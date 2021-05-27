@@ -1,3 +1,1 @@
-# ros2-project-template
-
-Project template for ROS2
+# lidar_driver
