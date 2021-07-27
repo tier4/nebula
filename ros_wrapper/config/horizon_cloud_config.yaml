@@ -1,0 +1,13 @@
+#CloudConfiguration file for Livox Horizon
+lidar_driver_node: #livox_lidar_driver: #node name
+    ros__parameters:
+        coordinate_mode: 'cartesian' # cartesian, spherical
+        intensity: true #include the intensity field in the point cloud
+        point_timestamp: true #include the timestamp for each point
+        #point_echo: true #include the echo field number (first (0) or second (1))
+        #echo_mode: 'single_first' # single_first, single_strongest, dual
+        #cloud_min_range: 0 # 0, no limit
+        #cloud_max_range: 0 #0, no limit
+        #remove_nans: false #false, publish all the points, including NaNs; remove the NaNs and produce a fixed size point cloud.
+
+#Point_echo and echo_mode must not be implemented in the first beta version of the driver.
