@@ -22,7 +22,7 @@ public:
 
   bool IsOpen() const;
 
-  int Send(std::vector<uint8_t> & buff);
+  int Send(const std::vector<uint8_t> & buff);
   int Recv(std::vector<uint8_t> & buff, int wait_msec = -1);
 
   std::string EndPointIp() const;

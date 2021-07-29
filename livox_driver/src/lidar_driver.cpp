@@ -42,14 +42,15 @@ bool LidarDriver::SetConfiguration(const livox_driver::LivoxSensorConfiguration 
     is_success = UdpSocketOpen(rx_imusock_, param.sensor_ip, 0, param.imu_port);
   }
 
-  if (is_success != false) {
-    const int64_t kNsPerSecond = 1000000000; /**< 1s  = 1000000000ns */
-    buffer_time_ms_ = param.frequency_ms;
-    publish_period_ns_ = kNsPerSecond / (1000 / param.frequency_ms);
-    lidarconfig_ = param;
-  } else {
+  if (is_success == false) {
     CloseAllUdpSocket();
+    return false;
   }
+
+  const int64_t kNsPerSecond = 1000000000; /**< 1s  = 1000000000ns */
+  buffer_time_ms_ = param.frequency_ms;
+  publish_period_ns_ = kNsPerSecond / (1000 / param.frequency_ms);
+  lidarconfig_ = param;
 
   // set extrinsic parameter / (beta) -start
   float roll = -0.001;
@@ -78,74 +79,124 @@ bool LidarDriver::GetConfiguration(livox_driver::LivoxSensorConfiguration & para
   return true;
 }
 
-/// @brief send command to livox
+/// @brief set command data
 /// @param command  : command type
-bool LidarDriver::SendCommand(LidarCommandType command)
+std::vector<uint8_t> LidarDriver::MakeSendCommand(LidarCommandType command)
 {
-  std::vector<uint8_t> buff;
-  std::vector<uint8_t> commanddata;
+  std::vector<uint8_t> buff(kMaxBufferSize);
+  CommandAll * command_all = reinterpret_cast<CommandAll *>(buff.data());
 
-  CommandHeader headerdata;
+  command_all->header.sof = 0xAA;
+  command_all->header.version = 0x01;
+  command_all->header.cmd_type = 0x00;
+  command_all->header.seq_num = 0x00;
 
-  uint8_t * crcbuf;
-  uint32_t crc16 = 0;
-  uint32_t crc32 = 0;
-  uint16_t headersize = sizeof(headerdata);
-
-  headerdata.sof = 0xAA;
-  headerdata.version = 0x01;
-  headerdata.cmd_type = 0x00;
-  headerdata.seq_num = 0x00;
-
+  uint32_t * crc32_ptr;
+  uint16_t cmd_size;
   switch (command) {
     case LidarCommandType::kLidarCommandHandshake:
-      MakeCommandHandshake(commanddata);
+      command_all->data.hand_shake = MakeCommandHandshake();
+      crc32_ptr = &command_all->data.hand_shake.crc32;
+      cmd_size = sizeof(command_all->data.hand_shake);
       break;
     case LidarCommandType::kLidarCommandStartStreaming:
-      MakeCommandStartStream(commanddata);
+      command_all->data.sampling = MakeCommandStartStream();
+      crc32_ptr = &command_all->data.sampling.crc32;
+      cmd_size = sizeof(command_all->data.sampling);
       break;
     case LidarCommandType::kLidarCommandStopStreaming:
-      MakeCommandStopStream(commanddata);
+      command_all->data.sampling = MakeCommandStopStream();
+      crc32_ptr = &command_all->data.sampling.crc32;
+      cmd_size = sizeof(command_all->data.sampling);
       break;
     case LidarCommandType::kLidarCommandHeartbeat:
-      MakeCommandHeartbeat(commanddata);
+      command_all->data.heart_beat = MakeCommandHeartbeat();
+      crc32_ptr = &command_all->data.heart_beat.crc32;
+      cmd_size = sizeof(command_all->data.heart_beat);
       break;
   }
 
-  uint16_t datasize = headersize + commanddata.size() + sizeof(crc32);
-  headerdata.length = datasize;
+  uint16_t header_size = sizeof(command_all->header);
+  uint16_t data_size = header_size + cmd_size;
+  command_all->header.length = data_size;
 
-  crcbuf = reinterpret_cast<uint8_t *>(&headerdata);
+  uint8_t * crcbuf = reinterpret_cast<uint8_t *>(&command_all->header);
+  uint32_t crc16 = crc16_.mcrf4xx_calc(crcbuf, header_size - kSdkPacketPreambleCrcSize);
+  command_all->header.crc16 = crc16;
+  *crc32_ptr = crc32_.crc32_calc(&buff[0], data_size - sizeof(*crc32_ptr));
+  buff.resize(data_size);
 
-  crc16 = crc16_.mcrf4xx_calc(crcbuf, headersize - kSdkPacketPreambleCrcSize);
-  headerdata.crc16 = crc16;
+  return buff;
+}
 
-  buff.resize(datasize, 0);
-  memcpy(&buff[0], &headerdata, headersize);
-  memcpy(&buff[headersize], &commanddata[0], commanddata.size());
-
-  crc32 = crc32_.crc32_calc(&buff[0], datasize - kSdkPacketCrcSize);
-  memcpy(&buff[datasize - kSdkPacketCrcSize], &crc32, sizeof(crc32));
-
-  int retval = commandsock_.Send(buff);
+/// @brief Command send and ack wait.
+/// @return CommandResult
+/// @details Received unknown packet 10 retries.
+CommandResult LidarDriver::SendAckWait(
+  const std::vector<uint8_t> & snd_buff, GeneralCommandID cmd_id)
+{
+  //printf("%s Start cmd_id=%d\n", __func__, (int)cmd_id);
+  std::unique_lock<std::mutex> lock(mtx_);
+  CommandResult result = CommandResult::kUnknownPacket;
+  int retval = commandsock_.Send(snd_buff);
   if (retval < 0) {
-    printf("command send error val:%d :%s(%d)\n", retval, __FILE__, __LINE__);
-  }
+    result = CommandResult::kError;  // send error.
+  } else {
+    std::vector<uint8_t> rcv_buff(kMaxBufferSize);
+    CommandAck * ack = reinterpret_cast<CommandAck *>(rcv_buff.data());
 
-  return true;
+    int rcv_len;
+    for (int retry_cnt = 10; retry_cnt > 0; --retry_cnt) {
+      rcv_len = commandsock_.Recv(rcv_buff, 100);  // 100ms
+      if (rcv_len < 0) {
+        result = CommandResult::kError;  // receive error
+        break;
+      } else if (rcv_len == 0) {
+        result = CommandResult::kTimeout;  // timeout
+        break;
+      } else if (rcv_len < static_cast<int>(sizeof(*ack))) {
+      } else if (CheckRecvData(rcv_buff) == false) {
+      } else if (ack->cmd_id != cmd_id) {
+      } else if (ack->result > 1) {
+      } else {
+        // ack->result  0:ack, 1:nack
+        result = (ack->result == 0) ? CommandResult::kAck : CommandResult::kNack;
+        break;
+      }
+    }
+    //printf("rcv_len=%d ack->result=%d\n", rcv_len, ack->result);
+  }
+  //printf("%s End cmd_id=%d\n", __func__, (int)cmd_id);
+
+  return result;
+}
+
+GeneralCommandID LidarDriver::GetCommandId(LidarCommandType cmd_type)
+{
+  GeneralCommandID cmd_id;
+  switch (cmd_type) {
+    case LidarCommandType::kLidarCommandHandshake:
+      cmd_id = GeneralCommandID::kHandshake;
+      break;
+    case LidarCommandType::kLidarCommandStartStreaming:
+      cmd_id = GeneralCommandID::kControlSample;
+      break;
+    case LidarCommandType::kLidarCommandStopStreaming:
+      cmd_id = GeneralCommandID::kControlSample;
+      break;
+    case LidarCommandType::kLidarCommandHeartbeat:
+      cmd_id = GeneralCommandID::kHeartbeat;
+      break;
+  }
+  return cmd_id;
 }
 
 /// @brief Rx socket open and start receive thread
-/// @retval 0  : success
-/// @retval -1 : socket not open
-/// @retval -2 : stream start timeout
-/// @retval -3 : stream start ack result NG
-int LidarDriver::StartHwRxInterface()
+/// @return true:success, false:faile.
+bool LidarDriver::StartHwRxInterface()
 {
-  int ret;
-
   if (rx_datasock_.IsOpen() == false || rx_imusock_.IsOpen() == false) {
-    return -1;
+    return false;
   }
 
   if (thread_rxdata_.get() == nullptr) {
@@ -154,156 +205,170 @@ int LidarDriver::StartHwRxInterface()
   if (thread_rximu_.get() == nullptr) {
     thread_rximu_ = std::make_shared<std::thread>(&LidarDriver::LivoxHwRxInterfaceImu, this);
   }
-
-  // send start streaming
-  lidarstatus_ = LidarDriverStatus::kStreaming;
-  for (int cnt = 0; cnt < 30; cnt++) {
-    stream_start_ack_ = -2;
-    SendCommand(LidarCommandType::kLidarCommandStartStreaming);
-    for (int wait_50ms = 0; wait_50ms < 20; wait_50ms++) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(50));
-      if (stream_start_ack_ == 0) {
-        return 0;
-      }
-    }  // for(wait_50ms)
-
-    if (lidarstatus_ != LidarDriverStatus::kStreaming) {
-      break;
-    }
-  }  // for(cnt)
-
-  ret = stream_start_ack_;
-  if (ret > 0) {
-    ret = -3;
+  if (thread_rxcommand_.get() == nullptr) {
+    thread_rxcommand_ =
+      std::make_shared<std::thread>(&LidarDriver::LivoxHwRxInterfaceCommand, this);
   }
 
-  return ret;
+  // Send StartStreaming: wake up thread LivoxHwRxInterfaceCommand
+  if (semaphore_.GetCount() <= 0) {
+    semaphore_.Signal();
+  }
+
+  return true;
 }
 
 /// @brief Rx socket close and stop receive thread
 void LidarDriver::StopHwRxInterface()
 {
+  if (lidarstatus_ == LidarDriverStatus::kStreaming) {
+    std::vector<uint8_t> buff = MakeSendCommand(LidarCommandType::kLidarCommandStopStreaming);
+    GeneralCommandID cmd_id = GetCommandId(LidarCommandType::kLidarCommandStopStreaming);
+    CommandResult result = CommandResult::kTimeout;
+
+    lidarstatus_ = LidarDriverStatus::kConnect;
+    for (int snd_cnt = 3; snd_cnt > 0; --snd_cnt) {
+      if (result != CommandResult::kTimeout) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+      result = SendAckWait(buff, cmd_id);
+      if (result == CommandResult::kAck) {
+        break;
+      }
+    }
+  }
+
+  // Stop thread LivoxHwRxInterfaceCommand
+  driverstatus_ = DriverStatus::kTerminate;
+  semaphore_.Signal();
+
   rx_datasock_.Close();
   rx_imusock_.Close();
+
+  thread_rxcommand_->join();
   thread_rxdata_->join();
   thread_rximu_->join();
 }
 
 /// @brief Tx socket open and start send thread
-/// @retval 0  : success
-/// @retval -1 : socket not open
-/// @retval -2 : handshake timeout
-/// @retval -3 : handshake ack result NG
-int LidarDriver::StartHwTxInterface()
+/// @return CommandResult
+CommandResult LidarDriver::StartHwTxInterface()
 {
-  int iret = -3;
+  CommandResult ret;
 
-  if (commandsock_.IsOpen()) {
-    // send Handshake command
-    SendCommand(LidarCommandType::kLidarCommandHandshake);
-    std::vector<uint8_t> buff;
-    buff.resize(kMaxBufferSize);
-
-    // receive response
-    int rcv_len = commandsock_.Recv(buff, 1000);
-    if (rcv_len > 0) {
-      if (CheckRecvData(buff)) {
-        // check HandShake ack
-        CommandAck * ack = reinterpret_cast<CommandAck *>(&buff[sizeof(CommandHeader)]);
-        if (ack->cmd_id == kCommandRxCommunicationSettingAck && ack->result == 0x00) {
-          lidarstatus_ = LidarDriverStatus::kConnect;
-          // thread start
-          thread_txheartbeat_ =
-            std::make_shared<std::thread>(&LidarDriver::LivoxHwTxInterfaceHeartbeat, this);
-          thread_rxcommand_ =
-            std::make_shared<std::thread>(&LidarDriver::LivoxHwRxInterfaceCommand, this);
-
-          iret = 0;
-        }
-      }
-    } else if (rcv_len == 0) {
-      // timeout
-      iret = -2;
-    }
+  if (commandsock_.IsOpen() == false) {
+    ret = CommandResult::kError;
   } else {
-    // socket not open
-    iret = -1;
+    std::vector<uint8_t> buff = MakeSendCommand(LidarCommandType::kLidarCommandHandshake);
+    GeneralCommandID cmd_id = GetCommandId(LidarCommandType::kLidarCommandHandshake);
+
+    ret = SendAckWait(buff, cmd_id);
+    if (ret == CommandResult::kAck) {
+      lidarstatus_ = LidarDriverStatus::kConnect;
+      // thread start
+      thread_txheartbeat_ =
+        std::make_shared<std::thread>(&LidarDriver::LivoxHwTxInterfaceHeartbeat, this);
+    }
   }
-  return iret;
+
+  return ret;
 }
 
 /// @brief Tx socket close and stop send thread
 void LidarDriver::StopHwTxInterface()
 {
-  SendCommand(LidarCommandType::kLidarCommandStopStreaming);
-  driverstatus_ = DriverStatus::kTerminate;
-
   thread_txheartbeat_->join();
-  thread_rxcommand_->join();
-
   commandsock_.Close();
 }
 
 /// @brief send thread
 bool LidarDriver::LivoxHwTxInterfaceHeartbeat()
 {
-  // wait 1.0 sec
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-  while (DriverStatus::kRunning == driverstatus_) {
-    if (LidarDriverStatus::kDisconnect == lidarstatus_) {
-      // send Handshake command
-      SendCommand(LidarCommandType::kLidarCommandHandshake);
-    } else {
-      // send heartbeat command
-      SendCommand(LidarCommandType::kLidarCommandHeartbeat);
+  std::vector<uint8_t> hand_shake_buff = MakeSendCommand(LidarCommandType::kLidarCommandHandshake);
+  GeneralCommandID hand_shake_id = GetCommandId(LidarCommandType::kLidarCommandHandshake);
+  std::vector<uint8_t> heart_beat_buff = MakeSendCommand(LidarCommandType::kLidarCommandHeartbeat);
+  GeneralCommandID heart_beat_id = GetCommandId(LidarCommandType::kLidarCommandHeartbeat);
+  CommandResult retval;
+  int retry_cnt = 0;
+  int wait_ms = 1000;   // wait 1.0 sec
+
+  while (driverstatus_ == DriverStatus::kRunning) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
+    if (driverstatus_ != DriverStatus::kRunning) {
+      //printf("%s Exit\n", __func__);
+      break;
     }
-    // wait 1.0 sec
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-  }
+    wait_ms = 1000;
+
+    if (lidarstatus_ == LidarDriverStatus::kDisconnect) {
+      retval = SendAckWait(hand_shake_buff, hand_shake_id);
+      if (retval == CommandResult::kAck) {
+        lidarstatus_ = LidarDriverStatus::kConnect;
+        retry_cnt = 0;
+        // Send StartStreaming: wake up thread LivoxHwRxInterfaceCommand
+        if (semaphore_.GetCount() <= 0) {
+          semaphore_.Signal();
+        }
+      } else if (retval == CommandResult::kTimeout) {
+        wait_ms = 900;    // 100 + 900 == 1000
+      } else {
+        /* do nothing. */
+      }
+    } else {
+      retval = SendAckWait(heart_beat_buff, heart_beat_id);
+      if (retval == CommandResult::kAck) {
+        retry_cnt = 0;
+      } else if (++retry_cnt >= 3) {
+        lidarstatus_ = LidarDriverStatus::kDisconnect;
+        retry_cnt = 0;
+        wait_ms = 110;    // requires 100ms over.
+      } else if (retval == CommandResult::kTimeout) {
+        wait_ms = 900;    // 100 + 900 == 1000
+      } else {
+        /* do nothing. */
+      }
+    }
+  }  // while
+
   return true;
 }
 
 /// @brief command receive thread
 bool LidarDriver::LivoxHwRxInterfaceCommand()
 {
-  std::vector<uint8_t> buff;
-  buff.resize(kMaxBufferSize);
+  std::vector<uint8_t> snd_buff = MakeSendCommand(LidarCommandType::kLidarCommandStartStreaming);
+  GeneralCommandID cmd_id = GetCommandId(LidarCommandType::kLidarCommandStartStreaming);
 
-  while (DriverStatus::kRunning == driverstatus_) {
-    int rcv_len = commandsock_.Recv(buff);
+  while (driverstatus_ == DriverStatus::kRunning) {
+    // Wait HandShake Ack(StartHwRxInterface or LivoxHwTxInterfaceHeartbeat) or StopHwRxInterface
+    semaphore_.Wait();
 
-    if (rcv_len > 0 && CheckRecvData(buff)) {
-      CommandAck * ack = reinterpret_cast<CommandAck *>(&buff[sizeof(CommandHeader)]);
-      switch (ack->cmd_id) {
-        case kCommandRxCommunicationSettingAck:
-          // first connection Communication port setting
-          DataRecvInit();
-          break;
-        case kCommancRxStreamingAck:
-          stream_start_ack_ = ack->result;  // 0:success, 1:fail.
-          //if (LidarDriverStatus::kConnect == lidarstatus_) {
-          //  if (ack->result == 1) {
-          //    // send retry(tentative)
-          //    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-          //    SendCommand(kLidarCommandStartStreaming);
-          //  } else {
-          //    // Start streaming
-          //    lidarstatus_ = LidarDriverStatus::kStreaming;
-          //  }
-          //} else {
-          //  // Stop streaming
-          //  //lidarstatus_ = LidarDriverStatus::kConnect;
-          //}
-          break;
-        case kCommandRxHeartbeatAck:
-          break;
-        default:
-          break;
+    if (driverstatus_ != DriverStatus::kRunning) {
+      break;
+    } else if (lidarstatus_ == LidarDriverStatus::kDisconnect) {
+      // continue;
+    } else {
+      if (lidarstatus_ == LidarDriverStatus::kConnect) {
+        lidarstatus_ = LidarDriverStatus::kStreaming;
       }
-    } else if (rcv_len < 0) {
-      printf("socket receive error val:%d :%s(%d)\n", rcv_len, __FILE__, __LINE__);
+
+      //printf("StartStreaming Loop start\n" );
+      CommandResult result;
+      while (driverstatus_ == DriverStatus::kRunning &&
+             lidarstatus_ == LidarDriverStatus::kStreaming) {
+        result = SendAckWait(snd_buff, cmd_id);
+        if (result == CommandResult::kAck) {
+          break;
+        } else if (result == CommandResult::kTimeout) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(150));
+        } else {
+          std::this_thread::sleep_for(std::chrono::milliseconds(250));
+        }
+      }  // while
+      //if (result != CommandResult::kAck) { printf("StartStreaming result=%d\n", (int)result ); }
     }
   }
+
   return true;
 }
 
@@ -335,49 +400,41 @@ void LidarDriver::CloseAllUdpSocket()
 }
 
 /// @brief make handshake command data
-void LidarDriver::MakeCommandHandshake(std::vector<uint8_t> & buff)
+CommandHandshake LidarDriver::MakeCommandHandshake()
 {
-  buff.resize(sizeof(CommandHandshake), 0);
-
-  CommandHandshake * command = reinterpret_cast<CommandHandshake *>(&buff[0]);
-  command->cmd_set = 0x00;
-  command->cmd_id = 0x01;
-  command->host_ip = inet_addr(lidarconfig_.host_ip.c_str());
-  command->data_port = lidarconfig_.data_port;
-  command->command_port = lidarconfig_.cmd_port;
-  command->imu_port = lidarconfig_.imu_port;
+  CommandHandshake command{};
+  command.cmd_id = GeneralCommandID::kHandshake;
+  command.host_ip = inet_addr(lidarconfig_.host_ip.c_str());
+  command.data_port = lidarconfig_.data_port;
+  command.command_port = lidarconfig_.cmd_port;
+  command.imu_port = lidarconfig_.imu_port;
+  return command;
 }
 
 /// @brief make stream command data(streaming start)
-void LidarDriver::MakeCommandStartStream(std::vector<uint8_t> & buff)
+CommandSampling LidarDriver::MakeCommandStartStream()
 {
-  buff.resize(sizeof(CommandSampling), 0);
-
-  CommandSampling * command = reinterpret_cast<CommandSampling *>(&buff[0]);
-  command->cmd_set = 0x00;
-  command->cmd_id = 0x04;
-  command->sample_ctrl = 0x01;
+  CommandSampling command{};
+  command.cmd_id = GeneralCommandID::kControlSample;
+  command.sample_ctrl = 0x01;
+  return command;
 }
 
 /// @brief make stream command data(streaming stop)
-void LidarDriver::MakeCommandStopStream(std::vector<uint8_t> & buff)
+CommandSampling LidarDriver::MakeCommandStopStream()
 {
-  buff.resize(sizeof(CommandSampling), 0);
-
-  CommandSampling * command = reinterpret_cast<CommandSampling *>(&buff[0]);
-  command->cmd_set = 0x00;
-  command->cmd_id = 0x04;
-  command->sample_ctrl = 0x00;
+  CommandSampling command{};
+  command.cmd_id = GeneralCommandID::kControlSample;
+  command.sample_ctrl = 0x00;
+  return command;
 }
 
 /// @brief make heartbeat command data
-void LidarDriver::MakeCommandHeartbeat(std::vector<uint8_t> & buff)
+CommandHeartbeat LidarDriver::MakeCommandHeartbeat()
 {
-  buff.resize(sizeof(CommandHeartbeat), 0);
-
-  CommandHeartbeat * command = reinterpret_cast<CommandHeartbeat *>(&buff[0]);
-  command->cmd_set = 0x00;
-  command->cmd_id = 0x03;
+  CommandHeartbeat command{};
+  command.cmd_id = GeneralCommandID::kHeartbeat;
+  return command;
 }
 
 /// @brief check receive data
@@ -393,7 +450,7 @@ bool LidarDriver::CheckRecvData(const std::vector<uint8_t> & buff)
   uint16_t crc16 = commandheader->crc16;
 
   // check crc16 on headder
-  crc16_calc = crc16_.mcrf4xx_calc(&buff[0], sizeof(CommandHeader) - kSdkPacketPreambleCrcSize);
+  crc16_calc = crc16_.mcrf4xx_calc(&buff[0], sizeof(*commandheader) - kSdkPacketPreambleCrcSize);
   if (crc16 != crc16_calc) {
     return false;
   }
@@ -416,9 +473,9 @@ int LidarDriver::ParsePacket(livox_driver::LivoxLidarPacket & packet)
   bool timegap_over = false;
   LivoxEthPacket * raw_packet = reinterpret_cast<LivoxEthPacket *>(packet.data.data());
 
-  if( temp_publish_data_.get() == nullptr ) {
+  if (temp_publish_data_.get() == nullptr) {
     temp_publish_data_ = std::make_unique<livox_driver::LivoxPublishData>();
-  }  
+  }
 
   if (temp_publish_data_->num == 0) {
     uint32_t remaining_time = timestamp % publish_period_ns_;
@@ -504,7 +561,8 @@ uint8_t * LidarDriver::LivoxExtendRawPointToPxyzrtl(
   uint8_t * point_buf, LivoxEthPacket * eth_packet, ExtrinsicParameter & extrinsic,
   uint32_t line_num)
 {
-  livox_driver::LivoxPointXyzrtl * dst_point = (livox_driver::LivoxPointXyzrtl *)point_buf;
+  livox_driver::LivoxPointXyzrtl * dst_point =
+    reinterpret_cast<livox_driver::LivoxPointXyzrtl *>(point_buf);
   uint32_t points_per_packet = GetPointsPerPacket(eth_packet->data_type);
   LivoxExtendRawPoint * raw_point = reinterpret_cast<LivoxExtendRawPoint *>(eth_packet->data);
 
@@ -512,8 +570,9 @@ uint8_t * LidarDriver::LivoxExtendRawPointToPxyzrtl(
   while (points_per_packet) {
     RawPointConvert(*dst_point, reinterpret_cast<const LivoxRawPoint &>(*raw_point));
     if (extrinsic.enable && IsTripleIntNoneZero(raw_point->x, raw_point->y, raw_point->z)) {
-      livox_driver::PointXyz src_point = *((livox_driver::PointXyz *)dst_point);
-      PointExtrisincCompensation((livox_driver::PointXyz *)dst_point, src_point, extrinsic);
+      livox_driver::PointXyz * xyz_ptr = reinterpret_cast<livox_driver::PointXyz *>(dst_point);
+      livox_driver::PointXyz src_point = *xyz_ptr;
+      PointExtrisincCompensation(xyz_ptr, src_point, extrinsic);
     }
     dst_point->tag = raw_point->tag;
     if (line_num > 1) {
