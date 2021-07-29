@@ -1,7 +1,10 @@
 #ifndef LIDARDRIVER_LIVOX_LIDARDRIVER_HPP_
 #define LIDARDRIVER_LIVOX_LIDARDRIVER_HPP_
 
+
+#include <condition_variable>
 #include <functional>
+#include <mutex>
 #include <thread>
 
 #include "HwInterface/udp_socket.hpp"
@@ -11,9 +14,6 @@
 namespace lidar_driver
 {
 const uint16_t kCommandPort = 65000;
-const uint8_t kCommandRxCommunicationSettingAck = 0x01;
-const uint8_t kCommancRxStreamingAck = 0x04;
-const uint8_t kCommandRxHeartbeatAck = 0x03;
 const uint16_t kCrcSeed16 = 0x4c49;
 const uint32_t kCrcSeed32 = 0x564f580a;
 const uint32_t kSdkPacketCrcSize = 4;
@@ -36,6 +36,27 @@ enum class LidarCommandType {
   kLidarCommandStartStreaming,
   kLidarCommandStopStreaming,
   kLidarCommandHeartbeat,
+};
+
+enum class CommandResult { kAck = 0, kNack, kTimeout, kError, kUnknownPacket };
+
+/**  Enum that represents the command id. */
+enum class GeneralCommandID : uint8_t {
+  kBroadcast = 0,                 // General command set, broadcast command.
+  kHandshake = 1,                 // General command set, query the information of device.
+  kDeviceInfo = 2,                // General command set, query the information of device.
+  kHeartbeat = 3,                 // General command set, heartbeat command.
+  kControlSample = 4,             // General command set, enable or disable the sampling.
+  kCoordinateSystem = 5,          // General command set, change the coordinate of point cloud data.
+  kDisconnect = 6,                // General command set, disconnect the device.
+  kPushAbnormalState = 7,         // General command set, a message command from a connected device
+  kConfigureStaticDynamicIp = 8,  // General command set, set the IP of the a device.
+  kGetDeviceIpInformation = 9,    // General command set, get the IP of the a device.
+  kRebootDevice = 0x0a,           // General command set, reboot a device.
+  kSetDeviceParam = 0x0b,         // Set device's parameters.
+  kGetDeviceParam = 0x0c,         // Get device's parameters.
+  kResetDeviceParam = 0x0d,       // Reset device's all parameters.
+  kCommandCount                   // Don't add command id after kCommandCount.
 };
 
 #pragma pack(1)
@@ -94,11 +115,12 @@ struct LivoxPoint
 struct CommandHandshake
 {
   uint8_t cmd_set;
-  uint8_t cmd_id;
+  GeneralCommandID cmd_id;
   uint32_t host_ip;
   uint16_t data_port;
   uint16_t command_port;
   uint16_t imu_port;
+  uint32_t crc32;
 };
 #pragma pack()
 
@@ -106,7 +128,8 @@ struct CommandHandshake
 struct CommandHeartbeat
 {
   uint8_t cmd_set;
-  uint8_t cmd_id;
+  GeneralCommandID cmd_id;
+  uint32_t crc32;
 };
 #pragma pack()
 
@@ -114,23 +137,65 @@ struct CommandHeartbeat
 struct CommandSampling
 {
   uint8_t cmd_set;
-  uint8_t cmd_id;
+  GeneralCommandID cmd_id;
   uint8_t sample_ctrl;
+  uint32_t crc32;
+};
+#pragma pack()
+
+#pragma pack(1)
+struct CommandAll
+{
+  CommandHeader header;
+  union {
+    CommandHandshake hand_shake;
+    CommandHeartbeat heart_beat;
+    CommandSampling sampling;
+  } data;
 };
 #pragma pack()
 
 #pragma pack(1)
 struct CommandAck
 {
+  CommandHeader header;
   uint8_t cmd_set;
-  uint8_t cmd_id;
+  GeneralCommandID cmd_id;
   uint8_t result;
+  uint32_t crc32;
 };
 #pragma pack()
 
-using EulerAngle = float [3];        /**< Roll, Pitch, Yaw, unit:radian. */
-using TranslationVector = float [3]; /**< x, y, z translation, unit: m. */
-using RotationMatrix = float [3][3];
+class Semaphore
+{
+public:
+  explicit Semaphore(int count = 0) : count_(count) {}
+
+  void Signal()
+  {
+    std::unique_lock<std::mutex> lock(mutex_);
+    ++count_;
+    cv_.notify_one();
+  }
+
+  void Wait()
+  {
+    std::unique_lock<std::mutex> lock(mutex_);
+    cv_.wait(lock, [=] { return count_ > 0; });
+    --count_;
+  }
+
+  int GetCount() { return count_; }
+
+private:
+  std::mutex mutex_;
+  std::condition_variable cv_;
+  volatile int count_;
+};
+
+using EulerAngle = float[3];        /**< Roll, Pitch, Yaw, unit:radian. */
+using TranslationVector = float[3]; /**< x, y, z translation, unit: m. */
+using RotationMatrix = float[3][3];
 
 #pragma pack(1)
 struct ExtrinsicParameter
@@ -186,10 +251,10 @@ public:
   bool SetCalibration();
   bool GetCalibration();
 
-  int StartHwRxInterface();
+  bool StartHwRxInterface();
   void StopHwRxInterface();
 
-  int StartHwTxInterface();
+  CommandResult StartHwTxInterface();
   void StopHwTxInterface();
 
   int ParsePacket(livox_driver::LivoxLidarPacket & packet);
@@ -217,16 +282,22 @@ private:
   bool LivoxHwTxInterfaceHeartbeat();
 
   bool SendCommand(LidarCommandType command);
-  void MakeCommandHandshake(std::vector<uint8_t> & buff);
-  void MakeCommandStartStream(std::vector<uint8_t> & buff);
-  void MakeCommandStopStream(std::vector<uint8_t> & buff);
-  void MakeCommandHeartbeat(std::vector<uint8_t> & buff);
+  CommandHandshake MakeCommandHandshake();
+  CommandSampling MakeCommandStartStream();
+  CommandSampling MakeCommandStopStream();
+  CommandHeartbeat MakeCommandHeartbeat();
 
   bool UdpSocketOpen(
     HwInterface::UdpSocket & sock, const std::string & sensor_ip, uint16_t sensor_port,
     uint16_t my_port);
   void CloseAllUdpSocket();
   bool CheckRecvData(const std::vector<uint8_t> & buff);
+
+  Semaphore semaphore_;
+  std::mutex mtx_;
+  std::vector<uint8_t> MakeSendCommand(LidarCommandType command);
+  CommandResult SendAckWait(const std::vector<uint8_t> & snd_buff, GeneralCommandID cmd_id);
+  GeneralCommandID GetCommandId(LidarCommandType cmd_type);
 
 private:
   enum DeviceType {
@@ -302,7 +373,7 @@ private:
     dst_point.x = raw_point.x / 1000.0f;
     dst_point.y = raw_point.y / 1000.0f;
     dst_point.z = raw_point.z / 1000.0f;
-    dst_point.reflectivity = (float)raw_point.reflectivity;
+    dst_point.reflectivity = static_cast<float>(raw_point.reflectivity);
   }
   inline bool IsTripleFloatNoneZero(float x, float y, float z)
   {

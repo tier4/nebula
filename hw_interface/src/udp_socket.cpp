@@ -125,7 +125,7 @@ uint16_t UdpSocket::EndPointPort() const { return ntohs(rcv_addrin_.sin_port); }
 /// @return On success, these calls return the number of bytes sent.
 /// @retval -1: sendto error
 /// @retval -2: port number not set.
-int UdpSocket::Send(std::vector<uint8_t> & buff)
+int UdpSocket::Send(const std::vector<uint8_t> & buff)
 {
   int retval;
 

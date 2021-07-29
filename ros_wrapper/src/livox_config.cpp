@@ -67,8 +67,8 @@ RosDriverWrapper::LivoxCoordinateModeEx RosDriverWrapper::GetParamLivoxCoordinat
 }
 
 /// @brief get livox configuration parameter.
-void RosDriverWrapper::GetLivoxParameter(SensorConfigEx & ex,
-  livox_driver::LivoxCloudConfiguration & cloud_config)
+void RosDriverWrapper::GetLivoxParameter(
+  SensorConfigEx & ex, livox_driver::LivoxCloudConfiguration & cloud_config)
 {
   std::string str_coordinate_mode;
 
@@ -90,7 +90,7 @@ void RosDriverWrapper::GetLivoxParameter(SensorConfigEx & ex,
   LivoxSensorModelEx sensor_model_ex = GetParamLivoxSensorModel();
   ex.sensor_config.sensor_model = std::get<0>(sensor_model_ex);
   ex.sensor_model_str = std::get<1>(sensor_model_ex);
-  
+
   // LivoxSensorConfiguration
   this->get_parameter("host_ip", ex.sensor_config.host_ip);
   this->get_parameter("sensor_ip", ex.sensor_config.sensor_ip);
@@ -128,33 +128,27 @@ bool RosDriverWrapper::CheckLivoxSensorConfiguration(SensorConfigEx & ex)
 
   if (ex.sensor_config.sensor_model == livox_driver::LivoxSensorModel::UNKNOWN) {
     err_str = "sensor_model '" + ex.sensor_model_str + "'";
-  }
-  else if (CheckIpAddress(ex.sensor_config.host_ip) == false) {
+  } else if (CheckIpAddress(ex.sensor_config.host_ip) == false) {
     err_str = "host_ip '" + ex.sensor_config.host_ip + "'";
-  }
-  else if (CheckIpAddress(ex.sensor_config.sensor_ip) == false) {
+  } else if (CheckIpAddress(ex.sensor_config.sensor_ip) == false) {
     err_str = "sensor_ip '" + ex.sensor_config.sensor_ip + "'";
-  }
-  else if (CheckPortNumber(ex.sensor_config.data_port) == false) {
+  } else if (CheckPortNumber(ex.sensor_config.data_port) == false) {
     err_str = "data_port " + std::to_string(ex.sensor_config.data_port);
-  }
-  else if (CheckPortNumber(ex.sensor_config.imu_port) == false) {
+  } else if (CheckPortNumber(ex.sensor_config.imu_port) == false) {
     err_str = "imu_port " + std::to_string(ex.sensor_config.imu_port);
-  }
-  else if (CheckPortNumber(ex.sensor_config.cmd_port) == false) {
+  } else if (CheckPortNumber(ex.sensor_config.cmd_port) == false) {
     err_str = "cmd_port " + std::to_string(ex.sensor_config.cmd_port);
-  }
-  else if ((ex.sensor_config.frequency_ms < 5) || (ex.sensor_config.frequency_ms > 1000)) {
+  } else if ((ex.sensor_config.frequency_ms < 5) || (ex.sensor_config.frequency_ms > 1000)) {
     err_str = "frequency_ms " + std::to_string(ex.sensor_config.frequency_ms);
   }
-#if 0 // ToDo: echo_mode and coordinate_mode must not be implemented in the first beta version of the driver.
+#if 0  // ToDo: echo_mode and coordinate_mode must not be implemented in the first beta version of the driver.
   else if( ex.sensor_config.echo_mode == livox_driver::LivoxEchoMode::UNKNOWN ) {
     err_str = "echo_mode '" + ex.sensor_config.echo_mode_str + "'";
   }
   else if( ex.sensor_config.coordinate_model == livox_driver::LivoxCoordinateMode::UNKNOWN ) {
     err_str = "coordinate_mode '" + ex.sensor_config.coordinate_mode_str + "'";
   }
-#endif // ToDo: echo_mode and coordinate_mode must not be implemented in the first beta version of the driver.
+#endif  // ToDo: echo_mode and coordinate_mode must not be implemented in the first beta version of the driver.
   else {
     ret = true;
   }
@@ -172,8 +166,8 @@ bool RosDriverWrapper::CheckLivoxSensorConfiguration(SensorConfigEx & ex)
 /// @param cloud_config: Livox Cloud Configuration
 /// @return true on success, false on failure.
 /// @details boolean is No check required.
-bool RosDriverWrapper::CheckLivoxCloudConfiguration(SensorConfigEx & ex,
-  livox_driver::LivoxCloudConfiguration & cloud_config)
+bool RosDriverWrapper::CheckLivoxCloudConfiguration(
+  SensorConfigEx & ex, livox_driver::LivoxCloudConfiguration & cloud_config)
 {
   std::string err_str = "";
   bool ret = false;
@@ -193,8 +187,7 @@ bool RosDriverWrapper::CheckLivoxCloudConfiguration(SensorConfigEx & ex,
     err_str = "cloud_min_range" + std::to_string(cloud_config.cloud_min_range);
   } else if (std::signbit(cloud_config.cloud_max_range)) {
     err_str = "cloud_max_range" + std::to_string(cloud_config.cloud_max_range);
-  }
-  else {
+  } else {
     ret = true;
   }
 

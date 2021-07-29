@@ -32,7 +32,7 @@ void RosDriverWrapper::GetParameter()
 /// @brief check IP address.
 /// @param ip_addr
 /// @return true: good address. false: bad address.
-bool RosDriverWrapper::CheckIpAddress(std::string & ip_addr)
+bool RosDriverWrapper::CheckIpAddress(const std::string & ip_addr)
 {
   bool ret = false;
   if (!ip_addr.empty()) {

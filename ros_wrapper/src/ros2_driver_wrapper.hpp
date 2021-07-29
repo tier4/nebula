@@ -31,7 +31,7 @@ class RosDriverWrapper final : public rclcpp::Node
 {
 public:  // Figure 9.
   explicit RosDriverWrapper(
-    const rclcpp::NodeOptions & options = rclcpp::NodeOptions(), 
+    const rclcpp::NodeOptions & options = rclcpp::NodeOptions(),
     const std::string & node_name = "lidar_driver_node");
   ~RosDriverWrapper() override;
 
@@ -88,10 +88,11 @@ private:  // Configuration
     std::string debug_str2;
     int npackets;
   } config_;
-  
+
   //SensorConfigEx sensor_configuration_;
-  struct SensorConfigEx_ {
-	SensorConfiguration sensor_config;
+  struct SensorConfigEx_
+  {
+    SensorConfiguration sensor_config;
     std::string sensor_model_str;
     std::string echo_mode_str;
     std::string coordinate_mode_str;
@@ -108,7 +109,7 @@ private:  // Configuration
   SensorConfiguration GetSensorConfig();
 
   void GetParameter();
-  bool CheckIpAddress(std::string & ip_addr);
+  bool CheckIpAddress(const std::string & ip_addr);
   bool CheckPortNumber(int port) { return ((0 < port) && (port <= 0xFFFF)) ? true : false; }
 
   using LivoxSensorModelEx = std::tuple<livox_driver::LivoxSensorModel, std::string>;
@@ -118,11 +119,10 @@ private:  // Configuration
   using LivoxCoordinateModeEx = std::tuple<livox_driver::LivoxCoordinateMode, std::string>;
   LivoxCoordinateModeEx GetParamLivoxCoordinateMode();
 
-  void GetLivoxParameter(SensorConfigEx & ex,
-    livox_driver::LivoxCloudConfiguration & cloud_config);
+  void GetLivoxParameter(SensorConfigEx & ex, livox_driver::LivoxCloudConfiguration & cloud_config);
   bool CheckLivoxSensorConfiguration(SensorConfigEx & ex);
-  bool CheckLivoxCloudConfiguration(SensorConfigEx & ex,
-    livox_driver::LivoxCloudConfiguration & cloud_config);
+  bool CheckLivoxCloudConfiguration(
+    SensorConfigEx & ex, livox_driver::LivoxCloudConfiguration & cloud_config);
 
 #ifdef UTEST
 public:

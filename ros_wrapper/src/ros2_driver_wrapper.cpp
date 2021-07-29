@@ -46,45 +46,42 @@ RosDriverWrapper::~RosDriverWrapper()
 }
 
 /// @brief Shutdown
-void RosDriverWrapper::Shutdown()
-{
-  StreamStop();
-  exit_signal_.set_value();
-}
+void RosDriverWrapper::Shutdown() { exit_signal_.set_value(); }
 
 /// @brief StreamStop
 void RosDriverWrapper::StreamStop()
 {
-  driver_.StopHwTxInterface();
-  driver_.StopHwRxInterface();
+  RCLCPP_INFO(this->get_logger(), "StopHwRxInterface: StreamStop request.");
+  driver_.StopHwRxInterface();  // stream stop request.
+  driver_.StopHwTxInterface();  // stop heart beat.
 }
 
 /// @brief StartHwTxInterface
 bool RosDriverWrapper::StartInterface()
 {
   bool ret = false;
-  int pre_rc = 0;
-  int rc;
+  CommandResult pre_result = CommandResult::kAck;
+  CommandResult cmd_result;
   int wait_ms = 0;
-  std::future_status status;
+  std::future_status status = std::future_status::timeout;
 
   do {
-    rc = driver_.StartHwTxInterface();
-    if (rc == 0) {
+    cmd_result = driver_.StartHwTxInterface();
+    if (cmd_result == CommandResult::kAck) {
       ret = true;
       RCLCPP_INFO(this->get_logger(), "StartHwTxInterface: Handshake success.");
       break;
-    } else if (rc == -2) {
+    } else if (cmd_result == CommandResult::kTimeout) {
       // Timeout.
-      if (pre_rc != rc) {
-        pre_rc = rc;
+      if (pre_result != cmd_result) {
+        pre_result = cmd_result;
         RCLCPP_WARN(this->get_logger(), "StartHwTxInterface: Handshake Timeout");
       }
-      wait_ms = 0;
-    } else if (rc == -3) {
+      wait_ms = 400;
+    } else if (cmd_result == CommandResult::kNack) {
       // Ack fail.
-      if (pre_rc != rc) {
-        pre_rc = rc;
+      if (pre_result != cmd_result) {
+        pre_result = cmd_result;
         RCLCPP_WARN(this->get_logger(), "StartHwTxInterface: Handshake Ack fail.");
       }
       wait_ms = 500;
@@ -95,6 +92,11 @@ bool RosDriverWrapper::StartInterface()
     }
     status = future_.wait_for(std::chrono::milliseconds(wait_ms));
   } while (status == std::future_status::timeout);
+
+  if (status != std::future_status::timeout) {
+    RCLCPP_ERROR(this->get_logger(), "StartHwTxInterface Cancel %d", static_cast<int>(cmd_result));
+    ret = false;
+  }
 
   return ret;
 }
@@ -138,7 +140,6 @@ void RosDriverWrapper::CreatePubSub()
 /// @brief StreamStart
 bool RosDriverWrapper::StreamStart()
 {
-  bool ret = false;
   /// InstantiateLidarDriver
   /// Instantiates the corresponding Lidar Driver for the selected sensor.
 
@@ -153,22 +154,11 @@ bool RosDriverWrapper::StreamStart()
     driver_.GetSensorConfig( sensor_configuration_ );
 #endif  // TODO(Next phase)
 
-  // Figure 10. LidarDriver.StreamStart()
-  int rc = driver_.StartHwRxInterface();
-  switch (rc) {
-    case 0:
-      RCLCPP_INFO(this->get_logger(), "StartHwRxInterface: StreamStart success.");
-      ret = true;
-      break;
-    case -1:
-      RCLCPP_ERROR(this->get_logger(), "StartHwRxInterface: Sensor Socket error !");
-      break;
-    case -2:
-      RCLCPP_ERROR(this->get_logger(), "StartHwRxInterface: StreamStart Timeout.");
-      break;
-    case -3:
-      RCLCPP_ERROR(this->get_logger(), "StartHwRxInterface: StreamStart Ack fail.");
-      break;
+  bool ret = driver_.StartHwRxInterface();
+  if (ret == false) {
+    RCLCPP_ERROR(this->get_logger(), "StartHwRxInterface: StreamStart failed.");
+  } else {
+    RCLCPP_INFO(this->get_logger(), "StartHwRxInterface: StreamStart request.");
   }
 
   return ret;
@@ -207,6 +197,8 @@ void RosDriverWrapper::MainThread()
     do {
       status = future_.wait_for(std::chrono::seconds(3));
     } while (status == std::future_status::timeout);
+
+    StreamStop();
 
     RCLCPP_INFO(this->get_logger(), "LidarDriver Ros2Wrapper MainThread() end %d", (int)status);
   }
