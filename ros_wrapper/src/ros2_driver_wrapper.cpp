@@ -107,7 +107,7 @@ void RosDriverWrapper::CreatePubSub()
   // 2. Wait Point Cloud. It is defined as the function that will wait and receive the processed
   // point cloud by the parser inside LidarDriver.
   imu_pub_ =
-    this->create_publisher<sensor_msgs::msg::Imu>("livox/imu_packet", rclcpp::SensorDataQoS());
+    this->create_publisher<sensor_msgs::msg::Imu>("livox/imu_packet", 16);
 
   driver_scan_ = this->create_publisher<livox_msgs::msg::LidarScan>(
     "livox/driver_scan_topic", rclcpp::SensorDataQoS());
