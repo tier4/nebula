@@ -128,15 +128,15 @@ bool RosDriverWrapper::CheckLivoxSensorConfiguration(SensorConfigEx & ex)
 
   if (ex.sensor_config.sensor_model == livox_driver::LivoxSensorModel::UNKNOWN) {
     err_str = "sensor_model '" + ex.sensor_model_str + "'";
-  } else if (CheckIpAddress(ex.sensor_config.host_ip) == false) {
+  } else if (!CheckIpAddress(ex.sensor_config.host_ip)) {
     err_str = "host_ip '" + ex.sensor_config.host_ip + "'";
-  } else if (CheckIpAddress(ex.sensor_config.sensor_ip) == false) {
+  } else if (!CheckIpAddress(ex.sensor_config.sensor_ip)) {
     err_str = "sensor_ip '" + ex.sensor_config.sensor_ip + "'";
-  } else if (CheckPortNumber(ex.sensor_config.data_port) == false) {
+  } else if (!CheckPortNumber(ex.sensor_config.data_port)) {
     err_str = "data_port " + std::to_string(ex.sensor_config.data_port);
-  } else if (CheckPortNumber(ex.sensor_config.imu_port) == false) {
+  } else if (!CheckPortNumber(ex.sensor_config.imu_port)) {
     err_str = "imu_port " + std::to_string(ex.sensor_config.imu_port);
-  } else if (CheckPortNumber(ex.sensor_config.cmd_port) == false) {
+  } else if (!CheckPortNumber(ex.sensor_config.cmd_port)) {
     err_str = "cmd_port " + std::to_string(ex.sensor_config.cmd_port);
   } else if ((ex.sensor_config.frequency_ms < 5) || (ex.sensor_config.frequency_ms > 1000)) {
     err_str = "frequency_ms " + std::to_string(ex.sensor_config.frequency_ms);

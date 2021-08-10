@@ -7,17 +7,13 @@
 namespace lidar_driver
 {
 /// @brief receive before initialize.
-void LidarDriver::DataRecvInit()
-{
-  lidars_.raw_data_type = 0xFF;
-  lidars_.device_info_type = DeviceType::kLidarHorizon;
-}
+void LidarDriver::DataRecvInit() { lidars_.raw_data_type = 0xFF; }
 
 /// @brief Raw data timestamp to nano sec.
 /// @param timestamp : Raw data timestamp
 /// @param timestamp_type : timestamp type
 /// @return nano sec timestamp
-uint64_t LidarDriver::RawLdsStampToNs(LdsStamp & timestamp, uint8_t timestamp_type)
+uint64_t RawLdsStampToNs(LdsStamp & timestamp, uint8_t timestamp_type)
 {
   uint64_t time_epoch = timestamp.stamp;
 
@@ -150,7 +146,7 @@ void LidarDriver::StorageRawPacket(const std::vector<uint8_t> & buff, int rcv_le
 }
 
 /// @brief data port receive
-bool LidarDriver::LivoxHwRxInterfaceData(void)
+void LidarDriver::LivoxHwRxInterfaceData()
 {
   DataRecvInit();
 
@@ -167,12 +163,12 @@ bool LidarDriver::LivoxHwRxInterfaceData(void)
     } else { /* nothing */
     }
   }
-
-  return true;
+  //printf("Thread end %s\n", __func__);
+  return;
 }
 
 /// @brief imu port receive
-bool LidarDriver::LivoxHwRxInterfaceImu(void)
+void LidarDriver::LivoxHwRxInterfaceImu()
 {
   while (driverstatus_ == DriverStatus::kRunning) {
     std::vector<uint8_t> buff(kMaxBufferSize);
@@ -187,7 +183,119 @@ bool LidarDriver::LivoxHwRxInterfaceImu(void)
     }
   }
 
-  return true;
+  //printf("Thread end %s\n", __func__);
+  return;
+}
+
+/// @brief packet data parse
+int LidarDriver::ParsePacket(livox_driver::LivoxLidarPacket & packet)
+{
+  //printf("parse packet packet.time %ld  temp.time %ld \n", packet.time, temp_publish_data_->time);
+  int iret = 0;
+  uint64_t timestamp = packet.time_stamp;
+  bool timegap_over = false;
+
+  if (!temp_publish_data_) {
+    temp_publish_data_ = std::make_unique<livox_driver::LivoxPublishData>();
+  }
+
+  if (temp_publish_data_->num == 0) {
+    uint32_t remaining_time = timestamp % publish_period_ns_;
+    uint32_t diff_time = publish_period_ns_ - remaining_time;
+    /** Get start time, down to the period boundary */
+    if (diff_time > (publish_period_ns_ / 4)) {
+      //printf("GetPublishStartTime : 0 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
+      last_timestamp_ = timestamp - remaining_time;
+    } else if (diff_time <= lidars_.packet_interval_max) {
+      //printf("GetPublishStartTime : 1 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
+      last_timestamp_ = timestamp;
+    } else {
+      //printf("GetPublishStartTime : 2 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
+      /* the remaning packets in queue maybe not enough after skip */
+      return 0;
+    }
+  }
+
+  do {
+    int64_t time_gap = timestamp - last_timestamp_;
+    // if timeout -> packet publish
+    if (time_gap > lidars_.packet_interval_max) {
+      //printf( "NG:time_gap=%ld timestamp=%ld last_timestamp=%ld\n", time_gap, timestamp, last_timestamp_ );
+      packet.data.clear();
+      last_timestamp_ += lidars_.packet_interval;
+      timegap_over = true;
+    } else {
+      //printf( "OK:time_gap=%ld timestamp=%ld last_timestamp=%ld\n", time_gap, timestamp, last_timestamp_ );
+      last_timestamp_ = timestamp;
+      timegap_over = false;
+    }
+
+    if (temp_publish_data_->num == 0) {
+      /* new timestamp */
+      temp_publish_data_->time = timestamp;
+      temp_publish_data_->data.resize(
+        lidars_.onetime_publish_packets * kMaxPointPerEthPacket *
+        sizeof(livox_driver::LivoxPointXyzrtl));
+    }
+
+    uint8_t * point_base =
+      &temp_publish_data_->data[temp_publish_data_->num * sizeof(livox_driver::LivoxPointXyzrtl)];
+
+    LivoxExtendRawPointToPxyzrtl(point_base, packet.data, 1);
+    temp_publish_data_->num += packet.data_cnt;
+
+    accumulate_count_++;
+
+    if (accumulate_count_ >= lidars_.onetime_publish_packets) {
+      uint32_t echo_num = GetEchoNumPerPoint(lidars_.raw_data_type);
+      temp_publish_data_->num = temp_publish_data_->num * echo_num;
+      publish_data_ = std::move(temp_publish_data_);
+      iret = publish_data_->num;
+
+      accumulate_count_ = 0;
+      break;
+    }
+  } while (timegap_over);
+
+  return iret;
+}
+
+/// @brief return publish data
+std::unique_ptr<livox_driver::LivoxPublishData> LidarDriver::GenerateCloud()
+{
+  return std::move(publish_data_);
+}
+
+/// @brief Extend raw point to point xyzrtl.
+void LidarDriver::LivoxExtendRawPointToPxyzrtl(
+  uint8_t * point_buf, const std::vector<uint8_t> & raw_packet, uint32_t line_num)
+{
+  const LivoxEthPacket * eth_packet = reinterpret_cast<const LivoxEthPacket *>(raw_packet.data());
+  livox_driver::LivoxPointXyzrtl * dst_point =
+    reinterpret_cast<livox_driver::LivoxPointXyzrtl *>(point_buf);
+  uint32_t points_per_packet = GetPointsPerPacket(eth_packet->data_type);
+  const LivoxExtendRawPoint * raw_point =
+    reinterpret_cast<const LivoxExtendRawPoint *>(eth_packet->data);
+
+  uint8_t line_id = 0;
+  while (points_per_packet) {
+    dst_point->x = raw_point->x / 1000.0f;
+    dst_point->y = raw_point->y / 1000.0f;
+    dst_point->z = raw_point->z / 1000.0f;
+    dst_point->reflectivity = static_cast<float>(raw_point->reflectivity);
+    dst_point->tag = raw_point->tag;
+    if (line_num > 1) {
+      dst_point->line = line_id % line_num;
+    } else {
+      dst_point->line = 0;
+    }
+    ++raw_point;
+    ++dst_point;
+    ++line_id;
+    --points_per_packet;
+  }
+
+  return;
 }
 
 }  // namespace lidar_driver

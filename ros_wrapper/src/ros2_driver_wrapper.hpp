@@ -67,8 +67,6 @@ private:                                                                  // pub
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr point_cloud_;  // point cloud2 publish
   void CreatePubSub();
 
-  //std::unique_ptr<velodyne_rawdata::DataContainerBase> container_ptr_;
-
   void RosLidarDataSubscriber(const livox_msgs::msg::LidarScan::SharedPtr scan_msg);
   void PublishCloud(int data_cnt);
   void PublishLidarData(
