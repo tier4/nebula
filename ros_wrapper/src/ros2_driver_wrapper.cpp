@@ -144,7 +144,7 @@ bool RosDriverWrapper::StreamStart()
   /// Instantiates the corresponding Lidar Driver for the selected sensor.
 
   // Initiates the corresponding hardware interface defined in the sensor for data reception.
-  if (StartInterface() == false) {
+  if (!StartInterface()) {
     return false;
   }
 
@@ -155,10 +155,11 @@ bool RosDriverWrapper::StreamStart()
 #endif  // TODO(Next phase)
 
   bool ret = driver_.StartHwRxInterface();
-  if (ret == false) {
-    RCLCPP_ERROR(this->get_logger(), "StartHwRxInterface: StreamStart failed.");
-  } else {
+  if (ret) {
     RCLCPP_INFO(this->get_logger(), "StartHwRxInterface: StreamStart request.");
+  } else {
+    driver_.StopHwTxInterface();
+    RCLCPP_ERROR(this->get_logger(), "StartHwRxInterface: StreamStart failed.");
   }
 
   return ret;
@@ -173,12 +174,12 @@ void RosDriverWrapper::MainThread()
   GetParameter();
 
   // 1. Check Configuration.
-  if (CheckConfiguration(sensor_config_ex_, cloud_configuration_) == false) {
+  if (!CheckConfiguration(sensor_config_ex_, cloud_configuration_)) {
   }
   // It ensures the requested configuration applied for the selected sensor.
-  else if (driver_.SetConfiguration(sensor_config_ex_.sensor_config) == false) {
+  else if (!driver_.SetConfiguration(sensor_config_ex_.sensor_config)) {
     RCLCPP_ERROR(this->get_logger(), "SetSensorConfiguration Error !");
-  } else if (driver_.SetConfiguration(cloud_configuration_) == false) {
+  } else if (!driver_.SetConfiguration(cloud_configuration_)) {
     RCLCPP_ERROR(this->get_logger(), "SetCloudConfiguration Error !");
   }
   // 6. LaunchRosHwRxInterface (a nodelet in ROS1). It launches the RosHwRxInterface that will
@@ -189,7 +190,7 @@ void RosDriverWrapper::MainThread()
     running = StreamStart();
   }
 
-  if (running == false) {
+  if (!running) {
     rclcpp::shutdown();
   } else {
     std::future_status status;

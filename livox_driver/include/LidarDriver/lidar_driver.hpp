@@ -1,238 +1,22 @@
 #ifndef LIDARDRIVER_LIVOX_LIDARDRIVER_HPP_
 #define LIDARDRIVER_LIVOX_LIDARDRIVER_HPP_
 
-
-#include <condition_variable>
 #include <functional>
 #include <mutex>
 #include <thread>
 
 #include "HwInterface/udp_socket.hpp"
+#include "LidarDriver/livox_command.hpp"
 #include "LidarDriver/livox_common.hpp"
 #include "third_party/FastCRC/FastCRC.h"
 
 namespace lidar_driver
 {
-const uint16_t kCommandPort = 65000;
-const uint16_t kCrcSeed16 = 0x4c49;
-const uint32_t kCrcSeed32 = 0x564f580a;
-const uint32_t kSdkPacketCrcSize = 4;
-const uint32_t kSdkPacketPreambleCrcSize = 2;
-const uint32_t kMaxPointPerEthPacket = 100;
-
-enum class DriverStatus {
-  kRunning = 0,
-  kTerminate,
-};
-
-enum class LidarDriverStatus {
-  kDisconnect = 0,
-  kConnect,
-  kStreaming,
-};
-
-enum class LidarCommandType {
-  kLidarCommandHandshake = 0,
-  kLidarCommandStartStreaming,
-  kLidarCommandStopStreaming,
-  kLidarCommandHeartbeat,
-};
-
-enum class CommandResult { kAck = 0, kNack, kTimeout, kError, kUnknownPacket };
-
-/**  Enum that represents the command id. */
-enum class GeneralCommandID : uint8_t {
-  kBroadcast = 0,                 // General command set, broadcast command.
-  kHandshake = 1,                 // General command set, query the information of device.
-  kDeviceInfo = 2,                // General command set, query the information of device.
-  kHeartbeat = 3,                 // General command set, heartbeat command.
-  kControlSample = 4,             // General command set, enable or disable the sampling.
-  kCoordinateSystem = 5,          // General command set, change the coordinate of point cloud data.
-  kDisconnect = 6,                // General command set, disconnect the device.
-  kPushAbnormalState = 7,         // General command set, a message command from a connected device
-  kConfigureStaticDynamicIp = 8,  // General command set, set the IP of the a device.
-  kGetDeviceIpInformation = 9,    // General command set, get the IP of the a device.
-  kRebootDevice = 0x0a,           // General command set, reboot a device.
-  kSetDeviceParam = 0x0b,         // Set device's parameters.
-  kGetDeviceParam = 0x0c,         // Get device's parameters.
-  kResetDeviceParam = 0x0d,       // Reset device's all parameters.
-  kCommandCount                   // Don't add command id after kCommandCount.
-};
-
-#pragma pack(1)
-struct CommandHeader
-{
-  uint8_t sof;
-  uint8_t version;
-  uint16_t length;
-  uint8_t cmd_type;
-  uint16_t seq_num;
-  uint16_t crc16;
-};
-#pragma pack()
-
-/** Point cloud packet. */
-#pragma pack(1)
-struct LivoxEthPacket
-{
-  uint8_t version;        /**< Packet protocol version. */
-  uint8_t slot;           /**< Slot number used for connecting LiDAR. */
-  uint8_t id;             /**< LiDAR id. */
-  uint8_t rsvd;           /**< Reserved. */
-  uint32_t err_code;      /**< Device error status indicator information. */
-  uint8_t timestamp_type; /**< Timestamp type. */
-  /** Point cloud coordinate format, refer to \ref PointDataType . */
-  uint8_t data_type;
-  uint8_t timestamp[8]; /**< Nanosecond or UTC format timestamp. */
-  uint8_t data[1];      /**< Point cloud data. */
-};
-#pragma pack()
-
-/** Cartesian coordinate format. */
-#pragma pack(1)
-struct LivoxRawPoint
-{
-  int32_t x;            /**< X axis, Unit:mm */
-  int32_t y;            /**< Y axis, Unit:mm */
-  int32_t z;            /**< Z axis, Unit:mm */
-  uint8_t reflectivity; /**< Reflectivity */
-};
-#pragma pack()
-
-/** Standard point cloud format */
-#pragma pack(1)
-struct LivoxPoint
-{
-  float x;              /**< X axis, Unit:m */
-  float y;              /**< Y axis, Unit:m */
-  float z;              /**< Z axis, Unit:m */
-  uint8_t reflectivity; /**< Reflectivity */
-  uint8_t tag;
-};
-#pragma pack()
-
-#pragma pack(1)
-struct CommandHandshake
-{
-  uint8_t cmd_set;
-  GeneralCommandID cmd_id;
-  uint32_t host_ip;
-  uint16_t data_port;
-  uint16_t command_port;
-  uint16_t imu_port;
-  uint32_t crc32;
-};
-#pragma pack()
-
-#pragma pack(1)
-struct CommandHeartbeat
-{
-  uint8_t cmd_set;
-  GeneralCommandID cmd_id;
-  uint32_t crc32;
-};
-#pragma pack()
-
-#pragma pack(1)
-struct CommandSampling
-{
-  uint8_t cmd_set;
-  GeneralCommandID cmd_id;
-  uint8_t sample_ctrl;
-  uint32_t crc32;
-};
-#pragma pack()
-
-#pragma pack(1)
-struct CommandAll
-{
-  CommandHeader header;
-  union {
-    CommandHandshake hand_shake;
-    CommandHeartbeat heart_beat;
-    CommandSampling sampling;
-  } data;
-};
-#pragma pack()
-
-#pragma pack(1)
-struct CommandAck
-{
-  CommandHeader header;
-  uint8_t cmd_set;
-  GeneralCommandID cmd_id;
-  uint8_t result;
-  uint32_t crc32;
-};
-#pragma pack()
-
-class Semaphore
-{
-public:
-  explicit Semaphore(int count = 0) : count_(count) {}
-
-  void Signal()
-  {
-    std::unique_lock<std::mutex> lock(mutex_);
-    ++count_;
-    cv_.notify_one();
-  }
-
-  void Wait()
-  {
-    std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait(lock, [=] { return count_ > 0; });
-    --count_;
-  }
-
-  int GetCount() { return count_; }
-
-private:
-  std::mutex mutex_;
-  std::condition_variable cv_;
-  volatile int count_;
-};
-
-using EulerAngle = float[3];        /**< Roll, Pitch, Yaw, unit:radian. */
-using TranslationVector = float[3]; /**< x, y, z translation, unit: m. */
-using RotationMatrix = float[3][3];
-
-#pragma pack(1)
-struct ExtrinsicParameter
-{
-  EulerAngle euler;
-  TranslationVector trans;
-  RotationMatrix rotation;
-  bool enable;
-};
-#pragma pack()
-
 class LidarDriver
 {
 public:
-  std::unique_ptr<livox_driver::LivoxPublishData> temp_publish_data_;
-  std::unique_ptr<livox_driver::LivoxPublishData> publish_data_;
-  livox_driver::LivoxSensorConfiguration lidarconfig_;
-
-private:
-  volatile DriverStatus driverstatus_;
-  volatile LidarDriverStatus lidarstatus_;
-
-  HwInterface::UdpSocket commandsock_;
-  HwInterface::UdpSocket rx_datasock_;
-  HwInterface::UdpSocket rx_imusock_;
-
-  std::shared_ptr<std::thread> thread_rxdata_;
-  std::shared_ptr<std::thread> thread_rximu_;
-  std::shared_ptr<std::thread> thread_rxcommand_;
-  std::shared_ptr<std::thread> thread_txheartbeat_;
-
-  FastCRC16 crc16_;
-  FastCRC32 crc32_;
-
-public:
   LidarDriver();
-  ~LidarDriver();
+  virtual ~LidarDriver();
 
   bool SetConfiguration(const livox_driver::LivoxSensorConfiguration & param);
   bool SetConfiguration(const livox_driver::LivoxCloudConfiguration & param)
@@ -248,8 +32,8 @@ public:
     return true;
   }
 
-  bool SetCalibration();
-  bool GetCalibration();
+  bool SetCalibration() { return true; };
+  bool GetCalibration() { return true; };
 
   bool StartHwRxInterface();
   void StopHwRxInterface();
@@ -259,8 +43,6 @@ public:
 
   int ParsePacket(livox_driver::LivoxLidarPacket & packet);
   std::unique_ptr<livox_driver::LivoxPublishData> GenerateCloud();
-
-  bool Initialize();
 
   using PublishLidarDataCallback = std::function<void(
     const std::vector<uint8_t> & buff, int pkt_len, uint64_t timestamp, uint32_t point_num)>;
@@ -275,31 +57,62 @@ public:
     publish_imu_packet_cb_ = func;
   }
 
-private:
-  bool LivoxHwRxInterfaceData();
-  bool LivoxHwRxInterfaceCommand();
-  bool LivoxHwRxInterfaceImu();
-  bool LivoxHwTxInterfaceHeartbeat();
+private:  // Resource, Configuration
+  HwInterface::UdpSocket commandsock_;
+  HwInterface::UdpSocket rx_datasock_;
+  HwInterface::UdpSocket rx_imusock_;
 
-  bool SendCommand(LidarCommandType command);
-  CommandHandshake MakeCommandHandshake();
-  CommandSampling MakeCommandStartStream();
-  CommandSampling MakeCommandStopStream();
-  CommandHeartbeat MakeCommandHeartbeat();
+  std::shared_ptr<std::thread> thread_txheartbeat_;
+  std::shared_ptr<std::thread> thread_rxcommand_;
+  std::shared_ptr<std::thread> thread_rxdata_;
+  std::shared_ptr<std::thread> thread_rximu_;
+
+  void LivoxHwTxInterfaceHeartbeat();
+  void LivoxHwRxInterfaceCommand();
+  void LivoxHwRxInterfaceData();
+  void LivoxHwRxInterfaceImu();
+
+  livox_driver::LivoxSensorConfiguration lidarconfig_;
+  livox_driver::LivoxCloudConfiguration cloud_config_;
 
   bool UdpSocketOpen(
     HwInterface::UdpSocket & sock, const std::string & sensor_ip, uint16_t sensor_port,
     uint16_t my_port);
   void CloseAllUdpSocket();
-  bool CheckRecvData(const std::vector<uint8_t> & buff);
 
-  Semaphore semaphore_;
-  std::mutex mtx_;
-  std::vector<uint8_t> MakeSendCommand(LidarCommandType command);
-  CommandResult SendAckWait(const std::vector<uint8_t> & snd_buff, GeneralCommandID cmd_id);
+private:  // Status, Command
+  enum class DriverStatus {
+    kRunning = 0,
+    kTerminate,
+  };
+  volatile DriverStatus driverstatus_{DriverStatus::kTerminate};
+
+  enum class LidarDriverStatus {
+    kDisconnect = 0,
+    kConnect,
+    kStreaming,
+  };
+  volatile LidarDriverStatus lidarstatus_{LidarDriverStatus::kDisconnect};
+
+  std::vector<uint8_t> MakeSendCommand(LidarCommandType cmd_type);
+  CommandHandshake MakeCommandHandshake();
+  CommandSampling MakeCommandStartStream();
+  CommandSampling MakeCommandStopStream();
+  CommandHeartbeat MakeCommandHeartbeat();
+  CommandResult SendAckWait(std::vector<uint8_t> & snd_buff, GeneralCommandID cmd_id);
   GeneralCommandID GetCommandId(LidarCommandType cmd_type);
 
-private:
+  FastCRC16 crc16_{kCrcSeed16};
+  FastCRC32 crc32_{kCrcSeed32};
+  void SetCrc16Crc32(std::vector<uint8_t> & buff, GeneralCommandID cmd_id);
+  bool CheckRecvData(const std::vector<uint8_t> & buff);
+
+  CountingSemaphore semaphore_;
+  std::mutex mtx_;
+
+  uint16_t snd_seq_num_;
+
+private:  // Receive
   enum DeviceType {
     kHub = 0,          /**< Livox Hub. */
     kLidarMid40 = 1,   /**< Mid-40. */
@@ -329,58 +142,26 @@ private:
     LidarPacketStatistic statistic_info_imu;
   } lidars_;
 
-  /** 8bytes stamp to uint64_t stamp */
-  union LdsStamp {
-    struct
-    {
-      uint32_t low;
-      uint32_t high;
-    } stamp_word;
-    std::array<uint8_t, 8> stamp_bytes;
-    int64_t stamp;
-  };
-
-  const size_t kMaxBufferSize = 2048;
-  uint32_t buffer_time_ms_;
-  uint32_t publish_period_ns_;
-  uint32_t accumulate_count_;
-  uint64_t last_timestamp_;
-  volatile int stream_start_ack_;
   PublishLidarDataCallback publish_lidar_data_cb_;
   PublishImuPacketCallback publish_imu_packet_cb_;
-  livox_driver::LivoxCloudConfiguration cloud_config_;
-
-  ExtrinsicParameter extrinsic_;
 
   void DataRecvInit();
-  uint64_t RawLdsStampToNs(LdsStamp & timestamp, uint8_t timestamp_type);
   int64_t RecvTimeBase(
     LidarPacketStatistic & packet_statistic, uint8_t timestamp_type, int64_t cur_timestamp_stamp);
   void StorageRawPacket(const std::vector<uint8_t> & buff, int rcv_len);
   void UpdateLidarInfoByEthPacket(uint8_t data_type);
 
-  void EulerAnglesToRotationMatrix(EulerAngle euler, RotationMatrix matrix);
-  uint8_t * LivoxExtendRawPointToPxyzrtl(
-    uint8_t * point_buf, LivoxEthPacket * eth_packet, ExtrinsicParameter & extrinsic,
-    uint32_t line_num);
-  void PointExtrisincCompensation(
-    livox_driver::PointXyz * dst_point, const livox_driver::PointXyz & src_point,
-    ExtrinsicParameter & extrinsic);
+private:  // Parse
+  uint32_t buffer_time_ms_;
+  uint32_t publish_period_ns_;
+  uint64_t last_timestamp_;
+  uint32_t accumulate_count_;
 
-  inline void RawPointConvert(
-    livox_driver::LivoxPointXyzrtl & dst_point, const LivoxRawPoint & raw_point)
-  {
-    dst_point.x = raw_point.x / 1000.0f;
-    dst_point.y = raw_point.y / 1000.0f;
-    dst_point.z = raw_point.z / 1000.0f;
-    dst_point.reflectivity = static_cast<float>(raw_point.reflectivity);
-  }
-  inline bool IsTripleFloatNoneZero(float x, float y, float z)
-  {
-    return ((x != 0.0f) || (y != 0.0f) || (z != 0.0f));
-  }
+  std::unique_ptr<livox_driver::LivoxPublishData> temp_publish_data_;
+  std::unique_ptr<livox_driver::LivoxPublishData> publish_data_;
 
-  inline bool IsTripleIntNoneZero(int32_t x, int32_t y, int32_t z) { return (x | y | z); }
+  void LivoxExtendRawPointToPxyzrtl(
+    uint8_t * point_buf, const std::vector<uint8_t> & raw_packet, uint32_t line_num);
 
 #ifdef UTEST
 public:

@@ -51,33 +51,14 @@ struct LivoxImuPoint
 #pragma pack()
 
 #pragma pack(1)
-struct LivoxPointXyzr
-{
-  float x;            /**< X axis, Unit:m */
-  float y;            /**< Y axis, Unit:m */
-  float z;            /**< Z axis, Unit:m */
-  float reflectivity; /**< Reflectivity   */
-};
-#pragma pack()
-
-#pragma pack(1)
 struct LivoxPointXyzrtl
-{
-  float x;            /**< X axis, Unit:m */
-  float y;            /**< Y axis, Unit:m */
-  float z;            /**< Z axis, Unit:m */
-  float reflectivity; /**< Reflectivity   */
-  uint8_t tag;        /**< Livox point tag   */
-  uint8_t line;       /**< Laser line id     */
-};
-#pragma pack()
-
-#pragma pack(1)
-struct PointXyz
 {
   float x; /**< X axis, Unit:m */
   float y; /**< Y axis, Unit:m */
   float z; /**< Z axis, Unit:m */
+  float reflectivity; /**< Reflectivity   */
+  uint8_t tag;  /**< Livox point tag   */
+  uint8_t line; /**< Laser line id     */
 };
 #pragma pack()
 
@@ -94,7 +75,6 @@ class LivoxPublishData
 public:
   uint64_t time;
   uint32_t num;
-
   std::vector<uint8_t> data;
 };
 

@@ -60,8 +60,8 @@ bool RosDriverWrapper::CheckConfiguration(
 {
   bool ret = false;
 
-  if (CheckSensorConfiguration(sensor_config_ex) == false) {
-  } else if (CheckOutputCloudConfiguration(sensor_config_ex, cloud_config) == false) {
+  if (!CheckSensorConfiguration(sensor_config_ex)) {
+  } else if (!CheckOutputCloudConfiguration(sensor_config_ex, cloud_config)) {
   } else {
     ret = true;
   }

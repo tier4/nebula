@@ -1,10 +1,43 @@
 #ifndef LIDARDRIVER_LIVOX_DATA_RECV_HPP_
 #define LIDARDRIVER_LIVOX_DATA_RECV_HPP_
 
+#include <array>
 #include "LidarDriver/livox_common.hpp"
 
 namespace lidar_driver
 {
+const uint16_t kCommandPort = 65000;
+const uint32_t kMaxPointPerEthPacket = 100;
+const size_t kMaxBufferSize = 2048;
+
+/** Point cloud packet. */
+#pragma pack(1)
+struct LivoxEthPacket
+{
+  uint8_t version;        /**< Packet protocol version. */
+  uint8_t slot;           /**< Slot number used for connecting LiDAR. */
+  uint8_t id;             /**< LiDAR id. */
+  uint8_t rsvd;           /**< Reserved. */
+  uint32_t err_code;      /**< Device error status indicator information. */
+  uint8_t timestamp_type; /**< Timestamp type. */
+  /** Point cloud coordinate format, refer to \ref PointDataType . */
+  uint8_t data_type;
+  uint8_t timestamp[8]; /**< Nanosecond or UTC format timestamp. */
+  uint8_t data[1];      /**< Point cloud data. */
+};
+#pragma pack()
+
+/** Cartesian coordinate format. */
+#pragma pack(1)
+struct LivoxRawPoint
+{
+  int32_t x;            /**< X axis, Unit:mm */
+  int32_t y;            /**< Y axis, Unit:mm */
+  int32_t z;            /**< Z axis, Unit:mm */
+  uint8_t reflectivity; /**< Reflectivity */
+};
+#pragma pack()
+
 /** Spherical coordinate format. */
 #pragma pack(1)
 struct LivoxSpherPoint
@@ -13,6 +46,18 @@ struct LivoxSpherPoint
   uint16_t theta;       /**< Zenith angle[0, 18000], Unit: 0.01 degree */
   uint16_t phi;         /**< Azimuth[0, 36000], Unit: 0.01 degree */
   uint8_t reflectivity; /**< Reflectivity */
+};
+#pragma pack()
+
+/** Standard point cloud format */
+#pragma pack(1)
+struct LivoxPoint
+{
+  float x;              /**< X axis, Unit:m */
+  float y;              /**< Y axis, Unit:m */
+  float z;              /**< Z axis, Unit:m */
+  uint8_t reflectivity; /**< Reflectivity */
+  uint8_t tag;
 };
 #pragma pack()
 
@@ -112,19 +157,6 @@ struct LivoxTripleExtendSpherPoint
 };
 #pragma pack()
 
-/** IMU data format. */
-#pragma pack(1)
-struct LivoxImuPoint
-{
-  float gyro_x; /**< Gyroscope X axis, Unit:rad/s */
-  float gyro_y; /**< Gyroscope Y axis, Unit:rad/s */
-  float gyro_z; /**< Gyroscope Z axis, Unit:rad/s */
-  float acc_x;  /**< Accelerometer X axis, Unit:g */
-  float acc_y;  /**< Accelerometer Y axis, Unit:g */
-  float acc_z;  /**< Accelerometer Z axis, Unit:g */
-};
-#pragma pack()
-
 /** Point data type. */
 enum PointDataType {
   kCartesian,             /**< Cartesian coordinate point cloud. */
@@ -184,6 +216,7 @@ struct ProductTypePointInfoPair
   {240000, 4167, 6},  {240000, 4167, 6},
 };
 
+/// @brief number of points every packet
 /// @param product_type : device type
 /// @param data_type : receive data type
 /// @return packet interval
@@ -193,6 +226,7 @@ inline int32_t GetPacketInterval(uint32_t product_type, uint8_t data_type)
          g_data_type_info_pair_table[data_type].points_per_packet;
 }
 
+/// @brief number of points per second / points per packet
 /// @param product_type : device type
 /// @param data_type : receive data type
 /// @return points per second / points per packet
@@ -202,21 +236,34 @@ inline int32_t GetPacketNumPerSec(uint32_t product_type, uint8_t data_type)
          g_data_type_info_pair_table[data_type].points_per_packet;
 }
 
+/// @brief length of raw ethenet packet unit:bytes
+/// @param data_type : receive data type
+/// @return packet length
 inline int32_t GetEthPacketLen(uint8_t data_type)
 {
   return g_data_type_info_pair_table[data_type].packet_length;
 }
 
+/// @brief length of raw ethenet packet unit:bytes
+/// @param data_type : receive data type
+/// @return points per packet
 inline int32_t GetPointsPerPacket(uint8_t data_type)
 {
   return g_data_type_info_pair_table[data_type].points_per_packet;
 }
 
+/// @brief length of real packet
+/// @param data_type : receive data type
+/// @param point_num : points count
+/// @return real packet length
 inline int32_t GetRealPacketLen(uint8_t data_type, int point_num)
 {
   return (g_data_type_info_pair_table[data_type].raw_point_length * point_num) + kPrefixDataSize;
 }
 
+/// @brief echo num per point
+/// @param data_type : receive data type
+/// @return echo num
 inline uint32_t GetEchoNumPerPoint(uint8_t data_type)
 {
   return g_data_type_info_pair_table[data_type].echo_num;
@@ -239,6 +286,18 @@ inline int RecvDataCnt(uint8_t data_type, int rcv_len)
   }
   return cnt;
 }
+
+/** Lidar data source Stamp 8bytes stamp to uint64_t stamp */
+union LdsStamp {
+  struct
+  {
+    uint32_t low;
+    uint32_t high;
+  } stamp_word;
+  std::array<uint8_t, 8> stamp_bytes;
+  int64_t stamp;
+};
+uint64_t RawLdsStampToNs(LdsStamp & timestamp, uint8_t timestamp_type);
 
 }  // namespace lidar_driver
 #endif  // LIDARDRIVER_LIVOX_DATA_RECV_HPP_
