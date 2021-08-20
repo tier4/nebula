@@ -7,7 +7,16 @@
 namespace lidar_driver
 {
 /// @brief receive before initialize.
-void LidarDriver::DataRecvInit() { lidars_.raw_data_type = 0xFF; }
+void LidarDriver::DataRecvInit()
+{
+  lidar_device_.raw_data_type = 0xFF;
+  lidar_device_.data_is_published = false;
+  if (temp_publish_data_.get()) {
+    temp_publish_data_->num = 0;
+  }
+  accumulate_count_ = 0;
+  skip_start_packet_ = false;
+}
 
 /// @brief Raw data timestamp to nano sec.
 /// @param timestamp : Raw data timestamp
@@ -81,12 +90,12 @@ int64_t LidarDriver::RecvTimeBase(
 /// @param data_type : raw data type
 void LidarDriver::UpdateLidarInfoByEthPacket(uint8_t data_type)
 {
-  if (lidars_.raw_data_type != data_type) {
-    lidars_.raw_data_type = data_type;
-    lidars_.packet_interval = GetPacketInterval(lidars_.device_info_type, data_type);
-    lidars_.packet_interval_max = lidars_.packet_interval * 1.8f;
-    lidars_.onetime_publish_packets =
-      GetPacketNumPerSec(lidars_.device_info_type, data_type) * buffer_time_ms_ / 1000;
+  if (lidar_device_.raw_data_type != data_type) {
+    lidar_device_.raw_data_type = data_type;
+    lidar_device_.packet_interval = GetPacketInterval(lidar_device_.device_info_type, data_type);
+    lidar_device_.packet_interval_max = lidar_device_.packet_interval * 1.8f;
+    lidar_device_.onetime_publish_packets =
+      GetPacketNumPerSec(lidar_device_.device_info_type, data_type) * buffer_time_ms_ / 1000;
   }
 }
 
@@ -124,7 +133,8 @@ void LidarDriver::StorageRawPacket(const std::vector<uint8_t> & buff, int rcv_le
   if (eth_packet->data_type == PointDataType::kImu) {
     if (publish_imu_packet_cb_) {
       if (timestamp_type == TimestampType::kPps) {
-        time_base = RecvTimeBase(lidars_.statistic_info_imu, timestamp_type, cur_timestamp.stamp);
+        time_base =
+          RecvTimeBase(lidar_device_.statistic_info_imu, timestamp_type, cur_timestamp.stamp);
         time_stamp += time_base;
       }
       const livox_driver::LivoxImuPoint * ptr =
@@ -134,7 +144,8 @@ void LidarDriver::StorageRawPacket(const std::vector<uint8_t> & buff, int rcv_le
   } else { /* if (PointDataType::kImu != eth_packet->data_type) */
     if (publish_lidar_data_cb_) {
       if (timestamp_type == TimestampType::kPps) {
-        time_base = RecvTimeBase(lidars_.statistic_info_data, timestamp_type, cur_timestamp.stamp);
+        time_base =
+          RecvTimeBase(lidar_device_.statistic_info_data, timestamp_type, cur_timestamp.stamp);
         time_stamp += time_base;
       }
       UpdateLidarInfoByEthPacket(eth_packet->data_type);
@@ -148,8 +159,6 @@ void LidarDriver::StorageRawPacket(const std::vector<uint8_t> & buff, int rcv_le
 /// @brief data port receive
 void LidarDriver::LivoxHwRxInterfaceData()
 {
-  DataRecvInit();
-
   while (driverstatus_ == DriverStatus::kRunning) {
     std::vector<uint8_t> buff(kMaxBufferSize);
     int rcv_len = rx_datasock_.Recv(buff);
@@ -182,12 +191,51 @@ void LidarDriver::LivoxHwRxInterfaceImu()
     } else { /* nothing */
     }
   }
-
   //printf("Thread end %s\n", __func__);
   return;
 }
 
+/// @brief set start timestamp to last_timestamp_
+/// @param timestamp : start timestamp
+/// @retval true: success
+/// @retval false: skip start packet
+bool LidarDriver::SetLastTimeStamp(uint64_t timestamp)
+{
+  uint32_t remaining_time = timestamp % publish_period_ns_;
+  uint32_t diff_time = publish_period_ns_ - remaining_time;
+
+  if (skip_start_packet_) {
+    if (last_remaning_time_ > remaining_time) {
+      skip_start_packet_ = false;
+    } else if (diff_time <= lidar_device_.packet_interval) {
+      skip_start_packet_ = false;
+    } else {
+      last_remaning_time_ = remaining_time;
+      return false;
+    }
+  }
+
+  /** Get start time, down to the period boundary */
+  if (diff_time > (publish_period_ns_ / 4)) {
+    //printf("GetPublishStartTime : 0 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
+    last_timestamp_ = timestamp - remaining_time;
+  } else if (diff_time <= lidar_device_.packet_interval_max) {
+    //printf("GetPublishStartTime : 1 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
+    last_timestamp_ = timestamp;
+  } else {
+    //printf("GetPublishStartTime : 2 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
+    /* the remaning packets in queue maybe not enough after skip */
+    last_remaning_time_ = remaining_time;
+    skip_start_packet_ = true;
+    return false;
+  }
+
+  return true;
+}
+
 /// @brief packet data parse
+/// @retval 0: accumulating
+/// @retval >0: Accumulation completed data count
 int LidarDriver::ParsePacket(livox_driver::LivoxLidarPacket & packet)
 {
   //printf("parse packet packet.time %ld  temp.time %ld \n", packet.time, temp_publish_data_->time);
@@ -200,18 +248,7 @@ int LidarDriver::ParsePacket(livox_driver::LivoxLidarPacket & packet)
   }
 
   if (temp_publish_data_->num == 0) {
-    uint32_t remaining_time = timestamp % publish_period_ns_;
-    uint32_t diff_time = publish_period_ns_ - remaining_time;
-    /** Get start time, down to the period boundary */
-    if (diff_time > (publish_period_ns_ / 4)) {
-      //printf("GetPublishStartTime : 0 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
-      last_timestamp_ = timestamp - remaining_time;
-    } else if (diff_time <= lidars_.packet_interval_max) {
-      //printf("GetPublishStartTime : 1 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
-      last_timestamp_ = timestamp;
-    } else {
-      //printf("GetPublishStartTime : 2 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
-      /* the remaning packets in queue maybe not enough after skip */
+    if (!SetLastTimeStamp(timestamp)) {
       return 0;
     }
   }
@@ -219,10 +256,10 @@ int LidarDriver::ParsePacket(livox_driver::LivoxLidarPacket & packet)
   do {
     int64_t time_gap = timestamp - last_timestamp_;
     // if timeout -> packet publish
-    if (time_gap > lidars_.packet_interval_max) {
+    if (time_gap > lidar_device_.packet_interval_max && lidar_device_.data_is_published) {
       //printf( "NG:time_gap=%ld timestamp=%ld last_timestamp=%ld\n", time_gap, timestamp, last_timestamp_ );
       packet.data.clear();
-      last_timestamp_ += lidars_.packet_interval;
+      last_timestamp_ += lidar_device_.packet_interval;
       timegap_over = true;
     } else {
       //printf( "OK:time_gap=%ld timestamp=%ld last_timestamp=%ld\n", time_gap, timestamp, last_timestamp_ );
@@ -234,25 +271,27 @@ int LidarDriver::ParsePacket(livox_driver::LivoxLidarPacket & packet)
       /* new timestamp */
       temp_publish_data_->time = timestamp;
       temp_publish_data_->data.resize(
-        lidars_.onetime_publish_packets * kMaxPointPerEthPacket *
+        lidar_device_.onetime_publish_packets * kMaxPointPerEthPacket *
         sizeof(livox_driver::LivoxPointXyzrtl));
     }
 
     uint8_t * point_base =
       &temp_publish_data_->data[temp_publish_data_->num * sizeof(livox_driver::LivoxPointXyzrtl)];
 
-    LivoxExtendRawPointToPxyzrtl(point_base, packet.data, 1);
+    LivoxExtendRawPointToPxyzrtl(point_base, packet.data, lidar_device_.line_num);
     temp_publish_data_->num += packet.data_cnt;
 
     accumulate_count_++;
 
-    if (accumulate_count_ >= lidars_.onetime_publish_packets) {
-      uint32_t echo_num = GetEchoNumPerPoint(lidars_.raw_data_type);
+    if (accumulate_count_ >= lidar_device_.onetime_publish_packets) {
+      uint32_t echo_num = GetEchoNumPerPoint(lidar_device_.raw_data_type);
       temp_publish_data_->num = temp_publish_data_->num * echo_num;
       publish_data_ = std::move(temp_publish_data_);
       iret = publish_data_->num;
+      lidar_device_.data_is_published = true;
 
       accumulate_count_ = 0;
+      skip_start_packet_ = false;
       break;
     }
   } while (timegap_over);

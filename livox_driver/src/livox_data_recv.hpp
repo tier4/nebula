@@ -244,6 +244,14 @@ inline int32_t GetEthPacketLen(uint8_t data_type)
   return g_data_type_info_pair_table[data_type].packet_length;
 }
 
+/// @brief laser line number
+/// @param product_type : product type
+/// @return laser line number
+inline uint32_t GetLaserLineNumber(uint32_t product_type)
+{
+  return g_product_type_info_pair_table[product_type].line_num;
+}
+
 /// @brief length of raw ethenet packet unit:bytes
 /// @param data_type : receive data type
 /// @return points per packet
