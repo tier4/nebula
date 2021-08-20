@@ -138,9 +138,11 @@ private:  // Receive
     volatile uint32_t packet_interval_max; /**< If more than it, have packet loss */
     volatile uint32_t onetime_publish_packets;
     DeviceType device_info_type;
+    uint32_t line_num;
     LidarPacketStatistic statistic_info_data;
     LidarPacketStatistic statistic_info_imu;
-  } lidars_;
+    bool data_is_published;
+  } lidar_device_;
 
   PublishLidarDataCallback publish_lidar_data_cb_;
   PublishImuPacketCallback publish_imu_packet_cb_;
@@ -156,10 +158,13 @@ private:  // Parse
   uint32_t publish_period_ns_;
   uint64_t last_timestamp_;
   uint32_t accumulate_count_;
+  bool skip_start_packet_;
+  uint32_t last_remaning_time_;
 
   std::unique_ptr<livox_driver::LivoxPublishData> temp_publish_data_;
   std::unique_ptr<livox_driver::LivoxPublishData> publish_data_;
 
+  bool SetLastTimeStamp(uint64_t timestamp);
   void LivoxExtendRawPointToPxyzrtl(
     uint8_t * point_buf, const std::vector<uint8_t> & raw_packet, uint32_t line_num);
 

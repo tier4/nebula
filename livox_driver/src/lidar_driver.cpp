@@ -32,7 +32,8 @@ bool LidarDriver::SetConfiguration(const livox_driver::LivoxSensorConfiguration 
   if (is_success) {
     switch (param.sensor_model) {
       case livox_driver::LivoxSensorModel::HORIZON:
-        lidars_.device_info_type = DeviceType::kLidarHorizon;
+        lidar_device_.device_info_type = DeviceType::kLidarHorizon;
+        lidar_device_.line_num = GetLaserLineNumber(lidar_device_.device_info_type);
         break;
       default:
         is_success = false;
@@ -277,7 +278,7 @@ CommandResult LidarDriver::StartHwTxInterface()
 /// @brief Tx socket close and stop send thread
 void LidarDriver::StopHwTxInterface()
 {
-  lidarstatus_ = LidarDriverStatus::kDisconnect;
+  driverstatus_ = DriverStatus::kTerminate;
   thread_txheartbeat_->join();
   commandsock_.Close();
 }
@@ -353,6 +354,7 @@ void LidarDriver::LivoxHwRxInterfaceCommand()
       if (lidarstatus_ == LidarDriverStatus::kConnect) {
         lidarstatus_ = LidarDriverStatus::kStreaming;
       }
+      DataRecvInit();
 
       //printf("StartStreaming Loop start\n" );
       CommandResult result;
