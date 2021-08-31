@@ -13,7 +13,7 @@ enum class LidarCommandType {
   kHandshake = 0,
   kStartStreaming,
   kStopStreaming,
-  kHeartbeat,
+  kHeartbeat
 };
 
 enum class CommandResult { kAck = 0, kNack, kTimeout, kError, kUnknownPacket };

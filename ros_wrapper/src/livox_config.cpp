@@ -142,10 +142,10 @@ bool RosDriverWrapper::CheckLivoxSensorConfiguration(SensorConfigEx & ex)
     err_str = "frequency_ms " + std::to_string(ex.sensor_config.frequency_ms);
   }
 #if 0  // ToDo: echo_mode and coordinate_mode must not be implemented in the first beta version of the driver.
-  else if( ex.sensor_config.echo_mode == livox_driver::LivoxEchoMode::UNKNOWN ) {
+  else if( ex.sensor_config.echo_mode == livox_driver::LivoxEchoMode::kUnknown ) {
     err_str = "echo_mode '" + ex.sensor_config.echo_mode_str + "'";
   }
-  else if( ex.sensor_config.coordinate_model == livox_driver::LivoxCoordinateMode::UNKNOWN ) {
+  else if( ex.sensor_config.coordinate_model == livox_driver::LivoxCoordinateMode::kUnknown ) {
     err_str = "coordinate_mode '" + ex.sensor_config.coordinate_mode_str + "'";
   }
 #endif  // ToDo: echo_mode and coordinate_mode must not be implemented in the first beta version of the driver.
@@ -176,10 +176,10 @@ bool RosDriverWrapper::CheckLivoxCloudConfiguration(
     err_str = "sensor_model '" + ex.sensor_model_str + "'";
   }
 #if 0  // ToDo: Point_echo and echo_mode must not be implemented in the first beta version of the driver.
-  else if( cloud_config.echo_mode == livox_driver::LivoxEchoMode::UNKNOWN ) {
+  else if( cloud_config.echo_mode == livox_driver::LivoxEchoMode::kUnknown ) {
     err_str = "echo_mode '" + ex.sensor_config.echo_mode_str + "'";
   }
-  else if( cloud_config.coordinate_model == livox_driver::LivoxCoordinateMode::UNKNOWN ) {
+  else if( cloud_config.coordinate_model == livox_driver::LivoxCoordinateMode::kUnknown ) {
     err_str = "coordinate_mode '" + ex.sensor_config.coordinate_mode_str + "'";
   }
 #endif  // ToDo: Point_echo and echo_mode must not be implemented in the first beta version of the driver.

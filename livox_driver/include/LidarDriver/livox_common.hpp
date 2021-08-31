@@ -1,6 +1,8 @@
 #ifndef LIVOX_DRIVER_LIVOX_COMMON_HPP_
 #define LIVOX_DRIVER_LIVOX_COMMON_HPP_
+#include <bitset>
 #include <string>
+#include <vector>
 
 namespace livox_driver
 {

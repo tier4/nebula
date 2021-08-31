@@ -2,6 +2,7 @@
 #define LIDARDRIVER_LIVOX_LIDARDRIVER_HPP_
 
 #include <functional>
+#include <map>
 #include <mutex>
 #include <thread>
 
@@ -15,6 +16,20 @@ namespace lidar_driver
 class LidarDriver
 {
 public:
+  enum class LidarDriverStatus {
+    kDisconnect = 0,
+    kConnect,
+    kStreaming,
+  };
+  const std::map<LidarDriverStatus, const char *> lidar_driver_status_dict_ = {
+    {LidarDriverStatus::kDisconnect, "Disconnected"},
+    {LidarDriverStatus::kConnect, "Connected"},
+    {LidarDriverStatus::kStreaming, "Streaming"}};
+
+  using PublishLidarDataCallback = std::function<void(
+    const std::vector<uint8_t> & buff, int pkt_len, uint64_t timestamp, uint32_t point_num)>;
+  using PublishImuPacketCallback =
+    std::function<void(const livox_driver::LivoxImuPoint & imu_pkt, uint64_t timestamp)>;
   LidarDriver();
   virtual ~LidarDriver();
 
@@ -44,14 +59,15 @@ public:
   int ParsePacket(livox_driver::LivoxLidarPacket & packet);
   std::unique_ptr<livox_driver::LivoxPublishData> GenerateCloud();
 
-  using PublishLidarDataCallback = std::function<void(
-    const std::vector<uint8_t> & buff, int pkt_len, uint64_t timestamp, uint32_t point_num)>;
+  bool Initialize();
+
+  LidarDriverStatus GetLidarStatus() { return lidarstatus_; }
+
   void SetPublishLidarDataFunc(const PublishLidarDataCallback & func)
   {
     publish_lidar_data_cb_ = func;
   }
-  using PublishImuPacketCallback =
-    std::function<void(const livox_driver::LivoxImuPoint & imu_pkt, uint64_t timestamp)>;
+
   void SetPublishImuPacketFunc(const PublishImuPacketCallback & func)
   {
     publish_imu_packet_cb_ = func;
@@ -85,22 +101,19 @@ private:  // Status, Command
     kRunning = 0,
     kTerminate,
   };
+  const std::map<DriverStatus, const char *> driver_status_dict_ = {
+    {DriverStatus::kRunning, "Running"}, {DriverStatus::kTerminate, "Not Running"}};
   volatile DriverStatus driverstatus_{DriverStatus::kTerminate};
 
-  enum class LidarDriverStatus {
-    kDisconnect = 0,
-    kConnect,
-    kStreaming,
-  };
   volatile LidarDriverStatus lidarstatus_{LidarDriverStatus::kDisconnect};
 
   std::vector<uint8_t> MakeSendCommand(LidarCommandType cmd_type);
   CommandHandshake MakeCommandHandshake();
-  CommandSampling MakeCommandStartStream();
-  CommandSampling MakeCommandStopStream();
-  CommandHeartbeat MakeCommandHeartbeat();
+  static CommandSampling MakeCommandStartStream();
+  static CommandSampling MakeCommandStopStream();
+  static CommandHeartbeat MakeCommandHeartbeat();
   CommandResult SendAckWait(std::vector<uint8_t> & snd_buff, GeneralCommandID cmd_id);
-  GeneralCommandID GetCommandId(LidarCommandType cmd_type);
+  static GeneralCommandID GetCommandId(LidarCommandType cmd_type);
 
   FastCRC16 crc16_{kCrcSeed16};
   FastCRC32 crc32_{kCrcSeed32};
@@ -141,6 +154,8 @@ private:  // Receive
     uint32_t line_num;
     LidarPacketStatistic statistic_info_data;
     LidarPacketStatistic statistic_info_imu;
+    uint32_t lidar_status_code; /**< Stores the lidar device status */
+    bool status_code_ready_{};
     bool data_is_published;
   } lidar_device_;
 
@@ -152,6 +167,11 @@ private:  // Receive
     LidarPacketStatistic & packet_statistic, uint8_t timestamp_type, int64_t cur_timestamp_stamp);
   void StorageRawPacket(const std::vector<uint8_t> & buff, int rcv_len);
   void UpdateLidarInfoByEthPacket(uint8_t data_type);
+  /**
+   * Updates the LivoxStatusCode union (error_status) from Livox Ethernet Packet, and sets the received flag to true.
+   * @param lidar_status_code The 32 bit word received in the packet containing the error status.
+   */
+  void UpdateLidarStatusCode(uint32_t lidar_status_code);
 
 private:  // Parse
   uint32_t buffer_time_ms_;
@@ -168,6 +188,15 @@ private:  // Parse
   void LivoxExtendRawPointToPxyzrtl(
     uint8_t * point_buf, const std::vector<uint8_t> & raw_packet, uint32_t line_num);
 
+public:
+  bool GetLidarStatusCode(uint32_t & out_lidar_status_code) const
+  {
+    if (lidar_device_.status_code_ready_) {
+      out_lidar_status_code = lidar_device_.lidar_status_code;
+      return true;
+    }
+    return false;
+  }
 #ifdef UTEST
 public:
   friend class TestFriend_LivoxDriver;
