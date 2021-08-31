@@ -8,13 +8,13 @@
 
 namespace lidar_driver
 {
-/// @brief constractor
+/// @brief constructor
 LidarDriver::LidarDriver() : driverstatus_(DriverStatus::kRunning) {}
 
-/// @brief destractor
+/// @brief destructor
 LidarDriver::~LidarDriver() { CloseAllUdpSocket(); }
 
-/// @brief set livox configration
+/// @brief set livox configuration
 bool LidarDriver::SetConfiguration(const livox_driver::LivoxSensorConfiguration & param)
 {
   bool is_success = false;
@@ -180,8 +180,6 @@ GeneralCommandID LidarDriver::GetCommandId(LidarCommandType cmd_type)
       cmd_id = GeneralCommandID::kHandshake;
       break;
     case LidarCommandType::kStartStreaming:
-      cmd_id = GeneralCommandID::kControlSample;
-      break;
     case LidarCommandType::kStopStreaming:
       cmd_id = GeneralCommandID::kControlSample;
       break;
@@ -193,7 +191,7 @@ GeneralCommandID LidarDriver::GetCommandId(LidarCommandType cmd_type)
 }
 
 /// @brief Rx socket open and start receive thread
-/// @return true:success, false:faile.
+/// @return true:success, false: failure.
 bool LidarDriver::StartHwRxInterface()
 {
   if (!rx_datasock_.IsOpen() || !rx_imusock_.IsOpen()) {

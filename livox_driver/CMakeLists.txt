@@ -17,6 +17,7 @@ set(FASTCRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/FastCRC)
 ament_auto_add_library(${PROJECT_NAME} SHARED
   ${CMAKE_CURRENT_SOURCE_DIR}/src/lidar_driver.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/livox_data_recv.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/livox_diagnostics.cpp
   ${FASTCRC_DIR}/FastCRCsw.cpp
 )
 

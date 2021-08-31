@@ -149,11 +149,18 @@ void LidarDriver::StorageRawPacket(const std::vector<uint8_t> & buff, int rcv_le
         time_stamp += time_base;
       }
       UpdateLidarInfoByEthPacket(eth_packet->data_type);
+      UpdateLidarStatusCode(eth_packet->err_code);
       publish_lidar_data_cb_(buff, pkt_len, time_stamp, data_cnt);
     }
   }
 
   return;
+}
+
+void LidarDriver::UpdateLidarStatusCode(uint32_t lidar_status_code)
+{
+  lidar_device_.lidar_status_code = lidar_status_code; //update lidar status
+  lidar_device_.status_code_ready_ = true;
 }
 
 /// @brief data port receive
@@ -262,7 +269,7 @@ int LidarDriver::ParsePacket(livox_driver::LivoxLidarPacket & packet)
       last_timestamp_ += lidar_device_.packet_interval;
       timegap_over = true;
     } else {
-      //printf( "OK:time_gap=%ld timestamp=%ld last_timestamp=%ld\n", time_gap, timestamp, last_timestamp_ );
+      //printf( "kOk:time_gap=%ld timestamp=%ld last_timestamp=%ld\n", time_gap, timestamp, last_timestamp_ );
       last_timestamp_ = timestamp;
       timegap_over = false;
     }

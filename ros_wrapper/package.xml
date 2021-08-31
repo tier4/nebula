@@ -19,6 +19,8 @@
   <depend>livox_msgs</depend>
   <depend>livox_driver</depend>
   <depend>hw_interface</depend>
+  <depend>diagnostic_msgs</depend>
+  <depend>diagnostic_updater</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

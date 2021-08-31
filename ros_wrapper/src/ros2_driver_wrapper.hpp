@@ -16,9 +16,11 @@
 #include <livox_msgs/msg/lidar_scan.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
+#include <diagnostic_updater/diagnostic_updater.hpp>
 
 #include "LidarDriver/lidar_driver.hpp"
 #include "LidarDriver/livox_common.hpp"
+#include "LidarDriver/livox_diagnostics.hpp"
 
 // ToDo: livox only
 using SensorConfiguration = livox_driver::LivoxSensorConfiguration;
@@ -45,6 +47,8 @@ public:  // Figure 9.
   void Shutdown();
 
 private:  // Figure 9.
+  using DiagStatus = diagnostic_msgs::msg::DiagnosticStatus;
+
   LidarDriver driver_;
 
   //rclcpp::Node * node_;
@@ -74,6 +78,24 @@ private:                                                                  // pub
   void PublishImuPacket(const livox_driver::LivoxImuPoint & imu_pkt, uint64_t timestamp);
 
   void InitPointcloud2MsgHeader(sensor_msgs::msg::PointCloud2 & cloud);
+
+private://ROS Diagnostics
+  rclcpp::TimerBase::SharedPtr diagnostics_timer_;
+  diagnostic_updater::Updater diagnostics_updater_;
+  livox_driver::diagnostics::LivoxDiagnosticsSensorStatus current_diagnostics_status_{};
+  void InitializeLivoxDiagnostics();
+  void OnLivoxDiagnosticsTimer();
+  void LivoxCheckConnection(diagnostic_updater::DiagnosticStatusWrapper & stat);
+  void LivoxCheckTemperature(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void LivoxCheckVoltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void LivoxCheckMotor(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void LivoxCheckWindowDirt(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void LivoxCheckFirmware(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void LivoxCheckTimeSync(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void LivoxCheckServiceLife(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void LivoxCheckFan(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void LivoxCheckPtp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void LivoxCheckPps(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
 private:  // Configuration
   // configuration parameters
