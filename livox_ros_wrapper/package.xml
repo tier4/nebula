@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>livox_lidar_ros_driver</name>
+  <version>0.1.0</version>
+  <description>
+    ROS device driver for LidarDriver.
+  </description>
+  <maintainer email="sample@example.com">sample.test</maintainer>
+
+  <license>TODO</license>
+  <author>TODO</author>
+
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>sensor_msgs</depend>
+  <depend>livox_msgs</depend>
+  <depend>livox_driver</depend>
+  <depend>hw_interface</depend>
+  <depend>diagnostic_msgs</depend>
+  <depend>diagnostic_updater</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
