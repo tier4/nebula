@@ -10,6 +10,6 @@ logs/
 log/
 .catkin_tools/
 .catkin_workspace
-/src/CMakeLists.txt
+/drivers/src/CMakeLists.txt
 
 .idea

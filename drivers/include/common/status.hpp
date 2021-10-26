@@ -1,14 +1,12 @@
 #ifndef NEBULA_STATUS_HPP
 #define NEBULA_STATUS_HPP
 
+namespace nebula
+{
+enum class STATUS { OK = 0, ERROR_1 = 1 };
 
-namespace nebula {
-enum class STATUS {
-  OK = 0,
-  ERROR_1 = 1
-};
-
-std::string NebulaStatusToString(STATUS nebula_status) {
+std::string NebulaStatusToString(STATUS nebula_status)
+{
   switch (nebula_status) {
     case STATUS::OK:
       return "OK";
@@ -17,5 +15,5 @@ std::string NebulaStatusToString(STATUS nebula_status) {
   }
 };
 
-}
-#endif //NEBULA_WS_STATUS_HPP
+}  // namespace nebula
+#endif  //NEBULA_STATUS_HPP
