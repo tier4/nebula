@@ -1,12 +1,19 @@
 #ifndef NEBULA_CONFIGURATION_BASE_H
 #define NEBULA_CONFIGURATION_BASE_H
 
+#include <vector>
+
 namespace nebula
 {
 namespace drivers
 {
 // COMMON
-enum class CoordinateMode { UNKNOWN = 0, CARTESIAN, SPHERICAL, CYLINDRICAL };
+enum class CoordinateMode {
+  UNKNOWN = 0,
+  CARTESIAN,
+  SPHERICAL,
+  CYLINDRICAL
+};
 
 enum class EchoMode {
   UNKNOWN = 0,
@@ -19,12 +26,12 @@ enum class EchoMode {
 };
 
 // SENSOR_CONFIGURATION
-class SensorModelBase
+enum class SensorModelBase
 {
-  const int UNKNOWN = 0;
+  UNKNOWN = 0
 };
 
-class SensorConfigurationBase
+struct SensorConfigurationBase
 {
   SensorModelBase sensor_model;
   EchoMode echo_mode;
@@ -35,39 +42,39 @@ class SensorConfigurationBase
 };
 
 // CALIBRATION_CONFIGURATION
-class CalibrationConfigurationBase
+struct CalibrationConfigurationBase
 {
   std::string calibration_file;
 };
 
 // CLOUD_CONFIGURATION
 enum class datatype {
-  uint8 INT8 = 1,
-  uint8 UINT8 = 2,
-  uint8 INT16 = 3,
-  uint8 UINT16 = 4,
-  uint8 INT32 = 5,
-  uint8 UINT32 = 6,
-  uint8 FLOAT32 = 7,
-  uint8 FLOAT64 = 8
+  INT8 = 1,
+  UINT8 = 2,
+  INT16 = 3,
+  UINT16 = 4,
+  INT32 = 5,
+  UINT32 = 6,
+  FLOAT32 = 7,
+  FLOAT64 = 8
 };
 
-class PointField
+struct PointField
 {
   std::string name;
-  uint32 offset;
-  uint8 datatype;
-  uint32 count;
+  uint32_t offset;
+  uint8_t datatype;
+  uint32_t count;
 };
 
-class CloudConfigurationBase
+struct CloudConfigurationBase
 {
-  PointField[] fields;
   CoordinateMode coordinate_mode;
   EchoMode echo_mode;
   double cloud_min_range;
   double cloud_max_range;
   bool remove_nans;  /// This may mean removing "all zeros" in some cases
+  std::vector<PointField> fields;
 };
 
 }  // namespace drivers
