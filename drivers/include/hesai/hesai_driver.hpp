@@ -4,10 +4,10 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include "common/configuration_base.hpp"
+#include "common/nebula_common.hpp"
 #include "common/nebula_driver_base.hpp"
 #include "common/nebula_status.hpp"
-#include "hesai/nebula_hesai_common.h"
+#include "hesai/hesai_common.hpp"
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
 
@@ -15,12 +15,12 @@ namespace nebula
 {
 namespace drivers
 {
-class NebulaHesaiDriver : NebulaDriverBase
+class HesaiDriver : NebulaDriverBase
 {
 private:
 public:
-  NebulaHesaiDriver();
-  NebulaHesaiDriver(const CalibrationConfigurationBase & calibration_configuration,
+  HesaiDriver();
+  HesaiDriver(const CalibrationConfigurationBase & calibration_configuration,
                     const CloudConfigurationBase & cloud_configuration);
   Status SetCalibrationConfiguration(
     const CalibrationConfigurationBase & calibration_configuration) override;

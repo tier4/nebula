@@ -5,7 +5,7 @@
 #include <vector>
 
 #include <sensor_msgs/msg/point_cloud2.hpp>
-#include "configuration_base.hpp"
+#include "nebula_common.hpp"
 #include "nebula_status.hpp"
 
 namespace nebula
