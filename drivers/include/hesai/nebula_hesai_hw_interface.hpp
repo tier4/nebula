@@ -1,38 +1,27 @@
 #ifndef NEBULA_DRIVERS_NEBULA_HESAI_H
 #define NEBULA_DRIVERS_NEBULA_HESAI_H
 
-include "HwInterface/udp_socket.hpp"
+#include "common/nebula_hw_interface_base.hpp"
+#include "udp_driver/udp_driver.hpp"
 
 namespace nebula
 {
 namespace drivers
 {
 
-class NebulaHesaiDriver : NebulaBaseDriver
+class NebulaHesaiHwInterface : NebulaHwInterfaceBase
 {
 private:
-  HwInterface::UdpSocket cloud_socket_;
-  HwInterface::UdpSocket gps_socket_;
+  IoContext io_context_;
+  ::drivers::udp_driver::UdpDriver cloud_udp_driver_;
 
 public:
+  NebulaHesaiHwInterface();
+  NebulaHesaiHwInterface(SensorConfigurationBase & sensor_configuration,
+                         CalibrationConfigurationBase & calibration_configuration);
 
-  bool SetConfiguration() override;
-  bool GetConfiguration() override;
+  Status CloudInterfaceStart(const SensorConfigurationBase &sensor_configuration) override;
 
-  void SetCalibration() override;
-  void GetCalibration() override;
-
-  void StartHwRxInterface() override;
-  void StopHwRxInterface() override;
-
-  int ParsePacket() override;
-  void* GenerateCloud() override;
-
-  bool Initialize() override;
-  LidarStatus GetLidarStatus() override;
-
-  void SetPublishLidarDataCallback(void*) override;
-  DiagnosticsStatus GetDiagnosticsStatus() override;
 };
 
 }
