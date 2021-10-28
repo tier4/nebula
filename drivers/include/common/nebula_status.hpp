@@ -3,13 +3,22 @@
 
 namespace nebula
 {
-enum class Status { OK = 0, ERROR_1 = 1 };
+enum class Status {
+  OK = 0,
+  UDP_CONNECTION_ERROR,
+  SENSOR_CONFIG_ERROR,
+  ERROR_1
+};
 
-std::string NebulaStatusToString(Status nebula_status)
+std::string NebulaStatusToString(const Status& nebula_status)
 {
   switch (nebula_status) {
     case Status::OK:
       return "OK";
+    case Status::UDP_CONNECTION_ERROR:
+      return "Udp Connection Error";
+    case Status::SENSOR_CONFIG_ERROR:
+      return "Could not set SensorConfiguration";
     case Status::ERROR_1:
     default:
       return "RUNTIME STOPPED";

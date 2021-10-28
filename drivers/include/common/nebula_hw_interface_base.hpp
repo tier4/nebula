@@ -1,9 +1,10 @@
 #ifndef NEBULA_HW_INTERFACE_BASE_H
 #define NEBULA_HW_INTERFACE_BASE_H
 
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include "common/configuration_base.hpp"
+#include "common/nebula_common.hpp"
 #include "common/nebula_status.hpp"
 #include "udp_driver/udp_driver.hpp"
 
@@ -14,8 +15,11 @@ namespace drivers
 class NebulaHwInterfaceBase
 {
 protected:
-  SensorConfigurationBase sensor_configuration_;
-  CalibrationConfigurationBase calibration_configuration_;
+  /**
+   * Callback function to receive the Cloud Packet data from the UDP Driver
+   * @param buffer buffer containing the data received from the UDP socket
+   * @return Status::OK if no error occured.
+   */
   virtual Status ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer) = 0;
 
 public:
@@ -25,25 +29,17 @@ public:
   NebulaHwInterfaceBase & operator=(const NebulaHwInterfaceBase & c) = delete;
 
   NebulaHwInterfaceBase() = default;
-  NebulaHwInterfaceBase(
-    SensorConfigurationBase & sensor_configuration,
-    CalibrationConfigurationBase & calibration_configuration);
 
-  virtual Status CloudInterfaceStart(const SensorConfigurationBase & sensor_configuration) = 0;
+  virtual Status CloudInterfaceStart() = 0;
   virtual Status CloudInterfaceStop() = 0;
   // You may want to also implement GpsInterfaceStart() and ReceiveGpsCallback, but that is sensor specific.
 
-  virtual Status SetSensorConfiguration(const SensorConfigurationBase & sensor_configuration) = 0;
+  virtual Status SetSensorConfiguration(
+    std::shared_ptr<SensorConfigurationBase> sensor_configuration) = 0;
   virtual Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration) = 0;
   virtual Status GetCalibrationConfiguration(
     CalibrationConfigurationBase & calibration_configuration) = 0;
 };
-NebulaHwInterfaceBase::NebulaHwInterfaceBase(
-  SensorConfigurationBase & sensor_configuration,
-  CalibrationConfigurationBase & calibration_configuration)
-: sensor_configuration_(sensor_configuration), calibration_configuration_(calibration_configuration)
-{
-}
 
 }  // namespace drivers
 }  // namespace nebula

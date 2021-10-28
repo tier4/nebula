@@ -7,7 +7,7 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <string>
 #include <vector>
-#include "configuration_base.hpp"
+#include "nebula_common.hpp"
 #include "nebula_status.hpp"
 
 namespace nebula
@@ -27,9 +27,9 @@ public:
   NebulaDriverWrapperBase(const NebulaDriverWrapperBase & c) = delete;
   NebulaDriverWrapperBase & operator=(const NebulaDriverWrapperBase & c) = delete;
 
-  virtual STATUS StreamStart();  // Activate callback function
-  virtual STATUS StreamStop();   // Deactivate callback function
-  virtual STATUS Shutdown();     // Shutdown the driver
+  virtual Status StreamStart();  // Activate callback function
+  virtual Status StreamStop();   // Deactivate callback function
+  virtual Status Shutdown();     // Shutdown the driver
 
 private:
   drivers::CloudConfigurationBase cloud_configuration_;
