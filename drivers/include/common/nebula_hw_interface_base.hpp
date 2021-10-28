@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include "configuration_base.hpp"
-#include "status.hpp"
+#include "nebula_status.hpp"
 #include "udp_driver/udp_driver.hpp"
 
 namespace nebula
@@ -23,16 +23,16 @@ class NebulaHwInterfaceBase
     CalibrationConfigurationBase & calibration_configuration);
 
 private:
-  virtual STATUS ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer);
+  virtual Status ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer);
 
 public:
-  virtual STATUS CloudInterfaceStart(const SensorConfigurationBase & sensor_configuration);
-  virtual STATUS CloudInterfaceStop() = 0;
+  virtual Status CloudInterfaceStart(const SensorConfigurationBase & sensor_configuration);
+  virtual Status CloudInterfaceStop() = 0;
   // You may want to also implement GpsInterfaceStart() and ReceiveGpsCallback, but that is sensor specific.
 
-  virtual STATUS SetSensorConfiguration(const SensorConfigurationBase & sensor_configuration) = 0;
-  virtual STATUS GetSensorConfiguration(SensorConfigurationBase & sensor_configuration);
-  virtual STATUS GetCalibrationConfiguration(
+  virtual Status SetSensorConfiguration(const SensorConfigurationBase & sensor_configuration) = 0;
+  virtual Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration);
+  virtual Status GetCalibrationConfiguration(
     CalibrationConfigurationBase & calibration_configuration);
 };
 

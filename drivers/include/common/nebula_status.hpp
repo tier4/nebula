@@ -3,17 +3,18 @@
 
 namespace nebula
 {
-enum class STATUS { OK = 0, ERROR_1 = 1 };
+enum class Status { OK = 0, ERROR_1 = 1 };
 
-std::string NebulaStatusToString(STATUS nebula_status)
+std::string NebulaStatusToString(Status nebula_status)
 {
   switch (nebula_status) {
-    case STATUS::OK:
+    case Status::OK:
       return "OK";
-    case STATUS::ERROR_1:
+    case Status::ERROR_1:
+    default:
       return "RUNTIME STOPPED";
   }
-};
+}
 
 }  // namespace nebula
 #endif  //NEBULA_STATUS_HPP

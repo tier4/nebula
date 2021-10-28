@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 #include "configuration_base.hpp"
-#include "status.hpp"
+#include "nebula_status.hpp"
 
 namespace nebula
 {
