@@ -1,5 +1,5 @@
-#ifndef NEBULA_DRIVERS_NEBULA_HESAI_H
-#define NEBULA_DRIVERS_NEBULA_HESAI_H
+#ifndef NEBULA_HESAI_HW_INTERFACE_H
+#define NEBULA_HESAI_HW_INTERFACE_H
 
 #include "common/nebula_hw_interface_base.hpp"
 #include "hesai/hesai_common.hpp"
@@ -13,9 +13,10 @@ namespace drivers
 class HesaiHwInterface : NebulaHwInterfaceBase
 {
 private:
-  IoContext io_context_;
+  IoContext cloud_io_context_;
+  IoContext gnss_io_context_;
   ::drivers::udp_driver::UdpDriver cloud_udp_driver_;
-  //::drivers::udp_driver::UdpDriver gnss_udp_driver_;
+  ::drivers::udp_driver::UdpDriver gnss_udp_driver_;
   std::shared_ptr<HesaiSensorConfiguration> sensor_configuration_;
   std::shared_ptr<HesaiCalibrationConfiguration> calibration_configuration_;
 
@@ -37,4 +38,4 @@ public:
 }//drivers
 }//nebula
 
-#endif  //NEBULA_DRIVERS_NEBULA_HESAI_H
+#endif  //NEBULA_HESAI_HW_INTERFACE_H

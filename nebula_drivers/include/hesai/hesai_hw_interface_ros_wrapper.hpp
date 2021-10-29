@@ -4,6 +4,7 @@
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+
 #include "common/nebula_common.hpp"
 #include "common/nebula_hw_interface_ros_wrapper_base.hpp"
 #include "hesai/hesai_common.hpp"

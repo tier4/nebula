@@ -1,5 +1,5 @@
-#ifndef NEBULA_DRIVERS_NEBULA_HESAI_H
-#define NEBULA_DRIVERS_NEBULA_HESAI_H
+#ifndef NEBULA_HESAI_DRIVER_H
+#define NEBULA_HESAI_DRIVER_H
 
 #include <iostream>
 #include <stdexcept>
@@ -33,4 +33,4 @@ public:
 }  // namespace drivers
 }  // namespace nebula
 
-#endif  //NEBULA_DRIVERS_NEBULA_HESAI_H
+#endif  //NEBULA_HESAI_DRIVER_H
