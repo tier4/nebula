@@ -5,14 +5,20 @@ namespace nebula
 namespace drivers
 {
 HesaiHwInterface::HesaiHwInterface()
-: io_context_(), cloud_udp_driver_(io_context_)/*, gnss_udp_driver_(io_context_)*/
+: cloud_io_context_(),
+  gnss_io_context_(),
+  cloud_udp_driver_(cloud_io_context_),
+  gnss_udp_driver_(gnss_io_context_)
 {
 }
 
 HesaiHwInterface::HesaiHwInterface(
   std::shared_ptr<SensorConfigurationBase> & sensor_configuration,
   CalibrationConfigurationBase & calibration_configuration)
-: io_context_(), cloud_udp_driver_(io_context_)/*, gnss_udp_driver_(io_context_)*/
+: cloud_io_context_(),
+  gnss_io_context_(),
+  cloud_udp_driver_(cloud_io_context_),
+  gnss_udp_driver_(cloud_io_context_)
 {
 }
 
@@ -37,16 +43,15 @@ Status HesaiHwInterface::CloudInterfaceStart()
       sensor_configuration_->sensor_ip, sensor_configuration_->data_port);
     cloud_udp_driver_.receiver()->open();
     cloud_udp_driver_.receiver()->bind();
+
     //gnss udp port
-//    gnss_udp_driver_.init_receiver(
-//      sensor_configuration_->sensor_ip, sensor_configuration_->gnss_port);
-//    gnss_udp_driver_.receiver()->open();
-//    gnss_udp_driver_.receiver()->bind();
+    gnss_udp_driver_.init_receiver(
+      sensor_configuration_->sensor_ip, sensor_configuration_->gnss_port);
+    gnss_udp_driver_.receiver()->open();
+    gnss_udp_driver_.receiver()->bind();
+
     cloud_udp_driver_.receiver()->asyncReceive(
       std::bind(&HesaiHwInterface::ReceiveCloudPacketCallback, this, std::placeholders::_1));
-    std::cout << "ip:" << sensor_configuration_->sensor_ip
-              << ", data:" << sensor_configuration_->data_port
-              << ", gnss:" <<  sensor_configuration_->gnss_port << std::endl;
     return Status::OK;
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
@@ -61,10 +66,12 @@ Status HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> &
   return Status::OK;
 }
 Status HesaiHwInterface::CloudInterfaceStop() { return Status::ERROR_1; }
+
 Status HesaiHwInterface::GetSensorConfiguration(SensorConfigurationBase & sensor_configuration)
 {
   return Status::ERROR_1;
 }
+
 Status HesaiHwInterface::GetCalibrationConfiguration(
   CalibrationConfigurationBase & calibration_configuration)
 {

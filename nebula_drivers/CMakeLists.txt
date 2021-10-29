@@ -14,15 +14,14 @@ find_package(ament_cmake_auto REQUIRED)
 
 ament_auto_find_build_dependencies()
 
-# HwInterfaces
+# HwInterfaces Lib
 ament_auto_add_library(hesai_hw_interface SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_hw_interface.cpp
         )
-
+# RosHWInterface
 ament_auto_add_library(hesai_hw_ros_wrapper SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_hw_interface_ros_wrapper.cpp
         )
-
 ament_auto_add_executable(hesai_hw_ros_wrapper_node
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_hw_interface_ros_main.cpp
         )
@@ -31,6 +30,10 @@ ament_auto_add_executable(hesai_hw_ros_wrapper_node
 ament_auto_add_library(hesai_driver SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver.cpp
         )
+
+# RosDriver Lib
+
+# RosDriverNode
 
 ament_auto_package(
         )
