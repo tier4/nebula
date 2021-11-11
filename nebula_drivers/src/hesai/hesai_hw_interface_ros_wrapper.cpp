@@ -8,19 +8,21 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   const rclcpp::NodeOptions & options, const std::string & node_name)
 : rclcpp::Node(node_name, options)
 {
-  drivers::HesaiSensorConfiguration sensor_configuration;
-  sensor_configuration.sensor_ip = "127.0.0.1";
-  sensor_configuration.data_port = 3360;
-  sensor_configuration.gnss_port = 3361;
-  drivers::HesaiHwInterface hw_interface;
-  std::shared_ptr<drivers::SensorConfigurationBase> a =
-    std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration);
-  hw_interface.SetSensorConfiguration(
-    std::static_pointer_cast<drivers::SensorConfigurationBase>(a));
-  hw_interface.CloudInterfaceStart();
 }
 
-Status HesaiHwInterfaceWrapper::StreamStart() { return Status::OK; }
+Status HesaiHwInterfaceWrapper::StreamStart() {
+  drivers::HesaiSensorConfiguration sensor_configuration;
+  sensor_configuration.sensor_ip = "255.255.255.255";
+  sensor_configuration.data_port = 2368;
+  sensor_configuration.gnss_port = 0;
+  drivers::HesaiHwInterface hw_interface;
+  std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
+    std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration);
+  hw_interface.SetSensorConfiguration(
+    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
+  hw_interface.CloudInterfaceStart();
+  return Status::OK; }
+
 Status HesaiHwInterfaceWrapper::StreamStop() { return Status::OK; }
 Status HesaiHwInterfaceWrapper::Shutdown() { return Status::OK; }
 

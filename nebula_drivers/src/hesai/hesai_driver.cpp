@@ -20,7 +20,7 @@ Status HesaiDriver::SetCloudConfiguration(
 std::shared_ptr<sensor_msgs::msg::PointCloud2> HesaiDriver::ParsePacketToPointcloud(
   std::vector<uint8_t> & packet)
 {
-  throw std::runtime_error("ParsePacketToPointcloud. Not yet implemented");
+  throw std::runtime_error("ParsePacketToPointcloud. Not yet implemented.");
 }
 
 HesaiDriver::HesaiDriver() {}
