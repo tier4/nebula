@@ -1,6 +1,8 @@
 #ifndef NEBULA_STATUS_HPP
 #define NEBULA_STATUS_HPP
 
+#include <string>
+
 namespace nebula
 {
 enum class Status {

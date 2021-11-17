@@ -2,7 +2,7 @@
 #define NEBULA_CONFIGURATION_BASE_H
 
 #include <vector>
-
+#include <string>
 namespace nebula
 {
 namespace drivers
