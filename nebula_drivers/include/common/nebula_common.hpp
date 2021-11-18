@@ -26,15 +26,16 @@ enum class EchoMode {
 };
 
 // SENSOR_CONFIGURATION
-enum class SensorModelBase
+enum class SensorModel
 {
-  UNKNOWN = 0
+  UNKNOWN = 0,
+  PANDAR64,
 };
 
 struct SensorConfigurationBase
 {
-  SensorModelBase sensor_model;
-  EchoMode echo_mode;
+  SensorModel sensor_model;
+  EchoMode echo_mode;         // todo: should this be ReturnMode?
   std::string host_ip;
   std::string sensor_ip;
   uint16_t data_port;

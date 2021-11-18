@@ -17,6 +17,18 @@ namespace ros
 class HesaiHwInterfaceWrapper final : public rclcpp::Node, NebulaHwInterfaceWrapperBase
 {
   drivers::HesaiHwInterface hw_interface_;
+
+  // ROS
+  std::string sensor_model_;
+  std::string echo_mode_;
+  std::string host_ip_;
+  std::string sensor_ip_;
+  uint16_t data_port_;
+  uint16_t gnss_port_;
+  uint16_t frequency_ms_;
+
+  drivers::HesaiSensorConfiguration sensor_configuration_;
+
   Status InitializeHwInterface(
     const drivers::SensorConfigurationBase & sensor_configuration) override;
   void ReceiveDataPacketCallback(const std::vector<uint8_t> & buffer) override;

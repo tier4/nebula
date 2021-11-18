@@ -13,6 +13,7 @@ namespace drivers
 class HesaiHwInterface : NebulaHwInterfaceBase
 {
 private:
+  std::vector<uint8_t> cur_pkt_;
   std::unique_ptr<IoContext> cloud_io_context_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
   std::shared_ptr<HesaiSensorConfiguration> sensor_configuration_;
@@ -20,8 +21,6 @@ private:
 
 public:
   HesaiHwInterface();
-  HesaiHwInterface(std::shared_ptr<SensorConfigurationBase>& sensor_configuration,
-                   CalibrationConfigurationBase & calibration_configuration);
 
   void ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer) final;
   Status CloudInterfaceStart() final;
