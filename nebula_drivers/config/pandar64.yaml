@@ -1,0 +1,5 @@
+nebula_hesai_hw_interface:
+  ros__parameters:
+    sensor_model: "Pandar64"
+    device_ip: "192.168.1.201"
+    host_ip: "255.255.255.255"
