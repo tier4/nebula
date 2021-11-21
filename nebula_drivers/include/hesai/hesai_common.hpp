@@ -11,6 +11,7 @@ namespace drivers
 struct HesaiSensorConfiguration : SensorConfigurationBase
 {
   uint16_t gnss_port{};
+  double scan_phase{};
 };
 
 struct HesaiCalibrationConfiguration : CalibrationConfigurationBase

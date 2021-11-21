@@ -10,6 +10,9 @@
 #include "hesai/hesai_common.hpp"
 #include "hesai/hesai_hw_interface.hpp"
 
+#include "pandar_msgs/msg/pandar_jumbo_packet.h"
+#include "pandar_msgs/msg/pandar_packet.h"
+
 namespace nebula
 {
 namespace ros
@@ -26,12 +29,11 @@ class HesaiHwInterfaceWrapper final : public rclcpp::Node, NebulaHwInterfaceWrap
   uint16_t data_port_;
   uint16_t gnss_port_;
   uint16_t frequency_ms_;
-
   drivers::HesaiSensorConfiguration sensor_configuration_;
 
   Status InitializeHwInterface(
     const drivers::SensorConfigurationBase & sensor_configuration) override;
-  void ReceiveDataPacketCallback(const std::vector<uint8_t> & buffer) override;
+  void ReceiveScanDataCallback(std::unique_ptr<std::vector<std::vector<uint8_t>>> scan_buffer) override;
 
 public:
   explicit HesaiHwInterfaceWrapper(
