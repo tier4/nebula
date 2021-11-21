@@ -7,7 +7,6 @@ namespace nebula
 {
 namespace drivers
 {
-
 struct HesaiSensorConfiguration : SensorConfigurationBase
 {
   uint16_t gnss_port{};
@@ -16,10 +15,9 @@ struct HesaiSensorConfiguration : SensorConfigurationBase
 
 struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
 {
-
 };
 
-}//drivers
-}//nebula
+}  // namespace drivers
+}  // namespace nebula
 
-#endif  //NEBULA_HESAI_COMMON_H
+#endif  // NEBULA_HESAI_COMMON_H

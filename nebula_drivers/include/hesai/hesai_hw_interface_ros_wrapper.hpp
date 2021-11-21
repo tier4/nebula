@@ -1,14 +1,14 @@
 #ifndef NEBULA_HesaiHwInterfaceWrapper_H
 #define NEBULA_HesaiHwInterfaceWrapper_H
 
-#include <diagnostic_updater/diagnostic_updater.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-
 #include "common/nebula_common.hpp"
 #include "common/nebula_hw_interface_ros_wrapper_base.hpp"
 #include "hesai/hesai_common.hpp"
 #include "hesai/hesai_hw_interface.hpp"
+
+#include <diagnostic_updater/diagnostic_updater.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
 
 #include "pandar_msgs/msg/pandar_jumbo_packet.h"
 #include "pandar_msgs/msg/pandar_packet.h"
@@ -33,7 +33,8 @@ class HesaiHwInterfaceWrapper final : public rclcpp::Node, NebulaHwInterfaceWrap
 
   Status InitializeHwInterface(
     const drivers::SensorConfigurationBase & sensor_configuration) override;
-  void ReceiveScanDataCallback(std::unique_ptr<std::vector<std::vector<uint8_t>>> scan_buffer) override;
+  void ReceiveScanDataCallback(
+    std::unique_ptr<std::vector<std::vector<uint8_t>>> scan_buffer) override;
 
 public:
   explicit HesaiHwInterfaceWrapper(
@@ -46,4 +47,4 @@ public:
 }  // namespace ros
 }  // namespace nebula
 
-#endif  //NEBULA_HesaiHwInterfaceWrapper_H
+#endif  // NEBULA_HesaiHwInterfaceWrapper_H

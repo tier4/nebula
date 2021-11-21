@@ -1,19 +1,14 @@
 #ifndef NEBULA_CONFIGURATION_BASE_H
 #define NEBULA_CONFIGURATION_BASE_H
 
-#include <vector>
 #include <string>
+#include <vector>
 namespace nebula
 {
 namespace drivers
 {
 // COMMON
-enum class CoordinateMode {
-  UNKNOWN = 0,
-  CARTESIAN,
-  SPHERICAL,
-  CYLINDRICAL
-};
+enum class CoordinateMode { UNKNOWN = 0, CARTESIAN, SPHERICAL, CYLINDRICAL };
 
 enum class ReturnMode {
   UNKNOWN = 0,
@@ -26,8 +21,7 @@ enum class ReturnMode {
 };
 
 // SENSOR_CONFIGURATION
-enum class SensorModel
-{
+enum class SensorModel {
   UNKNOWN = 0,
   HESAI_PANDAR64,
   HESAI_PANDAR40P,
@@ -88,4 +82,4 @@ struct CloudConfigurationBase
 }  // namespace drivers
 }  // namespace nebula
 
-#endif  //NEBULA_CONFIGURATION_BASE_H
+#endif  // NEBULA_CONFIGURATION_BASE_H

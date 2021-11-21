@@ -1,14 +1,17 @@
 #ifndef NEBULA_DRIVER_WRAPPER_BASE_H
 #define NEBULA_DRIVER_WRAPPER_BASE_H
 
+#include "nebula_common.hpp"
+#include "nebula_status.hpp"
+
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+
 #include <sensor_msgs/msg/point_cloud2.hpp>
+
 #include <string>
 #include <vector>
-#include "nebula_common.hpp"
-#include "nebula_status.hpp"
 
 namespace nebula
 {
@@ -45,4 +48,4 @@ private:
 
 }  // namespace ros
 }  // namespace nebula
-#endif  //NEBULA_DRIVER_WRAPPER_BASE_H
+#endif  // NEBULA_DRIVER_WRAPPER_BASE_H

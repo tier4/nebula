@@ -29,7 +29,7 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   // Echo mode and model will need some type of switch/case or if/else
   sensor_configuration_.echo_mode = drivers::ReturnMode::SINGLE_STRONGEST;
   sensor_configuration_.sensor_model = drivers::SensorModel::HESAI_PANDAR64;
-  sensor_configuration_.frame_id = "hesai_pandar";// maybe we need it?
+  sensor_configuration_.frame_id = "hesai_pandar";  // maybe we need it?
 
   // Initialize sensor_configuration
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
@@ -65,10 +65,12 @@ void HesaiHwInterfaceWrapper::ReceiveScanDataCallback(
   pandar_msgs::msg::PandarScan scan;
   scan.header.frame_id = sensor_configuration_.frame_id;
   std::chrono::duration<float> now = std::chrono::system_clock::now().time_since_epoch();
-  scan.header.stamp.sec =  std::chrono::duration_cast<std::chrono::seconds>(now).count();
-  scan.header.stamp.nanosec = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();//TODO: not sure this will work, probably need to remove the secs part
-  //scan.packets;
-  // move buffer to scan
+  scan.header.stamp.sec = std::chrono::duration_cast<std::chrono::seconds>(now).count();
+  scan.header.stamp.nanosec =
+    std::chrono::duration_cast<std::chrono::nanoseconds>(now)
+      .count();  // TODO: not sure this will work, probably need to remove the secs part
+  // scan.packets;
+  //  move buffer to scan
 }
 
 }  // namespace ros

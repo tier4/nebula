@@ -1,6 +1,8 @@
-#include <rclcpp/rclcpp.hpp>
-#include <memory>
 #include "hesai/hesai_hw_interface_ros_wrapper.hpp"
+
+#include <rclcpp/rclcpp.hpp>
+
+#include <memory>
 
 int main(int argc, char * argv[])
 {
@@ -12,10 +14,7 @@ int main(int argc, char * argv[])
   rclcpp::executors::SingleThreadedExecutor exec;
   rclcpp::NodeOptions options;
 
-  auto hesai_driver = std::make_shared<nebula::ros::HesaiHwInterfaceWrapper>(
-    options,
-    node_name
-  );
+  auto hesai_driver = std::make_shared<nebula::ros::HesaiHwInterfaceWrapper>(options, node_name);
   exec.add_node(hesai_driver->get_node_base_interface());
   nebula::Status driver_status = hesai_driver->StreamStart();
   if (driver_status == nebula::Status::OK) {

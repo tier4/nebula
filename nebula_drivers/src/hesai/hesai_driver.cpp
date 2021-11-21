@@ -4,7 +4,6 @@ namespace nebula
 {
 namespace drivers
 {
-
 Status HesaiDriver::SetCalibrationConfiguration(
   const CalibrationConfigurationBase & calibration_configuration)
 {

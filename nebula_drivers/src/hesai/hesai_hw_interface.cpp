@@ -18,30 +18,29 @@ Status HesaiHwInterface::SetSensorConfiguration(
   try {
     sensor_configuration_ =
       std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration);
-    if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR40P
-        || sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR40P)
-    {
+    if (
+      sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR40P ||
+      sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR40P) {
       azimuth_index_ = 2;  // 2 + 124 * [0-9]
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == 1262 || packet_size == 1266); };
-    }
-    else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARQT) {
+      is_valid_packet_ = [](size_t packet_size) {
+        return (packet_size == 1262 || packet_size == 1266);
+      };
+    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARQT) {
       azimuth_index_ = 12;  // 12 + 258 * [0-3]
       is_valid_packet_ = [](size_t packet_size) { return (packet_size == 1072); };
-    }
-    else  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARXT32) {
+    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARXT32) {
       azimuth_index_ = 12;  // 12 + 130 * [0-7]
       is_valid_packet_ = [](size_t packet_size) { return (packet_size == 1080); };
-    }
-    else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
+    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
       azimuth_index_ = 8;  // 8 + 192 * [0-5]
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == 1194 || packet_size == 1198); };
-    }
-    else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_V14) {
+      is_valid_packet_ = [](size_t packet_size) {
+        return (packet_size == 1194 || packet_size == 1198);
+      };
+    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_V14) {
       azimuth_index_ = 12;  // 12 + 386 * [0-1]
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == 893); };//version 1.4
+      is_valid_packet_ = [](size_t packet_size) { return (packet_size == 893); };  // version 1.4
       mtu_size_ = 1800;
-    }
-    else {
+    } else {
       status = Status::INVALID_SENSOR_MODEL;
     }
   } catch (const std::exception & ex) {
@@ -68,11 +67,12 @@ Status HesaiHwInterface::CloudInterfaceStart()
     std::cerr << NebulaStatusToString(status) << sensor_configuration_->sensor_ip << ","
               << sensor_configuration_->data_port << std::endl;
     return status;
-    }
+  }
   return Status::OK;
 }
 
-Status HesaiHwInterface::RegisterScanCallback(std::function<void (std::unique_ptr<std::vector<std::vector<uint8_t>>>)> scan_callback)
+Status HesaiHwInterface::RegisterScanCallback(
+  std::function<void(std::unique_ptr<std::vector<std::vector<uint8_t>>>)> scan_callback)
 {
   scan_reception_callback_ = std::move(scan_callback);
 }
@@ -80,19 +80,18 @@ Status HesaiHwInterface::RegisterScanCallback(std::function<void (std::unique_pt
 void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer)
 {
   int scan_phase = static_cast<int>(sensor_configuration_->scan_phase * 100.0);
-  std::unique_ptr<std::vector<std::vector<uint8_t>>> scan_data_ptr(new std::vector<std::vector<uint8_t>>);
+  std::unique_ptr<std::vector<std::vector<uint8_t>>> scan_data_ptr(
+    new std::vector<std::vector<uint8_t>>);
 
   for (int prev_phase = 0;;) {  // start forming scan
     while (true) {              // wait for valid lidar packet
       if (is_valid_packet_(buffer.size())) {
-        if(buffer.size() < mtu_size_) {
+        if (buffer.size() < mtu_size_) {
           // make sure the size matches the expected mtu size by the packet
           std::vector<uint8_t> packet(buffer);
           packet.resize(mtu_size_);
           scan_data_ptr->emplace_back(packet);
-        }
-        else
-        {
+        } else {
           scan_data_ptr->emplace_back(buffer);
         }
 
@@ -101,29 +100,23 @@ void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & b
     }
     int current_phase = 0;
     {
-      const auto& data = scan_data_ptr->back();
+      const auto & data = scan_data_ptr->back();
       current_phase = (data[azimuth_index_] & 0xff) | ((data[azimuth_index_ + 1] & 0xff) << 8);
       current_phase = (static_cast<int>(current_phase) + 36000 - scan_phase) % 36000;
     }
     if (current_phase >= prev_phase || scan_data_ptr->size() < 2) {
       prev_phase = current_phase;
-    }
-    else {
+    } else {
       // scan complete
       break;
     }
-  }// finish scan
-  //scan formed, send it back through the registered callback
-  if(scan_reception_callback_)
-  {
+  }  // finish scan
+  // scan formed, send it back through the registered callback
+  if (scan_reception_callback_) {
     scan_reception_callback_(std::move(scan_data_ptr));
   }
 }
-Status HesaiHwInterface::CloudInterfaceStop()
-{
-
-  return Status::ERROR_1;
-}
+Status HesaiHwInterface::CloudInterfaceStop() { return Status::ERROR_1; }
 
 Status HesaiHwInterface::GetSensorConfiguration(SensorConfigurationBase & sensor_configuration)
 {
