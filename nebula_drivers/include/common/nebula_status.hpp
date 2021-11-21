@@ -13,7 +13,7 @@ enum class Status {
   ERROR_1
 };
 
-std::string NebulaStatusToString(const Status& nebula_status)
+std::string NebulaStatusToString(const Status & nebula_status)
 {
   switch (nebula_status) {
     case Status::OK:
@@ -32,4 +32,4 @@ std::string NebulaStatusToString(const Status& nebula_status)
 }
 
 }  // namespace nebula
-#endif  //NEBULA_STATUS_HPP
+#endif  // NEBULA_STATUS_HPP
