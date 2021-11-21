@@ -20,7 +20,8 @@ protected:
    * @param buffer buffer containing the data received from the UDP socket
    * @return Status::OK if no error occured.
    */
-
+  virtual void ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer) = 0;
+  virtual Status RegisterScanCallback(std::function<void (std::unique_ptr<std::vector<std::vector<uint8_t>>>)> scan_callback) = 0;
 public:
   NebulaHwInterfaceBase(NebulaHwInterfaceBase && c) = delete;
   NebulaHwInterfaceBase & operator=(NebulaHwInterfaceBase && c) = delete;
@@ -29,7 +30,7 @@ public:
 
   NebulaHwInterfaceBase() = default;
 
-  virtual void ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer) = 0;
+
   virtual Status CloudInterfaceStart() = 0;
   virtual Status CloudInterfaceStop() = 0;
   // You may want to also implement GpsInterfaceStart() and ReceiveGpsCallback, but that is sensor specific.

@@ -1,5 +1,7 @@
 #include "hesai/hesai_hw_interface_ros_wrapper.hpp"
 
+#include "../../../../../build/pandar_msgs/rosidl_generator_cpp/pandar_msgs/msg/detail/pandar_scan__struct.hpp"
+
 namespace nebula
 {
 namespace ros
@@ -22,10 +24,12 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   sensor_configuration_.host_ip = host_ip_;
   sensor_configuration_.data_port = data_port_;
   sensor_configuration_.gnss_port = gnss_port_;
-  sensor_configuration_.frequency_ms = frequency_ms_;   // todo: this is weird, frequency_hz is better maybe?
+  sensor_configuration_.frequency_ms =
+    frequency_ms_;  // todo: this is weird, frequency_hz is better maybe?
   // Echo mode and model will need some type of switch/case or if/else
-  sensor_configuration_.echo_mode = drivers::EchoMode::SINGLE_STRONGEST;
-  sensor_configuration_.sensor_model = drivers::SensorModel::PANDAR64;
+  sensor_configuration_.echo_mode = drivers::ReturnMode::SINGLE_STRONGEST;
+  sensor_configuration_.sensor_model = drivers::SensorModel::HESAI_PANDAR64;
+  sensor_configuration_.frame_id = "hesai_pandar";// maybe we need it?
 
   // Initialize sensor_configuration
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
@@ -33,36 +37,38 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr);
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
+
+  // register scan callback
+  hw_interface_.RegisterScanCallback(
+    std::bind(&HesaiHwInterfaceWrapper::ReceiveScanDataCallback, this, std::placeholders::_1));
 }
 
-Status HesaiHwInterfaceWrapper::StreamStart() {
-hw_interface_.CloudInterfaceStart();
-  return Status::OK; }
+Status HesaiHwInterfaceWrapper::StreamStart()
+{
+  hw_interface_.CloudInterfaceStart();
+  return Status::OK;
+}
 
 Status HesaiHwInterfaceWrapper::StreamStop() { return Status::OK; }
 Status HesaiHwInterfaceWrapper::Shutdown() { return Status::OK; }
 
-Status HesaiHwInterfaceWrapper::InitializeHwInterface(      // todo: don't think this is needed
-  const drivers::SensorConfigurationBase & sensor_configuration) {
+Status HesaiHwInterfaceWrapper::InitializeHwInterface(  // todo: don't think this is needed
+  const drivers::SensorConfigurationBase & sensor_configuration)
+{
   return Status::OK;
 }
 
-void HesaiHwInterfaceWrapper::ReceiveDataPacketCallback(const std::vector<uint8_t> & buffer) {
-  // Todo: how do I wrap this in a callback for cur_pkt_?
-  // todo: how to bring msgs in hesai_hw_interface_ros_wrapper.hpp?
-
-  // Create new PandarPacket
-  // Add current packet, fix header
+void HesaiHwInterfaceWrapper::ReceiveScanDataCallback(
+  std::unique_ptr<std::vector<std::vector<uint8_t>>> scan_buffer)
+{
   // Publish
-
-  // Check if beginning of scan (somehow must be based on azimuth angle? or total size, but I still
-  // to check and start at the right place...)
-    // Create new hesai_msgs::PandarScan
-
-  // Add packet to scan
-
-  // Check if scan is complete
-    // Publish
+  pandar_msgs::msg::PandarScan scan;
+  scan.header.frame_id = sensor_configuration_.frame_id;
+  std::chrono::duration<float> now = std::chrono::system_clock::now().time_since_epoch();
+  scan.header.stamp.sec =  std::chrono::duration_cast<std::chrono::seconds>(now).count();
+  scan.header.stamp.nanosec = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();//TODO: not sure this will work, probably need to remove the secs part
+  //scan.packets;
+  // move buffer to scan
 }
 
 }  // namespace ros

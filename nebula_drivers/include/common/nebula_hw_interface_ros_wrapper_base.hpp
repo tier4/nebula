@@ -28,8 +28,7 @@ public:
 protected:
   virtual Status InitializeHwInterface(
     const drivers::SensorConfigurationBase & sensor_configuration) = 0;
-  virtual void ReceiveDataPacketCallback(
-    const std::vector<uint8_t> & buffer) = 0;  // TODO: Can we replace with unique_ptr? or shared?
+  virtual void ReceiveScanDataCallback(std::unique_ptr<std::vector<std::vector<uint8_t>>> scan_buffer) = 0;
   //  void SendDataPacket(const std::vector<uint8_t> &buffer);        // Ideally this will be implemented as specific funtions, GetFanStatus, GetEchoMode
 };
 
