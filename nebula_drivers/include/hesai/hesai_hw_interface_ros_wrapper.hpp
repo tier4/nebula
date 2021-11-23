@@ -10,8 +10,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "pandar_msgs/msg/pandar_jumbo_packet.h"
-#include "pandar_msgs/msg/pandar_packet.h"
+#include "pandar_msgs/msg/pandar_jumbo_packet.hpp"
+#include "pandar_msgs/msg/pandar_packet.hpp"
+#include "pandar_msgs/msg/pandar_scan.hpp"
 
 namespace nebula
 {
