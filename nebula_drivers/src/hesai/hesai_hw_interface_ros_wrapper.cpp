@@ -1,7 +1,5 @@
 #include "hesai/hesai_hw_interface_ros_wrapper.hpp"
 
-#include "../../../../../build/pandar_msgs/rosidl_generator_cpp/pandar_msgs/msg/detail/pandar_scan__struct.hpp"
-
 namespace nebula
 {
 namespace ros
