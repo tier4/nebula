@@ -64,11 +64,11 @@ void HesaiHwInterfaceWrapper::ReceiveScanDataCallback(
   scan.header.frame_id = sensor_configuration_.frame_id;
   std::chrono::duration<float> now = std::chrono::system_clock::now().time_since_epoch();
   scan.header.stamp.sec = std::chrono::duration_cast<std::chrono::seconds>(now).count();
-  scan.header.stamp.nanosec =
-    std::chrono::duration_cast<std::chrono::nanoseconds>(now)
-      .count();  // TODO: not sure this will work, probably need to remove the secs part
-  // scan.packets;
-  //  move buffer to scan
+  scan.header.stamp.nanosec = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+  // TODO: Copy data to scan.buffer
+  // TODO: Convert scan to unique_ptr
+  // TODO: another option is to obtain PandarScan directly instead of buffer, but then hesai_hw will
+  //      not be ros independent
 }
 
 }  // namespace ros
