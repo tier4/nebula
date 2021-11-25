@@ -1,12 +1,16 @@
 #include "hesai/hesai_hw_interface.hpp"
 
+#include <memory>
+#include <pandar_msgs/msg/detail/pandar_scan__struct.hpp>
+
 namespace nebula
 {
 namespace drivers
 {
 HesaiHwInterface::HesaiHwInterface()
 : cloud_io_context_{new IoContext(1)},
-  cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)}
+  cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
+  scan_cloud_ptr_{std::make_unique<pandar_msgs::msg::PandarScan>()}
 {
 }
 
@@ -60,6 +64,7 @@ Status HesaiHwInterface::CloudInterfaceStart()
       sensor_configuration_->host_ip, sensor_configuration_->data_port);
     cloud_udp_driver_->receiver()->open();
     cloud_udp_driver_->receiver()->bind();
+
     cloud_udp_driver_->receiver()->asyncReceive(
       std::bind(&HesaiHwInterface::ReceiveCloudPacketCallback, this, std::placeholders::_1));
   } catch (const std::exception & ex) {
@@ -72,7 +77,7 @@ Status HesaiHwInterface::CloudInterfaceStart()
 }
 
 Status HesaiHwInterface::RegisterScanCallback(
-  std::function<void(std::unique_ptr<std::vector<std::vector<uint8_t>>>)> scan_callback)
+  std::function<void(std::unique_ptr<pandar_msgs::msg::PandarScan>)> scan_callback)
 {
   scan_reception_callback_ = std::move(scan_callback);
 }
@@ -80,40 +85,37 @@ Status HesaiHwInterface::RegisterScanCallback(
 void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer)
 {
   int scan_phase = static_cast<int>(sensor_configuration_->scan_phase * 100.0);
-  std::unique_ptr<std::vector<std::vector<uint8_t>>> scan_data_ptr(
-    new std::vector<std::vector<uint8_t>>);
-
-  for (int prev_phase = 0;;) {  // start forming scan
-    while (true) {              // wait for valid lidar packet
-      if (is_valid_packet_(buffer.size())) {
-        if (buffer.size() < mtu_size_) {
-          // make sure the size matches the expected mtu size by the packet
-          std::vector<uint8_t> packet(buffer);
-          packet.resize(mtu_size_);
-          scan_data_ptr->emplace_back(packet);
-        } else {
-          scan_data_ptr->emplace_back(buffer);
-        }
-
-        break;
-      }
+  if (is_valid_packet_(buffer.size())) {
+    uint32_t buffer_size = buffer.size();
+    std::array<uint8_t, 1500> packet_data{};
+    std::copy_n(std::make_move_iterator(buffer.begin()), buffer_size, packet_data.begin());
+    pandar_msgs::msg::PandarPacket pandar_packet;
+    pandar_packet.data = packet_data;
+    pandar_packet.size = buffer_size;
+    std::chrono::duration<float> now = std::chrono::system_clock::now().time_since_epoch();
+    // get time from packet directly
+    pandar_packet.stamp.sec = std::chrono::duration_cast<std::chrono::seconds>(now).count();
+    pandar_packet.stamp.nanosec = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+    scan_cloud_ptr_->packets.emplace_back(pandar_packet);
+  }
+  int current_phase = 0;
+  {
+    const auto & data = scan_cloud_ptr_->packets.back().data;
+    current_phase = (data[azimuth_index_] & 0xff) | ((data[azimuth_index_ + 1] & 0xff) << 8);
+    current_phase = (static_cast<int>(current_phase) + 36000 - scan_phase) % 36000;
+  }
+  if (current_phase >= prev_phase_ || scan_cloud_ptr_->packets.size() < 2) {
+    prev_phase_ = current_phase;
+  } else {  // Scan complete
+    if (scan_reception_callback_) {
+      std::chrono::duration<float> now = std::chrono::system_clock::now().time_since_epoch();
+      // this should be from the final packet time
+      scan_cloud_ptr_->header.stamp.sec = std::chrono::duration_cast<std::chrono::seconds>(now).count();
+      scan_cloud_ptr_->header.stamp.nanosec = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+      // Callback
+      scan_reception_callback_(std::move(scan_cloud_ptr_));
+      scan_cloud_ptr_ = std::make_unique<pandar_msgs::msg::PandarScan>();
     }
-    int current_phase = 0;
-    {
-      const auto & data = scan_data_ptr->back();
-      current_phase = (data[azimuth_index_] & 0xff) | ((data[azimuth_index_ + 1] & 0xff) << 8);
-      current_phase = (static_cast<int>(current_phase) + 36000 - scan_phase) % 36000;
-    }
-    if (current_phase >= prev_phase || scan_data_ptr->size() < 2) {
-      prev_phase = current_phase;
-    } else {
-      // scan complete
-      break;
-    }
-  }  // finish scan
-  // scan formed, send it back through the registered callback
-  if (scan_reception_callback_) {
-    scan_reception_callback_(std::move(scan_data_ptr));
   }
 }
 Status HesaiHwInterface::CloudInterfaceStop() { return Status::ERROR_1; }
