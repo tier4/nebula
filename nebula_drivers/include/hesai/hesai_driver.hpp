@@ -1,15 +1,15 @@
 #ifndef NEBULA_HESAI_DRIVER_H
 #define NEBULA_HESAI_DRIVER_H
 
-#include <iostream>
-#include <stdexcept>
-#include <string>
 #include "common/nebula_common.hpp"
 #include "common/nebula_driver_base.hpp"
 #include "common/nebula_status.hpp"
 #include "hesai/hesai_common.hpp"
+
 #include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
+#include <iostream>
+#include <stdexcept>
+#include <string>
 
 namespace nebula
 {
@@ -20,17 +20,18 @@ class HesaiDriver : NebulaDriverBase
 private:
 public:
   HesaiDriver();
-  HesaiDriver(const CalibrationConfigurationBase & calibration_configuration,
-                    const CloudConfigurationBase & cloud_configuration);
+  HesaiDriver(
+    const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
+    const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
   Status SetCalibrationConfiguration(
     const CalibrationConfigurationBase & calibration_configuration) override;
   Status SetCloudConfiguration(const CloudConfigurationBase & cloud_configuration) override;
 
-  std::shared_ptr<sensor_msgs::msg::PointCloud2> ParsePacketToPointcloud(
-    std::vector<uint8_t> & packet) override;
+  sensor_msgs::msg::PointCloud2 ParsePacketToPointcloud(
+    std::vector<pandar_msgs::msg::PandarPacket> & packets);
 };
 
 }  // namespace drivers
 }  // namespace nebula
 
-#endif  //NEBULA_HESAI_DRIVER_H
+#endif  // NEBULA_HESAI_DRIVER_H

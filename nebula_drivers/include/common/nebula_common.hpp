@@ -1,21 +1,16 @@
 #ifndef NEBULA_CONFIGURATION_BASE_H
 #define NEBULA_CONFIGURATION_BASE_H
 
+#include <string>
 #include <vector>
-
 namespace nebula
 {
 namespace drivers
 {
 // COMMON
-enum class CoordinateMode {
-  UNKNOWN = 0,
-  CARTESIAN,
-  SPHERICAL,
-  CYLINDRICAL
-};
+enum class CoordinateMode { UNKNOWN = 0, CARTESIAN, SPHERICAL, CYLINDRICAL };
 
-enum class EchoMode {
+enum class ReturnMode {
   UNKNOWN = 0,
   SINGLE_FIRST,
   SINGLE_STRONGEST,
@@ -26,17 +21,24 @@ enum class EchoMode {
 };
 
 // SENSOR_CONFIGURATION
-enum class SensorModelBase
-{
-  UNKNOWN = 0
+enum class SensorModel {
+  UNKNOWN = 0,
+  HESAI_PANDAR64,
+  HESAI_PANDAR40P,
+  HESAI_PANDAR40M,
+  HESAI_PANDARQT,
+  HESAI_PANDARXT32,
+  HESAI_PANDAR128_V13,
+  HESAI_PANDAR128_V14
 };
 
 struct SensorConfigurationBase
 {
-  SensorModelBase sensor_model;
-  EchoMode echo_mode;
+  SensorModel sensor_model;
+  ReturnMode echo_mode;
   std::string host_ip;
   std::string sensor_ip;
+  std::string frame_id;
   uint16_t data_port;
   uint16_t frequency_ms;
 };
@@ -70,7 +72,7 @@ struct PointField
 struct CloudConfigurationBase
 {
   CoordinateMode coordinate_mode;
-  EchoMode echo_mode;
+  ReturnMode echo_mode;
   double cloud_min_range;
   double cloud_max_range;
   bool remove_nans;  /// This may mean removing "all zeros" in some cases
@@ -80,4 +82,4 @@ struct CloudConfigurationBase
 }  // namespace drivers
 }  // namespace nebula
 
-#endif  //NEBULA_CONFIGURATION_BASE_H
+#endif  // NEBULA_CONFIGURATION_BASE_H

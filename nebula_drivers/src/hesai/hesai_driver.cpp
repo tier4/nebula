@@ -4,6 +4,16 @@ namespace nebula
 {
 namespace drivers
 {
+HesaiDriver::HesaiDriver() = default;
+
+HesaiDriver::HesaiDriver(
+  const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
+  const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration
+)
+{
+  // initialize proper parser from cloud config's model and echo mode
+
+}
 
 Status HesaiDriver::SetCalibrationConfiguration(
   const CalibrationConfigurationBase & calibration_configuration)
@@ -15,22 +25,13 @@ Status HesaiDriver::SetCloudConfiguration(
   const nebula::drivers::CloudConfigurationBase & cloud_configuration)
 {
   throw std::runtime_error("SetCalibrationConfiguration. Not yet implemented");
-}
+}\
 
-std::shared_ptr<sensor_msgs::msg::PointCloud2> HesaiDriver::ParsePacketToPointcloud(
-  std::vector<uint8_t> & packet)
+sensor_msgs::msg::PointCloud2 HesaiDriver::ParsePacketToPointcloud(
+  std::vector<pandar_msgs::msg::PandarPacket> & packets)
 {
-  throw std::runtime_error("ParsePacketToPointcloud. Not yet implemented");
-}
-
-HesaiDriver::HesaiDriver() {}
-
-HesaiDriver::HesaiDriver(
-  const CalibrationConfigurationBase & calibration_configuration,
-  const CloudConfigurationBase & cloud_configuration)
-{
-  std::cout << calibration_configuration.calibration_file;
-  std::cout << cloud_configuration.cloud_min_range;
+  sensor_msgs::msg::PointCloud2 pointcloud;
+  return pointcloud;
 }
 
 }  // namespace drivers

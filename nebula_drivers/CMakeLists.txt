@@ -26,14 +26,17 @@ ament_auto_add_executable(hesai_hw_ros_wrapper_node
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_hw_interface_ros_main.cpp
         )
 
-# Driver
+# RosDriver Lib
 ament_auto_add_library(hesai_driver SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver.cpp
         )
-
-# RosDriver Lib
-
 # RosDriverNode
+ament_auto_add_library(hesai_driver_ros_wrapper SHARED
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver_ros_wrapper.cpp
+        )
+ament_auto_add_executable(hesai_driver_ros_wrapper_node
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver_ros_main.cpp
+        )
 
 ament_auto_package(
         )
