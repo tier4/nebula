@@ -17,6 +17,10 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
 {
 };
 
+struct HesaiCloudConfiguration : CloudConfigurationBase
+{
+};
+
 }  // namespace drivers
 }  // namespace nebula
 

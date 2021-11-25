@@ -4,7 +4,7 @@ namespace nebula
 {
 namespace ros
 {
-HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
+HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(
   const rclcpp::NodeOptions & options, const std::string & node_name)
 : rclcpp::Node(node_name, options), hw_interface_()
 {
@@ -27,48 +27,41 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   // Echo mode and model will need some type of switch/case or if/else
   sensor_configuration_.echo_mode = drivers::ReturnMode::SINGLE_STRONGEST;
   sensor_configuration_.sensor_model = drivers::SensorModel::HESAI_PANDAR64;
-  sensor_configuration_.frame_id = "hesai_pandar";  // maybe we need it?
+  sensor_configuration_.frame_id = "hesai_pandar";  // maybe we need it
 
   // Initialize sensor_configuration
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
     std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration_);
-  std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr);
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
 
-  // register scan callback
+  // register scan callback and publisher
   hw_interface_.RegisterScanCallback(
-    std::bind(&HesaiHwInterfaceWrapper::ReceiveScanDataCallback, this, std::placeholders::_1));
+    std::bind(&HesaiHwInterfaceRosWrapper::ReceiveScanDataCallback, this, std::placeholders::_1));
+  pandar_scan_pub_ = this->create_publisher<pandar_msgs::msg::PandarScan>("pandar_packets", rclcpp::SensorDataQoS());
 }
 
-Status HesaiHwInterfaceWrapper::StreamStart()
+Status HesaiHwInterfaceRosWrapper::StreamStart()
 {
   hw_interface_.CloudInterfaceStart();
   return Status::OK;
 }
 
-Status HesaiHwInterfaceWrapper::StreamStop() { return Status::OK; }
-Status HesaiHwInterfaceWrapper::Shutdown() { return Status::OK; }
+Status HesaiHwInterfaceRosWrapper::StreamStop() { return Status::OK; }
+Status HesaiHwInterfaceRosWrapper::Shutdown() { return Status::OK; }
 
-Status HesaiHwInterfaceWrapper::InitializeHwInterface(  // todo: don't think this is needed
+Status HesaiHwInterfaceRosWrapper::InitializeHwInterface(  // todo: don't think this is needed
   const drivers::SensorConfigurationBase & sensor_configuration)
 {
   return Status::OK;
 }
 
-void HesaiHwInterfaceWrapper::ReceiveScanDataCallback(
-  std::unique_ptr<std::vector<std::vector<uint8_t>>> scan_buffer)
+void HesaiHwInterfaceRosWrapper::ReceiveScanDataCallback(
+  std::unique_ptr<pandar_msgs::msg::PandarScan> scan_buffer)
 {
   // Publish
-  pandar_msgs::msg::PandarScan scan;
-  scan.header.frame_id = sensor_configuration_.frame_id;
-  std::chrono::duration<float> now = std::chrono::system_clock::now().time_since_epoch();
-  scan.header.stamp.sec = std::chrono::duration_cast<std::chrono::seconds>(now).count();
-  scan.header.stamp.nanosec = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
-  // TODO: Copy data to scan.buffer
-  // TODO: Convert scan to unique_ptr
-  // TODO: another option is to obtain PandarScan directly instead of buffer, but then hesai_hw will
-  //      not be ros independent
+  scan_buffer->header.frame_id = sensor_configuration_.frame_id;
+  pandar_scan_pub_->publish(*scan_buffer);
 }
 
 }  // namespace ros

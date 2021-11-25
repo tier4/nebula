@@ -1,5 +1,5 @@
-#ifndef NEBULA_HesaiHwInterfaceWrapper_H
-#define NEBULA_HesaiHwInterfaceWrapper_H
+#ifndef NEBULA_HesaiHwInterfaceRosWrapper_H
+#define NEBULA_HesaiHwInterfaceRosWrapper_H
 
 #include "common/nebula_common.hpp"
 #include "common/nebula_hw_interface_ros_wrapper_base.hpp"
@@ -18,7 +18,7 @@ namespace nebula
 {
 namespace ros
 {
-class HesaiHwInterfaceWrapper final : public rclcpp::Node, NebulaHwInterfaceWrapperBase
+class HesaiHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfaceWrapperBase
 {
   drivers::HesaiHwInterface hw_interface_;
 
@@ -31,15 +31,17 @@ class HesaiHwInterfaceWrapper final : public rclcpp::Node, NebulaHwInterfaceWrap
   uint16_t gnss_port_;
   uint16_t frequency_ms_;
   drivers::HesaiSensorConfiguration sensor_configuration_;
+  rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr pandar_scan_pub_;
 
   Status InitializeHwInterface(
     const drivers::SensorConfigurationBase & sensor_configuration) override;
   void ReceiveScanDataCallback(
-    std::unique_ptr<std::vector<std::vector<uint8_t>>> scan_buffer) override;
+    std::unique_ptr<pandar_msgs::msg::PandarScan> scan_buffer);
 
 public:
-  explicit HesaiHwInterfaceWrapper(
+  explicit HesaiHwInterfaceRosWrapper(
     const rclcpp::NodeOptions & options, const std::string & node_name);
+
   Status StreamStart() override;
   Status StreamStop() override;
   Status Shutdown() override;
@@ -48,4 +50,4 @@ public:
 }  // namespace ros
 }  // namespace nebula
 
-#endif  // NEBULA_HesaiHwInterfaceWrapper_H
+#endif  // NEBULA_HesaiHwInterfaceRosWrapper_H
