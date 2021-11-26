@@ -22,8 +22,8 @@ protected:
    * @return Status::OK if no error occured.
    */
   virtual void ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer) = 0;
-//  virtual Status RegisterScanCallback(
-//    std::function<void(std::unique_ptr<std::vector<std::vector<uint8_t>>>)> scan_callback) = 0;
+  //  virtual Status RegisterScanCallback(
+  //    std::function<void(std::unique_ptr<std::vector<std::vector<uint8_t>>>)> scan_callback) = 0;
 
 public:
   NebulaHwInterfaceBase(NebulaHwInterfaceBase && c) = delete;

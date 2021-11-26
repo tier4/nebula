@@ -38,7 +38,8 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(
   // register scan callback and publisher
   hw_interface_.RegisterScanCallback(
     std::bind(&HesaiHwInterfaceRosWrapper::ReceiveScanDataCallback, this, std::placeholders::_1));
-  pandar_scan_pub_ = this->create_publisher<pandar_msgs::msg::PandarScan>("pandar_packets", rclcpp::SensorDataQoS());
+  pandar_scan_pub_ =
+    this->create_publisher<pandar_msgs::msg::PandarScan>("pandar_packets", rclcpp::SensorDataQoS());
 }
 
 Status HesaiHwInterfaceRosWrapper::StreamStart()

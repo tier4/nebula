@@ -4,9 +4,10 @@
 #include "common/nebula_hw_interface_base.hpp"
 #include "hesai/hesai_common.hpp"
 #include "udp_driver/udp_driver.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
-#include "pandar_msgs/msg/pandar_packet.hpp"
+
 #include "pandar_msgs/msg/pandar_jumbo_packet.hpp"
+#include "pandar_msgs/msg/pandar_packet.hpp"
+#include "pandar_msgs/msg/pandar_scan.hpp"
 
 namespace nebula
 {
@@ -28,6 +29,7 @@ private:
     scan_reception_callback_; /**This function pointer is called when the scan is complete*/
 
   int prev_phase_{};
+
 public:
   HesaiHwInterface();
 
