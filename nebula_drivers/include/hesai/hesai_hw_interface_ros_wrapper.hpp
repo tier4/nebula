@@ -35,8 +35,7 @@ class HesaiHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfaceW
 
   Status InitializeHwInterface(
     const drivers::SensorConfigurationBase & sensor_configuration) override;
-  void ReceiveScanDataCallback(
-    std::unique_ptr<pandar_msgs::msg::PandarScan> scan_buffer);
+  void ReceiveScanDataCallback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_buffer);
 
 public:
   explicit HesaiHwInterfaceRosWrapper(

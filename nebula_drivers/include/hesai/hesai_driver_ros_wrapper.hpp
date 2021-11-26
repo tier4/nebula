@@ -2,22 +2,21 @@
 #define NEBULA_HesaiDriverRosWrapper_H
 
 #include "common/nebula_common.hpp"
-#include "common/nebula_status.hpp"
 #include "common/nebula_driver_ros_wrapper_base.hpp"
+#include "common/nebula_status.hpp"
 #include "hesai/hesai_common.hpp"
 #include "hesai/hesai_driver.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
 
+#include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
-#include <diagnostic_updater/diagnostic_updater.hpp>
 
+#include "pandar_msgs/msg/pandar_scan.hpp"
 
 namespace nebula
 {
 namespace ros
 {
-
 class HesaiDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapperBase
 {
   drivers::HesaiDriver driver_;

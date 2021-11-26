@@ -19,7 +19,6 @@ namespace ros
 {
 class NebulaDriverRosWrapperBase
 {
-
 public:
   NebulaDriverRosWrapperBase() = default;
 
@@ -37,7 +36,8 @@ private:
     std::shared_ptr<drivers::CloudConfigurationBase> cloud_configuration,
     std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) = 0;
 
-//  status ReceiveScanMsgCallback(void * ScanMsg);  // ROS message callback for individual packet type
+  //  status ReceiveScanMsgCallback(void * ScanMsg);  // ROS message callback for individual packet
+  //  type
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
 };
 
