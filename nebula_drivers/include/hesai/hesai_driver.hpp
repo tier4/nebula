@@ -5,8 +5,12 @@
 #include "common/nebula_driver_base.hpp"
 #include "common/nebula_status.hpp"
 #include "hesai/hesai_common.hpp"
+#include "hesai/point_types.hpp"
+#include "hesai/scan_decoder.hpp"
 
+#include "pandar_msgs/msg/pandar_jumbo_packet.hpp"
 #include "pandar_msgs/msg/pandar_packet.hpp"
+#include "pandar_msgs/msg/pandar_scan.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -20,6 +24,7 @@ class HesaiDriver : NebulaDriverBase
 {
 private:
   Status driver_status_;
+  std::shared_ptr<drivers::HesaiScanDecoder> scan_decoder_;
 public:
   HesaiDriver();
   HesaiDriver(

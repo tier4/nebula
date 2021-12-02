@@ -1,8 +1,8 @@
 #ifndef NEBULA_DRIVER_BASE_H
 #define NEBULA_DRIVER_BASE_H
 
-#include "nebula_common.hpp"
-#include "nebula_status.hpp"
+#include "common/nebula_common.hpp"
+#include "common/nebula_status.hpp"
 
 #include <sensor_msgs/msg/point_cloud2.hpp>
 

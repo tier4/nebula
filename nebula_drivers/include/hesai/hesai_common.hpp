@@ -12,7 +12,7 @@ struct HesaiSensorConfiguration : SensorConfigurationBase
   uint16_t gnss_port{};
   double scan_phase{};
 };
-std::ostream& operator<<(std::ostream& os, HesaiSensorConfiguration const& arg)
+inline std::ostream& operator<<(std::ostream& os, HesaiSensorConfiguration const& arg)
 {
   os << (SensorConfigurationBase)(arg) << ", gnss_port: " << arg.gnss_port << ", scan_phase:" << arg.scan_phase;
   return os;

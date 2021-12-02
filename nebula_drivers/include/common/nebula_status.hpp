@@ -2,6 +2,7 @@
 #define NEBULA_STATUS_HPP
 
 #include <string>
+#include <ostream>
 
 namespace nebula
 {
@@ -15,7 +16,7 @@ enum class Status {
   ERROR_1
 };
 
-std::ostream& operator<<(std::ostream& os, Status const& arg)
+inline std::ostream& operator<<(std::ostream& os, nebula::Status const& arg)
 {
   switch (arg) {
     case Status::OK:
