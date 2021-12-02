@@ -8,27 +8,12 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(
   const rclcpp::NodeOptions & options, const std::string & node_name)
 : rclcpp::Node(node_name, options), hw_interface_()
 {
-  // Get these params form YAML or XML file
-  sensor_model_ = "Pandar64";
-  host_ip_ = "255.255.255.255";
-  sensor_ip_ = "192.168.1.201";
-  data_port_ = 2368;
-  gnss_port_ = 0;
-  frequency_ms_ = 100;
-  echo_mode_ = "Dual";
-
-  // Build sensor_configuration file
-  sensor_configuration_.sensor_ip = sensor_ip_;
-  sensor_configuration_.host_ip = host_ip_;
-  sensor_configuration_.data_port = data_port_;
-  sensor_configuration_.gnss_port = gnss_port_;
-  sensor_configuration_.frequency_ms =
-    frequency_ms_;  // todo: this is weird, frequency_hz is better maybe?
-  // Echo mode and model will need some type of switch/case or if/else
-  sensor_configuration_.echo_mode = drivers::ReturnMode::SINGLE_STRONGEST;
-  sensor_configuration_.sensor_model = drivers::SensorModel::HESAI_PANDAR64;
-  sensor_configuration_.frame_id = "hesai_pandar";  // maybe we need it
-
+  interface_status_ = GetParameters(sensor_configuration_, calibration_configuration_, cloud_configuration_);
+  if (Status::OK != interface_status_)
+  {
+    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
+    return;
+  }
   // Initialize sensor_configuration
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
     std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration_);
@@ -44,8 +29,10 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(
 
 Status HesaiHwInterfaceRosWrapper::StreamStart()
 {
-  hw_interface_.CloudInterfaceStart();
-  return Status::OK;
+  if(Status::OK == interface_status_ ){
+    interface_status_ = hw_interface_.CloudInterfaceStart();
+  }
+  return interface_status_;
 }
 
 Status HesaiHwInterfaceRosWrapper::StreamStop() { return Status::OK; }
@@ -54,6 +41,42 @@ Status HesaiHwInterfaceRosWrapper::Shutdown() { return Status::OK; }
 Status HesaiHwInterfaceRosWrapper::InitializeHwInterface(  // todo: don't think this is needed
   const drivers::SensorConfigurationBase & sensor_configuration)
 {
+  return Status::OK;
+}
+
+Status HesaiHwInterfaceRosWrapper::GetParameters(
+  drivers::HesaiSensorConfiguration & sensor_configuration,
+  drivers::HesaiCalibrationConfiguration & calibration_configuration,
+  drivers::HesaiCloudConfiguration & cloud_configuration)
+{
+  sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(
+    this->declare_parameter<std::string>("sensor_model", ""));
+
+  sensor_configuration.return_mode =
+    nebula::drivers::ReturnModeFromString(this->declare_parameter<std::string>("return_mode", ""));
+
+  sensor_configuration.host_ip = this->declare_parameter<std::string>("host_ip", "255.255.255.255");
+  sensor_configuration.sensor_ip =
+    this->declare_parameter<std::string>("sensor_ip", "192.168.1.201");
+  sensor_configuration.frame_id = this->declare_parameter<std::string>("frame_id", "pandar");
+  sensor_configuration.data_port = this->declare_parameter<uint16_t>("data_port", 2368);
+  sensor_configuration.gnss_port = this->declare_parameter<uint16_t>("gnss_port", 2369);
+  sensor_configuration.scan_phase = this->declare_parameter<double>("scan_phase", 0.);
+  sensor_configuration.frequency_ms = this->declare_parameter<uint16_t>("frequency_ms", 100);
+
+  if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
+    return Status::INVALID_SENSOR_MODEL;
+  }
+  if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
+    return Status::INVALID_ECHO_MODE;
+  }
+  if (
+    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 365 ||
+    sensor_configuration.frequency_ms == 0) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
   return Status::OK;
 }
 

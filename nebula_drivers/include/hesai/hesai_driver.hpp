@@ -19,14 +19,18 @@ namespace drivers
 class HesaiDriver : NebulaDriverBase
 {
 private:
+  Status driver_status_;
 public:
   HesaiDriver();
   HesaiDriver(
+    const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
     const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
   Status SetCalibrationConfiguration(
     const CalibrationConfigurationBase & calibration_configuration) override;
   Status SetCloudConfiguration(const CloudConfigurationBase & cloud_configuration) override;
+
+  Status GetStatus();
 
   sensor_msgs::msg::PointCloud2 ParsePacketToPointcloud(
     std::vector<pandar_msgs::msg::PandarPacket> & packets);

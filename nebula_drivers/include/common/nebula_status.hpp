@@ -10,25 +10,37 @@ enum class Status {
   UDP_CONNECTION_ERROR,
   SENSOR_CONFIG_ERROR,
   INVALID_SENSOR_MODEL,
+  INVALID_ECHO_MODE,
+  NOT_IMPLEMENTED,
   ERROR_1
 };
 
-std::string NebulaStatusToString(const Status & nebula_status)
+std::ostream& operator<<(std::ostream& os, Status const& arg)
 {
-  switch (nebula_status) {
+  switch (arg) {
     case Status::OK:
-      return "OK";
+      os << "OK";
+      break;
     case Status::UDP_CONNECTION_ERROR:
-      return "Udp Connection Error";
+      os <<  "Udp Connection Error";
+      break;
     case Status::SENSOR_CONFIG_ERROR:
-      return "Could not set SensorConfiguration";
+      os <<  "Could not set SensorConfiguration";
       break;
     case Status::INVALID_SENSOR_MODEL:
-      return "Invalid sensor model provided";
+      os <<  "Invalid sensor model provided";
+      break;
+    case Status::INVALID_ECHO_MODE:
+      os <<  "Invalid echo model provided";
+      break;
+    case Status::NOT_IMPLEMENTED:
+      os <<  "Not Implemented";
+      break;
     case Status::ERROR_1:
     default:
-      return "RUNTIME STOPPED";
+      os <<  "Generic Error";
   }
+  return os;
 }
 
 }  // namespace nebula

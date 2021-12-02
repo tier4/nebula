@@ -27,12 +27,9 @@ public:
   NebulaDriverRosWrapperBase(const NebulaDriverRosWrapperBase & c) = delete;
   NebulaDriverRosWrapperBase & operator=(const NebulaDriverRosWrapperBase & c) = delete;
 
-  virtual Status StreamStart() = 0;  // Activate callback function
-  virtual Status StreamStop() = 0;   // Deactivate callback function
-  virtual Status Shutdown() = 0;     // Shutdown the driver
-
 private:
   virtual Status InitializeDriver(
+    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
     std::shared_ptr<drivers::CloudConfigurationBase> cloud_configuration,
     std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) = 0;
 
