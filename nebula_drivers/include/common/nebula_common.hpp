@@ -1,8 +1,8 @@
-#ifndef NEBULA_CONFIGURATION_BASE_H
-#define NEBULA_CONFIGURATION_BASE_H
+#ifndef NEBULA_COMMON_H
+#define NEBULA_COMMON_H
 
 #include <map>
-#include <sstream>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -23,7 +23,7 @@ enum class ReturnMode {
   DUAL_LAST
 };
 
-std::ostream & operator<<(std::ostream & os, ReturnMode const & arg)
+inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnMode const & arg)
 {
   switch (arg) {
     case ReturnMode::SINGLE_FIRST:
@@ -63,7 +63,7 @@ enum class SensorModel {
   HESAI_PANDAR128_V13,
   HESAI_PANDAR128_V14
 };
-std::ostream & operator<<(std::ostream & os, SensorModel const & arg)
+inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel const & arg)
 {
   switch (arg) {
     case SensorModel::HESAI_PANDAR64:
@@ -106,7 +106,7 @@ struct SensorConfigurationBase
   uint16_t frequency_ms;
   bool sensor_online;
 };
-std::ostream & operator<<(std::ostream & os, SensorConfigurationBase const & arg)
+inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorConfigurationBase const & arg)
 {
   os << "sensor_model: " << arg.sensor_model << ", return_mode: " << arg.return_mode << ", host_ip"
      << arg.host_ip << ", sensor_ip: " << arg.sensor_ip << ", frame_id: " << arg.frame_id
@@ -150,7 +150,7 @@ struct CloudConfigurationBase
   std::vector<PointField> fields;
 };
 
-SensorModel SensorModelFromString(const std::string & sensor_model)
+inline SensorModel SensorModelFromString(const std::string & sensor_model)
 {
   if (sensor_model == "Pandar64") return SensorModel::HESAI_PANDAR64;
   if (sensor_model == "Pandar40P") return SensorModel::HESAI_PANDAR40P;
@@ -163,7 +163,7 @@ SensorModel SensorModelFromString(const std::string & sensor_model)
   return SensorModel::UNKNOWN;
 }
 
-ReturnMode ReturnModeFromString(const std::string & return_mode)
+inline ReturnMode ReturnModeFromString(const std::string & return_mode)
 {
   if (return_mode == "SingleFirst") return ReturnMode::SINGLE_FIRST;
   if (return_mode == "SingleStrongest") return ReturnMode::SINGLE_STRONGEST;
