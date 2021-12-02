@@ -21,16 +21,12 @@ namespace ros
 class HesaiHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfaceWrapperBase
 {
   drivers::HesaiHwInterface hw_interface_;
+  Status interface_status_;
 
-  // ROS
-  std::string sensor_model_;
-  std::string echo_mode_;
-  std::string host_ip_;
-  std::string sensor_ip_;
-  uint16_t data_port_;
-  uint16_t gnss_port_;
-  uint16_t frequency_ms_;
   drivers::HesaiSensorConfiguration sensor_configuration_;
+  drivers::HesaiCloudConfiguration cloud_configuration_;
+  drivers::HesaiCalibrationConfiguration calibration_configuration_;
+
   rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr pandar_scan_pub_;
 
   Status InitializeHwInterface(
@@ -44,6 +40,10 @@ public:
   Status StreamStart() override;
   Status StreamStop() override;
   Status Shutdown() override;
+  Status GetParameters(
+    drivers::HesaiSensorConfiguration & sensor_configuration,
+    drivers::HesaiCalibrationConfiguration & calibration_configuration,
+    drivers::HesaiCloudConfiguration & cloud_configuration);
 };
 
 }  // namespace ros

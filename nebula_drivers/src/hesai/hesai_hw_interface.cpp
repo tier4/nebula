@@ -1,6 +1,8 @@
 #include "hesai/hesai_hw_interface.hpp"
 
-#include <pandar_msgs/msg/detail/pandar_scan__struct.hpp>
+#include <pandar_msgs/msg/pandar_jumbo_packet.hpp>
+#include <pandar_msgs/msg/pandar_packet.hpp>
+#include <pandar_msgs/msg/pandar_scan.hpp>
 
 #include <memory>
 
@@ -30,7 +32,7 @@ Status HesaiHwInterface::SetSensorConfiguration(
       is_valid_packet_ = [](size_t packet_size) {
         return (packet_size == 1262 || packet_size == 1266);
       };
-    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARQT) {
+    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARQT64) {
       azimuth_index_ = 12;  // 12 + 258 * [0-3]
       is_valid_packet_ = [](size_t packet_size) { return (packet_size == 1072); };
     } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARXT32) {
@@ -50,7 +52,7 @@ Status HesaiHwInterface::SetSensorConfiguration(
     }
   } catch (const std::exception & ex) {
     status = Status::SENSOR_CONFIG_ERROR;
-    std::cerr << NebulaStatusToString(status) << std::endl;
+    std::cerr << status << std::endl;
     return status;
   }
   return status;
@@ -59,8 +61,7 @@ Status HesaiHwInterface::SetSensorConfiguration(
 Status HesaiHwInterface::CloudInterfaceStart()
 {
   try {
-    std::cout << "Starting UDP server on: " << sensor_configuration_->host_ip << "."
-              << sensor_configuration_->data_port << std::endl;
+    std::cout << "Starting UDP server on: " << *sensor_configuration_ << std::endl;
     cloud_udp_driver_->init_receiver(
       sensor_configuration_->host_ip, sensor_configuration_->data_port);
     cloud_udp_driver_->receiver()->open();
@@ -70,7 +71,7 @@ Status HesaiHwInterface::CloudInterfaceStart()
       std::bind(&HesaiHwInterface::ReceiveCloudPacketCallback, this, std::placeholders::_1));
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
-    std::cerr << NebulaStatusToString(status) << sensor_configuration_->sensor_ip << ","
+    std::cerr << status << sensor_configuration_->sensor_ip << ","
               << sensor_configuration_->data_port << std::endl;
     return status;
   }

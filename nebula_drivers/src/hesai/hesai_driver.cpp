@@ -7,10 +7,12 @@ namespace drivers
 HesaiDriver::HesaiDriver() = default;
 
 HesaiDriver::HesaiDriver(
+  const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
   const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
   const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration)
 {
   // initialize proper parser from cloud config's model and echo mode
+  driver_status_ = nebula::Status::OK;
 }
 
 Status HesaiDriver::SetCalibrationConfiguration(
@@ -31,6 +33,7 @@ sensor_msgs::msg::PointCloud2 HesaiDriver::ParsePacketToPointcloud(
   sensor_msgs::msg::PointCloud2 pointcloud;
   return pointcloud;
 }
+Status HesaiDriver::GetStatus() { return driver_status_; }
 
 }  // namespace drivers
 }  // namespace nebula
