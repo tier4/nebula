@@ -1,11 +1,10 @@
 #pragma once
 
-#include "hesai/decoders/pandar_64.hpp"
+#include <hesai/decoders/hesai_scan_decoder.hpp>
+#include <hesai/decoders/pandar_64.hpp>
 
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
-
-#include "hesai/scan_decoder.hpp"
 
 #include <array>
 
@@ -13,40 +12,36 @@ namespace nebula
 {
 namespace drivers
 {
-namespace pandar64
+namespace pandar_64
 {
-class Pandar64Decoder : HesaiScanDecoder
+class Pandar64Decoder : public HesaiScanDecoder
 {
 public:
-  explicit Pandar64Decoder();
-  void unpack(const pandar_msgs::msg::PandarScan & raw_packet) override;
-  drivers::PclPointCloudXYZIRADTPtr build_point(int block_id, int unit_id, uint8_t return_type);
+  explicit Pandar64Decoder(const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
+                           const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
+                           const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
+  void unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override;
   bool hasScanned() override;
-  drivers::PclPointCloudXYZIRADTPtr getPointcloud() override;
+  drivers::PointCloudXYZIRADTPtr get_pointcloud() override;
 
 private:
-  bool parsePacket(const pandar_msgs::msg::PandarPacket& pandar_scan);
-  drivers::PclPointCloudXYZIRADTPtr convert(int block_id);
-  drivers::PclPointCloudXYZIRADTPtr convert_dual(int block_id);
+  bool parsePacket(const pandar_msgs::msg::PandarPacket & pandar_packet) override;
+  drivers::PointXYZIRADT build_point(size_t block_id, size_t unit_id, ReturnMode return_type);
+  drivers::PointCloudXYZIRADTPtr convert(size_t block_id) override;
+  drivers::PointCloudXYZIRADTPtr convert_dual(size_t block_id) override;
 
-  std::array<float, UNIT_NUM> elev_angle_{};
-  std::array<float, UNIT_NUM> azimuth_offset_{};
+  std::array<float, LASER_COUNT> elev_angle_{};
+  std::array<float, LASER_COUNT> azimuth_offset_{};
 
-  std::array<float, UNIT_NUM> firing_offset_{};
-  std::array<float, BLOCK_NUM> block_offset_single_{};
-  std::array<float, BLOCK_NUM> block_offset_dual_{};
+  std::array<float, LASER_COUNT> firing_offset_{};
 
-  double dual_return_distance_threshold_;
+  std::array<float, BLOCKS_PER_PACKET> block_offset_single_{};
+  std::array<float, BLOCKS_PER_PACKET> block_offset_dual_{};
+
   Packet packet_{};
 
-  drivers::PclPointCloudXYZIRADTPtr scan_pc_;
-  drivers::PclPointCloudXYZIRADTPtr overflow_pc_;
-
-  uint16_t scan_phase_;
-  int last_phase_;
-  bool has_scanned_;
 };
 
-}  // namespace pandar_qt
-}
-}
+}  // namespace pandar_64
+}  // namespace drivers
+}  // namespace nebula

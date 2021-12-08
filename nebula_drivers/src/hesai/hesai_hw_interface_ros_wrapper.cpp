@@ -63,6 +63,7 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
   sensor_configuration.gnss_port = this->declare_parameter<uint16_t>("gnss_port", 2369);
   sensor_configuration.scan_phase = this->declare_parameter<double>("scan_phase", 0.);
   sensor_configuration.frequency_ms = this->declare_parameter<uint16_t>("frequency_ms", 100);
+  sensor_configuration.packet_mtu_size = this->declare_parameter<uint16_t>("packet_mtu_size", 1500);
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
@@ -85,6 +86,7 @@ void HesaiHwInterfaceRosWrapper::ReceiveScanDataCallback(
 {
   // Publish
   scan_buffer->header.frame_id = sensor_configuration_.frame_id;
+  scan_buffer->header.stamp = scan_buffer->packets.front().stamp;
   pandar_scan_pub_->publish(*scan_buffer);
 }
 

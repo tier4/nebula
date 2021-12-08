@@ -4,13 +4,15 @@
 #include "common/nebula_common.hpp"
 #include "common/nebula_driver_base.hpp"
 #include "common/nebula_status.hpp"
+#include "hesai/decoders/hesai_scan_decoder.hpp"
 #include "hesai/hesai_common.hpp"
 #include "hesai/point_types.hpp"
-#include "hesai/scan_decoder.hpp"
 
 #include "pandar_msgs/msg/pandar_jumbo_packet.hpp"
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
+
+#include <pcl_conversions/pcl_conversions.h>
 
 #include <iostream>
 #include <stdexcept>
@@ -26,7 +28,7 @@ private:
   Status driver_status_;
   std::shared_ptr<drivers::HesaiScanDecoder> scan_decoder_;
 public:
-  HesaiDriver();
+  HesaiDriver() = delete;
   HesaiDriver(
     const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
@@ -37,8 +39,8 @@ public:
 
   Status GetStatus();
 
-  sensor_msgs::msg::PointCloud2 ParsePacketToPointcloud(
-    std::vector<pandar_msgs::msg::PandarPacket> & packets);
+  PointCloudXYZIRADTPtr ConvertScanToPointcloud(
+    const std::shared_ptr<pandar_msgs::msg::PandarScan>& pandar_scan);
 };
 
 }  // namespace drivers
