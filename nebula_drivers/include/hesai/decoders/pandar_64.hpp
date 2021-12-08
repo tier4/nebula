@@ -10,17 +10,17 @@ namespace nebula
 {
 namespace drivers
 {
-namespace pandar64
+namespace pandar_64
 {
 // Head
 constexpr size_t HEAD_SIZE = 8;
 // Body
-constexpr size_t BLOCK_NUM = 6;
+constexpr size_t BLOCKS_PER_PACKET = 6;
 constexpr size_t BLOCK_HEADER_AZIMUTH = 2;
-constexpr size_t UNIT_NUM = 64;
+constexpr size_t LASER_COUNT = 64;
 constexpr size_t UNIT_SIZE = 3;
-constexpr size_t BLOCK_SIZE = UNIT_SIZE * UNIT_NUM + BLOCK_HEADER_AZIMUTH;
-constexpr size_t BODY_SIZE = BLOCK_SIZE * BLOCK_NUM;
+constexpr size_t BLOCK_SIZE = UNIT_SIZE * LASER_COUNT + BLOCK_HEADER_AZIMUTH;
+constexpr size_t BODY_SIZE = BLOCK_SIZE * BLOCKS_PER_PACKET;
 // Tail
 constexpr size_t RESERVED_SIZE = 8;
 constexpr size_t HIGH_TEMPERATURE = 1;
@@ -54,20 +54,20 @@ struct Header
 
 struct Unit
 {
-  double distance;
+  float distance;
   uint16_t intensity;
 };
 
 struct Block
 {
   uint16_t azimuth;  // packet angle,Azimuth = RealAzimuth * 100
-  Unit units[UNIT_NUM];
+  Unit units[LASER_COUNT];
 };
 
 struct Packet
 {
   Header header;
-  Block blocks[BLOCK_NUM];
+  Block blocks[BLOCKS_PER_PACKET];
   uint32_t usec;  // ms
   uint32_t return_mode;
   tm t;

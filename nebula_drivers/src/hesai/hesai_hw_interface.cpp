@@ -82,6 +82,7 @@ Status HesaiHwInterface::RegisterScanCallback(
   std::function<void(std::unique_ptr<pandar_msgs::msg::PandarScan>)> scan_callback)
 {
   scan_reception_callback_ = std::move(scan_callback);
+  return Status::OK;
 }
 
 void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer)
@@ -94,10 +95,11 @@ void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & b
     pandar_msgs::msg::PandarPacket pandar_packet;
     pandar_packet.data = packet_data;
     pandar_packet.size = buffer_size;
-    std::chrono::duration<float> now = std::chrono::system_clock::now().time_since_epoch();
-    // get time from packet directly
-    pandar_packet.stamp.sec = std::chrono::duration_cast<std::chrono::seconds>(now).count();
-    pandar_packet.stamp.nanosec = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+    auto now = std::chrono::system_clock::now();
+    auto now_secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+    auto now_nanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+    pandar_packet.stamp.sec = static_cast<int>(now_secs);
+    pandar_packet.stamp.nanosec = static_cast<int>((now_nanosecs/1000000000. - static_cast<double>(now_secs))*1000000000);
     scan_cloud_ptr_->packets.emplace_back(pandar_packet);
   }
   int current_phase = 0;
@@ -110,12 +112,7 @@ void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & b
     prev_phase_ = current_phase;
   } else {  // Scan complete
     if (scan_reception_callback_) {
-      std::chrono::duration<float> now = std::chrono::system_clock::now().time_since_epoch();
-      // this should be from the final packet time
-      scan_cloud_ptr_->header.stamp.sec =
-        std::chrono::duration_cast<std::chrono::seconds>(now).count();
-      scan_cloud_ptr_->header.stamp.nanosec =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+      scan_cloud_ptr_->header.stamp = scan_cloud_ptr_->packets.front().stamp;
       // Callback
       scan_reception_callback_(std::move(scan_cloud_ptr_));
       scan_cloud_ptr_ = std::make_unique<pandar_msgs::msg::PandarScan>();

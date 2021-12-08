@@ -21,7 +21,7 @@ private:
   std::shared_ptr<HesaiSensorConfiguration> sensor_configuration_;
   std::shared_ptr<HesaiCalibrationConfiguration> calibration_configuration_;
   size_t azimuth_index_{};
-  size_t mtu_size_;
+  size_t mtu_size_{};
   std::unique_ptr<pandar_msgs::msg::PandarScan> scan_cloud_ptr_;
   std::function<bool(size_t)>
     is_valid_packet_; /*Lambda Function Array to verify proper packet size*/

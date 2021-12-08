@@ -20,8 +20,52 @@ enum class ReturnMode {
   SINGLE_LAST,
   DUAL_ONLY,
   DUAL_FIRST,
-  DUAL_LAST
+  DUAL_LAST,
+  DUAL_WEAK_FIRST,
+  DUAL_WEAK_LAST,
+  DUAL_STRONGEST_LAST,
+  DUAL_STRONGEST_FIRST
 };
+
+inline uint8_t ReturnModeToInt(const ReturnMode & mode)
+{
+  switch (mode) {
+    case ReturnMode::SINGLE_STRONGEST:
+      return 1;
+      break;
+    case ReturnMode::SINGLE_LAST:
+      return 2;
+      break;
+    case ReturnMode::DUAL_FIRST:
+      return 3;
+      break;
+    case ReturnMode::DUAL_LAST:
+      return 4;
+      break;
+    case ReturnMode::DUAL_ONLY:
+      return 5;
+      break;
+    case ReturnMode::SINGLE_FIRST:
+      return 6;
+      break;
+    case ReturnMode::DUAL_STRONGEST_FIRST:
+      return 7;
+      break;
+    case ReturnMode::DUAL_STRONGEST_LAST:
+      return 8;
+      break;
+    case ReturnMode::DUAL_WEAK_FIRST:
+      return 9;
+      break;
+    case ReturnMode::DUAL_WEAK_LAST:
+      return 10;
+      break;
+    default:
+    case ReturnMode::UNKNOWN:
+      return 0;
+      break;
+  }
+}
 
 inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnMode const & arg)
 {
@@ -43,6 +87,18 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnMode 
       break;
     case ReturnMode::DUAL_LAST:
       os << "DualLast";
+      break;
+    case ReturnMode::DUAL_WEAK_FIRST:
+      os << "WeakFirst";
+      break;
+    case ReturnMode::DUAL_WEAK_LAST:
+      os << "WeakLast";
+      break;
+    case ReturnMode::DUAL_STRONGEST_LAST:
+      os << "StrongLast";
+      break;
+    case ReturnMode::DUAL_STRONGEST_FIRST:
+      os << "StrongFirst";
       break;
     case ReturnMode::UNKNOWN:
       os << "Unknown";
@@ -85,8 +141,10 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
       os << "PandarXT32";
       break;
     case SensorModel::HESAI_PANDAR128_V13:
+      os << "Pandar128_1.3";
+      break;
     case SensorModel::HESAI_PANDAR128_V14:
-      os << "Pandar128";
+      os << "Pandar128_1.4";
       break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
@@ -105,12 +163,15 @@ struct SensorConfigurationBase
   uint16_t data_port;
   uint16_t frequency_ms;
   bool sensor_online;
+  uint16_t packet_mtu_size;
 };
-inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorConfigurationBase const & arg)
+inline std::ostream & operator<<(
+  std::ostream & os, nebula::drivers::SensorConfigurationBase const & arg)
 {
-  os << "sensor_model: " << arg.sensor_model << ", return_mode: " << arg.return_mode << ", host_ip"
-     << arg.host_ip << ", sensor_ip: " << arg.sensor_ip << ", frame_id: " << arg.frame_id
-     << ", data_port: " << arg.data_port << ", frequency: " << arg.frequency_ms;
+  os << "SensorModel: " << arg.sensor_model << ", ReturnMode: " << arg.return_mode
+     << ", HostIP: " << arg.host_ip << ", SensorIP: " << arg.sensor_ip
+     << ", FrameID: " << arg.frame_id << ", DataPort: " << arg.data_port
+     << ", Frequency: " << arg.frequency_ms << ", MTU: " << arg.packet_mtu_size;
   return os;
 }
 

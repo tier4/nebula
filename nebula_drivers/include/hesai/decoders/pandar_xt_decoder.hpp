@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hesai/decoders/pandar_xt.hpp"
-#include "hesai/scan_decoder.hpp"
+#include "hesai_scan_decoder.hpp"
 
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
@@ -14,35 +14,33 @@ namespace drivers
 {
 namespace pandar_xt
 {
-class PandarXTDecoder : drivers::HesaiScanDecoder
+class PandarXTDecoder : public HesaiScanDecoder
 {
 public:
-  PandarXTDecoder();
-  void unpack(const pandar_msgs::msg::PandarScan & raw_packet) override;
+  explicit PandarXTDecoder(const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
+                           const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
+                           const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
+  void unpack(const pandar_msgs::msg::PandarPacket & raw_packet) override;
   bool hasScanned() override;
-  drivers::PclPointCloudXYZIRADTPtr getPointcloud() override;
+  drivers::PointCloudXYZIRADTPtr get_pointcloud() override;
 
 private:
 
-  bool parsePacket(const pandar_msgs::msg::PandarScan& pandar_scan);
-  drivers::PclPointCloudXYZIRADTPtr convert(const int block_id);
-  drivers::PclPointCloudXYZIRADTPtr convert_dual(const int block_id);
+  bool parsePacket(const pandar_msgs::msg::PandarPacket& pandar_packet) override;
+  drivers::PointXYZIRADT build_point(int block_id, int unit_id, ReturnMode return_type);
+  drivers::PointCloudXYZIRADTPtr convert(size_t block_id) override;
+  drivers::PointCloudXYZIRADTPtr convert_dual(size_t block_id) override;
 
-  std::array<float, UNIT_NUM> elev_angle_;
-  std::array<float, UNIT_NUM> azimuth_offset_;
+  std::array<float, LASER_COUNT> elev_angle_{};
+  std::array<float, LASER_COUNT> azimuth_offset_{};
 
-  std::array<float, UNIT_NUM> firing_offset_;
-  std::array<float, BLOCK_NUM> block_offset_single_;
-  std::array<float, BLOCK_NUM> block_offset_dual_;
+  std::array<float, LASER_COUNT> firing_offset_{};
 
-  Packet packet_;
+  std::array<float, BLOCKS_PER_PACKET> block_offset_single_{};
+  std::array<float, BLOCKS_PER_PACKET> block_offset_dual_{};
 
-  drivers::PclPointCloudXYZIRADTPtr scan_pc_;
-  drivers::PclPointCloudXYZIRADTPtr overflow_pc_;
+  Packet packet_{};
 
-  uint16_t scan_phase_;
-  int last_phase_;
-  bool has_scanned_;
 };
 
 }  // namespace pandar_xt

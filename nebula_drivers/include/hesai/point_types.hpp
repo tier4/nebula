@@ -29,8 +29,9 @@ struct PointXYZIRADT
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
 
-using PclPointCloudXYZIRAD = pcl::PointCloud<PointXYZIRADT>;
-using PclPointCloudXYZIRADTPtr = pcl::PointCloud<PointXYZIRADT>::Ptr;
+using PointXYZIRADTPtr = std::shared_ptr<PointXYZIRADT>;
+using PointCloudXYZIRADT = pcl::PointCloud<PointXYZIRADT>;
+using PointCloudXYZIRADTPtr = pcl::PointCloud<PointXYZIRADT>::Ptr;
 
 }  // namespace drivers
 }  // namespace nebula

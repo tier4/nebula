@@ -30,7 +30,7 @@ public:
 
   // Lidar specific conversion of Packet to Pointcloud2 Msg
   // Header information should be filled in by the DriverBaseWrapper
-  //  virtual std::shared_ptr<sensor_msgs::msg::PointCloud2> ParsePacketToPointcloud(
+  //  virtual std::shared_ptr<sensor_msgs::msg::PointCloud2> ConvertScanToPointcloud(
   //    PACKET_MSG) = 0;
 };
 

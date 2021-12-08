@@ -17,12 +17,12 @@ constexpr size_t HEAD_SIZE = 12;
 constexpr size_t PRE_HEADER_SIZE = 6;
 constexpr size_t HEADER_SIZE = 6;
 // Body
-constexpr size_t BLOCK_NUM = 4;
+constexpr size_t BLOCKS_PER_PACKET = 4;
 constexpr size_t BLOCK_HEADER_AZIMUTH = 2;
-constexpr size_t UNIT_NUM = 64;
+constexpr size_t LASER_COUNT = 64;
 constexpr size_t UNIT_SIZE = 4;
-constexpr size_t BLOCK_SIZE = UNIT_SIZE * UNIT_NUM + BLOCK_HEADER_AZIMUTH;
-constexpr size_t BODY_SIZE = BLOCK_SIZE * BLOCK_NUM;
+constexpr size_t BLOCK_SIZE = UNIT_SIZE * LASER_COUNT + BLOCK_HEADER_AZIMUTH;
+constexpr size_t BODY_SIZE = BLOCK_SIZE * BLOCKS_PER_PACKET;
 // Tail
 constexpr size_t RESERVED_SIZE = 10;
 constexpr size_t ENGINE_VELOCITY = 2;
@@ -58,7 +58,7 @@ struct Header
 
 struct Unit
 {
-  double distance;
+  float distance;
   uint16_t intensity;
   uint16_t confidence;
 };
@@ -66,13 +66,13 @@ struct Unit
 struct Block
 {
   uint16_t azimuth;  // packet angle,Azimuth = RealAzimuth * 100
-  Unit units[UNIT_NUM];
+  Unit units[LASER_COUNT];
 };
 
 struct Packet
 {
   Header header;
-  Block blocks[BLOCK_NUM];
+  Block blocks[BLOCKS_PER_PACKET];
   uint32_t usec;  // ms
   uint32_t return_mode;
   tm t;

@@ -39,10 +39,11 @@ ament_auto_add_executable(hesai_hw_ros_wrapper_node
 ament_auto_add_library(hesai_driver SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/decoders/pandar_40_decoder.cpp
-#        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/decoders/pandar_64_decoder.cpp
-#        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/decoders/pandar_qt_decoder.cpp
-#        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/decoders/pandar_xt_decoder.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/decoders/pandar_64_decoder.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/decoders/pandar_qt_decoder.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/decoders/pandar_xt_decoder.cpp
         )
+
 # RosDriverNode
 ament_auto_add_library(hesai_driver_ros_wrapper SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver_ros_wrapper.cpp
@@ -52,5 +53,9 @@ ament_auto_add_executable(hesai_driver_ros_wrapper_node
         )
 
 ament_auto_package(
-        )
+        INSTALL_TO_SHARE
+        #launch
+        calibration
+        config
+)
 
