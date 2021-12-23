@@ -1,0 +1,14 @@
+# VSCode
+.vscode/
+*.code-workspace
+
+# catkin / colcon
+build/
+devel/
+install/
+logs/
+log/
+.catkin_tools/
+.catkin_workspace
+
+.idea
