@@ -1,14 +1,25 @@
-# VSCode
-.vscode/
-*.code-workspace
-
-# catkin / colcon
-build/
-devel/
 install/
-logs/
 log/
-.catkin_tools/
-.catkin_workspace
+build/
 
-.idea
+# Ignore generated docs
+*.dox
+*.wikidoc
+
+# eclipse stuff
+.project
+.cproject
+
+# qcreator stuff
+CMakeLists.txt.user
+
+srv/_*.py
+*.pcd
+*.pyc
+qtcreator-*
+*.user
+
+*~
+
+# Emacs
+.#*
