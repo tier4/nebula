@@ -54,7 +54,7 @@ ament_auto_add_executable(hesai_driver_ros_wrapper_node
 
 ament_auto_package(
         INSTALL_TO_SHARE
-        #launch
+        launch
         calibration
         config
 )

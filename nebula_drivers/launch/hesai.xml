@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="host_ip" default="255.255.255.255" description="Broadcast IP from Sensor"/>
+    <arg name="sensor_model" />
+    <arg name="device_ip" default="192.168.1.201" description="Lidar Sensor IP"/>
+    <arg name="return_mode" default="Dual" description="Dual/First/Last check config yaml for details"/>
+
+    <node pkg="nebula_lidar_driver" exec="hesai_hw_ros_wrapper_node"
+          name="hesai" output="screen">
+        <param name="host_ip" value="$(var host_ip)"/>
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="device_ip" value="$(var device_ip)"/>
+        <param name="return_mode" value="$(var return_mode)"/>
+    </node>
+</launch>
