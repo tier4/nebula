@@ -1,15 +1,28 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="host_ip" default="255.255.255.255" description="Broadcast IP from Sensor"/>
-    <arg name="sensor_model" />
+    <arg name="sensor_model" description="Pandar64|Pandar40P|Pandar40M|PandarQT64|PandarQT128|PandarXT32|"/>
+    <arg name="frame_id"  default="pandar"/>
     <arg name="device_ip" default="192.168.1.201" description="Lidar Sensor IP"/>
     <arg name="return_mode" default="Dual" description="Dual/First/Last check config yaml for details"/>
+    <arg name="calibration_file" default="$(find-pkg-share nebula_lidar_driver)/calibration/hesai/$(var sensor_model).csv"/>
 
     <node pkg="nebula_lidar_driver" exec="hesai_hw_ros_wrapper_node"
-          name="hesai" output="screen">
+          name="hesai_hw_driver" output="screen">
         <param name="host_ip" value="$(var host_ip)"/>
         <param name="sensor_model" value="$(var sensor_model)"/>
         <param name="device_ip" value="$(var device_ip)"/>
         <param name="return_mode" value="$(var return_mode)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+    </node>
+
+    <node pkg="nebula_lidar_driver" exec="hesai_driver_ros_wrapper_node"
+          name="hesai_cloud" output="screen">
+        <param name="host_ip" value="$(var host_ip)"/>
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="device_ip" value="$(var device_ip)"/>
+        <param name="return_mode" value="$(var return_mode)"/>
+        <param name="calibration_file" value="$(var calibration_file)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
     </node>
 </launch>
