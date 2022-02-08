@@ -1,9 +1,7 @@
 #pragma once
 
-#include "hesai_common.hpp"
-
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
+#include <pcl-1.10/pcl/point_cloud.h>
+#include <pcl-1.10/pcl/point_types.h>
 
 namespace nebula
 {
@@ -32,6 +30,16 @@ struct PointXYZIRADT
 using PointXYZIRADTPtr = std::shared_ptr<PointXYZIRADT>;
 using PointCloudXYZIRADT = pcl::PointCloud<PointXYZIRADT>;
 using PointCloudXYZIRADTPtr = pcl::PointCloud<PointXYZIRADT>::Ptr;
+
+class DataContainerBase
+{
+public:
+  virtual void addPoint(
+    const float & x, const float & y, const float & z,
+    const uint8_t & return_type, const uint16_t & ring,
+    const uint16_t & azimuth, const float & distance, const float & intensity,
+    const double & time_stamp) = 0;
+};
 
 }  // namespace drivers
 }  // namespace nebula

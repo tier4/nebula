@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="sensor_model" description="See readme for supported models"/>
+    <arg name="return_mode" default="Dual" description="See readme for supported return modes"/>
+    <arg name="frame_id"  default="velodyne"/>
+    <arg name="scan_phase" default="0.0" />
+
+    <arg name="calibration_file" default="$(find-pkg-share nebula_lidar_driver)/calibration/velodyne/$(var sensor_model).yaml"/>
+    <arg name="min_range" default="0.3" />
+    <arg name="max_range" default="300.0" />
+    <arg name="view_width" default="360.0" />
+
+    <node pkg="nebula_lidar_driver" exec="velodyne_driver_ros_wrapper_node"
+          name="velodyne_cloud" output="screen">
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="return_mode" value="$(var return_mode)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="scan_phase" value="$(var scan_phase)"/>
+        <param name="calibration_file" value="$(var calibration_file)"/>
+        <param name="min_range" value="$(var min_range)"/>
+        <param name="max_range" value="$(var max_range)"/>
+        <param name="view_width" value="$(var view_width)"/>
+    </node>
+</launch>

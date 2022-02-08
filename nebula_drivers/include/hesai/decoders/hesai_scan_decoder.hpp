@@ -2,7 +2,7 @@
 #define NEBULA_WS_HESAI_SCAN_DECODER_HPP
 
 #include "hesai/hesai_common.hpp"
-#include "hesai/point_types.hpp"
+#include "common/point_types.hpp"
 
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
@@ -24,7 +24,6 @@ protected:
 
   std::shared_ptr<drivers::HesaiSensorConfiguration> sensor_configuration_;
   std::shared_ptr<drivers::HesaiCalibrationConfiguration> sensor_calibration_;
-  std::shared_ptr<drivers::HesaiCloudConfiguration> cloud_calibration_;
 
   static inline double deg2rad(double degrees) { return degrees * M_PI / 180.0; }
 

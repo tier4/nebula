@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="sensor_model" description="Pandar64|Pandar40P|PandarXT32|PandarQT64"/>
+    <arg name="return_mode" default="Dual" description="See readme for supported return modes"/>
+    <arg name="frame_id"  default="hesai"/>
+    <arg name="scan_phase" default="0.0" description="Angle where scans begin (degrees, [0.,360.]" />
+
+    <arg name="sensor_ip" default="192.168.1.201" description="Lidar Sensor IP"/>
+    <arg name="host_ip" default="255.255.255.255" description="Broadcast IP from Sensor"/>
+    <arg name="data_port" default="2368" description="LiDAR Data Port"/>
+    <arg name="gnss_port" default="2369" description="LiDAR GNSS Port"/>
+    <arg name="frequency_ms" default="100" description="LiDAR scan frequency"/>
+    <arg name="packet_mtu_size" default="1500" description="Packet MTU size"/>
+
+    <node pkg="nebula_lidar_driver" exec="hesai_hw_ros_wrapper_node"
+          name="hesai_hw_driver" output="screen">
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="return_mode" value="$(var return_mode)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="scan_phase" value="$(var scan_phase)"/>
+        <param name="sensor_ip" value="$(var sensor_ip)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="host_ip" value="$(var host_ip)"/>
+        <param name="data_port" value="$(var data_port)"/>
+        <param name="gnss_port" value="$(var gnss_port)"/>
+        <param name="frequency_ms" value="$(var frequency_ms)"/>
+        <param name="packet_mtu_size" value="$(var packet_mtu_size)"/>
+    </node>
+
+</launch>

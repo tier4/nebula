@@ -13,12 +13,10 @@ namespace pandar_40
 {
 Pandar40Decoder::Pandar40Decoder(
   const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
   const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration)
 {
   sensor_configuration_ = sensor_configuration;
   sensor_calibration_ = calibration_configuration;
-  cloud_calibration_ = cloud_configuration;
 
   firing_order_ = {7,  19, 14, 26, 6,  18, 4,  32, 36, 0, 10, 22, 17, 29, 9,  21, 5,  33, 37, 1,
                    13, 25, 20, 30, 12, 8,  24, 34, 38, 2, 16, 28, 23, 31, 15, 11, 27, 35, 39, 3};
@@ -45,7 +43,7 @@ Pandar40Decoder::Pandar40Decoder(
   }
 
   scan_phase_ = static_cast<uint16_t>(sensor_configuration_->scan_phase * 100.0f);
-  dual_return_distance_threshold_ = cloud_calibration_->dual_return_distance_threshold;
+  dual_return_distance_threshold_ = sensor_configuration_->dual_return_distance_threshold;
 
   last_phase_ = 0;
   has_scanned_ = false;

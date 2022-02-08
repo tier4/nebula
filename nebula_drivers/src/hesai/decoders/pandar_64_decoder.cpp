@@ -12,11 +12,9 @@ namespace pandar_64
 {
 Pandar64Decoder::Pandar64Decoder(
   const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
   const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration)
 {
   sensor_configuration_ = sensor_configuration;
-  cloud_calibration_ = cloud_configuration;
   sensor_calibration_ = calibration_configuration;
 
   firing_offset_ = {23.18,  21.876, 20.572, 19.268, 17.964, 16.66,  11.444, 46.796, 7.532,  36.956,
@@ -43,7 +41,7 @@ Pandar64Decoder::Pandar64Decoder(
     azimuth_offset_[laser] = calibration_configuration->azimuth_offset_map[laser];
   }
   scan_phase_ = static_cast<uint16_t>(sensor_configuration_->scan_phase * 100.0f);
-  dual_return_distance_threshold_ = cloud_calibration_->dual_return_distance_threshold;
+  dual_return_distance_threshold_ = sensor_configuration_->dual_return_distance_threshold;
 
   last_phase_ = 0;
   has_scanned_ = false;

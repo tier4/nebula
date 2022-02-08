@@ -10,12 +10,10 @@ namespace pandar_xt
 {
 PandarXTDecoder::PandarXTDecoder(
   const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
   const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration)
 {
   sensor_configuration_ = sensor_configuration;
   sensor_calibration_ = calibration_configuration;
-  cloud_calibration_ = cloud_configuration;
 
   for (size_t unit = 0; unit < LASER_COUNT; ++unit) {
     firing_offset_[unit] = 1.512f * static_cast<float>(unit) + 0.28f;
@@ -38,7 +36,7 @@ PandarXTDecoder::PandarXTDecoder(
   }
 
   scan_phase_ = static_cast<uint16_t>(sensor_configuration_->scan_phase * 100.0f);
-  dual_return_distance_threshold_ = cloud_calibration_->dual_return_distance_threshold;
+  dual_return_distance_threshold_ = sensor_configuration_->dual_return_distance_threshold;
 
   last_phase_ = 0;
   has_scanned_ = false;
