@@ -30,7 +30,6 @@ public:
 private:
   virtual Status InitializeDriver(
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CloudConfigurationBase> cloud_configuration,
     std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) = 0;
 
   //  status ReceiveScanMsgCallback(void * ScanMsg);  // ROS message callback for individual packet

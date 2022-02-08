@@ -18,7 +18,6 @@ class Pandar40Decoder : public HesaiScanDecoder
 {
 public:
   explicit Pandar40Decoder(const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
-                           const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
                            const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
   void unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override;
   bool hasScanned() override;
@@ -30,6 +29,7 @@ private:
   drivers::PointCloudXYZIRADTPtr convert(size_t block_id) override;
   drivers::PointCloudXYZIRADTPtr convert_dual(size_t block_id) override;
 
+  
   std::array<float, LASER_COUNT> elev_angle_{};
   std::array<float, LASER_COUNT> azimuth_offset_{};
 

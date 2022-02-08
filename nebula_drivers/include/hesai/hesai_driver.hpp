@@ -6,7 +6,7 @@
 #include "common/nebula_status.hpp"
 #include "hesai/decoders/hesai_scan_decoder.hpp"
 #include "hesai/hesai_common.hpp"
-#include "hesai/point_types.hpp"
+#include "common/point_types.hpp"
 
 #include "pandar_msgs/msg/pandar_jumbo_packet.hpp"
 #include "pandar_msgs/msg/pandar_packet.hpp"
@@ -29,15 +29,14 @@ private:
   std::shared_ptr<drivers::HesaiScanDecoder> scan_decoder_;
 public:
   HesaiDriver() = delete;
-  HesaiDriver(
+  explicit HesaiDriver(
     const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
     const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
-  Status SetCalibrationConfiguration(
-    const CalibrationConfigurationBase & calibration_configuration) override;
-  Status SetCloudConfiguration(const CloudConfigurationBase & cloud_configuration) override;
 
   Status GetStatus();
+
+  Status SetCalibrationConfiguration(
+    const CalibrationConfigurationBase & calibration_configuration) override;
 
   PointCloudXYZIRADTPtr ConvertScanToPointcloud(
     const std::shared_ptr<pandar_msgs::msg::PandarScan>& pandar_scan);

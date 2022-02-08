@@ -38,7 +38,7 @@ public:
   Status CloudInterfaceStop() final;
   Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration) final;
   Status GetCalibrationConfiguration(
-    CalibrationConfigurationBase & calibration_configuration) final;
+    CalibrationConfigurationBase & calibration_configuration);
   Status SetSensorConfiguration(
     std::shared_ptr<SensorConfigurationBase> sensor_configuration) final;
   Status RegisterScanCallback(

@@ -8,7 +8,7 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(
   const rclcpp::NodeOptions & options, const std::string & node_name)
 : rclcpp::Node(node_name, options), hw_interface_()
 {
-  interface_status_ = GetParameters(sensor_configuration_, calibration_configuration_, cloud_configuration_);
+  interface_status_ = GetParameters(sensor_configuration_);
   if (Status::OK != interface_status_)
   {
     RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
@@ -45,9 +45,7 @@ Status HesaiHwInterfaceRosWrapper::InitializeHwInterface(  // todo: don't think 
 }
 
 Status HesaiHwInterfaceRosWrapper::GetParameters(
-  drivers::HesaiSensorConfiguration & sensor_configuration,
-  drivers::HesaiCalibrationConfiguration & calibration_configuration,
-  drivers::HesaiCloudConfiguration & cloud_configuration)
+  drivers::HesaiSensorConfiguration & sensor_configuration)
 {
   sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(
     this->declare_parameter<std::string>("sensor_model", ""));
@@ -72,12 +70,14 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
     return Status::INVALID_ECHO_MODE;
   }
   if (
-    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 365 ||
+    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360 ||
     sensor_configuration.frequency_ms == 0) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
-  RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
+  RCLCPP_INFO_STREAM(this->get_logger(), "Sensor model: " << sensor_configuration.sensor_model <<
+                                           ", Return mode: " << sensor_configuration.return_mode <<
+                                           ", Scan Phase: " << sensor_configuration.scan_phase);
   return Status::OK;
 }
 

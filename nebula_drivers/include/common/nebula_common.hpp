@@ -117,8 +117,33 @@ enum class SensorModel {
   HESAI_PANDARQT128,
   HESAI_PANDARXT32,
   HESAI_PANDAR128_V13,
-  HESAI_PANDAR128_V14
+  HESAI_PANDAR128_V14,
+  VELODYNE_VLS128,
+  VELODYNE_HDL64,
+  VELODYNE_VLP32,
+  VELODYNE_HDL32,
+  VELODYNE_VLP16,
 };
+
+enum class datatype {
+  INT8 = 1,
+  UINT8 = 2,
+  INT16 = 3,
+  UINT16 = 4,
+  INT32 = 5,
+  UINT32 = 6,
+  FLOAT32 = 7,
+  FLOAT64 = 8
+};
+
+struct PointField
+{
+  std::string name;
+  uint32_t offset;
+  uint8_t datatype;
+  uint32_t count;
+};
+
 inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel const & arg)
 {
   switch (arg) {
@@ -146,6 +171,21 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::HESAI_PANDAR128_V14:
       os << "Pandar128_1.4";
       break;
+    case SensorModel::VELODYNE_VLS128:
+      os << "VLS128";
+      break;
+    case SensorModel::VELODYNE_HDL64:
+      os << "HDL64";
+      break;
+    case SensorModel::VELODYNE_VLP32:
+      os << "VLP32";
+      break;
+    case SensorModel::VELODYNE_HDL32:
+      os << "HDL32";
+      break;
+    case SensorModel::VELODYNE_VLP16:
+      os << "VLP16";
+      break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
       break;
@@ -162,8 +202,12 @@ struct SensorConfigurationBase
   std::string frame_id;
   uint16_t data_port;
   uint16_t frequency_ms;
-  bool sensor_online;
   uint16_t packet_mtu_size;
+  CoordinateMode coordinate_mode;
+  double min_range;
+  double max_range;
+  bool remove_nans;  /// todo: consider changing to only_finite
+  std::vector<PointField> fields;
 };
 inline std::ostream & operator<<(
   std::ostream & os, nebula::drivers::SensorConfigurationBase const & arg)
@@ -175,44 +219,13 @@ inline std::ostream & operator<<(
   return os;
 }
 
-// CALIBRATION_CONFIGURATION
-struct CalibrationConfigurationBase
-{
+struct CalibrationConfigurationBase {
   std::string calibration_file;
-};
-
-// CLOUD_CONFIGURATION
-enum class datatype {
-  INT8 = 1,
-  UINT8 = 2,
-  INT16 = 3,
-  UINT16 = 4,
-  INT32 = 5,
-  UINT32 = 6,
-  FLOAT32 = 7,
-  FLOAT64 = 8
-};
-
-struct PointField
-{
-  std::string name;
-  uint32_t offset;
-  uint8_t datatype;
-  uint32_t count;
-};
-
-struct CloudConfigurationBase
-{
-  CoordinateMode coordinate_mode;
-  ReturnMode return_mode;
-  double cloud_min_range;
-  double cloud_max_range;
-  bool remove_nans;  /// todo: consider changing to only_finite
-  std::vector<PointField> fields;
 };
 
 inline SensorModel SensorModelFromString(const std::string & sensor_model)
 {
+  // Hesai
   if (sensor_model == "Pandar64") return SensorModel::HESAI_PANDAR64;
   if (sensor_model == "Pandar40P") return SensorModel::HESAI_PANDAR40P;
   if (sensor_model == "Pandar40M") return SensorModel::HESAI_PANDAR40M;
@@ -220,7 +233,12 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "PandarQT64") return SensorModel::HESAI_PANDARQT64;
   if (sensor_model == "PandarQT128") return SensorModel::HESAI_PANDARQT128;
   if (sensor_model == "Pandar128") return SensorModel::HESAI_PANDAR128_V14;
-
+  // Velodyne
+  if (sensor_model == "VLS128") return SensorModel::VELODYNE_VLS128;
+  if (sensor_model == "HDL64") return SensorModel::VELODYNE_HDL64;
+  if (sensor_model == "VLP32") return SensorModel::VELODYNE_VLP32;
+  if (sensor_model == "HDL32") return SensorModel::VELODYNE_HDL32;
+  if (sensor_model == "VLP16") return SensorModel::VELODYNE_VLP16;
   return SensorModel::UNKNOWN;
 }
 

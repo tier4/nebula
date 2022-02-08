@@ -1,5 +1,121 @@
 # Nebula Lidar Driver
 
+## Hesai LiDARs
+Supported models, where sensor_model is the ROS param to be used at launch:
+
+| Model         | sensor_model   | Config   |
+|---------------|----------------|----------|
+| Pandar 64     | Pandar64       | 64.csv   |
+| Pandar 40P    | Pandar40P      | 40p.csv  |
+| Pandar XT 32  | PandarXT32     | xt32.csv |
+| Pandar QT 64  | PandarQT64     | qt.csv   |
+| ------------- | -------------- | -------- |
+
+Supported return modes:
+
+| Mode               | return_mode     |
+|--------------------|-----------------|
+| Single (First)     | SingleFirst     |
+| Single (Strongest) | SingleStrongest |
+| Single (Last)      | SingleLast      |
+| Dual               | Dual            | 
+| ------------------ | --------------- |
+
+Common ROS params:
+
+| Parameter       | Type   | Default     | Accepted Values            | Description      |
+|-----------------|--------|-------------|----------------------------|------------------|
+| sensor_model    | string |             | See supported models       |                  |
+| return_mode     | string |             | See supported return modes |                  |
+| frame_id        | string | pandar      |                            | ROS frame ID     |
+| scan_phase      | double | 0           | degrees [0, 360[           | Scan start angle |
+
+### Hesai Hardware Interface
+Launches the UDP hardware connection to a live sensor and publishes HesaiScan messages. E.g.:
+```ros2 launch nebula_lidar_driver hesai_hw_interface.xml sensor_model:=Pandar40P return_mode:=Dual```
+Unique params:
+
+| Parameter       | Type   | Default     | Accepted Values   | Description     |
+|-----------------|--------|-------------|-------------------|-----------------|
+| sensor_ip       | string | 192.168.0.1 |                   | Sensor IP       |
+| host_ip         | string | 192.168.0.1 |                   | Host IP         |
+| data_port       | uint16 | 2368        |                   | Sensor port     |
+| gnss_port       | uint16 | 2369        |                   | GNSS port       |
+| frequency_ms    | uint16 | 100         | milliseconds, > 0 | Time per scan   |
+| packet_mtu_size | uint16 | 1500        |                   | Packet MTU size |
+
+
+### Hesai Driver
+Launches the hesai driver which subscribes to HesaiScan messages and converts them to PointCloud2. E.g.:
+```ros2 launch nebula_lidar_driver hesai_driver.xml sensor_model:=Pandar40P return_mode:=Dual```
+Unique params:
+
+| Parameter       | Type   | Default     | Accepted Values | Description            |
+|-----------------|--------|-------------|-----------------|------------------------|
+| calibration_file| string |             |                 | LiDAR calibration file |
+
+
+
+## Velodyne LiDARs
+| Model                 | sensor_model   | Config             |
+|-----------------------|----------------|--------------------|
+| VLP-16                | Pandar64       | VLP16.yaml         |
+| VLP-16-HiRes          | Pandar40P      | VLP16_hires.yaml   |
+| VLP-32                | PandarXT32     | VLP32.yaml         | 
+| VLS-128 (Alpha Prime) | HDL64          | VLS128.yaml        |
+| --------------------- | -------------- | ------------------ |
+| Untested:             |                |                    |
+| HDL-32                | PandarQT64     | HDL32.yaml         |
+| HDL-64E (default)     | HDL64          | HDL64e_utexas.yaml |              
+| HDL-64E S2            | HDL64          | HDL64e_s2.yaml     |
+| HDL-64E S3            | HDL64          | HDL64e_s3.yaml     |
+| --------------------- | -------------- | ------------------ |
+
+Supported return modes:
+
+| Mode               | return_mode     |
+|--------------------|-----------------|
+| Single (First)     | SingleFirst     |
+| Single (Strongest) | SingleStrongest |
+| Single (Last)      | SingleLast      |
+| Dual               | Dual            | 
+| ------------------ | --------------- |
+
+Common ROS params:
+
+| Parameter       | Type   | Default     | Accepted Values            | Description      |
+|-----------------|--------|-------------|----------------------------|------------------|
+| sensor_model    | string |             | See supported models       |                  |
+| return_mode     | string |             | See supported return modes |                  |
+| frame_id        | string | pandar      |                            | ROS frame ID     |
+| scan_phase      | double | 0           | degrees [0, 360[           | Scan start angle |
+
+### Velodyne Hardware Interface
+Launches the UDP hardware connection to a live sensor and publishes VelodyneScan messages. E.g.:
+```ros2 launch nebula_lidar_driver velodyne_hw_interface.xml sensor_model:=VLS128 return_mode:=Dual```
+Unique params:
+
+| Parameter       | Type   | Default     | Accepted Values | Description      |
+|-----------------|--------|-------------|-----------------|------------------|
+| sensor_ip       | string | 192.168.0.1 |                 | Sensor IP        |
+| data_port       | uint16 | 2368        |                 | Sensor port      |
+| gnss_port       | uint16 | 2369        |                 | GNSS port        |
+| frequency_ms    | uint16 | 100         | ms, > 0         | Time per scan    |
+| packet_mtu_size | uint16 | 1500        |                 | Packet MTU size  |
+
+### Velodyne Driver
+Launches the Velodyne driver which subscribes to VelodyneScan messages and converts them to PointCloud2. E.g.:
+```ros2 launch nebula_lidar_driver velodyne_driver.xml sensor_model:=VLS128 return_mode:=Dual```
+Unique params:
+
+| Parameter        | Type   | Default | Accepted Values  | Description                             |
+|------------------|--------|---------|------------------|-----------------------------------------|
+| calibration_file | string |         |                  | LiDAR calibration file                  |
+| min_range        | double | 0.3     | meters, >= 0.3   | Minimum point range published           | 
+| max_range        | double | 300     | meters, <= 300   | Maximum point range published           |
+| view_width       | double | 360     | degrees ]0, 360] | Horizontal FOV centered at `scan_phase` |
+
+## Diagrams
 ![DriverOrganization](doc/diagram.png)
 
 
