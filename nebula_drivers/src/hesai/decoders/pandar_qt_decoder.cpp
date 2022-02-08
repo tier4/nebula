@@ -12,12 +12,10 @@ namespace pandar_qt
 {
 PandarQTDecoder::PandarQTDecoder(
   const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
   const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration)
 {
   sensor_configuration_ = sensor_configuration;
   sensor_calibration_ = calibration_configuration;
-  cloud_calibration_ = cloud_configuration;
 
   firing_offset_ = {
     12.31,  14.37,  16.43,  18.49,  20.54,  22.6,   24.66,  26.71,  29.16,  31.22,  33.28,
@@ -43,7 +41,7 @@ PandarQTDecoder::PandarQTDecoder(
   }
 
   scan_phase_ = static_cast<uint16_t>(sensor_configuration_->scan_phase * 100.0f);
-  dual_return_distance_threshold_ = cloud_calibration_->dual_return_distance_threshold;
+  dual_return_distance_threshold_ = sensor_configuration_->dual_return_distance_threshold;
 
   last_phase_ = 0;
   has_scanned_ = false;

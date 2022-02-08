@@ -26,8 +26,6 @@ public:
   virtual Status SetCalibrationConfiguration(
     const CalibrationConfigurationBase & calibration_configuration) = 0;
 
-  virtual Status SetCloudConfiguration(const CloudConfigurationBase & cloud_configuration) = 0;
-
   // Lidar specific conversion of Packet to Pointcloud2 Msg
   // Header information should be filled in by the DriverBaseWrapper
   //  virtual std::shared_ptr<sensor_msgs::msg::PointCloud2> ConvertScanToPointcloud(

@@ -24,8 +24,6 @@ class HesaiHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfaceW
   Status interface_status_;
 
   drivers::HesaiSensorConfiguration sensor_configuration_;
-  drivers::HesaiCloudConfiguration cloud_configuration_;
-  drivers::HesaiCalibrationConfiguration calibration_configuration_;
 
   rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr pandar_scan_pub_;
 
@@ -41,9 +39,7 @@ public:
   Status StreamStop() override;
   Status Shutdown() override;
   Status GetParameters(
-    drivers::HesaiSensorConfiguration & sensor_configuration,
-    drivers::HesaiCalibrationConfiguration & calibration_configuration,
-    drivers::HesaiCloudConfiguration & cloud_configuration);
+    drivers::HesaiSensorConfiguration & sensor_configuration);
 };
 
 }  // namespace ros

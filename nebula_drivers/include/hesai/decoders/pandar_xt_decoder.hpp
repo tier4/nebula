@@ -18,7 +18,6 @@ class PandarXTDecoder : public HesaiScanDecoder
 {
 public:
   explicit PandarXTDecoder(const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
-                           const std::shared_ptr<drivers::HesaiCloudConfiguration> & cloud_configuration,
                            const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
   void unpack(const pandar_msgs::msg::PandarPacket & raw_packet) override;
   bool hasScanned() override;

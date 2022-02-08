@@ -14,6 +14,7 @@ struct HesaiSensorConfiguration : SensorConfigurationBase
 {
   uint16_t gnss_port{};
   double scan_phase{};
+  double dual_return_distance_threshold{};
 };
 inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration const & arg)
 {
@@ -89,10 +90,6 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
   }
 };
 
-struct HesaiCloudConfiguration : CloudConfigurationBase
-{
-  double dual_return_distance_threshold{};
-};
 
 }  // namespace drivers
 }  // namespace nebula
