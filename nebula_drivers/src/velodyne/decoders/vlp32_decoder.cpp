@@ -37,7 +37,7 @@ drivers::PointCloudXYZIRADTPtr Vlp32Decoder::get_pointcloud() {
   {
     uint16_t current_azimuth = (int)scan_pc_->points.back().azimuth;
     uint16_t phase_diff = (36000 + current_azimuth - phase) % 36000;
-    while (phase_diff < 18000 && scan_pc_->points.empty() > 0)
+    while (phase_diff < 18000 && scan_pc_->points.size() > 0)
     {
       overflow_pc_->points.push_back(scan_pc_->points.back());
       scan_pc_->points.pop_back();
