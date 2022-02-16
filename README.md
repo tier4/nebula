@@ -59,17 +59,16 @@ Unique params:
 ## Velodyne LiDARs
 | Model                 | sensor_model   | Config             |
 |-----------------------|----------------|--------------------|
-| VLP-16                | Pandar64       | VLP16.yaml         |
-| VLP-16-HiRes          | Pandar40P      | VLP16_hires.yaml   |
-| VLP-32                | PandarXT32     | VLP32.yaml         | 
+| VLP-16                | VLP16          | VLP16.yaml         |
+| VLP-16-HiRes          | VLP16          | VLP16_hires.yaml   |
+| VLP-32                | VLP32          | VLP32.yaml         | 
 | VLS-128 (Alpha Prime) | HDL64          | VLS128.yaml        |
-| --------------------- | -------------- | ------------------ |
+|  |  |  |
 | Untested:             |                |                    |
 | HDL-32                | PandarQT64     | HDL32.yaml         |
 | HDL-64E (default)     | HDL64          | HDL64e_utexas.yaml |              
 | HDL-64E S2            | HDL64          | HDL64e_s2.yaml     |
 | HDL-64E S3            | HDL64          | HDL64e_s3.yaml     |
-| --------------------- | -------------- | ------------------ |
 
 Supported return modes:
 
@@ -79,7 +78,6 @@ Supported return modes:
 | Single (Strongest) | SingleStrongest |
 | Single (Last)      | SingleLast      |
 | Dual               | Dual            | 
-| ------------------ | --------------- |
 
 Common ROS params:
 
