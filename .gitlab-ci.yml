@@ -8,5 +8,5 @@ test_build:
     - DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install libboost1.71-dev
     - rosdep update
     - mkdir -p src_tmp/$CI_PROJECT_NAME && mv `find -maxdepth 1 -not -name . -not -name src_tmp` src_tmp/$CI_PROJECT_NAME && mv src_tmp src
-    - rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
+    - DEBIAN_FRONTEND=noninteractive rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
     - colcon build
