@@ -21,9 +21,6 @@ jobs:
             container: ros:humble
             build-depends-repos: build_depends.repos
     steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.10.0
-
       - name: Check out repository
         uses: actions/checkout@v3
         with:
@@ -64,7 +61,7 @@ jobs:
 
   clang-tidy-differential:
     runs-on: ubuntu-latest
-    container: ros:galactic
+    container: ros:humble
     needs: build-and-test-differential
     steps:
       - name: Check out repository
@@ -83,7 +80,7 @@ jobs:
         if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
         uses: autowarefoundation/autoware-github-actions/clang-tidy@v1
         with:
-          rosdistro: galactic
+          rosdistro: humble
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
           clang-tidy-config-url: https://raw.githubusercontent.com/autowarefoundation/autoware/main/.clang-tidy
           build-depends-repos: build_depends.repos
