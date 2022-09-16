@@ -1,7 +1,13 @@
 #pragma once
 
-#include <pcl-1.10/pcl/point_cloud.h>
-#include <pcl-1.10/pcl/point_types.h>
+//Galactic
+//#include <pcl-1.10/pcl/point_cloud.h>
+//#include <pcl-1.10/pcl/point_types.h>
+//Humble
+//#include <pcl-1.12/pcl/point_cloud.h>
+//#include <pcl-1.12/pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
 namespace nebula
 {

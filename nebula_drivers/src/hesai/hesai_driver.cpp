@@ -3,6 +3,8 @@
 #include "hesai/decoders/pandar_40_decoder.hpp"
 #include "hesai/decoders/pandar_qt_decoder.hpp"
 #include "hesai/decoders/pandar_xt_decoder.hpp"
+#include "hesai/decoders/pandar_xtm_decoder.hpp"
+#include "hesai/decoders/pandar_at_decoder.hpp"
 
 namespace nebula
 {
@@ -11,7 +13,8 @@ namespace drivers
 
 HesaiDriver::HesaiDriver(
   const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration)
+  const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration,
+  const std::shared_ptr<drivers::HesaiCorrection> & correction_configuration)
 
 
 {
@@ -37,6 +40,15 @@ HesaiDriver::HesaiDriver(
     case SensorModel::HESAI_PANDARXT32:
       scan_decoder_.reset(new drivers::pandar_xt::PandarXTDecoder(sensor_configuration,
                                                                   calibration_configuration));
+      break;
+    case SensorModel::HESAI_PANDARXT32M:
+      scan_decoder_.reset(new drivers::pandar_xtm::PandarXTMDecoder(sensor_configuration,
+                                                                  calibration_configuration));
+      break;
+    case SensorModel::HESAI_PANDARAT128:
+      scan_decoder_.reset(new drivers::pandar_at::PandarATDecoder(sensor_configuration,
+                                                                  calibration_configuration,
+                                                                  correction_configuration));
       break;
     case SensorModel::HESAI_PANDARQT128:
     case SensorModel::HESAI_PANDAR128_V13:
@@ -67,7 +79,7 @@ PointCloudXYZIRADTPtr HesaiDriver::ConvertScanToPointcloud(
 Status HesaiDriver::SetCalibrationConfiguration(
   const CalibrationConfigurationBase & calibration_configuration)
 {
-  throw std::runtime_error("SetCalibrationConfiguration. Not yet implemented");
+  throw std::runtime_error("SetCalibrationConfiguration. Not yet implemented (" + calibration_configuration.calibration_file + ")");
 }
 
 Status HesaiDriver::GetStatus() { return driver_status_; }

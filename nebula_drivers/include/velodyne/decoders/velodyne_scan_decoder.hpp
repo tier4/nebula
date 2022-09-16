@@ -9,7 +9,12 @@
 
 #include <pcl/point_cloud.h>
 #include <rclcpp/rclcpp.hpp>
-#include <angles/angles.h>
+
+#if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)
+#include <angles/angles.h>//Galactic
+#else
+#include <angles/angles/angles.h>//Humble
+#endif
 
 #include <velodyne/decoders/velodyne_calibration_decoder.hpp>
 #include "velodyne/velodyne_common.hpp"

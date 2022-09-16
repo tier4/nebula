@@ -41,11 +41,14 @@ VelodyneDriverRosWrapper::VelodyneDriverRosWrapper(
 void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
   const velodyne_msgs::msg::VelodyneScan::SharedPtr scan_msg)
 {
+//  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "void VelodyneDriverRosWrapper::ReceiveScanMsgCallback");
   // take packets out of scan msg
   std::vector<velodyne_msgs::msg::VelodynePacket> pkt_msgs = scan_msg->packets;
 
+//  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "ConvertScanToPointcloud st, size=" << scan_msg->packets.size());
   nebula::drivers::PointCloudXYZIRADTPtr pointcloud =
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
+//  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "ConvertScanToPointcloud ed, size=" << pointcloud->size());
 
   auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
   pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
@@ -55,7 +58,9 @@ void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
       rclcpp::Time(SecondsToChronoNanoSeconds(first_point_timestamp).count());
   }
   ros_pc_msg_ptr->header.frame_id = sensor_cfg_ptr_->frame_id;
+//  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "publish");
   velodyne_points_pub_->publish(std::move(ros_pc_msg_ptr));
+//  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "published");
 }
 
 Status VelodyneDriverRosWrapper::InitializeDriver(
@@ -75,27 +80,135 @@ Status VelodyneDriverRosWrapper::GetParameters(
   drivers::VelodyneSensorConfiguration & sensor_configuration,
   drivers::VelodyneCalibrationConfiguration & calibration_configuration)
 {
-  sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(
-    this->declare_parameter<std::string>("sensor_model", ""));
-  sensor_configuration.return_mode =
-    nebula::drivers::ReturnModeFromString(this->declare_parameter<std::string>("return_mode", ""));
-  sensor_configuration.frame_id = this->declare_parameter<std::string>("frame_id", "velodyne");
-  sensor_configuration.scan_phase = this->declare_parameter<double>("scan_phase", 0.);
+//  sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(
+//    this->declare_parameter<std::string>("sensor_model", ""));
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = 4;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("sensor_model", "");
+    sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
+  }
+//  sensor_configuration.return_mode =
+//    nebula::drivers::ReturnModeFromString(this->declare_parameter<std::string>("return_mode", ""));
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = 4;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("return_mode", "", descriptor);
+    sensor_configuration.return_mode =
+      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
+  }
+//  sensor_configuration.frame_id = this->declare_parameter<std::string>("frame_id", "velodyne");
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = 4;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("frame_id", "velodyne", descriptor);
+    sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
+  }
+//  sensor_configuration.scan_phase = this->declare_parameter<double>("scan_phase", 0.);
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = 3;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
+    rcl_interfaces::msg::FloatingPointRange range;
+    range.set__from_value(0).set__to_value(360).set__step(0.01);
+    descriptor.floating_point_range= {range};
+    this->declare_parameter<double>("scan_phase", 0., descriptor);
+    sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
+  }
 
-  calibration_configuration.calibration_file = this->declare_parameter<std::string>("calibration_file", "");
+//  calibration_configuration.calibration_file = this->declare_parameter<std::string>("calibration_file", "");
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = 4;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("calibration_file", "", descriptor);
+    calibration_configuration.calibration_file = this->get_parameter("calibration_file").as_string();
+  }
 
-  sensor_configuration.min_range = this->declare_parameter<double>("min_range", 0.3);
-  sensor_configuration.max_range = this->declare_parameter<double>("max_range", 300.);
+//  sensor_configuration.min_range = this->declare_parameter<double>("min_range", 0.3);
+//  sensor_configuration.max_range = this->declare_parameter<double>("max_range", 300.);
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = 3;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("min_range", 0.3, descriptor);
+    sensor_configuration.min_range = this->get_parameter("min_range").as_double();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = 3;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("max_range", 300., descriptor);
+    sensor_configuration.max_range = this->get_parameter("max_range").as_double();
+  }
   double view_direction = sensor_configuration.scan_phase * M_PI / 180;
-  double view_width = this->declare_parameter<double>("view_width", 360) * M_PI / 180;
-  double min_angle = fmod(fmod(view_direction + view_width / 2, 2 * M_PI) + 2 * M_PI, 2 * M_PI);
-  double max_angle = fmod(fmod(view_direction - view_width / 2, 2 * M_PI) + 2 * M_PI, 2 * M_PI);
-  sensor_configuration.cloud_min_angle = 100 * (2 * M_PI - min_angle) * 180 / M_PI + 0.5;
-  sensor_configuration.cloud_max_angle = 100 * (2 * M_PI - max_angle) * 180 / M_PI + 0.5;
-  if (sensor_configuration.cloud_min_angle == sensor_configuration.cloud_max_angle) {
-    // avoid returning empty cloud if min_angle = max_angle
-    sensor_configuration.cloud_min_angle = 0;
-    sensor_configuration.cloud_max_angle = 36000;
+//  double view_width = this->declare_parameter<double>("view_width", 360) * M_PI / 180;
+  double view_width = 360 * M_PI / 180;
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = 3;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("view_width", 300., descriptor);
+    view_width = this->get_parameter("view_width").as_double() * M_PI / 180;
+  }
+
+  if(sensor_configuration.sensor_model != nebula::drivers::SensorModel::VELODYNE_HDL64)
+  {
+//    sensor_configuration.cloud_min_angle = this->declare_parameter<uint16_t>("cloud_min_angle", 0);
+//    sensor_configuration.cloud_max_angle = this->declare_parameter<uint16_t>("cloud_max_angle", 359);
+    {
+      rcl_interfaces::msg::ParameterDescriptor descriptor;
+      descriptor.type = 2;
+      descriptor.read_only = false;
+      descriptor.dynamic_typing = false;
+      descriptor.additional_constraints = "";
+      rcl_interfaces::msg::IntegerRange range;
+      range.set__from_value(0).set__to_value(359).set__step(1);
+      descriptor.integer_range= {range};
+      this->declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
+      sensor_configuration.cloud_min_angle = this->get_parameter("cloud_min_angle").as_int();
+    }
+    {
+      rcl_interfaces::msg::ParameterDescriptor descriptor;
+      descriptor.type = 2;
+      descriptor.read_only = false;
+      descriptor.dynamic_typing = false;
+      descriptor.additional_constraints = "";
+      rcl_interfaces::msg::IntegerRange range;
+      range.set__from_value(0).set__to_value(359).set__step(1);
+      descriptor.integer_range= {range};
+      this->declare_parameter<uint16_t>("cloud_max_angle", 359, descriptor);
+      sensor_configuration.cloud_max_angle = this->get_parameter("cloud_max_angle").as_int();
+    }
+  }else{
+    double min_angle = fmod(fmod(view_direction + view_width / 2, 2 * M_PI) + 2 * M_PI, 2 * M_PI);
+    double max_angle = fmod(fmod(view_direction - view_width / 2, 2 * M_PI) + 2 * M_PI, 2 * M_PI);
+    sensor_configuration.cloud_min_angle = 100 * (2 * M_PI - min_angle) * 180 / M_PI + 0.5;
+    sensor_configuration.cloud_max_angle = 100 * (2 * M_PI - max_angle) * 180 / M_PI + 0.5;
+    if (sensor_configuration.cloud_min_angle == sensor_configuration.cloud_max_angle) {
+      // avoid returning empty cloud if min_angle = max_angle
+      sensor_configuration.cloud_min_angle = 0;
+      sensor_configuration.cloud_max_angle = 36000;
+    }
   }
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {

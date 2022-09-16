@@ -27,14 +27,21 @@ class HesaiDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapperB
 
   std::shared_ptr<drivers::HesaiCalibrationConfiguration> calibration_cfg_ptr_;
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
+  std::shared_ptr<drivers::HesaiCorrection> correction_cfg_ptr_;
 
   Status InitializeDriver(
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
     std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) override;
 
+  Status InitializeDriver(
+    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
+    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
+    std::shared_ptr<drivers::HesaiCorrection> correction_configuration);
+
   Status GetParameters(
     drivers::HesaiSensorConfiguration & sensor_configuration,
-    drivers::HesaiCalibrationConfiguration & calibration_configuration);
+    drivers::HesaiCalibrationConfiguration & calibration_configuration,
+    drivers::HesaiCorrection & correction_configuration);
 
   static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
   {
@@ -48,6 +55,9 @@ public:
 
   void ReceiveScanMsgCallback(const pandar_msgs::msg::PandarScan::SharedPtr scan_msg);
   Status GetStatus();
+
+private:
+  std::string correction_file_path;
 };
 
 }  // namespace ros

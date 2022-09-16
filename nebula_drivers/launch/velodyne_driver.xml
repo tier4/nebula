@@ -9,6 +9,8 @@
     <arg name="min_range" default="0.3" />
     <arg name="max_range" default="300.0" />
     <arg name="view_width" default="360.0" />
+    <arg name="cloud_min_angle" default="0" description="Field of View, start degrees."/>
+    <arg name="cloud_max_angle" default="359" description="Field of View, end degrees."/>
 
     <node pkg="nebula_lidar_driver" exec="velodyne_driver_ros_wrapper_node"
           name="velodyne_cloud" output="screen">
@@ -20,5 +22,7 @@
         <param name="min_range" value="$(var min_range)"/>
         <param name="max_range" value="$(var max_range)"/>
         <param name="view_width" value="$(var view_width)"/>
+        <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>
+        <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
     </node>
 </launch>

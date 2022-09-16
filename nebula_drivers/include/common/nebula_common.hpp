@@ -24,7 +24,8 @@ enum class ReturnMode {
   DUAL_WEAK_FIRST,
   DUAL_WEAK_LAST,
   DUAL_STRONGEST_LAST,
-  DUAL_STRONGEST_FIRST
+  DUAL_STRONGEST_FIRST,
+  TRIPLE
 };
 
 inline uint8_t ReturnModeToInt(const ReturnMode & mode)
@@ -59,6 +60,9 @@ inline uint8_t ReturnModeToInt(const ReturnMode & mode)
       break;
     case ReturnMode::DUAL_WEAK_LAST:
       return 10;
+      break;
+    case ReturnMode::TRIPLE:
+      return 11;
       break;
     default:
     case ReturnMode::UNKNOWN:
@@ -100,6 +104,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnMode 
     case ReturnMode::DUAL_STRONGEST_FIRST:
       os << "StrongFirst";
       break;
+    case ReturnMode::TRIPLE:
+      os << "Triple";
+      break;
     case ReturnMode::UNKNOWN:
       os << "Unknown";
       break;
@@ -116,11 +123,14 @@ enum class SensorModel {
   HESAI_PANDARQT64,
   HESAI_PANDARQT128,
   HESAI_PANDARXT32,
+  HESAI_PANDARXT32M,
+  HESAI_PANDARAT128,
   HESAI_PANDAR128_V13,
   HESAI_PANDAR128_V14,
   VELODYNE_VLS128,
   VELODYNE_HDL64,
   VELODYNE_VLP32,
+  VELODYNE_VLP32MR,
   VELODYNE_HDL32,
   VELODYNE_VLP16,
 };
@@ -165,6 +175,12 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::HESAI_PANDARXT32:
       os << "PandarXT32";
       break;
+    case SensorModel::HESAI_PANDARXT32M:
+      os << "PandarXT32M";
+      break;
+    case SensorModel::HESAI_PANDARAT128:
+      os << "PandarAT128";
+      break;
     case SensorModel::HESAI_PANDAR128_V13:
       os << "Pandar128_1.3";
       break;
@@ -179,6 +195,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
       break;
     case SensorModel::VELODYNE_VLP32:
       os << "VLP32";
+      break;
+    case SensorModel::VELODYNE_VLP32MR:
+      os << "VLP32MR";
       break;
     case SensorModel::VELODYNE_HDL32:
       os << "HDL32";
@@ -230,6 +249,8 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "Pandar40P") return SensorModel::HESAI_PANDAR40P;
   if (sensor_model == "Pandar40M") return SensorModel::HESAI_PANDAR40M;
   if (sensor_model == "PandarXT32") return SensorModel::HESAI_PANDARXT32;
+  if (sensor_model == "PandarXT32M") return SensorModel::HESAI_PANDARXT32M;
+  if (sensor_model == "PandarAT128") return SensorModel::HESAI_PANDARAT128;
   if (sensor_model == "PandarQT64") return SensorModel::HESAI_PANDARQT64;
   if (sensor_model == "PandarQT128") return SensorModel::HESAI_PANDARQT128;
   if (sensor_model == "Pandar128") return SensorModel::HESAI_PANDAR128_V14;
@@ -237,6 +258,7 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "VLS128") return SensorModel::VELODYNE_VLS128;
   if (sensor_model == "HDL64") return SensorModel::VELODYNE_HDL64;
   if (sensor_model == "VLP32") return SensorModel::VELODYNE_VLP32;
+  if (sensor_model == "VLP32MR") return SensorModel::VELODYNE_VLP32MR;
   if (sensor_model == "HDL32") return SensorModel::VELODYNE_HDL32;
   if (sensor_model == "VLP16") return SensorModel::VELODYNE_VLP16;
   return SensorModel::UNKNOWN;
