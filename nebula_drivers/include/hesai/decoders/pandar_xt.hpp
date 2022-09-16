@@ -79,6 +79,6 @@ struct Packet
   uint32_t return_mode;
   tm t;
 };
-}  // namespace pandar_qt
+}  // namespace pandar_xt
 }
 }

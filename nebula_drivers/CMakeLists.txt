@@ -22,6 +22,32 @@ endif(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
 
 ament_auto_find_build_dependencies()
 
+# cURLpp requires libcurl to be installed
+message(STATUS "Looking for curl...")
+find_package(CURL REQUIRED)
+
+if (CURL_FOUND)
+    message(STATUS "Found curl version: ${CURL_VERSION_STRING}")
+    message(STATUS "Using curl version: ${CURL_INCLUDE_DIRS}")
+    message(STATUS "Using curl libraries: ${CURL_LIBRARIES}\n")
+    list(APPEND Project_INCLUDE_DIRS ${CURL_INCLUDE_DIRS})
+else()
+    message(FATAL_ERROR "Could not find curl.")
+endif()
+
+
+#message(STATUS "Looking for curlpp...")
+#find_package(CURLPP REQUIRED)
+
+#if (CURLPP_FOUND)
+#    message(STATUS "Found curlpp version: ${CURLPP_VERSION}")
+#    message(STATUS "Using curlpp include dir: ${CURLPP_INCLUDE_DIR}")
+#    message(STATUS "Using curlpp libraries: ${CURLPP_LIBRARY}\n")
+#    list(APPEND Project_INCLUDE_DIRS ${CURLPP_INCLUDE_DIR})
+#else()
+#    message(FATAL_ERROR "Could not find curlpp.")
+#endif()
+
 include_directories(
         include
         ${YAML_CPP_INCLUDE_DIRS}
@@ -47,6 +73,8 @@ ament_auto_add_library(hesai_driver SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/decoders/pandar_64_decoder.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/decoders/pandar_qt_decoder.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/decoders/pandar_xt_decoder.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/decoders/pandar_xtm_decoder.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/decoders/pandar_at_decoder.cpp
         )
 # RosDriver
 ament_auto_add_library(hesai_driver_ros_wrapper SHARED
@@ -55,6 +83,15 @@ ament_auto_add_library(hesai_driver_ros_wrapper SHARED
 ament_auto_add_executable(hesai_driver_ros_wrapper_node
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver_ros_main.cpp
         )
+
+# Offline Lib
+#ament_auto_add_library(hesai_driver_ros_offline_wrapper SHARED
+#        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver_ros_offline_wrapper.cpp
+#        )
+#target_link_libraries(hesai_driver_ros_offline_wrapper ${PCL_LIBRARIES})
+#ament_auto_add_executable(hesai_driver_ros_offline_wrapper_node
+#        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver_ros_offline_main.cpp
+#        )
 
 ## Velodyne
 # HwInterfaces Lib
@@ -68,6 +105,29 @@ ament_auto_add_library(velodyne_hw_ros_wrapper SHARED
 ament_auto_add_executable(velodyne_hw_ros_wrapper_node
         ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_hw_interface_ros_main.cpp
         )
+
+target_link_libraries(velodyne_hw_ros_wrapper ${CURL_LIBRARIES})
+#target_link_libraries(velodyne_hw_ros_wrapper ${CURLPP_LIBRARY})
+
+# RosHwMonitor
+ament_auto_add_library(velodyne_hw_monitor_ros_wrapper SHARED
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_hw_monitor_ros_wrapper.cpp
+        )
+ament_auto_add_executable(velodyne_hw_monitor_ros_wrapper_node
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_hw_monitor_ros_main.cpp
+        )
+
+target_link_libraries(velodyne_hw_monitor_ros_wrapper ${CURL_LIBRARIES})
+
+ament_auto_add_library(hesai_hw_monitor_ros_wrapper SHARED
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_hw_monitor_ros_wrapper.cpp
+        )
+ament_auto_add_executable(hesai_hw_monitor_ros_wrapper_node
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_hw_monitor_ros_main.cpp
+        )
+
+target_link_libraries(hesai_hw_monitor_ros_wrapper ${CURL_LIBRARIES})
+
 # Driver Lib
 ament_auto_add_library(velodyne_driver SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_driver.cpp
@@ -99,3 +159,15 @@ ament_auto_package(
         config
 )
 
+
+# Set ROS_DISTRO macros
+set(ROS_DISTRO $ENV{ROS_DISTRO})
+if(${ROS_DISTRO} STREQUAL "rolling")
+add_compile_definitions(ROS_DISTRO_ROLLING)
+elseif(${ROS_DISTRO} STREQUAL "foxy")
+add_compile_definitions(ROS_DISTRO_FOXY)
+elseif(${ROS_DISTRO} STREQUAL "galactic")
+add_compile_definitions(ROS_DISTRO_GALACTIC)
+elseif(${ROS_DISTRO} STREQUAL "humble")
+add_compile_definitions(ROS_DISTRO_HUMBLE)
+endif()

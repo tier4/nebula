@@ -15,14 +15,20 @@
 
     <depend>rclcpp</depend>
     <depend>rclcpp_components</depend>
+    <depend>diagnostic_msgs</depend>
+    <depend>diagnostic_updater</depend>
     <depend>sensor_msgs</depend>
     <depend>udp_driver</depend>
+    <depend>tcp_driver</depend>
     <depend>pandar_msgs</depend>
     <depend>livox_msgs</depend>
     <depend>velodyne_msgs</depend>
     <depend>pcl_conversions</depend>
     <depend>pcl_msgs</depend>
     <depend>libpcl-all-dev</depend>
+    <depend>curl</depend>
+
+    <!--<depend>rosbag2_cpp</depend>-->
 
     <export>
         <build_type>ament_cmake</build_type>

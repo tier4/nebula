@@ -36,13 +36,13 @@ drivers::PointCloudXYZIRADTPtr Vlp16Decoder::get_pointcloud() {
   int phase = (uint16_t)round(sensor_configuration_->scan_phase*100);
   if (!scan_pc_->points.empty())
   {
-    uint16_t current_azimuth = (int)scan_pc_->points.back().azimuth;
+    uint16_t current_azimuth = (int)scan_pc_->points.back().azimuth * 100;
     uint16_t phase_diff = (36000 + current_azimuth - phase) % 36000;
     while (phase_diff < 18000 && scan_pc_->points.size() > 0)
     {
       overflow_pc_->points.push_back(scan_pc_->points.back());
       scan_pc_->points.pop_back();
-      current_azimuth = (int)scan_pc_->points.back().azimuth;
+      current_azimuth = (int)scan_pc_->points.back().azimuth * 100;
       phase_diff = (36000 + current_azimuth - phase) % 36000;
     }
     overflow_pc_->width = overflow_pc_->points.size();
@@ -117,8 +117,10 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
     // Condition added to avoid calculating points which are not in the interesting defined area
     // (min_angle < area < max_angle).
     if ((sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle &&
-         azimuth >= sensor_configuration_->cloud_min_angle &&
-         azimuth <= sensor_configuration_->cloud_max_angle) ||
+//         azimuth >= sensor_configuration_->cloud_min_angle &&
+         azimuth >= sensor_configuration_->cloud_min_angle * 100 &&
+         azimuth <= sensor_configuration_->cloud_max_angle * 100) ||
+//         azimuth <= sensor_configuration_->cloud_max_angle) ||
         (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle))
     {
       for (int firing = 0, k = 0; firing < VLP16_FIRINGS_PER_BLOCK; ++firing) {
@@ -164,12 +166,16 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
 
               // Condition added to avoid calculating points which are not in the interesting defined area (min_angle < area < max_angle).
               if (
-                (azimuth_corrected >= sensor_configuration_->cloud_min_angle &&
-                 azimuth_corrected <= sensor_configuration_->cloud_max_angle &&
+//                (azimuth_corrected >= sensor_configuration_->cloud_min_angle &&
+//                 azimuth_corrected <= sensor_configuration_->cloud_max_angle &&
+                (azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100 &&
+                 azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 &&
                  sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle) ||
                 (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
-                 (azimuth_corrected <= sensor_configuration_->cloud_max_angle ||
-                  azimuth_corrected >= sensor_configuration_->cloud_min_angle))) {
+                 (azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 ||
+                  azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) {
+//                 (azimuth_corrected <= sensor_configuration_->cloud_max_angle ||
+//                  azimuth_corrected >= sensor_configuration_->cloud_min_angle))) {
                 // Convert polar coordinates to Euclidean XYZ.
                 const float cos_vert_angle = corrections.cos_vert_correction;
                 const float sin_vert_angle = corrections.sin_vert_correction;

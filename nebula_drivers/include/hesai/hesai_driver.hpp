@@ -31,7 +31,8 @@ public:
   HesaiDriver() = delete;
   explicit HesaiDriver(
     const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
+    const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration,
+    const std::shared_ptr<drivers::HesaiCorrection> & correction_configuration=nullptr);
 
   Status GetStatus();
 

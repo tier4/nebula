@@ -1,0 +1,67 @@
+cmake_minimum_required(VERSION 3.5)
+project(nebula_offline_sample)
+
+# Default to C++14
+if (NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 14)
+endif ()
+
+if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
+endif ()
+
+find_package(ament_cmake_auto REQUIRED)
+find_package(PCL REQUIRED COMPONENTS common)
+find_package(PCL REQUIRED)
+find_package(pcl_conversions REQUIRED)
+find_package(yaml-cpp REQUIRED)
+
+if(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
+    add_definitions(-DHAVE_NEW_YAMLCPP)
+endif(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
+
+ament_auto_find_build_dependencies()
+
+
+include_directories(
+        include
+        ${YAML_CPP_INCLUDE_DIRS}
+        ${PCL_INCLUDE_DIRS}
+        ${PCL_COMMON_INCLUDE_DIRS}
+)
+## HESAI
+# Offline Lib
+ament_auto_add_library(hesai_ros_offline_extract_pcd SHARED
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_pcd.cpp
+        )
+target_link_libraries(hesai_ros_offline_extract_pcd ${PCL_LIBRARIES})
+ament_auto_add_executable(hesai_ros_offline_extract_pcd_node
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_pcd_main.cpp
+        )
+
+## Velodyne
+
+## NEW SENSOR
+# HwInterfaces Lib
+# RosHwInterface
+# Driver Lib
+# RosDriver
+
+ament_auto_package(
+        INSTALL_TO_SHARE
+        launch
+        config
+)
+
+
+# Set ROS_DISTRO macros
+set(ROS_DISTRO $ENV{ROS_DISTRO})
+if(${ROS_DISTRO} STREQUAL "rolling")
+add_compile_definitions(ROS_DISTRO_ROLLING)
+elseif(${ROS_DISTRO} STREQUAL "foxy")
+add_compile_definitions(ROS_DISTRO_FOXY)
+elseif(${ROS_DISTRO} STREQUAL "galactic")
+add_compile_definitions(ROS_DISTRO_GALACTIC)
+elseif(${ROS_DISTRO} STREQUAL "humble")
+add_compile_definitions(ROS_DISTRO_HUMBLE)
+endif()
