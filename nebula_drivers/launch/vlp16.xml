@@ -17,6 +17,15 @@
     <arg name="max_range" default="300.0" />
     <arg name="view_width" default="360.0" />
 
+    <arg name="rotation_speed" default="600" description="Motor RPM, the sensor's internal spin rate."/>
+    <arg name="cloud_min_angle" default="0" description="Field of View, start degrees."/>
+    <arg name="cloud_max_angle" default="359" description="Field of View, end degrees."/>
+
+    <arg name="diag_span" default="1000" description="milliseconds"/>
+
+    <arg name="advanced_diagnostics" default="False" description="original diag"/>
+
+
     <node pkg="nebula_lidar_driver" exec="velodyne_hw_ros_wrapper_node"
           name="velodyne_hw_driver" output="screen">
         <param name="sensor_model" value="$(var sensor_model)"/>
@@ -30,6 +39,11 @@
         <param name="gnss_port" value="$(var gnss_port)"/>
         <param name="frequency_ms" value="$(var frequency_ms)"/>
         <param name="packet_mtu_size" value="$(var packet_mtu_size)"/>
+        <param name="rotation_speed" value="$(var rotation_speed)"/>
+        <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>
+        <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
+
+        <param name="diag_span" value="$(var diag_span)"/>
     </node>
 
     <node pkg="nebula_lidar_driver" exec="velodyne_driver_ros_wrapper_node"
@@ -42,6 +56,29 @@
         <param name="min_range" value="$(var min_range)"/>
         <param name="max_range" value="$(var max_range)"/>
         <param name="view_width" value="$(var view_width)"/>
+        <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>
+        <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
+    </node>
+
+    <node pkg="nebula_lidar_driver" exec="velodyne_hw_monitor_ros_wrapper_node"
+          name="velodyne_hw_monitor_$(var frame_id)" output="screen">
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="return_mode" value="$(var return_mode)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="scan_phase" value="$(var scan_phase)"/>
+        <param name="sensor_ip" value="$(var sensor_ip)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="host_ip" value="$(var host_ip)"/>
+        <param name="data_port" value="$(var data_port)"/>
+        <param name="gnss_port" value="$(var gnss_port)"/>
+        <param name="frequency_ms" value="$(var frequency_ms)"/>
+        <param name="packet_mtu_size" value="$(var packet_mtu_size)"/>
+        <param name="rotation_speed" value="$(var rotation_speed)"/>
+        <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>
+        <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
+
+        <param name="diag_span" value="$(var diag_span)"/>
+        <param name="advanced_diagnostics" value="$(var advanced_diagnostics)"/>
     </node>
 
 </launch>

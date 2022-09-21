@@ -159,15 +159,18 @@ void PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
     if (count >= correction_configuration_->frameNumber)
       continue;
 
-
+    int azimuth = packet_.blocks[block_id].azimuth;
+//    azimuth %= 36000;
+    azimuth %= 12000;
     auto block_pc = convert(block_id);
-    if (last_azimuth_ != packet_.blocks[block_id].azimuth && \
-            (azimuthGap / timestampGap) < 36000 * 100 ) {
+    if (last_azimuth_ != azimuth && \
+//            (azimuthGap / timestampGap) < 36000 * 100 ) {
+            (azimuthGap / timestampGap) < 12000 * 100 ) {
       /* for all the blocks */
-      if ((last_azimuth_ > packet_.blocks[block_id].azimuth &&
-           start_angle_ <= packet_.blocks[block_id].azimuth) ||
+      if ((last_azimuth_ > azimuth &&
+           start_angle_ <= azimuth) ||
           (last_azimuth_ < start_angle_ &&
-           start_angle_ <= packet_.blocks[block_id].azimuth)) {
+           start_angle_ <= azimuth)) {
           *overflow_pc_ += *block_pc;
           has_scanned_ = true;
       }
@@ -176,7 +179,7 @@ void PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
       //printf("last_azimuth_:%d pkt.blocks[block_id].azimuth:%d  *******azimuthGap:%d\n", last_azimuth_, pkt.blocks[block_id].azimuth, azimuthGap);
     }
 //    CalcXTPointXYZIT(block_id, packet_.header.chLaserNumber, scan_pc_);
-    last_azimuth_ = packet_.blocks[block_id].azimuth;
+    last_azimuth_ = azimuth;
     last_timestamp_ = packet_.usec;
   }
 }
