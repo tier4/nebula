@@ -128,22 +128,40 @@ void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & b
     scan_cloud_ptr_->packets.emplace_back(pandar_packet);
   }
   int current_phase = 0;
+  bool comp_flg = false;
   {
     const auto & data = scan_cloud_ptr_->packets.back().data;
+    /*
+    int index = 6+6+1034+6+1+11+2+4+1+1+6;
+    std::cout << index << std::endl;
+    unsigned int udp_sec = static_cast<unsigned int>((data[index] & 0xff) | (data[index + 1] & 0xff) << 8 |
+                  ((data[index + 2] & 0xff) << 16) | ((data[index + 3] & 0xff) << 24));
+    std::cout << udp_sec << std::endl;
+    */
     current_phase = (data[azimuth_index_] & 0xff) | ((data[azimuth_index_ + 1] & 0xff) << 8);
-    if(is_solid_state)
+    if(is_solid_state)//120
     {
-      current_phase = (static_cast<int>(current_phase) + 36000 - 0) % 36000;
+      current_phase = (static_cast<int>(current_phase) + 36000 - 0) % 12000;
 //      std::cout << "current_phase=" << current_phase << std::endl;
+
+      if (current_phase >= prev_phase_ || scan_cloud_ptr_->packets.size() < 2) {
+        prev_phase_ = current_phase;
+      } else {
+        comp_flg = true;
+      }
     }
     else
     {
       current_phase = (static_cast<int>(current_phase) + 36000 - scan_phase) % 36000;
+
+      if (current_phase >= prev_phase_ || scan_cloud_ptr_->packets.size() < 2) {
+        prev_phase_ = current_phase;
+      } else {
+        comp_flg = true;
+      }
     }
   }
-  if (current_phase >= prev_phase_ || scan_cloud_ptr_->packets.size() < 2) {
-    prev_phase_ = current_phase;
-  } else {  // Scan complete
+  if(comp_flg) {  // Scan complete
     if (scan_reception_callback_) {
       scan_cloud_ptr_->header.stamp = scan_cloud_ptr_->packets.front().stamp;
       // Callback
