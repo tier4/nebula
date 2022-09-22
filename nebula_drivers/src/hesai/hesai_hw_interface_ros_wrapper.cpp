@@ -8,6 +8,7 @@
 #include <thread>
 
 //#define WITH_DEBUG_STDOUT_HesaiHwInterfaceRosWrapper
+//#define TEST_PCAP
 
 namespace nebula
 {
@@ -38,6 +39,7 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(
     std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration_);
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
+#if not defined(TEST_PCAP)
   hw_interface_.InitializeTcpDriver();
   
   std::vector<std::thread> thread_pool{};
@@ -58,6 +60,7 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(
 #endif
   hw_interface_.CheckAndSetConfig();
   updateParameters();
+#endif
 
   // register scan callback and publisher
   hw_interface_.RegisterScanCallback(
@@ -65,8 +68,10 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(
   pandar_scan_pub_ =
     this->create_publisher<pandar_msgs::msg::PandarScan>("pandar_packets", rclcpp::SensorDataQoS());
 
+#if not defined(TEST_PCAP)
   set_param_res_ = this->add_on_set_parameters_callback(
     std::bind(&HesaiHwInterfaceRosWrapper::paramCallback, this, std::placeholders::_1));
+#endif
 
   /*
   hw_interface_.GetInventory();

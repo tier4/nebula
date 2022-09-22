@@ -1,6 +1,7 @@
 #include "hesai/decoders/pandar_at_decoder.hpp"
 
 #include "hesai/decoders/pandar_at.hpp"
+//#include <rclcpp/rclcpp.hpp>
 
 namespace nebula
 {
@@ -8,6 +9,13 @@ namespace drivers
 {
 namespace pandar_at
 {
+  /*
+  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
+  {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::duration<double>(seconds));
+  }
+  */
 PandarATDecoder::PandarATDecoder(
   const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
   const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration,
@@ -125,24 +133,32 @@ void PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
     last_phase_ = current_phase;
   }
   */
-// std::cout << "packet_.header.chBlockNumber = " << packet_.header.chBlockNumber << std::endl;
+// std::cout << "packet_.header.chBlockNumber = " << static_cast<int>(packet_.header.chBlockNumber) << std::endl;
   for (int block_id = 0; block_id < packet_.header.chBlockNumber; ++block_id) {
     int azimuthGap = 0; /* To do */
     double timestampGap = 0; /* To do */
-    if(last_azimuth_ > packet_.blocks[block_id].azimuth) {
-      azimuthGap = static_cast<int>(packet_.blocks[block_id].azimuth) + (36000 - static_cast<int>(last_azimuth_));
+    int azimuth = packet_.blocks[block_id].azimuth;
+//    azimuth %= 36000;
+    azimuth %= 12000;
+
+//    if(last_azimuth_ > packet_.blocks[block_id].azimuth) {
+    if(last_azimuth_ > azimuth) {
+//      azimuthGap = static_cast<int>(packet_.blocks[block_id].azimuth) + (36000 - static_cast<int>(last_azimuth_));
+//      azimuthGap = static_cast<int>(packet_.blocks[block_id].azimuth) + (12000 - static_cast<int>(last_azimuth_));
+      azimuthGap = azimuth + (12000 - static_cast<int>(last_azimuth_));
     } else {
-      azimuthGap = static_cast<int>(packet_.blocks[block_id].azimuth) - static_cast<int>(last_azimuth_);
+//      azimuthGap = static_cast<int>(packet_.blocks[block_id].azimuth) - static_cast<int>(last_azimuth_);
+      azimuthGap = azimuth - static_cast<int>(last_azimuth_);
     }
     timestampGap = packet_.usec - last_timestamp_ + 0.001;
 
 
-    int Azimuth = static_cast<int>(packet_.blocks[block_id].azimuth * LIDAR_AZIMUTH_UNIT + packet_.blocks[block_id].fine_azimuth);
+//    int Azimuth = static_cast<int>(packet_.blocks[block_id].azimuth * LIDAR_AZIMUTH_UNIT + packet_.blocks[block_id].fine_azimuth);
     /*
-    std::cout << "azimuth: " << azimuth << std::endl;
     std::cout << "correction_configuration_->frameNumber: " << correction_configuration_->frameNumber << std::endl;
     std::cout << "correction_configuration_->frameNumber: " << static_cast<int>(correction_configuration_->frameNumber) << std::endl;
     */
+   /*
     int count = 0, field = 0;
     while ( count < correction_configuration_->frameNumber
         && (
@@ -158,14 +174,19 @@ void PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
 //    std::cout << "count: " << count << std::endl;
     if (count >= correction_configuration_->frameNumber)
       continue;
-
-    int azimuth = packet_.blocks[block_id].azimuth;
-//    azimuth %= 36000;
-    azimuth %= 12000;
+      */
+//    std::cout << static_cast<int>(packet_.return_mode) << std::endl;
+/*
+    std::cout << "block_id: " << block_id << std::endl;
+    std::cout << "azimuth: " << azimuth << std::endl;
+    std::cout << "timestampGap: " << static_cast<int>(timestampGap) << std::endl;
+    std::cout << "azimuthGap / timestampGap: " << static_cast<float>(azimuthGap / timestampGap) << std::endl;
+    */
     auto block_pc = convert(block_id);
-    if (last_azimuth_ != azimuth && \
+    if ((packet_.return_mode == STRONGEST_RETURN || packet_.return_mode == LAST_RETURN) || (
+            last_azimuth_ != azimuth && \
 //            (azimuthGap / timestampGap) < 36000 * 100 ) {
-            (azimuthGap / timestampGap) < 12000 * 100 ) {
+            (azimuthGap / timestampGap) < 12000 * 100)) {
       /* for all the blocks */
       if ((last_azimuth_ > azimuth &&
            start_angle_ <= azimuth) ||
@@ -173,6 +194,8 @@ void PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
            start_angle_ <= azimuth)) {
           *overflow_pc_ += *block_pc;
           has_scanned_ = true;
+      }else{
+        *scan_pc_ += *block_pc;
       }
     } else {
       *scan_pc_ += *block_pc;
@@ -206,7 +229,7 @@ void PandarATDecoder::CalcXTPointXYZIT(int blockid, \
 //    if (unit.distance <= 0.1 || unit.distance > 200.0) {
 //    if (unit.distance <= 0.1 || unit.distance > 300.0) {
     if (unit.distance <= 0.1 || unit.distance > 180.0) {
-//      std::cout << "unit.distance <= 0.1 || unit.distance > 300.0" << std::endl;
+//      std::cout << "unit.distance <= 0.1 || unit.distance > 180.0" << std::endl;
       continue;
     }
 /*
@@ -222,6 +245,7 @@ void PandarATDecoder::CalcXTPointXYZIT(int blockid, \
 */
     if(use_dat){
       int Azimuth = static_cast<int>(block->azimuth * LIDAR_AZIMUTH_UNIT + block->fine_azimuth);
+//      std::cout << "Azimuth=" << Azimuth << std::endl;
       int count = 0, field = 0;
       while ( count < correction_configuration_->frameNumber
           && (
@@ -245,7 +269,7 @@ void PandarATDecoder::CalcXTPointXYZIT(int blockid, \
         point.y = static_cast<float>(xyDistance * m_cos_azimuth_map_[azimuth]);
   //      point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[i]);
         point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[elevation]);
-  //      std::cout << "(" << point.x << ", " << point.y << ", " << point.z << ")" << std::endl;
+//      std::cout << "(" << point.x << ", " << point.y << ", " << point.z << ")" << std::endl;
       }
     }else{
       int Azimuth = static_cast<int>(block->azimuth * LIDAR_AZIMUTH_UNIT + block->fine_azimuth);
@@ -292,11 +316,15 @@ void PandarATDecoder::CalcXTPointXYZIT(int blockid, \
     }
     */
 
+//   auto tm = rclcpp::Time(SecondsToChronoNanoSeconds(point.time_stamp).count());
+//   std::cout << "point: " << std::to_string(tm.nanoseconds()) << std::endl;
+
     point.return_type = packet_.return_mode;
     point.ring = i;
 //    std::cout << point.x << "," << point.y << "," << point.z << std::endl;
     cld->points.emplace_back(point);
   }
+//  std::cout << cld->points.size() << std::endl;
 }
 
 /*
@@ -495,30 +523,21 @@ bool PandarATDecoder::parsePacket(const pandar_msgs::msg::PandarPacket & pandar_
 
   index += RESERVED1_SIZE;  // skip reserved bytes
   packet_.shutdown_flg = buf[index] & 0xff;
+  index += HIGH_TEMP_SHUTDOWN_FLAG_SIZE;
   index += RESERVED2_SIZE;  // skip reserved bytes
-  packet_.moter_speed = (buf[index] & 0xff) << 8 | ((buf[index + 1] & 0xff));
+  packet_.moter_speed = (buf[index] & 0xff) | ((buf[index + 1] & 0xff) << 8);
 
   index += MOTER_SPEED_SIZE;
+
   packet_.usec = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8 |
                  ((buf[index + 2] & 0xff) << 16) | ((buf[index + 3] & 0xff) << 24);
+//  std::cout << std::to_string(packet_.usec) << std::endl;
 
   index += TIMESTAMP_SIZE;
   packet_.return_mode = buf[index] & 0xff;
   index += RETURN_SIZE;
   index += FACTORY_SIZE;
-  /*
-  packet_.t.tm_year = (buf[index + 0] & 0xff) + 100;
-  packet_.t.tm_mon = (buf[index + 1] & 0xff) - 1;
-  packet_.t.tm_mday = buf[index + 2] & 0xff;
-  packet_.t.tm_hour = buf[index + 3] & 0xff;
-  packet_.t.tm_min = buf[index + 4] & 0xff;
-  packet_.t.tm_sec = buf[index + 5] & 0xff;
-  packet_.t.tm_isdst = 0;
-  // in case of time error
-  if (packet_.t.tm_year >= 200) {
-    packet_.t.tm_year -= 100;
-  }
-  */
+
   if((buf[index] & 0xff) != 0){
     packet_.t.tm_year = (buf[index + 0] & 0xff);
     // in case of time error
@@ -541,19 +560,35 @@ bool PandarATDecoder::parsePacket(const pandar_msgs::msg::PandarPacket & pandar_
                     ((utc_time_big << 24));
   }
   /*
-  std::cout << "packet_.t.tm_year=" << packet_.t.tm_year << std::endl;
-  std::cout << "packet_.t.tm_mon=" << packet_.t.tm_mon << std::endl;
-  std::cout << "packet_.t.tm_mday=" << packet_.t.tm_mday << std::endl;
-  std::cout << "packet_.t.tm_hour=" << packet_.t.tm_hour << std::endl;
-  std::cout << "packet_.t.tm_min=" << packet_.t.tm_min << std::endl;
-  std::cout << "packet_.t.tm_sec=" << packet_.t.tm_sec << std::endl;
+  packet_.t.tm_year = (buf[index + 0] & 0xff) + 100;
+  packet_.t.tm_mon = (buf[index + 1] & 0xff) - 1;
+  packet_.t.tm_mday = buf[index + 2] & 0xff;
+  packet_.t.tm_hour = buf[index + 3] & 0xff;
+  packet_.t.tm_min = buf[index + 4] & 0xff;
+  packet_.t.tm_sec = buf[index + 5] & 0xff;
+  packet_.t.tm_isdst = 0;
+  // in case of time error
+  if (packet_.t.tm_year >= 200) {
+    packet_.t.tm_year -= 100;
+  }
+  */
+  /*
+  std::cout << "packet_.moter_speed=" << static_cast<int>(packet_.moter_speed) << std::endl;
+  std::cout << "packet_.return_mode=" << static_cast<int>(packet_.return_mode) << std::endl;
+
+  std::cout << "packet_.t.tm_year=" << static_cast<int>(packet_.t.tm_year) << std::endl;
+  std::cout << "packet_.t.tm_mon=" << static_cast<int>(packet_.t.tm_mon) << std::endl;
+  std::cout << "packet_.t.tm_mday=" << static_cast<int>(packet_.t.tm_mday) << std::endl;
+  std::cout << "packet_.t.tm_hour=" << static_cast<int>(packet_.t.tm_hour) << std::endl;
+  std::cout << "packet_.t.tm_min=" << static_cast<int>(packet_.t.tm_min) << std::endl;
+  std::cout << "packet_.t.tm_sec=" << static_cast<int>(packet_.t.tm_sec) << std::endl;
   for(int i=0;i<UTC_SIZE;i++){
     std::cout << static_cast<int>(buf[index + i]) << ", ";
   }
   std::cout << std::endl;
   */
-
   index += UTC_SIZE;
+
   /*
   for(int i=0;i<SEQUENCE_SIZE;i++){
     std::cout << static_cast<int>(buf[index + i]) << ", ";

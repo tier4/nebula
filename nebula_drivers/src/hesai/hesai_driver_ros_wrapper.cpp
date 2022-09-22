@@ -57,6 +57,10 @@ void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
   nebula::drivers::PointCloudXYZIRADTPtr pointcloud =
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
 
+//  std::cout << "got nebula::drivers::PointCloudXYZIRADTPtr pointcloud" << std::endl;
+//  std::cout << pointcloud->points.size() << std::endl;
+  if(pointcloud == nullptr)
+    return;
   auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
   pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
   if (!pointcloud->points.empty()) {
@@ -64,11 +68,17 @@ void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
     ros_pc_msg_ptr->header.stamp =
       rclcpp::Time(SecondsToChronoNanoSeconds(first_point_timestamp).count());
 //    std::cout << "point: " << ros_pc_msg_ptr->header.stamp.sec << std::endl;
-    rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
 //    std::cout << "now: " << system_clock.now().seconds() << std::endl;
     if(ros_pc_msg_ptr->header.stamp.sec < 0)// && false)
     {
+      rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
       ros_pc_msg_ptr->header.stamp = system_clock.now();
+//      std::cout << "system_clock.now()" << std::endl;
+      RCLCPP_WARN_STREAM(
+        this->get_logger(),
+        "Timestamp error... use system_clock");
+    }else{
+//      std::cout << "stamp" << std::endl;
     }
   }
   ros_pc_msg_ptr->header.frame_id = sensor_cfg_ptr_->frame_id;

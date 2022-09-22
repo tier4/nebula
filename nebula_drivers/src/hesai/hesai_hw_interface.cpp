@@ -139,7 +139,7 @@ void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & b
     std::cout << udp_sec << std::endl;
     */
     current_phase = (data[azimuth_index_] & 0xff) | ((data[azimuth_index_ + 1] & 0xff) << 8);
-    if(is_solid_state)//120
+    if(is_solid_state)// && false)//120
     {
       current_phase = (static_cast<int>(current_phase) + 36000 - 0) % 12000;
 //      std::cout << "current_phase=" << current_phase << std::endl;
@@ -153,6 +153,7 @@ void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & b
     else
     {
       current_phase = (static_cast<int>(current_phase) + 36000 - scan_phase) % 36000;
+//      std::cout << "current_phase=" << current_phase << std::endl;
 
       if (current_phase >= prev_phase_ || scan_cloud_ptr_->packets.size() < 2) {
         prev_phase_ = current_phase;
