@@ -3773,7 +3773,7 @@ void HesaiHwInterface::PrintInfo(std::string info)
 {
   if(parent_node_logger)
   {
-    RCLCPP_INFO_STREAM(*parent_node_logger, info);
+    RCLCPP_INFO_STREAM((*parent_node_logger), info);
   }
   else
   {
@@ -3785,7 +3785,7 @@ void HesaiHwInterface::PrintError(std::string error)
 {
   if(parent_node_logger)
   {
-    RCLCPP_ERROR_STREAM(*parent_node_logger, error);
+    RCLCPP_ERROR_STREAM((*parent_node_logger), error);
   }
   else
   {
@@ -3797,7 +3797,7 @@ void HesaiHwInterface::PrintDebug(std::string debug)
 {
   if(parent_node_logger)
   {
-    RCLCPP_DEBUG_STREAM(*parent_node_logger, debug);
+    RCLCPP_DEBUG_STREAM((*parent_node_logger), debug);
   }
   else
   {
