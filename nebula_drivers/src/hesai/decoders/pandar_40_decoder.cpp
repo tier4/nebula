@@ -74,9 +74,11 @@ void Pandar40Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
   if (!dual_return) {
     if (
       (packet_.return_mode == STRONGEST_RETURN &&
-       sensor_configuration_->return_mode != drivers::ReturnMode::SINGLE_STRONGEST) ||
+//       sensor_configuration_->return_mode != drivers::ReturnMode::SINGLE_STRONGEST) ||
+       sensor_configuration_->return_mode != drivers::ReturnMode::STRONGEST) ||
       (packet_.return_mode == LAST_RETURN &&
-       sensor_configuration_->return_mode != drivers::ReturnMode::SINGLE_LAST)) {
+//       sensor_configuration_->return_mode != drivers::ReturnMode::SINGLE_LAST)) {
+       sensor_configuration_->return_mode != drivers::ReturnMode::LAST)) {
       // sensor config, driver mismatched
     }
   }
@@ -165,7 +167,8 @@ drivers::PointCloudXYZIRADTPtr Pandar40Decoder::convert_dual(size_t block_id)
     bool even_usable = (even_unit.distance <= 0.1 || even_unit.distance > 200.0) ? 0 : 1;
     bool odd_usable = (odd_unit.distance <= 0.1 || odd_unit.distance > 200.0) ? 0 : 1;
 
-    if (sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_STRONGEST) {
+//    if (sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_STRONGEST) {
+    if (sensor_configuration_->return_mode == drivers::ReturnMode::STRONGEST) {
       // Strongest return is in even block when both returns coincide
       if (even_unit.intensity >= odd_unit.intensity && even_usable) {
         block_pc->push_back(
@@ -175,10 +178,12 @@ drivers::PointCloudXYZIRADTPtr Pandar40Decoder::convert_dual(size_t block_id)
           build_point(odd_block_id, unit_id, drivers::ReturnMode::SINGLE_STRONGEST));
       }
     } else if (
-      sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_LAST && even_usable) {
+//      sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_LAST && even_usable) {
+      sensor_configuration_->return_mode == drivers::ReturnMode::LAST && even_usable) {
       // Last return is always in even block
       block_pc->push_back(build_point(even_block_id, unit_id, drivers::ReturnMode::SINGLE_LAST));
-    } else if (sensor_configuration_->return_mode == drivers::ReturnMode::DUAL_ONLY) {
+//    } else if (sensor_configuration_->return_mode == drivers::ReturnMode::DUAL_ONLY) {
+    } else if (sensor_configuration_->return_mode == drivers::ReturnMode::DUAL) {
       // If the two returns are too close, only return the last one
       if (
         (abs(even_unit.distance - odd_unit.distance) < dual_return_distance_threshold_) &&

@@ -308,27 +308,86 @@ struct HesaiCorrection
 <option value="5">First Return + Last Return</option>
 <option value="6">First Return + Last Return + Strongest Return</option>
 */
-inline ReturnMode ReturnModeFromIntHesai (const int return_mode)
+
+inline ReturnMode ReturnModeFromStringHesai(const std::string & return_mode, const SensorModel & sensor_model)
 {
-  if (return_mode == 0) return ReturnMode::SINGLE_LAST;
-  if (return_mode == 1) return ReturnMode::SINGLE_STRONGEST;
-  if (return_mode == 2) return ReturnMode::DUAL_STRONGEST_LAST;
-  if (return_mode == 3) return ReturnMode::SINGLE_FIRST;
-  if (return_mode == 4) return ReturnMode::DUAL_ONLY;
-  if (return_mode == 5) return ReturnMode::DUAL_STRONGEST_FIRST;
-  if (return_mode == 6) return ReturnMode::TRIPLE;
+  switch (sensor_model)
+  {
+  case SensorModel::HESAI_PANDARXT32M:
+  case SensorModel::HESAI_PANDARAT128:
+    if (return_mode == "Last") return ReturnMode::LAST;
+    if (return_mode == "Strongest") return ReturnMode::STRONGEST;
+    if (return_mode == "LastStrongest") return ReturnMode::LAST_STRONGEST;
+    if (return_mode == "First") return ReturnMode::FIRST;
+    if (return_mode == "LastFirst") return ReturnMode::LAST_FIRST;
+    if (return_mode == "FirstStrongest") return ReturnMode::FIRST_STRONGEST;
+    break;
+  case SensorModel::HESAI_PANDARQT64:
+    if (return_mode == "Last") return ReturnMode::LAST;
+    if (return_mode == "Dual") return ReturnMode::DUAL;
+    if (return_mode == "First") return ReturnMode::FIRST;
+    break;
+  default:
+    if (return_mode == "Last") return ReturnMode::LAST;
+    if (return_mode == "Strongest") return ReturnMode::STRONGEST;
+    if (return_mode == "Dual") return ReturnMode::DUAL;
+    break;
+  }
 
   return ReturnMode::UNKNOWN;
 }
-inline int IntFromReturnModeHesai (const ReturnMode return_mode)
+
+inline ReturnMode ReturnModeFromIntHesai (const int return_mode, const SensorModel & sensor_model)
 {
-  if (return_mode == ReturnMode::SINGLE_LAST) return 0;
-  if (return_mode == ReturnMode::SINGLE_STRONGEST) return 1;
-  if (return_mode == ReturnMode::DUAL_STRONGEST_LAST) return 2;
-  if (return_mode == ReturnMode::SINGLE_FIRST) return 3;
-  if (return_mode == ReturnMode::DUAL_ONLY) return 4;
-  if (return_mode == ReturnMode::DUAL_STRONGEST_FIRST) return 5;
-  if (return_mode == ReturnMode::TRIPLE) return 6;
+  switch (sensor_model)
+  {
+  case SensorModel::HESAI_PANDARXT32M:
+  case SensorModel::HESAI_PANDARAT128:
+    if (return_mode == 0) return ReturnMode::LAST;
+    if (return_mode == 1) return ReturnMode::STRONGEST;
+    if (return_mode == 2) return ReturnMode::LAST_STRONGEST;
+    if (return_mode == 3) return ReturnMode::FIRST;
+    if (return_mode == 4) return ReturnMode::LAST_FIRST;
+    if (return_mode == 5) return ReturnMode::FIRST_STRONGEST;
+    break;
+  case SensorModel::HESAI_PANDARQT64:
+    if (return_mode == 0) return ReturnMode::LAST;
+    if (return_mode == 2) return ReturnMode::DUAL;
+    if (return_mode == 3) return ReturnMode::FIRST;
+    break;
+  default:
+    if (return_mode == 0) return ReturnMode::LAST;
+    if (return_mode == 1) return ReturnMode::STRONGEST;
+    if (return_mode == 2) return ReturnMode::DUAL;
+    break;
+  }
+
+  return ReturnMode::UNKNOWN;
+}
+inline int IntFromReturnModeHesai (const ReturnMode return_mode, const SensorModel & sensor_model)
+{
+  switch (sensor_model)
+  {
+  case SensorModel::HESAI_PANDARXT32M:
+  case SensorModel::HESAI_PANDARAT128:
+    if (return_mode == ReturnMode::LAST) return 0;
+    if (return_mode == ReturnMode::STRONGEST) return 1;
+    if (return_mode == ReturnMode::LAST_STRONGEST) return 2;
+    if (return_mode == ReturnMode::FIRST) return 3;
+    if (return_mode == ReturnMode::LAST_FIRST) return 4;
+    if (return_mode == ReturnMode::FIRST_STRONGEST) return 5;
+    break;
+  case SensorModel::HESAI_PANDARQT64:
+    if (return_mode == ReturnMode::LAST) return 0;
+    if (return_mode == ReturnMode::DUAL) return 2;
+    if (return_mode == ReturnMode::FIRST) return 3;
+    break;
+  default:
+    if (return_mode == ReturnMode::LAST) return 0;
+    if (return_mode == ReturnMode::STRONGEST) return 1;
+    if (return_mode == ReturnMode::DUAL) return 2;
+    break;
+  }
 
   return -1;
 }

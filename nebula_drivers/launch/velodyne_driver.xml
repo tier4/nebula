@@ -8,7 +8,7 @@
     <arg name="calibration_file" default="$(find-pkg-share nebula_lidar_driver)/calibration/velodyne/$(var sensor_model).yaml"/>
     <arg name="min_range" default="0.3" />
     <arg name="max_range" default="300.0" />
-    <arg name="view_width" default="360.0" />
+    <arg name="view_width" default="360.0" description="for VELODYNE_HDL64"/>
     <arg name="cloud_min_angle" default="0" description="Field of View, start degrees."/>
     <arg name="cloud_max_angle" default="359" description="Field of View, end degrees."/>
 

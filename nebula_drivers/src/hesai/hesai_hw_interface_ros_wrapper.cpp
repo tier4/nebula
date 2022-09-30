@@ -205,7 +205,8 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("return_mode", "", descriptor);
     sensor_configuration.return_mode =
-      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
+//      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
+      nebula::drivers::ReturnModeFromStringHesai(this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
   }
 //  sensor_configuration.host_ip = this->declare_parameter<std::string>("host_ip", "255.255.255.255");
   {
@@ -271,6 +272,7 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
     this->declare_parameter<double>("scan_phase", 0., descriptor);
     sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
   }
+  /*
 //  sensor_configuration.frequency_ms = this->declare_parameter<uint16_t>("frequency_ms", 100);
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -281,6 +283,7 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
     this->declare_parameter<uint16_t>("frequency_ms", 100, descriptor);
     sensor_configuration.frequency_ms = this->get_parameter("frequency_ms").as_int();
   }
+  */
 //  sensor_configuration.packet_mtu_size = this->declare_parameter<uint16_t>("packet_mtu_size", 1500);
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -343,8 +346,8 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
     return Status::INVALID_ECHO_MODE;
   }
   if (
-    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360 ||
-    sensor_configuration.frequency_ms == 0) {
+    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {// ||
+//    sensor_configuration.frequency_ms == 0) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -518,7 +521,7 @@ rcl_interfaces::msg::SetParametersResult HesaiHwInterfaceRosWrapper::paramCallba
     get_param(p, "data_port", new_param.data_port) ||
     get_param(p, "gnss_port", new_param.gnss_port) ||
     get_param(p, "scan_phase", new_param.scan_phase) ||
-    get_param(p, "frequency_ms", new_param.frequency_ms) ||
+//    get_param(p, "frequency_ms", new_param.frequency_ms) ||
     get_param(p, "packet_mtu_size", new_param.packet_mtu_size) ||
     get_param(p, "rotation_speed", new_param.rotation_speed) ||
     get_param(p, "cloud_min_angle", new_param.cloud_min_angle) ||
@@ -577,7 +580,7 @@ std::vector<rcl_interfaces::msg::SetParametersResult> HesaiHwInterfaceRosWrapper
     rclcpp::Parameter("data_port", sensor_configuration_.data_port),
     rclcpp::Parameter("gnss_port", sensor_configuration_.gnss_port),
     rclcpp::Parameter("scan_phase", sensor_configuration_.scan_phase),
-    rclcpp::Parameter("frequency_ms", sensor_configuration_.frequency_ms),
+//    rclcpp::Parameter("frequency_ms", sensor_configuration_.frequency_ms),
     rclcpp::Parameter("packet_mtu_size", sensor_configuration_.packet_mtu_size),
     rclcpp::Parameter("rotation_speed", sensor_configuration_.rotation_speed),
     rclcpp::Parameter("cloud_min_angle", sensor_configuration_.cloud_min_angle),

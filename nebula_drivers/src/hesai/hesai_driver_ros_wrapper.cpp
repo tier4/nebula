@@ -145,7 +145,8 @@ Status HesaiDriverRosWrapper::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("return_mode", "", descriptor);
     sensor_configuration.return_mode =
-      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
+//      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
+      nebula::drivers::ReturnModeFromStringHesai(this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;

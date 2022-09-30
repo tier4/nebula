@@ -62,12 +62,13 @@ private://ROS Diagnostics
   void OnVelodyneDiagnosticsTimer();
 
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopHv();
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopAdTemp();
+  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopAdTemp();//only32
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopLm20Temp();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5v();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr25v();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr33v();
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrRaw();
+  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5vRaw();//only16
+  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrRaw();//only32
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrVccint();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotIOut();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwr12v();
@@ -155,6 +156,7 @@ private://ROS Diagnostics
   const char* key_volt_temp_top_pwr_5v;
   const char* key_volt_temp_top_pwr_2_5v;
   const char* key_volt_temp_top_pwr_3_3v;
+  const char* key_volt_temp_top_pwr_5v_raw;
   const char* key_volt_temp_top_pwr_raw;
   const char* key_volt_temp_top_pwr_vccint;
   const char* key_volt_temp_bot_i_out;
@@ -215,6 +217,7 @@ private://ROS Diagnostics
   std::string name_volt_temp_top_pwr_5v;
   std::string name_volt_temp_top_pwr_2_5v;
   std::string name_volt_temp_top_pwr_3_3v;
+  std::string name_volt_temp_top_pwr_5v_raw;
   std::string name_volt_temp_top_pwr_raw;
   std::string name_volt_temp_top_pwr_vccint;
   std::string name_volt_temp_bot_i_out;
