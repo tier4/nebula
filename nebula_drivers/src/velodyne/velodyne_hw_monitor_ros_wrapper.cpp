@@ -43,12 +43,13 @@ VelodyneHwMonitorRosWrapper::VelodyneHwMonitorRosWrapper(
 
 
   key_volt_temp_top_hv = "volt_temp.top.hv";
-  key_volt_temp_top_ad_temp = "volt_temp.top.ad_temp";
+  key_volt_temp_top_ad_temp = "volt_temp.top.ad_temp";//only32
   key_volt_temp_top_lm20_temp = "volt_temp.top.lm20_temp";
   key_volt_temp_top_pwr_5v = "volt_temp.top.pwr_5v";
   key_volt_temp_top_pwr_2_5v = "volt_temp.top.pwr_2_5v";
   key_volt_temp_top_pwr_3_3v = "volt_temp.top.pwr_3_3v";
-  key_volt_temp_top_pwr_raw = "volt_temp.top.pwr_raw";
+  key_volt_temp_top_pwr_5v_raw = "volt_temp.top.pwr_5v_raw";//only16
+  key_volt_temp_top_pwr_raw = "volt_temp.top.pwr_raw";//only32
   key_volt_temp_top_pwr_vccint = "volt_temp.top.pwr_vccint";
   key_volt_temp_bot_i_out = "volt_temp.bot.i_out";
   key_volt_temp_bot_pwr_1_2v = "volt_temp.bot.pwr_1_2v";
@@ -77,6 +78,7 @@ VelodyneHwMonitorRosWrapper::VelodyneHwMonitorRosWrapper(
   name_volt_temp_top_pwr_5v = "Top 5v";
   name_volt_temp_top_pwr_2_5v = "Top 2.5v";
   name_volt_temp_top_pwr_3_3v = "Top 3.3v";
+  name_volt_temp_top_pwr_5v_raw = "Top 5v(RAW)";
   name_volt_temp_top_pwr_raw = "Top RAW";
   name_volt_temp_top_pwr_vccint = "Top VCCINT";
   name_volt_temp_bot_i_out = "Bot I out";
@@ -248,6 +250,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
     this->declare_parameter<double>("scan_phase", 0., descriptor);
     sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
   }
+  /*
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 2;
@@ -258,6 +261,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
     this->declare_parameter<uint16_t>("frequency_ms", 100, descriptor);
     sensor_configuration.frequency_ms = this->get_parameter("frequency_ms").as_int();
   }
+  */
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 2;
@@ -316,8 +320,8 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
     return Status::INVALID_ECHO_MODE;
   }
   if (
-    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360 ||
-    sensor_configuration.frequency_ms == 0) {
+    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {// ||
+//    sensor_configuration.frequency_ms == 0) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -370,9 +374,11 @@ void VelodyneHwMonitorRosWrapper::InitializeVelodyneDiagnostics()
     diagnostics_updater_.add(
         "velodyne_volt_temp_top_hv-" + sensor_configuration_.frame_id,
         this, &VelodyneHwMonitorRosWrapper::VelodyneCheckTopHv);
-    diagnostics_updater_.add(
-        "velodyne_volt_temp_top_ad_temp-" + sensor_configuration_.frame_id,
-        this, &VelodyneHwMonitorRosWrapper::VelodyneCheckTopAdTemp);
+    if(sensor_configuration_.sensor_model != nebula::drivers::SensorModel::VELODYNE_VLP16){
+      diagnostics_updater_.add(
+          "velodyne_volt_temp_top_ad_temp-" + sensor_configuration_.frame_id,
+          this, &VelodyneHwMonitorRosWrapper::VelodyneCheckTopAdTemp);
+    }
     diagnostics_updater_.add(
         "velodyne_volt_temp_top_lm20_temp-" + sensor_configuration_.frame_id,
         this, &VelodyneHwMonitorRosWrapper::VelodyneCheckTopLm20Temp);
@@ -822,7 +828,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_top_hv + message_sep + voltage_high_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " V";
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -842,7 +849,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
     double val = 0.0;
     val = boost::lexical_cast<double>(GetPtreeValue(current_diag_tree, key_volt_temp_top_ad_temp));
     val = val * 5.0 / 4096.0;
-    mes = boost::lexical_cast<std::string>(val) + " V";
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -868,7 +876,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_top_lm20_temp + message_sep + temperature_hot_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " C";
+//    mes = boost::lexical_cast<std::string>(val) + " C";
+    mes = GetFixedPrecisionString(val) + " C";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -894,7 +903,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_top_pwr_5v + message_sep + voltage_high_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " V";
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -920,7 +930,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_top_pwr_2_5v + message_sep + voltage_high_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " V";
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -946,7 +957,35 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_top_pwr_3_3v + message_sep + voltage_high_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " V";
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
+  }catch(boost::bad_lexical_cast &ex){
+    not_ex = false;
+    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    mes = error_message;
+  }
+  return std::make_tuple(not_ex, level, mes, error_mes);
+}
+
+std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper::VelodyneGetTopPwr5vRaw()
+{
+  bool not_ex = true;
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::string mes;
+  std::string error_mes;
+  try{
+    double val = 0.0;
+    val = boost::lexical_cast<double>(GetPtreeValue(current_diag_tree, key_volt_temp_top_pwr_5v_raw));
+    val = 2.0 * val * 5.0 / 4096.0;
+    if(val < 2.3){
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_top_pwr_5v_raw + message_sep + voltage_low_message;
+    }else if(2.7 < val){
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_top_pwr_5v_raw + message_sep + voltage_high_message;
+    }
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -972,7 +1011,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_top_pwr_raw + message_sep + voltage_high_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " V";
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -998,7 +1038,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_top_pwr_vccint + message_sep + voltage_high_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " V";
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -1024,7 +1065,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_bot_i_out + message_sep + ampere_high_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " A";
+//    mes = boost::lexical_cast<std::string>(val) + " A";
+    mes = GetFixedPrecisionString(val) + " A";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -1050,7 +1092,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_bot_pwr_1_2v + message_sep + voltage_high_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " V";
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -1076,7 +1119,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_bot_lm20_temp + message_sep + temperature_hot_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " C";
+//    mes = boost::lexical_cast<std::string>(val) + " C";
+    mes = GetFixedPrecisionString(val) + " C";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -1102,7 +1146,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_bot_pwr_5v + message_sep + voltage_high_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " V";
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -1128,7 +1173,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_bot_pwr_2_5v + message_sep + voltage_high_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " V";
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -1154,7 +1200,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_bot_pwr_3_3v + message_sep + voltage_high_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " V";
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -1180,7 +1227,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_bot_pwr_v_in + message_sep + voltage_high_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " V";
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -1206,7 +1254,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorRosWrapper:
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = name_volt_temp_bot_pwr_1_25v + message_sep + voltage_high_message;
     }
-    mes = boost::lexical_cast<std::string>(val) + " V";
+//    mes = boost::lexical_cast<std::string>(val) + " V";
+    mes = GetFixedPrecisionString(val) + " V";
   }catch(boost::bad_lexical_cast &ex){
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -2390,14 +2439,25 @@ void VelodyneHwMonitorRosWrapper::VelodyneCheckVoltage(
     }
     diagnostics.add(name_volt_temp_top_pwr_3_3v, std::get<2>(tpl));
 
-    tpl = VelodyneGetTopPwrRaw();
-    if(std::get<0>(tpl)){
-      level = std::max(level, std::get<1>(tpl));
-      if(0 < std::get<3>(tpl).length()){
-        msg.emplace_back(std::get<3>(tpl));
+    if(sensor_configuration_.sensor_model == nebula::drivers::SensorModel::VELODYNE_VLP16){
+      tpl = VelodyneGetTopPwr5vRaw();
+      if(std::get<0>(tpl)){
+        level = std::max(level, std::get<1>(tpl));
+        if(0 < std::get<3>(tpl).length()){
+          msg.emplace_back(std::get<3>(tpl));
+        }
       }
+      diagnostics.add(name_volt_temp_top_pwr_5v_raw, std::get<2>(tpl));
+    }else{
+      tpl = VelodyneGetTopPwrRaw();
+      if(std::get<0>(tpl)){
+        level = std::max(level, std::get<1>(tpl));
+        if(0 < std::get<3>(tpl).length()){
+          msg.emplace_back(std::get<3>(tpl));
+        }
+      }
+      diagnostics.add(name_volt_temp_top_pwr_raw, std::get<2>(tpl));
     }
-    diagnostics.add(name_volt_temp_top_pwr_raw, std::get<2>(tpl));
 
     tpl = VelodyneGetTopPwrVccint();
     if(std::get<0>(tpl)){
@@ -2476,8 +2536,6 @@ void VelodyneHwMonitorRosWrapper::VelodyneCheckVoltage(
 
   }
 }
-
-
 
 rcl_interfaces::msg::SetParametersResult VelodyneHwMonitorRosWrapper::paramCallback(
   const std::vector<rclcpp::Parameter> & p)

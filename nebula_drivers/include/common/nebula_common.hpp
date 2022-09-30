@@ -25,7 +25,14 @@ enum class ReturnMode {
   DUAL_WEAK_LAST,
   DUAL_STRONGEST_LAST,
   DUAL_STRONGEST_FIRST,
-  TRIPLE
+  TRIPLE,
+  LAST,
+  STRONGEST,
+  LAST_STRONGEST,
+  FIRST,
+  LAST_FIRST,
+  FIRST_STRONGEST,
+  DUAL
 };
 
 inline uint8_t ReturnModeToInt(const ReturnMode & mode)
@@ -63,6 +70,28 @@ inline uint8_t ReturnModeToInt(const ReturnMode & mode)
       break;
     case ReturnMode::TRIPLE:
       return 11;
+      break;
+    // for Hesai
+    case ReturnMode::LAST:
+      return 12;
+      break;
+    case ReturnMode::STRONGEST:
+      return 13;
+      break;
+    case ReturnMode::LAST_STRONGEST:
+      return 14;
+      break;
+    case ReturnMode::FIRST:
+      return 15;
+      break;
+    case ReturnMode::LAST_FIRST:
+      return 16;
+      break;
+    case ReturnMode::FIRST_STRONGEST:
+      return 17;
+      break;
+    case ReturnMode::DUAL:
+      return 18;
       break;
     default:
     case ReturnMode::UNKNOWN:
@@ -106,6 +135,28 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnMode 
       break;
     case ReturnMode::TRIPLE:
       os << "Triple";
+      break;
+    // for Hesai
+    case ReturnMode::LAST:
+      os << "Last";
+      break;
+    case ReturnMode::STRONGEST:
+      os << "Strongest";
+      break;
+    case ReturnMode::LAST_STRONGEST:
+      os << "LastStrongest";
+      break;
+    case ReturnMode::FIRST:
+      os << "First";
+      break;
+    case ReturnMode::LAST_FIRST:
+      os << "LastFirst";
+      break;
+    case ReturnMode::FIRST_STRONGEST:
+      os << "FirstStrongest";
+      break;
+    case ReturnMode::DUAL:
+      os << "Dual";
       break;
     case ReturnMode::UNKNOWN:
       os << "Unknown";

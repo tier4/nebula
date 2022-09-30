@@ -160,7 +160,8 @@ Status HesaiHwMonitorRosWrapper::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("return_mode", "", descriptor);
     sensor_configuration.return_mode =
-      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
+//      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
+      nebula::drivers::ReturnModeFromStringHesai(this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -219,6 +220,7 @@ Status HesaiHwMonitorRosWrapper::GetParameters(
     this->declare_parameter<double>("scan_phase", 0., descriptor);
     sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
   }
+  /*
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 2;
@@ -228,6 +230,7 @@ Status HesaiHwMonitorRosWrapper::GetParameters(
     this->declare_parameter<uint16_t>("frequency_ms", 100, descriptor);
     sensor_configuration.frequency_ms = this->get_parameter("frequency_ms").as_int();
   }
+  */
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 2;
@@ -289,8 +292,8 @@ Status HesaiHwMonitorRosWrapper::GetParameters(
     return Status::INVALID_ECHO_MODE;
   }
   if (
-    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360 ||
-    sensor_configuration.frequency_ms == 0) {
+    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {// ||
+//    sensor_configuration.frequency_ms == 0) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -447,8 +450,8 @@ rcl_interfaces::msg::SetParametersResult HesaiHwMonitorRosWrapper::paramCallback
   drivers::HesaiSensorConfiguration new_param{sensor_configuration_};
 //  std::cout << new_param << std::endl;
   RCLCPP_INFO_STREAM(this->get_logger(), new_param);
-  std::string sensor_model_str;
-  std::string return_mode_str;
+//  std::string sensor_model_str;
+//  std::string return_mode_str;
   uint16_t new_diag_span = 0;
   if (
     /*
