@@ -3172,7 +3172,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(std::shared_ptr<HesaiSensorConfi
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
   std::cout << "Start CheckAndSetConfig(HesaiConfig)!!" << std::endl;
 #endif
-  auto current_return_mode = nebula::drivers::ReturnModeFromIntHesai(hesai_config.return_mode);
+  auto current_return_mode = nebula::drivers::ReturnModeFromIntHesai(hesai_config.return_mode, sensor_configuration->sensor_model);
   if(sensor_configuration->return_mode != current_return_mode)
   {
 //    std::cout << "current_return_mode: " << current_return_mode << std::endl;
@@ -3187,7 +3187,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(std::shared_ptr<HesaiSensorConfi
 //      tm_.unlock();
 //    }
     std::thread t([this, sensor_configuration]{
-    SetReturnMode(nebula::drivers::IntFromReturnModeHesai(sensor_configuration->return_mode));//, false);
+    SetReturnMode(nebula::drivers::IntFromReturnModeHesai(sensor_configuration->return_mode, sensor_configuration->sensor_model));//, false);
 //    SetReturnMode(nebula::drivers::IntFromReturnModeHesai(sensor_configuration->return_mode), false);
     });
     t.join();
