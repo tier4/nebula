@@ -9,6 +9,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <ament_index_cpp/get_package_prefix.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
 
 #include <boost/asio.hpp>
@@ -44,8 +45,7 @@ class HesaiHwMonitorRosWrapper final : public rclcpp::Node, NebulaHwMonitorWrapp
     const drivers::SensorConfigurationBase & sensor_configuration) override;
 
 public:
-  explicit HesaiHwMonitorRosWrapper(
-    const rclcpp::NodeOptions & options, const std::string & node_name);
+  explicit HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & options);
 
   Status MonitorStart() override;
   Status MonitorStop() override;

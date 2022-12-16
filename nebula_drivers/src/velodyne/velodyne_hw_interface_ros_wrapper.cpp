@@ -8,9 +8,8 @@ namespace nebula
 namespace ros
 {
 
-VelodyneHwInterfaceRosWrapper::VelodyneHwInterfaceRosWrapper(
-  const rclcpp::NodeOptions & options, const std::string & node_name)
-: rclcpp::Node(node_name, options), hw_interface_()//, diagnostics_updater_(this)
+VelodyneHwInterfaceRosWrapper::VelodyneHwInterfaceRosWrapper(const rclcpp::NodeOptions & options)
+: rclcpp::Node("velodyne_hw_interface_ros_wrapper", options), hw_interface_()//, diagnostics_updater_(this)
 {
 //  cbg_r_ = create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 //  cbg_m_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -478,6 +477,6 @@ std::vector<rcl_interfaces::msg::SetParametersResult> VelodyneHwInterfaceRosWrap
   std::cout << "set_parameters fin" << std::endl;
   return results;
 }
-
+RCLCPP_COMPONENTS_REGISTER_NODE(VelodyneHwInterfaceRosWrapper)
 }  // namespace ros
 }  // namespace nebula

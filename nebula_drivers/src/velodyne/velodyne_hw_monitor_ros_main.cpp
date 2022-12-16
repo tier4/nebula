@@ -16,7 +16,7 @@ int main(int argc, char * argv[])
 //  std::cout << "exec.get_number_of_threads()=" << exec.get_number_of_threads() << std::endl;
 
   auto velodyne_hw_monitor =
-    std::make_shared<nebula::ros::VelodyneHwMonitorRosWrapper>(options, node_name);
+    std::make_shared<nebula::ros::VelodyneHwMonitorRosWrapper>(options);
   //*
   exec.add_node(velodyne_hw_monitor->get_node_base_interface());
 //  velodyne_hw_interface->declare_parameter("warning1",0.0);

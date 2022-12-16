@@ -12,7 +12,7 @@ int main(int argc, char * argv[])
   rclcpp::executors::SingleThreadedExecutor exec;
   rclcpp::NodeOptions options;
 
-  auto velodyne_driver = std::make_shared<nebula::ros::VelodyneDriverRosWrapper>(options, node_name);
+  auto velodyne_driver = std::make_shared<nebula::ros::VelodyneDriverRosWrapper>(options);
   exec.add_node(velodyne_driver->get_node_base_interface());
 
   RCLCPP_INFO_STREAM(rclcpp::get_logger(node_name), "Get Status");

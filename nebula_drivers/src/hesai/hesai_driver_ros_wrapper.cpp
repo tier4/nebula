@@ -4,9 +4,8 @@ namespace nebula
 {
 namespace ros
 {
-HesaiDriverRosWrapper::HesaiDriverRosWrapper(
-  const rclcpp::NodeOptions & options, const std::string & node_name)
-: rclcpp::Node(node_name, options)
+HesaiDriverRosWrapper::HesaiDriverRosWrapper(const rclcpp::NodeOptions & options)
+: rclcpp::Node("hesai_driver_ros_wrapper", options)
 {
   drivers::HesaiCalibrationConfiguration calibration_configuration;
   drivers::HesaiSensorConfiguration sensor_configuration;
@@ -224,10 +223,11 @@ Status HesaiDriverRosWrapper::GetParameters(
       }
     }
   }
-
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
   return Status::OK;
 }
 
+RCLCPP_COMPONENTS_REGISTER_NODE(HesaiDriverRosWrapper)
 }  // namespace ros
 }  // namespace nebula
+
