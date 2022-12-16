@@ -1,5 +1,15 @@
 # Nebula Lidar Driver
+Builds on ROS Galactic and Humble. Be sure to install dependencies using `rosdep`:
 
+```rosdep install --from-paths src --ignore-src -y -r```
+
+A [TCP enabled version of ROS' Transport Driver](https://github.com/MapIV/transport_drivers/tree/tcp) is required to use Nebula. You can install it manually or pull it inside this repository using vcs:
+
+```vcs import . < build_depends.repos```
+
+Then compile with colcon, optionally enabling symlink:
+
+```colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release```
 ## Hesai LiDARs
 Supported models, where sensor_model is the ROS param to be used at launch:
 
