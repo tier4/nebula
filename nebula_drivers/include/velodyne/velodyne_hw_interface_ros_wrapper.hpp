@@ -8,6 +8,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <ament_index_cpp/get_package_prefix.hpp>
 //#include <diagnostic_updater/diagnostic_updater.hpp>
 
 #include "velodyne_msgs/msg/velodyne_packet.hpp"
@@ -48,9 +49,7 @@ class VelodyneHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfa
   void ReceiveScanDataCallback(std::unique_ptr<velodyne_msgs::msg::VelodyneScan> scan_buffer);
 
 public:
-  explicit VelodyneHwInterfaceRosWrapper(
-    const rclcpp::NodeOptions & options, const std::string & node_name);
-
+  explicit VelodyneHwInterfaceRosWrapper(const rclcpp::NodeOptions & options);
   Status StreamStart() override;
   Status StreamStop() override;
   Status Shutdown() override;

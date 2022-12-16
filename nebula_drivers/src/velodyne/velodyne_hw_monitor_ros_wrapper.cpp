@@ -11,9 +11,8 @@ namespace nebula
 namespace ros
 {
 
-VelodyneHwMonitorRosWrapper::VelodyneHwMonitorRosWrapper(
-  const rclcpp::NodeOptions & options, const std::string & node_name)
-: rclcpp::Node(node_name, options), hw_interface_(), diagnostics_updater_(this)
+VelodyneHwMonitorRosWrapper::VelodyneHwMonitorRosWrapper(const rclcpp::NodeOptions & options)
+: rclcpp::Node("velodyne_hw_monitor_ros_wrapper", options), hw_interface_(), diagnostics_updater_(this)
 {
   cbg_r_ = create_callback_group(rclcpp::CallbackGroupType::Reentrant);
   cbg_m_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -2598,7 +2597,6 @@ rcl_interfaces::msg::SetParametersResult VelodyneHwMonitorRosWrapper::paramCallb
 //  return result;
   return *result;
 }
-
-
+RCLCPP_COMPONENTS_REGISTER_NODE(VelodyneHwMonitorRosWrapper)
 }  // namespace ros
 }  // namespace nebula

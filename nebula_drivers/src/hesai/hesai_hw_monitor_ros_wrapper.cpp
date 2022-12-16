@@ -1,6 +1,4 @@
 #include "hesai/hesai_hw_monitor_ros_wrapper.hpp"
-
-
 #include "tcp_driver/tcp_driver.hpp"
 
 #include <boost/asio.hpp>
@@ -15,9 +13,8 @@ namespace nebula
 {
 namespace ros
 {
-HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(
-  const rclcpp::NodeOptions & options, const std::string & node_name)
-: rclcpp::Node(node_name, options), hw_interface_(), diagnostics_updater_(this)
+HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & options)
+: rclcpp::Node("hesai_hw_monitor_ros_wrapper", options), hw_interface_(), diagnostics_updater_(this)
 {
   cbg_r_ = create_callback_group(rclcpp::CallbackGroupType::Reentrant);
   cbg_m_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -790,5 +787,7 @@ std::vector<rcl_interfaces::msg::SetParametersResult> HesaiHwInterfaceRosWrapper
   return results;
 }
 */
+RCLCPP_COMPONENTS_REGISTER_NODE(HesaiHwMonitorRosWrapper)
 }  // namespace ros
 }  // namespace nebula
+
