@@ -8,8 +8,8 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <ament_index_cpp/get_package_prefix.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
-
 
 #include <mutex>
 
@@ -44,8 +44,7 @@ class VelodyneHwMonitorRosWrapper final : public rclcpp::Node, NebulaHwMonitorWr
     const drivers::SensorConfigurationBase & sensor_configuration) override;
     
 public:
-  explicit VelodyneHwMonitorRosWrapper(
-    const rclcpp::NodeOptions & options, const std::string & node_name);
+  explicit VelodyneHwMonitorRosWrapper(const rclcpp::NodeOptions & options);
 
   Status MonitorStart() override;
   Status MonitorStop() override;
@@ -266,7 +265,6 @@ private://ROS Diagnostics
 //  rclcpp::callback_group::CallbackGroup::SharedPtr cbg_;
   rclcpp::CallbackGroup::SharedPtr cbg_r_;
   rclcpp::CallbackGroup::SharedPtr cbg_m_;
-
 
 };
 

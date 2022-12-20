@@ -9,6 +9,7 @@
 //#include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <ament_index_cpp/get_package_prefix.hpp>
 
 #include "pandar_msgs/msg/pandar_jumbo_packet.hpp"
 #include "pandar_msgs/msg/pandar_packet.hpp"
@@ -50,9 +51,7 @@ class HesaiHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfaceW
   void ReceiveScanDataCallback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_buffer);
 
 public:
-  explicit HesaiHwInterfaceRosWrapper(
-    const rclcpp::NodeOptions & options, const std::string & node_name);
-
+  explicit HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions & options);
   Status StreamStart() override;
   Status StreamStop() override;
   Status Shutdown() override;

@@ -63,9 +63,23 @@ ament_auto_add_library(hesai_hw_interface SHARED
 ament_auto_add_library(hesai_hw_ros_wrapper SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_hw_interface_ros_wrapper.cpp
         )
-ament_auto_add_executable(hesai_hw_ros_wrapper_node
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_hw_interface_ros_main.cpp
+
+rclcpp_components_register_node(hesai_hw_ros_wrapper
+        PLUGIN "HesaiHwInterfaceRosWrapper"
+        EXECUTABLE hesai_hw_interface_ros_wrapper_node
         )
+
+# RosHwMonitor
+ament_auto_add_library(hesai_hw_monitor_ros_wrapper SHARED
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_hw_monitor_ros_wrapper.cpp
+        )
+target_link_libraries(hesai_hw_monitor_ros_wrapper ${CURL_LIBRARIES})
+
+rclcpp_components_register_node(hesai_hw_monitor_ros_wrapper
+        PLUGIN "HesaiHwMonitorRosWrapper"
+        EXECUTABLE hesai_hw_monitor_ros_wrapper_node
+        )
+
 # Driver Lib
 ament_auto_add_library(hesai_driver SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver.cpp
@@ -80,9 +94,12 @@ ament_auto_add_library(hesai_driver SHARED
 ament_auto_add_library(hesai_driver_ros_wrapper SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver_ros_wrapper.cpp
         )
-ament_auto_add_executable(hesai_driver_ros_wrapper_node
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver_ros_main.cpp
+
+rclcpp_components_register_node(hesai_driver_ros_wrapper
+        PLUGIN "HesaiDriverRosWrapper"
+        EXECUTABLE hesai_driver_ros_wrapper_node
         )
+
 
 # Offline Lib
 #ament_auto_add_library(hesai_driver_ros_offline_wrapper SHARED
@@ -102,8 +119,9 @@ ament_auto_add_library(velodyne_hw_interface SHARED
 ament_auto_add_library(velodyne_hw_ros_wrapper SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_hw_interface_ros_wrapper.cpp
         )
-ament_auto_add_executable(velodyne_hw_ros_wrapper_node
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_hw_interface_ros_main.cpp
+rclcpp_components_register_node(velodyne_hw_ros_wrapper
+        PLUGIN "VelodyneHwInterfaceRosWrapper"
+        EXECUTABLE velodyne_hw_ros_wrapper_node
         )
 
 target_link_libraries(velodyne_hw_ros_wrapper ${CURL_LIBRARIES})
@@ -113,20 +131,11 @@ target_link_libraries(velodyne_hw_ros_wrapper ${CURL_LIBRARIES})
 ament_auto_add_library(velodyne_hw_monitor_ros_wrapper SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_hw_monitor_ros_wrapper.cpp
         )
-ament_auto_add_executable(velodyne_hw_monitor_ros_wrapper_node
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_hw_monitor_ros_main.cpp
-        )
-
 target_link_libraries(velodyne_hw_monitor_ros_wrapper ${CURL_LIBRARIES})
-
-ament_auto_add_library(hesai_hw_monitor_ros_wrapper SHARED
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_hw_monitor_ros_wrapper.cpp
+rclcpp_components_register_node(velodyne_hw_monitor_ros_wrapper
+        PLUGIN "VelodyneHwMonitorRosWrapper"
+        EXECUTABLE velodyne_hw_monitor_ros_wrapper_node
         )
-ament_auto_add_executable(hesai_hw_monitor_ros_wrapper_node
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_hw_monitor_ros_main.cpp
-        )
-
-target_link_libraries(hesai_hw_monitor_ros_wrapper ${CURL_LIBRARIES})
 
 # Driver Lib
 ament_auto_add_library(velodyne_driver SHARED
@@ -142,13 +151,15 @@ target_link_libraries(velodyne_driver ${YAML_CPP_LIBRARIES})
 ament_auto_add_library(velodyne_driver_ros_wrapper SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_driver_ros_wrapper.cpp
         )
-ament_auto_add_executable(velodyne_driver_ros_wrapper_node
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_driver_ros_main.cpp
+rclcpp_components_register_node(velodyne_driver_ros_wrapper
+        PLUGIN "VelodyneDriverRosWrapper"
+        EXECUTABLE velodyne_driver_ros_wrapper_node
         )
 
 ## NEW SENSOR
 # HwInterfaces Lib
 # RosHwInterface
+# RosHwMonitor
 # Driver Lib
 # RosDriver
 

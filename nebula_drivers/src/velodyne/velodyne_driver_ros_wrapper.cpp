@@ -5,8 +5,8 @@ namespace nebula
 namespace ros
 {
 VelodyneDriverRosWrapper::VelodyneDriverRosWrapper(
-  const rclcpp::NodeOptions & options, const std::string & node_name)
-: rclcpp::Node(node_name, options)
+  const rclcpp::NodeOptions & options)
+: rclcpp::Node("velodyne_driver_ros_wrapper", options)
 {
   drivers::VelodyneCalibrationConfiguration calibration_configuration;
   drivers::VelodyneSensorConfiguration sensor_configuration;
@@ -241,5 +241,6 @@ Status VelodyneDriverRosWrapper::GetParameters(
   return Status::OK;
 }
 
-}
-}
+RCLCPP_COMPONENTS_REGISTER_NODE(VelodyneDriverRosWrapper)
+} // namespace ros
+} // namespace nebula

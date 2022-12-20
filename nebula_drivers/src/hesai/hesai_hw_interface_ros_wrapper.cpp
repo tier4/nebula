@@ -1,6 +1,4 @@
 #include "hesai/hesai_hw_interface_ros_wrapper.hpp"
-
-
 #include "tcp_driver/tcp_driver.hpp"
 
 #include <boost/asio.hpp>
@@ -15,8 +13,8 @@ namespace nebula
 namespace ros
 {
 HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(
-  const rclcpp::NodeOptions & options, const std::string & node_name)
-: rclcpp::Node(node_name, options), hw_interface_()
+  const rclcpp::NodeOptions & options)
+: rclcpp::Node("hesai_hw_interface_ros_wrapper", options), hw_interface_()
 //  m_owned_ios{new boost::asio::io_service(1)},
 //  m_tcp_driver{new ::drivers::tcp_driver::TcpDriver(m_owned_ios)}
 {
@@ -592,5 +590,7 @@ std::vector<rcl_interfaces::msg::SetParametersResult> HesaiHwInterfaceRosWrapper
   return results;
 }
 
+RCLCPP_COMPONENTS_REGISTER_NODE(HesaiHwInterfaceRosWrapper)
 }  // namespace ros
 }  // namespace nebula
+

@@ -10,6 +10,7 @@
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <ament_index_cpp/get_package_prefix.hpp>
 
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
@@ -50,8 +51,7 @@ class HesaiDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapperB
   }
 
 public:
-  explicit HesaiDriverRosWrapper(
-    const rclcpp::NodeOptions & options, const std::string & node_name);
+  explicit HesaiDriverRosWrapper(const rclcpp::NodeOptions & options);
 
   void ReceiveScanMsgCallback(const pandar_msgs::msg::PandarScan::SharedPtr scan_msg);
   Status GetStatus();

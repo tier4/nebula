@@ -1,1 +1,6 @@
 repositories:
+  # TCP version of transport drivers
+  transport_drivers:
+    type: git
+    url: git@github.com:MapIV/transport_drivers.git
+    version: tcp
