@@ -8,7 +8,6 @@
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <strstream>
 
 namespace nebula
 {
@@ -30,47 +29,8 @@ Status VelodyneHwInterface::InitializeSensorConfiguration(
   phase_ = (uint16_t)round(sensor_configuration_->scan_phase*100);
 
 
-//  InitHttpClient();
-  // Need to check status
-//  GetDiag();
-//  GetStatus();
-//  GetSnapshot();
-  // Need to compare with current settings!!
-//  SetRpm(sensor_configuration_->rotation_speed);
-//  SetFovStart(sensor_configuration_->cloud_min_angle);
-//  SetFovEnd(sensor_configuration_->cloud_max_angle);
-//  SetReturnType(sensor_configuration_->return_mode);
-
-//  InitHttpClientAsync();
   GetDiagAsync();
   GetStatusAsync();
-  /*
-  GetSnapshotAsync();
-  // Need to compare with current settings!!
-  SetRpmAsync(sensor_configuration_->rotation_speed);
-  SetFovStartAsync(sensor_configuration_->cloud_min_angle);
-  SetFovEndAsync(sensor_configuration_->cloud_max_angle);
-  SetReturnTypeAsync(sensor_configuration_->return_mode);
-  boost_ctx_->run();
-  */
-
- /*
-  Status st1 = Status::HTTP_CONNECTION_ERROR;
-  std::cout << "Status::HTTP_CONNECTION_ERROR : " << st1 << std::endl;
-  VelodyneStatus st2 = VelodyneStatus::INVALID_RPM_ERROR;
-  std::cout << "VelodyneStatus::INVALID_RPM_ERROR : " << st2 << std::endl;
-  Status st3 = st2;
-  std::cout << "Status::INVALID_RPM_ERROR : " << st3 << std::endl;
-  VelodyneStatus st4 = Status::HTTP_CONNECTION_ERROR;
-  std::cout << "VelodyneStatus::HTTP_CONNECTION_ERROR : " << st4 << std::endl;
-  std::cout << "st4.type() : " << st4.type() << std::endl;
-  Status st5 = st4;
-  std::cout << "VelodyneStatus to Status::HTTP_CONNECTION_ERROR : " << st5 << std::endl;
-  Status st6 = Status(9);
-  std::cout << "Status(9) : " << st6 << std::endl;
-  Status st7 = static_cast<Status>(st4);
-  std::cout << "VelodyneStatus to static_cast Status::HTTP_CONNECTION_ERROR : " << st5 << std::endl;
-  */
   Status status = Status::OK;
   return status;
 }
@@ -80,7 +40,6 @@ Status VelodyneHwInterface::SetSensorConfiguration(
 {
   InitializeSensorConfiguration(sensor_configuration);
 
-//  Status status = Status::OK;
   VelodyneStatus status = CheckAndSetConfigBySnapshotAsync();
   Status rt = status;
   return rt;
@@ -89,7 +48,6 @@ Status VelodyneHwInterface::SetSensorConfiguration(
 Status VelodyneHwInterface::CloudInterfaceStart()
 {
   try {
-//    std::cout << "Starting UDP server on: " << sensor_configuration_->host_ip << std::endl;
     cloud_udp_driver_->init_receiver(
       sensor_configuration_->host_ip, sensor_configuration_->data_port);
     cloud_udp_driver_->receiver()->open();
@@ -137,8 +95,6 @@ void VelodyneHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> 
 
   packet_first_azm_phased_ = (36000 + packet_first_azm_ - phase_) % 36000;
   packet_last_azm_phased_ = (36000 + packet_last_azm_ - phase_) % 36000;
-//  std::cout << "first:" << packet_first_azm_phased_ << std::endl;
-//  std::cout << "last" << packet_last_azm_phased_ << std::endl;
 
   if (processed_packets_ > 1) {
     if (
@@ -179,10 +135,7 @@ VelodyneStatus VelodyneHwInterface::InitHttpClient()
       http_client_driver_->client()->open();
     }
   } catch (const std::exception & ex) {
-//    Status status = Status::HTTP_CONNECTION_ERROR;
     VelodyneStatus status = Status::HTTP_CONNECTION_ERROR;
-//    std::cerr << status << sensor_configuration_->sensor_ip << ","
-//              << 80 << std::endl;
     return status;
   }
   return Status::OK;
@@ -193,38 +146,16 @@ VelodyneStatus VelodyneHwInterface::InitHttpClientAsync()
   try {
     http_client_driver_->init_client(sensor_configuration_->sensor_ip, 80);
   } catch (const std::exception & ex) {
-//    Status status = Status::HTTP_CONNECTION_ERROR;
     VelodyneStatus status = Status::HTTP_CONNECTION_ERROR;
-//    std::cerr << status << sensor_configuration_->sensor_ip << ","
-//              << 80 << std::endl;
     return status;
   }
   return Status::OK;
 }
 
-/*
-std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> VelodyneHwInterface::GetHttpClientDriverOnce(std::shared_ptr<boost::asio::io_context> ctx){
-  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd = std::unique_ptr<::drivers::tcp_driver::HttpClientDriver>(new ::drivers::tcp_driver::HttpClientDriver(ctx));
-  try {
-    hcd->init_client(sensor_configuration_->sensor_ip, 80);
-  } catch (const std::exception & ex) {
-    Status status = Status::HTTP_CONNECTION_ERROR;
-    std::cerr << status << sensor_configuration_->sensor_ip << ","
-              << 80 << std::endl;
-    return hcd;
-  }
-  return hcd;
-}
-
-std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> VelodyneHwInterface::GetHttpClientDriverOnce(){
-  return GetHttpClientDriverOnce(std::make_shared<boost::asio::io_context>());
-}
-*/
 
 VelodyneStatus VelodyneHwInterface::GetHttpClientDriverOnce(std::shared_ptr<boost::asio::io_context> ctx, std::unique_ptr<::drivers::tcp_driver::HttpClientDriver>& hcd){
   hcd = std::unique_ptr<::drivers::tcp_driver::HttpClientDriver>(new ::drivers::tcp_driver::HttpClientDriver(ctx));
   try {
-//    std::cout << sensor_configuration_->sensor_ip << std::endl;
     hcd->init_client(sensor_configuration_->sensor_ip, 80);
   } catch (const std::exception & ex) {
     Status status = Status::HTTP_CONNECTION_ERROR;
@@ -245,28 +176,13 @@ VelodyneStatus VelodyneHwInterface::GetHttpClientDriverOnce(std::unique_ptr<::dr
 void VelodyneHwInterface::str_cb(const std::string &str)
 {
   std::cout << "VelodyneHwInterface::str_cb: " << str <<std::endl;
-//  RCLCPP_INFO(get_logger(), "VelodyneHwInterface::str_cb: %s", str.c_str());
 }
 
 boost::property_tree::ptree VelodyneHwInterface::ParseJson(const std::string &str)
 {
-//  std::cout << "VelodyneHwInterface::parse_json: " << str <<std::endl;
-//  std::cout << "VelodyneHwInterface::parse_json" << std::endl;
   boost::property_tree::ptree tree;
   try {
-      std::istrstream is(str.c_str());
-      boost::property_tree::read_json(is, tree);
-
-    /*
-      std::string target_key = "config.returns";
-      std::cout << "VelodyneHwInterface::parse_json(" << target_key << "): " << tree.get<std::string>(target_key) << std::endl;
-      target_key = "config.rpm";
-      std::cout << "VelodyneHwInterface::parse_json(" << target_key << "): " << tree.get<std::string>(target_key) << std::endl;
-      target_key = "config.fov.start";
-      std::cout << "VelodyneHwInterface::parse_json(" << target_key << "): " << tree.get<std::string>(target_key) << std::endl;
-      target_key = "config.fov.end";
-      std::cout << "VelodyneHwInterface::parse_json(" << target_key << "): " << tree.get<std::string>(target_key) << std::endl;
-    */
+      boost::property_tree::read_json(str, tree);
   } catch (boost::property_tree::json_parser_error &e) {
       std::cerr << e.what() << std::endl;
   }
@@ -287,7 +203,6 @@ VelodyneStatus VelodyneHwInterface::CheckAndSetConfig(std::shared_ptr<VelodyneSe
   }
 
   target_key = "config.rpm";
-//  auto current_rotation_speed = tree.get<std::string>(target_key);
   auto current_rotation_speed = tree.get<u_int16_t>(target_key);
   if(sensor_configuration->rotation_speed != current_rotation_speed)
   {
@@ -359,15 +274,6 @@ std::string VelodyneHwInterface::GetStatus()
 
 std::string VelodyneHwInterface::GetDiag()
 {
-  /*
-  auto rt = http_client_driver_->get(
-    TARGET_DIAG);
-  http_client_driver_->client()->close();
-//  str_cb(rt);
-//  return Status::OK;
-  return rt;
-  */
-
   auto ctx = std::make_shared<boost::asio::io_context>();
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
   std::cout << "GetHttpClientDriverOnce" << std::endl;
@@ -378,7 +284,6 @@ std::string VelodyneHwInterface::GetDiag()
   auto rt = hcd->get(
     TARGET_DIAG);
   std::cout << "read_response: " << rt << std::endl;
-//  hcd->client()->close();
   return rt;
 
 }
@@ -388,16 +293,12 @@ std::string VelodyneHwInterface::GetSnapshot()
   auto rt = http_client_driver_->get(
     TARGET_SNAPSHOT);
   http_client_driver_->client()->close();
-//  str_cb(rt);
-//  ParseJson(rt);
-//  return Status::OK;
   return rt;
 }
 
 VelodyneStatus VelodyneHwInterface::SetRpm(uint16_t rpm)
 {
   if (rpm < 300 || 1200 < rpm || rpm % 60 != 0){
-//    std::cerr << "Invalid integer value(range from 300 to 1200, in increments of 60): " << rpm << std::endl;
     return VelodyneStatus::INVALID_RPM_ERROR;
   }
   auto rt = http_client_driver_->post(
@@ -412,7 +313,6 @@ VelodyneStatus VelodyneHwInterface::SetRpm(uint16_t rpm)
 VelodyneStatus VelodyneHwInterface::SetFovStart(uint16_t fov_start)
 {
   if (359 < fov_start){
-//    std::cerr << "Invalid integer value(0 to 359): " << fov_start << std::endl;
     return VelodyneStatus::INVALID_FOV_ERROR;
   }
   auto rt = http_client_driver_->post(
@@ -427,7 +327,6 @@ VelodyneStatus VelodyneHwInterface::SetFovStart(uint16_t fov_start)
 VelodyneStatus VelodyneHwInterface::SetFovEnd(uint16_t fov_end)
 {
   if (359 < fov_end){
-//    std::cerr << "Invalid integer value(0 to 359): " << fov_end << std::endl;
     return VelodyneStatus::INVALID_FOV_ERROR;
   }
   auto rt = http_client_driver_->post(
@@ -453,7 +352,6 @@ VelodyneStatus VelodyneHwInterface::SetReturnType(nebula::drivers::ReturnMode re
       body_str = "returns=Dual";
       break;
     default:
-//      std::cerr << "Invalid ReturnMode: " << return_mode << std::endl;
       return VelodyneStatus::INVALID_RETURN_MODE_ERROR;
   }
   auto rt = http_client_driver_->post(
@@ -614,17 +512,6 @@ VelodyneStatus VelodyneHwInterface::GetStatusAsync(std::function<void(const std:
     return st;
   }
 
-//  RCLCPP_INFO(get_logger(), "VelodyneHwInterface::GetStatus");
-//  http_client_driver_->asyncGet(
-  /*
-  hcd->asyncGet(
-    [this](const std::string &str)
-    {
-      str_cb(str);
-    },
-    TARGET_STATUS);
-    */
-
   hcd->asyncGet(
     str_callback,
     TARGET_STATUS);
@@ -643,36 +530,17 @@ VelodyneStatus VelodyneHwInterface::GetStatusAsync()
 
 VelodyneStatus VelodyneHwInterface::GetDiagAsync(std::function<void(const std::string &str)> str_callback)
 {
-//  std::cout << "make io_context" << std::endl;
   auto ctx = std::make_shared<boost::asio::io_context>();
-//  auto ctx = std::make_shared<boost::asio::io_context>(3);
-//  auto hcd = GetHttpClientDriverOnce(ctx);
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
-//  std::cout << "GetHttpClientDriverOnce" << std::endl;
   auto st = GetHttpClientDriverOnce(ctx, hcd);
   if(st != Status::OK){
     return st;
   }
 
-//  RCLCPP_INFO(get_logger(), "VelodyneHwInterface::GetDiag");
-//  http_client_driver_->asyncGet(
-  /*
-  hcd->asyncGet(
-    [this](const std::string &str)
-    {
-      str_cb(str);
-    },
-    TARGET_DIAG);
-    */
-//  std::cout << "hcd->asyncGet" << std::endl;
   hcd->asyncGet(
     str_callback,
     TARGET_DIAG);
-//  std::cout << "ctx->run()" << std::endl;
   ctx->run();
-//  ctx->poll();
-//  std::cout << "return Status::WAITING_FOR_SENSOR_RESPONSE" << std::endl;
-//  ctx.reset();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
 
@@ -695,14 +563,6 @@ VelodyneStatus VelodyneHwInterface::GetSnapshotAsync(std::function<void(const st
   if(st != Status::OK){
     return st;
   }
-  /*
-  hcd->asyncGet(
-    [this](const std::string &str)
-    {
-      str_cb(str);
-    },
-    TARGET_SNAPSHOT);
-    */
   hcd->asyncGet(
     str_callback,
     TARGET_SNAPSHOT);
@@ -715,7 +575,6 @@ VelodyneStatus VelodyneHwInterface::GetSnapshotAsync()
   return GetSnapshotAsync(
     [this](const std::string &str)
     {
-//      str_cb(str);
       ParseJson(str);
     });
 }
@@ -733,20 +592,15 @@ VelodyneStatus VelodyneHwInterface::CheckAndSetConfigBySnapshotAsync()
 VelodyneStatus VelodyneHwInterface::SetRpmAsync(uint16_t rpm)
 {
   auto ctx = std::make_shared<boost::asio::io_context>();
-//  auto hcd = GetHttpClientDriverOnce(ctx);
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
   auto st = GetHttpClientDriverOnce(ctx, hcd);
   if(st != Status::OK){
     return st;
   }
 
-//  RCLCPP_INFO(get_logger(), "VelodyneHwInterface::SetRpm: %d", rpm);
   if (rpm < 300 || 1200 < rpm || rpm % 60 != 0){
-//    std::cerr << "Invalid integer value(range from 300 to 1200, in increments of 60): " << rpm << std::endl;
-//    return Status::SENSOR_CONFIG_ERROR;
     return VelodyneStatus::INVALID_RPM_ERROR;
   }
-//  http_client_driver_->asyncPost(
   hcd->asyncPost(
     [this](const std::string &str)
     {
@@ -762,7 +616,6 @@ VelodyneStatus VelodyneHwInterface::SetRpmAsync(uint16_t rpm)
 VelodyneStatus VelodyneHwInterface::SetFovStartAsync(uint16_t fov_start)
 {
   auto ctx = std::make_shared<boost::asio::io_context>();
-//  auto hcd = GetHttpClientDriverOnce(ctx);
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
   auto st = GetHttpClientDriverOnce(ctx, hcd);
   if(st != Status::OK){
@@ -770,11 +623,8 @@ VelodyneStatus VelodyneHwInterface::SetFovStartAsync(uint16_t fov_start)
   }
 
   if (359 < fov_start){
-//    std::cerr << "Invalid integer value(0 to 359): " << fov_start << std::endl;
-//    return Status::SENSOR_CONFIG_ERROR;
     return VelodyneStatus::INVALID_FOV_ERROR;
   }
-//  http_client_driver_->asyncPost(
   hcd->asyncPost(
     [this](const std::string &str)
     {
@@ -790,7 +640,6 @@ VelodyneStatus VelodyneHwInterface::SetFovStartAsync(uint16_t fov_start)
 VelodyneStatus VelodyneHwInterface::SetFovEndAsync(uint16_t fov_end)
 {
   auto ctx = std::make_shared<boost::asio::io_context>();
-//  auto hcd = GetHttpClientDriverOnce(ctx);
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
   auto st = GetHttpClientDriverOnce(ctx, hcd);
   if(st != Status::OK){
@@ -798,11 +647,8 @@ VelodyneStatus VelodyneHwInterface::SetFovEndAsync(uint16_t fov_end)
   }
 
   if (359 < fov_end){
-//    std::cerr << "Invalid integer value(0 to 359): " << fov_end << std::endl;
-//    return Status::SENSOR_CONFIG_ERROR;
     return VelodyneStatus::INVALID_FOV_ERROR;
   }
-//  http_client_driver_->asyncPost(
   hcd->asyncPost(
     [this](const std::string &str)
     {
@@ -818,7 +664,6 @@ VelodyneStatus VelodyneHwInterface::SetFovEndAsync(uint16_t fov_end)
 VelodyneStatus VelodyneHwInterface::SetReturnTypeAsync(nebula::drivers::ReturnMode return_mode)
 {
   auto ctx = std::make_shared<boost::asio::io_context>();
-//  auto hcd = GetHttpClientDriverOnce(ctx);
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
   auto st = GetHttpClientDriverOnce(ctx, hcd);
   if(st != Status::OK){
@@ -837,11 +682,8 @@ VelodyneStatus VelodyneHwInterface::SetReturnTypeAsync(nebula::drivers::ReturnMo
       body_str = "returns=Dual";
       break;
     default:
-//      std::cerr << "Invalid ReturnMode: " << return_mode << std::endl;
-//      return Status::SENSOR_CONFIG_ERROR;
       return VelodyneStatus::INVALID_RETURN_MODE_ERROR;
   }
-//  http_client_driver_->asyncPost(
   hcd->asyncPost(
     [this](const std::string &str)
     {
@@ -857,7 +699,6 @@ VelodyneStatus VelodyneHwInterface::SetReturnTypeAsync(nebula::drivers::ReturnMo
 VelodyneStatus VelodyneHwInterface::SaveConfigAsync()
 {
   auto ctx = std::make_shared<boost::asio::io_context>();
-//  auto hcd = GetHttpClientDriverOnce(ctx);
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
   auto st = GetHttpClientDriverOnce(ctx, hcd);
   if(st != Status::OK){
@@ -865,7 +706,6 @@ VelodyneStatus VelodyneHwInterface::SaveConfigAsync()
   }
 
   std::string body_str = "submit";
-//  http_client_driver_->asyncPost(
   hcd->asyncPost(
     [this](const std::string &str)
     {
@@ -881,7 +721,6 @@ VelodyneStatus VelodyneHwInterface::SaveConfigAsync()
 VelodyneStatus VelodyneHwInterface::ResetSystemAsync()
 {
   auto ctx = std::make_shared<boost::asio::io_context>();
-//  auto hcd = GetHttpClientDriverOnce(ctx);
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
   auto st = GetHttpClientDriverOnce(ctx, hcd);
   if(st != Status::OK){
@@ -889,7 +728,6 @@ VelodyneStatus VelodyneHwInterface::ResetSystemAsync()
   }
 
   std::string body_str = "reset_system";
-//  http_client_driver_->asyncPost(
   hcd->asyncPost(
     [this](const std::string &str)
     {
@@ -905,7 +743,6 @@ VelodyneStatus VelodyneHwInterface::ResetSystemAsync()
 VelodyneStatus VelodyneHwInterface::LaserOnAsync()
 {
   auto ctx = std::make_shared<boost::asio::io_context>();
-//  auto hcd = GetHttpClientDriverOnce(ctx);
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
   auto st = GetHttpClientDriverOnce(ctx, hcd);
   if(st != Status::OK){
@@ -913,7 +750,6 @@ VelodyneStatus VelodyneHwInterface::LaserOnAsync()
   }
 
   std::string body_str = "laser=on";
-//  http_client_driver_->asyncPost(
   hcd->asyncPost(
     [this](const std::string &str)
     {
@@ -929,7 +765,6 @@ VelodyneStatus VelodyneHwInterface::LaserOnAsync()
 VelodyneStatus VelodyneHwInterface::LaserOffAsync()
 {
   auto ctx = std::make_shared<boost::asio::io_context>();
-//  auto hcd = GetHttpClientDriverOnce(ctx);
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
   auto st = GetHttpClientDriverOnce(ctx, hcd);
   if(st != Status::OK){
@@ -937,7 +772,6 @@ VelodyneStatus VelodyneHwInterface::LaserOffAsync()
   }
 
   std::string body_str = "laser=off";
-//  http_client_driver_->asyncPost(
   hcd->asyncPost(
     [this](const std::string &str)
     {

@@ -71,9 +71,7 @@ void PandarQTDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
 
   if (!dual_return) {
     if (
-//      (packet_.return_mode == FIRST_RETURN && sensor_configuration_->return_mode != drivers::ReturnMode::SINGLE_FIRST) ||
       (packet_.return_mode == FIRST_RETURN && sensor_configuration_->return_mode != drivers::ReturnMode::FIRST) ||
-//      (packet_.return_mode == LAST_RETURN && sensor_configuration_->return_mode != drivers::ReturnMode::SINGLE_LAST)) {
       (packet_.return_mode == LAST_RETURN && sensor_configuration_->return_mode != drivers::ReturnMode::LAST)) {
       //sensor config, driver mismatched
     }

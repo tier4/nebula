@@ -41,14 +41,11 @@ VelodyneDriverRosWrapper::VelodyneDriverRosWrapper(
 void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
   const velodyne_msgs::msg::VelodyneScan::SharedPtr scan_msg)
 {
-//  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "void VelodyneDriverRosWrapper::ReceiveScanMsgCallback");
   // take packets out of scan msg
   std::vector<velodyne_msgs::msg::VelodynePacket> pkt_msgs = scan_msg->packets;
 
-//  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "ConvertScanToPointcloud st, size=" << scan_msg->packets.size());
   nebula::drivers::PointCloudXYZIRADTPtr pointcloud =
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
-//  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "ConvertScanToPointcloud ed, size=" << pointcloud->size());
 
   auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
   pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
@@ -58,9 +55,7 @@ void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
       rclcpp::Time(SecondsToChronoNanoSeconds(first_point_timestamp).count());
   }
   ros_pc_msg_ptr->header.frame_id = sensor_cfg_ptr_->frame_id;
-//  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "publish");
   velodyne_points_pub_->publish(std::move(ros_pc_msg_ptr));
-//  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "published");
 }
 
 Status VelodyneDriverRosWrapper::InitializeDriver(
@@ -80,8 +75,6 @@ Status VelodyneDriverRosWrapper::GetParameters(
   drivers::VelodyneSensorConfiguration & sensor_configuration,
   drivers::VelodyneCalibrationConfiguration & calibration_configuration)
 {
-//  sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(
-//    this->declare_parameter<std::string>("sensor_model", ""));
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 4;
@@ -91,8 +84,6 @@ Status VelodyneDriverRosWrapper::GetParameters(
     this->declare_parameter<std::string>("sensor_model", "");
     sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
   }
-//  sensor_configuration.return_mode =
-//    nebula::drivers::ReturnModeFromString(this->declare_parameter<std::string>("return_mode", ""));
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 4;
@@ -103,7 +94,6 @@ Status VelodyneDriverRosWrapper::GetParameters(
     sensor_configuration.return_mode =
       nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
   }
-//  sensor_configuration.frame_id = this->declare_parameter<std::string>("frame_id", "velodyne");
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 4;
@@ -113,7 +103,6 @@ Status VelodyneDriverRosWrapper::GetParameters(
     this->declare_parameter<std::string>("frame_id", "velodyne", descriptor);
     sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
   }
-//  sensor_configuration.scan_phase = this->declare_parameter<double>("scan_phase", 0.);
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 3;
@@ -127,7 +116,6 @@ Status VelodyneDriverRosWrapper::GetParameters(
     sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
   }
 
-//  calibration_configuration.calibration_file = this->declare_parameter<std::string>("calibration_file", "");
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 4;
@@ -138,8 +126,6 @@ Status VelodyneDriverRosWrapper::GetParameters(
     calibration_configuration.calibration_file = this->get_parameter("calibration_file").as_string();
   }
 
-//  sensor_configuration.min_range = this->declare_parameter<double>("min_range", 0.3);
-//  sensor_configuration.max_range = this->declare_parameter<double>("max_range", 300.);
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 3;
@@ -159,7 +145,6 @@ Status VelodyneDriverRosWrapper::GetParameters(
     sensor_configuration.max_range = this->get_parameter("max_range").as_double();
   }
   double view_direction = sensor_configuration.scan_phase * M_PI / 180;
-//  double view_width = this->declare_parameter<double>("view_width", 360) * M_PI / 180;
   double view_width = 360 * M_PI / 180;
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -173,8 +158,6 @@ Status VelodyneDriverRosWrapper::GetParameters(
 
   if(sensor_configuration.sensor_model != nebula::drivers::SensorModel::VELODYNE_HDL64)
   {
-//    sensor_configuration.cloud_min_angle = this->declare_parameter<uint16_t>("cloud_min_angle", 0);
-//    sensor_configuration.cloud_max_angle = this->declare_parameter<uint16_t>("cloud_max_angle", 359);
     {
       rcl_interfaces::msg::ParameterDescriptor descriptor;
       descriptor.type = 2;

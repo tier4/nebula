@@ -15,18 +15,6 @@ PandarXTMDecoder::PandarXTMDecoder(
   sensor_configuration_ = sensor_configuration;
   sensor_calibration_ = calibration_configuration;
 
-  /*
-  for (size_t unit = 0; unit < LASER_COUNT; ++unit) {
-    firing_offset_[unit] = 1.512f * static_cast<float>(unit) + 0.28f;
-  }
-
-  for (size_t block = 0; block < BLOCKS_PER_PACKET; ++block) {
-    block_offset_single_[block] =
-      3.28f - 50.00f * static_cast<float>(BLOCKS_PER_PACKET - block - 1);
-    block_offset_dual_[block] =
-      3.28f - 50.00f * (static_cast<float>(BLOCKS_PER_PACKET - block - 1) / 2.f);
-  }
-
   // TODO: add calibration data validation
   // if(calibration.elev_angle_map.size() != num_lasers_){
   //   // calibration data is not valid!
@@ -35,7 +23,6 @@ PandarXTMDecoder::PandarXTMDecoder(
     elev_angle_[laser] = calibration_configuration->elev_angle_map[laser];
     azimuth_offset_[laser] = calibration_configuration->azimuth_offset_map[laser];
   }
-  */
   /////////////////
 
   for (size_t laser = 0; laser < LASER_COUNT; ++laser) {

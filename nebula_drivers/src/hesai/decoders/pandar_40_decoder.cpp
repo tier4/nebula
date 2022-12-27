@@ -74,10 +74,8 @@ void Pandar40Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
   if (!dual_return) {
     if (
       (packet_.return_mode == STRONGEST_RETURN &&
-//       sensor_configuration_->return_mode != drivers::ReturnMode::SINGLE_STRONGEST) ||
        sensor_configuration_->return_mode != drivers::ReturnMode::STRONGEST) ||
       (packet_.return_mode == LAST_RETURN &&
-//       sensor_configuration_->return_mode != drivers::ReturnMode::SINGLE_LAST)) {
        sensor_configuration_->return_mode != drivers::ReturnMode::LAST)) {
       // sensor config, driver mismatched
     }

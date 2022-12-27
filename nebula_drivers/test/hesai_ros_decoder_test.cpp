@@ -1,4 +1,5 @@
-#include "hesai/hesai_ros_offline_extract_pcd.hpp"
+//#include "hesai/hesai_ros_decoder_test.hpp"
+#include "hesai_ros_decoder_test.hpp"
 
 
 #include "rclcpp/serialization.hpp"
@@ -9,18 +10,20 @@
 
 #include "rosbag2_cpp/reader.hpp"
 #include "rosbag2_cpp/readers/sequential_reader.hpp"
+#include "rosbag2_cpp/writer.hpp"
+#include "rosbag2_cpp/writers/sequential_writer.hpp"
 
 #include "rosbag2_storage/storage_options.hpp"
-//#include <boost/filesystem/path.hpp>
-//#include <boost/filesystem/operations.hpp>
 #include "rcpputils/filesystem_helper.hpp"
 #include <regex>
+
+#include <gtest/gtest.h>
 
 namespace nebula
 {
 namespace ros
 {
-HesaiRosOfflineExtractSample::HesaiRosOfflineExtractSample(
+HesaiRosDecoderTest::HesaiRosDecoderTest(
   const rclcpp::NodeOptions & options, const std::string & node_name)
 : rclcpp::Node(node_name, options)
 {
@@ -57,7 +60,12 @@ HesaiRosOfflineExtractSample::HesaiRosOfflineExtractSample(
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 }
 
-Status HesaiRosOfflineExtractSample::InitializeDriver(
+void HesaiRosDecoderTest::ReceiveScanMsgCallback(
+  const pandar_msgs::msg::PandarScan::SharedPtr scan_msg)
+{
+}
+
+Status HesaiRosDecoderTest::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
   std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration)
 {
@@ -68,7 +76,7 @@ Status HesaiRosOfflineExtractSample::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status HesaiRosOfflineExtractSample::InitializeDriver(
+Status HesaiRosDecoderTest::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
   std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
   std::shared_ptr<drivers::HesaiCorrection> correction_configuration)
@@ -81,9 +89,9 @@ Status HesaiRosOfflineExtractSample::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status HesaiRosOfflineExtractSample::GetStatus() { return wrapper_status_; }
+Status HesaiRosDecoderTest::GetStatus() { return wrapper_status_; }
 
-Status HesaiRosOfflineExtractSample::GetParameters(
+Status HesaiRosDecoderTest::GetParameters(
   drivers::HesaiSensorConfiguration & sensor_configuration,
   drivers::HesaiCalibrationConfiguration & calibration_configuration,
   drivers::HesaiCorrection & correction_configuration)
@@ -94,7 +102,8 @@ Status HesaiRosOfflineExtractSample::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_model", "");
+//    this->declare_parameter<std::string>("sensor_model", "");
+    this->declare_parameter<std::string>("sensor_model", "PandarAT128");
     sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
   }
   {
@@ -103,7 +112,8 @@ Status HesaiRosOfflineExtractSample::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("return_mode", "", descriptor);
+//    this->declare_parameter<std::string>("return_mode", "", descriptor);
+    this->declare_parameter<std::string>("return_mode", "LastStrongest", descriptor);
     sensor_configuration.return_mode =
 //      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
       nebula::drivers::ReturnModeFromStringHesai(this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
@@ -114,7 +124,8 @@ Status HesaiRosOfflineExtractSample::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("frame_id", "pandar", descriptor);
+//    this->declare_parameter<std::string>("frame_id", "pandar", descriptor);
+    this->declare_parameter<std::string>("frame_id", "hesai", descriptor);
     sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
   }
   {
@@ -135,7 +146,8 @@ Status HesaiRosOfflineExtractSample::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("calibration_file", "", descriptor);
+//    this->declare_parameter<std::string>("calibration_file", "", descriptor);
+    this->declare_parameter<std::string>("calibration_file", "/home/kyutoku/kyutoku_ws/ros2/github/install/nebula_lidar_driver/share/nebula_lidar_driver/calibration/hesai/PandarAT128.csv", descriptor);
     calibration_configuration.calibration_file = this->get_parameter("calibration_file").as_string();
   }
   if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128){
@@ -144,7 +156,8 @@ Status HesaiRosOfflineExtractSample::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("correction_file", "", descriptor);
+//    this->declare_parameter<std::string>("correction_file", "", descriptor);
+    this->declare_parameter<std::string>("correction_file", "/home/kyutoku/kyutoku_ws/ros2/github/install/nebula_lidar_driver/share/nebula_lidar_driver/calibration/hesai/PandarAT128.dat", descriptor);
     correction_file_path = this->get_parameter("correction_file").as_string();
   }
   {
@@ -153,7 +166,8 @@ Status HesaiRosOfflineExtractSample::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("bag_path", "", descriptor);
+//    this->declare_parameter<std::string>("bag_path", "", descriptor);
+    this->declare_parameter<std::string>("bag_path", "/home/kyutoku/kyutoku_ws/ros2/testing_pcd/pandar_packets/1671446145045082648", descriptor);
     bag_path = this->get_parameter("bag_path").as_string();
   }
   {
@@ -171,15 +185,6 @@ Status HesaiRosOfflineExtractSample::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("out_path", "", descriptor);
-    out_path = this->get_parameter("out_path").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("format", "cdr", descriptor);
     format = this->get_parameter("format").as_string();
   }
@@ -189,7 +194,8 @@ Status HesaiRosOfflineExtractSample::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("target_topic", "", descriptor);
+//    this->declare_parameter<std::string>("target_topic", "", descriptor);
+    this->declare_parameter<std::string>("target_topic", "/pandar_packets", descriptor);
     target_topic = this->get_parameter("target_topic").as_string();
   }
 
@@ -233,7 +239,51 @@ Status HesaiRosOfflineExtractSample::GetParameters(
   return Status::OK;
 }
 
-Status HesaiRosOfflineExtractSample::ReadBag()
+
+/*
+struct PointXYZIRADT
+{
+  PCL_ADD_POINT4D;
+  float intensity;
+  uint16_t ring;
+  float azimuth;
+  float distance;
+  uint8_t return_type;
+  double time_stamp;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+} EIGEN_ALIGN16;
+*/
+void printPCD(nebula::drivers::PointCloudXYZIRADTPtr pp){
+  for(auto p: pp->points){
+    std::cout << "(" << p.x << ", " << p.y << "," << p.z << "): " << p.intensity << ", " << p.ring << ", " << p.azimuth << ", " << p.distance << ", " << p.return_type << ", " << p.time_stamp << std::endl;
+  }
+}
+
+
+void checkPCDs(nebula::drivers::PointCloudXYZIRADTPtr pp1, nebula::drivers::PointCloudXYZIRADTPtr pp2){
+//  std::cout << "checkPCDs" << std::endl;
+//  std::cout << "pp1: " << pp1->points[0].x << std::endl;
+//  std::cout << "pp2: " << pp2->points[0].x << std::endl;
+  EXPECT_EQ(pp1->points.size(), pp2->points.size());
+//  std::cout << "size ok" << std::endl;
+  for(uint32_t i=0;i<pp1->points.size();i++){
+    auto p1 = pp1->points[i];
+    auto p2 = pp2->points[i];
+    EXPECT_FLOAT_EQ(p1.x, p2.x);
+    EXPECT_FLOAT_EQ(p1.y, p2.y);
+    EXPECT_FLOAT_EQ(p1.z, p2.z);
+    EXPECT_FLOAT_EQ(p1.intensity, p2.intensity);
+    EXPECT_EQ(p1.ring, p2.ring);
+    EXPECT_FLOAT_EQ(p1.azimuth, p2.azimuth);
+    EXPECT_FLOAT_EQ(p1.distance, p2.distance);
+    EXPECT_EQ(p1.return_type, p2.return_type);
+    EXPECT_DOUBLE_EQ(p1.time_stamp, p2.time_stamp);
+  }
+}
+
+
+
+void HesaiRosDecoderTest::ReadBag()
 {
   
   rosbag2_storage::StorageOptions storage_options;
@@ -241,57 +291,72 @@ Status HesaiRosOfflineExtractSample::ReadBag()
 
   std::cout << bag_path << std::endl;
   std::cout << storage_id << std::endl;
-  std::cout << out_path << std::endl;
   std::cout << format << std::endl;
   std::cout << target_topic << std::endl;
 
 
-  rcpputils::fs::path o_dir(out_path);
   auto target_topic_name = target_topic;
   if(target_topic_name.substr(0, 1) == "/"){
     target_topic_name = target_topic_name.substr(1);
   }
   target_topic_name = std::regex_replace(target_topic_name, std::regex("/"), "_");
-  o_dir = o_dir / rcpputils::fs::path(target_topic_name);
-  if (rcpputils::fs::create_directories(o_dir)) {
-    std::cout << "created: " << o_dir << std::endl;
-  }
-//  return Status::OK;
 
-  pcl::PCDWriter writer;
+  pcl::PCDReader pcd_reader;
+
+  rcpputils::fs::path bag_dir(bag_path);
+  rcpputils::fs::path pcd_dir = bag_dir.parent_path();
+  int check_cnt = 0;
 
   storage_options.uri = bag_path;
   storage_options.storage_id = storage_id;
   converter_options.output_serialization_format = format;//"cdr";
+  rclcpp::Serialization<pandar_msgs::msg::PandarScan> serialization;
+  nebula::drivers::PointCloudXYZIRADTPtr pointcloud(new nebula::drivers::PointCloudXYZIRADT);
+  nebula::drivers::PointCloudXYZIRADTPtr ref_pointcloud(new nebula::drivers::PointCloudXYZIRADT);
   {
-    rosbag2_cpp::Reader reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
-    // reader.open(rosbag_directory.string());
-    reader.open(storage_options, converter_options);
-    while (reader.has_next()) {
-      auto bag_message = reader.read_next();
+    rosbag2_cpp::Reader bag_reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
+    bag_reader.open(storage_options, converter_options);
+    while (bag_reader.has_next()) {
+      auto bag_message = bag_reader.read_next();
 
       std::cout<<"Found topic name " << bag_message->topic_name << std::endl;
 
       if (bag_message->topic_name == target_topic) {
         pandar_msgs::msg::PandarScan extracted_msg;
-        rclcpp::Serialization<pandar_msgs::msg::PandarScan> serialization;
         rclcpp::SerializedMessage extracted_serialized_msg(*bag_message->serialized_data);
         serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
 
-//        std::cout<<"Found data in topic " << bag_message->topic_name << ": " << extracted_test_msg.data << std::endl;
         std::cout<<"Found data in topic " << bag_message->topic_name << ": " << bag_message->time_stamp << std::endl;
 
-        nebula::drivers::PointCloudXYZIRADTPtr pointcloud = driver_ptr_->ConvertScanToPointcloud(std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg));
-        auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
-//        pcl::io::savePCDFileBinary((o_dir / fn).string(), *pointcloud);
-        writer.writeBinary((o_dir / fn).string(), *pointcloud);
-      }
+        auto extracted_msg_ptr = std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg);
+        pointcloud = driver_ptr_->ConvertScanToPointcloud(extracted_msg_ptr);
 
+        // There are very rare cases where has_scanned_ does not become true, but it is not known whether it is because of decoder or deserialize_message.
+        if(!pointcloud)
+          continue;
+
+        auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
+//        printPCD(pointcloud);
+
+        auto target_pcd_path = (pcd_dir / fn);
+        std::cout << target_pcd_path << std::endl;
+        if(target_pcd_path.exists()){
+          std::cout << "exists: " << target_pcd_path << std::endl;
+          auto rt = pcd_reader.read(target_pcd_path.string(), *ref_pointcloud);
+          std::cout << rt << " loaded: " << target_pcd_path << std::endl;
+//          printPCD(ref_pointcloud);
+          checkPCDs(pointcloud, ref_pointcloud);
+          check_cnt++;
+          ref_pointcloud.reset(new nebula::drivers::PointCloudXYZIRADT);
+        }
+        pointcloud.reset(new nebula::drivers::PointCloudXYZIRADT);
+      }
     }
+    EXPECT_GT(check_cnt, 0);
     // close on scope exit
   }
-  return Status::OK;
 }
+
 
 }  // namespace ros
 }  // namespace nebula

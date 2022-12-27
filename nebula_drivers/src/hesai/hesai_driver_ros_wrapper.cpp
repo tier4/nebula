@@ -24,8 +24,6 @@ HesaiDriverRosWrapper::HesaiDriverRosWrapper(const rclcpp::NodeOptions & options
 
   sensor_cfg_ptr_ = std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration);
 
-//  correction_cfg_ptr_ = std::make_shared<drivers::HesaiCorrection>(correction_configuration);
-
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
   if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128){
     correction_cfg_ptr_ = std::make_shared<drivers::HesaiCorrection>(correction_configuration);
@@ -56,8 +54,6 @@ void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
   nebula::drivers::PointCloudXYZIRADTPtr pointcloud =
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
 
-//  std::cout << "got nebula::drivers::PointCloudXYZIRADTPtr pointcloud" << std::endl;
-//  std::cout << pointcloud->points.size() << std::endl;
   if(pointcloud == nullptr)
     return;
   auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
@@ -66,18 +62,14 @@ void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
     double first_point_timestamp = pointcloud->points.front().time_stamp;
     ros_pc_msg_ptr->header.stamp =
       rclcpp::Time(SecondsToChronoNanoSeconds(first_point_timestamp).count());
-//    std::cout << "point: " << ros_pc_msg_ptr->header.stamp.sec << std::endl;
-//    std::cout << "now: " << system_clock.now().seconds() << std::endl;
     if(ros_pc_msg_ptr->header.stamp.sec < 0)// && false)
     {
       rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
       ros_pc_msg_ptr->header.stamp = system_clock.now();
-//      std::cout << "system_clock.now()" << std::endl;
       RCLCPP_WARN_STREAM(
         this->get_logger(),
         "Timestamp error... use system_clock");
     }else{
-//      std::cout << "stamp" << std::endl;
     }
   }
   ros_pc_msg_ptr->header.frame_id = sensor_cfg_ptr_->frame_id;
@@ -88,7 +80,6 @@ Status HesaiDriverRosWrapper::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
   std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration)
 {
-//  return InitializeDriver(sensor_configuration, calibration_configuration, nullptr_t);
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
     std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
     std::static_pointer_cast<drivers::HesaiCalibrationConfiguration>(calibration_configuration));
@@ -115,18 +106,6 @@ Status HesaiDriverRosWrapper::GetParameters(
   drivers::HesaiCalibrationConfiguration & calibration_configuration,
   drivers::HesaiCorrection & correction_configuration)
 {
-  /*
-  sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(
-    this->declare_parameter<std::string>("sensor_model", ""));
-
-  sensor_configuration.return_mode =
-    nebula::drivers::ReturnModeFromString(this->declare_parameter<std::string>("return_mode", ""));
-  sensor_configuration.frame_id = this->declare_parameter<std::string>("frame_id", "pandar");
-  sensor_configuration.scan_phase = this->declare_parameter<double>("scan_phase", 0.);
-
-  calibration_configuration.calibration_file =
-    this->declare_parameter<std::string>("calibration_file", "");
-  */
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 4;
@@ -144,7 +123,6 @@ Status HesaiDriverRosWrapper::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("return_mode", "", descriptor);
     sensor_configuration.return_mode =
-//      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
       nebula::drivers::ReturnModeFromStringHesai(this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
   }
   {

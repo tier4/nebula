@@ -101,15 +101,6 @@ rclcpp_components_register_node(hesai_driver_ros_wrapper
         )
 
 
-# Offline Lib
-#ament_auto_add_library(hesai_driver_ros_offline_wrapper SHARED
-#        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver_ros_offline_wrapper.cpp
-#        )
-#target_link_libraries(hesai_driver_ros_offline_wrapper ${PCL_LIBRARIES})
-#ament_auto_add_executable(hesai_driver_ros_offline_wrapper_node
-#        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_driver_ros_offline_main.cpp
-#        )
-
 ## Velodyne
 # HwInterfaces Lib
 ament_auto_add_library(velodyne_hw_interface SHARED
@@ -125,7 +116,6 @@ rclcpp_components_register_node(velodyne_hw_ros_wrapper
         )
 
 target_link_libraries(velodyne_hw_ros_wrapper ${CURL_LIBRARIES})
-#target_link_libraries(velodyne_hw_ros_wrapper ${CURLPP_LIBRARY})
 
 # RosHwMonitor
 ament_auto_add_library(velodyne_hw_monitor_ros_wrapper SHARED
@@ -156,12 +146,51 @@ rclcpp_components_register_node(velodyne_driver_ros_wrapper
         EXECUTABLE velodyne_driver_ros_wrapper_node
         )
 
+
 ## NEW SENSOR
 # HwInterfaces Lib
 # RosHwInterface
 # RosHwMonitor
 # Driver Lib
 # RosDriver
+
+if(BUILD_TESTING)
+        find_package(launch_testing_ament_cmake)
+        add_launch_test(test/hesai_ros_decoder_test_launch.py)
+
+        # lib for TEST
+        ament_auto_add_library(hesai_ros_decoder_test SHARED
+                ${CMAKE_CURRENT_SOURCE_DIR}/test/hesai_ros_decoder_test.cpp
+                )
+        target_link_libraries(hesai_ros_decoder_test ${PCL_LIBRARIES})
+
+        # standalone node for TEST
+        ament_auto_add_executable(hesai_ros_decoder_test_node
+                ${CMAKE_CURRENT_SOURCE_DIR}/test/hesai_ros_decoder_test_main.cpp
+                )
+        target_link_libraries(hesai_ros_decoder_test_node
+                ${PCL_LIBRARIES}
+                gtest
+                )
+
+        find_package(ament_cmake_gtest)
+        ament_add_gtest(hesai_ros_decoder_test_main
+                test/hesai_ros_decoder_test_main.cpp
+                )
+        ament_target_dependencies(hesai_ros_decoder_test_main
+                rclcpp
+                rosbag2_cpp
+                pandar_msgs
+                )
+        target_include_directories(hesai_ros_decoder_test_main PUBLIC
+                ${CMAKE_CURRENT_SOURCE_DIR}/src
+                include
+                )
+        target_link_libraries(hesai_ros_decoder_test_main
+                ${PCL_LIBRARIES}
+                hesai_ros_decoder_test
+                )
+endif()
 
 ament_auto_package(
         INSTALL_TO_SHARE
