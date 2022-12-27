@@ -9,7 +9,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <strstream>
 
 #define PANDARGENERALSDK_TCP_COMMAND_PORT (9347)
 
@@ -205,8 +204,7 @@ boost::property_tree::ptree HesaiHwInterface::ParseJson(const std::string &str)
 {
   boost::property_tree::ptree tree;
   try {
-      std::istrstream is(str.c_str());
-      boost::property_tree::read_json(is, tree);
+      boost::property_tree::read_json(str, tree);
   } catch (boost::property_tree::json_parser_error &e) {
       std::cerr << e.what() << std::endl;
   }
@@ -336,7 +334,7 @@ Status HesaiHwInterface::GetPtpDiagStatus(std::shared_ptr<::drivers::tcp_driver:
   buf_vec.emplace_back((len >> 16) & 0xff);
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
-  
+
   buf_vec.emplace_back(0x01);//PTP STATUS
 
   /*
@@ -399,13 +397,13 @@ Status HesaiHwInterface::GetPtpDiagStatus(std::shared_ptr<::drivers::tcp_driver:
     if(8 < response.size()){
       int payload_pos = 8;
       /*
-      hesai_ptp_diag_status.master_offset = response[payload_pos++] << 56 | 
-        response[payload_pos++] << 48 | 
-        response[payload_pos++] << 40 | 
-        response[payload_pos++] << 32 | 
-        response[payload_pos++] << 24 | 
-        response[payload_pos++] << 16 | 
-        response[payload_pos++] << 8 | 
+      hesai_ptp_diag_status.master_offset = response[payload_pos++] << 56 |
+        response[payload_pos++] << 48 |
+        response[payload_pos++] << 40 |
+        response[payload_pos++] << 32 |
+        response[payload_pos++] << 24 |
+        response[payload_pos++] << 16 |
+        response[payload_pos++] << 8 |
         response[payload_pos++];
       */
       hesai_ptp_diag_status.master_offset = static_cast<long long>(response[payload_pos++]) << 56;
@@ -488,7 +486,7 @@ Status HesaiHwInterface::GetPtpDiagPort(std::shared_ptr<::drivers::tcp_driver::T
   buf_vec.emplace_back((len >> 16) & 0xff);
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
-  
+
   buf_vec.emplace_back(0x02);//PTP TLV PORT_DATA_SET
 
   /*
@@ -557,13 +555,13 @@ Status HesaiHwInterface::GetPtpDiagPort(std::shared_ptr<::drivers::tcp_driver::T
       hesai_ptp_diag_port.portState = static_cast<int>(response[payload_pos++]);
       hesai_ptp_diag_port.logMinDelayReqInterval = static_cast<int>(response[payload_pos++]);
       /*
-      hesai_ptp_diag_port.peerMeanPathDelay = response[payload_pos++] << 56 | 
-        response[payload_pos++] << 48 | 
-        response[payload_pos++] << 40 | 
-        response[payload_pos++] << 32 | 
-        response[payload_pos++] << 24 | 
-        response[payload_pos++] << 16 | 
-        response[payload_pos++] << 8 | 
+      hesai_ptp_diag_port.peerMeanPathDelay = response[payload_pos++] << 56 |
+        response[payload_pos++] << 48 |
+        response[payload_pos++] << 40 |
+        response[payload_pos++] << 32 |
+        response[payload_pos++] << 24 |
+        response[payload_pos++] << 16 |
+        response[payload_pos++] << 8 |
         response[payload_pos++];
       */
       hesai_ptp_diag_port.peerMeanPathDelay = static_cast<long long>(response[payload_pos++]) << 56;
@@ -643,7 +641,7 @@ Status HesaiHwInterface::GetPtpDiagTime(std::shared_ptr<::drivers::tcp_driver::T
   buf_vec.emplace_back((len >> 16) & 0xff);
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
-  
+
   buf_vec.emplace_back(0x03);//PTP TLV TIME_STATUS_NP
 
 /*
@@ -706,13 +704,13 @@ Status HesaiHwInterface::GetPtpDiagTime(std::shared_ptr<::drivers::tcp_driver::T
     if(8 < response.size()){
       int payload_pos = 8;
       /*
-      hesai_ptp_diag_time.master_offset = response[payload_pos++] << 56 | 
-        response[payload_pos++] << 48 | 
-        response[payload_pos++] << 40 | 
-        response[payload_pos++] << 32 | 
-        response[payload_pos++] << 24 | 
-        response[payload_pos++] << 16 | 
-        response[payload_pos++] << 8 | 
+      hesai_ptp_diag_time.master_offset = response[payload_pos++] << 56 |
+        response[payload_pos++] << 48 |
+        response[payload_pos++] << 40 |
+        response[payload_pos++] << 32 |
+        response[payload_pos++] << 24 |
+        response[payload_pos++] << 16 |
+        response[payload_pos++] << 8 |
         response[payload_pos++];
       */
       hesai_ptp_diag_time.master_offset = static_cast<long long>(response[payload_pos++]) << 56;
@@ -724,13 +722,13 @@ Status HesaiHwInterface::GetPtpDiagTime(std::shared_ptr<::drivers::tcp_driver::T
       hesai_ptp_diag_time.master_offset = hesai_ptp_diag_time.master_offset | static_cast<long long>(response[payload_pos++]) << 8;
       hesai_ptp_diag_time.master_offset = hesai_ptp_diag_time.master_offset | static_cast<long long>(response[payload_pos++]);
       /*
-      hesai_ptp_diag_time.ingress_time = response[payload_pos++] << 56 | 
-        response[payload_pos++] << 48 | 
-        response[payload_pos++] << 40 | 
-        response[payload_pos++] << 32 | 
-        response[payload_pos++] << 24 | 
-        response[payload_pos++] << 16 | 
-        response[payload_pos++] << 8 | 
+      hesai_ptp_diag_time.ingress_time = response[payload_pos++] << 56 |
+        response[payload_pos++] << 48 |
+        response[payload_pos++] << 40 |
+        response[payload_pos++] << 32 |
+        response[payload_pos++] << 24 |
+        response[payload_pos++] << 16 |
+        response[payload_pos++] << 8 |
         response[payload_pos++];
       */
       hesai_ptp_diag_time.ingress_time = static_cast<long long>(response[payload_pos++]) << 56;
@@ -763,13 +761,13 @@ Status HesaiHwInterface::GetPtpDiagTime(std::shared_ptr<::drivers::tcp_driver::T
       hesai_ptp_diag_time.gmPresent = hesai_ptp_diag_time.gmPresent | response[payload_pos++] << 8;
       hesai_ptp_diag_time.gmPresent = hesai_ptp_diag_time.gmPresent | response[payload_pos++];
       /*
-      hesai_ptp_diag_time.gmIdentity = response[payload_pos++] << 56 | 
-        response[payload_pos++] << 48 | 
-        response[payload_pos++] << 40 | 
-        response[payload_pos++] << 32 | 
-        response[payload_pos++] << 24 | 
-        response[payload_pos++] << 16 | 
-        response[payload_pos++] << 8 | 
+      hesai_ptp_diag_time.gmIdentity = response[payload_pos++] << 56 |
+        response[payload_pos++] << 48 |
+        response[payload_pos++] << 40 |
+        response[payload_pos++] << 32 |
+        response[payload_pos++] << 24 |
+        response[payload_pos++] << 16 |
+        response[payload_pos++] << 8 |
         response[payload_pos++];
       */
       hesai_ptp_diag_time.gmIdentity = static_cast<long long>(response[payload_pos++]) << 56;
@@ -842,7 +840,7 @@ Status HesaiHwInterface::GetPtpDiagGrandmaster(std::shared_ptr<::drivers::tcp_dr
   buf_vec.emplace_back((len >> 16) & 0xff);
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
-  
+
   buf_vec.emplace_back(0x04);//PTP TLV GRANDMASTER_SETTINGS_NP
 
   /*
@@ -904,7 +902,7 @@ Status HesaiHwInterface::GetPtpDiagGrandmaster(std::shared_ptr<::drivers::tcp_dr
     HesaiPtpDiagGrandmaster hesai_ptp_diag_grandmaster;
     if(8 < response.size()){
       int payload_pos = 8;
-      
+
 //      hesai_ptp_diag_grandmaster.clockQuality = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
       hesai_ptp_diag_grandmaster.clockQuality = response[payload_pos++] << 24;
       hesai_ptp_diag_grandmaster.clockQuality = hesai_ptp_diag_grandmaster.clockQuality | response[payload_pos++] << 16;
@@ -2117,7 +2115,7 @@ int vlan_flg, int vlan_id, bool with_run
 ){
   auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
   tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
-  return SetControlPort(tcp_driver_local, 
+  return SetControlPort(tcp_driver_local,
   ip_1, ip_2, ip_3, ip_4,
   mask_1, mask_2, mask_3, mask_4,
   gateway_1, gateway_2, gateway_3, gateway_4,
@@ -2136,7 +2134,7 @@ Status HesaiHwInterface::SetControlPort(
     }
   }
 //*/
-  return SetControlPort(tcp_driver_s_, 
+  return SetControlPort(tcp_driver_s_,
   ip_1, ip_2, ip_3, ip_4,
   mask_1, mask_2, mask_3, mask_4,
   gateway_1, gateway_2, gateway_3, gateway_4,
@@ -2526,7 +2524,7 @@ bool with_run
   */
   if(!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetPtpConfig"))
   {
-    return SetPtpConfig(target_tcp_driver, 
+    return SetPtpConfig(target_tcp_driver,
     profile,
     domain,
     network,
@@ -2581,7 +2579,7 @@ bool with_run
 {
   auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
   tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
-  return SetPtpConfig(tcp_driver_local, 
+  return SetPtpConfig(tcp_driver_local,
   profile,
   domain,
   network,
@@ -2606,7 +2604,7 @@ Status HesaiHwInterface::SetPtpConfig(
     }
   }
 //*/
-  return SetPtpConfig(tcp_driver_s_, 
+  return SetPtpConfig(tcp_driver_s_,
   profile,
   domain,
   network,

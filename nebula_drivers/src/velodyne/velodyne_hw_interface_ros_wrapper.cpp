@@ -11,8 +11,6 @@ namespace ros
 VelodyneHwInterfaceRosWrapper::VelodyneHwInterfaceRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("velodyne_hw_interface_ros_wrapper", options), hw_interface_()//, diagnostics_updater_(this)
 {
-//  cbg_r_ = create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-//  cbg_m_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   not_supported_message = "Not supported";
 
   if(mtx_config_.try_lock()){
@@ -40,7 +38,6 @@ VelodyneHwInterfaceRosWrapper::VelodyneHwInterfaceRosWrapper(const rclcpp::NodeO
     std::bind(&VelodyneHwInterfaceRosWrapper::ReceiveScanDataCallback, this, std::placeholders::_1));
   velodyne_scan_pub_ =
     this->create_publisher<velodyne_msgs::msg::VelodyneScan>("velodyne_packets", rclcpp::SensorDataQoS(rclcpp::KeepLast(10)).best_effort().durability_volatile());
-//    this->create_publisher<velodyne_msgs::msg::VelodyneScan>("velodyne_packets", rclcpp::SensorDataQoS());
 
   set_param_res_ = this->add_on_set_parameters_callback(
     std::bind(&VelodyneHwInterfaceRosWrapper::paramCallback, this, std::placeholders::_1));
@@ -76,7 +73,6 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-//    sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(this->declare_parameter<std::string>("sensor_model", ""));
     this->declare_parameter<std::string>("sensor_model", "");
     sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
   }
@@ -86,7 +82,6 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-//      nebula::drivers::ReturnModeFromString(this->declare_parameter<std::string>("return_mode", "", descriptor));
     this->declare_parameter<std::string>("return_mode", "", descriptor);
     sensor_configuration.return_mode =
       nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
@@ -97,7 +92,6 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-//    sensor_configuration.host_ip = this->declare_parameter<std::string>("host_ip", "255.255.255.255", descriptor);
     this->declare_parameter<std::string>("host_ip", "255.255.255.255", descriptor);
     sensor_configuration.host_ip = this->get_parameter("host_ip").as_string();
   }
@@ -107,7 +101,6 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-//      sensor_configuration.sensor_ip = this->declare_parameter<std::string>("sensor_ip", "192.168.1.201", descriptor);
     this->declare_parameter<std::string>("sensor_ip", "192.168.1.201", descriptor);
     sensor_configuration.sensor_ip = this->get_parameter("sensor_ip").as_string();
   }
@@ -117,7 +110,6 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-//    sensor_configuration.frame_id = this->declare_parameter<std::string>("frame_id", "velodyne", descriptor);
     this->declare_parameter<std::string>("frame_id", "velodyne", descriptor);
     sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
   }
@@ -127,7 +119,6 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-//    sensor_configuration.data_port = this->declare_parameter<uint16_t>("data_port", 2368, descriptor);
     this->declare_parameter<uint16_t>("data_port", 2368, descriptor);
     sensor_configuration.data_port = this->get_parameter("data_port").as_int();
   }
@@ -137,7 +128,6 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-//    sensor_configuration.gnss_port = this->declare_parameter<uint16_t>("gnss_port", 2369, descriptor);
     this->declare_parameter<uint16_t>("gnss_port", 2369, descriptor);
     sensor_configuration.gnss_port = this->get_parameter("gnss_port").as_int();
   }
@@ -150,29 +140,15 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     rcl_interfaces::msg::FloatingPointRange range;
     range.set__from_value(0).set__to_value(360).set__step(0.01);
     descriptor.floating_point_range= {range};
-//    sensor_configuration.scan_phase = this->declare_parameter<double>("scan_phase", 0., descriptor);
     this->declare_parameter<double>("scan_phase", 0., descriptor);
     sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
   }
-  /*
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 2;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-//    sensor_configuration.frequency_ms = this->declare_parameter<uint16_t>("frequency_ms", 100, descriptor);
-    this->declare_parameter<uint16_t>("frequency_ms", 100, descriptor);
-    sensor_configuration.frequency_ms = this->get_parameter("frequency_ms").as_int();
-  }
-  */
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 2;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-//    sensor_configuration.packet_mtu_size = this->declare_parameter<uint16_t>("packet_mtu_size", 1500, descriptor);
     this->declare_parameter<uint16_t>("packet_mtu_size", 1500, descriptor);
     sensor_configuration.packet_mtu_size = this->get_parameter("packet_mtu_size").as_int();
   }
@@ -186,7 +162,6 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     rcl_interfaces::msg::IntegerRange range;
     range.set__from_value(300).set__to_value(1200).set__step(1);
     descriptor.integer_range= {range};
-//    sensor_configuration.rotation_speed = this->declare_parameter<uint16_t>("rotation_speed", 600, descriptor);
     this->declare_parameter<uint16_t>("rotation_speed", 600, descriptor);
     sensor_configuration.rotation_speed = this->get_parameter("rotation_speed").as_int();
   }
@@ -199,7 +174,6 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     rcl_interfaces::msg::IntegerRange range;
     range.set__from_value(0).set__to_value(359).set__step(1);
     descriptor.integer_range= {range};
-//    sensor_configuration.cloud_min_angle = this->declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
     this->declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
     sensor_configuration.cloud_min_angle = this->get_parameter("cloud_min_angle").as_int();
   }
@@ -212,7 +186,6 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     rcl_interfaces::msg::IntegerRange range;
     range.set__from_value(0).set__to_value(359).set__step(1);
     descriptor.integer_range= {range};
-//    sensor_configuration.cloud_max_angle = this->declare_parameter<uint16_t>("cloud_max_angle", 359, descriptor);
     this->declare_parameter<uint16_t>("cloud_max_angle", 359, descriptor);
     sensor_configuration.cloud_max_angle = this->get_parameter("cloud_max_angle").as_int();
   }
@@ -225,27 +198,10 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
   }
   if (
     sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {// ||
-//    sensor_configuration.frequency_ms == 0) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
-  /*
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 2;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "It may be safe if it is 5000 milliseconds or more...";
-//    diag_span_ = this->declare_parameter<uint16_t>("diag_span", 3000, descriptor);
-    this->declare_parameter<uint16_t>("diag_span", 3000, descriptor);
-    diag_span_ = this->get_parameter("diag_span").as_int();
-  }
-  */
-
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
-
-
-  
   return Status::OK;
 }
 
@@ -269,127 +225,6 @@ std::string VelodyneHwInterfaceRosWrapper::GetPtreeValue(std::shared_ptr<boost::
   }
 }
 
-
-/*
-// https://memo.appri.me/programming/cpp-curl-http-client
-using namespace std;
-typedef void (*CurlCallback)(string err, string body);
-
-class Curl {
-private:
-
-    // response body 
-    string body;
-
-    // TIP: CURLOPT_WRITEFUNCTION ÅÍ øÆÈéÖÉ static µ©ó¯t¯È¢ÌÅ­øÉ static cast µÄ¢Ü·:
-    // see: https://curl.se/docs/faq.html#Using_C_non_static_functions_f
-    static size_t invoke_write_data(char *buffer, size_t size, size_t nmemb, void *f) {
-        // Call non-static member function.
-        return static_cast<Curl*>(f)->write_data(buffer, size, nmemb, f);
-    }
-
-    // a callback function for libcurl request 
-    size_t write_data(char *buffer, size_t size, size_t nmemb, void *f) {
-        int dataLength = size * nmemb;
-        this->body.append(buffer, dataLength);
-        return dataLength;
-    }
-
-public:
-
-    // user-agent 
-    string useragent = "libcurl-agent/1.0";
-    // timeout 
-    int timeout = 30L; // timeout 30 seconds
-
-    // Constructor
-    Curl() {
-        //
-    }
-
-    // HTTP GET
-    void get(const string url, const CurlCallback cb) {
-        CURL* curl;
-        CURLcode ret;
-
-        this->body = ""; // init result body.
-        string err = "";
-
-        curl_global_init(CURL_GLOBAL_ALL);
-        curl = curl_easy_init();
-
-        if (curl == NULL) {
-            err = "curl_easy_init() failed on " + url;
-            return cb(err, "");
-        }
-
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, this->invoke_write_data);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, this->useragent.c_str()); // UA
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT, this->timeout); // timeout
-        // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); // verbose
-        ret = curl_easy_perform(curl);
-        curl_easy_cleanup(curl);
-        curl_global_cleanup();
-
-        if (ret != CURLE_OK) {
-            err = "curl_easy_perform() failed on " + url + " (ret:" + to_string(ret) + ")";
-            return cb(err, "");
-        }
-        return cb(err, this->body);
-    }
-
-     //HTTP POST
-    void post(const string url, const string data, const CurlCallback cb) {
-        CURL* curl;
-        CURLcode ret;
-
-        this->body = ""; // init result body.
-        string err = "";
-
-        curl_global_init(CURL_GLOBAL_ALL);
-        curl = curl_easy_init();
-
-        if (curl == NULL) {
-            err = "curl_easy_init() failed on " + url;
-            return cb(err, "");
-        }
-
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_POST, 1);
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, this->invoke_write_data);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, this->useragent.c_str()); // UA
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT, this->timeout); // timeout
-        // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); // verbose
-        ret = curl_easy_perform(curl);
-        curl_easy_cleanup(curl);
-        curl_global_cleanup();
-
-        if (ret != CURLE_OK) {
-            err = "curl_easy_perform() failed on " + url + " (ret:" + to_string(ret) + ")";
-            return cb(err, "");
-        }
-        return cb(err, this->body);
-    }
-
-};
-
-void VelodyneHwInterfaceRosWrapper::curl_callback(std::string err, std::string body)
- {
-    if (err != "") {
-      std::cerr << "Error:" << err << std::endl;
-    } else {
-      std::cout << body << std::endl;
-      current_diag_tree = std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(body));
-      std::cout << "diagnostics_updater_.force_update()" << std::endl;
-      diagnostics_updater_.force_update();
-    }
- }
- */
-
 rcl_interfaces::msg::SetParametersResult VelodyneHwInterfaceRosWrapper::paramCallback(
   const std::vector<rclcpp::Parameter> & p)
 {
@@ -402,7 +237,6 @@ rcl_interfaces::msg::SetParametersResult VelodyneHwInterfaceRosWrapper::paramCal
   std::cout << new_param << std::endl;
   std::string sensor_model_str;
   std::string return_mode_str;
-//  uint16_t new_diag_span = 0;
   if (
     get_param(p, "sensor_model", sensor_model_str) ||
     get_param(p, "return_mode", return_mode_str) ||
@@ -412,12 +246,10 @@ rcl_interfaces::msg::SetParametersResult VelodyneHwInterfaceRosWrapper::paramCal
     get_param(p, "data_port", new_param.data_port) ||
     get_param(p, "gnss_port", new_param.gnss_port) ||
     get_param(p, "scan_phase", new_param.scan_phase) ||
-//    get_param(p, "frequency_ms", new_param.frequency_ms) ||
     get_param(p, "packet_mtu_size", new_param.packet_mtu_size) ||
     get_param(p, "rotation_speed", new_param.rotation_speed) ||
     get_param(p, "cloud_min_angle", new_param.cloud_min_angle) ||
     get_param(p, "cloud_max_angle", new_param.cloud_max_angle)) {// ||
-//    get_param(p, "diag_span", new_diag_span)) {
 
     if(0 < sensor_model_str.length())
       new_param.sensor_model =
@@ -425,8 +257,6 @@ rcl_interfaces::msg::SetParametersResult VelodyneHwInterfaceRosWrapper::paramCal
     if(0 < return_mode_str.length())
       new_param.return_mode =
         nebula::drivers::ReturnModeFromString(return_mode_str);
-//    if(0 < new_diag_span)
-//      diag_span_ = new_diag_span;
 
     sensor_configuration_ = new_param;
     // Update sensor_configuration
@@ -436,17 +266,14 @@ rcl_interfaces::msg::SetParametersResult VelodyneHwInterfaceRosWrapper::paramCal
     RCLCPP_INFO_STREAM(this->get_logger(), "hw_interface_.SetSensorConfiguration");
     hw_interface_.SetSensorConfiguration(
       std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
-//    updateParameters();
   }
 
-//  rcl_interfaces::msg::SetParametersResult result;
   auto result = std::make_shared<rcl_interfaces::msg::SetParametersResult>();
   result->successful = true;
   result->reason = "success";
 
   std::cout << "add_on_set_parameters_callback success" << std::endl;
 
-//  return result;
   return *result;
 }
 
@@ -467,12 +294,10 @@ std::vector<rcl_interfaces::msg::SetParametersResult> VelodyneHwInterfaceRosWrap
     rclcpp::Parameter("data_port", sensor_configuration_.data_port),
     rclcpp::Parameter("gnss_port", sensor_configuration_.gnss_port),
     rclcpp::Parameter("scan_phase", sensor_configuration_.scan_phase),
-//    rclcpp::Parameter("frequency_ms", sensor_configuration_.frequency_ms),
     rclcpp::Parameter("packet_mtu_size", sensor_configuration_.packet_mtu_size),
     rclcpp::Parameter("rotation_speed", sensor_configuration_.rotation_speed),
     rclcpp::Parameter("cloud_min_angle", sensor_configuration_.cloud_min_angle),
     rclcpp::Parameter("cloud_max_angle", sensor_configuration_.cloud_max_angle)//,
-//    rclcpp::Parameter("diag_span", diag_span_)
   });
   std::cout << "set_parameters fin" << std::endl;
   return results;

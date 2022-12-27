@@ -1,5 +1,5 @@
-#ifndef NEBULA_HesaiRosOfflineExtractSample_H
-#define NEBULA_HesaiRosOfflineExtractSample_H
+#ifndef NEBULA_HesaiRosOfflineExtractBag_H
+#define NEBULA_HesaiRosOfflineExtractBag_H
 
 #include "common/nebula_common.hpp"
 #include "common/nebula_driver_ros_wrapper_base.hpp"
@@ -18,12 +18,10 @@ namespace nebula
 {
 namespace ros
 {
-class HesaiRosOfflineExtractSample final : public rclcpp::Node, NebulaDriverRosWrapperBase
+class HesaiRosOfflineExtractBag final : public rclcpp::Node, NebulaDriverRosWrapperBase
 {
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
   Status wrapper_status_;
-//  rclcpp::Subscription<pandar_msgs::msg::PandarScan>::SharedPtr pandar_scan_sub_;
-//  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pandar_points_pub_;
 
   std::shared_ptr<drivers::HesaiCalibrationConfiguration> calibration_cfg_ptr_;
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
@@ -51,7 +49,7 @@ class HesaiRosOfflineExtractSample final : public rclcpp::Node, NebulaDriverRosW
   }
 
 public:
-  explicit HesaiRosOfflineExtractSample(
+  explicit HesaiRosOfflineExtractBag(
     const rclcpp::NodeOptions & options, const std::string & node_name);
 
   Status GetStatus();
@@ -63,9 +61,11 @@ private:
   std::string format;
   std::string target_topic;
   std::string correction_file_path;
+  int out_num;
+  int skip_num;
 };
 
 }  // namespace ros
 }  // namespace nebula
 
-#endif  // NEBULA_HesaiRosOfflineExtractSample_H
+#endif  // NEBULA_HesaiRosOfflineExtractBag_H

@@ -51,16 +51,11 @@ PointCloudXYZIRADTPtr VelodyneDriver::ConvertScanToPointcloud(
   PointCloudXYZIRADTPtr pointcloud;
   if(driver_status_ == nebula::Status::OK)
   {
-//    std::cout << "velodyne_scan->packets.size() = " << velodyne_scan->packets.size() << std::endl;
     scan_decoder_->reset_pointcloud(velodyne_scan->packets.size());
-//    int cnt = 0;
     for (auto& packet : velodyne_scan->packets) {
       scan_decoder_->unpack(packet);
-//      cnt++;
     }
-//    std::cout << "cnt = " << cnt << std::endl;
     pointcloud = scan_decoder_->get_pointcloud();
-//    std::cout << "pointcloud->size() = " << pointcloud->size() << std::endl;
   }else{
     std::cout << "not ok driver_status_ = " << driver_status_ << std::endl;
   }

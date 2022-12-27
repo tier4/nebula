@@ -566,9 +566,6 @@ void HesaiHwMonitorRosWrapper::OnHesaiLidarMonitorTimerHttp()
 #ifdef WITH_DEBUG_STDOUT_HesaiHwMonitorRosWrapper
   std::cout << "OnHesaiLidarMonitorTimerHttp" << std::endl;
 #endif
-//  if(mtx_lidar_monitor.try_lock()){
-//  if(mtx_lidar_monitor.try_lock_for(std::chrono::milliseconds(diag_span_*10))){
-//    std::cout << "mtx_lidar_monitor lock" << std::endl;
   try
   {
     hw_interface_.GetLidarMonitorAsyncHttp(
@@ -577,8 +574,6 @@ void HesaiHwMonitorRosWrapper::OnHesaiLidarMonitorTimerHttp()
         std::scoped_lock lock(mtx_lidar_monitor);
         current_lidar_monitor_time.reset(new rclcpp::Time(this->get_clock()->now()));
         current_lidar_monitor_tree = std::make_unique<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
-//        mtx_lidar_monitor.unlock();
-//        std::cout << "mtx_lidar_monitor unlock" << std::endl;
       });
   }
   catch (const std::system_error &error)
@@ -631,16 +626,6 @@ void HesaiHwMonitorRosWrapper::HesaiCheckStatus(
     diagnostics.add("startup_times", std::to_string(current_status->startup_times));
     diagnostics.add("total_operation_time", std::to_string(current_status->total_operation_time));
 
-    /*
-    tpl = VelodyneGetLaserState();
-    if(std::get<0>(tpl)){
-      level = std::max(level, std::get<1>(tpl));
-      if(0 < std::get<3>(tpl).length()){
-        msg.emplace_back(std::get<3>(tpl));
-      }
-    }
-    diagnostics.add(name_status_laser_state, std::get<2>(tpl));
-    */
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
 
   }
@@ -670,26 +655,6 @@ void HesaiHwMonitorRosWrapper::HesaiCheckTemperature(
   if(current_status){
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
-    /*
-    diagnostics.add("Bottom circuit RT1", std::to_string(current_status->temperature[0] * 0.01));
-    diagnostics.add("Bottom circuit RT2", std::to_string(current_status->temperature[1] * 0.01));
-    diagnostics.add("Internal Temperature", std::to_string(current_status->temperature[2] * 0.01));
-    diagnostics.add("Laser emitting board RT1", std::to_string(current_status->temperature[3] * 0.01));
-    diagnostics.add("Laser emitting board RT2", std::to_string(current_status->temperature[4] * 0.01));
-    diagnostics.add("Receiving board RT1", std::to_string(current_status->temperature[5] * 0.01));
-    diagnostics.add("Top circuit RT1", std::to_string(current_status->temperature[6] * 0.01));
-    diagnostics.add("Top circuit RT2", std::to_string(current_status->temperature[7] * 0.01));
-    */
-    /*
-    diagnostics.add("Bottom circuit RT1", GetFixedPrecisionString(current_status->temperature[0] * 0.01));
-    diagnostics.add("Bottom circuit RT2", GetFixedPrecisionString(current_status->temperature[1] * 0.01));
-    diagnostics.add("Internal Temperature", GetFixedPrecisionString(current_status->temperature[2] * 0.01));
-    diagnostics.add("Laser emitting board RT1", GetFixedPrecisionString(current_status->temperature[3] * 0.01));
-    diagnostics.add("Laser emitting board RT2", GetFixedPrecisionString(current_status->temperature[4] * 0.01));
-    diagnostics.add("Receiving board RT1", GetFixedPrecisionString(current_status->temperature[5] * 0.01));
-    diagnostics.add("Top circuit RT1", GetFixedPrecisionString(current_status->temperature[6] * 0.01));
-    diagnostics.add("Top circuit RT2", GetFixedPrecisionString(current_status->temperature[7] * 0.01));
-    */
     for(size_t i=0;i<current_status->temperature.size();i++){
       diagnostics.add(temperature_names[i], GetFixedPrecisionString(current_status->temperature[i] * 0.01));
     }
@@ -720,7 +685,6 @@ void HesaiHwMonitorRosWrapper::HesaiCheckVoltageHttp(
     std::string key = "";
 
     std::string mes;
-//    key = "lidarCurrent"; // Hesai_XT32M2X_HTTP_API_Protocol_v1.0.pdf is wrong
     key = "lidarInCur";
     try{
       mes = GetPtreeValue(current_lidar_monitor_tree.get(), "Body." + key);
@@ -758,35 +722,6 @@ void HesaiHwMonitorRosWrapper::HesaiCheckVoltage(
   }
 }
 
-
-/*
-std::vector<rcl_interfaces::msg::SetParametersResult> HesaiHwInterfaceRosWrapper::updateParameters(){
-  std::scoped_lock lock(mtx_config_);
-  std::cout << "!!!!!!!!!!!updateParameters!!!!!!!!!!!!" << std::endl;
-  std::ostringstream os_sensor_model;
-  os_sensor_model << sensor_configuration_.sensor_model;
-  std::ostringstream os_return_mode;
-  os_return_mode << sensor_configuration_.return_mode;
-  std::cout << "set_parameters start" << std::endl;
-  auto results = set_parameters({
-    rclcpp::Parameter("sensor_model", os_sensor_model.str()),
-    rclcpp::Parameter("return_mode", os_return_mode.str()),
-    rclcpp::Parameter("host_ip", sensor_configuration_.host_ip),
-    rclcpp::Parameter("sensor_ip", sensor_configuration_.sensor_ip),
-    rclcpp::Parameter("frame_id", sensor_configuration_.frame_id),
-    rclcpp::Parameter("data_port", sensor_configuration_.data_port),
-    rclcpp::Parameter("gnss_port", sensor_configuration_.gnss_port),
-    rclcpp::Parameter("scan_phase", sensor_configuration_.scan_phase),
-    rclcpp::Parameter("frequency_ms", sensor_configuration_.frequency_ms),
-    rclcpp::Parameter("packet_mtu_size", sensor_configuration_.packet_mtu_size),
-    rclcpp::Parameter("rotation_speed", sensor_configuration_.rotation_speed),
-    rclcpp::Parameter("cloud_min_angle", sensor_configuration_.cloud_min_angle),
-    rclcpp::Parameter("cloud_max_angle", sensor_configuration_.cloud_max_angle)
-  });
-  std::cout << "set_parameters fin" << std::endl;
-  return results;
-}
-*/
 RCLCPP_COMPONENTS_REGISTER_NODE(HesaiHwMonitorRosWrapper)
 }  // namespace ros
 }  // namespace nebula

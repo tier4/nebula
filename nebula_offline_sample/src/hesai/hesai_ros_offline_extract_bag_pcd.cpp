@@ -1,4 +1,4 @@
-#include "hesai/hesai_ros_offline_extract_pcd.hpp"
+#include "hesai/hesai_ros_offline_extract_bag_pcd.hpp"
 
 
 #include "rclcpp/serialization.hpp"
@@ -9,6 +9,8 @@
 
 #include "rosbag2_cpp/reader.hpp"
 #include "rosbag2_cpp/readers/sequential_reader.hpp"
+#include "rosbag2_cpp/writer.hpp"
+#include "rosbag2_cpp/writers/sequential_writer.hpp"
 
 #include "rosbag2_storage/storage_options.hpp"
 //#include <boost/filesystem/path.hpp>
@@ -20,7 +22,7 @@ namespace nebula
 {
 namespace ros
 {
-HesaiRosOfflineExtractSample::HesaiRosOfflineExtractSample(
+HesaiRosOfflineExtractBag::HesaiRosOfflineExtractBag(
   const rclcpp::NodeOptions & options, const std::string & node_name)
 : rclcpp::Node(node_name, options)
 {
@@ -57,7 +59,7 @@ HesaiRosOfflineExtractSample::HesaiRosOfflineExtractSample(
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 }
 
-Status HesaiRosOfflineExtractSample::InitializeDriver(
+Status HesaiRosOfflineExtractBag::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
   std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration)
 {
@@ -68,7 +70,7 @@ Status HesaiRosOfflineExtractSample::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status HesaiRosOfflineExtractSample::InitializeDriver(
+Status HesaiRosOfflineExtractBag::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
   std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
   std::shared_ptr<drivers::HesaiCorrection> correction_configuration)
@@ -81,9 +83,9 @@ Status HesaiRosOfflineExtractSample::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status HesaiRosOfflineExtractSample::GetStatus() { return wrapper_status_; }
+Status HesaiRosOfflineExtractBag::GetStatus() { return wrapper_status_; }
 
-Status HesaiRosOfflineExtractSample::GetParameters(
+Status HesaiRosOfflineExtractBag::GetParameters(
   drivers::HesaiSensorConfiguration & sensor_configuration,
   drivers::HesaiCalibrationConfiguration & calibration_configuration,
   drivers::HesaiCorrection & correction_configuration)
@@ -185,6 +187,24 @@ Status HesaiRosOfflineExtractSample::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = 2;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<uint16_t>("out_num", 3, descriptor);
+    out_num = this->get_parameter("out_num").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = 2;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<uint16_t>("skip_num", 3, descriptor);
+    skip_num = this->get_parameter("skip_num").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 4;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
@@ -233,7 +253,7 @@ Status HesaiRosOfflineExtractSample::GetParameters(
   return Status::OK;
 }
 
-Status HesaiRosOfflineExtractSample::ReadBag()
+Status HesaiRosOfflineExtractBag::ReadBag()
 {
   
   rosbag2_storage::StorageOptions storage_options;
@@ -244,6 +264,8 @@ Status HesaiRosOfflineExtractSample::ReadBag()
   std::cout << out_path << std::endl;
   std::cout << format << std::endl;
   std::cout << target_topic << std::endl;
+  std::cout << out_num << std::endl;
+  std::cout << skip_num << std::endl;
 
 
   rcpputils::fs::path o_dir(out_path);
@@ -260,6 +282,8 @@ Status HesaiRosOfflineExtractSample::ReadBag()
 
   pcl::PCDWriter writer;
 
+  std::unique_ptr<rosbag2_cpp::writers::SequentialWriter> writer_;
+  bool needs_open = true;
   storage_options.uri = bag_path;
   storage_options.storage_id = storage_id;
   converter_options.output_serialization_format = format;//"cdr";
@@ -267,12 +291,15 @@ Status HesaiRosOfflineExtractSample::ReadBag()
     rosbag2_cpp::Reader reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
     // reader.open(rosbag_directory.string());
     reader.open(storage_options, converter_options);
+    int cnt = 0;
+    int out_cnt = 0;
     while (reader.has_next()) {
       auto bag_message = reader.read_next();
 
       std::cout<<"Found topic name " << bag_message->topic_name << std::endl;
 
       if (bag_message->topic_name == target_topic) {
+        std::cout << (cnt + 1) << ", "  << (out_cnt + 1) << "/" << out_num << std::endl;
         pandar_msgs::msg::PandarScan extracted_msg;
         rclcpp::Serialization<pandar_msgs::msg::PandarScan> serialization;
         rclcpp::SerializedMessage extracted_serialized_msg(*bag_message->serialized_data);
@@ -284,7 +311,24 @@ Status HesaiRosOfflineExtractSample::ReadBag()
         nebula::drivers::PointCloudXYZIRADTPtr pointcloud = driver_ptr_->ConvertScanToPointcloud(std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg));
         auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
 //        pcl::io::savePCDFileBinary((o_dir / fn).string(), *pointcloud);
-        writer.writeBinary((o_dir / fn).string(), *pointcloud);
+
+        if(needs_open){
+          const rosbag2_storage::StorageOptions storage_options_w({(o_dir / std::to_string(bag_message->time_stamp)).string(), "sqlite3"});
+          const rosbag2_cpp::ConverterOptions converter_options_w({rmw_get_serialization_format(), rmw_get_serialization_format()});
+          writer_ = std::make_unique<rosbag2_cpp::writers::SequentialWriter>();
+          writer_->open(storage_options_w, converter_options_w);
+          writer_->create_topic({bag_message->topic_name, "pandar_msgs/msg/PandarScan", rmw_get_serialization_format(), ""});
+          needs_open = false;
+        }
+        writer_->write(bag_message);
+        cnt++;
+        if(skip_num < cnt){
+          out_cnt++;
+          writer.writeBinary((o_dir / fn).string(), *pointcloud);
+        }
+        if(out_num <= out_cnt){
+          break;
+        }
       }
 
     }
