@@ -6,7 +6,6 @@
  * License: Modified BSD License
  */
 
-
 #include <velodyne/decoders/velodyne_calibration_decoder.hpp>
 
 #ifdef HAVE_NEW_YAMLCPP
@@ -22,13 +21,10 @@ void operator>>(const YAML::Node & node, T & i)
 }  // namespace YAML
 #endif  // HAVE_NEW_YAMLCPP
 
-
-
 namespace nebula
 {
 namespace drivers
 {
-
 const std::string NUM_LASERS = "num_lasers";
 const std::string DISTANCE_RESOLUTION = "distance_resolution";
 const std::string LASERS = "lasers";

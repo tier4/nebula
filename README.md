@@ -1,4 +1,7 @@
 # Nebula Lidar Driver
+
+## How to build
+
 Builds on ROS Galactic and Humble. Be sure to install dependencies using `rosdep`:
 
 ```rosdep install --from-paths src --ignore-src -y -r```
@@ -10,6 +13,19 @@ A [TCP enabled version of ROS' Transport Driver](https://github.com/MapIV/transp
 Then compile with colcon, optionally enabling symlink:
 
 ```colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release```
+
+## How to run Tests
+
+Run tests:
+
+```
+$ colcon test --event-handlers console_cohesion+
+```
+
+Show results:
+```
+$ colcon test-result --all
+```
 
 ## Generic Launch File
 You can easily run the sensor hardware interface, the sensor hardware monitor and sensor driver using (e.g. Pandar64):

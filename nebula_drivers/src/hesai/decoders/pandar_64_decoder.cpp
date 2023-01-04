@@ -168,18 +168,18 @@ drivers::PointCloudXYZIRADTPtr Pandar64Decoder::convert_dual(size_t block_id)
     bool odd_usable = !(odd_unit.distance <= 0.1 || odd_unit.distance > 200.0);
 
     if (
-//      sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_STRONGEST && even_usable) {
+      //      sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_STRONGEST && even_usable) {
       sensor_configuration_->return_mode == drivers::ReturnMode::STRONGEST && even_usable) {
       // First return is in even block
       block_pc->points.emplace_back(
         build_point(even_block_id, unit_id, drivers::ReturnMode::SINGLE_STRONGEST));
     } else if (
-//      sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_LAST && even_usable) {
+      //      sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_LAST && even_usable) {
       sensor_configuration_->return_mode == drivers::ReturnMode::LAST && even_usable) {
       // Last return is in odd block
       block_pc->points.emplace_back(
         build_point(odd_block_id, unit_id, drivers::ReturnMode::SINGLE_LAST));
-//    } else if (sensor_configuration_->return_mode == drivers::ReturnMode::DUAL_ONLY) {
+      //    } else if (sensor_configuration_->return_mode == drivers::ReturnMode::DUAL_ONLY) {
     } else if (sensor_configuration_->return_mode == drivers::ReturnMode::DUAL) {
       // If the two returns are too close, only return the last one
       if (

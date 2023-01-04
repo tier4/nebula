@@ -2,6 +2,7 @@
 #define HWINTERFACE_UDP_SOCKET_HPP_
 
 #include <netinet/in.h>
+
 #include <array>
 #include <string>
 #include <vector>

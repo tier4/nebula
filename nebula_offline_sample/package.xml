@@ -27,6 +27,7 @@
     <depend>yaml-cpp</depend>
 
     <depend>rosbag2_cpp</depend>
+    <test_depend>ament_cmake_clang_format</test_depend>
 
     <export>
         <build_type>ament_cmake</build_type>

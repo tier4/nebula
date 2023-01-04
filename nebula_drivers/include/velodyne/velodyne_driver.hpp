@@ -1,21 +1,20 @@
 #ifndef NEBULA_VELODYNE_DRIVER_H
 #define NEBULA_VELODYNE_DRIVER_H
 
-#include "common/nebula_common.hpp"
-#include "common/nebula_driver_base.hpp"
-#include "common/nebula_status.hpp"
-#include "common/point_types.hpp"
-#include "velodyne/velodyne_common.hpp"
-#include "velodyne/decoders/velodyne_scan_decoder.hpp"
-
-#include "velodyne_msgs/msg/velodyne_packet.hpp"
-#include "velodyne_msgs/msg/velodyne_scan.hpp"
-
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <iostream>
 #include <stdexcept>
 #include <string>
+
+#include "common/nebula_common.hpp"
+#include "common/nebula_driver_base.hpp"
+#include "common/nebula_status.hpp"
+#include "common/point_types.hpp"
+#include "velodyne/decoders/velodyne_scan_decoder.hpp"
+#include "velodyne/velodyne_common.hpp"
+#include "velodyne_msgs/msg/velodyne_packet.hpp"
+#include "velodyne_msgs/msg/velodyne_scan.hpp"
 
 namespace nebula
 {
@@ -34,13 +33,12 @@ public:
     const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration);
 
   Status SetCalibrationConfiguration(
-  const CalibrationConfigurationBase & calibration_configuration) override;
+    const CalibrationConfigurationBase & calibration_configuration) override;
 
   Status GetStatus();
 
   PointCloudXYZIRADTPtr ConvertScanToPointcloud(
-    const std::shared_ptr<velodyne_msgs::msg::VelodyneScan>& velodyne_scan);
-
+    const std::shared_ptr<velodyne_msgs::msg::VelodyneScan> & velodyne_scan);
 };
 
 }  // namespace drivers

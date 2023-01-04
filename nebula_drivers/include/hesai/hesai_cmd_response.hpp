@@ -40,147 +40,149 @@ std::string dumpHex(const T& t)
 }
 */
 
+struct HesaiPtpDiagStatus
+{
+  long long master_offset;
+  int ptp_state;
+  int elapsed_millisec;
 
-struct HesaiPtpDiagStatus{
-    long long master_offset;
-    int ptp_state;
-    int elapsed_millisec;
+  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpDiagStatus const & arg)
+  {
+    os << "master_offset: " << arg.master_offset;
+    os << ", ";
+    os << "ptp_state: " << arg.ptp_state;
+    os << ", ";
+    os << "elapsed_millisec: " << arg.elapsed_millisec;
 
-    friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpDiagStatus const & arg)
-    {
-      os << "master_offset: " << arg.master_offset;
-      os << ", ";
-      os << "ptp_state: " << arg.ptp_state;
-      os << ", ";
-      os << "elapsed_millisec: " << arg.elapsed_millisec;
-
-      return os;
-    }
+    return os;
+  }
 };
 
-struct HesaiPtpDiagPort{
-    std::vector<char> portIdentity = std::vector<char>(10);
-    int portState;
-    int logMinDelayReqInterval;
-    long long peerMeanPathDelay;
-    int logAnnounceInterval;
-    int announceReceiptTimeout;
-    int logSyncInterval;
-    int delayMechanism;
-    int logMinPdelayReqInterval;
-    int versionNumber;
+struct HesaiPtpDiagPort
+{
+  std::vector<char> portIdentity = std::vector<char>(10);
+  int portState;
+  int logMinDelayReqInterval;
+  long long peerMeanPathDelay;
+  int logAnnounceInterval;
+  int announceReceiptTimeout;
+  int logSyncInterval;
+  int delayMechanism;
+  int logMinPdelayReqInterval;
+  int versionNumber;
 
-    HesaiPtpDiagPort()
-    {
-    }
-    HesaiPtpDiagPort(const HesaiPtpDiagPort & arg)
-    {
-      std::copy(arg.portIdentity.begin(), arg.portIdentity.end(), portIdentity.begin());
-      portState = arg.portState;
-      logMinDelayReqInterval = arg.logMinDelayReqInterval;
-      peerMeanPathDelay = arg.peerMeanPathDelay;
-      logAnnounceInterval = arg.logAnnounceInterval;
-      announceReceiptTimeout = arg.announceReceiptTimeout;
-      logSyncInterval = arg.logSyncInterval;
-      delayMechanism = arg.delayMechanism;
-      logMinPdelayReqInterval = arg.logMinPdelayReqInterval;
-      versionNumber = arg.versionNumber;
-    }
+  HesaiPtpDiagPort() {}
+  HesaiPtpDiagPort(const HesaiPtpDiagPort & arg)
+  {
+    std::copy(arg.portIdentity.begin(), arg.portIdentity.end(), portIdentity.begin());
+    portState = arg.portState;
+    logMinDelayReqInterval = arg.logMinDelayReqInterval;
+    peerMeanPathDelay = arg.peerMeanPathDelay;
+    logAnnounceInterval = arg.logAnnounceInterval;
+    announceReceiptTimeout = arg.announceReceiptTimeout;
+    logSyncInterval = arg.logSyncInterval;
+    delayMechanism = arg.delayMechanism;
+    logMinPdelayReqInterval = arg.logMinPdelayReqInterval;
+    versionNumber = arg.versionNumber;
+  }
 
-    friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpDiagPort const & arg)
-    {
-      os << "portIdentity: " << std::string(arg.portIdentity.begin(), arg.portIdentity.end());
-      os << ", ";
-      os << "portState: " << arg.portState;
-      os << ", ";
-      os << "logMinDelayReqInterval: " << arg.logMinDelayReqInterval;
-      os << ", ";
-      os << "peerMeanPathDelay: " << arg.peerMeanPathDelay;
-      os << ", ";
-      os << "logAnnounceInterval: " << arg.logAnnounceInterval;
-      os << ", ";
-      os << "announceReceiptTimeout: " << arg.announceReceiptTimeout;
-      os << ", ";
-      os << "logSyncInterval: " << arg.logSyncInterval;
-      os << ", ";
-      os << "delayMechanism: " << arg.delayMechanism;
-      os << ", ";
-      os << "logMinPdelayReqInterval: " << arg.logMinPdelayReqInterval;
-      os << ", ";
-      os << "versionNumber: " << arg.versionNumber;
+  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpDiagPort const & arg)
+  {
+    os << "portIdentity: " << std::string(arg.portIdentity.begin(), arg.portIdentity.end());
+    os << ", ";
+    os << "portState: " << arg.portState;
+    os << ", ";
+    os << "logMinDelayReqInterval: " << arg.logMinDelayReqInterval;
+    os << ", ";
+    os << "peerMeanPathDelay: " << arg.peerMeanPathDelay;
+    os << ", ";
+    os << "logAnnounceInterval: " << arg.logAnnounceInterval;
+    os << ", ";
+    os << "announceReceiptTimeout: " << arg.announceReceiptTimeout;
+    os << ", ";
+    os << "logSyncInterval: " << arg.logSyncInterval;
+    os << ", ";
+    os << "delayMechanism: " << arg.delayMechanism;
+    os << ", ";
+    os << "logMinPdelayReqInterval: " << arg.logMinPdelayReqInterval;
+    os << ", ";
+    os << "versionNumber: " << arg.versionNumber;
 
-      return os;
-    }
+    return os;
+  }
 };
 
-struct HesaiPtpDiagTime{
-    long long master_offset;
-    long long ingress_time;
-    int cumulativeScaledRateOffset;
-    int scaledLastGmPhaseChange;
-    int gmTimeBaseIndicator;
-    std::vector<char> lastGmPhaseChange = std::vector<char>(12);
-    int gmPresent;
-    long long gmIdentity;
+struct HesaiPtpDiagTime
+{
+  long long master_offset;
+  long long ingress_time;
+  int cumulativeScaledRateOffset;
+  int scaledLastGmPhaseChange;
+  int gmTimeBaseIndicator;
+  std::vector<char> lastGmPhaseChange = std::vector<char>(12);
+  int gmPresent;
+  long long gmIdentity;
 
-    HesaiPtpDiagTime()
-    {
-    }
-    HesaiPtpDiagTime(const HesaiPtpDiagTime & arg)
-    {
-      master_offset = arg.master_offset;
-      ingress_time = arg.ingress_time;
-      cumulativeScaledRateOffset = arg.cumulativeScaledRateOffset;
-      scaledLastGmPhaseChange = arg.scaledLastGmPhaseChange;
-      gmTimeBaseIndicator = arg.gmTimeBaseIndicator;
-      std::copy(arg.lastGmPhaseChange.begin(), arg.lastGmPhaseChange.end(), lastGmPhaseChange.begin());
-      gmPresent = arg.gmPresent;
-      gmIdentity = arg.gmIdentity;
-    }
+  HesaiPtpDiagTime() {}
+  HesaiPtpDiagTime(const HesaiPtpDiagTime & arg)
+  {
+    master_offset = arg.master_offset;
+    ingress_time = arg.ingress_time;
+    cumulativeScaledRateOffset = arg.cumulativeScaledRateOffset;
+    scaledLastGmPhaseChange = arg.scaledLastGmPhaseChange;
+    gmTimeBaseIndicator = arg.gmTimeBaseIndicator;
+    std::copy(
+      arg.lastGmPhaseChange.begin(), arg.lastGmPhaseChange.end(), lastGmPhaseChange.begin());
+    gmPresent = arg.gmPresent;
+    gmIdentity = arg.gmIdentity;
+  }
 
-    friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpDiagTime const & arg)
-    {
-      os << "master_offset: " << arg.master_offset;
-      os << ", ";
-      os << "ingress_time: " << arg.ingress_time;
-      os << ", ";
-      os << "cumulativeScaledRateOffset: " << arg.cumulativeScaledRateOffset;
-      os << ", ";
-      os << "scaledLastGmPhaseChange: " << arg.scaledLastGmPhaseChange;
-      os << ", ";
-      os << "gmTimeBaseIndicator: " << arg.gmTimeBaseIndicator;
-      os << ", ";
-      os << "lastGmPhaseChange: " << std::string(arg.lastGmPhaseChange.begin(), arg.lastGmPhaseChange.end());
-      os << ", ";
-      os << "gmPresent: " << arg.gmPresent;
-      os << ", ";
-      os << "gmIdentity: " << arg.gmIdentity;
-      
-      return os;
-    }
+  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpDiagTime const & arg)
+  {
+    os << "master_offset: " << arg.master_offset;
+    os << ", ";
+    os << "ingress_time: " << arg.ingress_time;
+    os << ", ";
+    os << "cumulativeScaledRateOffset: " << arg.cumulativeScaledRateOffset;
+    os << ", ";
+    os << "scaledLastGmPhaseChange: " << arg.scaledLastGmPhaseChange;
+    os << ", ";
+    os << "gmTimeBaseIndicator: " << arg.gmTimeBaseIndicator;
+    os << ", ";
+    os << "lastGmPhaseChange: "
+       << std::string(arg.lastGmPhaseChange.begin(), arg.lastGmPhaseChange.end());
+    os << ", ";
+    os << "gmPresent: " << arg.gmPresent;
+    os << ", ";
+    os << "gmIdentity: " << arg.gmIdentity;
+
+    return os;
+  }
 };
 
-struct HesaiPtpDiagGrandmaster{
-    int clockQuality;
-    int utc_offset;
-    int time_flags;
-    int time_source;
+struct HesaiPtpDiagGrandmaster
+{
+  int clockQuality;
+  int utc_offset;
+  int time_flags;
+  int time_source;
 
-    friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpDiagGrandmaster const & arg)
-    {
-      os << "clockQuality: " << arg.clockQuality;
-      os << ", ";
-      os << "utc_offset: " << arg.utc_offset;
-      os << ", ";
-      os << "time_flags: " << arg.time_flags;
-      os << ", ";
-      os << "time_source: " << arg.time_source;
-      
-      return os;
-    }
+  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpDiagGrandmaster const & arg)
+  {
+    os << "clockQuality: " << arg.clockQuality;
+    os << ", ";
+    os << "utc_offset: " << arg.utc_offset;
+    os << ", ";
+    os << "time_flags: " << arg.time_flags;
+    os << ", ";
+    os << "time_source: " << arg.time_source;
+
+    return os;
+  }
 };
 
-struct HesaiInventory{
+struct HesaiInventory
+{
   /*
     char sn[18];
     char date_of_manufacture[16];
@@ -195,88 +197,90 @@ struct HesaiInventory{
     int num_of_lines;
     unsigned char reserved[11];
     */
-    std::vector<char> sn = std::vector<char>(18);
-    std::vector<char> date_of_manufacture = std::vector<char>(16);
-    std::vector<char> mac = std::vector<char>(6);
-    std::vector<char> sw_ver = std::vector<char>(16);
-    std::vector<char> hw_ver = std::vector<char>(16);
-    std::vector<char> control_fw_ver = std::vector<char>(16);
-    std::vector<char> sensor_fw_ver = std::vector<char>(16);
-    int angle_offset;
-    int model;
-    int motor_type;
-    int num_of_lines;
-    std::vector<unsigned char> reserved = std::vector<unsigned char>(11);
+  std::vector<char> sn = std::vector<char>(18);
+  std::vector<char> date_of_manufacture = std::vector<char>(16);
+  std::vector<char> mac = std::vector<char>(6);
+  std::vector<char> sw_ver = std::vector<char>(16);
+  std::vector<char> hw_ver = std::vector<char>(16);
+  std::vector<char> control_fw_ver = std::vector<char>(16);
+  std::vector<char> sensor_fw_ver = std::vector<char>(16);
+  int angle_offset;
+  int model;
+  int motor_type;
+  int num_of_lines;
+  std::vector<unsigned char> reserved = std::vector<unsigned char>(11);
 
-    HesaiInventory()
-    {
+  HesaiInventory() {}
+  HesaiInventory(const HesaiInventory & arg)
+  {
+    std::copy(arg.sn.begin(), arg.sn.end(), sn.begin());
+    std::copy(
+      arg.date_of_manufacture.begin(), arg.date_of_manufacture.end(), date_of_manufacture.begin());
+    std::copy(arg.mac.begin(), arg.mac.end(), mac.begin());
+    std::copy(arg.sw_ver.begin(), arg.sw_ver.end(), sw_ver.begin());
+    std::copy(arg.hw_ver.begin(), arg.hw_ver.end(), hw_ver.begin());
+    std::copy(arg.control_fw_ver.begin(), arg.control_fw_ver.end(), control_fw_ver.begin());
+    std::copy(arg.sensor_fw_ver.begin(), arg.sensor_fw_ver.end(), sensor_fw_ver.begin());
+    angle_offset = arg.angle_offset;
+    model = arg.model;
+    motor_type = arg.motor_type;
+    num_of_lines = arg.num_of_lines;
+    std::copy(arg.reserved.begin(), arg.reserved.end(), reserved.begin());
+  }
+
+  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiInventory const & arg)
+  {
+    os << "sn: " << std::string(arg.sn.begin(), arg.sn.end());
+    os << ", ";
+    os << "date_of_manufacture: "
+       << std::string(arg.date_of_manufacture.begin(), arg.date_of_manufacture.end());
+    os << ", ";
+    //      os << "mac: " << std::string(arg.mac.begin(), arg.mac.end());
+    os << "mac: ";
+    std::stringstream ss;
+    for (long unsigned int i = 0; i < arg.mac.size() - 1; i++) {
+      //        os << std::hex << static_cast<int>(arg.mac[i]) << ":";
+      //        os << dumpHex(static_cast<int>(arg.mac[i])) << ":";
+      //        os << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.mac[i]) & 0xff) << ":";
+      ss << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.mac[i]) & 0xff)
+         << ":";
     }
-    HesaiInventory(const HesaiInventory & arg)
-    {
-      std::copy(arg.sn.begin(), arg.sn.end(), sn.begin());
-      std::copy(arg.date_of_manufacture.begin(), arg.date_of_manufacture.end(), date_of_manufacture.begin());
-      std::copy(arg.mac.begin(), arg.mac.end(), mac.begin());
-      std::copy(arg.sw_ver.begin(), arg.sw_ver.end(), sw_ver.begin());
-      std::copy(arg.hw_ver.begin(), arg.hw_ver.end(), hw_ver.begin());
-      std::copy(arg.control_fw_ver.begin(), arg.control_fw_ver.end(), control_fw_ver.begin());
-      std::copy(arg.sensor_fw_ver.begin(), arg.sensor_fw_ver.end(), sensor_fw_ver.begin());
-      angle_offset = arg.angle_offset;
-      model = arg.model;
-      motor_type = arg.motor_type;
-      num_of_lines = arg.num_of_lines;
-      std::copy(arg.reserved.begin(), arg.reserved.end(), reserved.begin());
+    //      os << std::hex << static_cast<int>(arg.mac[arg.mac.size()-1]);
+    //      os << std::hex << dumpHex(static_cast<int>(arg.mac[arg.mac.size()-1]));
+    //      os << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.mac[arg.mac.size()-1]) & 0xff);
+    ss << std::hex << std::setfill('0') << std::setw(2)
+       << (static_cast<int>(arg.mac[arg.mac.size() - 1]) & 0xff);
+    os << ss.str();
+    os << ", ";
+    os << "sw_ver: " << std::string(arg.sw_ver.begin(), arg.sw_ver.end());
+    os << ", ";
+    os << "hw_ver: " << std::string(arg.hw_ver.begin(), arg.hw_ver.end());
+    os << ", ";
+    os << "control_fw_ver: " << std::string(arg.control_fw_ver.begin(), arg.control_fw_ver.end());
+    os << ", ";
+    os << "sensor_fw_ver: " << std::string(arg.sensor_fw_ver.begin(), arg.sensor_fw_ver.end());
+    os << ", ";
+    os << "angle_offset: " << arg.angle_offset;
+    os << ", ";
+    os << "model: " << arg.model;
+    os << ", ";
+    os << "motor_type: " << arg.motor_type;
+    os << ", ";
+    os << "num_of_lines: " << arg.num_of_lines;
+    os << ", ";
+    //      os << "reserved: " << boost::algorithm::join(arg.reserved, ",");
+    os << "reserved: ";
+    for (long unsigned int i = 0; i < arg.reserved.size() - 1; i++) {
+      os << arg.reserved[i] << ",";
     }
+    os << arg.reserved[arg.reserved.size() - 1];
 
-    friend std::ostream & operator<<(std::ostream & os, nebula::HesaiInventory const & arg)
-    {
-      os << "sn: " << std::string(arg.sn.begin(), arg.sn.end());
-      os << ", ";
-      os << "date_of_manufacture: " << std::string(arg.date_of_manufacture.begin(), arg.date_of_manufacture.end());
-      os << ", ";
-//      os << "mac: " << std::string(arg.mac.begin(), arg.mac.end());
-      os << "mac: ";
-      std::stringstream ss;
-      for(long unsigned int i=0;i<arg.mac.size()-1;i++){
-//        os << std::hex << static_cast<int>(arg.mac[i]) << ":";
-//        os << dumpHex(static_cast<int>(arg.mac[i])) << ":";
-//        os << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.mac[i]) & 0xff) << ":";
-        ss << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.mac[i]) & 0xff) << ":";
-      }
-//      os << std::hex << static_cast<int>(arg.mac[arg.mac.size()-1]);
-//      os << std::hex << dumpHex(static_cast<int>(arg.mac[arg.mac.size()-1]));
-//      os << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.mac[arg.mac.size()-1]) & 0xff);
-      ss << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.mac[arg.mac.size()-1]) & 0xff);
-      os << ss.str();
-      os << ", ";
-      os << "sw_ver: " << std::string(arg.sw_ver.begin(), arg.sw_ver.end());
-      os << ", ";
-      os << "hw_ver: " << std::string(arg.hw_ver.begin(), arg.hw_ver.end());
-      os << ", ";
-      os << "control_fw_ver: " << std::string(arg.control_fw_ver.begin(), arg.control_fw_ver.end());
-      os << ", ";
-      os << "sensor_fw_ver: " << std::string(arg.sensor_fw_ver.begin(), arg.sensor_fw_ver.end());
-      os << ", ";
-      os << "angle_offset: " << arg.angle_offset;
-      os << ", ";
-      os << "model: " << arg.model;
-      os << ", ";
-      os << "motor_type: " << arg.motor_type;
-      os << ", ";
-      os << "num_of_lines: " << arg.num_of_lines;
-      os << ", ";
-//      os << "reserved: " << boost::algorithm::join(arg.reserved, ",");
-      os << "reserved: ";
-      for(long unsigned int i=0;i<arg.reserved.size()-1;i++){
-        os << arg.reserved[i] << ",";
-      }
-      os << arg.reserved[arg.reserved.size()-1];
+    return os;
+  }
 
-      return os;
-    }
-
-    std::string get_str_model(){
-      switch (model)
-      {
+  std::string get_str_model()
+  {
+    switch (model) {
       case 0:
         return "Pandar40P";
         break;
@@ -310,149 +314,153 @@ struct HesaiInventory{
       default:
         return "Unknown(" + std::to_string(model) + ")";
         break;
-      }
     }
+  }
 };
 
-struct HesaiConfig{
-    int ipaddr[4];
-    int mask[4];
-    int gateway[4];
-    int dest_ipaddr[4];
-    int dest_LiDAR_udp_port;
-    int dest_gps_udp_port;
-    int spin_rate;
-    int sync;
-    int sync_angle;
-    int start_angle;
-    int stop_angle;
-    int clock_source;
-    int udp_seq;
-    int trigger_method;
-    int return_mode;
-    int standby_mode;
-    int motor_status;
-    int vlan_flag;
-    int vlan_id;
-    int clock_data_fmt;
-    int noise_filtering;
-    int reflectivity_mapping;
-    unsigned char reserved[6];
+struct HesaiConfig
+{
+  int ipaddr[4];
+  int mask[4];
+  int gateway[4];
+  int dest_ipaddr[4];
+  int dest_LiDAR_udp_port;
+  int dest_gps_udp_port;
+  int spin_rate;
+  int sync;
+  int sync_angle;
+  int start_angle;
+  int stop_angle;
+  int clock_source;
+  int udp_seq;
+  int trigger_method;
+  int return_mode;
+  int standby_mode;
+  int motor_status;
+  int vlan_flag;
+  int vlan_id;
+  int clock_data_fmt;
+  int noise_filtering;
+  int reflectivity_mapping;
+  unsigned char reserved[6];
 
-    friend std::ostream & operator<<(std::ostream & os, nebula::HesaiConfig const & arg)
-    {
-      os << "ipaddr: " << arg.ipaddr[0] << "." << arg.ipaddr[1] << "." << arg.ipaddr[2] << "." << arg.ipaddr[3];
-      os << ", ";
-      os << "mask: " << arg.mask[0] << "." << arg.mask[1] << "." << arg.mask[2] << "." << arg.mask[3];
-      os << ", ";
-      os << "gateway: " << arg.gateway[0] << "." << arg.gateway[1] << "." << arg.gateway[2] << "." << arg.gateway[3];
-      os << ", ";
-      os << "dest_ipaddr: " << arg.dest_ipaddr[0] << "." << arg.dest_ipaddr[1] << "." << arg.dest_ipaddr[2] << "." << arg.dest_ipaddr[3];
-      os << ", ";
-      os << "dest_LiDAR_udp_port: " << arg.dest_LiDAR_udp_port;
-      os << ", ";
-      os << "dest_gps_udp_port: " << arg.dest_gps_udp_port;
-      os << ", ";
-      os << "spin_rate: " << arg.spin_rate;
-      os << ", ";
-      os << "sync: " << arg.sync;
-      os << ", ";
-      os << "sync_angle: " << arg.sync_angle;
-      os << ", ";
-      os << "start_angle: " << arg.start_angle;
-      os << ", ";
-      os << "stop_angle: " << arg.stop_angle;
-      os << ", ";
-      os << "clock_source: " << arg.clock_source;
-      os << ", ";
-      os << "udp_seq: " << arg.udp_seq;
-      os << ", ";
-      os << "trigger_method: " << arg.trigger_method;
-      os << ", ";
-      os << "return_mode: " << arg.return_mode;
-      os << ", ";
-      os << "standby_mode: " << arg.standby_mode;
-      os << ", ";
-      os << "motor_status: " << arg.motor_status;
-      os << ", ";
-      os << "vlan_flag: " << arg.vlan_flag;
-      os << ", ";
-      os << "vlan_id: " << arg.vlan_id;
-      os << ", ";
-      os << "clock_data_fmt: " << arg.clock_data_fmt;
-      os << ", ";
-      os << "noise_filtering: " << arg.noise_filtering;
-      os << ", ";
-      os << "reflectivity_mapping: " << arg.reflectivity_mapping;
-      os << ", ";
-      os << "reserved: " << arg.reserved[0] << "," << arg.reserved[1] << "," << arg.reserved[2] << "," << arg.reserved[3] << "," << arg.reserved[4] << "," << arg.reserved[5];
-      
-      return os;
-    }
+  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiConfig const & arg)
+  {
+    os << "ipaddr: " << arg.ipaddr[0] << "." << arg.ipaddr[1] << "." << arg.ipaddr[2] << "."
+       << arg.ipaddr[3];
+    os << ", ";
+    os << "mask: " << arg.mask[0] << "." << arg.mask[1] << "." << arg.mask[2] << "." << arg.mask[3];
+    os << ", ";
+    os << "gateway: " << arg.gateway[0] << "." << arg.gateway[1] << "." << arg.gateway[2] << "."
+       << arg.gateway[3];
+    os << ", ";
+    os << "dest_ipaddr: " << arg.dest_ipaddr[0] << "." << arg.dest_ipaddr[1] << "."
+       << arg.dest_ipaddr[2] << "." << arg.dest_ipaddr[3];
+    os << ", ";
+    os << "dest_LiDAR_udp_port: " << arg.dest_LiDAR_udp_port;
+    os << ", ";
+    os << "dest_gps_udp_port: " << arg.dest_gps_udp_port;
+    os << ", ";
+    os << "spin_rate: " << arg.spin_rate;
+    os << ", ";
+    os << "sync: " << arg.sync;
+    os << ", ";
+    os << "sync_angle: " << arg.sync_angle;
+    os << ", ";
+    os << "start_angle: " << arg.start_angle;
+    os << ", ";
+    os << "stop_angle: " << arg.stop_angle;
+    os << ", ";
+    os << "clock_source: " << arg.clock_source;
+    os << ", ";
+    os << "udp_seq: " << arg.udp_seq;
+    os << ", ";
+    os << "trigger_method: " << arg.trigger_method;
+    os << ", ";
+    os << "return_mode: " << arg.return_mode;
+    os << ", ";
+    os << "standby_mode: " << arg.standby_mode;
+    os << ", ";
+    os << "motor_status: " << arg.motor_status;
+    os << ", ";
+    os << "vlan_flag: " << arg.vlan_flag;
+    os << ", ";
+    os << "vlan_id: " << arg.vlan_id;
+    os << ", ";
+    os << "clock_data_fmt: " << arg.clock_data_fmt;
+    os << ", ";
+    os << "noise_filtering: " << arg.noise_filtering;
+    os << ", ";
+    os << "reflectivity_mapping: " << arg.reflectivity_mapping;
+    os << ", ";
+    os << "reserved: " << arg.reserved[0] << "," << arg.reserved[1] << "," << arg.reserved[2] << ","
+       << arg.reserved[3] << "," << arg.reserved[4] << "," << arg.reserved[5];
+
+    return os;
+  }
 };
 
-struct HesaiLidarStatus{
-    int system_uptime;
-    int motor_speed;
-//    int temperature[8];
-    std::vector<int> temperature = std::vector<int>(8);
-    int gps_pps_lock;
-    int gps_gprmc_status;
-    int startup_times;
-    int total_operation_time;
-    int ptp_clock_status;
-    std::vector<unsigned char> reserved = std::vector<unsigned char>(5);
+struct HesaiLidarStatus
+{
+  int system_uptime;
+  int motor_speed;
+  //    int temperature[8];
+  std::vector<int> temperature = std::vector<int>(8);
+  int gps_pps_lock;
+  int gps_gprmc_status;
+  int startup_times;
+  int total_operation_time;
+  int ptp_clock_status;
+  std::vector<unsigned char> reserved = std::vector<unsigned char>(5);
 
-    HesaiLidarStatus()
-    {
+  HesaiLidarStatus() {}
+  HesaiLidarStatus(const HesaiLidarStatus & arg)
+  {
+    system_uptime = arg.system_uptime;
+    motor_speed = arg.motor_speed;
+    std::copy(arg.temperature.begin(), arg.temperature.end(), temperature.begin());
+    gps_pps_lock = arg.gps_pps_lock;
+    gps_gprmc_status = arg.gps_gprmc_status;
+    startup_times = arg.startup_times;
+    total_operation_time = arg.total_operation_time;
+    ptp_clock_status = arg.ptp_clock_status;
+    std::copy(arg.reserved.begin(), arg.reserved.end(), reserved.begin());
+  }
+
+  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiLidarStatus const & arg)
+  {
+    os << "system_uptime: " << arg.system_uptime;
+    os << ", ";
+    os << "motor_speed: " << arg.motor_speed;
+    os << ", ";
+    os << "temperature: ";
+    for (long unsigned int i = 0; i < arg.temperature.size() - 1; i++) {
+      os << arg.temperature[i] << ",";
     }
-    HesaiLidarStatus(const HesaiLidarStatus & arg)
-    {
-      system_uptime = arg.system_uptime;
-      motor_speed = arg.motor_speed;
-      std::copy(arg.temperature.begin(), arg.temperature.end(), temperature.begin());
-      gps_pps_lock = arg.gps_pps_lock;
-      gps_gprmc_status = arg.gps_gprmc_status;
-      startup_times = arg.startup_times;
-      total_operation_time = arg.total_operation_time;
-      ptp_clock_status = arg.ptp_clock_status;
-      std::copy(arg.reserved.begin(), arg.reserved.end(), reserved.begin());
+    os << arg.temperature[arg.temperature.size() - 1];
+    os << ", ";
+    os << "gps_pps_lock: " << arg.gps_pps_lock;
+    os << ", ";
+    os << "gps_gprmc_status: " << arg.gps_gprmc_status;
+    os << ", ";
+    os << "startup_times: " << arg.startup_times;
+    os << ", ";
+    os << "total_operation_time: " << arg.total_operation_time;
+    os << ", ";
+    os << "ptp_clock_status: " << arg.ptp_clock_status;
+    os << ", ";
+    os << "reserved: ";
+    for (long unsigned int i = 0; i < arg.reserved.size() - 1; i++) {
+      os << arg.reserved[i] << ",";
     }
+    os << arg.reserved[arg.reserved.size() - 1];
 
-    friend std::ostream & operator<<(std::ostream & os, nebula::HesaiLidarStatus const & arg)
-    {
-      os << "system_uptime: " << arg.system_uptime;
-      os << ", ";
-      os << "motor_speed: " << arg.motor_speed;
-      os << ", ";
-      os << "temperature: ";
-      for(long unsigned int i=0;i<arg.temperature.size()-1;i++){
-        os << arg.temperature[i] << ",";
-      }
-      os << arg.temperature[arg.temperature.size()-1];
-      os << ", ";
-      os << "gps_pps_lock: " << arg.gps_pps_lock;
-      os << ", ";
-      os << "gps_gprmc_status: " << arg.gps_gprmc_status;
-      os << ", ";
-      os << "startup_times: " << arg.startup_times;
-      os << ", ";
-      os << "total_operation_time: " << arg.total_operation_time;
-      os << ", ";
-      os << "ptp_clock_status: " << arg.ptp_clock_status;
-      os << ", ";
-      os << "reserved: ";
-      for(long unsigned int i=0;i<arg.reserved.size()-1;i++){
-        os << arg.reserved[i] << ",";
-      }
-      os << arg.reserved[arg.reserved.size()-1];
+    return os;
+  }
 
-      return os;
-    }
-
-    std::string get_str_gps_pps_lock(){
-      switch (gps_pps_lock)
-      {
+  std::string get_str_gps_pps_lock()
+  {
+    switch (gps_pps_lock) {
       case 1:
         return "Lock";
         break;
@@ -462,11 +470,11 @@ struct HesaiLidarStatus{
       default:
         return "Unknown";
         break;
-      }
     }
-    std::string get_str_gps_gprmc_status(){
-      switch (gps_gprmc_status)
-      {
+  }
+  std::string get_str_gps_gprmc_status()
+  {
+    switch (gps_gprmc_status) {
       case 1:
         return "Lock";
         break;
@@ -476,11 +484,11 @@ struct HesaiLidarStatus{
       default:
         return "Unknown";
         break;
-      }
     }
-    std::string get_str_ptp_clock_status(){
-      switch (ptp_clock_status)
-      {
+  }
+  std::string get_str_ptp_clock_status()
+  {
+    switch (ptp_clock_status) {
       case 0:
         return "free run";
         break;
@@ -496,84 +504,83 @@ struct HesaiLidarStatus{
       default:
         return "Unknown";
         break;
-      }
     }
+  }
 };
 
+struct HesaiLidarRangeAll
+{
+  int method;
+  int start;
+  int end;
 
-struct HesaiLidarRangeAll{
-    int method;
-    int start;
-    int end;
+  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiLidarRangeAll const & arg)
+  {
+    os << "method: " << arg.method;
+    os << ", ";
+    os << "start: " << arg.start;
+    os << ", ";
+    os << "end: " << arg.end;
 
-    friend std::ostream & operator<<(std::ostream & os, nebula::HesaiLidarRangeAll const & arg)
-    {
-      os << "method: " << arg.method;
-      os << ", ";
-      os << "start: " << arg.start;
-      os << ", ";
-      os << "end: " << arg.end;
-
-      return os;
-    }
+    return os;
+  }
 };
 
-struct HesaiPtpConfig{
-    int status;
-    int profile;
-    int domain;
-    int network;
-    int logAnnounceInterval;
-    int logSyncInterval;
-    int logMinDelayReqInterval;
+struct HesaiPtpConfig
+{
+  int status;
+  int profile;
+  int domain;
+  int network;
+  int logAnnounceInterval;
+  int logSyncInterval;
+  int logMinDelayReqInterval;
 
-    friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpConfig const & arg)
-    {
-      os << "status: " << arg.status;
+  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpConfig const & arg)
+  {
+    os << "status: " << arg.status;
+    os << ", ";
+    os << "profile: " << arg.profile;
+    os << ", ";
+    os << "domain: " << arg.domain;
+    os << ", ";
+    os << "network: " << arg.network;
+    if (arg.status == 0) {
       os << ", ";
-      os << "profile: " << arg.profile;
+      os << "logAnnounceInterval: " << arg.logAnnounceInterval;
       os << ", ";
-      os << "domain: " << arg.domain;
+      os << "logSyncInterval: " << arg.logSyncInterval;
       os << ", ";
-      os << "network: " << arg.network;
-      if(arg.status == 0)
-      {
-        os << ", ";
-        os << "logAnnounceInterval: " << arg.logAnnounceInterval;
-        os << ", ";
-        os << "logSyncInterval: " << arg.logSyncInterval;
-        os << ", ";
-        os << "logMinDelayReqInterval: " << arg.logMinDelayReqInterval;
-      }
-      return os;
+      os << "logMinDelayReqInterval: " << arg.logMinDelayReqInterval;
     }
+    return os;
+  }
 };
 
+struct HesaiLidarMonitor
+{
+  int input_voltage;
+  int input_current;
+  int input_power;
+  std::vector<unsigned char> reserved = std::vector<unsigned char>(52);
 
-struct HesaiLidarMonitor{
-    int input_voltage;
-    int input_current;
-    int input_power;
-    std::vector<unsigned char> reserved = std::vector<unsigned char>(52);
-
-    friend std::ostream & operator<<(std::ostream & os, nebula::HesaiLidarMonitor const & arg)
-    {
-      os << "input_voltage: " << arg.input_voltage;
-      os << ", ";
-      os << "input_current: " << arg.input_current;
-      os << ", ";
-      os << "input_power: " << arg.input_power;
-      os << ", ";
-      os << "reserved: ";
-      for(long unsigned int i=0;i<arg.reserved.size()-1;i++){
-        os << arg.reserved[i] << ",";
-      }
-      os << arg.reserved[arg.reserved.size()-1];
-      
-      return os;
+  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiLidarMonitor const & arg)
+  {
+    os << "input_voltage: " << arg.input_voltage;
+    os << ", ";
+    os << "input_current: " << arg.input_current;
+    os << ", ";
+    os << "input_power: " << arg.input_power;
+    os << ", ";
+    os << "reserved: ";
+    for (long unsigned int i = 0; i < arg.reserved.size() - 1; i++) {
+      os << arg.reserved[i] << ",";
     }
-};
+    os << arg.reserved[arg.reserved.size() - 1];
 
+    return os;
+  }
+};
 
 }  // namespace nebula
 #endif  // HESAI_CMD_RESPONSE_HPP

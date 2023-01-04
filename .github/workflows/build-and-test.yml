@@ -41,7 +41,7 @@ jobs:
       - name: Install Dependencies
         run: source /opt/ros/${{ matrix.ros_distribution }}/setup.bash && DEBIAN_FRONTEND=noninteractive rosdep install --include-eol-distros --from-paths src --ignore-src -y -r
         shell: bash
-      - name: Build
-        run: source /opt/ros/${{ matrix.ros_distribution }}/setup.bash &&  colcon build
+      - name: Build and test
+        run: source /opt/ros/${{ matrix.ros_distribution }}/setup.bash &&  colcon build && colcon test --event-handlers console_cohesion+ && colcon test-result --all
         shell: bash
 

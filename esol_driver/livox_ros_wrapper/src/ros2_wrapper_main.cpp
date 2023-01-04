@@ -1,6 +1,5 @@
-#include <rclcpp/rclcpp.hpp>
-
 #include <memory>
+#include <rclcpp/rclcpp.hpp>
 
 #include "ros2_driver_wrapper.hpp"
 
@@ -20,8 +19,7 @@ int main(int argc, char * argv[])
   const rclcpp::NodeOptions options;
   auto lidar_driver = std::make_shared<lidar_driver::RosDriverWrapper>(
     options,
-    node_name
-    );  // Internally call StartStream() and StopStream() during constructor/destructor.
+    node_name);  // Internally call StartStream() and StopStream() during constructor/destructor.
   exec.add_node(lidar_driver);
   exec.spin();
 

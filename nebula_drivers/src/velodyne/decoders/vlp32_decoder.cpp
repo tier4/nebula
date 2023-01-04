@@ -3,7 +3,6 @@
 #include <cmath>
 #include <utility>
 
-
 namespace nebula
 {
 namespace drivers
@@ -26,19 +25,18 @@ Vlp32Decoder::Vlp32Decoder(
     cos_rot_table_[rot_index] = cosf(rotation);
     sin_rot_table_[rot_index] = sinf(rotation);
   }
-  phase_ = (uint16_t)round(sensor_configuration_->scan_phase*100);
+  phase_ = (uint16_t)round(sensor_configuration_->scan_phase * 100);
 }
 
 bool Vlp32Decoder::hasScanned() { return has_scanned_; }
 
-drivers::PointCloudXYZIRADTPtr Vlp32Decoder::get_pointcloud() {
-  int phase = (uint16_t)round(sensor_configuration_->scan_phase*100);
-  if (!scan_pc_->points.empty())
-  {
+drivers::PointCloudXYZIRADTPtr Vlp32Decoder::get_pointcloud()
+{
+  int phase = (uint16_t)round(sensor_configuration_->scan_phase * 100);
+  if (!scan_pc_->points.empty()) {
     uint16_t current_azimuth = (int)scan_pc_->points.back().azimuth * 100;
     uint16_t phase_diff = (36000 + current_azimuth - phase) % 36000;
-    while (phase_diff < 18000 && scan_pc_->points.size() > 0)
-    {
+    while (phase_diff < 18000 && scan_pc_->points.size() > 0) {
       overflow_pc_->points.push_back(scan_pc_->points.back());
       scan_pc_->points.pop_back();
       current_azimuth = (int)scan_pc_->points.back().azimuth * 100;
@@ -49,16 +47,15 @@ drivers::PointCloudXYZIRADTPtr Vlp32Decoder::get_pointcloud() {
   return scan_pc_;
 }
 
-int Vlp32Decoder::pointsPerPacket() {return BLOCKS_PER_PACKET * SCANS_PER_BLOCK;}
-
+int Vlp32Decoder::pointsPerPacket() { return BLOCKS_PER_PACKET * SCANS_PER_BLOCK; }
 
 void Vlp32Decoder::reset_pointcloud(size_t n_pts)
 {
   //  scan_pc_.reset(new PointCloudXYZIRADT);
   scan_pc_->points.clear();
-  max_pts_ = n_pts*pointsPerPacket();
+  max_pts_ = n_pts * pointsPerPacket();
   scan_pc_->points.reserve(max_pts_);
-  reset_overflow();       // transfer existing overflow points to the cleared pointcloud
+  reset_overflow();  // transfer existing overflow points to the cleared pointcloud
 }
 
 void Vlp32Decoder::reset_overflow()
@@ -85,7 +82,8 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
       float intensity;
       const uint8_t laser_number = j + bank_origin;
 
-      const VelodyneLaserCorrection & corrections = calibration_configuration_->velodyne_calibration.laser_corrections[laser_number];
+      const VelodyneLaserCorrection & corrections =
+        calibration_configuration_->velodyne_calibration.laser_corrections[laser_number];
 
       /** Position Calculation */
       const raw_block_t & block = raw->blocks[i];
@@ -93,25 +91,28 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
       tmp.bytes[0] = block.data[k];
       tmp.bytes[1] = block.data[k + 1];
 
-      float distance = tmp.uint * calibration_configuration_->velodyne_calibration.distance_resolution_m;
+      float distance =
+        tmp.uint * calibration_configuration_->velodyne_calibration.distance_resolution_m;
       if (distance > 1e-6) {
         distance += corrections.dist_correction;
       }
 
-      if (distance > sensor_configuration_->min_range && distance < sensor_configuration_->max_range) {
+      if (
+        distance > sensor_configuration_->min_range &&
+        distance < sensor_configuration_->max_range) {
         /*condition added to avoid calculating points which are not
             in the interesting defined area (min_angle < area < max_angle)*/
         if (
-//          (block.rotation >= sensor_configuration_->cloud_min_angle &&
-//           block.rotation <= sensor_configuration_->cloud_max_angle &&
+          //          (block.rotation >= sensor_configuration_->cloud_min_angle &&
+          //           block.rotation <= sensor_configuration_->cloud_max_angle &&
           (block.rotation >= sensor_configuration_->cloud_min_angle * 100 &&
            block.rotation <= sensor_configuration_->cloud_max_angle * 100 &&
            sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle) ||
           (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
            (raw->blocks[i].rotation <= sensor_configuration_->cloud_max_angle * 100 ||
             raw->blocks[i].rotation >= sensor_configuration_->cloud_min_angle * 100))) {
-//           (raw->blocks[i].rotation <= sensor_configuration_->cloud_max_angle ||
-//            raw->blocks[i].rotation >= sensor_configuration_->cloud_min_angle))) {
+          //           (raw->blocks[i].rotation <= sensor_configuration_->cloud_max_angle ||
+          //            raw->blocks[i].rotation >= sensor_configuration_->cloud_min_angle))) {
           const float cos_vert_angle = corrections.cos_vert_correction;
           const float sin_vert_angle = corrections.sin_vert_correction;
           const float cos_rot_correction = corrections.cos_rot_correction;

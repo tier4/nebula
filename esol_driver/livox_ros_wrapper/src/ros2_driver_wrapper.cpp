@@ -1,14 +1,13 @@
 #include "ros2_driver_wrapper.hpp"
-#include <sensor_msgs/msg/imu.hpp>
-#include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include <chrono>
-#include <memory>
-#include <string>
-#include <utility>
-
 #include <fstream>
 #include <iostream>
+#include <memory>
+#include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <string>
+#include <utility>
 
 namespace lidar_driver
 {
@@ -352,35 +351,25 @@ void RosDriverWrapper::InitializeLivoxDiagnostics()
   using std::chrono_literals::operator""s;
   diagnostics_updater_.setHardwareID(config_.sensor_type + "_" + config_.frame_id);
   diagnostics_updater_.add(
-      "livox_temperature-" + config_.frame_id,
-      this, &RosDriverWrapper::LivoxCheckTemperature);
+    "livox_temperature-" + config_.frame_id, this, &RosDriverWrapper::LivoxCheckTemperature);
   diagnostics_updater_.add(
-      "livox_internal_voltage-" + config_.frame_id,
-      this, &RosDriverWrapper::LivoxCheckVoltage);
+    "livox_internal_voltage-" + config_.frame_id, this, &RosDriverWrapper::LivoxCheckVoltage);
   diagnostics_updater_.add(
-      "livox_motor_status-" + config_.frame_id,
-      this, &RosDriverWrapper::LivoxCheckMotor);
+    "livox_motor_status-" + config_.frame_id, this, &RosDriverWrapper::LivoxCheckMotor);
   diagnostics_updater_.add(
-      "livox_optical_window-" + config_.frame_id,
-      this, &RosDriverWrapper::LivoxCheckWindowDirt);
+    "livox_optical_window-" + config_.frame_id, this, &RosDriverWrapper::LivoxCheckWindowDirt);
   diagnostics_updater_.add(
-      "livox_firmware_status-" + config_.frame_id,
-      this, &RosDriverWrapper::LivoxCheckFirmware);
+    "livox_firmware_status-" + config_.frame_id, this, &RosDriverWrapper::LivoxCheckFirmware);
   diagnostics_updater_.add(
-      "livox_pps_signal-" + config_.frame_id,
-      this, &RosDriverWrapper::LivoxCheckPps);
+    "livox_pps_signal-" + config_.frame_id, this, &RosDriverWrapper::LivoxCheckPps);
   diagnostics_updater_.add(
-      "livox_service_life-" + config_.frame_id,
-      this, &RosDriverWrapper::LivoxCheckServiceLife);
+    "livox_service_life-" + config_.frame_id, this, &RosDriverWrapper::LivoxCheckServiceLife);
   diagnostics_updater_.add(
-      "livox_fan_status-" + config_.frame_id,
-      this, &RosDriverWrapper::LivoxCheckFan);
+    "livox_fan_status-" + config_.frame_id, this, &RosDriverWrapper::LivoxCheckFan);
   diagnostics_updater_.add(
-      "livox_time_sync-" + config_.frame_id,
-      this, &RosDriverWrapper::LivoxCheckTimeSync);
+    "livox_time_sync-" + config_.frame_id, this, &RosDriverWrapper::LivoxCheckTimeSync);
   diagnostics_updater_.add(
-      "livox_connection-" + config_.frame_id,
-      this, &RosDriverWrapper::LivoxCheckConnection);
+    "livox_connection-" + config_.frame_id, this, &RosDriverWrapper::LivoxCheckConnection);
 
   auto on_timer = [this] { OnLivoxDiagnosticsTimer(); };
   diagnostics_timer_ = std::make_shared<rclcpp::GenericTimer<decltype(on_timer)>>(
@@ -398,7 +387,8 @@ void RosDriverWrapper::OnLivoxDiagnosticsTimer()
   diagnostics_updater_.force_update();
 }
 
-void RosDriverWrapper::LivoxCheckConnection(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+void RosDriverWrapper::LivoxCheckConnection(
+  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   uint8_t level;
   LidarDriver::LidarDriverStatus lidar_driver_status = driver_.GetLidarStatus();
@@ -423,8 +413,8 @@ void RosDriverWrapper::LivoxCheckTemperature(
   uint8_t level;
   using Temp = livox_driver::diagnostics::LivoxTemperatureStatus;
   auto status = (LidarDriver::LidarDriverStatus::kDisconnect != driver_.GetLidarStatus())
-      ? current_diagnostics_status_.temperature_status
-      : Temp::kUnknown;
+                  ? current_diagnostics_status_.temperature_status
+                  : Temp::kUnknown;
   switch (status) {
     case Temp::kUnknown:
       level = DiagStatus::ERROR;
@@ -443,14 +433,13 @@ void RosDriverWrapper::LivoxCheckTemperature(
   diagnostics.summary(level, livox_driver::diagnostics::livox_temperature_dict_.at(status));
 }
 
-void RosDriverWrapper::LivoxCheckVoltage(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+void RosDriverWrapper::LivoxCheckVoltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   uint8_t level;
   using Volt = livox_driver::diagnostics::LivoxVoltageStatus;
   auto status = (LidarDriver::LidarDriverStatus::kDisconnect != driver_.GetLidarStatus())
-      ? current_diagnostics_status_.voltage_status
-      : Volt::kUnknown;
+                  ? current_diagnostics_status_.voltage_status
+                  : Volt::kUnknown;
   switch (status) {
     case Volt::kUnknown:
       level = DiagStatus::ERROR;
@@ -469,14 +458,13 @@ void RosDriverWrapper::LivoxCheckVoltage(
   diagnostics.summary(level, livox_driver::diagnostics::livox_voltage_dict_.at(status));
 }
 
-void RosDriverWrapper::LivoxCheckMotor(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+void RosDriverWrapper::LivoxCheckMotor(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   uint8_t level;
   using Motor = livox_driver::diagnostics::LivoxMotorStatus;
   auto status = (LidarDriver::LidarDriverStatus::kDisconnect != driver_.GetLidarStatus())
-      ? current_diagnostics_status_.motor_status
-      : Motor::kUnknown;
+                  ? current_diagnostics_status_.motor_status
+                  : Motor::kUnknown;
   switch (status) {
     case Motor::kUnknown:
       level = DiagStatus::ERROR;
@@ -501,8 +489,8 @@ void RosDriverWrapper::LivoxCheckWindowDirt(
   uint8_t level;
   using WindowDirt = livox_driver::diagnostics::LivoxDirtStatus;
   auto status = (LidarDriver::LidarDriverStatus::kDisconnect != driver_.GetLidarStatus())
-      ? current_diagnostics_status_.dirt_status
-      : WindowDirt::kUnknown;
+                  ? current_diagnostics_status_.dirt_status
+                  : WindowDirt::kUnknown;
   switch (status) {
     case WindowDirt::kUnknown:
       level = DiagStatus::ERROR;
@@ -518,14 +506,13 @@ void RosDriverWrapper::LivoxCheckWindowDirt(
   diagnostics.summary(level, livox_driver::diagnostics::livox_dirt_dict_.at(status));
 }
 
-void RosDriverWrapper::LivoxCheckFirmware(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+void RosDriverWrapper::LivoxCheckFirmware(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   uint8_t level;
   using Firmware = livox_driver::diagnostics::LivoxFirmwareStatus;
   auto status = (LidarDriver::LidarDriverStatus::kDisconnect != driver_.GetLidarStatus())
-      ? current_diagnostics_status_.firmware_status
-      : Firmware::kUnknown;
+                  ? current_diagnostics_status_.firmware_status
+                  : Firmware::kUnknown;
   switch (status) {
     case Firmware::kUnknown:
       level = DiagStatus::ERROR;
@@ -541,14 +528,13 @@ void RosDriverWrapper::LivoxCheckFirmware(
   diagnostics.summary(level, livox_driver::diagnostics::livox_firmware_dict_.at(status));
 }
 
-void RosDriverWrapper::LivoxCheckTimeSync(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+void RosDriverWrapper::LivoxCheckTimeSync(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   uint8_t level;
   using TimeSync = livox_driver::diagnostics::LivoxTimeSyncStatus;
   auto status = (LidarDriver::LidarDriverStatus::kDisconnect != driver_.GetLidarStatus())
-      ? current_diagnostics_status_.time_sync_status
-      : TimeSync::kUnknown;
+                  ? current_diagnostics_status_.time_sync_status
+                  : TimeSync::kUnknown;
   switch (status) {
     case TimeSync::kUnknown:
     case TimeSync::kNoSync:
@@ -571,8 +557,8 @@ void RosDriverWrapper::LivoxCheckServiceLife(
   uint8_t level;
   using ServiceLife = livox_driver::diagnostics::LivoxDeviceLifeStatus;
   auto status = (LidarDriver::LidarDriverStatus::kDisconnect != driver_.GetLidarStatus())
-      ? current_diagnostics_status_.device_life_status
-      : ServiceLife::kUnknown;
+                  ? current_diagnostics_status_.device_life_status
+                  : ServiceLife::kUnknown;
   switch (status) {
     case ServiceLife::kUnknown:
       level = DiagStatus::ERROR;
@@ -588,14 +574,13 @@ void RosDriverWrapper::LivoxCheckServiceLife(
   diagnostics.summary(level, livox_driver::diagnostics::livox_life_dict_.at(status));
 }
 
-void RosDriverWrapper::LivoxCheckFan(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+void RosDriverWrapper::LivoxCheckFan(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   uint8_t level;
   using Fan = livox_driver::diagnostics::LivoxFanStatus;
   auto status = (LidarDriver::LidarDriverStatus::kDisconnect != driver_.GetLidarStatus())
-      ? current_diagnostics_status_.fan_status
-      : Fan::kUnknown;
+                  ? current_diagnostics_status_.fan_status
+                  : Fan::kUnknown;
   switch (status) {
     case Fan::kUnknown:
       level = DiagStatus::ERROR;
@@ -611,14 +596,13 @@ void RosDriverWrapper::LivoxCheckFan(
   diagnostics.summary(level, livox_driver::diagnostics::livox_fan_dict_.at(status));
 }
 
-void RosDriverWrapper::LivoxCheckPtp(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+void RosDriverWrapper::LivoxCheckPtp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   uint8_t level;
   using Ptp = livox_driver::diagnostics::LivoxPtpStatus;
   auto status = (LidarDriver::LidarDriverStatus::kDisconnect != driver_.GetLidarStatus())
-      ? current_diagnostics_status_.ptp_status
-      : Ptp::kUnknown;
+                  ? current_diagnostics_status_.ptp_status
+                  : Ptp::kUnknown;
   switch (status) {
     case Ptp::kNoSignal:
     case Ptp::kUnknown:
@@ -632,14 +616,13 @@ void RosDriverWrapper::LivoxCheckPtp(
   diagnostics.summary(level, livox_driver::diagnostics::livox_ptp_dict_.at(status));
 }
 
-void RosDriverWrapper::LivoxCheckPps(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+void RosDriverWrapper::LivoxCheckPps(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   uint8_t level;
   using Pps = livox_driver::diagnostics::LivoxPpsStatus;
   auto status = (LidarDriver::LidarDriverStatus::kDisconnect != driver_.GetLidarStatus())
-      ? current_diagnostics_status_.pps_status
-      : Pps::kUnknown;
+                  ? current_diagnostics_status_.pps_status
+                  : Pps::kUnknown;
   switch (status) {
     case Pps::kUnknown:
     case Pps::kNoSignal:

@@ -1,8 +1,7 @@
-#include "hesai/hesai_ros_offline_extract_pcd.hpp"
-
+#include <memory>
 #include <rclcpp/rclcpp.hpp>
 
-#include <memory>
+#include "hesai/hesai_ros_offline_extract_pcd.hpp"
 
 int main(int argc, char * argv[])
 {
@@ -14,9 +13,8 @@ int main(int argc, char * argv[])
   rclcpp::executors::SingleThreadedExecutor exec;
   rclcpp::NodeOptions options;
 
-
-
-  auto hesai_driver = std::make_shared<nebula::ros::HesaiRosOfflineExtractSample>(options, node_name);
+  auto hesai_driver =
+    std::make_shared<nebula::ros::HesaiRosOfflineExtractSample>(options, node_name);
   exec.add_node(hesai_driver->get_node_base_interface());
 
   RCLCPP_INFO_STREAM(rclcpp::get_logger(node_name), "Get Status");
@@ -24,7 +22,7 @@ int main(int argc, char * argv[])
   if (driver_status == nebula::Status::OK) {
     RCLCPP_INFO_STREAM(rclcpp::get_logger(node_name), "Reading Started");
     driver_status = hesai_driver->ReadBag();
-//    exec.spin();
+    //    exec.spin();
   } else {
     RCLCPP_ERROR_STREAM(rclcpp::get_logger(node_name), driver_status);
   }

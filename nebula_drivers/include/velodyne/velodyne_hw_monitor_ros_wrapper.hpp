@@ -1,23 +1,21 @@
 #ifndef NEBULA_VelodyneHwMonitorRosWrapper_H
 #define NEBULA_VelodyneHwMonitorRosWrapper_H
 
+#include <ament_index_cpp/get_package_prefix.hpp>
+#include <diagnostic_updater/diagnostic_updater.hpp>
+#include <mutex>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
+
 #include "common/nebula_common.hpp"
 #include "common/nebula_hw_monitor_ros_wrapper_base.hpp"
 #include "velodyne/velodyne_common.hpp"
 #include "velodyne/velodyne_hw_interface.hpp"
 
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-#include <ament_index_cpp/get_package_prefix.hpp>
-#include <diagnostic_updater/diagnostic_updater.hpp>
-
-#include <mutex>
-
 namespace nebula
 {
 namespace ros
 {
-
 template <typename T>
 bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & name, T & value)
 {
@@ -39,10 +37,9 @@ class VelodyneHwMonitorRosWrapper final : public rclcpp::Node, NebulaHwMonitorWr
   drivers::VelodyneSensorConfiguration sensor_configuration_;
   drivers::VelodyneCalibrationConfiguration calibration_configuration_;
 
-
   Status InitializeHwMonitor(
     const drivers::SensorConfigurationBase & sensor_configuration) override;
-    
+
 public:
   explicit VelodyneHwMonitorRosWrapper(const rclcpp::NodeOptions & options);
 
@@ -51,23 +48,24 @@ public:
   Status Shutdown() override;
   Status GetParameters(drivers::VelodyneSensorConfiguration & sensor_configuration);
 
-private://ROS Diagnostics
+private:  //ROS Diagnostics
   diagnostic_updater::Updater diagnostics_updater_;
   void InitializeVelodyneDiagnostics();
-  std::string GetPtreeValue(std::shared_ptr<boost::property_tree::ptree> pt, const std::string& key);
-  std::string GetFixedPrecisionString(double val, int pre=2);
+  std::string GetPtreeValue(
+    std::shared_ptr<boost::property_tree::ptree> pt, const std::string & key);
+  std::string GetFixedPrecisionString(double val, int pre = 2);
   rclcpp::TimerBase::SharedPtr diagnostics_diag_timer_;
   std::shared_ptr<boost::property_tree::ptree> current_diag_tree;
   void OnVelodyneDiagnosticsTimer();
 
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopHv();
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopAdTemp();//only32
+  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopAdTemp();  //only32
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopLm20Temp();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5v();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr25v();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr33v();
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5vRaw();//only16
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrRaw();//only32
+  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5vRaw();  //only16
+  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrRaw();    //only32
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrVccint();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotIOut();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwr12v();
@@ -82,7 +80,7 @@ private://ROS Diagnostics
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetAdcStats();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetIxe();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetAdctpStat();
-  
+
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetGpsPpsState();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetGpsPosition();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetMotorState();
@@ -90,7 +88,6 @@ private://ROS Diagnostics
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetMotorLock();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetMotorPhase();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetLaserState();
-
 
   void VelodyneCheckTopHv(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   void VelodyneCheckTopAdTemp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
@@ -138,8 +135,8 @@ private://ROS Diagnostics
   std::shared_ptr<std::string> current_snapshot;
   std::shared_ptr<boost::property_tree::ptree> current_snapshot_tree;
   std::shared_ptr<rclcpp::Time> current_snapshot_time;
-//  rclcpp::Time current_snapshot_time;
-//  std::shared_ptr<uint8_t> current_diag_status;
+  //  rclcpp::Time current_snapshot_time;
+  //  std::shared_ptr<uint8_t> current_diag_status;
   uint8_t current_diag_status;
 
   uint16_t diag_span_;
@@ -149,35 +146,35 @@ private://ROS Diagnostics
 
   void curl_callback(std::string err, std::string body);
 
-  const char* key_volt_temp_top_hv;
-  const char* key_volt_temp_top_ad_temp;
-  const char* key_volt_temp_top_lm20_temp;
-  const char* key_volt_temp_top_pwr_5v;
-  const char* key_volt_temp_top_pwr_2_5v;
-  const char* key_volt_temp_top_pwr_3_3v;
-  const char* key_volt_temp_top_pwr_5v_raw;
-  const char* key_volt_temp_top_pwr_raw;
-  const char* key_volt_temp_top_pwr_vccint;
-  const char* key_volt_temp_bot_i_out;
-  const char* key_volt_temp_bot_pwr_1_2v;
-  const char* key_volt_temp_bot_lm20_temp;
-  const char* key_volt_temp_bot_pwr_5v;
-  const char* key_volt_temp_bot_pwr_2_5v;
-  const char* key_volt_temp_bot_pwr_3_3v;
-  const char* key_volt_temp_bot_pwr_v_in;
-  const char* key_volt_temp_bot_pwr_1_25v;
-  const char* key_vhv;
-  const char* key_adc_nf;
-  const char* key_adc_stats;
-  const char* key_ixe;
-  const char* key_adctp_stat;
-  const char* key_status_gps_pps_state;
-  const char* key_status_gps_pps_position;
-  const char* key_status_motor_state;
-  const char* key_status_motor_rpm;
-  const char* key_status_motor_lock;
-  const char* key_status_motor_phase;
-  const char* key_status_laser_state;
+  const char * key_volt_temp_top_hv;
+  const char * key_volt_temp_top_ad_temp;
+  const char * key_volt_temp_top_lm20_temp;
+  const char * key_volt_temp_top_pwr_5v;
+  const char * key_volt_temp_top_pwr_2_5v;
+  const char * key_volt_temp_top_pwr_3_3v;
+  const char * key_volt_temp_top_pwr_5v_raw;
+  const char * key_volt_temp_top_pwr_raw;
+  const char * key_volt_temp_top_pwr_vccint;
+  const char * key_volt_temp_bot_i_out;
+  const char * key_volt_temp_bot_pwr_1_2v;
+  const char * key_volt_temp_bot_lm20_temp;
+  const char * key_volt_temp_bot_pwr_5v;
+  const char * key_volt_temp_bot_pwr_2_5v;
+  const char * key_volt_temp_bot_pwr_3_3v;
+  const char * key_volt_temp_bot_pwr_v_in;
+  const char * key_volt_temp_bot_pwr_1_25v;
+  const char * key_vhv;
+  const char * key_adc_nf;
+  const char * key_adc_stats;
+  const char * key_ixe;
+  const char * key_adctp_stat;
+  const char * key_status_gps_pps_state;
+  const char * key_status_gps_pps_position;
+  const char * key_status_motor_state;
+  const char * key_status_motor_rpm;
+  const char * key_status_motor_lock;
+  const char * key_status_motor_phase;
+  const char * key_status_laser_state;
 
   /*
   const char* name_volt_temp_top_hv;
@@ -240,19 +237,19 @@ private://ROS Diagnostics
   std::string name_status_motor_phase;
   std::string name_status_laser_state;
 
-  const char* not_supported_message;
-  const char* error_message;
-  std::string  message_sep;
+  const char * not_supported_message;
+  const char * error_message;
+  std::string message_sep;
 
-  const char* key_info_model;
-  const char* key_info_serial;
+  const char * key_info_model;
+  const char * key_info_serial;
 
-  std::string  temperature_cold_message;
-  std::string  temperature_hot_message;
-  std::string  voltage_low_message;
-  std::string  voltage_high_message;
-  std::string  ampere_low_message;
-  std::string  ampere_high_message;
+  std::string temperature_cold_message;
+  std::string temperature_hot_message;
+  std::string voltage_low_message;
+  std::string voltage_high_message;
+  std::string ampere_low_message;
+  std::string ampere_high_message;
 
   std::string info_model;
   std::string info_serial;
@@ -260,12 +257,12 @@ private://ROS Diagnostics
   bool use_advanced_diagnostics;
 
   OnSetParametersCallbackHandle::SharedPtr set_param_res_;
-  rcl_interfaces::msg::SetParametersResult paramCallback(const std::vector<rclcpp::Parameter> & parameters);
+  rcl_interfaces::msg::SetParametersResult paramCallback(
+    const std::vector<rclcpp::Parameter> & parameters);
 
-//  rclcpp::callback_group::CallbackGroup::SharedPtr cbg_;
+  //  rclcpp::callback_group::CallbackGroup::SharedPtr cbg_;
   rclcpp::CallbackGroup::SharedPtr cbg_r_;
   rclcpp::CallbackGroup::SharedPtr cbg_m_;
-
 };
 
 }  // namespace ros
