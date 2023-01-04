@@ -289,7 +289,8 @@ inline std::ostream & operator<<(
   return os;
 }
 
-struct CalibrationConfigurationBase {
+struct CalibrationConfigurationBase
+{
   std::string calibration_file;
 };
 

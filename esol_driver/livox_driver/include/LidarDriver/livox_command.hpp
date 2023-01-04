@@ -9,12 +9,7 @@ namespace lidar_driver
 const uint16_t kCrcSeed16 = 0x4c49;
 const uint32_t kCrcSeed32 = 0x564f580a;
 
-enum class LidarCommandType {
-  kHandshake = 0,
-  kStartStreaming,
-  kStopStreaming,
-  kHeartbeat
-};
+enum class LidarCommandType { kHandshake = 0, kStartStreaming, kStopStreaming, kHeartbeat };
 
 enum class CommandResult { kAck = 0, kNack, kTimeout, kError, kUnknownPacket };
 

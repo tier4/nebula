@@ -1,12 +1,11 @@
 #pragma once
 
+#include <array>
 #include <hesai/decoders/hesai_scan_decoder.hpp>
 #include <hesai/decoders/pandar_64.hpp>
 
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
-
-#include <array>
 
 namespace nebula
 {
@@ -17,8 +16,9 @@ namespace pandar_64
 class Pandar64Decoder : public HesaiScanDecoder
 {
 public:
-  explicit Pandar64Decoder(const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
-                           const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
+  explicit Pandar64Decoder(
+    const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
   void unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override;
   bool hasScanned() override;
   drivers::PointCloudXYZIRADTPtr get_pointcloud() override;
@@ -38,7 +38,6 @@ private:
   std::array<float, BLOCKS_PER_PACKET> block_offset_dual_{};
 
   Packet packet_{};
-
 };
 
 }  // namespace pandar_64

@@ -16,7 +16,6 @@
     calibration_file: "./install/nebula_lidar_driver/share/nebula_lidar_driver/calibration/hesai/PandarAT128.csv"
     correction_file: "./install/nebula_lidar_driver/share/nebula_lidar_driver/calibration/hesai/PandarAT128.dat"
 
-    bag_path: "/home/kyutoku/kyutoku_ws/ros2/testing_pcd/pandar_packets/1671446145045082648"
     storage_id: "sqlite3"
     format: "cdr"
     target_topic: "/pandar_packets"

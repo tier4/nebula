@@ -2,8 +2,8 @@
 /**
  * Pandar QT
  */
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <ctime>
 
 namespace nebula
@@ -78,5 +78,5 @@ struct Packet
   tm t;
 };
 }  // namespace pandar_qt
-}
-}
+}  // namespace drivers
+}  // namespace nebula

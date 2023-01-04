@@ -1,26 +1,23 @@
 #ifndef NEBULA_HesaiHwMonitorRosWrapper_H
 #define NEBULA_HesaiHwMonitorRosWrapper_H
 
+#include <ament_index_cpp/get_package_prefix.hpp>
+#include <boost/asio.hpp>
+#include <diagnostic_updater/diagnostic_updater.hpp>
+#include <mutex>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
 
 #include "common/nebula_common.hpp"
 #include "common/nebula_hw_monitor_ros_wrapper_base.hpp"
 #include "hesai/hesai_common.hpp"
 #include "hesai/hesai_hw_interface.hpp"
-
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-#include <ament_index_cpp/get_package_prefix.hpp>
-#include <diagnostic_updater/diagnostic_updater.hpp>
-
-#include <boost/asio.hpp>
 #include "tcp_driver/tcp_driver.hpp"
-#include <mutex>
 
 namespace nebula
 {
 namespace ros
 {
-
 template <typename T>
 bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & name, T & value)
 {
@@ -50,8 +47,7 @@ public:
   Status MonitorStart() override;
   Status MonitorStop() override;
   Status Shutdown() override;
-  Status GetParameters(
-    drivers::HesaiSensorConfiguration & sensor_configuration);
+  Status GetParameters(drivers::HesaiSensorConfiguration & sensor_configuration);
 
 private:
   diagnostic_updater::Updater diagnostics_updater_;
@@ -59,8 +55,8 @@ private:
   void OnHesaiStatusTimer();
   void OnHesaiLidarMonitorTimerHttp();
   void OnHesaiLidarMonitorTimer();
-//  void OnHesaiDiagnosticsTimer();
-//  void OnHesaiStatusTimer();
+  //  void OnHesaiDiagnosticsTimer();
+  //  void OnHesaiStatusTimer();
   void HesaiCheckStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   void HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   void HesaiCheckTemperature(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
@@ -88,12 +84,13 @@ private:
   std::mutex mtx_diag;
   std::mutex mtx_status;
   std::mutex mtx_lidar_monitor;
-//  std::timed_mutex mtx_lidar_monitor;
+  //  std::timed_mutex mtx_lidar_monitor;
   std::mutex mtx_config_;
   OnSetParametersCallbackHandle::SharedPtr set_param_res_;
-  rcl_interfaces::msg::SetParametersResult paramCallback(const std::vector<rclcpp::Parameter> & parameters);
-  std::string GetPtreeValue(boost::property_tree::ptree *pt, const std::string& key);
-  std::string GetFixedPrecisionString(double val, int pre=2);
+  rcl_interfaces::msg::SetParametersResult paramCallback(
+    const std::vector<rclcpp::Parameter> & parameters);
+  std::string GetPtreeValue(boost::property_tree::ptree * pt, const std::string & key);
+  std::string GetFixedPrecisionString(double val, int pre = 2);
 
   std::string info_model;
   std::string info_serial;
@@ -101,12 +98,11 @@ private:
   rclcpp::CallbackGroup::SharedPtr cbg_m_;
   rclcpp::CallbackGroup::SharedPtr cbg_m2_;
 
-  const char* not_supported_message;
-  const char* error_message;
-  std::string  message_sep;
+  const char * not_supported_message;
+  const char * error_message;
+  std::string message_sep;
 
   std::vector<std::string> temperature_names;
-
 };
 
 }  // namespace ros

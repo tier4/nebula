@@ -3,7 +3,6 @@
 #include <cmath>
 #include <utility>
 
-
 namespace nebula
 {
 namespace drivers
@@ -27,19 +26,18 @@ Vlp16Decoder::Vlp16Decoder(
     sin_rot_table_[rot_index] = sinf(rotation);
   }
 
-  phase_ = (uint16_t)round(sensor_configuration_->scan_phase*100);
+  phase_ = (uint16_t)round(sensor_configuration_->scan_phase * 100);
 }
 
 bool Vlp16Decoder::hasScanned() { return has_scanned_; }
 
-drivers::PointCloudXYZIRADTPtr Vlp16Decoder::get_pointcloud() {
-  int phase = (uint16_t)round(sensor_configuration_->scan_phase*100);
-  if (!scan_pc_->points.empty())
-  {
+drivers::PointCloudXYZIRADTPtr Vlp16Decoder::get_pointcloud()
+{
+  int phase = (uint16_t)round(sensor_configuration_->scan_phase * 100);
+  if (!scan_pc_->points.empty()) {
     uint16_t current_azimuth = (int)scan_pc_->points.back().azimuth * 100;
     uint16_t phase_diff = (36000 + current_azimuth - phase) % 36000;
-    while (phase_diff < 18000 && scan_pc_->points.size() > 0)
-    {
+    while (phase_diff < 18000 && scan_pc_->points.size() > 0) {
       overflow_pc_->points.push_back(scan_pc_->points.back());
       scan_pc_->points.pop_back();
       current_azimuth = (int)scan_pc_->points.back().azimuth * 100;
@@ -50,15 +48,17 @@ drivers::PointCloudXYZIRADTPtr Vlp16Decoder::get_pointcloud() {
   return scan_pc_;
 }
 
-int Vlp16Decoder::pointsPerPacket() {return BLOCKS_PER_PACKET * VLP16_FIRINGS_PER_BLOCK * VLP16_SCANS_PER_FIRING;}
-
+int Vlp16Decoder::pointsPerPacket()
+{
+  return BLOCKS_PER_PACKET * VLP16_FIRINGS_PER_BLOCK * VLP16_SCANS_PER_FIRING;
+}
 
 void Vlp16Decoder::reset_pointcloud(size_t n_pts)
 {
   scan_pc_->points.clear();
-  max_pts_ = n_pts*pointsPerPacket();
+  max_pts_ = n_pts * pointsPerPacket();
   scan_pc_->points.reserve(max_pts_);
-  reset_overflow();       // transfer existing overflow points to the cleared pointcloud
+  reset_overflow();  // transfer existing overflow points to the cleared pointcloud
 }
 
 void Vlp16Decoder::reset_overflow()
@@ -73,7 +73,7 @@ void Vlp16Decoder::reset_overflow()
 
 void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
 {
-  const raw_packet_t * raw = (const raw_packet_t *) &velodyne_packet.data[0];
+  const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
   float last_azimuth_diff = 0;
   uint16_t azimuth_next;
   const uint8_t return_mode = velodyne_packet.data[1204];
@@ -85,7 +85,7 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
     if (UPPER_BANK != raw->blocks[block].header) {
       // Do not flood the log with messages, only issue at most one
       // of these warnings per minute.
-      return; // bad packet: skip the rest
+      return;  // bad packet: skip the rest
     }
 
     float azimuth_diff;
@@ -97,12 +97,12 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
     } else {
       azimuth = azimuth_next;
     }
-    if (block < static_cast < uint > (BLOCKS_PER_PACKET - (1 + dual_return))) {
+    if (block < static_cast<uint>(BLOCKS_PER_PACKET - (1 + dual_return))) {
       // Get the next block rotation to calculate how far we rotate between blocks.
       azimuth_next = raw->blocks[block + (1 + dual_return)].rotation;
 
       // Finds the difference between two sucessive blocks.
-      azimuth_diff = static_cast < float > ((36000 + azimuth_next - azimuth) % 36000);
+      azimuth_diff = static_cast<float>((36000 + azimuth_next - azimuth) % 36000);
 
       // This is used when the last block is next to predict rotation amount
       last_azimuth_diff = azimuth_diff;
@@ -110,19 +110,19 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
       // This makes the assumption the difference between the last block and the next packet is the
       // same as the last to the second to last.
       // Assumes RPM doesn't change much between blocks.
-      azimuth_diff = (block == static_cast < uint > (
-                                 BLOCKS_PER_PACKET - dual_return - 1) ? 0 : last_azimuth_diff);
+      azimuth_diff =
+        (block == static_cast<uint>(BLOCKS_PER_PACKET - dual_return - 1) ? 0 : last_azimuth_diff);
     }
 
     // Condition added to avoid calculating points which are not in the interesting defined area
     // (min_angle < area < max_angle).
-    if ((sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle &&
-//         azimuth >= sensor_configuration_->cloud_min_angle &&
-         azimuth >= sensor_configuration_->cloud_min_angle * 100 &&
-         azimuth <= sensor_configuration_->cloud_max_angle * 100) ||
-//         azimuth <= sensor_configuration_->cloud_max_angle) ||
-        (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle))
-    {
+    if (
+      (sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle &&
+       //         azimuth >= sensor_configuration_->cloud_min_angle &&
+       azimuth >= sensor_configuration_->cloud_min_angle * 100 &&
+       azimuth <= sensor_configuration_->cloud_max_angle * 100) ||
+      //         azimuth <= sensor_configuration_->cloud_max_angle) ||
+      (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle)) {
       for (int firing = 0, k = 0; firing < VLP16_FIRINGS_PER_BLOCK; ++firing) {
         for (int dsr = 0; dsr < VLP16_SCANS_PER_FIRING; dsr++, k += RAW_SCAN_SIZE) {
           union two_bytes current_return;
@@ -166,16 +166,16 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
 
               // Condition added to avoid calculating points which are not in the interesting defined area (min_angle < area < max_angle).
               if (
-//                (azimuth_corrected >= sensor_configuration_->cloud_min_angle &&
-//                 azimuth_corrected <= sensor_configuration_->cloud_max_angle &&
+                //                (azimuth_corrected >= sensor_configuration_->cloud_min_angle &&
+                //                 azimuth_corrected <= sensor_configuration_->cloud_max_angle &&
                 (azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100 &&
                  azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 &&
                  sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle) ||
                 (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
                  (azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 ||
                   azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) {
-//                 (azimuth_corrected <= sensor_configuration_->cloud_max_angle ||
-//                  azimuth_corrected >= sensor_configuration_->cloud_min_angle))) {
+                //                 (azimuth_corrected <= sensor_configuration_->cloud_max_angle ||
+                //                  azimuth_corrected >= sensor_configuration_->cloud_min_angle))) {
                 // Convert polar coordinates to Euclidean XYZ.
                 const float cos_vert_angle = corrections.cos_vert_correction;
                 const float sin_vert_angle = corrections.sin_vert_correction;
@@ -261,7 +261,7 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
 
 bool Vlp16Decoder::parsePacket(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
 {
- return 0;
+  return 0;
 }
 
 }  // namespace vlp16

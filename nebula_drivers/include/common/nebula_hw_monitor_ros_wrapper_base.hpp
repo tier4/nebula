@@ -1,12 +1,12 @@
 #ifndef NEBULA_HW_MONITOR_WRAPPER_BASE_H
 #define NEBULA_HW_MONITOR_WRAPPER_BASE_H
 
-#include "common/nebula_common.hpp"
-#include "common/nebula_status.hpp"
-
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "common/nebula_common.hpp"
+#include "common/nebula_status.hpp"
 
 namespace nebula
 {

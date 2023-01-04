@@ -32,9 +32,9 @@
 
     <depend>rosbag2_cpp</depend>
 
-    <test_depend>ament_cmake_gtest</test_depend>
     <test_depend>ament_lint_auto</test_depend>
-    <test_depend>ament_lint_common</test_depend>
+    <test_depend>ament_cmake_gtest</test_depend>
+    <test_depend>ament_cmake_clang_format</test_depend>
     <!--<test_depend>pandar_msgs</test_depend>-->
     <!--<test_depend>rosbag2_cpp</test_depend>-->
     <!--<test_depend>nebula_lidar_driver</test_depend>-->

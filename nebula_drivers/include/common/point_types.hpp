@@ -41,10 +41,9 @@ class DataContainerBase
 {
 public:
   virtual void addPoint(
-    const float & x, const float & y, const float & z,
-    const uint8_t & return_type, const uint16_t & ring,
-    const uint16_t & azimuth, const float & distance, const float & intensity,
-    const double & time_stamp) = 0;
+    const float & x, const float & y, const float & z, const uint8_t & return_type,
+    const uint16_t & ring, const uint16_t & azimuth, const float & distance,
+    const float & intensity, const double & time_stamp) = 0;
 };
 
 }  // namespace drivers
@@ -56,5 +55,6 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(
   nebula::drivers::PointXYZIRADT,
-  (float, x,
-   x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring)(float, azimuth, azimuth)(float, distance, distance)(std::uint8_t, return_type, return_type)(double, time_stamp, time_stamp))
+  (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring)(
+    float, azimuth, azimuth)(float, distance, distance)(std::uint8_t, return_type, return_type)(
+    double, time_stamp, time_stamp))

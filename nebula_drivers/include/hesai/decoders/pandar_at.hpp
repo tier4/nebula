@@ -2,8 +2,8 @@
 /**
  * Pandar XT-AT128
  */
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <ctime>
 
 namespace nebula
@@ -24,7 +24,8 @@ constexpr size_t BLOCK_HEADER_AZIMUTH = 3;
 constexpr size_t LASER_COUNT = 128;
 constexpr size_t UNIT_SIZE = 4;
 constexpr size_t CRC_SIZE = 4;
-constexpr size_t BLOCK_SIZE = UNIT_SIZE * LASER_COUNT + BLOCK_HEADER_AZIMUTH;// + BLOCK_HEADER_FINE_AZIMUTH;
+constexpr size_t BLOCK_SIZE =
+  UNIT_SIZE * LASER_COUNT + BLOCK_HEADER_AZIMUTH;  // + BLOCK_HEADER_FINE_AZIMUTH;
 constexpr size_t BODY_SIZE = BLOCK_SIZE * BLOCKS_PER_PACKET + CRC_SIZE;
 // Tail
 constexpr size_t RESERVED1_SIZE = 6;
@@ -58,7 +59,7 @@ struct Header
   uint16_t sob;            // 0xFFEE 2bytes
   int8_t chProtocolMajor;  // Protocol Version Major 1byte
   int8_t chProtocolMinor;  // Protocol Version Minor 1byte
-  int chLaserNumber;    // laser number 1byte (=128, so int8_t leads error)
+  int chLaserNumber;       // laser number 1byte (=128, so int8_t leads error)
   int8_t chBlockNumber;    // block number 1byte
   int8_t chReturnType;     // return mode 1 byte  when dual return 0-Single Return
                            // 1-The first block is the 1 st return.
@@ -75,7 +76,7 @@ struct Unit
 
 struct Block
 {
-  uint16_t azimuth;  // packet angle,Azimuth = RealAzimuth * 100
+  uint16_t azimuth;       // packet angle,Azimuth = RealAzimuth * 100
   uint16_t fine_azimuth;  // packet angle,Fine Azimuth = RealAzimuth * 100 / 256
   Unit units[LASER_COUNT];
 };
@@ -92,5 +93,5 @@ struct Packet
   double unix_second;
 };
 }  // namespace pandar_at
-}
-}
+}  // namespace drivers
+}  // namespace nebula

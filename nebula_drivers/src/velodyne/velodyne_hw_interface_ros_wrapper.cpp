@@ -1,28 +1,28 @@
 #include "velodyne/velodyne_hw_interface_ros_wrapper.hpp"
 
-#include <future>
 #include <curl/curl.h>
+
+#include <future>
 
 namespace nebula
 {
 namespace ros
 {
-
 VelodyneHwInterfaceRosWrapper::VelodyneHwInterfaceRosWrapper(const rclcpp::NodeOptions & options)
-: rclcpp::Node("velodyne_hw_interface_ros_wrapper", options), hw_interface_()//, diagnostics_updater_(this)
+: rclcpp::Node("velodyne_hw_interface_ros_wrapper", options),
+  hw_interface_()  //, diagnostics_updater_(this)
 {
   not_supported_message = "Not supported";
 
-  if(mtx_config_.try_lock()){
+  if (mtx_config_.try_lock()) {
     interface_status_ = GetParameters(sensor_configuration_);
     mtx_config_.unlock();
   }
-  if (Status::OK != interface_status_)
-  {
+  if (Status::OK != interface_status_) {
     RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
     return;
   }
-  
+
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
   // Initialize sensor_configuration
   RCLCPP_INFO_STREAM(this->get_logger(), "Initialize sensor_configuration");
@@ -34,19 +34,19 @@ VelodyneHwInterfaceRosWrapper::VelodyneHwInterfaceRosWrapper(const rclcpp::NodeO
   updateParameters();
 
   // register scan callback and publisher
-  hw_interface_.RegisterScanCallback(
-    std::bind(&VelodyneHwInterfaceRosWrapper::ReceiveScanDataCallback, this, std::placeholders::_1));
-  velodyne_scan_pub_ =
-    this->create_publisher<velodyne_msgs::msg::VelodyneScan>("velodyne_packets", rclcpp::SensorDataQoS(rclcpp::KeepLast(10)).best_effort().durability_volatile());
+  hw_interface_.RegisterScanCallback(std::bind(
+    &VelodyneHwInterfaceRosWrapper::ReceiveScanDataCallback, this, std::placeholders::_1));
+  velodyne_scan_pub_ = this->create_publisher<velodyne_msgs::msg::VelodyneScan>(
+    "velodyne_packets",
+    rclcpp::SensorDataQoS(rclcpp::KeepLast(10)).best_effort().durability_volatile());
 
   set_param_res_ = this->add_on_set_parameters_callback(
     std::bind(&VelodyneHwInterfaceRosWrapper::paramCallback, this, std::placeholders::_1));
-
 }
 
 Status VelodyneHwInterfaceRosWrapper::StreamStart()
 {
-  if(Status::OK == interface_status_ ){
+  if (Status::OK == interface_status_) {
     interface_status_ = hw_interface_.CloudInterfaceStart();
   }
   return interface_status_;
@@ -74,7 +74,8 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("sensor_model", "");
-    sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
+    sensor_configuration.sensor_model =
+      nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -139,7 +140,7 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
     rcl_interfaces::msg::FloatingPointRange range;
     range.set__from_value(0).set__to_value(360).set__step(0.01);
-    descriptor.floating_point_range= {range};
+    descriptor.floating_point_range = {range};
     this->declare_parameter<double>("scan_phase", 0., descriptor);
     sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
   }
@@ -161,7 +162,7 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.additional_constraints = "range from 300 to 1200, in increments of 60";
     rcl_interfaces::msg::IntegerRange range;
     range.set__from_value(300).set__to_value(1200).set__step(1);
-    descriptor.integer_range= {range};
+    descriptor.integer_range = {range};
     this->declare_parameter<uint16_t>("rotation_speed", 600, descriptor);
     sensor_configuration.rotation_speed = this->get_parameter("rotation_speed").as_int();
   }
@@ -173,7 +174,7 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.additional_constraints = "";
     rcl_interfaces::msg::IntegerRange range;
     range.set__from_value(0).set__to_value(359).set__step(1);
-    descriptor.integer_range= {range};
+    descriptor.integer_range = {range};
     this->declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
     sensor_configuration.cloud_min_angle = this->get_parameter("cloud_min_angle").as_int();
   }
@@ -185,7 +186,7 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.additional_constraints = "";
     rcl_interfaces::msg::IntegerRange range;
     range.set__from_value(0).set__to_value(359).set__step(1);
-    descriptor.integer_range= {range};
+    descriptor.integer_range = {range};
     this->declare_parameter<uint16_t>("cloud_max_angle", 359, descriptor);
     sensor_configuration.cloud_max_angle = this->get_parameter("cloud_max_angle").as_int();
   }
@@ -196,8 +197,7 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
   if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
     return Status::INVALID_ECHO_MODE;
   }
-  if (
-    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {// ||
+  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {  // ||
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -214,13 +214,13 @@ void VelodyneHwInterfaceRosWrapper::ReceiveScanDataCallback(
   velodyne_scan_pub_->publish(*scan_buffer);
 }
 
-
-std::string VelodyneHwInterfaceRosWrapper::GetPtreeValue(std::shared_ptr<boost::property_tree::ptree> pt, const std::string& key){
+std::string VelodyneHwInterfaceRosWrapper::GetPtreeValue(
+  std::shared_ptr<boost::property_tree::ptree> pt, const std::string & key)
+{
   boost::optional<std::string> value = pt->get_optional<std::string>(key);
-  if(value)
-  {
+  if (value) {
     return value.get();
-  }else{
+  } else {
     return not_supported_message;
   }
 }
@@ -239,8 +239,7 @@ rcl_interfaces::msg::SetParametersResult VelodyneHwInterfaceRosWrapper::paramCal
   std::string return_mode_str;
   if (
     get_param(p, "sensor_model", sensor_model_str) ||
-    get_param(p, "return_mode", return_mode_str) ||
-    get_param(p, "host_ip", new_param.host_ip) ||
+    get_param(p, "return_mode", return_mode_str) || get_param(p, "host_ip", new_param.host_ip) ||
     get_param(p, "sensor_ip", new_param.sensor_ip) ||
     get_param(p, "frame_id", new_param.frame_id) ||
     get_param(p, "data_port", new_param.data_port) ||
@@ -249,14 +248,12 @@ rcl_interfaces::msg::SetParametersResult VelodyneHwInterfaceRosWrapper::paramCal
     get_param(p, "packet_mtu_size", new_param.packet_mtu_size) ||
     get_param(p, "rotation_speed", new_param.rotation_speed) ||
     get_param(p, "cloud_min_angle", new_param.cloud_min_angle) ||
-    get_param(p, "cloud_max_angle", new_param.cloud_max_angle)) {// ||
+    get_param(p, "cloud_max_angle", new_param.cloud_max_angle)) {  // ||
 
-    if(0 < sensor_model_str.length())
-      new_param.sensor_model =
-        nebula::drivers::SensorModelFromString(sensor_model_str);
-    if(0 < return_mode_str.length())
-      new_param.return_mode =
-        nebula::drivers::ReturnModeFromString(return_mode_str);
+    if (0 < sensor_model_str.length())
+      new_param.sensor_model = nebula::drivers::SensorModelFromString(sensor_model_str);
+    if (0 < return_mode_str.length())
+      new_param.return_mode = nebula::drivers::ReturnModeFromString(return_mode_str);
 
     sensor_configuration_ = new_param;
     // Update sensor_configuration
@@ -277,7 +274,9 @@ rcl_interfaces::msg::SetParametersResult VelodyneHwInterfaceRosWrapper::paramCal
   return *result;
 }
 
-std::vector<rcl_interfaces::msg::SetParametersResult> VelodyneHwInterfaceRosWrapper::updateParameters(){
+std::vector<rcl_interfaces::msg::SetParametersResult>
+VelodyneHwInterfaceRosWrapper::updateParameters()
+{
   std::scoped_lock lock(mtx_config_);
   std::cout << "!!!!!!!!!!!updateParameters!!!!!!!!!!!!" << std::endl;
   std::ostringstream os_sensor_model;
@@ -297,7 +296,7 @@ std::vector<rcl_interfaces::msg::SetParametersResult> VelodyneHwInterfaceRosWrap
     rclcpp::Parameter("packet_mtu_size", sensor_configuration_.packet_mtu_size),
     rclcpp::Parameter("rotation_speed", sensor_configuration_.rotation_speed),
     rclcpp::Parameter("cloud_min_angle", sensor_configuration_.cloud_min_angle),
-    rclcpp::Parameter("cloud_max_angle", sensor_configuration_.cloud_max_angle)//,
+    rclcpp::Parameter("cloud_max_angle", sensor_configuration_.cloud_max_angle)  //,
   });
   std::cout << "set_parameters fin" << std::endl;
   return results;

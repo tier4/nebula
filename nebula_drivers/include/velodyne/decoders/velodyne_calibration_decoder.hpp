@@ -12,20 +12,20 @@
 #ifndef NEBULA_VELODYNE_CALIBRATION_DECODER_H
 #define NEBULA_VELODYNE_CALIBRATION_DECODER_H
 
-#include <map>
-#include <string>
-#include <vector>
 #include <yaml-cpp/yaml.h>
+
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <map>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
 namespace drivers
 {
-
 struct VelodyneLaserCorrection
 {
   float rot_correction;
@@ -79,4 +79,4 @@ public:
 }  // namespace drivers
 }  // namespace nebula
 
-#endif // NEBULA_VELODYNE_CALIBRATION_DECODER_H
+#endif  // NEBULA_VELODYNE_CALIBRATION_DECODER_H

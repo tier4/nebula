@@ -2,8 +2,8 @@
 /**
  * Pandar XT-32M
  */
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <ctime>
 
 namespace nebula
@@ -83,5 +83,5 @@ struct Packet
   tm t;
 };
 }  // namespace pandar_xtm
-}
-}
+}  // namespace drivers
+}  // namespace nebula

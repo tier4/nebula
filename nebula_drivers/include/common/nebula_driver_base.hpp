@@ -1,13 +1,12 @@
 #ifndef NEBULA_DRIVER_BASE_H
 #define NEBULA_DRIVER_BASE_H
 
-#include "common/nebula_common.hpp"
-#include "common/nebula_status.hpp"
-
 #include <sensor_msgs/msg/point_cloud2.hpp>
-
 #include <string>
 #include <vector>
+
+#include "common/nebula_common.hpp"
+#include "common/nebula_status.hpp"
 
 namespace nebula
 {

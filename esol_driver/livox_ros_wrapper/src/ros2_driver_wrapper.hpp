@@ -13,10 +13,10 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 //#include <pcl_conversions/pcl_conversions.h>
+#include <diagnostic_updater/diagnostic_updater.hpp>
 #include <livox_msgs/msg/lidar_scan.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
-#include <diagnostic_updater/diagnostic_updater.hpp>
 
 #include "LidarDriver/lidar_driver.hpp"
 #include "LidarDriver/livox_common.hpp"
@@ -79,7 +79,7 @@ private:                                                                  // pub
 
   void InitPointcloud2MsgHeader(sensor_msgs::msg::PointCloud2 & cloud);
 
-private://ROS Diagnostics
+private:  //ROS Diagnostics
   rclcpp::TimerBase::SharedPtr diagnostics_timer_;
   diagnostic_updater::Updater diagnostics_updater_;
   livox_driver::diagnostics::LivoxDiagnosticsSensorStatus current_diagnostics_status_{};

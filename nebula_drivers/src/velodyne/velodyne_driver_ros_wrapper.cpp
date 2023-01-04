@@ -4,15 +4,13 @@ namespace nebula
 {
 namespace ros
 {
-VelodyneDriverRosWrapper::VelodyneDriverRosWrapper(
-  const rclcpp::NodeOptions & options)
+VelodyneDriverRosWrapper::VelodyneDriverRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("velodyne_driver_ros_wrapper", options)
 {
   drivers::VelodyneCalibrationConfiguration calibration_configuration;
   drivers::VelodyneSensorConfiguration sensor_configuration;
 
-  wrapper_status_ =
-    GetParameters(sensor_configuration, calibration_configuration);
+  wrapper_status_ = GetParameters(sensor_configuration, calibration_configuration);
   if (Status::OK != wrapper_status_) {
     RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << wrapper_status_);
     return;
@@ -34,8 +32,8 @@ VelodyneDriverRosWrapper::VelodyneDriverRosWrapper(
   velodyne_scan_sub_ = create_subscription<velodyne_msgs::msg::VelodyneScan>(
     "velodyne_packets", rclcpp::SensorDataQoS(),
     std::bind(&VelodyneDriverRosWrapper::ReceiveScanMsgCallback, this, std::placeholders::_1));
-  velodyne_points_pub_ =
-    this->create_publisher<sensor_msgs::msg::PointCloud2>("velodyne_points", rclcpp::SensorDataQoS());
+  velodyne_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+    "velodyne_points", rclcpp::SensorDataQoS());
 }
 
 void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
@@ -82,7 +80,8 @@ Status VelodyneDriverRosWrapper::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("sensor_model", "");
-    sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
+    sensor_configuration.sensor_model =
+      nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -111,7 +110,7 @@ Status VelodyneDriverRosWrapper::GetParameters(
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
     rcl_interfaces::msg::FloatingPointRange range;
     range.set__from_value(0).set__to_value(360).set__step(0.01);
-    descriptor.floating_point_range= {range};
+    descriptor.floating_point_range = {range};
     this->declare_parameter<double>("scan_phase", 0., descriptor);
     sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
   }
@@ -123,7 +122,8 @@ Status VelodyneDriverRosWrapper::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("calibration_file", "", descriptor);
-    calibration_configuration.calibration_file = this->get_parameter("calibration_file").as_string();
+    calibration_configuration.calibration_file =
+      this->get_parameter("calibration_file").as_string();
   }
 
   {
@@ -156,8 +156,7 @@ Status VelodyneDriverRosWrapper::GetParameters(
     view_width = this->get_parameter("view_width").as_double() * M_PI / 180;
   }
 
-  if(sensor_configuration.sensor_model != nebula::drivers::SensorModel::VELODYNE_HDL64)
-  {
+  if (sensor_configuration.sensor_model != nebula::drivers::SensorModel::VELODYNE_HDL64) {
     {
       rcl_interfaces::msg::ParameterDescriptor descriptor;
       descriptor.type = 2;
@@ -166,7 +165,7 @@ Status VelodyneDriverRosWrapper::GetParameters(
       descriptor.additional_constraints = "";
       rcl_interfaces::msg::IntegerRange range;
       range.set__from_value(0).set__to_value(359).set__step(1);
-      descriptor.integer_range= {range};
+      descriptor.integer_range = {range};
       this->declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
       sensor_configuration.cloud_min_angle = this->get_parameter("cloud_min_angle").as_int();
     }
@@ -178,11 +177,11 @@ Status VelodyneDriverRosWrapper::GetParameters(
       descriptor.additional_constraints = "";
       rcl_interfaces::msg::IntegerRange range;
       range.set__from_value(0).set__to_value(359).set__step(1);
-      descriptor.integer_range= {range};
+      descriptor.integer_range = {range};
       this->declare_parameter<uint16_t>("cloud_max_angle", 359, descriptor);
       sensor_configuration.cloud_max_angle = this->get_parameter("cloud_max_angle").as_int();
     }
-  }else{
+  } else {
     double min_angle = fmod(fmod(view_direction + view_width / 2, 2 * M_PI) + 2 * M_PI, 2 * M_PI);
     double max_angle = fmod(fmod(view_direction - view_width / 2, 2 * M_PI) + 2 * M_PI, 2 * M_PI);
     sensor_configuration.cloud_min_angle = 100 * (2 * M_PI - min_angle) * 180 / M_PI + 0.5;
@@ -200,8 +199,7 @@ Status VelodyneDriverRosWrapper::GetParameters(
   if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
     return Status::INVALID_ECHO_MODE;
   }
-  if (
-    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
+  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -218,12 +216,13 @@ Status VelodyneDriverRosWrapper::GetParameters(
     }
   }
 
-  RCLCPP_INFO_STREAM(this->get_logger(), "Sensor model: " << sensor_configuration.sensor_model <<
-                     ", Return mode: " << sensor_configuration.return_mode <<
-                     ", Scan Phase: " << sensor_configuration.scan_phase);
+  RCLCPP_INFO_STREAM(
+    this->get_logger(), "Sensor model: " << sensor_configuration.sensor_model
+                                         << ", Return mode: " << sensor_configuration.return_mode
+                                         << ", Scan Phase: " << sensor_configuration.scan_phase);
   return Status::OK;
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(VelodyneDriverRosWrapper)
-} // namespace ros
-} // namespace nebula
+}  // namespace ros
+}  // namespace nebula

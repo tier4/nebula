@@ -1,9 +1,9 @@
 #include "hesai/decoders/pandar_40_decoder.hpp"
 
-#include "hesai/decoders/pandar_40.hpp"
-
 #include <cmath>
 #include <utility>
+
+#include "hesai/decoders/pandar_40.hpp"
 
 namespace nebula
 {
@@ -165,7 +165,7 @@ drivers::PointCloudXYZIRADTPtr Pandar40Decoder::convert_dual(size_t block_id)
     bool even_usable = (even_unit.distance <= 0.1 || even_unit.distance > 200.0) ? 0 : 1;
     bool odd_usable = (odd_unit.distance <= 0.1 || odd_unit.distance > 200.0) ? 0 : 1;
 
-//    if (sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_STRONGEST) {
+    //    if (sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_STRONGEST) {
     if (sensor_configuration_->return_mode == drivers::ReturnMode::STRONGEST) {
       // Strongest return is in even block when both returns coincide
       if (even_unit.intensity >= odd_unit.intensity && even_usable) {
@@ -176,11 +176,11 @@ drivers::PointCloudXYZIRADTPtr Pandar40Decoder::convert_dual(size_t block_id)
           build_point(odd_block_id, unit_id, drivers::ReturnMode::SINGLE_STRONGEST));
       }
     } else if (
-//      sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_LAST && even_usable) {
+      //      sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_LAST && even_usable) {
       sensor_configuration_->return_mode == drivers::ReturnMode::LAST && even_usable) {
       // Last return is always in even block
       block_pc->push_back(build_point(even_block_id, unit_id, drivers::ReturnMode::SINGLE_LAST));
-//    } else if (sensor_configuration_->return_mode == drivers::ReturnMode::DUAL_ONLY) {
+      //    } else if (sensor_configuration_->return_mode == drivers::ReturnMode::DUAL_ONLY) {
     } else if (sensor_configuration_->return_mode == drivers::ReturnMode::DUAL) {
       // If the two returns are too close, only return the last one
       if (

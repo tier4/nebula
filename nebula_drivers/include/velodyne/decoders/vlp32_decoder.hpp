@@ -1,11 +1,10 @@
 #pragma once
 
+#include <array>
 #include <velodyne/decoders/velodyne_scan_decoder.hpp>
 
 #include "velodyne_msgs/msg/velodyne_packet.hpp"
 #include "velodyne_msgs/msg/velodyne_scan.hpp"
-
-#include <array>
 
 namespace nebula
 {
@@ -16,8 +15,9 @@ namespace vlp32
 class Vlp32Decoder : public VelodyneScanDecoder
 {
 public:
-  explicit Vlp32Decoder(const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
-                         const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration);
+  explicit Vlp32Decoder(
+    const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration);
   void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) override;
   bool hasScanned() override;
   int pointsPerPacket() override;
