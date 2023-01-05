@@ -44,10 +44,9 @@ VelodyneHwInterfaceRosWrapper::VelodyneHwInterfaceRosWrapper(const rclcpp::NodeO
     std::bind(&VelodyneHwInterfaceRosWrapper::paramCallback, this, std::placeholders::_1));
 
   auto status = StreamStart();
-  if ( status == nebula::Status::OK) {
+  if (status == nebula::Status::OK) {
     RCLCPP_INFO_STREAM(get_logger(), "UDP Driver Started");
-  }
-  else {
+  } else {
     RCLCPP_ERROR_STREAM(get_logger(), status);
   }
 }
