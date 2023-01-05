@@ -27,7 +27,7 @@
         <param name="calibration_file" value="$(var calibration_file)"/>
     </node>
     
-    <node pkg="nebula_lidar_driver" exec="hesai_hw_ros_wrapper_node"
+    <node pkg="nebula_lidar_driver" exec="hesai_hw_interface_ros_wrapper_node"
           name="hesai_hw_driver" output="screen">
         <param name="sensor_model" value="$(var sensor_model)"/>
         <param name="return_mode" value="$(var return_mode)"/>
