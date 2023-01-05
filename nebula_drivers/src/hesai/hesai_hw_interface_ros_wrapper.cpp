@@ -137,6 +137,8 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
     }
   }
 #endif
+
+  StreamStart();
 }
 
 Status HesaiHwInterfaceRosWrapper::StreamStart()

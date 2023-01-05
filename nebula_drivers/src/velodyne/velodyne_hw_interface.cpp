@@ -185,9 +185,11 @@ boost::property_tree::ptree VelodyneHwInterface::ParseJson(const std::string & s
 {
   boost::property_tree::ptree tree;
   try {
-    boost::property_tree::read_json(str, tree);
+    std::stringstream ss;
+    ss << str;
+    boost::property_tree::read_json(ss, tree);
   } catch (boost::property_tree::json_parser_error & e) {
-    std::cerr << e.what() << std::endl;
+    std::cerr << "Error on ParseJson:" << e.what() << std::endl;
   }
   return tree;
 }
@@ -526,6 +528,7 @@ VelodyneStatus VelodyneHwInterface::CheckAndSetConfigBySnapshotAsync()
 {
   return GetSnapshotAsync([this](const std::string & str) {
     auto tree = ParseJson(str);
+    std::cout << "ParseJson OK\n";
     CheckAndSetConfig(
       std::static_pointer_cast<VelodyneSensorConfiguration>(sensor_configuration_), tree);
   });
