@@ -3,30 +3,42 @@
 
 #include <ostream>
 #include <string>
+
 #include "common/nebula_status.hpp"
 
 namespace nebula
 {
 // from https://marycore.jp/prog/cpp/extends-enum/
-struct HesaiStatus:Status
+struct HesaiStatus : Status
 {
   using Status::Status;
-  private:
+
+private:
   int _type_num;
-  public:
+
+public:
   enum HesaiType {
     INVALID_RPM_ERROR = Type_end_of_Status + 1,
     INVALID_FOV_ERROR,
     INVALID_RETURN_MODE_ERROR,
     Type_end_of_Status = INVALID_RPM_ERROR
   } _hesai_type;
-  HesaiStatus() : _type_num(static_cast<int>(Status::OK)) {_type = static_cast<Type>(type());}
-  HesaiStatus(Type v) : _type_num(static_cast<int>(v)) {_type = v;}
-  HesaiStatus(HesaiType v) : _type_num(static_cast<int>(v)), _hesai_type(v) {_type = Type::Type_end_of_Status;}
+  HesaiStatus() : _type_num(static_cast<int>(Status::OK)) { _type = static_cast<Type>(type()); }
+  HesaiStatus(Type v) : _type_num(static_cast<int>(v)) { _type = v; }
+  HesaiStatus(HesaiType v) : _type_num(static_cast<int>(v)), _hesai_type(v)
+  {
+    _type = Type::Type_end_of_Status;
+  }
   HesaiStatus(int type) : _type_num(type) {}
   int type() const { return _type_num; }
-  friend bool operator==(const HesaiStatus & L, const HesaiStatus & R) { return L.type() == R.type(); }
-  friend bool operator!=(const HesaiStatus & L, const HesaiStatus & R) { return L.type() != R.type(); }
+  friend bool operator==(const HesaiStatus & L, const HesaiStatus & R)
+  {
+    return L.type() == R.type();
+  }
+  friend bool operator!=(const HesaiStatus & L, const HesaiStatus & R)
+  {
+    return L.type() != R.type();
+  }
 
   friend std::ostream & operator<<(std::ostream & os, nebula::HesaiStatus const & arg)
   {

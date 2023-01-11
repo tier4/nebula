@@ -1,26 +1,25 @@
 #ifndef NEBULA_VelodyneHwInterfaceRosWrapper_H
 #define NEBULA_VelodyneHwInterfaceRosWrapper_H
 
+#include <ament_index_cpp/get_package_prefix.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
+
 #include "common/nebula_common.hpp"
 #include "common/nebula_hw_interface_ros_wrapper_base.hpp"
 #include "velodyne/velodyne_common.hpp"
 #include "velodyne/velodyne_hw_interface.hpp"
-
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-#include <ament_index_cpp/get_package_prefix.hpp>
 //#include <diagnostic_updater/diagnostic_updater.hpp>
+
+#include <mutex>
 
 #include "velodyne_msgs/msg/velodyne_packet.hpp"
 #include "velodyne_msgs/msg/velodyne_scan.hpp"
-
-#include <mutex>
 
 namespace nebula
 {
 namespace ros
 {
-
 template <typename T>
 bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & name, T & value)
 {
@@ -55,17 +54,18 @@ public:
   Status Shutdown() override;
   Status GetParameters(drivers::VelodyneSensorConfiguration & sensor_configuration);
 
-private://ROS Diagnostics
-/*
+private:  //ROS Diagnostics
+          /*
   diagnostic_updater::Updater diagnostics_updater_;
   void InitializeVelodyneDiagnostics();
 */
-  std::string GetPtreeValue(std::shared_ptr<boost::property_tree::ptree> pt, const std::string& key);
-/*
+  std::string GetPtreeValue(
+    std::shared_ptr<boost::property_tree::ptree> pt, const std::string & key);
+  /*
   rclcpp::TimerBase::SharedPtr diagnostics_diag_timer_;
 */
   std::shared_ptr<boost::property_tree::ptree> current_diag_tree;
-/*
+  /*
   void OnVelodyneDiagnosticsTimer();
   void VelodyneCheckTopHv(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   void VelodyneCheckTopAdTemp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
@@ -91,7 +91,7 @@ private://ROS Diagnostics
   rclcpp::TimerBase::SharedPtr diagnostics_status_timer_;
 */
   std::shared_ptr<boost::property_tree::ptree> current_status_tree;
-/*
+  /*
   void OnVelodyneStatusTimer();
   void VelodyneCheckGpsPpsState(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   void VelodyneCheckGpsPosition(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
@@ -110,8 +110,8 @@ private://ROS Diagnostics
   std::shared_ptr<std::string> current_snapshot;
   std::shared_ptr<boost::property_tree::ptree> current_snapshot_tree;
   std::shared_ptr<rclcpp::Time> current_snapshot_time;
-//  rclcpp::Time current_snapshot_time;
-//  std::shared_ptr<uint8_t> current_diag_status;
+  //  rclcpp::Time current_snapshot_time;
+  //  std::shared_ptr<uint8_t> current_diag_status;
   uint8_t current_diag_status;
 
   uint16_t diag_span_;
@@ -120,7 +120,7 @@ private://ROS Diagnostics
   std::mutex mtx_config_;
 
   void curl_callback(std::string err, std::string body);
-/*
+  /*
   const char* key_volt_temp_top_hv;
   const char* key_volt_temp_top_ad_temp;
   const char* key_volt_temp_top_lm20_temp;
@@ -150,17 +150,16 @@ private://ROS Diagnostics
   const char* key_status_motor_phase;
   const char* key_status_laser_state;
 */
-  const char* not_supported_message;
+  const char * not_supported_message;
 
   OnSetParametersCallbackHandle::SharedPtr set_param_res_;
-  rcl_interfaces::msg::SetParametersResult paramCallback(const std::vector<rclcpp::Parameter> & parameters);
+  rcl_interfaces::msg::SetParametersResult paramCallback(
+    const std::vector<rclcpp::Parameter> & parameters);
   std::vector<rcl_interfaces::msg::SetParametersResult> updateParameters();
 
-//  rclcpp::callback_group::CallbackGroup::SharedPtr cbg_;
+  //  rclcpp::callback_group::CallbackGroup::SharedPtr cbg_;
   rclcpp::CallbackGroup::SharedPtr cbg_r_;
   rclcpp::CallbackGroup::SharedPtr cbg_m_;
-
-
 };
 
 }  // namespace ros

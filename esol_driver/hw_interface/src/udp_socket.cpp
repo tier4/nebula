@@ -156,7 +156,7 @@ int UdpSocket::Recv(std::vector<uint8_t> & buff, int wait_msec)
   fds[0].events = POLLIN;
 
   do {
-	// wait for some event on a file descriptor
+    // wait for some event on a file descriptor
     int retval = poll(fds, sizeof(fds) / sizeof(fds[0]), poll_timeout);
     if (retval < 0) {
       if (errno != EINTR) {

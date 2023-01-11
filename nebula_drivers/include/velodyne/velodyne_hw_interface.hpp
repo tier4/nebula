@@ -1,18 +1,16 @@
 #ifndef NEBULA_VELODYNE_HW_INTERFACE_H
 #define NEBULA_VELODYNE_HW_INTERFACE_H
 
+#include <boost/property_tree/ptree.hpp>
+#include <rclcpp/rclcpp.hpp>
+
 #include "common/nebula_hw_interface_base.hpp"
+#include "tcp_driver/http_client_driver.hpp"
+#include "udp_driver/udp_driver.hpp"
 #include "velodyne/velodyne_common.hpp"
 #include "velodyne/velodyne_status.hpp"
-#include "udp_driver/udp_driver.hpp"
-#include "tcp_driver/http_client_driver.hpp"
-
 #include "velodyne_msgs/msg/velodyne_packet.hpp"
 #include "velodyne_msgs/msg/velodyne_scan.hpp"
-
-#include <boost/property_tree/ptree.hpp>
-
-#include <rclcpp/rclcpp.hpp>
 
 namespace nebula
 {
@@ -53,23 +51,28 @@ private:
   inline static constexpr std::string TARGET_SAVE { "cgi/save" };
   inline static constexpr std::string TARGET_RESET { "cgi/reset" };
   */
-  std::string TARGET_STATUS { "/cgi/status.json" };
-  std::string TARGET_DIAG { "/cgi/diag.json" };
-  std::string TARGET_SNAPSHOT { "/cgi/snapshot.hdl" };
-  std::string TARGET_SETTING { "/cgi/setting" };
-  std::string TARGET_FOV { "/cgi/setting/fov" };
-  std::string TARGET_HOST { "/cgi/setting/host" };
-  std::string TARGET_NET { "/cgi/setting/net" };
-  std::string TARGET_SAVE { "/cgi/save" };
-  std::string TARGET_RESET { "/cgi/reset" };
-  void str_cb(const std::string &str);
-//  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> GetHttpClientDriverOnce(std::shared_ptr<boost::asio::io_context> ctx);
-//  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> GetHttpClientDriverOnce();
+  std::string TARGET_STATUS{"/cgi/status.json"};
+  std::string TARGET_DIAG{"/cgi/diag.json"};
+  std::string TARGET_SNAPSHOT{"/cgi/snapshot.hdl"};
+  std::string TARGET_SETTING{"/cgi/setting"};
+  std::string TARGET_FOV{"/cgi/setting/fov"};
+  std::string TARGET_HOST{"/cgi/setting/host"};
+  std::string TARGET_NET{"/cgi/setting/net"};
+  std::string TARGET_SAVE{"/cgi/save"};
+  std::string TARGET_RESET{"/cgi/reset"};
+  void str_cb(const std::string & str);
+  //  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> GetHttpClientDriverOnce(std::shared_ptr<boost::asio::io_context> ctx);
+  //  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> GetHttpClientDriverOnce();
 
-  VelodyneStatus GetHttpClientDriverOnce(std::shared_ptr<boost::asio::io_context> ctx, std::unique_ptr<::drivers::tcp_driver::HttpClientDriver>& hcd);
-  VelodyneStatus GetHttpClientDriverOnce(std::unique_ptr<::drivers::tcp_driver::HttpClientDriver>& hcd);
+  VelodyneStatus GetHttpClientDriverOnce(
+    std::shared_ptr<boost::asio::io_context> ctx,
+    std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd);
+  VelodyneStatus GetHttpClientDriverOnce(
+    std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd);
 
-  VelodyneStatus CheckAndSetConfig(std::shared_ptr<VelodyneSensorConfiguration> sensor_configuration, boost::property_tree::ptree tree);
+  VelodyneStatus CheckAndSetConfig(
+    std::shared_ptr<VelodyneSensorConfiguration> sensor_configuration,
+    boost::property_tree::ptree tree);
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger;
   void PrintInfo(std::string info);
@@ -92,7 +95,7 @@ public:
   Status RegisterScanCallback(
     std::function<void(std::unique_ptr<velodyne_msgs::msg::VelodyneScan>)> scan_callback);
 
-  boost::property_tree::ptree ParseJson(const std::string &str);
+  boost::property_tree::ptree ParseJson(const std::string & str);
 
   VelodyneStatus InitHttpClient();
   std::string GetStatus();
@@ -116,11 +119,11 @@ public:
   VelodyneStatus SetNetDhcp(bool use_dhcp);
 
   VelodyneStatus InitHttpClientAsync();
-  VelodyneStatus GetStatusAsync(std::function<void(const std::string &str)> str_callback);
+  VelodyneStatus GetStatusAsync(std::function<void(const std::string & str)> str_callback);
   VelodyneStatus GetStatusAsync();
-  VelodyneStatus GetDiagAsync(std::function<void(const std::string &str)> str_callback);
+  VelodyneStatus GetDiagAsync(std::function<void(const std::string & str)> str_callback);
   VelodyneStatus GetDiagAsync();
-  VelodyneStatus GetSnapshotAsync(std::function<void(const std::string &str)> str_callback);
+  VelodyneStatus GetSnapshotAsync(std::function<void(const std::string & str)> str_callback);
   VelodyneStatus GetSnapshotAsync();
   VelodyneStatus CheckAndSetConfigBySnapshotAsync();
   VelodyneStatus SetRpmAsync(uint16_t rpm);

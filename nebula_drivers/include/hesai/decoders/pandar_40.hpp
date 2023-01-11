@@ -2,8 +2,8 @@
 /**
  * Pandar 40P
  */
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <ctime>
 
 namespace nebula
@@ -53,6 +53,6 @@ struct Packet
   uint32_t return_mode;
 };
 
-}  // namespace pandar40
-}
-}
+}  // namespace pandar_40
+}  // namespace drivers
+}  // namespace nebula

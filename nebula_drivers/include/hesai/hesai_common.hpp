@@ -1,14 +1,14 @@
 #ifndef NEBULA_HESAI_COMMON_H
 #define NEBULA_HESAI_COMMON_H
 
-#include "common/nebula_common.hpp"
-#include "common/nebula_status.hpp"
-
-#include <fstream>
-#include <sstream>
-#include <iostream>
 #include <bitset>
 #include <cmath>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
+#include "common/nebula_common.hpp"
+#include "common/nebula_status.hpp"
 namespace nebula
 {
 namespace drivers
@@ -25,8 +25,7 @@ struct HesaiSensorConfiguration : SensorConfigurationBase
 inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration const & arg)
 {
   os << (SensorConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
-     << ", ScanPhase:" << arg.scan_phase
-     << ", RotationSpeed:" << arg.rotation_speed
+     << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
      << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle;
   return os;
 }
@@ -117,7 +116,6 @@ struct HesaiCorrection
   int8_t elevationOffset[36000];
   uint8_t SHA256[32];
 
-
   inline nebula::Status LoadFromFile(const std::string & correction_file)
   {
     std::ifstream ifs(correction_file, std::ios::in | std::ios::binary);
@@ -134,12 +132,12 @@ struct HesaiCorrection
     }
     */
     std::vector<unsigned char> buf;
-//    int cnt = 0;
-    while(!ifs.eof()){
+    //    int cnt = 0;
+    while (!ifs.eof()) {
       unsigned char c;
-      ifs.read( ( char * ) &c, sizeof( unsigned char ) );
-//      std::cout << c << std::endl;
-/*
+      ifs.read((char *)&c, sizeof(unsigned char));
+      //      std::cout << c << std::endl;
+      /*
       if(cnt < 30){
         std::cout << static_cast<int>(c) << std::endl;
         std::cout << static_cast<int>(c & 0xff) << std::endl;
@@ -222,19 +220,23 @@ struct HesaiCorrection
     resolution = buf[index] & 0xff;
     index++;
     for (uint8_t i = 0; i < mirrorNumber; i++) {
-      startFrame[i] = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8 | ((buf[index + 2] & 0xff) << 16) | ((buf[index + 3] & 0xff) << 24);
+      startFrame[i] = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8 |
+                      ((buf[index + 2] & 0xff) << 16) | ((buf[index + 3] & 0xff) << 24);
       index += 4;
     }
     for (uint8_t i = 0; i < mirrorNumber; i++) {
-      endFrame[i] = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8 | ((buf[index + 2] & 0xff) << 16) | ((buf[index + 3] & 0xff) << 24);
+      endFrame[i] = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8 |
+                    ((buf[index + 2] & 0xff) << 16) | ((buf[index + 3] & 0xff) << 24);
       index += 4;
     }
     for (uint8_t i = 0; i < channelNumber; i++) {
-      azimuth[i] = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8 | ((buf[index + 2] & 0xff) << 16) | ((buf[index + 3] & 0xff) << 24);
+      azimuth[i] = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8 |
+                   ((buf[index + 2] & 0xff) << 16) | ((buf[index + 3] & 0xff) << 24);
       index += 4;
     }
     for (uint8_t i = 0; i < channelNumber; i++) {
-      elevation[i] = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8 | ((buf[index + 2] & 0xff) << 16) | ((buf[index + 3] & 0xff) << 24);
+      elevation[i] = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8 |
+                     ((buf[index + 2] & 0xff) << 16) | ((buf[index + 3] & 0xff) << 24);
       index += 4;
     }
     for (int i = 0; i < channelNumber * 180; i++) {
@@ -276,20 +278,21 @@ struct HesaiCorrection
   }
 
   static const int STEP3 = 200 * 256;
-  int8_t getAzimuthAdjustV3(uint8_t ch, uint32_t azi) const{
-      unsigned int i = std::floor(1.f * azi / STEP3);
-      unsigned int l = azi - i * STEP3;
-      float k = 1.f * l / STEP3;
-      return round((1-k) * azimuthOffset[ch*180 + i] + k * azimuthOffset[ch*180 + i+1]);
+  int8_t getAzimuthAdjustV3(uint8_t ch, uint32_t azi) const
+  {
+    unsigned int i = std::floor(1.f * azi / STEP3);
+    unsigned int l = azi - i * STEP3;
+    float k = 1.f * l / STEP3;
+    return round((1 - k) * azimuthOffset[ch * 180 + i] + k * azimuthOffset[ch * 180 + i + 1]);
   }
-  int8_t getElevationAdjustV3(uint8_t ch, uint32_t azi) const{
-      unsigned int i = std::floor(1.f * azi / STEP3);
-      unsigned int l = azi - i * STEP3;
-      float k = 1.f * l / STEP3;
-      return round((1-k) *elevationOffset[ch*180 + i] + k *elevationOffset[ch*180 + i+1]);
+  int8_t getElevationAdjustV3(uint8_t ch, uint32_t azi) const
+  {
+    unsigned int i = std::floor(1.f * azi / STEP3);
+    unsigned int l = azi - i * STEP3;
+    float k = 1.f * l / STEP3;
+    return round((1 - k) * elevationOffset[ch * 180 + i] + k * elevationOffset[ch * 180 + i + 1]);
   }
 };
-
 
 /*
 <option value="0">Last Return</option>
@@ -309,89 +312,86 @@ struct HesaiCorrection
 <option value="6">First Return + Last Return + Strongest Return</option>
 */
 
-inline ReturnMode ReturnModeFromStringHesai(const std::string & return_mode, const SensorModel & sensor_model)
+inline ReturnMode ReturnModeFromStringHesai(
+  const std::string & return_mode, const SensorModel & sensor_model)
 {
-  switch (sensor_model)
-  {
-  case SensorModel::HESAI_PANDARXT32M:
-  case SensorModel::HESAI_PANDARAT128:
-    if (return_mode == "Last") return ReturnMode::LAST;
-    if (return_mode == "Strongest") return ReturnMode::STRONGEST;
-    if (return_mode == "LastStrongest") return ReturnMode::LAST_STRONGEST;
-    if (return_mode == "First") return ReturnMode::FIRST;
-    if (return_mode == "LastFirst") return ReturnMode::LAST_FIRST;
-    if (return_mode == "FirstStrongest") return ReturnMode::FIRST_STRONGEST;
-    break;
-  case SensorModel::HESAI_PANDARQT64:
-    if (return_mode == "Last") return ReturnMode::LAST;
-    if (return_mode == "Dual") return ReturnMode::DUAL;
-    if (return_mode == "First") return ReturnMode::FIRST;
-    break;
-  default:
-    if (return_mode == "Last") return ReturnMode::LAST;
-    if (return_mode == "Strongest") return ReturnMode::STRONGEST;
-    if (return_mode == "Dual") return ReturnMode::DUAL;
-    break;
+  switch (sensor_model) {
+    case SensorModel::HESAI_PANDARXT32M:
+    case SensorModel::HESAI_PANDARAT128:
+      if (return_mode == "Last") return ReturnMode::LAST;
+      if (return_mode == "Strongest") return ReturnMode::STRONGEST;
+      if (return_mode == "LastStrongest") return ReturnMode::LAST_STRONGEST;
+      if (return_mode == "First") return ReturnMode::FIRST;
+      if (return_mode == "LastFirst") return ReturnMode::LAST_FIRST;
+      if (return_mode == "FirstStrongest") return ReturnMode::FIRST_STRONGEST;
+      break;
+    case SensorModel::HESAI_PANDARQT64:
+      if (return_mode == "Last") return ReturnMode::LAST;
+      if (return_mode == "Dual") return ReturnMode::DUAL;
+      if (return_mode == "First") return ReturnMode::FIRST;
+      break;
+    default:
+      if (return_mode == "Last") return ReturnMode::LAST;
+      if (return_mode == "Strongest") return ReturnMode::STRONGEST;
+      if (return_mode == "Dual") return ReturnMode::DUAL;
+      break;
   }
 
   return ReturnMode::UNKNOWN;
 }
 
-inline ReturnMode ReturnModeFromIntHesai (const int return_mode, const SensorModel & sensor_model)
+inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorModel & sensor_model)
 {
-  switch (sensor_model)
-  {
-  case SensorModel::HESAI_PANDARXT32M:
-  case SensorModel::HESAI_PANDARAT128:
-    if (return_mode == 0) return ReturnMode::LAST;
-    if (return_mode == 1) return ReturnMode::STRONGEST;
-    if (return_mode == 2) return ReturnMode::LAST_STRONGEST;
-    if (return_mode == 3) return ReturnMode::FIRST;
-    if (return_mode == 4) return ReturnMode::LAST_FIRST;
-    if (return_mode == 5) return ReturnMode::FIRST_STRONGEST;
-    break;
-  case SensorModel::HESAI_PANDARQT64:
-    if (return_mode == 0) return ReturnMode::LAST;
-    if (return_mode == 2) return ReturnMode::DUAL;
-    if (return_mode == 3) return ReturnMode::FIRST;
-    break;
-  default:
-    if (return_mode == 0) return ReturnMode::LAST;
-    if (return_mode == 1) return ReturnMode::STRONGEST;
-    if (return_mode == 2) return ReturnMode::DUAL;
-    break;
+  switch (sensor_model) {
+    case SensorModel::HESAI_PANDARXT32M:
+    case SensorModel::HESAI_PANDARAT128:
+      if (return_mode == 0) return ReturnMode::LAST;
+      if (return_mode == 1) return ReturnMode::STRONGEST;
+      if (return_mode == 2) return ReturnMode::LAST_STRONGEST;
+      if (return_mode == 3) return ReturnMode::FIRST;
+      if (return_mode == 4) return ReturnMode::LAST_FIRST;
+      if (return_mode == 5) return ReturnMode::FIRST_STRONGEST;
+      break;
+    case SensorModel::HESAI_PANDARQT64:
+      if (return_mode == 0) return ReturnMode::LAST;
+      if (return_mode == 2) return ReturnMode::DUAL;
+      if (return_mode == 3) return ReturnMode::FIRST;
+      break;
+    default:
+      if (return_mode == 0) return ReturnMode::LAST;
+      if (return_mode == 1) return ReturnMode::STRONGEST;
+      if (return_mode == 2) return ReturnMode::DUAL;
+      break;
   }
 
   return ReturnMode::UNKNOWN;
 }
-inline int IntFromReturnModeHesai (const ReturnMode return_mode, const SensorModel & sensor_model)
+inline int IntFromReturnModeHesai(const ReturnMode return_mode, const SensorModel & sensor_model)
 {
-  switch (sensor_model)
-  {
-  case SensorModel::HESAI_PANDARXT32M:
-  case SensorModel::HESAI_PANDARAT128:
-    if (return_mode == ReturnMode::LAST) return 0;
-    if (return_mode == ReturnMode::STRONGEST) return 1;
-    if (return_mode == ReturnMode::LAST_STRONGEST) return 2;
-    if (return_mode == ReturnMode::FIRST) return 3;
-    if (return_mode == ReturnMode::LAST_FIRST) return 4;
-    if (return_mode == ReturnMode::FIRST_STRONGEST) return 5;
-    break;
-  case SensorModel::HESAI_PANDARQT64:
-    if (return_mode == ReturnMode::LAST) return 0;
-    if (return_mode == ReturnMode::DUAL) return 2;
-    if (return_mode == ReturnMode::FIRST) return 3;
-    break;
-  default:
-    if (return_mode == ReturnMode::LAST) return 0;
-    if (return_mode == ReturnMode::STRONGEST) return 1;
-    if (return_mode == ReturnMode::DUAL) return 2;
-    break;
+  switch (sensor_model) {
+    case SensorModel::HESAI_PANDARXT32M:
+    case SensorModel::HESAI_PANDARAT128:
+      if (return_mode == ReturnMode::LAST) return 0;
+      if (return_mode == ReturnMode::STRONGEST) return 1;
+      if (return_mode == ReturnMode::LAST_STRONGEST) return 2;
+      if (return_mode == ReturnMode::FIRST) return 3;
+      if (return_mode == ReturnMode::LAST_FIRST) return 4;
+      if (return_mode == ReturnMode::FIRST_STRONGEST) return 5;
+      break;
+    case SensorModel::HESAI_PANDARQT64:
+      if (return_mode == ReturnMode::LAST) return 0;
+      if (return_mode == ReturnMode::DUAL) return 2;
+      if (return_mode == ReturnMode::FIRST) return 3;
+      break;
+    default:
+      if (return_mode == ReturnMode::LAST) return 0;
+      if (return_mode == ReturnMode::STRONGEST) return 1;
+      if (return_mode == ReturnMode::DUAL) return 2;
+      break;
   }
 
   return -1;
 }
-
 
 }  // namespace drivers
 }  // namespace nebula

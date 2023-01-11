@@ -24,6 +24,46 @@ You should ideally provide a config file for your specific sensor, but default o
 
 ```ros2 launch nebula_lidar_driver nebula_launch.py sensor_model:=Pandar64 config_file:=your_sensor.yaml```
 
+## How to build
+
+Builds on ROS Galactic and Humble. Be sure to install dependencies using `rosdep`:
+
+```rosdep install --from-paths src --ignore-src -y -r```
+
+A [TCP enabled version of ROS' Transport Driver](https://github.com/MapIV/transport_drivers/tree/tcp) is required to use Nebula. You can install it manually or pull it inside this repository using vcs:
+
+```vcs import . < build_depends.repos```
+
+Then compile with colcon, optionally enabling symlink:
+
+```colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release```
+
+## How to run Tests
+
+Run tests:
+
+```
+$ colcon test --event-handlers console_cohesion+
+```
+
+Show results:
+```
+$ colcon test-result --all
+```
+
+## Generic Launch File
+You can easily run the sensor hardware interface, the sensor hardware monitor and sensor driver using (e.g. Pandar64):
+
+```ros2 launch nebula_lidar_driver nebula_launch.py sensor_model:=Pandar64```
+
+If you don't want to launch the hardware (i.e. working on rosbag) set the `launch_hw` flag to false:
+
+```ros2 launch nebula_lidar_driver nebula_launch.py sensor_model:=Pandar64 launch_hw:=false```
+
+You should ideally provide a config file for your specific sensor, but default ones are provided `nebula_drivers/config`
+
+```ros2 launch nebula_lidar_driver nebula_launch.py sensor_model:=Pandar64 config_file:=your_sensor.yaml```
+
 ## Hesai LiDARs
 Supported models, where sensor_model is the ROS param to be used at launch:
 

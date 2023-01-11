@@ -71,10 +71,10 @@ void PandarQTDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
 
   if (!dual_return) {
     if (
-//      (packet_.return_mode == FIRST_RETURN && sensor_configuration_->return_mode != drivers::ReturnMode::SINGLE_FIRST) ||
-      (packet_.return_mode == FIRST_RETURN && sensor_configuration_->return_mode != drivers::ReturnMode::FIRST) ||
-//      (packet_.return_mode == LAST_RETURN && sensor_configuration_->return_mode != drivers::ReturnMode::SINGLE_LAST)) {
-      (packet_.return_mode == LAST_RETURN && sensor_configuration_->return_mode != drivers::ReturnMode::LAST)) {
+      (packet_.return_mode == FIRST_RETURN &&
+       sensor_configuration_->return_mode != drivers::ReturnMode::FIRST) ||
+      (packet_.return_mode == LAST_RETURN &&
+       sensor_configuration_->return_mode != drivers::ReturnMode::LAST)) {
       //sensor config, driver mismatched
     }
   }
@@ -116,13 +116,13 @@ drivers::PointXYZIRADT PandarQTDecoder::build_point(
   point.distance = unit.distance;
   point.ring = unit_id;
   point.azimuth = block.azimuth + std::round(azimuth_offset_[unit_id] * 100.0f);
-  point.return_type = drivers::ReturnModeToInt(return_type);;
+  point.return_type = drivers::ReturnModeToInt(return_type);
+  ;
   point.time_stamp = unix_second + (static_cast<double>(packet_.usec)) / 1000000.0;
   point.time_stamp +=
     dual_return
-      ? (static_cast<double>(block_offset_dual_[block_id] + firing_offset_[unit_id]) /
-      1000000.0f) : (static_cast<double>(block_offset_single_[block_id] +
-      firing_offset_[unit_id]) /
+      ? (static_cast<double>(block_offset_dual_[block_id] + firing_offset_[unit_id]) / 1000000.0f)
+      : (static_cast<double>(block_offset_single_[block_id] + firing_offset_[unit_id]) /
          1000000.0f);
 
   return point;
@@ -143,9 +143,9 @@ drivers::PointCloudXYZIRADTPtr PandarQTDecoder::convert(size_t block_id)
     block_pc->points.emplace_back(build_point(
       block_id, unit_id,
       (packet_.return_mode == FIRST_RETURN) ? drivers::ReturnMode::SINGLE_FIRST
-                                                : drivers::ReturnMode::SINGLE_LAST));
+                                            : drivers::ReturnMode::SINGLE_LAST));
   }
- return block_pc;
+  return block_pc;
 }
 
 drivers::PointCloudXYZIRADTPtr PandarQTDecoder::convert_dual(size_t block_id)
@@ -171,15 +171,15 @@ drivers::PointCloudXYZIRADTPtr PandarQTDecoder::convert_dual(size_t block_id)
     bool even_usable = !(even_unit.distance <= 0.1 || even_unit.distance > 200.0);
     bool odd_usable = !(odd_unit.distance <= 0.1 || odd_unit.distance > 200.0);
 
-//    if (sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_FIRST && even_usable) {
+    //    if (sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_FIRST && even_usable) {
     if (sensor_configuration_->return_mode == drivers::ReturnMode::FIRST && even_usable) {
       // First return is in even block
       block_pc->push_back(build_point(even_block_id, unit_id, drivers::ReturnMode::SINGLE_FIRST));
-//    } else if (sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_LAST && even_usable) {
+      //    } else if (sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_LAST && even_usable) {
     } else if (sensor_configuration_->return_mode == drivers::ReturnMode::LAST && even_usable) {
       // Last return is in odd block
       block_pc->push_back(build_point(odd_block_id, unit_id, drivers::ReturnMode::SINGLE_LAST));
-//    } else if (sensor_configuration_->return_mode == drivers::ReturnMode::DUAL_ONLY) {
+      //    } else if (sensor_configuration_->return_mode == drivers::ReturnMode::DUAL_ONLY) {
     } else if (sensor_configuration_->return_mode == drivers::ReturnMode::DUAL) {
       // If the two returns are too close, only return the last one
       if (

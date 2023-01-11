@@ -1,8 +1,9 @@
+#include "livox_data_recv.hpp"
+
 #include <cstring>
 
 #include "LidarDriver/lidar_driver.hpp"
 #include "LidarDriver/livox_common.hpp"
-#include "livox_data_recv.hpp"
 
 namespace lidar_driver
 {
@@ -159,7 +160,7 @@ void LidarDriver::StorageRawPacket(const std::vector<uint8_t> & buff, int rcv_le
 
 void LidarDriver::UpdateLidarStatusCode(uint32_t lidar_status_code)
 {
-  lidar_device_.lidar_status_code = lidar_status_code; //update lidar status
+  lidar_device_.lidar_status_code = lidar_status_code;  //update lidar status
   lidar_device_.status_code_ready_ = true;
 }
 

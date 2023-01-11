@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+
 #include <rclcpp/rclcpp.hpp>
 #include <string>
 
@@ -14,7 +15,7 @@ void RosDriverWrapper::GetParameter()
   } else if (config_.sensor_type == std::string("livox")) {
     GetLivoxParameter(sensor_config_ex_, cloud_configuration_);
   }
-#if 0  // ToDo : sensor_type
+#if 0   // ToDo : sensor_type
 	else if( config_.sensor_type == std::string("velodyne") ) {
 		GetVelodyneParameter(sensor_config_ex_, cloud_configuration_);
 	}
@@ -82,7 +83,7 @@ bool RosDriverWrapper::CheckSensorConfiguration(SensorConfigEx & sensor_config_e
   } else if (config_.sensor_type == std::string("livox")) {
     ret = CheckLivoxSensorConfiguration(sensor_config_ex);
   }
-#if 0  // ToDo : sensor_type
+#if 0   // ToDo : sensor_type
 	else if( config_.sensor_type == std::string("velodyne") ) {
 		ret = CheckVelodyneSensorConfiguration();
 	}
@@ -113,7 +114,7 @@ bool RosDriverWrapper::CheckOutputCloudConfiguration(
   } else if (config_.sensor_type == std::string("livox")) {
     ret = CheckLivoxCloudConfiguration(sensor_config_ex, cloud_config);
   }
-#if 0  // ToDo : sensor_type
+#if 0   // ToDo : sensor_type
 	else if( config_.sensor_type == std::string("velodyne") ) {
 		ret = CheckVelodyneCloudConfiguration(sensor_config_ex, cloud_config);
 	}

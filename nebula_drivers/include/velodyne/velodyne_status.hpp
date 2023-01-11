@@ -3,39 +3,51 @@
 
 #include <ostream>
 #include <string>
+
 #include "common/nebula_status.hpp"
 
 namespace nebula
 {
 // from https://marycore.jp/prog/cpp/extends-enum/
-struct VelodyneStatus:Status
+struct VelodyneStatus : Status
 {
   using Status::Status;
-  private:
+
+private:
   int _type_num;
-  public:
+
+public:
   enum VelodyneType {
     INVALID_RPM_ERROR = Type_end_of_Status + 1,
     INVALID_FOV_ERROR,
     INVALID_RETURN_MODE_ERROR,
     Type_end_of_Status = INVALID_RPM_ERROR
   } _velo_type;
-  VelodyneStatus() : _type_num(static_cast<int>(Status::OK)) {_type = static_cast<Type>(type());}
-  VelodyneStatus(Type v) : _type_num(static_cast<int>(v)) {_type = v;}
-  VelodyneStatus(VelodyneType v) : _type_num(static_cast<int>(v)), _velo_type(v) {_type = Type::Type_end_of_Status;}
+  VelodyneStatus() : _type_num(static_cast<int>(Status::OK)) { _type = static_cast<Type>(type()); }
+  VelodyneStatus(Type v) : _type_num(static_cast<int>(v)) { _type = v; }
+  VelodyneStatus(VelodyneType v) : _type_num(static_cast<int>(v)), _velo_type(v)
+  {
+    _type = Type::Type_end_of_Status;
+  }
   VelodyneStatus(int type) : _type_num(type) {}
   int type() const { return _type_num; }
-  friend bool operator==(const VelodyneStatus & L, const VelodyneStatus & R) { return L.type() == R.type(); }
-  friend bool operator!=(const VelodyneStatus & L, const VelodyneStatus & R) { return L.type() != R.type(); }
-//  friend VelodyneStatus operator VelodyneStatus(const Status & s) {return VelodyneStatus(s);}
-//implicit 
-//  operator Status() const {std::cout << "implicit" << std::endl; return Status(type());}
-//  operator const Status() {std::cout << "implicit" << std::endl; return Status(type());}
-//  explicit operator Status() const {std::cout << "explicit" << std::endl; return Status(type());}
-//  Status Status::operator=(const VelodyneStatus&) {std::cout << "implicit = " << std::endl; return Status(type());}
-//  Status operator=(const VelodyneStatus) {std::cout << "implicit = " << std::endl; return Status(type());}
-//  Status& operator=(const VelodyneStatus&) {std::cout << "implicit = " << std::endl; Status rt = Status(type()); return rt;}
-//  Status::Status(const VelodyneStatus& vs) {_type = v;}
+  friend bool operator==(const VelodyneStatus & L, const VelodyneStatus & R)
+  {
+    return L.type() == R.type();
+  }
+  friend bool operator!=(const VelodyneStatus & L, const VelodyneStatus & R)
+  {
+    return L.type() != R.type();
+  }
+  //  friend VelodyneStatus operator VelodyneStatus(const Status & s) {return VelodyneStatus(s);}
+  //implicit
+  //  operator Status() const {std::cout << "implicit" << std::endl; return Status(type());}
+  //  operator const Status() {std::cout << "implicit" << std::endl; return Status(type());}
+  //  explicit operator Status() const {std::cout << "explicit" << std::endl; return Status(type());}
+  //  Status Status::operator=(const VelodyneStatus&) {std::cout << "implicit = " << std::endl; return Status(type());}
+  //  Status operator=(const VelodyneStatus) {std::cout << "implicit = " << std::endl; return Status(type());}
+  //  Status& operator=(const VelodyneStatus&) {std::cout << "implicit = " << std::endl; Status rt = Status(type()); return rt;}
+  //  Status::Status(const VelodyneStatus& vs) {_type = v;}
 
   friend std::ostream & operator<<(std::ostream & os, nebula::VelodyneStatus const & arg)
   {

@@ -38,6 +38,19 @@ target_link_libraries(hesai_ros_offline_extract_pcd ${PCL_LIBRARIES})
 ament_auto_add_executable(hesai_ros_offline_extract_pcd_node
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_pcd_main.cpp
         )
+# Extraction for TEST Lib
+ament_auto_add_library(hesai_ros_offline_extract_bag_pcd SHARED
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_pcd.cpp
+        )
+target_link_libraries(hesai_ros_offline_extract_bag_pcd ${PCL_LIBRARIES})
+ament_auto_add_executable(hesai_ros_offline_extract_bag_pcd_node
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_pcd_main.cpp
+        )
+
+if (BUILD_TESTING)
+    find_package(ament_lint_auto REQUIRED)
+    ament_lint_auto_find_test_dependencies()
+endif()
 
 ## Velodyne
 
@@ -46,6 +59,8 @@ ament_auto_add_executable(hesai_ros_offline_extract_pcd_node
 # RosHwInterface
 # Driver Lib
 # RosDriver
+
+
 
 ament_auto_package(
         INSTALL_TO_SHARE

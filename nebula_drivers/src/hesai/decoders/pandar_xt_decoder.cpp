@@ -118,8 +118,6 @@ drivers::PointCloudXYZIRADTPtr PandarXTDecoder::convert(size_t block_id)
 {
   PointCloudXYZIRADTPtr block_pc(new PointCloudXYZIRADT);
 
-  auto unix_second = static_cast<double>(timegm(&packet_.t));
-
   const auto & block = packet_.blocks[block_id];
   for (size_t unit_id = 0; unit_id < LASER_COUNT; ++unit_id) {
     const auto & unit = block.units[unit_id];
@@ -143,10 +141,8 @@ drivers::PointCloudXYZIRADTPtr PandarXTDecoder::convert_dual(size_t block_id)
   auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
 
   auto head =
-//    block_id + ((sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_FIRST) ? 1 : 0);
     block_id + ((sensor_configuration_->return_mode == drivers::ReturnMode::FIRST) ? 1 : 0);
   auto tail =
-//    block_id + ((sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_LAST) ? 1 : 2);
     block_id + ((sensor_configuration_->return_mode == drivers::ReturnMode::LAST) ? 1 : 2);
 
   for (size_t unit_id = 0; unit_id < LASER_COUNT; ++unit_id) {

@@ -16,16 +16,16 @@ from ament_index_python.packages import get_package_share_directory
 
 def get_lidar_make(sensor_name):
     if sensor_name[:6].lower() == "pandar":
-        return "Hesai"
+        return "Hesai", ".csv"
     elif sensor_name[:3].lower() in ["hdl", "vlp", "vls"]:
-        return "Velodyne"
+        return "Velodyne", ".yaml"
     return "unrecognized_sensor_model"
 
 
 def launch_setup(context, *args, **kwargs):
     # Model and make
     sensor_model = LaunchConfiguration("sensor_model").perform(context)
-    sensor_make = get_lidar_make(sensor_model)
+    sensor_make, sensor_extension = get_lidar_make(sensor_model)
     nebula_share_dir = get_package_share_directory("nebula_lidar_driver")
 
     # Config
@@ -33,7 +33,7 @@ def launch_setup(context, *args, **kwargs):
     if sensor_params_fp == "":
         warnings.warn("No config file provided, using sensor model default", RuntimeWarning)
         sensor_params_fp = os.path.join(nebula_share_dir, "config", sensor_model + ".yaml")
-    sensor_calib_fp = os.path.join(nebula_share_dir, "calibration", sensor_make.lower(), sensor_model + ".csv")
+    sensor_calib_fp = os.path.join(nebula_share_dir, "calibration", sensor_make.lower(), sensor_model + sensor_extension)
     if not os.path.exists(sensor_params_fp):
         sensor_params_fp = os.path.join(nebula_share_dir, "config", "BaseParams.yaml")
     assert os.path.exists(sensor_params_fp), "Sensor params yaml file under config/ was not found: {}".format(sensor_params_fp)
@@ -53,6 +53,8 @@ def launch_setup(context, *args, **kwargs):
                     sensor_params,
                     {
                         "sensor_model": LaunchConfiguration("sensor_model"),
+                        "sensor_ip": LaunchConfiguration("sensor_ip"),
+                        "return_mode": LaunchConfiguration("return_mode"),
                         "calibration_file": sensor_calib_fp,
                     },
                 ],
@@ -68,6 +70,8 @@ def launch_setup(context, *args, **kwargs):
                     sensor_params,
                     {
                         "sensor_model": sensor_model,
+                        "sensor_ip": LaunchConfiguration("sensor_ip"),
+                        "return_mode": LaunchConfiguration("return_mode"),
                         "calibration_file": sensor_calib_fp,
                     },
                 ],
@@ -83,6 +87,8 @@ def launch_setup(context, *args, **kwargs):
                 sensor_params,
                 {
                     "sensor_model": sensor_model,
+                    "sensor_ip": LaunchConfiguration("sensor_ip"),
+                    "return_mode": LaunchConfiguration("return_mode"),
                     "calibration_file": sensor_calib_fp,
                 },
             ],
@@ -124,6 +130,8 @@ def generate_launch_description():
             add_launch_arg("container", ""),
             add_launch_arg("config_file", ""),
             add_launch_arg("sensor_model", ""),
+            add_launch_arg("sensor_ip", ""),
+            add_launch_arg("return_mode", ""),
             add_launch_arg("launch_hw", "true")
         ]
         + [OpaqueFunction(function=launch_setup)]

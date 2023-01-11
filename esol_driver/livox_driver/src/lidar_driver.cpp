@@ -1,10 +1,11 @@
 #include "LidarDriver/lidar_driver.hpp"
-#include "livox_data_recv.hpp"
+
+#include <arpa/inet.h>
 
 #include <cmath>
 #include <cstring>
 
-#include <arpa/inet.h>
+#include "livox_data_recv.hpp"
 
 namespace lidar_driver
 {
