@@ -655,19 +655,19 @@ void VelodyneHwMonitorRosWrapper::OnVelodyneDiagnosticsTimer()
   } else if (false) {
     boost::asio::io_context ioc;
     boost::asio::ip::tcp::resolver resolver(ioc);
-    beast::tcp_stream stream(ioc);
+    boost::beast::tcp_stream stream(ioc);
     auto const results = resolver.resolve(sensor_configuration_.sensor_ip, "80");
 
     stream.connect(results);
 
-    boost::beast::http::request<http::string_body> req{
+    boost::beast::http::request<boost::beast::http::string_body> req{
       boost::beast::http::verb::get, "/cgi/diag.json", 11};
     req.set(boost::beast::http::field::host, sensor_configuration_.sensor_ip);
     req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
     boost::beast::http::write(stream, req);
 
-    beast::flat_buffer buffer;
+    boost::beast::flat_buffer buffer;
 
     boost::beast::http::response<boost::beast::http::dynamic_body> res;
 
@@ -675,20 +675,20 @@ void VelodyneHwMonitorRosWrapper::OnVelodyneDiagnosticsTimer()
     boost::beast::http::read(stream, buffer, res);
 
     std::cout << res << std::endl;
-    auto m_res_string = beast::buffers_to_string(res.body().data());
+    auto m_res_string = boost::beast::buffers_to_string(res.body().data());
     current_diag_tree =
       std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(m_res_string));
     std::cout << "diagnostics_updater_.force_update()" << std::endl;
     diagnostics_updater_.force_update();
 
     // Gracefully close the socket
-    beast::error_code ec;
-    stream.socket().shutdown(tcp::socket::shutdown_both, ec);
+    boost::beast::error_code ec;
+    stream.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 
     // not_connected happens sometimes
     // so don't bother reporting it.
     //
-    if (ec && ec != beast::errc::not_connected) throw beast::system_error{ec};
+    if (ec && ec != boost::beast::errc::not_connected) throw boost::beast::system_error{ec};
   } else {
     Curl * curl = new Curl();
     std::string url = "http://" + sensor_configuration_.sensor_ip + "/cgi/diag.json";
