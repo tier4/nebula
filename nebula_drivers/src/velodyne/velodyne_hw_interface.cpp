@@ -12,7 +12,7 @@ namespace nebula
 namespace drivers
 {
 VelodyneHwInterface::VelodyneHwInterface()
-: cloud_io_context_{new IoContext(1)},
+: cloud_io_context_{new ::drivers::common::IoContext(1)},
   cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
   scan_cloud_ptr_{std::make_unique<velodyne_msgs::msg::VelodyneScan>()},
   boost_ctx_{new boost::asio::io_context()},

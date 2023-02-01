@@ -19,7 +19,7 @@ namespace drivers
 class VelodyneHwInterface : NebulaHwInterfaceBase
 {
 private:
-  std::unique_ptr<IoContext> cloud_io_context_;
+  std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
   std::shared_ptr<VelodyneSensorConfiguration> sensor_configuration_;
   std::shared_ptr<VelodyneCalibrationConfiguration> calibration_configuration_;

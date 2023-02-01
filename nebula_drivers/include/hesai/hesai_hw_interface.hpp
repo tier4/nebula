@@ -23,7 +23,7 @@ namespace drivers
 class HesaiHwInterface : NebulaHwInterfaceBase
 {
 private:
-  std::unique_ptr<IoContext> cloud_io_context_;
+  std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
   std::shared_ptr<boost::asio::io_context> m_owned_ctx;
   std::shared_ptr<boost::asio::io_context> m_owned_ctx_s;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
