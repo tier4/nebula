@@ -17,7 +17,7 @@ namespace nebula
 namespace drivers
 {
 HesaiHwInterface::HesaiHwInterface()
-: cloud_io_context_{new IoContext(1)},
+: cloud_io_context_{new ::drivers::common::IoContext(1)},
   m_owned_ctx{new boost::asio::io_context(1)},
   m_owned_ctx_s{new boost::asio::io_context(1)},
   //  m_owned_ctx{new boost::asio::io_service(3)},
