@@ -63,10 +63,11 @@ Status HesaiHwInterface::SetSensorConfiguration(
       is_valid_packet_ = [](size_t packet_size) {
         return (packet_size == 1194 || packet_size == 1198);
       };
-    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_V14) {
-      azimuth_index_ = 12;  // 12 + 386 * [0-1]
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == 893); };  // version 1.4
-      mtu_size_ = 1800;
+    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
+      azimuth_index_ = 12;  // 12
+      is_valid_packet_ = [](size_t packet_size) {
+        return (packet_size == 1117 || packet_size == 861);
+      };
     } else {
       status = Status::INVALID_SENSOR_MODEL;
     }

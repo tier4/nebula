@@ -64,8 +64,8 @@ HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & o
     case nebula::drivers::SensorModel::HESAI_PANDAR40M:
     case nebula::drivers::SensorModel::HESAI_PANDARQT64:
     case nebula::drivers::SensorModel::HESAI_PANDARQT128:
-    case nebula::drivers::SensorModel::HESAI_PANDAR128_V13:
-    case nebula::drivers::SensorModel::HESAI_PANDAR128_V14:
+    case nebula::drivers::SensorModel::HESAI_PANDAR128_E3X:
+    case nebula::drivers::SensorModel::HESAI_PANDAR128_E4X:
     default:
       temperature_names.emplace_back("Bottom circuit RT1");
       temperature_names.emplace_back("Bottom circuit RT2");

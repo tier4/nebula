@@ -24,7 +24,7 @@ protected:
   std::shared_ptr<drivers::HesaiSensorConfiguration> sensor_configuration_;
   std::shared_ptr<drivers::HesaiCalibrationConfiguration> sensor_calibration_;
 
-  static inline double deg2rad(double degrees) { return degrees * M_PI / 180.0; }
+  static inline float deg2rad(double degrees) { return degrees * M_PI / 180.0; }
 
 public:
   HesaiScanDecoder(HesaiScanDecoder && c) = delete;

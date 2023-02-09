@@ -11,6 +11,8 @@ HesaiDriverRosWrapper::HesaiDriverRosWrapper(const rclcpp::NodeOptions & options
   drivers::HesaiSensorConfiguration sensor_configuration;
   drivers::HesaiCorrection correction_configuration;
 
+  setvbuf(stdout, NULL, _IONBF, BUFSIZ);
+
   wrapper_status_ =
     GetParameters(sensor_configuration, calibration_configuration, correction_configuration);
   if (Status::OK != wrapper_status_) {

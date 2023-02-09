@@ -1,5 +1,6 @@
 #include "hesai/hesai_driver.hpp"
 
+#include "hesai/decoders/pandar_128_e4x_decoder.hpp"
 #include "hesai/decoders/pandar_40_decoder.hpp"
 #include "hesai/decoders/pandar_64_decoder.hpp"
 #include "hesai/decoders/pandar_at_decoder.hpp"
@@ -48,9 +49,12 @@ HesaiDriver::HesaiDriver(
       scan_decoder_.reset(new drivers::pandar_at::PandarATDecoder(
         sensor_configuration, calibration_configuration, correction_configuration));
       break;
+    case SensorModel::HESAI_PANDAR128_E4X:
+      scan_decoder_.reset(new drivers::pandar_128_e4x::Pandar128E4XDecoder(
+        sensor_configuration, calibration_configuration));
+      break;
     case SensorModel::HESAI_PANDARQT128:
-    case SensorModel::HESAI_PANDAR128_V13:
-    case SensorModel::HESAI_PANDAR128_V14:
+    case SensorModel::HESAI_PANDAR128_E3X:
     default:
       driver_status_ = nebula::Status::NOT_INITIALIZED;
       throw std::runtime_error("Driver not Implemented for selected sensor.");

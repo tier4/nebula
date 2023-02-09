@@ -320,10 +320,10 @@ inline ReturnMode ReturnModeFromStringHesai(
     case SensorModel::HESAI_PANDARAT128:
       if (return_mode == "Last") return ReturnMode::LAST;
       if (return_mode == "Strongest") return ReturnMode::STRONGEST;
-      if (return_mode == "LastStrongest") return ReturnMode::LAST_STRONGEST;
+      if (return_mode == "LastStrongest") return ReturnMode::DUAL_LAST_STRONGEST;
       if (return_mode == "First") return ReturnMode::FIRST;
-      if (return_mode == "LastFirst") return ReturnMode::LAST_FIRST;
-      if (return_mode == "FirstStrongest") return ReturnMode::FIRST_STRONGEST;
+      if (return_mode == "LastFirst") return ReturnMode::DUAL_LAST_FIRST;
+      if (return_mode == "FirstStrongest") return ReturnMode::DUAL_FIRST_STRONGEST;
       break;
     case SensorModel::HESAI_PANDARQT64:
       if (return_mode == "Last") return ReturnMode::LAST;
@@ -347,10 +347,10 @@ inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorMode
     case SensorModel::HESAI_PANDARAT128:
       if (return_mode == 0) return ReturnMode::LAST;
       if (return_mode == 1) return ReturnMode::STRONGEST;
-      if (return_mode == 2) return ReturnMode::LAST_STRONGEST;
+      if (return_mode == 2) return ReturnMode::DUAL_LAST_STRONGEST;
       if (return_mode == 3) return ReturnMode::FIRST;
-      if (return_mode == 4) return ReturnMode::LAST_FIRST;
-      if (return_mode == 5) return ReturnMode::FIRST_STRONGEST;
+      if (return_mode == 4) return ReturnMode::DUAL_LAST_FIRST;
+      if (return_mode == 5) return ReturnMode::DUAL_FIRST_STRONGEST;
       break;
     case SensorModel::HESAI_PANDARQT64:
       if (return_mode == 0) return ReturnMode::LAST;
@@ -373,10 +373,10 @@ inline int IntFromReturnModeHesai(const ReturnMode return_mode, const SensorMode
     case SensorModel::HESAI_PANDARAT128:
       if (return_mode == ReturnMode::LAST) return 0;
       if (return_mode == ReturnMode::STRONGEST) return 1;
-      if (return_mode == ReturnMode::LAST_STRONGEST) return 2;
+      if (return_mode == ReturnMode::DUAL_LAST_STRONGEST) return 2;
       if (return_mode == ReturnMode::FIRST) return 3;
-      if (return_mode == ReturnMode::LAST_FIRST) return 4;
-      if (return_mode == ReturnMode::FIRST_STRONGEST) return 5;
+      if (return_mode == ReturnMode::DUAL_LAST_FIRST) return 4;
+      if (return_mode == ReturnMode::DUAL_FIRST_STRONGEST) return 5;
       break;
     case SensorModel::HESAI_PANDARQT64:
       if (return_mode == ReturnMode::LAST) return 0;
