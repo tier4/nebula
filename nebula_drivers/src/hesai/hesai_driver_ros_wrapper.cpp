@@ -108,7 +108,7 @@ Status HesaiDriverRosWrapper::GetParameters(
 {
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -118,7 +118,7 @@ Status HesaiDriverRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -128,7 +128,7 @@ Status HesaiDriverRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -137,7 +137,7 @@ Status HesaiDriverRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 3;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
@@ -149,7 +149,7 @@ Status HesaiDriverRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -159,14 +159,26 @@ Status HesaiDriverRosWrapper::GetParameters(
   }
   if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("correction_file", "", descriptor);
     correction_file_path = this->get_parameter("correction_file").as_string();
   }
-
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "Dual return distance threshold [0.01, 0.5]";
+    rcl_interfaces::msg::FloatingPointRange range;
+    range.set__from_value(0.01).set__to_value(0.5).set__step(0.01);
+    descriptor.floating_point_range = {range};
+    this->declare_parameter<double>("dual_return_distance_threshold", 0.1, descriptor);
+    sensor_configuration.dual_return_distance_threshold =
+      this->get_parameter("dual_return_distance_threshold").as_double();
+  }
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }

@@ -60,7 +60,7 @@ struct Header
 
 struct Unit
 {
-  float distance;
+  double distance;
   uint16_t intensity;
   uint16_t confidence;
 };

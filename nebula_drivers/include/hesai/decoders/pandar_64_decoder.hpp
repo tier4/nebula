@@ -25,7 +25,7 @@ public:
 
 private:
   bool parsePacket(const pandar_msgs::msg::PandarPacket & pandar_packet) override;
-  drivers::PointXYZIRADT build_point(size_t block_id, size_t unit_id, ReturnMode return_type);
+  drivers::PointXYZIRADT build_point(size_t block_id, size_t unit_id, uint8_t return_type);
   drivers::PointCloudXYZIRADTPtr convert(size_t block_id) override;
   drivers::PointCloudXYZIRADTPtr convert_dual(size_t block_id) override;
 

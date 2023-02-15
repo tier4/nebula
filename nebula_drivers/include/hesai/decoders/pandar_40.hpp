@@ -35,7 +35,7 @@ constexpr uint32_t DUAL_RETURN = 0x39;
 struct Unit
 {
   uint8_t intensity;
-  float distance;
+  double distance;
 };
 
 struct Block

@@ -197,7 +197,19 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     this->declare_parameter<uint16_t>("cloud_max_angle", 359, descriptor);
     sensor_configuration.cloud_max_angle = this->get_parameter("cloud_max_angle").as_int();
   }
-
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "Dual return distance threshold [0.01, 0.5]";
+    rcl_interfaces::msg::FloatingPointRange range;
+    range.set__from_value(0.01).set__to_value(0.5).set__step(0.01);
+    descriptor.floating_point_range = {range};
+    this->declare_parameter<double>("dual_return_distance_threshold", 0.1, descriptor);
+    sensor_configuration.dual_return_distance_threshold =
+      this->get_parameter("dual_return_distance_threshold").as_double();
+  }
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
