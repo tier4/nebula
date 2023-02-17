@@ -161,7 +161,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
 {
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -171,7 +171,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -181,7 +181,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -190,7 +190,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -199,7 +199,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -208,7 +208,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 2;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -217,7 +217,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 2;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -226,7 +226,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 3;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
@@ -238,7 +238,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 2;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -248,7 +248,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 2;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "range from 300 to 1200, in increments of 60";
@@ -260,7 +260,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 2;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -272,7 +272,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 2;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
@@ -282,19 +282,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
     this->declare_parameter<uint16_t>("cloud_max_angle", 359, descriptor);
     sensor_configuration.cloud_max_angle = this->get_parameter("cloud_max_angle").as_int();
   }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "Dual return distance threshold [0.01, 0.5]";
-    rcl_interfaces::msg::FloatingPointRange range;
-    range.set__from_value(0.01).set__to_value(0.5).set__step(0.01);
-    descriptor.floating_point_range = {range};
-    this->declare_parameter<double>("dual_return_distance_threshold", 0.1, descriptor);
-    sensor_configuration.dual_return_distance_threshold =
-      this->get_parameter("dual_return_distance_threshold").as_double();
-  }
+
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
@@ -307,7 +295,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 2;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "It may be safe if it is 5000 milliseconds or more...";
@@ -317,7 +305,7 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 1;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
     descriptor.read_only = true;  // because it affects initialization
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "Showing advanced diagnostics";

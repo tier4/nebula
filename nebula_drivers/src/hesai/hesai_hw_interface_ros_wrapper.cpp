@@ -358,7 +358,8 @@ rcl_interfaces::msg::SetParametersResult HesaiHwInterfaceRosWrapper::paramCallba
     get_param(p, "packet_mtu_size", new_param.packet_mtu_size) ||
     get_param(p, "rotation_speed", new_param.rotation_speed) ||
     get_param(p, "cloud_min_angle", new_param.cloud_min_angle) ||
-    get_param(p, "cloud_max_angle", new_param.cloud_max_angle)) {
+    get_param(p, "cloud_max_angle", new_param.cloud_max_angle) ||
+    get_param(p, "dual_return_distance_threshold", new_param.dual_return_distance_threshold)) {
     if (0 < sensor_model_str.length())
       new_param.sensor_model = nebula::drivers::SensorModelFromString(sensor_model_str);
     if (0 < return_mode_str.length())
@@ -412,7 +413,9 @@ std::vector<rcl_interfaces::msg::SetParametersResult> HesaiHwInterfaceRosWrapper
      rclcpp::Parameter("packet_mtu_size", sensor_configuration_.packet_mtu_size),
      rclcpp::Parameter("rotation_speed", sensor_configuration_.rotation_speed),
      rclcpp::Parameter("cloud_min_angle", sensor_configuration_.cloud_min_angle),
-     rclcpp::Parameter("cloud_max_angle", sensor_configuration_.cloud_max_angle)});
+     rclcpp::Parameter("cloud_max_angle", sensor_configuration_.cloud_max_angle),
+     rclcpp::Parameter(
+       "dual_return_distance_threshold", sensor_configuration_.dual_return_distance_threshold)});
 #ifdef WITH_DEBUG_STDOUT_HesaiHwMonitorRosWrapper
   std::cout << "set_parameters fin" << std::endl;
 #endif

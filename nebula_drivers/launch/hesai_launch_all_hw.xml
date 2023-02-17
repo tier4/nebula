@@ -15,6 +15,7 @@
     <arg name="rotation_speed" default="600" description="Motor RPM, the sensor's internal spin rate."/>
     <arg name="cloud_min_angle" default="0" description="Field of View, start degrees."/>
     <arg name="cloud_max_angle" default="360" description="Field of View, end degrees."/>
+    <arg name="dual_return_distance_threshold" default="0.1" description="Distance threshold of dual return mode"/>
     <arg name="diag_span" default="1000" description="milliseconds"/>
 
 
@@ -42,6 +43,7 @@
         <param name="rotation_speed" value="$(var rotation_speed)"/>
         <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>
         <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
+        <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/>
     </node>
 
 <!--    <node pkg="nebula_lidar_driver" exec="hesai_hw_monitor_ros_wrapper_node"-->
@@ -60,6 +62,7 @@
 <!--        <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>-->
 <!--        <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>-->
 <!--        <param name="diag_span" value="$(var diag_span)"/>-->
+<!--        <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/> -->
 <!--    </node>-->
 
 </launch>
