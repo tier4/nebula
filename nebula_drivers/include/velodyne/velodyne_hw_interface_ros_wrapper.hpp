@@ -20,6 +20,12 @@ namespace nebula
 {
 namespace ros
 {
+/// @brief Get parametor from rclcpp::Parameter
+/// @tparam T
+/// @param p Parameter from rclcpp parameter callback
+/// @param name Target parametor name
+/// @param value Corresponding value
+/// @return Whether the target name existed
 template <typename T>
 bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & name, T & value)
 {
@@ -33,6 +39,7 @@ bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & nam
   return false;
 }
 
+/// @brief Hardware interface ros wrapper of velodyne driver
 class VelodyneHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfaceWrapperBase
 {
   drivers::VelodyneHwInterface hw_interface_;
@@ -41,17 +48,32 @@ class VelodyneHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfa
   drivers::VelodyneSensorConfiguration sensor_configuration_;
   drivers::VelodyneCalibrationConfiguration calibration_configuration_;
 
+  /// @brief Received Velodyne message publisher
   rclcpp::Publisher<velodyne_msgs::msg::VelodyneScan>::SharedPtr velodyne_scan_pub_;
 
+  /// @brief Initializing hardware interface ros wrapper
+  /// @param sensor_configuration SensorConfiguration for this driver
+  /// @return Resulting status
   Status InitializeHwInterface(
     const drivers::SensorConfigurationBase & sensor_configuration) override;
+  /// @brief Callback for receiving VelodyneScan
+  /// @param scan_buffer Received VelodyneScan
   void ReceiveScanDataCallback(std::unique_ptr<velodyne_msgs::msg::VelodyneScan> scan_buffer);
 
 public:
   explicit VelodyneHwInterfaceRosWrapper(const rclcpp::NodeOptions & options);
+  /// @brief Start point cloud streaming (Call CloudInterfaceStart of HwInterface)
+  /// @return Resulting status
   Status StreamStart() override;
+  /// @brief Stop point cloud streaming (not used)
+  /// @return Resulting status
   Status StreamStop() override;
+  /// @brief Shutdown (not used)
+  /// @return Resulting status
   Status Shutdown() override;
+  /// @brief Get configurations from ros parameters
+  /// @param sensor_configuration Output of SensorConfiguration
+  /// @return Resulting status
   Status GetParameters(drivers::VelodyneSensorConfiguration & sensor_configuration);
 
 private:  //ROS Diagnostics
@@ -59,6 +81,11 @@ private:  //ROS Diagnostics
   diagnostic_updater::Updater diagnostics_updater_;
   void InitializeVelodyneDiagnostics();
 */
+
+  /// @brief Get value from property_tree
+  /// @param pt property_tree
+  /// @param key Pey string
+  /// @return Value
   std::string GetPtreeValue(
     std::shared_ptr<boost::property_tree::ptree> pt, const std::string & key);
   /*
@@ -153,8 +180,13 @@ private:  //ROS Diagnostics
   const char * not_supported_message;
 
   OnSetParametersCallbackHandle::SharedPtr set_param_res_;
+  /// @brief rclcpp parameter callback
+  /// @param parameters Received parameters
+  /// @return SetParametersResult
   rcl_interfaces::msg::SetParametersResult paramCallback(
     const std::vector<rclcpp::Parameter> & parameters);
+  /// @brief Updating rclcpp parameter
+  /// @return SetParametersResult
   std::vector<rcl_interfaces::msg::SetParametersResult> updateParameters();
 
   //  rclcpp::callback_group::CallbackGroup::SharedPtr cbg_;

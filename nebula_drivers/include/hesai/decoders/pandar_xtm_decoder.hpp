@@ -74,29 +74,55 @@ const float laserXTMOffset[] = {
 
 const uint16_t MAX_AZIMUTH_DEGREE_NUM = 36000;
 
+/// @brief Hesai LiDAR decorder (XT32M)
 class PandarXTMDecoder : public HesaiScanDecoder
 {
 public:
+  /// @brief Constructor
+  /// @param sensor_configuration SensorConfiguration for this decoder
+  /// @param calibration_configuration Calibration for this decoder
   explicit PandarXTMDecoder(
     const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
+  /// @brief Parsing and shaping PandarPacket
+  /// @param pandar_packet
   void unpack(const pandar_msgs::msg::PandarPacket & raw_packet) override;
+  /// @brief Get the flag indicating whether one cycle is ready
+  /// @return Readied
   bool hasScanned() override;
+  /// @brief Get the constructed point cloud
+  /// @return Point cloud
   drivers::PointCloudXYZIRADTPtr get_pointcloud() override;
 
 private:
+  /// @brief Parsing PandarPacket based on packet structure
+  /// @param pandar_packet
+  /// @return Resulting flag
   bool parsePacket(const pandar_msgs::msg::PandarPacket & pandar_packet) override;
-  //  drivers::PointXYZIRADT build_point(int block_id, int unit_id, ReturnMode return_type);
 
 #if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)
+  /// @brief Constructing a point cloud of the target part
+  /// @param blockid Target block
+  /// @param chLaserNumber Target laser
+  /// @param cld Point cloud
   void CalcXTPointXYZIT(
     int blockid, char chLaserNumber, boost::shared_ptr<pcl::PointCloud<PointXYZIRADT>> cld);
 #else
+  /// @brief Constructing a point cloud of the target part
+  /// @param blockid Target block
+  /// @param chLaserNumber Target laser
+  /// @param cld Point cloud
   void CalcXTPointXYZIT(
     int blockid, char chLaserNumber, std::shared_ptr<pcl::PointCloud<PointXYZIRADT>> cld);
 #endif
 
+  /// @brief Convert to point cloud
+  /// @param block_id target block
+  /// @return Point cloud
   drivers::PointCloudXYZIRADTPtr convert(size_t block_id) override;
+  /// @brief Convert to point cloud for dual return
+  /// @param block_id target block
+  /// @return Point cloud
   drivers::PointCloudXYZIRADTPtr convert_dual(size_t block_id) override;
 
   std::array<float, LASER_COUNT> elev_angle_{};

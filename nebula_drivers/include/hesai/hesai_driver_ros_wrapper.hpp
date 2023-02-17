@@ -18,6 +18,7 @@ namespace nebula
 {
 namespace ros
 {
+/// @brief Ros wrapper of hesai driver
 class HesaiDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapperBase
 {
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
@@ -29,20 +30,37 @@ class HesaiDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapperB
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
   std::shared_ptr<drivers::HesaiCorrection> correction_cfg_ptr_;
 
+  /// @brief Initializing ros wrapper
+  /// @param sensor_configuration SensorConfiguration for this driver
+  /// @param calibration_configuration CalibrationConfiguration for this driver
+  /// @return Resulting status
   Status InitializeDriver(
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
     std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) override;
 
+  /// @brief Initializing ros wrapper for AT
+  /// @param sensor_configuration SensorConfiguration for this driver
+  /// @param calibration_configuration CalibrationConfiguration for this driver
+  /// @param correction_configuration CorrectionConfiguration for this driver
+  /// @return Resulting status
   Status InitializeDriver(
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
     std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
     std::shared_ptr<drivers::HesaiCorrection> correction_configuration);
 
+  /// @brief Get configurations from ros parameters
+  /// @param sensor_configuration Output of SensorConfiguration
+  /// @param calibration_configuration Output of CalibrationConfiguration
+  /// @param correction_configuration Output of CorrectionConfiguration (for AT)
+  /// @return Resulting status
   Status GetParameters(
     drivers::HesaiSensorConfiguration & sensor_configuration,
     drivers::HesaiCalibrationConfiguration & calibration_configuration,
     drivers::HesaiCorrection & correction_configuration);
 
+  /// @brief Convert seconds to chrono::nanoseconds
+  /// @param seconds
+  /// @return chrono::nanoseconds
   static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
   {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -52,10 +70,16 @@ class HesaiDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapperB
 public:
   explicit HesaiDriverRosWrapper(const rclcpp::NodeOptions & options);
 
+  /// @brief Callback for PandarScan subscriber
+  /// @param scan_msg Received PandarScan
   void ReceiveScanMsgCallback(const pandar_msgs::msg::PandarScan::SharedPtr scan_msg);
+
+  /// @brief Get current status of this driver
+  /// @return Current status
   Status GetStatus();
 
 private:
+  /// @brief File path of Correction data (Only here because because it is required only for AT)
   std::string correction_file_path;
 };
 

@@ -7,6 +7,8 @@
 namespace nebula
 {
 // from https://marycore.jp/prog/cpp/extends-enum/
+
+/// @brief Status definition
 struct Status
 {
   enum Type {
@@ -31,6 +33,10 @@ struct Status
   friend bool operator==(const Status & L, const Status & R) { return L.type() == R.type(); }
   friend bool operator!=(const Status & L, const Status & R) { return L.type() != R.type(); }
 
+  /// @brief Convert Status enum to string (Overloading the << operator)
+  /// @param os
+  /// @param arg
+  /// @return stream
   friend std::ostream & operator<<(std::ostream & os, nebula::Status const & arg)
   {
     switch (arg.type()) {

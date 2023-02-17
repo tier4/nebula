@@ -18,6 +18,12 @@ namespace nebula
 {
 namespace ros
 {
+/// @brief Get parametor from rclcpp::Parameter
+/// @tparam T
+/// @param p Parameter from rclcpp parameter callback
+/// @param name Target parametor name
+/// @param value Corresponding value
+/// @return Whether the target name existed
 template <typename T>
 bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & name, T & value)
 {
@@ -31,6 +37,7 @@ bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & nam
   return false;
 }
 
+/// @brief Hardware monitor ros wrapper of hesai driver
 class HesaiHwMonitorRosWrapper final : public rclcpp::Node, NebulaHwMonitorWrapperBase
 {
   drivers::HesaiHwInterface hw_interface_;
@@ -38,30 +45,59 @@ class HesaiHwMonitorRosWrapper final : public rclcpp::Node, NebulaHwMonitorWrapp
 
   drivers::HesaiSensorConfiguration sensor_configuration_;
 
+  /// @brief Initializing hardware monitor ros wrapper
+  /// @param sensor_configuration SensorConfiguration for this driver
+  /// @return Resulting status
   Status InitializeHwMonitor(
     const drivers::SensorConfigurationBase & sensor_configuration) override;
 
 public:
   explicit HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & options);
 
+  /// @brief Not used
+  /// @return Current status
   Status MonitorStart() override;
+  /// @brief Not used
+  /// @return Status::OK
   Status MonitorStop() override;
+  /// @brief Not used
+  /// @return Status::OK
   Status Shutdown() override;
+  /// @brief Get configurations from ros parameters
+  /// @param sensor_configuration Output of SensorConfiguration
+  /// @return Resulting status
   Status GetParameters(drivers::HesaiSensorConfiguration & sensor_configuration);
 
 private:
   diagnostic_updater::Updater diagnostics_updater_;
+  /// @brief Initializing diagnostics
   void InitializeHesaiDiagnostics();
+  /// @brief Callback of the timer for getting the current lidar status
   void OnHesaiStatusTimer();
+  /// @brief Callback of the timer for getting the current lidar monitor via http
   void OnHesaiLidarMonitorTimerHttp();
+  /// @brief Callback of the timer for getting the current lidar monitor via tcp
   void OnHesaiLidarMonitorTimer();
   //  void OnHesaiDiagnosticsTimer();
   //  void OnHesaiStatusTimer();
+
+  /// @brief Check status information from HesaiLidarStatus for diagnostic_updater
+  /// @param diagnostics DiagnosticStatusWrapper
   void HesaiCheckStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  /// @brief Check ptp information from HesaiLidarStatus for diagnostic_updater
+  /// @param diagnostics DiagnosticStatusWrapper
   void HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  /// @brief Check temperature information from HesaiLidarStatus for diagnostic_updater
+  /// @param diagnostics DiagnosticStatusWrapper
   void HesaiCheckTemperature(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  /// @brief Check rpm information from HesaiLidarStatus for diagnostic_updater
+  /// @param diagnostics DiagnosticStatusWrapper
   void HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  /// @brief Check voltage information from HesaiLidarStatus for diagnostic_updater via http
+  /// @param diagnostics DiagnosticStatusWrapper
   void HesaiCheckVoltageHttp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  /// @brief Check voltage information from HesaiLidarStatus for diagnostic_updater via tcp
+  /// @param diagnostics DiagnosticStatusWrapper
   void HesaiCheckVoltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
   rclcpp::TimerBase::SharedPtr diagnostics_update_timer_;
@@ -87,9 +123,20 @@ private:
   //  std::timed_mutex mtx_lidar_monitor;
   std::mutex mtx_config_;
   OnSetParametersCallbackHandle::SharedPtr set_param_res_;
+  /// @brief rclcpp parameter callback
+  /// @param parameters Received parameters
+  /// @return SetParametersResult
   rcl_interfaces::msg::SetParametersResult paramCallback(
     const std::vector<rclcpp::Parameter> & parameters);
+  /// @brief Get value from property_tree
+  /// @param pt property_tree
+  /// @param key Pey string
+  /// @return Value
   std::string GetPtreeValue(boost::property_tree::ptree * pt, const std::string & key);
+  /// @brief Making fixed precision string
+  /// @param val Target value
+  /// @param pre Precision
+  /// @return Created string
   std::string GetFixedPrecisionString(double val, int pre = 2);
 
   std::string info_model;

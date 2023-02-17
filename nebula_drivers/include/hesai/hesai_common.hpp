@@ -13,6 +13,7 @@ namespace nebula
 {
 namespace drivers
 {
+/// @brief struct for Hesai sensor configuration
 struct HesaiSensorConfiguration : SensorConfigurationBase
 {
   uint16_t gnss_port{};
@@ -22,6 +23,10 @@ struct HesaiSensorConfiguration : SensorConfigurationBase
   uint16_t cloud_min_angle;
   uint16_t cloud_max_angle;
 };
+/// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
+/// @param os
+/// @param arg
+/// @return stream
 inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration const & arg)
 {
   os << (SensorConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
@@ -30,6 +35,7 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   return os;
 }
 
+/// @brief struct for Hesai calibration configuration
 struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
 {
   std::map<size_t, float> elev_angle_map;
@@ -58,6 +64,9 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
     return Status::OK;
   }
 
+  /// @brief Loading calibration data (not used)
+  /// @param calibration_content
+  /// @return Resulting status
   inline nebula::Status LoadFromString(const std::string & calibration_content)
   {
     std::stringstream ss;
@@ -78,6 +87,9 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
     return Status::OK;
   }
 
+  /// @brief Saving calibration data (not used)
+  /// @param calibration_file
+  /// @return Resulting status
   inline nebula::Status SaveFile(const std::string & calibration_file)
   {
     std::ofstream ofs(calibration_file);
@@ -97,6 +109,7 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
   }
 };
 
+/// @brief struct for Hesai correction configuration (for AT)
 struct HesaiCorrection
 {
   uint16_t delimiter;
@@ -116,6 +129,9 @@ struct HesaiCorrection
   int8_t elevationOffset[36000];
   uint8_t SHA256[32];
 
+  /// @brief Load correction data from file
+  /// @param correction_file path
+  /// @return Resulting status
   inline nebula::Status LoadFromFile(const std::string & correction_file)
   {
     std::ifstream ifs(correction_file, std::ios::in | std::ios::binary);
@@ -312,6 +328,10 @@ struct HesaiCorrection
 <option value="6">First Return + Last Return + Strongest Return</option>
 */
 
+/// @brief Convert return mode name to ReturnMode enum (Hesai-specific ReturnModeFromString)
+/// @param return_mode Return mode name (Upper and lower case letters must match)
+/// @param sensor_model Model for correct conversion
+/// @return Corresponding ReturnMode
 inline ReturnMode ReturnModeFromStringHesai(
   const std::string & return_mode, const SensorModel & sensor_model)
 {
@@ -340,6 +360,10 @@ inline ReturnMode ReturnModeFromStringHesai(
   return ReturnMode::UNKNOWN;
 }
 
+/// @brief Convert return mode number to ReturnMode enum
+/// @param return_mode Return mode number from the hardware response
+/// @param sensor_model Model for correct conversion
+/// @return Corresponding ReturnMode
 inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {
@@ -366,6 +390,11 @@ inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorMode
 
   return ReturnMode::UNKNOWN;
 }
+
+/// @brief Convert ReturnMode enum to return mode number
+/// @param return_mode target ReturnMode
+/// @param sensor_model Model for correct conversion
+/// @return Corresponding return mode number for the hardware
 inline int IntFromReturnModeHesai(const ReturnMode return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {

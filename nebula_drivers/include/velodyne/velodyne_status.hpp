@@ -9,6 +9,8 @@
 namespace nebula
 {
 // from https://marycore.jp/prog/cpp/extends-enum/
+
+/// @brief Status definition for Velodyne
 struct VelodyneStatus : Status
 {
   using Status::Status;
@@ -49,10 +51,15 @@ public:
   //  Status& operator=(const VelodyneStatus&) {std::cout << "implicit = " << std::endl; Status rt = Status(type()); return rt;}
   //  Status::Status(const VelodyneStatus& vs) {_type = v;}
 
+  /// @brief Convert Status enum to string (Overloading the << operator)
+  /// @param os
+  /// @param arg
+  /// @return stream
   friend std::ostream & operator<<(std::ostream & os, nebula::VelodyneStatus const & arg)
   {
     switch (arg.type()) {
       /*
+      // in nebula_status.hpp
       case Status::OK:
         os << "OK";
         break;

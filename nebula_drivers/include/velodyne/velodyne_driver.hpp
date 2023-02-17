@@ -20,23 +20,37 @@ namespace nebula
 {
 namespace drivers
 {
+/// @brief Velodyne driver
 class VelodyneDriver : NebulaDriverBase
 {
 private:
+  /// @brief Current driver status
   Status driver_status_;
+  /// @brief Decoder according to the model
   std::shared_ptr<drivers::VelodyneScanDecoder> scan_decoder_;
 
 public:
   VelodyneDriver() = delete;
+  /// @brief Constructor
+  /// @param sensor_configuration SensorConfiguration for this driver
+  /// @param calibration_configuration CalibrationConfiguration for this driver
   VelodyneDriver(
     const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration);
 
+  /// @brief Setting CalibrationConfiguration (not used)
+  /// @param calibration_configuration
+  /// @return Resulting status
   Status SetCalibrationConfiguration(
     const CalibrationConfigurationBase & calibration_configuration) override;
 
+  /// @brief Get current status of this driver
+  /// @return Current status
   Status GetStatus();
 
+  /// @brief Convert VelodyneScan message to point cloud
+  /// @param pandar_scan Message
+  /// @return Point cloud
   PointCloudXYZIRADTPtr ConvertScanToPointcloud(
     const std::shared_ptr<velodyne_msgs::msg::VelodyneScan> & velodyne_scan);
 };

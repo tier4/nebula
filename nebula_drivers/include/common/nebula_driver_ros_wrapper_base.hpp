@@ -15,6 +15,7 @@ namespace nebula
 {
 namespace ros
 {
+/// @brief Base class for ros wrapper of each sensor driver
 class NebulaDriverRosWrapperBase
 {
 public:
@@ -26,12 +27,18 @@ public:
   NebulaDriverRosWrapperBase & operator=(const NebulaDriverRosWrapperBase & c) = delete;
 
 private:
+  /// @brief Virtual function for initializing ros wrapper
+  /// @param sensor_configuration SensorConfiguration for this driver
+  /// @param calibration_configuration CalibrationConfiguration for this driver
+  /// @return Resulting status
   virtual Status InitializeDriver(
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
     std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) = 0;
 
   //  status ReceiveScanMsgCallback(void * ScanMsg);  // ROS message callback for individual packet
   //  type
+
+  /// @brief Point cloud publisher
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
 };
 

@@ -17,6 +17,7 @@ namespace nebula
 {
 namespace ros
 {
+/// @brief Offline hesai driver usage example (Output PCD data)
 class HesaiRosOfflineExtractSample final : public rclcpp::Node, NebulaDriverRosWrapperBase
 {
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
@@ -28,20 +29,37 @@ class HesaiRosOfflineExtractSample final : public rclcpp::Node, NebulaDriverRosW
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
   std::shared_ptr<drivers::HesaiCorrection> correction_cfg_ptr_;
 
+  /// @brief Initializing ros wrapper
+  /// @param sensor_configuration SensorConfiguration for this driver
+  /// @param calibration_configuration CalibrationConfiguration for this driver
+  /// @return Resulting status
   Status InitializeDriver(
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
     std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) override;
 
+  /// @brief Initializing ros wrapper for AT
+  /// @param sensor_configuration SensorConfiguration for this driver
+  /// @param calibration_configuration CalibrationConfiguration for this driver
+  /// @param correction_configuration CorrectionConfiguration for this driver
+  /// @return Resulting status
   Status InitializeDriver(
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
     std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
     std::shared_ptr<drivers::HesaiCorrection> correction_configuration);
 
+  /// @brief Get configurations from ros parameters
+  /// @param sensor_configuration Output of SensorConfiguration
+  /// @param calibration_configuration Output of CalibrationConfiguration
+  /// @param correction_configuration Output of CorrectionConfiguration (for AT)
+  /// @return Resulting status
   Status GetParameters(
     drivers::HesaiSensorConfiguration & sensor_configuration,
     drivers::HesaiCalibrationConfiguration & calibration_configuration,
     drivers::HesaiCorrection & correction_configuration);
 
+  /// @brief Convert seconds to chrono::nanoseconds
+  /// @param seconds
+  /// @return chrono::nanoseconds
   static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
   {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -52,7 +70,11 @@ public:
   explicit HesaiRosOfflineExtractSample(
     const rclcpp::NodeOptions & options, const std::string & node_name);
 
+  /// @brief Get current status of this driver
+  /// @return Current status
   Status GetStatus();
+
+  /// @brief Read the specified bag file and output point clouds to PCD files
   Status ReadBag();
 
 private:

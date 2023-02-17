@@ -12,6 +12,7 @@ namespace nebula
 {
 namespace ros
 {
+/// @brief Base class for hardware monitor ros wrapper of each LiDAR
 class NebulaHwMonitorWrapperBase
 {
 public:
@@ -22,11 +23,22 @@ public:
   NebulaHwMonitorWrapperBase(const NebulaHwMonitorWrapperBase & c) = delete;
   NebulaHwMonitorWrapperBase & operator=(const NebulaHwMonitorWrapperBase & c) = delete;
 
+  /// @brief Start monitoring (not used)
+  /// @return Resulting status
   virtual Status MonitorStart() = 0;
+
+  /// @brief Stop monitoring (not used)
+  /// @return Resulting status
   virtual Status MonitorStop() = 0;
+
+  /// @brief Shutdown (not used)
+  /// @return Resulting status
   virtual Status Shutdown() = 0;
 
 protected:
+  /// @brief Virtual function for initializing hardware monitor ros wrapper
+  /// @param sensor_configuration SensorConfiguration for this driver
+  /// @return Resulting status
   virtual Status InitializeHwMonitor(
     const drivers::SensorConfigurationBase & sensor_configuration) = 0;
 };

@@ -11,6 +11,7 @@ namespace nebula
 {
 namespace drivers
 {
+/// @brief struct for Velodyne sensor configuration
 struct VelodyneSensorConfiguration : SensorConfigurationBase
 {
   uint16_t gnss_port{};
@@ -19,6 +20,10 @@ struct VelodyneSensorConfiguration : SensorConfigurationBase
   uint16_t cloud_min_angle;
   uint16_t cloud_max_angle;
 };
+/// @brief Convert VelodyneSensorConfiguration to string (Overloading the << operator)
+/// @param os
+/// @param arg
+/// @return stream
 inline std::ostream & operator<<(std::ostream & os, VelodyneSensorConfiguration const & arg)
 {
   os << (SensorConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
@@ -27,6 +32,7 @@ inline std::ostream & operator<<(std::ostream & os, VelodyneSensorConfiguration 
   return os;
 }
 
+/// @brief struct for Velodyne calibration configuration
 struct VelodyneCalibrationConfiguration : CalibrationConfigurationBase
 {
   VelodyneCalibration velodyne_calibration;
@@ -46,6 +52,9 @@ struct VelodyneCalibrationConfiguration : CalibrationConfigurationBase
   }
 };
 
+/// @brief Convert return mode name to ReturnMode enum (Velodyne-specific ReturnModeFromString)
+/// @param return_mode Return mode name (Upper and lower case letters must match)
+/// @return Corresponding ReturnMode
 inline ReturnMode ReturnModeFromStringVelodyne(const std::string & return_mode)
 {
   if (return_mode == "Strongest") return ReturnMode::SINGLE_STRONGEST;

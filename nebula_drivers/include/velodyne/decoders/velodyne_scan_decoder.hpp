@@ -133,10 +133,13 @@ enum RETURN_TYPE {
   DUAL_ONLY = 7
 };
 
+/// @brief Base class for Velodyne LiDAR decorder
 class VelodyneScanDecoder
 {
 protected:
+  /// @brief Decoded point cloud
   drivers::PointCloudXYZIRADTPtr scan_pc_;
+  /// @brief Point cloud overflowing from one cycle
   drivers::PointCloudXYZIRADTPtr overflow_pc_;
 
   uint16_t scan_phase_{};
@@ -145,7 +148,9 @@ protected:
   double
     dual_return_distance_threshold_{};  // Velodyne does this internally, this will not be implemented here
 
+  /// @brief SensorConfiguration for this decoder
   std::shared_ptr<drivers::VelodyneSensorConfiguration> sensor_configuration_;
+  /// @brief Calibration for this decoder
   std::shared_ptr<drivers::VelodyneCalibrationConfiguration> calibration_configuration_;
 
 public:
@@ -157,14 +162,28 @@ public:
   virtual ~VelodyneScanDecoder() = default;
   VelodyneScanDecoder() = default;
 
+  /// @brief Virtual function for parsing and shaping VelodynePacket
+  /// @param pandar_packet
   virtual void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) = 0;
+  /// @brief Virtual function for parsing VelodynePacket based on packet structure
+  /// @param pandar_packet
+  /// @return Resulting flag
   virtual bool parsePacket(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) = 0;
 
+  /// @brief Virtual function for getting the flag indicating whether one cycle is ready
+  /// @return Readied
   virtual bool hasScanned() = 0;
+  /// @brief Calculation of points in each packet
+  /// @return # of points
   virtual int pointsPerPacket() = 0;
 
+  /// @brief Virtual function for getting the constructed point cloud
+  /// @return Point cloud
   virtual drivers::PointCloudXYZIRADTPtr get_pointcloud() = 0;
+  /// @brief Resetting point cloud buffer
+  /// @param n_pts # of points
   virtual void reset_pointcloud(size_t n_pts) = 0;
+  /// @brief Resetting overflowed point cloud buffer
   virtual void reset_overflow() = 0;
 };
 

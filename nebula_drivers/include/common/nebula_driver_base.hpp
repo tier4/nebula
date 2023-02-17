@@ -12,6 +12,7 @@ namespace nebula
 {
 namespace drivers
 {
+/// @brief Base class for each sensor driver
 class NebulaDriverBase
 {
 public:
@@ -22,6 +23,9 @@ public:
 
   NebulaDriverBase() = default;
 
+  /// @brief Virtual function for setting calibration configuration
+  /// @param calibration_configuration CalibrationConfiguration including file path
+  /// @return Resulting status
   virtual Status SetCalibrationConfiguration(
     const CalibrationConfigurationBase & calibration_configuration) = 0;
 

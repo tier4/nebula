@@ -110,30 +110,57 @@ const uint16_t MAX_AZIMUTH_DEGREE_NUM = 36000;
 const uint16_t LIDAR_AZIMUTH_UNIT = 256;
 const uint32_t MAX_AZI_LEN = 36000 * 256;
 
+/// @brief Hesai LiDAR decorder (AT128)
 class PandarATDecoder : public HesaiScanDecoder
 {
 public:
+  /// @brief Constructor
+  /// @param sensor_configuration SensorConfiguration for this decoder
+  /// @param calibration_configuration Calibration for this decoder
+  /// @param correction_configuration Correction for this decoder
   explicit PandarATDecoder(
     const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration,
     const std::shared_ptr<drivers::HesaiCorrection> & correction_configuration);
+  /// @brief Parsing and shaping PandarPacket
+  /// @param pandar_packet
   void unpack(const pandar_msgs::msg::PandarPacket & raw_packet) override;
+  /// @brief Get the flag indicating whether one cycle is ready
+  /// @return Readied
   bool hasScanned() override;
+  /// @brief Get the constructed point cloud
+  /// @return Point cloud
   drivers::PointCloudXYZIRADTPtr get_pointcloud() override;
 
 private:
+  /// @brief Parsing PandarPacket based on packet structure
+  /// @param pandar_packet
+  /// @return Resulting flag
   bool parsePacket(const pandar_msgs::msg::PandarPacket & pandar_packet) override;
-  //  drivers::PointXYZIRADT build_point(int block_id, int unit_id, ReturnMode return_type);
 
 #if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)
+  /// @brief Constructing a point cloud of the target part
+  /// @param blockid Target block
+  /// @param chLaserNumber Target laser
+  /// @param cld Point cloud
   void CalcXTPointXYZIT(
     int blockid, int chLaserNumber, boost::shared_ptr<pcl::PointCloud<PointXYZIRADT>> cld);
 #else
+  /// @brief Constructing a point cloud of the target part
+  /// @param blockid Target block
+  /// @param chLaserNumber Target laser
+  /// @param cld Point cloud
   void CalcXTPointXYZIT(
     int blockid, int chLaserNumber, std::shared_ptr<pcl::PointCloud<PointXYZIRADT>> cld);
 #endif
 
+  /// @brief Convert to point cloud
+  /// @param block_id target block
+  /// @return Point cloud
   drivers::PointCloudXYZIRADTPtr convert(size_t block_id) override;
+  /// @brief Convert to point cloud for dual return
+  /// @param block_id target block
+  /// @return Point cloud
   drivers::PointCloudXYZIRADTPtr convert_dual(size_t block_id) override;
 
   std::array<float, LASER_COUNT> elev_angle_{};
@@ -157,6 +184,7 @@ private:
   int start_angle_;
   double last_timestamp_;
 
+  /// @brief Correctio for this decoder (Only AT)
   std::shared_ptr<drivers::HesaiCorrection> correction_configuration_;
 
   bool use_dat = true;

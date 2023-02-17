@@ -9,6 +9,8 @@
 namespace nebula
 {
 // from https://marycore.jp/prog/cpp/extends-enum/
+
+/// @brief Status definition for Hesai
 struct HesaiStatus : Status
 {
   using Status::Status;
@@ -40,10 +42,15 @@ public:
     return L.type() != R.type();
   }
 
+  /// @brief Convert Status enum to string (Overloading the << operator)
+  /// @param os
+  /// @param arg
+  /// @return stream
   friend std::ostream & operator<<(std::ostream & os, nebula::HesaiStatus const & arg)
   {
     switch (arg.type()) {
       /*
+      // in nebula_status.hpp
       case Status::OK:
         os << "OK";
         break;

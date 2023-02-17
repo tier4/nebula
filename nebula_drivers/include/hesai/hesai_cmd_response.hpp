@@ -40,6 +40,7 @@ std::string dumpHex(const T& t)
 }
 */
 
+/// @brief PTP STATUS struct of PTC_COMMAND_PTP_DIAGNOSTICS
 struct HesaiPtpDiagStatus
 {
   long long master_offset;
@@ -58,6 +59,7 @@ struct HesaiPtpDiagStatus
   }
 };
 
+/// @brief PTP TLV PORT_DATA_SET struct of PTC_COMMAND_PTP_DIAGNOSTICS
 struct HesaiPtpDiagPort
 {
   std::vector<char> portIdentity = std::vector<char>(10);
@@ -112,6 +114,7 @@ struct HesaiPtpDiagPort
   }
 };
 
+/// @brief LinuxPTP TLV TIME_STATUS_NP struct of PTC_COMMAND_PTP_DIAGNOSTICS
 struct HesaiPtpDiagTime
 {
   long long master_offset;
@@ -160,6 +163,7 @@ struct HesaiPtpDiagTime
   }
 };
 
+/// @brief LinuxPTP TLV GRANDMASTER_SETTINGS_NP struct of PTC_COMMAND_PTP_DIAGNOSTICS
 struct HesaiPtpDiagGrandmaster
 {
   int clockQuality;
@@ -181,6 +185,7 @@ struct HesaiPtpDiagGrandmaster
   }
 };
 
+/// @brief struct of PTC_COMMAND_GET_INVENTORY_INFO
 struct HesaiInventory
 {
   /*
@@ -318,6 +323,7 @@ struct HesaiInventory
   }
 };
 
+/// @brief struct of PTC_COMMAND_GET_CONFIG_INFO
 struct HesaiConfig
 {
   int ipaddr[4];
@@ -400,6 +406,7 @@ struct HesaiConfig
   }
 };
 
+/// @brief struct of PTC_COMMAND_GET_LIDAR_STATUS
 struct HesaiLidarStatus
 {
   int system_uptime;
@@ -508,6 +515,7 @@ struct HesaiLidarStatus
   }
 };
 
+/// @brief struct of PTC_COMMAND_GET_LIDAR_RANGE
 struct HesaiLidarRangeAll
 {
   int method;
@@ -526,6 +534,7 @@ struct HesaiLidarRangeAll
   }
 };
 
+/// @brief struct of PTC_COMMAND_GET_PTP_CONFIG
 struct HesaiPtpConfig
 {
   int status;
@@ -557,6 +566,7 @@ struct HesaiPtpConfig
   }
 };
 
+/// @brief struct of PTC_COMMAND_LIDAR_MONITOR
 struct HesaiLidarMonitor
 {
   int input_voltage;

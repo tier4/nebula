@@ -22,6 +22,12 @@ namespace nebula
 {
 namespace ros
 {
+/// @brief Get parametor from rclcpp::Parameter
+/// @tparam T
+/// @param p Parameter from rclcpp parameter callback
+/// @param name Target parametor name
+/// @param value Corresponding value
+/// @return Whether the target name existed
 template <typename T>
 bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & name, T & value)
 {
@@ -35,6 +41,7 @@ bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & nam
   return false;
 }
 
+/// @brief Hardware interface ros wrapper of hesai driver
 class HesaiHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfaceWrapperBase
 {
   drivers::HesaiHwInterface hw_interface_;
@@ -42,26 +49,44 @@ class HesaiHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfaceW
 
   drivers::HesaiSensorConfiguration sensor_configuration_;
 
+  /// @brief Received Hesai message publisher
   rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr pandar_scan_pub_;
 
+  /// @brief Initializing hardware interface ros wrapper
+  /// @param sensor_configuration SensorConfiguration for this driver
+  /// @return Resulting status
   Status InitializeHwInterface(
     const drivers::SensorConfigurationBase & sensor_configuration) override;
+  /// @brief Callback for receiving PandarScan
+  /// @param scan_buffer Received PandarScan
   void ReceiveScanDataCallback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_buffer);
 
 public:
   explicit HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions & options);
+  /// @brief Start point cloud streaming (Call CloudInterfaceStart of HwInterface)
+  /// @return Resulting status
   Status StreamStart() override;
+  /// @brief Stop point cloud streaming (not used)
+  /// @return Resulting status
   Status StreamStop() override;
+  /// @brief Shutdown (not used)
+  /// @return Resulting status
   Status Shutdown() override;
+  /// @brief Get configurations from ros parameters
+  /// @param sensor_configuration Output of SensorConfiguration
+  /// @return Resulting status
   Status GetParameters(drivers::HesaiSensorConfiguration & sensor_configuration);
 
 private:
-  //  std::shared_ptr<boost::asio::io_service> m_owned_ios;
-  //  std::unique_ptr<::drivers::tcp_driver::TcpDriver> m_tcp_driver;
   std::mutex mtx_config_;
   OnSetParametersCallbackHandle::SharedPtr set_param_res_;
+  /// @brief rclcpp parameter callback
+  /// @param parameters Received parameters
+  /// @return SetParametersResult
   rcl_interfaces::msg::SetParametersResult paramCallback(
     const std::vector<rclcpp::Parameter> & parameters);
+  /// @brief Updating rclcpp parameter
+  /// @return SetParametersResult
   std::vector<rcl_interfaces::msg::SetParametersResult> updateParameters();
 };
 
