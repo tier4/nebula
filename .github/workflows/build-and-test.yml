@@ -47,7 +47,7 @@ jobs:
 
       - name: Run action-ros-ci
         id: action_ros_ci_step
-        uses: ros-tooling/action-ros-ci@v0.2
+        uses: ros-tooling/action-ros-ci@v0.3
         with:
           package-name: ${{ steps.list_packages.outputs.package_list }}
           target-ros2-distro: ${{ matrix.ros_distribution }}
