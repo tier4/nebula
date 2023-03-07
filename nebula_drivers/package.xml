@@ -29,7 +29,6 @@
   <depend>velodyne_msgs</depend>
   <depend>yaml-cpp</depend>
 
-
   <test_depend>ament_cmake_clang_format</test_depend>
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>
