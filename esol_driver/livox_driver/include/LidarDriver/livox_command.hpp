@@ -127,4 +127,4 @@ private:
 };
 
 }  // namespace lidar_driver
-#endif  //LIDARDRIVER_LIVOX_COMMAND_HPP_
+#endif  // LIDARDRIVER_LIVOX_COMMAND_HPP_

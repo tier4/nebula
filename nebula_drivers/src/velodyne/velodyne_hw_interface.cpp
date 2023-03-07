@@ -1,11 +1,13 @@
 #include "velodyne/velodyne_hw_interface.hpp"
 
+#include <velodyne_msgs/msg/velodyne_packet.hpp>
+#include <velodyne_msgs/msg/velodyne_scan.hpp>
+
 #include <boost/format.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+
 #include <memory>
-#include <velodyne_msgs/msg/velodyne_packet.hpp>
-#include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 namespace nebula
 {
@@ -273,7 +275,7 @@ VelodyneStatus VelodyneHwInterface::CheckAndSetConfig(
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
 
-//sync
+// sync
 
 std::string VelodyneHwInterface::GetStatus()
 {
@@ -462,7 +464,7 @@ VelodyneStatus VelodyneHwInterface::SetNetDhcp(bool use_dhcp)
   return Status::OK;
 }
 
-//async
+// async
 
 VelodyneStatus VelodyneHwInterface::GetStatusAsync(
   std::function<void(const std::string & str)> str_callback)

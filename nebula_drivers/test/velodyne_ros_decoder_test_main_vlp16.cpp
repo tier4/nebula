@@ -1,9 +1,10 @@
+#include "velodyne_ros_decoder_test_vlp16.hpp"
+
+#include <rclcpp/rclcpp.hpp>
+
 #include <gtest/gtest.h>
 
 #include <memory>
-#include <rclcpp/rclcpp.hpp>
-
-#include "velodyne_ros_decoder_test_vlp16.hpp"
 
 std::shared_ptr<nebula::ros::VelodyneRosDecoderTest> velodyne_driver;
 

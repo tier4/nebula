@@ -76,7 +76,7 @@ uint16_t FastCRC16::mcrf4xx_calc(const uint8_t * data, uint16_t len)
     crc = (crc >> 8) ^ crc_table_mcrf4xx[(crc & 0xff) ^ *data++];
   }
 
-  //seed = crc;
+  // seed = crc;
   return crc;
 }
 
@@ -138,7 +138,7 @@ uint32_t FastCRC32::crc32_calc(const uint8_t * data, uint16_t len)
     crc = (crc >> 8) ^ CRC_TABLE_CRC32[(crc & 0xff) ^ *data++];
   }
 
-  //seed = crc;
+  // seed = crc;
   crc ^= 0xffffffff;
 
   return crc;

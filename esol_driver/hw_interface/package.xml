@@ -3,9 +3,7 @@
 <package format="3">
   <name>hw_interface</name>
   <version>0.1.0</version>
-  <description>
-    hardware interface for LiDAR Sensor.
-  </description>
+  <description>hardware interface for LiDAR Sensor.</description>
   <maintainer email="sample@example.com">sample.test</maintainer>
 
   <license>TODO</license>

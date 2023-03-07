@@ -22,4 +22,3 @@
     calibration_file: "./install/nebula_lidar_driver/share/nebula_lidar_driver/calibration/velodyne/VLP32.yaml"
 
     online: True
-  

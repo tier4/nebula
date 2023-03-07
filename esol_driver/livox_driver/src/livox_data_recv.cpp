@@ -1,9 +1,9 @@
 #include "livox_data_recv.hpp"
 
-#include <cstring>
-
 #include "LidarDriver/lidar_driver.hpp"
 #include "LidarDriver/livox_common.hpp"
+
+#include <cstring>
 
 namespace lidar_driver
 {
@@ -160,7 +160,7 @@ void LidarDriver::StorageRawPacket(const std::vector<uint8_t> & buff, int rcv_le
 
 void LidarDriver::UpdateLidarStatusCode(uint32_t lidar_status_code)
 {
-  lidar_device_.lidar_status_code = lidar_status_code;  //update lidar status
+  lidar_device_.lidar_status_code = lidar_status_code;  // update lidar status
   lidar_device_.status_code_ready_ = true;
 }
 
@@ -180,7 +180,7 @@ void LidarDriver::LivoxHwRxInterfaceData()
     } else { /* nothing */
     }
   }
-  //printf("Thread end %s\n", __func__);
+  // printf("Thread end %s\n", __func__);
   return;
 }
 
@@ -199,7 +199,7 @@ void LidarDriver::LivoxHwRxInterfaceImu()
     } else { /* nothing */
     }
   }
-  //printf("Thread end %s\n", __func__);
+  // printf("Thread end %s\n", __func__);
   return;
 }
 
@@ -225,13 +225,13 @@ bool LidarDriver::SetLastTimeStamp(uint64_t timestamp)
 
   /** Get start time, down to the period boundary */
   if (diff_time > (publish_period_ns_ / 4)) {
-    //printf("GetPublishStartTime : 0 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
+    // printf("GetPublishStartTime : 0 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
     last_timestamp_ = timestamp - remaining_time;
   } else if (diff_time <= lidar_device_.packet_interval_max) {
-    //printf("GetPublishStartTime : 1 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
+    // printf("GetPublishStartTime : 1 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
     last_timestamp_ = timestamp;
   } else {
-    //printf("GetPublishStartTime : 2 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
+    // printf("GetPublishStartTime : 2 : diff_time=%u timestamp=%lu\n", diff_time, timestamp);
     /* the remaning packets in queue maybe not enough after skip */
     last_remaning_time_ = remaining_time;
     skip_start_packet_ = true;
@@ -246,7 +246,8 @@ bool LidarDriver::SetLastTimeStamp(uint64_t timestamp)
 /// @retval >0: Accumulation completed data count
 int LidarDriver::ParsePacket(livox_driver::LivoxLidarPacket & packet)
 {
-  //printf("parse packet packet.time %ld  temp.time %ld \n", packet.time, temp_publish_data_->time);
+  // printf("parse packet packet.time %ld  temp.time %ld \n", packet.time,
+  // temp_publish_data_->time);
   int iret = 0;
   uint64_t timestamp = packet.time_stamp;
   bool timegap_over = false;
@@ -265,12 +266,14 @@ int LidarDriver::ParsePacket(livox_driver::LivoxLidarPacket & packet)
     int64_t time_gap = timestamp - last_timestamp_;
     // if timeout -> packet publish
     if (time_gap > lidar_device_.packet_interval_max && lidar_device_.data_is_published) {
-      //printf( "NG:time_gap=%ld timestamp=%ld last_timestamp=%ld\n", time_gap, timestamp, last_timestamp_ );
+      // printf( "NG:time_gap=%ld timestamp=%ld last_timestamp=%ld\n", time_gap, timestamp,
+      // last_timestamp_ );
       packet.data.clear();
       last_timestamp_ += lidar_device_.packet_interval;
       timegap_over = true;
     } else {
-      //printf( "kOk:time_gap=%ld timestamp=%ld last_timestamp=%ld\n", time_gap, timestamp, last_timestamp_ );
+      // printf( "kOk:time_gap=%ld timestamp=%ld last_timestamp=%ld\n", time_gap, timestamp,
+      // last_timestamp_ );
       last_timestamp_ = timestamp;
       timegap_over = false;
     }

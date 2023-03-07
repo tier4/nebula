@@ -1,16 +1,17 @@
 #ifndef NEBULA_VelodyneHwMonitorRosWrapper_H
 #define NEBULA_VelodyneHwMonitorRosWrapper_H
 
-#include <ament_index_cpp/get_package_prefix.hpp>
-#include <diagnostic_updater/diagnostic_updater.hpp>
-#include <mutex>
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-
 #include "common/nebula_common.hpp"
 #include "common/nebula_hw_monitor_ros_wrapper_base.hpp"
 #include "velodyne/velodyne_common.hpp"
 #include "velodyne/velodyne_hw_interface.hpp"
+
+#include <ament_index_cpp/get_package_prefix.hpp>
+#include <diagnostic_updater/diagnostic_updater.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
+
+#include <mutex>
 
 namespace nebula
 {
@@ -48,7 +49,7 @@ public:
   Status Shutdown() override;
   Status GetParameters(drivers::VelodyneSensorConfiguration & sensor_configuration);
 
-private:  //ROS Diagnostics
+private:  // ROS Diagnostics
   diagnostic_updater::Updater diagnostics_updater_;
   void InitializeVelodyneDiagnostics();
   std::string GetPtreeValue(
@@ -59,13 +60,13 @@ private:  //ROS Diagnostics
   void OnVelodyneDiagnosticsTimer();
 
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopHv();
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopAdTemp();  //only32
+  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopAdTemp();  // only32
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopLm20Temp();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5v();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr25v();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr33v();
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5vRaw();  //only16
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrRaw();    //only32
+  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5vRaw();  // only16
+  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrRaw();    // only32
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrVccint();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotIOut();
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwr12v();

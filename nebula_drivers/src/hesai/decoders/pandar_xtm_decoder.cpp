@@ -113,7 +113,8 @@ void PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_pack
       }
     } else {
       *scan_pc_ += *block_pc;
-      //printf("last_azimuth_:%d pkt.blocks[block_id].azimuth:%d  *******azimuthGap:%d\n", last_azimuth_, pkt.blocks[block_id].azimuth, azimuthGap);
+      // printf("last_azimuth_:%d pkt.blocks[block_id].azimuth:%d  *******azimuthGap:%d\n",
+      // last_azimuth_, pkt.blocks[block_id].azimuth, azimuthGap);
     }
     //    CalcXTPointXYZIT(block_id, packet_.header.chLaserNumber, scan_pc_);
     last_azimuth_ = packet_.blocks[block_id].azimuth;

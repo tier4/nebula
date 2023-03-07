@@ -1,11 +1,12 @@
 #pragma once
 
-#include <array>
-
 #include "hesai/decoders/pandar_xtm.hpp"
 #include "hesai_scan_decoder.hpp"
+
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
+
+#include <array>
 
 namespace nebula
 {

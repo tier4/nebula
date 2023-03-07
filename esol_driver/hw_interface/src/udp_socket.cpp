@@ -171,7 +171,7 @@ int UdpSocket::Recv(std::vector<uint8_t> & buff, int wait_msec)
     } else if ((fds[0].revents & (POLLERR | POLLHUP | POLLNVAL)) != 0) {
       return -2;  // device error?
     } else if ((fds[0].revents & POLLIN) == 0) {
-      //continue;
+      // continue;
     } else {
       socklen_t addr_size = sizeof(rcv_addrin_);
       retval = recvfrom(
@@ -187,7 +187,7 @@ int UdpSocket::Recv(std::vector<uint8_t> & buff, int wait_msec)
         (sensor_addrin_.sin_addr.s_addr != rcv_addrin_.sin_addr.s_addr)) {
         // If the target device is specified,
         // reception from other than the target device will be discarded.
-        //continue;
+        // continue;
       } else {
         nbytes = retval;
       }

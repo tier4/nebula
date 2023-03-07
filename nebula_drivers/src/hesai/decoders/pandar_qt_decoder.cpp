@@ -1,8 +1,8 @@
 #include "hesai/decoders/pandar_qt_decoder.hpp"
 
-#include <cmath>
-
 #include "hesai/decoders/pandar_qt.hpp"
+
+#include <cmath>
 
 namespace nebula
 {
@@ -75,7 +75,7 @@ void PandarQTDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
        sensor_configuration_->return_mode != drivers::ReturnMode::FIRST) ||
       (packet_.return_mode == LAST_RETURN &&
        sensor_configuration_->return_mode != drivers::ReturnMode::LAST)) {
-      //sensor config, driver mismatched
+      // sensor config, driver mismatched
     }
   }
 
@@ -171,11 +171,13 @@ drivers::PointCloudXYZIRADTPtr PandarQTDecoder::convert_dual(size_t block_id)
     bool even_usable = !(even_unit.distance <= 0.1 || even_unit.distance > 200.0);
     bool odd_usable = !(odd_unit.distance <= 0.1 || odd_unit.distance > 200.0);
 
-    //    if (sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_FIRST && even_usable) {
+    //    if (sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_FIRST &&
+    //    even_usable) {
     if (sensor_configuration_->return_mode == drivers::ReturnMode::FIRST && even_usable) {
       // First return is in even block
       block_pc->push_back(build_point(even_block_id, unit_id, drivers::ReturnMode::SINGLE_FIRST));
-      //    } else if (sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_LAST && even_usable) {
+      //    } else if (sensor_configuration_->return_mode == drivers::ReturnMode::SINGLE_LAST &&
+      //    even_usable) {
     } else if (sensor_configuration_->return_mode == drivers::ReturnMode::LAST && even_usable) {
       // Last return is in odd block
       block_pc->push_back(build_point(odd_block_id, unit_id, drivers::ReturnMode::SINGLE_LAST));

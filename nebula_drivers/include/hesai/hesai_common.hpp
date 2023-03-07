@@ -1,14 +1,14 @@
 #ifndef NEBULA_HESAI_COMMON_H
 #define NEBULA_HESAI_COMMON_H
 
+#include "common/nebula_common.hpp"
+#include "common/nebula_status.hpp"
+
 #include <bitset>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
-#include "common/nebula_common.hpp"
-#include "common/nebula_status.hpp"
 namespace nebula
 {
 namespace drivers
@@ -167,26 +167,28 @@ struct HesaiCorrection
     std::cout << "buf[2]: " << buf[2] << std::endl;
     std::cout << "(buf[index + 2] & 0xff): " << (buf[index + 2] & 0xff) << std::endl;
     std::cout << "static_cast<uint8_t>(buf[2]): " << static_cast<uint8_t>(buf[2]) << std::endl;
-    std::cout << "static_cast<uint8_t>((buf[index + 2] & 0xff)): " << static_cast<uint8_t>((buf[index + 2] & 0xff)) << std::endl;
-    std::cout << "int static_cast<uint8_t>(buf[2]): " << static_cast<int>(static_cast<uint8_t>(buf[2])) << std::endl;
-    std::cout << "int static_cast<uint8_t>((buf[index + 2] & 0xff)): " << static_cast<int>(static_cast<uint8_t>((buf[index + 2] & 0xff))) << std::endl;
-    uint8_t tmp = static_cast<uint8_t>((buf[index + 2] & 0xff));
-    std::cout << "tmp: " << tmp << std::endl;
+    std::cout << "static_cast<uint8_t>((buf[index + 2] & 0xff)): " <<
+    static_cast<uint8_t>((buf[index + 2] & 0xff)) << std::endl; std::cout << "int
+    static_cast<uint8_t>(buf[2]): " << static_cast<int>(static_cast<uint8_t>(buf[2])) << std::endl;
+    std::cout << "int static_cast<uint8_t>((buf[index + 2] & 0xff)): " <<
+    static_cast<int>(static_cast<uint8_t>((buf[index + 2] & 0xff))) << std::endl; uint8_t tmp =
+    static_cast<uint8_t>((buf[index + 2] & 0xff)); std::cout << "tmp: " << tmp << std::endl;
     std::cout << "static_cast<int>(tmp): " << static_cast<int>(tmp) << std::endl;
     std::cout << "std::bitset<8>(tmp): " << std::bitset<8>(tmp) << std::endl;
 
-    std::cout << "std::bitset<8>(static_cast<int>(tmp)): " << std::bitset<8>(static_cast<int>(tmp)) << std::endl;
-    std::cout << "buf[4]: " << buf[4] << std::endl;
-    std::cout << "(buf[index + 4] & 0xff): " << (buf[index + 4] & 0xff) << std::endl;
-    std::cout << "static_cast<uint8_t>(buf[4]): " << static_cast<uint8_t>(buf[4]) << std::endl;
-    std::cout << "static_cast<uint8_t>((buf[index + 4] & 0xff)): " << static_cast<uint8_t>((buf[index + 4] & 0xff)) << std::endl;
-    std::cout << "int static_cast<uint8_t>(buf[4]): " << static_cast<int>(static_cast<uint8_t>(buf[4])) << std::endl;
-    std::cout << "int static_cast<uint8_t>((buf[index + 4] & 0xff)): " << static_cast<int>(static_cast<uint8_t>((buf[index + 2] & 0xff))) << std::endl;
-    tmp = static_cast<uint8_t>((buf[index + 4] & 0xff));
-    std::cout << "tmp: " << tmp << std::endl;
+    std::cout << "std::bitset<8>(static_cast<int>(tmp)): " << std::bitset<8>(static_cast<int>(tmp))
+    << std::endl; std::cout << "buf[4]: " << buf[4] << std::endl; std::cout << "(buf[index + 4] &
+    0xff): " << (buf[index + 4] & 0xff) << std::endl; std::cout << "static_cast<uint8_t>(buf[4]): "
+    << static_cast<uint8_t>(buf[4]) << std::endl; std::cout << "static_cast<uint8_t>((buf[index + 4]
+    & 0xff)): " << static_cast<uint8_t>((buf[index + 4] & 0xff)) << std::endl; std::cout << "int
+    static_cast<uint8_t>(buf[4]): " << static_cast<int>(static_cast<uint8_t>(buf[4])) << std::endl;
+    std::cout << "int static_cast<uint8_t>((buf[index + 4] & 0xff)): " <<
+    static_cast<int>(static_cast<uint8_t>((buf[index + 2] & 0xff))) << std::endl; tmp =
+    static_cast<uint8_t>((buf[index + 4] & 0xff)); std::cout << "tmp: " << tmp << std::endl;
     std::cout << "static_cast<int>(tmp): " << static_cast<int>(tmp) << std::endl;
     std::cout << "std::bitset<8>(tmp): " << std::bitset<8>(tmp) << std::endl;
-    std::cout << "std::bitset<8>(static_cast<int>(tmp)): " << std::bitset<8>(static_cast<int>(tmp)) << std::endl;
+    std::cout << "std::bitset<8>(static_cast<int>(tmp)): " << std::bitset<8>(static_cast<int>(tmp))
+    << std::endl;
     */
     //*
     delimiter = (buf[index] & 0xff) << 8 | ((buf[index + 1] & 0xff));
@@ -204,9 +206,10 @@ struct HesaiCorrection
     */
     /*
     std::cout << "channelNumber: " << channelNumber << std::endl;
-    std::cout << "static_cast<int>(channelNumber): " << static_cast<int>(channelNumber) << std::endl;
-    std::cout << "std::bitset<8>(channelNumber): " << std::bitset<8>(channelNumber) << std::endl;
-    std::cout << "std::bitset<8>(static_cast<int>(channelNumber)): " << std::bitset<8>(static_cast<int>(channelNumber)) << std::endl;
+    std::cout << "static_cast<int>(channelNumber): " << static_cast<int>(channelNumber) <<
+    std::endl; std::cout << "std::bitset<8>(channelNumber): " << std::bitset<8>(channelNumber) <<
+    std::endl; std::cout << "std::bitset<8>(static_cast<int>(channelNumber)): " <<
+    std::bitset<8>(static_cast<int>(channelNumber)) << std::endl;
     */
     /*
     mirrorNumber = static_cast<uint8_t>(buf[index + 5] & 0xff);
@@ -269,7 +272,8 @@ struct HesaiCorrection
     std::cout << "frameNumber: " << static_cast<int>(frameNumber) << std::endl;
     std::cout << "mirrorNumber: " << static_cast<int>(mirrorNumber) << std::endl;
     for (int8_t i = 0; i < 8; i++) {
-      std::cout << "frameConfig[" << static_cast<int>(i) << "]: " << static_cast<int>(frameConfig[i]) << std::endl;
+      std::cout << "frameConfig[" << static_cast<int>(i) << "]: " <<
+    static_cast<int>(frameConfig[i]) << std::endl;
     }
     */
 

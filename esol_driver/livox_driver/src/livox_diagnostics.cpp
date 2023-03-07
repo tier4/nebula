@@ -1,8 +1,8 @@
 #include "LidarDriver/livox_diagnostics.hpp"
 
-#include <iostream>
-
 #include "LidarDriver/livox_common.hpp"
+
+#include <iostream>
 
 namespace livox_driver
 {

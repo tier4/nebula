@@ -3,9 +3,7 @@
 <package format="3">
   <name>livox_driver</name>
   <version>0.1.0</version>
-  <description>
-    Livox Sensor Driver.
-  </description>
+  <description>Livox Sensor Driver.</description>
   <maintainer email="sample@example.com">sample.test</maintainer>
 
   <license>TODO</license>

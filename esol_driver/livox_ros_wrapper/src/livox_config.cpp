@@ -1,11 +1,12 @@
+#include "LidarDriver/livox_common.hpp"
+#include "ros2_driver_wrapper.hpp"
+
+#include <rclcpp/rclcpp.hpp>
+
 #include <cmath>
 #include <iostream>
 #include <map>
-#include <rclcpp/rclcpp.hpp>
 #include <string>
-
-#include "LidarDriver/livox_common.hpp"
-#include "ros2_driver_wrapper.hpp"
 
 namespace lidar_driver
 {
@@ -140,14 +141,16 @@ bool RosDriverWrapper::CheckLivoxSensorConfiguration(SensorConfigEx & ex)
   } else if ((ex.sensor_config.frequency_ms < 5) || (ex.sensor_config.frequency_ms > 1000)) {
     err_str = "frequency_ms " + std::to_string(ex.sensor_config.frequency_ms);
   }
-#if 0  // ToDo: echo_mode and coordinate_mode must not be implemented in the first beta version of the driver.
+#if 0   // ToDo: echo_mode and coordinate_mode must not be implemented in the first beta version of
+        // the driver.
   else if( ex.sensor_config.echo_mode == livox_driver::LivoxEchoMode::kUnknown ) {
     err_str = "echo_mode '" + ex.sensor_config.echo_mode_str + "'";
   }
   else if( ex.sensor_config.coordinate_model == livox_driver::LivoxCoordinateMode::kUnknown ) {
     err_str = "coordinate_mode '" + ex.sensor_config.coordinate_mode_str + "'";
   }
-#endif  // ToDo: echo_mode and coordinate_mode must not be implemented in the first beta version of the driver.
+#endif  // ToDo: echo_mode and coordinate_mode must not be implemented in the first beta version of
+        // the driver.
   else {
     ret = true;
   }
@@ -174,14 +177,16 @@ bool RosDriverWrapper::CheckLivoxCloudConfiguration(
   if (ex.sensor_config.sensor_model == livox_driver::LivoxSensorModel::UNKNOWN) {
     err_str = "sensor_model '" + ex.sensor_model_str + "'";
   }
-#if 0  // ToDo: Point_echo and echo_mode must not be implemented in the first beta version of the driver.
+#if 0   // ToDo: Point_echo and echo_mode must not be implemented in the first beta version of the
+        // driver.
   else if( cloud_config.echo_mode == livox_driver::LivoxEchoMode::kUnknown ) {
     err_str = "echo_mode '" + ex.sensor_config.echo_mode_str + "'";
   }
   else if( cloud_config.coordinate_model == livox_driver::LivoxCoordinateMode::kUnknown ) {
     err_str = "coordinate_mode '" + ex.sensor_config.coordinate_mode_str + "'";
   }
-#endif  // ToDo: Point_echo and echo_mode must not be implemented in the first beta version of the driver.
+#endif  // ToDo: Point_echo and echo_mode must not be implemented in the first beta version of the
+        // driver.
   else if (std::signbit(cloud_config.cloud_min_range)) {
     err_str = "cloud_min_range" + std::to_string(cloud_config.cloud_min_range);
   } else if (std::signbit(cloud_config.cloud_max_range)) {

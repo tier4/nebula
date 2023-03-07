@@ -1,10 +1,5 @@
 #include "velodyne_ros_decoder_test_vlp16.hpp"
 
-#include <gtest/gtest.h>
-
-#include <filesystem>
-#include <regex>
-
 #include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rcpputils/filesystem_helper.hpp"
@@ -14,6 +9,11 @@
 #include "rosbag2_cpp/writer.hpp"
 #include "rosbag2_cpp/writers/sequential_writer.hpp"
 #include "rosbag2_storage/storage_options.hpp"
+
+#include <gtest/gtest.h>
+
+#include <filesystem>
+#include <regex>
 
 namespace nebula
 {
@@ -327,7 +327,8 @@ void VelodyneRosDecoderTest::ReadBag()
         auto extracted_msg_ptr = std::make_shared<velodyne_msgs::msg::VelodyneScan>(extracted_msg);
         pointcloud = driver_ptr_->ConvertScanToPointcloud(extracted_msg_ptr);
 
-        // There are very rare cases where has_scanned_ does not become true, but it is not known whether it is because of decoder or deserialize_message.
+        // There are very rare cases where has_scanned_ does not become true, but it is not known
+        // whether it is because of decoder or deserialize_message.
         if (!pointcloud) continue;
 
         auto fn = std::to_string(bag_message->time_stamp) + ".pcd";

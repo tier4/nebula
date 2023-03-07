@@ -1,7 +1,5 @@
 #include "velodyne/velodyne_ros_offline_extract_bag_pcd.hpp"
 
-#include <regex>
-
 #include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rcpputils/filesystem_helper.hpp"
@@ -11,6 +9,8 @@
 #include "rosbag2_cpp/writer.hpp"
 #include "rosbag2_cpp/writers/sequential_writer.hpp"
 #include "rosbag2_storage/storage_options.hpp"
+
+#include <regex>
 
 namespace nebula
 {

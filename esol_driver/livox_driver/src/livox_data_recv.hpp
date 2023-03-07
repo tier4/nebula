@@ -1,9 +1,9 @@
 #ifndef LIDARDRIVER_LIVOX_DATA_RECV_HPP_
 #define LIDARDRIVER_LIVOX_DATA_RECV_HPP_
 
-#include <array>
-
 #include "LidarDriver/livox_common.hpp"
+
+#include <array>
 
 namespace lidar_driver
 {

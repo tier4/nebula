@@ -1,20 +1,20 @@
 #ifndef NEBULA_VelodyneHwInterfaceRosWrapper_H
 #define NEBULA_VelodyneHwInterfaceRosWrapper_H
 
-#include <ament_index_cpp/get_package_prefix.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-
 #include "common/nebula_common.hpp"
 #include "common/nebula_hw_interface_ros_wrapper_base.hpp"
 #include "velodyne/velodyne_common.hpp"
 #include "velodyne/velodyne_hw_interface.hpp"
-//#include <diagnostic_updater/diagnostic_updater.hpp>
 
-#include <mutex>
+#include <ament_index_cpp/get_package_prefix.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
+//#include <diagnostic_updater/diagnostic_updater.hpp>
 
 #include "velodyne_msgs/msg/velodyne_packet.hpp"
 #include "velodyne_msgs/msg/velodyne_scan.hpp"
+
+#include <mutex>
 
 namespace nebula
 {
@@ -54,10 +54,10 @@ public:
   Status Shutdown() override;
   Status GetParameters(drivers::VelodyneSensorConfiguration & sensor_configuration);
 
-private:  //ROS Diagnostics
-          /*
-  diagnostic_updater::Updater diagnostics_updater_;
-  void InitializeVelodyneDiagnostics();
+private:  // ROS Diagnostics
+  /*
+diagnostic_updater::Updater diagnostics_updater_;
+void InitializeVelodyneDiagnostics();
 */
   std::string GetPtreeValue(
     std::shared_ptr<boost::property_tree::ptree> pt, const std::string & key);

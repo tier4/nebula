@@ -39,6 +39,7 @@ import launch
 import launch_ros.actions
 import yaml
 
+
 def generate_launch_description():
     sensor_name = 'livox_a'
     config_directory = os.path.join(

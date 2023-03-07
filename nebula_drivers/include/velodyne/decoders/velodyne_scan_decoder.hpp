@@ -1,12 +1,14 @@
 #ifndef NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
 #define NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
-#include <pcl/point_cloud.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include <boost/format.hpp>
+
+#include <pcl/point_cloud.h>
+
 #include <cerrno>
 #include <cmath>
 #include <cstdint>
-#include <rclcpp/rclcpp.hpp>
 #include <string>
 #include <vector>
 
@@ -16,10 +18,11 @@
 #include <angles/angles/angles.h>  //Humble
 #endif
 
-#include <velodyne/decoders/velodyne_calibration_decoder.hpp>
-
 #include "common/point_types.hpp"
 #include "velodyne/velodyne_common.hpp"
+
+#include <velodyne/decoders/velodyne_calibration_decoder.hpp>
+
 #include "velodyne_msgs/msg/velodyne_packet.hpp"
 #include "velodyne_msgs/msg/velodyne_scan.hpp"
 
@@ -142,8 +145,8 @@ protected:
   uint16_t scan_phase_{};
   uint16_t last_phase_{};
   bool has_scanned_ = true;
-  double
-    dual_return_distance_threshold_{};  // Velodyne does this internally, this will not be implemented here
+  double dual_return_distance_threshold_{};  // Velodyne does this internally, this will not be
+                                             // implemented here
 
   std::shared_ptr<drivers::VelodyneSensorConfiguration> sensor_configuration_;
   std::shared_ptr<drivers::VelodyneCalibrationConfiguration> calibration_configuration_;

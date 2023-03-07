@@ -1,10 +1,11 @@
 #pragma once
 
-#include <array>
 #include <velodyne/decoders/velodyne_scan_decoder.hpp>
 
 #include "velodyne_msgs/msg/velodyne_packet.hpp"
 #include "velodyne_msgs/msg/velodyne_scan.hpp"
+
+#include <array>
 
 namespace nebula
 {

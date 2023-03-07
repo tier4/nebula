@@ -1,12 +1,12 @@
 #ifndef NEBULA_VELODYNE_COMMON_H
 #define NEBULA_VELODYNE_COMMON_H
 
-#include <fstream>
-#include <sstream>
-
 #include "common/nebula_common.hpp"
 #include "common/nebula_status.hpp"
 #include "decoders/velodyne_calibration_decoder.hpp"
+
+#include <fstream>
+#include <sstream>
 namespace nebula
 {
 namespace drivers

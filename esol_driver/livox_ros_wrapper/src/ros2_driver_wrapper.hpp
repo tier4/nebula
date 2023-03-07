@@ -13,14 +13,15 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 //#include <pcl_conversions/pcl_conversions.h>
-#include <diagnostic_updater/diagnostic_updater.hpp>
-#include <livox_msgs/msg/lidar_scan.hpp>
-#include <sensor_msgs/msg/imu.hpp>
-#include <sensor_msgs/msg/point_cloud2.hpp>
-
 #include "LidarDriver/lidar_driver.hpp"
 #include "LidarDriver/livox_common.hpp"
 #include "LidarDriver/livox_diagnostics.hpp"
+
+#include <diagnostic_updater/diagnostic_updater.hpp>
+
+#include <livox_msgs/msg/lidar_scan.hpp>
+#include <sensor_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 
 // ToDo: livox only
 using SensorConfiguration = livox_driver::LivoxSensorConfiguration;
@@ -51,7 +52,7 @@ private:  // Figure 9.
 
   LidarDriver driver_;
 
-  //rclcpp::Node * node_;
+  // rclcpp::Node * node_;
 
   void MainThread();
   std::thread main_thread_;
@@ -79,7 +80,7 @@ private:                                                                  // pub
 
   void InitPointcloud2MsgHeader(sensor_msgs::msg::PointCloud2 & cloud);
 
-private:  //ROS Diagnostics
+private:  // ROS Diagnostics
   rclcpp::TimerBase::SharedPtr diagnostics_timer_;
   diagnostic_updater::Updater diagnostics_updater_;
   livox_driver::diagnostics::LivoxDiagnosticsSensorStatus current_diagnostics_status_{};
@@ -109,7 +110,7 @@ private:  // Configuration
     int npackets;
   } config_;
 
-  //SensorConfigEx sensor_configuration_;
+  // SensorConfigEx sensor_configuration_;
   struct SensorConfigEx_
   {
     SensorConfiguration sensor_config;
@@ -125,7 +126,7 @@ private:  // Configuration
   bool CheckSensorConfiguration(SensorConfigEx &);
   bool CheckOutputCloudConfiguration(SensorConfigEx &, CloudConfiguration &);
   void ConfigureSensor(SensorConfiguration &);
-  //void SetCalibration(sensor_calibration);			// ToDo
+  // void SetCalibration(sensor_calibration);			// ToDo
   SensorConfiguration GetSensorConfig();
 
   void GetParameter();
@@ -150,4 +151,4 @@ public:
 #endif  // UTEST
 };
 }  // namespace lidar_driver
-#endif  //LIDAR_DRIVER_ROS2_DRIVER_WRAPPER_HPP_
+#endif  // LIDAR_DRIVER_ROS2_DRIVER_WRAPPER_HPP_

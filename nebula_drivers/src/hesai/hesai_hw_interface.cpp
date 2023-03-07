@@ -1,12 +1,14 @@
 #include "hesai/hesai_hw_interface.hpp"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <memory>
 #include <pandar_msgs/msg/pandar_jumbo_packet.hpp>
 #include <pandar_msgs/msg/pandar_packet.hpp>
 #include <pandar_msgs/msg/pandar_scan.hpp>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include <memory>
 
 #define PANDARGENERALSDK_TCP_COMMAND_PORT (9347)
 
@@ -134,7 +136,8 @@ void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & b
     /*
     int index = 6+6+1034+6+1+11+2+4+1+1+6;
     std::cout << index << std::endl;
-    unsigned int udp_sec = static_cast<unsigned int>((data[index] & 0xff) | (data[index + 1] & 0xff) << 8 |
+    unsigned int udp_sec = static_cast<unsigned int>((data[index] & 0xff) | (data[index + 1] & 0xff)
+    << 8 |
                   ((data[index + 2] & 0xff) << 16) | ((data[index + 3] & 0xff) << 24));
     std::cout << udp_sec << std::endl;
     */
@@ -220,7 +223,7 @@ Status HesaiHwInterface::GetLidarCalib(
   int len = 0;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x05);  //Cmd PTC_COMMAND_GET_LIDAR_CALIBRATION
+  buf_vec.emplace_back(0x05);  // Cmd PTC_COMMAND_GET_LIDAR_CALIBRATION
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -245,9 +248,10 @@ Status HesaiHwInterface::GetLidarCalib(
 
   //  auto tcp_driver_local = new ::drivers::tcp_driver::TcpDriver(ctx);
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
-  //  tcp_driver_local->socket()->open();
-  //  auto sct = tcp_driver_local->socket();
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT); tcp_driver_local->socket()->open(); auto sct =
+  //  tcp_driver_local->socket();
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
     buf_vec,
@@ -328,14 +332,14 @@ Status HesaiHwInterface::GetPtpDiagStatus(
   int len = 1;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x06);  //Cmd PTC_COMMAND_PTP_DIAGNOSTICS
+  buf_vec.emplace_back(0x06);  // Cmd PTC_COMMAND_PTP_DIAGNOSTICS
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
 
-  buf_vec.emplace_back(0x01);  //PTP STATUS
+  buf_vec.emplace_back(0x01);  // PTP STATUS
 
   /*
  if(wl){
@@ -355,9 +359,10 @@ Status HesaiHwInterface::GetPtpDiagStatus(
 
   //  auto tcp_driver_local = new ::drivers::tcp_driver::TcpDriver(ctx);
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
-  //  tcp_driver_local->socket()->open();
-  //  auto sct = tcp_driver_local->socket();
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT); tcp_driver_local->socket()->open(); auto sct =
+  //  tcp_driver_local->socket();
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
     buf_vec,
@@ -419,14 +424,18 @@ Status HesaiHwInterface::GetPtpDiagStatus(
                                               static_cast<long long>(response[payload_pos++]) << 8;
         hesai_ptp_diag_status.master_offset =
           hesai_ptp_diag_status.master_offset | static_cast<long long>(response[payload_pos++]);
-        //      hesai_ptp_diag_status.ptp_state = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_ptp_diag_status.ptp_state = response[payload_pos++] << 24 |
+        //      response[payload_pos++] << 16 | response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_ptp_diag_status.ptp_state = response[payload_pos++] << 24;
         hesai_ptp_diag_status.ptp_state = hesai_ptp_diag_status.ptp_state | response[payload_pos++]
                                                                               << 16;
         hesai_ptp_diag_status.ptp_state = hesai_ptp_diag_status.ptp_state | response[payload_pos++]
                                                                               << 8;
         hesai_ptp_diag_status.ptp_state = hesai_ptp_diag_status.ptp_state | response[payload_pos++];
-        //      hesai_ptp_diag_status.elapsed_millisec = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_ptp_diag_status.elapsed_millisec = response[payload_pos++] << 24 |
+        //      response[payload_pos++] << 16 | response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_ptp_diag_status.elapsed_millisec = response[payload_pos++] << 24;
         hesai_ptp_diag_status.elapsed_millisec =
           hesai_ptp_diag_status.elapsed_millisec | response[payload_pos++] << 16;
@@ -491,14 +500,14 @@ Status HesaiHwInterface::GetPtpDiagPort(
   int len = 1;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x06);  //Cmd PTC_COMMAND_PTP_DIAGNOSTICS
+  buf_vec.emplace_back(0x06);  // Cmd PTC_COMMAND_PTP_DIAGNOSTICS
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
 
-  buf_vec.emplace_back(0x02);  //PTP TLV PORT_DATA_SET
+  buf_vec.emplace_back(0x02);  // PTP TLV PORT_DATA_SET
 
   /*
  if(wl){
@@ -518,9 +527,10 @@ Status HesaiHwInterface::GetPtpDiagPort(
 
   //  auto tcp_driver_local = new ::drivers::tcp_driver::TcpDriver(ctx);
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
-  //  tcp_driver_local->socket()->open();
-  //  auto sct = tcp_driver_local->socket();
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT); tcp_driver_local->socket()->open(); auto sct =
+  //  tcp_driver_local->socket();
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
     buf_vec,
@@ -657,14 +667,14 @@ Status HesaiHwInterface::GetPtpDiagTime(
   int len = 1;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x06);  //Cmd PTC_COMMAND_PTP_DIAGNOSTICS
+  buf_vec.emplace_back(0x06);  // Cmd PTC_COMMAND_PTP_DIAGNOSTICS
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
 
-  buf_vec.emplace_back(0x03);  //PTP TLV TIME_STATUS_NP
+  buf_vec.emplace_back(0x03);  // PTP TLV TIME_STATUS_NP
 
   /*
  if(wl){
@@ -684,9 +694,10 @@ Status HesaiHwInterface::GetPtpDiagTime(
 
   //  auto tcp_driver_local = new ::drivers::tcp_driver::TcpDriver(ctx);
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
-  //  tcp_driver_local->socket()->open();
-  //  auto sct = tcp_driver_local->socket();
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT); tcp_driver_local->socket()->open(); auto sct =
+  //  tcp_driver_local->socket();
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
     buf_vec,
@@ -773,7 +784,9 @@ Status HesaiHwInterface::GetPtpDiagTime(
           hesai_ptp_diag_time.ingress_time | static_cast<long long>(response[payload_pos++]) << 8;
         hesai_ptp_diag_time.ingress_time =
           hesai_ptp_diag_time.ingress_time | static_cast<long long>(response[payload_pos++]);
-        //      hesai_ptp_diag_time.cumulativeScaledRateOffset = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_ptp_diag_time.cumulativeScaledRateOffset = response[payload_pos++] << 24 |
+        //      response[payload_pos++] << 16 | response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_ptp_diag_time.cumulativeScaledRateOffset = response[payload_pos++] << 24;
         hesai_ptp_diag_time.cumulativeScaledRateOffset =
           hesai_ptp_diag_time.cumulativeScaledRateOffset | response[payload_pos++] << 16;
@@ -781,7 +794,9 @@ Status HesaiHwInterface::GetPtpDiagTime(
           hesai_ptp_diag_time.cumulativeScaledRateOffset | response[payload_pos++] << 8;
         hesai_ptp_diag_time.cumulativeScaledRateOffset =
           hesai_ptp_diag_time.cumulativeScaledRateOffset | response[payload_pos++];
-        //      hesai_ptp_diag_time.scaledLastGmPhaseChange = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_ptp_diag_time.scaledLastGmPhaseChange = response[payload_pos++] << 24 |
+        //      response[payload_pos++] << 16 | response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_ptp_diag_time.scaledLastGmPhaseChange = response[payload_pos++] << 24;
         hesai_ptp_diag_time.scaledLastGmPhaseChange =
           hesai_ptp_diag_time.scaledLastGmPhaseChange | response[payload_pos++] << 16;
@@ -789,14 +804,17 @@ Status HesaiHwInterface::GetPtpDiagTime(
           hesai_ptp_diag_time.scaledLastGmPhaseChange | response[payload_pos++] << 8;
         hesai_ptp_diag_time.scaledLastGmPhaseChange =
           hesai_ptp_diag_time.scaledLastGmPhaseChange | response[payload_pos++];
-        //      hesai_ptp_diag_time.gmTimeBaseIndicator = response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_ptp_diag_time.gmTimeBaseIndicator = response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_ptp_diag_time.gmTimeBaseIndicator = response[payload_pos++] << 8;
         hesai_ptp_diag_time.gmTimeBaseIndicator =
           hesai_ptp_diag_time.gmTimeBaseIndicator | response[payload_pos++];
         for (size_t i = 0; i < hesai_ptp_diag_time.lastGmPhaseChange.size(); i++) {
           hesai_ptp_diag_time.lastGmPhaseChange[i] = response[payload_pos++];
         }
-        //      hesai_ptp_diag_time.gmPresent = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_ptp_diag_time.gmPresent = response[payload_pos++] << 24 |
+        //      response[payload_pos++] << 16 | response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_ptp_diag_time.gmPresent = response[payload_pos++] << 24;
         hesai_ptp_diag_time.gmPresent = hesai_ptp_diag_time.gmPresent | response[payload_pos++]
                                                                           << 16;
@@ -884,14 +902,14 @@ Status HesaiHwInterface::GetPtpDiagGrandmaster(
   int len = 1;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x06);  //Cmd PTC_COMMAND_PTP_DIAGNOSTICS
+  buf_vec.emplace_back(0x06);  // Cmd PTC_COMMAND_PTP_DIAGNOSTICS
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
 
-  buf_vec.emplace_back(0x04);  //PTP TLV GRANDMASTER_SETTINGS_NP
+  buf_vec.emplace_back(0x04);  // PTP TLV GRANDMASTER_SETTINGS_NP
 
   /*
  if(wl){
@@ -911,9 +929,10 @@ Status HesaiHwInterface::GetPtpDiagGrandmaster(
 
   //  auto tcp_driver_local = new ::drivers::tcp_driver::TcpDriver(ctx);
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
-  //  tcp_driver_local->socket()->open();
-  //  auto sct = tcp_driver_local->socket();
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT); tcp_driver_local->socket()->open(); auto sct =
+  //  tcp_driver_local->socket();
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
     buf_vec,
@@ -951,7 +970,9 @@ Status HesaiHwInterface::GetPtpDiagGrandmaster(
       if (8 < response.size()) {
         int payload_pos = 8;
 
-        //      hesai_ptp_diag_grandmaster.clockQuality = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_ptp_diag_grandmaster.clockQuality = response[payload_pos++] << 24 |
+        //      response[payload_pos++] << 16 | response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_ptp_diag_grandmaster.clockQuality = response[payload_pos++] << 24;
         hesai_ptp_diag_grandmaster.clockQuality =
           hesai_ptp_diag_grandmaster.clockQuality | response[payload_pos++] << 16;
@@ -959,7 +980,8 @@ Status HesaiHwInterface::GetPtpDiagGrandmaster(
           hesai_ptp_diag_grandmaster.clockQuality | response[payload_pos++] << 8;
         hesai_ptp_diag_grandmaster.clockQuality =
           hesai_ptp_diag_grandmaster.clockQuality | response[payload_pos++];
-        //      hesai_ptp_diag_grandmaster.utc_offset = response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_ptp_diag_grandmaster.utc_offset = response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_ptp_diag_grandmaster.utc_offset = response[payload_pos++] << 8;
         hesai_ptp_diag_grandmaster.utc_offset =
           hesai_ptp_diag_grandmaster.utc_offset | response[payload_pos++];
@@ -1019,7 +1041,7 @@ Status HesaiHwInterface::GetInventory(
   int len = 0;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x07);  //Cmd PTC_COMMAND_GET_INVENTORY_INFO
+  buf_vec.emplace_back(0x07);  // Cmd PTC_COMMAND_GET_INVENTORY_INFO
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -1035,7 +1057,8 @@ Status HesaiHwInterface::GetInventory(
  if(wl){
     std::cout << "try_lock_for: GetInventory" << std::endl;
     if (!tm_.try_lock_for(std::chrono::milliseconds(timeout_))) {
-  //    std::error_code ec(static_cast<int>(std::errc::device_or_resource_busy), std::generic_category());
+  //    std::error_code ec(static_cast<int>(std::errc::device_or_resource_busy),
+ std::generic_category());
   //    throw std::system_error(ec);
       std::cout << "timeout: GetInventory" << std::endl;
   //    m_owned_ctx->run();
@@ -1053,9 +1076,10 @@ Status HesaiHwInterface::GetInventory(
   //  auto sct = tcp_driver_->socket();
   //  auto tcp_driver_local = new ::drivers::tcp_driver::TcpDriver(ctx);
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
-  //  tcp_driver_local->socket()->open();
-  //  auto sct = tcp_driver_local->socket();
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT); tcp_driver_local->socket()->open(); auto sct =
+  //  tcp_driver_local->socket();
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
     buf_vec,
@@ -1095,15 +1119,18 @@ Status HesaiHwInterface::GetInventory(
         for (size_t i = 0; i < hesai_inventory.sn.size(); i++) {
           hesai_inventory.sn[i] = response[payload_pos++];
         }
-        //    std::cout << std::string(hesai_inventory.sn.begin(), hesai_inventory.sn.end()) << std::endl;
+        //    std::cout << std::string(hesai_inventory.sn.begin(), hesai_inventory.sn.end()) <<
+        //    std::endl;
         for (size_t i = 0; i < hesai_inventory.date_of_manufacture.size(); i++) {
           hesai_inventory.date_of_manufacture[i] = response[payload_pos++];
         }
-        //    std::cout << std::string(hesai_inventory.date_of_manufacture.begin(), hesai_inventory.date_of_manufacture.end()) << std::endl;
+        //    std::cout << std::string(hesai_inventory.date_of_manufacture.begin(),
+        //    hesai_inventory.date_of_manufacture.end()) << std::endl;
         for (size_t i = 0; i < hesai_inventory.mac.size(); i++) {
           hesai_inventory.mac[i] = response[payload_pos++];
         }
-        //    std::cout << std::string(hesai_inventory.mac.begin(), hesai_inventory.mac.end()) << std::endl;
+        //    std::cout << std::string(hesai_inventory.mac.begin(), hesai_inventory.mac.end()) <<
+        //    std::endl;
         for (size_t i = 0; i < hesai_inventory.sw_ver.size(); i++) {
           hesai_inventory.sw_ver[i] = response[payload_pos++];
         }
@@ -1116,7 +1143,8 @@ Status HesaiHwInterface::GetInventory(
         for (size_t i = 0; i < hesai_inventory.sensor_fw_ver.size(); i++) {
           hesai_inventory.sensor_fw_ver[i] = response[payload_pos++];
         }
-        //      hesai_inventory.angle_offset = response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_inventory.angle_offset = response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_inventory.angle_offset = response[payload_pos++] << 8;
         hesai_inventory.angle_offset = hesai_inventory.angle_offset | response[payload_pos++];
         hesai_inventory.model = static_cast<int>(response[payload_pos++]);
@@ -1202,7 +1230,7 @@ Status HesaiHwInterface::GetConfig(
   int len = 0;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x08);  //Cmd PTC_COMMAND_GET_CONFIG_INFO
+  buf_vec.emplace_back(0x08);  // Cmd PTC_COMMAND_GET_CONFIG_INFO
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -1229,9 +1257,10 @@ Status HesaiHwInterface::GetConfig(
   //  auto sct = tcp_driver_->socket();
   //  auto tcp_driver_local = new ::drivers::tcp_driver::TcpDriver(ctx);
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
-  //  tcp_driver_local->socket()->open();
-  //  auto sct = tcp_driver_local->socket();
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT); tcp_driver_local->socket()->open(); auto sct =
+  //  tcp_driver_local->socket();
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
     buf_vec,
@@ -1284,11 +1313,13 @@ Status HesaiHwInterface::GetConfig(
         hesai_config.dest_ipaddr[1] = static_cast<int>(response[payload_pos++]);
         hesai_config.dest_ipaddr[2] = static_cast<int>(response[payload_pos++]);
         hesai_config.dest_ipaddr[3] = static_cast<int>(response[payload_pos++]);
-        //      hesai_config.dest_LiDAR_udp_port = response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_config.dest_LiDAR_udp_port = response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_config.dest_LiDAR_udp_port = response[payload_pos++] << 8;
         hesai_config.dest_LiDAR_udp_port =
           hesai_config.dest_LiDAR_udp_port | response[payload_pos++];
-        //      hesai_config.dest_gps_udp_port = response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_config.dest_gps_udp_port = response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_config.dest_gps_udp_port = response[payload_pos++] << 8;
         hesai_config.dest_gps_udp_port = hesai_config.dest_gps_udp_port | response[payload_pos++];
         //      hesai_config.spin_rate = response[payload_pos++] << 8 | response[payload_pos++];
@@ -1395,7 +1426,7 @@ Status HesaiHwInterface::GetLidarStatus(
   int len = 0;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x09);  //Cmd PTC_COMMAND_GET_LIDAR_STATUS
+  buf_vec.emplace_back(0x09);  // Cmd PTC_COMMAND_GET_LIDAR_STATUS
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -1429,9 +1460,10 @@ Status HesaiHwInterface::GetLidarStatus(
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
   //  tcp_drivers_status.emplace_back(tcp_driver_local);
   //  tcp_drivers_status.push_back(tcp_drivers_status);
-  //  target_tcp_driver->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
-  //  tcp_driver_local->socket()->open();
-  //  auto sct = tcp_driver_local->socket();
+  //  target_tcp_driver->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT); tcp_driver_local->socket()->open(); auto sct =
+  //  tcp_driver_local->socket();
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
     buf_vec,
@@ -1468,7 +1500,8 @@ Status HesaiHwInterface::GetLidarStatus(
       HesaiLidarStatus hesai_status;
       if (8 < response.size()) {
         int payload_pos = 8;
-        //      hesai_status.system_uptime = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_status.system_uptime = response[payload_pos++] << 24 | response[payload_pos++]
+        //      << 16 | response[payload_pos++] << 8 | response[payload_pos++];
         hesai_status.system_uptime = response[payload_pos++] << 24;
         hesai_status.system_uptime = hesai_status.system_uptime | response[payload_pos++] << 16;
         hesai_status.system_uptime = hesai_status.system_uptime | response[payload_pos++] << 8;
@@ -1477,7 +1510,9 @@ Status HesaiHwInterface::GetLidarStatus(
         hesai_status.motor_speed = response[payload_pos++] << 8;
         hesai_status.motor_speed = hesai_status.motor_speed | response[payload_pos++];
         for (size_t i = 0; i < hesai_status.temperature.size(); i++) {
-          //        hesai_status.temperature[i] = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
+          //        hesai_status.temperature[i] = response[payload_pos++] << 24 |
+          //        response[payload_pos++] << 16 | response[payload_pos++] << 8 |
+          //        response[payload_pos++];
           hesai_status.temperature[i] = response[payload_pos++] << 24;
           hesai_status.temperature[i] = hesai_status.temperature[i] | response[payload_pos++] << 16;
           hesai_status.temperature[i] = hesai_status.temperature[i] | response[payload_pos++] << 8;
@@ -1485,12 +1520,15 @@ Status HesaiHwInterface::GetLidarStatus(
         }
         hesai_status.gps_pps_lock = static_cast<int>(response[payload_pos++]);
         hesai_status.gps_gprmc_status = static_cast<int>(response[payload_pos++]);
-        //      hesai_status.startup_times = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_status.startup_times = response[payload_pos++] << 24 | response[payload_pos++]
+        //      << 16 | response[payload_pos++] << 8 | response[payload_pos++];
         hesai_status.startup_times = response[payload_pos++] << 24;
         hesai_status.startup_times = hesai_status.startup_times | response[payload_pos++] << 16;
         hesai_status.startup_times = hesai_status.startup_times | response[payload_pos++] << 8;
         hesai_status.startup_times = hesai_status.startup_times | response[payload_pos++];
-        //      hesai_status.total_operation_time = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_status.total_operation_time = response[payload_pos++] << 24 |
+        //      response[payload_pos++] << 16 | response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_status.total_operation_time = response[payload_pos++] << 24;
         hesai_status.total_operation_time =
           hesai_status.total_operation_time | response[payload_pos++] << 16;
@@ -1595,7 +1633,7 @@ Status HesaiHwInterface::SetSpinRate(
   int len = 2;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x17);  //Cmd PTC_COMMAND_SET_SPIN_RATE
+  buf_vec.emplace_back(0x17);  // Cmd PTC_COMMAND_SET_SPIN_RATE
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -1672,7 +1710,7 @@ Status HesaiHwInterface::SetSyncAngle(
   int len = 3;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x18);  //Cmd PTC_COMMAND_SET_SYNC_ANGLE
+  buf_vec.emplace_back(0x18);  // Cmd PTC_COMMAND_SET_SYNC_ANGLE
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -1700,7 +1738,9 @@ Status HesaiHwInterface::SetSyncAngle(
   PrintDebug("SetSyncAngle: start");
 
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT);
 
   target_tcp_driver->asyncSend(buf_vec, [this]() {
     /*
@@ -1755,7 +1795,7 @@ Status HesaiHwInterface::SetTriggerMethod(
   int len = 1;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x1b);  //Cmd PTC_COMMAND_SET_TRIGGER_METHOD
+  buf_vec.emplace_back(0x1b);  // Cmd PTC_COMMAND_SET_TRIGGER_METHOD
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -1781,7 +1821,9 @@ Status HesaiHwInterface::SetTriggerMethod(
   PrintDebug("SetTriggerMethod: start");
 
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT);
 
   target_tcp_driver->asyncSend(buf_vec, [this]() {
     /*
@@ -1836,7 +1878,7 @@ Status HesaiHwInterface::SetStandbyMode(
   int len = 1;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x1c);  //Cmd PTC_COMMAND_SET_STANDBY_MODE
+  buf_vec.emplace_back(0x1c);  // Cmd PTC_COMMAND_SET_STANDBY_MODE
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -1861,7 +1903,9 @@ Status HesaiHwInterface::SetStandbyMode(
   std::cout << "start: SetStandbyMode" << std::endl;
 
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT);
 
   target_tcp_driver->asyncSend(buf_vec, [this]() {
     /*
@@ -1916,7 +1960,7 @@ Status HesaiHwInterface::SetReturnMode(
   int len = 1;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x1e);  //Cmd PTC_COMMAND_SET_RETURN_MODE
+  buf_vec.emplace_back(0x1e);  // Cmd PTC_COMMAND_SET_RETURN_MODE
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -1942,7 +1986,9 @@ Status HesaiHwInterface::SetReturnMode(
   PrintDebug("SetReturnMode: start");
 
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT);
 
   target_tcp_driver->asyncSend(buf_vec, [this]() {
     /*
@@ -1997,7 +2043,7 @@ Status HesaiHwInterface::SetDestinationIp(
   int len = 8;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x20);  //Cmd PTC_COMMAND_SET_DESTINATION_IP
+  buf_vec.emplace_back(0x20);  // Cmd PTC_COMMAND_SET_DESTINATION_IP
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -2031,7 +2077,9 @@ Status HesaiHwInterface::SetDestinationIp(
   PrintDebug("SetDestinationIp: start");
 
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT);
 
   target_tcp_driver->asyncSend(buf_vec, [this]() {
     /*
@@ -2091,7 +2139,7 @@ Status HesaiHwInterface::SetControlPort(
   int len = 15;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x21);  //Cmd PTC_COMMAND_SET_CONTROL_PORT
+  buf_vec.emplace_back(0x21);  // Cmd PTC_COMMAND_SET_CONTROL_PORT
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -2133,7 +2181,9 @@ Status HesaiHwInterface::SetControlPort(
   PrintDebug("SetControlPort: start");
 
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT);
 
   target_tcp_driver->asyncSend(buf_vec, [this]() {
     /*
@@ -2197,7 +2247,7 @@ Status HesaiHwInterface::SetLidarRange(
   int len = 1 + data.size();
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x22);  //Cmd PTC_COMMAND_SET_LIDAR_RANGE
+  buf_vec.emplace_back(0x22);  // Cmd PTC_COMMAND_SET_LIDAR_RANGE
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -2229,7 +2279,9 @@ Status HesaiHwInterface::SetLidarRange(
   PrintDebug("SetLidarRange: start");
 
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT);
 
   target_tcp_driver->asyncSend(buf_vec, [this]() {
     /*
@@ -2285,7 +2337,7 @@ Status HesaiHwInterface::SetLidarRange(
   int len = 5;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x22);  //Cmd PTC_COMMAND_SET_LIDAR_RANGE
+  buf_vec.emplace_back(0x22);  // Cmd PTC_COMMAND_SET_LIDAR_RANGE
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -2319,7 +2371,9 @@ Status HesaiHwInterface::SetLidarRange(
   PrintDebug("SetLidarRange(All): start");
 
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT);
 
   target_tcp_driver->asyncSend(buf_vec, [this]() {
     /*
@@ -2376,7 +2430,7 @@ Status HesaiHwInterface::GetLidarRange(
   int len = 0;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x23);  //Cmd PTC_COMMAND_GET_LIDAR_RANGE
+  buf_vec.emplace_back(0x23);  // Cmd PTC_COMMAND_GET_LIDAR_RANGE
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -2401,7 +2455,9 @@ Status HesaiHwInterface::GetLidarRange(
   PrintDebug("SetLidarRange: start");
 
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT);
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
     buf_vec,
@@ -2441,7 +2497,7 @@ Status HesaiHwInterface::GetLidarRange(
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
         std::cout << "GetLidarRange method: " << method << std::endl;
 #endif
-        if (method == 0)  //for all channels
+        if (method == 0)  // for all channels
         {
           HesaiLidarRangeAll hesai_range_all;
           hesai_range_all.method = method;
@@ -2453,12 +2509,12 @@ Status HesaiHwInterface::GetLidarRange(
           hesai_range_all.end = hesai_range_all.end | response[payload_pos++];
           //      std::cout << hesai_range_all << std::endl;
           callback(hesai_range_all);
-        } else if (method == 1)  //for each channel
+        } else if (method == 1)  // for each channel
         {
           HesaiLidarRangeAll hesai_range_all;
           hesai_range_all.method = method;
           callback(hesai_range_all);
-        } else if (method == 2)  //multi-section FOV
+        } else if (method == 2)  // multi-section FOV
         {
           HesaiLidarRangeAll hesai_range_all;
           hesai_range_all.method = method;
@@ -2540,7 +2596,7 @@ Status HesaiHwInterface::SetPtpConfig(
   }
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x24);  //Cmd PTC_COMMAND_SET_PTP_CONFIG
+  buf_vec.emplace_back(0x24);  // Cmd PTC_COMMAND_SET_PTP_CONFIG
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -2575,7 +2631,9 @@ Status HesaiHwInterface::SetPtpConfig(
   PrintDebug("SetPtpConfig: start");
 
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT);
 
   target_tcp_driver->asyncSend(buf_vec, [this]() {
     /*
@@ -2637,7 +2695,7 @@ Status HesaiHwInterface::GetPtpConfig(
   int len = 0;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x26);  //Cmd PTC_COMMAND_GET_PTP_CONFIG
+  buf_vec.emplace_back(0x26);  // Cmd PTC_COMMAND_GET_PTP_CONFIG
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -2662,7 +2720,9 @@ Status HesaiHwInterface::GetPtpConfig(
   PrintDebug("GetPtpConfig: start");
 
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT);
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
     buf_vec,
@@ -2767,7 +2827,7 @@ Status HesaiHwInterface::SendReset(
   int len = 0;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x25);  //Cmd PTC_COMMAND_RESET
+  buf_vec.emplace_back(0x25);  // Cmd PTC_COMMAND_RESET
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -2791,7 +2851,9 @@ Status HesaiHwInterface::SendReset(
   PrintDebug("SendReset: start");
 
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT);
 
   target_tcp_driver->asyncSend(buf_vec, [this]() {
     /*
@@ -2844,7 +2906,7 @@ Status HesaiHwInterface::SetRotDir(
   int len = 1;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x2a);  //Cmd PTC_COMMAND_SET_ROTATE_DIRECTION
+  buf_vec.emplace_back(0x2a);  // Cmd PTC_COMMAND_SET_ROTATE_DIRECTION
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -2870,7 +2932,9 @@ Status HesaiHwInterface::SetRotDir(
   PrintDebug("SetRotDir: start");
 
   //  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip, PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip, PANDARGENERALSDK_TCP_COMMAND_PORT);
+  //  tcp_driver_local->init_socket(sensor_configuration_->sensor_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT, sensor_configuration_->host_ip,
+  //  PANDARGENERALSDK_TCP_COMMAND_PORT);
 
   target_tcp_driver->asyncSend(buf_vec, [this]() {
     /*
@@ -2925,7 +2989,7 @@ Status HesaiHwInterface::GetLidarMonitor(
   int len = 0;
   buf_vec.emplace_back(0x47);
   buf_vec.emplace_back(0x74);
-  buf_vec.emplace_back(0x27);  //Cmd PTC_COMMAND_LIDAR_MONITOR
+  buf_vec.emplace_back(0x27);  // Cmd PTC_COMMAND_LIDAR_MONITOR
   buf_vec.emplace_back(0x00);
   buf_vec.emplace_back((len >> 24) & 0xff);
   buf_vec.emplace_back((len >> 16) & 0xff);
@@ -2984,7 +3048,9 @@ Status HesaiHwInterface::GetLidarMonitor(
       HesaiLidarMonitor hesai_lidar_monitor;
       if (8 < response.size()) {
         int payload_pos = 8;
-        //      hesai_lidar_monitor.input_voltage = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_lidar_monitor.input_voltage = response[payload_pos++] << 24 |
+        //      response[payload_pos++] << 16 | response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_lidar_monitor.input_voltage = response[payload_pos++] << 24;
         hesai_lidar_monitor.input_voltage =
           hesai_lidar_monitor.input_voltage | response[payload_pos++] << 16;
@@ -2992,7 +3058,9 @@ Status HesaiHwInterface::GetLidarMonitor(
           hesai_lidar_monitor.input_voltage | response[payload_pos++] << 8;
         hesai_lidar_monitor.input_voltage =
           hesai_lidar_monitor.input_voltage | response[payload_pos++];
-        //      hesai_lidar_monitor.input_current = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_lidar_monitor.input_current = response[payload_pos++] << 24 |
+        //      response[payload_pos++] << 16 | response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_lidar_monitor.input_current = response[payload_pos++] << 24;
         hesai_lidar_monitor.input_current =
           hesai_lidar_monitor.input_current | response[payload_pos++] << 16;
@@ -3000,7 +3068,9 @@ Status HesaiHwInterface::GetLidarMonitor(
           hesai_lidar_monitor.input_current | response[payload_pos++] << 8;
         hesai_lidar_monitor.input_current =
           hesai_lidar_monitor.input_current | response[payload_pos++];
-        //      hesai_lidar_monitor.input_power = response[payload_pos++] << 24 | response[payload_pos++] << 16 | response[payload_pos++] << 8 | response[payload_pos++];
+        //      hesai_lidar_monitor.input_power = response[payload_pos++] << 24 |
+        //      response[payload_pos++] << 16 | response[payload_pos++] << 8 |
+        //      response[payload_pos++];
         hesai_lidar_monitor.input_power = response[payload_pos++] << 24;
         hesai_lidar_monitor.input_power = hesai_lidar_monitor.input_power | response[payload_pos++]
                                                                               << 16;
@@ -3156,7 +3226,8 @@ HesaiStatus HesaiHwInterface::GetLidarMonitorAsyncHttp(
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
   auto st = GetHttpClientDriverOnce(ctx, hcd);
   if (st != Status::OK) {
-    //    std::cerr << "HesaiHwInterface::GetLidarMonitorAsyncHttp: " << "cannnot GetHttpClientDriverOnce" << std::endl;
+    //    std::cerr << "HesaiHwInterface::GetLidarMonitorAsyncHttp: " << "cannnot
+    //    GetHttpClientDriverOnce" << std::endl;
     PrintError("HesaiHwInterface::GetLidarMonitorAsyncHttp: cannnot GetHttpClientDriverOnce");
     return st;
   }
@@ -3189,7 +3260,8 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     hesai_config.return_mode, sensor_configuration->sensor_model);
   if (sensor_configuration->return_mode != current_return_mode) {
     //    std::cout << "current_return_mode: " << current_return_mode << std::endl;
-    //    std::cout << "sensor_configuration->return_mode: " << sensor_configuration->return_mode << std::endl;
+    //    std::cout << "sensor_configuration->return_mode: " << sensor_configuration->return_mode <<
+    //    std::endl;
     std::stringstream ss;
     ss << current_return_mode;
     PrintInfo("current lidar return_mode: " + ss.str());
@@ -3202,11 +3274,13 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     std::thread t([this, sensor_configuration] {
       SetReturnMode(nebula::drivers::IntFromReturnModeHesai(
         sensor_configuration->return_mode, sensor_configuration->sensor_model));  //, false);
-      //    SetReturnMode(nebula::drivers::IntFromReturnModeHesai(sensor_configuration->return_mode), false);
+      //    SetReturnMode(nebula::drivers::IntFromReturnModeHesai(sensor_configuration->return_mode),
+      //    false);
     });
     t.join();
     /*
-    std::thread t([this, sensor_configuration]{SetReturnMode(nebula::drivers::IntFromReturnModeHesai(sensor_configuration->return_mode));});
+    std::thread t([this,
+    sensor_configuration]{SetReturnMode(nebula::drivers::IntFromReturnModeHesai(sensor_configuration->return_mode));});
     boost::system::error_code ec;
     m_owned_ctx->run(ec);
     if(ec){
@@ -3242,7 +3316,8 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     //    SetRpmAsync(sensor_configuration->rotation_speed);
     // needs http client...?
     //    std::cout << "current_rotation_speed: " << current_rotation_speed << std::endl;
-    //    std::cout << "sensor_configuration->rotation_speed: " << sensor_configuration->rotation_speed << std::endl;
+    //    std::cout << "sensor_configuration->rotation_speed: " <<
+    //    sensor_configuration->rotation_speed << std::endl;
     PrintInfo("current lidar rotation_speed: " + std::to_string(current_rotation_speed));
     PrintInfo(
       "current configuration rotation_speed: " +
@@ -3259,11 +3334,13 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
       });
       t.join();
       /*
-      std::thread t([this, sensor_configuration]{SetSpinRate(sensor_configuration->rotation_speed);});
+      std::thread t([this,
+      sensor_configuration]{SetSpinRate(sensor_configuration->rotation_speed);});
       boost::system::error_code ec;
       m_owned_ctx->run(ec);
       if(ec){
-        std::cerr << "HesaiHwInterface::CheckAndSetConfig(RotationSpeed): " << ec.message() << std::endl;
+        std::cerr << "HesaiHwInterface::CheckAndSetConfig(RotationSpeed): " << ec.message() <<
+      std::endl;
       }
       t.join();
       */
@@ -3279,8 +3356,9 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   if(sensor_configuration->cloud_min_angle != current_cloud_min_angle)
   {
     SetFovStartAsync(sensor_configuration->cloud_min_angle);
-    std::cout << "VelodyneHwInterface::parse_json(" << target_key << "): " << current_cloud_min_angle << std::endl;
-    std::cout << "sensor_configuration->cloud_min_angle: " << sensor_configuration->cloud_min_angle << std::endl;
+    std::cout << "VelodyneHwInterface::parse_json(" << target_key << "): " <<
+  current_cloud_min_angle << std::endl; std::cout << "sensor_configuration->cloud_min_angle: " <<
+  sensor_configuration->cloud_min_angle << std::endl;
   }
 
   target_key = "config.fov.end";
@@ -3288,8 +3366,9 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   if(sensor_configuration->cloud_max_angle != current_cloud_max_angle)
   {
     SetFovEndAsync(sensor_configuration->cloud_max_angle);
-    std::cout << "VelodyneHwInterface::parse_json(" << target_key << "): " << current_cloud_max_angle << std::endl;
-    std::cout << "sensor_configuration->cloud_max_angle: " << sensor_configuration->cloud_max_angle << std::endl;
+    std::cout << "VelodyneHwInterface::parse_json(" << target_key << "): " <<
+  current_cloud_max_angle << std::endl; std::cout << "sensor_configuration->cloud_max_angle: " <<
+  sensor_configuration->cloud_max_angle << std::endl;
   }
   */
 
@@ -3301,7 +3380,8 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   if (sensor_configuration->host_ip != current_host_addr) {
     set_flg = true;
     //    std::cout << "current dest_ipaddr: " << current_host_addr << std::endl;
-    //    std::cout << "sensor_configuration->host_ip: " << sensor_configuration->host_ip << std::endl;
+    //    std::cout << "sensor_configuration->host_ip: " << sensor_configuration->host_ip <<
+    //    std::endl;
     PrintInfo("current lidar dest_ipaddr: " + current_host_addr);
     PrintInfo("current configuration host_ip: " + sensor_configuration->host_ip);
   }
@@ -3310,7 +3390,8 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   if (sensor_configuration->data_port != current_host_dport) {
     set_flg = true;
     //    std::cout << "current dest_LiDAR_udp_port: " << current_host_dport << std::endl;
-    //    std::cout << "sensor_configuration->data_port: " << sensor_configuration->data_port << std::endl;
+    //    std::cout << "sensor_configuration->data_port: " << sensor_configuration->data_port <<
+    //    std::endl;
     PrintInfo("current lidar dest_LiDAR_udp_port: " + std::to_string(current_host_dport));
     PrintInfo(
       "current configuration data_port: " + std::to_string(sensor_configuration->data_port));
@@ -3320,7 +3401,8 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   if (sensor_configuration->gnss_port != current_host_tport) {
     set_flg = true;
     //    std::cout << "current dest_gps_udp_port: " << current_host_tport << std::endl;
-    //    std::cout << "sensor_configuration->gnss_port: " << sensor_configuration->gnss_port << std::endl;
+    //    std::cout << "sensor_configuration->gnss_port: " << sensor_configuration->gnss_port <<
+    //    std::endl;
     PrintInfo("current lidar dest_gps_udp_port: " + std::to_string(current_host_tport));
     PrintInfo(
       "current configuration gnss_port: " + std::to_string(sensor_configuration->gnss_port));
@@ -3386,7 +3468,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   std::cout << "Start CheckAndSetConfig(HesaiLidarRangeAll)!!" << std::endl;
 #endif
   //*
-  //PTC_COMMAND_SET_LIDAR_RANGE
+  // PTC_COMMAND_SET_LIDAR_RANGE
   bool set_flg = false;
   if (hesai_lidar_range_all.method != 0) {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
@@ -3398,8 +3480,9 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     auto current_cloud_min_angle = hesai_lidar_range_all.start;
     if (static_cast<int>(sensor_configuration->cloud_min_angle * 10) != current_cloud_min_angle) {
       set_flg = true;
-      //      std::cout << "current hesai_lidar_range_all.start: " << current_cloud_min_angle << std::endl;
-      //      std::cout << "sensor_configuration->cloud_min_angle: " << sensor_configuration->cloud_min_angle << std::endl;
+      //      std::cout << "current hesai_lidar_range_all.start: " << current_cloud_min_angle <<
+      //      std::endl; std::cout << "sensor_configuration->cloud_min_angle: " <<
+      //      sensor_configuration->cloud_min_angle << std::endl;
       PrintInfo("current lidar range.start: " + std::to_string(current_cloud_min_angle));
       PrintInfo(
         "current configuration cloud_min_angle: " +
@@ -3409,8 +3492,9 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     auto current_cloud_max_angle = hesai_lidar_range_all.end;
     if (static_cast<int>(sensor_configuration->cloud_max_angle * 10) != current_cloud_max_angle) {
       set_flg = true;
-      //      std::cout << "current hesai_lidar_range_all.end: " << current_cloud_max_angle << std::endl;
-      //      std::cout << "current configuration->cloud_max_angle: " << sensor_configuration->cloud_max_angle << std::endl;
+      //      std::cout << "current hesai_lidar_range_all.end: " << current_cloud_max_angle <<
+      //      std::endl; std::cout << "current configuration->cloud_max_angle: " <<
+      //      sensor_configuration->cloud_max_angle << std::endl;
       PrintInfo("current lidar range.end: " + std::to_string(current_cloud_max_angle));
       PrintInfo(
         "current configuration cloud_max_angle: " +
@@ -3456,7 +3540,8 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
       [this](HesaiConfig &result)
       {
         std::cout << result << std::endl;
-        CheckAndSetConfig(std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration_), result);
+        CheckAndSetConfig(std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration_),
+result);
       });
     });
   thread_pool.emplace_back([this]{
@@ -3465,7 +3550,8 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
       [this](HesaiLidarRangeAll &result)
       {
         std::cout << result << std::endl;
-        CheckAndSetConfig(std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration_), result);
+        CheckAndSetConfig(std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration_),
+result);
       });
     });
   boost::system::error_code ec;
@@ -3484,7 +3570,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
       //      if(tcp_driver_->GetIOContext()->stopped()){
       //        tcp_driver_->GetIOContext()->restart();
       //      }
-      GetConfig(  //ctx,
+      GetConfig(  // ctx,
         [this](HesaiConfig & result) {
           //        std::cout << result << std::endl;
           std::stringstream ss;
@@ -3510,7 +3596,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
       //      if(tcp_driver_->GetIOContext()->stopped()){
       //        tcp_driver_->GetIOContext()->restart();
       //      }
-      GetLidarRange(  //ctx,
+      GetLidarRange(  // ctx,
         [this](HesaiLidarRangeAll & result) {
           //        std::cout << result << std::endl;
           std::stringstream ss;
@@ -3538,17 +3624,20 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
   tcp_driver_->run();
   */
   } else if (false) {
-    //    auto w( boost::make_shared<boost::asio::io_service::work>( *tcp_driver_->GetIOContext() ) );
-    //    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> w = boost::asio::make_work_guard(tcp_driver_->GetIOContext());
-    //    auto w = boost::asio::make_work_guard(tcp_driver_->GetIOContext());
-    //    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> w(boost::asio::make_work_guard(*(tcp_driver_->GetIOContext())));
+    //    auto w( boost::make_shared<boost::asio::io_service::work>( *tcp_driver_->GetIOContext() )
+    //    ); boost::asio::executor_work_guard<boost::asio::io_context::executor_type> w =
+    //    boost::asio::make_work_guard(tcp_driver_->GetIOContext()); auto w =
+    //    boost::asio::make_work_guard(tcp_driver_->GetIOContext());
+    //    boost::asio::executor_work_guard<boost::asio::io_context::executor_type>
+    //    w(boost::asio::make_work_guard(*(tcp_driver_->GetIOContext())));
     /*
     tcp_driver_->GetIOContext()->post([w]{
       GetConfig(
       [this](HesaiConfig &result)
       {
         std::cout << result << std::endl;
-        CheckAndSetConfig(std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration_), result);
+        CheckAndSetConfig(std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration_),
+    result);
       }
       , false
       );
@@ -3571,12 +3660,12 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
     t.join();
     std::cout << "joined thread t" << std::endl;
     */
-    //    w.reset( boost::make_shared<boost::asio::io_service::work>( *tcp_driver_->GetIOContext() ) );
-    //    w.reset();
-    //    w = boost::asio::make_work_guard(tcp_driver_->GetIOContext());
+    //    w.reset( boost::make_shared<boost::asio::io_service::work>( *tcp_driver_->GetIOContext() )
+    //    ); w.reset(); w = boost::asio::make_work_guard(tcp_driver_->GetIOContext());
     //    w(boost::asio::make_work_guard(*tcp_driver_->GetIOContext()))
     //    w = boost::asio::make_work_guard(*(tcp_driver_->GetIOContext()));
-    //    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> w2(boost::asio::make_work_guard(*(tcp_driver_->GetIOContext())));
+    //    boost::asio::executor_work_guard<boost::asio::io_context::executor_type>
+    //    w2(boost::asio::make_work_guard(*(tcp_driver_->GetIOContext())));
     GetLidarRange([this](HesaiLidarRangeAll & result) {
       std::cout << result << std::endl;
       CheckAndSetConfig(

@@ -1,15 +1,15 @@
 #ifndef LIDARDRIVER_LIVOX_LIDARDRIVER_HPP_
 #define LIDARDRIVER_LIVOX_LIDARDRIVER_HPP_
 
-#include <functional>
-#include <map>
-#include <mutex>
-#include <thread>
-
 #include "HwInterface/udp_socket.hpp"
 #include "LidarDriver/livox_command.hpp"
 #include "LidarDriver/livox_common.hpp"
 #include "third_party/FastCRC/FastCRC.h"
+
+#include <functional>
+#include <map>
+#include <mutex>
+#include <thread>
 
 namespace lidar_driver
 {
@@ -168,7 +168,8 @@ private:  // Receive
   void StorageRawPacket(const std::vector<uint8_t> & buff, int rcv_len);
   void UpdateLidarInfoByEthPacket(uint8_t data_type);
   /**
-   * Updates the LivoxStatusCode union (error_status) from Livox Ethernet Packet, and sets the received flag to true.
+   * Updates the LivoxStatusCode union (error_status) from Livox Ethernet Packet, and sets the
+   * received flag to true.
    * @param lidar_status_code The 32 bit word received in the packet containing the error status.
    */
   void UpdateLidarStatusCode(uint32_t lidar_status_code);

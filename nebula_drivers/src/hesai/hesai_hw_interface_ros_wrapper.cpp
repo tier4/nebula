@@ -1,9 +1,10 @@
 #include "hesai/hesai_hw_interface_ros_wrapper.hpp"
 
-#include <boost/asio.hpp>
-#include <thread>
-
 #include "tcp_driver/tcp_driver.hpp"
+
+#include <boost/asio.hpp>
+
+#include <thread>
 
 //#define WITH_DEBUG_STDOUT_HesaiHwInterfaceRosWrapper
 //#define TEST_PCAP
@@ -34,7 +35,7 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
 
   std::vector<std::thread> thread_pool{};
   thread_pool.emplace_back([this] {
-    hw_interface_.GetInventory(  //ios,
+    hw_interface_.GetInventory(  // ios,
       [this](HesaiInventory & result) {
         std::cout << result << std::endl;
         hw_interface_.SetTargetModel(result.model);

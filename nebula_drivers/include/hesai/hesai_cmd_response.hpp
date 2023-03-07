@@ -12,26 +12,28 @@ namespace nebula
 /*
 // https://e405.hatenadiary.org/entry/20110522/1306048704
 // just for your reference
-template <class T> 
-std::string dumpHex_noBoost(const T& t) 
+template <class T>
+std::string dumpHex_noBoost(const T& t)
 {
   std::stringstream ss;
   for (size_t i = 0; i < sizeof(T); ++i) {
     ss << std::setw(2) << std::setfill('0') << std::hex << std::uppercase
-              << (static_cast<unsigned short>(*(reinterpret_cast<unsigned char*>(const_cast<T*>(&t)) + i)))
+              << (static_cast<unsigned short>(*(reinterpret_cast<unsigned char*>(const_cast<T*>(&t))
++ i)))
               ;
 //              << ' ';
   }
 //  std::cout << '\n';
   ss.str();
 }
-template <class T> 
-std::string dumpHex(const T& t) 
+template <class T>
+std::string dumpHex(const T& t)
 {
   std::stringstream ss;
   for (size_t i = 0; i < sizeof(T); ++i) {
     ss << boost::format("%02X")
-                 % (static_cast<unsigned short>(*(reinterpret_cast<boost::uint8_t*>(const_cast<T*>(&t)) + i)))
+                 % (static_cast<unsigned
+short>(*(reinterpret_cast<boost::uint8_t*>(const_cast<T*>(&t)) + i)))
                  ;
 //              << ' ';
   }
@@ -241,13 +243,15 @@ struct HesaiInventory
     for (long unsigned int i = 0; i < arg.mac.size() - 1; i++) {
       //        os << std::hex << static_cast<int>(arg.mac[i]) << ":";
       //        os << dumpHex(static_cast<int>(arg.mac[i])) << ":";
-      //        os << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.mac[i]) & 0xff) << ":";
+      //        os << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.mac[i])
+      //        & 0xff) << ":";
       ss << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.mac[i]) & 0xff)
          << ":";
     }
     //      os << std::hex << static_cast<int>(arg.mac[arg.mac.size()-1]);
     //      os << std::hex << dumpHex(static_cast<int>(arg.mac[arg.mac.size()-1]));
-    //      os << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.mac[arg.mac.size()-1]) & 0xff);
+    //      os << std::hex << std::setfill('0') << std::setw(2) <<
+    //      (static_cast<int>(arg.mac[arg.mac.size()-1]) & 0xff);
     ss << std::hex << std::setfill('0') << std::setw(2)
        << (static_cast<int>(arg.mac[arg.mac.size() - 1]) & 0xff);
     os << ss.str();

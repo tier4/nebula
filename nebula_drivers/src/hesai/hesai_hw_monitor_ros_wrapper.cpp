@@ -1,11 +1,12 @@
 #include "hesai/hesai_hw_monitor_ros_wrapper.hpp"
 
-#include <boost/asio.hpp>
-
 #include "tcp_driver/tcp_driver.hpp"
+
+#include <boost/asio.hpp>
 //#include <boost/thread/thread.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/lexical_cast.hpp>
+
 #include <thread>
 
 //#define WITH_DEBUG_STDOUT_HesaiHwMonitorRosWrapper
@@ -81,7 +82,7 @@ HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & o
   std::vector<std::thread> thread_pool{};
   thread_pool.emplace_back([this] {
     //      auto ios = std::make_shared<boost::asio::io_service>();
-    hw_interface_.GetInventory(  //ios,
+    hw_interface_.GetInventory(  // ios,
       [this](HesaiInventory & result) {
         current_inventory.reset(new HesaiInventory(result));
         current_inventory_time.reset(new rclcpp::Time(this->get_clock()->now()));
@@ -501,7 +502,7 @@ void HesaiHwMonitorRosWrapper::OnHesaiStatusTimer()
 #endif
   try {
     auto ios = std::make_shared<boost::asio::io_service>();
-    hw_interface_.GetLidarStatus(  //ios,
+    hw_interface_.GetLidarStatus(  // ios,
       [this](HesaiLidarStatus & result) {
         std::scoped_lock lock(mtx_status);
         //      std::cout << result << std::endl;
@@ -532,7 +533,8 @@ void HesaiHwMonitorRosWrapper::OnHesaiLidarMonitorTimer()
       [this](const std::string &str)
       {
         current_lidar_monitor_time.reset(new rclcpp::Time(this->get_clock()->now()));
-        current_lidar_monitor_tree = std::make_unique<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
+        current_lidar_monitor_tree =
+std::make_unique<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
         mtx_lidar_monitor.unlock();
         std::cout << "mtx_lidar_monitor unlock" << std::endl;
       });

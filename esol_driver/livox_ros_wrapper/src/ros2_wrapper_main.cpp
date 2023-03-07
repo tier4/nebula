@@ -1,7 +1,8 @@
-#include <memory>
+#include "ros2_driver_wrapper.hpp"
+
 #include <rclcpp/rclcpp.hpp>
 
-#include "ros2_driver_wrapper.hpp"
+#include <memory>
 
 int main(int argc, char * argv[])
 {

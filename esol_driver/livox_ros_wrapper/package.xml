@@ -3,9 +3,7 @@
 <package format="3">
   <name>livox_lidar_ros_driver</name>
   <version>0.1.0</version>
-  <description>
-    ROS device driver for LidarDriver.
-  </description>
+  <description>ROS device driver for LidarDriver.</description>
   <maintainer email="sample@example.com">sample.test</maintainer>
 
   <license>TODO</license>
@@ -13,14 +11,14 @@
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
+  <depend>diagnostic_msgs</depend>
+  <depend>diagnostic_updater</depend>
+  <depend>hw_interface</depend>
+  <depend>livox_driver</depend>
+  <depend>livox_msgs</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>sensor_msgs</depend>
-  <depend>livox_msgs</depend>
-  <depend>livox_driver</depend>
-  <depend>hw_interface</depend>
-  <depend>diagnostic_msgs</depend>
-  <depend>diagnostic_updater</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -1,10 +1,11 @@
 #include "velodyne/velodyne_hw_monitor_ros_wrapper.hpp"
 
+#include <boost/algorithm/string/join.hpp>
+#include <boost/lexical_cast.hpp>
+
 #include <curl/curl.h>
 #include <math.h>
 
-#include <boost/algorithm/string/join.hpp>
-#include <boost/lexical_cast.hpp>
 #include <future>
 
 namespace nebula
@@ -41,13 +42,13 @@ VelodyneHwMonitorRosWrapper::VelodyneHwMonitorRosWrapper(const rclcpp::NodeOptio
     std::bind(&VelodyneHwMonitorRosWrapper::paramCallback, this, std::placeholders::_1));
 
   key_volt_temp_top_hv = "volt_temp.top.hv";
-  key_volt_temp_top_ad_temp = "volt_temp.top.ad_temp";  //only32
+  key_volt_temp_top_ad_temp = "volt_temp.top.ad_temp";  // only32
   key_volt_temp_top_lm20_temp = "volt_temp.top.lm20_temp";
   key_volt_temp_top_pwr_5v = "volt_temp.top.pwr_5v";
   key_volt_temp_top_pwr_2_5v = "volt_temp.top.pwr_2_5v";
   key_volt_temp_top_pwr_3_3v = "volt_temp.top.pwr_3_3v";
-  key_volt_temp_top_pwr_5v_raw = "volt_temp.top.pwr_5v_raw";  //only16
-  key_volt_temp_top_pwr_raw = "volt_temp.top.pwr_raw";        //only32
+  key_volt_temp_top_pwr_5v_raw = "volt_temp.top.pwr_5v_raw";  // only16
+  key_volt_temp_top_pwr_raw = "volt_temp.top.pwr_raw";        // only32
   key_volt_temp_top_pwr_vccint = "volt_temp.top.pwr_vccint";
   key_volt_temp_bot_i_out = "volt_temp.bot.i_out";
   key_volt_temp_bot_pwr_1_2v = "volt_temp.bot.pwr_1_2v";
@@ -439,7 +440,7 @@ void VelodyneHwMonitorRosWrapper::InitializeVelodyneDiagnostics()
     this->get_clock(), std::chrono::milliseconds(diag_span_), std::move(on_timer_snapshot),
     this->get_node_base_interface()->get_context());
   this->get_node_timers_interface()->add_timer(
-    diagnostics_snapshot_timer_, cbg_m_);  //220721 killed for reconfigure
+    diagnostics_snapshot_timer_, cbg_m_);  // 220721 killed for reconfigure
 
   auto on_timer_update = [this] {
     std::cout << "OnUpdateTimer" << std::endl;
@@ -459,7 +460,7 @@ void VelodyneHwMonitorRosWrapper::InitializeVelodyneDiagnostics()
     this->get_clock(), std::chrono::milliseconds(100), std::move(on_timer_update),
     this->get_node_base_interface()->get_context());
   this->get_node_timers_interface()->add_timer(
-    diagnostics_update_timer_, cbg_r_);  //220721 killed for reconfigure
+    diagnostics_update_timer_, cbg_r_);  // 220721 killed for reconfigure
 }
 
 std::string VelodyneHwMonitorRosWrapper::GetPtreeValue(
@@ -511,16 +512,16 @@ public:
   int timeout = 30L;  // timeout 30 seconds
 
   /**
-     * Constructor
-     */
+   * Constructor
+   */
   Curl()
   {
     //
   }
 
   /**
-     * HTTP GET
-     */
+   * HTTP GET
+   */
   void get(const string url, const CurlCallback cb)
   {
     CURL * curl;
@@ -555,8 +556,8 @@ public:
   }
 
   /**
-     * HTTP POST
-     */
+   * HTTP POST
+   */
   void post(const string url, const string data, const CurlCallback cb)
   {
     CURL * curl;
@@ -698,7 +699,8 @@ void VelodyneHwMonitorRosWrapper::OnVelodyneDiagnosticsTimer()
         std::cerr << "ERROR: " << err << std::endl;
       } else {
         std::cout << body << std::endl;
-        //        current_diag_tree = std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(body));
+        //        current_diag_tree =
+        //        std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(body));
         //        std::cout << "diagnostics_updater_.force_update()" << std::endl;
         //        diagnostics_updater_.force_update();
       }

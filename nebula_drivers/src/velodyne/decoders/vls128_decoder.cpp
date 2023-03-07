@@ -157,7 +157,8 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
           other_return.bytes[1] =
             block % 2 ? raw->blocks[block - 1].data[k + 1] : raw->blocks[block + 1].data[k + 1];
         }
-        // Do not process if there is no return, or in dual return mode and the first and last echos are the same.
+        // Do not process if there is no return, or in dual return mode and the first and last echos
+        // are the same.
         if (
           (current_return.bytes[0] == 0 && current_return.bytes[1] == 0) ||
           (dual_return && block % 2 && other_return.bytes[0] == current_return.bytes[0] &&
@@ -185,7 +186,8 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
           if (
             distance > sensor_configuration_->min_range &&
             distance < sensor_configuration_->max_range) {
-            // Condition added to avoid calculating points which are not in the interesting defined area (cloud_min_angle < area < cloud_max_angle).
+            // Condition added to avoid calculating points which are not in the interesting defined
+            // area (cloud_min_angle < area < cloud_max_angle).
             //            if ((azimuth_corrected >= sensor_configuration_->cloud_min_angle &&
             //               azimuth_corrected <= sensor_configuration_->cloud_max_angle &&
             if (
@@ -276,7 +278,8 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
         }      // empty "else"
       }        // (uint j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE)
     }          // scan area condition
-  }  // for (uint block = 0; block < static_cast < uint > (BLOCKS_PER_PACKET - (4 * dual_return)); block++)
+  }  // for (uint block = 0; block < static_cast < uint > (BLOCKS_PER_PACKET - (4 * dual_return));
+     // block++)
 }
 
 bool Vls128Decoder::parsePacket(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)

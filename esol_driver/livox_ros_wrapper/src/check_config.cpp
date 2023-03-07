@@ -1,9 +1,10 @@
-#include <arpa/inet.h>
+#include "ros2_driver_wrapper.hpp"
 
 #include <rclcpp/rclcpp.hpp>
-#include <string>
 
-#include "ros2_driver_wrapper.hpp"
+#include <arpa/inet.h>
+
+#include <string>
 
 namespace lidar_driver
 {
@@ -102,7 +103,8 @@ bool RosDriverWrapper::CheckSensorConfiguration(SensorConfigEx & sensor_config_e
 
 /// Figure 10.
 /// CheckOutputCloudConfiguration
-/// @brief Checks that the desired parameters and fields for the output to be generated correspond to the selected sensor.
+/// @brief Checks that the desired parameters and fields for the output to be generated correspond
+/// to the selected sensor.
 bool RosDriverWrapper::CheckOutputCloudConfiguration(
   SensorConfigEx & sensor_config_ex, CloudConfiguration & cloud_config)
 {

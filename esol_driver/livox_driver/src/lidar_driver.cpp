@@ -1,11 +1,11 @@
 #include "LidarDriver/lidar_driver.hpp"
 
+#include "livox_data_recv.hpp"
+
 #include <arpa/inet.h>
 
 #include <cmath>
 #include <cstring>
-
-#include "livox_data_recv.hpp"
 
 namespace lidar_driver
 {
@@ -130,7 +130,7 @@ void LidarDriver::SetCrc16Crc32(std::vector<uint8_t> & buff, GeneralCommandID cm
 /// @details Received unknown packet 10 retries.
 CommandResult LidarDriver::SendAckWait(std::vector<uint8_t> & snd_buff, GeneralCommandID cmd_id)
 {
-  //printf("%s Start cmd_id=%d\n", __func__, (int)cmd_id);
+  // printf("%s Start cmd_id=%d\n", __func__, (int)cmd_id);
   std::unique_lock<std::mutex> lock(mtx_);
   CommandResult result = CommandResult::kUnknownPacket;
   CommandHeader * header = reinterpret_cast<CommandHeader *>(&snd_buff[0]);
@@ -163,9 +163,9 @@ CommandResult LidarDriver::SendAckWait(std::vector<uint8_t> & snd_buff, GeneralC
         break;
       }
     }
-    //printf("rcv_len=%d ack->result=%d\n", rcv_len, ack->result);
+    // printf("rcv_len=%d ack->result=%d\n", rcv_len, ack->result);
   }
-  //printf("%s End cmd_id=%d resukt=%d\n", __func__, (int)cmd_id, (int)result);
+  // printf("%s End cmd_id=%d resukt=%d\n", __func__, (int)cmd_id, (int)result);
 
   return result;
 }
@@ -296,7 +296,7 @@ void LidarDriver::LivoxHwTxInterfaceHeartbeat()
   while (driverstatus_ == DriverStatus::kRunning) {
     std::this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
     if (driverstatus_ != DriverStatus::kRunning) {
-      //printf("%s Exit\n", __func__);
+      // printf("%s Exit\n", __func__);
       break;
     }
     wait_ms = 1000;
@@ -331,7 +331,7 @@ void LidarDriver::LivoxHwTxInterfaceHeartbeat()
     }
   }  // while
 
-  //printf("Thread end %s\n", __func__);
+  // printf("Thread end %s\n", __func__);
   return;
 }
 
@@ -355,7 +355,7 @@ void LidarDriver::LivoxHwRxInterfaceCommand()
       }
       DataRecvInit();
 
-      //printf("StartStreaming Loop start\n" );
+      // printf("StartStreaming Loop start\n" );
       CommandResult result;
       while (driverstatus_ == DriverStatus::kRunning &&
              lidarstatus_ == LidarDriverStatus::kStreaming) {
@@ -368,11 +368,11 @@ void LidarDriver::LivoxHwRxInterfaceCommand()
           std::this_thread::sleep_for(std::chrono::milliseconds(250));
         }
       }  // while
-      //if (result != CommandResult::kAck) { printf("StartStreaming result=%d\n", (int)result ); }
+      // if (result != CommandResult::kAck) { printf("StartStreaming result=%d\n", (int)result ); }
     }
   }
 
-  //printf("Thread end %s\n", __func__);
+  // printf("Thread end %s\n", __func__);
   return;
 }
 
