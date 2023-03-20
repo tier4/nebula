@@ -1,12 +1,13 @@
 name: documentation
 on:
-  push:
   pull_request:
+    types: [ closed ]
 permissions:
   contents: write
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2
