@@ -19,8 +19,9 @@ build/
 
 # Ignore generated docs
 *.dox
+.mkdoxy/
 *.wikidoc
-
+site/
 # eclipse stuff
 .project
 .cproject

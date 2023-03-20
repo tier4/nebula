@@ -1,0 +1,86 @@
+### Site metadata ###
+
+site_name: Nebula
+site_description: Nebula Multi-Sensor Driver Framework
+
+repo_url: https://github.com/tier4/nebula
+docs_dir: docs
+copyright: Copyright &copy; 2023 TIER IV, Inc.
+
+### Theme settings ###
+theme:
+  name: material
+  language: en
+  # logo: docs/logo.png
+  # favicon: docs/favicon.png
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.top
+  palette:
+    - scheme: default
+      primary: white
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - scheme: slate
+      primary: grey
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+use_directory_urls: true
+plugins:
+    - search
+
+### Navigation ###
+nav:
+  - Home: index.md
+  - About Nebula: about.md
+  - API:
+    - Links: nebula/links.md
+    - Pages: nebula/pages.md
+    - Modules: nebula/modules.md
+    - Namespace Members: nebula/namespace_members.md
+    - Files: nebula/files.md
+    - Namespaces: nebula/namespaces.md
+    - Member Functions: nebula/namespace_member_functions.md
+    - Member Variables: nebula/namespace_member_variables.md
+    - Type Defs: nebula/namespace_member_typedefs.md
+    - Enumerations: nebula/namespace_member_enums.md
+    - Functions: nebula/functions.md
+    - Macros: nebula/macros.md
+    - Variables: nebula/variables.md
+    - Annotated: nebula/annotated.md
+    - Classes: nebula/classes.md
+    - Hierarchy: nebula/hierarchy.md
+    - Class Members: nebula/class_members.md
+    - Class Member Functions: nebula/class_member_functions.md
+    - Class Member Variables: nebula/class_member_variables.md
+    - Class TypeDefs: nebula/class_member_typedefs.md
+    - Class Member Enumerations: nebula/class_member_enums.md
+
+
+### Extra Settings ###
+plugins:
+  - mkdoxy:
+      projects:
+        nebula:
+          src-dirs: nebula_drivers/include
+          full-doc: True
+          doxy-cfg:
+            FILE_PATTERNS: "*.hpp *.h"
+            RECURSIVE: True
+            EXTRACT_ALL: True
+            INLINE_SOURCES: True
+            ENABLE_PREPROCESSING: True
+            MACRO_EXPANSION: True
+
+
+      save-api: .mkdoxy
+      full-doc: True
+      debug: False
+      ignore-errors: False
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences

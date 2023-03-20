@@ -154,5 +154,5 @@ Unique params:
 | view_width       | double | 360     | degrees ]0, 360] | Horizontal FOV centered at `scan_phase` |
 
 ## Diagrams
-![DriverOrganization](doc/diagram.png)
+![DriverOrganization](docs/diagram.png)
 
