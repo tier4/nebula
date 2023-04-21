@@ -1,21 +1,19 @@
-# VSCode
+# Vim
+*.swp
+*.swo
+
+# Visual Studio Code
 .vscode/
 *.code-workspace
 
-# catkin / colcon
+# colcon
 build/
-devel/
 install/
-logs/
 log/
-.catkin_tools/
-.catkin_workspace
 
-.idea
-=======
-install/
-log/
-build/
+# Python
+srv/_*.py
+*.pyc
 
 # Ignore generated docs
 *.dox
@@ -28,14 +26,3 @@ site/
 
 # qcreator stuff
 CMakeLists.txt.user
-
-srv/_*.py
-#*.pcd
-*.pyc
-qtcreator-*
-*.user
-
-*~
-
-# Emacs
-.#*
