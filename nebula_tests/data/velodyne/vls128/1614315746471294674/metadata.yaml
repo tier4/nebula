@@ -1,0 +1,26 @@
+rosbag2_bagfile_information:
+  version: 5
+  storage_identifier: sqlite3
+  duration:
+    nanoseconds: 277624032
+  starting_time:
+    nanoseconds_since_epoch: 1614315746471294674
+  message_count: 4
+  topics_with_message_count:
+    - topic_metadata:
+        name: /sensing/lidar/top/velodyne_packets
+        type: velodyne_msgs/msg/VelodyneScan
+        serialization_format: cdr
+        offered_qos_profiles: ""
+      message_count: 4
+  compression_format: ""
+  compression_mode: ""
+  relative_file_paths:
+    - 1614315746471294674_0.db3
+  files:
+    - path: 1614315746471294674_0.db3
+      starting_time:
+        nanoseconds_since_epoch: 1614315746471294674
+      duration:
+        nanoseconds: 277624032
+      message_count: 4

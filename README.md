@@ -30,36 +30,73 @@ $ colcon test-result --all
 ## Generic Launch File
 You can easily run the sensor hardware interface, the sensor hardware monitor and sensor driver using (e.g. Pandar64):
 
-```ros2 launch nebula_lidar_driver nebula_launch.py sensor_model:=Pandar64```
+```ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64```
 
 If you don't want to launch the hardware (i.e. working on rosbag) set the `launch_hw` flag to false:
 
-```ros2 launch nebula_lidar_driver nebula_launch.py sensor_model:=Pandar64 launch_hw:=false```
+```ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 launch_hw:=false```
+
+If you don't want the hardware driver to perform the sensor configuration communication (i.e. limited number of connections) set the `setup_sensor` flag to false:
+
+```ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 setup_sensor:=false```
 
 You should ideally provide a config file for your specific sensor, but default ones are provided `nebula_drivers/config`
 
-```ros2 launch nebula_lidar_driver nebula_launch.py sensor_model:=Pandar64 config_file:=your_sensor.yaml```
+```ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 config_file:=your_sensor.yaml```
 
 ## Hesai LiDARs
 Supported models, where sensor_model is the ROS param to be used at launch:
 
-| Model         | sensor_model   | Config   |
-|---------------|----------------|----------|
-| Pandar 64     | Pandar64       | 64.csv   |
-| Pandar 40P    | Pandar40P      | 40p.csv  |
-| Pandar XT 32  | PandarXT32     | xt32.csv |
-| Pandar QT 64  | PandarQT64     | qt.csv   |
-| ------------- | -------------- | -------- |
+| Model         | sensor_model |
+|---------------|--------------|
+| Pandar 64     | Pandar64     |
+| Pandar 40P    | Pandar40P    |
+| Pandar XT32   | PandarXT32   |
+| Pandar XT32M  | PandarXT32M  |
+| Pandar QT64   | PandarQT64   |
+| Pandar QT128  | PandarQT128  |
+| Pandar AT128  | PandarAT128  |
+| Pandar 128E4X | Pandar128E4X |
 
-Supported return modes:
+Supported return modes per model:
 
-| Mode               | return_mode     |
-|--------------------|-----------------|
-| Single (First)     | SingleFirst     |
-| Single (Strongest) | SingleStrongest |
-| Single (Last)      | SingleLast      |
-| Dual               | Dual            | 
-| ------------------ | --------------- |
+| Sensor Model | return_mode    | type   |
+|--------------|----------------|--------|
+| Pandar XT32M | Last           | Single |
+| Pandar XT32M | Strongest      | Single |
+| Pandar XT32M | LastStrongest  | Dual   |
+| Pandar XT32M | First          | Single |
+| Pandar XT32M | LastFirst      | Dual   |
+| Pandar XT32M | FirstStrongest | Dual   |
+| Pandar XT32M | Dual           | Dual   |
+| ---          | ---            | ---    |
+| Pandar AT128 | Last           | Single |
+| Pandar AT128 | Strongest      | Single |
+| Pandar AT128 | LastStrongest  | Dual   |
+| Pandar AT128 | First          | Single |
+| Pandar AT128 | LastFirst      | Dual   |
+| Pandar AT128 | FirstStrongest | Dual   |
+| Pandar AT128 | Dual           | Dual   |
+| ---          | ---            | ---    |
+| Pandar QT128 | Last           | Single |
+| Pandar QT128 | Strongest      | Single |
+| Pandar QT128 | LastStrongest  | Dual   |
+| Pandar QT128 | First          | Single |
+| Pandar QT128 | LastFirst      | Dual   |
+| Pandar QT128 | FirstStrongest | Dual   |
+| Pandar QT128 | Dual           | Dual   |
+| ---          | ---            | ---    |
+| Pandar QT64  | Last           | Single |
+| Pandar QT64  | Dual           | Dual   |
+| Pandar QT64  | First          | Single |
+| ---          | ---            | ---    |
+| Pandar 40P   | Last           | Single |
+| Pandar 40P   | Strongest      | Single |
+| Pandar 40P   | Dual           | Dual   |
+| ---          | ---            | ---    |
+| Pandar 64    | Last           | Single |
+| Pandar 64    | Strongest      | Single |
+| Pandar 64    | Dual           | Dual   |
 
 Common ROS params:
 
@@ -72,7 +109,7 @@ Common ROS params:
 
 ### Hesai Hardware Interface
 Launches the UDP hardware connection to a live sensor and publishes HesaiScan messages. E.g.:
-```ros2 launch nebula_lidar_driver hesai_hw_interface.xml sensor_model:=Pandar40P return_mode:=Dual```
+```ros2 launch nebula_ros hesai_hw_interface.xml sensor_model:=Pandar40P return_mode:=Dual```
 Unique params:
 
 | Parameter       | Type   | Default     | Accepted Values   | Description     |
@@ -87,7 +124,7 @@ Unique params:
 
 ### Hesai Driver
 Launches the hesai driver which subscribes to HesaiScan messages and converts them to PointCloud2. E.g.:
-```ros2 launch nebula_lidar_driver hesai_driver.xml sensor_model:=Pandar40P return_mode:=Dual```
+```ros2 launch nebula_ros hesai_driver.xml sensor_model:=Pandar40P return_mode:=Dual```
 Unique params:
 
 | Parameter       | Type   | Default     | Accepted Values | Description            |
@@ -130,7 +167,7 @@ Common ROS params:
 
 ### Velodyne Hardware Interface
 Launches the UDP hardware connection to a live sensor and publishes VelodyneScan messages. E.g.:
-```ros2 launch nebula_lidar_driver velodyne_hw_interface.xml sensor_model:=VLS128 return_mode:=Dual```
+```ros2 launch nebula_ros velodyne_hw_interface.xml sensor_model:=VLS128 return_mode:=Dual```
 Unique params:
 
 | Parameter       | Type   | Default     | Accepted Values | Description      |
@@ -143,7 +180,7 @@ Unique params:
 
 ### Velodyne Driver
 Launches the Velodyne driver which subscribes to VelodyneScan messages and converts them to PointCloud2. E.g.:
-```ros2 launch nebula_lidar_driver velodyne_driver.xml sensor_model:=VLS128 return_mode:=Dual```
+```ros2 launch nebula_ros velodyne_driver.xml sensor_model:=VLS128 return_mode:=Dual```
 Unique params:
 
 | Parameter        | Type   | Default | Accepted Values  | Description                             |

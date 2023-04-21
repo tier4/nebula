@@ -17,6 +17,8 @@ theme:
     - navigation.tabs
     - navigation.indexes
     - navigation.top
+    - search.suggest
+    - search.highlight
   palette:
     - scheme: default
       primary: white
@@ -29,43 +31,55 @@ theme:
         icon: material/weather-night
         name: Switch to light mode
 use_directory_urls: true
-plugins:
-    - search
 
 ### Navigation ###
 nav:
   - Home: index.md
+  - Design: design.md
   - About Nebula: about.md
-  - API:
-    - Links: nebula/links.md
-    - Pages: nebula/pages.md
-    - Modules: nebula/modules.md
-    - Namespace Members: nebula/namespace_members.md
-    - Files: nebula/files.md
-    - Namespaces: nebula/namespaces.md
-    - Member Functions: nebula/namespace_member_functions.md
-    - Member Variables: nebula/namespace_member_variables.md
-    - Type Defs: nebula/namespace_member_typedefs.md
-    - Enumerations: nebula/namespace_member_enums.md
-    - Functions: nebula/functions.md
-    - Macros: nebula/macros.md
-    - Variables: nebula/variables.md
-    - Annotated: nebula/annotated.md
-    - Classes: nebula/classes.md
-    - Hierarchy: nebula/hierarchy.md
-    - Class Members: nebula/class_members.md
-    - Class Member Functions: nebula/class_member_functions.md
-    - Class Member Variables: nebula/class_member_variables.md
-    - Class TypeDefs: nebula/class_member_typedefs.md
-    - Class Member Enumerations: nebula/class_member_enums.md
+  - Add Your Sensor: add_sensor.md
+  - Nebula Common: nebula_common/links.md
+  - Nebula Decoders: nebula_decoders/links.md
+  - Nebula HW Interfaces: nebula_hw_interfaces/links.md
+  - Nebula ROS: nebula_ros/links.md
 
 
 ### Extra Settings ###
 plugins:
   - mkdoxy:
       projects:
-        nebula:
-          src-dirs: nebula_drivers/include
+        nebula_common:
+          src-dirs: nebula_common/include
+          full-doc: True
+          doxy-cfg:
+            FILE_PATTERNS: "*.hpp *.h"
+            RECURSIVE: True
+            EXTRACT_ALL: True
+            INLINE_SOURCES: True
+            ENABLE_PREPROCESSING: True
+            MACRO_EXPANSION: True
+        nebula_decoders:
+          src-dirs: nebula_decoders/include
+          full-doc: True
+          doxy-cfg:
+            FILE_PATTERNS: "*.hpp *.h"
+            RECURSIVE: True
+            EXTRACT_ALL: True
+            INLINE_SOURCES: True
+            ENABLE_PREPROCESSING: True
+            MACRO_EXPANSION: True
+        nebula_hw_interfaces:
+          src-dirs: nebula_hw_interfaces/include
+          full-doc: True
+          doxy-cfg:
+            FILE_PATTERNS: "*.hpp *.h"
+            RECURSIVE: True
+            EXTRACT_ALL: True
+            INLINE_SOURCES: True
+            ENABLE_PREPROCESSING: True
+            MACRO_EXPANSION: True
+        nebula_ros:
+          src-dirs: nebula_ros/include
           full-doc: True
           doxy-cfg:
             FILE_PATTERNS: "*.hpp *.h"
@@ -80,6 +94,9 @@ plugins:
       full-doc: True
       debug: False
       ignore-errors: False
+
+  - search:
+      lang: en
 
 markdown_extensions:
   - pymdownx.highlight

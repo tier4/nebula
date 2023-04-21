@@ -1,0 +1,10 @@
+/**:
+  ros__parameters:
+    device_ip: "192.168.1.201"
+    return_mode: "SingleStrongest"
+    host_ip: "255.255.255.255"
+    frame_id: "lidar"
+    data_port: 2368
+    gnss_port: 2369
+    setup_sensor: True
+    online: True

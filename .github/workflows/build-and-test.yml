@@ -30,7 +30,7 @@ jobs:
         with:
           fetch-depth: 2 # https://github.com/codecov/codecov-action/issues/190#issuecomment-790729633
       - name: Update image
-        run: apt update && apt upgrade -y && rosdep update
+        run: apt update && rosdep update
         shell: bash
       - name: Prepare Workspace
         run: mkdir -p src && mv `find -maxdepth 1 -not -name . -not -name src` src/
@@ -42,6 +42,6 @@ jobs:
         run: source /opt/ros/${{ matrix.ros_distribution }}/setup.bash && DEBIAN_FRONTEND=noninteractive rosdep install --include-eol-distros --from-paths src --ignore-src -y -r
         shell: bash
       - name: Build and test
-        run: source /opt/ros/${{ matrix.ros_distribution }}/setup.bash &&  colcon build && colcon test --event-handlers console_cohesion+ --packages-select nebula_lidar_driver nebula_offline_sample && colcon test-result --all
+        run: source /opt/ros/${{ matrix.ros_distribution }}/setup.bash &&  colcon build && colcon test --event-handlers console_cohesion+ --packages-skip io_context serial_driver tcp_driver udp_driver
         shell: bash
 

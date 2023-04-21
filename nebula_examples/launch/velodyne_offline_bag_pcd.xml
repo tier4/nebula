@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="sensor_model" description="VLP16|VLP32|VLS128"/>
+    <arg name="return_mode" default="Dual" description="See readme for supported return modes"/>
+    <arg name="frame_id"  default="velodyne"/>
+    <arg name="scan_phase" default="0.0" />
+
+    <arg name="calibration_file" default="$(find-pkg-share nebula_decoders)/calibration/velodyne/$(var sensor_model).yaml"/>
+
+    <arg name="bag_path" default="path to bag dir"/>
+    <arg name="storage_id" default="sqlite3"/>
+    <arg name="out_path" default="path to output dir"/>
+    <arg name="format" default="cdr"/>
+    <arg name="target_topic" default="/velodyne_packets"/>
+    <arg name="out_num" default="1"/>
+    <arg name="skip_num" default="3"/>
+    <arg name="only_xyz" default="true"/>
+
+
+    <node pkg="nebula_examples" exec="velodyne_ros_offline_extract_bag_pcd_node"
+          name="velodyne_cloud" output="screen">
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="return_mode" value="$(var return_mode)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="scan_phase" value="$(var scan_phase)"/>
+        <param name="calibration_file" value="$(var calibration_file)"/>
+        <param name="bag_path" value="$(var bag_path)"/>
+        <param name="storage_id" value="$(var storage_id)"/>
+        <param name="out_path" value="$(var out_path)"/>
+        <param name="format" value="$(var format)"/>
+        <param name="target_topic" value="$(var target_topic)"/>
+        <param name="out_num" value="$(var out_num)"/>
+        <param name="skip_num" value="$(var skip_num)"/>
+        <param name="only_xyz" value="$(var only_xyz)"/>
+    </node>
+
+</launch>

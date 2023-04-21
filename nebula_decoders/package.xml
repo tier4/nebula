@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+    <name>nebula_decoders</name>
+    <version>0.1.0</version>
+    <description>
+        Nebula Decoders Library
+    </description>
+    <maintainer email="contact@map4.jp">MAP IV</maintainer>
+
+    <license>Apache 2</license>
+    <author>Tier IV</author>
+
+    <buildtool_depend>ament_cmake_auto</buildtool_depend>
+
+    <depend>sensor_msgs</depend>
+    <depend>pandar_msgs</depend>
+    <depend>velodyne_msgs</depend>
+    <depend>nebula_common</depend>
+    <depend>angles</depend>
+    <depend>yaml-cpp</depend>
+    <depend>pcl_conversions</depend>
+    <depend>libpcl-all-dev</depend>
+
+    <test_depend>ament_lint_auto</test_depend>
+    <test_depend>ament_cmake_gtest</test_depend>
+    <test_depend>ament_cmake_clang_format</test_depend>
+
+    <export>
+        <build_type>ament_cmake</build_type>
+    </export>
+</package>
