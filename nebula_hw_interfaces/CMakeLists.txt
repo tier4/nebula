@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 project(nebula_hw_interfaces)
 
 find_package(ament_cmake_auto REQUIRED)
+find_package(PCL REQUIRED)
+find_package(PCL REQUIRED COMPONENTS common)
+find_package(pcl_conversions REQUIRED)
 
 ament_auto_find_build_dependencies()
 
@@ -13,6 +16,13 @@ endif ()
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
 endif ()
+
+include_directories(
+        include
+        ${YAML_CPP_INCLUDE_DIRS}
+        ${PCL_INCLUDE_DIRS}
+        ${PCL_COMMON_INCLUDE_DIRS}
+)
 
 ament_auto_add_library(nebula_hw_interfaces_hesai SHARED
         src/nebula_hesai_hw_interfaces/hesai_hw_interface.cpp

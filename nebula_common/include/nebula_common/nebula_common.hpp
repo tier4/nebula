@@ -5,6 +5,7 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#include <nebula_common/point_types.hpp>
 
 namespace nebula
 {
@@ -481,6 +482,12 @@ inline ReturnMode ReturnModeFromString(const std::string & return_mode)
 
   return ReturnMode::UNKNOWN;
 }
+
+    [[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr
+convertPointXYZIRADTToPointXYZIR(const pcl::PointCloud<PointXYZIRADT>::ConstPtr& input_pointcloud);
+
+    [[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr
+convertPointXYZICAETRToPointXYZIR(const pcl::PointCloud<PointXYZICAETR>::ConstPtr& input_pointcloud);
 
 }  // namespace drivers
 }  // namespace nebula

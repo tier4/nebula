@@ -1,4 +1,5 @@
-#pragma once
+#ifndef NEBULA_POINT_TYPES_H
+#define NEBULA_POINT_TYPES_H
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -72,3 +73,5 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
   (float, x, x)(float, y, y)(float, z, z)(std::uint8_t, intensity, intensity)(
     std::uint16_t, channel, channel)(float, azimuth, azimuth)(
     std::uint32_t, time_stamp, time_stamp)(std::uint8_t, return_type, return_type))
+
+#endif
