@@ -20,39 +20,43 @@ PandarXTMDecoder::PandarXTMDecoder(
   //   // calibration data is not valid!
   // }
   for (size_t laser = 0; laser < LASER_COUNT; ++laser) {
-    elev_angle_[laser] = calibration_configuration->elev_angle_map[laser];
+    elevation_angle_[laser] = calibration_configuration->elev_angle_map[laser];
     azimuth_offset_[laser] = calibration_configuration->azimuth_offset_map[laser];
   }
   /////////////////
 
   for (size_t laser = 0; laser < LASER_COUNT; ++laser) {
-    elev_angle_[laser] = calibration_configuration->elev_angle_map[laser];
+    elevation_angle_[laser] = calibration_configuration->elev_angle_map[laser];
     azimuth_offset_[laser] = calibration_configuration->azimuth_offset_map[laser];
+    elevation_angle_rad_[laser] = deg2rad(elevation_angle_[laser]);
+    azimuth_offset_rad_[laser] = deg2rad(azimuth_offset_[laser]);
   }
 
-  m_sin_elevation_map_.resize(LASER_COUNT);
-  m_cos_elevation_map_.resize(LASER_COUNT);
+  sin_elevation_angle_.resize(LASER_COUNT);
+  cos_elevation_angle_.resize(LASER_COUNT);
   for (size_t laser = 0; laser < LASER_COUNT; ++laser) {
-    m_sin_elevation_map_[laser] = sinf(deg2rad(elev_angle_[laser]));
-    m_cos_elevation_map_[laser] = cosf(deg2rad(elev_angle_[laser]));
+    sin_elevation_angle_[laser] = sinf(deg2rad(elevation_angle_[laser]));
+    cos_elevation_angle_[laser] = cosf(deg2rad(elevation_angle_[laser]));
   }
-  m_sin_azimuth_map_.resize(MAX_AZIMUTH_DEGREE_NUM);
-  m_cos_azimuth_map_.resize(MAX_AZIMUTH_DEGREE_NUM);
+  sin_azimuth_angle_.resize(MAX_AZIMUTH_DEGREE_NUM);
+  cos_azimuth_angle_.resize(MAX_AZIMUTH_DEGREE_NUM);
   for (int i = 0; i < MAX_AZIMUTH_DEGREE_NUM; ++i) {
-    m_sin_azimuth_map_[i] = sinf(i * M_PI / 18000);
-    m_cos_azimuth_map_[i] = cosf(i * M_PI / 18000);
+    sin_azimuth_angle_[i] = sinf(i * M_PI / 18000);
+    cos_azimuth_angle_[i] = cosf(i * M_PI / 18000);
+    block_azimuth_rad_[i] = deg2rad(i / 100.);
   }
-
   scan_phase_ = static_cast<uint16_t>(sensor_configuration_->scan_phase * 100.0f);
   dual_return_distance_threshold_ = sensor_configuration_->dual_return_distance_threshold;
 
   last_phase_ = 0;
   has_scanned_ = false;
-  first_timestamp_tmp = std::numeric_limits<double>::max();
+  first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
   first_timestamp_ = first_timestamp_tmp;
 
   scan_pc_.reset(new NebulaPointCloud);
+  scan_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
   overflow_pc_.reset(new NebulaPointCloud);
+  overflow_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
 }
 
 bool PandarXTMDecoder::hasScanned() { return has_scanned_; }
@@ -71,8 +75,9 @@ void PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_pack
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
     first_timestamp_ = first_timestamp_tmp;
-    first_timestamp_tmp = std::numeric_limits<double>::max();
+    first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
     overflow_pc_.reset(new NebulaPointCloud);
+    overflow_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
     has_scanned_ = false;
   }
 
@@ -132,12 +137,12 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
     if (azimuth < 0) azimuth += 36000;
     if (azimuth >= 36000) azimuth -= 36000;
 
-    {
-      float xyDistance = unit.distance * m_cos_elevation_map_[i];
-      point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
-      point.y = static_cast<float>(xyDistance * m_cos_azimuth_map_[azimuth]);
-      point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[i]);
-    }
+    float xyDistance = unit.distance * cos_elevation_angle_[i];
+    point.x = xyDistance * sin_azimuth_angle_[azimuth];
+    point.y = xyDistance * cos_azimuth_angle_[azimuth];
+    point.z = unit.distance * sin_elevation_angle_[i];
+    point.azimuth = block_azimuth_rad_[blockid] + azimuth_offset_rad_[chLaserNumber];
+    point.elevation = elevation_angle_rad_[chLaserNumber];
 
     point.intensity = unit.intensity;
 

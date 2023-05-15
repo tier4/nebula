@@ -169,9 +169,9 @@ VelodyneStatus VelodyneHwInterface::GetHttpClientDriverOnce(
   return st;
 }
 
-void VelodyneHwInterface::str_cb(const std::string & str)
+void VelodyneHwInterface::StringCallback(const std::string & str)
 {
-  std::cout << "VelodyneHwInterface::str_cb: " << str << std::endl;
+  std::cout << "VelodyneHwInterface::StringCallback: " << str << std::endl;
 }
 
 boost::property_tree::ptree VelodyneHwInterface::ParseJson(const std::string & str)
@@ -305,7 +305,7 @@ VelodyneStatus VelodyneHwInterface::SetRpm(uint16_t rpm)
   }
   auto rt = http_client_driver_->post(TARGET_SETTING, (boost::format("rpm=%d") % rpm).str());
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -316,7 +316,7 @@ VelodyneStatus VelodyneHwInterface::SetFovStart(uint16_t fov_start)
   }
   auto rt = http_client_driver_->post(TARGET_FOV, (boost::format("start=%d") % fov_start).str());
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -327,7 +327,7 @@ VelodyneStatus VelodyneHwInterface::SetFovEnd(uint16_t fov_end)
   }
   auto rt = http_client_driver_->post(TARGET_FOV, (boost::format("end=%d") % fov_end).str());
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -349,7 +349,7 @@ VelodyneStatus VelodyneHwInterface::SetReturnType(nebula::drivers::ReturnMode re
   }
   auto rt = http_client_driver_->post(TARGET_SETTING, body_str);
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -358,7 +358,7 @@ VelodyneStatus VelodyneHwInterface::SaveConfig()
   std::string body_str = "submit";
   auto rt = http_client_driver_->post(TARGET_SAVE, body_str);
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -367,7 +367,7 @@ VelodyneStatus VelodyneHwInterface::ResetSystem()
   std::string body_str = "reset_system";
   auto rt = http_client_driver_->post(TARGET_RESET, body_str);
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -376,7 +376,7 @@ VelodyneStatus VelodyneHwInterface::LaserOn()
   std::string body_str = "laser=on";
   auto rt = http_client_driver_->post(TARGET_SETTING, body_str);
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -385,7 +385,7 @@ VelodyneStatus VelodyneHwInterface::LaserOff()
   std::string body_str = "laser=off";
   auto rt = http_client_driver_->post(TARGET_SETTING, body_str);
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -394,7 +394,7 @@ VelodyneStatus VelodyneHwInterface::LaserOnOff(bool on)
   std::string body_str = (boost::format("laser=%s") % (on ? "on" : "off")).str();
   auto rt = http_client_driver_->post(TARGET_SETTING, body_str);
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -402,7 +402,7 @@ VelodyneStatus VelodyneHwInterface::SetHostAddr(std::string addr)
 {
   auto rt = http_client_driver_->post(TARGET_HOST, (boost::format("addr=%s") % addr).str());
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -410,7 +410,7 @@ VelodyneStatus VelodyneHwInterface::SetHostDport(uint16_t dport)
 {
   auto rt = http_client_driver_->post(TARGET_HOST, (boost::format("dport=%d") % dport).str());
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -418,7 +418,7 @@ VelodyneStatus VelodyneHwInterface::SetHostTport(uint16_t tport)
 {
   auto rt = http_client_driver_->post(TARGET_HOST, (boost::format("tport=%d") % tport).str());
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -426,7 +426,7 @@ VelodyneStatus VelodyneHwInterface::SetNetAddr(std::string addr)
 {
   auto rt = http_client_driver_->post(TARGET_NET, (boost::format("addr=%s") % addr).str());
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -434,7 +434,7 @@ VelodyneStatus VelodyneHwInterface::SetNetMask(std::string mask)
 {
   auto rt = http_client_driver_->post(TARGET_NET, (boost::format("mask=%s") % mask).str());
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -442,7 +442,7 @@ VelodyneStatus VelodyneHwInterface::SetNetGateway(std::string gateway)
 {
   auto rt = http_client_driver_->post(TARGET_NET, (boost::format("gateway=%s") % gateway).str());
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -451,7 +451,7 @@ VelodyneStatus VelodyneHwInterface::SetNetDhcp(bool use_dhcp)
   auto rt = http_client_driver_->post(
     TARGET_NET, (boost::format("dhcp=%s") % (use_dhcp ? "on" : "off")).str());
   http_client_driver_->client()->close();
-  str_cb(rt);
+  StringCallback(rt);
   return Status::OK;
 }
 
@@ -472,7 +472,7 @@ VelodyneStatus VelodyneHwInterface::GetStatusAsync(
 
 VelodyneStatus VelodyneHwInterface::GetStatusAsync()
 {
-  return GetStatusAsync([this](const std::string & str) { str_cb(str); });
+  return GetStatusAsync([this](const std::string & str) { StringCallback(str); });
 }
 
 VelodyneStatus VelodyneHwInterface::GetDiagAsync(
@@ -492,7 +492,7 @@ VelodyneStatus VelodyneHwInterface::GetDiagAsync(
 
 VelodyneStatus VelodyneHwInterface::GetDiagAsync()
 {
-  return GetDiagAsync([this](const std::string & str) { str_cb(str); });
+  return GetDiagAsync([this](const std::string & str) { StringCallback(str); });
 }
 
 VelodyneStatus VelodyneHwInterface::GetSnapshotAsync(
@@ -537,7 +537,7 @@ VelodyneStatus VelodyneHwInterface::SetRpmAsync(uint16_t rpm)
     return VelodyneStatus::INVALID_RPM_ERROR;
   }
   hcd->asyncPost(
-    [this](const std::string & str) { str_cb(str); }, TARGET_SETTING,
+    [this](const std::string & str) { StringCallback(str); }, TARGET_SETTING,
     (boost::format("rpm=%d") % rpm).str());
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
@@ -556,7 +556,7 @@ VelodyneStatus VelodyneHwInterface::SetFovStartAsync(uint16_t fov_start)
     return VelodyneStatus::INVALID_FOV_ERROR;
   }
   hcd->asyncPost(
-    [this](const std::string & str) { str_cb(str); }, TARGET_FOV,
+    [this](const std::string & str) { StringCallback(str); }, TARGET_FOV,
     (boost::format("start=%d") % fov_start).str());
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
@@ -575,7 +575,7 @@ VelodyneStatus VelodyneHwInterface::SetFovEndAsync(uint16_t fov_end)
     return VelodyneStatus::INVALID_FOV_ERROR;
   }
   hcd->asyncPost(
-    [this](const std::string & str) { str_cb(str); }, TARGET_FOV,
+    [this](const std::string & str) { StringCallback(str); }, TARGET_FOV,
     (boost::format("end=%d") % fov_end).str());
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
@@ -604,7 +604,8 @@ VelodyneStatus VelodyneHwInterface::SetReturnTypeAsync(nebula::drivers::ReturnMo
     default:
       return VelodyneStatus::INVALID_RETURN_MODE_ERROR;
   }
-  hcd->asyncPost([this](const std::string & str) { str_cb(str); }, TARGET_SETTING, body_str);
+  hcd->asyncPost(
+    [this](const std::string & str) { StringCallback(str); }, TARGET_SETTING, body_str);
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
@@ -619,7 +620,7 @@ VelodyneStatus VelodyneHwInterface::SaveConfigAsync()
   }
 
   std::string body_str = "submit";
-  hcd->asyncPost([this](const std::string & str) { str_cb(str); }, TARGET_SAVE, body_str);
+  hcd->asyncPost([this](const std::string & str) { StringCallback(str); }, TARGET_SAVE, body_str);
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
@@ -634,7 +635,7 @@ VelodyneStatus VelodyneHwInterface::ResetSystemAsync()
   }
 
   std::string body_str = "reset_system";
-  hcd->asyncPost([this](const std::string & str) { str_cb(str); }, TARGET_RESET, body_str);
+  hcd->asyncPost([this](const std::string & str) { StringCallback(str); }, TARGET_RESET, body_str);
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
@@ -649,7 +650,8 @@ VelodyneStatus VelodyneHwInterface::LaserOnAsync()
   }
 
   std::string body_str = "laser=on";
-  hcd->asyncPost([this](const std::string & str) { str_cb(str); }, TARGET_SETTING, body_str);
+  hcd->asyncPost(
+    [this](const std::string & str) { StringCallback(str); }, TARGET_SETTING, body_str);
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
@@ -664,7 +666,8 @@ VelodyneStatus VelodyneHwInterface::LaserOffAsync()
   }
 
   std::string body_str = "laser=off";
-  hcd->asyncPost([this](const std::string & str) { str_cb(str); }, TARGET_SETTING, body_str);
+  hcd->asyncPost(
+    [this](const std::string & str) { StringCallback(str); }, TARGET_SETTING, body_str);
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
@@ -679,7 +682,8 @@ VelodyneStatus VelodyneHwInterface::LaserOnOffAsync(bool on)
   }
 
   std::string body_str = (boost::format("laser=%s") % (on ? "on" : "off")).str();
-  hcd->asyncPost([this](const std::string & str) { str_cb(str); }, TARGET_SETTING, body_str);
+  hcd->asyncPost(
+    [this](const std::string & str) { StringCallback(str); }, TARGET_SETTING, body_str);
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
@@ -694,7 +698,7 @@ VelodyneStatus VelodyneHwInterface::SetHostAddrAsync(std::string addr)
   }
 
   hcd->asyncPost(
-    [this](const std::string & str) { str_cb(str); }, TARGET_HOST,
+    [this](const std::string & str) { StringCallback(str); }, TARGET_HOST,
     (boost::format("addr=%s") % addr).str());
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
@@ -710,7 +714,7 @@ VelodyneStatus VelodyneHwInterface::SetHostDportAsync(uint16_t dport)
   }
 
   hcd->asyncPost(
-    [this](const std::string & str) { str_cb(str); }, TARGET_HOST,
+    [this](const std::string & str) { StringCallback(str); }, TARGET_HOST,
     (boost::format("dport=%d") % dport).str());
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
@@ -726,7 +730,7 @@ VelodyneStatus VelodyneHwInterface::SetHostTportAsync(uint16_t tport)
   }
 
   hcd->asyncPost(
-    [this](const std::string & str) { str_cb(str); }, TARGET_HOST,
+    [this](const std::string & str) { StringCallback(str); }, TARGET_HOST,
     (boost::format("tport=%d") % tport).str());
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
@@ -742,7 +746,7 @@ VelodyneStatus VelodyneHwInterface::SetNetAddrAsync(std::string addr)
   }
 
   hcd->asyncPost(
-    [this](const std::string & str) { str_cb(str); }, TARGET_NET,
+    [this](const std::string & str) { StringCallback(str); }, TARGET_NET,
     (boost::format("addr=%s") % addr).str());
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
@@ -758,7 +762,7 @@ VelodyneStatus VelodyneHwInterface::SetNetMaskAsync(std::string mask)
   }
 
   hcd->asyncPost(
-    [this](const std::string & str) { str_cb(str); }, TARGET_NET,
+    [this](const std::string & str) { StringCallback(str); }, TARGET_NET,
     (boost::format("mask=%s") % mask).str());
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
@@ -774,7 +778,7 @@ VelodyneStatus VelodyneHwInterface::SetNetGatewayAsync(std::string gateway)
   }
 
   hcd->asyncPost(
-    [this](const std::string & str) { str_cb(str); }, TARGET_NET,
+    [this](const std::string & str) { StringCallback(str); }, TARGET_NET,
     (boost::format("gateway=%s") % gateway).str());
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;
@@ -790,7 +794,7 @@ VelodyneStatus VelodyneHwInterface::SetNetDhcpAsync(bool use_dhcp)
   }
 
   hcd->asyncPost(
-    [this](const std::string & str) { str_cb(str); }, TARGET_NET,
+    [this](const std::string & str) { StringCallback(str); }, TARGET_NET,
     (boost::format("dhcp=%s") % (use_dhcp ? "on" : "off")).str());
   ctx->run();
   return Status::WAITING_FOR_SENSOR_RESPONSE;

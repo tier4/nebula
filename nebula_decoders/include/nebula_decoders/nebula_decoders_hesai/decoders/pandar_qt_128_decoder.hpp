@@ -59,17 +59,21 @@ private:
   /// @return packet_.return mode is dual mode
   bool is_dual_return();
 
-  std::array<float, LASER_COUNT> elev_angle_{};
+  std::array<float, LASER_COUNT> elevation_angle_{};
   std::array<float, LASER_COUNT> azimuth_offset_{};
   std::array<float, LASER_COUNT> elev_angle_rad_{};
-  std::array<float, LASER_COUNT> cos_elev_angle_{};
-  std::array<float, LASER_COUNT> sin_elev_angle_{};
+  std::array<float, LASER_COUNT> cos_elevation_angle_{};
+  std::array<float, LASER_COUNT> sin_elevation_angle_{};
+  std::array<float, LASER_COUNT> elevation_angle_rad_{};
+  std::array<float, LASER_COUNT> azimuth_offset_rad_{};
 
-  std::map<int, float> firing_offset1_{};
-  std::map<int, float> firing_offset2_{};
+  std::array<float, MAX_AZIMUTH_STEPS> block_azimuth_rad_{};
 
-  std::array<float, BLOCKS_PER_PACKET> block_offset_single_{};
-  std::array<float, BLOCKS_PER_PACKET> block_offset_dual_{};
+  std::map<int, float> firing_time_offset1_{};
+  std::map<int, float> firing_time_offset2_{};
+
+  std::array<float, BLOCKS_PER_PACKET> block_time_offset_single_{};
+  std::array<float, BLOCKS_PER_PACKET> block_time_offset_dual_{};
 
   uint8_t first_return_type_{};
   uint8_t second_return_type_{};

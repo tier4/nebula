@@ -215,58 +215,48 @@ Status HesaiDriverRosWrapper::GetParameters(
   if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
     return Status::SENSOR_CONFIG_ERROR;
   }
+
+  std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
+    std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration);
+
+  hw_interface_.SetSensorConfiguration(
+    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
   if (sensor_configuration.sensor_model != drivers::SensorModel::HESAI_PANDARAT128) {
     if (calibration_configuration.calibration_file.empty()) {
+      RCLCPP_ERROR_STREAM(
+        this->get_logger(), "Empty Calibration_file File: '" << calibration_configuration.calibration_file << "'");
       return Status::INVALID_CALIBRATION_FILE;
     } else {
-      RCLCPP_INFO_STREAM(
-        this->get_logger(), "Trying to acquire calibration data from sensor: '"
-                              << sensor_configuration.sensor_ip << "'");
-      std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
-        std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration);
+      auto cal_status =
+        calibration_configuration.LoadFromFile(calibration_configuration.calibration_file);
 
-      hw_interface_.SetSensorConfiguration(
-        std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
-      if (hw_interface_.InitializeTcpDriver(false) == Status::OK) {
-        hw_interface_.GetLidarCalibrationFromSensor(
-          [this, &calibration_configuration](const std::string & str) {
-            calibration_configuration.LoadFromString(str);
-          },
-          true);
-      } else {
-        auto cal_status =
-          calibration_configuration.LoadFromFile(calibration_configuration.calibration_file);
-
-        if (cal_status != Status::OK) {
-          RCLCPP_ERROR_STREAM(
-            this->get_logger(),
-            "Given Calibration File: '" << calibration_configuration.calibration_file << "'");
-          return cal_status;
-        }
+      if (cal_status != Status::OK) {
+        RCLCPP_ERROR_STREAM(
+          this->get_logger(),
+          "Given Calibration File: '" << calibration_configuration.calibration_file << "'");
+        return cal_status;
+      }else{
+        RCLCPP_INFO_STREAM(
+          this->get_logger(), "Load calibration data from: '"
+                                << calibration_configuration.calibration_file << "'");
       }
     }
-  } else {
+  } else { // sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128
     if (correction_file_path.empty()) {
       RCLCPP_ERROR_STREAM(
         this->get_logger(), "Empty Correction File: '" << correction_file_path << "'");
       return Status::INVALID_CALIBRATION_FILE;
     } else {
-      std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
-        std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration);
-      hw_interface_.SetSensorConfiguration(
-        std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
-      if (hw_interface_.InitializeTcpDriver(false) == Status::OK) {
-        hw_interface_.syncGetLidarCalibrationFromSensor(
-          [this, &correction_configuration](const std::vector<uint8_t> & received_bytes) {
-            correction_configuration.LoadFromBinary(received_bytes);
-          });
-      } else {
-        auto cal_status = correction_configuration.LoadFromFile(correction_file_path);
-        if (cal_status != Status::OK) {
-          RCLCPP_ERROR_STREAM(
-            this->get_logger(), "Given Correction File: '" << correction_file_path << "'");
-          return cal_status;
-        }
+      auto cal_status = correction_configuration.LoadFromFile(correction_file_path);
+
+      if (cal_status != Status::OK) {
+        RCLCPP_ERROR_STREAM(
+          this->get_logger(), "Given Correction File: '" << correction_file_path << "'");
+        return cal_status;
+      }else{
+        RCLCPP_INFO_STREAM(
+          this->get_logger(), "Load correction data from: '"
+                                << correction_file_path << "'");
       }
     }
   }

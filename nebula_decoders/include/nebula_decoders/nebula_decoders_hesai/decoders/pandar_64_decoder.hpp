@@ -53,13 +53,19 @@ private:
   /// @return Point cloud
   drivers::NebulaPointCloudPtr convert_dual(size_t block_id) override;
 
-  std::array<float, LASER_COUNT> elev_angle_{};
+  std::array<float, LASER_COUNT> elevation_angle_{};
   std::array<float, LASER_COUNT> azimuth_offset_{};
+  std::array<float, LASER_COUNT> elevation_angle_rad_{};
+  std::array<float, LASER_COUNT> azimuth_offset_rad_{};
+  std::array<float, LASER_COUNT> cos_elevation_angle_{};
+  std::array<float, LASER_COUNT> sin_elevation_angle_{};
 
-  std::array<float, LASER_COUNT> firing_offset_{};
+  std::array<float, MAX_AZIMUTH_STEPS> block_azimuth_rad_{};
 
-  std::array<float, BLOCKS_PER_PACKET> block_offset_single_{};
-  std::array<float, BLOCKS_PER_PACKET> block_offset_dual_{};
+  std::array<float, LASER_COUNT> firing_time_offset_{};
+
+  std::array<float, BLOCKS_PER_PACKET> block_time_offset_single_{};
+  std::array<float, BLOCKS_PER_PACKET> block_time_offset_dual_{};
 
   Packet packet_{};
 };

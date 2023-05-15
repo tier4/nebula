@@ -1,6 +1,15 @@
 #ifndef NEBULA_HESAI_HW_INTERFACE_H
 #define NEBULA_HESAI_HW_INTERFACE_H
-
+// Have to define macros to silence warnings about deprecated headers being used by
+// boost/property_tree/ in some versions of boost.
+// See: https://github.com/boostorg/property_tree/issues/51
+#include <boost/version.hpp>
+#if (BOOST_VERSION / 100 >= 1073 && BOOST_VERSION / 100 <= 1076)  // Boost 1.73 - 1.76
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
+#endif
+#if (BOOST_VERSION / 100 == 1074)  // Boost 1.74
+#define BOOST_ALLOW_DEPRECATED_HEADERS
+#endif
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>

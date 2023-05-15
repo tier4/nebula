@@ -19,7 +19,7 @@ Then compile with colcon, optionally enabling symlink:
 Run tests:
 
 ```
-$ colcon test --event-handlers console_cohesion+
+$ colcon test --event-handlers console_cohesion+ --packages-above nebula_common
 ```
 
 Show results:

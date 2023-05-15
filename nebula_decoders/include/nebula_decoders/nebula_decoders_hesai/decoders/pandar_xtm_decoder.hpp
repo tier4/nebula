@@ -94,20 +94,22 @@ private:
   /// @return Point cloud
   drivers::NebulaPointCloudPtr convert_dual(size_t block_id) override;
 
-  std::array<float, LASER_COUNT> elev_angle_{};
+  std::array<float, LASER_COUNT> elevation_angle_{};
   std::array<float, LASER_COUNT> azimuth_offset_{};
+  std::array<float, LASER_COUNT> elevation_angle_rad_{};
+  std::array<float, LASER_COUNT> azimuth_offset_rad_{};
 
-  //  std::array<float, LASER_COUNT> firing_offset_{};
+  std::array<float, MAX_AZIMUTH_STEPS> block_azimuth_rad_{};
 
-  std::array<float, BLOCKS_PER_PACKET> block_offset_single_{};
-  std::array<float, BLOCKS_PER_PACKET> block_offset_dual_{};
-  std::array<float, BLOCKS_PER_PACKET> block_offset_triple_{};
+  std::array<float, BLOCKS_PER_PACKET> block_time_offset_single_return_{};
+  std::array<float, BLOCKS_PER_PACKET> block_time_offset_dual_return_{};
+  std::array<float, BLOCKS_PER_PACKET> block_time_offset_triple_return_{};
 
-  std::vector<float> m_sin_elevation_map_;
-  std::vector<float> m_cos_elevation_map_;
+  std::vector<float> sin_elevation_angle_;
+  std::vector<float> cos_elevation_angle_;
 
-  std::vector<float> m_sin_azimuth_map_;
-  std::vector<float> m_cos_azimuth_map_;
+  std::vector<float> sin_azimuth_angle_;
+  std::vector<float> cos_azimuth_angle_;
 
   Packet packet_{};
 

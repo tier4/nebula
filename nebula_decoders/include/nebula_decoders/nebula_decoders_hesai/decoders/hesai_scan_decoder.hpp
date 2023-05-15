@@ -26,7 +26,7 @@ protected:
   bool has_scanned_{};
   double dual_return_distance_threshold_{};
   uint32_t first_timestamp_{};
-  double first_timestamp_tmp{};
+  uint32_t first_timestamp_tmp{};
 
   /// @brief SensorConfiguration for this decoder
   std::shared_ptr<drivers::HesaiSensorConfiguration> sensor_configuration_;

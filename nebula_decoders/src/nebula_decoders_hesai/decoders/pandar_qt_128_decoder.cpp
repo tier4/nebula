@@ -24,7 +24,7 @@ PandarQT128Decoder::PandarQT128Decoder(
       int id;
       float val;
       sscanf(sbuf.c_str(), "%d,%f", &id, &val);
-      firing_offset1_[id] = val;
+      firing_time_offset1_[id] = val;
     }
   }
   {
@@ -34,23 +34,24 @@ PandarQT128Decoder::PandarQT128Decoder(
       int id;
       float val;
       sscanf(sbuf.c_str(), "%d,%f", &id, &val);
-      firing_offset2_[id] = val;
+      firing_time_offset2_[id] = val;
     }
   }
   for (size_t block = 0; block < BLOCKS_PER_PACKET; ++block) {
-    block_offset_single_[block] = 9.00f + 111.11f * static_cast<float>(block);
-    block_offset_dual_[block] = 9.00f;
+    block_time_offset_single_[block] = 9.00f + 111.11f * static_cast<float>(block);
+    block_time_offset_dual_[block] = 9.00f;
   }
 
-  // TODO: add calibration data validation
-  // if(calibration.elev_angle_map.size() != num_lasers_){
-  //   // calibration data is not valid!
-  // }
   for (size_t laser = 0; laser < LASER_COUNT; ++laser) {
-    elev_angle_[laser] = calibration_configuration->elev_angle_map[laser];
+    elevation_angle_[laser] = calibration_configuration->elev_angle_map[laser];
     azimuth_offset_[laser] = calibration_configuration->azimuth_offset_map[laser];
-    cos_elev_angle_[laser] = cosf(deg2rad(elev_angle_[laser]));
-    sin_elev_angle_[laser] = sinf(deg2rad(elev_angle_[laser]));
+    elevation_angle_rad_[laser] = deg2rad(elevation_angle_[laser]);
+    azimuth_offset_rad_[laser] = deg2rad(azimuth_offset_[laser]);
+    cos_elevation_angle_[laser] = cosf(elevation_angle_rad_[laser]);
+    sin_elevation_angle_[laser] = sinf(elevation_angle_rad_[laser]);
+  }
+  for (uint32_t i = 0; i < MAX_AZIMUTH_STEPS; i++) {  // precalculate sensor azimuth, unit 0.01 deg
+    block_azimuth_rad_[i] = deg2rad(i / 100.);
   }
 
   scan_phase_ = static_cast<uint16_t>(sensor_configuration_->scan_phase * 100.0f);
@@ -58,7 +59,7 @@ PandarQT128Decoder::PandarQT128Decoder(
 
   last_phase_ = 0;
   has_scanned_ = false;
-  first_timestamp_tmp = std::numeric_limits<double>::max();
+  first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
   first_timestamp_ = first_timestamp_tmp;
 
   scan_pc_.reset(new NebulaPointCloud);
@@ -83,7 +84,7 @@ void PandarQT128Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_pa
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
     first_timestamp_ = first_timestamp_tmp;
-    first_timestamp_tmp = std::numeric_limits<double>::max();
+    first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
     overflow_pc_.reset(new NebulaPointCloud);
     overflow_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
     has_scanned_ = false;
@@ -145,19 +146,16 @@ drivers::NebulaPoint PandarQT128Decoder::build_point(
     first_flg = true;
   }
   NebulaPoint point{};
-  double xyDistance = unit.distance * cos_elev_angle_[unit_id];
+  float xyDistance = unit.distance * cos_elevation_angle_[unit_id];
 
-  point.x = static_cast<float>(
-    xyDistance *
-    sinf(deg2rad(azimuth_offset_[unit_id] + (static_cast<double>(block.azimuth)) / 100.0)));
-  point.y = static_cast<float>(
-    xyDistance *
-    cosf(deg2rad(azimuth_offset_[unit_id] + (static_cast<double>(block.azimuth)) / 100.0)));
-  point.z = static_cast<float>(unit.distance * sin_elev_angle_[unit_id]);
+  point.x = xyDistance * sinf(azimuth_offset_rad_[unit_id] + block_azimuth_rad_[block.azimuth]);
+  point.y = xyDistance * cosf(azimuth_offset_rad_[unit_id] + block_azimuth_rad_[block.azimuth]);
+  point.z = unit.distance * sin_elevation_angle_[unit_id];
 
   point.intensity = unit.intensity;
   point.channel = unit_id;
-  point.azimuth = block.azimuth + std::round(azimuth_offset_[unit_id] * 100.0f);
+  point.azimuth = block_azimuth_rad_[block_id] + azimuth_offset_rad_[unit_id];
+  point.elevation = elevation_angle_rad_[unit_id];
   if (dual_return && block_id == 1) {
     point.return_type = second_return_type_;
   } else {
@@ -171,16 +169,18 @@ drivers::NebulaPoint PandarQT128Decoder::build_point(
   if (0 < packet_.mode_flag) {
     point.time_stamp +=
       dual_return
-        ? (static_cast<double>(block_offset_dual_[block_id] + firing_offset1_[unit_id]) /
+        ? (static_cast<double>(block_time_offset_dual_[block_id] + firing_time_offset1_[unit_id]) /
            1000000.0f)
-        : (static_cast<double>(block_offset_single_[block_id] + firing_offset1_[unit_id]) /
+        : (static_cast<double>(
+             block_time_offset_single_[block_id] + firing_time_offset1_[unit_id]) /
            1000000.0f);
   } else {
     point.time_stamp +=
       dual_return
-        ? (static_cast<double>(block_offset_dual_[block_id] + firing_offset2_[unit_id]) /
+        ? (static_cast<double>(block_time_offset_dual_[block_id] + firing_time_offset2_[unit_id]) /
            1000000.0f)
-        : (static_cast<double>(block_offset_single_[block_id] + firing_offset2_[unit_id]) /
+        : (static_cast<double>(
+             block_time_offset_single_[block_id] + firing_time_offset2_[unit_id]) /
            1000000.0f);
   }
 

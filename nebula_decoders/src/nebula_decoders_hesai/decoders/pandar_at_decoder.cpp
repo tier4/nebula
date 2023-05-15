@@ -50,7 +50,7 @@ PandarATDecoder::PandarATDecoder(
 
   last_phase_ = 0;
   has_scanned_ = false;
-  first_timestamp_tmp = std::numeric_limits<double>::max();
+  first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
   first_timestamp_ = first_timestamp_tmp;
   last_field_ = -1;
 
@@ -75,7 +75,7 @@ void PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
     first_timestamp_ = first_timestamp_tmp;
-    first_timestamp_tmp = std::numeric_limits<double>::max();
+    first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
     overflow_pc_.reset(new NebulaPointCloud);
     has_scanned_ = false;
   }
@@ -179,6 +179,7 @@ void PandarATDecoder::CalcXTPointXYZIT(
         Azimuth + MAX_AZI_LEN - (azimuth_offset_[i] * 100 * LIDAR_AZIMUTH_UNIT) / 2);
       azimuth = (MAX_AZI_LEN + azimuth) % MAX_AZI_LEN;
       point.azimuth = azimuth / 3600.f;
+      point.elevation = elevation;
 
       {
         float xyDistance = unit.distance * m_cos_elevation_map_[elevation];

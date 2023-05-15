@@ -12,6 +12,8 @@ namespace drivers
 {
 namespace pandar_qt_64
 {
+constexpr double MIN_RANGE = 0.1f;
+constexpr double MAX_RANGE = 60.f;
 // Head
 constexpr size_t HEAD_SIZE = 12;
 constexpr size_t PRE_HEADER_SIZE = 6;
@@ -42,6 +44,7 @@ constexpr size_t PACKET_WITHOUT_UDPSEQ_SIZE =
 constexpr uint32_t FIRST_RETURN = 0x33;
 constexpr uint32_t LAST_RETURN = 0x38;
 constexpr uint32_t DUAL_RETURN_B = 0x3b;
+constexpr uint32_t MAX_AZIMUTH_STEPS = 360 * 100;  //Unit: 0.01°
 
 struct Header
 {
@@ -58,7 +61,7 @@ struct Header
 
 struct Unit
 {
-  double distance;
+  float distance;
   uint16_t intensity;
   uint16_t confidence;
 };

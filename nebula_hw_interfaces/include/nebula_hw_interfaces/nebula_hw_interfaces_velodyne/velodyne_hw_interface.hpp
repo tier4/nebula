@@ -1,6 +1,16 @@
 #ifndef NEBULA_VELODYNE_HW_INTERFACE_H
 #define NEBULA_VELODYNE_HW_INTERFACE_H
 
+// Have to define macros to silence warnings about deprecated headers being used by
+// boost/property_tree/ in some versions of boost.
+// See: https://github.com/boostorg/property_tree/issues/51
+#include <boost/version.hpp>
+#if (BOOST_VERSION / 100 >= 1073 && BOOST_VERSION / 100 <= 1076)  // Boost 1.73 - 1.76
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
+#endif
+#if (BOOST_VERSION / 100 == 1074)  // Boost 1.74
+#define BOOST_ALLOW_DEPRECATED_HEADERS
+#endif
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <memory>
@@ -26,8 +36,6 @@ private:
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
   std::shared_ptr<VelodyneSensorConfiguration> sensor_configuration_;
   std::shared_ptr<VelodyneCalibrationConfiguration> calibration_configuration_;
-  size_t azimuth_index_{};
-  size_t mtu_size_{};
   std::unique_ptr<velodyne_msgs::msg::VelodyneScan> scan_cloud_ptr_;
   std::function<bool(size_t)>
     is_valid_packet_; /*Lambda Function Array to verify proper packet size*/
@@ -54,7 +62,7 @@ private:
   std::string TARGET_NET{"/cgi/setting/net"};
   std::string TARGET_SAVE{"/cgi/save"};
   std::string TARGET_RESET{"/cgi/reset"};
-  void str_cb(const std::string & str);
+  void StringCallback(const std::string & str);
 
   /// @brief Get a one-off HTTP client to communicate with the hardware
   /// @param ctx IO Context

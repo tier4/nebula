@@ -2171,7 +2171,7 @@ Status HesaiHwInterface::GetPtpConfig(
       PrintDebug(received_bytes);
 
       auto response = target_tcp_driver->getPayload();
-      HesaiPtpConfig hesai_ptp_config;
+      HesaiPtpConfig hesai_ptp_config{};
       if (8 < response.size()) {
         int payload_pos = 8;
         hesai_ptp_config.status = static_cast<int>(response[payload_pos++]);

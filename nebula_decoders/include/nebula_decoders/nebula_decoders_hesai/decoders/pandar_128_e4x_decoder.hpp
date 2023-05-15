@@ -33,11 +33,14 @@ private:
   bool is_dual_return();
   static uint32_t get_epoch_from_datetime(const DateTime & date_time);
 
-  std::array<float, LASER_COUNT> elev_angle_{};
-  std::array<float, LASER_COUNT> elev_angle_rad_{};
-  std::array<float, LASER_COUNT> cos_elev_angle_{};
-  std::array<float, LASER_COUNT> sin_elev_angle_{};
+  std::array<float, LASER_COUNT> elevation_angle_{};
+  std::array<float, LASER_COUNT> elevation_angle_rad_{};
+  std::array<float, LASER_COUNT> cos_elevation_angle_{};
+  std::array<float, LASER_COUNT> sin_elevation_angle_{};
   std::array<float, LASER_COUNT> azimuth_offset_{};
+  std::array<float, LASER_COUNT> azimuth_offset_rad_{};
+
+  std::array<float, MAX_AZIMUTH_STEPS> block_azimuth_rad_{};
 
   Packet packet_{};
   uint32_t current_unit_unix_second_{};

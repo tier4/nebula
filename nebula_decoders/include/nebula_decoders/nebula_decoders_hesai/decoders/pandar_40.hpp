@@ -29,15 +29,16 @@ constexpr size_t INFO_SIZE =
 constexpr size_t UTC_TIME = 6;
 constexpr size_t PACKET_SIZE = BLOCK_SIZE * BLOCKS_PER_PACKET + INFO_SIZE + UTC_TIME;
 constexpr size_t SEQ_NUM_SIZE = 4;
-constexpr double LASER_RETURN_TO_DISTANCE_RATE = 0.004;
+constexpr float LASER_RETURN_TO_DISTANCE_RATE = 0.004;
 constexpr uint32_t STRONGEST_RETURN = 0x37;
 constexpr uint32_t LAST_RETURN = 0x38;
 constexpr uint32_t DUAL_RETURN = 0x39;
+constexpr uint32_t MAX_AZIMUTH_STEPS = 360 * 100;  //Unit: 0.01°
 
 struct Unit
 {
   uint8_t intensity;
-  double distance;
+  float distance;
 };
 
 struct Block

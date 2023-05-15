@@ -17,38 +17,43 @@ Pandar64Decoder::Pandar64Decoder(
   sensor_configuration_ = sensor_configuration;
   sensor_calibration_ = calibration_configuration;
 
-  firing_offset_ = {23.18,  21.876, 20.572, 19.268, 17.964, 16.66,  11.444, 46.796, 7.532,  36.956,
-                    50.732, 54.668, 40.892, 44.828, 31.052, 34.988, 48.764, 52.7,   38.924, 42.86,
-                    29.084, 33.02,  46.796, 25.148, 36.956, 50.732, 27.116, 40.892, 44.828, 31.052,
-                    34.988, 48.764, 25.148, 38.924, 42.86,  29.084, 33.02,  52.7,   6.228,  54.668,
-                    15.356, 27.116, 10.14,  23.18,  4.924,  21.876, 14.052, 17.964, 8.836,  19.268,
-                    3.62,   20.572, 12.748, 16.66,  7.532,  11.444, 6.228,  15.356, 10.14,  4.924,
-                    3.62,   14.052, 8.836,  12.748};
+  firing_time_offset_ = {
+    23.18,  21.876, 20.572, 19.268, 17.964, 16.66,  11.444, 46.796, 7.532,  36.956, 50.732,
+    54.668, 40.892, 44.828, 31.052, 34.988, 48.764, 52.7,   38.924, 42.86,  29.084, 33.02,
+    46.796, 25.148, 36.956, 50.732, 27.116, 40.892, 44.828, 31.052, 34.988, 48.764, 25.148,
+    38.924, 42.86,  29.084, 33.02,  52.7,   6.228,  54.668, 15.356, 27.116, 10.14,  23.18,
+    4.924,  21.876, 14.052, 17.964, 8.836,  19.268, 3.62,   20.572, 12.748, 16.66,  7.532,
+    11.444, 6.228,  15.356, 10.14,  4.924,  3.62,   14.052, 8.836,  12.748};
 
   for (size_t block = 0; block < BLOCKS_PER_PACKET; ++block) {
-    block_offset_single_[block] =
+    block_time_offset_single_[block] =
       55.56f * static_cast<float>(BLOCKS_PER_PACKET - block - 1) + 28.58f;
-    block_offset_dual_[block] =
+    block_time_offset_dual_[block] =
       55.56f * (static_cast<float>(BLOCKS_PER_PACKET - block - 1) / 2.f) + 28.58f;
   }
 
-  // TODO: add calibration data validation
-  //   if(calibration.elev_angle_map.size() != num_lasers_){
-  //     // calibration data is not valid!
-  //   }
   for (size_t laser = 0; laser < LASER_COUNT; ++laser) {
-    elev_angle_[laser] = calibration_configuration->elev_angle_map[laser];
+    elevation_angle_[laser] = calibration_configuration->elev_angle_map[laser];
     azimuth_offset_[laser] = calibration_configuration->azimuth_offset_map[laser];
+    elevation_angle_rad_[laser] = deg2rad(elevation_angle_[laser]);
+    azimuth_offset_rad_[laser] = deg2rad(azimuth_offset_[laser]);
+    cos_elevation_angle_[laser] = cosf(elevation_angle_rad_[laser]);
+    sin_elevation_angle_[laser] = sinf(elevation_angle_rad_[laser]);
+  }
+  for (uint32_t i = 0; i < MAX_AZIMUTH_STEPS; i++) {  // precalculate sensor azimuth, unit 0.01 deg
+    block_azimuth_rad_[i] = deg2rad(i / 100.);
   }
   scan_phase_ = static_cast<uint16_t>(sensor_configuration_->scan_phase * 100.0f);
   dual_return_distance_threshold_ = sensor_configuration_->dual_return_distance_threshold;
 
   last_phase_ = 0;
   has_scanned_ = false;
-  first_timestamp_tmp = std::numeric_limits<double>::max();
+  first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
   first_timestamp_ = first_timestamp_tmp;
   scan_pc_.reset(new NebulaPointCloud);
+  scan_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
   overflow_pc_.reset(new NebulaPointCloud);
+  overflow_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
 }
 
 bool Pandar64Decoder::hasScanned() { return has_scanned_; }
@@ -67,8 +72,9 @@ void Pandar64Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
     first_timestamp_ = first_timestamp_tmp;
-    first_timestamp_tmp = std::numeric_limits<double>::max();
+    first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
     overflow_pc_.reset(new NebulaPointCloud);
+    overflow_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
     has_scanned_ = false;
   }
 
@@ -110,25 +116,23 @@ drivers::NebulaPoint Pandar64Decoder::build_point(
   bool dual_return = (packet_.return_mode == DUAL_RETURN);
   NebulaPoint point{};
 
-  double xyDistance = unit.distance * cosf(deg2rad(elev_angle_[unit_id]));
+  float xyDistance = unit.distance * cos_elevation_angle_[unit_id];
 
-  point.x = static_cast<float>(
-    xyDistance *
-    sinf(deg2rad(azimuth_offset_[unit_id] + (static_cast<double>(block.azimuth)) / 100.0)));
-  point.y = static_cast<float>(
-    xyDistance *
-    cosf(deg2rad(azimuth_offset_[unit_id] + (static_cast<double>(block.azimuth)) / 100.0)));
-  point.z = static_cast<float>(unit.distance * sinf(deg2rad(elev_angle_[unit_id])));
+  point.x = xyDistance * sinf(azimuth_offset_rad_[unit_id] + block_azimuth_rad_[block.azimuth]);
+  point.y = xyDistance * cosf(azimuth_offset_rad_[unit_id] + block_azimuth_rad_[block.azimuth]);
+  point.z = unit.distance * sin_elevation_angle_[unit_id];
 
   point.intensity = unit.intensity;
   point.channel = unit_id;
-  point.azimuth = static_cast<float>(block.azimuth) + std::round(azimuth_offset_[unit_id] * 100.0f);
+  point.azimuth = block_azimuth_rad_[block_id] + azimuth_offset_rad_[unit_id];
+  point.elevation = elevation_angle_rad_[unit_id];
   point.return_type = return_type;
   point.time_stamp = (static_cast<double>(packet_.usec)) / 1000000.0;
   point.time_stamp +=
     dual_return
-      ? (static_cast<double>(block_offset_dual_[block_id] + firing_offset_[unit_id]) / 1000000.0f)
-      : (static_cast<double>(block_offset_single_[block_id] + firing_offset_[unit_id]) /
+      ? (static_cast<double>(block_time_offset_dual_[block_id] + firing_time_offset_[unit_id]) /
+         1000000.0f)
+      : (static_cast<double>(block_time_offset_single_[block_id] + firing_time_offset_[unit_id]) /
          1000000.0f);
 
   return point;
@@ -178,27 +182,22 @@ drivers::NebulaPointCloudPtr Pandar64Decoder::convert_dual(size_t block_id)
     bool even_usable = !(even_unit.distance < MIN_RANGE || even_unit.distance > MAX_RANGE);
     bool odd_usable = !(odd_unit.distance < MIN_RANGE || odd_unit.distance > MAX_RANGE);
 
-    // maybe always dual return mode in convert_dual
     // If the two returns are too close, only return the last one
     if (
       (abs(even_unit.distance - odd_unit.distance) < dual_return_distance_threshold_) &&
       odd_usable) {
-      block_pc->points.emplace_back(build_point(
-        odd_block_id, unit_id,
-        static_cast<uint8_t>(drivers::ReturnType::IDENTICAL)));  //drivers::ReturnMode::DUAL_ONLY)
+      block_pc->points.emplace_back(
+        build_point(odd_block_id, unit_id, static_cast<uint8_t>(drivers::ReturnType::IDENTICAL)));
     } else {
       if (even_usable) {
-        block_pc->points.emplace_back(build_point(
-          even_block_id, unit_id,
-          static_cast<uint8_t>(drivers::ReturnType::FIRST)));  //drivers::ReturnMode::DUAL_FIRST
+        block_pc->points.emplace_back(
+          build_point(even_block_id, unit_id, static_cast<uint8_t>(drivers::ReturnType::FIRST)));
       }
       if (odd_usable) {
-        block_pc->points.emplace_back(build_point(
-          odd_block_id, unit_id,
-          static_cast<uint8_t>(drivers::ReturnType::LAST)));  //drivers::ReturnMode::DUAL_LAST
+        block_pc->points.emplace_back(
+          build_point(odd_block_id, unit_id, static_cast<uint8_t>(drivers::ReturnType::LAST)));
       }
     }
-    //    }
   }
   return block_pc;
 }
