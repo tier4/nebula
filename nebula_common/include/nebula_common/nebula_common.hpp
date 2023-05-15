@@ -1,8 +1,9 @@
 #ifndef NEBULA_COMMON_H
 #define NEBULA_COMMON_H
 
-#include <map>
 #include <nebula_common/point_types.hpp>
+
+#include <map>
 #include <ostream>
 #include <string>
 #include <vector>

@@ -1,7 +1,8 @@
-#include <memory>
+#include "velodyne/velodyne_ros_offline_extract_bag_pcd.hpp"
+
 #include <rclcpp/rclcpp.hpp>
 
-#include "velodyne/velodyne_ros_offline_extract_bag_pcd.hpp"
+#include <memory>
 
 int main(int argc, char * argv[])
 {

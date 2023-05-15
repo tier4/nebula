@@ -14,7 +14,7 @@ namespace drivers
 namespace pandar_qt_128
 {
 constexpr uint16_t MAX_AZIMUTH_STEPS = 900;  // High Res mode
-//constexpr float DISTANCE_UNIT = 0.004f;       // 4mm
+// constexpr float DISTANCE_UNIT = 0.004f;       // 4mm
 constexpr double MIN_RANGE = 0.05;
 constexpr double MAX_RANGE = 50.0;
 

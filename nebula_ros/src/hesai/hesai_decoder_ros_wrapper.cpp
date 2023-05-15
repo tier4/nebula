@@ -224,7 +224,8 @@ Status HesaiDriverRosWrapper::GetParameters(
   if (sensor_configuration.sensor_model != drivers::SensorModel::HESAI_PANDARAT128) {
     if (calibration_configuration.calibration_file.empty()) {
       RCLCPP_ERROR_STREAM(
-        this->get_logger(), "Empty Calibration_file File: '" << calibration_configuration.calibration_file << "'");
+        this->get_logger(),
+        "Empty Calibration_file File: '" << calibration_configuration.calibration_file << "'");
       return Status::INVALID_CALIBRATION_FILE;
     } else {
       auto cal_status =
@@ -235,13 +236,13 @@ Status HesaiDriverRosWrapper::GetParameters(
           this->get_logger(),
           "Given Calibration File: '" << calibration_configuration.calibration_file << "'");
         return cal_status;
-      }else{
+      } else {
         RCLCPP_INFO_STREAM(
-          this->get_logger(), "Load calibration data from: '"
-                                << calibration_configuration.calibration_file << "'");
+          this->get_logger(),
+          "Load calibration data from: '" << calibration_configuration.calibration_file << "'");
       }
     }
-  } else { // sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128
+  } else {  // sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128
     if (correction_file_path.empty()) {
       RCLCPP_ERROR_STREAM(
         this->get_logger(), "Empty Correction File: '" << correction_file_path << "'");
@@ -253,10 +254,9 @@ Status HesaiDriverRosWrapper::GetParameters(
         RCLCPP_ERROR_STREAM(
           this->get_logger(), "Given Correction File: '" << correction_file_path << "'");
         return cal_status;
-      }else{
+      } else {
         RCLCPP_INFO_STREAM(
-          this->get_logger(), "Load correction data from: '"
-                                << correction_file_path << "'");
+          this->get_logger(), "Load correction data from: '" << correction_file_path << "'");
       }
     }
   }

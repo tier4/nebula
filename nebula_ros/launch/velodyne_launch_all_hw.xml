@@ -27,7 +27,7 @@
         <param name="scan_phase" value="$(var scan_phase)"/>
         <param name="calibration_file" value="$(var calibration_file)"/>
     </node>
-    
+
     <node pkg="nebula_ros" exec="velodyne_hw_ros_wrapper_node"
           name="velodyne_hw_driver" output="screen">
         <param name="sensor_model" value="$(var sensor_model)"/>

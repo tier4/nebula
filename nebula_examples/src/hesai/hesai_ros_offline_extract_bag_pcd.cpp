@@ -1,7 +1,5 @@
 #include "hesai/hesai_ros_offline_extract_bag_pcd.hpp"
 
-#include <regex>
-
 #include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rcpputils/filesystem_helper.hpp"
@@ -11,6 +9,8 @@
 #include "rosbag2_cpp/writer.hpp"
 #include "rosbag2_cpp/writers/sequential_writer.hpp"
 #include "rosbag2_storage/storage_options.hpp"
+
+#include <regex>
 
 namespace nebula
 {
@@ -309,7 +309,8 @@ Status HesaiRosOfflineExtractBag::ReadBag()
         rclcpp::SerializedMessage extracted_serialized_msg(*bag_message->serialized_data);
         serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
 
-        //        std::cout<<"Found data in topic " << bag_message->topic_name << ": " << extracted_test_msg.data << std::endl;
+        //        std::cout<<"Found data in topic " << bag_message->topic_name << ": " <<
+        //        extracted_test_msg.data << std::endl;
         std::cout << "Found data in topic " << bag_message->topic_name << ": "
                   << bag_message->time_stamp << std::endl;
 

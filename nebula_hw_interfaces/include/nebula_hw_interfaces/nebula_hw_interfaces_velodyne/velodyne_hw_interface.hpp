@@ -11,18 +11,21 @@
 #if (BOOST_VERSION / 100 == 1074)  // Boost 1.74
 #define BOOST_ALLOW_DEPRECATED_HEADERS
 #endif
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <memory>
-#include <rclcpp/rclcpp.hpp>
-
 #include "nebula_common/velodyne/velodyne_common.hpp"
 #include "nebula_common/velodyne/velodyne_status.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 #include "tcp_driver/http_client_driver.hpp"
 #include "udp_driver/udp_driver.hpp"
+
+#include <rclcpp/rclcpp.hpp>
+
 #include "velodyne_msgs/msg/velodyne_packet.hpp"
 #include "velodyne_msgs/msg/velodyne_scan.hpp"
+
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include <memory>
 
 namespace nebula
 {
@@ -71,7 +74,8 @@ private:
   VelodyneStatus GetHttpClientDriverOnce(
     std::shared_ptr<boost::asio::io_context> ctx,
     std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd);
-  /// @brief Get a one-off HTTP client to communicate with the hardware (without specifying io_context)
+  /// @brief Get a one-off HTTP client to communicate with the hardware (without specifying
+  /// io_context)
   /// @param hcd Got http client driver
   /// @return Resulting status
   VelodyneStatus GetHttpClientDriverOnce(
@@ -123,7 +127,8 @@ public:
   /// @return Resulting status
   Status InitializeSensorConfiguration(
     std::shared_ptr<SensorConfigurationBase> sensor_configuration);
-  /// @brief Setting sensor configuration with InitializeSensorConfiguration & CheckAndSetConfigBySnapshotAsync
+  /// @brief Setting sensor configuration with InitializeSensorConfiguration &
+  /// CheckAndSetConfigBySnapshotAsync
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
   Status SetSensorConfiguration(

@@ -1,10 +1,10 @@
 #ifndef VELODYNE_STATUS_HPP
 #define VELODYNE_STATUS_HPP
 
+#include "nebula_common/nebula_status.hpp"
+
 #include <ostream>
 #include <string>
-
-#include "nebula_common/nebula_status.hpp"
 
 namespace nebula
 {
@@ -42,13 +42,14 @@ public:
     return L.type() != R.type();
   }
   //  friend VelodyneStatus operator VelodyneStatus(const Status & s) {return VelodyneStatus(s);}
-  //implicit
+  // implicit
   //  operator Status() const {std::cout << "implicit" << std::endl; return Status(type());}
   //  operator const Status() {std::cout << "implicit" << std::endl; return Status(type());}
-  //  explicit operator Status() const {std::cout << "explicit" << std::endl; return Status(type());}
-  //  Status Status::operator=(const VelodyneStatus&) {std::cout << "implicit = " << std::endl; return Status(type());}
-  //  Status operator=(const VelodyneStatus) {std::cout << "implicit = " << std::endl; return Status(type());}
-  //  Status& operator=(const VelodyneStatus&) {std::cout << "implicit = " << std::endl; Status rt = Status(type()); return rt;}
+  //  explicit operator Status() const {std::cout << "explicit" << std::endl; return
+  //  Status(type());} Status Status::operator=(const VelodyneStatus&) {std::cout << "implicit = "
+  //  << std::endl; return Status(type());} Status operator=(const VelodyneStatus) {std::cout <<
+  //  "implicit = " << std::endl; return Status(type());} Status& operator=(const VelodyneStatus&)
+  //  {std::cout << "implicit = " << std::endl; Status rt = Status(type()); return rt;}
   //  Status::Status(const VelodyneStatus& vs) {_type = v;}
 
   /// @brief Convert Status enum to string (Overloading the << operator)

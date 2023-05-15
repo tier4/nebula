@@ -1,20 +1,22 @@
 #ifndef NEBULA_VelodyneHwInterfaceRosWrapper_H
 #define NEBULA_VelodyneHwInterfaceRosWrapper_H
 
-#include <curl/curl.h>
-
-#include <ament_index_cpp/get_package_prefix.hpp>
-#include <future>
-#include <mutex>
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/velodyne/velodyne_common.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp"
 #include "nebula_ros/common/nebula_hw_interface_ros_wrapper_base.hpp"
+
+#include <ament_index_cpp/get_package_prefix.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
+
 #include "velodyne_msgs/msg/velodyne_packet.hpp"
 #include "velodyne_msgs/msg/velodyne_scan.hpp"
+
+#include <curl/curl.h>
+
+#include <future>
+#include <mutex>
 
 namespace nebula
 {
@@ -76,10 +78,10 @@ public:
   /// @return Resulting status
   Status GetParameters(drivers::VelodyneSensorConfiguration & sensor_configuration);
 
-private:  //ROS Diagnostics
-          /*
-  diagnostic_updater::Updater diagnostics_updater_;
-  void InitializeVelodyneDiagnostics();
+private:  // ROS Diagnostics
+  /*
+diagnostic_updater::Updater diagnostics_updater_;
+void InitializeVelodyneDiagnostics();
 */
 
   /// @brief Get value from property_tree

@@ -27,7 +27,7 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
 
   std::vector<std::thread> thread_pool{};
   thread_pool.emplace_back([this] {
-    hw_interface_.GetInventory(  //ios,
+    hw_interface_.GetInventory(  // ios,
       [this](HesaiInventory & result) {
         std::cout << result << std::endl;
         hw_interface_.SetTargetModel(result.model);

@@ -1,16 +1,17 @@
 #ifndef NEBULA_VelodyneHwMonitorRosWrapper_H
 #define NEBULA_VelodyneHwMonitorRosWrapper_H
 
-#include <ament_index_cpp/get_package_prefix.hpp>
-#include <diagnostic_updater/diagnostic_updater.hpp>
-#include <mutex>
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/velodyne/velodyne_common.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp"
 #include "nebula_ros/common/nebula_hw_monitor_ros_wrapper_base.hpp"
+
+#include <ament_index_cpp/get_package_prefix.hpp>
+#include <diagnostic_updater/diagnostic_updater.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
+
+#include <mutex>
 
 namespace nebula
 {
@@ -67,7 +68,7 @@ public:
   /// @return Resulting status
   Status GetParameters(drivers::VelodyneSensorConfiguration & sensor_configuration);
 
-private:  //ROS Diagnostics
+private:  // ROS Diagnostics
   diagnostic_updater::Updater diagnostics_updater_;
   /// @brief Initializing diagnostics
   void InitializeVelodyneDiagnostics();
@@ -92,7 +93,7 @@ private:  //ROS Diagnostics
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopHv();
   /// @brief Getting top:ad_temp from the current property_tree (only VLP32)
   /// @return tuple<Got exeption, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopAdTemp();  //only32
+  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopAdTemp();  // only32
   /// @brief Getting top:lm20_temp from the current property_tree
   /// @return tuple<Got exeption, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopLm20Temp();
@@ -107,10 +108,10 @@ private:  //ROS Diagnostics
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr33v();
   /// @brief Getting top:pwr_5v_raw from the current property_tree (only VLP16)
   /// @return tuple<Got exeption, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5vRaw();  //only16
+  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5vRaw();  // only16
   /// @brief Getting top:pwr_raw from the current property_tree (only VLP32)
   /// @return tuple<Got exeption, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrRaw();  //only32
+  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrRaw();  // only32
   /// @brief Getting top:pwr_vccint from the current property_tree
   /// @return tuple<Got exeption, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrVccint();

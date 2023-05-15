@@ -266,7 +266,7 @@ VelodyneStatus VelodyneHwInterface::CheckAndSetConfig(
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
 
-//sync
+// sync
 
 std::string VelodyneHwInterface::GetStatus()
 {

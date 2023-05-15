@@ -10,22 +10,25 @@
 #if (BOOST_VERSION / 100 == 1074)  // Boost 1.74
 #define BOOST_ALLOW_DEPRECATED_HEADERS
 #endif
-#include <boost/algorithm/string.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <memory>
-#include <mutex>
-#include <rclcpp/rclcpp.hpp>
-
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/hesai/hesai_status.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
 #include "tcp_driver/http_client_driver.hpp"
 #include "tcp_driver/tcp_driver.hpp"
 #include "udp_driver/udp_driver.hpp"
+
+#include <rclcpp/rclcpp.hpp>
+
+#include "pandar_msgs/msg/pandar_packet.hpp"
+#include "pandar_msgs/msg/pandar_scan.hpp"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include <memory>
+#include <mutex>
 
 namespace nebula
 {
@@ -113,7 +116,8 @@ private:
   HesaiStatus GetHttpClientDriverOnce(
     std::shared_ptr<boost::asio::io_context> ctx,
     std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd);
-  /// @brief Get a one-off HTTP client to communicate with the hardware (without specifying io_context)
+  /// @brief Get a one-off HTTP client to communicate with the hardware (without specifying
+  /// io_context)
   /// @param hcd Got http client driver
   /// @return Resulting status
   HesaiStatus GetHttpClientDriverOnce(
@@ -725,9 +729,12 @@ public:
   /// @param profile IEEE timing and synchronization standard
   /// @param domain Domain attribute of the local clock
   /// @param network Network transport type of 1588v2
-  /// @param logAnnounceInterval Time interval between Announce messages, in units of log seconds (default: 1)
-  /// @param logSyncInterval Time interval between Sync messages, in units of log seconds (default: 1)
-  /// @param logMinDelayReqInterval Minimum permitted mean time between Delay_Req messages, in units of log seconds (default: 0)
+  /// @param logAnnounceInterval Time interval between Announce messages, in units of log seconds
+  /// (default: 1)
+  /// @param logSyncInterval Time interval between Sync messages, in units of log seconds (default:
+  /// 1)
+  /// @param logMinDelayReqInterval Minimum permitted mean time between Delay_Req messages, in units
+  /// of log seconds (default: 0)
   /// @param with_run Automatically executes run() of TcpDriver
   /// @return Resulting status
   Status SetPtpConfig(
@@ -739,9 +746,12 @@ public:
   /// @param profile IEEE timing and synchronization standard
   /// @param domain Domain attribute of the local clock
   /// @param network Network transport type of 1588v2
-  /// @param logAnnounceInterval Time interval between Announce messages, in units of log seconds (default: 1)
-  /// @param logSyncInterval Time interval between Sync messages, in units of log seconds (default: 1)
-  /// @param logMinDelayReqInterval Minimum permitted mean time between Delay_Req messages, in units of log seconds (default: 0)
+  /// @param logAnnounceInterval Time interval between Announce messages, in units of log seconds
+  /// (default: 1)
+  /// @param logSyncInterval Time interval between Sync messages, in units of log seconds (default:
+  /// 1)
+  /// @param logMinDelayReqInterval Minimum permitted mean time between Delay_Req messages, in units
+  /// of log seconds (default: 0)
   /// @param with_run Automatically executes run() of TcpDriver
   /// @return Resulting status
   Status SetPtpConfig(
@@ -751,9 +761,12 @@ public:
   /// @param profile IEEE timing and synchronization standard
   /// @param domain Domain attribute of the local clock
   /// @param network Network transport type of 1588v2
-  /// @param logAnnounceInterval Time interval between Announce messages, in units of log seconds (default: 1)
-  /// @param logSyncInterval Time interval between Sync messages, in units of log seconds (default: 1)
-  /// @param logMinDelayReqInterval Minimum permitted mean time between Delay_Req messages, in units of log seconds (default: 0)
+  /// @param logAnnounceInterval Time interval between Announce messages, in units of log seconds
+  /// (default: 1)
+  /// @param logSyncInterval Time interval between Sync messages, in units of log seconds (default:
+  /// 1)
+  /// @param logMinDelayReqInterval Minimum permitted mean time between Delay_Req messages, in units
+  /// of log seconds (default: 0)
   /// @param with_run Automatically executes run() of TcpDriver
   /// @return Resulting status
   Status SetPtpConfig(
@@ -880,7 +893,8 @@ public:
   /// @return Resulting status
   HesaiStatus CheckAndSetConfig();
 
-  /// @brief Set target model number (for proper use of HTTP and TCP according to the support of the target model)
+  /// @brief Set target model number (for proper use of HTTP and TCP according to the support of the
+  /// target model)
   /// @param model Model number
   void SetTargetModel(int model);
 

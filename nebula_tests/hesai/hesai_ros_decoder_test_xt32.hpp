@@ -1,19 +1,20 @@
 #ifndef NEBULA_HesaiRosDecoderTestXt32_H
 #define NEBULA_HesaiRosDecoderTestXt32_H
 
-#include <gtest/gtest.h>
-
-#include <diagnostic_updater/diagnostic_updater.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 #include "nebula_ros/common/nebula_driver_ros_wrapper_base.hpp"
+
+#include <diagnostic_updater/diagnostic_updater.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
+
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
+
+#include <gtest/gtest.h>
 
 namespace nebula
 {
@@ -47,7 +48,8 @@ class HesaiRosDecoderTest final : public rclcpp::Node, NebulaDriverRosWrapperBas
     std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
     std::shared_ptr<drivers::HesaiCorrection> correction_configuration);
 
-  /// @brief Get configurations (Magic numbers for XT32 is described, each function can be integrated if the ros parameter can be passed to Google Test)
+  /// @brief Get configurations (Magic numbers for XT32 is described, each function can be
+  /// integrated if the ros parameter can be passed to Google Test)
   /// @param sensor_configuration Output of SensorConfiguration
   /// @param calibration_configuration Output of CalibrationConfiguration
   /// @param correction_configuration Output of CorrectionConfiguration (for AT)
@@ -73,7 +75,8 @@ public:
   /// @return Current status
   Status GetStatus();
 
-  /// @brief Read the specified bag file and compare the constructed point clouds with the corresponding PCD files
+  /// @brief Read the specified bag file and compare the constructed point clouds with the
+  /// corresponding PCD files
   void ReadBag();
   /*
   void SetUp() override {

@@ -1,11 +1,6 @@
 #ifndef NEBULA_VelodyneRosOfflineExtractBag_H
 #define NEBULA_VelodyneRosOfflineExtractBag_H
 
-#include <ament_index_cpp/get_package_prefix.hpp>
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-#include <regex>
-
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_common/velodyne/velodyne_calibration_decoder.hpp"
@@ -21,8 +16,15 @@
 #include "rosbag2_cpp/writer.hpp"
 #include "rosbag2_cpp/writers/sequential_writer.hpp"
 #include "rosbag2_storage/storage_options.hpp"
+
+#include <ament_index_cpp/get_package_prefix.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
+
 #include "velodyne_msgs/msg/velodyne_packet.hpp"
 #include "velodyne_msgs/msg/velodyne_scan.hpp"
+
+#include <regex>
 
 namespace nebula
 {

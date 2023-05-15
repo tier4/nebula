@@ -1,11 +1,12 @@
 //#include "hesai/hesai_ros_decoder_test.hpp"
 //#include "hesai_ros_decoder_test.hpp"
+#include "hesai_ros_decoder_test_at128.hpp"
+
+#include <rclcpp/rclcpp.hpp>
+
 #include <gtest/gtest.h>
 
 #include <memory>
-#include <rclcpp/rclcpp.hpp>
-
-#include "hesai_ros_decoder_test_at128.hpp"
 
 std::shared_ptr<nebula::ros::HesaiRosDecoderTest> hesai_driver;
 

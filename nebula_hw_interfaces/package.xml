@@ -1,31 +1,29 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-    <name>nebula_hw_interfaces</name>
-    <version>0.1.0</version>
-    <description>
-        Nebula HW Interfaces
-    </description>
-    <maintainer email="contact@map4.jp">MAP IV</maintainer>
+  <name>nebula_hw_interfaces</name>
+  <version>0.1.0</version>
+  <description>Nebula HW Interfaces</description>
+  <maintainer email="contact@map4.jp">MAP IV</maintainer>
 
-    <license>Apache 2</license>
-    <author>Tier IV</author>
+  <license>Apache 2</license>
+  <author>Tier IV</author>
 
-    <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
-    <depend>rclcpp</depend>
-    <depend>sensor_msgs</depend>
-    <depend>udp_driver</depend>
-    <depend>tcp_driver</depend>
-    <depend>nebula_common</depend>
-    <depend>pandar_msgs</depend>
-    <depend>velodyne_msgs</depend>
-    <depend>libpcl-all-dev</depend>
+  <depend>libpcl-all-dev</depend>
+  <depend>nebula_common</depend>
+  <depend>pandar_msgs</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tcp_driver</depend>
+  <depend>udp_driver</depend>
+  <depend>velodyne_msgs</depend>
 
-    <test_depend>ament_lint_auto</test_depend>
-    <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
 
-    <export>
-        <build_type>ament_cmake</build_type>
-    </export>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

@@ -1,7 +1,7 @@
 name: documentation
 on:
   pull_request:
-    types: [ closed ]
+    types: [closed]
 permissions:
   contents: write
 jobs:

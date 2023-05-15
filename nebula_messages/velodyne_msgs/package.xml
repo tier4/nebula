@@ -2,9 +2,7 @@
 <package format="3">
   <name>velodyne_msgs</name>
   <version>1.3.12</version>
-  <description>
-    Nebula ROS message definitions for Velodyne VLS3D LIDARs.
-  </description>
+  <description>Nebula ROS message definitions for Velodyne VLS3D LIDARs.</description>
   <maintainer email="support@perceptionengine.jp">Perception Engine</maintainer>
   <license>BSD</license>
 
@@ -18,5 +16,4 @@
   <export>
     <build_type>ament_cmake</build_type>
   </export>
-
 </package>

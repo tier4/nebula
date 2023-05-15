@@ -138,7 +138,8 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
             other_return.bytes[1] =
               block % 2 ? raw->blocks[block - 1].data[k + 1] : raw->blocks[block + 1].data[k + 1];
           }
-          // Do not process if there is no return, or in dual return mode and the first and last echos are the same.
+          // Do not process if there is no return, or in dual return mode and the first and last
+          // echos are the same.
           if (
             (current_return.bytes[0] == 0 && current_return.bytes[1] == 0) ||
             (dual_return && block % 2 && other_return.bytes[0] == current_return.bytes[0] &&
@@ -165,7 +166,8 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
               const uint16_t azimuth_corrected =
                 (static_cast<uint16_t>(round(azimuth_corrected_f))) % 36000;
 
-              // Condition added to avoid calculating points which are not in the interesting defined area (min_angle < area < max_angle).
+              // Condition added to avoid calculating points which are not in the interesting
+              // defined area (min_angle < area < max_angle).
               if (
                 (azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100 &&
                  azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 &&

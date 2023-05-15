@@ -43,7 +43,6 @@ nav:
   - Nebula HW Interfaces: nebula_hw_interfaces/links.md
   - Nebula ROS: nebula_ros/links.md
 
-
 ### Extra Settings ###
 plugins:
   - mkdoxy:
@@ -88,7 +87,6 @@ plugins:
             INLINE_SOURCES: True
             ENABLE_PREPROCESSING: True
             MACRO_EXPANSION: True
-
 
       save-api: .mkdoxy
       full-doc: True

@@ -33,7 +33,7 @@ constexpr float LASER_RETURN_TO_DISTANCE_RATE = 0.004;
 constexpr uint32_t STRONGEST_RETURN = 0x37;
 constexpr uint32_t LAST_RETURN = 0x38;
 constexpr uint32_t DUAL_RETURN = 0x39;
-constexpr uint32_t MAX_AZIMUTH_STEPS = 360 * 100;  //Unit: 0.01°
+constexpr uint32_t MAX_AZIMUTH_STEPS = 360 * 100;  // Unit: 0.01°
 
 struct Unit
 {

@@ -1,11 +1,12 @@
 #include "nebula_ros/hesai/hesai_hw_monitor_ros_wrapper.hpp"
 
+#include "tcp_driver/tcp_driver.hpp"
+
 #include <boost/algorithm/string/join.hpp>
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
-#include <thread>
 
-#include "tcp_driver/tcp_driver.hpp"
+#include <thread>
 
 namespace nebula
 {
@@ -70,7 +71,7 @@ HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & o
 
   std::vector<std::thread> thread_pool{};
   thread_pool.emplace_back([this] {
-    hw_interface_.GetInventory(  //ios,
+    hw_interface_.GetInventory(  // ios,
       [this](HesaiInventory & result) {
         current_inventory.reset(new HesaiInventory(result));
         current_inventory_time.reset(new rclcpp::Time(this->get_clock()->now()));
@@ -406,7 +407,7 @@ void HesaiHwMonitorRosWrapper::OnHesaiStatusTimer()
   RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiStatusTimer" << std::endl);
   try {
     auto ios = std::make_shared<boost::asio::io_service>();
-    hw_interface_.GetLidarStatus(  //ios,
+    hw_interface_.GetLidarStatus(  // ios,
       [this](HesaiLidarStatus & result) {
         std::scoped_lock lock(mtx_status);
         current_status_time.reset(new rclcpp::Time(this->get_clock()->now()));

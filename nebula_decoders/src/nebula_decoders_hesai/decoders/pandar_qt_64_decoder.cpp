@@ -1,8 +1,8 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt_64_decoder.hpp"
 
-#include <cmath>
-
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt_64.hpp"
+
+#include <cmath>
 
 namespace nebula
 {
@@ -87,7 +87,7 @@ void PandarQT64Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_pac
        sensor_configuration_->return_mode != drivers::ReturnMode::FIRST) ||
       (packet_.return_mode == LAST_RETURN &&
        sensor_configuration_->return_mode != drivers::ReturnMode::LAST)) {
-      //sensor config, driver mismatched
+      // sensor config, driver mismatched
     }
   }
 
@@ -155,8 +155,8 @@ drivers::NebulaPointCloudPtr PandarQT64Decoder::convert(size_t block_id)
     block_pc->points.emplace_back(build_point(
       block_id, unit_id,
       (packet_.return_mode == FIRST_RETURN)
-        ? static_cast<uint8_t>(drivers::ReturnType::FIRST)    //drivers::ReturnMode::SINGLE_FIRST
-        : static_cast<uint8_t>(drivers::ReturnType::LAST)));  //drivers::ReturnMode::SINGLE_LAST
+        ? static_cast<uint8_t>(drivers::ReturnType::FIRST)    // drivers::ReturnMode::SINGLE_FIRST
+        : static_cast<uint8_t>(drivers::ReturnType::LAST)));  // drivers::ReturnMode::SINGLE_LAST
   }
   return block_pc;
 }

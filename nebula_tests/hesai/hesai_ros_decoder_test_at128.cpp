@@ -1,10 +1,5 @@
 #include "hesai_ros_decoder_test_at128.hpp"
 
-#include <gtest/gtest.h>
-
-#include <filesystem>
-#include <regex>
-
 #include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rcpputils/filesystem_helper.hpp"
@@ -14,6 +9,11 @@
 #include "rosbag2_cpp/writer.hpp"
 #include "rosbag2_cpp/writers/sequential_writer.hpp"
 #include "rosbag2_storage/storage_options.hpp"
+
+#include <gtest/gtest.h>
+
+#include <filesystem>
+#include <regex>
 
 namespace nebula
 {
@@ -298,7 +298,7 @@ void HesaiRosDecoderTest::ReadBag()
   converter_options.output_serialization_format = format;  //"cdr";
   rclcpp::Serialization<pandar_msgs::msg::PandarScan> serialization;
   nebula::drivers::NebulaPointCloudPtr pointcloud(new nebula::drivers::NebulaPointCloud);
-  //nebula::drivers::NebulaPointCloudPtr ref_pointcloud(new nebula::drivers::NebulaPointCloud);
+  // nebula::drivers::NebulaPointCloudPtr ref_pointcloud(new nebula::drivers::NebulaPointCloud);
   pcl::PointCloud<pcl::PointXYZ>::Ptr ref_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
   {
     rosbag2_cpp::Reader bag_reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
@@ -320,7 +320,8 @@ void HesaiRosDecoderTest::ReadBag()
         auto pointcloud_ts = driver_ptr_->ConvertScanToPointcloud(extracted_msg_ptr);
         pointcloud = std::get<0>(pointcloud_ts);
 
-        // There are very rare cases where has_scanned_ does not become true, but it is not known whether it is because of decoder or deserialize_message.
+        // There are very rare cases where has_scanned_ does not become true, but it is not known
+        // whether it is because of decoder or deserialize_message.
         if (!pointcloud) continue;
 
         auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
@@ -333,7 +334,7 @@ void HesaiRosDecoderTest::ReadBag()
           std::cout << rt << " loaded: " << target_pcd_path << std::endl;
           checkPCDs(pointcloud, ref_pointcloud);
           check_cnt++;
-          //ref_pointcloud.reset(new nebula::drivers::NebulaPointCloud);
+          // ref_pointcloud.reset(new nebula::drivers::NebulaPointCloud);
           ref_pointcloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
         }
         pointcloud.reset(new nebula::drivers::NebulaPointCloud);

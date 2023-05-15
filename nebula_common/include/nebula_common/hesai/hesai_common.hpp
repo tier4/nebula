@@ -1,14 +1,14 @@
 #ifndef NEBULA_HESAI_COMMON_H
 #define NEBULA_HESAI_COMMON_H
 
+#include "nebula_common/nebula_common.hpp"
+#include "nebula_common/nebula_status.hpp"
+
 #include <bitset>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
 namespace nebula
 {
 namespace drivers
@@ -185,7 +185,7 @@ struct HesaiCorrection
           index++;
         }
 
-        //230328 add
+        // 230328 add
         for (uint8_t i = 0; i < mirrorNumber; i++) {
           startFrame[i] *= resolution;
           endFrame[i] *= resolution;
@@ -204,7 +204,7 @@ struct HesaiCorrection
         }
         break;
 
-      case 3:  //not worked...
+      case 3:  // not worked...
         for (uint8_t i = 0; i < mirrorNumber; i++) {
           startFrame[i] = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8;
           index += 2;
@@ -238,8 +238,9 @@ struct HesaiCorrection
           /*
         startFrame[i] *= 2.56;
         endFrame[i] *= 2.56;
-        std::cout << "startFrame[" << static_cast<int>(i) << "]=" << static_cast<int>(startFrame[i]) << std::endl;
-        std::cout << "endFrame[" << static_cast<int>(i) << "]=" << static_cast<int>(endFrame[i]) << std::endl;
+        std::cout << "startFrame[" << static_cast<int>(i) << "]=" << static_cast<int>(startFrame[i])
+        << std::endl; std::cout << "endFrame[" << static_cast<int>(i) << "]=" <<
+        static_cast<int>(endFrame[i]) << std::endl;
         */
         }
 

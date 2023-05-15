@@ -3,10 +3,9 @@ import unittest
 import launch
 import launch_ros
 import launch_testing
-
 import launch_testing.event_handlers
-
 import pytest
+
 
 @pytest.mark.rostest
 def generate_test_description():

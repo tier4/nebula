@@ -1,9 +1,9 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_40_decoder.hpp"
 
+#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_40.hpp"
+
 #include <cmath>
 #include <utility>
-
-#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_40.hpp"
 
 namespace nebula
 {
@@ -153,8 +153,8 @@ drivers::NebulaPointCloudPtr Pandar40Decoder::convert(size_t block_id)
       block_id, unit_id,
       (packet_.return_mode == STRONGEST_RETURN)
         ? static_cast<uint8_t>(
-            drivers::ReturnType::STRONGEST)  //drivers::ReturnMode::SINGLE_STRONGEST
-        : static_cast<uint8_t>(drivers::ReturnType::LAST)));  //drivers::ReturnMode::SINGLE_LAST
+            drivers::ReturnType::STRONGEST)  // drivers::ReturnMode::SINGLE_STRONGEST
+        : static_cast<uint8_t>(drivers::ReturnType::LAST)));  // drivers::ReturnMode::SINGLE_LAST
   }
   return block_pc;
 }
@@ -191,20 +191,20 @@ drivers::NebulaPointCloudPtr Pandar40Decoder::convert_dual(size_t block_id)
       even_usable) {
       block_pc->emplace_back(build_point(
         even_block_id, unit_id,
-        static_cast<uint8_t>(drivers::ReturnType::IDENTICAL)));  //drivers::ReturnMode::DUAL_ONLY
+        static_cast<uint8_t>(drivers::ReturnType::IDENTICAL)));  // drivers::ReturnMode::DUAL_ONLY
     } else if (even_unit.intensity >= odd_unit.intensity) {
       // Strongest return is in even block when it is also the last
       if (odd_usable) {
         block_pc->emplace_back(build_point(
           odd_block_id, unit_id,
           static_cast<uint8_t>(
-            drivers::ReturnType::FIRST_WEAK)));  //drivers::ReturnMode::DUAL_WEAK_FIRST
+            drivers::ReturnType::FIRST_WEAK)));  // drivers::ReturnMode::DUAL_WEAK_FIRST
       }
       if (even_usable) {
         block_pc->emplace_back(build_point(
           even_block_id, unit_id,
           static_cast<uint8_t>(
-            drivers::ReturnType::STRONGEST)));  //drivers::ReturnMode::DUAL_STRONGEST_LAST
+            drivers::ReturnType::STRONGEST)));  // drivers::ReturnMode::DUAL_STRONGEST_LAST
       }
     } else {
       // Normally, strongest return is in odd block and last return is in even block
@@ -212,13 +212,13 @@ drivers::NebulaPointCloudPtr Pandar40Decoder::convert_dual(size_t block_id)
         block_pc->emplace_back(build_point(
           odd_block_id, unit_id,
           static_cast<uint8_t>(
-            drivers::ReturnType::STRONGEST)));  //drivers::ReturnMode::DUAL_STRONGEST_FIRST
+            drivers::ReturnType::STRONGEST)));  // drivers::ReturnMode::DUAL_STRONGEST_FIRST
       }
       if (even_usable) {
         block_pc->emplace_back(build_point(
           even_block_id, unit_id,
           static_cast<uint8_t>(
-            drivers::ReturnType::LAST_WEAK)));  //drivers::ReturnMode::DUAL_WEAK_LAST
+            drivers::ReturnType::LAST_WEAK)));  // drivers::ReturnMode::DUAL_WEAK_LAST
       }
     }
     //    }

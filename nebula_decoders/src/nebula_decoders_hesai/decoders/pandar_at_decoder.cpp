@@ -207,8 +207,8 @@ void PandarATDecoder::CalcXTPointXYZIT(
       case DUAL_RETURN:
         if (identical_flg) {
           point.return_type = static_cast<uint8_t>(
-            nebula::drivers::ReturnType::
-              IDENTICAL);  // not present in the manual, but it always seems to be this pattern
+            nebula::drivers::ReturnType::IDENTICAL);  // not present in the manual, but it always
+                                                      // seems to be this pattern
         } else if (blockid == 0) {
           if (point.intensity < another_intensity) {
             point.return_type =

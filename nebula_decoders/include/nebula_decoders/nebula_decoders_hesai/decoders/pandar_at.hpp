@@ -20,9 +20,9 @@ constexpr size_t PRE_HEADER_SIZE = 6;
 constexpr size_t HEADER_SIZE = 6;
 // Body
 constexpr size_t BLOCKS_PER_PACKET = 2;
-//constexpr size_t BLOCK_HEADER_AZIMUTH = 2;
+// constexpr size_t BLOCK_HEADER_AZIMUTH = 2;
 constexpr size_t BLOCK_HEADER_AZIMUTH = 3;
-//constexpr size_t BLOCK_HEADER_FINE_AZIMUTH = 1;
+// constexpr size_t BLOCK_HEADER_FINE_AZIMUTH = 1;
 constexpr size_t LASER_COUNT = 128;
 constexpr size_t UNIT_SIZE = 4;
 constexpr size_t CRC_SIZE = 4;

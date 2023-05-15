@@ -1,8 +1,8 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt_128_decoder.hpp"
 
-#include <cmath>
-
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt_128.hpp"
+
+#include <cmath>
 
 namespace nebula
 {
@@ -117,7 +117,7 @@ void PandarQT128Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_pa
       current_phase =
         (static_cast<int>(packet_.blocks[block_id + 1].azimuth) - scan_phase_ + 36000) % 36000;
     }
-  } else  //single
+  } else  // single
   {
     for (size_t block_id = 0; block_id < BLOCKS_PER_PACKET; block_id++) {
       block_pc = convert(block_id);
@@ -289,10 +289,10 @@ bool PandarQT128Decoder::parsePacket(const pandar_msgs::msg::PandarPacket & pand
   }
 
   index += SKIP_SIZE;
-  packet_.mode_flag = buf[index] & 0x01;  //Mode Flag
+  packet_.mode_flag = buf[index] & 0x01;  // Mode Flag
   index += MODE_FLAG_SIZE;
   index += RESERVED3_SIZE;
-  packet_.return_mode = buf[index] & 0xff;  //Return Mode
+  packet_.return_mode = buf[index] & 0xff;  // Return Mode
   index += RETURN_MODE_SIZE;
 
   packet_.t.tm_year = (buf[index + 0] & 0xff) + 100;

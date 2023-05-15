@@ -3,6 +3,7 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/format.hpp>
+
 #include <ostream>
 
 namespace nebula

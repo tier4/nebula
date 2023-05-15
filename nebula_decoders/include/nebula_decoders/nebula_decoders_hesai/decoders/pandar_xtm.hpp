@@ -49,7 +49,7 @@ constexpr uint32_t DUAL_RETURN = 0x39;
 constexpr uint32_t DUAL_RETURN_B = 0x3b;
 constexpr uint32_t DUAL_RETURN_C = 0x3c;
 constexpr uint32_t TRIPLE_RETURN = 0x3d;
-constexpr uint32_t MAX_AZIMUTH_STEPS = 360 * 100;  //Unit: 0.01°
+constexpr uint32_t MAX_AZIMUTH_STEPS = 360 * 100;  // Unit: 0.01°
 
 struct Header
 {

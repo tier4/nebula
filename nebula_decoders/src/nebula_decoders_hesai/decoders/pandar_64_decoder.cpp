@@ -1,8 +1,8 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_64_decoder.hpp"
 
-#include <cmath>
-
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_64.hpp"
+
+#include <cmath>
 
 namespace nebula
 {
@@ -153,8 +153,8 @@ drivers::NebulaPointCloudPtr Pandar64Decoder::convert(size_t block_id)
       block_id, unit_id,
       (packet_.return_mode == STRONGEST_RETURN)
         ? static_cast<uint8_t>(
-            drivers::ReturnType::STRONGEST)  //drivers::ReturnMode::SINGLE_STRONGEST
-        : static_cast<uint8_t>(drivers::ReturnType::LAST)));  //drivers::ReturnMode::SINGLE_LAST
+            drivers::ReturnType::STRONGEST)  // drivers::ReturnMode::SINGLE_STRONGEST
+        : static_cast<uint8_t>(drivers::ReturnType::LAST)));  // drivers::ReturnMode::SINGLE_LAST
   }
   return block_pc;
 }
