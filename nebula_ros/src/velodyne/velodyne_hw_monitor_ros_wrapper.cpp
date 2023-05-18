@@ -439,8 +439,7 @@ void VelodyneHwMonitorRosWrapper::InitializeVelodyneDiagnostics()
   diagnostics_snapshot_timer_ = std::make_shared<rclcpp::GenericTimer<decltype(on_timer_snapshot)>>(
     this->get_clock(), std::chrono::milliseconds(diag_span_), std::move(on_timer_snapshot),
     this->get_node_base_interface()->get_context());
-  this->get_node_timers_interface()->add_timer(
-    diagnostics_snapshot_timer_, cbg_m_);
+  this->get_node_timers_interface()->add_timer(diagnostics_snapshot_timer_, cbg_m_);
 
   auto on_timer_update = [this] {
     auto now = this->get_clock()->now();
@@ -457,8 +456,7 @@ void VelodyneHwMonitorRosWrapper::InitializeVelodyneDiagnostics()
   diagnostics_update_timer_ = std::make_shared<rclcpp::GenericTimer<decltype(on_timer_update)>>(
     this->get_clock(), std::chrono::milliseconds(1000), std::move(on_timer_update),
     this->get_node_base_interface()->get_context());
-  this->get_node_timers_interface()->add_timer(
-    diagnostics_update_timer_, cbg_r_);
+  this->get_node_timers_interface()->add_timer(diagnostics_update_timer_, cbg_r_);
 }
 
 std::string VelodyneHwMonitorRosWrapper::GetPtreeValue(
@@ -610,12 +608,12 @@ void VelodyneHwMonitorRosWrapper::OnVelodyneDiagnosticsTimer()
   std::cout << "OnVelodyneDiagnosticsTimer" << std::endl;
   if (mtx_diag.try_lock() || true) {
     std::cout << "mtx_diag lock" << std::endl;
-    hw_interface_.GetDiagAsync([this](const std::string &str) {
-        current_diag_tree =
-          std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
-        diagnostics_updater_.force_update();
-        mtx_diag.unlock();
-        std::cout << "mtx_diag unlock" << std::endl;
+    hw_interface_.GetDiagAsync([this](const std::string & str) {
+      current_diag_tree =
+        std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
+      diagnostics_updater_.force_update();
+      mtx_diag.unlock();
+      std::cout << "mtx_diag unlock" << std::endl;
     });
   } else {
     std::cout << "mtx_diag is locked..." << std::endl;
