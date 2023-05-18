@@ -321,12 +321,12 @@ Status VelodyneHwMonitorRosWrapper::GetParameters(
 
 void VelodyneHwMonitorRosWrapper::InitializeVelodyneDiagnostics()
 {
-  std::cout << "InitializeVelodyneDiagnostics" << std::endl;
+  RCLCPP_INFO_STREAM(get_logger(), "InitializeVelodyneDiagnostics");
   using std::chrono_literals::operator""s;
   std::ostringstream os;
   auto hardware_id = info_model + ": " + info_serial;
   diagnostics_updater_.setHardwareID(hardware_id);
-  std::cout << "hardware_id: " << hardware_id << std::endl;
+  RCLCPP_INFO_STREAM(get_logger(), "hardware_id" << hardware_id);
 
   if (use_advanced_diagnostics) {
     diagnostics_updater_.add(
@@ -440,27 +440,25 @@ void VelodyneHwMonitorRosWrapper::InitializeVelodyneDiagnostics()
     this->get_clock(), std::chrono::milliseconds(diag_span_), std::move(on_timer_snapshot),
     this->get_node_base_interface()->get_context());
   this->get_node_timers_interface()->add_timer(
-    diagnostics_snapshot_timer_, cbg_m_);  // 220721 killed for reconfigure
+    diagnostics_snapshot_timer_, cbg_m_);
 
   auto on_timer_update = [this] {
-    std::cout << "OnUpdateTimer" << std::endl;
     auto now = this->get_clock()->now();
     auto dif = (now - *current_snapshot_time).seconds();
-    std::cout << "dif: " << dif << std::endl;
     if (diag_span_ * 2.0 < dif * 1000) {
       current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
-      std::cout << "STALE" << std::endl;
+      RCLCPP_DEBUG_STREAM(get_logger(), "STALE");
     } else {
       current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::OK;
-      std::cout << "OK" << std::endl;
+      RCLCPP_DEBUG_STREAM(get_logger(), "OK");
     }
     diagnostics_updater_.force_update();
   };
   diagnostics_update_timer_ = std::make_shared<rclcpp::GenericTimer<decltype(on_timer_update)>>(
-    this->get_clock(), std::chrono::milliseconds(100), std::move(on_timer_update),
+    this->get_clock(), std::chrono::milliseconds(1000), std::move(on_timer_update),
     this->get_node_base_interface()->get_context());
   this->get_node_timers_interface()->add_timer(
-    diagnostics_update_timer_, cbg_r_);  // 220721 killed for reconfigure
+    diagnostics_update_timer_, cbg_r_);
 }
 
 std::string VelodyneHwMonitorRosWrapper::GetPtreeValue(
@@ -597,12 +595,12 @@ public:
 void VelodyneHwMonitorRosWrapper::curl_callback(std::string err, std::string body)
 {
   if (err != "") {
-    std::cerr << "Error:" << err << std::endl;
+    RCLCPP_ERROR_STREAM(get_logger(), "curl_callback:" << err);
   } else {
-    std::cout << body << std::endl;
+    RCLCPP_INFO_STREAM(get_logger(), body);
     current_diag_tree =
       std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(body));
-    std::cout << "diagnostics_updater_.force_update()" << std::endl;
+    RCLCPP_DEBUG_STREAM(get_logger(), "diagnostics_updater_.force_update()");
     diagnostics_updater_.force_update();
   }
 }
@@ -610,103 +608,17 @@ void VelodyneHwMonitorRosWrapper::curl_callback(std::string err, std::string bod
 void VelodyneHwMonitorRosWrapper::OnVelodyneDiagnosticsTimer()
 {
   std::cout << "OnVelodyneDiagnosticsTimer" << std::endl;
-  if (true) {
-    if (mtx_diag.try_lock() || true) {
-      std::cout << "mtx_diag lock" << std::endl;
-      hw_interface_.GetDiagAsync([this](const std::string & str) {
+  if (mtx_diag.try_lock() || true) {
+    std::cout << "mtx_diag lock" << std::endl;
+    hw_interface_.GetDiagAsync([this](const std::string &str) {
         current_diag_tree =
           std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
         diagnostics_updater_.force_update();
         mtx_diag.unlock();
         std::cout << "mtx_diag unlock" << std::endl;
-      });
-    } else {
-      std::cout << "mtx_diag is locked..." << std::endl;
-    }
-
-  } else if (false) {
-    auto self(shared_from_this());
-    std::future<VelodyneStatus> future = std::async(std::launch::async, [self, this]() {
-      return hw_interface_.GetDiagAsync([this](const std::string & str) {
-        current_diag_tree =
-          std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
-        diagnostics_updater_.force_update();
-      });
     });
-    auto future_status = future.wait_for(std::chrono::milliseconds(1000));
-    switch (future_status) {
-      case std::future_status::deferred:
-        std::cout << "deferred\n";
-        break;
-      case std::future_status::timeout:
-        std::cout << "timeout\n";
-        break;
-      case std::future_status::ready:
-        std::cout << "ready!\n";
-        break;
-    }
-  } else if (false) {
-    auto str = hw_interface_.GetDiag();
-    std::cout << "hw_interface_.GetDiag() : " << str << std::endl;
-    std::cout << "ParseJson" << std::endl;
-    current_diag_tree = std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
-    std::cout << "diagnostics_updater_.force_update()" << std::endl;
-    diagnostics_updater_.force_update();
-
-  } else if (false) {
-    boost::asio::io_context ioc;
-    boost::asio::ip::tcp::resolver resolver(ioc);
-    boost::beast::tcp_stream stream(ioc);
-    auto const results = resolver.resolve(sensor_configuration_.sensor_ip, "80");
-
-    stream.connect(results);
-
-    boost::beast::http::request<boost::beast::http::string_body> req{
-      boost::beast::http::verb::get, "/cgi/diag.json", 11};
-    req.set(boost::beast::http::field::host, sensor_configuration_.sensor_ip);
-    req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-
-    boost::beast::http::write(stream, req);
-
-    boost::beast::flat_buffer buffer;
-
-    boost::beast::http::response<boost::beast::http::dynamic_body> res;
-
-    // Receive the HTTP response
-    boost::beast::http::read(stream, buffer, res);
-
-    std::cout << res << std::endl;
-    auto m_res_string = boost::beast::buffers_to_string(res.body().data());
-    current_diag_tree =
-      std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(m_res_string));
-    std::cout << "diagnostics_updater_.force_update()" << std::endl;
-    diagnostics_updater_.force_update();
-
-    // Gracefully close the socket
-    boost::beast::error_code ec;
-    stream.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-
-    // not_connected happens sometimes
-    // so don't bother reporting it.
-    //
-    if (ec && ec != boost::beast::errc::not_connected) throw boost::beast::system_error{ec};
   } else {
-    Curl * curl = new Curl();
-    std::string url = "http://" + sensor_configuration_.sensor_ip + "/cgi/diag.json";
-    //*
-    curl->get(url, [](std::string err, std::string body) {
-      if (err != "") {
-        std::cerr << "ERROR: " << err << std::endl;
-      } else {
-        std::cout << body << std::endl;
-        //        current_diag_tree =
-        //        std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(body));
-        //        std::cout << "diagnostics_updater_.force_update()" << std::endl;
-        //        diagnostics_updater_.force_update();
-      }
-    });
-    //*/
-    //     curl->get(url, VelodyneHwMonitorRosWrapper::curl_callback);
+    std::cout << "mtx_diag is locked..." << std::endl;
   }
 }
 
@@ -1669,19 +1581,13 @@ void VelodyneHwMonitorRosWrapper::VelodyneCheckAdctpStat(
 
 void VelodyneHwMonitorRosWrapper::OnVelodyneStatusTimer()
 {
-  std::cout << "OnVelodyneStatusTimer" << std::endl;
   if (mtx_status.try_lock()) {
-    std::cout << "mtx_status lock" << std::endl;
     hw_interface_.GetStatusAsync([this](const std::string & str) {
       current_status_tree =
         std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
       diagnostics_updater_.force_update();
       mtx_status.unlock();
-      std::cout << "mtx_status unlock" << std::endl;
     });
-    std::cout << "run hw_interface_.GetStatusAsync" << std::endl;
-  } else {
-    std::cout << "mtx_status is locked..." << std::endl;
   }
 }
 
@@ -1780,7 +1686,6 @@ void VelodyneHwMonitorRosWrapper::VelodyneCheckSnapshot(
 
 void VelodyneHwMonitorRosWrapper::OnVelodyneSnapshotTimer()
 {
-  std::cout << "OnVelodyneSnapshotTimer" << std::endl;
   hw_interface_.GetSnapshotAsync([this](const std::string & str) {
     current_snapshot_time.reset(new rclcpp::Time(this->get_clock()->now()));
     current_snapshot_tree =
@@ -2062,11 +1967,11 @@ rcl_interfaces::msg::SetParametersResult VelodyneHwMonitorRosWrapper::paramCallb
   const std::vector<rclcpp::Parameter> & p)
 {
   std::scoped_lock lock(mtx_config_);
-  std::cout << "add_on_set_parameters_callback" << std::endl;
-  std::cout << p << std::endl;
-  std::cout << sensor_configuration_ << std::endl;
+  RCLCPP_INFO_STREAM(get_logger(), p);
+  RCLCPP_INFO_STREAM(get_logger(), sensor_configuration_);
 
   drivers::VelodyneSensorConfiguration new_param{sensor_configuration_};
+
   std::cout << new_param << std::endl;
   std::string sensor_model_str;
   std::string return_mode_str;

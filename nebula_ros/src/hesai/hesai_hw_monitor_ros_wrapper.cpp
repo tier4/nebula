@@ -350,7 +350,7 @@ void HesaiHwMonitorRosWrapper::InitializeHesaiDiagnostics()
     diagnostics_updater_.force_update();
   };
   diagnostics_update_timer_ = std::make_shared<rclcpp::GenericTimer<decltype(on_timer_update)>>(
-    this->get_clock(), std::chrono::milliseconds(100), std::move(on_timer_update),
+    this->get_clock(), std::chrono::milliseconds(1000), std::move(on_timer_update),
     this->get_node_base_interface()->get_context());
   this->get_node_timers_interface()->add_timer(diagnostics_update_timer_, cbg_r_);
 
