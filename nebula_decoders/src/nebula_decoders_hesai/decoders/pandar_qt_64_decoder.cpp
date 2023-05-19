@@ -121,7 +121,7 @@ drivers::NebulaPoint PandarQT64Decoder::build_point(
 
   point.intensity = unit.intensity;
   point.channel = unit_id;
-  point.azimuth = block_azimuth_rad_[block_id] + azimuth_offset_rad_[unit_id];
+  point.azimuth = block_azimuth_rad_[block.azimuth] + azimuth_offset_rad_[unit_id];
   point.elevation = elevation_angle_rad_[unit_id];
   point.return_type = return_type;
 

@@ -140,7 +140,7 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
     point.x = xyDistance * sin_azimuth_angle_[azimuth];
     point.y = xyDistance * cos_azimuth_angle_[azimuth];
     point.z = unit.distance * sin_elevation_angle_[i];
-    point.azimuth = block_azimuth_rad_[blockid] + azimuth_offset_rad_[chLaserNumber];
+    point.azimuth = block_azimuth_rad_[azimuth] + azimuth_offset_rad_[chLaserNumber];
     point.elevation = elevation_angle_rad_[chLaserNumber];
 
     point.intensity = unit.intensity;

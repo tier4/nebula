@@ -120,7 +120,7 @@ drivers::NebulaPoint Pandar64Decoder::build_point(
 
   point.intensity = unit.intensity;
   point.channel = unit_id;
-  point.azimuth = block_azimuth_rad_[block_id] + azimuth_offset_rad_[unit_id];
+  point.azimuth = block_azimuth_rad_[unit_id] + azimuth_offset_rad_[unit_id];
   point.elevation = elevation_angle_rad_[unit_id];
   point.return_type = return_type;
   if(std::numeric_limits<uint32_t>::max() == scan_timestamp_) { // invalid timestamp use current block stamp
