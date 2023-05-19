@@ -47,8 +47,7 @@ PandarQT64Decoder::PandarQT64Decoder(
   dual_return_distance_threshold_ = sensor_configuration_->dual_return_distance_threshold;
   last_phase_ = 0;
   has_scanned_ = false;
-  first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
-  first_timestamp_ = first_timestamp_tmp;
+  scan_timestamp_ = std::numeric_limits<uint32_t>::max();
 
   scan_pc_.reset(new NebulaPointCloud);
   scan_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
@@ -60,7 +59,7 @@ bool PandarQT64Decoder::hasScanned() { return has_scanned_; }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> PandarQT64Decoder::get_pointcloud()
 {
-  return std::make_tuple(scan_pc_, first_timestamp_);
+  return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
 void PandarQT64Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
@@ -71,8 +70,7 @@ void PandarQT64Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_pac
 
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
-    first_timestamp_ = first_timestamp_tmp;
-    first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
+    scan_timestamp_ = std::numeric_limits<uint32_t>::max();
     overflow_pc_.reset(new NebulaPointCloud);
     overflow_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
     has_scanned_ = false;
@@ -111,9 +109,7 @@ drivers::NebulaPoint PandarQT64Decoder::build_point(
   const auto & block = packet_.blocks[block_id];
   const auto & unit = block.units[unit_id];
   auto unix_second = static_cast<double>(timegm(&packet_.t));
-  if (unix_second < first_timestamp_tmp) {
-    first_timestamp_tmp = unix_second;
-  }
+
   bool dual_return = (packet_.return_mode == DUAL_RETURN_B);
   NebulaPoint point{};
 
@@ -129,13 +125,17 @@ drivers::NebulaPoint PandarQT64Decoder::build_point(
   point.elevation = elevation_angle_rad_[unit_id];
   point.return_type = return_type;
 
-  point.time_stamp = (static_cast<double>(packet_.usec)) / 1000000.0;
-  point.time_stamp +=
-    dual_return
-      ? (static_cast<double>(block_time_offset_dual_[block_id] + firing_offset_[unit_id]) /
-         1000000.0f)
-      : (static_cast<double>(block_time_offset_single_[block_id] + firing_offset_[unit_id]) /
-         1000000.0f);
+  auto offset = dual_return ? (static_cast<double>(
+                                 block_time_offset_dual_[block_id] + firing_offset_[unit_id]) /
+                               1000000.0f)
+                            : (static_cast<double>(
+                                 block_time_offset_single_[block_id] + firing_offset_[unit_id]) /
+                               1000000.0f);
+  point.time_stamp = static_cast<uint32_t>(
+    (unix_second + offset +
+     static_cast<double>(packet_.usec) / 1000000.f -
+     scan_timestamp_) * 10e9
+  );
 
   return point;
 }

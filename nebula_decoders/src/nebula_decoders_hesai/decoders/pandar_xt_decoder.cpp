@@ -40,8 +40,7 @@ PandarXTDecoder::PandarXTDecoder(
   dual_return_distance_threshold_ = sensor_configuration_->dual_return_distance_threshold;
   last_phase_ = 0;
   has_scanned_ = false;
-  first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
-  first_timestamp_ = first_timestamp_tmp;
+  scan_timestamp_ = std::numeric_limits<uint32_t>::max();;
 
   scan_pc_.reset(new NebulaPointCloud);
   scan_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
@@ -53,7 +52,7 @@ bool PandarXTDecoder::hasScanned() { return has_scanned_; }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> PandarXTDecoder::get_pointcloud()
 {
-  return std::make_tuple(scan_pc_, first_timestamp_);
+  return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
 void PandarXTDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
@@ -64,8 +63,7 @@ void PandarXTDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
 
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
-    first_timestamp_ = first_timestamp_tmp;
-    first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
+    scan_timestamp_ = std::numeric_limits<uint32_t>::max();
     overflow_pc_.reset(new NebulaPointCloud);
     overflow_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
     has_scanned_ = false;
@@ -93,9 +91,6 @@ drivers::NebulaPoint PandarXTDecoder::build_point(int block_id, int unit_id, uin
   const auto & block = packet_.blocks[block_id];
   const auto & unit = block.units[unit_id];
   auto unix_second = static_cast<double>(timegm(&packet_.t));
-  if (unix_second < first_timestamp_tmp) {
-    first_timestamp_tmp = unix_second;
-  }
   bool dual_return = packet_.return_mode == DUAL_RETURN;
   NebulaPoint point{};
 
@@ -110,14 +105,23 @@ drivers::NebulaPoint PandarXTDecoder::build_point(int block_id, int unit_id, uin
   point.azimuth = block_azimuth_rad_[block_id] + azimuth_offset_rad_[unit_id];
   point.elevation = elevation_angle_rad_[unit_id];
   point.return_type = return_type;
-  point.time_stamp = (static_cast<double>(packet_.usec)) / 1000000.0;
-  point.time_stamp +=
-    dual_return
-      ? (static_cast<double>(block_offset_dual_return_[block_id] + firing_time_offset_[unit_id]) /
-         1000000.0f)
-      : (static_cast<double>(
-           block_time_offset_single_return_[block_id] + firing_time_offset_[unit_id]) /
-         1000000.0f);
+  if(std::numeric_limits<uint32_t>::max() == scan_timestamp_) { // invalid timestamp use current block stamp
+    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+  }
+  if(!block.azimuth) { // initial azimuth, set as initial
+    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+  }
+  auto offset = dual_return ? (static_cast<double>(
+                                 block_offset_dual_return_[block_id] + firing_time_offset_[unit_id]) /
+                               1000000.0f)
+                            : (static_cast<double>(
+                                 block_time_offset_single_return_[block_id] + firing_time_offset_[unit_id]) /
+                               1000000.0f);
+  point.time_stamp = static_cast<uint32_t>(
+    (unix_second + offset +
+     static_cast<double>(packet_.usec) / 1000000.f -
+     scan_timestamp_) * 10e9
+  );
 
   return point;
 }
@@ -159,9 +163,6 @@ drivers::NebulaPointCloudPtr PandarXTDecoder::convert_dual(size_t block_id)
   NebulaPointCloudPtr block_pc(new NebulaPointCloud);
 
   auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
-  if (unix_second < first_timestamp_tmp) {
-    first_timestamp_tmp = unix_second;
-  }
 
   auto head =
     block_id + ((sensor_configuration_->return_mode == drivers::ReturnMode::FIRST) ? 1 : 0);

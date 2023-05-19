@@ -29,7 +29,7 @@ include_directories(
         ${PCL_INCLUDE_DIRS}
         ${PCL_COMMON_INCLUDE_DIRS}
 )
-link_libraries(${YAML_CPP_LIBRARIES})
+link_libraries(${YAML_CPP_LIBRARIES} ${PCL_LIBRARIES})
 ## Hesai
 # Hw Interface
 ament_auto_add_library(hesai_hw_ros_wrapper SHARED
