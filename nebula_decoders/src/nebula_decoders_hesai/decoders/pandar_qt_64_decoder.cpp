@@ -124,7 +124,12 @@ drivers::NebulaPoint PandarQT64Decoder::build_point(
   point.azimuth = block_azimuth_rad_[packet_.blocks[block_id].azimuth];
   point.elevation = elevation_angle_rad_[unit_id];
   point.return_type = return_type;
-
+  if(std::numeric_limits<uint32_t>::max() == scan_timestamp_) { // invalid timestamp use current block stamp
+    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+  }
+  if(!block.azimuth) { // initial azimuth, set as initial stamp
+    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+  }
   auto offset = dual_return ? (static_cast<double>(
                                  block_time_offset_dual_[block_id] + firing_offset_[unit_id]) /
                                1000000.0f)

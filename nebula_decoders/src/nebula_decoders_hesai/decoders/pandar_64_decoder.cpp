@@ -152,7 +152,7 @@ drivers::NebulaPointCloudPtr Pandar64Decoder::convert(size_t block_id)
   for (size_t unit_id = 0; unit_id < LASER_COUNT; ++unit_id) {
     const auto & unit = block.units[unit_id];
     // skip invalid points
-    if (unit.distance <= 0.1 || unit.distance > 200.0) {
+    if (unit.distance <= MIN_RANGE || unit.distance > MAX_RANGE) {
       continue;
     }
     block_pc->points.emplace_back(build_point(

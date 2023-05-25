@@ -122,7 +122,6 @@ drivers::NebulaPoint PandarXTDecoder::build_point(int block_id, int unit_id, uin
      static_cast<double>(packet_.usec) / 1000000.f -
      scan_timestamp_) * 10e9
   );
-
   return point;
 }
 
@@ -196,11 +195,21 @@ drivers::NebulaPointCloudPtr PandarXTDecoder::convert_dual(size_t block_id)
       point.channel = unit_id;
       point.azimuth = block_azimuth_rad_[packet_.blocks[block_id].azimuth];
 
-      point.time_stamp = (static_cast<double>(packet_.usec)) / 1000000.0;
-
-      point.time_stamp +=
-        (static_cast<double>(block_offset_dual_return_[block_id] + firing_time_offset_[unit_id]) /
-         1000000.0f);
+      if(std::numeric_limits<uint32_t>::max() == scan_timestamp_) { // invalid timestamp use current block stamp
+        scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+      }
+      if(!block.azimuth) { // initial azimuth, set as initial
+        scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+      }
+      auto offset = (static_cast<double>(
+                                     block_offset_dual_return_[block_id] + firing_time_offset_[unit_id]) /
+                                   1000000.0f);
+      std::cout.precision(std::numeric_limits< double >::max_digits10);
+      point.time_stamp = static_cast<uint32_t>(
+        (unix_second + offset +
+         static_cast<double>(packet_.usec) / 1000000.f -
+         scan_timestamp_) * 10e9
+      );
 
       if (identical_flg) {
         point.return_type = static_cast<uint8_t>(nebula::drivers::ReturnType::IDENTICAL);
