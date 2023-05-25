@@ -194,7 +194,7 @@ drivers::NebulaPointCloudPtr PandarXTDecoder::convert_dual(size_t block_id)
       point.z = unit.distance * sinf(elevation_angle_rad_[unit_id]);
 
       point.channel = unit_id;
-      point.azimuth = block.azimuth + std::round(azimuth_offset_[unit_id] * 100.0f);
+      point.azimuth = block_azimuth_rad_[packet_.blocks[block_id].azimuth];
 
       point.time_stamp = (static_cast<double>(packet_.usec)) / 1000000.0;
 

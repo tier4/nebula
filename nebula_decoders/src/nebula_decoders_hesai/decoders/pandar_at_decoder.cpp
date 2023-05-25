@@ -160,7 +160,7 @@ void PandarATDecoder::CalcXTPointXYZIT(
                      correction_configuration_->azimuth[i] +
                      correction_configuration_->getAzimuthAdjustV3(i, Azimuth) * LIDAR_AZIMUTH_UNIT;
       azimuth = (MAX_AZI_LEN + azimuth) % MAX_AZI_LEN;
-      point.azimuth = azimuth / 3600.f;
+      point.azimuth = deg2rad(azimuth / 3600.f);
       {
         float xyDistance = unit.distance * m_cos_elevation_map_[elevation];
         point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
