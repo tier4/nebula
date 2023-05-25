@@ -12,4 +12,17 @@ install/
 log/
 
 # Python
+srv/_*.py
 *.pyc
+
+# Ignore generated docs
+*.dox
+.mkdoxy/
+*.wikidoc
+site/
+# eclipse stuff
+.project
+.cproject
+
+# qcreator stuff
+CMakeLists.txt.user

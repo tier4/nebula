@@ -1,0 +1,17 @@
+/**:
+  ros__parameters:
+    sensor_model: "Pandar64"
+    frame_id: "hesai"
+    return_mode: "Dual"
+    sensor_ip: "192.168.1.201"
+    host_ip: "255.255.255.255"
+    data_port: 2368
+    gnss_port: 2369
+    scan_phase: 0.0
+    packet_mtu_size: 1500
+    rotation_speed: 600
+    cloud_min_angle: 0
+    cloud_max_angle: 360
+    diag_span: 1000
+    setup_sensor: True
+    online: True

@@ -1,0 +1,26 @@
+rosbag2_bagfile_information:
+  version: 5
+  storage_identifier: sqlite3
+  duration:
+    nanoseconds: 300143486
+  starting_time:
+    nanoseconds_since_epoch: 1673400471837873222
+  message_count: 4
+  topics_with_message_count:
+    - topic_metadata:
+        name: /velodyne_packets
+        type: velodyne_msgs/msg/VelodyneScan
+        serialization_format: cdr
+        offered_qos_profiles: ""
+      message_count: 4
+  compression_format: ""
+  compression_mode: ""
+  relative_file_paths:
+    - 1673400471837873222_0.db3
+  files:
+    - path: 1673400471837873222_0.db3
+      starting_time:
+        nanoseconds_since_epoch: 1673400471837873222
+      duration:
+        nanoseconds: 300143486
+      message_count: 4

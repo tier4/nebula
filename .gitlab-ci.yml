@@ -1,0 +1,12 @@
+stages:
+  - build
+
+test_build:
+  stage: build
+  image: ros:foxy
+  script:
+    - DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install libboost1.71-dev
+    - rosdep update
+    - mkdir -p src_tmp/$CI_PROJECT_NAME && mv `find -maxdepth 1 -not -name . -not -name src_tmp` src_tmp/$CI_PROJECT_NAME && mv src_tmp src
+    - DEBIAN_FRONTEND=noninteractive rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
+    - colcon build

@@ -1,0 +1,10 @@
+/**:
+  ros__parameters:
+    sensor_model: "VLS128"
+    sensor_ip: "192.168.1.201"
+    host_ip: "255.255.255.255"
+    frame_id: "velodyne"
+    data_port: 2368
+    gnss_port: 2369
+    setup_sensor: True
+    online: True

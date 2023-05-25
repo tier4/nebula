@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>nebula_sensor_driver</name>
+  <version>0.0.1</version>
+  <description>Meta package for nebula sensor drivers related packages</description>
+  <maintainer email="contact@map4.jp">MAP IV</maintainer>
+  <maintainer email="contact@tier4.jp">MAP IV</maintainer>
+  <license>Apache License 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>nebula_common</exec_depend>
+  <exec_depend>nebula_decoders</exec_depend>
+  <exec_depend>nebula_examples</exec_depend>
+  <exec_depend>nebula_examples</exec_depend>
+  <exec_depend>nebula_hw_interfaces</exec_depend>
+  <exec_depend>nebula_ros</exec_depend>
+  <exec_depend>nebula_tests</exec_depend>
+  <exec_depend>pandar_msgs</exec_depend>
+  <exec_depend>velodyne_msgs</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

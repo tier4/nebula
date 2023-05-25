@@ -1,0 +1,28 @@
+name: documentation
+on:
+  pull_request:
+    types: [closed]
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          key: ${{ github.ref }}
+          path: .cache
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+      - run: |
+          sudo apt update && sudo apt install -y doxygen && \
+          pip install mkdocs-material \
+          mkdocs \
+          mkdocs-material \
+          Jinja2 \
+          ruamel.yaml && \
+          pip install git+https://github.com/JakubAndrysek/mkdoxy
+      - run: mkdocs gh-deploy --force

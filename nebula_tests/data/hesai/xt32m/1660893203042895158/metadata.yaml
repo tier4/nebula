@@ -1,0 +1,26 @@
+rosbag2_bagfile_information:
+  version: 5
+  storage_identifier: sqlite3
+  duration:
+    nanoseconds: 249783906
+  starting_time:
+    nanoseconds_since_epoch: 1660893203042895158
+  message_count: 4
+  topics_with_message_count:
+    - topic_metadata:
+        name: /pandar_packets
+        type: pandar_msgs/msg/PandarScan
+        serialization_format: cdr
+        offered_qos_profiles: ""
+      message_count: 4
+  compression_format: ""
+  compression_mode: ""
+  relative_file_paths:
+    - 1660893203042895158_0.db3
+  files:
+    - path: 1660893203042895158_0.db3
+      starting_time:
+        nanoseconds_since_epoch: 1660893203042895158
+      duration:
+        nanoseconds: 249783906
+      message_count: 4
