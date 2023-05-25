@@ -186,17 +186,15 @@ void PandarATDecoder::CalcXTPointXYZIT(
       }
     }
     auto unix_second = static_cast<double>(timegm(&packet_.t));
-    if(std::numeric_limits<uint32_t>::max() == scan_timestamp_) { // invalid timestamp use current block stamp
+    if (std::numeric_limits<uint32_t>::max() == scan_timestamp_) {  // invalid timestamp use current
+                                                                    // block stamp
       scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     }
-    if(!block->azimuth) { // initial azimuth, set as initial
+    if (!block->azimuth) {  // initial azimuth, set as initial
       scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     }
     point.time_stamp = static_cast<uint32_t>(
-      (unix_second +
-       static_cast<double>(packet_.usec) / 1000000.f -
-       scan_timestamp_) * 10e9
-    );
+      (unix_second + static_cast<double>(packet_.usec) / 1000000.f - scan_timestamp_) * 10e9);
 
     switch (packet_.return_mode) {
       case STRONGEST_RETURN:

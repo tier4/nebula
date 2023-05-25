@@ -128,23 +128,23 @@ drivers::NebulaPoint Pandar40Decoder::build_point(
   point.elevation = elevation_angle_rad_[unit_id];
   point.return_type = return_type;
 
-  if(std::numeric_limits<uint32_t>::max() == scan_timestamp_) { // invalid timestamp use current block stamp
+  if (std::numeric_limits<uint32_t>::max() == scan_timestamp_) {  // invalid timestamp use current
+                                                                  // block stamp
     scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
   }
-  if(!block.azimuth) { // initial azimuth, set as initial
+  if (!block.azimuth) {  // initial azimuth, set as initial
     scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
   }
-  auto offset = dual_return ? (static_cast<double>(
-                                 block_time_offset_dual_return_[block_id] + firing_time_offset_[unit_id]) /
-                               1000000.0f)
-                            : (static_cast<double>(
-                                 block_time_offset_single_return_[block_id] + firing_time_offset_[unit_id]) /
-                               1000000.0f);
+  auto offset = dual_return
+                  ? (static_cast<double>(
+                       block_time_offset_dual_return_[block_id] + firing_time_offset_[unit_id]) /
+                     1000000.0f)
+                  : (static_cast<double>(
+                       block_time_offset_single_return_[block_id] + firing_time_offset_[unit_id]) /
+                     1000000.0f);
   point.time_stamp = static_cast<uint32_t>(
-    (unix_second + offset +
-          static_cast<double>(packet_.usec) / 1000000.f -
-     scan_timestamp_) * 10e9
-    );
+    (unix_second + offset + static_cast<double>(packet_.usec) / 1000000.f - scan_timestamp_) *
+    10e9);
 
   return point;
 }
