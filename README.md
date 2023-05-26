@@ -2,7 +2,7 @@
 
 ## How to build
 
-Builds on ROS Galactic and Humble. 
+Builds on ROS Galactic and Humble.
 
 A [TCP enabled version of ROS' Transport Driver](https://github.com/MapIV/transport_drivers/tree/tcp) is required to use Nebula. You can install it manually or pull it inside this repository using vcs:
 
