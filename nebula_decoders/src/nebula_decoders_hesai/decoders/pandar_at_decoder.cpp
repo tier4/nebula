@@ -50,8 +50,7 @@ PandarATDecoder::PandarATDecoder(
 
   last_phase_ = 0;
   has_scanned_ = false;
-  first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
-  first_timestamp_ = first_timestamp_tmp;
+  scan_timestamp_ = -1;
   last_field_ = -1;
 
   scan_pc_.reset(new NebulaPointCloud);
@@ -62,7 +61,7 @@ bool PandarATDecoder::hasScanned() { return has_scanned_; }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> PandarATDecoder::get_pointcloud()
 {
-  return std::make_tuple(scan_pc_, first_timestamp_);
+  return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
 void PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
@@ -74,8 +73,8 @@ void PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
 
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
-    first_timestamp_ = first_timestamp_tmp;
-    first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
+    auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
+    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     overflow_pc_.reset(new NebulaPointCloud);
     has_scanned_ = false;
   }
@@ -104,7 +103,6 @@ void PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
     }
     last_azimuth_ = Azimuth;
     last_field_ = field;
-    last_timestamp_ = packet_.usec;
   }
 }
 
@@ -163,7 +161,9 @@ void PandarATDecoder::CalcXTPointXYZIT(
                      correction_configuration_->azimuth[i] +
                      correction_configuration_->getAzimuthAdjustV3(i, Azimuth) * LIDAR_AZIMUTH_UNIT;
       azimuth = (MAX_AZI_LEN + azimuth) % MAX_AZI_LEN;
-      point.azimuth = azimuth / 3600.f;
+      point.azimuth = deg2rad(azimuth / 3600.f);
+      point.distance = unit.distance;
+      point.elevation = elevation;
       {
         float xyDistance = unit.distance * m_cos_elevation_map_[elevation];
         point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
@@ -179,6 +179,7 @@ void PandarATDecoder::CalcXTPointXYZIT(
         Azimuth + MAX_AZI_LEN - (azimuth_offset_[i] * 100 * LIDAR_AZIMUTH_UNIT) / 2);
       azimuth = (MAX_AZI_LEN + azimuth) % MAX_AZI_LEN;
       point.azimuth = azimuth / 3600.f;
+      point.distance = unit.distance;
       point.elevation = elevation;
 
       {
@@ -188,13 +189,18 @@ void PandarATDecoder::CalcXTPointXYZIT(
         point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[elevation]);
       }
     }
-
-    double unix_second = packet_.unix_second;
-    if (unix_second < first_timestamp_tmp) {
-      first_timestamp_tmp = unix_second;
+    auto unix_second = static_cast<double>(timegm(&packet_.t));
+    if (scan_timestamp_ < 0) {  // invalid timestamp
+      scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     }
-    point.time_stamp = (static_cast<double>(packet_.usec)) / 1000000.0;
-    //    point.return_type = packet_.return_mode;
+    auto point_stamp =
+      (unix_second + static_cast<double>(packet_.usec) / 1000000.f - scan_timestamp_);
+    if (point_stamp < 0) {
+      point.time_stamp = 0;
+    } else {
+      point.time_stamp = static_cast<uint32_t>(point_stamp * 10e9);
+    }
+
     switch (packet_.return_mode) {
       case STRONGEST_RETURN:
         point.return_type = static_cast<uint8_t>(nebula::drivers::ReturnType::STRONGEST);

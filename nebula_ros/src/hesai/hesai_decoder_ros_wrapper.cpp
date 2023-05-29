@@ -59,7 +59,10 @@ void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
 
-  if (pointcloud == nullptr) return;
+  if (pointcloud == nullptr) {
+    RCLCPP_WARN_STREAM(get_logger(), "Empty cloud parsed.");
+    return;
+  };
   auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
   pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
   if (!pointcloud->points.empty()) {

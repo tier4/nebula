@@ -250,6 +250,7 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
                 current_point.azimuth = azimuth_corrected;
                 current_point.time_stamp = time_stamp;
                 current_point.intensity = intensity;
+                current_point.distance = distance;
                 scan_pc_->points.emplace_back(current_point);
               }
             }

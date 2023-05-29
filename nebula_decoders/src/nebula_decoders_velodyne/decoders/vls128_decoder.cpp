@@ -271,6 +271,7 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               current_point.return_type = return_type;
               current_point.channel = corrections.laser_ring;
               current_point.azimuth = azimuth_corrected;
+              current_point.distance = distance;
               current_point.time_stamp = time_stamp;
               current_point.intensity = intensity;
               scan_pc_->points.emplace_back(current_point);

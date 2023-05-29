@@ -29,16 +29,17 @@ struct PointXYZICATR
  * This point type is not using PCL_ADD_POINT4D to avoid the addition of a 32-bit dummy word.
  * The fields are ordered to meet the SSE alignment.
  */
-struct PointXYZICAETR
+struct PointXYZIRCAEDT
 {
   float x;
   float y;
   float z;
+  std::uint8_t intensity;
+  std::uint8_t return_type;
+  std::uint16_t channel;
   float azimuth;
   float elevation;
-  std::uint8_t return_type;
-  std::uint8_t intensity;
-  std::uint16_t channel;
+  float distance;
   std::uint32_t time_stamp;
 };
 
@@ -54,7 +55,7 @@ struct PointXYZIRADT
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
 
-using NebulaPoint = PointXYZICAETR;
+using NebulaPoint = PointXYZIRCAEDT;
 using NebulaPointPtr = std::shared_ptr<NebulaPoint>;
 using NebulaPointCloud = pcl::PointCloud<NebulaPoint>;
 using NebulaPointCloudPtr = pcl::PointCloud<NebulaPoint>::Ptr;
@@ -80,9 +81,10 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
     std::uint32_t, time_stamp, time_stamp)(std::uint8_t, return_type, return_type))
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::PointXYZICAETR,
-  (float, x, x)(float, y, y)(float, z, z)(float, azimuth, azimuth)(float, elevation, elevation)(
-    std::uint8_t, return_type, return_type)(std::uint8_t, intensity, intensity)(
-    std::uint16_t, channel, channel)(std::uint32_t, time_stamp, time_stamp))
+  nebula::drivers::PointXYZIRCAEDT,
+  (float, x, x)(float, y, y)(float, z, z)(std::uint8_t, intensity, intensity)(
+    std::uint8_t, return_type,
+    return_type)(std::uint16_t, channel, channel)(float, azimuth, azimuth)(
+    float, elevation, elevation)(float, distance, distance)(std::uint32_t, time_stamp, time_stamp))
 
 #endif

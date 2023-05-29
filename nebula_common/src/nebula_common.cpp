@@ -25,8 +25,8 @@ namespace drivers
   return output_pointcloud;
 }
 
-pcl::PointCloud<PointXYZIR>::Ptr convertPointXYZICAETRToPointXYZIR(
-  const pcl::PointCloud<PointXYZICAETR>::ConstPtr & input_pointcloud)
+pcl::PointCloud<PointXYZIR>::Ptr convertPointXYZIRCAEDTToPointXYZIR(
+  const pcl::PointCloud<PointXYZIRCAEDT>::ConstPtr & input_pointcloud)
 {
   pcl::PointCloud<PointXYZIR>::Ptr output_pointcloud(new pcl::PointCloud<PointXYZIR>);
   output_pointcloud->reserve(input_pointcloud->points.size());
