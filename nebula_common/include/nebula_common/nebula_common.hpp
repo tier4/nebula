@@ -487,8 +487,8 @@ inline ReturnMode ReturnModeFromString(const std::string & return_mode)
 [[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr convertPointXYZIRADTToPointXYZIR(
   const pcl::PointCloud<PointXYZIRADT>::ConstPtr & input_pointcloud);
 
-[[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr convertPointXYZICAETRToPointXYZIR(
-  const pcl::PointCloud<PointXYZICAETR>::ConstPtr & input_pointcloud);
+[[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr convertPointXYZIRCAEDTToPointXYZIR(
+  const pcl::PointCloud<PointXYZIRCAEDT>::ConstPtr & input_pointcloud);
 
 }  // namespace drivers
 }  // namespace nebula
