@@ -59,7 +59,7 @@ PandarQT128Decoder::PandarQT128Decoder(
 
   last_phase_ = 0;
   has_scanned_ = false;
-  scan_timestamp_ = std::numeric_limits<uint32_t>::max();
+  scan_timestamp_ = -1;
 
   scan_pc_.reset(new NebulaPointCloud);
   scan_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
@@ -82,7 +82,8 @@ void PandarQT128Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_pa
 
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
-    scan_timestamp_ = std::numeric_limits<uint32_t>::max();
+    auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
+    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     overflow_pc_.reset(new NebulaPointCloud);
     overflow_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
     has_scanned_ = false;
@@ -148,17 +149,15 @@ drivers::NebulaPoint PandarQT128Decoder::build_point(
 
   point.intensity = unit.intensity;
   point.channel = unit_id;
-  point.azimuth = block_azimuth_rad_[packet_.blocks[block_id].azimuth];
+  point.azimuth = block_azimuth_rad_[block.azimuth] + azimuth_offset_rad_[unit_id];
+  point.distance = unit.distance;
   point.elevation = elevation_angle_rad_[unit_id];
   if (dual_return && block_id == 1) {
     point.return_type = second_return_type_;
   } else {
     point.return_type = first_return_type_;
   }
-  if(std::numeric_limits<uint32_t>::max() == scan_timestamp_) { // invalid timestamp use current block stamp
-    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
-  }
-  if(!block.azimuth) { // initial azimuth, set as initial
+  if (scan_timestamp_ < 0) { // invalid timestamp
     scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
   }
   auto offset = dual_return ? (static_cast<double>(
@@ -167,11 +166,16 @@ drivers::NebulaPoint PandarQT128Decoder::build_point(
                             : (static_cast<double>(
                                  block_time_offset_single_[block_id] + firing_time_offset2_[unit_id]) /
                                1000000.0f);
-  point.time_stamp = static_cast<uint32_t>(
+  auto point_stamp =
     (unix_second + offset +
      static_cast<double>(packet_.usec) / 1000000.f -
-     scan_timestamp_) * 10e9
-  );
+     scan_timestamp_);
+  if (point_stamp < 0) {
+    point.time_stamp = 0;
+  }
+  else {
+    point.time_stamp = static_cast<uint32_t>(point_stamp * 10e9);
+  }
 
   return point;
 }
