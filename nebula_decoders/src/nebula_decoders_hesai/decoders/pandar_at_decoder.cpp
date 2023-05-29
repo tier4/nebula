@@ -190,17 +190,14 @@ void PandarATDecoder::CalcXTPointXYZIT(
       }
     }
     auto unix_second = static_cast<double>(timegm(&packet_.t));
-    if (scan_timestamp_ < 0) { // invalid timestamp
+    if (scan_timestamp_ < 0) {  // invalid timestamp
       scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     }
     auto point_stamp =
-      (unix_second +
-       static_cast<double>(packet_.usec) / 1000000.f -
-       scan_timestamp_);
+      (unix_second + static_cast<double>(packet_.usec) / 1000000.f - scan_timestamp_);
     if (point_stamp < 0) {
       point.time_stamp = 0;
-    }
-    else {
+    } else {
       point.time_stamp = static_cast<uint32_t>(point_stamp * 10e9);
     }
 

@@ -127,8 +127,7 @@ drivers::NebulaPoint Pandar128E4XDecoder::build_point(
 {
   NebulaPoint point{};
   auto unit_distance = block.distance * DISTANCE_UNIT;
-  float xyDistance =
-    unit_distance * cos_elevation_angle_[laser_id];
+  float xyDistance = unit_distance * cos_elevation_angle_[laser_id];
 
   point.x = xyDistance * sinf(azimuth_offset_rad_[laser_id] + block_azimuth_rad_[azimuth]);
   point.y = xyDistance * cosf(azimuth_offset_rad_[laser_id] + block_azimuth_rad_[azimuth]);

@@ -83,8 +83,8 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
 POINT_CLOUD_REGISTER_POINT_STRUCT(
   nebula::drivers::PointXYZIRCAEDT,
   (float, x, x)(float, y, y)(float, z, z)(std::uint8_t, intensity, intensity)(
-    std::uint8_t, return_type, return_type)(std::uint16_t, channel, channel)
-    (float, azimuth, azimuth)(float, elevation, elevation)(float, distance, distance)
-    (std::uint32_t, time_stamp, time_stamp))
+    std::uint8_t, return_type,
+    return_type)(std::uint16_t, channel, channel)(float, azimuth, azimuth)(
+    float, elevation, elevation)(float, distance, distance)(std::uint32_t, time_stamp, time_stamp))
 
 #endif

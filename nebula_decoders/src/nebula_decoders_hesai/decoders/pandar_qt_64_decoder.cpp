@@ -125,23 +125,20 @@ drivers::NebulaPoint PandarQT64Decoder::build_point(
   point.distance = unit.distance;
   point.elevation = elevation_angle_rad_[unit_id];
   point.return_type = return_type;
-  if (scan_timestamp_ < 0) { // invalid timestamp
+  if (scan_timestamp_ < 0) {  // invalid timestamp
     scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
   }
-  auto offset = dual_return ? (static_cast<double>(
-                                 block_time_offset_dual_[block_id] + firing_offset_[unit_id]) /
-                               1000000.0f)
-                            : (static_cast<double>(
-                                 block_time_offset_single_[block_id] + firing_offset_[unit_id]) /
-                               1000000.0f);
+  auto offset =
+    dual_return
+      ? (static_cast<double>(block_time_offset_dual_[block_id] + firing_offset_[unit_id]) /
+         1000000.0f)
+      : (static_cast<double>(block_time_offset_single_[block_id] + firing_offset_[unit_id]) /
+         1000000.0f);
   auto point_stamp =
-    (unix_second + offset +
-     static_cast<double>(packet_.usec) / 1000000.f -
-     scan_timestamp_);
+    (unix_second + offset + static_cast<double>(packet_.usec) / 1000000.f - scan_timestamp_);
   if (point_stamp < 0) {
     point.time_stamp = 0;
-  }
-  else {
+  } else {
     point.time_stamp = static_cast<uint32_t>(point_stamp * 10e9);
   }
 

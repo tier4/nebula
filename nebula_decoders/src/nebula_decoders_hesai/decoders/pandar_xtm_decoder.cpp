@@ -147,7 +147,7 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
 
     point.intensity = unit.intensity;
 
-    if (scan_timestamp_ < 0) { // invalid timestamp
+    if (scan_timestamp_ < 0) {  // invalid timestamp
       scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     }
     double offset;
@@ -158,8 +158,7 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
     } else if (
       packet_.return_mode == DUAL_RETURN || packet_.return_mode == DUAL_RETURN_B ||
       packet_.return_mode == DUAL_RETURN_C) {
-      offset =
-        (static_cast<double>(blockXTMOffsetDual[blockid] + laserXTMOffset[i]) / 1000000.0f);
+      offset = (static_cast<double>(blockXTMOffsetDual[blockid] + laserXTMOffset[i]) / 1000000.0f);
     } else {
       offset =
         (static_cast<double>(blockXTMOffsetSingle[blockid] + laserXTMOffset[i]) / 1000000.0f);
@@ -196,13 +195,10 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
         break;
     }
     auto point_stamp =
-      (unix_second + offset +
-       static_cast<double>(packet_.usec) / 1000000.f -
-       scan_timestamp_);
+      (unix_second + offset + static_cast<double>(packet_.usec) / 1000000.f - scan_timestamp_);
     if (point_stamp < 0) {
       point.time_stamp = 0;
-    }
-    else {
+    } else {
       point.time_stamp = static_cast<uint32_t>(point_stamp * 10e9);
     }
     point.channel = i;
