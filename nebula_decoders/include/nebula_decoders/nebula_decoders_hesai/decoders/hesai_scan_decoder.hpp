@@ -49,7 +49,7 @@ public:
 
   /// @brief Virtual function for parsing and shaping PandarPacket
   /// @param pandar_packet
-  virtual void unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) = 0;
+  virtual int unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) = 0;
 
   /// @brief Virtual function for parsing PandarPacket based on packet structure
   /// @param pandar_packet

@@ -66,10 +66,10 @@ std::tuple<drivers::NebulaPointCloudPtr, double> PandarXTMDecoder::get_pointclou
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
-void PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
+int_least32_t PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
 {
   if (!parsePacket(pandar_packet)) {
-    return;
+    return -1;
   }
 
   if (has_scanned_) {
@@ -110,6 +110,7 @@ void PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_pack
     last_azimuth_ = packet_.blocks[block_id].azimuth;
     last_timestamp_ = packet_.usec;
   }
+  return last_azimuth_;
 }
 
 #if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)

@@ -94,7 +94,7 @@ public:
     const std::shared_ptr<drivers::HesaiCorrection> & correction_configuration);
   /// @brief Parsing and shaping PandarPacket
   /// @param pandar_packet
-  void unpack(const pandar_msgs::msg::PandarPacket & raw_packet) override;
+  int unpack(const pandar_msgs::msg::PandarPacket & raw_packet) override;
   /// @brief Get the flag indicating whether one cycle is ready
   /// @return Readied
   bool hasScanned() override;
@@ -150,7 +150,8 @@ private:
 
   Packet packet_{};
 
-  uint16_t last_azimuth_;
+  int last_azimuth_;
+  int max_azimuth_;
   uint16_t last_field_;
   int start_angle_;
   double last_timestamp_;

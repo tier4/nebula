@@ -20,7 +20,7 @@ public:
   explicit Pandar128E4XDecoder(
     const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
-  void unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override;
+  int unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override;
   bool hasScanned() override;
   std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() override;
 
