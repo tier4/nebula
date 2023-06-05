@@ -34,7 +34,7 @@ Pandar128E4XDecoder::Pandar128E4XDecoder(
 
   last_phase_ = 0;
   has_scanned_ = false;
-  first_timestamp_ = 0;
+  scan_timestamp_ = 0;
 
   scan_pc_.reset(new NebulaPointCloud);
   scan_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
@@ -46,7 +46,7 @@ bool Pandar128E4XDecoder::hasScanned() { return has_scanned_; }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> Pandar128E4XDecoder::get_pointcloud()
 {
-  return std::make_tuple(scan_pc_, first_timestamp_);
+  return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
 bool Pandar128E4XDecoder::parsePacket(const pandar_msgs::msg::PandarPacket & raw_packet)
@@ -94,17 +94,17 @@ bool Pandar128E4XDecoder::is_dual_return()
   return false;
 }
 
-void Pandar128E4XDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
+int Pandar128E4XDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
 {
   if (!parsePacket(pandar_packet)) {
-    return;
+    return -1;
   }
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
     overflow_pc_.reset(new NebulaPointCloud);
     overflow_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
     has_scanned_ = false;
-    first_timestamp_ = current_unit_unix_second_;
+    scan_timestamp_ = current_unit_unix_second_;
   }
 
   bool dual_return = is_dual_return();
@@ -119,6 +119,7 @@ void Pandar128E4XDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_p
     has_scanned_ = true;
   }
   last_phase_ = current_phase;
+  return last_phase_;
 }
 
 drivers::NebulaPoint Pandar128E4XDecoder::build_point(
@@ -126,9 +127,9 @@ drivers::NebulaPoint Pandar128E4XDecoder::build_point(
   const uint32_t & unix_second, float & out_distance)
 {
   NebulaPoint point{};
-
+  auto unit_distance = block.distance * DISTANCE_UNIT;
   float xyDistance =
-    static_cast<float>(block.distance) * DISTANCE_UNIT * cos_elevation_angle_[laser_id];
+    unit_distance * cos_elevation_angle_[laser_id];
 
   point.x = xyDistance * sinf(azimuth_offset_rad_[laser_id] + block_azimuth_rad_[azimuth]);
   point.y = xyDistance * cosf(azimuth_offset_rad_[laser_id] + block_azimuth_rad_[azimuth]);
@@ -136,8 +137,9 @@ drivers::NebulaPoint Pandar128E4XDecoder::build_point(
   point.intensity = block.reflectivity;
   point.channel = laser_id;
   point.azimuth = block_azimuth_rad_[azimuth] + azimuth_offset_rad_[laser_id];
+  point.distance = unit_distance;
   point.elevation = elevation_angle_rad_[laser_id];
-  point.time_stamp = unix_second + packet_.tail.timestamp_us - first_timestamp_;
+  point.time_stamp = unix_second + packet_.tail.timestamp_us - scan_timestamp_;
   out_distance = xyDistance;
   return point;
 }

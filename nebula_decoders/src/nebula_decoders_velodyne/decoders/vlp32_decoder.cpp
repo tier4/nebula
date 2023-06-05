@@ -273,6 +273,7 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
           current_point.return_type = static_cast<uint8_t>(return_type);
           current_point.channel = corrections.laser_ring;
           current_point.azimuth = raw->blocks[i].rotation;
+          current_point.distance = distance;
           current_point.time_stamp = time_stamp;
           current_point.intensity = intensity;
           scan_pc_->points.emplace_back(current_point);

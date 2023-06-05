@@ -50,8 +50,9 @@ PandarATDecoder::PandarATDecoder(
 
   last_phase_ = 0;
   has_scanned_ = false;
-  first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
-  first_timestamp_ = first_timestamp_tmp;
+  scan_timestamp_ = -1;
+  last_azimuth_ = -1;
+  max_azimuth_ = -1;
   last_field_ = -1;
 
   scan_pc_.reset(new NebulaPointCloud);
@@ -62,50 +63,54 @@ bool PandarATDecoder::hasScanned() { return has_scanned_; }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> PandarATDecoder::get_pointcloud()
 {
-  return std::make_tuple(scan_pc_, first_timestamp_);
+  return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
-void PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
+int PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
 {
   if (!parsePacket(pandar_packet)) {
     std::cout << "!parsePacket(pandar_packet)" << std::endl;
-    return;
+    return -1;
   }
 
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
-    first_timestamp_ = first_timestamp_tmp;
-    first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
+    auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
+    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     overflow_pc_.reset(new NebulaPointCloud);
     has_scanned_ = false;
   }
 
   for (int block_id = 0; block_id < packet_.header.chBlockNumber; ++block_id) {
-    int Azimuth = static_cast<int>(
+    int azimuth = static_cast<int>(
       packet_.blocks[block_id].azimuth * LIDAR_AZIMUTH_UNIT +
       packet_.blocks[block_id].fine_azimuth);
 
     auto block_pc = convert(block_id);
+    //*
     int count = 0, field = 0;
     while (count < correction_configuration_->frameNumber &&
-           (((Azimuth + MAX_AZI_LEN - correction_configuration_->startFrame[field]) % MAX_AZI_LEN +
-             (correction_configuration_->endFrame[field] + MAX_AZI_LEN - Azimuth) % MAX_AZI_LEN) !=
+           (((azimuth + MAX_AZI_LEN - correction_configuration_->startFrame[field]) % MAX_AZI_LEN +
+             (correction_configuration_->endFrame[field] + MAX_AZI_LEN - azimuth) % MAX_AZI_LEN) !=
             (correction_configuration_->endFrame[field] + MAX_AZI_LEN -
              correction_configuration_->startFrame[field]) %
               MAX_AZI_LEN)) {
       field = (field + 1) % correction_configuration_->frameNumber;
       count++;
     }
-    if (0 == last_field_ && last_field_ != field) {
+    if (last_field_ != field) {
+      if (max_azimuth_ < azimuth){
+        max_azimuth_ = azimuth;
+      }
       *overflow_pc_ += *block_pc;
       has_scanned_ = true;
     } else {
       *scan_pc_ += *block_pc;
     }
-    last_azimuth_ = Azimuth;
+    last_azimuth_ = azimuth;
     last_field_ = field;
-    last_timestamp_ = packet_.usec;
   }
+  return last_azimuth_;
 }
 
 #if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)
@@ -163,7 +168,9 @@ void PandarATDecoder::CalcXTPointXYZIT(
                      correction_configuration_->azimuth[i] +
                      correction_configuration_->getAzimuthAdjustV3(i, Azimuth) * LIDAR_AZIMUTH_UNIT;
       azimuth = (MAX_AZI_LEN + azimuth) % MAX_AZI_LEN;
-      point.azimuth = azimuth / 3600.f;
+      point.azimuth = deg2rad(azimuth / 3600.f);
+      point.distance = unit.distance;
+      point.elevation = elevation;
       {
         float xyDistance = unit.distance * m_cos_elevation_map_[elevation];
         point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
@@ -179,6 +186,7 @@ void PandarATDecoder::CalcXTPointXYZIT(
         Azimuth + MAX_AZI_LEN - (azimuth_offset_[i] * 100 * LIDAR_AZIMUTH_UNIT) / 2);
       azimuth = (MAX_AZI_LEN + azimuth) % MAX_AZI_LEN;
       point.azimuth = azimuth / 3600.f;
+      point.distance = unit.distance;
       point.elevation = elevation;
 
       {
@@ -188,13 +196,21 @@ void PandarATDecoder::CalcXTPointXYZIT(
         point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[elevation]);
       }
     }
-
-    double unix_second = packet_.unix_second;
-    if (unix_second < first_timestamp_tmp) {
-      first_timestamp_tmp = unix_second;
+    auto unix_second = static_cast<double>(timegm(&packet_.t));
+    if (scan_timestamp_ < 0) { // invalid timestamp
+      scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     }
-    point.time_stamp = (static_cast<double>(packet_.usec)) / 1000000.0;
-    //    point.return_type = packet_.return_mode;
+    auto point_stamp =
+      (unix_second +
+       static_cast<double>(packet_.usec) / 1000000.f -
+       scan_timestamp_);
+    if (point_stamp < 0) {
+      point.time_stamp = 0;
+    }
+    else {
+      point.time_stamp = static_cast<uint32_t>(point_stamp * 10e9);
+    }
+
     switch (packet_.return_mode) {
       case STRONGEST_RETURN:
         point.return_type = static_cast<uint8_t>(nebula::drivers::ReturnType::STRONGEST);

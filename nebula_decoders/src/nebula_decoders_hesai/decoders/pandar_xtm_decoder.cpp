@@ -50,8 +50,8 @@ PandarXTMDecoder::PandarXTMDecoder(
 
   last_phase_ = 0;
   has_scanned_ = false;
-  first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
-  first_timestamp_ = first_timestamp_tmp;
+
+  scan_timestamp_ = -1;
 
   scan_pc_.reset(new NebulaPointCloud);
   scan_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
@@ -63,19 +63,19 @@ bool PandarXTMDecoder::hasScanned() { return has_scanned_; }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> PandarXTMDecoder::get_pointcloud()
 {
-  return std::make_tuple(scan_pc_, first_timestamp_);
+  return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
-void PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
+int_least32_t PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
 {
   if (!parsePacket(pandar_packet)) {
-    return;
+    return -1;
   }
 
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
-    first_timestamp_ = first_timestamp_tmp;
-    first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
+    auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
+    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     overflow_pc_.reset(new NebulaPointCloud);
     overflow_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
     has_scanned_ = false;
@@ -110,6 +110,7 @@ void PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_pack
     last_azimuth_ = packet_.blocks[block_id].azimuth;
     last_timestamp_ = packet_.usec;
   }
+  return last_azimuth_;
 }
 
 #if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)
@@ -122,10 +123,10 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
 {
 #endif
   Block * block = &packet_.blocks[blockid];
-
+  auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
   for (int i = 0; i < chLaserNumber; ++i) {
     /* for all the units in a block */
-    Unit & unit = block->units[i];
+    const Unit & unit = block->units[i];
     NebulaPoint point{};
 
     /* skip invalid points */
@@ -141,32 +142,27 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
     point.x = xyDistance * sin_azimuth_angle_[azimuth];
     point.y = xyDistance * cos_azimuth_angle_[azimuth];
     point.z = unit.distance * sin_elevation_angle_[i];
-    point.azimuth = block_azimuth_rad_[blockid] + azimuth_offset_rad_[chLaserNumber];
+    point.azimuth = block_azimuth_rad_[block->azimuth] + azimuth_offset_rad_[i];
+    point.distance = unit.distance;
     point.elevation = elevation_angle_rad_[chLaserNumber];
 
     point.intensity = unit.intensity;
 
-    double unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
-    if (unix_second < first_timestamp_tmp) {
-      first_timestamp_tmp = unix_second;
+    if (scan_timestamp_ < 0) { // invalid timestamp
+      scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     }
-    point.time_stamp = (static_cast<double>(packet_.usec)) / 1000000.0;
-    point.time_stamp +=
-      (static_cast<double>(blockXTMOffsetSingle[i] + laserXTMOffset[i]) / 1000000.0f);
+    double offset;
 
     if (packet_.return_mode == TRIPLE_RETURN) {
-      point.time_stamp =
-        point.time_stamp +
+      offset =
         (static_cast<double>(blockXTMOffsetTriple[blockid] + laserXTMOffset[i]) / 1000000.0f);
     } else if (
       packet_.return_mode == DUAL_RETURN || packet_.return_mode == DUAL_RETURN_B ||
       packet_.return_mode == DUAL_RETURN_C) {
-      point.time_stamp =
-        point.time_stamp +
+      offset =
         (static_cast<double>(blockXTMOffsetDual[blockid] + laserXTMOffset[i]) / 1000000.0f);
     } else {
-      point.time_stamp =
-        point.time_stamp +
+      offset =
         (static_cast<double>(blockXTMOffsetSingle[blockid] + laserXTMOffset[i]) / 1000000.0f);
     }
 
@@ -199,6 +195,16 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
       default:
         point.return_type = static_cast<uint8_t>(nebula::drivers::ReturnType::UNKNOWN);
         break;
+    }
+    auto point_stamp =
+      (unix_second + offset +
+       static_cast<double>(packet_.usec) / 1000000.f -
+       scan_timestamp_);
+    if (point_stamp < 0) {
+      point.time_stamp = 0;
+    }
+    else {
+      point.time_stamp = static_cast<uint32_t>(point_stamp * 10e9);
     }
     point.channel = i;
     cld->points.emplace_back(point);

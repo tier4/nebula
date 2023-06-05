@@ -26,8 +26,7 @@ protected:
   int last_phase_{};
   bool has_scanned_{};
   double dual_return_distance_threshold_{};
-  uint32_t first_timestamp_{};
-  uint32_t first_timestamp_tmp{};
+  double scan_timestamp_{};
 
   /// @brief SensorConfiguration for this decoder
   std::shared_ptr<drivers::HesaiSensorConfiguration> sensor_configuration_;
@@ -50,7 +49,7 @@ public:
 
   /// @brief Virtual function for parsing and shaping PandarPacket
   /// @param pandar_packet
-  virtual void unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) = 0;
+  virtual int unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) = 0;
 
   /// @brief Virtual function for parsing PandarPacket based on packet structure
   /// @param pandar_packet

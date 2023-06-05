@@ -26,7 +26,7 @@ public:
     const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
   /// @brief Parsing and shaping PandarPacket
   /// @param pandar_packet
-  void unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override;
+  int unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override;
   /// @brief Get the flag indicating whether one cycle is ready
   /// @return Readied
   bool hasScanned() override;
@@ -46,7 +46,7 @@ private:
   /// @param unix_second Packet time
   /// @return Point cloud
   drivers::NebulaPoint build_point(
-    size_t block_id, size_t unit_id, bool dual_return, const uint32_t & unix_second);
+    size_t block_id, size_t unit_id, bool dual_return, const double & unix_second);
   /// @brief Convert to point cloud
   /// @param block_id target block
   /// @return Point cloud

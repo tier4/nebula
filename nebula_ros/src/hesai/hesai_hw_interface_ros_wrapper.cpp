@@ -18,26 +18,23 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
     std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration_);
-  if (this->setup_sensor) {
-    hw_interface_.SetSensorConfiguration(
-      std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
-  }
+  hw_interface_.SetSensorConfiguration(
+    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
 #if not defined(TEST_PCAP)
-  hw_interface_.InitializeTcpDriver(this->setup_sensor);
-
-  std::vector<std::thread> thread_pool{};
-  thread_pool.emplace_back([this] {
-    hw_interface_.GetInventory(  // ios,
-      [this](HesaiInventory & result) {
-        std::cout << result << std::endl;
-        hw_interface_.SetTargetModel(result.model);
-      });
-  });
-  for (std::thread & th : thread_pool) {
-    th.join();
-  }
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "hw_interface_.CheckAndSetConfig();");
   if (this->setup_sensor) {
+    hw_interface_.InitializeTcpDriver(this->setup_sensor);
+    std::vector<std::thread> thread_pool{};
+    thread_pool.emplace_back([this] {
+      hw_interface_.GetInventory(  // ios,
+        [this](HesaiInventory & result) {
+          std::cout << result << std::endl;
+          hw_interface_.SetTargetModel(result.model);
+        });
+    });
+    for (std::thread & th : thread_pool) {
+      th.join();
+    }
+    RCLCPP_DEBUG_STREAM(this->get_logger(), "hw_interface_.CheckAndSetConfig();");
     hw_interface_.CheckAndSetConfig();
     updateParameters();
   }

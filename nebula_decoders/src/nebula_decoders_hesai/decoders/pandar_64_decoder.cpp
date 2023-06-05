@@ -48,8 +48,7 @@ Pandar64Decoder::Pandar64Decoder(
 
   last_phase_ = 0;
   has_scanned_ = false;
-  first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
-  first_timestamp_ = first_timestamp_tmp;
+  scan_timestamp_ = -1;
   scan_pc_.reset(new NebulaPointCloud);
   scan_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
   overflow_pc_.reset(new NebulaPointCloud);
@@ -60,19 +59,19 @@ bool Pandar64Decoder::hasScanned() { return has_scanned_; }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> Pandar64Decoder::get_pointcloud()
 {
-  return std::make_tuple(scan_pc_, first_timestamp_);
+  return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
-void Pandar64Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
+int Pandar64Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
 {
   if (!parsePacket(pandar_packet)) {
-    return;
+    return -1;
   }
 
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
-    first_timestamp_ = first_timestamp_tmp;
-    first_timestamp_tmp = std::numeric_limits<uint32_t>::max();
+    auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
+    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     overflow_pc_.reset(new NebulaPointCloud);
     overflow_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
     has_scanned_ = false;
@@ -102,6 +101,7 @@ void Pandar64Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
     }
     last_phase_ = current_phase;
   }
+  return last_phase_;
 }
 
 drivers::NebulaPoint Pandar64Decoder::build_point(
@@ -110,9 +110,7 @@ drivers::NebulaPoint Pandar64Decoder::build_point(
   const auto & block = packet_.blocks[block_id];
   const auto & unit = block.units[unit_id];
   auto unix_second = static_cast<double>(timegm(&packet_.t));
-  if (unix_second < first_timestamp_tmp) {
-    first_timestamp_tmp = unix_second;
-  }
+
   bool dual_return = (packet_.return_mode == DUAL_RETURN);
   NebulaPoint point{};
 
@@ -124,16 +122,29 @@ drivers::NebulaPoint Pandar64Decoder::build_point(
 
   point.intensity = unit.intensity;
   point.channel = unit_id;
-  point.azimuth = block_azimuth_rad_[block_id] + azimuth_offset_rad_[unit_id];
+  point.azimuth = block_azimuth_rad_[block.azimuth] + azimuth_offset_rad_[unit_id];
+  point.distance = unit.distance;
   point.elevation = elevation_angle_rad_[unit_id];
   point.return_type = return_type;
-  point.time_stamp = (static_cast<double>(packet_.usec)) / 1000000.0;
-  point.time_stamp +=
-    dual_return
-      ? (static_cast<double>(block_time_offset_dual_[block_id] + firing_time_offset_[unit_id]) /
-         1000000.0f)
-      : (static_cast<double>(block_time_offset_single_[block_id] + firing_time_offset_[unit_id]) /
-         1000000.0f);
+  if (scan_timestamp_ < 0) { // invalid timestamp
+    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+  }
+  auto offset = dual_return ? (static_cast<double>(
+                                 block_time_offset_dual_[block_id] + firing_time_offset_[unit_id]) /
+                               1000000.0f)
+                            : (static_cast<double>(
+                                 block_time_offset_single_[block_id] + firing_time_offset_[unit_id]) /
+                               1000000.0f);
+  auto point_stamp =
+    (unix_second + offset +
+     static_cast<double>(packet_.usec) / 1000000.f -
+     scan_timestamp_);
+  if (point_stamp < 0) {
+    point.time_stamp = 0;
+  }
+  else {
+    point.time_stamp = static_cast<uint32_t>(point_stamp * 10e9);
+  }
 
   return point;
 }
@@ -146,7 +157,7 @@ drivers::NebulaPointCloudPtr Pandar64Decoder::convert(size_t block_id)
   for (size_t unit_id = 0; unit_id < LASER_COUNT; ++unit_id) {
     const auto & unit = block.units[unit_id];
     // skip invalid points
-    if (unit.distance <= 0.1 || unit.distance > 200.0) {
+    if (unit.distance <= MIN_RANGE || unit.distance > MAX_RANGE) {
       continue;
     }
     block_pc->points.emplace_back(build_point(

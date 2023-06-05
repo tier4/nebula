@@ -56,7 +56,7 @@ public:
     const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
   /// @brief Parsing and shaping PandarPacket
   /// @param pandar_packet
-  void unpack(const pandar_msgs::msg::PandarPacket & raw_packet) override;
+  int unpack(const pandar_msgs::msg::PandarPacket & raw_packet) override;
   /// @brief Get the flag indicating whether one cycle is ready
   /// @return Readied
   bool hasScanned() override;
