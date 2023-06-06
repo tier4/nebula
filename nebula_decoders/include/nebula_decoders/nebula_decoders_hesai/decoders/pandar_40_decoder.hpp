@@ -14,7 +14,7 @@ namespace drivers
 {
 namespace pandar_40
 {
-/// @brief Hesai LiDAR decorder (Pandar40)
+/// @brief Hesai LiDAR decoder (Pandar40)
 class Pandar40Decoder : public HesaiScanDecoder
 {
 public:

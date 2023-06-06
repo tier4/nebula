@@ -14,7 +14,7 @@ namespace drivers
 {
 namespace pandar_qt_64
 {
-/// @brief Hesai LiDAR decorder (QT64)
+/// @brief Hesai LiDAR decoder (QT64)
 class PandarQT64Decoder : public HesaiScanDecoder
 {
 public:

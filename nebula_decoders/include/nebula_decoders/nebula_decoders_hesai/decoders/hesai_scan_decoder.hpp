@@ -13,7 +13,7 @@ namespace nebula
 {
 namespace drivers
 {
-/// @brief Base class for Hesai LiDAR decorder
+/// @brief Base class for Hesai LiDAR decoder
 class HesaiScanDecoder
 {
 protected:

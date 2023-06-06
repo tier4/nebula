@@ -283,7 +283,7 @@ bool PandarATDecoder::parsePacket(const pandar_msgs::msg::PandarPacket & pandar_
   packet_.shutdown_flg = buf[index] & 0xff;
   index += HIGH_TEMP_SHUTDOWN_FLAG_SIZE;
   index += RESERVED2_SIZE;  // skip reserved bytes
-  packet_.moter_speed = (buf[index] & 0xff) | ((buf[index + 1] & 0xff) << 8);
+  packet_.motor_speed = (buf[index] & 0xff) | ((buf[index + 1] & 0xff) << 8);
 
   index += MOTOR_SPEED_SIZE;
 

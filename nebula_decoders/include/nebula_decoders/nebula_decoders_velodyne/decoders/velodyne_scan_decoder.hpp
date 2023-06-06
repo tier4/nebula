@@ -135,7 +135,7 @@ enum RETURN_TYPE {
   DUAL_ONLY = 7
 };
 
-/// @brief Base class for Velodyne LiDAR decorder
+/// @brief Base class for Velodyne LiDAR decoder
 class VelodyneScanDecoder
 {
 protected:

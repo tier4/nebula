@@ -20,7 +20,7 @@ namespace nebula
 {
 namespace ros
 {
-/// @brief Testing decorder of pandar 40p (Keeps HesaiDriverRosWrapper structure as much as
+/// @brief Testing decoder of pandar 40p (Keeps HesaiDriverRosWrapper structure as much as
 /// possible)
 class HesaiRosDecoderTest final : public rclcpp::Node, NebulaDriverRosWrapperBase  //, testing::Test
 {

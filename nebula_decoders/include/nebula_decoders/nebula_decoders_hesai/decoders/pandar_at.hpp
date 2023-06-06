@@ -90,7 +90,7 @@ struct Packet
   uint32_t usec;  // ms
   uint32_t return_mode;
   uint32_t shutdown_flg;
-  uint32_t moter_speed;
+  uint32_t motor_speed;
   tm t;
   double unix_second;
 };

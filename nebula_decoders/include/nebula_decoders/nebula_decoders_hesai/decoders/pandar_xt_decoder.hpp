@@ -14,7 +14,7 @@ namespace drivers
 {
 namespace pandar_xt
 {
-/// @brief Hesai LiDAR decorder (XT32)
+/// @brief Hesai LiDAR decoder (XT32)
 class PandarXTDecoder : public HesaiScanDecoder
 {
 public:

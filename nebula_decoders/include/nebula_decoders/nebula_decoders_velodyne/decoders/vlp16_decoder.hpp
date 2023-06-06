@@ -13,7 +13,7 @@ namespace drivers
 {
 namespace vlp16
 {
-/// @brief Velodyne LiDAR decorder (VLP16)
+/// @brief Velodyne LiDAR decoder (VLP16)
 class Vlp16Decoder : public VelodyneScanDecoder
 {
 public:

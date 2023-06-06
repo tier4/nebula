@@ -31,7 +31,7 @@ const uint16_t MAX_AZIMUTH_DEGREE_NUM = 36000;
 const uint16_t LIDAR_AZIMUTH_UNIT = 256;
 const uint32_t MAX_AZI_LEN = 36000 * 256;
 
-/// @brief Hesai LiDAR decorder (AT128)
+/// @brief Hesai LiDAR decoder (AT128)
 class PandarATDecoder : public HesaiScanDecoder
 {
 public:
@@ -109,7 +109,7 @@ private:
   int start_angle_;
   double last_timestamp_;
 
-  /// @brief Correctio for this decoder (Only AT)
+  /// @brief Correction data for this decoder (Only AT)
   std::shared_ptr<drivers::HesaiCorrection> correction_configuration_;
 
   bool use_dat = true;

@@ -44,7 +44,7 @@ const float laserXTMOffset[] = {
 
 const uint16_t MAX_AZIMUTH_DEGREE_NUM = 36000;
 
-/// @brief Hesai LiDAR decorder (XT32M)
+/// @brief Hesai LiDAR decoder (XT32M)
 class PandarXTMDecoder : public HesaiScanDecoder
 {
 public:
