@@ -31,18 +31,20 @@ PandarATDecoder::PandarATDecoder(
     elev_angle_[laser] = calibration_configuration->elev_angle_map[laser];
     azimuth_offset_[laser] = calibration_configuration->azimuth_offset_map[laser];
   }
-
+  
+  m_elevation_rad_map_.resize(MAX_AZI_LEN);
   m_sin_elevation_map_.resize(MAX_AZI_LEN);
   m_cos_elevation_map_.resize(MAX_AZI_LEN);
-  for (size_t i = 0; i < MAX_AZI_LEN; ++i) {
-    m_sin_elevation_map_[i] = sinf(2.f * i * M_PI / MAX_AZI_LEN);
-    m_cos_elevation_map_[i] = cosf(2.f * i * M_PI / MAX_AZI_LEN);
-  }
+  m_azimuth_rad_map_.resize(MAX_AZI_LEN);
   m_sin_azimuth_map_.resize(MAX_AZI_LEN);
   m_cos_azimuth_map_.resize(MAX_AZI_LEN);
   for (size_t i = 0; i < MAX_AZI_LEN; ++i) {
-    m_sin_azimuth_map_[i] = sinf(2.f * i * M_PI / MAX_AZI_LEN);
-    m_cos_azimuth_map_[i] = cosf(2.f * i * M_PI / MAX_AZI_LEN);
+    m_elevation_rad_map_[i] = 2.f * i * M_PI / MAX_AZI_LEN;
+    m_sin_elevation_map_[i] = sinf(m_elevation_rad_map_[i]);
+    m_cos_elevation_map_[i] = cosf(m_elevation_rad_map_[i]);
+    m_azimuth_rad_map_[i] = 2.f * i * M_PI / MAX_AZI_LEN;
+    m_sin_azimuth_map_[i] = sinf(m_azimuth_rad_map_[i]);
+    m_cos_azimuth_map_[i] = cosf(m_azimuth_rad_map_[i]);
   }
 
   scan_phase_ = static_cast<uint16_t>(0 * 100.0f);
@@ -168,9 +170,9 @@ void PandarATDecoder::CalcXTPointXYZIT(
                      correction_configuration_->azimuth[i] +
                      correction_configuration_->getAzimuthAdjustV3(i, Azimuth) * LIDAR_AZIMUTH_UNIT;
       azimuth = (MAX_AZI_LEN + azimuth) % MAX_AZI_LEN;
-      point.azimuth = 2.f * azimuth * M_PI / MAX_AZI_LEN;
+      point.azimuth = m_azimuth_rad_map_[azimuth];
       point.distance = unit.distance;
-      point.elevation = 2.f * elevation * M_PI / MAX_AZI_LEN;
+      point.elevation = m_elevation_rad_map_[elevation];
       {
         float xyDistance = unit.distance * m_cos_elevation_map_[elevation];
         point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
@@ -185,9 +187,9 @@ void PandarATDecoder::CalcXTPointXYZIT(
       auto azimuth = static_cast<int>(
         Azimuth + MAX_AZI_LEN - (azimuth_offset_[i] * 100 * LIDAR_AZIMUTH_UNIT) / 2);
       azimuth = (MAX_AZI_LEN + azimuth) % MAX_AZI_LEN;
-      point.azimuth = 2.f * azimuth * M_PI / MAX_AZI_LEN;
+      point.azimuth = m_azimuth_rad_map_[azimuth];
       point.distance = unit.distance;
-      point.elevation = 2.f * elevation * M_PI / MAX_AZI_LEN;
+      point.elevation = m_elevation_rad_map_[elevation];
 
       {
         float xyDistance = unit.distance * m_cos_elevation_map_[elevation];

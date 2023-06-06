@@ -142,9 +142,11 @@ private:
   std::array<float, BLOCKS_PER_PACKET> block_offset_dual_{};
   std::array<float, BLOCKS_PER_PACKET> block_offset_triple_{};
 
+  std::vector<float> m_elevation_rad_map_;
   std::vector<float> m_sin_elevation_map_;
   std::vector<float> m_cos_elevation_map_;
 
+  std::vector<float> m_azimuth_rad_map_;
   std::vector<float> m_sin_azimuth_map_;
   std::vector<float> m_cos_azimuth_map_;
 
