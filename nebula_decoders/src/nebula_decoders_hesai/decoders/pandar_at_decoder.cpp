@@ -31,7 +31,7 @@ PandarATDecoder::PandarATDecoder(
     elev_angle_[laser] = calibration_configuration->elev_angle_map[laser];
     azimuth_offset_[laser] = calibration_configuration->azimuth_offset_map[laser];
   }
-  
+
   m_elevation_rad_map_.resize(MAX_AZI_LEN);
   m_sin_elevation_map_.resize(MAX_AZI_LEN);
   m_cos_elevation_map_.resize(MAX_AZI_LEN);
