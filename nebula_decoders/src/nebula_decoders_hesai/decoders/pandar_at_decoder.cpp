@@ -77,9 +77,8 @@ int PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet
 
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
-    auto unix_second = packet_.unix_second;  // sensor-time (ppt/gps)
 
-    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+    scan_timestamp_ = packet_.unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     overflow_pc_.reset(new NebulaPointCloud);
     has_scanned_ = false;
   }
@@ -179,9 +178,8 @@ void PandarATDecoder::CalcXTPointXYZIT(
       point.y = static_cast<float>(xyDistance * m_cos_azimuth_map_[azimuth]);
       point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[elevation]);
     }
-    auto unix_second = packet_.unix_second;
     if (scan_timestamp_ < 0) {  // invalid timestamp
-      scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+      scan_timestamp_ = packet_.unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     }
 
     point.time_stamp = channel_firing_ns[i];
