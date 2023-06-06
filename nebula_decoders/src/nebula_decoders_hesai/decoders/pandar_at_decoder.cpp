@@ -47,7 +47,6 @@ PandarATDecoder::PandarATDecoder(
     m_cos_azimuth_map_[i] = cosf(m_azimuth_rad_map_[i]);
   }
 
-
   dual_return_distance_threshold_ = sensor_configuration_->dual_return_distance_threshold;
 
   last_phase_ = 0;
@@ -151,13 +150,12 @@ void PandarATDecoder::CalcXTPointXYZIT(
 
     int Azimuth = static_cast<int>(block->azimuth * LIDAR_AZIMUTH_UNIT + block->fine_azimuth);
     int count = 0, field = 0;
-    while (
-      count < correction_configuration_->frameNumber &&
-      (((Azimuth + MAX_AZI_LEN - correction_configuration_->startFrame[field]) % MAX_AZI_LEN +
-        (correction_configuration_->endFrame[field] + MAX_AZI_LEN - Azimuth) % MAX_AZI_LEN) !=
-       (correction_configuration_->endFrame[field] + MAX_AZI_LEN -
-        correction_configuration_->startFrame[field]) %
-       MAX_AZI_LEN)) {
+    while (count < correction_configuration_->frameNumber &&
+           (((Azimuth + MAX_AZI_LEN - correction_configuration_->startFrame[field]) % MAX_AZI_LEN +
+             (correction_configuration_->endFrame[field] + MAX_AZI_LEN - Azimuth) % MAX_AZI_LEN) !=
+            (correction_configuration_->endFrame[field] + MAX_AZI_LEN -
+             correction_configuration_->startFrame[field]) %
+              MAX_AZI_LEN)) {
       field = (field + 1) % correction_configuration_->frameNumber;
       count++;
     }
@@ -316,8 +314,8 @@ bool PandarATDecoder::parsePacket(const pandar_msgs::msg::PandarPacket & pandar_
     packet_.unix_second = ((utc_time_big >> 24) & 0xff) | ((utc_time_big >> 8) & 0xff00) |
                           ((utc_time_big << 8) & 0xff0000) | ((utc_time_big << 24));
   }
-//  index += UTC_SIZE;
-//  index += SEQUENCE_SIZE;
+  //  index += UTC_SIZE;
+  //  index += SEQUENCE_SIZE;
 
   return true;
 }
