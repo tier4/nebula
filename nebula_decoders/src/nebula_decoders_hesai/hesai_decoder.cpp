@@ -81,8 +81,9 @@ std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ConvertScanToPoint
       }
     }
 #ifdef WITH_DEBUG_STDCOUT_HESAI_CLIENT
-    //for checking
-    std::cout << "last_azimuth in this pandar_scan: " << last_azimuth << ", has_scaned: " << cnt << std::endl;
+    // for checking
+    std::cout << "last_azimuth in this pandar_scan: " << last_azimuth << ", has_scaned: " << cnt
+              << std::endl;
 #endif
   }
   return pointcloud;

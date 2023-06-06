@@ -99,7 +99,7 @@ int PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet
       count++;
     }
     if (last_field_ != field) {
-      if (max_azimuth_ < azimuth){
+      if (max_azimuth_ < azimuth) {
         max_azimuth_ = azimuth;
       }
       *overflow_pc_ += *block_pc;
