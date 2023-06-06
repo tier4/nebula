@@ -35,14 +35,14 @@ PandarATDecoder::PandarATDecoder(
   m_sin_elevation_map_.resize(MAX_AZI_LEN);
   m_cos_elevation_map_.resize(MAX_AZI_LEN);
   for (size_t i = 0; i < MAX_AZI_LEN; ++i) {
-    m_sin_elevation_map_[i] = sinf(2 * i * M_PI / MAX_AZI_LEN);
-    m_cos_elevation_map_[i] = cosf(2 * i * M_PI / MAX_AZI_LEN);
+    m_sin_elevation_map_[i] = sinf(2.f * i * M_PI / MAX_AZI_LEN);
+    m_cos_elevation_map_[i] = cosf(2.f * i * M_PI / MAX_AZI_LEN);
   }
   m_sin_azimuth_map_.resize(MAX_AZI_LEN);
   m_cos_azimuth_map_.resize(MAX_AZI_LEN);
   for (size_t i = 0; i < MAX_AZI_LEN; ++i) {
-    m_sin_azimuth_map_[i] = sinf(2 * i * M_PI / MAX_AZI_LEN);
-    m_cos_azimuth_map_[i] = cosf(2 * i * M_PI / MAX_AZI_LEN);
+    m_sin_azimuth_map_[i] = sinf(2.f * i * M_PI / MAX_AZI_LEN);
+    m_cos_azimuth_map_[i] = cosf(2.f * i * M_PI / MAX_AZI_LEN);
   }
 
   scan_phase_ = static_cast<uint16_t>(0 * 100.0f);
