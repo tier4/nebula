@@ -162,7 +162,7 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
               const float azimuth_corrected_f =
                 azimuth +
                 (azimuth_diff * ((dsr * VLP16_DSR_TOFFSET) + (firing * VLP16_FIRING_TOFFSET)) /
-                 VLP16_BLOCK_TDURATION);
+                 VLP16_BLOCK_DURATION);
               const uint16_t azimuth_corrected =
                 (static_cast<uint16_t>(round(azimuth_corrected_f))) % 36000;
 

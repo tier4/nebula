@@ -72,18 +72,18 @@ private:
 
 #if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)
   /// @brief Constructing a point cloud of the target part
-  /// @param blockid Target block
+  /// @param block_id Target block
   /// @param chLaserNumber Target laser
   /// @param cld Point cloud
   void CalcXTPointXYZIT(
-    int blockid, char chLaserNumber, boost::shared_ptr<pcl::PointCloud<NebulaPoint>> cld);
+    int block_id, char chLaserNumber, boost::shared_ptr<pcl::PointCloud<NebulaPoint>> cld);
 #else
   /// @brief Constructing a point cloud of the target part
-  /// @param blockid Target block
+  /// @param block_id Target block
   /// @param chLaserNumber Target laser
   /// @param cld Point cloud
   void CalcXTPointXYZIT(
-    int blockid, char chLaserNumber, std::shared_ptr<pcl::PointCloud<NebulaPoint>> cld);
+    int block_id, char chLaserNumber, std::shared_ptr<pcl::PointCloud<NebulaPoint>> cld);
 #endif
 
   /// @brief Convert to point cloud

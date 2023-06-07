@@ -116,15 +116,15 @@ int PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet
 
 #if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)
 void PandarATDecoder::CalcXTPointXYZIT(
-  int blockid, int chLaserNumber, boost::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
+  int block_id, int chLaserNumber, boost::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
 {
 #else
 void PandarATDecoder::CalcXTPointXYZIT(
-  int blockid, int chLaserNumber, std::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
+  int block_id, int chLaserNumber, std::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
 {
 #endif
-  Block * block = &packet_.blocks[blockid];
-  Block * another_block = &packet_.blocks[(blockid + 1) % 2];
+  Block * block = &packet_.blocks[block_id];
+  Block * another_block = &packet_.blocks[(block_id + 1) % 2];
 
   for (int i = 0; i < chLaserNumber; ++i) {
     /* for all the units in a block */
@@ -142,7 +142,7 @@ void PandarATDecoder::CalcXTPointXYZIT(
 
     bool identical_flg = false;
     if (point.intensity == another_intensity && unit.distance == another_unit.distance) {
-      if (0 < blockid) {
+      if (0 < block_id) {
         continue;
       }
       identical_flg = true;
@@ -196,7 +196,7 @@ void PandarATDecoder::CalcXTPointXYZIT(
           point.return_type = static_cast<uint8_t>(
             nebula::drivers::ReturnType::IDENTICAL);  // not present in the manual, but it always
                                                       // seems to be this pattern
-        } else if (blockid == 0) {
+        } else if (block_id == 0) {
           if (point.intensity < another_intensity) {
             point.return_type =
               static_cast<uint8_t>(nebula::drivers::ReturnType::LAST_WEAK);  // Last return

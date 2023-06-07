@@ -56,7 +56,7 @@ static const uint16_t RETURN_MODE_DUAL = 57;
 /** Special Defines for VLP16 support **/
 static const int VLP16_FIRINGS_PER_BLOCK = 2;
 static const int VLP16_SCANS_PER_FIRING = 16;
-static const float VLP16_BLOCK_TDURATION = 110.592f;  // [µs]
+static const float VLP16_BLOCK_DURATION = 110.592f;  // [µs]
 static const float VLP16_DSR_TOFFSET = 2.304f;        // [µs]
 static const float VLP16_FIRING_TOFFSET = 55.296f;    // [µs]
 
@@ -70,9 +70,9 @@ static const uint16_t VLS128_BANK_2 = 0xddff;
 static const uint16_t VLS128_BANK_3 = 0xccff;
 static const uint16_t VLS128_BANK_4 = 0xbbff;
 
-static const float VLS128_CHANNEL_TDURATION =
+static const float VLS128_CHANNEL_DURATION =
   2.665f;  // [µs] Channels corresponds to one laser firing
-static const float VLS128_SEQ_TDURATION =
+static const float VLS128_SEQ_DURATION =
   53.3f;  // [µs] Sequence is a set of laser firings including recharging
 
 /** \brief Raw Velodyne data block.

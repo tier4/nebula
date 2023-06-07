@@ -213,7 +213,7 @@ drivers::NebulaPointCloudPtr PandarQT64Decoder::convert_dual(size_t block_id)
 
 bool PandarQT64Decoder::parsePacket(const pandar_msgs::msg::PandarPacket & pandar_packet)
 {
-  if (pandar_packet.size != PACKET_SIZE && pandar_packet.size != PACKET_WITHOUT_UDPSEQ_SIZE) {
+  if (pandar_packet.size != PACKET_SIZE && pandar_packet.size != PACKET_WITHOUT_UDP_SEQ_SIZE) {
     return false;
   }
   const uint8_t * buf = &pandar_packet.data[0];

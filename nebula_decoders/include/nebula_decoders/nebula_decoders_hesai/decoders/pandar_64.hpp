@@ -32,12 +32,12 @@ constexpr size_t RETURN_SIZE = 1;  // echo
 constexpr size_t FACTORY_SIZE = 1;
 constexpr size_t UTC_SIZE = 6;
 constexpr size_t PACKET_TAIL_SIZE = 26;
-constexpr size_t PACKET_TAIL_WITHOUT_UDPSEQ_SIZE = 22;
+constexpr size_t PACKET_TAIL_WITHOUT_UDP_SEQ_SIZE = 22;
 
 // All
 constexpr size_t PACKET_SIZE = HEAD_SIZE + BODY_SIZE + PACKET_TAIL_SIZE;
-constexpr size_t PACKET_WITHOUT_UDPSEQ_SIZE =
-  HEAD_SIZE + BODY_SIZE + PACKET_TAIL_WITHOUT_UDPSEQ_SIZE;
+constexpr size_t PACKET_WITHOUT_UDP_SEQ_SIZE =
+  HEAD_SIZE + BODY_SIZE + PACKET_TAIL_WITHOUT_UDP_SEQ_SIZE;
 
 constexpr uint32_t STRONGEST_RETURN = 0x37;
 constexpr uint32_t LAST_RETURN = 0x38;

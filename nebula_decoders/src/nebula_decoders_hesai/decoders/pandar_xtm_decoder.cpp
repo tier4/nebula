@@ -115,14 +115,14 @@ int_least32_t PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pa
 
 #if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)
 void PandarXTMDecoder::CalcXTPointXYZIT(
-  int blockid, char chLaserNumber, boost::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
+  int block_id, char chLaserNumber, boost::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
 {
 #else
 void PandarXTMDecoder::CalcXTPointXYZIT(
-  int blockid, char chLaserNumber, std::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
+  int block_id, char chLaserNumber, std::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
 {
 #endif
-  Block * block = &packet_.blocks[blockid];
+  Block * block = &packet_.blocks[block_id];
   auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
   for (int i = 0; i < chLaserNumber; ++i) {
     /* for all the units in a block */
@@ -155,14 +155,14 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
 
     if (packet_.return_mode == TRIPLE_RETURN) {
       offset =
-        (static_cast<double>(blockXTMOffsetTriple[blockid] + laserXTMOffset[i]) / 1000000.0f);
+        (static_cast<double>(blockXTMOffsetTriple[block_id] + laserXTMOffset[i]) / 1000000.0f);
     } else if (
       packet_.return_mode == DUAL_RETURN || packet_.return_mode == DUAL_RETURN_B ||
       packet_.return_mode == DUAL_RETURN_C) {
-      offset = (static_cast<double>(blockXTMOffsetDual[blockid] + laserXTMOffset[i]) / 1000000.0f);
+      offset = (static_cast<double>(blockXTMOffsetDual[block_id] + laserXTMOffset[i]) / 1000000.0f);
     } else {
       offset =
-        (static_cast<double>(blockXTMOffsetSingle[blockid] + laserXTMOffset[i]) / 1000000.0f);
+        (static_cast<double>(blockXTMOffsetSingle[block_id] + laserXTMOffset[i]) / 1000000.0f);
     }
 
     //    point.return_type = packet_.return_mode;

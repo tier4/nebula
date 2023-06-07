@@ -32,7 +32,7 @@ Vls128Decoder::Vls128Decoder(
 
   for (uint8_t i = 0; i < 16; i++) {
     vls_128_laser_azimuth_cache_[i] =
-      (VLS128_CHANNEL_TDURATION / VLS128_SEQ_TDURATION) * (i + i / 8);
+      (VLS128_CHANNEL_DURATION / VLS128_SEQ_DURATION) * (i + i / 8);
   }
 }
 
