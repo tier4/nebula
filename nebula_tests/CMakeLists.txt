@@ -57,3 +57,5 @@ if(BUILD_TESTING)
     add_subdirectory(velodyne)
 
 endif()
+
+ament_auto_package()

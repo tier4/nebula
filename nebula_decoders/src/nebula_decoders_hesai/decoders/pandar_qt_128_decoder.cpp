@@ -74,10 +74,10 @@ std::tuple<drivers::NebulaPointCloudPtr, double> PandarQT128Decoder::get_pointcl
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
-void PandarQT128Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
+int PandarQT128Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
 {
   if (!parsePacket(pandar_packet)) {
-    return;
+    return -1;
   }
 
   if (has_scanned_) {
@@ -132,6 +132,7 @@ void PandarQT128Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_pa
     has_scanned_ = true;
   }
   last_phase_ = current_phase;
+  return last_phase_;
 }
 
 drivers::NebulaPoint PandarQT128Decoder::build_point(
@@ -243,7 +244,7 @@ bool PandarQT128Decoder::is_dual_return()
 
 bool PandarQT128Decoder::parsePacket(const pandar_msgs::msg::PandarPacket & pandar_packet)
 {
-  if (pandar_packet.size != PACKET_SIZE && pandar_packet.size != PACKET_WITHOUT_UDPSEQ_CRC_SIZE) {
+  if (pandar_packet.size != PACKET_SIZE && pandar_packet.size != PACKET_WITHOUT_UDP_SEQ_CRC_SIZE) {
     return false;
   }
   const uint8_t * buf = &pandar_packet.data[0];

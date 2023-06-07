@@ -13,7 +13,7 @@ namespace drivers
 {
 namespace vls128
 {
-/// @brief Velodyne LiDAR decorder (VLS128)
+/// @brief Velodyne LiDAR decoder (VLS128)
 class Vls128Decoder : public VelodyneScanDecoder
 {
 public:

@@ -20,7 +20,7 @@ namespace nebula
 {
 namespace ros
 {
-/// @brief Testing decorder of VLP16 (Keeps VelodyneDriverRosWrapper structure as much as possible)
+/// @brief Testing decoder of VLP16 (Keeps VelodyneDriverRosWrapper structure as much as possible)
 class VelodyneRosDecoderTest final : public rclcpp::Node,
                                      NebulaDriverRosWrapperBase  //, testing::Test
 {

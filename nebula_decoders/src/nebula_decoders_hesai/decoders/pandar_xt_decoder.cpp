@@ -55,10 +55,10 @@ std::tuple<drivers::NebulaPointCloudPtr, double> PandarXTDecoder::get_pointcloud
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
-void PandarXTDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
+int PandarXTDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
 {
   if (!parsePacket(pandar_packet)) {
-    return;
+    return -1;
   }
 
   if (has_scanned_) {
@@ -85,6 +85,7 @@ void PandarXTDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packe
     }
     last_phase_ = current_phase;
   }
+  return last_phase_;
 }
 
 drivers::NebulaPoint PandarXTDecoder::build_point(int block_id, int unit_id, uint8_t return_type)

@@ -31,8 +31,7 @@ Vls128Decoder::Vls128Decoder(
   phase_ = (uint16_t)round(sensor_configuration_->scan_phase * 100);
 
   for (uint8_t i = 0; i < 16; i++) {
-    vls_128_laser_azimuth_cache_[i] =
-      (VLS128_CHANNEL_TDURATION / VLS128_SEQ_TDURATION) * (i + i / 8);
+    vls_128_laser_azimuth_cache_[i] = (VLS128_CHANNEL_DURATION / VLS128_SEQ_DURATION) * (i + i / 8);
   }
 }
 
@@ -123,7 +122,7 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
       // Get the next block rotation to calculate how far we rotate between blocks
       azimuth_next = raw->blocks[block + (1 + dual_return)].rotation;
 
-      // Finds the difference between two sucessive blocks
+      // Finds the difference between two successive blocks
       azimuth_diff = static_cast<float>((36000 + azimuth_next - azimuth) % 36000);
 
       // This is used when the last block is next to predict rotation amount

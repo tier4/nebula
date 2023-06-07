@@ -33,7 +33,7 @@ constexpr size_t BODY_SIZE = BLOCK_SIZE * BLOCKS_PER_PACKET + CRC_SIZE;
 constexpr size_t RESERVED1_SIZE = 6;
 constexpr size_t HIGH_TEMP_SHUTDOWN_FLAG_SIZE = 1;
 constexpr size_t RESERVED2_SIZE = 11;
-constexpr size_t MOTER_SPEED_SIZE = 2;
+constexpr size_t MOTOR_SPEED_SIZE = 2;
 constexpr size_t TIMESTAMP_SIZE = 4;
 constexpr size_t RETURN_SIZE = 1;
 constexpr size_t FACTORY_SIZE = 1;
@@ -90,7 +90,7 @@ struct Packet
   uint32_t usec;  // ms
   uint32_t return_mode;
   uint32_t shutdown_flg;
-  uint32_t moter_speed;
+  uint32_t motor_speed;
   tm t;
   double unix_second;
 };

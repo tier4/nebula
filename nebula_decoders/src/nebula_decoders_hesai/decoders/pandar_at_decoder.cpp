@@ -32,25 +32,28 @@ PandarATDecoder::PandarATDecoder(
     azimuth_offset_[laser] = calibration_configuration->azimuth_offset_map[laser];
   }
 
+  m_elevation_rad_map_.resize(MAX_AZI_LEN);
   m_sin_elevation_map_.resize(MAX_AZI_LEN);
   m_cos_elevation_map_.resize(MAX_AZI_LEN);
-  for (size_t i = 0; i < MAX_AZI_LEN; ++i) {
-    m_sin_elevation_map_[i] = sinf(2 * i * M_PI / MAX_AZI_LEN);
-    m_cos_elevation_map_[i] = cosf(2 * i * M_PI / MAX_AZI_LEN);
-  }
+  m_azimuth_rad_map_.resize(MAX_AZI_LEN);
   m_sin_azimuth_map_.resize(MAX_AZI_LEN);
   m_cos_azimuth_map_.resize(MAX_AZI_LEN);
   for (size_t i = 0; i < MAX_AZI_LEN; ++i) {
-    m_sin_azimuth_map_[i] = sinf(2 * i * M_PI / MAX_AZI_LEN);
-    m_cos_azimuth_map_[i] = cosf(2 * i * M_PI / MAX_AZI_LEN);
+    m_elevation_rad_map_[i] = 2.f * i * M_PI / MAX_AZI_LEN;
+    m_sin_elevation_map_[i] = sinf(m_elevation_rad_map_[i]);
+    m_cos_elevation_map_[i] = cosf(m_elevation_rad_map_[i]);
+    m_azimuth_rad_map_[i] = 2.f * i * M_PI / MAX_AZI_LEN;
+    m_sin_azimuth_map_[i] = sinf(m_azimuth_rad_map_[i]);
+    m_cos_azimuth_map_[i] = cosf(m_azimuth_rad_map_[i]);
   }
 
-  scan_phase_ = static_cast<uint16_t>(0 * 100.0f);
   dual_return_distance_threshold_ = sensor_configuration_->dual_return_distance_threshold;
 
   last_phase_ = 0;
   has_scanned_ = false;
   scan_timestamp_ = -1;
+  last_azimuth_ = -1;
+  max_azimuth_ = -1;
   last_field_ = -1;
 
   scan_pc_.reset(new NebulaPointCloud);
@@ -64,59 +67,64 @@ std::tuple<drivers::NebulaPointCloudPtr, double> PandarATDecoder::get_pointcloud
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
-void PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
+int PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
 {
   if (!parsePacket(pandar_packet)) {
     std::cout << "!parsePacket(pandar_packet)" << std::endl;
-    return;
+    return -1;
   }
 
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
-    auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
-    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+
+    scan_timestamp_ = packet_.unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     overflow_pc_.reset(new NebulaPointCloud);
     has_scanned_ = false;
   }
 
   for (int block_id = 0; block_id < packet_.header.chBlockNumber; ++block_id) {
-    int Azimuth = static_cast<int>(
+    int azimuth = static_cast<int>(
       packet_.blocks[block_id].azimuth * LIDAR_AZIMUTH_UNIT +
       packet_.blocks[block_id].fine_azimuth);
 
     auto block_pc = convert(block_id);
+    //*
     int count = 0, field = 0;
     while (count < correction_configuration_->frameNumber &&
-           (((Azimuth + MAX_AZI_LEN - correction_configuration_->startFrame[field]) % MAX_AZI_LEN +
-             (correction_configuration_->endFrame[field] + MAX_AZI_LEN - Azimuth) % MAX_AZI_LEN) !=
+           (((azimuth + MAX_AZI_LEN - correction_configuration_->startFrame[field]) % MAX_AZI_LEN +
+             (correction_configuration_->endFrame[field] + MAX_AZI_LEN - azimuth) % MAX_AZI_LEN) !=
             (correction_configuration_->endFrame[field] + MAX_AZI_LEN -
              correction_configuration_->startFrame[field]) %
               MAX_AZI_LEN)) {
       field = (field + 1) % correction_configuration_->frameNumber;
       count++;
     }
-    if (0 == last_field_ && last_field_ != field) {
+    if (last_field_ != field) {
+      if (max_azimuth_ < azimuth) {
+        max_azimuth_ = azimuth;
+      }
       *overflow_pc_ += *block_pc;
       has_scanned_ = true;
     } else {
       *scan_pc_ += *block_pc;
     }
-    last_azimuth_ = Azimuth;
+    last_azimuth_ = azimuth;
     last_field_ = field;
   }
+  return last_azimuth_;
 }
 
 #if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)
 void PandarATDecoder::CalcXTPointXYZIT(
-  int blockid, int chLaserNumber, boost::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
+  int block_id, int chLaserNumber, boost::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
 {
 #else
 void PandarATDecoder::CalcXTPointXYZIT(
-  int blockid, int chLaserNumber, std::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
+  int block_id, int chLaserNumber, std::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
 {
 #endif
-  Block * block = &packet_.blocks[blockid];
-  Block * another_block = &packet_.blocks[(blockid + 1) % 2];
+  Block * block = &packet_.blocks[block_id];
+  Block * another_block = &packet_.blocks[(block_id + 1) % 2];
 
   for (int i = 0; i < chLaserNumber; ++i) {
     /* for all the units in a block */
@@ -134,72 +142,45 @@ void PandarATDecoder::CalcXTPointXYZIT(
 
     bool identical_flg = false;
     if (point.intensity == another_intensity && unit.distance == another_unit.distance) {
-      if (0 < blockid) {
+      if (0 < block_id) {
         continue;
       }
       identical_flg = true;
     }
 
-    if (use_dat) {
-      int Azimuth = static_cast<int>(block->azimuth * LIDAR_AZIMUTH_UNIT + block->fine_azimuth);
-      int count = 0, field = 0;
-      while (
-        count < correction_configuration_->frameNumber &&
-        (((Azimuth + MAX_AZI_LEN - correction_configuration_->startFrame[field]) % MAX_AZI_LEN +
-          (correction_configuration_->endFrame[field] + MAX_AZI_LEN - Azimuth) % MAX_AZI_LEN) !=
-         (correction_configuration_->endFrame[field] + MAX_AZI_LEN -
-          correction_configuration_->startFrame[field]) %
-           MAX_AZI_LEN)) {
-        field = (field + 1) % correction_configuration_->frameNumber;
-        count++;
-      }
-      auto elevation =
-        correction_configuration_->elevation[i] +
-        correction_configuration_->getElevationAdjustV3(i, Azimuth) * LIDAR_AZIMUTH_UNIT;
-      elevation = (MAX_AZI_LEN + elevation) % MAX_AZI_LEN;
-      auto azimuth = (Azimuth + MAX_AZI_LEN - correction_configuration_->startFrame[field]) * 2 -
-                     correction_configuration_->azimuth[i] +
-                     correction_configuration_->getAzimuthAdjustV3(i, Azimuth) * LIDAR_AZIMUTH_UNIT;
-      azimuth = (MAX_AZI_LEN + azimuth) % MAX_AZI_LEN;
-      point.azimuth = deg2rad(azimuth / 3600.f);
-      point.distance = unit.distance;
-      point.elevation = elevation;
-      {
-        float xyDistance = unit.distance * m_cos_elevation_map_[elevation];
-        point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
-        point.y = static_cast<float>(xyDistance * m_cos_azimuth_map_[azimuth]);
-        point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[elevation]);
-      }
-    } else {
-      int Azimuth = static_cast<int>(block->azimuth * LIDAR_AZIMUTH_UNIT + block->fine_azimuth);
-
-      auto elevation = static_cast<int>(elev_angle_[i] * 100 * LIDAR_AZIMUTH_UNIT);
-      elevation = (MAX_AZI_LEN + elevation) % MAX_AZI_LEN;
-      auto azimuth = static_cast<int>(
-        Azimuth + MAX_AZI_LEN - (azimuth_offset_[i] * 100 * LIDAR_AZIMUTH_UNIT) / 2);
-      azimuth = (MAX_AZI_LEN + azimuth) % MAX_AZI_LEN;
-      point.azimuth = azimuth / 3600.f;
-      point.distance = unit.distance;
-      point.elevation = elevation;
-
-      {
-        float xyDistance = unit.distance * m_cos_elevation_map_[elevation];
-        point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
-        point.y = static_cast<float>(xyDistance * m_cos_azimuth_map_[azimuth]);
-        point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[elevation]);
-      }
+    int Azimuth = static_cast<int>(block->azimuth * LIDAR_AZIMUTH_UNIT + block->fine_azimuth);
+    int count = 0, field = 0;
+    while (count < correction_configuration_->frameNumber &&
+           (((Azimuth + MAX_AZI_LEN - correction_configuration_->startFrame[field]) % MAX_AZI_LEN +
+             (correction_configuration_->endFrame[field] + MAX_AZI_LEN - Azimuth) % MAX_AZI_LEN) !=
+            (correction_configuration_->endFrame[field] + MAX_AZI_LEN -
+             correction_configuration_->startFrame[field]) %
+              MAX_AZI_LEN)) {
+      field = (field + 1) % correction_configuration_->frameNumber;
+      count++;
     }
-    auto unix_second = static_cast<double>(timegm(&packet_.t));
+    auto elevation =
+      correction_configuration_->elevation[i] +
+      correction_configuration_->getElevationAdjustV3(i, Azimuth) * LIDAR_AZIMUTH_UNIT;
+    elevation = (MAX_AZI_LEN + elevation) % MAX_AZI_LEN;
+    auto azimuth = (Azimuth + MAX_AZI_LEN - correction_configuration_->startFrame[field]) * 2 -
+                   correction_configuration_->azimuth[i] +
+                   correction_configuration_->getAzimuthAdjustV3(i, Azimuth) * LIDAR_AZIMUTH_UNIT;
+    azimuth = (MAX_AZI_LEN + azimuth) % MAX_AZI_LEN;
+    point.azimuth = 2.f * azimuth * M_PI / MAX_AZI_LEN;
+    point.distance = unit.distance;
+    point.elevation = 2.f * elevation * M_PI / MAX_AZI_LEN;
+    {
+      float xyDistance = unit.distance * m_cos_elevation_map_[elevation];
+      point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
+      point.y = static_cast<float>(xyDistance * m_cos_azimuth_map_[azimuth]);
+      point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[elevation]);
+    }
     if (scan_timestamp_ < 0) {  // invalid timestamp
-      scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+      scan_timestamp_ = packet_.unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     }
-    auto point_stamp =
-      (unix_second + static_cast<double>(packet_.usec) / 1000000.f - scan_timestamp_);
-    if (point_stamp < 0) {
-      point.time_stamp = 0;
-    } else {
-      point.time_stamp = static_cast<uint32_t>(point_stamp * 10e9);
-    }
+
+    point.time_stamp = channel_firing_ns[i];
 
     switch (packet_.return_mode) {
       case STRONGEST_RETURN:
@@ -215,7 +196,7 @@ void PandarATDecoder::CalcXTPointXYZIT(
           point.return_type = static_cast<uint8_t>(
             nebula::drivers::ReturnType::IDENTICAL);  // not present in the manual, but it always
                                                       // seems to be this pattern
-        } else if (blockid == 0) {
+        } else if (block_id == 0) {
           if (point.intensity < another_intensity) {
             point.return_type =
               static_cast<uint8_t>(nebula::drivers::ReturnType::LAST_WEAK);  // Last return
@@ -302,9 +283,9 @@ bool PandarATDecoder::parsePacket(const pandar_msgs::msg::PandarPacket & pandar_
   packet_.shutdown_flg = buf[index] & 0xff;
   index += HIGH_TEMP_SHUTDOWN_FLAG_SIZE;
   index += RESERVED2_SIZE;  // skip reserved bytes
-  packet_.moter_speed = (buf[index] & 0xff) | ((buf[index + 1] & 0xff) << 8);
+  packet_.motor_speed = (buf[index] & 0xff) | ((buf[index + 1] & 0xff) << 8);
 
-  index += MOTER_SPEED_SIZE;
+  index += MOTOR_SPEED_SIZE;
 
   packet_.usec = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8 |
                  ((buf[index + 2] & 0xff) << 16) | ((buf[index + 3] & 0xff) << 24);
@@ -333,8 +314,8 @@ bool PandarATDecoder::parsePacket(const pandar_msgs::msg::PandarPacket & pandar_
     packet_.unix_second = ((utc_time_big >> 24) & 0xff) | ((utc_time_big >> 8) & 0xff00) |
                           ((utc_time_big << 8) & 0xff0000) | ((utc_time_big << 24));
   }
-  index += UTC_SIZE;
-  index += SEQUENCE_SIZE;
+  //  index += UTC_SIZE;
+  //  index += SEQUENCE_SIZE;
 
   return true;
 }

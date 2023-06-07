@@ -94,10 +94,10 @@ bool Pandar128E4XDecoder::is_dual_return()
   return false;
 }
 
-void Pandar128E4XDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
+int Pandar128E4XDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
 {
   if (!parsePacket(pandar_packet)) {
-    return;
+    return -1;
   }
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
@@ -119,6 +119,7 @@ void Pandar128E4XDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_p
     has_scanned_ = true;
   }
   last_phase_ = current_phase;
+  return last_phase_;
 }
 
 drivers::NebulaPoint Pandar128E4XDecoder::build_point(

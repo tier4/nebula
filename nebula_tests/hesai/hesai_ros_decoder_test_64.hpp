@@ -20,7 +20,7 @@ namespace nebula
 {
 namespace ros
 {
-/// @brief Testing decorder of pandar 64 (Keeps HesaiDriverRosWrapper structure as much as possible)
+/// @brief Testing decoder of pandar 64 (Keeps HesaiDriverRosWrapper structure as much as possible)
 class HesaiRosDecoderTest final : public rclcpp::Node, NebulaDriverRosWrapperBase  //, testing::Test
 {
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;

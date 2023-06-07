@@ -104,7 +104,7 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
       // Get the next block rotation to calculate how far we rotate between blocks.
       azimuth_next = raw->blocks[block + (1 + dual_return)].rotation;
 
-      // Finds the difference between two sucessive blocks.
+      // Finds the difference between two successive blocks.
       azimuth_diff = static_cast<float>((36000 + azimuth_next - azimuth) % 36000);
 
       // This is used when the last block is next to predict rotation amount
@@ -162,7 +162,7 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
               const float azimuth_corrected_f =
                 azimuth +
                 (azimuth_diff * ((dsr * VLP16_DSR_TOFFSET) + (firing * VLP16_FIRING_TOFFSET)) /
-                 VLP16_BLOCK_TDURATION);
+                 VLP16_BLOCK_DURATION);
               const uint16_t azimuth_corrected =
                 (static_cast<uint16_t>(round(azimuth_corrected_f))) % 36000;
 

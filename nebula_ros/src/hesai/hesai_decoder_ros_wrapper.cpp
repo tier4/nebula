@@ -245,7 +245,7 @@ Status HesaiDriverRosWrapper::GetParameters(
           "Load calibration data from: '" << calibration_configuration.calibration_file << "'");
       }
     }
-  } else {  // sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128
+  } else {
     if (correction_file_path.empty()) {
       RCLCPP_ERROR_STREAM(
         this->get_logger(), "Empty Correction File: '" << correction_file_path << "'");

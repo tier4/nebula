@@ -14,7 +14,7 @@ namespace drivers
 {
 namespace pandar_40
 {
-/// @brief Hesai LiDAR decorder (Pandar40)
+/// @brief Hesai LiDAR decoder (Pandar40)
 class Pandar40Decoder : public HesaiScanDecoder
 {
 public:
@@ -26,7 +26,7 @@ public:
     const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
   /// @brief Parsing and shaping PandarPacket
   /// @param pandar_packet
-  void unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override;
+  int unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override;
   /// @brief Get the flag indicating whether one cycle is ready
   /// @return Readied
   bool hasScanned() override;

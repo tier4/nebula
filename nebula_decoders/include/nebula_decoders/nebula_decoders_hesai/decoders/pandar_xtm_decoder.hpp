@@ -44,7 +44,7 @@ const float laserXTMOffset[] = {
 
 const uint16_t MAX_AZIMUTH_DEGREE_NUM = 36000;
 
-/// @brief Hesai LiDAR decorder (XT32M)
+/// @brief Hesai LiDAR decoder (XT32M)
 class PandarXTMDecoder : public HesaiScanDecoder
 {
 public:
@@ -56,7 +56,7 @@ public:
     const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration);
   /// @brief Parsing and shaping PandarPacket
   /// @param pandar_packet
-  void unpack(const pandar_msgs::msg::PandarPacket & raw_packet) override;
+  int unpack(const pandar_msgs::msg::PandarPacket & raw_packet) override;
   /// @brief Get the flag indicating whether one cycle is ready
   /// @return Readied
   bool hasScanned() override;
@@ -72,18 +72,18 @@ private:
 
 #if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)
   /// @brief Constructing a point cloud of the target part
-  /// @param blockid Target block
+  /// @param block_id Target block
   /// @param chLaserNumber Target laser
   /// @param cld Point cloud
   void CalcXTPointXYZIT(
-    int blockid, char chLaserNumber, boost::shared_ptr<pcl::PointCloud<NebulaPoint>> cld);
+    int block_id, char chLaserNumber, boost::shared_ptr<pcl::PointCloud<NebulaPoint>> cld);
 #else
   /// @brief Constructing a point cloud of the target part
-  /// @param blockid Target block
+  /// @param block_id Target block
   /// @param chLaserNumber Target laser
   /// @param cld Point cloud
   void CalcXTPointXYZIT(
-    int blockid, char chLaserNumber, std::shared_ptr<pcl::PointCloud<NebulaPoint>> cld);
+    int block_id, char chLaserNumber, std::shared_ptr<pcl::PointCloud<NebulaPoint>> cld);
 #endif
 
   /// @brief Convert to point cloud
