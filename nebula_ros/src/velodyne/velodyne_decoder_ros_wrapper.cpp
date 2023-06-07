@@ -32,8 +32,8 @@ VelodyneDriverRosWrapper::VelodyneDriverRosWrapper(const rclcpp::NodeOptions & o
   velodyne_scan_sub_ = create_subscription<velodyne_msgs::msg::VelodyneScan>(
     "velodyne_packets", rclcpp::SensorDataQoS(),
     std::bind(&VelodyneDriverRosWrapper::ReceiveScanMsgCallback, this, std::placeholders::_1));
-  nebula_points_pub_ =
-    this->create_publisher<sensor_msgs::msg::PointCloud2>("velodyne_points", rclcpp::SensorDataQoS());
+  nebula_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+    "velodyne_points", rclcpp::SensorDataQoS());
   aw_points_base_pub_ =
     this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points", rclcpp::SensorDataQoS());
   aw_points_ex_pub_ =
@@ -50,29 +50,31 @@ void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
 
-  if (nebula_points_pub_->get_subscription_count() > 0 ||
-      nebula_points_pub_->get_intra_process_subscription_count() > 0)
-  {
+  if (
+    nebula_points_pub_->get_subscription_count() > 0 ||
+    nebula_points_pub_->get_intra_process_subscription_count() > 0) {
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
       rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
     PublishCloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
   }
-  if (aw_points_base_pub_->get_subscription_count() > 0 ||
-      aw_points_base_pub_->get_intra_process_subscription_count() > 0)
-  {
-    const auto autoware_cloud_xyzi = nebula::drivers::convertPointXYZIRCAEDTToPointXYZIR(pointcloud);
+  if (
+    aw_points_base_pub_->get_subscription_count() > 0 ||
+    aw_points_base_pub_->get_intra_process_subscription_count() > 0) {
+    const auto autoware_cloud_xyzi =
+      nebula::drivers::convertPointXYZIRCAEDTToPointXYZIR(pointcloud);
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_cloud_xyzi, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
       rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
     PublishCloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
   }
-  if (aw_points_ex_pub_->get_subscription_count() > 0 ||
-      aw_points_ex_pub_->get_intra_process_subscription_count() > 0)
-  {
-    const auto autoware_ex_cloud = nebula::drivers::convertPointXYZIRCAEDTToPointXYZIRADT(pointcloud);
+  if (
+    aw_points_ex_pub_->get_subscription_count() > 0 ||
+    aw_points_ex_pub_->get_intra_process_subscription_count() > 0) {
+    const auto autoware_ex_cloud =
+      nebula::drivers::convertPointXYZIRCAEDTToPointXYZIRADT(pointcloud);
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
@@ -81,8 +83,9 @@ void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
   }
 }
 
-void VelodyneDriverRosWrapper::PublishCloud(std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
-                                         const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr& publisher)
+void VelodyneDriverRosWrapper::PublishCloud(
+  std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
+  const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher)
 {
   if (pointcloud->header.stamp.sec < 0) {
     RCLCPP_WARN_STREAM(this->get_logger(), "Timestamp error, verify clock source.");

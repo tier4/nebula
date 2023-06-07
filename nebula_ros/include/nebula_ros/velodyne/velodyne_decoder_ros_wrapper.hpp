@@ -57,14 +57,14 @@ class VelodyneDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapp
       std::chrono::duration<double>(seconds));
   }
 
-    /***
-     * Publishes a sensor_msgs::msg::PointCloud2 to the specified publisher
-     * @param pointcloud unique pointer containing the point cloud to publish
-     * @param publisher
-     */
-    void
-    PublishCloud(std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
-                 const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr& publisher);
+  /***
+   * Publishes a sensor_msgs::msg::PointCloud2 to the specified publisher
+   * @param pointcloud unique pointer containing the point cloud to publish
+   * @param publisher
+   */
+  void PublishCloud(
+    std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
+    const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher);
 
 public:
   explicit VelodyneDriverRosWrapper(const rclcpp::NodeOptions & options);

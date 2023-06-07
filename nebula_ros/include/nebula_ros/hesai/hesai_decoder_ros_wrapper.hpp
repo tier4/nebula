@@ -78,9 +78,9 @@ class HesaiDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapperB
    * @param pointcloud unique pointer containing the point cloud to publish
    * @param publisher
    */
-  void
-  PublishCloud(std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
-               const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr& publisher);
+  void PublishCloud(
+    std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
+    const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher);
 
 public:
   explicit HesaiDriverRosWrapper(const rclcpp::NodeOptions & options);
