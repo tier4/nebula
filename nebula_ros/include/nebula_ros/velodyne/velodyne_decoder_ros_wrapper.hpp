@@ -25,7 +25,9 @@ class VelodyneDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapp
   std::shared_ptr<drivers::VelodyneDriver> driver_ptr_;
   Status wrapper_status_;
   rclcpp::Subscription<velodyne_msgs::msg::VelodyneScan>::SharedPtr velodyne_scan_sub_;
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr velodyne_points_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_;
 
   std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_cfg_ptr_;
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
@@ -54,6 +56,15 @@ class VelodyneDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapp
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::duration<double>(seconds));
   }
+
+  /***
+   * Publishes a sensor_msgs::msg::PointCloud2 to the specified publisher
+   * @param pointcloud unique pointer containing the point cloud to publish
+   * @param publisher
+   */
+  void PublishCloud(
+    std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
+    const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher);
 
 public:
   explicit VelodyneDriverRosWrapper(const rclcpp::NodeOptions & options);
