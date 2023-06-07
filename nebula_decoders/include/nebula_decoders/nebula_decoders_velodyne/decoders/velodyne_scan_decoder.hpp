@@ -57,8 +57,8 @@ static const uint16_t RETURN_MODE_DUAL = 57;
 static const int VLP16_FIRINGS_PER_BLOCK = 2;
 static const int VLP16_SCANS_PER_FIRING = 16;
 static const float VLP16_BLOCK_DURATION = 110.592f;  // [µs]
-static const float VLP16_DSR_TOFFSET = 2.304f;        // [µs]
-static const float VLP16_FIRING_TOFFSET = 55.296f;    // [µs]
+static const float VLP16_DSR_TOFFSET = 2.304f;       // [µs]
+static const float VLP16_FIRING_TOFFSET = 55.296f;   // [µs]
 
 /** Special Definitions for VLS128 support **/
 static const float VLP128_DISTANCE_RESOLUTION = 0.004f;  // [m]

@@ -31,8 +31,7 @@ Vls128Decoder::Vls128Decoder(
   phase_ = (uint16_t)round(sensor_configuration_->scan_phase * 100);
 
   for (uint8_t i = 0; i < 16; i++) {
-    vls_128_laser_azimuth_cache_[i] =
-      (VLS128_CHANNEL_DURATION / VLS128_SEQ_DURATION) * (i + i / 8);
+    vls_128_laser_azimuth_cache_[i] = (VLS128_CHANNEL_DURATION / VLS128_SEQ_DURATION) * (i + i / 8);
   }
 }
 
