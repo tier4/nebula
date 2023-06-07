@@ -26,7 +26,9 @@ class HesaiDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapperB
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
   Status wrapper_status_;
   rclcpp::Subscription<pandar_msgs::msg::PandarScan>::SharedPtr pandar_scan_sub_;
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pandar_points_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_;
 
   std::shared_ptr<drivers::HesaiCalibrationConfiguration> calibration_cfg_ptr_;
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
@@ -71,6 +73,15 @@ class HesaiDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapperB
       std::chrono::duration<double>(seconds));
   }
 
+  /***
+   * Publishes a sensor_msgs::msg::PointCloud2 to the specified publisher
+   * @param pointcloud unique pointer containing the point cloud to publish
+   * @param publisher
+   */
+  void
+  PublishCloud(std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
+               const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr& publisher);
+
 public:
   explicit HesaiDriverRosWrapper(const rclcpp::NodeOptions & options);
 
@@ -83,7 +94,7 @@ public:
   Status GetStatus();
 
 private:
-  /// @brief File path of Correction data (Only here because because it is required only for AT)
+  /// @brief File path of Correction data (Only required only for AT)
   std::string correction_file_path;
 };
 
