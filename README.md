@@ -52,20 +52,20 @@ You should ideally provide a config file for your specific sensor, but default o
 
 Supported models, where sensor_model is the ROS param to be used at launch:
 
-| Manufacturer | Model         | sensor_model | Configuration file | Test status     |
-|--------------| ------------- | ------------ | ------------------ | --------------- |
-| Hesai        | Pandar 64     | Pandar64     | Pandar64.yaml      | Complete        |
-| Hesai        | Pandar 40P    | Pandar40P    |                    | Complete        |
-| Hesai        | Pandar XT32   | PandarXT32   | PandarXT32.yaml    | Complete        |
-| Hesai        | Pandar XT32M  | PandarXT32M  | PandarXT32M.yaml   | Limited         |
-| Hesai        | Pandar QT64   | PandarQT64   |                    | Limited         |
-| Hesai        | Pandar QT128  | PandarQT128  | PandarQT128.yaml   | Limited         |
-| Hesai        | Pandar AT128  | PandarAT128  | PandarAT128.yaml   | Complete        |
-| Hesai        | Pandar 128E4X | Pandar128E4X |                    | Limited         |
-| Velodyne     | VLP-16        | VLP16        | VLP16.yaml         | Limited         |
-| Velodyne     | VLP-16-HiRes  | VLP16        |                    | Limited         |
-| Velodyne     | VLP-32        | VLP32        | VLP32.yaml         | Limited         |
-| Velodyne     | VLS-128       | VLS128       | VLS128.yaml        | Limited         |
+| Manufacturer | Model         | sensor_model | Configuration file | Test status |
+| ------------ | ------------- | ------------ | ------------------ | ----------- |
+| Hesai        | Pandar 64     | Pandar64     | Pandar64.yaml      | Complete    |
+| Hesai        | Pandar 40P    | Pandar40P    |                    | Complete    |
+| Hesai        | Pandar XT32   | PandarXT32   | PandarXT32.yaml    | Complete    |
+| Hesai        | Pandar XT32M  | PandarXT32M  | PandarXT32M.yaml   | Limited     |
+| Hesai        | Pandar QT64   | PandarQT64   |                    | Limited     |
+| Hesai        | Pandar QT128  | PandarQT128  | PandarQT128.yaml   | Limited     |
+| Hesai        | Pandar AT128  | PandarAT128  | PandarAT128.yaml   | Complete    |
+| Hesai        | Pandar 128E4X | Pandar128E4X |                    | Limited     |
+| Velodyne     | VLP-16        | VLP16        | VLP16.yaml         | Limited     |
+| Velodyne     | VLP-16-HiRes  | VLP16        |                    | Limited     |
+| Velodyne     | VLP-32        | VLP32        | VLP32.yaml         | Limited     |
+| Velodyne     | VLS-128       | VLS128       | VLS128.yaml        | Limited     |
 
 The test status indicates if all aspects of the sensor driver have been tested (including setting parameters over TCP and diagnostic data support).
 
@@ -73,7 +73,7 @@ The test status indicates if all aspects of the sensor driver have been tested (
 
 ### Common ROS parameters
 
-Parameters shared by all supported models: 
+Parameters shared by all supported models:
 
 | Parameter    | Type   | Default | Accepted Values            | Description      |
 | ------------ | ------ | ------- | -------------------------- | ---------------- |
@@ -84,7 +84,7 @@ Parameters shared by all supported models:
 
 ### Hesai specific parameters
 
-#### Supported return modes per model:
+#### Supported return modes per model
 
 | Sensor model | return_mode    | Mode   |
 | ------------ | -------------- | ------ |
@@ -124,10 +124,10 @@ Parameters shared by all supported models:
 | Pandar 64    | Strongest      | Single |
 | Pandar 64    | Dual           | Dual   |
 
-#### Hardware interface parameters:
+#### Hardware interface parameters
 
 | Parameter                      | Type   | Default         | Accepted Values   | Description                    |
-| ------------------------------ | ------ | --------------- | ------------------| ------------------------------ |
+| ------------------------------ | ------ | --------------- | ----------------- | ------------------------------ |
 | sensor_ip                      | string | 192.168.1.201   |                   | Sensor IP                      |
 | host_ip                        | string | 255.255.255.255 |                   | Host IP                        |
 | data_port                      | uint16 | 2368            |                   | Sensor port                    |
@@ -142,7 +142,7 @@ Parameters shared by all supported models:
 | diag_span                      | uint16 | 1000            | milliseconds, > 0 | Diagnostic span                |
 | setup_sensor                   | bool   | True            | True, False       | Configure sensor settings      |
 
-#### Driver parameters:
+#### Driver parameters
 
 | Parameter        | Type   | Default | Accepted Values | Description            |
 | ---------------- | ------ | ------- | --------------- | ---------------------- |
@@ -151,16 +151,16 @@ Parameters shared by all supported models:
 
 ### Velodyne specific parameters
 
-#### Supported return modes:
+#### Supported return modes
 
 | return_mode     | Mode               |
-| --------------- | ------------------ | 
+| --------------- | ------------------ |
 | SingleFirst     | Single (First)     |
 | SingleStrongest | Single (Strongest) |
 | SingleLast      | Single (Last)      |
 | Dual            | Dual               |
 
-#### Hardware interface parameters:
+#### Hardware interface parameters
 
 | Parameter       | Type   | Default         | Accepted Values   | Description     |
 | --------------- | ------ | --------------- | ----------------- | --------------- |
@@ -171,7 +171,7 @@ Parameters shared by all supported models:
 | frequency_ms    | uint16 | 100             | milliseconds, > 0 | Time per scan   |
 | packet_mtu_size | uint16 | 1500            |                   | Packet MTU size |
 
-#### Driver parameters:
+#### Driver parameters
 
 | Parameter        | Type   | Default | Accepted Values      | Description                             |
 | ---------------- | ------ | ------- | -------------------- | --------------------------------------- |
