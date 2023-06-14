@@ -16,7 +16,7 @@ Then compile with colcon, optionally enabling symlink:
 
 `colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release`
 
-## How to run Tests
+## How to run tests
 
 Run tests:
 
@@ -30,7 +30,7 @@ Show results:
 colcon test-result --all
 ```
 
-## Generic Launch File
+## Generic launch file
 
 You can easily run the sensor hardware interface, the sensor hardware monitor and sensor driver using (e.g. Pandar64):
 
@@ -48,24 +48,45 @@ You should ideally provide a config file for your specific sensor, but default o
 
 `ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 config_file:=your_sensor.yaml`
 
-## Hesai LiDARs
+## Supported sensors
 
 Supported models, where sensor_model is the ROS param to be used at launch:
 
-| Model         | sensor_model |
-| ------------- | ------------ |
-| Pandar 64     | Pandar64     |
-| Pandar 40P    | Pandar40P    |
-| Pandar XT32   | PandarXT32   |
-| Pandar XT32M  | PandarXT32M  |
-| Pandar QT64   | PandarQT64   |
-| Pandar QT128  | PandarQT128  |
-| Pandar AT128  | PandarAT128  |
-| Pandar 128E4X | Pandar128E4X |
+| Manufacturer | Model         | sensor_model | Configuration file | Test status     |
+|--------------| ------------- | ------------ | ------------------ | --------------- |
+| Hesai        | Pandar 64     | Pandar64     | Pandar64.yaml      | Complete        |
+| Hesai        | Pandar 40P    | Pandar40P    |                    | Complete        |
+| Hesai        | Pandar XT32   | PandarXT32   | PandarXT32.yaml    | Complete        |
+| Hesai        | Pandar XT32M  | PandarXT32M  | PandarXT32M.yaml   | Limited         |
+| Hesai        | Pandar QT64   | PandarQT64   |                    | Limited         |
+| Hesai        | Pandar QT128  | PandarQT128  | PandarQT128.yaml   | Limited         |
+| Hesai        | Pandar AT128  | PandarAT128  | PandarAT128.yaml   | Complete        |
+| Hesai        | Pandar 128E4X | Pandar128E4X |                    | Limited         |
+| Velodyne     | VLP-16        | VLP16        | VLP16.yaml         | Limited         |
+| Velodyne     | VLP-16-HiRes  | VLP16        |                    | Limited         |
+| Velodyne     | VLP-32        | VLP32        | VLP32.yaml         | Limited         |
+| Velodyne     | VLS-128       | VLS128       | VLS128.yaml        | Limited         |
 
-Supported return modes per model:
+The test status indicates if all aspects of the sensor driver have been tested (including setting parameters over TCP and diagnostic data support).
 
-| Sensor Model | return_mode    | type   |
+## ROS parameters
+
+### Common ROS parameters
+
+Parameters shared by all supported models: 
+
+| Parameter    | Type   | Default | Accepted Values            | Description      |
+| ------------ | ------ | ------- | -------------------------- | ---------------- |
+| sensor_model | string |         | See supported models       |                  |
+| return_mode  | string |         | See supported return modes |                  |
+| frame_id     | string | pandar  |                            | ROS frame ID     |
+| scan_phase   | double | 0.0     | degrees [0.0, 360.0]       | Scan start angle |
+
+### Hesai specific parameters
+
+#### Supported return modes per model:
+
+| Sensor model | return_mode    | Type   |
 | ------------ | -------------- | ------ |
 | Pandar XT32M | Last           | Single |
 | Pandar XT32M | Strongest      | Single |
@@ -103,56 +124,34 @@ Supported return modes per model:
 | Pandar 64    | Strongest      | Single |
 | Pandar 64    | Dual           | Dual   |
 
-Common ROS params:
+#### Hardware interface parameters:
 
-| Parameter    | Type   | Default | Accepted Values            | Description      |
-| ------------ | ------ | ------- | -------------------------- | ---------------- |
-| sensor_model | string |         | See supported models       |                  |
-| return_mode  | string |         | See supported return modes |                  |
-| frame_id     | string | pandar  |                            | ROS frame ID     |
-| scan_phase   | double | 0       | degrees [0, 360[           | Scan start angle |
+| Parameter                      | Type   | Default         | Accepted Values   | Description                    |
+| ------------------------------ | ------ | --------------- | ------------------| ------------------------------ |
+| sensor_ip                      | string | 192.168.1.201   |                   | Sensor IP                      |
+| host_ip                        | string | 255.255.255.255 |                   | Host IP                        |
+| data_port                      | uint16 | 2368            |                   | Sensor port                    |
+| gnss_port                      | uint16 | 2369            |                   | GNSS port                      |
+| frequency_ms                   | uint16 | 100             | milliseconds, > 0 | Time per scan                  |
+| packet_mtu_size                | uint16 | 1500            |                   | Packet MTU size                |
+| rotation_speed                 | uint16 | 600             |                   | Rotation speed                 |
+| rotation_speed                 | uint16 | 600             |                   | Rotation speed                 |
+| cloud_min_angle                | uint16 | 0               | degrees [0, 360]  | FoV start angle                |
+| cloud_max_angle                | uint16 | 360             | degrees [0, 360]  | FoV end angle                  |
+| dual_return_distance_threshold | double | 0.1             |                   | Dual return distance threshold |
+| diag_span                      | uint16 | 1000            | milliseconds, > 0 | Diagnostic span                |
+| setup_sensor                   | bool   | True            | True, False       | Configure sensor settings      |
 
-### Hesai Hardware Interface
-
-Launches the UDP hardware connection to a live sensor and publishes HesaiScan messages. E.g.:
-`ros2 launch nebula_ros hesai_hw_interface.xml sensor_model:=Pandar40P return_mode:=Dual`
-Unique params:
-
-| Parameter       | Type   | Default     | Accepted Values   | Description     |
-| --------------- | ------ | ----------- | ----------------- | --------------- |
-| sensor_ip       | string | 192.168.0.1 |                   | Sensor IP       |
-| host_ip         | string | 192.168.0.1 |                   | Host IP         |
-| data_port       | uint16 | 2368        |                   | Sensor port     |
-| gnss_port       | uint16 | 2369        |                   | GNSS port       |
-| frequency_ms    | uint16 | 100         | milliseconds, > 0 | Time per scan   |
-| packet_mtu_size | uint16 | 1500        |                   | Packet MTU size |
-
-### Hesai Driver
-
-Launches the hesai driver which subscribes to HesaiScan messages and converts them to PointCloud2. E.g.:
-`ros2 launch nebula_ros hesai_driver.xml sensor_model:=Pandar40P return_mode:=Dual`
-Unique params:
+#### Driver parameters:
 
 | Parameter        | Type   | Default | Accepted Values | Description            |
 | ---------------- | ------ | ------- | --------------- | ---------------------- |
 | calibration_file | string |         |                 | LiDAR calibration file |
+| correction_file  | string |         |                 | LiDAR correction file  |
 
-## Velodyne LiDARs
+### Velodyne specific parameters
 
-| Model                 | sensor_model | Config             |
-| --------------------- | ------------ | ------------------ |
-| VLP-16                | VLP16        | VLP16.yaml         |
-| VLP-16-HiRes          | VLP16        | VLP16_hires.yaml   |
-| VLP-32                | VLP32        | VLP32.yaml         |
-| VLS-128 (Alpha Prime) | HDL64        | VLS128.yaml        |
-|                       |              |                    |
-| Untested:             |              |                    |
-| HDL-32                | PandarQT64   | HDL32.yaml         |
-| HDL-64E (default)     | HDL64        | HDL64e_utexas.yaml |
-| HDL-64E S2            | HDL64        | HDL64e_s2.yaml     |
-| HDL-64E S3            | HDL64        | HDL64e_s3.yaml     |
-
-Supported return modes:
+#### Supported return modes per model:
 
 | Mode               | return_mode     |
 | ------------------ | --------------- |
@@ -161,41 +160,25 @@ Supported return modes:
 | Single (Last)      | SingleLast      |
 | Dual               | Dual            |
 
-Common ROS params:
+#### Hardware interface parameters:
 
-| Parameter    | Type   | Default | Accepted Values            | Description      |
-| ------------ | ------ | ------- | -------------------------- | ---------------- |
-| sensor_model | string |         | See supported models       |                  |
-| return_mode  | string |         | See supported return modes |                  |
-| frame_id     | string | pandar  |                            | ROS frame ID     |
-| scan_phase   | double | 0       | degrees [0, 360[           | Scan start angle |
+| Parameter       | Type   | Default         | Accepted Values   | Description     |
+| --------------- | ------ | --------------- | ----------------- | --------------- |
+| sensor_ip       | string | 192.168.1.201   |                   | Sensor IP       |
+| host_ip         | string | 255.255.255.255 |                   | Host IP         |
+| data_port       | uint16 | 2368            |                   | Sensor port     |
+| gnss_port       | uint16 | 2369            |                   | GNSS port       |
+| frequency_ms    | uint16 | 100             | milliseconds, > 0 | Time per scan   |
+| packet_mtu_size | uint16 | 1500            |                   | Packet MTU size |
 
-### Velodyne Hardware Interface
+#### Driver parameters:
 
-Launches the UDP hardware connection to a live sensor and publishes VelodyneScan messages. E.g.:
-`ros2 launch nebula_ros velodyne_hw_interface.xml sensor_model:=VLS128 return_mode:=Dual`
-Unique params:
-
-| Parameter       | Type   | Default     | Accepted Values | Description     |
-| --------------- | ------ | ----------- | --------------- | --------------- |
-| sensor_ip       | string | 192.168.0.1 |                 | Sensor IP       |
-| data_port       | uint16 | 2368        |                 | Sensor port     |
-| gnss_port       | uint16 | 2369        |                 | GNSS port       |
-| frequency_ms    | uint16 | 100         | ms, > 0         | Time per scan   |
-| packet_mtu_size | uint16 | 1500        |                 | Packet MTU size |
-
-### Velodyne Driver
-
-Launches the Velodyne driver which subscribes to VelodyneScan messages and converts them to PointCloud2. E.g.:
-`ros2 launch nebula_ros velodyne_driver.xml sensor_model:=VLS128 return_mode:=Dual`
-Unique params:
-
-| Parameter        | Type   | Default | Accepted Values  | Description                             |
-| ---------------- | ------ | ------- | ---------------- | --------------------------------------- |
-| calibration_file | string |         |                  | LiDAR calibration file                  |
-| min_range        | double | 0.3     | meters, >= 0.3   | Minimum point range published           |
-| max_range        | double | 300     | meters, <= 300   | Maximum point range published           |
-| view_width       | double | 360     | degrees ]0, 360] | Horizontal FOV centered at `scan_phase` |
+| Parameter        | Type   | Default | Accepted Values      | Description                             |
+| ---------------- | ------ | ------- | -------------------- | --------------------------------------- |
+| calibration_file | string |         |                      | LiDAR calibration file                  |
+| min_range        | double | 0.3     | meters, >= 0.3       | Minimum point range published           |
+| max_range        | double | 300.0   | meters, <= 300.0     | Maximum point range published           |
+| view_width       | double | 360.0   | degrees [0.0, 360.0] | Horizontal FOV centered at `scan_phase` |
 
 ## Diagrams
 
