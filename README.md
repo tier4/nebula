@@ -86,7 +86,7 @@ Parameters shared by all supported models:
 
 #### Supported return modes per model:
 
-| Sensor model | return_mode    | Type   |
+| Sensor model | return_mode    | Mode   |
 | ------------ | -------------- | ------ |
 | Pandar XT32M | Last           | Single |
 | Pandar XT32M | Strongest      | Single |
@@ -151,14 +151,14 @@ Parameters shared by all supported models:
 
 ### Velodyne specific parameters
 
-#### Supported return modes per model:
+#### Supported return modes:
 
-| Mode               | return_mode     |
-| ------------------ | --------------- |
-| Single (First)     | SingleFirst     |
-| Single (Strongest) | SingleStrongest |
-| Single (Last)      | SingleLast      |
-| Dual               | Dual            |
+| return_mode     | Mode               |
+| --------------- | ------------------ | 
+| SingleFirst     | Single (First)     |
+| SingleStrongest | Single (Strongest) |
+| SingleLast      | Single (Last)      |
+| Dual            | Dual               |
 
 #### Hardware interface parameters:
 
