@@ -491,7 +491,17 @@ inline ReturnMode ReturnModeFromString(const std::string & return_mode)
   const pcl::PointCloud<PointXYZIRCAEDT>::ConstPtr & input_pointcloud);
 
 pcl::PointCloud<PointXYZIRADT>::Ptr convertPointXYZIRCAEDTToPointXYZIRADT(
-  const pcl::PointCloud<PointXYZIRCAEDT>::ConstPtr & input_pointcloud);
+  const pcl::PointCloud<PointXYZIRCAEDT>::ConstPtr & input_pointcloud, double stamp);
+
+/// @brief Converts degrees to radians
+/// @param radians
+/// @return degrees
+static inline float deg2rad(double degrees) { return degrees * M_PI / 180.0; }
+
+/// @brief Converts radians to degrees
+/// @param radians
+/// @return degrees
+static inline float rad2deg(double radians) { return radians * 180.0 / M_PI; }
 }  // namespace drivers
 }  // namespace nebula
 

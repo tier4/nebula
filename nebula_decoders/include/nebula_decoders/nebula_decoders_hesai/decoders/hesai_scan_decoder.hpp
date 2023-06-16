@@ -33,11 +33,6 @@ protected:
   /// @brief Calibration for this decoder
   std::shared_ptr<drivers::HesaiCalibrationConfiguration> sensor_calibration_;
 
-  /// @brief Converts an input degree value to the radian value
-  /// @param degrees
-  /// @return radians
-  static inline float deg2rad(double degrees) { return degrees * M_PI / 180.0; }
-
 public:
   HesaiScanDecoder(HesaiScanDecoder && c) = delete;
   HesaiScanDecoder & operator=(HesaiScanDecoder && c) = delete;
