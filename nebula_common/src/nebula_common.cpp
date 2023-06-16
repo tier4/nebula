@@ -9,7 +9,7 @@ namespace drivers
 {
   pcl::PointCloud<PointXYZIR>::Ptr output_pointcloud(new pcl::PointCloud<PointXYZIR>);
   output_pointcloud->reserve(input_pointcloud->points.size());
-  PointXYZIR point;
+  PointXYZIR point{};
   for (const auto & p : input_pointcloud->points) {
     point.x = p.x;
     point.y = p.y;
@@ -30,7 +30,7 @@ pcl::PointCloud<PointXYZIR>::Ptr convertPointXYZIRCAEDTToPointXYZIR(
 {
   pcl::PointCloud<PointXYZIR>::Ptr output_pointcloud(new pcl::PointCloud<PointXYZIR>);
   output_pointcloud->reserve(input_pointcloud->points.size());
-  PointXYZIR point;
+  PointXYZIR point{};
   for (const auto & p : input_pointcloud->points) {
     point.x = p.x;
     point.y = p.y;
@@ -51,7 +51,7 @@ pcl::PointCloud<PointXYZIRADT>::Ptr convertPointXYZIRCAEDTToPointXYZIRADT(
 {
   pcl::PointCloud<PointXYZIRADT>::Ptr output_pointcloud(new pcl::PointCloud<PointXYZIRADT>);
   output_pointcloud->reserve(input_pointcloud->points.size());
-  PointXYZIRADT point;
+  PointXYZIRADT point{};
   for (const auto & p : input_pointcloud->points) {
     point.x = p.x;
     point.y = p.y;
@@ -60,7 +60,7 @@ pcl::PointCloud<PointXYZIRADT>::Ptr convertPointXYZIRCAEDTToPointXYZIRADT(
     point.ring = p.channel;
     point.azimuth = p.azimuth;
     point.distance = p.distance;
-    point.time_stamp = p.time_stamp;
+    point.time_stamp = static_cast<double>(input_pointcloud->header.stamp) + p.time_stamp*10e-9;
     output_pointcloud->points.emplace_back(point);
   }
 
