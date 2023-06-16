@@ -47,7 +47,7 @@ pcl::PointCloud<PointXYZIR>::Ptr convertPointXYZIRCAEDTToPointXYZIR(
 }
 
 pcl::PointCloud<PointXYZIRADT>::Ptr convertPointXYZIRCAEDTToPointXYZIRADT(
-  const pcl::PointCloud<PointXYZIRCAEDT>::ConstPtr & input_pointcloud)
+  const pcl::PointCloud<PointXYZIRCAEDT>::ConstPtr & input_pointcloud, const double stamp)
 {
   pcl::PointCloud<PointXYZIRADT>::Ptr output_pointcloud(new pcl::PointCloud<PointXYZIRADT>);
   output_pointcloud->reserve(input_pointcloud->points.size());
@@ -58,9 +58,9 @@ pcl::PointCloud<PointXYZIRADT>::Ptr convertPointXYZIRCAEDTToPointXYZIRADT(
     point.z = p.z;
     point.intensity = p.intensity;
     point.ring = p.channel;
-    point.azimuth = p.azimuth;
+    point.azimuth = rad2deg(p.azimuth);
     point.distance = p.distance;
-    point.time_stamp = static_cast<double>(input_pointcloud->header.stamp) + p.time_stamp*10e-9;
+    point.time_stamp = static_cast<double>(stamp) + p.time_stamp*10e-9;
     output_pointcloud->points.emplace_back(point);
   }
 

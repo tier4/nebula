@@ -74,7 +74,7 @@ void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
     aw_points_ex_pub_->get_subscription_count() > 0 ||
     aw_points_ex_pub_->get_intra_process_subscription_count() > 0) {
     const auto autoware_ex_cloud =
-      nebula::drivers::convertPointXYZIRCAEDTToPointXYZIRADT(pointcloud);
+      nebula::drivers::convertPointXYZIRCAEDTToPointXYZIRADT(pointcloud, 0.0);//velodyne drivers originally doesn't use absolute time
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
