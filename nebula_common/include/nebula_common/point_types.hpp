@@ -11,8 +11,8 @@ namespace drivers
 struct PointXYZIR
 {
   PCL_ADD_POINT4D;
-  std::uint8_t intensity;
-  std::uint16_t ring;
+  float intensity;
+  uint16_t ring;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
 
@@ -46,12 +46,12 @@ struct PointXYZIRCAEDT
 struct PointXYZIRADT
 {
   PCL_ADD_POINT4D;
-  std::uint8_t intensity;
-  std::uint16_t ring;
+  float intensity;
+  uint16_t ring;
   float azimuth;
   float distance;
-  std::uint8_t return_type;
-  std::uint32_t time_stamp;
+  uint8_t return_type;
+  double time_stamp;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
 
@@ -63,16 +63,20 @@ using NebulaPointCloudPtr = pcl::PointCloud<NebulaPoint>::Ptr;
 }  // namespace drivers
 }  // namespace nebula
 
-POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::PointXYZIR,
-  (float, x,
-   x)(float, y, y)(float, z, z)(std::uint8_t, intensity, intensity)(std::uint16_t, ring, ring))
+POINT_CLOUD_REGISTER_POINT_STRUCT(nebula::drivers::PointXYZIR,
+                                  (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t,
+                                                                                                       ring, ring))
 
-POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::PointXYZIRADT,
-  (float, x, x)(float, y, y)(float, z, z)(std::uint8_t, intensity, intensity)(
-    std::uint16_t, ring, ring)(float, azimuth, azimuth)(float, distance, distance)(
-    std::uint8_t, return_type, return_type)(std::uint32_t, time_stamp, time_stamp))
+POINT_CLOUD_REGISTER_POINT_STRUCT(nebula::drivers::PointXYZIRADT,
+                                  (float, x, x)
+                                    (float, y, y)
+                                    (float, z, z)
+                                    (float, intensity, intensity)
+                                    (std::uint16_t, ring, ring)
+                                    (float, azimuth, azimuth)
+                                    (float, distance, distance)
+                                    (std::uint8_t, return_type, return_type)
+                                    (double, time_stamp, time_stamp))
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(
   nebula::drivers::PointXYZICATR,
