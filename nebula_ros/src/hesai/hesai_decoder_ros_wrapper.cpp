@@ -67,9 +67,6 @@ void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
     RCLCPP_WARN_STREAM(get_logger(), "Empty cloud parsed.");
     return;
   };
-  pcl::PCDWriter writer;
-  auto fn = std::to_string(std::get<1>(pointcloud_ts)) + ".pcd";
-  writer.writeASCII( "/tmp/" + fn, *pointcloud);
   if (
     nebula_points_pub_->get_subscription_count() > 0 ||
     nebula_points_pub_->get_intra_process_subscription_count() > 0) {
