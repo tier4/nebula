@@ -54,14 +54,14 @@ Supported models, where sensor_model is the ROS param to be used at launch:
 
 | Manufacturer | Model         | sensor_model | Configuration file | Test status |
 | ------------ | ------------- | ------------ | ------------------ | ----------- |
-| Hesai        | Pandar 64     | Pandar64     | Pandar64.yaml      | Complete    |
-| Hesai        | Pandar 40P    | Pandar40P    |                    | Complete    |
-| Hesai        | Pandar XT32   | PandarXT32   | PandarXT32.yaml    | Complete    |
-| Hesai        | Pandar XT32M  | PandarXT32M  | PandarXT32M.yaml   | Limited     |
-| Hesai        | Pandar QT64   | PandarQT64   |                    | Limited     |
-| Hesai        | Pandar QT128  | PandarQT128  | PandarQT128.yaml   | Limited     |
-| Hesai        | Pandar AT128  | PandarAT128  | PandarAT128.yaml   | Complete    |
-| Hesai        | Pandar 128E4X | Pandar128E4X |                    | Limited     |
+| HESAI        | Pandar 64     | Pandar64     | Pandar64.yaml      | Complete    |
+| HESAI        | Pandar 40P    | Pandar40P    | Pandar40P.yaml     | Complete    |
+| HESAI        | Pandar XT32   | PandarXT32   | PandarXT32.yaml    | Complete    |
+| HESAI        | Pandar XT32M  | PandarXT32M  | PandarXT32M.yaml   | Limited     |
+| HESAI        | Pandar QT64   | PandarQT64   | PandarQT64.yaml    | Limited     |
+| HESAI        | Pandar QT128  | PandarQT128  | PandarQT128.yaml   | Limited     |
+| HESAI        | Pandar AT128  | PandarAT128  | PandarAT128.yaml   | Complete    |
+| HESAI        | Pandar 128E4X | Pandar128E4X | Pandar128E4X.yaml  | Limited     |
 | Velodyne     | VLP-16        | VLP16        | VLP16.yaml         | Limited     |
 | Velodyne     | VLP-16-HiRes  | VLP16        |                    | Limited     |
 | Velodyne     | VLP-32        | VLP32        | VLP32.yaml         | Limited     |
