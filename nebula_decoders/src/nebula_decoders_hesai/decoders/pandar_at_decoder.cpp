@@ -76,8 +76,6 @@ int PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet
 
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
-
-    scan_timestamp_ = packet_.unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     overflow_pc_.reset(new NebulaPointCloud);
     has_scanned_ = false;
   }
@@ -87,7 +85,6 @@ int PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet
       packet_.blocks[block_id].azimuth * LIDAR_AZIMUTH_UNIT +
       packet_.blocks[block_id].fine_azimuth);
 
-    auto block_pc = convert(block_id);
     //*
     int count = 0, field = 0;
     while (count < correction_configuration_->frameNumber &&
@@ -103,9 +100,12 @@ int PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet
       if (max_azimuth_ < azimuth) {
         max_azimuth_ = azimuth;
       }
+      scan_timestamp_ = packet_.unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+      auto block_pc = convert(block_id);
       *overflow_pc_ += *block_pc;
       has_scanned_ = true;
     } else {
+      auto block_pc = convert(block_id);
       *scan_pc_ += *block_pc;
     }
     last_azimuth_ = azimuth;
@@ -177,10 +177,13 @@ void PandarATDecoder::CalcXTPointXYZIT(
       point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[elevation]);
     }
     if (scan_timestamp_ < 0) {  // invalid timestamp
-      scan_timestamp_ = packet_.unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+      scan_timestamp_ = packet_.unix_second + static_cast<double>(packet_.usec) / 1000000.;
     }
 
-    point.time_stamp = channel_firing_ns[i];
+    point.time_stamp = static_cast<uint32_t>(
+      (packet_.unix_second +
+      static_cast<double>(packet_.usec) / 1000000. -
+      scan_timestamp_)*1000000000);
 
     switch (packet_.return_mode) {
       case STRONGEST_RETURN:

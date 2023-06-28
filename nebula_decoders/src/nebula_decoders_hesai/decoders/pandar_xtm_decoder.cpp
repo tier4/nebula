@@ -74,8 +74,6 @@ int_least32_t PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pa
 
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
-    auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
-    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     overflow_pc_.reset(new NebulaPointCloud);
     overflow_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
     has_scanned_ = false;
@@ -92,7 +90,6 @@ int_least32_t PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pa
         static_cast<int>(packet_.blocks[block_id].azimuth) - static_cast<int>(last_azimuth_);
     }
     timestampGap = packet_.usec - last_timestamp_ + 0.001;
-    auto block_pc = convert(block_id);
     if (
       last_azimuth_ != packet_.blocks[block_id].azimuth &&
       (azimuthGap / timestampGap) < 36000 * 100) {
@@ -101,10 +98,14 @@ int_least32_t PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pa
         (last_azimuth_ > packet_.blocks[block_id].azimuth &&
          start_angle_ <= packet_.blocks[block_id].azimuth) ||
         (last_azimuth_ < start_angle_ && start_angle_ <= packet_.blocks[block_id].azimuth)) {
+        auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
+        scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+        auto block_pc = convert(block_id);
         *overflow_pc_ += *block_pc;
         has_scanned_ = true;
       }
     } else {
+      auto block_pc = convert(block_id);
       *scan_pc_ += *block_pc;
     }
     last_azimuth_ = packet_.blocks[block_id].azimuth;
@@ -196,7 +197,7 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
         break;
     }
     auto point_stamp =
-      (unix_second + offset + static_cast<double>(packet_.usec) / 1000000.f - scan_timestamp_);
+      (unix_second - offset + static_cast<double>(packet_.usec) / 1000000.f - scan_timestamp_);
     if (point_stamp < 0) {
       point.time_stamp = 0;
     } else {

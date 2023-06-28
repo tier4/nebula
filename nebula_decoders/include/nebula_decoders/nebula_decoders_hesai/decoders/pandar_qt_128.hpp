@@ -13,15 +13,13 @@ namespace drivers
 {
 namespace pandar_qt_128
 {
-constexpr uint16_t MAX_AZIMUTH_STEPS = 900;  // High Res mode
+constexpr uint16_t MAX_AZIMUTH_STEPS = 36000;  // High Res mode
 // constexpr float DISTANCE_UNIT = 0.004f;       // 4mm
 constexpr double MIN_RANGE = 0.05;
 constexpr double MAX_RANGE = 50.0;
 
 // Head
 constexpr size_t HEAD_SIZE = 12;
-constexpr size_t PRE_HEADER_SIZE = 6;
-constexpr size_t HEADER_SIZE = 6;
 // Body
 constexpr size_t BLOCKS_PER_PACKET = 2;
 constexpr size_t BLOCK_HEADER_AZIMUTH = 2;
@@ -31,31 +29,22 @@ constexpr size_t CRC_SIZE = 4;
 constexpr size_t BLOCK_SIZE = UNIT_SIZE * LASER_COUNT + BLOCK_HEADER_AZIMUTH;
 constexpr size_t BODY_SIZE = BLOCK_SIZE * BLOCKS_PER_PACKET + CRC_SIZE;
 // Functional Safety
-constexpr size_t FS_VERSION_SIZE = 1;
-constexpr size_t LIDAR_STATE_SIZE = 1;
-constexpr size_t FAULT_SIZE = 1;
-constexpr size_t OUT_FAULT_SIZE = 2;
-constexpr size_t RESERVED_SIZE = 8;
-constexpr size_t CRC2_SIZE = 4;
 constexpr size_t PACKET_FS_SIZE = 17;
 // Tail
 constexpr size_t RESERVED2_SIZE = 5;
 constexpr size_t MODE_FLAG_SIZE = 1;
 constexpr size_t RESERVED3_SIZE = 6;
-constexpr size_t RETURN_MODE_SIZE = 1;
-constexpr size_t MOTOR_SPEED_SIZE = 2;
 constexpr size_t UTC_SIZE = 6;
 constexpr size_t TIMESTAMP_SIZE = 4;
 constexpr size_t FACTORY_SIZE = 1;
-constexpr size_t SEQUENCE_SIZE = 4;
-constexpr size_t CRC3_SIZE = 4;
 constexpr size_t PACKET_TAIL_SIZE = 34;
 constexpr size_t PACKET_TAIL_WITHOUT_UDP_SEQ_CRC_SIZE = 26;
+constexpr size_t PACKET_TAIL_TIMESTAMP_OFFSET = 1076;
 
 // Cyber Security
 constexpr size_t SIGNATURE_SIZE = 32;
 
-constexpr size_t SKIP_SIZE = CRC_SIZE + PACKET_FS_SIZE + RESERVED2_SIZE;
+constexpr size_t SKIP_SIZE = PACKET_FS_SIZE + RESERVED2_SIZE;
 
 // All
 constexpr size_t PACKET_SIZE =

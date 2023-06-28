@@ -138,7 +138,9 @@ drivers::NebulaPoint Pandar128E4XDecoder::build_point(
   point.azimuth = block_azimuth_rad_[azimuth] + azimuth_offset_rad_[laser_id];
   point.distance = unit_distance;
   point.elevation = elevation_angle_rad_[laser_id];
-  point.time_stamp = unix_second + packet_.tail.timestamp_us - scan_timestamp_;
+  point.time_stamp = static_cast<uint32_t>((static_cast<double>(unix_second) +
+    static_cast<double>(packet_.tail.timestamp_us)/1000000 -
+    scan_timestamp_)*1000000000);
   out_distance = xyDistance;
   return point;
 }

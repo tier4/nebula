@@ -82,20 +82,29 @@ int PandarQT128Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_pac
 
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
-    auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
-    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     overflow_pc_.reset(new NebulaPointCloud);
     overflow_pc_->reserve(LASER_COUNT * MAX_AZIMUTH_STEPS);
     has_scanned_ = false;
   }
 
   bool dual_return = is_dual_return();
+  auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
 
   drivers::NebulaPointCloudPtr block_pc(new NebulaPointCloud);
   int current_phase;
   int cnt2;
+  bool accumulating;
   if (dual_return) {
     for (size_t block_id = 0; block_id < BLOCKS_PER_PACKET; block_id += 2) {
+      current_phase =
+        (static_cast<int>(packet_.blocks[block_id + 1].azimuth) - scan_phase_ + 36000) % 36000;
+      if (current_phase > last_phase_ && !has_scanned_) {
+        accumulating = true;
+      }
+      else {
+        scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.;
+        accumulating = false;
+      }
       auto block1_pt = convert(block_id);
       auto block2_pt = convert(block_id + 1);
       size_t block1size = block1_pt->points.size();
@@ -113,19 +122,25 @@ int PandarQT128Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_pac
           block_pc->points.emplace_back(block1_pt->points[i]);
         }
       }
-      current_phase =
-        (static_cast<int>(packet_.blocks[block_id + 1].azimuth) - scan_phase_ + 36000) % 36000;
+
     }
   } else  // single
   {
     for (size_t block_id = 0; block_id < BLOCKS_PER_PACKET; block_id++) {
-      block_pc = convert(block_id);
-      *block_pc += *block_pc;
       current_phase =
         (static_cast<int>(packet_.blocks[block_id].azimuth) - scan_phase_ + 36000) % 36000;
+      if (current_phase > last_phase_ && !has_scanned_) {
+        accumulating = true;
+      }
+      else {
+        scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.;
+        accumulating = false;
+      }
+      block_pc = convert(block_id);
+      *block_pc += *block_pc;
     }
   }
-  if (current_phase > last_phase_ && !has_scanned_) {
+  if (accumulating) {
     *scan_pc_ += *block_pc;
   } else {
     *overflow_pc_ += *block_pc;
@@ -159,21 +174,17 @@ drivers::NebulaPoint PandarQT128Decoder::build_point(
     point.return_type = first_return_type_;
   }
   if (scan_timestamp_ < 0) {  // invalid timestamp
-    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
+    scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.;
   }
-  auto offset =
-    dual_return
-      ? (static_cast<double>(block_time_offset_dual_[block_id] + firing_time_offset1_[unit_id]) /
-         1000000.0f)
-      : (static_cast<double>(block_time_offset_single_[block_id] + firing_time_offset2_[unit_id]) /
-         1000000.0f);
-  auto point_stamp =
-    (unix_second + offset + static_cast<double>(packet_.usec) / 1000000.f - scan_timestamp_);
-  if (point_stamp < 0) {
-    point.time_stamp = 0;
-  } else {
-    point.time_stamp = static_cast<uint32_t>(point_stamp * 10e9);
-  }
+  auto offset = dual_return
+                ? static_cast<double>(
+                    block_time_offset_dual_[block_id] + firing_time_offset2_[unit_id]) / 1000000.
+                : static_cast<double>(
+                    block_time_offset_single_[block_id] + firing_time_offset1_[unit_id]) / 1000000.;
+  auto point_stamp =  unix_second + (static_cast<double>(packet_.usec) / 1000000.) - offset - scan_timestamp_;
+  if (point_stamp < 0)
+    point_stamp = 0;
+  point.time_stamp = static_cast<uint32_t>(point_stamp*1000000000);
 
   return point;
 }
@@ -261,6 +272,7 @@ bool PandarQT128Decoder::parsePacket(const pandar_msgs::msg::PandarPacket & pand
   index += HEAD_SIZE;
 
   if (packet_.header.sob != 0xEEFF) {
+    std::cerr << "Incorrect packet received" << std::endl;
     return false;
   }
 
@@ -284,8 +296,8 @@ bool PandarQT128Decoder::parsePacket(const pandar_msgs::msg::PandarPacket & pand
   index += MODE_FLAG_SIZE;
   index += RESERVED3_SIZE;
   packet_.return_mode = buf[index] & 0xff;  // Return Mode
-  index += RETURN_MODE_SIZE;
 
+  index = PACKET_TAIL_TIMESTAMP_OFFSET;
   packet_.t.tm_year = (buf[index + 0] & 0xff) + 100;
   packet_.t.tm_mon = (buf[index + 1] & 0xff) - 1;
   packet_.t.tm_mday = buf[index + 2] & 0xff;
@@ -297,7 +309,6 @@ bool PandarQT128Decoder::parsePacket(const pandar_msgs::msg::PandarPacket & pand
 
   packet_.usec = (buf[index] & 0xff) | (buf[index + 1] & 0xff) << 8 |
                  ((buf[index + 2] & 0xff) << 16) | ((buf[index + 3] & 0xff) << 24);
-  index += TIMESTAMP_SIZE;
 
   // in case of time error
   if (packet_.t.tm_year >= 200) {
