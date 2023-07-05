@@ -12,7 +12,7 @@ With a rapidly increasing number of sensor types and models becoming available, 
 
 ## How to build
 
-Builds on ROS Galactic and Humble.
+Nebula builds on ROS Galactic and Humble.
 
 A [TCP enabled version of ROS' Transport Driver](https://github.com/MapIV/transport_drivers/tree/tcp) is required to use Nebula. You can install it manually or pull it inside this repository using vcs:
 
@@ -46,7 +46,7 @@ You can easily run the sensor hardware interface, the sensor hardware monitor an
 
 `ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64`
 
-If you don't want to launch the hardware (i.e. working on rosbag) set the `launch_hw` flag to false:
+If you don't want to launch the hardware (i.e. when you are working from a rosbag), set the `launch_hw` flag to false:
 
 `ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 launch_hw:=false`
 
@@ -54,7 +54,7 @@ If you don't want the hardware driver to perform the sensor configuration commun
 
 `ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 setup_sensor:=false`
 
-You should ideally provide a config file for your specific sensor, but default ones are provided `nebula_drivers/config`
+You should ideally provide a config file for your specific sensor, but default ones are provided `nebula_drivers/config`:
 
 `ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 config_file:=your_sensor.yaml`
 
@@ -80,7 +80,7 @@ Supported models, where sensor_model is the ROS param to be used at launch:
 Test status:\
 :heavy_check_mark:: complete\
 :warning:: some functionality yet to be tested\
-:x:: untested
+:x: : untested
 
 ## ROS parameters
 
@@ -192,5 +192,7 @@ Parameters shared by all supported models:
 | min_range        | double | 0.3     | meters, >= 0.3       | Minimum point range published           |
 | max_range        | double | 300.0   | meters, <= 300.0     | Maximum point range published           |
 | view_width       | double | 360.0   | degrees [0.0, 360.0] | Horizontal FOV centered at `scan_phase` |
+
 ## Software design overview
+
 ![DriverOrganization](docs/diagram.png)
