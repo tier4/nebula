@@ -1,8 +1,14 @@
-# Nebula Lidar Driver
+# Nebula Sensor Driver
 
-In a world powered by an ever-growing ecosystem of sensors, the need for seamless integration across multiple sensor types and manufacturers has never been more essential. That's why we are thrilled to present Nebula, a groundbreaking open-source software sensor driver framework designed to empower you to effortlessly connect and harness the full potential of sensors from various manufacturers, all within a unified environment.
-Imagine a world where compatibility barriers vanish, disparate sensor technologies converge effortlessly, and the possibilities for innovation are limitless. Nebula is your gateway to this transformative reality. Whether working with cameras, lidars, radars, or any other sensor type that communicates using the TCP/IP stack, Nebula ensures a simple, efficient, and reliable connection, regardless of the manufacturer.
-At its core, Nebula embodies the spirit of collaboration and open-source innovation. The power of connectivity lies in shared knowledge and collective effort. By embracing the open-source ethos, we have created a framework that allows sensor manufacturers and developers to come together, exchange ideas, and contribute to a vibrant community dedicated to advancing sensor connectivity.
+Nebula is a sensor driver platfrom that is designed to provide a unified framework for as wide a variety of devices as possible.
+While it primarily targets Ethernet-based LiDAR sensors, it aims to be easily extendable to support new sensors and interfaces.
+Nebula provides the following features:
+- ROS2 interface implementations
+- Abstraction of sensor decoders and hardware interfaces available as libraries
+- TCP/IP and UDP communication implementations
+
+With a rapidly increasing number of sensor types and models becoming available, and varying levels of vendor and third-party driver support, Nebula creates a centralized driver methodology. We hope that this project will be used to facilitate active collaboration and efficiency in development projects by providing a platform that reduces the need to re-implement and maintain many different sensor drivers. Contributions to extend the supported devices and features of Nebula are always welcome.
+
 
 ## How to build
 
@@ -58,20 +64,23 @@ Supported models, where sensor_model is the ROS param to be used at launch:
 
 | Manufacturer | Model         | sensor_model | Configuration file | Test status |
 | ------------ | ------------- | ------------ | ------------------ | ----------- |
-| HESAI        | Pandar 64     | Pandar64     | Pandar64.yaml      | Complete    |
-| HESAI        | Pandar 40P    | Pandar40P    | Pandar40P.yaml     | Complete    |
-| HESAI        | Pandar XT32   | PandarXT32   | PandarXT32.yaml    | Complete    |
-| HESAI        | Pandar XT32M  | PandarXT32M  | PandarXT32M.yaml   | Limited     |
-| HESAI        | Pandar QT64   | PandarQT64   | PandarQT64.yaml    | Limited     |
-| HESAI        | Pandar QT128  | PandarQT128  | PandarQT128.yaml   | Limited     |
-| HESAI        | Pandar AT128  | PandarAT128  | PandarAT128.yaml   | Complete    |
-| HESAI        | Pandar 128E4X | Pandar128E4X | Pandar128E4X.yaml  | Limited     |
-| Velodyne     | VLP-16        | VLP16        | VLP16.yaml         | Limited     |
-| Velodyne     | VLP-16-HiRes  | VLP16        |                    | Limited     |
-| Velodyne     | VLP-32        | VLP32        | VLP32.yaml         | Limited     |
-| Velodyne     | VLS-128       | VLS128       | VLS128.yaml        | Limited     |
+| HESAI        | Pandar 64     | Pandar64     | Pandar64.yaml      | :heavy_check_mark: |
+| HESAI        | Pandar 40P    | Pandar40P    | Pandar40P.yaml     | :heavy_check_mark: |
+| HESAI        | Pandar XT32   | PandarXT32   | PandarXT32.yaml    | :heavy_check_mark: |
+| HESAI        | Pandar XT32M  | PandarXT32M  | PandarXT32M.yaml   | :warning: |
+| HESAI        | Pandar QT64   | PandarQT64   | PandarQT64.yaml    | :heavy_check_mark: |
+| HESAI        | Pandar QT128  | PandarQT128  | PandarQT128.yaml   | :warning: |
+| HESAI        | Pandar AT128  | PandarAT128  | PandarAT128.yaml   | :heavy_check_mark: |
+| HESAI        | Pandar 128E4X | Pandar128E4X | Pandar128E4X.yaml  | :warning: |
+| Velodyne     | VLP-16        | VLP16        | VLP16.yaml         | :warning: |
+| Velodyne     | VLP-16-HiRes  | VLP16        |                    | :x: |
+| Velodyne     | VLP-32        | VLP32        | VLP32.yaml         | :warning: |
+| Velodyne     | VLS-128       | VLS128       | VLS128.yaml        | :warning: |
 
-The test status indicates if all aspects of the sensor driver have been tested (including setting parameters over TCP and diagnostic data support).
+Test status:\
+:heavy_check_mark:: complete\
+:warning:: some functionality yet to be tested\
+:x:: untested
 
 ## ROS parameters
 
@@ -183,7 +192,5 @@ Parameters shared by all supported models:
 | min_range        | double | 0.3     | meters, >= 0.3       | Minimum point range published           |
 | max_range        | double | 300.0   | meters, <= 300.0     | Maximum point range published           |
 | view_width       | double | 360.0   | degrees [0.0, 360.0] | Horizontal FOV centered at `scan_phase` |
-
-## Diagrams
-
+## Software design overview
 ![DriverOrganization](docs/diagram.png)
