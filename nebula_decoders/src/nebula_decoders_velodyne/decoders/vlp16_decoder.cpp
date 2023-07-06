@@ -24,6 +24,7 @@ Vlp16Decoder::Vlp16Decoder(
   // Set up cached values for sin and cos of all the possible headings
   for (uint16_t rot_index = 0; rot_index < ROTATION_MAX_UNITS; ++rot_index) {
     float rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
+    rotation_radians_[rot_index] = rotation;
     cos_rot_table_[rot_index] = cosf(rotation);
     sin_rot_table_[rot_index] = sinf(rotation);
   }
@@ -39,7 +40,7 @@ std::tuple<drivers::NebulaPointCloudPtr, double> Vlp16Decoder::get_pointcloud()
   if (!scan_pc_->points.empty()) {
     uint16_t current_azimuth = (int)scan_pc_->points.back().azimuth * 100;
     uint16_t phase_diff = (36000 + current_azimuth - phase) % 36000;
-    while (phase_diff < 18000 && scan_pc_->points.size() > 0) {
+    while (phase_diff < 18000 && !scan_pc_->points.empty()) {
       overflow_pc_->points.push_back(scan_pc_->points.back());
       scan_pc_->points.pop_back();
       current_azimuth = (int)scan_pc_->points.back().azimuth * 100;
@@ -193,7 +194,7 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
                 const float x_coord = xy_distance * cos_rot_angle;     // velodyne y
                 const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
                 const float z_coord = distance * sin_vert_angle;       // velodyne z
-                const float intensity = current_block.data[k + 2];
+                const uint8_t intensity = current_block.data[k + 2];
 
                 const double time_stamp =
                   (block * 2 + firing) * 55.296 / 1000.0 / 1000.0 + dsr * 2.304 / 1000.0 / 1000.0;
@@ -212,12 +213,12 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
                        other_return.bytes[1] == current_return.bytes[1])) {
                       return_type = static_cast<uint8_t>(drivers::ReturnType::IDENTICAL);
                     } else {
-                      const float other_intensity = block % 2 ? raw->blocks[block - 1].data[k + 2]
+                      const uint8_t other_intensity = block % 2 ? raw->blocks[block - 1].data[k + 2]
                                                               : raw->blocks[block + 1].data[k + 2];
-                      bool first = other_return.uint < current_return.uint ? 0 : 1;
-                      bool strongest = other_intensity < intensity ? 1 : 0;
+                      bool first = current_return.uint > other_return.uint ;
+                      bool strongest = intensity > other_intensity;
                       if (other_intensity == intensity) {
-                        strongest = first ? 0 : 1;
+                        strongest = !first;
                       }
                       if (first && strongest) {
                         return_type = static_cast<uint8_t>(drivers::ReturnType::FIRST_STRONGEST);
@@ -247,8 +248,9 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
                 current_point.z = z_coord;
                 current_point.return_type = return_type;
                 current_point.channel = corrections.laser_ring;
-                current_point.azimuth = azimuth_corrected;
-                current_point.time_stamp = time_stamp;
+                current_point.azimuth = azimuth_corrected;//rotation_radians_[azimuth_corrected];
+                current_point.elevation = sin_vert_angle;
+                current_point.time_stamp = static_cast<uint32_t>(time_stamp*10e9);
                 current_point.intensity = intensity;
                 current_point.distance = distance;
                 scan_pc_->points.emplace_back(current_point);

@@ -24,6 +24,7 @@ Vls128Decoder::Vls128Decoder(
   // Set up cached values for sin and cos of all the possible headings
   for (uint16_t rot_index = 0; rot_index < ROTATION_MAX_UNITS; ++rot_index) {
     float rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
+    rotation_radians_[rot_index] = rotation;
     cos_rot_table_[rot_index] = cosf(rotation);
     sin_rot_table_[rot_index] = sinf(rotation);
   }
@@ -215,7 +216,7 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               const float x_coord = xy_distance * cos_rot_angle;     // velodyne y
               const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
               const float z_coord = distance * sin_vert_angle;       // velodyne z
-              const float intensity = current_block.data[k + 2];
+              const uint8_t intensity = current_block.data[k + 2];
 
               const double time_stamp =
                 block * 55.3 / 1000.0 / 1000.0 + j * 2.665 / 1000.0 / 1000.0;  // +
@@ -269,9 +270,10 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               current_point.z = z_coord;
               current_point.return_type = return_type;
               current_point.channel = corrections.laser_ring;
-              current_point.azimuth = azimuth_corrected;
+              current_point.azimuth = azimuth_corrected; //rotation_radians_[azimuth_corrected];
+              current_point.elevation = sin_vert_angle;
               current_point.distance = distance;
-              current_point.time_stamp = time_stamp;
+              current_point.time_stamp = static_cast<uint32_t>(time_stamp*10e9);
               current_point.intensity = intensity;
               scan_pc_->points.emplace_back(current_point);
             }  // 2nd scan area condition

@@ -24,6 +24,7 @@ Vlp32Decoder::Vlp32Decoder(
   // Set up cached values for sin and cos of all the possible headings
   for (uint16_t rot_index = 0; rot_index < ROTATION_MAX_UNITS; ++rot_index) {
     float rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
+    rotation_radians_[rot_index] = rotation;
     cos_rot_table_[rot_index] = cosf(rotation);
     sin_rot_table_[rot_index] = sinf(rotation);
   }
@@ -85,7 +86,7 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
     }
     for (int j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE) {
       float x, y, z;
-      float intensity;
+      uint8_t intensity;
       const uint8_t laser_number = j + bank_origin;
 
       const VelodyneLaserCorrection & corrections =
@@ -272,9 +273,10 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
           current_point.z = z_coord;
           current_point.return_type = static_cast<uint8_t>(return_type);
           current_point.channel = corrections.laser_ring;
-          current_point.azimuth = raw->blocks[i].rotation;
+          current_point.azimuth = block.rotation; // rotation_radians_[block.rotation]
+          current_point.elevation = sin_vert_angle;
+          current_point.time_stamp = static_cast<uint32_t>(time_stamp*10e9);
           current_point.distance = distance;
-          current_point.time_stamp = time_stamp;
           current_point.intensity = intensity;
           scan_pc_->points.emplace_back(current_point);
         }
