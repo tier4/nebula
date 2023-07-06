@@ -4,17 +4,14 @@
 
 Builds on ROS Galactic and Humble.
 
-A [TCP enabled version of ROS' Transport Driver](https://github.com/MapIV/transport_drivers/tree/tcp) is required to use Nebula. You can install it manually or pull it inside this repository using vcs:
-
-`vcs import . < build_depends.repos`
-
-Once you have either installed or added the source of the above Transport Drivers package to your workspace, be sure to install dependencies using `rosdep`:
-
-`rosdep install --from-paths src --ignore-src -y -r`
-
-Then compile with colcon, optionally enabling symlink:
-
-`colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release`
+```bash
+# In workspace
+mkdir src
+git clone https://github.com/tier4/nebula.git src
+vcs import src < src/build_depends.repos # Import dependency repositories
+rosdep install --from-paths src --ignore-src -y -r
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+```
 
 ## How to run Tests
 
