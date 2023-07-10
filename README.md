@@ -14,17 +14,24 @@ With a rapidly increasing number of sensor types and models becoming available, 
 
 Nebula builds on ROS Galactic and Humble.
 
-A [TCP enabled version of ROS' Transport Driver](https://github.com/MapIV/transport_drivers/tree/tcp) is required to use Nebula. You can install it manually or pull it inside this repository using vcs:
+> **Note**
+>
+> A [TCP enabled version of ROS' Transport Driver](https://github.com/MapIV/transport_drivers/tree/tcp) is required to use Nebula.
+> It is installed automatically into your workspace using the below commands. However, if you already have ROS transport driver binaries installed, you will have to uninstall them to avoid conflicts (replace `humble` with your ROS distribution):
+> `sudo apt remove ros-humble-udp-driver ros-humble-io-context`
 
-`vcs import . < build_depends.repos`
+To build Nebula run the following commands in your workspace:
 
-Once you have either installed or added the source of the above Transport Drivers package to your workspace, be sure to install dependencies using `rosdep`:
-
-`rosdep install --from-paths src --ignore-src -y -r`
-
-Then compile with colcon, optionally enabling symlink:
-
-`colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release`
+```bash
+# In workspace
+mkdir src
+git clone https://github.com/tier4/nebula.git src
+# Import dependencies
+vcs import src < src/build_depends.repos
+rosdep install --from-paths src --ignore-src -y -r
+# Build Nebula
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+```
 
 ## How to run tests
 
@@ -44,19 +51,27 @@ colcon test-result --all
 
 You can easily run the sensor hardware interface, the sensor hardware monitor and sensor driver using (e.g. Pandar64):
 
-`ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64`
+```
+ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64
+```
 
 If you don't want to launch the hardware (i.e. when you are working from a rosbag), set the `launch_hw` flag to false:
 
-`ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 launch_hw:=false`
+```
+ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 launch_hw:=false
+```
 
 If you don't want the hardware driver to perform the sensor configuration communication (i.e. limited number of connections) set the `setup_sensor` flag to false:
 
-`ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 setup_sensor:=false`
+```
+ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 setup_sensor:=false
+```
 
 You should ideally provide a config file for your specific sensor, but default ones are provided `nebula_drivers/config`:
 
-`ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 config_file:=your_sensor.yaml`
+```
+ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 config_file:=your_sensor.yaml
+```
 
 ## Supported sensors
 
@@ -88,12 +103,12 @@ Test status:\
 
 Parameters shared by all supported models:
 
-| Parameter    | Type   | Default | Accepted Values            | Description      |
-| ------------ | ------ | ------- | -------------------------- | ---------------- |
-| sensor_model | string |         | See supported models       |                  |
-| return_mode  | string |         | See supported return modes |                  |
-| frame_id     | string | pandar  |                            | ROS frame ID     |
-| scan_phase   | double | 0.0     | degrees [0.0, 360.0]       | Scan start angle |
+| Parameter    | Type   | Default          | Accepted values            | Description      |
+| ------------ | ------ | ---------------- | -------------------------- | ---------------- |
+| sensor_model | string |                  | See supported models       |                  |
+| return_mode  | string |                  | See supported return modes |                  |
+| frame_id     | string | Sensor dependent |                            | ROS frame ID     |
+| scan_phase   | double | 0.0              | degrees [0.0, 360.0]       | Scan start angle |
 
 ### Hesai specific parameters
 
@@ -139,8 +154,9 @@ Parameters shared by all supported models:
 
 #### Hardware interface parameters
 
-| Parameter                      | Type   | Default         | Accepted Values   | Description                    |
+| Parameter                      | Type   | Default         | Accepted values   | Description                    |
 | ------------------------------ | ------ | --------------- | ----------------- | ------------------------------ |
+| frame_id                       | string | hesai           |                   | ROS frame ID                   |
 | sensor_ip                      | string | 192.168.1.201   |                   | Sensor IP                      |
 | host_ip                        | string | 255.255.255.255 |                   | Host IP                        |
 | data_port                      | uint16 | 2368            |                   | Sensor port                    |
@@ -157,8 +173,9 @@ Parameters shared by all supported models:
 
 #### Driver parameters
 
-| Parameter        | Type   | Default | Accepted Values | Description            |
+| Parameter        | Type   | Default | Accepted values | Description            |
 | ---------------- | ------ | ------- | --------------- | ---------------------- |
+| frame_id         | string | hesai   |                 | ROS frame ID           |
 | calibration_file | string |         |                 | LiDAR calibration file |
 | correction_file  | string |         |                 | LiDAR correction file  |
 
@@ -175,8 +192,9 @@ Parameters shared by all supported models:
 
 #### Hardware interface parameters
 
-| Parameter       | Type   | Default         | Accepted Values   | Description     |
+| Parameter       | Type   | Default         | Accepted values   | Description     |
 | --------------- | ------ | --------------- | ----------------- | --------------- |
+| frame_id        | string | velodyne        |                   | ROS frame ID    |
 | sensor_ip       | string | 192.168.1.201   |                   | Sensor IP       |
 | host_ip         | string | 255.255.255.255 |                   | Host IP         |
 | data_port       | uint16 | 2368            |                   | Sensor port     |
@@ -186,12 +204,13 @@ Parameters shared by all supported models:
 
 #### Driver parameters
 
-| Parameter        | Type   | Default | Accepted Values      | Description                             |
-| ---------------- | ------ | ------- | -------------------- | --------------------------------------- |
-| calibration_file | string |         |                      | LiDAR calibration file                  |
-| min_range        | double | 0.3     | meters, >= 0.3       | Minimum point range published           |
-| max_range        | double | 300.0   | meters, <= 300.0     | Maximum point range published           |
-| view_width       | double | 360.0   | degrees [0.0, 360.0] | Horizontal FOV centered at `scan_phase` |
+| Parameter        | Type   | Default  | Accepted values      | Description                             |
+| ---------------- | ------ | -------- | -------------------- | --------------------------------------- |
+| frame_id         | string | velodyne |                      | ROS frame ID                            |
+| calibration_file | string |          |                      | LiDAR calibration file                  |
+| min_range        | double | 0.3      | meters, >= 0.3       | Minimum point range published           |
+| max_range        | double | 300.0    | meters, <= 300.0     | Maximum point range published           |
+| view_width       | double | 360.0    | degrees [0.0, 360.0] | Horizontal FOV centered at `scan_phase` |
 
 ## Software design overview
 
