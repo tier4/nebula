@@ -3,7 +3,7 @@
 Nebula is a sensor driver platform that is designed to provide a unified framework for as wide a variety of devices as possible.
 While it primarily targets Ethernet-based LiDAR sensors, it aims to be easily extendable to support new sensors and interfaces.
 Nebula provides the following features:
-- ROS2 interface implementations
+- ROS 2 interface implementations
 - Abstraction of sensor decoders and hardware interfaces available as libraries
 - TCP/IP and UDP communication implementations
 
