@@ -49,7 +49,10 @@ void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
-
+  if (pointcloud == nullptr) {
+    RCLCPP_WARN_STREAM(get_logger(), "Empty cloud parsed.");
+    return;
+  };
   if (
     nebula_points_pub_->get_subscription_count() > 0 ||
     nebula_points_pub_->get_intra_process_subscription_count() > 0) {

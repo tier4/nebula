@@ -49,6 +49,7 @@ private:
   float sin_rot_table_[ROTATION_MAX_UNITS];
   float cos_rot_table_[ROTATION_MAX_UNITS];
   float rotation_radians_[ROTATION_MAX_UNITS];
+  std::vector<std::vector<float>> timing_offsets_;
   int phase_;
   int max_pts_;
 };

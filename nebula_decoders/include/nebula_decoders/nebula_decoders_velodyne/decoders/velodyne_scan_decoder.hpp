@@ -149,7 +149,7 @@ protected:
   bool has_scanned_ = true;
   double dual_return_distance_threshold_{};  // Velodyne does this internally, this will not be
                                              // implemented here
-  double first_timestamp{};
+  double scan_timestamp_{};
 
   /// @brief SensorConfiguration for this decoder
   std::shared_ptr<drivers::VelodyneSensorConfiguration> sensor_configuration_;

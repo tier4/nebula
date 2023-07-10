@@ -52,6 +52,7 @@ private:
   float vls_128_laser_azimuth_cache_[16];
   int phase_;
   int max_pts_;
+  std::vector<std::vector<float>> timing_offsets_;
 };
 
 }  // namespace vls128
