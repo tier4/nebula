@@ -1,0 +1,19 @@
+/**:
+  ros__parameters:
+    sensor_model: "PandarQT64" # See readme for supported models
+    sensor_ip: "192.168.1.201" # Lidar Sensor IP
+    host_ip: "255.255.255.255" # Broadcast IP from Sensor
+    frame_id: "hesai"
+    data_port: 2368 # LiDAR Data Port
+    gnss_port: 10110 # LiDAR GNSS Port
+    return_mode: "Dual" # See readme for supported return modes
+    scan_phase: 0.0 # Angle where scans begin (degrees, [0.,360.]
+    packet_mtu_size: 1500 # Packet MTU size
+    rotation_speed: 600 # Motor RPM, the sensor's internal spin rate.
+    cloud_min_angle: 0 # Field of View, start degrees.
+    cloud_max_angle: 360 # Field of View, end degrees.
+    diag_span: 1000 # milliseconds
+    calibration_file: "./install/nebula_decoders/share/nebula_decoders/calibration/hesai/PandarQT64.csv"
+    setup_sensor: True
+
+    online: True
