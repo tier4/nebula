@@ -56,12 +56,19 @@ HesaiDriverRosWrapper::HesaiDriverRosWrapper(const rclcpp::NodeOptions & options
 void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
   const pandar_msgs::msg::PandarScan::SharedPtr scan_msg)
 {
+  auto start = std::chrono::high_resolution_clock::now();
   // take packets out of scan msg
   std::vector<pandar_msgs::msg::PandarPacket> pkt_msgs = scan_msg->packets;
+
+  auto d_packets_in = std::chrono::high_resolution_clock::now() - start;
+  start = std::chrono::high_resolution_clock::now();
 
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
+
+  auto d_convert = std::chrono::high_resolution_clock::now() - start;
+  start = std::chrono::high_resolution_clock::now();
 
   if (pointcloud == nullptr) {
     RCLCPP_WARN_STREAM(get_logger(), "Empty cloud parsed.");
@@ -98,6 +105,12 @@ void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
       rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
     PublishCloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
   }
+
+  auto d_publish = std::chrono::high_resolution_clock::now() - start;
+
+  RCLCPP_INFO(
+    get_logger(), "AAA {'d_packets_in': %ld, 'd_convert': %ld, 'd_publish': %ld} BBB", d_packets_in.count(),
+    d_convert.count(), d_publish.count());
 }
 
 void HesaiDriverRosWrapper::PublishCloud(

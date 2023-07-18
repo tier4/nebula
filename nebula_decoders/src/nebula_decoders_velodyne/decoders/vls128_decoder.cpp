@@ -273,7 +273,7 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               current_point.distance = distance;
               current_point.time_stamp = time_stamp;
               current_point.intensity = intensity;
-              scan_pc_->points.emplace_back(current_point);
+              scan_pc_->points.emplace_back(current_point); //MAX the bottleneck in terms of cache misses
             }  // 2nd scan area condition
           }    // distance condition
         }      // empty "else"

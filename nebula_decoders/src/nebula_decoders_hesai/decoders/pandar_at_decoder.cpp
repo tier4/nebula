@@ -76,7 +76,7 @@ int PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet
 
   if (has_scanned_) {
     scan_pc_ = overflow_pc_;
-    overflow_pc_.reset(new NebulaPointCloud);
+    overflow_pc_.reset(new NebulaPointCloud); //MAX reallocates memory, slow?
     has_scanned_ = false;
   }
 
