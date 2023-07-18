@@ -58,7 +58,7 @@ void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
 {
   auto start = std::chrono::high_resolution_clock::now();
   // take packets out of scan msg
-  std::vector<pandar_msgs::msg::PandarPacket> pkt_msgs = scan_msg->packets;
+  //std::vector<pandar_msgs::msg::PandarPacket> pkt_msgs = scan_msg->packets;
 
   auto d_packets_in = std::chrono::high_resolution_clock::now() - start;
   start = std::chrono::high_resolution_clock::now();

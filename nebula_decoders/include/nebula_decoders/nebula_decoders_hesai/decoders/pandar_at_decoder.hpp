@@ -72,13 +72,14 @@ private:
   /// @param chLaserNumber Target laser
   /// @param cld Point cloud
   void CalcXTPointXYZIT(
-    int block_id, int chLaserNumber, std::shared_ptr<pcl::PointCloud<NebulaPoint>> cld);
+    int block_id, int chLaserNumber, NebulaPointCloudPtr & cld);
 #endif
 
   /// @brief Convert to point cloud
   /// @param block_id target block
   /// @return Point cloud
   drivers::NebulaPointCloudPtr convert(size_t block_id) override;
+  void convert2(size_t block_id, NebulaPointCloudPtr & out_pc);
   /// @brief Convert to point cloud for dual return
   /// @param block_id target block
   /// @return Point cloud
