@@ -32,19 +32,12 @@ PandarATDecoder::PandarATDecoder(
     azimuth_offset_[laser] = calibration_configuration->azimuth_offset_map[laser];
   }
 
-  m_elevation_rad_map_.resize(MAX_AZI_LEN);
-  m_sin_elevation_map_.resize(MAX_AZI_LEN);
-  m_cos_elevation_map_.resize(MAX_AZI_LEN);
-  m_azimuth_rad_map_.resize(MAX_AZI_LEN);
-  m_sin_azimuth_map_.resize(MAX_AZI_LEN);
-  m_cos_azimuth_map_.resize(MAX_AZI_LEN);
+  m_sin_map_.resize(MAX_AZI_LEN);
+  m_cos_map_.resize(MAX_AZI_LEN);
   for (size_t i = 0; i < MAX_AZI_LEN; ++i) {
-    m_elevation_rad_map_[i] = 2.f * i * M_PI / MAX_AZI_LEN;
-    m_sin_elevation_map_[i] = sinf(m_elevation_rad_map_[i]);
-    m_cos_elevation_map_[i] = cosf(m_elevation_rad_map_[i]);
-    m_azimuth_rad_map_[i] = 2.f * i * M_PI / MAX_AZI_LEN;
-    m_sin_azimuth_map_[i] = sinf(m_azimuth_rad_map_[i]);
-    m_cos_azimuth_map_[i] = cosf(m_azimuth_rad_map_[i]);
+    const float rad = 2.f * i * M_PI / MAX_AZI_LEN;
+    m_sin_map_[i] = sinf(rad);
+    m_cos_map_[i] = cosf(rad);
   }
 
   dual_return_distance_threshold_ = sensor_configuration_->dual_return_distance_threshold;
@@ -58,13 +51,15 @@ PandarATDecoder::PandarATDecoder(
 
   scan_pc_.reset(new NebulaPointCloud);
   overflow_pc_.reset(new NebulaPointCloud);
+  scan_pc_->reserve(1200 * 128);
+  overflow_pc_->reserve(1200 * 128);
 }
 
 bool PandarATDecoder::hasScanned() { return has_scanned_; }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> PandarATDecoder::get_pointcloud()
 {
-  return std::make_tuple(scan_pc_, scan_timestamp_);
+  return std::make_tuple(overflow_pc_, scan_timestamp_);
 }
 
 int PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
@@ -75,8 +70,6 @@ int PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet
   }
 
   if (has_scanned_) {
-    scan_pc_ = overflow_pc_;
-    overflow_pc_.reset(new NebulaPointCloud);
     has_scanned_ = false;
   }
 
@@ -96,17 +89,19 @@ int PandarATDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet
       field = (field + 1) % correction_configuration_->frameNumber;
       count++;
     }
+
+    // The field (= mirror) has changed, meaning the previous scan is complete
     if (last_field_ != field) {
       if (max_azimuth_ < azimuth) {
         max_azimuth_ = azimuth;
       }
       scan_timestamp_ = packet_.unix_second + static_cast<double>(packet_.usec) / 1000000.f;
-      auto block_pc = convert(block_id);
-      *overflow_pc_ += *block_pc;
+      std::swap(scan_pc_, overflow_pc_);
+      scan_pc_->points.clear();
+      convert(block_id, scan_pc_);
       has_scanned_ = true;
     } else {
-      auto block_pc = convert(block_id);
-      *scan_pc_ += *block_pc;
+      convert(block_id, scan_pc_);
     }
     last_azimuth_ = azimuth;
     last_field_ = field;
@@ -171,10 +166,10 @@ void PandarATDecoder::CalcXTPointXYZIT(
     point.distance = unit.distance;
     point.elevation = 2.f * elevation * M_PI / MAX_AZI_LEN;
     {
-      float xyDistance = unit.distance * m_cos_elevation_map_[elevation];
-      point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
-      point.y = static_cast<float>(xyDistance * m_cos_azimuth_map_[azimuth]);
-      point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[elevation]);
+      float xyDistance = unit.distance * m_cos_map_[elevation];
+      point.x = xyDistance * m_sin_map_[azimuth];
+      point.y = xyDistance * m_cos_map_[azimuth];
+      point.z = unit.distance * m_sin_map_[elevation];
     }
     if (scan_timestamp_ < 0) {  // invalid timestamp
       scan_timestamp_ = packet_.unix_second + static_cast<double>(packet_.usec) / 1000000.;
@@ -227,17 +222,18 @@ void PandarATDecoder::CalcXTPointXYZIT(
   }
 }
 
+void PandarATDecoder::convert(size_t block_id, NebulaPointCloudPtr & out_pc) {
+  CalcXTPointXYZIT(block_id, static_cast<int>(packet_.header.chLaserNumber), out_pc);
+}
+
 drivers::NebulaPointCloudPtr PandarATDecoder::convert(size_t block_id)
 {
-  NebulaPointCloudPtr block_pc(new NebulaPointCloud);
-  CalcXTPointXYZIT(block_id, static_cast<int>(packet_.header.chLaserNumber), block_pc);
-
-  return block_pc;
+  throw std::runtime_error("Not implemented");
 }
 
 drivers::NebulaPointCloudPtr PandarATDecoder::convert_dual(size_t block_id)
 {
-  return convert(block_id);
+  throw std::runtime_error("Not implemented");
 }
 
 bool PandarATDecoder::parsePacket(const pandar_msgs::msg::PandarPacket & pandar_packet)

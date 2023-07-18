@@ -79,6 +79,10 @@ private:
   /// @param block_id target block
   /// @return Point cloud
   drivers::NebulaPointCloudPtr convert(size_t block_id) override;
+  /// @brief Convert to point cloud (without temporary buffer)
+  /// @param block_id target block
+  /// @param out_pc Point cloud to append the decoded points to
+  void convert(size_t block_id, NebulaPointCloudPtr & out_pc);
   /// @brief Convert to point cloud for dual return
   /// @param block_id target block
   /// @return Point cloud
@@ -93,13 +97,8 @@ private:
   std::array<float, BLOCKS_PER_PACKET> block_offset_dual_{};
   std::array<float, BLOCKS_PER_PACKET> block_offset_triple_{};
 
-  std::vector<float> m_elevation_rad_map_;
-  std::vector<float> m_sin_elevation_map_;
-  std::vector<float> m_cos_elevation_map_;
-
-  std::vector<float> m_azimuth_rad_map_;
-  std::vector<float> m_sin_azimuth_map_;
-  std::vector<float> m_cos_azimuth_map_;
+  std::vector<float> m_sin_map_;
+  std::vector<float> m_cos_map_;
 
   Packet packet_{};
 
