@@ -34,6 +34,14 @@ PandarATDecoder::PandarATDecoder(
 
   dual_return_distance_threshold_ = sensor_configuration_->dual_return_distance_threshold;
 
+  // Compute LUT only for 1/4 of the circle.
+  // The rest is obtained by symmetry.
+  m_cos_map_.resize(MAX_AZI_LEN / 4);
+  for (int i = 0; i < MAX_AZI_LEN / 4; ++i) {
+    const float rad = i * 2.f * M_PI / MAX_AZI_LEN;
+    m_cos_map_[i] = cosf(rad);
+  }
+
   last_phase_ = 0;
   has_scanned_ = false;
   scan_timestamp_ = -1;
@@ -111,6 +119,23 @@ void PandarATDecoder::CalcXTPointXYZIT(
   Block * block = &packet_.blocks[block_id];
   Block * another_block = &packet_.blocks[(block_id + 1) % 2];
 
+  auto fast_cosf = [=](int value) {
+    value = (value + MAX_AZI_LEN) % MAX_AZI_LEN; // make sure value is positive
+    if (value < MAX_AZI_LEN / 4) {
+      return m_cos_map_[value];
+    } else if (value < MAX_AZI_LEN / 2) {
+      return -m_cos_map_[MAX_AZI_LEN / 2 - value];
+    } else if (value < MAX_AZI_LEN * 3 / 4) {
+      return -m_cos_map_[value - MAX_AZI_LEN / 2];
+    } else {
+      return m_cos_map_[MAX_AZI_LEN - value];
+    }
+  };
+
+  auto fast_sinf = [=](int value) {
+    return fast_cosf(value - MAX_AZI_LEN / 4);
+  };
+
   for (int i = 0; i < chLaserNumber; ++i) {
     /* for all the units in a block */
     Unit & unit = block->units[i];
@@ -156,10 +181,10 @@ void PandarATDecoder::CalcXTPointXYZIT(
     point.distance = unit.distance;
     point.elevation = 2.f * elevation * M_PI / MAX_AZI_LEN;
     {
-      float xyDistance = unit.distance * cosf(point.elevation);
-      point.x = xyDistance * sinf(point.azimuth);
-      point.y = xyDistance * cosf(point.azimuth);
-      point.z = unit.distance * sinf(point.elevation);
+      float xyDistance = unit.distance * fast_cosf(point.elevation);
+      point.x = xyDistance * fast_sinf(point.azimuth);
+      point.y = xyDistance * fast_cosf(point.azimuth);
+      point.z = unit.distance * fast_sinf(point.elevation);
     }
     if (scan_timestamp_ < 0) {  // invalid timestamp
       scan_timestamp_ = packet_.unix_second + static_cast<double>(packet_.usec) / 1000000.;
