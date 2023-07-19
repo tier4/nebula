@@ -32,14 +32,6 @@ PandarATDecoder::PandarATDecoder(
     azimuth_offset_[laser] = calibration_configuration->azimuth_offset_map[laser];
   }
 
-  m_sin_map_.resize(MAX_AZI_LEN);
-  m_cos_map_.resize(MAX_AZI_LEN);
-  for (size_t i = 0; i < MAX_AZI_LEN; ++i) {
-    const float rad = 2.f * i * M_PI / MAX_AZI_LEN;
-    m_sin_map_[i] = sinf(rad);
-    m_cos_map_[i] = cosf(rad);
-  }
-
   dual_return_distance_threshold_ = sensor_configuration_->dual_return_distance_threshold;
 
   last_phase_ = 0;
@@ -164,10 +156,10 @@ void PandarATDecoder::CalcXTPointXYZIT(
     point.distance = unit.distance;
     point.elevation = 2.f * elevation * M_PI / MAX_AZI_LEN;
     {
-      float xyDistance = unit.distance * m_cos_map_[elevation];
-      point.x = xyDistance * m_sin_map_[azimuth];
-      point.y = xyDistance * m_cos_map_[azimuth];
-      point.z = unit.distance * m_sin_map_[elevation];
+      float xyDistance = unit.distance * cosf(point.elevation);
+      point.x = xyDistance * sinf(point.azimuth);
+      point.y = xyDistance * cosf(point.azimuth);
+      point.z = unit.distance * sinf(point.elevation);
     }
     if (scan_timestamp_ < 0) {  // invalid timestamp
       scan_timestamp_ = packet_.unix_second + static_cast<double>(packet_.usec) / 1000000.;
