@@ -60,12 +60,16 @@ void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
   // take packets out of scan msg
   //std::vector<pandar_msgs::msg::PandarPacket> pkt_msgs = scan_msg->packets;
 
+  size_t n_packets_in = scan_msg->packets.size();
+
   auto d_packets_in = std::chrono::high_resolution_clock::now() - start;
   start = std::chrono::high_resolution_clock::now();
 
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
+
+  size_t n_points_out = pointcloud ? pointcloud->size() : 0;
 
   auto d_convert = std::chrono::high_resolution_clock::now() - start;
   start = std::chrono::high_resolution_clock::now();
@@ -109,8 +113,8 @@ void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
   auto d_publish = std::chrono::high_resolution_clock::now() - start;
 
   RCLCPP_INFO(
-    get_logger(), "AAA {'d_packets_in': %ld, 'd_convert': %ld, 'd_publish': %ld} BBB", d_packets_in.count(),
-    d_convert.count(), d_publish.count());
+    get_logger(), "AAA {'d_packets_in': %ld, 'd_convert': %ld, 'd_publish': %ld, 'n_points_out': %lu, 'n_packets_in': %lu} BBB", 
+    d_packets_in.count(), d_convert.count(), d_publish.count(), n_points_out, n_packets_in);
 }
 
 void HesaiDriverRosWrapper::PublishCloud(
