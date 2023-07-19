@@ -181,10 +181,10 @@ void PandarATDecoder::CalcXTPointXYZIT(
     point.distance = unit.distance;
     point.elevation = 2.f * elevation * M_PI / MAX_AZI_LEN;
     {
-      float xyDistance = unit.distance * fast_cosf(point.elevation);
-      point.x = xyDistance * fast_sinf(point.azimuth);
-      point.y = xyDistance * fast_cosf(point.azimuth);
-      point.z = unit.distance * fast_sinf(point.elevation);
+      float xyDistance = unit.distance * fast_cosf(elevation);
+      point.x = xyDistance * fast_sinf(azimuth);
+      point.y = xyDistance * fast_cosf(azimuth);
+      point.z = unit.distance * fast_sinf(elevation);
     }
     if (scan_timestamp_ < 0) {  // invalid timestamp
       scan_timestamp_ = packet_.unix_second + static_cast<double>(packet_.usec) / 1000000.;
