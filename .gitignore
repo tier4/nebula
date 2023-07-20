@@ -11,6 +11,9 @@ build/
 install/
 log/
 
+# profiling
+profiling_output/
+
 # Python
 srv/_*.py
 *.pyc

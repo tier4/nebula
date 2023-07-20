@@ -56,6 +56,8 @@ HesaiDriverRosWrapper::HesaiDriverRosWrapper(const rclcpp::NodeOptions & options
 void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
   const pandar_msgs::msg::PandarScan::SharedPtr scan_msg)
 {
+  auto t_start = std::chrono::high_resolution_clock::now();
+
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
@@ -95,6 +97,9 @@ void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
       rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
     PublishCloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
   }
+
+  auto runtime = std::chrono::high_resolution_clock::now() - t_start;
+  RCLCPP_DEBUG(get_logger(), "PROFILING {'d_total': %lu, 'n_out': %lu}", runtime.count(), pointcloud->size());
 }
 
 void HesaiDriverRosWrapper::PublishCloud(
