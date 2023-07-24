@@ -159,6 +159,9 @@ public:
   /// @param setup_sensor Whether to also initialize tcp_driver for sensor configuration
   /// @return Resulting status
   Status InitializeTcpDriver(bool setup_sensor = true);
+  /// @brief Closes the TcpDriver and related resources
+  /// @return Status result
+  Status FinalizeTcpDriver();
   /// @brief Parsing json string to property_tree
   /// @param str JSON string
   /// @return Parsed property_tree

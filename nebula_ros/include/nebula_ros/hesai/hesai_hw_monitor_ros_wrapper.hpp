@@ -55,7 +55,7 @@ class HesaiHwMonitorRosWrapper final : public rclcpp::Node, NebulaHwMonitorWrapp
 
 public:
   explicit HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & options);
-
+  ~HesaiHwMonitorRosWrapper() noexcept override;
   /// @brief Not used
   /// @return Current status
   Status MonitorStart() override;

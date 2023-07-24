@@ -84,15 +84,11 @@ Status HesaiHwInterface::CloudInterfaceStart()
     std::cout << "Starting UDP server on: " << *sensor_configuration_ << std::endl;
     cloud_udp_driver_->init_receiver(
       sensor_configuration_->host_ip, sensor_configuration_->data_port);
-    PrintError("init ok");
     cloud_udp_driver_->receiver()->open();
-    PrintError("open ok");
     cloud_udp_driver_->receiver()->bind();
-    PrintError("bind ok");
 
     cloud_udp_driver_->receiver()->asyncReceive(
       std::bind(&HesaiHwInterface::ReceiveCloudPacketCallback, this, std::placeholders::_1));
-    PrintError("async receive set");
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
     std::cerr << status << sensor_configuration_->sensor_ip << ","
@@ -197,6 +193,17 @@ Status HesaiHwInterface::InitializeTcpDriver(bool setup_sensor)
     if (!tcp_driver_s_->open()) {
       return Status::ERROR_1;
     }
+  }
+  return Status::OK;
+}
+
+Status HesaiHwInterface::FinalizeTcpDriver() {
+  try {
+    tcp_driver_->close();
+  }
+  catch(std::exception &e) {
+    PrintError("Error while finalizing the TcpDriver");
+    return Status::UDP_CONNECTION_ERROR;
   }
   return Status::OK;
 }
@@ -2624,16 +2631,14 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     t.join();
   }
 
-  set_flg = false;
+  set_flg = true;
   auto sync_angle = static_cast<int>(hesai_config.sync_angle / 100);
   auto scan_phase = static_cast<int>(sensor_configuration->scan_phase);
-  int sync_flg = 0 < scan_phase ? 1 : 0;
-  if (hesai_config.sync != sync_flg) {
-    set_flg = true;
-  } else if (0 < sync_flg && scan_phase != sync_angle) {
+  int sync_flg = (hesai_config.sync_angle >= 0) ? 1 : 0;
+  if (scan_phase != sync_angle) {
     set_flg = true;
   }
-  if (set_flg) {
+  if (sync_flg && set_flg) {
     PrintInfo("current lidar sync: " + std::to_string(hesai_config.sync));
     PrintInfo("current lidar sync_angle: " + std::to_string(hesai_config.sync_angle));
     PrintInfo("current configuration scan_phase: " + std::to_string(scan_phase));
