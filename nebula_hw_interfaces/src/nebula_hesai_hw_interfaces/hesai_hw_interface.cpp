@@ -2535,7 +2535,7 @@ HesaiStatus HesaiHwInterface::GetLidarMonitorAsyncHttp(
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
   auto st = GetHttpClientDriverOnce(ctx, hcd);
   if (st != Status::OK) {
-    PrintError("HesaiHwInterface::GetLidarMonitorAsyncHttp: cannnot GetHttpClientDriverOnce");
+    PrintError("HesaiHwInterface::GetLidarMonitorAsyncHttp: cannot GetHttpClientDriverOnce");
     return st;
   }
 

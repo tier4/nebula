@@ -22,10 +22,10 @@ namespace nebula
 {
 namespace ros
 {
-/// @brief Get parametor from rclcpp::Parameter
+/// @brief Get parameter from rclcpp::Parameter
 /// @tparam T
 /// @param p Parameter from rclcpp parameter callback
-/// @param name Target parametor name
+/// @param name Target parameter name
 /// @param value Corresponding value
 /// @return Whether the target name existed
 template <typename T>
