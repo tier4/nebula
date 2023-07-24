@@ -31,6 +31,11 @@ const uint16_t MAX_AZIMUTH_DEGREE_NUM = 36000;
 const uint16_t LIDAR_AZIMUTH_UNIT = 256;
 const uint32_t MAX_AZI_LEN = 36000 * 256;
 
+/// @brief The resolution of one scan (in single return mode)
+const uint16_t SCAN_POINTS_NUM = 1200 * LASER_COUNT;
+/// @brief This sensor supports a maximum of 2 returns (= dual return)
+const uint16_t MAX_RETURN_COUNT = 2;
+
 /// @brief Hesai LiDAR decoder (AT128)
 class PandarATDecoder : public HesaiScanDecoder
 {

@@ -50,9 +50,9 @@ PandarATDecoder::PandarATDecoder(
   last_field_ = -1;
 
   scan_pc_.reset(new NebulaPointCloud);
+  scan_pc_->reserve(SCAN_POINTS_NUM * MAX_RETURN_COUNT);
   overflow_pc_.reset(new NebulaPointCloud);
-  scan_pc_->reserve(1200 * 128);
-  overflow_pc_->reserve(1200 * 128);
+  overflow_pc_->reserve(SCAN_POINTS_NUM * MAX_RETURN_COUNT);
 }
 
 bool PandarATDecoder::hasScanned() { return has_scanned_; }

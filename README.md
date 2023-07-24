@@ -47,26 +47,6 @@ Show results:
 colcon test-result --all
 ```
 
-## How to evaluate performance
-
-You can evaluate Nebula performance on a given rosbag and sensor model using the below tools.
-The profiling runner is most accurate when assigning isolated cores via the `-c <core_id>`.
-CPU frequencies are locked/unlocked automatically by the runner to increase repeatability.
-
-Run profiling for each version you want to compare:
-
-```bash
-./scripts/profiling_runner.bash baseline -m Pandar64 -b ~/my_rosbag -c 2 -t 20 -n 3
-git checkout my_improved_branch
-./scripts/profiling_runner.bash improved -m Pandar64 -b ~/my_rosbag -c 2 -t 20 -n 3
-```
-Show results:
-
-```bash
-pip3 install scripts/requirements.txt  # first-time setup
-python3 scripts/plot_times.py baseline improved
-```
-
 ## Generic launch file
 
 You can easily run the sensor hardware interface, the sensor hardware monitor and sensor driver using (e.g. Pandar64):
@@ -237,3 +217,24 @@ Parameters shared by all supported models:
 ## Software design overview
 
 ![DriverOrganization](docs/diagram.png)
+
+
+## How to evaluate performance
+
+You can evaluate Nebula performance on a given rosbag and sensor model using the below tools.
+The profiling runner is most accurate when assigning isolated cores via the `-c <core_id>`.
+CPU frequencies are locked/unlocked automatically by the runner to increase repeatability.
+
+Run profiling for each version you want to compare:
+
+```bash
+./scripts/profiling_runner.bash baseline -m Pandar64 -b ~/my_rosbag -c 2 -t 20 -n 3
+git checkout my_improved_branch
+./scripts/profiling_runner.bash improved -m Pandar64 -b ~/my_rosbag -c 2 -t 20 -n 3
+```
+Show results:
+
+```bash
+pip3 install scripts/requirements.txt  # first-time setup
+python3 scripts/plot_times.py baseline improved
+```
