@@ -185,7 +185,16 @@ Status VelodyneDriverRosWrapper::GetParameters(
     this->declare_parameter<double>("max_range", 300., descriptor);
     sensor_configuration.max_range = this->get_parameter("max_range").as_double();
   }
-  double view_direction = sensor_configuration.scan_phase * M_PI / 180;
+  double view_direction;
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("view_direction", 0., descriptor);
+    view_direction = this->get_parameter("view_direction").as_double() * M_PI / 180;
+  }
   double view_width = 360 * M_PI / 180;
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
