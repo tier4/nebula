@@ -16,6 +16,11 @@
     "QT",
     "XTM",
     "Pdelay",
-    "gprmc"
+    "gprmc",
+    "Vccint",
+    "vccint",
+    "adctp",
+    "Adctp",
+    
   ]
 }
