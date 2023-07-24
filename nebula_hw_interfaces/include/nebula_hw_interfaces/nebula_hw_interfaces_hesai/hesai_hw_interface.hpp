@@ -52,6 +52,7 @@ const uint8_t PTC_COMMAND_SET_SYNC_ANGLE = 0x18;
 const uint8_t PTC_COMMAND_SET_TRIGGER_METHOD = 0x1b;
 const uint8_t PTC_COMMAND_SET_STANDBY_MODE = 0x1c;
 const uint8_t PTC_COMMAND_SET_RETURN_MODE = 0x1e;
+const uint8_t PTC_COMMAND_SET_CLOCK_SOURCE = 0x1f;
 const uint8_t PTC_COMMAND_SET_DESTINATION_IP = 0x20;
 const uint8_t PTC_COMMAND_SET_CONTROL_PORT = 0x21;
 const uint8_t PTC_COMMAND_SET_LIDAR_RANGE = 0x22;
@@ -75,6 +76,16 @@ const uint16_t PANDAR128_E4X_PACKET_SIZE = 861;
 const uint16_t PANDAR128_E4X_EXTENDED_PACKET_SIZE = 1117;
 
 const uint16_t MTU_SIZE = 1500;
+
+const int PTP_PROFILE = 0; // Fixed: IEEE 1588v2
+const int PTP_DOMAIN_ID = 0; // 0-127, Default: 0
+const int PTP_NETWORK_TRANSPORT = 0; // 0: UDP/IP, 1: L2
+const int PTP_LOG_ANNOUNCE_INTERVAL = 1; // Time interval between Announce messages, in units of log seconds (default: 1)
+const int PTP_SYNC_INTERVAL = 1; //Time interval between Sync messages, in units of log seconds (default: 1)
+const int PTP_LOG_MIN_DELAY_INTERVAL = 0; //Minimum permitted mean time between Delay_Req messages, in units of log seconds (default: 0)
+
+const int HESAI_LIDAR_GPS_CLOCK_SOURCE = 0;
+const int HESAI_LIDAR_PTP_CLOCK_SOURCE = 1;
 
 /// @brief Hardware interface of hesai driver
 class HesaiHwInterface : NebulaHwInterfaceBase
@@ -104,7 +115,7 @@ private:
   int tm_fail_cnt_max = 0;
   std::timed_mutex tms_;
   int tms_fail_cnt = 0;
-  int tms_fail_cnt_max = 0;
+  int tms_fail_cnt_max = 3;
   bool wl = true;
   bool is_solid_state = false;
   int target_model_no;
@@ -727,6 +738,11 @@ public:
   /// @param with_run Automatically executes run() of TcpDriver
   /// @return Resulting status
   Status GetLidarRange(bool with_run = true);
+
+  Status SetClockSource(std::shared_ptr<::drivers::tcp_driver::TcpDriver> target_tcp_driver, int clock_source, bool with_run);
+  Status SetClockSource(std::shared_ptr<boost::asio::io_context> ctx, int clock_source, bool with_run);
+  Status SetClockSource(int clock_source, bool with_run = true);
+
   /// @brief Setting values with PTC_COMMAND_SET_PTP_CONFIG
   /// @param target_tcp_driver TcpDriver used
   /// @param profile IEEE timing and synchronization standard

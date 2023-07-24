@@ -2049,6 +2049,62 @@ Status HesaiHwInterface::GetLidarRange(bool with_run)
     [this](HesaiLidarRangeAll & result) { std::cout << result << std::endl; }, with_run);
 }
 
+Status HesaiHwInterface::SetClockSource(
+  std::shared_ptr<::drivers::tcp_driver::TcpDriver> target_tcp_driver, int clock_source,
+  bool with_run)
+{
+  std::vector<unsigned char> buf_vec;
+  int len = 1;
+  buf_vec.emplace_back(PTC_COMMAND_HEADER_HIGH);
+  buf_vec.emplace_back(PTC_COMMAND_HEADER_LOW);
+  buf_vec.emplace_back(PTC_COMMAND_SET_CLOCK_SOURCE);
+  buf_vec.emplace_back(PTC_COMMAND_DUMMY_BYTE);
+  buf_vec.emplace_back((len >> 24) & 0xff);
+  buf_vec.emplace_back((len >> 16) & 0xff);
+  buf_vec.emplace_back((len >> 8) & 0xff);
+  buf_vec.emplace_back((len >> 0) & 0xff);
+
+  buf_vec.emplace_back((clock_source >> 0) & 0xff);
+
+  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetClockSource")) {
+    return SetClockSource(target_tcp_driver, clock_source, with_run);
+  }
+  PrintDebug("SetClockSource: start");
+
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SetClockSource"); });
+  if (with_run) {
+    boost::system::error_code ec = target_tcp_driver->run();
+    if (ec) {
+      PrintError("HesaiHwInterface::SetClockSource: " + ec.message());
+    }
+#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
+    std::cout << "ctx->run(): SetReturnMode" << std::endl;
+#endif
+  }
+
+  return Status::WAITING_FOR_SENSOR_RESPONSE;
+}
+Status HesaiHwInterface::SetClockSource(
+  std::shared_ptr<boost::asio::io_context> ctx, int clock_source, bool with_run)
+{
+  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
+  tcp_driver_local->init_socket(
+    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
+    PandarTcpCommandPort);
+  return SetClockSource(tcp_driver_local, clock_source, with_run);
+}
+Status HesaiHwInterface::SetClockSource(int clock_source, bool with_run)
+{
+  //*
+  if (with_run) {
+    if (tcp_driver_s_->GetIOContext()->stopped()) {
+      tcp_driver_s_->GetIOContext()->restart();
+    }
+  }
+  //*/
+  return SetClockSource(tcp_driver_s_, clock_source, with_run);
+}
+
 Status HesaiHwInterface::SetPtpConfig(
   std::shared_ptr<::drivers::tcp_driver::TcpDriver> target_tcp_driver, int profile, int domain,
   int network, int logAnnounceInterval = 1, int logSyncInterval = 1, int logMinDelayReqInterval = 0,
@@ -2646,6 +2702,22 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     t.join();
   }
 
+  {
+    std::thread t([this] {
+      PrintInfo("Trying to set Clock source to PTP");
+      auto clock_status = SetClockSource(HESAI_LIDAR_PTP_CLOCK_SOURCE);
+      PrintInfo("Trying to set PTP Config: IEEE 1588 v2, Domain: 0, Transport: UDP/IP");
+      auto ptp_status = SetPtpConfig(PTP_PROFILE,
+                   PTP_DOMAIN_ID,
+                   PTP_NETWORK_TRANSPORT,
+                   PTP_LOG_ANNOUNCE_INTERVAL,
+                   PTP_SYNC_INTERVAL,
+                   PTP_LOG_MIN_DELAY_INTERVAL
+      );
+    });
+    t.join();
+  }
+
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
   std::cout << "End CheckAndSetConfig(HesaiConfig)!!" << std::endl;
 #endif
@@ -2878,6 +2950,9 @@ bool HesaiHwInterface::CheckLock(
         tcp_driver_->open();
         tcp_driver_s_->close();
         tcp_driver_s_->open();
+      }
+      else {
+        return true;
       }
       return false;
     }
