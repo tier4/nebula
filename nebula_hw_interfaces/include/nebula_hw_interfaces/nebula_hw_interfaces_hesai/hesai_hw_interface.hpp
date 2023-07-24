@@ -883,6 +883,29 @@ public:
   /// @param rpm spin_speed (300, 600, 1200)
   /// @return Resulting status
   HesaiStatus SetSpinSpeedAsyncHttp(uint16_t rpm);
+
+  HesaiStatus SetPtpConfigSyncHttp(
+    std::shared_ptr<boost::asio::io_context> ctx,
+    int profile,
+    int domain,
+    int network,
+    int logAnnounceInterval,
+    int logSyncInterval,
+    int logMinDelatReqInterval);
+  HesaiStatus SetPtpConfigSyncHttp(int profile,
+                                   int domain,
+                                   int network,
+                                   int logAnnounceInterval,
+                                   int logSyncInterval,
+                                   int logMinDelatReqInterval);
+  HesaiStatus SetSyncAngleSyncHttp(
+    std::shared_ptr<boost::asio::io_context> ctx,
+    int enable,
+    int angle);
+  HesaiStatus SetSyncAngleSyncHttp(int enable, int angle);
+
+
+
   /// @brief Getting lidar_monitor via HTTP API
   /// @param ctx IO Context
   /// @param str_callback Callback function for received string

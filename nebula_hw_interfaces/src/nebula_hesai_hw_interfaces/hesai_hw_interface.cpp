@@ -2584,6 +2584,82 @@ HesaiStatus HesaiHwInterface::SetSpinSpeedAsyncHttp(uint16_t rpm)
   return SetSpinSpeedAsyncHttp(std::make_shared<boost::asio::io_context>(), rpm);
 }
 
+HesaiStatus HesaiHwInterface::SetPtpConfigSyncHttp(
+  std::shared_ptr<boost::asio::io_context> ctx,
+  int profile,
+  int domain,
+  int network,
+  int logAnnounceInterval,
+  int logSyncInterval,
+  int logMinDelatReqInterval)
+{
+  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
+  auto st = GetHttpClientDriverOnce(ctx, hcd);
+  if (st != Status::OK) {
+    return st;
+  }
+
+  auto response = hcd->get(
+    (boost::format("/pandar.cgi?action=set&object=lidar&key=ptp_configuration&value={" \
+              "\"Profile\": %d," \
+              "\"Domain\": %d," \
+              "\"Network\": %d," \
+              "\"LogAnnounceInterval\": %d," \
+              "\"LogSyncInterval\": %d," \
+              "\"LogMinDelayReqInterval\": %d," \
+              "\"tsn_switch\": %d" \
+              "}")
+              % profile % domain % network % logAnnounceInterval % logSyncInterval %logMinDelatReqInterval % 0
+    ).str());
+  ctx->run();
+  PrintInfo(response);
+  return Status::OK;
+}
+
+HesaiStatus HesaiHwInterface::SetPtpConfigSyncHttp(int profile,
+                                                   int domain,
+                                                   int network,
+                                                   int logAnnounceInterval,
+                                                   int logSyncInterval,
+                                                   int logMinDelatReqInterval)
+{
+  return SetPtpConfigSyncHttp(std::make_shared<boost::asio::io_context>(),
+                              profile,
+                              domain,
+                              network,
+                              logAnnounceInterval,
+                              logSyncInterval,
+                              logMinDelatReqInterval);
+}
+
+HesaiStatus HesaiHwInterface::SetSyncAngleSyncHttp(
+  std::shared_ptr<boost::asio::io_context> ctx,
+  int enable,
+  int angle)
+{
+  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
+  auto st = GetHttpClientDriverOnce(ctx, hcd);
+  if (st != Status::OK) {
+    return st;
+  }
+  auto tmp_str = (boost::format("/pandar.cgi?action=set&object=lidar_sync&key=sync_angle&value={" \
+            "\"sync\": %d," \
+            "\"syncAngle\": %d" \
+            "}") % enable % angle).str();
+  PrintInfo(tmp_str);
+  auto response = hcd->get(tmp_str);
+  ctx->run();
+  PrintInfo(response);
+  return Status::OK;
+}
+
+HesaiStatus HesaiHwInterface::SetSyncAngleSyncHttp(int enable, int angle)
+{
+  return SetSyncAngleSyncHttp(std::make_shared<boost::asio::io_context>(),
+                              enable,
+                              angle);
+}
+
 HesaiStatus HesaiHwInterface::GetLidarMonitorAsyncHttp(
   std::shared_ptr<boost::asio::io_context> ctx,
   std::function<void(const std::string & str)> str_callback)
@@ -2687,27 +2763,29 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     t.join();
   }
 
-  set_flg = true;
-  auto sync_angle = static_cast<int>(hesai_config.sync_angle / 100);
-  auto scan_phase = static_cast<int>(sensor_configuration->scan_phase);
-  int sync_flg = (hesai_config.sync_angle >= 0) ? 1 : 0;
-  if (scan_phase != sync_angle) {
+  if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128){
     set_flg = true;
-  }
-  if (sync_flg && set_flg) {
-    PrintInfo("current lidar sync: " + std::to_string(hesai_config.sync));
-    PrintInfo("current lidar sync_angle: " + std::to_string(hesai_config.sync_angle));
-    PrintInfo("current configuration scan_phase: " + std::to_string(scan_phase));
-    std::thread t([this, sync_flg, scan_phase] { SetSyncAngle(sync_flg, scan_phase); });
-    t.join();
-  }
+    auto sync_angle = static_cast<int>(hesai_config.sync_angle / 100);
+    auto scan_phase = static_cast<int>(sensor_configuration->scan_phase);
+    int sync_flg = 1;
+    if (scan_phase != sync_angle) {
+      set_flg = true;
+    }
+    if (sync_flg && set_flg) {
+      PrintInfo("current lidar sync: " + std::to_string(hesai_config.sync));
+      PrintInfo("current lidar sync_angle: " + std::to_string(sync_angle));
+      PrintInfo("current configuration scan_phase: " + std::to_string(scan_phase));
+      std::thread t([this, sync_flg, scan_phase] {
+        SetSyncAngle(sync_flg, scan_phase);
+      });
+      t.join();
+    }
 
-  {
     std::thread t([this] {
       PrintInfo("Trying to set Clock source to PTP");
-      auto clock_status = SetClockSource(HESAI_LIDAR_PTP_CLOCK_SOURCE);
+      SetClockSource(HESAI_LIDAR_PTP_CLOCK_SOURCE);
       PrintInfo("Trying to set PTP Config: IEEE 1588 v2, Domain: 0, Transport: UDP/IP");
-      auto ptp_status = SetPtpConfig(PTP_PROFILE,
+      SetPtpConfig(PTP_PROFILE,
                    PTP_DOMAIN_ID,
                    PTP_NETWORK_TRANSPORT,
                    PTP_LOG_ANNOUNCE_INTERVAL,
@@ -2716,6 +2794,19 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
       );
     });
     t.join();
+  }
+  else { //AT128 only supports PTP setup via HTTP
+    PrintInfo("Trying to set SyncAngle via HTTP");
+    SetSyncAngleSyncHttp(1,
+                         static_cast<int>(sensor_configuration->scan_phase));
+    PrintInfo("Trying to set PTP Config: IEEE 1588 v2, Domain: 0, Transport: UDP/IP via HTTP");
+    SetPtpConfigSyncHttp(PTP_PROFILE,
+                         PTP_DOMAIN_ID,
+                         PTP_NETWORK_TRANSPORT,
+                         PTP_LOG_ANNOUNCE_INTERVAL,
+                         PTP_SYNC_INTERVAL,
+                         PTP_LOG_MIN_DELAY_INTERVAL);
+
   }
 
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
