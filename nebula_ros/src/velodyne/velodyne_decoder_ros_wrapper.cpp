@@ -193,7 +193,7 @@ Status VelodyneDriverRosWrapper::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<double>("view_direction", 0., descriptor);
-    view_direction = this->get_parameter("view_direction").as_double() * M_PI / 180;
+    view_direction = this->get_parameter("view_direction").as_double();
   }
   double view_width = 360 * M_PI / 180;
   {
