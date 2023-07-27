@@ -275,6 +275,11 @@ struct HesaiCorrection
   }
 
   static const int STEP3 = 200 * 256;
+  
+  /// @brief Get azimuth adjustment for channel and precision azimuth
+  /// @param ch The channel id
+  /// @param azi The precision azimuth in (0.01 / 256) degree unit
+  /// @return The azimuth adjustment in 0.01 degree unit
   int8_t getAzimuthAdjustV3(uint8_t ch, uint32_t azi) const
   {
     unsigned int i = std::floor(1.f * azi / STEP3);
@@ -282,6 +287,11 @@ struct HesaiCorrection
     float k = 1.f * l / STEP3;
     return round((1 - k) * azimuthOffset[ch * 180 + i] + k * azimuthOffset[ch * 180 + i + 1]);
   }
+
+  /// @brief Get elevation adjustment for channel and precision azimuth
+  /// @param ch The channel id
+  /// @param azi The precision azimuth in (0.01 / 256) degree unit
+  /// @return The elevation adjustment in 0.01 degree unit
   int8_t getElevationAdjustV3(uint8_t ch, uint32_t azi) const
   {
     unsigned int i = std::floor(1.f * azi / STEP3);

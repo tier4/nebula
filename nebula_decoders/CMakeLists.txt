@@ -12,6 +12,8 @@ endif ()
 
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
+    # compute large sin/cos lookup tables at compile time
+    add_compile_options(-fconstexpr-loop-limit=9216000 -fconstexpr-ops-limit=100000000000)
 endif ()
 
 find_package(PCL REQUIRED)
@@ -29,15 +31,12 @@ include_directories(
 # Lidar Decoders
 # Hesai
 ament_auto_add_library(nebula_decoders_hesai SHARED
-        src/nebula_decoders_hesai/hesai_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_40_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_64_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_qt_64_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_qt_128_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_xt_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_xtm_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_at_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_128_e4x_decoder.cpp
+        src/nebula_decoders_hesai/hesai_driver.cpp
+        src/nebula_decoders_hesai/decoders/hesai_packet.cpp
+        src/nebula_decoders_hesai/decoders/angle_corrector.cpp
+        src/nebula_decoders_hesai/decoders/angle_corrector_calibration_based.cpp
+        src/nebula_decoders_hesai/decoders/angle_corrector_correction_based.cpp
+        src/nebula_decoders_hesai/decoders/hesai_decoder.cpp
         )
 
 # Velodyne
