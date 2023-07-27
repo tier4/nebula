@@ -195,15 +195,15 @@ Status VelodyneDriverRosWrapper::GetParameters(
     this->declare_parameter<double>("view_direction", 0., descriptor);
     view_direction = this->get_parameter("view_direction").as_double();
   }
-  double view_width = 360 * M_PI / 180;
+  double view_width = 2.0 * M_PI;
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("view_width", 300., descriptor);
-    view_width = this->get_parameter("view_width").as_double() * M_PI / 180;
+    this->declare_parameter<double>("view_width", 2.0 * M_PI, descriptor);
+    view_width = this->get_parameter("view_width").as_double();
   }
 
   if (sensor_configuration.sensor_model != nebula::drivers::SensorModel::VELODYNE_HDL64) {
@@ -214,7 +214,7 @@ Status VelodyneDriverRosWrapper::GetParameters(
       descriptor.dynamic_typing = false;
       descriptor.additional_constraints = "";
       rcl_interfaces::msg::IntegerRange range;
-      range.set__from_value(0).set__to_value(359).set__step(1);
+      range.set__from_value(0).set__to_value(360).set__step(1);
       descriptor.integer_range = {range};
       this->declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
       sensor_configuration.cloud_min_angle = this->get_parameter("cloud_min_angle").as_int();
@@ -226,9 +226,9 @@ Status VelodyneDriverRosWrapper::GetParameters(
       descriptor.dynamic_typing = false;
       descriptor.additional_constraints = "";
       rcl_interfaces::msg::IntegerRange range;
-      range.set__from_value(0).set__to_value(359).set__step(1);
+      range.set__from_value(0).set__to_value(360).set__step(1);
       descriptor.integer_range = {range};
-      this->declare_parameter<uint16_t>("cloud_max_angle", 359, descriptor);
+      this->declare_parameter<uint16_t>("cloud_max_angle", 360, descriptor);
       sensor_configuration.cloud_max_angle = this->get_parameter("cloud_max_angle").as_int();
     }
   } else {
