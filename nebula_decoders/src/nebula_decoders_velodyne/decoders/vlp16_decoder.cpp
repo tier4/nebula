@@ -163,6 +163,11 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
             other_return.bytes[1] =
               block % 2 ? raw->blocks[block - 1].data[k + 1] : raw->blocks[block + 1].data[k + 1];
           }
+          // Apply timestamp if this is the first new packet in the scan.
+          auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
+          if (scan_timestamp_ < 0) {
+            scan_timestamp_ = block_timestamp;
+          }
           // Do not process if there is no return, or in dual return mode and the first and last
           // echos are the same.
           if (
@@ -220,10 +225,6 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
                 const float z_coord = distance * sin_vert_angle;       // velodyne z
                 const uint8_t intensity = current_block.data[k + 2];
 
-                auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
-                if (scan_timestamp_ < 0) {
-                  scan_timestamp_ = block_timestamp;
-                }
                 double point_time_offset =  timing_offsets_[block][firing * 16 + dsr];
 
                 // Determine return type.

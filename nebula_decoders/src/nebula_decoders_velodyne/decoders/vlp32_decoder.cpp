@@ -129,6 +129,11 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
         other_return.bytes[1] =
           i % 2 ? raw->blocks[i - 1].data[k + 1] : raw->blocks[i + 1].data[k + 1];
       }
+      // Apply timestamp if this is the first new packet in the scan.
+      auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
+      if (scan_timestamp_ < 0) {
+        scan_timestamp_ = block_timestamp;
+      }
       // Do not process if there is no return, or in dual return mode and the first and last echos
       // are the same.
       if (
@@ -248,10 +253,6 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
           intensity = (intensity < min_intensity) ? min_intensity : intensity;
           intensity = (intensity > max_intensity) ? max_intensity : intensity;
 
-          auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
-          if (scan_timestamp_ < 0) {
-            scan_timestamp_ = block_timestamp;
-          }
           double point_time_offset = timing_offsets_[i][j];
 
           nebula::drivers::ReturnType return_type;

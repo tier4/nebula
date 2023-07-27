@@ -180,6 +180,11 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
           other_return.bytes[1] =
             block % 2 ? raw->blocks[block - 1].data[k + 1] : raw->blocks[block + 1].data[k + 1];
         }
+        // Apply timestamp if this is the first new packet in the scan.
+        auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
+        if (scan_timestamp_ < 0) {
+          scan_timestamp_ = block_timestamp;
+        }
         // Do not process if there is no return, or in dual return mode and the first and last echos
         // are the same.
         if (
