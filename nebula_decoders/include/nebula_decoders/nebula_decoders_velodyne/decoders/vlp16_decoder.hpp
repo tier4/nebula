@@ -13,6 +13,7 @@ namespace drivers
 {
 namespace vlp16
 {
+  constexpr uint32_t MAX_POINTS = 300000;
 /// @brief Velodyne LiDAR decoder (VLP16)
 class Vlp16Decoder : public VelodyneScanDecoder
 {
@@ -48,8 +49,10 @@ private:
   bool parsePacket(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) override;
   float sin_rot_table_[ROTATION_MAX_UNITS];
   float cos_rot_table_[ROTATION_MAX_UNITS];
+  float rotation_radians_[ROTATION_MAX_UNITS];
   int phase_;
   int max_pts_;
+  std::vector<std::vector<float>> timing_offsets_;
 };
 
 }  // namespace vlp16

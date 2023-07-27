@@ -11,7 +11,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "pandar_msgs/msg/pandar_jumbo_packet.hpp"
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
 
@@ -24,10 +23,10 @@ namespace nebula
 {
 namespace ros
 {
-/// @brief Get parametor from rclcpp::Parameter
+/// @brief Get parameter from rclcpp::Parameter
 /// @tparam T
 /// @param p Parameter from rclcpp parameter callback
-/// @param name Target parametor name
+/// @param name Target parameter name
 /// @param value Corresponding value
 /// @return Whether the target name existed
 template <typename T>
