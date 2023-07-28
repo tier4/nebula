@@ -216,21 +216,31 @@ VelodyneStatus VelodyneHwInterface::CheckAndSetConfig(
 
   target_key = "config.fov.start";
   auto current_cloud_min_angle = tree.get<std::uint16_t>(target_key);
-  if (sensor_configuration->cloud_min_angle != current_cloud_min_angle) {
-    SetFovStartAsync(sensor_configuration->cloud_min_angle);
+  int setting_cloud_min_angle = sensor_configuration->cloud_min_angle;
+  // Velodyne only allows a maximum of 359 in the setting
+  if (setting_cloud_min_angle == 360) {
+    setting_cloud_min_angle = 359;
+  }
+  if (setting_cloud_min_angle != current_cloud_min_angle) {
+    SetFovStartAsync(setting_cloud_min_angle);
     std::cout << "VelodyneHwInterface::parse_json(" << target_key
               << "): " << current_cloud_min_angle << std::endl;
-    std::cout << "sensor_configuration->cloud_min_angle: " << sensor_configuration->cloud_min_angle
+    std::cout << "sensor_configuration->cloud_min_angle: " << setting_cloud_min_angle
               << std::endl;
   }
 
   target_key = "config.fov.end";
   auto current_cloud_max_angle = tree.get<std::uint16_t>(target_key);
-  if (sensor_configuration->cloud_max_angle != current_cloud_max_angle) {
-    SetFovEndAsync(sensor_configuration->cloud_max_angle);
+  int setting_cloud_max_angle = sensor_configuration->cloud_max_angle;
+  // Velodyne only allows a maximum of 359 in the setting
+  if (setting_cloud_max_angle == 360) {
+    setting_cloud_max_angle = 359;
+  }
+  if (setting_cloud_max_angle != current_cloud_max_angle) {
+    SetFovEndAsync(setting_cloud_max_angle);
     std::cout << "VelodyneHwInterface::parse_json(" << target_key
               << "): " << current_cloud_max_angle << std::endl;
-    std::cout << "sensor_configuration->cloud_max_angle: " << sensor_configuration->cloud_max_angle
+    std::cout << "sensor_configuration->cloud_max_angle: " << setting_cloud_max_angle
               << std::endl;
   }
 
