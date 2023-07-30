@@ -70,6 +70,9 @@ struct Status
       case Status::HTTP_CONNECTION_ERROR:
         os << "Http Connection Error";
         break;
+      case Status::WAITING_FOR_SENSOR_RESPONSE:
+        os << "Waiting for Sensor Response";
+        break;
       case Status::ERROR_1:
       default:
         os << "Generic Error";

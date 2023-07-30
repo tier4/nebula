@@ -607,6 +607,11 @@ void HesaiHwMonitorRosWrapper::HesaiCheckVoltage(
   }
 }
 
-RCLCPP_COMPONENTS_REGISTER_NODE(HesaiHwMonitorRosWrapper)
+  HesaiHwMonitorRosWrapper::~HesaiHwMonitorRosWrapper() {
+    RCLCPP_INFO_STREAM(get_logger(), "Closing TcpDriver");
+    hw_interface_.FinalizeTcpDriver();
+  }
+
+  RCLCPP_COMPONENTS_REGISTER_NODE(HesaiHwMonitorRosWrapper)
 }  // namespace ros
 }  // namespace nebula
