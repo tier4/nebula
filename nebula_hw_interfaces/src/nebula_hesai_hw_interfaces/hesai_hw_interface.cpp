@@ -2591,7 +2591,7 @@ HesaiStatus HesaiHwInterface::SetPtpConfigSyncHttp(
   int network,
   int logAnnounceInterval,
   int logSyncInterval,
-  int logMinDelatReqInterval)
+  int logMinDelayReqInterval)
 {
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
   auto st = GetHttpClientDriverOnce(ctx, hcd);
@@ -2609,7 +2609,7 @@ HesaiStatus HesaiHwInterface::SetPtpConfigSyncHttp(
               "\"LogMinDelayReqInterval\": %d," \
               "\"tsn_switch\": %d" \
               "}")
-              % profile % domain % network % logAnnounceInterval % logSyncInterval %logMinDelatReqInterval % 0
+              % profile % domain % network % logAnnounceInterval % logSyncInterval % logMinDelayReqInterval % 0
     ).str());
   ctx->run();
   PrintInfo(response);
@@ -2621,7 +2621,7 @@ HesaiStatus HesaiHwInterface::SetPtpConfigSyncHttp(int profile,
                                                    int network,
                                                    int logAnnounceInterval,
                                                    int logSyncInterval,
-                                                   int logMinDelatReqInterval)
+                                                   int logMinDelayReqInterval)
 {
   return SetPtpConfigSyncHttp(std::make_shared<boost::asio::io_context>(),
                               profile,
@@ -2629,7 +2629,7 @@ HesaiStatus HesaiHwInterface::SetPtpConfigSyncHttp(int profile,
                               network,
                               logAnnounceInterval,
                               logSyncInterval,
-                              logMinDelatReqInterval);
+                              logMinDelayReqInterval);
 }
 
 HesaiStatus HesaiHwInterface::SetSyncAngleSyncHttp(
