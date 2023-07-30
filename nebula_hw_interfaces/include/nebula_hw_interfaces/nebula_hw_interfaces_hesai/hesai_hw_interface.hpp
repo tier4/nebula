@@ -891,13 +891,13 @@ public:
     int network,
     int logAnnounceInterval,
     int logSyncInterval,
-    int logMinDelatReqInterval);
+    int logMinDelayReqInterval);
   HesaiStatus SetPtpConfigSyncHttp(int profile,
                                    int domain,
                                    int network,
                                    int logAnnounceInterval,
                                    int logSyncInterval,
-                                   int logMinDelatReqInterval);
+                                   int logMinDelayReqInterval);
   HesaiStatus SetSyncAngleSyncHttp(
     std::shared_ptr<boost::asio::io_context> ctx,
     int enable,
