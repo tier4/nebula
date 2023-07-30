@@ -48,9 +48,11 @@ private:
   bool parsePacket(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) override;
   float sin_rot_table_[ROTATION_MAX_UNITS];
   float cos_rot_table_[ROTATION_MAX_UNITS];
+  float rotation_radians_[ROTATION_MAX_UNITS];
   float vls_128_laser_azimuth_cache_[16];
   int phase_;
   int max_pts_;
+  std::vector<std::vector<float>> timing_offsets_;
 };
 
 }  // namespace vls128

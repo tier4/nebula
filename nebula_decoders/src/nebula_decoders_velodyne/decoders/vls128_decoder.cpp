@@ -16,7 +16,7 @@ Vls128Decoder::Vls128Decoder(
   sensor_configuration_ = sensor_configuration;
   calibration_configuration_ = calibration_configuration;
 
-  first_timestamp = std::numeric_limits<double>::max();
+  scan_timestamp_ = -1;
 
   scan_pc_.reset(new NebulaPointCloud);
   overflow_pc_.reset(new NebulaPointCloud);
@@ -24,6 +24,7 @@ Vls128Decoder::Vls128Decoder(
   // Set up cached values for sin and cos of all the possible headings
   for (uint16_t rot_index = 0; rot_index < ROTATION_MAX_UNITS; ++rot_index) {
     float rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
+    rotation_radians_[rot_index] = rotation;
     cos_rot_table_[rot_index] = cosf(rotation);
     sin_rot_table_[rot_index] = sinf(rotation);
   }
@@ -33,25 +34,45 @@ Vls128Decoder::Vls128Decoder(
   for (uint8_t i = 0; i < 16; i++) {
     vls_128_laser_azimuth_cache_[i] = (VLS128_CHANNEL_DURATION / VLS128_SEQ_DURATION) * (i + i / 8);
   }
+  // timing table calculation, from velodyne user manual p.64
+  timing_offsets_.resize(3);
+  for(size_t i=0; i < timing_offsets_.size(); ++i)
+  {
+    timing_offsets_[i].resize(17); // 17 (+1 for the maintenance time after firing group 8)
+  }
+  double full_firing_cycle_s = 53.3 * 1e-6;
+  double single_firing_s = 2.665 * 1e-6;
+  double offset_packet_time = 8.7 * 1e-6;
+  // compute timing offsets
+  for (size_t x = 0; x < timing_offsets_.size(); ++x){
+    for (size_t y = 0; y < timing_offsets_[x].size(); ++y){
+      double sequence_index, firing_group_index;
+      sequence_index = x;
+      firing_group_index = y;
+      timing_offsets_[x][y] = (full_firing_cycle_s * sequence_index) + (single_firing_s * firing_group_index) - offset_packet_time;
+    }
+  }
 }
 
 bool Vls128Decoder::hasScanned() { return has_scanned_; }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> Vls128Decoder::get_pointcloud()
 {
-  int phase = (uint16_t)round(sensor_configuration_->scan_phase * 100);
+  double phase = angles::from_degrees(sensor_configuration_->scan_phase);
   if (!scan_pc_->points.empty()) {
-    uint16_t current_azimuth = (int)scan_pc_->points.back().azimuth * 100;
-    uint16_t phase_diff = (36000 + current_azimuth - phase) % 36000;
-    while (phase_diff < 18000 && scan_pc_->points.size() > 0) {
+    auto current_azimuth = scan_pc_->points.back().azimuth;
+    auto phase_diff = static_cast<size_t>(angles::to_degrees(2*M_PI + current_azimuth - phase)) % 360;
+    while (phase_diff < M_PI_2 && !scan_pc_->points.empty()) {
       overflow_pc_->points.push_back(scan_pc_->points.back());
       scan_pc_->points.pop_back();
-      current_azimuth = (int)scan_pc_->points.back().azimuth * 100;
-      phase_diff = (36000 + current_azimuth - phase) % 36000;
+      current_azimuth = scan_pc_->points.back().azimuth;
+      phase_diff = static_cast<size_t>(angles::to_degrees(2*M_PI + current_azimuth - phase)) % 360;
     }
     overflow_pc_->width = overflow_pc_->points.size();
+    scan_pc_->width = scan_pc_->points.size();
+    scan_pc_->height = 1;
   }
-  return std::make_tuple(scan_pc_, first_timestamp);
+  return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
 int Vls128Decoder::pointsPerPacket() { return BLOCKS_PER_PACKET * SCANS_PER_BLOCK; }
@@ -63,7 +84,7 @@ void Vls128Decoder::reset_pointcloud(size_t n_pts)
   max_pts_ = n_pts * pointsPerPacket();
   scan_pc_->points.reserve(max_pts_);
   reset_overflow();  // transfer existing overflow points to the cleared pointcloud
-  first_timestamp = std::numeric_limits<double>::max();
+  scan_timestamp_ = -1;
 }
 
 void Vls128Decoder::reset_overflow()
@@ -159,6 +180,11 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
           other_return.bytes[1] =
             block % 2 ? raw->blocks[block - 1].data[k + 1] : raw->blocks[block + 1].data[k + 1];
         }
+        // Apply timestamp if this is the first new packet in the scan.
+        auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
+        if (scan_timestamp_ < 0) {
+          scan_timestamp_ = block_timestamp;
+        }
         // Do not process if there is no return, or in dual return mode and the first and last echos
         // are the same.
         if (
@@ -215,14 +241,12 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               const float x_coord = xy_distance * cos_rot_angle;     // velodyne y
               const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
               const float z_coord = distance * sin_vert_angle;       // velodyne z
-              const float intensity = current_block.data[k + 2];
-
-              const double time_stamp =
-                block * 55.3 / 1000.0 / 1000.0 + j * 2.665 / 1000.0 / 1000.0;  // +
-              auto ts = rclcpp::Time(velodyne_packet.stamp).seconds();
-              if (ts < first_timestamp) {
-                first_timestamp = ts;
+              const uint8_t intensity = current_block.data[k + 2];
+              auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
+              if (scan_timestamp_ < 0) {
+                scan_timestamp_ = block_timestamp;
               }
+              double point_time_offset = timing_offsets_[block / 4][firing_order + laser_number / 64];
 
               // Determine return type.
               uint8_t return_type;
@@ -236,10 +260,10 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
                   } else {
                     const float other_intensity = block % 2 ? raw->blocks[block - 1].data[k + 2]
                                                             : raw->blocks[block + 1].data[k + 2];
-                    bool first = other_return.uint < current_return.uint ? 0 : 1;
-                    bool strongest = other_intensity < intensity ? 1 : 0;
+                    bool first = other_return.uint >= current_return.uint;
+                    bool strongest = other_intensity < intensity;
                     if (other_intensity == intensity) {
-                      strongest = first ? 0 : 1;
+                      strongest = !first;
                     }
                     if (first && strongest) {
                       return_type = static_cast<uint8_t>(drivers::ReturnType::FIRST_STRONGEST);
@@ -269,9 +293,13 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               current_point.z = z_coord;
               current_point.return_type = return_type;
               current_point.channel = corrections.laser_ring;
-              current_point.azimuth = azimuth_corrected;
+              current_point.azimuth = rotation_radians_[azimuth_corrected];
+              current_point.elevation = sin_vert_angle;
               current_point.distance = distance;
-              current_point.time_stamp = time_stamp;
+              auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
+              if (point_ts < 0)
+                point_ts = 0;
+              current_point.time_stamp = static_cast<uint32_t>(point_ts*1e9);
               current_point.intensity = intensity;
               scan_pc_->points.emplace_back(current_point);
             }  // 2nd scan area condition

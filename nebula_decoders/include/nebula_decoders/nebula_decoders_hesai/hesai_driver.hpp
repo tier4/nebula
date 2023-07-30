@@ -8,7 +8,6 @@
 #include "nebula_decoders/nebula_decoders_common/nebula_driver_base.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
-#include "pandar_msgs/msg/pandar_jumbo_packet.hpp"
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
 
