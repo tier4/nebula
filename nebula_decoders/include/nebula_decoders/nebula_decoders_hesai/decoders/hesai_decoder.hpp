@@ -20,7 +20,7 @@ protected:
   const std::shared_ptr<drivers::HesaiSensorConfiguration> sensor_configuration_;
 
   /// @brief Decodes azimuth/elevation angles given calibration/correction data
-  typename SensorT::packet_t::angle_decoder_t angle_corrector_;
+  typename SensorT::angle_corrector_t angle_corrector_;
 
   /// @brief The point cloud new points get added to
   NebulaPointCloudPtr decode_pc_;

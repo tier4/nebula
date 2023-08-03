@@ -26,8 +26,6 @@ struct TailQT64
 struct PacketQT64 : public PacketBase<4, 64, 2, 100>
 {
   typedef Body<Block<Unit4B, PacketQT64::N_CHANNELS>, PacketQT64::N_BLOCKS> body_t;
-  typedef AngleCorrectorCalibrationBased<PacketQT64::N_CHANNELS, PacketQT64::DEGREE_SUBDIVISIONS>
-    angle_decoder_t;
   Header12B header;
   body_t body;
   TailQT64 tail;
@@ -38,7 +36,7 @@ struct PacketQT64 : public PacketBase<4, 64, 2, 100>
 
 }  // namespace hesai_packet
 
-class PandarQT64 : public HesaiSensor
+class PandarQT64 : public HesaiSensor<hesai_packet::PacketQT64>
 {
 private:
   static constexpr int firing_time_offset_ns_[64] = {
@@ -50,8 +48,6 @@ private:
     12960,  132050, 134110, 136170, 138220, 140280, 142340, 144390, 146450};
 
 public:
-  typedef hesai_packet::PacketQT64 packet_t;
-
   int getChannelTimeOffset(uint32_t channel_id) override
   {
     return firing_time_offset_ns_[channel_id];

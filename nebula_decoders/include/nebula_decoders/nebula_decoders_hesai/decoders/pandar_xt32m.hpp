@@ -18,9 +18,6 @@ typedef TailXT32 TailXT32M2X;
 struct PacketXT32M2X : public PacketBase<6, 32, 3, 100>
 {
   typedef Body<Block<Unit4B, PacketXT32M2X::N_CHANNELS>, PacketXT32M2X::N_BLOCKS> body_t;
-  typedef AngleCorrectorCalibrationBased<
-    PacketXT32M2X::N_CHANNELS, PacketXT32M2X::DEGREE_SUBDIVISIONS>
-    angle_decoder_t;
   Header12B header;
   body_t body;
   TailXT32M2X tail;
@@ -31,11 +28,9 @@ struct PacketXT32M2X : public PacketBase<6, 32, 3, 100>
 
 }  // namespace hesai_packet
 
-class PandarXT32M : public HesaiSensor
+class PandarXT32M : public HesaiSensor<hesai_packet::PacketXT32M2X>
 {
 public:
-  typedef hesai_packet::PacketXT32M2X packet_t;
-
   int getChannelTimeOffset(uint32_t channel_id) override
   {
     if (channel_id >= 16) {

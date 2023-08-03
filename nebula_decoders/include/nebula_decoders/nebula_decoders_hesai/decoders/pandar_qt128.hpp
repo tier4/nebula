@@ -33,9 +33,6 @@ struct TailQT128C2X
 struct PacketQT128C2X : public PacketBase<2, 128, 2, 100>
 {
   typedef Body<Block<Unit4B, PacketQT128C2X::N_CHANNELS>, PacketQT128C2X::N_BLOCKS> body_t;
-  typedef AngleCorrectorCalibrationBased<
-    PacketQT128C2X::N_CHANNELS, PacketQT128C2X::DEGREE_SUBDIVISIONS>
-    angle_decoder_t;
   Header12B header;
   body_t body;
   uint32_t crc_body;
@@ -51,11 +48,9 @@ struct PacketQT128C2X : public PacketBase<2, 128, 2, 100>
 
 }  // namespace hesai_packet
 
-class PandarQT128 : public HesaiSensor
+class PandarQT128 : public HesaiSensor<hesai_packet::PacketQT128C2X>
 {
 public:
-  typedef hesai_packet::PacketQT128C2X packet_t;
-
   int getChannelTimeOffset(uint32_t channel_id) override
   {
     return 0; // FIXME(mojomex) implement firetime correction file & mode flag support 

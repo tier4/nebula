@@ -32,8 +32,6 @@ struct Tail40P
 struct Packet40P : public PacketBase<10, 40, 2, 100>
 {
   typedef Body<SOBBlock<Unit3B, Packet40P::N_CHANNELS>, Packet40P::N_BLOCKS> body_t;
-  typedef AngleCorrectorCalibrationBased<Packet40P::N_CHANNELS, Packet40P::DEGREE_SUBDIVISIONS>
-    angle_decoder_t;
   body_t body;
   Tail40P tail;
 };
@@ -52,7 +50,7 @@ uint8_t get_dis_unit<Packet40P>(const Packet40P & /* packet */)
 
 }  // namespace hesai_packet
 
-class Pandar40 : public HesaiSensor
+class Pandar40 : public HesaiSensor<hesai_packet::Packet40P>
 {
 private:
   static constexpr int firing_time_offset_ns_[40] = {
@@ -62,8 +60,6 @@ private:
     -21920, -9500,  -43520, -29770, -17350, -4920,  -42220, -28470, -16040, -3620};
 
 public:
-  typedef hesai_packet::Packet40P packet_t;
-
   int getChannelTimeOffset(uint32_t channel_id) override
   {
     return firing_time_offset_ns_[channel_id];

@@ -45,9 +45,6 @@ struct Tail128E3X
 struct Packet128E3X : public PacketBase<2, 128, 2, 100>
 {
   typedef Body<Block<Unit3B, Packet128E3X::N_CHANNELS>, Packet128E3X::N_BLOCKS> body_t;
-  typedef AngleCorrectorCalibrationBased<
-    Packet128E3X::N_CHANNELS, Packet128E3X::DEGREE_SUBDIVISIONS>
-    angle_decoder_t;
   Header12B header;
   body_t body;
   uint32_t crc_body;
@@ -64,11 +61,9 @@ struct Packet128E3X : public PacketBase<2, 128, 2, 100>
 }  // namespace hesai_packet
 
 // FIXME(mojomex) support high resolution mode
-class Pandar128E3X : public HesaiSensor
+class Pandar128E3X : public HesaiSensor<hesai_packet::Packet128E3X>
 {
 public:
-  typedef hesai_packet::Packet128E3X packet_t;
-
   int getChannelTimeOffset(uint32_t channel_id) override
   {
     return 0; //FIXME(mojomex) implement azimuth state & resolution mode support

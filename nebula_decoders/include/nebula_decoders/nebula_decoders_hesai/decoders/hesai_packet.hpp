@@ -193,18 +193,6 @@ struct PacketBase
 /// @brief Get the number of returns for a given return mode
 /// @param return_mode The return mode
 /// @return The number of returns
-int get_n_returns(uint8_t return_mode);
-
-/// @brief Get timestamp from packet in nanoseconds
-/// @tparam PacketT The packet type
-/// @param packet The packet to get the timestamp from
-/// @return The timestamp in nanoseconds
-template <typename PacketT>
-uint64_t get_timestamp_ns(const PacketT & packet);
-
-template <typename PacketT>
-uint8_t get_dis_unit(const PacketT & packet);
-
 int get_n_returns(uint8_t return_mode)
 {
   switch (return_mode) {
@@ -226,12 +214,20 @@ int get_n_returns(uint8_t return_mode)
   }
 }
 
+/// @brief Get timestamp from packet in nanoseconds
+/// @tparam PacketT The packet type
+/// @param packet The packet to get the timestamp from
+/// @return The timestamp in nanoseconds
 template <typename PacketT>
 uint64_t get_timestamp_ns(const PacketT & packet)
 {
   return packet.tail.date_time.get_seconds() * 1000000000 + packet.tail.timestamp * 1000;
 }
 
+/// @brief Get the distance unit of the given packet type in millimeters
+/// @tparam PacketT The packet type
+/// @param packet The packet to get the distance unit from
+/// @return The distance unit in millimeters
 template <typename PacketT>
 uint8_t get_dis_unit(const PacketT & packet)
 {

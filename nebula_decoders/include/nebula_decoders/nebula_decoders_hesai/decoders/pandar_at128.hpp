@@ -34,9 +34,6 @@ struct PacketAT128E2X : public PacketBase<2, 128, 2, 100 * 256>
 {
   typedef Body<FineAzimuthBlock<Unit4B, PacketAT128E2X::N_CHANNELS>, PacketAT128E2X::N_BLOCKS>
     body_t;
-  typedef AngleCorrectorCorrectionBased<
-    PacketAT128E2X::N_CHANNELS, PacketAT128E2X::DEGREE_SUBDIVISIONS>
-    angle_decoder_t;
   Header12B header;
   body_t body;
   uint32_t crc_body;
@@ -51,7 +48,7 @@ struct PacketAT128E2X : public PacketBase<2, 128, 2, 100 * 256>
 
 }  // namespace hesai_packet
 
-class PandarAT128 : public HesaiSensor
+class PandarAT128 : public HesaiSensor<hesai_packet::PacketAT128E2X, AngleCorrectionType::CORRECTION>
 {
 private:
   static constexpr int firing_time_offset_ns_[128] = {
@@ -67,8 +64,6 @@ private:
     0,     0,     12424, 8264,  8240,  4144,  8264,  8240,  12376, 12376, 8264};
 
 public:
-  typedef hesai_packet::PacketAT128E2X packet_t;
-
   int getChannelTimeOffset(uint32_t channel_id) override
   {
     return firing_time_offset_ns_[channel_id];

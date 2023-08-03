@@ -21,7 +21,7 @@ typedef Packet128E3X Packet128E4X;
 }  // namespace hesai_packet
 
 // FIXME(mojomex) support high resolution mode
-class Pandar128E4X : public HesaiSensor
+class Pandar128E4X : public HesaiSensor<hesai_packet::Packet128E4X>
 {
 private:
   static constexpr int firing_time_offset_ns_[128] = {
@@ -37,8 +37,6 @@ private:
     2378,  8912,  49758, 43224, 36690, 30156, 21980, 15446, 8912,  2378,  30156};
 
 public:
-  typedef hesai_packet::Packet128E4X packet_t;
-
   int getChannelTimeOffset(uint32_t channel_id) override
   {
     return 43346 + firing_time_offset_ns_[channel_id];

@@ -1,16 +1,27 @@
 #pragma once
 
-#include <array>
+#include <type_traits>
 
 namespace nebula
 {
 namespace drivers
 {
 
-/// @brief Base class for all sensor definitions. Sensors have to `typedef` a `packet_t` type
+enum class AngleCorrectionType { CALIBRATION, CORRECTION };
+
+/// @brief Base class for all sensor definitions
+/// @tparam PacketT The packet type of the sensor
+template <typename PacketT, AngleCorrectionType AngleCorrection = AngleCorrectionType::CALIBRATION>
 class HesaiSensor
 {
 public:
+  typedef PacketT packet_t;
+  typedef typename std::conditional<
+    (AngleCorrection == AngleCorrectionType::CALIBRATION),
+    AngleCorrectorCalibrationBased<PacketT::N_CHANNELS, PacketT::DEGREE_SUBDIVISIONS>,
+    AngleCorrectorCorrectionBased<PacketT::N_CHANNELS, PacketT::DEGREE_SUBDIVISIONS>>::type
+    angle_corrector_t;
+
   HesaiSensor() = default;
   virtual ~HesaiSensor() = default;
 
