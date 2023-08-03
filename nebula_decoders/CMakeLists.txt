@@ -12,8 +12,6 @@ endif ()
 
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
-    # compute large sin/cos lookup tables at compile time
-    add_compile_options(-fconstexpr-loop-limit=9216000 -fconstexpr-ops-limit=100000000000)
 endif ()
 
 find_package(PCL REQUIRED)
