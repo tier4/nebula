@@ -3,6 +3,7 @@
 #include "nebula_common/hesai/hesai_common.hpp"
 
 #include <cstdint>
+#include <rclcpp/rclcpp.hpp>
 
 namespace nebula
 {
@@ -46,6 +47,8 @@ public:
   /// (azimuth, elevation) in radians
   virtual std::tuple<uint32_t, uint32_t, float, float> getCorrectedAzimuthAndElevation(
     uint32_t block_azimuth, uint32_t channel_id) = 0;
+
+  virtual bool hasScanned(int current_azimuth, int last_azimuth) = 0;
 };
 
 }  // namespace drivers

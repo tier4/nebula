@@ -180,20 +180,23 @@ struct Tail128E3X
   DateTime<1900> date_time;
   uint32_t timestamp;
   uint8_t factory_information;
-  uint32_t udp_sequence;
 
-  uint16_t imu_temperature;
-  uint16_t imu_acceleration_unit;
-  uint16_t imu_angular_velocity_unit;
-  uint32_t imu_timestamp;
-  uint16_t imu_x_axis_acceleration;
-  uint16_t imu_y_axis_acceleration;
-  uint16_t imu_z_axis_acceleration;
-  uint16_t imu_x_axis_angular_velocity;
-  uint16_t imu_y_axis_angular_velocity;
-  uint16_t imu_z_axis_angular_velocity;
+  /* Ignored optional fields */
 
-  uint32_t crc_tail;
+  //uint32_t udp_sequence;
+
+  //uint16_t imu_temperature;
+  //uint16_t imu_acceleration_unit;
+  //uint16_t imu_angular_velocity_unit;
+  //uint32_t imu_timestamp;
+  //uint16_t imu_x_axis_acceleration;
+  //uint16_t imu_y_axis_acceleration;
+  //uint16_t imu_z_axis_acceleration;
+  //uint16_t imu_x_axis_angular_velocity;
+  //uint16_t imu_y_axis_angular_velocity;
+  //uint16_t imu_z_axis_angular_velocity;
+
+  //uint32_t crc_tail;
 };
 
 struct TailXT32
@@ -216,7 +219,10 @@ struct Tail40P
   uint8_t return_mode;
   uint8_t factory_information;
   DateTime<2000> date_time;
-  uint32_t udp_sequence;
+
+  /* Ignored optional fields */
+
+  //uint32_t udp_sequence;
 };
 
 struct TailQT128C2X
@@ -229,8 +235,11 @@ struct TailQT128C2X
   DateTime<1900> date_time;
   uint32_t timestamp;
   uint8_t factory_information;
-  uint32_t udp_sequence;
-  uint32_t crc_tail;
+  
+  /* Ignored optional fields */
+
+  //uint32_t udp_sequence;
+  //uint32_t crc_tail;
 };
 
 struct TailAT128E2X
@@ -243,8 +252,11 @@ struct TailAT128E2X
   uint8_t return_mode;
   uint8_t factory_information;
   SecondsSinceEpoch date_time;
-  uint32_t udp_sequence;
-  uint32_t crc_tail;
+  
+  /* Ignored optional fields */
+
+  //uint32_t udp_sequence;
+  //uint32_t crc_tail;
 };
 
 struct TailQT64

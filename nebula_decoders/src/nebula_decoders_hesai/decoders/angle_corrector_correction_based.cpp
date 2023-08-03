@@ -9,12 +9,15 @@ template <size_t ChannelN, size_t AngleUnit>
 AngleCorrectorCorrectionBased<ChannelN, AngleUnit>::AngleCorrectorCorrectionBased(
   const std::shared_ptr<HesaiCalibrationConfiguration> & sensor_calibration,
   const std::shared_ptr<HesaiCorrection> & sensor_correction)
-: AngleCorrector<AngleUnit * 360>(sensor_calibration, sensor_correction)
+: AngleCorrector<AngleUnit * 360>(sensor_calibration, sensor_correction),
+  logger_(rclcpp::get_logger("AngleCorrectorCorrectionBased"))
 {
   if (sensor_correction == nullptr) {
     throw std::runtime_error(
       "Cannot instantiate AngleCorrectorCalibrationBased without calibration data");
   }
+
+  logger_.set_level(rclcpp::Logger::Level::Debug);
 }
 
 template <size_t ChannelN, size_t AngleUnit>
@@ -23,24 +26,14 @@ AngleCorrectorCorrectionBased<ChannelN, AngleUnit>::getCorrectedAzimuthAndElevat
   uint32_t block_azimuth, uint32_t channel_id)
 {
   const auto & correction = AngleCorrector<AngleUnit * 360>::sensor_correction_;
-  // Find the current field (mirror) for the given azimuth
-  int count = 0, field = 0;
-  while (
-    count < correction->frameNumber &&
-    (((block_azimuth + MAX_AZIMUTH_LENGTH - correction->startFrame[field]) % MAX_AZIMUTH_LENGTH +
-      (correction->endFrame[field] + MAX_AZIMUTH_LENGTH - block_azimuth) % MAX_AZIMUTH_LENGTH) !=
-     (correction->endFrame[field] + MAX_AZIMUTH_LENGTH - correction->startFrame[field]) %
-       MAX_AZIMUTH_LENGTH)) {
-    field = (field + 1) % correction->frameNumber;
-    count++;
-  }
+  int field = findField(block_azimuth);
 
   auto elevation = correction->elevation[channel_id] +
-                   correction->getElevationAdjustV3(channel_id, block_azimuth) * AngleUnit / 100;
+                   correction->getElevationAdjustV3(channel_id, block_azimuth) * (AngleUnit / 100);
 
   auto azimuth = (block_azimuth + MAX_AZIMUTH_LENGTH - correction->startFrame[field]) * 2 -
                  correction->azimuth[channel_id] +
-                 correction->getAzimuthAdjustV3(channel_id, block_azimuth) * AngleUnit / 100;
+                 correction->getAzimuthAdjustV3(channel_id, block_azimuth) * (AngleUnit / 100);
   azimuth = (MAX_AZIMUTH_LENGTH + azimuth) % MAX_AZIMUTH_LENGTH;
 
   float azimuth_rad = 2.f * azimuth * M_PI / MAX_AZIMUTH_LENGTH;

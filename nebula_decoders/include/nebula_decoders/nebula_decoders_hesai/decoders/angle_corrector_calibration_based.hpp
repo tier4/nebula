@@ -11,7 +11,7 @@ namespace drivers
 {
 
 template <size_t ChannelN, size_t AngleUnit>
-class AngleCorrectorCalibrationBased : public AngleCorrector<AngleUnit * 360>
+class AngleCorrectorCalibrationBased : public AngleCorrector<1000 * 360>
 {
 private:
   static constexpr size_t INTERNAL_RESOLUTION_PER_DEG = 1000;
@@ -31,6 +31,10 @@ public:
 
   std::tuple<uint32_t, uint32_t, float, float> getCorrectedAzimuthAndElevation(
     uint32_t block_azimuth, uint32_t channel_id) override;
+
+  bool hasScanned(int current_azimuth, int last_azimuth) override {
+    return current_azimuth < last_azimuth;
+  }
 };
 
 }  // namespace drivers

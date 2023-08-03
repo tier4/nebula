@@ -6,6 +6,9 @@
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
 
+
+#include <rclcpp/rclcpp.hpp>
+
 namespace nebula
 {
 namespace drivers
@@ -33,6 +36,8 @@ protected:
   uint64_t scan_timestamp_ns_;
   /// @brief Whether a full scan has been processed
   bool has_scanned_;
+
+  rclcpp::Logger logger_;
 
   /// @brief For each channel, its firing offset relative to the block in nanoseconds
   std::array<uint32_t, PacketT::N_CHANNELS> channel_firing_offset_ns_;

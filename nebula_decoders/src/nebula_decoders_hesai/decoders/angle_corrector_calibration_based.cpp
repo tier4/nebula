@@ -9,18 +9,16 @@ template <size_t ChannelN, size_t AngleUnit>
 AngleCorrectorCalibrationBased<ChannelN, AngleUnit>::AngleCorrectorCalibrationBased(
   const std::shared_ptr<HesaiCalibrationConfiguration> & sensor_calibration,
   const std::shared_ptr<HesaiCorrection> & sensor_correction)
-: AngleCorrector<AngleUnit * 360>(sensor_calibration, sensor_correction)
+: AngleCorrector<1000 * 360>(sensor_calibration, sensor_correction)
 {
-  const auto & calibration = AngleCorrector<SENSOR_MAX_AZIMUTH_LENGTH>::sensor_calibration_;
-
   if (sensor_calibration == nullptr) {
     throw std::runtime_error(
       "Cannot instantiate AngleCorrectorCalibrationBased without calibration data");
   }
 
   for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-    float elevation_angle = calibration->elev_angle_map[channel_id];
-    float azimuth_offset = calibration->azimuth_offset_map[channel_id];
+    float elevation_angle = sensor_calibration->elev_angle_map[channel_id];
+    float azimuth_offset = sensor_calibration->azimuth_offset_map[channel_id];
     elevation_angle_[channel_id] =
       static_cast<int32_t>(elevation_angle * INTERNAL_RESOLUTION_PER_DEG);
     azimuth_offset_[channel_id] =
@@ -30,7 +28,7 @@ AngleCorrectorCalibrationBased<ChannelN, AngleUnit>::AngleCorrectorCalibrationBa
   }
 
   for (uint32_t i = 0; i < AngleUnit * 360; i++) {
-    block_azimuth_rad_[i] = deg2rad(i / AngleUnit);
+    block_azimuth_rad_[i] = deg2rad(i / static_cast<float>(AngleUnit));
   }
 }
 
@@ -39,7 +37,7 @@ std::tuple<uint32_t, uint32_t, float, float>
 AngleCorrectorCalibrationBased<ChannelN, AngleUnit>::getCorrectedAzimuthAndElevation(
   uint32_t block_azimuth, uint32_t channel_id)
 {
-  int32_t corrected_azimuth = block_azimuth / AngleUnit * INTERNAL_RESOLUTION_PER_DEG;
+  int32_t corrected_azimuth = block_azimuth * INTERNAL_RESOLUTION_PER_DEG / AngleUnit;
   corrected_azimuth += azimuth_offset_[channel_id];
   if (corrected_azimuth < 0) {
     corrected_azimuth += INTERNAL_MAX_AZIMUTH_LENGTH;

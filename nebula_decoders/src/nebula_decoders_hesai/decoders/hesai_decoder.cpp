@@ -8,16 +8,18 @@ namespace drivers
 template <typename PacketT>
 bool HesaiDecoder<PacketT>::parsePacket(const pandar_msgs::msg::PandarPacket & pandar_packet)
 {
-  if (pandar_packet.size != sizeof(PacketT)) {
-    std::cerr << "Packet size mismatch:" << pandar_packet.size << " | Expected:" << sizeof(PacketT)
-              << std::endl;
+  if (pandar_packet.size < sizeof(PacketT)) {
+    RCLCPP_ERROR_STREAM(
+      logger_, "Packet size mismatch:" << pandar_packet.size << " | Expected at least:" << sizeof(PacketT));
     return false;
   }
   if (std::memcpy(&packet_, pandar_packet.data.data(), sizeof(PacketT))) {
     // FIXME(mojomex) do validation?
+    // RCLCPP_DEBUG(logger_, "Packet parsed successfully");
     return true;
   }
 
+  RCLCPP_ERROR(logger_, "Packet memcopy failed");
   return false;
 }
 
@@ -26,8 +28,9 @@ void HesaiDecoder<PacketT>::convertReturns(size_t start_block_id, size_t n_block
 {
   uint64_t timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
   for (size_t block_id = start_block_id; block_id < start_block_id + n_blocks; ++block_id) {
+    auto & block = packet_.body.blocks[block_id];
+
     for (size_t channel_id = 0; channel_id < PacketT::N_CHANNELS; ++channel_id) {
-      auto & block = packet_.body.blocks[block_id];
       auto & unit = block.units[channel_id];
 
       auto distance = getDistance(unit);
@@ -40,6 +43,7 @@ void HesaiDecoder<PacketT>::convertReturns(size_t start_block_id, size_t n_block
       NebulaPoint point;
       point.distance = distance;
       point.intensity = unit.reflectivity;
+      // TODO(mojomex) add header offset to scan offset correction
       point.time_stamp = getPointTimeRelative(timestamp_ns, block_id, channel_id);
       point.return_type = static_cast<uint8_t>(getReturnType(block_id));
       point.channel = channel_id;
@@ -47,28 +51,87 @@ void HesaiDecoder<PacketT>::convertReturns(size_t start_block_id, size_t n_block
       uint32_t raw_azimuth = block.get_azimuth();
       auto [azimuth_idx, elevation_idx, azimuth_rad, elevation_rad] =
         angle_corrector_.getCorrectedAzimuthAndElevation(raw_azimuth, channel_id);
-      float xyDistance = point.distance * angle_corrector_.cos_map_[elevation_idx];
+      float xyDistance = distance * angle_corrector_.cos_map_[elevation_idx];
       point.x = xyDistance * angle_corrector_.sin_map_[azimuth_idx];
       point.y = xyDistance * angle_corrector_.cos_map_[azimuth_idx];
-      point.z = unit.distance * angle_corrector_.sin_map_[elevation_idx];
+      point.z = distance * angle_corrector_.sin_map_[elevation_idx];
       point.azimuth = azimuth_rad;
       point.elevation = elevation_rad;
 
+      // NDDUMP(_(point.x), _(point.y), _(point.z));
       decode_pc_->emplace_back(point);
     }
   }
 }
 
 template <typename PacketT>
+int HesaiDecoder<PacketT>::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
+{
+  if (!parsePacket(pandar_packet)) {
+    return -1;
+  }
+
+  // At the start of a scan, set the timestamp to its absolute time since epoch.
+  // Point timestamps in the scan are relative to this value.
+  if (has_scanned_ || scan_timestamp_ns_ == 0) {
+    scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_);
+  }
+
+  if (has_scanned_) {
+    has_scanned_ = false;
+  }
+
+  const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
+  int current_azimuth;
+  for (size_t block_id = 0; block_id < PacketT::N_BLOCKS; block_id += 1) {
+    // FIXME(mojomex) respect scan phase
+    current_azimuth =
+      packet_.body.blocks[block_id].get_azimuth() -
+      static_cast<int>(sensor_configuration_->scan_phase * PacketT::DEGREE_SUBDIVISIONS);
+
+    bool scan_completed = checkScanCompleted(current_azimuth);
+    if (scan_completed) {
+      std::swap(decode_pc_, output_pc_);
+      decode_pc_->clear();
+      has_scanned_ = true;
+    }
+
+    convertReturns(block_id, 1);
+    last_phase_ = current_azimuth;
+    // NDDUMP(
+    //   _(n_returns), _(block_id), _(last_phase_), _(current_azimuth), _(scan_completed),
+    //   _(decode_pc_->size()),
+    //   _(output_pc_->size()));
+  }
+
+  return last_phase_;
+}
+
+template <typename PacketT>
+bool HesaiDecoder<PacketT>::hasScanned()
+{
+  return has_scanned_;
+}
+
+template <typename PacketT>
+std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDecoder<PacketT>::getPointcloud()
+{
+  double scan_timestamp_s = static_cast<double>(scan_timestamp_ns_) * 1e-9;
+  //RCLCPP_DEBUG(
+  //  logger_, "output_pc_ size: %ld, decode_pc_ size: %ld", output_pc_->size(), decode_pc_->size());
+  return std::make_pair(output_pc_, scan_timestamp_s);
+}
+
+template <typename PacketT>
 bool HesaiDecoder<PacketT>::checkScanCompleted(int current_phase)
 {
-  return current_phase > last_phase_ && !has_scanned_;
+  return angle_corrector_.hasScanned(current_phase, last_phase_);
 }
 
 template <typename PacketT>
 float HesaiDecoder<PacketT>::getDistance(typename PacketT::body_t::block_t::unit_t & unit)
 {
-  return unit.distance * hesai_packet::get_dis_unit(packet_);
+  return unit.distance * hesai_packet::get_dis_unit(packet_) / 1000.f;
 }
 
 template <typename PacketT>
@@ -139,59 +202,14 @@ HesaiDecoder<PacketT>::HesaiDecoder(
   const std::shared_ptr<HesaiCalibrationConfiguration> & calibration_configuration,
   const std::shared_ptr<HesaiCorrection> & correction_configuration)
 : sensor_configuration_(sensor_configuration),
-  angle_corrector_(calibration_configuration, correction_configuration)
+  angle_corrector_(calibration_configuration, correction_configuration),
+  logger_(rclcpp::get_logger("HesaiDecoder"))
 {
+  logger_.set_level(rclcpp::Logger::Level::Debug);
+  RCLCPP_DEBUG(logger_, "Hi from HesaiDecoder");
+
   decode_pc_.reset(new NebulaPointCloud);
   output_pc_.reset(new NebulaPointCloud);
-}
-
-template <typename PacketT>
-int HesaiDecoder<PacketT>::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet)
-{
-  if (!parsePacket(pandar_packet)) {
-    return -1;
-  }
-
-  // At the start of a scan, set the timestamp to its absolute time since epoch.
-  // Point timestamps in the scan are relative to this value.
-  if (has_scanned_ || scan_timestamp_ns_ == 0) {
-    scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_);
-  }
-
-  if (has_scanned_) {
-    has_scanned_ = false;
-  }
-
-  const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
-  int current_azimuth;
-  for (size_t block_id = 0; block_id < PacketT::N_BLOCKS; block_id += n_returns) {
-    // FIXME(mojomex) respect scan phase
-    current_azimuth =
-      packet_.body.blocks[block_id].get_azimuth() -
-      static_cast<int>(sensor_configuration_->scan_phase * PacketT::DEGREE_SUBDIVISIONS);
-    if (checkScanCompleted(current_azimuth)) {
-      std::swap(decode_pc_, output_pc_);
-      decode_pc_->points.clear();
-      has_scanned_ = true;
-    }
-
-    convertReturns(block_id, n_returns);
-  }
-
-  last_phase_ = current_azimuth;
-  return last_phase_;
-}
-
-template <typename PacketT>
-bool HesaiDecoder<PacketT>::hasScanned()
-{
-  return has_scanned_;
-}
-
-template <typename PacketT>
-std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDecoder<PacketT>::getPointcloud()
-{
-  return std::make_pair(output_pc_, scan_timestamp_ns_);
 }
 
 // Explicit template instantiation to prevent linker errors
