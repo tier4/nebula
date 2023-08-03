@@ -1,7 +1,15 @@
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_decoder.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_128e3x.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_128e4x.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_40.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_64.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_at128.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt128.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt64.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32m.hpp"
 
 // #define WITH_DEBUG_STD_COUT_HESAI_CLIENT // Use std::cout messages for debugging
 
@@ -22,37 +30,40 @@ HesaiDriver::HesaiDriver(
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;
       break;
     case SensorModel::HESAI_PANDAR64:
-      scan_decoder_.reset(new HesaiDecoder<hesai_packet::Packet64>(
+      scan_decoder_.reset(new HesaiDecoder<Pandar64>(
         sensor_configuration, calibration_configuration, correction_configuration));
       break;
     case SensorModel::HESAI_PANDAR40P:
     case SensorModel::HESAI_PANDAR40M:
-      scan_decoder_.reset(new HesaiDecoder<hesai_packet::Packet40P>(
+      scan_decoder_.reset(new HesaiDecoder<Pandar40>(
         sensor_configuration, calibration_configuration, correction_configuration));
       break;
     case SensorModel::HESAI_PANDARQT64:
-      scan_decoder_.reset(new HesaiDecoder<hesai_packet::PacketQT64>(
+      scan_decoder_.reset(new HesaiDecoder<PandarQT64>(
         sensor_configuration, calibration_configuration, correction_configuration));
       break;
     case SensorModel::HESAI_PANDARQT128:
-      scan_decoder_.reset(new HesaiDecoder<hesai_packet::PacketQT128C2X>(
+      scan_decoder_.reset(new HesaiDecoder<PandarQT128>(
         sensor_configuration, calibration_configuration, correction_configuration));
       break;
     case SensorModel::HESAI_PANDARXT32:
-      scan_decoder_.reset(new HesaiDecoder<hesai_packet::PacketXT32>(
+      scan_decoder_.reset(new HesaiDecoder<PandarXT32>(
         sensor_configuration, calibration_configuration, correction_configuration));
       break;
     case SensorModel::HESAI_PANDARXT32M:
-      scan_decoder_.reset(new HesaiDecoder<hesai_packet::PacketXT32M2X>(
+      scan_decoder_.reset(new HesaiDecoder<PandarXT32M>(
         sensor_configuration, calibration_configuration, correction_configuration));
       break;
     case SensorModel::HESAI_PANDARAT128:
-      scan_decoder_.reset(new HesaiDecoder<hesai_packet::PacketAT128E2X>(
+      scan_decoder_.reset(new HesaiDecoder<PandarAT128>(
         sensor_configuration, calibration_configuration, correction_configuration));
       break;
     case SensorModel::HESAI_PANDAR128_E3X:
+      scan_decoder_.reset(new HesaiDecoder<Pandar128E3X>(
+        sensor_configuration, calibration_configuration, correction_configuration));
+      break;
     case SensorModel::HESAI_PANDAR128_E4X:
-      scan_decoder_.reset(new HesaiDecoder<hesai_packet::Packet128E3X>(
+      scan_decoder_.reset(new HesaiDecoder<Pandar128E4X>(
         sensor_configuration, calibration_configuration, correction_configuration));
       break;
     default:

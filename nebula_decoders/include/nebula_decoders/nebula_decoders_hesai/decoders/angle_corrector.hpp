@@ -2,8 +2,9 @@
 
 #include "nebula_common/hesai/hesai_common.hpp"
 
-#include <cstdint>
 #include <rclcpp/rclcpp.hpp>
+
+#include <cstdint>
 
 namespace nebula
 {
@@ -37,7 +38,13 @@ public:
 
   AngleCorrector(
     const std::shared_ptr<HesaiCalibrationConfiguration> & sensor_calibration,
-    const std::shared_ptr<HesaiCorrection> & sensor_correction);
+    const std::shared_ptr<HesaiCorrection> & sensor_correction)
+  : sensor_calibration_(sensor_calibration),
+    sensor_correction_(sensor_correction),
+    cos_map_(calculateLUT(true)),
+    sin_map_(calculateLUT(false))
+  {
+  }
 
   /// @brief Get the corrected azimuth and elevation for a given block and channel
   /// @param block_azimuth The block's azimuth (including optional fine azimuth), in the sensor's

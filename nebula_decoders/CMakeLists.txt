@@ -32,11 +32,6 @@ include_directories(
 # Hesai
 ament_auto_add_library(nebula_decoders_hesai SHARED
         src/nebula_decoders_hesai/hesai_driver.cpp
-        src/nebula_decoders_hesai/decoders/hesai_packet.cpp
-        src/nebula_decoders_hesai/decoders/angle_corrector.cpp
-        src/nebula_decoders_hesai/decoders/angle_corrector_calibration_based.cpp
-        src/nebula_decoders_hesai/decoders/angle_corrector_correction_based.cpp
-        src/nebula_decoders_hesai/decoders/hesai_decoder.cpp
         )
 
 # Velodyne
