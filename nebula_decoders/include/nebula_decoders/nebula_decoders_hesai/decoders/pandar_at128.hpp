@@ -38,17 +38,18 @@ struct PacketAT128E2X : public PacketBase<2, 128, 2, 100 * 256>
   body_t body;
   uint32_t crc_body;
   TailAT128E2X tail;
-  
+
   /* Ignored optional fields */
-  
-  //uint8_t cyber_security[32];
+
+  // uint8_t cyber_security[32];
 };
 
 #pragma pack(pop)
 
 }  // namespace hesai_packet
 
-class PandarAT128 : public HesaiSensor<hesai_packet::PacketAT128E2X, AngleCorrectionType::CORRECTION>
+class PandarAT128
+: public HesaiSensor<hesai_packet::PacketAT128E2X, AngleCorrectionType::CORRECTION>
 {
 private:
   static constexpr int firing_time_offset_ns_[128] = {
@@ -64,18 +65,18 @@ private:
     0,     0,     12424, 8264,  8240,  4144,  8264,  8240,  12376, 12376, 8264};
 
 public:
-  int getChannelTimeOffset(uint32_t channel_id) override
+  int getPacketRelativePointTimeOffset(
+    uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
-    return firing_time_offset_ns_[channel_id];
-  }
-
-  int getBlockTimeOffset(uint32_t block_id, uint32_t n_returns) override
-  {
+    auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
+    int block_offset_ns;
     if (n_returns == 1) {
-      return -9249 - 41666 * (2 - block_id);
+      block_offset_ns = -9249 - 41666 * (2 - block_id);
+    } else {
+      block_offset_ns = -9249 - 41666;
     }
 
-    return -9249 - 41666;
+    return block_offset_ns + firing_time_offset_ns_[channel_id];
   }
 };
 

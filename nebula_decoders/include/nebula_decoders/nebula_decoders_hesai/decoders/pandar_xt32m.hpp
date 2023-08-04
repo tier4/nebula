@@ -31,26 +31,23 @@ struct PacketXT32M2X : public PacketBase<6, 32, 3, 100>
 class PandarXT32M : public HesaiSensor<hesai_packet::PacketXT32M2X>
 {
 public:
-  int getChannelTimeOffset(uint32_t channel_id) override
+  int getPacketRelativePointTimeOffset(
+    uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
+    auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
+    int block_offset_ns;
+    if (n_returns < 3) {
+      block_offset_ns = 5632 - 50000 * ((8 - block_id - 1) / n_returns);
+    } else /* n_returns == 3 */ {
+      block_offset_ns = 5632 - 50000 * ((6 - block_id - 1) / 3);
+    }
+
     if (channel_id >= 16) {
       channel_id -= 16;
     }
-    return 368 + 2888 * channel_id;
-  }
+    int channel_offset_ns = 368 + 2888 * channel_id;
 
-  int getBlockTimeOffset(uint32_t block_id, uint32_t n_returns) override
-  {
-    if (n_returns == 1) {
-      return 5632 - 50000 * (8 - block_id - 1);
-    }
-
-    if (n_returns == 2) {
-      return 5632 - 50000 * ((8 - block_id - 1) / 2);
-    }
-
-    // n_returns == 3
-    return 5632 - 50000 * ((6 - block_id - 1) / 3);
+    return block_offset_ns + channel_offset_ns;
   }
 };
 

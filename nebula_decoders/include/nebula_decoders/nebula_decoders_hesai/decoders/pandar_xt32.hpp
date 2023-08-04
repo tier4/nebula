@@ -39,19 +39,30 @@ struct PacketXT32 : public PacketBase<8, 32, 2, 100>
 class PandarXT32 : public HesaiSensor<hesai_packet::PacketXT32>
 {
 public:
-  int getChannelTimeOffset(uint32_t channel_id) override
+  int getPacketRelativePointTimeOffset(
+    uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
-    return 368 + 1512 * channel_id;
+    auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
+    int block_offset_ns = 5632 - 50000 * ((8 - block_id - 1) / n_returns);
+    int channel_offset_ns = 368 + 1512 * channel_id;
+    return block_offset_ns + channel_offset_ns;
   }
 
-  int getBlockTimeOffset(uint32_t block_id, uint32_t n_returns) override
+  ReturnType getReturnType(
+    hesai_packet::return_mode::ReturnMode return_mode, unsigned int return_idx,
+    typename packet_t::body_t::block_t::unit_t ** return_units) override
   {
-    if (n_returns == 1) {
-      return 5632 - 50000 * (8 - block_id - 1);
+    auto return_type = HesaiSensor<packet_t>::getReturnType(return_mode, return_idx, return_units);
+
+    // This sensor orders returns in the opposite order, so the return_type needs to be flipped too
+    if (return_mode == hesai_packet::return_mode::DUAL_FIRST_LAST) {
+      if (return_type == ReturnType::FIRST)
+        return_type = ReturnType::LAST;
+      else if (return_type == ReturnType::LAST)
+        return_type = ReturnType::FIRST;
     }
 
-    // The integer division is intentional here, cf. datasheet
-    return 5632 - 50000 * ((8 - block_id - 1) / 2);
+    return return_type;
   }
 };
 

@@ -48,19 +48,12 @@ private:
     12960,  132050, 134110, 136170, 138220, 140280, 142340, 144390, 146450};
 
 public:
-  int getChannelTimeOffset(uint32_t channel_id) override
+  int getPacketRelativePointTimeOffset(
+    uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
-    return firing_time_offset_ns_[channel_id];
-  }
-
-  int getBlockTimeOffset(uint32_t block_id, uint32_t n_returns) override
-  {
-    if (n_returns == 1) {
-      return 25710 + (500000 * block_id) / 3;
-    }
-
-    // The integer division is intentional here, cf. datasheet
-    return 25710 + (500000 * (block_id / 2)) / 3;
+    auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
+    int block_offset_ns = 25710 + (500000 * (block_id / n_returns)) / 3;
+    return block_offset_ns + firing_time_offset_ns_[channel_id];
   }
 };
 

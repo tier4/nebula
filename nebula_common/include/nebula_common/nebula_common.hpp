@@ -25,7 +25,7 @@ enum class ReturnType : uint8_t {
   LAST_WEAK,
   IDENTICAL,
   SECOND,
-  SECOND_STRONGEST,
+  SECONDSTRONGEST,
   FIRST_STRONGEST,
   LAST_STRONGEST
 };
@@ -220,7 +220,7 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnType 
     case ReturnType::SECOND:
       os << "Second";
       break;
-    case ReturnType::SECOND_STRONGEST:
+    case ReturnType::SECONDSTRONGEST:
       os << "SecondStrongest";
       break;
     case ReturnType::FIRST_STRONGEST:
