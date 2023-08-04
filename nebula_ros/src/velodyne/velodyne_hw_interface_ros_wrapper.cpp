@@ -180,7 +180,7 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     rcl_interfaces::msg::IntegerRange range;
-    range.set__from_value(0).set__to_value(360).set__step(1);
+    range.set__from_value(0).set__to_value(359).set__step(1);
     descriptor.integer_range = {range};
     this->declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
     sensor_configuration.cloud_min_angle = this->get_parameter("cloud_min_angle").as_int();
@@ -192,9 +192,9 @@ Status VelodyneHwInterfaceRosWrapper::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     rcl_interfaces::msg::IntegerRange range;
-    range.set__from_value(0).set__to_value(360).set__step(1);
+    range.set__from_value(0).set__to_value(359).set__step(1);
     descriptor.integer_range = {range};
-    this->declare_parameter<uint16_t>("cloud_max_angle", 360, descriptor);
+    this->declare_parameter<uint16_t>("cloud_max_angle", 359, descriptor);
     sensor_configuration.cloud_max_angle = this->get_parameter("cloud_max_angle").as_int();
   }
 

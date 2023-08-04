@@ -200,8 +200,8 @@ Parameters shared by all supported models:
 | gnss_port       | uint16 | 2369            |                   | GNSS port       |
 | frequency_ms    | uint16 | 100             | milliseconds, > 0 | Time per scan   |
 | packet_mtu_size | uint16 | 1500            |                   | Packet MTU size |
-| cloud_min_angle | uint16 | 0               | degrees [0, 360]  | FoV start angle |
-| cloud_max_angle | uint16 | 359             | degrees [0, 360]  | FoV end angle   |
+| cloud_min_angle | uint16 | 0               | degrees [0, 360)  | FoV start angle |
+| cloud_max_angle | uint16 | 359             | degrees [0, 360)  | FoV end angle   |
 
 #### Driver parameters
 
@@ -211,8 +211,8 @@ Parameters shared by all supported models:
 | calibration_file | string |          |                      | LiDAR calibration file                  |
 | min_range        | double | 0.3      | meters, >= 0.3       | Minimum point range published           |
 | max_range        | double | 300.0    | meters, <= 300.0     | Maximum point range published           |
-| cloud_min_angle  | uint16 | 0        | degrees [0, 360]     | FoV start angle                         |
-| cloud_max_angle  | uint16 | 359      | degrees [0, 360]     | FoV end angle                           |
+| cloud_min_angle  | uint16 | 0        | degrees [0, 360)     | FoV start angle                         |
+| cloud_max_angle  | uint16 | 359      | degrees [0, 360)     | FoV end angle                           |
 
 ## Software design overview
 
