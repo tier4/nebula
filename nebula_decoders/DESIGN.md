@@ -79,4 +79,39 @@ For all other return modes, duplicate points are output if the two returns coinc
 
 ## The implementation
 
-[work in progress]
+### `HesaiPacket`
+
+Packets are defined as **packed** structs for effortless parsing.
+The sensor-specific layout for sensor XYZ is defined in `PacketXYZ` and usually employs an own `TailXYZ` struct.
+The header formats are largely shared between sensors.
+The packet body (i.e. point data) is mainly parameterized by bytes per point, points per block, and blocks per body. Thus, parameterized generic structs are used. A few skews such as fine azimuth blocks and blocks with a start-of-block (SOB) header exist and are implemented as their own structs.
+
+![HesaiPacket diagram](./GenericHesaiDecoder-Packet%20Formats.png)
+
+### `HesaiSensor`
+
+Each sensor model has its own class `PandarXYZ : HesaiSensor<...>` that defines packet type and timing, and return mode handling logic. Angle correction is the same for 90% of sensors and thus outsourced into `AngleCorrector` and subclasses. These are template arguments for `HesaiSensor`.
+Return mode handling has a default implementation that is supplemented by additional logic only in 3 sensors.
+
+### `AngleCorector`
+
+The angle corrector has three main tasks:
+* compute corrected azimuth/elevation for given azimuth and channel
+* implement `hasScanCompleted()` logic that decides where one scan ends and the next starts
+* compute and provide lookup tables for sin/cos/etc.
+
+The two angle correction types are calibration-based and correction-based. In both approaches, a file from the sensor is used to extract the angle correction for each azimuth/channel.
+For all approaches, cos/sin lookup tables in the appropriate size (360deg) and resolution (either 1/1000th deg or 1/25600th deg) are generated.
+These resolutions come from the resolutions of the calibration file angle offsets (1/1000th deg) and the fine azimuth resolution of AT128 (1/15600th deg).
+
+### `HesaiDecoder<SensorT>`
+
+The decoder is in charge of the control flow and shared decoding steps of all sensors.
+It is a template class taking a sensor type `SensorT` from which packet type, angle correction etc. are deducted at compile time.
+Thus, this unified decoder is an almost zero-cost abstraction.
+
+Its tasks are:
+* parsing an incoming packet
+* managing decode/output point buffers
+* converting all points in the packet using the sensor-specific functions of `SensorT` where necessary
+
