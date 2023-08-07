@@ -64,6 +64,7 @@ class HesaiHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfaceW
 
 public:
   explicit HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions & options);
+  ~HesaiHwInterfaceRosWrapper() noexcept override;
   /// @brief Start point cloud streaming (Call CloudInterfaceStart of HwInterface)
   /// @return Resulting status
   Status StreamStart() override;

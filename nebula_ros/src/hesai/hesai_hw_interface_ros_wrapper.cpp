@@ -36,7 +36,6 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
   for (std::thread & th : thread_pool) {
     th.join();
   }
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "hw_interface_.CheckAndSetConfig();");
   if (this->setup_sensor) {
     hw_interface_.CheckAndSetConfig();
     updateParameters();
@@ -120,6 +119,11 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
 #endif
 
   StreamStart();
+}
+
+HesaiHwInterfaceRosWrapper::~HesaiHwInterfaceRosWrapper() {
+  RCLCPP_INFO_STREAM(get_logger(), "Closing TcpDriver");
+  hw_interface_.FinalizeTcpDriver();
 }
 
 Status HesaiHwInterfaceRosWrapper::StreamStart()

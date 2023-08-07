@@ -17,10 +17,10 @@ namespace nebula
 {
 namespace ros
 {
-/// @brief Get parametor from rclcpp::Parameter
+/// @brief Get parameter from rclcpp::Parameter
 /// @tparam T
 /// @param p Parameter from rclcpp parameter callback
-/// @param name Target parametor name
+/// @param name Target parameter name
 /// @param value Corresponding value
 /// @return Whether the target name existed
 template <typename T>
@@ -89,92 +89,92 @@ private:  // ROS Diagnostics
   void OnVelodyneDiagnosticsTimer();
 
   /// @brief Getting top:hv from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopHv();
   /// @brief Getting top:ad_temp from the current property_tree (only VLP32)
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopAdTemp();  // only32
   /// @brief Getting top:lm20_temp from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopLm20Temp();
   /// @brief Getting top:pwr_5v from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5v();
   /// @brief Getting top:pwr_2_5v from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr25v();
   /// @brief Getting top:pwr_3_3v from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr33v();
   /// @brief Getting top:pwr_5v_raw from the current property_tree (only VLP16)
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5vRaw();  // only16
   /// @brief Getting top:pwr_raw from the current property_tree (only VLP32)
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrRaw();  // only32
   /// @brief Getting top:pwr_vccint from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrVccint();
   /// @brief Getting bot:i_out from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotIOut();
   /// @brief Getting bot:pwr_1_2v from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwr12v();
   /// @brief Getting bot:lm20_temp from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotLm20Temp();
   /// @brief Getting bot:pwr_5v from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwr5v();
   /// @brief Getting bot:pwr_2_5v from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwr25v();
   /// @brief Getting bot:pwr_3_3v from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwr33v();
   /// @brief Getting bot:pwr_v_in from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwrVIn();
   /// @brief Getting bot:pwr_1_25v from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwr125v();
   /// @brief Getting vhv from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetVhv();
   /// @brief Getting adc_nf from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetAdcNf();
   /// @brief Getting adc_stats from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetAdcStats();
   /// @brief Getting ixe from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetIxe();
   /// @brief Getting adctp_stat from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetAdctpStat();
 
   /// @brief Getting gps:pps_state from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetGpsPpsState();
   /// @brief Getting gps:position from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetGpsPosition();
   /// @brief Getting motor:state from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetMotorState();
   /// @brief Getting motor:rpm from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetMotorRpm();
   /// @brief Getting motor:lock from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetMotorLock();
   /// @brief Getting motor:phase from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetMotorPhase();
   /// @brief Getting laser:state from the current property_tree
-  /// @return tuple<Got exeption, Error level, Information message, Error message>
+  /// @return tuple<Got exception, Error level, Information message, Error message>
   std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetLaserState();
 
   /// @brief Check top:hv from the current property_tree for diagnostic_updater

@@ -14,6 +14,13 @@
     "AT",
     "XT",
     "QT",
-    "XTM"
+    "XTM",
+    "Pdelay",
+    "gprmc",
+    "Vccint",
+    "vccint",
+    "adctp",
+    "Adctp",
+    
   ]
 }

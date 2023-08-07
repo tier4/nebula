@@ -27,6 +27,7 @@
         <param name="return_mode" value="$(var return_mode)"/>
         <param name="frame_id" value="$(var frame_id)"/>
         <param name="scan_phase" value="$(var scan_phase)"/>
+        <param name="sensor_ip" value="$(var sensor_ip)"/>
         <param name="calibration_file" value="$(var calibration_file)"/>
         <param name="correction_file" value="$(var correction_file)"/>
     </node>
