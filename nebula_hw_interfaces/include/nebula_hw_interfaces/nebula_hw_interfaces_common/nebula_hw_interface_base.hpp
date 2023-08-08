@@ -3,7 +3,7 @@
 
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
-#include "udp_driver/udp_driver.hpp"
+#include "boost_udp_driver/udp_driver.hpp"
 
 #include <stdexcept>
 #include <string>
@@ -20,7 +20,7 @@ protected:
   /**
    * Callback function to receive the Cloud Packet data from the UDP Driver
    * @param buffer Buffer containing the data received from the UDP socket
-   * @return Status::OK if no error occured.
+   * @return Status::OK if no error occurred.
    */
   virtual void ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer) = 0;
   //  virtual Status RegisterScanCallback(

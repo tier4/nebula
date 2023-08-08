@@ -14,8 +14,8 @@
 #include "nebula_common/velodyne/velodyne_common.hpp"
 #include "nebula_common/velodyne/velodyne_status.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
-#include "tcp_driver/http_client_driver.hpp"
-#include "udp_driver/udp_driver.hpp"
+#include "boost_tcp_driver/http_client_driver.hpp"
+#include "boost_udp_driver/udp_driver.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
