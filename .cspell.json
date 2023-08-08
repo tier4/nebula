@@ -21,6 +21,9 @@
     "vccint",
     "adctp",
     "Adctp",
-    
+    "stds",
+    "nproc",
+    "nohup",
+    "schedutil"
   ]
 }
