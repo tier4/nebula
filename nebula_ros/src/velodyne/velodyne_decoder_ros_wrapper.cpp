@@ -49,6 +49,7 @@ void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
+  double cloud_stamp = std::get<1>(pointcloud_ts);
   if (pointcloud == nullptr) {
     RCLCPP_WARN_STREAM(get_logger(), "Empty cloud parsed.");
     return;
@@ -77,7 +78,7 @@ void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
     aw_points_ex_pub_->get_subscription_count() > 0 ||
     aw_points_ex_pub_->get_intra_process_subscription_count() > 0) {
     const auto autoware_ex_cloud =
-      nebula::drivers::convertPointXYZIRCAEDTToPointXYZIRADT(pointcloud, 0.0);//velodyne drivers originally doesn't use absolute time
+      nebula::drivers::convertPointXYZIRCAEDTToPointXYZIRADT(pointcloud, cloud_stamp);
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =

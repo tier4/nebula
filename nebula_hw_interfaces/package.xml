@@ -16,8 +16,8 @@
   <depend>pandar_msgs</depend>
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
-  <depend>tcp_driver</depend>
-  <depend>udp_driver</depend>
+  <depend>boost_tcp_driver</depend>
+  <depend>boost_udp_driver</depend>
   <depend>velodyne_msgs</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
