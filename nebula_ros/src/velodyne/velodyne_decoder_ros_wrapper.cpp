@@ -43,6 +43,8 @@ VelodyneDriverRosWrapper::VelodyneDriverRosWrapper(const rclcpp::NodeOptions & o
 void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
   const velodyne_msgs::msg::VelodyneScan::SharedPtr scan_msg)
 {
+  auto t_start = std::chrono::high_resolution_clock::now();
+
   // take packets out of scan msg
   std::vector<velodyne_msgs::msg::VelodynePacket> pkt_msgs = scan_msg->packets;
 
@@ -85,6 +87,9 @@ void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
       rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
     PublishCloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
   }
+
+  auto runtime = std::chrono::high_resolution_clock::now() - t_start;
+  RCLCPP_DEBUG(get_logger(), "PROFILING {'d_total': %lu, 'n_out': %lu}", runtime.count(), pointcloud->size());
 }
 
 void VelodyneDriverRosWrapper::PublishCloud(
