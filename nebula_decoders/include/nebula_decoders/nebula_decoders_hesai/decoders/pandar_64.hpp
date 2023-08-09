@@ -39,6 +39,9 @@ private:
     -11444, -6228,  -15356, -10140, -4924,  -3620,  -14052, -8836,  -12748};
 
 public:
+  static constexpr float MIN_RANGE = 0.3f;
+  static constexpr float MAX_RANGE = 200.f;
+
   int getPacketRelativePointTimeOffset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {

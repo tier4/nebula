@@ -13,6 +13,7 @@
 
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
+#include "hesai_common.hpp"
 
 #include <gtest/gtest.h>
 

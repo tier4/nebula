@@ -22,7 +22,7 @@ private:
   {
     std::array<float, LookupTableSize> lut{};
     for (uint32_t i = 0; i < LookupTableSize; i++) {
-      float angle_rad = i / static_cast<float>(LookupTableSize) * 2 * M_PI;
+      float angle_rad = i / static_cast<float>(LookupTableSize) * 2.f * M_PI;
       lut[i] = is_cos ? cosf(angle_rad) : sinf(angle_rad);
     }
     return lut;

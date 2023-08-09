@@ -38,14 +38,14 @@ struct Packet40P : public PacketBase<10, 40, 2, 100>
 
 #pragma pack(pop)
 
-/// @brief Get the distance unit of the given @ref Packet40P packet in millimeters. This is the only
+/// @brief Get the distance unit of the given @ref Packet40P packet in meters. This is the only
 /// packet type without a header.
 /// @param dummy
-/// @return The value 4.
+/// @return 0.004 (4mm)
 template <>
-uint8_t get_dis_unit<Packet40P>(const Packet40P & /* packet */)
+float get_dis_unit<Packet40P>(const Packet40P & /* packet */)
 {
-  return 4;
+  return 4 / 1000.f;
 }
 
 }  // namespace hesai_packet
@@ -60,6 +60,9 @@ private:
     -21920, -9500,  -43520, -29770, -17350, -4920,  -42220, -28470, -16040, -3620};
 
 public:
+  static constexpr float MIN_RANGE = 0.3f;
+  static constexpr float MAX_RANGE = 200.f;
+
   int getPacketRelativePointTimeOffset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {

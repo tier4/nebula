@@ -203,7 +203,7 @@ Status HesaiRosDecoderTest::GetParameters(
     rcl_interfaces::msg::FloatingPointRange range;
     range.set__from_value(0.00).set__to_value(0.5).set__step(0.01);
     descriptor.floating_point_range = {range};
-    this->declare_parameter<double>("dual_return_distance_threshold", 0.0, descriptor);
+    this->declare_parameter<double>("dual_return_distance_threshold", 0.1, descriptor);
     sensor_configuration.dual_return_distance_threshold =
       this->get_parameter("dual_return_distance_threshold").as_double();
   }
@@ -272,17 +272,7 @@ void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::Nebula
   }
 }
 
-void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, pcl::PointCloud<pcl::PointXYZ>::Ptr pp2)
-{
-  EXPECT_EQ(pp1->points.size(), pp2->points.size());
-  for (uint32_t i = 0; i < pp1->points.size(); i++) {
-    auto p1 = pp1->points[i];
-    auto p2 = pp2->points[i];
-    EXPECT_FLOAT_EQ(p1.x, p2.x);
-    EXPECT_FLOAT_EQ(p1.y, p2.y);
-    EXPECT_FLOAT_EQ(p1.z, p2.z);
-  }
-}
+
 
 void HesaiRosDecoderTest::ReadBag()
 {

@@ -55,12 +55,12 @@ public:
   /// @return The return type of the point
   virtual ReturnType getReturnType(
     hesai_packet::return_mode::ReturnMode return_mode, unsigned int return_idx,
-    typename packet_t::body_t::block_t::unit_t ** return_units)
+    std::vector<typename packet_t::body_t::block_t::unit_t *> return_units)
   {
-    unsigned int n_returns = hesai_packet::get_n_returns(return_mode);
+    unsigned int n_returns = return_units.size();
 
     const auto is_strongest = [&]() {
-      for (int i = 0; i < n_returns; ++i) {
+      for (unsigned int i = 0; i < n_returns; ++i) {
         if (i == return_idx) {
           continue;
         }
@@ -74,7 +74,7 @@ public:
     };
 
     const auto is_duplicate = [&]() {
-      for (int i = 0; i < n_returns; ++i) {
+      for (unsigned int i = 0; i < n_returns; ++i) {
         if (i == return_idx) {
           continue;
         }
@@ -89,7 +89,7 @@ public:
       return false;
     };
 
-    if (n_returns != 1 && return_idx != 0 && is_duplicate()) {
+    if (n_returns != 1 && is_duplicate()) {
       return ReturnType::IDENTICAL;
     }
 

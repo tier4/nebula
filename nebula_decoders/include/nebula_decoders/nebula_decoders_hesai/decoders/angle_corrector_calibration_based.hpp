@@ -54,24 +54,23 @@ public:
   std::tuple<uint32_t, uint32_t, float, float> getCorrectedAzimuthAndElevation(
     uint32_t block_azimuth, uint32_t channel_id) override
   {
-    int32_t corrected_azimuth = block_azimuth * INTERNAL_RESOLUTION_PER_DEG / AngleUnit;
+    int32_t corrected_azimuth = block_azimuth * (INTERNAL_RESOLUTION_PER_DEG / AngleUnit);
     corrected_azimuth += azimuth_offset_[channel_id];
-    if (corrected_azimuth < 0) {
-      corrected_azimuth += INTERNAL_MAX_AZIMUTH_LENGTH;
-    } else if (corrected_azimuth >= INTERNAL_MAX_AZIMUTH_LENGTH) {
-      corrected_azimuth -= INTERNAL_MAX_AZIMUTH_LENGTH;
-    }
+    corrected_azimuth = (corrected_azimuth + INTERNAL_MAX_AZIMUTH_LENGTH) % INTERNAL_MAX_AZIMUTH_LENGTH;
 
     int32_t corrected_elevation = elevation_angle_[channel_id];
-    if (corrected_elevation < 0) {
-      corrected_elevation += INTERNAL_MAX_AZIMUTH_LENGTH;
-    } else if (corrected_elevation >= INTERNAL_MAX_AZIMUTH_LENGTH) {
-      corrected_elevation -= INTERNAL_MAX_AZIMUTH_LENGTH;
+    corrected_elevation = (corrected_elevation + INTERNAL_MAX_AZIMUTH_LENGTH) % INTERNAL_MAX_AZIMUTH_LENGTH;
+
+    float azimuth_rad = block_azimuth_rad_[block_azimuth] + azimuth_offset_rad_[channel_id];
+    if (azimuth_rad > 2 * M_PI) {
+      azimuth_rad -= 2 * M_PI;
+    } else if (azimuth_rad < 0) {
+      azimuth_rad += 2 * M_PI;
     }
 
     return std::make_tuple(
       static_cast<uint32_t>(corrected_azimuth), static_cast<uint32_t>(corrected_elevation),
-      block_azimuth_rad_[block_azimuth] + azimuth_offset_rad_[channel_id],
+      azimuth_rad,
       elevation_angle_rad_[channel_id]);
   }
 

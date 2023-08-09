@@ -221,14 +221,15 @@ uint64_t get_timestamp_ns(const PacketT & packet)
   return packet.tail.date_time.get_seconds() * 1000000000 + packet.tail.timestamp * 1000;
 }
 
-/// @brief Get the distance unit of the given packet type in millimeters
+/// @brief Get the distance unit of the given packet type in meters. Distance values in the packet, multiplied by this value, yield the distance in meters.
 /// @tparam PacketT The packet type
 /// @param packet The packet to get the distance unit from
-/// @return The distance unit in millimeters
+/// @return The distance unit in meters
 template <typename PacketT>
-uint8_t get_dis_unit(const PacketT & packet)
+float get_dis_unit(const PacketT & packet)
 {
-  return packet.header.dis_unit;
+  // Packets define distance unit in millimeters, convert to meters here
+  return packet.header.dis_unit / 1000.f;
 }
 
 }  // namespace hesai_packet

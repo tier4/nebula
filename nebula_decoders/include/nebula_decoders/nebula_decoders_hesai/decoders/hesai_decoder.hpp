@@ -12,6 +12,37 @@ namespace nebula
 {
 namespace drivers
 {
+
+struct DebugCounters
+{
+  uint64_t points_excluded_distance_zero;
+  uint64_t points_excluded_distance_range;
+  uint64_t points_excluded_multi_return_identical;
+  uint64_t points_excluded_multi_return_close;
+  uint64_t points_appended;
+  float min_azimuth;
+  float max_azimuth;
+  size_t min_azimuth_idx;
+  size_t max_azimuth_idx;
+
+  DebugCounters()
+  {
+    reset();
+  }
+
+  void reset() {
+    points_excluded_distance_zero = 0;
+    points_excluded_distance_range = 0;
+    points_excluded_multi_return_identical = 0;
+    points_excluded_multi_return_close = 0;
+    points_appended = 0;
+    min_azimuth = MAXFLOAT;
+    max_azimuth = -MAXFLOAT;
+    min_azimuth_idx = -1UL;
+    max_azimuth_idx = 0;
+  }
+};
+
 template <typename SensorT>
 class HesaiDecoder : public HesaiScanDecoder
 {
@@ -40,6 +71,7 @@ protected:
   bool has_scanned_;
 
   rclcpp::Logger logger_;
+  DebugCounters debug_counters_;
 
   /// @brief For each channel, its firing offset relative to the block in nanoseconds
   std::array<int, SensorT::packet_t::N_CHANNELS> channel_firing_offset_ns_;
@@ -79,33 +111,62 @@ protected:
     uint64_t packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
     uint32_t raw_azimuth = packet_.body.blocks[start_block_id].get_azimuth();
 
-    for (size_t channel_id = 0; channel_id < SensorT::packet_t::N_CHANNELS; ++channel_id) {
-      typename SensorT::packet_t::body_t::block_t::unit_t * return_units[n_blocks];
+    for (size_t block_id = start_block_id + 1; block_id < start_block_id + n_blocks; ++block_id) {
+      if (raw_azimuth != packet_.body.blocks[block_id].get_azimuth()) {
+        RCLCPP_ERROR(
+          logger_, "Azimuth mismatch for %d-return: %d != %d", n_blocks, raw_azimuth,
+          packet_.body.blocks[block_id].get_azimuth());
+        return;
+      }
+    }
 
-      for (size_t block_id = start_block_id; block_id < start_block_id + n_blocks; ++block_id) {
-        return_units[block_id - start_block_id] = &packet_.body.blocks[block_id].units[channel_id];
+    for (size_t channel_id = 0; channel_id < SensorT::packet_t::N_CHANNELS; ++channel_id) {
+      std::vector<typename SensorT::packet_t::body_t::block_t::unit_t *> return_units(n_blocks);
+
+      for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
+        return_units[block_offset] = &packet_.body.blocks[block_offset + start_block_id].units[channel_id];
       }
 
-      for (size_t block_id = start_block_id; block_id < start_block_id + n_blocks; ++block_id) {
-        auto & unit = *return_units[block_id - start_block_id];
+      for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
+        auto & unit = *return_units[block_offset];
 
-        auto distance = getDistance(unit);
-        if (
-          distance < sensor_configuration_->min_range ||
-          distance > sensor_configuration_->max_range) {
+        if (unit.distance == 0) {
+          debug_counters_.points_excluded_distance_zero++;
           continue;
         }
 
-        // TODO(mojomex) handle dual_return_distance_threshold_
+        auto distance = getDistance(unit);
+
+        if (distance < SensorT::MIN_RANGE || distance > SensorT::MAX_RANGE) {
+          debug_counters_.points_excluded_distance_range++;
+          continue;
+        }
+
+        auto return_type = sensor_.getReturnType(
+          static_cast<hesai_packet::return_mode::ReturnMode>(packet_.tail.return_mode),
+          block_offset, return_units);
+
+
+        // Keep only first of multiple identical points
+        if (return_type == ReturnType::IDENTICAL && block_offset != 0) {
+          debug_counters_.points_excluded_multi_return_identical++;
+          continue;
+        }
+
+        // Keep only first (if any) of multiple points that are too close
+        for (size_t return_idx = 0; return_idx < block_offset; ++return_idx) {
+          if (fabsf(getDistance(*return_units[return_idx]) - distance) < sensor_configuration_->dual_return_distance_threshold) {
+            debug_counters_.points_excluded_multi_return_close++;
+            continue;
+          }
+        }
 
         NebulaPoint point;
         point.distance = distance;
         point.intensity = unit.reflectivity;
         // TODO(mojomex) add header offset to scan offset correction
-        point.time_stamp = getPointTimeRelative(packet_timestamp_ns, block_id, channel_id);
+        point.time_stamp = getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
 
-        auto return_type =
-          sensor_.getReturnType(static_cast<hesai_packet::return_mode::ReturnMode>(packet_.tail.return_mode), block_id - start_block_id, return_units);
         point.return_type = static_cast<uint8_t>(return_type);
         point.channel = channel_id;
 
@@ -115,10 +176,27 @@ protected:
         point.x = xyDistance * angle_corrector_.sin_map_[azimuth_idx];
         point.y = xyDistance * angle_corrector_.cos_map_[azimuth_idx];
         point.z = distance * angle_corrector_.sin_map_[elevation_idx];
+
+        // The driver wrapper converts to degrees, expects radians
         point.azimuth = azimuth_rad;
         point.elevation = elevation_rad;
 
+        if (point.azimuth < debug_counters_.min_azimuth) {
+          debug_counters_.min_azimuth = point.azimuth;
+        }
+        if (point.azimuth > debug_counters_.max_azimuth) {
+          debug_counters_.max_azimuth = point.azimuth;
+        }
+
+        if (azimuth_idx < debug_counters_.min_azimuth_idx) {
+          debug_counters_.min_azimuth_idx = azimuth_idx;
+        }
+        if (azimuth_idx > debug_counters_.max_azimuth_idx) {
+          debug_counters_.max_azimuth_idx = azimuth_idx;
+        }
+
         // NDDUMP(_(point.x), _(point.y), _(point.z));
+        debug_counters_.points_appended++;
         decode_pc_->emplace_back(point);
       }
     }
@@ -132,10 +210,10 @@ protected:
     return angle_corrector_.hasScanned(current_phase, last_phase_);
   }
 
-  /// @brief Get the distance of the given unit in millimeters
+  /// @brief Get the distance of the given unit in meters
   float getDistance(typename SensorT::packet_t::body_t::block_t::unit_t & unit)
   {
-    return unit.distance * hesai_packet::get_dis_unit(packet_) / 1000.f;
+    return unit.distance * hesai_packet::get_dis_unit(packet_);
   }
 
   /// @brief Get timestamp of point in nanoseconds, relative to scan timestamp. Includes firing time
@@ -145,7 +223,8 @@ protected:
   /// @param channel_id The channel index of the point
   uint32_t getPointTimeRelative(uint64_t packet_timestamp_ns, size_t block_id, size_t channel_id)
   {
-    auto point_to_packet_offset_ns = sensor_.getPacketRelativePointTimeOffset(block_id, channel_id, packet_);
+    auto point_to_packet_offset_ns =
+      sensor_.getPacketRelativePointTimeOffset(block_id, channel_id, packet_);
     auto packet_to_scan_offset_ns = static_cast<uint32_t>(packet_timestamp_ns - scan_timestamp_ns_);
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
   }
@@ -166,10 +245,12 @@ public:
     logger_(rclcpp::get_logger("HesaiDecoder"))
   {
     logger_.set_level(rclcpp::Logger::Level::Debug);
-    RCLCPP_DEBUG(logger_, "Hi from HesaiDecoder");
+    RCLCPP_INFO_STREAM(logger_, sensor_configuration_);
 
     decode_pc_.reset(new NebulaPointCloud);
     output_pc_.reset(new NebulaPointCloud);
+
+    // TODO(mojomex) reserve n_points_per_scan * max_reurns points in buffers
   }
 
   int unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override
@@ -195,12 +276,32 @@ public:
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
       // FIXME(mojomex) respect scan phase
       current_azimuth =
-        packet_.body.blocks[block_id].get_azimuth() -
-        static_cast<int>(
-          sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS);
+        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS +
+         packet_.body.blocks[block_id].get_azimuth() -
+         static_cast<int>(
+           sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS)) %
+        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS);
 
       bool scan_completed = checkScanCompleted(current_azimuth);
       if (scan_completed) {
+        {
+          RCLCPP_DEBUG_STREAM(
+            logger_,
+            "decode: " << decode_pc_->size() << " | output: " << output_pc_->size()
+                       << " | points_excl_zero: " << debug_counters_.points_excluded_distance_zero
+                       << " | points_excl_range: " << debug_counters_.points_excluded_distance_range
+                       << " | points_excl_identical: " << debug_counters_.points_excluded_multi_return_identical
+                       << " | points_excl_close: " << debug_counters_.points_excluded_multi_return_close
+                       << " | points_appended: " << debug_counters_.points_appended
+                       << " | min_azimuth: " << debug_counters_.min_azimuth
+                       << " | max_azimuth: " << debug_counters_.max_azimuth
+                       << " | min_azimuth_idx: " << debug_counters_.min_azimuth_idx
+                       << " | max_azimuth_idx: " << debug_counters_.max_azimuth_idx
+                       << " | current_azimuth: " << current_azimuth
+                       << " | last_phase: " << last_phase_);
+          debug_counters_.reset();
+        }
+
         std::swap(decode_pc_, output_pc_);
         decode_pc_->clear();
         has_scanned_ = true;
@@ -208,10 +309,6 @@ public:
 
       convertReturns(block_id, n_returns);
       last_phase_ = current_azimuth;
-      // NDDUMP(
-      //   _(n_returns), _(block_id), _(last_phase_), _(current_azimuth), _(scan_completed),
-      //   _(decode_pc_->size()),
-      //   _(output_pc_->size()));
     }
 
     return last_phase_;

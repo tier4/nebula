@@ -81,7 +81,10 @@ Status HesaiRosDecoderTest::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status HesaiRosDecoderTest::GetStatus() { return wrapper_status_; }
+Status HesaiRosDecoderTest::GetStatus()
+{
+  return wrapper_status_;
+}
 
 Status HesaiRosDecoderTest::GetParameters(
   drivers::HesaiSensorConfiguration & sensor_configuration,
@@ -193,6 +196,19 @@ Status HesaiRosDecoderTest::GetParameters(
     this->declare_parameter<std::string>("target_topic", "/pandar_packets", descriptor);
     target_topic = this->get_parameter("target_topic").as_string();
   }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "Dual return distance threshold [0.01, 0.5]";
+    rcl_interfaces::msg::FloatingPointRange range;
+    range.set__from_value(0.00).set__to_value(0.5).set__step(0.01);
+    descriptor.floating_point_range = {range};
+    this->declare_parameter<double>("dual_return_distance_threshold", 0.1, descriptor);
+    sensor_configuration.dual_return_distance_threshold =
+      this->get_parameter("dual_return_distance_threshold").as_double();
+  }
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
@@ -255,18 +271,6 @@ void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::Nebula
     EXPECT_FLOAT_EQ(p1.azimuth, p2.azimuth);
     EXPECT_EQ(p1.return_type, p2.return_type);
     EXPECT_DOUBLE_EQ(p1.time_stamp, p2.time_stamp);
-  }
-}
-
-void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, pcl::PointCloud<pcl::PointXYZ>::Ptr pp2)
-{
-  EXPECT_EQ(pp1->points.size(), pp2->points.size());
-  for (uint32_t i = 0; i < pp1->points.size(); i++) {
-    auto p1 = pp1->points[i];
-    auto p2 = pp2->points[i];
-    EXPECT_FLOAT_EQ(p1.x, p2.x);
-    EXPECT_FLOAT_EQ(p1.y, p2.y);
-    EXPECT_FLOAT_EQ(p1.z, p2.z);
   }
 }
 

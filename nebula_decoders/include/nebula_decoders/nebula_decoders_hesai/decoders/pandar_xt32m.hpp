@@ -31,6 +31,9 @@ struct PacketXT32M2X : public PacketBase<6, 32, 3, 100>
 class PandarXT32M : public HesaiSensor<hesai_packet::PacketXT32M2X>
 {
 public:
+  static constexpr float MIN_RANGE = 0.5f;
+  static constexpr float MAX_RANGE = 300.0f;
+
   int getPacketRelativePointTimeOffset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {

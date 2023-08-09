@@ -204,6 +204,9 @@ private:
     -1,    -1, 34634, -1, -1, 1541, -1,    29319};
 
 public:
+  static constexpr float MIN_RANGE = 0.1;
+  static constexpr float MAX_RANGE = 230.0;
+
   int getPacketRelativePointTimeOffset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet)
   {
@@ -213,7 +216,7 @@ public:
     int channel_offset_ns;
     bool is_hires_mode = packet.tail.operational_state == OperationalState::HIGH_RESOLUTION;
     bool is_nearfield = (hesai_packet::get_dis_unit(packet) *
-                         packet.body.blocks[block_id].units[channel_id].distance / 1000.f) <= 2.85f;
+                         packet.body.blocks[block_id].units[channel_id].distance) <= 2.85f;
     auto azimuth_state = packet.tail.geAzimuthState(block_id);
 
     if (is_hires_mode && azimuth_state == 0 && !is_nearfield)
@@ -241,14 +244,15 @@ public:
     else if (!is_hires_mode && azimuth_state == 1 && is_nearfield)
       channel_offset_ns = standard_as1_near_offset_ns_[channel_id];
     else
-      throw std::runtime_error("Invalid combination of operational state and azimuth state and nearfield firing");
+      throw std::runtime_error(
+        "Invalid combination of operational state and azimuth state and nearfield firing");
 
     return block_offset_ns + channel_offset_ns;
   }
 
   ReturnType getReturnType(
     hesai_packet::return_mode::ReturnMode return_mode, unsigned int return_idx,
-    typename packet_t::body_t::block_t::unit_t ** return_units) override
+    std::vector<typename packet_t::body_t::block_t::unit_t *> return_units) override
   {
     auto return_type = HesaiSensor<packet_t>::getReturnType(return_mode, return_idx, return_units);
 

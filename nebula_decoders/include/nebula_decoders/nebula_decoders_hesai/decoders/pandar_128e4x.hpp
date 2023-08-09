@@ -63,6 +63,9 @@ private:
     -1,    -1,    -1,    21980, 15446, 8912,  2378,  -1,    -1,    -1,    -1};
 
 public:
+  static constexpr float MIN_RANGE = 0.1;
+  static constexpr float MAX_RANGE = 230.0;
+
   int getPacketRelativePointTimeOffset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet)
   {
@@ -93,7 +96,7 @@ public:
 
   ReturnType getReturnType(
     hesai_packet::return_mode::ReturnMode return_mode, unsigned int return_idx,
-    typename packet_t::body_t::block_t::unit_t ** return_units) override
+    std::vector<typename packet_t::body_t::block_t::unit_t *> return_units) override
   {
     auto return_type = HesaiSensor<packet_t>::getReturnType(return_mode, return_idx, return_units);
 

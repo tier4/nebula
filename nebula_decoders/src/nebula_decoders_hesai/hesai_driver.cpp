@@ -21,7 +21,6 @@ HesaiDriver::HesaiDriver(
   const std::shared_ptr<HesaiSensorConfiguration> & sensor_configuration,
   const std::shared_ptr<HesaiCalibrationConfiguration> & calibration_configuration,
   const std::shared_ptr<HesaiCorrection> & correction_configuration)
-
 {
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;
@@ -77,17 +76,31 @@ std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ConvertScanToPoint
   const std::shared_ptr<pandar_msgs::msg::PandarScan> & pandar_scan)
 {
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
+  auto logger = rclcpp::get_logger("HesaiDriver");
 
-  if (driver_status_ == nebula::Status::OK) {
-    int cnt = 0, last_azimuth;
-    for (auto & packet : pandar_scan->packets) {
-      last_azimuth = scan_decoder_->unpack(packet);
-      if (scan_decoder_->hasScanned()) {
-        pointcloud = scan_decoder_->getPointcloud();
-        cnt++;
-      }
+  if (driver_status_ != nebula::Status::OK) {
+    RCLCPP_ERROR(logger, "Driver not OK.");
+    return pointcloud;
+  }
+
+  int cnt = 0, last_azimuth = 0;
+  for (auto & packet : pandar_scan->packets) {
+    last_azimuth = scan_decoder_->unpack(packet);
+    if (scan_decoder_->hasScanned()) {
+      pointcloud = scan_decoder_->getPointcloud();
+      /*RCLCPP_INFO_STREAM(logger, "Scanned " << pandar_scan->packets.size() << " packets, "
+                                            << "generated " << std::get<0>(pointcloud)->size()
+                                            << " points.");
+      */cnt++;
     }
   }
+
+  if (cnt == 0) {
+    RCLCPP_ERROR_STREAM(
+      logger, "Scanned " << pandar_scan->packets.size() << " packets, but no "
+                         << "pointclouds were generated. Last azimuth: " << last_azimuth);
+  }
+
   return pointcloud;
 }
 
