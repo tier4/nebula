@@ -37,13 +37,13 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 Run tests:
 
-```
+```bash
 colcon test --event-handlers console_cohesion+ --packages-above nebula_common
 ```
 
 Show results:
 
-```
+```bash
 colcon test-result --all
 ```
 
@@ -51,25 +51,25 @@ colcon test-result --all
 
 You can easily run the sensor hardware interface, the sensor hardware monitor and sensor driver using (e.g. Pandar64):
 
-```
+```bash
 ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64
 ```
 
 If you don't want to launch the hardware (i.e. when you are working from a rosbag), set the `launch_hw` flag to false:
 
-```
+```bash
 ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 launch_hw:=false
 ```
 
 If you don't want the hardware driver to perform the sensor configuration communication (i.e. limited number of connections) set the `setup_sensor` flag to false:
 
-```
+```bash
 ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 setup_sensor:=false
 ```
 
 You should ideally provide a config file for your specific sensor, but default ones are provided `nebula_drivers/config`:
 
-```
+```bash
 ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 config_file:=your_sensor.yaml
 ```
 
@@ -217,3 +217,24 @@ Parameters shared by all supported models:
 ## Software design overview
 
 ![DriverOrganization](docs/diagram.png)
+
+
+## How to evaluate performance
+
+You can evaluate Nebula performance on a given rosbag and sensor model using the below tools.
+The profiling runner is most accurate when assigning isolated cores via the `-c <core_id>`.
+CPU frequencies are locked/unlocked automatically by the runner to increase repeatability.
+
+Run profiling for each version you want to compare:
+
+```bash
+./scripts/profiling_runner.bash baseline -m Pandar64 -b ~/my_rosbag -c 2 -t 20 -n 3
+git checkout my_improved_branch
+./scripts/profiling_runner.bash improved -m Pandar64 -b ~/my_rosbag -c 2 -t 20 -n 3
+```
+Show results:
+
+```bash
+pip3 install scripts/requirements.txt  # first-time setup
+python3 scripts/plot_times.py baseline improved
+```

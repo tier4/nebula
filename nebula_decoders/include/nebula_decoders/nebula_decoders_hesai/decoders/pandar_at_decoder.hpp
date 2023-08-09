@@ -31,6 +31,11 @@ const uint16_t MAX_AZIMUTH_DEGREE_NUM = 36000;
 const uint16_t LIDAR_AZIMUTH_UNIT = 256;
 const uint32_t MAX_AZI_LEN = 36000 * 256;
 
+/// @brief The resolution of one scan (in single return mode)
+const uint32_t SCAN_POINTS_NUM = 1200 * LASER_COUNT;
+/// @brief This sensor supports a maximum of 2 returns (= dual return)
+const uint16_t MAX_RETURN_COUNT = 2;
+
 /// @brief Hesai LiDAR decoder (AT128)
 class PandarATDecoder : public HesaiScanDecoder
 {
@@ -79,6 +84,10 @@ private:
   /// @param block_id target block
   /// @return Point cloud
   drivers::NebulaPointCloudPtr convert(size_t block_id) override;
+  /// @brief Convert to point cloud (without temporary buffer)
+  /// @param block_id target block
+  /// @param out_pc Point cloud to append the decoded points to
+  void convert(size_t block_id, NebulaPointCloudPtr & out_pc);
   /// @brief Convert to point cloud for dual return
   /// @param block_id target block
   /// @return Point cloud
@@ -93,13 +102,8 @@ private:
   std::array<float, BLOCKS_PER_PACKET> block_offset_dual_{};
   std::array<float, BLOCKS_PER_PACKET> block_offset_triple_{};
 
-  std::vector<float> m_elevation_rad_map_;
-  std::vector<float> m_sin_elevation_map_;
-  std::vector<float> m_cos_elevation_map_;
-
-  std::vector<float> m_azimuth_rad_map_;
-  std::vector<float> m_sin_azimuth_map_;
-  std::vector<float> m_cos_azimuth_map_;
+  std::vector<float> m_sin_map_;
+  std::vector<float> m_cos_map_;
 
   Packet packet_{};
 

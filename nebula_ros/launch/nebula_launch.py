@@ -102,6 +102,10 @@ def launch_setup(context, *args, **kwargs):
         target_container=LaunchConfiguration("container"),
     )
 
+    container_kwargs = {}
+    if LaunchConfiguration("debug_logging").perform(context) == "true":
+        container_kwargs["ros_arguments"] = ['--log-level', 'debug']
+    
     container = ComposableNodeContainer(
         name="nebula_ros_node",
         namespace="",
@@ -110,6 +114,7 @@ def launch_setup(context, *args, **kwargs):
         composable_node_descriptions=nodes,
         output="screen",
         condition=LaunchConfigurationEquals("container", ""),
+        **container_kwargs,
     )
 
     group = GroupAction(
@@ -135,6 +140,7 @@ def generate_launch_description():
             add_launch_arg("return_mode", "Dual"),
             add_launch_arg("launch_hw", "true"),
             add_launch_arg("setup_sensor", "true"),
+            add_launch_arg("debug_logging", "false"),
         ]
         + [OpaqueFunction(function=launch_setup)]
     )
