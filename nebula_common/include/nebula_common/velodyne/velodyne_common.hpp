@@ -11,6 +11,14 @@ namespace nebula
 {
 namespace drivers
 {
+
+/// @brief Invalid region on the cloud to be removed
+struct InvalidRegion {
+  int ring;
+  uint16_t start;
+  uint16_t end;
+};
+
 /// @brief struct for Velodyne sensor configuration
 struct VelodyneSensorConfiguration : LidarConfigurationBase
 {
@@ -20,9 +28,7 @@ struct VelodyneSensorConfiguration : LidarConfigurationBase
   uint16_t cloud_min_angle;
   uint16_t cloud_max_angle;
   bool invalid_point_remove;
-  std::vector<int64_t> invalid_rings;
-  std::vector<int64_t> invalid_angles_start;
-  std::vector<int64_t> invalid_angles_end;
+  std::vector<InvalidRegion> invalid_regions;
 };
 /// @brief Convert VelodyneSensorConfiguration to string (Overloading the << operator)
 /// @param os

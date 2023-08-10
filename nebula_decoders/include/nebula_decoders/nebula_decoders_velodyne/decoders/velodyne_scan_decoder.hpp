@@ -186,14 +186,12 @@ public:
   /// @brief Checks if the point is invalid.
   /// @param point The point to check.
   /// @return True if the point is invalid, false otherwise.
-  bool check_invalid_point(const int& channel, const uint16_t& azimuth)
+  bool check_invalid_point(const int & channel, const uint16_t & azimuth)
   {
     if (!sensor_configuration_->invalid_point_remove) return false;
-    for (size_t i = 0; i < sensor_configuration_->invalid_rings.size(); ++i) {
-      if (
-        sensor_configuration_->invalid_rings.at(i) == channel &&
-        azimuth >= sensor_configuration_->invalid_angles_start.at(i) &&
-        azimuth <= sensor_configuration_->invalid_angles_end.at(i)) {
+
+    for (const InvalidRegion & region : sensor_configuration_->invalid_regions) {
+      if (region.ring == channel && azimuth >= region.start && azimuth <= region.end) {
         return true;
       }
     }
