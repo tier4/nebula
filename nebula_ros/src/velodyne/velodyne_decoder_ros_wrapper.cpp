@@ -263,6 +263,10 @@ Status VelodyneDriverRosWrapper::GetParameters(
     }
   }
 
+  std::vector<int64_t> invalid_rings;
+  std::vector<int64_t> invalid_angles_start;
+  std::vector<int64_t> invalid_angles_end;
+
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY;
@@ -270,10 +274,10 @@ Status VelodyneDriverRosWrapper::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::vector<int64_t>>("invalid_rings", descriptor);
-    sensor_configuration.invalid_rings = this->get_parameter("invalid_rings").as_integer_array();
+    invalid_rings = this->get_parameter("invalid_rings").as_integer_array();
 
     RCLCPP_INFO_STREAM(this->get_logger(), "Invalid rings: ");
-    for (const auto & invalid_ring : sensor_configuration.invalid_rings) {
+    for (const auto & invalid_ring : invalid_rings) {
       RCLCPP_INFO_STREAM(this->get_logger(), invalid_ring << " ");
     }
   }
@@ -285,11 +289,10 @@ Status VelodyneDriverRosWrapper::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::vector<int64_t>>("invalid_angles_start", descriptor);
-    sensor_configuration.invalid_angles_start =
-      this->get_parameter("invalid_angles_start").as_integer_array();
+    invalid_angles_start = this->get_parameter("invalid_angles_start").as_integer_array();
 
     RCLCPP_INFO_STREAM(this->get_logger(), "Invalid angles start: ");
-    for (const auto & invalid_angle_start : sensor_configuration.invalid_angles_start) {
+    for (const auto & invalid_angle_start : invalid_angles_start) {
       RCLCPP_INFO_STREAM(this->get_logger(), invalid_angle_start << " ");
     }
   }
@@ -301,12 +304,32 @@ Status VelodyneDriverRosWrapper::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::vector<int64_t>>("invalid_angles_end", descriptor);
-    sensor_configuration.invalid_angles_end =
-      this->get_parameter("invalid_angles_end").as_integer_array();
+    invalid_angles_end = this->get_parameter("invalid_angles_end").as_integer_array();
 
     RCLCPP_INFO_STREAM(this->get_logger(), "Invalid angles end: ");
-    for (const auto & invalid_angle_end : sensor_configuration.invalid_angles_end) {
+    for (const auto & invalid_angle_end : invalid_angles_end) {
       RCLCPP_INFO_STREAM(this->get_logger(), invalid_angle_end << " ");
+    }
+  }
+
+  if (sensor_configuration.invalid_point_remove) {
+    // Check length of invalid_rings, invalid_angles_start and invalid_angles_end
+    if (
+      invalid_rings.size() != invalid_angles_start.size() ||
+      invalid_rings.size() != invalid_angles_end.size()) {
+      RCLCPP_ERROR_STREAM(
+        this->get_logger(),
+        "Invalid rings, invalid angles start and invalid angles end must have the same length.");
+      return Status::SENSOR_CONFIG_ERROR;
+    }
+
+    // Add invalid regions to sensor configuration
+    for (size_t i = 0; i < invalid_rings.size(); i++) {
+      drivers::InvalidRegion invalid_region;
+      invalid_region.ring = invalid_rings[i];
+      invalid_region.start = invalid_angles_start[i];
+      invalid_region.end = invalid_angles_end[i];
+      sensor_configuration.invalid_regions.push_back(invalid_region);
     }
   }
 
