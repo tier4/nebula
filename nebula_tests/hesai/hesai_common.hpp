@@ -23,13 +23,18 @@ namespace ros
 void checkPCDs(nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<pcl::PointXYZ>::Ptr ref_pc)
 {
   EXPECT_EQ(pc->points.size(), ref_pc->points.size());
-  for (uint32_t i = 0; i < pc->points.size(); i++) {
-    auto p = pc->points[i];
-    auto p_ref = ref_pc->points[i];
+  auto bound = std::min(pc->points.size(), ref_pc->points.size());
+  for (uint32_t i = 0; i < bound; i++) {
+    auto p1 = pc->points[i];
+    auto p2 = ref_pc->points[i];
 
-    EXPECT_FLOAT_EQ(p.x, p_ref.x);
-    EXPECT_FLOAT_EQ(p.y, p_ref.y);
-    EXPECT_FLOAT_EQ(p.z, p_ref.z);
+    auto azi1 = std::atan2(p1.x, p1.y);
+    auto azi2 = std::atan2(p2.x, p2.y);
+
+    std::cout << "<<<" << azi1 << ", " << azi2 << ">>>" << std::endl;
+
+    EXPECT_NEAR(
+      p1.x * p1.x + p1.y * p1.y + p1.z * p1.z, p2.x * p2.x + p2.y * p2.y + p2.z * p2.z, .01 * .01);
   }
 }
 

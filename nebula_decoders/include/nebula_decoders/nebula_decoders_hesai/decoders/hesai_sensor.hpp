@@ -89,7 +89,7 @@ public:
       return false;
     };
 
-    if (n_returns != 1 && is_duplicate()) {
+    if (is_duplicate()) {
       return ReturnType::IDENTICAL;
     }
 

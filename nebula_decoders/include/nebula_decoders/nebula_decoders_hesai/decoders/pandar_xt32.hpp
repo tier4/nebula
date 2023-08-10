@@ -56,6 +56,9 @@ public:
     std::vector<typename packet_t::body_t::block_t::unit_t *> return_units) override
   {
     auto return_type = HesaiSensor<packet_t>::getReturnType(return_mode, return_idx, return_units);
+    if (return_type == ReturnType::IDENTICAL) {
+      return return_type;
+    }
 
     // This sensor orders returns in the opposite order, so the return_type needs to be flipped too
     if (return_mode == hesai_packet::return_mode::DUAL_FIRST_LAST) {

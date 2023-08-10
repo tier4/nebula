@@ -15,6 +15,7 @@ namespace drivers
 
 struct DebugCounters
 {
+  uint64_t points_in;
   uint64_t points_excluded_distance_zero;
   uint64_t points_excluded_distance_range;
   uint64_t points_excluded_multi_return_identical;
@@ -25,12 +26,11 @@ struct DebugCounters
   size_t min_azimuth_idx;
   size_t max_azimuth_idx;
 
-  DebugCounters()
-  {
-    reset();
-  }
+  DebugCounters() { reset(); }
 
-  void reset() {
+  void reset()
+  {
+    points_in = 0;
     points_excluded_distance_zero = 0;
     points_excluded_distance_range = 0;
     points_excluded_multi_return_identical = 0;
@@ -114,7 +114,7 @@ protected:
     for (size_t block_id = start_block_id + 1; block_id < start_block_id + n_blocks; ++block_id) {
       if (raw_azimuth != packet_.body.blocks[block_id].get_azimuth()) {
         RCLCPP_ERROR(
-          logger_, "Azimuth mismatch for %d-return: %d != %d", n_blocks, raw_azimuth,
+          logger_, "Azimuth mismatch for %ld-return: %d != %d", n_blocks, raw_azimuth,
           packet_.body.blocks[block_id].get_azimuth());
         return;
       }
@@ -124,11 +124,14 @@ protected:
       std::vector<typename SensorT::packet_t::body_t::block_t::unit_t *> return_units(n_blocks);
 
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
-        return_units[block_offset] = &packet_.body.blocks[block_offset + start_block_id].units[channel_id];
+        return_units[block_offset] =
+          &packet_.body.blocks[block_offset + start_block_id].units[channel_id];
       }
 
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
         auto & unit = *return_units[block_offset];
+
+        debug_counters_.points_in++;
 
         if (unit.distance == 0) {
           debug_counters_.points_excluded_distance_zero++;
@@ -146,16 +149,36 @@ protected:
           static_cast<hesai_packet::return_mode::ReturnMode>(packet_.tail.return_mode),
           block_offset, return_units);
 
-
-        // Keep only first of multiple identical points
-        if (return_type == ReturnType::IDENTICAL && block_offset != 0) {
+        // Keep only last of multiple identical points
+        if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
+          if (unit.distance != return_units[n_blocks - 1]->distance) {
+            RCLCPP_ERROR(
+              logger_, "Identical return mismatch: %d != %d", unit.distance,
+              return_units[n_blocks - 1]->distance);
+            return;
+          }
           debug_counters_.points_excluded_multi_return_identical++;
           continue;
         }
 
-        // Keep only first (if any) of multiple points that are too close
-        for (size_t return_idx = 0; return_idx < block_offset; ++return_idx) {
-          if (fabsf(getDistance(*return_units[return_idx]) - distance) < sensor_configuration_->dual_return_distance_threshold) {
+        // Keep only last (if any) of multiple points that are too close
+        if (block_offset != n_blocks - 1) {
+          bool is_below_multi_return_threshold = false;
+
+          for (size_t return_idx = 0; return_idx < n_blocks; ++return_idx) {
+            if (return_idx == block_offset) {
+              continue;
+            }
+
+            if (
+              fabsf(getDistance(*return_units[return_idx]) - distance) <
+              sensor_configuration_->dual_return_distance_threshold) {
+              is_below_multi_return_threshold = true;
+              break;
+            }
+          }
+
+          if (is_below_multi_return_threshold) {
             debug_counters_.points_excluded_multi_return_close++;
             continue;
           }
@@ -165,7 +188,8 @@ protected:
         point.distance = distance;
         point.intensity = unit.reflectivity;
         // TODO(mojomex) add header offset to scan offset correction
-        point.time_stamp = getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
+        point.time_stamp =
+          getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
 
         point.return_type = static_cast<uint8_t>(return_type);
         point.channel = channel_id;
@@ -287,16 +311,20 @@ public:
         {
           RCLCPP_DEBUG_STREAM(
             logger_,
-            "decode: " << decode_pc_->size() << " | output: " << output_pc_->size()
+            "decode: " << decode_pc_->size()
+                       // << " | output: " << output_pc_->size()
+                       << " | points_in: " << debug_counters_.points_in
                        << " | points_excl_zero: " << debug_counters_.points_excluded_distance_zero
                        << " | points_excl_range: " << debug_counters_.points_excluded_distance_range
-                       << " | points_excl_identical: " << debug_counters_.points_excluded_multi_return_identical
-                       << " | points_excl_close: " << debug_counters_.points_excluded_multi_return_close
+                       << " | points_excl_identical: "
+                       << debug_counters_.points_excluded_multi_return_identical
+                       << " | points_excl_close: "
+                       << debug_counters_.points_excluded_multi_return_close
                        << " | points_appended: " << debug_counters_.points_appended
-                       << " | min_azimuth: " << debug_counters_.min_azimuth
-                       << " | max_azimuth: " << debug_counters_.max_azimuth
-                       << " | min_azimuth_idx: " << debug_counters_.min_azimuth_idx
-                       << " | max_azimuth_idx: " << debug_counters_.max_azimuth_idx
+                       << " | min_azimuth: " << debug_counters_.min_azimuth << " | max_azimuth: "
+                       << debug_counters_.max_azimuth
+                       //<< " | min_azimuth_idx: " << debug_counters_.min_azimuth_idx
+                       //<< " | max_azimuth_idx: " << debug_counters_.max_azimuth_idx
                        << " | current_azimuth: " << current_azimuth
                        << " | last_phase: " << last_phase_);
           debug_counters_.reset();
