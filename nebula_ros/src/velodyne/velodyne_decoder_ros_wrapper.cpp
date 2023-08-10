@@ -246,6 +246,70 @@ Status VelodyneDriverRosWrapper::GetParameters(
     }
   }
 
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<bool>("invalid_point_remove", false, descriptor);
+    sensor_configuration.invalid_point_remove =
+      this->get_parameter("invalid_point_remove").as_bool();
+
+    if (sensor_configuration.invalid_point_remove) {
+      RCLCPP_INFO_STREAM(this->get_logger(), "Invalid point remove is active.");
+    } else {
+      RCLCPP_INFO_STREAM(this->get_logger(), "Invalid point remove is not active.");
+    }
+  }
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::vector<int64_t>>("invalid_rings", descriptor);
+    sensor_configuration.invalid_rings = this->get_parameter("invalid_rings").as_integer_array();
+
+    RCLCPP_INFO_STREAM(this->get_logger(), "Invalid rings: ");
+    for (const auto & invalid_ring : sensor_configuration.invalid_rings) {
+      RCLCPP_INFO_STREAM(this->get_logger(), invalid_ring << " ");
+    }
+  }
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::vector<int64_t>>("invalid_angles_start", descriptor);
+    sensor_configuration.invalid_angles_start =
+      this->get_parameter("invalid_angles_start").as_integer_array();
+
+    RCLCPP_INFO_STREAM(this->get_logger(), "Invalid angles start: ");
+    for (const auto & invalid_angle_start : sensor_configuration.invalid_angles_start) {
+      RCLCPP_INFO_STREAM(this->get_logger(), invalid_angle_start << " ");
+    }
+  }
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::vector<int64_t>>("invalid_angles_end", descriptor);
+    sensor_configuration.invalid_angles_end =
+      this->get_parameter("invalid_angles_end").as_integer_array();
+
+    RCLCPP_INFO_STREAM(this->get_logger(), "Invalid angles end: ");
+    for (const auto & invalid_angle_end : sensor_configuration.invalid_angles_end) {
+      RCLCPP_INFO_STREAM(this->get_logger(), invalid_angle_end << " ");
+    }
+  }
+
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }

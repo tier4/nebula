@@ -19,6 +19,16 @@
 
     <arg name="setup_sensor" default="True" description="Enable sensor setup on hw-driver."/>
 
+    <arg name="invalid_point_remove" default="true"/>
+
+<!--    <arg name="invalid_rings" default="[0]"/>-->
+<!--    <arg name="invalid_angles_start" default="[0]"/>-->
+<!--    <arg name="invalid_angles_end" default="[0]"/>-->
+
+    <arg name="invalid_rings" default="[12,0,1,2,3,4,5,6,0,1,2,3,4]"/>
+    <arg name="invalid_angles_start" default="[31110,3500,3400,3200,3200,3000,2950,3100,26000,26000,26000,26000,26000]"/>
+    <arg name="invalid_angles_end" default="[31495,6900,6500,4600,4600,4300,4050,3800,32200,32200,31000,30000,28000]"/>
+
     <node pkg="nebula_ros" exec="velodyne_driver_ros_wrapper_node"
           name="velodyne_cloud" output="screen">
         <param name="sensor_model" value="$(var sensor_model)"/>
@@ -26,6 +36,10 @@
         <param name="frame_id" value="$(var frame_id)"/>
         <param name="scan_phase" value="$(var scan_phase)"/>
         <param name="calibration_file" value="$(var calibration_file)"/>
+        <param name="invalid_point_remove" value="$(var invalid_point_remove)"/>
+        <param name="invalid_rings" value="$(var invalid_rings)"/>
+        <param name="invalid_angles_start" value="$(var invalid_angles_start)"/>
+        <param name="invalid_angles_end" value="$(var invalid_angles_end)"/>
     </node>
 
     <node pkg="nebula_ros" exec="velodyne_hw_ros_wrapper_node"

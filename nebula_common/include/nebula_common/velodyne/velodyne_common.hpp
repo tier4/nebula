@@ -19,6 +19,10 @@ struct VelodyneSensorConfiguration : LidarConfigurationBase
   uint16_t rotation_speed;
   uint16_t cloud_min_angle;
   uint16_t cloud_max_angle;
+  bool invalid_point_remove;
+  std::vector<int64_t> invalid_rings;
+  std::vector<int64_t> invalid_angles_start;
+  std::vector<int64_t> invalid_angles_end;
 };
 /// @brief Convert VelodyneSensorConfiguration to string (Overloading the << operator)
 /// @param os
