@@ -1,5 +1,6 @@
 #pragma once
 
+#include "nebula_decoders/nebula_decoders_velodyne/decoders/parallel_unpack.hpp"
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/velodyne_scan_decoder.hpp"
 
 #include "velodyne_msgs/msg/velodyne_packet.hpp"
@@ -14,7 +15,7 @@ namespace drivers
 namespace vlp32
 {
 /// @brief Velodyne LiDAR decoder (VLP32)
-class Vlp32Decoder : public VelodyneScanDecoder
+class Vlp32Decoder : public VelodyneScanDecoder, public ParallelUnpack
 {
 public:
   /// @brief Constructor
@@ -25,7 +26,9 @@ public:
     const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration);
   /// @brief Parsing and shaping VelodynePacket
   /// @param velodyne_packet
-  void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) override;
+  void unpack(
+    const velodyne_msgs::msg::VelodynePacket & velodyne_packet,
+    const size_t & packet_index) override;
   /// @brief Get the flag indicating whether one cycle is ready
   /// @return Readied
   bool hasScanned() override;

@@ -54,16 +54,25 @@ std::tuple<drivers::NebulaPointCloudPtr, double> VelodyneDriver::ConvertScanToPo
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
   if (driver_status_ == nebula::Status::OK) {
     scan_decoder_->reset_pointcloud(velodyne_scan->packets.size());
-    for (auto & packet : velodyne_scan->packets) {
-      scan_decoder_->unpack(packet);
-    }
+
+    std::vector<size_t> indices(velodyne_scan->packets.size());
+    std::iota(indices.begin(), indices.end(), 0);
+
+    std::for_each(
+      std::execution::par, indices.begin(), indices.end(), [this, velodyne_scan](const auto index) {
+        scan_decoder_->unpack(velodyne_scan->packets.at(index), index);
+      });
+
     pointcloud = scan_decoder_->get_pointcloud();
   } else {
     std::cout << "not ok driver_status_ = " << driver_status_ << std::endl;
   }
   return pointcloud;
 }
-Status VelodyneDriver::GetStatus() { return driver_status_; }
+Status VelodyneDriver::GetStatus()
+{
+  return driver_status_;
+}
 
 }  // namespace drivers
 }  // namespace nebula
