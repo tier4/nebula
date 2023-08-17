@@ -48,6 +48,12 @@ ament_auto_add_library(nebula_decoders_velodyne SHARED
         src/nebula_decoders_velodyne/decoders/vlp32_decoder.cpp
         )
 
+        # Robosense
+ament_auto_add_library(nebula_decoders_robosense SHARED
+            src/nebula_decoders_robosense/robosense_driver.cpp
+            # src/nebula_decoders_robosense/decoders/vls128_decoder.cpp
+            )
+
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()

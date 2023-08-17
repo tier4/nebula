@@ -1,0 +1,11 @@
+uint8[6]                device_sn               
+uint16                  motor_rmp
+uint16                  bot_fpga_temperature 
+uint16                  recv_a_temperature
+uint16                  recv_b_temperature
+uint16                  main_fpga_temperature
+uint16                  main_fpga_core_temperature
+uint8                   lane_up
+uint16                  lane_up_cnt
+uint16                  main_status
+uint8                   gps_status

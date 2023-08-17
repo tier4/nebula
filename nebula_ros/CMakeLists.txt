@@ -30,6 +30,37 @@ include_directories(
         ${PCL_COMMON_INCLUDE_DIRS}
 )
 link_libraries(${YAML_CPP_LIBRARIES} ${PCL_LIBRARIES})
+#Robosense
+# Hw Interface
+ament_auto_add_library(robosense_hw_ros_wrapper SHARED
+        src/robosense/robosense_hw_interface_ros_wrapper.cpp
+        )
+
+rclcpp_components_register_node(robosense_hw_ros_wrapper
+        PLUGIN "RobosenseHwInterfaceRosWrapper"
+        EXECUTABLE robosense_hw_interface_ros_wrapper_node
+        )
+
+# Monitor
+ament_auto_add_library(robosense_hw_monitor_ros_wrapper SHARED
+        src/robosense/robosense_hw_monitor_ros_wrapper.cpp
+        )
+
+rclcpp_components_register_node(robosense_hw_monitor_ros_wrapper
+        PLUGIN "RobosenseHwMonitorRosWrapper"
+        EXECUTABLE robosense_hw_monitor_ros_wrapper_node
+        )
+
+# DriverDecoder
+ament_auto_add_library(robosense_driver_ros_wrapper SHARED
+        src/robosense/robosense_decoder_ros_wrapper.cpp
+        )
+
+rclcpp_components_register_node(robosense_driver_ros_wrapper
+        PLUGIN "RobosenseDriverRosWrapper"
+        EXECUTABLE robosense_driver_ros_wrapper_node
+        )
+
 ## Hesai
 # Hw Interface
 ament_auto_add_library(hesai_hw_ros_wrapper SHARED
