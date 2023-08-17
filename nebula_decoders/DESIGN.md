@@ -3,7 +3,7 @@
 Since sensors from the same vendor often follow similar conventions when it comes to packet structure and data processing steps, a generic decoder can be used for most of the decoding work.
 This document outlines the requirements and design of the generic Hesai decoder.
 
-## Potential for generalizaiton
+## Potential for generalization
 
 ### Packet formats
 
@@ -61,7 +61,7 @@ This yields a memory footprint of 36.9 MB per lookup table.
 Timing correction for all sensors follows the same underlying formula:
 Given a scan start timestamp $T_{s_i}$, packet start timestamp $T_{p_j}$, block offset $o_{b_k}$ within the packet and channel offset $o_{c_l}$ within the block, the point identified by $(i, j, k, l)$ has the relative scan timestamp $t_{i,j,k,l} = T_{p_j} - T_{s_i} + o_{b_k} + o_{c_l}$.
 
-The block offset follows a formula linear in the block index for all sensor models which addidionally depends on the number of returns of the currently active `return_mode`.
+The block offset follows a formula linear in the block index for all sensor models which additionally depends on the number of returns of the currently active `return_mode`.
 
 The channel offset is given as a formula, table or set of tables for all sensors. A few sensors' formula is influenced by factors such as high resolution mode (128E3X, 128E4X), alternate firing sequences (QT128) and near/farfield firing (128E3X).
 
@@ -93,7 +93,7 @@ The packet body (i.e. point data) is mainly parameterized by bytes per point, po
 Each sensor model has its own class `PandarXYZ : HesaiSensor<...>` that defines packet type and timing, and return mode handling logic. Angle correction is the same for 90% of sensors and thus outsourced into `AngleCorrector` and subclasses. These are template arguments for `HesaiSensor`.
 Return mode handling has a default implementation that is supplemented by additional logic only in 3 sensors.
 
-### `AngleCorector`
+### `AngleCorrector`
 
 The angle corrector has three main tasks:
 * compute corrected azimuth/elevation for given azimuth and channel
