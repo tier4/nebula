@@ -13,36 +13,6 @@ namespace nebula
 namespace drivers
 {
 
-struct DebugCounters
-{
-  uint64_t points_in;
-  uint64_t points_excluded_distance_zero;
-  uint64_t points_excluded_distance_range;
-  uint64_t points_excluded_multi_return_identical;
-  uint64_t points_excluded_multi_return_close;
-  uint64_t points_appended;
-  float min_azimuth;
-  float max_azimuth;
-  size_t min_azimuth_idx;
-  size_t max_azimuth_idx;
-
-  DebugCounters() { reset(); }
-
-  void reset()
-  {
-    points_in = 0;
-    points_excluded_distance_zero = 0;
-    points_excluded_distance_range = 0;
-    points_excluded_multi_return_identical = 0;
-    points_excluded_multi_return_close = 0;
-    points_appended = 0;
-    min_azimuth = MAXFLOAT;
-    max_azimuth = -MAXFLOAT;
-    min_azimuth_idx = -1UL;
-    max_azimuth_idx = 0;
-  }
-};
-
 template <typename SensorT>
 class HesaiDecoder : public HesaiScanDecoder
 {
@@ -71,7 +41,6 @@ protected:
   bool has_scanned_;
 
   rclcpp::Logger logger_;
-  DebugCounters debug_counters_;
 
   /// @brief For each channel, its firing offset relative to the block in nanoseconds
   std::array<int, SensorT::packet_t::N_CHANNELS> channel_firing_offset_ns_;
@@ -111,18 +80,11 @@ protected:
     uint64_t packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
     uint32_t raw_azimuth = packet_.body.blocks[start_block_id].get_azimuth();
 
-    for (size_t block_id = start_block_id + 1; block_id < start_block_id + n_blocks; ++block_id) {
-      if (raw_azimuth != packet_.body.blocks[block_id].get_azimuth()) {
-        RCLCPP_ERROR(
-          logger_, "Azimuth mismatch for %ld-return: %d != %d", n_blocks, raw_azimuth,
-          packet_.body.blocks[block_id].get_azimuth());
-        return;
-      }
-    }
-
     for (size_t channel_id = 0; channel_id < SensorT::packet_t::N_CHANNELS; ++channel_id) {
       std::vector<typename SensorT::packet_t::body_t::block_t::unit_t *> return_units(n_blocks);
 
+      // Find the units corresponding to the same return group as the current one.
+      // These are used to find duplicates in multi-return mode.
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
         return_units[block_offset] =
           &packet_.body.blocks[block_offset + start_block_id].units[channel_id];
@@ -131,17 +93,13 @@ protected:
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
         auto & unit = *return_units[block_offset];
 
-        debug_counters_.points_in++;
-
         if (unit.distance == 0) {
-          debug_counters_.points_excluded_distance_zero++;
           continue;
         }
 
         auto distance = getDistance(unit);
 
         if (distance < SensorT::MIN_RANGE || distance > SensorT::MAX_RANGE) {
-          debug_counters_.points_excluded_distance_range++;
           continue;
         }
 
@@ -151,13 +109,6 @@ protected:
 
         // Keep only last of multiple identical points
         if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
-          if (unit.distance != return_units[n_blocks - 1]->distance) {
-            RCLCPP_ERROR(
-              logger_, "Identical return mismatch: %d != %d", unit.distance,
-              return_units[n_blocks - 1]->distance);
-            return;
-          }
-          debug_counters_.points_excluded_multi_return_identical++;
           continue;
         }
 
@@ -179,7 +130,6 @@ protected:
           }
 
           if (is_below_multi_return_threshold) {
-            debug_counters_.points_excluded_multi_return_close++;
             continue;
           }
         }
@@ -205,22 +155,6 @@ protected:
         point.azimuth = azimuth_rad;
         point.elevation = elevation_rad;
 
-        if (point.azimuth < debug_counters_.min_azimuth) {
-          debug_counters_.min_azimuth = point.azimuth;
-        }
-        if (point.azimuth > debug_counters_.max_azimuth) {
-          debug_counters_.max_azimuth = point.azimuth;
-        }
-
-        if (azimuth_idx < debug_counters_.min_azimuth_idx) {
-          debug_counters_.min_azimuth_idx = azimuth_idx;
-        }
-        if (azimuth_idx > debug_counters_.max_azimuth_idx) {
-          debug_counters_.max_azimuth_idx = azimuth_idx;
-        }
-
-        // NDDUMP(_(point.x), _(point.y), _(point.z));
-        debug_counters_.points_appended++;
         decode_pc_->emplace_back(point);
       }
     }
@@ -296,9 +230,7 @@ public:
     const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
     int current_azimuth;
 
-    // FIXME(mojomex) for XT32M in triple return mode, blocks 6 and 7 are discarded
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
-      // FIXME(mojomex) respect scan phase
       current_azimuth =
         (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS +
          packet_.body.blocks[block_id].get_azimuth() -
@@ -308,28 +240,6 @@ public:
 
       bool scan_completed = checkScanCompleted(current_azimuth);
       if (scan_completed) {
-        {
-          RCLCPP_DEBUG_STREAM(
-            logger_,
-            "decode: " << decode_pc_->size()
-                       // << " | output: " << output_pc_->size()
-                       << " | points_in: " << debug_counters_.points_in
-                       << " | points_excl_zero: " << debug_counters_.points_excluded_distance_zero
-                       << " | points_excl_range: " << debug_counters_.points_excluded_distance_range
-                       << " | points_excl_identical: "
-                       << debug_counters_.points_excluded_multi_return_identical
-                       << " | points_excl_close: "
-                       << debug_counters_.points_excluded_multi_return_close
-                       << " | points_appended: " << debug_counters_.points_appended
-                       << " | min_azimuth: " << debug_counters_.min_azimuth << " | max_azimuth: "
-                       << debug_counters_.max_azimuth
-                       //<< " | min_azimuth_idx: " << debug_counters_.min_azimuth_idx
-                       //<< " | max_azimuth_idx: " << debug_counters_.max_azimuth_idx
-                       << " | current_azimuth: " << current_azimuth
-                       << " | last_phase: " << last_phase_);
-          debug_counters_.reset();
-        }
-
         std::swap(decode_pc_, output_pc_);
         decode_pc_->clear();
         has_scanned_ = true;
@@ -347,9 +257,6 @@ public:
   std::tuple<drivers::NebulaPointCloudPtr, double> getPointcloud() override
   {
     double scan_timestamp_s = static_cast<double>(scan_timestamp_ns_) * 1e-9;
-    // RCLCPP_DEBUG(
-    //   logger_, "output_pc_ size: %ld, decode_pc_ size: %ld", output_pc_->size(),
-    //   decode_pc_->size());
     return std::make_pair(output_pc_, scan_timestamp_s);
   }
 };

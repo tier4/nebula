@@ -88,10 +88,7 @@ std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ConvertScanToPoint
     last_azimuth = scan_decoder_->unpack(packet);
     if (scan_decoder_->hasScanned()) {
       pointcloud = scan_decoder_->getPointcloud();
-      /*RCLCPP_INFO_STREAM(logger, "Scanned " << pandar_scan->packets.size() << " packets, "
-                                            << "generated " << std::get<0>(pointcloud)->size()
-                                            << " points.");
-      */cnt++;
+      cnt++;
     }
   }
 

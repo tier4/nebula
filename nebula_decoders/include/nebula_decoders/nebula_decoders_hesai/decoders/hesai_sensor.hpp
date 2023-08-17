@@ -19,6 +19,57 @@ enum class AngleCorrectionType { CALIBRATION, CORRECTION };
 template <typename PacketT, AngleCorrectionType AngleCorrection = AngleCorrectionType::CALIBRATION>
 class HesaiSensor
 {
+private:
+  /// @brief Whether the unit given by return_idx is the strongest (in terms of intensity) among all
+  /// return_units
+  /// @param return_idx The index of the unit in return_units
+  /// @param return_units The vector of all the units corresponding to the same return group (i.e.
+  /// length 2 for dual-return with both units having the same channel but coming from different
+  /// blocks)
+  /// @return true if the reflectivity of the unit is strictly greater than that of all other units
+  /// in return_units, false otherwise
+  static bool is_strongest(
+    uint32_t return_idx,
+    const std::vector<typename PacketT::body_t::block_t::unit_t *> & return_units)
+  {
+    for (unsigned int i = 0; i < return_units.size(); ++i) {
+      if (i == return_idx) {
+        continue;
+      }
+
+      if (return_units[return_idx]->reflectivity < return_units[i]->reflectivity) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  /// @brief Whether the unit given by return_idx is a duplicate of any other unit in return_units
+  /// @param return_idx The unit's index in the return_units vector
+  /// @param return_units The vector of all the units corresponding to the same return group (i.e.
+  /// length 2 for dual-return with both units having the same channel but coming from different
+  /// blocks)
+  /// @return true if the unit is identical to any other one in return_units, false otherwise
+  static bool is_duplicate(
+    uint32_t return_idx,
+    const std::vector<typename PacketT::body_t::block_t::unit_t *> & return_units)
+  {
+    for (unsigned int i = 0; i < return_units.size(); ++i) {
+      if (i == return_idx) {
+        continue;
+      }
+
+      if (
+        return_units[return_idx]->distance == return_units[i]->distance &&
+        return_units[return_idx]->reflectivity == return_units[i]->reflectivity) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
 public:
   typedef PacketT packet_t;
   typedef typename std::conditional<
@@ -41,11 +92,11 @@ public:
 
   /// @brief Get the return type of the point given by return_idx
   ///
-  /// For duplicate points, the return type is reported as-is for the first point, and set to @ref
-  /// ReturnType::IDENTICAL for the duplicate(s). For DUAL_LAST_STRONGEST and DUAL_FIRST_STRONGEST,
-  /// if the last/first point is also the strongest, it will be returned as @ref
-  /// ReturnType::LAST_STRONGEST / @ref ReturnType::FIRST_STRONGEST respectively, with the second
-  /// point being reported as @ref ReturnType::SECONDSTRONGEST.
+  /// For duplicate points, the return type is reported as @ref ReturnType::IDENTICAL for all
+  /// identical points. For DUAL_LAST_STRONGEST and DUAL_FIRST_STRONGEST, if the last/first point is
+  /// also the strongest, it will be returned as @ref ReturnType::LAST_STRONGEST / @ref
+  /// ReturnType::FIRST_STRONGEST respectively, with the second point being reported as @ref
+  /// ReturnType::SECONDSTRONGEST.
   ///
   /// @param return_mode The sensor's currently active return mode
   /// @param return_idx The block index of the point within the group of blocks that make up the
@@ -55,41 +106,11 @@ public:
   /// @return The return type of the point
   virtual ReturnType getReturnType(
     hesai_packet::return_mode::ReturnMode return_mode, unsigned int return_idx,
-    std::vector<typename packet_t::body_t::block_t::unit_t *> return_units)
+    const std::vector<typename PacketT::body_t::block_t::unit_t *> & return_units)
   {
     unsigned int n_returns = return_units.size();
 
-    const auto is_strongest = [&]() {
-      for (unsigned int i = 0; i < n_returns; ++i) {
-        if (i == return_idx) {
-          continue;
-        }
-
-        if (return_units[return_idx]->reflectivity < return_units[i]->reflectivity) {
-          return false;
-        }
-      }
-
-      return true;
-    };
-
-    const auto is_duplicate = [&]() {
-      for (unsigned int i = 0; i < n_returns; ++i) {
-        if (i == return_idx) {
-          continue;
-        }
-
-        if (
-          return_units[return_idx]->distance == return_units[i]->distance &&
-          return_units[return_idx]->reflectivity == return_units[i]->reflectivity) {
-          return true;
-        }
-      }
-
-      return false;
-    };
-
-    if (is_duplicate()) {
+    if (is_duplicate(return_idx, return_units)) {
       return ReturnType::IDENTICAL;
     }
 
@@ -103,7 +124,7 @@ public:
       case hesai_packet::return_mode::SINGLE_LAST:
         return ReturnType::LAST;
       case hesai_packet::return_mode::DUAL_LAST_STRONGEST:
-        if (is_strongest()) {
+        if (is_strongest(return_idx, return_units)) {
           return return_idx == 0 ? ReturnType::LAST_STRONGEST : ReturnType::STRONGEST;
         } else {
           return return_idx == 0 ? ReturnType::LAST : ReturnType::SECONDSTRONGEST;
@@ -113,7 +134,7 @@ public:
       case hesai_packet::return_mode::DUAL_FIRST_LAST:
         return return_idx == 0 ? ReturnType::FIRST : ReturnType::LAST;
       case hesai_packet::return_mode::DUAL_FIRST_STRONGEST:
-        if (is_strongest()) {
+        if (is_strongest(return_idx, return_units)) {
           return return_idx == 0 ? ReturnType::FIRST_STRONGEST : ReturnType::STRONGEST;
         } else {
           return return_idx == 0 ? ReturnType::FIRST : ReturnType::SECONDSTRONGEST;

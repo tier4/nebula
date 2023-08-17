@@ -11,6 +11,10 @@ namespace nebula
 namespace drivers
 {
 
+/// @brief Handles angle correction for given azimuth/channel combinations, as well as trigonometry
+/// lookup tables
+/// @tparam LookupTableSize The number of values per trigonometry lookup table, e.g. 1000 * 360 for
+/// a milli-degree resolution
 template <size_t LookupTableSize>
 class AngleCorrector
 {
@@ -55,6 +59,11 @@ public:
   virtual std::tuple<uint32_t, uint32_t, float, float> getCorrectedAzimuthAndElevation(
     uint32_t block_azimuth, uint32_t channel_id) = 0;
 
+  /// @brief Returns true if the current azimuth lies in a different (new) scan compared to the last
+  /// azimuth
+  /// @param current_azimuth The current azimuth value in the sensor's angle resolution
+  /// @param last_azimuth The last azimuth in the sensor's angle resolution
+  /// @return true if the current azimuth is in a different scan than the last one, false otherwise
   virtual bool hasScanned(int current_azimuth, int last_azimuth) = 0;
 };
 
