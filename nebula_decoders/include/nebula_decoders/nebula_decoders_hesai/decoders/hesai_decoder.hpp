@@ -45,7 +45,7 @@ protected:
   /// @brief For each channel, its firing offset relative to the block in nanoseconds
   std::array<int, SensorT::packet_t::N_CHANNELS> channel_firing_offset_ns_;
   /// @brief For each return mode, the firing offset of each block relative to its packet in
-  /// nanosconds
+  /// nanoseconds
   std::array<std::array<int, SensorT::packet_t::N_BLOCKS>, SensorT::packet_t::MAX_RETURNS>
     block_firing_offset_ns_;
 
@@ -144,12 +144,15 @@ protected:
         point.return_type = static_cast<uint8_t>(return_type);
         point.channel = channel_id;
 
-        auto [azimuth_idx, elevation_idx, azimuth_rad, elevation_rad] =
+        auto [azimuth_rad, elevation_rad] =
           angle_corrector_.getCorrectedAzimuthAndElevation(raw_azimuth, channel_id);
-        float xyDistance = distance * angle_corrector_.cos_map_[elevation_idx];
-        point.x = xyDistance * angle_corrector_.sin_map_[azimuth_idx];
-        point.y = xyDistance * angle_corrector_.cos_map_[azimuth_idx];
-        point.z = distance * angle_corrector_.sin_map_[elevation_idx];
+
+        // The raw_azimuth and channel are only used as indices, sin/cos functions use the precise
+        // corrected angles
+        float xyDistance = distance * angle_corrector_.getElevationCos(raw_azimuth, channel_id);
+        point.x = xyDistance * angle_corrector_.getAzimuthSin(raw_azimuth, channel_id);
+        point.y = xyDistance * angle_corrector_.getAzimuthCos(raw_azimuth, channel_id);
+        point.z = distance * angle_corrector_.getElevationSin(raw_azimuth, channel_id);
 
         // The driver wrapper converts to degrees, expects radians
         point.azimuth = azimuth_rad;

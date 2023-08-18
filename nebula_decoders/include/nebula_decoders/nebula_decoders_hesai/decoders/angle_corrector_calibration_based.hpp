@@ -11,24 +11,25 @@ namespace drivers
 {
 
 template <size_t ChannelN, size_t AngleUnit>
-class AngleCorrectorCalibrationBased : public AngleCorrector<1000 * 360>
+class AngleCorrectorCalibrationBased : public AngleCorrector
 {
 private:
-  static constexpr size_t INTERNAL_RESOLUTION_PER_DEG = 1000;
-  static constexpr size_t INTERNAL_MAX_AZIMUTH_LENGTH = 360 * INTERNAL_RESOLUTION_PER_DEG;
-  static constexpr size_t SENSOR_MAX_AZIMUTH_LENGTH = 360 * AngleUnit;
+  static constexpr size_t MAX_AZIMUTH_LEN = 360 * AngleUnit;
 
-  std::array<int32_t, ChannelN> elevation_angle_{};
-  std::array<int32_t, ChannelN> azimuth_offset_{};
   std::array<float, ChannelN> elevation_angle_rad_{};
   std::array<float, ChannelN> azimuth_offset_rad_{};
-  std::array<float, 360 * AngleUnit> block_azimuth_rad_{};
+  std::array<float, MAX_AZIMUTH_LEN> block_azimuth_rad_{};
+
+  std::array<float, ChannelN> elevation_cos_{};
+  std::array<float, ChannelN> elevation_sin_{};
+  std::array<std::array<float, ChannelN>, MAX_AZIMUTH_LEN> azimuth_cos_{};
+  std::array<std::array<float, ChannelN>, MAX_AZIMUTH_LEN> azimuth_sin_{};
 
 public:
   AngleCorrectorCalibrationBased(
     const std::shared_ptr<HesaiCalibrationConfiguration> & sensor_calibration,
     const std::shared_ptr<HesaiCorrection> & sensor_correction)
-  : AngleCorrector<1000 * 360>(sensor_calibration, sensor_correction)
+  : AngleCorrector(sensor_calibration, sensor_correction)
   {
     if (sensor_calibration == nullptr) {
       throw std::runtime_error(
@@ -36,47 +37,59 @@ public:
     }
 
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-      float elevation_angle = sensor_calibration->elev_angle_map[channel_id];
-      float azimuth_offset = sensor_calibration->azimuth_offset_map[channel_id];
-      elevation_angle_[channel_id] =
-        static_cast<int32_t>(elevation_angle * INTERNAL_RESOLUTION_PER_DEG);
-      azimuth_offset_[channel_id] =
-        static_cast<int32_t>(azimuth_offset * INTERNAL_RESOLUTION_PER_DEG);
-      elevation_angle_rad_[channel_id] = deg2rad(elevation_angle);
-      azimuth_offset_rad_[channel_id] = deg2rad(azimuth_offset);
+      float elevation_angle_deg = sensor_calibration->elev_angle_map[channel_id];
+      float azimuth_offset_deg = sensor_calibration->azimuth_offset_map[channel_id];
+
+      elevation_angle_rad_[channel_id] = deg2rad(elevation_angle_deg);
+      azimuth_offset_rad_[channel_id] = deg2rad(azimuth_offset_deg);
+
+      elevation_cos_[channel_id] = cosf(elevation_angle_rad_[channel_id]);
+      elevation_sin_[channel_id] = sinf(elevation_angle_rad_[channel_id]);
     }
 
-    for (uint32_t i = 0; i < AngleUnit * 360; i++) {
-      block_azimuth_rad_[i] = deg2rad(i / static_cast<float>(AngleUnit));
+    for (size_t block_azimuth = 0; block_azimuth < MAX_AZIMUTH_LEN; block_azimuth++) {
+      block_azimuth_rad_[block_azimuth] = deg2rad(block_azimuth / static_cast<double>(AngleUnit));
+
+      for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
+        float precision_azimuth =
+          std::get<0>(getCorrectedAzimuthAndElevation(block_azimuth, channel_id));
+
+        azimuth_cos_[block_azimuth][channel_id] = cosf(precision_azimuth);
+        azimuth_sin_[block_azimuth][channel_id] = sinf(precision_azimuth);
+      }
     }
   }
 
-  std::tuple<uint32_t, uint32_t, float, float> getCorrectedAzimuthAndElevation(
+  std::tuple<float, float> getCorrectedAzimuthAndElevation(
     uint32_t block_azimuth, uint32_t channel_id) override
   {
-    int32_t corrected_azimuth = block_azimuth * (INTERNAL_RESOLUTION_PER_DEG / AngleUnit);
-    corrected_azimuth += azimuth_offset_[channel_id];
-    corrected_azimuth = (corrected_azimuth + INTERNAL_MAX_AZIMUTH_LENGTH) % INTERNAL_MAX_AZIMUTH_LENGTH;
-
-    int32_t corrected_elevation = elevation_angle_[channel_id];
-    corrected_elevation = (corrected_elevation + INTERNAL_MAX_AZIMUTH_LENGTH) % INTERNAL_MAX_AZIMUTH_LENGTH;
-
     float azimuth_rad = block_azimuth_rad_[block_azimuth] + azimuth_offset_rad_[channel_id];
-    if (azimuth_rad > 2 * M_PI) {
-      azimuth_rad -= 2 * M_PI;
-    } else if (azimuth_rad < 0) {
-      azimuth_rad += 2 * M_PI;
-    }
-
-    return std::make_tuple(
-      static_cast<uint32_t>(corrected_azimuth), static_cast<uint32_t>(corrected_elevation),
-      azimuth_rad,
-      elevation_angle_rad_[channel_id]);
+    return std::make_tuple(azimuth_rad, elevation_angle_rad_[channel_id]);
   }
 
   bool hasScanned(int current_azimuth, int last_azimuth) override
   {
     return current_azimuth < last_azimuth;
+  }
+
+  float getElevationCos(size_t /* block_azimuth */, size_t channel_id) override
+  {
+    return elevation_cos_[channel_id];
+  }
+
+  float getElevationSin(size_t /* block_azimuth */, size_t channel_id) override
+  {
+    return elevation_sin_[channel_id];
+  }
+
+  float getAzimuthCos(size_t block_azimuth, size_t channel_id) override
+  {
+    return azimuth_cos_[block_azimuth][channel_id];
+  }
+
+  float getAzimuthSin(size_t block_azimuth, size_t channel_id) override
+  {
+    return azimuth_sin_[block_azimuth][channel_id];
   }
 };
 
