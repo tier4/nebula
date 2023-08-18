@@ -21,6 +21,7 @@ private:
 
   std::array<float, MAX_AZIMUTH_LENGTH> cos_{};
   std::array<float, MAX_AZIMUTH_LENGTH> sin_{};
+  std::array<uint8_t, MAX_AZIMUTH_LENGTH> field_{};
 
   int findField(int azimuth)
   {
@@ -43,7 +44,7 @@ private:
     uint32_t block_azimuth, uint32_t channel_id)
   {
     const auto & correction = AngleCorrector::sensor_correction_;
-    int field = findField(block_azimuth);
+    int field = field_[block_azimuth];
 
     auto elevation =
       correction->elevation[channel_id] +
@@ -76,6 +77,7 @@ public:
       float rad = 2.f * i * M_PI / MAX_AZIMUTH_LENGTH;
       cos_[i] = cosf(rad);
       sin_[i] = sinf(rad);
+      field_[i] = findField(i);
     }
   }
 
@@ -94,8 +96,8 @@ public:
 
   bool hasScanned(int current_azimuth, int last_azimuth) override
   {
-    int field = findField(current_azimuth);
-    int last_field = findField(last_azimuth);
+    int field = field_[current_azimuth];
+    int last_field = field_[last_azimuth];
 
     // RCLCPP_DEBUG_STREAM(
     //   logger_, '{' << _(field) << _(last_field) << _(current_azimuth) << _(last_azimuth) << '}');
