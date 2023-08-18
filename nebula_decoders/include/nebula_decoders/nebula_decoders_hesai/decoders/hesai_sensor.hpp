@@ -88,7 +88,28 @@ public:
   /// @param packet The packet
   /// @return The relative time offset in nanoseconds
   virtual int getPacketRelativePointTimeOffset(
-    uint32_t block_id, uint32_t channel_id, const PacketT & packet);
+    uint32_t block_id, uint32_t channel_id, const PacketT & packet) = 0;
+
+  /// @brief For a given start block index, find the earliest (lowest) relative time offset of any
+  /// point in the packet in or after the start block
+  /// @param start_block_id The index of the block in and after which to consider points
+  /// @param packet The packet
+  /// @return The lowest point time offset (relative to the packet timestamp) of any point in or
+  /// after the start block, in nanoseconds
+  int getEarliestPointTimeOffsetForBlock(uint32_t start_block_id, const PacketT & packet)
+  {
+    unsigned int n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
+    int min_offset_ns = 0xFFFFFFFF;  // MAXINT
+
+    for (uint32_t block_id = start_block_id; block_id < start_block_id + n_returns; ++block_id) {
+      for (uint32_t channel_id = 0; channel_id < PacketT::N_CHANNELS; ++channel_id) {
+        min_offset_ns =
+          std::min(min_offset_ns, getPacketRelativePointTimeOffset(block_id, channel_id, packet));
+      }
+    }
+
+    return min_offset_ns;
+  }
 
   /// @brief Get the return type of the point given by return_idx
   ///
@@ -108,8 +129,6 @@ public:
     hesai_packet::return_mode::ReturnMode return_mode, unsigned int return_idx,
     const std::vector<typename PacketT::body_t::block_t::unit_t *> & return_units)
   {
-    unsigned int n_returns = return_units.size();
-
     if (is_duplicate(return_idx, return_units)) {
       return ReturnType::IDENTICAL;
     }

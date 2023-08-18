@@ -35,8 +35,10 @@ protected:
   typename SensorT::packet_t packet_;
   /// @brief The last azimuth processed
   int last_phase_;
-  /// @brief The timestamp of the last scan in nanoseconds
-  uint64_t scan_timestamp_ns_;
+  /// @brief The timestamp of the last completed scan in nanoseconds
+  uint64_t output_scan_timestamp_ns_;
+  /// @brief The timestamp of the scan currently in progress
+  uint64_t decode_scan_timestamp_ns_;
   /// @brief Whether a full scan has been processed
   bool has_scanned_;
 
@@ -186,7 +188,8 @@ protected:
   {
     auto point_to_packet_offset_ns =
       sensor_.getPacketRelativePointTimeOffset(block_id, channel_id, packet_);
-    auto packet_to_scan_offset_ns = static_cast<uint32_t>(packet_timestamp_ns - scan_timestamp_ns_);
+    auto packet_to_scan_offset_ns =
+      static_cast<uint32_t>(packet_timestamp_ns - decode_scan_timestamp_ns_);
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
   }
 
@@ -221,10 +224,8 @@ public:
       return -1;
     }
 
-    // At the start of a scan, set the timestamp to its absolute time since epoch.
-    // Point timestamps in the scan are relative to this value.
-    if (has_scanned_ || scan_timestamp_ns_ == 0) {
-      scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_);
+    if (decode_scan_timestamp_ns_ == 0) {
+      decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_);
     }
 
     if (has_scanned_) {
@@ -247,6 +248,13 @@ public:
         std::swap(decode_pc_, output_pc_);
         decode_pc_->clear();
         has_scanned_ = true;
+        output_scan_timestamp_ns_ = decode_scan_timestamp_ns_;
+
+        // A new scan starts within the current packet, so the new scan's timestamp must be
+        // calculated as the packet timestamp plus the lowest time offset of any point in the
+        // remainder of the packet
+        decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
+                                  sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
       }
 
       convertReturns(block_id, n_returns);
@@ -260,7 +268,7 @@ public:
 
   std::tuple<drivers::NebulaPointCloudPtr, double> getPointcloud() override
   {
-    double scan_timestamp_s = static_cast<double>(scan_timestamp_ns_) * 1e-9;
+    double scan_timestamp_s = static_cast<double>(output_scan_timestamp_ns_) * 1e-9;
     return std::make_pair(output_pc_, scan_timestamp_s);
   }
 };
