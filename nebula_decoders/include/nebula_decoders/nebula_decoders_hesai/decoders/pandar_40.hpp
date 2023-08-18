@@ -40,12 +40,11 @@ struct Packet40P : public PacketBase<10, 40, 2, 100>
 
 /// @brief Get the distance unit of the given @ref Packet40P packet in meters. This is the only
 /// packet type without a header.
-/// @param dummy
 /// @return 0.004 (4mm)
 template <>
-float get_dis_unit<Packet40P>(const Packet40P & /* packet */)
+double get_dis_unit<Packet40P>(const Packet40P & /* packet */)
 {
-  return 4 / 1000.f;
+  return 4 / 1000.;
 }
 
 }  // namespace hesai_packet

@@ -226,10 +226,10 @@ uint64_t get_timestamp_ns(const PacketT & packet)
 /// @param packet The packet to get the distance unit from
 /// @return The distance unit in meters
 template <typename PacketT>
-float get_dis_unit(const PacketT & packet)
+double get_dis_unit(const PacketT & packet)
 {
   // Packets define distance unit in millimeters, convert to meters here
-  return packet.header.dis_unit / 1000.f;
+  return packet.header.dis_unit / 1000.;
 }
 
 }  // namespace hesai_packet
