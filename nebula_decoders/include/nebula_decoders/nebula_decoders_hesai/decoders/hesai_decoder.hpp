@@ -211,7 +211,8 @@ public:
     decode_pc_.reset(new NebulaPointCloud);
     output_pc_.reset(new NebulaPointCloud);
 
-    // TODO(mojomex) reserve n_points_per_scan * max_reurns points in buffers
+    decode_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
+    output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
   }
 
   int unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override

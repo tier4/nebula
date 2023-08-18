@@ -33,6 +33,7 @@ class PandarXT32M : public HesaiSensor<hesai_packet::PacketXT32M2X>
 public:
   static constexpr float MIN_RANGE = 0.5f;
   static constexpr float MAX_RANGE = 300.0f;
+  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 384000;
 
   int getPacketRelativePointTimeOffset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
