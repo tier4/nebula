@@ -18,6 +18,7 @@
   <exec_depend>nebula_tests</exec_depend>
   <exec_depend>pandar_msgs</exec_depend>
   <exec_depend>velodyne_msgs</exec_depend>
+  <exec_depend>innoviz_msgs</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
