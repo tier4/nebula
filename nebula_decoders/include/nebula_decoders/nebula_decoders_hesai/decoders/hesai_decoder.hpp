@@ -82,14 +82,15 @@ protected:
     uint64_t packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
     uint32_t raw_azimuth = packet_.body.blocks[start_block_id].get_azimuth();
 
-    for (size_t channel_id = 0; channel_id < SensorT::packet_t::N_CHANNELS; ++channel_id) {
-      std::vector<typename SensorT::packet_t::body_t::block_t::unit_t *> return_units(n_blocks);
+    std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units;
 
+    for (size_t channel_id = 0; channel_id < SensorT::packet_t::N_CHANNELS; ++channel_id) {
       // Find the units corresponding to the same return group as the current one.
       // These are used to find duplicates in multi-return mode.
+      return_units.clear();
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
-        return_units[block_offset] =
-          &packet_.body.blocks[block_offset + start_block_id].units[channel_id];
+        return_units.push_back(
+          &packet_.body.blocks[block_offset + start_block_id].units[channel_id]);
       }
 
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
@@ -146,19 +147,18 @@ protected:
         point.return_type = static_cast<uint8_t>(return_type);
         point.channel = channel_id;
 
-        auto [azimuth_rad, elevation_rad] =
-          angle_corrector_.getCorrectedAzimuthAndElevation(raw_azimuth, channel_id);
+        auto corrected_angle_data = angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
 
         // The raw_azimuth and channel are only used as indices, sin/cos functions use the precise
         // corrected angles
-        float xyDistance = distance * angle_corrector_.getElevationCos(raw_azimuth, channel_id);
-        point.x = xyDistance * angle_corrector_.getAzimuthSin(raw_azimuth, channel_id);
-        point.y = xyDistance * angle_corrector_.getAzimuthCos(raw_azimuth, channel_id);
-        point.z = distance * angle_corrector_.getElevationSin(raw_azimuth, channel_id);
+        float xyDistance = distance * corrected_angle_data.cos_elevation;
+        point.x = xyDistance * corrected_angle_data.sin_azimuth;
+        point.y = xyDistance * corrected_angle_data.cos_azimuth;
+        point.z = distance * corrected_angle_data.sin_elevation;
 
         // The driver wrapper converts to degrees, expects radians
-        point.azimuth = azimuth_rad;
-        point.elevation = elevation_rad;
+        point.azimuth = corrected_angle_data.azimuth_rad;
+        point.elevation = corrected_angle_data.elevation_rad;
 
         decode_pc_->emplace_back(point);
       }
@@ -174,7 +174,7 @@ protected:
   }
 
   /// @brief Get the distance of the given unit in meters
-  float getDistance(typename SensorT::packet_t::body_t::block_t::unit_t & unit)
+  float getDistance(const typename SensorT::packet_t::body_t::block_t::unit_t & unit)
   {
     return unit.distance * hesai_packet::get_dis_unit(packet_);
   }
@@ -254,7 +254,7 @@ public:
         // calculated as the packet timestamp plus the lowest time offset of any point in the
         // remainder of the packet
         decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
-                                  sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
+                                    sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
       }
 
       convertReturns(block_id, n_returns);

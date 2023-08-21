@@ -30,7 +30,7 @@ private:
   /// in return_units, false otherwise
   static bool is_strongest(
     uint32_t return_idx,
-    const std::vector<typename PacketT::body_t::block_t::unit_t *> & return_units)
+    const std::vector<const typename PacketT::body_t::block_t::unit_t *> & return_units)
   {
     for (unsigned int i = 0; i < return_units.size(); ++i) {
       if (i == return_idx) {
@@ -53,7 +53,7 @@ private:
   /// @return true if the unit is identical to any other one in return_units, false otherwise
   static bool is_duplicate(
     uint32_t return_idx,
-    const std::vector<typename PacketT::body_t::block_t::unit_t *> & return_units)
+    const std::vector<const typename PacketT::body_t::block_t::unit_t *> & return_units)
   {
     for (unsigned int i = 0; i < return_units.size(); ++i) {
       if (i == return_idx) {
@@ -127,7 +127,7 @@ public:
   /// @return The return type of the point
   virtual ReturnType getReturnType(
     hesai_packet::return_mode::ReturnMode return_mode, unsigned int return_idx,
-    const std::vector<typename PacketT::body_t::block_t::unit_t *> & return_units)
+    const std::vector<const typename PacketT::body_t::block_t::unit_t *> & return_units)
   {
     if (is_duplicate(return_idx, return_units)) {
       return ReturnType::IDENTICAL;

@@ -52,7 +52,7 @@ public:
 
       for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
         float precision_azimuth =
-          std::get<0>(getCorrectedAzimuthAndElevation(block_azimuth, channel_id));
+          block_azimuth_rad_[block_azimuth] + azimuth_offset_rad_[channel_id];
 
         azimuth_cos_[block_azimuth][channel_id] = cosf(precision_azimuth);
         azimuth_sin_[block_azimuth][channel_id] = sinf(precision_azimuth);
@@ -60,36 +60,23 @@ public:
     }
   }
 
-  std::tuple<float, float> getCorrectedAzimuthAndElevation(
-    uint32_t block_azimuth, uint32_t channel_id) override
+  CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) override
   {
     float azimuth_rad = block_azimuth_rad_[block_azimuth] + azimuth_offset_rad_[channel_id];
-    return std::make_tuple(azimuth_rad, elevation_angle_rad_[channel_id]);
+    float elevation_rad = elevation_angle_rad_[channel_id];
+
+    return {
+      azimuth_rad,
+      elevation_rad,
+      azimuth_sin_[block_azimuth][channel_id],
+      azimuth_cos_[block_azimuth][channel_id],
+      elevation_sin_[channel_id],
+      elevation_cos_[channel_id]};
   }
 
   bool hasScanned(int current_azimuth, int last_azimuth) override
   {
     return current_azimuth < last_azimuth;
-  }
-
-  float getElevationCos(size_t /* block_azimuth */, size_t channel_id) override
-  {
-    return elevation_cos_[channel_id];
-  }
-
-  float getElevationSin(size_t /* block_azimuth */, size_t channel_id) override
-  {
-    return elevation_sin_[channel_id];
-  }
-
-  float getAzimuthCos(size_t block_azimuth, size_t channel_id) override
-  {
-    return azimuth_cos_[block_azimuth][channel_id];
-  }
-
-  float getAzimuthSin(size_t block_azimuth, size_t channel_id) override
-  {
-    return azimuth_sin_[block_azimuth][channel_id];
   }
 };
 

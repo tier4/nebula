@@ -21,42 +21,24 @@ private:
 
   std::array<float, MAX_AZIMUTH_LENGTH> cos_{};
   std::array<float, MAX_AZIMUTH_LENGTH> sin_{};
-  std::array<uint8_t, MAX_AZIMUTH_LENGTH> field_{};
 
-  int findField(int azimuth)
+  /// @brief For a given azimuth value, find its corresponding output field
+  /// @param azimuth The azimuth to get the field for
+  /// @return The correct output field, as specified in @ref HesaiCorrection
+  int findField(uint32_t azimuth)
   {
-    const auto & correction = AngleCorrector::sensor_correction_;
-
-    int count = 0, field = 0;
-    while (count < correction->frameNumber &&
-           (((azimuth + MAX_AZIMUTH_LENGTH - correction->startFrame[field]) % MAX_AZIMUTH_LENGTH +
-             (correction->endFrame[field] + MAX_AZIMUTH_LENGTH - azimuth) % MAX_AZIMUTH_LENGTH) !=
-            (correction->endFrame[field] + MAX_AZIMUTH_LENGTH - correction->startFrame[field]) %
-              MAX_AZIMUTH_LENGTH)) {
-      field = (field + 1) % correction->frameNumber;
-      count++;
+    // Assumes that:
+    // * none of the startFrames are defined as > 360 deg (< 0 not possible since they are unsigned)
+    // * the fields are arranged in ascending order (e.g. field 1: 20-140deg, field 2: 140-260deg etc.)
+    // These assumptions hold for AT128E2X.
+    int field = sensor_correction_->frameNumber - 1;
+    for (size_t i = 0; i < sizeof(HesaiCorrection::startFrame); ++i) {
+      if (azimuth < sensor_correction_->startFrame[i]) return field;
+      field = i;
     }
 
+    // This is never reached if sensor_correction_ is correct
     return field;
-  }
-
-  std::tuple<size_t, size_t> getPrecisionIndexAzimuthandElevation(
-    uint32_t block_azimuth, uint32_t channel_id)
-  {
-    const auto & correction = AngleCorrector::sensor_correction_;
-    int field = field_[block_azimuth];
-
-    auto elevation =
-      correction->elevation[channel_id] +
-      correction->getElevationAdjustV3(channel_id, block_azimuth) * (AngleUnit / 100);
-    elevation = (MAX_AZIMUTH_LENGTH + elevation) % MAX_AZIMUTH_LENGTH;
-
-    auto azimuth = (block_azimuth + MAX_AZIMUTH_LENGTH - correction->startFrame[field]) * 2 -
-                   correction->azimuth[channel_id] +
-                   correction->getAzimuthAdjustV3(channel_id, block_azimuth) * (AngleUnit / 100);
-    azimuth = (MAX_AZIMUTH_LENGTH + azimuth) % MAX_AZIMUTH_LENGTH;
-
-    return std::make_tuple(azimuth, elevation);
   }
 
 public:
@@ -77,55 +59,39 @@ public:
       float rad = 2.f * i * M_PI / MAX_AZIMUTH_LENGTH;
       cos_[i] = cosf(rad);
       sin_[i] = sinf(rad);
-      field_[i] = findField(i);
     }
   }
 
-  std::tuple<float, float> getCorrectedAzimuthAndElevation(
-    uint32_t block_azimuth, uint32_t channel_id) override
+  CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) override
   {
-    auto precision_indices = getPrecisionIndexAzimuthandElevation(block_azimuth, channel_id);
-    size_t azimuth = std::get<0>(precision_indices);
-    size_t elevation = std::get<1>(precision_indices);
+    const auto & correction = AngleCorrector::sensor_correction_;
+    int field = findField(block_azimuth);
+
+    auto elevation =
+      correction->elevation[channel_id] +
+      correction->getElevationAdjustV3(channel_id, block_azimuth) * (AngleUnit / 100);
+    elevation = (MAX_AZIMUTH_LENGTH + elevation) % MAX_AZIMUTH_LENGTH;
+
+    auto azimuth = (block_azimuth + MAX_AZIMUTH_LENGTH - correction->startFrame[field]) * 2 -
+                   correction->azimuth[channel_id] +
+                   correction->getAzimuthAdjustV3(channel_id, block_azimuth) * (AngleUnit / 100);
+    azimuth = (MAX_AZIMUTH_LENGTH + azimuth) % MAX_AZIMUTH_LENGTH;
 
     float azimuth_rad = 2.f * azimuth * M_PI / MAX_AZIMUTH_LENGTH;
     float elevation_rad = 2.f * elevation * M_PI / MAX_AZIMUTH_LENGTH;
 
-    return std::make_tuple(azimuth_rad, elevation_rad);
+    return {azimuth_rad,   elevation_rad,   sin_[azimuth],
+            cos_[azimuth], sin_[elevation], cos_[elevation]};
   }
 
   bool hasScanned(int current_azimuth, int last_azimuth) override
   {
-    int field = field_[current_azimuth];
-    int last_field = field_[last_azimuth];
+    int field = findField(current_azimuth);
+    int last_field = findField(last_azimuth);
 
     // RCLCPP_DEBUG_STREAM(
     //   logger_, '{' << _(field) << _(last_field) << _(current_azimuth) << _(last_azimuth) << '}');
     return last_field != field;
-  }
-
-  float getElevationCos(size_t block_azimuth, size_t channel_id) override
-  {
-    size_t elevation = std::get<1>(getPrecisionIndexAzimuthandElevation(block_azimuth, channel_id));
-    return cos_[elevation];
-  }
-
-  float getElevationSin(size_t block_azimuth, size_t channel_id) override
-  {
-    size_t elevation = std::get<1>(getPrecisionIndexAzimuthandElevation(block_azimuth, channel_id));
-    return sin_[elevation];
-  }
-
-  float getAzimuthCos(size_t block_azimuth, size_t channel_id) override
-  {
-    size_t azimuth = std::get<0>(getPrecisionIndexAzimuthandElevation(block_azimuth, channel_id));
-    return cos_[azimuth];
-  }
-
-  float getAzimuthSin(size_t block_azimuth, size_t channel_id) override
-  {
-    size_t azimuth = std::get<0>(getPrecisionIndexAzimuthandElevation(block_azimuth, channel_id));
-    return sin_[azimuth];
   }
 };
 

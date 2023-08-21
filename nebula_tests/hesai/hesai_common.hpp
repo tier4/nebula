@@ -32,6 +32,7 @@ void checkPCDs(nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<pcl::Poi
     EXPECT_FLOAT_EQ(p.y, p_ref.y);
     EXPECT_FLOAT_EQ(p.z, p_ref.z);
 
+    // Prevent thousands of outputs when point clouds do not align
     if (p.x != p_ref.x || p.y != p_ref.y || p.z != p_ref.z) {
       return;
     }

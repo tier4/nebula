@@ -31,7 +31,8 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
 {
   os << (SensorConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
      << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
-     << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold;
+     << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle
+     << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold;
   return os;
 }
 
@@ -275,7 +276,7 @@ struct HesaiCorrection
   }
 
   static const int STEP3 = 200 * 256;
-  
+
   /// @brief Get azimuth adjustment for channel and precision azimuth
   /// @param ch The channel id
   /// @param azi The precision azimuth in (0.01 / 256) degree unit
