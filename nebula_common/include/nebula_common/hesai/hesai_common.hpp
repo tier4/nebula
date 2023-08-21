@@ -31,7 +31,7 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
 {
   os << (SensorConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
      << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
-     << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle;
+     << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle << ", DualReturnThreshold: " << arg.dual_return_distance_threshold;
   return os;
 }
 
