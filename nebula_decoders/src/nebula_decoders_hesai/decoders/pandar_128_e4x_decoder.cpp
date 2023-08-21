@@ -199,7 +199,7 @@ drivers::NebulaPointCloudPtr Pandar128E4XDecoder::convert_dual([[maybe_unused]] 
       packet_.body.block_02[i], i, packet_.body.azimuth_2, current_unit_unix_second_, pt2_distance);
     block1_pt.return_type = first_return_type_;
     block_pc->points.emplace_back(block1_pt);
-    if (fabsf(pt1_distance - pt2_distance) > dual_return_distance_threshold_) {
+    if (fabsf(pt1_distance - pt2_distance) >= dual_return_distance_threshold_) {
       block2_pt.return_type = second_return_type_;
       block_pc->points.emplace_back(block2_pt);
     }

@@ -170,14 +170,26 @@ drivers::NebulaPointCloudPtr PandarXTDecoder::convert_dual(size_t block_id)
       const auto & another_block = packet_.blocks[i == head ? tail : head];
       const auto & another_unit = another_block.units[unit_id];
       // skip invalid points
-      if (unit.distance <= MIN_RANGE || unit.distance > MAX_RANGE) {
+      if (unit.distance < MIN_RANGE || unit.distance > MAX_RANGE) {
         continue;
       }
+
       point.intensity = unit.intensity;
       auto another_intensity = another_unit.intensity;
       bool identical_flg = false;
-      if (point.intensity == another_intensity && unit.distance == another_unit.distance) {
+      if (unit.intensity == another_intensity && unit.distance == another_unit.distance) {
         identical_flg = true;
+      }
+
+      if (i == head && identical_flg) {
+        continue;
+      }
+
+      // filter out dual return points with similar distance, keep the odd block_id
+      if (
+        i == head &&
+        std::abs(unit.distance - another_unit.distance) < dual_return_distance_threshold_) {
+        continue;
       }
 
       float xyDistance = unit.distance * cosf(elevation_angle_rad_[unit_id]);

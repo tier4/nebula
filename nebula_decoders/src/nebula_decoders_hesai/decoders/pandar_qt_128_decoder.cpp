@@ -113,7 +113,7 @@ int PandarQT128Decoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_pac
         if (
           fabsf(
             packet_.blocks[block_id + 1].units[i].distance -
-            packet_.blocks[block_id].units[i].distance) > dual_return_distance_threshold_) {
+            packet_.blocks[block_id].units[i].distance) >= dual_return_distance_threshold_) {
           block_pc->points.emplace_back(block1_pt->points[i]);
           block_pc->points.emplace_back(block2_pt->points[i]);
           cnt2++;

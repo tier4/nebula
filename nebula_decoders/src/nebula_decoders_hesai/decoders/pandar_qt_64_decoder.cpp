@@ -152,7 +152,7 @@ drivers::NebulaPointCloudPtr PandarQT64Decoder::convert(size_t block_id)
   for (size_t unit_id = 0; unit_id < LASER_COUNT; ++unit_id) {
     const auto & unit = block.units[unit_id];
     // skip invalid points
-    if (unit.distance <= MIN_RANGE || unit.distance > MAX_RANGE) {
+    if (unit.distance < MIN_RANGE || unit.distance > MAX_RANGE) {
       continue;
     }
 
@@ -185,8 +185,8 @@ drivers::NebulaPointCloudPtr PandarQT64Decoder::convert_dual(size_t block_id)
     const auto & even_unit = even_block.units[unit_id];
     const auto & odd_unit = odd_block.units[unit_id];
 
-    bool even_usable = !(even_unit.distance <= MIN_RANGE || even_unit.distance > MAX_RANGE);
-    bool odd_usable = !(odd_unit.distance <= MIN_RANGE || odd_unit.distance > MAX_RANGE);
+    bool even_usable = !(even_unit.distance < MIN_RANGE || even_unit.distance > MAX_RANGE);
+    bool odd_usable = !(odd_unit.distance < MIN_RANGE || odd_unit.distance > MAX_RANGE);
 
     // If the two returns are too close, only return the last one
     if (

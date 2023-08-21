@@ -132,12 +132,22 @@ void PandarATDecoder::CalcXTPointXYZIT(
       continue;
     }
 
+    // Filter out pairs of close points in dual return mode (keep the odd block_id)
+    bool is_dual_return = packet_.return_mode == DUAL_RETURN ||
+                          packet_.return_mode == DUAL_RETURN_B ||
+                          packet_.return_mode == DUAL_RETURN_C;
+    if (is_dual_return && block_id == 0) {
+      if (std::abs(another_unit.distance - unit.distance) < dual_return_distance_threshold_) {
+        continue;
+      }
+    }
+
     point.intensity = unit.intensity;
     auto another_intensity = another_unit.intensity;
 
     bool identical_flg = false;
     if (point.intensity == another_intensity && unit.distance == another_unit.distance) {
-      if (0 < block_id) {
+      if (block_id == 0) {
         continue;
       }
       identical_flg = true;
