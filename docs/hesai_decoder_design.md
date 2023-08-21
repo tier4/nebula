@@ -138,3 +138,38 @@ Its tasks are:
 * converting all points in the packet using the sensor-specific functions of `SensorT` where necessary
 
 `HesaiDecoder<SensorT>` is a subclass of the existing `HesaiScanDecoder` to allow all template instantiations to be assigned to variables of the supertype.
+
+## Supporting a new sensor
+
+To support a new sensor model, first familiarize with the already implemented decoders.
+Then, consult the new sensor's datasheet and identify the following parameters:
+
+| Parameter | Chapter | Possible values | Notes |
+|-|-|-|-|
+| Header format | 3.1 | `Header12B`, `Header8B`, ... | `Header12B` is the standard and comprises the UDP pre-header and header (6+6B) mentioned in the data sheets |
+| Blocks per packet | 3.1 | `2`, `6`, `10`, ... | |
+| Number of channels | 3.1 | `32`, `40`, `64`, ... |  |
+| Unit format | 3.1 | `Unit3B`, `Unit4B`, ... |  |
+| Angle correction | App. 3 | `CALIBRATION`, `CORRECTION`, ... | The datasheet usually specifies whether a calibration/correction file is used |
+| Timing correction | App. 2 |  | There is usually a block and channel component. These come in the form of formulas/lookup tables. For most sensors, these depend on return mode and for some, features like high resolution mode, alternate firing etc. might change the timing |
+| Return type handling | 3.1 |  | Return modes are handled identically for most sensors but some re-order the returns or replace returns if there are duplicates |
+| Bytes per second | 1.4 | |  |
+| Lowest supported frequency | 1.4 | `5 Hz`, `10 Hz`, ... |  |
+
+| Chapter | Full title |
+|-|-|
+|1.4| Introduction > Specifications|
+|3.1| Data Structure > Point Cloud Data Packet|
+|App. 2| Absolute Time of Point Cloud Data|
+|App. 3| Angle Correction|
+
+With this information, create a `PacketMySensor` struct and `SensorMySensor` class.
+Reuse already-defined structs as much as possible (c.f. `Packet128E3X` and `Packet128E4X`).
+
+Implement timing correction in `SensorMySensor` and define the class constants `float MIN_RANGE`,
+`float MAX_RANGE` and `size_t MAX_SCAN_BUFFER_POINTS`.
+The former two are used for filtering out too-close and too-far away points while the latter is used to
+allocate pointcloud buffers. 
+Set `MAX_SCAN_BUFFER_POINTS = bytes_per_second / lowest_supported_frequency` from the parameters found above.
+
+If there are any non-standard features your sensor has, implement them as generically as possible to allow for future sensors to re-use your code.
