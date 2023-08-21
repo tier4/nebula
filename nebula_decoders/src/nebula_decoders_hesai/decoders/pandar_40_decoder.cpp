@@ -18,10 +18,6 @@ Pandar40Decoder::Pandar40Decoder(
   sensor_configuration_ = sensor_configuration;
   sensor_calibration_ = calibration_configuration;
 
-  vertical_laser_firing_order_ = {7,  19, 14, 26, 6,  18, 4,  32, 36, 0,  10, 22, 17, 29,
-                                  9,  21, 5,  33, 37, 1,  13, 25, 20, 30, 12, 8,  24, 34,
-                                  38, 2,  16, 28, 23, 31, 15, 11, 27, 35, 39, 3};
-
   firing_time_offset_ = {42.22, 28.47, 16.04, 3.62,  45.49, 31.74, 47.46, 54.67, 20.62, 33.71,
                          40.91, 8.19,  20.62, 27.16, 50.73, 8.19,  14.74, 36.98, 45.49, 52.7,
                          23.89, 31.74, 38.95, 11.47, 18.65, 25.19, 48.76, 6.23,  12.77, 35.01,
@@ -152,7 +148,7 @@ drivers::NebulaPointCloudPtr Pandar40Decoder::convert(size_t block_id)
 {
   drivers::NebulaPointCloudPtr block_pc(new NebulaPointCloud);
 
-  for (auto unit_id : vertical_laser_firing_order_) {
+  for (size_t unit_id = 0; unit_id < LASER_COUNT; ++unit_id) {
     block_pc->points.emplace_back(build_point(
       block_id, unit_id,
       (packet_.return_mode == STRONGEST_RETURN)
@@ -179,7 +175,7 @@ drivers::NebulaPointCloudPtr Pandar40Decoder::convert_dual(size_t block_id)
   const auto & odd_block = packet_.blocks[odd_block_id];
   //  auto sensor_return_mode = sensor_configuration_->return_mode;
 
-  for (auto unit_id : vertical_laser_firing_order_) {
+  for (size_t unit_id = 0; unit_id < LASER_COUNT; ++unit_id) {
     const auto & even_unit = even_block.units[unit_id];
     const auto & odd_unit = odd_block.units[unit_id];
 

@@ -64,7 +64,6 @@ private:
   std::array<float, MAX_AZIMUTH_STEPS> block_azimuth_rad_{};
 
   std::array<float, LASER_COUNT> firing_time_offset_{};
-  std::array<size_t, LASER_COUNT> vertical_laser_firing_order_{};
 
   std::array<float, BLOCKS_PER_PACKET> block_time_offset_single_return_{};
   std::array<float, BLOCKS_PER_PACKET> block_time_offset_dual_return_{};
