@@ -68,7 +68,8 @@ int PandarXTDecoder::unpack(const pandar_msgs::msg::PandarPacket & pandar_packet
     has_scanned_ = false;
   }
 
-  bool dual_return = packet_.return_mode == DUAL_RETURN;
+  bool dual_return = packet_.return_mode == DUAL_RETURN || packet_.return_mode == DUAL_RETURN_B ||
+                     packet_.return_mode == DUAL_RETURN_C;
   auto step = dual_return ? 2 : 1;
 
   for (size_t block_id = 0; block_id < BLOCKS_PER_PACKET; block_id += step) {
