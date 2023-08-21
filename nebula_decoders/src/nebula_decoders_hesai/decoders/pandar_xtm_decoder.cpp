@@ -79,36 +79,21 @@ int_least32_t PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pa
     has_scanned_ = false;
   }
 
-  for (int block_id = 0; block_id < packet_.header.chBlockNumber; ++block_id) {
-    int azimuthGap = 0;      /* To do */
-    double timestampGap = 0; /* To do */
-    if (last_azimuth_ > packet_.blocks[block_id].azimuth) {
-      azimuthGap = static_cast<int>(packet_.blocks[block_id].azimuth) +
-                   (36000 - static_cast<int>(last_azimuth_));
-    } else {
-      azimuthGap =
-        static_cast<int>(packet_.blocks[block_id].azimuth) - static_cast<int>(last_azimuth_);
-    }
-    timestampGap = packet_.usec - last_timestamp_ + 0.001;
-    if (
-      last_azimuth_ != packet_.blocks[block_id].azimuth &&
-      (azimuthGap / timestampGap) < 36000 * 100) {
-      /* for all the blocks */
-      if (
-        (last_azimuth_ > packet_.blocks[block_id].azimuth &&
-         start_angle_ <= packet_.blocks[block_id].azimuth) ||
-        (last_azimuth_ < start_angle_ && start_angle_ <= packet_.blocks[block_id].azimuth)) {
-        auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
-        scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
-        auto block_pc = convert(block_id);
+  bool is_dual = packet_.return_mode == DUAL_RETURN || packet_.return_mode == DUAL_RETURN_B ||
+                 packet_.return_mode == DUAL_RETURN_C;
+
+  for (int block_id = 0; block_id < packet_.header.chBlockNumber; block_id += (is_dual ? 2 : 1)) {
+    int current_phase =
+      (static_cast<int>(packet_.blocks[block_id].azimuth) - scan_phase_ + 36000) % 36000;
+    if (current_phase < last_azimuth_ || has_scanned_) {
+      auto block_pc = is_dual ? convert_dual(block_id) : convert(block_id);
         *overflow_pc_ += *block_pc;
         has_scanned_ = true;
-      }
     } else {
-      auto block_pc = convert(block_id);
+      auto block_pc = is_dual ? convert_dual(block_id) : convert(block_id);
       *scan_pc_ += *block_pc;
     }
-    last_azimuth_ = packet_.blocks[block_id].azimuth;
+    last_azimuth_ = current_phase;
     last_timestamp_ = packet_.usec;
   }
   return last_azimuth_;
@@ -116,23 +101,22 @@ int_least32_t PandarXTMDecoder::unpack(const pandar_msgs::msg::PandarPacket & pa
 
 #if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)
 void PandarXTMDecoder::CalcXTPointXYZIT(
-  int block_id, char chLaserNumber, boost::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
+  int block_id, char i, boost::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
 {
 #else
 void PandarXTMDecoder::CalcXTPointXYZIT(
-  int block_id, char chLaserNumber, std::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
+  int block_id, char i, std::shared_ptr<pcl::PointCloud<NebulaPoint>> cld)
 {
 #endif
   Block * block = &packet_.blocks[block_id];
   auto unix_second = static_cast<double>(timegm(&packet_.t));  // sensor-time (ppt/gps)
-  for (int i = 0; i < chLaserNumber; ++i) {
     /* for all the units in a block */
     const Unit & unit = block->units[i];
     NebulaPoint point{};
 
     /* skip invalid points */
     if (unit.distance < MIN_RANGE || unit.distance > MAX_RANGE) {
-      continue;
+    return;
     }
 
     int azimuth = static_cast<int>(azimuth_offset_[i] * 100 + block->azimuth);
@@ -145,7 +129,7 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
     point.z = unit.distance * sin_elevation_angle_[i];
     point.azimuth = block_azimuth_rad_[block->azimuth] + azimuth_offset_rad_[i];
     point.distance = unit.distance;
-    point.elevation = elevation_angle_rad_[chLaserNumber];
+    point.elevation = elevation_angle_rad_[i];
 
     point.intensity = unit.intensity;
 
@@ -153,6 +137,7 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
       scan_timestamp_ = unix_second + static_cast<double>(packet_.usec) / 1000000.f;
     }
     double offset;
+  bool is_dual_return = false;
 
     if (packet_.return_mode == TRIPLE_RETURN) {
       offset =
@@ -160,6 +145,7 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
     } else if (
       packet_.return_mode == DUAL_RETURN || packet_.return_mode == DUAL_RETURN_B ||
       packet_.return_mode == DUAL_RETURN_C) {
+    is_dual_return = true;
       offset = (static_cast<double>(blockXTMOffsetDual[block_id] + laserXTMOffset[i]) / 1000000.0f);
     } else {
       offset =
@@ -205,20 +191,28 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
     }
     point.channel = i;
     cld->points.emplace_back(point);
-  }
 }
 
 drivers::NebulaPointCloudPtr PandarXTMDecoder::convert(size_t block_id)
 {
   NebulaPointCloudPtr block_pc(new NebulaPointCloud);
-  CalcXTPointXYZIT(block_id, packet_.header.chLaserNumber, block_pc);
+  for (int i = 0; i < packet_.header.chLaserNumber; ++i) {
+    CalcXTPointXYZIT(block_id, i, block_pc);
+  }
 
   return block_pc;
 }
 
 drivers::NebulaPointCloudPtr PandarXTMDecoder::convert_dual(size_t block_id)
 {
-  return convert(block_id);
+  NebulaPointCloudPtr block_pc(new NebulaPointCloud);
+  for (int i = 0; i < packet_.header.chLaserNumber; ++i) {
+    for (int block = block_id; block <= block_id + 1; ++block) {
+      CalcXTPointXYZIT(block, i, block_pc);
+    }
+  }
+
+  return block_pc;
 }
 
 bool PandarXTMDecoder::parsePacket(const pandar_msgs::msg::PandarPacket & pandar_packet)
