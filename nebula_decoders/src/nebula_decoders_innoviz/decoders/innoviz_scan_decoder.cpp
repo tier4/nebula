@@ -81,7 +81,7 @@ bool InnovizScanDecoder::isFrameComplete()
 
 drivers::NebulaPointCloudPtr InnovizScanDecoder::getPointcloud()
 {
-    if(!isFrameComplete)
+    if(!isFrameComplete())
     {
         //TODO: Error log -> No complete frame to return
     }
@@ -124,6 +124,8 @@ drivers::NebulaPointCloudPtr InnovizScanDecoder::getPointcloud()
             nebula_scan_pc_->points.emplace_back(nebulaPoint);
         }
     }
+
+    return nebula_scan_pc_;
 }
 
 }

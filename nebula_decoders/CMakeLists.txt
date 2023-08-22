@@ -48,6 +48,13 @@ ament_auto_add_library(nebula_decoders_velodyne SHARED
         src/nebula_decoders_velodyne/decoders/vlp32_decoder.cpp
         )
 
+# Innoviz
+ament_auto_add_library(nebula_decoders_innoviz SHARED
+        src/nebula_decoders_innoviz/innoviz_driver.cpp
+        src/nebula_decoders_innoviz/decoders/innoviz_scan_decoder.cpp
+        src/nebula_decoders_innoviz/decoders/innoviz_two_condor_decoder.cpp
+        src/nebula_decoders_innoviz/decoders/innoviz_two_raven_decoder.cpp)
+
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()

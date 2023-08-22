@@ -1,5 +1,7 @@
 
 #include "nebula_decoders/nebula_decoders_innoviz/innoviz_driver.hpp"
+#include "nebula_decoders/nebula_decoders_innoviz/decoders/innoviz_two_condor_decoder.hpp"
+#include "nebula_decoders/nebula_decoders_innoviz/decoders/innoviz_two_raven_decoder.hpp"
 
 
 namespace nebula

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "nebula_driver_base.hpp"
 #include "innoviz_msgs/msg/innoviz_scan.hpp"
+#include "nebula_decoders/nebula_decoders_common/nebula_driver_base.hpp"
 #include "nebula_decoders/nebula_decoders_innoviz/decoders/innoviz_scan_decoder.hpp"
 #include "nebula_common/innoviz/innoviz_common.hpp"
 

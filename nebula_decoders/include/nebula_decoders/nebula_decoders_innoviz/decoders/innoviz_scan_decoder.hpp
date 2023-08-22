@@ -6,8 +6,6 @@
 #include "nebula_common/innoviz/innoviz_common.hpp"
 
 #include "innoviz_msgs/msg/innoviz_packet.hpp"
-#include "innoviz_two_raven_decoder.hpp"
-#include "innoviz_two_condor_decoder.hpp"
 
 namespace nebula
 {
