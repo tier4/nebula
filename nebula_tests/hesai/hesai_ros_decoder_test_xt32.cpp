@@ -202,7 +202,7 @@ Status HesaiRosDecoderTest::GetParameters(
     rcl_interfaces::msg::FloatingPointRange range;
     range.set__from_value(0.00).set__to_value(0.5).set__step(0.01);
     descriptor.floating_point_range = {range};
-    this->declare_parameter<double>("dual_return_distance_threshold", 0.0, descriptor);
+    this->declare_parameter<double>("dual_return_distance_threshold", 0.1, descriptor);
     sensor_configuration.dual_return_distance_threshold =
       this->get_parameter("dual_return_distance_threshold").as_double();
   }
