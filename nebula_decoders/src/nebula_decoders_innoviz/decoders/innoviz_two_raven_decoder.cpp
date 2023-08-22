@@ -7,7 +7,8 @@ namespace drivers
 {
 namespace itwo_raven
 {
-    InnovizTwoRaven::InnovizTwoRaven() : InnovizScanDecoder(MAX_POINTS)
+    InnovizTwoRaven::InnovizTwoRaven(const std::shared_ptr<drivers::InnovizSensorConfiguration>& sensorConfiguration) 
+            : InnovizScanDecoder(MAX_POINTS, sensorConfiguration)
     {}
 }
 }

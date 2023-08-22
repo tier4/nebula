@@ -7,7 +7,8 @@ namespace drivers
 {
 namespace itwo_condor
 {
-    InnovizTwoCondor::InnovizTwoCondor() : InnovizScanDecoder(MAX_POINTS)
+    InnovizTwoCondor::InnovizTwoCondor(const std::shared_ptr<drivers::InnovizSensorConfiguration>& sensorConfiguration) 
+            : InnovizScanDecoder(MAX_POINTS, sensorConfiguration)
     {}
 }
 }

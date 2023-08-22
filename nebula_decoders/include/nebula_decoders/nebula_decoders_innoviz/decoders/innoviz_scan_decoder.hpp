@@ -3,6 +3,8 @@
 #include <cstdint>
 
 #include "nebula_common/point_types.hpp"
+#include "nebula_common/innoviz/innoviz_common.hpp"
+
 #include "innoviz_msgs/msg/innoviz_packet.hpp"
 #include "innoviz_two_raven_decoder.hpp"
 #include "innoviz_two_condor_decoder.hpp"
@@ -155,11 +157,11 @@ struct LidarDetectionInterface_st{
 class InnovizScanDecoder 
 {
 public:
-    InnovizScanDecoder(uint32_t numOfPoints);
+    InnovizScanDecoder(uint32_t numOfPoints, const std::shared_ptr<drivers::InnovizSensorConfiguration>& sensorConfiguration);
 
     /// @brief Unpack UDP data
     /// @param buf pointer to UDP payload
-    void parsePacket(innoviz_msgs::msg::InnovizPacket packet); 
+    void parsePacket(innoviz_msgs::msg::InnovizPacket& packet); 
 
     /// @brief Checks if decoder holds a complete frame.
     /// @return True if the decoder holds a complete frame. False otherwise.
@@ -179,6 +181,7 @@ private:
     size_t written_size_           = 0;
     size_t scan_size_              = 0;
     uint32_t last_sequence_number_ = 0;
+    std::shared_ptr<drivers::InnovizSensorConfiguration> sensor_configuration_;
     
 };
 

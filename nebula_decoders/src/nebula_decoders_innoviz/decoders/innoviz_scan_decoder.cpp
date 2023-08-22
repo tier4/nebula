@@ -14,10 +14,12 @@ namespace nebula
 namespace drivers
 {
 
-InnovizScanDecoder::InnovizScanDecoder(uint32_t numOfPoints)
+InnovizScanDecoder::InnovizScanDecoder(uint32_t numOfPoints, const std::shared_ptr<drivers::InnovizSensorConfiguration>& sensorConfiguration)
 {
+    sensor_configuration_ = sensorConfiguration;
     innoviz_scan_pc_.detections.resize(numOfPoints);
 }
+
 
 void InnovizScanDecoder::resetPointcloud()
 {
@@ -30,7 +32,7 @@ void InnovizScanDecoder::resetPointcloud()
     memset(innoviz_scan_pc_.detections.data(), 0, innoviz_scan_pc_.detections.size() * sizeof(LidarDetectionEntity_st));
 }
 
-void InnovizScanDecoder::parsePacket(innoviz_msgs::msg::InnovizPacket packet)
+void InnovizScanDecoder::parsePacket(innoviz_msgs::msg::InnovizPacket& packet)
 {
     uint32_t marker = packet.header.marker;
     uint32_t sequence_number = packet.header.sequence_number;
@@ -91,12 +93,23 @@ drivers::NebulaPointCloudPtr InnovizScanDecoder::getPointcloud()
     {
         LidarDetectionEntity_st invzPoint = innoviz_scan_pc_.detections[pixelID];
 
-        //TODO: Add control for confidence/artifact filtering via configuration
-        if(invzPoint.distance.value > 0)
+        bool isValid = invzPoint.distance.value > 0;
+
+        if(invzPoint.confidence < sensor_configuration_->minConfidence) // Minimum confidence filter
+        {
+            isValid = false;
+        }
+
+        if(sensor_configuration_->filterArtifacts && invzPoint.Invalid_detection_classification) // Filter artifact pixels
+        {
+            isValid = false;
+        }
+
+        if(isValid)
         {
             drivers::NebulaPoint nebulaPoint{};
             nebulaPoint.distance  = invzPoint.distance.value * 0.01f; // uint16 cm to float m
-            nebulaPoint.azimuth   = static_cast<float>(invzPoint.angle_azimuth)* M_PI * (ANGLE_ELEVATION_AZIMUTH_FACTOR); //Decode azi/elevation
+            nebulaPoint.azimuth   = static_cast<float>(invzPoint.angle_azimuth)* M_PI * (ANGLE_ELEVATION_AZIMUTH_FACTOR); //Decode azimuth/elevation
             nebulaPoint.elevation = static_cast<float>(invzPoint.angle_elevation)* M_PI * (ANGLE_ELEVATION_AZIMUTH_FACTOR);
             
             nebulaPoint.x = nebulaPoint.distance * cos(nebulaPoint.azimuth) * cos(nebulaPoint.elevation);
