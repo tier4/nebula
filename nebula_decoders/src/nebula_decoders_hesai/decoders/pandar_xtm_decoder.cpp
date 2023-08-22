@@ -35,14 +35,10 @@ PandarXTMDecoder::PandarXTMDecoder(
   sin_elevation_angle_.resize(LASER_COUNT);
   cos_elevation_angle_.resize(LASER_COUNT);
   for (size_t laser = 0; laser < LASER_COUNT; ++laser) {
-    sin_elevation_angle_[laser] = sinf(deg2rad(elevation_angle_[laser]));
-    cos_elevation_angle_[laser] = cosf(deg2rad(elevation_angle_[laser]));
+    sin_elevation_angle_[laser] = sinf(elevation_angle_rad_[laser]);
+    cos_elevation_angle_[laser] = cosf(elevation_angle_rad_[laser]);
   }
-  sin_azimuth_angle_.resize(MAX_AZIMUTH_DEGREE_NUM);
-  cos_azimuth_angle_.resize(MAX_AZIMUTH_DEGREE_NUM);
   for (int i = 0; i < MAX_AZIMUTH_DEGREE_NUM; ++i) {
-    sin_azimuth_angle_[i] = sinf(i * M_PI / 18000);
-    cos_azimuth_angle_[i] = cosf(i * M_PI / 18000);
     block_azimuth_rad_[i] = deg2rad(i / 100.);
   }
   scan_phase_ = static_cast<uint16_t>(sensor_configuration_->scan_phase * 100.0f);
@@ -123,13 +119,14 @@ void PandarXTMDecoder::CalcXTPointXYZIT(
   if (azimuth < 0) azimuth += 36000;
   if (azimuth >= 36000) azimuth -= 36000;
 
-  float xyDistance = unit.distance * cos_elevation_angle_[i];
-  point.x = xyDistance * sin_azimuth_angle_[azimuth];
-  point.y = xyDistance * cos_azimuth_angle_[azimuth];
-  point.z = unit.distance * sin_elevation_angle_[i];
-  point.azimuth = block_azimuth_rad_[block->azimuth] + azimuth_offset_rad_[i];
   point.distance = unit.distance;
+  point.azimuth = block_azimuth_rad_[block->azimuth] + azimuth_offset_rad_[i];
   point.elevation = elevation_angle_rad_[i];
+
+  float xyDistance = unit.distance * cos_elevation_angle_[i];
+  point.x = xyDistance * sinf(point.azimuth);
+  point.y = xyDistance * cosf(point.azimuth);
+  point.z = unit.distance * sin_elevation_angle_[i];
 
   point.intensity = unit.intensity;
 

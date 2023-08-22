@@ -109,9 +109,6 @@ private:
   std::vector<float> sin_elevation_angle_;
   std::vector<float> cos_elevation_angle_;
 
-  std::vector<float> sin_azimuth_angle_;
-  std::vector<float> cos_azimuth_angle_;
-
   Packet packet_{};
 
   uint16_t last_azimuth_;
