@@ -91,6 +91,15 @@ rclcpp_components_register_node(velodyne_driver_ros_wrapper
         )
 
 ## Innoviz
+# Hw Interface
+ament_auto_add_library(innoviz_hw_ros_wrapper SHARED
+        src/innoviz/innoviz_hw_interface_ros_wrapper.cpp
+        )
+rclcpp_components_register_node(innoviz_hw_ros_wrapper
+        PLUGIN "InnovizHwInterfaceRosWrapper"
+        EXECUTABLE innoviz_hw_ros_wrapper_node
+        )
+
 # DriverDecoder
 ament_auto_add_library(innoviz_driver_ros_wrapper SHARED
         src/innoviz/innoviz_decoder_ros_wrapper.cpp
