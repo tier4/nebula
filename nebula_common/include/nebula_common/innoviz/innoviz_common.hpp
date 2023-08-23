@@ -8,8 +8,8 @@ namespace drivers
 {
     struct InnovizSensorConfiguration : SensorConfigurationBase
     {
-        uint8_t minConfidence = 21;
-        bool filterArtifacts = true;
+        uint8_t min_confidence = 21;
+        bool filter_artifacts = true;
     };
 }
 }

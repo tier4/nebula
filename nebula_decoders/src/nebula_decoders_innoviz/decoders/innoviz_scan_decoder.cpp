@@ -95,12 +95,12 @@ drivers::NebulaPointCloudPtr InnovizScanDecoder::getPointcloud()
 
         bool isValid = invzPoint.distance.value > 0;
 
-        if(invzPoint.confidence < sensor_configuration_->minConfidence) // Minimum confidence filter
+        if(invzPoint.confidence < sensor_configuration_->min_confidence) // Minimum confidence filter
         {
             isValid = false;
         }
 
-        if(sensor_configuration_->filterArtifacts && invzPoint.Invalid_detection_classification) // Filter artifact pixels
+        if(sensor_configuration_->filter_artifacts && invzPoint.Invalid_detection_classification) // Filter artifact pixels
         {
             isValid = false;
         }

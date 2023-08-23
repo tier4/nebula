@@ -10,12 +10,13 @@ namespace nebula
 namespace drivers
 {
 
-class InnovizDriver : NebulaDriverBase 
+class InnovizDriver : public NebulaDriverBase 
 {
 public:
 
     InnovizDriver(const std::shared_ptr<drivers::InnovizSensorConfiguration>& sensorConfiguration);
     drivers::NebulaPointCloudPtr ConvertScanToPointcloud(const std::shared_ptr<innoviz_msgs::msg::InnovizScan> & innoviz_scan);
+    Status SetCalibrationConfiguration(const CalibrationConfigurationBase & calibration_configuration);
     Status GetStatus();
 
 private:
