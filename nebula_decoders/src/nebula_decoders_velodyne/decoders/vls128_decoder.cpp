@@ -334,6 +334,9 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               current_point.return_type = return_type;
               current_point.channel = corrections.laser_ring;
               current_point.azimuth = rotation_radians_[azimuth_corrected];
+
+              if (check_invalid_point(corrections.laser_ring, azimuth_corrected)) continue;
+              
               current_point.elevation = sin_vert_angle;
               current_point.distance = distance;
               auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;

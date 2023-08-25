@@ -342,6 +342,9 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
           current_point.return_type = static_cast<uint8_t>(return_type);
           current_point.channel = corrections.laser_ring;
           current_point.azimuth = rotation_radians_[block.rotation];
+
+          if (check_invalid_point(corrections.laser_ring, block.rotation)) continue;
+
           current_point.elevation = sin_vert_angle;
           auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
           if (point_ts < 0) point_ts = 0;
