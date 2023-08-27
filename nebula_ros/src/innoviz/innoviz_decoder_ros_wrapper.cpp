@@ -2,6 +2,7 @@
 #include "nebula_ros/innoviz/innoviz_decoder_ros_wrapper.hpp"
 
 #include <pcl_conversions/pcl_conversions.h>
+#include <rclcpp_components/register_node_macro.hpp>
 
 namespace nebula
 {
@@ -22,9 +23,10 @@ InnovizDriverRosWrapper::InnovizDriverRosWrapper(const rclcpp::NodeOptions& opti
     RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
 
     sensor_cfg_ptr_ = std::make_shared<drivers::InnovizSensorConfiguration>(sensorConfiguration);
+    auto calib_ptr = std::make_shared<drivers::CalibrationConfigurationBase>();
 
     RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
-    wrapper_status_ = InitializeDriver(std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
+    wrapper_status_ = InitializeDriver(std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_), calib_ptr);
     RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 
     auto innovizScancallbackFunction = std::bind(&InnovizDriverRosWrapper::ReceiveScanMsgCallback, this, std::placeholders::_1);
@@ -39,17 +41,20 @@ InnovizDriverRosWrapper::InnovizDriverRosWrapper(const rclcpp::NodeOptions& opti
             rclcpp::SensorDataQoS());
 }
 
-Status InnovizDriverRosWrapper::GetStatus()
-{
-    return wrapper_status_;
-}
-
-Status InnovizDriverRosWrapper::InitializeDriver(std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration)
+Status InnovizDriverRosWrapper::InitializeDriver(
+    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
+    std::shared_ptr<drivers::CalibrationConfigurationBase> /*calibration_configuration*/)
 {
     driver_ptr_ = std::make_shared<drivers::InnovizDriver>(
         std::static_pointer_cast<drivers::InnovizSensorConfiguration>(sensor_configuration));
     return driver_ptr_->GetStatus();
 }
+
+Status InnovizDriverRosWrapper::GetStatus()
+{
+    return wrapper_status_;
+}
+
 
 void InnovizDriverRosWrapper::ReceiveScanMsgCallback(const innoviz_msgs::msg::InnovizScan::SharedPtr scan_msg)
 {
@@ -137,8 +142,7 @@ Status InnovizDriverRosWrapper::GetParameters(drivers::InnovizSensorConfiguratio
     
     return Status::OK;
 }
-    
-} // namespace ros
 
-    
+RCLCPP_COMPONENTS_REGISTER_NODE(InnovizDriverRosWrapper)
+} // namespace ros
 } // namespace nebula

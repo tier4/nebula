@@ -33,7 +33,8 @@ private:
 
     /// @brief Initializes the Innoviz Driver
     /// @param sensor_configuration Sensor configuration for the driver to initialize    
-    Status InitializeDriver(std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration);
+    Status InitializeDriver(std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration, 
+                            std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) override;
 
     /// @brief Callback for the InnovizScan subscriber
     /// @param scan_msg The receive InnovizScan to handle

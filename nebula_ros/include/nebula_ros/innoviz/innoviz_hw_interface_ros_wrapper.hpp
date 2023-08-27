@@ -37,6 +37,7 @@ public:
     Status GetParameters(drivers::InnovizSensorConfiguration & sensorConfiguration);
 
 private:
+    Status InitializeHwInterface(const drivers::SensorConfigurationBase & sensor_configuration) override;
     /// @brief Callback for receiving InnovizScan
     /// @param scan_buffer Received InnovizScan
     void ReceiveScanDataCallback(std::unique_ptr<innoviz_msgs::msg::InnovizScan> scan_buffer);

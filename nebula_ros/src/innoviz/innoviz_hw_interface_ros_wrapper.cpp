@@ -1,6 +1,6 @@
 
 #include "nebula_ros/innoviz/innoviz_hw_interface_ros_wrapper.hpp"
-
+#include <rclcpp_components/register_node_macro.hpp>
 
 namespace nebula
 {
@@ -58,7 +58,10 @@ namespace ros
         innoviz_scan_pub_->publish(*scan_buffer);
     }
 
-
+    Status InnovizHwInterfaceRosWrapper::InitializeHwInterface(const drivers::SensorConfigurationBase & /*sensor_configuration*/)
+    {
+        return Status::OK;
+    }
 
 
     Status InnovizHwInterfaceRosWrapper::GetParameters(drivers::InnovizSensorConfiguration & sensor_configuration)
@@ -115,9 +118,11 @@ namespace ros
         {
             return Status::INVALID_SENSOR_MODEL;
         }
-        
+
         RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
         return Status::OK;
     }
+
+RCLCPP_COMPONENTS_REGISTER_NODE(InnovizHwInterfaceRosWrapper)
 }
 }
