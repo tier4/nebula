@@ -3,7 +3,8 @@
     sensor_model: "InnovizTwoCondor"
     sensor_ip: "192.168.0.5"
     host_ip: "192.168.0.2"
-    data_port: 9101
+    data_port: 9210
     frame_id: "innoviz"    
     setup_sensor: False
     online: True
+    filter_artifacts: True

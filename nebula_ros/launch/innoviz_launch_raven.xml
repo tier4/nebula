@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="sensor_model" description="InnovizTwoRaven"/>
+    <arg name="frame_id"  default="innoviz"/>
+
+    <arg name="sensor_ip" default="192.168.0.5" description="Lidar Sensor IP"/>
+    <arg name="host_ip" default="192.168.0.2" description="IP of the host machine"/>
+    <arg name="data_port" default="9210" description="LiDAR Data Port"/>
+    <arg name="setup_sensor" default="False" description="Enable sensor setup on hw-driver."/>
+
+    <node pkg="nebula_ros" exec="innoviz_driver_ros_wrapper_node"
+          name="innoviz_cloud" output="screen">
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+    </node>
+
+    <node pkg="nebula_ros" exec="innoviz_hw_interface_ros_wrapper_node"
+          name="innoviz_hw_driver" output="screen">
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="sensor_ip" value="$(var sensor_ip)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="host_ip" value="$(var host_ip)"/>
+        <param name="data_port" value="$(var data_port)"/>
+        <param name="setup_sensor" value="$(var setup_sensor)"/>
+    </node>
+
+</launch>

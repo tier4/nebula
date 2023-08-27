@@ -59,14 +59,14 @@ Status InnovizDriverRosWrapper::GetStatus()
 void InnovizDriverRosWrapper::ReceiveScanMsgCallback(const innoviz_msgs::msg::InnovizScan::SharedPtr scan_msg)
 {
     nebula::drivers::NebulaPointCloudPtr pointcloud = driver_ptr_->ConvertScanToPointcloud(scan_msg);
+    //pointcloud->header.stamp;
 
-    if (nebula_points_pub_->get_subscription_count() > 0 ||
-        nebula_points_pub_->get_intra_process_subscription_count() > 0) 
+    int subCount = nebula_points_pub_->get_subscription_count() + nebula_points_pub_->get_intra_process_subscription_count();
+    if (subCount > 0) 
     {
         auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
         pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
-        //TODO: Add timestamp from driver??
-        //ros_pc_msg_ptr->header.stamp = rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
+        
         ros_pc_msg_ptr->header.frame_id = sensor_cfg_ptr_->frame_id;
         nebula_points_pub_->publish(std::move(ros_pc_msg_ptr));
     }

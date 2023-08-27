@@ -52,7 +52,6 @@ drivers::NebulaPointCloudPtr InnovizDriver::ConvertScanToPointcloud(const std::s
     else
     {
         nebulaPCL = nullptr;
-        //TODO: Error log
     }
 
     return nebulaPCL;

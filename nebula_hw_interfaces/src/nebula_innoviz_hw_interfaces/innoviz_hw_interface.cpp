@@ -88,10 +88,16 @@ namespace drivers
             uint32_t offset = INVZ_PACKET_HEADER_SIZE;
             uint32_t actualDataSize = innovizPacket.header.end_idx - innovizPacket.header.start_id;
 
-            if(buffer.size() >= offset + actualDataSize)
+            if(buffer.size() < offset + actualDataSize)
             {
                 innovizPacket.data.resize(actualDataSize);
                 memcpy(innovizPacket.data.data(), buffer.data() + offset, actualDataSize);
+
+                int blaOffset = 0;
+                while(innovizPacket.header.start_id != 0 && (blaOffset + (int)innovizPacket.header.start_id - 124) % 10 != 0){
+                    blaOffset++;
+                }
+
                 scan_cloud_ptr_->packets.emplace_back(innovizPacket);
 
                 processed_bytes_ += actualDataSize;

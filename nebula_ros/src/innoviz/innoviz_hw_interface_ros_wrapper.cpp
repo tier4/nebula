@@ -91,7 +91,7 @@ namespace ros
             descriptor.read_only = true;
             descriptor.dynamic_typing = false;
             descriptor.additional_constraints = "";
-            this->declare_parameter<std::string>("sensor_ip", "192.168.0.2", descriptor);
+            this->declare_parameter<std::string>("sensor_ip", "192.168.0.5", descriptor);
             sensor_configuration.sensor_ip = this->get_parameter("sensor_ip").as_string();
         }
         {
@@ -109,7 +109,7 @@ namespace ros
             descriptor.read_only = true;
             descriptor.dynamic_typing = false;
             descriptor.additional_constraints = "";
-            this->declare_parameter<uint16_t>("data_port", 9101, descriptor);
+            this->declare_parameter<uint16_t>("data_port", 9210, descriptor);
             sensor_configuration.data_port = this->get_parameter("data_port").as_int();
         }
 
@@ -119,7 +119,6 @@ namespace ros
             return Status::INVALID_SENSOR_MODEL;
         }
 
-        RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
         return Status::OK;
     }
 
