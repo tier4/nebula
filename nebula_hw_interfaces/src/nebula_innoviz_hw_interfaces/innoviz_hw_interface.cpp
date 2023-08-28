@@ -88,7 +88,7 @@ namespace drivers
             uint32_t offset = INVZ_PACKET_HEADER_SIZE;
             uint32_t actualDataSize = innovizPacket.header.end_idx - innovizPacket.header.start_id;
 
-            if(buffer.size() < offset + actualDataSize)
+            if(buffer.size() <= offset + actualDataSize)
             {
                 innovizPacket.data.resize(actualDataSize);
                 memcpy(innovizPacket.data.data(), buffer.data() + offset, actualDataSize);
