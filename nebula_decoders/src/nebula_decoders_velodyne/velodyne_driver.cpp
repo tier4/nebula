@@ -69,10 +69,7 @@ std::tuple<drivers::NebulaPointCloudPtr, double> VelodyneDriver::ConvertScanToPo
   }
   return pointcloud;
 }
-Status VelodyneDriver::GetStatus()
-{
-  return driver_status_;
-}
+Status VelodyneDriver::GetStatus() { return driver_status_; }
 
 }  // namespace drivers
 }  // namespace nebula

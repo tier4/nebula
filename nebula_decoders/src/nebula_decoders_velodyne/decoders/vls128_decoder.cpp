@@ -36,28 +36,25 @@ Vls128Decoder::Vls128Decoder(
   }
   // timing table calculation, from velodyne user manual p.64
   timing_offsets_.resize(3);
-  for (size_t i = 0; i < timing_offsets_.size(); ++i) {
-    timing_offsets_[i].resize(17);  // 17 (+1 for the maintenance time after firing group 8)
+  for (size_t i=0; i < timing_offsets_.size(); ++i)
+  {
+    timing_offsets_[i].resize(17); // 17 (+1 for the maintenance time after firing group 8)
   }
   double full_firing_cycle_s = 53.3 * 1e-6;
   double single_firing_s = 2.665 * 1e-6;
   double offset_packet_time = 8.7 * 1e-6;
   // compute timing offsets
-  for (size_t x = 0; x < timing_offsets_.size(); ++x) {
-    for (size_t y = 0; y < timing_offsets_[x].size(); ++y) {
+  for (size_t x = 0; x < timing_offsets_.size(); ++x){
+    for (size_t y = 0; y < timing_offsets_[x].size(); ++y){
       double sequence_index, firing_group_index;
       sequence_index = x;
       firing_group_index = y;
-      timing_offsets_[x][y] = (full_firing_cycle_s * sequence_index) +
-                              (single_firing_s * firing_group_index) - offset_packet_time;
+      timing_offsets_[x][y] = (full_firing_cycle_s * sequence_index) + (single_firing_s * firing_group_index) - offset_packet_time;
     }
   }
 }
 
-bool Vls128Decoder::hasScanned()
-{
-  return has_scanned_;
-}
+bool Vls128Decoder::hasScanned() { return has_scanned_; }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> Vls128Decoder::get_pointcloud()
 {
@@ -68,14 +65,12 @@ std::tuple<drivers::NebulaPointCloudPtr, double> Vls128Decoder::get_pointcloud()
   double phase = angles::from_degrees(sensor_configuration_->scan_phase);
   if (!scan_pc_->points.empty()) {
     auto current_azimuth = scan_pc_->points.back().azimuth;
-    auto phase_diff =
-      static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
+    auto phase_diff = static_cast<size_t>(angles::to_degrees(2*M_PI + current_azimuth - phase)) % 360;
     while (phase_diff < M_PI_2 && !scan_pc_->points.empty()) {
       overflow_pc_->points.push_back(scan_pc_->points.back());
       scan_pc_->points.pop_back();
       current_azimuth = scan_pc_->points.back().azimuth;
-      phase_diff =
-        static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
+      phase_diff = static_cast<size_t>(angles::to_degrees(2*M_PI + current_azimuth - phase)) % 360;
     }
     overflow_pc_->width = overflow_pc_->points.size();
     scan_pc_->width = scan_pc_->points.size();
@@ -84,10 +79,7 @@ std::tuple<drivers::NebulaPointCloudPtr, double> Vls128Decoder::get_pointcloud()
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
-int Vls128Decoder::pointsPerPacket()
-{
-  return BLOCKS_PER_PACKET * SCANS_PER_BLOCK;
-}
+int Vls128Decoder::pointsPerPacket() { return BLOCKS_PER_PACKET * SCANS_PER_BLOCK; }
 
 void Vls128Decoder::reset_pointcloud(size_t n_pts)
 {
@@ -261,8 +253,7 @@ void Vls128Decoder::unpack(
               if (scan_timestamp_ < 0) {
                 scan_timestamp_ = block_timestamp;
               }
-              double point_time_offset =
-                timing_offsets_[block / 4][firing_order + laser_number / 64];
+              double point_time_offset = timing_offsets_[block / 4][firing_order + laser_number / 64];
 
               // Determine return type.
               uint8_t return_type;
@@ -313,8 +304,9 @@ void Vls128Decoder::unpack(
               current_point.elevation = sin_vert_angle;
               current_point.distance = distance;
               auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
-              if (point_ts < 0) point_ts = 0;
-              current_point.time_stamp = static_cast<uint32_t>(point_ts * 1e9);
+              if (point_ts < 0)
+                point_ts = 0;
+              current_point.time_stamp = static_cast<uint32_t>(point_ts*1e9);
               current_point.intensity = intensity;
 
               append_point(current_point, packet_index);

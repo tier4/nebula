@@ -8,8 +8,6 @@
 #include "nebula_decoders/nebula_decoders_common/nebula_driver_base.hpp"
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/velodyne_scan_decoder.hpp"
 
-#include <range/v3/view/enumerate.hpp>
-
 #include "velodyne_msgs/msg/velodyne_packet.hpp"
 #include "velodyne_msgs/msg/velodyne_scan.hpp"
 

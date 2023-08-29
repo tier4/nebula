@@ -14,7 +14,7 @@ namespace drivers
 {
 namespace vlp16
 {
-constexpr uint32_t MAX_POINTS = 300000;
+  constexpr uint32_t MAX_POINTS = 300000;
 /// @brief Velodyne LiDAR decoder (VLP16)
 class Vlp16Decoder : public VelodyneScanDecoder, public ParallelUnpack
 {
