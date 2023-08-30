@@ -41,7 +41,7 @@ namespace drivers
         Status status = Status::OK;
         try
         {
-            cloud_udp_driver_->init_receiver(sensor_configuration_->host_ip, sensor_configuration_->data_port);
+            cloud_udp_driver_->init_receiver(sensor_configuration_->host_ip, sensor_configuration_->data_port, UINT16_MAX);
             cloud_udp_driver_->receiver()->open();
             cloud_udp_driver_->receiver()->bind();
             cloud_udp_driver_->receiver()->asyncReceive(std::bind(&InnovizHwInterface::ReceiveCloudPacketCallback, this, std::placeholders::_1));
