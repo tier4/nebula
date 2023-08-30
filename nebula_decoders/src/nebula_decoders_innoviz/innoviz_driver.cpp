@@ -59,7 +59,7 @@ drivers::NebulaPointCloudPtr InnovizDriver::ConvertScanToPointcloud(const std::s
 
 Status InnovizDriver::SetCalibrationConfiguration(const CalibrationConfigurationBase & /*calibration_configuration*/)
 {
-    return Status::ERROR_1;
+    return Status::NOT_IMPLEMENTED;
 }
 
 } // namespace drivers    

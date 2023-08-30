@@ -10,8 +10,9 @@ namespace drivers
 namespace itwo_raven
 {
 
-constexpr uint32_t MAX_POINTS = 480*1200;
+constexpr uint32_t MAX_POINTS = 30*32*600;
 
+/// @brief Class for Innoviz Two Raven decoder
 class InnovizTwoRaven : public InnovizScanDecoder
 {
 public:

@@ -10,6 +10,7 @@
 #endif
 
 #define ANGLE_ELEVATION_AZIMUTH_FACTOR (1.f/32768)
+#define INNOVIZ_IPCL_MARKER (0xfacecafe)
 
 
 namespace nebula
@@ -51,13 +52,15 @@ void InnovizScanDecoder::parsePacket(innoviz_msgs::msg::InnovizPacket& packet)
                                     sizeof(innoviz_scan_pc_.detection_interface_type) + 
                                     sizeof(innoviz_scan_pc_.lidar_sensor_detections_header);
 
-    if(marker != 0xfacecafe)
+    //Check packet has a valid Innoviz marker
+    if(marker != INNOVIZ_IPCL_MARKER)
     {
         std::cerr << "InnovizScanDecoder: Invalid marker" << std::endl;
         std::cerr << "Marker = " << marker << std::endl;
         return;
     }
 
+    //Check for missing packet sequence number
     if(last_sequence_number_ != 0 && 
         ((last_sequence_number_ == UINT32_MAX && sequence_number != 0) || 
         last_sequence_number_ + 1 != sequence_number))
@@ -65,6 +68,7 @@ void InnovizScanDecoder::parsePacket(innoviz_msgs::msg::InnovizPacket& packet)
         std::cerr << "InnovizScanDecoder: Missing packet" << std::endl;
     }
 
+    //Ensure validity of scan_size
     if(scan_size_ != 0 && scan_size_ != total_objects)
     {
         std::cerr << "InnovizScanDecoder: Scan has inconsistent size" << std::endl;
@@ -76,18 +80,19 @@ void InnovizScanDecoder::parsePacket(innoviz_msgs::msg::InnovizPacket& packet)
         return;
     }
 
-    uint32_t totalStructSize =INVZ_PREFIX_SIZE + innoviz_scan_pc_.detections.size() * sizeof(LidarDetectionEntity_st); 
+    //Check for overflow
+    uint32_t totalStructSize = INVZ_PREFIX_SIZE + innoviz_scan_pc_.detections.size() * sizeof(LidarDetectionEntity_st); 
     if((start_id + length) > totalStructSize)
     {
         std::cerr << "InnovizScanDecoder: Scan overflow" << std::endl;
         auto sum = start_id + length;
         std::cerr << "Writing to " + sum << " in struct of size " << totalStructSize << std::endl;
+        return;
     }
 
     //Write to prefix first
     if(start_id < INVZ_PREFIX_SIZE)
     {
-        //min
         uint32_t prefixLength = std::min(INVZ_PREFIX_SIZE - start_id, length);
         uint8_t* destination = ((uint8_t *)(&innoviz_scan_pc_)) + start_id;
         memcpy(destination, packet.data.data(), prefixLength);    
@@ -97,11 +102,14 @@ void InnovizScanDecoder::parsePacket(innoviz_msgs::msg::InnovizPacket& packet)
         offset += prefixLength;
     }
 
+    //Logically this can only happen if length < INVZ_PREFIX_SIZE.
+    // If this happens, we have no more data to write from this packet.
     if(start_id < INVZ_PREFIX_SIZE)
     {
-        std::cout << "Error writing prefix. Start = " << start_id << std::endl;
+        return;
     }
 
+    //Discount INVZ_PREFIX_SIZE when writing to detections vector
     start_id -= INVZ_PREFIX_SIZE;
     uint8_t* destination = (uint8_t *)(innoviz_scan_pc_.detections.data()) + start_id;
     
@@ -130,9 +138,11 @@ drivers::NebulaPointCloudPtr InnovizScanDecoder::getPointcloud()
 
     nebula_scan_pc_->points.clear();
     nebula_scan_pc_->points.reserve(innoviz_scan_pc_.detections.size());
-    nebula_scan_pc_->header.stamp = (innoviz_scan_pc_.lidar_sensor_detections_header.timestamp.seconds * 1e9 + 
+    //Take UTC timestamp from synced LiDAR and convert to micros
+    nebula_scan_pc_->header.stamp = (innoviz_scan_pc_.lidar_sensor_detections_header.timestamp.seconds * 1e6 + 
                                     innoviz_scan_pc_.lidar_sensor_detections_header.timestamp.nano_seconds) * 0.001;
 
+    //Handle case where the LiDAR is not synced. Take host time in this case.
     if(nebula_scan_pc_->header.stamp == 0)
     {
         auto now = std::chrono::system_clock::now();
@@ -146,12 +156,14 @@ drivers::NebulaPointCloudPtr InnovizScanDecoder::getPointcloud()
 
         bool isValid = invzPoint.distance.value > 0;
 
-        if(invzPoint.confidence < sensor_configuration_->min_confidence) // Minimum confidence filter
+        // Filter pixels that are below the configured confidence threshold
+        if(invzPoint.confidence < sensor_configuration_->min_confidence) 
         {
             isValid = false;
         }
 
-        if(sensor_configuration_->filter_artifacts && invzPoint.Invalid_detection_classification) // Filter artifact pixels
+        // Filter artifact pixels based on the configuration
+        if(sensor_configuration_->filter_artifacts && invzPoint.Invalid_detection_classification) 
         {
             isValid = false;
         }
@@ -160,7 +172,8 @@ drivers::NebulaPointCloudPtr InnovizScanDecoder::getPointcloud()
         {
             drivers::NebulaPoint nebulaPoint{};
             nebulaPoint.distance  = invzPoint.distance.value * 0.01f; // uint16 cm to float m
-            nebulaPoint.azimuth   = static_cast<float>(invzPoint.angle_azimuth)* M_PI * (ANGLE_ELEVATION_AZIMUTH_FACTOR); //Decode azimuth/elevation
+            //Convert digital azimuth/elevation values to radians
+            nebulaPoint.azimuth   = static_cast<float>(invzPoint.angle_azimuth)* M_PI * (ANGLE_ELEVATION_AZIMUTH_FACTOR); 
             nebulaPoint.elevation = static_cast<float>(invzPoint.angle_elevation)* M_PI * (ANGLE_ELEVATION_AZIMUTH_FACTOR);
 
             nebulaPoint.x = nebulaPoint.distance * cos(nebulaPoint.azimuth) * cos(nebulaPoint.elevation);

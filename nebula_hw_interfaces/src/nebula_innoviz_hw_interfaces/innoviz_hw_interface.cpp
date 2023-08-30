@@ -22,6 +22,12 @@ namespace drivers
         {
             status = Status::INVALID_SENSOR_MODEL;
         }
+
+        if(sensor_configuration_->return_mode != drivers::ReturnMode::SINGLE_FIRST && 
+            sensor_configuration_->return_mode != drivers::ReturnMode::FIRST)
+        {
+            status = Status::INVALID_ECHO_MODE;
+        }
         
         return status;
     }
@@ -48,14 +54,7 @@ namespace drivers
         }
         catch(const std::exception& e)
         {
-            if(parent_node_logger)
-            {
-                RCLCPP_ERROR_STREAM((*parent_node_logger), e.what());
-            }
-            else
-            {
-                std::cerr << e.what() << '\n';
-            }       
+            PrintError(e.what());
             status = Status::UDP_CONNECTION_ERROR;     
         }
 
@@ -73,12 +72,13 @@ namespace drivers
         
         if(bufferSize > INVZ_PACKET_HEADER_SIZE)
         {
+            //Populate packet header
             memcpy(&innovizPacket.header, buffer.data(), INVZ_PACKET_HEADER_SIZE);
             
             //Start of new frame before completion of previous one
             if(innovizPacket.header.pc_idx != last_frame_id_ && scan_cloud_ptr_->packets.size() > 0)
             {
-                //Send previous scan data (will be a partial frame. Let decoder handle it?)
+                //Send previous scan data (will be a partial frame. Let decoder handle it)
                 scan_reception_callback_(std::move(scan_cloud_ptr_));
                 scan_cloud_ptr_ = std::make_unique<innoviz_msgs::msg::InnovizScan>();
                 scan_cloud_ptr_->packets.clear();    
@@ -90,22 +90,19 @@ namespace drivers
 
             if(buffer.size() <= offset + actualDataSize)
             {
+                //Populate packet data
                 innovizPacket.data.resize(actualDataSize);
                 memcpy(innovizPacket.data.data(), buffer.data() + offset, actualDataSize);
-
-                int blaOffset = 0;
-                while(innovizPacket.header.start_id != 0 && (blaOffset + (int)innovizPacket.header.start_id - 124) % 10 != 0){
-                    blaOffset++;
-                }
 
                 scan_cloud_ptr_->packets.emplace_back(innovizPacket);
 
                 processed_bytes_ += actualDataSize;
                 last_frame_id_ = innovizPacket.header.pc_idx;
 
-                //Completed frame
+                //Check if completed frame
                 if(processed_bytes_ == innovizPacket.header.total_objects)
                 {
+                    //Send completed scan data
                     scan_reception_callback_(std::move(scan_cloud_ptr_));
                     scan_cloud_ptr_ = std::make_unique<innoviz_msgs::msg::InnovizScan>();
                     scan_cloud_ptr_->packets.clear();    

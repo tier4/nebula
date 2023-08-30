@@ -47,7 +47,7 @@ public:
     /// @param scan_callback Callback function to call
     void RegisterScanCallback(std::function<void(std::unique_ptr<innoviz_msgs::msg::InnovizScan>)> scan_callback);
     
-    /// @brief Setting rclcpp::Logger
+    /// @brief Setting rclcpp::Logger log messages upstream can be sent upstream
     /// @param logger Logger
     void SetLogger(std::shared_ptr<rclcpp::Logger> logger);
     
