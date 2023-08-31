@@ -142,14 +142,6 @@ drivers::NebulaPointCloudPtr InnovizScanDecoder::getPointcloud()
     nebula_scan_pc_->header.stamp = (innoviz_scan_pc_.lidar_sensor_detections_header.timestamp.seconds * 1e6 + 
                                     innoviz_scan_pc_.lidar_sensor_detections_header.timestamp.nano_seconds) * 0.001;
 
-    //Handle case where the LiDAR is not synced. Take host time in this case.
-    if(nebula_scan_pc_->header.stamp == 0)
-    {
-        auto now = std::chrono::system_clock::now();
-        auto now_micros = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
-        nebula_scan_pc_->header.stamp = now_micros;
-    }
-
     for(uint32_t pixelID = 0; pixelID < innoviz_scan_pc_.detections.size(); pixelID++)
     {
         LidarDetectionEntity_st invzPoint = innoviz_scan_pc_.detections[pixelID];

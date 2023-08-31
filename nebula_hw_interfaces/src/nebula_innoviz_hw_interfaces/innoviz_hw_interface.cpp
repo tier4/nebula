@@ -65,6 +65,7 @@ namespace drivers
 
     void InnovizHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>& buffer)
     {
+        auto now = std::chrono::system_clock::now();
         constexpr uint32_t INVZ_PACKET_HEADER_SIZE = sizeof(innoviz_msgs::msg::InnovizPacketHeader);
         uint32_t bufferSize = buffer.size();
 
@@ -97,6 +98,14 @@ namespace drivers
                 scan_cloud_ptr_->packets.emplace_back(innovizPacket);
 
                 processed_bytes_ += actualDataSize;
+
+                //Start of new scan, update scan timestamp with host time of first packet
+                if(last_frame_id_ != innovizPacket.header.pc_idx)
+                {
+                    auto now_nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+                    scan_cloud_ptr_->header.stamp.nanosec = now_nanos % ((uint32_t)1e9);
+                    scan_cloud_ptr_->header.stamp.sec = now_nanos / 1e9;
+                }
                 last_frame_id_ = innovizPacket.header.pc_idx;
 
                 //Check if completed frame
