@@ -1,3 +1,17 @@
+// Copyright 2023 Map IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "hesai/hesai_ros_offline_extract_bag_pcd.hpp"
 
 #include "rclcpp/serialization.hpp"
@@ -78,7 +92,7 @@ Status HesaiRosOfflineExtractBag::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status HesaiRosOfflineExtractBag::GetStatus() { return wrapper_status_; }
+Status HesaiRosOfflineExtractBag::GetStatus() {return wrapper_status_;}
 
 Status HesaiRosOfflineExtractBag::GetParameters(
   drivers::HesaiSensorConfiguration & sensor_configuration,
@@ -105,7 +119,7 @@ Status HesaiRosOfflineExtractBag::GetParameters(
     sensor_configuration.return_mode =
       //      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
       nebula::drivers::ReturnModeFromStringHesai(
-        this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
+      this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -290,7 +304,7 @@ Status HesaiRosOfflineExtractBag::ReadBag()
   bool needs_open = true;
   storage_options.uri = bag_path;
   storage_options.storage_id = storage_id;
-  converter_options.output_serialization_format = format;  //"cdr";
+  converter_options.output_serialization_format = format;  // "cdr";
   {
     rosbag2_cpp::Reader reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
     // reader.open(rosbag_directory.string());
@@ -329,7 +343,7 @@ Status HesaiRosOfflineExtractBag::ReadBag()
           writer_->open(storage_options_w, converter_options_w);
           writer_->create_topic(
             {bag_message->topic_name, "pandar_msgs/msg/PandarScan", rmw_get_serialization_format(),
-             ""});
+              ""});
           needs_open = false;
         }
         writer_->write(bag_message);
