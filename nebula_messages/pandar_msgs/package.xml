@@ -3,7 +3,7 @@
   <name>pandar_msgs</name>
   <version>0.0.0</version>
   <description>
-    ROS message definition for the Heisai PandarQT/Pandar64/Pandar40P/Pandar20A/Pandar20B/Pandar40M LiDAR
+    ROS message definition for the Hesai PandarQT/Pandar64/Pandar40P/Pandar20A/Pandar20B/Pandar40M LiDAR
         sensor.
   </description>
   <maintainer email="shinnosuke.hirakawa@tier4.jp">hirakawa</maintainer>
