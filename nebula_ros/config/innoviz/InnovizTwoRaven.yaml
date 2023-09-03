@@ -4,6 +4,7 @@
     sensor_ip: "192.168.0.5"
     host_ip: "192.168.0.2"
     data_port: 9210
+    return_mode: "SingleStrongest"
     frame_id: "innoviz"    
     setup_sensor: False
     online: True

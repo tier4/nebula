@@ -61,7 +61,7 @@ void InnovizScanDecoder::parsePacket(innoviz_msgs::msg::InnovizPacket& packet)
     }
 
     //Check for missing packet sequence number
-    if(last_sequence_number_ != 0 && 
+    if(start_id != 0 &&last_sequence_number_ != 0 && 
         ((last_sequence_number_ == UINT32_MAX && sequence_number != 0) || 
         last_sequence_number_ + 1 != sequence_number))
     {
