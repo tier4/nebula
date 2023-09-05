@@ -3,9 +3,17 @@
 Nebula is a sensor driver platform that is designed to provide a unified framework for as wide a variety of devices as possible.
 While it primarily targets Ethernet-based LiDAR sensors, it aims to be easily extendable to support new sensors and interfaces.
 Nebula provides the following features:
+- Support for Velodyne and Hesai sensors, with other LiDAR vendor support under development
 - ROS 2 interface implementations
-- Abstraction of sensor decoders and hardware interfaces available as libraries
 - TCP/IP and UDP communication implementations
+- Abstraction of sensor decoders and hardware interfaces available as libraries
+- Handling of standard LiDAR functionality, including but not limited to:
+  - Configuration of communication settings such as sensor and host IP addresses and communication ports
+  - Configuration of scan speed, synchronization settings, scan phase, and field of view
+  - Receiving and conversion of UDP packet data into point clouds in Cartesian co-ordinates
+  - Receiving and interpretation of diagnostics information from the sensor
+  - Support for multiple return modes and labelling of return types for each point
+
 
 With a rapidly increasing number of sensor types and models becoming available, and varying levels of vendor and third-party driver support, Nebula creates a centralized driver methodology. We hope that this project will be used to facilitate active collaboration and efficiency in development projects by providing a platform that reduces the need to re-implement and maintain many different sensor drivers. Contributions to extend the supported devices and features of Nebula are always welcome.
 
