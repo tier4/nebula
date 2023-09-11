@@ -28,6 +28,7 @@
     "vccint",
     "Vccint",
     "XT",
-    "XTM"
+    "XTM",
+    "mkdoxy"
   ]
 }
