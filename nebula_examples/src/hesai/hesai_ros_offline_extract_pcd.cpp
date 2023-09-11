@@ -1,3 +1,17 @@
+// Copyright 2023 Map IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "hesai/hesai_ros_offline_extract_pcd.hpp"
 
 #include "rclcpp/serialization.hpp"
@@ -7,9 +21,8 @@
 #include "rosbag2_cpp/reader.hpp"
 #include "rosbag2_cpp/readers/sequential_reader.hpp"
 #include "rosbag2_storage/storage_options.hpp"
-//#include <boost/filesystem/path.hpp>
-//#include <boost/filesystem/operations.hpp>
-#include "rcpputils/filesystem_helper.hpp"
+// #include <boost/filesystem/path.hpp>
+// #include <boost/filesystem/operations.hpp>
 
 #include <regex>
 
@@ -79,7 +92,7 @@ Status HesaiRosOfflineExtractSample::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status HesaiRosOfflineExtractSample::GetStatus() { return wrapper_status_; }
+Status HesaiRosOfflineExtractSample::GetStatus() {return wrapper_status_;}
 
 Status HesaiRosOfflineExtractSample::GetParameters(
   drivers::HesaiSensorConfiguration & sensor_configuration,
@@ -106,7 +119,7 @@ Status HesaiRosOfflineExtractSample::GetParameters(
     sensor_configuration.return_mode =
       //      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
       nebula::drivers::ReturnModeFromStringHesai(
-        this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
+      this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -259,7 +272,7 @@ Status HesaiRosOfflineExtractSample::ReadBag()
 
   storage_options.uri = bag_path;
   storage_options.storage_id = storage_id;
-  converter_options.output_serialization_format = format;  //"cdr";
+  converter_options.output_serialization_format = format;  // "cdr";
   {
     rosbag2_cpp::Reader reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
     // reader.open(rosbag_directory.string());
