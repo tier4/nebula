@@ -3308,8 +3308,8 @@ bool HesaiHwInterface::CheckLock(
 /*
     std::chrono::system_clock::time_point test_time = std::chrono::system_clock::now();
     std::time_t tst = std::chrono::system_clock::to_time_t(test_time);
-    const std::tm* tslt = std::localtime(&tst);
-    std::cerr << "try_lock_for: test at " << std::put_time(tslt, "%c") << std::endl;
+    const std::tm* local_time = std::localtime(&tst);
+    std::cerr << "try_lock_for: test at " << std::put_time(local_time, "%c") << std::endl;
     auto dur_test = test_time - start_time;
     std::cerr << "test: " << name << " : " << std::chrono::duration_cast<std::chrono::milliseconds>(dur_test).count() << std::endl;
 */
@@ -3319,8 +3319,8 @@ bool HesaiHwInterface::CheckLock(
     std::cout << "if (!tm.try_lock_for(std::chrono::milliseconds(" << timeout_ << "))) {" << std::endl;
     std::chrono::system_clock::time_point end_time = std::chrono::system_clock::now();
     std::time_t edt = std::chrono::system_clock::to_time_t(end_time);
-    const std::tm* edlt = std::localtime(&edt);
-    std::cerr << "try_lock_for: end at " << std::put_time(edlt, "%c") << std::endl;
+    const std::tm* end_local_time = std::localtime(&edt);
+    std::cerr << "try_lock_for: end at " << std::put_time(end_local_time, "%c") << std::endl;
     auto dur = end_time - start_time;
     std::cerr << "timeout: " << name << " : " << std::chrono::duration_cast<std::chrono::milliseconds>(dur).count() << std::endl;
 #endif
