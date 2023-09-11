@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 3.5)
 project(nebula_examples)
 
 # Default to C++17
-if (NOT CMAKE_CXX_STANDARD)
+if(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 17)
-endif ()
+endif()
 
-if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
-endif ()
+endif()
 
 find_package(ament_cmake_auto REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
@@ -31,19 +31,19 @@ include_directories(
 # Offline Lib
 ament_auto_add_library(hesai_ros_offline_extract_pcd SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_pcd.cpp
-        )
+)
 target_link_libraries(hesai_ros_offline_extract_pcd ${PCL_LIBRARIES})
 ament_auto_add_executable(hesai_ros_offline_extract_pcd_node
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_pcd_main.cpp
-        )
+)
 # Extraction for TEST Lib
 ament_auto_add_library(hesai_ros_offline_extract_bag_pcd SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_pcd.cpp
-        )
+)
 target_link_libraries(hesai_ros_offline_extract_bag_pcd ${PCL_LIBRARIES})
 ament_auto_add_executable(hesai_ros_offline_extract_bag_pcd_node
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_pcd_main.cpp
-        )
+)
 
 ## Robosense
 # Offline Lib
@@ -67,13 +67,13 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/robosense/robosense_ros_offline_extract_bag_pcd_
 # Extraction for TEST Lib
 ament_auto_add_library(velodyne_ros_offline_extract_bag_pcd SHARED
         ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_ros_offline_extract_bag_pcd.cpp
-        )
+)
 target_link_libraries(velodyne_ros_offline_extract_bag_pcd ${PCL_LIBRARIES})
 ament_auto_add_executable(velodyne_ros_offline_extract_bag_pcd_node
         ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_ros_offline_extract_bag_pcd_main.cpp
-        )
+)
 
-if (BUILD_TESTING)
+if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()
 endif()
