@@ -29,7 +29,7 @@ HesaiHwInterface::~HesaiHwInterface()
   if(tcp_driver_)
   {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << ".......................tcp_driver_ is avaiable" << std::endl;
+    std::cout << ".......................tcp_driver_ is available" << std::endl;
 #endif
     if(tcp_driver_ && tcp_driver_->isOpen())
     {
@@ -48,7 +48,7 @@ HesaiHwInterface::~HesaiHwInterface()
   if(tcp_driver_s_)
   {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << ".......................tcp_driver_s_ is avaiable" << std::endl;
+    std::cout << ".......................tcp_driver_s_ is available" << std::endl;
 #endif
     if(tcp_driver_s_->isOpen())
     {
@@ -3303,8 +3303,8 @@ bool HesaiHwInterface::CheckLock(
 //    std::chrono::time_point start_time = std::chrono::steady_clock::now();
     std::chrono::system_clock::time_point start_time = std::chrono::system_clock::now();
     std::time_t stt = std::chrono::system_clock::to_time_t(start_time);
-    const std::tm* stlt = std::localtime(&stt);
-    std::cout << "try_lock_for: start at " << std::put_time(stlt, "%c") << std::endl;
+    const std::tm* system_local_time = std::localtime(&stt);
+    std::cout << "try_lock_for: start at " << std::put_time(system_local_time, "%c") << std::endl;
 /*
     std::chrono::system_clock::time_point test_time = std::chrono::system_clock::now();
     std::time_t tst = std::chrono::system_clock::to_time_t(test_time);
