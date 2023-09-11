@@ -248,6 +248,9 @@ struct HesaiInventory
       case 17:
         return "Pandar40M";
         break;
+      case 20:
+        return "PandarMind(PM64)";
+        break;
       case 25:
         return "PandarXT32";
         break;
