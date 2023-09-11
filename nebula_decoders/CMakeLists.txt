@@ -29,15 +29,7 @@ include_directories(
 # Lidar Decoders
 # Hesai
 ament_auto_add_library(nebula_decoders_hesai SHARED
-        src/nebula_decoders_hesai/hesai_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_40_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_64_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_qt_64_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_qt_128_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_xt_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_xtm_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_at_decoder.cpp
-        src/nebula_decoders_hesai/decoders/pandar_128_e4x_decoder.cpp
+        src/nebula_decoders_hesai/hesai_driver.cpp
         )
 
 # Velodyne
