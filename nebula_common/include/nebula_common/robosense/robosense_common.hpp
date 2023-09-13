@@ -38,8 +38,7 @@ inline std::ostream & operator<<(std::ostream & os, RobosenseSensorConfiguration
 /// @brief Convert return mode name to ReturnMode enum (Robosense-specific ReturnModeFromString)
 /// @param return_mode Return mode name (Upper and lower case letters must match)
 /// @return Corresponding ReturnMode
-inline ReturnMode ReturnModeFromStringRobosense(
-  const std::string & return_mode)
+inline ReturnMode ReturnModeFromStringRobosense(const std::string & return_mode)
 {
   if (return_mode == "Last") return ReturnMode::LAST;
   if (return_mode == "Strongest") return ReturnMode::STRONGEST;
@@ -47,6 +46,11 @@ inline ReturnMode ReturnModeFromStringRobosense(
 
   return ReturnMode::UNKNOWN;
 }
+
+/// @brief struct for Robosense calibration configuration
+struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
+{
+};
 
 }  // namespace drivers
 }  // namespace nebula
