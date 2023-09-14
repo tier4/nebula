@@ -52,6 +52,29 @@ struct PacketBase
   static constexpr size_t DEGREE_SUBDIVISIONS = degreeSubdivisions;
 };
 
+/// @brief Get timestamp from packet in nanoseconds
+/// @tparam PacketT The packet type
+/// @param packet The packet to get the timestamp from
+/// @return The timestamp in nanoseconds
+template <typename PacketT>
+uint64_t get_timestamp_ns(const PacketT & packet)
+{
+  return packet.header.timestamp.get_time_in_ns();
+  //  return packet.tail.date_time.get_seconds() * 1000000000 + packet.tail.timestamp * 1000;
+}
+
+/// @brief Get the distance unit of the given packet type in meters. Distance values in the packet, multiplied by this value, yield the distance in meters.
+/// @tparam PacketT The packet type
+/// @param packet The packet to get the distance unit from
+/// @return The distance unit in meters
+template <typename PacketT>
+double get_dis_unit(const PacketT & packet)
+{
+  // Packets define distance unit in millimeters, convert to meters here
+  return 0.0025;
+//  return packet.header.dis_unit / 1000.;
+}
+
 }  // namespace robosense_packet
 }  // namespace drivers
 }  // namespace nebula

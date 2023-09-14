@@ -28,13 +28,10 @@ class AngleCorrector
 {
 protected:
   const std::shared_ptr<RobosenseCalibrationConfiguration> sensor_calibration_;
-  const std::shared_ptr<RobosenseCorrection> sensor_correction_;
 
 public:
-  AngleCorrector(
-    const std::shared_ptr<RobosenseCalibrationConfiguration> & sensor_calibration,
-    const std::shared_ptr<RobosenseCorrection> & sensor_correction)
-  : sensor_calibration_(sensor_calibration), sensor_correction_(sensor_correction)
+  explicit AngleCorrector(const std::shared_ptr<RobosenseCalibrationConfiguration> & sensor_calibration)
+  : sensor_calibration_(sensor_calibration)
   {
   }
 

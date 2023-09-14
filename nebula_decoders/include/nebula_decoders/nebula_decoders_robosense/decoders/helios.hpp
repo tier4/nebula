@@ -13,6 +13,22 @@ namespace drivers
 namespace robosense_packet
 {
 
+struct Timestamp
+{
+  uint8_t seconds[6];
+  uint8_t nanoseconds[4];
+
+  uint64_t get_time_in_ns() const
+  {
+    uint64_t time_ns;
+    std::memcpy(&time_ns, seconds, sizeof(seconds));
+    uint32_t ns;
+    std::memcpy(&ns, nanoseconds, sizeof(ns));
+    return time_ns * 1000000000 + ns;
+  }
+};
+
+#pragma pack(push, 1)
 struct Header
 {
   uint32_t header_id;
@@ -23,7 +39,7 @@ struct Header
   uint8_t reserved_second;
   uint8_t range_resolution;
   uint16_t angle_interval_count;
-  uint8_t timestamp[10];
+  Timestamp timestamp;
   uint8_t reserved_third;
   uint8_t lidar_type;
   uint8_t lidar_model;
