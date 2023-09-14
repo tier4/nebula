@@ -27,9 +27,8 @@ private:
 
 public:
   AngleCorrectorCalibrationBased(
-    const std::shared_ptr<RobosenseCalibrationConfiguration> & sensor_calibration,
-    const std::shared_ptr<RobosenseCorrection> & sensor_correction)
-  : AngleCorrector(sensor_calibration, sensor_correction)
+    const std::shared_ptr<RobosenseCalibrationConfiguration> & sensor_calibration)
+  : AngleCorrector(sensor_calibration)
   {
     if (sensor_calibration == nullptr) {
       throw std::runtime_error(
