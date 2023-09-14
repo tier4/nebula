@@ -4,7 +4,11 @@
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 
+#include <bitset>
+#include <cmath>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 
 namespace nebula
 {
@@ -50,6 +54,31 @@ inline ReturnMode ReturnModeFromStringRobosense(const std::string & return_mode)
 /// @brief struct for Robosense calibration configuration
 struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
 {
+  std::map<size_t, float> elev_angle_map;
+  std::map<size_t, float> azimuth_offset_map;
+
+  inline nebula::Status LoadFromFile(const std::string & calibration_file)
+  {
+    std::ifstream ifs(calibration_file);
+    if (!ifs) {
+      return Status::INVALID_CALIBRATION_FILE;
+    }
+
+    std::string header;
+    std::getline(ifs, header);
+
+    char sep;
+    int laser_id;
+    float elevation;
+    float azimuth;
+    while (!ifs.eof()) {
+      ifs >> laser_id >> sep >> elevation >> sep >> azimuth;
+      elev_angle_map[laser_id - 1] = elevation;
+      azimuth_offset_map[laser_id - 1] = azimuth;
+    }
+    ifs.close();
+    return Status::OK;
+  }
 };
 
 }  // namespace drivers
