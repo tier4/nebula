@@ -43,13 +43,14 @@ public:
   /// after the start block, in nanoseconds
   int getEarliestPointTimeOffsetForBlock(uint32_t start_block_id, const PacketT & packet)
   {
-    unsigned int n_returns = robosense_packet::get_n_returns(packet.tail.return_mode);
+//    unsigned int n_returns = robosense_packet::get_n_returns(packet.tail.return_mode);
+    unsigned int n_returns = 1;
     int min_offset_ns = 0xFFFFFFFF;  // MAXINT
 
     for (uint32_t block_id = start_block_id; block_id < start_block_id + n_returns; ++block_id) {
       for (uint32_t channel_id = 0; channel_id < PacketT::N_CHANNELS; ++channel_id) {
         min_offset_ns =
-          std::min(min_offset_ns, getPacketRelativePointTimeOffset(block_id, channel_id, packet));
+          std::min(min_offset_ns, getPacketRelativePointTimeOffset(block_id, channel_id, true));
       }
     }
 

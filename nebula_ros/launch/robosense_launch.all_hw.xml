@@ -1,9 +1,11 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="sensor_model" description="Helios|Bpearl"/>
-    <arg name="return_mode" default="Dual" description="See readme for supported return modes"/>
+    <arg name="return_mode" default="Strongest" description="See readme for supported return modes"/>
     <arg name="frame_id" default="robosense"/>
     <arg name="scan_phase" default="0.0"/>
+
+    <arg name="calibration_file" default="$(find-pkg-share nebula_decoders)/calibration/robosense/Helios5515.csv"/>
 
     <arg name="sensor_ip" default="192.168.1.202" description="Lidar Sensor IP"/>
     <arg name="host_ip" default="192.168.1.201" description="Broadcast IP from Sensor"/>
@@ -31,6 +33,16 @@
         <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>
         <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
         <param name="setup_sensor" value="$(var setup_sensor)"/>
+    </node>
+
+    <node pkg="nebula_ros" exec="robosense_driver_ros_wrapper_node"
+          name="robosense_cloud" output="screen">
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="return_mode" value="$(var return_mode)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="scan_phase" value="$(var scan_phase)"/>
+        <param name="sensor_ip" value="$(var sensor_ip)"/>
+        <param name="calibration_file" value="$(var calibration_file)"/>
     </node>
 
 </launch>
