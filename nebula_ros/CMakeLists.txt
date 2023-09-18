@@ -102,6 +102,16 @@ rclcpp_components_register_node(robosense_hw_ros_wrapper
         EXECUTABLE robosense_hw_interface_ros_wrapper_node
         )
 
+# DriverDecoder
+ament_auto_add_library(robosense_driver_ros_wrapper SHARED
+        src/robosense/robosense_decoder_ros_wrapper.cpp
+        )
+
+rclcpp_components_register_node(robosense_driver_ros_wrapper
+        PLUGIN "RobosenseDriverRosWrapper"
+        EXECUTABLE robosense_driver_ros_wrapper_node
+        )
+
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()

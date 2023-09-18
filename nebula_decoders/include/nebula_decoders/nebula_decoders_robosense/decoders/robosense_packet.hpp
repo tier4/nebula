@@ -12,6 +12,8 @@ namespace drivers
 namespace robosense_packet
 {
 
+#pragma pack(push, 1)
+
 struct Unit
 {
   uint16_t distance;
@@ -26,7 +28,7 @@ struct Block
   UnitT units[UnitN];
   typedef UnitT unit_t;
 
-  uint32_t get_azimuth() const { return azimuth; }
+  uint16_t get_azimuth() const { return azimuth; }
 };
 
 template <typename BlockT, size_t BlockN>
@@ -51,6 +53,7 @@ struct PacketBase
   static constexpr size_t MAX_RETURNS = maxReturns;
   static constexpr size_t DEGREE_SUBDIVISIONS = degreeSubdivisions;
 };
+#pragma pack(pop)
 
 /// @brief Get timestamp from packet in nanoseconds
 /// @tparam PacketT The packet type

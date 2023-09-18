@@ -97,14 +97,14 @@ protected:
           continue;
         }
 
-        auto return_type = sensor_.getReturnType(
-          static_cast<robosense_packet::return_mode::ReturnMode>(packet_.tail.return_mode),
-          block_offset, return_units);
-
-        // Keep only last of multiple identical points
-        if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
-          continue;
-        }
+//        auto return_type = sensor_.getReturnType(
+//          static_cast<robosense_packet::return_mode::ReturnMode>(packet_.tail.return_mode),
+//          block_offset, return_units);
+//
+//        // Keep only last of multiple identical points
+//        if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
+//          continue;
+//        }
 
         // Keep only last (if any) of multiple points that are too close
         if (block_offset != n_blocks - 1) {
@@ -115,27 +115,29 @@ protected:
               continue;
             }
 
-            if (
-              fabsf(getDistance(*return_units[return_idx]) - distance) <
-              sensor_configuration_->dual_return_distance_threshold) {
-              is_below_multi_return_threshold = true;
-              break;
-            }
+//            if (
+//              fabsf(getDistance(*return_units[return_idx]) - distance) <
+//              sensor_configuration_->dual_return_distance_threshold) {
+//              is_below_multi_return_threshold = true;
+//              break;
+//            }
           }
 
-          if (is_below_multi_return_threshold) {
-            continue;
-          }
+//          if (is_below_multi_return_threshold) {
+//            continue;
+//          }
         }
 
         NebulaPoint point;
         point.distance = distance;
         point.intensity = unit.reflectivity;
         // TODO(mojomex) add header offset to scan offset correction
-        point.time_stamp =
-          getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
+//        point.time_stamp =
+//          getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
+        point.time_stamp = 10;
 
-        point.return_type = static_cast<uint8_t>(return_type);
+//        point.return_type = static_cast<uint8_t>(return_type);
+        point.return_type = 1;
         point.channel = channel_id;
 
         auto corrected_angle_data = angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
@@ -178,7 +180,7 @@ protected:
   uint32_t getPointTimeRelative(uint64_t packet_timestamp_ns, size_t block_id, size_t channel_id)
   {
     auto point_to_packet_offset_ns =
-      sensor_.getPacketRelativePointTimeOffset(block_id, channel_id, packet_);
+      sensor_.getPacketRelativePointTimeOffset(block_id, channel_id, true);
     auto packet_to_scan_offset_ns =
       static_cast<uint32_t>(packet_timestamp_ns - decode_scan_timestamp_ns_);
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
@@ -220,16 +222,27 @@ public:
       has_scanned_ = false;
     }
 
-    const size_t n_returns = robosense_packet::get_n_returns(packet_.tail.return_mode);
+    // For the dual return mode, the packet contains two blocks with the same azimuth, one for each
+    // return. For the single return mode, the packet contains only one block per azimuth.
+    // So, if the return mode is dual, we process two blocks per iteration, otherwise one.
+
+    // !!!! For now, use only single return mode
+    //    const size_t n_returns = robosense_packet::get_n_returns(packet_.tail.return_mode);
+    const size_t n_returns = 1;
     int current_azimuth;
 
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
-      current_azimuth =
-        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS +
-         packet_.body.blocks[block_id].get_azimuth() -
-         static_cast<int>(
-           sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS)) %
-        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS);
+      RCLCPP_INFO_STREAM(logger_, "N_BLOCKS: " << SensorT::packet_t::N_BLOCKS);
+//      current_azimuth =
+//        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS +
+//         packet_.body.blocks[block_id].get_azimuth() -
+//         static_cast<int>(
+//           sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS)) %
+//        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS);
+
+      current_azimuth = packet_.body.blocks[block_id].get_azimuth();
+
+      RCLCPP_INFO_STREAM(logger_, "current_azimuth: " << current_azimuth);
 
       bool scan_completed = checkScanCompleted(current_azimuth);
       if (scan_completed) {
