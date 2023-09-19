@@ -33,7 +33,8 @@ public:
   /// @param packet The packet
   /// @return The relative time offset in nanoseconds
   virtual int getPacketRelativePointTimeOffset(
-    uint32_t block_id, uint32_t channel_id, const bool & isSingleReturn) = 0;
+    uint32_t block_id, uint32_t channel_id,
+    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration) = 0;
 
   /// @brief For a given start block index, find the earliest (lowest) relative time offset of any
   /// point in the packet in or after the start block
@@ -41,7 +42,9 @@ public:
   /// @param packet The packet
   /// @return The lowest point time offset (relative to the packet timestamp) of any point in or
   /// after the start block, in nanoseconds
-  int getEarliestPointTimeOffsetForBlock(uint32_t start_block_id, const PacketT & packet)
+  int getEarliestPointTimeOffsetForBlock(
+    uint32_t start_block_id,
+    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration)
   {
     //    unsigned int n_returns = robosense_packet::get_n_returns(packet.tail.return_mode);
     unsigned int n_returns = 1;
@@ -49,8 +52,9 @@ public:
 
     for (uint32_t block_id = start_block_id; block_id < start_block_id + n_returns; ++block_id) {
       for (uint32_t channel_id = 0; channel_id < PacketT::N_CHANNELS; ++channel_id) {
-        min_offset_ns =
-          std::min(min_offset_ns, getPacketRelativePointTimeOffset(block_id, channel_id, true));
+        min_offset_ns = std::min(
+          min_offset_ns,
+          getPacketRelativePointTimeOffset(block_id, channel_id, sensor_configuration));
       }
     }
 

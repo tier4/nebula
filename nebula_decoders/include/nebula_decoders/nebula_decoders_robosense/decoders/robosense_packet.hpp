@@ -100,10 +100,9 @@ double get_dis_unit(const PacketT & packet)
     return 0.0025;
   } else if (range_resolution == 1) {
     return 0.0050;
-  } else {
-    // Should throw an error here?
-    // throw std::runtime_error("Unknown range resolution");
   }
+  // Should throw an error here?
+  // throw std::runtime_error("Unknown range resolution");
 }
 
 }  // namespace robosense_packet
