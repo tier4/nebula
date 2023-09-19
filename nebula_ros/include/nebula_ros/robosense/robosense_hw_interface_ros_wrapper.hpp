@@ -1,5 +1,4 @@
-#ifndef NEBULA_RobosenseHwInterfaceRosWrapper_H
-#define NEBULA_RobosenseHwInterfaceRosWrapper_H
+#pragma once
 
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/robosense/robosense_common.hpp"
@@ -81,5 +80,3 @@ private:
 
 }  // namespace ros
 }  // namespace nebula
-
-#endif  // #define NEBULA_RobosenseHwInterfaceRosWrapper_H

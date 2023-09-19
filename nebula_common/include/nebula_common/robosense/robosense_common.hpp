@@ -1,5 +1,4 @@
-#ifndef NEBULA_ROBOSENSE_COMMON_H
-#define NEBULA_ROBOSENSE_COMMON_H
+#pragma once
 
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
@@ -84,5 +83,3 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
 
 }  // namespace drivers
 }  // namespace nebula
-
-#endif  // NEBULA_ROBOSENSE_COMMON_H

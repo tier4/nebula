@@ -1,10 +1,9 @@
-#ifndef NEBULA_ROBOSENSE_DRIVER_H
-#define NEBULA_ROBOSENSE_DRIVER_H
+#pragma once
 
-#include "nebula_common/robosense/robosense_common.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_common/point_types.hpp"
+#include "nebula_common/robosense/robosense_common.hpp"
 #include "nebula_decoders/nebula_decoders_common/nebula_driver_base.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_decoder.hpp"
 
@@ -60,5 +59,3 @@ public:
 
 }  // namespace drivers
 }  // namespace nebula
-
-#endif  // NEBULA_ROBOSENSE_DRIVER_H

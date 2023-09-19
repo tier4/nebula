@@ -26,8 +26,8 @@ ros::RobosenseHwInterfaceRosWrapper::RobosenseHwInterfaceRosWrapper(
 
   hw_interface_.RegisterScanCallback(std::bind(
     &RobosenseHwInterfaceRosWrapper::ReceiveScanDataCallback, this, std::placeholders::_1));
-  pandar_scan_pub_ =
-    this->create_publisher<pandar_msgs::msg::PandarScan>("robosense_packets", rclcpp::SensorDataQoS());
+  pandar_scan_pub_ = this->create_publisher<pandar_msgs::msg::PandarScan>(
+    "robosense_packets", rclcpp::SensorDataQoS());
 
   StreamStart();
 }
