@@ -107,7 +107,7 @@ protected:
 
         // Keep only last (if any) of multiple points that are too close
         if (block_offset != n_blocks - 1) {
-          bool is_below_multi_return_threshold = false;
+          //          bool is_below_multi_return_threshold = false;
 
           for (size_t return_idx = 0; return_idx < n_blocks; ++return_idx) {
             if (return_idx == block_offset) {
@@ -177,7 +177,7 @@ protected:
   uint32_t getPointTimeRelative(uint64_t packet_timestamp_ns, size_t block_id, size_t channel_id)
   {
     auto point_to_packet_offset_ns =
-      sensor_.getPacketRelativePointTimeOffset(block_id, channel_id, true);
+      sensor_.getPacketRelativePointTimeOffset(block_id, channel_id, sensor_configuration_);
     auto packet_to_scan_offset_ns =
       static_cast<uint32_t>(packet_timestamp_ns - decode_scan_timestamp_ns_);
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
@@ -243,8 +243,9 @@ public:
         // A new scan starts within the current packet, so the new scan's timestamp must be
         // calculated as the packet timestamp plus the lowest time offset of any point in the
         // remainder of the packet
-        decode_scan_timestamp_ns_ = robosense_packet::get_timestamp_ns(packet_) +
-                                    sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
+        decode_scan_timestamp_ns_ =
+          robosense_packet::get_timestamp_ns(packet_) +
+          sensor_.getEarliestPointTimeOffsetForBlock(block_id, sensor_configuration_);
       }
 
       convertReturns(block_id, n_returns);
