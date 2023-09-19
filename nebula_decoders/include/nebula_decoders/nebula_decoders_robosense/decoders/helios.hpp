@@ -13,6 +13,8 @@ namespace drivers
 namespace robosense_packet
 {
 
+#pragma pack(push, 1)
+
 struct Timestamp
 {
   uint8_t seconds[6];
@@ -28,7 +30,6 @@ struct Timestamp
   }
 };
 
-#pragma pack(push, 1)
 struct Header
 {
   uint32_t header_id;
@@ -52,7 +53,7 @@ struct PacketHelios : public PacketBase<12, 32, 2, 100>
   Header header;
   body_t body;
   uint8_t tail[6];
-  uint32_t udp_sequence;
+};
 };
 
 #pragma pack(pop)
