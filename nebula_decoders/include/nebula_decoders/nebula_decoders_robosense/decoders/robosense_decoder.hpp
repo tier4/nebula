@@ -87,7 +87,7 @@ protected:
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
         auto & unit = *return_units[block_offset];
 
-        if (unit.distance == 0) {
+        if (unit.distance.value() == 0) {
           continue;
         }
 
@@ -130,7 +130,7 @@ protected:
 
         NebulaPoint point;
         point.distance = distance;
-        point.intensity = unit.reflectivity;
+        point.intensity = unit.reflectivity.value();
         // TODO(mojomex) add header offset to scan offset correction
 //        point.time_stamp =
 //          getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
@@ -169,7 +169,7 @@ protected:
   /// @brief Get the distance of the given unit in meters
   float getDistance(const typename SensorT::packet_t::body_t::block_t::unit_t & unit)
   {
-    return unit.distance * robosense_packet::get_dis_unit(packet_);
+    return unit.distance.value() * robosense_packet::get_dis_unit(packet_);
   }
 
   /// @brief Get timestamp of point in nanoseconds, relative to scan timestamp. Includes firing time
@@ -232,7 +232,7 @@ public:
     int current_azimuth;
 
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
-      RCLCPP_INFO_STREAM(logger_, "N_BLOCKS: " << SensorT::packet_t::N_BLOCKS);
+//      RCLCPP_INFO_STREAM(logger_, "N_BLOCKS: " << SensorT::packet_t::N_BLOCKS);
 //      current_azimuth =
 //        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS +
 //         packet_.body.blocks[block_id].get_azimuth() -
@@ -242,7 +242,7 @@ public:
 
       current_azimuth = packet_.body.blocks[block_id].get_azimuth();
 
-      RCLCPP_INFO_STREAM(logger_, "current_azimuth: " << current_azimuth);
+//      RCLCPP_INFO_STREAM(logger_, "current_azimuth: " << current_azimuth);
 
       bool scan_completed = checkScanCompleted(current_azimuth);
       if (scan_completed) {

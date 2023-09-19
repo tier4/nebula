@@ -3,6 +3,8 @@
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_sensor.hpp"
 
+#include "boost/endian/buffers.hpp"
+
 #include <cstddef>
 #include <cstdint>
 
@@ -17,34 +19,33 @@ namespace robosense_packet
 
 struct Timestamp
 {
-  uint8_t seconds[6];
-  uint8_t nanoseconds[4];
+  boost::endian::big_uint48_buf_t seconds;
+  boost::endian::big_uint32_buf_t nanoseconds;
 
   uint64_t get_time_in_ns() const
   {
-    uint64_t time_ns;
-    std::memcpy(&time_ns, seconds, sizeof(seconds));
-    uint32_t ns;
-    std::memcpy(&ns, nanoseconds, sizeof(ns));
-    return time_ns * 1000000000 + ns;
+    uint64_t total_nanoseconds = static_cast<uint64_t>(seconds.value()) * 1000000000ULL +
+                                 static_cast<uint64_t>(nanoseconds.value());
+
+    return total_nanoseconds;
   }
 };
 
 struct Header
 {
-  uint32_t header_id;
-  uint16_t protocol_version;
-  uint16_t reserved_first;
-  uint32_t top_packet_count;
-  uint32_t bottom_packet_count;
-  uint8_t reserved_second;
-  uint8_t range_resolution;
-  uint16_t angle_interval_count;
+  boost::endian::big_uint32_buf_t header_id;
+  boost::endian::big_uint16_buf_t protocol_version;
+  boost::endian::big_uint16_buf_t reserved_first;
+  boost::endian::big_uint32_buf_t top_packet_count;
+  boost::endian::big_uint32_buf_t bottom_packet_count;
+  boost::endian::big_uint8_buf_t reserved_second;
+  boost::endian::big_uint8_buf_t range_resolution;
+  boost::endian::big_uint16_buf_t angle_interval_count;
   Timestamp timestamp;
-  uint8_t reserved_third;
-  uint8_t lidar_type;
-  uint8_t lidar_model;
-  uint8_t reserved_fourth[9];
+  boost::endian::big_uint8_buf_t reserved_third;
+  boost::endian::big_uint8_buf_t lidar_type;
+  boost::endian::big_uint8_buf_t lidar_model;
+  boost::endian::big_uint8_buf_t reserved_fourth[9];
 };
 
 struct PacketHelios : public PacketBase<12, 32, 2, 100>
@@ -52,7 +53,7 @@ struct PacketHelios : public PacketBase<12, 32, 2, 100>
   typedef Body<Block<Unit, PacketHelios::N_CHANNELS>, PacketHelios::N_BLOCKS> body_t;
   Header header;
   body_t body;
-  uint8_t tail[6];
+  boost::endian::big_uint48_buf_t tail;
 };
 
 #pragma pack(pop)
