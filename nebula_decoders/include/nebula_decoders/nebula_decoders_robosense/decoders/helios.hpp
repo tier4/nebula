@@ -54,7 +54,6 @@ struct PacketHelios : public PacketBase<12, 32, 2, 100>
   body_t body;
   uint8_t tail[6];
 };
-};
 
 #pragma pack(pop)
 
