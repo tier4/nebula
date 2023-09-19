@@ -130,7 +130,6 @@ protected:
         NebulaPoint point;
         point.distance = distance;
         point.intensity = unit.reflectivity.value();
-        // TODO(mojomex) add header offset to scan offset correction
         point.time_stamp =
           getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
 
@@ -227,17 +226,12 @@ public:
     int current_azimuth;
 
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
-//      RCLCPP_INFO_STREAM(logger_, "N_BLOCKS: " << SensorT::packet_t::N_BLOCKS);
-//      current_azimuth =
-//        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS +
-//         packet_.body.blocks[block_id].get_azimuth() -
-//         static_cast<int>(
-//           sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS)) %
-//        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS);
-
-      current_azimuth = packet_.body.blocks[block_id].get_azimuth();
-
-//      RCLCPP_INFO_STREAM(logger_, "current_azimuth: " << current_azimuth);
+      current_azimuth =
+        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS +
+         packet_.body.blocks[block_id].get_azimuth() -
+         static_cast<int>(
+           sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS)) %
+        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS);
 
       bool scan_completed = checkScanCompleted(current_azimuth);
       if (scan_completed) {
