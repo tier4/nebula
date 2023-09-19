@@ -132,9 +132,8 @@ protected:
         point.distance = distance;
         point.intensity = unit.reflectivity.value();
         // TODO(mojomex) add header offset to scan offset correction
-//        point.time_stamp =
-//          getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
-        point.time_stamp = 10;
+        point.time_stamp =
+          getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
 
 //        point.return_type = static_cast<uint8_t>(return_type);
         point.return_type = 1;
