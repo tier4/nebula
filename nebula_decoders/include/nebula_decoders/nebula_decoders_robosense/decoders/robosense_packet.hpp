@@ -57,6 +57,25 @@ struct PacketBase
 };
 #pragma pack(pop)
 
+/// @brief Get the number of returns for a given return mode
+/// @param return_mode The return mode
+/// @return The number of returns
+size_t get_n_returns(ReturnMode return_mode)
+{
+  switch (return_mode) {
+    case ReturnMode::DUAL:
+      return 2;
+    case ReturnMode::STRONGEST:
+      return 1;
+    case ReturnMode::LAST:
+      return 1;
+    case ReturnMode::FIRST:
+      return 1;
+    default:
+      throw std::runtime_error("Unknown return mode");
+  }
+}
+
 /// @brief Get timestamp from packet in nanoseconds
 /// @tparam PacketT The packet type
 /// @param packet The packet to get the timestamp from
