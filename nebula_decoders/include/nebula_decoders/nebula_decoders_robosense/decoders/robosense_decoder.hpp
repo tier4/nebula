@@ -66,8 +66,7 @@ protected:
   /// @brief Converts a group of returns (i.e. 1 for single return, 2 for dual return, etc.) to
   /// points and appends them to the point cloud
   /// @param start_block_id The first block in the group of returns
-  /// @param n_blocks The number of returns in the group (has to align with the `n_returns` field in
-  /// the packet footer)
+  /// @param n_blocks The number of returns in the group
   void convertReturns(size_t start_block_id, size_t n_blocks)
   {
     uint64_t packet_timestamp_ns = robosense_packet::get_timestamp_ns(packet_);
@@ -135,8 +134,8 @@ protected:
         point.time_stamp =
           getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
 
-//        point.return_type = static_cast<uint8_t>(return_type);
-        point.return_type = 1;
+        point.return_type =
+          static_cast<uint8_t>(ReturnModeToReturnType(sensor_configuration_->return_mode));
         point.channel = channel_id;
 
         auto corrected_angle_data = angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
@@ -224,10 +223,7 @@ public:
     // For the dual return mode, the packet contains two blocks with the same azimuth, one for each
     // return. For the single return mode, the packet contains only one block per azimuth.
     // So, if the return mode is dual, we process two blocks per iteration, otherwise one.
-
-    // !!!! For now, use only single return mode
-    //    const size_t n_returns = robosense_packet::get_n_returns(packet_.tail.return_mode);
-    const size_t n_returns = 1;
+    const size_t n_returns = robosense_packet::get_n_returns(sensor_configuration_->return_mode);
     int current_azimuth;
 
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
