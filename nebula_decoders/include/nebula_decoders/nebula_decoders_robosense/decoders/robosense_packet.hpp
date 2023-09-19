@@ -1,5 +1,7 @@
 #pragma once
 
+#include "boost/endian/buffers.hpp"
+
 #include <cstddef>
 #include <cstdint>
 #include <ctime>
@@ -16,19 +18,19 @@ namespace robosense_packet
 
 struct Unit
 {
-  uint16_t distance;
-  uint8_t reflectivity;
+  boost::endian::big_uint16_buf_t distance;
+  boost::endian::big_uint8_buf_t reflectivity;
 };
 
 template <typename UnitT, size_t UnitN>
 struct Block
 {
-  uint16_t flag;
-  uint16_t azimuth;
+  boost::endian::big_uint16_buf_t flag;
+  boost::endian::big_uint16_buf_t azimuth;
   UnitT units[UnitN];
   typedef UnitT unit_t;
 
-  uint16_t get_azimuth() const { return azimuth; }
+  uint16_t get_azimuth() const { return azimuth.value(); }
 };
 
 template <typename BlockT, size_t BlockN>
@@ -66,7 +68,8 @@ uint64_t get_timestamp_ns(const PacketT & packet)
   //  return packet.tail.date_time.get_seconds() * 1000000000 + packet.tail.timestamp * 1000;
 }
 
-/// @brief Get the distance unit of the given packet type in meters. Distance values in the packet, multiplied by this value, yield the distance in meters.
+/// @brief Get the distance unit of the given packet type in meters. Distance values in the packet,
+/// multiplied by this value, yield the distance in meters.
 /// @tparam PacketT The packet type
 /// @param packet The packet to get the distance unit from
 /// @return The distance unit in meters
@@ -75,7 +78,7 @@ double get_dis_unit(const PacketT & packet)
 {
   // Packets define distance unit in millimeters, convert to meters here
   return 0.0025;
-//  return packet.header.dis_unit / 1000.;
+  //  return packet.header.dis_unit / 1000.;
 }
 
 }  // namespace robosense_packet
