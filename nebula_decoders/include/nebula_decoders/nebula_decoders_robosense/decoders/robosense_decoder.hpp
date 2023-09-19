@@ -96,14 +96,14 @@ protected:
           continue;
         }
 
-//        auto return_type = sensor_.getReturnType(
-//          static_cast<robosense_packet::return_mode::ReturnMode>(packet_.tail.return_mode),
-//          block_offset, return_units);
-//
-//        // Keep only last of multiple identical points
-//        if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
-//          continue;
-//        }
+        //        auto return_type = sensor_.getReturnType(
+        //          static_cast<robosense_packet::return_mode::ReturnMode>(packet_.tail.return_mode),
+        //          block_offset, return_units);
+        //
+        //        // Keep only last of multiple identical points
+        //        if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
+        //          continue;
+        //        }
 
         // Keep only last (if any) of multiple points that are too close
         if (block_offset != n_blocks - 1) {
@@ -114,17 +114,17 @@ protected:
               continue;
             }
 
-//            if (
-//              fabsf(getDistance(*return_units[return_idx]) - distance) <
-//              sensor_configuration_->dual_return_distance_threshold) {
-//              is_below_multi_return_threshold = true;
-//              break;
-//            }
+            //            if (
+            //              fabsf(getDistance(*return_units[return_idx]) - distance) <
+            //              sensor_configuration_->dual_return_distance_threshold) {
+            //              is_below_multi_return_threshold = true;
+            //              break;
+            //            }
           }
 
-//          if (is_below_multi_return_threshold) {
-//            continue;
-//          }
+          //          if (is_below_multi_return_threshold) {
+          //            continue;
+          //          }
         }
 
         NebulaPoint point;

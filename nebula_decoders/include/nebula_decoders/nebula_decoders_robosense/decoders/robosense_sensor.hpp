@@ -43,7 +43,7 @@ public:
   /// after the start block, in nanoseconds
   int getEarliestPointTimeOffsetForBlock(uint32_t start_block_id, const PacketT & packet)
   {
-//    unsigned int n_returns = robosense_packet::get_n_returns(packet.tail.return_mode);
+    //    unsigned int n_returns = robosense_packet::get_n_returns(packet.tail.return_mode);
     unsigned int n_returns = 1;
     int min_offset_ns = 0xFFFFFFFF;  // MAXINT
 

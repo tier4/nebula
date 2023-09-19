@@ -1,5 +1,4 @@
-#ifndef NEBULA_ROBOSENSE_HW_INTERFACE_H
-#define NEBULA_ROBOSENSE_HW_INTERFACE_H
+#pragma once
 
 // Have to define macros to silence warnings about deprecated headers being used by
 // boost/property_tree/ in some versions of boost.
@@ -99,4 +98,3 @@ public:
 
 }  // namespace drivers
 }  // namespace nebula
-#endif  // NEBULA_ROBOSENSE_HW_INTERFACE_H
