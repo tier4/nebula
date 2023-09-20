@@ -5,7 +5,9 @@ namespace drivers
 {
 RobosenseHwInterface::RobosenseHwInterface()
 : cloud_io_context_{new ::drivers::common::IoContext(1)},
+  cloud_io_context_info_{new ::drivers::common::IoContext(1)},
   cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
+  cloud_udp_driver_info{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_info_)},
   scan_cloud_ptr_{std::make_unique<pandar_msgs::msg::PandarScan>()}
 {
 }
@@ -58,10 +60,22 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   }
 }
 
+void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> & buffer)
+{
+  PrintInfo("Info Packet Received");
+
+  if (!is_valid_info_packet_(buffer.size())) {
+    PrintDebug("Invalid Packet: " + std::to_string(buffer.size()));
+    return;
+  }
+
+  info_buffer_.emplace(buffer);
+}
+
 Status RobosenseHwInterface::CloudInterfaceStart()
 {
   try {
-    std::cout << "Starting UDP server on: " << *sensor_configuration_ << std::endl;
+    std::cout << "Starting UDP server for data packets on: " << *sensor_configuration_ << std::endl;
     cloud_udp_driver_->init_receiver(
       sensor_configuration_->host_ip, sensor_configuration_->data_port);
     cloud_udp_driver_->receiver()->open();
@@ -73,6 +87,27 @@ Status RobosenseHwInterface::CloudInterfaceStart()
     Status status = Status::UDP_CONNECTION_ERROR;
     std::cerr << status << sensor_configuration_->sensor_ip << ","
               << sensor_configuration_->data_port << std::endl;
+    return status;
+  }
+  return Status::OK;
+}
+
+Status RobosenseHwInterface::InfoInterfaceStart()
+{
+  try {
+    std::cout << "Starting UDP server for info packets on: " << *sensor_configuration_ << std::endl;
+    cloud_udp_driver_info->init_receiver(
+      sensor_configuration_->host_ip, sensor_configuration_->gnss_port);
+    cloud_udp_driver_info->receiver()->open();
+    cloud_udp_driver_info->receiver()->bind();
+
+    cloud_udp_driver_info->receiver()->asyncReceive(
+      std::bind(&RobosenseHwInterface::ReceiveInfoPacketCallback, this, std::placeholders::_1));
+
+  } catch (const std::exception & ex) {
+    Status status = Status::UDP_CONNECTION_ERROR;
+    std::cerr << status << sensor_configuration_->sensor_ip << ","
+              << sensor_configuration_->gnss_port << std::endl;
     return status;
   }
   return Status::OK;
@@ -90,6 +125,9 @@ Status RobosenseHwInterface::SetSensorConfiguration(
     std::static_pointer_cast<RobosenseSensorConfiguration>(sensor_configuration);
 
   is_valid_packet_ = [](size_t packet_size) { return (packet_size == HELIOS5515_PACKET_SIZE); };
+  is_valid_info_packet_ = [](size_t packet_size) {
+    return (packet_size == HELIOS5515_INFO_PACKET_SIZE);
+  };
 
   return Status::OK;
 }
@@ -107,6 +145,55 @@ Status RobosenseHwInterface::GetCalibrationConfiguration(
 {
   PrintDebug(calibration_configuration.calibration_file);
   return Status::ERROR_1;
+}
+
+Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
+  const std::function<void(const std::string & received_string)> & string_callback)
+{
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+
+  std::stringstream calibration;
+  calibration << "Laser ID,Elevation,Azimuth" << std::endl;
+
+  size_t channel_num = 0;
+  size_t vertical_data_offset = 0;
+  size_t horizontal_data_offset = 0;
+
+  switch (sensor_configuration_->sensor_model) {
+    case SensorModel::ROBOSENSE_HELIOS_5515:
+      channel_num = 32;
+      vertical_data_offset = HELIOS5515_CORRECTED_VERTICAL_ANGLE_OFFSET;
+      horizontal_data_offset = HELIOS5515_CORRECTED_HORIZONTAL_ANGLE_OFFSET;
+      break;
+
+    case SensorModel::ROBOSENSE_BPEARL:
+      channel_num = 32;
+      break;
+
+    default:
+      return Status::INVALID_SENSOR_MODEL;
+  }
+
+  for (size_t channel = 0; channel < channel_num; ++channel) {
+    const auto vertical_offset = (channel * 3) + vertical_data_offset;
+    const auto horizontal_offset = (channel * 3) + horizontal_data_offset;
+
+    auto & info_buffer = info_buffer_.value();
+
+    uint16_t vertical_angle_data =
+      (info_buffer[vertical_offset + 2] & 0xff) + ((info_buffer[vertical_offset + 1] & 0xff) << 8);
+    double vertical_angle = static_cast<double>(vertical_angle_data) / 100.0;
+    if (info_buffer[vertical_offset] == 0x01) vertical_angle = -vertical_angle;
+
+    uint16_t horizontal_angle_data = (info_buffer[horizontal_offset + 2] & 0xff) +
+                                     ((info_buffer[horizontal_offset + 1] & 0xff) << 8);
+    double horizontal_angle = static_cast<double>(horizontal_angle_data) / 100.0;
+    if (info_buffer[horizontal_offset] == 0x01) horizontal_angle = -horizontal_angle;
+
+    calibration << channel << "," << vertical_angle << "," << horizontal_angle << std::endl;
+  }
+
+  string_callback(calibration.str());
 }
 
 Status RobosenseHwInterface::RegisterScanCallback(

@@ -42,7 +42,9 @@
         <param name="frame_id" value="$(var frame_id)"/>
         <param name="scan_phase" value="$(var scan_phase)"/>
         <param name="sensor_ip" value="$(var sensor_ip)"/>
+        <param name="host_ip" value="$(var host_ip)"/>
         <param name="calibration_file" value="$(var calibration_file)"/>
+        <param name="gnss_port" value="$(var gnss_port)"/>
     </node>
 
 </launch>

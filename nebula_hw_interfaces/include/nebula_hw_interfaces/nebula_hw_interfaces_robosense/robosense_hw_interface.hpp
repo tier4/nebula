@@ -27,6 +27,11 @@ namespace drivers
 
 const uint16_t MTU_SIZE = 1500;
 const uint16_t HELIOS5515_PACKET_SIZE = 1248;
+const uint16_t HELIOS5515_INFO_PACKET_SIZE = 1248;
+const uint16_t HELIOS5515_CORRECTED_VERTICAL_ANGLE_SIZE = 96;
+const uint16_t HELIOS5515_CORRECTED_VERTICAL_ANGLE_OFFSET = 468;
+const uint16_t HELIOS5515_CORRECTED_HORIZONTAL_ANGLE_SIZE = 96;
+const uint16_t HELIOS5515_CORRECTED_HORIZONTAL_ANGLE_OFFSET = 564;
 const uint16_t BPEARL_PACKET_SIZE = 1248;
 
 /// @brief Hardware interface of Robosense driver
@@ -34,13 +39,18 @@ class RobosenseHwInterface : NebulaHwInterfaceBase
 {
 private:
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
+  std::unique_ptr<::drivers::common::IoContext> cloud_io_context_info_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
+  std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_info;
   std::shared_ptr<RobosenseSensorConfiguration> sensor_configuration_;
   std::unique_ptr<pandar_msgs::msg::PandarScan> scan_cloud_ptr_;
   size_t azimuth_index_{44};  // For Helios and Bpearl 42 byte header + 2 byte flag
   int prev_phase_{};
+  std::optional<std::vector<uint8_t>> info_buffer_;  // To hold DIFOP data
   std::function<bool(size_t)>
-    is_valid_packet_; /*Lambda Function Array to verify proper packet size*/
+    is_valid_packet_; /*Lambda Function Array to verify proper packet size for data*/
+  std::function<bool(size_t)>
+    is_valid_info_packet_; /*Lambda Function Array to verify proper packet size for info*/
   std::function<void(std::unique_ptr<pandar_msgs::msg::PandarScan> buffer)>
     scan_reception_callback_; /**This function pointer is called when the scan is complete*/
   std::shared_ptr<rclcpp::Logger> parent_node_logger_;
@@ -61,9 +71,17 @@ public:
   /// @param buffer Buffer containing the data received from the UDP socket
   void ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer) final;
 
-  /// @brief Starting the interface that handles UDP streams
+  /// @brief Callback function to receive the Info Packet data from the UDP Driver
+  /// @param buffer Buffer containing the data received from the UDP socket
+  void ReceiveInfoPacketCallback(const std::vector<uint8_t> & buffer);
+
+  /// @brief Starting the interface that handles UDP streams for MSOP packets
   /// @return Resulting status
   Status CloudInterfaceStart() final;
+
+  /// @brief Starting the interface that handles UDP streams for DIFOP packets
+  /// @return Resulting status
+  Status InfoInterfaceStart();
 
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
@@ -84,6 +102,12 @@ public:
   /// @param calibration_configuration CalibrationConfiguration for the checking
   /// @return Resulting status
   Status GetCalibrationConfiguration(CalibrationConfigurationBase & calibration_configuration);
+
+  /// @brief Getting correction values from DIFOP packet
+  /// @param with_run Automatically executes run() of UdpDriver
+  /// @return Resulting status
+  Status GetLidarCalibrationFromSensor(
+    const std::function<void(const std::string & received_string)> & string_callback);
 
   /// @brief Registering callback for PandarScan
   /// @param scan_callback Callback function
