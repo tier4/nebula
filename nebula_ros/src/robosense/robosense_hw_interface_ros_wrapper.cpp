@@ -12,20 +12,23 @@ ros::RobosenseHwInterfaceRosWrapper::RobosenseHwInterfaceRosWrapper(
     interface_status_ = GetParameters(sensor_configuration_);
     mtx_config_.unlock();
   }
+
   if (Status::OK != interface_status_) {
     RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
     return;
   }
+
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
+
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
     std::make_shared<drivers::RobosenseSensorConfiguration>(sensor_configuration_);
-  if (this->setup_sensor) {
-    hw_interface_.SetSensorConfiguration(
-      std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
-  }
+
+  hw_interface_.SetSensorConfiguration(
+    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
 
   hw_interface_.RegisterScanCallback(std::bind(
     &RobosenseHwInterfaceRosWrapper::ReceiveScanDataCallback, this, std::placeholders::_1));
+
   pandar_scan_pub_ = this->create_publisher<pandar_msgs::msg::PandarScan>(
     "robosense_packets", rclcpp::SensorDataQoS());
 
