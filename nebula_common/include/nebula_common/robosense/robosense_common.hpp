@@ -79,6 +79,29 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
     ifs.close();
     return Status::OK;
   }
+
+  //  inline nebula::Status LoadFromDifop(const std::string & calibration_file)
+
+  /// @brief Saving calibration data (not used)
+  /// @param calibration_file
+  /// @return Resulting status
+  inline nebula::Status SaveFile(const std::string & calibration_file)
+  {
+    std::ofstream ofs(calibration_file);
+    if (!ofs) {
+      return Status::CANNOT_SAVE_FILE;
+    }
+    ofs << "Laser id,Elevation,Azimuth" << std::endl;
+    for (const auto & pair : elev_angle_map) {
+      auto laser_id = pair.first + 1;
+      float elevation = pair.second;
+      float azimuth = azimuth_offset_map[pair.first];
+      ofs << laser_id << "," << elevation << "," << azimuth << std::endl;
+    }
+    ofs.close();
+
+    return Status::OK;
+  }
 };
 
 }  // namespace drivers

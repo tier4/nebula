@@ -1,5 +1,4 @@
-#ifndef NEBULA_WS_ROBOSENSE_SCAN_DECODER_HPP
-#define NEBULA_WS_ROBOSENSE_SCAN_DECODER_HPP
+#pragma once
 
 #include "nebula_common/point_types.hpp"
 #include "nebula_common/robosense/robosense_common.hpp"
@@ -41,5 +40,3 @@ public:
 
 }  // namespace drivers
 }  // namespace nebula
-
-#endif  // NEBULA_WS_ROBOSENSE_SCAN_DECODER_HPP
