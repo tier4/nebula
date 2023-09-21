@@ -153,7 +153,7 @@ Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   std::stringstream calibration;
-  calibration << "Laser ID,Elevation,Azimuth" << std::endl;
+  calibration << "Laser ID,Elevation,Azimuth\n";
 
   size_t channel_num = 0;
   size_t vertical_data_offset = 0;
