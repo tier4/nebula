@@ -80,6 +80,30 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
     return Status::OK;
   }
 
+  /// @brief Loading calibration data (not used)
+  /// @param calibration_content
+  /// @return Resulting status
+  inline nebula::Status LoadFromString(const std::string & calibration_content)
+  {
+    std::stringstream ss;
+    ss << calibration_content;
+
+    std::string header;
+    std::getline(ss, header);
+
+    char sep;
+    int laser_id;
+    float elevation;
+    float azimuth;
+    while (!ss.eof()) {
+      ss >> laser_id >> sep >> elevation >> sep >> azimuth;
+      elev_angle_map[laser_id - 1] = elevation;
+      azimuth_offset_map[laser_id - 1] = azimuth;
+    }
+
+    return Status::OK;
+  }
+
   //  inline nebula::Status LoadFromDifop(const std::string & calibration_file)
 
   /// @brief Saving calibration data (not used)
