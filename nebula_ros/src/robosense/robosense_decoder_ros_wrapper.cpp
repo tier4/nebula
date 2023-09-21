@@ -216,15 +216,7 @@ Status RobosenseDriverRosWrapper::GetParameters(
     calibration_configuration.calibration_file =
       this->get_parameter("calibration_file").as_string();
   }
-  if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("correction_file", "", descriptor);
-    correction_file_path = this->get_parameter("correction_file").as_string();
-  }
+
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
@@ -241,7 +233,8 @@ Status RobosenseDriverRosWrapper::GetParameters(
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
 
-  bool run_local = false;
+  bool run_local = true;
+
   RCLCPP_INFO_STREAM(
     this->get_logger(),
     "Trying to acquire calibration data from sensor: '" << sensor_configuration.sensor_ip << "'");
@@ -249,33 +242,55 @@ Status RobosenseDriverRosWrapper::GetParameters(
   std::string file_path;
 
   if (hw_interface_.InfoInterfaceStart() == Status::OK) {
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+
     RCLCPP_INFO_STREAM(
       this->get_logger(),
       "Acquiring calibration data from sensor: '" << sensor_configuration.sensor_ip << "'");
-    hw_interface_.GetLidarCalibrationFromSensor(
-      [this, &calibration_configuration, &file_path](const std::string & received_string) {
-        RCLCPP_INFO_STREAM(this->get_logger(), received_string);
-      });
+
+    hw_interface_.GetLidarCalibrationFromSensor([this, &calibration_configuration, &file_path,
+                                                 &run_local](const std::string & received_string) {
+      RCLCPP_INFO_STREAM(
+        this->get_logger(), "Received calibration data from sensor: '" << received_string);
+
+      const auto load_status = calibration_configuration.LoadFromString(received_string);
+      if (load_status == Status::OK) {
+        RCLCPP_INFO_STREAM(this->get_logger(), "Loaded calibration data from sensor. ");
+        run_local = false;
+      } else {
+        RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to load calibration data from sensor. ");
+      }
+
+      const auto save_status = calibration_configuration.SaveFile(
+        "src/nebula_decoders/calibration/robosense/calibration.csv");
+      if (save_status == Status::OK) {
+        RCLCPP_INFO_STREAM(this->get_logger(), "Saved calibration data from sensor. ");
+      } else {
+        RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to save calibration data from sensor. ");
+      }
+    });
   }
 
-  if (calibration_configuration.calibration_file.empty()) {
-    RCLCPP_ERROR_STREAM(
-      this->get_logger(),
-      "Empty Calibration_file File: '" << calibration_configuration.calibration_file << "'");
-    return Status::INVALID_CALIBRATION_FILE;
-  } else {
-    auto cal_status =
-      calibration_configuration.LoadFromFile(calibration_configuration.calibration_file);
-
-    if (cal_status != Status::OK) {
+  if (run_local) {
+    if (calibration_configuration.calibration_file.empty()) {
       RCLCPP_ERROR_STREAM(
         this->get_logger(),
-        "Given Calibration File: '" << calibration_configuration.calibration_file << "'");
-      return cal_status;
+        "Empty Calibration_file File: '" << calibration_configuration.calibration_file << "'");
+      return Status::INVALID_CALIBRATION_FILE;
     } else {
-      RCLCPP_INFO_STREAM(
-        this->get_logger(),
-        "Load calibration data from: '" << calibration_configuration.calibration_file << "'");
+      auto cal_status =
+        calibration_configuration.LoadFromFile(calibration_configuration.calibration_file);
+
+      if (cal_status != Status::OK) {
+        RCLCPP_ERROR_STREAM(
+          this->get_logger(),
+          "Given Calibration File: '" << calibration_configuration.calibration_file << "'");
+        return cal_status;
+      } else {
+        RCLCPP_INFO_STREAM(
+          this->get_logger(),
+          "Load calibration data from: '" << calibration_configuration.calibration_file << "'");
+      }
     }
   }
 
