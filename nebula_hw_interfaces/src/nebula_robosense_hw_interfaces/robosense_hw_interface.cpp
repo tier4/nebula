@@ -70,6 +70,7 @@ void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> 
   }
 
   info_buffer_.emplace(buffer);
+  cloud_udp_driver_info->receiver()->close();
 }
 
 Status RobosenseHwInterface::CloudInterfaceStart()
