@@ -186,7 +186,7 @@ Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
     double horizontal_angle = static_cast<double>(horizontal_angle_data) / 100.0;
     if (info_buffer[horizontal_offset] == 0x01) horizontal_angle = -horizontal_angle;
 
-    calibration << channel << "," << vertical_angle << "," << horizontal_angle << std::endl;
+    calibration << channel + 1 << "," << vertical_angle << "," << horizontal_angle << std::endl;
   }
 
   string_callback(calibration.str());
