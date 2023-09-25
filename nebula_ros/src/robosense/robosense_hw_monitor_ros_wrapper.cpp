@@ -1,0 +1,272 @@
+#include "nebula_ros/robosense/robosense_hw_monitor_ros_wrapper.hpp"
+
+#include <memory>
+
+namespace nebula
+{
+namespace ros
+{
+RobosenseHwMonitorRosWrapper::RobosenseHwMonitorRosWrapper(const rclcpp::NodeOptions & options)
+: rclcpp::Node("robosense_hw_monitor_ros_wrapper", options),
+  hw_interface_(),
+  diagnostics_updater_(this)
+{
+  interface_status_ = GetParameters(sensor_configuration_);
+
+  auto sensor_cfg_ptr =
+    std::make_shared<drivers::RobosenseSensorConfiguration>(sensor_configuration_);
+
+  hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
+  hw_interface_.SetSensorConfiguration(sensor_cfg_ptr);
+
+  std::this_thread::sleep_for(std::chrono::seconds(3));
+
+  hw_interface_.InfoInterfaceStart();
+
+  // Wait for the first DIFOP packet
+  while (rclcpp::ok() && !hw_interface_.is_info_received) {
+    RCLCPP_INFO_STREAM(this->get_logger(), "Waiting for DIFOP packet");
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
+  RCLCPP_INFO_STREAM(this->get_logger(), "Got DIFOP packet");
+
+  info_driver_ =
+    std::make_unique<drivers::RobosenseInfoDriver>(sensor_cfg_ptr, calibration_configuration_);
+
+  RCLCPP_INFO_STREAM(this->get_logger(), "Decoding packet");
+  info_driver_->DecodeInfoPacket(hw_interface_.GetInfoPacketFromSensor());
+  RCLCPP_INFO_STREAM(this->get_logger(), "Decoded packet");
+
+  current_sensor_info_ = info_driver_->GetSensorInfo();
+  current_info_time_ = std::make_unique<rclcpp::Time>(this->get_clock()->now());
+
+  hardware_id_ = current_sensor_info_["model"] + ": " + current_sensor_info_["serial_number"];
+
+  InitializeRobosenseDiagnostics();
+
+  //  set_param_res_ = this->add_on_set_parameters_callback(
+  //    std::bind(&RobosenseHwMonitorRosWrapper::paramCallback, this, std::placeholders::_1));
+}
+//
+Status RobosenseHwMonitorRosWrapper::MonitorStart()
+{
+  //  return interface_status_;
+}
+
+Status RobosenseHwMonitorRosWrapper::MonitorStop()
+{
+  return Status::OK;
+}
+Status RobosenseHwMonitorRosWrapper::Shutdown()
+{
+  return Status::OK;
+}
+//
+Status RobosenseHwMonitorRosWrapper::InitializeHwMonitor(  // todo: don't think this is needed
+  const drivers::SensorConfigurationBase & sensor_configuration)
+{
+  std::stringstream ss;
+  ss << sensor_configuration;
+  RCLCPP_DEBUG_STREAM(this->get_logger(), ss.str());
+  return Status::OK;
+}
+
+Status RobosenseHwMonitorRosWrapper::GetParameters(
+  drivers::RobosenseSensorConfiguration & sensor_configuration)
+{
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("sensor_model", "");
+    sensor_configuration.sensor_model =
+      nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("return_mode", "", descriptor);
+    sensor_configuration.return_mode = nebula::drivers::ReturnModeFromStringRobosense(
+      this->get_parameter("return_mode").as_string());
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("host_ip", "255.255.255.255", descriptor);
+    sensor_configuration.host_ip = this->get_parameter("host_ip").as_string();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("sensor_ip", "192.168.1.201", descriptor);
+    sensor_configuration.sensor_ip = this->get_parameter("sensor_ip").as_string();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("frame_id", "pandar", descriptor);
+    sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<uint16_t>("data_port", 2368, descriptor);
+    sensor_configuration.data_port = this->get_parameter("data_port").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<uint16_t>("gnss_port", 2369, descriptor);
+    sensor_configuration.gnss_port = this->get_parameter("gnss_port").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
+    rcl_interfaces::msg::FloatingPointRange range;
+    range.set__from_value(0).set__to_value(360).set__step(0.01);
+    descriptor.floating_point_range = {range};
+    this->declare_parameter<double>("scan_phase", 0., descriptor);
+    sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<uint16_t>("packet_mtu_size", 1500, descriptor);
+    sensor_configuration.packet_mtu_size = this->get_parameter("packet_mtu_size").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    rcl_interfaces::msg::IntegerRange range;
+    if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::HESAI_PANDARAT128) {
+      descriptor.additional_constraints = "200, 300, 400, 500";
+      range.set__from_value(200).set__to_value(500).set__step(100);
+      descriptor.integer_range = {range};
+      this->declare_parameter<uint16_t>("rotation_speed", 200, descriptor);
+    } else {
+      descriptor.additional_constraints = "300, 600, 1200";
+      range.set__from_value(300).set__to_value(1200).set__step(300);
+      descriptor.integer_range = {range};
+      this->declare_parameter<uint16_t>("rotation_speed", 600, descriptor);
+    }
+    sensor_configuration.rotation_speed = this->get_parameter("rotation_speed").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    rcl_interfaces::msg::IntegerRange range;
+    range.set__from_value(0).set__to_value(360).set__step(1);
+    descriptor.integer_range = {range};
+    this->declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
+    sensor_configuration.cloud_min_angle = this->get_parameter("cloud_min_angle").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    rcl_interfaces::msg::IntegerRange range;
+    range.set__from_value(0).set__to_value(360).set__step(1);
+    descriptor.integer_range = {range};
+    this->declare_parameter<uint16_t>("cloud_max_angle", 360, descriptor);
+    sensor_configuration.cloud_max_angle = this->get_parameter("cloud_max_angle").as_int();
+  }
+
+  if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
+    return Status::INVALID_SENSOR_MODEL;
+  }
+  if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
+    return Status::INVALID_ECHO_MODE;
+  }
+  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {  // ||
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "milliseconds";
+    this->declare_parameter<uint16_t>("diag_span", 1000, descriptor);
+    diag_span_ = this->get_parameter("diag_span").as_int();
+  }
+
+  RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
+  return Status::OK;
+}
+
+void RobosenseHwMonitorRosWrapper::InitializeRobosenseDiagnostics()
+{
+  RCLCPP_INFO_STREAM(this->get_logger(), "InitializeRobosenseDiagnostics");
+  diagnostics_updater_.setHardwareID(hardware_id_);
+  RCLCPP_INFO_STREAM(this->get_logger(), "hardware_id: " + hardware_id_);
+
+  diagnostics_updater_.add(
+    "robosense_status", this, &RobosenseHwMonitorRosWrapper::RobosenseCheckStatus);
+
+  auto on_timer_status = [this] { OnRobosenseStatusTimer(); };
+  diagnostics_status_timer_ =
+    this->create_wall_timer(std::chrono::milliseconds(diag_span_), std::move(on_timer_status));
+
+  RCLCPP_DEBUG_STREAM(get_logger(), "add_timer");
+}
+
+void RobosenseHwMonitorRosWrapper::OnRobosenseStatusTimer()
+{
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "OnRobosenseStatusTimer" << std::endl);
+  info_driver_->DecodeInfoPacket(hw_interface_.GetInfoPacketFromSensor());
+  RCLCPP_INFO_STREAM(this->get_logger(), "Decoded packet");
+  current_sensor_info_ = info_driver_->GetSensorInfo();
+  current_info_time_ = std::make_unique<rclcpp::Time>(this->get_clock()->now());
+}
+
+void RobosenseHwMonitorRosWrapper::RobosenseCheckStatus(
+  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+{
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+
+  for (const auto & info : current_sensor_info_) {
+    diagnostics.add(info.first, info.second);
+  }
+}
+
+// RobosenseHwMonitorRosWrapper::~RobosenseHwMonitorRosWrapper()
+//{
+// }
+
+RCLCPP_COMPONENTS_REGISTER_NODE(RobosenseHwMonitorRosWrapper)
+}  // namespace ros
+}  // namespace nebula

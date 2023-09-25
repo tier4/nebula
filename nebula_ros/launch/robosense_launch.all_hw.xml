@@ -17,6 +17,8 @@
     <arg name="cloud_max_angle" default="360" description="Field of View, end degrees."/>
 
     <arg name="setup_sensor" default="True" description="Enable sensor setup on hw-driver."/>
+    <arg name="diag_span" default="1000" description="milliseconds"/>
+
 
     <node pkg="nebula_ros" exec="robosense_hw_interface_ros_wrapper_node"
           name="robosense_hw_driver" output="screen">
@@ -45,6 +47,24 @@
         <param name="host_ip" value="$(var host_ip)"/>
         <param name="calibration_file" value="$(var calibration_file)"/>
         <param name="gnss_port" value="$(var gnss_port)"/>
+    </node>
+
+    <node pkg="nebula_ros" exec="robosense_hw_monitor_ros_wrapper_node"
+          name="robosense_hw_monitor_$(var frame_id)" output="screen">
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="return_mode" value="$(var return_mode)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="scan_phase" value="$(var scan_phase)"/>
+        <param name="sensor_ip" value="$(var sensor_ip)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="host_ip" value="$(var host_ip)"/>
+        <param name="data_port" value="$(var data_port)"/>
+        <param name="gnss_port" value="$(var gnss_port)"/>
+        <param name="packet_mtu_size" value="$(var packet_mtu_size)"/>
+        <param name="rotation_speed" value="$(var rotation_speed)"/>
+        <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>
+        <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
+        <param name="diag_span" value="$(var diag_span)"/>
     </node>
 
 </launch>

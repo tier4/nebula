@@ -14,12 +14,13 @@ namespace drivers
 
 /// @brief Base class for all sensor definitions
 /// @tparam PacketT The packet type of the sensor
-template <typename PacketT>
+template <typename PacketT, typename InfoPacketT>
 class RobosenseSensor
 {
 private:
 public:
   typedef PacketT packet_t;
+  typedef InfoPacketT info_t;
   typedef class AngleCorrectorCalibrationBased<PacketT::N_CHANNELS, PacketT::DEGREE_SUBDIVISIONS>
     angle_corrector_t;
 

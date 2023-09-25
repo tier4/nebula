@@ -56,11 +56,52 @@ struct PacketHelios : public PacketBase<12, 32, 2, 100>
   boost::endian::big_uint48_buf_t tail;
 };
 
+struct InfoPacketHelios : public InfoPacketBase
+{
+  boost::endian::big_uint64_buf_t header;
+  boost::endian::big_uint16_buf_t motor_speed;
+  Ethernet ethernet;
+  FovSetting fov_setting;
+  boost::endian::big_uint16_buf_t reserved_first;
+  boost::endian::big_uint16_buf_t phase_lock;
+  boost::endian::big_uint40_buf_t top_firmware_version;
+  boost::endian::big_uint40_buf_t bottom_firmware_version;
+  boost::endian::big_uint40_buf_t bottom_software_version;
+  boost::endian::big_uint40_buf_t motor_firmware_version;
+  boost::endian::big_uint24_buf_t sensor_hw_version;
+  boost::endian::big_uint32_buf_t web_page_version;
+  boost::endian::big_uint32_buf_t top_backup_crc;
+  boost::endian::big_uint32_buf_t bottom_backup_crc;
+  boost::endian::big_uint32_buf_t software_backup_crc;
+  boost::endian::big_uint32_buf_t webpage_backup_crc;
+  boost::endian::big_uint32_buf_t ethernet_gateway;
+  boost::endian::big_uint32_buf_t subnet_mask;
+  uint8_t reserved_second[201];
+  boost::endian::big_uint48_buf_t serial_number;
+  boost::endian::big_uint16_buf_t zero_angle_offset;
+  boost::endian::big_uint8_buf_t return_mode;
+  boost::endian::big_uint8_buf_t time_sync_mode;
+  boost::endian::big_uint8_buf_t sync_status;
+  Timestamp time;
+  OperatingStatus operating_status;
+  uint8_t reserved_third[17];
+  FaultDiagnosis fault_diagnosis;
+  boost::endian::big_uint8_buf_t code_wheel_status;
+  boost::endian::big_uint8_buf_t pps_trigger_mode;
+  uint8_t reserved_fourth[20];
+  boost::endian::big_uint8_buf_t gprmc[86];
+  CorrectedVerticalAngle corrected_vertical;
+  CorrectedHorizontalAngle corrected_horizontal;
+  uint8_t reserved_fifth[586];
+  boost::endian::big_uint16_buf_t tail;
+};
+
 #pragma pack(pop)
 
 }  // namespace robosense_packet
 
-class Helios : public RobosenseSensor<robosense_packet::PacketHelios>
+class Helios
+: public RobosenseSensor<robosense_packet::PacketHelios, robosense_packet::InfoPacketHelios>
 {
 private:
   static constexpr int firing_time_offset_ns_single_[12][32] = {
