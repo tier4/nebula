@@ -269,6 +269,7 @@ Status RobosenseDriverRosWrapper::GetParameters(
         RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to save calibration data from sensor. ");
       }
     });
+    hw_interface_.InfoInterfaceStop();
   }
 
   if (run_local) {

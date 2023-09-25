@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <ctime>
 #include <stdexcept>
+#include <string>
 
 namespace nebula
 {
@@ -55,6 +56,82 @@ struct PacketBase
   static constexpr size_t MAX_RETURNS = maxReturns;
   static constexpr size_t DEGREE_SUBDIVISIONS = degreeSubdivisions;
 };
+
+struct InfoPacketBase
+{
+};
+
+struct IpAddress
+{
+  boost::endian::big_uint8_buf_t first_octet;
+  boost::endian::big_uint8_buf_t second_octet;
+  boost::endian::big_uint8_buf_t third_octet;
+  boost::endian::big_uint8_buf_t fourth_octet;
+
+  [[nodiscard]] std::string to_string() const
+  {
+    return std::to_string(first_octet.value()) + "." + std::to_string(second_octet.value()) + "." +
+           std::to_string(third_octet.value()) + "." + std::to_string(fourth_octet.value());
+  }
+};
+
+struct Ethernet
+{
+  IpAddress lidar_ip;
+  IpAddress dest_pc_ip;
+  boost::endian::big_uint48_buf_t mac_addr;
+  boost::endian::big_uint16_buf_t lidar_out_msop_port;
+  boost::endian::big_uint16_buf_t pc_dest_msop_port;
+  boost::endian::big_uint16_buf_t lidar_out_difop_port;
+  boost::endian::big_uint16_buf_t pc_dest_difop_port;
+};
+
+struct FovSetting
+{
+  boost::endian::big_uint16_buf_t fov_start;
+  boost::endian::big_uint16_buf_t fov_end;
+};
+
+struct OperatingStatus
+{
+  boost::endian::big_uint16_buf_t i_dat;
+  boost::endian::big_uint16_buf_t v_dat;
+  boost::endian::big_uint16_buf_t v_dat_12v;
+  boost::endian::big_uint16_buf_t v_dat_5v;
+  boost::endian::big_uint16_buf_t v_dat_2v5;
+  boost::endian::big_uint16_buf_t v_dat_apd;
+};
+
+struct FaultDiagnosis
+{
+  boost::endian::big_uint16_buf_t temperature1;
+  boost::endian::big_uint16_buf_t temperature2;
+  boost::endian::big_uint16_buf_t temperature3;
+  boost::endian::big_uint16_buf_t temperature4;
+  boost::endian::big_uint16_buf_t temperature5;
+  boost::endian::big_uint16_buf_t r_rpm;
+  boost::endian::big_uint8_buf_t lane_up;
+  boost::endian::big_uint16_buf_t lane_up_cnt;
+  boost::endian::big_uint16_buf_t top_status;
+  boost::endian::big_uint8_buf_t gps_status;
+};
+
+struct ChannelAngleCorrection
+{
+  boost::endian::big_uint8_buf_t sign;
+  boost::endian::big_uint16_buf_t angle;
+};
+
+struct CorrectedVerticalAngle
+{
+  ChannelAngleCorrection angles[32];
+};
+
+struct CorrectedHorizontalAngle
+{
+  ChannelAngleCorrection angles[32];
+};
+
 #pragma pack(pop)
 
 /// @brief Get the number of returns for a given return mode

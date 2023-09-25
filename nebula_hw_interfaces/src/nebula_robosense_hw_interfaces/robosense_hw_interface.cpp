@@ -70,7 +70,7 @@ void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> 
   }
 
   info_buffer_.emplace(buffer);
-  cloud_udp_driver_info->receiver()->close();
+  is_info_received = true;
 }
 
 Status RobosenseHwInterface::CloudInterfaceStart()
@@ -97,6 +97,9 @@ Status RobosenseHwInterface::InfoInterfaceStart()
 {
   try {
     std::cout << "Starting UDP server for info packets on: " << *sensor_configuration_ << std::endl;
+    PrintInfo(
+      "Starting UDP server for info packets on: " + sensor_configuration_->sensor_ip + ":" +
+      std::to_string(sensor_configuration_->gnss_port));
     cloud_udp_driver_info->init_receiver(
       sensor_configuration_->host_ip, sensor_configuration_->gnss_port);
     cloud_udp_driver_info->receiver()->open();
@@ -113,6 +116,12 @@ Status RobosenseHwInterface::InfoInterfaceStart()
   }
 
   std::this_thread::sleep_for(std::chrono::seconds(1));
+  return Status::OK;
+}
+
+Status RobosenseHwInterface::InfoInterfaceStop()
+{
+  cloud_udp_driver_info->receiver()->close();
   return Status::OK;
 }
 
@@ -191,6 +200,11 @@ Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
 
   string_callback(calibration.str());
   return Status::OK;
+}
+
+std::vector<uint8_t> RobosenseHwInterface::GetInfoPacketFromSensor()
+{
+  return *info_buffer_;
 }
 
 Status RobosenseHwInterface::RegisterScanCallback(

@@ -64,6 +64,8 @@ private:
   void PrintDebug(std::string debug);
 
 public:
+  std::atomic<bool> is_info_received{false};
+
   /// @brief Constructor
   RobosenseHwInterface();
 
@@ -87,6 +89,10 @@ public:
   /// @return Resulting status
   Status CloudInterfaceStop() final;
 
+  /// @brief Stopping the interface that handles UDP streams for DIFOP packets
+  /// @return Resulting status
+  Status InfoInterfaceStop();
+
   /// @brief Setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
@@ -108,6 +114,8 @@ public:
   /// @return Resulting status
   Status GetLidarCalibrationFromSensor(
     const std::function<void(const std::string & received_string)> & string_callback);
+
+  std::vector<uint8_t> GetInfoPacketFromSensor();
 
   /// @brief Registering callback for PandarScan
   /// @param scan_callback Callback function
