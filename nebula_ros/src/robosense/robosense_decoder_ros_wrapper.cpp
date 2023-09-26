@@ -247,27 +247,35 @@ Status RobosenseDriverRosWrapper::GetParameters(
                               << sensor_configuration.gnss_port
                               << "' Local calibration file will be used.");
     } else {
-      hw_interface_.GetLidarCalibrationFromSensor([this, &calibration_configuration, &run_local](
-                                                    const std::string & received_string) {
-        RCLCPP_INFO_STREAM(
-          this->get_logger(), "Received calibration data from sensor: '" << received_string);
+      hw_interface_.GetLidarCalibrationFromSensor(
+        [this, &sensor_configuration, &calibration_configuration, &run_local](
+          const std::string & calibration_received,
+          const nebula::drivers::ReturnMode & return_mode_received) {
+          sensor_configuration.return_mode = return_mode_received;
+          RCLCPP_INFO_STREAM(
+            this->get_logger(), "Set return mode from sensor as: " << return_mode_received);
 
-        const auto load_status = calibration_configuration.LoadFromString(received_string);
-        if (load_status == Status::OK) {
-          RCLCPP_INFO_STREAM(this->get_logger(), "Loaded calibration data from sensor. ");
-          run_local = false;
-        } else {
-          RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to load calibration data from sensor. ");
-        }
+          RCLCPP_INFO_STREAM(
+            this->get_logger(), "Received calibration data from sensor: '" << calibration_received);
 
-        const auto save_status = calibration_configuration.SaveFile(
-          CreateCalibrationPath(calibration_configuration.calibration_file));
-        if (save_status == Status::OK) {
-          RCLCPP_INFO_STREAM(this->get_logger(), "Saved calibration data from sensor. ");
-        } else {
-          RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to save calibration data from sensor. ");
-        }
-      });
+          const auto load_status = calibration_configuration.LoadFromString(calibration_received);
+          if (load_status == Status::OK) {
+            RCLCPP_INFO_STREAM(this->get_logger(), "Loaded calibration data from sensor. ");
+            run_local = false;
+          } else {
+            RCLCPP_ERROR_STREAM(
+              this->get_logger(), "Failed to load calibration data from sensor. ");
+          }
+
+          const auto save_status = calibration_configuration.SaveFile(
+            CreateCalibrationPath(calibration_configuration.calibration_file));
+          if (save_status == Status::OK) {
+            RCLCPP_INFO_STREAM(this->get_logger(), "Saved calibration data from sensor. ");
+          } else {
+            RCLCPP_ERROR_STREAM(
+              this->get_logger(), "Failed to save calibration data from sensor. ");
+          }
+        });
       hw_interface_.InfoInterfaceStop();
     }
   }

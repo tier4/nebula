@@ -172,7 +172,8 @@ Status RobosenseHwInterface::GetCalibrationConfiguration(
 }
 
 Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
-  const std::function<void(const std::string & received_string)> & string_callback)
+  const std::function<void(
+    const std::string & calibration_received, const ReturnMode & return_mode_received)> & callback)
 {
   if (!info_buffer_.has_value()) {
     PrintInfo("Info packet is not received yet.");
@@ -185,11 +186,24 @@ Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
   size_t channel_num = 0;
   size_t vertical_data_offset = 0;
   size_t horizontal_data_offset = 0;
+  ReturnMode return_mode = ReturnMode::UNKNOWN;
 
   if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_HELIOS_5515) {
     channel_num = 32;
     vertical_data_offset = HELIOS5515_CORRECTED_VERTICAL_ANGLE_OFFSET;
     horizontal_data_offset = HELIOS5515_CORRECTED_HORIZONTAL_ANGLE_OFFSET;
+
+    uint8_t return_mode_data = info_buffer_.value()[HELIOS5515_RETURN_MODE_OFFSET];
+    if (return_mode_data == 0x00) {
+      return_mode = ReturnMode::DUAL;
+    } else if (return_mode_data == 0x04) {
+      return_mode = ReturnMode::STRONGEST;
+    } else if (return_mode_data == 0x05) {
+      return_mode = ReturnMode::LAST;
+    } else if (return_mode_data == 0x06) {
+      return_mode = ReturnMode::FIRST;
+    }
+
   } else if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL) {
     channel_num = 32;
   } else {
@@ -215,7 +229,7 @@ Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
     calibration << channel + 1 << "," << vertical_angle << "," << horizontal_angle << std::endl;
   }
 
-  string_callback(calibration.str());
+  callback(calibration.str(), return_mode);
   return Status::OK;
 }
 
