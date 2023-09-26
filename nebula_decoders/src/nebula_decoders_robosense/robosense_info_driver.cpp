@@ -47,7 +47,6 @@ Status RobosenseInfoDriver::SetCalibrationConfiguration(
 Status RobosenseInfoDriver::DecodeInfoPacket(const std::vector<uint8_t> & packet)
 {
   const auto parsed = info_decoder_->parsePacket(packet);
-  std::cout << "parsed: " << parsed << std::endl;
   if (parsed) return nebula::Status::OK;
   return nebula::Status::ERROR_1;
 }
