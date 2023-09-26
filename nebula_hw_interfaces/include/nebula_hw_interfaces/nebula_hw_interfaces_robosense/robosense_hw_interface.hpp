@@ -77,6 +77,8 @@ public:
   /// @param buffer Buffer containing the data received from the UDP socket
   void ReceiveInfoPacketCallback(const std::vector<uint8_t> & buffer);
 
+  Status WaitForSensorInfo(const std::chrono::milliseconds & timeout) const;
+
   /// @brief Starting the interface that handles UDP streams for MSOP packets
   /// @return Resulting status
   Status CloudInterfaceStart() final;

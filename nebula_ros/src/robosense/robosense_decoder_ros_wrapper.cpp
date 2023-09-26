@@ -248,6 +248,14 @@ Status RobosenseDriverRosWrapper::GetParameters(
       this->get_logger(),
       "Acquiring calibration data from sensor: '" << sensor_configuration.sensor_ip << "'");
 
+    if (hw_interface_.WaitForSensorInfo(std::chrono::seconds(3)) != Status::OK) {
+      RCLCPP_WARN_STREAM(
+        this->get_logger(), "Failed to acquire calibration data from sensor: '"
+                              << sensor_configuration.sensor_ip << ":"
+                              << sensor_configuration.gnss_port
+                              << "' Local calibration file will be used.");
+    }
+
     hw_interface_.GetLidarCalibrationFromSensor([this, &calibration_configuration, &file_path,
                                                  &run_local](const std::string & received_string) {
       RCLCPP_INFO_STREAM(

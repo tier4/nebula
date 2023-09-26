@@ -73,6 +73,20 @@ void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> 
   is_info_received = true;
 }
 
+Status RobosenseHwInterface::WaitForSensorInfo(const std::chrono::milliseconds & timeout) const
+{
+  const auto start = std::chrono::system_clock::now();
+  while (rclcpp::ok() && !is_info_received) {
+    const auto now = std::chrono::system_clock::now();
+    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
+    if (elapsed > timeout) {
+      return Status::ERROR_1;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+  return Status::OK;
+}
+
 Status RobosenseHwInterface::CloudInterfaceStart()
 {
   try {
@@ -162,6 +176,11 @@ Status RobosenseHwInterface::GetCalibrationConfiguration(
 Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
   const std::function<void(const std::string & received_string)> & string_callback)
 {
+  if (!info_buffer_.has_value()) {
+    PrintInfo("Info packet is not received yet.");
+    return Status::ERROR_1;
+  }
+
   std::stringstream calibration;
   calibration << "Laser ID,Elevation,Azimuth\n";
 
