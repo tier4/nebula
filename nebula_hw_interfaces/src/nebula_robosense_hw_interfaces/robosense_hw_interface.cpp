@@ -62,8 +62,6 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
 
 void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> & buffer)
 {
-  PrintInfo("Info Packet Received");
-
   if (!is_valid_info_packet_(buffer.size())) {
     PrintDebug("Invalid Packet: " + std::to_string(buffer.size()));
     return;

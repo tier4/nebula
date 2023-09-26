@@ -52,6 +52,8 @@ class RobosenseDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrap
     drivers::RobosenseSensorConfiguration & sensor_configuration,
     drivers::RobosenseCalibrationConfiguration & calibration_configuration);
 
+  std::string CreateCalibrationPath(const std::string & original_path);
+
   /// @brief Convert seconds to chrono::nanoseconds
   /// @param seconds
   /// @return chrono::nanoseconds
