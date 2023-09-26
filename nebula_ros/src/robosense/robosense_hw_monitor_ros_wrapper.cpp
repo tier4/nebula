@@ -22,7 +22,6 @@ RobosenseHwMonitorRosWrapper::RobosenseHwMonitorRosWrapper(const rclcpp::NodeOpt
 
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
   hw_interface_.SetSensorConfiguration(sensor_cfg_ptr);
-
   hw_interface_.InfoInterfaceStart();
 
   // Wait for the first DIFOP packet
@@ -39,14 +38,18 @@ RobosenseHwMonitorRosWrapper::RobosenseHwMonitorRosWrapper(const rclcpp::NodeOpt
   current_sensor_info_ = info_driver_->GetSensorInfo();
   current_info_time_ = std::make_unique<rclcpp::Time>(this->get_clock()->now());
 
-  hardware_id_ = current_sensor_info_["model"] + ": " + current_sensor_info_["serial_number"];
+  RCLCPP_INFO_STREAM(this->get_logger(), "Model:" << sensor_configuration_.sensor_model);
+  RCLCPP_INFO_STREAM(this->get_logger(), "Serial:" << current_sensor_info_["serial_number"]);
+
+  hardware_id_ = nebula::drivers::SensorModelToString(sensor_configuration_.sensor_model) + ": " +
+                 current_sensor_info_["serial_number"];
 
   InitializeRobosenseDiagnostics();
 
-  //  set_param_res_ = this->add_on_set_parameters_callback(
-  //    std::bind(&RobosenseHwMonitorRosWrapper::paramCallback, this, std::placeholders::_1));
+  set_param_res_ = this->add_on_set_parameters_callback(
+    std::bind(&RobosenseHwMonitorRosWrapper::paramCallback, this, std::placeholders::_1));
 }
-//
+
 Status RobosenseHwMonitorRosWrapper::MonitorStart()
 {
   return interface_status_;
@@ -61,7 +64,7 @@ Status RobosenseHwMonitorRosWrapper::Shutdown()
   return Status::OK;
 }
 //
-Status RobosenseHwMonitorRosWrapper::InitializeHwMonitor(  // todo: don't think this is needed
+Status RobosenseHwMonitorRosWrapper::InitializeHwMonitor(
   const drivers::SensorConfigurationBase & sensor_configuration)
 {
   std::stringstream ss;
@@ -247,7 +250,6 @@ void RobosenseHwMonitorRosWrapper::OnRobosenseStatusTimer()
 {
   RCLCPP_DEBUG_STREAM(this->get_logger(), "OnRobosenseStatusTimer" << std::endl);
   info_driver_->DecodeInfoPacket(hw_interface_.GetInfoPacketFromSensor());
-  RCLCPP_INFO_STREAM(this->get_logger(), "Decoded packet");
   current_sensor_info_ = info_driver_->GetSensorInfo();
   current_info_time_ = std::make_unique<rclcpp::Time>(this->get_clock()->now());
 }
@@ -260,6 +262,35 @@ void RobosenseHwMonitorRosWrapper::RobosenseCheckStatus(
   for (const auto & info : current_sensor_info_) {
     diagnostics.add(info.first, info.second);
   }
+
+  diagnostics.summary(level, "OK");
+}
+
+rcl_interfaces::msg::SetParametersResult RobosenseHwMonitorRosWrapper::paramCallback(
+  const std::vector<rclcpp::Parameter> & parameters)
+{
+  RCLCPP_DEBUG_STREAM(get_logger(), "add_on_set_parameters_callback");
+  RCLCPP_DEBUG_STREAM(get_logger(), parameters);
+  RCLCPP_DEBUG_STREAM(get_logger(), sensor_configuration_);
+  RCLCPP_INFO_STREAM(this->get_logger(), parameters);
+
+  drivers::RobosenseSensorConfiguration new_param{sensor_configuration_};
+  RCLCPP_INFO_STREAM(this->get_logger(), new_param);
+  uint16_t new_diag_span = 0;
+  if (get_param(parameters, "diag_span", new_diag_span)) {
+    sensor_configuration_ = new_param;
+    RCLCPP_INFO_STREAM(this->get_logger(), "Update sensor_configuration");
+    std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
+      std::make_shared<drivers::RobosenseSensorConfiguration>(sensor_configuration_);
+    RCLCPP_DEBUG_STREAM(this->get_logger(), "hw_interface_.SetSensorConfiguration");
+  }
+
+  auto result = std::make_shared<rcl_interfaces::msg::SetParametersResult>();
+  result->successful = true;
+  result->reason = "success";
+
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "add_on_set_parameters_callback success");
+  return *result;
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(RobosenseHwMonitorRosWrapper)

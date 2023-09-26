@@ -85,6 +85,14 @@ private:
   /// @param diagnostics DiagnosticStatusWrapper
   void RobosenseCheckStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
+  /// @brief rclcpp parameter callback
+  /// @param parameters Received parameters
+  /// @return SetParametersResult
+  rcl_interfaces::msg::SetParametersResult paramCallback(
+    const std::vector<rclcpp::Parameter> & parameters);
+
+  OnSetParametersCallbackHandle::SharedPtr set_param_res_;
+
   rclcpp::TimerBase::SharedPtr diagnostics_status_timer_;
   std::map<std::string, std::string> current_sensor_info_;
 

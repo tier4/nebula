@@ -35,12 +35,7 @@ public:
   /// @return Whether the packet was parsed successfully
   bool parsePacket(const std::vector<uint8_t> & raw_packet) override
   {
-    RCLCPP_INFO_STREAM(logger_, "Parsing packet");
-    RCLCPP_INFO_STREAM(logger_, "Packet length: " << raw_packet.size());
-
     const auto packet_size = raw_packet.size();
-    RCLCPP_INFO_STREAM(logger_, "Packet size: " << packet_size);
-    RCLCPP_INFO_STREAM(logger_, "Expected size: " << sizeof(typename SensorT::info_t));
     if (packet_size < sizeof(typename SensorT::info_t)) {
       RCLCPP_ERROR_STREAM(
         logger_, "Packet size mismatch:" << packet_size << " | Expected at least:"
@@ -48,16 +43,13 @@ public:
       return false;
     }
     try {
-      RCLCPP_INFO_STREAM(logger_, "Mecpying packet");
       if (std::memcpy(&packet_, raw_packet.data(), sizeof(typename SensorT::info_t)) == &packet_) {
-        RCLCPP_INFO_STREAM(logger_, "Packet memcopy success");
         return true;
       }
     } catch (const std::exception & e) {
       RCLCPP_ERROR_STREAM(logger_, "Packet memcopy failed: " << e.what());
     }
 
-    RCLCPP_ERROR(logger_, "Packet memcopy failed");
     return false;
   }
 
@@ -102,11 +94,21 @@ public:
     sensor_info["bottom_backup_crc"] = std::to_string(packet_.bottom_backup_crc.value());
     sensor_info["software_backup_crc"] = std::to_string(packet_.software_backup_crc.value());
     sensor_info["webpage_backup_crc"] = std::to_string(packet_.webpage_backup_crc.value());
-    sensor_info["ethernet_gateway"] = std::to_string(packet_.ethernet_gateway.value());
-    sensor_info["subnet_mask"] = std::to_string(packet_.subnet_mask.value());
+    sensor_info["ethernet_gateway"] = packet_.ethernet_gateway.to_string();
+    sensor_info["subnet_mask"] = packet_.subnet_mask.to_string();
     sensor_info["serial_number"] = std::to_string(packet_.serial_number.value());
     sensor_info["zero_angle_offset"] = std::to_string(packet_.zero_angle_offset.value());
-    sensor_info["return_mode"] = std::to_string(packet_.return_mode.value());
+
+    if (packet_.return_mode.value() == 0x00) {
+      sensor_info["return_mode"] = "dual";
+    } else if (packet_.return_mode.value() == 0x04) {
+      sensor_info["return_mode"] = "strongest";
+    } else if (packet_.return_mode.value() == 0x05) {
+      sensor_info["return_mode"] = "last";
+    } else if (packet_.return_mode.value() == 0x06) {
+      sensor_info["return_mode"] = "first";
+    }
+
     sensor_info["time_sync_mode"] = std::to_string(packet_.time_sync_mode.value());
     sensor_info["sync_status"] = std::to_string(packet_.sync_status.value());
     sensor_info["time"] = std::to_string(packet_.time.get_time_in_ns());

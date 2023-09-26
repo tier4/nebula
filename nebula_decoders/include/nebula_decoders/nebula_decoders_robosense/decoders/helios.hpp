@@ -74,8 +74,8 @@ struct InfoPacketHelios : public InfoPacketBase
   boost::endian::big_uint32_buf_t bottom_backup_crc;
   boost::endian::big_uint32_buf_t software_backup_crc;
   boost::endian::big_uint32_buf_t webpage_backup_crc;
-  boost::endian::big_uint32_buf_t ethernet_gateway;
-  boost::endian::big_uint32_buf_t subnet_mask;
+  IpAddress ethernet_gateway;
+  IpAddress subnet_mask;
   uint8_t reserved_second[201];
   boost::endian::big_uint48_buf_t serial_number;
   boost::endian::big_uint16_buf_t zero_angle_offset;

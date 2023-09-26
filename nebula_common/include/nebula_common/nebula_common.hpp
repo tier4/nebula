@@ -478,8 +478,33 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "VLP16") return SensorModel::VELODYNE_VLP16;
   // Robosense
   if (sensor_model == "Helios") return SensorModel::ROBOSENSE_HELIOS_5515;
-  if (sensor_model  == "Bpearl") return SensorModel::ROBOSENSE_BPEARL;
+  if (sensor_model == "Bpearl") return SensorModel::ROBOSENSE_BPEARL;
   return SensorModel::UNKNOWN;
+}
+
+inline std::string SensorModelToString(const SensorModel & sensor_model)
+{
+  // Hesai
+  if (sensor_model == SensorModel::HESAI_PANDAR64) return "Pandar64";
+  if (sensor_model == SensorModel::HESAI_PANDAR40P) return "Pandar40P";
+  if (sensor_model == SensorModel::HESAI_PANDAR40M) return "Pandar40M";
+  if (sensor_model == SensorModel::HESAI_PANDARXT32) return "PandarXT32";
+  if (sensor_model == SensorModel::HESAI_PANDARXT32M) return "PandarXT32M";
+  if (sensor_model == SensorModel::HESAI_PANDARAT128) return "PandarAT128";
+  if (sensor_model == SensorModel::HESAI_PANDARQT64) return "PandarQT64";
+  if (sensor_model == SensorModel::HESAI_PANDARQT128) return "PandarQT128";
+  if (sensor_model == SensorModel::HESAI_PANDAR128_E4X) return "Pandar128E4X";
+  // Velodyne
+  if (sensor_model == SensorModel::VELODYNE_VLS128) return "VLS128";
+  if (sensor_model == SensorModel::VELODYNE_HDL64) return "HDL64";
+  if (sensor_model == SensorModel::VELODYNE_VLP32) return "VLP32";
+  if (sensor_model == SensorModel::VELODYNE_VLP32MR) return "VLP32MR";
+  if (sensor_model == SensorModel::VELODYNE_HDL32) return "HDL32";
+  if (sensor_model == SensorModel::VELODYNE_VLP16) return "VLP16";
+  // Robosense
+  if (sensor_model == SensorModel::ROBOSENSE_HELIOS_5515) return "Helios";
+  if (sensor_model == SensorModel::ROBOSENSE_BPEARL) return "Bpearl";
+  return "UNKNOWN";
 }
 
 /// @brief Convert return mode name to ReturnMode enum
@@ -507,12 +532,18 @@ pcl::PointCloud<PointXYZIRADT>::Ptr convertPointXYZIRCAEDTToPointXYZIRADT(
 /// @brief Converts degrees to radians
 /// @param radians
 /// @return degrees
-static inline float deg2rad(double degrees) { return degrees * M_PI / 180.0; }
+static inline float deg2rad(double degrees)
+{
+  return degrees * M_PI / 180.0;
+}
 
 /// @brief Converts radians to degrees
 /// @param radians
 /// @return degrees
-static inline float rad2deg(double radians) { return radians * 180.0 / M_PI; }
+static inline float rad2deg(double radians)
+{
+  return radians * 180.0 / M_PI;
+}
 }  // namespace drivers
 }  // namespace nebula
 
