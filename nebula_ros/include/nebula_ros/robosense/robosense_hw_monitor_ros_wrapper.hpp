@@ -60,7 +60,6 @@ class RobosenseHwMonitorRosWrapper final : public rclcpp::Node, NebulaHwMonitorW
 
 public:
   explicit RobosenseHwMonitorRosWrapper(const rclcpp::NodeOptions & options);
-  //  ~RobosenseHwMonitorRosWrapper() noexcept override;
   /// @brief Not used
   /// @return Current status
   Status MonitorStart() override;
@@ -90,7 +89,7 @@ private:
   std::map<std::string, std::string> current_sensor_info_;
 
   std::unique_ptr<rclcpp::Time> current_info_time_;
-  uint16_t diag_span_;
+  uint16_t diag_span_{1000};
   std::string hardware_id_;
 };
 

@@ -12,6 +12,10 @@ RobosenseHwMonitorRosWrapper::RobosenseHwMonitorRosWrapper(const rclcpp::NodeOpt
   diagnostics_updater_(this)
 {
   interface_status_ = GetParameters(sensor_configuration_);
+  if (Status::OK != interface_status_) {
+    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
+    return;
+  }
 
   auto sensor_cfg_ptr =
     std::make_shared<drivers::RobosenseSensorConfiguration>(sensor_configuration_);
@@ -19,15 +23,10 @@ RobosenseHwMonitorRosWrapper::RobosenseHwMonitorRosWrapper(const rclcpp::NodeOpt
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
   hw_interface_.SetSensorConfiguration(sensor_cfg_ptr);
 
-  std::this_thread::sleep_for(std::chrono::seconds(3));
-
   hw_interface_.InfoInterfaceStart();
 
   // Wait for the first DIFOP packet
-  while (rclcpp::ok() && !hw_interface_.is_info_received) {
-    RCLCPP_INFO_STREAM(this->get_logger(), "Waiting for DIFOP packet");
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-  }
+  hw_interface_.WaitForSensorInfo(std::chrono::seconds(3));
   RCLCPP_INFO_STREAM(this->get_logger(), "Got DIFOP packet");
 
   info_driver_ =
@@ -50,7 +49,7 @@ RobosenseHwMonitorRosWrapper::RobosenseHwMonitorRosWrapper(const rclcpp::NodeOpt
 //
 Status RobosenseHwMonitorRosWrapper::MonitorStart()
 {
-  //  return interface_status_;
+  return interface_status_;
 }
 
 Status RobosenseHwMonitorRosWrapper::MonitorStop()
@@ -262,10 +261,6 @@ void RobosenseHwMonitorRosWrapper::RobosenseCheckStatus(
     diagnostics.add(info.first, info.second);
   }
 }
-
-// RobosenseHwMonitorRosWrapper::~RobosenseHwMonitorRosWrapper()
-//{
-// }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(RobosenseHwMonitorRosWrapper)
 }  // namespace ros
