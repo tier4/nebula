@@ -32,6 +32,8 @@ const uint16_t HELIOS5515_CORRECTED_VERTICAL_ANGLE_SIZE = 96;
 const uint16_t HELIOS5515_CORRECTED_VERTICAL_ANGLE_OFFSET = 468;
 const uint16_t HELIOS5515_CORRECTED_HORIZONTAL_ANGLE_SIZE = 96;
 const uint16_t HELIOS5515_CORRECTED_HORIZONTAL_ANGLE_OFFSET = 564;
+const uint16_t HELIOS5515_RETURN_MODE_SIZE = 1;
+const uint16_t HELIOS5515_RETURN_MODE_OFFSET = 300;
 const uint16_t BPEARL_PACKET_SIZE = 1248;
 
 /// @brief Hardware interface of Robosense driver
@@ -115,7 +117,9 @@ public:
   /// @param with_run Automatically executes run() of UdpDriver
   /// @return Resulting status
   Status GetLidarCalibrationFromSensor(
-    const std::function<void(const std::string & received_string)> & string_callback);
+    const std::function<
+      void(const std::string & received_string, const ReturnMode & return_mode_received)> &
+      string_callback);
 
   std::vector<uint8_t> GetInfoPacketFromSensor();
 
