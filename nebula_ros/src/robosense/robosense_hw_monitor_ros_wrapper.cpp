@@ -22,18 +22,16 @@ RobosenseHwMonitorRosWrapper::RobosenseHwMonitorRosWrapper(const rclcpp::NodeOpt
 
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
   hw_interface_.SetSensorConfiguration(sensor_cfg_ptr);
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   hw_interface_.InfoInterfaceStart();
 
   // Wait for the first DIFOP packet
   hw_interface_.WaitForSensorInfo(std::chrono::seconds(3));
-  RCLCPP_INFO_STREAM(this->get_logger(), "Got DIFOP packet");
 
   info_driver_ =
     std::make_unique<drivers::RobosenseInfoDriver>(sensor_cfg_ptr, calibration_configuration_);
 
-  RCLCPP_INFO_STREAM(this->get_logger(), "Decoding packet");
   info_driver_->DecodeInfoPacket(hw_interface_.GetInfoPacketFromSensor());
-  RCLCPP_INFO_STREAM(this->get_logger(), "Decoded packet");
 
   current_sensor_info_ = info_driver_->GetSensorInfo();
   current_info_time_ = std::make_unique<rclcpp::Time>(this->get_clock()->now());

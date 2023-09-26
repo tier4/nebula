@@ -239,45 +239,37 @@ Status RobosenseDriverRosWrapper::GetParameters(
     this->get_logger(),
     "Trying to acquire calibration data from sensor: '" << sensor_configuration.sensor_ip << "'");
 
-  std::string file_path;
-
   if (hw_interface_.InfoInterfaceStart() == Status::OK) {
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-
-    RCLCPP_INFO_STREAM(
-      this->get_logger(),
-      "Acquiring calibration data from sensor: '" << sensor_configuration.sensor_ip << "'");
-
-    if (hw_interface_.WaitForSensorInfo(std::chrono::seconds(3)) != Status::OK) {
+    if (hw_interface_.WaitForSensorInfo(std::chrono::seconds(5)) != Status::OK) {
       RCLCPP_WARN_STREAM(
         this->get_logger(), "Failed to acquire calibration data from sensor: '"
                               << sensor_configuration.sensor_ip << ":"
                               << sensor_configuration.gnss_port
                               << "' Local calibration file will be used.");
+    } else {
+      hw_interface_.GetLidarCalibrationFromSensor([this, &calibration_configuration, &run_local](
+                                                    const std::string & received_string) {
+        RCLCPP_INFO_STREAM(
+          this->get_logger(), "Received calibration data from sensor: '" << received_string);
+
+        const auto load_status = calibration_configuration.LoadFromString(received_string);
+        if (load_status == Status::OK) {
+          RCLCPP_INFO_STREAM(this->get_logger(), "Loaded calibration data from sensor. ");
+          run_local = false;
+        } else {
+          RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to load calibration data from sensor. ");
+        }
+
+        const auto save_status = calibration_configuration.SaveFile(
+          CreateCalibrationPath(calibration_configuration.calibration_file));
+        if (save_status == Status::OK) {
+          RCLCPP_INFO_STREAM(this->get_logger(), "Saved calibration data from sensor. ");
+        } else {
+          RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to save calibration data from sensor. ");
+        }
+      });
+      hw_interface_.InfoInterfaceStop();
     }
-
-    hw_interface_.GetLidarCalibrationFromSensor([this, &calibration_configuration, &file_path,
-                                                 &run_local](const std::string & received_string) {
-      RCLCPP_INFO_STREAM(
-        this->get_logger(), "Received calibration data from sensor: '" << received_string);
-
-      const auto load_status = calibration_configuration.LoadFromString(received_string);
-      if (load_status == Status::OK) {
-        RCLCPP_INFO_STREAM(this->get_logger(), "Loaded calibration data from sensor. ");
-        run_local = false;
-      } else {
-        RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to load calibration data from sensor. ");
-      }
-
-      const auto save_status = calibration_configuration.SaveFile(
-        "src/nebula_decoders/calibration/robosense/calibration.csv");
-      if (save_status == Status::OK) {
-        RCLCPP_INFO_STREAM(this->get_logger(), "Saved calibration data from sensor. ");
-      } else {
-        RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to save calibration data from sensor. ");
-      }
-    });
-    hw_interface_.InfoInterfaceStop();
   }
 
   if (run_local) {
@@ -305,6 +297,29 @@ Status RobosenseDriverRosWrapper::GetParameters(
 
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
   return Status::OK;
+}
+
+std::string RobosenseDriverRosWrapper::CreateCalibrationPath(const std::string & original_path)
+{
+  // New suffix to add
+  const std::string suffix = "_from_sensor.csv";
+
+  // Find the last occurrence of '.' to get the directory path
+  size_t last_pos = original_path.find_last_of('.');
+  if (last_pos != std::string::npos) {
+    // Extract the path
+    const std::string calib_path = original_path.substr(0, last_pos);
+
+    // Create the new file path by appending the new filename
+    std::string new_path = calib_path + suffix;
+
+    // Print the new file path
+    RCLCPP_INFO_STREAM(this->get_logger(), "New calibration file path: " << new_path);
+    return new_path;
+
+  } else {
+    RCLCPP_ERROR_STREAM(this->get_logger(), "Invalid file path format.");
+  }
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(RobosenseDriverRosWrapper)
