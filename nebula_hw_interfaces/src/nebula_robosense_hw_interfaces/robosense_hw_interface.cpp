@@ -40,8 +40,6 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   const auto & data = scan_cloud_ptr_->packets.back().data;
   current_phase = (data[azimuth_index_ + 1] & 0xff) + ((data[azimuth_index_] & 0xff) << 8);
 
-  //    PrintInfo("Current phase: " + std::to_string(current_phase));  ///////
-
   current_phase = (static_cast<int>(current_phase) + 36000 - scan_phase) % 36000;
 
   if (current_phase >= prev_phase_ || scan_cloud_ptr_->packets.size() < 2) {
