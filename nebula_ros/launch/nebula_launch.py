@@ -12,6 +12,7 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.actions import LoadComposableNodes
 from launch_ros.descriptions import ComposableNode
+from launch_ros.actions import Node
 import yaml
 
 
@@ -20,6 +21,8 @@ def get_lidar_make(sensor_name):
         return "Hesai", ".csv"
     elif sensor_name[:3].lower() in ["hdl", "vlp", "vls"]:
         return "Velodyne", ".yaml"
+    elif sensor_name[:9].lower() in ["robosense"]:
+        return "Robosense", ".csv"
     return "unrecognized_sensor_model"
 
 

@@ -219,8 +219,38 @@ Parameters shared by all supported models:
 | calibration_file | string |          |                      | LiDAR calibration file                  |
 | min_range        | double | 0.3      | meters, >= 0.3       | Minimum point range published           |
 | max_range        | double | 300.0    | meters, <= 300.0     | Maximum point range published           |
-| cloud_min_angle  | uint16 | 0        | degrees [0, 360]     | FoV start angle                         |
-| cloud_max_angle  | uint16 | 359      | degrees [0, 360]     | FoV end angle                           |
+## Robosense specific parameters
+
+#### Supported return modes
+
+|  | return_mode     | Mode               |
+| - | --------------- | ------------------ |
+|  | SingleFirst     | Single (First)     |
+|  | SingleStrongest | Single (Strongest) |
+|  | SingleLast      | Single (Last)      |
+|  | Dual            | Dual               |
+
+#### Hardware interface parameters
+
+| Parameter       | Type   | Default       | Accepted values  | Description                             |
+| --------------- | ------ | ------------- | ---------------- | --------------------------------------- |
+| frame_id        | string | robosense     |                  | ROS frame ID                            |
+| sensor_ip       | string | 192.168.1.201 |                  | Sensor IP                               |
+| host_ip         | string | 192.168.1.102 |                  | Host IP                                 |
+| data_port       | uint16 | 6699          |                  | Sensor port                             |
+| difop_port      | uint16 | 7788          |                  | Device Information Output Protocol Port |
+| rotation_speed  | uint16 | 600           |                  | Rotation speed                          |
+| cloud_min_angle | uint16 | 0             | degrees [0, 360] | Fov start angle                         |
+| cloud_max_angle | uint16 | 360           | degrees [0, 360] | Fov end angle                           |
+|                 |        |               |                  |                                         |
+
+#### Driver parameters
+
+| Parameter        | Type   | Default   | Accepted values | Description            |
+| ---------------- | ------ | --------- | --------------- | ---------------------- |
+| frame_id         | string | robosense |                 | ROS frame ID           |
+| calibration_file | string |           |                 | LiDAR calibration file |
+| correction_file  | string |           |                 | LiDAR correction file  |
 
 ## Software design overview
 

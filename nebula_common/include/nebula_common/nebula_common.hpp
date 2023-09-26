@@ -323,6 +323,8 @@ enum class SensorModel {
   VELODYNE_VLP32MR,
   VELODYNE_HDL32,
   VELODYNE_VLP16,
+  ROBOSENSE_HELIOS,
+  ROBOSENSE_HELIOS16P
 };
 
 /// @brief not used?
@@ -401,6 +403,12 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::VELODYNE_VLP16:
       os << "VLP16";
       break;
+    case SensorModel::ROBOSENSE_HELIOS:
+      os << "RobosenseHelios";
+      break;
+    case SensorModel::ROBOSENSE_HELIOS16P:
+      os << "ROBOSENSE_HELIOS16P";
+      break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
       break;
@@ -468,6 +476,9 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "VLP32MR") return SensorModel::VELODYNE_VLP32MR;
   if (sensor_model == "HDL32") return SensorModel::VELODYNE_HDL32;
   if (sensor_model == "VLP16") return SensorModel::VELODYNE_VLP16;
+  // Robosense
+  if (sensor_model == "RobosenseHelios") return SensorModel::ROBOSENSE_HELIOS;
+  if (sensor_model == "RobosenseHelios16P") return SensorModel::ROBOSENSE_HELIOS16P;
   return SensorModel::UNKNOWN;
 }
 
