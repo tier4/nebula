@@ -56,7 +56,7 @@ struct DateTime
     tm.tm_hour = hour;
     tm.tm_min = minute;
     tm.tm_sec = second;
-    return std::mktime(&tm);
+    return timegm(&tm);
   }
 };
 
