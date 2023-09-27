@@ -3,6 +3,7 @@
 Nebula is a sensor driver platform that is designed to provide a unified framework for as wide a variety of devices as possible.
 While it primarily targets Ethernet-based LiDAR sensors, it aims to be easily extendable to support new sensors and interfaces.
 Nebula provides the following features:
+
 - Support for Velodyne and Hesai sensors, with other LiDAR vendor support under development
 - ROS 2 interface implementations
 - TCP/IP and UDP communication implementations
@@ -14,9 +15,7 @@ Nebula provides the following features:
   - Receiving and interpretation of diagnostics information from the sensor
   - Support for multiple return modes and labelling of return types for each point
 
-
 With a rapidly increasing number of sensor types and models becoming available, and varying levels of vendor and third-party driver support, Nebula creates a centralized driver methodology. We hope that this project will be used to facilitate active collaboration and efficiency in development projects by providing a platform that reduces the need to re-implement and maintain many different sensor drivers. Contributions to extend the supported devices and features of Nebula are always welcome.
-
 
 ## How to build
 
@@ -24,7 +23,7 @@ Nebula builds on ROS Galactic and Humble.
 
 > **Note**
 >
-> A [TCP enabled version of ROS' Transport Driver](https://github.com/MapIV/transport_drivers/tree/tcp) is required to use Nebula.
+> A [TCP enabled version of ROS&#39; Transport Driver](https://github.com/MapIV/transport_drivers/tree/tcp) is required to use Nebula.
 > It is installed automatically into your workspace using the below commands. However, if you already have ROS transport driver binaries installed, you will have to uninstall them to avoid conflicts (replace `humble` with your ROS distribution):
 > `sudo apt remove ros-humble-udp-driver ros-humble-io-context`
 
@@ -85,25 +84,31 @@ ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 config_file:=your
 
 Supported models, where sensor_model is the ROS param to be used at launch:
 
-| Manufacturer | Model         | sensor_model | Configuration file | Test status |
-| ------------ | ------------- | ------------ | ------------------ | ----------- |
-| HESAI        | Pandar 64     | Pandar64     | Pandar64.yaml      | :heavy_check_mark: |
-| HESAI        | Pandar 40P    | Pandar40P    | Pandar40P.yaml     | :heavy_check_mark: |
-| HESAI        | Pandar XT32   | PandarXT32   | PandarXT32.yaml    | :heavy_check_mark: |
-| HESAI        | Pandar XT32M  | PandarXT32M  | PandarXT32M.yaml   | :warning: |
-| HESAI        | Pandar QT64   | PandarQT64   | PandarQT64.yaml    | :heavy_check_mark: |
-| HESAI        | Pandar QT128  | PandarQT128  | PandarQT128.yaml   | :warning: |
-| HESAI        | Pandar AT128  | PandarAT128  | PandarAT128.yaml   | :heavy_check_mark: |
-| HESAI        | Pandar 128E4X | Pandar128E4X | Pandar128E4X.yaml  | :warning: |
-| Velodyne     | VLP-16        | VLP16        | VLP16.yaml         | :warning: |
-| Velodyne     | VLP-16-HiRes  | VLP16        |                    | :x: |
-| Velodyne     | VLP-32        | VLP32        | VLP32.yaml         | :warning: |
-| Velodyne     | VLS-128       | VLS128       | VLS128.yaml        | :warning: |
+| Manufacturer | Model         | sensor_model       | Configuration file      | Test status |
+| ------------ | ------------- | ------------------ | ----------------------- | ----------- |
+| HESAI        | Pandar 64     | Pandar64           | Pandar64.yaml           | ✔️        |
+| HESAI        | Pandar 40P    | Pandar40P          | Pandar40P.yaml          | ✔️        |
+| HESAI        | Pandar XT32   | PandarXT32         | PandarXT32.yaml         | ✔️        |
+| HESAI        | Pandar XT32M  | PandarXT32M        | PandarXT32M.yaml        | ⚠️        |
+| HESAI        | Pandar QT64   | PandarQT64         | PandarQT64.yaml         | ✔️        |
+| HESAI        | Pandar QT128  | PandarQT128        | PandarQT128.yaml        | ⚠️        |
+| HESAI        | Pandar AT128  | PandarAT128        | PandarAT128.yaml        | ✔️        |
+| HESAI        | Pandar 128E4X | Pandar128E4X       | Pandar128E4X.yaml       | ⚠️        |
+| Velodyne     | VLP-16        | VLP16              | VLP16.yaml              | ⚠️        |
+| Velodyne     | VLP-16-HiRes  | VLP16              |                         | ❌          |
+| Velodyne     | VLP-32        | VLP32              | VLP32.yaml              | ⚠️        |
+| Velodyne     | VLS-128       | VLS128             | VLS128.yaml             | ⚠️        |
+| Robosense    | Helios 32     | RobosenseHelios    | RobosenseHelios.yaml    | ✔️        |
+| Robosense    | Helios 16     | RobosenseHelios16P | RobosenseHelios16P.yaml | ✔️        |
+| Robosense    | Bpearl        | RobosenseBpearl    | RobosenseBpearl.yaml    | ✔️        |
+| Robosense    | Ruby Plus     | RobosenseRubyPlus  | RobosenseRubyPlus.yaml  | ✔️        |
+| Robosense    | M1 Plus       | RobosenseM1Plus    | RobosenseM1Plus.yaml    | ✔️        |
+| Robosense    | E1            | RobosenseE1        | RobosenseE1.yaml        | ✔️        |
 
-Test status:\
-:heavy_check_mark:: complete\
-:warning:: some functionality yet to be tested\
-:x: : untested
+Test status:
+✔️: complete
+⚠️: some functionality yet to be tested
+❌ : untested
 
 ## ROS parameters
 
@@ -213,19 +218,51 @@ Parameters shared by all supported models:
 
 #### Driver parameters
 
-| Parameter        | Type   | Default  | Accepted values      | Description                             |
-| ---------------- | ------ | -------- | -------------------- | --------------------------------------- |
-| frame_id         | string | velodyne |                      | ROS frame ID                            |
-| calibration_file | string |          |                      | LiDAR calibration file                  |
-| min_range        | double | 0.3      | meters, >= 0.3       | Minimum point range published           |
-| max_range        | double | 300.0    | meters, <= 300.0     | Maximum point range published           |
-| cloud_min_angle  | uint16 | 0        | degrees [0, 360]     | FoV start angle                         |
-| cloud_max_angle  | uint16 | 359      | degrees [0, 360]     | FoV end angle                           |
+| Parameter        | Type   | Default  | Accepted values  | Description                   |
+| ---------------- | ------ | -------- | ---------------- | ----------------------------- |
+| frame_id         | string | velodyne |                  | ROS frame ID                  |
+| calibration_file | string |          |                  | LiDAR calibration file        |
+| min_range        | double | 0.3      | meters, >= 0.3   | Minimum point range published |
+| max_range        | double | 300.0    | meters, <= 300.0 | Maximum point range published |
+| cloud_min_angle  | uint16 | 0        | degrees [0, 360] | FoV start angle               |
+| cloud_max_angle  | uint16 | 359      | degrees [0, 360] | FoV end angle                 |
+
+## Robosense specific parameters
+
+#### Supported return modes
+
+|  | return_mode     | Mode               |
+| - | --------------- | ------------------ |
+|  | SingleFirst     | Single (First)     |
+|  | SingleStrongest | Single (Strongest) |
+|  | SingleLast      | Single (Last)      |
+|  | Dual            | Dual               |
+
+#### Hardware interface parameters
+
+| Parameter       | Type   | Default       | Accepted values  | Description                             |
+| --------------- | ------ | ------------- | ---------------- | --------------------------------------- |
+| frame_id        | string | robosense     |                  | ROS frame ID                            |
+| sensor_ip       | string | 192.168.1.201 |                  | Sensor IP                               |
+| host_ip         | string | 192.168.1.102 |                  | Host IP                                 |
+| data_port       | uint16 | 6699          |                  | Sensor port                             |
+| difop_port      | uint16 | 7788          |                  | Device Information Output Protocol Port |
+| rotation_speed  | uint16 | 600           |                  | Rotation speed                          |
+| cloud_min_angle | uint16 | 0             | degrees [0, 360] | Fov start angle                         |
+| cloud_max_angle | uint16 | 360           | degrees [0, 360] | Fov end angle                           |
+|                 |        |               |                  |                                         |
+
+#### Driver parameters
+
+| Parameter        | Type   | Default   | Accepted values | Description            |
+| ---------------- | ------ | --------- | --------------- | ---------------------- |
+| frame_id         | string | robosense |                 | ROS frame ID           |
+| calibration_file | string |           |                 | LiDAR calibration file |
+| correction_file  | string |           |                 | LiDAR correction file  |
 
 ## Software design overview
 
 ![DriverOrganization](docs/diagram.png)
-
 
 ## How to evaluate performance
 
@@ -240,6 +277,7 @@ Run profiling for each version you want to compare:
 git checkout my_improved_branch
 ./scripts/profiling_runner.bash improved -m Pandar64 -b ~/my_rosbag -c 2 -t 20 -n 3
 ```
+
 Show results:
 
 ```bash

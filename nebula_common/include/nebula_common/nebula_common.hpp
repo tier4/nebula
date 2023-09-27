@@ -323,6 +323,12 @@ enum class SensorModel {
   VELODYNE_VLP32MR,
   VELODYNE_HDL32,
   VELODYNE_VLP16,
+  ROBOSENSE_HELIOS,
+  ROBOSENSE_HELIOS16P,
+  ROBOSENSE_BPEARL,
+  ROBOSENSE_RUBYPLUS,
+  ROBOSENSE_M1PLUS,
+  ROBOSENSE_E1
 };
 
 /// @brief not used?
@@ -401,6 +407,24 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::VELODYNE_VLP16:
       os << "VLP16";
       break;
+    case SensorModel::ROBOSENSE_HELIOS:
+      os << "RobosenseHelios";
+      break;
+    case SensorModel::ROBOSENSE_HELIOS16P:
+      os << "RobosenseHelios16P";
+      break;
+    case SensorModel::ROBOSENSE_BPEARL:
+      os << "RobosenseBpearl";
+      break;
+    case SensorModel::ROBOSENSE_RUBYPLUS:
+      os << "RobosenseRubyPlus";
+      break;
+    case SensorModel::ROBOSENSE_M1PLUS:
+      os << "RobosenseM1Plus";
+      break;
+    case SensorModel::ROBOSENSE_E1:
+      os << "RobosenseE1";
+      break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
       break;
@@ -468,6 +492,13 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "VLP32MR") return SensorModel::VELODYNE_VLP32MR;
   if (sensor_model == "HDL32") return SensorModel::VELODYNE_HDL32;
   if (sensor_model == "VLP16") return SensorModel::VELODYNE_VLP16;
+  // Robosense
+  if (sensor_model == "RobosenseHelios") return SensorModel::ROBOSENSE_HELIOS;
+  if (sensor_model == "RobosenseHelios16P") return SensorModel::ROBOSENSE_HELIOS16P;
+  if (sensor_model == "RobosenseBpearl") return SensorModel::ROBOSENSE_BPEARL;
+  if (sensor_model == "RobosenseRubyPlus") return SensorModel::ROBOSENSE_RUBYPLUS;
+  if (sensor_model == "RobosenseM1Plus") return SensorModel::ROBOSENSE_M1PLUS;
+  if (sensor_model == "RobosenseE1") return SensorModel::ROBOSENSE_E1;
   return SensorModel::UNKNOWN;
 }
 
@@ -496,12 +527,18 @@ pcl::PointCloud<PointXYZIRADT>::Ptr convertPointXYZIRCAEDTToPointXYZIRADT(
 /// @brief Converts degrees to radians
 /// @param radians
 /// @return degrees
-static inline float deg2rad(double degrees) { return degrees * M_PI / 180.0; }
+static inline float deg2rad(double degrees)
+{
+  return degrees * M_PI / 180.0;
+}
 
 /// @brief Converts radians to degrees
 /// @param radians
 /// @return degrees
-static inline float rad2deg(double radians) { return radians * 180.0 / M_PI; }
+static inline float rad2deg(double radians)
+{
+  return radians * 180.0 / M_PI;
+}
 }  // namespace drivers
 }  // namespace nebula
 

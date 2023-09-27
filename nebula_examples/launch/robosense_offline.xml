@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="sensor_model" default="RobosenseBpearl"  description="RobosenseHelios/RobosenseHelios16P/RobosenseBpearl/RobosenseM1Plus/RobosenseRubyPlus/RobosenseE1"/>
+    <arg name="return_mode" default="Dual" description="See readme for supported return modes"/>
+    <arg name="frame_id"  default="robosense"/>
+    <arg name="scan_phase" default="0.0" />
+
+    <arg name="calibration_file" default="$(find-pkg-share nebula_decoders)/calibration/robosense/$(var sensor_model).csv"/>
+
+    <arg name="bag_path" default="/home/sti/felix/ws/final_pr/nebula_robosense_ws/src/nebula_tests/data/robosense/bpearl/rosbag2_2023_08_25-09_49_31/rosbag2_2023_08_25-09_49_31_0.db3"/>
+    <arg name="storage_id" default="sqlite3"/>
+    <arg name="out_path" default="/home/sti/felix/robosense_offline"/>
+    <arg name="format" default="cdr"/>
+    <arg name="target_topic" default="/robosense_packets"/>
+
+
+    <node pkg="nebula_examples" exec="robosense_ros_offline_extract_pcd_node"
+          name="robosense_cloud" output="screen">
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="return_mode" value="$(var return_mode)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="scan_phase" value="$(var scan_phase)"/>
+        <param name="calibration_file" value="$(var calibration_file)"/>
+        <param name="bag_path" value="$(var bag_path)"/>
+        <param name="storage_id" value="$(var storage_id)"/>
+        <param name="out_path" value="$(var out_path)"/>
+        <param name="format" value="$(var format)"/>
+        <param name="target_topic" value="$(var target_topic)"/>
+    </node>
+</launch>

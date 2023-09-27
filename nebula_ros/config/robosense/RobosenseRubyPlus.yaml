@@ -1,0 +1,16 @@
+/**:
+  ros__parameters:
+    sensor_model: "RobosenseRubyPlus"
+    frame_id: "robosense"
+    return_mode: "Dual"
+    lidar_ip: "192.168.1.200"
+    host_ip: "192.168.1.102"
+    data_port: 6699
+    difop_port: 7788
+    packet_mtu_size: 1500
+    rotation_speed: 600
+    cloud_min_angle: 0
+    cloud_max_angle: 360
+    calibration_file: "./install/nebula_decoders/share/nebula_decoders/calibration/robosense/RobosenseM1Plus.csv"
+    setup_sensor: True
+    online: True
