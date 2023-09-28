@@ -55,6 +55,23 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
   std::map<size_t, float> elev_angle_map;
   std::map<size_t, float> azimuth_offset_map;
 
+  template <typename stream_t>
+  void LoadFromStream(stream_t & stream)
+  {
+    std::string header;
+    std::getline(stream, header);
+
+    char sep;
+    int laser_id;
+    float elevation;
+    float azimuth;
+    while (!stream.eof()) {
+      stream >> laser_id >> sep >> elevation >> sep >> azimuth;
+      elev_angle_map[laser_id - 1] = elevation;
+      azimuth_offset_map[laser_id - 1] = azimuth;
+    }
+  }
+
   inline nebula::Status LoadFromFile(const std::string & calibration_file)
   {
     std::ifstream ifs(calibration_file);
@@ -62,18 +79,8 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
       return Status::INVALID_CALIBRATION_FILE;
     }
 
-    std::string header;
-    std::getline(ifs, header);
+    LoadFromStream(ifs);
 
-    char sep;
-    int laser_id;
-    float elevation;
-    float azimuth;
-    while (!ifs.eof()) {
-      ifs >> laser_id >> sep >> elevation >> sep >> azimuth;
-      elev_angle_map[laser_id - 1] = elevation;
-      azimuth_offset_map[laser_id - 1] = azimuth;
-    }
     ifs.close();
     return Status::OK;
   }
@@ -86,18 +93,7 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
     std::stringstream ss;
     ss << calibration_content;
 
-    std::string header;
-    std::getline(ss, header);
-
-    char sep;
-    int laser_id;
-    float elevation;
-    float azimuth;
-    while (!ss.eof()) {
-      ss >> laser_id >> sep >> elevation >> sep >> azimuth;
-      elev_angle_map[laser_id - 1] = elevation;
-      azimuth_offset_map[laser_id - 1] = azimuth;
-    }
+    LoadFromStream(ss);
 
     return Status::OK;
   }
