@@ -1,6 +1,6 @@
-#ifndef NEBULA_HesaiRosDecoderTest40p_H
-#define NEBULA_HesaiRosDecoderTest40p_H
+#pragma once
 
+#include "hesai_common.hpp"
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
@@ -13,14 +13,37 @@
 
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
-#include "hesai_common.hpp"
 
 #include <gtest/gtest.h>
+
+#ifndef _SRC_CALIBRATION_DIR_PATH
+#define _SRC_CALIBRATION_DIR_PATH ""
+#endif
+
+#ifndef _SRC_RESOURCES_DIR_PATH
+#define _SRC_RESOURCES_DIR_PATH ""
+#endif
 
 namespace nebula
 {
 namespace ros
 {
+
+struct HesaiRosDecoderTestParams
+{
+  std::string sensor_model;
+  std::string return_mode;
+  std::string frame_id = "hesai";
+  double scan_phase = 0.;
+  std::string calibration_file = "";
+  std::string correction_file = "";
+  std::string bag_path;
+  std::string storage_id = "sqlite3";
+  std::string format = "cdr";
+  std::string target_topic = "/pandar_packets";
+  double dual_return_distance_threshold = 0.1;
+};
+
 /// @brief Testing decoder of pandar 40p (Keeps HesaiDriverRosWrapper structure as much as
 /// possible)
 class HesaiRosDecoderTest final : public rclcpp::Node, NebulaDriverRosWrapperBase  //, testing::Test
@@ -71,7 +94,9 @@ class HesaiRosDecoderTest final : public rclcpp::Node, NebulaDriverRosWrapperBas
   }
 
 public:
-  explicit HesaiRosDecoderTest(const rclcpp::NodeOptions & options, const std::string & node_name);
+  explicit HesaiRosDecoderTest(
+    const rclcpp::NodeOptions & options, const std::string & node_name,
+    const HesaiRosDecoderTestParams & params);
 
   //  void ReceiveScanMsgCallback(const pandar_msgs::msg::PandarScan::SharedPtr scan_msg);
 
@@ -94,14 +119,8 @@ public:
   }
 */
 private:
-  std::string bag_path;
-  std::string storage_id;
-  std::string format;
-  std::string target_topic;
-  std::string correction_file_path;
+  HesaiRosDecoderTestParams params_;
 };
 
 }  // namespace ros
 }  // namespace nebula
-
-#endif  // NEBULA_HesaiRosDecoderTest40p_H

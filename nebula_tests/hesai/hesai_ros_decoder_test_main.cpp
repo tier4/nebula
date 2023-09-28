@@ -1,4 +1,4 @@
-#include "hesai_ros_decoder_test_40p.hpp"
+#include "hesai_ros_decoder_test.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -14,9 +14,11 @@ TEST(TestDecoder, TestPcd)
   hesai_driver->ReadBag();
 }
 
+
+
 int main(int argc, char * argv[])
 {
-  std::cout << "hesai_ros_decoder_test_main_40p.cpp" << std::endl;
+  std::cout << "hesai_ros_decoder_test_main.cpp" << std::endl;
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
   std::string node_name = "nebula_hesai_decoder_test";
@@ -26,7 +28,14 @@ int main(int argc, char * argv[])
   rclcpp::executors::SingleThreadedExecutor exec;
   rclcpp::NodeOptions options;
 
-  hesai_driver = std::make_shared<nebula::ros::HesaiRosDecoderTest>(options, node_name);
+  nebula::ros::HesaiRosDecoderTestParams decoder_params;
+  decoder_params.sensor_model = "Pandar40P";
+  decoder_params.return_mode = "Dual";
+  decoder_params.calibration_file = "Pandar40P.csv";
+  decoder_params.bag_path = "40p/1673400149412331409";
+
+  hesai_driver =
+    std::make_shared<nebula::ros::HesaiRosDecoderTest>(options, node_name, decoder_params);
   exec.add_node(hesai_driver->get_node_base_interface());
 
   RCLCPP_INFO_STREAM(rclcpp::get_logger(node_name), "Get Status");

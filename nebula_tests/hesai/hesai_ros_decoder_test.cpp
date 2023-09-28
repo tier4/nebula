@@ -1,5 +1,4 @@
-#include "hesai_ros_decoder_test_40p.hpp"
-
+#include "hesai_ros_decoder_test.hpp"
 #include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rcpputils/filesystem_helper.hpp"
@@ -20,8 +19,9 @@ namespace nebula
 namespace ros
 {
 HesaiRosDecoderTest::HesaiRosDecoderTest(
-  const rclcpp::NodeOptions & options, const std::string & node_name)
-: rclcpp::Node(node_name, options)
+  const rclcpp::NodeOptions & options, const std::string & node_name,
+  const HesaiRosDecoderTestParams & params)
+: rclcpp::Node(node_name, options), params_(params)
 {
   drivers::HesaiCalibrationConfiguration calibration_configuration;
   drivers::HesaiSensorConfiguration sensor_configuration;
@@ -81,118 +81,119 @@ Status HesaiRosDecoderTest::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status HesaiRosDecoderTest::GetStatus() { return wrapper_status_; }
+Status HesaiRosDecoderTest::GetStatus()
+{
+  return wrapper_status_;
+}
 
 Status HesaiRosDecoderTest::GetParameters(
   drivers::HesaiSensorConfiguration & sensor_configuration,
   drivers::HesaiCalibrationConfiguration & calibration_configuration,
   drivers::HesaiCorrection & correction_configuration)
 {
-  std::filesystem::path calib_dir =
-    _SRC_CALIBRATION_DIR_PATH;  // variable defined in CMakeLists.txt;
-  calib_dir /= "hesai";
-  std::filesystem::path bag_root_dir =
-    _SRC_RESOURCES_DIR_PATH;  // variable defined in CMakeLists.txt;
+  std::filesystem::path calibration_dir = _SRC_CALIBRATION_DIR_PATH;
+  calibration_dir /= "hesai";
+  std::filesystem::path bag_root_dir = _SRC_RESOURCES_DIR_PATH;
   bag_root_dir /= "hesai";
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_model", "Pandar40P");
+    this->declare_parameter<std::string>("sensor_model", params_.sensor_model, descriptor);
     sensor_configuration.sensor_model =
       nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("return_mode", "Dual", descriptor);
+    this->declare_parameter<std::string>("return_mode", params_.return_mode, descriptor);
     sensor_configuration.return_mode = nebula::drivers::ReturnModeFromStringHesai(
       this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("frame_id", "hesai", descriptor);
+    this->declare_parameter<std::string>("frame_id", params_.frame_id, descriptor);
     sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 3;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
     rcl_interfaces::msg::FloatingPointRange range;
     range.set__from_value(0).set__to_value(360).set__step(0.01);
     descriptor.floating_point_range = {range};
-    this->declare_parameter<double>("scan_phase", 0., descriptor);
+    this->declare_parameter<double>("scan_phase", params_.scan_phase, descriptor);
     sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>(
-      "calibration_file", (calib_dir / "Pandar40P.csv").string(), descriptor);
+      "calibration_file", (calibration_dir / params_.calibration_file).string(), descriptor);
     calibration_configuration.calibration_file =
       this->get_parameter("calibration_file").as_string();
   }
   if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>(
-      "correction_file", (calib_dir / "PandarAT128.dat").string(), descriptor);
-    correction_file_path = this->get_parameter("correction_file").as_string();
+      "correction_file", (calibration_dir / params_.correction_file).string(), descriptor);
+    params_.correction_file = this->get_parameter("correction_file").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>(
-      "bag_path", (bag_root_dir / "40p" / "1673400149412331409").string(), descriptor);
-    bag_path = this->get_parameter("bag_path").as_string();
-    std::cout << bag_path << std::endl;
+      "bag_path", (bag_root_dir / params_.bag_path).string(), descriptor);
+    params_.bag_path = this->get_parameter("bag_path").as_string();
+    std::cout << params_.bag_path << std::endl;
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("storage_id", "sqlite3", descriptor);
-    storage_id = this->get_parameter("storage_id").as_string();
+    this->declare_parameter<std::string>("storage_id", params_.storage_id, descriptor);
+    params_.storage_id = this->get_parameter("storage_id").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("format", "cdr", descriptor);
-    format = this->get_parameter("format").as_string();
+    this->declare_parameter<std::string>("format", params_.format, descriptor);
+    params_.format = this->get_parameter("format").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("target_topic", "/pandar_packets", descriptor);
-    target_topic = this->get_parameter("target_topic").as_string();
+    this->declare_parameter<std::string>("target_topic", params_.target_topic, descriptor);
+    params_.target_topic = this->get_parameter("target_topic").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -203,7 +204,8 @@ Status HesaiRosDecoderTest::GetParameters(
     rcl_interfaces::msg::FloatingPointRange range;
     range.set__from_value(0.00).set__to_value(0.5).set__step(0.01);
     descriptor.floating_point_range = {range};
-    this->declare_parameter<double>("dual_return_distance_threshold", 0.1, descriptor);
+    this->declare_parameter<double>(
+      "dual_return_distance_threshold", params_.dual_return_distance_threshold, descriptor);
     sensor_configuration.dual_return_distance_threshold =
       this->get_parameter("dual_return_distance_threshold").as_double();
   }
@@ -230,13 +232,13 @@ Status HesaiRosDecoderTest::GetParameters(
     }
   }
   if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
-    if (correction_file_path.empty()) {
+    if (params_.correction_file.empty()) {
       return Status::INVALID_CALIBRATION_FILE;
     } else {
-      auto cal_status = correction_configuration.LoadFromFile(correction_file_path);
+      auto cal_status = correction_configuration.LoadFromFile(params_.correction_file);
       if (cal_status != Status::OK) {
         RCLCPP_ERROR_STREAM(
-          this->get_logger(), "Given Correction File: '" << correction_file_path << "'");
+          this->get_logger(), "Given Correction File: '" << params_.correction_file << "'");
         return cal_status;
       }
     }
@@ -246,45 +248,17 @@ Status HesaiRosDecoderTest::GetParameters(
   return Status::OK;
 }
 
-void printPCD(nebula::drivers::NebulaPointCloudPtr pp)
-{
-  for (auto p : pp->points) {
-    std::cout << "(" << p.x << ", " << p.y << "," << p.z << "): " << p.intensity << ", "
-              << p.channel << ", " << p.azimuth << ", " << p.return_type << ", " << p.time_stamp
-              << std::endl;
-  }
-}
-
-void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::NebulaPointCloudPtr pp2)
-{
-  EXPECT_EQ(pp1->points.size(), pp2->points.size());
-  for (uint32_t i = 0; i < pp1->points.size(); i++) {
-    auto p1 = pp1->points[i];
-    auto p2 = pp2->points[i];
-    EXPECT_FLOAT_EQ(p1.x, p2.x);
-    EXPECT_FLOAT_EQ(p1.y, p2.y);
-    EXPECT_FLOAT_EQ(p1.z, p2.z);
-    EXPECT_FLOAT_EQ(p1.intensity, p2.intensity);
-    EXPECT_EQ(p1.channel, p2.channel);
-    EXPECT_FLOAT_EQ(p1.azimuth, p2.azimuth);
-    EXPECT_EQ(p1.return_type, p2.return_type);
-    EXPECT_DOUBLE_EQ(p1.time_stamp, p2.time_stamp);
-  }
-}
-
-
-
 void HesaiRosDecoderTest::ReadBag()
 {
   rosbag2_storage::StorageOptions storage_options;
   rosbag2_cpp::ConverterOptions converter_options;
 
-  std::cout << bag_path << std::endl;
-  std::cout << storage_id << std::endl;
-  std::cout << format << std::endl;
-  std::cout << target_topic << std::endl;
+  std::cout << params_.bag_path << std::endl;
+  std::cout << params_.storage_id << std::endl;
+  std::cout << params_.format << std::endl;
+  std::cout << params_.target_topic << std::endl;
 
-  auto target_topic_name = target_topic;
+  auto target_topic_name = params_.target_topic;
   if (target_topic_name.substr(0, 1) == "/") {
     target_topic_name = target_topic_name.substr(1);
   }
@@ -292,13 +266,13 @@ void HesaiRosDecoderTest::ReadBag()
 
   pcl::PCDReader pcd_reader;
 
-  rcpputils::fs::path bag_dir(bag_path);
+  rcpputils::fs::path bag_dir(params_.bag_path);
   rcpputils::fs::path pcd_dir = bag_dir.parent_path();
   int check_cnt = 0;
 
-  storage_options.uri = bag_path;
-  storage_options.storage_id = storage_id;
-  converter_options.output_serialization_format = format;  //"cdr";
+  storage_options.uri = params_.bag_path;
+  storage_options.storage_id = params_.storage_id;
+  converter_options.output_serialization_format = params_.format;  //"cdr";
   rclcpp::Serialization<pandar_msgs::msg::PandarScan> serialization;
   nebula::drivers::NebulaPointCloudPtr pointcloud(new nebula::drivers::NebulaPointCloud);
   // nebula::drivers::NebulaPointCloudPtr ref_pointcloud(new nebula::drivers::NebulaPointCloud);
@@ -311,7 +285,7 @@ void HesaiRosDecoderTest::ReadBag()
 
       std::cout << "Found topic name " << bag_message->topic_name << std::endl;
 
-      if (bag_message->topic_name == target_topic) {
+      if (bag_message->topic_name == params_.target_topic) {
         pandar_msgs::msg::PandarScan extracted_msg;
         rclcpp::SerializedMessage extracted_serialized_msg(*bag_message->serialized_data);
         serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
