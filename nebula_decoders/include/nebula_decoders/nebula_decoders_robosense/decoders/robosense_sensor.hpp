@@ -47,8 +47,7 @@ public:
     uint32_t start_block_id,
     const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration)
   {
-    //    unsigned int n_returns = robosense_packet::get_n_returns(packet.tail.return_mode);
-    unsigned int n_returns = 1;
+    const auto n_returns = robosense_packet::get_n_returns(sensor_configuration->return_mode);
     int min_offset_ns = 0xFFFFFFFF;  // MAXINT
 
     for (uint32_t block_id = start_block_id; block_id < start_block_id + n_returns; ++block_id) {
