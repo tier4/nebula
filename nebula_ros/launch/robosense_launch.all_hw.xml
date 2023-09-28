@@ -17,6 +17,7 @@
     <arg name="cloud_max_angle" default="360" description="Field of View, end degrees."/>
 
     <arg name="setup_sensor" default="True" description="Enable sensor setup on hw-driver."/>
+    <arg name="dual_return_distance_threshold" default="0.1" description="Distance threshold of dual return mode"/>
     <arg name="diag_span" default="1000" description="milliseconds"/>
 
 
@@ -24,6 +25,7 @@
           name="robosense_hw_driver" output="screen">
         <param name="sensor_model" value="$(var sensor_model)"/>
         <param name="return_mode" value="$(var return_mode)"/>
+        <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/>
         <param name="frame_id" value="$(var frame_id)"/>
         <param name="scan_phase" value="$(var scan_phase)"/>
         <param name="sensor_ip" value="$(var sensor_ip)"/>

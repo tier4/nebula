@@ -187,11 +187,24 @@ Status RobosenseDriverRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "Dual return distance threshold [0.01, 0.5]";
+    rcl_interfaces::msg::FloatingPointRange range;
+    range.set__from_value(0.01).set__to_value(0.5).set__step(0.01);
+    descriptor.floating_point_range = {range};
+    this->declare_parameter<double>("dual_return_distance_threshold", 0.1, descriptor);
+    sensor_configuration.dual_return_distance_threshold =
+      this->get_parameter("dual_return_distance_threshold").as_double();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("frame_id", "pandar", descriptor);
+    this->declare_parameter<std::string>("frame_id", "robosense", descriptor);
     sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
   }
   {

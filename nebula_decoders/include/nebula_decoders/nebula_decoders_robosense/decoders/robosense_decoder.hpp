@@ -98,10 +98,23 @@ protected:
 
         // Keep only last (if any) of multiple points that are too close
         if (block_offset != n_blocks - 1) {
+          bool is_below_multi_return_threshold = false;
+
           for (size_t return_idx = 0; return_idx < n_blocks; ++return_idx) {
             if (return_idx == block_offset) {
               continue;
             }
+
+            if (
+              fabsf(getDistance(*return_units[return_idx]) - distance) <
+              sensor_configuration_->dual_return_distance_threshold) {
+              is_below_multi_return_threshold = true;
+              break;
+            }
+          }
+
+          if (is_below_multi_return_threshold) {
+            continue;
           }
         }
 
