@@ -18,12 +18,10 @@ struct RobosenseSensorConfiguration : SensorConfigurationBase
 {
   uint16_t gnss_port{};  // difop
   double scan_phase{};   // start/end angle
+  double dual_return_distance_threshold{};
   uint16_t rotation_speed;
   uint16_t cloud_min_angle;
   uint16_t cloud_max_angle;
-  // time_sync_source
-  // operation_mode
-  // noise_filter
 };
 
 /// @brief Convert RobosenseSensorConfiguration to string (Overloading the << operator)
