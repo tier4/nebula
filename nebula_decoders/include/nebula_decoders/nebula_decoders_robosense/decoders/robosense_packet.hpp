@@ -75,11 +75,33 @@ struct IpAddress
   }
 };
 
+struct MacAddress
+{
+  boost::endian::big_uint8_buf_t first_octet;
+  boost::endian::big_uint8_buf_t second_octet;
+  boost::endian::big_uint8_buf_t third_octet;
+  boost::endian::big_uint8_buf_t fourth_octet;
+  boost::endian::big_uint8_buf_t fifth_octet;
+  boost::endian::big_uint8_buf_t sixth_octet;
+
+  [[nodiscard]] std::string to_string() const
+  {
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(first_octet.value())
+       << ":" << std::setw(2) << static_cast<int>(second_octet.value()) << ":" << std::setw(2)
+       << static_cast<int>(third_octet.value()) << ":" << std::setw(2)
+       << static_cast<int>(fourth_octet.value()) << ":" << std::setw(2)
+       << static_cast<int>(fifth_octet.value()) << ":" << std::setw(2)
+       << static_cast<int>(sixth_octet.value());
+    return ss.str();
+  }
+};
+
 struct Ethernet
 {
   IpAddress lidar_ip;
   IpAddress dest_pc_ip;
-  boost::endian::big_uint48_buf_t mac_addr;
+  MacAddress mac_addr;
   boost::endian::big_uint16_buf_t lidar_out_msop_port;
   boost::endian::big_uint16_buf_t pc_dest_msop_port;
   boost::endian::big_uint16_buf_t lidar_out_difop_port;
@@ -106,6 +128,48 @@ struct CorrectedVerticalAngle
 struct CorrectedHorizontalAngle
 {
   ChannelAngleCorrection angles[32];
+};
+
+struct FirmwareVersion
+{
+  boost::endian::big_uint8_buf_t first_octet;
+  boost::endian::big_uint8_buf_t second_octet;
+  boost::endian::big_uint8_buf_t third_octet;
+  boost::endian::big_uint8_buf_t fourth_octet;
+  boost::endian::big_uint8_buf_t fifth_octet;
+
+  [[nodiscard]] std::string to_string() const
+  {
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(first_octet.value())
+       << std::setw(2) << static_cast<int>(second_octet.value()) << std::setw(2)
+       << static_cast<int>(third_octet.value()) << std::setw(2)
+       << static_cast<int>(fourth_octet.value()) << std::setw(2)
+       << static_cast<int>(fifth_octet.value());
+    return ss.str();
+  }
+};
+
+struct SerialNumber
+{
+  boost::endian::big_uint8_buf_t first_octet;
+  boost::endian::big_uint8_buf_t second_octet;
+  boost::endian::big_uint8_buf_t third_octet;
+  boost::endian::big_uint8_buf_t fourth_octet;
+  boost::endian::big_uint8_buf_t fifth_octet;
+  boost::endian::big_uint8_buf_t sixth_octet;
+
+  [[nodiscard]] std::string to_string() const
+  {
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(first_octet.value())
+       << std::setw(2) << static_cast<int>(second_octet.value()) << std::setw(2)
+       << static_cast<int>(third_octet.value()) << std::setw(2)
+       << static_cast<int>(fourth_octet.value()) << std::setw(2)
+       << static_cast<int>(fifth_octet.value()) << std::setw(2)
+       << static_cast<int>(sixth_octet.value());
+    return ss.str();
+  }
 };
 
 #pragma pack(pop)
