@@ -116,13 +116,13 @@ struct InfoPacket : public InfoPacketBase
   FovSetting fov_setting;
   boost::endian::big_uint16_buf_t tcp_msop_port;
   boost::endian::big_uint16_buf_t phase_lock;
-  boost::endian::big_uint40_buf_t top_firmware_version;
-  boost::endian::big_uint40_buf_t bottom_firmware_version;
-  boost::endian::big_uint40_buf_t bottom_software_version;
-  boost::endian::big_uint40_buf_t motor_firmware_version;
+  FirmwareVersion top_firmware_version;
+  FirmwareVersion bottom_firmware_version;
+  FirmwareVersion bottom_software_version;
+  FirmwareVersion motor_firmware_version;
   uint8_t reserved_first[230];
   boost::endian::big_uint16_buf_t reverse_zero_angle_offset;
-  boost::endian::big_uint48_buf_t serial_number;
+  SerialNumber serial_number;
   boost::endian::big_uint16_buf_t zero_angle_offset;
   boost::endian::big_uint8_buf_t return_mode;
   boost::endian::big_uint8_buf_t time_sync_mode;
@@ -252,7 +252,7 @@ public:
     sensor_info["motor_speed"] = std::to_string(info_packet.motor_speed.value());
     sensor_info["lidar_ip"] = info_packet.ethernet.lidar_ip.to_string();
     sensor_info["dest_pc_ip"] = info_packet.ethernet.dest_pc_ip.to_string();
-    sensor_info["mac_addr"] = std::to_string(info_packet.ethernet.mac_addr.value());
+    sensor_info["mac_addr"] = info_packet.ethernet.mac_addr.to_string();
     sensor_info["lidar_out_msop_port"] =
       std::to_string(info_packet.ethernet.lidar_out_msop_port.value());
     sensor_info["lidar_out_difop_port"] =
@@ -261,16 +261,13 @@ public:
     sensor_info["fov_end"] = std::to_string(info_packet.fov_setting.fov_end.value());
     sensor_info["tcp_msop_port"] = std::to_string(info_packet.tcp_msop_port.value());
     sensor_info["phase_lock"] = std::to_string(info_packet.phase_lock.value());
-    sensor_info["top_firmware_version"] = std::to_string(info_packet.top_firmware_version.value());
-    sensor_info["bottom_firmware_version"] =
-      std::to_string(info_packet.bottom_firmware_version.value());
-    sensor_info["bottom_software_version"] =
-      std::to_string(info_packet.bottom_software_version.value());
-    sensor_info["motor_firmware_version"] =
-      std::to_string(info_packet.motor_firmware_version.value());
+    sensor_info["top_firmware_version"] = info_packet.top_firmware_version.to_string();
+    sensor_info["bottom_firmware_version"] = info_packet.bottom_firmware_version.to_string();
+    sensor_info["bottom_software_version"] = info_packet.bottom_software_version.to_string();
+    sensor_info["motor_firmware_version"] = info_packet.motor_firmware_version.to_string();
     sensor_info["reverse_zero_angle_offset"] =
       std::to_string(info_packet.reverse_zero_angle_offset.value());
-    sensor_info["serial_number"] = std::to_string(info_packet.serial_number.value());
+    sensor_info["serial_number"] = info_packet.serial_number.to_string();
     sensor_info["zero_angle_offset"] = std::to_string(info_packet.zero_angle_offset.value());
 
     if (info_packet.return_mode.value() == 0x00) {
