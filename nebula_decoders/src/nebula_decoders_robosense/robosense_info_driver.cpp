@@ -15,10 +15,10 @@ RobosenseInfoDriver::RobosenseInfoDriver(
     case SensorModel::UNKNOWN:
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;
       break;
-      //    case SensorModel::ROBOSENSE_BPEARL:
-      //      scan_decoder_.reset(new RobosenseDecoder<Bpearl>(
-      //        sensor_configuration, calibration_configuration, correction_configuration));
-      //      break;
+    case SensorModel::ROBOSENSE_BPEARL:
+      info_decoder_.reset(
+        new RobosenseInfoDecoder<Bpearl>(sensor_configuration, calibration_configuration));
+      break;
     case SensorModel::ROBOSENSE_HELIOS_5515:
       info_decoder_.reset(
         new RobosenseInfoDecoder<Helios>(sensor_configuration, calibration_configuration));

@@ -219,6 +219,78 @@ public:
     else
       return firing_time_offset_ns_single_[block_id][channel_id];
   }
+
+  std::map<std::string, std::string> getSensorInfo(
+    const robosense_packet::helios::InfoPacket & info_packet)
+  {
+    std::map<std::string, std::string> sensor_info;
+    sensor_info["motor_speed"] = std::to_string(info_packet.motor_speed.value());
+    sensor_info["lidar_ip"] = info_packet.ethernet.lidar_ip.to_string();
+    sensor_info["dest_pc_ip"] = info_packet.ethernet.dest_pc_ip.to_string();
+    sensor_info["mac_addr"] = std::to_string(info_packet.ethernet.mac_addr.value());
+    sensor_info["lidar_out_msop_port"] =
+      std::to_string(info_packet.ethernet.lidar_out_msop_port.value());
+    sensor_info["pc_dest_msop_port"] =
+      std::to_string(info_packet.ethernet.pc_dest_msop_port.value());
+    sensor_info["lidar_out_difop_port"] =
+      std::to_string(info_packet.ethernet.lidar_out_difop_port.value());
+    sensor_info["pc_dest_difop_port"] =
+      std::to_string(info_packet.ethernet.pc_dest_difop_port.value());
+    sensor_info["fov_start"] = std::to_string(info_packet.fov_setting.fov_start.value());
+    sensor_info["fov_end"] = std::to_string(info_packet.fov_setting.fov_end.value());
+    sensor_info["phase_lock"] = std::to_string(info_packet.phase_lock.value());
+    sensor_info["top_firmware_version"] = std::to_string(info_packet.top_firmware_version.value());
+    sensor_info["bottom_firmware_version"] =
+      std::to_string(info_packet.bottom_firmware_version.value());
+    sensor_info["bottom_software_version"] =
+      std::to_string(info_packet.bottom_software_version.value());
+    sensor_info["motor_firmware_version"] =
+      std::to_string(info_packet.motor_firmware_version.value());
+    sensor_info["sensor_hw_version"] = std::to_string(info_packet.sensor_hw_version.value());
+    sensor_info["web_page_version"] = std::to_string(info_packet.web_page_version.value());
+    sensor_info["top_backup_crc"] = std::to_string(info_packet.top_backup_crc.value());
+    sensor_info["bottom_backup_crc"] = std::to_string(info_packet.bottom_backup_crc.value());
+    sensor_info["software_backup_crc"] = std::to_string(info_packet.software_backup_crc.value());
+    sensor_info["webpage_backup_crc"] = std::to_string(info_packet.webpage_backup_crc.value());
+    sensor_info["ethernet_gateway"] = info_packet.ethernet_gateway.to_string();
+    sensor_info["subnet_mask"] = info_packet.subnet_mask.to_string();
+    sensor_info["serial_number"] = std::to_string(info_packet.serial_number.value());
+    sensor_info["zero_angle_offset"] = std::to_string(info_packet.zero_angle_offset.value());
+
+    if (info_packet.return_mode.value() == 0x00) {
+      sensor_info["return_mode"] = "dual";
+    } else if (info_packet.return_mode.value() == 0x04) {
+      sensor_info["return_mode"] = "strongest";
+    } else if (info_packet.return_mode.value() == 0x05) {
+      sensor_info["return_mode"] = "last";
+    } else if (info_packet.return_mode.value() == 0x06) {
+      sensor_info["return_mode"] = "first";
+    }
+
+    sensor_info["time_sync_mode"] = std::to_string(info_packet.time_sync_mode.value());
+    sensor_info["sync_status"] = std::to_string(info_packet.sync_status.value());
+    sensor_info["time"] = std::to_string(info_packet.time.get_time_in_ns());
+    sensor_info["i_dat"] = std::to_string(info_packet.operating_status.i_dat.value());
+    sensor_info["v_dat"] = std::to_string(info_packet.operating_status.v_dat.value());
+    sensor_info["v_dat_12v"] = std::to_string(info_packet.operating_status.v_dat_12v.value());
+    sensor_info["v_dat_5v"] = std::to_string(info_packet.operating_status.v_dat_5v.value());
+    sensor_info["v_dat_2v5"] = std::to_string(info_packet.operating_status.v_dat_2v5.value());
+    sensor_info["v_dat_apd"] = std::to_string(info_packet.operating_status.v_dat_apd.value());
+    sensor_info["temperature1"] = std::to_string(info_packet.fault_diagnosis.temperature1.value());
+    sensor_info["temperature2"] = std::to_string(info_packet.fault_diagnosis.temperature2.value());
+    sensor_info["temperature3"] = std::to_string(info_packet.fault_diagnosis.temperature3.value());
+    sensor_info["temperature4"] = std::to_string(info_packet.fault_diagnosis.temperature4.value());
+    sensor_info["temperature5"] = std::to_string(info_packet.fault_diagnosis.temperature5.value());
+    sensor_info["r_rpm"] = std::to_string(info_packet.fault_diagnosis.r_rpm.value());
+    sensor_info["lane_up"] = std::to_string(info_packet.fault_diagnosis.lane_up.value());
+    sensor_info["lane_up_cnt"] = std::to_string(info_packet.fault_diagnosis.lane_up_cnt.value());
+    sensor_info["top_status"] = std::to_string(info_packet.fault_diagnosis.top_status.value());
+    sensor_info["gps_status"] = std::to_string(info_packet.fault_diagnosis.gps_status.value());
+    sensor_info["code_wheel_status"] = std::to_string(info_packet.code_wheel_status.value());
+    sensor_info["pps_trigger_mode"] = std::to_string(info_packet.pps_trigger_mode.value());
+    //        sensor_info["gprmc"] = std::to_string(info_packet.gprmc.getGprmc());
+    return sensor_info;
+  }
 };
 
 }  // namespace drivers
