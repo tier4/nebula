@@ -28,8 +28,7 @@ RobosenseHwMonitorRosWrapper::RobosenseHwMonitorRosWrapper(const rclcpp::NodeOpt
   // Wait for the first DIFOP packet
   hw_interface_.WaitForSensorInfo(std::chrono::seconds(3));
 
-  info_driver_ =
-    std::make_unique<drivers::RobosenseInfoDriver>(sensor_cfg_ptr, calibration_configuration_);
+  info_driver_ = std::make_unique<drivers::RobosenseInfoDriver>(sensor_cfg_ptr);
 
   info_driver_->DecodeInfoPacket(hw_interface_.GetInfoPacketFromSensor());
 

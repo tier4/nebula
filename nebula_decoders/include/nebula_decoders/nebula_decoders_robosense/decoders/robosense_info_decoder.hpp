@@ -55,11 +55,8 @@ public:
 
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
-  /// @param calibration_configuration Calibration for this decoder
-  /// calibration_configuration is set)
   explicit RobosenseInfoDecoder(
-    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<RobosenseCalibrationConfiguration> & calibration_configuration)
+    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration)
   : sensor_configuration_(sensor_configuration), logger_(rclcpp::get_logger("RobosenseInfoDecoder"))
   {
     logger_.set_level(rclcpp::Logger::Level::Debug);
