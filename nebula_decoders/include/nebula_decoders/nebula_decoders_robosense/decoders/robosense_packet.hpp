@@ -92,30 +92,6 @@ struct FovSetting
   boost::endian::big_uint16_buf_t fov_end;
 };
 
-struct OperatingStatus
-{
-  boost::endian::big_uint16_buf_t i_dat;
-  boost::endian::big_uint16_buf_t v_dat;
-  boost::endian::big_uint16_buf_t v_dat_12v;
-  boost::endian::big_uint16_buf_t v_dat_5v;
-  boost::endian::big_uint16_buf_t v_dat_2v5;
-  boost::endian::big_uint16_buf_t v_dat_apd;
-};
-
-struct FaultDiagnosis
-{
-  boost::endian::big_uint16_buf_t temperature1;
-  boost::endian::big_uint16_buf_t temperature2;
-  boost::endian::big_uint16_buf_t temperature3;
-  boost::endian::big_uint16_buf_t temperature4;
-  boost::endian::big_uint16_buf_t temperature5;
-  boost::endian::big_uint16_buf_t r_rpm;
-  boost::endian::big_uint8_buf_t lane_up;
-  boost::endian::big_uint16_buf_t lane_up_cnt;
-  boost::endian::big_uint16_buf_t top_status;
-  boost::endian::big_uint8_buf_t gps_status;
-};
-
 struct ChannelAngleCorrection
 {
   boost::endian::big_uint8_buf_t sign;
