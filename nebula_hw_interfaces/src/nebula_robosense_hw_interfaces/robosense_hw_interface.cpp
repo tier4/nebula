@@ -143,14 +143,32 @@ Status RobosenseHwInterface::CloudInterfaceStop()
 Status RobosenseHwInterface::SetSensorConfiguration(
   std::shared_ptr<SensorConfigurationBase> sensor_configuration)
 {
-  sensor_configuration_ =
-    std::static_pointer_cast<RobosenseSensorConfiguration>(sensor_configuration);
+  Status status = Status::OK;
 
-  is_valid_packet_ = [](size_t packet_size) { return (packet_size == HELIOS5515_PACKET_SIZE); };
-  is_valid_info_packet_ = [](size_t packet_size) {
-    return (packet_size == HELIOS5515_INFO_PACKET_SIZE);
-  };
+  try {
+    sensor_configuration_ =
+      std::static_pointer_cast<RobosenseSensorConfiguration>(sensor_configuration);
 
+    if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL) {
+      azimuth_index_ = 44;
+      is_valid_packet_ = [](size_t packet_size) { return (packet_size == BPEARL_PACKET_SIZE); };
+      is_valid_info_packet_ = [](size_t packet_size) {
+        return (packet_size == BPEARL_INFO_PACKET_SIZE);
+      };
+    } else if (sensor_configuration->sensor_model == SensorModel::ROBOSENSE_HELIOS_5515) {
+      azimuth_index_ = 44;
+      is_valid_packet_ = [](size_t packet_size) { return (packet_size == HELIOS5515_PACKET_SIZE); };
+      is_valid_info_packet_ = [](size_t packet_size) {
+        return (packet_size == HELIOS5515_INFO_PACKET_SIZE);
+      };
+    } else {
+      status = Status::INVALID_SENSOR_MODEL;
+    }
+  } catch (const std::exception & ex) {
+    status = Status::SENSOR_CONFIG_ERROR;
+    std::cerr << status << std::endl;
+    return status;
+  }
   return Status::OK;
 }
 
@@ -204,6 +222,18 @@ Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
 
   } else if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL) {
     channel_num = 32;
+    vertical_data_offset = BPEARL_CORRECTED_VERTICAL_ANGLE_OFFSET;
+    horizontal_data_offset = BPEARL_CORRECTED_HORIZONTAL_ANGLE_OFFSET;
+
+    uint8_t return_mode_data = info_buffer_.value()[BPEARL_RETURN_MODE_OFFSET];
+    if (return_mode_data == 0x00) {
+      return_mode = ReturnMode::DUAL;
+    } else if (return_mode_data == 0x01) {
+      return_mode = ReturnMode::STRONGEST;
+    } else if (return_mode_data == 0x02) {
+      return_mode = ReturnMode::LAST;
+    }
+
   } else {
     return Status::INVALID_SENSOR_MODEL;
   }

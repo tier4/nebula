@@ -14,7 +14,8 @@ namespace drivers
 {
 namespace robosense_packet
 {
-
+namespace helios
+{
 #pragma pack(push, 1)
 
 struct Timestamp
@@ -48,15 +49,39 @@ struct Header
   boost::endian::big_uint8_buf_t reserved_fourth[9];
 };
 
-struct PacketHelios : public PacketBase<12, 32, 2, 100>
+struct Packet : public PacketBase<12, 32, 2, 100>
 {
-  typedef Body<Block<Unit, PacketHelios::N_CHANNELS>, PacketHelios::N_BLOCKS> body_t;
+  typedef Body<Block<Unit, Packet::N_CHANNELS>, Packet::N_BLOCKS> body_t;
   Header header;
   body_t body;
   boost::endian::big_uint48_buf_t tail;
 };
 
-struct InfoPacketHelios : public InfoPacketBase
+struct OperatingStatus
+{
+  boost::endian::big_uint16_buf_t i_dat;
+  boost::endian::big_uint16_buf_t v_dat;
+  boost::endian::big_uint16_buf_t v_dat_12v;
+  boost::endian::big_uint16_buf_t v_dat_5v;
+  boost::endian::big_uint16_buf_t v_dat_2v5;
+  boost::endian::big_uint16_buf_t v_dat_apd;
+};
+
+struct FaultDiagnosis
+{
+  boost::endian::big_uint16_buf_t temperature1;
+  boost::endian::big_uint16_buf_t temperature2;
+  boost::endian::big_uint16_buf_t temperature3;
+  boost::endian::big_uint16_buf_t temperature4;
+  boost::endian::big_uint16_buf_t temperature5;
+  boost::endian::big_uint16_buf_t r_rpm;
+  boost::endian::big_uint8_buf_t lane_up;
+  boost::endian::big_uint16_buf_t lane_up_cnt;
+  boost::endian::big_uint16_buf_t top_status;
+  boost::endian::big_uint8_buf_t gps_status;
+};
+
+struct InfoPacket : public InfoPacketBase
 {
   boost::endian::big_uint64_buf_t header;
   boost::endian::big_uint16_buf_t motor_speed;
@@ -97,11 +122,11 @@ struct InfoPacketHelios : public InfoPacketBase
 };
 
 #pragma pack(pop)
-
+}  // namespace helios
 }  // namespace robosense_packet
 
 class Helios
-: public RobosenseSensor<robosense_packet::PacketHelios, robosense_packet::InfoPacketHelios>
+: public RobosenseSensor<robosense_packet::helios::Packet, robosense_packet::helios::InfoPacket>
 {
 private:
   static constexpr int firing_time_offset_ns_single_[12][32] = {
