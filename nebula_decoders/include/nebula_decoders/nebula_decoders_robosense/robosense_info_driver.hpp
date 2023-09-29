@@ -25,7 +25,7 @@ namespace nebula
 namespace drivers
 {
 /// @brief Robosense driver
-class RobosenseInfoDriver : NebulaDriverBase
+class RobosenseInfoDriver
 {
 private:
   /// @brief Current driver status
@@ -39,20 +39,12 @@ public:
 
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this driver
-  /// @param calibration_configuration CalibrationConfiguration for this driver
   explicit RobosenseInfoDriver(
-    const std::shared_ptr<drivers::RobosenseSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<drivers::RobosenseCalibrationConfiguration> & calibration_configuration);
+    const std::shared_ptr<drivers::RobosenseSensorConfiguration> & sensor_configuration);
 
   /// @brief Get current status of this driver
   /// @return Current status
   Status GetStatus();
-
-  /// @brief Setting CalibrationConfiguration (not used)
-  /// @param calibration_configuration
-  /// @return Resulting status
-  Status SetCalibrationConfiguration(
-    const CalibrationConfigurationBase & calibration_configuration) override;
 
   Status DecodeInfoPacket(const std::vector<uint8_t> & packet);
 
