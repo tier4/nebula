@@ -173,6 +173,8 @@ Status RobosenseDriverRosWrapper::GetParameters(
     this->declare_parameter<std::string>("sensor_model", "");
     sensor_configuration.sensor_model =
       nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
+    calibration_configuration.SetChannelSize(
+      nebula::drivers::GetChannelSize(sensor_configuration.sensor_model));
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -275,18 +277,19 @@ Status RobosenseDriverRosWrapper::GetParameters(
           if (load_status == Status::OK) {
             RCLCPP_INFO_STREAM(this->get_logger(), "Loaded calibration data from sensor. ");
             run_local = false;
+
+            const auto save_status = calibration_configuration.SaveFile(
+              CreateCalibrationPath(calibration_configuration.calibration_file));
+            if (save_status == Status::OK) {
+              RCLCPP_INFO_STREAM(this->get_logger(), "Saved calibration data from sensor. ");
+            } else {
+              RCLCPP_ERROR_STREAM(
+                this->get_logger(), "Failed to save calibration data from sensor. ");
+            }
+
           } else {
             RCLCPP_ERROR_STREAM(
               this->get_logger(), "Failed to load calibration data from sensor. ");
-          }
-
-          const auto save_status = calibration_configuration.SaveFile(
-            CreateCalibrationPath(calibration_configuration.calibration_file));
-          if (save_status == Status::OK) {
-            RCLCPP_INFO_STREAM(this->get_logger(), "Saved calibration data from sensor. ");
-          } else {
-            RCLCPP_ERROR_STREAM(
-              this->get_logger(), "Failed to save calibration data from sensor. ");
           }
         });
       hw_interface_.InfoInterfaceStop();

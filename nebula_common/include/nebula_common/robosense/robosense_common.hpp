@@ -7,7 +7,9 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <sstream>
+#include <vector>
 
 namespace nebula
 {
@@ -49,14 +51,33 @@ inline ReturnMode ReturnModeFromStringRobosense(const std::string & return_mode)
   return ReturnMode::UNKNOWN;
 }
 
+size_t GetChannelSize(const SensorModel & model)
+{
+  switch (model) {
+    case SensorModel::ROBOSENSE_BPEARL:
+      return 32;
+    case SensorModel::ROBOSENSE_HELIOS_5515:
+      return 32;
+  }
+}
+
+struct ChannelCorrection
+{
+  float azimuth{NAN};
+  float elevation{NAN};
+
+  [[nodiscard]] bool has_value() const { return !std::isnan(azimuth) && !std::isnan(elevation); }
+};
+
 /// @brief struct for Robosense calibration configuration
 struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
 {
-  std::map<size_t, float> elev_angle_map;
-  std::map<size_t, float> azimuth_offset_map;
+  std::vector<ChannelCorrection> calibration;
+
+  void SetChannelSize(const size_t channel_num) { calibration.resize(channel_num); }
 
   template <typename stream_t>
-  void LoadFromStream(stream_t & stream)
+  inline nebula::Status LoadFromStream(stream_t & stream)
   {
     std::string header;
     std::getline(stream, header);
@@ -65,11 +86,46 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
     int laser_id;
     float elevation;
     float azimuth;
-    while (!stream.eof()) {
+    Status load_status = Status::OK;
+    for (size_t i = 0; i < calibration.size(); ++i) {
       stream >> laser_id >> sep >> elevation >> sep >> azimuth;
-      elev_angle_map[laser_id - 1] = elevation;
-      azimuth_offset_map[laser_id - 1] = azimuth;
+
+      if (laser_id <= 0 || laser_id > calibration.size()) {
+        std::cout << "Invalid laser id: " << laser_id << std::endl;
+        load_status = Status::INVALID_CALIBRATION_FILE;
+      }
+      if (std::isnan(elevation) || std::isnan(azimuth)) {
+        std::cout << "Invalid calibration data" << laser_id << "," << elevation << "," << azimuth
+                  << std::endl;
+        load_status = Status::INVALID_CALIBRATION_FILE;
+      }
+      if (
+        calibration[laser_id - 1].has_value() && calibration[laser_id - 1].elevation != elevation &&
+        calibration[laser_id - 1].azimuth != azimuth) {
+        std::cout << "Duplicate calibration data for laser id: " << laser_id << std::endl;
+        load_status = Status::INVALID_CALIBRATION_FILE;
+      }
+
+      ChannelCorrection correction{azimuth, elevation};
+      calibration[laser_id - 1] = correction;
     }
+
+    for (auto & calib : calibration) {
+      if (!calib.has_value()) {
+        std::cout << calib.elevation << "," << calib.azimuth << std::endl;
+        std::cout << "Missing calibration data" << std::endl;
+        load_status = Status::INVALID_CALIBRATION_FILE;
+      }
+    }
+
+    if (load_status != Status::OK) {
+      for (auto & correction : calibration) {
+        correction.elevation = NAN;
+        correction.azimuth = NAN;
+      }
+    }
+
+    return load_status;
   }
 
   inline nebula::Status LoadFromFile(const std::string & calibration_file)
@@ -79,10 +135,9 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
       return Status::INVALID_CALIBRATION_FILE;
     }
 
-    LoadFromStream(ifs);
-
+    const auto status = LoadFromStream(ifs);
     ifs.close();
-    return Status::OK;
+    return status;
   }
 
   /// @brief Loading calibration data (not used)
@@ -93,9 +148,8 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
     std::stringstream ss;
     ss << calibration_content;
 
-    LoadFromStream(ss);
-
-    return Status::OK;
+    const auto status = LoadFromStream(ss);
+    return status;
   }
 
   //  inline nebula::Status LoadFromDifop(const std::string & calibration_file)
@@ -110,15 +164,21 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
       return Status::CANNOT_SAVE_FILE;
     }
     ofs << "Laser id,Elevation,Azimuth" << std::endl;
-    for (const auto & pair : elev_angle_map) {
-      auto laser_id = pair.first + 1;
-      float elevation = pair.second;
-      float azimuth = azimuth_offset_map[pair.first];
+
+    for (size_t i = 0; i < calibration.size(); ++i) {
+      auto laser_id = i + 1;
+      float elevation = calibration[i].elevation;
+      float azimuth = calibration[i].azimuth;
       ofs << laser_id << "," << elevation << "," << azimuth << std::endl;
     }
-    ofs.close();
 
+    ofs.close();
     return Status::OK;
+  }
+
+  [[nodiscard]] inline ChannelCorrection GetCorrection(const size_t channel_id) const
+  {
+    return calibration[channel_id];
   }
 };
 
