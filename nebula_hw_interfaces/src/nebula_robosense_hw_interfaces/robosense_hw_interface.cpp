@@ -5,9 +5,9 @@ namespace drivers
 {
 RobosenseHwInterface::RobosenseHwInterface()
 : cloud_io_context_{new ::drivers::common::IoContext(1)},
-  cloud_io_context_info_{new ::drivers::common::IoContext(1)},
+  info_io_context_{new ::drivers::common::IoContext(1)},
   cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
-  cloud_udp_driver_info{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_info_)},
+  info_udp_driver_{new ::drivers::udp_driver::UdpDriver(*info_io_context_)},
   scan_cloud_ptr_{std::make_unique<pandar_msgs::msg::PandarScan>()}
 {
 }
@@ -25,16 +25,18 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   pandar_msgs::msg::PandarPacket pandar_packet;
   pandar_packet.data = packet_data;
   pandar_packet.size = buffer_size;
-  auto now = std::chrono::system_clock::now();
-  auto now_secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-  auto now_nanosecs =
+
+  const auto now = std::chrono::system_clock::now();
+  const auto timestamp_ns =
     std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-  pandar_packet.stamp.sec = static_cast<int>(now_secs);
-  pandar_packet.stamp.nanosec =
-    static_cast<int>((now_nanosecs / 1000000000. - static_cast<double>(now_secs)) * 1000000000);
+
+  constexpr int nanosec_per_sec = 1000000000;
+  pandar_packet.stamp.sec = static_cast<int>(timestamp_ns / nanosec_per_sec);
+  pandar_packet.stamp.nanosec = static_cast<int>(timestamp_ns % nanosec_per_sec);
+
   scan_cloud_ptr_->packets.emplace_back(pandar_packet);
 
-  int current_phase = 0;
+  int current_phase{};
   bool comp_flg = false;
 
   const auto & data = scan_cloud_ptr_->packets.back().data;
@@ -110,12 +112,12 @@ Status RobosenseHwInterface::InfoInterfaceStart()
     PrintInfo(
       "Starting UDP server for info packets on: " + sensor_configuration_->sensor_ip + ":" +
       std::to_string(sensor_configuration_->gnss_port));
-    cloud_udp_driver_info->init_receiver(
+    info_udp_driver_->init_receiver(
       sensor_configuration_->host_ip, sensor_configuration_->gnss_port);
-    cloud_udp_driver_info->receiver()->open();
-    cloud_udp_driver_info->receiver()->bind();
+    info_udp_driver_->receiver()->open();
+    info_udp_driver_->receiver()->bind();
 
-    cloud_udp_driver_info->receiver()->asyncReceive(
+    info_udp_driver_->receiver()->asyncReceive(
       std::bind(&RobosenseHwInterface::ReceiveInfoPacketCallback, this, std::placeholders::_1));
 
   } catch (const std::exception & ex) {
@@ -131,7 +133,7 @@ Status RobosenseHwInterface::InfoInterfaceStart()
 
 Status RobosenseHwInterface::InfoInterfaceStop()
 {
-  cloud_udp_driver_info->receiver()->close();
+  info_udp_driver_->receiver()->close();
   return Status::OK;
 }
 
@@ -169,7 +171,7 @@ Status RobosenseHwInterface::SetSensorConfiguration(
     std::cerr << status << std::endl;
     return status;
   }
-  return Status::OK;
+  return status;
 }
 
 Status RobosenseHwInterface::GetSensorConfiguration(SensorConfigurationBase & sensor_configuration)
@@ -200,8 +202,8 @@ Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
   calibration << "Laser ID,Elevation,Azimuth\n";
 
   size_t channel_num = GetChannelSize(sensor_configuration_->sensor_model);
-  size_t vertical_data_offset = 0;
-  size_t horizontal_data_offset = 0;
+  size_t vertical_data_offset{};
+  size_t horizontal_data_offset{};
   ReturnMode return_mode = ReturnMode::UNKNOWN;
 
   if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_HELIOS_5515) {

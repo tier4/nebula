@@ -52,6 +52,8 @@ class RobosenseDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrap
     drivers::RobosenseSensorConfiguration & sensor_configuration,
     drivers::RobosenseCalibrationConfiguration & calibration_configuration);
 
+  /// @brief Create calibration file path by adding a suffix to the original path
+  /// @param original_path Original path
   std::string CreateCalibrationPath(const std::string & original_path);
 
   /// @brief Convert seconds to chrono::nanoseconds
@@ -82,10 +84,6 @@ public:
   /// @brief Get current status of this driver
   /// @return Current status
   Status GetStatus();
-
-private:
-  /// @brief File path of Correction data (Only required only for AT)
-  std::string correction_file_path;
 };
 
 }  // namespace ros

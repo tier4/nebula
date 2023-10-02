@@ -44,7 +44,7 @@ protected:
 
   rclcpp::Logger logger_;
 
-  /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
+  /// @brief Validates and parses PandarPacket. Currently only checks size, not checksums etc.
   /// @param pandar_packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
   bool parsePacket(const pandar_msgs::msg::PandarPacket & pandar_packet)
@@ -155,6 +155,8 @@ protected:
   }
 
   /// @brief Get the distance of the given unit in meters
+  /// @param unit The unit to get the distance from
+  /// @return The distance in meters
   float getDistance(const typename SensorT::packet_t::body_t::block_t::unit_t & unit)
   {
     return unit.distance.value() * robosense_packet::get_dis_unit(packet_);

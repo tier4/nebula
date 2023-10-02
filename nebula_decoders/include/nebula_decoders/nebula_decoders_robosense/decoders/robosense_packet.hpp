@@ -31,7 +31,7 @@ struct Block
   UnitT units[UnitN];
   typedef UnitT unit_t;
 
-  uint16_t get_azimuth() const { return azimuth.value(); }
+  [[nodiscard]] uint16_t get_azimuth() const { return azimuth.value(); }
 };
 
 template <typename BlockT, size_t BlockN>
@@ -55,10 +55,6 @@ struct PacketBase
   static constexpr size_t N_CHANNELS = nChannels;
   static constexpr size_t MAX_RETURNS = maxReturns;
   static constexpr size_t DEGREE_SUBDIVISIONS = degreeSubdivisions;
-};
-
-struct InfoPacketBase
-{
 };
 
 struct IpAddress

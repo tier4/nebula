@@ -42,13 +42,14 @@ class RobosenseHwInterface : NebulaHwInterfaceBase
 {
 private:
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
-  std::unique_ptr<::drivers::common::IoContext> cloud_io_context_info_;
+  std::unique_ptr<::drivers::common::IoContext> info_io_context_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
-  std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_info;
+  std::unique_ptr<::drivers::udp_driver::UdpDriver> info_udp_driver_;
   std::shared_ptr<RobosenseSensorConfiguration> sensor_configuration_;
   std::unique_ptr<pandar_msgs::msg::PandarScan> scan_cloud_ptr_;
   size_t azimuth_index_{44};  // For Helios and Bpearl 42 byte header + 2 byte flag
   int prev_phase_{};
+  std::atomic<bool> is_info_received{false};         // To check if DIFOP is received
   std::optional<std::vector<uint8_t>> info_buffer_;  // To hold DIFOP data
   std::function<bool(size_t)>
     is_valid_packet_; /*Lambda Function Array to verify proper packet size for data*/
@@ -67,8 +68,6 @@ private:
   void PrintDebug(std::string debug);
 
 public:
-  std::atomic<bool> is_info_received{false};
-
   /// @brief Constructor
   RobosenseHwInterface();
 
@@ -80,6 +79,9 @@ public:
   /// @param buffer Buffer containing the data received from the UDP socket
   void ReceiveInfoPacketCallback(const std::vector<uint8_t> & buffer);
 
+  /// @brief Blocks until the sensor info is received or timeout
+  /// @param timeout Timeout duration
+  /// @return Resulting status
   Status WaitForSensorInfo(const std::chrono::milliseconds & timeout) const;
 
   /// @brief Starting the interface that handles UDP streams for MSOP packets
@@ -112,16 +114,19 @@ public:
   /// @brief Printing calibration configuration
   /// @param calibration_configuration CalibrationConfiguration for the checking
   /// @return Resulting status
-  Status GetCalibrationConfiguration(CalibrationConfigurationBase & calibration_configuration);
+  Status GetCalibrationConfiguration(
+    CalibrationConfigurationBase & calibration_configuration) override;
 
   /// @brief Getting correction values from DIFOP packet
-  /// @param with_run Automatically executes run() of UdpDriver
+  /// @param string_callback Callback function for received correction data
   /// @return Resulting status
   Status GetLidarCalibrationFromSensor(
     const std::function<
       void(const std::string & received_string, const ReturnMode & return_mode_received)> &
       string_callback);
 
+  /// @brief Get the most recent info packet from the sensor
+  /// @return Info packet
   std::vector<uint8_t> GetInfoPacketFromSensor();
 
   /// @brief Registering callback for PandarScan
