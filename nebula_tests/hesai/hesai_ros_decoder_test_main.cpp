@@ -89,12 +89,6 @@ TEST_P(DecoderTest, TestPcd)
   EXPECT_GT(check_cnt, 0);
 }
 
-
-
-int main(int argc, char * argv[])
-{
-  std::cout << "hesai_ros_decoder_test_main.cpp" << std::endl;
-
 void DecoderTest::SetUp()
 {
   auto decoder_params = GetParam();
