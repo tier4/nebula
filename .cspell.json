@@ -10,6 +10,7 @@
     "gprmc",
     "Hesai",
     "memcpy",
+    "mkdoxy",
     "nohup",
     "nproc",
     "pandar",
@@ -19,6 +20,7 @@
     "PANDARXT",
     "Pdelay",
     "QT",
+    "rclcpp",
     "schedutil",
     "STD_COUT",
     "stds",
@@ -28,7 +30,6 @@
     "vccint",
     "Vccint",
     "XT",
-    "XTM",
-    "mkdoxy"
+    "XTM"
   ]
 }

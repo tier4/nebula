@@ -16,6 +16,8 @@
 
 #include <gtest/gtest.h>
 
+#include <functional>
+
 #ifndef _SRC_CALIBRATION_DIR_PATH
 #define _SRC_CALIBRATION_DIR_PATH ""
 #endif
@@ -106,19 +108,8 @@ public:
 
   /// @brief Read the specified bag file and compare the constructed point clouds with the
   /// corresponding PCD files
-  void ReadBag();
+  void ReadBag(std::function<void(uint64_t, uint64_t, nebula::drivers::NebulaPointCloudPtr)> scan_callback);
 
-  /*
-  void SetUp() override {
-    // Setup things that should occur before every test instance should go here
-    RCLCPP_ERROR_STREAM(this->get_logger(), "DONE WITH SETUP!!");
-  }
-
-  void TearDown() override {
-    std::cout << "DONE WITH TEARDOWN" << std::endl;
-  }
-*/
-private:
   HesaiRosDecoderTestParams params_;
 };
 

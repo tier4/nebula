@@ -1,4 +1,5 @@
 #include "hesai_ros_decoder_test.hpp"
+
 #include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rcpputils/filesystem_helper.hpp"
@@ -166,7 +167,7 @@ Status HesaiRosDecoderTest::GetParameters(
     this->declare_parameter<std::string>(
       "bag_path", (bag_root_dir / params_.bag_path).string(), descriptor);
     params_.bag_path = this->get_parameter("bag_path").as_string();
-    std::cout << params_.bag_path << std::endl;
+    RCLCPP_DEBUG_STREAM(get_logger(), "Bag path relative to test root: " << params_.bag_path);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -248,15 +249,16 @@ Status HesaiRosDecoderTest::GetParameters(
   return Status::OK;
 }
 
-void HesaiRosDecoderTest::ReadBag()
+void HesaiRosDecoderTest::ReadBag(
+  std::function<void(uint64_t, uint64_t, nebula::drivers::NebulaPointCloudPtr)> scan_callback)
 {
   rosbag2_storage::StorageOptions storage_options;
   rosbag2_cpp::ConverterOptions converter_options;
 
-  std::cout << params_.bag_path << std::endl;
-  std::cout << params_.storage_id << std::endl;
-  std::cout << params_.format << std::endl;
-  std::cout << params_.target_topic << std::endl;
+  RCLCPP_DEBUG_STREAM(get_logger(), params_.bag_path);
+  RCLCPP_DEBUG_STREAM(get_logger(), params_.storage_id);
+  RCLCPP_DEBUG_STREAM(get_logger(), params_.format);
+  RCLCPP_DEBUG_STREAM(get_logger(), params_.target_topic);
 
   auto target_topic_name = params_.target_topic;
   if (target_topic_name.substr(0, 1) == "/") {
@@ -264,61 +266,38 @@ void HesaiRosDecoderTest::ReadBag()
   }
   target_topic_name = std::regex_replace(target_topic_name, std::regex("/"), "_");
 
-  pcl::PCDReader pcd_reader;
-
   rcpputils::fs::path bag_dir(params_.bag_path);
-  rcpputils::fs::path pcd_dir = bag_dir.parent_path();
-  int check_cnt = 0;
 
   storage_options.uri = params_.bag_path;
   storage_options.storage_id = params_.storage_id;
   converter_options.output_serialization_format = params_.format;  //"cdr";
   rclcpp::Serialization<pandar_msgs::msg::PandarScan> serialization;
   nebula::drivers::NebulaPointCloudPtr pointcloud(new nebula::drivers::NebulaPointCloud);
-  // nebula::drivers::NebulaPointCloudPtr ref_pointcloud(new nebula::drivers::NebulaPointCloud);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr ref_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
-  {
-    rosbag2_cpp::Reader bag_reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
-    bag_reader.open(storage_options, converter_options);
-    while (bag_reader.has_next()) {
-      auto bag_message = bag_reader.read_next();
 
-      std::cout << "Found topic name " << bag_message->topic_name << std::endl;
+  rosbag2_cpp::Reader bag_reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
+  bag_reader.open(storage_options, converter_options);
+  while (bag_reader.has_next()) {
+    auto bag_message = bag_reader.read_next();
 
-      if (bag_message->topic_name == params_.target_topic) {
-        pandar_msgs::msg::PandarScan extracted_msg;
-        rclcpp::SerializedMessage extracted_serialized_msg(*bag_message->serialized_data);
-        serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
+    RCLCPP_DEBUG_STREAM(get_logger(), "Found topic name " << bag_message->topic_name);
 
-        std::cout << "Found data in topic " << bag_message->topic_name << ": "
-                  << bag_message->time_stamp << std::endl;
+    if (bag_message->topic_name == params_.target_topic) {
+      pandar_msgs::msg::PandarScan extracted_msg;
+      rclcpp::SerializedMessage extracted_serialized_msg(*bag_message->serialized_data);
+      serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
 
-        auto extracted_msg_ptr = std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg);
-        auto pointcloud_ts = driver_ptr_->ConvertScanToPointcloud(extracted_msg_ptr);
-        pointcloud = std::get<0>(pointcloud_ts);
+      RCLCPP_DEBUG_STREAM(
+        get_logger(),
+        "Found data in topic " << bag_message->topic_name << ": " << bag_message->time_stamp);
 
-        // There are very rare cases where has_scanned_ does not become true, but it is not known
-        // whether it is because of decoder or deserialize_message.
-        if (!pointcloud) continue;
+      auto extracted_msg_ptr = std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg);
+      auto pointcloud_ts = driver_ptr_->ConvertScanToPointcloud(extracted_msg_ptr);
+      auto scan_timestamp = std::get<1>(pointcloud_ts);
+      pointcloud = std::get<0>(pointcloud_ts);
 
-        auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
-
-        auto target_pcd_path = (pcd_dir / fn);
-        std::cout << target_pcd_path << std::endl;
-        if (target_pcd_path.exists()) {
-          std::cout << "exists: " << target_pcd_path << std::endl;
-          auto rt = pcd_reader.read(target_pcd_path.string(), *ref_pointcloud);
-          std::cout << rt << " loaded: " << target_pcd_path << std::endl;
-          checkPCDs(pointcloud, ref_pointcloud);
-          check_cnt++;
-          // ref_pointcloud.reset(new nebula::drivers::NebulaPointCloud);
-          ref_pointcloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
-        }
-        pointcloud.reset(new nebula::drivers::NebulaPointCloud);
-      }
+      scan_callback(bag_message->time_stamp, scan_timestamp, pointcloud);
+      pointcloud.reset(new nebula::drivers::NebulaPointCloud);
     }
-    EXPECT_GT(check_cnt, 0);
-    // close on scope exit
   }
 }
 

@@ -21,7 +21,7 @@
 
 namespace nebula
 {
-namespace ros
+namespace test
 {
 
 void checkPCDs(nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<pcl::PointXYZ>::Ptr pc_ref)
@@ -66,24 +66,6 @@ void printPCD(nebula::drivers::NebulaPointCloudPtr pp)
     std::cout << "(" << p.x << ", " << p.y << "," << p.z << "): " << p.intensity << ", "
               << p.channel << ", " << p.azimuth << ", " << p.return_type << ", " << p.time_stamp
               << std::endl;
-  }
-}
-
-void checkTimestamp(
-  pandar_msgs::msg::PandarScan & raw_scan, nebula::drivers::HesaiScanDecoder & decoder)
-{
-  // first: self-check
-  putenv("TZ=GMT");
-  tzset();
-  auto gmt = timezone;
-  putenv("TZ=JST");
-  tzset();
-  auto jst = timezone;
-
-  EXPECT_NE(gmt, jst);
-
-  for (auto packet : raw_scan.packets) {
-    decoder.unpack(packet);
   }
 }
 
