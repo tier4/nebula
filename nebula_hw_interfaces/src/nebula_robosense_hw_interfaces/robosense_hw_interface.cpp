@@ -199,13 +199,12 @@ Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
   std::stringstream calibration;
   calibration << "Laser ID,Elevation,Azimuth\n";
 
-  size_t channel_num = 0;
+  size_t channel_num = GetChannelSize(sensor_configuration_->sensor_model);
   size_t vertical_data_offset = 0;
   size_t horizontal_data_offset = 0;
   ReturnMode return_mode = ReturnMode::UNKNOWN;
 
   if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_HELIOS_5515) {
-    channel_num = 32;
     vertical_data_offset = HELIOS5515_CORRECTED_VERTICAL_ANGLE_OFFSET;
     horizontal_data_offset = HELIOS5515_CORRECTED_HORIZONTAL_ANGLE_OFFSET;
 
@@ -221,7 +220,6 @@ Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
     }
 
   } else if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL) {
-    channel_num = 32;
     vertical_data_offset = BPEARL_CORRECTED_VERTICAL_ANGLE_OFFSET;
     horizontal_data_offset = BPEARL_CORRECTED_HORIZONTAL_ANGLE_OFFSET;
 
@@ -256,7 +254,6 @@ Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
 
     calibration << channel + 1 << "," << vertical_angle << "," << horizontal_angle << std::endl;
   }
-
   callback(calibration.str(), return_mode);
   return Status::OK;
 }

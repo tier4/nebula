@@ -36,8 +36,9 @@ public:
     }
 
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-      float elevation_angle_deg = sensor_calibration->elev_angle_map[channel_id];
-      float azimuth_offset_deg = sensor_calibration->azimuth_offset_map[channel_id];
+      const auto correction = sensor_calibration->GetCorrection(channel_id);
+      float elevation_angle_deg = correction.elevation;
+      float azimuth_offset_deg = correction.azimuth;
 
       elevation_angle_rad_[channel_id] = deg2rad(elevation_angle_deg);
       azimuth_offset_rad_[channel_id] = deg2rad(azimuth_offset_deg);
