@@ -29,7 +29,7 @@ struct Timestamp
   boost::endian::big_uint16_buf_t millisecond;
   boost::endian::big_uint16_buf_t nanosecond;
 
-  uint64_t get_time_in_ns() const
+  [[nodiscard]] uint64_t get_time_in_ns() const
   {
     // Constants for conversion
     constexpr uint64_t nanoseconds_per_second = 1'000'000'000;
@@ -108,7 +108,7 @@ struct FaultDiagnosis
   uint8_t reserved_third[7];
 };
 
-struct InfoPacket : public InfoPacketBase
+struct InfoPacket
 {
   boost::endian::big_uint64_buf_t header;
   boost::endian::big_uint16_buf_t motor_speed;
@@ -231,8 +231,8 @@ private:
      29424, 29680, 30456, 30712, 30968, 31224, 31480, 31736, 31992, 32248}};
 
 public:
-  static constexpr float MIN_RANGE = 0.2f;
-  static constexpr float MAX_RANGE = 150.f;
+  static constexpr float MIN_RANGE = 0.1f;
+  static constexpr float MAX_RANGE = 30.f;
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 230400;  ///// !! Calculate this
 
   int getPacketRelativePointTimeOffset(

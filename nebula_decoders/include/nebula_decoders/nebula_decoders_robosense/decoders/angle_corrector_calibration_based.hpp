@@ -26,7 +26,7 @@ private:
   std::array<std::array<float, ChannelN>, MAX_AZIMUTH_LEN> azimuth_sin_{};
 
 public:
-  AngleCorrectorCalibrationBased(
+  explicit AngleCorrectorCalibrationBased(
     const std::shared_ptr<RobosenseCalibrationConfiguration> & sensor_calibration)
   : AngleCorrector(sensor_calibration)
   {

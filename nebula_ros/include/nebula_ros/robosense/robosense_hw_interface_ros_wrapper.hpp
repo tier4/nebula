@@ -39,7 +39,6 @@ class RobosenseHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterf
 {
 public:
   explicit RobosenseHwInterfaceRosWrapper(const rclcpp::NodeOptions & options);
-  ~RobosenseHwInterfaceRosWrapper() noexcept override;
 
   /// @brief Start point cloud streaming (Call CloudInterfaceStart of HwInterface)
   /// @return Resulting status
@@ -61,7 +60,6 @@ public:
 private:
   drivers::RobosenseHwInterface hw_interface_;
   drivers::RobosenseSensorConfiguration sensor_configuration_;
-  std::mutex mtx_config_;
   Status interface_status_;
 
   /// @brief Received Robosense message publisher

@@ -8,10 +8,7 @@ ros::RobosenseHwInterfaceRosWrapper::RobosenseHwInterfaceRosWrapper(
   const rclcpp::NodeOptions & options)
 : rclcpp::Node("robosense_hw_interface_ros_wrapper", options)
 {
-  if (mtx_config_.try_lock()) {
-    interface_status_ = GetParameters(sensor_configuration_);
-    mtx_config_.unlock();
-  }
+  interface_status_ = GetParameters(sensor_configuration_);
 
   if (Status::OK != interface_status_) {
     RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
@@ -33,10 +30,6 @@ ros::RobosenseHwInterfaceRosWrapper::RobosenseHwInterfaceRosWrapper(
     "robosense_packets", rclcpp::SensorDataQoS());
 
   StreamStart();
-}
-
-RobosenseHwInterfaceRosWrapper::~RobosenseHwInterfaceRosWrapper() noexcept
-{
 }
 
 Status RobosenseHwInterfaceRosWrapper::StreamStart()
@@ -103,7 +96,7 @@ Status RobosenseHwInterfaceRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_ip", "192.168.1.201", descriptor);
+    this->declare_parameter<std::string>("sensor_ip", "192.168.1.200", descriptor);
     sensor_configuration.sensor_ip = this->get_parameter("sensor_ip").as_string();
   }
   {
@@ -215,7 +208,7 @@ Status RobosenseHwInterfaceRosWrapper::GetParameters(
   if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
     return Status::INVALID_ECHO_MODE;
   }
-  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {  // ||
+  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 

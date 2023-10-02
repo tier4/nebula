@@ -166,14 +166,15 @@ Status RobosenseHwMonitorRosWrapper::GetParameters(
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     rcl_interfaces::msg::IntegerRange range;
-    if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::HESAI_PANDARAT128) {
-      descriptor.additional_constraints = "200, 300, 400, 500";
-      range.set__from_value(200).set__to_value(500).set__step(100);
-      descriptor.integer_range = {range};
-      this->declare_parameter<uint16_t>("rotation_speed", 200, descriptor);
-    } else {
+    if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::ROBOSENSE_BPEARL) {
       descriptor.additional_constraints = "300, 600, 1200";
       range.set__from_value(300).set__to_value(1200).set__step(300);
+      descriptor.integer_range = {range};
+      this->declare_parameter<uint16_t>("rotation_speed", 600, descriptor);
+    } else if (
+      sensor_configuration.sensor_model == nebula::drivers::SensorModel::ROBOSENSE_HELIOS_5515) {
+      descriptor.additional_constraints = "600, 1200";
+      range.set__from_value(600).set__to_value(1200).set__step(600);
       descriptor.integer_range = {range};
       this->declare_parameter<uint16_t>("rotation_speed", 600, descriptor);
     }

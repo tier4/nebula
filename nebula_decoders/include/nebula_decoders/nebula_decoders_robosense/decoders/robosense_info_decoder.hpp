@@ -25,13 +25,14 @@ protected:
   /// @brief The sensor definition, used for return mode and time offset handling
   SensorT sensor_{};
 
+  /// @brief The last decoded packet
   typename SensorT::info_t packet_{};
 
   rclcpp::Logger logger_;
 
 public:
-  /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
-  /// @param pandar_packet The incoming PandarPacket
+  /// @brief Validates and parses DIFOP packet. Currently only checks size, not checksums etc.
+  /// @param raw_packet The incoming DIFOP packet
   /// @return Whether the packet was parsed successfully
   bool parsePacket(const std::vector<uint8_t> & raw_packet) override
   {
@@ -63,6 +64,8 @@ public:
     RCLCPP_INFO_STREAM(logger_, sensor_configuration_);
   }
 
+  /// @brief Get the sensor telemetry
+  /// @return The sensor telemetry
   std::map<std::string, std::string> getSensorInfo() override
   {
     return sensor_.getSensorInfo(packet_);

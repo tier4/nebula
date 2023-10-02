@@ -26,11 +26,9 @@ RobosenseDriver::RobosenseDriver(
       scan_decoder_.reset(
         new RobosenseDecoder<Helios>(sensor_configuration, calibration_configuration));
       break;
-
     default:
       driver_status_ = nebula::Status::NOT_INITIALIZED;
       throw std::runtime_error("Driver not Implemented for selected sensor.");
-      break;
   }
 }
 

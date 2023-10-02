@@ -16,11 +16,13 @@ public:
   virtual ~RobosenseInfoDecoderBase() = default;
   RobosenseInfoDecoderBase() = default;
 
-  /// @brief Parses PandarPacket and add its points to the point cloud
-  /// @param pandar_packet The incoming PandarPacket
-  /// @return The last azimuth processed
+  /// @brief Parses DIFOP and add its telemetry
+  /// @param raw_packet The incoming DIFOP packet
+  /// @return Whether the packet was parsed successfully
   virtual bool parsePacket(const std::vector<uint8_t> & raw_packet) = 0;
 
+  /// @brief Get the sensor telemetry
+  /// @return The sensor telemetry
   virtual std::map<std::string, std::string> getSensorInfo() = 0;
 };
 

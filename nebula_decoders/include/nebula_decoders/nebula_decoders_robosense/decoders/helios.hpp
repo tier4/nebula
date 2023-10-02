@@ -115,7 +115,7 @@ struct WebPageVersion
   }
 };
 
-struct InfoPacket : public InfoPacketBase
+struct InfoPacket
 {
   boost::endian::big_uint64_buf_t header;
   boost::endian::big_uint16_buf_t motor_speed;
