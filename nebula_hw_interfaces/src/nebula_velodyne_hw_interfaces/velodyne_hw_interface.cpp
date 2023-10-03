@@ -29,8 +29,6 @@ Status VelodyneHwInterface::InitializeSensorConfiguration(
 Status VelodyneHwInterface::SetSensorConfiguration(
   std::shared_ptr<SensorConfigurationBase> sensor_configuration)
 {
-  InitializeSensorConfiguration(sensor_configuration);
-
   VelodyneStatus status = CheckAndSetConfigBySnapshotAsync();
   Status rt = status;
   return rt;
