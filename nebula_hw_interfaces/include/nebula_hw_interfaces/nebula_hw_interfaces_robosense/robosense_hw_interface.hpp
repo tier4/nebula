@@ -17,15 +17,16 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
+#include "robosense_msgs/msg/difop_packet.hpp"
+#include "robosense_msgs/msg/msop_packet.hpp"
+#include "robosense_msgs/msg/robosense_scan.hpp"
 
 namespace nebula
 {
 namespace drivers
 {
 
-const uint16_t MTU_SIZE = 1500;
+const uint16_t MTU_SIZE = 1248;
 const uint16_t HELIOS5515_PACKET_SIZE = 1248;
 const uint16_t HELIOS5515_INFO_PACKET_SIZE = 1248;
 const uint16_t HELIOS5515_CORRECTED_VERTICAL_ANGLE_OFFSET = 468;
@@ -46,7 +47,7 @@ private:
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> info_udp_driver_;
   std::shared_ptr<RobosenseSensorConfiguration> sensor_configuration_;
-  std::unique_ptr<pandar_msgs::msg::PandarScan> scan_cloud_ptr_;
+  std::unique_ptr<robosense_msgs::msg::RobosenseScan> scan_cloud_ptr_;
   size_t azimuth_index_{44};  // For Helios and Bpearl 42 byte header + 2 byte flag
   int prev_phase_{};
   std::atomic<bool> is_info_received{false};         // To check if DIFOP is received
@@ -55,7 +56,7 @@ private:
     is_valid_packet_; /*Lambda Function Array to verify proper packet size for data*/
   std::function<bool(size_t)>
     is_valid_info_packet_; /*Lambda Function Array to verify proper packet size for info*/
-  std::function<void(std::unique_ptr<pandar_msgs::msg::PandarScan> buffer)>
+  std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseScan> buffer)>
     scan_reception_callback_; /**This function pointer is called when the scan is complete*/
   std::shared_ptr<rclcpp::Logger> parent_node_logger_;
 
@@ -129,11 +130,11 @@ public:
   /// @return Info packet
   std::vector<uint8_t> GetInfoPacketFromSensor();
 
-  /// @brief Registering callback for PandarScan
+  /// @brief Registering callback for RobosenseScan
   /// @param scan_callback Callback function
   /// @return Resulting status
   Status RegisterScanCallback(
-    std::function<void(std::unique_ptr<pandar_msgs::msg::PandarScan>)> scan_callback);
+    std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseScan>)> scan_callback);
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger

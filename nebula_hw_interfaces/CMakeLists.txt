@@ -5,6 +5,7 @@ find_package(ament_cmake_auto REQUIRED)
 find_package(PCL REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(pcl_conversions REQUIRED)
+find_package(robosense_msgs REQUIRED)
 
 ament_auto_find_build_dependencies()
 

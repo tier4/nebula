@@ -8,7 +8,7 @@ RobosenseHwInterface::RobosenseHwInterface()
   info_io_context_{new ::drivers::common::IoContext(1)},
   cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
   info_udp_driver_{new ::drivers::udp_driver::UdpDriver(*info_io_context_)},
-  scan_cloud_ptr_{std::make_unique<pandar_msgs::msg::PandarScan>()}
+  scan_cloud_ptr_{std::make_unique<robosense_msgs::msg::RobosenseScan>()}
 {
 }
 
@@ -22,19 +22,18 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   uint32_t buffer_size = buffer.size();
   std::array<uint8_t, MTU_SIZE> packet_data{};
   std::copy_n(std::make_move_iterator(buffer.begin()), buffer_size, packet_data.begin());
-  pandar_msgs::msg::PandarPacket pandar_packet;
-  pandar_packet.data = packet_data;
-  pandar_packet.size = buffer_size;
+  robosense_msgs::msg::MsopPacket msop_packet;
+  msop_packet.data = packet_data;
 
   const auto now = std::chrono::system_clock::now();
   const auto timestamp_ns =
     std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
 
   constexpr int nanosec_per_sec = 1000000000;
-  pandar_packet.stamp.sec = static_cast<int>(timestamp_ns / nanosec_per_sec);
-  pandar_packet.stamp.nanosec = static_cast<int>(timestamp_ns % nanosec_per_sec);
+  msop_packet.stamp.sec = static_cast<int>(timestamp_ns / nanosec_per_sec);
+  msop_packet.stamp.nanosec = static_cast<int>(timestamp_ns % nanosec_per_sec);
 
-  scan_cloud_ptr_->packets.emplace_back(pandar_packet);
+  scan_cloud_ptr_->packets.emplace_back(msop_packet);
 
   int current_phase{};
   bool comp_flg = false;
@@ -55,7 +54,7 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
       scan_cloud_ptr_->header.stamp = scan_cloud_ptr_->packets.front().stamp;
       // Callback
       scan_reception_callback_(std::move(scan_cloud_ptr_));
-      scan_cloud_ptr_ = std::make_unique<pandar_msgs::msg::PandarScan>();
+      scan_cloud_ptr_ = std::make_unique<robosense_msgs::msg::RobosenseScan>();
     }
   }
 }
@@ -260,7 +259,7 @@ std::vector<uint8_t> RobosenseHwInterface::GetInfoPacketFromSensor()
 }
 
 Status RobosenseHwInterface::RegisterScanCallback(
-  std::function<void(std::unique_ptr<pandar_msgs::msg::PandarScan>)> scan_callback)
+  std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseScan>)> scan_callback)
 {
   scan_reception_callback_ = std::move(scan_callback);
   return Status::OK;

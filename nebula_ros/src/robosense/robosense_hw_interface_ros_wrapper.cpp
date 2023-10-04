@@ -26,7 +26,7 @@ ros::RobosenseHwInterfaceRosWrapper::RobosenseHwInterfaceRosWrapper(
   hw_interface_.RegisterScanCallback(std::bind(
     &RobosenseHwInterfaceRosWrapper::ReceiveScanDataCallback, this, std::placeholders::_1));
 
-  pandar_scan_pub_ = this->create_publisher<pandar_msgs::msg::PandarScan>(
+  robosense_scan_pub_ = this->create_publisher<robosense_msgs::msg::RobosenseScan>(
     "robosense_packets", rclcpp::SensorDataQoS());
 
   StreamStart();
@@ -217,12 +217,12 @@ Status RobosenseHwInterfaceRosWrapper::GetParameters(
 }
 
 void RobosenseHwInterfaceRosWrapper::ReceiveScanDataCallback(
-  std::unique_ptr<pandar_msgs::msg::PandarScan> scan_buffer)
+  std::unique_ptr<robosense_msgs::msg::RobosenseScan> scan_buffer)
 {
   // Publish
   scan_buffer->header.frame_id = sensor_configuration_.frame_id;
   scan_buffer->header.stamp = scan_buffer->packets.front().stamp;
-  pandar_scan_pub_->publish(*scan_buffer);
+  robosense_scan_pub_->publish(*scan_buffer);
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(RobosenseHwInterfaceRosWrapper)

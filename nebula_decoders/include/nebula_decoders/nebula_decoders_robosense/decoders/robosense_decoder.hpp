@@ -6,8 +6,9 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
+#include "robosense_msgs/msg/difop_packet.hpp"
+#include "robosense_msgs/msg/msop_packet.hpp"
+#include "robosense_msgs/msg/robosense_scan.hpp"
 
 namespace nebula
 {
@@ -44,18 +45,18 @@ protected:
 
   rclcpp::Logger logger_;
 
-  /// @brief Validates and parses PandarPacket. Currently only checks size, not checksums etc.
-  /// @param pandar_packet The incoming PandarPacket
+  /// @brief Validates and parses MsopPacket. Currently only checks size, not checksums etc.
+  /// @param msop_packet The incoming MsopPacket
   /// @return Whether the packet was parsed successfully
-  bool parsePacket(const pandar_msgs::msg::PandarPacket & pandar_packet)
+  bool parsePacket(const robosense_msgs::msg::MsopPacket & msop_packet)
   {
-    if (pandar_packet.size < sizeof(typename SensorT::packet_t)) {
+    if (msop_packet.data.size() < sizeof(typename SensorT::packet_t)) {
       RCLCPP_ERROR_STREAM(
-        logger_, "Packet size mismatch:" << pandar_packet.size << " | Expected at least:"
+        logger_, "Packet size mismatch:" << msop_packet.data.size() << " | Expected at least:"
                                          << sizeof(typename SensorT::packet_t));
       return false;
     }
-    if (std::memcpy(&packet_, pandar_packet.data.data(), sizeof(typename SensorT::packet_t))) {
+    if (std::memcpy(&packet_, msop_packet.data.data(), sizeof(typename SensorT::packet_t))) {
       return true;
     }
 
@@ -164,7 +165,7 @@ protected:
 
   /// @brief Get timestamp of point in nanoseconds, relative to scan timestamp. Includes firing time
   /// offset correction for channel and block
-  /// @param packet_timestamp_ns The timestamp of the current PandarPacket in nanoseconds
+  /// @param packet_timestamp_ns The timestamp of the current MsopPacket in nanoseconds
   /// @param block_id The block index of the point
   /// @param channel_id The channel index of the point
   uint32_t getPointTimeRelative(uint64_t packet_timestamp_ns, size_t block_id, size_t channel_id)
@@ -198,9 +199,9 @@ public:
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
   }
 
-  int unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override
+  int unpack(const robosense_msgs::msg::MsopPacket & msop_packet) override
   {
-    if (!parsePacket(pandar_packet)) {
+    if (!parsePacket(msop_packet)) {
       return -1;
     }
 

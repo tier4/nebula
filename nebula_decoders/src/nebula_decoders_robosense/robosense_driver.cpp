@@ -46,7 +46,7 @@ Status RobosenseDriver::SetCalibrationConfiguration(
 }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ConvertScanToPointcloud(
-  const std::shared_ptr<pandar_msgs::msg::PandarScan> & pandar_scan)
+  const std::shared_ptr<robosense_msgs::msg::RobosenseScan> & robosense_scan)
 {
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
   auto logger = rclcpp::get_logger("RobosenseDriver");
@@ -57,7 +57,7 @@ std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ConvertScanToP
   }
 
   int cnt = 0, last_azimuth = 0;
-  for (auto & packet : pandar_scan->packets) {
+  for (auto & packet : robosense_scan->packets) {
     last_azimuth = scan_decoder_->unpack(packet);
     if (scan_decoder_->hasScanned()) {
       pointcloud = scan_decoder_->getPointcloud();
@@ -67,7 +67,7 @@ std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ConvertScanToP
 
   if (cnt == 0) {
     RCLCPP_ERROR_STREAM(
-      logger, "Scanned " << pandar_scan->packets.size() << " packets, but no "
+      logger, "Scanned " << robosense_scan->packets.size() << " packets, but no "
                          << "pointclouds were generated. Last azimuth: " << last_azimuth);
   }
 

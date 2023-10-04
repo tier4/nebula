@@ -8,8 +8,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
+#include "robosense_msgs/msg/difop_packet.hpp"
+#include "robosense_msgs/msg/msop_packet.hpp"
+#include "robosense_msgs/msg/robosense_scan.hpp"
 
 namespace nebula
 {
@@ -63,7 +64,7 @@ private:
   Status interface_status_;
 
   /// @brief Received Robosense message publisher
-  rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr pandar_scan_pub_;
+  rclcpp::Publisher<robosense_msgs::msg::RobosenseScan>::SharedPtr robosense_scan_pub_;
 
   /// @brief Initializing hardware interface ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
@@ -71,9 +72,13 @@ private:
   Status InitializeHwInterface(
     const drivers::SensorConfigurationBase & sensor_configuration) override;
 
-  /// @brief Callback for receiving PandarScan
-  /// @param scan_buffer Received PandarScan
-  void ReceiveScanDataCallback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_buffer);
+  /// @brief Callback for receiving RobosenseScan
+  /// @param scan_buffer Received RobosenseScan
+  void ReceiveScanDataCallback(std::unique_ptr<robosense_msgs::msg::RobosenseScan> scan_buffer);
+
+  /// @brief Callback for receiving DifopPacket
+  /// @param difop_buffer Received DIFOP packet
+  void ReceiveInfoDataCallback(std::unique_ptr<robosense_msgs::msg::DifopPacket> difop_buffer);
 };
 
 }  // namespace ros
