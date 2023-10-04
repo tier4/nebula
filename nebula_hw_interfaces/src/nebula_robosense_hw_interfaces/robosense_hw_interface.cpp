@@ -213,12 +213,8 @@ Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
     uint8_t return_mode_data = info_buffer_.value()[HELIOS5515_RETURN_MODE_OFFSET];
     if (return_mode_data == 0x00) {
       return_mode = ReturnMode::DUAL;
-    } else if (return_mode_data == 0x04) {
-      return_mode = ReturnMode::STRONGEST;
-    } else if (return_mode_data == 0x05) {
-      return_mode = ReturnMode::LAST;
-    } else if (return_mode_data == 0x06) {
-      return_mode = ReturnMode::FIRST;
+    } else {
+      return_mode = ReturnMode::SINGLE;
     }
 
   } else if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL) {
@@ -228,10 +224,8 @@ Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
     uint8_t return_mode_data = info_buffer_.value()[BPEARL_RETURN_MODE_OFFSET];
     if (return_mode_data == 0x00) {
       return_mode = ReturnMode::DUAL;
-    } else if (return_mode_data == 0x01) {
-      return_mode = ReturnMode::STRONGEST;
-    } else if (return_mode_data == 0x02) {
-      return_mode = ReturnMode::LAST;
+    } else {
+      return_mode = ReturnMode::SINGLE;
     }
 
   } else {

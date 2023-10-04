@@ -178,11 +178,7 @@ size_t get_n_returns(ReturnMode return_mode)
   switch (return_mode) {
     case ReturnMode::DUAL:
       return 2;
-    case ReturnMode::STRONGEST:
-      return 1;
-    case ReturnMode::LAST:
-      return 1;
-    case ReturnMode::FIRST:
+    case ReturnMode::SINGLE:
       return 1;
     default:
       throw std::runtime_error("Unknown return mode");
