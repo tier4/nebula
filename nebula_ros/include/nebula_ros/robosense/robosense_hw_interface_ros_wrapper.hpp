@@ -63,8 +63,11 @@ private:
   drivers::RobosenseSensorConfiguration sensor_configuration_;
   Status interface_status_;
 
-  /// @brief Received Robosense message publisher
+  /// @brief Received Robosense Scan message publisher
   rclcpp::Publisher<robosense_msgs::msg::RobosenseScan>::SharedPtr robosense_scan_pub_;
+
+  /// @brief Received Robosense Difop message publisher
+  rclcpp::Publisher<robosense_msgs::msg::DifopPacket>::SharedPtr robosense_difop_pub_;
 
   /// @brief Initializing hardware interface ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
