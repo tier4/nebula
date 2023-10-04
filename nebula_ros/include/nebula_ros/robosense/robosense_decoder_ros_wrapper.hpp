@@ -12,8 +12,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
+#include "robosense_msgs/msg/difop_packet.hpp"
+#include "robosense_msgs/msg/msop_packet.hpp"
+#include "robosense_msgs/msg/robosense_scan.hpp"
 
 #include <chrono>
 
@@ -26,7 +27,7 @@ class RobosenseDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrap
 {
   std::shared_ptr<drivers::RobosenseDriver> driver_ptr_;
   Status wrapper_status_;
-  rclcpp::Subscription<pandar_msgs::msg::PandarScan>::SharedPtr pandar_scan_sub_;
+  rclcpp::Subscription<robosense_msgs::msg::RobosenseScan>::SharedPtr robosense_scan_sub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_;
@@ -77,9 +78,9 @@ class RobosenseDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrap
 public:
   explicit RobosenseDriverRosWrapper(const rclcpp::NodeOptions & options);
 
-  /// @brief Callback for PandarScan subscriber
-  /// @param scan_msg Received PandarScan
-  void ReceiveScanMsgCallback(const pandar_msgs::msg::PandarScan::SharedPtr scan_msg);
+  /// @brief Callback for RobosenseScan subscriber
+  /// @param scan_msg Received RobosenseScan
+  void ReceiveScanMsgCallback(const robosense_msgs::msg::RobosenseScan::SharedPtr scan_msg);
 
   /// @brief Get current status of this driver
   /// @return Current status

@@ -33,11 +33,11 @@ RobosenseDriverRosWrapper::RobosenseDriverRosWrapper(const rclcpp::NodeOptions &
     std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_));
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
-  pandar_scan_sub_ = create_subscription<pandar_msgs::msg::PandarScan>(
+  robosense_scan_sub_ = create_subscription<robosense_msgs::msg::RobosenseScan>(
     "robosense_packets", rclcpp::SensorDataQoS(),
     std::bind(&RobosenseDriverRosWrapper::ReceiveScanMsgCallback, this, std::placeholders::_1));
-  nebula_points_pub_ =
-    this->create_publisher<sensor_msgs::msg::PointCloud2>("pandar_points", rclcpp::SensorDataQoS());
+  nebula_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+    "robosense_points", rclcpp::SensorDataQoS());
   aw_points_base_pub_ =
     this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points", rclcpp::SensorDataQoS());
   aw_points_ex_pub_ =
@@ -47,7 +47,7 @@ RobosenseDriverRosWrapper::RobosenseDriverRosWrapper(const rclcpp::NodeOptions &
 }
 
 void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
-  const pandar_msgs::msg::PandarScan::SharedPtr scan_msg)
+  const robosense_msgs::msg::RobosenseScan::SharedPtr scan_msg)
 {
   auto t_start = std::chrono::high_resolution_clock::now();
 

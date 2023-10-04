@@ -7,8 +7,9 @@
 #include "nebula_decoders/nebula_decoders_common/nebula_driver_base.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_decoder.hpp"
 
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
+#include "robosense_msgs/msg/difop_packet.hpp"
+#include "robosense_msgs/msg/msop_packet.hpp"
+#include "robosense_msgs/msg/robosense_scan.hpp"
 
 #include <pcl_conversions/pcl_conversions.h>
 
@@ -50,11 +51,11 @@ public:
   Status SetCalibrationConfiguration(
     const CalibrationConfigurationBase & calibration_configuration) override;
 
-  /// @brief Convert PandarScan message to point cloud
-  /// @param pandar_scan Message
+  /// @brief Convert RobosenseScan message to point cloud
+  /// @param robosense_scan Message
   /// @return tuple of Point cloud and timestamp
   std::tuple<drivers::NebulaPointCloudPtr, double> ConvertScanToPointcloud(
-    const std::shared_ptr<pandar_msgs::msg::PandarScan> & pandar_scan);
+    const std::shared_ptr<robosense_msgs::msg::RobosenseScan> & robosense_scan);
 };
 
 }  // namespace drivers

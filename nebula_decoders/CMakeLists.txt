@@ -18,6 +18,7 @@ find_package(PCL REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(nebula_common REQUIRED)
+find_package(robosense_msgs REQUIRED)
 
 include_directories(
         include
