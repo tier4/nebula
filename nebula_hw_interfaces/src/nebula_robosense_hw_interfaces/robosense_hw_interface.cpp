@@ -66,8 +66,16 @@ void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> 
     return;
   }
 
-  info_buffer_.emplace(buffer);
-  is_info_received = true;
+  info_buffer_.emplace(buffer);  //////
+  is_info_received = true;       ////////
+
+  if (info_reception_callback_) {
+    std::unique_ptr<robosense_msgs::msg::DifopPacket> difop_packet =
+      std::make_unique<robosense_msgs::msg::DifopPacket>();
+    std::copy_n(std::make_move_iterator(buffer.begin()), buffer.size(), difop_packet->data.begin());
+
+    info_reception_callback_(std::move(difop_packet));
+  }
 }
 
 Status RobosenseHwInterface::WaitForSensorInfo(const std::chrono::milliseconds & timeout) const
@@ -262,6 +270,13 @@ Status RobosenseHwInterface::RegisterScanCallback(
   std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseScan>)> scan_callback)
 {
   scan_reception_callback_ = std::move(scan_callback);
+  return Status::OK;
+}
+
+Status RobosenseHwInterface::RegisterInfoCallback(
+  std::function<void(std::unique_ptr<robosense_msgs::msg::DifopPacket>)> info_callback)
+{
+  info_reception_callback_ = std::move(info_callback);
   return Status::OK;
 }
 

@@ -58,6 +58,8 @@ private:
     is_valid_info_packet_; /*Lambda Function Array to verify proper packet size for info*/
   std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseScan> buffer)>
     scan_reception_callback_; /**This function pointer is called when the scan is complete*/
+  std::function<void(std::unique_ptr<robosense_msgs::msg::DifopPacket> buffer)>
+    info_reception_callback_; /**This function pointer is called when DIFOP packet is received*/
   std::shared_ptr<rclcpp::Logger> parent_node_logger_;
 
   /// @brief Printing the string to RCLCPP_INFO_STREAM
@@ -135,6 +137,12 @@ public:
   /// @return Resulting status
   Status RegisterScanCallback(
     std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseScan>)> scan_callback);
+
+  /// @brief Registering callback for DifopPacket
+  /// @param scan_callback Callback function
+  /// @return Resulting status
+  Status RegisterInfoCallback(
+    std::function<void(std::unique_ptr<robosense_msgs::msg::DifopPacket>)> info_callback);
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger

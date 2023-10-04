@@ -26,8 +26,14 @@ ros::RobosenseHwInterfaceRosWrapper::RobosenseHwInterfaceRosWrapper(
   hw_interface_.RegisterScanCallback(std::bind(
     &RobosenseHwInterfaceRosWrapper::ReceiveScanDataCallback, this, std::placeholders::_1));
 
+  hw_interface_.RegisterInfoCallback(std::bind(
+    &RobosenseHwInterfaceRosWrapper::ReceiveInfoDataCallback, this, std::placeholders::_1));
+
   robosense_scan_pub_ = this->create_publisher<robosense_msgs::msg::RobosenseScan>(
     "robosense_packets", rclcpp::SensorDataQoS());
+
+  robosense_difop_pub_ = this->create_publisher<robosense_msgs::msg::DifopPacket>(
+    "robosense_difop_packets", rclcpp::SensorDataQoS());
 
   StreamStart();
 }
@@ -36,7 +42,8 @@ Status RobosenseHwInterfaceRosWrapper::StreamStart()
 {
   if (Status::OK == interface_status_) {
     RCLCPP_INFO_STREAM(get_logger(), "Starting interface.");
-    interface_status_ = hw_interface_.CloudInterfaceStart();
+    hw_interface_.CloudInterfaceStart();
+    hw_interface_.InfoInterfaceStart();
   }
   return interface_status_;
 }
@@ -223,6 +230,14 @@ void RobosenseHwInterfaceRosWrapper::ReceiveScanDataCallback(
   scan_buffer->header.frame_id = sensor_configuration_.frame_id;
   scan_buffer->header.stamp = scan_buffer->packets.front().stamp;
   robosense_scan_pub_->publish(*scan_buffer);
+}
+
+void RobosenseHwInterfaceRosWrapper::ReceiveInfoDataCallback(
+  std::unique_ptr<robosense_msgs::msg::DifopPacket> difop_buffer)
+{
+  // Publish
+  //  difop_buffer->stamp = difop_buffer->packets.front().stamp;
+  robosense_difop_pub_->publish(*difop_buffer);
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(RobosenseHwInterfaceRosWrapper)
