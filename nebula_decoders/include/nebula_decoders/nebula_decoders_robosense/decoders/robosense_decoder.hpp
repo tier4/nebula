@@ -96,6 +96,14 @@ protected:
           continue;
         }
 
+        auto return_type =
+          sensor_.getReturnType(sensor_configuration_->return_mode, block_offset, return_units);
+
+        // Keep only last of multiple identical points
+        if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
+          continue;
+        }
+
         // Keep only last (if any) of multiple points that are too close
         if (block_offset != n_blocks - 1) {
           bool is_below_multi_return_threshold = false;
@@ -124,8 +132,7 @@ protected:
         point.time_stamp =
           getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
 
-        point.return_type =
-          static_cast<uint8_t>(ReturnModeToReturnType(sensor_configuration_->return_mode));
+        point.return_type = static_cast<uint8_t>(return_type);
         point.channel = channel_id;
 
         auto corrected_angle_data = angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
