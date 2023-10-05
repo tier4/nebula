@@ -22,7 +22,7 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   uint32_t buffer_size = buffer.size();
   std::array<uint8_t, MTU_SIZE> packet_data{};
   std::copy_n(std::make_move_iterator(buffer.begin()), buffer_size, packet_data.begin());
-  robosense_msgs::msg::MsopPacket msop_packet;
+  robosense_msgs::msg::RobosensePacket msop_packet;
   msop_packet.data = packet_data;
 
   const auto now = std::chrono::system_clock::now();
@@ -70,8 +70,8 @@ void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> 
   is_info_received = true;       ////////
 
   if (info_reception_callback_) {
-    std::unique_ptr<robosense_msgs::msg::DifopPacket> difop_packet =
-      std::make_unique<robosense_msgs::msg::DifopPacket>();
+    std::unique_ptr<robosense_msgs::msg::RobosensePacket> difop_packet =
+      std::make_unique<robosense_msgs::msg::RobosensePacket>();
     std::copy_n(std::make_move_iterator(buffer.begin()), buffer.size(), difop_packet->data.begin());
 
     info_reception_callback_(std::move(difop_packet));
@@ -274,7 +274,7 @@ Status RobosenseHwInterface::RegisterScanCallback(
 }
 
 Status RobosenseHwInterface::RegisterInfoCallback(
-  std::function<void(std::unique_ptr<robosense_msgs::msg::DifopPacket>)> info_callback)
+  std::function<void(std::unique_ptr<robosense_msgs::msg::RobosensePacket>)> info_callback)
 {
   info_reception_callback_ = std::move(info_callback);
   return Status::OK;

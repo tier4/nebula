@@ -1,2 +1,2 @@
 std_msgs/Header header
-MsopPacket[] packets
+RobosensePacket[] packets

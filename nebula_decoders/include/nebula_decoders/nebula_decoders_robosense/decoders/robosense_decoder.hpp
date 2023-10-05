@@ -6,8 +6,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "robosense_msgs/msg/difop_packet.hpp"
-#include "robosense_msgs/msg/msop_packet.hpp"
+#include "robosense_msgs/msg/robosense_packet.hpp"
 #include "robosense_msgs/msg/robosense_scan.hpp"
 
 namespace nebula
@@ -48,7 +47,7 @@ protected:
   /// @brief Validates and parses MsopPacket. Currently only checks size, not checksums etc.
   /// @param msop_packet The incoming MsopPacket
   /// @return Whether the packet was parsed successfully
-  bool parsePacket(const robosense_msgs::msg::MsopPacket & msop_packet)
+  bool parsePacket(const robosense_msgs::msg::RobosensePacket & msop_packet)
   {
     if (msop_packet.data.size() < sizeof(typename SensorT::packet_t)) {
       RCLCPP_ERROR_STREAM(
@@ -199,7 +198,7 @@ public:
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
   }
 
-  int unpack(const robosense_msgs::msg::MsopPacket & msop_packet) override
+  int unpack(const robosense_msgs::msg::RobosensePacket & msop_packet) override
   {
     if (!parsePacket(msop_packet)) {
       return -1;

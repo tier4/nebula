@@ -17,8 +17,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "robosense_msgs/msg/difop_packet.hpp"
-#include "robosense_msgs/msg/msop_packet.hpp"
+#include "robosense_msgs/msg/robosense_packet.hpp"
 #include "robosense_msgs/msg/robosense_scan.hpp"
 
 namespace nebula
@@ -58,7 +57,7 @@ private:
     is_valid_info_packet_; /*Lambda Function Array to verify proper packet size for info*/
   std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseScan> buffer)>
     scan_reception_callback_; /**This function pointer is called when the scan is complete*/
-  std::function<void(std::unique_ptr<robosense_msgs::msg::DifopPacket> buffer)>
+  std::function<void(std::unique_ptr<robosense_msgs::msg::RobosensePacket> buffer)>
     info_reception_callback_; /**This function pointer is called when DIFOP packet is received*/
   std::shared_ptr<rclcpp::Logger> parent_node_logger_;
 
@@ -138,11 +137,11 @@ public:
   Status RegisterScanCallback(
     std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseScan>)> scan_callback);
 
-  /// @brief Registering callback for DifopPacket
+  /// @brief Registering callback for RobosensePacket
   /// @param scan_callback Callback function
   /// @return Resulting status
   Status RegisterInfoCallback(
-    std::function<void(std::unique_ptr<robosense_msgs::msg::DifopPacket>)> info_callback);
+    std::function<void(std::unique_ptr<robosense_msgs::msg::RobosensePacket>)> info_callback);
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger

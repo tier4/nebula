@@ -24,6 +24,14 @@ public:
   /// @brief Get the sensor telemetry
   /// @return The sensor telemetry
   virtual std::map<std::string, std::string> getSensorInfo() = 0;
+
+  /// @brief Get the laser return mode
+  /// @return The laser return mode
+  virtual ReturnMode getReturnMode() = 0;
+
+  /// @brief Get sensor calibration
+  /// @return The sensor calibration
+  virtual RobosenseCalibrationConfiguration getSensorCalibration() = 0;
 };
 
 }  // namespace drivers

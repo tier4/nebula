@@ -11,8 +11,7 @@ find_package(std_msgs REQUIRED)
 ament_auto_find_build_dependencies()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-        "msg/MsopPacket.msg"
-        "msg/DifopPacket.msg"
+        "msg/RobosensePacket.msg"
         "msg/RobosenseScan.msg"
         DEPENDENCIES
         std_msgs

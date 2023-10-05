@@ -49,6 +49,10 @@ public:
   Status DecodeInfoPacket(const std::vector<uint8_t> & packet);
 
   std::map<std::string, std::string> GetSensorInfo();
+
+  ReturnMode GetReturnMode();
+
+  RobosenseCalibrationConfiguration GetSensorCalibration();
 };
 
 }  // namespace drivers

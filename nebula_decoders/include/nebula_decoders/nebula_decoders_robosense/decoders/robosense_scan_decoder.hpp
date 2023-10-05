@@ -3,8 +3,7 @@
 #include "nebula_common/point_types.hpp"
 #include "nebula_common/robosense/robosense_common.hpp"
 
-#include "robosense_msgs/msg/difop_packet.hpp"
-#include "robosense_msgs/msg/msop_packet.hpp"
+#include "robosense_msgs/msg/robosense_packet.hpp"
 #include "robosense_msgs/msg/robosense_scan.hpp"
 
 #include <tuple>
@@ -28,7 +27,7 @@ public:
   /// @brief Parses RobosensePacket and add its points to the point cloud
   /// @param msop_packet The incoming MsopPacket
   /// @return The last azimuth processed
-  virtual int unpack(const robosense_msgs::msg::MsopPacket & msop_packet) = 0;
+  virtual int unpack(const robosense_msgs::msg::RobosensePacket & msop_packet) = 0;
 
   /// @brief Indicates whether one full scan is ready
   /// @return Whether a scan is ready

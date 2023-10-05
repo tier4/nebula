@@ -19,9 +19,6 @@ template <typename SensorT>
 class RobosenseInfoDecoder : public RobosenseInfoDecoderBase
 {
 protected:
-  /// @brief Configuration for this decoder
-  const std::shared_ptr<drivers::RobosenseSensorConfiguration> sensor_configuration_;
-
   /// @brief The sensor definition, used for return mode and time offset handling
   SensorT sensor_{};
 
@@ -55,13 +52,9 @@ public:
   }
 
   /// @brief Constructor
-  /// @param sensor_configuration SensorConfiguration for this decoder
-  explicit RobosenseInfoDecoder(
-    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration)
-  : sensor_configuration_(sensor_configuration), logger_(rclcpp::get_logger("RobosenseInfoDecoder"))
+  RobosenseInfoDecoder() : logger_(rclcpp::get_logger("RobosenseInfoDecoder"))
   {
     logger_.set_level(rclcpp::Logger::Level::Debug);
-    RCLCPP_INFO_STREAM(logger_, sensor_configuration_);
   }
 
   /// @brief Get the sensor telemetry
@@ -69,6 +62,17 @@ public:
   std::map<std::string, std::string> getSensorInfo() override
   {
     return sensor_.getSensorInfo(packet_);
+  }
+
+  /// @brief Get the laser return mode
+  /// @return The laser return mode
+  ReturnMode getReturnMode() override { return sensor_.getReturnMode(packet_); }
+
+  /// @brief Get sensor calibration
+  /// @return The sensor calibration
+  RobosenseCalibrationConfiguration getSensorCalibration() override
+  {
+    return sensor_.getSensorCalibration(packet_);
   }
 };
 
