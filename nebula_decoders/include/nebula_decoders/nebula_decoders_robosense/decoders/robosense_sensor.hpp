@@ -60,7 +60,63 @@ public:
 
     return min_offset_ns;
   }
-};
 
+  /// @brief Whether the unit given by return_idx is a duplicate of any other unit in return_units
+  /// @param return_idx The unit's index in the return_units vector
+  /// @param return_units The vector of all the units corresponding to the same return group (i.e.
+  /// length 2 for dual-return with both units having the same channel but coming from different
+  /// blocks)
+  /// @return true if the unit is identical to any other one in return_units, false otherwise
+  static bool is_duplicate(
+    uint32_t return_idx,
+    const std::vector<const typename PacketT::body_t::block_t::unit_t *> & return_units)
+  {
+    for (unsigned int i = 0; i < return_units.size(); ++i) {
+      if (i == return_idx) {
+        continue;
+      }
+
+      if (
+        return_units[return_idx]->distance.value() == return_units[i]->distance.value() &&
+        return_units[return_idx]->reflectivity.value() == return_units[i]->reflectivity.value()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// @brief Get the return type of the point given by return_idx
+  ///
+  /// @param return_mode The sensor's currently active return mode
+  /// @param return_idx The block index of the point within the group of blocks that make up the
+  /// return group (e.g. either 0 or 1 for dual return)
+  /// @param return_units The units corresponding to all the returns in the group. These are usually
+  /// from the same column across adjascent blocks.
+  /// @return The return type of the point
+  virtual ReturnType getReturnType(
+    ReturnMode return_mode, unsigned int return_idx,
+    const std::vector<const typename PacketT::body_t::block_t::unit_t *> & return_units)
+  {
+    if (is_duplicate(return_idx, return_units)) {
+      return ReturnType::IDENTICAL;
+    }
+
+    switch (return_mode) {
+      case ReturnMode::SINGLE_FIRST:
+        return ReturnType::FIRST;
+      case ReturnMode::SINGLE_LAST:
+        return ReturnType::LAST;
+      case ReturnMode::SINGLE_STRONGEST:
+        return ReturnType::STRONGEST;
+      case ReturnMode::DUAL:
+        if (return_idx == 0) {
+          return ReturnType::STRONGEST;
+        } else {
+          return ReturnType::LAST;
+        }
+    }
+  }
+};
 }  // namespace drivers
 }  // namespace nebula
