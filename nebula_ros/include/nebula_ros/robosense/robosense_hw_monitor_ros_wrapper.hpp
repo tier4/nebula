@@ -12,6 +12,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
+#include "robosense_msgs/msg/robosense_packet.hpp"
+
 #include <boost/algorithm/string/join.hpp>
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
@@ -48,9 +50,12 @@ class RobosenseHwMonitorRosWrapper final : public rclcpp::Node, NebulaHwMonitorW
   drivers::RobosenseHwInterface hw_interface_;
   Status interface_status_;
   std::unique_ptr<drivers::RobosenseInfoDriver> info_driver_;
+  std::vector<uint8_t> info_packet_buffer_;
 
   drivers::RobosenseSensorConfiguration sensor_configuration_;
   std::shared_ptr<nebula::drivers::RobosenseCalibrationConfiguration> calibration_configuration_;
+
+  rclcpp::Subscription<robosense_msgs::msg::RobosensePacket>::SharedPtr robosense_info_sub_;
 
   /// @brief Initializing hardware monitor ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
@@ -85,6 +90,10 @@ private:
   /// @param diagnostics DiagnosticStatusWrapper
   void RobosenseCheckStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
+  /// @brief Callback for receiving DIFOP packet
+  /// @param info_msg Received DIFOP packet
+  void ReceiveInfoMsgCallback(const robosense_msgs::msg::RobosensePacket::SharedPtr info_msg);
+
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
   /// @return SetParametersResult
@@ -98,7 +107,7 @@ private:
 
   std::unique_ptr<rclcpp::Time> current_info_time_;
   uint16_t diag_span_{1000};
-  std::string hardware_id_;
+  std::optional<std::string> hardware_id_;
 };
 
 }  // namespace ros
