@@ -7,8 +7,7 @@
 #include "nebula_decoders/nebula_decoders_common/nebula_driver_base.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_decoder.hpp"
 
-#include "robosense_msgs/msg/difop_packet.hpp"
-#include "robosense_msgs/msg/msop_packet.hpp"
+#include "robosense_msgs/msg/robosense_packet.hpp"
 #include "robosense_msgs/msg/robosense_scan.hpp"
 
 #include <pcl_conversions/pcl_conversions.h>

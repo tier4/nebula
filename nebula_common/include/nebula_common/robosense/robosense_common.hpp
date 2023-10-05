@@ -44,9 +44,9 @@ inline std::ostream & operator<<(std::ostream & os, RobosenseSensorConfiguration
 inline ReturnMode ReturnModeFromStringRobosense(const std::string & return_mode)
 {
   if (return_mode == "Dual") return ReturnMode::DUAL;
-  if (return_mode == "Strongest") return ReturnMode::STRONGEST;
-  if (return_mode == "Last") return ReturnMode::LAST;
-  if (return_mode == "First") return ReturnMode::FIRST;
+  if (return_mode == "Strongest") return ReturnMode::SINGLE;
+  if (return_mode == "Last") return ReturnMode::SINGLE;
+  if (return_mode == "First") return ReturnMode::SINGLE;
 
   return ReturnMode::UNKNOWN;
 }

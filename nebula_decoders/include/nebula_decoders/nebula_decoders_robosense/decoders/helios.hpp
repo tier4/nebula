@@ -149,8 +149,7 @@ struct InfoPacket
   boost::endian::big_uint8_buf_t pps_trigger_mode;
   uint8_t reserved_fourth[20];
   boost::endian::big_uint8_buf_t gprmc[86];
-  CorrectedVerticalAngle corrected_vertical;
-  CorrectedHorizontalAngle corrected_horizontal;
+  SensorCalibration sensor_calibration;
   uint8_t reserved_fifth[586];
   boost::endian::big_uint16_buf_t tail;
 };
@@ -252,6 +251,21 @@ public:
       return firing_time_offset_ns_dual_[block_id][channel_id];
     else
       return firing_time_offset_ns_single_[block_id][channel_id];
+  }
+
+  ReturnMode getReturnMode(const robosense_packet::helios::InfoPacket & info_packet)
+  {
+    const uint8_t return_mode_data = info_packet.return_mode.value();
+    if (return_mode_data == 0x00) {
+      return ReturnMode::DUAL;
+    }
+    return ReturnMode::SINGLE;
+  }
+
+  RobosenseCalibrationConfiguration getSensorCalibration(
+    const robosense_packet::helios::InfoPacket & info_packet)
+  {
+    return info_packet.sensor_calibration.getCalibration();
   }
 
   std::map<std::string, std::string> getSensorInfo(

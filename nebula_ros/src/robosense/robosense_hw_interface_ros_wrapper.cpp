@@ -32,7 +32,7 @@ ros::RobosenseHwInterfaceRosWrapper::RobosenseHwInterfaceRosWrapper(
   robosense_scan_pub_ = this->create_publisher<robosense_msgs::msg::RobosenseScan>(
     "robosense_packets", rclcpp::SensorDataQoS());
 
-  robosense_difop_pub_ = this->create_publisher<robosense_msgs::msg::DifopPacket>(
+  robosense_difop_pub_ = this->create_publisher<robosense_msgs::msg::RobosensePacket>(
     "robosense_difop_packets", rclcpp::SensorDataQoS());
 
   StreamStart();
@@ -233,7 +233,7 @@ void RobosenseHwInterfaceRosWrapper::ReceiveScanDataCallback(
 }
 
 void RobosenseHwInterfaceRosWrapper::ReceiveInfoDataCallback(
-  std::unique_ptr<robosense_msgs::msg::DifopPacket> difop_buffer)
+  std::unique_ptr<robosense_msgs::msg::RobosensePacket> difop_buffer)
 {
   // Publish
   //  difop_buffer->stamp = difop_buffer->packets.front().stamp;

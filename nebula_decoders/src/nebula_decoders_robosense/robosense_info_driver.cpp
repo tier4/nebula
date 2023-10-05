@@ -6,7 +6,7 @@ namespace drivers
 {
 
 RobosenseInfoDriver::RobosenseInfoDriver(
-const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration)
+  const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration)
 {
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;
@@ -15,10 +15,10 @@ const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration)
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;
       break;
     case SensorModel::ROBOSENSE_BPEARL:
-      info_decoder_.reset(new RobosenseInfoDecoder<Bpearl>(sensor_configuration));
+      info_decoder_.reset(new RobosenseInfoDecoder<Bpearl>());
       break;
     case SensorModel::ROBOSENSE_HELIOS_5515:
-      info_decoder_.reset(new RobosenseInfoDecoder<Helios>(sensor_configuration));
+      info_decoder_.reset(new RobosenseInfoDecoder<Helios>());
       break;
 
     default:
@@ -39,9 +39,20 @@ Status RobosenseInfoDriver::DecodeInfoPacket(const std::vector<uint8_t> & packet
   if (parsed) return nebula::Status::OK;
   return nebula::Status::ERROR_1;
 }
+
 std::map<std::string, std::string> RobosenseInfoDriver::GetSensorInfo()
 {
   return info_decoder_->getSensorInfo();
+}
+
+ReturnMode RobosenseInfoDriver::GetReturnMode()
+{
+  return info_decoder_->getReturnMode();
+}
+
+RobosenseCalibrationConfiguration RobosenseInfoDriver::GetSensorCalibration()
+{
+  return info_decoder_->getSensorCalibration();
 }
 
 }  // namespace drivers

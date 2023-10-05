@@ -28,14 +28,16 @@ RobosenseDriverRosWrapper::RobosenseDriverRosWrapper(const rclcpp::NodeOptions &
   sensor_cfg_ptr_ = std::make_shared<drivers::RobosenseSensorConfiguration>(sensor_configuration);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
-  wrapper_status_ = InitializeDriver(
-    std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
-    std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_));
-
+  wrapper_status_ = InitializeInfoDriver(
+    std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
+
   robosense_scan_sub_ = create_subscription<robosense_msgs::msg::RobosenseScan>(
     "robosense_packets", rclcpp::SensorDataQoS(),
     std::bind(&RobosenseDriverRosWrapper::ReceiveScanMsgCallback, this, std::placeholders::_1));
+  robosense_info_sub_ = create_subscription<robosense_msgs::msg::RobosensePacket>(
+    "robosense_difop_packets", rclcpp::SensorDataQoS(),
+    std::bind(&RobosenseDriverRosWrapper::ReceiveInfoMsgCallback, this, std::placeholders::_1));
   nebula_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
     "robosense_points", rclcpp::SensorDataQoS());
   aw_points_base_pub_ =
@@ -49,6 +51,11 @@ RobosenseDriverRosWrapper::RobosenseDriverRosWrapper(const rclcpp::NodeOptions &
 void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
   const robosense_msgs::msg::RobosenseScan::SharedPtr scan_msg)
 {
+  if (!is_received_info) {
+    RCLCPP_WARN_STREAM(this->get_logger(), "Waiting for info packet.");
+    return;
+  }
+
   auto t_start = std::chrono::high_resolution_clock::now();
 
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
@@ -96,6 +103,37 @@ void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
     get_logger(), "PROFILING {'d_total': %lu, 'n_out': %lu}", runtime.count(), pointcloud->size());
 }
 
+void RobosenseDriverRosWrapper::ReceiveInfoMsgCallback(
+  const robosense_msgs::msg::RobosensePacket::SharedPtr info_msg)
+{
+  if (!sensor_cfg_ptr_) {
+    RCLCPP_WARN_STREAM(this->get_logger(), "Sensor configuration has not been initialized yet.");
+    return;
+  }
+  if (info_msg->data.size() == 0) {
+    RCLCPP_WARN_STREAM(this->get_logger(), "Empty info packet received.");
+    return;
+  }
+
+  std::vector<uint8_t> info_data(info_msg->data.begin(), info_msg->data.end());
+  const auto decode_status = info_driver_ptr_->DecodeInfoPacket(info_data);
+  if (decode_status != Status::OK) {
+    RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to decode DIFOP packet.");
+    return;
+  }
+
+  sensor_cfg_ptr_->return_mode = info_driver_ptr_->GetReturnMode();
+  *calibration_cfg_ptr_ = info_driver_ptr_->GetSensorCalibration();
+
+  wrapper_status_ = InitializeDriver(sensor_cfg_ptr_, calibration_cfg_ptr_);
+  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
+
+  is_received_info = true;
+
+  // Unsubscribe from info topic
+  robosense_info_sub_.reset();
+}
+
 void RobosenseDriverRosWrapper::PublishCloud(
   std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher)
@@ -112,11 +150,23 @@ Status RobosenseDriverRosWrapper::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
   std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration)
 {
+  RCLCPP_INFO_STREAM(this->get_logger(), "Initializing driver...");
   driver_ptr_ = std::make_shared<drivers::RobosenseDriver>(
     std::static_pointer_cast<drivers::RobosenseSensorConfiguration>(sensor_configuration),
     std::static_pointer_cast<drivers::RobosenseCalibrationConfiguration>(
       calibration_configuration));
+
   return driver_ptr_->GetStatus();
+}
+
+Status RobosenseDriverRosWrapper::InitializeInfoDriver(
+  std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration)
+{
+  RCLCPP_INFO_STREAM(this->get_logger(), "Initializing info driver...");
+  info_driver_ptr_ = std::make_shared<drivers::RobosenseInfoDriver>(
+    std::static_pointer_cast<drivers::RobosenseSensorConfiguration>(sensor_configuration));
+
+  return info_driver_ptr_->GetStatus();
 }
 
 Status RobosenseDriverRosWrapper::GetStatus()
@@ -242,80 +292,24 @@ Status RobosenseDriverRosWrapper::GetParameters(
     return Status::SENSOR_CONFIG_ERROR;
   }
 
-  std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
-    std::make_shared<drivers::RobosenseSensorConfiguration>(sensor_configuration);
+  if (calibration_configuration.calibration_file.empty()) {
+    RCLCPP_ERROR_STREAM(
+      this->get_logger(),
+      "Empty Calibration_file File: '" << calibration_configuration.calibration_file << "'");
+    return Status::INVALID_CALIBRATION_FILE;
+  } else {
+    auto cal_status =
+      calibration_configuration.LoadFromFile(calibration_configuration.calibration_file);
 
-  hw_interface_.SetSensorConfiguration(
-    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
-
-  bool run_local = true;
-
-  RCLCPP_INFO_STREAM(
-    this->get_logger(),
-    "Trying to acquire calibration data from sensor: '" << sensor_configuration.sensor_ip << "'");
-
-  if (hw_interface_.InfoInterfaceStart() == Status::OK) {
-    if (hw_interface_.WaitForSensorInfo(std::chrono::seconds(5)) != Status::OK) {
-      RCLCPP_WARN_STREAM(
-        this->get_logger(), "Failed to acquire calibration data from sensor: '"
-                              << sensor_configuration.sensor_ip << ":"
-                              << sensor_configuration.gnss_port
-                              << "' Local calibration file will be used.");
-    } else {
-      hw_interface_.GetLidarCalibrationFromSensor(
-        [this, &sensor_configuration, &calibration_configuration, &run_local](
-          const std::string & calibration_received,
-          const nebula::drivers::ReturnMode & return_mode_received) {
-          sensor_configuration.return_mode = return_mode_received;
-          RCLCPP_INFO_STREAM(
-            this->get_logger(), "Set return mode from sensor as: " << return_mode_received);
-
-          RCLCPP_INFO_STREAM(
-            this->get_logger(), "Received calibration data from sensor: '" << calibration_received);
-
-          const auto load_status = calibration_configuration.LoadFromString(calibration_received);
-          if (load_status == Status::OK) {
-            RCLCPP_INFO_STREAM(this->get_logger(), "Loaded calibration data from sensor. ");
-            run_local = false;
-
-            const auto save_status = calibration_configuration.SaveFile(
-              CreateCalibrationPath(calibration_configuration.calibration_file));
-            if (save_status == Status::OK) {
-              RCLCPP_INFO_STREAM(this->get_logger(), "Saved calibration data from sensor. ");
-            } else {
-              RCLCPP_ERROR_STREAM(
-                this->get_logger(), "Failed to save calibration data from sensor. ");
-            }
-
-          } else {
-            RCLCPP_ERROR_STREAM(
-              this->get_logger(), "Failed to load calibration data from sensor. ");
-          }
-        });
-      hw_interface_.InfoInterfaceStop();
-    }
-  }
-
-  if (run_local) {
-    if (calibration_configuration.calibration_file.empty()) {
+    if (cal_status != Status::OK) {
       RCLCPP_ERROR_STREAM(
         this->get_logger(),
-        "Empty Calibration_file File: '" << calibration_configuration.calibration_file << "'");
-      return Status::INVALID_CALIBRATION_FILE;
+        "Given Calibration File: '" << calibration_configuration.calibration_file << "'");
+      return cal_status;
     } else {
-      auto cal_status =
-        calibration_configuration.LoadFromFile(calibration_configuration.calibration_file);
-
-      if (cal_status != Status::OK) {
-        RCLCPP_ERROR_STREAM(
-          this->get_logger(),
-          "Given Calibration File: '" << calibration_configuration.calibration_file << "'");
-        return cal_status;
-      } else {
-        RCLCPP_INFO_STREAM(
-          this->get_logger(),
-          "Load calibration data from: '" << calibration_configuration.calibration_file << "'");
-      }
+      RCLCPP_INFO_STREAM(
+        this->get_logger(),
+        "Load calibration data from: '" << calibration_configuration.calibration_file << "'");
     }
   }
 

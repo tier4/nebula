@@ -4,6 +4,7 @@
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_common/robosense/robosense_common.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/robosense_driver.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/robosense_info_driver.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_robosense/robosense_hw_interface.hpp"
 #include "nebula_ros/common/nebula_driver_ros_wrapper_base.hpp"
 
@@ -12,8 +13,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "robosense_msgs/msg/difop_packet.hpp"
-#include "robosense_msgs/msg/msop_packet.hpp"
+#include "robosense_msgs/msg/robosense_packet.hpp"
 #include "robosense_msgs/msg/robosense_scan.hpp"
 
 #include <chrono>
@@ -26,8 +26,11 @@ namespace ros
 class RobosenseDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapperBase
 {
   std::shared_ptr<drivers::RobosenseDriver> driver_ptr_;
+  std::shared_ptr<drivers::RobosenseInfoDriver> info_driver_ptr_;
   Status wrapper_status_;
+  bool is_received_info{false};
   rclcpp::Subscription<robosense_msgs::msg::RobosenseScan>::SharedPtr robosense_scan_sub_;
+  rclcpp::Subscription<robosense_msgs::msg::RobosensePacket>::SharedPtr robosense_info_sub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_;
@@ -44,6 +47,12 @@ class RobosenseDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrap
   Status InitializeDriver(
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
     std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) override;
+
+  /// @brief Initializing info driver
+  /// @param sensor_configuration SensorConfiguration for this driver
+  /// @return Resulting status
+  Status InitializeInfoDriver(
+    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration);
 
   /// @brief Get configurations from ros parameters
   /// @param sensor_configuration Output of SensorConfiguration
@@ -81,6 +90,10 @@ public:
   /// @brief Callback for RobosenseScan subscriber
   /// @param scan_msg Received RobosenseScan
   void ReceiveScanMsgCallback(const robosense_msgs::msg::RobosenseScan::SharedPtr scan_msg);
+
+  /// @brief Callback for DIFOP packet subscriber
+  /// @param scan_msg Received RobosensePacket
+  void ReceiveInfoMsgCallback(const robosense_msgs::msg::RobosensePacket::SharedPtr info_msg);
 
   /// @brief Get current status of this driver
   /// @return Current status

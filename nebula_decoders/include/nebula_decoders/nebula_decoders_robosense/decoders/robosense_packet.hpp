@@ -126,6 +126,26 @@ struct CorrectedHorizontalAngle
   ChannelAngleCorrection angles[32];
 };
 
+struct SensorCalibration
+{
+  CorrectedVerticalAngle corrected_vertical_angle;
+  CorrectedHorizontalAngle corrected_horizontal_angle;
+
+  RobosenseCalibrationConfiguration getCalibration() const
+  {
+    RobosenseCalibrationConfiguration calibration;
+    for (size_t i = 0; i < 32; ++i) {
+      ChannelCorrection channel_correction;
+      channel_correction.azimuth =
+        static_cast<float>(corrected_horizontal_angle.angles[i].angle.value()) / 100.0f;
+      channel_correction.elevation =
+        static_cast<float>(corrected_vertical_angle.angles[i].angle.value()) / 100.0f;
+      calibration.calibration.push_back(channel_correction);
+    }
+    return calibration;
+  }
+};
+
 struct FirmwareVersion
 {
   boost::endian::big_uint8_buf_t first_octet;
