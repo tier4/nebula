@@ -232,7 +232,7 @@ private:
 public:
   static constexpr float MIN_RANGE = 0.1f;
   static constexpr float MAX_RANGE = 30.f;
-  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 230400;  ///// !! Calculate this
+  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 1152000;
 
   int getPacketRelativePointTimeOffset(
     uint32_t block_id, uint32_t channel_id,
@@ -253,9 +253,10 @@ public:
     return ReturnMode::SINGLE;
   }
 
-  RobosenseCalibrationConfiguration getSensorCalibration(const robosense_packet::bpearl::InfoPacket & info_packet)
+  RobosenseCalibrationConfiguration getSensorCalibration(
+    const robosense_packet::bpearl::InfoPacket & info_packet)
   {
-      return info_packet.sensor_calibration.getCalibration();
+    return info_packet.sensor_calibration.getCalibration();
   }
 
   std::map<std::string, std::string> getSensorInfo(
