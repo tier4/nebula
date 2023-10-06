@@ -78,20 +78,6 @@ void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> 
   }
 }
 
-Status RobosenseHwInterface::WaitForSensorInfo(const std::chrono::milliseconds & timeout) const
-{
-  const auto start = std::chrono::system_clock::now();
-  while (rclcpp::ok() && !is_info_received) {
-    const auto now = std::chrono::system_clock::now();
-    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
-    if (elapsed > timeout) {
-      return Status::ERROR_1;
-    }
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  }
-  return Status::OK;
-}
-
 Status RobosenseHwInterface::CloudInterfaceStart()
 {
   try {
@@ -135,12 +121,6 @@ Status RobosenseHwInterface::InfoInterfaceStart()
   }
 
   std::this_thread::sleep_for(std::chrono::seconds(1));
-  return Status::OK;
-}
-
-Status RobosenseHwInterface::InfoInterfaceStop()
-{
-  info_udp_driver_->receiver()->close();
   return Status::OK;
 }
 
@@ -194,72 +174,6 @@ Status RobosenseHwInterface::GetCalibrationConfiguration(
 {
   PrintDebug(calibration_configuration.calibration_file);
   return Status::ERROR_1;
-}
-
-Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
-  const std::function<void(
-    const std::string & calibration_received, const ReturnMode & return_mode_received)> & callback)
-{
-  if (!info_buffer_.has_value()) {
-    PrintInfo("Info packet is not received yet.");
-    return Status::ERROR_1;
-  }
-
-  std::stringstream calibration;
-  calibration << "Laser ID,Elevation,Azimuth\n";
-
-  size_t channel_num = GetChannelSize(sensor_configuration_->sensor_model);
-  size_t vertical_data_offset{};
-  size_t horizontal_data_offset{};
-  ReturnMode return_mode = ReturnMode::UNKNOWN;
-
-  if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_HELIOS_5515) {
-    vertical_data_offset = HELIOS5515_CORRECTED_VERTICAL_ANGLE_OFFSET;
-    horizontal_data_offset = HELIOS5515_CORRECTED_HORIZONTAL_ANGLE_OFFSET;
-
-    uint8_t return_mode_data = info_buffer_.value()[HELIOS5515_RETURN_MODE_OFFSET];
-//    if (return_mode_data == 0x00) {
-//      return_mode = ReturnMode::DUAL;
-//    } else {
-//      return_mode = ReturnMode::SINGLE;
-//    }
-
-  } else if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL) {
-    vertical_data_offset = BPEARL_CORRECTED_VERTICAL_ANGLE_OFFSET;
-    horizontal_data_offset = BPEARL_CORRECTED_HORIZONTAL_ANGLE_OFFSET;
-
-    uint8_t return_mode_data = info_buffer_.value()[BPEARL_RETURN_MODE_OFFSET];
-//    if (return_mode_data == 0xdd
-
-  } else {
-    return Status::INVALID_SENSOR_MODEL;
-  }
-
-  for (size_t channel = 0; channel < channel_num; ++channel) {
-    const auto vertical_offset = (channel * 3) + vertical_data_offset;
-    const auto horizontal_offset = (channel * 3) + horizontal_data_offset;
-
-    auto & info_buffer = info_buffer_.value();
-
-    uint16_t vertical_angle_data =
-      (info_buffer[vertical_offset + 2] & 0xff) + ((info_buffer[vertical_offset + 1] & 0xff) << 8);
-    double vertical_angle = static_cast<double>(vertical_angle_data) / 100.0;
-    if (info_buffer[vertical_offset] == 0x01) vertical_angle = -vertical_angle;
-
-    uint16_t horizontal_angle_data = (info_buffer[horizontal_offset + 2] & 0xff) +
-                                     ((info_buffer[horizontal_offset + 1] & 0xff) << 8);
-    double horizontal_angle = static_cast<double>(horizontal_angle_data) / 100.0;
-    if (info_buffer[horizontal_offset] == 0x01) horizontal_angle = -horizontal_angle;
-
-    calibration << channel + 1 << "," << vertical_angle << "," << horizontal_angle << std::endl;
-  }
-  callback(calibration.str(), return_mode);
-  return Status::OK;
-}
-
-std::vector<uint8_t> RobosenseHwInterface::GetInfoPacketFromSensor()
-{
-  return *info_buffer_;
 }
 
 Status RobosenseHwInterface::RegisterScanCallback(
