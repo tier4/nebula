@@ -81,11 +81,6 @@ public:
   /// @param buffer Buffer containing the data received from the UDP socket
   void ReceiveInfoPacketCallback(const std::vector<uint8_t> & buffer);
 
-  /// @brief Blocks until the sensor info is received or timeout
-  /// @param timeout Timeout duration
-  /// @return Resulting status
-  Status WaitForSensorInfo(const std::chrono::milliseconds & timeout) const;
-
   /// @brief Starting the interface that handles UDP streams for MSOP packets
   /// @return Resulting status
   Status CloudInterfaceStart() final;
@@ -97,10 +92,6 @@ public:
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
   Status CloudInterfaceStop() final;
-
-  /// @brief Stopping the interface that handles UDP streams for DIFOP packets
-  /// @return Resulting status
-  Status InfoInterfaceStop();
 
   /// @brief Setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
@@ -118,18 +109,6 @@ public:
   /// @return Resulting status
   Status GetCalibrationConfiguration(
     CalibrationConfigurationBase & calibration_configuration) override;
-
-  /// @brief Getting correction values from DIFOP packet
-  /// @param string_callback Callback function for received correction data
-  /// @return Resulting status
-  Status GetLidarCalibrationFromSensor(
-    const std::function<
-      void(const std::string & received_string, const ReturnMode & return_mode_received)> &
-      string_callback);
-
-  /// @brief Get the most recent info packet from the sensor
-  /// @return Info packet
-  std::vector<uint8_t> GetInfoPacketFromSensor();
 
   /// @brief Registering callback for RobosenseScan
   /// @param scan_callback Callback function
