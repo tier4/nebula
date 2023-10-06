@@ -199,14 +199,10 @@ struct SerialNumber
 /// @return The number of returns
 size_t get_n_returns(ReturnMode return_mode)
 {
-  switch (return_mode) {
-    case ReturnMode::DUAL:
-      return 2;
-    case ReturnMode::SINGLE:
-      return 1;
-    default:
-      throw std::runtime_error("Unknown return mode");
+  if (return_mode == ReturnMode::DUAL) {
+    return 2;
   }
+  return 1;
 }
 
 /// @brief Get timestamp from packet in nanoseconds
