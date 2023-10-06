@@ -246,13 +246,17 @@ public:
 
   ReturnMode getReturnMode(const robosense_packet::bpearl::InfoPacket & info_packet)
   {
-    // TODO: Bpearl has different return modes for different versions. Each version should be
-    // handled.
     const uint8_t return_mode_data = info_packet.return_mode.value();
     if (return_mode_data == 0x00) {
       return ReturnMode::DUAL;
+    } else if (return_mode_data == 0x01 || return_mode_data == 0x04) {
+      return ReturnMode::SINGLE_STRONGEST;
+    } else if (return_mode_data == 0x02 || return_mode_data == 0x05) {
+      return ReturnMode::SINGLE_LAST;
+    } else if (return_mode_data == 0x06) {
+      return ReturnMode::SINGLE_FIRST;
     }
-    return ReturnMode::SINGLE;
+    return ReturnMode::UNKNOWN;
   }
 
   RobosenseCalibrationConfiguration getSensorCalibration(
@@ -285,7 +289,17 @@ public:
       std::to_string(info_packet.reverse_zero_angle_offset.value());
     sensor_info["serial_number"] = info_packet.serial_number.to_string();
     sensor_info["zero_angle_offset"] = std::to_string(info_packet.zero_angle_offset.value());
-    sensor_info["return_mode_flag"] = std::to_string(info_packet.return_mode.value());
+
+    if (info_packet.return_mode.value() == 0x00) {
+      sensor_info["return_mode"] = "dual";
+    } else if (info_packet.return_mode.value() == 0x01 || info_packet.return_mode.value() == 0x04) {
+      sensor_info["return_mode"] = "strongest";
+    } else if (info_packet.return_mode.value() == 0x02 || info_packet.return_mode.value() == 0x05) {
+      sensor_info["return_mode"] = "last";
+    } else if (info_packet.return_mode.value() == 0x06) {
+      sensor_info["return_mode"] = "first";
+    }
+
     sensor_info["time_sync_mode"] = std::to_string(info_packet.time_sync_mode.value());
     sensor_info["sync_status"] = std::to_string(info_packet.sync_status.value());
     sensor_info["time"] = std::to_string(info_packet.time.get_time_in_ns());

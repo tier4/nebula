@@ -258,8 +258,14 @@ public:
     const uint8_t return_mode_data = info_packet.return_mode.value();
     if (return_mode_data == 0x00) {
       return ReturnMode::DUAL;
+    } else if (return_mode_data == 0x04) {
+      return ReturnMode::SINGLE_STRONGEST;
+    } else if (return_mode_data == 0x05) {
+      return ReturnMode::SINGLE_LAST;
+    } else if (return_mode_data == 0x06) {
+      return ReturnMode::SINGLE_FIRST;
     }
-    return ReturnMode::SINGLE;
+    return ReturnMode::UNKNOWN;
   }
 
   RobosenseCalibrationConfiguration getSensorCalibration(

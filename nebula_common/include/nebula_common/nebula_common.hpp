@@ -50,8 +50,7 @@ enum class ReturnMode : uint8_t {
   FIRST,
   DUAL_LAST_FIRST,
   DUAL_FIRST_STRONGEST,
-  DUAL,
-  SINGLE
+  DUAL
 };
 
 /// @brief Convert ReturnMode enum to ReturnType enum for Pandar AT, XTM (temporary, not used)
@@ -298,9 +297,6 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnMode 
       break;
     case ReturnMode::UNKNOWN:
       os << "Unknown";
-      break;
-    case ReturnMode::SINGLE:
-      os << "Single";
       break;
   }
   return os;

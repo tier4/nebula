@@ -115,9 +115,8 @@ public:
         } else {
           return ReturnType::LAST;
         }
-      default:  // Bpearl has different versions. The old ones don't have "first" mode while the new
-                // ones have it.
-        return ReturnType::STRONGEST;
+      default:
+        return ReturnType::UNKNOWN;
     }
   }
 };

@@ -218,22 +218,18 @@ Status RobosenseHwInterface::GetLidarCalibrationFromSensor(
     horizontal_data_offset = HELIOS5515_CORRECTED_HORIZONTAL_ANGLE_OFFSET;
 
     uint8_t return_mode_data = info_buffer_.value()[HELIOS5515_RETURN_MODE_OFFSET];
-    if (return_mode_data == 0x00) {
-      return_mode = ReturnMode::DUAL;
-    } else {
-      return_mode = ReturnMode::SINGLE;
-    }
+//    if (return_mode_data == 0x00) {
+//      return_mode = ReturnMode::DUAL;
+//    } else {
+//      return_mode = ReturnMode::SINGLE;
+//    }
 
   } else if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL) {
     vertical_data_offset = BPEARL_CORRECTED_VERTICAL_ANGLE_OFFSET;
     horizontal_data_offset = BPEARL_CORRECTED_HORIZONTAL_ANGLE_OFFSET;
 
     uint8_t return_mode_data = info_buffer_.value()[BPEARL_RETURN_MODE_OFFSET];
-    if (return_mode_data == 0x00) {
-      return_mode = ReturnMode::DUAL;
-    } else {
-      return_mode = ReturnMode::SINGLE;
-    }
+//    if (return_mode_data == 0xdd
 
   } else {
     return Status::INVALID_SENSOR_MODEL;
