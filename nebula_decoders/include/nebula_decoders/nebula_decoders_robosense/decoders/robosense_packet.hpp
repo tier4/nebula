@@ -114,6 +114,12 @@ struct ChannelAngleCorrection
 {
   boost::endian::big_uint8_buf_t sign;
   boost::endian::big_uint16_buf_t angle;
+
+  [[nodiscard]] float getAngle() const
+  {
+    return sign.value() == 0x00 ? static_cast<float>(angle.value()) / 100.0f
+                                : static_cast<float>(angle.value()) / -100.0f;
+  }
 };
 
 struct CorrectedVerticalAngle
@@ -136,10 +142,8 @@ struct SensorCalibration
     RobosenseCalibrationConfiguration calibration;
     for (size_t i = 0; i < 32; ++i) {
       ChannelCorrection channel_correction;
-      channel_correction.azimuth =
-        static_cast<float>(corrected_horizontal_angle.angles[i].angle.value()) / 100.0f;
-      channel_correction.elevation =
-        static_cast<float>(corrected_vertical_angle.angles[i].angle.value()) / 100.0f;
+      channel_correction.azimuth = corrected_horizontal_angle.angles[i].getAngle();
+      channel_correction.elevation = corrected_vertical_angle.angles[i].getAngle();
       calibration.calibration.push_back(channel_correction);
     }
     return calibration;
