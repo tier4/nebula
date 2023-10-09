@@ -19,12 +19,14 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
     PrintDebug("Invalid Packet: " + std::to_string(buffer.size()));
     return;
   }
+  // Copy data
   uint32_t buffer_size = buffer.size();
   std::array<uint8_t, MTU_SIZE> packet_data{};
   std::copy_n(std::make_move_iterator(buffer.begin()), buffer_size, packet_data.begin());
   robosense_msgs::msg::RobosensePacket msop_packet;
   msop_packet.data = packet_data;
 
+  // Add timestamp (Sensor timestamp will be handled by decoder)
   const auto now = std::chrono::system_clock::now();
   const auto timestamp_ns =
     std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
@@ -32,6 +34,19 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   constexpr int nanosec_per_sec = 1000000000;
   msop_packet.stamp.sec = static_cast<int>(timestamp_ns / nanosec_per_sec);
   msop_packet.stamp.nanosec = static_cast<int>(timestamp_ns % nanosec_per_sec);
+
+  // Add sensor model
+  if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_HELIOS_5515) {
+    msop_packet.lidar_model = "helios";
+  } else if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL) {
+    if (msop_packet.data[32] == 0x04) {
+      msop_packet.lidar_model = "bpearl-v4.0";
+    } else {
+      msop_packet.lidar_model = "bpearl-v3.0";
+    }
+  } else {
+    msop_packet.lidar_model = "unknown";
+  }
 
   scan_cloud_ptr_->packets.emplace_back(msop_packet);
 
