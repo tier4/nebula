@@ -26,9 +26,6 @@ RobosenseDriverRosWrapper::RobosenseDriverRosWrapper(const rclcpp::NodeOptions &
   sensor_cfg_ptr_ = std::make_shared<drivers::RobosenseSensorConfiguration>(sensor_configuration);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
-  wrapper_status_ = InitializeInfoDriver(
-    std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
-  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 
   robosense_scan_sub_ = create_subscription<robosense_msgs::msg::RobosenseScan>(
     "robosense_packets", rclcpp::SensorDataQoS(),
@@ -49,21 +46,24 @@ RobosenseDriverRosWrapper::RobosenseDriverRosWrapper(const rclcpp::NodeOptions &
 void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
   const robosense_msgs::msg::RobosenseScan::SharedPtr scan_msg)
 {
-  if (!is_received_info) {
-    RCLCPP_WARN_STREAM(this->get_logger(), "Waiting for info packet.");
-    return;
-  }
-
   if (!driver_ptr_) {
     if (sensor_cfg_ptr_->sensor_model == drivers::SensorModel::ROBOSENSE_BPEARL) {
       if (scan_msg->packets.back().data[32] == 0x04) {
         sensor_cfg_ptr_->sensor_model = drivers::SensorModel::ROBOSENSE_BPEARL_V4;
+        RCLCPP_INFO_STREAM(this->get_logger(), "Bpearl V4 detected.");
       } else {
         sensor_cfg_ptr_->sensor_model = drivers::SensorModel::ROBOSENSE_BPEARL_V3;
+        RCLCPP_INFO_STREAM(this->get_logger(), "Bpearl V3 detected.");
       }
     }
-    wrapper_status_ = InitializeDriver(sensor_cfg_ptr_, calibration_cfg_ptr_);
+    wrapper_status_ = InitializeInfoDriver(
+      std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
     RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
+  }
+
+  if (!is_received_info) {
+    RCLCPP_WARN_STREAM(this->get_logger(), "Waiting for info packet.");
+    return;
   }
 
   auto t_start = std::chrono::high_resolution_clock::now();
@@ -120,6 +120,12 @@ void RobosenseDriverRosWrapper::ReceiveInfoMsgCallback(
     RCLCPP_WARN_STREAM(this->get_logger(), "Sensor configuration has not been initialized yet.");
     return;
   }
+
+  if (!info_driver_ptr_) {
+    RCLCPP_WARN_STREAM(this->get_logger(), "Info driver has not been initialized yet.");
+    return;
+  }
+
   if (info_msg->data.size() == 0) {
     RCLCPP_WARN_STREAM(this->get_logger(), "Empty info packet received.");
     return;
@@ -135,6 +141,9 @@ void RobosenseDriverRosWrapper::ReceiveInfoMsgCallback(
   sensor_cfg_ptr_->return_mode = info_driver_ptr_->GetReturnMode();
   *calibration_cfg_ptr_ = info_driver_ptr_->GetSensorCalibration();
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << *sensor_cfg_ptr_);
+
+  wrapper_status_ = InitializeDriver(sensor_cfg_ptr_, calibration_cfg_ptr_);
+  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 
   is_received_info = true;
 
