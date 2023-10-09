@@ -1,6 +1,7 @@
 #include "nebula_decoders/nebula_decoders_robosense/robosense_driver.hpp"
 
 #include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v3.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v4.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/helios.hpp"
 
 namespace nebula
@@ -20,7 +21,11 @@ RobosenseDriver::RobosenseDriver(
       break;
     case SensorModel::ROBOSENSE_BPEARL_V3:
       scan_decoder_.reset(
-        new RobosenseDecoder<Bpearl>(sensor_configuration, calibration_configuration));
+        new RobosenseDecoder<BpearlV3>(sensor_configuration, calibration_configuration));
+      break;
+    case SensorModel::ROBOSENSE_BPEARL_V4:
+      scan_decoder_.reset(
+        new RobosenseDecoder<BpearlV4>(sensor_configuration, calibration_configuration));
       break;
     case SensorModel::ROBOSENSE_HELIOS_5515:
       scan_decoder_.reset(

@@ -18,20 +18,6 @@ namespace helios
 {
 #pragma pack(push, 1)
 
-struct Timestamp
-{
-  boost::endian::big_uint48_buf_t seconds;
-  boost::endian::big_uint32_buf_t nanoseconds;
-
-  uint64_t get_time_in_ns() const
-  {
-    uint64_t total_nanoseconds = static_cast<uint64_t>(seconds.value()) * 1000000000ULL +
-                                 static_cast<uint64_t>(nanoseconds.value());
-
-    return total_nanoseconds;
-  }
-};
-
 struct Header
 {
   boost::endian::big_uint32_buf_t header_id;

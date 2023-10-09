@@ -14,7 +14,7 @@ namespace drivers
 {
 namespace robosense_packet
 {
-namespace bpearl
+namespace bpearl_v3
 {
 #pragma pack(push, 1)
 
@@ -140,20 +140,20 @@ struct InfoPacket
 };
 
 #pragma pack(pop)
-}  // namespace bpearl
+}  // namespace bpearl_v3
 
-/// @brief Get the distance unit of the given @ref Bpearl packet in meters.
+/// @brief Get the distance unit of the given @ref BpearlV3 packet in meters.
 /// @return 0.005m (0.5cm)
 template <>
-double get_dis_unit<bpearl::Packet>(const bpearl::Packet & /* packet */)
+double get_dis_unit<bpearl_v3::Packet>(const bpearl_v3::Packet & /* packet */)
 {
   return 0.005;
 }
 
 }  // namespace robosense_packet
 
-class Bpearl
-: public RobosenseSensor<robosense_packet::bpearl::Packet, robosense_packet::bpearl::InfoPacket>
+class BpearlV3 : public RobosenseSensor<
+                   robosense_packet::bpearl_v3::Packet, robosense_packet::bpearl_v3::InfoPacket>
 {
 private:
   static constexpr int firing_time_offset_ns_single_[12][32]{
@@ -244,29 +244,27 @@ public:
       return firing_time_offset_ns_single_[block_id][channel_id];
   }
 
-  ReturnMode getReturnMode(const robosense_packet::bpearl::InfoPacket & info_packet)
+  ReturnMode getReturnMode(const robosense_packet::bpearl_v3::InfoPacket & info_packet)
   {
     const uint8_t return_mode_data = info_packet.return_mode.value();
     if (return_mode_data == 0x00) {
       return ReturnMode::DUAL;
-    } else if (return_mode_data == 0x01 || return_mode_data == 0x04) {
+    } else if (return_mode_data == 0x01) {
       return ReturnMode::SINGLE_STRONGEST;
-    } else if (return_mode_data == 0x02 || return_mode_data == 0x05) {
+    } else if (return_mode_data == 0x02) {
       return ReturnMode::SINGLE_LAST;
-    } else if (return_mode_data == 0x06) {
-      return ReturnMode::SINGLE_FIRST;
     }
     return ReturnMode::UNKNOWN;
   }
 
   RobosenseCalibrationConfiguration getSensorCalibration(
-    const robosense_packet::bpearl::InfoPacket & info_packet)
+    const robosense_packet::bpearl_v3::InfoPacket & info_packet)
   {
     return info_packet.sensor_calibration.getCalibration();
   }
 
   std::map<std::string, std::string> getSensorInfo(
-    const robosense_packet::bpearl::InfoPacket & info_packet)
+    const robosense_packet::bpearl_v3::InfoPacket & info_packet)
   {
     std::map<std::string, std::string> sensor_info;
     sensor_info["motor_speed"] = std::to_string(info_packet.motor_speed.value());
