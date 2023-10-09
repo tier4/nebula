@@ -5,15 +5,13 @@ namespace nebula
 namespace ros
 {
 RobosenseDriverRosWrapper::RobosenseDriverRosWrapper(const rclcpp::NodeOptions & options)
-: rclcpp::Node("robosense_driver_ros_wrapper", options), hw_interface_()
+: rclcpp::Node("robosense_driver_ros_wrapper", options)
 {
   RCLCPP_WARN_STREAM(this->get_logger(), "RobosenseDriverRosWrapper");
   drivers::RobosenseCalibrationConfiguration calibration_configuration;
   drivers::RobosenseSensorConfiguration sensor_configuration;
 
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
-
-  hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
 
   wrapper_status_ = GetParameters(sensor_configuration, calibration_configuration);
   if (Status::OK != wrapper_status_) {

@@ -38,8 +38,6 @@ class RobosenseDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrap
   std::shared_ptr<drivers::RobosenseCalibrationConfiguration> calibration_cfg_ptr_;
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
 
-  drivers::RobosenseHwInterface hw_interface_;
-
   /// @brief Initializing ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
   /// @param calibration_configuration CalibrationConfiguration for this driver
