@@ -30,7 +30,7 @@ RobosenseDriverRosWrapper::RobosenseDriverRosWrapper(const rclcpp::NodeOptions &
   robosense_scan_sub_ = create_subscription<robosense_msgs::msg::RobosenseScan>(
     "robosense_packets", rclcpp::SensorDataQoS(),
     std::bind(&RobosenseDriverRosWrapper::ReceiveScanMsgCallback, this, std::placeholders::_1));
-  robosense_info_sub_ = create_subscription<robosense_msgs::msg::RobosensePacket>(
+  robosense_info_sub_ = create_subscription<robosense_msgs::msg::RobosenseInfoPacket>(
     "robosense_difop_packets", rclcpp::SensorDataQoS(),
     std::bind(&RobosenseDriverRosWrapper::ReceiveInfoMsgCallback, this, std::placeholders::_1));
   nebula_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
@@ -114,7 +114,7 @@ void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
 }
 
 void RobosenseDriverRosWrapper::ReceiveInfoMsgCallback(
-  const robosense_msgs::msg::RobosensePacket::SharedPtr info_msg)
+  const robosense_msgs::msg::RobosenseInfoPacket::SharedPtr info_msg)
 {
   if (!sensor_cfg_ptr_) {
     RCLCPP_WARN_STREAM(this->get_logger(), "Sensor configuration has not been initialized yet.");
@@ -126,12 +126,12 @@ void RobosenseDriverRosWrapper::ReceiveInfoMsgCallback(
     return;
   }
 
-  if (info_msg->data.size() == 0) {
+  if (info_msg->packet.data.size() == 0) {
     RCLCPP_WARN_STREAM(this->get_logger(), "Empty info packet received.");
     return;
   }
 
-  std::vector<uint8_t> info_data(info_msg->data.begin(), info_msg->data.end());
+  std::vector<uint8_t> info_data(info_msg->packet.data.begin(), info_msg->packet.data.end());
   const auto decode_status = info_driver_ptr_->DecodeInfoPacket(info_data);
   if (decode_status != Status::OK) {
     RCLCPP_ERROR_STREAM(this->get_logger(), "Failed to decode DIFOP packet.");

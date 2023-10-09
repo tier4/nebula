@@ -35,6 +35,18 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   msop_packet.stamp.sec = static_cast<int>(timestamp_ns / nanosec_per_sec);
   msop_packet.stamp.nanosec = static_cast<int>(timestamp_ns % nanosec_per_sec);
 
+  if (
+    !sensor_model_.has_value() &&
+    sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL) {
+    if (buffer[32] == 0x04) {
+      sensor_model_.emplace(drivers::SensorModel::ROBOSENSE_BPEARL_V4);
+      PrintInfo("Bpearl V4 detected.");
+    } else {
+      sensor_model_.emplace(drivers::SensorModel::ROBOSENSE_BPEARL_V3);
+      PrintInfo("Bpearl V3 detected.");
+    }
+  }
+
   scan_cloud_ptr_->packets.emplace_back(msop_packet);
 
   int current_phase{};
@@ -72,9 +84,16 @@ void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> 
   is_info_received = true;       ////////
 
   if (info_reception_callback_) {
-    std::unique_ptr<robosense_msgs::msg::RobosensePacket> difop_packet =
-      std::make_unique<robosense_msgs::msg::RobosensePacket>();
-    std::copy_n(std::make_move_iterator(buffer.begin()), buffer.size(), difop_packet->data.begin());
+    std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> difop_packet =
+      std::make_unique<robosense_msgs::msg::RobosenseInfoPacket>();
+    std::copy_n(
+      std::make_move_iterator(buffer.begin()), buffer.size(), difop_packet->packet.data.begin());
+
+    if (sensor_model_.has_value()) {
+      difop_packet->lidar_model = SensorModelToString(sensor_model_.value());
+    } else {
+      difop_packet->lidar_model = SensorModelToString(sensor_configuration_->sensor_model);
+    }
 
     info_reception_callback_(std::move(difop_packet));
   }
@@ -186,7 +205,7 @@ Status RobosenseHwInterface::RegisterScanCallback(
 }
 
 Status RobosenseHwInterface::RegisterInfoCallback(
-  std::function<void(std::unique_ptr<robosense_msgs::msg::RobosensePacket>)> info_callback)
+  std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket>)> info_callback)
 {
   info_reception_callback_ = std::move(info_callback);
   return Status::OK;

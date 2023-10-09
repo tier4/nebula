@@ -32,7 +32,7 @@ ros::RobosenseHwInterfaceRosWrapper::RobosenseHwInterfaceRosWrapper(
   robosense_scan_pub_ = this->create_publisher<robosense_msgs::msg::RobosenseScan>(
     "robosense_packets", rclcpp::SensorDataQoS());
 
-  robosense_difop_pub_ = this->create_publisher<robosense_msgs::msg::RobosensePacket>(
+  robosense_difop_pub_ = this->create_publisher<robosense_msgs::msg::RobosenseInfoPacket>(
     "robosense_difop_packets", rclcpp::SensorDataQoS());
 
   StreamStart();
@@ -161,7 +161,7 @@ Status RobosenseHwInterfaceRosWrapper::GetParameters(
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     rcl_interfaces::msg::IntegerRange range;
-    if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::ROBOSENSE_BPEARL_V3) {
+    if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::ROBOSENSE_BPEARL) {
       descriptor.additional_constraints = "300, 600, 1200";
       range.set__from_value(300).set__to_value(1200).set__step(300);
       descriptor.integer_range = {range};
@@ -233,10 +233,9 @@ void RobosenseHwInterfaceRosWrapper::ReceiveScanDataCallback(
 }
 
 void RobosenseHwInterfaceRosWrapper::ReceiveInfoDataCallback(
-  std::unique_ptr<robosense_msgs::msg::RobosensePacket> difop_buffer)
+  std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> difop_buffer)
 {
   // Publish
-  //  difop_buffer->stamp = difop_buffer->packets.front().stamp;
   robosense_difop_pub_->publish(*difop_buffer);
 }
 
