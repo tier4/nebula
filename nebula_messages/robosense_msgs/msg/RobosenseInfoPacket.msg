@@ -1,0 +1,2 @@
+string lidar_model
+RobosensePacket packet

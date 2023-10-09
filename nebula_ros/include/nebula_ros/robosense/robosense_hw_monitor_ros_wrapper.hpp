@@ -12,7 +12,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "robosense_msgs/msg/robosense_packet.hpp"
+#include "robosense_msgs/msg/robosense_info_packet.hpp"
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/asio.hpp>
@@ -55,7 +55,7 @@ class RobosenseHwMonitorRosWrapper final : public rclcpp::Node, NebulaHwMonitorW
   drivers::RobosenseSensorConfiguration sensor_configuration_;
   std::shared_ptr<nebula::drivers::RobosenseCalibrationConfiguration> calibration_configuration_;
 
-  rclcpp::Subscription<robosense_msgs::msg::RobosensePacket>::SharedPtr robosense_info_sub_;
+  rclcpp::Subscription<robosense_msgs::msg::RobosenseInfoPacket>::SharedPtr robosense_info_sub_;
 
   /// @brief Initializing hardware monitor ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
@@ -92,7 +92,7 @@ private:
 
   /// @brief Callback for receiving DIFOP packet
   /// @param info_msg Received DIFOP packet
-  void ReceiveInfoMsgCallback(const robosense_msgs::msg::RobosensePacket::SharedPtr info_msg);
+  void ReceiveInfoMsgCallback(const robosense_msgs::msg::RobosenseInfoPacket::SharedPtr info_msg);
 
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
