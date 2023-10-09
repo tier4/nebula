@@ -1,6 +1,6 @@
 #include "nebula_decoders/nebula_decoders_robosense/robosense_driver.hpp"
 
-#include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v3.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/helios.hpp"
 
 namespace nebula
