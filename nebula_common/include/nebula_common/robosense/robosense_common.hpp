@@ -54,7 +54,7 @@ inline ReturnMode ReturnModeFromStringRobosense(const std::string & return_mode)
 size_t GetChannelSize(const SensorModel & model)
 {
   switch (model) {
-    case SensorModel::ROBOSENSE_BPEARL:
+    case SensorModel::ROBOSENSE_BPEARL_V3:
       return 32;
     case SensorModel::ROBOSENSE_HELIOS_5515:
       return 32;

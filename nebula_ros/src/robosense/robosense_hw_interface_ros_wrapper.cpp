@@ -161,7 +161,7 @@ Status RobosenseHwInterfaceRosWrapper::GetParameters(
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     rcl_interfaces::msg::IntegerRange range;
-    if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::ROBOSENSE_BPEARL) {
+    if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::ROBOSENSE_BPEARL_V3) {
       descriptor.additional_constraints = "300, 600, 1200";
       range.set__from_value(300).set__to_value(1200).set__step(300);
       descriptor.integer_range = {range};

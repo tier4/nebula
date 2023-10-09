@@ -54,6 +54,18 @@ void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
     return;
   }
 
+  if (!driver_ptr_) {
+    if (sensor_cfg_ptr_->sensor_model == drivers::SensorModel::ROBOSENSE_BPEARL) {
+      if (scan_msg->packets.back().data[32] == 0x04) {
+        sensor_cfg_ptr_->sensor_model = drivers::SensorModel::ROBOSENSE_BPEARL_V4;
+      } else {
+        sensor_cfg_ptr_->sensor_model = drivers::SensorModel::ROBOSENSE_BPEARL_V3;
+      }
+    }
+    wrapper_status_ = InitializeDriver(sensor_cfg_ptr_, calibration_cfg_ptr_);
+    RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
+  }
+
   auto t_start = std::chrono::high_resolution_clock::now();
 
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
@@ -123,9 +135,6 @@ void RobosenseDriverRosWrapper::ReceiveInfoMsgCallback(
   sensor_cfg_ptr_->return_mode = info_driver_ptr_->GetReturnMode();
   *calibration_cfg_ptr_ = info_driver_ptr_->GetSensorCalibration();
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << *sensor_cfg_ptr_);
-
-  wrapper_status_ = InitializeDriver(sensor_cfg_ptr_, calibration_cfg_ptr_);
-  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 
   is_received_info = true;
 
