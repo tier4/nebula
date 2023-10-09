@@ -35,19 +35,6 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   msop_packet.stamp.sec = static_cast<int>(timestamp_ns / nanosec_per_sec);
   msop_packet.stamp.nanosec = static_cast<int>(timestamp_ns % nanosec_per_sec);
 
-  // Add sensor model
-  if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_HELIOS_5515) {
-    msop_packet.lidar_model = "helios";
-  } else if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL) {
-    if (msop_packet.data[32] == 0x04) {
-      msop_packet.lidar_model = "bpearl-v4.0";
-    } else {
-      msop_packet.lidar_model = "bpearl-v3.0";
-    }
-  } else {
-    msop_packet.lidar_model = "unknown";
-  }
-
   scan_cloud_ptr_->packets.emplace_back(msop_packet);
 
   int current_phase{};
@@ -153,7 +140,7 @@ Status RobosenseHwInterface::SetSensorConfiguration(
     sensor_configuration_ =
       std::static_pointer_cast<RobosenseSensorConfiguration>(sensor_configuration);
 
-    if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL) {
+    if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL_V3) {
       azimuth_index_ = 44;
       is_valid_packet_ = [](size_t packet_size) { return (packet_size == BPEARL_PACKET_SIZE); };
       is_valid_info_packet_ = [](size_t packet_size) {

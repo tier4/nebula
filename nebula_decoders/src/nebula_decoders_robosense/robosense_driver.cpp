@@ -18,7 +18,7 @@ RobosenseDriver::RobosenseDriver(
     case SensorModel::UNKNOWN:
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;
       break;
-    case SensorModel::ROBOSENSE_BPEARL:
+    case SensorModel::ROBOSENSE_BPEARL_V3:
       scan_decoder_.reset(
         new RobosenseDecoder<Bpearl>(sensor_configuration, calibration_configuration));
       break;
