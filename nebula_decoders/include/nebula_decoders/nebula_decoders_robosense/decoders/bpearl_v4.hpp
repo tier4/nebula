@@ -21,13 +21,14 @@ namespace bpearl_v4
 struct Header
 {
   boost::endian::big_uint64_buf_t header_id;
-  boost::endian::big_uint32_buf_t reserved_first;
+  uint8_t reserved_first[4];
   boost::endian::big_uint32_buf_t packet_count;
-  boost::endian::big_uint32_buf_t reserved_second;
+  uint8_t reserved_second[4];
   Timestamp timestamp;
+  uint8_t reserved_third[1];
   boost::endian::big_uint8_buf_t lidar_type;
   boost::endian::big_uint8_buf_t lidar_model;
-  uint8_t reserved_third[9];
+  uint8_t reserved_fourth[9];
 };
 
 struct Packet : public PacketBase<12, 32, 2, 100>
@@ -44,6 +45,7 @@ struct OperatingStatus
   boost::endian::big_uint16_buf_t machine_current;
   boost::endian::big_uint24_buf_t reserved_second;
   boost::endian::big_uint16_buf_t machine_voltage;
+  uint8_t reserved_third[16];
 };
 
 struct FaultDiagnosis
@@ -75,8 +77,8 @@ struct InfoPacket
   SerialNumber serial_number;
   uint8_t reserved_third[2];
   boost::endian::big_uint8_buf_t return_mode;
-  boost::endian::big_uint8_buf_t time_sync_mode;
-  boost::endian::big_uint8_buf_t sync_status;
+  boost::endian::big_uint16_buf_t time_sync_info;
+  Timestamp time;
   OperatingStatus operating_status;
   boost::endian::big_uint8_buf_t rotation_direction;
   boost::endian::big_uint32_buf_t running_time;
@@ -250,12 +252,12 @@ public:
     } else if (info_packet.return_mode.value() == 0x06) {
       sensor_info["return_mode"] = "first";
     }
-    sensor_info["time_sync_mode"] = std::to_string(info_packet.time_sync_mode.value());
-    sensor_info["sync_status"] = std::to_string(info_packet.sync_status.value());
-    sensor_info["machine_current"] =
-      std::to_string(info_packet.operating_status.machine_current.value());
-    sensor_info["machine_voltage"] =
-      std::to_string(info_packet.operating_status.machine_voltage.value());
+    sensor_info["time_sync_info"] = std::to_string(info_packet.time_sync_info.value());
+    sensor_info["time"] = std::to_string(info_packet.time.get_time_in_ns());
+    sensor_info["machine_current"] = std::to_string(
+      static_cast<float>(info_packet.operating_status.machine_current.value()) / 100.0f);
+    sensor_info["machine_voltage"] = std::to_string(
+      static_cast<float>(info_packet.operating_status.machine_voltage.value()) / 100.0f);
     sensor_info["rotation_direction"] = std::to_string(info_packet.rotation_direction.value());
     sensor_info["running_time"] = std::to_string(info_packet.running_time.value());
     sensor_info["startup_times"] =
@@ -283,7 +285,8 @@ public:
       sensor_info["pps_input_status"] = "no_input";
     }
 
-    sensor_info["machine_temp"] = std::to_string(info_packet.fault_diagnosis.machine_temp.value());
+    sensor_info["machine_temp"] =
+      std::to_string(static_cast<float>(info_packet.fault_diagnosis.machine_temp.value()) / 100.0f);
     sensor_info["phase"] = std::to_string(info_packet.fault_diagnosis.phase.value());
     sensor_info["rotation_speed"] =
       std::to_string(info_packet.fault_diagnosis.rotation_speed.value());
