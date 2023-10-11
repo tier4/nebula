@@ -54,6 +54,10 @@ public:
   ReturnMode GetReturnMode();
 
   RobosenseCalibrationConfiguration GetSensorCalibration();
+
+  /// @brief Get the status of time synchronization
+  /// @return True if the sensor's clock is synchronized
+  bool GetSyncStatus();
 };
 
 }  // namespace drivers

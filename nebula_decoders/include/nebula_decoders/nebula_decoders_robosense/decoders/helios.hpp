@@ -260,6 +260,14 @@ public:
     return info_packet.sensor_calibration.getCalibration();
   }
 
+  bool getSyncStatus(const robosense_packet::helios::InfoPacket & info_packet)
+  {
+    if ((info_packet.fault_diagnosis.gps_status.value() & 00100000) == 00100000) {
+      return true;
+    }
+    return false;
+  }
+
   std::map<std::string, std::string> getSensorInfo(
     const robosense_packet::helios::InfoPacket & info_packet)
   {

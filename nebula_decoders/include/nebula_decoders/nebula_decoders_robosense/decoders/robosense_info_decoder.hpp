@@ -74,6 +74,10 @@ public:
   {
     return sensor_.getSensorCalibration(packet_);
   }
+
+  /// @brief Get the status of time synchronization
+  /// @return True if the sensor's clock is synchronized
+  bool getSyncStatus() override { return sensor_.getSyncStatus(packet_); }
 };
 
 }  // namespace drivers

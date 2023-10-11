@@ -250,6 +250,14 @@ public:
     return info_packet.sensor_calibration.getCalibration();
   }
 
+  bool getSyncStatus(const robosense_packet::bpearl_v3::InfoPacket & info_packet)
+  {
+    if (info_packet.sync_status.value() != 0x00) {
+      return true;
+    }
+    return false;
+  }
+
   std::map<std::string, std::string> getSensorInfo(
     const robosense_packet::bpearl_v3::InfoPacket & info_packet)
   {

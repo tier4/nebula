@@ -440,6 +440,7 @@ struct SensorConfigurationBase
   double max_range;
   bool remove_nans;  /// todo: consider changing to only_finite
   std::vector<PointField> fields;
+  bool use_sensor_time{false};
 };
 
 /// @brief Convert SensorConfigurationBase to string (Overloading the << operator)
@@ -452,7 +453,8 @@ inline std::ostream & operator<<(
   os << "SensorModel: " << arg.sensor_model << ", ReturnMode: " << arg.return_mode
      << ", HostIP: " << arg.host_ip << ", SensorIP: " << arg.sensor_ip
      << ", FrameID: " << arg.frame_id << ", DataPort: " << arg.data_port
-     << ", Frequency: " << arg.frequency_ms << ", MTU: " << arg.packet_mtu_size;
+     << ", Frequency: " << arg.frequency_ms << ", MTU: " << arg.packet_mtu_size
+     << ", Use sensor time: " << arg.use_sensor_time;
   return os;
 }
 
