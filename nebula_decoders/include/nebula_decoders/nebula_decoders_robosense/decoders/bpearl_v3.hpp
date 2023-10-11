@@ -270,8 +270,10 @@ public:
       std::to_string(info_packet.ethernet.lidar_out_msop_port.value());
     sensor_info["lidar_out_difop_port"] =
       std::to_string(info_packet.ethernet.lidar_out_difop_port.value());
-    sensor_info["fov_start"] = std::to_string(info_packet.fov_setting.fov_start.value());
-    sensor_info["fov_end"] = std::to_string(info_packet.fov_setting.fov_end.value());
+    sensor_info["fov_start"] =
+      std::to_string(static_cast<float>(info_packet.fov_setting.fov_start.value()) / 100.0f);
+    sensor_info["fov_end"] =
+      std::to_string(static_cast<float>(info_packet.fov_setting.fov_end.value()) / 100.0f);
     sensor_info["tcp_msop_port"] = std::to_string(info_packet.tcp_msop_port.value());
     sensor_info["phase_lock"] = std::to_string(info_packet.phase_lock.value());
     sensor_info["top_firmware_version"] = info_packet.top_firmware_version.to_string();
@@ -296,23 +298,47 @@ public:
     sensor_info["time_sync_mode"] = std::to_string(info_packet.time_sync_mode.value());
     sensor_info["sync_status"] = std::to_string(info_packet.sync_status.value());
     sensor_info["time"] = std::to_string(info_packet.time.get_time_in_ns());
-    sensor_info["v_dat_0v5"] = std::to_string(info_packet.operating_status.v_dat_0v5.value());
-    sensor_info["v_dat_12v"] = std::to_string(info_packet.operating_status.v_dat_12v.value());
-    sensor_info["v_dat_5v"] = std::to_string(info_packet.operating_status.v_dat_5v.value());
-    sensor_info["v_dat_1v25"] = std::to_string(info_packet.operating_status.v_dat_1v25.value());
-    sensor_info["v_dat_0v"] = std::to_string(info_packet.operating_status.v_dat_0v.value());
-    sensor_info["v_dat_1v"] = std::to_string(info_packet.operating_status.v_dat_1v.value());
+    sensor_info["v_dat_0v5"] =
+      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_0v5.value()) / 100.0f);
+    sensor_info["v_dat_12v"] =
+      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_12v.value()) / 100.0f);
+    sensor_info["v_dat_5v"] =
+      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_5v.value()) / 100.0f);
+    sensor_info["v_dat_1v25"] =
+      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_1v25.value()) / 100.0f);
+    sensor_info["v_dat_0v"] =
+      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_0v.value()) / 100.0f);
+    sensor_info["v_dat_1v"] =
+      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_1v.value()) / 100.0f);
     sensor_info["rotation_direction"] = std::to_string(info_packet.rotation_direction.value());
     sensor_info["elapsed_time_flag"] = std::to_string(info_packet.elapsed_time_flag.value());
     sensor_info["cksum_st"] = std::to_string(info_packet.fault_diagnosis.cksum_st.value());
     sensor_info["manc_err1"] = std::to_string(info_packet.fault_diagnosis.manc_err1.value());
     sensor_info["manc_err2"] = std::to_string(info_packet.fault_diagnosis.manc_err2.value());
-    sensor_info["gps_st"] = std::to_string(info_packet.fault_diagnosis.gps_st.value());
-    sensor_info["temperature1"] = std::to_string(info_packet.fault_diagnosis.temperature1.value());
-    sensor_info["temperature2"] = std::to_string(info_packet.fault_diagnosis.temperature2.value());
-    sensor_info["temperature3"] = std::to_string(info_packet.fault_diagnosis.temperature3.value());
-    sensor_info["temperature4"] = std::to_string(info_packet.fault_diagnosis.temperature4.value());
-    sensor_info["temperature5"] = std::to_string(info_packet.fault_diagnosis.temperature5.value());
+
+    if ((info_packet.fault_diagnosis.gps_st.value() & 0b10000000))
+      sensor_info["pps_lock"] = "valid";
+    else
+      sensor_info["pps_lock"] = "invalid";
+    if ((info_packet.fault_diagnosis.gps_st.value() & 0b01000000))
+      sensor_info["gprmc_lock"] = "valid";
+    else
+      sensor_info["gprmc_lock"] = "invalid";
+    if ((info_packet.fault_diagnosis.gps_st.value() & 0b00100000))
+      sensor_info["utc_lock"] = "synchronized";
+    else
+      sensor_info["utc_lock"] = "not_synchronized";
+
+    sensor_info["temperature1"] =
+      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature1.value()) / 100.0f);
+    sensor_info["temperature2"] =
+      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature2.value()) / 100.0f);
+    sensor_info["temperature3"] =
+      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature3.value()) / 100.0f);
+    sensor_info["temperature4"] =
+      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature4.value()) / 100.0f);
+    sensor_info["temperature5"] =
+      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature5.value()) / 100.0f);
     sensor_info["r_rpm1"] = std::to_string(info_packet.fault_diagnosis.r_rpm1.value());
     sensor_info["r_rpm2"] = std::to_string(info_packet.fault_diagnosis.r_rpm2.value());
     //        sensor_info["gprmc"] = std::to_string(info_packet.gprmc.getGprmc());

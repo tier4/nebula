@@ -241,8 +241,10 @@ public:
       std::to_string(info_packet.ethernet.lidar_out_msop_port.value());
     sensor_info["lidar_out_difop_port"] =
       std::to_string(info_packet.ethernet.lidar_out_difop_port.value());
-    sensor_info["fov_start"] = std::to_string(info_packet.fov_setting.fov_start.value());
-    sensor_info["fov_end"] = std::to_string(info_packet.fov_setting.fov_end.value());
+    sensor_info["fov_start"] =
+      std::to_string(static_cast<float>(info_packet.fov_setting.fov_start.value()));
+    sensor_info["fov_end"] =
+      std::to_string(static_cast<float>(info_packet.fov_setting.fov_end.value()));
     sensor_info["tcp_msop_port"] = std::to_string(info_packet.tcp_msop_port.value());
     sensor_info["phase_lock"] = std::to_string(info_packet.phase_lock.value());
     sensor_info["mainboard_firmware_version"] = info_packet.mainboard_firmware_version.to_string();
@@ -274,22 +276,22 @@ public:
       std::to_string(info_packet.fault_diagnosis.startup_times.value());
 
     const uint8_t gps_status_data = info_packet.fault_diagnosis.gps_status.value();
-    if ((gps_status_data & 0b10000000) == 0b10000000) {
+    if (gps_status_data & 0b10000000) {
       sensor_info["pps_lock"] = "valid";
     } else {
       sensor_info["pps_lock"] = "invalid";
     }
-    if ((gps_status_data & 0b01000000) == 0b01000000) {
+    if (gps_status_data & 0b01000000) {
       sensor_info["gprmc_lock"] = "valid";
     } else {
       sensor_info["gprmc_lock"] = "invalid";
     }
-    if ((gps_status_data & 0b00100000) == 0b00100000) {
+    if (gps_status_data & 0b00100000) {
       sensor_info["utc_lock"] = "synchronized";
     } else {
       sensor_info["utc_lock"] = "not_synchronized";
     }
-    if ((gps_status_data & 0b00010000) == 0b00010000) {
+    if (gps_status_data & 0b00010000) {
       sensor_info["pps_input_status"] = "input_present";
     } else {
       sensor_info["pps_input_status"] = "no_input";
