@@ -5,6 +5,7 @@
 
 #include "boost/endian/buffers.hpp"
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 
@@ -27,34 +28,20 @@ struct Timestamp
   boost::endian::big_uint8_buf_t minute;
   boost::endian::big_uint8_buf_t second;
   boost::endian::big_uint16_buf_t millisecond;
-  boost::endian::big_uint16_buf_t nanosecond;
+  boost::endian::big_uint16_buf_t microsecond;
 
   [[nodiscard]] uint64_t get_time_in_ns() const
   {
-    // Constants for conversion
-    constexpr uint64_t nanoseconds_per_second = 1'000'000'000;
-    constexpr uint64_t nanoseconds_per_millisecond = 1'000'000;
-    constexpr uint64_t nanoseconds_per_minute = 60 * nanoseconds_per_second;
-    constexpr uint64_t nanoseconds_per_hour = 60 * nanoseconds_per_minute;
-    constexpr uint64_t nanoseconds_per_day = 24 * nanoseconds_per_hour;
-    constexpr uint64_t nanoseconds_per_month = 30 * nanoseconds_per_day;
-    constexpr uint64_t nanoseconds_per_year = 12 * nanoseconds_per_month;
-
-    // Calculate the nanoseconds from each component
-    uint64_t year_ns = year.value() * nanoseconds_per_year;
-    uint64_t month_ns = month.value() * nanoseconds_per_month;
-    uint64_t day_ns = day.value() * nanoseconds_per_day;
-    uint64_t hour_ns = hour.value() * nanoseconds_per_hour;
-    uint64_t minute_ns = minute.value() * nanoseconds_per_minute;
-    uint64_t second_ns = second.value() * nanoseconds_per_second;
-    uint64_t millisecond_ns = millisecond.value() * nanoseconds_per_millisecond;
-    uint64_t nanosecond_ns = nanosecond.value();
-
-    // Calculate the total time in nanoseconds
-    uint64_t total_ns = year_ns + month_ns + day_ns + hour_ns + minute_ns + second_ns +
-                        millisecond_ns + nanosecond_ns;
-
-    return total_ns;
+    std::tm tm{};
+    tm.tm_year = year.value() + 100;
+    tm.tm_mon = month.value() - 1;  // starts from 0 in C
+    tm.tm_mday = day.value();
+    tm.tm_hour = hour.value();
+    tm.tm_min = minute.value();
+    tm.tm_sec = second.value();
+    const uint64_t time = timegm(&tm) * 1000000000ULL + millisecond.value() * 1000000ULL +
+                          microsecond.value() * 1000ULL;
+    return time;
   }
 };
 
