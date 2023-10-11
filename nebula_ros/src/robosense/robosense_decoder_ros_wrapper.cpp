@@ -250,17 +250,6 @@ Status RobosenseDriverRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("return_mode", "", descriptor);
-
-    sensor_configuration.return_mode = nebula::drivers::ReturnModeFromStringRobosense(
-      this->get_parameter("return_mode").as_string());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
@@ -293,16 +282,6 @@ Status RobosenseDriverRosWrapper::GetParameters(
     this->declare_parameter<double>("scan_phase", 0., descriptor);
     sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
   }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("calibration_file", "", descriptor);
-    calibration_configuration.calibration_file =
-      this->get_parameter("calibration_file").as_string();
-  }
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
@@ -314,52 +293,8 @@ Status RobosenseDriverRosWrapper::GetParameters(
     return Status::SENSOR_CONFIG_ERROR;
   }
 
-  if (calibration_configuration.calibration_file.empty()) {
-    RCLCPP_ERROR_STREAM(
-      this->get_logger(),
-      "Empty Calibration_file File: '" << calibration_configuration.calibration_file << "'");
-    return Status::INVALID_CALIBRATION_FILE;
-  } else {
-    auto cal_status =
-      calibration_configuration.LoadFromFile(calibration_configuration.calibration_file);
-
-    if (cal_status != Status::OK) {
-      RCLCPP_ERROR_STREAM(
-        this->get_logger(),
-        "Given Calibration File: '" << calibration_configuration.calibration_file << "'");
-      return cal_status;
-    } else {
-      RCLCPP_INFO_STREAM(
-        this->get_logger(),
-        "Load calibration data from: '" << calibration_configuration.calibration_file << "'");
-    }
-  }
-
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
   return Status::OK;
-}
-
-std::string RobosenseDriverRosWrapper::CreateCalibrationPath(const std::string & original_path)
-{
-  // New suffix to add
-  const std::string suffix = "_from_sensor.csv";
-
-  // Find the last occurrence of '.' to get the directory path
-  size_t last_pos = original_path.find_last_of('.');
-  if (last_pos != std::string::npos) {
-    // Extract the path
-    const std::string calib_path = original_path.substr(0, last_pos);
-
-    // Create the new file path by appending the new filename
-    std::string new_path = calib_path + suffix;
-
-    // Print the new file path
-    RCLCPP_INFO_STREAM(this->get_logger(), "New calibration file path: " << new_path);
-    return new_path;
-
-  } else {
-    RCLCPP_ERROR_STREAM(this->get_logger(), "Invalid file path format.");
-  }
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(RobosenseDriverRosWrapper)
