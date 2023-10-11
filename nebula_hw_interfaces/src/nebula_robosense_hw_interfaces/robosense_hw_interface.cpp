@@ -159,7 +159,10 @@ Status RobosenseHwInterface::SetSensorConfiguration(
     sensor_configuration_ =
       std::static_pointer_cast<RobosenseSensorConfiguration>(sensor_configuration);
 
-    if (sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL_V3) {
+    if (
+      sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL ||
+      sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL_V3 ||
+      sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL_V4) {
       azimuth_index_ = 44;
       is_valid_packet_ = [](size_t packet_size) { return (packet_size == BPEARL_PACKET_SIZE); };
       is_valid_info_packet_ = [](size_t packet_size) {
