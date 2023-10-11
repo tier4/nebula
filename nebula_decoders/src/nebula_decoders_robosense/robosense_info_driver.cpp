@@ -58,5 +58,10 @@ RobosenseCalibrationConfiguration RobosenseInfoDriver::GetSensorCalibration()
   return info_decoder_->getSensorCalibration();
 }
 
+bool RobosenseInfoDriver::GetSyncStatus()
+{
+  return info_decoder_->getSyncStatus();
+}
+
 }  // namespace drivers
 }  // namespace nebula

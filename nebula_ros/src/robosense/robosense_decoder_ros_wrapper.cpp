@@ -139,7 +139,9 @@ void RobosenseDriverRosWrapper::ReceiveInfoMsgCallback(
   }
 
   sensor_cfg_ptr_->return_mode = info_driver_ptr_->GetReturnMode();
+  sensor_cfg_ptr_->use_sensor_time = info_driver_ptr_->GetSyncStatus();
   *calibration_cfg_ptr_ = info_driver_ptr_->GetSensorCalibration();
+
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << *sensor_cfg_ptr_);
 
   wrapper_status_ = InitializeDriver(sensor_cfg_ptr_, calibration_cfg_ptr_);
@@ -155,9 +157,12 @@ void RobosenseDriverRosWrapper::PublishCloud(
   std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher)
 {
+  if (!sensor_cfg_ptr_->use_sensor_time) {
+    pointcloud->header.stamp = this->now();
+  }
   if (pointcloud->header.stamp.sec < 0) {
     RCLCPP_WARN_STREAM(this->get_logger(), "Timestamp error, verify clock source.");
-    pointcloud->header.stamp = this->now();
+    return;
   }
   pointcloud->header.frame_id = sensor_cfg_ptr_->frame_id;
   publisher->publish(std::move(pointcloud));

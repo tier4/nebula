@@ -32,6 +32,10 @@ public:
   /// @brief Get sensor calibration
   /// @return The sensor calibration
   virtual RobosenseCalibrationConfiguration getSensorCalibration() = 0;
+
+  /// @brief Get the status of time synchronization
+  /// @return True if the sensor's clock is synchronized
+  virtual bool getSyncStatus() = 0;
 };
 
 }  // namespace drivers

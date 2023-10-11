@@ -77,7 +77,8 @@ struct InfoPacket
   SerialNumber serial_number;
   uint8_t reserved_third[2];
   boost::endian::big_uint8_buf_t return_mode;
-  boost::endian::big_uint16_buf_t time_sync_info;
+  boost::endian::big_uint8_buf_t time_sync_mode;
+  boost::endian::big_uint8_buf_t time_sync_state;
   Timestamp time;
   OperatingStatus operating_status;
   boost::endian::big_uint8_buf_t rotation_direction;
@@ -220,6 +221,14 @@ public:
     return info_packet.sensor_calibration.getCalibration();
   }
 
+  bool getSyncStatus(const robosense_packet::bpearl_v4::InfoPacket & info_packet)
+  {
+    if (info_packet.time_sync_state.value() != 0x00) {
+      return true;
+    }
+    return false;
+  }
+
   std::map<std::string, std::string> getSensorInfo(
     const robosense_packet::bpearl_v4::InfoPacket & info_packet)
   {
@@ -252,7 +261,8 @@ public:
     } else if (info_packet.return_mode.value() == 0x06) {
       sensor_info["return_mode"] = "first";
     }
-    sensor_info["time_sync_info"] = std::to_string(info_packet.time_sync_info.value());
+    sensor_info["time_sync_mode"] = std::to_string(info_packet.time_sync_mode.value());
+    sensor_info["time_sync_state"] = std::to_string(info_packet.time_sync_state.value());
     sensor_info["time"] = std::to_string(info_packet.time.get_time_in_ns());
     sensor_info["machine_current"] = std::to_string(
       static_cast<float>(info_packet.operating_status.machine_current.value()) / 100.0f);
