@@ -288,9 +288,6 @@ Status RobosenseDriverRosWrapper::GetParameters(
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
-  if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
-    return Status::INVALID_ECHO_MODE;
-  }
   if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
     return Status::SENSOR_CONFIG_ERROR;
   }

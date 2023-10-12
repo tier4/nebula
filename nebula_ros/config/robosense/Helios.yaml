@@ -1,0 +1,12 @@
+/**:
+  ros__parameters:
+    sensor_model: "Helios" # See readme for supported models
+    sensor_ip: "192.168.1.200" # Lidar Sensor IP
+    host_ip: "192.168.1.102" # Broadcast IP from Sensor
+    frame_id: "robosense"
+    data_port: 6699 # LiDAR Data Port (MSOP)
+    gnss_port: 7788 # LiDAR GNSS Port (DIFOP)
+    return_mode: "Dual" # See readme for supported return modes
+    scan_phase: 0.0 # Angle where scans begin (degrees, [0.,360.]
+    diag_span: 1000 # milliseconds
+    dual_return_distance_threshold: 0.1
