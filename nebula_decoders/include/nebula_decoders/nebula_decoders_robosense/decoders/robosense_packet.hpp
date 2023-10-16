@@ -240,9 +240,9 @@ double get_dis_unit(const PacketT & packet)
   // Packets define distance unit in millimeters, convert to meters here
   const uint8_t range_resolution = packet.header.range_resolution.value();
   if (range_resolution == 0) {
-    return 0.0025;
-  } else if (range_resolution == 1) {
     return 0.0050;
+  } else if (range_resolution == 1) {
+    return 0.0025;
   }
   // Should throw an error here?
   // throw std::runtime_error("Unknown range resolution");
