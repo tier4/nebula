@@ -89,6 +89,54 @@ TEST_P(DecoderTest, TestPcd)
   EXPECT_GT(check_cnt, 0);
 }
 
+// Tests if decoders handle timezone settings correctly, i.e. their output timestamps
+// are not affected by timezones and are always output in UST.
+TEST_P(DecoderTest, TestTimezone)
+{
+  // For each pointcloud decoded, this will contain the pointcloud timestamp returned by the driver
+  std::vector<uint64_t> decoded_timestamps;
+
+  auto scan_callback = [&](
+                         uint64_t msg_timestamp, uint64_t scan_timestamp,
+                         nebula::drivers::NebulaPointCloudPtr pointcloud) {
+    if (!pointcloud) return;
+    decoded_timestamps.push_back(scan_timestamp);
+  };
+
+  // First, set the timezone to e.g. GMT, check if setting TZ was successful,
+  // then decode scans and record timestamps
+  setenv("TZ", "/usr/share/zoneinfo/GMT", 1);
+  tzset();
+  ASSERT_STREQ(tzname[0], "GMT");
+  auto gmt = timezone;
+  hesai_driver_->ReadBag(scan_callback);
+
+  // Then, reset driver and timestamps vector for the next decode run
+  TearDown();
+  SetUp();
+  auto decoded_timestamps_cmp = std::vector<uint64_t>(decoded_timestamps);
+  decoded_timestamps.clear();
+
+  // Perform the next run with a different timezone, e.g. JST, check if set successfully,
+  // then decode and record times again
+  setenv("TZ", "/usr/share/zoneinfo/Japan", 1);
+  tzset();
+  ASSERT_STREQ(tzname[0], "JST");
+  auto jst = timezone;
+  hesai_driver_->ReadBag(scan_callback);
+
+  // Wrong timezone settings do not throw an error, they just result in UST+0.
+  // Thus, verify that timezone setting has effect on local timestamp
+  ASSERT_NE(gmt, jst);
+
+  // Assert that the same number (>0) of pointclouds have been decoded,
+  // then compare e.g. the last timestamp to verify that it is not affected
+  // by timezone settings
+  ASSERT_EQ(decoded_timestamps.size(), decoded_timestamps_cmp.size());
+  ASSERT_GT(decoded_timestamps.size(), 0);
+  EXPECT_EQ(decoded_timestamps.back(), decoded_timestamps_cmp.back());
+}
+
 void DecoderTest::SetUp()
 {
   auto decoder_params = GetParam();
