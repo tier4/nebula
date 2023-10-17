@@ -1,6 +1,6 @@
-#ifndef NEBULA_HesaiRosDecoderTest64_H
-#define NEBULA_HesaiRosDecoderTest64_H
+#pragma once
 
+#include "hesai_common.hpp"
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
@@ -13,15 +13,41 @@
 
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
-#include "hesai_common.hpp"
 
 #include <gtest/gtest.h>
+
+#include <functional>
+
+#ifndef _SRC_CALIBRATION_DIR_PATH
+#define _SRC_CALIBRATION_DIR_PATH ""
+#endif
+
+#ifndef _SRC_RESOURCES_DIR_PATH
+#define _SRC_RESOURCES_DIR_PATH ""
+#endif
 
 namespace nebula
 {
 namespace ros
 {
-/// @brief Testing decoder of pandar 64 (Keeps HesaiDriverRosWrapper structure as much as possible)
+
+struct HesaiRosDecoderTestParams
+{
+  std::string sensor_model;
+  std::string return_mode;
+  std::string frame_id = "hesai";
+  double scan_phase = 0.;
+  std::string calibration_file = "";
+  std::string correction_file = "";
+  std::string bag_path;
+  std::string storage_id = "sqlite3";
+  std::string format = "cdr";
+  std::string target_topic = "/pandar_packets";
+  double dual_return_distance_threshold = 0.1;
+};
+
+/// @brief Testing decoder of pandar 40p (Keeps HesaiDriverRosWrapper structure as much as
+/// possible)
 class HesaiRosDecoderTest final : public rclcpp::Node, NebulaDriverRosWrapperBase  //, testing::Test
 {
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
@@ -49,7 +75,7 @@ class HesaiRosDecoderTest final : public rclcpp::Node, NebulaDriverRosWrapperBas
     std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
     std::shared_ptr<drivers::HesaiCorrection> correction_configuration);
 
-  /// @brief Get configurations (Magic numbers for Pandar64 is described, each function can be
+  /// @brief Get configurations (Magic numbers for Pandar40P is described, each function can be
   /// integrated if the ros parameter can be passed to Google Test)
   /// @param sensor_configuration Output of SensorConfiguration
   /// @param calibration_configuration Output of CalibrationConfiguration
@@ -70,7 +96,11 @@ class HesaiRosDecoderTest final : public rclcpp::Node, NebulaDriverRosWrapperBas
   }
 
 public:
-  explicit HesaiRosDecoderTest(const rclcpp::NodeOptions & options, const std::string & node_name);
+  explicit HesaiRosDecoderTest(
+    const rclcpp::NodeOptions & options, const std::string & node_name,
+    const HesaiRosDecoderTestParams & params);
+
+  //  void ReceiveScanMsgCallback(const pandar_msgs::msg::PandarScan::SharedPtr scan_msg);
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -78,26 +108,10 @@ public:
 
   /// @brief Read the specified bag file and compare the constructed point clouds with the
   /// corresponding PCD files
-  void ReadBag();
-  /*
-  void SetUp() override {
-    // Setup things that should occur before every test instance should go here
-    RCLCPP_ERROR_STREAM(this->get_logger(), "DONE WITH SETUP!!");
-  }
+  void ReadBag(std::function<void(uint64_t, uint64_t, nebula::drivers::NebulaPointCloudPtr)> scan_callback);
 
-  void TearDown() override {
-    std::cout << "DONE WITH TEARDOWN" << std::endl;
-  }
-*/
-private:
-  std::string bag_path;
-  std::string storage_id;
-  std::string format;
-  std::string target_topic;
-  std::string correction_file_path;
+  HesaiRosDecoderTestParams params_;
 };
 
 }  // namespace ros
 }  // namespace nebula
-
-#endif  // NEBULA_HesaiRosDecoderTest64_H
