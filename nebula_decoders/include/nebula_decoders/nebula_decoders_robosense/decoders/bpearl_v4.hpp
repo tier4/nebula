@@ -223,9 +223,8 @@ public:
 
   bool getSyncStatus(const robosense_packet::bpearl_v4::InfoPacket & info_packet)
   {
-    if (info_packet.time_sync_state.value() != 0x00) {
-      return true;
-    }
+    std::bitset<8> gps_st_bits{info_packet.fault_diagnosis.gps_status.value()};
+    if (gps_st_bits[2] == 1) return true;
     return false;
   }
 
