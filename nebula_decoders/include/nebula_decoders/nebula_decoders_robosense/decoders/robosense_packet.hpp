@@ -248,6 +248,14 @@ double get_dis_unit(const PacketT & packet)
   // throw std::runtime_error("Unknown range resolution");
 }
 
+/// @brief Convert raw angle value from packet to std::string
+/// @param raw_angle The raw angle value from the packet
+/// @return The angle as std::string
+std::string get_float_value(const uint16_t & raw_angle)
+{
+  return std::to_string(static_cast<float>(raw_angle) / 100.0f);
+}
+
 }  // namespace robosense_packet
 }  // namespace drivers
 }  // namespace nebula

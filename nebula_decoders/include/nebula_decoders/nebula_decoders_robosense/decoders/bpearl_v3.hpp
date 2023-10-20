@@ -273,9 +273,9 @@ public:
     sensor_info["lidar_out_difop_port"] =
       std::to_string(info_packet.ethernet.lidar_out_difop_port.value());
     sensor_info["fov_start"] =
-      std::to_string(static_cast<float>(info_packet.fov_setting.fov_start.value()) / 100.0f);
+      robosense_packet::get_float_value(info_packet.fov_setting.fov_start.value());
     sensor_info["fov_end"] =
-      std::to_string(static_cast<float>(info_packet.fov_setting.fov_end.value()) / 100.0f);
+      robosense_packet::get_float_value(info_packet.fov_setting.fov_end.value());
     sensor_info["tcp_msop_port"] = std::to_string(info_packet.tcp_msop_port.value());
     sensor_info["phase_lock"] = std::to_string(info_packet.phase_lock.value());
     sensor_info["top_firmware_version"] = info_packet.top_firmware_version.to_string();
@@ -283,7 +283,7 @@ public:
     sensor_info["bottom_software_version"] = info_packet.bottom_software_version.to_string();
     sensor_info["motor_firmware_version"] = info_packet.motor_firmware_version.to_string();
     sensor_info["reverse_zero_angle_offset"] =
-      std::to_string(static_cast<float>(info_packet.reverse_zero_angle_offset.value()) / 100);
+      std::to_string(info_packet.reverse_zero_angle_offset.value());
     sensor_info["serial_number"] = info_packet.serial_number.to_string();
     sensor_info["zero_angle_offset"] = std::to_string(info_packet.zero_angle_offset.value());
 
@@ -310,17 +310,17 @@ public:
 
     sensor_info["time"] = std::to_string(info_packet.time.get_time_in_ns());
     sensor_info["v_dat_0v5"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_0v5.value()) / 100.0f);
+      robosense_packet::get_float_value(info_packet.operating_status.v_dat_0v5.value());
     sensor_info["v_dat_12v"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_12v.value()) / 100.0f);
+      robosense_packet::get_float_value(info_packet.operating_status.v_dat_12v.value());
     sensor_info["v_dat_5v"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_5v.value()) / 100.0f);
+      robosense_packet::get_float_value(info_packet.operating_status.v_dat_5v.value());
     sensor_info["v_dat_1v25"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_1v25.value()) / 100.0f);
+      robosense_packet::get_float_value(info_packet.operating_status.v_dat_1v25.value());
     sensor_info["v_dat_0v"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_0v.value()) / 100.0f);
+      robosense_packet::get_float_value(info_packet.operating_status.v_dat_0v.value());
     sensor_info["v_dat_1v"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_1v.value()) / 100.0f);
+      robosense_packet::get_float_value(info_packet.operating_status.v_dat_1v.value());
     sensor_info["rotation_direction"] = std::to_string(info_packet.rotation_direction.value());
     sensor_info["elapsed_time_flag"] = std::to_string(info_packet.elapsed_time_flag.value());
 
