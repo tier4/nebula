@@ -285,9 +285,9 @@ public:
     sensor_info["pc_dest_difop_port"] =
       std::to_string(info_packet.ethernet.pc_dest_difop_port.value());
     sensor_info["fov_start"] =
-      std::to_string(static_cast<float>(info_packet.fov_setting.fov_start.value()) / 100);
+      robosense_packet::get_float_value(info_packet.fov_setting.fov_start.value());
     sensor_info["fov_end"] =
-      std::to_string(static_cast<float>(info_packet.fov_setting.fov_end.value()) / 100);
+      robosense_packet::get_float_value(info_packet.fov_setting.fov_end.value());
     sensor_info["phase_lock"] = std::to_string(info_packet.phase_lock.value());
     sensor_info["top_firmware_version"] = info_packet.top_firmware_version.to_string();
     sensor_info["bottom_firmware_version"] = info_packet.bottom_firmware_version.to_string();
@@ -314,39 +314,74 @@ public:
       sensor_info["return_mode"] = "first";
     }
 
-    sensor_info["time_sync_mode"] = std::to_string(info_packet.time_sync_mode.value());
-    sensor_info["sync_status"] = std::to_string(info_packet.sync_status.value());
+    if (info_packet.time_sync_mode.value() == 0) sensor_info["time_sync_mode"] = "gps";
+    if (info_packet.time_sync_mode.value() == 1) sensor_info["time_sync_mode"] = "e2e";
+    if (info_packet.time_sync_mode.value() == 2) sensor_info["time_sync_mode"] = "p2p";
+    if (info_packet.time_sync_mode.value() == 3) sensor_info["time_sync_mode"] = "gptp";
+
+    if (info_packet.sync_status.value() == 0) sensor_info["sync_status"] = "time_sync_invalid";
+    if (info_packet.sync_status.value() == 1)
+      sensor_info["sync_status"] = "gps_time_sync_successful";
+    if (info_packet.sync_status.value() == 2)
+      sensor_info["sync_status"] = "ptp_time_sync_successful";
+
     sensor_info["time"] = std::to_string(info_packet.time.get_time_in_ns());
-    sensor_info["i_dat"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.i_dat.value()) / 100);
-    sensor_info["v_dat"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat.value()) / 100);
+    sensor_info["i_dat"] = std::to_string(info_packet.operating_status.i_dat.value() / 4096.0 * 5);
+    sensor_info["v_dat"] = std::to_string(info_packet.operating_status.v_dat.value() / 4096.0);
     sensor_info["v_dat_12v"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_12v.value()) / 100);
+      std::to_string(info_packet.operating_status.v_dat_12v.value() / 4096.0 * 24.5);
     sensor_info["v_dat_5v"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_5v.value()) / 100);
+      std::to_string(info_packet.operating_status.v_dat_5v.value() / 4096.0 * 11);
     sensor_info["v_dat_2v5"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_2v5.value()) / 100);
+      std::to_string(info_packet.operating_status.v_dat_2v5.value() / 4096.0 * 10);
     sensor_info["v_dat_apd"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_apd.value()) / 100);
-    sensor_info["temperature1"] =
-      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature1.value()) / 100);
+      std::to_string(info_packet.operating_status.v_dat_apd.value() * 516.65 / 4096 - 465.8);
+    sensor_info["top_board_temp"] =
+      std::to_string(info_packet.fault_diagnosis.temperature1.value() * 503.975 / 4096.0 - 273.15);
     sensor_info["temperature2"] =
-      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature2.value()) / 100);
+      std::to_string(info_packet.fault_diagnosis.temperature2.value() * 200 / 4096.0 - 50);
     sensor_info["temperature3"] =
-      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature3.value()) / 100);
+      std::to_string(info_packet.fault_diagnosis.temperature3.value() * 200 / 4096.0 - 50);
     sensor_info["temperature4"] =
-      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature4.value()) / 100);
-    sensor_info["temperature5"] =
-      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature5.value()) / 100);
-    sensor_info["r_rpm"] = std::to_string(info_packet.fault_diagnosis.r_rpm.value());
+      std::to_string(info_packet.fault_diagnosis.temperature4.value() * 200 / 4096.0 - 50);
+    sensor_info["bottom_board_temp"] =
+      std::to_string(info_packet.fault_diagnosis.temperature5.value() * 503.975 / 4096.0 - 273.15);
+    sensor_info["real_time_rot_speed"] = std::to_string(info_packet.fault_diagnosis.r_rpm.value());
     sensor_info["lane_up"] = std::to_string(info_packet.fault_diagnosis.lane_up.value());
     sensor_info["lane_up_cnt"] = std::to_string(info_packet.fault_diagnosis.lane_up_cnt.value());
     sensor_info["top_status"] = std::to_string(info_packet.fault_diagnosis.top_status.value());
-    sensor_info["gps_status"] = std::to_string(info_packet.fault_diagnosis.gps_status.value());
+
+    std::bitset<8> gps_st_bits{info_packet.fault_diagnosis.gps_status.value()};
+    if (gps_st_bits[0] == 1)
+      sensor_info["pps_lock"] = "valid";
+    else
+      sensor_info["pps_lock"] = "invalid";
+    if (gps_st_bits[1] == 1)
+      sensor_info["gprmc_lock"] = "valid";
+    else
+      sensor_info["gprmc_lock"] = "invalid";
+    if (gps_st_bits[2] == 1)
+      sensor_info["utc_lock"] = "synchronized";
+    else
+      sensor_info["utc_lock"] = "not_synchronized";
+    if (gps_st_bits[3] == 1)
+      sensor_info["gprmc_input_status"] = "received_gprmc";
+    else
+      sensor_info["gprmc_input_status"] = "no_gprmc";
+    if (gps_st_bits[4] == 1)
+      sensor_info["pps_input_status"] = "received_pps";
+    else
+      sensor_info["pps_input_status"] = "no_pps";
+
     sensor_info["code_wheel_status"] = std::to_string(info_packet.code_wheel_status.value());
     sensor_info["pps_trigger_mode"] = std::to_string(info_packet.pps_trigger_mode.value());
-    //        sensor_info["gprmc"] = std::to_string(info_packet.gprmc.getGprmc());
+
+    std::string gprmc_string;
+    for (auto i : info_packet.gprmc) {
+      gprmc_string += static_cast<char>(i.value());
+    }
+    sensor_info["gprmc_string"] = gprmc_string;
+
     return sensor_info;
   }
 };
