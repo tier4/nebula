@@ -242,9 +242,9 @@ public:
     sensor_info["lidar_out_difop_port"] =
       std::to_string(info_packet.ethernet.lidar_out_difop_port.value());
     sensor_info["fov_start"] =
-      std::to_string(static_cast<float>(info_packet.fov_setting.fov_start.value()));
+      robosense_packet::get_float_value(info_packet.fov_setting.fov_start.value());
     sensor_info["fov_end"] =
-      std::to_string(static_cast<float>(info_packet.fov_setting.fov_end.value()));
+      robosense_packet::get_float_value(info_packet.fov_setting.fov_end.value());
     sensor_info["tcp_msop_port"] = std::to_string(info_packet.tcp_msop_port.value());
     sensor_info["phase_lock"] = std::to_string(info_packet.phase_lock.value());
     sensor_info["mainboard_firmware_version"] = info_packet.mainboard_firmware_version.to_string();
@@ -263,47 +263,62 @@ public:
     } else if (info_packet.return_mode.value() == 0x06) {
       sensor_info["return_mode"] = "first";
     }
-    sensor_info["time_sync_mode"] = std::to_string(info_packet.time_sync_mode.value());
-    sensor_info["time_sync_state"] = std::to_string(info_packet.time_sync_state.value());
+
+    if (info_packet.time_sync_mode.value() == 0) sensor_info["time_sync_mode"] = "gps";
+    if (info_packet.time_sync_mode.value() == 1) sensor_info["time_sync_mode"] = "e2e";
+    if (info_packet.time_sync_mode.value() == 2) sensor_info["time_sync_mode"] = "p2p";
+    if (info_packet.time_sync_mode.value() == 3) sensor_info["time_sync_mode"] = "gptp";
+
+    if (info_packet.time_sync_state.value() == 0)
+      sensor_info["time_sync_state"] = "time_sync_invalid";
+    if (info_packet.time_sync_state.value() == 1)
+      sensor_info["time_sync_state"] = "gps_time_sync_successful";
+    if (info_packet.time_sync_state.value() == 2)
+      sensor_info["time_sync_state"] = "ptp_time_sync_successful";
+
     sensor_info["time"] = std::to_string(info_packet.time.get_time_in_ns());
-    sensor_info["machine_current"] = std::to_string(
-      static_cast<float>(info_packet.operating_status.machine_current.value()) / 100.0f);
-    sensor_info["machine_voltage"] = std::to_string(
-      static_cast<float>(info_packet.operating_status.machine_voltage.value()) / 100.0f);
+    sensor_info["machine_current"] =
+      robosense_packet::get_float_value(info_packet.operating_status.machine_current.value());
+    sensor_info["machine_voltage"] =
+      robosense_packet::get_float_value(info_packet.operating_status.machine_voltage.value());
     sensor_info["rotation_direction"] = std::to_string(info_packet.rotation_direction.value());
     sensor_info["running_time"] = std::to_string(info_packet.running_time.value());
     sensor_info["startup_times"] =
       std::to_string(info_packet.fault_diagnosis.startup_times.value());
 
-    const uint8_t gps_status_data = info_packet.fault_diagnosis.gps_status.value();
-    if (gps_status_data & 0b10000000) {
+    std::bitset<8> gps_st_bits{info_packet.fault_diagnosis.gps_status.value()};
+    if (gps_st_bits[0] == 1)
       sensor_info["pps_lock"] = "valid";
-    } else {
+    else
       sensor_info["pps_lock"] = "invalid";
-    }
-    if (gps_status_data & 0b01000000) {
+    if (gps_st_bits[1] == 1)
       sensor_info["gprmc_lock"] = "valid";
-    } else {
+    else
       sensor_info["gprmc_lock"] = "invalid";
-    }
-    if (gps_status_data & 0b00100000) {
+    if (gps_st_bits[2] == 1)
       sensor_info["utc_lock"] = "synchronized";
-    } else {
+    else
       sensor_info["utc_lock"] = "not_synchronized";
-    }
-    if (gps_status_data & 0b00010000) {
-      sensor_info["pps_input_status"] = "input_present";
-    } else {
-      sensor_info["pps_input_status"] = "no_input";
-    }
+    if (gps_st_bits[3] == 1)
+      sensor_info["gprmc_input_status"] = "received_gprmc";
+    else
+      sensor_info["gprmc_input_status"] = "no_gprmc";
+    if (gps_st_bits[4] == 1)
+      sensor_info["pps_input_status"] = "received_pps";
+    else
+      sensor_info["pps_input_status"] = "no_pps";
 
     sensor_info["machine_temp"] =
-      std::to_string(static_cast<float>(info_packet.fault_diagnosis.machine_temp.value()) / 100.0f);
+      robosense_packet::get_float_value(info_packet.fault_diagnosis.machine_temp.value());
     sensor_info["phase"] = std::to_string(info_packet.fault_diagnosis.phase.value());
     sensor_info["rotation_speed"] =
       std::to_string(info_packet.fault_diagnosis.rotation_speed.value());
 
-    //        sensor_info["gprmc"] = std::to_string(info_packet.gprmc.getGprmc());
+    std::string gprmc_string;
+    for (auto i : info_packet.gprmc) {
+      gprmc_string += static_cast<char>(i.value());
+    }
+    sensor_info["gprmc_string"] = gprmc_string;
 
     return sensor_info;
   }
