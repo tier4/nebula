@@ -140,8 +140,8 @@ protected:
         // The raw_azimuth and channel are only used as indices, sin/cos functions use the precise
         // corrected angles
         float xyDistance = distance * corrected_angle_data.cos_elevation;
-        point.x = xyDistance * corrected_angle_data.sin_azimuth;
-        point.y = xyDistance * corrected_angle_data.cos_azimuth;
+        point.x = xyDistance * corrected_angle_data.cos_azimuth;
+        point.y = -xyDistance * corrected_angle_data.sin_azimuth;
         point.z = distance * corrected_angle_data.sin_elevation;
 
         // The driver wrapper converts to degrees, expects radians
