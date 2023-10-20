@@ -262,9 +262,8 @@ public:
 
   bool getSyncStatus(const robosense_packet::helios::InfoPacket & info_packet)
   {
-    if ((info_packet.fault_diagnosis.gps_status.value() & 0b00100000)) {
-      return true;
-    }
+    std::bitset<8> gps_st_bits{info_packet.fault_diagnosis.gps_status.value()};
+    if (gps_st_bits[2] == 1) return true;
     return false;
   }
 
