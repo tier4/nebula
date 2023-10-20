@@ -285,9 +285,9 @@ public:
     sensor_info["pc_dest_difop_port"] =
       std::to_string(info_packet.ethernet.pc_dest_difop_port.value());
     sensor_info["fov_start"] =
-      std::to_string(static_cast<float>(info_packet.fov_setting.fov_start.value()));
+      std::to_string(static_cast<float>(info_packet.fov_setting.fov_start.value()) / 100);
     sensor_info["fov_end"] =
-      std::to_string(static_cast<float>(info_packet.fov_setting.fov_end.value()));
+      std::to_string(static_cast<float>(info_packet.fov_setting.fov_end.value()) / 100);
     sensor_info["phase_lock"] = std::to_string(info_packet.phase_lock.value());
     sensor_info["top_firmware_version"] = info_packet.top_firmware_version.to_string();
     sensor_info["bottom_firmware_version"] = info_packet.bottom_firmware_version.to_string();
@@ -318,27 +318,27 @@ public:
     sensor_info["sync_status"] = std::to_string(info_packet.sync_status.value());
     sensor_info["time"] = std::to_string(info_packet.time.get_time_in_ns());
     sensor_info["i_dat"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.i_dat.value()));
+      std::to_string(static_cast<float>(info_packet.operating_status.i_dat.value()) / 100);
     sensor_info["v_dat"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat.value()));
+      std::to_string(static_cast<float>(info_packet.operating_status.v_dat.value()) / 100);
     sensor_info["v_dat_12v"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_12v.value()));
+      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_12v.value()) / 100);
     sensor_info["v_dat_5v"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_5v.value()));
+      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_5v.value()) / 100);
     sensor_info["v_dat_2v5"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_2v5.value()));
+      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_2v5.value()) / 100);
     sensor_info["v_dat_apd"] =
-      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_apd.value()));
+      std::to_string(static_cast<float>(info_packet.operating_status.v_dat_apd.value()) / 100);
     sensor_info["temperature1"] =
-      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature1.value()));
+      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature1.value()) / 100);
     sensor_info["temperature2"] =
-      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature2.value()));
+      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature2.value()) / 100);
     sensor_info["temperature3"] =
-      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature3.value()));
+      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature3.value()) / 100);
     sensor_info["temperature4"] =
-      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature4.value()));
+      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature4.value()) / 100);
     sensor_info["temperature5"] =
-      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature5.value()));
+      std::to_string(static_cast<float>(info_packet.fault_diagnosis.temperature5.value()) / 100);
     sensor_info["r_rpm"] = std::to_string(info_packet.fault_diagnosis.r_rpm.value());
     sensor_info["lane_up"] = std::to_string(info_packet.fault_diagnosis.lane_up.value());
     sensor_info["lane_up_cnt"] = std::to_string(info_packet.fault_diagnosis.lane_up_cnt.value());
