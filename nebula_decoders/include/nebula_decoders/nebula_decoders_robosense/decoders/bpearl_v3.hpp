@@ -287,20 +287,17 @@ public:
     sensor_info["serial_number"] = info_packet.serial_number.to_string();
     sensor_info["zero_angle_offset"] = std::to_string(info_packet.zero_angle_offset.value());
 
-    if (info_packet.return_mode.value() == 0x00) {
+    if (info_packet.return_mode.value() == 0x00)
       sensor_info["return_mode"] = "dual";
-    } else if (info_packet.return_mode.value() == 0x01 || info_packet.return_mode.value() == 0x04) {
+    else if (info_packet.return_mode.value() == 0x01)
       sensor_info["return_mode"] = "strongest";
-    } else if (info_packet.return_mode.value() == 0x02 || info_packet.return_mode.value() == 0x05) {
+    else if (info_packet.return_mode.value() == 0x02)
       sensor_info["return_mode"] = "last";
-    } else if (info_packet.return_mode.value() == 0x06) {
-      sensor_info["return_mode"] = "first";
-    }
 
     if (info_packet.time_sync_mode.value() == 0) sensor_info["time_sync_mode"] = "gps";
     if (info_packet.time_sync_mode.value() == 1) sensor_info["time_sync_mode"] = "e2e";
     if (info_packet.time_sync_mode.value() == 2) sensor_info["time_sync_mode"] = "p2p";
-    if (info_packet.time_sync_mode.value() == 4) sensor_info["time_sync_mode"] = "gptp";
+    if (info_packet.time_sync_mode.value() == 3) sensor_info["time_sync_mode"] = "gptp";
 
     if (info_packet.sync_status.value() == 0) sensor_info["sync_status"] = "time_sync_invalid";
     if (info_packet.sync_status.value() == 1)
