@@ -121,7 +121,8 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
   StreamStart();
 }
 
-HesaiHwInterfaceRosWrapper::~HesaiHwInterfaceRosWrapper() {
+HesaiHwInterfaceRosWrapper::~HesaiHwInterfaceRosWrapper()
+{
   RCLCPP_INFO_STREAM(get_logger(), "Closing TcpDriver");
   hw_interface_.FinalizeTcpDriver();
 }
@@ -134,8 +135,14 @@ Status HesaiHwInterfaceRosWrapper::StreamStart()
   return interface_status_;
 }
 
-Status HesaiHwInterfaceRosWrapper::StreamStop() { return Status::OK; }
-Status HesaiHwInterfaceRosWrapper::Shutdown() { return Status::OK; }
+Status HesaiHwInterfaceRosWrapper::StreamStop()
+{
+  return Status::OK;
+}
+Status HesaiHwInterfaceRosWrapper::Shutdown()
+{
+  return Status::OK;
+}
 
 Status HesaiHwInterfaceRosWrapper::InitializeHwInterface(  // todo: don't think this is needed
   const drivers::SensorConfigurationBase & sensor_configuration)
@@ -225,6 +232,25 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
     descriptor.floating_point_range = {range};
     this->declare_parameter<double>("scan_phase", 0., descriptor);
     sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
+  }
+  if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("correction_file", "", descriptor);
+    
+    auto correction_file_path = get_parameter("correction_file").as_string();
+    sensor_correction_ = std::make_shared<drivers::HesaiCorrection>();
+    
+    auto status = sensor_correction_->LoadFromFile(correction_file_path);
+    if (status != Status::OK) {
+      RCLCPP_ERROR_STREAM(get_logger(), "Failed to load correction file: " << correction_file_path);
+      return status;
+    }
+
+    sensor_configuration.scan_phase = sensor_correction_->outputAngleToEncoderAngle(sensor_configuration.scan_phase);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;

@@ -49,6 +49,7 @@ class HesaiHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfaceW
   Status interface_status_;
 
   drivers::HesaiSensorConfiguration sensor_configuration_;
+  std::shared_ptr<drivers::HesaiCorrection> sensor_correction_;
 
   /// @brief Received Hesai message publisher
   rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr pandar_scan_pub_;

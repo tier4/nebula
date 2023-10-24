@@ -300,6 +300,22 @@ struct HesaiCorrection
     float k = 1.f * l / STEP3;
     return round((1 - k) * elevationOffset[ch * 180 + i] + k * elevationOffset[ch * 180 + i + 1]);
   }
+
+  float outputAngleToEncoderAngle(float output_angle)
+  {
+    uint32_t internal_angle = static_cast<uint32_t>(output_angle * 25600);
+    internal_angle = (360 * 25600 + internal_angle) % (360 * 25600);
+    return outputAngleToEncoderAngle(internal_angle, 0) / 25600.;
+  }
+
+  uint32_t outputAngleToEncoderAngle(uint32_t output_angle, uint8_t frame_id) {
+    // From the AT128 manual (C.2.1. Horizontal angle of the current firing channel):
+    // The horizontal output angle a_out is related to the encoder angle a_enc as follows:
+    // a_out = (a_enc - start_frame) * 2 + channel_correction
+    // Ignoring channel correction and solving for a_enc:
+    // a_enc = (a_out / 2) + start_frame
+    return (output_angle / 2) + startFrame[frame_id];
+  }
 };
 
 /*

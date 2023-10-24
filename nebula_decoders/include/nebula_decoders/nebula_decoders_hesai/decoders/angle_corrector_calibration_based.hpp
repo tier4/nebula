@@ -74,9 +74,14 @@ public:
       elevation_cos_[channel_id]};
   }
 
-  bool hasScanned(int current_azimuth, int last_azimuth) override
+  bool hasScanned(uint32_t current_azimuth, uint32_t last_azimuth, uint32_t sync_azimuth) override
   {
-    return current_azimuth < last_azimuth;
+    uint32_t current_diff_from_sync =
+      (MAX_AZIMUTH_LEN + current_azimuth - sync_azimuth) % MAX_AZIMUTH_LEN;
+    uint32_t last_diff_from_sync =
+      (MAX_AZIMUTH_LEN + last_azimuth - sync_azimuth) % MAX_AZIMUTH_LEN;
+      
+    return current_diff_from_sync < last_diff_from_sync;
   }
 };
 

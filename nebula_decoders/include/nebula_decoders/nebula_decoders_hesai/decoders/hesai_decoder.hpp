@@ -84,6 +84,8 @@ protected:
 
     std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units;
 
+    float min_azi_out = -1;
+
     for (size_t channel_id = 0; channel_id < SensorT::packet_t::N_CHANNELS; ++channel_id) {
       // Find the units corresponding to the same return group as the current one.
       // These are used to find duplicates in multi-return mode.
@@ -157,20 +159,34 @@ protected:
         point.z = distance * corrected_angle_data.sin_elevation;
 
         // The driver wrapper converts to degrees, expects radians
-        point.azimuth = corrected_angle_data.azimuth_rad;
-        point.elevation = corrected_angle_data.elevation_rad;
+        point.azimuth = corrected_angle_data.debug_field;
+        point.elevation = (packet_timestamp_ns + point.time_stamp) % 100000000;
+
+        if (min_azi_out == -1 || corrected_angle_data.azimuth_rad < min_azi_out) {
+          min_azi_out = corrected_angle_data.azimuth_rad;
+        }
 
         decode_pc_->emplace_back(point);
       }
+    }
+
+    if (start_block_id == 0) {
+      RCLCPP_ERROR(
+        logger_, "[ANGDBG] {\"scan_phase\": %f, \"azi_raw\": %f, \"azi_out\": %f, \"t_ns\": %lu}",
+        sensor_configuration_->scan_phase,
+        raw_azimuth / static_cast<float>(SensorT::packet_t::DEGREE_SUBDIVISIONS), min_azi_out / 3.1415269 * 180,
+        packet_timestamp_ns);
     }
   }
 
   /// @brief Checks whether the last processed block was the last block of a scan
   /// @param current_phase The azimuth of the last processed block
+  /// @param sync_phase The azimuth set in the sensor configuration, for which the
+  /// timestamp is aligned to the full second
   /// @return Whether the scan has completed
-  bool checkScanCompleted(int current_phase)
+  bool checkScanCompleted(uint32_t current_phase, uint32_t sync_phase)
   {
-    return angle_corrector_.hasScanned(current_phase, last_phase_);
+    return angle_corrector_.hasScanned(current_phase, last_phase_, sync_phase);
   }
 
   /// @brief Get the distance of the given unit in meters
@@ -233,20 +249,18 @@ public:
     }
 
     const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
-    int current_azimuth;
+    uint32_t current_azimuth;
 
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
-      current_azimuth =
-        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS +
-         packet_.body.blocks[block_id].get_azimuth() -
-         static_cast<int>(
-           sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS)) %
-        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS);
+      current_azimuth = packet_.body.blocks[block_id].get_azimuth();
 
-      bool scan_completed = checkScanCompleted(current_azimuth);
+      bool scan_completed = checkScanCompleted(
+        current_azimuth,
+        sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS);
+
       if (scan_completed) {
         std::swap(decode_pc_, output_pc_);
-        decode_pc_->clear();
+        decode_pc_->clear();  
         has_scanned_ = true;
         output_scan_timestamp_ns_ = decode_scan_timestamp_ns_;
 

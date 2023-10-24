@@ -2,12 +2,12 @@
   ros__parameters:
     sensor_model: "PandarAT128" # See readme for supported models
     sensor_ip: "192.168.1.201" # Lidar Sensor IP
-    host_ip: "255.255.255.255" # Broadcast IP from Sensor
-    frame_id: "hesai"
-    data_port: 2368 # LiDAR Data Port
+    host_ip: "192.168.1.100" # Broadcast IP from Sensor
+    frame_id: "pandar_front"
+    data_port: 2371 # LiDAR Data Port
     gnss_port: 10110 # LiDAR GNSS Port
-    return_mode: "LastStrongest" # See readme for supported return modes
-    scan_phase: 0.0 # Angle where scans begin (degrees, [0.,360.]
+    return_mode: "Strongest" # See readme for supported return modes
+    scan_phase: 30.0 # Angle where scans begin (degrees, [0.,360.]
     packet_mtu_size: 1500 # Packet MTU size
     rotation_speed: 200 # Motor RPM, the sensor's internal spin rate.
     cloud_min_angle: 0 # Field of View, start degrees.
