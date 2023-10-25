@@ -20,6 +20,9 @@
     <arg name="diag_span" default="1000" description="milliseconds"/>
 
     <arg name="setup_sensor" default="True" description="Enable sensor setup on hw-driver."/>
+    <arg name="delay_hw_ms" default="1000" description="hw driver startup delay in milliseconds."/>
+    <arg name="delay_monitor_ms" default="2000" description="hw monitor startup delay in milliseconds."/>
+    <arg name="retry_hw" default="True" description="hw driver startup retry (false when using pcap)."/>
 
     <node pkg="nebula_ros" exec="hesai_driver_ros_wrapper_node"
           name="hesai_cloud" output="screen">
@@ -49,6 +52,8 @@
         <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
         <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/>
         <param name="setup_sensor" value="$(var setup_sensor)"/>
+        <param name="delay_hw_ms" value="$(var delay_hw_ms)"/>
+        <param name="retry_hw" value="$(var retry_hw)"/>
     </node>
 
     <node pkg="nebula_ros" exec="hesai_hw_monitor_ros_wrapper_node"
@@ -68,6 +73,7 @@
         <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
         <param name="diag_span" value="$(var diag_span)"/>
         <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/>
+        <param name="delay_monitor_ms" value="$(var delay_monitor_ms)"/>
     </node>
 
 </launch>
