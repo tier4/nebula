@@ -27,7 +27,7 @@ RobosenseDriver::RobosenseDriver(
       scan_decoder_.reset(
         new RobosenseDecoder<BpearlV4>(sensor_configuration, calibration_configuration));
       break;
-    case SensorModel::ROBOSENSE_HELIOS_5515:
+    case SensorModel::ROBOSENSE_HELIOS:
       scan_decoder_.reset(
         new RobosenseDecoder<Helios>(sensor_configuration, calibration_configuration));
       break;

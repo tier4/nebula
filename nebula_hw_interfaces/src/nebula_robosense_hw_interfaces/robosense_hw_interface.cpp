@@ -168,11 +168,11 @@ Status RobosenseHwInterface::SetSensorConfiguration(
       is_valid_info_packet_ = [](size_t packet_size) {
         return (packet_size == BPEARL_INFO_PACKET_SIZE);
       };
-    } else if (sensor_configuration->sensor_model == SensorModel::ROBOSENSE_HELIOS_5515) {
+    } else if (sensor_configuration->sensor_model == SensorModel::ROBOSENSE_HELIOS) {
       azimuth_index_ = 44;
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == HELIOS5515_PACKET_SIZE); };
+      is_valid_packet_ = [](size_t packet_size) { return (packet_size == HELIOS_PACKET_SIZE); };
       is_valid_info_packet_ = [](size_t packet_size) {
-        return (packet_size == HELIOS5515_INFO_PACKET_SIZE);
+        return (packet_size == HELIOS_INFO_PACKET_SIZE);
       };
     } else {
       status = Status::INVALID_SENSOR_MODEL;
