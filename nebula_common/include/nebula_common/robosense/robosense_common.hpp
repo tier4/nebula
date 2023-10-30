@@ -56,7 +56,7 @@ size_t GetChannelSize(const SensorModel & model)
   switch (model) {
     case SensorModel::ROBOSENSE_BPEARL_V3:
       return 32;
-    case SensorModel::ROBOSENSE_HELIOS_5515:
+    case SensorModel::ROBOSENSE_HELIOS:
       return 32;
   }
 }

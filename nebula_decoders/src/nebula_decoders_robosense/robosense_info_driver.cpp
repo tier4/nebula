@@ -20,7 +20,7 @@ RobosenseInfoDriver::RobosenseInfoDriver(
     case SensorModel::ROBOSENSE_BPEARL_V4:
       info_decoder_.reset(new RobosenseInfoDecoder<BpearlV4>());
       break;
-    case SensorModel::ROBOSENSE_HELIOS_5515:
+    case SensorModel::ROBOSENSE_HELIOS:
       info_decoder_.reset(new RobosenseInfoDecoder<Helios>());
       break;
 
