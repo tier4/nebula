@@ -20,13 +20,15 @@ struct CorrectedAngleData
   float sin_elevation;
   float cos_elevation;
   int debug_field = -10000;
+  int debug_azimuth = -10000;
+  int debug_azimuth_channel = -10000;
 };
 
 /// @brief Handles angle correction for given azimuth/channel combinations, as well as trigonometry
 /// lookup tables
 class AngleCorrector
 {
-protected:
+public:
   const std::shared_ptr<HesaiCalibrationConfiguration> sensor_calibration_;
   const std::shared_ptr<HesaiCorrection> sensor_correction_;
 

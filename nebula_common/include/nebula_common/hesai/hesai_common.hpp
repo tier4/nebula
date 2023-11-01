@@ -250,6 +250,7 @@ struct HesaiCorrection
       default:
         break;
     }
+
     return Status::OK;
   }
 

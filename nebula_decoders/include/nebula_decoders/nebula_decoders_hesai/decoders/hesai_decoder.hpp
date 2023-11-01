@@ -82,9 +82,17 @@ protected:
     uint64_t packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
     uint32_t raw_azimuth = packet_.body.blocks[start_block_id].get_azimuth();
 
+    bool do_output =
+      (std::abs(
+         raw_azimuth / 25600. - angle_corrector_.sensor_correction_->outputAngleToEncoderAngle(
+                                  sensor_configuration_->scan_phase)) <= .1);
+
     std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units;
 
-    float min_azi_out = -1;
+    auto corrected_angle_data = angle_corrector_.getCorrectedAngleData(raw_azimuth, 0);
+    // int min_corr = 10000000, max_corr = -10000000;
+    // int min_ch_corr = 10000000, max_ch_corr = -10000000;
+    // double min_out = INFINITY, max_out = -INFINITY;
 
     for (size_t channel_id = 0; channel_id < SensorT::packet_t::N_CHANNELS; ++channel_id) {
       // Find the units corresponding to the same return group as the current one.
@@ -98,15 +106,15 @@ protected:
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
         auto & unit = *return_units[block_offset];
 
-        if (unit.distance == 0) {
-          continue;
-        }
+        // if (unit.distance == 0) {
+        //   continue;
+        // }
 
-        auto distance = getDistance(unit);
+        auto distance = 2.236067977 + ((channel_id - 63.5) * .01);//getDistance(unit);
 
-        if (distance < SensorT::MIN_RANGE || distance > SensorT::MAX_RANGE) {
-          continue;
-        }
+        // if (distance < SensorT::MIN_RANGE || distance > SensorT::MAX_RANGE) {
+        //   continue;
+        // }
 
         auto return_type = sensor_.getReturnType(
           static_cast<hesai_packet::return_mode::ReturnMode>(packet_.tail.return_mode),
@@ -149,7 +157,15 @@ protected:
         point.return_type = static_cast<uint8_t>(return_type);
         point.channel = channel_id;
 
-        auto corrected_angle_data = angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
+        corrected_angle_data = angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
+        // min_corr = std::min(min_corr, corrected_angle_data.debug_azimuth);
+        // max_corr = std::max(max_corr, corrected_angle_data.debug_azimuth);
+
+        // min_ch_corr = std::min(min_ch_corr, corrected_angle_data.debug_azimuth_channel);
+        // max_ch_corr = std::max(max_ch_corr, corrected_angle_data.debug_azimuth_channel);
+
+        // min_out = std::min(min_out, corrected_angle_data.azimuth_rad / M_PI * 180);
+        // max_out = std::max(max_out, corrected_angle_data.azimuth_rad / M_PI * 180);
 
         // The raw_azimuth and channel are only used as indices, sin/cos functions use the precise
         // corrected angles
@@ -162,21 +178,28 @@ protected:
         point.azimuth = corrected_angle_data.debug_field;
         point.elevation = (packet_timestamp_ns + point.time_stamp) % 100000000;
 
-        if (min_azi_out == -1 || corrected_angle_data.azimuth_rad < min_azi_out) {
-          min_azi_out = corrected_angle_data.azimuth_rad;
+        if (do_output) {
+          RCLCPP_ERROR(
+            logger_,
+            "[ANGDBG] {\"channel\": %d, \"raw_deg\": %f, \"out_deg\": %f, \"t_packet\": %lu, "
+            "\"t_point\": %lu, \"scan_phase\": %f}",
+            channel_id, raw_azimuth / 25600., corrected_angle_data.azimuth_rad / M_PI * 180,
+            packet_timestamp_ns, packet_timestamp_ns + point.time_stamp,
+            angle_corrector_.sensor_correction_->outputAngleToEncoderAngle(
+              sensor_configuration_->scan_phase));
         }
 
         decode_pc_->emplace_back(point);
       }
     }
 
-    if (start_block_id == 0) {
-      RCLCPP_ERROR(
-        logger_, "[ANGDBG] {\"scan_phase\": %f, \"azi_raw\": %f, \"azi_out\": %f, \"t_ns\": %lu}",
-        sensor_configuration_->scan_phase,
-        raw_azimuth / static_cast<float>(SensorT::packet_t::DEGREE_SUBDIVISIONS), min_azi_out / 3.1415269 * 180,
-        packet_timestamp_ns);
-    }
+    // if (min_corr != 10000000)
+    //   RCLCPP_ERROR(
+    //     logger_,
+    //     "[ANGDBG] {\"azi_raw\": %u, \"field\": %d, \"min_corr\": %d, \"max_corr\": %d, "
+    //     "\"min_ch_corr\": %d, \"max_ch_corr\": %d, \"min_out\": %f, \"max_out\": %f}",
+    //     raw_azimuth, corrected_angle_data.debug_field, min_corr, max_corr, min_ch_corr,
+    //     max_ch_corr, min_out, max_out);
   }
 
   /// @brief Checks whether the last processed block was the last block of a scan
@@ -260,7 +283,7 @@ public:
 
       if (scan_completed) {
         std::swap(decode_pc_, output_pc_);
-        decode_pc_->clear();  
+        decode_pc_->clear();
         has_scanned_ = true;
         output_scan_timestamp_ns_ = decode_scan_timestamp_ns_;
 

@@ -80,8 +80,18 @@ public:
     float azimuth_rad = 2.f * azimuth * M_PI / MAX_AZIMUTH_LENGTH;
     float elevation_rad = 2.f * elevation * M_PI / MAX_AZIMUTH_LENGTH;
 
-    return {azimuth_rad,     elevation_rad,   sin_[azimuth], cos_[azimuth],
-            sin_[elevation], cos_[elevation], field};
+    return {
+      azimuth_rad,
+      elevation_rad,
+      sin_[azimuth],
+      cos_[azimuth],
+      sin_[elevation],
+      cos_[elevation],
+      field,
+      -correction->azimuth[channel_id] +
+        static_cast<int>(
+          correction->getAzimuthAdjustV3(channel_id, block_azimuth) * (AngleUnit / 100)),
+      -correction->azimuth[channel_id]};
   }
 
   bool hasScanned(uint32_t current_azimuth, uint32_t last_azimuth, uint32_t sync_azimuth) override
@@ -91,8 +101,7 @@ public:
     for (size_t i = 0; i < correction->frameNumber; ++i) {
       uint32_t encoder_sync_angle = correction->outputAngleToEncoderAngle(sync_azimuth, i);
 
-      if (last_azimuth <= encoder_sync_angle &&
-          encoder_sync_angle <= current_azimuth) {
+      if (last_azimuth <= encoder_sync_angle && encoder_sync_angle <= current_azimuth) {
         return true;
       }
     }
