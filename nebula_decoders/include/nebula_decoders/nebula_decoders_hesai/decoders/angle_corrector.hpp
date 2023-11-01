@@ -25,7 +25,7 @@ struct CorrectedAngleData
 /// lookup tables
 class AngleCorrector
 {
-public:
+protected:
   const std::shared_ptr<HesaiCalibrationConfiguration> sensor_calibration_;
   const std::shared_ptr<HesaiCorrection> sensor_correction_;
 

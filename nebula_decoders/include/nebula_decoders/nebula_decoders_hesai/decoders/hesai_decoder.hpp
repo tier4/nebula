@@ -156,8 +156,8 @@ protected:
         point.z = distance * corrected_angle_data.sin_elevation;
 
         // The driver wrapper converts to degrees, expects radians
-        point.azimuth = corrected_angle_data.debug_field;
-        point.elevation = (packet_timestamp_ns + point.time_stamp) % 100000000;
+        point.azimuth = corrected_angle_data.azimuth_rad;
+        point.elevation = corrected_angle_data.elevation_rad;
 
         decode_pc_->emplace_back(point);
       }

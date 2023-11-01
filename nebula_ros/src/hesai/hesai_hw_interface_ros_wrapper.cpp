@@ -233,24 +233,33 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
     this->declare_parameter<double>("scan_phase", 0., descriptor);
     sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
   }
+
+  // AT128 needs to convert the scan_phase provided by the user to its internal
+  // encoder angle. To do this, the mirror offsets from the correction file are required.
   if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
+    rcl_interfaces::msg::FloatingPointRange range;
+    range.set__from_value(30).set__to_value(150);
+    descriptor.floating_point_range = {range};
     this->declare_parameter<std::string>("correction_file", "", descriptor);
-    
+
     auto correction_file_path = get_parameter("correction_file").as_string();
-    sensor_correction_ = std::make_shared<drivers::HesaiCorrection>();
-    
-    auto status = sensor_correction_->LoadFromFile(correction_file_path);
+    auto sensor_correction = drivers::HesaiCorrection();
+
+    auto status = sensor_correction.LoadFromFile(correction_file_path);
     if (status != Status::OK) {
       RCLCPP_ERROR_STREAM(get_logger(), "Failed to load correction file: " << correction_file_path);
       return status;
     }
 
-    sensor_configuration.scan_phase = sensor_correction_->outputAngleToEncoderAngle(sensor_configuration.scan_phase);
+    // Convert the scan phase to encoder angle. Note that changing it in the web UI will cause
+    // incorrect scan cutting in Nebula.
+    sensor_configuration.scan_phase =
+      sensor_correction.outputAngleToEncoderAngle(sensor_configuration.scan_phase);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
