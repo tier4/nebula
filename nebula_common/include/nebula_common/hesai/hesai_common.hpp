@@ -80,7 +80,7 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
     int laser_id;
     float elevation;
     float azimuth;
-    
+
     std::string line;
     while (std::getline(ss, line)) {
       if (line.empty()) {

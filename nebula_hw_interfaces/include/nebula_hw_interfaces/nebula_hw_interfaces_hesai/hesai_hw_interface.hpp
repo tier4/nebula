@@ -166,6 +166,8 @@ private:
 public:
   /// @brief Constructor
   HesaiHwInterface();
+  /// @brief Destructor
+  ~HesaiHwInterface();
   /// @brief Initializing tcp_driver for TCP communication
   /// @param setup_sensor Whether to also initialize tcp_driver for sensor configuration
   /// @return Resulting status
@@ -363,6 +365,35 @@ public:
   /// @param with_run Automatically executes run() of TcpDriver
   /// @return Resulting status
   Status GetPtpDiagGrandmaster(bool with_run = true);
+
+  /// @brief Getting data with PTC_COMMAND_GET_INVENTORY_INFO (sync)
+  /// @param target_tcp_driver TcpDriver used
+  /// @param callback Callback function for received HesaiInventory
+  /// @return Resulting status
+  Status syncGetInventory(
+    std::shared_ptr<::drivers::tcp_driver::TcpDriver> target_tcp_driver,
+    std::function<void(HesaiInventory & result)> callback);
+  /// @brief Getting data with PTC_COMMAND_GET_INVENTORY_INFO (sync)
+  /// @param target_tcp_driver TcpDriver used
+  /// @return Resulting status
+  Status syncGetInventory(
+    std::shared_ptr<::drivers::tcp_driver::TcpDriver> target_tcp_driver);
+  /// @brief Getting data with PTC_COMMAND_GET_INVENTORY_INFO (sync)
+  /// @param ctx IO Context used
+  /// @param callback Callback function for received HesaiInventory
+  /// @return Resulting status
+  Status syncGetInventory(
+    std::shared_ptr<boost::asio::io_context> ctx,
+    std::function<void(HesaiInventory & result)> callback);
+  /// @brief Getting data with PTC_COMMAND_GET_LIDAR_CALIBRATION (sync)
+  /// @param ctx IO Context used
+  /// @return Resulting status
+  Status syncGetInventory(std::shared_ptr<boost::asio::io_context> ctx);
+  /// @brief Getting data with PTC_COMMAND_GET_LIDAR_CALIBRATION (sync)
+  /// @param callback Callback function for received HesaiInventory
+  /// @return Resulting status
+  Status syncGetInventory(std::function<void(HesaiInventory & result)> callback);
+
   /// @brief Getting data with PTC_COMMAND_GET_INVENTORY_INFO
   /// @param target_tcp_driver TcpDriver used
   /// @param callback Callback function for received HesaiInventory
@@ -935,10 +966,20 @@ public:
   /// @return Resulting status
   HesaiStatus CheckAndSetConfig();
 
+  /// @brief Convert to model in Hesai protocol from nebula::drivers::SensorModel
+  /// @param model 
+  /// @return 
+  int NebulaModelToHesaiModelNo(nebula::drivers::SensorModel model);
+
   /// @brief Set target model number (for proper use of HTTP and TCP according to the support of the
   /// target model)
   /// @param model Model number
   void SetTargetModel(int model);
+
+  /// @brief Set target model number (for proper use of HTTP and TCP according to the support of the
+  /// target model)
+  /// @param model Model
+  void SetTargetModel(nebula::drivers::SensorModel model);
 
   /// @brief Whether to use HTTP for setting SpinRate
   /// @param model Model number

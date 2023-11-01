@@ -15,30 +15,56 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
     RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
     return;
   }
+  std::this_thread::sleep_for(std::chrono::milliseconds(this->delay_hw_ms_));
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
     std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration_);
-  if (this->setup_sensor) {
-    hw_interface_.SetSensorConfiguration(
-      std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
-  }
+  hw_interface_.SetSensorConfiguration(
+    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
 #if not defined(TEST_PCAP)
-  hw_interface_.InitializeTcpDriver(this->setup_sensor);
-
-  std::vector<std::thread> thread_pool{};
-  thread_pool.emplace_back([this] {
-    hw_interface_.GetInventory(  // ios,
-      [this](HesaiInventory & result) {
-        std::cout << result << std::endl;
-        hw_interface_.SetTargetModel(result.model);
-      });
-  });
-  for (std::thread & th : thread_pool) {
-    th.join();
+  Status rt = hw_interface_.InitializeTcpDriver(this->setup_sensor);
+  if(this->retry_hw_)
+  {
+    int cnt = 0;
+    RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << " Retry: " << cnt);
+    while(rt == Status::ERROR_1)
+    {
+      cnt++;
+      std::this_thread::sleep_for(std::chrono::milliseconds(8000));// >5000
+      RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Retry: " << cnt);
+      rt = hw_interface_.InitializeTcpDriver(this->setup_sensor);
+    }
   }
-  if (this->setup_sensor) {
-    hw_interface_.CheckAndSetConfig();
-    updateParameters();
+
+  if(rt != Status::ERROR_1){
+    try{
+      std::vector<std::thread> thread_pool{};
+        thread_pool.emplace_back([this] {
+          hw_interface_.GetInventory(  // ios,
+            [this](HesaiInventory & result) {
+              RCLCPP_INFO_STREAM(get_logger(), result);
+              hw_interface_.SetTargetModel(result.model);
+            });
+        });
+        for (std::thread & th : thread_pool) {
+          th.join();
+        }
+
+    }
+    catch (...)
+    {
+      std::cout << "catch (...) in parent" << std::endl;
+      RCLCPP_ERROR_STREAM(get_logger(), "Failed to get model from sensor...");
+    }
+    if (this->setup_sensor) {
+      hw_interface_.CheckAndSetConfig();
+      updateParameters();
+    }
+  }
+  else
+  {
+    RCLCPP_ERROR_STREAM(get_logger(), "Failed to get model from sensor... Set from config: " << sensor_cfg_ptr->sensor_model);
+    hw_interface_.SetTargetModel(sensor_cfg_ptr->sensor_model);
   }
 #endif
 
@@ -335,6 +361,25 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<bool>("setup_sensor", true, descriptor);
     this->setup_sensor = this->get_parameter("setup_sensor").as_bool();
+  }
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "milliseconds";
+    this->declare_parameter<uint16_t>("delay_hw_ms", 0, descriptor);
+    this->delay_hw_ms_ = this->get_parameter("delay_hw_ms").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<bool>("retry_hw", true, descriptor);
+    this->retry_hw_ = this->get_parameter("retry_hw").as_bool();
   }
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {

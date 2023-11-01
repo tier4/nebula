@@ -124,6 +124,7 @@ private:
   uint8_t current_monitor_status;
 
   uint16_t diag_span_;
+  uint16_t delay_monitor_ms_;
   std::mutex mtx_diag;
   std::mutex mtx_status;
   std::mutex mtx_lidar_monitor;
