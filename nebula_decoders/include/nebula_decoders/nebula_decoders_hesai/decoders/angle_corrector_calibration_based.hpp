@@ -76,6 +76,7 @@ public:
 
   bool hasScanned(uint32_t current_azimuth, uint32_t last_azimuth, uint32_t sync_azimuth) override
   {
+    // Cut the scan when the azimuth passes over the sync_azimuth
     uint32_t current_diff_from_sync =
       (MAX_AZIMUTH_LEN + current_azimuth - sync_azimuth) % MAX_AZIMUTH_LEN;
     uint32_t last_diff_from_sync =
