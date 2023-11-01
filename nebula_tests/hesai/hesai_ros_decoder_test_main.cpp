@@ -31,7 +31,8 @@ const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[6] = {
   },
   {
     .sensor_model = "PandarAT128",
-    .return_mode = "LastStrongest",
+    .return_mode = "Dual",
+    .scan_phase = 152,
     .calibration_file = "PandarAT128.csv",
     .correction_file = "PandarAT128.dat",
     .bag_path = "at128/1679653308406038376",
