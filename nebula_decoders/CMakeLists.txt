@@ -40,6 +40,12 @@ ament_auto_add_library(nebula_decoders_velodyne SHARED
         src/nebula_decoders_velodyne/decoders/vlp32_decoder.cpp
         )
 
+# Innovusion
+ament_auto_add_library(nebula_decoders_innovusion SHARED
+        src/nebula_decoders_innovusion/decoders/innovusion_decoder.cpp
+        src/nebula_decoders_innovusion/innovusion_driver.cpp
+        )
+
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()
