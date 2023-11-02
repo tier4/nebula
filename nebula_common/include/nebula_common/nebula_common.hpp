@@ -323,6 +323,7 @@ enum class SensorModel {
   VELODYNE_VLP32MR,
   VELODYNE_HDL32,
   VELODYNE_VLP16,
+  INNOVUSION_LIDAR,
 };
 
 /// @brief not used?
@@ -401,6 +402,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::VELODYNE_VLP16:
       os << "VLP16";
       break;
+    case SensorModel::INNOVUSION_LIDAR:
+      os << "InnoLidar";
+      break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
       break;
@@ -468,6 +472,8 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "VLP32MR") return SensorModel::VELODYNE_VLP32MR;
   if (sensor_model == "HDL32") return SensorModel::VELODYNE_HDL32;
   if (sensor_model == "VLP16") return SensorModel::VELODYNE_VLP16;
+  // innovusion
+  if (sensor_model == "InnoLidar") return SensorModel::INNOVUSION_LIDAR;
   return SensorModel::UNKNOWN;
 }
 
