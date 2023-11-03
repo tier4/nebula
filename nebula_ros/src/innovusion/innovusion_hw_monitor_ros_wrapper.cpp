@@ -20,10 +20,10 @@ Status InnovusionHwMonitorRosWrapper::InitializeHwMonitor(  // todo: don't think
   return Status::OK;
 }
 
-  InnovusionHwMonitorRosWrapper::~InnovusionHwMonitorRosWrapper() {
-    RCLCPP_INFO_STREAM(get_logger(), "Closing TcpDriver");
-  }
+InnovusionHwMonitorRosWrapper::~InnovusionHwMonitorRosWrapper() {
+  RCLCPP_INFO_STREAM(get_logger(), "Closing TcpDriver");
+}
 
-  RCLCPP_COMPONENTS_REGISTER_NODE(InnovusionHwMonitorRosWrapper)
+RCLCPP_COMPONENTS_REGISTER_NODE(InnovusionHwMonitorRosWrapper)
 }  // namespace ros
 }  // namespace nebula
