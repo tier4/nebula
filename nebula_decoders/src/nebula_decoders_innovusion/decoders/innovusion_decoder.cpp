@@ -337,9 +337,6 @@ bool InnovusionDecoder::check_data_packet(const InnoDataPacket &pkt, size_t size
       std::cout << "please upgrade client sdk, lidar protocol major version:" << pkt.common.version.major_version
                 << " sdk major version:" << kInnoMajorVersionDataPacket << std::endl;
       return false;
-    } else if (pkt.common.version.major_version == kInnoMajorVersionDataPacket &&
-               pkt.common.version.minor_version > kInnoMinorVersionDataPacket) {
-      static int count = 0;
     }
     return true;
   } else if (pkt.type == INNO_ITEM_TYPE_MESSAGE || pkt.type == INNO_ITEM_TYPE_MESSAGE_LOG) {

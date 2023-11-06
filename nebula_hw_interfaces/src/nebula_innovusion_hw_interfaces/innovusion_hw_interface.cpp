@@ -35,7 +35,7 @@ Status InnovusionHwInterface::CloudInterfaceStart()
   try {
     std::cout << "Starting UDP server on: " << *sensor_configuration_ << std::endl;
     cloud_udp_driver_->init_receiver(
-      sensor_configuration_->host_ip, sensor_configuration_->data_port);
+      sensor_configuration_->host_ip, sensor_configuration_->data_port, kInnoPktMax);
     cloud_udp_driver_->receiver()->open();
     cloud_udp_driver_->receiver()->bind();
     cloud_udp_driver_->receiver()->asyncReceive(

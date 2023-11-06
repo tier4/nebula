@@ -47,6 +47,7 @@ const uint16_t kInnoPktMajorVersionSection = 2;
 const uint16_t kInnoPktMinorVersionSection = 3;
 const uint16_t kInnoPktVersionSectionLen = 1;
 const uint32_t kInnoProtocolMajorV1 = 1;
+const uint32_t kInnoPktMax = 9000;
 
 /// @brief Hardware interface of Innovusion driver
 class InnovusionHwInterface : NebulaHwInterfaceBase

@@ -188,7 +188,7 @@ public:
   }
 
   static inline size_t get_data_packet_size(InnoItemType type, uint32_t item_count, InnoMultipleReturnMode mode) {
-    size_t unit_size;
+    size_t unit_size = 0;
     switch (type) {
     case INNO_ITEM_TYPE_SPHERE_POINTCLOUD:
       if (mode == INNO_MULTIPLE_RETURN_MODE_SINGLE) {
