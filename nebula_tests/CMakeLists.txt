@@ -50,11 +50,13 @@ if(BUILD_TESTING)
             rosbag2_cpp
             pandar_msgs
             velodyne_msgs
+            innovusion_msgs
             )
 
 
     add_subdirectory(hesai)
     add_subdirectory(velodyne)
+    add_subdirectory(innovusion)
 
 endif()
 

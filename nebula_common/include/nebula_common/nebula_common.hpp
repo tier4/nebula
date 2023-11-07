@@ -459,8 +459,6 @@ struct CalibrationConfigurationBase
 /// @return Corresponding SensorModel
 inline SensorModel SensorModelFromString(const std::string & sensor_model)
 {
-
-  std::cout<<"xxxxxxxxxxxxxx:"<<sensor_model<<std::endl;
   // Hesai
   if (sensor_model == "Pandar64") return SensorModel::HESAI_PANDAR64;
   if (sensor_model == "Pandar40P") return SensorModel::HESAI_PANDAR40P;
