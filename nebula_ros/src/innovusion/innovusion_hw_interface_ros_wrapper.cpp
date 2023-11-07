@@ -116,70 +116,6 @@ Status InnovusionHwInterfaceRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("gnss_port", 2369, descriptor);
-    sensor_configuration.gnss_port = this->get_parameter("gnss_port").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
-    rcl_interfaces::msg::FloatingPointRange range;
-    range.set__from_value(0).set__to_value(360).set__step(0.01);
-    descriptor.floating_point_range = {range};
-    this->declare_parameter<double>("scan_phase", 0., descriptor);
-    sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    rcl_interfaces::msg::IntegerRange range;
-    if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::INNOVUSION_LIDAR) {
-      descriptor.additional_constraints = "200, 300, 400, 500";
-      range.set__from_value(200).set__to_value(500).set__step(100);
-      descriptor.integer_range = {range};
-      this->declare_parameter<uint16_t>("rotation_speed", 200, descriptor);
-    } else {
-      descriptor.additional_constraints = "300, 600, 1200";
-      range.set__from_value(300).set__to_value(1200).set__step(300);
-      descriptor.integer_range = {range};
-      this->declare_parameter<uint16_t>("rotation_speed", 600, descriptor);
-    }
-    sensor_configuration.rotation_speed = this->get_parameter("rotation_speed").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    rcl_interfaces::msg::IntegerRange range;
-    range.set__from_value(0).set__to_value(360).set__step(1);
-    descriptor.integer_range = {range};
-    this->declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
-    sensor_configuration.cloud_min_angle = this->get_parameter("cloud_min_angle").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    rcl_interfaces::msg::IntegerRange range;
-    range.set__from_value(0).set__to_value(360).set__step(1);
-    descriptor.integer_range = {range};
-    this->declare_parameter<uint16_t>("cloud_max_angle", 360, descriptor);
-    sensor_configuration.cloud_max_angle = this->get_parameter("cloud_max_angle").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
@@ -193,9 +129,6 @@ Status InnovusionHwInterfaceRosWrapper::GetParameters(
   }
   if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
     return Status::INVALID_ECHO_MODE;
-  }
-  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {  // ||
-    return Status::SENSOR_CONFIG_ERROR;
   }
 
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);

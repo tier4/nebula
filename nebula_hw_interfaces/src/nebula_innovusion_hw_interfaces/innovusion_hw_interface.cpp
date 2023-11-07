@@ -35,7 +35,7 @@ Status InnovusionHwInterface::CloudInterfaceStart()
   try {
     std::cout << "Starting UDP server on: " << *sensor_configuration_ << std::endl;
     cloud_udp_driver_->init_receiver(
-      sensor_configuration_->host_ip, sensor_configuration_->data_port);
+      sensor_configuration_->host_ip, sensor_configuration_->data_port, kInnoPktMax);
     cloud_udp_driver_->receiver()->open();
     cloud_udp_driver_->receiver()->bind();
     cloud_udp_driver_->receiver()->asyncReceive(
@@ -61,7 +61,8 @@ bool InnovusionHwInterface::IsPacketValid(const std::vector<uint8_t> & buffer) {
   std::memcpy(&send_packet_size, &buffer[kInnoPktSizeSectionIndex], kInnoPktSizeSectionLength);
 
   if (buffer.size() < send_packet_size) {
-    PrintError("Packet size is too small");
+    std::cout << "receive buffer size " << buffer.size() << " < packet size " << send_packet_size
+              << std::endl;
     return false;
   }
 
@@ -176,6 +177,49 @@ void InnovusionHwInterface::PrintDebug(std::string debug)
   } else {
     std::cout << debug << std::endl;
   }
+}
+
+boost::property_tree::ptree InnovusionHwInterface::ParseJson(const std::string & str)
+{
+  boost::property_tree::ptree tree;
+  try {
+    std::stringstream ss;
+    ss << str;
+    boost::property_tree::read_json(ss, tree);
+  } catch (boost::property_tree::json_parser_error & e) {
+    std::cerr << "Error on ParseJson:" << e.what() << std::endl;
+  }
+  return tree;
+}
+
+Status InnovusionHwInterface::GetHttpClientDriverOnce(
+  std::shared_ptr<boost::asio::io_context> ctx,
+  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd)
+{
+  hcd = std::unique_ptr<::drivers::tcp_driver::HttpClientDriver>(
+    new ::drivers::tcp_driver::HttpClientDriver(ctx));
+  try {
+    hcd->init_client(sensor_configuration_->sensor_ip, 8088);
+  } catch (const std::exception & ex) {
+    Status status = Status::HTTP_CONNECTION_ERROR;
+    std::cerr << status << sensor_configuration_->sensor_ip << "," << 8088 << std::endl;
+    return Status::HTTP_CONNECTION_ERROR;
+  }
+  return Status::OK;
+}
+
+Status InnovusionHwInterface::GetSnapshotAsync(
+  std::function<void(const std::string & str)> str_callback, const std::string & snapshot)
+{
+  auto ctx = std::make_shared<boost::asio::io_context>();
+  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
+  auto st = GetHttpClientDriverOnce(ctx, hcd);
+  if (st != Status::OK) {
+    return st;
+  }
+  hcd->asyncGet(str_callback, snapshot);
+  ctx->run();
+  return Status::OK;
 }
 
 }  // namespace drivers

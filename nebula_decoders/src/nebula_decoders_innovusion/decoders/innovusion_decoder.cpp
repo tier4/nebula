@@ -86,7 +86,7 @@ void InnovusionDecoder::point_xyz_data_parse_(bool is_en_data, bool is_use_refl,
 void InnovusionDecoder::data_packet_parse_(const InnoDataPacket *pkt) {
   // current_ts_start_ = pkt->common.ts_start_us / us_in_second_c;
   // adapt different data structures form different lidar
-  if (CHECK_EN_XYZ_POINTCLOUD_DATA(pkt->type)) {
+  if (is_en_xyz_data(pkt->type)) {
     const InnoEnXyzPoint *pt =
       reinterpret_cast<const InnoEnXyzPoint *>(reinterpret_cast<const char *>(pkt) + sizeof(InnoDataPacket));
     point_xyz_data_parse_<const InnoEnXyzPoint *>(true, pkt->use_reflectance, pkt->item_number, pt);
@@ -101,16 +101,16 @@ int InnovusionDecoder::unpack(const innovusion_msgs::msg::InnovusionPacket & pac
 {
   const InnoDataPacket *inno_pkt =
     reinterpret_cast<const InnoDataPacket *>(reinterpret_cast<const char *>(&packet.data[0]));
-  if (CHECK_SPHERE_POINTCLOUD_DATA(inno_pkt->type)) {
+  if (is_sphere_data(inno_pkt->type)) {
     // convert sphere to xyz
-    bool ret_val = 
+    bool ret_val =
       convert_to_xyz_pointcloud(*inno_pkt, reinterpret_cast<InnoDataPacket *>(&xyz_from_sphere_[0]), kConvertSize, false);
     if (!ret_val) {
       RCLCPP_ERROR_STREAM(logger_, "convert_to_xyz_pointcloud failed");
       return -1;
     }
     data_packet_parse_(reinterpret_cast<InnoDataPacket *>(&xyz_from_sphere_[0]));
-  } else if (CHECK_XYZ_POINTCLOUD_DATA(inno_pkt->type)) {
+  } else if (is_xyz_data(inno_pkt->type)) {
     data_packet_parse_(inno_pkt);
   } else {
     RCLCPP_ERROR_STREAM(logger_, "cframe type" <<  inno_pkt->type << "is not supported");
@@ -337,9 +337,6 @@ bool InnovusionDecoder::check_data_packet(const InnoDataPacket &pkt, size_t size
       std::cout << "please upgrade client sdk, lidar protocol major version:" << pkt.common.version.major_version
                 << " sdk major version:" << kInnoMajorVersionDataPacket << std::endl;
       return false;
-    } else if (pkt.common.version.major_version == kInnoMajorVersionDataPacket &&
-               pkt.common.version.minor_version > kInnoMinorVersionDataPacket) {
-      static int count = 0;
     }
     return true;
   } else if (pkt.type == INNO_ITEM_TYPE_MESSAGE || pkt.type == INNO_ITEM_TYPE_MESSAGE_LOG) {
@@ -365,7 +362,7 @@ bool InnovusionDecoder::check_data_packet(const InnoDataPacket &pkt, size_t size
 
 bool InnovusionDecoder::convert_to_xyz_pointcloud(const InnoDataPacket &src, InnoDataPacket *dest, size_t dest_size,
                                                     bool append) {
-  if (!CHECK_SPHERE_POINTCLOUD_DATA(src.type)) {
+  if (!is_sphere_data(src.type)) {
     std::cout << "invalid type: " << src.type << std::endl;
     return false;
   }
@@ -411,47 +408,47 @@ bool InnovusionDecoder::convert_to_xyz_pointcloud(const InnoDataPacket &src, Inn
     }
     time_adjust_10us = (src.common.ts_start_us - dest->common.ts_start_us) / 10;
   }
-  
 
   {
-#define CONVERT_FN(ctx, p, blk, pt, full_angles, ch, m)                                                                \
-  do {                                                                                                                 \
-    if (pt.radius > 0) {                                                                                               \
-      InnoXyzPoint *xyz_points = reinterpret_cast<InnoXyzPoint *>(dest->payload);                                      \
-      InnoXyzPoint &ipt = xyz_points[dest->item_number];                                                               \
-      required_size += sizeof(InnoXyzPoint);                                                                           \
-      if (required_size > dest_size) {                                                                                 \
-        return false;                                                                                                  \
-      }                                                                                                                \
-      get_xyz_point(blk.header, pt, full_angles.angles[ch], ch, &ipt);                                                 \
-      ipt.multi_return = m;                                                                                            \
-      ipt.is_2nd_return = pt.is_2nd_return;                                                                            \
-      ipt.ts_10us += time_adjust_10us;                                                                                 \
-      dest->item_number++;                                                                                             \
-    }                                                                                                                  \
-  } while (0)
-
-#define CONVERT_EN_FN(ctx, p, blk, pt, full_angles, ch, m)                                                             \
-  do {                                                                                                                 \
-    if (pt.radius > 0) {                                                                                               \
-      InnoEnXyzPoint *xyz_points = reinterpret_cast<InnoEnXyzPoint *>(dest->payload);                                  \
-      InnoEnXyzPoint &ipt = xyz_points[dest->item_number];                                                             \
-      required_size += sizeof(InnoEnXyzPoint);                                                                         \
-      if (required_size > dest_size) {                                                                                 \
-        return false;                                                                                                  \
-      }                                                                                                                \
-      get_xyz_point(blk.header, pt, full_angles.angles[ch], ch, &ipt, (InnoItemType)src.type);                         \
-      ipt.multi_return = m;                                                                                            \
-      ipt.is_2nd_return = pt.is_2nd_return;                                                                            \
-      ipt.ts_10us += time_adjust_10us;                                                                                 \
-      dest->item_number++;                                                                                             \
-    }                                                                                                                  \
-  } while (0)
-
     if (src.type == INNO_ITEM_TYPE_SPHERE_POINTCLOUD) {
-      ITERARATE_INNO_DATA_PACKET_CPOINTS(CONVERT_FN, NULL, &src, dummy_count);
+      (void)iterate_inno_data_packet_cpoints<InnoBlock, InnoBlockHeader, InnoBlock1, InnoBlock2, InnoChannelPoint>(
+          src, [&](const InnoDataPacketPointsCallbackParams<InnoBlock, InnoChannelPoint> &in_params) {
+            if (in_params.pt.radius > 0) {
+              InnoXyzPoint &ipt = dest->xyz_points[dest->item_number];
+              required_size += static_cast<uint32_t>(sizeof(InnoXyzPoint));
+              if (required_size > dest_size) {
+                std::cerr << "no enough size required_size:" << required_size << ",dest_size:" << dest_size
+                          << std::endl;
+              } else {
+                (void)get_xyz_point(in_params.block.header, in_params.pt, in_params.angle.angles[in_params.channel],
+                                    in_params.channel, &ipt);
+                ipt.multi_return = in_params.multi_return;
+                ipt.is_2nd_return = in_params.pt.is_2nd_return;
+                ipt.ts_10us += time_adjust_10us;
+                dest->item_number++;
+              }
+            }
+          });
     } else {
-      ITERARATE_INNO_DATA_PACKET_EN_CPOINTS(CONVERT_EN_FN, NULL, &src, dummy_count);
+      (void)iterate_inno_data_packet_cpoints<InnoEnBlock, InnoEnBlockHeader, InnoEnBlock1, InnoEnBlock2,
+                                             InnoEnChannelPoint>(
+          src, [&](const InnoDataPacketPointsCallbackParams<InnoEnBlock, InnoEnChannelPoint> &in_params) {
+            if (in_params.pt.radius > 0) {
+              InnoEnXyzPoint &ipt = dest->en_xyz_points[dest->item_number];
+              required_size += static_cast<uint32_t>(sizeof(InnoEnXyzPoint));
+              if (required_size > dest_size) {
+                std::cerr << "no enough size required_size en:" << required_size << ",dest_size:" << dest_size
+                          << std::endl;
+              } else {
+                (void)get_xyz_point(in_params.block.header, in_params.pt, in_params.angle.angles[in_params.channel],
+                                    in_params.channel, &ipt, static_cast<InnoItemType>(in_params.pkt.type));
+                ipt.multi_return = in_params.multi_return;
+                ipt.is_2nd_return = in_params.pt.is_2nd_return;
+                ipt.ts_10us += time_adjust_10us;
+                dest->item_number++;
+              }
+            }
+          });
     }
   }
 

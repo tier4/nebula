@@ -47,16 +47,66 @@ bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & nam
 /// @brief Hardware monitor ros wrapper of Innovusion driver
 class InnovusionHwMonitorRosWrapper final : public rclcpp::Node, NebulaHwMonitorWrapperBase
 {
+private:
   drivers::InnovusionHwInterface hw_interface_;
+  diagnostic_updater::Updater diagnostics_updater_;
   Status interface_status_;
-
   drivers::InnovusionSensorConfiguration sensor_configuration_;
+  std::shared_ptr<boost::property_tree::ptree> current_snapshot_;
+  std::shared_ptr<boost::property_tree::ptree> lidar_info_;
+  std::shared_ptr<rclcpp::Time> current_snapshot_time_;
+  rclcpp::TimerBase::SharedPtr diagnostics_snapshot_timer_;
+  rclcpp::TimerBase::SharedPtr diagnostics_update_timer_;
+  uint16_t diag_span_;
+  rclcpp::CallbackGroup::SharedPtr cbg_r_;
+  rclcpp::CallbackGroup::SharedPtr cbg_m_;
+  uint8_t current_diag_status_;
+  bool setup_sensor_;
+
+  std::string key_lidar_info_;
+  std::string key_lidar_snapshot_;
+  std::string key_lidar_rpm_;
+  std::string key_laser_voltage_;
+  std::string key_lidar_up_time_;
+  std::string key_det_temp_;
+  std::string key_laser_temp_;
+  std::string key_lidar_sn_;
 
   /// @brief Initializing hardware monitor ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
   /// @return Resulting status
   Status InitializeHwMonitor(
     const drivers::SensorConfigurationBase & sensor_configuration) override;
+
+  /// @brief Check the current motor rpm for diagnostic_updater
+  /// @param diagnostics DiagnosticStatusWrapper
+  void InnovusionCheckMotorRpm(
+      diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  /// @brief Check the laser voltage for diagnostic_updater
+  /// @param diagnostics 
+  void InnovusionCheckLaserVoltage(
+      diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  /// @brief Check the uptime for diagnostic_updater
+  void InnovusionCheckUptime(
+      diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  /// @brief Check the det temperature for diagnostic_updater
+  void InnovusionCheckDetTemp(
+      diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  /// @brief Check the laser temperature for diagnostic_updater
+  void InnovusionCheckLaserTemp(
+      diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  /// @brief Get value from property_tree
+  /// @param pt property_tree
+  /// @param key Pey string
+  /// @return Value
+  std::tuple<bool, uint8_t, std::string, std::string> InnovusionCommonGet(
+    std::shared_ptr<boost::property_tree::ptree> pt,std::string key);
+  /// @brief Get value from property_tree
+  /// @param pt property_tree
+  /// @param key Pey string
+  /// @return Value
+  std::string GetPtreeValue(
+       std::shared_ptr<boost::property_tree::ptree> pt, const std::string & key);
 
 public:
   explicit InnovusionHwMonitorRosWrapper(const rclcpp::NodeOptions & options);
@@ -70,6 +120,16 @@ public:
   /// @brief Not used
   /// @return Status::OK
   Status Shutdown() override;
+  /// @brief Get configurations from ros parameters
+  /// @param sensor_configuration Output of SensorConfiguration
+  /// @return Resulting status
+  Status GetParameters(drivers::InnovusionSensorConfiguration & sensor_configuration);
+  /// @brief Initializing diagnostics
+  void InitializeInnovusionDiagnostics();
+  /// @brief Callback of the timer for getting the current lidar snapshot
+  void OnInnovusionSnapshotTimer();
+  /// @brief Get the key of the lidar snapshot
+  const std::string & GetKeyLidarSnapshot() const { return key_lidar_snapshot_; }
 };
 
 }  // namespace ros

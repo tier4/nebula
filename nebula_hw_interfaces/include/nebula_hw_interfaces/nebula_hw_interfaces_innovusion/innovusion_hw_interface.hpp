@@ -47,6 +47,7 @@ const uint16_t kInnoPktMajorVersionSection = 2;
 const uint16_t kInnoPktMinorVersionSection = 3;
 const uint16_t kInnoPktVersionSectionLen = 1;
 const uint32_t kInnoProtocolMajorV1 = 1;
+const uint32_t kInnoPktMax = 10000;
 
 /// @brief Hardware interface of Innovusion driver
 class InnovusionHwInterface : NebulaHwInterfaceBase
@@ -116,6 +117,23 @@ public:
   /// @brief Setting rclcpp::Logger
   /// @param node Logger
   void SetLogger(std::shared_ptr<rclcpp::Logger> node);
+  /// @brief Get a one-off HTTP client to communicate with the hardware
+  /// @param ctx IO Context
+  /// @param hcd Got http client driver
+  /// @return Resulting status
+  Status GetHttpClientDriverOnce(
+  std::shared_ptr<boost::asio::io_context> ctx,
+  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd);
+  /// @brief Getting current sensor configuration and status data (async)
+  /// @param str_callback Callback function for received JSON string
+  /// @param snapshot snapshot information
+  /// @return Resulting status
+  Status GetSnapshotAsync(
+  std::function<void(const std::string & str)> str_callback, const std::string & snapshot);
+  /// @brief Parsing JSON string to property_tree
+  /// @param str JSON string
+  /// @return property_tree
+  boost::property_tree::ptree ParseJson(const std::string & str);
 };
 }  // namespace drivers
 }  // namespace nebula
