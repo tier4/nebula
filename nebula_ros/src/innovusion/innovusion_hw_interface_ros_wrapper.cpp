@@ -141,7 +141,7 @@ Status InnovusionHwInterfaceRosWrapper::GetParameters(
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     rcl_interfaces::msg::IntegerRange range;
-    if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::INNOVUSION_LIDAR) {
+    if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::INNOVUSION_FALCON) {
       descriptor.additional_constraints = "200, 300, 400, 500";
       range.set__from_value(200).set__to_value(500).set__step(100);
       descriptor.integer_range = {range};

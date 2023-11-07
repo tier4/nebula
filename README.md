@@ -99,6 +99,8 @@ Supported models, where sensor_model is the ROS param to be used at launch:
 | Velodyne     | VLP-16-HiRes  | VLP16        |                    | :x: |
 | Velodyne     | VLP-32        | VLP32        | VLP32.yaml         | :warning: |
 | Velodyne     | VLS-128       | VLS128       | VLS128.yaml        | :warning: |
+| Innovusion   | Falcon        | Falcon       | Falcon.yaml        | :warning: |
+| Innovusion   | Robin         | Robin        | Robin.yaml         | :warning: |
 
 Test status:\
 :heavy_check_mark:: complete\
@@ -221,6 +223,42 @@ Parameters shared by all supported models:
 | max_range        | double | 300.0    | meters, <= 300.0     | Maximum point range published           |
 | cloud_min_angle  | uint16 | 0        | degrees [0, 360]     | FoV start angle                         |
 | cloud_max_angle  | uint16 | 359      | degrees [0, 360]     | FoV end angle                           |
+
+### Innovusion specific parameters
+
+#### Supported return modes
+
+| return_mode     | Mode               |
+| --------------- | ------------------ |
+| SingleFirst     | Single (First)     |
+| SingleStrongest | Single (Strongest) |
+| SingleLast      | Single (Last)      |
+| Dual            | Dual               |
+
+#### Hardware interface parameters
+
+| Parameter       | Type   | Default         | Accepted values   | Description     |
+| --------------- | ------ | --------------- | ----------------- | --------------- |
+| frame_id        | string | innovusion      |                   | ROS frame ID    |
+| sensor_ip       | string | 172.168.1.11    |                   | Sensor IP       |
+| host_ip         | string | 255.255.255.255 |                   | Host IP         |
+| data_port       | uint16 | 8010            |                   | Sensor port     |
+| gnss_port       | uint16 | 8010            |                   | GNSS port       |
+| frequency_ms    | uint16 | 100             | milliseconds, > 0 | Time per scan   |
+| packet_mtu_size | uint16 | 8820            |                   | Packet MTU size |
+| cloud_min_angle | uint16 | 0               | degrees [0, 120]  | FoV start angle |
+| cloud_max_angle | uint16 | 120             | degrees [0, 120]  | FoV end angle   |
+
+#### Driver parameters
+
+| Parameter        | Type   | Default    | Accepted values      | Description                           |
+| ---------------- | ------ | --------   | -------------------- | ------------------------------------- |
+| frame_id         | string | innovusion |                      | ROS frame ID                          |
+| calibration_file | string |            |                      | LiDAR calibration file                |
+| min_range        | double | 0.3        | meters, >= 0.3       | Minimum point range published         |
+| max_range        | double | 500.0      | meters, <= 500.0     | Maximum point range published         |
+| cloud_min_angle  | uint16 | 0          | degrees [0, 120]     | FoV start angle                       |
+| cloud_max_angle  | uint16 | 120        | degrees [0, 120]     | FoV end angle
 
 ## Software design overview
 

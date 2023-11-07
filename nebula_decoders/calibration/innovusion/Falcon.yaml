@@ -1,0 +1,4 @@
+# Our Lidar is calibrated internally, so there is no need to use calibration files here.
+# However, in order to maintain consistency in the Nebula framework, we created an empty calibration file.
+# Please ignore it.
+yaml_version: 2023110701
