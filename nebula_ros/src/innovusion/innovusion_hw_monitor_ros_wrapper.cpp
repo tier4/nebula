@@ -28,8 +28,11 @@ InnovusionHwMonitorRosWrapper::InnovusionHwMonitorRosWrapper(const rclcpp::NodeO
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
 
-  // Initialize diagnostics updater
-  InitializeInnovusionDiagnostics();
+  if (setup_sensor_) {
+    // Initialize diagnostics updater
+    InitializeInnovusionDiagnostics();
+  }
+
 }
 
 Status InnovusionHwMonitorRosWrapper::MonitorStart() { return interface_status_; }
@@ -206,6 +209,15 @@ Status InnovusionHwMonitorRosWrapper::GetParameters(
     descriptor.additional_constraints = "milliseconds";
     this->declare_parameter<uint16_t>("diag_span", 1000, descriptor);
     this->diag_span_ = this->get_parameter("diag_span").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<bool>("setup_sensor", true, descriptor);
+    this->setup_sensor_ = this->get_parameter("setup_sensor").as_bool();
   }
 
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);

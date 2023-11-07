@@ -199,8 +199,7 @@ Status InnovusionHwInterface::GetHttpClientDriverOnce(
   hcd = std::unique_ptr<::drivers::tcp_driver::HttpClientDriver>(
     new ::drivers::tcp_driver::HttpClientDriver(ctx));
   try {
-    // hcd->init_client(sensor_configuration_->sensor_ip, 8088);
-    hcd->init_client("172.168.1.10", 8088);
+    hcd->init_client(sensor_configuration_->sensor_ip, 8088);
   } catch (const std::exception & ex) {
     Status status = Status::HTTP_CONNECTION_ERROR;
     std::cerr << status << sensor_configuration_->sensor_ip << "," << 8088 << std::endl;

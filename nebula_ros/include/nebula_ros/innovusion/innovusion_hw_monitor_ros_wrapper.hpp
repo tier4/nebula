@@ -61,6 +61,7 @@ private:
   rclcpp::CallbackGroup::SharedPtr cbg_r_;
   rclcpp::CallbackGroup::SharedPtr cbg_m_;
   uint8_t current_diag_status_;
+  bool setup_sensor_;
 
   std::string key_lidar_info_;
   std::string key_lidar_snapshot_;
