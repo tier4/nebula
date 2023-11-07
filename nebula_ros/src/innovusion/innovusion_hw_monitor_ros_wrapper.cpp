@@ -40,19 +40,28 @@ Status InnovusionHwMonitorRosWrapper::Shutdown() { return Status::OK; }
 Status InnovusionHwMonitorRosWrapper::InitializeHwMonitor(  // todo: don't think this is needed
   const drivers::SensorConfigurationBase & sensor_configuration)
 {
+
   switch (sensor_configuration.sensor_model) {
-    case nebula::drivers::SensorModel::INNOVUSION_LIDAR:
+    case nebula::drivers::SensorModel::INNOVUSION_ROBIN:
+      key_lidar_info_ = ":get-lidar-info";
       key_lidar_snapshot_ = ":get-lidar-status";
       key_lidar_rpm_ = "motor.polygon_speed";
       key_laser_voltage_ = "laser_info.laser_5V";
       key_lidar_up_time_ = "uptime";
       key_det_temp_ = "temperature.det";
       key_laser_temp_ = "temperature.laser";
-
+      key_lidar_sn_ = "sn";
       break;
-    // case nebula::drivers::SensorModel::INNOVUSION_LIDAR:
-    //   key_lidar_snapshot_ = "get_lidar_status";
-    //   break;
+    case nebula::drivers::SensorModel::INNOVUSION_FALCON:
+      key_lidar_info_ = ":get-lidar-info";
+      key_lidar_snapshot_ = ":get_lidar_status";
+      key_lidar_rpm_ = "motor_status.polygon_speed";
+      key_laser_voltage_ = "laser_status.pump_voltage";
+      key_lidar_up_time_ = "uptime";
+      key_det_temp_ = "temperature.det";
+      key_laser_temp_ = "temperature.laser";
+      key_lidar_sn_ = "sn";
+      break;
     default:
       return Status::INVALID_SENSOR_MODEL;
       break;
@@ -63,14 +72,27 @@ Status InnovusionHwMonitorRosWrapper::InitializeHwMonitor(  // todo: don't think
 void InnovusionHwMonitorRosWrapper::InitializeInnovusionDiagnostics()
 { 
   hw_interface_.GetSnapshotAsync([this](const std::string & str) {
+    lidar_info_ =
+      std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
+    try {
+      std::string info_serial = GetPtreeValue(lidar_info_, key_lidar_sn_);
+      auto hardware_id = "innovusion:" + info_serial;
+      diagnostics_updater_.setHardwareID(hardware_id);
+    } catch (boost::bad_lexical_cast & ex) {
+      RCLCPP_ERROR_STREAM(
+        this->get_logger(), this->get_name() << " Error:"
+                                             << "Can't get lidar sn");
+      return;
+    }
+  }, key_lidar_info_);
+
+    // get lidar snapshot
+  hw_interface_.GetSnapshotAsync([this](const std::string & str) {
     current_snapshot_time_.reset(new rclcpp::Time(this->get_clock()->now()));
     current_snapshot_ =
       std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
   }, key_lidar_snapshot_);
 
-  // auto hardware_id = info_model + ": " + info_serial;
-  auto hardware_id = "inno:robinw";
-  diagnostics_updater_.setHardwareID(hardware_id);
   diagnostics_updater_.add(
     "innovusion_motor", this, &InnovusionHwMonitorRosWrapper::InnovusionCheckMotorRpm);
   diagnostics_updater_.add(

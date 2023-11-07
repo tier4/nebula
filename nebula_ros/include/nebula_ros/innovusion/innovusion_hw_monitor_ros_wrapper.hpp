@@ -53,6 +53,7 @@ private:
   Status interface_status_;
   drivers::InnovusionSensorConfiguration sensor_configuration_;
   std::shared_ptr<boost::property_tree::ptree> current_snapshot_;
+  std::shared_ptr<boost::property_tree::ptree> lidar_info_;
   std::shared_ptr<rclcpp::Time> current_snapshot_time_;
   rclcpp::TimerBase::SharedPtr diagnostics_snapshot_timer_;
   rclcpp::TimerBase::SharedPtr diagnostics_update_timer_;
@@ -61,12 +62,14 @@ private:
   rclcpp::CallbackGroup::SharedPtr cbg_m_;
   uint8_t current_diag_status_;
 
+  std::string key_lidar_info_;
   std::string key_lidar_snapshot_;
   std::string key_lidar_rpm_;
   std::string key_laser_voltage_;
   std::string key_lidar_up_time_;
   std::string key_det_temp_;
   std::string key_laser_temp_;
+  std::string key_lidar_sn_;
 
   /// @brief Initializing hardware monitor ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
