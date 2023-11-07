@@ -25,13 +25,11 @@ InnovusionRosOfflineExtractBag::InnovusionRosOfflineExtractBag(
   drivers::InnovusionCalibrationConfiguration calibration_configuration;
   drivers::InnovusionSensorConfiguration sensor_configuration;
 
-  std::cout<<"111111111"<<std::endl;
   wrapper_status_ = GetParameters(sensor_configuration, calibration_configuration);
   if (Status::OK != wrapper_status_) {
     RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << wrapper_status_);
     return;
   }
-  std::cout<<"111111111"<<std::endl;
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
 
   calibration_cfg_ptr_ =
@@ -315,9 +313,9 @@ Status InnovusionRosOfflineExtractBag::ReadBag()
             writer.writeBinary((o_dir / fn).string(), *pointcloud);
           }
         }
-        // if (out_num <= out_cnt) {
-        //   break;
-        // }
+        if (out_num <= out_cnt) {
+          break;
+        }
       }
     }
     // close on scope exit
