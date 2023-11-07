@@ -373,6 +373,7 @@ public:
       return item_count;
     } else {
       std::cout << "invalid type " << pkt.type << std::endl;
+      return -1;
     }
   }
 
