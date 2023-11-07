@@ -323,7 +323,8 @@ enum class SensorModel {
   VELODYNE_VLP32MR,
   VELODYNE_HDL32,
   VELODYNE_VLP16,
-  INNOVUSION_LIDAR,
+  INNOVUSION_FALCON,
+  INNOVUSION_ROBIN
 };
 
 /// @brief not used?
@@ -402,8 +403,11 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::VELODYNE_VLP16:
       os << "VLP16";
       break;
-    case SensorModel::INNOVUSION_LIDAR:
-      os << "InnoLidar";
+    case SensorModel::INNOVUSION_FALCON:
+      os << "Falcon";
+      break;
+    case SensorModel::INNOVUSION_ROBIN:
+      os << "Robin";
       break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
@@ -455,6 +459,8 @@ struct CalibrationConfigurationBase
 /// @return Corresponding SensorModel
 inline SensorModel SensorModelFromString(const std::string & sensor_model)
 {
+
+  std::cout<<"xxxxxxxxxxxxxx:"<<sensor_model<<std::endl;
   // Hesai
   if (sensor_model == "Pandar64") return SensorModel::HESAI_PANDAR64;
   if (sensor_model == "Pandar40P") return SensorModel::HESAI_PANDAR40P;
@@ -473,7 +479,8 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "HDL32") return SensorModel::VELODYNE_HDL32;
   if (sensor_model == "VLP16") return SensorModel::VELODYNE_VLP16;
   // innovusion
-  if (sensor_model == "InnoLidar") return SensorModel::INNOVUSION_LIDAR;
+  if (sensor_model == "Falcon") return SensorModel::INNOVUSION_FALCON;
+  if (sensor_model == "Robin") return SensorModel::INNOVUSION_ROBIN;
   return SensorModel::UNKNOWN;
 }
 
