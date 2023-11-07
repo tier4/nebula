@@ -13,11 +13,7 @@ namespace drivers
 /// @brief struct for Innovusion sensor configuration
 struct InnovusionSensorConfiguration : SensorConfigurationBase
 {
-  uint16_t gnss_port{};
-  double scan_phase{};
-  uint16_t rotation_speed;
-  uint16_t cloud_min_angle;
-  uint16_t cloud_max_angle;
+  uint16_t reserved_1;
 };
 /// @brief Convert InnovusionSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -25,9 +21,7 @@ struct InnovusionSensorConfiguration : SensorConfigurationBase
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, InnovusionSensorConfiguration const & arg)
 {
-  os << (SensorConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
-     << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
-     << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle;
+  os << (SensorConfigurationBase)(arg);
   return os;
 }
 

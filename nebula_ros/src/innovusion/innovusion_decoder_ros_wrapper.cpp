@@ -187,26 +187,11 @@ Status InnovusionDriverRosWrapper::GetParameters(
     this->declare_parameter<std::string>("frame_id", "innovusion", descriptor);
     sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
   }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
-    rcl_interfaces::msg::FloatingPointRange range;
-    range.set__from_value(0).set__to_value(360).set__step(0.01);
-    descriptor.floating_point_range = {range};
-    this->declare_parameter<double>("scan_phase", 0., descriptor);
-    sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
-  }
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
   if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
     return Status::INVALID_ECHO_MODE;
-  }
-  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
-    return Status::SENSOR_CONFIG_ERROR;
   }
 
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
