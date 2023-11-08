@@ -100,18 +100,6 @@ Status InnovusionRosDecoderTest::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 3;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
-    rcl_interfaces::msg::FloatingPointRange range;
-    range.set__from_value(0).set__to_value(360).set__step(0.01);
-    descriptor.floating_point_range = {range};
-    this->declare_parameter<double>("scan_phase", 0., descriptor);
-    sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 4;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
@@ -139,7 +127,6 @@ Status InnovusionRosDecoderTest::GetParameters(
     this->declare_parameter<double>("max_range", 300., descriptor);
     sensor_configuration.max_range = this->get_parameter("max_range").as_double();
   }
-  double view_direction = sensor_configuration.scan_phase * M_PI / 180;
   double view_width = 360 * M_PI / 180;
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -149,43 +136,6 @@ Status InnovusionRosDecoderTest::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<double>("view_width", 300., descriptor);
     view_width = this->get_parameter("view_width").as_double() * M_PI / 180;
-  }
-
-  if (sensor_configuration.sensor_model != nebula::drivers::SensorModel::INNOVUSION_FALCON) {
-    {
-      rcl_interfaces::msg::ParameterDescriptor descriptor;
-      descriptor.type = 2;
-      descriptor.read_only = false;
-      descriptor.dynamic_typing = false;
-      descriptor.additional_constraints = "";
-      rcl_interfaces::msg::IntegerRange range;
-      range.set__from_value(0).set__to_value(359).set__step(1);
-      descriptor.integer_range = {range};
-      this->declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
-      sensor_configuration.cloud_min_angle = this->get_parameter("cloud_min_angle").as_int();
-    }
-    {
-      rcl_interfaces::msg::ParameterDescriptor descriptor;
-      descriptor.type = 2;
-      descriptor.read_only = false;
-      descriptor.dynamic_typing = false;
-      descriptor.additional_constraints = "";
-      rcl_interfaces::msg::IntegerRange range;
-      range.set__from_value(0).set__to_value(359).set__step(1);
-      descriptor.integer_range = {range};
-      this->declare_parameter<uint16_t>("cloud_max_angle", 359, descriptor);
-      sensor_configuration.cloud_max_angle = this->get_parameter("cloud_max_angle").as_int();
-    }
-  } else {
-    double min_angle = fmod(fmod(view_direction + view_width / 2, 2 * M_PI) + 2 * M_PI, 2 * M_PI);
-    double max_angle = fmod(fmod(view_direction - view_width / 2, 2 * M_PI) + 2 * M_PI, 2 * M_PI);
-    sensor_configuration.cloud_min_angle = 100 * (2 * M_PI - min_angle) * 180 / M_PI + 0.5;
-    sensor_configuration.cloud_max_angle = 100 * (2 * M_PI - max_angle) * 180 / M_PI + 0.5;
-    if (sensor_configuration.cloud_min_angle == sensor_configuration.cloud_max_angle) {
-      // avoid returning empty cloud if min_angle = max_angle
-      sensor_configuration.cloud_min_angle = 0;
-      sensor_configuration.cloud_max_angle = 36000;
-    }
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -231,9 +181,6 @@ Status InnovusionRosDecoderTest::GetParameters(
   }
   if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
     return Status::INVALID_ECHO_MODE;
-  }
-  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
-    return Status::SENSOR_CONFIG_ERROR;
   }
   if (calibration_configuration.calibration_file.empty()) {
     return Status::INVALID_CALIBRATION_FILE;

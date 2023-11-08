@@ -18,16 +18,12 @@ InnovusionHwInterfaceRosWrapper::InnovusionHwInterfaceRosWrapper(const rclcpp::N
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
     std::make_shared<drivers::InnovusionSensorConfiguration>(sensor_configuration_);
-  if (this->setup_sensor) {
-    hw_interface_.SetSensorConfiguration(
-      std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
-  }
-
+  hw_interface_.SetSensorConfiguration(
+    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
   hw_interface_.RegisterScanCallback(
     std::bind(&InnovusionHwInterfaceRosWrapper::ReceiveScanDataCallback, this, std::placeholders::_1));
   innovusion_scan_pub_ =
     this->create_publisher<innovusion_msgs::msg::InnovusionScan>("innovusion_packets", rclcpp::SensorDataQoS());
-
   StreamStart();
 }
 
