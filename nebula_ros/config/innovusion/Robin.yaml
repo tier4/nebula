@@ -5,5 +5,5 @@
     host_ip: "10.0.2.15" # Broadcast IP from Sensor
     frame_id: "innovusion"
     data_port: 8010 # LiDAR Data Port
-    setup_sensor: True
+    setup_sensor: false
     online: True

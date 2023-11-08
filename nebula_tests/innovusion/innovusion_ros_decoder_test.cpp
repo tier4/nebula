@@ -144,7 +144,7 @@ Status InnovusionRosDecoderTest::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>(
-      "bag_path", (bag_root_dir / "1699260127096496311").string(), descriptor);
+      "bag_path", (bag_root_dir / "1699435339354672202").string(), descriptor);
     bag_path = this->get_parameter("bag_path").as_string();
     std::cout << bag_path << std::endl;
   }

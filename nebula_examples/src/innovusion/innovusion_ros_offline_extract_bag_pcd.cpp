@@ -97,7 +97,7 @@ Status InnovusionRosOfflineExtractBag::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("calibration_file", "/home/demo/github/src/nebula_decoders/calibration/innovusion/Falcon.yaml", descriptor);
+    this->declare_parameter<std::string>("calibration_file", "/home/demo/github2/nebula/src/nebula_decoders/calibration/innovusion/Falcon.yaml", descriptor);
     calibration_configuration.calibration_file =
       this->get_parameter("calibration_file").as_string();
   }
@@ -135,7 +135,7 @@ Status InnovusionRosOfflineExtractBag::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("bag_path", "/home/demo/github/bag_inno/", descriptor);
+    this->declare_parameter<std::string>("bag_path", "/home/demo/github2/nebula/bag_inno/", descriptor);
     bag_path = this->get_parameter("bag_path").as_string();
   }
   {
@@ -153,7 +153,7 @@ Status InnovusionRosOfflineExtractBag::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("out_path", "/home/demo/github/output", descriptor);
+    this->declare_parameter<std::string>("out_path", "/home/demo/github2/nebula/output", descriptor);
     out_path = this->get_parameter("out_path").as_string();
   }
   {
