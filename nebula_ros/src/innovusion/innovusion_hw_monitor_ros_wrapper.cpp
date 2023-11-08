@@ -9,30 +9,29 @@ InnovusionHwMonitorRosWrapper::InnovusionHwMonitorRosWrapper(const rclcpp::NodeO
   hw_interface_(),
   diagnostics_updater_(this)
 {
-  // cbg_r_ = create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-  // cbg_m_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  cbg_r_ = create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+  cbg_m_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
-  // interface_status_ = GetParameters(sensor_configuration_);
-  // if (Status::OK != interface_status_) {
-  //   RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
-  //   return;
-  // }
-  // InitializeHwMonitor(sensor_configuration_);
+  interface_status_ = GetParameters(sensor_configuration_);
+  if (Status::OK != interface_status_) {
+    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
+    return;
+  }
+  InitializeHwMonitor(sensor_configuration_);
 
-  // // Initialize sensor_configuration
-  // hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
-  // RCLCPP_INFO_STREAM(this->get_logger(), "Initialize sensor_configuration");
-  // std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
-  //   std::make_shared<drivers::InnovusionSensorConfiguration>(sensor_configuration_);
-  // RCLCPP_INFO_STREAM(this->get_logger(), "hw_interface_.InitializeSensorConfiguration");
-  // hw_interface_.SetSensorConfiguration(
-  //   std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
+  // Initialize sensor_configuration
+  hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
+  RCLCPP_INFO_STREAM(this->get_logger(), "Initialize sensor_configuration");
+  std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
+    std::make_shared<drivers::InnovusionSensorConfiguration>(sensor_configuration_);
+  RCLCPP_INFO_STREAM(this->get_logger(), "hw_interface_.InitializeSensorConfiguration");
+  hw_interface_.SetSensorConfiguration(
+    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
 
-  // if (setup_sensor_) {
-  //   // Initialize diagnostics updater
-  //   InitializeInnovusionDiagnostics();
-  // }
-
+  if (setup_sensor_) {
+    // Initialize diagnostics updater
+    InitializeInnovusionDiagnostics();
+  }
 }
 
 Status InnovusionHwMonitorRosWrapper::MonitorStart() { return interface_status_; }
