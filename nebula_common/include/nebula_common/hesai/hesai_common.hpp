@@ -31,7 +31,8 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
 {
   os << (SensorConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
      << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
-     << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle;
+     << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle
+     << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold;
   return os;
 }
 
@@ -64,7 +65,7 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
     return Status::OK;
   }
 
-  /// @brief Loading calibration data (not used)
+  /// @brief Loading calibration data
   /// @param calibration_content
   /// @return Resulting status
   inline nebula::Status LoadFromString(const std::string & calibration_content)
@@ -79,11 +80,20 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
     int laser_id;
     float elevation;
     float azimuth;
-    while (!ss.eof()) {
-      ss >> laser_id >> sep >> elevation >> sep >> azimuth;
+
+    std::string line;
+    while (std::getline(ss, line)) {
+      if (line.empty()) {
+        continue;
+      }
+      std::stringstream line_ss;
+      line_ss << line;
+      line_ss >> laser_id >> sep >> elevation >> sep >> azimuth;
       elev_angle_map[laser_id - 1] = elevation;
       azimuth_offset_map[laser_id - 1] = azimuth;
+//      std::cout << "laser_id=" << laser_id << ", elevation=" << elevation << ", azimuth=" << azimuth << std::endl;
     }
+//    std::cout << "LoadFromString fin" << std::endl;
     return Status::OK;
   }
 
@@ -103,6 +113,23 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
       float azimuth = azimuth_offset_map[pair.first];
       ofs << laser_id << "," << elevation << "," << azimuth << std::endl;
     }
+    ofs.close();
+
+    return Status::OK;
+  }
+
+  /// @brief Saving calibration data from string
+  /// @param calibration_file path
+  /// @param calibration_string calibration string
+  /// @return Resulting status
+  inline nebula::Status SaveFileFromString(const std::string & calibration_file, const std::string & calibration_string)
+  {
+    std::ofstream ofs(calibration_file);
+    if (!ofs) {
+      return Status::CANNOT_SAVE_FILE;
+    }
+    ofs << calibration_string;
+//    std::cout << calibration_string << std::endl;
     ofs.close();
 
     return Status::OK;
@@ -134,7 +161,11 @@ struct HesaiCorrection
   /// @return Resulting status
   inline nebula::Status LoadFromBinary(const std::vector<uint8_t> & buf)
   {
-    size_t index = 0;
+    size_t index;
+    for (index = 0; index < buf.size()-1; index++) {
+      if(buf[index]==0xee && buf[index+1]==0xff)
+        break;
+    }
     delimiter = (buf[index] & 0xff) << 8 | ((buf[index + 1] & 0xff));
     versionMajor = buf[index + 2] & 0xff;
     versionMinor = buf[index + 3] & 0xff;
@@ -274,7 +305,44 @@ struct HesaiCorrection
     return Status::OK;
   }
 
+  /// @brief Save correction data from binary buffer
+  /// @param correction_file path
+  /// @param buf correction binary
+  /// @return Resulting status
+  inline nebula::Status SaveFileFromBinary(const std::string & correction_file, const std::vector<uint8_t> & buf)
+  {
+    std::cerr << "Saving in:" << correction_file << "\n";
+    std::ofstream ofs(correction_file, std::ios::trunc | std::ios::binary);
+    if (!ofs) {
+      std::cerr << "Could not create file:" << correction_file << "\n";
+      return Status::CANNOT_SAVE_FILE;
+    }
+    std::cerr << "Writing start...." << buf.size() << "\n";
+    bool sop_received = false;
+    for (const auto &byte : buf) {
+      if (!sop_received) {
+        if (byte == 0xEE) {
+          std::cerr << "SOP received....\n";
+          sop_received = true;
+        }
+      }
+      if(sop_received) {
+        ofs << byte;
+      }
+    }
+    std::cerr << "Closing file\n";
+    ofs.close();
+    if(sop_received)
+      return Status::OK;
+    return Status::INVALID_CALIBRATION_FILE;
+  }
+
   static const int STEP3 = 200 * 256;
+
+  /// @brief Get azimuth adjustment for channel and precision azimuth
+  /// @param ch The channel id
+  /// @param azi The precision azimuth in (0.01 / 256) degree unit
+  /// @return The azimuth adjustment in 0.01 degree unit
   int8_t getAzimuthAdjustV3(uint8_t ch, uint32_t azi) const
   {
     unsigned int i = std::floor(1.f * azi / STEP3);
@@ -282,6 +350,11 @@ struct HesaiCorrection
     float k = 1.f * l / STEP3;
     return round((1 - k) * azimuthOffset[ch * 180 + i] + k * azimuthOffset[ch * 180 + i + 1]);
   }
+
+  /// @brief Get elevation adjustment for channel and precision azimuth
+  /// @param ch The channel id
+  /// @param azi The precision azimuth in (0.01 / 256) degree unit
+  /// @return The elevation adjustment in 0.01 degree unit
   int8_t getElevationAdjustV3(uint8_t ch, uint32_t azi) const
   {
     unsigned int i = std::floor(1.f * azi / STEP3);
@@ -384,7 +457,8 @@ inline int IntFromReturnModeHesai(const ReturnMode return_mode, const SensorMode
     case SensorModel::HESAI_PANDARAT128:
       if (return_mode == ReturnMode::LAST) return 0;
       if (return_mode == ReturnMode::STRONGEST) return 1;
-      if (return_mode == ReturnMode::DUAL_LAST_STRONGEST) return 2;
+      if (return_mode == ReturnMode::DUAL_LAST_STRONGEST
+      || return_mode == ReturnMode::DUAL) return 2;
       if (return_mode == ReturnMode::FIRST) return 3;
       if (return_mode == ReturnMode::DUAL_LAST_FIRST) return 4;
       if (return_mode == ReturnMode::DUAL_FIRST_STRONGEST) return 5;

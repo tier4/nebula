@@ -1,61 +1,76 @@
 #pragma once
-/**
- * Pandar 40P
- */
-#include <cstddef>
-#include <cstdint>
-#include <ctime>
+
+#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
 namespace nebula
 {
 namespace drivers
 {
-namespace pandar_40
-{
-constexpr double MIN_RANGE = 0.3f;
-constexpr double MAX_RANGE = 200.f;
-constexpr size_t SOB_ANGLE_SIZE = 4;
-constexpr size_t RAW_MEASURE_SIZE = 3;
-constexpr size_t LASER_COUNT = 40;
-constexpr size_t BLOCKS_PER_PACKET = 10;
-constexpr size_t BLOCK_SIZE = RAW_MEASURE_SIZE * LASER_COUNT + SOB_ANGLE_SIZE;
-constexpr size_t TIMESTAMP_SIZE = 4;
-constexpr size_t FACTORY_INFO_SIZE = 1;
-constexpr size_t RETURN_SIZE = 1;
-constexpr size_t RESERVE_SIZE = 8;
-constexpr size_t REVOLUTION_SIZE = 2;
-constexpr size_t INFO_SIZE =
-  TIMESTAMP_SIZE + FACTORY_INFO_SIZE + RETURN_SIZE + RESERVE_SIZE + REVOLUTION_SIZE;
-constexpr size_t UTC_TIME = 6;
-constexpr size_t PACKET_SIZE = BLOCK_SIZE * BLOCKS_PER_PACKET + INFO_SIZE + UTC_TIME;
-constexpr size_t SEQ_NUM_SIZE = 4;
-constexpr float LASER_RETURN_TO_DISTANCE_RATE = 0.004;
-constexpr uint32_t STRONGEST_RETURN = 0x37;
-constexpr uint32_t LAST_RETURN = 0x38;
-constexpr uint32_t DUAL_RETURN = 0x39;
-constexpr uint32_t MAX_AZIMUTH_STEPS = 360 * 100;  // Unit: 0.01°
 
-struct Unit
+namespace hesai_packet
 {
-  uint8_t intensity;
-  float distance;
+
+#pragma pack(push, 1)
+
+struct Tail40P
+{
+  uint8_t reserved1[5];
+  uint8_t high_temperature_shutdown_flag;
+  uint8_t reserved2[2];
+  uint16_t motor_speed;
+  uint32_t timestamp;
+  uint8_t return_mode;
+  uint8_t factory_information;
+  DateTime<2000> date_time;
+
+  /* Ignored optional fields */
+
+  // uint32_t udp_sequence;
 };
 
-struct Block
+struct Packet40P : public PacketBase<10, 40, 2, 100>
 {
-  uint16_t azimuth;
-  uint16_t sob;
-  Unit units[LASER_COUNT];
+  typedef Body<SOBBlock<Unit3B, Packet40P::N_CHANNELS>, Packet40P::N_BLOCKS> body_t;
+  body_t body;
+  Tail40P tail;
 };
 
-struct Packet
+#pragma pack(pop)
+
+/// @brief Get the distance unit of the given @ref Packet40P packet in meters. This is the only
+/// packet type without a header.
+/// @return 0.004 (4mm)
+template <>
+double get_dis_unit<Packet40P>(const Packet40P & /* packet */)
 {
-  Block blocks[BLOCKS_PER_PACKET];
-  struct tm t;
-  uint32_t usec;
-  uint32_t return_mode;
+  return 4 / 1000.;
+}
+
+}  // namespace hesai_packet
+
+class Pandar40 : public HesaiSensor<hesai_packet::Packet40P>
+{
+private:
+  static constexpr int firing_time_offset_ns_[40] = {
+    -42220, -28470, -16040, -3620,  -45490, -31740, -47460, -54670, -20620, -33710,
+    -40910, -8190,  -20620, -27160, -50730, -8190,  -14740, -36980, -45490, -52700,
+    -23890, -31740, -38950, -11470, -18650, -25190, -48760, -6230,  -12770, -35010,
+    -21920, -9500,  -43520, -29770, -17350, -4920,  -42220, -28470, -16040, -3620};
+
+public:
+  static constexpr float MIN_RANGE = 0.3f;
+  static constexpr float MAX_RANGE = 200.f;
+  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 144000;
+
+  int getPacketRelativePointTimeOffset(
+    uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
+  {
+    auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
+    int block_offset_ns = -28580 - 55560 * ((10 - block_id - 1) / n_returns);
+    return block_offset_ns + firing_time_offset_ns_[channel_id];
+  }
 };
 
-}  // namespace pandar_40
 }  // namespace drivers
 }  // namespace nebula

@@ -80,6 +80,8 @@ public:
   Status GetParameters(drivers::HesaiSensorConfiguration & sensor_configuration);
 
 private:
+  uint16_t delay_hw_ms_;
+  bool retry_hw_;
   std::mutex mtx_config_;
   OnSetParametersCallbackHandle::SharedPtr set_param_res_;
   /// @brief rclcpp parameter callback

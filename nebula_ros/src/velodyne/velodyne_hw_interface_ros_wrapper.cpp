@@ -23,9 +23,12 @@ VelodyneHwInterfaceRosWrapper::VelodyneHwInterfaceRosWrapper(const rclcpp::NodeO
   RCLCPP_INFO_STREAM(this->get_logger(), "Initialize sensor_configuration");
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
     std::make_shared<drivers::VelodyneSensorConfiguration>(sensor_configuration_);
-  RCLCPP_INFO_STREAM(this->get_logger(), "hw_interface_.SetSensorConfiguration");
+  RCLCPP_INFO_STREAM(this->get_logger(), "hw_interface_.InitializeSensorConfiguration");
+  hw_interface_.InitializeSensorConfiguration(
+    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
 
   if (this->setup_sensor) {
+    RCLCPP_INFO_STREAM(this->get_logger(), "hw_interface_.SetSensorConfiguration");
     hw_interface_.SetSensorConfiguration(
       std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
     updateParameters();

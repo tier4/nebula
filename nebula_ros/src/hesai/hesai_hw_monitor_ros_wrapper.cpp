@@ -18,12 +18,9 @@ HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & o
     RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
     return;
   }
-  hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
+  std::this_thread::sleep_for(std::chrono::milliseconds(this->delay_monitor_ms_));
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
     std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration_);
-  hw_interface_.SetSensorConfiguration(
-    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
-  hw_interface_.InitializeTcpDriver();
 
   message_sep = ": ";
   not_supported_message = "Not supported";
@@ -61,6 +58,13 @@ HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & o
       break;
   }
 
+  hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
+  hw_interface_.SetSensorConfiguration(
+    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
+  while(hw_interface_.InitializeTcpDriver(false) == Status::ERROR_1)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(8000));// >5000
+  }
   std::vector<std::thread> thread_pool{};
   thread_pool.emplace_back([this] {
     hw_interface_.GetInventory(  // ios,
@@ -262,7 +266,17 @@ Status HesaiHwMonitorRosWrapper::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "milliseconds";
     this->declare_parameter<uint16_t>("diag_span", 1000, descriptor);
-    diag_span_ = this->get_parameter("diag_span").as_int();
+    this->diag_span_ = this->get_parameter("diag_span").as_int();
+  }
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "milliseconds";
+    this->declare_parameter<uint16_t>("delay_monitor_ms", 0, descriptor);
+    this->delay_monitor_ms_ = this->get_parameter("delay_monitor_ms").as_int();
   }
 
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
