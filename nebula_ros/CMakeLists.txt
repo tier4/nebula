@@ -97,7 +97,7 @@ ament_auto_add_library(innoviz_hw_ros_wrapper SHARED
         )
 rclcpp_components_register_node(innoviz_hw_ros_wrapper
         PLUGIN "InnovizHwInterfaceRosWrapper"
-        EXECUTABLE innoviz_hw_ros_wrapper_node
+        EXECUTABLE innoviz_hw_interface_ros_wrapper_node
         )
 
 # DriverDecoder

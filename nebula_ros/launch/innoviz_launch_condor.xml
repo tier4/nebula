@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="sensor_model" default="InnovizTwoRaven"/>
+    <arg name="sensor_model" default="InnovizTwoCondor"/>
     <arg name="frame_id"  default="innoviz"/>
 
     <arg name="sensor_ip" default="192.168.0.5" description="Lidar Sensor IP"/>
