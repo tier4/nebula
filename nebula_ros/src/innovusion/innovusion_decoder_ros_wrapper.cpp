@@ -187,6 +187,38 @@ Status InnovusionDriverRosWrapper::GetParameters(
     this->declare_parameter<std::string>("frame_id", "innovusion", descriptor);
     sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
   }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("cloud_min_range", 0.4, descriptor);
+    sensor_configuration.cloud_min_range = this->get_parameter("cloud_min_range").as_double();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("cloud_max_range", 2000.0, descriptor);
+    sensor_configuration.cloud_max_range = this->get_parameter("cloud_max_range").as_double();
+  }
+
+  //   {
+  //   rcl_interfaces::msg::ParameterDescriptor descriptor;
+  //   descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+  //   descriptor.read_only = false;
+  //   descriptor.dynamic_typing = false;
+  //   descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
+  //   rcl_interfaces::msg::FloatingPointRange range;
+  //   range.set__from_value(0).set__to_value(360).set__step(0.01);
+  //   descriptor.floating_point_range = {range};
+  //   this->declare_parameter<double>("scan_phase", 0., descriptor);
+  //   sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
+  // }
+  
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }

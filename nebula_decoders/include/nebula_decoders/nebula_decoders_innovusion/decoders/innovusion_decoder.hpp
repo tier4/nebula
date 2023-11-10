@@ -90,7 +90,9 @@ private:
   static int32_t atan_table_[];
   static int8_t robin_nps_adjustment_[kRobinScanlines_][kHTableSize_][kXYZSize_];
   static int8_t nps_adjustment_[kVTableSize_][kHTableSize_][kInnoChannelNumber][kXZSize_];
-  std::uint64_t frame_point_number_ = 0;
+  double current_ts_start_ = 0.0;
+  static constexpr double us_in_second_c = 1000000.0;
+  static constexpr double ten_us_in_second_c = 100000.0;
 
 public:
   /// @brief Constructor

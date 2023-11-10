@@ -1,9 +1,11 @@
 /**:
   ros__parameters:
     sensor_model: "Falcon" # See readme for supported models
-    sensor_ip: "10.0.2.15" # Lidar Sensor IP
-    host_ip: "10.0.2.15" # Broadcast IP from Sensor
+    sensor_ip: "172.168.1.10" # Lidar Sensor IP
+    host_ip: "172.168.1.101" # Broadcast IP from Sensor
     frame_id: "innovusion"
     data_port: 8010 # LiDAR Data Port
+    cloud_min_range: 0.4
+    cloud_max_range: 2000.0
     setup_sensor: false
     online: True

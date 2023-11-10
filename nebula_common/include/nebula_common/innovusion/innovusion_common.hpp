@@ -13,7 +13,8 @@ namespace drivers
 /// @brief struct for Innovusion sensor configuration
 struct InnovusionSensorConfiguration : SensorConfigurationBase
 {
-  uint16_t reserved_1;
+  double cloud_min_range;
+  double cloud_max_range;
 };
 /// @brief Convert InnovusionSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -21,7 +22,8 @@ struct InnovusionSensorConfiguration : SensorConfigurationBase
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, InnovusionSensorConfiguration const & arg)
 {
-  os << (SensorConfigurationBase)(arg);
+  os << (SensorConfigurationBase)(arg) << ", cloud_min_range: " << arg.cloud_min_range
+     << ", cloud_max_range: " << arg.cloud_max_range << "\n";
   return os;
 }
 

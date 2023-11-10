@@ -60,6 +60,11 @@ void InnovusionDecoder::point_xyz_data_parse_(bool is_en_data, bool is_use_refl,
       continue;
     }
 
+    if ((point_ptr->radius < sensor_configuration_->cloud_min_range) ||
+        (point_ptr->radius > sensor_configuration_->cloud_max_range)) {
+      continue;
+    }
+
     if constexpr (std::is_same<PointType, const InnoEnXyzPoint *>::value) {
       if (is_use_refl) {
         point.intensity = point_ptr->reflectance;
@@ -69,13 +74,9 @@ void InnovusionDecoder::point_xyz_data_parse_(bool is_en_data, bool is_use_refl,
     } else if constexpr (std::is_same<PointType, const InnoXyzPoint *>::value) {
       point.intensity = point_ptr->refl;
     }
-    // int32_t roi = point_ptr->in_roi == 3 ? (1 << 2) : 0;
-    // point.scan_id = point_ptr->scan_id;
-    // point.scan_idx = point_ptr->scan_idx;
-    // point.flags = point_ptr->channel | roi | (point_ptr->facet << 3) | (point_ptr->type << 6);
-    // point.is_2nd_return = point_ptr->is_2nd_return;
-    // point.elongation = point_ptr->elongation;
-    // point.timestamp = point_ptr->ts_10us / ten_us_in_second_c + current_ts_start_;
+  
+    point.time_stamp = point_ptr->ts_10us / ten_us_in_second_c + current_ts_start_;
+    point.distance = point_ptr->radius;
     point.x = point_ptr->x;
     point.y = point_ptr->y;
     point.z = point_ptr->z;
@@ -84,7 +85,7 @@ void InnovusionDecoder::point_xyz_data_parse_(bool is_en_data, bool is_use_refl,
 }
 
 void InnovusionDecoder::data_packet_parse_(const InnoDataPacket *pkt) {
-  // current_ts_start_ = pkt->common.ts_start_us / us_in_second_c;
+  current_ts_start_ = pkt->common.ts_start_us / us_in_second_c;
   // adapt different data structures form different lidar
   if (is_en_xyz_data(pkt->type)) {
     const InnoEnXyzPoint *pt =
@@ -95,6 +96,7 @@ void InnovusionDecoder::data_packet_parse_(const InnoDataPacket *pkt) {
       reinterpret_cast<const InnoXyzPoint *>(reinterpret_cast<const char *>(pkt) + sizeof(InnoDataPacket));
     point_xyz_data_parse_<const InnoXyzPoint *>(false, pkt->use_reflectance, pkt->item_number, pt);
   }
+  output_scan_timestamp_ns_ = pkt->common.ts_start_us * 1000;
 }
 
 int InnovusionDecoder::unpack(const innovusion_msgs::msg::InnovusionPacket & packet)
@@ -115,14 +117,12 @@ int InnovusionDecoder::unpack(const innovusion_msgs::msg::InnovusionPacket & pac
   } else {
     RCLCPP_ERROR_STREAM(logger_, "cframe type" <<  inno_pkt->type << "is not supported");
   }
+
   return 0;
 }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> InnovusionDecoder::getPointcloud() {
-  // double scan_timestamp_s = static_cast<double>(output_scan_timestamp_ns_) * 1e-9;
-  // std::cout << "one frame points number: " << frame_point_number_ << std::endl;
-  frame_point_number_ = 0;
-  double scan_timestamp_s = 0.0;
+  double scan_timestamp_s = static_cast<double>(output_scan_timestamp_ns_) * 1e-9;
   std::swap(decode_pc_, output_pc_);
   decode_pc_->clear();
   return std::make_pair(output_pc_, scan_timestamp_s);
