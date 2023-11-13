@@ -74,7 +74,7 @@ void InnovusionDecoder::point_xyz_data_parse_(bool is_en_data, bool is_use_refl,
     } else if constexpr (std::is_same<PointType, const InnoXyzPoint *>::value) {
       point.intensity = point_ptr->refl;
     }
-  
+
     point.time_stamp = point_ptr->ts_10us / ten_us_in_second_c + current_ts_start_;
     point.distance = point_ptr->radius;
     point.x = point_ptr->x;

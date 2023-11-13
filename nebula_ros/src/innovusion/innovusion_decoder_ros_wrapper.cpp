@@ -5,14 +5,12 @@ namespace nebula
 namespace ros
 {
 InnovusionDriverRosWrapper::InnovusionDriverRosWrapper(const rclcpp::NodeOptions & options)
-: rclcpp::Node("Innovusion_driver_ros_wrapper", options), hw_interface_()
+: rclcpp::Node("Innovusion_driver_ros_wrapper", options)
 {
   drivers::InnovusionCalibrationConfiguration calibration_configuration;
   drivers::InnovusionSensorConfiguration sensor_configuration;
 
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
-
-  hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
 
   wrapper_status_ =
     GetParameters(sensor_configuration, calibration_configuration);
@@ -129,7 +127,7 @@ Status InnovusionDriverRosWrapper::GetStatus() { return wrapper_status_; }
 
 Status InnovusionDriverRosWrapper::GetParameters(
   drivers::InnovusionSensorConfiguration & sensor_configuration,
-  drivers::InnovusionCalibrationConfiguration & calibration_configuration)
+  drivers::InnovusionCalibrationConfiguration &)
 {
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -206,19 +204,6 @@ Status InnovusionDriverRosWrapper::GetParameters(
     sensor_configuration.cloud_max_range = this->get_parameter("cloud_max_range").as_double();
   }
 
-  //   {
-  //   rcl_interfaces::msg::ParameterDescriptor descriptor;
-  //   descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-  //   descriptor.read_only = false;
-  //   descriptor.dynamic_typing = false;
-  //   descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
-  //   rcl_interfaces::msg::FloatingPointRange range;
-  //   range.set__from_value(0).set__to_value(360).set__step(0.01);
-  //   descriptor.floating_point_range = {range};
-  //   this->declare_parameter<double>("scan_phase", 0., descriptor);
-  //   sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
-  // }
-  
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
@@ -226,11 +211,6 @@ Status InnovusionDriverRosWrapper::GetParameters(
     return Status::INVALID_ECHO_MODE;
   }
 
-  std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
-    std::make_shared<drivers::InnovusionSensorConfiguration>(sensor_configuration);
-
-  hw_interface_.SetSensorConfiguration(
-    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
   return Status::OK;
 }

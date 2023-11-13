@@ -42,7 +42,7 @@ Status InnovusionHwInterfaceRosWrapper::StreamStart()
 Status InnovusionHwInterfaceRosWrapper::StreamStop() { return Status::OK; }
 Status InnovusionHwInterfaceRosWrapper::Shutdown() { return Status::OK; }
 
-Status InnovusionHwInterfaceRosWrapper::InitializeHwInterface(  // todo: don't think this is needed
+Status InnovusionHwInterfaceRosWrapper::InitializeHwInterface(
   const drivers::SensorConfigurationBase & sensor_configuration)
 {
   std::stringstream ss;

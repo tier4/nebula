@@ -35,8 +35,6 @@ class InnovusionDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWra
   std::shared_ptr<drivers::InnovusionCalibrationConfiguration> calibration_cfg_ptr_;
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
 
-  drivers::InnovusionHwInterface hw_interface_;
-
   /// @brief Initializing ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
   /// @param calibration_configuration CalibrationConfiguration for this driver

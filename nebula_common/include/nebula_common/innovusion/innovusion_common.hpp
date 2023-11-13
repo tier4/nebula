@@ -31,11 +31,11 @@ inline std::ostream & operator<<(std::ostream & os, InnovusionSensorConfiguratio
 struct InnovusionCalibrationConfiguration : CalibrationConfigurationBase
 {
   // InnovusionCalibration innovusion_calibration;
-  inline nebula::Status LoadFromFile(const std::string & calibration_file)
+  inline nebula::Status LoadFromFile(const std::string &)
   {
     return Status::OK;
   }
-  inline nebula::Status SaveFile(const std::string & calibration_file)
+  inline nebula::Status SaveFile(const std::string &)
   {
     return Status::OK;
   }

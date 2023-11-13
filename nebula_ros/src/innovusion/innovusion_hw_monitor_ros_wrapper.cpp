@@ -39,7 +39,7 @@ Status InnovusionHwMonitorRosWrapper::MonitorStart() { return interface_status_;
 Status InnovusionHwMonitorRosWrapper::MonitorStop() { return Status::OK; }
 Status InnovusionHwMonitorRosWrapper::Shutdown() { return Status::OK; }
 
-Status InnovusionHwMonitorRosWrapper::InitializeHwMonitor(  // todo: don't think this is needed
+Status InnovusionHwMonitorRosWrapper::InitializeHwMonitor(
   const drivers::SensorConfigurationBase & sensor_configuration)
 {
 
@@ -72,7 +72,7 @@ Status InnovusionHwMonitorRosWrapper::InitializeHwMonitor(  // todo: don't think
 }
 
 void InnovusionHwMonitorRosWrapper::InitializeInnovusionDiagnostics()
-{ 
+{
   hw_interface_.GetSnapshotAsync([this](const std::string & str) {
     lidar_info_ =
       std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
@@ -88,7 +88,7 @@ void InnovusionHwMonitorRosWrapper::InitializeInnovusionDiagnostics()
     }
   }, key_lidar_info_);
 
-    // get lidar snapshot
+  // get lidar snapshot
   hw_interface_.GetSnapshotAsync([this](const std::string & str) {
     current_snapshot_time_.reset(new rclcpp::Time(this->get_clock()->now()));
     current_snapshot_ =

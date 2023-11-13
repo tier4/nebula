@@ -57,8 +57,7 @@ private:
   std::shared_ptr<boost::asio::io_context> m_owned_ctx;
   std::shared_ptr<boost::asio::io_context> m_owned_ctx_s;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
-  std::shared_ptr<::drivers::tcp_driver::TcpDriver> tcp_driver_;
-  std::shared_ptr<::drivers::tcp_driver::TcpDriver> tcp_driver_s_;
+  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> http_client_driver_;
   std::shared_ptr<InnovusionSensorConfiguration> sensor_configuration_;
   std::shared_ptr<InnovusionCalibrationConfiguration> calibration_configuration_;
   std::unique_ptr<innovusion_msgs::msg::InnovusionScan> scan_cloud_ptr_;
@@ -83,6 +82,43 @@ private:
   /// @brief Printing the string to RCLCPP_DEBUG_STREAM
   /// @param debug Target string
   void PrintDebug(std::string debug);
+
+  /// @brief Get sensor configuration and status data
+  /// @param key information key
+  /// @return value of key
+  std::string GetSensorParameter(const std::string & key);
+
+  /// @brief Set sensor configuration and status data
+  /// @param key information key
+  std::string SetSensorParameter(const std::string & key, const std::string &value);
+
+  /// @brief Init HttpClientDriver
+  void InitHttpClientDriver();
+
+  /// @brief Print sensor common information
+  void DisplayCommonVersion();
+
+  /// @brief check ip is broadcast
+  bool IsBroadcast(std::string strIp);
+
+  /// @brief check ip is multicast
+  bool IsMulticast(std::string strIp);
+
+  /// @brief add to multicast group
+  /// @param strMuiticastIp remote Lidar send udp data ip
+  /// @param uMulticastPort remote send udp data port
+  /// @param strLocalIp local ip
+  /// @param uLocalPort local port
+  void AddToMuiticastGroup(const std::string &strMuiticastIp, const uint16_t &uMulticastPort,
+     const std::string &strLocalIp, const uint16_t &uLocalPort);
+
+  /// @brief update unicast ip port
+  /// @param strUnicastIp remote Lidar send udp data ip
+  /// @param uUnicastPort remote send udp data port
+  /// @param strLocalIp local ip
+  /// @param uLocalPort local port
+  void UpdateUnicastIpPort(const std::string &strUnicastIp, const uint16_t &uUnicastPort,
+     const std::string &strLocalIp, const uint16_t &uLocalPort);
 
 public:
   /// @brief Constructor

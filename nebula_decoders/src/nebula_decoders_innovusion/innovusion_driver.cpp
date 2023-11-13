@@ -48,9 +48,6 @@ std::tuple<drivers::NebulaPointCloudPtr, double> InnovusionDriver::ConvertScanTo
 Status InnovusionDriver::SetCalibrationConfiguration(
   const CalibrationConfigurationBase & calibration_configuration)
 {
-  // throw std::runtime_error(
-  //   "SetCalibrationConfiguration. Not yet implemented (" +
-  //   calibration_configuration.calibration_file + ")");
 }
 
 Status InnovusionDriver::GetStatus()

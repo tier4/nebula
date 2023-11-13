@@ -9,8 +9,7 @@ InnovusionHwInterface::InnovusionHwInterface()
   m_owned_ctx{new boost::asio::io_context(1)},
   m_owned_ctx_s{new boost::asio::io_context(1)},
   cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
-  tcp_driver_{new ::drivers::tcp_driver::TcpDriver(m_owned_ctx)},
-  tcp_driver_s_{new ::drivers::tcp_driver::TcpDriver(m_owned_ctx_s)},
+  http_client_driver_{new ::drivers::tcp_driver::HttpClientDriver(m_owned_ctx)},
   scan_cloud_ptr_{std::make_unique<innovusion_msgs::msg::InnovusionScan>()}
 {
 }
@@ -20,8 +19,7 @@ Status InnovusionHwInterface::SetSensorConfiguration(
 {
   InnovusionStatus status = Status::OK;
   try {
-    sensor_configuration_ =
-      std::static_pointer_cast<InnovusionSensorConfiguration>(sensor_configuration);
+    sensor_configuration_ = std::static_pointer_cast<InnovusionSensorConfiguration>(sensor_configuration);
   } catch (const std::exception & ex) {
     status = Status::SENSOR_CONFIG_ERROR;
     std::cerr << status << std::endl;
@@ -33,6 +31,8 @@ Status InnovusionHwInterface::SetSensorConfiguration(
 Status InnovusionHwInterface::CloudInterfaceStart()
 {
   try {
+    InitHttpClientDriver();
+
     std::cout << "Starting UDP server on: " << *sensor_configuration_ << std::endl;
     cloud_udp_driver_->init_receiver(
       sensor_configuration_->host_ip, sensor_configuration_->data_port, kInnoPktMax);
@@ -179,8 +179,101 @@ void InnovusionHwInterface::PrintDebug(std::string debug)
   }
 }
 
-boost::property_tree::ptree InnovusionHwInterface::ParseJson(const std::string & str)
-{
+std::string InnovusionHwInterface::GetSensorParameter(const std::string &key) {
+  auto rt = http_client_driver_->get("/command/?get_" + key);
+  http_client_driver_->client()->close();
+  return rt;
+}
+
+std::string InnovusionHwInterface::SetSensorParameter(const std::string &key, const std::string &value) {
+  auto rt = http_client_driver_->get("/command/?set_" + key + "=" + value);
+  http_client_driver_->client()->close();
+  return rt;
+}
+
+void InnovusionHwInterface::InitHttpClientDriver() {
+  uint16_t data_port;
+  uint16_t status_port;
+  uint16_t message_port;
+  char ip[20]{0};
+
+  http_client_driver_->init_client(sensor_configuration_->sensor_ip, 8010);
+  DisplayCommonVersion();
+
+  std::string strUdpInfo = GetSensorParameter("udp_ports_ip");
+
+  if (sscanf(strUdpInfo.c_str(), "%hu,%hu,%hu,%*32[^,],%32[^,], %*s", &data_port, &status_port, &message_port, ip) == 4) {
+    std::cout << "udp_info:" << data_port << "," << status_port << "," << message_port << "," << ip << std::endl;
+
+    if (IsBroadcast(ip)) {
+      // broadcast ip, do nothing
+      sensor_configuration_->host_ip = "0.0.0.0";
+      std::cout << "broadcast ip" << std::endl;
+    } else if (IsMulticast(ip)) {
+      // multicast ip
+      std::cout << "multicast ip" << std::endl;
+      AddToMuiticastGroup(ip, data_port, sensor_configuration_->host_ip, sensor_configuration_->data_port);
+    } else {
+      // unicast ip
+      std::cout << "unicast ip" << std::endl;
+      UpdateUnicastIpPort(ip, data_port, sensor_configuration_->host_ip, sensor_configuration_->data_port);
+    }
+  }
+}
+
+void InnovusionHwInterface::DisplayCommonVersion() {
+  std::cout<<"*************** Innovusion Lidar Version Info ***************"<<std::endl;
+  std::cout<<"sw_version:"<<GetSensorParameter("sw_version")<<std::endl;
+  std::cout<<"sdk_version:"<<GetSensorParameter("sdk_version")<<std::endl;
+  std::cout<<"lidar_id:"<<GetSensorParameter("lidar_id")<<std::endl;
+  std::cout<<"fw_version:"<<GetSensorParameter("fw_version")<<std::endl;
+  std::cout<<"sn:"<<GetSensorParameter("sn")<<std::endl;
+  std::cout<<"*************************************************************"<<std::endl;
+}
+
+bool InnovusionHwInterface::IsBroadcast(std::string strIp) {
+  bool bRet = false;
+  if (strIp.size() > 4 && strcmp(strIp.c_str() + strIp.size() - 4, ".255") == 0) {
+    bRet = true;
+  }
+  return bRet;
+}
+
+bool InnovusionHwInterface::IsMulticast(std::string strIp) {
+  bool bRet = false;
+  uint16_t uHead = 0;
+  if (sscanf(strIp.c_str(), "%hu", &uHead) == 1) {
+    if (uHead >= 224 && uHead <= 239) {
+      bRet = true;
+    }
+  }
+  return bRet;
+}
+
+void InnovusionHwInterface::AddToMuiticastGroup(const std::string &strMuiticastIp, const uint16_t &uMulticastPort,
+                                                const std::string &strLocalIp, const uint16_t &uLocalPort) {
+  //TODO: multicast access to point cloud data is not supported
+  std::cout<<"Attention!!!!!!!!! Currently, multicast access to point cloud data is not supported! We shall change to unicast!"<<std::endl;
+  UpdateUnicastIpPort(strMuiticastIp, uMulticastPort, strLocalIp, uLocalPort);
+}
+
+void InnovusionHwInterface::UpdateUnicastIpPort(const std::string &strUnicastIp, const uint16_t &uUnicastPort,
+                                                const std::string &strLocalIp, const uint16_t &uLocalPort) {
+  if(strUnicastIp == strLocalIp && uUnicastPort == uLocalPort) {
+    std::cout << "UpdateUnicastIpPort, same ip and port" << std::endl;
+    return;
+  }
+
+  std::string strSendInfo = std::to_string(uLocalPort) + "," + std::to_string(uLocalPort)
+    + "," + std::to_string(uLocalPort) + "," + strLocalIp;
+
+
+  std::cout << "UpdateUnicastIpPort, strSendInfo:" << strSendInfo << std::endl;
+
+  std::string ret = SetSensorParameter("force_udp_ports_ip", strSendInfo);
+}
+
+boost::property_tree::ptree InnovusionHwInterface::ParseJson(const std::string &str) {
   boost::property_tree::ptree tree;
   try {
     std::stringstream ss;
