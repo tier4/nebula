@@ -120,6 +120,9 @@ private:
   void UpdateUnicastIpPort(const std::string &strUnicastIp, const uint16_t &uUnicastPort,
      const std::string &strLocalIp, const uint16_t &uLocalPort);
 
+  /// @brief update unicast ip port for robin by restApi
+  void RobinSetUdpPortIP(std::string strUdpIp, uint16_t uUdpPort);
+
 public:
   /// @brief Constructor
   InnovusionHwInterface();
