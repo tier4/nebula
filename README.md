@@ -61,6 +61,7 @@ You can easily run the sensor hardware interface, the sensor hardware monitor an
 
 ```bash
 ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64
+ros2 launch nebula_ros nebula_launch.py sensor_model:=Falcon sensor_ip:=172.168.1.10
 ```
 
 If you don't want to launch the hardware (i.e. when you are working from a rosbag), set the `launch_hw` flag to false:
