@@ -12,8 +12,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "velodyne_msgs/msg/velodyne_packet.hpp"
-#include "velodyne_msgs/msg/velodyne_scan.hpp"
+#include <velodyne_msgs/msg/velodyne_packet.hpp>
+#include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 namespace nebula
 {
