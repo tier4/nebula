@@ -35,11 +35,11 @@ struct HesaiRosDecoderTestParams
 {
   std::string sensor_model;
   std::string return_mode;
+  std::string calibration_file = "";
+  std::string bag_path;
+  std::string correction_file = "";
   std::string frame_id = "hesai";
   double scan_phase = 0.;
-  std::string calibration_file = "";
-  std::string correction_file = "";
-  std::string bag_path;
   std::string storage_id = "sqlite3";
   std::string format = "cdr";
   std::string target_topic = "/pandar_packets";

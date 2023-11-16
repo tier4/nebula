@@ -19,40 +19,42 @@ namespace test
 {
 
 const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[6] = {
-  {.sensor_model = "Pandar40P",
-   .return_mode = "Dual",
-   .calibration_file = "Pandar40P.csv",
-   .bag_path = "40p/1673400149412331409"},
   {
-    .sensor_model = "Pandar64",
-    .return_mode = "Dual",
-    .calibration_file = "Pandar64.csv",
-    .bag_path = "64/1673403880599376836",
+    "Pandar40P",
+    "Dual",
+    "Pandar40P.csv",
+    "40p/1673400149412331409",
   },
   {
-    .sensor_model = "PandarAT128",
-    .return_mode = "LastStrongest",
-    .calibration_file = "PandarAT128.csv",
-    .correction_file = "PandarAT128.dat",
-    .bag_path = "at128/1679653308406038376",
+    "Pandar64",
+    "Dual",
+    "Pandar64.csv",
+    "64/1673403880599376836",
   },
   {
-    .sensor_model = "PandarQT64",
-    .return_mode = "Dual",
-    .calibration_file = "PandarQT64.csv",
-    .bag_path = "qt64/1673401195788312575",
+    "PandarAT128",
+    "LastStrongest",
+    "PandarAT128.csv",
+    "at128/1679653308406038376",
+    "PandarAT128.dat",
   },
   {
-    .sensor_model = "PandarXT32",
-    .return_mode = "Dual",
-    .calibration_file = "PandarXT32.csv",
-    .bag_path = "xt32/1673400677802009732",
+    "PandarQT64",
+    "Dual",
+    "PandarQT64.csv",
+    "qt64/1673401195788312575",
   },
   {
-    .sensor_model = "PandarXT32M",
-    .return_mode = "LastStrongest",
-    .calibration_file = "PandarXT32M.csv",
-    .bag_path = "xt32m/1660893203042895158",
+    "PandarXT32",
+    "Dual",
+    "PandarXT32.csv",
+    "xt32/1673400677802009732",
+  },
+  {
+    "PandarXT32M",
+    "LastStrongest",
+    "PandarXT32M.csv",
+    "xt32m/1660893203042895158",
   }};
 
 // Compares geometrical output of decoder against pre-recorded reference pointcloud.
@@ -66,7 +68,7 @@ TEST_P(DecoderTest, TestPcd)
   int check_cnt = 0;
 
   auto scan_callback = [&](
-                         uint64_t msg_timestamp, uint64_t scan_timestamp,
+                         uint64_t msg_timestamp, uint64_t /*scan_timestamp*/,
                          nebula::drivers::NebulaPointCloudPtr pointcloud) {
     if (!pointcloud) return;
 
@@ -97,7 +99,7 @@ TEST_P(DecoderTest, TestTimezone)
   std::vector<uint64_t> decoded_timestamps;
 
   auto scan_callback = [&](
-                         uint64_t msg_timestamp, uint64_t scan_timestamp,
+                         uint64_t /*msg_timestamp*/, uint64_t scan_timestamp,
                          nebula::drivers::NebulaPointCloudPtr pointcloud) {
     if (!pointcloud) return;
     decoded_timestamps.push_back(scan_timestamp);
@@ -133,7 +135,7 @@ TEST_P(DecoderTest, TestTimezone)
   // then compare e.g. the last timestamp to verify that it is not affected
   // by timezone settings
   ASSERT_EQ(decoded_timestamps.size(), decoded_timestamps_cmp.size());
-  ASSERT_GT(decoded_timestamps.size(), 0);
+  ASSERT_GT(decoded_timestamps.size(), 0U);
   EXPECT_EQ(decoded_timestamps.back(), decoded_timestamps_cmp.back());
 }
 
