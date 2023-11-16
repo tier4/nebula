@@ -93,7 +93,7 @@ Supported models, where sensor_model is the ROS param to be used at launch:
 | HESAI        | Pandar XT32M  | PandarXT32M  | PandarXT32M.yaml   | :warning: |
 | HESAI        | Pandar QT64   | PandarQT64   | PandarQT64.yaml    | :heavy_check_mark: |
 | HESAI        | Pandar QT128  | PandarQT128  | PandarQT128.yaml   | :warning: |
-| HESAI        | Pandar AT128  | PandarAT128  | PandarAT128.yaml   | :heavy_check_mark: |
+| HESAI        | Pandar AT128  | PandarAT128  | PandarAT128.yaml   | :heavy_check_mark:* |
 | HESAI        | Pandar 128E4X | Pandar128E4X | Pandar128E4X.yaml  | :warning: |
 | Velodyne     | VLP-16        | VLP16        | VLP16.yaml         | :warning: |
 | Velodyne     | VLP-16-HiRes  | VLP16        |                    | :x: |
@@ -103,7 +103,9 @@ Supported models, where sensor_model is the ROS param to be used at launch:
 Test status:\
 :heavy_check_mark:: complete\
 :warning:: some functionality yet to be tested\
-:x: : untested
+:x:: untested\
+*: AT128 needs software version 3.50.8 or newer for the `scan_angle` setting to work correctly.
+
 
 ## ROS parameters
 
