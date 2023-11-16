@@ -29,7 +29,3 @@ site/
 
 # qcreator stuff
 CMakeLists.txt.user
-
-# dependencies from .repos
-transport_drivers/
-heaphook/

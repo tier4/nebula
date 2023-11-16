@@ -147,8 +147,7 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
   StreamStart();
 }
 
-HesaiHwInterfaceRosWrapper::~HesaiHwInterfaceRosWrapper()
-{
+HesaiHwInterfaceRosWrapper::~HesaiHwInterfaceRosWrapper() {
   RCLCPP_INFO_STREAM(get_logger(), "Closing TcpDriver");
   hw_interface_.FinalizeTcpDriver();
 }
@@ -161,14 +160,8 @@ Status HesaiHwInterfaceRosWrapper::StreamStart()
   return interface_status_;
 }
 
-Status HesaiHwInterfaceRosWrapper::StreamStop()
-{
-  return Status::OK;
-}
-Status HesaiHwInterfaceRosWrapper::Shutdown()
-{
-  return Status::OK;
-}
+Status HesaiHwInterfaceRosWrapper::StreamStop() { return Status::OK; }
+Status HesaiHwInterfaceRosWrapper::Shutdown() { return Status::OK; }
 
 Status HesaiHwInterfaceRosWrapper::InitializeHwInterface(  // todo: don't think this is needed
   const drivers::SensorConfigurationBase & sensor_configuration)
@@ -268,6 +261,7 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
     this->declare_parameter<uint16_t>("packet_mtu_size", 1500, descriptor);
     sensor_configuration.packet_mtu_size = this->get_parameter("packet_mtu_size").as_int();
   }
+
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
