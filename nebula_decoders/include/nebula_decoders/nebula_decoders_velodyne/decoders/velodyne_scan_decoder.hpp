@@ -22,8 +22,8 @@
 #include "nebula_common/velodyne/velodyne_calibration_decoder.hpp"
 #include "nebula_common/velodyne/velodyne_common.hpp"
 
-#include "velodyne_msgs/msg/velodyne_packet.hpp"
-#include "velodyne_msgs/msg/velodyne_scan.hpp"
+#include <velodyne_msgs/msg/velodyne_packet.hpp>
+#include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 #include <tuple>
 
