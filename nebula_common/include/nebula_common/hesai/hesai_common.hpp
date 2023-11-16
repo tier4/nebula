@@ -362,31 +362,6 @@ struct HesaiCorrection
     float k = 1.f * l / STEP3;
     return round((1 - k) * elevationOffset[ch * 180 + i] + k * elevationOffset[ch * 180 + i + 1]);
   }
-
-  /// @brief Convert an output angle to an encoder angle. For example, for AT128:
-  /// outputAngleToEncoderAngle(30) = 23.XXX
-  /// outputAngleToEncoderAngle(90) = 72.XXX
-  /// @param output_angle_deg The angle in degrees, as seen in the output pointcloud
-  /// @return The internal encoder angle (for mirror 0) in degrees
-  float outputAngleToEncoderAngle(float output_angle_deg)
-  {
-    uint32_t internal_angle = static_cast<uint32_t>(output_angle_deg * 25600);
-    internal_angle = (360 * 25600 + internal_angle) % (360 * 25600);
-    return outputAngleToEncoderAngle(internal_angle, 0) / 25600.;
-  }
-
-  /// @brief Convert an output angle to an encoder angle for a given mirror
-  /// @param output_angle The angle in internal sensor angle unit in output coordinates
-  /// @param frame_id The mirror ID to get the encoder angle for
-  /// @return The internal encoder angle (for the given mirror) in internal sensor angle unit
-  uint32_t outputAngleToEncoderAngle(uint32_t output_angle, uint8_t frame_id) {
-    // From the AT128 manual (C.2.1. Horizontal angle of the current firing channel):
-    // The horizontal output angle a_out is related to the encoder angle a_enc as follows:
-    // a_out = (a_enc - start_frame) * 2 + channel_correction
-    // Ignoring channel correction and solving for a_enc:
-    // a_enc = (a_out / 2) + start_frame
-    return (output_angle / 2) + startFrame[frame_id];
-  }
 };
 
 /*
