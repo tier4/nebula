@@ -84,22 +84,16 @@ public:
             cos_[azimuth], sin_[elevation], cos_[elevation]};
   }
 
-  bool hasScanned(uint32_t current_azimuth, uint32_t last_azimuth, uint32_t sync_azimuth) override
+  bool hasScanned(uint32_t current_azimuth, uint32_t last_azimuth, uint32_t /*sync_azimuth*/) override
   {
-    const auto & correction = AngleCorrector::sensor_correction_;
-
-    // For correct sync_azimuth handling, the angle set by the user has to be converted to
-    // the corresponding encoder angle for each mirror. The hasScanned check is thus true
-    // 3 times per rotation (encoder 0-360 deg) for a LiDAR with 3 mirrors (such as AT128).
-    for (size_t i = 0; i < correction->frameNumber; ++i) {
-      uint32_t encoder_sync_angle = correction->outputAngleToEncoderAngle(sync_azimuth, i);
-
-      if (last_azimuth <= encoder_sync_angle && encoder_sync_angle <= current_azimuth) {
-        return true;
-      }
-    }
-
-    return false;
+    // For AT128, the scan is always cut at the beginning of the field:
+    // If we would cut at `sync_azimuth`, the points left of it would be
+    // from the previous field and therefore significantly older than the
+    // points right of it.
+    // This also means that the pointcloud timestamp is only at top of second
+    // if the `sync_azimuth` aligns with the beginning of the field (e.g. 30deg for AT128).
+    // The absolute point time for points at `sync_azimuth` is still at top of second.
+    return findField(current_azimuth) != findField(last_azimuth);
   }
 };
 
