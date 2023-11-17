@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 project(nebula_ros)
 
 find_package(ament_cmake_auto REQUIRED)
@@ -25,6 +25,7 @@ find_package(yaml-cpp REQUIRED)
 
 include_directories(
         include
+        SYSTEM
         ${YAML_CPP_INCLUDE_DIRS}
         ${PCL_INCLUDE_DIRS}
         ${PCL_COMMON_INCLUDE_DIRS}
