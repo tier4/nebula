@@ -1,0 +1,47 @@
+<launch>
+    <arg name="sensor_model" description="Robin/Falcon"/>
+    <arg name="return_mode" default="Dual" description="See readme for supported return modes"/>
+    <arg name="frame_id"  default="innovusion"/>
+    <arg name="sensor_ip" default="172.168.1.10" description="Lidar Sensor IP"/>
+    <arg name="host_ip" default="172.168.1.11" description="Local IP"/>
+    <arg name="data_port" default="8010" description="LiDAR Data Port"/>
+    <arg name="cloud_min_range" default="0.4" description="Min Point Range"/>
+    <arg name="cloud_max_range" default="2000.0" description="Max Point Range"/>
+    <arg name="setup_sensor" default="true" description="Enable sensor setup on hw-driver."/>
+
+    <node_container pkg="rclcpp_components" exec="component_container" name="innovusion" namespace="">
+        <composable_node pkg="nebula_ros" plugin="InnovusionDriverRosWrapper" name="innovusion_cloud" namespace="">
+            <param name="sensor_model" value="$(var sensor_model)"/>
+            <param name="host_ip" value="$(var host_ip)"/>
+            <param name="return_mode" value="$(var return_mode)"/>
+            <param name="frame_id" value="$(var frame_id)"/>
+            <param name="sensor_ip" value="$(var sensor_ip)"/>
+            <param name="cloud_min_range" value="$(var cloud_min_range)"/>
+            <param name="cloud_max_range" value="$(var cloud_max_range)"/>
+        </composable_node>
+        <composable_node pkg="nebula_ros" plugin="InnovusionHwInterfaceRosWrapper" name="innovusion_hw_driver" namespace="">
+            <param name="sensor_model" value="$(var sensor_model)"/>
+            <param name="return_mode" value="$(var return_mode)"/>
+            <param name="frame_id" value="$(var frame_id)"/>
+            <param name="sensor_ip" value="$(var sensor_ip)"/>
+            <param name="frame_id" value="$(var frame_id)"/>
+            <param name="host_ip" value="$(var host_ip)"/>
+            <param name="data_port" value="$(var data_port)"/>
+            <param name="setup_sensor" value="$(var setup_sensor)"/>
+            <param name="cloud_min_range" value="$(var cloud_min_range)"/>
+            <param name="cloud_max_range" value="$(var cloud_max_range)"/>
+        </composable_node>
+        <composable_node pkg="nebula_ros" plugin="InnovusionHwMonitorRosWrapper" name="innovusion_hw_monitor" namespace="">
+            <param name="sensor_model" value="$(var sensor_model)"/>
+            <param name="return_mode" value="$(var return_mode)"/>
+            <param name="frame_id" value="$(var frame_id)"/>
+            <param name="sensor_ip" value="$(var sensor_ip)"/>
+            <param name="frame_id" value="$(var frame_id)"/>
+            <param name="host_ip" value="$(var host_ip)"/>
+            <param name="data_port" value="$(var data_port)"/>
+            <param name="setup_sensor" value="$(var setup_sensor)"/>
+            <param name="cloud_min_range" value="$(var cloud_min_range)"/>
+            <param name="cloud_max_range" value="$(var cloud_max_range)"/>
+        </composable_node>
+    </node_container>
+</launch>
