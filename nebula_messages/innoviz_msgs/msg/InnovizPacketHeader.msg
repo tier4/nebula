@@ -1,0 +1,10 @@
+uint32 marker
+uint32 pc_idx
+uint16 innoviz_network_al_version
+uint16 protocol_type
+uint32 data_fregmantaton_type
+uint32 sequence_number
+uint32 reserved
+uint32 start_id
+uint32 end_idx
+uint32 total_objects

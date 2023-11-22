@@ -19,6 +19,7 @@
   <depend>boost_tcp_driver</depend>
   <depend>boost_udp_driver</depend>
   <depend>velodyne_msgs</depend>
+  <depend>innoviz_msgs</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>

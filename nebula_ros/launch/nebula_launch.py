@@ -20,6 +20,8 @@ def get_lidar_make(sensor_name):
         return "Hesai", ".csv"
     elif sensor_name[:3].lower() in ["hdl", "vlp", "vls"]:
         return "Velodyne", ".yaml"
+    elif sensor_name[:7].lower() == "innoviz":
+        return "Innoviz", ".csv"
     return "unrecognized_sensor_model"
 
 
