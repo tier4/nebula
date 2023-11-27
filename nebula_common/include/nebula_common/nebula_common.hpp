@@ -496,29 +496,51 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
 
 inline std::string SensorModelToString(const SensorModel & sensor_model)
 {
-  // Hesai
-  if (sensor_model == SensorModel::HESAI_PANDAR64) return "Pandar64";
-  if (sensor_model == SensorModel::HESAI_PANDAR40P) return "Pandar40P";
-  if (sensor_model == SensorModel::HESAI_PANDAR40M) return "Pandar40M";
-  if (sensor_model == SensorModel::HESAI_PANDARXT32) return "PandarXT32";
-  if (sensor_model == SensorModel::HESAI_PANDARXT32M) return "PandarXT32M";
-  if (sensor_model == SensorModel::HESAI_PANDARAT128) return "PandarAT128";
-  if (sensor_model == SensorModel::HESAI_PANDARQT64) return "PandarQT64";
-  if (sensor_model == SensorModel::HESAI_PANDARQT128) return "PandarQT128";
-  if (sensor_model == SensorModel::HESAI_PANDAR128_E4X) return "Pandar128E4X";
-  // Velodyne
-  if (sensor_model == SensorModel::VELODYNE_VLS128) return "VLS128";
-  if (sensor_model == SensorModel::VELODYNE_HDL64) return "HDL64";
-  if (sensor_model == SensorModel::VELODYNE_VLP32) return "VLP32";
-  if (sensor_model == SensorModel::VELODYNE_VLP32MR) return "VLP32MR";
-  if (sensor_model == SensorModel::VELODYNE_HDL32) return "HDL32";
-  if (sensor_model == SensorModel::VELODYNE_VLP16) return "VLP16";
-  // Robosense
-  if (sensor_model == SensorModel::ROBOSENSE_HELIOS) return "Helios";
-  if (sensor_model == SensorModel::ROBOSENSE_BPEARL) return "Bpearl";
-  if (sensor_model == SensorModel::ROBOSENSE_BPEARL_V3) return "Bpearl_V3";
-  if (sensor_model == SensorModel::ROBOSENSE_BPEARL_V4) return "Bpearl_V4";
-  return "UNKNOWN";
+  switch (sensor_model) {
+    // Hesai
+    case SensorModel::HESAI_PANDAR64:
+      return "Pandar64";
+    case SensorModel::HESAI_PANDAR40P:
+      return "Pandar40P";
+    case SensorModel::HESAI_PANDAR40M:
+      return "Pandar40M";
+    case SensorModel::HESAI_PANDARXT32:
+      return "PandarXT32";
+    case SensorModel::HESAI_PANDARXT32M:
+      return "PandarXT32M";
+    case SensorModel::HESAI_PANDARAT128:
+      return "PandarAT128";
+    case SensorModel::HESAI_PANDARQT64:
+      return "PandarQT64";
+    case SensorModel::HESAI_PANDARQT128:
+      return "PandarQT128";
+    case SensorModel::HESAI_PANDAR128_E4X:
+      return "Pandar128E4X";
+    // Velodyne
+    case SensorModel::VELODYNE_VLS128:
+      return "VLS128";
+    case SensorModel::VELODYNE_HDL64:
+      return "HDL64";
+    case SensorModel::VELODYNE_VLP32:
+      return "VLP32";
+    case SensorModel::VELODYNE_VLP32MR:
+      return "VLP32MR";
+    case SensorModel::VELODYNE_HDL32:
+      return "HDL32";
+    case SensorModel::VELODYNE_VLP16:
+      return "VLP16";
+    // Robosense
+    case SensorModel::ROBOSENSE_HELIOS:
+      return "Helios";
+    case SensorModel::ROBOSENSE_BPEARL:
+      return "Bpearl";
+    case SensorModel::ROBOSENSE_BPEARL_V3:
+      return "Bpearl_V3";
+    case SensorModel::ROBOSENSE_BPEARL_V4:
+      return "Bpearl_V4";
+    default:
+      return "UNKNOWN";
+  }
 }
 
 /// @brief Convert return mode name to ReturnMode enum
