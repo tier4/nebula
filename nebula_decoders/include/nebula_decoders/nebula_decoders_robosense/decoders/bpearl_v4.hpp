@@ -5,6 +5,7 @@
 
 #include "boost/endian/buffers.hpp"
 
+#include <bitset>
 #include <cstddef>
 #include <cstdint>
 
