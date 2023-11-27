@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <cstdint>
 
+using namespace boost::endian;
+
 namespace nebula
 {
 namespace drivers
@@ -20,19 +22,19 @@ namespace helios
 
 struct Header
 {
-  boost::endian::big_uint32_buf_t header_id;
-  boost::endian::big_uint16_buf_t protocol_version;
-  boost::endian::big_uint16_buf_t reserved_first;
-  boost::endian::big_uint32_buf_t top_packet_count;
-  boost::endian::big_uint32_buf_t bottom_packet_count;
-  boost::endian::big_uint8_buf_t reserved_second;
-  boost::endian::big_uint8_buf_t range_resolution;
-  boost::endian::big_uint16_buf_t angle_interval_count;
+  big_uint32_buf_t header_id;
+  big_uint16_buf_t protocol_version;
+  big_uint16_buf_t reserved_first;
+  big_uint32_buf_t top_packet_count;
+  big_uint32_buf_t bottom_packet_count;
+  big_uint8_buf_t reserved_second;
+  big_uint8_buf_t range_resolution;
+  big_uint16_buf_t angle_interval_count;
   Timestamp timestamp;
-  boost::endian::big_uint8_buf_t reserved_third;
-  boost::endian::big_uint8_buf_t lidar_type;
-  boost::endian::big_uint8_buf_t lidar_model;
-  boost::endian::big_uint8_buf_t reserved_fourth[9];
+  big_uint8_buf_t reserved_third;
+  big_uint8_buf_t lidar_type;
+  big_uint8_buf_t lidar_model;
+  big_uint8_buf_t reserved_fourth[9];
 };
 
 struct Packet : public PacketBase<12, 32, 2, 100>
@@ -40,38 +42,38 @@ struct Packet : public PacketBase<12, 32, 2, 100>
   typedef Body<Block<Unit, Packet::N_CHANNELS>, Packet::N_BLOCKS> body_t;
   Header header;
   body_t body;
-  boost::endian::big_uint48_buf_t tail;
+  big_uint48_buf_t tail;
 };
 
 struct OperatingStatus
 {
-  boost::endian::big_uint16_buf_t i_dat;
-  boost::endian::big_uint16_buf_t v_dat;
-  boost::endian::big_uint16_buf_t v_dat_12v;
-  boost::endian::big_uint16_buf_t v_dat_5v;
-  boost::endian::big_uint16_buf_t v_dat_2v5;
-  boost::endian::big_uint16_buf_t v_dat_apd;
+  big_uint16_buf_t i_dat;
+  big_uint16_buf_t v_dat;
+  big_uint16_buf_t v_dat_12v;
+  big_uint16_buf_t v_dat_5v;
+  big_uint16_buf_t v_dat_2v5;
+  big_uint16_buf_t v_dat_apd;
 };
 
 struct FaultDiagnosis
 {
-  boost::endian::big_uint16_buf_t temperature1;
-  boost::endian::big_uint16_buf_t temperature2;
-  boost::endian::big_uint16_buf_t temperature3;
-  boost::endian::big_uint16_buf_t temperature4;
-  boost::endian::big_uint16_buf_t temperature5;
-  boost::endian::big_uint16_buf_t r_rpm;
-  boost::endian::big_uint8_buf_t lane_up;
-  boost::endian::big_uint16_buf_t lane_up_cnt;
-  boost::endian::big_uint16_buf_t top_status;
-  boost::endian::big_uint8_buf_t gps_status;
+  big_uint16_buf_t temperature1;
+  big_uint16_buf_t temperature2;
+  big_uint16_buf_t temperature3;
+  big_uint16_buf_t temperature4;
+  big_uint16_buf_t temperature5;
+  big_uint16_buf_t r_rpm;
+  big_uint8_buf_t lane_up;
+  big_uint16_buf_t lane_up_cnt;
+  big_uint16_buf_t top_status;
+  big_uint8_buf_t gps_status;
 };
 
 struct SensorHwVersion
 {
-  boost::endian::big_uint8_buf_t first_octet;
-  boost::endian::big_uint8_buf_t second_octet;
-  boost::endian::big_uint8_buf_t third_octet;
+  big_uint8_buf_t first_octet;
+  big_uint8_buf_t second_octet;
+  big_uint8_buf_t third_octet;
 
   [[nodiscard]] std::string to_string() const
   {
@@ -85,10 +87,10 @@ struct SensorHwVersion
 
 struct WebPageVersion
 {
-  boost::endian::big_uint8_buf_t first_octet;
-  boost::endian::big_uint8_buf_t second_octet;
-  boost::endian::big_uint8_buf_t third_octet;
-  boost::endian::big_uint8_buf_t fourth_octet;
+  big_uint8_buf_t first_octet;
+  big_uint8_buf_t second_octet;
+  big_uint8_buf_t third_octet;
+  big_uint8_buf_t fourth_octet;
 
   [[nodiscard]] std::string to_string() const
   {
@@ -103,41 +105,41 @@ struct WebPageVersion
 
 struct InfoPacket
 {
-  boost::endian::big_uint64_buf_t header;
-  boost::endian::big_uint16_buf_t motor_speed;
+  big_uint64_buf_t header;
+  big_uint16_buf_t motor_speed;
   Ethernet ethernet;
   FovSetting fov_setting;
-  boost::endian::big_uint16_buf_t reserved_first;
-  boost::endian::big_uint16_buf_t phase_lock;
+  big_uint16_buf_t reserved_first;
+  big_uint16_buf_t phase_lock;
   FirmwareVersion top_firmware_version;
   FirmwareVersion bottom_firmware_version;
   FirmwareVersion bottom_software_version;
   FirmwareVersion motor_firmware_version;
   SensorHwVersion sensor_hw_version;
   WebPageVersion web_page_version;
-  boost::endian::big_uint32_buf_t top_backup_crc;
-  boost::endian::big_uint32_buf_t bottom_backup_crc;
-  boost::endian::big_uint32_buf_t software_backup_crc;
-  boost::endian::big_uint32_buf_t webpage_backup_crc;
+  big_uint32_buf_t top_backup_crc;
+  big_uint32_buf_t bottom_backup_crc;
+  big_uint32_buf_t software_backup_crc;
+  big_uint32_buf_t webpage_backup_crc;
   IpAddress ethernet_gateway;
   IpAddress subnet_mask;
   uint8_t reserved_second[201];
   SerialNumber serial_number;
-  boost::endian::big_uint16_buf_t zero_angle_offset;
-  boost::endian::big_uint8_buf_t return_mode;
-  boost::endian::big_uint8_buf_t time_sync_mode;
-  boost::endian::big_uint8_buf_t sync_status;
+  big_uint16_buf_t zero_angle_offset;
+  big_uint8_buf_t return_mode;
+  big_uint8_buf_t time_sync_mode;
+  big_uint8_buf_t sync_status;
   Timestamp time;
   OperatingStatus operating_status;
   uint8_t reserved_third[17];
   FaultDiagnosis fault_diagnosis;
-  boost::endian::big_uint8_buf_t code_wheel_status;
-  boost::endian::big_uint8_buf_t pps_trigger_mode;
+  big_uint8_buf_t code_wheel_status;
+  big_uint8_buf_t pps_trigger_mode;
   uint8_t reserved_fourth[20];
-  boost::endian::big_uint8_buf_t gprmc[86];
+  big_uint8_buf_t gprmc[86];
   SensorCalibration sensor_calibration;
   uint8_t reserved_fifth[586];
-  boost::endian::big_uint16_buf_t tail;
+  big_uint16_buf_t tail;
 };
 
 #pragma pack(pop)
