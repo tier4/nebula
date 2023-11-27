@@ -389,12 +389,21 @@ public:
     else
       sensor_info["pps_input_status"] = "no_pps";
 
+    /*
+     * From the manual, here is the formula for calculating bottom board temperature:
+     * Temp =（Value（temp1）* 256 + Value（temp2）& 0Xffff）* 503.975 / 4096.0 - 273.15
+     */
     sensor_info["bottom_board_temp"] = std::to_string(
       (static_cast<float>(info_packet.fault_diagnosis.temperature1.value()) * 256 +
        static_cast<float>(info_packet.fault_diagnosis.temperature2.value())) *
         503.975 / 4096.0 -
       273.15);
 
+    /*
+     * From the manual, here is the formula for calculating APD temperature:
+     * When Value ≤ 32768, the temperature value is positive; otherwise negative.
+     * Temp = ( (value(362) * 256 + value(363) ) & 0x7FF8 ) / 128.0
+     */
     double apd_temp = ((info_packet.fault_diagnosis.temperature3.value() * 256 +
                         info_packet.fault_diagnosis.temperature4.value()) &
                        0x7FF8) /
@@ -406,6 +415,11 @@ public:
       apd_temp = -apd_temp;
     sensor_info["apd_temp"] = std::to_string(apd_temp);
 
+    /*
+     * From the manual, here is the formula for calculating top board temperature:
+     * When Value ≤ 32768, the temperature value is positive; otherwise negative.
+     * Temp= ( (value(362) * 256 + value(363) ) & 0x7FF8 ) / 128.0
+     */
     double top_board_temp = ((info_packet.fault_diagnosis.temperature5.value() * 256 +
                               info_packet.fault_diagnosis.temperature6.value()) &
                              0x7FF8) /
@@ -417,6 +431,10 @@ public:
       top_board_temp = -top_board_temp;
     sensor_info["top_board_temp"] = std::to_string(top_board_temp);
 
+    /*
+     * From the manual, here is the formula for calculating real time rotation speed:
+     * Speed = (256 * r_rpm1 + r_rpm2) / 6
+     */
     sensor_info["real_time_rot_speed"] = std::to_string(
       (info_packet.fault_diagnosis.r_rpm1.value() * 256 +
        info_packet.fault_diagnosis.r_rpm2.value()) /
