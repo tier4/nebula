@@ -74,7 +74,6 @@ Status RobosenseHwMonitorRosWrapper::GetParameters(
     diag_span_ = this->get_parameter("diag_span").as_int();
   }
 
-  RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
   return Status::OK;
 }
 
