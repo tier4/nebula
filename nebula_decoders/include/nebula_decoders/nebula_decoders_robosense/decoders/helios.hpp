@@ -371,6 +371,18 @@ public:
         sensor_info["sync_status"] = "n/a";
     }
 
+    /*
+     * From the manual, here are the formulas for calculating following values:
+     *
+     * Idat = Value_temp / 4096 * 5 [A]
+     * Vdat = value / 4096 [V]
+     * Vdat_12V_reg = value / 4096 * 24.5 [V]
+     * Vdat_5V_reg = value / 4096 x 11 [V]
+     * Vdat_2V5_reg = value / 4096 x 10 [V]
+     * Vdat_APD = 516.65 * (value) / 4096 - 465.8 [V](negative value)
+     * Temperature 2&3&4 = 200 *（value）/ 4096 - 50
+     * Temperature 1&5 = 503.975 * (value) / 4096 - 273.15
+     */
     sensor_info["time"] = std::to_string(info_packet.time.get_time_in_ns());
     sensor_info["i_dat"] = std::to_string(info_packet.operating_status.i_dat.value() / 4096.0 * 5);
     sensor_info["v_dat"] = std::to_string(info_packet.operating_status.v_dat.value() / 4096.0);
