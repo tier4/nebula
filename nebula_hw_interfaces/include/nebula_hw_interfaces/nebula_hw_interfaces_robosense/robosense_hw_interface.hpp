@@ -25,12 +25,11 @@ namespace nebula
 {
 namespace drivers
 {
-
-const uint16_t MTU_SIZE = 1248;
-const uint16_t HELIOS_PACKET_SIZE = 1248;
-const uint16_t HELIOS_INFO_PACKET_SIZE = 1248;
-const uint16_t BPEARL_PACKET_SIZE = 1248;
-const uint16_t BPEARL_INFO_PACKET_SIZE = 1248;
+constexpr uint16_t MTU_SIZE = 1248;
+constexpr uint16_t HELIOS_PACKET_SIZE = 1248;
+constexpr uint16_t HELIOS_INFO_PACKET_SIZE = 1248;
+constexpr uint16_t BPEARL_PACKET_SIZE = 1248;
+constexpr uint16_t BPEARL_INFO_PACKET_SIZE = 1248;
 
 /// @brief Hardware interface of Robosense driver
 class RobosenseHwInterface : NebulaHwInterfaceBase

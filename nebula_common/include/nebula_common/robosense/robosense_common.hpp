@@ -15,6 +15,10 @@ namespace nebula
 {
 namespace drivers
 {
+
+// Flag for detecting Bpearl version
+constexpr uint8_t BPEARL_V4_FLAG = 0x04;
+
 /// @brief struct for Robosense sensor configuration
 struct RobosenseSensorConfiguration : SensorConfigurationBase
 {
