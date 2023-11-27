@@ -6,9 +6,10 @@
 #include "boost/endian/buffers.hpp"
 
 #include <bitset>
-#include <chrono>
 #include <cstddef>
 #include <cstdint>
+
+using namespace boost::endian;
 
 namespace nebula
 {
@@ -22,14 +23,14 @@ namespace bpearl_v3
 
 struct Timestamp
 {
-  boost::endian::big_uint8_buf_t year;
-  boost::endian::big_uint8_buf_t month;
-  boost::endian::big_uint8_buf_t day;
-  boost::endian::big_uint8_buf_t hour;
-  boost::endian::big_uint8_buf_t minute;
-  boost::endian::big_uint8_buf_t second;
-  boost::endian::big_uint16_buf_t millisecond;
-  boost::endian::big_uint16_buf_t microsecond;
+  big_uint8_buf_t year;
+  big_uint8_buf_t month;
+  big_uint8_buf_t day;
+  big_uint8_buf_t hour;
+  big_uint8_buf_t minute;
+  big_uint8_buf_t second;
+  big_uint16_buf_t millisecond;
+  big_uint16_buf_t microsecond;
 
   [[nodiscard]] uint64_t get_time_in_ns() const
   {
@@ -48,15 +49,15 @@ struct Timestamp
 
 struct Header
 {
-  boost::endian::big_uint64_buf_t header_id;
-  boost::endian::big_uint32_buf_t checksum;
-  boost::endian::big_uint32_buf_t packet_count;
-  boost::endian::big_uint32_buf_t reserved_first;
+  big_uint64_buf_t header_id;
+  big_uint32_buf_t checksum;
+  big_uint32_buf_t packet_count;
+  big_uint32_buf_t reserved_first;
   Timestamp timestamp;
-  boost::endian::big_uint8_buf_t lidar_model;
+  big_uint8_buf_t lidar_model;
   uint8_t reserved_second[7];
-  boost::endian::big_uint16_buf_t temperature;
-  boost::endian::big_uint16_buf_t top_board_temperature;
+  big_uint16_buf_t temperature;
+  big_uint16_buf_t top_board_temperature;
 };
 
 struct Packet : public PacketBase<12, 32, 2, 100>
@@ -64,68 +65,68 @@ struct Packet : public PacketBase<12, 32, 2, 100>
   typedef Body<Block<Unit, Packet::N_CHANNELS>, Packet::N_BLOCKS> body_t;
   Header header;
   body_t body;
-  boost::endian::big_uint48_buf_t tail;
+  big_uint48_buf_t tail;
 };
 
 struct OperatingStatus
 {
-  boost::endian::big_uint48_buf_t reserved;
-  boost::endian::big_uint16_buf_t v_dat_0v5;
-  boost::endian::big_uint16_buf_t v_dat_12v;
-  boost::endian::big_uint16_buf_t v_dat_5v;
-  boost::endian::big_uint16_buf_t v_dat_1v25;
-  boost::endian::big_uint16_buf_t v_dat_0v;
-  boost::endian::big_uint16_buf_t v_dat_1v;
+  big_uint48_buf_t reserved;
+  big_uint16_buf_t v_dat_0v5;
+  big_uint16_buf_t v_dat_12v;
+  big_uint16_buf_t v_dat_5v;
+  big_uint16_buf_t v_dat_1v25;
+  big_uint16_buf_t v_dat_0v;
+  big_uint16_buf_t v_dat_1v;
 };
 
 struct FaultDiagnosis
 {
   uint8_t reserved_first[11];
-  boost::endian::big_uint16_buf_t manc_err1;
-  boost::endian::big_uint16_buf_t manc_err2;
-  boost::endian::big_uint8_buf_t gps_st;
-  boost::endian::big_uint8_buf_t temperature1;
-  boost::endian::big_uint8_buf_t temperature2;
+  big_uint16_buf_t manc_err1;
+  big_uint16_buf_t manc_err2;
+  big_uint8_buf_t gps_st;
+  big_uint8_buf_t temperature1;
+  big_uint8_buf_t temperature2;
   uint8_t reserved_second[2];
-  boost::endian::big_uint8_buf_t temperature3;
-  boost::endian::big_uint8_buf_t temperature4;
-  boost::endian::big_uint8_buf_t temperature5;
-  boost::endian::big_uint8_buf_t temperature6;
+  big_uint8_buf_t temperature3;
+  big_uint8_buf_t temperature4;
+  big_uint8_buf_t temperature5;
+  big_uint8_buf_t temperature6;
   uint8_t reserved_third[7];
-  boost::endian::big_uint8_buf_t r_rpm1;
-  boost::endian::big_uint8_buf_t r_rpm2;
+  big_uint8_buf_t r_rpm1;
+  big_uint8_buf_t r_rpm2;
   uint8_t reserved_fourth[7];
 };
 
 struct InfoPacket
 {
-  boost::endian::big_uint64_buf_t header;
-  boost::endian::big_uint16_buf_t motor_speed;
+  big_uint64_buf_t header;
+  big_uint16_buf_t motor_speed;
   Ethernet ethernet;
   FovSetting fov_setting;
-  boost::endian::big_uint16_buf_t tcp_msop_port;
-  boost::endian::big_uint16_buf_t phase_lock;
+  big_uint16_buf_t tcp_msop_port;
+  big_uint16_buf_t phase_lock;
   FirmwareVersion top_firmware_version;
   FirmwareVersion bottom_firmware_version;
   FirmwareVersion bottom_software_version;
   FirmwareVersion motor_firmware_version;
   uint8_t reserved_first[230];
-  boost::endian::big_uint16_buf_t reverse_zero_angle_offset;
+  big_uint16_buf_t reverse_zero_angle_offset;
   SerialNumber serial_number;
-  boost::endian::big_uint16_buf_t zero_angle_offset;
-  boost::endian::big_uint8_buf_t return_mode;
-  boost::endian::big_uint8_buf_t time_sync_mode;
-  boost::endian::big_uint8_buf_t sync_status;
+  big_uint16_buf_t zero_angle_offset;
+  big_uint8_buf_t return_mode;
+  big_uint8_buf_t time_sync_mode;
+  big_uint8_buf_t sync_status;
   Timestamp time;
   OperatingStatus operating_status;
   uint8_t reserved_second[6];
-  boost::endian::big_uint8_buf_t rotation_direction;
-  boost::endian::big_uint32_buf_t elapsed_time_flag;
+  big_uint8_buf_t rotation_direction;
+  big_uint32_buf_t elapsed_time_flag;
   FaultDiagnosis fault_diagnosis;
-  boost::endian::big_uint8_buf_t gprmc[86];
+  big_uint8_buf_t gprmc[86];
   SensorCalibration sensor_calibration;
   uint8_t reserved_fourth[586];
-  boost::endian::big_uint16_buf_t tail;
+  big_uint16_buf_t tail;
 };
 
 #pragma pack(pop)

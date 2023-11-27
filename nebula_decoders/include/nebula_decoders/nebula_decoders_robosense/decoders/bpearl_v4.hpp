@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <cstdint>
 
+using namespace boost::endian;
+
 namespace nebula
 {
 namespace drivers
@@ -20,14 +22,14 @@ namespace bpearl_v4
 
 struct Header
 {
-  boost::endian::big_uint64_buf_t header_id;
+  big_uint64_buf_t header_id;
   uint8_t reserved_first[4];
-  boost::endian::big_uint32_buf_t packet_count;
+  big_uint32_buf_t packet_count;
   uint8_t reserved_second[4];
   Timestamp timestamp;
   uint8_t reserved_third[1];
-  boost::endian::big_uint8_buf_t lidar_type;
-  boost::endian::big_uint8_buf_t lidar_model;
+  big_uint8_buf_t lidar_type;
+  big_uint8_buf_t lidar_model;
   uint8_t reserved_fourth[9];
 };
 
@@ -36,60 +38,60 @@ struct Packet : public PacketBase<12, 32, 2, 100>
   typedef Body<Block<Unit, Packet::N_CHANNELS>, Packet::N_BLOCKS> body_t;
   Header header;
   body_t body;
-  boost::endian::big_uint48_buf_t tail;
+  big_uint48_buf_t tail;
 };
 
 struct OperatingStatus
 {
-  boost::endian::big_uint8_buf_t reserved_first;
-  boost::endian::big_uint16_buf_t machine_current;
-  boost::endian::big_uint24_buf_t reserved_second;
-  boost::endian::big_uint16_buf_t machine_voltage;
+  big_uint8_buf_t reserved_first;
+  big_uint16_buf_t machine_current;
+  big_uint24_buf_t reserved_second;
+  big_uint16_buf_t machine_voltage;
   uint8_t reserved_third[16];
 };
 
 struct FaultDiagnosis
 {
-  boost::endian::big_uint16_buf_t startup_times;
-  boost::endian::big_uint32_buf_t reserved;
-  boost::endian::big_uint8_buf_t gps_status;
-  boost::endian::big_uint16_buf_t machine_temp;
+  big_uint16_buf_t startup_times;
+  big_uint32_buf_t reserved;
+  big_uint8_buf_t gps_status;
+  big_uint16_buf_t machine_temp;
   uint8_t reserved_first[11];
-  boost::endian::big_uint16_buf_t phase;
-  boost::endian::big_uint16_buf_t rotation_speed;
+  big_uint16_buf_t phase;
+  big_uint16_buf_t rotation_speed;
 };
 
 struct InfoPacket
 {
-  boost::endian::big_uint64_buf_t header;
-  boost::endian::big_uint16_buf_t motor_speed_setting;
+  big_uint64_buf_t header;
+  big_uint16_buf_t motor_speed_setting;
   Ethernet ethernet;
   FovSetting fov_setting;
-  boost::endian::big_uint16_buf_t tcp_msop_port;
-  boost::endian::big_uint16_buf_t phase_lock;
+  big_uint16_buf_t tcp_msop_port;
+  big_uint16_buf_t phase_lock;
   FirmwareVersion mainboard_firmware_version;
   FirmwareVersion bottom_firmware_version;
   FirmwareVersion app_software_version;
   FirmwareVersion motor_firmware_version;
   uint8_t reserved_first[228];
-  boost::endian::big_uint8_buf_t baud_rate;
+  big_uint8_buf_t baud_rate;
   uint8_t reserved_second[3];
   SerialNumber serial_number;
   uint8_t reserved_third[2];
-  boost::endian::big_uint8_buf_t return_mode;
-  boost::endian::big_uint8_buf_t time_sync_mode;
-  boost::endian::big_uint8_buf_t time_sync_state;
+  big_uint8_buf_t return_mode;
+  big_uint8_buf_t time_sync_mode;
+  big_uint8_buf_t time_sync_state;
   Timestamp time;
   OperatingStatus operating_status;
-  boost::endian::big_uint8_buf_t rotation_direction;
-  boost::endian::big_uint32_buf_t running_time;
+  big_uint8_buf_t rotation_direction;
+  big_uint32_buf_t running_time;
   uint8_t reserved_fourth[9];
   FaultDiagnosis fault_diagnosis;
   uint8_t reserved_fifth[7];
-  boost::endian::big_uint8_buf_t gprmc[86];
+  big_uint8_buf_t gprmc[86];
   SensorCalibration sensor_calibration;
   uint8_t reserved_sixth[586];
-  boost::endian::big_uint16_buf_t tail;
+  big_uint16_buf_t tail;
 };
 
 #pragma pack(pop)
