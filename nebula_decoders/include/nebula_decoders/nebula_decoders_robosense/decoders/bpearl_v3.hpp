@@ -135,7 +135,7 @@ struct InfoPacket
 /// @brief Get the distance unit of the given @ref BpearlV3 packet in meters.
 /// @return 0.005m (0.5cm)
 template <>
-double get_dis_unit<bpearl_v3::Packet>(const bpearl_v3::Packet & /* packet */)
+inline double get_dis_unit<bpearl_v3::Packet>(const bpearl_v3::Packet & /* packet */)
 {
   return 0.005;
 }
@@ -225,7 +225,7 @@ public:
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 1152000;
 
   int getPacketRelativePointTimeOffset(
-    uint32_t block_id, uint32_t channel_id,
+    const uint32_t block_id, const uint32_t channel_id,
     const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration) override
   {
     if (sensor_configuration->return_mode == ReturnMode::DUAL)
@@ -236,15 +236,16 @@ public:
 
   ReturnMode getReturnMode(const robosense_packet::bpearl_v3::InfoPacket & info_packet)
   {
-    const uint8_t return_mode_data = info_packet.return_mode.value();
-    if (return_mode_data == 0x00) {
-      return ReturnMode::DUAL;
-    } else if (return_mode_data == 0x01) {
-      return ReturnMode::SINGLE_STRONGEST;
-    } else if (return_mode_data == 0x02) {
-      return ReturnMode::SINGLE_LAST;
+    switch (info_packet.return_mode.value()) {
+      case 0x00:
+        return ReturnMode::DUAL;
+      case 0x01:
+        return ReturnMode::SINGLE_STRONGEST;
+      case 0x02:
+        return ReturnMode::SINGLE_LAST;
+      default:
+        return ReturnMode::UNKNOWN;
     }
-    return ReturnMode::UNKNOWN;
   }
 
   RobosenseCalibrationConfiguration getSensorCalibration(
@@ -255,7 +256,7 @@ public:
 
   bool getSyncStatus(const robosense_packet::bpearl_v3::InfoPacket & info_packet)
   {
-    std::bitset<8> gps_st_bits{info_packet.fault_diagnosis.gps_st.value()};
+    const std::bitset<8> gps_st_bits{info_packet.fault_diagnosis.gps_st.value()};
     if (gps_st_bits[2] == 1) return true;
     return false;
   }
@@ -287,23 +288,52 @@ public:
     sensor_info["serial_number"] = info_packet.serial_number.to_string();
     sensor_info["zero_angle_offset"] = std::to_string(info_packet.zero_angle_offset.value());
 
-    if (info_packet.return_mode.value() == 0x00)
-      sensor_info["return_mode"] = "dual";
-    else if (info_packet.return_mode.value() == 0x01)
-      sensor_info["return_mode"] = "strongest";
-    else if (info_packet.return_mode.value() == 0x02)
-      sensor_info["return_mode"] = "last";
+    switch (info_packet.return_mode.value()) {
+      case 0x00:
+        sensor_info["return_mode"] = "dual";
+        break;
+      case 0x01:
+        sensor_info["return_mode"] = "strongest";
+        break;
+      case 0x02:
+        sensor_info["return_mode"] = "last";
+        break;
+      default:
+        sensor_info["return_mode"] = "n/a";
+        break;
+    }
 
-    if (info_packet.time_sync_mode.value() == 0) sensor_info["time_sync_mode"] = "gps";
-    if (info_packet.time_sync_mode.value() == 1) sensor_info["time_sync_mode"] = "e2e";
-    if (info_packet.time_sync_mode.value() == 2) sensor_info["time_sync_mode"] = "p2p";
-    if (info_packet.time_sync_mode.value() == 3) sensor_info["time_sync_mode"] = "gptp";
+    switch (info_packet.time_sync_mode.value()) {
+      case 0:
+        sensor_info["time_sync_mode"] = "gps";
+        break;
+      case 1:
+        sensor_info["time_sync_mode"] = "e2e";
+        break;
+      case 2:
+        sensor_info["time_sync_mode"] = "p2p";
+        break;
+      case 3:
+        sensor_info["time_sync_mode"] = "gptp";
+        break;
+      default:
+        sensor_info["time_sync_mode"] = "n/a";
+        break;
+    }
 
-    if (info_packet.sync_status.value() == 0) sensor_info["sync_status"] = "time_sync_invalid";
-    if (info_packet.sync_status.value() == 1)
-      sensor_info["sync_status"] = "gps_time_sync_successful";
-    if (info_packet.sync_status.value() == 2)
-      sensor_info["sync_status"] = "ptp_time_sync_successful";
+    switch (info_packet.sync_status.value()) {
+      case 0:
+        sensor_info["sync_status"] = "time_sync_invalid";
+        break;
+      case 1:
+        sensor_info["sync_status"] = "gps_time_sync_successful";
+        break;
+      case 2:
+        sensor_info["sync_status"] = "ptp_time_sync_successful";
+        break;
+      default:
+        sensor_info["sync_status"] = "n/a";
+    }
 
     sensor_info["time"] = std::to_string(info_packet.time.get_time_in_ns());
     sensor_info["v_dat_0v5"] =
@@ -324,24 +354,24 @@ public:
     sensor_info["manc_err1"] = std::to_string(info_packet.fault_diagnosis.manc_err1.value());
     sensor_info["manc_err2"] = std::to_string(info_packet.fault_diagnosis.manc_err2.value());
 
-    std::bitset<8> gps_st_bits{info_packet.fault_diagnosis.gps_st.value()};
-    if (gps_st_bits[0] == 1)
+    const std::bitset<8> gps_st_bits{info_packet.fault_diagnosis.gps_st.value()};
+    if (gps_st_bits[0])
       sensor_info["pps_lock"] = "valid";
     else
       sensor_info["pps_lock"] = "invalid";
-    if (gps_st_bits[1] == 1)
+    if (gps_st_bits[1])
       sensor_info["gprmc_lock"] = "valid";
     else
       sensor_info["gprmc_lock"] = "invalid";
-    if (gps_st_bits[2] == 1)
+    if (gps_st_bits[2])
       sensor_info["utc_lock"] = "synchronized";
     else
       sensor_info["utc_lock"] = "not_synchronized";
-    if (gps_st_bits[3] == 1)
+    if (gps_st_bits[3])
       sensor_info["gprmc_input_status"] = "received_gprmc";
     else
       sensor_info["gprmc_input_status"] = "no_gprmc";
-    if (gps_st_bits[4] == 1)
+    if (gps_st_bits[4])
       sensor_info["pps_input_status"] = "received_pps";
     else
       sensor_info["pps_input_status"] = "no_pps";
