@@ -20,16 +20,20 @@ namespace robosense_packet
 struct Timestamp
 {
   big_uint48_buf_t seconds;
-  big_uint32_buf_t nanoseconds;
+  big_uint32_buf_t microseconds;
 
   uint64_t get_time_in_ns() const
   {
-    uint64_t total_nanoseconds = static_cast<uint64_t>(seconds.value()) * 1000000000ULL +
-                                 static_cast<uint64_t>(nanoseconds.value());
+    constexpr uint64_t NS_IN_SECOND = 1000000000ULL;
+    constexpr uint64_t NS_IN_MICROSECOND = 1000ULL;
+
+    uint64_t total_nanoseconds = seconds.value() * NS_IN_SECOND;
+    total_nanoseconds += microseconds.value() * NS_IN_MICROSECOND;
 
     return total_nanoseconds;
   }
 };
+
 
 struct Unit
 {
