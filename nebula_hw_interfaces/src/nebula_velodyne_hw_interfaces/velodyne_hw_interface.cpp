@@ -29,7 +29,9 @@ Status VelodyneHwInterface::InitializeSensorConfiguration(
 Status VelodyneHwInterface::SetSensorConfiguration(
   std::shared_ptr<SensorConfigurationBase> sensor_configuration)
 {
-  VelodyneStatus status = CheckAndSetConfigBySnapshotAsync();
+  auto velodyne_sensor_configuration =
+    std::static_pointer_cast<VelodyneSensorConfiguration>(sensor_configuration);
+  VelodyneStatus status = CheckAndSetConfigBySnapshotAsync(velodyne_sensor_configuration);
   Status rt = status;
   return rt;
 }
@@ -99,7 +101,10 @@ void VelodyneHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> 
   }
   prev_packet_first_azm_phased_ = packet_first_azm_phased_;
 }
-Status VelodyneHwInterface::CloudInterfaceStop() { return Status::ERROR_1; }
+Status VelodyneHwInterface::CloudInterfaceStop()
+{
+  return Status::ERROR_1;
+}
 
 Status VelodyneHwInterface::GetSensorConfiguration(SensorConfigurationBase & sensor_configuration)
 {
@@ -222,8 +227,7 @@ VelodyneStatus VelodyneHwInterface::CheckAndSetConfig(
     SetFovStartAsync(setting_cloud_min_angle);
     std::cout << "VelodyneHwInterface::parse_json(" << target_key
               << "): " << current_cloud_min_angle << std::endl;
-    std::cout << "sensor_configuration->cloud_min_angle: " << setting_cloud_min_angle
-              << std::endl;
+    std::cout << "sensor_configuration->cloud_min_angle: " << setting_cloud_min_angle << std::endl;
   }
 
   target_key = "config.fov.end";
@@ -237,8 +241,7 @@ VelodyneStatus VelodyneHwInterface::CheckAndSetConfig(
     SetFovEndAsync(setting_cloud_max_angle);
     std::cout << "VelodyneHwInterface::parse_json(" << target_key
               << "): " << current_cloud_max_angle << std::endl;
-    std::cout << "sensor_configuration->cloud_max_angle: " << setting_cloud_max_angle
-              << std::endl;
+    std::cout << "sensor_configuration->cloud_max_angle: " << setting_cloud_max_angle << std::endl;
   }
 
   target_key = "config.host.addr";
@@ -521,8 +524,11 @@ VelodyneStatus VelodyneHwInterface::GetSnapshotAsync()
   return GetSnapshotAsync([this](const std::string & str) { ParseJson(str); });
 }
 
-VelodyneStatus VelodyneHwInterface::CheckAndSetConfigBySnapshotAsync()
+VelodyneStatus VelodyneHwInterface::CheckAndSetConfigBySnapshotAsync(
+  std::shared_ptr<VelodyneSensorConfiguration> sensor_configuration)
 {
+  sensor_configuration_ = sensor_configuration;
+
   return GetSnapshotAsync([this](const std::string & str) {
     auto tree = ParseJson(str);
     std::cout << "ParseJson OK\n";

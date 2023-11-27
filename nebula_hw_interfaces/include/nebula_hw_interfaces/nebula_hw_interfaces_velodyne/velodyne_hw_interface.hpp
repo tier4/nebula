@@ -11,11 +11,11 @@
 #if (BOOST_VERSION / 100 == 1074)  // Boost 1.74
 #define BOOST_ALLOW_DEPRECATED_HEADERS
 #endif
+#include "boost_tcp_driver/http_client_driver.hpp"
+#include "boost_udp_driver/udp_driver.hpp"
 #include "nebula_common/velodyne/velodyne_common.hpp"
 #include "nebula_common/velodyne/velodyne_status.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
-#include "boost_tcp_driver/http_client_driver.hpp"
-#include "boost_udp_driver/udp_driver.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -243,7 +243,8 @@ public:
   VelodyneStatus GetSnapshotAsync();
   /// @brief Checking the current settings and changing the difference point
   /// @return Resulting status
-  VelodyneStatus CheckAndSetConfigBySnapshotAsync();
+  VelodyneStatus CheckAndSetConfigBySnapshotAsync(
+    std::shared_ptr<VelodyneSensorConfiguration> sensor_configuration);
   /// @brief Setting Motor RPM (async)
   /// @param rpm the RPM of the motor
   /// @return Resulting status
