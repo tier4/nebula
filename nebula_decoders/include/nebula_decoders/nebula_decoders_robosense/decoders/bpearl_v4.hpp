@@ -188,6 +188,11 @@ private:
      29610, 29777, 29943, 30110, 30277, 30444, 30611, 30777, 30944, 31111, 31278,
      31445, 31611, 31778, 31945, 32112, 32279, 32445, 32612, 32779, 32946}};
 
+  constexpr uint8_t DUAL_RETURN_FLAG = 0x00;
+  constexpr uint8_t STRONGEST_RETURN_FLAG = 0x04;
+  constexpr uint8_t LAST_RETURN_FLAG = 0x05;
+  constexpr uint8_t FIRST_RETURN_FLAG = 0x06;
+
 public:
   static constexpr float MIN_RANGE = 0.1f;
   static constexpr float MAX_RANGE = 30.f;
@@ -206,13 +211,13 @@ public:
   ReturnMode getReturnMode(const robosense_packet::bpearl_v4::InfoPacket & info_packet)
   {
     switch (info_packet.return_mode.value()) {
-      case 0x00:
+      case DUAL_RETURN_FLAG:
         return ReturnMode::DUAL;
-      case 0x04:
+      case STRONGEST_RETURN_FLAG:
         return ReturnMode::SINGLE_STRONGEST;
-      case 0x05:
+      case LAST_RETURN_FLAG:
         return ReturnMode::SINGLE_LAST;
-      case 0x06:
+      case FIRST_RETURN_FLAG:
         return ReturnMode::SINGLE_FIRST;
       default:
         return ReturnMode::UNKNOWN;
@@ -258,16 +263,16 @@ public:
     sensor_info["serial_number"] = info_packet.serial_number.to_string();
 
     switch (info_packet.return_mode.value()) {
-      case 0x00:
+      case DUAL_RETURN_FLAG:
         sensor_info["return_mode"] = "dual";
         break;
-      case 0x04:
+      case STRONGEST_RETURN_FLAG:
         sensor_info["return_mode"] = "strongest";
         break;
-      case 0x05:
+      case LAST_RETURN_FLAG:
         sensor_info["return_mode"] = "last";
         break;
-      case 0x06:
+      case FIRST_RETURN_FLAG:
         sensor_info["return_mode"] = "first";
         break;
       default:

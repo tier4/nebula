@@ -227,6 +227,11 @@ private:
      296770, 298340, 299920, 301490, 303060, 304310, 305550, 306790, 308030, 309270, 310510,
      311750, 313000, 314240, 315480, 316720, 317960, 319200, 320440, 321680, 322930}};
 
+  constexpr uint8_t DUAL_RETURN_FLAG = 0x00;
+  constexpr uint8_t STRONGEST_RETURN_FLAG = 0x04;
+  constexpr uint8_t LAST_RETURN_FLAG = 0x05;
+  constexpr uint8_t FIRST_RETURN_FLAG = 0x06;
+
 public:
   static constexpr float MIN_RANGE = 0.2f;
   static constexpr float MAX_RANGE = 150.f;
@@ -245,13 +250,13 @@ public:
   ReturnMode getReturnMode(const robosense_packet::helios::InfoPacket & info_packet)
   {
     switch (info_packet.return_mode.value()) {
-      case 0x00:
+      case DUAL_RETURN_FLAG:
         return ReturnMode::DUAL;
-      case 0x04:
+      case STRONGEST_RETURN_FLAG:
         return ReturnMode::SINGLE_STRONGEST;
-      case 0x05:
+      case LAST_RETURN_FLAG:
         return ReturnMode::SINGLE_LAST;
-      case 0x06:
+      case FIRST_RETURN_FLAG:
         return ReturnMode::SINGLE_FIRST;
       default:
         return ReturnMode::UNKNOWN;
@@ -308,16 +313,16 @@ public:
     sensor_info["zero_angle_offset"] = std::to_string(info_packet.zero_angle_offset.value());
 
     switch (info_packet.return_mode.value()) {
-      case 0x00:
+      case DUAL_RETURN_FLAG:
         sensor_info["return_mode"] = "dual";
         break;
-      case 0x04:
+      case STRONGEST_RETURN_FLAG:
         sensor_info["return_mode"] = "strongest";
         break;
-      case 0x05:
+      case LAST_RETURN_FLAG:
         sensor_info["return_mode"] = "last";
         break;
-      case 0x06:
+      case FIRST_RETURN_FLAG:
         sensor_info["return_mode"] = "first";
         break;
       default:
