@@ -4,9 +4,9 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <ctime>
-#include <stdexcept>
 #include <string>
+
+using namespace boost::endian;
 
 namespace nebula
 {
@@ -19,8 +19,8 @@ namespace robosense_packet
 
 struct Timestamp
 {
-  boost::endian::big_uint48_buf_t seconds;
-  boost::endian::big_uint32_buf_t nanoseconds;
+  big_uint48_buf_t seconds;
+  big_uint32_buf_t nanoseconds;
 
   uint64_t get_time_in_ns() const
   {
@@ -33,15 +33,15 @@ struct Timestamp
 
 struct Unit
 {
-  boost::endian::big_uint16_buf_t distance;
-  boost::endian::big_uint8_buf_t reflectivity;
+  big_uint16_buf_t distance;
+  big_uint8_buf_t reflectivity;
 };
 
 template <typename UnitT, size_t UnitN>
 struct Block
 {
-  boost::endian::big_uint16_buf_t flag;
-  boost::endian::big_uint16_buf_t azimuth;
+  big_uint16_buf_t flag;
+  big_uint16_buf_t azimuth;
   UnitT units[UnitN];
   typedef UnitT unit_t;
 
@@ -73,10 +73,10 @@ struct PacketBase
 
 struct IpAddress
 {
-  boost::endian::big_uint8_buf_t first_octet;
-  boost::endian::big_uint8_buf_t second_octet;
-  boost::endian::big_uint8_buf_t third_octet;
-  boost::endian::big_uint8_buf_t fourth_octet;
+  big_uint8_buf_t first_octet;
+  big_uint8_buf_t second_octet;
+  big_uint8_buf_t third_octet;
+  big_uint8_buf_t fourth_octet;
 
   [[nodiscard]] std::string to_string() const
   {
@@ -87,12 +87,12 @@ struct IpAddress
 
 struct MacAddress
 {
-  boost::endian::big_uint8_buf_t first_octet;
-  boost::endian::big_uint8_buf_t second_octet;
-  boost::endian::big_uint8_buf_t third_octet;
-  boost::endian::big_uint8_buf_t fourth_octet;
-  boost::endian::big_uint8_buf_t fifth_octet;
-  boost::endian::big_uint8_buf_t sixth_octet;
+  big_uint8_buf_t first_octet;
+  big_uint8_buf_t second_octet;
+  big_uint8_buf_t third_octet;
+  big_uint8_buf_t fourth_octet;
+  big_uint8_buf_t fifth_octet;
+  big_uint8_buf_t sixth_octet;
 
   [[nodiscard]] std::string to_string() const
   {
@@ -112,22 +112,22 @@ struct Ethernet
   IpAddress lidar_ip;
   IpAddress dest_pc_ip;
   MacAddress mac_addr;
-  boost::endian::big_uint16_buf_t lidar_out_msop_port;
-  boost::endian::big_uint16_buf_t pc_dest_msop_port;
-  boost::endian::big_uint16_buf_t lidar_out_difop_port;
-  boost::endian::big_uint16_buf_t pc_dest_difop_port;
+  big_uint16_buf_t lidar_out_msop_port;
+  big_uint16_buf_t pc_dest_msop_port;
+  big_uint16_buf_t lidar_out_difop_port;
+  big_uint16_buf_t pc_dest_difop_port;
 };
 
 struct FovSetting
 {
-  boost::endian::big_uint16_buf_t fov_start;
-  boost::endian::big_uint16_buf_t fov_end;
+  big_uint16_buf_t fov_start;
+  big_uint16_buf_t fov_end;
 };
 
 struct ChannelAngleCorrection
 {
-  boost::endian::big_uint8_buf_t sign;
-  boost::endian::big_uint16_buf_t angle;
+  big_uint8_buf_t sign;
+  big_uint16_buf_t angle;
 
   [[nodiscard]] float getAngle() const
   {
@@ -166,11 +166,11 @@ struct SensorCalibration
 
 struct FirmwareVersion
 {
-  boost::endian::big_uint8_buf_t first_octet;
-  boost::endian::big_uint8_buf_t second_octet;
-  boost::endian::big_uint8_buf_t third_octet;
-  boost::endian::big_uint8_buf_t fourth_octet;
-  boost::endian::big_uint8_buf_t fifth_octet;
+  big_uint8_buf_t first_octet;
+  big_uint8_buf_t second_octet;
+  big_uint8_buf_t third_octet;
+  big_uint8_buf_t fourth_octet;
+  big_uint8_buf_t fifth_octet;
 
   [[nodiscard]] std::string to_string() const
   {
@@ -186,12 +186,12 @@ struct FirmwareVersion
 
 struct SerialNumber
 {
-  boost::endian::big_uint8_buf_t first_octet;
-  boost::endian::big_uint8_buf_t second_octet;
-  boost::endian::big_uint8_buf_t third_octet;
-  boost::endian::big_uint8_buf_t fourth_octet;
-  boost::endian::big_uint8_buf_t fifth_octet;
-  boost::endian::big_uint8_buf_t sixth_octet;
+  big_uint8_buf_t first_octet;
+  big_uint8_buf_t second_octet;
+  big_uint8_buf_t third_octet;
+  big_uint8_buf_t fourth_octet;
+  big_uint8_buf_t fifth_octet;
+  big_uint8_buf_t sixth_octet;
 
   [[nodiscard]] std::string to_string() const
   {
