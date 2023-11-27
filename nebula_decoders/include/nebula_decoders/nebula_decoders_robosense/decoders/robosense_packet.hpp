@@ -124,6 +124,8 @@ struct FovSetting
   big_uint16_buf_t fov_end;
 };
 
+constexpr uint8_t ANGLE_SIGN_FLAG = 0x00;
+
 struct ChannelAngleCorrection
 {
   big_uint8_buf_t sign;
@@ -131,8 +133,9 @@ struct ChannelAngleCorrection
 
   [[nodiscard]] float getAngle() const
   {
-    return sign.value() == 0x00 ? static_cast<float>(angle.value()) / 100.0f
-                                : static_cast<float>(angle.value()) / -100.0f;
+    return sign.value() == ANGLE_SIGN_FLAG
+             ? static_cast<float>(angle.value()) / 100.0f
+             : static_cast<float>(angle.value()) / -100.0f;
   }
 };
 

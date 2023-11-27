@@ -38,7 +38,7 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   if (
     !sensor_model_.has_value() &&
     sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL) {
-    if (buffer[32] == 0x04) {
+    if (buffer[32] == BPEARL_V4_FLAG) {
       sensor_model_.emplace(drivers::SensorModel::ROBOSENSE_BPEARL_V4);
       PrintInfo("Bpearl V4 detected.");
     } else {

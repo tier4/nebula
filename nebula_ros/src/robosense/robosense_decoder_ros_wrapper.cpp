@@ -48,7 +48,7 @@ void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
 {
   if (!driver_ptr_) {
     if (sensor_cfg_ptr_->sensor_model == drivers::SensorModel::ROBOSENSE_BPEARL) {
-      if (scan_msg->packets.back().data[32] == 0x04) {
+      if (scan_msg->packets.back().data[32] == drivers::BPEARL_V4_FLAG) {
         sensor_cfg_ptr_->sensor_model = drivers::SensorModel::ROBOSENSE_BPEARL_V4;
         RCLCPP_INFO_STREAM(this->get_logger(), "Bpearl V4 detected.");
       } else {

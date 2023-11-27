@@ -188,10 +188,19 @@ private:
      29610, 29777, 29943, 30110, 30277, 30444, 30611, 30777, 30944, 31111, 31278,
      31445, 31611, 31778, 31945, 32112, 32279, 32445, 32612, 32779, 32946}};
 
-  constexpr uint8_t DUAL_RETURN_FLAG = 0x00;
-  constexpr uint8_t STRONGEST_RETURN_FLAG = 0x04;
-  constexpr uint8_t LAST_RETURN_FLAG = 0x05;
-  constexpr uint8_t FIRST_RETURN_FLAG = 0x06;
+  static constexpr uint8_t DUAL_RETURN_FLAG = 0x00;
+  static constexpr uint8_t STRONGEST_RETURN_FLAG = 0x04;
+  static constexpr uint8_t LAST_RETURN_FLAG = 0x05;
+  static constexpr uint8_t FIRST_RETURN_FLAG = 0x06;
+
+  static constexpr uint8_t SYNC_MODE_GPS_FLAG = 0x00;
+  static constexpr uint8_t SYNC_MODE_E2E_FLAG = 0x01;
+  static constexpr uint8_t SYNC_MODE_P2P_FLAG = 0x02;
+  static constexpr uint8_t SYNC_MODE_GPTP_FLAG = 0x03;
+
+  static constexpr uint8_t SYNC_STATUS_INVALID_FLAG = 0x00;
+  static constexpr uint8_t SYNC_STATUS_GPS_SUCCESS_FLAG = 0x01;
+  static constexpr uint8_t SYNC_STATUS_PTP_SUCCESS_FLAG = 0x02;
 
 public:
   static constexpr float MIN_RANGE = 0.1f;
@@ -281,31 +290,31 @@ public:
     }
 
     switch (info_packet.time_sync_mode.value()) {
-      case 0:
+      case SYNC_MODE_GPS_FLAG:
         sensor_info["time_sync_mode"] = "gps";
-      break;
-      case 1:
+        break;
+      case SYNC_MODE_E2E_FLAG:
         sensor_info["time_sync_mode"] = "e2e";
-      break;
-      case 2:
+        break;
+      case SYNC_MODE_P2P_FLAG:
         sensor_info["time_sync_mode"] = "p2p";
-      break;
-      case 3:
+        break;
+      case SYNC_MODE_GPTP_FLAG:
         sensor_info["time_sync_mode"] = "gptp";
-      break;
+        break;
       default:
         sensor_info["time_sync_mode"] = "n/a";
-      break;
+        break;
     }
 
     switch (info_packet.time_sync_state.value()) {
-      case 0:
+      case SYNC_STATUS_INVALID_FLAG:
         sensor_info["time_sync_state"] = "time_sync_invalid";
         break;
-      case 1:
+      case SYNC_STATUS_GPS_SUCCESS_FLAG:
         sensor_info["time_sync_state"] = "gps_time_sync_successful";
         break;
-      case 2:
+      case SYNC_STATUS_PTP_SUCCESS_FLAG:
         sensor_info["time_sync_state"] = "ptp_time_sync_successful";
         break;
       default:
