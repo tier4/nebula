@@ -251,8 +251,7 @@ double get_dis_unit(const PacketT & packet)
   } else if (range_resolution == 1) {
     return 0.0025;
   }
-  // Should throw an error here?
-  // throw std::runtime_error("Unknown range resolution");
+  throw std::runtime_error("Unknown range resolution");
 }
 
 /// @brief Convert raw angle value from packet to std::string
