@@ -46,6 +46,24 @@ ament_auto_add_executable(hesai_ros_offline_extract_bag_pcd_node
         ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_pcd_main.cpp
 )
 
+## Robosense
+# Offline Lib
+ament_auto_add_library(robosense_ros_offline_extract_pcd SHARED
+${CMAKE_CURRENT_SOURCE_DIR}/src/robosense/robosense_ros_offline_extract_pcd.cpp
+)
+target_link_libraries(robosense_ros_offline_extract_pcd ${PCL_LIBRARIES})
+ament_auto_add_executable(robosense_ros_offline_extract_pcd_node
+${CMAKE_CURRENT_SOURCE_DIR}/src/robosense/robosense_ros_offline_extract_pcd_main.cpp
+)
+# Extraction for TEST Lib
+ament_auto_add_library(robosense_ros_offline_extract_bag_pcd SHARED
+${CMAKE_CURRENT_SOURCE_DIR}/src/robosense/robosense_ros_offline_extract_bag_pcd.cpp
+)
+target_link_libraries(robosense_ros_offline_extract_bag_pcd ${PCL_LIBRARIES})
+ament_auto_add_executable(robosense_ros_offline_extract_bag_pcd_node
+${CMAKE_CURRENT_SOURCE_DIR}/src/robosense/robosense_ros_offline_extract_bag_pcd_main.cpp
+)
+
 ## Velodyne
 # Extraction for TEST Lib
 ament_auto_add_library(velodyne_ros_offline_extract_bag_pcd SHARED

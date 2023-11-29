@@ -12,6 +12,7 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.actions import LoadComposableNodes
 from launch_ros.descriptions import ComposableNode
+from launch_ros.actions import Node
 import yaml
 
 
@@ -20,6 +21,8 @@ def get_lidar_make(sensor_name):
         return "Hesai", ".csv"
     elif sensor_name[:3].lower() in ["hdl", "vlp", "vls"]:
         return "Velodyne", ".yaml"
+    elif sensor_name[:9].lower() in ["robosense"]:
+        return "Robosense", ".csv"
     return "unrecognized_sensor_model"
 
 
@@ -36,6 +39,7 @@ def launch_setup(context, *args, **kwargs):
         warnings.warn("No config file provided, using sensor model default", RuntimeWarning)
         sensor_params_fp = os.path.join(nebula_ros_share_dir, "config", sensor_make.lower(), sensor_model + ".yaml")
     sensor_calib_fp = os.path.join(nebula_decoders_share_dir, "calibration", sensor_make.lower(), sensor_model + sensor_extension)
+    print(sensor_calib_fp)
     if not os.path.exists(sensor_params_fp):
         sensor_params_fp = os.path.join(nebula_ros_share_dir, "config", "BaseParams.yaml")
     assert os.path.exists(sensor_params_fp), "Sensor params yaml file under config/ was not found: {}".format(sensor_params_fp)
@@ -130,7 +134,6 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     def add_launch_arg(name: str, default_value=None):
         return DeclareLaunchArgument(name, default_value=default_value)
-
     return launch.LaunchDescription(
         [
             add_launch_arg("container", ""),

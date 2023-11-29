@@ -14,6 +14,7 @@
   <depend>libpcl-all-dev</depend>
   <depend>nebula_common</depend>
   <depend>pandar_msgs</depend>
+  <depend>robosense_msgs</depend>
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
   <depend>boost_tcp_driver</depend>
