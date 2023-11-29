@@ -14,27 +14,27 @@ namespace drivers
 namespace point_accessors
 {
 
-template <typename SensorT>
+template <typename PacketT>
 struct PacketTimestampMixin
 {
-  virtual uint64_t getPacketTimestamp(const SensorT::packet_t & packet) = 0;
+  virtual uint64_t getPacketTimestamp(const PacketT & packet) = 0;
 };
 
-template <typename SensorT>
+template <typename PacketT>
 struct PointTimestampMixin
 {
   virtual int32_t getPacketRelativeTimestamp(
-    const SensorT::packet_t & packet, const size_t block_id, const size_t channel_id,
+    const PacketT & packet, const size_t block_id, const size_t channel_id,
     const ReturnMode return_mode) = 0;
 };
 
-template <typename SensorT>
-struct BlockTimestampUsMixin: public PointTimestampMixin<SensorT>
+template <typename PacketT>
+struct BlockTimestampUsMixin: public PointTimestampMixin<PacketT>
 {
   /// @brief Returns the timestamp of the point identified by block_id and channel_id relative to
   /// the packet's timestamp, in nanoseconds
   int32_t getPacketRelativeTimestamp(
-    const SensorT::packet_t & packet, const size_t block_id, const size_t /* channel_id */,
+    const PacketT & packet, const size_t block_id, const size_t /* channel_id */,
     const ReturnMode /* return_mode */) override
   {
     const auto * block = getBlock(packet, block_id);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "nebula_common/nebula_common.hpp"
 #include "nebula_decoders/nebula_decoders_common/util.hpp"
 
 #include <cstddef>
@@ -10,15 +11,15 @@ namespace nebula
 namespace drivers
 {
 
-template <typename SensorT>
+template <typename PacketT>
 class SensorBase
 {
 private:
 public:
-  typedef SensorT::packet_t packet_t;
-  typedef packet_t::body_t body_t;
-  typedef body_t::block_t block_t;
-  typedef block_t::unit_t unit_t;
+  typedef PacketT packet_t;
+  typedef typename packet_t::body_t body_t;
+  typedef typename body_t::block_t block_t;
+  typedef typename block_t::unit_t unit_t;
 
   SensorBase() = default;
   virtual ~SensorBase() = default;
@@ -31,13 +32,13 @@ public:
   /// after the start block, in nanoseconds
   int getEarliestPointTimeOffsetForBlock(
     uint32_t start_block_id,
-    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration)
+    const std::shared_ptr<SensorConfigurationBase> & sensor_configuration)
   {
     const auto n_returns = robosense_packet::get_n_returns(sensor_configuration->return_mode);
     int min_offset_ns = std::numeric_limits<int>::max();
 
     for (uint32_t block_id = start_block_id; block_id < start_block_id + n_returns; ++block_id) {
-      for (uint32_t channel_id = 0; channel_id < PacketT::N_CHANNELS; ++channel_id) {
+      for (uint32_t channel_id = 0; channel_id < packet_t::N_CHANNELS; ++channel_id) {
         min_offset_ns = std::min(
           min_offset_ns,
           getPacketRelativePointTimeOffset(block_id, channel_id, sensor_configuration));
@@ -79,7 +80,8 @@ public:
   /// return group (e.g. either 0 or 1 for dual return)
   /// @param return_mode The sensor's currently active return mode
   /// @return The return type of the point
-  virtual static ReturnType getReturnType(
+  template <typename CollectionT>
+  static ReturnType getReturnType(
     const CollectionT & return_units, const size_t return_idx, const ReturnMode & return_mode)
   {
     if (is_duplicate(return_idx, return_units)) {

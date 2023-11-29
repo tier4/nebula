@@ -1,10 +1,14 @@
 #pragma once
 
 #include "boost/endian/buffers.hpp"
+#include "nebula_common/robosense/robosense_common.hpp"
+#include "nebula_decoders/nebula_decoders_common/sensor_mixins/timestamp.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <iostream>
+#include <iomanip>
 
 using namespace boost::endian;
 
@@ -33,6 +37,15 @@ struct Timestamp
     total_nanoseconds += microseconds.value() * NS_IN_MICROSECOND;
 
     return total_nanoseconds;
+  }
+};
+
+template <typename PacketT>
+struct RobosensePacketTimestampMixin : public point_accessors::PacketTimestampMixin<PacketT>
+{
+  uint64_t getPacketTimestamp(const PacketT & packet) override
+  {
+    return packet.header.timestamp.get_time_in_ns();
   }
 };
 
@@ -226,34 +239,6 @@ size_t get_n_returns(ReturnMode return_mode)
     return 2;
   }
   return 1;
-}
-
-/// @brief Get timestamp from packet in nanoseconds
-/// @tparam PacketT The packet type
-/// @param packet The packet to get the timestamp from
-/// @return The timestamp in nanoseconds
-template <typename PacketT>
-uint64_t get_timestamp_ns(const PacketT & packet)
-{
-  return packet.header.timestamp.get_time_in_ns();
-}
-
-/// @brief Get the distance unit of the given packet type in meters. Distance values in the packet,
-/// multiplied by this value, yield the distance in meters.
-/// @tparam PacketT The packet type
-/// @param packet The packet to get the distance unit from
-/// @return The distance unit in meters
-template <typename PacketT>
-double get_dis_unit(const PacketT & packet)
-{
-  // Packets define distance unit in millimeters, convert to meters here
-  const uint8_t range_resolution = packet.header.range_resolution.value();
-  if (range_resolution == 0) {
-    return 0.0050;
-  } else if (range_resolution == 1) {
-    return 0.0025;
-  }
-  throw std::runtime_error("Unknown range resolution");
 }
 
 /// @brief Convert raw angle value from packet to std::string

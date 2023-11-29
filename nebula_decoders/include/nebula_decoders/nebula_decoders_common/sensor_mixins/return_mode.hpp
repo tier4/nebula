@@ -14,15 +14,15 @@ namespace drivers
 namespace point_accessors
 {
 
-template <typename SensorT>
+template <typename PacketT>
 struct ReturnModeMixin {
   virtual ReturnMode getReturnMode(
-    const SensorT::packet_t & packet, const SensorConfigurationBase & config) = 0;
+    const PacketT & packet, const SensorConfigurationBase & config) = 0;
 
 };
 
-template <typename SensorT>
-struct ReturnModeFromConfigMixin: public ReturnModeMixin<SensorT>
+template <typename PacketT>
+struct ReturnModeFromConfigMixin: public ReturnModeMixin<PacketT>
 {
   /// @brief Retrieves the return mode from the given sensor configuration
   ReturnMode getReturnMode(const PacketT & /* packet */, const SensorConfigurationBase & config) override

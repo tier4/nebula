@@ -53,7 +53,7 @@ struct M1Block
 
 struct M1Unit
 {
-  big_uint16_buf_t radius;
+  big_uint16_buf_t distance;
   big_uint16_buf_t elevation;
   big_uint16_buf_t azimuth;
   big_uint8_buf_t reflectivity;
@@ -107,17 +107,18 @@ struct InfoPacket
 }  // namespace m1
 }  // namespace robosense_packet
 
-class M1 : public SensorBase<M1>,
-           public PointTimestampMixin<M1>,
-           public ReturnModeMixin<M1>,
-           public AnglesInUnitMixin<M1>,
-           public BasicReflectivityMixin<M1>,
-           public DistanceMixin<M1>,
-           public ChannelIsUnitMixin<M1>,
-           public NonZeroDistanceIsValidMixin<M1>
+class M1 : public SensorBase<robosense_packet::m1::Packet>,
+           public PointTimestampMixin<robosense_packet::m1::Packet>,
+           public robosense_packet::RobosensePacketTimestampMixin<robosense_packet::m1::Packet>,
+           public ReturnModeMixin<robosense_packet::m1::Packet>,
+           public AnglesInUnitMixin<robosense_packet::m1::Packet>,
+           public BasicReflectivityMixin<robosense_packet::m1::Packet>,
+           public DistanceMixin<robosense_packet::m1::Packet>,
+           public ChannelIsUnitMixin<robosense_packet::m1::Packet>,
+           public NonZeroDistanceIsValidMixin<robosense_packet::m1::Packet>
 {
 public:
-  typedef robosense_packet::m1::Packet packet_t;
+  typedef typename robosense_packet::m1::Packet packet_t;
 
   static constexpr float MIN_RANGE = 0.2f;
   static constexpr float MAX_RANGE = 150.f;
@@ -126,14 +127,14 @@ public:
   static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE{1, 0, 0};
 
   int32_t getPacketRelativeTimestamp(
-    const packet_t & packet, const size_t block_id, const size_t channel_id,
-    const ReturnMode return_mode) override
+    const packet_t & packet, const size_t block_id, const size_t /* channel_id */,
+    const ReturnMode /* return_mode */) override
   {
     const auto * block = getBlock(packet, block_id);
     return static_cast<int32_t>(getFieldValue(block->time_offset)) * 1000;
   };
 
-  double getDistanceUnit(const packet_t & packet) override
+  double getDistanceUnit(const packet_t & /* packet */) override
   {
     return 0.005;
   }
@@ -142,7 +143,7 @@ public:
   double getDistance(const packet_t & packet, const size_t block_id, const size_t unit_id) override
   {
     const auto * unit = getUnit(packet, block_id, unit_id);
-    return getFieldValue(unit->radius) * getDistanceUnit(packet);
+    return getFieldValue(unit->distance) * getDistanceUnit(packet);
   }
 
   ReturnMode getReturnMode(const packet_t & packet, const SensorConfigurationBase & /* config */) override

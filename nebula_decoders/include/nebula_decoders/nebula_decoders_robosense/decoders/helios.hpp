@@ -1,7 +1,15 @@
 #pragma once
 
+#include "nebula_decoders/nebula_decoders_common/sensor.hpp"
+#include "nebula_decoders/nebula_decoders_common/sensor_mixins/angles.hpp"
+#include "nebula_decoders/nebula_decoders_common/sensor_mixins/channel.hpp"
+#include "nebula_decoders/nebula_decoders_common/sensor_mixins/distance.hpp"
+#include "nebula_decoders/nebula_decoders_common/sensor_mixins/intensity.hpp"
+#include "nebula_decoders/nebula_decoders_common/sensor_mixins/return_mode.hpp"
+#include "nebula_decoders/nebula_decoders_common/sensor_mixins/timestamp.hpp"
+#include "nebula_decoders/nebula_decoders_common/sensor_mixins/validity.hpp"
+#include "nebula_decoders/nebula_decoders_common/util.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_sensor.hpp"
 
 #include "boost/endian/buffers.hpp"
 
@@ -147,8 +155,15 @@ struct InfoPacket
 }  // namespace helios
 }  // namespace robosense_packet
 
-class Helios
-: public RobosenseSensor<robosense_packet::helios::Packet, robosense_packet::helios::InfoPacket>
+class Helios : public SensorBase<robosense_packet::helios::Packet>,
+               public PointTimestampMixin<robosense_packet::helios::Packet>,
+               public robosense_packet::RobosensePacketTimestampMixin<robosense_packet::helios::Packet>,
+               public ReturnModeMixin<robosense_packet::helios::Packet>,
+               public BlockAziChannelElevMixin<robosense_packet::helios::Packet>,
+               public BasicReflectivityMixin<robosense_packet::helios::Packet>,
+               public DistanceMixin<robosense_packet::helios::Packet>,
+               public ChannelIsUnitMixin<robosense_packet::helios::Packet>,
+               public NonZeroDistanceIsValidMixin<robosense_packet::helios::Packet>
 {
 private:
   static constexpr int firing_time_offset_ns_single_[12][32] = {
@@ -246,21 +261,45 @@ public:
   static constexpr float MAX_RANGE = 150.f;
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 1152000;
 
-  static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE =  {0, 1, 0};
+  static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE = {0, 1, 0};
 
-  int getPacketRelativePointTimeOffset(
-    const uint32_t block_id, const uint32_t channel_id,
-    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration) override
+  int32_t getPacketRelativeTimestamp(
+    const packet_t & /* packet */, const size_t block_id, const size_t unit_id,
+    const ReturnMode return_mode) override
   {
-    if (sensor_configuration->return_mode == ReturnMode::DUAL)
-      return firing_time_offset_ns_dual_[block_id][channel_id];
+    if (return_mode == ReturnMode::DUAL)
+      return firing_time_offset_ns_dual_[block_id][unit_id];
     else
-      return firing_time_offset_ns_single_[block_id][channel_id];
+      return firing_time_offset_ns_single_[block_id][unit_id];
+  };
+
+  double getDistanceUnit(const packet_t & packet) override
+  {
+    const uint8_t range_resolution = getFieldValue(packet.header.range_resolution);
+    if (range_resolution == 0) {
+      return 0.0050;
+    } else if (range_resolution == 1) {
+      return 0.0025;
+    }
+
+    throw std::runtime_error("Unknown range resolution");
+  }
+
+  /// @brief Get the distance value of the given unit in meters.
+  double getDistance(const packet_t & packet, const size_t block_id, const size_t unit_id) override
+  {
+    const auto * unit = getUnit(packet, block_id, unit_id);
+    return getFieldValue(unit->distance) * getDistanceUnit(packet);
+  }
+
+  ReturnMode getReturnMode(const packet_t & /* packet */, const SensorConfigurationBase & config) override
+  {
+    return config.return_mode; //TODO(mojomex): add DIFOP packet handling back in
   }
 
   ReturnMode getReturnMode(const robosense_packet::helios::InfoPacket & info_packet)
   {
-    switch (info_packet.return_mode.value()) {
+    switch (getFieldValue(info_packet.return_mode)) {
       case DUAL_RETURN_FLAG:
         return ReturnMode::DUAL;
       case STRONGEST_RETURN_FLAG:
