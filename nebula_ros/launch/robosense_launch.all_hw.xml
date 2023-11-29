@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="sensor_model" description="Helios|Bpearl"/>
+    <arg name="sensor_model" description="Helios|Bpearl|M1"/>
     <arg name="return_mode" default="Strongest" description="See readme for supported return modes"/>
     <arg name="frame_id" default="robosense"/>
     <arg name="scan_phase" default="0.0"/>

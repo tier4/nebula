@@ -38,11 +38,11 @@ public:
 
   /// @brief Get the corrected azimuth and elevation for a given block and channel, along with their
   /// sin/cos values.
-  /// @param block_azimuth The block's azimuth (including optional fine azimuth), in the sensor's
+  /// @param azimuth The block's azimuth (including optional fine azimuth), in the sensor's
   /// angle unit
-  /// @param channel_id The laser channel's id
+  /// @param elevation The laser channel's id
   /// @return The corrected angles (azimuth, elevation) in radians and their sin/cos values
-  virtual CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) = 0;
+  virtual CorrectedAngleData getCorrectedAngleData(uint32_t azimuth, uint32_t elevation) = 0;
 
   /// @brief Returns true if the current azimuth lies in a different (new) scan compared to the last
   /// azimuth

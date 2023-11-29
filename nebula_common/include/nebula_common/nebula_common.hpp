@@ -327,6 +327,7 @@ enum class SensorModel {
   ROBOSENSE_BPEARL,
   ROBOSENSE_BPEARL_V3,
   ROBOSENSE_BPEARL_V4,
+  ROBOSENSE_M1
 };
 
 /// @brief not used?
@@ -416,6 +417,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
       break;
     case SensorModel::ROBOSENSE_BPEARL_V4:
       os << "BPEARL V4.0";
+      break;
+    case SensorModel::ROBOSENSE_M1:
+      os << "M1";
       break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";

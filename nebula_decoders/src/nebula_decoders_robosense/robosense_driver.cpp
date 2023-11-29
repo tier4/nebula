@@ -3,6 +3,7 @@
 #include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v3.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v4.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/helios.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/decoders/m1.hpp"
 
 namespace nebula
 {
@@ -31,6 +32,8 @@ RobosenseDriver::RobosenseDriver(
       scan_decoder_.reset(
         new RobosenseDecoder<Helios>(sensor_configuration, calibration_configuration));
       break;
+    case SensorModel::ROBOSENSE_M1:
+      scan_decoder_.reset(new RobosenseDecoder<M1>(sensor_configuration, nullptr));
     default:
       driver_status_ = nebula::Status::NOT_INITIALIZED;
       throw std::runtime_error("Driver not Implemented for selected sensor.");

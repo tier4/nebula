@@ -237,6 +237,8 @@ public:
   static constexpr float MAX_RANGE = 30.f;
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 1152000;
 
+  static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE =  {0, 1, 0};
+
   int getPacketRelativePointTimeOffset(
     const uint32_t block_id, const uint32_t channel_id,
     const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration) override

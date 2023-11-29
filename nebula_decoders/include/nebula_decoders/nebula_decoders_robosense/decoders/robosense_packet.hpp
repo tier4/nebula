@@ -17,6 +17,8 @@ namespace robosense_packet
 
 #pragma pack(push, 1)
 
+struct RobosensePacket {};
+
 struct Timestamp
 {
   big_uint48_buf_t seconds;

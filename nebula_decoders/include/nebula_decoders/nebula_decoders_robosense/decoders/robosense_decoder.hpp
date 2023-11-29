@@ -25,14 +25,19 @@ protected:
 
   /// @brief Decodes azimuth/elevation angles given calibration/correction data
   typename SensorT::angle_corrector_t angle_corrector_;
+  /// @brief Computes the exact timestamp of each point
+  typename SensorT::timing_corrector_t timing_corrector_;
+  /// @brief Checks whether a scan is complete at every block
+  typename SensorT::scan_completion_checker_t scan_completion_checker_;
 
   /// @brief The point cloud new points get added to
   NebulaPointCloudPtr decode_pc_;
   /// @brief The point cloud that is returned when a scan is complete
   NebulaPointCloudPtr output_pc_;
 
-  /// @brief The last decoded packet
-  typename SensorT::packet_t packet_;
+  /// @brief The current group of packets being decoded. In most cases this is just the latest
+  /// packet received, but for some sensors, return groups can be split across packets.
+  typename SensorT::decode_group_t decode_group_;
   /// @brief The last azimuth processed
   int last_phase_;
   /// @brief The timestamp of the last completed scan in nanoseconds
@@ -55,7 +60,7 @@ protected:
                                          << sizeof(typename SensorT::packet_t));
       return false;
     }
-    if (std::memcpy(&packet_, msop_packet.data.data(), sizeof(typename SensorT::packet_t))) {
+    if (std::memcpy(&packets_, msop_packet.data.data(), sizeof(typename SensorT::packet_t))) {
       return true;
     }
 
@@ -65,100 +70,113 @@ protected:
 
   /// @brief Converts a group of returns (i.e. 1 for single return, 2 for dual return, etc.) to
   /// points and appends them to the point cloud
+  /// @param start_packet_id The index of the first packet in the current decode group
   /// @param start_block_id The first block in the group of returns
-  /// @param n_blocks The number of returns in the group
-  void convertReturns(size_t start_block_id, size_t n_blocks)
+  /// @param start_channel_id The first channel in the return group
+  /// @param n_returns The number of returns in the group
+  void convertReturnGroup(
+    size_t start_packet_id, size_t start_block_id, size_t start_channel_id, size_t n_returns)
   {
-    uint64_t packet_timestamp_ns = robosense_packet::get_timestamp_ns(packet_);
-    uint32_t raw_azimuth = packet_.body.blocks[start_block_id].get_azimuth();
+    std::array<const typename SensorT::packet_t::body_t::block_t::unit_t *, n_returns> return_units;
+    std::array<size_t, n_returns> packet_idxs;
+    std::array<size_t, n_returns> block_idxs;
 
-    std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units;
+    // Find the units corresponding to the same return group as the current one.
+    // These are used to find duplicates in multi-return mode.
+    for (size_t return_idx = 0; return_idx < n_returns; ++return_idx) {
+      size_t packet_idx = start_packet_id + return_idx * SensorT::RETURN_GROUP_STRIDE[0];
+      size_t block_idx = start_block_id + return_idx * SensorT::RETURN_GROUP_STRIDE[1];
+      size_t channel_idx = start_channel_id + return_idx * SensorT::RETURN_GROUP_STRIDE[2];
 
-    for (size_t channel_id = 0; channel_id < SensorT::packet_t::N_CHANNELS; ++channel_id) {
-      // Find the units corresponding to the same return group as the current one.
-      // These are used to find duplicates in multi-return mode.
-      return_units.clear();
-      for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
-        return_units.push_back(
-          &packet_.body.blocks[block_offset + start_block_id].units[channel_id]);
+      packet_idxs[return_idx] = packet_idx;
+      block_idxs[return_idx] = block_idx;
+
+      return_units[return_idx] = &packets_[packet_idx].body.blocks[block_idx].units[channel_idx];
+    }
+
+    // For each return unit, validate it and check if it is a duplicate of any other
+    // unit in the return group. If not, convert it to a point and add it to the point cloud.
+    for (size_t return_idx = 0; return_idx < n_returns; ++return_idx) {
+      uint64_t packet_timestamp_ns =
+        robosense_packet::get_timestamp_ns(packets_[packet_idxs[return_idx]]);
+      uint32_t raw_azimuth = packets_.body.blocks[block_idxs[return_idx]].get_azimuth();
+      auto & unit = *return_units[return_idx];
+
+      // 1. Validate point
+      if (unit.distance.value() == 0) {
+        continue;
       }
 
-      for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
-        auto & unit = *return_units[block_offset];
+      // 2. Range checks
+      auto distance = getDistance(unit);
 
-        if (unit.distance.value() == 0) {
-          continue;
-        }
+      if (distance < SensorT::MIN_RANGE || distance > SensorT::MAX_RANGE) {
+        continue;
+      }
 
-        auto distance = getDistance(unit);
+      // 3. Return group duplicate checks
+      auto return_type =
+        sensor_.getReturnType(sensor_configuration_->return_mode, return_idx, return_units);
 
-        if (distance < SensorT::MIN_RANGE || distance > SensorT::MAX_RANGE) {
-          continue;
-        }
+      // Keep only last of multiple identical points
+      if (return_type == ReturnType::IDENTICAL && return_idx != n_returns - 1) {
+        continue;
+      }
 
-        auto return_type =
-          sensor_.getReturnType(sensor_configuration_->return_mode, block_offset, return_units);
+      // Keep only last (if any) of multiple points that are too close
+      if (return_idx != n_returns - 1) {
+        bool is_below_multi_return_threshold = false;
 
-        // Keep only last of multiple identical points
-        if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
-          continue;
-        }
-
-        // Keep only last (if any) of multiple points that are too close
-        if (block_offset != n_blocks - 1) {
-          bool is_below_multi_return_threshold = false;
-
-          for (size_t return_idx = 0; return_idx < n_blocks; ++return_idx) {
-            if (return_idx == block_offset) {
-              continue;
-            }
-
-            if (
-              fabsf(getDistance(*return_units[return_idx]) - distance) <
-              sensor_configuration_->dual_return_distance_threshold) {
-              is_below_multi_return_threshold = true;
-              break;
-            }
-          }
-
-          if (is_below_multi_return_threshold) {
+        for (size_t return_idx = 0; return_idx < n_returns; ++return_idx) {
+          if (return_idx == return_idx) {
             continue;
           }
+
+          if (
+            fabsf(getDistance(*return_units[return_idx]) - distance) <
+            sensor_configuration_->dual_return_distance_threshold) {
+            is_below_multi_return_threshold = true;
+            break;
+          }
         }
 
-        NebulaPoint point;
-        point.distance = distance;
-        point.intensity = unit.reflectivity.value();
-        point.time_stamp =
-          getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
-
-        point.return_type = static_cast<uint8_t>(return_type);
-        point.channel = channel_id;
-
-        auto corrected_angle_data = angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
-
-        // The raw_azimuth and channel are only used as indices, sin/cos functions use the precise
-        // corrected angles
-        float xyDistance = distance * corrected_angle_data.cos_elevation;
-        point.x = xyDistance * corrected_angle_data.cos_azimuth;
-        point.y = -xyDistance * corrected_angle_data.sin_azimuth;
-        point.z = distance * corrected_angle_data.sin_elevation;
-
-        // The driver wrapper converts to degrees, expects radians
-        point.azimuth = corrected_angle_data.azimuth_rad;
-        point.elevation = corrected_angle_data.elevation_rad;
-
-        decode_pc_->emplace_back(point);
+        if (is_below_multi_return_threshold) {
+          continue;
+        }
       }
-    }
-  }
 
-  /// @brief Checks whether the last processed block was the last block of a scan
-  /// @param current_phase The azimuth of the last processed block
-  /// @return Whether the scan has completed
-  bool checkScanCompleted(int current_phase)
-  {
-    return angle_corrector_.hasScanned(current_phase, last_phase_);
+
+      // 4. Get fields intrinsic to the point
+      NebulaPoint point;
+      point.distance = distance;
+      point.intensity = unit.reflectivity.value();
+      
+      // 5. Do timing correction
+      point.time_stamp =
+        getPointTimeRelative(packet_timestamp_ns, return_idx + start_block_id, start_channel_id);
+
+      // 6. Add point metadata
+      point.return_type = static_cast<uint8_t>(return_type);
+      point.channel = start_channel_id; //TODO(mojomex): get correct channel
+
+      // 7. Do angle correction
+      auto corrected_angle_data =
+        angle_corrector_.getCorrectedAngleData(start_block_id + return_idx, start_channel_id);
+
+      // The driver wrapper converts to degrees, expects radians
+      point.azimuth = corrected_angle_data.azimuth_rad;
+      point.elevation = corrected_angle_data.elevation_rad;
+      
+      // 8. Convert to cartesian coordinates
+      // The raw_azimuth and channel are only used as indices, sin/cos functions use the precise
+      // corrected angles
+      float xyDistance = distance * corrected_angle_data.cos_elevation;
+      point.x = xyDistance * corrected_angle_data.cos_azimuth;
+      point.y = -xyDistance * corrected_angle_data.sin_azimuth;
+      point.z = distance * corrected_angle_data.sin_elevation;
+
+      decode_pc_->emplace_back(point);
+    }
   }
 
   /// @brief Get the distance of the given unit in meters
@@ -166,7 +184,7 @@ protected:
   /// @return The distance in meters
   float getDistance(const typename SensorT::packet_t::body_t::block_t::unit_t & unit)
   {
-    return unit.distance.value() * robosense_packet::get_dis_unit(packet_);
+    return unit.distance.value() * robosense_packet::get_dis_unit(packets_);
   }
 
   /// @brief Get timestamp of point in nanoseconds, relative to scan timestamp. Includes firing time
@@ -181,6 +199,21 @@ protected:
     auto packet_to_scan_offset_ns =
       static_cast<uint32_t>(packet_timestamp_ns - decode_scan_timestamp_ns_);
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
+  }
+
+  void onScanCompleted()
+  {
+    std::swap(decode_pc_, output_pc_);
+    decode_pc_->clear();
+    has_scanned_ = true;
+    output_scan_timestamp_ns_ = decode_scan_timestamp_ns_;
+
+    // A new scan starts within the current packet, so the new scan's timestamp must be
+    // calculated as the packet timestamp plus the lowest time offset of any point in the
+    // remainder of the packet
+    decode_scan_timestamp_ns_ =
+      robosense_packet::get_timestamp_ns(packets_) +
+      sensor_.getEarliestPointTimeOffsetForBlock(block_id, sensor_configuration_);
   }
 
 public:
@@ -212,7 +245,7 @@ public:
     }
 
     if (decode_scan_timestamp_ns_ == 0) {
-      decode_scan_timestamp_ns_ = robosense_packet::get_timestamp_ns(packet_);
+      decode_scan_timestamp_ns_ = robosense_packet::get_timestamp_ns(packets_);
     }
 
     if (has_scanned_) {
@@ -225,34 +258,28 @@ public:
     const size_t n_returns = robosense_packet::get_n_returns(sensor_configuration_->return_mode);
     int current_azimuth;
 
-    for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
-      current_azimuth =
-        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS +
-         packet_.body.blocks[block_id].get_azimuth() -
-         static_cast<int>(
-           sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS)) %
-        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS);
+    // The advance/stride BETWEEN return groups. Not to be confused with RETURN_GROUP_STRIDE, which
+    // is the stride between units WITHIN a return group.
+    std::array<size_t, SensorT::RETURN_GROUP_STRIDE.size()> advance;
+    std::transform(
+      SensorT::RETURN_GROUP_STRIDE.begin(), SensorT::RETURN_GROUP_STRIDE.end(), advance.begin(),
+      [=](bool is_strided_dimension) { return is_strided_dimension ? n_returns : 1; });
 
-      bool scan_completed = checkScanCompleted(current_azimuth);
-      if (scan_completed) {
-        std::swap(decode_pc_, output_pc_);
-        decode_pc_->clear();
-        has_scanned_ = true;
-        output_scan_timestamp_ns_ = decode_scan_timestamp_ns_;
-
-        // A new scan starts within the current packet, so the new scan's timestamp must be
-        // calculated as the packet timestamp plus the lowest time offset of any point in the
-        // remainder of the packet
-        decode_scan_timestamp_ns_ =
-          robosense_packet::get_timestamp_ns(packet_) +
-          sensor_.getEarliestPointTimeOffsetForBlock(block_id, sensor_configuration_);
+    for (size_t packet_id = 0; packet_id < decode_group_.size(); packet_id += advance[0]) {
+      for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += advance[1]) {
+        bool scan_completed =
+          scan_completion_checker_.checkScanCompleted(packets_[packet_id], block_id);
+        if (scan_completed) {
+          onScanCompleted();
+        }
+        for (size_t channel_id = 0; channel_id < SensorT::packet_t::N_CHANNELS;
+             channel_id += advance[2]) {
+          convertReturnGroup(packet_id, block_id, channel_id, n_returns);
+        }
       }
-
-      convertReturns(block_id, n_returns);
-      last_phase_ = current_azimuth;
     }
 
-    return last_phase_;
+    return 0; // TODO(mojomex): azimuth has no meaning for some sensors, what to return instead? #Points decoded?
   }
 
   bool hasScanned() override { return has_scanned_; }
