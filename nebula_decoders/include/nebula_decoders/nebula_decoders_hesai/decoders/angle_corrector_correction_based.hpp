@@ -84,14 +84,16 @@ public:
             cos_[azimuth], sin_[elevation], cos_[elevation]};
   }
 
-  bool hasScanned(int current_azimuth, int last_azimuth) override
+  bool hasScanned(uint32_t current_azimuth, uint32_t last_azimuth, uint32_t /*sync_azimuth*/) override
   {
-    int field = findField(current_azimuth);
-    int last_field = findField(last_azimuth);
-
-    // RCLCPP_DEBUG_STREAM(
-    //   logger_, '{' << _(field) << _(last_field) << _(current_azimuth) << _(last_azimuth) << '}');
-    return last_field != field;
+    // For AT128, the scan is always cut at the beginning of the field:
+    // If we would cut at `sync_azimuth`, the points left of it would be
+    // from the previous field and therefore significantly older than the
+    // points right of it.
+    // This also means that the pointcloud timestamp is only at top of second
+    // if the `sync_azimuth` aligns with the beginning of the field (e.g. 30deg for AT128).
+    // The absolute point time for points at `sync_azimuth` is still at top of second.
+    return findField(current_azimuth) != findField(last_azimuth);
   }
 };
 

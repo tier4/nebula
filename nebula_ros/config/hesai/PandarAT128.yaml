@@ -7,7 +7,7 @@
     data_port: 2368 # LiDAR Data Port
     gnss_port: 10110 # LiDAR GNSS Port
     return_mode: "LastStrongest" # See readme for supported return modes
-    scan_phase: 0.0 # Angle where scans begin (degrees, [0.,360.]
+    scan_phase: 30.0 # Angle where scans begin (degrees, [30.,150.])
     packet_mtu_size: 1500 # Packet MTU size
     rotation_speed: 200 # Motor RPM, the sensor's internal spin rate.
     cloud_min_angle: 0 # Field of View, start degrees.

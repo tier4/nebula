@@ -140,7 +140,6 @@ protected:
         NebulaPoint point;
         point.distance = distance;
         point.intensity = unit.reflectivity;
-        // TODO(mojomex) add header offset to scan offset correction
         point.time_stamp =
           getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
 
@@ -167,10 +166,12 @@ protected:
 
   /// @brief Checks whether the last processed block was the last block of a scan
   /// @param current_phase The azimuth of the last processed block
+  /// @param sync_phase The azimuth set in the sensor configuration, for which the
+  /// timestamp is aligned to the full second
   /// @return Whether the scan has completed
-  bool checkScanCompleted(int current_phase)
+  bool checkScanCompleted(uint32_t current_phase, uint32_t sync_phase)
   {
-    return angle_corrector_.hasScanned(current_phase, last_phase_);
+    return angle_corrector_.hasScanned(current_phase, last_phase_, sync_phase);
   }
 
   /// @brief Get the distance of the given unit in meters
@@ -233,17 +234,15 @@ public:
     }
 
     const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
-    int current_azimuth;
+    uint32_t current_azimuth;
 
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
-      current_azimuth =
-        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS +
-         packet_.body.blocks[block_id].get_azimuth() -
-         static_cast<int>(
-           sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS)) %
-        (360 * SensorT::packet_t::DEGREE_SUBDIVISIONS);
+      current_azimuth = packet_.body.blocks[block_id].get_azimuth();
 
-      bool scan_completed = checkScanCompleted(current_azimuth);
+      bool scan_completed = checkScanCompleted(
+        current_azimuth,
+        sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS);
+
       if (scan_completed) {
         std::swap(decode_pc_, output_pc_);
         decode_pc_->clear();
