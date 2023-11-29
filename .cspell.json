@@ -42,6 +42,8 @@
     "Helios",
     "Msop",
     "Difop",
-    "gptp"
+    "gptp",
+    "Idat",
+    "Vdat"
   ]
 }
