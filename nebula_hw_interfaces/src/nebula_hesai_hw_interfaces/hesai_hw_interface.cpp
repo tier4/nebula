@@ -3202,16 +3202,10 @@ int HesaiHwInterface::NebulaModelToHesaiModelNo(nebula::drivers::SensorModel mod
       return 40;
     case SensorModel::HESAI_PANDARAT128:
       return 48;
-    case SensorModel::VELODYNE_VLS128:
-    case SensorModel::VELODYNE_HDL64:
-    case SensorModel::VELODYNE_VLP32:
-    case SensorModel::VELODYNE_VLP32MR:
-    case SensorModel::VELODYNE_HDL32:
-    case SensorModel::VELODYNE_VLP16:
-    case SensorModel::UNKNOWN:
+    // All other vendors and unknown sensors
+    default:
       return -1;
   }
-  return -1;
 }
 void HesaiHwInterface::SetTargetModel(int model) { target_model_no = model; }
 void HesaiHwInterface::SetTargetModel(nebula::drivers::SensorModel model) { target_model_no = NebulaModelToHesaiModelNo(model); }
