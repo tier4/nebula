@@ -189,8 +189,7 @@ void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & b
   auto now_nanosecs =
     std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
   pandar_packet.stamp.sec = static_cast<int>(now_secs);
-  pandar_packet.stamp.nanosec =
-    static_cast<int>((now_nanosecs / 1000000000. - static_cast<double>(now_secs)) * 1000000000);
+  pandar_packet.stamp.nanosec = static_cast<std::uint32_t>(now_nanosecs % 1000000000);
   scan_cloud_ptr_->packets.emplace_back(pandar_packet);
 
   int current_phase = 0;
