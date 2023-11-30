@@ -47,10 +47,6 @@ ament_auto_add_library(nebula_decoders_robosense SHARED
         src/nebula_decoders_robosense/robosense_driver.cpp
         )
 
-ament_auto_add_library(nebula_decoders_robosense_info SHARED
-        src/nebula_decoders_robosense/robosense_info_driver.cpp
-        )
-
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()

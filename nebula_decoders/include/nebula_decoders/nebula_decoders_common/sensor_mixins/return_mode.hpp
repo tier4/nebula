@@ -11,26 +11,27 @@ namespace nebula
 {
 namespace drivers
 {
-namespace point_accessors
+namespace sensor_mixins
 {
 
 template <typename PacketT>
-struct ReturnModeMixin {
+struct ReturnModeMixin
+{
   virtual ReturnMode getReturnMode(
-    const PacketT & packet, const SensorConfigurationBase & config) = 0;
-
+    const PacketT & packet, const SensorConfigurationBase & config) const = 0;
 };
 
 template <typename PacketT>
-struct ReturnModeFromConfigMixin: public ReturnModeMixin<PacketT>
+struct ReturnModeFromConfigMixin : public ReturnModeMixin<PacketT>
 {
   /// @brief Retrieves the return mode from the given sensor configuration
-  ReturnMode getReturnMode(const PacketT & /* packet */, const SensorConfigurationBase & config) override
+  ReturnMode getReturnMode(
+    const PacketT & /* packet */, const SensorConfigurationBase & config) const override
   {
     return config.return_mode;
   }
 };
 
-}  // namespace point_accessors
+}  // namespace sensor_mixins
 }  // namespace drivers
 }  // namespace nebula

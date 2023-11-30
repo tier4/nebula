@@ -20,21 +20,22 @@ RobosenseDriver::RobosenseDriver(
     case SensorModel::UNKNOWN:
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;
       break;
-    case SensorModel::ROBOSENSE_BPEARL_V3:
-      scan_decoder_.reset(
-        new RobosenseDecoder<BpearlV3>(sensor_configuration, calibration_configuration));
-      break;
-    case SensorModel::ROBOSENSE_BPEARL_V4:
-      scan_decoder_.reset(
-        new RobosenseDecoder<BpearlV4>(sensor_configuration, calibration_configuration));
-      break;
-    case SensorModel::ROBOSENSE_HELIOS:
-      scan_decoder_.reset(
-        new RobosenseDecoder<Helios>(sensor_configuration, calibration_configuration));
-      break;
-    case SensorModel::ROBOSENSE_M1:
-      scan_decoder_.reset(new RobosenseDecoder<M1>(sensor_configuration, nullptr));
-      break;
+    case SensorModel::ROBOSENSE_BPEARL_V3: {
+      BpearlV3 sensor(sensor_configuration, calibration_configuration);
+      scan_decoder_.reset(new RobosenseDecoder<BpearlV3>(sensor_configuration, std::move(sensor)));
+    } break;
+    case SensorModel::ROBOSENSE_BPEARL_V4: {
+      BpearlV4 sensor(sensor_configuration, calibration_configuration);
+      scan_decoder_.reset(new RobosenseDecoder<BpearlV4>(sensor_configuration, std::move(sensor)));
+    } break;
+    case SensorModel::ROBOSENSE_HELIOS: {
+      Helios sensor(sensor_configuration, calibration_configuration);
+      scan_decoder_.reset(new RobosenseDecoder<Helios>(sensor_configuration, std::move(sensor)));
+    } break;
+    case SensorModel::ROBOSENSE_M1: {
+      M1 sensor{};
+      scan_decoder_.reset(new RobosenseDecoder<M1>(sensor_configuration, std::move(sensor)));
+    } break;
     default:
       driver_status_ = nebula::Status::NOT_INITIALIZED;
       throw std::runtime_error("Driver not Implemented for selected sensor.");

@@ -6,6 +6,7 @@
 #include "nebula_decoders/nebula_decoders_common/sensor_mixins/distance.hpp"
 #include "nebula_decoders/nebula_decoders_common/sensor_mixins/intensity.hpp"
 #include "nebula_decoders/nebula_decoders_common/sensor_mixins/return_mode.hpp"
+#include "nebula_decoders/nebula_decoders_common/sensor_mixins/scan_completion.hpp"
 #include "nebula_decoders/nebula_decoders_common/sensor_mixins/timestamp.hpp"
 #include "nebula_decoders/nebula_decoders_common/sensor_mixins/validity.hpp"
 #include "nebula_decoders/nebula_decoders_common/util.hpp"
@@ -17,7 +18,7 @@
 #include <cstdint>
 
 using namespace boost::endian;
-using namespace nebula::drivers::point_accessors;
+using namespace nebula::drivers::sensor_mixins;
 
 namespace nebula
 {
@@ -107,6 +108,8 @@ struct InfoPacket
 }  // namespace m1
 }  // namespace robosense_packet
 
+using namespace sensor_mixins;
+
 class M1 : public SensorBase<robosense_packet::m1::Packet>,
            public PointTimestampMixin<robosense_packet::m1::Packet>,
            public robosense_packet::RobosensePacketTimestampMixin<robosense_packet::m1::Packet>,
@@ -115,10 +118,23 @@ class M1 : public SensorBase<robosense_packet::m1::Packet>,
            public BasicReflectivityMixin<robosense_packet::m1::Packet>,
            public DistanceMixin<robosense_packet::m1::Packet>,
            public ChannelIsUnitMixin<robosense_packet::m1::Packet>,
-           public NonZeroDistanceIsValidMixin<robosense_packet::m1::Packet>
+           public NonZeroDistanceIsValidMixin<robosense_packet::m1::Packet>,
+           public ScanCompletionMixin<robosense_packet::m1::Packet>,
+           public AngleCorrectorMixin<robosense_packet::m1::Packet>
 {
+private:
+  uint32_t last_sequence_number_{};
+
+  std::array<float, 65536> sin_{};
+  std::array<float, 65536> cos_{};
+
+  float internalAngleToRad(int32_t angle) const
+  {
+    return static_cast<float>(angle - 32768) / 100.0f * M_PI / 180.0f;
+  }
+
 public:
-  typedef typename robosense_packet::m1::Packet packet_t;
+  typedef typename robosense_packet::m1::InfoPacket info_t;
 
   static constexpr float MIN_RANGE = 0.2f;
   static constexpr float MAX_RANGE = 150.f;
@@ -126,27 +142,68 @@ public:
 
   static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE{1, 0, 0};
 
+  M1() {
+    for (size_t i = 0; i < 65536; ++i) {
+      sin_[i] = std::sin(internalAngleToRad(i));
+      cos_[i] = std::cos(internalAngleToRad(i));
+    }
+  }
+
+  size_t getDecodeGroupIndex(const uint8_t * const raw_packet) const override
+  {
+    constexpr size_t header_offset = offsetof(robosense_packet::m1::Packet, header);
+    constexpr size_t wave_mode_offset = offsetof(robosense_packet::m1::Header, wave_mode);
+    constexpr size_t seq_num_offset = offsetof(robosense_packet::m1::Header, sequence_number);
+    // In single return mode, the return index is always 0
+    if (raw_packet[header_offset + wave_mode_offset] != 0x00) {
+      return 0;
+    }
+
+    // From the datasheet: in dual return mode, the odd-numbered packets store the first return
+    // [...] the even numbered packets store the second return
+    bool is_odd = raw_packet[header_offset + seq_num_offset] % 2 == 1;
+    return is_odd ? 0 : 1;
+  }
+
+  bool checkScanCompleted(const packet_t & packet, const size_t /* block_id */) override
+  {
+    const uint32_t current_sequence_number = getFieldValue(packet.header.sequence_number);
+    return current_sequence_number < last_sequence_number_;
+  }
+
   int32_t getPacketRelativeTimestamp(
     const packet_t & packet, const size_t block_id, const size_t /* channel_id */,
-    const ReturnMode /* return_mode */) override
+    const ReturnMode /* return_mode */) const override
   {
     const auto * block = getBlock(packet, block_id);
     return static_cast<int32_t>(getFieldValue(block->time_offset)) * 1000;
   };
 
-  double getDistanceUnit(const packet_t & /* packet */) override
-  {
-    return 0.005;
-  }
+  double getDistanceUnit(const packet_t & /* packet */) const override { return 0.005; }
 
   /// @brief Get the distance value of the given unit in meters.
-  double getDistance(const packet_t & packet, const size_t block_id, const size_t unit_id) override
+  double getDistance(
+    const packet_t & packet, const size_t block_id, const size_t unit_id) const override
   {
     const auto * unit = getUnit(packet, block_id, unit_id);
     return getFieldValue(unit->distance) * getDistanceUnit(packet);
   }
 
-  ReturnMode getReturnMode(const packet_t & packet, const SensorConfigurationBase & /* config */) override
+  sensor_mixins::CorrectedAngleData getCorrectedAngleData(
+    int32_t raw_azimuth, int32_t raw_elevation) const override
+  {
+    sensor_mixins::CorrectedAngleData data;
+    data.azimuth_rad = internalAngleToRad(raw_azimuth);
+    data.elevation_rad = internalAngleToRad(raw_elevation);
+    data.sin_azimuth = sin_[raw_azimuth];
+    data.cos_azimuth = cos_[raw_azimuth];
+    data.sin_elevation = sin_[raw_elevation];
+    data.cos_elevation = cos_[raw_elevation];
+    return data;
+  }
+
+  ReturnMode getReturnMode(
+    const packet_t & packet, const SensorConfigurationBase & /* config */) const override
   {
     switch (getFieldValue(packet.header.wave_mode)) {
       case 0x00:

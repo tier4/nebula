@@ -3,7 +3,7 @@
 #include "boost_tcp_driver/tcp_driver.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/robosense/robosense_common.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/robosense_info_driver.hpp"
+// #include "nebula_decoders/nebula_decoders_robosense/robosense_info_driver.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_robosense/robosense_hw_interface.hpp"
 #include "nebula_ros/common/nebula_hw_monitor_ros_wrapper_base.hpp"
 
@@ -49,13 +49,13 @@ class RobosenseHwMonitorRosWrapper final : public rclcpp::Node, NebulaHwMonitorW
 {
   drivers::RobosenseHwInterface hw_interface_;
   Status interface_status_;
-  std::unique_ptr<drivers::RobosenseInfoDriver> info_driver_;
+  // std::unique_ptr<drivers::RobosenseInfoDriver> info_driver_;
   std::vector<uint8_t> info_packet_buffer_;
 
   drivers::RobosenseSensorConfiguration sensor_configuration_;
   std::shared_ptr<nebula::drivers::RobosenseCalibrationConfiguration> calibration_configuration_;
 
-  rclcpp::Subscription<robosense_msgs::msg::RobosenseInfoPacket>::SharedPtr robosense_info_sub_;
+  // rclcpp::Subscription<robosense_msgs::msg::RobosenseInfoPacket>::SharedPtr robosense_info_sub_;
 
   /// @brief Initializing hardware monitor ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
@@ -92,7 +92,7 @@ private:
 
   /// @brief Callback for receiving DIFOP packet
   /// @param info_msg Received DIFOP packet
-  void ReceiveInfoMsgCallback(const robosense_msgs::msg::RobosenseInfoPacket::SharedPtr info_msg);
+  // void ReceiveInfoMsgCallback(const robosense_msgs::msg::RobosenseInfoPacket::SharedPtr info_msg);
 
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters

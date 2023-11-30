@@ -10,6 +10,7 @@
 #include "nebula_decoders/nebula_decoders_common/sensor_mixins/validity.hpp"
 #include "nebula_decoders/nebula_decoders_common/util.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/decoders/angle_corrector_calibration_based.hpp"
 
 #include "boost/endian/buffers.hpp"
 
@@ -155,15 +156,20 @@ struct InfoPacket
 }  // namespace helios
 }  // namespace robosense_packet
 
-class Helios : public SensorBase<robosense_packet::helios::Packet>,
-               public PointTimestampMixin<robosense_packet::helios::Packet>,
-               public robosense_packet::RobosensePacketTimestampMixin<robosense_packet::helios::Packet>,
-               public ReturnModeMixin<robosense_packet::helios::Packet>,
-               public BlockAziChannelElevMixin<robosense_packet::helios::Packet>,
-               public BasicReflectivityMixin<robosense_packet::helios::Packet>,
-               public DistanceMixin<robosense_packet::helios::Packet>,
-               public ChannelIsUnitMixin<robosense_packet::helios::Packet>,
-               public NonZeroDistanceIsValidMixin<robosense_packet::helios::Packet>
+using namespace sensor_mixins;
+
+class Helios
+: public SensorBase<robosense_packet::helios::Packet>,
+  public PointTimestampMixin<robosense_packet::helios::Packet>,
+  public robosense_packet::RobosensePacketTimestampMixin<robosense_packet::helios::Packet>,
+  public ReturnModeMixin<robosense_packet::helios::Packet>,
+  public BlockAziChannelElevMixin<robosense_packet::helios::Packet>,
+  public BasicReflectivityMixin<robosense_packet::helios::Packet>,
+  public DistanceMixin<robosense_packet::helios::Packet>,
+  public ChannelIsUnitMixin<robosense_packet::helios::Packet>,
+  public NonZeroDistanceIsValidMixin<robosense_packet::helios::Packet>,
+  public AngleBasedScanCompletionMixin<robosense_packet::helios::Packet, RobosenseSensorConfiguration>,
+  public AngleCorrectorCalibrationBased<robosense_packet::helios::Packet>
 {
 private:
   static constexpr int firing_time_offset_ns_single_[12][32] = {
@@ -256,16 +262,27 @@ private:
   static constexpr uint8_t SYNC_STATUS_GPS_SUCCESS_FLAG = 0x01;
   static constexpr uint8_t SYNC_STATUS_PTP_SUCCESS_FLAG = 0x02;
 
+  const std::shared_ptr<RobosenseCalibrationConfiguration> calibration_config_;
+
 public:
+  typedef typename robosense_packet::helios::InfoPacket info_t;
+
   static constexpr float MIN_RANGE = 0.2f;
   static constexpr float MAX_RANGE = 150.f;
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 1152000;
 
   static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE = {0, 1, 0};
 
+  Helios(
+    const std::shared_ptr<RobosenseSensorConfiguration> sensor_config,
+    const std::shared_ptr<const RobosenseCalibrationConfiguration> & calibration_config)
+  : AngleBasedScanCompletionMixin(sensor_config), AngleCorrectorCalibrationBased(calibration_config)
+  {
+  }
+
   int32_t getPacketRelativeTimestamp(
     const packet_t & /* packet */, const size_t block_id, const size_t unit_id,
-    const ReturnMode return_mode) override
+    const ReturnMode return_mode) const override
   {
     if (return_mode == ReturnMode::DUAL)
       return firing_time_offset_ns_dual_[block_id][unit_id];
@@ -273,7 +290,7 @@ public:
       return firing_time_offset_ns_single_[block_id][unit_id];
   };
 
-  double getDistanceUnit(const packet_t & packet) override
+  double getDistanceUnit(const packet_t & packet) const override
   {
     const uint8_t range_resolution = getFieldValue(packet.header.range_resolution);
     if (range_resolution == 0) {
@@ -286,18 +303,20 @@ public:
   }
 
   /// @brief Get the distance value of the given unit in meters.
-  double getDistance(const packet_t & packet, const size_t block_id, const size_t unit_id) override
+  double getDistance(
+    const packet_t & packet, const size_t block_id, const size_t unit_id) const override
   {
     const auto * unit = getUnit(packet, block_id, unit_id);
     return getFieldValue(unit->distance) * getDistanceUnit(packet);
   }
 
-  ReturnMode getReturnMode(const packet_t & /* packet */, const SensorConfigurationBase & config) override
+  ReturnMode getReturnMode(
+    const packet_t & /* packet */, const SensorConfigurationBase & config) const override
   {
-    return config.return_mode; //TODO(mojomex): add DIFOP packet handling back in
+    return config.return_mode;  // TODO(mojomex): add DIFOP packet handling back in
   }
 
-  ReturnMode getReturnMode(const robosense_packet::helios::InfoPacket & info_packet)
+  ReturnMode getReturnMode(const robosense_packet::helios::InfoPacket & info_packet) const
   {
     switch (getFieldValue(info_packet.return_mode)) {
       case DUAL_RETURN_FLAG:
@@ -314,12 +333,12 @@ public:
   }
 
   RobosenseCalibrationConfiguration getSensorCalibration(
-    const robosense_packet::helios::InfoPacket & info_packet)
+    const robosense_packet::helios::InfoPacket & info_packet) const
   {
     return info_packet.sensor_calibration.getCalibration();
   }
 
-  bool getSyncStatus(const robosense_packet::helios::InfoPacket & info_packet)
+  bool getSyncStatus(const robosense_packet::helios::InfoPacket & info_packet) const
   {
     const std::bitset<8> gps_st_bits{info_packet.fault_diagnosis.gps_status.value()};
     if (gps_st_bits[2] == 1) return true;
@@ -327,7 +346,7 @@ public:
   }
 
   std::map<std::string, std::string> getSensorInfo(
-    const robosense_packet::helios::InfoPacket & info_packet)
+    const robosense_packet::helios::InfoPacket & info_packet) const
   {
     std::map<std::string, std::string> sensor_info;
     sensor_info["motor_speed"] = std::to_string(info_packet.motor_speed.value());

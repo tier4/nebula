@@ -15,9 +15,9 @@ RobosenseHwMonitorRosWrapper::RobosenseHwMonitorRosWrapper(const rclcpp::NodeOpt
     return;
   }
 
-  robosense_info_sub_ = create_subscription<robosense_msgs::msg::RobosenseInfoPacket>(
-    "robosense_difop_packets", rclcpp::SensorDataQoS(),
-    std::bind(&RobosenseHwMonitorRosWrapper::ReceiveInfoMsgCallback, this, std::placeholders::_1));
+  // robosense_info_sub_ = create_subscription<robosense_msgs::msg::RobosenseInfoPacket>(
+  //   "robosense_difop_packets", rclcpp::SensorDataQoS(),
+  //   std::bind(&RobosenseHwMonitorRosWrapper::ReceiveInfoMsgCallback, this, std::placeholders::_1));
 
   set_param_res_ = this->add_on_set_parameters_callback(
     std::bind(&RobosenseHwMonitorRosWrapper::paramCallback, this, std::placeholders::_1));
@@ -96,8 +96,8 @@ void RobosenseHwMonitorRosWrapper::InitializeRobosenseDiagnostics()
 void RobosenseHwMonitorRosWrapper::OnRobosenseStatusTimer()
 {
   RCLCPP_DEBUG_STREAM(this->get_logger(), "OnRobosenseStatusTimer" << std::endl);
-  info_driver_->DecodeInfoPacket(info_packet_buffer_);
-  current_sensor_info_ = info_driver_->GetSensorInfo();
+  // info_driver_->DecodeInfoPacket(info_packet_buffer_);
+  // current_sensor_info_ = info_driver_->GetSensorInfo();
   current_info_time_ = std::make_unique<rclcpp::Time>(this->get_clock()->now());
 }
 
@@ -144,48 +144,48 @@ rcl_interfaces::msg::SetParametersResult RobosenseHwMonitorRosWrapper::paramCall
   return *result;
 }
 
-void RobosenseHwMonitorRosWrapper::ReceiveInfoMsgCallback(
-  const robosense_msgs::msg::RobosenseInfoPacket::SharedPtr info_msg)
-{
-  if (!info_driver_) {
-    auto sensor_cfg_ptr =
-      std::make_shared<drivers::RobosenseSensorConfiguration>(sensor_configuration_);
+// void RobosenseHwMonitorRosWrapper::ReceiveInfoMsgCallback(
+//   const robosense_msgs::msg::RobosenseInfoPacket::SharedPtr info_msg)
+// {
+//   if (!info_driver_) {
+//     auto sensor_cfg_ptr =
+//       std::make_shared<drivers::RobosenseSensorConfiguration>(sensor_configuration_);
 
-    if (sensor_cfg_ptr->sensor_model == drivers::SensorModel::ROBOSENSE_BPEARL) {
-      if (
-        drivers::SensorModelFromString(info_msg->lidar_model) ==
-        drivers::SensorModel::ROBOSENSE_BPEARL_V3) {
-        sensor_cfg_ptr->sensor_model = drivers::SensorModel::ROBOSENSE_BPEARL_V3;
-      } else if (
-        drivers::SensorModelFromString(info_msg->lidar_model) ==
-        drivers::SensorModel::ROBOSENSE_BPEARL_V4) {
-        sensor_cfg_ptr->sensor_model = drivers::SensorModel::ROBOSENSE_BPEARL_V4;
-      } else {
-        RCLCPP_ERROR_STREAM(this->get_logger(), "No version for Bpearl.");
-        return;
-      }
-    }
+//     if (sensor_cfg_ptr->sensor_model == drivers::SensorModel::ROBOSENSE_BPEARL) {
+//       if (
+//         drivers::SensorModelFromString(info_msg->lidar_model) ==
+//         drivers::SensorModel::ROBOSENSE_BPEARL_V3) {
+//         sensor_cfg_ptr->sensor_model = drivers::SensorModel::ROBOSENSE_BPEARL_V3;
+//       } else if (
+//         drivers::SensorModelFromString(info_msg->lidar_model) ==
+//         drivers::SensorModel::ROBOSENSE_BPEARL_V4) {
+//         sensor_cfg_ptr->sensor_model = drivers::SensorModel::ROBOSENSE_BPEARL_V4;
+//       } else {
+//         RCLCPP_ERROR_STREAM(this->get_logger(), "No version for Bpearl.");
+//         return;
+//       }
+//     }
 
-    info_driver_ = std::make_unique<drivers::RobosenseInfoDriver>(sensor_cfg_ptr);
-  }
+//     info_driver_ = std::make_unique<drivers::RobosenseInfoDriver>(sensor_cfg_ptr);
+//   }
 
-  info_packet_buffer_ =
-    std::vector<uint8_t>(info_msg->packet.data.begin(), info_msg->packet.data.end());
+//   info_packet_buffer_ =
+//     std::vector<uint8_t>(info_msg->packet.data.begin(), info_msg->packet.data.end());
 
-  if (!hardware_id_.has_value()) {
-    info_driver_->DecodeInfoPacket(info_packet_buffer_);
-    current_sensor_info_ = info_driver_->GetSensorInfo();
-    current_info_time_ = std::make_unique<rclcpp::Time>(this->get_clock()->now());
+//   if (!hardware_id_.has_value()) {
+//     info_driver_->DecodeInfoPacket(info_packet_buffer_);
+//     current_sensor_info_ = info_driver_->GetSensorInfo();
+//     current_info_time_ = std::make_unique<rclcpp::Time>(this->get_clock()->now());
 
-    RCLCPP_INFO_STREAM(this->get_logger(), "Model:" << sensor_configuration_.sensor_model);
-    RCLCPP_INFO_STREAM(this->get_logger(), "Serial:" << current_sensor_info_["serial_number"]);
+//     RCLCPP_INFO_STREAM(this->get_logger(), "Model:" << sensor_configuration_.sensor_model);
+//     RCLCPP_INFO_STREAM(this->get_logger(), "Serial:" << current_sensor_info_["serial_number"]);
 
-    hardware_id_.emplace(
-      nebula::drivers::SensorModelToString(sensor_configuration_.sensor_model) + ": " +
-      current_sensor_info_["serial_number"]);
-    InitializeRobosenseDiagnostics();
-  }
-}
+//     hardware_id_.emplace(
+//       nebula::drivers::SensorModelToString(sensor_configuration_.sensor_model) + ": " +
+//       current_sensor_info_["serial_number"]);
+//     InitializeRobosenseDiagnostics();
+//   }
+// }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(RobosenseHwMonitorRosWrapper)
 }  // namespace ros

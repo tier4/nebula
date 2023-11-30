@@ -41,9 +41,9 @@ struct Timestamp
 };
 
 template <typename PacketT>
-struct RobosensePacketTimestampMixin : public point_accessors::PacketTimestampMixin<PacketT>
+struct RobosensePacketTimestampMixin : public sensor_mixins::PacketTimestampMixin<PacketT>
 {
-  uint64_t getPacketTimestamp(const PacketT & packet) override
+  uint64_t getPacketTimestamp(const PacketT & packet) const override
   {
     return packet.header.timestamp.get_time_in_ns();
   }

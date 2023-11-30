@@ -1,7 +1,8 @@
 #pragma once
 
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_sensor.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/decoders/angle_corrector_calibration_based.hpp"
+
 
 #include "boost/endian/buffers.hpp"
 
@@ -97,19 +98,22 @@ struct InfoPacket
 
 #pragma pack(pop)
 }  // namespace bpearl_v4
-
-/// @brief Get the distance unit of the given @ref BpearlV3 packet in meters.
-/// @return 0.0025m (0.25cm)
-template <>
-inline double get_dis_unit<bpearl_v4::Packet>(const bpearl_v4::Packet & /* packet */)
-{
-  return 0.0025;
-}
-
 }  // namespace robosense_packet
 
-class BpearlV4 : public RobosenseSensor<
-                   robosense_packet::bpearl_v4::Packet, robosense_packet::bpearl_v4::InfoPacket>
+using namespace sensor_mixins;
+
+class BpearlV4
+: public SensorBase<robosense_packet::bpearl_v4::Packet>,
+  public PointTimestampMixin<robosense_packet::bpearl_v4::Packet>,
+  public robosense_packet::RobosensePacketTimestampMixin<robosense_packet::bpearl_v4::Packet>,
+  public ReturnModeMixin<robosense_packet::bpearl_v4::Packet>,
+  public BlockAziChannelElevMixin<robosense_packet::bpearl_v4::Packet>,
+  public BasicReflectivityMixin<robosense_packet::bpearl_v4::Packet>,
+  public DistanceMixin<robosense_packet::bpearl_v4::Packet>,
+  public ChannelIsUnitMixin<robosense_packet::bpearl_v4::Packet>,
+  public NonZeroDistanceIsValidMixin<robosense_packet::bpearl_v4::Packet>,
+  public AngleBasedScanCompletionMixin<robosense_packet::bpearl_v4::Packet, RobosenseSensorConfiguration>,
+  public AngleCorrectorCalibrationBased<robosense_packet::bpearl_v4::Packet>
 {
 private:
   static constexpr int firing_time_offset_ns_single_[12][32] = {
@@ -202,26 +206,49 @@ private:
   static constexpr uint8_t SYNC_STATUS_GPS_SUCCESS_FLAG = 0x01;
   static constexpr uint8_t SYNC_STATUS_PTP_SUCCESS_FLAG = 0x02;
 
+
 public:
+  typedef typename robosense_packet::bpearl_v4::InfoPacket info_t;
+
   static constexpr float MIN_RANGE = 0.1f;
   static constexpr float MAX_RANGE = 30.f;
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 1152000;
 
-  static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE =  {0, 1, 0};
+  static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE = {0, 1, 0};
 
-  int getPacketRelativePointTimeOffset(
-    const uint32_t block_id, const uint32_t channel_id,
-    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration) override
+  BpearlV4(const std::shared_ptr<RobosenseSensorConfiguration> sensor_config, const std::shared_ptr<const RobosenseCalibrationConfiguration> & calibration_config)
+  : AngleBasedScanCompletionMixin(sensor_config), AngleCorrectorCalibrationBased(calibration_config)
   {
-    if (sensor_configuration->return_mode == ReturnMode::DUAL)
-      return firing_time_offset_ns_dual_[block_id][channel_id];
-    else
-      return firing_time_offset_ns_single_[block_id][channel_id];
   }
 
-  ReturnMode getReturnMode(const robosense_packet::bpearl_v4::InfoPacket & info_packet)
+  int32_t getPacketRelativeTimestamp(
+    const packet_t & /* packet */, const size_t block_id, const size_t unit_id,
+    const ReturnMode return_mode) const override
   {
-    switch (info_packet.return_mode.value()) {
+    if (return_mode == ReturnMode::DUAL)
+      return firing_time_offset_ns_dual_[block_id][unit_id];
+    else
+      return firing_time_offset_ns_single_[block_id][unit_id];
+  };
+
+  double getDistanceUnit(const packet_t & /* packet */) const override { return 0.0025; }
+
+  /// @brief Get the distance value of the given unit in meters.
+  double getDistance(const packet_t & packet, const size_t block_id, const size_t unit_id) const override
+  {
+    const auto * unit = getUnit(packet, block_id, unit_id);
+    return getFieldValue(unit->distance) * getDistanceUnit(packet);
+  }
+
+  ReturnMode getReturnMode(
+    const packet_t & /* packet */, const SensorConfigurationBase & config) const override
+  {
+    return config.return_mode;  // TODO(mojomex): add DIFOP packet handling back in
+  }
+
+  ReturnMode getReturnMode(const robosense_packet::bpearl_v4::InfoPacket & info_packet) const
+  {
+    switch (getFieldValue(info_packet.return_mode)) {
       case DUAL_RETURN_FLAG:
         return ReturnMode::DUAL;
       case STRONGEST_RETURN_FLAG:
@@ -236,12 +263,12 @@ public:
   }
 
   RobosenseCalibrationConfiguration getSensorCalibration(
-    const robosense_packet::bpearl_v4::InfoPacket & info_packet)
+    const robosense_packet::bpearl_v4::InfoPacket & info_packet) const
   {
     return info_packet.sensor_calibration.getCalibration();
   }
 
-  bool getSyncStatus(const robosense_packet::bpearl_v4::InfoPacket & info_packet)
+  bool getSyncStatus(const robosense_packet::bpearl_v4::InfoPacket & info_packet) const
   {
     const std::bitset<8> gps_st_bits{info_packet.fault_diagnosis.gps_status.value()};
     if (gps_st_bits[2] == 1) return true;
@@ -249,7 +276,7 @@ public:
   }
 
   std::map<std::string, std::string> getSensorInfo(
-    const robosense_packet::bpearl_v4::InfoPacket & info_packet)
+    const robosense_packet::bpearl_v4::InfoPacket & info_packet) const
   {
     std::map<std::string, std::string> sensor_info;
     sensor_info["motor_speed"] = std::to_string(info_packet.motor_speed_setting.value());

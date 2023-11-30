@@ -24,6 +24,12 @@ public:
   SensorBase() = default;
   virtual ~SensorBase() = default;
 
+  /// @brief Decide whereto to decode the given raw packet. This is only non-zero for sensors that
+  /// split return groups across multiple packets
+  /// @param raw_packet The raw bytes to be decoded
+  /// @return The index [0, num_decode_groups) within the decode group to which the packet belongs
+  virtual size_t getDecodeGroupIndex(const uint8_t * const /* raw_packet */) const { return 0; }
+
   /// @brief For a given start block index, find the earliest (lowest) relative time offset of any
   /// point in the packet in or after the start block
   /// @param start_block_id The index of the block in and after which to consider points
@@ -31,21 +37,9 @@ public:
   /// @return The lowest point time offset (relative to the packet timestamp) of any point in or
   /// after the start block, in nanoseconds
   int getEarliestPointTimeOffsetForBlock(
-    uint32_t start_block_id,
-    const std::shared_ptr<SensorConfigurationBase> & sensor_configuration)
+    uint32_t /* start_block_id */, const std::shared_ptr<SensorConfigurationBase> & /* sensor_configuration */)
   {
-    const auto n_returns = robosense_packet::get_n_returns(sensor_configuration->return_mode);
-    int min_offset_ns = std::numeric_limits<int>::max();
-
-    for (uint32_t block_id = start_block_id; block_id < start_block_id + n_returns; ++block_id) {
-      for (uint32_t channel_id = 0; channel_id < packet_t::N_CHANNELS; ++channel_id) {
-        min_offset_ns = std::min(
-          min_offset_ns,
-          getPacketRelativePointTimeOffset(block_id, channel_id, sensor_configuration));
-      }
-    }
-
-    return min_offset_ns;
+    return 0;  // TODO(mojomex): implement
   }
 
   /// @brief Whether the unit given by return_idx is a duplicate of any other unit in return_units
@@ -55,7 +49,7 @@ public:
   /// blocks)
   /// @return true if the unit is identical to any other one in return_units, false otherwise
   template <typename CollectionT>
-  static bool is_duplicate(const CollectionT & return_units, const size_t return_idx)
+  static bool isDuplicate(const CollectionT & return_units, const size_t return_idx)
   {
     for (size_t i = 0; i < return_units.size(); ++i) {
       if (i == return_idx) {
@@ -84,7 +78,7 @@ public:
   static ReturnType getReturnType(
     const CollectionT & return_units, const size_t return_idx, const ReturnMode & return_mode)
   {
-    if (is_duplicate(return_idx, return_units)) {
+    if (isDuplicate(return_units, return_idx)) {
       return ReturnType::IDENTICAL;
     }
 

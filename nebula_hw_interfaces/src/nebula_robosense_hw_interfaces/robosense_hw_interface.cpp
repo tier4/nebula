@@ -126,13 +126,13 @@ Status RobosenseHwInterface::InfoInterfaceStart()
     PrintInfo(
       "Starting UDP server for info packets on: " + sensor_configuration_->sensor_ip + ":" +
       std::to_string(sensor_configuration_->gnss_port));
-    info_udp_driver_->init_receiver(
-      sensor_configuration_->host_ip, sensor_configuration_->gnss_port);
-    info_udp_driver_->receiver()->open();
-    info_udp_driver_->receiver()->bind();
+    // info_udp_driver_->init_receiver(
+    //   sensor_configuration_->host_ip, sensor_configuration_->gnss_port);
+    // info_udp_driver_->receiver()->open();
+    // info_udp_driver_->receiver()->bind();
 
-    info_udp_driver_->receiver()->asyncReceive(
-      std::bind(&RobosenseHwInterface::ReceiveInfoPacketCallback, this, std::placeholders::_1));
+    // info_udp_driver_->receiver()->asyncReceive(
+    //   std::bind(&RobosenseHwInterface::ReceiveInfoPacketCallback, this, std::placeholders::_1));
 
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;

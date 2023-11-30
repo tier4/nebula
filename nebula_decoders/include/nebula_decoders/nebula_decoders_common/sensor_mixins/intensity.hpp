@@ -10,14 +10,14 @@ namespace nebula
 {
 namespace drivers
 {
-namespace point_accessors
+namespace sensor_mixins
 {
 
 template <typename PacketT>
 struct IntensityMixin
 {
   virtual uint8_t getIntensity(
-    const PacketT & packet, const size_t block_id, const size_t unit_id) = 0;
+    const PacketT & packet, const size_t block_id, const size_t unit_id) const = 0;
 };
 
 template <typename PacketT>
@@ -27,13 +27,13 @@ struct BasicReflectivityMixin : public IntensityMixin<PacketT>
   /// Intensities from 0-100 refer to diffuse reflections whereas intensities from 101-255
   /// refer to retroreflections.
   uint8_t getIntensity(
-    const PacketT & packet, const size_t block_id, const size_t unit_id) override
+    const PacketT & packet, const size_t block_id, const size_t unit_id) const override
   {
     const auto * unit = getUnit(packet, block_id, unit_id);
     return static_cast<uint8_t>(getFieldValue(unit->reflectivity));
   }
 };
 
-}  // namespace point_accessors
+}  // namespace sensor_mixins
 }  // namespace drivers
 }  // namespace nebula

@@ -11,13 +11,13 @@ namespace nebula
 {
 namespace drivers
 {
-namespace point_accessors
+namespace sensor_mixins
 {
 
 template <typename PacketT>
 struct PacketTimestampMixin
 {
-  virtual uint64_t getPacketTimestamp(const PacketT & packet) = 0;
+  virtual uint64_t getPacketTimestamp(const PacketT & packet) const = 0;
 };
 
 template <typename PacketT>
@@ -25,7 +25,7 @@ struct PointTimestampMixin
 {
   virtual int32_t getPacketRelativeTimestamp(
     const PacketT & packet, const size_t block_id, const size_t channel_id,
-    const ReturnMode return_mode) = 0;
+    const ReturnMode return_mode) const = 0;
 };
 
 template <typename PacketT>
@@ -35,13 +35,13 @@ struct BlockTimestampUsMixin: public PointTimestampMixin<PacketT>
   /// the packet's timestamp, in nanoseconds
   int32_t getPacketRelativeTimestamp(
     const PacketT & packet, const size_t block_id, const size_t /* channel_id */,
-    const ReturnMode /* return_mode */) override
+    const ReturnMode /* return_mode */) const override
   {
     const auto * block = getBlock(packet, block_id);
     return static_cast<int32_t>(getFieldValue(block->timestamp)) * 1000;
   }
 };
 
-}  // namespace point_accessors
+}  // namespace sensor_mixins
 }  // namespace drivers
 }  // namespace nebula
