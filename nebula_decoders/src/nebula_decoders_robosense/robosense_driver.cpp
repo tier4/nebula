@@ -11,30 +11,36 @@ namespace drivers
 {
 
 RobosenseDriver::RobosenseDriver(
-  const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<RobosenseCalibrationConfiguration> & calibration_configuration)
+  const std::shared_ptr<RobosenseSensorConfiguration> sensor_configuration,
+  const std::shared_ptr<RobosenseCalibrationConfiguration> calibration_configuration)
 {
+  std::cout << "1" << std::endl;
+  std::cout << "sensor_configuration->sensor_model: " << sensor_configuration->sensor_model << std::endl;
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;
   switch (sensor_configuration->sensor_model) {
     case SensorModel::UNKNOWN:
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;
+      std::cerr << "Invalid sensor model: " << sensor_configuration->sensor_model << std::endl;
       break;
     case SensorModel::ROBOSENSE_BPEARL_V3: {
-      BpearlV3 sensor(sensor_configuration, calibration_configuration);
-      scan_decoder_.reset(new RobosenseDecoder<BpearlV3>(sensor_configuration, std::move(sensor)));
+      // BpearlV3 sensor(sensor_configuration, calibration_configuration);
+      // scan_decoder_.reset(new RobosenseDecoder<BpearlV3>(sensor_configuration, sensor));
     } break;
     case SensorModel::ROBOSENSE_BPEARL_V4: {
-      BpearlV4 sensor(sensor_configuration, calibration_configuration);
-      scan_decoder_.reset(new RobosenseDecoder<BpearlV4>(sensor_configuration, std::move(sensor)));
+      // BpearlV4 sensor(sensor_configuration, calibration_configuration);
+      // scan_decoder_.reset(new RobosenseDecoder<BpearlV4>(sensor_configuration, sensor));
     } break;
     case SensorModel::ROBOSENSE_HELIOS: {
-      Helios sensor(sensor_configuration, calibration_configuration);
-      scan_decoder_.reset(new RobosenseDecoder<Helios>(sensor_configuration, std::move(sensor)));
+      // Helios sensor(sensor_configuration, calibration_configuration);
+      // scan_decoder_.reset(new RobosenseDecoder<Helios>(sensor_configuration, sensor));
     } break;
     case SensorModel::ROBOSENSE_M1: {
+      std::cout << "2" << std::endl;
       M1 sensor{};
-      scan_decoder_.reset(new RobosenseDecoder<M1>(sensor_configuration, std::move(sensor)));
+      std::cout << "3" << std::endl;
+      scan_decoder_.reset(new RobosenseDecoder<M1>(sensor_configuration, {sensor}));
+      std::cout << "4" << std::endl;
     } break;
     default:
       driver_status_ = nebula::Status::NOT_INITIALIZED;
@@ -45,6 +51,11 @@ RobosenseDriver::RobosenseDriver(
 Status RobosenseDriver::GetStatus()
 {
   return driver_status_;
+}
+
+bool RobosenseDriver::HasScanned()
+{
+  return scan_decoder_->hasScanned();
 }
 
 Status RobosenseDriver::SetCalibrationConfiguration(
@@ -75,11 +86,11 @@ std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ConvertScanToP
     }
   }
 
-  if (cnt == 0) {
-    RCLCPP_ERROR_STREAM(
-      logger, "Scanned " << robosense_scan->packets.size() << " packets, but no "
-                         << "pointclouds were generated. Last azimuth: " << last_azimuth);
-  }
+  // if (cnt == 0) {
+  //   RCLCPP_ERROR_STREAM(
+  //     logger, "Scanned " << robosense_scan->packets.size() << " packets, but no "
+  //                        << "pointclouds were generated. Last azimuth: " << last_azimuth);
+  // }
 
   return pointcloud;
 }

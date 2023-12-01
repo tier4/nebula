@@ -29,9 +29,9 @@ class RobosenseDriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrap
   std::shared_ptr<drivers::RobosenseDriver> driver_ptr_;
   // std::shared_ptr<drivers::RobosenseInfoDriver> info_driver_ptr_;
   Status wrapper_status_;
-  bool is_received_info{false};
+  // bool is_received_info{false};
   rclcpp::Subscription<robosense_msgs::msg::RobosenseScan>::SharedPtr robosense_scan_sub_;
-  rclcpp::Subscription<robosense_msgs::msg::RobosenseInfoPacket>::SharedPtr robosense_info_sub_;
+  // rclcpp::Subscription<robosense_msgs::msg::RobosenseInfoPacket>::SharedPtr robosense_info_sub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_;

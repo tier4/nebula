@@ -524,6 +524,7 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "Bpearl") return SensorModel::ROBOSENSE_BPEARL;
   if (sensor_model == "Bpearl_V3") return SensorModel::ROBOSENSE_BPEARL_V3;
   if (sensor_model == "Bpearl_V4") return SensorModel::ROBOSENSE_BPEARL_V4;
+  if (sensor_model == "M1") return SensorModel::ROBOSENSE_M1;
   return SensorModel::UNKNOWN;
 }
 
@@ -571,6 +572,8 @@ inline std::string SensorModelToString(const SensorModel & sensor_model)
       return "Bpearl_V3";
     case SensorModel::ROBOSENSE_BPEARL_V4:
       return "Bpearl_V4";
+    case SensorModel::ROBOSENSE_M1:
+      return "M1";
     default:
       return "UNKNOWN";
   }

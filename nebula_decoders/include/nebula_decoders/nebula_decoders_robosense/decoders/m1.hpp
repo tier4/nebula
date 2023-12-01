@@ -66,7 +66,7 @@ struct Packet : public PacketBase<25, 5, 2, 100>
   typedef Body<M1Block<M1Unit, Packet::N_CHANNELS>, Packet::N_BLOCKS> body_t;
   Header header;
   body_t body;
-  big_uint48_buf_t tail;
+  big_uint24_buf_t tail;
 };
 
 struct InfoPacket
@@ -168,7 +168,9 @@ public:
   bool checkScanCompleted(const packet_t & packet, const size_t /* block_id */) override
   {
     const uint32_t current_sequence_number = getFieldValue(packet.header.sequence_number);
-    return current_sequence_number < last_sequence_number_;
+    bool completed = current_sequence_number < last_sequence_number_;
+    last_sequence_number_ = current_sequence_number;
+    return completed;
   }
 
   int32_t getPacketRelativeTimestamp(

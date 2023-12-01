@@ -77,9 +77,9 @@ protected:
   /// @return Whether the packet was parsed successfully
   bool parsePacket(const robosense_msgs::msg::RobosensePacket & msop_packet)
   {
-    if (msop_packet.data.size() < sizeof(typename SensorT::packet_t)) {
+    if (msop_packet.size < sizeof(typename SensorT::packet_t)) {
       RCLCPP_ERROR_STREAM(
-        logger_, "Packet size mismatch:" << msop_packet.data.size() << " | Expected at least:"
+        logger_, "Packet size mismatch:" << msop_packet.size << " | Expected at least:"
                                          << sizeof(typename SensorT::packet_t));
       return false;
     }
@@ -271,7 +271,7 @@ public:
   /// calibration_configuration is set)
   explicit RobosenseDecoder(
     const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration,
-    const SensorT && sensor)
+    const SensorT sensor)
   : sensor_configuration_(sensor_configuration),
     sensor_(sensor),
     decode_group_(decode_group_size_),

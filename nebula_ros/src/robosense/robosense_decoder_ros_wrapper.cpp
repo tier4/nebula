@@ -27,6 +27,9 @@ RobosenseDriverRosWrapper::RobosenseDriverRosWrapper(const rclcpp::NodeOptions &
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
 
+  wrapper_status_ = InitializeDriver(sensor_cfg_ptr_, calibration_cfg_ptr_);
+  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
+
   robosense_scan_sub_ = create_subscription<robosense_msgs::msg::RobosenseScan>(
     "robosense_packets", rclcpp::SensorDataQoS(),
     std::bind(&RobosenseDriverRosWrapper::ReceiveScanMsgCallback, this, std::placeholders::_1));
@@ -46,6 +49,7 @@ RobosenseDriverRosWrapper::RobosenseDriverRosWrapper(const rclcpp::NodeOptions &
 void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
   const robosense_msgs::msg::RobosenseScan::SharedPtr scan_msg)
 {
+  // RCLCPP_INFO(this->get_logger(), "Received scan message: %lu", scan_msg->packets.size());
   if (!driver_ptr_) {
     if (sensor_cfg_ptr_->sensor_model == drivers::SensorModel::ROBOSENSE_BPEARL) {
       if (scan_msg->packets.back().data[32] == drivers::BPEARL_V4_FLAG) {
@@ -61,18 +65,25 @@ void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
     //     std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
     //   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
     // }
-  }
 
-  if (!is_received_info) {
-    RCLCPP_WARN_STREAM(this->get_logger(), "Waiting for info packet.");
+    RCLCPP_WARN(this->get_logger(), "Driver not initialized.");
     return;
   }
+
+  // if (!is_received_info) {
+  //   RCLCPP_WARN_STREAM(this->get_logger(), "Waiting for info packet.");
+  //   return;
+  // }
 
   auto t_start = std::chrono::high_resolution_clock::now();
 
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
+
+  if (!driver_ptr_->HasScanned()) {
+    return;
+  };
 
   if (pointcloud == nullptr) {
     RCLCPP_WARN_STREAM(get_logger(), "Empty cloud parsed.");
@@ -174,11 +185,14 @@ Status RobosenseDriverRosWrapper::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
   std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration)
 {
-  RCLCPP_INFO_STREAM(this->get_logger(), "Initializing driver...");
-  driver_ptr_ = std::make_shared<drivers::RobosenseDriver>(
+  RCLCPP_INFO_STREAM(
+    this->get_logger(), "Initializing driver...\n"
+                          << sensor_configuration << "\n"
+                          << calibration_configuration);
+  driver_ptr_ = std::shared_ptr<drivers::RobosenseDriver>(new drivers::RobosenseDriver(
     std::static_pointer_cast<drivers::RobosenseSensorConfiguration>(sensor_configuration),
     std::static_pointer_cast<drivers::RobosenseCalibrationConfiguration>(
-      calibration_configuration));
+      calibration_configuration)));
 
   return driver_ptr_->GetStatus();
 }
@@ -226,7 +240,7 @@ Status RobosenseDriverRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("data_port", 2368, descriptor);
+    this->declare_parameter<uint16_t>("data_port", 6699, descriptor);
     sensor_configuration.data_port = this->get_parameter("data_port").as_int();
   }
   {

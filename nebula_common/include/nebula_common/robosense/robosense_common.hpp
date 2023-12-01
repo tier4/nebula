@@ -62,6 +62,8 @@ size_t GetChannelSize(const SensorModel & model)
       return 32;
     case SensorModel::ROBOSENSE_HELIOS:
       return 32;
+    default:
+      return 0;
   }
 }
 
