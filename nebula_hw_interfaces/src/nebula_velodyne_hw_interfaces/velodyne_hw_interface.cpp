@@ -72,7 +72,7 @@ void VelodyneHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> 
     std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
   velodyne_packet.data = packet_data;
   velodyne_packet.stamp.sec = static_cast<int>(now_secs);
-  velodyne_packet.stamp.nanosec = static_cast<std::uint32_t>(now_nanosecs % 1000000000);
+  velodyne_packet.stamp.nanosec = static_cast<std::uint32_t>(now_nanosecs % 1'000'000'000);
   scan_cloud_ptr_->packets.emplace_back(velodyne_packet);
   processed_packets_++;
 
