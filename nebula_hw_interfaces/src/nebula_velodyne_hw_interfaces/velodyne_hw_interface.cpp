@@ -62,15 +62,13 @@ Status VelodyneHwInterface::RegisterScanCallback(
 void VelodyneHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer)
 {
   // Process current packet
-  uint32_t buffer_size = buffer.size();
-  std::array<uint8_t, 1206> packet_data{};
-  std::copy_n(std::make_move_iterator(buffer.begin()), buffer_size, packet_data.begin());
+  const uint32_t buffer_size = buffer.size();
   velodyne_msgs::msg::VelodynePacket velodyne_packet;
+  std::copy_n(std::make_move_iterator(buffer.begin()), buffer_size, velodyne_packet.data.begin());
   auto now = std::chrono::system_clock::now();
   auto now_secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
   auto now_nanosecs =
     std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-  velodyne_packet.data = packet_data;
   velodyne_packet.stamp.sec = static_cast<int>(now_secs);
   velodyne_packet.stamp.nanosec = static_cast<std::uint32_t>(now_nanosecs % 1'000'000'000);
   scan_cloud_ptr_->packets.emplace_back(velodyne_packet);
