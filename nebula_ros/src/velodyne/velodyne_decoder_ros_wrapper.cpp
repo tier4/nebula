@@ -45,9 +45,6 @@ void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
 {
   auto t_start = std::chrono::high_resolution_clock::now();
 
-  // take packets out of scan msg
-  std::vector<velodyne_msgs::msg::VelodynePacket> pkt_msgs = scan_msg->packets;
-
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
