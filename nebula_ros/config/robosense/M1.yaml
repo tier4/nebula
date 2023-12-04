@@ -1,8 +1,8 @@
 /**:
   ros__parameters:
     sensor_model: "M1" # See readme for supported models
-    sensor_ip: "127.0.0.1" # Lidar Sensor IP
-    host_ip: "127.0.0.1" # Broadcast IP from Sensor
+    sensor_ip: "192.168.1.200" # Lidar Sensor IP
+    host_ip: "192.168.1.102" # Broadcast IP from Sensor
     frame_id: "robosense"
     data_port: 6699 # LiDAR Data Port (MSOP)
     gnss_port: 7788 # LiDAR GNSS Port (DIFOP)

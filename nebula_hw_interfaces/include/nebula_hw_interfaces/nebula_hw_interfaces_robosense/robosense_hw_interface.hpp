@@ -31,30 +31,31 @@ constexpr uint16_t HELIOS_INFO_PACKET_SIZE = 1248;
 constexpr uint16_t BPEARL_PACKET_SIZE = 1248;
 constexpr uint16_t BPEARL_INFO_PACKET_SIZE = 1248;
 constexpr uint16_t M1_PACKET_SIZE = 1210;
+constexpr uint16_t M1_INFO_PACKET_SIZE = 256;
 
 /// @brief Hardware interface of Robosense driver
 class RobosenseHwInterface : NebulaHwInterfaceBase
 {
 private:
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
-  // std::unique_ptr<::drivers::common::IoContext> info_io_context_;
+  std::unique_ptr<::drivers::common::IoContext> info_io_context_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
-  // std::unique_ptr<::drivers::udp_driver::UdpDriver> info_udp_driver_;
+  std::unique_ptr<::drivers::udp_driver::UdpDriver> info_udp_driver_;
   std::shared_ptr<RobosenseSensorConfiguration> sensor_configuration_;
   std::unique_ptr<robosense_msgs::msg::RobosenseScan> scan_cloud_ptr_;
   size_t azimuth_index_{44};  // For Helios and Bpearl 42 byte header + 2 byte flag
   int prev_phase_{};
-  // std::atomic<bool> is_info_received{false};         // To check if DIFOP is received
-  // std::optional<std::vector<uint8_t>> info_buffer_;  // To hold DIFOP data
+  std::atomic<bool> is_info_received{false};         // To check if DIFOP is received
+  std::optional<std::vector<uint8_t>> info_buffer_;  // To hold DIFOP data
   std::optional<SensorModel> sensor_model_;          // To hold sensor model
   std::function<bool(size_t)>
     is_valid_packet_; /*Lambda Function Array to verify proper packet size for data*/
-  // std::function<bool(size_t)>
-  //   is_valid_info_packet_; /*Lambda Function Array to verify proper packet size for info*/
+  std::function<bool(size_t)>
+    is_valid_info_packet_; /*Lambda Function Array to verify proper packet size for info*/
   std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseScan> buffer)>
     scan_reception_callback_; /**This function pointer is called when the scan is complete*/
-  // std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> buffer)>
-  //   info_reception_callback_; /**This function pointer is called when DIFOP packet is received*/
+  std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> buffer)>
+    info_reception_callback_; /**This function pointer is called when DIFOP packet is received*/
   std::shared_ptr<rclcpp::Logger> parent_node_logger_;
 
   /// @brief Printing the string to RCLCPP_INFO_STREAM
@@ -75,7 +76,7 @@ public:
 
   /// @brief Callback function to receive the Info Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  // void ReceiveInfoPacketCallback(const std::vector<uint8_t> & buffer);
+  void ReceiveInfoPacketCallback(const std::vector<uint8_t> & buffer);
 
   /// @brief Starting the interface that handles UDP streams for MSOP packets
   /// @return Resulting status
@@ -83,7 +84,7 @@ public:
 
   /// @brief Starting the interface that handles UDP streams for DIFOP packets
   /// @return Resulting status
-  // Status InfoInterfaceStart();
+  Status InfoInterfaceStart();
 
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
@@ -115,8 +116,8 @@ public:
   /// @brief Registering callback for RobosensePacket
   /// @param scan_callback Callback function
   /// @return Resulting status
-  // Status RegisterInfoCallback(
-  //   std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket>)> info_callback);
+  Status RegisterInfoCallback(
+    std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket>)> info_callback);
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger

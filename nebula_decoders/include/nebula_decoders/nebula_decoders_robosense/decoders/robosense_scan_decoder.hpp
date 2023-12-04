@@ -36,6 +36,10 @@ public:
   /// @brief Returns the point cloud and timestamp of the last scan
   /// @return A tuple of point cloud and timestamp in nanoseconds
   virtual std::tuple<drivers::NebulaPointCloudPtr, double> getPointcloud() = 0;
+
+  /// @brief Updates the decoder's internal sensor configuration that is used during decoding
+  virtual void updateSensorConfiguration(
+    const std::shared_ptr<const drivers::RobosenseSensorConfiguration> & sensor_configuration) = 0;
 };
 
 }  // namespace drivers

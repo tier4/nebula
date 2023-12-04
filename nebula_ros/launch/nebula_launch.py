@@ -144,7 +144,7 @@ def generate_launch_description():
             add_launch_arg("container", ""),
             add_launch_arg("config_file", ""),
             add_launch_arg("sensor_model", ""),
-            add_launch_arg("sensor_ip", "192.168.1.201"),
+            add_launch_arg("sensor_ip", "192.168.1.200"),
             add_launch_arg("return_mode", "Dual"),
             add_launch_arg("launch_hw", "true"),
             add_launch_arg("setup_sensor", "true"),

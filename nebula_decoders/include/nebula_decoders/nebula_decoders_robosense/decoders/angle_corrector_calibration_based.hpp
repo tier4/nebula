@@ -36,6 +36,11 @@ public:
         "Cannot instantiate AngleCorrectorCalibrationBased without calibration data");
     }
 
+    if (sensor_calibration->calibration.size() == 0) {
+      throw std::runtime_error(
+        "Cannot instantiate AngleCorrectorCalibrationBased with empty calibration data");
+    }
+
     for (size_t channel_id = 0; channel_id < N_CHANNELS; ++channel_id) {
       const auto correction = sensor_calibration->GetCorrection(channel_id);
       float elevation_angle_deg = correction.elevation;
@@ -54,6 +59,9 @@ public:
       for (size_t channel_id = 0; channel_id < N_CHANNELS; ++channel_id) {
         float precision_azimuth =
           block_azimuth_rad_[block_azimuth] + azimuth_offset_rad_[channel_id];
+
+          // Robosense azimuths are clockwise, math is counter-clockwise
+          precision_azimuth = -precision_azimuth;
 
         azimuth_cos_[block_azimuth][channel_id] = cosf(precision_azimuth);
         azimuth_sin_[block_azimuth][channel_id] = sinf(precision_azimuth);

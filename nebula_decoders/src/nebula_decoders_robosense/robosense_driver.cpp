@@ -14,8 +14,6 @@ RobosenseDriver::RobosenseDriver(
   const std::shared_ptr<RobosenseSensorConfiguration> sensor_configuration,
   const std::shared_ptr<RobosenseCalibrationConfiguration> calibration_configuration)
 {
-  std::cout << "1" << std::endl;
-  std::cout << "sensor_configuration->sensor_model: " << sensor_configuration->sensor_model << std::endl;
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;
   switch (sensor_configuration->sensor_model) {
@@ -24,23 +22,20 @@ RobosenseDriver::RobosenseDriver(
       std::cerr << "Invalid sensor model: " << sensor_configuration->sensor_model << std::endl;
       break;
     case SensorModel::ROBOSENSE_BPEARL_V3: {
-      // BpearlV3 sensor(sensor_configuration, calibration_configuration);
-      // scan_decoder_.reset(new RobosenseDecoder<BpearlV3>(sensor_configuration, sensor));
+      std::shared_ptr<BpearlV3> sensor = std::make_shared<BpearlV3>(sensor_configuration, calibration_configuration);
+      scan_decoder_.reset(new RobosenseDecoder<BpearlV3>(sensor_configuration, sensor));
     } break;
     case SensorModel::ROBOSENSE_BPEARL_V4: {
-      // BpearlV4 sensor(sensor_configuration, calibration_configuration);
-      // scan_decoder_.reset(new RobosenseDecoder<BpearlV4>(sensor_configuration, sensor));
+      std::shared_ptr<BpearlV4> sensor = std::make_shared<BpearlV4>(sensor_configuration, calibration_configuration);
+      scan_decoder_.reset(new RobosenseDecoder<BpearlV4>(sensor_configuration, sensor));
     } break;
     case SensorModel::ROBOSENSE_HELIOS: {
-      // Helios sensor(sensor_configuration, calibration_configuration);
-      // scan_decoder_.reset(new RobosenseDecoder<Helios>(sensor_configuration, sensor));
+      std::shared_ptr<Helios> sensor = std::make_shared<Helios>(sensor_configuration, calibration_configuration);
+      scan_decoder_.reset(new RobosenseDecoder<Helios>(sensor_configuration, sensor));
     } break;
     case SensorModel::ROBOSENSE_M1: {
-      std::cout << "2" << std::endl;
-      M1 sensor{};
-      std::cout << "3" << std::endl;
-      scan_decoder_.reset(new RobosenseDecoder<M1>(sensor_configuration, {sensor}));
-      std::cout << "4" << std::endl;
+      std::shared_ptr<M1> sensor = std::make_shared<M1>();
+      scan_decoder_.reset(new RobosenseDecoder<M1>(sensor_configuration, sensor));
     } break;
     default:
       driver_status_ = nebula::Status::NOT_INITIALIZED;

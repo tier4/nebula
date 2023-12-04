@@ -5,9 +5,9 @@ namespace drivers
 {
 RobosenseHwInterface::RobosenseHwInterface()
 : cloud_io_context_{new ::drivers::common::IoContext(1)},
-  // info_io_context_{new ::drivers::common::IoContext(1)},
+  info_io_context_{new ::drivers::common::IoContext(1)},
   cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
-  // info_udp_driver_{new ::drivers::udp_driver::UdpDriver(*info_io_context_)},
+  info_udp_driver_{new ::drivers::udp_driver::UdpDriver(*info_io_context_)},
   scan_cloud_ptr_{std::make_unique<robosense_msgs::msg::RobosenseScan>()}
 {
 }
@@ -78,31 +78,31 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   }
 }
 
-// void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> & buffer)
-// {
-//   if (!is_valid_info_packet_(buffer.size())) {
-//     PrintDebug("Invalid Packet: " + std::to_string(buffer.size()));
-//     return;
-//   }
+void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> & buffer)
+{
+  if (!is_valid_info_packet_(buffer.size())) {
+    PrintDebug("Invalid Packet: " + std::to_string(buffer.size()));
+    return;
+  }
 
-//   info_buffer_.emplace(buffer);  //////
-//   is_info_received = true;       ////////
+  info_buffer_.emplace(buffer);
+  is_info_received = true;
 
-//   if (info_reception_callback_) {
-//     std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> difop_packet =
-//       std::make_unique<robosense_msgs::msg::RobosenseInfoPacket>();
-//     std::copy_n(
-//       std::make_move_iterator(buffer.begin()), buffer.size(), difop_packet->packet.data.begin());
+  if (info_reception_callback_) {
+    std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> difop_packet =
+      std::make_unique<robosense_msgs::msg::RobosenseInfoPacket>();
+    std::copy_n(
+      std::make_move_iterator(buffer.begin()), buffer.size(), difop_packet->packet.data.begin());
 
-//     if (sensor_model_.has_value()) {
-//       difop_packet->lidar_model = SensorModelToString(sensor_model_.value());
-//     } else {
-//       difop_packet->lidar_model = SensorModelToString(sensor_configuration_->sensor_model);
-//     }
+    if (sensor_model_.has_value()) {
+      difop_packet->lidar_model = SensorModelToString(sensor_model_.value());
+    } else {
+      difop_packet->lidar_model = SensorModelToString(sensor_configuration_->sensor_model);
+    }
 
-//     info_reception_callback_(std::move(difop_packet));
-//   }
-// }
+    info_reception_callback_(std::move(difop_packet));
+  }
+}
 
 Status RobosenseHwInterface::CloudInterfaceStart()
 {
@@ -124,32 +124,31 @@ Status RobosenseHwInterface::CloudInterfaceStart()
   return Status::OK;
 }
 
-// Status RobosenseHwInterface::InfoInterfaceStart()
-// {
-//   try {
-//     std::cout << "Starting UDP server for info packets on: " << *sensor_configuration_ <<
-//     std::endl; PrintInfo(
-//       "Starting UDP server for info packets on: " + sensor_configuration_->sensor_ip + ":" +
-//       std::to_string(sensor_configuration_->gnss_port));
-//     // info_udp_driver_->init_receiver(
-//     //   sensor_configuration_->host_ip, sensor_configuration_->gnss_port);
-//     // info_udp_driver_->receiver()->open();
-//     // info_udp_driver_->receiver()->bind();
+Status RobosenseHwInterface::InfoInterfaceStart()
+{
+  try {
+    std::cout << "Starting UDP server for info packets on: " << *sensor_configuration_ << std::endl;
+    PrintInfo(
+      "Starting UDP server for info packets on: " + sensor_configuration_->sensor_ip + ":" +
+      std::to_string(sensor_configuration_->gnss_port));
+    info_udp_driver_->init_receiver(
+      sensor_configuration_->host_ip, sensor_configuration_->gnss_port);
+    info_udp_driver_->receiver()->open();
+    info_udp_driver_->receiver()->bind();
 
-//     // info_udp_driver_->receiver()->asyncReceive(
-//     //   std::bind(&RobosenseHwInterface::ReceiveInfoPacketCallback, this,
-//     std::placeholders::_1));
+    info_udp_driver_->receiver()->asyncReceive(
+      std::bind(&RobosenseHwInterface::ReceiveInfoPacketCallback, this, std::placeholders::_1));
 
-//   } catch (const std::exception & ex) {
-//     Status status = Status::UDP_CONNECTION_ERROR;
-//     std::cerr << status << sensor_configuration_->sensor_ip << ","
-//               << sensor_configuration_->gnss_port << std::endl;
-//     return status;
-//   }
+  } catch (const std::exception & ex) {
+    Status status = Status::UDP_CONNECTION_ERROR;
+    std::cerr << status << sensor_configuration_->sensor_ip << ","
+              << sensor_configuration_->gnss_port << std::endl;
+    return status;
+  }
 
-//   std::this_thread::sleep_for(std::chrono::seconds(1));
-//   return Status::OK;
-// }
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  return Status::OK;
+}
 
 Status RobosenseHwInterface::CloudInterfaceStop()
 {
@@ -165,27 +164,35 @@ Status RobosenseHwInterface::SetSensorConfiguration(
     sensor_configuration_ =
       std::static_pointer_cast<RobosenseSensorConfiguration>(sensor_configuration);
 
-    if (
-      sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL ||
-      sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL_V3 ||
-      sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL_V4) {
-      azimuth_index_ = 44;
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == BPEARL_PACKET_SIZE); };
-      // is_valid_info_packet_ = [](size_t packet_size) {
-      //   return (packet_size == BPEARL_INFO_PACKET_SIZE);
-      // };
-    } else if (sensor_configuration->sensor_model == SensorModel::ROBOSENSE_HELIOS) {
-      azimuth_index_ = 44;
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == HELIOS_PACKET_SIZE); };
-      // is_valid_info_packet_ = [](size_t packet_size) {
-      //   return (packet_size == HELIOS_INFO_PACKET_SIZE);
-      // };
-    } else if (sensor_configuration->sensor_model == SensorModel::ROBOSENSE_M1) {
-      azimuth_index_ = 0;
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == M1_PACKET_SIZE); };
-    } else {
-      status = Status::INVALID_SENSOR_MODEL;
+    switch (sensor_configuration->sensor_model) {
+      case SensorModel::ROBOSENSE_BPEARL:
+      case SensorModel::ROBOSENSE_BPEARL_V3:
+      case SensorModel::ROBOSENSE_BPEARL_V4:
+        azimuth_index_ = 44;
+        is_valid_packet_ = [](size_t packet_size) { return (packet_size == BPEARL_PACKET_SIZE); };
+        is_valid_info_packet_ = [](size_t packet_size) {
+          return (packet_size == BPEARL_INFO_PACKET_SIZE);
+        };
+        break;
+      case SensorModel::ROBOSENSE_HELIOS:
+        azimuth_index_ = 44;
+        is_valid_packet_ = [](size_t packet_size) { return (packet_size == HELIOS_PACKET_SIZE); };
+        is_valid_info_packet_ = [](size_t packet_size) {
+          return (packet_size == HELIOS_INFO_PACKET_SIZE);
+        };
+        break;
+      case SensorModel::ROBOSENSE_M1:
+        azimuth_index_ = 0;  // unused
+        is_valid_packet_ = [](size_t packet_size) { return (packet_size == M1_PACKET_SIZE); };
+        is_valid_info_packet_ = [](size_t packet_size) {
+          return (packet_size == M1_INFO_PACKET_SIZE);
+        };
+        break;
+      default:
+        status = Status::INVALID_SENSOR_MODEL;
+        break;
     }
+
   } catch (const std::exception & ex) {
     status = Status::SENSOR_CONFIG_ERROR;
     std::cerr << status << std::endl;
@@ -216,12 +223,12 @@ Status RobosenseHwInterface::RegisterScanCallback(
   return Status::OK;
 }
 
-// Status RobosenseHwInterface::RegisterInfoCallback(
-//   std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket>)> info_callback)
-// {
-//   info_reception_callback_ = std::move(info_callback);
-//   return Status::OK;
-// }
+Status RobosenseHwInterface::RegisterInfoCallback(
+  std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket>)> info_callback)
+{
+  info_reception_callback_ = std::move(info_callback);
+  return Status::OK;
+}
 
 void RobosenseHwInterface::PrintDebug(std::string debug)
 {

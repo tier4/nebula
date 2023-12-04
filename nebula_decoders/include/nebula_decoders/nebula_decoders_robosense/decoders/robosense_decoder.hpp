@@ -19,6 +19,7 @@
 #include "robosense_msgs/msg/robosense_scan.hpp"
 
 #include <type_traits>
+#include <mutex>
 
 namespace nebula
 {
@@ -45,7 +46,8 @@ class RobosenseDecoder : public RobosenseScanDecoder
 
 protected:
   /// @brief Configuration for this decoder
-  const std::shared_ptr<drivers::RobosenseSensorConfiguration> sensor_configuration_;
+  std::shared_ptr<const drivers::RobosenseSensorConfiguration> sensor_configuration_;
+  std::mutex sensor_configuration_mutex_;
 
   /// @brief The sensor definition, used for return mode and time offset handling
   SensorT sensor_;
@@ -224,7 +226,7 @@ protected:
       // corrected angles
       float xyDistance = distance * corrected_angle_data.cos_elevation;
       point.x = xyDistance * corrected_angle_data.cos_azimuth;
-      point.y = -xyDistance * corrected_angle_data.sin_azimuth;
+      point.y = xyDistance * corrected_angle_data.sin_azimuth;
       point.z = distance * corrected_angle_data.sin_elevation;
 
       decode_pc_->emplace_back(point);
@@ -271,9 +273,9 @@ public:
   /// calibration_configuration is set)
   explicit RobosenseDecoder(
     const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration,
-    const SensorT sensor)
+    const std::shared_ptr<const SensorT> & sensor)
   : sensor_configuration_(sensor_configuration),
-    sensor_(sensor),
+    sensor_(*sensor),
     decode_group_(decode_group_size_),
     logger_(rclcpp::get_logger("RobosenseDecoder")),
     clock_(RCL_STEADY_TIME)
@@ -290,6 +292,13 @@ public:
 
   int unpack(const robosense_msgs::msg::RobosensePacket & msop_packet) override
   {
+    std::lock_guard<std::mutex> lock(sensor_configuration_mutex_);
+    if (sensor_configuration_ == nullptr) {
+      RCLCPP_WARN_THROTTLE(
+        logger_, clock_, 1000, "Sensor configuration not set, cannot decode packet.");
+      return false;
+    }
+
     if (!parsePacket(msop_packet)) {
       return -1;
     }
@@ -338,6 +347,14 @@ public:
   {
     double scan_timestamp_s = static_cast<double>(output_scan_timestamp_ns_) * 1e-9;
     return std::make_pair(output_pc_, scan_timestamp_s);
+  }
+
+  void updateSensorConfiguration(
+    const std::shared_ptr<const drivers::RobosenseSensorConfiguration> & sensor_configuration)
+    override
+  {
+    std::lock_guard<std::mutex> lock(sensor_configuration_mutex_);
+    sensor_configuration_ = sensor_configuration;
   }
 };
 

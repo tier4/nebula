@@ -37,7 +37,7 @@ public:
   /// @return The lowest point time offset (relative to the packet timestamp) of any point in or
   /// after the start block, in nanoseconds
   int getEarliestPointTimeOffsetForBlock(
-    uint32_t /* start_block_id */, const std::shared_ptr<SensorConfigurationBase> & /* sensor_configuration */)
+    uint32_t /* start_block_id */, const std::shared_ptr<const SensorConfigurationBase> & /* sensor_configuration */)
   {
     return 0;  // TODO(mojomex): implement
   }

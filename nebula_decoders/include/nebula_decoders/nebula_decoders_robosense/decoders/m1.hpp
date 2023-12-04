@@ -11,11 +11,14 @@
 #include "nebula_decoders/nebula_decoders_common/sensor_mixins/validity.hpp"
 #include "nebula_decoders/nebula_decoders_common/util.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/decoders/sensor_info.hpp"
 
 #include "boost/endian/buffers.hpp"
 
 #include <cstddef>
 #include <cstdint>
+#include <map>
+#include <string>
 
 using namespace boost::endian;
 using namespace nebula::drivers::sensor_mixins;
@@ -91,7 +94,7 @@ struct InfoPacket
 
   SerialNumber serial_number;
 
-  uint8_t wave_mode;
+  uint8_t return_mode;
 
   uint8_t time_sync_mode;
   uint8_t sync_status;
@@ -134,15 +137,14 @@ private:
   }
 
 public:
-  typedef typename robosense_packet::m1::InfoPacket info_t;
-
   static constexpr float MIN_RANGE = 0.2f;
   static constexpr float MAX_RANGE = 150.f;
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 1152000;
 
   static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE{1, 0, 0};
 
-  M1() {
+  M1()
+  {
     for (size_t i = 0; i < 65536; ++i) {
       sin_[i] = std::sin(internalAngleToRad(i));
       cos_[i] = std::cos(internalAngleToRad(i));
@@ -220,9 +222,15 @@ public:
         return ReturnMode::UNKNOWN;
     }
   }
+};
 
-  std::map<std::string, std::string> getSensorInfo(
-    const robosense_packet::m1::InfoPacket & info_packet)
+class M1Info : public SensorInfoBase<robosense_packet::m1::InfoPacket>
+{
+public:
+  typedef typename robosense_packet::m1::InfoPacket packet_t;
+
+  ::std::map<std::string, std::string> getSensorInfo(
+    const robosense_packet::m1::InfoPacket & info_packet) const override
   {
     std::map<std::string, std::string> sensor_info;
 
@@ -239,18 +247,21 @@ public:
       info_packet.mb_programming_system_fw_version.to_string();
     sensor_info["serial_number"] = info_packet.serial_number.to_string();
 
-    switch (info_packet.wave_mode) {
-      case 0:
+    switch (getReturnMode(info_packet)) {
+      case ReturnMode::DUAL:
         sensor_info["return_mode"] = "dual";
         break;
-      case 4:
+      case ReturnMode::SINGLE_STRONGEST:
         sensor_info["return_mode"] = "strongest";
         break;
-      case 5:
+      case ReturnMode::SINGLE_LAST:
         sensor_info["return_mode"] = "last";
         break;
-      case 6:
+      case ReturnMode::SINGLE_FIRST:
         sensor_info["return_mode"] = "first";
+        break;
+      default:
+        sensor_info["return_mode"] = "n/a";
         break;
     }
 
@@ -284,6 +295,16 @@ public:
     sensor_info["time"] = std::to_string(info_packet.time.get_time_in_ns());
 
     return sensor_info;
+  }
+
+  std::optional<RobosenseCalibrationConfiguration> getSensorCalibration(
+    const robosense_packet::m1::InfoPacket & /* info_packet */) const override
+  {
+    return {};  // M1 has no calibration
+  }
+
+  bool getSyncStatus(const robosense_packet::m1::InfoPacket & /* info_packet */) const override {
+    return false; //TODO(mojomex)
   }
 };
 
