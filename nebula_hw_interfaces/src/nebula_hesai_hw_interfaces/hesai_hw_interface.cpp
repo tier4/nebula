@@ -178,11 +178,9 @@ void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & b
     PrintDebug("Invalid Packet: " + std::to_string(buffer.size()));
     return;
   }
-  uint32_t buffer_size = buffer.size();
-  std::array<uint8_t, MTU_SIZE> packet_data{};
-  std::copy_n(std::make_move_iterator(buffer.begin()), buffer_size, packet_data.begin());
+  const uint32_t buffer_size = buffer.size();
   pandar_msgs::msg::PandarPacket pandar_packet;
-  pandar_packet.data = packet_data;
+  std::copy_n(std::make_move_iterator(buffer.begin()), buffer_size, pandar_packet.data.begin());
   pandar_packet.size = buffer_size;
   auto now = std::chrono::system_clock::now();
   auto now_secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
