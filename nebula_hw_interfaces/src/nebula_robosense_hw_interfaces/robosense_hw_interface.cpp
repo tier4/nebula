@@ -50,16 +50,20 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
 
   scan_cloud_ptr_->packets.emplace_back(msop_packet);
 
-  int current_phase{};
   bool comp_flg = false;
 
-  const auto & data = scan_cloud_ptr_->packets.back().data;
-  current_phase = (data[azimuth_index_ + 1] & 0xff) + ((data[azimuth_index_] & 0xff) << 8);
+  if (sensor_configuration_->sensor_model != SensorModel::ROBOSENSE_M1) {
+    int current_phase;
+    const auto & data = scan_cloud_ptr_->packets.back().data;
+    current_phase = (data[azimuth_index_ + 1] & 0xff) + ((data[azimuth_index_] & 0xff) << 8);
 
-  current_phase = (static_cast<int>(current_phase) + 36000 - scan_phase) % 36000;
+    current_phase = (static_cast<int>(current_phase) + 36000 - scan_phase) % 36000;
 
-  if (current_phase >= prev_phase_ || scan_cloud_ptr_->packets.size() < 2) {
-    prev_phase_ = current_phase;
+    if (current_phase >= prev_phase_ || scan_cloud_ptr_->packets.size() < 2) {
+      prev_phase_ = current_phase;
+    } else {
+      comp_flg = true;
+    }
   } else {
     comp_flg = true;
   }
@@ -164,21 +168,28 @@ Status RobosenseHwInterface::SetSensorConfiguration(
       case SensorModel::ROBOSENSE_BPEARL:
       case SensorModel::ROBOSENSE_BPEARL_V3:
       case SensorModel::ROBOSENSE_BPEARL_V4:
-      azimuth_index_ = 44;
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == BPEARL_PACKET_SIZE); };
-      is_valid_info_packet_ = [](size_t packet_size) {
-        return (packet_size == BPEARL_INFO_PACKET_SIZE);
-      };
+        azimuth_index_ = 44;
+        is_valid_packet_ = [](size_t packet_size) { return (packet_size == BPEARL_PACKET_SIZE); };
+        is_valid_info_packet_ = [](size_t packet_size) {
+          return (packet_size == BPEARL_INFO_PACKET_SIZE);
+        };
         break;
       case SensorModel::ROBOSENSE_HELIOS:
-      azimuth_index_ = 44;
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == HELIOS_PACKET_SIZE); };
-      is_valid_info_packet_ = [](size_t packet_size) {
-        return (packet_size == HELIOS_INFO_PACKET_SIZE);
-      };
+        azimuth_index_ = 44;
+        is_valid_packet_ = [](size_t packet_size) { return (packet_size == HELIOS_PACKET_SIZE); };
+        is_valid_info_packet_ = [](size_t packet_size) {
+          return (packet_size == HELIOS_INFO_PACKET_SIZE);
+        };
+        break;
+      case SensorModel::ROBOSENSE_M1:
+        azimuth_index_ = 0;  // unused
+        is_valid_packet_ = [](size_t packet_size) { return (packet_size == M1_PACKET_SIZE); };
+        is_valid_info_packet_ = [](size_t packet_size) {
+          return (packet_size == M1_INFO_PACKET_SIZE);
+        };
         break;
       default:
-      status = Status::INVALID_SENSOR_MODEL;
+        status = Status::INVALID_SENSOR_MODEL;
         break;
     }
 

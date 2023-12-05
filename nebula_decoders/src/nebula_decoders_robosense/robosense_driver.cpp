@@ -32,6 +32,10 @@ RobosenseDriver::RobosenseDriver(
       std::shared_ptr<Helios> sensor = std::make_shared<Helios>(sensor_configuration, calibration_configuration);
       scan_decoder_.reset(new RobosenseDecoder<Helios>(sensor_configuration, sensor));
     } break;
+    case SensorModel::ROBOSENSE_M1: {
+      std::shared_ptr<M1> sensor = std::make_shared<M1>();
+      scan_decoder_.reset(new RobosenseDecoder<M1>(sensor_configuration, sensor));
+    } break;
     default:
       driver_status_ = nebula::Status::NOT_INITIALIZED;
       throw std::runtime_error("Driver not Implemented for selected sensor.");

@@ -46,7 +46,7 @@ RobosenseDriverRosWrapper::RobosenseDriverRosWrapper(const rclcpp::NodeOptions &
 void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
   const robosense_msgs::msg::RobosenseScan::SharedPtr scan_msg)
 {
-  if (!driver_ptr_) {
+    if (!driver_ptr_) {
     if (sensor_cfg_ptr_->sensor_model == drivers::SensorModel::ROBOSENSE_BPEARL) {
       if (scan_msg->packets.back().data[32] == drivers::BPEARL_V4_FLAG) {
         sensor_cfg_ptr_->sensor_model = drivers::SensorModel::ROBOSENSE_BPEARL_V4;

@@ -30,6 +30,8 @@ constexpr uint16_t HELIOS_PACKET_SIZE = 1248;
 constexpr uint16_t HELIOS_INFO_PACKET_SIZE = 1248;
 constexpr uint16_t BPEARL_PACKET_SIZE = 1248;
 constexpr uint16_t BPEARL_INFO_PACKET_SIZE = 1248;
+constexpr uint16_t M1_PACKET_SIZE = 1210;
+constexpr uint16_t M1_INFO_PACKET_SIZE = 256;
 
 /// @brief Hardware interface of Robosense driver
 class RobosenseHwInterface : NebulaHwInterfaceBase

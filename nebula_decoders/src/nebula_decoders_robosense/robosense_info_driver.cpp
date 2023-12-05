@@ -23,7 +23,9 @@ RobosenseInfoDriver::RobosenseInfoDriver(
     case SensorModel::ROBOSENSE_HELIOS:
       info_decoder_.reset(new RobosenseInfoDecoder<HeliosInfo>());
       break;
-
+    case SensorModel::ROBOSENSE_M1:
+      info_decoder_.reset(new RobosenseInfoDecoder<M1Info>());
+      break;
     default:
       driver_status_ = nebula::Status::NOT_INITIALIZED;
       throw std::runtime_error("Driver not Implemented for selected sensor.");

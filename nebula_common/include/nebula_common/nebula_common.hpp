@@ -356,6 +356,7 @@ enum class SensorModel {
   ROBOSENSE_BPEARL,
   ROBOSENSE_BPEARL_V3,
   ROBOSENSE_BPEARL_V4,
+  ROBOSENSE_M1
 };
 
 /// @brief not used?
@@ -446,6 +447,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::ROBOSENSE_BPEARL_V4:
       os << "BPEARL V4.0";
       break;
+    case SensorModel::ROBOSENSE_M1:
+      os << "M1";
+      break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
       break;
@@ -520,6 +524,7 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "Bpearl") return SensorModel::ROBOSENSE_BPEARL;
   if (sensor_model == "Bpearl_V3") return SensorModel::ROBOSENSE_BPEARL_V3;
   if (sensor_model == "Bpearl_V4") return SensorModel::ROBOSENSE_BPEARL_V4;
+  if (sensor_model == "M1") return SensorModel::ROBOSENSE_M1;
   return SensorModel::UNKNOWN;
 }
 
@@ -567,6 +572,8 @@ inline std::string SensorModelToString(const SensorModel & sensor_model)
       return "Bpearl_V3";
     case SensorModel::ROBOSENSE_BPEARL_V4:
       return "Bpearl_V4";
+    case SensorModel::ROBOSENSE_M1:
+      return "M1";
     default:
       return "UNKNOWN";
   }
