@@ -64,6 +64,8 @@ size_t GetChannelSize(const SensorModel & model)
       return 32;
     case SensorModel::ROBOSENSE_HELIOS:
       return 32;
+    case SensorModel::ROBOSENSE_M1:
+      return 5;
     default:
       throw std::runtime_error("Unknown sensor model");
   }
