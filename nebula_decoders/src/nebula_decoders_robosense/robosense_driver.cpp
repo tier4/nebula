@@ -67,19 +67,17 @@ std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ConvertScanToP
     return pointcloud;
   }
 
-  int cnt = 0, last_azimuth = 0;
   for (auto & packet : robosense_scan->packets) {
-    last_azimuth = scan_decoder_->unpack(packet);
+    scan_decoder_->unpack(packet);
     if (scan_decoder_->hasScanned()) {
       pointcloud = scan_decoder_->getPointcloud();
-      cnt++;
     }
   }
 
-  // if (cnt == 0) {
+  // if (/* there is no pointcloud produced for a long time */) {
   //   RCLCPP_ERROR_STREAM(
   //     logger, "Scanned " << robosense_scan->packets.size() << " packets, but no "
-  //                        << "pointclouds were generated. Last azimuth: " << last_azimuth);
+  //                        << "pointclouds were generated.");
   // }
 
   return pointcloud;

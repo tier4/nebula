@@ -77,10 +77,6 @@ void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
 
-  if (!driver_ptr_->HasScanned()) {
-    return;
-  };
-
   if (pointcloud == nullptr) {
     RCLCPP_WARN_STREAM(get_logger(), "Empty cloud parsed.");
     return;
