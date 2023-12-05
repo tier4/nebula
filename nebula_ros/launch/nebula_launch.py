@@ -20,6 +20,8 @@ def get_lidar_make(sensor_name):
         return "Hesai", ".csv"
     elif sensor_name[:3].lower() in ["hdl", "vlp", "vls"]:
         return "Velodyne", ".yaml"
+    elif sensor_name[:3].lower() in ["fal", "rob"]:
+        return "Innovusion", ".yaml"
     return "unrecognized_sensor_model"
 
 
@@ -105,7 +107,7 @@ def launch_setup(context, *args, **kwargs):
     container_kwargs = {}
     if LaunchConfiguration("debug_logging").perform(context) == "true":
         container_kwargs["ros_arguments"] = ['--log-level', 'debug']
-    
+
     container = ComposableNodeContainer(
         name="nebula_ros_node",
         namespace="",

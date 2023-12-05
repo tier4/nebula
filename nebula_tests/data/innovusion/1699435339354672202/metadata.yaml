@@ -1,0 +1,19 @@
+rosbag2_bagfile_information:
+  version: 4
+  storage_identifier: sqlite3
+  relative_file_paths:
+    - 1699435339354672202_0.db3
+  duration:
+    nanoseconds: 4296672446
+  starting_time:
+    nanoseconds_since_epoch: 1699435339354672202
+  message_count: 6
+  topics_with_message_count:
+    - topic_metadata:
+        name: /innovusion_packets
+        type: innovusion_msgs/msg/InnovusionScan
+        serialization_format: cdr
+        offered_qos_profiles: ""
+      message_count: 6
+  compression_format: ""
+  compression_mode: ""

@@ -65,6 +65,7 @@ void HesaiDriverRosWrapper::ReceiveScanMsgCallback(
     RCLCPP_WARN_STREAM(get_logger(), "Empty cloud parsed.");
     return;
   };
+  
   if (
     nebula_points_pub_->get_subscription_count() > 0 ||
     nebula_points_pub_->get_intra_process_subscription_count() > 0) {
