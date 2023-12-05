@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 namespace nebula
@@ -15,15 +16,16 @@ namespace nebula
 namespace drivers
 {
 
-template <typename SensorT>
+template <typename SensorInfoT>
 class RobosenseInfoDecoder : public RobosenseInfoDecoderBase
 {
+  static_assert(std::is_base_of_v<SensorInfoBase<typename SensorInfoT::packet_t>, SensorInfoT>);
+
 protected:
-  /// @brief The sensor definition, used for return mode and time offset handling
-  SensorT sensor_{};
+  SensorInfoT sensor_{};
 
   /// @brief The last decoded packet
-  typename SensorT::info_t packet_{};
+  typename SensorInfoT::packet_t packet_{};
 
   rclcpp::Logger logger_;
 
@@ -34,14 +36,14 @@ public:
   bool parsePacket(const std::vector<uint8_t> & raw_packet) override
   {
     const auto packet_size = raw_packet.size();
-    if (packet_size < sizeof(typename SensorT::info_t)) {
+    if (packet_size < sizeof(typename SensorInfoT::packet_t)) {
       RCLCPP_ERROR_STREAM(
         logger_, "Packet size mismatch:" << packet_size << " | Expected at least:"
-                                         << sizeof(typename SensorT::info_t));
+                                         << sizeof(typename SensorInfoT::packet_t));
       return false;
     }
     try {
-      if (std::memcpy(&packet_, raw_packet.data(), sizeof(typename SensorT::info_t)) == &packet_) {
+      if (std::memcpy(&packet_, raw_packet.data(), sizeof(typename SensorInfoT::packet_t)) == &packet_) {
         return true;
       }
     } catch (const std::exception & e) {
@@ -51,7 +53,6 @@ public:
     return false;
   }
 
-  /// @brief Constructor
   RobosenseInfoDecoder() : logger_(rclcpp::get_logger("RobosenseInfoDecoder"))
   {
     logger_.set_level(rclcpp::Logger::Level::Debug);
@@ -70,7 +71,7 @@ public:
 
   /// @brief Get sensor calibration
   /// @return The sensor calibration
-  RobosenseCalibrationConfiguration getSensorCalibration() override
+  std::optional<RobosenseCalibrationConfiguration> getSensorCalibration() override
   {
     return sensor_.getSensorCalibration(packet_);
   }

@@ -21,10 +21,11 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   }
   // Copy data
   uint32_t buffer_size = buffer.size();
-  std::array<uint8_t, MTU_SIZE> packet_data{};
+  std::array<uint8_t, MTU_SIZE> packet_data{0};
   std::copy_n(std::make_move_iterator(buffer.begin()), buffer_size, packet_data.begin());
   robosense_msgs::msg::RobosensePacket msop_packet;
   msop_packet.data = packet_data;
+  msop_packet.size = buffer_size;
 
   // Add timestamp (Sensor timestamp will be handled by decoder)
   const auto now = std::chrono::system_clock::now();
@@ -80,8 +81,8 @@ void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> 
     return;
   }
 
-  info_buffer_.emplace(buffer);  //////
-  is_info_received = true;       ////////
+  info_buffer_.emplace(buffer);
+  is_info_received = true;
 
   if (info_reception_callback_) {
     std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> difop_packet =
@@ -159,24 +160,28 @@ Status RobosenseHwInterface::SetSensorConfiguration(
     sensor_configuration_ =
       std::static_pointer_cast<RobosenseSensorConfiguration>(sensor_configuration);
 
-    if (
-      sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL ||
-      sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL_V3 ||
-      sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL_V4) {
+    switch (sensor_configuration->sensor_model) {
+      case SensorModel::ROBOSENSE_BPEARL:
+      case SensorModel::ROBOSENSE_BPEARL_V3:
+      case SensorModel::ROBOSENSE_BPEARL_V4:
       azimuth_index_ = 44;
       is_valid_packet_ = [](size_t packet_size) { return (packet_size == BPEARL_PACKET_SIZE); };
       is_valid_info_packet_ = [](size_t packet_size) {
         return (packet_size == BPEARL_INFO_PACKET_SIZE);
       };
-    } else if (sensor_configuration->sensor_model == SensorModel::ROBOSENSE_HELIOS) {
+        break;
+      case SensorModel::ROBOSENSE_HELIOS:
       azimuth_index_ = 44;
       is_valid_packet_ = [](size_t packet_size) { return (packet_size == HELIOS_PACKET_SIZE); };
       is_valid_info_packet_ = [](size_t packet_size) {
         return (packet_size == HELIOS_INFO_PACKET_SIZE);
       };
-    } else {
+        break;
+      default:
       status = Status::INVALID_SENSOR_MODEL;
+        break;
     }
+
   } catch (const std::exception & ex) {
     status = Status::SENSOR_CONFIG_ERROR;
     std::cerr << status << std::endl;

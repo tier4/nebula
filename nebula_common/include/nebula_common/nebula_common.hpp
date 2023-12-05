@@ -121,6 +121,35 @@ inline ReturnType ReturnModeToReturnType(const ReturnMode & mode)
   }
 }
 
+inline uint8_t ReturnModeToNReturns(const ReturnMode & mode)
+{
+  switch (mode) {
+    case ReturnMode::SINGLE_STRONGEST:
+    case ReturnMode::SINGLE_FIRST:
+    case ReturnMode::SINGLE_LAST:
+    case ReturnMode::STRONGEST:
+    case ReturnMode::FIRST:
+    case ReturnMode::LAST:
+      return 1;
+    case ReturnMode::DUAL_STRONGEST_FIRST:
+    case ReturnMode::DUAL_FIRST_STRONGEST:
+    case ReturnMode::DUAL_STRONGEST_LAST:
+    case ReturnMode::DUAL_LAST_STRONGEST:
+    case ReturnMode::DUAL_LAST_FIRST:
+    case ReturnMode::DUAL_WEAK_FIRST:
+    case ReturnMode::DUAL_WEAK_LAST:
+    case ReturnMode::DUAL_FIRST:
+    case ReturnMode::DUAL_LAST:
+    case ReturnMode::DUAL_ONLY:
+    case ReturnMode::DUAL:
+      return 2;
+    case ReturnMode::TRIPLE:
+      return 3;
+    case ReturnMode::UNKNOWN:
+      throw std::runtime_error("Got unknown return mode");
+  }
+}
+
 /// @brief Convert ReturnMode enum to integer
 /// @param mode
 /// @return Corresponding number

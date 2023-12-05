@@ -15,13 +15,13 @@ RobosenseInfoDriver::RobosenseInfoDriver(
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;
       break;
     case SensorModel::ROBOSENSE_BPEARL_V3:
-      info_decoder_.reset(new RobosenseInfoDecoder<BpearlV3>());
+      info_decoder_.reset(new RobosenseInfoDecoder<BpearlV3Info>());
       break;
     case SensorModel::ROBOSENSE_BPEARL_V4:
-      info_decoder_.reset(new RobosenseInfoDecoder<BpearlV4>());
+      info_decoder_.reset(new RobosenseInfoDecoder<BpearlV4Info>());
       break;
     case SensorModel::ROBOSENSE_HELIOS:
-      info_decoder_.reset(new RobosenseInfoDecoder<Helios>());
+      info_decoder_.reset(new RobosenseInfoDecoder<HeliosInfo>());
       break;
 
     default:
@@ -53,7 +53,7 @@ ReturnMode RobosenseInfoDriver::GetReturnMode()
   return info_decoder_->getReturnMode();
 }
 
-RobosenseCalibrationConfiguration RobosenseInfoDriver::GetSensorCalibration()
+std::optional<RobosenseCalibrationConfiguration> RobosenseInfoDriver::GetSensorCalibration()
 {
   return info_decoder_->getSensorCalibration();
 }
