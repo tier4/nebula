@@ -61,10 +61,13 @@ void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
         std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
       RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
     }
+
+    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Driver not initialized.");
+    return;
   }
 
   if (!is_received_info) {
-    RCLCPP_WARN_STREAM(this->get_logger(), "Waiting for info packet.");
+    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Waiting for info packet.");
     return;
   }
 
@@ -73,6 +76,10 @@ void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
     driver_ptr_->ConvertScanToPointcloud(scan_msg);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
+
+  if (!driver_ptr_->HasScanned()) {
+    return;
+  };
 
   if (pointcloud == nullptr) {
     RCLCPP_WARN_STREAM(get_logger(), "Empty cloud parsed.");
@@ -124,7 +131,8 @@ void RobosenseDriverRosWrapper::ReceiveInfoMsgCallback(
   }
 
   if (!info_driver_ptr_) {
-    RCLCPP_WARN_STREAM(this->get_logger(), "Info driver has not been initialized yet.");
+    RCLCPP_WARN_THROTTLE(
+      this->get_logger(), *this->get_clock(), 1000, "Info driver has not been initialized yet.");
     return;
   }
 
@@ -175,7 +183,7 @@ Status RobosenseDriverRosWrapper::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
   std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration)
 {
-  RCLCPP_INFO_STREAM(this->get_logger(), "Initializing driver...");
+  RCLCPP_INFO(this->get_logger(), "Initializing driver...");
   driver_ptr_ = std::make_shared<drivers::RobosenseDriver>(
     std::static_pointer_cast<drivers::RobosenseSensorConfiguration>(sensor_configuration),
     std::static_pointer_cast<drivers::RobosenseCalibrationConfiguration>(
@@ -227,7 +235,7 @@ Status RobosenseDriverRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("data_port", 2368, descriptor);
+    this->declare_parameter<uint16_t>("data_port", 6699, descriptor);
     sensor_configuration.data_port = this->get_parameter("data_port").as_int();
   }
   {
