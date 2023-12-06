@@ -143,6 +143,7 @@ void RobosenseDriverRosWrapper::ReceiveInfoMsgCallback(
   sensor_cfg_ptr_->return_mode = info_driver_ptr_->GetReturnMode();
   sensor_cfg_ptr_->use_sensor_time = info_driver_ptr_->GetSyncStatus();
   *calibration_cfg_ptr_ = info_driver_ptr_->GetSensorCalibration();
+  calibration_cfg_ptr_->CreateCorrectedChannels();
 
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << *sensor_cfg_ptr_);
 

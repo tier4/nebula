@@ -133,9 +133,9 @@ protected:
           getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
 
         point.return_type = static_cast<uint8_t>(return_type);
-        point.channel = channel_id;
 
         auto corrected_angle_data = angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
+        point.channel = corrected_angle_data.corrected_channel_id;
 
         // The raw_azimuth and channel are only used as indices, sin/cos functions use the precise
         // corrected angles

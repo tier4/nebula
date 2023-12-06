@@ -20,6 +20,7 @@ struct CorrectedAngleData
   float cos_azimuth;
   float sin_elevation;
   float cos_elevation;
+  uint16_t corrected_channel_id;
 };
 
 /// @brief Handles angle correction for given azimuth/channel combinations, as well as trigonometry

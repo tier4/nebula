@@ -71,7 +71,8 @@ public:
       azimuth_sin_[block_azimuth][channel_id],
       azimuth_cos_[block_azimuth][channel_id],
       elevation_sin_[channel_id],
-      elevation_cos_[channel_id]};
+      elevation_cos_[channel_id],
+      sensor_calibration_->calibration[channel_id].channel};
   }
 
   bool hasScanned(int current_azimuth, int last_azimuth) override
