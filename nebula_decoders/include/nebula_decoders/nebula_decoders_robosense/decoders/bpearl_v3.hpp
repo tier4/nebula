@@ -269,9 +269,18 @@ public:
 
   bool getSyncStatus(const robosense_packet::bpearl_v3::InfoPacket & info_packet)
   {
-    const std::bitset<8> gps_st_bits{info_packet.fault_diagnosis.gps_st.value()};
-    if (gps_st_bits[2] == 1) return true;
-    return false;
+    switch (info_packet.time_sync_mode.value()) {
+      case SYNC_MODE_GPS_FLAG:
+        return true;
+      case SYNC_MODE_E2E_FLAG:
+        return true;
+      case SYNC_MODE_P2P_FLAG:
+        return true;
+      case SYNC_MODE_GPTP_FLAG:
+        return true;
+      default:
+        return false;
+    }
   }
 
   std::map<std::string, std::string> getSensorInfo(
