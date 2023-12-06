@@ -18,8 +18,10 @@
 #include "robosense_msgs/msg/robosense_packet.hpp"
 #include "robosense_msgs/msg/robosense_scan.hpp"
 
-#include <type_traits>
+#include <boost/container/static_vector.hpp>
+
 #include <mutex>
+#include <type_traits>
 
 namespace nebula
 {
@@ -127,11 +129,12 @@ protected:
     size_t start_packet_id, size_t start_block_id, size_t start_unit_id, size_t n_returns,
     ReturnMode return_mode)
   {
-    std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units(
-      n_returns);
-    std::vector<size_t> packet_idxs(n_returns);
-    std::vector<size_t> block_idxs(n_returns);
-    std::vector<size_t> unit_idxs(n_returns);
+    boost::container::static_vector<
+      const typename SensorT::packet_t::body_t::block_t::unit_t *, SensorT::packet_t::MAX_RETURNS>
+      return_units{};
+    boost::container::static_vector<size_t, SensorT::packet_t::MAX_RETURNS> packet_idxs{};
+    boost::container::static_vector<size_t, SensorT::packet_t::MAX_RETURNS> block_idxs{};
+    boost::container::static_vector<size_t, SensorT::packet_t::MAX_RETURNS> unit_idxs{};
 
     // Find the units corresponding to the same return group as the current one.
     // These are used to find duplicates in multi-return mode.
@@ -144,7 +147,7 @@ protected:
       block_idxs[return_idx] = block_idx;
       unit_idxs[return_idx] = unit_idx;
 
-      return_units[return_idx] = &decode_group_[packet_idx].body.blocks[block_idx].units[unit_idx];
+      return_units[return_idx] = getUnit(decode_group_[packet_idx], block_idx, unit_idx);
     }
 
     // For each return unit, validate it and check if it is a duplicate of any other
