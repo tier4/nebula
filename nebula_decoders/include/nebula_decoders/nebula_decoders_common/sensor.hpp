@@ -58,8 +58,8 @@ public:
       }
 
       if (
-        return_units[return_idx]->distance.value() == return_units[i]->distance.value() &&
-        return_units[return_idx]->reflectivity.value() == return_units[i]->reflectivity.value()) {
+        getFieldValue(return_units[return_idx]->distance) == getFieldValue(return_units[i]->distance) &&
+        getFieldValue(return_units[return_idx]->reflectivity) == getFieldValue(return_units[i]->reflectivity)) {
         return true;
       }
     }
