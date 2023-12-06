@@ -65,6 +65,7 @@ protected:
     SensorT::RETURN_GROUP_STRIDE[0] ? SensorT::packet_t::MAX_RETURNS : 1;
   /// @brief The current group of packets being decoded.
   std::vector<typename SensorT::packet_t> decode_group_;
+  std::vector<uint64_t> decode_group_timestamps_;
 
   /// @brief The timestamp of the last completed scan in nanoseconds
   uint64_t output_scan_timestamp_ns_;
@@ -94,23 +95,28 @@ protected:
         logger_, "Packet index out of bounds: %lu (expected at most: %lu)", packet_idx,
         decode_group_size_);
       decode_group_.clear();
+      decode_group_timestamps_.clear();
       return false;
     }
 
     if (packet_idx > decode_group_.size()) {
       RCLCPP_WARN_THROTTLE(logger_, clock_, 1000, "Dropped packets detected");
       decode_group_.clear();
+      decode_group_timestamps_.clear();
       return false;
     }
 
     if (packet_idx == 0) {
       decode_group_.clear();
+      decode_group_timestamps_.clear();
     }
 
     decode_group_.emplace_back();  // Guaranteed to be at packet_idx
     if (std::memcpy(
           &decode_group_[packet_idx], msop_packet.data.data(),
           sizeof(typename SensorT::packet_t))) {
+      const auto & parsed_packet = decode_group_[packet_idx];
+      decode_group_timestamps_.emplace_back(sensor_.getPacketTimestamp(parsed_packet));
       return true;
     }
 
@@ -154,6 +160,7 @@ protected:
     // unit in the return group. If not, convert it to a point and add it to the point cloud.
     for (size_t return_idx = 0; return_idx < n_returns; ++return_idx) {
       const auto & packet = decode_group_[packet_idxs[return_idx]];
+      const auto packet_idx = packet_idxs[return_idx];
       const auto block_idx = block_idxs[return_idx];
       const auto unit_idx = unit_idxs[return_idx];
 
@@ -209,7 +216,7 @@ protected:
       point.intensity = sensor_.getIntensity(packet, block_idx, unit_idx);
 
       // 5. Do timing correction
-      point.time_stamp = getPointTimeRelative(packet, block_idx, unit_idx, return_mode);
+      point.time_stamp = getPointTimeRelative(packet_idx, block_idx, unit_idx, return_mode);
 
       // 6. Add point metadata
       point.return_type = static_cast<uint8_t>(return_type);
@@ -238,17 +245,17 @@ protected:
 
   /// @brief Get timestamp of point in nanoseconds, relative to scan timestamp. Includes firing time
   /// offset correction for channel and block
-  /// @param packet_timestamp_ns The timestamp of the current MsopPacket in nanoseconds
+  /// @param packet_idx The index of the packet in the current decode group
   /// @param block_idx The block index of the point
   /// @param unit_idx The channel index of the point
   /// @param return_mode The currently active return mode
   uint32_t getPointTimeRelative(
-    const typename SensorT::packet_t & packet, size_t block_idx, size_t unit_idx,
+    size_t packet_idx, size_t block_idx, size_t unit_idx,
     ReturnMode return_mode)
   {
     const auto point_to_packet_offset_ns =
-      sensor_.getPacketRelativeTimestamp(packet, block_idx, unit_idx, return_mode);
-    const auto packet_timestamp_ns = sensor_.getPacketTimestamp(packet);
+      sensor_.getPacketRelativeTimestamp(decode_group_[packet_idx], block_idx, unit_idx, return_mode);
+    const auto packet_timestamp_ns = decode_group_timestamps_[packet_idx];
     auto packet_to_scan_offset_ns =
       static_cast<uint32_t>(packet_timestamp_ns - decode_scan_timestamp_ns_);
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
@@ -265,7 +272,7 @@ protected:
     // calculated as the packet timestamp plus the lowest time offset of any point in the
     // remainder of the packet
     decode_scan_timestamp_ns_ =
-      sensor_.getPacketTimestamp(decode_group_[packet_id]) +
+      decode_group_timestamps_[packet_id] +
       sensor_.getEarliestPointTimeOffsetForBlock(block_id, sensor_configuration_);
   }
 
@@ -307,7 +314,7 @@ public:
     }
 
     if (decode_scan_timestamp_ns_ == 0) {
-      decode_scan_timestamp_ns_ = sensor_.getPacketTimestamp(decode_group_[0]);
+      decode_scan_timestamp_ns_ = decode_group_timestamps_.back();
     }
 
     if (has_scanned_) {
