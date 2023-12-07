@@ -323,6 +323,10 @@ enum class SensorModel {
   VELODYNE_VLP32MR,
   VELODYNE_HDL32,
   VELODYNE_VLP16,
+  ROBOSENSE_HELIOS,
+  ROBOSENSE_BPEARL,
+  ROBOSENSE_BPEARL_V3,
+  ROBOSENSE_BPEARL_V4,
 };
 
 /// @brief not used?
@@ -401,6 +405,18 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::VELODYNE_VLP16:
       os << "VLP16";
       break;
+    case SensorModel::ROBOSENSE_HELIOS:
+      os << "HELIOS";
+      break;
+    case SensorModel::ROBOSENSE_BPEARL:
+      os << "BPEARL";
+      break;
+    case SensorModel::ROBOSENSE_BPEARL_V3:
+      os << "BPEARL V3.0";
+      break;
+    case SensorModel::ROBOSENSE_BPEARL_V4:
+      os << "BPEARL V4.0";
+      break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
       break;
@@ -424,6 +440,7 @@ struct SensorConfigurationBase
   double max_range;
   bool remove_nans;  /// todo: consider changing to only_finite
   std::vector<PointField> fields;
+  bool use_sensor_time{false};
 };
 
 /// @brief Convert SensorConfigurationBase to string (Overloading the << operator)
@@ -436,7 +453,8 @@ inline std::ostream & operator<<(
   os << "SensorModel: " << arg.sensor_model << ", ReturnMode: " << arg.return_mode
      << ", HostIP: " << arg.host_ip << ", SensorIP: " << arg.sensor_ip
      << ", FrameID: " << arg.frame_id << ", DataPort: " << arg.data_port
-     << ", Frequency: " << arg.frequency_ms << ", MTU: " << arg.packet_mtu_size;
+     << ", Frequency: " << arg.frequency_ms << ", MTU: " << arg.packet_mtu_size
+     << ", Use sensor time: " << arg.use_sensor_time;
   return os;
 }
 
@@ -468,7 +486,61 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "VLP32MR") return SensorModel::VELODYNE_VLP32MR;
   if (sensor_model == "HDL32") return SensorModel::VELODYNE_HDL32;
   if (sensor_model == "VLP16") return SensorModel::VELODYNE_VLP16;
+  // Robosense
+  if (sensor_model == "Helios") return SensorModel::ROBOSENSE_HELIOS;
+  if (sensor_model == "Bpearl") return SensorModel::ROBOSENSE_BPEARL;
+  if (sensor_model == "Bpearl_V3") return SensorModel::ROBOSENSE_BPEARL_V3;
+  if (sensor_model == "Bpearl_V4") return SensorModel::ROBOSENSE_BPEARL_V4;
   return SensorModel::UNKNOWN;
+}
+
+inline std::string SensorModelToString(const SensorModel & sensor_model)
+{
+  switch (sensor_model) {
+    // Hesai
+    case SensorModel::HESAI_PANDAR64:
+      return "Pandar64";
+    case SensorModel::HESAI_PANDAR40P:
+      return "Pandar40P";
+    case SensorModel::HESAI_PANDAR40M:
+      return "Pandar40M";
+    case SensorModel::HESAI_PANDARXT32:
+      return "PandarXT32";
+    case SensorModel::HESAI_PANDARXT32M:
+      return "PandarXT32M";
+    case SensorModel::HESAI_PANDARAT128:
+      return "PandarAT128";
+    case SensorModel::HESAI_PANDARQT64:
+      return "PandarQT64";
+    case SensorModel::HESAI_PANDARQT128:
+      return "PandarQT128";
+    case SensorModel::HESAI_PANDAR128_E4X:
+      return "Pandar128E4X";
+    // Velodyne
+    case SensorModel::VELODYNE_VLS128:
+      return "VLS128";
+    case SensorModel::VELODYNE_HDL64:
+      return "HDL64";
+    case SensorModel::VELODYNE_VLP32:
+      return "VLP32";
+    case SensorModel::VELODYNE_VLP32MR:
+      return "VLP32MR";
+    case SensorModel::VELODYNE_HDL32:
+      return "HDL32";
+    case SensorModel::VELODYNE_VLP16:
+      return "VLP16";
+    // Robosense
+    case SensorModel::ROBOSENSE_HELIOS:
+      return "Helios";
+    case SensorModel::ROBOSENSE_BPEARL:
+      return "Bpearl";
+    case SensorModel::ROBOSENSE_BPEARL_V3:
+      return "Bpearl_V3";
+    case SensorModel::ROBOSENSE_BPEARL_V4:
+      return "Bpearl_V4";
+    default:
+      return "UNKNOWN";
+  }
 }
 
 /// @brief Convert return mode name to ReturnMode enum
@@ -496,12 +568,18 @@ pcl::PointCloud<PointXYZIRADT>::Ptr convertPointXYZIRCAEDTToPointXYZIRADT(
 /// @brief Converts degrees to radians
 /// @param radians
 /// @return degrees
-static inline float deg2rad(double degrees) { return degrees * M_PI / 180.0; }
+static inline float deg2rad(double degrees)
+{
+  return degrees * M_PI / 180.0;
+}
 
 /// @brief Converts radians to degrees
 /// @param radians
 /// @return degrees
-static inline float rad2deg(double radians) { return radians * 180.0 / M_PI; }
+static inline float rad2deg(double radians)
+{
+  return radians * 180.0 / M_PI;
+}
 }  // namespace drivers
 }  // namespace nebula
 
