@@ -96,20 +96,20 @@ protected:
         logger_, "Packet index out of bounds: %lu (expected at most: %lu)", packet_idx,
         decode_group_size_);
       decode_group_.clear();
-      decode_group_timestamps_.clear();
+      decode_group_timestamps_ns_.clear();
       return false;
     }
 
     if (packet_idx > decode_group_.size()) {
       RCLCPP_WARN_THROTTLE(logger_, clock_, 1000, "Dropped packets detected");
       decode_group_.clear();
-      decode_group_timestamps_.clear();
+      decode_group_timestamps_ns_.clear();
       return false;
     }
 
     if (packet_idx == 0) {
       decode_group_.clear();
-      decode_group_timestamps_.clear();
+      decode_group_timestamps_ns_.clear();
     }
 
     decode_group_.emplace_back();  // Guaranteed to be at packet_idx
@@ -117,7 +117,8 @@ protected:
           &decode_group_[packet_idx], msop_packet.data.data(),
           sizeof(PacketT))) {
       const auto & parsed_packet = decode_group_[packet_idx];
-      decode_group_timestamps_.emplace_back(sensor_.getPacketTimestamp(parsed_packet));
+      const auto packet_timestamp = sensor_.getPacketTimestamp(parsed_packet);
+      decode_group_timestamps_ns_.emplace_back(packet_timestamp);
       return true;
     }
 
@@ -151,6 +152,11 @@ protected:
 
     // Find the units corresponding to the same return group as the current one.
     // These are used to find duplicates in multi-return mode.
+    boost::container::static_vector<const unit_t *, packet_t::MAX_RETURNS> return_units{};
+    boost::container::static_vector<size_t, packet_t::MAX_RETURNS> packet_idxs{};
+    boost::container::static_vector<size_t, packet_t::MAX_RETURNS> block_idxs{};
+    boost::container::static_vector<size_t, packet_t::MAX_RETURNS> unit_idxs{};
+
     for (size_t return_idx = 0; return_idx < n_returns; ++return_idx) {
       size_t packet_idx = start_packet_id + return_idx * PacketT::RETURN_GROUP_STRIDE[0];
       size_t block_idx = start_block_id + return_idx * PacketT::RETURN_GROUP_STRIDE[1];
@@ -171,19 +177,16 @@ protected:
       const auto block_idx = block_idxs[return_idx];
       const auto unit_idx = unit_idxs[return_idx];
 
-      // 1. Validate point
       if (!sensor_.isValid(packet, block_idx, unit_idx)) {
         continue;
       }
 
-      // 2. Range checks
       auto distance = sensor_.getDistance(packet, block_idx, unit_idx);
 
       if (distance < SensorT::MIN_RANGE || distance > SensorT::MAX_RANGE) {
         continue;
       }
 
-      // 3. Return group duplicate checks
       auto return_type = sensor_.getReturnType(return_units, return_idx, return_mode);
 
       // Keep only last of multiple identical points
@@ -217,19 +220,15 @@ protected:
         }
       }
 
-      // 4. Get fields intrinsic to the point
       NebulaPoint point;
       point.distance = distance;
       point.intensity = sensor_.getIntensity(packet, block_idx, unit_idx);
 
-      // 5. Do timing correction
       point.time_stamp = getPointTimeRelative(packet_idx, block_idx, unit_idx, return_mode);
 
-      // 6. Add point metadata
       point.return_type = static_cast<uint8_t>(return_type);
       point.channel = sensor_.getChannel(packet, block_idx, unit_idx);
 
-      // 7. Do angle correction
       const auto raw_azimuth = sensor_.getRawAzimuth(packet, block_idx, unit_idx);
       const auto raw_elevation = sensor_.getRawElevation(packet, block_idx, unit_idx);
       auto corrected_angle_data = sensor_.getCorrectedAngleData(raw_azimuth, raw_elevation);
@@ -238,7 +237,6 @@ protected:
       point.azimuth = corrected_angle_data.azimuth_rad;
       point.elevation = corrected_angle_data.elevation_rad;
 
-      // 8. Convert to cartesian coordinates
       // The raw_azimuth and channel are only used as indices, sin/cos functions use the precise
       // corrected angles
       float xyDistance = distance * corrected_angle_data.cos_elevation;
@@ -323,7 +321,7 @@ public:
     }
 
     if (decode_scan_timestamp_ns_ == 0) {
-      decode_scan_timestamp_ns_ = decode_group_timestamps_.back();
+      decode_scan_timestamp_ns_ = decode_group_timestamps_ns_.back();
     }
 
     if (has_scanned_) {
