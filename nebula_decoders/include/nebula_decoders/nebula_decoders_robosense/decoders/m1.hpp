@@ -226,6 +226,16 @@ public:
 
 class M1Info : public SensorInfoBase<robosense_packet::m1::InfoPacket>
 {
+private:
+  static constexpr uint8_t SYNC_MODE_GPS_FLAG = 0x00;
+  static constexpr uint8_t SYNC_MODE_E2E_FLAG = 0x01;
+  static constexpr uint8_t SYNC_MODE_P2P_FLAG = 0x02;
+  static constexpr uint8_t SYNC_MODE_GPTP_FLAG = 0x03;
+
+  static constexpr uint8_t SYNC_STATUS_UNSUCCESSFUL_FLAG = 0x00;
+  static constexpr uint8_t SYNC_STATUS_SUCCESSFUL_FLAG = 0x01;
+  static constexpr uint8_t SYNC_STATUS_CLOCK_DISCONNECTED_FLAG = 0x02;
+
 public:
   typedef typename robosense_packet::m1::InfoPacket packet_t;
 
@@ -266,29 +276,35 @@ public:
     }
 
     switch (info_packet.time_sync_mode) {
-      case 0:
+      case SYNC_MODE_GPS_FLAG:
         sensor_info["time_sync_mode"] = "gps";
         break;
-      case 1:
+      case SYNC_MODE_E2E_FLAG:
         sensor_info["time_sync_mode"] = "e2e";
         break;
-      case 2:
+      case SYNC_MODE_P2P_FLAG:
         sensor_info["time_sync_mode"] = "p2p";
         break;
-      case 3:
+      case SYNC_MODE_GPTP_FLAG:
         sensor_info["time_sync_mode"] = "gptp";
+        break;
+      default:
+        sensor_info["time_sync_mode"] = "n/a";
         break;
     }
 
     switch (info_packet.sync_status) {
-      case 0:
-        sensor_info["sync_status"] = "time_sync_invalid";
+      case SYNC_STATUS_UNSUCCESSFUL_FLAG:
+        sensor_info["sync_status"] = "not_synced";
         break;
-      case 1:
-        sensor_info["sync_status"] = "gps_time_sync_successful";
+      case SYNC_STATUS_SUCCESSFUL_FLAG:
+        sensor_info["sync_status"] = "synced";
         break;
-      case 2:
-        sensor_info["sync_status"] = "ptp_time_sync_successful";
+      case SYNC_STATUS_CLOCK_DISCONNECTED_FLAG:
+        sensor_info["sync_status"] = "clock_disconnected";
+        break;
+      default:
+        sensor_info["sync_status"] = "n/a";
         break;
     }
 
@@ -303,8 +319,9 @@ public:
     return {};  // M1 has no calibration
   }
 
-  bool getSyncStatus(const robosense_packet::m1::InfoPacket & /* info_packet */) const override {
-    return false; //TODO(mojomex)
+  bool getSyncStatus(const robosense_packet::m1::InfoPacket & /* info_packet */) const override
+  {
+    return false;  // TODO(mojomex)
   }
 };
 
