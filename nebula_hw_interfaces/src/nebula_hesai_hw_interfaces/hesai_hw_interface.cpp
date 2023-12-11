@@ -2322,7 +2322,7 @@ Status HesaiHwInterface::SetPtpConfig(
   std::vector<unsigned char> buf_vec;
   int len = 6;
   if (profile == 0) {
-  } else if (profile == 1) {
+  } else if (profile >= 1) {
     len = 3;
   } else {
     return Status::ERROR_1;
@@ -2995,13 +2995,23 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
       t.join();
     }
 
-    std::thread t([this] {
-      PrintInfo("Trying to set Clock source to PTP");
-      SetClockSource(HESAI_LIDAR_PTP_CLOCK_SOURCE);
-      PrintInfo("Trying to set PTP Config: IEEE 1588 v2, Domain: 0, Transport: UDP/IP");
-      SetPtpConfig(PTP_PROFILE,
-                   PTP_DOMAIN_ID,
-                   PTP_NETWORK_TRANSPORT,
+    std::thread t([this, sensor_configuration] {
+      if(sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR40P
+       || sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR64
+       || sensor_configuration->sensor_model == SensorModel::HESAI_PANDARQT64
+       || sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32
+       || sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32M) {
+        PrintInfo("Trying to set Clock source to PTP");
+        SetClockSource(HESAI_LIDAR_PTP_CLOCK_SOURCE);
+      }
+      std::ostringstream tmp_ostr;
+      tmp_ostr << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
+               << ", Domain: " << std::to_string(sensor_configuration->ptp_domain)
+               << ", Transport: " << sensor_configuration->ptp_transport_type << " via TCP";
+      PrintInfo(tmp_ostr.str());
+      SetPtpConfig(static_cast<int>(sensor_configuration->ptp_profile),
+                   sensor_configuration->ptp_domain,
+                   static_cast<int>(sensor_configuration->ptp_transport_type),
                    PTP_LOG_ANNOUNCE_INTERVAL,
                    PTP_SYNC_INTERVAL,
                    PTP_LOG_MIN_DELAY_INTERVAL
@@ -3013,10 +3023,14 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     PrintInfo("Trying to set SyncAngle via HTTP");
     SetSyncAngleSyncHttp(1,
                          static_cast<int>(sensor_configuration->scan_phase));
-    PrintInfo("Trying to set PTP Config: IEEE 1588 v2, Domain: 0, Transport: UDP/IP via HTTP");
-    SetPtpConfigSyncHttp(PTP_PROFILE,
-                         PTP_DOMAIN_ID,
-                         PTP_NETWORK_TRANSPORT,
+    std::ostringstream tmp_ostr;
+    tmp_ostr << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
+             << ", Domain: " << sensor_configuration->ptp_domain
+             << ", Transport: " << sensor_configuration->ptp_transport_type << " via HTTP";
+    PrintInfo(tmp_ostr.str());
+    SetPtpConfigSyncHttp(static_cast<int>(sensor_configuration->ptp_profile),
+                         sensor_configuration->ptp_domain,
+                         static_cast<int>(sensor_configuration->ptp_transport_type),
                          PTP_LOG_ANNOUNCE_INTERVAL,
                          PTP_SYNC_INTERVAL,
                          PTP_LOG_MIN_DELAY_INTERVAL);

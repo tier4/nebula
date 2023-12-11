@@ -91,6 +91,10 @@ def launch_setup(context, *args, **kwargs):
                     "sensor_ip": LaunchConfiguration("sensor_ip"),
                     "return_mode": LaunchConfiguration("return_mode"),
                     "calibration_file": sensor_calib_fp,
+                    "launch_hw": LaunchConfiguration("launch_hw"),
+                    "ptp_profile": LaunchConfiguration("ptp_profile"),
+                    "ptp_domain": LaunchConfiguration("ptp_domain"),
+                    "ptp_transport_type": LaunchConfiguration("ptp_transport_type"),
                 },
             ],
         ),
@@ -141,6 +145,9 @@ def generate_launch_description():
             add_launch_arg("launch_hw", "true"),
             add_launch_arg("setup_sensor", "true"),
             add_launch_arg("debug_logging", "false"),
+            add_launch_arg("ptp_profile", "1588v2"),
+            add_launch_arg("ptp_domain", "0"),
+            add_launch_arg("ptp_transport_type", "UDP"),
         ]
         + [OpaqueFunction(function=launch_setup)]
     )

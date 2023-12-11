@@ -346,7 +346,50 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
     this->declare_parameter<bool>("retry_hw", true, descriptor);
     this->retry_hw_ = this->get_parameter("retry_hw").as_bool();
   }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("ptp_profile", "");
+    sensor_configuration.ptp_profile =
+      nebula::drivers::PtpProfileFromString(this->get_parameter("ptp_profile").as_string());
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("ptp_transport_type", "");
+    sensor_configuration.ptp_transport_type =
+      nebula::drivers::PtpTransportTypeFromString(this->get_parameter("ptp_transport_type").as_string());
+    if(static_cast<int>(sensor_configuration.ptp_profile) > 0) {
+      sensor_configuration.ptp_transport_type = nebula::drivers::PtpTransportType::L2;
+    }
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    rcl_interfaces::msg::IntegerRange range;
+    range.set__from_value(0).set__to_value(127).set__step(1);
+    descriptor.integer_range = {range};
+    this->declare_parameter<uint8_t>("ptp_domain", 0, descriptor);
+    sensor_configuration.ptp_domain = this->get_parameter("ptp_domain").as_int();
+  }
 
+  if(sensor_configuration.ptp_profile == nebula::drivers::PtpProfile::PROFILE_UNKNOWN) {
+    RCLCPP_ERROR_STREAM(get_logger(), "Invalid PTP Profile Provided. Please use '1588v2', '802.1as' or 'automotive'");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+  if(sensor_configuration.ptp_transport_type == nebula::drivers::PtpTransportType::UNKNOWN_TRANSPORT) {
+    RCLCPP_ERROR_STREAM(get_logger(),
+                        "Invalid PTP Transport Provided. Please use 'udp' or 'l2', 'udp' is only available when using the '1588v2' PTP Profile");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }

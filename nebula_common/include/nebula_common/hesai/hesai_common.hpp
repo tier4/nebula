@@ -22,6 +22,9 @@ struct HesaiSensorConfiguration : SensorConfigurationBase
   uint16_t rotation_speed;
   uint16_t cloud_min_angle;
   uint16_t cloud_max_angle;
+  PtpProfile ptp_profile;
+  uint8_t ptp_domain;
+  PtpTransportType ptp_transport_type;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -32,7 +35,9 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << (SensorConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
      << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
      << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle
-     << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold;
+     << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold
+     << ", PtpProfile:" << arg.ptp_profile << ", PtpDomain:" << std::to_string(arg.ptp_domain)
+     << ", PtpTransportType:" << arg.ptp_transport_type;
   return os;
 }
 
