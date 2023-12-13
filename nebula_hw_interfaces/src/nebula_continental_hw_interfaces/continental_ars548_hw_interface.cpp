@@ -328,9 +328,9 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
                                            : status_driving_direction == 1 ? "VDY_NOTOK"
                                                                            : "INVALID VALUE";
 
-  const uint8_t & charasteristic_speed = buffer[STATUS_CHARASTERISTIC_SPEED_BYTE];
-  radar_status_.charasteristic_speed = charasteristic_speed == 0   ? "VDY_OK"
-                                       : charasteristic_speed == 1 ? "VDY_NOTOK"
+  const uint8_t & characteristic_speed = buffer[STATUS_CHARACTERISTIC_SPEED_BYTE];
+  radar_status_.characteristic_speed = characteristic_speed == 0   ? "VDY_OK"
+                                       : characteristic_speed == 1 ? "VDY_NOTOK"
                                                                    : "INVALID VALUE";
 
   const uint8_t & radar_status = buffer[STATUS_RADAR_STATUS_BYTE];
@@ -793,24 +793,24 @@ Status ContinentalARS548HwInterface::SetAccelerationLongitudinalCog(float longit
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::SetCharasteristicSpeed(float charasteristic_speed)
+Status ContinentalARS548HwInterface::SetCharacteristicSpeed(float characteristic_speed)
 {
-  constexpr uint16_t CHARASTERISTIC_SPEED_SERVICE_ID = 0;
-  constexpr uint16_t CHARASTERISTIC_SPEED_METHOD_ID = 328;
-  constexpr uint8_t CHARASTERISTIC_SPEED_LENGTH = 11;
-  const int CHARASTERISTIC_SPEED_PAYLOAD_SIZE = CHARASTERISTIC_SPEED_LENGTH + 8;
+  constexpr uint16_t CHARACTERISTIC_SPEED_SERVICE_ID = 0;
+  constexpr uint16_t CHARACTERISTIC_SPEED_METHOD_ID = 328;
+  constexpr uint8_t CHARACTERISTIC_SPEED_LENGTH = 11;
+  const int CHARACTERISTIC_SPEED_PAYLOAD_SIZE = CHARACTERISTIC_SPEED_LENGTH + 8;
 
-  if (charasteristic_speed < 0.f || charasteristic_speed > 255.f) {
-    PrintError("Invalid charasteristic_speed value");
+  if (characteristic_speed < 0.f || characteristic_speed > 255.f) {
+    PrintError("Invalid characteristic_speed value");
     return Status::ERROR_1;
   }
 
-  std::vector<uint8_t> send_vector(CHARASTERISTIC_SPEED_PAYLOAD_SIZE, 0);
-  send_vector[1] = CHARASTERISTIC_SPEED_SERVICE_ID;
-  send_vector[2] = static_cast<uint8_t>(CHARASTERISTIC_SPEED_METHOD_ID >> 8);
-  send_vector[3] = static_cast<uint8_t>(CHARASTERISTIC_SPEED_METHOD_ID & 0x00ff);
-  send_vector[7] = CHARASTERISTIC_SPEED_LENGTH;
-  send_vector[10] = static_cast<uint8_t>(charasteristic_speed);
+  std::vector<uint8_t> send_vector(CHARACTERISTIC_SPEED_PAYLOAD_SIZE, 0);
+  send_vector[1] = CHARACTERISTIC_SPEED_SERVICE_ID;
+  send_vector[2] = static_cast<uint8_t>(CHARACTERISTIC_SPEED_METHOD_ID >> 8);
+  send_vector[3] = static_cast<uint8_t>(CHARACTERISTIC_SPEED_METHOD_ID & 0x00ff);
+  send_vector[7] = CHARACTERISTIC_SPEED_LENGTH;
+  send_vector[10] = static_cast<uint8_t>(characteristic_speed);
 
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 

@@ -247,7 +247,7 @@ void ContinentalARS548HwInterfaceRosWrapper::DrivingDirectionCallback(
   hw_interface_.SetAccelerationLateralCog(0.0);
   hw_interface_.SetAccelerationLongitudinalCog(0.0);
 
-  hw_interface_.SetCharasteristicSpeed(0.0);
+  hw_interface_.SetCharacteristicSpeed(0.0);
   hw_interface_.SetSteeringAngleFrontAxle(0.0);
   hw_interface_.SetVelocityVehicle(5.0);
   hw_interface_.SetYawRate(0.25);
@@ -317,7 +317,7 @@ void ContinentalARS548HwInterfaceRosWrapper::ContinentalMonitorStatus(
   diagnostics.add("status_yaw_rate", sensor_status.status_yaw_rate);
   diagnostics.add("status_steering_angle", sensor_status.status_steering_angle);
   diagnostics.add("status_driving_direction", sensor_status.status_driving_direction);
-  diagnostics.add("charasteristic_speed", sensor_status.charasteristic_speed);
+  diagnostics.add("characteristic_speed", sensor_status.characteristic_speed);
   diagnostics.add("radar_status", sensor_status.radar_status);
   diagnostics.add("voltage_status", sensor_status.voltage_status);
   diagnostics.add("temperature_status", sensor_status.temperature_status);

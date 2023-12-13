@@ -198,10 +198,10 @@ public:
   /// @return Resulting status
   Status SetAccelerationLongitudinalCog(float longitudinal_acceleration);
 
-  /// @brief Set the charasteristic speed
-  /// @param charasteristic_speed Charasteristic speed
+  /// @brief Set the characteristic speed
+  /// @param characteristic_speed Characteristic speed
   /// @return Resulting status
-  Status SetCharasteristicSpeed(float charasteristic_speed);
+  Status SetCharacteristicSpeed(float characteristic_speed);
 
   /// @brief Set the current direction
   /// @param direction Current driving direction

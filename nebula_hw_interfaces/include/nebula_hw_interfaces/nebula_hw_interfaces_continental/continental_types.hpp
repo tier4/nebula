@@ -58,7 +58,7 @@ struct ContinentalARS548Status
   std::string status_yaw_rate;
   std::string status_steering_angle;
   std::string status_driving_direction;
-  std::string charasteristic_speed;
+  std::string characteristic_speed;
   std::string radar_status;
   std::string voltage_status;
   std::string temperature_status;
@@ -134,7 +134,7 @@ struct ContinentalARS548Status
     os << ", ";
     os << "status_driving_direction: " << arg.status_driving_direction;
     os << ", ";
-    os << "charasteristic_speed: " << arg.charasteristic_speed;
+    os << "characteristic_speed: " << arg.characteristic_speed;
     os << ", ";
     os << "radar_status: " << arg.radar_status;
     os << ", ";
