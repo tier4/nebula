@@ -39,7 +39,7 @@ ament_auto_add_library(nebula_hw_interfaces_robosense SHARED
         )
 
 ament_auto_add_library(nebula_hw_interfaces_continental SHARED
-        src/nebula_continental_hw_interfaces/continental_radar_ethernet_hw_interface.cpp
+        src/nebula_continental_hw_interfaces/continental_ars548_hw_interface.cpp
         )
 
 

@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_ContinentalRadarEthernetHwInterfaceRosWrapper_H
-#define NEBULA_ContinentalRadarEthernetHwInterfaceRosWrapper_H
+#ifndef NEBULA_ContinentalARS548HwInterfaceRosWrapper_H
+#define NEBULA_ContinentalARS548HwInterfaceRosWrapper_H
 
 #include "boost_tcp_driver/tcp_driver.hpp"
 #include "nebula_common/continental/continental_common.hpp"
 #include "nebula_common/nebula_common.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_radar_ethernet_hw_interface.hpp"
+#include "nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp"
 #include "nebula_ros/common/nebula_hw_interface_ros_wrapper_base.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
@@ -63,13 +63,13 @@ bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & nam
 }
 
 /// @brief Hardware interface ros wrapper of continental radar ethernet driver
-class ContinentalRadarEthernetHwInterfaceRosWrapper final : public rclcpp::Node,
-                                                            NebulaHwInterfaceWrapperBase
+class ContinentalARS548HwInterfaceRosWrapper final : public rclcpp::Node,
+                                                     NebulaHwInterfaceWrapperBase
 {
-  drivers::ContinentalRadarEthernetHwInterface hw_interface_;
+  drivers::continental_ars548::ContinentalARS548HwInterface hw_interface_;
   Status interface_status_;
 
-  drivers::ContinentalRadarEthernetSensorConfiguration sensor_configuration_;
+  drivers::ContinentalARS548SensorConfiguration sensor_configuration_;
 
   /// @brief Received Continental Radar message publisher
   rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_;
@@ -97,8 +97,9 @@ class ContinentalRadarEthernetHwInterfaceRosWrapper final : public rclcpp::Node,
     const std::shared_ptr<std_srvs::srv::Empty::Response> response);
 
 public:
-  explicit ContinentalRadarEthernetHwInterfaceRosWrapper(const rclcpp::NodeOptions & options);
-  ~ContinentalRadarEthernetHwInterfaceRosWrapper() noexcept override;
+  explicit ContinentalARS548HwInterfaceRosWrapper(const rclcpp::NodeOptions & options);
+  ~ContinentalARS548HwInterfaceRosWrapper() noexcept override;
+
   /// @brief Start point cloud streaming (Call CloudInterfaceStart of HwInterface)
   /// @return Resulting status
   Status StreamStart() override;
@@ -111,13 +112,15 @@ public:
   /// @brief Get configurations from ros parameters
   /// @param sensor_configuration Output of SensorConfiguration
   /// @return Resulting status
-  Status GetParameters(drivers::ContinentalRadarEthernetSensorConfiguration & sensor_configuration);
+  Status GetParameters(drivers::ContinentalARS548SensorConfiguration & sensor_configuration);
 
 private:
   std::mutex mtx_config_;
   OnSetParametersCallbackHandle::SharedPtr set_param_res_;
 
   diagnostic_updater::Updater diagnostics_updater_;
+
+  /// @brief Callback to populate diagnostic messages
   void ContinentalMonitorStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
   /// @brief rclcpp parameter callback
@@ -125,6 +128,7 @@ private:
   /// @return SetParametersResult
   rcl_interfaces::msg::SetParametersResult paramCallback(
     const std::vector<rclcpp::Parameter> & parameters);
+
   /// @brief Updating rclcpp parameter
   /// @return SetParametersResult
   std::vector<rcl_interfaces::msg::SetParametersResult> updateParameters();
@@ -133,4 +137,4 @@ private:
 }  // namespace ros
 }  // namespace nebula
 
-#endif  // NEBULA_ContinentalRadarEthernetHwInterfaceRosWrapper_H
+#endif  // NEBULA_ContinentalARS548HwInterfaceRosWrapper_H

@@ -16,11 +16,6 @@
 /**
  * Continental ARS548
  */
-#include "continental_msgs/msg/continental_ars548_detection_list.hpp"
-#include "continental_msgs/msg/continental_ars548_object_list.hpp"
-#include "radar_msgs/msg/radar_scan.hpp"
-#include "radar_msgs/msg/radar_tracks.hpp"
-
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -38,14 +33,62 @@ constexpr int SERVICE_ID_BYTE = 0;
 constexpr int METHOD_ID_BYTE = 2;
 constexpr int LENGTH_BYTE = 4;
 
+constexpr int CONFIGURATION_METHOD_ID = 390;
+constexpr int CONFIGURATION_PAYLOAD_LENGTH = 56;
+
+constexpr int STATUS_TIMESTAMP_NANOSECONDS_BYTE = 8;
+constexpr int STATUS_TIMESTAMP_SECONDS_BYTE = 12;
+constexpr int STATUS_SYNC_STATUS_BYTE = 16;
+constexpr int STATUS_SW_VERSION_MAJOR_BYTE = 17;
+constexpr int STATUS_SW_VERSION_MINOR_BYTE = 18;
+constexpr int STATUS_SW_VERSION_PATCH_BYTE = 19;
+
+constexpr int STATUS_LONGITUDINAL_BYTE = 20;
+constexpr int STATUS_LATERAL_BYTE = 24;
+constexpr int STATUS_VERTICAL_BYTE = 28;
+constexpr int STATUS_YAW_BYTE = 32;
+constexpr int STATUS_PITCH_BYTE = 36;
+
+constexpr int STATUS_PLUG_ORIENTATION_BYTE = 40;
+constexpr int STATUS_LENGTH_BYTE = 41;
+constexpr int STATUS_WIDTH_BYTE = 45;
+constexpr int STATUS_HEIGHT_BYTE = 49;
+constexpr int STATUS_WHEEL_BASE_BYTE = 53;
+constexpr int STATUS_MAXIMUM_DISTANCE_BYTE = 57;
+constexpr int STATUS_FREQUENCY_SLOT_BYTE = 59;
+constexpr int STATUS_CYCLE_TIME_BYTE = 60;
+constexpr int STATUS_TIME_SLOT_BYTE = 61;
+constexpr int STATUS_HCC_BYTE = 62;
+constexpr int STATUS_POWERSAVING_STANDSTILL_BYTE = 63;
+constexpr int STATUS_SENSOR_IP_ADDRESS0_BYTE = 64;
+constexpr int STATUS_SENSOR_IP_ADDRESS1_BYTE = 68;
+constexpr int STATUS_CONFIGURATION_COUNTER_BYTE = 72;
+constexpr int STATUS_LONGITUDINAL_VELOCITY_BYTE = 73;
+constexpr int STATUS_LONGITUDINAL_ACCELERATION_BYTE = 74;
+constexpr int STATUS_LATERAL_ACCELERATION_BYTE = 75;
+constexpr int STATUS_YAW_RATE_BYTE = 76;
+constexpr int STATUS_STEERING_ANGLE_BYTE = 77;
+constexpr int STATUS_DRIVING_DIRECTION_BYTE = 78;
+constexpr int STATUS_CHARASTERISTIC_SPEED_BYTE = 79;
+constexpr int STATUS_RADAR_STATUS_BYTE = 80;
+constexpr int STATUS_VOLTAGE_STATUS_BYTE = 81;
+constexpr int STATUS_TEMPERATURE_STATUS_BYTE = 82;
+constexpr int STATUS_BLOCKAGE_STATUS_BYTE = 83;
+
 constexpr int DETECTION_LIST_METHOD_ID = 336;
 constexpr int OBJECT_LIST_METHOD_ID = 329;
+constexpr int SENSOR_STATUS_METHOD_ID = 380;
+constexpr int FILTER_STATUS_METHOD_ID = 396;
 
 constexpr int DETECTION_LIST_UDP_PAYPLOAD = 35336;
 constexpr int OBJECT_LIST_UDP_PAYPLOAD = 9401;
+constexpr int SENSOR_STATUS_UDP_PAYPLOAD = 84;
+constexpr int FILTER_STATUS_UDP_PAYPLOAD = 330;
 
 constexpr int DETECTION_LIST_PDU_LENGTH = 35328;
 constexpr int OBJECT_LIST_PDU_LENGTH = 9393;
+constexpr int SENSOR_STATUS_PDU_LENGTH = 76;
+constexpr int FILTER_STATUS_PDU_LENGTH = 322;
 
 constexpr int DETECTION_LIST_CRC_BYTE = 16;
 constexpr int DETECTION_LIST_LENGTH_BYTE = 24;
@@ -156,17 +199,8 @@ constexpr int OBJECT_DYNAMICS_ORIENTATION_RATE_STD_BYTE = 157;
 constexpr int OBJECT_SHAPE_LENGTH_EDGE_MEAN_BYTE = 166;
 constexpr int OBJECT_SHAPE_WIDTH_EDGE_MEAN_BYTE = 179;
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr convertToPointcloud(
-  const continental_msgs::msg::ContinentalArs548DetectionList & msg);
-
-pcl::PointCloud<pcl::PointXYZ>::Ptr convertToPointcloud(
-  const continental_msgs::msg::ContinentalArs548ObjectList & msg);
-
-radar_msgs::msg::RadarScan convertToRadarScan(
-  const continental_msgs::msg::ContinentalArs548DetectionList & msg);
-
-radar_msgs::msg::RadarTracks convertToRadarTracks(
-  const continental_msgs::msg::ContinentalArs548ObjectList & msg);
+static constexpr int DETECTION_FILTER_PROPERTIES_NUM = 7;
+static constexpr int OBJECT_FILTER_PROPERTIES_NUM = 24;
 
 }  // namespace continental_ars548
 }  // namespace drivers

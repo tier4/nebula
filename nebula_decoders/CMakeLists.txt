@@ -53,7 +53,6 @@ ament_auto_add_library(nebula_decoders_robosense_info SHARED
 
 # Continental
 ament_auto_add_library(nebula_decoders_continental SHARED
-        src/nebula_decoders_continental/decoders/continental_ars548.cpp
         src/nebula_decoders_continental/decoders/continental_ars548_decoder.cpp
         )
 

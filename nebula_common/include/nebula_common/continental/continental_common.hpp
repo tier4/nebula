@@ -30,20 +30,20 @@ namespace nebula
 namespace drivers
 {
 /// @brief struct for Hesai sensor configuration
-struct ContinentalRadarEthernetSensorConfiguration : EthernetSensorConfigurationBase
+struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
 {
   std::string multicast_ip{};
   uint16_t configuration_host_port{};
   uint16_t configuration_sensor_port{};
 };
 
-/// @brief Convert ContinentalRadarEthernetSensorConfiguration to string (Overloading the <<
+/// @brief Convert ContinentalARS548SensorConfiguration to string (Overloading the <<
 /// operator)
 /// @param os
 /// @param arg
 /// @return stream
 inline std::ostream & operator<<(
-  std::ostream & os, ContinentalRadarEthernetSensorConfiguration const & arg)
+  std::ostream & os, ContinentalARS548SensorConfiguration const & arg)
 {
   os << (EthernetSensorConfigurationBase)(arg) << ", MulticastIP: " << arg.multicast_ip
      << ", ConfigurationHostPort: " << arg.configuration_host_port

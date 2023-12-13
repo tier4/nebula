@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_ros/continental/continental_radar_ethernet_hw_interface_ros_wrapper.hpp"
+#include "nebula_ros/continental/continental_ars548_hw_interface_ros_wrapper.hpp"
 
 #include <chrono>
 #include <thread>
@@ -21,7 +21,7 @@ namespace nebula
 {
 namespace ros
 {
-ContinentalRadarEthernetHwInterfaceRosWrapper::ContinentalRadarEthernetHwInterfaceRosWrapper(
+ContinentalARS548HwInterfaceRosWrapper::ContinentalARS548HwInterfaceRosWrapper(
   const rclcpp::NodeOptions & options)
 : rclcpp::Node("hesai_hw_interface_ros_wrapper", options),
   hw_interface_(),
@@ -37,67 +37,61 @@ ContinentalRadarEthernetHwInterfaceRosWrapper::ContinentalRadarEthernetHwInterfa
   }
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
-    std::make_shared<drivers::ContinentalRadarEthernetSensorConfiguration>(sensor_configuration_);
+    std::make_shared<drivers::ContinentalARS548SensorConfiguration>(sensor_configuration_);
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
 
   hw_interface_.RegisterScanCallback(std::bind(
-    &ContinentalRadarEthernetHwInterfaceRosWrapper::ReceivePacketsDataCallback, this,
+    &ContinentalARS548HwInterfaceRosWrapper::ReceivePacketsDataCallback, this,
     std::placeholders::_1));
   packets_pub_ = this->create_publisher<nebula_msgs::msg::NebulaPackets>(
     "nebula_packets", rclcpp::SensorDataQoS());
 
-#if not defined(TEST_PCAP)  // KL check how to do this
-  if (this->setup_sensor) {
-    set_param_res_ = this->add_on_set_parameters_callback(std::bind(
-      &ContinentalRadarEthernetHwInterfaceRosWrapper::paramCallback, this, std::placeholders::_1));
-  }
-#endif
+  set_param_res_ = this->add_on_set_parameters_callback(
+    std::bind(&ContinentalARS548HwInterfaceRosWrapper::paramCallback, this, std::placeholders::_1));
 
   driving_direction_sub_ = create_subscription<std_msgs::msg::Bool>(
     "driving_direction", rclcpp::SensorDataQoS(),
     std::bind(
-      &ContinentalRadarEthernetHwInterfaceRosWrapper::DrivingDirectionCallback, this,
+      &ContinentalARS548HwInterfaceRosWrapper::DrivingDirectionCallback, this,
       std::placeholders::_1));
 
   sensor_config_service_server_ = this->create_service<std_srvs::srv::Empty>(
-    "configure_radar",
-    std::bind(
-      &ContinentalRadarEthernetHwInterfaceRosWrapper::SensorConfigureRequestCallback, this,
-      std::placeholders::_1, std::placeholders::_2));
+    "configure_radar", std::bind(
+                         &ContinentalARS548HwInterfaceRosWrapper::SensorConfigureRequestCallback,
+                         this, std::placeholders::_1, std::placeholders::_2));
 
   StreamStart();
 }
 
-ContinentalRadarEthernetHwInterfaceRosWrapper::~ContinentalRadarEthernetHwInterfaceRosWrapper()
+ContinentalARS548HwInterfaceRosWrapper::~ContinentalARS548HwInterfaceRosWrapper()
 {
 }
 
-Status ContinentalRadarEthernetHwInterfaceRosWrapper::StreamStart()
+Status ContinentalARS548HwInterfaceRosWrapper::StreamStart()
 {
   using std::chrono_literals::operator""ms;
 
   if (Status::OK == interface_status_) {
     interface_status_ = hw_interface_.CloudInterfaceStart();
     diagnostics_updater_.add(
-      "radar_status", this,
-      &ContinentalRadarEthernetHwInterfaceRosWrapper::ContinentalMonitorStatus);
+      "radar_status", this, &ContinentalARS548HwInterfaceRosWrapper::ContinentalMonitorStatus);
   }
 
   return interface_status_;
 }
 
-Status ContinentalRadarEthernetHwInterfaceRosWrapper::StreamStop()
+Status ContinentalARS548HwInterfaceRosWrapper::StreamStop()
 {
   return Status::OK;
 }
-Status ContinentalRadarEthernetHwInterfaceRosWrapper::Shutdown()
+Status ContinentalARS548HwInterfaceRosWrapper::Shutdown()
 {
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterfaceRosWrapper::InitializeHwInterface(  // todo: don't think
-                                                                              // this is needed
+Status ContinentalARS548HwInterfaceRosWrapper::InitializeHwInterface(  // todo: don't think
+                                                                       // this is needed
   const drivers::SensorConfigurationBase & sensor_configuration)
 {
   std::stringstream ss;
@@ -106,8 +100,8 @@ Status ContinentalRadarEthernetHwInterfaceRosWrapper::InitializeHwInterface(  //
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterfaceRosWrapper::GetParameters(
-  drivers::ContinentalRadarEthernetSensorConfiguration & sensor_configuration)
+Status ContinentalARS548HwInterfaceRosWrapper::GetParameters(
+  drivers::ContinentalARS548SensorConfiguration & sensor_configuration)
 {
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -197,14 +191,13 @@ Status ContinentalRadarEthernetHwInterfaceRosWrapper::GetParameters(
   return Status::OK;
 }
 
-void ContinentalRadarEthernetHwInterfaceRosWrapper::ReceivePacketsDataCallback(
+void ContinentalARS548HwInterfaceRosWrapper::ReceivePacketsDataCallback(
   std::unique_ptr<nebula_msgs::msg::NebulaPackets> scan_buffer)
 {
   packets_pub_->publish(std::move(scan_buffer));
 }
 
-rcl_interfaces::msg::SetParametersResult
-ContinentalRadarEthernetHwInterfaceRosWrapper::paramCallback(
+rcl_interfaces::msg::SetParametersResult ContinentalARS548HwInterfaceRosWrapper::paramCallback(
   const std::vector<rclcpp::Parameter> & p)
 {
   std::scoped_lock lock(mtx_config_);
@@ -213,7 +206,7 @@ ContinentalRadarEthernetHwInterfaceRosWrapper::paramCallback(
   RCLCPP_DEBUG_STREAM(this->get_logger(), sensor_configuration_);
   RCLCPP_INFO_STREAM(this->get_logger(), p);
 
-  drivers::ContinentalRadarEthernetSensorConfiguration new_param{sensor_configuration_};
+  drivers::ContinentalARS548SensorConfiguration new_param{sensor_configuration_};
   RCLCPP_INFO_STREAM(this->get_logger(), new_param);
   std::string sensor_model_str;
   std::string return_mode_str;
@@ -231,7 +224,7 @@ ContinentalRadarEthernetHwInterfaceRosWrapper::paramCallback(
     sensor_configuration_ = new_param;
     RCLCPP_INFO_STREAM(this->get_logger(), "Update sensor_configuration");
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
-      std::make_shared<drivers::ContinentalRadarEthernetSensorConfiguration>(sensor_configuration_);
+      std::make_shared<drivers::ContinentalARS548SensorConfiguration>(sensor_configuration_);
     RCLCPP_DEBUG_STREAM(this->get_logger(), "hw_interface_.SetSensorConfiguration");
     hw_interface_.SetSensorConfiguration(
       std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
@@ -247,13 +240,9 @@ ContinentalRadarEthernetHwInterfaceRosWrapper::paramCallback(
   return *result;
 }
 
-void ContinentalRadarEthernetHwInterfaceRosWrapper::DrivingDirectionCallback(
+void ContinentalARS548HwInterfaceRosWrapper::DrivingDirectionCallback(
   [[maybe_unused]] const std_msgs::msg::Bool::SharedPtr msg)
 {
-  std::cout << std::this_thread::get_id()
-            << ": ContinentalRadarEthernetHwInterface::DrivingDirectionTimerCallback" << std::endl
-            << std::flush;
-
   hw_interface_.SetDrivingDirection(0);
   hw_interface_.SetAccelerationLateralCog(0.0);
   hw_interface_.SetAccelerationLongitudinalCog(0.0);
@@ -264,17 +253,15 @@ void ContinentalRadarEthernetHwInterfaceRosWrapper::DrivingDirectionCallback(
   hw_interface_.SetYawRate(0.25);
 }
 
-void ContinentalRadarEthernetHwInterfaceRosWrapper::SensorConfigureRequestCallback(
+void ContinentalARS548HwInterfaceRosWrapper::SensorConfigureRequestCallback(
   [[maybe_unused]] const std::shared_ptr<std_srvs::srv::Empty::Request> request,
   [[maybe_unused]] const std::shared_ptr<std_srvs::srv::Empty::Response> response)
 {
-  std::cout << "SetVehicleParametersCallback" << std::endl << std::flush;
-
   hw_interface_.SetVehicleParameters(10.f, 4.5f, 3.f, 2.5f);
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
-ContinentalRadarEthernetHwInterfaceRosWrapper::updateParameters()
+ContinentalARS548HwInterfaceRosWrapper::updateParameters()
 {
   std::scoped_lock lock(mtx_config_);
   RCLCPP_DEBUG_STREAM(this->get_logger(), "updateParameters start");
@@ -294,14 +281,10 @@ ContinentalRadarEthernetHwInterfaceRosWrapper::updateParameters()
   return results;
 }
 
-void ContinentalRadarEthernetHwInterfaceRosWrapper::ContinentalMonitorStatus(
+void ContinentalARS548HwInterfaceRosWrapper::ContinentalMonitorStatus(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  std::cout << std::this_thread::get_id() << ": ContinentalMonitorStatus" << std::endl
-            << std::flush;
-
   auto sensor_status = hw_interface_.GetRadarStatus();
-  // KL need to use smart pointers for the initial case
   diagnostics.add("timestamp_nanoseconds", std::to_string(sensor_status.timestamp_nanoseconds));
   diagnostics.add("timestamp_seconds", std::to_string(sensor_status.timestamp_seconds));
   diagnostics.add("timestamp_sync_status", sensor_status.timestamp_sync_status);
@@ -339,11 +322,8 @@ void ContinentalRadarEthernetHwInterfaceRosWrapper::ContinentalMonitorStatus(
   diagnostics.add("voltage_status", sensor_status.voltage_status);
   diagnostics.add("temperature_status", sensor_status.temperature_status);
   diagnostics.add("blockage_status", sensor_status.blockage_status);
-  diagnostics.summary(
-    diagnostic_msgs::msg::DiagnosticStatus::WARN,
-    "Dummy No data available");  // KL: need to check this
 }
 
-RCLCPP_COMPONENTS_REGISTER_NODE(ContinentalRadarEthernetHwInterfaceRosWrapper)
+RCLCPP_COMPONENTS_REGISTER_NODE(ContinentalARS548HwInterfaceRosWrapper)
 }  // namespace ros
 }  // namespace nebula

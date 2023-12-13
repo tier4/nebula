@@ -12,7 +12,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_radar_ethernet_hw_interface.hpp"
+
+#include "nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp"
+
+#include "nebula_common/continental/continental_ars548.hpp"
 
 #include <limits>
 
@@ -20,21 +23,23 @@ namespace nebula
 {
 namespace drivers
 {
-ContinentalRadarEthernetHwInterface::ContinentalRadarEthernetHwInterface()
+namespace continental_ars548
+{
+ContinentalARS548HwInterface::ContinentalARS548HwInterface()
 : cloud_io_context_{new ::drivers::common::IoContext(1)},
   sensor_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
   nebula_packets_ptr_{std::make_unique<nebula_msgs::msg::NebulaPackets>()}
 {
 }
 
-Status ContinentalRadarEthernetHwInterface::SetSensorConfiguration(
+Status ContinentalARS548HwInterface::SetSensorConfiguration(
   std::shared_ptr<SensorConfigurationBase> sensor_configuration)
 {
   Status status = Status::OK;
 
   try {
     sensor_configuration_ =
-      std::static_pointer_cast<ContinentalRadarEthernetSensorConfiguration>(sensor_configuration);
+      std::static_pointer_cast<ContinentalARS548SensorConfiguration>(sensor_configuration);
   } catch (const std::exception & ex) {
     status = Status::SENSOR_CONFIG_ERROR;
     std::cerr << status << std::endl;
@@ -44,10 +49,9 @@ Status ContinentalRadarEthernetHwInterface::SetSensorConfiguration(
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterface::CloudInterfaceStart()
+Status ContinentalARS548HwInterface::CloudInterfaceStart()
 {
   try {
-    std::cout << "Starting Data UDP server on: " << *sensor_configuration_ << std::endl;
     sensor_udp_driver_->init_receiver(
       sensor_configuration_->multicast_ip, sensor_configuration_->data_port,
       sensor_configuration_->host_ip, sensor_configuration_->data_port, 2 << 16);
@@ -55,7 +59,7 @@ Status ContinentalRadarEthernetHwInterface::CloudInterfaceStart()
     sensor_udp_driver_->receiver()->open();
     sensor_udp_driver_->receiver()->bind();
     sensor_udp_driver_->receiver()->asyncReceiveWithSender(std::bind(
-      &ContinentalRadarEthernetHwInterface::ReceiveCloudPacketCallbackWithSender, this,
+      &ContinentalARS548HwInterface::ReceiveCloudPacketCallbackWithSender, this,
       std::placeholders::_1, std::placeholders::_2));
 
     sensor_udp_driver_->init_sender(
@@ -77,24 +81,23 @@ Status ContinentalRadarEthernetHwInterface::CloudInterfaceStart()
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterface::RegisterScanCallback(
+Status ContinentalARS548HwInterface::RegisterScanCallback(
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> callback)
 {
   nebula_packets_reception_callback_ = std::move(callback);
   return Status::OK;
 }
 
-void ContinentalRadarEthernetHwInterface::ReceiveCloudPacketCallbackWithSender(
+void ContinentalARS548HwInterface::ReceiveCloudPacketCallbackWithSender(
   const std::vector<uint8_t> & buffer, const std::string & sender_ip)
 {
   if (sender_ip == sensor_configuration_->sensor_ip) {
     ReceiveCloudPacketCallback(buffer);
   }
 }
-void ContinentalRadarEthernetHwInterface::ReceiveCloudPacketCallback(
-  const std::vector<uint8_t> & buffer)
+void ContinentalARS548HwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer)
 {
-  constexpr int DETECTION_LIST_METHOD_ID = 336;
+  /*constexpr int DETECTION_LIST_METHOD_ID = 336;
   constexpr int OBJECT_LIST_METHOD_ID = 329;
   constexpr int SENSOR_STATUS_METHOD_ID = 380;
   constexpr int FILTER_STATUS_METHOD_ID = 396;
@@ -108,6 +111,8 @@ void ContinentalRadarEthernetHwInterface::ReceiveCloudPacketCallback(
   constexpr int OBJECT_LIST_PDU_LENGTH = 9393;
   constexpr int SENSOR_STATUS_PDU_LENGTH = 76;
   constexpr int FILTER_STATUS_PDU_LENGTH = 322;
+
+  */
 
   if (buffer.size() < LENGTH_BYTE + sizeof(uint32_t)) {
     PrintError("Unrecognized packet. Too short");
@@ -156,8 +161,7 @@ void ContinentalRadarEthernetHwInterface::ReceiveCloudPacketCallback(
   }
 }
 
-void ContinentalRadarEthernetHwInterface::ProcessSensorStatusPacket(
-  const std::vector<uint8_t> & buffer)
+void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<uint8_t> & buffer)
 {
   radar_status_.timestamp_nanoseconds =
     (static_cast<uint32_t>(buffer[STATUS_TIMESTAMP_NANOSECONDS_BYTE]) << 24) |
@@ -403,8 +407,7 @@ void ContinentalRadarEthernetHwInterface::ProcessSensorStatusPacket(
   }
 }
 
-void ContinentalRadarEthernetHwInterface::ProcessFilterStatusPacket(
-  const std::vector<uint8_t> & buffer)
+void ContinentalARS548HwInterface::ProcessFilterStatusPacket(const std::vector<uint8_t> & buffer)
 {
   // Unused available data
   // constexpr int FILTER_STATUS_TIMESTAMP_NANOSECONDS_BYTE = 8;
@@ -474,7 +477,7 @@ void ContinentalRadarEthernetHwInterface::ProcessFilterStatusPacket(
   }
 }
 
-void ContinentalRadarEthernetHwInterface::ProcessDataPacket(const std::vector<uint8_t> & buffer)
+void ContinentalARS548HwInterface::ProcessDataPacket(const std::vector<uint8_t> & buffer)
 {
   nebula_msgs::msg::NebulaPacket nebula_packet;
   nebula_packet.data = buffer;
@@ -494,12 +497,12 @@ void ContinentalRadarEthernetHwInterface::ProcessDataPacket(const std::vector<ui
   nebula_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
 }
 
-Status ContinentalRadarEthernetHwInterface::CloudInterfaceStop()
+Status ContinentalARS548HwInterface::CloudInterfaceStop()
 {
   return Status::ERROR_1;
 }
 
-Status ContinentalRadarEthernetHwInterface::GetSensorConfiguration(
+Status ContinentalARS548HwInterface::GetSensorConfiguration(
   SensorConfigurationBase & sensor_configuration)
 {
   std::stringstream ss;
@@ -508,18 +511,7 @@ Status ContinentalRadarEthernetHwInterface::GetSensorConfiguration(
   return Status::ERROR_1;
 }
 
-boost::property_tree::ptree ContinentalRadarEthernetHwInterface::ParseJson(const std::string & str)
-{
-  boost::property_tree::ptree tree;
-  try {
-    boost::property_tree::read_json(str, tree);
-  } catch (boost::property_tree::json_parser_error & e) {
-    std::cerr << e.what() << std::endl;
-  }
-  return tree;
-}
-
-Status ContinentalRadarEthernetHwInterface::SetSensorMounting(
+Status ContinentalARS548HwInterface::SetSensorMounting(
   float longitudinal_autosar, float lateral_autosar, float vertical_autosar, float yaw_autosar,
   float pitch_autosar, uint8_t plug_orientation)
 {
@@ -592,7 +584,7 @@ Status ContinentalRadarEthernetHwInterface::SetSensorMounting(
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterface::SetVehicleParameters(
+Status ContinentalARS548HwInterface::SetVehicleParameters(
   float length_autosar, float width_autosar, float height_autosar, float wheel_base_autosar)
 {
   constexpr int CONFIGURATION_LENGTH_BYTE = 29;
@@ -653,7 +645,7 @@ Status ContinentalRadarEthernetHwInterface::SetVehicleParameters(
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterface::SetRadarParameters(
+Status ContinentalARS548HwInterface::SetRadarParameters(
   uint16_t maximum_distance, uint8_t frequency_slot, uint8_t cycle_time, uint8_t time_slot,
   uint8_t hcc, uint8_t powersave_standstill)
 {
@@ -699,8 +691,7 @@ Status ContinentalRadarEthernetHwInterface::SetRadarParameters(
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterface::SetSensorIPAddress(
-  const std::string & sensor_ip_address)
+Status ContinentalARS548HwInterface::SetSensorIPAddress(const std::string & sensor_ip_address)
 {
   constexpr int CONFIGURATION_SENSOR_IP_ADDRESS0 = 52;
   constexpr int CONFIGURATION_SENSOR_IP_ADDRESS1 = 56;
@@ -742,7 +733,7 @@ Status ContinentalRadarEthernetHwInterface::SetSensorIPAddress(
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterface::SetAccelerationLateralCog(float lateral_acceleration)
+Status ContinentalARS548HwInterface::SetAccelerationLateralCog(float lateral_acceleration)
 {
   constexpr uint16_t ACCELERATION_LATERAL_COG_SERVICE_ID = 0;
   constexpr uint16_t ACCELERATION_LATERAL_COG_METHOD_ID = 321;
@@ -758,7 +749,6 @@ Status ContinentalRadarEthernetHwInterface::SetAccelerationLateralCog(float late
   std::memcpy(bytes, &lateral_acceleration, sizeof(lateral_acceleration));
 
   std::vector<uint8_t> send_vector(ACCELERATION_LATERAL_COG_PAYLOAD_SIZE, 0);
-  ;
   send_vector[1] = ACCELERATION_LATERAL_COG_SERVICE_ID;
   send_vector[2] = static_cast<uint8_t>(ACCELERATION_LATERAL_COG_METHOD_ID >> 8);
   send_vector[3] = static_cast<uint8_t>(ACCELERATION_LATERAL_COG_METHOD_ID & 0x00ff);
@@ -773,8 +763,7 @@ Status ContinentalRadarEthernetHwInterface::SetAccelerationLateralCog(float late
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterface::SetAccelerationLongitudinalCog(
-  float longitudinal_acceleration)
+Status ContinentalARS548HwInterface::SetAccelerationLongitudinalCog(float longitudinal_acceleration)
 {
   constexpr uint16_t ACCELERATION_LONGITUDINAL_COG_SERVICE_ID = 0;
   constexpr uint16_t ACCELERATION_LONGITUDINAL_COG_METHOD_ID = 322;
@@ -790,7 +779,6 @@ Status ContinentalRadarEthernetHwInterface::SetAccelerationLongitudinalCog(
   std::memcpy(bytes, &longitudinal_acceleration, sizeof(longitudinal_acceleration));
 
   std::vector<uint8_t> send_vector(ACCELERATION_LONGITUDINAL_COG_PAYLOAD_SIZE, 0);
-  ;
   send_vector[1] = ACCELERATION_LONGITUDINAL_COG_SERVICE_ID;
   send_vector[2] = static_cast<uint8_t>(ACCELERATION_LONGITUDINAL_COG_METHOD_ID >> 8);
   send_vector[3] = static_cast<uint8_t>(ACCELERATION_LONGITUDINAL_COG_METHOD_ID & 0x00ff);
@@ -805,7 +793,7 @@ Status ContinentalRadarEthernetHwInterface::SetAccelerationLongitudinalCog(
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterface::SetCharasteristicSpeed(float charasteristic_speed)
+Status ContinentalARS548HwInterface::SetCharasteristicSpeed(float charasteristic_speed)
 {
   constexpr uint16_t CHARASTERISTIC_SPEED_SERVICE_ID = 0;
   constexpr uint16_t CHARASTERISTIC_SPEED_METHOD_ID = 328;
@@ -818,7 +806,6 @@ Status ContinentalRadarEthernetHwInterface::SetCharasteristicSpeed(float charast
   }
 
   std::vector<uint8_t> send_vector(CHARASTERISTIC_SPEED_PAYLOAD_SIZE, 0);
-  ;
   send_vector[1] = CHARASTERISTIC_SPEED_SERVICE_ID;
   send_vector[2] = static_cast<uint8_t>(CHARASTERISTIC_SPEED_METHOD_ID >> 8);
   send_vector[3] = static_cast<uint8_t>(CHARASTERISTIC_SPEED_METHOD_ID & 0x00ff);
@@ -830,7 +817,7 @@ Status ContinentalRadarEthernetHwInterface::SetCharasteristicSpeed(float charast
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterface::SetDrivingDirection(int direction)
+Status ContinentalARS548HwInterface::SetDrivingDirection(int direction)
 {
   constexpr uint16_t DRIVING_DIRECTION_SERVICE_ID = 0;
   constexpr uint16_t DRIVING_DIRECTION_METHOD_ID = 325;
@@ -841,7 +828,6 @@ Status ContinentalRadarEthernetHwInterface::SetDrivingDirection(int direction)
   const int DRIVING_DIRECTION_PAYLOAD_SIZE = DRIVING_DIRECTION_LENGTH + 8;
 
   std::vector<uint8_t> send_vector(DRIVING_DIRECTION_PAYLOAD_SIZE, 0);
-  ;
   send_vector[1] = DRIVING_DIRECTION_SERVICE_ID;
   send_vector[2] = static_cast<uint8_t>(DRIVING_DIRECTION_METHOD_ID >> 8);
   send_vector[3] = static_cast<uint8_t>(DRIVING_DIRECTION_METHOD_ID & 0xff);
@@ -860,7 +846,7 @@ Status ContinentalRadarEthernetHwInterface::SetDrivingDirection(int direction)
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterface::SetSteeringAngleFrontAxle(float angle_rad)
+Status ContinentalARS548HwInterface::SetSteeringAngleFrontAxle(float angle_rad)
 {
   constexpr uint16_t STEERING_ANGLE_SERVICE_ID = 0;
   constexpr uint16_t STEERING_ANGLE_METHOD_ID = 327;
@@ -876,7 +862,6 @@ Status ContinentalRadarEthernetHwInterface::SetSteeringAngleFrontAxle(float angl
   std::memcpy(bytes, &angle_rad, sizeof(angle_rad));
 
   std::vector<uint8_t> send_vector(STEERING_ANGLE_PAYLOAD_SIZE, 0);
-  ;
   send_vector[1] = STEERING_ANGLE_SERVICE_ID;
   send_vector[2] = static_cast<uint8_t>(STEERING_ANGLE_METHOD_ID >> 8);
   send_vector[3] = static_cast<uint8_t>(STEERING_ANGLE_METHOD_ID & 0x00ff);
@@ -891,7 +876,7 @@ Status ContinentalRadarEthernetHwInterface::SetSteeringAngleFrontAxle(float angl
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterface::SetVelocityVehicle(float velocity)
+Status ContinentalARS548HwInterface::SetVelocityVehicle(float velocity)
 {
   constexpr uint16_t VELOCITY_VECHILE_SERVICE_ID = 0;
   constexpr uint16_t VELOCITY_VECHILE_METHOD_ID = 323;
@@ -902,7 +887,6 @@ Status ContinentalRadarEthernetHwInterface::SetVelocityVehicle(float velocity)
   std::memcpy(bytes, &velocity, sizeof(velocity));
 
   std::vector<uint8_t> send_vector(VELOCITY_VECHILE_PAYLOAD_SIZE, 0);
-  ;
   send_vector[1] = VELOCITY_VECHILE_SERVICE_ID;
   send_vector[2] = static_cast<uint8_t>(VELOCITY_VECHILE_METHOD_ID >> 8);
   send_vector[3] = static_cast<uint8_t>(VELOCITY_VECHILE_METHOD_ID & 0x00ff);
@@ -917,7 +901,7 @@ Status ContinentalRadarEthernetHwInterface::SetVelocityVehicle(float velocity)
   return Status::OK;
 }
 
-Status ContinentalRadarEthernetHwInterface::SetYawRate(float yaw_rate)
+Status ContinentalARS548HwInterface::SetYawRate(float yaw_rate)
 {
   constexpr uint16_t YAW_RATE_SERVICE_ID = 0;
   constexpr uint16_t YAW_RATE_METHOD_ID = 326;
@@ -928,7 +912,6 @@ Status ContinentalRadarEthernetHwInterface::SetYawRate(float yaw_rate)
   std::memcpy(bytes, &yaw_rate, sizeof(yaw_rate));
 
   std::vector<uint8_t> send_vector(YAW_RATE_PAYLOAD_SIZE, 0);
-  ;
   send_vector[1] = YAW_RATE_SERVICE_ID;
   send_vector[2] = static_cast<uint8_t>(YAW_RATE_METHOD_ID >> 8);
   send_vector[3] = static_cast<uint8_t>(YAW_RATE_METHOD_ID & 0x00ff);
@@ -943,18 +926,18 @@ Status ContinentalRadarEthernetHwInterface::SetYawRate(float yaw_rate)
   return Status::OK;
 }
 
-ContinentalRadarStatus ContinentalRadarEthernetHwInterface::GetRadarStatus()
+ContinentalARS548Status ContinentalARS548HwInterface::GetRadarStatus()
 {
   std::lock_guard l(sensor_status_mutex_);
   return radar_status_;
 }
 
-void ContinentalRadarEthernetHwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
+void ContinentalARS548HwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
 {
   parent_node_logger = logger;
 }
 
-void ContinentalRadarEthernetHwInterface::PrintInfo(std::string info)
+void ContinentalARS548HwInterface::PrintInfo(std::string info)
 {
   if (parent_node_logger) {
     RCLCPP_INFO_STREAM((*parent_node_logger), info);
@@ -963,7 +946,7 @@ void ContinentalRadarEthernetHwInterface::PrintInfo(std::string info)
   }
 }
 
-void ContinentalRadarEthernetHwInterface::PrintError(std::string error)
+void ContinentalARS548HwInterface::PrintError(std::string error)
 {
   if (parent_node_logger) {
     RCLCPP_ERROR_STREAM((*parent_node_logger), error);
@@ -972,7 +955,7 @@ void ContinentalRadarEthernetHwInterface::PrintError(std::string error)
   }
 }
 
-void ContinentalRadarEthernetHwInterface::PrintDebug(std::string debug)
+void ContinentalARS548HwInterface::PrintDebug(std::string debug)
 {
   if (parent_node_logger) {
     RCLCPP_DEBUG_STREAM((*parent_node_logger), debug);
@@ -981,7 +964,7 @@ void ContinentalRadarEthernetHwInterface::PrintDebug(std::string debug)
   }
 }
 
-void ContinentalRadarEthernetHwInterface::PrintDebug(const std::vector<uint8_t> & bytes)
+void ContinentalARS548HwInterface::PrintDebug(const std::vector<uint8_t> & bytes)
 {
   std::stringstream ss;
   for (const auto & b : bytes) {
@@ -991,5 +974,6 @@ void ContinentalRadarEthernetHwInterface::PrintDebug(const std::vector<uint8_t> 
   PrintDebug(ss.str());
 }
 
+}  // namespace continental_ars548
 }  // namespace drivers
 }  // namespace nebula

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_ContinentalRadarEthernetDriverRosWrapper_H
-#define NEBULA_ContinentalRadarEthernetDriverRosWrapper_H
+#ifndef NEBULA_ContinentalARS548DriverRosWrapper_H
+#define NEBULA_ContinentalARS548DriverRosWrapper_H
 
 #include "nebula_common/continental/continental_common.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_radar_ethernet_hw_interface.hpp"
+#include "nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp"
 #include "nebula_ros/common/nebula_driver_ros_wrapper_base.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
@@ -33,6 +33,8 @@
 #include "continental_msgs/msg/continental_ars548_object_list.hpp"
 #include "nebula_msgs/msg/nebula_packet.hpp"
 #include "nebula_msgs/msg/nebula_packets.hpp"
+#include "radar_msgs/msg/radar_scan.hpp"
+#include "radar_msgs/msg/radar_tracks.hpp"
 
 #include <chrono>
 #include <memory>
@@ -42,8 +44,7 @@ namespace nebula
 namespace ros
 {
 /// @brief Ros wrapper of continental radar ethernet driver
-class ContinentalRadarEthernetDriverRosWrapper final : public rclcpp::Node,
-                                                       NebulaDriverRosWrapperBase
+class ContinentalARS548DriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapperBase
 {
   std::shared_ptr<drivers::continental_ars548::ContinentalARS548Decoder> decoder_ptr_;
   Status wrapper_status_;
@@ -58,7 +59,7 @@ class ContinentalRadarEthernetDriverRosWrapper final : public rclcpp::Node,
 
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
 
-  drivers::ContinentalRadarEthernetHwInterface hw_interface_;
+  drivers::continental_ars548::ContinentalARS548HwInterface hw_interface_;
 
   /// @brief Initializing ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
@@ -71,7 +72,7 @@ class ContinentalRadarEthernetDriverRosWrapper final : public rclcpp::Node,
   /// @param calibration_configuration Output of CalibrationConfiguration
   /// @param correction_configuration Output of CorrectionConfiguration (for AT)
   /// @return Resulting status
-  Status GetParameters(drivers::ContinentalRadarEthernetSensorConfiguration & sensor_configuration);
+  Status GetParameters(drivers::ContinentalARS548SensorConfiguration & sensor_configuration);
 
   /// @brief Convert seconds to chrono::nanoseconds
   /// @param seconds
@@ -82,21 +83,17 @@ class ContinentalRadarEthernetDriverRosWrapper final : public rclcpp::Node,
       std::chrono::duration<double>(seconds));
   }
 
-  /***
-   * Publishes a sensor_msgs::msg::PointCloud2 to the specified publisher
-   * @param pointcloud unique pointer containing the point cloud to publish
-   * @param publisher
-   */
-  void PublishCloud(
-    std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
-    const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher);
-
-  void detectionListCallback(
+  /// @brief Callback to process new ContinentalArs548DetectionList from the driver
+  /// @param msg The new ContinentalArs548DetectionList from the driver
+  void DetectionListCallback(
     std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg);
-  void objectListCallback(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg);
+
+  /// @brief Callback to process new ContinentalArs548ObjectList from the driver
+  /// @param msg The new ContinentalArs548ObjectList from the driver
+  void ObjectListCallback(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg);
 
 public:
-  explicit ContinentalRadarEthernetDriverRosWrapper(const rclcpp::NodeOptions & options);
+  explicit ContinentalARS548DriverRosWrapper(const rclcpp::NodeOptions & options);
 
   /// @brief Callback for NebulaPackets subscriber
   /// @param scan_msg Received NebulaPackets
@@ -105,9 +102,33 @@ public:
   /// @brief Get current status of this driver
   /// @return Current status
   Status GetStatus();
+
+  /// @brief Convert ARS548 detections to a pointcloud
+  /// @param msg The ARS548 detection list msg
+  /// @return Resulting detection pointcloud
+  pcl::PointCloud<pcl::PointXYZ>::Ptr ConvertToPointcloud(
+    const continental_msgs::msg::ContinentalArs548DetectionList & msg);
+
+  /// @brief Convert ARS548 objects to a pointcloud
+  /// @param msg The ARS548 object list msg
+  /// @return Resulting object pointcloud
+  pcl::PointCloud<pcl::PointXYZ>::Ptr ConvertToPointcloud(
+    const continental_msgs::msg::ContinentalArs548ObjectList & msg);
+
+  /// @brief Convert ARS548 detections to a standard RadarScan msg
+  /// @param msg The ARS548 detection list msg
+  /// @return Resulting RadarScan msg
+  radar_msgs::msg::RadarScan ConvertToRadarScan(
+    const continental_msgs::msg::ContinentalArs548DetectionList & msg);
+
+  /// @brief Convert ARS548 objects to a standard RadarTracks msg
+  /// @param msg The ARS548 object list msg
+  /// @return Resulting RadarTracks msg
+  radar_msgs::msg::RadarTracks ConvertToRadarTracks(
+    const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 };
 
 }  // namespace ros
 }  // namespace nebula
 
-#endif  // NEBULA_ContinentalRadarEthernetDriverRosWrapper_H
+#endif  // NEBULA_ContinentalARS548DriverRosWrapper_H

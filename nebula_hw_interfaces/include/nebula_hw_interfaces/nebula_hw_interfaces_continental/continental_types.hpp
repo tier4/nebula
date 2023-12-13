@@ -24,8 +24,8 @@
 namespace nebula
 {
 
-/// @brief semantic struct of Radar Status (overfitted to ARS548)
-struct ContinentalRadarStatus
+/// @brief semantic struct of ARS548 Status
+struct ContinentalARS548Status
 {
   uint32_t timestamp_nanoseconds;
   uint32_t timestamp_seconds;
@@ -64,9 +64,13 @@ struct ContinentalRadarStatus
   std::string temperature_status;
   std::string blockage_status;
 
-  ContinentalRadarStatus() {}
+  ContinentalARS548Status() {}
 
-  friend std::ostream & operator<<(std::ostream & os, nebula::ContinentalRadarStatus const & arg)
+  /// @brief Stream ContinentalRadarStatus method
+  /// @param os
+  /// @param arg
+  /// @return stream
+  friend std::ostream & operator<<(std::ostream & os, nebula::ContinentalARS548Status const & arg)
   {
     os << "timestamp_nanoseconds: " << arg.timestamp_nanoseconds;
     os << ", ";
@@ -145,4 +149,4 @@ struct ContinentalRadarStatus
 };
 
 }  // namespace nebula
-#endif  // HESAI_CMD_RESPONSE_HPP
+#endif  // CONTINENTAL_TYPES_HPP

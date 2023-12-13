@@ -12,6 +12,7 @@
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>ros_environment</buildtool_depend>
 
+  <depend>continental_msgs</depend>
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
   <depend>libpcl-all-dev</depend>

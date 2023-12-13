@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_decoders/nebula_decoders_continental/decoders/continental_ars548.hpp"
+#include "nebula_common/continental/continental_common.hpp"
 #include "nebula_decoders/nebula_decoders_continental/decoders/continental_packets_decoder.hpp"
 
 #include "nebula_msgs/msg/nebula_packet.hpp"
@@ -39,8 +39,7 @@ public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
   explicit ContinentalARS548Decoder(
-    const std::shared_ptr<drivers::ContinentalRadarEthernetSensorConfiguration> &
-      sensor_configuration);
+    const std::shared_ptr<drivers::ContinentalARS548SensorConfiguration> & sensor_configuration);
 
   /// @brief Function for parsing NebulaPackets
   /// @param nebula_packets
@@ -50,9 +49,16 @@ public:
   bool ParseDetectionsListPacket(const std::vector<uint8_t> & data);
   bool ParseObjectsListPacket(const std::vector<uint8_t> & data);
 
+  /// @brief Register function to call whenever a new detection list is processed
+  /// @param detection_list_callback
+  /// @return Resulting status
   Status RegisterDetectionListCallback(
     std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList>)>
       detection_list_callback);
+
+  /// @brief Register function to call whenever a new object list is processed
+  /// @param object_list_callback
+  /// @return Resulting status
   Status RegisterObjectListCallback(
     std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList>)>
       object_list_callback);

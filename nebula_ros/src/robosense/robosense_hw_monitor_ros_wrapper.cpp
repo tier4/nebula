@@ -52,7 +52,7 @@ Status RobosenseHwMonitorRosWrapper::Shutdown()
 {
   return Status::OK;
 }
-//
+
 Status RobosenseHwMonitorRosWrapper::InitializeHwMonitor(
   const drivers::SensorConfigurationBase & sensor_configuration)
 {

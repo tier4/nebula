@@ -33,7 +33,7 @@ class ContinentalPacketsDecoder
 {
 protected:
   /// @brief SensorConfiguration for this decoder
-  std::shared_ptr<drivers::ContinentalRadarEthernetSensorConfiguration> sensor_configuration_;
+  std::shared_ptr<drivers::ContinentalARS548SensorConfiguration> sensor_configuration_;
 
 public:
   ContinentalPacketsDecoder(ContinentalPacketsDecoder && c) = delete;
