@@ -22,7 +22,7 @@ namespace ros
 {
 ContinentalARS548DriverRosWrapper::ContinentalARS548DriverRosWrapper(
   const rclcpp::NodeOptions & options)
-: rclcpp::Node("continental_driver_ros_wrapper", options), hw_interface_()
+: rclcpp::Node("continental_ars548_driver_ros_wrapper", options), hw_interface_()
 {
   drivers::ContinentalARS548SensorConfiguration sensor_configuration;
 
@@ -190,7 +190,7 @@ void ContinentalARS548DriverRosWrapper::ObjectListCallback(
   }
 }
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr ConvertToPointcloud(
+pcl::PointCloud<pcl::PointXYZ>::Ptr ContinentalARS548DriverRosWrapper::ConvertToPointcloud(
   const continental_msgs::msg::ContinentalArs548DetectionList & msg)
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr output_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
@@ -212,7 +212,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr ConvertToPointcloud(
   return output_pointcloud;
 }
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr ConvertToPointcloud(
+pcl::PointCloud<pcl::PointXYZ>::Ptr ContinentalARS548DriverRosWrapper::ConvertToPointcloud(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr output_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);

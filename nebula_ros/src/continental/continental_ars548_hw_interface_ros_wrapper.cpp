@@ -23,7 +23,7 @@ namespace ros
 {
 ContinentalARS548HwInterfaceRosWrapper::ContinentalARS548HwInterfaceRosWrapper(
   const rclcpp::NodeOptions & options)
-: rclcpp::Node("hesai_hw_interface_ros_wrapper", options),
+: rclcpp::Node("continental_ars548_hw_interface_ros_wrapper", options),
   hw_interface_(),
   diagnostics_updater_(this)
 {

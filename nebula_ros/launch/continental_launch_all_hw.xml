@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="sensor_model" default="ContinentalARS548"/>
+    <arg name="sensor_model" default="ARS548"/>
     <arg name="frame_id"  default="continental_ars548"/>
 
     <arg name="sensor_ip" default="10.13.1.113" description="Radar Sensor IP"/>
@@ -12,7 +12,7 @@
 
     <arg name="setup_sensor" default="False" description="Enable sensor setup on hw-driver."/>
 
-    <node pkg="nebula_ros" exec="continental_driver_ros_wrapper_node" name="continental_cloud" output="screen">
+    <node pkg="nebula_ros" exec="continental_ars548_driver_ros_wrapper_node" name="continental_ars548_decoder_driver" output="screen">
         <param name="sensor_model" value="$(var sensor_model)"/>
         <param name="frame_id" value="$(var frame_id)"/>
         <param name="host_ip" value="$(var host_ip)"/>
@@ -20,8 +20,8 @@
         <param name="data_port" value="$(var data_port)"/>
     </node>
 
-    <node pkg="nebula_ros" exec="continental_hw_interface_ros_wrapper_node"
-          name="continental_radar_ethernet_hw_driver" output="screen">
+    <node pkg="nebula_ros" exec="continental_ars548_hw_interface_ros_wrapper_node"
+          name="continental_ars548_hw_driver" output="screen">
         <param name="sensor_model" value="$(var sensor_model)"/>
         <param name="frame_id" value="$(var frame_id)"/>
         <param name="host_ip" value="$(var host_ip)"/>
