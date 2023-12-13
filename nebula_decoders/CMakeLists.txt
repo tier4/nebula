@@ -51,6 +51,12 @@ ament_auto_add_library(nebula_decoders_robosense_info SHARED
         src/nebula_decoders_robosense/robosense_info_driver.cpp
         )
 
+# Continental
+ament_auto_add_library(nebula_decoders_continental SHARED
+        src/nebula_decoders_continental/decoders/continental_ars548.cpp
+        src/nebula_decoders_continental/decoders/continental_ars548_decoder.cpp
+        )
+
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()

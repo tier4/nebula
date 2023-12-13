@@ -1,3 +1,19 @@
+// Copyright 2023 LeoDrive.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Developed by LeoDrive, 2023
+
 #pragma once
 
 #include "nebula_common/nebula_common.hpp"
@@ -11,6 +27,11 @@
 #include "robosense_msgs/msg/robosense_info_packet.hpp"
 #include "robosense_msgs/msg/robosense_packet.hpp"
 #include "robosense_msgs/msg/robosense_scan.hpp"
+
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -81,7 +102,8 @@ private:
 
   /// @brief Callback for receiving RobosensePacket
   /// @param difop_buffer Received DIFOP packet
-  void ReceiveInfoDataCallback(std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> difop_buffer);
+  void ReceiveInfoDataCallback(
+    std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> difop_buffer);
 };
 
 }  // namespace ros

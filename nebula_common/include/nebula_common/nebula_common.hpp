@@ -1,3 +1,17 @@
+// Copyright 2023 Tier IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef NEBULA_COMMON_H
 #define NEBULA_COMMON_H
 
@@ -327,6 +341,7 @@ enum class SensorModel {
   ROBOSENSE_BPEARL,
   ROBOSENSE_BPEARL_V3,
   ROBOSENSE_BPEARL_V4,
+  CONTINENTAL_ARS548
 };
 
 /// @brief not used?
@@ -417,6 +432,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::ROBOSENSE_BPEARL_V4:
       os << "BPEARL V4.0";
       break;
+    case SensorModel::CONTINENTAL_ARS548:
+      os << "ARS548";
+      break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
       break;
@@ -428,11 +446,21 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
 struct SensorConfigurationBase
 {
   SensorModel sensor_model;
-  ReturnMode return_mode;
+  std::string frame_id;
+};
+
+/// @brief Base struct for Ethernet-based Sensor configuration
+struct EthernetSensorConfigurationBase : SensorConfigurationBase
+{
   std::string host_ip;
   std::string sensor_ip;
-  std::string frame_id;
   uint16_t data_port;
+};
+
+/// @brief Base struct for Lidar configuration
+struct LidarConfigurationBase : EthernetSensorConfigurationBase
+{
+  ReturnMode return_mode;
   uint16_t frequency_ms;
   uint16_t packet_mtu_size;
   CoordinateMode coordinate_mode;
@@ -447,12 +475,31 @@ struct SensorConfigurationBase
 /// @param os
 /// @param arg
 /// @return stream
-inline std::ostream & operator<<(
-  std::ostream & os, nebula::drivers::SensorConfigurationBase const & arg)
+inline std::ostream & operator<<(std::ostream & os, SensorConfigurationBase const & arg)
 {
-  os << "SensorModel: " << arg.sensor_model << ", ReturnMode: " << arg.return_mode
-     << ", HostIP: " << arg.host_ip << ", SensorIP: " << arg.sensor_ip
-     << ", FrameID: " << arg.frame_id << ", DataPort: " << arg.data_port
+  os << "SensorModel: " << arg.sensor_model << ", FrameID: " << arg.frame_id;
+  return os;
+}
+
+/// @brief Convert EthernetSensorConfigurationBase to string (Overloading the << operator)
+/// @param os
+/// @param arg
+/// @return stream
+inline std::ostream & operator<<(std::ostream & os, EthernetSensorConfigurationBase const & arg)
+{
+  os << (SensorConfigurationBase)(arg) << ", HostIP: " << arg.host_ip
+     << ", SensorIP: " << arg.sensor_ip << ", DataPort: " << arg.data_port;
+  return os;
+}
+
+/// @brief Convert LidarConfigurationBase to string (Overloading the << operator)
+/// @param os
+/// @param arg
+/// @return stream
+inline std::ostream & operator<<(
+  std::ostream & os, nebula::drivers::LidarConfigurationBase const & arg)
+{
+  os << (EthernetSensorConfigurationBase)(arg) << ", ReturnMode: " << arg.return_mode
      << ", Frequency: " << arg.frequency_ms << ", MTU: " << arg.packet_mtu_size
      << ", Use sensor time: " << arg.use_sensor_time;
   return os;
@@ -491,6 +538,7 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "Bpearl") return SensorModel::ROBOSENSE_BPEARL;
   if (sensor_model == "Bpearl_V3") return SensorModel::ROBOSENSE_BPEARL_V3;
   if (sensor_model == "Bpearl_V4") return SensorModel::ROBOSENSE_BPEARL_V4;
+  if (sensor_model == "ARS548") return SensorModel::CONTINENTAL_ARS548;
   return SensorModel::UNKNOWN;
 }
 
@@ -538,6 +586,8 @@ inline std::string SensorModelToString(const SensorModel & sensor_model)
       return "Bpearl_V3";
     case SensorModel::ROBOSENSE_BPEARL_V4:
       return "Bpearl_V4";
+    case SensorModel::CONTINENTAL_ARS548:
+      return "ARS548";
     default:
       return "UNKNOWN";
   }

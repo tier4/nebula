@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="sensor_model" default="ContinentalARS548"/>
+    <arg name="frame_id"  default="continental_ars548"/>
+
+    <arg name="sensor_ip" default="10.13.1.113" description="Radar Sensor IP"/>
+    <arg name="host_ip" default="10.13.1.166" description="Broadcast IP from Sensor"/>
+    <arg name="multicast_ip" default="224.0.2.2" description="Multicast Sensor IP"/>
+    <arg name="data_port" default="42102" description="LiDAR Data Port"/>
+    <arg name="configuration_host_port" default="42401" description="LiDAR GNSS Port"/>
+    <arg name="configuration_sensor_port" default="42101" description="LiDAR GNSS Port"/>
+
+    <arg name="setup_sensor" default="False" description="Enable sensor setup on hw-driver."/>
+
+    <node pkg="nebula_ros" exec="continental_driver_ros_wrapper_node" name="continental_cloud" output="screen">
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="host_ip" value="$(var host_ip)"/>
+        <param name="sensor_ip" value="$(var sensor_ip)"/>
+        <param name="data_port" value="$(var data_port)"/>
+    </node>
+
+    <node pkg="nebula_ros" exec="continental_hw_interface_ros_wrapper_node"
+          name="continental_radar_ethernet_hw_driver" output="screen">
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="host_ip" value="$(var host_ip)"/>
+        <param name="multicast_ip" value="$(var multicast_ip)"/>
+        <param name="data_port" value="$(var data_port)"/>
+        <param name="sensor_ip" value="$(var sensor_ip)"/>
+        <param name="configuration_host_port" value="$(var configuration_host_port)"/>
+        <param name="configuration_sensor_port" value="$(var configuration_sensor_port)"/>
+    </node>
+</launch>

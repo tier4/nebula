@@ -1,3 +1,17 @@
+// Copyright 2023 Tier IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_common/nebula_common.hpp"
@@ -9,6 +23,7 @@
 #include <iostream>
 #include <optional>
 #include <sstream>
+#include <string>
 #include <vector>
 
 namespace nebula
@@ -20,7 +35,7 @@ namespace drivers
 constexpr uint8_t BPEARL_V4_FLAG = 0x04;
 
 /// @brief struct for Robosense sensor configuration
-struct RobosenseSensorConfiguration : SensorConfigurationBase
+struct RobosenseSensorConfiguration : LidarConfigurationBase
 {
   uint16_t gnss_port{};  // difop
   double scan_phase{};   // start/end angle
@@ -36,7 +51,7 @@ struct RobosenseSensorConfiguration : SensorConfigurationBase
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, RobosenseSensorConfiguration const & arg)
 {
-  os << (SensorConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
+  os << (LidarConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
      << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
      << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle;
   return os;
@@ -188,10 +203,10 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
 
   void CreateCorrectedChannels()
   {
-    for(auto& correction : calibration) {
+    for (auto & correction : calibration) {
       uint16_t channel = 0;
-      for(const auto& compare:calibration) {
-        if(compare.elevation < correction.elevation) ++channel;
+      for (const auto & compare : calibration) {
+        if (compare.elevation < correction.elevation) ++channel;
       }
       correction.channel = channel;
     }

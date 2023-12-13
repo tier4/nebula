@@ -38,6 +38,11 @@ ament_auto_add_library(nebula_hw_interfaces_robosense SHARED
         src/nebula_robosense_hw_interfaces/robosense_hw_interface.cpp
         )
 
+ament_auto_add_library(nebula_hw_interfaces_continental SHARED
+        src/nebula_continental_hw_interfaces/continental_radar_ethernet_hw_interface.cpp
+        )
+
+
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()
