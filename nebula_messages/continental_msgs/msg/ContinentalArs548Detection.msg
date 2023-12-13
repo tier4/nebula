@@ -18,6 +18,6 @@ int8 rcs
 uint16 measurement_id
 uint8 positive_predictive_value
 uint8 classification
-uint8 multi_target_probabilty
+uint8 multi_target_probability
 uint16 object_id
 uint8 ambiguity_flag

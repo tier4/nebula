@@ -177,11 +177,11 @@ public:
   /// @param cycle_time Desired cycle time value (50ms <= v <= 100ms)
   /// @param time_slot Desired time slot value (10ms <= v <= 90ms)
   /// @param hcc Desired hcc value (1 = Worldwide, 2 = Japan)
-  /// @param powersave_standstill Desired powersave_standstill value (0 = Off, 1 = On)
+  /// @param power_save_standstill Desired power_save_standstill value (0 = Off, 1 = On)
   /// @return Resulting status
   Status SetRadarParameters(
     uint16_t maximum_distance, uint8_t frequency_slot, uint8_t cycle_time, uint8_t time_slot,
-    uint8_t hcc, uint8_t powersave_standstill);
+    uint8_t hcc, uint8_t power_save_standstill);
 
   /// @brief Set the sensor ip address
   /// @param sensor_ip_address Desired sensor ip address
@@ -194,7 +194,7 @@ public:
   Status SetAccelerationLateralCog(float lateral_acceleration);
 
   /// @brief Set the current longitudinal acceleration
-  /// @param lonitudinal_acceleration Current longitudinal acceleration
+  /// @param longitudinal_acceleration Current longitudinal acceleration
   /// @return Resulting status
   Status SetAccelerationLongitudinalCog(float longitudinal_acceleration);
 

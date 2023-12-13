@@ -48,7 +48,7 @@ struct ContinentalARS548Status
   uint8_t cycle_time;
   uint8_t time_slot;
   std::string hcc;
-  std::string powersave_standstill;
+  std::string power_save_standstill;
   std::string sensor_ip_address0;
   std::string sensor_ip_address1;
   uint8_t configuration_counter;
@@ -114,7 +114,7 @@ struct ContinentalARS548Status
     os << ", ";
     os << "hcc: " << arg.hcc;
     os << ", ";
-    os << "powersave_standstill: " << arg.powersave_standstill;
+    os << "power_save_standstill: " << arg.power_save_standstill;
     os << ", ";
     os << "sensor_ip_address0: " << arg.sensor_ip_address0;
     os << ", ";
@@ -132,7 +132,7 @@ struct ContinentalARS548Status
     os << ", ";
     os << "status_steering_angle: " << arg.status_steering_angle;
     os << ", ";
-    os << "status_drivin_direction: " << arg.status_driving_direction;
+    os << "status_driving_direction: " << arg.status_driving_direction;
     os << ", ";
     os << "charasteristic_speed: " << arg.charasteristic_speed;
     os << ", ";

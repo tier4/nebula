@@ -29,7 +29,7 @@ namespace nebula
 {
 namespace drivers
 {
-/// @brief struct for Hesai sensor configuration
+/// @brief struct for ARS548 sensor configuration
 struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
 {
   std::string multicast_ip{};

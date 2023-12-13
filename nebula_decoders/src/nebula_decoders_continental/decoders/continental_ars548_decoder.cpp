@@ -75,13 +75,13 @@ bool ContinentalARS548Decoder::ProcessPackets(
   }
 
   if (method_id == DETECTION_LIST_METHOD_ID) {
-    if (data.size() != DETECTION_LIST_UDP_PAYPLOAD || length != DETECTION_LIST_PDU_LENGTH) {
+    if (data.size() != DETECTION_LIST_UDP_PAYLOAD || length != DETECTION_LIST_PDU_LENGTH) {
       return false;
     }
 
     return ParseDetectionsListPacket(data);
   } else if (method_id == OBJECT_LIST_METHOD_ID) {
-    if (data.size() != OBJECT_LIST_UDP_PAYPLOAD || length != OBJECT_LIST_PDU_LENGTH) {
+    if (data.size() != OBJECT_LIST_UDP_PAYLOAD || length != OBJECT_LIST_PDU_LENGTH) {
       return false;
     }
 
@@ -305,7 +305,7 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(const std::vector<uint8
     const uint8_t positive_predictive_value_u =
       data[CURRENT_DETECTION_POSITIVE_PREDICTIVE_VALUE_BYTE];
     const uint8_t classification_u = data[CURRENT_DETECTION_CLASSIFICATION_BYTE];
-    const uint8_t multi_target_probabilty_u = data[CURRENT_DETECTION_MULT_TARGET_PROBABILITY_BYTE];
+    const uint8_t multi_target_probability_u = data[CURRENT_DETECTION_MULT_TARGET_PROBABILITY_BYTE];
     const uint16_t object_id_u =
       (static_cast<uint16_t>(data[CURRENT_DETECTION_OBJECT_ID_BYTE]) << 8) |
       static_cast<uint16_t>(data[CURRENT_DETECTION_OBJECT_ID_BYTE + 1]);
@@ -313,7 +313,7 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(const std::vector<uint8
 
     assert(positive_predictive_value_u <= 100);
     assert(classification_u <= 4 || classification_u == 255);
-    assert(multi_target_probabilty_u <= 100);
+    assert(multi_target_probability_u <= 100);
     assert(ambiguity_flag_u <= 100);
 
     detection_msg.invalid_distance = invalid_flags_u & 0x01;
@@ -328,7 +328,7 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(const std::vector<uint8
     detection_msg.measurement_id = measurement_id_u;
     detection_msg.positive_predictive_value = positive_predictive_value_u;
     detection_msg.classification = classification_u;
-    detection_msg.multi_target_probabilty = multi_target_probabilty_u;
+    detection_msg.multi_target_probability = multi_target_probability_u;
     detection_msg.object_id = object_id_u;
     detection_msg.ambiguity_flag = ambiguity_flag_u;
     std::memcpy(&detection_msg.azimuth_angle, &azimuth_angle_u, sizeof(azimuth_angle_u));

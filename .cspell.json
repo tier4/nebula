@@ -38,6 +38,9 @@
     "Difop",
     "gptp",
     "Idat",
-    "Vdat"
+    "Vdat",
+    "autosar",
+    "characteristic",
+    "srvs"
   ]
 }

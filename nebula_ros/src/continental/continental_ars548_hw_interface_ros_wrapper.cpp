@@ -306,7 +306,7 @@ void ContinentalARS548HwInterfaceRosWrapper::ContinentalMonitorStatus(
   diagnostics.add("cycle_time", std::to_string(sensor_status.cycle_time));
   diagnostics.add("time_slot", std::to_string(sensor_status.time_slot));
   diagnostics.add("hcc", sensor_status.hcc);
-  diagnostics.add("powersave_standstill", sensor_status.powersave_standstill);
+  diagnostics.add("power_save_standstill", sensor_status.power_save_standstill);
   diagnostics.add("sensor_ip_address0", sensor_status.sensor_ip_address0);
   diagnostics.add("sensor_ip_address1", sensor_status.sensor_ip_address1);
   diagnostics.add("configuration_counter", std::to_string(sensor_status.configuration_counter));

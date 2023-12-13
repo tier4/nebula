@@ -102,10 +102,10 @@ void ContinentalARS548HwInterface::ReceiveCloudPacketCallback(const std::vector<
   constexpr int SENSOR_STATUS_METHOD_ID = 380;
   constexpr int FILTER_STATUS_METHOD_ID = 396;
 
-  constexpr int DETECTION_LIST_UDP_PAYPLOAD = 35336;
-  constexpr int OBJECT_LIST_UDP_PAYPLOAD = 9401;
-  constexpr int SENSOR_STATUS_UDP_PAYPLOAD = 84;
-  constexpr int FILTER_STATUS_UDP_PAYPLOAD = 330;
+  constexpr int DETECTION_LIST_UDP_PAYLOAD = 35336;
+  constexpr int OBJECT_LIST_UDP_PAYLOAD = 9401;
+  constexpr int SENSOR_STATUS_UDP_PAYLOAD = 84;
+  constexpr int FILTER_STATUS_UDP_PAYLOAD = 330;
 
   constexpr int DETECTION_LIST_PDU_LENGTH = 35328;
   constexpr int OBJECT_LIST_PDU_LENGTH = 9393;
@@ -132,27 +132,27 @@ void ContinentalARS548HwInterface::ReceiveCloudPacketCallback(const std::vector<
     PrintError("Invalid service id");
     return;
   } else if (method_id == SENSOR_STATUS_METHOD_ID) {
-    if (buffer.size() != SENSOR_STATUS_UDP_PAYPLOAD || length != SENSOR_STATUS_PDU_LENGTH) {
+    if (buffer.size() != SENSOR_STATUS_UDP_PAYLOAD || length != SENSOR_STATUS_PDU_LENGTH) {
       PrintError("SensorStatus message with invalid size");
       return;
     }
     ProcessSensorStatusPacket(buffer);
   } else if (method_id == FILTER_STATUS_METHOD_ID) {
-    if (buffer.size() != FILTER_STATUS_UDP_PAYPLOAD || length != FILTER_STATUS_PDU_LENGTH) {
+    if (buffer.size() != FILTER_STATUS_UDP_PAYLOAD || length != FILTER_STATUS_PDU_LENGTH) {
       PrintError("FilterStatus message with invalid size");
       return;
     }
 
     ProcessFilterStatusPacket(buffer);
   } else if (method_id == DETECTION_LIST_METHOD_ID) {
-    if (buffer.size() != DETECTION_LIST_UDP_PAYPLOAD || length != DETECTION_LIST_PDU_LENGTH) {
+    if (buffer.size() != DETECTION_LIST_UDP_PAYLOAD || length != DETECTION_LIST_PDU_LENGTH) {
       PrintError("DetectionList message with invalid size");
       return;
     }
 
     ProcessDataPacket(buffer);
   } else if (method_id == OBJECT_LIST_METHOD_ID) {
-    if (buffer.size() != OBJECT_LIST_UDP_PAYPLOAD || length != OBJECT_LIST_PDU_LENGTH) {
+    if (buffer.size() != OBJECT_LIST_UDP_PAYLOAD || length != OBJECT_LIST_PDU_LENGTH) {
       PrintError("ObjectList message with invalid size");
       return;
     }
@@ -267,10 +267,10 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
                       : hcc == 2 ? "Japan"
                                  : ("INVALID VALUE=" + std::to_string(hcc));
 
-  const uint8_t & powersave_standstill = buffer[STATUS_POWERSAVING_STANDSTILL_BYTE];
-  radar_status_.powersave_standstill = powersave_standstill == 0   ? "Off"
-                                       : powersave_standstill == 1 ? "On"
-                                                                   : "INVALID VALUE";
+  const uint8_t & power_save_standstill = buffer[STATUS_POWER_SAVING_STANDSTILL_BYTE];
+  radar_status_.power_save_standstill = power_save_standstill == 0   ? "Off"
+                                        : power_save_standstill == 1 ? "On"
+                                                                     : "INVALID VALUE";
 
   const uint8_t status_sensor_ip_address00 = buffer[STATUS_SENSOR_IP_ADDRESS0_BYTE];
   const uint8_t status_sensor_ip_address01 = buffer[STATUS_SENSOR_IP_ADDRESS0_BYTE + 1];
@@ -296,9 +296,9 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
 
   radar_status_.configuration_counter = buffer[STATUS_CONFIGURATION_COUNTER_BYTE];
 
-  const uint8_t & status_longitudinal_velicity = buffer[STATUS_LONGITUDINAL_VELOCITY_BYTE];
-  radar_status_.status_longitudinal_velocity = status_longitudinal_velicity == 0 ? "VDY_OK"
-                                               : status_longitudinal_velicity == 1
+  const uint8_t & status_longitudinal_velocity = buffer[STATUS_LONGITUDINAL_VELOCITY_BYTE];
+  radar_status_.status_longitudinal_velocity = status_longitudinal_velocity == 0 ? "VDY_OK"
+                                               : status_longitudinal_velocity == 1
                                                  ? "VDY_NOTOK"
                                                  : "INVALID VALUE";
 
@@ -349,16 +349,16 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
     radar_status_.voltage_status = "Ok";
   }
   if (voltage_status & 0x01) {
-    radar_status_.voltage_status += "Current undervoltage";
+    radar_status_.voltage_status += "Current under voltage";
   }
   if (voltage_status & 0x02) {
-    radar_status_.voltage_status = "Past undervoltage";
+    radar_status_.voltage_status = "Past under voltage";
   }
   if (voltage_status & 0x03) {
-    radar_status_.voltage_status = "Current overvoltage";
+    radar_status_.voltage_status = "Current over voltage";
   }
   if (voltage_status & 0x04) {
-    radar_status_.voltage_status = "Past overvoltage";
+    radar_status_.voltage_status = "Past over voltage";
   }
 
   const uint8_t & temperature_status = buffer[STATUS_TEMPERATURE_STATUS_BYTE];
@@ -366,16 +366,16 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
     radar_status_.temperature_status = "Ok";
   }
   if (temperature_status & 0x01) {
-    radar_status_.temperature_status += "Current undertemperature";
+    radar_status_.temperature_status += "Current under temperature";
   }
   if (temperature_status & 0x02) {
-    radar_status_.temperature_status += "Past undertemperature";
+    radar_status_.temperature_status += "Past under temperature";
   }
   if (temperature_status & 0x03) {
-    radar_status_.temperature_status += "Current overtemperature";
+    radar_status_.temperature_status += "Current over temperature";
   }
   if (temperature_status & 0x04) {
-    radar_status_.temperature_status += "Past overtemperature";
+    radar_status_.temperature_status += "Past over temperature";
   }
 
   const uint8_t & blockage_status = buffer[STATUS_BLOCKAGE_STATUS_BYTE];
@@ -397,13 +397,13 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
   }
 
   if (blockage_status1 == 0) {
-    radar_status_.blockage_status += ". Self testfailed";
+    radar_status_.blockage_status += ". Self test failed";
   } else if (blockage_status1 == 1) {
-    radar_status_.blockage_status += ". Self testpassed";
+    radar_status_.blockage_status += ". Self test passed";
   } else if (blockage_status1 == 2) {
-    radar_status_.blockage_status += ". Selftest ongoing";
+    radar_status_.blockage_status += ". Self test ongoing";
   } else {
-    radar_status_.blockage_status += ". Invalid selftest";
+    radar_status_.blockage_status += ". Invalid self test";
   }
 }
 
@@ -647,20 +647,20 @@ Status ContinentalARS548HwInterface::SetVehicleParameters(
 
 Status ContinentalARS548HwInterface::SetRadarParameters(
   uint16_t maximum_distance, uint8_t frequency_slot, uint8_t cycle_time, uint8_t time_slot,
-  uint8_t hcc, uint8_t powersave_standstill)
+  uint8_t hcc, uint8_t power_save_standstill)
 {
   constexpr int CONFIGURATION_MAXIMUM_DISTANCE_BYTE = 45;
   constexpr int CONFIGURATION_FREQUENCY_SLOT_BYTE = 47;
   constexpr int CONFIGURATION_CYCLE_TIME_BYTE = 48;
   constexpr int CONFIGURATION_TIME_SLOT_BYTE = 49;
   constexpr int CONFIGURATION_HCC_BYTE = 50;
-  constexpr int CONFIGURATION_POWERSAVE_STANDSTILL_BYTE = 51;
+  constexpr int CONFIGURATION_power_save_STANDSTILL_BYTE = 51;
   constexpr int CONFIGURATION_NEW_RADAR_PARAMETERS_BYTE = 62;
 
   if (
     maximum_distance < 93 || maximum_distance > 1514 || frequency_slot > 2 || cycle_time < 50 ||
     cycle_time > 100 || time_slot < 10 || time_slot > 90 || hcc < 1 || hcc > 2 ||
-    powersave_standstill > 1) {
+    power_save_standstill > 1) {
     PrintError("Invalid SetRadarParameters values");
     return Status::SENSOR_CONFIG_ERROR;
   }
@@ -682,7 +682,7 @@ Status ContinentalARS548HwInterface::SetRadarParameters(
   send_vector[CONFIGURATION_CYCLE_TIME_BYTE] = cycle_time;
   send_vector[CONFIGURATION_TIME_SLOT_BYTE] = time_slot;
   send_vector[CONFIGURATION_HCC_BYTE] = hcc;
-  send_vector[CONFIGURATION_POWERSAVE_STANDSTILL_BYTE] = powersave_standstill;
+  send_vector[CONFIGURATION_power_save_STANDSTILL_BYTE] = power_save_standstill;
 
   send_vector[CONFIGURATION_NEW_RADAR_PARAMETERS_BYTE] = 1;
 
@@ -878,19 +878,19 @@ Status ContinentalARS548HwInterface::SetSteeringAngleFrontAxle(float angle_rad)
 
 Status ContinentalARS548HwInterface::SetVelocityVehicle(float velocity)
 {
-  constexpr uint16_t VELOCITY_VECHILE_SERVICE_ID = 0;
-  constexpr uint16_t VELOCITY_VECHILE_METHOD_ID = 323;
-  constexpr uint8_t VELOCITY_VECHILE_LENGTH = 28;
-  const int VELOCITY_VECHILE_PAYLOAD_SIZE = VELOCITY_VECHILE_LENGTH + 8;
+  constexpr uint16_t VELOCITY_VEHICLE_SERVICE_ID = 0;
+  constexpr uint16_t VELOCITY_VEHICLE_METHOD_ID = 323;
+  constexpr uint8_t VELOCITY_VEHICLE_LENGTH = 28;
+  const int VELOCITY_VEHICLE_PAYLOAD_SIZE = VELOCITY_VEHICLE_LENGTH + 8;
 
   uint8_t bytes[4];
   std::memcpy(bytes, &velocity, sizeof(velocity));
 
-  std::vector<uint8_t> send_vector(VELOCITY_VECHILE_PAYLOAD_SIZE, 0);
-  send_vector[1] = VELOCITY_VECHILE_SERVICE_ID;
-  send_vector[2] = static_cast<uint8_t>(VELOCITY_VECHILE_METHOD_ID >> 8);
-  send_vector[3] = static_cast<uint8_t>(VELOCITY_VECHILE_METHOD_ID & 0x00ff);
-  send_vector[7] = VELOCITY_VECHILE_LENGTH;
+  std::vector<uint8_t> send_vector(VELOCITY_VEHICLE_PAYLOAD_SIZE, 0);
+  send_vector[1] = VELOCITY_VEHICLE_SERVICE_ID;
+  send_vector[2] = static_cast<uint8_t>(VELOCITY_VEHICLE_METHOD_ID >> 8);
+  send_vector[3] = static_cast<uint8_t>(VELOCITY_VEHICLE_METHOD_ID & 0x00ff);
+  send_vector[7] = VELOCITY_VEHICLE_LENGTH;
   send_vector[11] = bytes[3];
   send_vector[12] = bytes[2];
   send_vector[13] = bytes[1];
