@@ -95,7 +95,7 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("host_ip", "255.255.255.255", descriptor);
+    this->declare_parameter<std::string>("host_ip", descriptor);
     sensor_configuration.host_ip = this->get_parameter("host_ip").as_string();
   }
   {
@@ -104,7 +104,7 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_ip", "192.168.1.201", descriptor);
+    this->declare_parameter<std::string>("sensor_ip", descriptor);
     sensor_configuration.sensor_ip = this->get_parameter("sensor_ip").as_string();
   }
   {
@@ -113,7 +113,7 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("data_port", 2368, descriptor);
+    this->declare_parameter<uint16_t>("data_port", descriptor);
     sensor_configuration.data_port = this->get_parameter("data_port").as_int();
   }
   {
@@ -122,7 +122,7 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_model", "");
+    this->declare_parameter<std::string>("sensor_model");
     sensor_configuration.sensor_model =
       nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
   }
@@ -132,7 +132,7 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("frame_id", "continental", descriptor);
+    this->declare_parameter<std::string>("frame_id", descriptor);
     sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
   }
 
