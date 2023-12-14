@@ -36,7 +36,7 @@ ContinentalARS548HwInterfaceRosWrapper::ContinentalARS548HwInterfaceRosWrapper(
     return;
   }
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
-  std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
+  std::shared_ptr<drivers::ContinentalARS548SensorConfiguration> sensor_cfg_ptr =
     std::make_shared<drivers::ContinentalARS548SensorConfiguration>(sensor_configuration_);
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
