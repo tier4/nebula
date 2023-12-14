@@ -99,9 +99,6 @@ private:
 public:
   /// @brief Constructor
   ContinentalARS548HwInterface();
-  /// @brief Initializing tcp_driver for TCP communication
-  /// @param setup_sensor Whether to also initialize tcp_driver for sensor configuration
-  /// @return Resulting status
 
   /// @brief Process a new sensor status packet
   /// @param buffer The buffer containing the status packet

@@ -132,7 +132,7 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("frame_id", "continental_ars548", descriptor);
+    this->declare_parameter<std::string>("frame_id", "continental", descriptor);
     sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
   }
 

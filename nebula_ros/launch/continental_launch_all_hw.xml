@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="sensor_model" default="ARS548"/>
-    <arg name="frame_id"  default="continental_ars548"/>
+    <arg name="frame_id"  default="continental"/>
 
     <arg name="sensor_ip" default="10.13.1.113" description="Radar Sensor IP"/>
     <arg name="host_ip" default="10.13.1.166" description="Broadcast IP from Sensor"/>
@@ -9,8 +9,6 @@
     <arg name="data_port" default="42102" description="LiDAR Data Port"/>
     <arg name="configuration_host_port" default="42401" description="LiDAR GNSS Port"/>
     <arg name="configuration_sensor_port" default="42101" description="LiDAR GNSS Port"/>
-
-    <arg name="setup_sensor" default="False" description="Enable sensor setup on hw-driver."/>
 
     <node pkg="nebula_ros" exec="continental_ars548_driver_ros_wrapper_node" name="continental_ars548_decoder_driver" output="screen">
         <param name="sensor_model" value="$(var sensor_model)"/>
