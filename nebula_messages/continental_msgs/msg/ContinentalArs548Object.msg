@@ -7,8 +7,8 @@ uint8 position_reference
 geometry_msgs/Point position
 geometry_msgs/Vector3 position_std
 float32 position_covariance_xy
-float32 position_orientation
-float32 position_orientation_std
+float32 orientation
+float32 orientation_std
 
 float32 existence_probability
 

@@ -405,10 +405,9 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(const std::vector<uint8_t>
 
     const int CURRENT_OBJECT_POSITION_COVARIANCE_XY_BYTE =
       CURRENT_OBJECT_START_BYTE + OBJECT_POSITION_COVARIANCE_XY_BYTE;
-    const int CURRENT_OBJECT_POSITION_ORIENTATION_BYTE =
-      CURRENT_OBJECT_START_BYTE + OBJECT_POSITION_ORIENTATION_BYTE;
-    const int CURRENT_OBJECT_POSITION_ORIENTATION_STD_BYTE =
-      CURRENT_OBJECT_START_BYTE + OBJECT_POSITION_ORIENTATION_STD_BYTE;
+    const int CURRENT_OBJECT_ORIENTATION_BYTE = CURRENT_OBJECT_START_BYTE + OBJECT_ORIENTATION_BYTE;
+    const int CURRENT_OBJECT_ORIENTATION_STD_BYTE =
+      CURRENT_OBJECT_START_BYTE + OBJECT_ORIENTATION_STD_BYTE;
 
     const int CURRENT_OBJECT_EXISTENCE_PROBABILITY_BYTE =
       CURRENT_OBJECT_START_BYTE + OBJECT_EXISTENCE_PROBABILITY_BYTE;
@@ -529,16 +528,16 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(const std::vector<uint8_t>
       (static_cast<uint32_t>(data[CURRENT_OBJECT_POSITION_COVARIANCE_XY_BYTE + 1]) << 16) |
       (static_cast<uint32_t>(data[CURRENT_OBJECT_POSITION_COVARIANCE_XY_BYTE + 2]) << 8) |
       data[CURRENT_OBJECT_POSITION_COVARIANCE_XY_BYTE + 3];
-    const uint32_t position_orientation_u =
-      (static_cast<uint32_t>(data[CURRENT_OBJECT_POSITION_ORIENTATION_BYTE]) << 24) |
-      (static_cast<uint32_t>(data[CURRENT_OBJECT_POSITION_ORIENTATION_BYTE + 1]) << 16) |
-      (static_cast<uint32_t>(data[CURRENT_OBJECT_POSITION_ORIENTATION_BYTE + 2]) << 8) |
-      data[CURRENT_OBJECT_POSITION_ORIENTATION_BYTE + 3];
-    const uint32_t position_orientation_std_u =
-      (static_cast<uint32_t>(data[CURRENT_OBJECT_POSITION_ORIENTATION_STD_BYTE]) << 24) |
-      (static_cast<uint32_t>(data[CURRENT_OBJECT_POSITION_ORIENTATION_STD_BYTE + 1]) << 16) |
-      (static_cast<uint32_t>(data[CURRENT_OBJECT_POSITION_ORIENTATION_STD_BYTE + 2]) << 8) |
-      data[CURRENT_OBJECT_POSITION_ORIENTATION_STD_BYTE + 3];
+    const uint32_t orientation_u =
+      (static_cast<uint32_t>(data[CURRENT_OBJECT_ORIENTATION_BYTE]) << 24) |
+      (static_cast<uint32_t>(data[CURRENT_OBJECT_ORIENTATION_BYTE + 1]) << 16) |
+      (static_cast<uint32_t>(data[CURRENT_OBJECT_ORIENTATION_BYTE + 2]) << 8) |
+      data[CURRENT_OBJECT_ORIENTATION_BYTE + 3];
+    const uint32_t orientation_std_u =
+      (static_cast<uint32_t>(data[CURRENT_OBJECT_ORIENTATION_STD_BYTE]) << 24) |
+      (static_cast<uint32_t>(data[CURRENT_OBJECT_ORIENTATION_STD_BYTE + 1]) << 16) |
+      (static_cast<uint32_t>(data[CURRENT_OBJECT_ORIENTATION_STD_BYTE + 2]) << 8) |
+      data[CURRENT_OBJECT_ORIENTATION_STD_BYTE + 3];
     const uint32_t existence_probability_u =
       (static_cast<uint32_t>(data[CURRENT_OBJECT_EXISTENCE_PROBABILITY_BYTE]) << 24) |
       (static_cast<uint32_t>(data[CURRENT_OBJECT_EXISTENCE_PROBABILITY_BYTE + 1]) << 16) |
@@ -552,8 +551,8 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(const std::vector<uint8_t>
     float position_z_f;
     float position_z_std_f;
     float position_xy_covariance_f;
-    float position_orientation_f;
-    float position_orientation_std_f;
+    float orientation_f;
+    float orientation_std_f;
     float existence_probability_f;
 
     std::memcpy(&position_x_f, &position_x_u, sizeof(position_x_u));
@@ -564,9 +563,8 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(const std::vector<uint8_t>
     std::memcpy(&position_z_std_f, &position_z_std_u, sizeof(position_z_std_u));
     std::memcpy(
       &position_xy_covariance_f, &position_xy_covariance_u, sizeof(position_xy_covariance_u));
-    std::memcpy(&position_orientation_f, &position_orientation_u, sizeof(position_orientation_u));
-    std::memcpy(
-      &position_orientation_std_f, &position_orientation_std_u, sizeof(position_orientation_std_u));
+    std::memcpy(&orientation_f, &orientation_u, sizeof(orientation_u));
+    std::memcpy(&orientation_std_f, &orientation_std_u, sizeof(orientation_std_u));
     std::memcpy(
       &existence_probability_f, &existence_probability_u, sizeof(existence_probability_u));
 
@@ -799,8 +797,8 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(const std::vector<uint8_t>
     assert(position_y_std_f >= 0.f);
     assert(position_z_f >= -1600.f && position_z_f <= 1600.f);
     assert(position_z_std_f >= 0.f);
-    assert(position_orientation_f >= -M_PI && position_orientation_f <= M_PI);
-    assert(position_orientation_std_f >= 0.f);
+    assert(orientation_f >= -M_PI && orientation_f <= M_PI);
+    assert(orientation_std_f >= 0.f);
 
     assert(classification_car_u <= 100);
     assert(classification_truck_u <= 100);
@@ -839,8 +837,8 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(const std::vector<uint8_t>
 
     object_msg.position_covariance_xy = position_xy_covariance_f;
 
-    object_msg.position_orientation = position_orientation_f;
-    object_msg.position_orientation_std = position_orientation_std_f;
+    object_msg.orientation = orientation_f;
+    object_msg.orientation_std = orientation_std_f;
 
     object_msg.existence_probability = existence_probability_f;
     object_msg.classification_car = classification_car_u;
