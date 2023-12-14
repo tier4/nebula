@@ -70,8 +70,6 @@ ContinentalARS548HwInterfaceRosWrapper::~ContinentalARS548HwInterfaceRosWrapper(
 
 Status ContinentalARS548HwInterfaceRosWrapper::StreamStart()
 {
-  using std::chrono_literals::operator""ms;
-
   if (Status::OK == interface_status_) {
     interface_status_ = hw_interface_.CloudInterfaceStart();
     diagnostics_updater_.add(
