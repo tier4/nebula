@@ -36,7 +36,7 @@ Vls128Decoder::Vls128Decoder(
   }
   // timing table calculation, from velodyne user manual p.64
   timing_offsets_.resize(3);
-  for(size_t i=0; i < timing_offsets_.size(); ++i)
+  for (size_t i=0; i < timing_offsets_.size(); ++i)
   {
     timing_offsets_[i].resize(17); // 17 (+1 for the maintenance time after firing group 8)
   }
@@ -58,6 +58,10 @@ bool Vls128Decoder::hasScanned() { return has_scanned_; }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> Vls128Decoder::get_pointcloud()
 {
+  for (const auto & cloud : packet_clouds_) {
+    *scan_pc_ += cloud;
+  }
+
   double phase = angles::from_degrees(sensor_configuration_->scan_phase);
   if (!scan_pc_->points.empty()) {
     auto current_azimuth = scan_pc_->points.back().azimuth;
@@ -85,6 +89,8 @@ void Vls128Decoder::reset_pointcloud(size_t n_pts)
   scan_pc_->points.reserve(max_pts_);
   reset_overflow();  // transfer existing overflow points to the cleared pointcloud
   scan_timestamp_ = -1;
+
+  reset_packet_clouds(n_pts, pointsPerPacket());
 }
 
 void Vls128Decoder::reset_overflow()
@@ -97,7 +103,8 @@ void Vls128Decoder::reset_overflow()
   overflow_pc_->points.reserve(max_pts_);
 }
 
-void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
+void Vls128Decoder::unpack(
+  const velodyne_msgs::msg::VelodynePacket & velodyne_packet, const size_t & packet_index)
 {
   const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
   float last_azimuth_diff = 0;
@@ -301,7 +308,9 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
                 point_ts = 0;
               current_point.time_stamp = static_cast<uint32_t>(point_ts*1e9);
               current_point.intensity = intensity;
-              scan_pc_->points.emplace_back(current_point);
+
+              append_point(current_point, packet_index);
+
             }  // 2nd scan area condition
           }    // distance condition
         }      // empty "else"

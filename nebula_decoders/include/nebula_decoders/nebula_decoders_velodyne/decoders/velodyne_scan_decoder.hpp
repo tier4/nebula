@@ -167,7 +167,8 @@ public:
 
   /// @brief Virtual function for parsing and shaping VelodynePacket
   /// @param pandar_packet
-  virtual void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) = 0;
+  virtual void unpack(
+    const velodyne_msgs::msg::VelodynePacket & velodyne_packet, const size_t & packet_index) = 0;
   /// @brief Virtual function for parsing VelodynePacket based on packet structure
   /// @param pandar_packet
   /// @return Resulting flag

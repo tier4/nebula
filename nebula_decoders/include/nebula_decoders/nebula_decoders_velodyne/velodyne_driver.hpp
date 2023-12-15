@@ -13,6 +13,8 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <algorithm>
+#include <execution>
 #include <iostream>
 #include <stdexcept>
 #include <string>

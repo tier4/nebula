@@ -58,6 +58,10 @@ bool Vlp32Decoder::hasScanned() { return has_scanned_; }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> Vlp32Decoder::get_pointcloud()
 {
+  for (const auto & cloud : packet_clouds_) {
+    *scan_pc_ += cloud;
+  }
+
   double phase = angles::from_degrees(sensor_configuration_->scan_phase);
   if (!scan_pc_->points.empty()) {
     auto current_azimuth = scan_pc_->points.back().azimuth;
@@ -85,6 +89,8 @@ void Vlp32Decoder::reset_pointcloud(size_t n_pts)
   scan_pc_->points.reserve(max_pts_);
   reset_overflow();  // transfer existing overflow points to the cleared pointcloud
   scan_timestamp_ = -1;
+
+  reset_packet_clouds(n_pts, pointsPerPacket());
 }
 
 void Vlp32Decoder::reset_overflow()
@@ -97,7 +103,8 @@ void Vlp32Decoder::reset_overflow()
   overflow_pc_->points.reserve(max_pts_);
 }
 
-void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
+void Vlp32Decoder::unpack(
+  const velodyne_msgs::msg::VelodynePacket & velodyne_packet, const size_t & packet_index)
 {
   const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
   uint8_t return_mode = velodyne_packet.data[RETURN_MODE_INDEX];
@@ -307,7 +314,8 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
           current_point.time_stamp = static_cast<uint32_t>(point_ts*1e9);
           current_point.distance = distance;
           current_point.intensity = intensity;
-          scan_pc_->points.emplace_back(current_point);
+
+          append_point(current_point, packet_index);
         }
       }
     }
