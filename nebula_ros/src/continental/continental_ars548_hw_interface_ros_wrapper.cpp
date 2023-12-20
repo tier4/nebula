@@ -308,14 +308,14 @@ void ContinentalARS548HwInterfaceRosWrapper::ContinentalMonitorStatus(
   diagnostics.add("sensor_ip_address0", sensor_status.sensor_ip_address0);
   diagnostics.add("sensor_ip_address1", sensor_status.sensor_ip_address1);
   diagnostics.add("configuration_counter", std::to_string(sensor_status.configuration_counter));
-  diagnostics.add("status_longitudinal_velocity", sensor_status.status_longitudinal_velocity);
+  diagnostics.add("longitudinal_velocity_status", sensor_status.longitudinal_velocity_status);
   diagnostics.add(
-    "status_longitudinal_acceleration", sensor_status.status_longitudinal_acceleration);
-  diagnostics.add("status_lateral_acceleration", sensor_status.status_lateral_acceleration);
-  diagnostics.add("status_yaw_rate", sensor_status.status_yaw_rate);
-  diagnostics.add("status_steering_angle", sensor_status.status_steering_angle);
-  diagnostics.add("status_driving_direction", sensor_status.status_driving_direction);
-  diagnostics.add("characteristic_speed", sensor_status.characteristic_speed);
+    "longitudinal_acceleration_status", sensor_status.longitudinal_acceleration_status);
+  diagnostics.add("lateral_acceleration_status", sensor_status.lateral_acceleration_status);
+  diagnostics.add("yaw_rate_status", sensor_status.yaw_rate_status);
+  diagnostics.add("steering_angle_status", sensor_status.steering_angle_status);
+  diagnostics.add("driving_direction_status", sensor_status.driving_direction_status);
+  diagnostics.add("characteristic_speed_status", sensor_status.characteristic_speed_status);
   diagnostics.add("radar_status", sensor_status.radar_status);
   diagnostics.add("voltage_status", sensor_status.voltage_status);
   diagnostics.add("temperature_status", sensor_status.temperature_status);

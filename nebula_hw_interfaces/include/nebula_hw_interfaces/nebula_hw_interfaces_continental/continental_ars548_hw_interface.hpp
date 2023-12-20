@@ -65,18 +65,9 @@ private:
 
   std::mutex sensor_status_mutex_;
 
-  struct FilterStatus
-  {
-    uint8_t active;
-    uint8_t filter_id;
-    uint8_t min_value;
-    uint8_t max_value;
-  };
-
-  FilterStatus detection_filters_status_[DETECTION_FILTER_PROPERTIES_NUM];
-  FilterStatus object_filters_status_[OBJECT_FILTER_PROPERTIES_NUM];
-
-  ContinentalARS548Status radar_status_;
+  SensorStatusPacket sensor_status_packet_{};
+  FilterStatusPacket filter_status_{};
+  ContinentalARS548Status radar_status_{};
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger;
 
