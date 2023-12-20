@@ -264,7 +264,7 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(const std::vector<uint8_t>
     object_msg.orientation = object.position_orientation.value();
     object_msg.orientation_std = object.position_orientation_std.value();
 
-    object_msg.existence_probability = object.existance_probability.value();
+    object_msg.existence_probability = object.existence_probability.value();
     object_msg.classification_car = object.classification_car;
     object_msg.classification_truck = object.classification_truck;
     object_msg.classification_motorcycle = object.classification_motorcycle;

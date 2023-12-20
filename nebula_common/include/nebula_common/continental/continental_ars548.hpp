@@ -71,7 +71,7 @@ struct HeaderPacket
   big_uint32_buf_t length;
 };
 
-struct HeaderSOMEIPPacket
+struct HeaderSomeIPPacket
 {
   big_uint16_buf_t client_id;
   big_uint16_buf_t session_id;
@@ -120,7 +120,7 @@ struct DetectionPacket
 struct DetectionListPacket
 {
   HeaderPacket header;
-  HeaderSOMEIPPacket header_someip;
+  HeaderSomeIPPacket header_some_ip;
   HeaderE2EP07Packet header_e2ep07;
   StampSyncStatusPacket stamp;
   big_uint32_buf_t event_data_qualifier;
@@ -146,7 +146,7 @@ struct DetectionListPacket
   big_float32_buf_t alignment_azimuth_correction;
   big_float32_buf_t alignment_elevation_correction;
   uint8_t alignment_status;
-  uint8_t reserverd[14];
+  uint8_t reserved[14];
 };
 
 struct ObjectPacket
@@ -167,9 +167,9 @@ struct ObjectPacket
   big_float32_buf_t position_covariance_xy;
   big_float32_buf_t position_orientation;
   big_float32_buf_t position_orientation_std;
-  uint8_t existance_invalid_flags;
-  big_float32_buf_t existance_probability;
-  big_float32_buf_t existance_ppv;
+  uint8_t existence_invalid_flags;
+  big_float32_buf_t existence_probability;
+  big_float32_buf_t existence_ppv;
   uint8_t classification_car;
   uint8_t classification_truck;
   uint8_t classification_motorcycle;
@@ -220,7 +220,7 @@ struct ObjectPacket
 struct ObjectListPacket
 {
   HeaderPacket header;
-  HeaderSOMEIPPacket header_someip;
+  HeaderSomeIPPacket header_some_ip;
   HeaderE2EP07Packet header_e2ep07;
   StampSyncStatusPacket stamp;
   big_uint32_buf_t event_data_qualifier;
@@ -305,7 +305,7 @@ struct AccelerationLongitudinalCoGPacket
   uint8_t reserved1[22];
 };
 
-struct CharasteristicSpeedPacket
+struct CharacteristicSpeedPacket
 {
   HeaderPacket header;
   uint8_t reserved0[2];

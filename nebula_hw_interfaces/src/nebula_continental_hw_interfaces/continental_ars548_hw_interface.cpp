@@ -567,15 +567,15 @@ Status ContinentalARS548HwInterface::SetCharacteristicSpeed(float characteristic
     return Status::ERROR_1;
   }
 
-  CharasteristicSpeedPacket characteristic_speed_packet{};
-  static_assert(sizeof(CharasteristicSpeedPacket) == CHARACTERISTIC_SPEED_UDP_LENGTH);
+  CharacteristicSpeedPacket characteristic_speed_packet{};
+  static_assert(sizeof(CharacteristicSpeedPacket) == CHARACTERISTIC_SPEED_UDP_LENGTH);
   characteristic_speed_packet.header.service_id = CHARACTERISTIC_SPEED_SERVICE_ID;
   characteristic_speed_packet.header.method_id = CHARACTERISTIC_SPEED_METHOD_ID;
   characteristic_speed_packet.header.length = CHARACTERISTIC_SPEED_LENGTH;
   characteristic_speed_packet.characteristic_speed = characteristic_speed;
 
-  std::vector<uint8_t> send_vector(sizeof(CharasteristicSpeedPacket));
-  std::memcpy(send_vector.data(), &characteristic_speed_packet, sizeof(CharasteristicSpeedPacket));
+  std::vector<uint8_t> send_vector(sizeof(CharacteristicSpeedPacket));
+  std::memcpy(send_vector.data(), &characteristic_speed_packet, sizeof(CharacteristicSpeedPacket));
 
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
