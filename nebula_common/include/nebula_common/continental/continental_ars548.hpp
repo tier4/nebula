@@ -16,6 +16,8 @@
 /**
  * Continental ARS548
  */
+#include "boost/endian/buffers.hpp"
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -29,10 +31,299 @@ namespace drivers
 {
 namespace continental_ars548
 {
+
+using namespace boost::endian;
+
+#pragma pack(push, 1)
+
+struct Header
+{
+  big_uint16_buf_t service_id;
+  big_uint16_buf_t method_id;
+  big_uint32_buf_t length;
+};
+
+struct HeaderSOMEIP
+{
+  big_uint16_buf_t client_id;
+  big_uint16_buf_t session_id;
+  uint8_t protocol_version;
+  uint8_t interface_version;
+  uint8_t message_type;
+  uint8_t return_code;
+};
+
+struct HeaderE2EP07
+{
+  big_uint64_buf_t crc;
+  big_uint32_buf_t length;
+  big_uint32_buf_t sqc;
+  big_uint32_buf_t data_id;
+};
+
+struct StampSyncStatus
+{
+  big_uint32_buf_t timestamp_nanoseconds;
+  big_uint32_buf_t timestamp_seconds;
+  uint8_t timestamp_sync_status;
+};
+
+struct Detection
+{  // Actual 44 . Datasheet is 44
+  big_float32_buf_t azimuth_angle;
+  big_float32_buf_t azimuth_angle_std;
+  uint8_t invalid_flags;
+  big_float32_buf_t elevation_angle;
+  big_float32_buf_t elevation_angle_std;
+  big_float32_buf_t range;
+  big_float32_buf_t range_std;
+  big_float32_buf_t range_rate;
+  big_float32_buf_t range_rate_std;
+  int8_t rcs;
+  big_uint16_buf_t measurement_id;
+  uint8_t positive_predictive_value;
+  uint8_t classification;
+  uint8_t multi_target_probability;
+  big_uint16_buf_t object_id;
+  uint8_t ambiguity_flag;
+  big_uint16_buf_t sort_index;
+};
+
+struct DetectionList
+{
+  Header header;
+  HeaderSOMEIP header_someip;
+  HeaderE2EP07 header_e2ep07;
+  StampSyncStatus stamp;
+  big_uint32_buf_t event_data_qualifier;
+  uint8_t extended_qualifier;
+  big_uint16_buf_t origin_invalid_flags;
+  big_float32_buf_t origin_x_pos;
+  big_float32_buf_t origin_x_std;
+  big_float32_buf_t origin_y_pos;
+  big_float32_buf_t origin_y_std;
+  big_float32_buf_t origin_z_pos;
+  big_float32_buf_t origin_z_std;
+  big_float32_buf_t origin_roll;
+  big_float32_buf_t origin_roll_std;
+  big_float32_buf_t origin_pitch;
+  big_float32_buf_t origin_pitch_std;
+  big_float32_buf_t origin_yaw;
+  big_float32_buf_t origin_yaw_std;
+  uint8_t list_invalid_flags;
+  Detection detections[800];
+  big_float32_buf_t list_rad_vel_domain_min;
+  big_float32_buf_t list_rad_vel_domain_max;
+  big_uint32_buf_t number_of_detections;
+  big_float32_buf_t alignment_azimuth_correction;
+  big_float32_buf_t alignment_elevation_correction;
+  uint8_t alignment_status;
+  uint8_t reserverd[14];
+};
+
+struct Object
+{                                  // Datasheet 187 Current 184. Datsheet: 32x40 + 16x3 + 8x21
+  big_uint16_buf_t status_sensor;  // Current 32x40  16x3 21x1
+  big_uint32_buf_t id;
+  big_uint16_buf_t age;
+  uint8_t status_measurement;
+  uint8_t status_movement;
+  big_uint16_buf_t position_invalid_flags;
+  uint8_t position_reference;
+  big_float32_buf_t position_x;
+  big_float32_buf_t position_x_std;
+  big_float32_buf_t position_y;
+  big_float32_buf_t position_y_std;
+  big_float32_buf_t position_z;
+  big_float32_buf_t position_z_std;
+  big_float32_buf_t position_covariance_xy;
+  big_float32_buf_t position_orientation;
+  big_float32_buf_t position_orientation_std;
+  uint8_t existance_invalid_flags;
+  big_float32_buf_t existance_probability;
+  big_float32_buf_t existance_ppv;
+  uint8_t classification_car;
+  uint8_t classification_truck;
+  uint8_t classification_motorcycle;
+  uint8_t classification_bicycle;
+  uint8_t classification_pedestrian;
+  uint8_t classification_animal;
+  uint8_t classification_hazard;
+  uint8_t classification_unknown;
+  uint8_t classification_overdrivable;
+  uint8_t classification_underdrivable;
+  uint8_t dynamics_abs_vel_invalid_flags;
+  big_float32_buf_t dynamics_abs_vel_x;
+  big_float32_buf_t dynamics_abs_vel_x_std;
+  big_float32_buf_t dynamics_abs_vel_y;
+  big_float32_buf_t dynamics_abs_vel_y_std;
+  big_float32_buf_t dynamics_abs_vel_covariance_xy;
+  uint8_t dynamics_rel_vel_invalid_flags;
+  big_float32_buf_t dynamics_rel_vel_x;
+  big_float32_buf_t dynamics_rel_vel_x_std;
+  big_float32_buf_t dynamics_rel_vel_y;
+  big_float32_buf_t dynamics_rel_vel_y_std;
+  big_float32_buf_t dynamics_rel_vel_covariance_xy;
+  uint8_t dynamics_abs_accel_invalid_flags;
+  big_float32_buf_t dynamics_abs_accel_x;
+  big_float32_buf_t dynamics_abs_accel_x_std;
+  big_float32_buf_t dynamics_abs_accel_y;
+  big_float32_buf_t dynamics_abs_accel_y_std;
+  big_float32_buf_t dynamics_abs_accel_covariance_xy;
+  uint8_t dynamics_rel_accel_invalid_flags;
+  big_float32_buf_t dynamics_rel_accel_x;
+  big_float32_buf_t dynamics_rel_accel_x_std;
+  big_float32_buf_t dynamics_rel_accel_y;
+  big_float32_buf_t dynamics_rel_accel_y_std;
+  big_float32_buf_t dynamics_rel_accel_covariance_xy;
+  uint8_t dynamics_orientation_invalid_flags;
+  big_float32_buf_t dynamics_orientation_rate_mean;
+  big_float32_buf_t dynamics_orientation_rate_std;
+  big_uint32_buf_t shape_length_status;
+  uint8_t shape_length_edge_invalid_flags;
+  big_float32_buf_t shape_length_edge_mean;
+  big_float32_buf_t shape_length_edge_std;
+  big_uint32_buf_t shape_width_status;
+  uint8_t shape_width_edge_invalid_flags;
+  big_float32_buf_t shape_width_edge_mean;
+  big_float32_buf_t shape_width_edge_std;
+};
+
+struct ObjectList
+{
+  Header header;
+  HeaderSOMEIP header_someip;
+  HeaderE2EP07 header_e2ep07;
+  StampSyncStatus stamp;
+  big_uint32_buf_t event_data_qualifier;
+  uint8_t extended_qualifier;
+  uint8_t number_of_objects;
+  Object objects[50];
+};
+
+struct StatusConfiguration
+{
+  big_float32_buf_t longitudinal;
+  big_float32_buf_t lateral;
+  big_float32_buf_t vertical;
+  big_float32_buf_t yaw;
+  big_float32_buf_t pitch;
+  uint8_t plug_orientation;
+  big_float32_buf_t length;
+  big_float32_buf_t width;
+  big_float32_buf_t height;
+  big_float32_buf_t wheelbase;
+  big_uint16_buf_t maximum_distance;
+  uint8_t frequency_slot;
+  uint8_t cycle_time;
+  uint8_t time_slot;
+  uint8_t hcc;
+  uint8_t powersave_standstill;
+  uint8_t sensor_ip_address00;
+  uint8_t sensor_ip_address01;
+  uint8_t sensor_ip_address02;
+  uint8_t sensor_ip_address03;
+  uint8_t sensor_ip_address10;
+  uint8_t sensor_ip_address11;
+  uint8_t sensor_ip_address12;
+  uint8_t sensor_ip_address13;
+};
+
+struct SensorStatus
+{  // Actual 44 + 2 + 30 = 76 bytes. datasheet: 76
+  Header header;
+  StampSyncStatus stamp;
+  uint8_t sw_version_major;
+  uint8_t sw_version_minor;
+  uint8_t sw_version_patch;
+  StatusConfiguration status;
+  uint8_t configuration_counter;
+  uint8_t status_longitudinal_velocity;
+  uint8_t status_longitudinal_acceleration;
+  uint8_t status_lateral_acceleration;
+  uint8_t status_yaw_rate;
+  uint8_t status_steering_angle;
+  uint8_t status_driving_direction;
+  uint8_t status_characteristic_speed;
+  uint8_t status_radar_status;
+  uint8_t status_voltage_status;
+  uint8_t status_temperature_status;
+  uint8_t status_blockage_status;
+};
+
+struct Configuration
+{
+  Header header;
+  StatusConfiguration configuration;
+  uint8_t new_sensor_mounting;
+  uint8_t new_vehicle_parameters;
+  uint8_t new_radar_parameters;
+  uint8_t new_network_configuration;
+};
+
+struct AccelerationLateralCoG
+{
+  Header header;
+  uint8_t reserved0[6];
+  big_float32_buf_t acceleration_lateral;
+  uint8_t reserved1[22];
+};
+
+struct AccelerationLongitudinalCoG
+{
+  Header header;
+  uint8_t reserved0[6];
+  big_float32_buf_t acceleration_lateral;
+  uint8_t reserved1[22];
+};
+
+struct CharasteristicSpeed
+{
+  Header header;
+  uint8_t reserved0[2];
+  big_float32_buf_t characteristic_speed;
+  uint8_t reserved1[8];
+};
+
+struct DrivingDirection
+{
+  Header header;
+  uint8_t reserved0;
+  big_float32_buf_t driving_direction;
+  uint8_t reserved1[20];
+};
+
+struct SteeringAngleFrontAxle
+{
+  Header header;
+  uint8_t reserved0[6];
+  big_float32_buf_t steering_angle_front_axle;
+  uint8_t reserved1[22];
+};
+
+struct VelocityVehicle
+{
+  Header header;
+  uint8_t reserved0[3];
+  big_float32_buf_t velocity_vehicle;
+  uint8_t reserved1[21];
+};
+
+struct YawRate
+{
+  Header header;
+  uint8_t reserved0[6];
+  big_float32_buf_t yaw_rate;
+  uint8_t reserved1[221];
+};
+
+#pragma pack(pop)
+
 constexpr int SERVICE_ID_BYTE = 0;
 constexpr int METHOD_ID_BYTE = 2;
 constexpr int LENGTH_BYTE = 4;
 
+constexpr int CONFIGURATION_SERVICE_ID = 0;
 constexpr int CONFIGURATION_METHOD_ID = 390;
 constexpr int CONFIGURATION_PAYLOAD_LENGTH = 56;
 

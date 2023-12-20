@@ -199,7 +199,7 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(const std::vector<uint8
 
   msg.alignment_status = data[DETECTION_LIST_ALIGNMENT_STATUS_BYTE];
 
-  const uint32_t numer_of_detections =
+  const uint32_t number_of_detections =
     (static_cast<uint32_t>(data[DETECTION_LIST_NUMBER_OF_DETECTIONS_BYTE]) << 24) |
     (static_cast<uint32_t>(data[DETECTION_LIST_NUMBER_OF_DETECTIONS_BYTE + 1]) << 16) |
     (static_cast<uint32_t>(data[DETECTION_LIST_NUMBER_OF_DETECTIONS_BYTE + 2]) << 8) |
@@ -212,13 +212,13 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(const std::vector<uint8
   assert(msg.origin_yaw >= -M_PI && msg.origin_yaw <= M_PI);
   assert(msg.ambiguity_free_velocity_min >= -100.f && msg.ambiguity_free_velocity_min <= 100.f);
   assert(msg.ambiguity_free_velocity_max >= -100.f && msg.ambiguity_free_velocity_max <= 100.f);
-  assert(numer_of_detections <= 800);
+  assert(number_of_detections <= 800);
   assert(msg.alignment_azimuth_correction >= -M_PI && msg.alignment_azimuth_correction <= M_PI);
   assert(msg.alignment_elevation_correction >= -M_PI && msg.alignment_elevation_correction <= M_PI);
 
-  msg.detections.resize(numer_of_detections);
+  msg.detections.resize(number_of_detections);
 
-  for (std::size_t detection_index = 0; detection_index < numer_of_detections; detection_index++) {
+  for (std::size_t detection_index = 0; detection_index < number_of_detections; detection_index++) {
     auto & detection_msg = msg.detections[detection_index];
 
     const int CURRENT_DETECTION_START_BYTE =
@@ -264,11 +264,7 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(const std::vector<uint8
       (static_cast<uint32_t>(data[CURRENT_DETECTION_AZIMUTH_ANGLE_STD_BYTE + 1]) << 16) |
       (static_cast<uint32_t>(data[CURRENT_DETECTION_AZIMUTH_ANGLE_STD_BYTE + 2]) << 8) |
       data[CURRENT_DETECTION_AZIMUTH_ANGLE_STD_BYTE + 3];
-    const uint8_t invalid_flags_u =
-      (static_cast<uint32_t>(data[CURRENT_DETECTION_INVALID_FLAGS_BYTE]) << 24) |
-      (static_cast<uint32_t>(data[CURRENT_DETECTION_INVALID_FLAGS_BYTE + 1]) << 16) |
-      (static_cast<uint32_t>(data[CURRENT_DETECTION_INVALID_FLAGS_BYTE + 2]) << 8) |
-      data[CURRENT_DETECTION_INVALID_FLAGS_BYTE + 3];
+    const uint8_t invalid_flags_u = data[CURRENT_DETECTION_INVALID_FLAGS_BYTE];
     const uint32_t elevation_angle_u =
       (static_cast<uint32_t>(data[CURRENT_DETECTION_ELEVATION_ANGLE_BYTE]) << 24) |
       (static_cast<uint32_t>(data[CURRENT_DETECTION_ELEVATION_ANGLE_BYTE + 1]) << 16) |
@@ -317,13 +313,13 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(const std::vector<uint8
     assert(ambiguity_flag_u <= 100);
 
     detection_msg.invalid_distance = invalid_flags_u & 0x01;
-    detection_msg.invalid_distance_std = invalid_flags_u & 0x01;
+    detection_msg.invalid_distance_std = invalid_flags_u & 0x02;
     detection_msg.invalid_azimuth = invalid_flags_u & 0x04;
     detection_msg.invalid_azimuth_std = invalid_flags_u & 0x08;
     detection_msg.invalid_elevation = invalid_flags_u & 0x10;
     detection_msg.invalid_elevation_std = invalid_flags_u & 0x20;
     detection_msg.invalid_range_rate = invalid_flags_u & 0x40;
-    detection_msg.invalid_range_rate_std = invalid_flags_u & 0x01;
+    detection_msg.invalid_range_rate_std = invalid_flags_u & 0x80;
     detection_msg.rcs = static_cast<int8_t>(rcs_u);
     detection_msg.measurement_id = measurement_id_u;
     detection_msg.positive_predictive_value = positive_predictive_value_u;
@@ -352,6 +348,108 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(const std::vector<uint8
     assert(detection_msg.range_rate_std >= 0.f && detection_msg.range_rate_std <= 1.f);
   }
 
+  auto msg2_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548DetectionList>();
+  auto & msg2 = *msg2_ptr;
+
+  DetectionList detection_list;
+  assert(sizeof(DetectionList) == data.size());
+
+  std::memcpy(&detection_list, data.data(), sizeof(DetectionList));
+
+  msg2.header.frame_id = sensor_configuration_->frame_id;
+  msg2.header.stamp.nanosec = detection_list.stamp.timestamp_nanoseconds.value();
+  msg2.header.stamp.sec = detection_list.stamp.timestamp_seconds.value();
+  msg2.stamp_sync_status = detection_list.stamp.timestamp_sync_status;
+  assert(msg2.stamp_sync_status >= 1 && msg2.stamp_sync_status <= 3);
+
+  msg2.origin_pos.x = detection_list.origin_x_pos.value();
+  msg2.origin_pos.y = detection_list.origin_y_pos.value();
+  msg2.origin_pos.z = detection_list.origin_z_pos.value();
+
+  msg2.origin_pitch = detection_list.origin_pitch.value();
+  msg2.origin_pitch_std = detection_list.origin_pitch_std.value();
+  msg2.origin_yaw = detection_list.origin_yaw.value();
+  msg2.origin_yaw_std = detection_list.origin_yaw_std.value();
+
+  msg2.ambiguity_free_velocity_min = detection_list.list_rad_vel_domain_min.value();
+  msg2.ambiguity_free_velocity_max = detection_list.list_rad_vel_domain_max.value();
+
+  msg2.alignment_azimuth_correction = detection_list.alignment_azimuth_correction.value();
+  msg2.alignment_elevation_correction = detection_list.alignment_elevation_correction.value();
+
+  msg2.alignment_status = detection_list.alignment_status;
+
+  const uint32_t number_of_detections2 = detection_list.number_of_detections.value();
+  msg2.detections.resize(number_of_detections2);
+
+  assert(msg2.origin_pos.x >= -10.f && msg2.origin_pos.x <= 10.f);
+  assert(msg2.origin_pos.y >= -10.f && msg2.origin_pos.y <= 10.f);
+  assert(msg2.origin_pos.z >= -10.f && msg2.origin_pos.z <= 10.f);
+  assert(msg2.origin_pitch >= -M_PI && msg2.origin_pitch <= M_PI);
+  assert(msg2.origin_yaw >= -M_PI && msg2.origin_yaw <= M_PI);
+  assert(msg2.ambiguity_free_velocity_min >= -100.f && msg2.ambiguity_free_velocity_min <= 100.f);
+  assert(msg2.ambiguity_free_velocity_max >= -100.f && msg2.ambiguity_free_velocity_max <= 100.f);
+  assert(number_of_detections2 <= 800);
+  assert(msg2.alignment_azimuth_correction >= -M_PI && msg2.alignment_azimuth_correction <= M_PI);
+  assert(
+    msg2.alignment_elevation_correction >= -M_PI && msg2.alignment_elevation_correction <= M_PI);
+
+  for (std::size_t detection_index = 0; detection_index < number_of_detections2;
+       detection_index++) {
+    auto & detection_msg = msg2.detections[detection_index];
+    auto & detection = detection_list.detections[detection_index];
+
+    assert(detection.positive_predictive_value <= 100);
+    assert(detection.classification <= 4 || detection.classification == 255);
+    assert(detection.multi_target_probability <= 100);
+    assert(detection.ambiguity_flag <= 100);
+
+    assert(detection.azimuth_angle.value() >= -M_PI && detection.azimuth_angle.value() <= M_PI);
+    assert(
+      detection.azimuth_angle_std.value() >= 0.f && detection.azimuth_angle_std.value() <= 1.f);
+    assert(detection.elevation_angle.value() >= -M_PI && detection.elevation_angle.value() <= M_PI);
+    assert(
+      detection.elevation_angle_std.value() >= 0.f && detection.elevation_angle_std.value() <= 1.f);
+
+    assert(detection.range.value() >= 0.f && detection.range.value() <= 1500.f);
+    assert(detection.range_std.value() >= 0.f && detection.range_std.value() <= 1.f);
+    assert(detection.range_rate_std.value() >= 0.f && detection.range_rate_std.value() <= 1.f);
+
+    detection_msg.invalid_distance = detection.invalid_flags & 0x01;
+    detection_msg.invalid_distance_std = detection.invalid_flags & 0x02;
+    detection_msg.invalid_azimuth = detection.invalid_flags & 0x04;
+    detection_msg.invalid_azimuth_std = detection.invalid_flags & 0x08;
+    detection_msg.invalid_elevation = detection.invalid_flags & 0x10;
+    detection_msg.invalid_elevation_std = detection.invalid_flags & 0x20;
+    detection_msg.invalid_range_rate = detection.invalid_flags & 0x40;
+    detection_msg.invalid_range_rate_std = detection.invalid_flags & 0x80;
+    detection_msg.rcs = detection.rcs;
+    detection_msg.measurement_id = detection.measurement_id.value();
+    detection_msg.positive_predictive_value = detection.positive_predictive_value;
+    detection_msg.classification = detection.classification;
+    detection_msg.multi_target_probability = detection.multi_target_probability;
+    detection_msg.object_id = detection.object_id.value();
+    detection_msg.ambiguity_flag = detection.ambiguity_flag;
+
+    detection_msg.azimuth_angle = detection.azimuth_angle.value();
+    detection_msg.azimuth_angle_std = detection.azimuth_angle_std.value();
+    detection_msg.elevation_angle = detection.elevation_angle.value();
+    detection_msg.elevation_angle_std = detection.elevation_angle_std.value();
+
+    detection_msg.range = detection.range.value();
+    detection_msg.range_std = detection.range_std.value();
+    detection_msg.range_rate = detection.range_rate.value();
+    detection_msg.range_rate_std = detection.range_rate_std.value();
+  }
+
+  assert(number_of_detections2 == number_of_detections);
+
+  for (std::size_t i = 0; i < number_of_detections; i++) {
+    assert(msg.detections[i] == msg2.detections[i]);
+  }
+
+  assert(msg == msg2);
+
   detection_list_callback_(std::move(msg_ptr));
 
   return true;
@@ -375,11 +473,11 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(const std::vector<uint8_t>
   msg.stamp_sync_status = data[OBJECT_LIST_TIMESTAMP_SYNC_STATUS_BYTE];
   assert(msg.stamp_sync_status >= 1 && msg.stamp_sync_status <= 3);
 
-  const uint8_t numer_of_objects = data[OBJECT_LIST_NUMBER_OF_OBJECTS_BYTE];
+  const uint8_t number_of_objects = data[OBJECT_LIST_NUMBER_OF_OBJECTS_BYTE];
 
-  msg.objects.resize(numer_of_objects);
+  msg.objects.resize(number_of_objects);
 
-  for (std::size_t object_index = 0; object_index < numer_of_objects; object_index++) {
+  for (std::size_t object_index = 0; object_index < number_of_objects; object_index++) {
     auto & object_msg = msg.objects[object_index];
 
     const int CURRENT_OBJECT_START_BYTE =
@@ -880,6 +978,134 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(const std::vector<uint8_t>
     object_msg.shape_length_edge_mean = shape_length_edge_mean_f;
     object_msg.shape_width_edge_mean = shape_width_edge_mean_f;
   }
+
+  auto msg2_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548ObjectList>();
+  auto & msg2 = *msg2_ptr;
+
+  ObjectList object_list;
+  assert(sizeof(ObjectList) == data.size());
+
+  std::memcpy(&object_list, data.data(), sizeof(object_list));
+
+  msg2.header.frame_id = sensor_configuration_->frame_id;
+  msg2.header.stamp.nanosec = object_list.stamp.timestamp_nanoseconds.value();
+  msg2.header.stamp.sec = object_list.stamp.timestamp_seconds.value();
+  msg2.stamp_sync_status = object_list.stamp.timestamp_sync_status;
+  assert(msg2.stamp_sync_status >= 1 && msg2.stamp_sync_status <= 3);
+
+  const uint8_t number_of_objects2 = object_list.number_of_objects;
+
+  msg2.objects.resize(number_of_objects2);
+
+  for (std::size_t object_index = 0; object_index < number_of_objects2; object_index++) {
+    auto & object_msg = msg2.objects[object_index];
+    const Object & object = object_list.objects[object_index];
+
+    assert(object.status_measurement <= 2 || object.status_measurement == 255);
+    assert(object.status_movement <= 1 || object.status_movement == 255);
+    assert(object.position_reference <= 7 || object.position_reference == 255);
+
+    assert(object.position_x.value() >= -1600.f && object.position_x.value() <= 1600.f);
+    assert(object.position_x_std.value() >= 0.f);
+    assert(object.position_y.value() >= -1600.f && object.position_y.value() <= 1600.f);
+    assert(object.position_y_std.value() >= 0.f);
+    assert(object.position_z.value() >= -1600.f && object.position_z.value() <= 1600.f);
+    assert(object.position_z_std.value() >= 0.f);
+    assert(
+      object.position_orientation.value() >= -M_PI && object.position_orientation.value() <= M_PI);
+    assert(object.position_orientation_std.value() >= 0.f);
+
+    assert(object.classification_car <= 100);
+    assert(object.classification_truck <= 100);
+    assert(object.classification_motorcycle <= 100);
+    assert(object.classification_bicycle <= 100);
+    assert(object.classification_pedestrian <= 100);
+    assert(object.classification_animal <= 100);
+    assert(object.classification_hazard <= 100);
+    assert(object.classification_unknown <= 100);
+
+    assert(object.dynamics_abs_vel_x_std.value() >= 0.f);
+    assert(object.dynamics_abs_vel_y_std.value() >= 0.f);
+
+    assert(object.dynamics_rel_vel_x_std.value() >= 0.f);
+    assert(object.dynamics_rel_vel_y_std.value() >= 0.f);
+
+    assert(object.dynamics_abs_accel_x_std.value() >= 0.f);
+    assert(object.dynamics_abs_accel_y_std.value() >= 0.f);
+
+    assert(object.dynamics_rel_accel_x_std.value() >= 0.f);
+    assert(object.dynamics_rel_accel_y_std.value() >= 0.f);
+
+    object_msg.object_id = object.id.value();
+    object_msg.age = object.age.value();
+    object_msg.status_measurement = object.status_measurement;
+    object_msg.status_movement = object.status_movement;
+    object_msg.position_reference = object.position_reference;
+
+    object_msg.position.x = static_cast<double>(object.position_x.value());
+    object_msg.position.y = static_cast<double>(object.position_y.value());
+    object_msg.position.y = static_cast<double>(object.position_z.value());
+
+    object_msg.position_std.x = static_cast<double>(object.position_x_std.value());
+    object_msg.position_std.y = static_cast<double>(object.position_y_std.value());
+    object_msg.position_std.z = static_cast<double>(object.position_z_std.value());
+
+    object_msg.position_covariance_xy = object.position_covariance_xy.value();
+
+    object_msg.orientation = object.position_orientation.value();
+    object_msg.orientation_std = object.position_orientation_std.value();
+
+    object_msg.existence_probability = object.existance_probability.value();
+    object_msg.classification_car = object.classification_car;
+    object_msg.classification_truck = object.classification_truck;
+    object_msg.classification_motorcycle = object.classification_motorcycle;
+    object_msg.classification_bicycle = object.classification_bicycle;
+    object_msg.classification_pedestrian = object.classification_pedestrian;
+    object_msg.classification_animal = object.classification_animal;
+    object_msg.classification_hazard = object.classification_hazard;
+    object_msg.classification_unknown = object.classification_unknown;
+
+    object_msg.absolute_velocity.x = static_cast<double>(object.dynamics_abs_vel_x.value());
+    object_msg.absolute_velocity.y = static_cast<double>(object.dynamics_abs_vel_y.value());
+    object_msg.absolute_velocity_std.x = static_cast<double>(object.dynamics_abs_vel_x_std.value());
+    object_msg.absolute_velocity_std.y = static_cast<double>(object.dynamics_abs_vel_y_std.value());
+    object_msg.absolute_velocity_covariance_xy = object.dynamics_abs_vel_covariance_xy.value();
+
+    object_msg.relative_velocity.x = static_cast<double>(object.dynamics_rel_vel_x.value());
+    object_msg.relative_velocity.y = static_cast<double>(object.dynamics_rel_vel_y.value());
+    object_msg.relative_velocity_std.x = static_cast<double>(object.dynamics_rel_vel_x_std.value());
+    object_msg.relative_velocity_std.y = static_cast<double>(object.dynamics_rel_vel_y_std.value());
+    object_msg.relative_velocity_covariance_xy = object.dynamics_rel_vel_covariance_xy.value();
+
+    object_msg.absolute_acceleration.x = static_cast<double>(object.dynamics_abs_accel_x.value());
+    object_msg.absolute_acceleration.y = static_cast<double>(object.dynamics_abs_accel_y.value());
+    object_msg.absolute_acceleration_std.x =
+      static_cast<double>(object.dynamics_abs_accel_x_std.value());
+    object_msg.absolute_acceleration_std.y =
+      static_cast<double>(object.dynamics_abs_accel_y_std.value());
+    object_msg.absolute_acceleration_covariance_xy =
+      object.dynamics_abs_accel_covariance_xy.value();
+
+    object_msg.relative_velocity.x = object.dynamics_rel_accel_x.value();
+    object_msg.relative_velocity.y = object.dynamics_rel_accel_y.value();
+    object_msg.relative_velocity_std.x = object.dynamics_rel_accel_x_std.value();
+    object_msg.relative_velocity_std.y = object.dynamics_rel_accel_y_std.value();
+    object_msg.relative_velocity_covariance_xy = object.dynamics_rel_accel_covariance_xy.value();
+
+    object_msg.orientation_rate_mean = object.dynamics_orientation_rate_mean.value();
+    object_msg.orientation_rate_std = object.dynamics_orientation_rate_std.value();
+
+    object_msg.shape_length_edge_mean = object.shape_length_edge_mean.value();
+    object_msg.shape_width_edge_mean = object.shape_width_edge_mean.value();
+  }
+
+  assert(number_of_objects2 == number_of_objects);
+
+  for (std::size_t i = 0; i < number_of_objects; i++) {
+    assert(msg.objects[i] == msg2.objects[i]);
+  }
+
+  assert(msg == msg2);
 
   object_list_callback_(std::move(msg_ptr));
 

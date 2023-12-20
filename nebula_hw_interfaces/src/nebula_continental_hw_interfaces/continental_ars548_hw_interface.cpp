@@ -114,19 +114,26 @@ void ContinentalARS548HwInterface::ReceiveCloudPacketCallback(const std::vector<
 
   */
 
-  if (buffer.size() < LENGTH_BYTE + sizeof(uint32_t)) {
+  if (buffer.size() < sizeof(Header)) {
     PrintError("Unrecognized packet. Too short");
     return;
   }
 
-  const int service_id =
+  Header header{};
+  std::memcpy(&header, buffer.data(), sizeof(Header));
+
+  const uint16_t service_id =
     (static_cast<uint32_t>(buffer[SERVICE_ID_BYTE]) << 8) | buffer[SERVICE_ID_BYTE + 1];
-  const int method_id =
+  const uint16_t method_id =
     (static_cast<uint32_t>(buffer[METHOD_ID_BYTE]) << 8) | buffer[METHOD_ID_BYTE + 1];
-  const int length = (static_cast<uint32_t>(buffer[LENGTH_BYTE]) << 24) |
-                     (static_cast<uint32_t>(buffer[LENGTH_BYTE + 1]) << 16) |
-                     (static_cast<uint32_t>(buffer[LENGTH_BYTE + 2]) << 8) |
-                     buffer[LENGTH_BYTE + 3];
+  const uint32_t length = (static_cast<uint32_t>(buffer[LENGTH_BYTE]) << 24) |
+                          (static_cast<uint32_t>(buffer[LENGTH_BYTE + 1]) << 16) |
+                          (static_cast<uint32_t>(buffer[LENGTH_BYTE + 2]) << 8) |
+                          buffer[LENGTH_BYTE + 3];
+
+  assert(header.service_id.value() == service_id);
+  assert(header.method_id.value() == method_id);
+  assert(header.length.value() == length);
 
   if (service_id != 0) {
     PrintError("Invalid service id");
@@ -175,6 +182,13 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
     buffer[STATUS_TIMESTAMP_SECONDS_BYTE + 3];
 
   const uint8_t & sync_status = buffer[STATUS_SYNC_STATUS_BYTE];
+
+  SensorStatus sensor_status{};
+  std::memcpy(&sensor_status, buffer.data(), sizeof(SensorStatus));
+  assert(sensor_status.stamp.timestamp_nanoseconds.value() == radar_status_.timestamp_nanoseconds);
+  assert(sensor_status.stamp.timestamp_seconds.value() == radar_status_.timestamp_seconds);
+  assert(sync_status == sensor_status.stamp.timestamp_sync_status);
+
   if (sync_status == 1) {
     radar_status_.timestamp_sync_status = "SYNC_OK";
   } else if (sync_status == 2) {
@@ -185,10 +199,13 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
     radar_status_.timestamp_sync_status = "INVALID_VALUE";
   }
 
-  radar_status_.timestamp_sync_status = buffer[STATUS_SYNC_STATUS_BYTE];
   radar_status_.sw_version_major = buffer[STATUS_SW_VERSION_MAJOR_BYTE];
   radar_status_.sw_version_minor = buffer[STATUS_SW_VERSION_MINOR_BYTE];
   radar_status_.sw_version_patch = buffer[STATUS_SW_VERSION_PATCH_BYTE];
+
+  assert(sensor_status.sw_version_major == radar_status_.sw_version_major);
+  assert(sensor_status.sw_version_minor == radar_status_.sw_version_minor);
+  assert(sensor_status.sw_version_patch == radar_status_.sw_version_patch);
 
   const uint32_t status_longitudinal_u =
     (static_cast<uint32_t>(buffer[STATUS_LONGITUDINAL_BYTE]) << 24) |
@@ -263,6 +280,7 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
   radar_status_.time_slot = buffer[STATUS_TIME_SLOT_BYTE];
 
   const uint8_t & hcc = buffer[STATUS_HCC_BYTE];
+
   radar_status_.hcc = hcc == 1   ? "Worldwide"
                       : hcc == 2 ? "Japan"
                                  : ("INVALID VALUE=" + std::to_string(hcc));
@@ -294,46 +312,81 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
       << std::to_string(status_sensor_ip_address13);
   radar_status_.sensor_ip_address1 = ss1.str();
 
+  assert(sensor_status.status.plug_orientation == plug_orientation);
+  assert(sensor_status.status.maximum_distance.value() == radar_status_.max_distance);
+  assert(sensor_status.status.longitudinal.value() == radar_status_.longitudinal);
+  assert(sensor_status.status.lateral.value() == radar_status_.lateral);
+  assert(sensor_status.status.vertical.value() == radar_status_.vertical);
+  assert(sensor_status.status.yaw.value() == radar_status_.yaw);
+  assert(sensor_status.status.pitch.value() == radar_status_.pitch);
+  assert(sensor_status.status.length.value() == radar_status_.length);
+  assert(sensor_status.status.width.value() == radar_status_.width);
+  assert(sensor_status.status.height.value() == radar_status_.height);
+  assert(sensor_status.status.wheelbase.value() == radar_status_.wheel_base);
+  assert(sensor_status.status.frequency_slot == frequency_slot);
+  assert(sensor_status.status.cycle_time == radar_status_.cycle_time);
+  assert(sensor_status.status.time_slot == radar_status_.time_slot);
+  assert(sensor_status.status.hcc == hcc);
+  assert(sensor_status.status.powersave_standstill == power_save_standstill);
+  assert(sensor_status.status.sensor_ip_address00 == status_sensor_ip_address00);
+  assert(sensor_status.status.sensor_ip_address01 == status_sensor_ip_address01);
+  assert(sensor_status.status.sensor_ip_address02 == status_sensor_ip_address02);
+  assert(sensor_status.status.sensor_ip_address03 == status_sensor_ip_address03);
+
+  assert(sensor_status.status.sensor_ip_address10 == status_sensor_ip_address10);
+  assert(sensor_status.status.sensor_ip_address11 == status_sensor_ip_address11);
+  assert(sensor_status.status.sensor_ip_address12 == status_sensor_ip_address12);
+  assert(sensor_status.status.sensor_ip_address13 == status_sensor_ip_address13);
+
   radar_status_.configuration_counter = buffer[STATUS_CONFIGURATION_COUNTER_BYTE];
+  assert(sensor_status.configuration_counter == radar_status_.configuration_counter);
 
   const uint8_t & status_longitudinal_velocity = buffer[STATUS_LONGITUDINAL_VELOCITY_BYTE];
+  assert(sensor_status.status_longitudinal_velocity == status_longitudinal_velocity);
   radar_status_.status_longitudinal_velocity = status_longitudinal_velocity == 0 ? "VDY_OK"
                                                : status_longitudinal_velocity == 1
                                                  ? "VDY_NOTOK"
                                                  : "INVALID VALUE";
 
   const uint8_t & status_longitudinal_acceleration = buffer[STATUS_LONGITUDINAL_ACCELERATION_BYTE];
+  assert(sensor_status.status_longitudinal_acceleration == status_longitudinal_acceleration);
   radar_status_.status_longitudinal_acceleration = status_longitudinal_acceleration == 0 ? "VDY_OK"
                                                    : status_longitudinal_acceleration == 1
                                                      ? "VDY_NOTOK"
                                                      : "INVALID VALUE";
 
   const uint8_t & status_lateral_acceleration = buffer[STATUS_LATERAL_ACCELERATION_BYTE];
+  assert(sensor_status.status_lateral_acceleration == status_lateral_acceleration);
   radar_status_.status_lateral_acceleration = status_lateral_acceleration == 0   ? "VDY_OK"
                                               : status_lateral_acceleration == 1 ? "VDY_NOTOK"
                                                                                  : "INVALID VALUE";
 
   const uint8_t & status_yaw_rate = buffer[STATUS_YAW_RATE_BYTE];
+  assert(sensor_status.status_yaw_rate == status_yaw_rate);
   radar_status_.status_yaw_rate = status_yaw_rate == 0   ? "VDY_OK"
                                   : status_yaw_rate == 1 ? "VDY_NOTOK"
                                                          : "INVALID VALUE";
 
   const uint8_t & status_steering_angle = buffer[STATUS_STEERING_ANGLE_BYTE];
+  assert(sensor_status.status_steering_angle == status_steering_angle);
   radar_status_.status_steering_angle = status_steering_angle == 0   ? "VDY_OK"
                                         : status_steering_angle == 1 ? "VDY_NOTOK"
                                                                      : "INVALID VALUE";
 
   const uint8_t & status_driving_direction = buffer[STATUS_DRIVING_DIRECTION_BYTE];
+  assert(sensor_status.status_driving_direction == status_driving_direction);
   radar_status_.status_driving_direction = status_driving_direction == 0   ? "VDY_OK"
                                            : status_driving_direction == 1 ? "VDY_NOTOK"
                                                                            : "INVALID VALUE";
 
   const uint8_t & characteristic_speed = buffer[STATUS_CHARACTERISTIC_SPEED_BYTE];
+  assert(sensor_status.status_characteristic_speed == characteristic_speed);
   radar_status_.characteristic_speed = characteristic_speed == 0   ? "VDY_OK"
                                        : characteristic_speed == 1 ? "VDY_NOTOK"
                                                                    : "INVALID VALUE";
 
   const uint8_t & radar_status = buffer[STATUS_RADAR_STATUS_BYTE];
+  assert(sensor_status.status_radar_status == radar_status);
   if (radar_status == 0) {
     radar_status_.radar_status = "STATE_INIT";
   } else if (radar_status == 1) {
@@ -345,6 +398,7 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
   }
 
   const uint8_t & voltage_status = buffer[STATUS_VOLTAGE_STATUS_BYTE];
+  assert(sensor_status.status_voltage_status == voltage_status);
   if (voltage_status == 0) {
     radar_status_.voltage_status = "Ok";
   }
@@ -362,6 +416,7 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
   }
 
   const uint8_t & temperature_status = buffer[STATUS_TEMPERATURE_STATUS_BYTE];
+  assert(sensor_status.status_temperature_status == temperature_status);
   if (temperature_status == 0) {
     radar_status_.temperature_status = "Ok";
   }
@@ -379,6 +434,7 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
   }
 
   const uint8_t & blockage_status = buffer[STATUS_BLOCKAGE_STATUS_BYTE];
+  assert(sensor_status.status_blockage_status == blockage_status);
   const uint8_t & blockage_status0 = blockage_status & 0x0f;
   const uint8_t & blockage_status1 = (blockage_status & 0xf0) >> 4;
 
@@ -409,13 +465,14 @@ void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<u
 
 void ContinentalARS548HwInterface::ProcessFilterStatusPacket(const std::vector<uint8_t> & buffer)
 {
-  // Unused available data
-  // constexpr int FILTER_STATUS_TIMESTAMP_NANOSECONDS_BYTE = 8;
-  // constexpr int FILTER_STATUS_TIMESTAMP_SECONDS_BYTE = 12;
-  // constexpr int FILTER_STATUS_SYNC_STATUS_BYTE = 16;
-  // constexpr int FILTER_STATUS_FILTER_CONFIGURATION_COUNTER_BYTE = 17;
-  // constexpr int FILTER_STATUS_DETECTION_SORT_INDEX_BYTE = 18;
-  // constexpr int FILTER_STATUS_OBJECT_SORT_INDEX_BYTE = 19;
+  // assert(false); // it seems 548 does not have this anymore....
+  //  Unused available data
+  //  constexpr int FILTER_STATUS_TIMESTAMP_NANOSECONDS_BYTE = 8;
+  //  constexpr int FILTER_STATUS_TIMESTAMP_SECONDS_BYTE = 12;
+  //  constexpr int FILTER_STATUS_SYNC_STATUS_BYTE = 16;
+  //  constexpr int FILTER_STATUS_FILTER_CONFIGURATION_COUNTER_BYTE = 17;
+  //  constexpr int FILTER_STATUS_DETECTION_SORT_INDEX_BYTE = 18;
+  //  constexpr int FILTER_STATUS_OBJECT_SORT_INDEX_BYTE = 19;
   constexpr int FILTER_STATUS_DETECTION_FILTER_BYTE = 20;
   constexpr int FILTER_STATUS_OBJECT_FILTER_BYTE = 90;
 
@@ -579,6 +636,23 @@ Status ContinentalARS548HwInterface::SetSensorMounting(
   send_vector[CONFIGURATION_PLUG_ORIENTATION_BYTE] = plug_orientation;
   send_vector[CONFIGURATION_NEW_SENSOR_MOUNTING_BYTE] = 1;
 
+  Configuration configuration{};
+  assert(send_vector.size() == sizeof(Configuration));
+  configuration.header.service_id = CONFIGURATION_SERVICE_ID;
+  configuration.header.method_id = CONFIGURATION_METHOD_ID;
+  configuration.header.length = CONFIGURATION_PAYLOAD_LENGTH;
+  configuration.configuration.longitudinal = longitudinal_autosar;
+  configuration.configuration.lateral = lateral_autosar;
+  configuration.configuration.vertical = vertical_autosar;
+  configuration.configuration.yaw = yaw_autosar;
+  configuration.configuration.pitch = pitch_autosar;
+  configuration.configuration.plug_orientation = plug_orientation;
+  configuration.new_sensor_mounting = 1;
+
+  std::vector<uint8_t> send_vector2(sizeof(Configuration));
+  std::memcpy(send_vector2.data(), &configuration, sizeof(Configuration));
+  assert(send_vector2 == send_vector2);
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -640,6 +714,21 @@ Status ContinentalARS548HwInterface::SetVehicleParameters(
 
   send_vector[CONFIGURATION_NEW_VEHICLE_PARAMETERS_BYTE] = 1;
 
+  Configuration configuration{};
+  assert(send_vector.size() == sizeof(Configuration));
+  configuration.header.service_id = CONFIGURATION_SERVICE_ID;
+  configuration.header.method_id = CONFIGURATION_METHOD_ID;
+  configuration.header.length = CONFIGURATION_PAYLOAD_LENGTH;
+  configuration.configuration.length = length_autosar;
+  configuration.configuration.width = width_autosar;
+  configuration.configuration.height = height_autosar;
+  configuration.configuration.wheelbase = wheel_base_autosar;
+  configuration.new_vehicle_parameters = 1;
+
+  std::vector<uint8_t> send_vector2(sizeof(Configuration));
+  std::memcpy(send_vector2.data(), &configuration, sizeof(Configuration));
+  assert(send_vector2 == send_vector2);
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -686,6 +775,22 @@ Status ContinentalARS548HwInterface::SetRadarParameters(
 
   send_vector[CONFIGURATION_NEW_RADAR_PARAMETERS_BYTE] = 1;
 
+  Configuration configuration{};
+  assert(send_vector.size() == sizeof(Configuration));
+  configuration.header.service_id = CONFIGURATION_SERVICE_ID;
+  configuration.header.method_id = CONFIGURATION_METHOD_ID;
+  configuration.header.length = CONFIGURATION_PAYLOAD_LENGTH;
+  configuration.configuration.maximum_distance = maximum_distance;
+  configuration.configuration.frequency_slot = frequency_slot;
+  configuration.configuration.cycle_time = cycle_time;
+  configuration.configuration.hcc = hcc;
+  configuration.configuration.powersave_standstill = power_save_standstill;
+  configuration.new_radar_parameters = 1;
+
+  std::vector<uint8_t> send_vector2(sizeof(Configuration));
+  std::memcpy(send_vector2.data(), &configuration, sizeof(Configuration));
+  assert(send_vector2 == send_vector2);
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -728,6 +833,25 @@ Status ContinentalARS548HwInterface::SetSensorIPAddress(const std::string & sens
 
   send_vector[CONFIGURATION_NEW_NETWORK_CONFIGURATION_BYTE] = 1;
 
+  Configuration configuration{};
+  assert(send_vector.size() == sizeof(Configuration));
+  configuration.header.service_id = CONFIGURATION_SERVICE_ID;
+  configuration.header.method_id = CONFIGURATION_METHOD_ID;
+  configuration.header.length = CONFIGURATION_PAYLOAD_LENGTH;
+  configuration.configuration.sensor_ip_address00 = ip_bytes[0];
+  configuration.configuration.sensor_ip_address01 = ip_bytes[1];
+  configuration.configuration.sensor_ip_address02 = ip_bytes[2];
+  configuration.configuration.sensor_ip_address03 = ip_bytes[3];
+  configuration.configuration.sensor_ip_address10 = 169;
+  configuration.configuration.sensor_ip_address11 = 254;
+  configuration.configuration.sensor_ip_address12 = 116;
+  configuration.configuration.sensor_ip_address13 = 113;
+  configuration.new_network_configuration = 1;
+
+  std::vector<uint8_t> send_vector2(sizeof(Configuration));
+  std::memcpy(send_vector2.data(), &configuration, sizeof(Configuration));
+  assert(send_vector2 == send_vector2);
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -757,6 +881,17 @@ Status ContinentalARS548HwInterface::SetAccelerationLateralCog(float lateral_acc
   send_vector[15] = bytes[2];
   send_vector[16] = bytes[1];
   send_vector[17] = bytes[0];
+
+  AccelerationLateralCoG acceleration_lateral_cog{};
+  assert(send_vector.size() == sizeof(AccelerationLateralCoG));
+  acceleration_lateral_cog.header.service_id = ACCELERATION_LATERAL_COG_SERVICE_ID;
+  acceleration_lateral_cog.header.method_id = ACCELERATION_LATERAL_COG_METHOD_ID;
+  acceleration_lateral_cog.header.length = ACCELERATION_LATERAL_COG_LENGTH;
+  acceleration_lateral_cog.acceleration_lateral = lateral_acceleration;
+
+  std::vector<uint8_t> send_vector2(sizeof(AccelerationLateralCoG));
+  std::memcpy(send_vector2.data(), &acceleration_lateral_cog, sizeof(AccelerationLateralCoG));
+  assert(send_vector2 == send_vector2);
 
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
@@ -788,6 +923,18 @@ Status ContinentalARS548HwInterface::SetAccelerationLongitudinalCog(float longit
   send_vector[16] = bytes[1];
   send_vector[17] = bytes[0];
 
+  AccelerationLongitudinalCoG acceleration_longitudinal_cog{};
+  assert(send_vector.size() == sizeof(AccelerationLongitudinalCoG));
+  acceleration_longitudinal_cog.header.service_id = ACCELERATION_LONGITUDINAL_COG_SERVICE_ID;
+  acceleration_longitudinal_cog.header.method_id = ACCELERATION_LONGITUDINAL_COG_METHOD_ID;
+  acceleration_longitudinal_cog.header.length = ACCELERATION_LONGITUDINAL_COG_LENGTH;
+  acceleration_longitudinal_cog.acceleration_lateral = longitudinal_acceleration;
+
+  std::vector<uint8_t> send_vector2(sizeof(AccelerationLongitudinalCoG));
+  std::memcpy(
+    send_vector2.data(), &acceleration_longitudinal_cog, sizeof(AccelerationLongitudinalCoG));
+  assert(send_vector2 == send_vector2);
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -811,6 +958,17 @@ Status ContinentalARS548HwInterface::SetCharacteristicSpeed(float characteristic
   send_vector[3] = static_cast<uint8_t>(CHARACTERISTIC_SPEED_METHOD_ID & 0x00ff);
   send_vector[7] = CHARACTERISTIC_SPEED_LENGTH;
   send_vector[10] = static_cast<uint8_t>(characteristic_speed);
+
+  CharasteristicSpeed characteristic_speed_packet{};
+  assert(send_vector.size() == sizeof(CharasteristicSpeed));
+  characteristic_speed_packet.header.service_id = CHARACTERISTIC_SPEED_SERVICE_ID;
+  characteristic_speed_packet.header.method_id = CHARACTERISTIC_SPEED_METHOD_ID;
+  characteristic_speed_packet.header.length = CHARACTERISTIC_SPEED_LENGTH;
+  characteristic_speed_packet.characteristic_speed = characteristic_speed;
+
+  std::vector<uint8_t> send_vector2(sizeof(CharasteristicSpeed));
+  std::memcpy(send_vector2.data(), &characteristic_speed_packet, sizeof(CharasteristicSpeed));
+  assert(send_vector2 == send_vector2);
 
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
@@ -840,6 +998,24 @@ Status ContinentalARS548HwInterface::SetDrivingDirection(int direction)
   } else {
     send_vector[9] = DRIVING_DIRECTION_BACKWARDS;
   }
+
+  DrivingDirection driving_direction_packet{};
+  assert(send_vector.size() == sizeof(DrivingDirection));
+  driving_direction_packet.header.service_id = DRIVING_DIRECTION_SERVICE_ID;
+  driving_direction_packet.header.method_id = DRIVING_DIRECTION_METHOD_ID;
+  driving_direction_packet.header.length = DRIVING_DIRECTION_LENGTH;
+
+  if (direction == 0) {
+    driving_direction_packet.driving_direction = DRIVING_DIRECTION_STANDSTILL;
+  } else if (direction > 0) {
+    driving_direction_packet.driving_direction = DRIVING_DIRECTION_FORWARD;
+  } else {
+    driving_direction_packet.driving_direction = DRIVING_DIRECTION_BACKWARDS;
+  }
+
+  std::vector<uint8_t> send_vector2(sizeof(DrivingDirection));
+  std::memcpy(send_vector2.data(), &driving_direction_packet, sizeof(DrivingDirection));
+  assert(send_vector2 == send_vector2);
 
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
@@ -871,6 +1047,18 @@ Status ContinentalARS548HwInterface::SetSteeringAngleFrontAxle(float angle_rad)
   send_vector[16] = bytes[1];
   send_vector[17] = bytes[0];
 
+  SteeringAngleFrontAxle steering_angle_front_axle_packet{};
+  assert(send_vector.size() == sizeof(SteeringAngleFrontAxle));
+  steering_angle_front_axle_packet.header.service_id = STEERING_ANGLE_SERVICE_ID;
+  steering_angle_front_axle_packet.header.method_id = STEERING_ANGLE_METHOD_ID;
+  steering_angle_front_axle_packet.header.length = STEERING_ANGLE_LENGTH;
+  steering_angle_front_axle_packet.steering_angle_front_axle = angle_rad;
+
+  std::vector<uint8_t> send_vector2(sizeof(SteeringAngleFrontAxle));
+  std::memcpy(
+    send_vector2.data(), &steering_angle_front_axle_packet, sizeof(SteeringAngleFrontAxle));
+  assert(send_vector2 == send_vector2);
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -896,6 +1084,17 @@ Status ContinentalARS548HwInterface::SetVelocityVehicle(float velocity)
   send_vector[13] = bytes[1];
   send_vector[14] = bytes[0];
 
+  VelocityVehicle steering_angle_front_axle_packet{};
+  assert(send_vector.size() == sizeof(VelocityVehicle));
+  steering_angle_front_axle_packet.header.service_id = VELOCITY_VEHICLE_SERVICE_ID;
+  steering_angle_front_axle_packet.header.method_id = VELOCITY_VEHICLE_METHOD_ID;
+  steering_angle_front_axle_packet.header.length = VELOCITY_VEHICLE_LENGTH;
+  steering_angle_front_axle_packet.velocity_vehicle = velocity;
+
+  std::vector<uint8_t> send_vector2(sizeof(VelocityVehicle));
+  std::memcpy(send_vector2.data(), &steering_angle_front_axle_packet, sizeof(VelocityVehicle));
+  assert(send_vector2 == send_vector2);
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -920,6 +1119,17 @@ Status ContinentalARS548HwInterface::SetYawRate(float yaw_rate)
   send_vector[15] = bytes[2];
   send_vector[16] = bytes[1];
   send_vector[17] = bytes[0];
+
+  YawRate yaw_rate_packet{};
+  assert(send_vector.size() == sizeof(YawRate));
+  yaw_rate_packet.header.service_id = YAW_RATE_SERVICE_ID;
+  yaw_rate_packet.header.method_id = YAW_RATE_METHOD_ID;
+  yaw_rate_packet.header.length = YAW_RATE_LENGTH;
+  yaw_rate_packet.yaw_rate = yaw_rate;
+
+  std::vector<uint8_t> send_vector2(sizeof(YawRate));
+  std::memcpy(send_vector2.data(), &yaw_rate_packet, sizeof(YawRate));
+  assert(send_vector2 == send_vector2);
 
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
