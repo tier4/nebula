@@ -142,7 +142,7 @@ struct ContinentalARS548Status
     os << ", ";
     os << "voltage_status: " << arg.voltage_status;
     os << ", ";
-    os << "blockage_status_rate: " << arg.blockage_status;
+    os << "blockage_status: " << arg.blockage_status;
 
     return os;
   }

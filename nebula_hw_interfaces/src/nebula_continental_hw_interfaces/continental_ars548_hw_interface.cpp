@@ -148,6 +148,8 @@ void ContinentalARS548HwInterface::ReceiveCloudPacketCallback(const std::vector<
 
 void ContinentalARS548HwInterface::ProcessSensorStatusPacket(const std::vector<uint8_t> & buffer)
 {
+  std::lock_guard l(sensor_status_mutex_);
+
   std::memcpy(&sensor_status_packet_, buffer.data(), sizeof(SensorStatusPacket));
 
   radar_status_.timestamp_nanoseconds = sensor_status_packet_.stamp.timestamp_nanoseconds.value();

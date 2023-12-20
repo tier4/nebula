@@ -209,12 +209,10 @@ rcl_interfaces::msg::SetParametersResult ContinentalARS548HwInterfaceRosWrapper:
   std::string sensor_model_str;
   std::string return_mode_str;
   if (
-    get_param(p, "sensor_model", sensor_model_str) ||
-    get_param(p, "return_mode", return_mode_str) || get_param(p, "host_ip", new_param.host_ip) ||
-    get_param(p, "sensor_ip", new_param.sensor_ip) ||
-    get_param(p, "frame_id", new_param.frame_id) ||
-    get_param(p, "data_port", new_param.data_port) ||
-    get_param(p, "configuration_host_port", new_param.configuration_host_port) ||
+    get_param(p, "sensor_model", sensor_model_str) | get_param(p, "return_mode", return_mode_str) |
+    get_param(p, "host_ip", new_param.host_ip) | get_param(p, "sensor_ip", new_param.sensor_ip) |
+    get_param(p, "frame_id", new_param.frame_id) | get_param(p, "data_port", new_param.data_port) |
+    get_param(p, "configuration_host_port", new_param.configuration_host_port) |
     get_param(p, "configuration_sensor_port", new_param.configuration_sensor_port)) {
     if (0 < sensor_model_str.length())
       new_param.sensor_model = nebula::drivers::SensorModelFromString(sensor_model_str);
