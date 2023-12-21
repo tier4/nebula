@@ -300,6 +300,9 @@ public:
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
   }
 
+  /// @brief Parse the raw UDP packet in `msop_packet` and append its points to the decode buffer.
+  /// @param msop_packet The raw packet
+  /// @return The number of points decoded from this packet
   int unpack(const robosense_msgs::msg::RobosensePacket & msop_packet) override
   {
     std::lock_guard<std::mutex> lock(sensor_configuration_mutex_);
@@ -327,6 +330,8 @@ public:
     const ReturnMode return_mode = sensor_.getReturnMode(decode_group_[0], *sensor_configuration_);
     const size_t n_returns = ReturnModeToNReturns(return_mode);
 
+    const size_t size_before_decode = decode_pc_->size();
+
     // The advance/stride BETWEEN return groups. Not to be confused with RETURN_GROUP_STRIDE, which
     // is the stride between units WITHIN a return group.
     std::array<size_t, SensorT::RETURN_GROUP_STRIDE.size()> advance;
@@ -347,8 +352,12 @@ public:
       }
     }
 
-    return 0;  // TODO(mojomex): azimuth has no meaning for some sensors, what to return instead?
-               // #Points decoded?
+    size_t size_after_decode = decode_pc_->size();
+    if (has_scanned_) {
+      size_after_decode += output_pc_->size();
+    }
+
+    return static_cast<int>(size_after_decode - size_before_decode);
   }
 
   bool hasScanned() override { return has_scanned_; }
