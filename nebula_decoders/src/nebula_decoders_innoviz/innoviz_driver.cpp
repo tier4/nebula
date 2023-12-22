@@ -52,8 +52,7 @@ drivers::NebulaPointCloudPtr InnovizDriver::ConvertScanToPointcloud(const std::s
         //Check valid timestamp. If the LiDAR is not synced this will be 0 and need to take host timestamp from innoviz_scan
         if(nebulaPCL->header.stamp == 0)
         {
-            nebulaPCL->header.stamp = (innoviz_scan->header.stamp.sec * 1e6 + 
-                                       innoviz_scan->header.stamp.nanosec) * 0.001;
+            nebulaPCL->header.stamp = innoviz_scan->header.stamp.sec * 1e6 + innoviz_scan->header.stamp.nanosec * 1e-3;
         }
     }
     else

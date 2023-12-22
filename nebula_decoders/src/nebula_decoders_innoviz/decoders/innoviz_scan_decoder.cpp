@@ -139,8 +139,8 @@ drivers::NebulaPointCloudPtr InnovizScanDecoder::getPointcloud()
     nebula_scan_pc_->points.clear();
     nebula_scan_pc_->points.reserve(innoviz_scan_pc_.detections.size());
     //Take UTC timestamp from synced LiDAR and convert to micros
-    nebula_scan_pc_->header.stamp = (innoviz_scan_pc_.lidar_sensor_detections_header.timestamp.seconds * 1e6 + 
-                                    innoviz_scan_pc_.lidar_sensor_detections_header.timestamp.nano_seconds) * 0.001;
+    nebula_scan_pc_->header.stamp = innoviz_scan_pc_.lidar_sensor_detections_header.timestamp.seconds * 1e6 + 
+                                    innoviz_scan_pc_.lidar_sensor_detections_header.timestamp.nano_seconds * 1e-3;
 
     for(uint32_t pixelID = 0; pixelID < innoviz_scan_pc_.detections.size(); pixelID++)
     {
