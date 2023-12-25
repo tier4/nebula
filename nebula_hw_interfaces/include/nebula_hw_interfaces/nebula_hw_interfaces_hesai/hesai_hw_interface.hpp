@@ -113,7 +113,7 @@ private:
   std::timed_mutex tms_;
   int tms_fail_cnt = 0;
   int tms_fail_cnt_max = 3;
-  bool wl = true;
+  bool wl = false;
   bool is_solid_state = false;
   int target_model_no;
 

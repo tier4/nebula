@@ -2900,6 +2900,7 @@ HesaiStatus HesaiHwInterface::GetLidarMonitorAsyncHttp(
 HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   std::shared_ptr<HesaiSensorConfiguration> sensor_configuration, HesaiConfig hesai_config)
 {
+  using namespace std::chrono_literals;
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
   std::cout << "Start CheckAndSetConfig(HesaiConfig)!!" << std::endl;
 #endif
@@ -2922,7 +2923,9 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
       SetReturnMode(return_mode_int);
     });
     t.join();
+    std::this_thread::sleep_for(100ms);
   }
+
   auto current_rotation_speed = hesai_config.spin_rate;
   if (sensor_configuration->rotation_speed != current_rotation_speed) {
     PrintInfo("current lidar rotation_speed: " + std::to_string(current_rotation_speed));
@@ -2932,10 +2935,12 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     if (UseHttpSetSpinRate()) {
       SetSpinSpeedAsyncHttp(sensor_configuration->rotation_speed);
     } else {
+      PrintInfo("Setting up spin rate via TCP." + std::to_string(sensor_configuration->rotation_speed) );
       std::thread t(
         [this, sensor_configuration] { SetSpinRate(sensor_configuration->rotation_speed); });
       t.join();
     }
+    std::this_thread::sleep_for(100ms);
   }
 
   bool set_flg = false;
@@ -2975,9 +2980,11 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
         sensor_configuration->gnss_port);
     });
     t.join();
+    std::this_thread::sleep_for(100ms);
   }
 
-  if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128){
+  if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128
+    && sensor_configuration->sensor_model != SensorModel::HESAI_PANDARQT128) {
     set_flg = true;
     auto sync_angle = static_cast<int>(hesai_config.sync_angle / 100);
     auto scan_phase = static_cast<int>(sensor_configuration->scan_phase);
@@ -2993,6 +3000,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
         SetSyncAngle(sync_flg, scan_phase);
       });
       t.join();
+      std::this_thread::sleep_for(100ms);
     }
 
     std::thread t([this, sensor_configuration] {
@@ -3018,6 +3026,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
       );
     });
     t.join();
+    std::this_thread::sleep_for(100ms);
   }
   else { //AT128 only supports PTP setup via HTTP
     PrintInfo("Trying to set SyncAngle via HTTP");
@@ -3209,8 +3218,8 @@ int HesaiHwInterface::NebulaModelToHesaiModelNo(nebula::drivers::SensorModel mod
       return 38;
     case SensorModel::HESAI_PANDAR128_E3X://check required
       return 40;
-    case SensorModel::HESAI_PANDAR128_E4X://check required
-      return 40;
+    case SensorModel::HESAI_PANDAR128_E4X://OT128
+      return 42;
     case SensorModel::HESAI_PANDARAT128:
       return 48;
     // All other vendors and unknown sensors
@@ -3251,6 +3260,9 @@ bool HesaiHwInterface::UseHttpSetSpinRate(int model)
     case 38:
       return false;
       break;
+    case 42:
+      return false;
+      break;
     case 48:
       return false;
       break;
@@ -3288,6 +3300,9 @@ bool HesaiHwInterface::UseHttpGetLidarMonitor(int model)
       return true;
       break;
     case 38:
+      return false;
+      break;
+    case 42:
       return false;
       break;
     case 48:
