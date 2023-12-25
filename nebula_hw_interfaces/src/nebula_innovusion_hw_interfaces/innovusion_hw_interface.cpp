@@ -107,6 +107,7 @@ void InnovusionHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t
 
   // publish the whole frame data
   if ((scan_reception_callback_ != nullptr) && (current_packet_id != packet_id) && (scan_cloud_ptr_->size > 0)) {
+    scan_cloud_ptr_->header.stamp = scan_cloud_ptr_->packets[0].stamp;
     scan_reception_callback_(std::move(scan_cloud_ptr_));
     scan_cloud_ptr_ = std::make_unique<innovusion_msgs::msg::InnovusionScan>();
     scan_cloud_ptr_->packets.clear();
