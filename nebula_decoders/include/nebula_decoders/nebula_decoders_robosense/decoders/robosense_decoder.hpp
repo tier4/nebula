@@ -66,7 +66,7 @@ protected:
     PacketT::RETURN_GROUP_STRIDE[0] ? PacketT::MAX_RETURNS : 1;
   /// @brief The current group of packets being decoded.
   std::vector<PacketT> decode_group_;
-  std::vector<uint64_t> decode_group_timestamps_;
+  std::vector<uint64_t> decode_group_timestamps_ns_;
 
   /// @brief The timestamp of the last completed scan in nanoseconds
   uint64_t output_scan_timestamp_ns_;
@@ -137,7 +137,9 @@ protected:
     size_t start_packet_id, size_t start_block_id, size_t start_unit_id, size_t n_returns,
     ReturnMode return_mode)
   {
-    // These are Boost static_vectors because
+    // Find the units corresponding to the same return group as the current one.
+    // These are used to find duplicates in multi-return mode.
+    // Using Boost static_vectors because
     // * if they were std::arrays, we would have to drag along a `size` variable as `n_returns` is
     // variable
     //   and variable-length arrays cannot be statically allocated
@@ -149,13 +151,6 @@ protected:
     boost::container::static_vector<size_t, PacketT::MAX_RETURNS> packet_idxs{};
     boost::container::static_vector<size_t, PacketT::MAX_RETURNS> block_idxs{};
     boost::container::static_vector<size_t, PacketT::MAX_RETURNS> unit_idxs{};
-
-    // Find the units corresponding to the same return group as the current one.
-    // These are used to find duplicates in multi-return mode.
-    boost::container::static_vector<const unit_t *, packet_t::MAX_RETURNS> return_units{};
-    boost::container::static_vector<size_t, packet_t::MAX_RETURNS> packet_idxs{};
-    boost::container::static_vector<size_t, packet_t::MAX_RETURNS> block_idxs{};
-    boost::container::static_vector<size_t, packet_t::MAX_RETURNS> unit_idxs{};
 
     for (size_t return_idx = 0; return_idx < n_returns; ++return_idx) {
       size_t packet_idx = start_packet_id + return_idx * PacketT::RETURN_GROUP_STRIDE[0];
@@ -259,7 +254,7 @@ protected:
   {
     const auto point_to_packet_offset_ns = sensor_.getPacketRelativeTimestamp(
       decode_group_[packet_idx], block_idx, unit_idx, return_mode);
-    const auto packet_timestamp_ns = decode_group_timestamps_[packet_idx];
+    const auto packet_timestamp_ns = decode_group_timestamps_ns_[packet_idx];
     auto packet_to_scan_offset_ns =
       static_cast<uint32_t>(packet_timestamp_ns - decode_scan_timestamp_ns_);
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
@@ -276,7 +271,7 @@ protected:
     // calculated as the packet timestamp plus the lowest time offset of any point in the
     // remainder of the packet
     decode_scan_timestamp_ns_ =
-      decode_group_timestamps_[packet_id] +
+      decode_group_timestamps_ns_[packet_id] +
       sensor_.getEarliestPointTimeOffsetForScan(decode_group_[packet_id], block_id, return_mode);
   }
 

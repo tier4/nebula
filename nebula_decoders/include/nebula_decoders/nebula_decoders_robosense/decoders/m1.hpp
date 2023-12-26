@@ -64,7 +64,7 @@ struct M1Unit
   big_uint16_buf_t reserved;
 };
 
-struct Packet : public PacketBase<25, 5, 2, 100>
+struct Packet : public PacketBase<25, 5, 2, 100, true, false, false>
 {
   typedef Body<M1Block<M1Unit, Packet::N_CHANNELS>, Packet::N_BLOCKS> body_t;
   Header header;
@@ -140,8 +140,6 @@ public:
   static constexpr float MIN_RANGE = 0.2f;
   static constexpr float MAX_RANGE = 150.f;
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 1152000;
-
-  static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE{1, 0, 0};
 
   M1()
   {
