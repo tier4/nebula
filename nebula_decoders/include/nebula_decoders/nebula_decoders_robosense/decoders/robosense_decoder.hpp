@@ -33,18 +33,19 @@ using namespace nebula::drivers::sensor_mixins;
 template <typename SensorT>
 class RobosenseDecoder : public RobosenseScanDecoder
 {
+  using PacketT = typename SensorT::packet_t;
   // I want C++20 concepts :')
-  static_assert(std::is_base_of_v<SensorBase<typename SensorT::packet_t>, SensorT>);
-  static_assert(std::is_base_of_v<AnglesMixin<typename SensorT::packet_t>, SensorT>);
-  static_assert(std::is_base_of_v<ChannelMixin<typename SensorT::packet_t>, SensorT>);
-  static_assert(std::is_base_of_v<ValidityMixin<typename SensorT::packet_t>, SensorT>);
-  static_assert(std::is_base_of_v<DistanceMixin<typename SensorT::packet_t>, SensorT>);
-  static_assert(std::is_base_of_v<IntensityMixin<typename SensorT::packet_t>, SensorT>);
-  static_assert(std::is_base_of_v<ReturnModeMixin<typename SensorT::packet_t>, SensorT>);
-  static_assert(std::is_base_of_v<PointTimestampMixin<typename SensorT::packet_t>, SensorT>);
-  static_assert(std::is_base_of_v<ScanCompletionMixin<typename SensorT::packet_t>, SensorT>);
-  static_assert(std::is_base_of_v<AngleCorrectorMixin<typename SensorT::packet_t>, SensorT>);
-  static_assert(std::is_base_of_v<PacketTimestampMixin<typename SensorT::packet_t>, SensorT>);
+  static_assert(std::is_base_of_v<SensorBase<PacketT>, SensorT>);
+  static_assert(std::is_base_of_v<AnglesMixin<PacketT>, SensorT>);
+  static_assert(std::is_base_of_v<ChannelMixin<PacketT>, SensorT>);
+  static_assert(std::is_base_of_v<ValidityMixin<PacketT>, SensorT>);
+  static_assert(std::is_base_of_v<DistanceMixin<PacketT>, SensorT>);
+  static_assert(std::is_base_of_v<IntensityMixin<PacketT>, SensorT>);
+  static_assert(std::is_base_of_v<ReturnModeMixin<PacketT>, SensorT>);
+  static_assert(std::is_base_of_v<PointTimestampMixin<PacketT>, SensorT>);
+  static_assert(std::is_base_of_v<ScanCompletionMixin<PacketT>, SensorT>);
+  static_assert(std::is_base_of_v<AngleCorrectorMixin<PacketT>, SensorT>);
+  static_assert(std::is_base_of_v<PacketTimestampMixin<PacketT>, SensorT>);
 
 protected:
   /// @brief Configuration for this decoder
@@ -62,9 +63,9 @@ protected:
   /// @brief Some sensors need to decode return groups across multiple packets. This is dictated by
   /// whether or not their return groups are strided along the packet axis (0)
   static constexpr size_t decode_group_size_ =
-    SensorT::RETURN_GROUP_STRIDE[0] ? SensorT::packet_t::MAX_RETURNS : 1;
+    PacketT::RETURN_GROUP_STRIDE[0] ? PacketT::MAX_RETURNS : 1;
   /// @brief The current group of packets being decoded.
-  std::vector<typename SensorT::packet_t> decode_group_;
+  std::vector<PacketT> decode_group_;
   std::vector<uint64_t> decode_group_timestamps_;
 
   /// @brief The timestamp of the last completed scan in nanoseconds
@@ -82,10 +83,10 @@ protected:
   /// @return Whether the packet was parsed successfully
   bool parsePacket(const robosense_msgs::msg::RobosensePacket & msop_packet)
   {
-    if (msop_packet.size < sizeof(typename SensorT::packet_t)) {
+    if (msop_packet.size < sizeof(PacketT)) {
       RCLCPP_ERROR_STREAM(
         logger_, "Packet size mismatch:" << msop_packet.size << " | Expected at least:"
-                                         << sizeof(typename SensorT::packet_t));
+                                         << sizeof(PacketT));
       return false;
     }
 
@@ -114,7 +115,7 @@ protected:
     decode_group_.emplace_back();  // Guaranteed to be at packet_idx
     if (std::memcpy(
           &decode_group_[packet_idx], msop_packet.data.data(),
-          sizeof(typename SensorT::packet_t))) {
+          sizeof(PacketT))) {
       const auto & parsed_packet = decode_group_[packet_idx];
       decode_group_timestamps_.emplace_back(sensor_.getPacketTimestamp(parsed_packet));
       return true;
@@ -135,19 +136,25 @@ protected:
     size_t start_packet_id, size_t start_block_id, size_t start_unit_id, size_t n_returns,
     ReturnMode return_mode)
   {
+    // These are Boost static_vectors because
+    // * if they were std::arrays, we would have to drag along a `size` variable as `n_returns` is
+    // variable
+    //   and variable-length arrays cannot be statically allocated
+    // * if they were std::vectors, they would be dynamically allocated (this function runs *per
+    // point*, so this was slowing performance to ~25%)
     boost::container::static_vector<
-      const typename SensorT::packet_t::body_t::block_t::unit_t *, SensorT::packet_t::MAX_RETURNS>
+      const typename PacketT::body_t::block_t::unit_t *, PacketT::MAX_RETURNS>
       return_units{};
-    boost::container::static_vector<size_t, SensorT::packet_t::MAX_RETURNS> packet_idxs{};
-    boost::container::static_vector<size_t, SensorT::packet_t::MAX_RETURNS> block_idxs{};
-    boost::container::static_vector<size_t, SensorT::packet_t::MAX_RETURNS> unit_idxs{};
+    boost::container::static_vector<size_t, PacketT::MAX_RETURNS> packet_idxs{};
+    boost::container::static_vector<size_t, PacketT::MAX_RETURNS> block_idxs{};
+    boost::container::static_vector<size_t, PacketT::MAX_RETURNS> unit_idxs{};
 
     // Find the units corresponding to the same return group as the current one.
     // These are used to find duplicates in multi-return mode.
     for (size_t return_idx = 0; return_idx < n_returns; ++return_idx) {
-      size_t packet_idx = start_packet_id + return_idx * SensorT::RETURN_GROUP_STRIDE[0];
-      size_t block_idx = start_block_id + return_idx * SensorT::RETURN_GROUP_STRIDE[1];
-      size_t unit_idx = start_unit_id + return_idx * SensorT::RETURN_GROUP_STRIDE[2];
+      size_t packet_idx = start_packet_id + return_idx * PacketT::RETURN_GROUP_STRIDE[0];
+      size_t block_idx = start_block_id + return_idx * PacketT::RETURN_GROUP_STRIDE[1];
+      size_t unit_idx = start_unit_id + return_idx * PacketT::RETURN_GROUP_STRIDE[2];
 
       packet_idxs[return_idx] = packet_idx;
       block_idxs[return_idx] = block_idx;
@@ -250,11 +257,10 @@ protected:
   /// @param unit_idx The channel index of the point
   /// @param return_mode The currently active return mode
   uint32_t getPointTimeRelative(
-    size_t packet_idx, size_t block_idx, size_t unit_idx,
-    ReturnMode return_mode)
+    size_t packet_idx, size_t block_idx, size_t unit_idx, ReturnMode return_mode)
   {
-    const auto point_to_packet_offset_ns =
-      sensor_.getPacketRelativeTimestamp(decode_group_[packet_idx], block_idx, unit_idx, return_mode);
+    const auto point_to_packet_offset_ns = sensor_.getPacketRelativeTimestamp(
+      decode_group_[packet_idx], block_idx, unit_idx, return_mode);
     const auto packet_timestamp_ns = decode_group_timestamps_[packet_idx];
     auto packet_to_scan_offset_ns =
       static_cast<uint32_t>(packet_timestamp_ns - decode_scan_timestamp_ns_);
@@ -334,18 +340,19 @@ public:
 
     // The advance/stride BETWEEN return groups. Not to be confused with RETURN_GROUP_STRIDE, which
     // is the stride between units WITHIN a return group.
-    std::array<size_t, SensorT::RETURN_GROUP_STRIDE.size()> advance;
+    std::array<size_t, PacketT::RETURN_GROUP_STRIDE.size()> advance;
     std::transform(
-      SensorT::RETURN_GROUP_STRIDE.begin(), SensorT::RETURN_GROUP_STRIDE.end(), advance.begin(),
+      PacketT::RETURN_GROUP_STRIDE.begin(), PacketT::RETURN_GROUP_STRIDE.end(),
+      advance.begin(),
       [=](bool is_strided_dimension) { return is_strided_dimension ? n_returns : 1; });
 
     for (size_t packet_id = 0; packet_id < decode_group_.size(); packet_id += advance[0]) {
-      for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += advance[1]) {
+      for (size_t block_id = 0; block_id < PacketT::N_BLOCKS; block_id += advance[1]) {
         bool scan_completed = sensor_.checkScanCompleted(decode_group_[packet_id], block_id);
         if (scan_completed) {
           onScanCompleted(packet_id, block_id);
         }
-        for (size_t channel_id = 0; channel_id < SensorT::packet_t::N_CHANNELS;
+        for (size_t channel_id = 0; channel_id < PacketT::N_CHANNELS;
              channel_id += advance[2]) {
           convertReturnGroup(packet_id, block_id, channel_id, n_returns, return_mode);
         }

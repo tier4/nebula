@@ -10,9 +10,9 @@
 #include "nebula_decoders/nebula_decoders_common/sensor_mixins/validity.hpp"
 #include "nebula_decoders/nebula_decoders_common/util.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/angle_corrector_calibration_based.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_common.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/sensor_info.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_common.hpp"
 
 #include "boost/endian/buffers.hpp"
 
@@ -240,12 +240,12 @@ public:
   static constexpr float MAX_RANGE = 30.f;
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 1152000;
 
-  static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE = {0, 1, 0};
-
   BpearlV3(
     const std::shared_ptr<RobosenseSensorConfiguration> sensor_config,
     const std::shared_ptr<const RobosenseCalibrationConfiguration> & calibration_config)
-  : BpearlChannelMixin(calibration_config), AngleBasedScanCompletionMixin(sensor_config), AngleCorrectorCalibrationBased(calibration_config)
+  : BpearlChannelMixin(calibration_config),
+    AngleBasedScanCompletionMixin(sensor_config),
+    AngleCorrectorCalibrationBased(calibration_config)
   {
   }
 

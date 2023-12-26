@@ -1,14 +1,15 @@
 #pragma once
 
-#include "boost/endian/buffers.hpp"
 #include "nebula_common/robosense/robosense_common.hpp"
 #include "nebula_decoders/nebula_decoders_common/sensor_mixins/timestamp.hpp"
 
+#include "boost/endian/buffers.hpp"
+
 #include <cstddef>
 #include <cstdint>
-#include <string>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <string>
 
 using namespace boost::endian;
 
@@ -21,7 +22,9 @@ namespace robosense_packet
 
 #pragma pack(push, 1)
 
-struct RobosensePacket {};
+struct RobosensePacket
+{
+};
 
 struct Timestamp
 {
@@ -48,7 +51,6 @@ struct RobosensePacketTimestampMixin : public sensor_mixins::PacketTimestampMixi
     return packet.header.timestamp.get_time_in_ns();
   }
 };
-
 
 struct Unit
 {
@@ -80,14 +82,22 @@ struct Body
 /// @tparam nChannels The number of channels per block
 /// @tparam maxReturns The maximum number of returns, e.g. 2 for dual return
 /// @tparam degreeSubdivisions The resolution of the azimuth angle in the packet, e.g. 100 if packet
+/// @tparam returnsStridedPacket Whether returns within a return group are strided across packets
+/// @tparam returnsStridedBlock Whether returns are strided across blocks
+/// @tparam returnsStridedChannel Whether returns are strided across channels
 /// azimuth is given in 1/100th of a degree
-template <size_t nBlocks, size_t nChannels, size_t maxReturns, size_t degreeSubdivisions>
+template <
+  size_t nBlocks, size_t nChannels, size_t maxReturns, size_t degreeSubdivisions,
+  bool returnsStridedPacket = 0, bool returnsStridedBlock = 1, bool returnsStridedChannel = 0>
 struct PacketBase
 {
   static constexpr size_t N_BLOCKS = nBlocks;
   static constexpr size_t N_CHANNELS = nChannels;
   static constexpr size_t MAX_RETURNS = maxReturns;
   static constexpr size_t DEGREE_SUBDIVISIONS = degreeSubdivisions;
+
+  static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE = {
+    returnsStridedPacket, returnsStridedBlock, returnsStridedChannel};
 };
 
 struct IpAddress
@@ -152,9 +162,8 @@ struct ChannelAngleCorrection
 
   [[nodiscard]] float getAngle() const
   {
-    return sign.value() == ANGLE_SIGN_FLAG
-             ? static_cast<float>(angle.value()) / 100.0f
-             : static_cast<float>(angle.value()) / -100.0f;
+    return sign.value() == ANGLE_SIGN_FLAG ? static_cast<float>(angle.value()) / 100.0f
+                                           : static_cast<float>(angle.value()) / -100.0f;
   }
 };
 

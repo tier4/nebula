@@ -258,8 +258,6 @@ public:
   static constexpr float MAX_RANGE = 150.f;
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 1152000;
 
-  static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE = {0, 1, 0};
-
   Helios(
     const std::shared_ptr<RobosenseSensorConfiguration> sensor_config,
     const std::shared_ptr<const RobosenseCalibrationConfiguration> & calibration_config)

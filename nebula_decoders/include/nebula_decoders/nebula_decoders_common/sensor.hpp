@@ -13,10 +13,8 @@ namespace drivers
 
 /// @brief Base class for all LiDAR sensors that are compatible with the generic decoder.
 template <typename PacketT>
-class SensorBase
+struct SensorBase
 {
-private:
-public:
   typedef PacketT packet_t;
   typedef typename packet_t::body_t body_t;
   typedef typename body_t::block_t block_t;
@@ -58,8 +56,10 @@ public:
       }
 
       if (
-        getFieldValue(return_units[return_idx]->distance) == getFieldValue(return_units[i]->distance) &&
-        getFieldValue(return_units[return_idx]->reflectivity) == getFieldValue(return_units[i]->reflectivity)) {
+        getFieldValue(return_units[return_idx]->distance) ==
+          getFieldValue(return_units[i]->distance) &&
+        getFieldValue(return_units[return_idx]->reflectivity) ==
+          getFieldValue(return_units[i]->reflectivity)) {
         return true;
       }
     }
@@ -83,7 +83,7 @@ public:
       return ReturnType::IDENTICAL;
     }
 
-    // TODO(mojomex): this switch is not exhaustive
+    // TODO(mojomex): this is exhaustive only for Robosense. Extend to all ReturnModes in the future
     switch (return_mode) {
       case ReturnMode::SINGLE_FIRST:
         return ReturnType::FIRST;
