@@ -29,18 +29,6 @@ struct SensorBase
   /// @return The index [0, num_decode_groups) within the decode group to which the packet belongs
   virtual size_t getDecodeGroupIndex(const uint8_t * const /* raw_packet */) const { return 0; }
 
-  /// @brief For a given start block index, find the earliest (lowest) relative time offset of any
-  /// point in the packet in or after the start block
-  /// @param start_block_id The index of the block in and after which to consider points
-  /// @param sensor_configuration The sensor configuration
-  /// @return The lowest point time offset (relative to the packet timestamp) of any point in or
-  /// after the start block, in nanoseconds
-  int getEarliestPointTimeOffsetForBlock(
-    uint32_t /* start_block_id */, const std::shared_ptr<const SensorConfigurationBase> & /* sensor_configuration */)
-  {
-    return 0;  // TODO(mojomex): implement
-  }
-
   /// @brief Whether the unit given by return_idx is a duplicate of any other unit in return_units
   /// @param return_idx The unit's index in the return_units vector
   /// @param return_units The vector of all the units corresponding to the same return group (i.e.

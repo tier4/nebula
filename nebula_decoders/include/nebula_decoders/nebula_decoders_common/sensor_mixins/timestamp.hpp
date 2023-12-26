@@ -30,18 +30,35 @@ struct PointTimestampMixin
   virtual int32_t getPacketRelativeTimestamp(
     const PacketT & packet, const size_t block_id, const size_t channel_id,
     const ReturnMode return_mode) const = 0;
+
+  /// @brief For a given start block index, find the earliest (lowest) relative time offset of any
+  /// point in the packet in or after the start block, in nanoseconds
+  virtual int32_t getEarliestPointTimeOffsetForScan(
+    const PacketT & packet, const size_t block_id, const ReturnMode return_mode) const = 0;
 };
 
-/// @brief Return the timestamp field of each block as the timestamp of the block's units
+/// @brief Determine the start timestamp of the next scan based on the lowest point timestamp in the
+/// next return group. This mixin checks all point timestamps in the return group starting at
+/// `block_id` and returns the lowest one.
 template <typename PacketT>
-struct BlockTimestampUsMixin: public PointTimestampMixin<PacketT>
+struct BlockUnitIdBasedPointTimestampMixin : public PointTimestampMixin<PacketT>
 {
-  int32_t getPacketRelativeTimestamp(
-    const PacketT & packet, const size_t block_id, const size_t /* channel_id */,
-    const ReturnMode /* return_mode */) const override
+  virtual int32_t getPacketRelativeTimestamp(
+    const PacketT & packet, const size_t block_id, const size_t channel_id,
+    const ReturnMode return_mode) const = 0;
+
+  int32_t getEarliestPointTimeOffsetForScan(
+    const PacketT & packet, const size_t block_id, const ReturnMode return_mode) const override
   {
-    const auto * block = getBlock(packet, block_id);
-    return static_cast<int32_t>(getFieldValue(block->timestamp)) * 1000;
+    int32_t t_min = std::numeric_limits<int>::max();
+    auto n_returns = ReturnModeToNReturns(return_mode);
+    for (size_t blk = block_id; blk < block_id + n_returns; ++blk) {
+      for (size_t ch = 0; ch < PacketT::N_CHANNELS; ++ch) {
+        t_min = std::min(t_min, getPacketRelativeTimestamp(packet, blk, ch, return_mode));
+      }
+    }
+
+    return t_min;
   }
 };
 

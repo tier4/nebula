@@ -267,7 +267,7 @@ protected:
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
   }
 
-  void onScanCompleted(size_t packet_id, size_t block_id)
+  void onScanCompleted(size_t packet_id, size_t block_id, ReturnMode return_mode)
   {
     std::swap(decode_pc_, output_pc_);
     decode_pc_->clear();
@@ -279,7 +279,7 @@ protected:
     // remainder of the packet
     decode_scan_timestamp_ns_ =
       decode_group_timestamps_[packet_id] +
-      sensor_.getEarliestPointTimeOffsetForBlock(block_id, sensor_configuration_);
+      sensor_.getEarliestPointTimeOffsetForScan(decode_group_[packet_id], block_id, return_mode);
   }
 
 public:
@@ -350,7 +350,7 @@ public:
       for (size_t block_id = 0; block_id < PacketT::N_BLOCKS; block_id += advance[1]) {
         bool scan_completed = sensor_.checkScanCompleted(decode_group_[packet_id], block_id);
         if (scan_completed) {
-          onScanCompleted(packet_id, block_id);
+          onScanCompleted(packet_id, block_id, return_mode);
         }
         for (size_t channel_id = 0; channel_id < PacketT::N_CHANNELS;
              channel_id += advance[2]) {

@@ -159,20 +159,20 @@ struct InfoPacket
 }  // namespace robosense_packet
 
 using namespace sensor_mixins;
+using HeliosPacket = robosense_packet::helios::Packet;
 
 class Helios
-: public SensorBase<robosense_packet::helios::Packet>,
-  public PointTimestampMixin<robosense_packet::helios::Packet>,
-  public robosense_packet::RobosensePacketTimestampMixin<robosense_packet::helios::Packet>,
-  public ReturnModeMixin<robosense_packet::helios::Packet>,
-  public BlockAziChannelElevMixin<robosense_packet::helios::Packet>,
-  public BasicReflectivityMixin<robosense_packet::helios::Packet>,
-  public DistanceMixin<robosense_packet::helios::Packet>,
-  public ChannelIsUnitMixin<robosense_packet::helios::Packet>,
-  public NonZeroDistanceIsValidMixin<robosense_packet::helios::Packet>,
-  public AngleBasedScanCompletionMixin<
-    robosense_packet::helios::Packet, RobosenseSensorConfiguration>,
-  public AngleCorrectorCalibrationBased<robosense_packet::helios::Packet>
+: public SensorBase<HeliosPacket>,
+  public BlockUnitIdBasedPointTimestampMixin<HeliosPacket>,
+  public robosense_packet::RobosensePacketTimestampMixin<HeliosPacket>,
+  public ReturnModeMixin<HeliosPacket>,
+  public BlockAziChannelElevMixin<HeliosPacket>,
+  public BasicReflectivityMixin<HeliosPacket>,
+  public DistanceMixin<HeliosPacket>,
+  public ChannelIsUnitMixin<HeliosPacket>,
+  public NonZeroDistanceIsValidMixin<HeliosPacket>,
+  public AngleBasedScanCompletionMixin<HeliosPacket, RobosenseSensorConfiguration>,
+  public AngleCorrectorCalibrationBased<HeliosPacket>
 {
 private:
   static constexpr int firing_time_offset_ns_single_[12][32] = {

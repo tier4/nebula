@@ -113,20 +113,19 @@ struct InfoPacket
 }  // namespace robosense_packet
 
 using namespace sensor_mixins;
+using BpearlV4Packet = robosense_packet::bpearl_v4::Packet;
 
-class BpearlV4
-: public SensorBase<robosense_packet::bpearl_v4::Packet>,
-  public PointTimestampMixin<robosense_packet::bpearl_v4::Packet>,
-  public robosense_packet::RobosensePacketTimestampMixin<robosense_packet::bpearl_v4::Packet>,
-  public ReturnModeMixin<robosense_packet::bpearl_v4::Packet>,
-  public BlockAziChannelElevMixin<robosense_packet::bpearl_v4::Packet>,
-  public BasicReflectivityMixin<robosense_packet::bpearl_v4::Packet>,
-  public DistanceMixin<robosense_packet::bpearl_v4::Packet>,
-  public BpearlChannelMixin<robosense_packet::bpearl_v4::Packet>,
-  public NonZeroDistanceIsValidMixin<robosense_packet::bpearl_v4::Packet>,
-  public AngleBasedScanCompletionMixin<
-    robosense_packet::bpearl_v4::Packet, RobosenseSensorConfiguration>,
-  public AngleCorrectorCalibrationBased<robosense_packet::bpearl_v4::Packet>
+class BpearlV4 : public SensorBase<BpearlV4Packet>,
+                 public BlockUnitIdBasedPointTimestampMixin<BpearlV4Packet>,
+                 public robosense_packet::RobosensePacketTimestampMixin<BpearlV4Packet>,
+                 public ReturnModeMixin<BpearlV4Packet>,
+                 public BlockAziChannelElevMixin<BpearlV4Packet>,
+                 public BasicReflectivityMixin<BpearlV4Packet>,
+                 public DistanceMixin<BpearlV4Packet>,
+                 public BpearlChannelMixin<BpearlV4Packet>,
+                 public NonZeroDistanceIsValidMixin<BpearlV4Packet>,
+                 public AngleBasedScanCompletionMixin<BpearlV4Packet, RobosenseSensorConfiguration>,
+                 public AngleCorrectorCalibrationBased<BpearlV4Packet>
 {
 private:
   static constexpr int firing_time_offset_ns_single_[12][32] = {
