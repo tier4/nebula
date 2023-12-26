@@ -183,6 +183,17 @@ public:
     return static_cast<int32_t>(getFieldValue(block->time_offset)) * 1000;
   };
 
+  int32_t getEarliestPointTimeOffsetForScan(
+    const packet_t & packet, const size_t block_id, const ReturnMode return_mode) const override
+  {
+    int32_t t_min = std::numeric_limits<int>::max();
+    for (size_t i = block_id; i < packet_t::N_BLOCKS; ++i) {
+      t_min = std::min(t_min, getPacketRelativeTimestamp(packet, i, 0, return_mode));
+    }
+
+    return t_min;
+  }
+
   double getDistanceUnit(const packet_t & /* packet */) const override { return 0.005; }
 
   /// @brief Get the distance value of the given unit in meters.
