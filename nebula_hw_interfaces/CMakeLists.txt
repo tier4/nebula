@@ -5,6 +5,7 @@ find_package(ament_cmake_auto REQUIRED)
 find_package(PCL REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(pcl_conversions REQUIRED)
+find_package(robosense_msgs REQUIRED)
 
 ament_auto_find_build_dependencies()
 
@@ -31,6 +32,10 @@ ament_auto_add_library(nebula_hw_interfaces_hesai SHARED
 
 ament_auto_add_library(nebula_hw_interfaces_velodyne SHARED
         src/nebula_velodyne_hw_interfaces/velodyne_hw_interface.cpp
+        )
+
+ament_auto_add_library(nebula_hw_interfaces_robosense SHARED
+        src/nebula_robosense_hw_interfaces/robosense_hw_interface.cpp
         )
 
 if(BUILD_TESTING)
