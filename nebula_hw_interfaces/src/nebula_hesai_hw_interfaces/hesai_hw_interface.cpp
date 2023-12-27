@@ -3012,11 +3012,11 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
         PrintInfo("Trying to set Clock source to PTP");
         SetClockSource(HESAI_LIDAR_PTP_CLOCK_SOURCE);
       }
-      std::ostringstream tmp_ostr;
-      tmp_ostr << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
-               << ", Domain: " << std::to_string(sensor_configuration->ptp_domain)
-               << ", Transport: " << sensor_configuration->ptp_transport_type << " via TCP";
-      PrintInfo(tmp_ostr.str());
+      std::ostringstream tmp_ostringstream;
+      tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
+                        << ", Domain: " << std::to_string(sensor_configuration->ptp_domain)
+                        << ", Transport: " << sensor_configuration->ptp_transport_type << " via TCP";
+      PrintInfo(tmp_ostringstream.str());
       SetPtpConfig(static_cast<int>(sensor_configuration->ptp_profile),
                    sensor_configuration->ptp_domain,
                    static_cast<int>(sensor_configuration->ptp_transport_type),
@@ -3032,11 +3032,11 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     PrintInfo("Trying to set SyncAngle via HTTP");
     SetSyncAngleSyncHttp(1,
                          static_cast<int>(sensor_configuration->scan_phase));
-    std::ostringstream tmp_ostr;
-    tmp_ostr << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
+    std::ostringstream tmp_ostringstream;
+    tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
              << ", Domain: " << sensor_configuration->ptp_domain
              << ", Transport: " << sensor_configuration->ptp_transport_type << " via HTTP";
-    PrintInfo(tmp_ostr.str());
+    PrintInfo(tmp_ostringstream.str());
     SetPtpConfigSyncHttp(static_cast<int>(sensor_configuration->ptp_profile),
                          sensor_configuration->ptp_domain,
                          static_cast<int>(sensor_configuration->ptp_transport_type),
