@@ -2,7 +2,7 @@
 #define NEBULA_COMMON_H
 
 #include <nebula_common/point_types.hpp>
-
+#include <boost/tokenizer.hpp>
 #include <map>
 #include <ostream>
 #include <string>

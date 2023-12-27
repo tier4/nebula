@@ -42,8 +42,11 @@ HesaiDriverRosWrapper::HesaiDriverRosWrapper(const rclcpp::NodeOptions & options
   }
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Wrapper=" << wrapper_status_);
+  rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+  auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10),
+                         qos_profile);
   pandar_scan_sub_ = create_subscription<pandar_msgs::msg::PandarScan>(
-    "pandar_packets", rclcpp::SensorDataQoS(),
+    "pandar_packets", qos,
     std::bind(&HesaiDriverRosWrapper::ReceiveScanMsgCallback, this, std::placeholders::_1));
   nebula_points_pub_ =
     this->create_publisher<sensor_msgs::msg::PointCloud2>("pandar_points", rclcpp::SensorDataQoS());
@@ -290,6 +293,7 @@ Status HesaiDriverRosWrapper::GetParameters(
                                                     const std::string &str) {
                                                     auto rt = calibration_configuration.SaveFileFromString(
                                                       calibration_file_path_from_sensor, str);
+                                                    RCLCPP_ERROR_STREAM(get_logger(), str);
                                                     if (rt == Status::OK) {
                                                       RCLCPP_INFO_STREAM(get_logger(), "SaveFileFromString success:"
                                                         << calibration_file_path_from_sensor << "\n");

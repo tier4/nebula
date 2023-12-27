@@ -27,6 +27,7 @@
     <arg name="delay_monitor_ms" default="2000" description="hw monitor startup delay in milliseconds."/>
     <arg name="retry_hw" default="True" description="hw driver startup retry (false when using pcap)."/>
     <arg name="debug_logging" default="False" description="Launches Monitor/HW Interfaces and calibration acquisition"/>
+    <arg name="launch_hw" default="True" />
 
     <let name="debug_level" value="debug" if="$(eval $(var debug_logging))"/>
     <let name="debug_level" value="info" unless="$(eval $(var debug_logging))"/>
@@ -67,25 +68,25 @@
             <param name="ptp_transport_type" value="$(var ptp_transport_type)"/>
         </node>
 
-<!--        <node pkg="nebula_ros" exec="hesai_hw_monitor_ros_wrapper_node"-->
-<!--              name="hesai_hw_monitor_$(var frame_id)" output="screen">-->
-<!--            <param name="sensor_model" value="$(var sensor_model)"/>-->
-<!--            <param name="return_mode" value="$(var return_mode)"/>-->
-<!--            <param name="frame_id" value="$(var frame_id)"/>-->
-<!--            <param name="scan_phase" value="$(var scan_phase)"/>-->
-<!--            <param name="sensor_ip" value="$(var sensor_ip)"/>-->
-<!--            <param name="frame_id" value="$(var frame_id)"/>-->
-<!--            <param name="host_ip" value="$(var host_ip)"/>-->
-<!--            <param name="data_port" value="$(var data_port)"/>-->
-<!--            <param name="gnss_port" value="$(var gnss_port)"/>-->
-<!--            <param name="packet_mtu_size" value="$(var packet_mtu_size)"/>-->
-<!--            <param name="rotation_speed" value="$(var rotation_speed)"/>-->
-<!--            <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>-->
-<!--            <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>-->
-<!--            <param name="diag_span" value="$(var diag_span)"/>-->
-<!--            <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/>-->
-<!--            <param name="delay_monitor_ms" value="$(var delay_monitor_ms)"/>-->
-<!--        </node>-->
+        <node pkg="nebula_ros" exec="hesai_hw_monitor_ros_wrapper_node"
+              name="hesai_hw_monitor_$(var frame_id)" output="screen">
+            <param name="sensor_model" value="$(var sensor_model)"/>
+            <param name="return_mode" value="$(var return_mode)"/>
+            <param name="frame_id" value="$(var frame_id)"/>
+            <param name="scan_phase" value="$(var scan_phase)"/>
+            <param name="sensor_ip" value="$(var sensor_ip)"/>
+            <param name="frame_id" value="$(var frame_id)"/>
+            <param name="host_ip" value="$(var host_ip)"/>
+            <param name="data_port" value="$(var data_port)"/>
+            <param name="gnss_port" value="$(var gnss_port)"/>
+            <param name="packet_mtu_size" value="$(var packet_mtu_size)"/>
+            <param name="rotation_speed" value="$(var rotation_speed)"/>
+            <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>
+            <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
+            <param name="diag_span" value="$(var diag_span)"/>
+            <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/>
+            <param name="delay_monitor_ms" value="$(var delay_monitor_ms)"/>
+        </node>
     </group>
 
 </launch>

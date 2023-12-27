@@ -53,21 +53,10 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
     if (!ifs) {
       return Status::INVALID_CALIBRATION_FILE;
     }
-
-    std::string header;
-    std::getline(ifs, header);
-
-    char sep;
-    int laser_id;
-    float elevation;
-    float azimuth;
-    while (!ifs.eof()) {
-      ifs >> laser_id >> sep >> elevation >> sep >> azimuth;
-      elev_angle_map[laser_id - 1] = elevation;
-      azimuth_offset_map[laser_id - 1] = azimuth;
-    }
+    std::ostringstream ss;
+    ss << ifs.rdbuf(); // reading data
     ifs.close();
-    return Status::OK;
+    return LoadFromString(ss.str());
   }
 
   /// @brief Loading calibration data
@@ -77,28 +66,32 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
   {
     std::stringstream ss;
     ss << calibration_content;
-
-    std::string header;
-    std::getline(ss, header);
-
-    char sep;
-    int laser_id;
-    float elevation;
-    float azimuth;
-
     std::string line;
-    while (std::getline(ss, line)) {
-      if (line.empty()) {
+    constexpr size_t expected_cols = 3;
+    while(std::getline(ss, line)) {
+      boost::char_separator<char> sep(",");
+      boost::tokenizer<boost::char_separator<char>> tok(line, sep);
+
+      std::vector<std::string> actual_tokens(tok.begin(), tok.end());
+      if (actual_tokens.size() < expected_cols
+        || actual_tokens.size() > expected_cols
+        ) {
+        std::cerr << "Ignoring line with unexpected data:" << line << std::endl;
         continue;
       }
-      std::stringstream line_ss;
-      line_ss << line;
-      line_ss >> laser_id >> sep >> elevation >> sep >> azimuth;
-      elev_angle_map[laser_id - 1] = elevation;
-      azimuth_offset_map[laser_id - 1] = azimuth;
-//      std::cout << "laser_id=" << laser_id << ", elevation=" << elevation << ", azimuth=" << azimuth << std::endl;
+
+      try {
+        int laser_id = std::stoi(actual_tokens[0]);
+        float elevation = std::stof(actual_tokens[1]);
+        float azimuth = std::stof(actual_tokens[2]);
+        elev_angle_map[laser_id - 1] = elevation;
+        azimuth_offset_map[laser_id - 1] = azimuth;
+        std::cout << "laser " << laser_id << ", elevation " << elevation << ", azimuth " << azimuth << std::endl;
+      } catch (const std::invalid_argument& ia) {
+        continue;
+      }
+
     }
-//    std::cout << "LoadFromString fin" << std::endl;
     return Status::OK;
   }
 
@@ -136,7 +129,6 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
     ofs << calibration_string;
 //    std::cout << calibration_string << std::endl;
     ofs.close();
-
     return Status::OK;
   }
 };
