@@ -31,6 +31,14 @@
     "Vccint",
     "XT",
     "XTM",
-    "DHAVE"
+    "DHAVE",
+    "Bpearl",
+    "Helios",
+    "Msop",
+    "Difop",
+    "gptp",
+    "Idat",
+    "Vdat",
+    "manc"
   ]
 }

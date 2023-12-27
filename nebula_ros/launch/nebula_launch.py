@@ -20,6 +20,8 @@ def get_lidar_make(sensor_name):
         return "Hesai", ".csv"
     elif sensor_name[:3].lower() in ["hdl", "vlp", "vls"]:
         return "Velodyne", ".yaml"
+    elif sensor_name.lower() in ["helios", "bpearl"]:
+        return "Robosense", None
     return "unrecognized_sensor_model"
 
 
@@ -35,11 +37,17 @@ def launch_setup(context, *args, **kwargs):
     if sensor_params_fp == "":
         warnings.warn("No config file provided, using sensor model default", RuntimeWarning)
         sensor_params_fp = os.path.join(nebula_ros_share_dir, "config", sensor_make.lower(), sensor_model + ".yaml")
-    sensor_calib_fp = os.path.join(nebula_decoders_share_dir, "calibration", sensor_make.lower(), sensor_model + sensor_extension)
+
     if not os.path.exists(sensor_params_fp):
         sensor_params_fp = os.path.join(nebula_ros_share_dir, "config", "BaseParams.yaml")
     assert os.path.exists(sensor_params_fp), "Sensor params yaml file under config/ was not found: {}".format(sensor_params_fp)
-    assert os.path.exists(sensor_calib_fp), "Sensor calib file under calibration/ was not found: {}".format(sensor_calib_fp)
+
+    if sensor_extension is not None:  # Velodyne and Hesai
+        sensor_calib_fp = os.path.join(nebula_decoders_share_dir, "calibration", sensor_make.lower(), sensor_model + sensor_extension)
+        assert os.path.exists(sensor_calib_fp), "Sensor calib file under calibration/ was not found: {}".format(sensor_calib_fp)
+    else:  # Robosense
+        sensor_calib_fp = ""
+
     with open(sensor_params_fp, "r") as f:
             sensor_params = yaml.safe_load(f)["/**"]["ros__parameters"]
     nodes = []

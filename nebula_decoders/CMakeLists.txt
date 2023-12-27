@@ -18,6 +18,7 @@ find_package(PCL REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(nebula_common REQUIRED)
+find_package(robosense_msgs REQUIRED)
 
 include_directories(
         include
@@ -39,6 +40,15 @@ ament_auto_add_library(nebula_decoders_velodyne SHARED
         src/nebula_decoders_velodyne/decoders/vls128_decoder.cpp
         src/nebula_decoders_velodyne/decoders/vlp16_decoder.cpp
         src/nebula_decoders_velodyne/decoders/vlp32_decoder.cpp
+        )
+
+# Robosense
+ament_auto_add_library(nebula_decoders_robosense SHARED
+        src/nebula_decoders_robosense/robosense_driver.cpp
+        )
+
+ament_auto_add_library(nebula_decoders_robosense_info SHARED
+        src/nebula_decoders_robosense/robosense_info_driver.cpp
         )
 
 if(BUILD_TESTING)
