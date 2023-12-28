@@ -106,7 +106,7 @@ void Vls128Decoder::reset_overflow(double time_stamp)
   const double last_overflow_time_stamp =
     scan_timestamp_ + 1e-9 * overflow_pc_->points.back().time_stamp;
 
-  // Detect cases where there in an inacceptable time differente between the last overflow point and
+  // Detect cases where there in an unacceptable time difference between the last overflow point and
   // the first point of the next packet. In that case, there was probably a packet drop so it is
   // better to ignore the overflow pointcloud
   if (time_stamp - last_overflow_time_stamp > 0.05) {
