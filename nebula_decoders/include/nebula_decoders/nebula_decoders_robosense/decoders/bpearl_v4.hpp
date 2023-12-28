@@ -241,7 +241,7 @@ public:
   ReturnMode getReturnMode(
     const packet_t & /* packet */, const SensorConfigurationBase & config) const override
   {
-    return config.return_mode;  // TODO(mojomex): add DIFOP packet handling back in
+    return config.return_mode;
   }
 };
 

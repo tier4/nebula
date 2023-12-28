@@ -141,6 +141,11 @@ public:
   static constexpr float MAX_RANGE = 150.f;
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 1152000;
 
+  static constexpr uint8_t RETURN_MODE_DUAL = 0U;
+  static constexpr uint8_t RETURN_MODE_STRONGEST = 4U;
+  static constexpr uint8_t RETURN_MODE_LAST = 5U;
+  static constexpr uint8_t RETURN_MODE_FIRST = 6U;
+
   M1()
   {
     for (size_t i = 0; i < 65536; ++i) {
@@ -219,13 +224,13 @@ public:
     const packet_t & packet, const SensorConfigurationBase & /* config */) const override
   {
     switch (getFieldValue(packet.header.wave_mode)) {
-      case 0x00:
+      case RETURN_MODE_DUAL:
         return ReturnMode::DUAL;
-      case 0x04:
+      case RETURN_MODE_STRONGEST:
         return ReturnMode::SINGLE_STRONGEST;
-      case 0x05:
+      case RETURN_MODE_LAST:
         return ReturnMode::SINGLE_LAST;
-      case 0x06:
+      case RETURN_MODE_FIRST:
         return ReturnMode::SINGLE_FIRST;
       default:
         return ReturnMode::UNKNOWN;
@@ -284,6 +289,7 @@ public:
         break;
     }
 
+    // The datasheet is incorrect, M1 reports exactly the way Helios etc. do
     switch (info_packet.time_sync_mode) {
       case SYNC_MODE_GPS_FLAG:
         sensor_info["time_sync_mode"] = "gps";
@@ -328,9 +334,9 @@ public:
     return {};  // M1 has no calibration
   }
 
-  bool getSyncStatus(const robosense_packet::m1::InfoPacket & /* info_packet */) const override
+  bool getSyncStatus(const robosense_packet::m1::InfoPacket & info_packet) const override
   {
-    return false;  // TODO(mojomex)
+    return info_packet.sync_status == SYNC_STATUS_SUCCESSFUL_FLAG;
   }
 };
 
