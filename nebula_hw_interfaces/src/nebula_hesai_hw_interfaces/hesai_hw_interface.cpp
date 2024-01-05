@@ -182,12 +182,8 @@ void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & b
   pandar_msgs::msg::PandarPacket pandar_packet;
   std::copy_n(std::make_move_iterator(buffer.begin()), buffer_size, pandar_packet.data.begin());
   pandar_packet.size = buffer_size;
-  auto now = std::chrono::system_clock::now();
-  auto now_secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-  auto now_nanosecs =
-    std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-  pandar_packet.stamp.sec = static_cast<int>(now_secs);
-  pandar_packet.stamp.nanosec = static_cast<std::uint32_t>(now_nanosecs % 1'000'000'000);
+  rclcpp::Clock clock(RCL_ROS_TIME);
+  pandar_packet.stamp = clock.now();
   scan_cloud_ptr_->packets.emplace_back(pandar_packet);
 
   int current_phase = 0;

@@ -27,13 +27,8 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   msop_packet.data = packet_data;
 
   // Add timestamp (Sensor timestamp will be handled by decoder)
-  const auto now = std::chrono::system_clock::now();
-  const auto timestamp_ns =
-    std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-
-  constexpr int nanosec_per_sec = 1000000000;
-  msop_packet.stamp.sec = static_cast<int>(timestamp_ns / nanosec_per_sec);
-  msop_packet.stamp.nanosec = static_cast<int>(timestamp_ns % nanosec_per_sec);
+  rclcpp::Clock clock(RCL_ROS_TIME);
+  msop_packet.stamp = clock.now();
 
   if (
     !sensor_model_.has_value() &&
