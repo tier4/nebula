@@ -121,9 +121,9 @@ void Vls128Decoder::reset_overflow(double time_stamp)
 
     // The overflow points had the stamps from the previous pointcloud. These need to be changed to
     // be relative to the overflow's packet timestamp
-    double new_timestamp =
+    double new_timestamp_seconds =
       scan_timestamp_ + 1e-9 * overflow_point.time_stamp - last_block_timestamp_;
-    overflow_point.time_stamp = 1e-9 * new_timestamp;
+    overflow_point.time_stamp = 1e9 * new_timestamp_seconds;
 
     scan_pc_->points.emplace_back(overflow_point);
   }
