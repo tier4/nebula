@@ -116,16 +116,17 @@ void Vls128Decoder::reset_overflow(double time_stamp)
   }
 
   // Add the overflow buffer points
-  for (size_t i = 0; i < overflow_pc_->points.size(); i++) {
-    auto overflow_point = overflow_pc_->points[i];
+  while (overflow_pc_->points.size() > 0) {
+    auto overflow_point = overflow_pc_->points.back();
 
     // The overflow points had the stamps from the previous pointcloud. These need to be changed to
     // be relative to the overflow's packet timestamp
     double new_timestamp_seconds =
       scan_timestamp_ + 1e-9 * overflow_point.time_stamp - last_block_timestamp_;
-    overflow_point.time_stamp = 1e9 * new_timestamp_seconds;
+    overflow_point.time_stamp = new_timestamp_seconds < 0.0 ? 0.0 : 1e9 * new_timestamp_seconds;
 
     scan_pc_->points.emplace_back(overflow_point);
+    overflow_pc_->points.pop_back();
   }
 
   // When there is overflow, the timestamp becomes the overflow packets' one
