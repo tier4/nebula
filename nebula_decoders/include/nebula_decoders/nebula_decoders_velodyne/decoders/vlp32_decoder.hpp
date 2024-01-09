@@ -37,9 +37,9 @@ public:
   std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() override;
   /// @brief Resetting point cloud buffer
   /// @param n_pts # of points
-  void reset_pointcloud(size_t n_pts) override;
+  void reset_pointcloud(size_t n_pts, double time_stamp) override;
   /// @brief Resetting overflowed point cloud buffer
-  void reset_overflow() override;
+  void reset_overflow(double time_stamp) override;
 
 private:
   /// @brief Parsing VelodynePacket based on packet structure
