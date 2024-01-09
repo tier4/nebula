@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-    <arg name="launch_hw" default="True" />
+    <arg name="launch_hw" default="true" />
     <arg name="sensor_model" description="Pandar64|Pandar40P|PandarXT32|PandarXT32M|PandarAT128|PandarQT64|PandarQT128|Pandar128E4X"/>
     <arg name="return_mode" default="Dual" description="See readme for supported return modes"/>
     <arg name="frame_id"  default="hesai"/>
@@ -9,6 +9,9 @@
 
     <arg name="packet_mtu_size" default="1500" description="Packet MTU size"/>
     <arg name="dual_return_distance_threshold" default="0.1" description="Distance threshold of dual return mode"/>
+
+    <arg name="calibration_file" default="$(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).csv"/>
+    <arg name="correction_file" default="$(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).dat"/>
 
     <arg name="sensor_ip" default="192.168.1.201" description="Lidar Sensor IP"/>
     <arg name="host_ip" default="255.255.255.255" description="Broadcast IP from Sensor"/>
@@ -38,14 +41,15 @@
                 <param name="frame_id" value="$(var frame_id)"/>
                 <param name="scan_phase" value="$(var scan_phase)"/>
                 <param name="sensor_ip" value="$(var sensor_ip)"/>
-                <param name="calibration_file" value="$(find-pkg-share nebula_decoders)/calibration/hesai/Pandar128E4X.csv"/>
+                <param name="calibration_file" value="$(var calibration_file)"/>
+                <param name="correction_file" value="$(var correction_file)"/>
                 <param name="launch_hw" value="$(var launch_hw)"/>
                 <extra_arg name="use_intra_process_comms" value="true" />
             </composable_node>
         </node_container>
     </group>
 
-    <group if="launch_hw">
+    <group if="$(var launch_hw)">
         <load_composable_node target="my_container">
             <composable_node pkg="nebula_ros"
                              plugin="HesaiHwInterfaceRosWrapper"
