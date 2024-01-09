@@ -256,6 +256,9 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
                 const float z_coord = distance * sin_vert_angle;       // velodyne z
                 const uint8_t intensity = current_block.data[k + 2];
 
+                auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
+                last_block_timestamp_ = block_timestamp;
+
                 double point_time_offset =  timing_offsets_[block][firing * 16 + dsr];
 
                 // Determine return type.

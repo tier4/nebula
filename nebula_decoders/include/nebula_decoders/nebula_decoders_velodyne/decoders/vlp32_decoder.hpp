@@ -52,6 +52,7 @@ private:
   std::vector<std::vector<float>> timing_offsets_;
   int phase_;
   int max_pts_;
+  double last_block_timestamp_;
 };
 
 }  // namespace vlp32

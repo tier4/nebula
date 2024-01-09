@@ -52,6 +52,7 @@ private:
   float rotation_radians_[ROTATION_MAX_UNITS];
   int phase_;
   int max_pts_;
+  double last_block_timestamp_;
   std::vector<std::vector<float>> timing_offsets_;
 };
 

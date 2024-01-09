@@ -275,6 +275,9 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
 
           intensity = raw->blocks[i].data[k + 2];
 
+          auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
+          last_block_timestamp_ = block_timestamp;
+
           const float focal_offset = 256 * (1 - corrections.focal_distance / 13100) *
                                      (1 - corrections.focal_distance / 13100);
           const float focal_slope = corrections.focal_slope;
