@@ -367,7 +367,7 @@ void HesaiHwInterfaceRosWrapper::ReceiveScanDataCallback(
   // Publish
   scan_buffer->header.frame_id = sensor_configuration_.frame_id;
   scan_buffer->header.stamp = scan_buffer->packets.front().stamp;
-  pandar_scan_pub_->publish(*scan_buffer);
+  pandar_scan_pub_->publish(std::move(scan_buffer));
 }
 
 rcl_interfaces::msg::SetParametersResult HesaiHwInterfaceRosWrapper::paramCallback(
