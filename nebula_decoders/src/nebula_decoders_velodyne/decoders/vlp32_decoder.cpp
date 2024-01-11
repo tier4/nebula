@@ -111,6 +111,7 @@ void Vlp32Decoder::reset_overflow(double time_stamp)
     scan_timestamp_ = -1;
     overflow_pc_->points.clear();
     overflow_pc_->points.reserve(max_pts_);
+    return;
   }
 
   // Add the overflow buffer points
