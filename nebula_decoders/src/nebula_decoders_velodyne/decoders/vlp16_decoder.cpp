@@ -112,6 +112,7 @@ void Vlp16Decoder::reset_overflow(double time_stamp)
     scan_timestamp_ = -1;
     overflow_pc_->points.clear();
     overflow_pc_->points.reserve(max_pts_);
+    return;
   }
 
   // Add the overflow buffer points
@@ -122,7 +123,8 @@ void Vlp16Decoder::reset_overflow(double time_stamp)
     // be relative to the overflow's packet timestamp
     double new_timestamp_seconds =
       scan_timestamp_ + 1e-9 * overflow_point.time_stamp - last_block_timestamp_;
-    overflow_point.time_stamp = static_cast<uint32_t>(new_timestamp_seconds < 0.0 ? 0.0 : 1e9 * new_timestamp_seconds);
+    overflow_point.time_stamp =
+      static_cast<uint32_t>(new_timestamp_seconds < 0.0 ? 0.0 : 1e9 * new_timestamp_seconds);
 
     scan_pc_->points.emplace_back(overflow_point);
     overflow_pc_->points.pop_back();
@@ -263,7 +265,7 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
                 auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
                 last_block_timestamp_ = block_timestamp;
 
-                double point_time_offset =  timing_offsets_[block][firing * 16 + dsr];
+                double point_time_offset = timing_offsets_[block][firing * 16 + dsr];
 
                 // Determine return type.
                 uint8_t return_type;
