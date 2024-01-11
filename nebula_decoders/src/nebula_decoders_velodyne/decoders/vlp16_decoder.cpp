@@ -85,21 +85,53 @@ int Vlp16Decoder::pointsPerPacket()
   return BLOCKS_PER_PACKET * VLP16_FIRINGS_PER_BLOCK * VLP16_SCANS_PER_FIRING;
 }
 
-void Vlp16Decoder::reset_pointcloud(size_t n_pts, [[maybe_unused]] double time_stamp)
+void Vlp16Decoder::reset_pointcloud(size_t n_pts, double time_stamp)
 {
   scan_pc_->points.clear();
   max_pts_ = n_pts * pointsPerPacket();
   scan_pc_->points.reserve(max_pts_);
   reset_overflow(time_stamp);  // transfer existing overflow points to the cleared pointcloud
-  scan_timestamp_ = -1;
 }
 
-void Vlp16Decoder::reset_overflow([[maybe_unused]] double time_stamp)
+void Vlp16Decoder::reset_overflow(double time_stamp)
 {
-  // Add the overflow buffer points
-  for (size_t i = 0; i < overflow_pc_->points.size(); i++) {
-    scan_pc_->points.emplace_back(overflow_pc_->points[i]);
+  if (overflow_pc_->points.size() == 0) {
+    scan_timestamp_ = -1;
+    overflow_pc_->points.reserve(max_pts_);
+    return;
   }
+
+  // Compute the absolute time stamp of the last point of the overflow pointcloud
+  const double last_overflow_time_stamp =
+    scan_timestamp_ + 1e-9 * overflow_pc_->points.back().time_stamp;
+
+  // Detect cases where there is an unacceptable time difference between the last overflow point and
+  // the first point of the next packet. In that case, there was probably a packet drop so it is
+  // better to ignore the overflow pointcloud
+  if (time_stamp - last_overflow_time_stamp > 0.05) {
+    scan_timestamp_ = -1;
+    overflow_pc_->points.clear();
+    overflow_pc_->points.reserve(max_pts_);
+    return;
+  }
+
+  // Add the overflow buffer points
+  while (overflow_pc_->points.size() > 0) {
+    auto overflow_point = overflow_pc_->points.back();
+
+    // The overflow points had the stamps from the previous pointcloud. These need to be changed to
+    // be relative to the overflow's packet timestamp
+    double new_timestamp_seconds =
+      scan_timestamp_ + 1e-9 * overflow_point.time_stamp - last_block_timestamp_;
+    overflow_point.time_stamp =
+      static_cast<uint32_t>(new_timestamp_seconds < 0.0 ? 0.0 : 1e9 * new_timestamp_seconds);
+
+    scan_pc_->points.emplace_back(overflow_point);
+    overflow_pc_->points.pop_back();
+  }
+
+  // When there is overflow, the timestamp becomes the overflow packets' one
+  scan_timestamp_ = last_block_timestamp_;
   overflow_pc_->points.clear();
   overflow_pc_->points.reserve(max_pts_);
 }
@@ -229,6 +261,8 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
                 const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
                 const float z_coord = distance * sin_vert_angle;       // velodyne z
                 const uint8_t intensity = current_block.data[k + 2];
+
+                last_block_timestamp_ = block_timestamp;
 
                 double point_time_offset = timing_offsets_[block][firing * 16 + dsr];
 

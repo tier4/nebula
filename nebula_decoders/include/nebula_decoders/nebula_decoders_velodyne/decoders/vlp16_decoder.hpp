@@ -6,6 +6,9 @@
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 #include <array>
+#include <memory>
+#include <tuple>
+#include <vector>
 
 namespace nebula
 {
@@ -52,6 +55,7 @@ private:
   float rotation_radians_[ROTATION_MAX_UNITS];
   int phase_;
   int max_pts_;
+  double last_block_timestamp_;
   std::vector<std::vector<float>> timing_offsets_;
 };
 
