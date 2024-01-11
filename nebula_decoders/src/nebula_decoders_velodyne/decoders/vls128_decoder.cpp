@@ -282,11 +282,7 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
               const float z_coord = distance * sin_vert_angle;       // velodyne z
               const uint8_t intensity = current_block.data[k + 2];
-              auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
               last_block_timestamp_ = block_timestamp;
-              if (scan_timestamp_ < 0) {
-                scan_timestamp_ = block_timestamp;
-              }
               double point_time_offset =
                 timing_offsets_[block / 4][firing_order + laser_number / 64];
 

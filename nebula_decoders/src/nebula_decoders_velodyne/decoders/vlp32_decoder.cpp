@@ -122,7 +122,8 @@ void Vlp32Decoder::reset_overflow(double time_stamp)
     // be relative to the overflow's packet timestamp
     double new_timestamp_seconds =
       scan_timestamp_ + 1e-9 * overflow_point.time_stamp - last_block_timestamp_;
-    overflow_point.time_stamp = static_cast<uint32_t>(new_timestamp_seconds < 0.0 ? 0.0 : 1e9 * new_timestamp_seconds);
+    overflow_point.time_stamp =
+      static_cast<uint32_t>(new_timestamp_seconds < 0.0 ? 0.0 : 1e9 * new_timestamp_seconds);
 
     scan_pc_->points.emplace_back(overflow_point);
     overflow_pc_->points.pop_back();
@@ -281,7 +282,6 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
 
           intensity = raw->blocks[i].data[k + 2];
 
-          auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
           last_block_timestamp_ = block_timestamp;
 
           const float focal_offset = 256 * (1 - corrections.focal_distance / 13100) *
