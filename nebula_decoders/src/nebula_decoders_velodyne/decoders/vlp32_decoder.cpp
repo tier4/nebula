@@ -90,7 +90,6 @@ void Vlp32Decoder::reset_pointcloud(size_t n_pts, double time_stamp)
   max_pts_ = n_pts * pointsPerPacket();
   scan_pc_->points.reserve(max_pts_);
   reset_overflow(time_stamp);  // transfer existing overflow points to the cleared pointcloud
-  scan_timestamp_ = -1;
 }
 
 void Vlp32Decoder::reset_overflow(double time_stamp)
