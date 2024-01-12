@@ -67,8 +67,13 @@ void VelodyneHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> 
   const uint32_t buffer_size = buffer.size();
   velodyne_msgs::msg::VelodynePacket velodyne_packet;
   std::copy_n(std::make_move_iterator(buffer.begin()), buffer_size, velodyne_packet.data.begin());
-  rclcpp::Clock clock(RCL_ROS_TIME);
-  velodyne_packet.stamp = clock.now();
+  if (parent_node_clock) {
+    velodyne_packet.stamp = parent_node_clock->now();
+  }
+  else {
+    rclcpp::Clock clock(RCL_ROS_TIME);// it will default to system clock since the wrapper is not attached to a node
+    velodyne_packet.stamp = clock.now();
+  }
   scan_cloud_ptr_->packets.emplace_back(velodyne_packet);
   processed_packets_++;
 
@@ -810,6 +815,11 @@ VelodyneStatus VelodyneHwInterface::SetNetDhcpAsync(bool use_dhcp)
 void VelodyneHwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
 {
   parent_node_logger = logger;
+}
+
+void VelodyneHwInterface::SetClock(std::shared_ptr<rclcpp::Clock> clock)
+{
+  parent_node_clock = clock;
 }
 
 void VelodyneHwInterface::PrintInfo(std::string info)

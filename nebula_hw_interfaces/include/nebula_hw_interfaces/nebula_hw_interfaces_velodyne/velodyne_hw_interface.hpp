@@ -90,6 +90,7 @@ private:
     boost::property_tree::ptree tree);
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger;
+  std::shared_ptr<rclcpp::Clock> parent_node_clock;
   /// @brief Printing the string to RCLCPP_INFO_STREAM
   /// @param info Target string
   void PrintInfo(std::string info);
@@ -309,6 +310,9 @@ public:
   /// @brief Setting rclcpp::Logger
   /// @param node Logger
   void SetLogger(std::shared_ptr<rclcpp::Logger> node);
+  /// @brief Sets the clock
+  /// @param node Clock
+  void SetClock(std::shared_ptr<rclcpp::Clock> clock);
 };
 
 }  // namespace drivers

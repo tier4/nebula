@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <launch>
+    <set_parameter name="use_sim_time" value="true"/>
     <arg name="sensor_model" description="Pandar64|Pandar40P|PandarXT32|PandarXT32M|PandarAT128|PandarQT64|PandarQT128|Pandar128E4X"/>
     <arg name="return_mode" default="Dual" description="See readme for supported return modes"/>
     <arg name="frame_id"  default="hesai"/>
@@ -54,26 +55,6 @@
         <param name="setup_sensor" value="$(var setup_sensor)"/>
         <param name="delay_hw_ms" value="$(var delay_hw_ms)"/>
         <param name="retry_hw" value="$(var retry_hw)"/>
-    </node>
-
-    <node pkg="nebula_ros" exec="hesai_hw_monitor_ros_wrapper_node"
-          name="hesai_hw_monitor_$(var frame_id)" output="screen">
-        <param name="sensor_model" value="$(var sensor_model)"/>
-        <param name="return_mode" value="$(var return_mode)"/>
-        <param name="frame_id" value="$(var frame_id)"/>
-        <param name="scan_phase" value="$(var scan_phase)"/>
-        <param name="sensor_ip" value="$(var sensor_ip)"/>
-        <param name="frame_id" value="$(var frame_id)"/>
-        <param name="host_ip" value="$(var host_ip)"/>
-        <param name="data_port" value="$(var data_port)"/>
-        <param name="gnss_port" value="$(var gnss_port)"/>
-        <param name="packet_mtu_size" value="$(var packet_mtu_size)"/>
-        <param name="rotation_speed" value="$(var rotation_speed)"/>
-        <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>
-        <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
-        <param name="diag_span" value="$(var diag_span)"/>
-        <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/>
-        <param name="delay_monitor_ms" value="$(var delay_monitor_ms)"/>
     </node>
 
 </launch>

@@ -17,6 +17,7 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
   }
   std::this_thread::sleep_for(std::chrono::milliseconds(this->delay_hw_ms_));
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
+  hw_interface_.SetClock(get_clock());
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
     std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration_);
   hw_interface_.SetSensorConfiguration(

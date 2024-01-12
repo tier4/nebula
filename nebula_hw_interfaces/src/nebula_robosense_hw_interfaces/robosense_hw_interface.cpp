@@ -27,8 +27,13 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   msop_packet.data = packet_data;
 
   // Add timestamp (Sensor timestamp will be handled by decoder)
-  rclcpp::Clock clock(RCL_ROS_TIME);
-  msop_packet.stamp = clock.now();
+  if (parent_node_clock_) {
+    msop_packet.stamp = parent_node_clock_->now();
+  }
+  else {
+    rclcpp::Clock clock(RCL_ROS_TIME);// it will default to system clock since the wrapper is not attached to a node
+    msop_packet.stamp = clock.now();
+  }
 
   if (
     !sensor_model_.has_value() &&

@@ -182,8 +182,13 @@ void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & b
   pandar_msgs::msg::PandarPacket pandar_packet;
   std::copy_n(std::make_move_iterator(buffer.begin()), buffer_size, pandar_packet.data.begin());
   pandar_packet.size = buffer_size;
-  rclcpp::Clock clock(RCL_ROS_TIME);
-  pandar_packet.stamp = clock.now();
+  if (parent_node_clock) {
+    pandar_packet.stamp = parent_node_clock->now();
+  }
+  else {
+    rclcpp::Clock clock(RCL_ROS_TIME);// it will default to system clock since the wrapper is not attached to a node
+    pandar_packet.stamp = clock.now();
+  }
   scan_cloud_ptr_->packets.emplace_back(pandar_packet);
 
   int current_phase = 0;
@@ -3345,6 +3350,11 @@ void HesaiHwInterface::CheckUnlock(std::timed_mutex & tm, std::string name)
 void HesaiHwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
 {
   parent_node_logger = logger;
+}
+
+void HesaiHwInterface::SetClock(std::shared_ptr<rclcpp::Clock> clock)
+{
+  parent_node_clock = clock;
 }
 
 void HesaiHwInterface::PrintInfo(std::string info)

@@ -55,6 +55,7 @@ private:
   std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> buffer)>
     info_reception_callback_; /**This function pointer is called when DIFOP packet is received*/
   std::shared_ptr<rclcpp::Logger> parent_node_logger_;
+  std::shared_ptr<rclcpp::Clock> parent_node_clock_;
 
   /// @brief Printing the string to RCLCPP_INFO_STREAM
   /// @param info Target string
@@ -120,6 +121,10 @@ public:
   /// @brief Setting rclcpp::Logger
   /// @param node Logger
   void SetLogger(std::shared_ptr<rclcpp::Logger> logger);
+
+  /// @brief Sets the clock
+  /// @param node Clock
+  void SetClock(std::shared_ptr<rclcpp::Clock> clock);
 };
 
 }  // namespace drivers
