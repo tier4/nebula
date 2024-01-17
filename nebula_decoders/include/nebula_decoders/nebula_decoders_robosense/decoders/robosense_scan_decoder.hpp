@@ -24,9 +24,10 @@ public:
   virtual ~RobosenseScanDecoder() = default;
   RobosenseScanDecoder() = default;
 
-  /// @brief Parses RobosensePacket and add its points to the point cloud
-  /// @param msop_packet The incoming MsopPacket
-  /// @return The last azimuth processed
+  /// @brief Decodes all points in the given packet into the current scan's pointcloud.
+  /// Whether the pointcloud is complete can be checked with hasScanned().
+  /// @param msop_packet The packet to decode
+  /// @return The number of points decoded
   virtual int unpack(const robosense_msgs::msg::RobosensePacket & msop_packet) = 0;
 
   /// @brief Indicates whether one full scan is ready
@@ -36,6 +37,10 @@ public:
   /// @brief Returns the point cloud and timestamp of the last scan
   /// @return A tuple of point cloud and timestamp in nanoseconds
   virtual std::tuple<drivers::NebulaPointCloudPtr, double> getPointcloud() = 0;
+
+  /// @brief Updates the internally stored sensor configuration
+  virtual void updateSensorConfiguration(
+    const std::shared_ptr<const drivers::RobosenseSensorConfiguration> & sensor_configuration) = 0;
 };
 
 }  // namespace drivers

@@ -8,6 +8,7 @@
 #include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v3.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v4.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/helios.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/decoders/m1.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_info_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_info_decoder_base.hpp"
@@ -53,7 +54,7 @@ public:
 
   ReturnMode GetReturnMode();
 
-  RobosenseCalibrationConfiguration GetSensorCalibration();
+  std::optional<RobosenseCalibrationConfiguration> GetSensorCalibration();
 
   /// @brief Get the status of time synchronization
   /// @return True if the sensor's clock is synchronized

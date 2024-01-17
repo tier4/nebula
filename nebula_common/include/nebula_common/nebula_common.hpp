@@ -121,6 +121,35 @@ inline ReturnType ReturnModeToReturnType(const ReturnMode & mode)
   }
 }
 
+inline uint8_t ReturnModeToNReturns(const ReturnMode & mode)
+{
+  switch (mode) {
+    case ReturnMode::SINGLE_STRONGEST:
+    case ReturnMode::SINGLE_FIRST:
+    case ReturnMode::SINGLE_LAST:
+    case ReturnMode::STRONGEST:
+    case ReturnMode::FIRST:
+    case ReturnMode::LAST:
+      return 1;
+    case ReturnMode::DUAL_STRONGEST_FIRST:
+    case ReturnMode::DUAL_FIRST_STRONGEST:
+    case ReturnMode::DUAL_STRONGEST_LAST:
+    case ReturnMode::DUAL_LAST_STRONGEST:
+    case ReturnMode::DUAL_LAST_FIRST:
+    case ReturnMode::DUAL_WEAK_FIRST:
+    case ReturnMode::DUAL_WEAK_LAST:
+    case ReturnMode::DUAL_FIRST:
+    case ReturnMode::DUAL_LAST:
+    case ReturnMode::DUAL_ONLY:
+    case ReturnMode::DUAL:
+      return 2;
+    case ReturnMode::TRIPLE:
+      return 3;
+    case ReturnMode::UNKNOWN:
+      throw std::runtime_error("Got unknown return mode");
+  }
+}
+
 /// @brief Convert ReturnMode enum to integer
 /// @param mode
 /// @return Corresponding number
@@ -327,6 +356,7 @@ enum class SensorModel {
   ROBOSENSE_BPEARL,
   ROBOSENSE_BPEARL_V3,
   ROBOSENSE_BPEARL_V4,
+  ROBOSENSE_M1
 };
 
 /// @brief not used?
@@ -417,6 +447,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::ROBOSENSE_BPEARL_V4:
       os << "BPEARL V4.0";
       break;
+    case SensorModel::ROBOSENSE_M1:
+      os << "M1";
+      break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
       break;
@@ -491,6 +524,7 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "Bpearl") return SensorModel::ROBOSENSE_BPEARL;
   if (sensor_model == "Bpearl_V3") return SensorModel::ROBOSENSE_BPEARL_V3;
   if (sensor_model == "Bpearl_V4") return SensorModel::ROBOSENSE_BPEARL_V4;
+  if (sensor_model == "M1") return SensorModel::ROBOSENSE_M1;
   return SensorModel::UNKNOWN;
 }
 
@@ -538,6 +572,8 @@ inline std::string SensorModelToString(const SensorModel & sensor_model)
       return "Bpearl_V3";
     case SensorModel::ROBOSENSE_BPEARL_V4:
       return "Bpearl_V4";
+    case SensorModel::ROBOSENSE_M1:
+      return "M1";
     default:
       return "UNKNOWN";
   }

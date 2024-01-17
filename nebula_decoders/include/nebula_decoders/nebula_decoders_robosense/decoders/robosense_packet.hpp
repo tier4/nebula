@@ -1,9 +1,14 @@
 #pragma once
 
+#include "nebula_common/robosense/robosense_common.hpp"
+#include "nebula_decoders/nebula_decoders_common/sensor_mixins/timestamp.hpp"
+
 #include "boost/endian/buffers.hpp"
 
 #include <cstddef>
 #include <cstdint>
+#include <iomanip>
+#include <iostream>
 #include <string>
 
 using namespace boost::endian;
@@ -16,6 +21,10 @@ namespace robosense_packet
 {
 
 #pragma pack(push, 1)
+
+struct RobosensePacket
+{
+};
 
 struct Timestamp
 {
@@ -34,6 +43,14 @@ struct Timestamp
   }
 };
 
+template <typename PacketT>
+struct RobosensePacketTimestampMixin : public sensor_mixins::PacketTimestampMixin<PacketT>
+{
+  uint64_t getPacketTimestamp(const PacketT & packet) const override
+  {
+    return packet.header.timestamp.get_time_in_ns();
+  }
+};
 
 struct Unit
 {
@@ -65,14 +82,22 @@ struct Body
 /// @tparam nChannels The number of channels per block
 /// @tparam maxReturns The maximum number of returns, e.g. 2 for dual return
 /// @tparam degreeSubdivisions The resolution of the azimuth angle in the packet, e.g. 100 if packet
+/// @tparam returnsStridedPacket Whether returns within a return group are strided across packets
+/// @tparam returnsStridedBlock Whether returns are strided across blocks
+/// @tparam returnsStridedChannel Whether returns are strided across channels
 /// azimuth is given in 1/100th of a degree
-template <size_t nBlocks, size_t nChannels, size_t maxReturns, size_t degreeSubdivisions>
+template <
+  size_t nBlocks, size_t nChannels, size_t maxReturns, size_t degreeSubdivisions,
+  bool returnsStridedPacket = 0, bool returnsStridedBlock = 1, bool returnsStridedChannel = 0>
 struct PacketBase
 {
   static constexpr size_t N_BLOCKS = nBlocks;
   static constexpr size_t N_CHANNELS = nChannels;
   static constexpr size_t MAX_RETURNS = maxReturns;
   static constexpr size_t DEGREE_SUBDIVISIONS = degreeSubdivisions;
+
+  static constexpr std::array<bool, 3> RETURN_GROUP_STRIDE = {
+    returnsStridedPacket, returnsStridedBlock, returnsStridedChannel};
 };
 
 struct IpAddress
@@ -137,9 +162,8 @@ struct ChannelAngleCorrection
 
   [[nodiscard]] float getAngle() const
   {
-    return sign.value() == ANGLE_SIGN_FLAG
-             ? static_cast<float>(angle.value()) / 100.0f
-             : static_cast<float>(angle.value()) / -100.0f;
+    return sign.value() == ANGLE_SIGN_FLAG ? static_cast<float>(angle.value()) / 100.0f
+                                           : static_cast<float>(angle.value()) / -100.0f;
   }
 };
 
@@ -224,34 +248,6 @@ size_t get_n_returns(ReturnMode return_mode)
     return 2;
   }
   return 1;
-}
-
-/// @brief Get timestamp from packet in nanoseconds
-/// @tparam PacketT The packet type
-/// @param packet The packet to get the timestamp from
-/// @return The timestamp in nanoseconds
-template <typename PacketT>
-uint64_t get_timestamp_ns(const PacketT & packet)
-{
-  return packet.header.timestamp.get_time_in_ns();
-}
-
-/// @brief Get the distance unit of the given packet type in meters. Distance values in the packet,
-/// multiplied by this value, yield the distance in meters.
-/// @tparam PacketT The packet type
-/// @param packet The packet to get the distance unit from
-/// @return The distance unit in meters
-template <typename PacketT>
-double get_dis_unit(const PacketT & packet)
-{
-  // Packets define distance unit in millimeters, convert to meters here
-  const uint8_t range_resolution = packet.header.range_resolution.value();
-  if (range_resolution == 0) {
-    return 0.0050;
-  } else if (range_resolution == 1) {
-    return 0.0025;
-  }
-  throw std::runtime_error("Unknown range resolution");
 }
 
 /// @brief Convert raw angle value from packet to std::string

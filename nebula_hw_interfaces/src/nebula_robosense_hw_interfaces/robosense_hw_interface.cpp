@@ -21,10 +21,11 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
   }
   // Copy data
   uint32_t buffer_size = buffer.size();
-  std::array<uint8_t, MTU_SIZE> packet_data{};
+  std::array<uint8_t, MTU_SIZE> packet_data{0};
   std::copy_n(std::make_move_iterator(buffer.begin()), buffer_size, packet_data.begin());
   robosense_msgs::msg::RobosensePacket msop_packet;
   msop_packet.data = packet_data;
+  msop_packet.size = buffer_size;
 
   // Add timestamp (Sensor timestamp will be handled by decoder)
   const auto now = std::chrono::system_clock::now();
@@ -49,16 +50,20 @@ void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t>
 
   scan_cloud_ptr_->packets.emplace_back(msop_packet);
 
-  int current_phase{};
   bool comp_flg = false;
 
-  const auto & data = scan_cloud_ptr_->packets.back().data;
-  current_phase = (data[azimuth_index_ + 1] & 0xff) + ((data[azimuth_index_] & 0xff) << 8);
+  if (sensor_configuration_->sensor_model != SensorModel::ROBOSENSE_M1) {
+    int current_phase;
+    const auto & data = scan_cloud_ptr_->packets.back().data;
+    current_phase = (data[azimuth_index_ + 1] & 0xff) + ((data[azimuth_index_] & 0xff) << 8);
 
-  current_phase = (static_cast<int>(current_phase) + 36000 - scan_phase) % 36000;
+    current_phase = (static_cast<int>(current_phase) + 36000 - scan_phase) % 36000;
 
-  if (current_phase >= prev_phase_ || scan_cloud_ptr_->packets.size() < 2) {
-    prev_phase_ = current_phase;
+    if (current_phase >= prev_phase_ || scan_cloud_ptr_->packets.size() < 2) {
+      prev_phase_ = current_phase;
+    } else {
+      comp_flg = true;
+    }
   } else {
     comp_flg = true;
   }
@@ -80,8 +85,8 @@ void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> 
     return;
   }
 
-  info_buffer_.emplace(buffer);  //////
-  is_info_received = true;       ////////
+  info_buffer_.emplace(buffer);
+  is_info_received = true;
 
   if (info_reception_callback_) {
     std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> difop_packet =
@@ -159,24 +164,35 @@ Status RobosenseHwInterface::SetSensorConfiguration(
     sensor_configuration_ =
       std::static_pointer_cast<RobosenseSensorConfiguration>(sensor_configuration);
 
-    if (
-      sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL ||
-      sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL_V3 ||
-      sensor_configuration_->sensor_model == SensorModel::ROBOSENSE_BPEARL_V4) {
-      azimuth_index_ = 44;
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == BPEARL_PACKET_SIZE); };
-      is_valid_info_packet_ = [](size_t packet_size) {
-        return (packet_size == BPEARL_INFO_PACKET_SIZE);
-      };
-    } else if (sensor_configuration->sensor_model == SensorModel::ROBOSENSE_HELIOS) {
-      azimuth_index_ = 44;
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == HELIOS_PACKET_SIZE); };
-      is_valid_info_packet_ = [](size_t packet_size) {
-        return (packet_size == HELIOS_INFO_PACKET_SIZE);
-      };
-    } else {
-      status = Status::INVALID_SENSOR_MODEL;
+    switch (sensor_configuration->sensor_model) {
+      case SensorModel::ROBOSENSE_BPEARL:
+      case SensorModel::ROBOSENSE_BPEARL_V3:
+      case SensorModel::ROBOSENSE_BPEARL_V4:
+        azimuth_index_ = 44;
+        is_valid_packet_ = [](size_t packet_size) { return (packet_size == BPEARL_PACKET_SIZE); };
+        is_valid_info_packet_ = [](size_t packet_size) {
+          return (packet_size == BPEARL_INFO_PACKET_SIZE);
+        };
+        break;
+      case SensorModel::ROBOSENSE_HELIOS:
+        azimuth_index_ = 44;
+        is_valid_packet_ = [](size_t packet_size) { return (packet_size == HELIOS_PACKET_SIZE); };
+        is_valid_info_packet_ = [](size_t packet_size) {
+          return (packet_size == HELIOS_INFO_PACKET_SIZE);
+        };
+        break;
+      case SensorModel::ROBOSENSE_M1:
+        azimuth_index_ = 0;  // unused
+        is_valid_packet_ = [](size_t packet_size) { return (packet_size == M1_PACKET_SIZE); };
+        is_valid_info_packet_ = [](size_t packet_size) {
+          return (packet_size == M1_INFO_PACKET_SIZE);
+        };
+        break;
+      default:
+        status = Status::INVALID_SENSOR_MODEL;
+        break;
     }
+
   } catch (const std::exception & ex) {
     status = Status::SENSOR_CONFIG_ERROR;
     std::cerr << status << std::endl;
