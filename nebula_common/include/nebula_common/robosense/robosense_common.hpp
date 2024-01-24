@@ -58,10 +58,14 @@ inline ReturnMode ReturnModeFromStringRobosense(const std::string & return_mode)
 size_t GetChannelSize(const SensorModel & model)
 {
   switch (model) {
+    case SensorModel::ROBOSENSE_BPEARL:
     case SensorModel::ROBOSENSE_BPEARL_V3:
+    case SensorModel::ROBOSENSE_BPEARL_V4:
       return 32;
     case SensorModel::ROBOSENSE_HELIOS:
       return 32;
+    default:
+      throw std::runtime_error("Unknown sensor model");
   }
 }
 
@@ -69,7 +73,6 @@ struct ChannelCorrection
 {
   float azimuth{NAN};
   float elevation{NAN};
-  uint16_t channel{};
 
   [[nodiscard]] bool has_value() const { return !std::isnan(azimuth) && !std::isnan(elevation); }
 };
@@ -184,17 +187,6 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
   [[nodiscard]] inline ChannelCorrection GetCorrection(const size_t channel_id) const
   {
     return calibration[channel_id];
-  }
-
-  void CreateCorrectedChannels()
-  {
-    for(auto& correction : calibration) {
-      uint16_t channel = 0;
-      for(const auto& compare:calibration) {
-        if(compare.elevation < correction.elevation) ++channel;
-      }
-      correction.channel = channel;
-    }
   }
 };
 

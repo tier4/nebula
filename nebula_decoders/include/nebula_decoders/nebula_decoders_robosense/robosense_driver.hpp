@@ -7,9 +7,6 @@
 #include "nebula_decoders/nebula_decoders_common/nebula_driver_base.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_decoder.hpp"
 
-#include "robosense_msgs/msg/robosense_packet.hpp"
-#include "robosense_msgs/msg/robosense_scan.hpp"
-
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <iostream>
@@ -37,8 +34,8 @@ public:
   /// @param sensor_configuration SensorConfiguration for this driver
   /// @param calibration_configuration CalibrationConfiguration for this driver
   explicit RobosenseDriver(
-    const std::shared_ptr<drivers::RobosenseSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<drivers::RobosenseCalibrationConfiguration> & calibration_configuration);
+    const std::shared_ptr<drivers::RobosenseSensorConfiguration> sensor_configuration,
+    const std::shared_ptr<drivers::RobosenseCalibrationConfiguration> calibration_configuration);
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -55,6 +52,8 @@ public:
   /// @return tuple of Point cloud and timestamp
   std::tuple<drivers::NebulaPointCloudPtr, double> ConvertScanToPointcloud(
     const std::shared_ptr<robosense_msgs::msg::RobosenseScan> & robosense_scan);
+  
+  bool HasScanned();
 };
 
 }  // namespace drivers

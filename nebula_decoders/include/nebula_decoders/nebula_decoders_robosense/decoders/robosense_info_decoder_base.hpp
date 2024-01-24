@@ -1,5 +1,13 @@
 #pragma once
 
+#include "nebula_common/nebula_common.hpp"
+#include "nebula_common/robosense/robosense_common.hpp"
+
+#include <cstdint>
+#include <map>
+#include <vector>
+#include <optional>
+
 namespace nebula
 {
 namespace drivers
@@ -31,7 +39,7 @@ public:
 
   /// @brief Get sensor calibration
   /// @return The sensor calibration
-  virtual RobosenseCalibrationConfiguration getSensorCalibration() = 0;
+  virtual std::optional<RobosenseCalibrationConfiguration> getSensorCalibration() = 0;
 
   /// @brief Get the status of time synchronization
   /// @return True if the sensor's clock is synchronized
