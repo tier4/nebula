@@ -37,9 +37,9 @@ public:
   std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() override;
   /// @brief Resetting point cloud buffer
   /// @param n_pts # of points
-  void reset_pointcloud(size_t n_pts) override;
+  void reset_pointcloud(size_t n_pts, double time_stamp) override;
   /// @brief Resetting overflowed point cloud buffer
-  void reset_overflow() override;
+  void reset_overflow(double time_stamp) override;
 
 private:
   /// @brief Parsing VelodynePacket based on packet structure
@@ -52,6 +52,7 @@ private:
   float vls_128_laser_azimuth_cache_[16];
   int phase_;
   int max_pts_;
+  double last_block_timestamp_;
   std::vector<std::vector<float>> timing_offsets_;
 };
 
