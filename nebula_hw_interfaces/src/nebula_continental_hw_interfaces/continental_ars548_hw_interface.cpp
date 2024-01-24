@@ -1,4 +1,4 @@
-// Copyright 2023 Tier IV, Inc.
+// Copyright 2024 Tier IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 #include "nebula_common/continental/continental_ars548.hpp"
 
 #include <limits>
-
+#include <sstream>
 namespace nebula
 {
 namespace drivers
@@ -399,6 +399,13 @@ Status ContinentalARS548HwInterface::SetSensorMounting(
   std::vector<uint8_t> send_vector(sizeof(ConfigurationPacket));
   std::memcpy(send_vector.data(), &configuration_packet, sizeof(ConfigurationPacket));
 
+  PrintInfo("longitudinal_autosar = " + std::to_string(longitudinal_autosar));
+  PrintInfo("lateral_autosar = " + std::to_string(lateral_autosar));
+  PrintInfo("vertical_autosar = " + std::to_string(vertical_autosar));
+  PrintInfo("yaw_autosar = " + std::to_string(yaw_autosar));
+  PrintInfo("pitch_autosar = " + std::to_string(pitch_autosar));
+  PrintInfo("plug_orientation = " + std::to_string(plug_orientation));
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -428,6 +435,11 @@ Status ContinentalARS548HwInterface::SetVehicleParameters(
 
   std::vector<uint8_t> send_vector(sizeof(ConfigurationPacket));
   std::memcpy(send_vector.data(), &configuration_packet, sizeof(ConfigurationPacket));
+
+  PrintInfo("length_autosar = " + std::to_string(length_autosar));
+  PrintInfo("width_autosar = " + std::to_string(width_autosar));
+  PrintInfo("height_autosar = " + std::to_string(height_autosar));
+  PrintInfo("wheel_base_autosar = " + std::to_string(wheel_base_autosar));
 
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
@@ -461,6 +473,12 @@ Status ContinentalARS548HwInterface::SetRadarParameters(
   std::vector<uint8_t> send_vector(sizeof(ConfigurationPacket));
   std::memcpy(send_vector.data(), &configuration_packet, sizeof(ConfigurationPacket));
 
+  PrintInfo("maximum_distance = " + std::to_string(maximum_distance));
+  PrintInfo("frequency_slot = " + std::to_string(frequency_slot));
+  PrintInfo("cycle_time = " + std::to_string(cycle_time));
+  PrintInfo("hcc = " + std::to_string(hcc));
+  PrintInfo("power_save_standstill = " + std::to_string(power_save_standstill));
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -477,6 +495,8 @@ Status ContinentalARS548HwInterface::SetSensorIPAddress(const std::string & sens
     PrintError("Setting invalid IP");
     return Status::SENSOR_CONFIG_ERROR;
   }
+
+  PrintInfo("New sensor IP = " + sensor_ip_address);
 
   ConfigurationPacket configuration{};
   static_assert(sizeof(ConfigurationPacket) == CONFIGURATION_UDP_LENGTH);

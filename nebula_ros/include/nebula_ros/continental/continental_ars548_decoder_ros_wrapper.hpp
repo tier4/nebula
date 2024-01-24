@@ -1,4 +1,4 @@
-// Copyright 2023 Tier IV, Inc.
+// Copyright 2024 Tier IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,26 +15,26 @@
 #ifndef NEBULA_ContinentalARS548DriverRosWrapper_H
 #define NEBULA_ContinentalARS548DriverRosWrapper_H
 
-#include "nebula_common/continental/continental_common.hpp"
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp"
-#include "nebula_ros/common/nebula_driver_ros_wrapper_base.hpp"
-
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_common/continental/continental_ars548.hpp>
+#include <nebula_common/continental/continental_common.hpp>
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_common/nebula_status.hpp>
+#include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
+#include <nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp>
+#include <nebula_ros/common/nebula_driver_ros_wrapper_base.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "continental_msgs/msg/continental_ars548_detection.hpp"
-#include "continental_msgs/msg/continental_ars548_detection_list.hpp"
-#include "continental_msgs/msg/continental_ars548_object.hpp"
-#include "continental_msgs/msg/continental_ars548_object_list.hpp"
-#include "nebula_msgs/msg/nebula_packet.hpp"
-#include "nebula_msgs/msg/nebula_packets.hpp"
-#include "radar_msgs/msg/radar_scan.hpp"
-#include "radar_msgs/msg/radar_tracks.hpp"
+#include <continental_msgs/msg/continental_ars548_detection.hpp>
+#include <continental_msgs/msg/continental_ars548_detection_list.hpp>
+#include <continental_msgs/msg/continental_ars548_object.hpp>
+#include <continental_msgs/msg/continental_ars548_object_list.hpp>
+#include <nebula_msgs/msg/nebula_packet.hpp>
+#include <nebula_msgs/msg/nebula_packets.hpp>
+#include <radar_msgs/msg/radar_scan.hpp>
+#include <radar_msgs/msg/radar_tracks.hpp>
 
 #include <chrono>
 #include <memory>
@@ -56,6 +56,8 @@ class ContinentalARS548DriverRosWrapper final : public rclcpp::Node, NebulaDrive
   rclcpp::Publisher<continental_msgs::msg::ContinentalArs548ObjectList>::SharedPtr object_list_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr object_pointcloud_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr detection_pointcloud_pub_;
+  rclcpp::Publisher<radar_msgs::msg::RadarScan>::SharedPtr scan_raw_pub_;
+  rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr objects_raw_pub_;
 
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
 
@@ -106,13 +108,13 @@ public:
   /// @brief Convert ARS548 detections to a pointcloud
   /// @param msg The ARS548 detection list msg
   /// @return Resulting detection pointcloud
-  pcl::PointCloud<pcl::PointXYZ>::Ptr ConvertToPointcloud(
-    const continental_msgs::msg::ContinentalArs548DetectionList & msg);
+  pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr
+  ConvertToPointcloud(const continental_msgs::msg::ContinentalArs548DetectionList & msg);
 
   /// @brief Convert ARS548 objects to a pointcloud
   /// @param msg The ARS548 object list msg
   /// @return Resulting object pointcloud
-  pcl::PointCloud<pcl::PointXYZ>::Ptr ConvertToPointcloud(
+  pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr ConvertToPointcloud(
     const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 
   /// @brief Convert ARS548 detections to a standard RadarScan msg

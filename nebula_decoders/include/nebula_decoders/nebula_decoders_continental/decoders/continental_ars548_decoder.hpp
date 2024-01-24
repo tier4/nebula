@@ -1,4 +1,4 @@
-// Copyright 2023 Tier IV, Inc.
+// Copyright 2024 Tier IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,13 +14,14 @@
 
 #pragma once
 
-#include "nebula_common/continental/continental_common.hpp"
-#include "nebula_decoders/nebula_decoders_continental/decoders/continental_packets_decoder.hpp"
+#include <nebula_common/continental/continental_common.hpp>
+#include <nebula_decoders/nebula_decoders_continental/decoders/continental_packets_decoder.hpp>
 
-#include "nebula_msgs/msg/nebula_packet.hpp"
-#include "nebula_msgs/msg/nebula_packets.hpp"
 #include <continental_msgs/msg/continental_ars548_detection_list.hpp>
 #include <continental_msgs/msg/continental_ars548_object_list.hpp>
+#include <nebula_msgs/msg/nebula_packet.hpp>
+#include <nebula_msgs/msg/nebula_packets.hpp>
+#include <std_msgs/msg/header.hpp>
 
 #include <array>
 #include <memory>
@@ -46,8 +47,10 @@ public:
   /// @return Resulting flag
   bool ProcessPackets(const nebula_msgs::msg::NebulaPackets & nebula_packets) override;
 
-  bool ParseDetectionsListPacket(const std::vector<uint8_t> & data);
-  bool ParseObjectsListPacket(const std::vector<uint8_t> & data);
+  bool ParseDetectionsListPacket(
+    const std::vector<uint8_t> & data, const std_msgs::msg::Header & header);
+  bool ParseObjectsListPacket(
+    const std::vector<uint8_t> & data, const std_msgs::msg::Header & header);
 
   /// @brief Register function to call whenever a new detection list is processed
   /// @param detection_list_callback

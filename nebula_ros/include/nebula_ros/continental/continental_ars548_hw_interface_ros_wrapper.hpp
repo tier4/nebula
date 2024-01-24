@@ -1,4 +1,4 @@
-// Copyright 2023 Tier IV, Inc.
+// Copyright 2024 Tier IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,21 +15,22 @@
 #ifndef NEBULA_ContinentalARS548HwInterfaceRosWrapper_H
 #define NEBULA_ContinentalARS548HwInterfaceRosWrapper_H
 
-#include "boost_tcp_driver/tcp_driver.hpp"
-#include "nebula_common/continental/continental_common.hpp"
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp"
-#include "nebula_ros/common/nebula_hw_interface_ros_wrapper_base.hpp"
-
 #include <ament_index_cpp/get_package_prefix.hpp>
+#include <boost_tcp_driver/tcp_driver.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_common/continental/continental_common.hpp>
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp>
+#include <nebula_ros/common/nebula_hw_interface_ros_wrapper_base.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "nebula_msgs/msg/nebula_packet.hpp"
-#include "nebula_msgs/msg/nebula_packets.hpp"
-#include "std_msgs/msg/bool.hpp"
-#include "std_srvs/srv/empty.hpp"
+#include <geometry_msgs/msg/accel_with_covariance_stamped.hpp>
+#include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
+#include <nebula_msgs/msg/nebula_packet.hpp>
+#include <nebula_msgs/msg/nebula_packets.hpp>
+#include <std_msgs/msg/bool.hpp>
+#include <std_srvs/srv/empty.hpp>
 
 #include <boost/asio.hpp>
 
@@ -73,8 +74,15 @@ class ContinentalARS548HwInterfaceRosWrapper final : public rclcpp::Node,
 
   /// @brief Received Continental Radar message publisher
   rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_;
-  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr driving_direction_sub_;
-  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr sensor_config_service_server_;
+  rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr odometry_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::AccelWithCovarianceStamped>::SharedPtr acceleration_sub_;
+
+  bool standstill_{true};
+
+  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr set_new_sensor_ip_service_server_;
+  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr set_new_sensor_mounting_service_server_;
+  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr set_new_vehicle_parameters_service_server_;
+  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr set_new_radar_parameters_service_server_;
 
   /// @brief Initializing hardware interface ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
@@ -85,14 +93,39 @@ class ContinentalARS548HwInterfaceRosWrapper final : public rclcpp::Node,
   /// @param packets_buffer Received NebulaPackets
   void ReceivePacketsDataCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_buffer);
 
-  /// @brief (Dummy) Callback to set the driving direction
-  /// @param msg A dummy msg
-  void DrivingDirectionCallback(const std_msgs::msg::Bool::SharedPtr msg);
+  /// @brief Callback to send the odometry information to the radar device
+  /// @param msg The odometry message
+  void OdometryCallback(const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg);
 
-  /// @brief (Dummy) Service callback to configure the sensor
+  /// @brief Callback to send the acceleration information to the radar device
+  /// @param msg The acceleration message
+  void AccelerationCallback(const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr msg);
+
+  /// @brief Service callback to set the new sensor ip
   /// @param request Empty service request
   /// @param response Empty service response
-  void SensorConfigureRequestCallback(
+  void SetNewSensorIPRequestCallback(
+    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
+    const std::shared_ptr<std_srvs::srv::Empty::Response> response);
+
+  /// @brief Service callback to set the new sensor mounting position
+  /// @param request Empty service request
+  /// @param response Empty service response
+  void SetNewSensorMountingRequestCallback(
+    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
+    const std::shared_ptr<std_srvs::srv::Empty::Response> response);
+
+  /// @brief Service callback to set the new vehicle parameters
+  /// @param request Empty service request
+  /// @param response Empty service response
+  void SetNewVehicleParametersRequestCallback(
+    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
+    const std::shared_ptr<std_srvs::srv::Empty::Response> response);
+
+  /// @brief Service callback to set the new radar parameters
+  /// @param request Empty service request
+  /// @param response Empty service response
+  void SetNewRadarParametersRequestCallback(
     const std::shared_ptr<std_srvs::srv::Empty::Request> request,
     const std::shared_ptr<std_srvs::srv::Empty::Response> response);
 

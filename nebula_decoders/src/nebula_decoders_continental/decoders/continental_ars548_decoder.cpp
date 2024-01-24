@@ -1,4 +1,4 @@
-// Copyright 2023 Tier IV, Inc.
+// Copyright 2024 Tier IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,19 +75,20 @@ bool ContinentalARS548Decoder::ProcessPackets(
       return false;
     }
 
-    return ParseDetectionsListPacket(data);
+    return ParseDetectionsListPacket(data, nebula_packets.header);
   } else if (header.method_id.value() == OBJECT_LIST_METHOD_ID) {
     if (data.size() != OBJECT_LIST_UDP_PAYLOAD || header.length.value() != OBJECT_LIST_PDU_LENGTH) {
       return false;
     }
 
-    return ParseObjectsListPacket(data);
+    return ParseObjectsListPacket(data, nebula_packets.header);
   }
 
   return true;
 }
 
-bool ContinentalARS548Decoder::ParseDetectionsListPacket(const std::vector<uint8_t> & data)
+bool ContinentalARS548Decoder::ParseDetectionsListPacket(
+  const std::vector<uint8_t> & data, const std_msgs::msg::Header & header)
 {
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548DetectionList>();
   auto & msg = *msg_ptr;
@@ -98,8 +99,14 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(const std::vector<uint8
   std::memcpy(&detection_list, data.data(), sizeof(DetectionListPacket));
 
   msg.header.frame_id = sensor_configuration_->frame_id;
-  msg.header.stamp.nanosec = detection_list.stamp.timestamp_nanoseconds.value();
-  msg.header.stamp.sec = detection_list.stamp.timestamp_seconds.value();
+
+  if (sensor_configuration_->use_sensor_time) {
+    msg.header.stamp.nanosec = detection_list.stamp.timestamp_nanoseconds.value();
+    msg.header.stamp.sec = detection_list.stamp.timestamp_seconds.value();
+  } else {
+    msg.header.stamp = header.stamp;
+  }
+
   msg.stamp_sync_status = detection_list.stamp.timestamp_sync_status;
   assert(msg.stamp_sync_status >= 1 && msg.stamp_sync_status <= 3);
 
@@ -186,7 +193,8 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(const std::vector<uint8
   return true;
 }
 
-bool ContinentalARS548Decoder::ParseObjectsListPacket(const std::vector<uint8_t> & data)
+bool ContinentalARS548Decoder::ParseObjectsListPacket(
+  const std::vector<uint8_t> & data, const std_msgs::msg::Header & header)
 {
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548ObjectList>();
   auto & msg = *msg_ptr;
@@ -196,9 +204,16 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(const std::vector<uint8_t>
 
   std::memcpy(&object_list, data.data(), sizeof(object_list));
 
-  msg.header.frame_id = sensor_configuration_->frame_id;
-  msg.header.stamp.nanosec = object_list.stamp.timestamp_nanoseconds.value();
-  msg.header.stamp.sec = object_list.stamp.timestamp_seconds.value();
+  // msg.header.frame_id = sensor_configuration_->frame_id;
+  msg.header.frame_id = "base_link";
+
+  if (sensor_configuration_->use_sensor_time) {
+    msg.header.stamp.nanosec = object_list.stamp.timestamp_nanoseconds.value();
+    msg.header.stamp.sec = object_list.stamp.timestamp_seconds.value();
+  } else {
+    msg.header.stamp = header.stamp;
+  }
+
   msg.stamp_sync_status = object_list.stamp.timestamp_sync_status;
   assert(msg.stamp_sync_status >= 1 && msg.stamp_sync_status <= 3);
 

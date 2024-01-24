@@ -1,4 +1,4 @@
-// Copyright 2023 Tier IV, Inc.
+// Copyright 2024 Tier IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,14 +51,20 @@ ContinentalARS548DriverRosWrapper::ContinentalARS548DriverRosWrapper(
 
   detection_list_pub_ =
     this->create_publisher<continental_msgs::msg::ContinentalArs548DetectionList>(
-      "detection_array", rclcpp::SensorDataQoS());
+      "continental_detections", rclcpp::SensorDataQoS());
   object_list_pub_ = this->create_publisher<continental_msgs::msg::ContinentalArs548ObjectList>(
-    "object_array", rclcpp::SensorDataQoS());
+    "continental_objects", rclcpp::SensorDataQoS());
 
   detection_pointcloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
     "detection_points", rclcpp::SensorDataQoS());
   object_pointcloud_pub_ =
     this->create_publisher<sensor_msgs::msg::PointCloud2>("object_points", rclcpp::SensorDataQoS());
+
+  scan_raw_pub_ =
+    this->create_publisher<radar_msgs::msg::RadarScan>("scan_raw", rclcpp::SensorDataQoS());
+  ;
+  objects_raw_pub_ =
+    this->create_publisher<radar_msgs::msg::RadarTracks>("objects_raw", rclcpp::SensorDataQoS());
 }
 
 void ContinentalARS548DriverRosWrapper::ReceivePacketsMsgCallback(
@@ -135,6 +141,124 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
     this->declare_parameter<std::string>("frame_id", descriptor);
     sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
   }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<bool>("use_sensor_time", descriptor);
+    sensor_configuration.use_sensor_time = this->get_parameter("use_sensor_time").as_bool();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<uint16_t>("new_plug_orientation", descriptor);
+    sensor_configuration.new_plug_orientation =
+      this->get_parameter("new_plug_orientation").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("new_vehicle_length", descriptor);
+    sensor_configuration.new_vehicle_length =
+      static_cast<float>(this->get_parameter("new_vehicle_length").as_double());
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("new_vehicle_width", descriptor);
+    sensor_configuration.new_vehicle_width =
+      static_cast<float>(this->get_parameter("new_vehicle_width").as_double());
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("new_vehicle_height", descriptor);
+    sensor_configuration.new_vehicle_height =
+      static_cast<float>(this->get_parameter("new_vehicle_height").as_double());
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("new_vehicle_wheelbase", descriptor);
+    sensor_configuration.new_vehicle_wheelbase =
+      static_cast<float>(this->get_parameter("new_vehicle_wheelbase").as_double());
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<uint16_t>("new_radar_maximum_distance", descriptor);
+    sensor_configuration.new_radar_maximum_distance =
+      this->get_parameter("new_radar_maximum_distance").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<uint16_t>("new_radar_frequency_slot", descriptor);
+    sensor_configuration.new_radar_frequency_slot =
+      this->get_parameter("new_radar_frequency_slot").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<uint16_t>("new_radar_cycle_time", descriptor);
+    sensor_configuration.new_radar_cycle_time =
+      this->get_parameter("new_radar_cycle_time").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<uint16_t>("new_radar_time_slot", descriptor);
+    sensor_configuration.new_radar_time_slot = this->get_parameter("new_radar_time_slot").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<uint16_t>("new_radar_country_code", descriptor);
+    sensor_configuration.new_radar_country_code =
+      this->get_parameter("new_radar_country_code").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<uint16_t>("new_radar_powersave_standstill", descriptor);
+    sensor_configuration.new_radar_powersave_standstill =
+      this->get_parameter("new_radar_powersave_standstill").as_int();
+  }
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
@@ -163,6 +287,14 @@ void ContinentalARS548DriverRosWrapper::DetectionListCallback(
     detection_pointcloud_msg_ptr->header = msg->header;
     detection_pointcloud_pub_->publish(std::move(detection_pointcloud_msg_ptr));
   }
+
+  if (
+    scan_raw_pub_->get_subscription_count() > 0 ||
+    scan_raw_pub_->get_intra_process_subscription_count() > 0) {
+    auto radar_scan_msg = ConvertToRadarScan(*msg);
+    radar_scan_msg.header = msg->header;
+    scan_raw_pub_->publish(std::move(radar_scan_msg));
+  }
   if (
     detection_list_pub_->get_subscription_count() > 0 ||
     detection_list_pub_->get_intra_process_subscription_count() > 0) {
@@ -184,25 +316,48 @@ void ContinentalARS548DriverRosWrapper::ObjectListCallback(
     object_pointcloud_pub_->publish(std::move(object_pointcloud_msg_ptr));
   }
   if (
+    objects_raw_pub_->get_subscription_count() > 0 ||
+    objects_raw_pub_->get_intra_process_subscription_count() > 0) {
+    auto objects_raw_msg = ConvertToRadarTracks(*msg);
+    objects_raw_msg.header = msg->header;
+    objects_raw_pub_->publish(std::move(objects_raw_msg));
+  }
+  if (
     object_list_pub_->get_subscription_count() > 0 ||
     object_list_pub_->get_intra_process_subscription_count() > 0) {
     object_list_pub_->publish(std::move(msg));
   }
 }
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr ContinentalARS548DriverRosWrapper::ConvertToPointcloud(
+pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr
+ContinentalARS548DriverRosWrapper::ConvertToPointcloud(
   const continental_msgs::msg::ContinentalArs548DetectionList & msg)
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr output_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr output_pointcloud(
+    new pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>);
   output_pointcloud->reserve(msg.detections.size());
 
-  pcl::PointXYZ point{};
+  nebula::drivers::continental_ars548::PointARS548Detection point{};
   for (const auto & detection : msg.detections) {
     point.x =
       std::cos(detection.elevation_angle) * std::cos(detection.azimuth_angle) * detection.range;
     point.y =
       std::cos(detection.elevation_angle) * std::sin(detection.azimuth_angle) * detection.range;
     point.z = std::sin(detection.elevation_angle) * detection.range;
+
+    point.azimuth = detection.azimuth_angle;
+    point.azimuth_std = detection.azimuth_angle_std;
+    point.elevation = detection.elevation_angle;
+    point.elevation_std = detection.elevation_angle_std;
+    point.range = detection.range;
+    point.range_std = detection.range_std;
+    point.rcs = detection.rcs;
+    point.measurement_id = detection.measurement_id;
+    point.positive_predictive_value = detection.positive_predictive_value;
+    point.classification = detection.classification;
+    point.multi_target_probability = detection.multi_target_probability;
+    point.object_id = detection.object_id;
+    point.ambiguity_flag = detection.ambiguity_flag;
 
     output_pointcloud->points.emplace_back(point);
   }
@@ -212,17 +367,37 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr ContinentalARS548DriverRosWrapper::ConvertTo
   return output_pointcloud;
 }
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr ContinentalARS548DriverRosWrapper::ConvertToPointcloud(
+pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr
+ContinentalARS548DriverRosWrapper::ConvertToPointcloud(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr output_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr output_pointcloud(
+    new pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>);
   output_pointcloud->reserve(msg.objects.size());
 
-  pcl::PointXYZ point{};
+  nebula::drivers::continental_ars548::PointARS548Object point{};
   for (const auto & detection : msg.objects) {
     point.x = static_cast<float>(detection.position.x);
     point.y = static_cast<float>(detection.position.y);
     point.z = static_cast<float>(detection.position.z);
+
+    point.id = detection.object_id;
+    point.age = detection.age;
+    point.status_measurement = detection.status_measurement;
+    point.status_movement = detection.status_movement;
+    point.position_reference = detection.position_reference;
+    point.classification_car = detection.classification_car;
+    point.classification_truck = detection.classification_truck;
+    point.classification_motorcycle = detection.classification_motorcycle;
+    point.classification_bicycle = detection.classification_bicycle;
+    point.classification_pedestrian = detection.classification_pedestrian;
+    point.dynamics_abs_vel_x = static_cast<float>(detection.absolute_velocity.x);
+    point.dynamics_abs_vel_y = static_cast<float>(detection.absolute_velocity.y);
+    point.dynamics_rel_vel_x = static_cast<float>(detection.relative_velocity.x);
+    point.dynamics_rel_vel_y = static_cast<float>(detection.relative_velocity.y);
+    point.shape_length_edge_mean = detection.shape_length_edge_mean;
+    point.shape_width_edge_mean = detection.shape_width_edge_mean;
+    point.dynamics_orientation_rate_mean = detection.orientation_rate_mean;
 
     output_pointcloud->points.emplace_back(point);
   }

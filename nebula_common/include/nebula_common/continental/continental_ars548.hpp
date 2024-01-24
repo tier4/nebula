@@ -1,4 +1,4 @@
-// Copyright 2023 Tier IV, Inc.
+// Copyright 2024 Tier IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -366,6 +366,77 @@ struct FilterStatusPacket
 
 #pragma pack(pop)
 
+struct PointARS548Detection
+{
+  PCL_ADD_POINT4D;
+  float azimuth;
+  float azimuth_std;
+  float elevation;
+  float elevation_std;
+  float range;
+  float range_std;
+  int8_t rcs;
+  uint16_t measurement_id;
+  uint8_t positive_predictive_value;
+  uint8_t classification;
+  uint8_t multi_target_probability;
+  uint16_t object_id;
+  uint8_t ambiguity_flag;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+} EIGEN_ALIGN16;
+
+// Note we only use a subset of the data since POINT_CLOUD_REGISTER_POINT_STRUCT has a limit in the
+// number of fields
+struct PointARS548Object
+{
+  PCL_ADD_POINT4D;
+  uint32_t id;
+  uint16_t age;
+  uint8_t status_measurement;
+  uint8_t status_movement;
+  uint8_t position_reference;
+  uint8_t classification_car;
+  uint8_t classification_truck;
+  uint8_t classification_motorcycle;
+  uint8_t classification_bicycle;
+  uint8_t classification_pedestrian;
+  float dynamics_abs_vel_x;
+  float dynamics_abs_vel_y;
+  float dynamics_rel_vel_x;
+  float dynamics_rel_vel_y;
+  float shape_length_edge_mean;
+  float shape_width_edge_mean;
+  float dynamics_orientation_rate_mean;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+} EIGEN_ALIGN16;
+
 }  // namespace continental_ars548
 }  // namespace drivers
 }  // namespace nebula
+
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+  nebula::drivers::continental_ars548::PointARS548Detection,
+  (float, x, x)(float, y, y)(float, z, z)(float, azimuth, azimuth)(float, azimuth_std, azimuth_std)(
+    float, elevation, elevation)(float, elevation_std, elevation_std)(float, range, range)(
+    float, range_std, range_std)(int8_t, rcs, rcs)(uint16_t, measurement_id, measurement_id)(
+    uint8_t, positive_predictive_value,
+    positive_predictive_value)(uint8_t, classification, classification)(
+    uint8_t, multi_target_probability, multi_target_probability)(uint16_t, object_id, object_id)(
+    uint8_t, ambiguity_flag, ambiguity_flag))
+
+// Note: we can only use up to 20 fields
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+  nebula::drivers::continental_ars548::PointARS548Object,
+  (float, x, x)(float, y, y)(float, z, z)(uint32_t, id, id)(uint16_t, age, age)(
+    uint8_t, status_measurement, status_measurement)(uint8_t, status_movement, status_movement)(
+    uint8_t, position_reference,
+    position_reference)(uint8_t, classification_car, classification_car)(
+    uint8_t, classification_truck,
+    classification_truck)(uint8_t, classification_motorcycle, classification_motorcycle)(
+    uint8_t, classification_bicycle,
+    classification_bicycle)(uint8_t, classification_pedestrian, classification_pedestrian)(
+    float, dynamics_abs_vel_x, dynamics_abs_vel_x)(float, dynamics_abs_vel_y, dynamics_abs_vel_y)(
+    float, dynamics_rel_vel_x, dynamics_rel_vel_x)(float, dynamics_rel_vel_y, dynamics_rel_vel_y)(
+    float, shape_length_edge_mean,
+    shape_length_edge_mean)(float, shape_width_edge_mean, shape_width_edge_mean)(
+    float, dynamics_orientation_rate_mean, dynamics_orientation_rate_mean))
