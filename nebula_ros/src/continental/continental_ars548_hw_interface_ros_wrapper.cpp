@@ -63,6 +63,11 @@ ContinentalARS548HwInterfaceRosWrapper::ContinentalARS548HwInterfaceRosWrapper(
     std::bind(
       &ContinentalARS548HwInterfaceRosWrapper::AccelerationCallback, this, std::placeholders::_1));
 
+  steering_angle_sub_ = create_subscription<std_msgs::msg::Float32>(
+    "steering_angle_input", rclcpp::QoS{1},
+    std::bind(
+      &ContinentalARS548HwInterfaceRosWrapper::SteeringAngleCallback, this, std::placeholders::_1));
+
   set_new_sensor_ip_service_server_ = this->create_service<std_srvs::srv::Empty>(
     "set_new_sensor_ip", std::bind(
                            &ContinentalARS548HwInterfaceRosWrapper::SetNewSensorIPRequestCallback,
@@ -427,6 +432,13 @@ void ContinentalARS548HwInterfaceRosWrapper::AccelerationCallback(
   std::scoped_lock lock(mtx_config_);
   hw_interface_.SetAccelerationLateralCog(msg->accel.accel.linear.y);
   hw_interface_.SetAccelerationLongitudinalCog(msg->accel.accel.linear.x);
+}
+
+void ContinentalARS548HwInterfaceRosWrapper::SteeringAngleCallback(
+  const std_msgs::msg::Float32::SharedPtr msg)
+{
+  std::scoped_lock lock(mtx_config_);
+  hw_interface_.SetSteeringAngleFrontAxle(msg->data);
 }
 
 void ContinentalARS548HwInterfaceRosWrapper::SetNewSensorIPRequestCallback(

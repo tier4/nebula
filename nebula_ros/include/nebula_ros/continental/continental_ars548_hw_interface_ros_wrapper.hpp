@@ -30,6 +30,7 @@
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
 #include <std_msgs/msg/bool.hpp>
+#include <std_msgs/msg/float32.hpp>
 #include <std_srvs/srv/empty.hpp>
 
 #include <boost/asio.hpp>
@@ -76,6 +77,7 @@ class ContinentalARS548HwInterfaceRosWrapper final : public rclcpp::Node,
   rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_;
   rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr odometry_sub_;
   rclcpp::Subscription<geometry_msgs::msg::AccelWithCovarianceStamped>::SharedPtr acceleration_sub_;
+  rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr steering_angle_sub_;
 
   bool standstill_{true};
 
@@ -100,6 +102,10 @@ class ContinentalARS548HwInterfaceRosWrapper final : public rclcpp::Node,
   /// @brief Callback to send the acceleration information to the radar device
   /// @param msg The acceleration message
   void AccelerationCallback(const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr msg);
+
+  /// @brief Callback to send the steering angle information to the radar device
+  /// @param msg The steering angle message
+  void SteeringAngleCallback(const std_msgs::msg::Float32::SharedPtr msg);
 
   /// @brief Service callback to set the new sensor ip
   /// @param request Empty service request

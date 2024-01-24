@@ -5,6 +5,7 @@
 
     <arg name="odometry_topic" default="odometry_input"/>
     <arg name="acceleration_topic"  default="acceleration_input"/>
+    <arg name="steering_angle_topic"  default="steering_angle_input"/>
 
     <arg name="sensor_ip" default="10.13.1.114" description="Radar Sensor IP"/>
     <arg name="new_sensor_ip" default="10.13.1.113" description="New Radar Sensor IP"/>
@@ -54,6 +55,7 @@
         <remap from="/diagnostics" to="diagnostics"/>
         <remap from="odometry_input" to="$(var odometry_topic)"/>
         <remap from="acceleration_input" to="$(var acceleration_topic)"/>
+        <remap from="steering_angle_input" to="$(var steering_angle_topic)"/>
 
         <param name="sensor_model" value="$(var sensor_model)"/>
         <param name="frame_id" value="$(var frame_id)"/>
