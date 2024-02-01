@@ -53,44 +53,6 @@ ContinentalARS548HwInterfaceRosWrapper::ContinentalARS548HwInterfaceRosWrapper(
   set_param_res_ = this->add_on_set_parameters_callback(
     std::bind(&ContinentalARS548HwInterfaceRosWrapper::paramCallback, this, std::placeholders::_1));
 
-  odometry_sub_ = this->create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
-    "odometry_input", rclcpp::QoS{1},
-    std::bind(
-      &ContinentalARS548HwInterfaceRosWrapper::OdometryCallback, this, std::placeholders::_1));
-
-  acceleration_sub_ = create_subscription<geometry_msgs::msg::AccelWithCovarianceStamped>(
-    "acceleration_input", rclcpp::QoS{1},
-    std::bind(
-      &ContinentalARS548HwInterfaceRosWrapper::AccelerationCallback, this, std::placeholders::_1));
-
-  steering_angle_sub_ = create_subscription<std_msgs::msg::Float32>(
-    "steering_angle_input", rclcpp::QoS{1},
-    std::bind(
-      &ContinentalARS548HwInterfaceRosWrapper::SteeringAngleCallback, this, std::placeholders::_1));
-
-  set_new_sensor_ip_service_server_ = this->create_service<std_srvs::srv::Empty>(
-    "set_new_sensor_ip", std::bind(
-                           &ContinentalARS548HwInterfaceRosWrapper::SetNewSensorIPRequestCallback,
-                           this, std::placeholders::_1, std::placeholders::_2));
-
-  set_new_sensor_mounting_service_server_ = this->create_service<std_srvs::srv::Empty>(
-    "set_new_sensor_mounting",
-    std::bind(
-      &ContinentalARS548HwInterfaceRosWrapper::SetNewSensorMountingRequestCallback, this,
-      std::placeholders::_1, std::placeholders::_2));
-
-  set_new_vehicle_parameters_service_server_ = this->create_service<std_srvs::srv::Empty>(
-    "set_new_vehicle_parameters",
-    std::bind(
-      &ContinentalARS548HwInterfaceRosWrapper::SetNewVehicleParametersRequestCallback, this,
-      std::placeholders::_1, std::placeholders::_2));
-
-  set_new_radar_parameters_service_server_ = this->create_service<std_srvs::srv::Empty>(
-    "set_new_radar_parameters",
-    std::bind(
-      &ContinentalARS548HwInterfaceRosWrapper::SetNewRadarParametersRequestCallback, this,
-      std::placeholders::_1, std::placeholders::_2));
-
   StreamStart();
 }
 
@@ -102,6 +64,48 @@ Status ContinentalARS548HwInterfaceRosWrapper::StreamStart()
 {
   if (Status::OK == interface_status_) {
     interface_status_ = hw_interface_.CloudInterfaceStart();
+  }
+
+  if (Status::OK == interface_status_) {
+    odometry_sub_ = this->create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
+      "odometry_input", rclcpp::QoS{1},
+      std::bind(
+        &ContinentalARS548HwInterfaceRosWrapper::OdometryCallback, this, std::placeholders::_1));
+
+    acceleration_sub_ = create_subscription<geometry_msgs::msg::AccelWithCovarianceStamped>(
+      "acceleration_input", rclcpp::QoS{1},
+      std::bind(
+        &ContinentalARS548HwInterfaceRosWrapper::AccelerationCallback, this,
+        std::placeholders::_1));
+
+    steering_angle_sub_ = create_subscription<std_msgs::msg::Float32>(
+      "steering_angle_input", rclcpp::QoS{1},
+      std::bind(
+        &ContinentalARS548HwInterfaceRosWrapper::SteeringAngleCallback, this,
+        std::placeholders::_1));
+
+    set_new_sensor_ip_service_server_ = this->create_service<std_srvs::srv::Empty>(
+      "set_new_sensor_ip", std::bind(
+                             &ContinentalARS548HwInterfaceRosWrapper::SetNewSensorIPRequestCallback,
+                             this, std::placeholders::_1, std::placeholders::_2));
+
+    set_new_sensor_mounting_service_server_ = this->create_service<std_srvs::srv::Empty>(
+      "set_new_sensor_mounting",
+      std::bind(
+        &ContinentalARS548HwInterfaceRosWrapper::SetNewSensorMountingRequestCallback, this,
+        std::placeholders::_1, std::placeholders::_2));
+
+    set_new_vehicle_parameters_service_server_ = this->create_service<std_srvs::srv::Empty>(
+      "set_new_vehicle_parameters",
+      std::bind(
+        &ContinentalARS548HwInterfaceRosWrapper::SetNewVehicleParametersRequestCallback, this,
+        std::placeholders::_1, std::placeholders::_2));
+
+    set_new_radar_parameters_service_server_ = this->create_service<std_srvs::srv::Empty>(
+      "set_new_radar_parameters",
+      std::bind(
+        &ContinentalARS548HwInterfaceRosWrapper::SetNewRadarParametersRequestCallback, this,
+        std::placeholders::_1, std::placeholders::_2));
 
     std::scoped_lock lock(mtx_config_);
     diagnostics_updater_.add(
@@ -188,6 +192,15 @@ Status ContinentalARS548HwInterfaceRosWrapper::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("frame_id", descriptor);
     sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("base_frame", descriptor);
+    sensor_configuration.base_frame = this->get_parameter("base_frame").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -458,32 +471,26 @@ void ContinentalARS548HwInterfaceRosWrapper::SetNewSensorMountingRequestCallback
   auto tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
   auto tf_listener = std::make_unique<tf2_ros::TransformListener>(*tf_buffer);
 
-  geometry_msgs::msg::TransformStamped autosar_to_sensor_tf;
+  geometry_msgs::msg::TransformStamped base_to_sensor_tf;
   try {
-    autosar_to_sensor_tf = tf_buffer->lookupTransform(
-      std::string("autosar"), sensor_configuration_.frame_id, rclcpp::Time(0),
+    base_to_sensor_tf = tf_buffer->lookupTransform(
+      sensor_configuration_.base_frame, sensor_configuration_.frame_id, rclcpp::Time(0),
       rclcpp::Duration::from_seconds(0.5));
   } catch (tf2::TransformException & ex) {
     RCLCPP_ERROR(
-      this->get_logger(), "Could not obtain the transform from the autosar frame to %s (%s)",
+      this->get_logger(), "Could not obtain the transform from the base frame to %s (%s)",
       sensor_configuration_.frame_id.c_str(), ex.what());
     return;
   }
 
-  const auto & quat = autosar_to_sensor_tf.transform.rotation;
+  const auto & quat = base_to_sensor_tf.transform.rotation;
   geometry_msgs::msg::Vector3 rpy;
   tf2::Matrix3x3(tf2::Quaternion(quat.x, quat.y, quat.z, quat.w)).getRPY(rpy.x, rpy.y, rpy.z);
 
-  std::cout << "DEBUG TF" << std::endl;
-  std::cout << "translation: x=" << autosar_to_sensor_tf.transform.translation.x
-            << " y=" << autosar_to_sensor_tf.transform.translation.y
-            << " z=" << autosar_to_sensor_tf.transform.translation.z << std::endl;
-  std::cout << "orientation: roll=" << rpy.x << " pitch=" << rpy.y << " yaw=" << rpy.z << std::endl;
-
   hw_interface_.SetSensorMounting(
-    autosar_to_sensor_tf.transform.translation.x, autosar_to_sensor_tf.transform.translation.y,
-    autosar_to_sensor_tf.transform.translation.z, rpy.z, rpy.y,
-    sensor_configuration_.new_plug_orientation);
+    base_to_sensor_tf.transform.translation.x - sensor_configuration_.new_vehicle_wheelbase,
+    base_to_sensor_tf.transform.translation.y, base_to_sensor_tf.transform.translation.z, rpy.z,
+    rpy.y, sensor_configuration_.new_plug_orientation);
 }
 
 void ContinentalARS548HwInterfaceRosWrapper::SetNewVehicleParametersRequestCallback(

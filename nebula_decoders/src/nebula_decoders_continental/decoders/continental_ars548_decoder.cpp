@@ -204,8 +204,7 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(
 
   std::memcpy(&object_list, data.data(), sizeof(object_list));
 
-  // msg.header.frame_id = sensor_configuration_->frame_id;
-  msg.header.frame_id = "base_link";
+  msg.header.frame_id = sensor_configuration_->base_frame;
 
   if (sensor_configuration_->use_sensor_time) {
     msg.header.stamp.nanosec = object_list.stamp.timestamp_nanoseconds.value();
@@ -268,7 +267,7 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(
 
     object_msg.position.x = static_cast<double>(object.position_x.value());
     object_msg.position.y = static_cast<double>(object.position_y.value());
-    object_msg.position.y = static_cast<double>(object.position_z.value());
+    object_msg.position.z = static_cast<double>(object.position_z.value());
 
     object_msg.position_std.x = static_cast<double>(object.position_x_std.value());
     object_msg.position_std.y = static_cast<double>(object.position_y_std.value());

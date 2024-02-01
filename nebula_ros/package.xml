@@ -29,6 +29,7 @@
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>velodyne_msgs</depend>
+  <depend>visualization_msgs</depend>
   <depend>yaml-cpp</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>

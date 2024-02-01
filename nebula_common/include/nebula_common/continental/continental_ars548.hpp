@@ -375,6 +375,8 @@ struct PointARS548Detection
   float elevation_std;
   float range;
   float range_std;
+  float range_rate;
+  float range_rate_std;
   int8_t rcs;
   uint16_t measurement_id;
   uint8_t positive_predictive_value;

@@ -35,9 +35,11 @@
 #include <nebula_msgs/msg/nebula_packets.hpp>
 #include <radar_msgs/msg/radar_scan.hpp>
 #include <radar_msgs/msg/radar_tracks.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 #include <chrono>
 #include <memory>
+#include <unordered_set>
 
 namespace nebula
 {
@@ -58,8 +60,23 @@ class ContinentalARS548DriverRosWrapper final : public rclcpp::Node, NebulaDrive
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr detection_pointcloud_pub_;
   rclcpp::Publisher<radar_msgs::msg::RadarScan>::SharedPtr scan_raw_pub_;
   rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr objects_raw_pub_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr objects_markers_pub_;
 
-  std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
+  std::unordered_set<int> previous_ids_;
+
+  constexpr static int REFERENCE_POINTS_NUM = 9;
+  constexpr static std::array<std::array<double, 2>, REFERENCE_POINTS_NUM> reference_to_center_ = {
+    {{{-1.0, -1.0}},
+     {{-1.0, 0.0}},
+     {{-1.0, 1.0}},
+     {{0.0, 1.0}},
+     {{1.0, 1.0}},
+     {{1.0, 0.0}},
+     {{1.0, -1.0}},
+     {{0.0, -1.0}},
+     {{0.0, 0.0}}}};
+
+  std::shared_ptr<drivers::ContinentalARS548SensorConfiguration> sensor_cfg_ptr_;
 
   drivers::continental_ars548::ContinentalARS548HwInterface hw_interface_;
 
@@ -127,6 +144,12 @@ public:
   /// @param msg The ARS548 object list msg
   /// @return Resulting RadarTracks msg
   radar_msgs::msg::RadarTracks ConvertToRadarTracks(
+    const continental_msgs::msg::ContinentalArs548ObjectList & msg);
+
+  /// @brief Convert ARS548 objects to a standard MarkerArray msg
+  /// @param msg The ARS548 object list msg
+  /// @return Resulting MarkerArray msg
+  visualization_msgs::msg::MarkerArray ConvertToMarkers(
     const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 };
 
