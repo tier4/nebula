@@ -255,7 +255,6 @@ Status VelodyneDriverRosWrapper::GetParameters(
     this->declare_parameter<bool>("invalid_point_remove", false, descriptor);
     sensor_configuration.invalid_point_remove =
       this->get_parameter("invalid_point_remove").as_bool();
-
     if (sensor_configuration.invalid_point_remove) {
       RCLCPP_INFO_STREAM(this->get_logger(), "Invalid point remove is active.");
     } else {
@@ -263,74 +262,36 @@ Status VelodyneDriverRosWrapper::GetParameters(
     }
   }
 
-  std::vector<int64_t> invalid_rings;
-  std::vector<int64_t> invalid_angles_start;
-  std::vector<int64_t> invalid_angles_end;
-
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY;
-    descriptor.read_only = false;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::vector<int64_t>>("invalid_rings", descriptor);
-    invalid_rings = this->get_parameter("invalid_rings").as_integer_array();
+    this->declare_parameter<std::string>("invalid_regions", "", descriptor);
+    const std::string regions_string = this->get_parameter("invalid_regions").as_string();
+    std::istringstream regions_stream(regions_string);
 
-    RCLCPP_INFO_STREAM(this->get_logger(), "Invalid rings: ");
-    for (const auto & invalid_ring : invalid_rings) {
-      RCLCPP_INFO_STREAM(this->get_logger(), invalid_ring << " ");
-    }
-  }
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_json(regions_stream, pt);
 
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::vector<int64_t>>("invalid_angles_start", descriptor);
-    invalid_angles_start = this->get_parameter("invalid_angles_start").as_integer_array();
-
-    RCLCPP_INFO_STREAM(this->get_logger(), "Invalid angles start: ");
-    for (const auto & invalid_angle_start : invalid_angles_start) {
-      RCLCPP_INFO_STREAM(this->get_logger(), invalid_angle_start << " ");
-    }
-  }
-
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::vector<int64_t>>("invalid_angles_end", descriptor);
-    invalid_angles_end = this->get_parameter("invalid_angles_end").as_integer_array();
-
-    RCLCPP_INFO_STREAM(this->get_logger(), "Invalid angles end: ");
-    for (const auto & invalid_angle_end : invalid_angles_end) {
-      RCLCPP_INFO_STREAM(this->get_logger(), invalid_angle_end << " ");
-    }
-  }
-
-  if (sensor_configuration.invalid_point_remove) {
-    // Check length of invalid_rings, invalid_angles_start and invalid_angles_end
-    if (
-      invalid_rings.size() != invalid_angles_start.size() ||
-      invalid_rings.size() != invalid_angles_end.size()) {
-      RCLCPP_ERROR_STREAM(
-        this->get_logger(),
-        "Invalid rings, invalid angles start and invalid angles end must have the same length.");
-      return Status::SENSOR_CONFIG_ERROR;
+    for (const auto & region : pt) {
+      std::vector<int> elements;  // Will store extracted ring number, start angle and end angle.
+      for (const auto & element : region.second) {
+        elements.push_back(element.second.get<int>(""));
+      }
+      sensor_configuration.invalid_regions[elements[0]].push_back(
+        {static_cast<uint16_t>(elements[1]), static_cast<uint16_t>(elements[2])});
     }
 
-    // Add invalid regions to sensor configuration
-    for (size_t i = 0; i < invalid_rings.size(); i++) {
-      drivers::InvalidRegion invalid_region;
-      invalid_region.ring = invalid_rings[i];
-      invalid_region.start = invalid_angles_start[i];
-      invalid_region.end = invalid_angles_end[i];
-      sensor_configuration.invalid_regions.push_back(invalid_region);
+    std::stringstream regions_log;
+    for (const auto & regions : sensor_configuration.invalid_regions) {
+      regions_log << "\nRing: " << regions.first << '\n';
+      for (const auto & region : regions.second) {
+        regions_log << "(" << region.start << "," << region.end << ")\n";
+      }
     }
+    RCLCPP_INFO_STREAM(get_logger(), regions_log.str());
   }
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {

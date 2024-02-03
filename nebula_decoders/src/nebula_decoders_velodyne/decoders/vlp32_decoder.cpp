@@ -195,12 +195,13 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
         /*condition added to avoid calculating points which are not
             in the interesting defined area (min_angle < area < max_angle)*/
         if (
-          (block.rotation >= sensor_configuration_->cloud_min_angle * 100 &&
+          ((block.rotation >= sensor_configuration_->cloud_min_angle * 100 &&
            block.rotation <= sensor_configuration_->cloud_max_angle * 100 &&
            sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle) ||
           (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
            (raw->blocks[i].rotation <= sensor_configuration_->cloud_max_angle * 100 ||
-            raw->blocks[i].rotation >= sensor_configuration_->cloud_min_angle * 100))) {
+            raw->blocks[i].rotation >= sensor_configuration_->cloud_min_angle * 100))) &&
+          !check_invalid_point(corrections.laser_ring, block.rotation)) {
           const float cos_vert_angle = corrections.cos_vert_correction;
           const float sin_vert_angle = corrections.sin_vert_correction;
           const float cos_rot_correction = corrections.cos_rot_correction;
@@ -342,9 +343,6 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
           current_point.return_type = static_cast<uint8_t>(return_type);
           current_point.channel = corrections.laser_ring;
           current_point.azimuth = rotation_radians_[block.rotation];
-
-          if (check_invalid_point(corrections.laser_ring, block.rotation)) continue;
-
           current_point.elevation = sin_vert_angle;
           auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
           if (point_ts < 0) point_ts = 0;
