@@ -189,13 +189,10 @@ public:
   bool check_invalid_point(const int & channel, const uint16_t & azimuth)
   {
     if (!sensor_configuration_->invalid_point_remove) return false;
-
-    for (const InvalidRegion & region : sensor_configuration_->invalid_regions) {
-      if (region.ring == channel && azimuth >= region.start && azimuth <= region.end) {
-        return true;
-      }
-    }
-    return false;
+    const auto & regions = sensor_configuration_->invalid_regions[channel];
+    return std::any_of(regions.begin(), regions.end(), [azimuth](const auto & region) {
+      return azimuth >= region.start && azimuth <= region.end;
+    });
   }
 };
 

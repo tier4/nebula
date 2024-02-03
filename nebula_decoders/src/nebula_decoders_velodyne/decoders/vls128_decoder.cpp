@@ -259,12 +259,13 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
             // Condition added to avoid calculating points which are not in the interesting defined
             // area (cloud_min_angle < area < cloud_max_angle).
             if (
-              (azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100 &&
+              ((azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100 &&
                azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 &&
                sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle) ||
               (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
                (azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 ||
-                azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) {
+                azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) &&
+              !check_invalid_point(corrections.laser_ring, azimuth_corrected)) {
               // convert polar coordinates to Euclidean XYZ.
               const float cos_vert_angle = corrections.cos_vert_correction;
               const float sin_vert_angle = corrections.sin_vert_correction;
@@ -334,9 +335,6 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               current_point.return_type = return_type;
               current_point.channel = corrections.laser_ring;
               current_point.azimuth = rotation_radians_[azimuth_corrected];
-
-              if (check_invalid_point(corrections.laser_ring, azimuth_corrected)) continue;
-              
               current_point.elevation = sin_vert_angle;
               current_point.distance = distance;
               auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
