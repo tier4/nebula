@@ -3,6 +3,8 @@
 #include <cmath>
 #include <utility>
 
+#include <angles/angles.h> 
+
 namespace nebula
 {
 namespace drivers
