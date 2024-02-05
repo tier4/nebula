@@ -5,8 +5,6 @@
     <arg name="frame_id" default="robosense"/>
     <arg name="scan_phase" default="0.0"/>
 
-    <arg name="calibration_file" default="$(find-pkg-share nebula_decoders)/calibration/robosense/Helios5515.csv"/>
-
     <arg name="sensor_ip" default="192.168.1.202" description="Lidar Sensor IP"/>
     <arg name="host_ip" default="192.168.1.201" description="Broadcast IP from Sensor"/>
     <arg name="data_port" default="6701" description="LiDAR Data Port"/>
