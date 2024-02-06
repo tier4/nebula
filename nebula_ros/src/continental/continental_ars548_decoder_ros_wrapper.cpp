@@ -484,62 +484,74 @@ radar_msgs::msg::RadarTracks ContinentalARS548DriverRosWrapper::ConvertToRadarTr
   constexpr float INVALID_COVARIANCE = 1e6;
 
   radar_msgs::msg::RadarTrack track_msg;
-  for (const auto & objects : msg.objects) {
-    track_msg.uuid.uuid[0] = static_cast<uint8_t>(objects.object_id & 0xff);
-    track_msg.uuid.uuid[1] = static_cast<uint8_t>((objects.object_id >> 8) & 0xff);
-    track_msg.uuid.uuid[2] = static_cast<uint8_t>((objects.object_id >> 16) & 0xff);
-    track_msg.uuid.uuid[3] = static_cast<uint8_t>((objects.object_id >> 24) & 0xff);
-    track_msg.position = objects.position;
-    track_msg.velocity = objects.absolute_velocity;
-    track_msg.acceleration = objects.absolute_acceleration;
-    track_msg.size.x = objects.shape_length_edge_mean;
-    track_msg.size.y = objects.shape_width_edge_mean;
+  for (const auto & object : msg.objects) {
+    track_msg.uuid.uuid[0] = static_cast<uint8_t>(object.object_id & 0xff);
+    track_msg.uuid.uuid[1] = static_cast<uint8_t>((object.object_id >> 8) & 0xff);
+    track_msg.uuid.uuid[2] = static_cast<uint8_t>((object.object_id >> 16) & 0xff);
+    track_msg.uuid.uuid[3] = static_cast<uint8_t>((object.object_id >> 24) & 0xff);
+
+    const double half_length = 0.5 * object.shape_length_edge_mean;
+    const double half_width = 0.5 * object.shape_width_edge_mean;
+    const int reference_index = std::min<int>(object.position_reference, 8);
+    const double & yaw = object.orientation;
+    track_msg.position.x = object.position.x +
+                           std::cos(yaw) * half_length * reference_to_center_[reference_index][0] -
+                           std::sin(yaw) * half_width * reference_to_center_[reference_index][1];
+    track_msg.position.y = object.position.y +
+                           std::sin(yaw) * half_length * reference_to_center_[reference_index][0] +
+                           std::cos(yaw) * half_width * reference_to_center_[reference_index][1];
+    track_msg.position.z = object.position.z;
+
+    track_msg.velocity = object.absolute_velocity;
+    track_msg.acceleration = object.absolute_acceleration;
+    track_msg.size.x = object.shape_length_edge_mean;
+    track_msg.size.y = object.shape_width_edge_mean;
     track_msg.size.z = 1.f;
 
-    uint8_t max_score = objects.classification_unknown;
+    uint8_t max_score = object.classification_unknown;
     track_msg.classification = UNKNOWN_ID;
 
-    if (objects.classification_car > max_score) {
-      max_score = objects.classification_car;
+    if (object.classification_car > max_score) {
+      max_score = object.classification_car;
       track_msg.classification = CAR_ID;
     }
-    if (objects.classification_truck > max_score) {
-      max_score = objects.classification_truck;
+    if (object.classification_truck > max_score) {
+      max_score = object.classification_truck;
       track_msg.classification = TRUCK_ID;
     }
-    if (objects.classification_motorcycle > max_score) {
-      max_score = objects.classification_motorcycle;
+    if (object.classification_motorcycle > max_score) {
+      max_score = object.classification_motorcycle;
       track_msg.classification = MOTORCYCLE_ID;
     }
-    if (objects.classification_bicycle > max_score) {
-      max_score = objects.classification_bicycle;
+    if (object.classification_bicycle > max_score) {
+      max_score = object.classification_bicycle;
       track_msg.classification = BICYCLE_ID;
     }
-    if (objects.classification_pedestrian > max_score) {
-      max_score = objects.classification_pedestrian;
+    if (object.classification_pedestrian > max_score) {
+      max_score = object.classification_pedestrian;
       track_msg.classification = PEDESTRIAN_ID;
     }
 
-    track_msg.position_covariance[0] = static_cast<float>(objects.position_std.x);
-    track_msg.position_covariance[1] = objects.position_covariance_xy;
+    track_msg.position_covariance[0] = static_cast<float>(object.position_std.x);
+    track_msg.position_covariance[1] = object.position_covariance_xy;
     track_msg.position_covariance[2] = 0.f;
-    track_msg.position_covariance[3] = static_cast<float>(objects.position_std.y);
+    track_msg.position_covariance[3] = static_cast<float>(object.position_std.y);
     track_msg.position_covariance[4] = 0.f;
-    track_msg.position_covariance[5] = static_cast<float>(objects.position_std.z);
+    track_msg.position_covariance[5] = static_cast<float>(object.position_std.z);
 
-    track_msg.velocity_covariance[0] = static_cast<float>(objects.absolute_velocity_std.x);
-    track_msg.velocity_covariance[1] = objects.absolute_velocity_covariance_xy;
+    track_msg.velocity_covariance[0] = static_cast<float>(object.absolute_velocity_std.x);
+    track_msg.velocity_covariance[1] = object.absolute_velocity_covariance_xy;
     track_msg.velocity_covariance[2] = 0.f;
-    track_msg.velocity_covariance[3] = static_cast<float>(objects.absolute_velocity_std.y);
+    track_msg.velocity_covariance[3] = static_cast<float>(object.absolute_velocity_std.y);
     track_msg.velocity_covariance[4] = 0.f;
-    track_msg.velocity_covariance[5] = static_cast<float>(objects.absolute_velocity_std.z);
+    track_msg.velocity_covariance[5] = static_cast<float>(object.absolute_velocity_std.z);
 
-    track_msg.acceleration_covariance[0] = static_cast<float>(objects.absolute_acceleration_std.x);
-    track_msg.acceleration_covariance[1] = objects.absolute_acceleration_covariance_xy;
+    track_msg.acceleration_covariance[0] = static_cast<float>(object.absolute_acceleration_std.x);
+    track_msg.acceleration_covariance[1] = object.absolute_acceleration_covariance_xy;
     track_msg.acceleration_covariance[2] = 0.f;
-    track_msg.acceleration_covariance[3] = static_cast<float>(objects.absolute_acceleration_std.y);
+    track_msg.acceleration_covariance[3] = static_cast<float>(object.absolute_acceleration_std.y);
     track_msg.acceleration_covariance[4] = 0.f;
-    track_msg.acceleration_covariance[5] = static_cast<float>(objects.absolute_acceleration_std.z);
+    track_msg.acceleration_covariance[5] = static_cast<float>(object.absolute_acceleration_std.z);
 
     track_msg.size_covariance[0] = INVALID_COVARIANCE;
     track_msg.size_covariance[1] = 0.f;
