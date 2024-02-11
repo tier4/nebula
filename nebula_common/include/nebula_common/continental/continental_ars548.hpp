@@ -13,17 +13,26 @@
 // limitations under the License.
 
 #pragma once
-/**
- * Continental ARS548
- */
+
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_common/nebula_status.hpp>
+
 #include "boost/endian/buffers.hpp"
+#include <boost/algorithm/string/join.hpp>
+#include <boost/format.hpp>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include <bitset>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <ctime>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 namespace nebula
 {
@@ -31,6 +40,179 @@ namespace drivers
 {
 namespace continental_ars548
 {
+
+/// @brief struct for ARS548 sensor configuration
+struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
+{
+  std::string multicast_ip{};
+  std::string new_sensor_ip{};
+  std::string base_frame{};
+  uint16_t configuration_host_port{};
+  uint16_t configuration_sensor_port{};
+  bool use_sensor_time{};
+  uint16_t new_plug_orientation{};
+  float new_vehicle_length{};
+  float new_vehicle_width{};
+  float new_vehicle_height{};
+  float new_vehicle_wheelbase{};
+  uint16_t new_radar_maximum_distance{};
+  uint16_t new_radar_frequency_slot{};
+  uint16_t new_radar_cycle_time{};
+  uint16_t new_radar_time_slot{};
+  uint16_t new_radar_country_code{};
+  uint16_t new_radar_powersave_standstill{};
+};
+
+/// @brief Convert ContinentalARS548SensorConfiguration to string (Overloading the <<
+/// operator)
+/// @param os
+/// @param arg
+/// @return stream
+inline std::ostream & operator<<(
+  std::ostream & os, ContinentalARS548SensorConfiguration const & arg)
+{
+  os << (EthernetSensorConfigurationBase)(arg) << ", MulticastIP: " << arg.multicast_ip
+     << ", NewSensorIP: " << arg.new_sensor_ip << ", BaseFrame: " << arg.base_frame
+     << ", ConfigurationHostPort: " << arg.configuration_host_port
+     << ", ConfigurationSensorPort: " << arg.configuration_sensor_port
+     << ", UseSensorTime: " << arg.use_sensor_time
+     << ", NewPlugOrientation: " << arg.new_plug_orientation
+     << ", NewVehicleLength: " << arg.new_vehicle_length
+     << ", NewVehicleWidth: " << arg.new_vehicle_width
+     << ", NewVehicleHeight: " << arg.new_vehicle_height
+     << ", NewVehicleWheelbase: " << arg.new_vehicle_wheelbase
+     << ", NewRadarMaximumDistance: " << arg.new_radar_maximum_distance
+     << ", NewRadarFrequencySlot: " << arg.new_radar_frequency_slot
+     << ", NewRadarCycleTime: " << arg.new_radar_cycle_time
+     << ", NewRadarTimeSlot: " << arg.new_radar_time_slot
+     << ", NewRadarCountryCode: " << arg.new_radar_country_code
+     << ", RadarPowersaveStandstill: " << arg.new_radar_powersave_standstill;
+  return os;
+}
+
+/// @brief semantic struct of ARS548 Status
+struct ContinentalARS548Status
+{
+  uint32_t timestamp_nanoseconds;
+  uint32_t timestamp_seconds;
+  std::string timestamp_sync_status;
+  uint8_t sw_version_major;
+  uint8_t sw_version_minor;
+  uint8_t sw_version_patch;
+  float longitudinal;
+  float lateral;
+  float vertical;
+  float yaw;
+  float pitch;
+  std::string plug_orientation;
+  float length;
+  float width;
+  float height;
+  float wheel_base;
+  uint16_t max_distance;
+  std::string frequency_slot;
+  uint8_t cycle_time;
+  uint8_t time_slot;
+  std::string hcc;
+  std::string power_save_standstill;
+  std::string sensor_ip_address0;
+  std::string sensor_ip_address1;
+  uint8_t configuration_counter;
+  std::string longitudinal_velocity_status;
+  std::string longitudinal_acceleration_status;
+  std::string lateral_acceleration_status;
+  std::string yaw_rate_status;
+  std::string steering_angle_status;
+  std::string driving_direction_status;
+  std::string characteristic_speed_status;
+  std::string radar_status;
+  std::string voltage_status;
+  std::string temperature_status;
+  std::string blockage_status;
+
+  ContinentalARS548Status() {}
+
+  /// @brief Stream ContinentalRadarStatus method
+  /// @param os
+  /// @param arg
+  /// @return stream
+  friend std::ostream & operator<<(std::ostream & os, ContinentalARS548Status const & arg)
+  {
+    os << "timestamp_nanoseconds: " << arg.timestamp_nanoseconds;
+    os << ", ";
+    os << "timestamp_seconds: " << arg.timestamp_seconds;
+    os << ", ";
+    os << "timestamp_sync_status: " << arg.timestamp_sync_status;
+    os << ", ";
+    os << "sw_version_major: " << arg.sw_version_major;
+    os << ", ";
+    os << "sw_version_minor: " << arg.sw_version_minor;
+    os << ", ";
+    os << "sw_version_patch: " << arg.sw_version_patch;
+    os << ", ";
+    os << "longitudinal: " << arg.longitudinal;
+    os << ", ";
+    os << "lateral: " << arg.lateral;
+    os << ", ";
+    os << "vertical: " << arg.vertical;
+    os << ", ";
+    os << "yaw: " << arg.yaw;
+    os << ", ";
+    os << "pitch: " << arg.pitch;
+    os << ", ";
+    os << "plug_orientation: " << arg.plug_orientation;
+    os << ", ";
+    os << "length: " << arg.length;
+    os << ", ";
+    os << "width: " << arg.width;
+    os << ", ";
+    os << "height: " << arg.height;
+    os << ", ";
+    os << "wheel_base: " << arg.wheel_base;
+    os << ", ";
+    os << "max_distance: " << arg.max_distance;
+    os << ", ";
+    os << "frequency_slot: " << arg.frequency_slot;
+    os << ", ";
+    os << "cycle_time: " << arg.cycle_time;
+    os << ", ";
+    os << "time_slot: " << arg.time_slot;
+    os << ", ";
+    os << "hcc: " << arg.hcc;
+    os << ", ";
+    os << "power_save_standstill: " << arg.power_save_standstill;
+    os << ", ";
+    os << "sensor_ip_address0: " << arg.sensor_ip_address0;
+    os << ", ";
+    os << "sensor_ip_address1: " << arg.sensor_ip_address1;
+    os << ", ";
+    os << "configuration_counter: " << arg.configuration_counter;
+    os << ", ";
+    os << "status_longitudinal_velocity: " << arg.longitudinal_velocity_status;
+    os << ", ";
+    os << "status_longitudinal_acceleration: " << arg.longitudinal_acceleration_status;
+    os << ", ";
+    os << "status_lateral_acceleration: " << arg.lateral_acceleration_status;
+    os << ", ";
+    os << "status_yaw_rate: " << arg.yaw_rate_status;
+    os << ", ";
+    os << "status_steering_angle: " << arg.steering_angle_status;
+    os << ", ";
+    os << "status_driving_direction: " << arg.driving_direction_status;
+    os << ", ";
+    os << "characteristic_speed: " << arg.characteristic_speed_status;
+    os << ", ";
+    os << "radar_status: " << arg.radar_status;
+    os << ", ";
+    os << "temperature_status: " << arg.temperature_status;
+    os << ", ";
+    os << "voltage_status: " << arg.voltage_status;
+    os << ", ";
+    os << "blockage_status: " << arg.blockage_status;
+
+    return os;
+  }
+};
 
 using boost::endian::big_float32_buf_t;
 using boost::endian::big_uint16_buf_t;

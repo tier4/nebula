@@ -133,6 +133,14 @@ rclcpp_components_register_node(continental_ars548_hw_ros_wrapper
         EXECUTABLE continental_ars548_hw_interface_ros_wrapper_node
         )
 
+ament_auto_add_library(continental_srr520_hw_ros_wrapper SHARED
+        src/continental/continental_srr520_hw_interface_ros_wrapper.cpp
+        )
+rclcpp_components_register_node(continental_srr520_hw_ros_wrapper
+        PLUGIN "ContinentalSRR520HwInterfaceRosWrapper"
+        EXECUTABLE continental_srr520_hw_interface_ros_wrapper_node
+        )
+
 # DriverDecoder
 ament_auto_add_library(continental_ars548_driver_ros_wrapper SHARED
         src/continental/continental_ars548_decoder_ros_wrapper.cpp
@@ -141,7 +149,13 @@ rclcpp_components_register_node(continental_ars548_driver_ros_wrapper
         PLUGIN "ContinentalARS548DriverRosWrapper"
         EXECUTABLE continental_ars548_driver_ros_wrapper_node
         )
-
+ament_auto_add_library(continental_srr520_driver_ros_wrapper SHARED
+        src/continental/continental_srr520_decoder_ros_wrapper.cpp
+        )
+rclcpp_components_register_node(continental_srr520_driver_ros_wrapper
+        PLUGIN "ContinentalSRR520DriverRosWrapper"
+        EXECUTABLE continental_srr520_driver_ros_wrapper_node
+        )
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)

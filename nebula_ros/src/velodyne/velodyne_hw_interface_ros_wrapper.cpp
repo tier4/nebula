@@ -1,3 +1,17 @@
+// Copyright 2024 Tier IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "nebula_ros/velodyne/velodyne_hw_interface_ros_wrapper.hpp"
 
 namespace nebula
@@ -57,13 +71,19 @@ VelodyneHwInterfaceRosWrapper::VelodyneHwInterfaceRosWrapper(const rclcpp::NodeO
 Status VelodyneHwInterfaceRosWrapper::StreamStart()
 {
   if (Status::OK == interface_status_) {
-    interface_status_ = hw_interface_.CloudInterfaceStart();
+    interface_status_ = hw_interface_.SensorInterfaceStart();
   }
   return interface_status_;
 }
 
-Status VelodyneHwInterfaceRosWrapper::StreamStop() { return Status::OK; }
-Status VelodyneHwInterfaceRosWrapper::Shutdown() { return Status::OK; }
+Status VelodyneHwInterfaceRosWrapper::StreamStop()
+{
+  return Status::OK;
+}
+Status VelodyneHwInterfaceRosWrapper::Shutdown()
+{
+  return Status::OK;
+}
 
 Status VelodyneHwInterfaceRosWrapper::InitializeHwInterface(  // todo: don't think this is needed
   const drivers::SensorConfigurationBase & sensor_configuration)
@@ -269,7 +289,6 @@ rcl_interfaces::msg::SetParametersResult VelodyneHwInterfaceRosWrapper::paramCal
     get_param(p, "rotation_speed", new_param.rotation_speed) ||
     get_param(p, "cloud_min_angle", new_param.cloud_min_angle) ||
     get_param(p, "cloud_max_angle", new_param.cloud_max_angle)) {  // ||
-
     if (0 < sensor_model_str.length())
       new_param.sensor_model = nebula::drivers::SensorModelFromString(sensor_model_str);
     if (0 < return_mode_str.length())

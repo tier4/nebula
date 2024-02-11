@@ -39,8 +39,10 @@ ContinentalARS548HwInterfaceRosWrapper::ContinentalARS548HwInterfaceRosWrapper(
     return;
   }
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
-  std::shared_ptr<drivers::ContinentalARS548SensorConfiguration> sensor_cfg_ptr =
-    std::make_shared<drivers::ContinentalARS548SensorConfiguration>(sensor_configuration_);
+  std::shared_ptr<drivers::continental_ars548::ContinentalARS548SensorConfiguration>
+    sensor_cfg_ptr =
+      std::make_shared<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
+        sensor_configuration_);
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
 
@@ -63,7 +65,7 @@ ContinentalARS548HwInterfaceRosWrapper::~ContinentalARS548HwInterfaceRosWrapper(
 Status ContinentalARS548HwInterfaceRosWrapper::StreamStart()
 {
   if (Status::OK == interface_status_) {
-    interface_status_ = hw_interface_.CloudInterfaceStart();
+    interface_status_ = hw_interface_.SensorInterfaceStart();
   }
 
   if (Status::OK == interface_status_) {
@@ -136,7 +138,7 @@ Status ContinentalARS548HwInterfaceRosWrapper::InitializeHwInterface(  // todo: 
 }
 
 Status ContinentalARS548HwInterfaceRosWrapper::GetParameters(
-  drivers::ContinentalARS548SensorConfiguration & sensor_configuration)
+  drivers::continental_ars548::ContinentalARS548SensorConfiguration & sensor_configuration)
 {
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -377,15 +379,31 @@ rcl_interfaces::msg::SetParametersResult ContinentalARS548HwInterfaceRosWrapper:
   RCLCPP_DEBUG_STREAM(this->get_logger(), sensor_configuration_);
   RCLCPP_INFO_STREAM(this->get_logger(), p);
 
-  drivers::ContinentalARS548SensorConfiguration new_param{sensor_configuration_};
+  drivers::continental_ars548::ContinentalARS548SensorConfiguration new_param{
+    sensor_configuration_};
   RCLCPP_INFO_STREAM(this->get_logger(), new_param);
   std::string sensor_model_str;
-  std::string return_mode_str;
+
   if (
-    get_param(p, "sensor_model", sensor_model_str) | get_param(p, "return_mode", return_mode_str) |
-    get_param(p, "host_ip", new_param.host_ip) | get_param(p, "sensor_ip", new_param.sensor_ip) |
+    get_param(p, "sensor_model", sensor_model_str) | get_param(p, "host_ip", new_param.host_ip) |
+    get_param(p, "sensor_ip", new_param.sensor_ip) | get_param(p, "frame_id", new_param.frame_id) |
+    get_param(p, "data_port", new_param.data_port) |
+    get_param(p, "multicast_ip", new_param.multicast_ip) |
     get_param(p, "new_sensor_ip", new_param.new_sensor_ip) |
-    get_param(p, "frame_id", new_param.frame_id) | get_param(p, "data_port", new_param.data_port) |
+    get_param(p, "base_frame", new_param.base_frame) |
+    get_param(p, "configuration_host_port", new_param.configuration_host_port) |
+    get_param(p, "configuration_sensor_port", new_param.configuration_sensor_port) |
+    get_param(p, "new_plug_orientation", new_param.new_plug_orientation) |
+    get_param(p, "new_vehicle_length", new_param.new_vehicle_length) |
+    get_param(p, "new_vehicle_width", new_param.new_vehicle_width) |
+    get_param(p, "new_vehicle_height", new_param.new_vehicle_height) |
+    get_param(p, "new_vehicle_wheelbase", new_param.new_vehicle_wheelbase) |
+    get_param(p, "new_radar_maximum_distance", new_param.new_radar_maximum_distance) |
+    get_param(p, "new_radar_frequency_slot", new_param.new_radar_frequency_slot) |
+    get_param(p, "new_radar_cycle_time", new_param.new_radar_cycle_time) |
+    get_param(p, "new_radar_time_slot", new_param.new_radar_time_slot) |
+    get_param(p, "new_radar_country_code", new_param.new_radar_time_slot) |
+    get_param(p, "new_radar_powersave_standstill", new_param.new_radar_time_slot) |
     get_param(p, "configuration_host_port", new_param.configuration_host_port) |
     get_param(p, "configuration_sensor_port", new_param.configuration_sensor_port)) {
     if (0 < sensor_model_str.length())
@@ -394,7 +412,8 @@ rcl_interfaces::msg::SetParametersResult ContinentalARS548HwInterfaceRosWrapper:
     sensor_configuration_ = new_param;
     RCLCPP_INFO_STREAM(this->get_logger(), "Update sensor_configuration");
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
-      std::make_shared<drivers::ContinentalARS548SensorConfiguration>(sensor_configuration_);
+      std::make_shared<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
+        sensor_configuration_);
     RCLCPP_DEBUG_STREAM(this->get_logger(), "hw_interface_.SetSensorConfiguration");
     hw_interface_.SetSensorConfiguration(
       std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
@@ -414,8 +433,6 @@ void ContinentalARS548HwInterfaceRosWrapper::OdometryCallback(
   const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg)
 {
   std::scoped_lock lock(mtx_config_);
-  // hw_interface_.SetCharacteristicSpeed(0.0);
-  // hw_interface_.SetSteeringAngleFrontAxle(0.0);
 
   constexpr float speed_to_standstill = 0.5f;
   constexpr float speed_to_moving = 2.f;
@@ -429,11 +446,11 @@ void ContinentalARS548HwInterfaceRosWrapper::OdometryCallback(
   if (standstill_) {
     hw_interface_.SetDrivingDirection(0);
   } else {
-    hw_interface_.SetDrivingDirection(msg->twist.twist.linear.x);
+    hw_interface_.SetDrivingDirection(msg->twist.twist.linear.x > 0.f ? 1 : -1);
   }
 
   constexpr float ms_to_kmh = 3.6f;
-  hw_interface_.SetVelocityVehicle(ms_to_kmh * msg->twist.twist.linear.x);
+  hw_interface_.SetVelocityVehicle(ms_to_kmh * std::abs(msg->twist.twist.linear.x));
 
   constexpr float rad_to_deg = 180.f / M_PI;
   hw_interface_.SetYawRate(rad_to_deg * msg->twist.twist.angular.z);
@@ -451,7 +468,8 @@ void ContinentalARS548HwInterfaceRosWrapper::SteeringAngleCallback(
   const std_msgs::msg::Float32::SharedPtr msg)
 {
   std::scoped_lock lock(mtx_config_);
-  hw_interface_.SetSteeringAngleFrontAxle(msg->data);
+  constexpr float rad_to_deg = 180.f / M_PI;
+  hw_interface_.SetSteeringAngleFrontAxle(rad_to_deg * msg->data);
 }
 
 void ContinentalARS548HwInterfaceRosWrapper::SetNewSensorIPRequestCallback(
@@ -527,12 +545,27 @@ ContinentalARS548HwInterfaceRosWrapper::updateParameters()
     {rclcpp::Parameter("sensor_model", os_sensor_model.str()),
      rclcpp::Parameter("host_ip", sensor_configuration_.host_ip),
      rclcpp::Parameter("sensor_ip", sensor_configuration_.sensor_ip),
-     rclcpp::Parameter("new_sensor_ip", sensor_configuration_.new_sensor_ip),
      rclcpp::Parameter("frame_id", sensor_configuration_.frame_id),
      rclcpp::Parameter("data_port", sensor_configuration_.data_port),
+     rclcpp::Parameter("multicast_ip", sensor_configuration_.multicast_ip),
+     rclcpp::Parameter("new_sensor_ip", sensor_configuration_.new_sensor_ip),
+     rclcpp::Parameter("base_frame", sensor_configuration_.base_frame),
      rclcpp::Parameter("configuration_host_port", sensor_configuration_.configuration_host_port),
      rclcpp::Parameter(
-       "configuration_sensor_port", sensor_configuration_.configuration_sensor_port)});
+       "configuration_sensor_port", sensor_configuration_.configuration_sensor_port),
+     rclcpp::Parameter("new_plug_orientation", sensor_configuration_.new_plug_orientation),
+     rclcpp::Parameter("new_vehicle_length", sensor_configuration_.new_vehicle_length),
+     rclcpp::Parameter("new_vehicle_width", sensor_configuration_.new_vehicle_width),
+     rclcpp::Parameter("new_vehicle_height", sensor_configuration_.new_vehicle_height),
+     rclcpp::Parameter("new_vehicle_wheelbase", sensor_configuration_.new_vehicle_wheelbase),
+     rclcpp::Parameter(
+       "new_radar_maximum_distance", sensor_configuration_.new_radar_maximum_distance),
+     rclcpp::Parameter("new_radar_frequency_slot", sensor_configuration_.new_radar_frequency_slot),
+     rclcpp::Parameter("new_radar_cycle_time", sensor_configuration_.new_radar_cycle_time),
+     rclcpp::Parameter("new_radar_time_slot", sensor_configuration_.new_radar_time_slot),
+     rclcpp::Parameter("new_radar_country_code", sensor_configuration_.new_radar_country_code),
+     rclcpp::Parameter(
+       "new_radar_powersave_standstill", sensor_configuration_.new_radar_powersave_standstill)});
   RCLCPP_DEBUG_STREAM(this->get_logger(), "updateParameters end");
   return results;
 }

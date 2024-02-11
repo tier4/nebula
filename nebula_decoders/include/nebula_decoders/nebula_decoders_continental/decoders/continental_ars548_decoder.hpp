@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include <nebula_common/continental/continental_common.hpp>
+#include <nebula_common/continental/continental_ars548.hpp>
 #include <nebula_decoders/nebula_decoders_continental/decoders/continental_packets_decoder.hpp>
 
 #include <continental_msgs/msg/continental_ars548_detection_list.hpp>
@@ -40,7 +40,7 @@ public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
   explicit ContinentalARS548Decoder(
-    const std::shared_ptr<drivers::ContinentalARS548SensorConfiguration> & sensor_configuration);
+    const std::shared_ptr<ContinentalARS548SensorConfiguration> & sensor_configuration);
 
   /// @brief Function for parsing NebulaPackets
   /// @param nebula_packets
@@ -71,6 +71,9 @@ private:
     detection_list_callback_;
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg)>
     object_list_callback_;
+
+  /// @brief SensorConfiguration for this decoder
+  std::shared_ptr<continental_ars548::ContinentalARS548SensorConfiguration> sensor_configuration_;
 };
 
 }  // namespace continental_ars548

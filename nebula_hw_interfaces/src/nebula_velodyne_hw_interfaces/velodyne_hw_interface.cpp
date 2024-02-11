@@ -1,3 +1,17 @@
+// Copyright 2024 Tier IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "nebula_hw_interfaces/nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp"
 
 namespace nebula
@@ -36,7 +50,7 @@ Status VelodyneHwInterface::SetSensorConfiguration(
   return rt;
 }
 
-Status VelodyneHwInterface::CloudInterfaceStart()
+Status VelodyneHwInterface::SensorInterfaceStart()
 {
   try {
     cloud_udp_driver_->init_receiver(
@@ -44,7 +58,7 @@ Status VelodyneHwInterface::CloudInterfaceStart()
     cloud_udp_driver_->receiver()->open();
     cloud_udp_driver_->receiver()->bind();
     cloud_udp_driver_->receiver()->asyncReceive(
-      std::bind(&VelodyneHwInterface::ReceiveCloudPacketCallback, this, std::placeholders::_1));
+      std::bind(&VelodyneHwInterface::ReceiveSensorPacketCallback, this, std::placeholders::_1));
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
     std::cerr << status << sensor_configuration_->sensor_ip << ","
@@ -61,7 +75,7 @@ Status VelodyneHwInterface::RegisterScanCallback(
   return Status::OK;
 }
 
-void VelodyneHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer)
+void VelodyneHwInterface::ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer)
 {
   // Process current packet
   const uint32_t buffer_size = buffer.size();
@@ -99,7 +113,7 @@ void VelodyneHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> 
   }
   prev_packet_first_azm_phased_ = packet_first_azm_phased_;
 }
-Status VelodyneHwInterface::CloudInterfaceStop()
+Status VelodyneHwInterface::SensorInterfaceStop()
 {
   return Status::ERROR_1;
 }

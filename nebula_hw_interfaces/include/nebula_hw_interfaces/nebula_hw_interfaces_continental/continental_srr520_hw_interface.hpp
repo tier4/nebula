@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
-#define NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
+#ifndef NEBULA_CONTINENTAL_SRR520_HW_INTERFACE_H
+#define NEBULA_CONTINENTAL_SRR520_HW_INTERFACE_H
 // Have to define macros to silence warnings about deprecated headers being used by
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
@@ -27,9 +27,11 @@
 #include <boost_tcp_driver/http_client_driver.hpp>
 #include <boost_tcp_driver/tcp_driver.hpp>
 #include <boost_udp_driver/udp_driver.hpp>
-#include <nebula_common/continental/continental_ars548.hpp>
+#include <nebula_common/continental/continental_srr520.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <ros2_socketcan/socket_can_receiver.hpp>
+#include <ros2_socketcan/socket_can_sender.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
@@ -47,24 +49,37 @@ namespace nebula
 {
 namespace drivers
 {
-namespace continental_ars548
+namespace continental_srr520
 {
-/// @brief Hardware interface of the Continental ARS548 radar
-class ContinentalARS548HwInterface : NebulaHwInterfaceBase
+/// @brief Hardware interface of the Continental SRR520 radar
+class ContinentalSRR520HwInterface : NebulaHwInterfaceBase
 {
 private:
-  std::unique_ptr<::drivers::common::IoContext> sensor_io_context_;
-  std::unique_ptr<::drivers::udp_driver::UdpDriver> sensor_udp_driver_;
-  std::shared_ptr<ContinentalARS548SensorConfiguration> sensor_configuration_;
+  // std::unique_ptr<::drivers::common::IoContext> sensor_io_context_;
+  // std::unique_ptr<::drivers::udp_driver::UdpDriver> sensor_udp_driver_;
+
+  std::unique_ptr<::drivers::socketcan::SocketCanReceiver> can_receiver_;
+  std::unique_ptr<::drivers::socketcan::SocketCanSender> can_sender_;
+  std::unique_ptr<std::thread> receiver_thread_;
+
+  std::shared_ptr<ContinentalSRR520SensorConfiguration> sensor_configuration_;
   std::unique_ptr<nebula_msgs::msg::NebulaPackets> nebula_packets_ptr_;
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets> buffer)>
     nebula_packets_reception_callback_;
 
   std::mutex sensor_status_mutex_;
+  std::mutex receiver_mutex_;
+  bool sensor_interface_active_{};
 
-  SensorStatusPacket sensor_status_packet_{};
-  FilterStatusPacket filter_status_{};
-  ContinentalARS548Status radar_status_{};
+  ContinentalSRR520Status radar_status_{};  // not being filled. remove later
+
+  std::unique_ptr<nebula_msgs::msg::NebulaPackets> rdi_near_packets_ptr_{};
+  std::unique_ptr<nebula_msgs::msg::NebulaPackets> rdi_hrr_packets_ptr_{};
+  std::unique_ptr<nebula_msgs::msg::NebulaPackets> object_packets_ptr_{};
+
+  bool first_rdi_near_packet_{true};
+  bool first_rdi_hrr_packet_{true};
+  bool first_object_packet_{true};
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger;
 
@@ -86,7 +101,22 @@ private:
 
 public:
   /// @brief Constructor
-  ContinentalARS548HwInterface();
+  ContinentalSRR520HwInterface();
+
+  /// @brief Main loop of the CAN receiver thread
+  void ReceiveLoop();
+
+  void ProcessNearHeaderPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+  void ProcessNearElementPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+  void ProcessHRRHeaderPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+  void ProcessHRRElementPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+  void ProcessObjectHeaderPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+  void ProcessObjectElementPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+  void ProcessCRCListPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+  void ProcessNearCRCListPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+  void ProcessHRRCRCListPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+  void ProcessObjectCRCListPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+  void ProcessStatusPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
 
   /// @brief Process a new sensor status packet
   /// @param buffer The buffer containing the status packet
@@ -102,12 +132,7 @@ public:
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallbackWithSender(
-    const std::vector<uint8_t> & buffer, const std::string & sender_ip);
-
-  /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
-  /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer) final;
+  void ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer, int id, uint64_t stamp);
 
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
@@ -134,79 +159,33 @@ public:
   Status RegisterScanCallback(
     std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> scan_callback);
 
-  /// @brief Set the sensor mounting parameters
+  /// @brief Configure the sensor
+  /// @param sensor_id Desired sensor id
   /// @param longitudinal_autosar Desired longitudinal value in autosar coordinates
   /// @param lateral_autosar Desired lateral value in autosar coordinates
   /// @param vertical_autosar Desired vertical value in autosar coordinates
   /// @param yaw_autosar Desired yaw value in autosar coordinates
-  /// @param pitch_autosar Desired pitch value in autosar coordinates
-  /// @param plug_orientation Desired plug orientation (0 = PLUG_RIGHT, 1 = PLUG_LEFT)
+  /// @param longitudinal_cog Desired longitudinal cog
+  /// @param wheelbase Desired wheelbase
+  /// @param cover_damping Desired cover damping
+  /// @param plug_bottom Desired plug bottom
+  /// @param reset Rest the sensor to its default values
   /// @return Resulting status
-  Status SetSensorMounting(
-    float longitudinal_autosar, float lateral_autosar, float vertical_autosar, float yaw_autosar,
-    float pitch_autosar, uint8_t plug_orientation);
+  Status ConfigureSensor(
+    uint8_t sensor_id, float longitudinal_autosar, float lateral_autosar, float vertical_autosar,
+    float yaw_autosar, float longitudinal_cog, float wheelbase, float cover_damping,
+    bool plug_bottom, bool reset);
 
-  /// @brief Set the vehicle parameters
-  /// @param length_autosar Desired vehicle length value
-  /// @param width_autosar Desired vehicle width value
-  /// @param height_autosar Desired height value
-  /// @param wheel_base_autosar Desired wheel base value
+  /// @brief Set the current vehicle dynamics
+  /// @param longitudinal_acceleration Longitudinal acceleration
+  /// @param lateral_acceleration Lateral acceleration
+  /// @param yaw_rate Yaw rate
+  /// @param longitudinal_velocity Longitudinal velocity
+  /// @param driving_direction Driving direction
   /// @return Resulting status
-  Status SetVehicleParameters(
-    float length_autosar, float width_autosar, float height_autosar, float wheel_base_autosar);
-
-  /// @brief Set the radar parameters
-  /// @param maximum_distance Desired maximum detection distance (93m <= v <= 1514m)
-  /// @param frequency_slot Desired frequency slot (0 = Low (76.23 GHz), 1 = Mid (76.48 GHz), 2 =
-  /// High (76.73 GHz))
-  /// @param cycle_time Desired cycle time value (50ms <= v <= 100ms)
-  /// @param time_slot Desired time slot value (10ms <= v <= 90ms)
-  /// @param hcc Desired hcc value (1 = Worldwide, 2 = Japan)
-  /// @param power_save_standstill Desired power_save_standstill value (0 = Off, 1 = On)
-  /// @return Resulting status
-  Status SetRadarParameters(
-    uint16_t maximum_distance, uint8_t frequency_slot, uint8_t cycle_time, uint8_t time_slot,
-    uint8_t hcc, uint8_t power_save_standstill);
-
-  /// @brief Set the sensor ip address
-  /// @param sensor_ip_address Desired sensor ip address
-  /// @return Resulting status
-  Status SetSensorIPAddress(const std::string & sensor_ip_address);
-
-  /// @brief Set the current lateral acceleration
-  /// @param lateral_acceleration Current lateral acceleration
-  /// @return Resulting status
-  Status SetAccelerationLateralCog(float lateral_acceleration);
-
-  /// @brief Set the current longitudinal acceleration
-  /// @param longitudinal_acceleration Current longitudinal acceleration
-  /// @return Resulting status
-  Status SetAccelerationLongitudinalCog(float longitudinal_acceleration);
-
-  /// @brief Set the characteristic speed
-  /// @param characteristic_speed Characteristic speed
-  /// @return Resulting status
-  Status SetCharacteristicSpeed(float characteristic_speed);
-
-  /// @brief Set the current direction
-  /// @param direction Current driving direction
-  /// @return Resulting status
-  Status SetDrivingDirection(int direction);
-
-  /// @brief Set the current steering angle
-  /// @param angle_rad Current steering angle in radians
-  /// @return Resulting status
-  Status SetSteeringAngleFrontAxle(float angle_rad);
-
-  /// @brief Set the current vehicle velocity
-  /// @param velocity Current vehicle velocity
-  /// @return Resulting status
-  Status SetVelocityVehicle(float velocity);
-
-  /// @brief Set the current yaw rate
-  /// @param yaw_rate Current yaw rate
-  /// @return Resulting status
-  Status SetYawRate(float yaw_rate);
+  Status SetVehicleDynamics(
+    float longitudinal_acceleration, float lateral_acceleration, float yaw_rate,
+    float longitudinal_velocity, bool standstill);
 
   /// @brief Checking the current settings and changing the difference point
   /// @return Resulting status
@@ -214,14 +193,14 @@ public:
 
   /// @brief Returns the last semantic sensor status
   /// @return Last semantic sensor status message
-  ContinentalARS548Status GetRadarStatus();
+  ContinentalSRR520Status GetRadarStatus();
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger
   void SetLogger(std::shared_ptr<rclcpp::Logger> node);
 };
-}  // namespace continental_ars548
+}  // namespace continental_srr520
 }  // namespace drivers
 }  // namespace nebula
 
-#endif  // NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
+#endif  // NEBULA_CONTINENTAL_SRR520_HW_INTERFACE_H

@@ -19,6 +19,7 @@
   <depend>pandar_msgs</depend>
   <depend>rclcpp</depend>
   <depend>robosense_msgs</depend>
+  <depend>ros2_socketcan</depend>
   <depend>sensor_msgs</depend>
   <depend>velodyne_msgs</depend>
 

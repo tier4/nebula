@@ -13,9 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp"
-
-#include "nebula_common/continental/continental_ars548.hpp"
+#include <nebula_common/continental/continental_ars548.hpp>
+#include <nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp>
 
 #include <limits>
 #include <sstream>
@@ -26,8 +25,8 @@ namespace drivers
 namespace continental_ars548
 {
 ContinentalARS548HwInterface::ContinentalARS548HwInterface()
-: cloud_io_context_{new ::drivers::common::IoContext(1)},
-  sensor_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
+: sensor_io_context_{new ::drivers::common::IoContext(1)},
+  sensor_udp_driver_{new ::drivers::udp_driver::UdpDriver(*sensor_io_context_)},
   nebula_packets_ptr_{std::make_unique<nebula_msgs::msg::NebulaPackets>()}
 {
 }
@@ -49,7 +48,7 @@ Status ContinentalARS548HwInterface::SetSensorConfiguration(
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::CloudInterfaceStart()
+Status ContinentalARS548HwInterface::SensorInterfaceStart()
 {
   try {
     sensor_udp_driver_->init_receiver(
@@ -59,7 +58,7 @@ Status ContinentalARS548HwInterface::CloudInterfaceStart()
     sensor_udp_driver_->receiver()->open();
     sensor_udp_driver_->receiver()->bind();
     sensor_udp_driver_->receiver()->asyncReceiveWithSender(std::bind(
-      &ContinentalARS548HwInterface::ReceiveCloudPacketCallbackWithSender, this,
+      &ContinentalARS548HwInterface::ReceiveSensorPacketCallbackWithSender, this,
       std::placeholders::_1, std::placeholders::_2));
 
     sensor_udp_driver_->init_sender(
@@ -88,14 +87,14 @@ Status ContinentalARS548HwInterface::RegisterScanCallback(
   return Status::OK;
 }
 
-void ContinentalARS548HwInterface::ReceiveCloudPacketCallbackWithSender(
+void ContinentalARS548HwInterface::ReceiveSensorPacketCallbackWithSender(
   const std::vector<uint8_t> & buffer, const std::string & sender_ip)
 {
   if (sender_ip == sensor_configuration_->sensor_ip) {
-    ReceiveCloudPacketCallback(buffer);
+    ReceiveSensorPacketCallback(buffer);
   }
 }
-void ContinentalARS548HwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer)
+void ContinentalARS548HwInterface::ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer)
 {
   if (buffer.size() < sizeof(HeaderPacket)) {
     PrintError("Unrecognized packet. Too short");
@@ -357,7 +356,7 @@ void ContinentalARS548HwInterface::ProcessDataPacket(const std::vector<uint8_t> 
   nebula_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
 }
 
-Status ContinentalARS548HwInterface::CloudInterfaceStop()
+Status ContinentalARS548HwInterface::SensorInterfaceStop()
 {
   return Status::ERROR_1;
 }
@@ -643,7 +642,7 @@ Status ContinentalARS548HwInterface::SetSteeringAngleFrontAxle(float angle_rad)
   constexpr uint8_t STEERING_ANGLE_LENGTH = 32;
   const int STEERING_ANGLE_UDP_LENGTH = 40;
 
-  if (angle_rad < -M_PI_2 || angle_rad > M_PI_2) {
+  if (angle_rad < -90.f || angle_rad > 90.f) {
     PrintError("Invalid angle_rad value");
     return Status::ERROR_1;
   }
@@ -664,8 +663,13 @@ Status ContinentalARS548HwInterface::SetSteeringAngleFrontAxle(float angle_rad)
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::SetVelocityVehicle(float velocity)
+Status ContinentalARS548HwInterface::SetVelocityVehicle(float velocity_kmh)
 {
+  if (velocity_kmh < 0.f || velocity_kmh > 350.f) {
+    PrintError("Invalid velocity value");
+    return Status::ERROR_1;
+  }
+
   constexpr uint16_t VELOCITY_VEHICLE_SERVICE_ID = 0;
   constexpr uint16_t VELOCITY_VEHICLE_METHOD_ID = 323;
   constexpr uint8_t VELOCITY_VEHICLE_LENGTH = 28;
@@ -676,7 +680,7 @@ Status ContinentalARS548HwInterface::SetVelocityVehicle(float velocity)
   steering_angle_front_axle_packet.header.service_id = VELOCITY_VEHICLE_SERVICE_ID;
   steering_angle_front_axle_packet.header.method_id = VELOCITY_VEHICLE_METHOD_ID;
   steering_angle_front_axle_packet.header.length = VELOCITY_VEHICLE_LENGTH;
-  steering_angle_front_axle_packet.velocity_vehicle = velocity;
+  steering_angle_front_axle_packet.velocity_vehicle = velocity_kmh;
 
   std::vector<uint8_t> send_vector(sizeof(VelocityVehiclePacket));
   std::memcpy(send_vector.data(), &steering_angle_front_axle_packet, sizeof(VelocityVehiclePacket));
@@ -688,6 +692,11 @@ Status ContinentalARS548HwInterface::SetVelocityVehicle(float velocity)
 
 Status ContinentalARS548HwInterface::SetYawRate(float yaw_rate)
 {
+  if (yaw_rate < -163.83 || yaw_rate > 163.83) {
+    PrintError("Invalid yaw rate value");
+    return Status::ERROR_1;
+  }
+
   constexpr uint16_t YAW_RATE_SERVICE_ID = 0;
   constexpr uint16_t YAW_RATE_METHOD_ID = 326;
   constexpr uint8_t YAW_RATE_LENGTH = 32;

@@ -18,7 +18,6 @@
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/continental/continental_ars548.hpp>
-#include <nebula_common/continental/continental_common.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/nebula_status.hpp>
 #include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
@@ -76,7 +75,8 @@ class ContinentalARS548DriverRosWrapper final : public rclcpp::Node, NebulaDrive
      {{0.0, -1.0}},
      {{0.0, 0.0}}}};
 
-  std::shared_ptr<drivers::ContinentalARS548SensorConfiguration> sensor_cfg_ptr_;
+  std::shared_ptr<drivers::continental_ars548::ContinentalARS548SensorConfiguration>
+    sensor_cfg_ptr_;
 
   drivers::continental_ars548::ContinentalARS548HwInterface hw_interface_;
 
@@ -91,7 +91,8 @@ class ContinentalARS548DriverRosWrapper final : public rclcpp::Node, NebulaDrive
   /// @param calibration_configuration Output of CalibrationConfiguration
   /// @param correction_configuration Output of CorrectionConfiguration (for AT)
   /// @return Resulting status
-  Status GetParameters(drivers::ContinentalARS548SensorConfiguration & sensor_configuration);
+  Status GetParameters(
+    drivers::continental_ars548::ContinentalARS548SensorConfiguration & sensor_configuration);
 
   /// @brief Convert seconds to chrono::nanoseconds
   /// @param seconds

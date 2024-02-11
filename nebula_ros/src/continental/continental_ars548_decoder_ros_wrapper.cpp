@@ -24,7 +24,7 @@ ContinentalARS548DriverRosWrapper::ContinentalARS548DriverRosWrapper(
   const rclcpp::NodeOptions & options)
 : rclcpp::Node("continental_ars548_driver_ros_wrapper", options), hw_interface_()
 {
-  drivers::ContinentalARS548SensorConfiguration sensor_configuration;
+  drivers::continental_ars548::ContinentalARS548SensorConfiguration sensor_configuration;
 
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
@@ -38,10 +38,12 @@ ContinentalARS548DriverRosWrapper::ContinentalARS548DriverRosWrapper(
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
 
   sensor_cfg_ptr_ =
-    std::make_shared<drivers::ContinentalARS548SensorConfiguration>(sensor_configuration);
+    std::make_shared<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
+      sensor_configuration);
 
   wrapper_status_ = InitializeDriver(
-    std::const_pointer_cast<drivers::ContinentalARS548SensorConfiguration>(sensor_cfg_ptr_));
+    std::const_pointer_cast<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
+      sensor_cfg_ptr_));
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
   packets_sub_ = create_subscription<nebula_msgs::msg::NebulaPackets>(
@@ -80,7 +82,8 @@ Status ContinentalARS548DriverRosWrapper::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration)
 {
   decoder_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalARS548Decoder>(
-    std::static_pointer_cast<drivers::ContinentalARS548SensorConfiguration>(sensor_configuration));
+    std::static_pointer_cast<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
+      sensor_configuration));
 
   decoder_ptr_->RegisterDetectionListCallback(std::bind(
     &ContinentalARS548DriverRosWrapper::DetectionListCallback, this, std::placeholders::_1));
@@ -96,7 +99,7 @@ Status ContinentalARS548DriverRosWrapper::GetStatus()
 }
 
 Status ContinentalARS548DriverRosWrapper::GetParameters(
-  drivers::ContinentalARS548SensorConfiguration & sensor_configuration)
+  drivers::continental_ars548::ContinentalARS548SensorConfiguration & sensor_configuration)
 {
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -277,7 +280,8 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
   }
 
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
-    std::make_shared<drivers::ContinentalARS548SensorConfiguration>(sensor_configuration);
+    std::make_shared<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
+      sensor_configuration);
 
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
@@ -621,7 +625,6 @@ visualization_msgs::msg::MarkerArray ContinentalARS548DriverRosWrapper::ConvertT
 
   radar_msgs::msg::RadarTrack track_msg;
   for (const auto & object : msg.objects) {
-    const Eigen::Vector2d center_xy{object.position.x, object.position.y};
     const double half_length = 0.5 * object.shape_length_edge_mean;
     const double half_width = 0.5 * object.shape_width_edge_mean;
     constexpr double DEFAULT_HALF_SIZE = 1.0;

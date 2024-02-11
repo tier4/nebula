@@ -1,11 +1,25 @@
+// Copyright 2024 Tier IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef NEBULA_HesaiHwInterfaceRosWrapper_H
 #define NEBULA_HesaiHwInterfaceRosWrapper_H
 
+#include "boost_tcp_driver/tcp_driver.hpp"
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
 #include "nebula_ros/common/nebula_hw_interface_ros_wrapper_base.hpp"
-#include "boost_tcp_driver/tcp_driver.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -16,8 +30,11 @@
 
 #include <boost/asio.hpp>
 
+#include <memory>
 #include <mutex>
+#include <string>
 #include <thread>
+#include <vector>
 
 namespace nebula
 {
@@ -65,7 +82,7 @@ class HesaiHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfaceW
 public:
   explicit HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions & options);
   ~HesaiHwInterfaceRosWrapper() noexcept override;
-  /// @brief Start point cloud streaming (Call CloudInterfaceStart of HwInterface)
+  /// @brief Start point cloud streaming (Call SensorInterfaceStart of HwInterface)
   /// @return Resulting status
   Status StreamStart() override;
   /// @brief Stop point cloud streaming (not used)

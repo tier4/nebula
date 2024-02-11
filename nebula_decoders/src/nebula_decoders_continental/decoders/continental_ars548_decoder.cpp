@@ -15,7 +15,6 @@
 #include "nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp"
 
 #include "nebula_common/continental/continental_ars548.hpp"
-#include "nebula_common/continental/continental_common.hpp"
 
 #include <cmath>
 #include <utility>
@@ -27,7 +26,8 @@ namespace drivers
 namespace continental_ars548
 {
 ContinentalARS548Decoder::ContinentalARS548Decoder(
-  const std::shared_ptr<drivers::ContinentalARS548SensorConfiguration> & sensor_configuration)
+  const std::shared_ptr<continental_ars548::ContinentalARS548SensorConfiguration> &
+    sensor_configuration)
 {
   sensor_configuration_ = sensor_configuration;
 }
