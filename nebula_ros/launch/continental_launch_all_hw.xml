@@ -101,6 +101,53 @@
         </node>
     </group>
 
+    <group if="$(eval &quot;'$(var sensor_model)' == 'MultiARS548' &quot;)" >
+
+        <node pkg="nebula_ros" exec="continental_ars548_driver_ros_wrapper_node" name="continental_ars548_decoder_driver" output="screen">
+            <param name="sensor_model" value="ARS548"/>
+            <param name="frame_id" value="$(var frame_id)"/>
+            <param name="base_frame" value="$(var base_frame)"/>
+            <param name="host_ip" value="$(var host_ip)"/>
+            <param name="sensor_ip" value="$(var sensor_ip)"/>
+            <param name="new_sensor_ip" value="$(var new_sensor_ip)"/>
+            <param name="data_port" value="$(var data_port)"/>
+            <param name="use_sensor_time" value="$(var use_sensor_time)"/>
+
+            <param name="new_plug_orientation" value="$(var new_plug_orientation)"/>
+            <param name="new_vehicle_length" value="$(var new_vehicle_length)"/>
+            <param name="new_vehicle_width" value="$(var new_vehicle_width)"/>
+            <param name="new_vehicle_height" value="$(var new_vehicle_height)"/>
+            <param name="new_vehicle_wheelbase" value="$(var new_vehicle_wheelbase)"/>
+            <param name="new_radar_maximum_distance" value="$(var new_radar_maximum_distance)"/>
+            <param name="new_radar_frequency_slot" value="$(var new_radar_frequency_slot)"/>
+            <param name="new_radar_cycle_time" value="$(var new_radar_cycle_time)"/>
+            <param name="new_radar_time_slot" value="$(var new_radar_time_slot)"/>
+            <param name="new_radar_country_code" value="$(var new_radar_country_code)"/>
+            <param name="new_radar_powersave_standstill" value="$(var new_radar_powersave_standstill)"/>
+        </node>
+
+        <node pkg="nebula_ros" exec="multi_continental_ars548_hw_interface_ros_wrapper_node"
+            name="multi_continental_ars548_hw_driver" output="screen">
+            <remap from="/diagnostics" to="diagnostics"/>
+            <remap from="odometry_input" to="$(var odometry_topic)"/>
+            <remap from="acceleration_input" to="$(var acceleration_topic)"/>
+            <remap from="steering_angle_input" to="$(var steering_angle_topic)"/>
+
+            <param name="sensor_model" value="ARS548"/>
+            <param name="frame_ids" value="[$(var frame_id)]"/>
+            <param name="base_frame" value="$(var base_frame)"/>
+            <param name="host_ip" value="$(var host_ip)"/>
+            <param name="multicast_ip" value="$(var multicast_ip)"/>
+            <param name="data_port" value="$(var data_port)"/>
+            <param name="sensor_ips" value="[$(var sensor_ip)]"/>
+            <param name="configuration_host_port" value="$(var configuration_host_port)"/>
+            <param name="configuration_sensor_port" value="$(var configuration_sensor_port)"/>
+            <param name="use_sensor_time" value="$(var use_sensor_time)"/>
+
+            <param name="use_sim_time" value="false"/>
+        </node>
+    </group>
+
 
     <group if="$(eval &quot;'$(var sensor_model)' == 'SRR520' &quot;)" >
 

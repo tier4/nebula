@@ -26,9 +26,7 @@ namespace ros
 {
 ContinentalARS548HwInterfaceRosWrapper::ContinentalARS548HwInterfaceRosWrapper(
   const rclcpp::NodeOptions & options)
-: rclcpp::Node("continental_ars548_hw_interface_ros_wrapper", options),
-  hw_interface_(),
-  diagnostics_updater_(this)
+: rclcpp::Node("continental_ars548_hw_interface_ros_wrapper", options), hw_interface_()
 {
   if (mtx_config_.try_lock()) {
     interface_status_ = GetParameters(sensor_configuration_);
@@ -108,11 +106,6 @@ Status ContinentalARS548HwInterfaceRosWrapper::StreamStart()
       std::bind(
         &ContinentalARS548HwInterfaceRosWrapper::SetNewRadarParametersRequestCallback, this,
         std::placeholders::_1, std::placeholders::_2));
-
-    std::scoped_lock lock(mtx_config_);
-    diagnostics_updater_.add(
-      "radar_status(" + sensor_configuration_.frame_id + ")", this,
-      &ContinentalARS548HwInterfaceRosWrapper::ContinentalMonitorStatus);
   }
 
   return interface_status_;
@@ -356,10 +349,6 @@ Status ContinentalARS548HwInterfaceRosWrapper::GetParameters(
     return Status::INVALID_SENSOR_MODEL;
   }
 
-  if (sensor_configuration.frame_id.empty()) {
-    return Status::SENSOR_CONFIG_ERROR;
-  }
-
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
   return Status::OK;
 }
@@ -568,49 +557,6 @@ ContinentalARS548HwInterfaceRosWrapper::updateParameters()
        "new_radar_powersave_standstill", sensor_configuration_.new_radar_powersave_standstill)});
   RCLCPP_DEBUG_STREAM(this->get_logger(), "updateParameters end");
   return results;
-}
-
-void ContinentalARS548HwInterfaceRosWrapper::ContinentalMonitorStatus(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
-{
-  auto sensor_status = hw_interface_.GetRadarStatus();
-  diagnostics.add("timestamp_nanoseconds", std::to_string(sensor_status.timestamp_nanoseconds));
-  diagnostics.add("timestamp_seconds", std::to_string(sensor_status.timestamp_seconds));
-  diagnostics.add("timestamp_sync_status", sensor_status.timestamp_sync_status);
-  diagnostics.add("sw_version_major", std::to_string(sensor_status.sw_version_major));
-  diagnostics.add("sw_version_minor", std::to_string(sensor_status.sw_version_minor));
-  diagnostics.add("sw_version_patch", std::to_string(sensor_status.sw_version_patch));
-  diagnostics.add("longitudinal", std::to_string(sensor_status.longitudinal));
-  diagnostics.add("lateral", std::to_string(sensor_status.lateral));
-  diagnostics.add("vertical", std::to_string(sensor_status.vertical));
-  diagnostics.add("yaw", std::to_string(sensor_status.yaw));
-  diagnostics.add("pitch", std::to_string(sensor_status.pitch));
-  diagnostics.add("plug_orientation", sensor_status.plug_orientation);
-  diagnostics.add("length", std::to_string(sensor_status.length));
-  diagnostics.add("width", std::to_string(sensor_status.width));
-  diagnostics.add("height", std::to_string(sensor_status.height));
-  diagnostics.add("wheel_base", std::to_string(sensor_status.wheel_base));
-  diagnostics.add("max_distance", std::to_string(sensor_status.max_distance));
-  diagnostics.add("frequency_slot", sensor_status.frequency_slot);
-  diagnostics.add("cycle_time", std::to_string(sensor_status.cycle_time));
-  diagnostics.add("time_slot", std::to_string(sensor_status.time_slot));
-  diagnostics.add("hcc", sensor_status.hcc);
-  diagnostics.add("power_save_standstill", sensor_status.power_save_standstill);
-  diagnostics.add("sensor_ip_address0", sensor_status.sensor_ip_address0);
-  diagnostics.add("sensor_ip_address1", sensor_status.sensor_ip_address1);
-  diagnostics.add("configuration_counter", std::to_string(sensor_status.configuration_counter));
-  diagnostics.add("longitudinal_velocity_status", sensor_status.longitudinal_velocity_status);
-  diagnostics.add(
-    "longitudinal_acceleration_status", sensor_status.longitudinal_acceleration_status);
-  diagnostics.add("lateral_acceleration_status", sensor_status.lateral_acceleration_status);
-  diagnostics.add("yaw_rate_status", sensor_status.yaw_rate_status);
-  diagnostics.add("steering_angle_status", sensor_status.steering_angle_status);
-  diagnostics.add("driving_direction_status", sensor_status.driving_direction_status);
-  diagnostics.add("characteristic_speed_status", sensor_status.characteristic_speed_status);
-  diagnostics.add("radar_status", sensor_status.radar_status);
-  diagnostics.add("voltage_status", sensor_status.voltage_status);
-  diagnostics.add("temperature_status", sensor_status.temperature_status);
-  diagnostics.add("blockage_status", sensor_status.blockage_status);
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(ContinentalARS548HwInterfaceRosWrapper)

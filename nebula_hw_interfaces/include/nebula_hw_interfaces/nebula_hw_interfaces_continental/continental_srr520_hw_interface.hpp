@@ -71,8 +71,6 @@ private:
   std::mutex receiver_mutex_;
   bool sensor_interface_active_{};
 
-  ContinentalSRR520Status radar_status_{};  // not being filled. remove later
-
   std::unique_ptr<nebula_msgs::msg::NebulaPackets> rdi_near_packets_ptr_{};
   std::unique_ptr<nebula_msgs::msg::NebulaPackets> rdi_hrr_packets_ptr_{};
   std::unique_ptr<nebula_msgs::msg::NebulaPackets> object_packets_ptr_{};
@@ -190,10 +188,6 @@ public:
   /// @brief Checking the current settings and changing the difference point
   /// @return Resulting status
   Status CheckAndSetConfig();
-
-  /// @brief Returns the last semantic sensor status
-  /// @return Last semantic sensor status message
-  ContinentalSRR520Status GetRadarStatus();
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger

@@ -18,7 +18,7 @@
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <boost_tcp_driver/tcp_driver.hpp>
 #include <nebula_common/nebula_common.hpp>
-#include <nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp>
+#include <nebula_hw_interfaces/nebula_hw_interfaces_continental/multi_continental_ars548_hw_interface.hpp>
 #include <nebula_ros/common/nebula_hw_interface_ros_wrapper_base.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
@@ -37,6 +37,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 namespace nebula
@@ -63,26 +64,22 @@ bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & nam
 }
 
 /// @brief Hardware interface ros wrapper of continental radar ethernet driver
-class ContinentalARS548HwInterfaceRosWrapper final : public rclcpp::Node,
-                                                     NebulaHwInterfaceWrapperBase
+class MultiContinentalARS548HwInterfaceRosWrapper final : public rclcpp::Node,
+                                                          NebulaHwInterfaceWrapperBase
 {
-  drivers::continental_ars548::ContinentalARS548HwInterface hw_interface_;
+  drivers::continental_ars548::MultiContinentalARS548HwInterface hw_interface_;
   Status interface_status_;
 
-  drivers::continental_ars548::ContinentalARS548SensorConfiguration sensor_configuration_;
+  drivers::continental_ars548::MultiContinentalARS548SensorConfiguration sensor_configuration_;
 
   /// @brief Received Continental Radar message publisher
-  rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_;
+  std::unordered_map<std::string, rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr>
+    packets_pub_map_;
   rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr odometry_sub_;
   rclcpp::Subscription<geometry_msgs::msg::AccelWithCovarianceStamped>::SharedPtr acceleration_sub_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr steering_angle_sub_;
 
   bool standstill_{true};
-
-  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr set_new_sensor_ip_service_server_;
-  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr set_new_sensor_mounting_service_server_;
-  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr set_new_vehicle_parameters_service_server_;
-  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr set_new_radar_parameters_service_server_;
 
   /// @brief Initializing hardware interface ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
@@ -91,7 +88,8 @@ class ContinentalARS548HwInterfaceRosWrapper final : public rclcpp::Node,
     const drivers::SensorConfigurationBase & sensor_configuration) override;
   /// @brief Callback for receiving NebulaPackets
   /// @param packets_buffer Received NebulaPackets
-  void ReceivePacketsDataCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_buffer);
+  void ReceivePacketsDataCallback(
+    std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_buffer, const std::string & sensor_ip);
 
   /// @brief Callback to send the odometry information to the radar device
   /// @param msg The odometry message
@@ -105,37 +103,9 @@ class ContinentalARS548HwInterfaceRosWrapper final : public rclcpp::Node,
   /// @param msg The steering angle message
   void SteeringAngleCallback(const std_msgs::msg::Float32::SharedPtr msg);
 
-  /// @brief Service callback to set the new sensor ip
-  /// @param request Empty service request
-  /// @param response Empty service response
-  void SetNewSensorIPRequestCallback(
-    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
-    const std::shared_ptr<std_srvs::srv::Empty::Response> response);
-
-  /// @brief Service callback to set the new sensor mounting position
-  /// @param request Empty service request
-  /// @param response Empty service response
-  void SetNewSensorMountingRequestCallback(
-    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
-    const std::shared_ptr<std_srvs::srv::Empty::Response> response);
-
-  /// @brief Service callback to set the new vehicle parameters
-  /// @param request Empty service request
-  /// @param response Empty service response
-  void SetNewVehicleParametersRequestCallback(
-    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
-    const std::shared_ptr<std_srvs::srv::Empty::Response> response);
-
-  /// @brief Service callback to set the new radar parameters
-  /// @param request Empty service request
-  /// @param response Empty service response
-  void SetNewRadarParametersRequestCallback(
-    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
-    const std::shared_ptr<std_srvs::srv::Empty::Response> response);
-
 public:
-  explicit ContinentalARS548HwInterfaceRosWrapper(const rclcpp::NodeOptions & options);
-  ~ContinentalARS548HwInterfaceRosWrapper() noexcept override;
+  explicit MultiContinentalARS548HwInterfaceRosWrapper(const rclcpp::NodeOptions & options);
+  ~MultiContinentalARS548HwInterfaceRosWrapper() noexcept override;
 
   /// @brief Start point cloud streaming (Call SensorInterfaceStart of HwInterface)
   /// @return Resulting status
@@ -150,7 +120,7 @@ public:
   /// @param sensor_configuration Output of SensorConfiguration
   /// @return Resulting status
   Status GetParameters(
-    drivers::continental_ars548::ContinentalARS548SensorConfiguration & sensor_configuration);
+    drivers::continental_ars548::MultiContinentalARS548SensorConfiguration & sensor_configuration);
 
 private:
   std::mutex mtx_config_;

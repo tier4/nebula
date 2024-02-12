@@ -19,6 +19,7 @@
 
 #include <continental_msgs/msg/continental_ars548_detection_list.hpp>
 #include <continental_msgs/msg/continental_ars548_object_list.hpp>
+#include <diagnostic_msgs/msg/diagnostic_array.hpp>
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
 #include <std_msgs/msg/header.hpp>
@@ -47,30 +48,52 @@ public:
   /// @return Resulting flag
   bool ProcessPackets(const nebula_msgs::msg::NebulaPackets & nebula_packets) override;
 
+  /// @brief Function for parsing detection lists
+  /// @param data
+  /// @return Resulting flag
   bool ParseDetectionsListPacket(
     const std::vector<uint8_t> & data, const std_msgs::msg::Header & header);
+
+  /// @brief Function for parsing object lists
+  /// @param data
+  /// @return Resulting flag
   bool ParseObjectsListPacket(
     const std::vector<uint8_t> & data, const std_msgs::msg::Header & header);
 
-  /// @brief Register function to call whenever a new detection list is processed
+  /// @brief Function for parsing sensor status messages
+  /// @param data
+  /// @return Resulting flag
+  bool ParseSensorStatusPacket(
+    const std::vector<uint8_t> & data, const std_msgs::msg::Header & header);
+
+  /// @brief Register function to call when a new detection list is processed
   /// @param detection_list_callback
   /// @return Resulting status
   Status RegisterDetectionListCallback(
     std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList>)>
       detection_list_callback);
 
-  /// @brief Register function to call whenever a new object list is processed
+  /// @brief Register function to call when a new object list is processed
   /// @param object_list_callback
   /// @return Resulting status
   Status RegisterObjectListCallback(
     std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList>)>
       object_list_callback);
 
+  /// @brief Register function to call when a new sensor status message is processed
+  /// @param object_list_callback
+  /// @return Resulting status
+  Status RegisterSensorStatusCallback(
+    std::function<void(const ContinentalARS548Status & status)> sensor_status_callback);
+
 private:
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg)>
     detection_list_callback_;
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg)>
     object_list_callback_;
+  std::function<void(const ContinentalARS548Status & status)> sensor_status_callback_;
+
+  ContinentalARS548Status radar_status_{};
 
   /// @brief SensorConfiguration for this decoder
   std::shared_ptr<continental_ars548::ContinentalARS548SensorConfiguration> sensor_configuration_;

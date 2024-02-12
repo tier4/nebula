@@ -133,6 +133,14 @@ rclcpp_components_register_node(continental_ars548_hw_ros_wrapper
         EXECUTABLE continental_ars548_hw_interface_ros_wrapper_node
         )
 
+ament_auto_add_library(multi_continental_ars548_hw_ros_wrapper SHARED
+        src/continental/multi_continental_ars548_hw_interface_ros_wrapper.cpp
+        )
+rclcpp_components_register_node(multi_continental_ars548_hw_ros_wrapper
+        PLUGIN "MultiContinentalARS548HwInterfaceRosWrapper"
+        EXECUTABLE multi_continental_ars548_hw_interface_ros_wrapper_node
+        )
+
 ament_auto_add_library(continental_srr520_hw_ros_wrapper SHARED
         src/continental/continental_srr520_hw_interface_ros_wrapper.cpp
         )

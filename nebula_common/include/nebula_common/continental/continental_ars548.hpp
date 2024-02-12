@@ -33,6 +33,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -63,6 +64,13 @@ struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
   uint16_t new_radar_powersave_standstill{};
 };
 
+/// @brief struct for Multiple ARS548 sensor configuration
+struct MultiContinentalARS548SensorConfiguration : ContinentalARS548SensorConfiguration
+{
+  std::vector<std::string> sensor_ips{};
+  std::vector<std::string> frame_ids{};
+};
+
 /// @brief Convert ContinentalARS548SensorConfiguration to string (Overloading the <<
 /// operator)
 /// @param os
@@ -90,9 +98,37 @@ inline std::ostream & operator<<(
   return os;
 }
 
+/// @brief Convert MultiContinentalARS548SensorConfiguration to string (Overloading the <<
+/// operator)
+/// @param os
+/// @param arg
+/// @return stream
+inline std::ostream & operator<<(
+  std::ostream & os, MultiContinentalARS548SensorConfiguration const & arg)
+{
+  std::stringstream sensor_ips_ss;
+  sensor_ips_ss << "[";
+  for (const auto sensor_ip : arg.sensor_ips) {
+    sensor_ips_ss << sensor_ip << ", ";
+  }
+  sensor_ips_ss << "]";
+
+  std::stringstream frame_ids_ss;
+  frame_ids_ss << "[";
+  for (const auto frame_id : arg.frame_ids) {
+    frame_ids_ss << frame_id << ", ";
+  }
+  frame_ids_ss << "]";
+
+  os << (ContinentalARS548SensorConfiguration)(arg) << ", MulticastIP: " << arg.multicast_ip
+     << ", SensorIPs: " << sensor_ips_ss.str() << ", FrameIds: " << frame_ids_ss.str();
+  return os;
+}
+
 /// @brief semantic struct of ARS548 Status
 struct ContinentalARS548Status
 {
+  // Filled with raw sensor data
   uint32_t timestamp_nanoseconds;
   uint32_t timestamp_seconds;
   std::string timestamp_sync_status;
@@ -129,6 +165,19 @@ struct ContinentalARS548Status
   std::string voltage_status;
   std::string temperature_status;
   std::string blockage_status;
+
+  // Processed data
+  uint64_t detection_first_stamp;
+  uint64_t detection_last_stamp;
+  uint64_t detection_total_count;
+  uint64_t detection_dropped_dt_count;
+  uint64_t detection_empty_count;
+
+  uint64_t object_first_stamp;
+  uint64_t object_last_stamp;
+  uint64_t object_total_count;
+  uint64_t object_dropped_dt_count;
+  uint64_t object_empty_count;
 
   ContinentalARS548Status() {}
 
@@ -248,9 +297,9 @@ constexpr int MAX_OBJECTS = 50;
 
 struct HeaderPacket
 {
-  big_uint16_buf_t service_id;
-  big_uint16_buf_t method_id;
-  big_uint32_buf_t length;
+  big_uint16_buf_t service_id{};
+  big_uint16_buf_t method_id{};
+  big_uint32_buf_t length{};
 };
 
 struct HeaderSomeIPPacket
@@ -413,30 +462,30 @@ struct ObjectListPacket
 
 struct StatusConfigurationPacket
 {
-  big_float32_buf_t longitudinal;
-  big_float32_buf_t lateral;
-  big_float32_buf_t vertical;
-  big_float32_buf_t yaw;
-  big_float32_buf_t pitch;
-  uint8_t plug_orientation;
-  big_float32_buf_t length;
-  big_float32_buf_t width;
-  big_float32_buf_t height;
-  big_float32_buf_t wheelbase;
-  big_uint16_buf_t maximum_distance;
-  uint8_t frequency_slot;
-  uint8_t cycle_time;
-  uint8_t time_slot;
-  uint8_t hcc;
-  uint8_t powersave_standstill;
-  uint8_t sensor_ip_address00;
-  uint8_t sensor_ip_address01;
-  uint8_t sensor_ip_address02;
-  uint8_t sensor_ip_address03;
-  uint8_t sensor_ip_address10;
-  uint8_t sensor_ip_address11;
-  uint8_t sensor_ip_address12;
-  uint8_t sensor_ip_address13;
+  big_float32_buf_t longitudinal{};
+  big_float32_buf_t lateral{};
+  big_float32_buf_t vertical{};
+  big_float32_buf_t yaw{};
+  big_float32_buf_t pitch{};
+  uint8_t plug_orientation{};
+  big_float32_buf_t length{};
+  big_float32_buf_t width{};
+  big_float32_buf_t height{};
+  big_float32_buf_t wheelbase{};
+  big_uint16_buf_t maximum_distance{};
+  uint8_t frequency_slot{};
+  uint8_t cycle_time{};
+  uint8_t time_slot{};
+  uint8_t hcc{};
+  uint8_t powersave_standstill{};
+  uint8_t sensor_ip_address00{};
+  uint8_t sensor_ip_address01{};
+  uint8_t sensor_ip_address02{};
+  uint8_t sensor_ip_address03{};
+  uint8_t sensor_ip_address10{};
+  uint8_t sensor_ip_address11{};
+  uint8_t sensor_ip_address12{};
+  uint8_t sensor_ip_address13{};
 };
 
 struct SensorStatusPacket
@@ -463,12 +512,12 @@ struct SensorStatusPacket
 
 struct ConfigurationPacket
 {
-  HeaderPacket header;
-  StatusConfigurationPacket configuration;
-  uint8_t new_sensor_mounting;
-  uint8_t new_vehicle_parameters;
-  uint8_t new_radar_parameters;
-  uint8_t new_network_configuration;
+  HeaderPacket header{};
+  StatusConfigurationPacket configuration{};
+  uint8_t new_sensor_mounting{};
+  uint8_t new_vehicle_parameters{};
+  uint8_t new_radar_parameters{};
+  uint8_t new_network_configuration{};
 };
 
 struct AccelerationLateralCoGPacket

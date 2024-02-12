@@ -637,12 +637,6 @@ Status ContinentalSRR520HwInterface::SetVehicleDynamics(
   return Status::OK;
 }
 
-ContinentalSRR520Status ContinentalSRR520HwInterface::GetRadarStatus()
-{
-  std::lock_guard l(sensor_status_mutex_);
-  return radar_status_;
-}
-
 void ContinentalSRR520HwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
 {
   parent_node_logger = logger;
