@@ -280,6 +280,7 @@ Status ContinentalARS548HwInterface::SetRadarParameters(
   configuration_packet.configuration.maximum_distance = maximum_distance;
   configuration_packet.configuration.frequency_slot = frequency_slot;
   configuration_packet.configuration.cycle_time = cycle_time;
+  configuration_packet.configuration.time_slot = time_slot;
   configuration_packet.configuration.hcc = hcc;
   configuration_packet.configuration.powersave_standstill = power_save_standstill;
   configuration_packet.new_radar_parameters = 1;
@@ -287,13 +288,10 @@ Status ContinentalARS548HwInterface::SetRadarParameters(
   std::vector<uint8_t> send_vector(sizeof(ConfigurationPacket));
   std::memcpy(send_vector.data(), &configuration_packet, sizeof(ConfigurationPacket));
 
-  // There may be a chance that some of the fields were initialized to garbage, which although
-  // should not have an effect according to the datasheet is having it To confirm just print the
-  // whole vector and analyze
-
   PrintInfo("maximum_distance = " + std::to_string(maximum_distance));
   PrintInfo("frequency_slot = " + std::to_string(frequency_slot));
   PrintInfo("cycle_time = " + std::to_string(cycle_time));
+  PrintInfo("time_slot = " + std::to_string(time_slot));
   PrintInfo("hcc = " + std::to_string(hcc));
   PrintInfo("power_save_standstill = " + std::to_string(power_save_standstill));
 

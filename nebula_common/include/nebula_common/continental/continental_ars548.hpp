@@ -129,55 +129,58 @@ inline std::ostream & operator<<(
 struct ContinentalARS548Status
 {
   // Filled with raw sensor data
-  uint32_t timestamp_nanoseconds;
-  uint32_t timestamp_seconds;
-  std::string timestamp_sync_status;
-  uint8_t sw_version_major;
-  uint8_t sw_version_minor;
-  uint8_t sw_version_patch;
-  float longitudinal;
-  float lateral;
-  float vertical;
-  float yaw;
-  float pitch;
-  std::string plug_orientation;
-  float length;
-  float width;
-  float height;
-  float wheel_base;
-  uint16_t max_distance;
-  std::string frequency_slot;
-  uint8_t cycle_time;
-  uint8_t time_slot;
-  std::string hcc;
-  std::string power_save_standstill;
-  std::string sensor_ip_address0;
-  std::string sensor_ip_address1;
-  uint8_t configuration_counter;
-  std::string longitudinal_velocity_status;
-  std::string longitudinal_acceleration_status;
-  std::string lateral_acceleration_status;
-  std::string yaw_rate_status;
-  std::string steering_angle_status;
-  std::string driving_direction_status;
-  std::string characteristic_speed_status;
-  std::string radar_status;
-  std::string voltage_status;
-  std::string temperature_status;
-  std::string blockage_status;
+  uint32_t timestamp_nanoseconds{};
+  uint32_t timestamp_seconds{};
+  std::string timestamp_sync_status{};
+  uint8_t sw_version_major{};
+  uint8_t sw_version_minor{};
+  uint8_t sw_version_patch{};
+  float longitudinal{};
+  float lateral{};
+  float vertical{};
+  float yaw{};
+  float pitch{};
+  std::string plug_orientation{};
+  float length{};
+  float width{};
+  float height{};
+  float wheel_base{};
+  uint16_t max_distance{};
+  std::string frequency_slot{};
+  uint8_t cycle_time{};
+  uint8_t time_slot{};
+  std::string hcc{};
+  std::string power_save_standstill{};
+  std::string sensor_ip_address0{};
+  std::string sensor_ip_address1{};
+  uint8_t configuration_counter{};
+  std::string longitudinal_velocity_status{};
+  std::string longitudinal_acceleration_status{};
+  std::string lateral_acceleration_status{};
+  std::string yaw_rate_status{};
+  std::string steering_angle_status{};
+  std::string driving_direction_status{};
+  std::string characteristic_speed_status{};
+  std::string radar_status{};
+  std::string voltage_status{};
+  std::string temperature_status{};
+  std::string blockage_status{};
 
   // Processed data
-  uint64_t detection_first_stamp;
-  uint64_t detection_last_stamp;
-  uint64_t detection_total_count;
-  uint64_t detection_dropped_dt_count;
-  uint64_t detection_empty_count;
+  uint64_t detection_first_stamp{};
+  uint64_t detection_last_stamp{};
+  uint64_t detection_total_count{};
+  uint64_t detection_dropped_dt_count{};
+  uint64_t detection_empty_count{};
 
-  uint64_t object_first_stamp;
-  uint64_t object_last_stamp;
-  uint64_t object_total_count;
-  uint64_t object_dropped_dt_count;
-  uint64_t object_empty_count;
+  uint64_t object_first_stamp{};
+  uint64_t object_last_stamp{};
+  uint64_t object_total_count{};
+  uint64_t object_dropped_dt_count{};
+  uint64_t object_empty_count{};
+
+  uint64_t status_total_count{};
+  uint64_t radar_invalid_count{};
 
   ContinentalARS548Status() {}
 

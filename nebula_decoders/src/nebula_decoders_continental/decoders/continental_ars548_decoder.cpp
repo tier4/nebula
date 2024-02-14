@@ -148,10 +148,12 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(
   if (radar_status_.timestamp_sync_status == "SYNC_OK") {
     if (radar_status_.detection_first_stamp == 0) {
       radar_status_.detection_first_stamp =
-        msg.header.stamp.sec * 1'000'000'000 + msg.header.stamp.nanosec;
+        static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
+        static_cast<uint64_t>(msg.header.stamp.nanosec);
       radar_status_.detection_last_stamp = radar_status_.detection_first_stamp;
     } else {
-      uint64_t stamp = msg.header.stamp.sec * 1'000'000'000 + msg.header.stamp.nanosec;
+      uint64_t stamp = static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
+                       static_cast<uint64_t>(msg.header.stamp.nanosec);
       radar_status_.detection_total_count++;
       radar_status_.detection_empty_count += number_of_detections == 0 ? 1 : 0;
       radar_status_.detection_dropped_dt_count +=
@@ -254,10 +256,12 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(
   if (radar_status_.timestamp_sync_status == "SYNC_OK") {
     if (radar_status_.object_first_stamp == 0) {
       radar_status_.object_first_stamp =
-        msg.header.stamp.sec * 1'000'000'000 + msg.header.stamp.nanosec;
+        static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
+        static_cast<uint64_t>(msg.header.stamp.nanosec);
       radar_status_.object_last_stamp = radar_status_.object_first_stamp;
     } else {
-      uint64_t stamp = msg.header.stamp.sec * 1'000'000'000 + msg.header.stamp.nanosec;
+      uint64_t stamp = static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
+                       static_cast<uint64_t>(msg.header.stamp.nanosec);
       radar_status_.object_total_count++;
       radar_status_.object_empty_count += number_of_objects == 0 ? 1 : 0;
       radar_status_.object_dropped_dt_count +=
@@ -556,6 +560,9 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
   } else {
     radar_status_.blockage_status += ". Invalid self test";
   }
+
+  radar_status_.status_total_count++;
+  radar_status_.radar_invalid_count += sensor_status_packet.radar_status == 2 ? 1 : 0;
 
   sensor_status_callback_(radar_status_);
 

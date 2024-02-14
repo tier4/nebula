@@ -423,34 +423,53 @@ void ContinentalARS548DriverRosWrapper::SensorStatusCallback(
 
   double detection_total_time_sec =
     (sensor_status.detection_last_stamp - sensor_status.detection_first_stamp) * 1e-9;
-  uint64_t expected_total_detections = detection_total_time_sec * sensor_status.cycle_time * 1e3;
+  uint64_t expected_total_detection =
+    static_cast<uint64_t>(detection_total_time_sec / (sensor_status.cycle_time * 1e-3));
+  uint64_t detection_count_diff =
+    expected_total_detection > sensor_status.detection_total_count
+      ? expected_total_detection - sensor_status.detection_total_count
+      : sensor_status.detection_total_count - expected_total_detection;
   double detection_dropped_rate =
-    100.0 * std::abs<double>(expected_total_detections - sensor_status.detection_total_count) /
-    expected_total_detections;
+    100.0 * std::abs<double>(detection_count_diff) / expected_total_detection;
   double detection_dropped_rate_dt =
     100.0 * sensor_status.detection_dropped_dt_count / sensor_status.detection_total_count;
+  double detection_empty_rate =
+    100.0 * sensor_status.detection_empty_count / sensor_status.detection_total_count;
 
   add_diagnostic("detection_total_time", std::to_string(detection_total_time_sec));
   add_diagnostic("detection_dropped_rate", std::to_string(detection_dropped_rate));
   add_diagnostic("detection_dropped_rate_dt", std::to_string(detection_dropped_rate_dt));
+  add_diagnostic("detection_empty_rate", std::to_string(detection_empty_rate));
   add_diagnostic(
     "detection_dropped_dt_count", std::to_string(sensor_status.detection_dropped_dt_count));
   add_diagnostic("detection_empty_count", std::to_string(sensor_status.detection_empty_count));
 
   double object_total_time_sec =
     (sensor_status.object_last_stamp - sensor_status.object_first_stamp) * 1e-9;
-  uint64_t expected_total_object = object_total_time_sec * sensor_status.cycle_time * 1e3;
-  double object_dropped_rate =
-    100.0 * std::abs<double>(expected_total_object - sensor_status.object_total_count) /
-    expected_total_object;
+  uint64_t expected_total_object =
+    static_cast<uint64_t>(object_total_time_sec / (sensor_status.cycle_time * 1e-3));
+  uint64_t object_count_diff = expected_total_object > sensor_status.object_total_count
+                                 ? expected_total_object - sensor_status.object_total_count
+                                 : sensor_status.object_total_count - expected_total_object;
+  double object_dropped_rate = 100.0 * std::abs<double>(object_count_diff) / expected_total_object;
   double object_dropped_rate_dt =
     100.0 * sensor_status.object_dropped_dt_count / sensor_status.object_total_count;
+  double object_empty_rate =
+    100.0 * sensor_status.object_empty_count / sensor_status.object_total_count;
+
+  add_diagnostic("sensor_status.expected_total_object", std::to_string(expected_total_object));
+  add_diagnostic(
+    "sensor_status.detection_total_count", std::to_string(sensor_status.detection_total_count));
 
   add_diagnostic("object_total_time", std::to_string(object_total_time_sec));
   add_diagnostic("object_dropped_rate", std::to_string(object_dropped_rate));
   add_diagnostic("object_dropped_rate_dt", std::to_string(object_dropped_rate_dt));
+  add_diagnostic("object_empty_rate", std::to_string(object_empty_rate));
   add_diagnostic("object_dropped_dt_count", std::to_string(sensor_status.object_dropped_dt_count));
   add_diagnostic("object_empty_count", std::to_string(sensor_status.object_empty_count));
+
+  add_diagnostic("status_total_count", std::to_string(sensor_status.status_total_count));
+  add_diagnostic("radar_invalid_count", std::to_string(sensor_status.radar_invalid_count));
 
   diagnostics_pub_->publish(diagnostic_array_msg);
 }

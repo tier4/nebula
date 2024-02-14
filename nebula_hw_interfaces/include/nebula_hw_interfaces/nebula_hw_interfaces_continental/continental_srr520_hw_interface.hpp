@@ -104,21 +104,67 @@ public:
   /// @brief Main loop of the CAN receiver thread
   void ReceiveLoop();
 
+  /// @brief Process a new near detection header packet
+  /// @param buffer The buffer containing the packet
+  /// @param stamp The stamp in nanoseconds
   void ProcessNearHeaderPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+
+  /// @brief Process a new near element packet
+  /// @param buffer The buffer containing the packet
+  /// @param stamp The stamp in nanoseconds
   void ProcessNearElementPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+
+  /// @brief Process a new hrr header packet
+  /// @param buffer The buffer containing the packet
+  /// @param stamp The stamp in nanoseconds
   void ProcessHRRHeaderPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+
+  /// @brief Process a new hrr element packet
+  /// @param buffer The buffer containing the packet
+  /// @param stamp The stamp in nanoseconds
   void ProcessHRRElementPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+
+  /// @brief Process a new object header packet
+  /// @param buffer The buffer containing the packet
+  /// @param stamp The stamp in nanoseconds
   void ProcessObjectHeaderPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+
+  /// @brief Process a new object element packet
+  /// @param buffer The buffer containing the packet
+  /// @param stamp The stamp in nanoseconds
   void ProcessObjectElementPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+
+  /// @brief Process a new crc list packet
+  /// @param buffer The buffer containing the packet
+  /// @param stamp The stamp in nanoseconds
   void ProcessCRCListPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+
+  /// @brief Process a new Near detections crc list packet
+  /// @param buffer The buffer containing the packet
+  /// @param stamp The stamp in nanoseconds
   void ProcessNearCRCListPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+
+  /// @brief Process a new HRR crc list packet
+  /// @param buffer The buffer containing the packet
+  /// @param stamp The stamp in nanoseconds
   void ProcessHRRCRCListPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+
+  /// @brief Process a new objects crc list packet
+  /// @param buffer The buffer containing the packet
+  /// @param stamp The stamp in nanoseconds
   void ProcessObjectCRCListPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
-  void ProcessStatusPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
 
   /// @brief Process a new sensor status packet
   /// @param buffer The buffer containing the status packet
-  void ProcessSensorStatusPacket(const std::vector<uint8_t> & buffer);
+  /// @param stamp The stamp in nanoseconds
+  void ProcessSensorStatusPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+
+  /// @brief Process a new Sync Fup packet
+  /// @param buffer The buffer containing the packet
+  /// @param stamp The stamp in nanoseconds
+  void ProcessSyncFupPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+
+  void SyncTimerCallback();
 
   /// @brief Process a new filter status packet
   /// @param buffer The buffer containing the status packet
