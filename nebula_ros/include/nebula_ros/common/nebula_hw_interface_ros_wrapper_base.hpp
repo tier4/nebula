@@ -56,7 +56,7 @@ protected:
   virtual Status InitializeHwInterface(
     const drivers::SensorConfigurationBase & sensor_configuration) = 0;
   //  void SendDataPacket(const std::vector<uint8_t> &buffer);        // Ideally this will be
-  //  implemented as specific funtions, GetFanStatus, GetEchoMode
+  //  implemented as specific functions, GetFanStatus, GetEchoMode
 
   /// @brief Enable sensor setup during initialization and set_parameters_callback
   bool setup_sensor;
