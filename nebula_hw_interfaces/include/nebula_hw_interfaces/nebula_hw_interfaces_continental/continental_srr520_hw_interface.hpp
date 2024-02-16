@@ -79,7 +79,15 @@ private:
   bool first_rdi_hrr_packet_{true};
   bool first_object_packet_{true};
 
+  uint8_t sync_counter_{0};
+  bool sync_fup_sent_{false};
+
   std::shared_ptr<rclcpp::Logger> parent_node_logger;
+
+  /// @brief Send a Fd frame
+  /// @param data a buffer containing the data to send
+  template <std::size_t N>
+  bool SendFrame(const std::array<uint8_t, N> & data, int can_frame_id);
 
   /// @brief Printing the string to RCLCPP_INFO_STREAM
   /// @param info Target string
@@ -96,10 +104,6 @@ private:
   /// @brief Printing the bytes to RCLCPP_DEBUG_STREAM
   /// @param bytes Target byte vector
   void PrintDebug(const std::vector<uint8_t> & bytes);
-
-public:
-  /// @brief Constructor
-  ContinentalSRR520HwInterface();
 
   /// @brief Main loop of the CAN receiver thread
   void ReceiveLoop();
@@ -164,8 +168,6 @@ public:
   /// @param stamp The stamp in nanoseconds
   void ProcessSyncFupPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
 
-  void SyncTimerCallback();
-
   /// @brief Process a new filter status packet
   /// @param buffer The buffer containing the status packet
   void ProcessFilterStatusPacket(const std::vector<uint8_t> & buffer);
@@ -177,6 +179,10 @@ public:
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
   void ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer, int id, uint64_t stamp);
+
+public:
+  /// @brief Constructor
+  ContinentalSRR520HwInterface();
 
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
@@ -202,6 +208,9 @@ public:
   /// @return Resulting status
   Status RegisterScanCallback(
     std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> scan_callback);
+
+  /// @brief Sensor synchronization routine
+  void SensorSync();
 
   /// @brief Configure the sensor
   /// @param sensor_id Desired sensor id

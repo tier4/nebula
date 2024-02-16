@@ -62,6 +62,8 @@ ContinentalSRR520HwInterfaceRosWrapper::~ContinentalSRR520HwInterfaceRosWrapper(
 
 Status ContinentalSRR520HwInterfaceRosWrapper::StreamStart()
 {
+  using std::chrono_literals::operator""ms;
+
   if (Status::OK == interface_status_) {
     interface_status_ = hw_interface_.SensorInterfaceStart();
   }
@@ -78,6 +80,14 @@ Status ContinentalSRR520HwInterfaceRosWrapper::StreamStart()
       "configure_sensor", std::bind(
                             &ContinentalSRR520HwInterfaceRosWrapper::ConfigureSensorRequestCallback,
                             this, std::placeholders::_1, std::placeholders::_2));
+
+    sync_timer_ = rclcpp::create_timer(
+      this, get_clock(), 100ms,
+      std::bind(&ContinentalSRR520HwInterfaceRosWrapper::syncTimerCallback, this));
+
+    vehicle_dynamics_timer_ = rclcpp::create_timer(
+      this, get_clock(), 100ms,
+      std::bind(&ContinentalSRR520HwInterfaceRosWrapper::vehicleDynamicsTimerCallback, this));
   }
 
   return interface_status_;
@@ -359,6 +369,16 @@ void ContinentalSRR520HwInterfaceRosWrapper::ConfigureSensorRequestCallback(
     base_to_sensor_tf.transform.translation.x - 0.5 * sensor_configuration_.new_vehicle_wheelbase,
     sensor_configuration_.new_vehicle_wheelbase, sensor_configuration_.new_cover_damping,
     sensor_configuration_.new_plug_bottom, sensor_configuration_.reset_sensor_configuration);
+}
+
+void ContinentalSRR520HwInterfaceRosWrapper::syncTimerCallback()
+{
+  hw_interface_.SensorSync();
+}
+
+void ContinentalSRR520HwInterfaceRosWrapper::vehicleDynamicsTimerCallback()
+{
+  hw_interface_.SetVehicleDynamics(0.0, 0.0, 0.0, 0.0, true);
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>

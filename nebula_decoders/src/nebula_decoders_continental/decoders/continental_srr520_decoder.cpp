@@ -16,6 +16,8 @@
 
 #include "nebula_common/continental/continental_srr520.hpp"
 
+#include <nebula_common/continental/crc.hpp>
+
 #include <cmath>
 #include <utility>
 
@@ -337,20 +339,6 @@ bool ContinentalSRR520Decoder::ParseObjectsListPacket(
   return true;
 }
 
-template <typename Iterator>
-int crc16(Iterator begin, Iterator end)
-{
-  uint16_t w_crc = 0xffff;
-  int counter = 0;
-  for (Iterator it = begin; it != end; ++it) {
-    counter++;
-    w_crc ^= (*it) << 8;
-    for (int i = 0; i < 8; i++) w_crc = w_crc & 0x8000 ? (w_crc << 1) ^ 0x1021 : w_crc << 1;
-  }
-
-  return w_crc;
-}
-
 bool ContinentalSRR520Decoder::ParseStatusPacket(
   const nebula_msgs::msg::NebulaPackets & nebula_packets)
 {
@@ -536,7 +524,7 @@ bool ContinentalSRR520Decoder::ParseStatusPacket(
   diagnostic_values.push_back(key_value);
 
   uint16_t computed_crc =
-    crc16(nebula_packets.packets[1].data.begin(), nebula_packets.packets[1].data.end() - 3);
+    crc16_packet(nebula_packets.packets[1].data.begin(), nebula_packets.packets[1].data.end() - 3);
   key_value.key = "crc_check";
   key_value.value =
     std::to_string(status_packet.u_crc.value()) + "|" + std::to_string(computed_crc);

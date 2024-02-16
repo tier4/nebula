@@ -14,6 +14,7 @@
 // limitations under the License.
 
 #include <nebula_common/continental/continental_srr520.hpp>
+#include <nebula_common/continental/crc.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_srr520_hw_interface.hpp>
 
 #include <limits>
@@ -49,6 +50,8 @@ Status ContinentalSRR520HwInterface::SetSensorConfiguration(
 
 Status ContinentalSRR520HwInterface::SensorInterfaceStart()
 {
+  std::lock_guard lock(receiver_mutex_);
+
   try {
     can_sender_ = std::make_unique<::drivers::socketcan::SocketCanSender>(
       sensor_configuration_->interface, true);
@@ -68,6 +71,24 @@ Status ContinentalSRR520HwInterface::SensorInterfaceStart()
     return status;
   }
   return Status::OK;
+}
+
+template <std::size_t N>
+bool ContinentalSRR520HwInterface::SendFrame(const std::array<uint8_t, N> & data, int can_frame_id)
+{
+  ::drivers::socketcan::CanId send_id(
+    can_frame_id, 0, ::drivers::socketcan::FrameType::DATA, ::drivers::socketcan::StandardFrame);
+
+  try {
+    can_sender_->send_fd(
+      data.data(), data.size(), send_id,
+      std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::duration<double>(sensor_configuration_->sender_timeout_sec)));
+    return true;
+  } catch (const std::exception & ex) {
+    PrintError(std::string("Error sending CAN message: ") + ex.what());
+    return false;
+  }
 }
 
 void ContinentalSRR520HwInterface::ReceiveLoop()
@@ -333,24 +354,6 @@ void ContinentalSRR520HwInterface::ProcessCRCListPacket(
   }
 }
 
-template <typename Iterator>
-int crc16(Iterator begin, Iterator end)
-{
-  uint16_t w_crc = 0xffff;
-
-  int counter = 0;
-
-  for (Iterator it = begin; it != end; ++it) {
-    counter++;
-    for (const uint8_t byte : it->data) {
-      w_crc ^= byte << 8;
-      for (int i = 0; i < 8; i++) w_crc = w_crc & 0x8000 ? (w_crc << 1) ^ 0x1021 : w_crc << 1;
-    }
-  }
-
-  return w_crc;
-}
-
 void ContinentalSRR520HwInterface::ProcessNearCRCListPacket(
   const std::vector<uint8_t> & buffer, [[maybe_unused]] const uint64_t stamp)
 {
@@ -363,7 +366,7 @@ void ContinentalSRR520HwInterface::ProcessNearCRCListPacket(
 
   uint16_t transmitted_crc = (static_cast<uint16_t>(buffer[1]) << 8) | buffer[2];
   uint16_t computed_crc =
-    crc16(rdi_near_packets_ptr_->packets.begin() + 1, rdi_near_packets_ptr_->packets.end());
+    crc16_packets(rdi_near_packets_ptr_->packets.begin() + 1, rdi_near_packets_ptr_->packets.end());
 
   // uint8_t current_seq = buffer[3];
 
@@ -390,7 +393,7 @@ void ContinentalSRR520HwInterface::ProcessHRRCRCListPacket(
 
   uint16_t transmitted_crc = (static_cast<uint16_t>(buffer[1]) << 8) | buffer[2];
   uint16_t computed_crc =
-    crc16(rdi_hrr_packets_ptr_->packets.begin() + 1, rdi_hrr_packets_ptr_->packets.end());
+    crc16_packets(rdi_hrr_packets_ptr_->packets.begin() + 1, rdi_hrr_packets_ptr_->packets.end());
 
   // uint8_t current_seq = buffer[3];
 
@@ -417,7 +420,7 @@ void ContinentalSRR520HwInterface::ProcessObjectCRCListPacket(
 
   uint16_t transmitted_crc = (static_cast<uint16_t>(buffer[1]) << 8) | buffer[2];
   uint16_t computed_crc =
-    crc16(object_packets_ptr_->packets.begin() + 1, object_packets_ptr_->packets.end());
+    crc16_packets(object_packets_ptr_->packets.begin() + 1, object_packets_ptr_->packets.end());
 
   // uint8_t current_seq = buffer[3];
 
@@ -456,61 +459,72 @@ void ContinentalSRR520HwInterface::ProcessSensorStatusPacket(
 void ContinentalSRR520HwInterface::ProcessSyncFupPacket(
   const std::vector<uint8_t> & buffer, [[maybe_unused]] const uint64_t stamp)
 {
-  /*
+  if (!can_sender_) {
+    PrintError("Can sender is invalid so can not do follow up");
+  }
+
   // Want to know what type of sync_fup message is, its counter and time domain
-  bool is_sync = msg->data[0] == 0x20;
-  uint8_t rx_sync_counter = msg->data[2] & 0x0F;
-  uint8_t rx_domain_id = msg->data[2] >> 4;
+  bool is_sync = buffer[0] == 0x20;
+  uint8_t rx_sync_counter = buffer[2] & 0x0F;
+  uint8_t rx_domain_id = buffer[2] >> 4;
 
-  std::cout << "RECEIVED " << (is_sync ? "SYNC" : "FUP") << " domain=" << std::dec <<
-  static_cast<uint16_t>(rx_domain_id) << " counter=" << static_cast<uint16_t>(rx_sync_counter) << ":
-  secs=" << msg->header.stamp.sec << " nsecs=" << msg->header.stamp.nanosec << std::endl;
+  uint32_t sec = stamp / 1'000'000'000;
+  uint32_t nanosec = stamp % 1'000'000'000;
 
-  if (!sync_use_bus_time_ || sync_fup_sent_) {
+  std::cout << "RECEIVED " << (is_sync ? "SYNC" : "FUP") << " domain=" << std::dec
+            << static_cast<uint16_t>(rx_domain_id)
+            << " counter=" << static_cast<uint16_t>(rx_sync_counter) << ": secs=" << sec
+            << " nsecs=" << nanosec << std::endl;
+
+  if (!sensor_configuration_->sync_use_bus_time || sync_fup_sent_) {
     return;
   }
 
   // In this case, we will attempt to do the full sync scheme
-  builtin_interfaces::msg::Time stamp = this->now();
 
-  auto t0s = sync_msg_.header.stamp;
+  auto now = std::chrono::system_clock::now();
+  auto now_secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+  auto now_nanosecs =
+    std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+
+  builtin_interfaces::msg::Time fup_stamp;
+  fup_stamp.sec = static_cast<int>(now_secs);
+  fup_stamp.nanosec = static_cast<std::uint32_t>(now_nanosecs % 1'000'000'000);
+
+  auto t0s = fup_stamp;
   t0s.nanosec = 0;
-  const auto t1r = msg->header.stamp;
+  const auto t1r = fup_stamp;
 
-  builtin_interfaces::msg::Time t4r = rclcpp::Time(rclcpp::Time() + (rclcpp::Time(t1r) -
-  rclcpp::Time(t0s))); uint8_t t4r_seconds = static_cast<uint8_t>(t4r.sec); uint32_t t4r_nanoseconds
-  = t4r.nanosec;
+  builtin_interfaces::msg::Time t4r =
+    rclcpp::Time(rclcpp::Time() + (rclcpp::Time(t1r) - rclcpp::Time(t0s)));
+  uint8_t t4r_seconds = static_cast<uint8_t>(t4r.sec);
+  uint32_t t4r_nanoseconds = t4r.nanosec;
 
-  std::cout << "\t\t\tComputing FUP with the delta scheme: sec=" <<
-  static_cast<uint16_t>(t4r_seconds) << " nsec=" << t4r_nanoseconds << std::endl;
+  std::cout << "\t\t\tComputing FUP with the delta scheme: sec="
+            << static_cast<uint16_t>(t4r_seconds) << " nsec=" << t4r_nanoseconds << std::endl;
 
+  std::array<uint8_t, 8> data;
+  data[0] = 0x28;  // mode 0x18 is without CRC
+  data[1] = 0;     // CRC. Not this time
+  data[2] = (((static_cast<uint16_t>(TIME_DOMAIN_ID) << 4) & 0xF0)) |
+            (sync_counter_ & 0x0F);  // Domain and counter
+  data[3] = t4r_seconds & 0x3;       // SGW and OVS
+  data[4] = (t4r_nanoseconds & 0xFF000000) >> 24;
+  data[5] = (t4r_nanoseconds & 0x00FF0000) >> 16;
+  data[6] = (t4r_nanoseconds & 0x0000FF00) >> 8;
+  data[7] = (t4r_nanoseconds & 0x000000FF) >> 0;
 
-  followup_msg_.header.stamp = stamp;
-  followup_msg_.id = SYNC_FUP_ID;
-  followup_msg_.is_error = false;
-  followup_msg_.is_extended = false;
-  followup_msg_.len = 8;
-  followup_msg_.data.resize(8);
-  followup_msg_.data[0] = 0x28; // mode 0x18 is without CRC
-  followup_msg_.data[1] = 0; // CRC. Not this time
-  followup_msg_.data[2] = (((static_cast<uint16_t>(TIME_DOMAIN_ID) << 4) & 0xF0)) | (sync_counter_ &
-  0x0F); // Domain and counter followup_msg_.data[3] = t4r_seconds & 0x3; // SGW and OVS
-  followup_msg_.data[4] = (t4r_nanoseconds & 0xFF000000) >> 24;
-  followup_msg_.data[5] = (t4r_nanoseconds & 0x00FF0000) >> 16;
-  followup_msg_.data[6] = (t4r_nanoseconds & 0x0000FF00) >> 8;
-  followup_msg_.data[7] = (t4r_nanoseconds & 0x000000FF) >> 0;
+  std::array<uint8_t, 7> fup_crc_array{data[2], data[3], data[4], data[5], data[6], data[7], 0x00};
+  uint8_t fup_crc = crc8h2f(fup_crc_array.begin(), fup_crc_array.end());
+  data[1] = fup_crc;
 
-  uint8_t fup_crc_array[] = {sync_msg_.data[2], followup_msg_.data[3], followup_msg_.data[4],
-  followup_msg_.data[5], followup_msg_.data[6], followup_msg_.data[7], 0x00}; uint8_t fup_crc =
-  Crc_CalculateCRC8H2F(fup_crc_array, 7, 0x00, true); followup_msg_.data[1] = fup_crc;
+  SendFrame(data, SYNC_FUP_CAN_MESSAGE_ID);
 
-  fd_frames_pub_->publish(followup_msg_);
   sync_fup_sent_ = true;
-  sync_counter_ = sync_counter_ == 15 ? 0 : sync_counter_ +1;
-  */
+  sync_counter_ = sync_counter_ == 15 ? 0 : sync_counter_ + 1;
 }
 
-void ContinentalSRR520HwInterface::SyncTimerCallback()
+void ContinentalSRR520HwInterface::SensorSync()
 {
   // This method must be called periodically
   // There are two ways of performing the syncronization procedure using the current hardware
@@ -521,60 +535,62 @@ void ContinentalSRR520HwInterface::SyncTimerCallback()
   // stamping into it leaving the kernel). The second approach can improve things and gets closer to
   // what autosar describes, but we have no real way to know it, and depends on the actual
   // implementation.
-
-  /*if (!sync_fup_sent_) {
-    RCLCPP_WARN(this->get_logger(), "We will send a SYNC message without having sent a FUP message
-  first!");
+  if (!can_sender_) {
+    PrintError("Can sender is invalid so can not do sync up");
   }
 
-  builtin_interfaces::msg::Time stamp = this->now();
-  std::cout << "SYNC - domain=" << std::dec << static_cast<uint16_t>(TIME_DOMAIN_ID)  << " counter="
-  << (sync_counter_ & 0x0F) << " stamp: secs=" << stamp.sec << " nsecs=" << stamp.nanosec <<
-  std::endl;
+  if (!sync_fup_sent_) {
+    PrintError("We will send a SYNC message without having sent a FUP message first!");
+  }
 
-  sync_msg_.header.stamp = stamp;
-  sync_msg_.id = SYNC_FUP_ID;
-  sync_msg_.is_error = false;
-  sync_msg_.is_extended = false;
-  sync_msg_.len = 8;
-  sync_msg_.data.resize(8);
-  sync_msg_.data[0] = 0x20; // mode 0x10 is without CRC
-  sync_msg_.data[1] = 0; // CRC. Not this time
-  sync_msg_.data[2] = (((static_cast<uint16_t>(TIME_DOMAIN_ID) << 4) & 0xF0)) | (sync_counter_ &
-  0x0F); // Domain and counter sync_msg_.data[3] = 0; // use data sync_msg_.data[4] = (stamp.sec &
-  0xFF000000) >> 24; sync_msg_.data[5] = (stamp.sec & 0x00FF0000) >> 16; sync_msg_.data[6] =
-  (stamp.sec & 0x0000FF00) >> 8; sync_msg_.data[7] = (stamp.sec & 0x000000FF) >> 0;
+  auto now = std::chrono::system_clock::now();
+  auto now_secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+  auto now_nanosecs =
+    std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
 
-  uint8_t sync_crc_array[] = {sync_msg_.data[2], sync_msg_.data[3], sync_msg_.data[4],
-  sync_msg_.data[5], sync_msg_.data[6], sync_msg_.data[7], 0x00}; uint8_t sync_crc =
-  Crc_CalculateCRC8H2F(sync_crc_array, 7, 0x00, true); sync_msg_.data[1] = sync_crc;
+  builtin_interfaces::msg::Time stamp;
+  stamp.sec = static_cast<int>(now_secs);
+  stamp.nanosec = static_cast<std::uint32_t>(now_nanosecs % 1'000'000'000);
 
-  fd_frames_pub_->publish(sync_msg_);
+  std::cout << "SYNC - domain=" << std::dec << static_cast<uint16_t>(TIME_DOMAIN_ID)
+            << " counter=" << (sync_counter_ & 0x0F) << " stamp: secs=" << stamp.sec
+            << " nsecs=" << stamp.nanosec << std::endl;
 
-  if (!sync_use_bus_time_) {
-    followup_msg_.header.stamp = stamp;
-    followup_msg_.id = SYNC_FUP_ID;
-    followup_msg_.is_error = false;
-    followup_msg_.is_extended = false;
-    followup_msg_.len = 8;
-    followup_msg_.data.resize(8);
-    followup_msg_.data[0] = 0x28; // mode 0x18 is without CRC
-    followup_msg_.data[1] = 0; // CRC. Not this time
-    followup_msg_.data[2] = (((static_cast<uint16_t>(TIME_DOMAIN_ID) << 4) & 0xF0)) | (sync_counter_
-  & 0x0F); // Domain and counter followup_msg_.data[3] = 0; // SGW and OVS followup_msg_.data[4] =
-  (stamp.nanosec & 0xFF000000) >> 24; followup_msg_.data[5] = (stamp.nanosec & 0x00FF0000) >> 16;
-    followup_msg_.data[6] = (stamp.nanosec & 0x0000FF00) >> 8;
-    followup_msg_.data[7] = (stamp.nanosec & 0x000000FF) >> 0;
+  std::array<uint8_t, 8> data;
+  data[0] = 0x20;  // mode 0x10 is without CRC
+  data[1] = 0;     // CRC. Not this time
+  data[2] = (((static_cast<uint16_t>(TIME_DOMAIN_ID) << 4) & 0xF0)) |
+            (sync_counter_ & 0x0F);  // Domain and counter
+  data[3] = 0;                       // use data
+  data[4] = (stamp.sec & 0xFF000000) >> 24;
+  data[5] = (stamp.sec & 0x00FF0000) >> 16;
+  data[6] = (stamp.sec & 0x0000FF00) >> 8;
+  data[7] = (stamp.sec & 0x000000FF) >> 0;
 
-    uint8_t fup_crc_array[] = {sync_msg_.data[2], followup_msg_.data[3], followup_msg_.data[4],
-  followup_msg_.data[5], followup_msg_.data[6], followup_msg_.data[7], 0x00}; uint8_t fup_crc =
-  Crc_CalculateCRC8H2F(fup_crc_array, 7, 0x00, true); followup_msg_.data[1] = fup_crc;
+  std::array<uint8_t, 7> sync_crc_array{data[2], data[3], data[4], data[5], data[6], data[7], 0x00};
+  uint8_t sync_crc = crc8h2f(sync_crc_array.begin(), sync_crc_array.end());
+  data[1] = sync_crc;
 
-    fd_frames_pub_->publish(followup_msg_);
-    sync_counter_ = sync_counter_ == 15 ? 0 : sync_counter_ +1;
-  } else {
+  SendFrame(data, SYNC_FUP_CAN_MESSAGE_ID);
+
+  if (sensor_configuration_->sync_use_bus_time) {
     sync_fup_sent_ = false;
-  }*/
+    return;
+  }
+
+  data[0] = 0x28;  // mode 0x18 is without CRC
+  data[1] = 0;     // CRC. Not this time
+  data[2] = (((static_cast<uint16_t>(TIME_DOMAIN_ID) << 4) & 0xF0)) |
+            (sync_counter_ & 0x0F);  // Domain and counter
+  data[3] = 0;                       // SGW and OVS
+  data[4] = (stamp.nanosec & 0xFF000000) >> 24;
+  data[5] = (stamp.nanosec & 0x00FF0000) >> 16;
+  data[6] = (stamp.nanosec & 0x0000FF00) >> 8;
+  data[7] = (stamp.nanosec & 0x000000FF) >> 0;
+
+  SendFrame(data, SYNC_FUP_CAN_MESSAGE_ID);
+
+  sync_counter_ = sync_counter_ == 15 ? 0 : sync_counter_ + 1;
 }
 
 void ContinentalSRR520HwInterface::ProcessDataPacket(const std::vector<uint8_t> & buffer)
@@ -591,7 +607,11 @@ void ContinentalSRR520HwInterface::ProcessDataPacket(const std::vector<uint8_t> 
   nebula_packets_ptr_->packets.emplace_back(nebula_packet);
 
   nebula_packets_ptr_->header.stamp = nebula_packets_ptr_->packets.front().stamp;
-  nebula_packets_ptr_->header.frame_id = sensor_configuration_->frame_id;
+
+  {
+    std::lock_guard lock(receiver_mutex_);
+    nebula_packets_ptr_->header.frame_id = sensor_configuration_->frame_id;
+  }
 
   nebula_packets_reception_callback_(std::move(nebula_packets_ptr_));
   nebula_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -690,21 +710,11 @@ Status ContinentalSRR520HwInterface::ConfigureSensor(
   uint8_t reset_value = reset ? 0x80 : 0x00;
   data[15] = plug_value | reset_value;  // PLUG orientation. default is 0, make it 1 for testing
 
-  ::drivers::socketcan::CanId send_id(
-    SENSOR_CONFIG_CAN_MESSAGE_ID, 0, ::drivers::socketcan::FrameType::DATA,
-    ::drivers::socketcan::StandardFrame);
-
-  try {
-    can_sender_->send_fd(
-      data.data(), 16, send_id,
-      std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::duration<double>(sensor_configuration_->sender_timeout_sec)));
-  } catch (const std::exception & ex) {
-    PrintError(std::string("Error sending CAN message: ") + ex.what());
+  if (SendFrame(data, SENSOR_CONFIG_CAN_MESSAGE_ID)) {
+    return Status::OK;
+  } else {
     return Status::CAN_CONNECTION_ERROR;
   }
-
-  return Status::OK;
 }
 
 Status ContinentalSRR520HwInterface::SetVehicleDynamics(
@@ -744,21 +754,11 @@ Status ContinentalSRR520HwInterface::SetVehicleDynamics(
   data[6] = 0x00;
   data[7] = 0x00;
 
-  ::drivers::socketcan::CanId send_id(
-    VEH_DYN_CAN_MESSAGE_ID, 0, ::drivers::socketcan::FrameType::DATA,
-    ::drivers::socketcan::StandardFrame);
-
-  try {
-    can_sender_->send_fd(
-      data.data(), 8, send_id,
-      std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::duration<double>(sensor_configuration_->sender_timeout_sec)));
-  } catch (const std::exception & ex) {
-    PrintError(std::string("Error sending CAN message: ") + ex.what());
+  if (SendFrame(data, VEH_DYN_CAN_MESSAGE_ID)) {
+    return Status::OK;
+  } else {
     return Status::CAN_CONNECTION_ERROR;
   }
-
-  return Status::OK;
 }
 
 void ContinentalSRR520HwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
