@@ -1,3 +1,17 @@
+// Copyright 2024 Tier IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "nebula_ros/hesai/hesai_hw_interface_ros_wrapper.hpp"
 
 namespace nebula
@@ -23,36 +37,31 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
 #if not defined(TEST_PCAP)
   Status rt = hw_interface_.InitializeTcpDriver(this->setup_sensor);
-  if(this->retry_hw_)
-  {
+  if (this->retry_hw_) {
     int cnt = 0;
     RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << " Retry: " << cnt);
-    while(rt == Status::ERROR_1)
-    {
+    while (rt == Status::ERROR_1) {
       cnt++;
-      std::this_thread::sleep_for(std::chrono::milliseconds(8000));// >5000
+      std::this_thread::sleep_for(std::chrono::milliseconds(8000));  // >5000
       RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Retry: " << cnt);
       rt = hw_interface_.InitializeTcpDriver(this->setup_sensor);
     }
   }
 
-  if(rt != Status::ERROR_1){
-    try{
+  if (rt != Status::ERROR_1) {
+    try {
       std::vector<std::thread> thread_pool{};
-        thread_pool.emplace_back([this] {
-          hw_interface_.GetInventory(  // ios,
-            [this](HesaiInventory & result) {
-              RCLCPP_INFO_STREAM(get_logger(), result);
-              hw_interface_.SetTargetModel(result.model);
-            });
-        });
-        for (std::thread & th : thread_pool) {
-          th.join();
-        }
-
-    }
-    catch (...)
-    {
+      thread_pool.emplace_back([this] {
+        hw_interface_.GetInventory(  // ios,
+          [this](HesaiInventory & result) {
+            RCLCPP_INFO_STREAM(get_logger(), result);
+            hw_interface_.SetTargetModel(result.model);
+          });
+      });
+      for (std::thread & th : thread_pool) {
+        th.join();
+      }
+    } catch (...) {
       std::cout << "catch (...) in parent" << std::endl;
       RCLCPP_ERROR_STREAM(get_logger(), "Failed to get model from sensor...");
     }
@@ -60,10 +69,10 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
       hw_interface_.CheckAndSetConfig();
       updateParameters();
     }
-  }
-  else
-  {
-    RCLCPP_ERROR_STREAM(get_logger(), "Failed to get model from sensor... Set from config: " << sensor_cfg_ptr->sensor_model);
+  } else {
+    RCLCPP_ERROR_STREAM(
+      get_logger(),
+      "Failed to get model from sensor... Set from config: " << sensor_cfg_ptr->sensor_model);
     hw_interface_.SetTargetModel(sensor_cfg_ptr->sensor_model);
   }
 #endif
@@ -147,7 +156,8 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
   StreamStart();
 }
 
-HesaiHwInterfaceRosWrapper::~HesaiHwInterfaceRosWrapper() {
+HesaiHwInterfaceRosWrapper::~HesaiHwInterfaceRosWrapper()
+{
   RCLCPP_INFO_STREAM(get_logger(), "Closing TcpDriver");
   hw_interface_.FinalizeTcpDriver();
 }
@@ -155,13 +165,19 @@ HesaiHwInterfaceRosWrapper::~HesaiHwInterfaceRosWrapper() {
 Status HesaiHwInterfaceRosWrapper::StreamStart()
 {
   if (Status::OK == interface_status_) {
-    interface_status_ = hw_interface_.CloudInterfaceStart();
+    interface_status_ = hw_interface_.SensorInterfaceStart();
   }
   return interface_status_;
 }
 
-Status HesaiHwInterfaceRosWrapper::StreamStop() { return Status::OK; }
-Status HesaiHwInterfaceRosWrapper::Shutdown() { return Status::OK; }
+Status HesaiHwInterfaceRosWrapper::StreamStop()
+{
+  return Status::OK;
+}
+Status HesaiHwInterfaceRosWrapper::Shutdown()
+{
+  return Status::OK;
+}
 
 Status HesaiHwInterfaceRosWrapper::InitializeHwInterface(  // todo: don't think this is needed
   const drivers::SensorConfigurationBase & sensor_configuration)

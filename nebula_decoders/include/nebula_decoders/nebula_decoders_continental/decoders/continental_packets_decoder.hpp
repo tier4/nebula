@@ -15,7 +15,6 @@
 #ifndef NEBULA_WS_CONTINENTAL_PACKETS_DECODER_HPP
 #define NEBULA_WS_CONTINENTAL_PACKETS_DECODER_HPP
 
-#include "nebula_common/continental/continental_common.hpp"
 #include "nebula_common/point_types.hpp"
 
 #include "nebula_msgs/msg/nebula_packet.hpp"
@@ -31,10 +30,6 @@ namespace drivers
 /// @brief Base class for Continental Radar decoder
 class ContinentalPacketsDecoder
 {
-protected:
-  /// @brief SensorConfiguration for this decoder
-  std::shared_ptr<drivers::ContinentalARS548SensorConfiguration> sensor_configuration_;
-
 public:
   ContinentalPacketsDecoder(ContinentalPacketsDecoder && c) = delete;
   ContinentalPacketsDecoder & operator=(ContinentalPacketsDecoder && c) = delete;

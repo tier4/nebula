@@ -1,3 +1,19 @@
+// Copyright 2023 LeoDrive.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Developed by LeoDrive, 2023
+
 #pragma once
 
 // Have to define macros to silence warnings about deprecated headers being used by
@@ -20,6 +36,10 @@
 #include "robosense_msgs/msg/robosense_info_packet.hpp"
 #include "robosense_msgs/msg/robosense_packet.hpp"
 #include "robosense_msgs/msg/robosense_scan.hpp"
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -70,7 +90,7 @@ public:
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer) final;
+  void ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer) final;
 
   /// @brief Callback function to receive the Info Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
@@ -78,7 +98,7 @@ public:
 
   /// @brief Starting the interface that handles UDP streams for MSOP packets
   /// @return Resulting status
-  Status CloudInterfaceStart() final;
+  Status SensorInterfaceStart() final;
 
   /// @brief Starting the interface that handles UDP streams for DIFOP packets
   /// @return Resulting status
@@ -86,7 +106,7 @@ public:
 
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
-  Status CloudInterfaceStop() final;
+  Status SensorInterfaceStop() final;
 
   /// @brief Setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface

@@ -8,6 +8,7 @@
     <arg name="acceleration_topic"  default="acceleration_input"/>
     <arg name="steering_angle_topic"  default="steering_angle_input"/>
 
+    <!-- Ethernet based sensor: ARS548 -->
     <arg name="sensor_ip" default="10.13.1.114" description="Radar Sensor IP"/>
     <arg name="new_sensor_ip" default="10.13.1.113" description="New Radar Sensor IP"/>
     <arg name="host_ip" default="10.13.1.166" description="Broadcast IP from Sensor"/>
@@ -29,59 +30,171 @@
     <arg name="new_radar_country_code" default="2" description="New country code"/>
     <arg name="new_radar_powersave_standstill" default="0" description="New power saving in standstill"/>
 
-    <node pkg="nebula_ros" exec="continental_ars548_driver_ros_wrapper_node" name="continental_ars548_decoder_driver" output="screen">
-        <param name="sensor_model" value="$(var sensor_model)"/>
-        <param name="frame_id" value="$(var frame_id)"/>
-        <param name="base_frame" value="$(var base_frame)"/>
-        <param name="host_ip" value="$(var host_ip)"/>
-        <param name="sensor_ip" value="$(var sensor_ip)"/>
-        <param name="new_sensor_ip" value="$(var new_sensor_ip)"/>
-        <param name="data_port" value="$(var data_port)"/>
-        <param name="use_sensor_time" value="$(var use_sensor_time)"/>
+    <!-- CAN based sensor: SRR520 -->
+    <arg name="interface" default="can4" description="Can interface"/>
+    <arg name="receiver_timeout_sec" default="0.03" description="Receiver timeout in seconds"/>
+    <arg name="sender_timeout_sec" default="0.01" description="Sender timeout int seconds"/>
+    <arg name="filters" default="0:0" description="CAN filters"/>
+    <arg name="use_bus_time" default="false" description="Whether to use the bus time for received messages or the system time"/>
 
-        <param name="new_plug_orientation" value="$(var new_plug_orientation)"/>
-        <param name="new_vehicle_length" value="$(var new_vehicle_length)"/>
-        <param name="new_vehicle_width" value="$(var new_vehicle_width)"/>
-        <param name="new_vehicle_height" value="$(var new_vehicle_height)"/>
-        <param name="new_vehicle_wheelbase" value="$(var new_vehicle_wheelbase)"/>
-        <param name="new_radar_maximum_distance" value="$(var new_radar_maximum_distance)"/>
-        <param name="new_radar_frequency_slot" value="$(var new_radar_frequency_slot)"/>
-        <param name="new_radar_cycle_time" value="$(var new_radar_cycle_time)"/>
-        <param name="new_radar_time_slot" value="$(var new_radar_time_slot)"/>
-        <param name="new_radar_country_code" value="$(var new_radar_country_code)"/>
-        <param name="new_radar_powersave_standstill" value="$(var new_radar_powersave_standstill)"/>
-    </node>
+    <arg name="new_sensor_id" default="0" description="The new sensor id"/>
+    <arg name="new_plug_bottom" default="true" description="Whether the plug is in the bottom"/>
+    <arg name="new_cover_damping" default="0.0" description="Cover damping in dB"/>
+    <arg name="reset_sensor_configuration" default="false" description="Whether to reset all values to default when configuring the sensor"/>
 
-    <node pkg="nebula_ros" exec="continental_ars548_hw_interface_ros_wrapper_node"
-          name="continental_ars548_hw_driver" output="screen">
-        <remap from="/diagnostics" to="diagnostics"/>
-        <remap from="odometry_input" to="$(var odometry_topic)"/>
-        <remap from="acceleration_input" to="$(var acceleration_topic)"/>
-        <remap from="steering_angle_input" to="$(var steering_angle_topic)"/>
+    <group if="$(eval &quot;'$(var sensor_model)' == 'ARS548' &quot;)" >
 
-        <param name="sensor_model" value="$(var sensor_model)"/>
-        <param name="frame_id" value="$(var frame_id)"/>
-        <param name="base_frame" value="$(var base_frame)"/>
-        <param name="host_ip" value="$(var host_ip)"/>
-        <param name="multicast_ip" value="$(var multicast_ip)"/>
-        <param name="data_port" value="$(var data_port)"/>
-        <param name="sensor_ip" value="$(var sensor_ip)"/>
-        <param name="new_sensor_ip" value="$(var new_sensor_ip)"/>
-        <param name="configuration_host_port" value="$(var configuration_host_port)"/>
-        <param name="configuration_sensor_port" value="$(var configuration_sensor_port)"/>
-        <param name="use_sensor_time" value="$(var use_sensor_time)"/>
-        <param name="new_plug_orientation" value="$(var new_plug_orientation)"/>
-        <param name="new_vehicle_length" value="$(var new_vehicle_length)"/>
-        <param name="new_vehicle_width" value="$(var new_vehicle_width)"/>
-        <param name="new_vehicle_height" value="$(var new_vehicle_height)"/>
-        <param name="new_vehicle_wheelbase" value="$(var new_vehicle_wheelbase)"/>
-        <param name="new_radar_maximum_distance" value="$(var new_radar_maximum_distance)"/>
-        <param name="new_radar_frequency_slot" value="$(var new_radar_frequency_slot)"/>
-        <param name="new_radar_cycle_time" value="$(var new_radar_cycle_time)"/>
-        <param name="new_radar_time_slot" value="$(var new_radar_time_slot)"/>
-        <param name="new_radar_country_code" value="$(var new_radar_country_code)"/>
-        <param name="new_radar_powersave_standstill" value="$(var new_radar_powersave_standstill)"/>
+        <node pkg="nebula_ros" exec="continental_ars548_driver_ros_wrapper_node" name="continental_ars548_decoder_driver" output="screen">
+            <param name="sensor_model" value="$(var sensor_model)"/>
+            <param name="frame_id" value="$(var frame_id)"/>
+            <param name="base_frame" value="$(var base_frame)"/>
+            <param name="host_ip" value="$(var host_ip)"/>
+            <param name="sensor_ip" value="$(var sensor_ip)"/>
+            <param name="new_sensor_ip" value="$(var new_sensor_ip)"/>
+            <param name="data_port" value="$(var data_port)"/>
+            <param name="use_sensor_time" value="$(var use_sensor_time)"/>
 
-        <param name="use_sim_time" value="false"/>
-    </node>
+            <param name="new_plug_orientation" value="$(var new_plug_orientation)"/>
+            <param name="new_vehicle_length" value="$(var new_vehicle_length)"/>
+            <param name="new_vehicle_width" value="$(var new_vehicle_width)"/>
+            <param name="new_vehicle_height" value="$(var new_vehicle_height)"/>
+            <param name="new_vehicle_wheelbase" value="$(var new_vehicle_wheelbase)"/>
+            <param name="new_radar_maximum_distance" value="$(var new_radar_maximum_distance)"/>
+            <param name="new_radar_frequency_slot" value="$(var new_radar_frequency_slot)"/>
+            <param name="new_radar_cycle_time" value="$(var new_radar_cycle_time)"/>
+            <param name="new_radar_time_slot" value="$(var new_radar_time_slot)"/>
+            <param name="new_radar_country_code" value="$(var new_radar_country_code)"/>
+            <param name="new_radar_powersave_standstill" value="$(var new_radar_powersave_standstill)"/>
+        </node>
+
+        <node pkg="nebula_ros" exec="continental_ars548_hw_interface_ros_wrapper_node"
+            name="continental_ars548_hw_driver" output="screen">
+            <remap from="/diagnostics" to="diagnostics"/>
+            <remap from="odometry_input" to="$(var odometry_topic)"/>
+            <remap from="acceleration_input" to="$(var acceleration_topic)"/>
+            <remap from="steering_angle_input" to="$(var steering_angle_topic)"/>
+
+            <param name="sensor_model" value="$(var sensor_model)"/>
+            <param name="frame_id" value="$(var frame_id)"/>
+            <param name="base_frame" value="$(var base_frame)"/>
+            <param name="host_ip" value="$(var host_ip)"/>
+            <param name="multicast_ip" value="$(var multicast_ip)"/>
+            <param name="data_port" value="$(var data_port)"/>
+            <param name="sensor_ip" value="$(var sensor_ip)"/>
+            <param name="new_sensor_ip" value="$(var new_sensor_ip)"/>
+            <param name="configuration_host_port" value="$(var configuration_host_port)"/>
+            <param name="configuration_sensor_port" value="$(var configuration_sensor_port)"/>
+            <param name="use_sensor_time" value="$(var use_sensor_time)"/>
+            <param name="new_plug_orientation" value="$(var new_plug_orientation)"/>
+            <param name="new_vehicle_length" value="$(var new_vehicle_length)"/>
+            <param name="new_vehicle_width" value="$(var new_vehicle_width)"/>
+            <param name="new_vehicle_height" value="$(var new_vehicle_height)"/>
+            <param name="new_vehicle_wheelbase" value="$(var new_vehicle_wheelbase)"/>
+            <param name="new_radar_maximum_distance" value="$(var new_radar_maximum_distance)"/>
+            <param name="new_radar_frequency_slot" value="$(var new_radar_frequency_slot)"/>
+            <param name="new_radar_cycle_time" value="$(var new_radar_cycle_time)"/>
+            <param name="new_radar_time_slot" value="$(var new_radar_time_slot)"/>
+            <param name="new_radar_country_code" value="$(var new_radar_country_code)"/>
+            <param name="new_radar_powersave_standstill" value="$(var new_radar_powersave_standstill)"/>
+
+            <param name="use_sim_time" value="false"/>
+        </node>
+    </group>
+
+    <group if="$(eval &quot;'$(var sensor_model)' == 'MultiARS548' &quot;)" >
+
+        <node pkg="nebula_ros" exec="continental_ars548_driver_ros_wrapper_node" name="continental_ars548_decoder_driver" output="screen">
+            <param name="sensor_model" value="ARS548"/>
+            <param name="frame_id" value="$(var frame_id)"/>
+            <param name="base_frame" value="$(var base_frame)"/>
+            <param name="host_ip" value="$(var host_ip)"/>
+            <param name="sensor_ip" value="$(var sensor_ip)"/>
+            <param name="new_sensor_ip" value="$(var new_sensor_ip)"/>
+            <param name="data_port" value="$(var data_port)"/>
+            <param name="use_sensor_time" value="$(var use_sensor_time)"/>
+
+            <param name="new_plug_orientation" value="$(var new_plug_orientation)"/>
+            <param name="new_vehicle_length" value="$(var new_vehicle_length)"/>
+            <param name="new_vehicle_width" value="$(var new_vehicle_width)"/>
+            <param name="new_vehicle_height" value="$(var new_vehicle_height)"/>
+            <param name="new_vehicle_wheelbase" value="$(var new_vehicle_wheelbase)"/>
+            <param name="new_radar_maximum_distance" value="$(var new_radar_maximum_distance)"/>
+            <param name="new_radar_frequency_slot" value="$(var new_radar_frequency_slot)"/>
+            <param name="new_radar_cycle_time" value="$(var new_radar_cycle_time)"/>
+            <param name="new_radar_time_slot" value="$(var new_radar_time_slot)"/>
+            <param name="new_radar_country_code" value="$(var new_radar_country_code)"/>
+            <param name="new_radar_powersave_standstill" value="$(var new_radar_powersave_standstill)"/>
+        </node>
+
+        <node pkg="nebula_ros" exec="multi_continental_ars548_hw_interface_ros_wrapper_node"
+            name="multi_continental_ars548_hw_driver" output="screen">
+            <remap from="/diagnostics" to="diagnostics"/>
+            <remap from="odometry_input" to="$(var odometry_topic)"/>
+            <remap from="acceleration_input" to="$(var acceleration_topic)"/>
+            <remap from="steering_angle_input" to="$(var steering_angle_topic)"/>
+
+            <param name="sensor_model" value="ARS548"/>
+            <param name="frame_ids" value="[$(var frame_id)]"/>
+            <param name="base_frame" value="$(var base_frame)"/>
+            <param name="host_ip" value="$(var host_ip)"/>
+            <param name="multicast_ip" value="$(var multicast_ip)"/>
+            <param name="data_port" value="$(var data_port)"/>
+            <param name="sensor_ips" value="[$(var sensor_ip)]"/>
+            <param name="configuration_host_port" value="$(var configuration_host_port)"/>
+            <param name="configuration_sensor_port" value="$(var configuration_sensor_port)"/>
+            <param name="use_sensor_time" value="$(var use_sensor_time)"/>
+
+            <param name="use_sim_time" value="false"/>
+        </node>
+    </group>
+
+
+    <group if="$(eval &quot;'$(var sensor_model)' == 'SRR520' &quot;)" >
+
+        <node pkg="nebula_ros" exec="continental_srr520_driver_ros_wrapper_node" name="continental_srr520_decoder_driver" output="screen">
+            <param name="sensor_model" value="$(var sensor_model)"/>
+            <param name="frame_id" value="$(var frame_id)"/>
+            <param name="base_frame" value="$(var base_frame)"/>
+
+            <param name="interface" value="$(var interface)"/>
+            <param name="receiver_timeout_sec" value="$(var receiver_timeout_sec)"/>
+            <param name="sender_timeout_sec" value="$(var sender_timeout_sec)"/>
+            <param name="filters" value="$(var filters)"/>
+            <param name="use_bus_time" value="$(var use_bus_time)"/>
+
+            <param name="new_longitudinal_cog" value="1.25"/> <!-- test value -->
+            <param name="new_sensor_id" value="$(var new_sensor_id)"/>
+            <param name="new_vehicle_wheelbase" value="$(var new_vehicle_wheelbase)"/>
+            <param name="new_plug_bottom" value="$(var new_plug_bottom)"/>
+            <param name="new_cover_damping" value="$(var new_cover_damping)"/>
+            <param name="reset_sensor_configuration" value="$(var reset_sensor_configuration)"/>
+        </node>
+
+        <node pkg="nebula_ros" exec="continental_srr520_hw_interface_ros_wrapper_node"
+            name="continental_srr520_hw_driver" output="screen">
+            <remap from="/diagnostics" to="diagnostics"/>
+            <remap from="odometry_input" to="$(var odometry_topic)"/>
+            <remap from="acceleration_input" to="$(var acceleration_topic)"/>
+            <remap from="steering_angle_input" to="$(var steering_angle_topic)"/>
+
+            <param name="sensor_model" value="$(var sensor_model)"/>
+            <param name="frame_id" value="$(var frame_id)"/>
+            <param name="base_frame" value="$(var base_frame)"/>
+
+            <param name="interface" value="$(var interface)"/>
+            <param name="receiver_timeout_sec" value="$(var receiver_timeout_sec)"/>
+            <param name="sender_timeout_sec" value="$(var sender_timeout_sec)"/>
+            <param name="filters" value="$(var filters)"/>
+            <param name="use_bus_time" value="$(var use_bus_time)"/>
+
+            <param name="new_longitudinal_cog" value="1.25"/> <!-- test value -->
+            <param name="new_sensor_id" value="$(var new_sensor_id)"/>
+            <param name="new_vehicle_wheelbase" value="$(var new_vehicle_wheelbase)"/>
+            <param name="new_plug_bottom" value="$(var new_plug_bottom)"/>
+            <param name="new_cover_damping" value="$(var new_cover_damping)"/>
+            <param name="reset_sensor_configuration" value="$(var reset_sensor_configuration)"/>
+
+            <param name="use_sim_time" value="false"/>
+        </node>
+    </group>
 </launch>

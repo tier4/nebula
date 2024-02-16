@@ -37,7 +37,7 @@ protected:
    * @param buffer Buffer containing the data received from the UDP socket
    * @return Status::OK if no error occurred.
    */
-  virtual void ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer) = 0;
+  virtual void ReceiveSensorPacketCallback([[maybe_unused]] const std::vector<uint8_t> & buffer) {}
   //  virtual Status RegisterScanCallback(
   //    std::function<void(std::unique_ptr<std::vector<std::vector<uint8_t>>>)> scan_callback) = 0;
 
@@ -51,11 +51,11 @@ public:
 
   /// @brief Virtual function for starting the interface that handles UDP streams
   /// @return Resulting status
-  virtual Status CloudInterfaceStart() = 0;
+  virtual Status SensorInterfaceStart() = 0;
 
   /// @brief Virtual function for stopping the interface that handles UDP streams
   /// @return Resulting status
-  virtual Status CloudInterfaceStop() = 0;
+  virtual Status SensorInterfaceStop() = 0;
   // You may want to also implement GpsInterfaceStart() and ReceiveGpsCallback, but that is sensor
   // specific.
 

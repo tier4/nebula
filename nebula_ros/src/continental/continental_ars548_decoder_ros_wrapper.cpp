@@ -24,7 +24,7 @@ ContinentalARS548DriverRosWrapper::ContinentalARS548DriverRosWrapper(
   const rclcpp::NodeOptions & options)
 : rclcpp::Node("continental_ars548_driver_ros_wrapper", options), hw_interface_()
 {
-  drivers::ContinentalARS548SensorConfiguration sensor_configuration;
+  drivers::continental_ars548::ContinentalARS548SensorConfiguration sensor_configuration;
 
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
@@ -38,10 +38,12 @@ ContinentalARS548DriverRosWrapper::ContinentalARS548DriverRosWrapper(
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
 
   sensor_cfg_ptr_ =
-    std::make_shared<drivers::ContinentalARS548SensorConfiguration>(sensor_configuration);
+    std::make_shared<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
+      sensor_configuration);
 
   wrapper_status_ = InitializeDriver(
-    std::const_pointer_cast<drivers::ContinentalARS548SensorConfiguration>(sensor_cfg_ptr_));
+    std::const_pointer_cast<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
+      sensor_cfg_ptr_));
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
   packets_sub_ = create_subscription<nebula_msgs::msg::NebulaPackets>(
@@ -68,6 +70,9 @@ ContinentalARS548DriverRosWrapper::ContinentalARS548DriverRosWrapper(
 
   objects_markers_pub_ =
     this->create_publisher<visualization_msgs::msg::MarkerArray>("marker_array", 10);
+
+  diagnostics_pub_ =
+    this->create_publisher<diagnostic_msgs::msg::DiagnosticArray>("diagnostics", 10);
 }
 
 void ContinentalARS548DriverRosWrapper::ReceivePacketsMsgCallback(
@@ -80,12 +85,15 @@ Status ContinentalARS548DriverRosWrapper::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration)
 {
   decoder_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalARS548Decoder>(
-    std::static_pointer_cast<drivers::ContinentalARS548SensorConfiguration>(sensor_configuration));
+    std::static_pointer_cast<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
+      sensor_configuration));
 
   decoder_ptr_->RegisterDetectionListCallback(std::bind(
     &ContinentalARS548DriverRosWrapper::DetectionListCallback, this, std::placeholders::_1));
   decoder_ptr_->RegisterObjectListCallback(
     std::bind(&ContinentalARS548DriverRosWrapper::ObjectListCallback, this, std::placeholders::_1));
+  decoder_ptr_->RegisterSensorStatusCallback(std::bind(
+    &ContinentalARS548DriverRosWrapper::SensorStatusCallback, this, std::placeholders::_1));
 
   return Status::OK;
 }
@@ -96,7 +104,7 @@ Status ContinentalARS548DriverRosWrapper::GetStatus()
 }
 
 Status ContinentalARS548DriverRosWrapper::GetParameters(
-  drivers::ContinentalARS548SensorConfiguration & sensor_configuration)
+  drivers::continental_ars548::ContinentalARS548SensorConfiguration & sensor_configuration)
 {
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -277,7 +285,8 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
   }
 
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
-    std::make_shared<drivers::ContinentalARS548SensorConfiguration>(sensor_configuration);
+    std::make_shared<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
+      sensor_configuration);
 
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
@@ -351,6 +360,120 @@ void ContinentalARS548DriverRosWrapper::ObjectListCallback(
   }
 }
 
+void ContinentalARS548DriverRosWrapper::SensorStatusCallback(
+  const drivers::continental_ars548::ContinentalARS548Status & sensor_status)
+{
+  diagnostic_msgs::msg::DiagnosticArray diagnostic_array_msg;
+  diagnostic_array_msg.header.stamp.sec = sensor_status.timestamp_seconds;
+  diagnostic_array_msg.header.stamp.nanosec = sensor_status.timestamp_nanoseconds;
+  diagnostic_array_msg.header.frame_id = sensor_cfg_ptr_->frame_id;
+
+  diagnostic_array_msg.status.resize(1);
+  auto & status = diagnostic_array_msg.status[0];
+  status.values.reserve(36);
+  status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  status.hardware_id = sensor_cfg_ptr_->frame_id;
+  status.name = sensor_cfg_ptr_->frame_id;
+  status.message = "Diagnostic messages from ARS548";
+
+  auto add_diagnostic = [&status](const std::string & key, const std::string & value) {
+    diagnostic_msgs::msg::KeyValue key_value;
+    key_value.key = key;
+    key_value.value = value;
+    status.values.push_back(key_value);
+  };
+
+  add_diagnostic("timestamp_nanoseconds", std::to_string(sensor_status.timestamp_nanoseconds));
+  add_diagnostic("timestamp_seconds", std::to_string(sensor_status.timestamp_seconds));
+  add_diagnostic("timestamp_sync_status", sensor_status.timestamp_sync_status);
+  add_diagnostic("sw_version_major", std::to_string(sensor_status.sw_version_major));
+  add_diagnostic("sw_version_minor", std::to_string(sensor_status.sw_version_minor));
+  add_diagnostic("sw_version_patch", std::to_string(sensor_status.sw_version_patch));
+  add_diagnostic("longitudinal", std::to_string(sensor_status.longitudinal));
+  add_diagnostic("lateral", std::to_string(sensor_status.lateral));
+  add_diagnostic("vertical", std::to_string(sensor_status.vertical));
+  add_diagnostic("yaw", std::to_string(sensor_status.yaw));
+  add_diagnostic("pitch", std::to_string(sensor_status.pitch));
+  add_diagnostic("plug_orientation", sensor_status.plug_orientation);
+  add_diagnostic("length", std::to_string(sensor_status.length));
+  add_diagnostic("width", std::to_string(sensor_status.width));
+  add_diagnostic("height", std::to_string(sensor_status.height));
+  add_diagnostic("wheel_base", std::to_string(sensor_status.wheel_base));
+  add_diagnostic("max_distance", std::to_string(sensor_status.max_distance));
+  add_diagnostic("frequency_slot", sensor_status.frequency_slot);
+  add_diagnostic("cycle_time", std::to_string(sensor_status.cycle_time));
+  add_diagnostic("time_slot", std::to_string(sensor_status.time_slot));
+  add_diagnostic("hcc", sensor_status.hcc);
+  add_diagnostic("power_save_standstill", sensor_status.power_save_standstill);
+  add_diagnostic("sensor_ip_address0", sensor_status.sensor_ip_address0);
+  add_diagnostic("sensor_ip_address1", sensor_status.sensor_ip_address1);
+  add_diagnostic("configuration_counter", std::to_string(sensor_status.configuration_counter));
+  add_diagnostic("longitudinal_velocity_status", sensor_status.longitudinal_velocity_status);
+  add_diagnostic(
+    "longitudinal_acceleration_status", sensor_status.longitudinal_acceleration_status);
+  add_diagnostic("lateral_acceleration_status", sensor_status.lateral_acceleration_status);
+  add_diagnostic("yaw_rate_status", sensor_status.yaw_rate_status);
+  add_diagnostic("steering_angle_status", sensor_status.steering_angle_status);
+  add_diagnostic("driving_direction_status", sensor_status.driving_direction_status);
+  add_diagnostic("characteristic_speed_status", sensor_status.characteristic_speed_status);
+  add_diagnostic("radar_status", sensor_status.radar_status);
+  add_diagnostic("voltage_status", sensor_status.voltage_status);
+  add_diagnostic("temperature_status", sensor_status.temperature_status);
+  add_diagnostic("blockage_status", sensor_status.blockage_status);
+
+  double detection_total_time_sec =
+    (sensor_status.detection_last_stamp - sensor_status.detection_first_stamp) * 1e-9;
+  uint64_t expected_total_detection =
+    static_cast<uint64_t>(detection_total_time_sec / (sensor_status.cycle_time * 1e-3));
+  uint64_t detection_count_diff =
+    expected_total_detection > sensor_status.detection_total_count
+      ? expected_total_detection - sensor_status.detection_total_count
+      : sensor_status.detection_total_count - expected_total_detection;
+  double detection_dropped_rate =
+    100.0 * std::abs<double>(detection_count_diff) / expected_total_detection;
+  double detection_dropped_rate_dt =
+    100.0 * sensor_status.detection_dropped_dt_count / sensor_status.detection_total_count;
+  double detection_empty_rate =
+    100.0 * sensor_status.detection_empty_count / sensor_status.detection_total_count;
+
+  add_diagnostic("detection_total_time", std::to_string(detection_total_time_sec));
+  add_diagnostic("detection_dropped_rate", std::to_string(detection_dropped_rate));
+  add_diagnostic("detection_dropped_rate_dt", std::to_string(detection_dropped_rate_dt));
+  add_diagnostic("detection_empty_rate", std::to_string(detection_empty_rate));
+  add_diagnostic(
+    "detection_dropped_dt_count", std::to_string(sensor_status.detection_dropped_dt_count));
+  add_diagnostic("detection_empty_count", std::to_string(sensor_status.detection_empty_count));
+
+  double object_total_time_sec =
+    (sensor_status.object_last_stamp - sensor_status.object_first_stamp) * 1e-9;
+  uint64_t expected_total_object =
+    static_cast<uint64_t>(object_total_time_sec / (sensor_status.cycle_time * 1e-3));
+  uint64_t object_count_diff = expected_total_object > sensor_status.object_total_count
+                                 ? expected_total_object - sensor_status.object_total_count
+                                 : sensor_status.object_total_count - expected_total_object;
+  double object_dropped_rate = 100.0 * std::abs<double>(object_count_diff) / expected_total_object;
+  double object_dropped_rate_dt =
+    100.0 * sensor_status.object_dropped_dt_count / sensor_status.object_total_count;
+  double object_empty_rate =
+    100.0 * sensor_status.object_empty_count / sensor_status.object_total_count;
+
+  add_diagnostic("sensor_status.expected_total_object", std::to_string(expected_total_object));
+  add_diagnostic(
+    "sensor_status.detection_total_count", std::to_string(sensor_status.detection_total_count));
+
+  add_diagnostic("object_total_time", std::to_string(object_total_time_sec));
+  add_diagnostic("object_dropped_rate", std::to_string(object_dropped_rate));
+  add_diagnostic("object_dropped_rate_dt", std::to_string(object_dropped_rate_dt));
+  add_diagnostic("object_empty_rate", std::to_string(object_empty_rate));
+  add_diagnostic("object_dropped_dt_count", std::to_string(sensor_status.object_dropped_dt_count));
+  add_diagnostic("object_empty_count", std::to_string(sensor_status.object_empty_count));
+
+  add_diagnostic("status_total_count", std::to_string(sensor_status.status_total_count));
+  add_diagnostic("radar_invalid_count", std::to_string(sensor_status.radar_invalid_count));
+
+  diagnostics_pub_->publish(diagnostic_array_msg);
+}
+
 pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr
 ContinentalARS548DriverRosWrapper::ConvertToPointcloud(
   const continental_msgs::msg::ContinentalArs548DetectionList & msg)
@@ -401,19 +524,8 @@ ContinentalARS548DriverRosWrapper::ConvertToPointcloud(
 
   nebula::drivers::continental_ars548::PointARS548Object point{};
   for (const auto & object : msg.objects) {
-    const double half_length = 0.5 * object.shape_length_edge_mean;
-    const double half_width = 0.5 * object.shape_width_edge_mean;
-    const int reference_index = std::min<int>(object.position_reference, 8);
-    const double & yaw = object.orientation;
-    const double x = object.position.x +
-                     std::cos(yaw) * half_length * reference_to_center_[reference_index][0] -
-                     std::sin(yaw) * half_width * reference_to_center_[reference_index][1];
-    const double y = object.position.y +
-                     std::sin(yaw) * half_length * reference_to_center_[reference_index][0] +
-                     std::cos(yaw) * half_width * reference_to_center_[reference_index][1];
-
-    point.x = static_cast<float>(x);
-    point.y = static_cast<float>(y);
+    point.x = static_cast<float>(object.position.x);
+    point.y = static_cast<float>(object.position.y);
     point.z = static_cast<float>(object.position.z);
 
     point.id = object.object_id;
@@ -621,7 +733,6 @@ visualization_msgs::msg::MarkerArray ContinentalARS548DriverRosWrapper::ConvertT
 
   radar_msgs::msg::RadarTrack track_msg;
   for (const auto & object : msg.objects) {
-    const Eigen::Vector2d center_xy{object.position.x, object.position.y};
     const double half_length = 0.5 * object.shape_length_edge_mean;
     const double half_width = 0.5 * object.shape_width_edge_mean;
     constexpr double DEFAULT_HALF_SIZE = 1.0;

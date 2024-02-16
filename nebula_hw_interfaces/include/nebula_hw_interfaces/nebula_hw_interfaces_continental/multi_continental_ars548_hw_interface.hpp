@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
-#define NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
+#ifndef NEBULA_MULTI_CONTINENTAL_ARS548_HW_INTERFACE_H
+#define NEBULA_MULTI_CONTINENTAL_ARS548_HW_INTERFACE_H
 // Have to define macros to silence warnings about deprecated headers being used by
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
@@ -41,6 +41,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace nebula
@@ -50,20 +51,22 @@ namespace drivers
 namespace continental_ars548
 {
 /// @brief Hardware interface of the Continental ARS548 radar
-class ContinentalARS548HwInterface : NebulaHwInterfaceBase
+class MultiContinentalARS548HwInterface : NebulaHwInterfaceBase
 {
 private:
   std::unique_ptr<::drivers::common::IoContext> sensor_io_context_;
-  std::unique_ptr<::drivers::udp_driver::UdpDriver> sensor_udp_driver_;
-  std::shared_ptr<ContinentalARS548SensorConfiguration> sensor_configuration_;
+  std::vector<std::unique_ptr<::drivers::udp_driver::UdpDriver>> sensor_udp_drivers_;
+  std::shared_ptr<MultiContinentalARS548SensorConfiguration> sensor_configuration_;
   std::unique_ptr<nebula_msgs::msg::NebulaPackets> nebula_packets_ptr_;
-  std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets> buffer)>
+  std::function<void(
+    std::unique_ptr<nebula_msgs::msg::NebulaPackets> buffer, const std::string & sensor_ip)>
     nebula_packets_reception_callback_;
 
   std::mutex sensor_status_mutex_;
 
   SensorStatusPacket sensor_status_packet_{};
   FilterStatusPacket filter_status_{};
+  std::unordered_map<std::string, std::string> sensor_ip_to_frame_;
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger;
 
@@ -85,7 +88,7 @@ private:
 
 public:
   /// @brief Constructor
-  ContinentalARS548HwInterface();
+  MultiContinentalARS548HwInterface();
 
   /// @brief Process a new filter status packet
   /// @param buffer The buffer containing the status packet
@@ -93,16 +96,12 @@ public:
 
   /// @brief Process a new data packet
   /// @param buffer The buffer containing the data packet
-  void ProcessDataPacket(const std::vector<uint8_t> & buffer);
+  void ProcessDataPacket(const std::vector<uint8_t> & buffer, const std::string & sensor_ip);
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallbackWithSender(
-    const std::vector<uint8_t> & buffer, const std::string & sender_ip);
-
-  /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
-  /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer) final;
+  void ReceiveSensorPacketCallback(
+    const std::vector<uint8_t> & buffer, const std::string & sensor_ip);
 
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
@@ -127,46 +126,8 @@ public:
   /// @param scan_callback Callback function
   /// @return Resulting status
   Status RegisterScanCallback(
-    std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> scan_callback);
-
-  /// @brief Set the sensor mounting parameters
-  /// @param longitudinal_autosar Desired longitudinal value in autosar coordinates
-  /// @param lateral_autosar Desired lateral value in autosar coordinates
-  /// @param vertical_autosar Desired vertical value in autosar coordinates
-  /// @param yaw_autosar Desired yaw value in autosar coordinates
-  /// @param pitch_autosar Desired pitch value in autosar coordinates
-  /// @param plug_orientation Desired plug orientation (0 = PLUG_RIGHT, 1 = PLUG_LEFT)
-  /// @return Resulting status
-  Status SetSensorMounting(
-    float longitudinal_autosar, float lateral_autosar, float vertical_autosar, float yaw_autosar,
-    float pitch_autosar, uint8_t plug_orientation);
-
-  /// @brief Set the vehicle parameters
-  /// @param length_autosar Desired vehicle length value
-  /// @param width_autosar Desired vehicle width value
-  /// @param height_autosar Desired height value
-  /// @param wheel_base_autosar Desired wheel base value
-  /// @return Resulting status
-  Status SetVehicleParameters(
-    float length_autosar, float width_autosar, float height_autosar, float wheel_base_autosar);
-
-  /// @brief Set the radar parameters
-  /// @param maximum_distance Desired maximum detection distance (93m <= v <= 1514m)
-  /// @param frequency_slot Desired frequency slot (0 = Low (76.23 GHz), 1 = Mid (76.48 GHz), 2 =
-  /// High (76.73 GHz))
-  /// @param cycle_time Desired cycle time value (50ms <= v <= 100ms)
-  /// @param time_slot Desired time slot value (10ms <= v <= 90ms)
-  /// @param hcc Desired hcc value (1 = Worldwide, 2 = Japan)
-  /// @param power_save_standstill Desired power_save_standstill value (0 = Off, 1 = On)
-  /// @return Resulting status
-  Status SetRadarParameters(
-    uint16_t maximum_distance, uint8_t frequency_slot, uint8_t cycle_time, uint8_t time_slot,
-    uint8_t hcc, uint8_t power_save_standstill);
-
-  /// @brief Set the sensor ip address
-  /// @param sensor_ip_address Desired sensor ip address
-  /// @return Resulting status
-  Status SetSensorIPAddress(const std::string & sensor_ip_address);
+    std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>, const std::string &)>
+      scan_callback);
 
   /// @brief Set the current lateral acceleration
   /// @param lateral_acceleration Current lateral acceleration
@@ -215,4 +176,4 @@ public:
 }  // namespace drivers
 }  // namespace nebula
 
-#endif  // NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
+#endif  // NEBULA_MULTI_CONTINENTAL_ARS548_HW_INTERFACE_H

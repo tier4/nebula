@@ -16,9 +16,7 @@
 #define NEBULA_ContinentalARS548DriverRosWrapper_H
 
 #include <ament_index_cpp/get_package_prefix.hpp>
-#include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/continental/continental_ars548.hpp>
-#include <nebula_common/continental/continental_common.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/nebula_status.hpp>
 #include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
@@ -31,6 +29,7 @@
 #include <continental_msgs/msg/continental_ars548_detection_list.hpp>
 #include <continental_msgs/msg/continental_ars548_object.hpp>
 #include <continental_msgs/msg/continental_ars548_object_list.hpp>
+#include <diagnostic_msgs/msg/diagnostic_array.hpp>
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
 #include <radar_msgs/msg/radar_scan.hpp>
@@ -61,6 +60,7 @@ class ContinentalARS548DriverRosWrapper final : public rclcpp::Node, NebulaDrive
   rclcpp::Publisher<radar_msgs::msg::RadarScan>::SharedPtr scan_raw_pub_;
   rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr objects_raw_pub_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr objects_markers_pub_;
+  rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_;
 
   std::unordered_set<int> previous_ids_;
 
@@ -76,7 +76,8 @@ class ContinentalARS548DriverRosWrapper final : public rclcpp::Node, NebulaDrive
      {{0.0, -1.0}},
      {{0.0, 0.0}}}};
 
-  std::shared_ptr<drivers::ContinentalARS548SensorConfiguration> sensor_cfg_ptr_;
+  std::shared_ptr<drivers::continental_ars548::ContinentalARS548SensorConfiguration>
+    sensor_cfg_ptr_;
 
   drivers::continental_ars548::ContinentalARS548HwInterface hw_interface_;
 
@@ -91,7 +92,8 @@ class ContinentalARS548DriverRosWrapper final : public rclcpp::Node, NebulaDrive
   /// @param calibration_configuration Output of CalibrationConfiguration
   /// @param correction_configuration Output of CorrectionConfiguration (for AT)
   /// @return Resulting status
-  Status GetParameters(drivers::ContinentalARS548SensorConfiguration & sensor_configuration);
+  Status GetParameters(
+    drivers::continental_ars548::ContinentalARS548SensorConfiguration & sensor_configuration);
 
   /// @brief Convert seconds to chrono::nanoseconds
   /// @param seconds
@@ -110,6 +112,11 @@ class ContinentalARS548DriverRosWrapper final : public rclcpp::Node, NebulaDrive
   /// @brief Callback to process new ContinentalArs548ObjectList from the driver
   /// @param msg The new ContinentalArs548ObjectList from the driver
   void ObjectListCallback(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg);
+
+  /// @brief Callback to process new ContinentalARS548Status from the driver
+  /// @param msg The new ContinentalArs548ObjectList from the driver
+  void SensorStatusCallback(
+    const drivers::continental_ars548::ContinentalARS548Status & sensor_status);
 
 public:
   explicit ContinentalARS548DriverRosWrapper(const rclcpp::NodeOptions & options);
