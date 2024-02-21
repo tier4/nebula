@@ -1,3 +1,4 @@
 pandas
 tabulate
 matplotlib
+rich
