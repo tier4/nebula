@@ -344,6 +344,7 @@ if __name__ == "__main__":
             )
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(5)
     sock.connect((args.sensor_ip, 9347))
 
     try:
