@@ -12,12 +12,6 @@
 #include <string>
 #include <vector>
 
-#if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)
-#include <angles/angles.h>  //Galactic
-#else
-#include <angles/angles/angles.h>  //Humble
-#endif
-
 #include "nebula_common/point_types.hpp"
 #include "nebula_common/velodyne/velodyne_calibration_decoder.hpp"
 #include "nebula_common/velodyne/velodyne_common.hpp"
