@@ -285,7 +285,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--sensor-ip",
         type=str,
-        default="192.168.1.201",
+        required=True,
         help="The current sensor IP address",
     )
     parser.add_argument(
