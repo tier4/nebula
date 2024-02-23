@@ -183,8 +183,9 @@ public:
   /// @brief Resetting overflowed point cloud buffer
   virtual void reset_overflow(double time_stamp) = 0;
 
-  /// @brief Checks if the point is invalid.
-  /// @param point The point to check.
+  /// @brief Checks if the point is inside invalid regions.
+  /// @param channel Channel id of the point.
+  /// @param azimuth Azimuth angle of the point.
   /// @return True if the point is invalid, false otherwise.
   bool check_invalid_point(const int & channel, const uint16_t & azimuth)
   {
