@@ -19,9 +19,9 @@
 
     <arg name="setup_sensor" default="True" description="Enable sensor setup on hw-driver."/>
 
-    <arg name="invalid_point_remove" default="true"/>
+    <arg name="invalid_point_remove" default="false"/>
     <arg name="invalid_regions"
-         default="'[[12, 31110, 31495], [0, 3500, 6900], [1, 3400, 6500], [2, 3200, 4600], [3, 3200, 4600], [4, 3000, 4300], [5, 2950, 4050], [6, 3100, 3800], [0, 26000, 32200], [1, 26000, 32200], [2, 26000, 31000], [3, 26000, 30000], [4, 26000, 28000]]'"/>
+         default="'[[0, 3500, 6900], [1, 3400, 6500], [2, 3200, 4600], [3, 3200, 4600]]'"/>
 
     <node pkg="nebula_ros" exec="velodyne_driver_ros_wrapper_node"
           name="velodyne_cloud" output="screen">
