@@ -262,7 +262,7 @@ Status VelodyneDriverRosWrapper::GetParameters(
     }
   }
 
-  {
+  if (sensor_configuration.invalid_point_remove) {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
