@@ -236,8 +236,7 @@ Status HesaiRosDecoderTest::GetParameters(
     return Status::INVALID_ECHO_MODE;
   }
   if (
-    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360 ||
-    sensor_configuration.min_range != 0.3 || sensor_configuration.max_range != 300.) {
+    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
     return Status::SENSOR_CONFIG_ERROR;
   }
   if (calibration_configuration.calibration_file.empty()) {
