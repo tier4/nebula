@@ -148,6 +148,24 @@ Status HesaiRosDecoderTest::GetParameters(
     calibration_configuration.calibration_file =
       this->get_parameter("calibration_file").as_string();
   }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("min_range", params_.min_range, descriptor);
+    sensor_configuration.min_range = this->get_parameter("min_range").as_double();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("max_range", params_.max_range, descriptor);
+    sensor_configuration.max_range = this->get_parameter("max_range").as_double();
+  }
   if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
@@ -217,7 +235,9 @@ Status HesaiRosDecoderTest::GetParameters(
   if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
     return Status::INVALID_ECHO_MODE;
   }
-  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
+  if (
+    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360 ||
+    sensor_configuration.min_range != 0.3 || sensor_configuration.max_range != 300.) {
     return Status::SENSOR_CONFIG_ERROR;
   }
   if (calibration_configuration.calibration_file.empty()) {
