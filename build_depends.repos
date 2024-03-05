@@ -4,3 +4,7 @@ repositories:
     type: git
     url: https://github.com/knzo25/transport_drivers
     version: feat/multicast_support
+  ros2_socketcan:
+    type: git
+    url: https://github.com/knzo25/ros2_socketcan
+    version: feat/continental_fd
