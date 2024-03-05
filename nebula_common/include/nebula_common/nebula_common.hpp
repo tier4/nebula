@@ -435,8 +435,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
       break;
     case SensorModel::CONTINENTAL_ARS548:
       os << "ARS548";
+      break;
     case SensorModel::CONTINENTAL_SRR520:
-      os << "ARR520";
+      os << "SRR520";
       break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";

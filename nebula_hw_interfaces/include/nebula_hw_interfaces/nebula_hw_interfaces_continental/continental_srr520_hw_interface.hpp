@@ -80,7 +80,7 @@ private:
   bool first_object_packet_{true};
 
   uint8_t sync_counter_{0};
-  bool sync_fup_sent_{false};
+  bool sync_fup_sent_{true};
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger;
 

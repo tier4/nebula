@@ -211,7 +211,15 @@ void ContinentalSRR520HwInterface::ReceiveSensorPacketCallback(
     }
 
     ProcessSensorStatusPacket(buffer, stamp);
-  } else {
+  } else if (can_message_id == SYNC_FUP_CAN_MESSAGE_ID) {
+    if (buffer.size() != SYNC_FUP_CAN_PACKET_SIZE) {
+      PrintError("SYNC_FUP_CAN_MESSAGE_ID message with invalid size");
+      return;
+    }
+
+    ProcessSyncFupPacket(buffer, stamp);
+  } else if (
+    can_message_id != VEH_DYN_CAN_MESSAGE_ID && can_message_id != SENSOR_CONFIG_CAN_MESSAGE_ID) {
     PrintError("Unrecognized message ID=" + std::to_string(can_message_id));
   }
 }
@@ -463,18 +471,12 @@ void ContinentalSRR520HwInterface::ProcessSyncFupPacket(
     PrintError("Can sender is invalid so can not do follow up");
   }
 
-  // Want to know what type of sync_fup message is, its counter and time domain
   bool is_sync = buffer[0] == 0x20;
   uint8_t rx_sync_counter = buffer[2] & 0x0F;
   uint8_t rx_domain_id = buffer[2] >> 4;
 
   uint32_t sec = stamp / 1'000'000'000;
   uint32_t nanosec = stamp % 1'000'000'000;
-
-  std::cout << "RECEIVED " << (is_sync ? "SYNC" : "FUP") << " domain=" << std::dec
-            << static_cast<uint16_t>(rx_domain_id)
-            << " counter=" << static_cast<uint16_t>(rx_sync_counter) << ": secs=" << sec
-            << " nsecs=" << nanosec << std::endl;
 
   if (!sensor_configuration_->sync_use_bus_time || sync_fup_sent_) {
     return;
@@ -500,9 +502,6 @@ void ContinentalSRR520HwInterface::ProcessSyncFupPacket(
   uint8_t t4r_seconds = static_cast<uint8_t>(t4r.sec);
   uint32_t t4r_nanoseconds = t4r.nanosec;
 
-  std::cout << "\t\t\tComputing FUP with the delta scheme: sec="
-            << static_cast<uint16_t>(t4r_seconds) << " nsec=" << t4r_nanoseconds << std::endl;
-
   std::array<uint8_t, 8> data;
   data[0] = 0x28;  // mode 0x18 is without CRC
   data[1] = 0;     // CRC. Not this time
@@ -526,15 +525,6 @@ void ContinentalSRR520HwInterface::ProcessSyncFupPacket(
 
 void ContinentalSRR520HwInterface::SensorSync()
 {
-  // This method must be called periodically
-  // There are two ways of performing the syncronization procedure using the current hardware
-  // 1) Send a sync message followed inmediatly by a follow up message
-  // 2) Send a sync message, wait until it is echoed into the can (self), at which point we send the
-  // follow up In 1) we ignore the time that happens since stamping (here), and the actual time the
-  // radar receives the data (we do not take into account the bus time and the time it takes from
-  // stamping into it leaving the kernel). The second approach can improve things and gets closer to
-  // what autosar describes, but we have no real way to know it, and depends on the actual
-  // implementation.
   if (!can_sender_) {
     PrintError("Can sender is invalid so can not do sync up");
   }
@@ -551,10 +541,6 @@ void ContinentalSRR520HwInterface::SensorSync()
   builtin_interfaces::msg::Time stamp;
   stamp.sec = static_cast<int>(now_secs);
   stamp.nanosec = static_cast<std::uint32_t>(now_nanosecs % 1'000'000'000);
-
-  std::cout << "SYNC - domain=" << std::dec << static_cast<uint16_t>(TIME_DOMAIN_ID)
-            << " counter=" << (sync_counter_ & 0x0F) << " stamp: secs=" << stamp.sec
-            << " nsecs=" << stamp.nanosec << std::endl;
 
   std::array<uint8_t, 8> data;
   data[0] = 0x20;  // mode 0x10 is without CRC
@@ -588,9 +574,14 @@ void ContinentalSRR520HwInterface::SensorSync()
   data[6] = (stamp.nanosec & 0x0000FF00) >> 8;
   data[7] = (stamp.nanosec & 0x000000FF) >> 0;
 
+  std::array<uint8_t, 7> fup_crc_array{data[2], data[3], data[4], data[5], data[6], data[7], 0x00};
+  uint8_t fup_crc = crc8h2f(fup_crc_array.begin(), fup_crc_array.end());
+  data[1] = fup_crc;
+
   SendFrame(data, SYNC_FUP_CAN_MESSAGE_ID);
 
   sync_counter_ = sync_counter_ == 15 ? 0 : sync_counter_ + 1;
+  sync_fup_sent_ = true;
 }
 
 void ContinentalSRR520HwInterface::ProcessDataPacket(const std::vector<uint8_t> & buffer)
@@ -642,23 +633,31 @@ Status ContinentalSRR520HwInterface::ConfigureSensor(
   float yaw_autosar, float longitudinal_cog, float wheelbase, float cover_damping, bool plug_bottom,
   bool reset)
 {
+  std::cout << "longitudinal_autosar=" << longitudinal_autosar << std::endl;
+  std::cout << "lateral_autosar=" << lateral_autosar << std::endl;
+  std::cout << "vertical_autosar=" << vertical_autosar << std::endl;
+  std::cout << "longitudinal_cog=" << longitudinal_cog << std::endl;
+  std::cout << "wheelbase=" << wheelbase << std::endl;
+  std::cout << "yaw_autosar=" << yaw_autosar << std::endl;
+  std::cout << "sensor_id=" << static_cast<uint16_t>(sensor_id) << std::endl << std::flush;
+
   if (
-    longitudinal_autosar < -32.767 || longitudinal_autosar > 32.767 || lateral_autosar < -32.767 ||
-    lateral_autosar > 32.767 || vertical_autosar < -32.767 || vertical_autosar > 32.767 ||
-    longitudinal_cog < -32.767 || longitudinal_cog > 32.767 || wheelbase < 0.f ||
-    wheelbase > 65.534 || yaw_autosar < -3.14159 || yaw_autosar > 3.14159 ||
-    cover_damping < -32.767 || cover_damping > 32.767) {
+    longitudinal_autosar < -32.767f || longitudinal_autosar > 32.767f ||
+    lateral_autosar < -32.767f || lateral_autosar > 32.767f || vertical_autosar < -32.767f ||
+    vertical_autosar > 32.767f || longitudinal_cog < -32.767f || longitudinal_cog > 32.767f ||
+    wheelbase < 0.f || wheelbase > 65.534f || yaw_autosar < -3.14159f || yaw_autosar > 3.14159f ||
+    cover_damping < -32.767f || cover_damping > 32.767f) {
     PrintError("Sensor configuration values out of range!");
     return Status::SENSOR_CONFIG_ERROR;
   }
 
-  const uint16_t u_long_pos = static_cast<uint16_t>((longitudinal_autosar + 32.767) / 0.001f);
-  const uint16_t u_lat_pos = static_cast<uint16_t>((lateral_autosar + 32.767) / 0.001f);
-  const uint16_t u_vert_pos = static_cast<uint16_t>((vertical_autosar + 32.767) / 0.001f);
-  const uint16_t u_long_pos_cog = static_cast<uint16_t>((longitudinal_cog + 32.767) / 0.001f);
+  const uint16_t u_long_pos = static_cast<uint16_t>((longitudinal_autosar + 32.767f) / 0.001f);
+  const uint16_t u_lat_pos = static_cast<uint16_t>((lateral_autosar + 32.767f) / 0.001f);
+  const uint16_t u_vert_pos = static_cast<uint16_t>((vertical_autosar + 32.767f) / 0.001f);
+  const uint16_t u_long_pos_cog = static_cast<uint16_t>((longitudinal_cog + 32.767f) / 0.001f);
   const uint16_t u_wheelbase = static_cast<uint16_t>(wheelbase / 0.001f);
-  const uint16_t u_yaw_angle = static_cast<uint16_t>((yaw_autosar + 3.14159) / 9.5877e-05);
-  const uint16_t u_cover_damping = static_cast<uint16_t>((cover_damping + 32.767) / 0.001f);
+  const uint16_t u_yaw_angle = static_cast<uint16_t>((yaw_autosar + 3.14159f) / 9.5877e-05);
+  const uint16_t u_cover_damping = static_cast<uint16_t>((cover_damping + 32.767f) / 0.001f);
 
   std::cout << "\t\t\tu_LongPos: " << std::hex << static_cast<uint16_t>(u_long_pos) << " | "
             << std::bitset<16>(u_long_pos) << std::endl;

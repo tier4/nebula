@@ -362,10 +362,12 @@ void ContinentalSRR520HwInterfaceRosWrapper::ConfigureSensorRequestCallback(
   geometry_msgs::msg::Vector3 rpy;
   tf2::Matrix3x3(tf2::Quaternion(quat.x, quat.y, quat.z, quat.w)).getRPY(rpy.x, rpy.y, rpy.z);
 
+  float yaw = std::min<float>(std::max(static_cast<float>(rpy.z), -3.14159f), 3.14159f);
+
   hw_interface_.ConfigureSensor(
     sensor_configuration_.new_sensor_id,
     base_to_sensor_tf.transform.translation.x - sensor_configuration_.new_vehicle_wheelbase,
-    base_to_sensor_tf.transform.translation.y, base_to_sensor_tf.transform.translation.z, rpy.z,
+    base_to_sensor_tf.transform.translation.y, base_to_sensor_tf.transform.translation.z, yaw,
     base_to_sensor_tf.transform.translation.x - 0.5 * sensor_configuration_.new_vehicle_wheelbase,
     sensor_configuration_.new_vehicle_wheelbase, sensor_configuration_.new_cover_damping,
     sensor_configuration_.new_plug_bottom, sensor_configuration_.reset_sensor_configuration);

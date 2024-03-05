@@ -228,6 +228,8 @@ constexpr int OBJECT_HEADER_PACKET_SIZE = 32;
 constexpr int OBJECT_PACKET_SIZE = 64;
 constexpr int CRC_LIST_PACKET_SIZE = 4;
 constexpr int STATUS_PACKET_SIZE = 64;
+constexpr int SYNC_FUP_CAN_PACKET_SIZE = 8;
+constexpr int VEH_DYN_CAN_PACKET_SIZE = 8;
 constexpr int CONFIGURATION_PACKET_SIZE = 16;
 
 constexpr int RDI_NEAR_PACKET_NUM = 50;
