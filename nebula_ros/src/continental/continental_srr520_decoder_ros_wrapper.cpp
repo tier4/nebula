@@ -575,9 +575,13 @@ visualization_msgs::msg::MarkerArray ContinentalSRR520DriverRosWrapper::ConvertT
   }};
 
   std::unordered_set<int> current_ids;
+  std::size_t null_object_id_counter = 0;
 
-  radar_msgs::msg::RadarTrack track_msg;
   for (const auto & object : msg.objects) {
+    if (!object.box_valid || object.object_status == 0) {
+      continue;
+    }
+
     const double half_length = 0.5 * object.box_length;
     const double half_width = 0.5 * object.box_width;
     constexpr double DEFAULT_HALF_SIZE = 1.0;
@@ -589,7 +593,9 @@ visualization_msgs::msg::MarkerArray ContinentalSRR520DriverRosWrapper::ConvertT
     box_marker.header.frame_id = sensor_cfg_ptr_->base_frame;
     box_marker.header.stamp = msg.header.stamp;
     box_marker.ns = "boxes";
-    box_marker.id = object.object_id;
+    box_marker.id = object.object_id == 0
+                      ? drivers::continental_srr520::MAX_OBJECTS + null_object_id_counter++
+                      : object.object_id;
     box_marker.action = visualization_msgs::msg::Marker::ADD;
     box_marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
     box_marker.lifetime = rclcpp::Duration::from_seconds(0);

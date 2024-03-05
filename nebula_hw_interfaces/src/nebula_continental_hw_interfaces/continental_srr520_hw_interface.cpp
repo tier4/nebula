@@ -124,10 +124,6 @@ void ContinentalSRR520HwInterface::ReceiveLoop()
 
     buffer.resize(receive_id.length());
 
-    // std::cout << "CAN_ID=" << receive_id.identifier() << " | extended=" <<
-    // receive_id.is_extended() << " | is_error=" << (receive_id.frame_type() ==
-    // ::drivers::socketcan::FrameType::ERROR) << " | len=" << receive_id.length() << std::endl <<
-    // std::flush;
     int64_t stamp = use_bus_time
                       ? static_cast<int64_t>(receive_id.get_bus_time() * 1000U)
                       : static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -354,7 +350,7 @@ void ContinentalSRR520HwInterface::ProcessCRCListPacket(
   if (crc_id == NEAR_CRC_ID) {
     ProcessNearCRCListPacket(buffer, stamp);
   } else if (crc_id == HRR_CRC_ID) {
-    ProcessHRRCRCListPacket(buffer, stamp);
+    ProcessHRRCRCListPacket(buffer, stamp);  // cspell: ignore HRRCRC
   } else if (crc_id == OBJECT_CRC_ID) {
     ProcessObjectCRCListPacket(buffer, stamp);
   } else {
@@ -375,8 +371,6 @@ void ContinentalSRR520HwInterface::ProcessNearCRCListPacket(
   uint16_t transmitted_crc = (static_cast<uint16_t>(buffer[1]) << 8) | buffer[2];
   uint16_t computed_crc =
     crc16_packets(rdi_near_packets_ptr_->packets.begin() + 1, rdi_near_packets_ptr_->packets.end());
-
-  // uint8_t current_seq = buffer[3];
 
   if (transmitted_crc != computed_crc) {
     PrintError(
@@ -402,8 +396,6 @@ void ContinentalSRR520HwInterface::ProcessHRRCRCListPacket(
   uint16_t transmitted_crc = (static_cast<uint16_t>(buffer[1]) << 8) | buffer[2];
   uint16_t computed_crc =
     crc16_packets(rdi_hrr_packets_ptr_->packets.begin() + 1, rdi_hrr_packets_ptr_->packets.end());
-
-  // uint8_t current_seq = buffer[3];
 
   if (transmitted_crc != computed_crc) {
     PrintError(
@@ -465,46 +457,26 @@ void ContinentalSRR520HwInterface::ProcessSensorStatusPacket(
 }
 
 void ContinentalSRR520HwInterface::ProcessSyncFupPacket(
-  const std::vector<uint8_t> & buffer, [[maybe_unused]] const uint64_t stamp)
+  [[maybe_unused]] const std::vector<uint8_t> & buffer, [[maybe_unused]] const uint64_t stamp)
 {
   if (!can_sender_) {
     PrintError("Can sender is invalid so can not do follow up");
   }
 
-  bool is_sync = buffer[0] == 0x20;
-  uint8_t rx_sync_counter = buffer[2] & 0x0F;
-  uint8_t rx_domain_id = buffer[2] >> 4;
-
-  uint32_t sec = stamp / 1'000'000'000;
-  uint32_t nanosec = stamp % 1'000'000'000;
-
   if (!sensor_configuration_->sync_use_bus_time || sync_fup_sent_) {
     return;
   }
 
-  // In this case, we will attempt to do the full sync scheme
-
-  auto now = std::chrono::system_clock::now();
-  auto now_secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-  auto now_nanosecs =
-    std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-
-  builtin_interfaces::msg::Time fup_stamp;
-  fup_stamp.sec = static_cast<int>(now_secs);
-  fup_stamp.nanosec = static_cast<std::uint32_t>(now_nanosecs % 1'000'000'000);
-
-  auto t0s = fup_stamp;
+  auto t0s = last_sync_stamp_;
   t0s.nanosec = 0;
-  const auto t1r = fup_stamp;
+  const auto t1r = stamp;
 
   builtin_interfaces::msg::Time t4r =
     rclcpp::Time(rclcpp::Time() + (rclcpp::Time(t1r) - rclcpp::Time(t0s)));
   uint8_t t4r_seconds = static_cast<uint8_t>(t4r.sec);
   uint32_t t4r_nanoseconds = t4r.nanosec;
-
   std::array<uint8_t, 8> data;
   data[0] = 0x28;  // mode 0x18 is without CRC
-  data[1] = 0;     // CRC. Not this time
   data[2] = (((static_cast<uint16_t>(TIME_DOMAIN_ID) << 4) & 0xF0)) |
             (sync_counter_ & 0x0F);  // Domain and counter
   data[3] = t4r_seconds & 0x3;       // SGW and OVS
@@ -541,10 +513,10 @@ void ContinentalSRR520HwInterface::SensorSync()
   builtin_interfaces::msg::Time stamp;
   stamp.sec = static_cast<int>(now_secs);
   stamp.nanosec = static_cast<std::uint32_t>(now_nanosecs % 1'000'000'000);
+  last_sync_stamp_ = stamp;
 
   std::array<uint8_t, 8> data;
   data[0] = 0x20;  // mode 0x10 is without CRC
-  data[1] = 0;     // CRC. Not this time
   data[2] = (((static_cast<uint16_t>(TIME_DOMAIN_ID) << 4) & 0xF0)) |
             (sync_counter_ & 0x0F);  // Domain and counter
   data[3] = 0;                       // use data
@@ -565,7 +537,6 @@ void ContinentalSRR520HwInterface::SensorSync()
   }
 
   data[0] = 0x28;  // mode 0x18 is without CRC
-  data[1] = 0;     // CRC. Not this time
   data[2] = (((static_cast<uint16_t>(TIME_DOMAIN_ID) << 4) & 0xF0)) |
             (sync_counter_ & 0x0F);  // Domain and counter
   data[3] = 0;                       // SGW and OVS
@@ -659,31 +630,8 @@ Status ContinentalSRR520HwInterface::ConfigureSensor(
   const uint16_t u_yaw_angle = static_cast<uint16_t>((yaw_autosar + 3.14159f) / 9.5877e-05);
   const uint16_t u_cover_damping = static_cast<uint16_t>((cover_damping + 32.767f) / 0.001f);
 
-  std::cout << "\t\t\tu_LongPos: " << std::hex << static_cast<uint16_t>(u_long_pos) << " | "
-            << std::bitset<16>(u_long_pos) << std::endl;
-  std::cout << "\t\t\tu_LatPos: " << std::hex << static_cast<uint16_t>(u_lat_pos) << " | "
-            << std::bitset<16>(u_lat_pos) << std::endl;
-  std::cout << "\t\t\tu_VertPos: " << std::hex << static_cast<uint16_t>(u_vert_pos) << " | "
-            << std::bitset<16>(u_vert_pos) << std::endl;
-  std::cout << "\t\t\tu_LongPosCoG: " << std::hex << static_cast<uint16_t>(u_long_pos_cog) << " | "
-            << std::bitset<16>(u_long_pos_cog) << std::endl;
-  std::cout << "\t\t\tu_Wheelbase: " << std::hex << static_cast<uint16_t>(u_wheelbase) << " | "
-            << std::bitset<16>(u_wheelbase) << std::endl;
-  std::cout << "\t\t\tu_YawAngle: " << std::hex << static_cast<uint16_t>(u_yaw_angle) << " | "
-            << std::bitset<16>(u_yaw_angle) << std::endl;
-  std::cout << "\t\t\tu_CoverDamping: " << std::hex << static_cast<uint16_t>(u_cover_damping)
-            << " | " << std::bitset<16>(u_cover_damping) << std::endl;
-
-  std::cout << "\t\t\tu_LatPos1: " << std::hex << static_cast<uint16_t>(u_lat_pos) << " | "
-            << std::bitset<16>(u_lat_pos) << std::endl;
-  std::cout << "\t\t\tu_LatPos2: " << std::hex << static_cast<uint16_t>(u_lat_pos & 0xff00) << " | "
-            << std::bitset<16>(u_lat_pos & 0xff00) << std::endl;
-  std::cout << "\t\t\tu_LatPos3: " << std::hex << static_cast<uint16_t>((u_lat_pos & 0xff00) >> 8)
-            << " | " << std::bitset<8>((u_lat_pos & 0xff00) >> 8) << std::endl;
-
   std::array<uint8_t, 16> data;
-  data[0] = sensor_id;  // 0 actually makes it 1. When there are multiple radars in the same
-                        // vehicle, this actually is needed
+  data[0] = sensor_id;
   data[1] = static_cast<uint8_t>((u_long_pos & 0xff00) >> 8);
   data[2] = static_cast<uint8_t>((u_long_pos & 0x00ff));
 
@@ -707,7 +655,7 @@ Status ContinentalSRR520HwInterface::ConfigureSensor(
 
   uint8_t plug_value = plug_bottom ? 0x00 : 0x01;
   uint8_t reset_value = reset ? 0x80 : 0x00;
-  data[15] = plug_value | reset_value;  // PLUG orientation. default is 0, make it 1 for testing
+  data[15] = plug_value | reset_value;
 
   if (SendFrame(data, SENSOR_CONFIG_CAN_MESSAGE_ID)) {
     return Status::OK;

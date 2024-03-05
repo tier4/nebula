@@ -43,7 +43,7 @@ public:
   explicit ContinentalSRR520Decoder(
     const std::shared_ptr<ContinentalSRR520SensorConfiguration> & sensor_configuration);
 
-  /// @brief Function for psrring NebulaPackets
+  /// @brief Function for parsing NebulaPackets
   /// @param nebula_packets
   /// @return Resulting flag
   bool ProcessPackets(const nebula_msgs::msg::NebulaPackets & nebula_packets) override;

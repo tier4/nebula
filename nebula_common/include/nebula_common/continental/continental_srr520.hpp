@@ -219,7 +219,6 @@ constexpr int HRR_CRC_ID = 1;
 constexpr int OBJECT_CRC_ID = 2;
 constexpr int TIME_DOMAIN_ID = 0;
 
-//
 constexpr int RDI_NEAR_HEADER_PACKET_SIZE = 32;
 constexpr int RDI_NEAR_ELEMENT_PACKET_SIZE = 64;
 constexpr int RDI_HRR_HEADER_PACKET_SIZE = 32;
@@ -240,6 +239,10 @@ constexpr int FRAGMENTS_PER_DETECTION_PACKET = 10;
 constexpr int FRAGMENTS_PER_OBJECT_PACKET = 2;
 constexpr int DETECTION_FRAGMENT_SIZE = 6;
 constexpr int OBJECT_FRAGMENT_SIZE = 31;
+
+constexpr int MAX_RDI_NEAR_DETECTIONS = RDI_NEAR_PACKET_NUM * FRAGMENTS_PER_DETECTION_PACKET;
+constexpr int MAX_RDI_HRR_DETECTIONS = RDI_HRR_PACKET_NUM * FRAGMENTS_PER_DETECTION_PACKET;
+constexpr int MAX_OBJECTS = OBJECT_PACKET_NUM * FRAGMENTS_PER_OBJECT_PACKET;
 
 #pragma pack(push, 1)
 
@@ -287,7 +290,7 @@ struct ScanHeaderPacket
   uint8_t u_signal_status;                    // 13
   uint8_t u_sequence_counter;                 // 14
   big_uint32_buf_t u_cycle_counter;           // 15
-  big_uint16_buf_t u_vambig;                  // 19
+  big_uint16_buf_t u_vambig;                  // 19. cSpell:ignore vambig
   big_uint16_buf_t u_max_range;               // 21
   big_uint16_buf_t u_number_of_detections;    // 23
   uint8_t reserved[7];                        // 25

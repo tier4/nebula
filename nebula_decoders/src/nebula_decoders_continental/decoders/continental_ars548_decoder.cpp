@@ -378,7 +378,7 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(
 }
 
 bool ContinentalARS548Decoder::ParseSensorStatusPacket(
-  const std::vector<uint8_t> & data, const std_msgs::msg::Header & header)
+  const std::vector<uint8_t> & data, [[maybe_unused]] const std_msgs::msg::Header & header)
 {
   SensorStatusPacket sensor_status_packet;
   std::memcpy(&sensor_status_packet, data.data(), sizeof(SensorStatusPacket));

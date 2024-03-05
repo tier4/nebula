@@ -81,6 +81,7 @@ private:
 
   uint8_t sync_counter_{0};
   bool sync_fup_sent_{true};
+  builtin_interfaces::msg::Time last_sync_stamp_;
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger;
 

@@ -84,10 +84,6 @@ Status ContinentalSRR520HwInterfaceRosWrapper::StreamStart()
     sync_timer_ = rclcpp::create_timer(
       this, get_clock(), 100ms,
       std::bind(&ContinentalSRR520HwInterfaceRosWrapper::syncTimerCallback, this));
-
-    vehicle_dynamics_timer_ = rclcpp::create_timer(
-      this, get_clock(), 100ms,
-      std::bind(&ContinentalSRR520HwInterfaceRosWrapper::vehicleDynamicsTimerCallback, this));
   }
 
   return interface_status_;
@@ -376,11 +372,6 @@ void ContinentalSRR520HwInterfaceRosWrapper::ConfigureSensorRequestCallback(
 void ContinentalSRR520HwInterfaceRosWrapper::syncTimerCallback()
 {
   hw_interface_.SensorSync();
-}
-
-void ContinentalSRR520HwInterfaceRosWrapper::vehicleDynamicsTimerCallback()
-{
-  hw_interface_.SetVehicleDynamics(0.0, 0.0, 0.0, 0.0, true);
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>

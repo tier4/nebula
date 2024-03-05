@@ -120,7 +120,7 @@ bool ContinentalSRR520Decoder::ParseDetectionsListPacket(
 
   if (header_packet.u_global_time_stamp_sync_status == 1) {
     scan_msg->header.stamp.sec = header_packet.u_global_time_stamp_sec.value();
-    scan_msg->header.stamp.sec = header_packet.u_global_time_stamp_nsec.value();
+    scan_msg->header.stamp.nanosec = header_packet.u_global_time_stamp_nsec.value();
   }
 
   scan_msg->internal_time_stamp_usec = header_packet.u_time_stamp.value();
@@ -128,7 +128,7 @@ bool ContinentalSRR520Decoder::ParseDetectionsListPacket(
   scan_msg->signal_status = header_packet.u_signal_status;
   scan_msg->sequence_counter = header_packet.u_sequence_counter;
   scan_msg->cycle_counter = header_packet.u_cycle_counter.value();
-  scan_msg->vambig = 0.003051851f * header_packet.u_vambig.value() - 100.f;
+  scan_msg->vambig = 0.003051851f * header_packet.u_vambig.value() - 100.f;  // cSpell:ignore vambig
   scan_msg->max_range = 0.1f * header_packet.u_max_range.value();
 
   int parsed_detections = 0;
@@ -218,7 +218,7 @@ bool ContinentalSRR520Decoder::ParseObjectsListPacket(
 
   if (header_packet.u_global_time_stamp_sync_status == 1) {
     objects_msg->header.stamp.sec = header_packet.u_global_time_stamp_sec.value();
-    objects_msg->header.stamp.sec = header_packet.u_global_time_stamp_nsec.value();
+    objects_msg->header.stamp.nanosec = header_packet.u_global_time_stamp_nsec.value();
   }
 
   objects_msg->internal_time_stamp_usec = header_packet.u_time_stamp.value();
@@ -354,7 +354,7 @@ bool ContinentalSRR520Decoder::ParseStatusPacket(
 
   auto & diagnostic_status = diagnostic_array_msg_ptr->status.front();
   auto & diagnostic_values = diagnostic_status.values;
-  diagnostic_values.reserve(33);  // add number later
+  diagnostic_values.reserve(33);
   diagnostic_status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
 
   diagnostic_status.message = "Sensor diagnostics for the SRR520";
@@ -436,13 +436,6 @@ bool ContinentalSRR520Decoder::ParseStatusPacket(
   key_value.value = std::to_string(status_packet.u_supply_voltage_limit);
   diagnostic_values.push_back(key_value);
   diagnostic_status.level = status_packet.u_supply_voltage_limit != 0
-                              ? diagnostic_msgs::msg::DiagnosticStatus::ERROR
-                              : diagnostic_status.level;
-
-  key_value.key = "sensor_off_temp";
-  key_value.value = std::to_string(status_packet.u_sensor_off_temp);
-  diagnostic_values.push_back(key_value);
-  diagnostic_status.level = status_packet.u_sensor_off_temp != 0
                               ? diagnostic_msgs::msg::DiagnosticStatus::ERROR
                               : diagnostic_status.level;
 

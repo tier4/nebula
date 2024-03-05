@@ -88,7 +88,6 @@ class ContinentalSRR520HwInterfaceRosWrapper final : public rclcpp::Node,
   std::shared_ptr<ExactTimeSync> sync_ptr_;
 
   rclcpp::TimerBase::SharedPtr sync_timer_;
-  rclcpp::TimerBase::SharedPtr vehicle_dynamics_timer_;
 
   bool standstill_{true};
 
@@ -117,8 +116,8 @@ class ContinentalSRR520HwInterfaceRosWrapper final : public rclcpp::Node,
     const std::shared_ptr<std_srvs::srv::Empty::Request> request,
     const std::shared_ptr<std_srvs::srv::Empty::Response> response);
 
+  /// @brief Method periodically called to initiate the sensor synchronization mechanism
   void syncTimerCallback();
-  void vehicleDynamicsTimerCallback();
 
 public:
   explicit ContinentalSRR520HwInterfaceRosWrapper(const rclcpp::NodeOptions & options);
