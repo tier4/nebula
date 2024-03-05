@@ -158,17 +158,21 @@ bool ContinentalSRR520Decoder::ParseDetectionsListPacket(
 
       uint16_t u_range =
         (static_cast<uint16_t>(data[0]) << 4) | (static_cast<uint16_t>(data[1] & 0xF0) >> 4);
+      assert(u_range <= 4095);
       detection_msg.range = 0.024420024 * u_range;
 
       uint16_t u_azimuth =
         (static_cast<uint16_t>(data[1] & 0x0f) << 5) | (static_cast<uint16_t>(data[2] & 0xF8) >> 3);
+      assert(u_azimuth <= 510);
       detection_msg.azimuth_angle = 0.006159986 * u_azimuth - 1.570796327;
 
       uint16_t u_range_rate =
         (static_cast<uint16_t>(data[2] & 0x07) << 8) | static_cast<uint16_t>(data[3]);
+      assert(u_range_rate <= 2046);
       detection_msg.range_rate = 0.014662757 * u_range_rate - 15.f;
 
-      uint8_t u_rcs = (data[4] & 0xFE) >> 1;
+      uint16_t u_rcs = (data[4] & 0xFE) >> 1;
+      assert(u_rcs <= 126);
       detection_msg.rcs = 0.476190476 * u_rcs - 40.f;
 
       detection_msg.pdh00 = 100 * (data[4] & 0x01);
@@ -241,13 +245,14 @@ bool ContinentalSRR520Decoder::ParseObjectsListPacket(
       break;
     }
 
-    DetectionPacket detection_packet;
-    std::memcpy(&detection_packet, it->data.data(), sizeof(DetectionPacket));
+    ObjectPacket object_packet;
+    std::memcpy(&object_packet, it->data.data(), sizeof(ObjectPacket));
+    static_assert(sizeof(ObjectPacket) == OBJECT_PACKET_SIZE);
 
-    assert(header_packet.u_sequence_counter == detection_packet.u_sequence_counter);
-    assert(object_packet_index == detection_packet.u_message_counter);
+    assert(header_packet.u_sequence_counter == object_packet.u_sequence_counter);
+    assert(object_packet_index == object_packet.u_message_counter);
 
-    for (const auto & fragment : detection_packet.fragments) {
+    for (const auto & fragment : object_packet.fragments) {
       continental_msgs::msg::ContinentalSrr520Object object_msg;
       const auto & data = fragment.data;
 
@@ -256,73 +261,94 @@ bool ContinentalSRR520Decoder::ParseObjectsListPacket(
       }
 
       object_msg.object_id = data[0];
-      object_msg.dist_x = 0.009155553 * ((static_cast<uint16_t>(data[1]) << 8) | data[2]) - 300.f;
-      object_msg.dist_y = 0.009155553 * ((static_cast<uint16_t>(data[3]) << 8) | data[4]) - 300.f;
+
+      uint16_t u_dist_x = ((static_cast<uint16_t>(data[1]) << 8) | data[2]);
+      uint16_t u_dist_y = ((static_cast<uint16_t>(data[3]) << 8) | data[4]);
+      assert(u_dist_x <= 65534);
+      assert(u_dist_y <= 65534);
+      object_msg.dist_x = 0.009155553 * u_dist_x - 300.f;
+      object_msg.dist_y = 0.009155553 * u_dist_y - 300.f;
 
       uint16_t u_v_abs_x =
         (static_cast<uint16_t>(data[5]) << 6) | (static_cast<uint16_t>(data[6] & 0xfc) >> 2);
+      assert(u_v_abs_x <= 16382);
       object_msg.v_abs_x = 0.009156391 * u_v_abs_x - 75.f;
 
       uint16_t u_v_abs_y = (static_cast<uint16_t>(data[6] & 0x03) << 12) |
                            (static_cast<uint16_t>(data[7]) << 4) |
                            (static_cast<uint16_t>(data[8] & 0xF0) >> 4);
+      assert(u_v_abs_y <= 16382);
       object_msg.v_abs_y = 0.009156391 * u_v_abs_y - 75.f;
 
       uint16_t u_a_abs_x =
         (static_cast<uint16_t>(data[8] & 0x0f) << 6) | (static_cast<uint16_t>(data[9] & 0xfc) >> 2);
+      assert(u_a_abs_x <= 1022);
       object_msg.a_abs_x = 0.019569472 * u_a_abs_x - 10.f;
 
       uint16_t u_a_abs_y =
         (static_cast<uint16_t>(data[9] & 0x03) << 8) | static_cast<uint16_t>(data[10]);
+      assert(u_a_abs_y <= 1022);
       object_msg.a_abs_y = 0.019569472 * u_a_abs_y - 10.f;
 
       uint16_t u_dist_x_std =
         (static_cast<uint16_t>(data[11]) << 6) | (static_cast<uint16_t>(data[12] & 0xfc) >> 2);
+      assert(u_dist_x_std <= 16383);
       object_msg.dist_x_std = 0.001831166 * u_dist_x_std;
 
       uint16_t u_dist_y_std = (static_cast<uint16_t>(data[12] & 0x03) << 12) |
                               (static_cast<uint16_t>(data[13]) << 4) |
                               (static_cast<uint16_t>(data[14] & 0xF0) >> 4);
+      assert(u_dist_y_std <= 16383);
       object_msg.dist_y_std = 0.001831166 * u_dist_y_std;
 
       uint16_t u_v_abs_x_std = (static_cast<uint16_t>(data[14] & 0x0f) << 10) |
                                (static_cast<uint16_t>(data[15]) << 2) |
                                (static_cast<uint16_t>(data[15] & 0x03) >> 6);
+      assert(u_v_abs_x_std <= 16383);
       object_msg.v_abs_x_std = 0.001831166 * u_v_abs_x_std;
 
       uint16_t u_v_abs_y_std =
         (static_cast<uint16_t>(data[16] & 0x3f) << 8) | static_cast<uint16_t>(data[17]);
+      assert(u_v_abs_y_std <= 16383);
       object_msg.v_abs_y_std = 0.001831166 * u_v_abs_y_std;
 
       uint16_t u_a_abs_x_std =
         (static_cast<uint16_t>(data[18]) << 6) | (static_cast<uint16_t>(data[19] & 0xfc) >> 2);
+      assert(u_a_abs_x_std <= 16383);
       object_msg.a_abs_x_std = 0.001831166 * u_a_abs_x_std;
 
       uint16_t u_a_abs_y_std = (static_cast<uint16_t>(data[19] & 0x03) << 12) |
                                (static_cast<uint16_t>(data[20]) << 4) |
                                (static_cast<uint16_t>(data[21] & 0xF0) >> 4);
+      assert(u_a_abs_y_std <= 16383);
       object_msg.a_abs_y_std = 0.001831166 * u_a_abs_y_std;
 
       uint16_t u_box_length =
         (static_cast<uint16_t>(data[21] & 0x0f) << 8) | static_cast<uint16_t>(data[22]);
+      assert(u_box_length <= 4095);
       object_msg.box_length = 0.007326007 * u_box_length;
 
       uint16_t u_box_width =
         (static_cast<uint16_t>(data[23]) << 4) | (static_cast<uint16_t>(data[24] & 0xF0) >> 4);
+      assert(u_box_width <= 4095);
       object_msg.box_width = 0.007326007 * u_box_width;
 
       uint16_t u_orientation =
         (static_cast<uint16_t>(data[24] & 0x0f) << 8) | static_cast<uint16_t>(data[25]);
+      assert(u_orientation <= 4094);
       object_msg.orientation = 0.001534729 * u_orientation - 3.14159;
 
       uint16_t u_rcs =
         (static_cast<uint16_t>(data[26]) << 4) | (static_cast<uint16_t>(data[27] & 0xF0) >> 4);
+      assert(u_rcs <= 4094);
       object_msg.rcs = 0.024425989 * u_rcs - 50.f;
 
       uint8_t u_score = data[27] & 0x0f;
+      assert(u_score <= 15);
       object_msg.score = 6.666666667 * u_score;
 
       object_msg.life_cycles = (static_cast<uint16_t>(data[28]) << 8) | data[29];
+      assert(object_msg.life_cycles <= 65535);
 
       object_msg.box_valid = data[30] & 0x01;
       object_msg.object_status = (data[30] & 0x06) >> 1;

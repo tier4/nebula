@@ -333,9 +333,7 @@ struct ObjectFragmentPacket
 
 struct ObjectPacket
 {
-  ObjectFragmentPacket fragments[FRAGMENTS_PER_OBJECT_PACKET];  // 0 - 59
-  uint8_t reserved0;                                            // 60
-  uint8_t reserved1;                                            // 61
+  ObjectFragmentPacket fragments[FRAGMENTS_PER_OBJECT_PACKET];  // 0 - 61
   uint8_t u_message_counter;                                    // 62
   uint8_t u_sequence_counter;                                   // 63
 };

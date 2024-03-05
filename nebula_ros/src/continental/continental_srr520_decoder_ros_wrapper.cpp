@@ -575,7 +575,6 @@ visualization_msgs::msg::MarkerArray ContinentalSRR520DriverRosWrapper::ConvertT
   }};
 
   std::unordered_set<int> current_ids;
-  std::size_t null_object_id_counter = 0;
 
   for (const auto & object : msg.objects) {
     if (!object.box_valid || object.object_status == 0) {
@@ -593,9 +592,7 @@ visualization_msgs::msg::MarkerArray ContinentalSRR520DriverRosWrapper::ConvertT
     box_marker.header.frame_id = sensor_cfg_ptr_->base_frame;
     box_marker.header.stamp = msg.header.stamp;
     box_marker.ns = "boxes";
-    box_marker.id = object.object_id == 0
-                      ? drivers::continental_srr520::MAX_OBJECTS + null_object_id_counter++
-                      : object.object_id;
+    box_marker.id = object.object_id;
     box_marker.action = visualization_msgs::msg::Marker::ADD;
     box_marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
     box_marker.lifetime = rclcpp::Duration::from_seconds(0);
@@ -638,7 +635,8 @@ visualization_msgs::msg::MarkerArray ContinentalSRR520DriverRosWrapper::ConvertT
     marker_array.markers.emplace_back(text_marker);
 
     std::stringstream object_status_ss;
-    object_status_ss << std::fixed << std::setprecision(3) << "ID=" << object.object_id << "\n"
+    object_status_ss << std::fixed << std::setprecision(3)
+                     << "ID=" << static_cast<uint32_t>(object.object_id) << "\n"
                      << static_cast<int>(object.box_length) << "/"
                      << static_cast<int>(object.object_status);
 
@@ -648,7 +646,8 @@ visualization_msgs::msg::MarkerArray ContinentalSRR520DriverRosWrapper::ConvertT
     marker_array.markers.emplace_back(text_marker);
 
     std::stringstream object_dynamics_ss;
-    object_dynamics_ss << std::fixed << std::setprecision(3) << "ID=" << object.object_id
+    object_dynamics_ss << std::fixed << std::setprecision(3)
+                       << "ID=" << static_cast<uint32_t>(object.object_id)
                        << "\nyaw=" << object.orientation << "\nvx=" << object.v_abs_x
                        << "\nvy=" << object.v_abs_y << "\nax=" << object.a_abs_x
                        << "\nay=" << object.a_abs_y;
