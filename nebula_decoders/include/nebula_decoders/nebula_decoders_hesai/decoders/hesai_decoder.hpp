@@ -102,7 +102,10 @@ protected:
 
         auto distance = getDistance(unit);
 
-        if (distance < SensorT::MIN_RANGE || distance > SensorT::MAX_RANGE) {
+        if (
+          distance < SensorT::MIN_RANGE || SensorT::MAX_RANGE < distance ||
+          distance < sensor_configuration_->min_range ||
+          sensor_configuration_->max_range < distance) {
           continue;
         }
 

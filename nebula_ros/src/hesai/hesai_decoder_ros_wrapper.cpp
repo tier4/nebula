@@ -238,6 +238,24 @@ Status HesaiDriverRosWrapper::GetParameters(
     calibration_configuration.calibration_file =
       this->get_parameter("calibration_file").as_string();
   }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("min_range", 0.3, descriptor);
+    sensor_configuration.min_range = this->get_parameter("min_range").as_double();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("max_range", 300., descriptor);
+    sensor_configuration.max_range = this->get_parameter("max_range").as_double();
+  }
   if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
