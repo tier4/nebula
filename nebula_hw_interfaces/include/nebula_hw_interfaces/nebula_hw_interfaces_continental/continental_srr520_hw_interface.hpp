@@ -152,7 +152,8 @@ private:
   /// @brief Process a new HRR crc list packet
   /// @param buffer The buffer containing the packet
   /// @param stamp The stamp in nanoseconds
-  void ProcessHRRCRCListPacket(const std::vector<uint8_t> & buffer, const uint64_t stamp);
+  void ProcessHRRCRCListPacket(
+    const std::vector<uint8_t> & buffer, const uint64_t stamp);  // cspell:ignore HRRCRC
 
   /// @brief Process a new objects crc list packet
   /// @param buffer The buffer containing the packet
