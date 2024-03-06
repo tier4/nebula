@@ -604,8 +604,8 @@ radar_msgs::msg::RadarTracks ContinentalARS548DriverRosWrapper::ConvertToRadarTr
 
     const double half_length = 0.5 * object.shape_length_edge_mean;
     const double half_width = 0.5 * object.shape_width_edge_mean;
-    // There are 9 possible reference points. In the case of an invalid refence point, we fall back
-    // to the center
+    // There are 9 possible reference points. In the case of an invalid reference point, we fall
+    // back to the center
     const int reference_index = std::min<int>(object.position_reference, 8);
     const double & yaw = object.orientation;
     track_msg.position.x = object.position.x +
