@@ -41,6 +41,8 @@
     "Vdat",
     "autosar",
     "srvs",
-    "manc"
+    "manc",
+    "ipaddr",
+    "ntoa"
   ]
 }
