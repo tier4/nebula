@@ -489,24 +489,24 @@ radar_msgs::msg::RadarTracks ContinentalSRR520DriverRosWrapper::ConvertToRadarTr
 
     track_msg.classification = UNKNOWN_ID;
 
-    track_msg.position_covariance[0] = object.dist_x_std;
+    track_msg.position_covariance[0] = object.dist_x_std * object.dist_x_std;
     track_msg.position_covariance[1] = INVALID_COVARIANCE;
     track_msg.position_covariance[2] = 0.f;
-    track_msg.position_covariance[3] = object.dist_y_std;
+    track_msg.position_covariance[3] = object.dist_y_std * object.dist_y_std;
     track_msg.position_covariance[4] = 0.f;
     track_msg.position_covariance[5] = INVALID_COVARIANCE;
 
-    track_msg.velocity_covariance[0] = object.v_abs_x_std;
+    track_msg.velocity_covariance[0] = object.v_abs_x_std * object.v_abs_x_std;
     track_msg.velocity_covariance[1] = INVALID_COVARIANCE;
     track_msg.velocity_covariance[2] = 0.f;
-    track_msg.velocity_covariance[3] = object.v_abs_y_std;
+    track_msg.velocity_covariance[3] = object.v_abs_y_std * object.v_abs_y_std;
     track_msg.velocity_covariance[4] = 0.f;
     track_msg.velocity_covariance[5] = INVALID_COVARIANCE;
 
-    track_msg.acceleration_covariance[0] = object.a_abs_x_std;
+    track_msg.acceleration_covariance[0] = object.a_abs_x_std * object.a_abs_x_std;
     track_msg.acceleration_covariance[1] = INVALID_COVARIANCE;
     track_msg.acceleration_covariance[2] = 0.f;
-    track_msg.acceleration_covariance[3] = object.a_abs_y_std;
+    track_msg.acceleration_covariance[3] = object.a_abs_y_std * object.a_abs_y_std;
     track_msg.acceleration_covariance[4] = 0.f;
     track_msg.acceleration_covariance[5] = INVALID_COVARIANCE;
 
