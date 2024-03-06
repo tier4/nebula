@@ -644,26 +644,35 @@ radar_msgs::msg::RadarTracks ContinentalARS548DriverRosWrapper::ConvertToRadarTr
       track_msg.classification = PEDESTRIAN_ID;
     }
 
-    track_msg.position_covariance[0] = static_cast<float>(object.position_std.x);
+    track_msg.position_covariance[0] =
+      static_cast<float>(object.position_std.x * object.position_std.x);
     track_msg.position_covariance[1] = object.position_covariance_xy;
     track_msg.position_covariance[2] = 0.f;
-    track_msg.position_covariance[3] = static_cast<float>(object.position_std.y);
+    track_msg.position_covariance[3] =
+      static_cast<float>(object.position_std.y * object.position_std.y);
     track_msg.position_covariance[4] = 0.f;
-    track_msg.position_covariance[5] = static_cast<float>(object.position_std.z);
+    track_msg.position_covariance[5] =
+      static_cast<float>(object.position_std.z * object.position_std.z);
 
-    track_msg.velocity_covariance[0] = static_cast<float>(object.absolute_velocity_std.x);
+    track_msg.velocity_covariance[0] =
+      static_cast<float>(object.absolute_velocity_std.x * object.absolute_velocity_std.x);
     track_msg.velocity_covariance[1] = object.absolute_velocity_covariance_xy;
     track_msg.velocity_covariance[2] = 0.f;
-    track_msg.velocity_covariance[3] = static_cast<float>(object.absolute_velocity_std.y);
+    track_msg.velocity_covariance[3] =
+      static_cast<float>(object.absolute_velocity_std.y * object.absolute_velocity_std.y);
     track_msg.velocity_covariance[4] = 0.f;
-    track_msg.velocity_covariance[5] = static_cast<float>(object.absolute_velocity_std.z);
+    track_msg.velocity_covariance[5] =
+      static_cast<float>(object.absolute_velocity_std.z * object.absolute_velocity_std.z);
 
-    track_msg.acceleration_covariance[0] = static_cast<float>(object.absolute_acceleration_std.x);
+    track_msg.acceleration_covariance[0] =
+      static_cast<float>(object.absolute_acceleration_std.x * object.absolute_acceleration_std.x);
     track_msg.acceleration_covariance[1] = object.absolute_acceleration_covariance_xy;
     track_msg.acceleration_covariance[2] = 0.f;
-    track_msg.acceleration_covariance[3] = static_cast<float>(object.absolute_acceleration_std.y);
+    track_msg.acceleration_covariance[3] =
+      static_cast<float>(object.absolute_acceleration_std.y * object.absolute_acceleration_std.y);
     track_msg.acceleration_covariance[4] = 0.f;
-    track_msg.acceleration_covariance[5] = static_cast<float>(object.absolute_acceleration_std.z);
+    track_msg.acceleration_covariance[5] =
+      static_cast<float>(object.absolute_acceleration_std.z * object.absolute_acceleration_std.z);
 
     track_msg.size_covariance[0] = INVALID_COVARIANCE;
     track_msg.size_covariance[1] = 0.f;
