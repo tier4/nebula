@@ -145,6 +145,7 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(
   const uint32_t number_of_detections = detection_list.number_of_detections.value();
   msg.detections.resize(number_of_detections);
 
+  // Estimate dropped detections only when the radar is synchronzied
   if (radar_status_.timestamp_sync_status == "SYNC_OK") {
     if (radar_status_.detection_first_stamp == 0) {
       radar_status_.detection_first_stamp =
@@ -253,6 +254,7 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(
 
   msg.objects.resize(number_of_objects);
 
+  // Estimate dropped objects only when the radar is synchronzied
   if (radar_status_.timestamp_sync_status == "SYNC_OK") {
     if (radar_status_.object_first_stamp == 0) {
       radar_status_.object_first_stamp =
