@@ -380,7 +380,7 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(
 }
 
 bool ContinentalARS548Decoder::ParseSensorStatusPacket(
-  const std::vector<uint8_t> & data, const std_msgs::msg::Header & header)
+  const std::vector<uint8_t> & data, [[maybe_unused]] const std_msgs::msg::Header & header)
 {
   SensorStatusPacket sensor_status_packet;
   std::memcpy(&sensor_status_packet, data.data(), sizeof(SensorStatusPacket));
@@ -388,24 +388,38 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
   radar_status_.timestamp_nanoseconds = sensor_status_packet.stamp.timestamp_nanoseconds.value();
   radar_status_.timestamp_seconds = sensor_status_packet.stamp.timestamp_seconds.value();
 
-  if (sensor_status_packet.stamp.timestamp_sync_status == 1) {
-    radar_status_.timestamp_sync_status = "SYNC_OK";
-  } else if (sensor_status_packet.stamp.timestamp_sync_status == 2) {
-    radar_status_.timestamp_sync_status = "NEVER_SYNC";
-  } else if (sensor_status_packet.stamp.timestamp_sync_status == 3) {
-    radar_status_.timestamp_sync_status = "SYNC_LOST";
-  } else {
-    radar_status_.timestamp_sync_status = "INVALID_VALUE";
+  switch (sensor_status_packet.stamp.timestamp_sync_status) {
+    case SYNC_OK:
+      radar_status_.timestamp_sync_status = "1:SYNC_OK";
+      break;
+    case NEVER_SYNC:
+      radar_status_.timestamp_sync_status = "2:NEVER_SYNC";
+      break;
+    case SYNC_LOST:
+      radar_status_.timestamp_sync_status = "3:SYNC_LOST";
+      break;
+    default:
+      radar_status_.timestamp_sync_status =
+        std::to_string(sensor_status_packet.stamp.timestamp_sync_status) + ":Invalid";
+      break;
   }
 
   radar_status_.sw_version_major = sensor_status_packet.sw_version_major;
   radar_status_.sw_version_minor = sensor_status_packet.sw_version_minor;
   radar_status_.sw_version_patch = sensor_status_packet.sw_version_patch;
 
-  radar_status_.plug_orientation = sensor_status_packet.status.plug_orientation == 0 ? "PLUG_RIGHT"
-                                   : sensor_status_packet.status.plug_orientation == 1
-                                     ? "PLUG_LEFT"
-                                     : "INVALID_VALUE";
+  switch (sensor_status_packet.status.plug_orientation) {
+    case PLUG_RIGHT:
+      radar_status_.plug_orientation = "0:PLUG_RIGHT";
+      break;
+    case PLUG_LEFT:
+      radar_status_.plug_orientation = "1:PLUG_LEFT";
+      break;
+    default:
+      radar_status_.plug_orientation =
+        std::to_string(sensor_status_packet.status.plug_orientation) + ":Invalid";
+      break;
+  }
 
   radar_status_.max_distance = sensor_status_packet.status.maximum_distance.value();
 
@@ -415,35 +429,54 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
   radar_status_.yaw = sensor_status_packet.status.yaw.value();
 
   radar_status_.pitch = sensor_status_packet.status.pitch.value();
-  ;
   radar_status_.length = sensor_status_packet.status.length.value();
-  ;
   radar_status_.width = sensor_status_packet.status.width.value();
   radar_status_.height = sensor_status_packet.status.height.value();
   radar_status_.wheel_base = sensor_status_packet.status.wheelbase.value();
 
-  if (sensor_status_packet.status.frequency_slot == 0) {
-    radar_status_.frequency_slot = "0:Low (76.23 GHz)";
-  } else if (sensor_status_packet.status.frequency_slot == 1) {
-    radar_status_.frequency_slot = "1:Mid (76.48 GHz)";
-  } else if (sensor_status_packet.status.frequency_slot == 2) {
-    radar_status_.frequency_slot = "2:High (76.73 GHz)";
-  } else {
-    radar_status_.frequency_slot = "INVALID VALUE";
+  switch (sensor_status_packet.status.frequency_slot) {
+    case FREQUENCY_SLOT_LOW:
+      radar_status_.frequency_slot = "0:Low (76.23 GHz)";
+      break;
+    case FREQUENCY_SLOT_MID:
+      radar_status_.frequency_slot = "1:Mid (76.48 GHz)";
+      break;
+    case FREQUENCY_SLOT_HIGH:
+      radar_status_.frequency_slot = "2:High (76.73 GHz)";
+      break;
+    default:
+      radar_status_.frequency_slot =
+        std::to_string(sensor_status_packet.status.frequency_slot) + ":Invalid";
+      break;
   }
 
   radar_status_.cycle_time = sensor_status_packet.status.cycle_time;
   radar_status_.time_slot = sensor_status_packet.status.time_slot;
 
-  radar_status_.hcc = sensor_status_packet.status.hcc == 1 ? "Worldwide"
-                      : sensor_status_packet.status.hcc == 2
-                        ? "Japan"
-                        : ("INVALID VALUE=" + std::to_string(sensor_status_packet.status.hcc));
+  switch (sensor_status_packet.status.hcc) {
+    case HCC_WORLDWIDE:
+      radar_status_.hcc = "1:Worldwide";
+      break;
+    case HCC_JAPAN:
+      radar_status_.hcc = "1:Japan";
+      break;
+    default:
+      radar_status_.hcc = std::to_string(sensor_status_packet.status.hcc) + ":Invalid hcc";
+      break;
+  }
 
-  radar_status_.power_save_standstill =
-    sensor_status_packet.status.powersave_standstill == 0   ? "Off"
-    : sensor_status_packet.status.powersave_standstill == 1 ? "On"
-                                                            : "INVALID VALUE";
+  switch (sensor_status_packet.status.powersave_standstill) {
+    case POWERSAVE_STANDSTILL_OFF:
+      radar_status_.power_save_standstill = "0:Off";
+      break;
+    case POWERSAVE_STANDSTILL_ON:
+      radar_status_.power_save_standstill = "1:On";
+      break;
+    default:
+      radar_status_.power_save_standstill =
+        std::to_string(sensor_status_packet.status.powersave_standstill) + ":Invalid";
+      break;
+  }
 
   std::stringstream ss0, ss1;
   ss0 << std::to_string(sensor_status_packet.status.sensor_ip_address00) << "."
@@ -460,107 +493,121 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
 
   radar_status_.configuration_counter = sensor_status_packet.configuration_counter;
 
+  auto vdy_value_to_string = [](uint8_t value) -> std::string {
+    switch (value) {
+      case VDY_OK:
+        return "0:VDY_OK";
+      case VDY_NOTOK:
+        return "1:VDY_NOTOK";
+      default:
+        return std::to_string(value) + ":Invalid";
+    }
+  };
+
   radar_status_.longitudinal_velocity_status =
-    sensor_status_packet.longitudinal_velocity_status == 0   ? "VDY_OK"
-    : sensor_status_packet.longitudinal_velocity_status == 1 ? "VDY_NOTOK"
-                                                             : "INVALID VALUE";
-
+    vdy_value_to_string(sensor_status_packet.longitudinal_velocity_status);
   radar_status_.longitudinal_acceleration_status =
-    sensor_status_packet.longitudinal_acceleration_status == 0   ? "VDY_OK"
-    : sensor_status_packet.longitudinal_acceleration_status == 1 ? "VDY_NOTOK"
-                                                                 : "INVALID VALUE";
-
+    vdy_value_to_string(sensor_status_packet.longitudinal_acceleration_status);
   radar_status_.lateral_acceleration_status =
-    sensor_status_packet.lateral_acceleration_status == 0   ? "VDY_OK"
-    : sensor_status_packet.lateral_acceleration_status == 1 ? "VDY_NOTOK"
-                                                            : "INVALID VALUE";
+    vdy_value_to_string(sensor_status_packet.lateral_acceleration_status);
 
-  radar_status_.yaw_rate_status = sensor_status_packet.yaw_rate_status == 0   ? "VDY_OK"
-                                  : sensor_status_packet.yaw_rate_status == 1 ? "VDY_NOTOK"
-                                                                              : "INVALID VALUE";
-
-  radar_status_.steering_angle_status = sensor_status_packet.steering_angle_status == 0 ? "VDY_OK"
-                                        : sensor_status_packet.steering_angle_status == 1
-                                          ? "VDY_NOTOK"
-                                          : "INVALID VALUE";
-
+  radar_status_.yaw_rate_status = vdy_value_to_string(sensor_status_packet.yaw_rate_status);
+  radar_status_.steering_angle_status =
+    vdy_value_to_string(sensor_status_packet.steering_angle_status);
   radar_status_.driving_direction_status =
-    sensor_status_packet.driving_direction_status == 0   ? "VDY_OK"
-    : sensor_status_packet.driving_direction_status == 1 ? "VDY_NOTOK"
-                                                         : "INVALID VALUE";
-
+    vdy_value_to_string(sensor_status_packet.driving_direction_status);
   radar_status_.characteristic_speed_status =
-    sensor_status_packet.characteristic_speed_status == 0   ? "VDY_OK"
-    : sensor_status_packet.characteristic_speed_status == 1 ? "VDY_NOTOK"
-                                                            : "INVALID VALUE";
+    vdy_value_to_string(sensor_status_packet.characteristic_speed_status);
 
-  if (sensor_status_packet.radar_status == 0) {
-    radar_status_.radar_status = "STATE_INIT";
-  } else if (sensor_status_packet.radar_status == 1) {
-    radar_status_.radar_status = "STATE_OK";
-  } else if (sensor_status_packet.radar_status == 2) {
-    radar_status_.radar_status = "STATE_INVALID";
-  } else {
-    radar_status_.radar_status = "INVALID VALUE";
+  switch (sensor_status_packet.radar_status) {
+    case STATE_INIT:
+      radar_status_.radar_status = "0:STATE_INIT";
+      break;
+    case STATE_OK:
+      radar_status_.radar_status = "1:STATE_OK";
+      break;
+    case STATE_INVALID:
+      radar_status_.radar_status = "2:STATE_INVALID";
+      break;
+    default:
+      radar_status_.radar_status = std::to_string(sensor_status_packet.radar_status) + ":Invalid";
+      break;
   }
+
+  std::vector<std::string> voltage_status_vector, temperature_status_vector;
 
   if (sensor_status_packet.voltage_status == 0) {
-    radar_status_.voltage_status = "Ok";
+    voltage_status_vector.push_back("Ok");
   }
   if (sensor_status_packet.voltage_status & 0x01) {
-    radar_status_.voltage_status += "Current under voltage";
+    voltage_status_vector.push_back("Current undervoltage");
   }
   if (sensor_status_packet.voltage_status & 0x02) {
-    radar_status_.voltage_status = "Past under voltage";
-  }
-  if (sensor_status_packet.voltage_status & 0x03) {
-    radar_status_.voltage_status = "Current over voltage";
+    voltage_status_vector.push_back("Past undervoltage");
   }
   if (sensor_status_packet.voltage_status & 0x04) {
-    radar_status_.voltage_status = "Past over voltage";
+    voltage_status_vector.push_back("Current overvoltage");
+  }
+  if (sensor_status_packet.voltage_status & 0x08) {
+    voltage_status_vector.push_back("Past overvoltage");
   }
 
   if (sensor_status_packet.temperature_status == 0) {
-    radar_status_.temperature_status = "Ok";
+    temperature_status_vector.push_back("Ok");
   }
   if (sensor_status_packet.temperature_status & 0x01) {
-    radar_status_.temperature_status += "Current under temperature";
+    temperature_status_vector.push_back("Current under temperature");
   }
   if (sensor_status_packet.temperature_status & 0x02) {
-    radar_status_.temperature_status += "Past under temperature";
-  }
-  if (sensor_status_packet.temperature_status & 0x03) {
-    radar_status_.temperature_status += "Current over temperature";
+    temperature_status_vector.push_back("Past under temperature");
   }
   if (sensor_status_packet.temperature_status & 0x04) {
-    radar_status_.temperature_status += "Past over temperature";
+    temperature_status_vector.push_back("Current over temperature");
   }
+  if (sensor_status_packet.temperature_status & 0x08) {
+    temperature_status_vector.push_back("Past over temperature");
+  }
+
+  radar_status_.voltage_status = boost::algorithm::join(voltage_status_vector, ", ");
+  radar_status_.temperature_status = boost::algorithm::join(temperature_status_vector, ", ");
 
   const uint8_t & blockage_status0 = sensor_status_packet.blockage_status & 0x0f;
   const uint8_t & blockage_status1 = (sensor_status_packet.blockage_status & 0xf0) >> 4;
 
-  if (blockage_status0 == 0) {
-    radar_status_.blockage_status = "Blind";
-  } else if (blockage_status0 == 1) {
-    radar_status_.blockage_status = "High";
-  } else if (blockage_status0 == 2) {
-    radar_status_.blockage_status = "Mid";
-  } else if (blockage_status0 == 3) {
-    radar_status_.blockage_status = "Low";
-  } else if (blockage_status0 == 4) {
-    radar_status_.blockage_status = "None";
-  } else {
-    radar_status_.blockage_status = "INVALID VALUE";
+  switch (blockage_status0) {
+    case BLOCKAGE_STATUS_BLIND:
+      radar_status_.blockage_status = "0:Blind";
+      break;
+    case BLOCKAGE_STATUS_HIGH:
+      radar_status_.blockage_status = "1:High";
+      break;
+    case BLOCKAGE_STATUS_MID:
+      radar_status_.blockage_status = "2:Mid";
+      break;
+    case BLOCKAGE_STATUS_LOW:
+      radar_status_.blockage_status = "3:Low";
+      break;
+    case BLOCKAGE_STATUS_NONE:
+      radar_status_.blockage_status = "4:None";
+      break;
+    default:
+      radar_status_.blockage_status = std::to_string(blockage_status0) + ":Invalid";
+      break;
   }
 
-  if (blockage_status1 == 0) {
-    radar_status_.blockage_status += ". Self test failed";
-  } else if (blockage_status1 == 1) {
-    radar_status_.blockage_status += ". Self test passed";
-  } else if (blockage_status1 == 2) {
-    radar_status_.blockage_status += ". Self test ongoing";
-  } else {
-    radar_status_.blockage_status += ". Invalid self test";
+  switch (blockage_status1) {
+    case BLOCKAGE_TEST_FAILED:
+      radar_status_.blockage_status += ". 0:Self test failed";
+      break;
+    case BLOCKAGE_TEST_PASSED:
+      radar_status_.blockage_status += ". 1:Self test passed";
+      break;
+    case BLOCKAGE_TEST_ONGOING:
+      radar_status_.blockage_status += ". 2:Self test ongoing";
+      break;
+    default:
+      radar_status_.blockage_status += std::to_string(blockage_status1) + ":Invalid";
+      break;
   }
 
   radar_status_.status_total_count++;
