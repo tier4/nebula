@@ -229,6 +229,38 @@ Parameters shared by all supported models:
 ![DriverOrganization](docs/diagram.png)
 
 
+## Hesai Sensor Setup
+
+New Hesai sensors do not provide a Web UI to verify and set up the sensor parameters. Instead, these offer a TCP-based protocol to obtain and set the configuration. Nebula sets these sensors at launch. However, settings such as Destination IP, Sensor IP, IP Mask, and Data Port might cause undesired sensor functioning if the driver gets mistakenly launched with inappropriate values. To overcome this problem, Nebula provides an additional setup script for these settings to avoid such scenarios.
+
+The script requires the installation of dependencies via pip:
+
+`$ pip3 install scripts/requirements.txt  # first-time setup`
+
+Once the dependencies are installed, the setup script can be invoked using the following command:
+
+`$ python3 scripts/hesai_config --sensor-ip X.X.X.X`
+
+To set the parameters, please use the corresponding arguments as defined below:
+
+```
+usage: hesai_config.py [-h] --sensor-ip SENSOR_IP [--destination-ip DESTINATION_IP]
+                       [--data-port DATA_PORT] [--new-sensor-ip NEW_SENSOR_IP] [--mask MASK]
+
+options:
+  -h, --help            Show this help message and exit
+  --sensor-ip SENSOR_IP
+                        The current sensor IP address
+  --destination-ip DESTINATION_IP
+                        Change the current destination IP address to the given one
+  --data-port DATA_PORT
+                        Change the current destination LiDAR data port to the given one
+  --new-sensor-ip NEW_SENSOR_IP
+                        Change the current sensor IP address to the given one
+  --mask MASK           Change the current net mask to the given one. You can pass it in either a
+                        CIDR notation or dotted-decimal notation.
+```
+
 ## How to evaluate performance
 
 You can evaluate Nebula performance on a given rosbag and sensor model using the below tools.
