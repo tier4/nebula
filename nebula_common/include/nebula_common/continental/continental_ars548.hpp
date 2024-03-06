@@ -296,6 +296,40 @@ constexpr int OBJECT_FILTER_PROPERTIES_NUM = 24;
 constexpr int MAX_DETECTIONS = 800;
 constexpr int MAX_OBJECTS = 50;
 
+constexpr int SYNC_OK = 1;
+constexpr int NEVER_SYNC = 2;
+constexpr int SYNC_LOST = 3;
+
+constexpr int PLUG_RIGHT = 0;
+constexpr int PLUG_LEFT = 1;
+
+constexpr int FREQUENCY_SLOT_LOW = 0;
+constexpr int FREQUENCY_SLOT_MID = 1;
+constexpr int FREQUENCY_SLOT_HIGH = 2;
+
+constexpr int HCC_WORLDWIDE = 1;
+constexpr int HCC_JAPAN = 2;
+
+constexpr int POWERSAVE_STANDSTILL_OFF = 0;
+constexpr int POWERSAVE_STANDSTILL_ON = 1;
+
+constexpr int VDY_OK = 0;
+constexpr int VDY_NOTOK = 1;
+
+constexpr int STATE_INIT = 0;
+constexpr int STATE_OK = 1;
+constexpr int STATE_INVALID = 2;
+
+constexpr int BLOCKAGE_STATUS_BLIND = 0;
+constexpr int BLOCKAGE_STATUS_HIGH = 1;
+constexpr int BLOCKAGE_STATUS_MID = 2;
+constexpr int BLOCKAGE_STATUS_LOW = 3;
+constexpr int BLOCKAGE_STATUS_NONE = 4;
+
+constexpr int BLOCKAGE_TEST_FAILED = 0;
+constexpr int BLOCKAGE_TEST_PASSED = 1;
+constexpr int BLOCKAGE_TEST_ONGOING = 2;
+
 #pragma pack(push, 1)
 
 struct HeaderPacket
