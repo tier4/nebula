@@ -39,6 +39,8 @@
     "gptp",
     "Idat",
     "Vdat",
-    "manc"
+    "manc",
+    "ipaddr",
+    "ntoa"
   ]
 }
