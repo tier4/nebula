@@ -18,17 +18,10 @@
     <arg name="configuration_sensor_port" default="42101" description="Radar sensor configuration port"/>
     <arg name="use_sensor_time" default="false" description="Whether to use or not the timestamp from the sensor"/>
 
-    <arg name="new_plug_orientation" default="0" description="0=PLUG_RIGHT 1=PLUG_LEFT"/>
-    <arg name="new_vehicle_length" default="4.89" description="New vehicle length"/>
-    <arg name="new_vehicle_width" default="1.896" description="New vehicle width"/>
-    <arg name="new_vehicle_height" default="2.5" description="New vehicle height"/>
-    <arg name="new_vehicle_wheelbase" default="2.79" description="New vehicle wheel base"/>
-    <arg name="new_radar_maximum_distance" default="301" description="New maximum distance in meters"/>
-    <arg name="new_radar_frequency_slot" default="2" description="New frequency slot"/>
-    <arg name="new_radar_cycle_time" default="50" description="New cycle time in ms"/>
-    <arg name="new_radar_time_slot" default="10" description="New time slot in ms"/>
-    <arg name="new_radar_country_code" default="2" description="New country code"/>
-    <arg name="new_radar_powersave_standstill" default="0" description="New power saving in standstill"/>
+    <arg name="configuration_vehicle_length" default="4.89" description="New vehicle length"/>
+    <arg name="configuration_vehicle_width" default="1.896" description="New vehicle width"/>
+    <arg name="configuration_vehicle_height" default="2.5" description="New vehicle height"/>
+    <arg name="configuration_vehicle_wheelbase" default="2.79" description="New vehicle wheel base"/>
 
     <!-- CAN based sensor: SRR520 -->
     <arg name="interface" default="can4" description="Can interface"/>
@@ -54,17 +47,10 @@
             <param name="data_port" value="$(var data_port)"/>
             <param name="use_sensor_time" value="$(var use_sensor_time)"/>
 
-            <param name="new_plug_orientation" value="$(var new_plug_orientation)"/>
-            <param name="new_vehicle_length" value="$(var new_vehicle_length)"/>
-            <param name="new_vehicle_width" value="$(var new_vehicle_width)"/>
-            <param name="new_vehicle_height" value="$(var new_vehicle_height)"/>
-            <param name="new_vehicle_wheelbase" value="$(var new_vehicle_wheelbase)"/>
-            <param name="new_radar_maximum_distance" value="$(var new_radar_maximum_distance)"/>
-            <param name="new_radar_frequency_slot" value="$(var new_radar_frequency_slot)"/>
-            <param name="new_radar_cycle_time" value="$(var new_radar_cycle_time)"/>
-            <param name="new_radar_time_slot" value="$(var new_radar_time_slot)"/>
-            <param name="new_radar_country_code" value="$(var new_radar_country_code)"/>
-            <param name="new_radar_powersave_standstill" value="$(var new_radar_powersave_standstill)"/>
+            <param name="configuration_vehicle_length" value="$(var configuration_vehicle_length)"/>
+            <param name="configuration_vehicle_width" value="$(var configuration_vehicle_width)"/>
+            <param name="configuration_vehicle_height" value="$(var configuration_vehicle_height)"/>
+            <param name="configuration_vehicle_wheelbase" value="$(var configuration_vehicle_wheelbase)"/>
         </node>
 
         <node pkg="nebula_ros" exec="continental_ars548_hw_interface_ros_wrapper_node"
@@ -85,17 +71,10 @@
             <param name="configuration_host_port" value="$(var configuration_host_port)"/>
             <param name="configuration_sensor_port" value="$(var configuration_sensor_port)"/>
             <param name="use_sensor_time" value="$(var use_sensor_time)"/>
-            <param name="new_plug_orientation" value="$(var new_plug_orientation)"/>
-            <param name="new_vehicle_length" value="$(var new_vehicle_length)"/>
-            <param name="new_vehicle_width" value="$(var new_vehicle_width)"/>
-            <param name="new_vehicle_height" value="$(var new_vehicle_height)"/>
-            <param name="new_vehicle_wheelbase" value="$(var new_vehicle_wheelbase)"/>
-            <param name="new_radar_maximum_distance" value="$(var new_radar_maximum_distance)"/>
-            <param name="new_radar_frequency_slot" value="$(var new_radar_frequency_slot)"/>
-            <param name="new_radar_cycle_time" value="$(var new_radar_cycle_time)"/>
-            <param name="new_radar_time_slot" value="$(var new_radar_time_slot)"/>
-            <param name="new_radar_country_code" value="$(var new_radar_country_code)"/>
-            <param name="new_radar_powersave_standstill" value="$(var new_radar_powersave_standstill)"/>
+            <param name="configuration_vehicle_length" value="$(var configuration_vehicle_length)"/>
+            <param name="configuration_vehicle_width" value="$(var configuration_vehicle_width)"/>
+            <param name="configuration_vehicle_height" value="$(var configuration_vehicle_height)"/>
+            <param name="configuration_vehicle_wheelbase" value="$(var configuration_vehicle_wheelbase)"/>
 
             <param name="use_sim_time" value="false"/>
         </node>
@@ -113,17 +92,10 @@
             <param name="data_port" value="$(var data_port)"/>
             <param name="use_sensor_time" value="$(var use_sensor_time)"/>
 
-            <param name="new_plug_orientation" value="$(var new_plug_orientation)"/>
-            <param name="new_vehicle_length" value="$(var new_vehicle_length)"/>
-            <param name="new_vehicle_width" value="$(var new_vehicle_width)"/>
-            <param name="new_vehicle_height" value="$(var new_vehicle_height)"/>
-            <param name="new_vehicle_wheelbase" value="$(var new_vehicle_wheelbase)"/>
-            <param name="new_radar_maximum_distance" value="$(var new_radar_maximum_distance)"/>
-            <param name="new_radar_frequency_slot" value="$(var new_radar_frequency_slot)"/>
-            <param name="new_radar_cycle_time" value="$(var new_radar_cycle_time)"/>
-            <param name="new_radar_time_slot" value="$(var new_radar_time_slot)"/>
-            <param name="new_radar_country_code" value="$(var new_radar_country_code)"/>
-            <param name="new_radar_powersave_standstill" value="$(var new_radar_powersave_standstill)"/>
+            <param name="configuration_vehicle_length" value="$(var configuration_vehicle_length)"/>
+            <param name="configuration_vehicle_width" value="$(var configuration_vehicle_width)"/>
+            <param name="configuration_vehicle_height" value="$(var configuration_vehicle_height)"/>
+            <param name="configuration_vehicle_wheelbase" value="$(var configuration_vehicle_wheelbase)"/>
         </node>
 
         <node pkg="nebula_ros" exec="multi_continental_ars548_hw_interface_ros_wrapper_node"

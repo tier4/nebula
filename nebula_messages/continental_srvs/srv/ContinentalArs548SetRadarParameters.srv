@@ -1,0 +1,9 @@
+uint16 maximum_distance
+uint16 frequency_slot
+uint16 cycle_time
+uint16 time_slot
+uint16 country_code
+uint16 powersave_standstill
+---
+bool success
+string message # status messages

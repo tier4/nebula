@@ -23,13 +23,16 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
+#include <continental_srvs/srv/continental_ars548_set_network_configuration.hpp>
+#include <continental_srvs/srv/continental_ars548_set_radar_parameters.hpp>
+#include <continental_srvs/srv/continental_ars548_set_sensor_mounting.hpp>
+#include <continental_srvs/srv/continental_ars548_set_vehicle_parameters.hpp>
 #include <geometry_msgs/msg/accel_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
 #include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/float32.hpp>
-#include <std_srvs/srv/empty.hpp>
 
 #include <boost/asio.hpp>
 
@@ -79,10 +82,14 @@ class ContinentalARS548HwInterfaceRosWrapper final : public rclcpp::Node,
 
   bool standstill_{true};
 
-  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr set_new_sensor_ip_service_server_;
-  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr set_new_sensor_mounting_service_server_;
-  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr set_new_vehicle_parameters_service_server_;
-  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr set_new_radar_parameters_service_server_;
+  rclcpp::Service<continental_srvs::srv::ContinentalArs548SetNetworkConfiguration>::SharedPtr
+    set_network_configuration_service_server_;
+  rclcpp::Service<continental_srvs::srv::ContinentalArs548SetSensorMounting>::SharedPtr
+    set_sensor_mounting_service_server_;
+  rclcpp::Service<continental_srvs::srv::ContinentalArs548SetVehicleParameters>::SharedPtr
+    set_vehicle_parameters_service_server_;
+  rclcpp::Service<continental_srvs::srv::ContinentalArs548SetRadarParameters>::SharedPtr
+    set_radar_parameters_service_server_;
 
   /// @brief Initializing hardware interface ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
@@ -106,32 +113,40 @@ class ContinentalARS548HwInterfaceRosWrapper final : public rclcpp::Node,
   void SteeringAngleCallback(const std_msgs::msg::Float32::SharedPtr msg);
 
   /// @brief Service callback to set the new sensor ip
-  /// @param request Empty service request
-  /// @param response Empty service response
-  void SetNewSensorIPRequestCallback(
-    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
-    const std::shared_ptr<std_srvs::srv::Empty::Response> response);
+  /// @param request service request
+  /// @param response service response
+  void SetNetworkConfigurationRequestCallback(
+    const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetNetworkConfiguration::Request>
+      request,
+    const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetNetworkConfiguration::Response>
+      response);
 
   /// @brief Service callback to set the new sensor mounting position
-  /// @param request Empty service request
-  /// @param response Empty service response
-  void SetNewSensorMountingRequestCallback(
-    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
-    const std::shared_ptr<std_srvs::srv::Empty::Response> response);
+  /// @param request service request
+  /// @param response service response
+  void SetSensorMountingRequestCallback(
+    const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetSensorMounting::Request>
+      request,
+    const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetSensorMounting::Response>
+      response);
 
   /// @brief Service callback to set the new vehicle parameters
-  /// @param request Empty service request
-  /// @param response Empty service response
-  void SetNewVehicleParametersRequestCallback(
-    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
-    const std::shared_ptr<std_srvs::srv::Empty::Response> response);
+  /// @param request service request
+  /// @param response service response
+  void SetVehicleParametersRequestCallback(
+    const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetVehicleParameters::Request>
+      request,
+    const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetVehicleParameters::Response>
+      response);
 
   /// @brief Service callback to set the new radar parameters
-  /// @param request Empty service request
-  /// @param response Empty service response
-  void SetNewRadarParametersRequestCallback(
-    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
-    const std::shared_ptr<std_srvs::srv::Empty::Response> response);
+  /// @param request service request
+  /// @param response service response
+  void SetRadarParametersRequestCallback(
+    const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetRadarParameters::Request>
+      request,
+    const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetRadarParameters::Response>
+      response);
 
 public:
   explicit ContinentalARS548HwInterfaceRosWrapper(const rclcpp::NodeOptions & options);

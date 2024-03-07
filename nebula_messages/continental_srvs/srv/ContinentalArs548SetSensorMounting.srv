@@ -1,0 +1,4 @@
+bool plug_orientation # 0 = PLUG_RIGHT. 1 = PLUG_LEFT
+---
+bool success
+string message # status messages
