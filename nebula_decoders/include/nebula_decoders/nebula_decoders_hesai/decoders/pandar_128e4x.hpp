@@ -20,7 +20,6 @@ typedef Packet128E3X Packet128E4X;
 
 }  // namespace hesai_packet
 
-// FIXME(mojomex) support high resolution mode
 class Pandar128E4X : public HesaiSensor<hesai_packet::Packet128E4X>
 {
 private:
