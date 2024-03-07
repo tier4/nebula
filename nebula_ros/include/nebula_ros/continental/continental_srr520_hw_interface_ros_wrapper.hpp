@@ -24,6 +24,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
+#include <continental_srvs/srv/continental_srr520_set_radar_parameters.hpp>
 #include <geometry_msgs/msg/accel_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <nebula_msgs/msg/nebula_packet.hpp>
@@ -91,7 +92,8 @@ class ContinentalSRR520HwInterfaceRosWrapper final : public rclcpp::Node,
 
   bool standstill_{true};
 
-  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr configure_sensor_service_server_;
+  rclcpp::Service<continental_srvs::srv::ContinentalSrr520SetRadarParameters>::SharedPtr
+    configure_sensor_service_server_;
 
   /// @brief Initializing hardware interface ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
@@ -113,8 +115,10 @@ class ContinentalSRR520HwInterfaceRosWrapper final : public rclcpp::Node,
   /// @param request Empty service request
   /// @param response Empty service response
   void ConfigureSensorRequestCallback(
-    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
-    const std::shared_ptr<std_srvs::srv::Empty::Response> response);
+    const std::shared_ptr<continental_srvs::srv::ContinentalSrr520SetRadarParameters::Request>
+      request,
+    const std::shared_ptr<continental_srvs::srv::ContinentalSrr520SetRadarParameters::Response>
+      response);
 
   /// @brief Method periodically called to initiate the sensor synchronization mechanism
   void syncTimerCallback();

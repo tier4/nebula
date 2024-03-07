@@ -76,10 +76,12 @@ Status ContinentalSRR520HwInterfaceRosWrapper::StreamStart()
       std::make_shared<ExactTimeSync>(ExactTimeSyncPolicy(10), odometry_sub_, acceleration_sub_);
     sync_ptr_->registerCallback(&ContinentalSRR520HwInterfaceRosWrapper::dynamicsCallback, this);
 
-    configure_sensor_service_server_ = this->create_service<std_srvs::srv::Empty>(
-      "configure_sensor", std::bind(
-                            &ContinentalSRR520HwInterfaceRosWrapper::ConfigureSensorRequestCallback,
-                            this, std::placeholders::_1, std::placeholders::_2));
+    configure_sensor_service_server_ =
+      this->create_service<continental_srvs::srv::ContinentalSrr520SetRadarParameters>(
+        "configure_sensor",
+        std::bind(
+          &ContinentalSRR520HwInterfaceRosWrapper::ConfigureSensorRequestCallback, this,
+          std::placeholders::_1, std::placeholders::_2));
 
     sync_timer_ = rclcpp::create_timer(
       this, get_clock(), 100ms,
@@ -189,60 +191,13 @@ Status ContinentalSRR520HwInterfaceRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<int>("new_sensor_id", descriptor);
-    sensor_configuration.new_sensor_id = this->get_parameter("new_sensor_id").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<bool>("new_plug_bottom", descriptor);
-    sensor_configuration.new_plug_bottom = this->get_parameter("new_plug_bottom").as_bool();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("new_longitudinal_cog", descriptor);
-    sensor_configuration.new_longitudinal_cog =
-      static_cast<float>(this->get_parameter("new_longitudinal_cog").as_double());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("new_vehicle_wheelbase", descriptor);
-    sensor_configuration.new_vehicle_wheelbase =
-      static_cast<float>(this->get_parameter("new_vehicle_wheelbase").as_double());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("new_cover_damping", descriptor);
-    sensor_configuration.new_cover_damping = this->get_parameter("new_cover_damping").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<bool>("reset_sensor_configuration", descriptor);
-    sensor_configuration.reset_sensor_configuration =
-      this->get_parameter("reset_sensor_configuration").as_bool();
+    this->declare_parameter<double>("configuration_vehicle_wheelbase", descriptor);
+    sensor_configuration.configuration_vehicle_wheelbase =
+      static_cast<float>(this->get_parameter("configuration_vehicle_wheelbase").as_double());
   }
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
@@ -286,12 +241,7 @@ rcl_interfaces::msg::SetParametersResult ContinentalSRR520HwInterfaceRosWrapper:
     get_param(p, "frame_id", new_param.frame_id) |
     get_param(p, "base_frame", new_param.base_frame) | get_param(p, "filters", new_param.filters) |
     get_param(p, "use_bus_time", new_param.use_bus_time) |
-    get_param(p, "new_sensor_id", new_param.new_sensor_id) |
-    get_param(p, "new_plug_bottom", new_param.new_plug_bottom) |
-    get_param(p, "new_longitudinal_cog", new_param.new_longitudinal_cog) |
-    get_param(p, "new_vehicle_wheelbase", new_param.new_vehicle_wheelbase) |
-    get_param(p, "new_cover_damping", new_param.new_cover_damping) |
-    get_param(p, "reset_sensor_configuration", new_param.reset_sensor_configuration)) {
+    get_param(p, "configuration_vehicle_wheelbase", new_param.configuration_vehicle_wheelbase)) {
     if (0 < sensor_model_str.length())
       new_param.sensor_model = nebula::drivers::SensorModelFromString(sensor_model_str);
 
@@ -334,8 +284,10 @@ void ContinentalSRR520HwInterfaceRosWrapper::dynamicsCallback(
 }
 
 void ContinentalSRR520HwInterfaceRosWrapper::ConfigureSensorRequestCallback(
-  [[maybe_unused]] const std::shared_ptr<std_srvs::srv::Empty::Request> request,
-  [[maybe_unused]] const std::shared_ptr<std_srvs::srv::Empty::Response> response)
+  const std::shared_ptr<continental_srvs::srv::ContinentalSrr520SetRadarParameters::Request>
+    request,
+  const std::shared_ptr<continental_srvs::srv::ContinentalSrr520SetRadarParameters::Response>
+    response)
 {
   std::scoped_lock lock(mtx_config_);
 
@@ -351,6 +303,8 @@ void ContinentalSRR520HwInterfaceRosWrapper::ConfigureSensorRequestCallback(
     RCLCPP_ERROR(
       this->get_logger(), "Could not obtain the transform from the base frame to %s (%s)",
       sensor_configuration_.frame_id.c_str(), ex.what());
+    response->success = false;
+    response->message = ex.what();
     return;
   }
 
@@ -360,13 +314,18 @@ void ContinentalSRR520HwInterfaceRosWrapper::ConfigureSensorRequestCallback(
 
   float yaw = std::min<float>(std::max(static_cast<float>(rpy.z), -3.14159f), 3.14159f);
 
-  hw_interface_.ConfigureSensor(
-    sensor_configuration_.new_sensor_id,
-    base_to_sensor_tf.transform.translation.x - sensor_configuration_.new_vehicle_wheelbase,
+  auto result = hw_interface_.ConfigureSensor(
+    request->sensor_id,
+    base_to_sensor_tf.transform.translation.x -
+      sensor_configuration_.configuration_vehicle_wheelbase,
     base_to_sensor_tf.transform.translation.y, base_to_sensor_tf.transform.translation.z, yaw,
-    base_to_sensor_tf.transform.translation.x - 0.5 * sensor_configuration_.new_vehicle_wheelbase,
-    sensor_configuration_.new_vehicle_wheelbase, sensor_configuration_.new_cover_damping,
-    sensor_configuration_.new_plug_bottom, sensor_configuration_.reset_sensor_configuration);
+    base_to_sensor_tf.transform.translation.x -
+      0.5 * sensor_configuration_.configuration_vehicle_wheelbase,
+    sensor_configuration_.configuration_vehicle_wheelbase, request->cover_damping,
+    request->plug_bottom, request->reset_sensor_configuration);
+
+  response->success = result == Status::OK;
+  response->message = (std::stringstream() << result).str();
 }
 
 void ContinentalSRR520HwInterfaceRosWrapper::syncTimerCallback()
@@ -392,13 +351,8 @@ ContinentalSRR520HwInterfaceRosWrapper::updateParameters()
      rclcpp::Parameter("base_frame", sensor_configuration_.base_frame),
      rclcpp::Parameter("filters", sensor_configuration_.filters),
      rclcpp::Parameter("use_bus_time", sensor_configuration_.use_bus_time),
-     rclcpp::Parameter("new_sensor_id", sensor_configuration_.new_sensor_id),
-     rclcpp::Parameter("new_plug_bottom", sensor_configuration_.new_plug_bottom),
-     rclcpp::Parameter("new_longitudinal_cog", sensor_configuration_.new_longitudinal_cog),
-     rclcpp::Parameter("new_vehicle_wheelbase", sensor_configuration_.new_vehicle_wheelbase),
-     rclcpp::Parameter("new_cover_damping", sensor_configuration_.new_cover_damping),
      rclcpp::Parameter(
-       "reset_sensor_configuration", sensor_configuration_.reset_sensor_configuration)});
+       "configuration_vehicle_wheelbase", sensor_configuration_.configuration_vehicle_wheelbase)});
 
   RCLCPP_DEBUG_STREAM(this->get_logger(), "updateParameters end");
   return results;

@@ -30,11 +30,6 @@
     <arg name="filters" default="0:0" description="CAN filters"/>
     <arg name="use_bus_time" default="false" description="Whether to use the bus time for received messages or the system time"/>
 
-    <arg name="new_sensor_id" default="0" description="The new sensor id"/>
-    <arg name="new_plug_bottom" default="true" description="Whether the plug is in the bottom"/>
-    <arg name="new_cover_damping" default="0.0" description="Cover damping in dB"/>
-    <arg name="reset_sensor_configuration" default="false" description="Whether to reset all values to default when configuring the sensor"/>
-
     <group if="$(eval &quot;'$(var sensor_model)' == 'ARS548' &quot;)" >
 
         <node pkg="nebula_ros" exec="continental_ars548_driver_ros_wrapper_node" name="continental_ars548_decoder_driver" output="screen">
@@ -133,13 +128,7 @@
             <param name="sender_timeout_sec" value="$(var sender_timeout_sec)"/>
             <param name="filters" value="$(var filters)"/>
             <param name="use_bus_time" value="$(var use_bus_time)"/>
-
-            <param name="new_longitudinal_cog" value="1.25"/> <!-- test value -->
-            <param name="new_sensor_id" value="$(var new_sensor_id)"/>
-            <param name="new_vehicle_wheelbase" value="$(var new_vehicle_wheelbase)"/>
-            <param name="new_plug_bottom" value="$(var new_plug_bottom)"/>
-            <param name="new_cover_damping" value="$(var new_cover_damping)"/>
-            <param name="reset_sensor_configuration" value="$(var reset_sensor_configuration)"/>
+            <param name="configuration_vehicle_wheelbase" value="$(var configuration_vehicle_wheelbase)"/>
         </node>
 
         <node pkg="nebula_ros" exec="continental_srr520_hw_interface_ros_wrapper_node"
@@ -158,13 +147,7 @@
             <param name="sender_timeout_sec" value="$(var sender_timeout_sec)"/>
             <param name="filters" value="$(var filters)"/>
             <param name="use_bus_time" value="$(var use_bus_time)"/>
-
-            <param name="new_longitudinal_cog" value="1.25"/> <!-- test value -->
-            <param name="new_sensor_id" value="$(var new_sensor_id)"/>
-            <param name="new_vehicle_wheelbase" value="$(var new_vehicle_wheelbase)"/>
-            <param name="new_plug_bottom" value="$(var new_plug_bottom)"/>
-            <param name="new_cover_damping" value="$(var new_cover_damping)"/>
-            <param name="reset_sensor_configuration" value="$(var reset_sensor_configuration)"/>
+            <param name="configuration_vehicle_wheelbase" value="$(var configuration_vehicle_wheelbase)"/>
 
             <param name="use_sim_time" value="false"/>
         </node>

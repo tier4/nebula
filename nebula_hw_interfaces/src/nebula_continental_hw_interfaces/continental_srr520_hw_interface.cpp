@@ -611,6 +611,7 @@ Status ContinentalSRR520HwInterface::ConfigureSensor(
   std::cout << "wheelbase=" << wheelbase << std::endl;
   std::cout << "yaw_autosar=" << yaw_autosar << std::endl;
   std::cout << "sensor_id=" << static_cast<uint16_t>(sensor_id) << std::endl << std::flush;
+  std::cout << "plug_bottom=" << plug_bottom << std::endl;
 
   if (
     longitudinal_autosar < -32.767f || longitudinal_autosar > 32.767f ||

@@ -19,6 +19,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
         "srv/ContinentalArs548SetVehicleParameters.srv"
         "srv/ContinentalArs548SetRadarParameters.srv"
         "srv/ContinentalArs548SetNetworkConfiguration.srv"
+        "srv/ContinentalSrr520SetRadarParameters.srv"
         DEPENDENCIES
         std_msgs
         )

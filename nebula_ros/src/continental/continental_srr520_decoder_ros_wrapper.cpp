@@ -189,60 +189,13 @@ Status ContinentalSRR520DriverRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<int>("new_sensor_id", descriptor);
-    sensor_configuration.new_sensor_id = this->get_parameter("new_sensor_id").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<bool>("new_plug_bottom", descriptor);
-    sensor_configuration.new_plug_bottom = this->get_parameter("new_plug_bottom").as_bool();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("new_longitudinal_cog", descriptor);
-    sensor_configuration.new_longitudinal_cog =
-      static_cast<float>(this->get_parameter("new_longitudinal_cog").as_double());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("new_vehicle_wheelbase", descriptor);
-    sensor_configuration.new_vehicle_wheelbase =
-      static_cast<float>(this->get_parameter("new_vehicle_wheelbase").as_double());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("new_cover_damping", descriptor);
-    sensor_configuration.new_cover_damping = this->get_parameter("new_cover_damping").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<bool>("reset_sensor_configuration", descriptor);
-    sensor_configuration.reset_sensor_configuration =
-      this->get_parameter("reset_sensor_configuration").as_bool();
+    this->declare_parameter<double>("configuration_vehicle_wheelbase", descriptor);
+    sensor_configuration.configuration_vehicle_wheelbase =
+      static_cast<float>(this->get_parameter("configuration_vehicle_wheelbase").as_double());
   }
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {

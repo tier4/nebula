@@ -44,12 +44,7 @@ struct ContinentalSRR520SensorConfiguration : CANSensorConfigurationBase
 {
   std::string base_frame{};
   bool sync_use_bus_time{};
-  uint8_t new_sensor_id;
-  bool new_plug_bottom{};
-  float new_longitudinal_cog{};
-  float new_vehicle_wheelbase{};
-  float new_cover_damping{};
-  bool reset_sensor_configuration{};
+  float configuration_vehicle_wheelbase{};
 };
 
 /// @brief Convert ContinentalSRR520SensorConfiguration to string (Overloading the <<
@@ -62,12 +57,7 @@ inline std::ostream & operator<<(
 {
   os << (CANSensorConfigurationBase)(arg) << ", BaseFrame: " << arg.base_frame
      << ", SyncUseBusTime: " << arg.sync_use_bus_time
-     << ", NewSensorId: " << static_cast<uint16_t>(arg.new_sensor_id)
-     << ", NewPlugBottom: " << arg.new_plug_bottom
-     << ", NewLongitudinalCog: " << arg.new_longitudinal_cog
-     << ", NewVehicleWheelbase: " << arg.new_vehicle_wheelbase
-     << ", NewCoverDamping: " << arg.new_cover_damping
-     << ", ResetSensorConfiguration: " << arg.reset_sensor_configuration;
+     << ", ConfigurationVehicleWheelbase: " << arg.configuration_vehicle_wheelbase;
   return os;
 }
 
