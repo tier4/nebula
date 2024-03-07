@@ -13,6 +13,7 @@
   <buildtool_depend>ros_environment</buildtool_depend>
 
   <depend>continental_msgs</depend>
+  <depend>continental_srvs</depend>
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
   <depend>geometry_msgs</depend>

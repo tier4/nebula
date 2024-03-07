@@ -220,6 +220,10 @@ Status ContinentalARS548HwInterface::SetSensorMounting(
   PrintInfo("pitch_autosar = " + std::to_string(pitch_autosar));
   PrintInfo("plug_orientation = " + std::to_string(plug_orientation));
 
+  if (!sensor_udp_driver_->sender()->isOpen()) {
+    return Status::ERROR_1;
+  }
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -254,6 +258,10 @@ Status ContinentalARS548HwInterface::SetVehicleParameters(
   PrintInfo("width_autosar = " + std::to_string(width_autosar));
   PrintInfo("height_autosar = " + std::to_string(height_autosar));
   PrintInfo("wheel_base_autosar = " + std::to_string(wheel_base_autosar));
+
+  if (!sensor_udp_driver_->sender()->isOpen()) {
+    return Status::ERROR_1;
+  }
 
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
@@ -295,6 +303,10 @@ Status ContinentalARS548HwInterface::SetRadarParameters(
   PrintInfo("hcc = " + std::to_string(hcc));
   PrintInfo("power_save_standstill = " + std::to_string(power_save_standstill));
 
+  if (!sensor_udp_driver_->sender()->isOpen()) {
+    return Status::ERROR_1;
+  }
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -308,7 +320,7 @@ Status ContinentalARS548HwInterface::SetSensorIPAddress(const std::string & sens
     auto sensor_ip = boost::asio::ip::address::from_string(sensor_ip_address);
     ip_bytes = sensor_ip.to_v4().to_bytes();
   } catch (const std::exception & ex) {
-    PrintError("Setting invalid IP");
+    PrintError("Setting invalid IP=" + sensor_ip_address);
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -331,6 +343,10 @@ Status ContinentalARS548HwInterface::SetSensorIPAddress(const std::string & sens
 
   std::vector<uint8_t> send_vector(sizeof(ConfigurationPacket));
   std::memcpy(send_vector.data(), &configuration, sizeof(ConfigurationPacket));
+
+  if (!sensor_udp_driver_->sender()->isOpen()) {
+    return Status::ERROR_1;
+  }
 
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
@@ -358,6 +374,10 @@ Status ContinentalARS548HwInterface::SetAccelerationLateralCog(float lateral_acc
 
   std::vector<uint8_t> send_vector(sizeof(AccelerationLateralCoGPacket));
   std::memcpy(send_vector.data(), &acceleration_lateral_cog, sizeof(AccelerationLateralCoGPacket));
+
+  if (!sensor_udp_driver_->sender()->isOpen()) {
+    return Status::ERROR_1;
+  }
 
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
@@ -388,6 +408,10 @@ Status ContinentalARS548HwInterface::SetAccelerationLongitudinalCog(float longit
   std::memcpy(
     send_vector.data(), &acceleration_longitudinal_cog, sizeof(AccelerationLongitudinalCoGPacket));
 
+  if (!sensor_udp_driver_->sender()->isOpen()) {
+    return Status::ERROR_1;
+  }
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -414,6 +438,10 @@ Status ContinentalARS548HwInterface::SetCharacteristicSpeed(float characteristic
 
   std::vector<uint8_t> send_vector(sizeof(CharacteristicSpeedPacket));
   std::memcpy(send_vector.data(), &characteristic_speed_packet, sizeof(CharacteristicSpeedPacket));
+
+  if (!sensor_udp_driver_->sender()->isOpen()) {
+    return Status::ERROR_1;
+  }
 
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
@@ -447,6 +475,10 @@ Status ContinentalARS548HwInterface::SetDrivingDirection(int direction)
   std::vector<uint8_t> send_vector(sizeof(DrivingDirectionPacket));
   std::memcpy(send_vector.data(), &driving_direction_packet, sizeof(DrivingDirectionPacket));
 
+  if (!sensor_udp_driver_->sender()->isOpen()) {
+    return Status::ERROR_1;
+  }
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -475,6 +507,10 @@ Status ContinentalARS548HwInterface::SetSteeringAngleFrontAxle(float angle_rad)
   std::memcpy(
     send_vector.data(), &steering_angle_front_axle_packet, sizeof(SteeringAngleFrontAxlePacket));
 
+  if (!sensor_udp_driver_->sender()->isOpen()) {
+    return Status::ERROR_1;
+  }
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -502,6 +538,10 @@ Status ContinentalARS548HwInterface::SetVelocityVehicle(float velocity_kmh)
   std::vector<uint8_t> send_vector(sizeof(VelocityVehiclePacket));
   std::memcpy(send_vector.data(), &steering_angle_front_axle_packet, sizeof(VelocityVehiclePacket));
 
+  if (!sensor_udp_driver_->sender()->isOpen()) {
+    return Status::ERROR_1;
+  }
+
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 
   return Status::OK;
@@ -528,6 +568,10 @@ Status ContinentalARS548HwInterface::SetYawRate(float yaw_rate)
 
   std::vector<uint8_t> send_vector(sizeof(YawRatePacket));
   std::memcpy(send_vector.data(), &yaw_rate_packet, sizeof(YawRatePacket));
+
+  if (!sensor_udp_driver_->sender()->isOpen()) {
+    return Status::ERROR_1;
+  }
 
   sensor_udp_driver_->sender()->asyncSend(send_vector);
 

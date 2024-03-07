@@ -172,13 +172,13 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("new_plug_orientation", descriptor);
-    sensor_configuration.new_plug_orientation =
-      this->get_parameter("new_plug_orientation").as_int();
+    this->declare_parameter<double>("configuration_vehicle_length", descriptor);
+    sensor_configuration.configuration_vehicle_length =
+      static_cast<float>(this->get_parameter("configuration_vehicle_length").as_double());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -186,9 +186,9 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("new_vehicle_length", descriptor);
-    sensor_configuration.new_vehicle_length =
-      static_cast<float>(this->get_parameter("new_vehicle_length").as_double());
+    this->declare_parameter<double>("configuration_vehicle_width", descriptor);
+    sensor_configuration.configuration_vehicle_width =
+      static_cast<float>(this->get_parameter("configuration_vehicle_width").as_double());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -196,9 +196,9 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("new_vehicle_width", descriptor);
-    sensor_configuration.new_vehicle_width =
-      static_cast<float>(this->get_parameter("new_vehicle_width").as_double());
+    this->declare_parameter<double>("configuration_vehicle_height", descriptor);
+    sensor_configuration.configuration_vehicle_height =
+      static_cast<float>(this->get_parameter("configuration_vehicle_height").as_double());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -206,78 +206,9 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("new_vehicle_height", descriptor);
-    sensor_configuration.new_vehicle_height =
-      static_cast<float>(this->get_parameter("new_vehicle_height").as_double());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("new_vehicle_wheelbase", descriptor);
-    sensor_configuration.new_vehicle_wheelbase =
-      static_cast<float>(this->get_parameter("new_vehicle_wheelbase").as_double());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("new_radar_maximum_distance", descriptor);
-    sensor_configuration.new_radar_maximum_distance =
-      this->get_parameter("new_radar_maximum_distance").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("new_radar_frequency_slot", descriptor);
-    sensor_configuration.new_radar_frequency_slot =
-      this->get_parameter("new_radar_frequency_slot").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("new_radar_cycle_time", descriptor);
-    sensor_configuration.new_radar_cycle_time =
-      this->get_parameter("new_radar_cycle_time").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("new_radar_time_slot", descriptor);
-    sensor_configuration.new_radar_time_slot = this->get_parameter("new_radar_time_slot").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("new_radar_country_code", descriptor);
-    sensor_configuration.new_radar_country_code =
-      this->get_parameter("new_radar_country_code").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("new_radar_powersave_standstill", descriptor);
-    sensor_configuration.new_radar_powersave_standstill =
-      this->get_parameter("new_radar_powersave_standstill").as_int();
+    this->declare_parameter<double>("configuration_vehicle_wheelbase", descriptor);
+    sensor_configuration.configuration_vehicle_wheelbase =
+      static_cast<float>(this->get_parameter("configuration_vehicle_wheelbase").as_double());
   }
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {

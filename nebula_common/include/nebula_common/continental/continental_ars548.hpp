@@ -46,22 +46,14 @@ namespace continental_ars548
 struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
 {
   std::string multicast_ip{};
-  std::string new_sensor_ip{};
   std::string base_frame{};
   uint16_t configuration_host_port{};
   uint16_t configuration_sensor_port{};
   bool use_sensor_time{};
-  uint16_t new_plug_orientation{};
-  float new_vehicle_length{};
-  float new_vehicle_width{};
-  float new_vehicle_height{};
-  float new_vehicle_wheelbase{};
-  uint16_t new_radar_maximum_distance{};
-  uint16_t new_radar_frequency_slot{};
-  uint16_t new_radar_cycle_time{};
-  uint16_t new_radar_time_slot{};
-  uint16_t new_radar_country_code{};
-  uint16_t new_radar_powersave_standstill{};
+  float configuration_vehicle_length{};
+  float configuration_vehicle_width{};
+  float configuration_vehicle_height{};
+  float configuration_vehicle_wheelbase{};
 };
 
 /// @brief struct for Multiple ARS548 sensor configuration
@@ -80,21 +72,13 @@ inline std::ostream & operator<<(
   std::ostream & os, ContinentalARS548SensorConfiguration const & arg)
 {
   os << (EthernetSensorConfigurationBase)(arg) << ", MulticastIP: " << arg.multicast_ip
-     << ", NewSensorIP: " << arg.new_sensor_ip << ", BaseFrame: " << arg.base_frame
      << ", ConfigurationHostPort: " << arg.configuration_host_port
      << ", ConfigurationSensorPort: " << arg.configuration_sensor_port
      << ", UseSensorTime: " << arg.use_sensor_time
-     << ", NewPlugOrientation: " << arg.new_plug_orientation
-     << ", NewVehicleLength: " << arg.new_vehicle_length
-     << ", NewVehicleWidth: " << arg.new_vehicle_width
-     << ", NewVehicleHeight: " << arg.new_vehicle_height
-     << ", NewVehicleWheelbase: " << arg.new_vehicle_wheelbase
-     << ", NewRadarMaximumDistance: " << arg.new_radar_maximum_distance
-     << ", NewRadarFrequencySlot: " << arg.new_radar_frequency_slot
-     << ", NewRadarCycleTime: " << arg.new_radar_cycle_time
-     << ", NewRadarTimeSlot: " << arg.new_radar_time_slot
-     << ", NewRadarCountryCode: " << arg.new_radar_country_code
-     << ", RadarPowersaveStandstill: " << arg.new_radar_powersave_standstill;
+     << ", ConfigurationVehicleLength: " << arg.configuration_vehicle_length
+     << ", ConfigurationVehicleWidth: " << arg.configuration_vehicle_width
+     << ", ConfigurationVehicleHeight: " << arg.configuration_vehicle_height
+     << ", ConfigurationVehicleWheelbase: " << arg.configuration_vehicle_wheelbase;
   return os;
 }
 
