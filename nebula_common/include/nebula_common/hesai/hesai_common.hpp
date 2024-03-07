@@ -22,6 +22,9 @@ struct HesaiSensorConfiguration : SensorConfigurationBase
   uint16_t rotation_speed;
   uint16_t cloud_min_angle;
   uint16_t cloud_max_angle;
+  PtpProfile ptp_profile;
+  uint8_t ptp_domain;
+  PtpTransportType ptp_transport_type;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -32,7 +35,9 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << (SensorConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
      << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
      << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle
-     << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold;
+     << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold
+     << ", PtpProfile:" << arg.ptp_profile << ", PtpDomain:" << std::to_string(arg.ptp_domain)
+     << ", PtpTransportType:" << arg.ptp_transport_type;
   return os;
 }
 
@@ -48,21 +53,10 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
     if (!ifs) {
       return Status::INVALID_CALIBRATION_FILE;
     }
-
-    std::string header;
-    std::getline(ifs, header);
-
-    char sep;
-    int laser_id;
-    float elevation;
-    float azimuth;
-    while (!ifs.eof()) {
-      ifs >> laser_id >> sep >> elevation >> sep >> azimuth;
-      elev_angle_map[laser_id - 1] = elevation;
-      azimuth_offset_map[laser_id - 1] = azimuth;
-    }
+    std::ostringstream ss;
+    ss << ifs.rdbuf(); // reading data
     ifs.close();
-    return Status::OK;
+    return LoadFromString(ss.str());
   }
 
   /// @brief Loading calibration data
@@ -72,28 +66,32 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
   {
     std::stringstream ss;
     ss << calibration_content;
-
-    std::string header;
-    std::getline(ss, header);
-
-    char sep;
-    int laser_id;
-    float elevation;
-    float azimuth;
-
     std::string line;
-    while (std::getline(ss, line)) {
-      if (line.empty()) {
+    constexpr size_t expected_cols = 3;
+    while(std::getline(ss, line)) {
+      boost::char_separator<char> sep(",");
+      boost::tokenizer<boost::char_separator<char>> tok(line, sep);
+
+      std::vector<std::string> actual_tokens(tok.begin(), tok.end());
+      if (actual_tokens.size() < expected_cols
+        || actual_tokens.size() > expected_cols
+        ) {
+        std::cerr << "Ignoring line with unexpected data:" << line << std::endl;
         continue;
       }
-      std::stringstream line_ss;
-      line_ss << line;
-      line_ss >> laser_id >> sep >> elevation >> sep >> azimuth;
-      elev_angle_map[laser_id - 1] = elevation;
-      azimuth_offset_map[laser_id - 1] = azimuth;
-//      std::cout << "laser_id=" << laser_id << ", elevation=" << elevation << ", azimuth=" << azimuth << std::endl;
+
+      try {
+        int laser_id = std::stoi(actual_tokens[0]);
+        float elevation = std::stof(actual_tokens[1]);
+        float azimuth = std::stof(actual_tokens[2]);
+        elev_angle_map[laser_id - 1] = elevation;
+        azimuth_offset_map[laser_id - 1] = azimuth;
+        std::cout << "laser " << laser_id << ", elevation " << elevation << ", azimuth " << azimuth << std::endl;
+      } catch (const std::invalid_argument& ia) {
+        continue;
+      }
+
     }
-//    std::cout << "LoadFromString fin" << std::endl;
     return Status::OK;
   }
 
@@ -131,7 +129,6 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
     ofs << calibration_string;
 //    std::cout << calibration_string << std::endl;
     ofs.close();
-
     return Status::OK;
   }
 };
@@ -392,6 +389,8 @@ inline ReturnMode ReturnModeFromStringHesai(
   switch (sensor_model) {
     case SensorModel::HESAI_PANDARXT32M:
     case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR128_E4X:
+    case SensorModel::HESAI_PANDARQT128:
       if (return_mode == "Last") return ReturnMode::LAST;
       if (return_mode == "Strongest") return ReturnMode::STRONGEST;
       if (return_mode == "LastStrongest") return ReturnMode::DUAL_LAST_STRONGEST;
@@ -424,6 +423,8 @@ inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorMode
   switch (sensor_model) {
     case SensorModel::HESAI_PANDARXT32M:
     case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR128_E4X:
+    case SensorModel::HESAI_PANDARQT128:
       if (return_mode == 0) return ReturnMode::LAST;
       if (return_mode == 1) return ReturnMode::STRONGEST;
       if (return_mode == 2) return ReturnMode::DUAL_LAST_STRONGEST;
@@ -455,6 +456,8 @@ inline int IntFromReturnModeHesai(const ReturnMode return_mode, const SensorMode
   switch (sensor_model) {
     case SensorModel::HESAI_PANDARXT32M:
     case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR128_E4X:
+    case SensorModel::HESAI_PANDARQT128:
       if (return_mode == ReturnMode::LAST) return 0;
       if (return_mode == ReturnMode::STRONGEST) return 1;
       if (return_mode == ReturnMode::DUAL_LAST_STRONGEST

@@ -77,9 +77,6 @@ const uint16_t PANDAR128_E4X_EXTENDED_PACKET_SIZE = 1117;
 
 const uint16_t MTU_SIZE = 1500;
 
-const int PTP_PROFILE = 0; // Fixed: IEEE 1588v2
-const int PTP_DOMAIN_ID = 0; // 0-127, Default: 0
-const int PTP_NETWORK_TRANSPORT = 0; // 0: UDP/IP, 1: L2
 const int PTP_LOG_ANNOUNCE_INTERVAL = 1; // Time interval between Announce messages, in units of log seconds (default: 1)
 const int PTP_SYNC_INTERVAL = 1; //Time interval between Sync messages, in units of log seconds (default: 1)
 const int PTP_LOG_MIN_DELAY_INTERVAL = 0; //Minimum permitted mean time between Delay_Req messages, in units of log seconds (default: 0)
@@ -116,7 +113,7 @@ private:
   std::timed_mutex tms_;
   int tms_fail_cnt = 0;
   int tms_fail_cnt_max = 3;
-  bool wl = true;
+  bool wl = false;
   bool is_solid_state = false;
   int target_model_no;
 

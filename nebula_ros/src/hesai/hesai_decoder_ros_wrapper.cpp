@@ -42,8 +42,11 @@ HesaiDriverRosWrapper::HesaiDriverRosWrapper(const rclcpp::NodeOptions & options
   }
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Wrapper=" << wrapper_status_);
+  rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+  auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10),
+                         qos_profile);
   pandar_scan_sub_ = create_subscription<pandar_msgs::msg::PandarScan>(
-    "pandar_packets", rclcpp::SensorDataQoS(),
+    "pandar_packets", qos,
     std::bind(&HesaiDriverRosWrapper::ReceiveScanMsgCallback, this, std::placeholders::_1));
   nebula_points_pub_ =
     this->create_publisher<sensor_msgs::msg::PointCloud2>("pandar_points", rclcpp::SensorDataQoS());
@@ -260,6 +263,16 @@ Status HesaiDriverRosWrapper::GetParameters(
     sensor_configuration.dual_return_distance_threshold =
       this->get_parameter("dual_return_distance_threshold").as_double();
   }
+  bool launch_hw;
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<bool>("launch_hw", "", descriptor);
+    launch_hw = this->get_parameter("launch_hw").as_bool();
+  }
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
@@ -276,65 +289,72 @@ Status HesaiDriverRosWrapper::GetParameters(
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
   
-  bool run_local = false;
-  RCLCPP_INFO_STREAM(
-    this->get_logger(), "Trying to acquire calibration data from sensor: '"
-                          << sensor_configuration.sensor_ip << "'");
-  std::cout << "Trying to acquire calibration data from sensor: '" << sensor_configuration.sensor_ip << "'" << std::endl;
+  bool run_local = !launch_hw;
   if (sensor_configuration.sensor_model != drivers::SensorModel::HESAI_PANDARAT128) {
     std::string calibration_file_path_from_sensor;
-    if (!calibration_configuration.calibration_file.empty()) {
+    if (launch_hw && !calibration_configuration.calibration_file.empty()) {
       int ext_pos = calibration_configuration.calibration_file.find_last_of('.');
       calibration_file_path_from_sensor += calibration_configuration.calibration_file.substr(0, ext_pos);
       calibration_file_path_from_sensor += "_from_sensor";
       calibration_file_path_from_sensor += calibration_configuration.calibration_file.substr(ext_pos, calibration_configuration.calibration_file.size() - ext_pos);
     }
-    std::future<void> future = std::async(std::launch::async, [this, &calibration_configuration, &calibration_file_path_from_sensor, &run_local]() {
-      if (hw_interface_.InitializeTcpDriver(false) == Status::OK) {
-        hw_interface_.GetLidarCalibrationFromSensor(
-          [this, &calibration_configuration, &calibration_file_path_from_sensor](const std::string & str) {
-            auto rt = calibration_configuration.SaveFileFromString(calibration_file_path_from_sensor, str);
-            if(rt == Status::OK)
-            {
-              RCLCPP_INFO_STREAM(get_logger(), "SaveFileFromString success:" << calibration_file_path_from_sensor << "\n");
-            }
-            else
-            {
-              RCLCPP_ERROR_STREAM(get_logger(), "SaveFileFromString failed:" << calibration_file_path_from_sensor << "\n");
-            }
-            rt = calibration_configuration.LoadFromString(str);
-            if(rt == Status::OK)
-            {
-              RCLCPP_INFO_STREAM(get_logger(), "LoadFromString success:" << str << "\n");
-            }
-            else
-            {
-              RCLCPP_ERROR_STREAM(get_logger(), "LoadFromString failed:" << str << "\n");
-            }
-          },
-          true);
-      }else{
+    if(launch_hw) {
+      run_local = false;
+      RCLCPP_INFO_STREAM(
+        this->get_logger(), "Trying to acquire calibration data from sensor: '"
+        << sensor_configuration.sensor_ip << "'");
+      std::future<void> future = std::async(std::launch::async,
+                                            [this, &calibration_configuration, &calibration_file_path_from_sensor, &run_local]() {
+                                              if (hw_interface_.InitializeTcpDriver(false) == Status::OK) {
+                                                hw_interface_.GetLidarCalibrationFromSensor(
+                                                  [this, &calibration_configuration, &calibration_file_path_from_sensor](
+                                                    const std::string &str) {
+                                                    auto rt = calibration_configuration.SaveFileFromString(
+                                                      calibration_file_path_from_sensor, str);
+                                                    RCLCPP_ERROR_STREAM(get_logger(), str);
+                                                    if (rt == Status::OK) {
+                                                      RCLCPP_INFO_STREAM(get_logger(), "SaveFileFromString success:"
+                                                        << calibration_file_path_from_sensor << "\n");
+                                                    } else {
+                                                      RCLCPP_ERROR_STREAM(get_logger(), "SaveFileFromString failed:"
+                                                        << calibration_file_path_from_sensor << "\n");
+                                                    }
+                                                    rt = calibration_configuration.LoadFromString(str);
+                                                    if (rt == Status::OK) {
+                                                      RCLCPP_INFO_STREAM(get_logger(),
+                                                                         "LoadFromString success:" << str << "\n");
+                                                    } else {
+                                                      RCLCPP_ERROR_STREAM(get_logger(),
+                                                                          "LoadFromString failed:" << str << "\n");
+                                                    }
+                                                  },
+                                                  true);
+                                              } else {
+                                                run_local = true;
+                                              }
+                                            });
+      std::future_status status;
+      status = future.wait_for(std::chrono::milliseconds(5000));
+      if (status == std::future_status::timeout) {
+        std::cerr << "# std::future_status::timeout\n";
+        RCLCPP_ERROR_STREAM(get_logger(), "GetCalibration Timeout");
         run_local = true;
+      } else if (status == std::future_status::ready && !run_local) {
+        RCLCPP_INFO_STREAM(
+          this->get_logger(), "Acquired calibration data from sensor: '"
+          << sensor_configuration.sensor_ip << "'");
+        RCLCPP_INFO_STREAM(
+          this->get_logger(), "The calibration has been saved in '"
+          << calibration_file_path_from_sensor << "'");
       }
-    });
-    std::future_status status;
-    status = future.wait_for(std::chrono::milliseconds(8000));
-    if (status == std::future_status::timeout) {
-      std::cerr << "# std::future_status::timeout\n";
-      run_local = true;
-    } else if (status == std::future_status::ready && !run_local) {
-      RCLCPP_INFO_STREAM(
-        this->get_logger(), "Acquired calibration data from sensor: '"
-                              << sensor_configuration.sensor_ip << "'");
-      RCLCPP_INFO_STREAM(
-        this->get_logger(), "The calibration has been saved in '"
-                              << calibration_file_path_from_sensor << "'");
     }
     if(run_local) {
+      RCLCPP_WARN_STREAM(get_logger(), "Running locally");
       bool run_org = false;
       if (calibration_file_path_from_sensor.empty()) {
         run_org = true;
       } else {
+        RCLCPP_INFO_STREAM(get_logger(),"Trying to load file: " << calibration_file_path_from_sensor);
         auto cal_status =
           calibration_configuration.LoadFromFile(calibration_file_path_from_sensor);
 
@@ -347,6 +367,7 @@ Status HesaiDriverRosWrapper::GetParameters(
         }
       }
       if(run_org) {
+        RCLCPP_INFO_STREAM(get_logger(),"Trying to load file: " << calibration_configuration.calibration_file);
         if (calibration_configuration.calibration_file.empty()) {
           RCLCPP_ERROR_STREAM(
             this->get_logger(), "Empty Calibration_file File: '" << calibration_configuration.calibration_file << "'");
@@ -369,16 +390,17 @@ Status HesaiDriverRosWrapper::GetParameters(
       }
     }
   } else { // sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128
-    run_local = true;
     std::string correction_file_path_from_sensor;
-    if (!correction_file_path.empty()) {
+    if (launch_hw && !correction_file_path.empty()) {
       int ext_pos = correction_file_path.find_last_of('.');
       correction_file_path_from_sensor += correction_file_path.substr(0, ext_pos);
       correction_file_path_from_sensor += "_from_sensor";
       correction_file_path_from_sensor += correction_file_path.substr(ext_pos, correction_file_path.size() - ext_pos);
     }
-    std::future<void> future = std::async(std::launch::async, [this, &correction_configuration, &correction_file_path_from_sensor, &run_local]() {
-    if (hw_interface_.InitializeTcpDriver(false) == Status::OK) {
+    std::future<void> future = std::async(std::launch::async, [this, &correction_configuration, &correction_file_path_from_sensor, &run_local, &launch_hw]() {
+    if (launch_hw && hw_interface_.InitializeTcpDriver(false) == Status::OK) {
+      RCLCPP_INFO_STREAM(
+        this->get_logger(), "Trying to acquire calibration data from sensor");
       hw_interface_.GetLidarCalibrationFromSensor(
         [this, &correction_configuration, &correction_file_path_from_sensor, &run_local](const std::vector<uint8_t> & received_bytes) {
           RCLCPP_INFO_STREAM(get_logger(), "AT128 calibration size:" << received_bytes.size() << "\n");
@@ -405,22 +427,24 @@ Status HesaiDriverRosWrapper::GetParameters(
           }
         });
       }else{
-        RCLCPP_ERROR_STREAM(get_logger(), "InitializeTcpDriver failed. Falling back to offline calibration file.");
+        RCLCPP_ERROR_STREAM(get_logger(), "Falling back to offline calibration file.");
         run_local = true;
       }
     });
-    std::future_status status;
-    status = future.wait_for(std::chrono::milliseconds(8000));
-    if (status == std::future_status::timeout) {
-      std::cerr << "# std::future_status::timeout\n";
-      run_local = true;
-    } else if (status == std::future_status::ready && !run_local) {
-      RCLCPP_INFO_STREAM(
-        this->get_logger(), "Acquired correction data from sensor: '"
-                              << sensor_configuration.sensor_ip << "'");
-      RCLCPP_INFO_STREAM(
-        this->get_logger(), "The correction has been saved in '"
-                              << correction_file_path_from_sensor << "'");
+    if (!run_local) {
+      std::future_status status;
+      status = future.wait_for(std::chrono::milliseconds(8000));
+      if (status == std::future_status::timeout) {
+        std::cerr << "# std::future_status::timeout\n";
+        run_local = true;
+      } else if (status == std::future_status::ready && !run_local) {
+        RCLCPP_INFO_STREAM(
+          this->get_logger(), "Acquired correction data from sensor: '"
+          << sensor_configuration.sensor_ip << "'");
+        RCLCPP_INFO_STREAM(
+          this->get_logger(), "The correction has been saved in '"
+          << correction_file_path_from_sensor << "'");
+      }
     }
     if(run_local) {
       bool run_org = false;
