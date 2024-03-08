@@ -1,22 +1,8 @@
-// Copyright 2024 Tier IV, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 #ifndef NEBULA_COMMON_H
 #define NEBULA_COMMON_H
 
 #include <nebula_common/point_types.hpp>
-
+#include <boost/tokenizer.hpp>
 #include <map>
 #include <ostream>
 #include <string>
@@ -357,6 +343,19 @@ enum class datatype {
   FLOAT64 = 8
 };
 
+enum class PtpProfile {
+  IEEE_1588v2 = 0,
+  IEEE_802_1AS,
+  IEEE_802_1AS_AUTO,
+  PROFILE_UNKNOWN
+};
+
+enum class PtpTransportType {
+  UDP_IP = 0,
+  L2,
+  UNKNOWN_TRANSPORT
+};
+
 /// @brief not used?
 struct PointField
 {
@@ -636,6 +635,80 @@ inline ReturnMode ReturnModeFromString(const std::string & return_mode)
   if (return_mode == "Dual") return ReturnMode::DUAL_ONLY;
 
   return ReturnMode::UNKNOWN;
+}
+
+/// @brief Converts String to PTP Profile
+/// @param ptp_profile Profile as String
+/// @return Corresponding PtpProfile
+inline PtpProfile PtpProfileFromString(const std::string & ptp_profile)
+{
+  // Hesai
+  auto tmp_str = ptp_profile;
+  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(),
+                 [](unsigned char c){ return std::tolower(c); });
+  if (tmp_str == "1588v2") return PtpProfile::IEEE_1588v2;
+  if (tmp_str == "802.1as") return PtpProfile::IEEE_802_1AS;
+  if (tmp_str == "automotive") return PtpProfile::IEEE_802_1AS_AUTO;
+
+  return PtpProfile::PROFILE_UNKNOWN;
+}
+
+/// @brief Convert PtpProfile enum to string (Overloading the << operator)
+/// @param os
+/// @param arg
+/// @return stream
+inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpProfile const & arg)
+{
+  switch (arg) {
+    case PtpProfile::IEEE_1588v2:
+      os << "IEEE_1588v2";
+      break;
+    case PtpProfile::IEEE_802_1AS:
+      os << "IEEE_802.1AS";
+      break;
+    case PtpProfile::IEEE_802_1AS_AUTO:
+      os << "IEEE_802.1AS Automotive";
+      break;
+    case PtpProfile::PROFILE_UNKNOWN:
+      os << "UNKNOWN";
+      break;
+  }
+  return os;
+}
+
+/// @brief Converts String to PTP TransportType
+/// @param transport_type Transport as String
+/// @return Corresponding PtpTransportType
+inline PtpTransportType PtpTransportTypeFromString(const std::string & transport_type)
+{
+  // Hesai
+  auto tmp_str = transport_type;
+  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(),
+                 [](unsigned char c){ return std::tolower(c); });
+  if (tmp_str == "udp") return PtpTransportType::UDP_IP;
+  if (tmp_str == "l2") return PtpTransportType::L2;
+
+  return PtpTransportType::UNKNOWN_TRANSPORT;
+}
+
+/// @brief Convert PtpTransportType enum to string (Overloading the << operator)
+/// @param os
+/// @param arg
+/// @return stream
+inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpTransportType const & arg)
+{
+  switch (arg) {
+    case PtpTransportType::UDP_IP:
+      os << "UDP/IP";
+      break;
+    case PtpTransportType::L2:
+      os << "L2";
+      break;
+    case PtpTransportType::UNKNOWN_TRANSPORT:
+      os << "UNKNOWN";
+      break;
+  }
+  return os;
 }
 
 [[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr convertPointXYZIRADTToPointXYZIR(
