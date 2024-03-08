@@ -225,9 +225,23 @@ Parameters shared by all supported models:
 | invalid_point_remove   | bool   | false    | true, false      | Enable ring based filter*        |
 | invalid_regions        | string |          |                  | Invalid point regions to remove* |
 
-*Ring based filter to remove reflected points and vehicle points.
-Points will be removed from specified rings within the corresponding angle ranges.
+*`invalid_point_remove` activates the ring based filter which removes points if they are within specified angle ranges. 
 
+*The format for an invalid region is [ring_id, start_angle, end_angle]
+
+*Angles are given in degrees and multiplied by 100. For instance, 34.44 degrees is represented as 3444. 
+
+*Invalid regions are specified as a string containing a list of invalid regions. Ensure that you have quotation marks to make it string. For example:
+```xml
+<node pkg="nebula_ros" exec="velodyne_driver_ros_wrapper_node"
+          name="velodyne_cloud" output="screen">
+        ...
+        <param name="invalid_point_remove" value="true"/>
+        <param name="invalid_regions" value="'[[0, 3500, 6900], [1, 3400, 6500], [2, 3200, 4600], [3, 3200, 4600]]'"/>
+    </node>
+```
+
+*Multiple invalid regions are possible for the same ring.
 
 ## Software design overview
 
