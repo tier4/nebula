@@ -256,9 +256,9 @@ Status VelodyneDriverRosWrapper::GetParameters(
     sensor_configuration.invalid_point_remove =
       this->get_parameter("invalid_point_remove").as_bool();
     if (sensor_configuration.invalid_point_remove) {
-      RCLCPP_INFO_STREAM(this->get_logger(), "Invalid point remove is active.");
+      RCLCPP_DEBUG_STREAM(this->get_logger(), "Invalid point remove is active.");
     } else {
-      RCLCPP_INFO_STREAM(this->get_logger(), "Invalid point remove is not active.");
+      RCLCPP_DEBUG_STREAM(this->get_logger(), "Invalid point remove is not active.");
     }
   }
 
@@ -291,7 +291,7 @@ Status VelodyneDriverRosWrapper::GetParameters(
         regions_log << "(" << region.start << "," << region.end << ")\n";
       }
     }
-    RCLCPP_INFO_STREAM(get_logger(), regions_log.str());
+    RCLCPP_DEBUG_STREAM(get_logger(), regions_log.str());
   }
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
