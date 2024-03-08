@@ -214,14 +214,20 @@ Parameters shared by all supported models:
 
 #### Driver parameters
 
-| Parameter        | Type   | Default  | Accepted values  | Description                   |
-| ---------------- | ------ | -------- | ---------------- | ----------------------------- |
-| frame_id         | string | velodyne |                  | ROS frame ID                  |
-| calibration_file | string |          |                  | LiDAR calibration file        |
-| min_range        | double | 0.3      | meters, >= 0.3   | Minimum point range published |
-| max_range        | double | 300.0    | meters, <= 300.0 | Maximum point range published |
-| cloud_min_angle  | uint16 | 0        | degrees [0, 360] | FoV start angle               |
-| cloud_max_angle  | uint16 | 359      | degrees [0, 360] | FoV end angle                 |
+| Parameter              | Type   | Default  | Accepted values  | Description                      |
+|------------------------|--------|----------|------------------|----------------------------------|
+| frame_id               | string | velodyne |                  | ROS frame ID                     |
+| calibration_file       | string |          |                  | LiDAR calibration file           |
+| min_range              | double | 0.3      | meters, >= 0.3   | Minimum point range published    |
+| max_range              | double | 300.0    | meters, <= 300.0 | Maximum point range published    |
+| cloud_min_angle        | uint16 | 0        | degrees [0, 360] | FoV start angle                  |
+| cloud_max_angle        | uint16 | 359      | degrees [0, 360] | FoV end angle                    |
+| invalid_point_remove   | bool   | false    | true, false      | Enable ring based filter*        |
+| invalid_regions        | string |          |                  | Invalid point regions to remove* |
+
+*Ring based filter to remove reflected points and vehicle points.
+Points will be removed from specified rings within the corresponding angle ranges.
+
 
 ## Software design overview
 
