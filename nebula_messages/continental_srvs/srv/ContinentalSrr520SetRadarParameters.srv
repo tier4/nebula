@@ -1,0 +1,7 @@
+uint8 sensor_id # The new sensor id
+float32 cover_damping # Whether the plug is in the bottom
+bool plug_bottom # Cover damping in dB
+bool reset_sensor_configuration
+---
+bool success
+string message # status messages
