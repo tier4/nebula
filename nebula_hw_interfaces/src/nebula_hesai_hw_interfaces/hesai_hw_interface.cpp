@@ -2906,6 +2906,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 #endif
   auto current_return_mode = nebula::drivers::ReturnModeFromIntHesai(
     hesai_config.return_mode, sensor_configuration->sensor_model);
+  auto wait_time = 100ms; // Avoids spamming the sensor, which leads to failure when configuring it.
   if (sensor_configuration->return_mode != current_return_mode) {
     std::stringstream ss;
     ss << current_return_mode;
@@ -2923,7 +2924,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
       SetReturnMode(return_mode_int);
     });
     t.join();
-    std::this_thread::sleep_for(100ms);
+    std::this_thread::sleep_for(wait_time);
   }
 
   auto current_rotation_speed = hesai_config.spin_rate;
@@ -2940,7 +2941,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
         [this, sensor_configuration] { SetSpinRate(sensor_configuration->rotation_speed); });
       t.join();
     }
-    std::this_thread::sleep_for(100ms);
+    std::this_thread::sleep_for(wait_time);
   }
 
   bool set_flg = false;
@@ -2980,7 +2981,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
         sensor_configuration->gnss_port);
     });
     t.join();
-    std::this_thread::sleep_for(100ms);
+    std::this_thread::sleep_for(wait_time);
   }
 
   if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128
@@ -3000,7 +3001,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
         SetSyncAngle(sync_flg, scan_phase);
       });
       t.join();
-      std::this_thread::sleep_for(100ms);
+      std::this_thread::sleep_for(wait_time);
     }
 
     std::thread t([this, sensor_configuration] {
@@ -3026,7 +3027,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
       );
     });
     t.join();
-    std::this_thread::sleep_for(100ms);
+    std::this_thread::sleep_for(wait_time);
   }
   else { //AT128 only supports PTP setup via HTTP
     PrintInfo("Trying to set SyncAngle via HTTP");
