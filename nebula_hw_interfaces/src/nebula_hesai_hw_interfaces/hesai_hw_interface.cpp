@@ -340,18 +340,7 @@ Status HesaiHwInterface::syncGetLidarCalibration(
       PrintInfo(calib_string);
     });
 }
-Status HesaiHwInterface::syncGetLidarCalibration(
-  std::shared_ptr<boost::asio::io_context> ctx,
-  std::function<void(const std::string & str)> str_callback)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  return syncGetLidarCalibration(tcp_driver_local, str_callback);
-}
-Status HesaiHwInterface::syncGetLidarCalibration(std::shared_ptr<boost::asio::io_context> ctx)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  return syncGetLidarCalibration(tcp_driver_local);
-}
+
 Status HesaiHwInterface::syncGetLidarCalibrationFromSensor(
   std::function<void(const std::vector<uint8_t> & received_bytes)> bytes_callback)
 {
@@ -457,19 +446,7 @@ Status HesaiHwInterface::GetLidarCalibration(
     },
     with_run);
 }
-Status HesaiHwInterface::GetLidarCalibration(
-  std::shared_ptr<boost::asio::io_context> ctx,
-  std::function<void(const std::string & str)> str_callback, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  return GetLidarCalibration(tcp_driver_local, str_callback, with_run);
-}
-Status HesaiHwInterface::GetLidarCalibration(
-  std::shared_ptr<boost::asio::io_context> ctx, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  return GetLidarCalibration(tcp_driver_local, with_run);
-}
+
 Status HesaiHwInterface::GetLidarCalibrationFromSensor(
   std::function<void(const std::vector<uint8_t> & received_bytes)> bytes_callback, bool with_run)
 {
@@ -606,12 +583,7 @@ Status HesaiHwInterface::GetPtpDiagStatus(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::GetPtpDiagStatus(
-  std::shared_ptr<boost::asio::io_context> ctx, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  return GetPtpDiagStatus(tcp_driver_local, with_run);
-}
+
 Status HesaiHwInterface::GetPtpDiagStatus(bool with_run)
 {
   if (with_run) {
@@ -732,11 +704,7 @@ Status HesaiHwInterface::GetPtpDiagPort(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::GetPtpDiagPort(std::shared_ptr<boost::asio::io_context> ctx, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  return GetPtpDiagPort(tcp_driver_local, with_run);
-}
+
 Status HesaiHwInterface::GetPtpDiagPort(bool with_run)
 {
   if (with_run) {
@@ -893,11 +861,7 @@ Status HesaiHwInterface::GetPtpDiagTime(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::GetPtpDiagTime(std::shared_ptr<boost::asio::io_context> ctx, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  return GetPtpDiagTime(tcp_driver_local, with_run);
-}
+
 Status HesaiHwInterface::GetPtpDiagTime(bool with_run)
 {
   if (with_run) {
@@ -994,12 +958,7 @@ Status HesaiHwInterface::GetPtpDiagGrandmaster(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::GetPtpDiagGrandmaster(
-  std::shared_ptr<boost::asio::io_context> ctx, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  return GetPtpDiagGrandmaster(tcp_driver_local, with_run);
-}
+
 Status HesaiHwInterface::GetPtpDiagGrandmaster(bool with_run)
 {
   if (with_run) {
@@ -1119,18 +1078,7 @@ Status HesaiHwInterface::syncGetInventory(
   return syncGetInventory(target_tcp_driver,
     [this](HesaiInventory & result) { std::cout << result << std::endl; });
 }
-Status HesaiHwInterface::syncGetInventory(
-  std::shared_ptr<boost::asio::io_context> ctx,
-  std::function<void(HesaiInventory & result)> callback)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  return syncGetInventory(tcp_driver_local, callback);
-}
-Status HesaiHwInterface::syncGetInventory(std::shared_ptr<boost::asio::io_context> ctx)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  return syncGetInventory(tcp_driver_local);
-}
+
 Status HesaiHwInterface::syncGetInventory(std::function<void(HesaiInventory & result)> callback)
 {
   return syncGetInventory(
@@ -1240,16 +1188,7 @@ Status HesaiHwInterface::GetInventory(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::GetInventory(
-  std::shared_ptr<boost::asio::io_context> ctx,
-  std::function<void(HesaiInventory & result)> callback, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return GetInventory(tcp_driver_local, callback, with_run);
-}
+
 Status HesaiHwInterface::GetInventory(std::shared_ptr<boost::asio::io_context> ctx, bool with_run)
 {
   return GetInventory(
@@ -1390,16 +1329,7 @@ Status HesaiHwInterface::GetConfig(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::GetConfig(
-  std::shared_ptr<boost::asio::io_context> ctx, std::function<void(HesaiConfig & result)> callback,
-  bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return GetConfig(tcp_driver_local, callback, with_run);
-}
+
 Status HesaiHwInterface::GetConfig(std::shared_ptr<boost::asio::io_context> ctx, bool with_run)
 {
   return GetConfig(
@@ -1521,16 +1451,7 @@ Status HesaiHwInterface::GetLidarStatus(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::GetLidarStatus(
-  std::shared_ptr<boost::asio::io_context> ctx,
-  std::function<void(HesaiLidarStatus & result)> callback, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return GetLidarStatus(tcp_driver_local, callback, with_run);
-}
+
 Status HesaiHwInterface::GetLidarStatus(std::shared_ptr<boost::asio::io_context> ctx, bool with_run)
 {
   return GetLidarStatus(
@@ -1591,15 +1512,7 @@ Status HesaiHwInterface::SetSpinRate(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::SetSpinRate(
-  std::shared_ptr<boost::asio::io_context> ctx, uint16_t rpm, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return SetSpinRate(tcp_driver_local, rpm, with_run);
-}
+
 Status HesaiHwInterface::SetSpinRate(uint16_t rpm, bool with_run)
 {
   if (with_run) {
@@ -1647,15 +1560,7 @@ Status HesaiHwInterface::SetSyncAngle(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::SetSyncAngle(
-  std::shared_ptr<boost::asio::io_context> ctx, int sync_angle, int angle, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return SetSyncAngle(tcp_driver_local, sync_angle, angle, with_run);
-}
+
 Status HesaiHwInterface::SetSyncAngle(int sync_angle, int angle, bool with_run)
 {
   if (with_run) {
@@ -1701,15 +1606,7 @@ Status HesaiHwInterface::SetTriggerMethod(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::SetTriggerMethod(
-  std::shared_ptr<boost::asio::io_context> ctx, int trigger_method, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return SetTriggerMethod(tcp_driver_local, trigger_method, with_run);
-}
+
 Status HesaiHwInterface::SetTriggerMethod(int trigger_method, bool with_run)
 {
   if (with_run) {
@@ -1754,15 +1651,7 @@ Status HesaiHwInterface::SetStandbyMode(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::SetStandbyMode(
-  std::shared_ptr<boost::asio::io_context> ctx, int standby_mode, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return SetStandbyMode(tcp_driver_local, standby_mode, with_run);
-}
+
 Status HesaiHwInterface::SetStandbyMode(int standby_mode, bool with_run)
 {
   if (with_run) {
@@ -1807,15 +1696,7 @@ Status HesaiHwInterface::SetReturnMode(
   PrintDebug("SetReturnMode: done");
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::SetReturnMode(
-  std::shared_ptr<boost::asio::io_context> ctx, int return_mode, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return SetReturnMode(tcp_driver_local, return_mode, with_run);
-}
+
 Status HesaiHwInterface::SetReturnMode(int return_mode, bool with_run)
 {
   //*
@@ -1871,17 +1752,7 @@ Status HesaiHwInterface::SetDestinationIp(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::SetDestinationIp(
-  std::shared_ptr<boost::asio::io_context> ctx, int dest_ip_1, int dest_ip_2, int dest_ip_3,
-  int dest_ip_4, int port, int gps_port, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return SetDestinationIp(
-    tcp_driver_local, dest_ip_1, dest_ip_2, dest_ip_3, dest_ip_4, port, gps_port, with_run);
-}
+
 Status HesaiHwInterface::SetDestinationIp(
   int dest_ip_1, int dest_ip_2, int dest_ip_3, int dest_ip_4, int port, int gps_port, bool with_run)
 {
@@ -1946,19 +1817,7 @@ Status HesaiHwInterface::SetControlPort(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::SetControlPort(
-  std::shared_ptr<boost::asio::io_context> ctx, int ip_1, int ip_2, int ip_3, int ip_4, int mask_1,
-  int mask_2, int mask_3, int mask_4, int gateway_1, int gateway_2, int gateway_3, int gateway_4,
-  int vlan_flg, int vlan_id, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return SetControlPort(
-    tcp_driver_local, ip_1, ip_2, ip_3, ip_4, mask_1, mask_2, mask_3, mask_4, gateway_1, gateway_2,
-    gateway_3, gateway_4, vlan_flg, vlan_id, with_run);
-}
+
 Status HesaiHwInterface::SetControlPort(
   int ip_1, int ip_2, int ip_3, int ip_4, int mask_1, int mask_2, int mask_3, int mask_4,
   int gateway_1, int gateway_2, int gateway_3, int gateway_4, int vlan_flg, int vlan_id,
@@ -2015,16 +1874,7 @@ Status HesaiHwInterface::SetLidarRange(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::SetLidarRange(
-  std::shared_ptr<boost::asio::io_context> ctx, int method, std::vector<unsigned char> data,
-  bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return SetLidarRange(tcp_driver_local, method, data, with_run);
-}
+
 Status HesaiHwInterface::SetLidarRange(int method, std::vector<unsigned char> data, bool with_run)
 {
   if (with_run) {
@@ -2081,15 +1931,7 @@ Status HesaiHwInterface::SetLidarRange(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::SetLidarRange(
-  std::shared_ptr<boost::asio::io_context> ctx, int start, int end, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return SetLidarRange(tcp_driver_local, start, end, with_run);
-}
+
 Status HesaiHwInterface::SetLidarRange(int start, int end, bool with_run)
 {
   if (with_run) {
@@ -2192,16 +2034,7 @@ Status HesaiHwInterface::GetLidarRange(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::GetLidarRange(
-  std::shared_ptr<boost::asio::io_context> ctx,
-  std::function<void(HesaiLidarRangeAll & result)> callback, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return GetLidarRange(tcp_driver_local, callback, with_run);
-}
+
 Status HesaiHwInterface::GetLidarRange(std::shared_ptr<boost::asio::io_context> ctx, bool with_run)
 {
   return GetLidarRange(
@@ -2258,15 +2091,7 @@ Status HesaiHwInterface::SetClockSource(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::SetClockSource(
-  std::shared_ptr<boost::asio::io_context> ctx, int clock_source, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return SetClockSource(tcp_driver_local, clock_source, with_run);
-}
+
 Status HesaiHwInterface::SetClockSource(int clock_source, bool with_run)
 {
   //*
@@ -2341,19 +2166,7 @@ Status HesaiHwInterface::SetPtpConfig(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::SetPtpConfig(
-  std::shared_ptr<boost::asio::io_context> ctx, int profile, int domain, int network,
-  int switch_type, int logAnnounceInterval = 1, int logSyncInterval = 1,
-  int logMinDelayReqInterval = 0, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return SetPtpConfig(
-    tcp_driver_local, profile, domain, network, switch_type, logAnnounceInterval, 
-    logSyncInterval, logMinDelayReqInterval, with_run);
-}
+
 Status HesaiHwInterface::SetPtpConfig(
   int profile, int domain, int network, int switch_type, int logAnnounceInterval,
   int logSyncInterval, int logMinDelayReqInterval, bool with_run)
@@ -2450,14 +2263,7 @@ Status HesaiHwInterface::GetPtpConfig(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::GetPtpConfig(std::shared_ptr<boost::asio::io_context> ctx, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return GetPtpConfig(tcp_driver_local, with_run);
-}
+
 Status HesaiHwInterface::GetPtpConfig(bool with_run)
 {
   if (with_run) {
@@ -2500,14 +2306,7 @@ Status HesaiHwInterface::SendReset(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::SendReset(std::shared_ptr<boost::asio::io_context> ctx, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return SendReset(tcp_driver_local, with_run);
-}
+
 Status HesaiHwInterface::SendReset(bool with_run)
 {
   //*
@@ -2554,15 +2353,7 @@ Status HesaiHwInterface::SetRotDir(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::SetRotDir(
-  std::shared_ptr<boost::asio::io_context> ctx, int mode, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return SetRotDir(tcp_driver_local, mode, with_run);
-}
+
 Status HesaiHwInterface::SetRotDir(int mode, bool with_run)
 {
   if (with_run) {
@@ -2667,16 +2458,7 @@ Status HesaiHwInterface::GetLidarMonitor(
   }
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-Status HesaiHwInterface::GetLidarMonitor(
-  std::shared_ptr<boost::asio::io_context> ctx,
-  std::function<void(HesaiLidarMonitor & result)> callback, bool with_run)
-{
-  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
-  tcp_driver_local->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
-    PandarTcpCommandPort);
-  return GetLidarMonitor(tcp_driver_local, callback, with_run);
-}
+
 Status HesaiHwInterface::GetLidarMonitor(
   std::shared_ptr<boost::asio::io_context> ctx, bool with_run)
 {
