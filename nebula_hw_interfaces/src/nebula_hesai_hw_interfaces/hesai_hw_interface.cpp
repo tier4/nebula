@@ -2323,14 +2323,14 @@ Status HesaiHwInterface::SetPtpConfig(
     return Status::ERROR_1;
   }
   // Handle the OT128 differently - it has TSN settings and defines the PTP profile
-  // for automotove as 0x03 instead of 0x02 for other sensors.
+  // for automotive as 0x03 instead of 0x02 for other sensors.
   if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
     if (profile != static_cast<int>(PtpProfile::IEEE_802_1AS_AUTO)) {
       return Status::SENSOR_CONFIG_ERROR;
     }
     profile = 3;
   }
-  
+
   std::vector<unsigned char> buf_vec;
   int len = 3;
   switch (profile) {
