@@ -2284,6 +2284,14 @@ Status HesaiHwInterface::SetPtpConfig(
   int network, int switch_type, int logAnnounceInterval = 1, int logSyncInterval = 1, 
   int logMinDelayReqInterval = 0, bool with_run)
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
+    if (profile != static_cast<int>(PtpProfile::IEEE_802_1AS_AUTO)) {
+      return Status::SENSOR_CONFIG_ERROR;
+    }
+
+    profile = 3; // OT128 expects 0x03 as its profile; the other sensors define 802.1AS automotive as 0x02
+  }
+
   std::vector<unsigned char> buf_vec;
   int len = 6;
   if (profile == 0) {
