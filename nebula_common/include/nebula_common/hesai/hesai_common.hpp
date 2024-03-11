@@ -86,7 +86,6 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
         float azimuth = std::stof(actual_tokens[2]);
         elev_angle_map[laser_id - 1] = elevation;
         azimuth_offset_map[laser_id - 1] = azimuth;
-        std::cout << "laser " << laser_id << ", elevation " << elevation << ", azimuth " << azimuth << std::endl;
       } catch (const std::invalid_argument& ia) {
         continue;
       }
@@ -127,7 +126,6 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
       return Status::CANNOT_SAVE_FILE;
     }
     ofs << calibration_string;
-//    std::cout << calibration_string << std::endl;
     ofs.close();
     return Status::OK;
   }
@@ -166,21 +164,15 @@ struct HesaiCorrection
     delimiter = (buf[index] & 0xff) << 8 | ((buf[index + 1] & 0xff));
     versionMajor = buf[index + 2] & 0xff;
     versionMinor = buf[index + 3] & 0xff;
-    std::cout << "versionMajor=" << static_cast<int>(versionMajor) << std::endl;
-    std::cout << "versionMinor=" << static_cast<int>(versionMinor) << std::endl;
     channelNumber = buf[index + 4] & 0xff;
-    std::cout << "channelNumber=" << static_cast<int>(channelNumber) << std::endl;
     mirrorNumber = buf[index + 5] & 0xff;
-    std::cout << "mirrorNumber=" << static_cast<int>(mirrorNumber) << std::endl;
     frameNumber = buf[index + 6] & 0xff;
-    std::cout << "frameNumber=" << static_cast<int>(frameNumber) << std::endl;
     index += 7;
     for (uint8_t i = 0; i < 8; i++) {
       frameConfig[i] = buf[index] & 0xff;
       index++;
     }
     resolution = buf[index] & 0xff;
-    std::cout << "resolution=" << static_cast<int>(resolution) << std::endl;
     index++;
     switch (versionMinor) {
       case 5:
@@ -213,14 +205,9 @@ struct HesaiCorrection
           index++;
         }
 
-        // 230328 add
         for (uint8_t i = 0; i < mirrorNumber; i++) {
           startFrame[i] *= resolution;
           endFrame[i] *= resolution;
-          std::cout << "startFrame[" << static_cast<int>(i)
-                    << "]=" << static_cast<int>(startFrame[i]) << std::endl;
-          std::cout << "endFrame[" << static_cast<int>(i) << "]=" << static_cast<int>(endFrame[i])
-                    << std::endl;
         }
         for (uint8_t i = 0; i < channelNumber; i++) {
           azimuth[i] *= resolution;
@@ -256,20 +243,6 @@ struct HesaiCorrection
         for (int i = 0; i < 36000; i++) {
           elevationOffset[i] = buf[index] & 0xff;
           index++;
-        }
-
-        for (uint8_t i = 0; i < mirrorNumber; i++) {
-          std::cout << "startFrame[" << static_cast<int>(i)
-                    << "]=" << static_cast<int>(startFrame[i]) << std::endl;
-          std::cout << "endFrame[" << static_cast<int>(i) << "]=" << static_cast<int>(endFrame[i])
-                    << std::endl;
-          /*
-        startFrame[i] *= 2.56;
-        endFrame[i] *= 2.56;
-        std::cout << "startFrame[" << static_cast<int>(i) << "]=" << static_cast<int>(startFrame[i])
-        << std::endl; std::cout << "endFrame[" << static_cast<int>(i) << "]=" <<
-        static_cast<int>(endFrame[i]) << std::endl;
-        */
         }
 
         break;
