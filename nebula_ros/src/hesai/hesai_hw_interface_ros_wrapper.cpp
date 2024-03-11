@@ -371,6 +371,16 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("ptp_switch_type", "");
+    sensor_configuration.ptp_switch_type =
+      nebula::drivers::PtpSwitchTypeFromString(this->get_parameter("ptp_switch_type").as_string());
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
@@ -388,6 +398,11 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
   if(sensor_configuration.ptp_transport_type == nebula::drivers::PtpTransportType::UNKNOWN_TRANSPORT) {
     RCLCPP_ERROR_STREAM(get_logger(),
                         "Invalid PTP Transport Provided. Please use 'udp' or 'l2', 'udp' is only available when using the '1588v2' PTP Profile");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+  if(sensor_configuration.ptp_switch_type == nebula::drivers::PtpSwitchType::UNKNOWN_SWITCH) {
+    RCLCPP_ERROR_STREAM(get_logger(),
+                        "Invalid PTP Switch Type Provided. Please use 'tsn' or 'non_tsn'");
     return Status::SENSOR_CONFIG_ERROR;
   }
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {

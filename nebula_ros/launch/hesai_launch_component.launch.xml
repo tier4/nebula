@@ -26,6 +26,7 @@
     <arg name="ptp_profile" default="1588v2" description="1588v2|802.1as|automotive"/>
     <arg name="ptp_domain" default="0" description="PTP Domain [0-127]."/>
     <arg name="ptp_transport_type" default="UDP" description="1588v2 supports 'UDP' or 'L2', other profiles only L2 (HW)"/>
+    <arg name="ptp_switch_type" default="TSN" description="For automotive profile,'TSN' or 'NON_TSN'"/>
     <arg name="delay_hw_ms" default="1000" description="hw driver startup delay in milliseconds."/>
     <arg name="delay_monitor_ms" default="2000" description="hw monitor startup delay in milliseconds."/>
     <arg name="retry_hw" default="True" description="hw driver startup retry (false when using pcap)."/>
@@ -80,6 +81,7 @@
                 <param name="ptp_profile" value="$(var ptp_profile)"/>
                 <param name="ptp_domain" value="$(var ptp_domain)"/>
                 <param name="ptp_transport_type" value="$(var ptp_transport_type)"/>
+                <param name="ptp_switch_type" value="$(var ptp_switch_type)"/>
                 <extra_arg name="use_intra_process_comms" value="true" />
             </composable_node>
         </load_composable_node>
