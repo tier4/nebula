@@ -2987,7 +2987,8 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     std::this_thread::sleep_for(wait_time);
   }
 
-  if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128) {
+  if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128
+    && sensor_configuration->sensor_model != SensorModel::HESAI_PANDARQT128) {
     set_flg = true;
     auto sync_angle = static_cast<int>(hesai_config.sync_angle / 100);
     auto scan_phase = static_cast<int>(sensor_configuration->scan_phase);
