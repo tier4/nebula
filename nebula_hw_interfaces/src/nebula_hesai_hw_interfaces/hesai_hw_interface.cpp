@@ -2319,13 +2319,29 @@ Status HesaiHwInterface::SetPtpConfig(
   int network, int switch_type, int logAnnounceInterval, int logSyncInterval, 
   int logMinDelayReqInterval, bool with_run)
 {
-  std::vector<unsigned char> buf_vec;
-  int len = 6;
-  if (profile == 0) {
-  } else if (profile >= 1) {
-    len = 3;
-  } else {
+  if (profile < 0 || profile > 3) {
     return Status::ERROR_1;
+  }
+  // Handle the OT128 differently - it has TSN settings and defines the PTP profile
+  // for automotove as 0x03 instead of 0x02 for other sensors.
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
+    if (profile != static_cast<int>(PtpProfile::IEEE_802_1AS_AUTO)) {
+      return Status::SENSOR_CONFIG_ERROR;
+    }
+    profile = 3;
+  }
+  
+  std::vector<unsigned char> buf_vec;
+  int len = 3;
+  switch (profile) {
+    case 0:
+      len = 6;
+      break;
+    case 3:
+      len = 4;
+      break;
+    default:
+      len = 3;
   }
   buf_vec.emplace_back(PTC_COMMAND_HEADER_HIGH);
   buf_vec.emplace_back(PTC_COMMAND_HEADER_LOW);
@@ -2335,13 +2351,6 @@ Status HesaiHwInterface::SetPtpConfig(
   buf_vec.emplace_back((len >> 16) & 0xff);
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
-
-  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
-    if (profile != static_cast<int>(PtpProfile::IEEE_802_1AS_AUTO)) {
-      return Status::SENSOR_CONFIG_ERROR;
-    }
-    profile = 3; // OT128 has a different definition of PTP profile
-  }
   buf_vec.emplace_back((profile >> 0) & 0xff);
   buf_vec.emplace_back((domain >> 0) & 0xff);
   buf_vec.emplace_back((network >> 0) & 0xff);
