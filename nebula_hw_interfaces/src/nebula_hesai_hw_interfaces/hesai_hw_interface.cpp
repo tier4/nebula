@@ -2316,8 +2316,8 @@ Status HesaiHwInterface::SetClockSource(int clock_source, bool with_run)
 
 Status HesaiHwInterface::SetPtpConfig(
   std::shared_ptr<::drivers::tcp_driver::TcpDriver> target_tcp_driver, int profile, int domain,
-  int network, int switch_type, int logAnnounceInterval = 1, int logSyncInterval = 1, 
-  int logMinDelayReqInterval = 0, bool with_run)
+  int network, int switch_type, int logAnnounceInterval, int logSyncInterval, 
+  int logMinDelayReqInterval, bool with_run)
 {
   std::vector<unsigned char> buf_vec;
   int len = 6;
@@ -2376,8 +2376,8 @@ Status HesaiHwInterface::SetPtpConfig(
 }
 Status HesaiHwInterface::SetPtpConfig(
   std::shared_ptr<boost::asio::io_context> ctx, int profile, int domain, int network,
-  int switch_type, int logAnnounceInterval = 1, int logSyncInterval = 1,
-  int logMinDelayReqInterval = 0, bool with_run)
+  int switch_type, int logAnnounceInterval, int logSyncInterval,
+  int logMinDelayReqInterval, bool with_run)
 {
   auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
   tcp_driver_local->init_socket(
