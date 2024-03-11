@@ -1573,12 +1573,12 @@ Status HesaiHwInterface::SetSpinRate(
   buf_vec.emplace_back((rpm >> 8) & 0xff);
   buf_vec.emplace_back((rpm >> 0) & 0xff);
 
-  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetSpinRate")) {
+  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetSpinRate")) {
     return SetSpinRate(target_tcp_driver, rpm, with_run);
   }
   PrintDebug("SetSpinRate: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SetSpinRate"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetSpinRate"); });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -1629,12 +1629,12 @@ Status HesaiHwInterface::SetSyncAngle(
   buf_vec.emplace_back((angle >> 8) & 0xff);
   buf_vec.emplace_back((angle >> 0) & 0xff);
 
-  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetSyncAngle")) {
+  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetSyncAngle")) {
     return SetSyncAngle(target_tcp_driver, sync_angle, angle, with_run);
   }
   PrintDebug("SetSyncAngle: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SetSyncAngle"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetSyncAngle"); });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -1683,12 +1683,12 @@ Status HesaiHwInterface::SetTriggerMethod(
 
   buf_vec.emplace_back((trigger_method >> 0) & 0xff);
 
-  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetTriggerMethod")) {
+  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetTriggerMethod")) {
     return SetTriggerMethod(target_tcp_driver, trigger_method, with_run);
   }
   PrintDebug("SetTriggerMethod: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SetTriggerMethod"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetTriggerMethod"); });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -1736,12 +1736,12 @@ Status HesaiHwInterface::SetStandbyMode(
   buf_vec.emplace_back((len >> 0) & 0xff);
 
   buf_vec.emplace_back((standby_mode >> 0) & 0xff);
-  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetStandbyMode")) {
+  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetStandbyMode")) {
     return SetStandbyMode(target_tcp_driver, standby_mode, with_run);
   }
   std::cout << "start: SetStandbyMode" << std::endl;
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SetStandbyMode"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetStandbyMode"); });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -1790,11 +1790,11 @@ Status HesaiHwInterface::SetReturnMode(
 
   buf_vec.emplace_back((return_mode >> 0) & 0xff);
   PrintDebug("SetReturnMode: start" + std::to_string(return_mode));
-  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetReturnMode")) {
+  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetReturnMode")) {
     return SetReturnMode(target_tcp_driver, return_mode, with_run);
   }
   PrintDebug("SetReturnMode: asyncSend");
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SetReturnMode"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetReturnMode"); });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -1852,13 +1852,13 @@ Status HesaiHwInterface::SetDestinationIp(
   buf_vec.emplace_back((gps_port >> 8) & 0xff);
   buf_vec.emplace_back((gps_port >> 0) & 0xff);
 
-  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetDestinationIp")) {
+  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetDestinationIp")) {
     return SetDestinationIp(
       target_tcp_driver, dest_ip_1, dest_ip_2, dest_ip_3, dest_ip_4, port, gps_port, with_run);
   }
   PrintDebug("SetDestinationIp: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SetDestinationIp"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetDestinationIp"); });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -1926,14 +1926,14 @@ Status HesaiHwInterface::SetControlPort(
   buf_vec.emplace_back((vlan_id >> 8) & 0xff);
   buf_vec.emplace_back((vlan_id >> 0) & 0xff);
 
-  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetControlPort")) {
+  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetControlPort")) {
     return SetControlPort(
       target_tcp_driver, ip_1, ip_2, ip_3, ip_4, mask_1, mask_2, mask_3, mask_4, gateway_1,
       gateway_2, gateway_3, gateway_4, vlan_flg, vlan_id, with_run);
   }
   PrintDebug("SetControlPort: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SetControlPort"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetControlPort"); });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -1997,12 +1997,12 @@ Status HesaiHwInterface::SetLidarRange(
     buf_vec.emplace_back(d);
   }
 
-  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetLidarRange")) {
+  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetLidarRange")) {
     return SetLidarRange(target_tcp_driver, method, data, with_run);
   }
   PrintDebug("SetLidarRange: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SetLidarRange"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetLidarRange"); });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -2060,12 +2060,12 @@ Status HesaiHwInterface::SetLidarRange(
   buf_vec.emplace_back((end >> 8) & 0xff);
   buf_vec.emplace_back((end >> 0) & 0xff);
 
-  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetLidarRange(All)")) {
+  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetLidarRange(All)")) {
     return SetLidarRange(target_tcp_driver, start, end, with_run);
   }
   PrintDebug("SetLidarRange(All): start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SetLidarRange(All)"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetLidarRange(All)"); });
   if (with_run) {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
     std::cout << "start ctx->run(): SetLidarRange(All)" << std::endl;
@@ -2240,12 +2240,12 @@ Status HesaiHwInterface::SetClockSource(
 
   buf_vec.emplace_back((clock_source >> 0) & 0xff);
 
-  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetClockSource")) {
+  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetClockSource")) {
     return SetClockSource(target_tcp_driver, clock_source, with_run);
   }
   PrintDebug("SetClockSource: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SetClockSource"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetClockSource"); });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -2313,14 +2313,14 @@ Status HesaiHwInterface::SetPtpConfig(
     buf_vec.emplace_back((switch_type >> 0) & 0xff);
   }
 
-  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetPtpConfig")) {
+  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetPtpConfig")) {
     return SetPtpConfig(
       target_tcp_driver, profile, domain, network, switch_type, logAnnounceInterval, 
       logSyncInterval, logMinDelayReqInterval, with_run);
   }
   PrintDebug("SetPtpConfig: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SetPtpConfig"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetPtpConfig"); });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -2474,12 +2474,12 @@ Status HesaiHwInterface::SendReset(
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
 
-  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SendReset")) {
+  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SendReset")) {
     return SendReset(target_tcp_driver, with_run);
   }
   PrintDebug("SendReset: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SendReset"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SendReset"); });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -2528,12 +2528,12 @@ Status HesaiHwInterface::SetRotDir(
 
   buf_vec.emplace_back((mode >> 0) & 0xff);
 
-  if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetRotDir")) {
+  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetRotDir")) {
     return SetRotDir(target_tcp_driver, mode, with_run);
   }
   PrintDebug("SetRotDir: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tms_, "SetRotDir"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetRotDir"); });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {

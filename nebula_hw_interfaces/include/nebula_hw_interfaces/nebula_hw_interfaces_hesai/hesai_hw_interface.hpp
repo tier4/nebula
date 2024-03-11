@@ -108,9 +108,7 @@ private:
   std::timed_mutex tm_;
   int tm_fail_cnt = 0;
   int tm_fail_cnt_max = 0;
-  std::timed_mutex tms_;
-  int tms_fail_cnt = 0;
-  int tms_fail_cnt_max = 3;
+  int tm_fail_cnt_max_sensor_setup = 3;
   bool wl = false;
   bool is_solid_state = false;
   int target_model_no;
