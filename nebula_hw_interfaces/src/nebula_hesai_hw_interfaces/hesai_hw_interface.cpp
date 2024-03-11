@@ -2336,6 +2336,12 @@ Status HesaiHwInterface::SetPtpConfig(
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
 
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
+    if (profile != static_cast<int>(PtpProfile::IEEE_802_1AS_AUTO)) {
+      return Status::SENSOR_CONFIG_ERROR;
+    }
+    profile = 3; // OT128 has a different definition of PTP profile
+  }
   buf_vec.emplace_back((profile >> 0) & 0xff);
   buf_vec.emplace_back((domain >> 0) & 0xff);
   buf_vec.emplace_back((network >> 0) & 0xff);
@@ -2344,7 +2350,7 @@ Status HesaiHwInterface::SetPtpConfig(
     buf_vec.emplace_back((logSyncInterval >> 0) & 0xff);
     buf_vec.emplace_back((logMinDelayReqInterval >> 0) & 0xff);
   }
-  if (profile == 3) {
+  else if (profile == 3) {
     buf_vec.emplace_back((switch_type >> 0) & 0xff);
   }
 
