@@ -2281,8 +2281,8 @@ Status HesaiHwInterface::SetClockSource(int clock_source, bool with_run)
 
 Status HesaiHwInterface::SetPtpConfig(
   std::shared_ptr<::drivers::tcp_driver::TcpDriver> target_tcp_driver, int profile, int domain,
-  int network, int logAnnounceInterval = 1, int logSyncInterval = 1, int logMinDelayReqInterval = 0,
-  bool with_run)
+  int network, int switch_type, int logAnnounceInterval = 1, int logSyncInterval = 1, 
+  int logMinDelayReqInterval = 0, bool with_run)
 {
   std::vector<unsigned char> buf_vec;
   int len = 6;
@@ -2309,11 +2309,14 @@ Status HesaiHwInterface::SetPtpConfig(
     buf_vec.emplace_back((logSyncInterval >> 0) & 0xff);
     buf_vec.emplace_back((logMinDelayReqInterval >> 0) & 0xff);
   }
+  if (profile == 3) {
+    buf_vec.emplace_back((switch_type >> 0) & 0xff);
+  }
 
   if (!CheckLock(tms_, tms_fail_cnt, tms_fail_cnt_max, "SetPtpConfig")) {
     return SetPtpConfig(
-      target_tcp_driver, profile, domain, network, logAnnounceInterval, logSyncInterval,
-      logMinDelayReqInterval, with_run);
+      target_tcp_driver, profile, domain, network, switch_type, logAnnounceInterval, 
+      logSyncInterval, logMinDelayReqInterval, with_run);
   }
   PrintDebug("SetPtpConfig: start");
 
@@ -2332,20 +2335,20 @@ Status HesaiHwInterface::SetPtpConfig(
 }
 Status HesaiHwInterface::SetPtpConfig(
   std::shared_ptr<boost::asio::io_context> ctx, int profile, int domain, int network,
-  int logAnnounceInterval = 1, int logSyncInterval = 1, int logMinDelayReqInterval = 0,
-  bool with_run)
+  int switch_type, int logAnnounceInterval = 1, int logSyncInterval = 1,
+  int logMinDelayReqInterval = 0, bool with_run)
 {
   auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
   tcp_driver_local->init_socket(
     sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
     PandarTcpCommandPort);
   return SetPtpConfig(
-    tcp_driver_local, profile, domain, network, logAnnounceInterval, logSyncInterval,
-    logMinDelayReqInterval, with_run);
+    tcp_driver_local, profile, domain, network, switch_type, logAnnounceInterval, 
+    logSyncInterval, logMinDelayReqInterval, with_run);
 }
 Status HesaiHwInterface::SetPtpConfig(
-  int profile, int domain, int network, int logAnnounceInterval, int logSyncInterval,
-  int logMinDelayReqInterval, bool with_run)
+  int profile, int domain, int network, int switch_type, int logAnnounceInterval,
+  int logSyncInterval, int logMinDelayReqInterval, bool with_run)
 {
   if (with_run) {
     if (tcp_driver_ && tcp_driver_->GetIOContext()->stopped()) {
@@ -2353,8 +2356,8 @@ Status HesaiHwInterface::SetPtpConfig(
     }
   }
   return SetPtpConfig(
-    tcp_driver_, profile, domain, network, logAnnounceInterval, logSyncInterval,
-    logMinDelayReqInterval, with_run);
+    tcp_driver_, profile, domain, network, switch_type, logAnnounceInterval, 
+    logSyncInterval, logMinDelayReqInterval, with_run);
 }
 
 Status HesaiHwInterface::GetPtpConfig(
@@ -2941,8 +2944,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     std::this_thread::sleep_for(wait_time);
   }
 
-  if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128
-    && sensor_configuration->sensor_model != SensorModel::HESAI_PANDARQT128) {
+  if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128) {
     set_flg = true;
     auto sync_angle = static_cast<int>(hesai_config.sync_angle / 100);
     auto scan_phase = static_cast<int>(sensor_configuration->scan_phase);
@@ -2969,11 +2971,13 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     std::ostringstream tmp_ostringstream;
     tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
                       << ", Domain: " << std::to_string(sensor_configuration->ptp_domain)
-                      << ", Transport: " << sensor_configuration->ptp_transport_type << " via TCP";
+                      << ", Transport: " << sensor_configuration->ptp_transport_type
+                      << ", Switch Type: " << sensor_configuration->ptp_switch_type << " via TCP";
     PrintInfo(tmp_ostringstream.str());
     SetPtpConfig(static_cast<int>(sensor_configuration->ptp_profile),
                   sensor_configuration->ptp_domain,
                   static_cast<int>(sensor_configuration->ptp_transport_type),
+                  static_cast<int>(sensor_configuration->ptp_switch_type),
                   PTP_LOG_ANNOUNCE_INTERVAL,
                   PTP_SYNC_INTERVAL,
                   PTP_LOG_MIN_DELAY_INTERVAL
