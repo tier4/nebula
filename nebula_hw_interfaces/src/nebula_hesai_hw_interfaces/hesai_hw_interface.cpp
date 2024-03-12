@@ -2106,24 +2106,32 @@ Status HesaiHwInterface::SetClockSource(int clock_source, bool with_run)
 
 Status HesaiHwInterface::SetPtpConfig(
   std::shared_ptr<::drivers::tcp_driver::TcpDriver> target_tcp_driver, int profile, int domain,
-  int network, int switch_type, int logAnnounceInterval = 1, int logSyncInterval = 1, 
-  int logMinDelayReqInterval = 0, bool with_run)
+  int network, int switch_type, int logAnnounceInterval, int logSyncInterval, 
+  int logMinDelayReqInterval, bool with_run)
 {
+  if (profile < 0 || profile > 3) {
+    return Status::ERROR_1;
+  }
+  // Handle the OT128 differently - it has TSN settings and defines the PTP profile
+  // for automotive as 0x03 instead of 0x02 for other sensors.
   if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
     if (profile != static_cast<int>(PtpProfile::IEEE_802_1AS_AUTO)) {
       return Status::SENSOR_CONFIG_ERROR;
     }
-
-    profile = 3; // OT128 expects 0x03 as its profile; the other sensors define 802.1AS automotive as 0x02
+    profile = 3;
   }
 
   std::vector<unsigned char> buf_vec;
-  int len = 6;
-  if (profile == 0) {
-  } else if (profile >= 1) {
-    len = 3;
-  } else {
-    return Status::ERROR_1;
+  int len = 3;
+  switch (profile) {
+    case 0:
+      len = 6;
+      break;
+    case 3:
+      len = 4;
+      break;
+    default:
+      len = 3;
   }
   buf_vec.emplace_back(PTC_COMMAND_HEADER_HIGH);
   buf_vec.emplace_back(PTC_COMMAND_HEADER_LOW);
@@ -2133,7 +2141,6 @@ Status HesaiHwInterface::SetPtpConfig(
   buf_vec.emplace_back((len >> 16) & 0xff);
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
-
   buf_vec.emplace_back((profile >> 0) & 0xff);
   buf_vec.emplace_back((domain >> 0) & 0xff);
   buf_vec.emplace_back((network >> 0) & 0xff);
@@ -2142,7 +2149,7 @@ Status HesaiHwInterface::SetPtpConfig(
     buf_vec.emplace_back((logSyncInterval >> 0) & 0xff);
     buf_vec.emplace_back((logMinDelayReqInterval >> 0) & 0xff);
   }
-  if (profile == 3) {
+  else if (profile == 3) {
     buf_vec.emplace_back((switch_type >> 0) & 0xff);
   }
 
@@ -2166,7 +2173,19 @@ Status HesaiHwInterface::SetPtpConfig(
 
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
-
+Status HesaiHwInterface::SetPtpConfig(
+  std::shared_ptr<boost::asio::io_context> ctx, int profile, int domain, int network,
+  int switch_type, int logAnnounceInterval, int logSyncInterval,
+  int logMinDelayReqInterval, bool with_run)
+{
+  auto tcp_driver_local = std::make_shared<::drivers::tcp_driver::TcpDriver>(ctx);
+  tcp_driver_local->init_socket(
+    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
+    PandarTcpCommandPort);
+  return SetPtpConfig(
+    tcp_driver_local, profile, domain, network, switch_type, logAnnounceInterval, 
+    logSyncInterval, logMinDelayReqInterval, with_run);
+}
 Status HesaiHwInterface::SetPtpConfig(
   int profile, int domain, int network, int switch_type, int logAnnounceInterval,
   int logSyncInterval, int logMinDelayReqInterval, bool with_run)
