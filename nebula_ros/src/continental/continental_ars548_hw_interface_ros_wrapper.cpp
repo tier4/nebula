@@ -79,7 +79,7 @@ Status ContinentalARS548HwInterfaceRosWrapper::StreamStart()
         std::placeholders::_1));
 
     steering_angle_sub_ = create_subscription<std_msgs::msg::Float32>(
-      "steering_angle_input", rclcpp::QoS{1},
+      "steering_angle_input", rclcpp::SensorDataQoS(),
       std::bind(
         &ContinentalARS548HwInterfaceRosWrapper::SteeringAngleCallback, this,
         std::placeholders::_1));
