@@ -7,6 +7,8 @@
 #include <ctime>
 #endif
 
+#include <boost/asio.hpp>
+
 namespace nebula
 {
 namespace drivers
@@ -46,6 +48,54 @@ HesaiHwInterface::~HesaiHwInterface()
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
   std::cout << ".......................ed: HesaiHwInterface::~HesaiHwInterface()" << std::endl;
 #endif
+}
+
+std::shared_ptr<std::vector<uint8_t>> HesaiHwInterface::SendReceive(const uint8_t command_id, const std::vector<uint8_t> & payload) {
+  uint32_t len = payload.size();
+
+  std::vector<uint8_t> send_buf;
+  send_buf.emplace_back(PTC_COMMAND_HEADER_HIGH);
+  send_buf.emplace_back(PTC_COMMAND_HEADER_LOW);
+  send_buf.emplace_back(command_id);
+  send_buf.emplace_back(PTC_COMMAND_DUMMY_BYTE);
+  send_buf.emplace_back((len >> 24) & 0xff);
+  send_buf.emplace_back((len >> 16) & 0xff);
+  send_buf.emplace_back((len >> 8) & 0xff);
+  send_buf.emplace_back((len >> 0) & 0xff);
+  send_buf.insert(send_buf.end(), payload.begin(), payload.end());
+
+  auto recv_buf = std::make_shared<std::vector<uint8_t>>();
+  bool success = false;
+
+  std::timed_mutex tm;
+  tm.lock();
+
+  if (tcp_driver_->GetIOContext()->stopped()) {
+    tcp_driver_->GetIOContext()->restart();
+  }
+
+  tcp_driver_->asyncSendReceiveHeaderPayload(send_buf, 
+  [](const std::vector<uint8_t> & header_bytes){
+
+  },
+  [&recv_buf, &success](const std::vector<uint8_t> & payload_bytes){
+    recv_buf->insert(recv_buf->end(), payload_bytes.begin(), payload_bytes.end());
+    success = true;
+  },
+  [&tm](){ tm.unlock(); }
+  );
+  this->IOContextRun();
+  if (!tm.try_lock_for(std::chrono::seconds(1))) {
+    PrintError("Request did not finish within 1s");
+    return nullptr;
+  }
+
+  if (!success) {
+    PrintError("Did not receive payload");
+    return nullptr;
+  }
+  
+  return recv_buf;
 }
 
 Status HesaiHwInterface::SetSensorConfiguration(
@@ -234,9 +284,9 @@ Status HesaiHwInterface::InitializeTcpDriver(bool setup_sensor)
 #endif
   if (!tcp_driver_->open()) {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "!tcp_driver_->open()" << std::endl;
+    std::cout << "!tcp_driver_->open()" << std::endl;
 #endif
-//    tcp_driver_->close();
+    //    tcp_driver_->close();
     tcp_driver_->closeSync();
     return Status::ERROR_1;
   }
@@ -314,7 +364,7 @@ Status HesaiHwInterface::syncGetLidarCalibration(
 #endif
       bytes_callback(received_bytes);
     },
-    [this]() { CheckUnlock(tm_, "GetLidarCalibration"); });
+    [this]() {  });
 
   return Status::OK;
 }
@@ -407,7 +457,7 @@ Status HesaiHwInterface::GetLidarCalibration(
 #endif
       bytes_callback(received_bytes);
     },
-    [this]() { CheckUnlock(tm_, "GetLidarCalibration"); });
+    [](){});
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -495,9 +545,6 @@ Status HesaiHwInterface::GetPtpDiagStatus(
 
   buf_vec.emplace_back(PTC_COMMAND_PTP_STATUS);  // PTP STATUS
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max, "GetPtpDiagStatus")) {
-    return GetPtpDiagStatus(target_tcp_driver, with_run);
-  }
   PrintDebug("GetPtpDiagStatus: start");
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
@@ -569,7 +616,7 @@ Status HesaiHwInterface::GetPtpDiagStatus(
         PrintInfo(ss.str());
       }
     },
-    [this]() { CheckUnlock(tm_, "GetPtpDiagStatus"); });
+    [this]() {  });
 
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
@@ -610,9 +657,6 @@ Status HesaiHwInterface::GetPtpDiagPort(
 
   buf_vec.emplace_back(PTC_COMMAND_PTP_PORT_DATA_SET);  // PTP TLV PORT_DATA_SET
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max, "GetPtpDiagPort")) {
-    return GetPtpDiagPort(target_tcp_driver, with_run);
-  }
   PrintDebug("GetPtpDiagPort: start");
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
@@ -690,7 +734,7 @@ Status HesaiHwInterface::GetPtpDiagPort(
         PrintInfo(ss.str());
       }
     },
-    [this]() { CheckUnlock(tm_, "GetPtpDiagPort"); });
+    [this]() {  });
 
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
@@ -730,9 +774,7 @@ Status HesaiHwInterface::GetPtpDiagTime(
   buf_vec.emplace_back((len >> 0) & 0xff);
 
   buf_vec.emplace_back(PTC_COMMAND_PTP_TIME_STATUS_NP);  // PTP TLV TIME_STATUS_NP
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max, "GetPtpDiagTime")) {
-    return GetPtpDiagTime(target_tcp_driver, with_run);
-  }
+
   PrintDebug("GetPtpDiagTime: start");
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
@@ -847,7 +889,7 @@ Status HesaiHwInterface::GetPtpDiagTime(
         PrintInfo(ss.str());
       }
     },
-    [this]() { CheckUnlock(tm_, "GetPtpDiagTime"); });
+    [this]() {  });
 
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
@@ -887,9 +929,7 @@ Status HesaiHwInterface::GetPtpDiagGrandmaster(
   buf_vec.emplace_back((len >> 0) & 0xff);
 
   buf_vec.emplace_back(PTC_COMMAND_PTP_GRANDMASTER_SETTINGS_NP);  // PTP TLV GRANDMASTER_SETTINGS_NP
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max, "GetPtpDiagGrandmaster")) {
-    return GetPtpDiagGrandmaster(target_tcp_driver, with_run);
-  }
+
   PrintDebug("GetPtpDiagGrandmaster: start");
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
@@ -944,7 +984,7 @@ Status HesaiHwInterface::GetPtpDiagGrandmaster(
         std::cout << hesai_ptp_diag_grandmaster << std::endl;
       }
     },
-    [this]() { CheckUnlock(tm_, "GetPtpDiagGrandmaster"); });
+    [this]() {  });
 
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
@@ -985,9 +1025,6 @@ Status HesaiHwInterface::syncGetInventory(
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max, "GetInventory")) {
-    return syncGetInventory(target_tcp_driver, callback);
-  }
 
   // It doesn't work even when the sensor is not connected...
   if(!target_tcp_driver){
@@ -1068,7 +1105,7 @@ Status HesaiHwInterface::syncGetInventory(
         callback(hesai_inventory);
       }
     },
-    [this]() { CheckUnlock(tm_, "syncGetInventory"); });
+    [this]() {  });
 
   return Status::OK;
 }
@@ -1101,10 +1138,6 @@ Status HesaiHwInterface::GetInventory(
   buf_vec.emplace_back((len >> 16) & 0xff);
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
-
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max, "GetInventory")) {
-    return GetInventory(target_tcp_driver, callback, with_run);
-  }
   PrintDebug("GetInventory: start");
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
@@ -1174,7 +1207,7 @@ Status HesaiHwInterface::GetInventory(
         callback(hesai_inventory);
       }
     },
-    [this]() { CheckUnlock(tm_, "GetInventory"); });
+    []() {});
 
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
@@ -1210,145 +1243,70 @@ Status HesaiHwInterface::GetInventory(bool with_run)
     [this](HesaiInventory & result) { std::cout << result << std::endl; }, with_run);
 }
 
-Status HesaiHwInterface::GetConfig(
-  std::shared_ptr<::drivers::tcp_driver::TcpDriver> target_tcp_driver,
-  std::function<void(HesaiConfig & result)> callback, bool with_run)
+std::shared_ptr<HesaiConfig> HesaiHwInterface::GetConfig()
 {
-  std::vector<unsigned char> buf_vec;
-  int len = 0;
-  buf_vec.emplace_back(PTC_COMMAND_HEADER_HIGH);
-  buf_vec.emplace_back(PTC_COMMAND_HEADER_LOW);
-  buf_vec.emplace_back(PTC_COMMAND_GET_CONFIG_INFO);  // Cmd PTC_COMMAND_GET_CONFIG_INFO
-  buf_vec.emplace_back(PTC_COMMAND_DUMMY_BYTE);
-  buf_vec.emplace_back((len >> 24) & 0xff);
-  buf_vec.emplace_back((len >> 16) & 0xff);
-  buf_vec.emplace_back((len >> 8) & 0xff);
-  buf_vec.emplace_back((len >> 0) & 0xff);
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max, "GetConfig")) {
-    return GetConfig(target_tcp_driver, callback, with_run);
-  }
-  PrintDebug("GetConfig: start");
+  auto hesai_config_ptr = std::make_shared<HesaiConfig>();
+  auto & hesai_config = *hesai_config_ptr;
+  auto response = *SendReceive(PTC_COMMAND_GET_CONFIG_INFO);
 
-  target_tcp_driver->asyncSendReceiveHeaderPayload(
-    buf_vec,
-    [this](const std::vector<uint8_t> & received_bytes) {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-      for (const auto & b : received_bytes) {
-        std::cout << static_cast<int>(b) << ", ";
-      }
-      std::cout << std::endl;
-#endif
-      PrintDebug(received_bytes);
-    },
-    [this, target_tcp_driver, callback](const std::vector<uint8_t> & received_bytes) {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-      for (const auto & b : received_bytes) {
-        std::cout << static_cast<int>(b) << ", ";
-      }
-      std::cout << std::endl;
+  PrintDebug(response);
 
-      std::cout << "GetConfig getHeader: ";
-      for (const auto & b : target_tcp_driver->getHeader()) {
-        std::cout << static_cast<int>(b) << ", ";
-      }
-      std::cout << std::endl;
-      std::cout << "GetConfig getPayload: ";
-      for (const auto & b : target_tcp_driver->getPayload()) {
-        std::cout << static_cast<int>(b) << ", ";
-      }
-      std::cout << std::endl;
-#endif
-      PrintDebug(received_bytes);
-
-      auto response = target_tcp_driver->getPayload();
-      HesaiConfig hesai_config;
-      if (8 < response.size()) {
-        int payload_pos = 8;
-        hesai_config.ipaddr[0] = static_cast<int>(response[payload_pos++]);
-        hesai_config.ipaddr[1] = static_cast<int>(response[payload_pos++]);
-        hesai_config.ipaddr[2] = static_cast<int>(response[payload_pos++]);
-        hesai_config.ipaddr[3] = static_cast<int>(response[payload_pos++]);
-        hesai_config.mask[0] = static_cast<int>(response[payload_pos++]);
-        hesai_config.mask[1] = static_cast<int>(response[payload_pos++]);
-        hesai_config.mask[2] = static_cast<int>(response[payload_pos++]);
-        hesai_config.mask[3] = static_cast<int>(response[payload_pos++]);
-        hesai_config.gateway[0] = static_cast<int>(response[payload_pos++]);
-        hesai_config.gateway[1] = static_cast<int>(response[payload_pos++]);
-        hesai_config.gateway[2] = static_cast<int>(response[payload_pos++]);
-        hesai_config.gateway[3] = static_cast<int>(response[payload_pos++]);
-        hesai_config.dest_ipaddr[0] = static_cast<int>(response[payload_pos++]);
-        hesai_config.dest_ipaddr[1] = static_cast<int>(response[payload_pos++]);
-        hesai_config.dest_ipaddr[2] = static_cast<int>(response[payload_pos++]);
-        hesai_config.dest_ipaddr[3] = static_cast<int>(response[payload_pos++]);
-        hesai_config.dest_LiDAR_udp_port = response[payload_pos++] << 8;
-        hesai_config.dest_LiDAR_udp_port =
-          hesai_config.dest_LiDAR_udp_port | response[payload_pos++];
-        hesai_config.dest_gps_udp_port = response[payload_pos++] << 8;
-        hesai_config.dest_gps_udp_port = hesai_config.dest_gps_udp_port | response[payload_pos++];
-        hesai_config.spin_rate = response[payload_pos++] << 8;
-        hesai_config.spin_rate = hesai_config.spin_rate | response[payload_pos++];
-        hesai_config.sync = static_cast<int>(response[payload_pos++]);
-        hesai_config.sync_angle = response[payload_pos++] << 8;
-        hesai_config.sync_angle = hesai_config.sync_angle | response[payload_pos++];
-        hesai_config.start_angle = response[payload_pos++] << 8;
-        hesai_config.start_angle = hesai_config.start_angle | response[payload_pos++];
-        hesai_config.stop_angle = response[payload_pos++] << 8;
-        hesai_config.stop_angle = hesai_config.stop_angle | response[payload_pos++];
-        hesai_config.clock_source = static_cast<int>(response[payload_pos++]);
-        hesai_config.udp_seq = static_cast<int>(response[payload_pos++]);
-        hesai_config.trigger_method = static_cast<int>(response[payload_pos++]);
-        hesai_config.return_mode = static_cast<int>(response[payload_pos++]);
-        hesai_config.standby_mode = static_cast<int>(response[payload_pos++]);
-        hesai_config.motor_status = static_cast<int>(response[payload_pos++]);
-        hesai_config.vlan_flag = static_cast<int>(response[payload_pos++]);
-        hesai_config.vlan_id = response[payload_pos++] << 8;
-        hesai_config.vlan_id = hesai_config.vlan_id | response[payload_pos++];
-        hesai_config.clock_data_fmt = static_cast<int>(response[payload_pos++]);
-        hesai_config.noise_filtering = static_cast<int>(response[payload_pos++]);
-        hesai_config.reflectivity_mapping = static_cast<int>(response[payload_pos++]);
-        hesai_config.reserved[0] = static_cast<unsigned char>(response[payload_pos++]);
-        hesai_config.reserved[1] = static_cast<unsigned char>(response[payload_pos++]);
-        hesai_config.reserved[2] = static_cast<unsigned char>(response[payload_pos++]);
-        hesai_config.reserved[3] = static_cast<unsigned char>(response[payload_pos++]);
-        hesai_config.reserved[4] = static_cast<unsigned char>(response[payload_pos++]);
-        hesai_config.reserved[5] = static_cast<unsigned char>(response[payload_pos++]);
-
-        callback(hesai_config);
-      }
-    },
-    [this]() { CheckUnlock(tm_, "GetConfig"); });
-  if (with_run) {
-    boost::system::error_code ec = target_tcp_driver->run();
-    if (ec) {
-      PrintError("HesaiHwInterface::GetConfig: " + ec.message());
-    }
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << "ctx->run(): GetConfig" << std::endl;
-#endif
+  if (8 < response.size()) {
+    int payload_pos = 8;
+    hesai_config.ipaddr[0] = static_cast<int>(response[payload_pos++]);
+    hesai_config.ipaddr[1] = static_cast<int>(response[payload_pos++]);
+    hesai_config.ipaddr[2] = static_cast<int>(response[payload_pos++]);
+    hesai_config.ipaddr[3] = static_cast<int>(response[payload_pos++]);
+    hesai_config.mask[0] = static_cast<int>(response[payload_pos++]);
+    hesai_config.mask[1] = static_cast<int>(response[payload_pos++]);
+    hesai_config.mask[2] = static_cast<int>(response[payload_pos++]);
+    hesai_config.mask[3] = static_cast<int>(response[payload_pos++]);
+    hesai_config.gateway[0] = static_cast<int>(response[payload_pos++]);
+    hesai_config.gateway[1] = static_cast<int>(response[payload_pos++]);
+    hesai_config.gateway[2] = static_cast<int>(response[payload_pos++]);
+    hesai_config.gateway[3] = static_cast<int>(response[payload_pos++]);
+    hesai_config.dest_ipaddr[0] = static_cast<int>(response[payload_pos++]);
+    hesai_config.dest_ipaddr[1] = static_cast<int>(response[payload_pos++]);
+    hesai_config.dest_ipaddr[2] = static_cast<int>(response[payload_pos++]);
+    hesai_config.dest_ipaddr[3] = static_cast<int>(response[payload_pos++]);
+    hesai_config.dest_LiDAR_udp_port = response[payload_pos++] << 8;
+    hesai_config.dest_LiDAR_udp_port =
+      hesai_config.dest_LiDAR_udp_port | response[payload_pos++];
+    hesai_config.dest_gps_udp_port = response[payload_pos++] << 8;
+    hesai_config.dest_gps_udp_port = hesai_config.dest_gps_udp_port | response[payload_pos++];
+    hesai_config.spin_rate = response[payload_pos++] << 8;
+    hesai_config.spin_rate = hesai_config.spin_rate | response[payload_pos++];
+    hesai_config.sync = static_cast<int>(response[payload_pos++]);
+    hesai_config.sync_angle = response[payload_pos++] << 8;
+    hesai_config.sync_angle = hesai_config.sync_angle | response[payload_pos++];
+    hesai_config.start_angle = response[payload_pos++] << 8;
+    hesai_config.start_angle = hesai_config.start_angle | response[payload_pos++];
+    hesai_config.stop_angle = response[payload_pos++] << 8;
+    hesai_config.stop_angle = hesai_config.stop_angle | response[payload_pos++];
+    hesai_config.clock_source = static_cast<int>(response[payload_pos++]);
+    hesai_config.udp_seq = static_cast<int>(response[payload_pos++]);
+    hesai_config.trigger_method = static_cast<int>(response[payload_pos++]);
+    hesai_config.return_mode = static_cast<int>(response[payload_pos++]);
+    hesai_config.standby_mode = static_cast<int>(response[payload_pos++]);
+    hesai_config.motor_status = static_cast<int>(response[payload_pos++]);
+    hesai_config.vlan_flag = static_cast<int>(response[payload_pos++]);
+    hesai_config.vlan_id = response[payload_pos++] << 8;
+    hesai_config.vlan_id = hesai_config.vlan_id | response[payload_pos++];
+    hesai_config.clock_data_fmt = static_cast<int>(response[payload_pos++]);
+    hesai_config.noise_filtering = static_cast<int>(response[payload_pos++]);
+    hesai_config.reflectivity_mapping = static_cast<int>(response[payload_pos++]);
+    hesai_config.reserved[0] = static_cast<unsigned char>(response[payload_pos++]);
+    hesai_config.reserved[1] = static_cast<unsigned char>(response[payload_pos++]);
+    hesai_config.reserved[2] = static_cast<unsigned char>(response[payload_pos++]);
+    hesai_config.reserved[3] = static_cast<unsigned char>(response[payload_pos++]);
+    hesai_config.reserved[4] = static_cast<unsigned char>(response[payload_pos++]);
+    hesai_config.reserved[5] = static_cast<unsigned char>(response[payload_pos++]);
   }
 
-  return Status::WAITING_FOR_SENSOR_RESPONSE;
+  std::cout << "Config: " << hesai_config << std::endl;
+  return hesai_config_ptr;
 }
 
-Status HesaiHwInterface::GetConfig(std::shared_ptr<boost::asio::io_context> ctx, bool with_run)
-{
-  return GetConfig(
-    ctx, [this](HesaiConfig & result) { std::cout << result << std::endl; }, with_run);
-}
-Status HesaiHwInterface::GetConfig(
-  std::function<void(HesaiConfig & result)> callback, bool with_run)
-{
-  if (with_run) {
-    if (tcp_driver_->GetIOContext()->stopped()) {
-      tcp_driver_->GetIOContext()->restart();
-    }
-  }
-  return GetConfig(tcp_driver_, callback, with_run);
-}
-Status HesaiHwInterface::GetConfig(bool with_run)
-{
-  return GetConfig([this](HesaiConfig & result) { std::cout << result << std::endl; }, with_run);
-}
 
 Status HesaiHwInterface::GetLidarStatus(
   std::shared_ptr<::drivers::tcp_driver::TcpDriver> target_tcp_driver,
@@ -1365,9 +1323,6 @@ Status HesaiHwInterface::GetLidarStatus(
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max, "GetLidarStatus")) {
-    return GetLidarStatus(target_tcp_driver, callback, with_run);
-  }
   PrintDebug("GetLidarStatus: start");
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
@@ -1438,7 +1393,7 @@ Status HesaiHwInterface::GetLidarStatus(
         callback(hesai_status);
       }
     },
-    [this]() { CheckUnlock(tm_, "GetLidarStatus"); });
+    [this]() {  });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -1494,12 +1449,9 @@ Status HesaiHwInterface::SetSpinRate(
   buf_vec.emplace_back((rpm >> 8) & 0xff);
   buf_vec.emplace_back((rpm >> 0) & 0xff);
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetSpinRate")) {
-    return SetSpinRate(target_tcp_driver, rpm, with_run);
-  }
   PrintDebug("SetSpinRate: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetSpinRate"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() {  });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -1542,23 +1494,20 @@ Status HesaiHwInterface::SetSyncAngle(
   buf_vec.emplace_back((angle >> 8) & 0xff);
   buf_vec.emplace_back((angle >> 0) & 0xff);
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetSyncAngle")) {
-    return SetSyncAngle(target_tcp_driver, sync_angle, angle, with_run);
-  }
   PrintDebug("SetSyncAngle: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetSyncAngle"); });
-  if (with_run) {
-    boost::system::error_code ec = target_tcp_driver->run();
-    if (ec) {
-      PrintError("HesaiHwInterface::SetSyncAngle: " + ec.message());
-    }
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << "ctx->run(): SetSyncAngle" << std::endl;
-#endif
-  }
+target_tcp_driver->syncSendReceiveHeaderPayload(
+    buf_vec,
+    []([[maybe_unused]]const std::vector<uint8_t> & received_bytes) {},
+    [this, target_tcp_driver]([[maybe_unused]]const std::vector<uint8_t> & received_bytes) {
+      auto response = target_tcp_driver->getPayload();
+    },
+    [](){});
 
-  return Status::WAITING_FOR_SENSOR_RESPONSE;
+  PrintDebug("SetSyncAngle: done");
+
+
+  return Status::OK;
 }
 
 Status HesaiHwInterface::SetSyncAngle(int sync_angle, int angle, bool with_run)
@@ -1588,12 +1537,9 @@ Status HesaiHwInterface::SetTriggerMethod(
 
   buf_vec.emplace_back((trigger_method >> 0) & 0xff);
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetTriggerMethod")) {
-    return SetTriggerMethod(target_tcp_driver, trigger_method, with_run);
-  }
   PrintDebug("SetTriggerMethod: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetTriggerMethod"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() {  });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -1633,12 +1579,10 @@ Status HesaiHwInterface::SetStandbyMode(
   buf_vec.emplace_back((len >> 0) & 0xff);
 
   buf_vec.emplace_back((standby_mode >> 0) & 0xff);
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetStandbyMode")) {
-    return SetStandbyMode(target_tcp_driver, standby_mode, with_run);
-  }
+
   std::cout << "start: SetStandbyMode" << std::endl;
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetStandbyMode"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() {  });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -1679,22 +1623,15 @@ Status HesaiHwInterface::SetReturnMode(
 
   buf_vec.emplace_back((return_mode >> 0) & 0xff);
   PrintDebug("SetReturnMode: start" + std::to_string(return_mode));
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetReturnMode")) {
-    return SetReturnMode(target_tcp_driver, return_mode, with_run);
-  }
-  PrintDebug("SetReturnMode: asyncSend");
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetReturnMode"); });
-  if (with_run) {
-    boost::system::error_code ec = target_tcp_driver->run();
-    if (ec) {
-      PrintError("HesaiHwInterface::SetReturnMode: " + ec.message());
-    }
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << "ctx->run(): SetReturnMode" << std::endl;
-#endif
-  }
+  target_tcp_driver->syncSendReceiveHeaderPayload(
+    buf_vec,
+    []([[maybe_unused]]const std::vector<uint8_t> & received_bytes) {},
+    [this, target_tcp_driver]([[maybe_unused]]const std::vector<uint8_t> & received_bytes) {
+      auto response = target_tcp_driver->getPayload();
+    },
+    [](){});
   PrintDebug("SetReturnMode: done");
-  return Status::WAITING_FOR_SENSOR_RESPONSE;
+  return Status::OK;
 }
 
 Status HesaiHwInterface::SetReturnMode(int return_mode, bool with_run)
@@ -1733,24 +1670,20 @@ Status HesaiHwInterface::SetDestinationIp(
   buf_vec.emplace_back((gps_port >> 8) & 0xff);
   buf_vec.emplace_back((gps_port >> 0) & 0xff);
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetDestinationIp")) {
-    return SetDestinationIp(
-      target_tcp_driver, dest_ip_1, dest_ip_2, dest_ip_3, dest_ip_4, port, gps_port, with_run);
-  }
   PrintDebug("SetDestinationIp: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetDestinationIp"); });
-  if (with_run) {
-    boost::system::error_code ec = target_tcp_driver->run();
-    if (ec) {
-      PrintError("HesaiHwInterface::SetDestinationIp: " + ec.message());
-    }
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << "ctx->run(): SetDestinationIp" << std::endl;
-#endif
-  }
+target_tcp_driver->syncSendReceiveHeaderPayload(
+    buf_vec,
+    []([[maybe_unused]]const std::vector<uint8_t> & received_bytes) {},
+    [this, target_tcp_driver]([[maybe_unused]]const std::vector<uint8_t> & received_bytes) {
+      auto response = target_tcp_driver->getPayload();
+    },
+    [](){});
 
-  return Status::WAITING_FOR_SENSOR_RESPONSE;
+  PrintDebug("SetDestinationIp: done");
+
+
+  return Status::OK;
 }
 
 Status HesaiHwInterface::SetDestinationIp(
@@ -1797,14 +1730,9 @@ Status HesaiHwInterface::SetControlPort(
   buf_vec.emplace_back((vlan_id >> 8) & 0xff);
   buf_vec.emplace_back((vlan_id >> 0) & 0xff);
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetControlPort")) {
-    return SetControlPort(
-      target_tcp_driver, ip_1, ip_2, ip_3, ip_4, mask_1, mask_2, mask_3, mask_4, gateway_1,
-      gateway_2, gateway_3, gateway_4, vlan_flg, vlan_id, with_run);
-  }
   PrintDebug("SetControlPort: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetControlPort"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() {  });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -1856,12 +1784,9 @@ Status HesaiHwInterface::SetLidarRange(
     buf_vec.emplace_back(d);
   }
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetLidarRange")) {
-    return SetLidarRange(target_tcp_driver, method, data, with_run);
-  }
   PrintDebug("SetLidarRange: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetLidarRange"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() {  });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -1910,12 +1835,9 @@ Status HesaiHwInterface::SetLidarRange(
   buf_vec.emplace_back((end >> 8) & 0xff);
   buf_vec.emplace_back((end >> 0) & 0xff);
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetLidarRange(All)")) {
-    return SetLidarRange(target_tcp_driver, start, end, with_run);
-  }
   PrintDebug("SetLidarRange(All): start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetLidarRange(All)"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() {  });
   if (with_run) {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
     std::cout << "start ctx->run(): SetLidarRange(All)" << std::endl;
@@ -1956,10 +1878,8 @@ Status HesaiHwInterface::GetLidarRange(
   buf_vec.emplace_back((len >> 16) & 0xff);
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max, "GetLidarRange")) {
-    return GetLidarRange(target_tcp_driver, callback, with_run);
-  }
-  PrintDebug("SetLidarRange: start");
+
+  PrintDebug("GetLidarRange: start");
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
     buf_vec,
@@ -2021,7 +1941,7 @@ Status HesaiHwInterface::GetLidarRange(
         }
       }
     },
-    [this]() { CheckUnlock(tm_, "GetLidarRange"); });
+    [this]() {  });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -2073,12 +1993,9 @@ Status HesaiHwInterface::SetClockSource(
 
   buf_vec.emplace_back((clock_source >> 0) & 0xff);
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetClockSource")) {
-    return SetClockSource(target_tcp_driver, clock_source, with_run);
-  }
   PrintDebug("SetClockSource: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetClockSource"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() {  });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -2106,7 +2023,7 @@ Status HesaiHwInterface::SetClockSource(int clock_source, bool with_run)
 
 Status HesaiHwInterface::SetPtpConfig(
   std::shared_ptr<::drivers::tcp_driver::TcpDriver> target_tcp_driver, int profile, int domain,
-  int network, int switch_type, int logAnnounceInterval, int logSyncInterval, 
+  int network, int switch_type, int logAnnounceInterval, int logSyncInterval,
   int logMinDelayReqInterval, bool with_run)
 {
   if (profile < 0 || profile > 3) {
@@ -2153,25 +2070,21 @@ Status HesaiHwInterface::SetPtpConfig(
     buf_vec.emplace_back((switch_type >> 0) & 0xff);
   }
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetPtpConfig")) {
-    return SetPtpConfig(
-      target_tcp_driver, profile, domain, network, switch_type, logAnnounceInterval, 
-      logSyncInterval, logMinDelayReqInterval, with_run);
-  }
   PrintDebug("SetPtpConfig: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetPtpConfig"); });
-  if (with_run) {
-    boost::system::error_code ec = target_tcp_driver->run();
-    if (ec) {
-      PrintError("HesaiHwInterface::SetPtpConfig: " + ec.message());
-    }
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << "ctx->run(): SetPtpConfig" << std::endl;
-#endif
-  }
+  target_tcp_driver->syncSendReceiveHeaderPayload(
+    buf_vec,
+    []([[maybe_unused]]const std::vector<uint8_t> & received_bytes) {},
+    [this, target_tcp_driver]([[maybe_unused]]const std::vector<uint8_t> & received_bytes) {
+      auto response = target_tcp_driver->getPayload();
+       PrintDebug("SetPtpConfig: recv'd");
 
-  return Status::WAITING_FOR_SENSOR_RESPONSE;
+    },
+    [](){});
+  PrintDebug("SetPtpConfig: done");
+
+
+  return Status::OK;
 }
 Status HesaiHwInterface::SetPtpConfig(
   std::shared_ptr<boost::asio::io_context> ctx, int profile, int domain, int network,
@@ -2214,9 +2127,6 @@ Status HesaiHwInterface::GetPtpConfig(
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max, "GetPtpConfig")) {
-    return GetPtpConfig(target_tcp_driver, with_run);
-  }
   PrintDebug("GetPtpConfig: start");
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
@@ -2269,7 +2179,7 @@ Status HesaiHwInterface::GetPtpConfig(
         PrintInfo(ss.str());
       }
     },
-    [this]() { CheckUnlock(tm_, "GetPtpConfig"); });
+    [this]() {  });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -2307,12 +2217,9 @@ Status HesaiHwInterface::SendReset(
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SendReset")) {
-    return SendReset(target_tcp_driver, with_run);
-  }
   PrintDebug("SendReset: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SendReset"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() {  });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -2354,12 +2261,9 @@ Status HesaiHwInterface::SetRotDir(
 
   buf_vec.emplace_back((mode >> 0) & 0xff);
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max_sensor_setup, "SetRotDir")) {
-    return SetRotDir(target_tcp_driver, mode, with_run);
-  }
   PrintDebug("SetRotDir: start");
 
-  target_tcp_driver->asyncSend(buf_vec, [this]() { CheckUnlock(tm_, "SetRotDir"); });
+  target_tcp_driver->asyncSend(buf_vec, [this]() {  });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -2398,9 +2302,6 @@ Status HesaiHwInterface::GetLidarMonitor(
   buf_vec.emplace_back((len >> 8) & 0xff);
   buf_vec.emplace_back((len >> 0) & 0xff);
 
-  if (!CheckLock(tm_, tm_fail_cnt, tm_fail_cnt_max, "GetLidarMonitor")) {
-    return GetLidarMonitor(target_tcp_driver, callback, with_run);
-  }
   PrintDebug("GetLidarMonitor: start");
 
   target_tcp_driver->asyncSendReceiveHeaderPayload(
@@ -2465,7 +2366,7 @@ Status HesaiHwInterface::GetLidarMonitor(
         callback(hesai_lidar_monitor);
       }
     },
-    [this]() { CheckUnlock(tm_, "GetLidarMonitor"); });
+    [this]() {  });
   if (with_run) {
     boost::system::error_code ec = target_tcp_driver->run();
     if (ec) {
@@ -2587,14 +2488,14 @@ HesaiStatus HesaiHwInterface::SetPtpConfigSyncHttp(
 
   auto response = hcd->get(
     (boost::format("/pandar.cgi?action=set&object=lidar&key=ptp_configuration&value={" \
-              "\"Profile\": %d," \
-              "\"Domain\": %d," \
-              "\"Network\": %d," \
-              "\"LogAnnounceInterval\": %d," \
-              "\"LogSyncInterval\": %d," \
-              "\"LogMinDelayReqInterval\": %d," \
-              "\"tsn_switch\": %d" \
-              "}")
+                            "\"Profile\": %d," \
+                            "\"Domain\": %d," \
+                            "\"Network\": %d," \
+                            "\"LogAnnounceInterval\": %d," \
+                            "\"LogSyncInterval\": %d," \
+                            "\"LogMinDelayReqInterval\": %d," \
+                            "\"tsn_switch\": %d" \
+                            "}")
               % profile % domain % network % logAnnounceInterval % logSyncInterval % logMinDelayReqInterval % 0
     ).str());
   ctx->run();
@@ -2607,14 +2508,14 @@ HesaiStatus HesaiHwInterface::SetPtpConfigSyncHttp(int profile,
                                                    int network,
                                                    int logAnnounceInterval,
                                                    int logSyncInterval,
-                                                   int logMinDelayReqInterval)
+  int logMinDelayReqInterval)
 {
   return SetPtpConfigSyncHttp(std::make_shared<boost::asio::io_context>(),
                               profile,
                               domain,
                               network,
                               logAnnounceInterval,
-                              logSyncInterval,
+    logSyncInterval,
                               logMinDelayReqInterval);
 }
 
@@ -2629,9 +2530,9 @@ HesaiStatus HesaiHwInterface::SetSyncAngleSyncHttp(
     return st;
   }
   auto tmp_str = (boost::format("/pandar.cgi?action=set&object=lidar_sync&key=sync_angle&value={" \
-            "\"sync\": %d," \
-            "\"syncAngle\": %d" \
-            "}") % enable % angle).str();
+                                "\"sync\": %d," \
+                                "\"syncAngle\": %d" \
+                                "}") % enable % angle).str();
   PrintInfo(tmp_str);
   auto response = hcd->get(tmp_str);
   ctx->run();
@@ -2691,13 +2592,16 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     std::stringstream ss2;
     ss2 << sensor_configuration->return_mode;
     PrintInfo("Current Configuration return_mode: " + ss2.str());
-    auto return_mode_int = nebula::drivers::IntFromReturnModeHesai(
-      sensor_configuration->return_mode, sensor_configuration->sensor_model);
-    if (return_mode_int < 0) {
-      PrintError("Invalid Return Mode for this sensor. Please check your settings. Falling back to Dual mode.");
-      return_mode_int = 2;
-    }
-    SetReturnMode(return_mode_int);
+    std::thread t([this, sensor_configuration] {
+      auto return_mode_int = nebula::drivers::IntFromReturnModeHesai(
+        sensor_configuration->return_mode, sensor_configuration->sensor_model);
+      if (return_mode_int < 0) {
+        PrintError("Invalid Return Mode for this sensor. Please check your settings. Falling back to Dual mode.");
+        return_mode_int = 2;
+      }
+      SetReturnMode(return_mode_int);
+    });
+    t.join();
     std::this_thread::sleep_for(wait_time);
   }
 
@@ -2711,7 +2615,9 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
       SetSpinSpeedAsyncHttp(sensor_configuration->rotation_speed);
     } else {
       PrintInfo("Setting up spin rate via TCP." + std::to_string(sensor_configuration->rotation_speed) );
-      SetSpinRate(sensor_configuration->rotation_speed);
+      std::thread t(
+        [this, sensor_configuration] { SetSpinRate(sensor_configuration->rotation_speed); });
+      t.join();
     }
     std::this_thread::sleep_for(wait_time);
   }
@@ -2746,14 +2652,18 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   if (set_flg) {
     std::vector<std::string> list_string;
     boost::split(list_string, sensor_configuration->host_ip, boost::is_any_of("."));
-    SetDestinationIp(
-      std::stoi(list_string[0]), std::stoi(list_string[1]), std::stoi(list_string[2]),
-      std::stoi(list_string[3]), sensor_configuration->data_port,
-      sensor_configuration->gnss_port);
+    std::thread t([this, sensor_configuration, list_string] {
+      SetDestinationIp(
+        std::stoi(list_string[0]), std::stoi(list_string[1]), std::stoi(list_string[2]),
+        std::stoi(list_string[3]), sensor_configuration->data_port,
+        sensor_configuration->gnss_port);
+    });
+    t.join();
     std::this_thread::sleep_for(wait_time);
   }
 
-  if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128) {
+  if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128
+    && sensor_configuration->sensor_model != SensorModel::HESAI_PANDARQT128) {
     set_flg = true;
     auto sync_angle = static_cast<int>(hesai_config.sync_angle / 100);
     auto scan_phase = static_cast<int>(sensor_configuration->scan_phase);
@@ -2765,32 +2675,43 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
       PrintInfo("current lidar sync: " + std::to_string(hesai_config.sync));
       PrintInfo("current lidar sync_angle: " + std::to_string(sync_angle));
       PrintInfo("current configuration scan_phase: " + std::to_string(scan_phase));
-      SetSyncAngle(sync_flg, scan_phase);
+      std::thread t([this, sync_flg, scan_phase] {
+        SetSyncAngle(sync_flg, scan_phase);
+      });
+      t.join();
       std::this_thread::sleep_for(wait_time);
     }
 
-    if(sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR40P
-      || sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR64
-      || sensor_configuration->sensor_model == SensorModel::HESAI_PANDARQT64
-      || sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32
-      || sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32M) {
-      PrintInfo("Trying to set Clock source to PTP");
-      SetClockSource(HESAI_LIDAR_PTP_CLOCK_SOURCE);
-    }
-    std::ostringstream tmp_ostringstream;
-    tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
-                      << ", Domain: " << std::to_string(sensor_configuration->ptp_domain)
-                      << ", Transport: " << sensor_configuration->ptp_transport_type
-                      << ", Switch Type: " << sensor_configuration->ptp_switch_type << " via TCP";
-    PrintInfo(tmp_ostringstream.str());
-    SetPtpConfig(static_cast<int>(sensor_configuration->ptp_profile),
-                  sensor_configuration->ptp_domain,
-                  static_cast<int>(sensor_configuration->ptp_transport_type),
-                  static_cast<int>(sensor_configuration->ptp_switch_type),
-                  PTP_LOG_ANNOUNCE_INTERVAL,
-                  PTP_SYNC_INTERVAL,
-                  PTP_LOG_MIN_DELAY_INTERVAL
-    );
+    std::thread t([this, sensor_configuration] {
+      if(sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR40P
+       || sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR64
+       || sensor_configuration->sensor_model == SensorModel::HESAI_PANDARQT64
+       || sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32
+       || sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32M) {
+        PrintInfo("Trying to set Clock source to PTP");
+        SetClockSource(HESAI_LIDAR_PTP_CLOCK_SOURCE);
+      }
+      std::ostringstream tmp_ostringstream;
+      tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
+                        << ", Domain: " << std::to_string(sensor_configuration->ptp_domain)
+                        << ", Transport: " << sensor_configuration->ptp_transport_type
+                        << ", Switch Type: " << sensor_configuration->ptp_switch_type << " via TCP";
+      PrintInfo(tmp_ostringstream.str());
+      SetPtpConfig(static_cast<int>(sensor_configuration->ptp_profile),
+                   sensor_configuration->ptp_domain,
+        static_cast<int>(sensor_configuration->ptp_transport_type),
+        static_cast<int>(sensor_configuration->ptp_switch_type),
+                   PTP_LOG_ANNOUNCE_INTERVAL,
+        PTP_SYNC_INTERVAL,
+                   PTP_LOG_MIN_DELAY_INTERVAL
+      );
+      PrintDebug("Setting properties done");
+    });
+    PrintDebug("Waiting for thread to finish");
+
+    t.join();
+    PrintDebug("Thread finished");
+
     std::this_thread::sleep_for(wait_time);
   }
   else { //AT128 only supports PTP setup via HTTP
@@ -2799,12 +2720,12 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
                          static_cast<int>(sensor_configuration->scan_phase));
     std::ostringstream tmp_ostringstream;
     tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
-             << ", Domain: " << sensor_configuration->ptp_domain
-             << ", Transport: " << sensor_configuration->ptp_transport_type << " via HTTP";
+                      << ", Domain: " << sensor_configuration->ptp_domain
+                      << ", Transport: " << sensor_configuration->ptp_transport_type << " via HTTP";
     PrintInfo(tmp_ostringstream.str());
     SetPtpConfigSyncHttp(static_cast<int>(sensor_configuration->ptp_profile),
                          sensor_configuration->ptp_domain,
-                         static_cast<int>(sensor_configuration->ptp_transport_type),
+      static_cast<int>(sensor_configuration->ptp_transport_type),
                          PTP_LOG_ANNOUNCE_INTERVAL,
                          PTP_SYNC_INTERVAL,
                          PTP_LOG_MIN_DELAY_INTERVAL);
@@ -2814,7 +2735,9 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
   std::cout << "End CheckAndSetConfig(HesaiConfig)!!" << std::endl;
 #endif
-  return Status::WAITING_FOR_SENSOR_RESPONSE;
+    PrintDebug("GetAndCheckConfig(HesaiConfig) finished");
+
+  return Status::OK;
 }
 
 HesaiStatus HesaiHwInterface::CheckAndSetConfig(
@@ -2854,11 +2777,14 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   }
 
   if (set_flg) {
-    SetLidarRange(
-      static_cast<int>(sensor_configuration->cloud_min_angle * 10),
-      static_cast<int>(sensor_configuration->cloud_max_angle * 10)  //,
-                                                                    //      false
-    );
+    std::thread t([this, sensor_configuration] {
+      SetLidarRange(
+        static_cast<int>(sensor_configuration->cloud_min_angle * 10),
+        static_cast<int>(sensor_configuration->cloud_max_angle * 10)  //,
+                                                                      //      false
+      );
+    });
+    t.join();
   }
 
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
@@ -2872,23 +2798,28 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
   std::cout << "Start CheckAndSetConfig!!" << std::endl;
 #endif
-GetConfig(  // ctx,
-  [this](HesaiConfig & result) {
-    std::stringstream ss;
-    ss << result;
-    PrintInfo(ss.str());
-    CheckAndSetConfig(
-      std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration_), result);
-  });
+  std::thread t([this] {
+    auto result = GetConfig();
 
-GetLidarRange(  // ctx,
-  [this](HesaiLidarRangeAll & result) {
     std::stringstream ss;
-    ss << result;
+    ss << *result;
     PrintInfo(ss.str());
     CheckAndSetConfig(
-      std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration_), result);
+    std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration_), *result);
   });
+  t.join();//here
+
+  std::thread t2([this] {
+    GetLidarRange(  // ctx,
+      [this](HesaiLidarRangeAll & result) {
+        std::stringstream ss;
+        ss << result;
+        PrintInfo(ss.str());
+        CheckAndSetConfig(
+          std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration_), result);
+      });
+  });
+  t2.join();
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
   std::cout << "End CheckAndSetConfig!!" << std::endl;
 #endif
@@ -2907,6 +2838,7 @@ GetLidarRange(  // ctx,
 32: QT128C2X
 38: ?
 40: AT128?
+42: OT128
 48: ?
 */
 int HesaiHwInterface::NebulaModelToHesaiModelNo(nebula::drivers::SensorModel model)
@@ -3025,62 +2957,6 @@ bool HesaiHwInterface::UseHttpGetLidarMonitor(int model)
   }
 }
 bool HesaiHwInterface::UseHttpGetLidarMonitor() { return UseHttpGetLidarMonitor(target_model_no); }
-
-bool HesaiHwInterface::CheckLock(
-  std::timed_mutex & tm, int & fail_cnt, const int & fail_cnt_max, std::string name)
-{
-  if (wl) {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-//    std::chrono::time_point start_time = std::chrono::steady_clock::now();
-    std::chrono::system_clock::time_point start_time = std::chrono::system_clock::now();
-    std::time_t stt = std::chrono::system_clock::to_time_t(start_time);
-    const std::tm* system_local_time = std::localtime(&stt);
-    std::cout << "try_lock_for: start at " << std::put_time(system_local_time, "%c") << std::endl;
-/*
-    std::chrono::system_clock::time_point test_time = std::chrono::system_clock::now();
-    std::time_t tst = std::chrono::system_clock::to_time_t(test_time);
-    const std::tm* local_time = std::localtime(&tst);
-    std::cerr << "try_lock_for: test at " << std::put_time(local_time, "%c") << std::endl;
-    auto dur_test = test_time - start_time;
-    std::cerr << "test: " << name << " : " << std::chrono::duration_cast<std::chrono::milliseconds>(dur_test).count() << std::endl;
-*/
-#endif
-    if (!tm.try_lock_for(std::chrono::milliseconds(timeout_))) {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << "if (!tm.try_lock_for(std::chrono::milliseconds(" << timeout_ << "))) {" << std::endl;
-    std::chrono::system_clock::time_point end_time = std::chrono::system_clock::now();
-    std::time_t edt = std::chrono::system_clock::to_time_t(end_time);
-    const std::tm* end_local_time = std::localtime(&edt);
-    std::cerr << "try_lock_for: end at " << std::put_time(end_local_time, "%c") << std::endl;
-    auto dur = end_time - start_time;
-    std::cerr << "timeout: " << name << " : " << std::chrono::duration_cast<std::chrono::milliseconds>(dur).count() << std::endl;
-#endif
-      PrintDebug("timeout: " + name);
-      fail_cnt++;
-      if (fail_cnt_max < fail_cnt) {
-        tm.unlock();
-        if (tcp_driver_ && tcp_driver_->isOpen()) {
-          tcp_driver_->closeSync();
-          tcp_driver_->open();
-        }
-      }
-      else {
-        return true;
-      }
-      return false;
-    }
-    fail_cnt = 0;
-  }
-  return true;
-}
-
-void HesaiHwInterface::CheckUnlock(std::timed_mutex & tm, std::string name)
-{
-  if (wl) {
-    tm.unlock();
-    PrintDebug(name + ": finished");
-  }
-}
 
 void HesaiHwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
 {

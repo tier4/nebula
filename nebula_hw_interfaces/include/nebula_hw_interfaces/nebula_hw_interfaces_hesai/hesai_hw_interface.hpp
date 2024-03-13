@@ -104,12 +104,6 @@ private:
 
   int prev_phase_{};
 
-  int timeout_ = 2000;
-  std::timed_mutex tm_;
-  int tm_fail_cnt = 0;
-  int tm_fail_cnt_max = 0;
-  int tm_fail_cnt_max_sensor_setup = 3;
-  bool wl = false;
   bool is_solid_state = false;
   int target_model_no;
 
@@ -130,18 +124,6 @@ private:
   /// @param str Received string
   void str_cb(const std::string & str);
 
-  /// @brief Lock function during TCP communication
-  /// @param tm Mutex
-  /// @param fail_cnt # of failures
-  /// @param fail_cnt_max # of times to accept failure
-  /// @param name Confirmation name used in PrintDebug
-  /// @return Locked
-  bool CheckLock(std::timed_mutex & tm, int & fail_cnt, const int & fail_cnt_max, std::string name);
-  /// @brief Unlock function during TCP communication
-  /// @param tm Mutex
-  /// @param name Confirmation name used in PrintDebug
-  void CheckUnlock(std::timed_mutex & tm, std::string name);
-
   std::shared_ptr<rclcpp::Logger> parent_node_logger;
   /// @brief Printing the string to RCLCPP_INFO_STREAM
   /// @param info Target string
@@ -156,6 +138,11 @@ private:
   /// @param bytes Target byte vector
   void PrintDebug(const std::vector<uint8_t> & bytes);
 
+  /// @brief Send a PTC request with an optional payload, and return the full response payload. Blocking.
+  /// @param command_id PTC command number.
+  /// @param payload Payload bytes of the PTC command. Not including the 8-byte PTC header.
+  /// @return The returned payload, if successful, or nullptr.
+  std::shared_ptr<std::vector<uint8_t>> SendReceive(const uint8_t command_id, const std::vector<uint8_t> &  payload = {});
 public:
   /// @brief Constructor
   HesaiHwInterface();
@@ -422,31 +409,7 @@ public:
   /// @param callback Callback function for received HesaiConfig
   /// @param with_run Automatically executes run() of TcpDriver
   /// @return Resulting status
-  Status GetConfig(
-    std::shared_ptr<::drivers::tcp_driver::TcpDriver> target_tcp_driver,
-    std::function<void(HesaiConfig & result)> callback, bool with_run = true);
-  /// @brief Getting data with PTC_COMMAND_GET_CONFIG_INFO
-  /// @param ctx IO Context used
-  /// @param callback Callback function for received HesaiConfig
-  /// @param with_run Automatically executes run() of TcpDriver
-  /// @return Resulting status
-  Status GetConfig(
-    std::shared_ptr<boost::asio::io_context> ctx,
-    std::function<void(HesaiConfig & result)> callback, bool with_run = true);
-  /// @brief Getting data with PTC_COMMAND_GET_CONFIG_INFO
-  /// @param ctx IO Context used
-  /// @param with_run Automatically executes run() of TcpDriver
-  /// @return Resulting status
-  Status GetConfig(std::shared_ptr<boost::asio::io_context> ctx, bool with_run = true);
-  /// @brief Getting data with PTC_COMMAND_GET_CONFIG_INFO
-  /// @param callback Callback function for received HesaiConfig
-  /// @param with_run Automatically executes run() of TcpDriver
-  /// @return Resulting status
-  Status GetConfig(std::function<void(HesaiConfig & result)> callback, bool with_run = true);
-  /// @brief Getting data with PTC_COMMAND_GET_CONFIG_INFO
-  /// @param with_run Automatically executes run() of TcpDriver
-  /// @return Resulting status
-  Status GetConfig(bool with_run = true);
+  std::shared_ptr<HesaiConfig> GetConfig();
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_STATUS
   /// @param target_tcp_driver TcpDriver used
   /// @param callback Callback function for received HesaiLidarStatus

@@ -7,6 +7,8 @@ namespace ros
 HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("hesai_hw_interface_ros_wrapper", options), hw_interface_()
 {
+  this->get_logger().set_level(rclcpp::Logger::Level::Debug);
+
   if (mtx_config_.try_lock()) {
     interface_status_ = GetParameters(sensor_configuration_);
     mtx_config_.unlock();
