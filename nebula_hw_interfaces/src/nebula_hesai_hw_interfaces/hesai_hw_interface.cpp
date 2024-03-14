@@ -890,7 +890,7 @@ Status HesaiHwInterface::SetPtpConfig(
     request_payload.emplace_back(logAnnounceInterval & 0xff);
     request_payload.emplace_back(logSyncInterval & 0xff);
     request_payload.emplace_back(logMinDelayReqInterval & 0xff);
-  } else if (profile == 3) {
+  } else if (profile == 2 || profile == 3) {
     request_payload.emplace_back(switch_type & 0xff);
   }
 
@@ -1237,8 +1237,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   }
 
   if (
-    sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128 &&
-    sensor_configuration->sensor_model != SensorModel::HESAI_PANDARQT128) {
+    sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128) {
     set_flg = true;
     auto sync_angle = static_cast<int>(hesai_config.sync_angle / 100);
     auto scan_phase = static_cast<int>(sensor_configuration->scan_phase);
