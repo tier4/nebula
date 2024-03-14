@@ -776,6 +776,7 @@ public:
   /// @param profile IEEE timing and synchronization standard
   /// @param domain Domain attribute of the local clock
   /// @param network Network transport type of 1588v2
+  /// @param switch_type Switch type of 802.1AS Automotive
   /// @param logAnnounceInterval Time interval between Announce messages, in units of log seconds
   /// (default: 1)
   /// @param logSyncInterval Time interval between Sync messages, in units of log seconds (default:
@@ -786,13 +787,14 @@ public:
   /// @return Resulting status
   Status SetPtpConfig(
     std::shared_ptr<::drivers::tcp_driver::TcpDriver> target_tcp_driver, int profile, int domain,
-    int network, int logAnnounceInterval, int logSyncInterval, int logMinDelayReqInterval,
+    int network, int switch_type, int logAnnounceInterval = 1, int logSyncInterval = 1, int logMinDelayReqInterval = 0,
     bool with_run = true);
   /// @brief Setting values with PTC_COMMAND_SET_PTP_CONFIG
   /// @param ctx IO Context used
   /// @param profile IEEE timing and synchronization standard
   /// @param domain Domain attribute of the local clock
   /// @param network Network transport type of 1588v2
+  /// @param switch_type Switch type of 802.1AS Automotive
   /// @param logAnnounceInterval Time interval between Announce messages, in units of log seconds
   /// (default: 1)
   /// @param logSyncInterval Time interval between Sync messages, in units of log seconds (default:
@@ -802,12 +804,13 @@ public:
   /// @param with_run Automatically executes run() of TcpDriver
   /// @return Resulting status
   Status SetPtpConfig(
-    std::shared_ptr<boost::asio::io_context> ctx, int profile, int domain, int network,
-    int logAnnounceInterval, int logSyncInterval, int logMinDelayReqInterval, bool with_run = true);
+    std::shared_ptr<boost::asio::io_context> ctx, int profile, int domain, int network, int switch_type, 
+    int logAnnounceInterval = 1, int logSyncInterval = 1, int logMinDelayReqInterval = 0, bool with_run = true);
   /// @brief Setting values with PTC_COMMAND_SET_PTP_CONFIG
   /// @param profile IEEE timing and synchronization standard
   /// @param domain Domain attribute of the local clock
   /// @param network Network transport type of 1588v2
+  /// @param switch_type Switch type of 802.1AS Automotive
   /// @param logAnnounceInterval Time interval between Announce messages, in units of log seconds
   /// (default: 1)
   /// @param logSyncInterval Time interval between Sync messages, in units of log seconds (default:
@@ -817,8 +820,8 @@ public:
   /// @param with_run Automatically executes run() of TcpDriver
   /// @return Resulting status
   Status SetPtpConfig(
-    int profile, int domain, int network, int logAnnounceInterval, int logSyncInterval,
-    int logMinDelayReqInterval, bool with_run = true);
+    int profile, int domain, int network, int switch_type, int logAnnounceInterval = 1, int logSyncInterval = 1,
+    int logMinDelayReqInterval = 0, bool with_run = true);
   /// @brief Getting data with PTC_COMMAND_GET_PTP_CONFIG
   /// @param target_tcp_driver TcpDriver used
   /// @param with_run Automatically executes run() of TcpDriver

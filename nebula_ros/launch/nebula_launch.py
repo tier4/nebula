@@ -86,6 +86,7 @@ def launch_setup(context, *args, **kwargs):
                         "ptp_profile": LaunchConfiguration("ptp_profile"),
                         "ptp_domain": LaunchConfiguration("ptp_domain"),
                         "ptp_transport_type": LaunchConfiguration("ptp_transport_type"),
+                        "ptp_switch_type": LaunchConfiguration("ptp_switch_type"),
                     },
                 ],
             ),
@@ -128,6 +129,7 @@ def launch_setup(context, *args, **kwargs):
                     "ptp_profile": LaunchConfiguration("ptp_profile"),
                     "ptp_domain": LaunchConfiguration("ptp_domain"),
                     "ptp_transport_type": LaunchConfiguration("ptp_transport_type"),
+                    "ptp_switch_type": LaunchConfiguration("ptp_switch_type"),
                 },
             ],
         ),
@@ -183,6 +185,7 @@ def generate_launch_description():
             add_launch_arg("ptp_profile", "1588v2"),
             add_launch_arg("ptp_domain", "0"),
             add_launch_arg("ptp_transport_type", "UDP"),
+            add_launch_arg("ptp_switch_type", "TSN"),
         ]
         + [OpaqueFunction(function=launch_setup)]
     )

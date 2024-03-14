@@ -355,6 +355,12 @@ enum class PtpTransportType {
   UNKNOWN_TRANSPORT
 };
 
+enum class PtpSwitchType {
+  NON_TSN = 0,
+  TSN,
+  UNKNOWN_SWITCH
+};
+
 /// @brief not used?
 struct PointField
 {
@@ -673,6 +679,41 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpTranspor
       os << "L2";
       break;
     case PtpTransportType::UNKNOWN_TRANSPORT:
+      os << "UNKNOWN";
+      break;
+  }
+  return os;
+}
+
+/// @brief Converts String to PTP SwitchType
+/// @param switch_type Switch as String
+/// @return Corresponding PtpSwitchType
+inline PtpSwitchType PtpSwitchTypeFromString(const std::string & switch_type)
+{
+  // Hesai
+  auto tmp_str = switch_type;
+  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(),
+                 [](unsigned char c){ return std::tolower(c); });
+  if (tmp_str == "tsn") return PtpSwitchType::TSN;
+  if (tmp_str == "non_tsn") return PtpSwitchType::NON_TSN;
+
+  return PtpSwitchType::UNKNOWN_SWITCH;
+}
+
+/// @brief Convert PtpSwitchType enum to string (Overloading the << operator)
+/// @param os
+/// @param arg
+/// @return stream
+inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpSwitchType const & arg)
+{
+  switch (arg) {
+    case PtpSwitchType::TSN:
+      os << "TSN";
+      break;
+    case PtpSwitchType::NON_TSN:
+      os << "NON_TSN";
+      break;
+    case PtpSwitchType::UNKNOWN_SWITCH:
       os << "UNKNOWN";
       break;
   }
