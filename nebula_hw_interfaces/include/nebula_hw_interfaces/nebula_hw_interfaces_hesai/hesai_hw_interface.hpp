@@ -77,12 +77,12 @@ const uint16_t PANDAR128_E4X_EXTENDED_PACKET_SIZE = 1117;
 
 const uint16_t MTU_SIZE = 1500;
 
-const int PTP_LOG_ANNOUNCE_INTERVAL =
-  1;  // Time interval between Announce messages, in units of log seconds (default: 1)
-const int PTP_SYNC_INTERVAL =
-  1;  // Time interval between Sync messages, in units of log seconds (default: 1)
-const int PTP_LOG_MIN_DELAY_INTERVAL = 0;  // Minimum permitted mean time between Delay_Req
-                                           // messages, in units of log seconds (default: 0)
+// Time interval between Announce messages, in units of log seconds (default: 1)
+const int PTP_LOG_ANNOUNCE_INTERVAL = 1; 
+// Time interval between Sync messages, in units of log seconds (default: 1)
+const int PTP_SYNC_INTERVAL = 1;  
+// Minimum permitted mean time between Delay_Req messages, in units of log seconds (default: 0)
+const int PTP_LOG_MIN_DELAY_INTERVAL = 0;
 
 const int HESAI_LIDAR_GPS_CLOCK_SOURCE = 0;
 const int HESAI_LIDAR_PTP_CLOCK_SOURCE = 1;

@@ -83,7 +83,7 @@ public:
 
     int channel_offset_ns;
     bool is_hires_mode = packet.tail.operational_state == OperationalState::HIGH_RESOLUTION;
-        auto azimuth_state = packet.tail.geAzimuthState(block_id);
+    auto azimuth_state = packet.tail.geAzimuthState(block_id);
 
     if (!is_hires_mode) {
       channel_offset_ns = firing_time_offset_static_ns_[channel_id];
@@ -94,7 +94,7 @@ public:
         channel_offset_ns = firing_time_offset_as1_ns_[channel_id];
       }
     }
-    
+
     return block_offset_ns + 43346 + channel_offset_ns;
   }
 
