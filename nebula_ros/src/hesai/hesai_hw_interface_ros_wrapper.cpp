@@ -42,11 +42,9 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
     try{
       std::vector<std::thread> thread_pool{};
         thread_pool.emplace_back([this] {
-          hw_interface_.GetInventory(  // ios,
-            [this](HesaiInventory & result) {
-              RCLCPP_INFO_STREAM(get_logger(), result);
-              hw_interface_.SetTargetModel(result.model);
-            });
+          auto result = hw_interface_.GetInventory();
+          RCLCPP_INFO_STREAM(get_logger(), result);
+          hw_interface_.SetTargetModel(result.model);
         });
         for (std::thread & th : thread_pool) {
           th.join();
@@ -146,6 +144,7 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
   }
 #endif
 
+  RCLCPP_DEBUG(this->get_logger(), "Starting stream");
   StreamStart();
 }
 
