@@ -274,7 +274,7 @@ void HesaiHwInterface::ReceiveSensorPacketCallback(const std::vector<uint8_t> & 
     }
   }
 }
-Status HesaiHwInterface::SensorInterfaceStop() { return Status::ERROR_1; }
+Status HesaiHwInterface::SensorInterfaceStop()
 {
   return Status::ERROR_1;
 }
