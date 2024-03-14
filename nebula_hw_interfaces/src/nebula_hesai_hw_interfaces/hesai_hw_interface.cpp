@@ -294,10 +294,10 @@ Status HesaiHwInterface::GetCalibrationConfiguration(
   return Status::ERROR_1;
 }
 
-Status HesaiHwInterface::InitializeTcpDriver(bool setup_sensor)
+Status HesaiHwInterface::InitializeTcpDriver()
 {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "HesaiHwInterface::InitializeTcpDriver, setup_sensor=" << setup_sensor << std::endl;
+  std::cout << "HesaiHwInterface::InitializeTcpDriver" << std::endl;
   std::cout << "st: tcp_driver_->init_socket" << std::endl;
   std::cout << "sensor_configuration_->sensor_ip=" << sensor_configuration_->sensor_ip << std::endl;
   std::cout << "sensor_configuration_->host_ip=" << sensor_configuration_->host_ip << std::endl;
@@ -695,9 +695,7 @@ Status HesaiHwInterface::SetSpinRate(uint16_t rpm)
   request_payload.emplace_back((rpm >> 8) & 0xff);
   request_payload.emplace_back(rpm & 0xff);
 
-  auto response_ptr = SendReceive(PTC_COMMAND_SET_SPIN_RATE, request_payload);
-  auto & response = *response_ptr;
-
+  SendReceive(PTC_COMMAND_SET_SPIN_RATE, request_payload);
   return Status::OK;
 }
 
@@ -708,9 +706,7 @@ Status HesaiHwInterface::SetSyncAngle(int sync_angle, int angle)
   request_payload.emplace_back((angle >> 8) & 0xff);
   request_payload.emplace_back(angle & 0xff);
 
-  auto response_ptr = SendReceive(PTC_COMMAND_SET_SYNC_ANGLE, request_payload);
-  auto & response = *response_ptr;
-
+  SendReceive(PTC_COMMAND_SET_SYNC_ANGLE, request_payload);
   return Status::OK;
 }
 
@@ -719,9 +715,7 @@ Status HesaiHwInterface::SetTriggerMethod(int trigger_method)
   std::vector<unsigned char> request_payload;
   request_payload.emplace_back(trigger_method & 0xff);
 
-  auto response_ptr = SendReceive(PTC_COMMAND_SET_TRIGGER_METHOD, request_payload);
-  auto & response = *response_ptr;
-
+  SendReceive(PTC_COMMAND_SET_TRIGGER_METHOD, request_payload);
   return Status::OK;
 }
 
@@ -730,9 +724,7 @@ Status HesaiHwInterface::SetStandbyMode(int standby_mode)
   std::vector<unsigned char> request_payload;
   request_payload.emplace_back(standby_mode & 0xff);
 
-  auto response_ptr = SendReceive(PTC_COMMAND_SET_STANDBY_MODE, request_payload);
-  auto & response = *response_ptr;
-
+  SendReceive(PTC_COMMAND_SET_STANDBY_MODE, request_payload);
   return Status::OK;
 }
 
@@ -741,9 +733,7 @@ Status HesaiHwInterface::SetReturnMode(int return_mode)
   std::vector<unsigned char> request_payload;
   request_payload.emplace_back(return_mode & 0xff);
 
-  auto response_ptr = SendReceive(PTC_COMMAND_SET_RETURN_MODE, request_payload);
-  auto & response = *response_ptr;
-
+  SendReceive(PTC_COMMAND_SET_RETURN_MODE, request_payload);
   return Status::OK;
 }
 
@@ -760,9 +750,7 @@ Status HesaiHwInterface::SetDestinationIp(
   request_payload.emplace_back((gps_port >> 8) & 0xff);
   request_payload.emplace_back(gps_port & 0xff);
 
-  auto response_ptr = SendReceive(PTC_COMMAND_SET_DESTINATION_IP, request_payload);
-  auto & response = *response_ptr;
-
+  SendReceive(PTC_COMMAND_SET_DESTINATION_IP, request_payload);
   return Status::OK;
 }
 
@@ -787,9 +775,7 @@ Status HesaiHwInterface::SetControlPort(
   request_payload.emplace_back((vlan_id >> 8) & 0xff);
   request_payload.emplace_back(vlan_id & 0xff);
 
-  auto response_ptr = SendReceive(PTC_COMMAND_SET_CONTROL_PORT, request_payload);
-  auto & response = *response_ptr;
-
+  SendReceive(PTC_COMMAND_SET_CONTROL_PORT, request_payload);
   return Status::OK;
 }
 
@@ -802,9 +788,7 @@ Status HesaiHwInterface::SetLidarRange(int method, std::vector<unsigned char> da
   request_payload.emplace_back(method & 0xff);
   request_payload.insert(request_payload.end(), data.begin(), data.end());
 
-  auto response_ptr = SendReceive(PTC_COMMAND_SET_LIDAR_RANGE, request_payload);
-  auto & response = *response_ptr;
-
+  SendReceive(PTC_COMMAND_SET_LIDAR_RANGE, request_payload);
   return Status::OK;
 }
 
@@ -821,9 +805,7 @@ Status HesaiHwInterface::SetLidarRange(int start, int end)
   request_payload.emplace_back((end >> 8) & 0xff);
   request_payload.emplace_back(end & 0xff);
 
-  auto response_ptr = SendReceive(PTC_COMMAND_SET_LIDAR_RANGE, request_payload);
-  auto & response = *response_ptr;
-
+  SendReceive(PTC_COMMAND_SET_LIDAR_RANGE, request_payload);
   return Status::OK;
 }
 
@@ -859,9 +841,7 @@ Status HesaiHwInterface::SetClockSource(int clock_source)
   std::vector<unsigned char> request_payload;
   request_payload.emplace_back(clock_source & 0xff);
 
-  auto response_ptr = SendReceive(PTC_COMMAND_SET_CLOCK_SOURCE, request_payload);
-  auto & response = *response_ptr;
-
+  SendReceive(PTC_COMMAND_SET_CLOCK_SOURCE, request_payload);
   return Status::OK;
 }
 
@@ -894,9 +874,7 @@ Status HesaiHwInterface::SetPtpConfig(
     request_payload.emplace_back(switch_type & 0xff);
   }
 
-  auto response_ptr = SendReceive(PTC_COMMAND_SET_PTP_CONFIG, request_payload);
-  auto & response = *response_ptr;
-
+  SendReceive(PTC_COMMAND_SET_PTP_CONFIG, request_payload);
   return Status::OK;
 }
 
@@ -927,9 +905,7 @@ HesaiPtpConfig HesaiHwInterface::GetPtpConfig()
 
 Status HesaiHwInterface::SendReset()
 {
-  auto response_ptr = SendReceive(PTC_COMMAND_RESET);
-  auto & response = *response_ptr;
-
+  SendReceive(PTC_COMMAND_RESET);
   return Status::OK;
 }
 
@@ -938,9 +914,7 @@ Status HesaiHwInterface::SetRotDir(int mode)
   std::vector<unsigned char> request_payload;
   request_payload.emplace_back(mode & 0xff);
 
-  auto response_ptr = SendReceive(PTC_COMMAND_SET_ROTATE_DIRECTION, request_payload);
-  auto & response = *response_ptr;
-
+  SendReceive(PTC_COMMAND_SET_ROTATE_DIRECTION, request_payload);
   return Status::OK;
 }
 

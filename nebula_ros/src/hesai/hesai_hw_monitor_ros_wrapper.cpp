@@ -61,7 +61,7 @@ HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & o
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
-  while(hw_interface_.InitializeTcpDriver(false) == Status::ERROR_1)
+  while(hw_interface_.InitializeTcpDriver() == Status::ERROR_1)
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(8000));// >5000
   }

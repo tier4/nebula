@@ -305,7 +305,7 @@ Status HesaiDriverRosWrapper::GetParameters(
         << sensor_configuration.sensor_ip << "'");
       std::future<void> future = std::async(std::launch::async,
                                             [this, &calibration_configuration, &calibration_file_path_from_sensor, &run_local]() {
-                                              if (hw_interface_.InitializeTcpDriver(false) == Status::OK) {
+                                              if (hw_interface_.InitializeTcpDriver() == Status::OK) {
                                                 auto str = hw_interface_.GetLidarCalibrationString();
                                                   auto rt = calibration_configuration.SaveFileFromString(
                                                     calibration_file_path_from_sensor, str);
@@ -394,7 +394,7 @@ Status HesaiDriverRosWrapper::GetParameters(
       correction_file_path_from_sensor += correction_file_path.substr(ext_pos, correction_file_path.size() - ext_pos);
     }
     std::future<void> future = std::async(std::launch::async, [this, &correction_configuration, &correction_file_path_from_sensor, &run_local, &launch_hw]() {
-      if (launch_hw && hw_interface_.InitializeTcpDriver(false) == Status::OK) {
+      if (launch_hw && hw_interface_.InitializeTcpDriver() == Status::OK) {
         RCLCPP_INFO_STREAM(
           this->get_logger(), "Trying to acquire calibration data from sensor");
         auto received_bytes = hw_interface_.GetLidarCalibrationBytes();

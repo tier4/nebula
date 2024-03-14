@@ -22,7 +22,7 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
 #if not defined(TEST_PCAP)
-  Status rt = hw_interface_.InitializeTcpDriver(this->setup_sensor);
+  Status rt = hw_interface_.InitializeTcpDriver();
   if(this->retry_hw_)
   {
     int cnt = 0;
@@ -32,7 +32,7 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
       cnt++;
       std::this_thread::sleep_for(std::chrono::milliseconds(8000));// >5000
       RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Retry: " << cnt);
-      rt = hw_interface_.InitializeTcpDriver(this->setup_sensor);
+      rt = hw_interface_.InitializeTcpDriver();
     }
   }
 
