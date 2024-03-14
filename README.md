@@ -3,6 +3,7 @@
 Nebula is a sensor driver platform that is designed to provide a unified framework for as wide a variety of devices as possible.
 While it primarily targets Ethernet-based LiDAR sensors, it aims to be easily extendable to support new sensors and interfaces.
 Nebula provides the following features:
+
 - Support for Velodyne and Hesai sensors, with other LiDAR vendor support under development
 - ROS 2 interface implementations
 - TCP/IP and UDP communication implementations
@@ -14,9 +15,7 @@ Nebula provides the following features:
   - Receiving and interpretation of diagnostics information from the sensor
   - Support for multiple return modes and labelling of return types for each point
 
-
 With a rapidly increasing number of sensor types and models becoming available, and varying levels of vendor and third-party driver support, Nebula creates a centralized driver methodology. We hope that this project will be used to facilitate active collaboration and efficiency in development projects by providing a platform that reduces the need to re-implement and maintain many different sensor drivers. Contributions to extend the supported devices and features of Nebula are always welcome.
-
 
 ## How to build
 
@@ -85,27 +84,27 @@ ros2 launch nebula_ros nebula_launch.py sensor_model:=Pandar64 config_file:=your
 
 Supported models, where sensor_model is the ROS param to be used at launch:
 
-| Manufacturer | Model         | sensor_model | Configuration file | Test status |
-| ------------ | ------------- | ------------ | ------------------ | ----------- |
-| HESAI        | Pandar 64     | Pandar64     | Pandar64.yaml      | :heavy_check_mark: |
-| HESAI        | Pandar 40P    | Pandar40P    | Pandar40P.yaml     | :heavy_check_mark: |
-| HESAI        | Pandar XT32   | PandarXT32   | PandarXT32.yaml    | :heavy_check_mark: |
-| HESAI        | Pandar XT32M  | PandarXT32M  | PandarXT32M.yaml   | :warning: |
-| HESAI        | Pandar QT64   | PandarQT64   | PandarQT64.yaml    | :heavy_check_mark: |
-| HESAI        | Pandar QT128  | PandarQT128  | PandarQT128.yaml   | :warning: |
-| HESAI        | Pandar AT128  | PandarAT128  | PandarAT128.yaml   | :heavy_check_mark:* |
-| HESAI        | Pandar 128E4X | Pandar128E4X | Pandar128E4X.yaml  | :warning: |
-| Velodyne     | VLP-16        | VLP16        | VLP16.yaml         | :warning: |
-| Velodyne     | VLP-16-HiRes  | VLP16        |                    | :x: |
-| Velodyne     | VLP-32        | VLP32        | VLP32.yaml         | :warning: |
-| Velodyne     | VLS-128       | VLS128       | VLS128.yaml        | :warning: |
+| Manufacturer | Model         | sensor_model | Configuration file | Test status          |
+| ------------ | ------------- | ------------ | ------------------ | -------------------- |
+| HESAI        | Pandar 64     | Pandar64     | Pandar64.yaml      | :heavy_check_mark:   |
+| HESAI        | Pandar 40P    | Pandar40P    | Pandar40P.yaml     | :heavy_check_mark:   |
+| HESAI        | Pandar XT32   | PandarXT32   | PandarXT32.yaml    | :heavy_check_mark:   |
+| HESAI        | Pandar XT32M  | PandarXT32M  | PandarXT32M.yaml   | :warning:            |
+| HESAI        | Pandar QT64   | PandarQT64   | PandarQT64.yaml    | :heavy_check_mark:   |
+| HESAI        | Pandar QT128  | PandarQT128  | PandarQT128.yaml   | :warning:            |
+| HESAI        | Pandar AT128  | PandarAT128  | PandarAT128.yaml   | :heavy_check_mark:\* |
+| HESAI        | Pandar 128E4X | Pandar128E4X | Pandar128E4X.yaml  | :warning:            |
+| Velodyne     | VLP-16        | VLP16        | VLP16.yaml         | :warning:            |
+| Velodyne     | VLP-16-HiRes  | VLP16        |                    | :x:                  |
+| Velodyne     | VLP-32        | VLP32        | VLP32.yaml         | :warning:            |
+| Velodyne     | VLS-128       | VLS128       | VLS128.yaml        | :warning:            |
+| Continental  | ARS548        | ARS548       | ARS548.yaml        | :warning:            |
 
 Test status:\
 :heavy_check_mark:: complete\
 :warning:: some functionality yet to be tested\
 :x:: untested\
-*: AT128 needs software version 3.50.8 or newer for the `scan_angle` setting to work correctly.
-
+\*: AT128 needs software version 3.50.8 or newer for the `scan_angle` setting to work correctly.
 
 ## ROS parameters
 
@@ -215,19 +214,18 @@ Parameters shared by all supported models:
 
 #### Driver parameters
 
-| Parameter        | Type   | Default  | Accepted values      | Description                             |
-| ---------------- | ------ | -------- | -------------------- | --------------------------------------- |
-| frame_id         | string | velodyne |                      | ROS frame ID                            |
-| calibration_file | string |          |                      | LiDAR calibration file                  |
-| min_range        | double | 0.3      | meters, >= 0.3       | Minimum point range published           |
-| max_range        | double | 300.0    | meters, <= 300.0     | Maximum point range published           |
-| cloud_min_angle  | uint16 | 0        | degrees [0, 360]     | FoV start angle                         |
-| cloud_max_angle  | uint16 | 359      | degrees [0, 360]     | FoV end angle                           |
+| Parameter        | Type   | Default  | Accepted values  | Description                   |
+| ---------------- | ------ | -------- | ---------------- | ----------------------------- |
+| frame_id         | string | velodyne |                  | ROS frame ID                  |
+| calibration_file | string |          |                  | LiDAR calibration file        |
+| min_range        | double | 0.3      | meters, >= 0.3   | Minimum point range published |
+| max_range        | double | 300.0    | meters, <= 300.0 | Maximum point range published |
+| cloud_min_angle  | uint16 | 0        | degrees [0, 360] | FoV start angle               |
+| cloud_max_angle  | uint16 | 359      | degrees [0, 360] | FoV end angle                 |
 
 ## Software design overview
 
 ![DriverOrganization](docs/diagram.png)
-
 
 ## Hesai Sensor Setup
 
@@ -235,7 +233,7 @@ New Hesai sensors do not provide a Web UI to verify and set up the sensor parame
 
 The script requires the installation of dependencies via pip:
 
-`$ pip3 install scripts/requirements.txt  # first-time setup`
+`$ pip3 install scripts/requirements.txt # first-time setup`
 
 Once the dependencies are installed, the setup script can be invoked using the following command:
 
@@ -274,6 +272,7 @@ Run profiling for each version you want to compare:
 git checkout my_improved_branch
 ./scripts/profiling_runner.bash improved -m Pandar64 -b ~/my_rosbag -c 2 -t 20 -n 3
 ```
+
 Show results:
 
 ```bash
