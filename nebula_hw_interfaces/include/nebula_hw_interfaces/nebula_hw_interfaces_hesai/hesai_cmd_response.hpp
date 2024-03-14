@@ -235,40 +235,30 @@ struct HesaiInventory
     switch (model) {
       case 0:
         return "Pandar40P";
-        break;
       case 2:
         return "Pandar64";
-        break;
       case 3:
         return "Pandar128";
-        break;
       case 15:
         return "PandarQT";
-        break;
       case 17:
         return "Pandar40M";
-        break;
       case 20:
         return "PandarMind(PM64)";
-        break;
       case 25:
         return "PandarXT32";
-        break;
       case 26:
         return "PandarXT16";
-        break;
       case 32:
         return "QT128C2X";
-        break;
       case 38:
         return "PandarXT32M";
-        break;
+      case 42:
+        return "OT128";
       case 48:
         return "PandarAT128";
-        break;
       default:
         return "Unknown(" + std::to_string(model) + ")";
-        break;
     }
   }
 };
