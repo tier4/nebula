@@ -20,11 +20,14 @@ typedef Packet128E3X Packet128E4X;
 
 }  // namespace hesai_packet
 
-// FIXME(mojomex) support high resolution mode
+// FIXME(mojomex):
+// The OT128 datasheet has entirely different numbers (and more azimuth states).
+// With the current sensor version, the numbers from the new datasheet are incorrect
+// (clouds do not sync to ToS but ToS+.052s) 
 class Pandar128E4X : public HesaiSensor<hesai_packet::Packet128E4X>
 {
 private:
-  enum OperationalState { HIGH_RESOLUTION = 0, STANDARD = 1 };
+enum OperationalState { HIGH_RESOLUTION = 0, STANDARD = 1 };
 
   static constexpr int firing_time_offset_static_ns_[128] = {
     49758, 43224, 36690, 30156, 21980, 15446, 8912,  2378,  49758, 43224, 36690, 30156, 2378,
