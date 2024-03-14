@@ -163,6 +163,15 @@ Status ContinentalARS548DriverRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("object_frame", descriptor);
+    sensor_configuration.object_frame = this->get_parameter("object_frame").as_string();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
@@ -683,7 +692,7 @@ visualization_msgs::msg::MarkerArray ContinentalARS548DriverRosWrapper::ConvertT
     current_ids.emplace(object.object_id);
 
     visualization_msgs::msg::Marker box_marker;
-    box_marker.header.frame_id = sensor_cfg_ptr_->base_frame;
+    box_marker.header.frame_id = sensor_cfg_ptr_->object_frame;
     box_marker.header.stamp = msg.header.stamp;
     box_marker.ns = "boxes";
     box_marker.id = object.object_id;
@@ -764,7 +773,7 @@ visualization_msgs::msg::MarkerArray ContinentalARS548DriverRosWrapper::ConvertT
     }
 
     visualization_msgs::msg::Marker delete_marker;
-    delete_marker.header.frame_id = sensor_cfg_ptr_->base_frame;
+    delete_marker.header.frame_id = sensor_cfg_ptr_->object_frame;
     delete_marker.header.stamp = msg.header.stamp;
     delete_marker.ns = "boxes";
     delete_marker.id = previous_id;

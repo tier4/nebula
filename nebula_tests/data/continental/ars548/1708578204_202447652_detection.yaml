@@ -2,7 +2,7 @@ header:
   stamp:
     sec: 1708578204
     nanosec: 202447652
-  frame_id: some_base_frame
+  frame_id: some_sensor_frame
 stamp_sync_status: 1
 origin_pos:
   x: 3.87200

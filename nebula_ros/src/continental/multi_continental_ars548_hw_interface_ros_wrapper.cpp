@@ -175,6 +175,15 @@ Status MultiContinentalARS548HwInterfaceRosWrapper::GetParameters(
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("object_frame", descriptor);
+    sensor_configuration.object_frame = this->get_parameter("object_frame").as_string();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
@@ -247,6 +256,7 @@ rcl_interfaces::msg::SetParametersResult MultiContinentalARS548HwInterfaceRosWra
     get_param(p, "data_port", new_param.data_port) |
     get_param(p, "multicast_ip", new_param.multicast_ip) |
     get_param(p, "base_frame", new_param.base_frame) |
+    get_param(p, "object_frame", new_param.object_frame) |
     get_param(p, "configuration_host_port", new_param.configuration_host_port) |
     get_param(p, "configuration_sensor_port", new_param.configuration_sensor_port) |
     get_param(p, "configuration_host_port", new_param.configuration_host_port) |
@@ -333,6 +343,7 @@ MultiContinentalARS548HwInterfaceRosWrapper::updateParameters()
      rclcpp::Parameter("data_port", sensor_configuration_.data_port),
      rclcpp::Parameter("multicast_ip", sensor_configuration_.multicast_ip),
      rclcpp::Parameter("base_frame", sensor_configuration_.base_frame),
+     rclcpp::Parameter("object_frame", sensor_configuration_.object_frame),
      rclcpp::Parameter("configuration_host_port", sensor_configuration_.configuration_host_port),
      rclcpp::Parameter(
        "configuration_sensor_port", sensor_configuration_.configuration_sensor_port)});

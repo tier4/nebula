@@ -238,7 +238,7 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(
 
   std::memcpy(&object_list, data.data(), sizeof(object_list));
 
-  msg.header.frame_id = sensor_configuration_->base_frame;
+  msg.header.frame_id = sensor_configuration_->object_frame;
 
   if (sensor_configuration_->use_sensor_time) {
     msg.header.stamp.nanosec = object_list.stamp.timestamp_nanoseconds.value();

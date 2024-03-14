@@ -3,6 +3,7 @@
     <arg name="sensor_model" default="ARS548"/>
     <arg name="frame_id"  default="continental"/>
     <arg name="base_frame"  default="base_link"/>
+    <arg name="object_frame"  default="base_link"/>
 
     <arg name="odometry_topic" default="odometry_input"/>
     <arg name="acceleration_topic"  default="acceleration_input"/>
@@ -41,6 +42,7 @@
             <param name="sensor_model" value="$(var sensor_model)"/>
             <param name="frame_id" value="$(var frame_id)"/>
             <param name="base_frame" value="$(var base_frame)"/>
+            <param name="object_frame" value="$(var object_frame)"/>
             <param name="host_ip" value="$(var host_ip)"/>
             <param name="sensor_ip" value="$(var sensor_ip)"/>
             <param name="new_sensor_ip" value="$(var new_sensor_ip)"/>
@@ -63,6 +65,7 @@
             <param name="sensor_model" value="$(var sensor_model)"/>
             <param name="frame_id" value="$(var frame_id)"/>
             <param name="base_frame" value="$(var base_frame)"/>
+            <param name="object_frame" value="$(var object_frame)"/>
             <param name="host_ip" value="$(var host_ip)"/>
             <param name="multicast_ip" value="$(var multicast_ip)"/>
             <param name="data_port" value="$(var data_port)"/>
@@ -86,6 +89,7 @@
             <param name="sensor_model" value="ARS548"/>
             <param name="frame_id" value="$(var frame_id)"/>
             <param name="base_frame" value="$(var base_frame)"/>
+            <param name="object_frame" value="$(var object_frame)"/>
             <param name="host_ip" value="$(var host_ip)"/>
             <param name="sensor_ip" value="$(var sensor_ip)"/>
             <param name="new_sensor_ip" value="$(var new_sensor_ip)"/>
@@ -108,6 +112,7 @@
             <param name="sensor_model" value="ARS548"/>
             <param name="frame_ids" value="[$(var frame_id)]"/>
             <param name="base_frame" value="$(var base_frame)"/>
+            <param name="object_frame" value="$(var object_frame)"/>
             <param name="host_ip" value="$(var host_ip)"/>
             <param name="multicast_ip" value="$(var multicast_ip)"/>
             <param name="data_port" value="$(var data_port)"/>
