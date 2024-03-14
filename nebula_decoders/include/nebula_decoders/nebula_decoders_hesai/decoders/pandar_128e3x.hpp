@@ -68,7 +68,6 @@ struct Packet128E3X : public PacketBase<2, 128, 2, 100>
 
 }  // namespace hesai_packet
 
-// FIXME(mojomex) support high resolution mode
 class Pandar128E3X : public HesaiSensor<hesai_packet::Packet128E3X>
 {
 private:
