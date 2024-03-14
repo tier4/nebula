@@ -47,6 +47,7 @@ struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
 {
   std::string multicast_ip{};
   std::string base_frame{};
+  std::string object_frame{};
   uint16_t configuration_host_port{};
   uint16_t configuration_sensor_port{};
   bool use_sensor_time{};
@@ -72,6 +73,7 @@ inline std::ostream & operator<<(
   std::ostream & os, ContinentalARS548SensorConfiguration const & arg)
 {
   os << (EthernetSensorConfigurationBase)(arg) << ", MulticastIP: " << arg.multicast_ip
+     << ", BaseFrame: " << arg.base_frame << ", ObjectFrame: " << arg.object_frame
      << ", ConfigurationHostPort: " << arg.configuration_host_port
      << ", ConfigurationSensorPort: " << arg.configuration_sensor_port
      << ", UseSensorTime: " << arg.use_sensor_time

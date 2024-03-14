@@ -104,7 +104,16 @@ Status ContinentalRosDecoderTest::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("base_frame", "some_base_frame", descriptor);
-    sensor_configuration.frame_id = this->get_parameter("base_frame").as_string();
+    sensor_configuration.base_frame = this->get_parameter("base_frame").as_string();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = 4;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("object_frame", "some_object_frame", descriptor);
+    sensor_configuration.object_frame = this->get_parameter("object_frame").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -113,7 +122,7 @@ Status ContinentalRosDecoderTest::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("frame_id", "some_sensor_frame", descriptor);
-    sensor_configuration.base_frame = this->get_parameter("frame_id").as_string();
+    sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -216,7 +225,7 @@ void ContinentalRosDecoderTest::DetectionListCallback(
 void ContinentalRosDecoderTest::ObjectListCallback(
   std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg)
 {
-  EXPECT_EQ(sensor_cfg_ptr_->base_frame, msg->header.frame_id);
+  EXPECT_EQ(sensor_cfg_ptr_->object_frame, msg->header.frame_id);
   std::string msg_as_string = continental_msgs::msg::to_yaml(*msg);
 
   std::stringstream detection_path;

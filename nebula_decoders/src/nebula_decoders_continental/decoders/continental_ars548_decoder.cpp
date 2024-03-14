@@ -146,7 +146,7 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(
   msg.detections.resize(number_of_detections);
 
   // Estimate dropped detections only when the radar is synchronized
-  if (radar_status_.timestamp_sync_status == "SYNC_OK") {
+  if (radar_status_.timestamp_sync_status == "1:SYNC_OK") {
     if (radar_status_.detection_first_stamp == 0) {
       radar_status_.detection_first_stamp =
         static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
@@ -238,7 +238,7 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(
 
   std::memcpy(&object_list, data.data(), sizeof(object_list));
 
-  msg.header.frame_id = sensor_configuration_->base_frame;
+  msg.header.frame_id = sensor_configuration_->object_frame;
 
   if (sensor_configuration_->use_sensor_time) {
     msg.header.stamp.nanosec = object_list.stamp.timestamp_nanoseconds.value();
@@ -255,7 +255,7 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(
   msg.objects.resize(number_of_objects);
 
   // Estimate dropped objects only when the radar is synchronized
-  if (radar_status_.timestamp_sync_status == "SYNC_OK") {
+  if (radar_status_.timestamp_sync_status == "1:SYNC_OK") {
     if (radar_status_.object_first_stamp == 0) {
       radar_status_.object_first_stamp =
         static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
