@@ -22,17 +22,15 @@ def get_sensor_make(sensor_name):
         return "Velodyne", ".yaml"
     elif sensor_name.lower() in ["helios", "bpearl"]:
         return "Robosense", None
-    elif sensor_name.lower() == "ars548":
+    elif sensor_name.lower() in ["ars548", "srr520"]:
         return "Continental", None
     return "unrecognized_sensor_model", None
 
 def get_plugin_name(sensor_make, sensor_model):
     if sensor_make.lower() != "continental":
         return sensor_make
-    elif sensor_model.lower() == "ars548":
-        return "ContinentalARS548"
     else:
-        return "invalid_plugin"
+        return sensor_make + sensor_model
 
 def is_hw_monitor_available(sensor_make):
     return sensor_make.lower() != "continental"

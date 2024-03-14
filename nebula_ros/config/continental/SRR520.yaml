@@ -12,3 +12,4 @@
     new_plug_bottom: true
     new_cover_damping: 0.0
     reset_sensor_configuration: false
+    configuration_vehicle_wheelbase: 2.79

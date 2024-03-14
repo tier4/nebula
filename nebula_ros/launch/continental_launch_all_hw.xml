@@ -71,8 +71,6 @@
             <param name="configuration_vehicle_width" value="$(var configuration_vehicle_width)"/>
             <param name="configuration_vehicle_height" value="$(var configuration_vehicle_height)"/>
             <param name="configuration_vehicle_wheelbase" value="$(var configuration_vehicle_wheelbase)"/>
-
-            <param name="use_sim_time" value="false"/>
         </node>
     </group>
 
@@ -112,8 +110,6 @@
             <param name="configuration_host_port" value="$(var configuration_host_port)"/>
             <param name="configuration_sensor_port" value="$(var configuration_sensor_port)"/>
             <param name="use_sensor_time" value="$(var use_sensor_time)"/>
-
-            <param name="use_sim_time" value="false"/>
         </node>
     </group>
 
@@ -150,8 +146,6 @@
             <param name="filters" value="$(var filters)"/>
             <param name="use_bus_time" value="$(var use_bus_time)"/>
             <param name="configuration_vehicle_wheelbase" value="$(var configuration_vehicle_wheelbase)"/>
-
-            <param name="use_sim_time" value="false"/>
         </node>
     </group>
 </launch>
