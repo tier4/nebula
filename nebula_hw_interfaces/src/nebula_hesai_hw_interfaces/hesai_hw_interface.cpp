@@ -1128,8 +1128,8 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 #endif
   auto current_return_mode = nebula::drivers::ReturnModeFromIntHesai(
     hesai_config.return_mode, sensor_configuration->sensor_model);
-  auto wait_time =
-    100ms;  // Avoids spamming the sensor, which leads to failure when configuring it.
+  // Avoids spamming the sensor, which leads to failure when configuring it.
+  auto wait_time = 100ms;
   if (sensor_configuration->return_mode != current_return_mode) {
     std::stringstream ss;
     ss << current_return_mode;
@@ -1345,7 +1345,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
     CheckAndSetConfig(
       std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration_), result);
   });
-  t.join();  // here
+  t.join();
 
   std::thread t2([this] {
     auto result = GetLidarRange();

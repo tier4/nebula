@@ -21,7 +21,7 @@ typedef Packet128E3X Packet128E4X;
 }  // namespace hesai_packet
 
 // FIXME(mojomex):
-// The OT128 datasheet has entierly different numbers (and more azimuth states).
+// The OT128 datasheet has entirely different numbers (and more azimuth states).
 // With the current sensor version, the numbers from the new datasheet are incorrect
 // (clouds do not sync to ToS but ToS+.052s) 
 class Pandar128E4X : public HesaiSensor<hesai_packet::Packet128E4X>
