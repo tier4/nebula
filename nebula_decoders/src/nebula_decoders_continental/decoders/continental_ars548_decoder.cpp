@@ -556,10 +556,10 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
     temperature_status_vector.push_back("Ok");
   }
   if (sensor_status_packet.temperature_status & 0x01) {
-    temperature_status_vector.push_back("Current under temperature");
+    temperature_status_vector.push_back("Current undertemperature");
   }
   if (sensor_status_packet.temperature_status & 0x02) {
-    temperature_status_vector.push_back("Past under temperature");
+    temperature_status_vector.push_back("Past undertemperature");
   }
   if (sensor_status_packet.temperature_status & 0x04) {
     temperature_status_vector.push_back("Current over temperature");
