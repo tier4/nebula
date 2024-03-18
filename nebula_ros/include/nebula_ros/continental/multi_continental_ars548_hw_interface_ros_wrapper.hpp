@@ -63,7 +63,7 @@ bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & nam
 }
 
 /// @brief Hardware interface ros wrapper of continental radar ethernet driver
-/// NOTE: this is a temporal class that acts as a single hw interface for multiple devices
+/// NOTE: this is a temporary class that acts as a single hw interface for multiple devices
 /// The reason behind this is a not-so-efficient multicasting and package processing when having N
 /// interfaces for N devices If we end up having problems because of that we may switch to this
 /// implementation. Otherwise this implementation will be removed at a later date

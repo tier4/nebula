@@ -30,7 +30,6 @@
     <arg name="sender_timeout_sec" default="0.01" description="Sender timeout int seconds"/>
     <arg name="filters" default="0:0" description="CAN filters"/>
     <arg name="use_bus_time" default="false" description="Whether to use the bus time for received messages or the system time"/>
-
     <group if="$(eval &quot;'$(var sensor_model)' == 'ARS548' &quot;)" >
 
         <node pkg="nebula_ros" exec="continental_ars548_driver_ros_wrapper_node" name="continental_ars548_decoder_driver" output="screen">
@@ -112,7 +111,6 @@
             <param name="use_sensor_time" value="$(var use_sensor_time)"/>
         </node>
     </group>
-
 
     <group if="$(eval &quot;'$(var sensor_model)' == 'SRR520' &quot;)" >
 
