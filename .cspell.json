@@ -7,6 +7,7 @@
     "Adctp",
     "AT",
     "block_id",
+    "extrinsics",
     "gprmc",
     "Hesai",
     "memcpy",
