@@ -294,34 +294,55 @@ void ContinentalSRR520HwInterfaceRosWrapper::ConfigureSensorRequestCallback(
   auto tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
   auto tf_listener = std::make_unique<tf2_ros::TransformListener>(*tf_buffer);
 
-  geometry_msgs::msg::TransformStamped base_to_sensor_tf;
-  try {
-    base_to_sensor_tf = tf_buffer->lookupTransform(
-      sensor_configuration_.base_frame, sensor_configuration_.frame_id, rclcpp::Time(0),
-      rclcpp::Duration::from_seconds(0.5));
-  } catch (tf2::TransformException & ex) {
-    RCLCPP_ERROR(
-      this->get_logger(), "Could not obtain the transform from the base frame to %s (%s)",
-      sensor_configuration_.frame_id.c_str(), ex.what());
-    response->success = false;
-    response->message = ex.what();
-    return;
+  float longitudinal = request->longitudinal;
+  float lateral = request->lateral;
+  float vertical = request->vertical;
+  float yaw = request->yaw;
+  float vehicle_wheelbase = request->vehicle_wheelbase;
+
+  if (vehicle_wheelbase < 0.f) {
+    RCLCPP_INFO(
+      this->get_logger(),
+      "Service vehicle_wheelbase is invalid. Falling back to configuration value (%.2f)",
+      sensor_configuration_.configuration_vehicle_wheelbase);
+    vehicle_wheelbase = sensor_configuration_.configuration_vehicle_wheelbase;
   }
 
-  const auto & quat = base_to_sensor_tf.transform.rotation;
-  geometry_msgs::msg::Vector3 rpy;
-  tf2::Matrix3x3(tf2::Quaternion(quat.x, quat.y, quat.z, quat.w)).getRPY(rpy.x, rpy.y, rpy.z);
+  if (request->autoconfigure_extrinsics) {
+    RCLCPP_INFO(
+      this->get_logger(),
+      "autoconfigure_extrinsics was set to true, so the mounting position will be derived from the "
+      "tfs");
 
-  float yaw = std::min<float>(std::max(static_cast<float>(rpy.z), -3.14159f), 3.14159f);
+    geometry_msgs::msg::TransformStamped base_to_sensor_tf;
+    try {
+      base_to_sensor_tf = tf_buffer->lookupTransform(
+        sensor_configuration_.base_frame, sensor_configuration_.frame_id, rclcpp::Time(0),
+        rclcpp::Duration::from_seconds(0.5));
+    } catch (tf2::TransformException & ex) {
+      RCLCPP_ERROR(
+        this->get_logger(), "Could not obtain the transform from the base frame to %s (%s)",
+        sensor_configuration_.frame_id.c_str(), ex.what());
+      response->success = false;
+      response->message = ex.what();
+      return;
+    }
+
+    const auto & quat = base_to_sensor_tf.transform.rotation;
+    geometry_msgs::msg::Vector3 rpy;
+    tf2::Matrix3x3(tf2::Quaternion(quat.x, quat.y, quat.z, quat.w)).getRPY(rpy.x, rpy.y, rpy.z);
+
+    longitudinal = base_to_sensor_tf.transform.translation.x - vehicle_wheelbase;
+    lateral = base_to_sensor_tf.transform.translation.y;
+    vertical = base_to_sensor_tf.transform.translation.z;
+    yaw = rpy.z;
+  }
+
+  yaw = std::min<float>(std::max<float>(yaw, -3.14159f), 3.14159f);
 
   auto result = hw_interface_.ConfigureSensor(
-    request->sensor_id,
-    base_to_sensor_tf.transform.translation.x -
-      sensor_configuration_.configuration_vehicle_wheelbase,
-    base_to_sensor_tf.transform.translation.y, base_to_sensor_tf.transform.translation.z, yaw,
-    base_to_sensor_tf.transform.translation.x -
-      0.5 * sensor_configuration_.configuration_vehicle_wheelbase,
-    sensor_configuration_.configuration_vehicle_wheelbase, request->cover_damping,
+    request->sensor_id, longitudinal, lateral, vertical, yaw,
+    longitudinal + 0.5 * vehicle_wheelbase, vehicle_wheelbase, request->cover_damping,
     request->plug_bottom, request->reset_sensor_configuration);
 
   response->success = result == Status::OK;
