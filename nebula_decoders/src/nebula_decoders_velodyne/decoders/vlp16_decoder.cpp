@@ -231,7 +231,7 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
               const float azimuth_corrected_f =
                 azimuth +
                 (azimuth_diff * ((dsr * VLP16_DSR_TOFFSET) + (firing * VLP16_FIRING_TOFFSET)) /
-                 VLP16_BLOCK_DURATION);
+                 VLP16_BLOCK_DURATION) - corrections.rot_correction * 180.0 / M_PI * 100;
               const uint16_t azimuth_corrected =
                 (static_cast<uint16_t>(round(azimuth_corrected_f))) % 36000;
 
@@ -247,13 +247,8 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
                 // Convert polar coordinates to Euclidean XYZ.
                 const float cos_vert_angle = corrections.cos_vert_correction;
                 const float sin_vert_angle = corrections.sin_vert_correction;
-                const float cos_rot_correction = corrections.cos_rot_correction;
-                const float sin_rot_correction = corrections.sin_rot_correction;
-
-                const float cos_rot_angle = cos_rot_table_[azimuth_corrected] * cos_rot_correction +
-                                            sin_rot_table_[azimuth_corrected] * sin_rot_correction;
-                const float sin_rot_angle = sin_rot_table_[azimuth_corrected] * cos_rot_correction -
-                                            cos_rot_table_[azimuth_corrected] * sin_rot_correction;
+                const float cos_rot_angle = cos_rot_table_[azimuth_corrected];
+                const float sin_rot_angle = sin_rot_table_[azimuth_corrected];
 
                 // Compute the distance in the xy plane (w/o accounting for rotation).
                 const float xy_distance = distance * cos_vert_angle;
