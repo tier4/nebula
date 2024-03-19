@@ -466,7 +466,7 @@ struct EthernetSensorConfigurationBase : SensorConfigurationBase
   uint16_t data_port;
 };
 
-/// @brief Base struct for Ethernet-based Sensor configuration
+/// @brief Base struct for CAN-based Sensor configuration
 struct CANSensorConfigurationBase : SensorConfigurationBase
 {
   std::string interface;
