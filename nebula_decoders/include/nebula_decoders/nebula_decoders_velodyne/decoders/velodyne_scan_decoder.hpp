@@ -182,6 +182,19 @@ public:
   virtual void reset_pointcloud(size_t n_pts, double time_stamp) = 0;
   /// @brief Resetting overflowed point cloud buffer
   virtual void reset_overflow(double time_stamp) = 0;
+
+  /// @brief Checks if the point is inside invalid regions.
+  /// @param channel Channel id of the point.
+  /// @param azimuth Azimuth angle of the point.
+  /// @return True if the point is invalid, false otherwise.
+  bool check_invalid_point(const int & channel, const uint16_t & azimuth)
+  {
+    if (!sensor_configuration_->invalid_point_remove) return false;
+    const auto & regions = sensor_configuration_->invalid_regions[channel];
+    return std::any_of(regions.begin(), regions.end(), [azimuth](const auto & region) {
+      return azimuth >= region.start && azimuth <= region.end;
+    });
+  }
 };
 
 }  // namespace drivers

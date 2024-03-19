@@ -246,6 +246,54 @@ Status VelodyneDriverRosWrapper::GetParameters(
     }
   }
 
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<bool>("invalid_point_remove", false, descriptor);
+    sensor_configuration.invalid_point_remove =
+      this->get_parameter("invalid_point_remove").as_bool();
+    if (sensor_configuration.invalid_point_remove) {
+      RCLCPP_DEBUG_STREAM(this->get_logger(), "Invalid point remove is active.");
+    } else {
+      RCLCPP_DEBUG_STREAM(this->get_logger(), "Invalid point remove is not active.");
+    }
+  }
+
+  if (sensor_configuration.invalid_point_remove) {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("invalid_regions", "", descriptor);
+    const std::string regions_string = this->get_parameter("invalid_regions").as_string();
+    std::istringstream regions_stream(regions_string);
+
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_json(regions_stream, pt);
+
+    for (const auto & region : pt) {
+      std::vector<int> elements;  // Will store extracted ring number, start angle and end angle.
+      for (const auto & element : region.second) {
+        elements.push_back(element.second.get<int>(""));
+      }
+      sensor_configuration.invalid_regions[elements[0]].push_back(
+        {static_cast<uint16_t>(elements[1]), static_cast<uint16_t>(elements[2])});
+    }
+
+    std::stringstream regions_log;
+    for (const auto & regions : sensor_configuration.invalid_regions) {
+      regions_log << "\nRing: " << regions.first << '\n';
+      for (const auto & region : regions.second) {
+        regions_log << "(" << region.start << "," << region.end << ")\n";
+      }
+    }
+    RCLCPP_DEBUG_STREAM(get_logger(), regions_log.str());
+  }
+
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }

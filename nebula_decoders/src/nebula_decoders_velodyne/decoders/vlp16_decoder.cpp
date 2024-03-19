@@ -238,12 +238,13 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
               // Condition added to avoid calculating points which are not in the interesting
               // defined area (min_angle < area < max_angle).
               if (
-                (azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100 &&
+                ((azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100 &&
                  azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 &&
                  sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle) ||
                 (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
                  (azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 ||
-                  azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) {
+                  azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) &&
+                !check_invalid_point(corrections.laser_ring, azimuth_corrected)) {
                 // Convert polar coordinates to Euclidean XYZ.
                 const float cos_vert_angle = corrections.cos_vert_correction;
                 const float sin_vert_angle = corrections.sin_vert_correction;

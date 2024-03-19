@@ -215,14 +215,34 @@ Parameters shared by all supported models:
 
 #### Driver parameters
 
-| Parameter        | Type   | Default  | Accepted values      | Description                             |
-| ---------------- | ------ | -------- | -------------------- | --------------------------------------- |
-| frame_id         | string | velodyne |                      | ROS frame ID                            |
-| calibration_file | string |          |                      | LiDAR calibration file                  |
-| min_range        | double | 0.3      | meters, >= 0.3       | Minimum point range published           |
-| max_range        | double | 300.0    | meters, <= 300.0     | Maximum point range published           |
-| cloud_min_angle  | uint16 | 0        | degrees [0, 360]     | FoV start angle                         |
-| cloud_max_angle  | uint16 | 359      | degrees [0, 360]     | FoV end angle                           |
+| Parameter              | Type   | Default  | Accepted values  | Description                      |
+|------------------------|--------|----------|------------------|----------------------------------|
+| frame_id               | string | velodyne |                  | ROS frame ID                     |
+| calibration_file       | string |          |                  | LiDAR calibration file           |
+| min_range              | double | 0.3      | meters, >= 0.3   | Minimum point range published    |
+| max_range              | double | 300.0    | meters, <= 300.0 | Maximum point range published    |
+| cloud_min_angle        | uint16 | 0        | degrees [0, 360] | FoV start angle                  |
+| cloud_max_angle        | uint16 | 359      | degrees [0, 360] | FoV end angle                    |
+| invalid_point_remove   | bool   | false    | true, false      | Enable ring based filter*        |
+| invalid_regions        | string |          |                  | Invalid point regions to remove* |
+
+*`invalid_point_remove` activates the ring based filter which removes points if they are within specified angle ranges. 
+
+*The format for an invalid region is [ring_id, start_angle, end_angle]
+
+*Angles are given in degrees and multiplied by 100. For instance, 34.44 degrees is represented as 3444. 
+
+*Invalid regions are specified as a string containing a list of invalid regions. Ensure that you have quotation marks to make it string. For example:
+```xml
+<node pkg="nebula_ros" exec="velodyne_driver_ros_wrapper_node"
+          name="velodyne_cloud" output="screen">
+        ...
+        <param name="invalid_point_remove" value="true"/>
+        <param name="invalid_regions" value="'[[0, 3500, 6900], [1, 3400, 6500], [2, 3200, 4600], [3, 3200, 4600]]'"/>
+    </node>
+```
+
+*Multiple invalid regions are possible for the same ring.
 
 ## Software design overview
 

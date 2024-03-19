@@ -19,6 +19,10 @@
 
     <arg name="setup_sensor" default="True" description="Enable sensor setup on hw-driver."/>
 
+    <arg name="invalid_point_remove" default="false"/>
+    <arg name="invalid_regions"
+         default="'[[0, 3500, 6900], [1, 3400, 6500], [2, 3200, 4600], [3, 3200, 4600]]'"/>
+
     <node pkg="nebula_ros" exec="velodyne_driver_ros_wrapper_node"
           name="velodyne_cloud" output="screen">
         <param name="sensor_model" value="$(var sensor_model)"/>
@@ -26,6 +30,8 @@
         <param name="frame_id" value="$(var frame_id)"/>
         <param name="scan_phase" value="$(var scan_phase)"/>
         <param name="calibration_file" value="$(var calibration_file)"/>
+        <param name="invalid_point_remove" value="$(var invalid_point_remove)"/>
+        <param name="invalid_regions" value="$(var invalid_regions)"/>
     </node>
 
     <node pkg="nebula_ros" exec="velodyne_hw_ros_wrapper_node"
