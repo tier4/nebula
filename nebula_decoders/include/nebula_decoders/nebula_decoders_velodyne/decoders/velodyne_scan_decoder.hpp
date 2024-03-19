@@ -12,12 +12,6 @@
 #include <string>
 #include <vector>
 
-#if defined(ROS_DISTRO_FOXY) || defined(ROS_DISTRO_GALACTIC)
-#include <angles/angles.h>  //Galactic
-#else
-#include <angles/angles/angles.h>  //Humble
-#endif
-
 #include "nebula_common/point_types.hpp"
 #include "nebula_common/velodyne/velodyne_calibration_decoder.hpp"
 #include "nebula_common/velodyne/velodyne_common.hpp"
@@ -185,9 +179,9 @@ public:
   virtual std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() = 0;
   /// @brief Resetting point cloud buffer
   /// @param n_pts # of points
-  virtual void reset_pointcloud(size_t n_pts) = 0;
+  virtual void reset_pointcloud(size_t n_pts, double time_stamp) = 0;
   /// @brief Resetting overflowed point cloud buffer
-  virtual void reset_overflow() = 0;
+  virtual void reset_overflow(double time_stamp) = 0;
 };
 
 }  // namespace drivers

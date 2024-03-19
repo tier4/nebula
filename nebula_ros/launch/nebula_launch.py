@@ -28,6 +28,8 @@ def get_lidar_make(sensor_name):
 def launch_setup(context, *args, **kwargs):
     # Model and make
     sensor_model = LaunchConfiguration("sensor_model").perform(context)
+    calibration_file = LaunchConfiguration("calibration_file").perform(context)
+    correction_file = LaunchConfiguration("correction_file").perform(context)
     sensor_make, sensor_extension = get_lidar_make(sensor_model)
     nebula_decoders_share_dir = get_package_share_directory("nebula_decoders")
     nebula_ros_share_dir = get_package_share_directory("nebula_ros")
@@ -64,8 +66,13 @@ def launch_setup(context, *args, **kwargs):
                         "sensor_model": LaunchConfiguration("sensor_model"),
                         "sensor_ip": LaunchConfiguration("sensor_ip"),
                         "return_mode": LaunchConfiguration("return_mode"),
-                        "calibration_file": sensor_calib_fp,
+                        "calibration_file": calibration_file or sensor_calib_fp,
+                        "correction_file": correction_file or sensor_calib_fp,
                         "setup_sensor": LaunchConfiguration("setup_sensor"),
+                        "ptp_profile": LaunchConfiguration("ptp_profile"),
+                        "ptp_domain": LaunchConfiguration("ptp_domain"),
+                        "ptp_transport_type": LaunchConfiguration("ptp_transport_type"),
+                        "ptp_switch_type": LaunchConfiguration("ptp_switch_type"),
                     },
                 ],
             ),
@@ -82,7 +89,8 @@ def launch_setup(context, *args, **kwargs):
                         "sensor_model": sensor_model,
                         "sensor_ip": LaunchConfiguration("sensor_ip"),
                         "return_mode": LaunchConfiguration("return_mode"),
-                        "calibration_file": sensor_calib_fp,
+                        "calibration_file": calibration_file or sensor_calib_fp,
+                        "correction_file": correction_file or sensor_calib_fp,
                     },
                 ],
             )
@@ -98,7 +106,13 @@ def launch_setup(context, *args, **kwargs):
                     "sensor_model": sensor_model,
                     "sensor_ip": LaunchConfiguration("sensor_ip"),
                     "return_mode": LaunchConfiguration("return_mode"),
-                    "calibration_file": sensor_calib_fp,
+                    "calibration_file": calibration_file or sensor_calib_fp,
+                    "correction_file": correction_file or sensor_calib_fp,
+                    "launch_hw": LaunchConfiguration("launch_hw"),
+                    "ptp_profile": LaunchConfiguration("ptp_profile"),
+                    "ptp_domain": LaunchConfiguration("ptp_domain"),
+                    "ptp_transport_type": LaunchConfiguration("ptp_transport_type"),
+                    "ptp_switch_type": LaunchConfiguration("ptp_switch_type"),
                 },
             ],
         ),
@@ -145,10 +159,16 @@ def generate_launch_description():
             add_launch_arg("config_file", ""),
             add_launch_arg("sensor_model", ""),
             add_launch_arg("sensor_ip", "192.168.1.201"),
+            add_launch_arg("calibration_file", ""),
+            add_launch_arg("correction_file", ""),
             add_launch_arg("return_mode", "Dual"),
             add_launch_arg("launch_hw", "true"),
             add_launch_arg("setup_sensor", "true"),
             add_launch_arg("debug_logging", "false"),
+            add_launch_arg("ptp_profile", "1588v2"),
+            add_launch_arg("ptp_domain", "0"),
+            add_launch_arg("ptp_transport_type", "UDP"),
+            add_launch_arg("ptp_switch_type", "TSN"),
         ]
         + [OpaqueFunction(function=launch_setup)]
     )

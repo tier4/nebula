@@ -61,25 +61,23 @@ HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & o
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
-  while(hw_interface_.InitializeTcpDriver(false) == Status::ERROR_1)
+  while(hw_interface_.InitializeTcpDriver() == Status::ERROR_1)
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(8000));// >5000
   }
   std::vector<std::thread> thread_pool{};
   thread_pool.emplace_back([this] {
-    hw_interface_.GetInventory(  // ios,
-      [this](HesaiInventory & result) {
-        current_inventory.reset(new HesaiInventory(result));
-        current_inventory_time.reset(new rclcpp::Time(this->get_clock()->now()));
-        std::cout << "HesaiInventory" << std::endl;
-        std::cout << result << std::endl;
-        info_model = result.get_str_model();
-        info_serial = std::string(result.sn.begin(), result.sn.end());
-        hw_interface_.SetTargetModel(result.model);
-        RCLCPP_INFO_STREAM(this->get_logger(), "Model:" << info_model);
-        RCLCPP_INFO_STREAM(this->get_logger(), "Serial:" << info_serial);
-        InitializeHesaiDiagnostics();
-      });
+    auto result = hw_interface_.GetInventory();
+    current_inventory.reset(new HesaiInventory(result));
+    current_inventory_time.reset(new rclcpp::Time(this->get_clock()->now()));
+    std::cout << "HesaiInventory" << std::endl;
+    std::cout << result << std::endl;
+    info_model = result.get_str_model();
+    info_serial = std::string(result.sn.begin(), result.sn.end());
+    hw_interface_.SetTargetModel(result.model);
+    RCLCPP_INFO_STREAM(this->get_logger(), "Model:" << info_model);
+    RCLCPP_INFO_STREAM(this->get_logger(), "Serial:" << info_serial);
+    InitializeHesaiDiagnostics();
   });
   for (std::thread & th : thread_pool) {
     th.join();
@@ -413,12 +411,10 @@ void HesaiHwMonitorRosWrapper::OnHesaiStatusTimer()
   RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiStatusTimer" << std::endl);
   try {
     auto ios = std::make_shared<boost::asio::io_service>();
-    hw_interface_.GetLidarStatus(  // ios,
-      [this](HesaiLidarStatus & result) {
-        std::scoped_lock lock(mtx_status);
-        current_status_time.reset(new rclcpp::Time(this->get_clock()->now()));
-        current_status.reset(new HesaiLidarStatus(result));
-      });
+    auto result = hw_interface_.GetLidarStatus();
+    std::scoped_lock lock(mtx_status);
+    current_status_time.reset(new rclcpp::Time(this->get_clock()->now()));
+    current_status.reset(new HesaiLidarStatus(result));
   } catch (const std::system_error & error) {
     RCLCPP_ERROR_STREAM(
       rclcpp::get_logger("HesaiHwMonitorRosWrapper::OnHesaiStatusTimer(std::system_error)"),
@@ -459,11 +455,10 @@ void HesaiHwMonitorRosWrapper::OnHesaiLidarMonitorTimer()
   RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiLidarMonitorTimer");
   try {
     auto ios = std::make_shared<boost::asio::io_service>();
-    hw_interface_.GetLidarMonitor([this](HesaiLidarMonitor & result) {
-      std::scoped_lock lock(mtx_lidar_monitor);
-      current_lidar_monitor_time.reset(new rclcpp::Time(this->get_clock()->now()));
-      current_monitor.reset(new HesaiLidarMonitor(result));
-    });
+    auto result = hw_interface_.GetLidarMonitor();
+    std::scoped_lock lock(mtx_lidar_monitor);
+    current_lidar_monitor_time.reset(new rclcpp::Time(this->get_clock()->now()));
+    current_monitor.reset(new HesaiLidarMonitor(result));
   } catch (const std::system_error & error) {
     RCLCPP_ERROR_STREAM(
       rclcpp::get_logger("HesaiHwMonitorRosWrapper::OnHesaiLidarMonitorTimer(std::system_error)"),

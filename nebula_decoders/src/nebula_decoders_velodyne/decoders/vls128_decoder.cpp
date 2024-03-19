@@ -3,6 +3,8 @@
 #include <cmath>
 #include <utility>
 
+#include <angles/angles.h> 
+
 namespace nebula
 {
 namespace drivers
@@ -36,37 +38,42 @@ Vls128Decoder::Vls128Decoder(
   }
   // timing table calculation, from velodyne user manual p.64
   timing_offsets_.resize(3);
-  for(size_t i=0; i < timing_offsets_.size(); ++i)
-  {
-    timing_offsets_[i].resize(17); // 17 (+1 for the maintenance time after firing group 8)
+  for (size_t i = 0; i < timing_offsets_.size(); ++i) {
+    timing_offsets_[i].resize(17);  // 17 (+1 for the maintenance time after firing group 8)
   }
   double full_firing_cycle_s = 53.3 * 1e-6;
   double single_firing_s = 2.665 * 1e-6;
   double offset_packet_time = 8.7 * 1e-6;
   // compute timing offsets
-  for (size_t x = 0; x < timing_offsets_.size(); ++x){
-    for (size_t y = 0; y < timing_offsets_[x].size(); ++y){
+  for (size_t x = 0; x < timing_offsets_.size(); ++x) {
+    for (size_t y = 0; y < timing_offsets_[x].size(); ++y) {
       double sequence_index, firing_group_index;
       sequence_index = x;
       firing_group_index = y;
-      timing_offsets_[x][y] = (full_firing_cycle_s * sequence_index) + (single_firing_s * firing_group_index) - offset_packet_time;
+      timing_offsets_[x][y] = (full_firing_cycle_s * sequence_index) +
+                              (single_firing_s * firing_group_index) - offset_packet_time;
     }
   }
 }
 
-bool Vls128Decoder::hasScanned() { return has_scanned_; }
+bool Vls128Decoder::hasScanned()
+{
+  return has_scanned_;
+}
 
 std::tuple<drivers::NebulaPointCloudPtr, double> Vls128Decoder::get_pointcloud()
 {
   double phase = angles::from_degrees(sensor_configuration_->scan_phase);
   if (!scan_pc_->points.empty()) {
     auto current_azimuth = scan_pc_->points.back().azimuth;
-    auto phase_diff = static_cast<size_t>(angles::to_degrees(2*M_PI + current_azimuth - phase)) % 360;
+    auto phase_diff =
+      static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
     while (phase_diff < M_PI_2 && !scan_pc_->points.empty()) {
       overflow_pc_->points.push_back(scan_pc_->points.back());
       scan_pc_->points.pop_back();
       current_azimuth = scan_pc_->points.back().azimuth;
-      phase_diff = static_cast<size_t>(angles::to_degrees(2*M_PI + current_azimuth - phase)) % 360;
+      phase_diff =
+        static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
     }
     overflow_pc_->width = overflow_pc_->points.size();
     scan_pc_->width = scan_pc_->points.size();
@@ -75,24 +82,59 @@ std::tuple<drivers::NebulaPointCloudPtr, double> Vls128Decoder::get_pointcloud()
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
-int Vls128Decoder::pointsPerPacket() { return BLOCKS_PER_PACKET * SCANS_PER_BLOCK; }
+int Vls128Decoder::pointsPerPacket()
+{
+  return BLOCKS_PER_PACKET * SCANS_PER_BLOCK;
+}
 
-void Vls128Decoder::reset_pointcloud(size_t n_pts)
+void Vls128Decoder::reset_pointcloud(size_t n_pts, double time_stamp)
 {
   //  scan_pc_.reset(new NebulaPointCloud);
   scan_pc_->points.clear();
   max_pts_ = n_pts * pointsPerPacket();
   scan_pc_->points.reserve(max_pts_);
-  reset_overflow();  // transfer existing overflow points to the cleared pointcloud
-  scan_timestamp_ = -1;
+  reset_overflow(time_stamp);  // transfer existing overflow points to the cleared pointcloud
 }
 
-void Vls128Decoder::reset_overflow()
+void Vls128Decoder::reset_overflow(double time_stamp)
 {
-  // Add the overflow buffer points
-  for (size_t i = 0; i < overflow_pc_->points.size(); i++) {
-    scan_pc_->points.emplace_back(overflow_pc_->points[i]);
+  if (overflow_pc_->points.size() == 0) {
+    scan_timestamp_ = -1;
+    overflow_pc_->points.reserve(max_pts_);
+    return;
   }
+
+  // Compute the absolute time stamp of the last point of the overflow pointcloud
+  const double last_overflow_time_stamp =
+    scan_timestamp_ + 1e-9 * overflow_pc_->points.back().time_stamp;
+
+  // Detect cases where there is an unacceptable time difference between the last overflow point and
+  // the first point of the next packet. In that case, there was probably a packet drop so it is
+  // better to ignore the overflow pointcloud
+  if (time_stamp - last_overflow_time_stamp > 0.05) {
+    scan_timestamp_ = -1;
+    overflow_pc_->points.clear();
+    overflow_pc_->points.reserve(max_pts_);
+    return;
+  }
+
+  // Add the overflow buffer points
+  while (overflow_pc_->points.size() > 0) {
+    auto overflow_point = overflow_pc_->points.back();
+
+    // The overflow points had the stamps from the previous pointcloud. These need to be changed to
+    // be relative to the overflow's packet timestamp
+    double new_timestamp_seconds =
+      scan_timestamp_ + 1e-9 * overflow_point.time_stamp - last_block_timestamp_;
+    overflow_point.time_stamp =
+      static_cast<uint32_t>(new_timestamp_seconds < 0.0 ? 0.0 : 1e9 * new_timestamp_seconds);
+
+    scan_pc_->points.emplace_back(overflow_point);
+    overflow_pc_->points.pop_back();
+  }
+
+  // When there is overflow, the timestamp becomes the overflow packets' one
+  scan_timestamp_ = last_block_timestamp_;
   overflow_pc_->points.clear();
   overflow_pc_->points.reserve(max_pts_);
 }
@@ -238,11 +280,9 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
               const float z_coord = distance * sin_vert_angle;       // velodyne z
               const uint8_t intensity = current_block.data[k + 2];
-              auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
-              if (scan_timestamp_ < 0) {
-                scan_timestamp_ = block_timestamp;
-              }
-              double point_time_offset = timing_offsets_[block / 4][firing_order + laser_number / 64];
+              last_block_timestamp_ = block_timestamp;
+              double point_time_offset =
+                timing_offsets_[block / 4][firing_order + laser_number / 64];
 
               // Determine return type.
               uint8_t return_type;
@@ -293,9 +333,8 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               current_point.elevation = sin_vert_angle;
               current_point.distance = distance;
               auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
-              if (point_ts < 0)
-                point_ts = 0;
-              current_point.time_stamp = static_cast<uint32_t>(point_ts*1e9);
+              if (point_ts < 0) point_ts = 0;
+              current_point.time_stamp = static_cast<uint32_t>(point_ts * 1e9);
               current_point.intensity = intensity;
               scan_pc_->points.emplace_back(current_point);
             }  // 2nd scan area condition
