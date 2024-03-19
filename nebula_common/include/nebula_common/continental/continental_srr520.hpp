@@ -61,7 +61,7 @@ inline std::ostream & operator<<(
   return os;
 }
 
-/// @brief semantic struct of ARS548 Status
+/// @brief semantic struct of SRR520 Status
 struct ContinentalSRR520Status
 {
   uint32_t timestamp_nanoseconds;
