@@ -58,10 +58,6 @@ public:
   explicit HesaiRosWrapper(const rclcpp::NodeOptions & options);
   ~HesaiRosWrapper();
 
-  /// @brief Callback for PandarScan subscriber
-  /// @param scan_msg Received PandarScan
-  void ReceiveScanMsgCallback(const pandar_msgs::msg::PandarScan::SharedPtr scan_msg);
-
   /// @brief Get current status of this driver
   /// @return Current status
   Status GetStatus();
@@ -134,7 +130,7 @@ private:
     const drivers::SensorConfigurationBase & sensor_configuration) override;
   /// @brief Callback for receiving PandarScan
   /// @param scan_buffer Received PandarScan
-  void ReceiveScanDataCallback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_buffer);
+  void ReceiveCloudPacketCallback(const std::vector<uint8_t> & scan_buffer);
 
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
