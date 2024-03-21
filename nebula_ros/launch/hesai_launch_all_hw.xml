@@ -35,8 +35,8 @@
     <let name="debug_level" value="debug" if="$(eval $(var debug_logging))"/>
     <let name="debug_level" value="info" unless="$(eval $(var debug_logging))"/>
 
-    <node pkg="nebula_ros" exec="hesai_driver_ros_wrapper_node"
-          name="hesai_cloud" output="screen" ros_args="--log-level $(var debug_level)">
+    <node pkg="nebula_ros" exec="hesai_ros_wrapper_node"
+           name="nebula_hesai" output="screen" ros_args="--log-level $(var debug_level)">
         <param name="sensor_model" value="$(var sensor_model)"/>
         <param name="return_mode" value="$(var return_mode)"/>
         <param name="frame_id" value="$(var frame_id)"/>
@@ -45,52 +45,24 @@
         <param name="calibration_file" value="$(var calibration_file)"/>
         <param name="correction_file" value="$(var correction_file)"/>
         <param name="launch_hw" value="$(var launch_hw)"/>
+
+        <param name="host_ip" value="$(var host_ip)"/>
+        <param name="data_port" value="$(var data_port)"/>
+        <param name="gnss_port" value="$(var gnss_port)"/>
+        <param name="packet_mtu_size" value="$(var packet_mtu_size)"/>
+        <param name="rotation_speed" value="$(var rotation_speed)"/>
+        <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>
+        <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
+        <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/>
+        <param name="setup_sensor" value="$(var setup_sensor)"/>
+        <param name="delay_hw_ms" value="$(var delay_hw_ms)"/>
+        <param name="retry_hw" value="$(var retry_hw)"/>
+        <param name="ptp_profile" value="$(var ptp_profile)"/>
+        <param name="ptp_domain" value="$(var ptp_domain)"/>
+        <param name="ptp_transport_type" value="$(var ptp_transport_type)"/>
+        <param name="ptp_switch_type" value="$(var ptp_switch_type)"/>
+
+        <param name="diag_span" value="$(var diag_span)"/>
+        <param name="delay_monitor_ms" value="$(var delay_monitor_ms)"/>
     </node>
-    <group if="$(var launch_hw)">
-        <node pkg="nebula_ros" exec="hesai_hw_interface_ros_wrapper_node"
-              name="hesai_hw_driver" output="screen" >
-            <param name="sensor_model" value="$(var sensor_model)"/>
-            <param name="return_mode" value="$(var return_mode)"/>
-            <param name="frame_id" value="$(var frame_id)"/>
-            <param name="scan_phase" value="$(var scan_phase)"/>
-            <param name="sensor_ip" value="$(var sensor_ip)"/>
-            <param name="frame_id" value="$(var frame_id)"/>
-            <param name="host_ip" value="$(var host_ip)"/>
-            <param name="data_port" value="$(var data_port)"/>
-            <param name="gnss_port" value="$(var gnss_port)"/>
-            <param name="packet_mtu_size" value="$(var packet_mtu_size)"/>
-            <param name="rotation_speed" value="$(var rotation_speed)"/>
-            <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>
-            <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
-            <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/>
-            <param name="setup_sensor" value="$(var setup_sensor)"/>
-            <param name="delay_hw_ms" value="$(var delay_hw_ms)"/>
-            <param name="retry_hw" value="$(var retry_hw)"/>
-            <param name="ptp_profile" value="$(var ptp_profile)"/>
-            <param name="ptp_domain" value="$(var ptp_domain)"/>
-            <param name="ptp_transport_type" value="$(var ptp_transport_type)"/>
-            <param name="ptp_switch_type" value="$(var ptp_switch_type)"/>
-        </node>
-
-        <node pkg="nebula_ros" exec="hesai_hw_monitor_ros_wrapper_node"
-              name="hesai_hw_monitor_$(var frame_id)" output="screen">
-            <param name="sensor_model" value="$(var sensor_model)"/>
-            <param name="return_mode" value="$(var return_mode)"/>
-            <param name="frame_id" value="$(var frame_id)"/>
-            <param name="scan_phase" value="$(var scan_phase)"/>
-            <param name="sensor_ip" value="$(var sensor_ip)"/>
-            <param name="frame_id" value="$(var frame_id)"/>
-            <param name="host_ip" value="$(var host_ip)"/>
-            <param name="data_port" value="$(var data_port)"/>
-            <param name="gnss_port" value="$(var gnss_port)"/>
-            <param name="packet_mtu_size" value="$(var packet_mtu_size)"/>
-            <param name="rotation_speed" value="$(var rotation_speed)"/>
-            <param name="cloud_min_angle" value="$(var cloud_min_angle)"/>
-            <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
-            <param name="diag_span" value="$(var diag_span)"/>
-            <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/>
-            <param name="delay_monitor_ms" value="$(var delay_monitor_ms)"/>
-        </node>
-    </group>
-
 </launch>
