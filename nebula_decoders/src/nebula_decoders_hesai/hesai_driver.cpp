@@ -72,8 +72,8 @@ HesaiDriver::HesaiDriver(
   }
 }
 
-std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ConvertScanToPointcloud(
-  const std::shared_ptr<pandar_msgs::msg::PandarScan> & pandar_scan)
+std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ParseCloudPacket(
+  const std::vector<uint8_t> & packet)
 {
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
   auto logger = rclcpp::get_logger("HesaiDriver");
@@ -83,20 +83,17 @@ std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ConvertScanToPoint
     return pointcloud;
   }
 
-  int cnt = 0, last_azimuth = 0;
-  for (auto & packet : pandar_scan->packets) {
-    last_azimuth = scan_decoder_->unpack(packet);
-    if (scan_decoder_->hasScanned()) {
-      pointcloud = scan_decoder_->getPointcloud();
-      cnt++;
-    }
+  scan_decoder_->unpack(packet);
+  if (scan_decoder_->hasScanned()) {
+    pointcloud = scan_decoder_->getPointcloud();
   }
 
-  if (cnt == 0) {
-    RCLCPP_ERROR_STREAM(
-      logger, "Scanned " << pandar_scan->packets.size() << " packets, but no "
-                         << "pointclouds were generated. Last azimuth: " << last_azimuth);
-  }
+  // todo
+  // if (cnt == 0) {
+  //   RCLCPP_ERROR_STREAM(
+  //     logger, "Scanned " << pandar_scan->packets.size() << " packets, but no "
+  //                        << "pointclouds were generated. Last azimuth: " << last_azimuth);
+  // }
 
   return pointcloud;
 }

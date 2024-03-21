@@ -69,7 +69,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 #endif
 
   hw_interface_.RegisterScanCallback(
-    std::bind(&HesaiRosWrapper::ReceiveScanDataCallback, this, std::placeholders::_1));
+    std::bind(&HesaiRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
   pandar_scan_pub_ =
     this->create_publisher<pandar_msgs::msg::PandarScan>("pandar_packets", rclcpp::SensorDataQoS());
 
@@ -117,9 +117,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
   auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10),
                          qos_profile);
-  pandar_scan_sub_ = create_subscription<pandar_msgs::msg::PandarScan>(
-    "pandar_packets", qos,
-    std::bind(&HesaiRosWrapper::ReceiveScanMsgCallback, this, std::placeholders::_1));
+
   nebula_points_pub_ =
     this->create_publisher<sensor_msgs::msg::PointCloud2>("pandar_points", rclcpp::SensorDataQoS());
   aw_points_base_pub_ =
@@ -198,16 +196,22 @@ cbg_r_ = create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 }
 }
 
-void HesaiRosWrapper::ReceiveScanMsgCallback(
-  const pandar_msgs::msg::PandarScan::SharedPtr scan_msg)
+void HesaiRosWrapper::ReceiveCloudPacketCallback(
+  const std::vector<uint8_t> & packet)
 {
+  // Driver is not initialized yet
+  if (!driver_ptr_) {
+    return;
+  }
+
   auto t_start = std::chrono::high_resolution_clock::now();
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
-    driver_ptr_->ConvertScanToPointcloud(scan_msg);
+    driver_ptr_->ParseCloudPacket(packet);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
 
   if (pointcloud == nullptr) {
-    RCLCPP_WARN_STREAM(get_logger(), "Empty cloud parsed.");
+    // todo
+    // RCLCPP_WARN_STREAM(get_logger(), "Empty cloud parsed.");
     return;
   };
   if (
@@ -843,15 +847,6 @@ Status HesaiRosWrapper::InitializeHwMonitor(  // todo: don't think this is neede
   const drivers::SensorConfigurationBase & sensor_configuration)
 {
   return Status::OK;
-}
-
-void HesaiRosWrapper::ReceiveScanDataCallback(
-  std::unique_ptr<pandar_msgs::msg::PandarScan> scan_buffer)
-{
-  // Publish
-  scan_buffer->header.frame_id = sensor_cfg_ptr_->frame_id;
-  scan_buffer->header.stamp = scan_buffer->packets.front().stamp;
-  pandar_scan_pub_->publish(std::move(scan_buffer));
 }
 
 rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::paramCallback(

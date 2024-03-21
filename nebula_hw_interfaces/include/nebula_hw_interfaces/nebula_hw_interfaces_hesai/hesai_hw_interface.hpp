@@ -127,8 +127,8 @@ private:
   std::unique_ptr<pandar_msgs::msg::PandarScan> scan_cloud_ptr_;
   std::function<bool(size_t)>
     is_valid_packet_; /*Lambda Function Array to verify proper packet size*/
-  std::function<void(std::unique_ptr<pandar_msgs::msg::PandarScan> buffer)>
-    scan_reception_callback_; /**This function pointer is called when the scan is complete*/
+  std::function<void(const std::vector<uint8_t> & buffer)>
+    cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
 
   int prev_phase_{};
 
@@ -222,7 +222,7 @@ public:
   /// @param scan_callback Callback function
   /// @return Resulting status
   Status RegisterScanCallback(
-    std::function<void(std::unique_ptr<pandar_msgs::msg::PandarScan>)> scan_callback);
+    std::function<void(const std::vector<uint8_t> &)> scan_callback);
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_CALIBRATION
   /// @return Resulting status
   std::string GetLidarCalibrationString();
