@@ -52,17 +52,17 @@ protected:
     block_firing_offset_ns_;
 
   /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
-  /// @param pandar_packet The incoming PandarPacket
+  /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
-  bool parsePacket(const pandar_msgs::msg::PandarPacket & pandar_packet)
+  bool parsePacket(const std::vector<uint8_t> & packet)
   {
-    if (pandar_packet.size < sizeof(typename SensorT::packet_t)) {
+    if (packet.size() < sizeof(typename SensorT::packet_t)) {
       RCLCPP_ERROR_STREAM(
-        logger_, "Packet size mismatch:" << pandar_packet.size << " | Expected at least:"
+        logger_, "Packet size mismatch:" << packet.size() << " | Expected at least:"
                                          << sizeof(typename SensorT::packet_t));
       return false;
     }
-    if (std::memcpy(&packet_, pandar_packet.data.data(), sizeof(typename SensorT::packet_t))) {
+    if (std::memcpy(&packet_, packet.data(), sizeof(typename SensorT::packet_t))) {
       // FIXME(mojomex) do validation?
       // RCLCPP_DEBUG(logger_, "Packet parsed successfully");
       return true;
@@ -222,9 +222,9 @@ public:
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
   }
 
-  int unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override
+  int unpack(const std::vector<uint8_t> & packet) override
   {
-    if (!parsePacket(pandar_packet)) {
+    if (!parsePacket(packet)) {
       return -1;
     }
 
