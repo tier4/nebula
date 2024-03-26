@@ -15,8 +15,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
+#include "nebula_msgs/msg/nebula_packet.hpp"
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/asio.hpp>
@@ -72,23 +71,21 @@ public:
   Status Shutdown() override;
 
 private:
-  /// @brief Initializing ros wrapper
+  /// @brief Initialize pointcloud decoder
   /// @param sensor_configuration SensorConfiguration for this driver
   /// @param calibration_configuration CalibrationConfiguration for this driver
-  /// @return Resulting status
-  Status InitializeCloudDriver(
-    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) override;
-
-  /// @brief Initializing ros wrapper for AT
-  /// @param sensor_configuration SensorConfiguration for this driver
-  /// @param calibration_configuration CalibrationConfiguration for this driver
-  /// @param correction_configuration CorrectionConfiguration for this driver
+  /// @param correction_configuration CorrectionConfiguration for this driver (only for AT128, ignored otherwise)
   /// @return Resulting status
   Status InitializeCloudDriver(
     const std::shared_ptr<drivers::SensorConfigurationBase> & sensor_configuration,
     const std::shared_ptr<drivers::CalibrationConfigurationBase> & calibration_configuration,
-    const std::shared_ptr<drivers::HesaiCorrection> & correction_configuration);
+    const std::shared_ptr<drivers::HesaiCorrection> & correction_configuration = nullptr);
+
+  Status InitializeCloudDriver(
+    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
+    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) {
+      return InitializeCloudDriver(sensor_configuration, calibration_configuration, nullptr);
+    }
 
   /// @brief Get configurations from ros parameters
   /// @param sensor_configuration Output of SensorConfiguration
@@ -188,7 +185,10 @@ private:
 
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
   Status wrapper_status_;
-  rclcpp::Subscription<pandar_msgs::msg::PandarScan>::SharedPtr pandar_scan_sub_;
+
+  rclcpp::Publisher<nebula_msgs::msg::NebulaPacket>::SharedPtr packet_pub_;
+  rclcpp::Subscription<nebula_msgs::msg::NebulaPacket>::SharedPtr packet_sub_;
+
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_;
