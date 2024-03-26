@@ -24,7 +24,6 @@ def parse_logs(run_name):
     
     for col in [c for c in df.columns if c.startswith("d_")]:
         df[col] /= 1e6  # ns to ms
-    df['d_total'] = sum([df[c] for c in df.columns if c.startswith("d_")]) # type: ignore
     return df
 
 def plot_timing_comparison(run_names):
@@ -41,11 +40,13 @@ def plot_timing_comparison(run_names):
     boxes = axs[1:]
 
     for i, (label, df) in enumerate(scenario_dfs.items()):
-        durations = df['d_total']
+        # durations = df['d_total']
 
-        ax_d.plot(durations.index, durations, label=label, linestyle='', marker='.')
+        # ax_d.plot(durations.index, durations, label=label, linestyle='', marker='.')
         for col in filter(lambda col: col.startswith("n_"), df.columns):
             ax_n.plot(df.index, df[col], label=f"{label}::{col}", linestyle='', marker='.', color='black')
+        for col in filter(lambda col: col.startswith("d_"), df.columns):
+            ax_d.plot(df.index, df[col], label=f"{label}::{col}", linestyle='', marker='.')
         
         d_columns = [col for col in df.columns if col.startswith("d_")]
         n_cols = len(d_columns)
