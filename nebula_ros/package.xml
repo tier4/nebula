@@ -12,8 +12,11 @@
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>ros_environment</buildtool_depend>
 
+  <depend>continental_msgs</depend>
+  <depend>continental_srvs</depend>
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
+  <depend>geometry_msgs</depend>
   <depend>libpcl-all-dev</depend>
   <depend>nebula_common</depend>
   <depend>nebula_decoders</depend>
@@ -21,9 +24,13 @@
   <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
-  <depend>yaml-cpp</depend>
-  <depend>velodyne_msgs</depend>
   <depend>robosense_msgs</depend>
+  <depend>tf2_eigen</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>velodyne_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>yaml-cpp</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>

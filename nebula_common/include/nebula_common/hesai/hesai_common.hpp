@@ -14,7 +14,7 @@ namespace nebula
 namespace drivers
 {
 /// @brief struct for Hesai sensor configuration
-struct HesaiSensorConfiguration : SensorConfigurationBase
+struct HesaiSensorConfiguration : LidarConfigurationBase
 {
   uint16_t gnss_port{};
   double scan_phase{};
@@ -33,7 +33,7 @@ struct HesaiSensorConfiguration : SensorConfigurationBase
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration const & arg)
 {
-  os << (SensorConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
+  os << (LidarConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
      << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
      << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle
      << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold

@@ -12,7 +12,7 @@ RobosenseHwInterface::RobosenseHwInterface()
 {
 }
 
-void RobosenseHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer)
+void RobosenseHwInterface::ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer)
 {
   int scan_phase = static_cast<int>(sensor_configuration_->scan_phase * 100.0);
   if (!is_valid_packet_(buffer.size())) {
@@ -99,7 +99,7 @@ void RobosenseHwInterface::ReceiveInfoPacketCallback(const std::vector<uint8_t> 
   }
 }
 
-Status RobosenseHwInterface::CloudInterfaceStart()
+Status RobosenseHwInterface::SensorInterfaceStart()
 {
   try {
     std::cout << "Starting UDP server for data packets on: " << *sensor_configuration_ << std::endl;
@@ -109,7 +109,7 @@ Status RobosenseHwInterface::CloudInterfaceStart()
     cloud_udp_driver_->receiver()->bind();
 
     cloud_udp_driver_->receiver()->asyncReceive(
-      std::bind(&RobosenseHwInterface::ReceiveCloudPacketCallback, this, std::placeholders::_1));
+      std::bind(&RobosenseHwInterface::ReceiveSensorPacketCallback, this, std::placeholders::_1));
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
     std::cerr << status << sensor_configuration_->sensor_ip << ","
@@ -145,7 +145,7 @@ Status RobosenseHwInterface::InfoInterfaceStart()
   return Status::OK;
 }
 
-Status RobosenseHwInterface::CloudInterfaceStop()
+Status RobosenseHwInterface::SensorInterfaceStop()
 {
   return Status::ERROR_1;
 }

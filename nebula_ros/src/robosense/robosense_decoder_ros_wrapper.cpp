@@ -58,7 +58,7 @@ void RobosenseDriverRosWrapper::ReceiveScanMsgCallback(
     }
     if (!info_driver_ptr_) {
       wrapper_status_ = InitializeInfoDriver(
-        std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
+        std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
       RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
     }
   }

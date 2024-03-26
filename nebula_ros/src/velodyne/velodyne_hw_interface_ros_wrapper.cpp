@@ -57,7 +57,7 @@ VelodyneHwInterfaceRosWrapper::VelodyneHwInterfaceRosWrapper(const rclcpp::NodeO
 Status VelodyneHwInterfaceRosWrapper::StreamStart()
 {
   if (Status::OK == interface_status_) {
-    interface_status_ = hw_interface_.CloudInterfaceStart();
+    interface_status_ = hw_interface_.SensorInterfaceStart();
   }
   return interface_status_;
 }

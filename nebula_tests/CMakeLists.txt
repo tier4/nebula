@@ -48,11 +48,14 @@ if(BUILD_TESTING)
     set(NEBULA_TEST_DEPENDENCIES
             rclcpp
             rosbag2_cpp
+            continental_msgs
+            nebula_msgs
             pandar_msgs
             velodyne_msgs
             )
 
 
+    add_subdirectory(continental)
     add_subdirectory(hesai)
     add_subdirectory(velodyne)
 

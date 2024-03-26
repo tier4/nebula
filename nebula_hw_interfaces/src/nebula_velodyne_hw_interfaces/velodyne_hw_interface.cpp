@@ -36,7 +36,7 @@ Status VelodyneHwInterface::SetSensorConfiguration(
   return rt;
 }
 
-Status VelodyneHwInterface::CloudInterfaceStart()
+Status VelodyneHwInterface::SensorInterfaceStart()
 {
   try {
     cloud_udp_driver_->init_receiver(
@@ -44,7 +44,7 @@ Status VelodyneHwInterface::CloudInterfaceStart()
     cloud_udp_driver_->receiver()->open();
     cloud_udp_driver_->receiver()->bind();
     cloud_udp_driver_->receiver()->asyncReceive(
-      std::bind(&VelodyneHwInterface::ReceiveCloudPacketCallback, this, std::placeholders::_1));
+      std::bind(&VelodyneHwInterface::ReceiveSensorPacketCallback, this, std::placeholders::_1));
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
     std::cerr << status << sensor_configuration_->sensor_ip << ","
@@ -61,7 +61,7 @@ Status VelodyneHwInterface::RegisterScanCallback(
   return Status::OK;
 }
 
-void VelodyneHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer)
+void VelodyneHwInterface::ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer)
 {
   // Process current packet
   const uint32_t buffer_size = buffer.size();
@@ -99,7 +99,7 @@ void VelodyneHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> 
   }
   prev_packet_first_azm_phased_ = packet_first_azm_phased_;
 }
-Status VelodyneHwInterface::CloudInterfaceStop()
+Status VelodyneHwInterface::SensorInterfaceStop()
 {
   return Status::ERROR_1;
 }

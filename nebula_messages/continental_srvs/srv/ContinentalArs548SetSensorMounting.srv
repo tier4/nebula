@@ -1,0 +1,10 @@
+bool autoconfigure_extrinsics 1
+float32 longitudinal
+float32 lateral
+float32 vertical
+float32 yaw
+float32 pitch
+bool plug_orientation # 0 = PLUG_RIGHT. 1 = PLUG_LEFT
+---
+bool success
+string message # status messages

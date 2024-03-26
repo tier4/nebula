@@ -20,7 +20,7 @@ namespace drivers
 constexpr uint8_t BPEARL_V4_FLAG = 0x04;
 
 /// @brief struct for Robosense sensor configuration
-struct RobosenseSensorConfiguration : SensorConfigurationBase
+struct RobosenseSensorConfiguration : LidarConfigurationBase
 {
   uint16_t gnss_port{};  // difop
   double scan_phase{};   // start/end angle
@@ -36,7 +36,7 @@ struct RobosenseSensorConfiguration : SensorConfigurationBase
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, RobosenseSensorConfiguration const & arg)
 {
-  os << (SensorConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
+  os << (LidarConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
      << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
      << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle;
   return os;

@@ -1,0 +1,4 @@
+std_msgs/String sensor_ip # must be in the 10.13.1.X network
+---
+bool success
+string message # status messages

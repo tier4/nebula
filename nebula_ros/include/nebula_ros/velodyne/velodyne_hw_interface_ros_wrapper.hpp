@@ -64,7 +64,7 @@ class VelodyneHwInterfaceRosWrapper final : public rclcpp::Node, NebulaHwInterfa
 
 public:
   explicit VelodyneHwInterfaceRosWrapper(const rclcpp::NodeOptions & options);
-  /// @brief Start point cloud streaming (Call CloudInterfaceStart of HwInterface)
+  /// @brief Start point cloud streaming (Call SensorInterfaceStart of HwInterface)
   /// @return Resulting status
   Status StreamStart() override;
   /// @brief Stop point cloud streaming (not used)

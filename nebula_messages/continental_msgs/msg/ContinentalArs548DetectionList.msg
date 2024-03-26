@@ -1,0 +1,13 @@
+std_msgs/Header header
+uint8 stamp_sync_status
+geometry_msgs/Point origin_pos
+float32 origin_pitch
+float32 origin_pitch_std
+float32 origin_yaw
+float32 origin_yaw_std
+float32 ambiguity_free_velocity_min
+float32 ambiguity_free_velocity_max
+float32 alignment_azimuth_correction
+float32 alignment_elevation_correction
+uint8 alignment_status
+ContinentalArs548Detection[] detections
