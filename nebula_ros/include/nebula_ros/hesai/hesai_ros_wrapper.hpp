@@ -15,7 +15,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "nebula_msgs/msg/raw_packet_stamped.hpp"
+#include "nebula_msgs/msg/nebula_packet.hpp"
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/asio.hpp>
@@ -124,9 +124,13 @@ private:
   /// @return Resulting status
   Status InitializeHwInterface(
     const drivers::SensorConfigurationBase & sensor_configuration) override;
-  /// @brief Callback for receiving PandarScan
+  /// @brief Callback for receiving a raw UDP packet
   /// @param scan_buffer Received PandarScan
   void ReceiveCloudPacketCallback(const std::vector<uint8_t> & scan_buffer);
+
+  /// @brief Decodes a nebula packet and, if it completes the scan, publishes the pointcloud.
+  /// @param packet_msg The received packet message
+  void ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
@@ -186,8 +190,10 @@ private:
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
   Status wrapper_status_;
 
-  rclcpp::Publisher<nebula_msgs::msg::RawPacketStamped>::SharedPtr packet_pub_;
-  rclcpp::Subscription<nebula_msgs::msg::RawPacketStamped>::SharedPtr packet_sub_;
+  std::mutex mtx_decode_;
+
+  rclcpp::Publisher<nebula_msgs::msg::NebulaPacket>::SharedPtr packet_pub_;
+  rclcpp::Subscription<nebula_msgs::msg::NebulaPacket>::SharedPtr packet_sub_;
 
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;

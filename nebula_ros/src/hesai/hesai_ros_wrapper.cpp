@@ -86,18 +86,13 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
       std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_),
       std::static_pointer_cast<drivers::HesaiCorrection>(correction_cfg_ptr_));
 
-    RCLCPP_DEBUG(this->get_logger(), "Starting stream");
-    StreamStart();
-    hw_interface_.RegisterScanCallback(
-      std::bind(&HesaiRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
-
     RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Wrapper=" << wrapper_status_);
 
-    packet_pub_ = create_publisher<nebula_msgs::msg::RawPacketStamped>(
+    packet_pub_ = create_publisher<nebula_msgs::msg::NebulaPacket>(
       "hesai_packets", rclcpp::SensorDataQoS());
 
-    packet_sub_ = create_subscription<nebula_msgs::msg::RawPacketStamped>(
-      "hesai_packets", rclcpp::SensorDataQoS(), [](nebula_msgs::msg::RawPacketStamped::UniquePtr){});
+    packet_sub_ = create_subscription<nebula_msgs::msg::NebulaPacket>(
+      "hesai_packets", rclcpp::SensorDataQoS(), std::bind(&HesaiRosWrapper::ProcessCloudPacket, this, std::placeholders::_1));
 
     nebula_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
       "pandar_points", rclcpp::SensorDataQoS());
@@ -107,6 +102,11 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
       "aw_points_ex", rclcpp::SensorDataQoS());
   }
 
+  RCLCPP_DEBUG(this->get_logger(), "Starting stream");
+  StreamStart();
+  hw_interface_.RegisterScanCallback(
+    std::bind(&HesaiRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
+
   InitializeHwMonitor(*sensor_cfg_ptr_);
 
   set_param_res_ = this->add_on_set_parameters_callback(
@@ -115,23 +115,30 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 
 void HesaiRosWrapper::ReceiveCloudPacketCallback(const std::vector<uint8_t> & packet)
 {
-  auto t_received = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-  auto msg_ptr = std::make_unique<nebula_msgs::msg::RawPacketStamped>(packet.size());
-  msg_ptr->stamp.sec = t_received / 1'000'000'000;
-  msg_ptr->stamp.nanosec = t_received % 1'000'000'000;
-  // TODO(mojomex) this copy could be avoided if transport_drivers would give us a non-const vector
-  std::copy(packet.begin(), packet.end(), msg_ptr->data.begin());
-  packet_pub_->publish(std::move(msg_ptr));
-
-  //todo
   // Driver is not initialized yet
   if (!driver_ptr_) {
     return;
   }
 
+  const auto now = std::chrono::system_clock::now();
+  const auto timestamp_ns =
+    std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+
+  auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
+  msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
+  msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
+  std::copy(packet.begin(), packet.end(), std::back_inserter(msg_ptr->data));
+
+  packet_pub_->publish(std::move(msg_ptr));
+}
+
+void HesaiRosWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
+{
+  std::lock_guard lock(mtx_decode_);
+
   auto t_start = std::chrono::high_resolution_clock::now();
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
-    driver_ptr_->ParseCloudPacket(packet);
+    driver_ptr_->ParseCloudPacket(packet_msg->data);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
 
   auto t_end = std::chrono::high_resolution_clock::now();

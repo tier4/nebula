@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.5)
 project(nebula_msgs)
 
 if (NOT CMAKE_CXX_STANDARD)
@@ -15,9 +15,10 @@ find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-        "msg/RawPacketStamped.msg"
+        "msg/NebulaPacket.msg"
+        "msg/NebulaPackets.msg"
         DEPENDENCIES
-        builtin_interfaces
+        std_msgs
         )
 
 ament_package()
