@@ -44,7 +44,7 @@ def launch_setup(context, *args, **kwargs):
         sensor_params_fp = os.path.join(nebula_ros_share_dir, "config", "BaseParams.yaml")
     assert os.path.exists(sensor_params_fp), "Sensor params yaml file under config/ was not found: {}".format(sensor_params_fp)
 
-    sensor_calib_fp = sensor_corr_fp = None
+    sensor_calib_fp = sensor_corr_fp = ""
     if sensor_extension is not None:  # Velodyne and Hesai
         sensor_calib_fp = os.path.join(nebula_decoders_share_dir, "calibration", sensor_make.lower(), sensor_model + sensor_extension)
         assert os.path.exists(sensor_calib_fp), "Sensor calib file under calibration/ was not found: {}".format(sensor_calib_fp)
@@ -52,9 +52,6 @@ def launch_setup(context, *args, **kwargs):
         if sensor_model.lower() == "pandarat128":
             sensor_corr_fp = os.path.splitext(sensor_calib_fp)[0] + ".dat"
             assert os.path.exists(sensor_corr_fp), "Sensor corr file under calibration/ was not found: {}".format(sensor_corr_fp)
-
-    else:  # Robosense
-        sensor_calib_fp = ""
 
     with open(sensor_params_fp, "r") as f:
             sensor_params = yaml.safe_load(f)["/**"]["ros__parameters"]
