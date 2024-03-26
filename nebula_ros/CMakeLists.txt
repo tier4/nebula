@@ -23,6 +23,7 @@ find_package(nebula_decoders REQUIRED)
 find_package(nebula_hw_interfaces REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(robosense_msgs REQUIRED)
+find_package(nebula_msgs REQUIRED)
 
 include_directories(
         include

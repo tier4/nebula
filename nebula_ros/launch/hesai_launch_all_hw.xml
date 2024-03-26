@@ -27,8 +27,6 @@
     <arg name="ptp_domain" default="0" description="PTP Domain [0-127]."/>
     <arg name="ptp_transport_type" default="UDP" description="1588v2 supports 'UDP' or 'L2', other profiles only L2 (HW)"/>
     <arg name="ptp_switch_type" default="TSN" description="For automotive profile,'TSN' or 'NON_TSN'"/>
-    <arg name="delay_hw_ms" default="1000" description="hw driver startup delay in milliseconds."/>
-    <arg name="delay_monitor_ms" default="2000" description="hw monitor startup delay in milliseconds."/>
     <arg name="retry_hw" default="True" description="hw driver startup retry (false when using pcap)."/>
     <arg name="debug_logging" default="False" description="Launches Monitor/HW Interfaces and calibration acquisition"/>
 
@@ -55,7 +53,6 @@
         <param name="cloud_max_angle" value="$(var cloud_max_angle)"/>
         <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/>
         <param name="setup_sensor" value="$(var setup_sensor)"/>
-        <param name="delay_hw_ms" value="$(var delay_hw_ms)"/>
         <param name="retry_hw" value="$(var retry_hw)"/>
         <param name="ptp_profile" value="$(var ptp_profile)"/>
         <param name="ptp_domain" value="$(var ptp_domain)"/>
@@ -63,6 +60,5 @@
         <param name="ptp_switch_type" value="$(var ptp_switch_type)"/>
 
         <param name="diag_span" value="$(var diag_span)"/>
-        <param name="delay_monitor_ms" value="$(var delay_monitor_ms)"/>
     </node>
 </launch>
