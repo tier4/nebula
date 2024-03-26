@@ -40,6 +40,8 @@ ament_auto_add_library(nebula_common SHARED
         src/velodyne/velodyne_calibration_decoder.cpp
         )
 
+target_link_libraries(nebula_common yaml-cpp)
+
 ament_auto_package()
 
 # Set ROS_DISTRO macros
