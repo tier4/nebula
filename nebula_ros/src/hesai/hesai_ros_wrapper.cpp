@@ -86,94 +86,31 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
       std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_),
       std::static_pointer_cast<drivers::HesaiCorrection>(correction_cfg_ptr_));
 
-    RCLCPP_DEBUG(this->get_logger(), "Starting stream");
-    StreamStart();
-    hw_interface_.RegisterScanCallback(
-      std::bind(&HesaiRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
+    RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Wrapper=" << wrapper_status_);
+    rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10),
+                          qos_profile);
 
-  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Wrapper=" << wrapper_status_);
-  rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
-  auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10),
-                         qos_profile);
+    packet_pub_ = create_publisher<nebula_msgs::msg::NebulaPacket>(
+      "hesai_packets", rclcpp::SensorDataQoS());
 
-  packet_pub_ = create_publisher<nebula_msgs::msg::NebulaPacket>(
-    "hesai_packets", rclcpp::SensorDataQoS());
+    packet_sub_ = create_subscription<nebula_msgs::msg::NebulaPacket>(
+      "hesai_packets", rclcpp::SensorDataQoS(), std::bind(&HesaiRosWrapper::ProcessCloudPacket, this, std::placeholders::_1));
 
-  packet_sub_ = create_subscription<nebula_msgs::msg::NebulaPacket>(
-    "hesai_packets", rclcpp::SensorDataQoS(), [](nebula_msgs::msg::NebulaPacket::UniquePtr){});
-
-  nebula_points_pub_ =
-    this->create_publisher<sensor_msgs::msg::PointCloud2>("pandar_points", rclcpp::SensorDataQoS());
-  aw_points_base_pub_ =
-    this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points", rclcpp::SensorDataQoS());
-  aw_points_ex_pub_ =
-    this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points_ex", rclcpp::SensorDataQoS());
-}
-
-//hwmon
-{
-cbg_r_ = create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-  cbg_m_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  cbg_m2_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  if (Status::OK != interface_status_) {
-    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
-    return;
-  }
-  std::this_thread::sleep_for(std::chrono::milliseconds(this->delay_monitor_ms_));
-
-  message_sep = ": ";
-  not_supported_message = "Not supported";
-  error_message = "Error";
-
-  switch (sensor_cfg_ptr_->sensor_model) {
-    case nebula::drivers::SensorModel::HESAI_PANDARXT32:
-    case nebula::drivers::SensorModel::HESAI_PANDARXT32M:
-    case nebula::drivers::SensorModel::HESAI_PANDARAT128:
-      temperature_names.emplace_back("Bottom circuit board T1");
-      temperature_names.emplace_back("Bottom circuit board T2");
-      temperature_names.emplace_back("Laser emitting board RT_L1(Internal)");
-      temperature_names.emplace_back("Laser emitting board RT_L2");
-      temperature_names.emplace_back("Receiving board RT_R");
-      temperature_names.emplace_back("Receiving board RT2");
-      temperature_names.emplace_back("Top circuit RT3");
-      temperature_names.emplace_back("Not used");
-      break;
-    case nebula::drivers::SensorModel::HESAI_PANDAR64:
-    case nebula::drivers::SensorModel::HESAI_PANDAR40P:
-    case nebula::drivers::SensorModel::HESAI_PANDAR40M:
-    case nebula::drivers::SensorModel::HESAI_PANDARQT64:
-    case nebula::drivers::SensorModel::HESAI_PANDARQT128:
-    case nebula::drivers::SensorModel::HESAI_PANDAR128_E3X:
-    case nebula::drivers::SensorModel::HESAI_PANDAR128_E4X:
-    default:
-      temperature_names.emplace_back("Bottom circuit RT1");
-      temperature_names.emplace_back("Bottom circuit RT2");
-      temperature_names.emplace_back("Internal Temperature");
-      temperature_names.emplace_back("Laser emitting board RT1");
-      temperature_names.emplace_back("Laser emitting board RT2");
-      temperature_names.emplace_back("Receiving board RT1");
-      temperature_names.emplace_back("Top circuit RT1");
-      temperature_names.emplace_back("Top circuit RT2");
-      break;
+    nebula_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+      "pandar_points", rclcpp::SensorDataQoS());
+    aw_points_base_pub_ =
+      this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points", rclcpp::SensorDataQoS());
+    aw_points_ex_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+      "aw_points_ex", rclcpp::SensorDataQoS());
   }
 
-  std::vector<std::thread> thread_pool{};
-  thread_pool.emplace_back([this] {
-    auto result = hw_interface_.GetInventory();
-    current_inventory.reset(new HesaiInventory(result));
-    current_inventory_time.reset(new rclcpp::Time(this->get_clock()->now()));
-    RCLCPP_INFO_STREAM(this->get_logger(), "HesaiInventory");
-    RCLCPP_INFO_STREAM(this->get_logger(), result);
-    info_model = result.get_str_model();
-    info_serial = std::string(result.sn.begin(), result.sn.end());
-    hw_interface_.SetTargetModel(result.model);
-    RCLCPP_INFO_STREAM(this->get_logger(), "Model:" << info_model);
-    RCLCPP_INFO_STREAM(this->get_logger(), "Serial:" << info_serial);
-    InitializeHesaiDiagnostics();
-  });
-  for (std::thread & th : thread_pool) {
-    th.join();
-  }
+  RCLCPP_DEBUG(this->get_logger(), "Starting stream");
+  StreamStart();
+  hw_interface_.RegisterScanCallback(
+    std::bind(&HesaiRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
+
+  InitializeHwMonitor(*sensor_cfg_ptr_);
 
   set_param_res_ = this->add_on_set_parameters_callback(
     std::bind(&HesaiRosWrapper::paramCallback, this, std::placeholders::_1));
@@ -181,23 +118,30 @@ cbg_r_ = create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
 void HesaiRosWrapper::ReceiveCloudPacketCallback(const std::vector<uint8_t> & packet)
 {
-  auto t_received = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-  auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>(packet.size());
-  msg_ptr->stamp.sec = t_received / 1'000'000'000;
-  msg_ptr->stamp.nanosec = t_received % 1'000'000'000;
-  // TODO(mojomex) this copy could be avoided if transport_drivers would give us a non-const vector
-  std::copy(packet.begin(), packet.end(), msg_ptr->data.begin());
-  packet_pub_->publish(std::move(msg_ptr));
-
-  //todo
   // Driver is not initialized yet
   if (!driver_ptr_) {
     return;
   }
 
+  const auto now = std::chrono::system_clock::now();
+  const auto timestamp_ns =
+    std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+
+  auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
+  msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
+  msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
+  std::copy(packet.begin(), packet.end(), std::back_inserter(msg_ptr->data));
+
+  packet_pub_->publish(std::move(msg_ptr));
+}
+
+void HesaiRosWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
+{
+  std::lock_guard lock(mtx_decode_);
+
   auto t_start = std::chrono::high_resolution_clock::now();
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
-    driver_ptr_->ParseCloudPacket(packet);
+    driver_ptr_->ParseCloudPacket(packet_msg->data);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
 
   auto t_end = std::chrono::high_resolution_clock::now();
