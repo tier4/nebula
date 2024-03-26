@@ -1,0 +1,5 @@
+mkdocs
+mkdocs-material
+Jinja2
+ruamel.yaml
+git+https://github.com/JakubAndrysek/mkdoxy
