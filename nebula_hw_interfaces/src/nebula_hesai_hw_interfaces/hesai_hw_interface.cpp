@@ -68,7 +68,6 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
   auto recv_buf = std::make_shared<std::vector<uint8_t>>();
   auto response_complete = std::make_shared<bool>(false);
 
-  // Low byte is for PTC error code, the rest is nebula-specific
   auto error_code = std::make_shared<ptc_error_t>();
 
   std::stringstream ss;
