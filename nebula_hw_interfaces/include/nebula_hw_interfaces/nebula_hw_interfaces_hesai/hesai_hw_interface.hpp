@@ -15,6 +15,7 @@
 #include "boost_udp_driver/udp_driver.hpp"
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/hesai/hesai_status.hpp"
+#include "nebula_common/util/expected.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 
@@ -29,6 +30,7 @@
 
 #include <memory>
 #include <mutex>
+#include <vector>
 
 namespace nebula
 {
@@ -63,6 +65,20 @@ const uint8_t PTC_COMMAND_RESET = 0x25;
 const uint8_t PTC_COMMAND_SET_ROTATE_DIRECTION = 0x2a;
 const uint8_t PTC_COMMAND_LIDAR_MONITOR = 0x27;
 
+const uint8_t PTC_ERROR_CODE_NO_ERROR = 0x00;
+const uint8_t PTC_ERROR_CODE_INVALID_INPUT_PARAM = 0x01;
+const uint8_t PTC_ERROR_CODE_SERVER_CONN_FAILED = 0x02;
+const uint8_t PTC_ERROR_CODE_INVALID_DATA = 0x03;
+const uint8_t PTC_ERROR_CODE_OUT_OF_MEMORY = 0x04;
+const uint8_t PTC_ERROR_CODE_UNSUPPORTED_CMD = 0x05;
+const uint8_t PTC_ERROR_CODE_FPGA_COMM_FAILED = 0x06;
+const uint8_t PTC_ERROR_CODE_OTHER = 0x07;
+
+const uint8_t TCP_ERROR_UNRELATED_RESPONSE = 1;
+const uint8_t TCP_ERROR_UNEXPECTED_PAYLOAD = 2;
+const uint8_t TCP_ERROR_TIMEOUT = 4;
+const uint8_t TCP_ERROR_INCOMPLETE_RESPONSE = 8;
+
 const uint16_t PANDARQT64_PACKET_SIZE = 1072;
 const uint16_t PANDARQT128_PACKET_SIZE = 1127;
 const uint16_t PANDARXT32_PACKET_SIZE = 1080;
@@ -74,7 +90,6 @@ const uint16_t PANDAR40_PACKET_SIZE = 1262;
 const uint16_t PANDAR40P_EXTENDED_PACKET_SIZE = 1266;
 const uint16_t PANDAR128_E4X_PACKET_SIZE = 861;
 const uint16_t PANDAR128_E4X_EXTENDED_PACKET_SIZE = 1117;
-
 const uint16_t MTU_SIZE = 1500;
 
 // Time interval between Announce messages, in units of log seconds (default: 1)
@@ -87,10 +102,13 @@ const int PTP_LOG_MIN_DELAY_INTERVAL = 0;
 const int HESAI_LIDAR_GPS_CLOCK_SOURCE = 0;
 const int HESAI_LIDAR_PTP_CLOCK_SOURCE = 1;
 
+
 /// @brief Hardware interface of hesai driver
 class HesaiHwInterface : NebulaHwInterfaceBase
 {
 private:
+  typedef nebula::util::expected<std::vector<uint8_t>, uint32_t> ptc_cmd_result_t;
+
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
   std::shared_ptr<boost::asio::io_context> m_owned_ctx;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
@@ -141,12 +159,18 @@ private:
   /// @param bytes Target byte vector
   void PrintDebug(const std::vector<uint8_t> & bytes);
 
+  /// @brief Convert an error code to a human-readable string
+  /// @param error_code The error code (lowest byte is Hesai PTC error code, higher bytes nebula flags)
+  /// such as TCP_ERROR_UNRELATED_RESPONSE etc.
+  /// @return A string description of all errors in this code
+  std::string PrettyPrintPTCError(uint32_t error_code);
+
   /// @brief Send a PTC request with an optional payload, and return the full response payload.
   /// Blocking.
   /// @param command_id PTC command number.
   /// @param payload Payload bytes of the PTC command. Not including the 8-byte PTC header.
   /// @return The returned payload, if successful, or nullptr.
-  std::shared_ptr<std::vector<uint8_t>> SendReceive(
+  ptc_cmd_result_t SendReceive(
     const uint8_t command_id, const std::vector<uint8_t> & payload = {});
 
 public:
