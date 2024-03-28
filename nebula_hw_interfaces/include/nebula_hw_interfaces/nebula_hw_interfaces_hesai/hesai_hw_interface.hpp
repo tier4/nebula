@@ -168,13 +168,13 @@ public:
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer) final;
+  void ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer) final;
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
-  Status CloudInterfaceStart() final;
+  Status SensorInterfaceStart() final;
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
-  Status CloudInterfaceStop() final;
+  Status SensorInterfaceStop() final;
   /// @brief Printing sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status

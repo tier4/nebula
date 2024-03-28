@@ -34,8 +34,12 @@ private:
   /// @param calibration_configuration CalibrationConfiguration for this driver
   /// @return Resulting status
   virtual Status InitializeDriver(
-    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) = 0;
+    [[maybe_unused]] std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
+    [[maybe_unused]] std::shared_ptr<drivers::CalibrationConfigurationBase>
+      calibration_configuration)
+  {
+    return Status::NOT_IMPLEMENTED;
+  }
 
   //  status ReceiveScanMsgCallback(void * ScanMsg);  // ROS message callback for individual packet
   //  type

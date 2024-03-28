@@ -7,6 +7,7 @@
     "Adctp",
     "AT",
     "block_id",
+    "extrinsics",
     "gprmc",
     "Hesai",
     "memcpy",
@@ -39,6 +40,8 @@
     "gptp",
     "Idat",
     "Vdat",
+    "autosar",
+    "srvs",
     "manc",
     "ipaddr",
     "ntoa"

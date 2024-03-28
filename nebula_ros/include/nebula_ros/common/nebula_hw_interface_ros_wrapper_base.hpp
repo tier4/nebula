@@ -23,7 +23,7 @@ public:
   NebulaHwInterfaceWrapperBase(const NebulaHwInterfaceWrapperBase & c) = delete;
   NebulaHwInterfaceWrapperBase & operator=(const NebulaHwInterfaceWrapperBase & c) = delete;
 
-  /// @brief Start point cloud streaming (Call CloudInterfaceStart of HwInterface)
+  /// @brief Start point cloud streaming (Call SensorInterfaceStart of HwInterface)
   /// @return Resulting status
   virtual Status StreamStart() = 0;
 
@@ -42,7 +42,7 @@ protected:
   virtual Status InitializeHwInterface(
     const drivers::SensorConfigurationBase & sensor_configuration) = 0;
   //  void SendDataPacket(const std::vector<uint8_t> &buffer);        // Ideally this will be
-  //  implemented as specific funtions, GetFanStatus, GetEchoMode
+  //  implemented as specific functions, GetFanStatus, GetEchoMode
 
   /// @brief Enable sensor setup during initialization and set_parameters_callback
   bool setup_sensor;

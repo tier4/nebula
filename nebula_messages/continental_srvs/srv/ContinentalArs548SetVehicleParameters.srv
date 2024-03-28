@@ -1,0 +1,7 @@
+float32 vehicle_length -1.0
+float32 vehicle_width -1.0
+float32 vehicle_height -1.0
+float32 vehicle_wheelbase -1.0
+---
+bool success
+string message # status messages

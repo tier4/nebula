@@ -1,0 +1,44 @@
+uint32 object_id
+uint16 age
+uint8 status_measurement
+uint8 status_movement
+uint8 position_reference
+
+geometry_msgs/Point position
+geometry_msgs/Vector3 position_std
+float32 position_covariance_xy
+float32 orientation
+float32 orientation_std
+
+float32 existence_probability
+
+uint8 classification_car
+uint8 classification_truck
+uint8 classification_motorcycle
+uint8 classification_bicycle
+uint8 classification_pedestrian
+uint8 classification_animal
+uint8 classification_hazard
+uint8 classification_unknown
+
+geometry_msgs/Vector3 absolute_velocity
+geometry_msgs/Vector3 absolute_velocity_std
+float32 absolute_velocity_covariance_xy
+
+geometry_msgs/Vector3 relative_velocity
+geometry_msgs/Vector3 relative_velocity_std
+float32 relative_velocity_covariance_xy
+
+geometry_msgs/Vector3 absolute_acceleration
+geometry_msgs/Vector3 absolute_acceleration_std
+float32 absolute_acceleration_covariance_xy
+
+geometry_msgs/Vector3 relative_acceleration
+geometry_msgs/Vector3 relative_acceleration_std
+float32 relative_acceleration_covariance_xy
+
+float32 orientation_rate_mean
+float32 orientation_rate_std
+
+float32 shape_length_edge_mean
+float32 shape_width_edge_mean

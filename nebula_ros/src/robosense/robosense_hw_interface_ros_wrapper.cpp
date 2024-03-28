@@ -42,7 +42,7 @@ Status RobosenseHwInterfaceRosWrapper::StreamStart()
 {
   if (Status::OK == interface_status_) {
     RCLCPP_INFO_STREAM(get_logger(), "Starting interface.");
-    hw_interface_.CloudInterfaceStart();
+    hw_interface_.SensorInterfaceStart();
     hw_interface_.InfoInterfaceStart();
   }
   return interface_status_;

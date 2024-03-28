@@ -123,6 +123,33 @@ rclcpp_components_register_node(robosense_hw_monitor_ros_wrapper
         EXECUTABLE robosense_hw_monitor_ros_wrapper_node
         )
 
+## Continental
+# Hw Interface
+ament_auto_add_library(continental_ars548_hw_ros_wrapper SHARED
+        src/continental/continental_ars548_hw_interface_ros_wrapper.cpp
+        )
+rclcpp_components_register_node(continental_ars548_hw_ros_wrapper
+        PLUGIN "ContinentalARS548HwInterfaceRosWrapper"
+        EXECUTABLE continental_ars548_hw_interface_ros_wrapper_node
+        )
+
+ament_auto_add_library(multi_continental_ars548_hw_ros_wrapper SHARED
+        src/continental/multi_continental_ars548_hw_interface_ros_wrapper.cpp
+        )
+rclcpp_components_register_node(multi_continental_ars548_hw_ros_wrapper
+        PLUGIN "MultiContinentalARS548HwInterfaceRosWrapper"
+        EXECUTABLE multi_continental_ars548_hw_interface_ros_wrapper_node
+        )
+
+# DriverDecoder
+ament_auto_add_library(continental_ars548_driver_ros_wrapper SHARED
+        src/continental/continental_ars548_decoder_ros_wrapper.cpp
+        )
+rclcpp_components_register_node(continental_ars548_driver_ros_wrapper
+        PLUGIN "ContinentalARS548DriverRosWrapper"
+        EXECUTABLE continental_ars548_driver_ros_wrapper_node
+        )
+
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()

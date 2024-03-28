@@ -185,7 +185,7 @@ Status HesaiHwInterface::SetSensorConfiguration(
   return Status::OK;
 }
 
-Status HesaiHwInterface::CloudInterfaceStart()
+Status HesaiHwInterface::SensorInterfaceStart()
 {
   try {
     std::cout << "Starting UDP server on: " << *sensor_configuration_ << std::endl;
@@ -204,7 +204,7 @@ Status HesaiHwInterface::CloudInterfaceStart()
 #endif
 
     cloud_udp_driver_->receiver()->asyncReceive(
-      std::bind(&HesaiHwInterface::ReceiveCloudPacketCallback, this, std::placeholders::_1));
+      std::bind(&HesaiHwInterface::ReceiveSensorPacketCallback, this, std::placeholders::_1));
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
     PrintError("async receive set");
 #endif
@@ -224,7 +224,7 @@ Status HesaiHwInterface::RegisterScanCallback(
   return Status::OK;
 }
 
-void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & buffer)
+void HesaiHwInterface::ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer)
 {
   int scan_phase = static_cast<int>(sensor_configuration_->scan_phase * 100.0);
   if (!is_valid_packet_(buffer.size())) {
@@ -274,7 +274,7 @@ void HesaiHwInterface::ReceiveCloudPacketCallback(const std::vector<uint8_t> & b
     }
   }
 }
-Status HesaiHwInterface::CloudInterfaceStop()
+Status HesaiHwInterface::SensorInterfaceStop()
 {
   return Status::ERROR_1;
 }
