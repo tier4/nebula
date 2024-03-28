@@ -14,8 +14,6 @@ VelodyneDriver::VelodyneDriver(
 {
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;
-  std::cout << "sensor_configuration->sensor_model=" << sensor_configuration->sensor_model
-            << std::endl;
   switch (sensor_configuration->sensor_model) {
     case SensorModel::UNKNOWN:
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;

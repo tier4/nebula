@@ -59,15 +59,14 @@ public:
   std::vector<VelodyneLaserCorrection> laser_corrections;
   int num_lasers{};
   bool initialized;
-  bool ros_info;
 
 public:
-  explicit VelodyneCalibration(bool info = true)
-  : distance_resolution_m(0.002f), initialized(false), ros_info(info)
+  explicit VelodyneCalibration()
+  : distance_resolution_m(0.002f), initialized(false)
   {
   }
-  explicit VelodyneCalibration(const std::string & calibration_file, bool info = true)
-  : distance_resolution_m(0.002f), ros_info(info)
+  explicit VelodyneCalibration(const std::string & calibration_file)
+  : distance_resolution_m(0.002f)
   {
     read(calibration_file);
   }
