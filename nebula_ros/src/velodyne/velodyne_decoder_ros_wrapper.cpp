@@ -15,19 +15,19 @@ VelodyneDriverRosWrapper::VelodyneDriverRosWrapper(const rclcpp::NodeOptions & o
     RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << wrapper_status_);
     return;
   }
-  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
+  RCLCPP_DEBUG_STREAM(this->get_logger(), this->get_name() << ". Starting...");
 
   calibration_cfg_ptr_ =
     std::make_shared<drivers::VelodyneCalibrationConfiguration>(calibration_configuration);
 
   sensor_cfg_ptr_ = std::make_shared<drivers::VelodyneSensorConfiguration>(sensor_configuration);
 
-  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
+  RCLCPP_DEBUG_STREAM(this->get_logger(), this->get_name() << ". Driver ");
   wrapper_status_ = InitializeDriver(
     std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
     std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_));
 
-  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
+  RCLCPP_DEBUG_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 
   velodyne_scan_sub_ = create_subscription<velodyne_msgs::msg::VelodyneScan>(
     "velodyne_packets", rclcpp::SensorDataQoS(),

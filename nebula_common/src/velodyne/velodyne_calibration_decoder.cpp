@@ -162,10 +162,6 @@ void operator>>(const YAML::Node & node, VelodyneCalibration & calibration)
       // store this ring number with its corresponding laser number
       calibration.laser_corrections[next_index].laser_ring = ring;
       next_angle = min_seen;
-      if (calibration.ros_info) {
-        std::cout << "laser_ring[" << next_index << "] =" << ring << ", angle = " << next_angle
-                  << std::endl;
-      }
     }
   }
 }
