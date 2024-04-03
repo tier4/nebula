@@ -109,8 +109,7 @@ private:
 
   rclcpp::TimerBase::SharedPtr diagnostics_update_timer_;
   rclcpp::TimerBase::SharedPtr diagnostics_update_monitor_timer_;
-  rclcpp::TimerBase::SharedPtr diagnostics_status_timer_;
-  rclcpp::TimerBase::SharedPtr diagnostics_lidar_monitor_timer_;
+  rclcpp::TimerBase::SharedPtr fetch_diagnostics_timer_;
   std::unique_ptr<HesaiLidarStatus> current_status;
   std::unique_ptr<HesaiLidarMonitor> current_monitor;
   std::unique_ptr<HesaiConfig> current_config;

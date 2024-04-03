@@ -63,6 +63,7 @@ HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & o
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
   while(hw_interface_.InitializeTcpDriver() == Status::ERROR_1)
   {
+    RCLCPP_WARN(this->get_logger(), "Could not initialize TCP driver, retrying in 8s...");
     std::this_thread::sleep_for(std::chrono::milliseconds(8000));// >5000
   }
   std::vector<std::thread> thread_pool{};
@@ -70,8 +71,8 @@ HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & o
     auto result = hw_interface_.GetInventory();
     current_inventory.reset(new HesaiInventory(result));
     current_inventory_time.reset(new rclcpp::Time(this->get_clock()->now()));
-    std::cout << "HesaiInventory" << std::endl;
-    std::cout << result << std::endl;
+    RCLCPP_INFO_STREAM(this->get_logger(), "HesaiInventory");
+    RCLCPP_INFO_STREAM(this->get_logger(), result);
     info_model = result.get_str_model();
     info_serial = std::string(result.sn.begin(), result.sn.end());
     hw_interface_.SetTargetModel(result.model);
@@ -303,29 +304,25 @@ void HesaiHwMonitorRosWrapper::InitializeHesaiDiagnostics()
   current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
   current_monitor_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
 
-  auto on_timer_status = [this] { OnHesaiStatusTimer(); };
-  diagnostics_status_timer_ = std::make_shared<rclcpp::GenericTimer<decltype(on_timer_status)>>(
-    this->get_clock(), std::chrono::milliseconds(diag_span_), std::move(on_timer_status),
+  auto fetch_diag_from_sensor = [this](){ 
+    OnHesaiStatusTimer(); 
+    if (hw_interface_.UseHttpGetLidarMonitor()) {
+      OnHesaiLidarMonitorTimerHttp();
+    } else {
+      OnHesaiLidarMonitorTimer();
+    }
+  };
+
+  fetch_diagnostics_timer_ = std::make_shared<rclcpp::GenericTimer<decltype(fetch_diag_from_sensor)>>(
+    this->get_clock(), std::chrono::milliseconds(diag_span_), std::move(fetch_diag_from_sensor),
     this->get_node_base_interface()->get_context());
-  this->get_node_timers_interface()->add_timer(diagnostics_status_timer_, cbg_m_);
+  this->get_node_timers_interface()->add_timer(fetch_diagnostics_timer_, cbg_m_);
 
   if (hw_interface_.UseHttpGetLidarMonitor()) {
     diagnostics_updater_.add(
       "hesai_voltage", this, &HesaiHwMonitorRosWrapper::HesaiCheckVoltageHttp);
-    auto on_timer_lidar_monitor = [this] { OnHesaiLidarMonitorTimerHttp(); };
-    diagnostics_lidar_monitor_timer_ =
-      std::make_shared<rclcpp::GenericTimer<decltype(on_timer_lidar_monitor)>>(
-        this->get_clock(), std::chrono::milliseconds(diag_span_), std::move(on_timer_lidar_monitor),
-        this->get_node_base_interface()->get_context());
-    this->get_node_timers_interface()->add_timer(diagnostics_lidar_monitor_timer_, cbg_m2_);
   } else {
     diagnostics_updater_.add("hesai_voltage", this, &HesaiHwMonitorRosWrapper::HesaiCheckVoltage);
-    auto on_timer_lidar_monitor = [this] { OnHesaiLidarMonitorTimer(); };
-    diagnostics_lidar_monitor_timer_ =
-      std::make_shared<rclcpp::GenericTimer<decltype(on_timer_lidar_monitor)>>(
-        this->get_clock(), std::chrono::milliseconds(diag_span_), std::move(on_timer_lidar_monitor),
-        this->get_node_base_interface()->get_context());
-    this->get_node_timers_interface()->add_timer(diagnostics_lidar_monitor_timer_, cbg_m2_);
   }
 
   auto on_timer_update = [this] {
@@ -425,6 +422,7 @@ void HesaiHwMonitorRosWrapper::OnHesaiStatusTimer()
         "HesaiHwMonitorRosWrapper::OnHesaiStatusTimer(boost::system::system_error)"),
       error.what());
   }
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiStatusTimer END" << std::endl);
 }
 
 void HesaiHwMonitorRosWrapper::OnHesaiLidarMonitorTimerHttp()
@@ -448,6 +446,8 @@ void HesaiHwMonitorRosWrapper::OnHesaiLidarMonitorTimerHttp()
         "HesaiHwMonitorRosWrapper::OnHesaiLidarMonitorTimerHttp(boost::system::system_error)"),
       error.what());
   }
+
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiLidarMonitorTimerHttp END");
 }
 
 void HesaiHwMonitorRosWrapper::OnHesaiLidarMonitorTimer()
@@ -469,6 +469,8 @@ void HesaiHwMonitorRosWrapper::OnHesaiLidarMonitorTimer()
         "HesaiHwMonitorRosWrapper::OnHesaiLidarMonitorTimer(boost::system::system_error)"),
       error.what());
   }
+
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiLidarMonitorTimer END");
 }
 
 void HesaiHwMonitorRosWrapper::HesaiCheckStatus(
