@@ -91,6 +91,8 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10),
                           qos_profile);
 
+    //TODO(mojomex): create high-frequency QoS with large buffer to prevent packet loss
+
     packet_pub_ = create_publisher<nebula_msgs::msg::NebulaPacket>(
       "hesai_packets", rclcpp::SensorDataQoS());
 
@@ -137,8 +139,6 @@ void HesaiRosWrapper::ReceiveCloudPacketCallback(const std::vector<uint8_t> & pa
 
 void HesaiRosWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
-  std::lock_guard lock(mtx_decode_);
-
   auto t_start = std::chrono::high_resolution_clock::now();
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
     driver_ptr_->ParseCloudPacket(packet_msg->data);
@@ -742,7 +742,7 @@ HesaiRosWrapper::~HesaiRosWrapper()
 Status HesaiRosWrapper::StreamStart()
 {
   if (Status::OK == interface_status_) {
-    interface_status_ = hw_interface_.CloudInterfaceStart();
+    interface_status_ = hw_interface_.SensorInterfaceStart();
   }
   return interface_status_;
 }
