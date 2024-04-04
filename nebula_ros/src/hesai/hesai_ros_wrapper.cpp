@@ -88,23 +88,23 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 
     RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Wrapper=" << wrapper_status_);
     rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10),
-                          qos_profile);
+    auto pointcloud_qos =
+      rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
 
-    //TODO(mojomex): create high-frequency QoS with large buffer to prevent packet loss
+    auto packet_qos =
+      rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 1000), qos_profile);
 
-    packet_pub_ = create_publisher<nebula_msgs::msg::NebulaPacket>(
-      "hesai_packets", rclcpp::SensorDataQoS());
-
+    packet_pub_ = create_publisher<nebula_msgs::msg::NebulaPacket>("hesai_packets", packet_qos);
     packet_sub_ = create_subscription<nebula_msgs::msg::NebulaPacket>(
-      "hesai_packets", rclcpp::SensorDataQoS(), std::bind(&HesaiRosWrapper::ProcessCloudPacket, this, std::placeholders::_1));
+      "hesai_packets", packet_qos,
+      std::bind(&HesaiRosWrapper::ProcessCloudPacket, this, std::placeholders::_1));
 
-    nebula_points_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
-      "pandar_points", rclcpp::SensorDataQoS());
+    nebula_points_pub_ =
+      this->create_publisher<sensor_msgs::msg::PointCloud2>("pandar_points", pointcloud_qos);
     aw_points_base_pub_ =
-      this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points", rclcpp::SensorDataQoS());
-    aw_points_ex_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
-      "aw_points_ex", rclcpp::SensorDataQoS());
+      this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points", pointcloud_qos);
+    aw_points_ex_pub_ =
+      this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points_ex", pointcloud_qos);
   }
 
   RCLCPP_DEBUG(this->get_logger(), "Starting stream");
@@ -664,14 +664,12 @@ Status HesaiRosWrapper::GetCalibrationData(
           }
           rt = correction_configuration.LoadFromBinary(received_bytes);
           if (rt == Status::OK) {
-            RCLCPP_INFO_STREAM(
-              get_logger(), "LoadFromBinary success"
-                              << "\n");
+            RCLCPP_INFO_STREAM(get_logger(), "LoadFromBinary success" << "\n");
             run_local = false;
           } else {
             RCLCPP_ERROR_STREAM(
-              get_logger(), "LoadFromBinary failed"
-                              << ". Falling back to offline calibration file.");
+              get_logger(),
+              "LoadFromBinary failed" << ". Falling back to offline calibration file.");
             run_local = true;
           }
         } else {
@@ -923,8 +921,8 @@ void HesaiRosWrapper::InitializeHesaiDiagnostics()
   current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
   current_monitor_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
 
-  auto fetch_diag_from_sensor = [this](){ 
-    OnHesaiStatusTimer(); 
+  auto fetch_diag_from_sensor = [this]() {
+    OnHesaiStatusTimer();
     if (hw_interface_.UseHttpGetLidarMonitor()) {
       OnHesaiLidarMonitorTimerHttp();
     } else {
@@ -932,9 +930,10 @@ void HesaiRosWrapper::InitializeHesaiDiagnostics()
     }
   };
 
-  fetch_diagnostics_timer_ = std::make_shared<rclcpp::GenericTimer<decltype(fetch_diag_from_sensor)>>(
-    this->get_clock(), std::chrono::milliseconds(diag_span_), std::move(fetch_diag_from_sensor),
-    this->get_node_base_interface()->get_context());
+  fetch_diagnostics_timer_ =
+    std::make_shared<rclcpp::GenericTimer<decltype(fetch_diag_from_sensor)>>(
+      this->get_clock(), std::chrono::milliseconds(diag_span_), std::move(fetch_diag_from_sensor),
+      this->get_node_base_interface()->get_context());
   this->get_node_timers_interface()->add_timer(fetch_diagnostics_timer_, cbg_m_);
 
   if (hw_interface_.UseHttpGetLidarMonitor()) {
