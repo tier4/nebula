@@ -27,6 +27,8 @@
 #include <mutex>
 #include <thread>
 
+#include "nebula_ros/hesai/mt_queue.hpp"
+
 namespace nebula
 {
 namespace ros
@@ -202,6 +204,9 @@ private:
   std::shared_ptr<drivers::HesaiCalibrationConfiguration> calibration_cfg_ptr_;
   std::shared_ptr<drivers::HesaiSensorConfiguration> sensor_cfg_ptr_;
   std::shared_ptr<drivers::HesaiCorrection> correction_cfg_ptr_;
+
+  mt_queue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
+  std::thread decoder_thread_;
 
   Status interface_status_;
 
