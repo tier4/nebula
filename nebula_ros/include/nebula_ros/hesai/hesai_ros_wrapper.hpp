@@ -128,7 +128,7 @@ private:
     const drivers::SensorConfigurationBase & sensor_configuration) override;
   /// @brief Callback for receiving a raw UDP packet
   /// @param scan_buffer Received PandarScan
-  void ReceiveCloudPacketCallback(const std::vector<uint8_t> & scan_buffer);
+  void ReceiveCloudPacketCallback(std::vector<uint8_t> & scan_buffer);
 
   /// @brief Decodes a nebula packet and, if it completes the scan, publishes the pointcloud.
   /// @param packet_msg The received packet message
