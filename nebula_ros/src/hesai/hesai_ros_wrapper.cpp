@@ -7,7 +7,8 @@ namespace ros
 HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   hw_interface_(),
-  diagnostics_updater_(this)
+  diagnostics_updater_(this),
+  packet_queue_(300)
 {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
@@ -91,13 +92,20 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     auto pointcloud_qos =
       rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
 
-    auto packet_qos =
-      rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 1000), qos_profile);
+    // auto packet_qos =
+    //   rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 300), qos_profile);
 
-    packet_pub_ = create_publisher<nebula_msgs::msg::NebulaPacket>("hesai_packets", packet_qos);
-    packet_sub_ = create_subscription<nebula_msgs::msg::NebulaPacket>(
-      "hesai_packets", packet_qos,
-      std::bind(&HesaiRosWrapper::ProcessCloudPacket, this, std::placeholders::_1));
+    // packet_pub_ = create_publisher<nebula_msgs::msg::NebulaPacket>("hesai_packets", packet_qos);
+    // packet_sub_ = create_subscription<nebula_msgs::msg::NebulaPacket>(
+    //   "hesai_packets", packet_qos,
+    //   std::bind(&HesaiRosWrapper::ProcessCloudPacket, this, std::placeholders::_1));
+
+    decoder_thread_ = std::thread([this](){
+      while(true) {
+        auto pkt = packet_queue_.pop();
+        this->ProcessCloudPacket(std::move(pkt));
+      }
+    });
 
     nebula_points_pub_ =
       this->create_publisher<sensor_msgs::msg::PointCloud2>("pandar_points", pointcloud_qos);
@@ -142,7 +150,10 @@ void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
   // delay.tick(msg_ptr->stamp);
 
   // publish.tick();
-  packet_pub_->publish(std::move(msg_ptr));
+  if (!packet_queue_.push(std::move(msg_ptr))) {
+    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packets dropped");
+  }
+  // packet_pub_->publish(std::move(msg_ptr));
   // publish.tock();
 }
 
