@@ -120,14 +120,15 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 
 void HesaiRosWrapper::ReceiveCloudPacketCallback(const std::vector<uint8_t> & packet)
 {
-  static nebula::util::Instrumentation convert{"ReceiveCloudPacketCallback.convert"};
-  static nebula::util::Instrumentation publish{"ReceiveCloudPacketCallback.publish"};
+  // static auto convert = nebula::util::Instrumentation("ReceiveCloudPacketCallback.convert");
+  // static auto publish = nebula::util::Instrumentation("ReceiveCloudPacketCallback.publish");
+  // static auto delay = nebula::util::TopicDelay("ReceiveCloudPacketCallback");
   // Driver is not initialized yet
   if (!driver_ptr_) {
     return;
   }
 
-  convert.tick();
+  // convert.tick();
   const auto now = std::chrono::system_clock::now();
   const auto timestamp_ns =
     std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
@@ -135,25 +136,29 @@ void HesaiRosWrapper::ReceiveCloudPacketCallback(const std::vector<uint8_t> & pa
   auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
   msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
-  std::copy(packet.begin(), packet.end(), std::back_inserter(msg_ptr->data));
-  convert.tock();
+  msg_ptr->data.swap(packet);
+  // convert.tock();
 
-  publish.tick();
-  packet_pub_->publish(std::move(msg_ptr));
-  publish.tock();
+  // delay.tick(msg_ptr->stamp);
+
+  // publish.tick();
+  // publish.tock();
 }
 
 void HesaiRosWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
-  static nebula::util::Instrumentation parse{"ProcessCloudPacket.parse"};
-  static nebula::util::Instrumentation convert{"ProcessCloudPacket.convert"};
-  static nebula::util::Instrumentation publish{"ProcessCloudPacket.publish"};
+  // static auto parse = nebula::util::Instrumentation("ProcessCloudPacket.parse");
+  // static auto convert = nebula::util::Instrumentation("ProcessCloudPacket.convert");
+  // static auto publish = nebula::util::Instrumentation("ProcessCloudPacket.publish");
+  // static auto delay = nebula::util::TopicDelay("ProcessCloudPacket");
 
-  parse.tick();
+  // delay.tick(packet_msg->stamp);
+
+  // parse.tick();
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
     driver_ptr_->ParseCloudPacket(packet_msg->data);
   nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
-  parse.tock();
+  // parse.tock();
 
   if (pointcloud == nullptr) {
     // todo
@@ -163,20 +168,20 @@ void HesaiRosWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::Nebul
   if (
     nebula_points_pub_->get_subscription_count() > 0 ||
     nebula_points_pub_->get_intra_process_subscription_count() > 0) {
-    convert.tick();
+    // convert.tick();
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
       rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    convert.tock();
-    publish.tick();
+    // convert.tock();
+    // publish.tick();
     PublishCloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
-    publish.tock();
+    // publish.tock();
   }
   if (
     aw_points_base_pub_->get_subscription_count() > 0 ||
     aw_points_base_pub_->get_intra_process_subscription_count() > 0) {
-    convert.tick();
+    // convert.tick();
 
     const auto autoware_cloud_xyzi =
       nebula::drivers::convertPointXYZIRCAEDTToPointXYZIR(pointcloud);
@@ -184,15 +189,15 @@ void HesaiRosWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::Nebul
     pcl::toROSMsg(*autoware_cloud_xyzi, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
       rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    convert.tock();
-    publish.tick();
+    // convert.tock();
+    // publish.tick();
     PublishCloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
-    publish.tock();
+    // publish.tock();
   }
   if (
     aw_points_ex_pub_->get_subscription_count() > 0 ||
     aw_points_ex_pub_->get_intra_process_subscription_count() > 0) {
-    convert.tick();
+    // convert.tick();
 
     const auto autoware_ex_cloud = nebula::drivers::convertPointXYZIRCAEDTToPointXYZIRADT(
       pointcloud, std::get<1>(pointcloud_ts));
@@ -200,10 +205,10 @@ void HesaiRosWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::Nebul
     pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
       rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    convert.tock();
-    publish.tick();
+    // convert.tock();
+    // publish.tick();
     PublishCloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
-    publish.tock();
+    // publish.tock();
   }
 }
 
