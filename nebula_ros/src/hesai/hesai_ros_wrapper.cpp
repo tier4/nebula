@@ -118,7 +118,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     std::bind(&HesaiRosWrapper::paramCallback, this, std::placeholders::_1));
 }
 
-void HesaiRosWrapper::ReceiveCloudPacketCallback(const std::vector<uint8_t> & packet)
+void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
 {
   // static auto convert = nebula::util::Instrumentation("ReceiveCloudPacketCallback.convert");
   // static auto publish = nebula::util::Instrumentation("ReceiveCloudPacketCallback.publish");
@@ -142,6 +142,7 @@ void HesaiRosWrapper::ReceiveCloudPacketCallback(const std::vector<uint8_t> & pa
   // delay.tick(msg_ptr->stamp);
 
   // publish.tick();
+  packet_pub_->publish(std::move(msg_ptr));
   // publish.tock();
 }
 

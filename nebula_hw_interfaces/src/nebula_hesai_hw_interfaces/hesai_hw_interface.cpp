@@ -239,18 +239,18 @@ Status HesaiHwInterface::SensorInterfaceStart()
 }
 
 Status HesaiHwInterface::RegisterScanCallback(
-  std::function<void(const std::vector<uint8_t> &)> scan_callback)
+  std::function<void(std::vector<uint8_t> &)> scan_callback)
 {
   cloud_packet_callback_ = std::move(scan_callback);
   return Status::OK;
 }
 
-void HesaiHwInterface::ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer)
+void HesaiHwInterface::ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer)
 {
-  if (!is_valid_packet_(buffer.size())) {
-    PrintDebug("Invalid Packet: " + std::to_string(buffer.size()));
-    return;
-  }
+  // if (!is_valid_packet_(buffer.size())) {
+  //   PrintDebug("Invalid Packet: " + std::to_string(buffer.size()));
+  //   return;
+  // } TODO
   cloud_packet_callback_(buffer);
 }
 Status HesaiHwInterface::SensorInterfaceStop()
