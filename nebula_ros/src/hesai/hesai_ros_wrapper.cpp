@@ -92,14 +92,6 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     auto pointcloud_qos =
       rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
 
-    // auto packet_qos =
-    //   rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 300), qos_profile);
-
-    // packet_pub_ = create_publisher<nebula_msgs::msg::NebulaPacket>("hesai_packets", packet_qos);
-    // packet_sub_ = create_subscription<nebula_msgs::msg::NebulaPacket>(
-    //   "hesai_packets", packet_qos,
-    //   std::bind(&HesaiRosWrapper::ProcessCloudPacket, this, std::placeholders::_1));
-
     decoder_thread_ = std::thread([this](){
       while(true) {
         auto pkt = packet_queue_.pop();
@@ -254,9 +246,6 @@ Status HesaiRosWrapper::GetStatus()
 
 Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor_configuration)
 {
-  ///////////////////////////////////////////////
-  // Define and get ROS parameters
-  ///////////////////////////////////////////////
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;

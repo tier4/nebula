@@ -195,9 +195,6 @@ private:
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
   Status wrapper_status_;
 
-  rclcpp::Publisher<nebula_msgs::msg::NebulaPacket>::SharedPtr packet_pub_;
-  rclcpp::Subscription<nebula_msgs::msg::NebulaPacket>::SharedPtr packet_sub_;
-
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_;
