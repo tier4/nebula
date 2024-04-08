@@ -124,7 +124,7 @@ struct HesaiPtpDiagGrandmaster
   {
     os << "clockQuality: " << arg.clockQuality;
     os << ", ";
-    os << "utc_offset: " << static_cast<int>(arg.utc_offset.value());
+    os << "utc_offset: " << arg.utc_offset;
     os << ", ";
     os << "time_flags: " << +arg.time_flags;
     os << ", ";
