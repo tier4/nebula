@@ -24,6 +24,7 @@
 #include <chrono>
 #include <mutex>
 #include <thread>
+#include <array>
 
 namespace nebula
 {
