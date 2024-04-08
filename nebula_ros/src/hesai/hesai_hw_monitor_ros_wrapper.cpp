@@ -74,7 +74,7 @@ HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & o
     RCLCPP_INFO_STREAM(this->get_logger(), "HesaiInventory");
     RCLCPP_INFO_STREAM(this->get_logger(), result);
     info_model = result.get_str_model();
-    info_serial = std::string(std::begin(result.sn), std::begin(result.sn));
+    info_serial = std::string(std::begin(result.sn), std::end(result.sn));
     hw_interface_.SetTargetModel(result.model);
     RCLCPP_INFO_STREAM(this->get_logger(), "Model:" << info_model);
     RCLCPP_INFO_STREAM(this->get_logger(), "Serial:" << info_serial);
