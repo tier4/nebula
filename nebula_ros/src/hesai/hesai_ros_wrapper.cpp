@@ -8,7 +8,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   hw_interface_(),
   diagnostics_updater_(this),
-  packet_queue_(300)
+  packet_queue_(3000)
 {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
