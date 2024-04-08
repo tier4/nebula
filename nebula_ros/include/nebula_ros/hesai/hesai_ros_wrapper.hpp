@@ -8,9 +8,7 @@
 // #include "nebula_common/util/topic_delay.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
-#include "nebula_ros/common/nebula_hw_interface_ros_wrapper_base.hpp"
-#include "nebula_ros/common/nebula_hw_monitor_ros_wrapper_base.hpp"
-#include "nebula_ros/common/nebula_ros_wrapper_base.hpp"
+#include "nebula_ros/hesai/mt_queue.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
@@ -26,8 +24,6 @@
 #include <chrono>
 #include <mutex>
 #include <thread>
-
-#include "nebula_ros/hesai/mt_queue.hpp"
 
 namespace nebula
 {
@@ -54,7 +50,7 @@ bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & nam
 }
 
 /// @brief Ros wrapper of hesai driver
-class HesaiRosWrapper final : public rclcpp::Node, NebulaRosWrapperBase
+class HesaiRosWrapper final : public rclcpp::Node
 {
 public:
   explicit HesaiRosWrapper(const rclcpp::NodeOptions & options);
@@ -66,36 +62,17 @@ public:
 
   /// @brief Start point cloud streaming (Call CloudInterfaceStart of HwInterface)
   /// @return Resulting status
-  Status StreamStart() override;
-  /// @brief Stop point cloud streaming (not used)
-  /// @return Resulting status
-  Status StreamStop() override;
-  /// @brief Shutdown (not used)
-  /// @return Resulting status
-  Status Shutdown() override;
+  Status StreamStart();
 
 private:
-  /// @brief Initialize pointcloud decoder
-  /// @param sensor_configuration SensorConfiguration for this driver
-  /// @param calibration_configuration CalibrationConfiguration for this driver
-  /// @param correction_configuration CorrectionConfiguration for this driver (only for AT128, ignored otherwise)
-  /// @return Resulting status
-  Status InitializeCloudDriver(
-    const std::shared_ptr<drivers::SensorConfigurationBase> & sensor_configuration,
-    const std::shared_ptr<drivers::CalibrationConfigurationBase> & calibration_configuration,
-    const std::shared_ptr<drivers::HesaiCorrection> & correction_configuration = nullptr);
-
-  Status InitializeCloudDriver(
-    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) {
-      return InitializeCloudDriver(sensor_configuration, calibration_configuration, nullptr);
-    }
+  Status InitializeHwInterface();
+  Status InitializeDecoder();
+  Status InitializeHwMonitor();
 
   /// @brief Get configurations from ros parameters
   /// @param sensor_configuration Output of SensorConfiguration
   /// @return Resulting status
-  Status GetParameters(
-    drivers::HesaiSensorConfiguration & sensor_configuration);
+  Status GetParameters(drivers::HesaiSensorConfiguration & sensor_configuration);
 
   /// @brief Get calibration data from the sensor
   /// @param calibration_configuration Output of CalibrationConfiguration
@@ -123,11 +100,6 @@ private:
     std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
     const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher);
 
-  /// @brief Initializing hardware interface ros wrapper
-  /// @param sensor_configuration SensorConfiguration for this driver
-  /// @return Resulting status
-  Status InitializeHwInterface(
-    const drivers::SensorConfigurationBase & sensor_configuration) override;
   /// @brief Callback for receiving a raw UDP packet
   /// @param scan_buffer Received PandarScan
   void ReceiveCloudPacketCallback(std::vector<uint8_t> & scan_buffer);
@@ -144,12 +116,6 @@ private:
   /// @brief Updating rclcpp parameter
   /// @return SetParametersResult
   std::vector<rcl_interfaces::msg::SetParametersResult> updateParameters();
-
-  /// @brief Initializing hardware monitor ros wrapper
-  /// @param sensor_configuration SensorConfiguration for this driver
-  /// @return Resulting status
-  Status InitializeHwMonitor(
-    const drivers::SensorConfigurationBase & sensor_configuration) override;
 
   /// @brief Initializing diagnostics
   void InitializeHesaiDiagnostics();
@@ -192,7 +158,10 @@ private:
   std::string GetFixedPrecisionString(double val, int pre = 2);
 
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
+  drivers::HesaiHwInterface hw_interface_;
+
   Status wrapper_status_;
+  Status interface_status_;
 
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
@@ -202,15 +171,15 @@ private:
   std::shared_ptr<drivers::HesaiSensorConfiguration> sensor_cfg_ptr_;
   std::shared_ptr<drivers::HesaiCorrection> correction_cfg_ptr_;
 
+  /// @brief Stores received packets that have not been processed yet by the decoder thread
   mt_queue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
+  /// @brief Thread to isolate decoding from receiving
   std::thread decoder_thread_;
 
-  Status interface_status_;
-
-  //todo: temporary class member during single node refactoring
+  // todo: temporary class member during single node refactoring
   bool launch_hw_;
 
-  //todo: temporary class member during single node refactoring
+  // todo: temporary class member during single node refactoring
   std::string calibration_file_path;
   /// @brief File path of Correction data (Only required only for AT)
   std::string correction_file_path;
@@ -218,9 +187,6 @@ private:
   /// @brief Received Hesai message publisher
   rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr pandar_scan_pub_;
 
-  drivers::HesaiHwInterface hw_interface_;
-
-  uint16_t delay_hw_ms_;
   bool retry_hw_;
   std::mutex mtx_config_;
   OnSetParametersCallbackHandle::SharedPtr set_param_res_;
@@ -228,39 +194,35 @@ private:
   diagnostic_updater::Updater diagnostics_updater_;
 
   rclcpp::TimerBase::SharedPtr diagnostics_update_timer_;
-  rclcpp::TimerBase::SharedPtr diagnostics_update_monitor_timer_;
   rclcpp::TimerBase::SharedPtr fetch_diagnostics_timer_;
-  std::unique_ptr<HesaiLidarStatus> current_status;
-  std::unique_ptr<HesaiLidarMonitor> current_monitor;
-  std::unique_ptr<HesaiConfig> current_config;
-  std::unique_ptr<HesaiInventory> current_inventory;
-  std::unique_ptr<boost::property_tree::ptree> current_lidar_monitor_tree;
-  std::unique_ptr<rclcpp::Time> current_status_time;
-  std::unique_ptr<rclcpp::Time> current_config_time;
-  std::unique_ptr<rclcpp::Time> current_inventory_time;
-  std::unique_ptr<rclcpp::Time> current_lidar_monitor_time;
-  uint8_t current_diag_status;
-  uint8_t current_monitor_status;
+
+  std::unique_ptr<HesaiLidarStatus> current_status_;
+  std::unique_ptr<HesaiLidarMonitor> current_monitor_;
+  std::unique_ptr<HesaiConfig> current_config_;
+  std::unique_ptr<HesaiInventory> current_inventory_;
+  std::unique_ptr<boost::property_tree::ptree> current_lidar_monitor_tree_;
+
+  std::unique_ptr<rclcpp::Time> current_status_time_;
+  std::unique_ptr<rclcpp::Time> current_config_time_;
+  std::unique_ptr<rclcpp::Time> current_inventory_time_;
+  std::unique_ptr<rclcpp::Time> current_lidar_monitor_time_;
+
+  uint8_t current_diag_status_;
+  uint8_t current_monitor_status_;
 
   uint16_t diag_span_;
-  uint16_t delay_monitor_ms_;
-  std::mutex mtx_diag;
-  std::mutex mtx_status;
-  std::mutex mtx_lidar_monitor;
+  std::mutex mtx_lidar_status_;
+  std::mutex mtx_lidar_monitor_;
 
-  std::string info_model;
-  std::string info_serial;
-  rclcpp::CallbackGroup::SharedPtr cbg_r_;
-  rclcpp::CallbackGroup::SharedPtr cbg_m_;
-  rclcpp::CallbackGroup::SharedPtr cbg_m2_;
+  std::string info_model_;
+  std::string info_serial_;
 
-  const char * not_supported_message;
-  const char * error_message;
-  std::string message_sep;
-
-  std::vector<std::string> temperature_names;
+  std::vector<std::string> temperature_names_;
 
   bool setup_sensor;
+  const std::string MSG_NOT_SUPPORTED = "Not supported";
+  const std::string MSG_ERROR = "Error";
+  const std::string MSG_SEP = ": ";
 };
 
 }  // namespace ros
