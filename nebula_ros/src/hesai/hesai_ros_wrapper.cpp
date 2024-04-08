@@ -7,115 +7,164 @@ namespace ros
 HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   hw_interface_(),
-  diagnostics_updater_(this),
-  packet_queue_(3000)
+  packet_queue_(3000),
+  diagnostics_updater_(this)
 {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
   drivers::HesaiSensorConfiguration sensor_configuration;
   wrapper_status_ = GetParameters(sensor_configuration);
   sensor_cfg_ptr_ = std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration);
+  // DeclareRosParameters();
+  // auto sensor_cfg_ptr = GetRosParameters();
+  InitializeHwInterface();
+  InitializeDecoder();
+  InitializeHwMonitor();
+  // StreamStart();
 
-  // hwiface
-  {
-    if (Status::OK != interface_status_) {
-      RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
-      return;
-    }
-    hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
-    hw_interface_.SetSensorConfiguration(
-      std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
-    Status rt = hw_interface_.InitializeTcpDriver();
-    if (this->retry_hw_) {
-      int cnt = 0;
-      RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << " Retry: " << cnt);
-      while (rt == Status::ERROR_1) {
-        cnt++;
-        std::this_thread::sleep_for(std::chrono::milliseconds(8000));  // >5000
-        RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Retry: " << cnt);
-        rt = hw_interface_.InitializeTcpDriver();
-      }
-    }
-
-    if (rt != Status::ERROR_1) {
-      try {
-        std::vector<std::thread> thread_pool{};
-        thread_pool.emplace_back([this] {
-          auto result = hw_interface_.GetInventory();
-          RCLCPP_INFO_STREAM(get_logger(), result);
-          hw_interface_.SetTargetModel(result.model);
-        });
-        for (std::thread & th : thread_pool) {
-          th.join();
-        }
-
-      } catch (...) {
-        std::cout << "catch (...) in parent" << std::endl;
-        RCLCPP_ERROR_STREAM(get_logger(), "Failed to get model from sensor...");
-      }
-      if (this->setup_sensor) {
-        hw_interface_.CheckAndSetConfig();
-        updateParameters();
-      }
-    } else {
-      RCLCPP_ERROR_STREAM(
-        get_logger(),
-        "Failed to get model from sensor... Set from config: " << sensor_cfg_ptr_->sensor_model);
-      hw_interface_.SetTargetModel(sensor_cfg_ptr_->sensor_model);
-    }
-  }
-  // decoder
-  {
-    drivers::HesaiCalibrationConfiguration calibration_configuration;
-    drivers::HesaiCorrection correction_configuration;
-
-    wrapper_status_ = GetCalibrationData(calibration_configuration, correction_configuration);
-    if (Status::OK != wrapper_status_) {
-      RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << wrapper_status_);
-      return;
-    }
-    RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
-
-    calibration_cfg_ptr_ =
-      std::make_shared<drivers::HesaiCalibrationConfiguration>(calibration_configuration);
-    // Will be left empty for AT128, and ignored by all decoders except AT128
-    correction_cfg_ptr_ = std::make_shared<drivers::HesaiCorrection>(correction_configuration);
-
-    RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
-    wrapper_status_ = InitializeCloudDriver(
-      std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
-      std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_),
-      std::static_pointer_cast<drivers::HesaiCorrection>(correction_cfg_ptr_));
-
-    RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Wrapper=" << wrapper_status_);
-    rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
-    auto pointcloud_qos =
-      rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
-
-    decoder_thread_ = std::thread([this](){
-      while(true) {
-        auto pkt = packet_queue_.pop();
-        this->ProcessCloudPacket(std::move(pkt));
-      }
-    });
-
-    nebula_points_pub_ =
-      this->create_publisher<sensor_msgs::msg::PointCloud2>("pandar_points", pointcloud_qos);
-    aw_points_base_pub_ =
-      this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points", pointcloud_qos);
-    aw_points_ex_pub_ =
-      this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points_ex", pointcloud_qos);
-  }
 
   RCLCPP_DEBUG(this->get_logger(), "Starting stream");
   StreamStart();
   hw_interface_.RegisterScanCallback(
     std::bind(&HesaiRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
 
-  InitializeHwMonitor(*sensor_cfg_ptr_);
-
   set_param_res_ = this->add_on_set_parameters_callback(
     std::bind(&HesaiRosWrapper::paramCallback, this, std::placeholders::_1));
+}
+
+Status HesaiRosWrapper::InitializeHwInterface()
+{
+  if (Status::OK != interface_status_) {
+    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
+    return interface_status_;
+  }
+  hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
+  hw_interface_.SetSensorConfiguration(
+    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
+  
+  Status status;
+  int retry_count = 0;
+
+  while (true) {
+    status = hw_interface_.InitializeTcpDriver();
+    if (status == Status::OK || !retry_hw_) {
+      break;
+    }
+
+    retry_count++;
+    std::this_thread::sleep_for(std::chrono::milliseconds(8000));  // >5000
+    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Retry: " << retry_count);
+  };
+
+  if (status == Status::OK) {
+    try {
+      auto inventory = hw_interface_.GetInventory();
+      RCLCPP_INFO_STREAM(get_logger(), inventory);
+      hw_interface_.SetTargetModel(inventory.model);
+    } catch (...) {
+      RCLCPP_ERROR_STREAM(get_logger(), "Failed to get model from sensor...");
+    }
+    if (this->setup_sensor) {
+      hw_interface_.CheckAndSetConfig();
+      updateParameters();
+    }
+  } else {
+    RCLCPP_ERROR_STREAM(
+      get_logger(),
+      "Failed to get model from sensor... Set from config: " << sensor_cfg_ptr_->sensor_model);
+    hw_interface_.SetTargetModel(sensor_cfg_ptr_->sensor_model);
+  }
+
+  return Status::OK;
+}
+
+Status HesaiRosWrapper::InitializeDecoder()
+{
+  calibration_cfg_ptr_ = std::make_shared<drivers::HesaiCalibrationConfiguration>();
+  correction_cfg_ptr_ = std::make_shared<drivers::HesaiCorrection>();
+
+  wrapper_status_ = GetCalibrationData(*calibration_cfg_ptr_, *correction_cfg_ptr_);
+  if (Status::OK != wrapper_status_) {
+    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << wrapper_status_);
+    return wrapper_status_;
+  }
+  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
+  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
+  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Wrapper=" << wrapper_status_);
+  rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+  auto pointcloud_qos =
+    rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
+
+  decoder_thread_ = std::thread([this]() {
+    while (true) {
+      auto pkt = packet_queue_.pop();
+      this->ProcessCloudPacket(std::move(pkt));
+    }
+  });
+
+  nebula_points_pub_ =
+    this->create_publisher<sensor_msgs::msg::PointCloud2>("pandar_points", pointcloud_qos);
+  aw_points_base_pub_ =
+    this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points", pointcloud_qos);
+  aw_points_ex_pub_ =
+    this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points_ex", pointcloud_qos);
+
+  driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
+    sensor_cfg_ptr_, calibration_cfg_ptr_, correction_cfg_ptr_);
+  return driver_ptr_->GetStatus();
+}
+
+Status HesaiRosWrapper::InitializeHwMonitor()
+{
+  if (Status::OK != interface_status_) {
+    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
+    return Status::ERROR_1;
+  }
+
+  switch (sensor_cfg_ptr_->sensor_model) {
+    case nebula::drivers::SensorModel::HESAI_PANDARXT32:
+    case nebula::drivers::SensorModel::HESAI_PANDARXT32M:
+    case nebula::drivers::SensorModel::HESAI_PANDARAT128:
+      temperature_names_.emplace_back("Bottom circuit board T1");
+      temperature_names_.emplace_back("Bottom circuit board T2");
+      temperature_names_.emplace_back("Laser emitting board RT_L1(Internal)");
+      temperature_names_.emplace_back("Laser emitting board RT_L2");
+      temperature_names_.emplace_back("Receiving board RT_R");
+      temperature_names_.emplace_back("Receiving board RT2");
+      temperature_names_.emplace_back("Top circuit RT3");
+      temperature_names_.emplace_back("Not used");
+      break;
+    case nebula::drivers::SensorModel::HESAI_PANDAR64:
+    case nebula::drivers::SensorModel::HESAI_PANDAR40P:
+    case nebula::drivers::SensorModel::HESAI_PANDAR40M:
+    case nebula::drivers::SensorModel::HESAI_PANDARQT64:
+    case nebula::drivers::SensorModel::HESAI_PANDARQT128:
+    case nebula::drivers::SensorModel::HESAI_PANDAR128_E3X:
+    case nebula::drivers::SensorModel::HESAI_PANDAR128_E4X:
+    default:
+      temperature_names_.emplace_back("Bottom circuit RT1");
+      temperature_names_.emplace_back("Bottom circuit RT2");
+      temperature_names_.emplace_back("Internal Temperature");
+      temperature_names_.emplace_back("Laser emitting board RT1");
+      temperature_names_.emplace_back("Laser emitting board RT2");
+      temperature_names_.emplace_back("Receiving board RT1");
+      temperature_names_.emplace_back("Top circuit RT1");
+      temperature_names_.emplace_back("Top circuit RT2");
+      break;
+  }
+
+  auto result = hw_interface_.GetInventory();
+  current_inventory_.reset(new HesaiInventory(result));
+  current_inventory_time_.reset(new rclcpp::Time(this->get_clock()->now()));
+  std::cout << "HesaiInventory" << std::endl;
+  std::cout << result << std::endl;
+  info_model_ = result.get_str_model();
+  info_serial_ = std::string(result.sn.begin(), result.sn.end());
+  hw_interface_.SetTargetModel(result.model);
+  RCLCPP_INFO_STREAM(this->get_logger(), "Model:" << info_model_);
+  RCLCPP_INFO_STREAM(this->get_logger(), "Serial:" << info_serial_);
+  InitializeHesaiDiagnostics();
+  return Status::OK;
 }
 
 void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
@@ -225,18 +274,6 @@ void HesaiRosWrapper::PublishCloud(
   }
   pointcloud->header.frame_id = sensor_cfg_ptr_->frame_id;
   publisher->publish(std::move(pointcloud));
-}
-
-Status HesaiRosWrapper::InitializeCloudDriver(
-  const std::shared_ptr<drivers::SensorConfigurationBase> & sensor_configuration,
-  const std::shared_ptr<drivers::CalibrationConfigurationBase> & calibration_configuration,
-  const std::shared_ptr<drivers::HesaiCorrection> & correction_configuration)
-{
-  driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
-    std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
-    std::static_pointer_cast<drivers::HesaiCalibrationConfiguration>(calibration_configuration),
-    std::static_pointer_cast<drivers::HesaiCorrection>(correction_configuration));
-  return driver_ptr_->GetStatus();
 }
 
 Status HesaiRosWrapper::GetStatus()
@@ -766,85 +803,6 @@ Status HesaiRosWrapper::StreamStart()
   return interface_status_;
 }
 
-Status HesaiRosWrapper::StreamStop()
-{
-  return Status::OK;
-}
-Status HesaiRosWrapper::Shutdown()
-{
-  return Status::OK;
-}
-
-Status HesaiRosWrapper::InitializeHwInterface(  // todo: don't think this is needed
-  const drivers::SensorConfigurationBase & sensor_configuration)
-{
-  std::stringstream ss;
-  ss << sensor_configuration;
-  RCLCPP_DEBUG_STREAM(this->get_logger(), ss.str());
-  return Status::OK;
-}
-
-Status HesaiRosWrapper::InitializeHwMonitor(  // todo: don't think this is needed
-  const drivers::SensorConfigurationBase & /* sensor_configuration */)
-{
-  cbg_r_ = create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-  cbg_m_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  cbg_m2_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  if (Status::OK != interface_status_) {
-    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
-    return Status::ERROR_1;
-  }
-
-  message_sep = ": ";
-  not_supported_message = "Not supported";
-  error_message = "Error";
-
-  switch (sensor_cfg_ptr_->sensor_model) {
-    case nebula::drivers::SensorModel::HESAI_PANDARXT32:
-    case nebula::drivers::SensorModel::HESAI_PANDARXT32M:
-    case nebula::drivers::SensorModel::HESAI_PANDARAT128:
-      temperature_names.emplace_back("Bottom circuit board T1");
-      temperature_names.emplace_back("Bottom circuit board T2");
-      temperature_names.emplace_back("Laser emitting board RT_L1(Internal)");
-      temperature_names.emplace_back("Laser emitting board RT_L2");
-      temperature_names.emplace_back("Receiving board RT_R");
-      temperature_names.emplace_back("Receiving board RT2");
-      temperature_names.emplace_back("Top circuit RT3");
-      temperature_names.emplace_back("Not used");
-      break;
-    case nebula::drivers::SensorModel::HESAI_PANDAR64:
-    case nebula::drivers::SensorModel::HESAI_PANDAR40P:
-    case nebula::drivers::SensorModel::HESAI_PANDAR40M:
-    case nebula::drivers::SensorModel::HESAI_PANDARQT64:
-    case nebula::drivers::SensorModel::HESAI_PANDARQT128:
-    case nebula::drivers::SensorModel::HESAI_PANDAR128_E3X:
-    case nebula::drivers::SensorModel::HESAI_PANDAR128_E4X:
-    default:
-      temperature_names.emplace_back("Bottom circuit RT1");
-      temperature_names.emplace_back("Bottom circuit RT2");
-      temperature_names.emplace_back("Internal Temperature");
-      temperature_names.emplace_back("Laser emitting board RT1");
-      temperature_names.emplace_back("Laser emitting board RT2");
-      temperature_names.emplace_back("Receiving board RT1");
-      temperature_names.emplace_back("Top circuit RT1");
-      temperature_names.emplace_back("Top circuit RT2");
-      break;
-  }
-
-  auto result = hw_interface_.GetInventory();
-  current_inventory.reset(new HesaiInventory(result));
-  current_inventory_time.reset(new rclcpp::Time(this->get_clock()->now()));
-  std::cout << "HesaiInventory" << std::endl;
-  std::cout << result << std::endl;
-  info_model = result.get_str_model();
-  info_serial = std::string(result.sn.begin(), result.sn.end());
-  hw_interface_.SetTargetModel(result.model);
-  RCLCPP_INFO_STREAM(this->get_logger(), "Model:" << info_model);
-  RCLCPP_INFO_STREAM(this->get_logger(), "Serial:" << info_serial);
-  InitializeHesaiDiagnostics();
-  return Status::OK;
-}
-
 rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::paramCallback(
   const std::vector<rclcpp::Parameter> & p)
 {
@@ -926,7 +884,7 @@ void HesaiRosWrapper::InitializeHesaiDiagnostics()
   RCLCPP_INFO_STREAM(this->get_logger(), "InitializeHesaiDiagnostics");
   using std::chrono_literals::operator""s;
   std::ostringstream os;
-  auto hardware_id = info_model + ": " + info_serial;
+  auto hardware_id = info_model_ + ": " + info_serial_;
   diagnostics_updater_.setHardwareID(hardware_id);
   RCLCPP_INFO_STREAM(this->get_logger(), "hardware_id: " + hardware_id);
 
@@ -935,12 +893,12 @@ void HesaiRosWrapper::InitializeHesaiDiagnostics()
   diagnostics_updater_.add("hesai_temperature", this, &HesaiRosWrapper::HesaiCheckTemperature);
   diagnostics_updater_.add("hesai_rpm", this, &HesaiRosWrapper::HesaiCheckRpm);
 
-  current_status.reset();
-  current_monitor.reset();
-  current_status_time.reset(new rclcpp::Time(this->get_clock()->now()));
-  current_lidar_monitor_time.reset(new rclcpp::Time(this->get_clock()->now()));
-  current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
-  current_monitor_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+  current_status_.reset();
+  current_monitor_.reset();
+  current_status_time_.reset(new rclcpp::Time(this->get_clock()->now()));
+  current_lidar_monitor_time_.reset(new rclcpp::Time(this->get_clock()->now()));
+  current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+  current_monitor_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
 
   auto fetch_diag_from_sensor = [this]() {
     OnHesaiStatusTimer();
@@ -952,10 +910,7 @@ void HesaiRosWrapper::InitializeHesaiDiagnostics()
   };
 
   fetch_diagnostics_timer_ =
-    std::make_shared<rclcpp::GenericTimer<decltype(fetch_diag_from_sensor)>>(
-      this->get_clock(), std::chrono::milliseconds(diag_span_), std::move(fetch_diag_from_sensor),
-      this->get_node_base_interface()->get_context());
-  this->get_node_timers_interface()->add_timer(fetch_diagnostics_timer_, cbg_m_);
+    create_wall_timer(std::chrono::milliseconds(diag_span_), std::move(fetch_diag_from_sensor));
 
   if (hw_interface_.UseHttpGetLidarMonitor()) {
     diagnostics_updater_.add("hesai_voltage", this, &HesaiRosWrapper::HesaiCheckVoltageHttp);
@@ -966,32 +921,30 @@ void HesaiRosWrapper::InitializeHesaiDiagnostics()
   auto on_timer_update = [this] {
     RCLCPP_DEBUG_STREAM(get_logger(), "OnUpdateTimer");
     auto now = this->get_clock()->now();
-    auto dif = (now - *current_status_time).seconds();
+    auto dif = (now - *current_status_time_).seconds();
 
     RCLCPP_DEBUG_STREAM(get_logger(), "dif(status): " << dif);
 
     if (diag_span_ * 2.0 < dif * 1000) {
-      current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+      current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
       RCLCPP_DEBUG_STREAM(get_logger(), "STALE");
     } else {
-      current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::OK;
+      current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::OK;
       RCLCPP_DEBUG_STREAM(get_logger(), "OK");
     }
-    dif = (now - *current_lidar_monitor_time).seconds();
+    dif = (now - *current_lidar_monitor_time_).seconds();
     RCLCPP_DEBUG_STREAM(get_logger(), "dif(monitor): " << dif);
     if (diag_span_ * 2.0 < dif * 1000) {
-      current_monitor_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+      current_monitor_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
       RCLCPP_DEBUG_STREAM(get_logger(), "STALE");
     } else {
-      current_monitor_status = diagnostic_msgs::msg::DiagnosticStatus::OK;
+      current_monitor_status_ = diagnostic_msgs::msg::DiagnosticStatus::OK;
       RCLCPP_DEBUG_STREAM(get_logger(), "OK");
     }
     diagnostics_updater_.force_update();
   };
-  diagnostics_update_timer_ = std::make_shared<rclcpp::GenericTimer<decltype(on_timer_update)>>(
-    this->get_clock(), std::chrono::milliseconds(1000), std::move(on_timer_update),
-    this->get_node_base_interface()->get_context());
-  this->get_node_timers_interface()->add_timer(diagnostics_update_timer_, cbg_r_);
+  diagnostics_update_timer_ =
+    create_wall_timer(std::chrono::milliseconds(1000), std::move(on_timer_update));
 
   RCLCPP_DEBUG_STREAM(get_logger(), "add_timer");
 }
@@ -1003,7 +956,7 @@ std::string HesaiRosWrapper::GetPtreeValue(
   if (value) {
     return value.get();
   } else {
-    return not_supported_message;
+    return MSG_NOT_SUPPORTED;
   }
 }
 std::string HesaiRosWrapper::GetFixedPrecisionString(double val, int pre)
@@ -1018,9 +971,9 @@ void HesaiRosWrapper::OnHesaiStatusTimer()
   RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiStatusTimer" << std::endl);
   try {
     auto result = hw_interface_.GetLidarStatus();
-    std::scoped_lock lock(mtx_status);
-    current_status_time.reset(new rclcpp::Time(this->get_clock()->now()));
-    current_status.reset(new HesaiLidarStatus(result));
+    std::scoped_lock lock(mtx_lidar_status_);
+    current_status_time_.reset(new rclcpp::Time(this->get_clock()->now()));
+    current_status_.reset(new HesaiLidarStatus(result));
   } catch (const std::system_error & error) {
     RCLCPP_ERROR_STREAM(
       rclcpp::get_logger("HesaiRosWrapper::OnHesaiStatusTimer(std::system_error)"), error.what());
@@ -1037,9 +990,9 @@ void HesaiRosWrapper::OnHesaiLidarMonitorTimerHttp()
   RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiLidarMonitorTimerHttp");
   try {
     hw_interface_.GetLidarMonitorAsyncHttp([this](const std::string & str) {
-      std::scoped_lock lock(mtx_lidar_monitor);
-      current_lidar_monitor_time.reset(new rclcpp::Time(this->get_clock()->now()));
-      current_lidar_monitor_tree =
+      std::scoped_lock lock(mtx_lidar_monitor_);
+      current_lidar_monitor_time_.reset(new rclcpp::Time(this->get_clock()->now()));
+      current_lidar_monitor_tree_ =
         std::make_unique<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
     });
   } catch (const std::system_error & error) {
@@ -1059,11 +1012,10 @@ void HesaiRosWrapper::OnHesaiLidarMonitorTimer()
 {
   RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiLidarMonitorTimer");
   try {
-    auto ios = std::make_shared<boost::asio::io_service>();
     auto result = hw_interface_.GetLidarMonitor();
-    std::scoped_lock lock(mtx_lidar_monitor);
-    current_lidar_monitor_time.reset(new rclcpp::Time(this->get_clock()->now()));
-    current_monitor.reset(new HesaiLidarMonitor(result));
+    std::scoped_lock lock(mtx_lidar_monitor_);
+    current_lidar_monitor_time_.reset(new rclcpp::Time(this->get_clock()->now()));
+    current_monitor_.reset(new HesaiLidarMonitor(result));
   } catch (const std::system_error & error) {
     RCLCPP_ERROR_STREAM(
       rclcpp::get_logger("HesaiRosWrapper::OnHesaiLidarMonitorTimer(std::system_error)"),
@@ -1078,14 +1030,14 @@ void HesaiRosWrapper::OnHesaiLidarMonitorTimer()
 
 void HesaiRosWrapper::HesaiCheckStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  std::scoped_lock lock(mtx_status);
-  if (current_status) {
+  std::scoped_lock lock(mtx_lidar_status_);
+  if (current_status_) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
 
-    diagnostics.add("system_uptime", std::to_string(current_status->system_uptime));
-    diagnostics.add("startup_times", std::to_string(current_status->startup_times));
-    diagnostics.add("total_operation_time", std::to_string(current_status->total_operation_time));
+    diagnostics.add("system_uptime", std::to_string(current_status_->system_uptime));
+    diagnostics.add("startup_times", std::to_string(current_status_->startup_times));
+    diagnostics.add("total_operation_time", std::to_string(current_status_->total_operation_time));
 
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
@@ -1095,13 +1047,13 @@ void HesaiRosWrapper::HesaiCheckStatus(diagnostic_updater::DiagnosticStatusWrapp
 
 void HesaiRosWrapper::HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  std::scoped_lock lock(mtx_status);
-  if (current_status) {
+  std::scoped_lock lock(mtx_lidar_status_);
+  if (current_status_) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
-    auto gps_status = current_status->get_str_gps_pps_lock();
-    auto gprmc_status = current_status->get_str_gps_gprmc_status();
-    auto ptp_status = current_status->get_str_ptp_clock_status();
+    auto gps_status = current_status_->get_str_gps_pps_lock();
+    auto gprmc_status = current_status_->get_str_gps_gprmc_status();
+    auto ptp_status = current_status_->get_str_ptp_clock_status();
     std::transform(gps_status.cbegin(), gps_status.cend(), gps_status.begin(), toupper);
     std::transform(gprmc_status.cbegin(), gprmc_status.cend(), gprmc_status.begin(), toupper);
     std::transform(ptp_status.cbegin(), ptp_status.cend(), ptp_status.begin(), toupper);
@@ -1129,13 +1081,13 @@ void HesaiRosWrapper::HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWrapper 
 void HesaiRosWrapper::HesaiCheckTemperature(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  std::scoped_lock lock(mtx_status);
-  if (current_status) {
+  std::scoped_lock lock(mtx_lidar_status_);
+  if (current_status_) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
-    for (size_t i = 0; i < current_status->temperature.size(); i++) {
+    for (size_t i = 0; i < current_status_->temperature.size(); i++) {
       diagnostics.add(
-        temperature_names[i], GetFixedPrecisionString(current_status->temperature[i] * 0.01));
+        temperature_names_[i], GetFixedPrecisionString(current_status_->temperature[i] * 0.01));
     }
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
@@ -1145,11 +1097,11 @@ void HesaiRosWrapper::HesaiCheckTemperature(
 
 void HesaiRosWrapper::HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  std::scoped_lock lock(mtx_status);
-  if (current_status) {
+  std::scoped_lock lock(mtx_lidar_status_);
+  if (current_status_) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
-    diagnostics.add("motor_speed", std::to_string(current_status->motor_speed));
+    diagnostics.add("motor_speed", std::to_string(current_status_->motor_speed));
 
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
@@ -1160,8 +1112,8 @@ void HesaiRosWrapper::HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWrapper 
 void HesaiRosWrapper::HesaiCheckVoltageHttp(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  std::scoped_lock lock(mtx_lidar_monitor);
-  if (current_lidar_monitor_tree) {
+  std::scoped_lock lock(mtx_lidar_monitor_);
+  if (current_lidar_monitor_tree_) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
     std::string key = "";
@@ -1169,18 +1121,18 @@ void HesaiRosWrapper::HesaiCheckVoltageHttp(
     std::string mes;
     key = "lidarInCur";
     try {
-      mes = GetPtreeValue(current_lidar_monitor_tree.get(), "Body." + key);
+      mes = GetPtreeValue(current_lidar_monitor_tree_.get(), "Body." + key);
     } catch (boost::bad_lexical_cast & ex) {
       level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-      mes = error_message + std::string(ex.what());
+      mes = MSG_ERROR + std::string(ex.what());
     }
     diagnostics.add(key, mes);
     key = "lidarInVol";
     try {
-      mes = GetPtreeValue(current_lidar_monitor_tree.get(), "Body." + key);
+      mes = GetPtreeValue(current_lidar_monitor_tree_.get(), "Body." + key);
     } catch (boost::bad_lexical_cast & ex) {
       level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-      mes = error_message + std::string(ex.what());
+      mes = MSG_ERROR + std::string(ex.what());
     }
     diagnostics.add(key, mes);
 
@@ -1192,16 +1144,16 @@ void HesaiRosWrapper::HesaiCheckVoltageHttp(
 
 void HesaiRosWrapper::HesaiCheckVoltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  std::scoped_lock lock(mtx_lidar_monitor);
-  if (current_monitor) {
+  std::scoped_lock lock(mtx_lidar_monitor_);
+  if (current_monitor_) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
     diagnostics.add(
-      "input_voltage", GetFixedPrecisionString(current_monitor->input_voltage * 0.01) + " V");
+      "input_voltage", GetFixedPrecisionString(current_monitor_->input_voltage * 0.01) + " V");
     diagnostics.add(
-      "input_current", GetFixedPrecisionString(current_monitor->input_current * 0.01) + " mA");
+      "input_current", GetFixedPrecisionString(current_monitor_->input_current * 0.01) + " mA");
     diagnostics.add(
-      "input_power", GetFixedPrecisionString(current_monitor->input_power * 0.01) + " W");
+      "input_power", GetFixedPrecisionString(current_monitor_->input_power * 0.01) + " W");
 
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
