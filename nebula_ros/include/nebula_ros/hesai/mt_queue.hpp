@@ -8,10 +8,9 @@ template <typename T>
 class mt_queue
 {
 private:
-  std::mutex d_mutex;
-  std::condition_variable d_condition;
-  std::deque<T> d_queue;
-
+  std::mutex mutex_;
+  std::condition_variable condition_variable_;
+  std::deque<T> queue_;
   size_t capacity_;
 
 public:
@@ -20,22 +19,22 @@ public:
   bool push(T && value)
   {
     {
-      std::unique_lock<std::mutex> lock(this->d_mutex);
-      if (d_queue.size() == capacity_) {
+      std::unique_lock<std::mutex> lock(this->mutex_);
+      if (queue_.size() == capacity_) {
         return false;
       }
 
-      d_queue.push_front(std::move(value));
+      queue_.push_front(std::move(value));
     }
-    this->d_condition.notify_one();
+    this->condition_variable_.notify_one();
     return true;
   }
   T pop()
   {
-    std::unique_lock<std::mutex> lock(this->d_mutex);
-    this->d_condition.wait(lock, [=] { return !this->d_queue.empty(); });
-    T rc(std::move(this->d_queue.back()));
-    this->d_queue.pop_back();
-    return rc;
+    std::unique_lock<std::mutex> lock(this->mutex_);
+    this->condition_variable_.wait(lock, [=] { return !this->queue_.empty(); });
+    T return_value(std::move(this->queue_.back()));
+    this->queue_.pop_back();
+    return return_value;
   }
 };
