@@ -124,11 +124,11 @@ struct HesaiPtpDiagGrandmaster
   {
     os << "clockQuality: " << arg.clockQuality;
     os << ", ";
-    os << "utc_offset: " << static_cast<int>(arg.utc_offset.value());
+    os << "utc_offset: " << arg.utc_offset;
     os << ", ";
-    os << "time_flags: " << static_cast<int>(arg.time_flags);
+    os << "time_flags: " << +arg.time_flags;
     os << ", ";
-    os << "time_source: " << static_cast<int>(arg.time_source);
+    os << "time_source: " << +arg.time_source;
 
     return os;
   }
@@ -137,13 +137,13 @@ struct HesaiPtpDiagGrandmaster
 /// @brief struct of PTC_COMMAND_GET_INVENTORY_INFO
 struct HesaiInventory
 {
-  uint8_t sn[18];
-  uint8_t date_of_manufacture[16];
+  char sn[18];
+  char date_of_manufacture[16];
   uint8_t mac[6];
-  uint8_t sw_ver[16];
-  uint8_t hw_ver[16];
-  uint8_t control_fw_ver[16];
-  uint8_t sensor_fw_ver[16];
+  char sw_ver[16];
+  char hw_ver[16];
+  char control_fw_ver[16];
+  char sensor_fw_ver[16];
   big_uint16_buf_t angle_offset;
   uint8_t model;
   uint8_t motor_type;
@@ -152,10 +152,13 @@ struct HesaiInventory
 
   friend std::ostream & operator<<(std::ostream & os, nebula::HesaiInventory const & arg)
   {
-    os << "sn: " << std::string(std::begin(arg.sn), std::end(arg.sn));
+    std::ios initial_format(nullptr);
+    initial_format.copyfmt(os);
+
+    os << "sn: " << std::string(arg.sn, strnlen(arg.sn, sizeof(arg.sn)));
     os << ", ";
     os << "date_of_manufacture: "
-       << std::string(std::begin(arg.date_of_manufacture), std::end(arg.date_of_manufacture));
+       << std::string(arg.date_of_manufacture, strnlen(arg.date_of_manufacture, sizeof(arg.date_of_manufacture)));
     os << ", ";
     os << "mac: ";
 
@@ -163,35 +166,37 @@ struct HesaiInventory
       if (i != 0) {
         os << ':';
       }
-      os << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.mac[i]));
+      os << std::hex << std::setfill('0') << std::setw(2) << (+arg.mac[i]);
     }
+    os.copyfmt(initial_format);
 
     os << ", ";
-    os << "sw_ver: " << std::string(std::begin(arg.sw_ver), std::end(arg.sw_ver));
+    os << "sw_ver: " << std::string(arg.sw_ver, strnlen(arg.sw_ver, sizeof(arg.sw_ver)));
     os << ", ";
-    os << "hw_ver: " << std::string(std::begin(arg.hw_ver), std::end(arg.hw_ver));
+    os << "hw_ver: " << std::string(arg.hw_ver, strnlen(arg.hw_ver, sizeof(arg.hw_ver)));
     os << ", ";
     os << "control_fw_ver: "
-       << std::string(std::begin(arg.control_fw_ver), std::end(arg.control_fw_ver));
+       << std::string(arg.control_fw_ver, strnlen(arg.control_fw_ver, sizeof(arg.control_fw_ver)));
     os << ", ";
     os << "sensor_fw_ver: "
-       << std::string(std::begin(arg.sensor_fw_ver), std::end(arg.sensor_fw_ver));
+       << std::string(arg.sensor_fw_ver, strnlen(arg.sensor_fw_ver, sizeof(arg.sensor_fw_ver)));
     os << ", ";
     os << "angle_offset: " << arg.angle_offset;
     os << ", ";
-    os << "model: " << arg.model;
+    os << "model: " << +arg.model;
     os << ", ";
-    os << "motor_type: " << arg.motor_type;
+    os << "motor_type: " << +arg.motor_type;
     os << ", ";
-    os << "num_of_lines: " << arg.num_of_lines;
+    os << "num_of_lines: " << +arg.num_of_lines;
     os << ", ";
 
     for (size_t i = 0; i < sizeof(arg.reserved); i++) {
       if (i != 0) {
         os << ' ';
       }
-      os << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.reserved[i]));
+      os << std::hex << std::setfill('0') << std::setw(2) << (+arg.reserved[i]);
     }
+    os.copyfmt(initial_format);
 
     return os;
   }
@@ -258,29 +263,32 @@ struct HesaiConfig
 
   friend std::ostream & operator<<(std::ostream & os, nebula::HesaiConfig const & arg)
   {
+    std::ios initial_format(nullptr);
+    initial_format.copyfmt(os);
+
     os << "ipaddr: " 
-       << static_cast<int>(arg.ipaddr[0]) << "." 
-       << static_cast<int>(arg.ipaddr[1]) << "." 
-       << static_cast<int>(arg.ipaddr[2]) << "." 
-       << static_cast<int>(arg.ipaddr[3]);
+       << +arg.ipaddr[0] << "." 
+       << +arg.ipaddr[1] << "." 
+       << +arg.ipaddr[2] << "." 
+       << +arg.ipaddr[3];
     os << ", ";
     os << "mask: " 
-       << static_cast<int>(arg.mask[0]) << "." 
-       << static_cast<int>(arg.mask[1]) << "."
-       << static_cast<int>(arg.mask[2]) << "." 
-       << static_cast<int>(arg.mask[3]);
+       << +arg.mask[0] << "." 
+       << +arg.mask[1] << "."
+       << +arg.mask[2] << "." 
+       << +arg.mask[3];
     os << ", ";
     os << "gateway: " 
-       << static_cast<int>(arg.gateway[0]) << "." 
-       << static_cast<int>(arg.gateway[1]) << "." 
-       << static_cast<int>(arg.gateway[2]) << "." 
-       << static_cast<int>(arg.gateway[3]);
+       << +arg.gateway[0] << "." 
+       << +arg.gateway[1] << "." 
+       << +arg.gateway[2] << "." 
+       << +arg.gateway[3];
     os << ", ";
     os << "dest_ipaddr: " 
-       << static_cast<int>(arg.dest_ipaddr[0]) << "."
-       << static_cast<int>(arg.dest_ipaddr[1]) << "." 
-       << static_cast<int>(arg.dest_ipaddr[2]) << "."
-       << static_cast<int>(arg.dest_ipaddr[3]);
+       << +arg.dest_ipaddr[0] << "."
+       << +arg.dest_ipaddr[1] << "." 
+       << +arg.dest_ipaddr[2] << "."
+       << +arg.dest_ipaddr[3];
     os << ", ";
     os << "dest_LiDAR_udp_port: " << arg.dest_LiDAR_udp_port;
     os << ", ";
@@ -288,7 +296,7 @@ struct HesaiConfig
     os << ", ";
     os << "spin_rate: " << arg.spin_rate;
     os << ", ";
-    os << "sync: " << arg.sync;
+    os << "sync: " << +arg.sync;
     os << ", ";
     os << "sync_angle: " << arg.sync_angle;
     os << ", ";
@@ -296,27 +304,27 @@ struct HesaiConfig
     os << ", ";
     os << "stop_angle: " << arg.stop_angle;
     os << ", ";
-    os << "clock_source: " << arg.clock_source;
+    os << "clock_source: " << +arg.clock_source;
     os << ", ";
-    os << "udp_seq: " << arg.udp_seq;
+    os << "udp_seq: " << +arg.udp_seq;
     os << ", ";
-    os << "trigger_method: " << arg.trigger_method;
+    os << "trigger_method: " << +arg.trigger_method;
     os << ", ";
-    os << "return_mode: " << arg.return_mode;
+    os << "return_mode: " << +arg.return_mode;
     os << ", ";
-    os << "standby_mode: " << arg.standby_mode;
+    os << "standby_mode: " << +arg.standby_mode;
     os << ", ";
-    os << "motor_status: " << arg.motor_status;
+    os << "motor_status: " << +arg.motor_status;
     os << ", ";
-    os << "vlan_flag: " << arg.vlan_flag;
+    os << "vlan_flag: " << +arg.vlan_flag;
     os << ", ";
     os << "vlan_id: " << arg.vlan_id;
     os << ", ";
-    os << "clock_data_fmt: " << arg.clock_data_fmt;
+    os << "clock_data_fmt: " << +arg.clock_data_fmt;
     os << ", ";
-    os << "noise_filtering: " << arg.noise_filtering;
+    os << "noise_filtering: " << +arg.noise_filtering;
     os << ", ";
-    os << "reflectivity_mapping: " << arg.reflectivity_mapping;
+    os << "reflectivity_mapping: " << +arg.reflectivity_mapping;
     os << ", ";
     os << "reserved: ";
 
@@ -324,8 +332,9 @@ struct HesaiConfig
       if (i != 0) {
         os << ' ';
       }
-      os << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.reserved[i]));
+      os << std::hex << std::setfill('0') << std::setw(2) << (+arg.reserved[i]);
     }
+    os.copyfmt(initial_format);
 
     return os;
   }
@@ -346,6 +355,9 @@ struct HesaiLidarStatus
 
   friend std::ostream & operator<<(std::ostream & os, nebula::HesaiLidarStatus const & arg)
   {
+    std::ios initial_format(nullptr);
+    initial_format.copyfmt(os);
+
     os << "system_uptime: " << arg.system_uptime;
     os << ", ";
     os << "motor_speed: " << arg.motor_speed;
@@ -378,6 +390,7 @@ struct HesaiLidarStatus
       }
       os << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.reserved[i]));
     }
+    os.copyfmt(initial_format);
 
     return os;
   }
