@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="launch_hw" default="True" />
+    <arg name="launch_hw" default="true" />
     <arg name="sensor_model" description="Pandar64|Pandar40P|PandarXT32|PandarXT32M|PandarAT128|PandarQT64|PandarQT128|Pandar128E4X"/>
     <arg name="return_mode" default="Dual" description="See readme for supported return modes"/>
     <arg name="frame_id"  default="hesai"/>
