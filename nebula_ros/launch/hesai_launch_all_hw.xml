@@ -33,7 +33,7 @@
     <let name="debug_level" value="debug" if="$(eval $(var debug_logging))"/>
     <let name="debug_level" value="info" unless="$(eval $(var debug_logging))"/>
 
-    <node_container pkg="rclcpp_components" exec="component_container_mt" name="nebula_container" 
+    <node_container pkg="rclcpp_components" exec="component_container" name="nebula_container" 
         output="screen" ros_args="--log-level $(var debug_level)" namespace="">
         <composable_node pkg="nebula_ros" plugin="HesaiRosWrapper"
                name="nebula_hesai">
