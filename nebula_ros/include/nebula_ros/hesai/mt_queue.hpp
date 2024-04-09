@@ -16,7 +16,7 @@ private:
 public:
   mt_queue(size_t capacity) : capacity_(capacity) {}
 
-  bool push(T && value)
+  bool try_push(T && value)
   {
     {
       std::unique_lock<std::mutex> lock(this->mutex_);
@@ -29,6 +29,17 @@ public:
     this->condition_variable_.notify_one();
     return true;
   }
+
+  void push(T && value)
+  {
+    {
+      std::unique_lock<std::mutex> lock(this->mutex_);
+      this->condition_variable_.wait(lock, [=] { return this->queue_.size() < this->capacity_; });
+      queue_.push_front(std::move(value));
+    }
+    this->condition_variable_.notify_one();
+  }
+
   T pop()
   {
     std::unique_lock<std::mutex> lock(this->mutex_);
