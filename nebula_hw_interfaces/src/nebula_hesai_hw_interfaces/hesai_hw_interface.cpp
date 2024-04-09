@@ -17,8 +17,7 @@ HesaiHwInterface::HesaiHwInterface()
 : cloud_io_context_{new ::drivers::common::IoContext(1)},
   m_owned_ctx{new boost::asio::io_context(1)},
   cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
-  tcp_driver_{new ::drivers::tcp_driver::TcpDriver(m_owned_ctx)},
-  scan_cloud_ptr_{std::make_unique<pandar_msgs::msg::PandarScan>()}
+  tcp_driver_{new ::drivers::tcp_driver::TcpDriver(m_owned_ctx)}
 {
 }
 HesaiHwInterface::~HesaiHwInterface()
@@ -141,63 +140,8 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
 Status HesaiHwInterface::SetSensorConfiguration(
   std::shared_ptr<SensorConfigurationBase> sensor_configuration)
 {
-  HesaiStatus status = Status::OK;
-  mtu_size_ = MTU_SIZE;
-  is_solid_state = false;
-  try {
-    sensor_configuration_ =
-      std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration);
-    if (
-      sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR40P ||
-      sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR40P) {
-      azimuth_index_ = 2;
-      is_valid_packet_ = [](size_t packet_size) {
-        return (
-          packet_size == PANDAR40_PACKET_SIZE || packet_size == PANDAR40P_EXTENDED_PACKET_SIZE);
-      };
-    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARQT64) {
-      azimuth_index_ = 12;  // 12 + 258 * [0-3]
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == PANDARQT64_PACKET_SIZE); };
-    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARQT128) {
-      azimuth_index_ = 12;  // 12 + 514 * [0-1]
-      is_valid_packet_ = [](size_t packet_size) {
-        return (packet_size == PANDARQT128_PACKET_SIZE);
-      };
-    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARXT32) {
-      azimuth_index_ = 12;  // 12 + 130 * [0-7]
-      is_valid_packet_ = [](size_t packet_size) { return (packet_size == PANDARXT32_PACKET_SIZE); };
-    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARXT32M) {
-      azimuth_index_ = 12;  // 12 + 130 * [0-7]
-      is_valid_packet_ = [](size_t packet_size) {
-        return (packet_size == PANDARXT32M_PACKET_SIZE);
-      };
-    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
-      azimuth_index_ = 12;  // 12 + 4 * 128 * [0-1]
-      is_solid_state = true;
-      is_valid_packet_ = [](size_t packet_size) {
-        return (packet_size == PANDARAT128_PACKET_SIZE);
-      };
-    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
-      azimuth_index_ = 8;  // 8 + 192 * [0-5]
-      is_valid_packet_ = [](size_t packet_size) {
-        return (
-          packet_size == PANDAR64_PACKET_SIZE || packet_size == PANDAR64_EXTENDED_PACKET_SIZE);
-      };
-    } else if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
-      azimuth_index_ = 12;  // 12
-      is_valid_packet_ = [](size_t packet_size) {
-        return (
-          packet_size == PANDAR128_E4X_EXTENDED_PACKET_SIZE ||
-          packet_size == PANDAR128_E4X_PACKET_SIZE);
-      };
-    } else {
-      status = Status::INVALID_SENSOR_MODEL;
-    }
-  } catch (const std::exception & ex) {
-    status = Status::SENSOR_CONFIG_ERROR;
-    std::cerr << status << std::endl;
-    return status;
-  }
+  sensor_configuration_ =
+    std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration);
   return Status::OK;
 }
 
@@ -242,10 +186,6 @@ Status HesaiHwInterface::RegisterScanCallback(
 
 void HesaiHwInterface::ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer)
 {
-  // if (!is_valid_packet_(buffer.size())) {
-  //   PrintDebug("Invalid Packet: " + std::to_string(buffer.size()));
-  //   return;
-  // } TODO
   cloud_packet_callback_(buffer);
 }
 Status HesaiHwInterface::SensorInterfaceStop()
@@ -297,7 +237,9 @@ Status HesaiHwInterface::InitializeTcpDriver()
 Status HesaiHwInterface::FinalizeTcpDriver()
 {
   try {
-    tcp_driver_->close();
+    if (tcp_driver_) {
+      tcp_driver_->close();
+    }
   } catch (std::exception & e) {
     PrintError("Error while finalizing the TcpDriver");
     return Status::UDP_CONNECTION_ERROR;
