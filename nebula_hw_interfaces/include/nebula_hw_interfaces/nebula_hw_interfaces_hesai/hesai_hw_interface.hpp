@@ -104,7 +104,7 @@ const int HESAI_LIDAR_PTP_CLOCK_SOURCE = 1;
 
 
 /// @brief Hardware interface of hesai driver
-class HesaiHwInterface : NebulaHwInterfaceBase
+class HesaiHwInterface : public NebulaHwInterfaceBase
 {
 private:
   struct ptc_error_t
@@ -122,12 +122,6 @@ private:
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
   std::shared_ptr<::drivers::tcp_driver::TcpDriver> tcp_driver_;
   std::shared_ptr<HesaiSensorConfiguration> sensor_configuration_;
-  std::shared_ptr<HesaiCalibrationConfiguration> calibration_configuration_;
-  size_t azimuth_index_{};
-  size_t mtu_size_{};
-  std::unique_ptr<pandar_msgs::msg::PandarScan> scan_cloud_ptr_;
-  std::function<bool(size_t)>
-    is_valid_packet_; /*Lambda Function Array to verify proper packet size*/
   std::function<void(std::vector<uint8_t> & buffer)>
     cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
 

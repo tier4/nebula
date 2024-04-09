@@ -7,26 +7,29 @@ namespace ros
 HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   hw_interface_(),
+  wrapper_status_(Status::NOT_INITIALIZED),
+  interface_status_(Status::NOT_INITIALIZED),
   packet_queue_(3000),
   diagnostics_updater_(this)
 {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
-  drivers::HesaiSensorConfiguration sensor_configuration;
-  wrapper_status_ = GetParameters(sensor_configuration);
-  sensor_cfg_ptr_ = std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration);
-  // DeclareRosParameters();
-  // auto sensor_cfg_ptr = GetRosParameters();
+  sensor_cfg_ptr_ = std::make_shared<drivers::HesaiSensorConfiguration>();
+  wrapper_status_ = GetParameters(*sensor_cfg_ptr_);
+
   InitializeHwInterface();
   InitializeDecoder();
-  InitializeHwMonitor();
-  // StreamStart();
-
 
   RCLCPP_DEBUG(this->get_logger(), "Starting stream");
-  StreamStart();
-  hw_interface_.RegisterScanCallback(
-    std::bind(&HesaiRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
+
+  if (launch_hw_) {
+    InitializeHwMonitor();
+    StreamStart();
+    hw_interface_.RegisterScanCallback(
+      std::bind(&HesaiRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
+  } else {
+    packets_sub_ = create_subscription<pandar_msgs::msg::PandarScan>("pandar_packets", rclcpp::SensorDataQoS(), std::bind(&HesaiRosWrapper::ReceiveScanMessageCallback, this, std::placeholders::_1));
+  }
 
   set_param_res_ = this->add_on_set_parameters_callback(
     std::bind(&HesaiRosWrapper::paramCallback, this, std::placeholders::_1));
@@ -34,29 +37,31 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 
 Status HesaiRosWrapper::InitializeHwInterface()
 {
-  if (Status::OK != interface_status_) {
-    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
-    return interface_status_;
-  }
+  interface_status_ = Status::OK;
+
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
-  
-  Status status;
+  hw_interface_.SetTargetModel(sensor_cfg_ptr_->sensor_model);
+
+  if (!launch_hw_) {
+    return interface_status_;
+  }
+
   int retry_count = 0;
 
   while (true) {
-    status = hw_interface_.InitializeTcpDriver();
-    if (status == Status::OK || !retry_hw_) {
+    interface_status_ = hw_interface_.InitializeTcpDriver();
+    if (interface_status_ == Status::OK || !retry_hw_) {
       break;
     }
 
     retry_count++;
     std::this_thread::sleep_for(std::chrono::milliseconds(8000));  // >5000
     RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Retry: " << retry_count);
-  };
+  }
 
-  if (status == Status::OK) {
+  if (interface_status_ == Status::OK) {
     try {
       auto inventory = hw_interface_.GetInventory();
       RCLCPP_INFO_STREAM(get_logger(), inventory);
@@ -72,8 +77,11 @@ Status HesaiRosWrapper::InitializeHwInterface()
     RCLCPP_ERROR_STREAM(
       get_logger(),
       "Failed to get model from sensor... Set from config: " << sensor_cfg_ptr_->sensor_model);
-    hw_interface_.SetTargetModel(sensor_cfg_ptr_->sensor_model);
   }
+
+  pandar_scan_pub_ =
+    create_publisher<pandar_msgs::msg::PandarScan>("pandar_packets", rclcpp::SensorDataQoS());
+  current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
 
   return Status::OK;
 }
@@ -191,11 +199,30 @@ void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
   // delay.tick(msg_ptr->stamp);
 
   // publish.tick();
-  if (!packet_queue_.push(std::move(msg_ptr))) {
+  if (!packet_queue_.try_push(std::move(msg_ptr))) {
     RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packets dropped");
   }
   // packet_pub_->publish(std::move(msg_ptr));
   // publish.tock();
+}
+
+void HesaiRosWrapper::ReceiveScanMessageCallback(
+  std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg)
+{
+  if (launch_hw_) {
+    RCLCPP_ERROR_THROTTLE(
+      get_logger(), *get_clock(), 1000,
+      "Ignoring received PandarScan. Launch with launch_hw:=false to enable PandarScan replay.");
+    return;
+  }
+
+  for (auto & pkt : scan_msg->packets) {
+    auto nebula_pkt_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
+    nebula_pkt_ptr->stamp = pkt.stamp;
+    std::copy(pkt.data.begin(), pkt.data.end(), std::back_inserter(nebula_pkt_ptr->data));
+
+    packet_queue_.push(std::move(nebula_pkt_ptr));
+  }
 }
 
 void HesaiRosWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
@@ -206,6 +233,22 @@ void HesaiRosWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::Nebul
   // static auto delay = nebula::util::TopicDelay("ProcessCloudPacket");
 
   // delay.tick(packet_msg->stamp);
+
+  // Accumulate packets for recording only if someone is subscribed to the topic (for performance)
+  if (
+    pandar_scan_pub_ &&
+    (pandar_scan_pub_->get_subscription_count() > 0 ||
+    pandar_scan_pub_->get_intra_process_subscription_count() > 0)) {
+    if (current_scan_msg_->packets.size() == 0) {
+      current_scan_msg_->header.stamp = packet_msg->stamp;
+    }
+
+    pandar_msgs::msg::PandarPacket pandar_packet_msg{};
+    pandar_packet_msg.stamp = packet_msg->stamp;
+    pandar_packet_msg.size = packet_msg->data.size();
+    std::copy(packet_msg->data.begin(), packet_msg->data.end(), pandar_packet_msg.data.begin());
+    current_scan_msg_->packets.emplace_back(std::move(pandar_packet_msg));
+  }
 
   // parse.tick();
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
@@ -218,6 +261,13 @@ void HesaiRosWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::Nebul
     // RCLCPP_WARN_STREAM(get_logger(), "Empty cloud parsed.");
     return;
   };
+
+  // Publish scan message only if it has been written to
+  if (current_scan_msg_ && !current_scan_msg_->packets.empty()) {
+    pandar_scan_pub_->publish(std::move(current_scan_msg_));
+    current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
+  }
+
   if (
     nebula_points_pub_->get_subscription_count() > 0 ||
     nebula_points_pub_->get_intra_process_subscription_count() > 0) {
@@ -577,11 +627,8 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     return Status::SENSOR_CONFIG_ERROR;
   }
 
-  std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
-    std::make_shared<drivers::HesaiSensorConfiguration>(sensor_configuration);
-
   hw_interface_.SetSensorConfiguration(
-    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
+    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
 
   RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
   return Status::OK;

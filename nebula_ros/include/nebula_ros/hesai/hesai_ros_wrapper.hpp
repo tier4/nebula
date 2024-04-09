@@ -16,6 +16,8 @@
 #include <rclcpp_components/register_node_macro.hpp>
 
 #include "nebula_msgs/msg/nebula_packet.hpp"
+#include "pandar_msgs/msg/pandar_packet.hpp"
+#include "pandar_msgs/msg/pandar_scan.hpp"
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/asio.hpp>
@@ -105,6 +107,10 @@ private:
   /// @param scan_buffer Received PandarScan
   void ReceiveCloudPacketCallback(std::vector<uint8_t> & scan_buffer);
 
+  /// @brief Callback for receiving replayed, aggregated packets (= scan messages)
+  /// @param scan_msg 
+  void ReceiveScanMessageCallback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg);
+
   /// @brief Decodes a nebula packet and, if it completes the scan, publishes the pointcloud.
   /// @param packet_msg The received packet message
   void ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
@@ -158,19 +164,23 @@ private:
   /// @return Created string
   std::string GetFixedPrecisionString(double val, int pre = 2);
 
-  std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
-  drivers::HesaiHwInterface hw_interface_;
+  std::shared_ptr<drivers::HesaiDriver> driver_ptr_{};
+  drivers::HesaiHwInterface hw_interface_{};
 
   Status wrapper_status_;
   Status interface_status_;
 
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_;
+  rclcpp::Subscription<pandar_msgs::msg::PandarScan>::SharedPtr packets_sub_{};
+  rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr packets_pub_{};
+  pandar_msgs::msg::PandarScan::UniquePtr current_scan_msg_{};
 
-  std::shared_ptr<drivers::HesaiCalibrationConfiguration> calibration_cfg_ptr_;
-  std::shared_ptr<drivers::HesaiSensorConfiguration> sensor_cfg_ptr_;
-  std::shared_ptr<drivers::HesaiCorrection> correction_cfg_ptr_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_{};
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_{};
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_{};
+
+  std::shared_ptr<drivers::HesaiCalibrationConfiguration> calibration_cfg_ptr_{};
+  std::shared_ptr<drivers::HesaiSensorConfiguration> sensor_cfg_ptr_{};
+  std::shared_ptr<drivers::HesaiCorrection> correction_cfg_ptr_{};
 
   /// @brief Stores received packets that have not been processed yet by the decoder thread
   mt_queue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
@@ -186,27 +196,27 @@ private:
   std::string correction_file_path;
 
   /// @brief Received Hesai message publisher
-  rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr pandar_scan_pub_;
+  rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr pandar_scan_pub_{};
 
   bool retry_hw_;
   std::mutex mtx_config_;
-  OnSetParametersCallbackHandle::SharedPtr set_param_res_;
+  OnSetParametersCallbackHandle::SharedPtr set_param_res_{};
 
   diagnostic_updater::Updater diagnostics_updater_;
 
-  rclcpp::TimerBase::SharedPtr diagnostics_update_timer_;
-  rclcpp::TimerBase::SharedPtr fetch_diagnostics_timer_;
+  rclcpp::TimerBase::SharedPtr diagnostics_update_timer_{};
+  rclcpp::TimerBase::SharedPtr fetch_diagnostics_timer_{};
 
-  std::unique_ptr<HesaiLidarStatus> current_status_;
-  std::unique_ptr<HesaiLidarMonitor> current_monitor_;
-  std::unique_ptr<HesaiConfig> current_config_;
-  std::unique_ptr<HesaiInventory> current_inventory_;
-  std::unique_ptr<boost::property_tree::ptree> current_lidar_monitor_tree_;
+  std::unique_ptr<HesaiLidarStatus> current_status_{};
+  std::unique_ptr<HesaiLidarMonitor> current_monitor_{};
+  std::unique_ptr<HesaiConfig> current_config_{};
+  std::unique_ptr<HesaiInventory> current_inventory_{};
+  std::unique_ptr<boost::property_tree::ptree> current_lidar_monitor_tree_{};
 
-  std::unique_ptr<rclcpp::Time> current_status_time_;
-  std::unique_ptr<rclcpp::Time> current_config_time_;
-  std::unique_ptr<rclcpp::Time> current_inventory_time_;
-  std::unique_ptr<rclcpp::Time> current_lidar_monitor_time_;
+  std::unique_ptr<rclcpp::Time> current_status_time_{};
+  std::unique_ptr<rclcpp::Time> current_config_time_{};
+  std::unique_ptr<rclcpp::Time> current_inventory_time_{};
+  std::unique_ptr<rclcpp::Time> current_lidar_monitor_time_{};
 
   uint8_t current_diag_status_;
   uint8_t current_monitor_status_;
