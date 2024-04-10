@@ -104,9 +104,15 @@ Status HesaiRosWrapper::InitializeDecoder()
     rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
 
   decoder_thread_ = std::thread([this]() {
+    std::deque<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> received{};
     while (true) {
-      auto pkt = packet_queue_.pop();
-      this->ProcessCloudPacket(std::move(pkt));
+      packet_queue_.pop_all(received);
+
+      while (!received.empty()) {
+        auto pkt = std::move(received.back());
+        received.pop_back();
+        this->ProcessCloudPacket(std::move(pkt));
+      }
     }
   });
 
@@ -200,7 +206,7 @@ void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
 
   // publish.tick();
   if (!packet_queue_.try_push(std::move(msg_ptr))) {
-    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packets dropped");
+    RCLCPP_ERROR(get_logger(), "Packet dropped");
   }
   // packet_pub_->publish(std::move(msg_ptr));
   // publish.tock();
