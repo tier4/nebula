@@ -27,9 +27,10 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     StreamStart();
     hw_interface_.RegisterScanCallback(
       std::bind(&HesaiRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
-  } else {
-    packets_sub_ = create_subscription<pandar_msgs::msg::PandarScan>("pandar_packets", rclcpp::SensorDataQoS(), std::bind(&HesaiRosWrapper::ReceiveScanMessageCallback, this, std::placeholders::_1));
   }
+
+  packets_sub_ = create_subscription<pandar_msgs::msg::PandarScan>("pandar_packets", rclcpp::SensorDataQoS(), 
+    std::bind(&HesaiRosWrapper::ReceiveScanMessageCallback, this, std::placeholders::_1));
 
   set_param_res_ = this->add_on_set_parameters_callback(
     std::bind(&HesaiRosWrapper::paramCallback, this, std::placeholders::_1));
@@ -104,15 +105,8 @@ Status HesaiRosWrapper::InitializeDecoder()
     rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
 
   decoder_thread_ = std::thread([this]() {
-    std::deque<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> received{};
     while (true) {
-      packet_queue_.pop_all(received);
-
-      while (!received.empty()) {
-        auto pkt = std::move(received.back());
-        received.pop_back();
-        this->ProcessCloudPacket(std::move(pkt));
-      }
+        this->ProcessCloudPacket(std::move(packet_queue_.pop()));
     }
   });
 
@@ -242,7 +236,7 @@ void HesaiRosWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::Nebul
 
   // Accumulate packets for recording only if someone is subscribed to the topic (for performance)
   if (
-    pandar_scan_pub_ &&
+    launch_hw_ &&
     (pandar_scan_pub_->get_subscription_count() > 0 ||
     pandar_scan_pub_->get_intra_process_subscription_count() > 0)) {
     if (current_scan_msg_->packets.size() == 0) {
