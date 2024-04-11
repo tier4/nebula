@@ -206,7 +206,7 @@ void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
 
   // publish.tick();
   if (!packet_queue_.try_push(std::move(msg_ptr))) {
-    RCLCPP_ERROR(get_logger(), "Packet dropped");
+    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");
   }
   // packet_pub_->publish(std::move(msg_ptr));
   // publish.tock();
