@@ -16,6 +16,7 @@ namespace drivers
 constexpr uint32_t MAX_POINTS = 300000;
 
 /// @brief Velodyne LiDAR decoder
+template <typename SensorT>
 class VelodyneDecoder : public VelodyneScanDecoder
 {
 public:
