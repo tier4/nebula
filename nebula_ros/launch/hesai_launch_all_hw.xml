@@ -72,7 +72,7 @@
             <param name="ptp_switch_type" value="$(var ptp_switch_type)"/>
         </node>
 
-        <node pkg="nebula_ros" exec="hesai_hw_monitor_ros_wrapper_node"
+        <!-- <node pkg="nebula_ros" exec="hesai_hw_monitor_ros_wrapper_node"
               name="hesai_hw_monitor_$(var frame_id)" output="screen">
             <param name="sensor_model" value="$(var sensor_model)"/>
             <param name="return_mode" value="$(var return_mode)"/>
@@ -90,7 +90,7 @@
             <param name="diag_span" value="$(var diag_span)"/>
             <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/>
             <param name="delay_monitor_ms" value="$(var delay_monitor_ms)"/>
-        </node>
+        </node> -->
     </group>
 
 </launch>

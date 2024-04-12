@@ -811,10 +811,13 @@ Status HesaiHwInterface::SetLidarRange(int start, int end)
 
 HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
 {
+  HesaiLidarRangeAll hesai_range_all{};
+  return hesai_range_all;
+  
   auto response_ptr = SendReceive(PTC_COMMAND_GET_LIDAR_RANGE);
   auto & response = *response_ptr;
 
-  HesaiLidarRangeAll hesai_range_all;
+
   int payload_pos = 0;
   int method = static_cast<int>(response[payload_pos++]);
   switch (method) {
