@@ -41,8 +41,11 @@ def launch_setup(context, *args, **kwargs):
     # Model and make
     sensor_model = LaunchConfiguration("sensor_model").perform(context)
     calibration_file = LaunchConfiguration("calibration_file").perform(context)
-    correction_file = LaunchConfiguration("correction_file").perform(context)
     sensor_make, sensor_extension = get_sensor_make(sensor_model)
+
+    if sensor_make.lower() == "hesai":
+        raise ValueError("\n  `nebula_launch.py` is deprecated. For Hesai sensors, use `hesai_launch_all_hw.xml` instead.")
+
     nebula_decoders_share_dir = get_package_share_directory("nebula_decoders")
     nebula_ros_share_dir = get_package_share_directory("nebula_ros")
 
@@ -84,7 +87,6 @@ def launch_setup(context, *args, **kwargs):
                         "sensor_ip": LaunchConfiguration("sensor_ip"),
                         "return_mode": LaunchConfiguration("return_mode"),
                         "calibration_file": calibration_file or sensor_calib_fp,
-                        "correction_file": correction_file or sensor_corr_fp,
                         "setup_sensor": LaunchConfiguration("setup_sensor"),
                         "ptp_profile": LaunchConfiguration("ptp_profile"),
                         "ptp_domain": LaunchConfiguration("ptp_domain"),
@@ -110,7 +112,6 @@ def launch_setup(context, *args, **kwargs):
                         "sensor_ip": LaunchConfiguration("sensor_ip"),
                         "return_mode": LaunchConfiguration("return_mode"),
                         "calibration_file": calibration_file or sensor_calib_fp,
-                        "correction_file": correction_file or sensor_corr_fp,
                     },
                 ],
             )
@@ -127,7 +128,6 @@ def launch_setup(context, *args, **kwargs):
                     "sensor_ip": LaunchConfiguration("sensor_ip"),
                     "return_mode": LaunchConfiguration("return_mode"),
                     "calibration_file": calibration_file or sensor_calib_fp,
-                    "correction_file": correction_file or sensor_corr_fp,
                     "launch_hw": LaunchConfiguration("launch_hw"),
                     "ptp_profile": LaunchConfiguration("ptp_profile"),
                     "ptp_domain": LaunchConfiguration("ptp_domain"),
