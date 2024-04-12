@@ -1,8 +1,11 @@
 #include "nebula_decoders/nebula_decoders_velodyne/velodyne_driver.hpp"
 
+#include "nebula_decoders/nebula_decoders_velodyne/decoders/velodyne_generic_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vlp16_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vlp32_decoder.hpp"
+#include "nebula_decoders/nebula_decoders_velodyne/decoders/vlp_16.hpp"
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vls128_decoder.hpp"
+#include "nebula_decoders/nebula_decoders_velodyne/decoders/vls_128.hpp"
 
 namespace nebula
 {
@@ -20,7 +23,7 @@ VelodyneDriver::VelodyneDriver(
       break;
     case SensorModel::VELODYNE_VLS128:
       scan_decoder_.reset(
-        new drivers::vls128::Vls128Decoder(sensor_configuration, calibration_configuration));
+        new VelodyneDecoder<VLS128>(sensor_configuration, calibration_configuration));
       break;
     case SensorModel::VELODYNE_VLP32:
     case SensorModel::VELODYNE_HDL64:
@@ -30,7 +33,7 @@ VelodyneDriver::VelodyneDriver(
       break;
     case SensorModel::VELODYNE_VLP16:
       scan_decoder_.reset(
-        new drivers::vlp16::Vlp16Decoder(sensor_configuration, calibration_configuration));
+        new VelodyneDecoder<VLP16>(sensor_configuration, calibration_configuration));
       break;
     default:
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;

@@ -12,364 +12,394 @@ namespace drivers
 
 // DONE?
 template <typename SensorT>
-VelodyneDecoder::VelodyneDecoder(
-  const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration)
+class VelodyneDecoder
 {
-  sensor_configuration_ = sensor_configuration;
-  calibration_configuration_ = calibration_configuration;
-
-  scan_timestamp_ = -1;
-
-  scan_pc_.reset(new NebulaPointCloud);
-  overflow_pc_.reset(new NebulaPointCloud);
-
-  // Set up cached values for sin and cos of all the possible headings
-  for (uint16_t rot_index = 0; rot_index < ROTATION_MAX_UNITS; ++rot_index) {
-    float rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
-    rotation_radians_[rot_index] = rotation;
-    cos_rot_table_[rot_index] = cosf(rotation);
-    sin_rot_table_[rot_index] = sinf(rotation);
-  }
-
-  phase_ = (uint16_t)round(sensor_configuration_->scan_phase * 100);
-
-  for (uint8_t i = 0; i < 16; i++) {
-    vls_128_laser_azimuth_cache_[i] = (VLS128_CHANNEL_DURATION / VLS128_SEQ_DURATION) * (i + i / 8);
-  }
-
-  // timing table calculation, from velodyne user manual p.64
-  timing_offsets_.resize(blocks_per_packet);  // x dir size
-  for (size_t i = 0; i < timing_offsets_.size(); ++i) {
-    timing_offsets_[i].resize(channels_per_block + num_maintainence_periods)  // y dir size
-  }
-
-  double full_firing_cycle_s = 53.3 * 1e-6;
-  double single_firing_s = 2.665 * 1e-6;
-  double offset_packet_time = 8.7 * 1e-6;
-  bool dual_mode = sensor_configuration_->return_mode == ReturnMode::DUAL;
-  double firing_sequence_index, data_point_index
-    // compute timing offsets
-    for (size_t x = 0; x < timing_offsets_.size(); ++x)
+public:
+  explicit VelodyneDecoder(
+    const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration)
   {
-    for (size_t y = 0; y < timing_offsets_[x].size(); ++y) {
-      if (dual_mode) {
-        firing_sequence_index = (x * firing_sequences_per_block / 2) + (y / num_channels);
-      } else {
-        firing_sequence_index = static_cast<long>(x * firing_sequences_per_block) +
-                                (y / num_channels);  // cast to long to make double multiplication
-                                                     // integer division
+    sensor_configuration_ = sensor_configuration;
+    calibration_configuration_ = calibration_configuration;
+
+    scan_timestamp_ = -1;
+
+    scan_pc_.reset(new NebulaPointCloud);
+    overflow_pc_.reset(new NebulaPointCloud);
+
+    // Set up cached values for sin and cos of all the possible headings
+    for (uint16_t rot_index = 0; rot_index < ROTATION_MAX_UNITS; ++rot_index) {
+      float rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
+      rotation_radians_[rot_index] = rotation;
+      cos_rot_table_[rot_index] = cosf(rotation);
+      sin_rot_table_[rot_index] = sinf(rotation);
+    }
+
+    phase_ = (uint16_t)round(sensor_configuration_->scan_phase * 100);
+
+    for (uint8_t i = 0; i < 16; i++) {
+      vls_128_laser_azimuth_cache_[i] =
+        (VLS128_CHANNEL_DURATION / VLS128_SEQ_DURATION) * (i + i / 8);
+    }
+
+    // timing table calculation, from velodyne user manual p.64
+    timing_offsets_.resize(SensorT::blocks_per_packet);  // x dir size
+    for (size_t i = 0; i < timing_offsets_.size(); ++i) {
+      timing_offsets_[i].resize(
+        SensorT::channels_per_block + SensorT::num_maintenance_periods);  // y dir size
+    }
+
+    double full_firing_cycle_s = 53.3 * 1e-6;
+    double single_firing_s = 2.665 * 1e-6;
+    double offset_packet_time = 8.7 * 1e-6;
+    bool dual_mode = sensor_configuration_->return_mode == ReturnMode::DUAL;
+    double firing_sequence_index, data_point_index;
+    // compute timing offsets
+    for (size_t x = 0; x < timing_offsets_.size(); ++x) {
+      for (size_t y = 0; y < timing_offsets_[x].size(); ++y) {
+        if (dual_mode) {
+          firing_sequence_index = static_cast<long>(x * SensorT::firing_sequences_per_block / 2) +
+                                  (y / SensorT::channels_per_firing_sequence);
+        } else {
+          firing_sequence_index =
+            static_cast<long>(x * SensorT::firing_sequences_per_block) +
+            (y / SensorT::channels_per_firing_sequence);  // cast to long to make double
+                                                          // multiplication integer division
+        }
+        data_point_index =
+          (y % SensorT::channels_per_firing_sequence) / SensorT::num_simultaneous_firings -
+          offset_packet_time;
+        timing_offsets_[x][y] =
+          (full_firing_cycle_s * firing_sequence_index) + (single_firing_s * data_point_index);
       }
-      data_point_index = (y % num_channels) / num_simultaneous_firings - offset_packet_time;
-      timing_offsets_[x][y] =
-        (full_firing_cycle_s * firing_sequence_index) + (single_firing_s * data_point_index);
     }
   }
-}
 
-// DONE
-bool Vls128Decoder::hasScanned()
-{
-  return has_scanned_;
-}
+  // DONE
+  bool hasScanned() { return has_scanned_; }
 
-// TODO: DONE?
-std::tuple<drivers::NebulaPointCloudPtr, double> Vls128Decoder::get_pointcloud()
-{
-  double phase = angles::from_degrees(sensor_configuration_->scan_phase);
-  if (!scan_pc_->points.empty()) {
-    auto current_azimuth = scan_pc_->points.back().azimuth;
-    auto phase_diff = 2 * M_PI + current_azimuth - phase;
-    while (phase_diff < M_PI_2 && !scan_pc_->points.empty()) {
-      overflow_pc_->points.push_back(scan_pc_->points.back());
-      scan_pc_->points.pop_back();
-      current_azimuth = scan_pc_->points.back().azimuth;
+  // TODO: DONE?
+  std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud()
+  {
+    double phase = angles::from_degrees(sensor_configuration_->scan_phase);
+    if (!scan_pc_->points.empty()) {
+      auto current_azimuth = scan_pc_->points.back().azimuth;
       auto phase_diff = 2 * M_PI + current_azimuth - phase;
+      while (phase_diff < M_PI_2 && !scan_pc_->points.empty()) {
+        overflow_pc_->points.push_back(scan_pc_->points.back());
+        scan_pc_->points.pop_back();
+        current_azimuth = scan_pc_->points.back().azimuth;
+        auto phase_diff = 2 * M_PI + current_azimuth - phase;
+      }
+      overflow_pc_->width = overflow_pc_->points.size();
+      scan_pc_->width = scan_pc_->points.size();
+      scan_pc_->height = 1;
     }
-    overflow_pc_->width = overflow_pc_->points.size();
-    scan_pc_->width = scan_pc_->points.size();
-    scan_pc_->height = 1;
-  }
-  return std::make_tuple(scan_pc_, scan_timestamp_);
-}
-
-// DONE
-int Vls128Decoder::pointsPerPacket()
-{
-  return BLOCKS_PER_PACKET * SCANS_PER_BLOCK;
-}
-
-// DONE
-void Vls128Decoder::reset_pointcloud(size_t n_pts, double time_stamp)
-{
-  //  scan_pc_.reset(new NebulaPointCloud);
-  scan_pc_->points.clear();
-  max_pts_ = n_pts * pointsPerPacket();
-  scan_pc_->points.reserve(max_pts_);
-  reset_overflow(time_stamp);  // transfer existing overflow points to the cleared pointcloud
-}
-
-// DONE
-void Vls128Decoder::reset_overflow(double time_stamp)
-{
-  if (overflow_pc_->points.size() == 0) {
-    scan_timestamp_ = -1;
-    overflow_pc_->points.reserve(max_pts_);
-    return;
+    return std::make_tuple(scan_pc_, scan_timestamp_);
   }
 
-  // Compute the absolute time stamp of the last point of the overflow pointcloud
-  const double last_overflow_time_stamp =
-    scan_timestamp_ + 1e-9 * overflow_pc_->points.back().time_stamp;
+  // DONE
+  int pointsPerPacket() { return SensorT::blocks_per_packet * SensorT::channels_per_block; }
 
-  // Detect cases where there is an unacceptable time difference between the last overflow point and
-  // the first point of the next packet. In that case, there was probably a packet drop so it is
-  // better to ignore the overflow pointcloud
-  if (time_stamp - last_overflow_time_stamp > 0.05) {
-    scan_timestamp_ = -1;
+  // DONE
+  void reset_pointcloud(size_t n_pts, double time_stamp)
+  {
+    //  scan_pc_.reset(new NebulaPointCloud);
+    scan_pc_->points.clear();
+    max_pts_ = n_pts * pointsPerPacket();
+    scan_pc_->points.reserve(max_pts_);
+    reset_overflow(time_stamp);  // transfer existing overflow points to the cleared pointcloud
+  }
+
+  // DONE
+  void reset_overflow(double time_stamp)
+  {
+    if (overflow_pc_->points.size() == 0) {
+      scan_timestamp_ = -1;
+      overflow_pc_->points.reserve(max_pts_);
+      return;
+    }
+
+    // Compute the absolute time stamp of the last point of the overflow pointcloud
+    const double last_overflow_time_stamp =
+      scan_timestamp_ + 1e-9 * overflow_pc_->points.back().time_stamp;
+
+    // Detect cases where there is an unacceptable time difference between the last overflow point
+    // and the first point of the next packet. In that case, there was probably a packet drop so it
+    // is better to ignore the overflow pointcloud
+    if (time_stamp - last_overflow_time_stamp > 0.05) {
+      scan_timestamp_ = -1;
+      overflow_pc_->points.clear();
+      overflow_pc_->points.reserve(max_pts_);
+      return;
+    }
+
+    // Add the overflow buffer points
+    while (overflow_pc_->points.size() > 0) {
+      auto overflow_point = overflow_pc_->points.back();
+
+      // The overflow points had the stamps from the previous pointcloud. These need to be changed
+      // to be relative to the overflow's packet timestamp
+      double new_timestamp_seconds =
+        scan_timestamp_ + 1e-9 * overflow_point.time_stamp - last_block_timestamp_;
+      overflow_point.time_stamp =
+        static_cast<uint32_t>(new_timestamp_seconds < 0.0 ? 0.0 : 1e9 * new_timestamp_seconds);
+
+      scan_pc_->points.emplace_back(overflow_point);
+      overflow_pc_->points.pop_back();
+    }
+
+    // When there is overflow, the timestamp becomes the overflow packets' one
+    scan_timestamp_ = last_block_timestamp_;
     overflow_pc_->points.clear();
     overflow_pc_->points.reserve(max_pts_);
-    return;
   }
 
-  // Add the overflow buffer points
-  while (overflow_pc_->points.size() > 0) {
-    auto overflow_point = overflow_pc_->points.back();
+  // TODO:
+  void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
+  {
+    const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
+    float last_azimuth_diff = 0;
+    uint16_t azimuth_next;
+    const uint8_t return_mode = velodyne_packet.data[RETURN_MODE_INDEX];
+    const bool dual_return = (return_mode == RETURN_MODE_DUAL);
 
-    // The overflow points had the stamps from the previous pointcloud. These need to be changed to
-    // be relative to the overflow's packet timestamp
-    double new_timestamp_seconds =
-      scan_timestamp_ + 1e-9 * overflow_point.time_stamp - last_block_timestamp_;
-    overflow_point.time_stamp =
-      static_cast<uint32_t>(new_timestamp_seconds < 0.0 ? 0.0 : 1e9 * new_timestamp_seconds);
+    for (uint block = 0; block < static_cast<uint>(BLOCKS_PER_PACKET - padding_blocks); block++) {
+      // Cache block for use.
+      const raw_block_t & current_block = raw->blocks[block];
 
-    scan_pc_->points.emplace_back(overflow_point);
-    overflow_pc_->points.pop_back();
-  }
+      uint bank_origin = 0;
+      // Used to detect which bank of 32 lasers is in this block.
+      switch (current_block.header) {
+        case bank_1:
+          bank_origin = 0;
+          break;
+        case bank_2:
+          bank_origin = 32;
+          break;
+        case bank_3:
+          bank_origin = 64;
+          break;
+        case bank4:
+          bank_origin = 96;
+          break;
+        default:
+          // Do not flood the log with messages, only issue at most one
+          // of these warnings per minute.
+          return;  // bad packet: skip the rest
+      }
 
-  // When there is overflow, the timestamp becomes the overflow packets' one
-  scan_timestamp_ = last_block_timestamp_;
-  overflow_pc_->points.clear();
-  overflow_pc_->points.reserve(max_pts_);
-}
+      float azimuth_diff;
+      uint16_t azimuth;
 
-// TODO:
-void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
-{
-  const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
-  float last_azimuth_diff = 0;
-  uint16_t azimuth_next;
-  const uint8_t return_mode = velodyne_packet.data[RETURN_MODE_INDEX];
-  const bool dual_return = (return_mode == RETURN_MODE_DUAL);
+      // Calculate difference between current and next block's azimuth angle.
+      if (block == 0) {
+        azimuth = current_block.rotation;
+      } else {
+        azimuth = azimuth_next;
+      }
+      if (block < static_cast<uint>(BLOCKS_PER_PACKET - (1 + dual_return))) {
+        // Get the next block rotation to calculate how far we rotate between blocks
+        azimuth_next = raw->blocks[block + (1 + dual_return)].rotation;
 
-  for (uint block = 0; block < static_cast<uint>(BLOCKS_PER_PACKET - (4 * dual_return)); block++) {
-    // Cache block for use.
-    const raw_block_t & current_block = raw->blocks[block];
+        // Finds the difference between two successive blocks
+        azimuth_diff = static_cast<float>((36000 + azimuth_next - azimuth) % 36000);
 
-    uint bank_origin = 0;
-    // Used to detect which bank of 32 lasers is in this block.
-    switch (current_block.header) {
-      case VLS128_BANK_1:
-        bank_origin = 0;
-        break;
-      case VLS128_BANK_2:
-        bank_origin = 32;
-        break;
-      case VLS128_BANK_3:
-        bank_origin = 64;
-        break;
-      case VLS128_BANK_4:
-        bank_origin = 96;
-        break;
-      default:
-        // Do not flood the log with messages, only issue at most one
-        // of these warnings per minute.
-        return;  // bad packet: skip the rest
-    }
+        // This is used when the last block is next to predict rotation amount
+        last_azimuth_diff = azimuth_diff;
+      } else {
+        // This makes the assumption the difference between the last block and the next packet is
+        // the same as the last to the second to last. Assumes RPM doesn't change much between
+        // blocks.
+        // TODO: understand this and diff between VLP16 and VLS128
+        azimuth_diff =
+          (block == static_cast<uint>(SensorT::blocks_per_packet - (4 * dual_return) - 1))
+            ? 0
+            : last_azimuth_diff;
+      }
 
-    float azimuth_diff;
-    uint16_t azimuth;
+      // Condition added to avoid calculating points which are not in the interesting defined area
+      // (cloud_min_angle < area < cloud_max_angle).
+      if (
+        (sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle &&
+         azimuth >= sensor_configuration_->cloud_min_angle * 100 &&
+         azimuth <= sensor_configuration_->cloud_max_angle * 100) ||
+        (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle)) {
+        // TODO: loop conditions
+        for (int firing_seq = 0; k = 0;
+             firing_seq < std::max(SensorT::firing_sequences_per_block, 1); firing_seq++) {
+          for (int channel = 0; channel < SensorT::channels_per_block &&
+                                channel < SensorT::channels_per_firing_sequence;
+               channel++, k += raw_channel_size) {
+            union two_bytes current_return;
+            union two_bytes other_return;
 
-    // Calculate difference between current and next block's azimuth angle.
-    if (block == 0) {
-      azimuth = current_block.rotation;
-    } else {
-      azimuth = azimuth_next;
-    }
-    if (block < static_cast<uint>(BLOCKS_PER_PACKET - (1 + dual_return))) {
-      // Get the next block rotation to calculate how far we rotate between blocks
-      azimuth_next = raw->blocks[block + (1 + dual_return)].rotation;
+            // Distance extraction.
+            current_return.bytes[0] = current_block.data[k];
+            current_return.bytes[1] = current_block.data[k + 1];
+            if (dual_return) {
+              other_return.bytes[0] =
+                block % 2 ? raw->blocks[block - 1].data[k] : raw->blocks[block + 1].data[k];
+              other_return.bytes[1] =
+                block % 2 ? raw->blocks[block - 1].data[k + 1] : raw->blocks[block + 1].data[k + 1];
+            }
 
-      // Finds the difference between two successive blocks
-      azimuth_diff = static_cast<float>((36000 + azimuth_next - azimuth) % 36000);
+            // Apply timestamp if this is the first new packet in the scan.
+            auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
+            if (scan_timestamp_ < 0) {
+              scan_timestamp_ = block_timestamp;
+            }
 
-      // This is used when the last block is next to predict rotation amount
-      last_azimuth_diff = azimuth_diff;
-    } else {
-      // This makes the assumption the difference between the last block and the next packet is the
-      // same as the last to the second to last.
-      // Assumes RPM doesn't change much between blocks.
-      azimuth_diff = (block == static_cast<uint>(BLOCKS_PER_PACKET - (4 * dual_return) - 1))
-                       ? 0
-                       : last_azimuth_diff;
-    }
-
-    // Condition added to avoid calculating points which are not in the interesting defined area
-    // (cloud_min_angle < area < cloud_max_angle).
-    if (
-      (sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle &&
-       //         azimuth >= sensor_configuration_->cloud_min_angle &&
-       azimuth >= sensor_configuration_->cloud_min_angle * 100 &&
-       azimuth <= sensor_configuration_->cloud_max_angle * 100) ||
-      //         azimuth <= sensor_configuration_->cloud_max_angle) ||
-      (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle)) {
-      for (size_t j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE) {
-        union two_bytes current_return {
-        };
-        union two_bytes other_return {
-        };
-        // Distance extraction.
-        current_return.bytes[0] = current_block.data[k];
-        current_return.bytes[1] = current_block.data[k + 1];
-        if (dual_return) {
-          other_return.bytes[0] =
-            block % 2 ? raw->blocks[block - 1].data[k] : raw->blocks[block + 1].data[k];
-          other_return.bytes[1] =
-            block % 2 ? raw->blocks[block - 1].data[k + 1] : raw->blocks[block + 1].data[k + 1];
-        }
-        // Apply timestamp if this is the first new packet in the scan.
-        auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
-        if (scan_timestamp_ < 0) {
-          scan_timestamp_ = block_timestamp;
-        }
-        // Do not process if there is no return, or in dual return mode and the first and last echos
-        // are the same.
-        if (
-          (current_return.bytes[0] == 0 && current_return.bytes[1] == 0) ||
-          (dual_return && block % 2 && other_return.bytes[0] == current_return.bytes[0] &&
-           other_return.bytes[1] == current_return.bytes[1])) {
-          continue;
-        }
-        {
-          const uint laser_number =
-            j + bank_origin;  // offset the laser in this block by which block it's in
-          const uint firing_order = laser_number / 8;  // VLS-128 fires 8 lasers at a time
-
-          VelodyneLaserCorrection & corrections =
-            calibration_configuration_->velodyne_calibration.laser_corrections[laser_number];
-
-          float distance = current_return.uint * VLP128_DISTANCE_RESOLUTION;
-          if (distance > 1e-6) {
-            distance += corrections.dist_correction;
-          }
-
-          // Correct for the laser rotation as a function of timing during the firings.
-          const float azimuth_corrected_f =
-            azimuth + (azimuth_diff * vls_128_laser_azimuth_cache_[firing_order]);
-          const uint16_t azimuth_corrected = ((uint16_t)round(azimuth_corrected_f)) % 36000;
-
-          if (
-            distance > sensor_configuration_->min_range &&
-            distance < sensor_configuration_->max_range) {
-            // Condition added to avoid calculating points which are not in the interesting defined
-            // area (cloud_min_angle < area < cloud_max_angle).
+            // Do not process if there is no return, or in dual return mode and the first and last
+            // echos are the same.
             if (
-              (azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100 &&
-               azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 &&
-               sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle) ||
-              (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
-               (azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 ||
-                azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) {
-              // convert polar coordinates to Euclidean XYZ.
-              const float cos_vert_angle = corrections.cos_vert_correction;
-              const float sin_vert_angle = corrections.sin_vert_correction;
-              const float cos_rot_correction = corrections.cos_rot_correction;
-              const float sin_rot_correction = corrections.sin_rot_correction;
+              (current_return.bytes[0] == 0 && current_return.bytes[1] == 0) ||
+              (dual_return && block % 2 && other_return.bytes[0] == current_return.bytes[0] &&
+               other_return.bytes[1] == current_return.bytes[1])) {
+              continue;
+            }
 
-              const float cos_rot_angle = cos_rot_table_[azimuth_corrected] * cos_rot_correction +
-                                          sin_rot_table_[azimuth_corrected] * sin_rot_correction;
-              const float sin_rot_angle = sin_rot_table_[azimuth_corrected] * cos_rot_correction -
-                                          cos_rot_table_[azimuth_corrected] * sin_rot_correction;
+            const uint laser_number =
+              channel + bank_origin;  // offset the laser in this block by which block it's in
+            const uint firing_order =
+              laser_number / SensorT::num_simultaneous_firings;  // VLS-128 fires 8 lasers at a time
 
-              // Compute the distance in the xy plane (w/o accounting for rotation).
-              const float xy_distance = distance * cos_vert_angle;
+            VelodyneLaserCorrection & corrections =
+              calibration_configuration_->velodyne_calibration.laser_corrections[laser_number];
 
-              // Use standard ROS coordinate system (right-hand rule).
-              const float x_coord = xy_distance * cos_rot_angle;     // velodyne y
-              const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
-              const float z_coord = distance * sin_vert_angle;       // velodyne z
-              const uint8_t intensity = current_block.data[k + 2];
-              last_block_timestamp_ = block_timestamp;
-              double point_time_offset =
-                timing_offsets_[block / 4][firing_order + laser_number / 64];
+            float distance = current_return.uint * SensorT::distance_resolution_m;
+            if (distance > 1e-6) {
+              distance += corrections.dist_correction;
+            }
 
-              // Determine return type.
-              uint8_t return_type;
-              switch (return_mode) {
-                case RETURN_MODE_DUAL:
-                  if (
-                    (other_return.bytes[0] == 0 && other_return.bytes[1] == 0) ||
-                    (other_return.bytes[0] == current_return.bytes[0] &&
-                     other_return.bytes[1] == current_return.bytes[1])) {
-                    return_type = static_cast<uint8_t>(drivers::ReturnType::IDENTICAL);
-                  } else {
-                    const float other_intensity = block % 2 ? raw->blocks[block - 1].data[k + 2]
-                                                            : raw->blocks[block + 1].data[k + 2];
-                    bool first = other_return.uint >= current_return.uint;
-                    bool strongest = other_intensity < intensity;
-                    if (other_intensity == intensity) {
-                      strongest = !first;
-                    }
-                    if (first && strongest) {
-                      return_type = static_cast<uint8_t>(drivers::ReturnType::FIRST_STRONGEST);
-                    } else if (!first && strongest) {
-                      return_type = static_cast<uint8_t>(drivers::ReturnType::LAST_STRONGEST);
-                    } else if (first && !strongest) {
-                      return_type = static_cast<uint8_t>(drivers::ReturnType::FIRST_WEAK);
-                    } else if (!first && !strongest) {
-                      return_type = static_cast<uint8_t>(drivers::ReturnType::LAST_WEAK);
-                    } else {
-                      return_type = static_cast<uint8_t>(drivers::ReturnType::UNKNOWN);
-                    }
-                  }
-                  break;
-                case RETURN_MODE_STRONGEST:
-                  return_type = static_cast<uint8_t>(drivers::ReturnType::STRONGEST);
-                  break;
-                case RETURN_MODE_LAST:
-                  return_type = static_cast<uint8_t>(drivers::ReturnType::LAST);
-                  break;
-                default:
-                  return_type = static_cast<uint8_t>(drivers::ReturnType::UNKNOWN);
+            if (
+              distance > sensor_configuration_->min_range &&
+              distance < sensor_configuration_->max_range) {
+              // Correct for the laser rotation as a function of timing during the firings.
+              float azimuth_corrected_f;
+              if (SensorT::sensor_model == "vls128") {
+                azimuth_corrected_f =
+                  azimuth + (azimuth_diff * vls_128_laser_azimuth_cache_[firing_order]);
+              } else {
+                azimuth_corrected_f = azimuth + (azimuth_diff *
+                                                 ((channel * SensorT::VLP16_DSR_TOFFSET) +
+                                                  (firing_seq * SensorT::VLP16_FIRING_TOFFSET)) /
+                                                 SensorT::VLP16_BLOCK_DURATION);
               }
-              drivers::NebulaPoint current_point{};
-              current_point.x = x_coord;
-              current_point.y = y_coord;
-              current_point.z = z_coord;
-              current_point.return_type = return_type;
-              current_point.channel = corrections.laser_ring;
-              current_point.azimuth = rotation_radians_[azimuth_corrected];
-              current_point.elevation = sin_vert_angle;
-              current_point.distance = distance;
-              auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
-              if (point_ts < 0) point_ts = 0;
-              current_point.time_stamp = static_cast<uint32_t>(point_ts * 1e9);
-              current_point.intensity = intensity;
-              scan_pc_->points.emplace_back(current_point);
-            }  // 2nd scan area condition
-          }    // distance condition
-        }      // empty "else"
-      }        // (uint j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE)
-    }          // scan area condition
-  }  // for (uint block = 0; block < static_cast < uint > (BLOCKS_PER_PACKET - (4 * dual_return));
-     // block++)
-}
 
-bool Vls128Decoder::parsePacket(
-  [[maybe_unused]] const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
-{
-  return 0;
-}
+              const uint16_t azimuth_corrected =
+                (static_cast<uint16_t>(round(azimuth_corrected_f))) % 36000;
 
+              // Condition added to avoid calculating points which are not in the interesting
+              // defined area (cloud_min_angle < area < cloud_max_angle).
+              if (
+                (azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100 &&
+                 azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 &&
+                 sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle) ||
+                (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
+                 (azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 ||
+                  azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) {
+                // convert polar coordinates to Euclidean XYZ.
+                const float cos_vert_angle = corrections.cos_vert_correction;
+                const float sin_vert_angle = corrections.sin_vert_correction;
+                const float cos_rot_correction = corrections.cos_rot_correction;
+                const float sin_rot_correction = corrections.sin_rot_correction;
+
+                const float cos_rot_angle = cos_rot_table_[azimuth_corrected] * cos_rot_correction +
+                                            sin_rot_table_[azimuth_corrected] * sin_rot_correction;
+                const float sin_rot_angle = sin_rot_table_[azimuth_corrected] * cos_rot_correction -
+                                            cos_rot_table_[azimuth_corrected] * sin_rot_correction;
+
+                // Compute the distance in the xy plane (w/o accounting for rotation).
+                const float xy_distance = distance * cos_vert_angle;
+
+                // Use standard ROS coordinate system (right-hand rule).
+                const float x_coord = xy_distance * cos_rot_angle;     // velodyne y
+                const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
+                const float z_coord = distance * sin_vert_angle;       // velodyne z
+                const uint8_t intensity = current_block.data[k + 2];
+
+                last_block_timestamp_ = block_timestamp;
+
+                double point_time_offset;
+                if (SensorT::sensor_model == "vls128") {
+                  point_time_offset = timing_offsets_[block / 4][firing_order + laser_number / 64];
+                } else {
+                  point_time_offset = timing_offsets_[block][firing_seq * 16 + dsr];
+                }
+
+                // Determine return type.
+                uint8_t return_type;
+                switch (return_mode) {
+                  case RETURN_MODE_DUAL:
+                    if (
+                      (other_return.bytes[0] == 0 && other_return.bytes[1] == 0) ||
+                      (other_return.bytes[0] == current_return.bytes[0] &&
+                       other_return.bytes[1] == current_return.bytes[1])) {
+                      return_type = static_cast<uint8_t>(drivers::ReturnType::IDENTICAL);
+                    } else {
+                      const float other_intensity = block % 2 ? raw->blocks[block - 1].data[k + 2]
+                                                              : raw->blocks[block + 1].data[k + 2];
+
+                      bool first;
+                      if (SensorT::sensor_model == "vls128")
+                        first = other_return.uint >= current_return.uint;
+                      else
+                        first = other_return.uint >= current_return.uint;
+
+                      bool strongest = other_intensity < intensity;
+                      if (other_intensity == intensity) {
+                        strongest = !first;
+                      }
+                      if (first && strongest) {
+                        return_type = static_cast<uint8_t>(drivers::ReturnType::FIRST_STRONGEST);
+                      } else if (!first && strongest) {
+                        return_type = static_cast<uint8_t>(drivers::ReturnType::LAST_STRONGEST);
+                      } else if (first && !strongest) {
+                        return_type = static_cast<uint8_t>(drivers::ReturnType::FIRST_WEAK);
+                      } else if (!first && !strongest) {
+                        return_type = static_cast<uint8_t>(drivers::ReturnType::LAST_WEAK);
+                      } else {
+                        return_type = static_cast<uint8_t>(drivers::ReturnType::UNKNOWN);
+                      }
+                    }
+                    break;
+                  case RETURN_MODE_STRONGEST:
+                    return_type = static_cast<uint8_t>(drivers::ReturnType::STRONGEST);
+                    break;
+                  case RETURN_MODE_LAST:
+                    return_type = static_cast<uint8_t>(drivers::ReturnType::LAST);
+                    break;
+                  default:
+                    return_type = static_cast<uint8_t>(drivers::ReturnType::UNKNOWN);
+                }
+                drivers::NebulaPoint current_point{};
+                current_point.x = x_coord;
+                current_point.y = y_coord;
+                current_point.z = z_coord;
+                current_point.return_type = return_type;
+                current_point.channel = corrections.laser_ring;
+                current_point.azimuth = rotation_radians_[azimuth_corrected];
+                current_point.elevation = sin_vert_angle;
+                current_point.distance = distance;
+                auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
+                if (point_ts < 0) point_ts = 0;
+                current_point.time_stamp = static_cast<uint32_t>(point_ts * 1e9);
+                current_point.intensity = intensity;
+                scan_pc_->points.emplace_back(current_point);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  bool parsePacket([[maybe_unused]] const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
+  {
+    return 0;
+  }
+
+};  // class VelodyneDecoder
 }  // namespace drivers
 }  // namespace nebula
