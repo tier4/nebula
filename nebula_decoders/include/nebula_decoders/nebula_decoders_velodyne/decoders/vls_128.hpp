@@ -10,22 +10,33 @@ namespace drivers
 class VLS128
 {
 public:
-  int num_maintenance_periods = 1;
+  constexpr static int raw_channel_size = 3;
 
-  int num_simultaneous_firings = 8;
+  constexpr static int blocks_per_packet = 12;
 
-  double firing_sequences_per_block = 0.25;
+  constexpr static int channels_per_block = 32;
 
-  int channels_per_firing_sequence = 128;
+  constexpr static int num_maintenance_periods = 1;
 
-  float distance_resolution_m = 0.002f;
+  constexpr static int num_simultaneous_firings = 8;
 
-  char sensor_model[16] = "vls128";
+  constexpr static double firing_sequences_per_block = 0.25;
+
+  constexpr static int channels_per_firing_sequence = 128;
+
+  constexpr static float distance_resolution_m = 0.004f;
+
+  constexpr static char sensor_model[16] = "vls128";
+
+  constexpr static int BANK_1 = 0xeeff;
+  constexpr static int BANK_2 = 0xddff;
+  constexpr static int BANK_3 = 0xccff;
+  constexpr static int BANK_4 = 0xbbff;
 
   // unused
-  float VLP16_BLOCK_DURATION = 110.592f;  // [µs]
-  float VLP16_DSR_TOFFSET = 2.304f;       // [µs]
-  float VLP16_FIRING_TOFFSET = 55.296f;   // [µs]
+  constexpr static float VLP16_BLOCK_DURATION = 110.592f;  // [µs]
+  constexpr static float VLP16_DSR_TOFFSET = 2.304f;       // [µs]
+  constexpr static float VLP16_FIRING_TOFFSET = 55.296f;   // [µs]
 };
 }  // namespace drivers
 }  // namespace nebula
