@@ -8,7 +8,7 @@ namespace nebula
 namespace drivers
 {
 
-class VLS128
+class VelodyneSensor
 {
 public:
   double full_firing_cycle_s;
