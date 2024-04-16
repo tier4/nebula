@@ -41,10 +41,12 @@ namespace nebula::drivers
 /**
  * Raw Velodyne packet constants and structures.
  */
-static const int g_size_block = 100;
-static const int g_raw_scan_size = 3;
-static const int g_scans_per_block = 32;
-static const int g_block_data_size = (g_scans_per_block * g_raw_scan_size);
+static const int SIZE_BLOCK = 100;
+static const int RAW_SCAN_SIZE = 3;   // TODO: remove
+static const int RAW_CHANNEL_SIZE = 3;
+static const int SCANS_PER_BLOCK = 32; // TODO: remove
+static const int CHANNELS_PER_BLOCK = 32;
+static const int BLOCK_DATA_SIZE = (SCANS_PER_BLOCK * RAW_SCAN_SIZE);
 
 static const double g_rotation_resolution = 0.01;     // [deg]
 static const uint16_t g_rotation_max_units = 36000u;  // [deg/100]
@@ -76,10 +78,10 @@ static const float g_vlp128_distance_resolution = 0.004f;  // [m]
 
 /** Special Definitions for VLS128 support **/
 // These are used to detect which bank of 32 lasers is in this block
-static const uint16_t g_vls128_bank_1 = 0xeeff;
-static const uint16_t g_vls128_bank_2 = 0xddff;
-static const uint16_t g_vls128_bank_3 = 0xccff;
-static const uint16_t g_vls128_bank_4 = 0xbbff;
+static const uint16_t BANK_1 = 0xeeff;
+static const uint16_t BANK_2 = 0xddff;
+static const uint16_t BANK_3 = 0xccff;
+static const uint16_t BANK_4 = 0xbbff;
 
 static const float g_vls128_channel_duration =
   2.665f;  // [µs] Channels corresponds to one laser firing

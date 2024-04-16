@@ -73,16 +73,19 @@ public:
 
     phase_ = (uint16_t)round(sensor_configuration_->scan_phase * 100);
 
-    for (uint8_t i = 0; i < 16; i++) {
-      vls_128_laser_azimuth_cache_[i] =
-        (VLS128_CHANNEL_DURATION / VLS128_SEQ_DURATION) * (i + i / 8);
+    // fill vls1228 laser azimuth cache
+    if (strcmp(SensorT::sensor_model, "vls128") == 0) {
+      for (uint8_t i = 0; i < 16; i++) {
+        vls128_laser_azimuth_cache_[i] =
+          (VLS128_CHANNEL_DURATION / VLS128_SEQ_DURATION) * (i + i / 8);
+      }
     }
 
     // timing table calculation, from velodyne user manual p.64
-    timing_offsets_.resize(SensorT::blocks_per_packet);  // x dir size
+    timing_offsets_.resize(BLOCKS_PER_PACKET);  // x dir size
     for (size_t i = 0; i < timing_offsets_.size(); ++i) {
       timing_offsets_[i].resize(
-        SensorT::channels_per_block + SensorT::num_maintenance_periods);  // y dir size
+        CHANNELS_PER_BLOCK + SensorT::num_maintenance_periods);  // y dir size
     }
 
     double full_firing_cycle_s = 53.3 * 1e-6;
@@ -114,25 +117,9 @@ public:
   // DONE
   bool hasScanned() { return has_scanned_; }
 
-  // TODO: DONE?
+  // TODO: better understand differences in this function between sensor models
   std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud()
   {
-    // double phase = angles::from_degrees(sensor_configuration_->scan_phase);
-    // if (!scan_pc_->points.empty()) {
-    //   auto current_azimuth = scan_pc_->points.back().azimuth;
-    //   auto phase_diff = 2 * M_PI + current_azimuth - phase;
-    //   while (phase_diff < M_PI_2 && !scan_pc_->points.empty()) {
-    //     overflow_pc_->points.push_back(scan_pc_->points.back());
-    //     scan_pc_->points.pop_back();
-    //     current_azimuth = scan_pc_->points.back().azimuth;
-    //     phase_diff = 2 * M_PI + current_azimuth - phase;
-    //   }
-    //   overflow_pc_->width = overflow_pc_->points.size();
-    //   scan_pc_->width = scan_pc_->points.size();
-    //   scan_pc_->height = 1;
-    // }
-    // return std::make_tuple(scan_pc_, scan_timestamp_);
-
     double phase = angles::from_degrees(sensor_configuration_->scan_phase);
     if (!scan_pc_->points.empty()) {
       auto current_azimuth = scan_pc_->points.back().azimuth;
@@ -153,7 +140,7 @@ public:
   }
 
   // DONE
-  int pointsPerPacket() { return SensorT::blocks_per_packet * SensorT::channels_per_block; }
+  int pointsPerPacket() { return BLOCKS_PER_PACKET * CHANNELS_PER_BLOCK; }
 
   // DONE
   void reset_pointcloud(size_t n_pts, double time_stamp)
@@ -209,7 +196,7 @@ public:
     overflow_pc_->points.reserve(max_pts_);
   }
 
-  // TODO:
+  // TODO: add in VLP32 logic
   void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
   {
     const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
@@ -229,16 +216,16 @@ public:
       uint bank_origin = 0;
       // Used to detect which bank of 32 lasers is in this block.
       switch (current_block.header) {
-        case SensorT::BANK_1:
+        case BANK_1:
           bank_origin = 0;
           break;
-        case SensorT::BANK_2:
+        case BANK_2:
           bank_origin = 32;
           break;
-        case SensorT::BANK_3:
+        case BANK_3:
           bank_origin = 64;
           break;
-        case SensorT::BANK_4:
+        case BANK_4:
           bank_origin = 96;
           break;
         default:
@@ -269,11 +256,9 @@ public:
         // This makes the assumption the difference between the last block and the next packet is
         // the same as the last to the second to last. Assumes RPM doesn't change much between
         // blocks.
-        // TODO: understand this and diff between VLP16 and VLS128
-        azimuth_diff =
-          (block == static_cast<uint>(SensorT::blocks_per_packet - (4 * dual_return) - 1))
-            ? 0
-            : last_azimuth_diff;
+        azimuth_diff = (block == static_cast<uint>(BLOCKS_PER_PACKET - (4 * dual_return) - 1))
+                         ? 0
+                         : last_azimuth_diff;
       }
 
       // Condition added to avoid calculating points which are not in the interesting defined area
@@ -287,9 +272,9 @@ public:
              firing_seq <
              std::max(static_cast<long>(SensorT::firing_sequences_per_block), static_cast<long>(1));
              firing_seq++) {
-          for (int channel = 0; channel < SensorT::channels_per_block &&
-                                channel < SensorT::channels_per_firing_sequence;
-               channel++, k += SensorT::raw_channel_size) {
+          for (int channel = 0;
+               channel < CHANNELS_PER_BLOCK && channel < SensorT::channels_per_firing_sequence;
+               channel++, k += RAW_CHANNEL_SIZE) {
             union two_bytes current_return;
             union two_bytes other_return;
 
@@ -338,12 +323,12 @@ public:
               float azimuth_corrected_f;
               if (strcmp(SensorT::sensor_model, "vls128") == 0) {
                 azimuth_corrected_f =
-                  azimuth + (azimuth_diff * vls_128_laser_azimuth_cache_[firing_order]);
+                  azimuth + (azimuth_diff * vls128_laser_azimuth_cache_[firing_order]);
               } else {
-                azimuth_corrected_f = azimuth + (azimuth_diff *
-                                                 ((channel * SensorT::VLP16_DSR_TOFFSET) +
-                                                  (firing_seq * SensorT::VLP16_FIRING_TOFFSET)) /
-                                                 SensorT::VLP16_BLOCK_DURATION);
+                azimuth_corrected_f =
+                  azimuth + (azimuth_diff *
+                             ((channel * VLP16_DSR_TOFFSET) + (firing_seq * VLP16_FIRING_TOFFSET)) /
+                             VLP16_BLOCK_DURATION);
               }
 
               const uint16_t azimuth_corrected =
@@ -382,7 +367,7 @@ public:
 
                 double point_time_offset;
                 if (strcmp(SensorT::sensor_model, "vls128") == 0) {
-                  point_time_offset = timing_offsets_[block / 4][firing_order + laser_number / 64];
+                  point_time_offset = timing_offsets_[block][firing_order + laser_number / 64];
                 } else {
                   point_time_offset = timing_offsets_[block][firing_seq * 16 + channel];
                 }
@@ -437,9 +422,6 @@ public:
                 current_point.x = x_coord;
                 current_point.y = y_coord;
                 current_point.z = z_coord;
-                // current_point.x = 1;
-                // current_point.y = 1;
-                // current_point.z = 1;
                 current_point.return_type = return_type;
                 current_point.channel = corrections.laser_ring;
                 current_point.azimuth = rotation_radians_[azimuth_corrected];
@@ -477,8 +459,7 @@ private:
   double last_block_timestamp_;
   std::vector<std::vector<float>> timing_offsets_;
 
-  // vls128 specific parameter
-  float vls_128_laser_azimuth_cache_[16];
+  float vls128_laser_azimuth_cache_[16];
 };
 
 }  // namespace drivers
