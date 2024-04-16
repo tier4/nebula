@@ -187,12 +187,12 @@ public:
   /// @param channel Channel id of the point.
   /// @param azimuth Azimuth angle of the point.
   /// @return True if the point is invalid, false otherwise.
-  bool check_invalid_point(const int & channel, const uint16_t & azimuth)
+  bool check_excluded_point(const int & channel, const uint16_t & azimuth)
   {
-    if (!sensor_configuration_->invalid_point_remove) return false;
-    const auto & regions = sensor_configuration_->invalid_regions[channel];
-    return std::any_of(regions.begin(), regions.end(), [azimuth](const auto & region) {
-      return azimuth >= region.start && azimuth <= region.end;
+    if (!sensor_configuration_->ring_section_filter) return false;
+    const auto & sectors = sensor_configuration_->excluded_ring_sectors[channel];
+    return std::any_of(sectors.begin(), sectors.end(), [azimuth](const auto & sector) {
+      return azimuth >= sector.start && azimuth <= sector.end;
     });
   }
 };

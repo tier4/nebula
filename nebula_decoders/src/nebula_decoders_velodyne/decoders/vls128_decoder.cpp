@@ -265,7 +265,7 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
                (azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 ||
                 azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) &&
-              !check_invalid_point(corrections.laser_ring, azimuth_corrected)) {
+              !check_excluded_point(corrections.laser_ring, azimuth_corrected)) {
               // convert polar coordinates to Euclidean XYZ.
               const float cos_vert_angle = corrections.cos_vert_correction;
               const float sin_vert_angle = corrections.sin_vert_correction;

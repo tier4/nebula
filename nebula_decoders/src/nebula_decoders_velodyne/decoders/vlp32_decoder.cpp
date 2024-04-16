@@ -201,7 +201,7 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
           (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
            (raw->blocks[i].rotation <= sensor_configuration_->cloud_max_angle * 100 ||
             raw->blocks[i].rotation >= sensor_configuration_->cloud_min_angle * 100))) &&
-          !check_invalid_point(corrections.laser_ring, block.rotation)) {
+          !check_excluded_point(corrections.laser_ring, block.rotation)) {
           const float cos_vert_angle = corrections.cos_vert_correction;
           const float sin_vert_angle = corrections.sin_vert_correction;
           const float cos_rot_correction = corrections.cos_rot_correction;
