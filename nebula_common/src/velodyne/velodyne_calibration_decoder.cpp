@@ -1,3 +1,4 @@
+// cspell:ignore piyush, fout
 /**
  * \author  Piyush Khandelwal (piyushk@cs.utexas.edu)
  * Copyright (C) 2012, Austin Robot Technology,
