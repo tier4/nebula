@@ -252,9 +252,9 @@ Status VelodyneDriverRosWrapper::GetParameters(
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<bool>("ring_section_filter", false, descriptor);
+    this->declare_parameter<bool>("enable_ring_section_filter", false, descriptor);
     sensor_configuration.ring_section_filter =
-      this->get_parameter("ring_section_filter").as_bool();
+      this->get_parameter("enable_ring_section_filter").as_bool();
     if (sensor_configuration.ring_section_filter) {
       RCLCPP_DEBUG_STREAM(this->get_logger(), "Ring section filter is active.");
     } else {

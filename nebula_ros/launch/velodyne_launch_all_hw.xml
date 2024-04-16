@@ -19,7 +19,7 @@
 
     <arg name="setup_sensor" default="True" description="Enable sensor setup on hw-driver."/>
 
-    <arg name="ring_section_filter" default="false"/>
+    <arg name="enable_ring_section_filter" default="false"/>
     <arg name="excluded_ring_sectors"
          default="[0, 3500, 6900], [1, 3400, 6500], [2, 3200, 4600], [3, 3200, 4600]"/>
 
@@ -30,7 +30,7 @@
         <param name="frame_id" value="$(var frame_id)"/>
         <param name="scan_phase" value="$(var scan_phase)"/>
         <param name="calibration_file" value="$(var calibration_file)"/>
-        <param name="ring_section_filter" value="$(var ring_section_filter)"/>
+        <param name="enable_ring_section_filter" value="$(var enable_ring_section_filter)"/>
         <param name="excluded_ring_sectors" type="str" value="$(var excluded_ring_sectors)"/>
     </node>
 
