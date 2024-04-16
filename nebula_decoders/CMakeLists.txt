@@ -38,8 +38,6 @@ ament_auto_add_library(nebula_decoders_hesai SHARED
 # Velodyne
 ament_auto_add_library(nebula_decoders_velodyne SHARED
         src/nebula_decoders_velodyne/velodyne_driver.cpp
-        src/nebula_decoders_velodyne/decoders/vls128_decoder.cpp
-        src/nebula_decoders_velodyne/decoders/vlp16_decoder.cpp
         src/nebula_decoders_velodyne/decoders/vlp32_decoder.cpp
         )
 

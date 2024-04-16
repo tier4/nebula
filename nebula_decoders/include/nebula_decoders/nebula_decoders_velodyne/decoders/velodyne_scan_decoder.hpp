@@ -1,6 +1,13 @@
 #ifndef NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
 #define NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
+#include "nebula_common/point_types.hpp"
+#include "nebula_common/velodyne/velodyne_calibration_decoder.hpp"
+#include "nebula_common/velodyne/velodyne_common.hpp"
+
 #include <rclcpp/rclcpp.hpp>
+
+#include <velodyne_msgs/msg/velodyne_packet.hpp>
+#include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 #include <boost/format.hpp>
 
@@ -10,16 +17,8 @@
 #include <cmath>
 #include <cstdint>
 #include <string>
-#include <vector>
-
-#include "nebula_common/point_types.hpp"
-#include "nebula_common/velodyne/velodyne_calibration_decoder.hpp"
-#include "nebula_common/velodyne/velodyne_common.hpp"
-
-#include <velodyne_msgs/msg/velodyne_packet.hpp>
-#include <velodyne_msgs/msg/velodyne_scan.hpp>
-
 #include <tuple>
+#include <vector>
 
 namespace nebula
 {
@@ -29,8 +28,10 @@ namespace drivers
  * Raw Velodyne packet constants and structures.
  */
 static const int SIZE_BLOCK = 100;
-static const int RAW_SCAN_SIZE = 3;
-static const int SCANS_PER_BLOCK = 32;
+static const int RAW_SCAN_SIZE = 3;   // TODO: remove
+static const int RAW_CHANNEL_SIZE = 3;
+static const int SCANS_PER_BLOCK = 32; // TODO: remove
+static const int CHANNELS_PER_BLOCK = 32;
 static const int BLOCK_DATA_SIZE = (SCANS_PER_BLOCK * RAW_SCAN_SIZE);
 
 static const double ROTATION_RESOLUTION = 0.01;     // [deg]
@@ -59,10 +60,10 @@ static const float VLP128_DISTANCE_RESOLUTION = 0.004f;  // [m]
 
 /** Special Definitions for VLS128 support **/
 // These are used to detect which bank of 32 lasers is in this block
-static const uint16_t VLS128_BANK_1 = 0xeeff;
-static const uint16_t VLS128_BANK_2 = 0xddff;
-static const uint16_t VLS128_BANK_3 = 0xccff;
-static const uint16_t VLS128_BANK_4 = 0xbbff;
+static const uint16_t BANK_1 = 0xeeff;
+static const uint16_t BANK_2 = 0xddff;
+static const uint16_t BANK_3 = 0xccff;
+static const uint16_t BANK_4 = 0xbbff;
 
 static const float VLS128_CHANNEL_DURATION =
   2.665f;  // [µs] Channels corresponds to one laser firing
