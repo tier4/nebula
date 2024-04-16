@@ -117,15 +117,33 @@ public:
   // TODO: DONE?
   std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud()
   {
+    // double phase = angles::from_degrees(sensor_configuration_->scan_phase);
+    // if (!scan_pc_->points.empty()) {
+    //   auto current_azimuth = scan_pc_->points.back().azimuth;
+    //   auto phase_diff = 2 * M_PI + current_azimuth - phase;
+    //   while (phase_diff < M_PI_2 && !scan_pc_->points.empty()) {
+    //     overflow_pc_->points.push_back(scan_pc_->points.back());
+    //     scan_pc_->points.pop_back();
+    //     current_azimuth = scan_pc_->points.back().azimuth;
+    //     phase_diff = 2 * M_PI + current_azimuth - phase;
+    //   }
+    //   overflow_pc_->width = overflow_pc_->points.size();
+    //   scan_pc_->width = scan_pc_->points.size();
+    //   scan_pc_->height = 1;
+    // }
+    // return std::make_tuple(scan_pc_, scan_timestamp_);
+
     double phase = angles::from_degrees(sensor_configuration_->scan_phase);
     if (!scan_pc_->points.empty()) {
       auto current_azimuth = scan_pc_->points.back().azimuth;
-      auto phase_diff = 2 * M_PI + current_azimuth - phase;
+      auto phase_diff =
+        static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
       while (phase_diff < M_PI_2 && !scan_pc_->points.empty()) {
         overflow_pc_->points.push_back(scan_pc_->points.back());
         scan_pc_->points.pop_back();
         current_azimuth = scan_pc_->points.back().azimuth;
-        phase_diff = 2 * M_PI + current_azimuth - phase;
+        phase_diff =
+          static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
       }
       overflow_pc_->width = overflow_pc_->points.size();
       scan_pc_->width = scan_pc_->points.size();
@@ -386,7 +404,8 @@ public:
                       if (strcmp(SensorT::sensor_model, "vls128") == 0)
                         first = other_return.uint >= current_return.uint;
                       else
-                        first = other_return.uint >= current_return.uint;
+                        first =
+                          current_return.uint > other_return.uint;  // TODO: why is it this way?
 
                       bool strongest = other_intensity < intensity;
                       if (other_intensity == intensity) {
@@ -418,6 +437,9 @@ public:
                 current_point.x = x_coord;
                 current_point.y = y_coord;
                 current_point.z = z_coord;
+                // current_point.x = 1;
+                // current_point.y = 1;
+                // current_point.z = 1;
                 current_point.return_type = return_type;
                 current_point.channel = corrections.laser_ring;
                 current_point.azimuth = rotation_radians_[azimuth_corrected];
