@@ -271,7 +271,7 @@ Status VelodyneDriverRosWrapper::GetParameters(
     this->declare_parameter<std::string>("excluded_ring_sectors", "", descriptor);
     std::string sectors = this->get_parameter("excluded_ring_sectors").as_string();
 
-    // Put sectors string inside square bracktes so that it can be a valid JSON array
+    // Put sectors string inside square brackets so that it can be a valid JSON array
     sectors = "[" + sectors + "]";
 
     // Parse the JSON string
