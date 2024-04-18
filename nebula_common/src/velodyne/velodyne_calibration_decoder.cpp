@@ -6,6 +6,8 @@
  * License: Modified BSD License
  */
 
+// cspell:ignore piyush, piyushk, fout
+
 #include <nebula_common/velodyne/velodyne_calibration_decoder.hpp>
 
 #ifdef HAVE_NEW_YAMLCPP
