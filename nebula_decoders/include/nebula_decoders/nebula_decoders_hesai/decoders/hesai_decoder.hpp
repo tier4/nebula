@@ -174,6 +174,10 @@ protected:
   /// @return Whether the scan has completed
   bool checkScanCompleted(uint32_t current_phase, uint32_t sync_phase)
   {
+    if (last_phase_ == -1) {
+      return false;
+    }
+    
     return angle_corrector_.hasScanned(current_phase, last_phase_, sync_phase);
   }
 
@@ -220,6 +224,8 @@ public:
 
     decode_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
+
+    last_phase_ = -1; // Dummy value to signal last_phase_ has not been set yet
   }
 
   int unpack(const std::vector<uint8_t> & packet) override
@@ -247,7 +253,7 @@ public:
         sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS);
 
       if (scan_completed) {
-        std::swap(decode_pc_, output_pc_);
+          std::swap(decode_pc_, output_pc_);
         decode_pc_->clear();
         has_scanned_ = true;
         output_scan_timestamp_ns_ = decode_scan_timestamp_ns_;
