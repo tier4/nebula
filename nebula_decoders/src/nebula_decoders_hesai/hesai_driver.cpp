@@ -17,53 +17,56 @@ namespace nebula
 {
 namespace drivers
 {
-HesaiDriver::HesaiDriver(
-  const std::shared_ptr<HesaiSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<HesaiCalibrationConfiguration> & calibration_configuration,
-  const std::shared_ptr<HesaiCorrection> & correction_configuration)
+HesaiDriver::HesaiDriver(const std::shared_ptr<HesaiSensorConfiguration>& sensor_configuration,
+                         const std::shared_ptr<CalibrationConfigurationBase>& calibration_configuration)
 {
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;
-  switch (sensor_configuration->sensor_model) {
+
+  std::shared_ptr<HesaiCalibrationConfiguration> calibration = nullptr;
+  std::shared_ptr<HesaiCorrection> correction = nullptr;
+
+  if (sensor_configuration->sensor_model == SensorModel::HESAI_PANDARAT128)
+  {
+    correction = std::static_pointer_cast<HesaiCorrection>(calibration_configuration);
+  }
+  else
+  {
+    calibration = std::static_pointer_cast<HesaiCalibrationConfiguration>(calibration_configuration);
+  }
+
+  switch (sensor_configuration->sensor_model)
+  {
     case SensorModel::UNKNOWN:
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;
       break;
     case SensorModel::HESAI_PANDAR64:
-      scan_decoder_.reset(new HesaiDecoder<Pandar64>(
-        sensor_configuration, calibration_configuration, correction_configuration));
+      scan_decoder_.reset(new HesaiDecoder<Pandar64>(sensor_configuration, calibration, correction));
       break;
     case SensorModel::HESAI_PANDAR40P:
     case SensorModel::HESAI_PANDAR40M:
-      scan_decoder_.reset(new HesaiDecoder<Pandar40>(
-        sensor_configuration, calibration_configuration, correction_configuration));
+      scan_decoder_.reset(new HesaiDecoder<Pandar40>(sensor_configuration, calibration, correction));
       break;
     case SensorModel::HESAI_PANDARQT64:
-      scan_decoder_.reset(new HesaiDecoder<PandarQT64>(
-        sensor_configuration, calibration_configuration, correction_configuration));
+      scan_decoder_.reset(new HesaiDecoder<PandarQT64>(sensor_configuration, calibration, correction));
       break;
     case SensorModel::HESAI_PANDARQT128:
-      scan_decoder_.reset(new HesaiDecoder<PandarQT128>(
-        sensor_configuration, calibration_configuration, correction_configuration));
+      scan_decoder_.reset(new HesaiDecoder<PandarQT128>(sensor_configuration, calibration, correction));
       break;
     case SensorModel::HESAI_PANDARXT32:
-      scan_decoder_.reset(new HesaiDecoder<PandarXT32>(
-        sensor_configuration, calibration_configuration, correction_configuration));
+      scan_decoder_.reset(new HesaiDecoder<PandarXT32>(sensor_configuration, calibration, correction));
       break;
     case SensorModel::HESAI_PANDARXT32M:
-      scan_decoder_.reset(new HesaiDecoder<PandarXT32M>(
-        sensor_configuration, calibration_configuration, correction_configuration));
+      scan_decoder_.reset(new HesaiDecoder<PandarXT32M>(sensor_configuration, calibration, correction));
       break;
     case SensorModel::HESAI_PANDARAT128:
-      scan_decoder_.reset(new HesaiDecoder<PandarAT128>(
-        sensor_configuration, calibration_configuration, correction_configuration));
+      scan_decoder_.reset(new HesaiDecoder<PandarAT128>(sensor_configuration, calibration, correction));
       break;
     case SensorModel::HESAI_PANDAR128_E3X:
-      scan_decoder_.reset(new HesaiDecoder<Pandar128E3X>(
-        sensor_configuration, calibration_configuration, correction_configuration));
+      scan_decoder_.reset(new HesaiDecoder<Pandar128E3X>(sensor_configuration, calibration, correction));
       break;
     case SensorModel::HESAI_PANDAR128_E4X:
-      scan_decoder_.reset(new HesaiDecoder<Pandar128E4X>(
-        sensor_configuration, calibration_configuration, correction_configuration));
+      scan_decoder_.reset(new HesaiDecoder<Pandar128E4X>(sensor_configuration, calibration, correction));
       break;
     default:
       driver_status_ = nebula::Status::NOT_INITIALIZED;
@@ -78,13 +81,15 @@ std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ParseCloudPacket(
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
   auto logger = rclcpp::get_logger("HesaiDriver");
 
-  if (driver_status_ != nebula::Status::OK) {
+  if (driver_status_ != nebula::Status::OK)
+  {
     RCLCPP_ERROR(logger, "Driver not OK.");
     return pointcloud;
   }
 
   scan_decoder_->unpack(packet);
-  if (scan_decoder_->hasScanned()) {
+  if (scan_decoder_->hasScanned())
+  {
     pointcloud = scan_decoder_->getPointcloud();
   }
 

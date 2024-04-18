@@ -29,6 +29,9 @@ struct expected
     return default_;
   }
 
+  /// @brief If the instance has a value, return the value, else throw std::runtime_error(error_msg)
+  /// @param error_msg The message to be included in the thrown exception
+  /// @return The value
   T value_or_throw(const std::string & error_msg) {
     if (has_value()) return value();
     throw std::runtime_error(error_msg);

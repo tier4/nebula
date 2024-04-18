@@ -22,29 +22,7 @@ HesaiHwInterface::HesaiHwInterface()
 }
 HesaiHwInterface::~HesaiHwInterface()
 {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << ".......................st: HesaiHwInterface::~HesaiHwInterface()" << std::endl;
-#endif
-  if (tcp_driver_) {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << ".......................tcp_driver_ is available" << std::endl;
-#endif
-    if (tcp_driver_ && tcp_driver_->isOpen()) {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-      std::cout << ".......................st: tcp_driver_->close();" << std::endl;
-#endif
-      tcp_driver_->close();
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-      std::cout << ".......................ed: tcp_driver_->close();" << std::endl;
-#endif
-    }
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << ".......................ed: if(tcp_driver_)" << std::endl;
-#endif
-  }
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << ".......................ed: HesaiHwInterface::~HesaiHwInterface()" << std::endl;
-#endif
+  FinalizeTcpDriver();
 }
 
 HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(

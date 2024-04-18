@@ -34,12 +34,11 @@ public:
   HesaiDriver() = delete;
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this driver
-  /// @param calibration_configuration CalibrationConfiguration for this driver
-  /// @param correction_configuration CorrectionConfiguration for this driver (for AT)
+  /// @param calibration_configuration CalibrationConfiguration for this driver (either HesaiCalibrationConfiguration
+  /// for sensors other than AT128 or HesaiCorrection for AT128)
   explicit HesaiDriver(
-    const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration,
-    const std::shared_ptr<drivers::HesaiCorrection> & correction_configuration = nullptr);
+      const std::shared_ptr<drivers::HesaiSensorConfiguration>& sensor_configuration,
+      const std::shared_ptr<drivers::CalibrationConfigurationBase>& calibration_configuration = nullptr);
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -48,14 +47,12 @@ public:
   /// @brief Setting CalibrationConfiguration (not used)
   /// @param calibration_configuration
   /// @return Resulting status
-  Status SetCalibrationConfiguration(
-    const CalibrationConfigurationBase & calibration_configuration) override;
+  Status SetCalibrationConfiguration(const CalibrationConfigurationBase& calibration_configuration) override;
 
   /// @brief Convert PandarScan message to point cloud
   /// @param pandar_scan Message
   /// @return tuple of Point cloud and timestamp
-  std::tuple<drivers::NebulaPointCloudPtr, double> ParseCloudPacket(
-    const std::vector<uint8_t> & packet);
+  std::tuple<drivers::NebulaPointCloudPtr, double> ParseCloudPacket(const std::vector<uint8_t>& packet);
 };
 
 }  // namespace drivers

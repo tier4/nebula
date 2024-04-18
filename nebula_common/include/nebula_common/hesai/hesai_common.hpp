@@ -14,7 +14,7 @@ namespace nebula
 namespace drivers
 {
 /// @brief struct for Hesai sensor configuration
-struct HesaiSensorConfiguration : LidarConfigurationBase
+struct HesaiSensorConfiguration : public LidarConfigurationBase
 {
   uint16_t gnss_port{};
   double scan_phase{};
@@ -43,13 +43,20 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   return os;
 }
 
+struct HesaiCalibrationConfigurationBase : public CalibrationConfigurationBase
+{
+  virtual nebula::Status LoadFromBytes(const std::vector<uint8_t> & buf) = 0;
+  virtual nebula::Status LoadFromFile(const std::string & calibration_file) = 0;
+  virtual nebula::Status SaveToFileFromBytes(const std::string & calibration_file, const std::vector<uint8_t> & buf) = 0;
+};
+
 /// @brief struct for Hesai calibration configuration
-struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
+struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
 {
   std::map<size_t, float> elev_angle_map;
   std::map<size_t, float> azimuth_offset_map;
 
-  inline nebula::Status LoadFromFile(const std::string & calibration_file)
+  inline nebula::Status LoadFromFile(const std::string & calibration_file) override
   {
     std::ifstream ifs(calibration_file);
     if (!ifs) {
@@ -59,6 +66,11 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
     ss << ifs.rdbuf(); // reading data
     ifs.close();
     return LoadFromString(ss.str());
+  }
+
+  nebula::Status LoadFromBytes(const std::vector<uint8_t> & buf) {
+    std::string calibration_string = std::string(buf.begin(), buf.end());
+    return LoadFromString(calibration_string);
   }
 
   /// @brief Loading calibration data
@@ -99,7 +111,7 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
   /// @brief Saving calibration data (not used)
   /// @param calibration_file
   /// @return Resulting status
-  inline nebula::Status SaveFile(const std::string & calibration_file)
+  inline nebula::Status SaveToFile(const std::string & calibration_file)
   {
     std::ofstream ofs(calibration_file);
     if (!ofs) {
@@ -115,6 +127,11 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
     ofs.close();
 
     return Status::OK;
+  }
+
+  nebula::Status SaveToFileFromBytes(const std::string & calibration_file, const std::vector<uint8_t> & buf) override {
+    std::string calibration_string = std::string(buf.begin(), buf.end());
+    return SaveFileFromString(calibration_file, calibration_string);
   }
 
   /// @brief Saving calibration data from string
@@ -134,7 +151,7 @@ struct HesaiCalibrationConfiguration : CalibrationConfigurationBase
 };
 
 /// @brief struct for Hesai correction configuration (for AT)
-struct HesaiCorrection
+struct HesaiCorrection : public HesaiCalibrationConfigurationBase
 {
   uint16_t delimiter;
   uint8_t versionMajor;
@@ -156,7 +173,7 @@ struct HesaiCorrection
   /// @brief Load correction data from file
   /// @param buf Binary buffer
   /// @return Resulting status
-  inline nebula::Status LoadFromBinary(const std::vector<uint8_t> & buf)
+  inline nebula::Status LoadFromBytes(const std::vector<uint8_t> & buf) override
   {
     size_t index;
     for (index = 0; index < buf.size()-1; index++) {
@@ -258,7 +275,7 @@ struct HesaiCorrection
   /// @brief Load correction data from file
   /// @param correction_file path
   /// @return Resulting status
-  inline nebula::Status LoadFromFile(const std::string & correction_file)
+  inline nebula::Status LoadFromFile(const std::string & correction_file) override
   {
     std::ifstream ifs(correction_file, std::ios::in | std::ios::binary);
     if (!ifs) {
@@ -271,7 +288,7 @@ struct HesaiCorrection
       ifs.read((char *)&c, sizeof(unsigned char));
       buf.emplace_back(c);
     }
-    LoadFromBinary(buf);
+    LoadFromBytes(buf);
 
     ifs.close();
     return Status::OK;
@@ -281,7 +298,7 @@ struct HesaiCorrection
   /// @param correction_file path
   /// @param buf correction binary
   /// @return Resulting status
-  inline nebula::Status SaveFileFromBinary(const std::string & correction_file, const std::vector<uint8_t> & buf)
+  inline nebula::Status SaveToFileFromBytes(const std::string & correction_file, const std::vector<uint8_t> & buf) override
   {
     std::cerr << "Saving in:" << correction_file << "\n";
     std::ofstream ofs(correction_file, std::ios::trunc | std::ios::binary);
