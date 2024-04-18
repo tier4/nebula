@@ -3,6 +3,7 @@
 #include <condition_variable>
 #include <deque>
 #include <mutex>
+#include <chrono>
 
 template <typename T>
 class mt_queue
@@ -44,13 +45,5 @@ public:
     this->cv_not_full_.notify_all();
 
     return return_value;
-  }
-
-  void pop_all(std::deque<T> & dest) {
-    std::unique_lock<std::mutex> lock(this->mutex_);
-    this->cv_not_empty_.wait(lock, [=] { return !this->queue_.empty(); });
-    dest.insert(dest.end(), std::make_move_iterator(queue_.begin()), std::make_move_iterator(queue_.end()));
-    this->queue_.clear();
-    this->cv_not_full_.notify_all();
   }
 };

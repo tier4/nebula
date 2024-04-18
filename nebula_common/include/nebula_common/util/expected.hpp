@@ -54,8 +54,9 @@ struct expected
     return default_;
   }
 
-  /// @brief Return the contained value, or, if an error is contained, throw `runtime_error(error_msg)`.
-  /// @return The contained value if no error is thrown
+  /// @brief If the instance has a value, return the value, else throw std::runtime_error(error_msg)
+  /// @param error_msg The message to be included in the thrown exception
+  /// @return The value
   T value_or_throw(const std::string & error_msg) {
     if (has_value()) return value();
     throw std::runtime_error(error_msg);

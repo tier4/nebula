@@ -24,6 +24,7 @@ find_package(nebula_hw_interfaces REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(robosense_msgs REQUIRED)
 find_package(nebula_msgs REQUIRED)
+find_package(pandar_msgs REQUIRED)
 
 include_directories(
         include
@@ -36,6 +37,9 @@ link_libraries(${YAML_CPP_LIBRARIES} ${PCL_LIBRARIES})
 ## Hesai
 ament_auto_add_library(hesai_ros_wrapper SHARED
         src/hesai/hesai_ros_wrapper.cpp
+        src/hesai/decoder_wrapper.cpp
+        src/hesai/hw_interface_wrapper.cpp
+        src/hesai/hw_monitor_wrapper.cpp
         )
 
 rclcpp_components_register_node(hesai_ros_wrapper
