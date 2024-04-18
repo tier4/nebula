@@ -142,6 +142,8 @@ TEST_P(DecoderTest, TestTimezone)
   auto gmt = timezone;
   hesai_driver_->ReadBag(scan_callback);
 
+  ASSERT_GT(decoded_timestamps.size(), 0U);
+
   // Then, reset driver and timestamps vector for the next decode run
   TearDown();
   SetUp();
