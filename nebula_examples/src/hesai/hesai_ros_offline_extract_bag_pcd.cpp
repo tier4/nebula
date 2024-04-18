@@ -56,12 +56,11 @@ HesaiRosOfflineExtractBag::HesaiRosOfflineExtractBag(
     correction_cfg_ptr_ = std::make_shared<drivers::HesaiCorrection>(correction_configuration);
     wrapper_status_ = InitializeDriver(
       std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
-      std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_),
-      std::static_pointer_cast<drivers::HesaiCorrection>(correction_cfg_ptr_));
+      correction_cfg_ptr_);
   } else {
     wrapper_status_ = InitializeDriver(
       std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
-      std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_));
+      calibration_cfg_ptr_);
   }
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
@@ -69,26 +68,12 @@ HesaiRosOfflineExtractBag::HesaiRosOfflineExtractBag(
 
 Status HesaiRosOfflineExtractBag::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-  std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration)
+  std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calibration_configuration)
 {
   // driver should be initialized here with proper decoder
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
     std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
-    std::static_pointer_cast<drivers::HesaiCalibrationConfiguration>(calibration_configuration));
-  return driver_ptr_->GetStatus();
-}
-
-Status HesaiRosOfflineExtractBag::InitializeDriver(
-  std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-  std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
-  std::shared_ptr<drivers::HesaiCorrection> correction_configuration)
-{
-  // driver should be initialized here with proper decoder
-  driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
-    std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
-    std::static_pointer_cast<drivers::HesaiCalibrationConfiguration>(
-      calibration_configuration),  //);
-    std::static_pointer_cast<drivers::HesaiCorrection>(correction_configuration));
+    calibration_configuration);
   return driver_ptr_->GetStatus();
 }
 
@@ -328,39 +313,45 @@ Status HesaiRosOfflineExtractBag::ReadBag()
         std::cout << "Found data in topic " << bag_message->topic_name << ": "
                   << bag_message->time_stamp << std::endl;
 
-        auto pointcloud_ts = driver_ptr_->ConvertScanToPointcloud(
-          std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg));
-        auto pointcloud = std::get<0>(pointcloud_ts);
-        auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
-        //        pcl::io::savePCDFileBinary((o_dir / fn).string(), *pointcloud);
+        for (auto & pkt : extracted_msg.packets) {
+          auto pointcloud_ts = driver_ptr_->ParseCloudPacket(std::vector<uint8_t>(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size)));
+          auto pointcloud = std::get<0>(pointcloud_ts);
 
-        if (needs_open) {
-          const rosbag2_storage::StorageOptions storage_options_w(
-            {(o_dir / std::to_string(bag_message->time_stamp)).string(), "sqlite3"});
-          const rosbag2_cpp::ConverterOptions converter_options_w(
-            {rmw_get_serialization_format(), rmw_get_serialization_format()});
-          writer_ = std::make_unique<rosbag2_cpp::writers::SequentialWriter>();
-          writer_->open(storage_options_w, converter_options_w);
-          writer_->create_topic(
-            {bag_message->topic_name, "pandar_msgs/msg/PandarScan", rmw_get_serialization_format(),
-              ""});
-          needs_open = false;
-        }
-        writer_->write(bag_message);
-        cnt++;
-        if (skip_num < cnt) {
-          out_cnt++;
-          if (only_xyz) {
-            pcl::PointCloud<pcl::PointXYZ> cloud_xyz;
-            pcl::copyPointCloud(*pointcloud, cloud_xyz);
-            writer.writeBinary((o_dir / fn).string(), cloud_xyz);
-          } else {
-            writer.writeBinary((o_dir / fn).string(), *pointcloud);
+          if (!pointcloud) {
+            continue;
           }
-          //          writer.writeASCII((o_dir / fn).string(), *pointcloud);
-        }
-        if (out_num <= out_cnt) {
-          break;
+
+          auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
+          //        pcl::io::savePCDFileBinary((o_dir / fn).string(), *pointcloud);
+
+          if (needs_open) {
+            const rosbag2_storage::StorageOptions storage_options_w(
+              {(o_dir / std::to_string(bag_message->time_stamp)).string(), "sqlite3"});
+            const rosbag2_cpp::ConverterOptions converter_options_w(
+              {rmw_get_serialization_format(), rmw_get_serialization_format()});
+            writer_ = std::make_unique<rosbag2_cpp::writers::SequentialWriter>();
+            writer_->open(storage_options_w, converter_options_w);
+            writer_->create_topic(
+              {bag_message->topic_name, "pandar_msgs/msg/PandarScan", rmw_get_serialization_format(),
+                ""});
+            needs_open = false;
+          }
+          writer_->write(bag_message);
+          cnt++;
+          if (skip_num < cnt) {
+            out_cnt++;
+            if (only_xyz) {
+              pcl::PointCloud<pcl::PointXYZ> cloud_xyz;
+              pcl::copyPointCloud(*pointcloud, cloud_xyz);
+              writer.writeBinary((o_dir / fn).string(), cloud_xyz);
+            } else {
+              writer.writeBinary((o_dir / fn).string(), *pointcloud);
+            }
+            //          writer.writeASCII((o_dir / fn).string(), *pointcloud);
+          }
+          if (out_num <= out_cnt) {
+            break;
+          }
         }
       }
     }

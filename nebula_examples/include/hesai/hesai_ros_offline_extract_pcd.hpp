@@ -36,7 +36,7 @@ namespace nebula
 namespace ros
 {
 /// @brief Offline hesai driver usage example (Output PCD data)
-class HesaiRosOfflineExtractSample final : public rclcpp::Node, NebulaDriverRosWrapperBase
+class HesaiRosOfflineExtractSample final : public rclcpp::Node
 {
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
   Status wrapper_status_;
@@ -51,17 +51,7 @@ class HesaiRosOfflineExtractSample final : public rclcpp::Node, NebulaDriverRosW
   /// @return Resulting status
   Status InitializeDriver(
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) override;
-
-  /// @brief Initializing ros wrapper for AT
-  /// @param sensor_configuration SensorConfiguration for this driver
-  /// @param calibration_configuration CalibrationConfiguration for this driver
-  /// @param correction_configuration CorrectionConfiguration for this driver
-  /// @return Resulting status
-  Status InitializeDriver(
-    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
-    std::shared_ptr<drivers::HesaiCorrection> correction_configuration);
+    std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calibration_configuration);
 
   /// @brief Get configurations from ros parameters
   /// @param sensor_configuration Output of SensorConfiguration

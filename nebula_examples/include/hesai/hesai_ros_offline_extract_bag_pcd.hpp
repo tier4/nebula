@@ -35,7 +35,7 @@ namespace nebula
 {
 namespace ros
 {
-class HesaiRosOfflineExtractBag final : public rclcpp::Node, NebulaDriverRosWrapperBase
+class HesaiRosOfflineExtractBag final : public rclcpp::Node
 {
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
   Status wrapper_status_;
@@ -46,12 +46,7 @@ class HesaiRosOfflineExtractBag final : public rclcpp::Node, NebulaDriverRosWrap
 
   Status InitializeDriver(
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) override;
-
-  Status InitializeDriver(
-    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
-    std::shared_ptr<drivers::HesaiCorrection> correction_configuration);
+    std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calibration_configuration);
 
   Status GetParameters(
     drivers::HesaiSensorConfiguration & sensor_configuration,
