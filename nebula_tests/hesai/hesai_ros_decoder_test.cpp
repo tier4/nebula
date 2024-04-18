@@ -46,12 +46,11 @@ HesaiRosDecoderTest::HesaiRosDecoderTest(
     correction_cfg_ptr_ = std::make_shared<drivers::HesaiCorrection>(correction_configuration);
     wrapper_status_ = InitializeDriver(
       std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
-      std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_),
-      std::static_pointer_cast<drivers::HesaiCorrection>(correction_cfg_ptr_));
+      correction_cfg_ptr_);
   } else {
     wrapper_status_ = InitializeDriver(
       std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
-      std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_));
+      calibration_cfg_ptr_);
   }
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
@@ -59,26 +58,12 @@ HesaiRosDecoderTest::HesaiRosDecoderTest(
 
 Status HesaiRosDecoderTest::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-  std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration)
+  std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calibration_configuration)
 {
   // driver should be initialized here with proper decoder
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
     std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
-    std::static_pointer_cast<drivers::HesaiCalibrationConfiguration>(calibration_configuration));
-  return driver_ptr_->GetStatus();
-}
-
-Status HesaiRosDecoderTest::InitializeDriver(
-  std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-  std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
-  std::shared_ptr<drivers::HesaiCorrection> correction_configuration)
-{
-  // driver should be initialized here with proper decoder
-  driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
-    std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
-    std::static_pointer_cast<drivers::HesaiCalibrationConfiguration>(
-      calibration_configuration),  //);
-    std::static_pointer_cast<drivers::HesaiCorrection>(correction_configuration));
+    calibration_configuration);
   return driver_ptr_->GetStatus();
 }
 
@@ -291,7 +276,6 @@ void HesaiRosDecoderTest::ReadBag(
   storage_options.storage_id = params_.storage_id;
   converter_options.output_serialization_format = params_.format;  //"cdr";
   rclcpp::Serialization<pandar_msgs::msg::PandarScan> serialization;
-  nebula::drivers::NebulaPointCloudPtr pointcloud(new nebula::drivers::NebulaPointCloud);
 
   rosbag2_cpp::Reader bag_reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
   bag_reader.open(storage_options, converter_options);
@@ -310,12 +294,20 @@ void HesaiRosDecoderTest::ReadBag(
         "Found data in topic " << bag_message->topic_name << ": " << bag_message->time_stamp);
 
       auto extracted_msg_ptr = std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg);
-      auto pointcloud_ts = driver_ptr_->ConvertScanToPointcloud(extracted_msg_ptr);
-      auto scan_timestamp = std::get<1>(pointcloud_ts);
-      pointcloud = std::get<0>(pointcloud_ts);
 
-      scan_callback(bag_message->time_stamp, scan_timestamp, pointcloud);
-      pointcloud.reset(new nebula::drivers::NebulaPointCloud);
+      for (auto & pkt : extracted_msg_ptr->packets) {
+        auto pointcloud_ts = driver_ptr_->ParseCloudPacket(std::vector<uint8_t>(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size)));
+        auto pointcloud = std::get<0>(pointcloud_ts);
+        auto scan_timestamp = std::get<1>(pointcloud_ts);
+
+        if (!pointcloud) {
+          continue;
+        }
+
+        std::cerr << "PC size: " << pointcloud->size() << std::endl;
+
+        scan_callback(bag_message->time_stamp, scan_timestamp, pointcloud);
+      }
     }
   }
 }
