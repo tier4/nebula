@@ -1,4 +1,3 @@
-// cspell:ignore piyush, fout
 /**
  * \author  Piyush Khandelwal (piyushk@cs.utexas.edu)
  * Copyright (C) 2012, Austin Robot Technology,
@@ -6,6 +5,8 @@
  *
  * License: Modified BSD License
  */
+
+// cspell:ignore piyush, piyushk, fout
 
 #include <nebula_common/velodyne/velodyne_calibration_decoder.hpp>
 
