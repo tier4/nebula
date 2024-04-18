@@ -1,13 +1,10 @@
 /**
- * cspell:ignore piyush, piyushk, fout
  * \author  Piyush Khandelwal (piyushk@cs.utexas.edu)
  * Copyright (C) 2012, Austin Robot Technology,
  *                     The University of Texas at Austin
  *
  * License: Modified BSD License
  */
-
-// cspell:ignore piyush, piyushk, fout
 
 #include <nebula_common/velodyne/velodyne_calibration_decoder.hpp>
 
