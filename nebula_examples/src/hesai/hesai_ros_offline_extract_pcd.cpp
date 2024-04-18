@@ -56,12 +56,11 @@ HesaiRosOfflineExtractSample::HesaiRosOfflineExtractSample(
     correction_cfg_ptr_ = std::make_shared<drivers::HesaiCorrection>(correction_configuration);
     wrapper_status_ = InitializeDriver(
       std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
-      std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_),
-      std::static_pointer_cast<drivers::HesaiCorrection>(correction_cfg_ptr_));
+      correction_cfg_ptr_);
   } else {
     wrapper_status_ = InitializeDriver(
       std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
-      std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_));
+      calibration_cfg_ptr_);
   }
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
@@ -69,26 +68,12 @@ HesaiRosOfflineExtractSample::HesaiRosOfflineExtractSample(
 
 Status HesaiRosOfflineExtractSample::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-  std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration)
+  std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calibration_configuration)
 {
   // driver should be initialized here with proper decoder
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
     std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
-    std::static_pointer_cast<drivers::HesaiCalibrationConfiguration>(calibration_configuration));
-  return driver_ptr_->GetStatus();
-}
-
-Status HesaiRosOfflineExtractSample::InitializeDriver(
-  std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-  std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
-  std::shared_ptr<drivers::HesaiCorrection> correction_configuration)
-{
-  // driver should be initialized here with proper decoder
-  driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
-    std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
-    std::static_pointer_cast<drivers::HesaiCalibrationConfiguration>(
-      calibration_configuration),  //);
-    std::static_pointer_cast<drivers::HesaiCorrection>(correction_configuration));
+    calibration_configuration);
   return driver_ptr_->GetStatus();
 }
 
@@ -296,12 +281,18 @@ Status HesaiRosOfflineExtractSample::ReadBag()
         //        nebula::drivers::NebulaPointCloudPtr pointcloud =
         //        driver_ptr_->ConvertScanToPointcloud(
         //          std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg));
-        auto pointcloud_ts = driver_ptr_->ConvertScanToPointcloud(
-          std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg));
-        auto pointcloud = std::get<0>(pointcloud_ts);
-        auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
-        //        pcl::io::savePCDFileBinary((o_dir / fn).string(), *pointcloud);
-        writer.writeBinary((o_dir / fn).string(), *pointcloud);
+        for (auto & pkt : extracted_msg.packets) {
+          auto pointcloud_ts = driver_ptr_->ParseCloudPacket(std::vector<uint8_t>(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size)));
+          auto pointcloud = std::get<0>(pointcloud_ts);
+
+          if (!pointcloud) {
+            continue;
+          }
+
+          auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
+          //        pcl::io::savePCDFileBinary((o_dir / fn).string(), *pointcloud);
+          writer.writeBinary((o_dir / fn).string(), *pointcloud);
+        }
       }
     }
     // close on scope exit
