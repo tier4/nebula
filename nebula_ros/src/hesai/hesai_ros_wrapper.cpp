@@ -4,344 +4,70 @@ namespace nebula
 {
 namespace ros
 {
-HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
-: rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
-  hw_interface_(),
-  wrapper_status_(Status::NOT_INITIALIZED),
-  interface_status_(Status::NOT_INITIALIZED),
-  packet_queue_(3000),
-  diagnostics_updater_(this)
+HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions& options)
+  : rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true))
+  , wrapper_status_(Status::NOT_INITIALIZED)
+  , sensor_cfg_ptr_(nullptr)
+  , packet_queue_(3000)
+  , hw_interface_wrapper_()
+  , hw_monitor_wrapper_()
+  , decoder_wrapper_()
 {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
-  sensor_cfg_ptr_ = std::make_shared<drivers::HesaiSensorConfiguration>();
-  wrapper_status_ = GetParameters(*sensor_cfg_ptr_);
+  wrapper_status_ = DeclareAndGetSensorConfigParams();
+  wrapper_status_ = DeclareAndGetWrapperParams();
 
-  InitializeHwInterface();
-  InitializeDecoder();
-
-  RCLCPP_DEBUG(this->get_logger(), "Starting stream");
-
-  if (launch_hw_) {
-    InitializeHwMonitor();
-    StreamStart();
-    hw_interface_.RegisterScanCallback(
-      std::bind(&HesaiRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
+  if (launch_hw_)
+  {
+    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_);
+    hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->HwInterface(), sensor_cfg_ptr_);
   }
 
-  packets_sub_ = create_subscription<pandar_msgs::msg::PandarScan>("pandar_packets", rclcpp::SensorDataQoS(), 
-    std::bind(&HesaiRosWrapper::ReceiveScanMessageCallback, this, std::placeholders::_1));
+  decoder_wrapper_.emplace(this, hw_interface_wrapper_ ? hw_interface_wrapper_->HwInterface() : nullptr,
+                           sensor_cfg_ptr_);
 
-  set_param_res_ = this->add_on_set_parameters_callback(
-    std::bind(&HesaiRosWrapper::paramCallback, this, std::placeholders::_1));
-}
+  RCLCPP_INFO_STREAM(get_logger(), "SensorConfig:" << *sensor_cfg_ptr_);
+  set_param_res_ =
+      add_on_set_parameters_callback(std::bind(&HesaiRosWrapper::paramCallback, this, std::placeholders::_1));
 
-Status HesaiRosWrapper::InitializeHwInterface()
-{
-  interface_status_ = Status::OK;
-
-  hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
-  hw_interface_.SetSensorConfiguration(
-    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
-  hw_interface_.SetTargetModel(sensor_cfg_ptr_->sensor_model);
-
-  if (!launch_hw_) {
-    return interface_status_;
-  }
-
-  int retry_count = 0;
-
-  while (true) {
-    interface_status_ = hw_interface_.InitializeTcpDriver();
-    if (interface_status_ == Status::OK || !retry_hw_) {
-      break;
-    }
-
-    retry_count++;
-    std::this_thread::sleep_for(std::chrono::milliseconds(8000));  // >5000
-    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Retry: " << retry_count);
-  }
-
-  if (interface_status_ == Status::OK) {
-    try {
-      auto inventory = hw_interface_.GetInventory();
-      RCLCPP_INFO_STREAM(get_logger(), inventory);
-      hw_interface_.SetTargetModel(inventory.model);
-    } catch (...) {
-      RCLCPP_ERROR_STREAM(get_logger(), "Failed to get model from sensor...");
-    }
-    if (this->setup_sensor) {
-      hw_interface_.CheckAndSetConfig();
-      updateParameters();
-    }
-  } else {
-    RCLCPP_ERROR_STREAM(
-      get_logger(),
-      "Failed to get model from sensor... Set from config: " << sensor_cfg_ptr_->sensor_model);
-  }
-
-  pandar_scan_pub_ =
-    create_publisher<pandar_msgs::msg::PandarScan>("pandar_packets", rclcpp::SensorDataQoS());
-  current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
-
-  return Status::OK;
-}
-
-Status HesaiRosWrapper::InitializeDecoder()
-{
-  calibration_cfg_ptr_ = std::make_shared<drivers::HesaiCalibrationConfiguration>();
-  correction_cfg_ptr_ = std::make_shared<drivers::HesaiCorrection>();
-
-  wrapper_status_ = GetCalibrationData(*calibration_cfg_ptr_, *correction_cfg_ptr_);
-  if (Status::OK != wrapper_status_) {
-    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << wrapper_status_);
-    return wrapper_status_;
-  }
-  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
-  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
-  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Wrapper=" << wrapper_status_);
-  rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
-  auto pointcloud_qos =
-    rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
+  RCLCPP_DEBUG(get_logger(), "Starting stream");
 
   decoder_thread_ = std::thread([this]() {
-    while (true) {
-        this->ProcessCloudPacket(std::move(packet_queue_.pop()));
+    while (true)
+    {
+      decoder_wrapper_->ProcessCloudPacket(std::move(packet_queue_.pop()));
     }
   });
 
-  nebula_points_pub_ =
-    this->create_publisher<sensor_msgs::msg::PointCloud2>("pandar_points", pointcloud_qos);
-  aw_points_base_pub_ =
-    this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points", pointcloud_qos);
-  aw_points_ex_pub_ =
-    this->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points_ex", pointcloud_qos);
-
-  driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
-    sensor_cfg_ptr_, calibration_cfg_ptr_, correction_cfg_ptr_);
-  return driver_ptr_->GetStatus();
-}
-
-Status HesaiRosWrapper::InitializeHwMonitor()
-{
-  if (Status::OK != interface_status_) {
-    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << interface_status_);
-    return Status::ERROR_1;
+  if (launch_hw_)
+  {
+    StreamStart();
+    hw_interface_wrapper_->HwInterface()->RegisterScanCallback(
+        std::bind(&HesaiRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
   }
-
-  switch (sensor_cfg_ptr_->sensor_model) {
-    case nebula::drivers::SensorModel::HESAI_PANDARXT32:
-    case nebula::drivers::SensorModel::HESAI_PANDARXT32M:
-    case nebula::drivers::SensorModel::HESAI_PANDARAT128:
-      temperature_names_.emplace_back("Bottom circuit board T1");
-      temperature_names_.emplace_back("Bottom circuit board T2");
-      temperature_names_.emplace_back("Laser emitting board RT_L1(Internal)");
-      temperature_names_.emplace_back("Laser emitting board RT_L2");
-      temperature_names_.emplace_back("Receiving board RT_R");
-      temperature_names_.emplace_back("Receiving board RT2");
-      temperature_names_.emplace_back("Top circuit RT3");
-      temperature_names_.emplace_back("Not used");
-      break;
-    case nebula::drivers::SensorModel::HESAI_PANDAR64:
-    case nebula::drivers::SensorModel::HESAI_PANDAR40P:
-    case nebula::drivers::SensorModel::HESAI_PANDAR40M:
-    case nebula::drivers::SensorModel::HESAI_PANDARQT64:
-    case nebula::drivers::SensorModel::HESAI_PANDARQT128:
-    case nebula::drivers::SensorModel::HESAI_PANDAR128_E3X:
-    case nebula::drivers::SensorModel::HESAI_PANDAR128_E4X:
-    default:
-      temperature_names_.emplace_back("Bottom circuit RT1");
-      temperature_names_.emplace_back("Bottom circuit RT2");
-      temperature_names_.emplace_back("Internal Temperature");
-      temperature_names_.emplace_back("Laser emitting board RT1");
-      temperature_names_.emplace_back("Laser emitting board RT2");
-      temperature_names_.emplace_back("Receiving board RT1");
-      temperature_names_.emplace_back("Top circuit RT1");
-      temperature_names_.emplace_back("Top circuit RT2");
-      break;
-  }
-
-  auto result = hw_interface_.GetInventory();
-  current_inventory_.reset(new HesaiInventory(result));
-  current_inventory_time_.reset(new rclcpp::Time(this->get_clock()->now()));
-  std::cout << "HesaiInventory" << std::endl;
-  std::cout << result << std::endl;
-  info_model_ = result.get_str_model();
-  info_serial_ = std::string(result.sn.begin(), result.sn.end());
-  hw_interface_.SetTargetModel(result.model);
-  RCLCPP_INFO_STREAM(this->get_logger(), "Model:" << info_model_);
-  RCLCPP_INFO_STREAM(this->get_logger(), "Serial:" << info_serial_);
-  InitializeHesaiDiagnostics();
-  return Status::OK;
-}
-
-void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
-{
-  // static auto convert = nebula::util::Instrumentation("ReceiveCloudPacketCallback.convert");
-  // static auto publish = nebula::util::Instrumentation("ReceiveCloudPacketCallback.publish");
-  // static auto delay = nebula::util::TopicDelay("ReceiveCloudPacketCallback");
-  // Driver is not initialized yet
-  if (!driver_ptr_) {
-    return;
-  }
-
-  // convert.tick();
-  const auto now = std::chrono::system_clock::now();
-  const auto timestamp_ns =
-    std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-
-  auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
-  msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
-  msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
-  msg_ptr->data.swap(packet);
-  // convert.tock();
-
-  // delay.tick(msg_ptr->stamp);
-
-  // publish.tick();
-  if (!packet_queue_.try_push(std::move(msg_ptr))) {
-    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");
-  }
-  // packet_pub_->publish(std::move(msg_ptr));
-  // publish.tock();
-}
-
-void HesaiRosWrapper::ReceiveScanMessageCallback(
-  std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg)
-{
-  if (launch_hw_) {
-    RCLCPP_ERROR_THROTTLE(
-      get_logger(), *get_clock(), 1000,
-      "Ignoring received PandarScan. Launch with launch_hw:=false to enable PandarScan replay.");
-    return;
-  }
-
-  for (auto & pkt : scan_msg->packets) {
-    auto nebula_pkt_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
-    nebula_pkt_ptr->stamp = pkt.stamp;
-    std::copy(pkt.data.begin(), pkt.data.end(), std::back_inserter(nebula_pkt_ptr->data));
-
-    packet_queue_.push(std::move(nebula_pkt_ptr));
+  else
+  {
+    packets_sub_ = create_subscription<pandar_msgs::msg::PandarScan>(
+        "pandar_packets", rclcpp::SensorDataQoS(),
+        std::bind(&HesaiRosWrapper::ReceiveScanMessageCallback, this, std::placeholders::_1));
+    RCLCPP_INFO_STREAM(get_logger(), "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
   }
 }
 
-void HesaiRosWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
+nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
 {
-  // static auto parse = nebula::util::Instrumentation("ProcessCloudPacket.parse");
-  // static auto convert = nebula::util::Instrumentation("ProcessCloudPacket.convert");
-  // static auto publish = nebula::util::Instrumentation("ProcessCloudPacket.publish");
-  // static auto delay = nebula::util::TopicDelay("ProcessCloudPacket");
+  nebula::drivers::HesaiSensorConfiguration sensor_configuration;
 
-  // delay.tick(packet_msg->stamp);
-
-  // Accumulate packets for recording only if someone is subscribed to the topic (for performance)
-  if (
-    launch_hw_ &&
-    (pandar_scan_pub_->get_subscription_count() > 0 ||
-    pandar_scan_pub_->get_intra_process_subscription_count() > 0)) {
-    if (current_scan_msg_->packets.size() == 0) {
-      current_scan_msg_->header.stamp = packet_msg->stamp;
-    }
-
-    pandar_msgs::msg::PandarPacket pandar_packet_msg{};
-    pandar_packet_msg.stamp = packet_msg->stamp;
-    pandar_packet_msg.size = packet_msg->data.size();
-    std::copy(packet_msg->data.begin(), packet_msg->data.end(), pandar_packet_msg.data.begin());
-    current_scan_msg_->packets.emplace_back(std::move(pandar_packet_msg));
-  }
-
-  // parse.tick();
-  std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
-    driver_ptr_->ParseCloudPacket(packet_msg->data);
-  nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
-  // parse.tock();
-
-  if (pointcloud == nullptr) {
-    // todo
-    // RCLCPP_WARN_STREAM(get_logger(), "Empty cloud parsed.");
-    return;
-  };
-
-  // Publish scan message only if it has been written to
-  if (current_scan_msg_ && !current_scan_msg_->packets.empty()) {
-    pandar_scan_pub_->publish(std::move(current_scan_msg_));
-    current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
-  }
-
-  if (
-    nebula_points_pub_->get_subscription_count() > 0 ||
-    nebula_points_pub_->get_intra_process_subscription_count() > 0) {
-    // convert.tick();
-    auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
-    ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    // convert.tock();
-    // publish.tick();
-    PublishCloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
-    // publish.tock();
-  }
-  if (
-    aw_points_base_pub_->get_subscription_count() > 0 ||
-    aw_points_base_pub_->get_intra_process_subscription_count() > 0) {
-    // convert.tick();
-
-    const auto autoware_cloud_xyzi =
-      nebula::drivers::convertPointXYZIRCAEDTToPointXYZIR(pointcloud);
-    auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*autoware_cloud_xyzi, *ros_pc_msg_ptr);
-    ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    // convert.tock();
-    // publish.tick();
-    PublishCloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
-    // publish.tock();
-  }
-  if (
-    aw_points_ex_pub_->get_subscription_count() > 0 ||
-    aw_points_ex_pub_->get_intra_process_subscription_count() > 0) {
-    // convert.tick();
-
-    const auto autoware_ex_cloud = nebula::drivers::convertPointXYZIRCAEDTToPointXYZIRADT(
-      pointcloud, std::get<1>(pointcloud_ts));
-    auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
-    ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    // convert.tock();
-    // publish.tick();
-    PublishCloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
-    // publish.tock();
-  }
-}
-
-void HesaiRosWrapper::PublishCloud(
-  std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
-  const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher)
-{
-  if (pointcloud->header.stamp.sec < 0) {
-    RCLCPP_WARN_STREAM(this->get_logger(), "Timestamp error, verify clock source.");
-  }
-  pointcloud->header.frame_id = sensor_cfg_ptr_->frame_id;
-  publisher->publish(std::move(pointcloud));
-}
-
-Status HesaiRosWrapper::GetStatus()
-{
-  return wrapper_status_;
-}
-
-Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor_configuration)
-{
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_model", "");
+    declare_parameter<std::string>("sensor_model", "");
     sensor_configuration.sensor_model =
-      nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
+        nebula::drivers::SensorModelFromString(get_parameter("sensor_model").as_string());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -349,9 +75,9 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("return_mode", "", descriptor);
+    declare_parameter<std::string>("return_mode", "", descriptor);
     sensor_configuration.return_mode = nebula::drivers::ReturnModeFromStringHesai(
-      this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
+        get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -359,8 +85,8 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("host_ip", "255.255.255.255", descriptor);
-    sensor_configuration.host_ip = this->get_parameter("host_ip").as_string();
+    declare_parameter<std::string>("host_ip", "255.255.255.255", descriptor);
+    sensor_configuration.host_ip = get_parameter("host_ip").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -368,8 +94,8 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_ip", "192.168.1.201", descriptor);
-    sensor_configuration.sensor_ip = this->get_parameter("sensor_ip").as_string();
+    declare_parameter<std::string>("sensor_ip", "192.168.1.201", descriptor);
+    sensor_configuration.sensor_ip = get_parameter("sensor_ip").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -377,8 +103,8 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("data_port", 2368, descriptor);
-    sensor_configuration.data_port = this->get_parameter("data_port").as_int();
+    declare_parameter<uint16_t>("data_port", 2368, descriptor);
+    sensor_configuration.data_port = get_parameter("data_port").as_int();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -386,8 +112,8 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("gnss_port", 2369, descriptor);
-    sensor_configuration.gnss_port = this->get_parameter("gnss_port").as_int();
+    declare_parameter<uint16_t>("gnss_port", 2369, descriptor);
+    sensor_configuration.gnss_port = get_parameter("gnss_port").as_int();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -395,8 +121,8 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("frame_id", "pandar", descriptor);
-    sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
+    declare_parameter<std::string>("frame_id", "pandar", descriptor);
+    sensor_configuration.frame_id = get_parameter("frame_id").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -406,18 +132,9 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
     rcl_interfaces::msg::FloatingPointRange range;
     range.set__from_value(0).set__to_value(360).set__step(0.01);
-    descriptor.floating_point_range = {range};
-    this->declare_parameter<double>("scan_phase", 0., descriptor);
-    sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("calibration_file", "", descriptor);
-    calibration_file_path = this->get_parameter("calibration_file").as_string();
+    descriptor.floating_point_range = { range };
+    declare_parameter<double>("scan_phase", 0., descriptor);
+    sensor_configuration.scan_phase = get_parameter("scan_phase").as_double();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -425,8 +142,8 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("min_range", 0.3, descriptor);
-    sensor_configuration.min_range = this->get_parameter("min_range").as_double();
+    declare_parameter<double>("min_range", 0.3, descriptor);
+    sensor_configuration.min_range = get_parameter("min_range").as_double();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -434,8 +151,8 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("max_range", 300., descriptor);
-    sensor_configuration.max_range = this->get_parameter("max_range").as_double();
+    declare_parameter<double>("max_range", 300., descriptor);
+    sensor_configuration.max_range = get_parameter("max_range").as_double();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -443,10 +160,9 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("packet_mtu_size", 1500, descriptor);
-    sensor_configuration.packet_mtu_size = this->get_parameter("packet_mtu_size").as_int();
+    declare_parameter<uint16_t>("packet_mtu_size", 1500, descriptor);
+    sensor_configuration.packet_mtu_size = get_parameter("packet_mtu_size").as_int();
   }
-
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
@@ -454,18 +170,21 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.dynamic_typing = false;
     rcl_interfaces::msg::IntegerRange range;
     RCLCPP_DEBUG_STREAM(get_logger(), sensor_configuration.sensor_model);
-    if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::HESAI_PANDARAT128) {
+    if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::HESAI_PANDARAT128)
+    {
       descriptor.additional_constraints = "200, 300, 400, 500";
       // range.set__from_value(200).set__to_value(500).set__step(100);
       // descriptor.integer_range = {range}; //todo
-      this->declare_parameter<uint16_t>("rotation_speed", 200, descriptor);
-    } else {
+      declare_parameter<uint16_t>("rotation_speed", 200, descriptor);
+    }
+    else
+    {
       descriptor.additional_constraints = "300, 600, 1200";
       // range.set__from_value(300).set__to_value(1200).set__step(300);
       // descriptor.integer_range = {range}; //todo
-      this->declare_parameter<uint16_t>("rotation_speed", 600, descriptor);
+      declare_parameter<uint16_t>("rotation_speed", 600, descriptor);
     }
-    sensor_configuration.rotation_speed = this->get_parameter("rotation_speed").as_int();
+    sensor_configuration.rotation_speed = get_parameter("rotation_speed").as_int();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -475,9 +194,9 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.additional_constraints = "";
     rcl_interfaces::msg::IntegerRange range;
     range.set__from_value(0).set__to_value(360).set__step(1);
-    descriptor.integer_range = {range};
-    this->declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
-    sensor_configuration.cloud_min_angle = this->get_parameter("cloud_min_angle").as_int();
+    descriptor.integer_range = { range };
+    declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
+    sensor_configuration.cloud_min_angle = get_parameter("cloud_min_angle").as_int();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -487,18 +206,9 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.additional_constraints = "";
     rcl_interfaces::msg::IntegerRange range;
     range.set__from_value(0).set__to_value(360).set__step(1);
-    descriptor.integer_range = {range};
-    this->declare_parameter<uint16_t>("cloud_max_angle", 360, descriptor);
-    sensor_configuration.cloud_max_angle = this->get_parameter("cloud_max_angle").as_int();
-  }
-  if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("correction_file", "", descriptor);
-    correction_file_path = this->get_parameter("correction_file").as_string();
+    descriptor.integer_range = { range };
+    declare_parameter<uint16_t>("cloud_max_angle", 360, descriptor);
+    sensor_configuration.cloud_max_angle = get_parameter("cloud_max_angle").as_int();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -508,37 +218,9 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.additional_constraints = "Dual return distance threshold [0.01, 0.5]";
     rcl_interfaces::msg::FloatingPointRange range;
     range.set__from_value(0.01).set__to_value(0.5).set__step(0.01);
-    descriptor.floating_point_range = {range};
-    this->declare_parameter<double>("dual_return_distance_threshold", 0.1, descriptor);
-    sensor_configuration.dual_return_distance_threshold =
-      this->get_parameter("dual_return_distance_threshold").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<bool>("launch_hw", "", descriptor);
-    launch_hw_ = this->get_parameter("launch_hw").as_bool();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<bool>("setup_sensor", true, descriptor);
-    this->setup_sensor = this->get_parameter("setup_sensor").as_bool();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<bool>("retry_hw", true, descriptor);
-    this->retry_hw_ = this->get_parameter("retry_hw").as_bool();
+    descriptor.floating_point_range = { range };
+    declare_parameter<double>("dual_return_distance_threshold", 0.1, descriptor);
+    sensor_configuration.dual_return_distance_threshold = get_parameter("dual_return_distance_threshold").as_double();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -546,9 +228,8 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("ptp_profile", "");
-    sensor_configuration.ptp_profile =
-      nebula::drivers::PtpProfileFromString(this->get_parameter("ptp_profile").as_string());
+    declare_parameter<std::string>("ptp_profile", "");
+    sensor_configuration.ptp_profile = nebula::drivers::PtpProfileFromString(get_parameter("ptp_profile").as_string());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -556,10 +237,11 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("ptp_transport_type", "");
-    sensor_configuration.ptp_transport_type = nebula::drivers::PtpTransportTypeFromString(
-      this->get_parameter("ptp_transport_type").as_string());
-    if (static_cast<int>(sensor_configuration.ptp_profile) > 0) {
+    declare_parameter<std::string>("ptp_transport_type", "");
+    sensor_configuration.ptp_transport_type =
+        nebula::drivers::PtpTransportTypeFromString(get_parameter("ptp_transport_type").as_string());
+    if (static_cast<int>(sensor_configuration.ptp_profile) > 0)
+    {
       sensor_configuration.ptp_transport_type = nebula::drivers::PtpTransportType::L2;
     }
   }
@@ -569,9 +251,9 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("ptp_switch_type", "");
+    declare_parameter<std::string>("ptp_switch_type", "");
     sensor_configuration.ptp_switch_type =
-      nebula::drivers::PtpSwitchTypeFromString(this->get_parameter("ptp_switch_type").as_string());
+        nebula::drivers::PtpSwitchTypeFromString(get_parameter("ptp_switch_type").as_string());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -580,320 +262,144 @@ Status HesaiRosWrapper::GetParameters(drivers::HesaiSensorConfiguration & sensor
     descriptor.dynamic_typing = false;
     rcl_interfaces::msg::IntegerRange range;
     range.set__from_value(0).set__to_value(127).set__step(1);
-    descriptor.integer_range = {range};
-    this->declare_parameter<uint8_t>("ptp_domain", 0, descriptor);
-    sensor_configuration.ptp_domain = this->get_parameter("ptp_domain").as_int();
+    descriptor.integer_range = { range };
+    declare_parameter<uint8_t>("ptp_domain", 0, descriptor);
+    sensor_configuration.ptp_domain = get_parameter("ptp_domain").as_int();
   }
+
+  if (sensor_configuration.ptp_profile == nebula::drivers::PtpProfile::PROFILE_UNKNOWN)
   {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "milliseconds";
-    this->declare_parameter<uint16_t>("diag_span", 1000, descriptor);
-    this->diag_span_ = this->get_parameter("diag_span").as_int();
-  }
-
-  ///////////////////////////////////////////////
-  // Validate ROS parameters
-  ///////////////////////////////////////////////
-
-  if (sensor_configuration.ptp_profile == nebula::drivers::PtpProfile::PROFILE_UNKNOWN) {
-    RCLCPP_ERROR_STREAM(
-      get_logger(), "Invalid PTP Profile Provided. Please use '1588v2', '802.1as' or 'automotive'");
+    RCLCPP_ERROR_STREAM(get_logger(), "Invalid PTP Profile Provided. Please use '1588v2', '802.1as' or 'automotive'");
     return Status::SENSOR_CONFIG_ERROR;
   }
-  if (
-    sensor_configuration.ptp_transport_type ==
-    nebula::drivers::PtpTransportType::UNKNOWN_TRANSPORT) {
-    RCLCPP_ERROR_STREAM(
-      get_logger(),
-      "Invalid PTP Transport Provided. Please use 'udp' or 'l2', 'udp' is only available when "
-      "using the '1588v2' PTP Profile");
+  if (sensor_configuration.ptp_transport_type == nebula::drivers::PtpTransportType::UNKNOWN_TRANSPORT)
+  {
+    RCLCPP_ERROR_STREAM(get_logger(),
+                        "Invalid PTP Transport Provided. Please use 'udp' or 'l2', 'udp' is only available when "
+                        "using the '1588v2' PTP Profile");
     return Status::SENSOR_CONFIG_ERROR;
   }
-  if (sensor_configuration.ptp_switch_type == nebula::drivers::PtpSwitchType::UNKNOWN_SWITCH) {
-    RCLCPP_ERROR_STREAM(
-      get_logger(), "Invalid PTP Switch Type Provided. Please use 'tsn' or 'non_tsn'");
+  if (sensor_configuration.ptp_switch_type == nebula::drivers::PtpSwitchType::UNKNOWN_SWITCH)
+  {
+    RCLCPP_ERROR_STREAM(get_logger(), "Invalid PTP Switch Type Provided. Please use 'tsn' or 'non_tsn'");
     return Status::SENSOR_CONFIG_ERROR;
   }
-  if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
+  if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN)
+  {
     return Status::INVALID_SENSOR_MODEL;
   }
-  if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
+  if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN)
+  {
     return Status::INVALID_ECHO_MODE;
   }
-  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
+  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360)
+  {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
-  hw_interface_.SetSensorConfiguration(
-    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
-
-  RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
+  auto new_cfg_ptr_ = std::make_shared<nebula::drivers::HesaiSensorConfiguration>(sensor_configuration);
+  sensor_cfg_ptr_.swap(new_cfg_ptr_);
   return Status::OK;
 }
 
-Status HesaiRosWrapper::GetCalibrationData(
-  drivers::HesaiCalibrationConfiguration & calibration_configuration,
-  drivers::HesaiCorrection & correction_configuration)
+void HesaiRosWrapper::ReceiveScanMessageCallback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg)
 {
-  calibration_configuration.calibration_file = calibration_file_path;  // todo
+  if (hw_interface_wrapper_)
+  {
+    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 1000,
+                          "Ignoring received PandarScan. Launch with launch_hw:=false to enable PandarScan replay.");
+    return;
+  }
 
-  bool run_local = !launch_hw_;
-  if (sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDARAT128) {
-    std::string calibration_file_path_from_sensor;
-    if (launch_hw_ && !calibration_configuration.calibration_file.empty()) {
-      int ext_pos = calibration_configuration.calibration_file.find_last_of('.');
-      calibration_file_path_from_sensor +=
-        calibration_configuration.calibration_file.substr(0, ext_pos);
-      calibration_file_path_from_sensor += "_from_sensor";
-      calibration_file_path_from_sensor += calibration_configuration.calibration_file.substr(
-        ext_pos, calibration_configuration.calibration_file.size() - ext_pos);
-    }
-    if (launch_hw_) {
-      run_local = false;
-      RCLCPP_INFO_STREAM(
-        this->get_logger(),
-        "Trying to acquire calibration data from sensor: '" << sensor_cfg_ptr_->sensor_ip << "'");
-      std::future<void> future = std::async(
-        std::launch::async,
-        [this, &calibration_configuration, &calibration_file_path_from_sensor, &run_local]() {
-          auto str = hw_interface_.GetLidarCalibrationString();
-          auto rt =
-            calibration_configuration.SaveFileFromString(calibration_file_path_from_sensor, str);
-          RCLCPP_ERROR_STREAM(get_logger(), str);
-          if (rt == Status::OK) {
-            RCLCPP_INFO_STREAM(
-              get_logger(),
-              "SaveFileFromString success:" << calibration_file_path_from_sensor << "\n");
-          } else {
-            RCLCPP_ERROR_STREAM(
-              get_logger(),
-              "SaveFileFromString failed:" << calibration_file_path_from_sensor << "\n");
-          }
-          rt = calibration_configuration.LoadFromString(str);
-          if (rt == Status::OK) {
-            RCLCPP_INFO_STREAM(get_logger(), "LoadFromString success:" << str << "\n");
-          } else {
-            RCLCPP_ERROR_STREAM(get_logger(), "LoadFromString failed:" << str << "\n");
-          }
-        });
-      std::future_status status;
-      status = future.wait_for(std::chrono::milliseconds(5000));
-      if (status == std::future_status::timeout) {
-        std::cerr << "# std::future_status::timeout\n";
-        RCLCPP_ERROR_STREAM(get_logger(), "GetCalibration Timeout");
-        run_local = true;
-      } else if (status == std::future_status::ready && !run_local) {
-        RCLCPP_INFO_STREAM(
-          this->get_logger(),
-          "Acquired calibration data from sensor: '" << sensor_cfg_ptr_->sensor_ip << "'");
-        RCLCPP_INFO_STREAM(
-          this->get_logger(),
-          "The calibration has been saved in '" << calibration_file_path_from_sensor << "'");
-      }
-    }
-    if (run_local) {
-      RCLCPP_WARN_STREAM(get_logger(), "Running locally");
-      bool run_org = false;
-      if (calibration_file_path_from_sensor.empty()) {
-        run_org = true;
-      } else {
-        RCLCPP_INFO_STREAM(
-          get_logger(), "Trying to load file: " << calibration_file_path_from_sensor);
-        auto cal_status = calibration_configuration.LoadFromFile(calibration_file_path_from_sensor);
+  for (auto& pkt : scan_msg->packets)
+  {
+    auto nebula_pkt_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
+    nebula_pkt_ptr->stamp = pkt.stamp;
+    std::copy(pkt.data.begin(), pkt.data.end(), std::back_inserter(nebula_pkt_ptr->data));
 
-        if (cal_status != Status::OK) {
-          run_org = true;
-        } else {
-          RCLCPP_INFO_STREAM(
-            this->get_logger(),
-            "Load calibration data from: '" << calibration_file_path_from_sensor << "'");
-        }
-      }
-      if (run_org) {
-        RCLCPP_INFO_STREAM(
-          get_logger(), "Trying to load file: " << calibration_configuration.calibration_file);
-        if (calibration_configuration.calibration_file.empty()) {
-          RCLCPP_ERROR_STREAM(
-            this->get_logger(),
-            "Empty Calibration_file File: '" << calibration_configuration.calibration_file << "'");
-          return Status::INVALID_CALIBRATION_FILE;
-        } else {
-          auto cal_status =
-            calibration_configuration.LoadFromFile(calibration_configuration.calibration_file);
+    packet_queue_.push(std::move(nebula_pkt_ptr));
+  }
+}
 
-          if (cal_status != Status::OK) {
-            RCLCPP_ERROR_STREAM(
-              this->get_logger(),
-              "Given Calibration File: '" << calibration_configuration.calibration_file << "'");
-            return cal_status;
-          } else {
-            RCLCPP_INFO_STREAM(
-              this->get_logger(),
-              "Load calibration data from: '" << calibration_configuration.calibration_file << "'");
-          }
-        }
-      }
-    }
-  } else {  // sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128
-    std::string correction_file_path_from_sensor;
-    if (launch_hw_ && !correction_file_path.empty()) {
-      int ext_pos = correction_file_path.find_last_of('.');
-      correction_file_path_from_sensor += correction_file_path.substr(0, ext_pos);
-      correction_file_path_from_sensor += "_from_sensor";
-      correction_file_path_from_sensor +=
-        correction_file_path.substr(ext_pos, correction_file_path.size() - ext_pos);
-    }
-    std::future<void> future = std::async(
-      std::launch::async,
-      [this, &correction_configuration, &correction_file_path_from_sensor, &run_local]() {
-        if (launch_hw_) {
-          RCLCPP_INFO_STREAM(this->get_logger(), "Trying to acquire calibration data from sensor");
-          auto received_bytes = hw_interface_.GetLidarCalibrationBytes();
-          RCLCPP_INFO_STREAM(
-            get_logger(), "AT128 calibration size:" << received_bytes.size() << "\n");
-          auto rt = correction_configuration.SaveFileFromBinary(
-            correction_file_path_from_sensor, received_bytes);
-          if (rt == Status::OK) {
-            RCLCPP_INFO_STREAM(
-              get_logger(),
-              "SaveFileFromBinary success:" << correction_file_path_from_sensor << "\n");
-          } else {
-            RCLCPP_ERROR_STREAM(
-              get_logger(),
-              "SaveFileFromBinary failed:" << correction_file_path_from_sensor
-                                           << ". Falling back to offline calibration file.");
-            run_local = true;
-          }
-          rt = correction_configuration.LoadFromBinary(received_bytes);
-          if (rt == Status::OK) {
-            RCLCPP_INFO_STREAM(get_logger(), "LoadFromBinary success" << "\n");
-            run_local = false;
-          } else {
-            RCLCPP_ERROR_STREAM(
-              get_logger(),
-              "LoadFromBinary failed" << ". Falling back to offline calibration file.");
-            run_local = true;
-          }
-        } else {
-          RCLCPP_ERROR_STREAM(get_logger(), "Falling back to offline calibration file.");
-          run_local = true;
-        }
-      });
-    if (!run_local) {
-      std::future_status status;
-      status = future.wait_for(std::chrono::milliseconds(8000));
-      if (status == std::future_status::timeout) {
-        std::cerr << "# std::future_status::timeout\n";
-        run_local = true;
-      } else if (status == std::future_status::ready && !run_local) {
-        RCLCPP_INFO_STREAM(
-          this->get_logger(),
-          "Acquired correction data from sensor: '" << sensor_cfg_ptr_->sensor_ip << "'");
-        RCLCPP_INFO_STREAM(
-          this->get_logger(),
-          "The correction has been saved in '" << correction_file_path_from_sensor << "'");
-      }
-    }
-    if (run_local) {
-      bool run_org = false;
-      if (correction_file_path_from_sensor.empty()) {
-        run_org = true;
-      } else {
-        auto cal_status = correction_configuration.LoadFromFile(correction_file_path_from_sensor);
+Status HesaiRosWrapper::GetStatus()
+{
+  return wrapper_status_;
+}
 
-        if (cal_status != Status::OK) {
-          run_org = true;
-        } else {
-          RCLCPP_INFO_STREAM(
-            this->get_logger(),
-            "Load correction data from: '" << correction_file_path_from_sensor << "'");
-        }
-      }
-      if (run_org) {
-        if (correction_file_path.empty()) {
-          RCLCPP_ERROR_STREAM(
-            this->get_logger(), "Empty Correction File: '" << correction_file_path << "'");
-          return Status::INVALID_CALIBRATION_FILE;
-        } else {
-          auto cal_status = correction_configuration.LoadFromFile(correction_file_path);
-
-          if (cal_status != Status::OK) {
-            RCLCPP_ERROR_STREAM(
-              this->get_logger(), "Given Correction File: '" << correction_file_path << "'");
-            return cal_status;
-          } else {
-            RCLCPP_INFO_STREAM(
-              this->get_logger(), "Load correction data from: '" << correction_file_path << "'");
-          }
-        }
-      }
-    }
-  }  // end AT128
+Status HesaiRosWrapper::DeclareAndGetWrapperParams()
+{
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    declare_parameter<bool>("launch_hw", "", descriptor);
+    launch_hw_ = get_parameter("launch_hw").as_bool();
+  }
 
   return Status::OK;
 }
 
 HesaiRosWrapper::~HesaiRosWrapper()
 {
-  RCLCPP_INFO_STREAM(get_logger(), "Closing TcpDriver");
-  hw_interface_.FinalizeTcpDriver();
 }
 
 Status HesaiRosWrapper::StreamStart()
 {
-  if (Status::OK == interface_status_) {
-    interface_status_ = hw_interface_.SensorInterfaceStart();
+  if (!hw_interface_wrapper_)
+  {
+    return Status::UDP_CONNECTION_ERROR;
   }
-  return interface_status_;
+
+  if (hw_interface_wrapper_->Status() != Status::OK)
+  {
+    return hw_interface_wrapper_->Status();
+  }
+
+  return hw_interface_wrapper_->HwInterface()->SensorInterfaceStart();
 }
 
-rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::paramCallback(
-  const std::vector<rclcpp::Parameter> & p)
+rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::paramCallback(const std::vector<rclcpp::Parameter>& p)
 {
   std::scoped_lock lock(mtx_config_);
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "add_on_set_parameters_callback");
-  RCLCPP_DEBUG_STREAM(this->get_logger(), p);
-  RCLCPP_DEBUG_STREAM(this->get_logger(), *sensor_cfg_ptr_);
-  RCLCPP_INFO_STREAM(this->get_logger(), p);
+  RCLCPP_DEBUG_STREAM(get_logger(), "add_on_set_parameters_callback");
+  RCLCPP_DEBUG_STREAM(get_logger(), p);
+  RCLCPP_DEBUG_STREAM(get_logger(), *sensor_cfg_ptr_);
 
-  std::shared_ptr<drivers::HesaiSensorConfiguration> new_param =
-    std::make_shared<drivers::HesaiSensorConfiguration>(*sensor_cfg_ptr_);
-  RCLCPP_INFO_STREAM(this->get_logger(), new_param);
+  drivers::HesaiSensorConfiguration new_cfg(*sensor_cfg_ptr_);
+
   std::string sensor_model_str;
   std::string return_mode_str;
-  if (
-    get_param(p, "sensor_model", sensor_model_str) | get_param(p, "return_mode", return_mode_str) |
-    get_param(p, "host_ip", new_param->host_ip) | get_param(p, "sensor_ip", new_param->sensor_ip) |
-    get_param(p, "frame_id", new_param->frame_id) |
-    get_param(p, "data_port", new_param->data_port) |
-    get_param(p, "gnss_port", new_param->gnss_port) |
-    get_param(p, "scan_phase", new_param->scan_phase) |
-    get_param(p, "packet_mtu_size", new_param->packet_mtu_size) |
-    get_param(p, "rotation_speed", new_param->rotation_speed) |
-    get_param(p, "cloud_min_angle", new_param->cloud_min_angle) |
-    get_param(p, "cloud_max_angle", new_param->cloud_max_angle) |
-    get_param(p, "dual_return_distance_threshold", new_param->dual_return_distance_threshold)) {
+  if (get_param(p, "sensor_model", sensor_model_str) | get_param(p, "return_mode", return_mode_str) |
+      get_param(p, "host_ip", new_cfg.host_ip) | get_param(p, "sensor_ip", new_cfg.sensor_ip) |
+      get_param(p, "frame_id", new_cfg.frame_id) | get_param(p, "data_port", new_cfg.data_port) |
+      get_param(p, "gnss_port", new_cfg.gnss_port) | get_param(p, "scan_phase", new_cfg.scan_phase) |
+      get_param(p, "packet_mtu_size", new_cfg.packet_mtu_size) |
+      get_param(p, "rotation_speed", new_cfg.rotation_speed) |
+      get_param(p, "cloud_min_angle", new_cfg.cloud_min_angle) |
+      get_param(p, "cloud_max_angle", new_cfg.cloud_max_angle) |
+      get_param(p, "dual_return_distance_threshold", new_cfg.dual_return_distance_threshold))
+  {
     if (0 < sensor_model_str.length())
-      new_param->sensor_model = nebula::drivers::SensorModelFromString(sensor_model_str);
+      new_cfg.sensor_model = nebula::drivers::SensorModelFromString(sensor_model_str);
     if (0 < return_mode_str.length())
-      new_param->return_mode = nebula::drivers::ReturnModeFromString(return_mode_str);
+      new_cfg.return_mode = nebula::drivers::ReturnModeFromString(return_mode_str);
 
-    sensor_cfg_ptr_.swap(new_param);
-    RCLCPP_INFO_STREAM(this->get_logger(), "Update sensor_configuration");
-    RCLCPP_DEBUG_STREAM(this->get_logger(), "hw_interface_.SetSensorConfiguration");
-    hw_interface_.SetSensorConfiguration(
-      std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
-    hw_interface_.CheckAndSetConfig();
+    auto new_cfg_ptr = std::make_shared<nebula::drivers::HesaiSensorConfiguration>(new_cfg);
+    sensor_cfg_ptr_.swap(new_cfg_ptr);
+    RCLCPP_INFO_STREAM(get_logger(), "Update sensor_configuration");
+    RCLCPP_DEBUG_STREAM(get_logger(), "hw_interface_.SetSensorConfiguration");
+    hw_interface_wrapper_->HwInterface()->SetSensorConfiguration(
+        std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
+    hw_interface_wrapper_->HwInterface()->CheckAndSetConfig();
   }
 
   auto result = std::make_shared<rcl_interfaces::msg::SetParametersResult>();
   result->successful = true;
   result->reason = "success";
 
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "add_on_set_parameters_callback success");
+  RCLCPP_DEBUG_STREAM(get_logger(), "add_on_set_parameters_callback success");
 
   return *result;
 }
@@ -901,310 +407,47 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::paramCallback(
 std::vector<rcl_interfaces::msg::SetParametersResult> HesaiRosWrapper::updateParameters()
 {
   std::scoped_lock lock(mtx_config_);
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "updateParameters start");
+  RCLCPP_DEBUG_STREAM(get_logger(), "updateParameters start");
   std::ostringstream os_sensor_model;
   os_sensor_model << sensor_cfg_ptr_->sensor_model;
   std::ostringstream os_return_mode;
   os_return_mode << sensor_cfg_ptr_->return_mode;
-  RCLCPP_INFO_STREAM(this->get_logger(), "set_parameters");
+  RCLCPP_INFO_STREAM(get_logger(), "set_parameters");
   auto results = set_parameters(
-    {rclcpp::Parameter("sensor_model", os_sensor_model.str()),
-     rclcpp::Parameter("return_mode", os_return_mode.str()),
-     rclcpp::Parameter("host_ip", sensor_cfg_ptr_->host_ip),
-     rclcpp::Parameter("sensor_ip", sensor_cfg_ptr_->sensor_ip),
-     rclcpp::Parameter("frame_id", sensor_cfg_ptr_->frame_id),
-     rclcpp::Parameter("data_port", sensor_cfg_ptr_->data_port),
-     rclcpp::Parameter("gnss_port", sensor_cfg_ptr_->gnss_port),
-     rclcpp::Parameter("scan_phase", sensor_cfg_ptr_->scan_phase),
-     rclcpp::Parameter("packet_mtu_size", sensor_cfg_ptr_->packet_mtu_size),
-     rclcpp::Parameter("rotation_speed", sensor_cfg_ptr_->rotation_speed),
-     rclcpp::Parameter("cloud_min_angle", sensor_cfg_ptr_->cloud_min_angle),
-     rclcpp::Parameter("cloud_max_angle", sensor_cfg_ptr_->cloud_max_angle),
-     rclcpp::Parameter(
-       "dual_return_distance_threshold", sensor_cfg_ptr_->dual_return_distance_threshold)});
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "updateParameters end");
+      { rclcpp::Parameter("sensor_model", os_sensor_model.str()),
+        rclcpp::Parameter("return_mode", os_return_mode.str()), rclcpp::Parameter("host_ip", sensor_cfg_ptr_->host_ip),
+        rclcpp::Parameter("sensor_ip", sensor_cfg_ptr_->sensor_ip),
+        rclcpp::Parameter("frame_id", sensor_cfg_ptr_->frame_id),
+        rclcpp::Parameter("data_port", sensor_cfg_ptr_->data_port),
+        rclcpp::Parameter("gnss_port", sensor_cfg_ptr_->gnss_port),
+        rclcpp::Parameter("scan_phase", sensor_cfg_ptr_->scan_phase),
+        rclcpp::Parameter("packet_mtu_size", sensor_cfg_ptr_->packet_mtu_size),
+        rclcpp::Parameter("rotation_speed", sensor_cfg_ptr_->rotation_speed),
+        rclcpp::Parameter("cloud_min_angle", sensor_cfg_ptr_->cloud_min_angle),
+        rclcpp::Parameter("cloud_max_angle", sensor_cfg_ptr_->cloud_max_angle),
+        rclcpp::Parameter("dual_return_distance_threshold", sensor_cfg_ptr_->dual_return_distance_threshold) });
+  RCLCPP_DEBUG_STREAM(get_logger(), "updateParameters end");
   return results;
 }
 
-void HesaiRosWrapper::InitializeHesaiDiagnostics()
+void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t>& packet)
 {
-  RCLCPP_INFO_STREAM(this->get_logger(), "InitializeHesaiDiagnostics");
-  using std::chrono_literals::operator""s;
-  std::ostringstream os;
-  auto hardware_id = info_model_ + ": " + info_serial_;
-  diagnostics_updater_.setHardwareID(hardware_id);
-  RCLCPP_INFO_STREAM(this->get_logger(), "hardware_id: " + hardware_id);
-
-  diagnostics_updater_.add("hesai_status", this, &HesaiRosWrapper::HesaiCheckStatus);
-  diagnostics_updater_.add("hesai_ptp", this, &HesaiRosWrapper::HesaiCheckPtp);
-  diagnostics_updater_.add("hesai_temperature", this, &HesaiRosWrapper::HesaiCheckTemperature);
-  diagnostics_updater_.add("hesai_rpm", this, &HesaiRosWrapper::HesaiCheckRpm);
-
-  current_status_.reset();
-  current_monitor_.reset();
-  current_status_time_.reset(new rclcpp::Time(this->get_clock()->now()));
-  current_lidar_monitor_time_.reset(new rclcpp::Time(this->get_clock()->now()));
-  current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
-  current_monitor_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
-
-  auto fetch_diag_from_sensor = [this]() {
-    OnHesaiStatusTimer();
-    if (hw_interface_.UseHttpGetLidarMonitor()) {
-      OnHesaiLidarMonitorTimerHttp();
-    } else {
-      OnHesaiLidarMonitorTimer();
-    }
-  };
-
-  fetch_diagnostics_timer_ =
-    create_wall_timer(std::chrono::milliseconds(diag_span_), std::move(fetch_diag_from_sensor));
-
-  if (hw_interface_.UseHttpGetLidarMonitor()) {
-    diagnostics_updater_.add("hesai_voltage", this, &HesaiRosWrapper::HesaiCheckVoltageHttp);
-  } else {
-    diagnostics_updater_.add("hesai_voltage", this, &HesaiRosWrapper::HesaiCheckVoltage);
+  if (!decoder_wrapper_ || decoder_wrapper_->Status() != Status::OK)
+  {
+    return;
   }
 
-  auto on_timer_update = [this] {
-    RCLCPP_DEBUG_STREAM(get_logger(), "OnUpdateTimer");
-    auto now = this->get_clock()->now();
-    auto dif = (now - *current_status_time_).seconds();
+  const auto now = std::chrono::system_clock::now();
+  const auto timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
 
-    RCLCPP_DEBUG_STREAM(get_logger(), "dif(status): " << dif);
+  auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
+  msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
+  msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
+  msg_ptr->data.swap(packet);
 
-    if (diag_span_ * 2.0 < dif * 1000) {
-      current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
-      RCLCPP_DEBUG_STREAM(get_logger(), "STALE");
-    } else {
-      current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::OK;
-      RCLCPP_DEBUG_STREAM(get_logger(), "OK");
-    }
-    dif = (now - *current_lidar_monitor_time_).seconds();
-    RCLCPP_DEBUG_STREAM(get_logger(), "dif(monitor): " << dif);
-    if (diag_span_ * 2.0 < dif * 1000) {
-      current_monitor_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
-      RCLCPP_DEBUG_STREAM(get_logger(), "STALE");
-    } else {
-      current_monitor_status_ = diagnostic_msgs::msg::DiagnosticStatus::OK;
-      RCLCPP_DEBUG_STREAM(get_logger(), "OK");
-    }
-    diagnostics_updater_.force_update();
-  };
-  diagnostics_update_timer_ =
-    create_wall_timer(std::chrono::milliseconds(1000), std::move(on_timer_update));
-
-  RCLCPP_DEBUG_STREAM(get_logger(), "add_timer");
-}
-
-std::string HesaiRosWrapper::GetPtreeValue(
-  boost::property_tree::ptree * pt, const std::string & key)
-{
-  boost::optional<std::string> value = pt->get_optional<std::string>(key);
-  if (value) {
-    return value.get();
-  } else {
-    return MSG_NOT_SUPPORTED;
-  }
-}
-std::string HesaiRosWrapper::GetFixedPrecisionString(double val, int pre)
-{
-  std::stringstream ss;
-  ss << std::fixed << std::setprecision(pre) << val;
-  return ss.str();
-}
-
-void HesaiRosWrapper::OnHesaiStatusTimer()
-{
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiStatusTimer" << std::endl);
-  try {
-    auto result = hw_interface_.GetLidarStatus();
-    std::scoped_lock lock(mtx_lidar_status_);
-    current_status_time_.reset(new rclcpp::Time(this->get_clock()->now()));
-    current_status_.reset(new HesaiLidarStatus(result));
-  } catch (const std::system_error & error) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger("HesaiRosWrapper::OnHesaiStatusTimer(std::system_error)"), error.what());
-  } catch (const boost::system::system_error & error) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger("HesaiRosWrapper::OnHesaiStatusTimer(boost::system::system_error)"),
-      error.what());
-  }
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiStatusTimer END" << std::endl);
-}
-
-void HesaiRosWrapper::OnHesaiLidarMonitorTimerHttp()
-{
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiLidarMonitorTimerHttp");
-  try {
-    hw_interface_.GetLidarMonitorAsyncHttp([this](const std::string & str) {
-      std::scoped_lock lock(mtx_lidar_monitor_);
-      current_lidar_monitor_time_.reset(new rclcpp::Time(this->get_clock()->now()));
-      current_lidar_monitor_tree_ =
-        std::make_unique<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
-    });
-  } catch (const std::system_error & error) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger("HesaiRosWrapper::OnHesaiLidarMonitorTimerHttp(std::system_error)"),
-      error.what());
-  } catch (const boost::system::system_error & error) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger(
-        "HesaiRosWrapper::OnHesaiLidarMonitorTimerHttp(boost::system::system_error)"),
-      error.what());
-  }
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiLidarMonitorTimerHttp END");
-}
-
-void HesaiRosWrapper::OnHesaiLidarMonitorTimer()
-{
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiLidarMonitorTimer");
-  try {
-    auto result = hw_interface_.GetLidarMonitor();
-    std::scoped_lock lock(mtx_lidar_monitor_);
-    current_lidar_monitor_time_.reset(new rclcpp::Time(this->get_clock()->now()));
-    current_monitor_.reset(new HesaiLidarMonitor(result));
-  } catch (const std::system_error & error) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger("HesaiRosWrapper::OnHesaiLidarMonitorTimer(std::system_error)"),
-      error.what());
-  } catch (const boost::system::system_error & error) {
-    RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger("HesaiRosWrapper::OnHesaiLidarMonitorTimer(boost::system::system_error)"),
-      error.what());
-  }
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "OnHesaiLidarMonitorTimer END");
-}
-
-void HesaiRosWrapper::HesaiCheckStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
-{
-  std::scoped_lock lock(mtx_lidar_status_);
-  if (current_status_) {
-    uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-    std::vector<std::string> msg;
-
-    diagnostics.add("system_uptime", std::to_string(current_status_->system_uptime));
-    diagnostics.add("startup_times", std::to_string(current_status_->startup_times));
-    diagnostics.add("total_operation_time", std::to_string(current_status_->total_operation_time));
-
-    diagnostics.summary(level, boost::algorithm::join(msg, ", "));
-  } else {
-    diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
-  }
-}
-
-void HesaiRosWrapper::HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
-{
-  std::scoped_lock lock(mtx_lidar_status_);
-  if (current_status_) {
-    uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-    std::vector<std::string> msg;
-    auto gps_status = current_status_->get_str_gps_pps_lock();
-    auto gprmc_status = current_status_->get_str_gps_gprmc_status();
-    auto ptp_status = current_status_->get_str_ptp_clock_status();
-    std::transform(gps_status.cbegin(), gps_status.cend(), gps_status.begin(), toupper);
-    std::transform(gprmc_status.cbegin(), gprmc_status.cend(), gprmc_status.begin(), toupper);
-    std::transform(ptp_status.cbegin(), ptp_status.cend(), ptp_status.begin(), toupper);
-    diagnostics.add("gps_pps_lock", gps_status);
-    diagnostics.add("gps_gprmc_status", gprmc_status);
-    diagnostics.add("ptp_clock_status", ptp_status);
-    if (gps_status != "UNKNOWN") {
-      msg.emplace_back("gps_pps_lock: " + gps_status);
-    }
-    if (gprmc_status != "UNKNOWN") {
-      msg.emplace_back("gprmc_status: " + gprmc_status);
-    }
-    if (ptp_status != "UNKNOWN") {
-      msg.emplace_back("ptp_status: " + ptp_status);
-    }
-    if (ptp_status == "FREE RUN" && gps_status == "UNKNOWN") {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-    }
-    diagnostics.summary(level, boost::algorithm::join(msg, ", "));
-  } else {
-    diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
-  }
-}
-
-void HesaiRosWrapper::HesaiCheckTemperature(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
-{
-  std::scoped_lock lock(mtx_lidar_status_);
-  if (current_status_) {
-    uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-    std::vector<std::string> msg;
-    for (size_t i = 0; i < current_status_->temperature.size(); i++) {
-      diagnostics.add(
-        temperature_names_[i], GetFixedPrecisionString(current_status_->temperature[i] * 0.01));
-    }
-    diagnostics.summary(level, boost::algorithm::join(msg, ", "));
-  } else {
-    diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
-  }
-}
-
-void HesaiRosWrapper::HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
-{
-  std::scoped_lock lock(mtx_lidar_status_);
-  if (current_status_) {
-    uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-    std::vector<std::string> msg;
-    diagnostics.add("motor_speed", std::to_string(current_status_->motor_speed));
-
-    diagnostics.summary(level, boost::algorithm::join(msg, ", "));
-  } else {
-    diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
-  }
-}
-
-void HesaiRosWrapper::HesaiCheckVoltageHttp(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
-{
-  std::scoped_lock lock(mtx_lidar_monitor_);
-  if (current_lidar_monitor_tree_) {
-    uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-    std::vector<std::string> msg;
-    std::string key = "";
-
-    std::string mes;
-    key = "lidarInCur";
-    try {
-      mes = GetPtreeValue(current_lidar_monitor_tree_.get(), "Body." + key);
-    } catch (boost::bad_lexical_cast & ex) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-      mes = MSG_ERROR + std::string(ex.what());
-    }
-    diagnostics.add(key, mes);
-    key = "lidarInVol";
-    try {
-      mes = GetPtreeValue(current_lidar_monitor_tree_.get(), "Body." + key);
-    } catch (boost::bad_lexical_cast & ex) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-      mes = MSG_ERROR + std::string(ex.what());
-    }
-    diagnostics.add(key, mes);
-
-    diagnostics.summary(level, boost::algorithm::join(msg, ", "));
-  } else {
-    diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
-  }
-}
-
-void HesaiRosWrapper::HesaiCheckVoltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
-{
-  std::scoped_lock lock(mtx_lidar_monitor_);
-  if (current_monitor_) {
-    uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-    std::vector<std::string> msg;
-    diagnostics.add(
-      "input_voltage", GetFixedPrecisionString(current_monitor_->input_voltage * 0.01) + " V");
-    diagnostics.add(
-      "input_current", GetFixedPrecisionString(current_monitor_->input_current * 0.01) + " mA");
-    diagnostics.add(
-      "input_power", GetFixedPrecisionString(current_monitor_->input_power * 0.01) + " W");
-
-    diagnostics.summary(level, boost::algorithm::join(msg, ", "));
-  } else {
-    diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
+  if (!packet_queue_.try_push(std::move(msg_ptr)))
+  {
+    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");
   }
 }
 

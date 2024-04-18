@@ -190,7 +190,7 @@ struct PacketBase
 /// @brief Get the number of returns for a given return mode
 /// @param return_mode The return mode
 /// @return The number of returns
-int get_n_returns(uint8_t return_mode)
+inline int get_n_returns(uint8_t return_mode)
 {
   switch (return_mode) {
     case return_mode::SINGLE_FIRST:
