@@ -46,7 +46,7 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
   auto response_complete = std::make_shared<bool>(false);
 
   // Low byte is for PTC error code, the rest is nebula-specific
-  auto error_code = std::make_shared<uint32_t>(0);
+  auto error_code = std::make_shared<ptc_error_t>();
 
   std::stringstream ss;
   ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(command_id) << " (" << len << ") ";
@@ -66,14 +66,15 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
   tcp_driver_->asyncSendReceiveHeaderPayload(
     send_buf,
     [this, log_tag, command_id, response_complete, error_code](const std::vector<uint8_t> & header_bytes) {
+      error_code->ptc_error_code = header_bytes[3];
+
       size_t payload_len = (header_bytes[4] << 24) | (header_bytes[5] << 16) | (header_bytes[6] << 8) | header_bytes[7];
       PrintDebug(log_tag + "Received header (expecting " + std::to_string(payload_len) + "B payload)");
       // If command_id in the response does not match, we got a response for another command (or rubbish), probably as a
       // result of too many simultaneous TCP connections to the sensor (e.g. from GUI, Web UI, another nebula instance, etc.)
       if (header_bytes[2] != command_id) {
-        *error_code = (TCP_ERROR_UNRELATED_RESPONSE << 8);
+        error_code->error_flags |= TCP_ERROR_UNRELATED_RESPONSE;
       }
-      *error_code |= header_bytes[3];
       if (payload_len == 0) { 
         *response_complete = true; 
       }
@@ -84,7 +85,7 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
       // Header had payload length 0 (thus, header callback processed request successfully already),
       // but we still received a payload: invalid state
       if (*response_complete == true) {
-        *error_code |= (TCP_ERROR_UNEXPECTED_PAYLOAD << 8);
+        error_code->error_flags |= TCP_ERROR_UNEXPECTED_PAYLOAD;
         return;
       }
 
@@ -100,13 +101,17 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
   this->IOContextRun();
   if (!tm.try_lock_for(std::chrono::seconds(1))) {
     PrintError(log_tag + "Request did not finish within 1s");
-    *error_code |= (TCP_ERROR_TIMEOUT << 8);
+    error_code->error_flags |= TCP_ERROR_TIMEOUT;
     return *error_code;
   }
 
   if (!response_complete) {
     PrintError(log_tag + "Did not receive response");
-    *error_code |= (TCP_ERROR_INCOMPLETE_RESPONSE << 8);
+    error_code->error_flags |= TCP_ERROR_INCOMPLETE_RESPONSE;
+    return *error_code;
+  }
+
+  if (!error_code->ok()) {
     return *error_code;
   }
 
@@ -239,13 +244,13 @@ boost::property_tree::ptree HesaiHwInterface::ParseJson(const std::string & str)
 std::vector<uint8_t> HesaiHwInterface::GetLidarCalibrationBytes()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_GET_LIDAR_CALIBRATION);
-  return response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  return response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 }
 
 std::string HesaiHwInterface::GetLidarCalibrationString()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_GET_LIDAR_CALIBRATION);
-  auto calib_data = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  auto calib_data = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   std::string calib_string(calib_data.begin(), calib_data.end());
   return calib_string;
 }
@@ -253,7 +258,7 @@ std::string HesaiHwInterface::GetLidarCalibrationString()
 HesaiPtpDiagStatus HesaiHwInterface::GetPtpDiagStatus()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_STATUS});
-  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
   if (response.size() != sizeof(HesaiPtpDiagStatus)) {
     throw std::runtime_error("Unexpected payload size");
@@ -272,7 +277,7 @@ HesaiPtpDiagStatus HesaiHwInterface::GetPtpDiagStatus()
 HesaiPtpDiagPort HesaiHwInterface::GetPtpDiagPort()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_PORT_DATA_SET});
-  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
   if (response.size() != sizeof(HesaiPtpDiagPort)) {
     throw std::runtime_error("Unexpected payload size");
@@ -290,7 +295,7 @@ HesaiPtpDiagPort HesaiHwInterface::GetPtpDiagPort()
 HesaiPtpDiagTime HesaiHwInterface::GetPtpDiagTime()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_TIME_STATUS_NP});
-  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
   if (response.size() != sizeof(HesaiPtpDiagTime)) {
     throw std::runtime_error("Unexpected payload size");
@@ -309,7 +314,7 @@ HesaiPtpDiagTime HesaiHwInterface::GetPtpDiagTime()
 HesaiPtpDiagGrandmaster HesaiHwInterface::GetPtpDiagGrandmaster()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_GRANDMASTER_SETTINGS_NP});
-  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
   if (response.size() != sizeof(HesaiPtpDiagGrandmaster)) {
     throw std::runtime_error("Unexpected payload size");
@@ -328,7 +333,7 @@ HesaiPtpDiagGrandmaster HesaiHwInterface::GetPtpDiagGrandmaster()
 HesaiInventory HesaiHwInterface::GetInventory()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_GET_INVENTORY_INFO);
-  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
   if (response.size() < sizeof(HesaiInventory)) {
     throw std::runtime_error("Unexpected payload size");
@@ -345,7 +350,7 @@ HesaiInventory HesaiHwInterface::GetInventory()
 HesaiConfig HesaiHwInterface::GetConfig()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_GET_CONFIG_INFO);
-  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
   if (response.size() != sizeof(HesaiConfig)) {
     throw std::runtime_error("Unexpected payload size");
@@ -361,7 +366,7 @@ HesaiConfig HesaiHwInterface::GetConfig()
 HesaiLidarStatus HesaiHwInterface::GetLidarStatus()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_GET_LIDAR_STATUS);
-  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
   if (response.size() != sizeof(HesaiLidarStatus)) {
     throw std::runtime_error("Unexpected payload size");
@@ -380,7 +385,7 @@ Status HesaiHwInterface::SetSpinRate(uint16_t rpm)
   request_payload.emplace_back(rpm & 0xff);
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_SPIN_RATE, request_payload);
-  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return Status::OK;
 }
 
@@ -392,7 +397,7 @@ Status HesaiHwInterface::SetSyncAngle(int sync_angle, int angle)
   request_payload.emplace_back(angle & 0xff);
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_SYNC_ANGLE, request_payload);
-  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return Status::OK;
 }
 
@@ -402,7 +407,7 @@ Status HesaiHwInterface::SetTriggerMethod(int trigger_method)
   request_payload.emplace_back(trigger_method & 0xff);
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_TRIGGER_METHOD, request_payload);
-  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return Status::OK;
 }
 
@@ -412,7 +417,7 @@ Status HesaiHwInterface::SetStandbyMode(int standby_mode)
   request_payload.emplace_back(standby_mode & 0xff);
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_STANDBY_MODE, request_payload);
-  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return Status::OK;
 }
 
@@ -422,7 +427,7 @@ Status HesaiHwInterface::SetReturnMode(int return_mode)
   request_payload.emplace_back(return_mode & 0xff);
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_RETURN_MODE, request_payload);
-  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return Status::OK;
 }
 
@@ -440,7 +445,7 @@ Status HesaiHwInterface::SetDestinationIp(
   request_payload.emplace_back(gps_port & 0xff);
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_DESTINATION_IP, request_payload);
-  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return Status::OK;
 }
 
@@ -466,7 +471,7 @@ Status HesaiHwInterface::SetControlPort(
   request_payload.emplace_back(vlan_id & 0xff);
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_CONTROL_PORT, request_payload);
-  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return Status::OK;
 }
 
@@ -480,7 +485,7 @@ Status HesaiHwInterface::SetLidarRange(int method, std::vector<unsigned char> da
   request_payload.insert(request_payload.end(), data.begin(), data.end());
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_LIDAR_RANGE, request_payload);
-  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return Status::OK;
 }
 
@@ -498,14 +503,14 @@ Status HesaiHwInterface::SetLidarRange(int start, int end)
   request_payload.emplace_back(end & 0xff);
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_LIDAR_RANGE, request_payload);
-  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return Status::OK;
 }
 
 HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_GET_LIDAR_RANGE);
-  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
   if (response.size() < 1) {
     throw std::runtime_error("Response payload too short");
@@ -539,7 +544,7 @@ Status HesaiHwInterface::SetClockSource(int clock_source)
   request_payload.emplace_back(clock_source & 0xff);
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_CLOCK_SOURCE, request_payload);
-  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return Status::OK;
 }
 
@@ -573,14 +578,14 @@ Status HesaiHwInterface::SetPtpConfig(
   }
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_PTP_CONFIG, request_payload);
-  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return Status::OK;
 }
 
 HesaiPtpConfig HesaiHwInterface::GetPtpConfig()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_GET_PTP_CONFIG);
-  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
   if (response.size() < sizeof(HesaiPtpConfig)) {
     throw std::runtime_error("Unexpected payload size");
@@ -604,7 +609,7 @@ HesaiPtpConfig HesaiHwInterface::GetPtpConfig()
 Status HesaiHwInterface::SendReset()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_RESET);
-  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return Status::OK;
 }
 
@@ -614,14 +619,14 @@ Status HesaiHwInterface::SetRotDir(int mode)
   request_payload.emplace_back(mode & 0xff);
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_ROTATE_DIRECTION, request_payload);
-  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return Status::OK;
 }
 
 HesaiLidarMonitor HesaiHwInterface::GetLidarMonitor()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_LIDAR_MONITOR);
-  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or(0)));
+  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
   if (response.size() != sizeof(HesaiLidarMonitor)) {
     throw std::runtime_error("Unexpected payload size");
@@ -1231,20 +1236,20 @@ void HesaiHwInterface::PrintDebug(const std::vector<uint8_t> & bytes)
   PrintDebug(ss.str());
 }
 
-std::string HesaiHwInterface::PrettyPrintPTCError(uint32_t error_code) {
-  if (error_code == 0) {
+std::string HesaiHwInterface::PrettyPrintPTCError(ptc_error_t error_code) {
+  if (error_code.ok()) {
     return "No error";
   }
 
-  uint8_t hesai_error = error_code & 0xFF;
-  uint32_t nebula_error_flags = (error_code >> 8);
+  auto ptc_error = error_code.ptc_error_code;
+  auto error_flags = error_code.error_flags;
   std::stringstream ss;
 
-  if (hesai_error) {
-    ss << "Sensor error: 0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(hesai_error) << ' ';
+  if (ptc_error) {
+    ss << "Sensor error: 0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(ptc_error) << ' ';
   }
 
-  switch(hesai_error) {
+  switch(ptc_error) {
     case PTC_ERROR_CODE_NO_ERROR:
       break;
     case PTC_ERROR_CODE_INVALID_INPUT_PARAM:
@@ -1273,27 +1278,27 @@ std::string HesaiHwInterface::PrettyPrintPTCError(uint32_t error_code) {
       break;
   }
 
-  if (!nebula_error_flags) {
+  if (!error_flags) {
     return ss.str();
   }
 
-  if (hesai_error) {
+  if (ptc_error) {
     ss << ", ";
   }
 
   ss << "Communication error: ";
   std::vector<std::string> nebula_errors;
 
-  if (nebula_error_flags & TCP_ERROR_INCOMPLETE_RESPONSE) {
+  if (error_flags & TCP_ERROR_INCOMPLETE_RESPONSE) {
     nebula_errors.push_back("Incomplete response payload");
   }
-  if (nebula_error_flags & TCP_ERROR_TIMEOUT) {
+  if (error_flags & TCP_ERROR_TIMEOUT) {
     nebula_errors.push_back("Request timeout");
   }
-  if (nebula_error_flags & TCP_ERROR_UNEXPECTED_PAYLOAD) {
+  if (error_flags & TCP_ERROR_UNEXPECTED_PAYLOAD) {
     nebula_errors.push_back("Received payload but expected payload length 0");
   }
-  if (nebula_error_flags & TCP_ERROR_UNRELATED_RESPONSE) {
+  if (error_flags & TCP_ERROR_UNRELATED_RESPONSE) {
     nebula_errors.push_back("Received unrelated response");
   }
 
