@@ -113,7 +113,6 @@ const int PTP_LOG_MIN_DELAY_INTERVAL = 0;
 const int HESAI_LIDAR_GPS_CLOCK_SOURCE = 0;
 const int HESAI_LIDAR_PTP_CLOCK_SOURCE = 1;
 
-
 /// @brief Hardware interface of hesai driver
 class HesaiHwInterface
 {
