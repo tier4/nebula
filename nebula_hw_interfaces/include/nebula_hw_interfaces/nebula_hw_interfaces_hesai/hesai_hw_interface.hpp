@@ -93,21 +93,28 @@ const uint16_t PANDAR128_E4X_EXTENDED_PACKET_SIZE = 1117;
 const uint16_t MTU_SIZE = 1500;
 
 // Time interval between Announce messages, in units of log seconds (default: 1)
-const int PTP_LOG_ANNOUNCE_INTERVAL = 1; 
+const int PTP_LOG_ANNOUNCE_INTERVAL = 1;
 // Time interval between Sync messages, in units of log seconds (default: 1)
-const int PTP_SYNC_INTERVAL = 1;  
+const int PTP_SYNC_INTERVAL = 1;
 // Minimum permitted mean time between Delay_Req messages, in units of log seconds (default: 0)
 const int PTP_LOG_MIN_DELAY_INTERVAL = 0;
 
 const int HESAI_LIDAR_GPS_CLOCK_SOURCE = 0;
 const int HESAI_LIDAR_PTP_CLOCK_SOURCE = 1;
 
-
 /// @brief Hardware interface of hesai driver
 class HesaiHwInterface : NebulaHwInterfaceBase
 {
 private:
-  typedef nebula::util::expected<std::vector<uint8_t>, uint32_t> ptc_cmd_result_t;
+  struct ptc_error_t
+  {
+    uint8_t error_flags = 0;
+    uint8_t ptc_error_code = 0;
+
+    bool ok() { return !error_flags && !ptc_error_code; }
+  };
+
+  typedef nebula::util::expected<std::vector<uint8_t>, ptc_error_t> ptc_cmd_result_t;
 
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
   std::shared_ptr<boost::asio::io_context> m_owned_ctx;
@@ -160,18 +167,17 @@ private:
   void PrintDebug(const std::vector<uint8_t> & bytes);
 
   /// @brief Convert an error code to a human-readable string
-  /// @param error_code The error code (lowest byte is Hesai PTC error code, higher bytes nebula flags)
-  /// such as TCP_ERROR_UNRELATED_RESPONSE etc.
+  /// @param error_code The error code, containing the sensor's error code (if any), along with
+  /// flags such as TCP_ERROR_UNRELATED_RESPONSE etc.
   /// @return A string description of all errors in this code
-  std::string PrettyPrintPTCError(uint32_t error_code);
+  std::string PrettyPrintPTCError(ptc_error_t error_code);
 
   /// @brief Send a PTC request with an optional payload, and return the full response payload.
   /// Blocking.
   /// @param command_id PTC command number.
   /// @param payload Payload bytes of the PTC command. Not including the 8-byte PTC header.
   /// @return The returned payload, if successful, or nullptr.
-  ptc_cmd_result_t SendReceive(
-    const uint8_t command_id, const std::vector<uint8_t> & payload = {});
+  ptc_cmd_result_t SendReceive(const uint8_t command_id, const std::vector<uint8_t> & payload = {});
 
 public:
   /// @brief Constructor
