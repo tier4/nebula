@@ -17,22 +17,22 @@ namespace nebula
 {
 namespace drivers
 {
-HesaiDriver::HesaiDriver(const std::shared_ptr<HesaiSensorConfiguration>& sensor_configuration,
-                         const std::shared_ptr<CalibrationConfigurationBase>& calibration_configuration)
+HesaiDriver::HesaiDriver(const std::shared_ptr<const HesaiSensorConfiguration>& sensor_configuration,
+                         const std::shared_ptr<const HesaiCalibrationConfigurationBase>& calibration_configuration)
 {
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;
 
-  std::shared_ptr<HesaiCalibrationConfiguration> calibration = nullptr;
-  std::shared_ptr<HesaiCorrection> correction = nullptr;
+  std::shared_ptr<const HesaiCalibrationConfiguration> calibration = nullptr;
+  std::shared_ptr<const HesaiCorrection> correction = nullptr;
 
   if (sensor_configuration->sensor_model == SensorModel::HESAI_PANDARAT128)
   {
-    correction = std::static_pointer_cast<HesaiCorrection>(calibration_configuration);
+    correction = std::static_pointer_cast<const HesaiCorrection>(calibration_configuration);
   }
   else
   {
-    calibration = std::static_pointer_cast<HesaiCalibrationConfiguration>(calibration_configuration);
+    calibration = std::static_pointer_cast<const HesaiCalibrationConfiguration>(calibration_configuration);
   }
 
   switch (sensor_configuration->sensor_model)
@@ -104,7 +104,7 @@ std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ParseCloudPacket(
 }
 
 Status HesaiDriver::SetCalibrationConfiguration(
-  const CalibrationConfigurationBase & calibration_configuration)
+  const HesaiCalibrationConfigurationBase & calibration_configuration)
 {
   throw std::runtime_error(
     "SetCalibrationConfiguration. Not yet implemented (" +

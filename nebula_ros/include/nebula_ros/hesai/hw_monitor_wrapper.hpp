@@ -1,7 +1,10 @@
 #pragma once
 
+#include "nebula_ros/common/parameter_descriptors.hpp"
+
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/hesai/hesai_common.hpp>
+
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -22,10 +25,13 @@ class HesaiHwMonitorWrapper
 public:
   HesaiHwMonitorWrapper(rclcpp::Node* const parent_node,
                         const std::shared_ptr<nebula::drivers::HesaiHwInterface>& hw_interface,
-                        std::shared_ptr<nebula::drivers::HesaiSensorConfiguration>& config);
+                        std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration>& config);
 
-  nebula::Status InitializeHwMonitor();
+  void OnConfigChange(const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & /* new_config */) {}
 
+  nebula::Status Status();
+
+private:
   void InitializeHesaiDiagnostics();
 
   std::string GetPtreeValue(boost::property_tree::ptree* pt, const std::string& key);
@@ -50,9 +56,6 @@ public:
 
   void HesaiCheckVoltage(diagnostic_updater::DiagnosticStatusWrapper& diagnostics);
 
-  nebula::Status Status();
-
-private:
   rclcpp::Logger logger_;
   diagnostic_updater::Updater diagnostics_updater_;
   nebula::Status status_;

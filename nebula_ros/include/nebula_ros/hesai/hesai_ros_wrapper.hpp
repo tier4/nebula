@@ -1,6 +1,7 @@
 #pragma once
 
 #include "boost_tcp_driver/tcp_driver.hpp"
+
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
@@ -9,6 +10,7 @@
 #include "nebula_ros/hesai/hw_interface_wrapper.hpp"
 #include "nebula_ros/hesai/hw_monitor_wrapper.hpp"
 #include "nebula_ros/hesai/mt_queue.hpp"
+#include "nebula_ros/common/parameter_descriptors.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -31,31 +33,12 @@ namespace nebula
 namespace ros
 {
 
-/// @brief Get parameter from rclcpp::Parameter
-/// @tparam T
-/// @param p Parameter from rclcpp parameter callback
-/// @param name Target parameter name
-/// @param value Corresponding value
-/// @return Whether the target name existed
-template <typename T>
-bool get_param(const std::vector<rclcpp::Parameter>& p, const std::string& name, T& value)
-{
-  auto it = std::find_if(p.cbegin(), p.cend(),
-                         [&name](const rclcpp::Parameter& parameter) { return parameter.get_name() == name; });
-  if (it != p.cend())
-  {
-    value = it->template get_value<T>();
-    return true;
-  }
-  return false;
-}
-
 /// @brief Ros wrapper of hesai driver
 class HesaiRosWrapper final : public rclcpp::Node
 {
 public:
   explicit HesaiRosWrapper(const rclcpp::NodeOptions& options);
-  ~HesaiRosWrapper() noexcept;
+  ~HesaiRosWrapper() noexcept {};
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -72,23 +55,16 @@ private:
 
   Status DeclareAndGetSensorConfigParams();
 
-  /// @brief Get configurations from ros parameters
-  /// @param sensor_configuration Output of SensorConfiguration
-  /// @return Resulting status
-  Status DeclareAndGetWrapperParams();
-
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
   /// @return SetParametersResult
-  rcl_interfaces::msg::SetParametersResult paramCallback(const std::vector<rclcpp::Parameter>& parameters);
+  rcl_interfaces::msg::SetParametersResult OnParameterChange(const std::vector<rclcpp::Parameter>& p);
 
-  /// @brief Updating rclcpp parameter
-  /// @return SetParametersResult
-  std::vector<rcl_interfaces::msg::SetParametersResult> updateParameters();
+  Status ValidateAndSetConfig(std::shared_ptr<const drivers::HesaiSensorConfiguration>& new_config);
 
   Status wrapper_status_;
 
-  std::shared_ptr<nebula::drivers::HesaiSensorConfiguration> sensor_cfg_ptr_{};
+  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> sensor_cfg_ptr_{};
 
   /// @brief Stores received packets that have not been processed yet by the decoder thread
   mt_queue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
@@ -104,7 +80,8 @@ private:
   std::optional<HesaiDecoderWrapper> decoder_wrapper_;
 
   std::mutex mtx_config_;
-  OnSetParametersCallbackHandle::SharedPtr set_param_res_{};
+
+  OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_;
 };
 
 }  // namespace ros
