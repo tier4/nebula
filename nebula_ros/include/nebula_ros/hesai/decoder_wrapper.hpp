@@ -3,6 +3,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
+#include "nebula_ros/common/watchdog_timer.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
@@ -80,6 +81,8 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_{};
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_{};
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_{};
+
+  std::shared_ptr<WatchdogTimer> cloud_watchdog_;
 };
 }  // namespace ros
 }  // namespace nebula
