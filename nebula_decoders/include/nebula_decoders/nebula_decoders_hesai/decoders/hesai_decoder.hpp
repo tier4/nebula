@@ -18,7 +18,7 @@ class HesaiDecoder : public HesaiScanDecoder
 {
 protected:
   /// @brief Configuration for this decoder
-  const std::shared_ptr<drivers::HesaiSensorConfiguration> sensor_configuration_;
+  const std::shared_ptr<const drivers::HesaiSensorConfiguration> sensor_configuration_;
 
   /// @brief The sensor definition, used for return mode and time offset handling
   SensorT sensor_{};
@@ -34,13 +34,13 @@ protected:
   /// @brief The last decoded packet
   typename SensorT::packet_t packet_;
   /// @brief The last azimuth processed
-  int last_phase_;
+  int last_phase_ = -1; // Dummy value to signal last_phase_ has not been set yet
   /// @brief The timestamp of the last completed scan in nanoseconds
-  uint64_t output_scan_timestamp_ns_;
+  uint64_t output_scan_timestamp_ns_ = 0;
   /// @brief The timestamp of the scan currently in progress
-  uint64_t decode_scan_timestamp_ns_;
+  uint64_t decode_scan_timestamp_ns_ = 0;
   /// @brief Whether a full scan has been processed
-  bool has_scanned_;
+  bool has_scanned_ = false;
 
   rclcpp::Logger logger_;
 
@@ -209,9 +209,9 @@ public:
   /// @param correction_configuration Correction for this decoder (can be nullptr if
   /// calibration_configuration is set)
   explicit HesaiDecoder(
-    const std::shared_ptr<HesaiSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<HesaiCalibrationConfiguration> & calibration_configuration,
-    const std::shared_ptr<HesaiCorrection> & correction_configuration)
+    const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<const HesaiCalibrationConfiguration> & calibration_configuration,
+    const std::shared_ptr<const HesaiCorrection> & correction_configuration)
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(calibration_configuration, correction_configuration),
     logger_(rclcpp::get_logger("HesaiDecoder"))
@@ -224,8 +224,6 @@ public:
 
     decode_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
-
-    last_phase_ = -1; // Dummy value to signal last_phase_ has not been set yet
   }
 
   int unpack(const std::vector<uint8_t> & packet) override

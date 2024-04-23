@@ -28,6 +28,8 @@ HesaiHwInterface::~HesaiHwInterface()
 HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
   const uint8_t command_id, const std::vector<uint8_t> & payload)
 {
+  std::lock_guard lock(mtx_inflight_tcp_request_);
+
   uint32_t len = payload.size();
 
   std::vector<uint8_t> send_buf;
@@ -120,10 +122,10 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
 }
 
 Status HesaiHwInterface::SetSensorConfiguration(
-  std::shared_ptr<SensorConfigurationBase> sensor_configuration)
+  std::shared_ptr<const SensorConfigurationBase> sensor_configuration)
 {
   sensor_configuration_ =
-    std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration);
+    std::static_pointer_cast<const HesaiSensorConfiguration>(sensor_configuration);
   return Status::OK;
 }
 
@@ -175,7 +177,7 @@ Status HesaiHwInterface::SensorInterfaceStop()
   return Status::ERROR_1;
 }
 
-Status HesaiHwInterface::GetSensorConfiguration(SensorConfigurationBase & sensor_configuration)
+Status HesaiHwInterface::GetSensorConfiguration(const SensorConfigurationBase & sensor_configuration)
 {
   std::stringstream ss;
   ss << sensor_configuration;
@@ -808,7 +810,7 @@ HesaiStatus HesaiHwInterface::GetLidarMonitorAsyncHttp(
 }
 
 HesaiStatus HesaiHwInterface::CheckAndSetConfig(
-  std::shared_ptr<HesaiSensorConfiguration> sensor_configuration, HesaiConfig hesai_config)
+  std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration, HesaiConfig hesai_config)
 {
   using namespace std::chrono_literals;
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
@@ -967,7 +969,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 }
 
 HesaiStatus HesaiHwInterface::CheckAndSetConfig(
-  std::shared_ptr<HesaiSensorConfiguration> sensor_configuration,
+  std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration,
   HesaiLidarRangeAll hesai_lidar_range_all)
 {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
@@ -1031,7 +1033,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
     ss << result;
     PrintInfo(ss.str());
     CheckAndSetConfig(
-      std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration_), result);
+      std::static_pointer_cast<const HesaiSensorConfiguration>(sensor_configuration_), result);
   });
   t.join();
 
@@ -1041,7 +1043,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
     ss << result;
     PrintInfo(ss.str());
     CheckAndSetConfig(
-      std::static_pointer_cast<HesaiSensorConfiguration>(sensor_configuration_), result);
+      std::static_pointer_cast<const HesaiSensorConfiguration>(sensor_configuration_), result);
   });
   t2.join();
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE

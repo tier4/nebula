@@ -27,8 +27,8 @@ private:
 
 public:
   AngleCorrectorCalibrationBased(
-    const std::shared_ptr<HesaiCalibrationConfiguration> & sensor_calibration,
-    const std::shared_ptr<HesaiCorrection> & sensor_correction)
+    const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration,
+    const std::shared_ptr<const HesaiCorrection> & sensor_correction)
   : AngleCorrector(sensor_calibration, sensor_correction)
   {
     if (sensor_calibration == nullptr) {
@@ -37,8 +37,8 @@ public:
     }
 
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-      float elevation_angle_deg = sensor_calibration->elev_angle_map[channel_id];
-      float azimuth_offset_deg = sensor_calibration->azimuth_offset_map[channel_id];
+      float elevation_angle_deg = sensor_calibration->elev_angle_map.at(channel_id);
+      float azimuth_offset_deg = sensor_calibration->azimuth_offset_map.at(channel_id);
 
       elevation_angle_rad_[channel_id] = deg2rad(elevation_angle_deg);
       azimuth_offset_rad_[channel_id] = deg2rad(azimuth_offset_deg);
