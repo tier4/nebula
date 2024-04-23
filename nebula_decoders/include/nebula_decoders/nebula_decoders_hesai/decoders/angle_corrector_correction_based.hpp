@@ -43,8 +43,8 @@ private:
 
 public:
   AngleCorrectorCorrectionBased(
-    const std::shared_ptr<HesaiCalibrationConfiguration> & sensor_calibration,
-    const std::shared_ptr<HesaiCorrection> & sensor_correction)
+    const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration,
+    const std::shared_ptr<const HesaiCorrection> & sensor_correction)
   : AngleCorrector(sensor_calibration, sensor_correction),
     logger_(rclcpp::get_logger("AngleCorrectorCorrectionBased"))
   {

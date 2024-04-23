@@ -6,22 +6,14 @@ namespace ros
 {
 HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(rclcpp::Node* const parent_node,
                                              const std::shared_ptr<nebula::drivers::HesaiHwInterface>& hw_interface,
-                                             std::shared_ptr<nebula::drivers::HesaiSensorConfiguration>& config)
+                                             std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration>& config)
   : logger_(parent_node->get_logger().get_child("HwMonitor"))
   , diagnostics_updater_(parent_node)
   , status_(Status::OK)
   , hw_interface_(hw_interface)
   , parent_node_(parent_node)
 {
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "milliseconds";
-    parent_node->declare_parameter<uint16_t>("diag_span", 1000, descriptor);
-    diag_span_ = parent_node->get_parameter("diag_span").as_int();
-  }
+  diag_span_ = parent_node->declare_parameter<uint16_t>("diag_span", 1000, param_read_only());
 
   switch (config->sensor_model)
   {
@@ -66,11 +58,6 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(rclcpp::Node* const parent_node,
   RCLCPP_INFO_STREAM(logger_, "Model:" << info_model_);
   RCLCPP_INFO_STREAM(logger_, "Serial:" << info_serial_);
   InitializeHesaiDiagnostics();
-
-  if (Status::OK != status_)
-  {
-    throw std::runtime_error((std::stringstream() << "Error getting calibration data: " << status_).str());
-  }
 }
 
 void HesaiHwMonitorWrapper::InitializeHesaiDiagnostics()

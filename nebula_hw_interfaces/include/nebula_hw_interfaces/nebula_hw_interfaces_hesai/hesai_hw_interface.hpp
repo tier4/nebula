@@ -103,7 +103,7 @@ const int HESAI_LIDAR_GPS_CLOCK_SOURCE = 0;
 const int HESAI_LIDAR_PTP_CLOCK_SOURCE = 1;
 
 /// @brief Hardware interface of hesai driver
-class HesaiHwInterface : public NebulaHwInterfaceBase
+class HesaiHwInterface
 {
 private:
   struct ptc_error_t
@@ -120,9 +120,11 @@ private:
   std::shared_ptr<boost::asio::io_context> m_owned_ctx;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
   std::shared_ptr<::drivers::tcp_driver::TcpDriver> tcp_driver_;
-  std::shared_ptr<HesaiSensorConfiguration> sensor_configuration_;
+  std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration_;
   std::function<void(std::vector<uint8_t> & buffer)>
     cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
+
+  std::mutex mtx_inflight_tcp_request_;
 
   int prev_phase_{};
 
@@ -195,14 +197,14 @@ public:
   void ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer);
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStart() final;
+  Status SensorInterfaceStart();
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStop() final;
+  Status SensorInterfaceStop();
   /// @brief Printing sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
-  Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration) final;
+  Status GetSensorConfiguration(const SensorConfigurationBase & sensor_configuration);
   /// @brief Printing calibration configuration
   /// @param calibration_configuration CalibrationConfiguration for the checking
   /// @return Resulting status
@@ -211,7 +213,7 @@ public:
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
   Status SetSensorConfiguration(
-    std::shared_ptr<SensorConfigurationBase> sensor_configuration) final;
+    std::shared_ptr<const SensorConfigurationBase> sensor_configuration);
   /// @brief Registering callback for PandarScan
   /// @param scan_callback Callback function
   /// @return Resulting status
@@ -382,13 +384,13 @@ public:
   /// @param hesai_config Current HesaiConfig
   /// @return Resulting status
   HesaiStatus CheckAndSetConfig(
-    std::shared_ptr<HesaiSensorConfiguration> sensor_configuration, HesaiConfig hesai_config);
+    std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration, HesaiConfig hesai_config);
   /// @brief Checking the current settings and changing the difference point
   /// @param sensor_configuration Current SensorConfiguration
   /// @param hesai_lidar_range_all Current HesaiLidarRangeAll
   /// @return Resulting status
   HesaiStatus CheckAndSetConfig(
-    std::shared_ptr<HesaiSensorConfiguration> sensor_configuration,
+    std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration,
     HesaiLidarRangeAll hesai_lidar_range_all);
   /// @brief Checking the current settings and changing the difference point
   /// @return Resulting status

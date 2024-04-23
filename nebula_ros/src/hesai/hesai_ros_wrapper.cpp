@@ -16,7 +16,15 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions& options)
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
   wrapper_status_ = DeclareAndGetSensorConfigParams();
-  wrapper_status_ = DeclareAndGetWrapperParams();
+
+  if (wrapper_status_ != Status::OK)
+  {
+    throw std::runtime_error((std::stringstream{} << "Sensor configuration invalid: " << wrapper_status_).str());
+  }
+
+  RCLCPP_INFO_STREAM(get_logger(), "SensorConfig:" << *sensor_cfg_ptr_);
+
+  launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
 
   if (launch_hw_)
   {
@@ -26,10 +34,6 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions& options)
 
   decoder_wrapper_.emplace(this, hw_interface_wrapper_ ? hw_interface_wrapper_->HwInterface() : nullptr,
                            sensor_cfg_ptr_);
-
-  RCLCPP_INFO_STREAM(get_logger(), "SensorConfig:" << *sensor_cfg_ptr_);
-  set_param_res_ =
-      add_on_set_parameters_callback(std::bind(&HesaiRosWrapper::paramCallback, this, std::placeholders::_1));
 
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
@@ -42,263 +46,164 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions& options)
 
   if (launch_hw_)
   {
-    StreamStart();
     hw_interface_wrapper_->HwInterface()->RegisterScanCallback(
         std::bind(&HesaiRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
+    StreamStart();
   }
   else
   {
     packets_sub_ = create_subscription<pandar_msgs::msg::PandarScan>(
         "pandar_packets", rclcpp::SensorDataQoS(),
         std::bind(&HesaiRosWrapper::ReceiveScanMessageCallback, this, std::placeholders::_1));
-    RCLCPP_INFO_STREAM(get_logger(), "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
+    RCLCPP_INFO_STREAM(get_logger(),
+                       "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
   }
+
+  // Register parameter callback after all params have been declared. Otherwise it would be called once for each
+  // declaration
+  parameter_event_cb_ =
+      add_on_set_parameters_callback(std::bind(&HesaiRosWrapper::OnParameterChange, this, std::placeholders::_1));
 }
 
 nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
 {
-  nebula::drivers::HesaiSensorConfiguration sensor_configuration;
+  nebula::drivers::HesaiSensorConfiguration config;
+
+  auto _sensor_model = declare_parameter<std::string>("sensor_model", "", param_read_only());
+  config.sensor_model = drivers::SensorModelFromString(_sensor_model);
+
+  auto _return_mode = declare_parameter<std::string>("return_mode", "", param_read_write());
+  config.return_mode = drivers::ReturnModeFromStringHesai(_return_mode, config.sensor_model);
+
+  config.host_ip = declare_parameter<std::string>("host_ip", "255.255.255.255", param_read_only());
+  config.sensor_ip = declare_parameter<std::string>("sensor_ip", "192.168.1.201", param_read_only());
+  config.data_port = declare_parameter<uint16_t>("data_port", 2368, param_read_only());
+  config.gnss_port = declare_parameter<uint16_t>("gnss_port", 2369, param_read_only());
+  config.frame_id = declare_parameter<std::string>("frame_id", "pandar", param_read_write());
 
   {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<std::string>("sensor_model", "");
-    sensor_configuration.sensor_model =
-        nebula::drivers::SensorModelFromString(get_parameter("sensor_model").as_string());
+    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
+    descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.])";
+    descriptor.floating_point_range = float_range(0, 360, 0.01);
+    config.scan_phase = declare_parameter<double>("scan_phase", 0., descriptor);
   }
+
+  config.min_range = declare_parameter<double>("min_range", 0.3, param_read_write());
+  config.max_range = declare_parameter<double>("max_range", 300., param_read_write());
+  config.packet_mtu_size = declare_parameter<uint16_t>("packet_mtu_size", 1500, param_read_only());
+
   {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<std::string>("return_mode", "", descriptor);
-    sensor_configuration.return_mode = nebula::drivers::ReturnModeFromStringHesai(
-        get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<std::string>("host_ip", "255.255.255.255", descriptor);
-    sensor_configuration.host_ip = get_parameter("host_ip").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<std::string>("sensor_ip", "192.168.1.201", descriptor);
-    sensor_configuration.sensor_ip = get_parameter("sensor_ip").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<uint16_t>("data_port", 2368, descriptor);
-    sensor_configuration.data_port = get_parameter("data_port").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<uint16_t>("gnss_port", 2369, descriptor);
-    sensor_configuration.gnss_port = get_parameter("gnss_port").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<std::string>("frame_id", "pandar", descriptor);
-    sensor_configuration.frame_id = get_parameter("frame_id").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
-    rcl_interfaces::msg::FloatingPointRange range;
-    range.set__from_value(0).set__to_value(360).set__step(0.01);
-    descriptor.floating_point_range = { range };
-    declare_parameter<double>("scan_phase", 0., descriptor);
-    sensor_configuration.scan_phase = get_parameter("scan_phase").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<double>("min_range", 0.3, descriptor);
-    sensor_configuration.min_range = get_parameter("min_range").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<double>("max_range", 300., descriptor);
-    sensor_configuration.max_range = get_parameter("max_range").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<uint16_t>("packet_mtu_size", 1500, descriptor);
-    sensor_configuration.packet_mtu_size = get_parameter("packet_mtu_size").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    rcl_interfaces::msg::IntegerRange range;
-    RCLCPP_DEBUG_STREAM(get_logger(), sensor_configuration.sensor_model);
-    if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::HESAI_PANDARAT128)
+    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
+    uint16_t default_value;
+    RCLCPP_DEBUG_STREAM(get_logger(), config.sensor_model);
+    if (config.sensor_model == nebula::drivers::SensorModel::HESAI_PANDARAT128)
     {
-      descriptor.additional_constraints = "200, 300, 400, 500";
-      // range.set__from_value(200).set__to_value(500).set__step(100);
-      // descriptor.integer_range = {range}; //todo
-      declare_parameter<uint16_t>("rotation_speed", 200, descriptor);
+      descriptor.additional_constraints = "200, 400";
+      descriptor.integer_range = int_range(200, 400, 200);
+      default_value = 200;
     }
     else
     {
       descriptor.additional_constraints = "300, 600, 1200";
-      // range.set__from_value(300).set__to_value(1200).set__step(300);
-      // descriptor.integer_range = {range}; //todo
-      declare_parameter<uint16_t>("rotation_speed", 600, descriptor);
+      descriptor.integer_range = int_range(300, 1200, 300);
+      default_value = 600;
     }
-    sensor_configuration.rotation_speed = get_parameter("rotation_speed").as_int();
+    config.rotation_speed = declare_parameter<uint16_t>("rotation_speed", default_value, descriptor);
   }
   {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    rcl_interfaces::msg::IntegerRange range;
-    range.set__from_value(0).set__to_value(360).set__step(1);
-    descriptor.integer_range = { range };
-    declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
-    sensor_configuration.cloud_min_angle = get_parameter("cloud_min_angle").as_int();
+    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
+    descriptor.integer_range = int_range(0, 360, 1);
+    config.cloud_min_angle = declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
   }
   {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    rcl_interfaces::msg::IntegerRange range;
-    range.set__from_value(0).set__to_value(360).set__step(1);
-    descriptor.integer_range = { range };
-    declare_parameter<uint16_t>("cloud_max_angle", 360, descriptor);
-    sensor_configuration.cloud_max_angle = get_parameter("cloud_max_angle").as_int();
+    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
+    descriptor.integer_range = int_range(0, 360, 1);
+    config.cloud_max_angle = declare_parameter<uint16_t>("cloud_max_angle", 360, descriptor);
   }
   {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
+    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     descriptor.additional_constraints = "Dual return distance threshold [0.01, 0.5]";
-    rcl_interfaces::msg::FloatingPointRange range;
-    range.set__from_value(0.01).set__to_value(0.5).set__step(0.01);
-    descriptor.floating_point_range = { range };
-    declare_parameter<double>("dual_return_distance_threshold", 0.1, descriptor);
-    sensor_configuration.dual_return_distance_threshold = get_parameter("dual_return_distance_threshold").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<std::string>("ptp_profile", "");
-    sensor_configuration.ptp_profile = nebula::drivers::PtpProfileFromString(get_parameter("ptp_profile").as_string());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<std::string>("ptp_transport_type", "");
-    sensor_configuration.ptp_transport_type =
-        nebula::drivers::PtpTransportTypeFromString(get_parameter("ptp_transport_type").as_string());
-    if (static_cast<int>(sensor_configuration.ptp_profile) > 0)
-    {
-      sensor_configuration.ptp_transport_type = nebula::drivers::PtpTransportType::L2;
-    }
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<std::string>("ptp_switch_type", "");
-    sensor_configuration.ptp_switch_type =
-        nebula::drivers::PtpSwitchTypeFromString(get_parameter("ptp_switch_type").as_string());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    rcl_interfaces::msg::IntegerRange range;
-    range.set__from_value(0).set__to_value(127).set__step(1);
-    descriptor.integer_range = { range };
-    declare_parameter<uint8_t>("ptp_domain", 0, descriptor);
-    sensor_configuration.ptp_domain = get_parameter("ptp_domain").as_int();
+    descriptor.floating_point_range = float_range(0.01, 0.5, 0.01);
+    config.dual_return_distance_threshold =
+        declare_parameter<double>("dual_return_distance_threshold", 0.1, descriptor);
   }
 
-  if (sensor_configuration.ptp_profile == nebula::drivers::PtpProfile::PROFILE_UNKNOWN)
+  auto _ptp_profile = declare_parameter<std::string>("ptp_profile", "", param_read_only());
+  config.ptp_profile = drivers::PtpProfileFromString(_ptp_profile);
+
+  auto _ptp_transport = declare_parameter<std::string>("ptp_transport_type", "", param_read_only());
+  config.ptp_transport_type = drivers::PtpTransportTypeFromString(_ptp_transport);
+
+  if (config.ptp_transport_type != drivers::PtpTransportType::L2 &&
+      config.ptp_profile != drivers::PtpProfile::IEEE_1588v2 &&
+      config.ptp_profile != drivers::PtpProfile::UNKNOWN_PROFILE)
+  {
+    RCLCPP_WARN_STREAM(get_logger(), "PTP transport was set to '" << _ptp_transport << "' but PTP profile '"
+                                                                  << _ptp_profile
+                                                                  << "' only supports 'L2'. Setting it to 'L2'.");
+    config.ptp_transport_type = drivers::PtpTransportType::L2;
+    set_parameter(rclcpp::Parameter("ptp_transport_type", "L2"));
+  }
+
+  auto _ptp_switch = declare_parameter<std::string>("ptp_switch_type", "", param_read_only());
+  config.ptp_switch_type = drivers::PtpSwitchTypeFromString(_ptp_switch);
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
+    descriptor.integer_range = int_range(0, 127, 1);
+    config.ptp_domain = declare_parameter<uint8_t>("ptp_domain", 0, descriptor);
+  }
+
+  auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(config);
+  return ValidateAndSetConfig(new_cfg_ptr);
+}
+
+Status HesaiRosWrapper::ValidateAndSetConfig(std::shared_ptr<const drivers::HesaiSensorConfiguration>& new_config)
+{
+  if (new_config->sensor_model == nebula::drivers::SensorModel::UNKNOWN)
+  {
+    return Status::INVALID_SENSOR_MODEL;
+  }
+  if (new_config->return_mode == nebula::drivers::ReturnMode::UNKNOWN)
+  {
+    return Status::INVALID_ECHO_MODE;
+  }
+  if (new_config->frame_id.empty())
+  {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+  if (new_config->ptp_profile == nebula::drivers::PtpProfile::UNKNOWN_PROFILE)
   {
     RCLCPP_ERROR_STREAM(get_logger(), "Invalid PTP Profile Provided. Please use '1588v2', '802.1as' or 'automotive'");
     return Status::SENSOR_CONFIG_ERROR;
   }
-  if (sensor_configuration.ptp_transport_type == nebula::drivers::PtpTransportType::UNKNOWN_TRANSPORT)
+  if (new_config->ptp_transport_type == nebula::drivers::PtpTransportType::UNKNOWN_TRANSPORT)
   {
     RCLCPP_ERROR_STREAM(get_logger(),
                         "Invalid PTP Transport Provided. Please use 'udp' or 'l2', 'udp' is only available when "
                         "using the '1588v2' PTP Profile");
     return Status::SENSOR_CONFIG_ERROR;
   }
-  if (sensor_configuration.ptp_switch_type == nebula::drivers::PtpSwitchType::UNKNOWN_SWITCH)
+  if (new_config->ptp_switch_type == nebula::drivers::PtpSwitchType::UNKNOWN_SWITCH)
   {
     RCLCPP_ERROR_STREAM(get_logger(), "Invalid PTP Switch Type Provided. Please use 'tsn' or 'non_tsn'");
     return Status::SENSOR_CONFIG_ERROR;
   }
-  if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN)
+
+  if (hw_interface_wrapper_)
   {
-    return Status::INVALID_SENSOR_MODEL;
+    hw_interface_wrapper_->OnConfigChange(new_config);
   }
-  if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN)
+  if (hw_monitor_wrapper_)
   {
-    return Status::INVALID_ECHO_MODE;
+    hw_monitor_wrapper_->OnConfigChange(new_config);
   }
-  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360)
+  if (decoder_wrapper_)
   {
-    return Status::SENSOR_CONFIG_ERROR;
+    decoder_wrapper_->OnConfigChange(new_config);
   }
 
-  auto new_cfg_ptr_ = std::make_shared<nebula::drivers::HesaiSensorConfiguration>(sensor_configuration);
-  sensor_cfg_ptr_.swap(new_cfg_ptr_);
+  sensor_cfg_ptr_ = new_config;
   return Status::OK;
 }
 
@@ -326,25 +231,6 @@ Status HesaiRosWrapper::GetStatus()
   return wrapper_status_;
 }
 
-Status HesaiRosWrapper::DeclareAndGetWrapperParams()
-{
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    declare_parameter<bool>("launch_hw", "", descriptor);
-    launch_hw_ = get_parameter("launch_hw").as_bool();
-  }
-
-  return Status::OK;
-}
-
-HesaiRosWrapper::~HesaiRosWrapper()
-{
-}
-
 Status HesaiRosWrapper::StreamStart()
 {
   if (!hw_interface_wrapper_)
@@ -360,74 +246,60 @@ Status HesaiRosWrapper::StreamStart()
   return hw_interface_wrapper_->HwInterface()->SensorInterfaceStart();
 }
 
-rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::paramCallback(const std::vector<rclcpp::Parameter>& p)
+rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(const std::vector<rclcpp::Parameter>& p)
 {
+  using namespace rcl_interfaces::msg;
+
+  if (p.empty())
+  {
+    return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
+  }
+
   std::scoped_lock lock(mtx_config_);
-  RCLCPP_DEBUG_STREAM(get_logger(), "add_on_set_parameters_callback");
-  RCLCPP_DEBUG_STREAM(get_logger(), p);
-  RCLCPP_DEBUG_STREAM(get_logger(), *sensor_cfg_ptr_);
+
+  RCLCPP_INFO(get_logger(), "OnParameterChange");
 
   drivers::HesaiSensorConfiguration new_cfg(*sensor_cfg_ptr_);
 
-  std::string sensor_model_str;
-  std::string return_mode_str;
-  if (get_param(p, "sensor_model", sensor_model_str) | get_param(p, "return_mode", return_mode_str) |
-      get_param(p, "host_ip", new_cfg.host_ip) | get_param(p, "sensor_ip", new_cfg.sensor_ip) |
-      get_param(p, "frame_id", new_cfg.frame_id) | get_param(p, "data_port", new_cfg.data_port) |
-      get_param(p, "gnss_port", new_cfg.gnss_port) | get_param(p, "scan_phase", new_cfg.scan_phase) |
-      get_param(p, "packet_mtu_size", new_cfg.packet_mtu_size) |
-      get_param(p, "rotation_speed", new_cfg.rotation_speed) |
-      get_param(p, "cloud_min_angle", new_cfg.cloud_min_angle) |
-      get_param(p, "cloud_max_angle", new_cfg.cloud_max_angle) |
-      get_param(p, "dual_return_distance_threshold", new_cfg.dual_return_distance_threshold))
-  {
-    if (0 < sensor_model_str.length())
-      new_cfg.sensor_model = nebula::drivers::SensorModelFromString(sensor_model_str);
-    if (0 < return_mode_str.length())
-      new_cfg.return_mode = nebula::drivers::ReturnModeFromString(return_mode_str);
+  std::string _return_mode = "";
+  bool got_any = get_param(p, "return_mode", _return_mode) | get_param(p, "frame_id", new_cfg.frame_id) |
+                 get_param(p, "scan_phase", new_cfg.scan_phase) | get_param(p, "min_range", new_cfg.min_range) |
+                 get_param(p, "max_range", new_cfg.max_range) | get_param(p, "rotation_speed", new_cfg.rotation_speed) |
+                 get_param(p, "cloud_min_angle", new_cfg.cloud_min_angle) |
+                 get_param(p, "cloud_max_angle", new_cfg.cloud_max_angle) |
+                 get_param(p, "dual_return_distance_threshold", new_cfg.dual_return_distance_threshold);
 
-    auto new_cfg_ptr = std::make_shared<nebula::drivers::HesaiSensorConfiguration>(new_cfg);
-    sensor_cfg_ptr_.swap(new_cfg_ptr);
-    RCLCPP_INFO_STREAM(get_logger(), "Update sensor_configuration");
-    RCLCPP_DEBUG_STREAM(get_logger(), "hw_interface_.SetSensorConfiguration");
-    hw_interface_wrapper_->HwInterface()->SetSensorConfiguration(
-        std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_));
-    hw_interface_wrapper_->HwInterface()->CheckAndSetConfig();
+  // Currently, HW interface and monitor wrappers have only read-only parameters, so their update logic is not
+  // implemented
+  if (decoder_wrapper_)
+  {
+    auto result = decoder_wrapper_->OnParameterChange(p);
+    if (!result.successful) {
+      return result;
+    }
   }
 
-  auto result = std::make_shared<rcl_interfaces::msg::SetParametersResult>();
-  result->successful = true;
-  result->reason = "success";
+  if (!got_any)
+  {
+    return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
+  }
 
-  RCLCPP_DEBUG_STREAM(get_logger(), "add_on_set_parameters_callback success");
+  if (_return_mode.length() > 0)
+    new_cfg.return_mode = nebula::drivers::ReturnModeFromString(_return_mode);
 
-  return *result;
-}
+  auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(new_cfg);
+  auto status = ValidateAndSetConfig(new_cfg_ptr);
 
-std::vector<rcl_interfaces::msg::SetParametersResult> HesaiRosWrapper::updateParameters()
-{
-  std::scoped_lock lock(mtx_config_);
-  RCLCPP_DEBUG_STREAM(get_logger(), "updateParameters start");
-  std::ostringstream os_sensor_model;
-  os_sensor_model << sensor_cfg_ptr_->sensor_model;
-  std::ostringstream os_return_mode;
-  os_return_mode << sensor_cfg_ptr_->return_mode;
-  RCLCPP_INFO_STREAM(get_logger(), "set_parameters");
-  auto results = set_parameters(
-      { rclcpp::Parameter("sensor_model", os_sensor_model.str()),
-        rclcpp::Parameter("return_mode", os_return_mode.str()), rclcpp::Parameter("host_ip", sensor_cfg_ptr_->host_ip),
-        rclcpp::Parameter("sensor_ip", sensor_cfg_ptr_->sensor_ip),
-        rclcpp::Parameter("frame_id", sensor_cfg_ptr_->frame_id),
-        rclcpp::Parameter("data_port", sensor_cfg_ptr_->data_port),
-        rclcpp::Parameter("gnss_port", sensor_cfg_ptr_->gnss_port),
-        rclcpp::Parameter("scan_phase", sensor_cfg_ptr_->scan_phase),
-        rclcpp::Parameter("packet_mtu_size", sensor_cfg_ptr_->packet_mtu_size),
-        rclcpp::Parameter("rotation_speed", sensor_cfg_ptr_->rotation_speed),
-        rclcpp::Parameter("cloud_min_angle", sensor_cfg_ptr_->cloud_min_angle),
-        rclcpp::Parameter("cloud_max_angle", sensor_cfg_ptr_->cloud_max_angle),
-        rclcpp::Parameter("dual_return_distance_threshold", sensor_cfg_ptr_->dual_return_distance_threshold) });
-  RCLCPP_DEBUG_STREAM(get_logger(), "updateParameters end");
-  return results;
+  if (status != Status::OK)
+  {
+    RCLCPP_WARN_STREAM(get_logger(), "OnParameterChange aborted: " << status);
+    auto result = SetParametersResult();
+    result.successful = false;
+    result.reason = (std::stringstream() << "Invalid configuration: " << status).str();
+    return result;
+  }
+
+  return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
 void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t>& packet)

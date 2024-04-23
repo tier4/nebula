@@ -7,7 +7,7 @@ namespace ros
 
 HesaiDecoderWrapper::HesaiDecoderWrapper(rclcpp::Node* const parent_node,
                                          const std::shared_ptr<nebula::drivers::HesaiHwInterface>& hw_interface,
-                                         std::shared_ptr<nebula::drivers::HesaiSensorConfiguration>& config)
+                                         std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration>& config)
   : status_(nebula::Status::NOT_INITIALIZED)
   , logger_(parent_node->get_logger().get_child("HesaiDecoder"))
   , hw_interface_(hw_interface)
@@ -20,26 +20,14 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(rclcpp::Node* const parent_node,
 
   if (config->sensor_model == drivers::SensorModel::HESAI_PANDARAT128)
   {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    parent_node->declare_parameter<std::string>("correction_file", "", descriptor);
-    calibration_file_path_ = parent_node->get_parameter("correction_file").as_string();
+    calibration_file_path_ = parent_node->declare_parameter<std::string>("correction_file", "", param_read_write());
   }
   else
   {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    parent_node->declare_parameter<std::string>("calibration_file", "", descriptor);
-    calibration_file_path_ = parent_node->get_parameter("calibration_file").as_string();
+    calibration_file_path_ = parent_node->declare_parameter<std::string>("calibration_file", "", param_read_write());
   }
 
-  auto calibration_result = GetCalibrationData();
+  auto calibration_result = GetCalibrationData(calibration_file_path_, false);
 
   if (!calibration_result.has_value())
   {
@@ -78,8 +66,64 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(rclcpp::Node* const parent_node,
   RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
 }
 
-nebula::util::expected<std::shared_ptr<drivers::HesaiCalibrationConfigurationBase>, nebula::Status>
-HesaiDecoderWrapper::GetCalibrationData()
+void HesaiDecoderWrapper::OnConfigChange(
+    const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration>& new_config)
+{
+  std::lock_guard lock(mtx_driver_ptr_);
+  auto new_driver = std::make_shared<drivers::HesaiDriver>(new_config, calibration_cfg_ptr_);
+  driver_ptr_ = new_driver;
+  sensor_cfg_ = new_config;
+}
+
+void HesaiDecoderWrapper::OnCalibrationChange(
+    const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase>& new_calibration)
+{
+  std::lock_guard lock(mtx_driver_ptr_);
+  auto new_driver = std::make_shared<drivers::HesaiDriver>(sensor_cfg_, new_calibration);
+  driver_ptr_ = new_driver;
+  calibration_cfg_ptr_ = new_calibration;
+  calibration_file_path_ = calibration_cfg_ptr_->calibration_file;
+}
+
+rcl_interfaces::msg::SetParametersResult HesaiDecoderWrapper::OnParameterChange(const std::vector<rclcpp::Parameter>& p)
+{
+  using namespace rcl_interfaces::msg;
+
+  std::string calibration_path = "";
+
+  // Only one of the two parameters is defined, so not checking for sensor model explicitly here is fine
+  bool got_any = get_param(p, "calibration_file", calibration_path) | get_param(p, "correction_file", calibration_path);
+  if (!got_any)
+  {
+    return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
+  }
+
+  if (!std::filesystem::exists(calibration_path))
+  {
+    auto result = SetParametersResult();
+    result.successful = false;
+    result.reason = "The given calibration path does not exist, ignoring: '" + calibration_path + "'";
+    return result;
+  }
+
+  auto get_calibration_result = GetCalibrationData(calibration_path, true);
+  if (!get_calibration_result.has_value())
+  {
+    auto result = SetParametersResult();
+    result.successful = false;
+    result.reason = (std::stringstream() << "Could not change calibration file to '" << calibration_path
+                                         << "': " << get_calibration_result.error())
+                        .str();
+    return result;
+  }
+
+  OnCalibrationChange(get_calibration_result.value());
+  RCLCPP_INFO_STREAM(logger_, "Changed calibration to '" << calibration_cfg_ptr_->calibration_file << "'");
+  return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
+}
+
+HesaiDecoderWrapper::get_calibration_result_t
+HesaiDecoderWrapper::GetCalibrationData(const std::string& calibration_file_path, bool ignore_others)
 {
   std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calib;
 
@@ -96,16 +140,15 @@ HesaiDecoderWrapper::GetCalibrationData()
   std::string calibration_file_path_from_sensor;
 
   {
-    int ext_pos = calibration_file_path_.find_last_of('.');
-    calibration_file_path_from_sensor = calibration_file_path_.substr(0, ext_pos);
+    int ext_pos = calibration_file_path.find_last_of('.');
+    calibration_file_path_from_sensor = calibration_file_path.substr(0, ext_pos);
     // TODO: if multiple different sensors of the same type are used, this will mix up their calibration data
     calibration_file_path_from_sensor += "_from_sensor";
-    calibration_file_path_from_sensor +=
-        calibration_file_path_.substr(ext_pos, calibration_file_path_.size() - ext_pos);
+    calibration_file_path_from_sensor += calibration_file_path.substr(ext_pos, calibration_file_path.size() - ext_pos);
   }
 
   // If a sensor is connected, try to download and save its calibration data
-  if (hw_connected)
+  if (!ignore_others && hw_connected)
   {
     try
     {
@@ -128,7 +171,7 @@ HesaiDecoderWrapper::GetCalibrationData()
   }
 
   // If saved calibration data from a sensor exists (either just downloaded above, or previously), try to load it
-  if (std::filesystem::exists(calibration_file_path_from_sensor))
+  if (!ignore_others && std::filesystem::exists(calibration_file_path_from_sensor))
   {
     auto status = calib->LoadFromFile(calibration_file_path_from_sensor);
     if (status == Status::OK)
@@ -139,31 +182,34 @@ HesaiDecoderWrapper::GetCalibrationData()
 
     RCLCPP_ERROR_STREAM(logger_, "Could not load downloaded calibration data: " << status);
   }
-  else
+  else if (!ignore_others)
   {
     RCLCPP_ERROR(logger_, "No downloaded calibration data found.");
   }
 
-  RCLCPP_WARN(logger_, "Falling back to generic calibration file.");
+  if (!ignore_others)
+  {
+    RCLCPP_WARN(logger_, "Falling back to generic calibration file.");
+  }
 
   // If downloaded data did not exist or could not be loaded, fall back to a generic file.
   // If that file does not exist either, return an error code
-  if (!std::filesystem::exists(calibration_file_path_))
+  if (!std::filesystem::exists(calibration_file_path))
   {
     RCLCPP_ERROR(logger_, "No calibration data found.");
     return nebula::Status(Status::INVALID_CALIBRATION_FILE);
   }
 
   // Try to load the existing fallback calibration file. Return an error if this fails
-  auto status = calib->LoadFromFile(calibration_file_path_);
+  auto status = calib->LoadFromFile(calibration_file_path);
   if (status != Status::OK)
   {
-    RCLCPP_ERROR(logger_, "Could not load fallback calibration file.");
+    RCLCPP_ERROR_STREAM(logger_, "Could not load calibration file at '" << calibration_file_path << "'");
     return status;
   }
 
   // Return the fallback calibration file
-  calib->calibration_file = calibration_file_path_;
+  calib->calibration_file = calibration_file_path;
   return calib;
 }
 
@@ -185,9 +231,13 @@ void HesaiDecoderWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::N
     current_scan_msg_->packets.emplace_back(std::move(pandar_packet_msg));
   }
 
-  std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts =
-      driver_ptr_->ParseCloudPacket(packet_msg->data);
-  nebula::drivers::NebulaPointCloudPtr pointcloud = std::get<0>(pointcloud_ts);
+  std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts{};
+  nebula::drivers::NebulaPointCloudPtr pointcloud = nullptr;
+  {
+    std::lock_guard lock(mtx_driver_ptr_);
+    pointcloud_ts = driver_ptr_->ParseCloudPacket(packet_msg->data);
+    pointcloud = std::get<0>(pointcloud_ts);
+  }
 
   if (pointcloud == nullptr)
   {
@@ -244,6 +294,8 @@ void HesaiDecoderWrapper::PublishCloud(std::unique_ptr<sensor_msgs::msg::PointCl
 
 nebula::Status HesaiDecoderWrapper::Status()
 {
+  std::lock_guard lock(mtx_driver_ptr_);
+
   if (!driver_ptr_)
   {
     return nebula::Status::NOT_INITIALIZED;
