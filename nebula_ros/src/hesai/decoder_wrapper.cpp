@@ -5,6 +5,8 @@ namespace nebula
 namespace ros
 {
 
+using namespace std::chrono_literals;
+
 HesaiDecoderWrapper::HesaiDecoderWrapper(rclcpp::Node* const parent_node,
                                          const std::shared_ptr<nebula::drivers::HesaiHwInterface>& hw_interface,
                                          std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration>& config)
@@ -64,6 +66,12 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(rclcpp::Node* const parent_node,
   aw_points_ex_pub_ = parent_node->create_publisher<sensor_msgs::msg::PointCloud2>("aw_points_ex", pointcloud_qos);
 
   RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
+
+  cloud_watchdog_ = std::make_shared<WatchdogTimer>(*parent_node, 100'000us, [this, parent_node](bool ok) {
+    if (ok)
+      return;
+    RCLCPP_WARN_THROTTLE(logger_, *parent_node->get_clock(), 5000, "Missed pointcloud output deadline");
+  });
 }
 
 void HesaiDecoderWrapper::OnConfigChange(
@@ -245,6 +253,8 @@ void HesaiDecoderWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::N
     // RCLCPP_WARN_STREAM(logger_, "Empty cloud parsed.");
     return;
   };
+
+  cloud_watchdog_->update();
 
   // Publish scan message only if it has been written to
   if (current_scan_msg_ && !current_scan_msg_->packets.empty())
