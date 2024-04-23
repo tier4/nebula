@@ -73,13 +73,8 @@ public:
 
     phase_ = (uint16_t)round(sensor_configuration_->scan_phase * 100);
 
-    // fill vls1228 laser azimuth cache
-    if (strcmp(SensorT::sensor_model, "vls128") == 0) {
-      for (uint8_t i = 0; i < 16; i++) {
-        vls128_laser_azimuth_cache_[i] =
-          (VLS128_CHANNEL_DURATION / VLS128_SEQ_DURATION) * (i + i / 8);
-      }
-    }
+    // fill vls128 laser azimuth cache
+    sensor_.fillAzimuthCache();  // TODO: predefine azimuth cache and remove this
 
     // timing table calculation, from velodyne user manual p.64
     timing_offsets_.resize(BLOCKS_PER_PACKET);  // x dir size
@@ -205,8 +200,7 @@ public:
     const uint8_t return_mode = velodyne_packet.data[RETURN_MODE_INDEX];
     const bool dual_return = (return_mode == RETURN_MODE_DUAL);
 
-    int num_padding_blocks = 0;
-    if (dual_return && strcmp(SensorT::sensor_model, "vls128") == 0) num_padding_blocks = 4;
+    int num_padding_blocks = sensor_.getNumPaddingBlocks(dual_return);
 
     for (uint block = 0; block < static_cast<uint>(BLOCKS_PER_PACKET - num_padding_blocks);
          block++) {
@@ -320,19 +314,8 @@ public:
               distance > sensor_configuration_->min_range &&
               distance < sensor_configuration_->max_range) {
               // Correct for the laser rotation as a function of timing during the firings.
-              float azimuth_corrected_f;
-              if (strcmp(SensorT::sensor_model, "vls128") == 0) {
-                azimuth_corrected_f =
-                  azimuth + (azimuth_diff * vls128_laser_azimuth_cache_[firing_order]);
-              } else {
-                azimuth_corrected_f =
-                  azimuth + (azimuth_diff *
-                             ((channel * VLP16_DSR_TOFFSET) + (firing_seq * VLP16_FIRING_TOFFSET)) /
-                             VLP16_BLOCK_DURATION);
-              }
-
               const uint16_t azimuth_corrected =
-                (static_cast<uint16_t>(round(azimuth_corrected_f))) % 36000;
+                sensor_.getAzimuthCorrected(azimuth, azimuth_diff, firing_seq, firing_order);
 
               // Condition added to avoid calculating points which are not in the interesting
               // defined area (cloud_min_angle < area < cloud_max_angle).
@@ -365,12 +348,9 @@ public:
 
                 last_block_timestamp_ = block_timestamp;
 
-                double point_time_offset;
-                if (strcmp(SensorT::sensor_model, "vls128") == 0) {
-                  point_time_offset = timing_offsets_[block][firing_order + laser_number / 64];
-                } else {
-                  point_time_offset = timing_offsets_[block][firing_seq * 16 + channel];
-                }
+                // TODO: replace magic numbers 16 and 64
+                double point_time_offset =
+                  timing_offsets_[block][firing_seq * 16 + firing_order + laser_number / 64];
 
                 // Determine return type.
                 uint8_t return_type;
@@ -385,12 +365,10 @@ public:
                       const float other_intensity = block % 2 ? raw->blocks[block - 1].data[k + 2]
                                                               : raw->blocks[block + 1].data[k + 2];
 
-                      bool first;
-                      if (strcmp(SensorT::sensor_model, "vls128") == 0)
-                        first = other_return.uint >= current_return.uint;
-                      else
-                        first =
-                          current_return.uint > other_return.uint;  // TODO: why is it this way?
+                      bool first =
+                        other_return.uint >=
+                        current_return
+                          .uint;  // TODO: understand why this differs from VLP16 original decoder
 
                       bool strongest = other_intensity < intensity;
                       if (other_intensity == intensity) {
@@ -459,7 +437,7 @@ private:
   double last_block_timestamp_;
   std::vector<std::vector<float>> timing_offsets_;
 
-  float vls128_laser_azimuth_cache_[16];
+  SensorT sensor_;
 };
 
 }  // namespace drivers
