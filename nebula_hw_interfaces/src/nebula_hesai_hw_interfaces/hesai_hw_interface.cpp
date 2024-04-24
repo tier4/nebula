@@ -503,6 +503,26 @@ HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
   return hesai_range_all;
 }
 
+Status HesaiHwInterface::SetHighResolutionMode(bool enable) {
+  std::vector<unsigned char> request_payload;
+  request_payload.emplace_back(enable ? 0x01 : 0x00);
+
+  auto response_or_err = SendReceive(PTC_COMMAND_SET_HIGH_RESOLUTION_MODE, request_payload);
+  response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
+  return Status::OK;
+}
+
+bool HesaiHwInterface::GetHighResolutionMode() {
+  auto response_or_err = SendReceive(PTC_COMMAND_GET_HIGH_RESOLUTION_MODE);
+  auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
+
+  if (response.size() != 1) {
+    throw std::runtime_error("Unexpected payload size");
+  }
+
+  return response[0] > 0x00;
+}
+
 Status HesaiHwInterface::SetClockSource(int clock_source)
 {
   std::vector<unsigned char> request_payload;
@@ -922,6 +942,22 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
       static_cast<int>(sensor_configuration->ptp_profile), sensor_configuration->ptp_domain,
       static_cast<int>(sensor_configuration->ptp_transport_type), PTP_LOG_ANNOUNCE_INTERVAL,
       PTP_SYNC_INTERVAL, PTP_LOG_MIN_DELAY_INTERVAL);
+  }
+
+  if (
+    sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR128_E3X ||
+    sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
+    auto hires_currently_enabled = GetHighResolutionMode();
+
+    if (hires_currently_enabled != sensor_configuration->hires_mode) {
+
+      PrintInfo("current lidar hires_mode: " + std::to_string(hires_currently_enabled));
+      PrintInfo(
+        "current configuration hires_mode: " + std::to_string(sensor_configuration->hires_mode));
+
+      PrintInfo("Setting hires_mode via TCP.");
+      SetHighResolutionMode(sensor_configuration->hires_mode);
+    }
   }
 
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE

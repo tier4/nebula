@@ -72,6 +72,8 @@ const uint8_t PTC_COMMAND_SET_LIDAR_RANGE = 0x22;
 const uint8_t PTC_COMMAND_GET_LIDAR_RANGE = 0x23;
 const uint8_t PTC_COMMAND_SET_PTP_CONFIG = 0x24;
 const uint8_t PTC_COMMAND_GET_PTP_CONFIG = 0x26;
+const uint8_t PTC_COMMAND_SET_HIGH_RESOLUTION_MODE = 0x29;
+const uint8_t PTC_COMMAND_GET_HIGH_RESOLUTION_MODE = 0x28;
 const uint8_t PTC_COMMAND_RESET = 0x25;
 const uint8_t PTC_COMMAND_SET_ROTATE_DIRECTION = 0x2a;
 const uint8_t PTC_COMMAND_LIDAR_MONITOR = 0x27;
@@ -322,6 +324,12 @@ public:
   /// @brief Getting values with PTC_COMMAND_GET_LIDAR_RANGE
   /// @return Resulting status
   HesaiLidarRangeAll GetLidarRange();
+  /// @brief Setting values with PTC_COMMAND_GET_HIGH_RESOLUTION_MODE
+  /// @return Resulting status
+  Status SetHighResolutionMode(bool enable);
+  /// @brief Getting values with PTC_COMMAND_GET_HIGH_RESOLUTION_MODE
+  /// @return Resulting status
+  bool GetHighResolutionMode();
 
   Status SetClockSource(int clock_source);
 

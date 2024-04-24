@@ -1,6 +1,7 @@
 // Copyright 2024 TIER IV, Inc.
 
 #include "nebula_ros/hesai/hesai_ros_wrapper.hpp"
+#include "nebula_ros/common/parameter_descriptors.hpp"
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
@@ -91,6 +92,7 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
   config.min_range = declare_parameter<double>("min_range", param_read_write());
   config.max_range = declare_parameter<double>("max_range", param_read_write());
   config.packet_mtu_size = declare_parameter<uint16_t>("packet_mtu_size", param_read_only());
+  config.hires_mode = this->declare_parameter<bool>("hires_mode", param_read_write());
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
@@ -257,7 +259,8 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
     get_param(p, "rotation_speed", new_cfg.rotation_speed) |
     get_param(p, "cloud_min_angle", new_cfg.cloud_min_angle) |
     get_param(p, "cloud_max_angle", new_cfg.cloud_max_angle) |
-    get_param(p, "dual_return_distance_threshold", new_cfg.dual_return_distance_threshold);
+    get_param(p, "dual_return_distance_threshold", new_cfg.dual_return_distance_threshold) |
+    get_param(p, "hires_mode", new_cfg.hires_mode);
 
   // Currently, HW interface and monitor wrappers have only read-only parameters, so their update
   // logic is not implemented

@@ -42,6 +42,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   uint8_t ptp_domain;
   PtpTransportType ptp_transport_type;
   PtpSwitchType ptp_switch_type;
+  bool hires_mode;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -55,7 +56,8 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
      << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold
      << ", PtpProfile:" << arg.ptp_profile << ", PtpDomain:" << std::to_string(arg.ptp_domain)
      << ", PtpTransportType:" << arg.ptp_transport_type
-     << ", PtpSwitchType:" << arg.ptp_switch_type;
+     << ", PtpSwitchType:" << arg.ptp_switch_type
+     << ", HighResolutionMode:" << arg.hires_mode;
   return os;
 }
 
