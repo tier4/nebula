@@ -389,6 +389,11 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
     this->declare_parameter<uint8_t>("ptp_domain", 0, descriptor);
     sensor_configuration.ptp_domain = this->get_parameter("ptp_domain").as_int();
   }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = false;
+    sensor_configuration.hires_mode = this->declare_parameter<bool>("hires_mode", false, descriptor);
+  }
 
   if(sensor_configuration.ptp_profile == nebula::drivers::PtpProfile::PROFILE_UNKNOWN) {
     RCLCPP_ERROR_STREAM(get_logger(), "Invalid PTP Profile Provided. Please use '1588v2', '802.1as' or 'automotive'");
@@ -413,8 +418,16 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
   if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {  // ||
     return Status::SENSOR_CONFIG_ERROR;
   }
+  if (
+    sensor_configuration.hires_mode &&
+    !(sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDAR128_E3X ||
+      sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDAR128_E4X)) {
+        RCLCPP_ERROR_STREAM(get_logger(),
+                        "Only Pandar128 and OT128 support high resolution mode.");
+        return Status::SENSOR_CONFIG_ERROR;
+      }
 
-  RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
+    RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
   return Status::OK;
 }
 
@@ -452,7 +465,8 @@ rcl_interfaces::msg::SetParametersResult HesaiHwInterfaceRosWrapper::paramCallba
     get_param(p, "rotation_speed", new_param.rotation_speed) ||
     get_param(p, "cloud_min_angle", new_param.cloud_min_angle) ||
     get_param(p, "cloud_max_angle", new_param.cloud_max_angle) ||
-    get_param(p, "dual_return_distance_threshold", new_param.dual_return_distance_threshold)) {
+    get_param(p, "dual_return_distance_threshold", new_param.dual_return_distance_threshold) ||
+    get_param(p, "hires_mode", new_param.hires_mode)) {
     if (0 < sensor_model_str.length())
       new_param.sensor_model = nebula::drivers::SensorModelFromString(sensor_model_str);
     if (0 < return_mode_str.length())

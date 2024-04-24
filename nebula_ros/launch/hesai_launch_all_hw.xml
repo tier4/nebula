@@ -5,6 +5,7 @@
     <arg name="return_mode" default="Dual" description="See readme for supported return modes"/>
     <arg name="frame_id"  default="hesai"/>
     <arg name="scan_phase" default="0.0" />
+    <arg name="hires_mode" default="false" description="Whether to set the sensor to high resolution mode. See readme for supported sensors." />
 
     <arg name="packet_mtu_size" default="1500" description="Packet MTU size"/>
     <arg name="dual_return_distance_threshold" default="0.1" description="Distance threshold of dual return mode"/>
@@ -70,6 +71,7 @@
             <param name="ptp_domain" value="$(var ptp_domain)"/>
             <param name="ptp_transport_type" value="$(var ptp_transport_type)"/>
             <param name="ptp_switch_type" value="$(var ptp_switch_type)"/>
+            <param name="hires_mode" value="$(var hires_mode)"/>
         </node>
 
         <node pkg="nebula_ros" exec="hesai_hw_monitor_ros_wrapper_node"
