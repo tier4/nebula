@@ -323,12 +323,12 @@ public:
               // Condition added to avoid calculating points which are not in the interesting
               // defined area (cloud_min_angle < area < cloud_max_angle).
               if (
-                (current_block.rotation >= sensor_configuration_->cloud_min_angle * 100 &&
-                 current_block.rotation <= sensor_configuration_->cloud_max_angle * 100 &&
+                (azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100 &&
+                 azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 &&
                  sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle) ||
                 (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
-                 (current_block.rotation <= sensor_configuration_->cloud_max_angle * 100 ||
-                  current_block.rotation >= sensor_configuration_->cloud_min_angle * 100))) {
+                 (azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 ||
+                  azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) {
                 // convert polar coordinates to Euclidean XYZ.
                 const double cos_vert_angle = corrections.cos_vert_correction;
                 const double sin_vert_angle = corrections.sin_vert_correction;
