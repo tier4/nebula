@@ -28,9 +28,9 @@ namespace drivers
  * Raw Velodyne packet constants and structures.
  */
 static const int SIZE_BLOCK = 100;
-static const int RAW_SCAN_SIZE = 3;   // TODO: remove
+static const int RAW_SCAN_SIZE = 3;  // TODO: remove
 static const int RAW_CHANNEL_SIZE = 3;
-static const int SCANS_PER_BLOCK = 32; // TODO: remove
+static const int SCANS_PER_BLOCK = 32;  // TODO: remove
 static const int CHANNELS_PER_BLOCK = 32;
 static const int BLOCK_DATA_SIZE = (SCANS_PER_BLOCK * RAW_SCAN_SIZE);
 
@@ -54,6 +54,12 @@ static const int VLP16_SCANS_PER_FIRING = 16;
 static const float VLP16_BLOCK_DURATION = 110.592f;  // [µs]
 static const float VLP16_DSR_TOFFSET = 2.304f;       // [µs]
 static const float VLP16_FIRING_TOFFSET = 55.296f;   // [µs]
+
+/** Special Definitions for VLS32 support **/
+static const float VLP32_CHANNEL_DURATION =
+  2.304f;  // [µs] Channels corresponds to one laser firing
+static const float VLP32_SEQ_DURATION =
+  55.296f;  // [µs] Sequence is a set of laser firings including recharging
 
 /** Special Definitions for VLS128 support **/
 static const float VLP128_DISTANCE_RESOLUTION = 0.004f;  // [m]
