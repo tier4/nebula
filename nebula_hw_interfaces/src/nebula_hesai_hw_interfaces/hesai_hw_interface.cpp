@@ -262,8 +262,10 @@ HesaiPtpDiagStatus HesaiHwInterface::GetPtpDiagStatus()
   auto response_or_err = SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_STATUS});
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
-  if (response.size() != sizeof(HesaiPtpDiagStatus)) {
-    throw std::runtime_error("Unexpected payload size");
+  if (response.size() < sizeof(HesaiPtpDiagStatus)) {
+    throw std::runtime_error("HesaiPtpDiagStatus has unexpected payload size");
+  } else if (response.size() > sizeof(HesaiPtpDiagStatus)) {
+    PrintError("HesaiPtpDiagStatus from Sensor has unknown format. Will parse anyway.");
   }
 
   HesaiPtpDiagStatus hesai_ptp_diag_status;
@@ -281,9 +283,12 @@ HesaiPtpDiagPort HesaiHwInterface::GetPtpDiagPort()
   auto response_or_err = SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_PORT_DATA_SET});
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
-  if (response.size() != sizeof(HesaiPtpDiagPort)) {
-    throw std::runtime_error("Unexpected payload size");
+  if (response.size() < sizeof(HesaiPtpDiagPort)) {
+    throw std::runtime_error("HesaiPtpDiagPort has unexpected payload size");
+  } else if (response.size() > sizeof(HesaiPtpDiagPort)) {
+    PrintError("HesaiPtpDiagPort from Sensor has unknown format. Will parse anyway.");
   }
+
   HesaiPtpDiagPort hesai_ptp_diag_port;
   memcpy(&hesai_ptp_diag_port, response.data(), sizeof(HesaiPtpDiagPort));
 
@@ -299,8 +304,10 @@ HesaiPtpDiagTime HesaiHwInterface::GetPtpDiagTime()
   auto response_or_err = SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_TIME_STATUS_NP});
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
-  if (response.size() != sizeof(HesaiPtpDiagTime)) {
-    throw std::runtime_error("Unexpected payload size");
+  if (response.size() < sizeof(HesaiPtpDiagTime)) {
+    throw std::runtime_error("HesaiPtpDiagTime has unexpected payload size");
+  } else if (response.size() > sizeof(HesaiPtpDiagTime)) {
+    PrintError("HesaiPtpDiagTime from Sensor has unknown format. Will parse anyway.");
   }
 
   HesaiPtpDiagTime hesai_ptp_diag_time;
@@ -318,8 +325,10 @@ HesaiPtpDiagGrandmaster HesaiHwInterface::GetPtpDiagGrandmaster()
   auto response_or_err = SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_GRANDMASTER_SETTINGS_NP});
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
-  if (response.size() != sizeof(HesaiPtpDiagGrandmaster)) {
-    throw std::runtime_error("Unexpected payload size");
+  if (response.size() < sizeof(HesaiPtpDiagGrandmaster)) {
+    throw std::runtime_error("HesaiPtpDiagGrandmaster has unexpected payload size");
+  } else if (response.size() > sizeof(HesaiPtpDiagGrandmaster)) {
+    PrintError("HesaiPtpDiagGrandmaster from Sensor has unknown format. Will parse anyway.");
   }
 
   HesaiPtpDiagGrandmaster hesai_ptp_diag_grandmaster;
@@ -338,7 +347,7 @@ HesaiInventory HesaiHwInterface::GetInventory()
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
   if (response.size() < sizeof(HesaiInventory)) {
-    throw std::runtime_error("Unexpected payload size");
+    throw std::runtime_error("HesaiInventory has unexpected payload size");
   } else if (response.size() > sizeof(HesaiInventory)) {
     PrintError("HesaiInventory from Sensor has unknown format. Will parse anyway.");
   }
@@ -354,8 +363,10 @@ HesaiConfig HesaiHwInterface::GetConfig()
   auto response_or_err = SendReceive(PTC_COMMAND_GET_CONFIG_INFO);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
-  if (response.size() != sizeof(HesaiConfig)) {
-    throw std::runtime_error("Unexpected payload size");
+  if (response.size() < sizeof(HesaiConfig)) {
+    throw std::runtime_error("HesaiConfig has unexpected payload size");
+  } else if (response.size() > sizeof(HesaiConfig)) {
+    PrintError("HesaiConfig from Sensor has unknown format. Will parse anyway.");
   }
 
   HesaiConfig hesai_config;
@@ -370,8 +381,10 @@ HesaiLidarStatus HesaiHwInterface::GetLidarStatus()
   auto response_or_err = SendReceive(PTC_COMMAND_GET_LIDAR_STATUS);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
-  if (response.size() != sizeof(HesaiLidarStatus)) {
-    throw std::runtime_error("Unexpected payload size");
+  if (response.size() < sizeof(HesaiLidarStatus)) {
+    throw std::runtime_error("HesaiLidarStatus has unexpected payload size");
+  } else if (response.size() > sizeof(HesaiLidarStatus)) {
+    PrintError("HesaiLidarStatus from Sensor has unknown format. Will parse anyway.");
   }
 
   HesaiLidarStatus hesai_status;
@@ -590,7 +603,7 @@ HesaiPtpConfig HesaiHwInterface::GetPtpConfig()
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
   if (response.size() < sizeof(HesaiPtpConfig)) {
-    throw std::runtime_error("Unexpected payload size");
+    throw std::runtime_error("HesaiPtpConfig has unexpected payload size");
   } else if (response.size() > sizeof(HesaiPtpConfig)) {
     PrintError("HesaiPtpConfig from Sensor has unknown format. Will parse anyway.");
   }
@@ -630,8 +643,10 @@ HesaiLidarMonitor HesaiHwInterface::GetLidarMonitor()
   auto response_or_err = SendReceive(PTC_COMMAND_LIDAR_MONITOR);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
-  if (response.size() != sizeof(HesaiLidarMonitor)) {
-    throw std::runtime_error("Unexpected payload size");
+  if (response.size() < sizeof(HesaiLidarMonitor)) {
+    throw std::runtime_error("HesaiLidarMonitor has unexpected payload size");
+  } else if (response.size() > sizeof(HesaiLidarMonitor)) {
+    PrintError("HesaiLidarMonitor from Sensor has unknown format. Will parse anyway.");
   }
 
   HesaiLidarMonitor hesai_lidar_monitor;
