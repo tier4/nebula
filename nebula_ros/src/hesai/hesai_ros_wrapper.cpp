@@ -309,7 +309,7 @@ void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t>& packet)
     return;
   }
 
-  const auto now = std::chrono::system_clock::now();
+  const auto now = std::chrono::high_resolution_clock::now();
   const auto timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
 
   auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
