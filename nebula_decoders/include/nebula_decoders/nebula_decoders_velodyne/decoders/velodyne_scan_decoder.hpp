@@ -42,9 +42,9 @@ namespace nebula::drivers
  * Raw Velodyne packet constants and structures.
  */
 static const int SIZE_BLOCK = 100;
-static const int RAW_SCAN_SIZE = 3;   // TODO: remove
+static const int RAW_SCAN_SIZE = 3;  // TODO: remove
 static const int RAW_CHANNEL_SIZE = 3;
-static const int SCANS_PER_BLOCK = 32; // TODO: remove
+static const int SCANS_PER_BLOCK = 32;  // TODO: remove
 static const int CHANNELS_PER_BLOCK = 32;
 static const int BLOCK_DATA_SIZE = (SCANS_PER_BLOCK * RAW_SCAN_SIZE);
 
@@ -72,6 +72,12 @@ static const float g_vlp16_firing_toffset = 55.296f;   // [µs]
 /** Special Defines for VLP32 support **/
 static const float g_vlp32_channel_duration = 2.304f;  // [µs]
 static const float g_vlp32_seq_duration = 55.296f;     // [µs]
+
+/** Special Definitions for VLS32 support **/
+static const float VLP32_CHANNEL_DURATION =
+  2.304f;  // [µs] Channels corresponds to one laser firing
+static const float VLP32_SEQ_DURATION =
+  55.296f;  // [µs] Sequence is a set of laser firings including recharging
 
 /** Special Definitions for VLS128 support **/
 static const float g_vlp128_distance_resolution = 0.004f;  // [m]

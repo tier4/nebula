@@ -261,7 +261,9 @@ public:
         (sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle &&
          azimuth >= sensor_configuration_->cloud_min_angle * 100 &&
          azimuth <= sensor_configuration_->cloud_max_angle * 100) ||
-        (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle)) {
+        (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
+         (azimuth <= sensor_configuration_->cloud_max_angle * 100 ||
+          azimuth >= sensor_configuration_->cloud_min_angle * 100))) {
         for (int firing_seq = 0, k = 0;
              firing_seq <
              std::max(static_cast<long>(SensorT::firing_sequences_per_block), static_cast<long>(1));
@@ -300,7 +302,8 @@ public:
             const uint laser_number =
               channel + bank_origin;  // offset the laser in this block by which block it's in
             const uint firing_order =
-              laser_number / SensorT::num_simultaneous_firings;  // VLS-128 fires 8 lasers at a time
+              laser_number / SensorT::num_simultaneous_firings;  // VLS-128 fires 8 lasers at a
+                                                                 // time, VLP32 = 2, VLP16 = 1
 
             VelodyneLaserCorrection & corrections =
               calibration_configuration_->velodyne_calibration.laser_corrections[laser_number];
@@ -320,12 +323,12 @@ public:
               // Condition added to avoid calculating points which are not in the interesting
               // defined area (cloud_min_angle < area < cloud_max_angle).
               if (
-                (azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100 &&
-                 azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 &&
+                (current_block.rotation >= sensor_configuration_->cloud_min_angle * 100 &&
+                 current_block.rotation <= sensor_configuration_->cloud_max_angle * 100 &&
                  sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle) ||
                 (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
-                 (azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 ||
-                  azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) {
+                 (current_block.rotation <= sensor_configuration_->cloud_max_angle * 100 ||
+                  current_block.rotation >= sensor_configuration_->cloud_min_angle * 100))) {
                 // convert polar coordinates to Euclidean XYZ.
                 const float cos_vert_angle = corrections.cos_vert_correction;
                 const float sin_vert_angle = corrections.sin_vert_correction;
@@ -344,6 +347,7 @@ public:
                 const float x_coord = xy_distance * cos_rot_angle;     // velodyne y
                 const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
                 const float z_coord = distance * sin_vert_angle;       // velodyne z
+
                 const uint8_t intensity = current_block.data[k + 2];
 
                 last_block_timestamp_ = block_timestamp;
@@ -396,6 +400,7 @@ public:
                   default:
                     return_type = static_cast<uint8_t>(drivers::ReturnType::UNKNOWN);
                 }
+
                 drivers::NebulaPoint current_point{};
                 current_point.x = x_coord;
                 current_point.y = y_coord;

@@ -29,8 +29,6 @@ public:
   constexpr static int channels_per_firing_sequence = 16;
 
   constexpr static float distance_resolution_m = 0.002f;
-
-  constexpr static char sensor_model[16] = "vlp16";
 };
 }  // namespace drivers
 }  // namespace nebula
