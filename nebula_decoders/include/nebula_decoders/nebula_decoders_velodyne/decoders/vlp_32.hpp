@@ -12,7 +12,8 @@ public:
   bool fillAzimuthCache()
   {
     for (uint8_t i = 0; i < 16; i++) {
-      laser_azimuth_cache_[i] = (VLP32_CHANNEL_DURATION / VLP32_SEQ_DURATION) * (i + i / 8);
+      laser_azimuth_cache_[i] = (VLP32_CHANNEL_DURATION / VLP32_SEQ_DURATION) *
+                                (i + i / 2);  // TODO: better understand this calculation
     }
     return true;
   }
