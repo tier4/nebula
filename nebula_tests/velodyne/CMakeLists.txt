@@ -39,3 +39,24 @@ target_link_libraries(velodyne_ros_decoder_test_main_vls128
         ${PCL_LIBRARIES}
         velodyne_ros_decoder_test_vls128
         )
+
+# Velodyne VLP32
+ament_auto_add_library(velodyne_ros_decoder_test_vlp32 SHARED
+velodyne_ros_decoder_test_vlp32.cpp
+)
+target_link_libraries(velodyne_ros_decoder_test_vlp32 ${PCL_LIBRARIES} ${NEBULA_TEST_LIBRARIES})
+
+ament_add_gtest(velodyne_ros_decoder_test_main_vlp32
+velodyne_ros_decoder_test_main_vlp32.cpp
+)
+ament_target_dependencies(velodyne_ros_decoder_test_main_vlp32
+${NEBULA_TEST_DEPENDENCIES}
+)
+target_include_directories(velodyne_ros_decoder_test_main_vlp32 PUBLIC
+${PROJECT_SOURCE_DIR}/src/velodyne
+include
+)
+target_link_libraries(velodyne_ros_decoder_test_main_vlp32
+${PCL_LIBRARIES}
+velodyne_ros_decoder_test_vlp32
+)
