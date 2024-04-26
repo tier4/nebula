@@ -74,7 +74,7 @@ public:
     phase_ = (uint16_t)round(sensor_configuration_->scan_phase * 100);
 
     // fill vls128 laser azimuth cache
-    sensor_.fillAzimuthCache();  // TODO: predefine azimuth cache and remove this
+    sensor_.fillAzimuthCache();  // TODO: predefine azimuth cache and remove this for performance?
 
     // timing table calculation, from velodyne user manual p.64
     timing_offsets_.resize(BLOCKS_PER_PACKET);  // x dir size
@@ -112,7 +112,7 @@ public:
   // DONE
   bool hasScanned() { return has_scanned_; }
 
-  // TODO: better understand differences in this function between sensor models
+  // TODO: better understand differences in this function between sensor models. Was it a bug?
   std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud()
   {
     double phase = angles::from_degrees(sensor_configuration_->scan_phase);
@@ -191,7 +191,6 @@ public:
     overflow_pc_->points.reserve(max_pts_);
   }
 
-  // TODO: add in VLP32 logic
   void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
   {
     const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
