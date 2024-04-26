@@ -112,20 +112,17 @@ public:
   // DONE
   bool hasScanned() { return has_scanned_; }
 
-  // TODO: better understand differences in this function between sensor models. Was it a bug?
   std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud()
   {
     double phase = angles::from_degrees(sensor_configuration_->scan_phase);
     if (!scan_pc_->points.empty()) {
       auto current_azimuth = scan_pc_->points.back().azimuth;
-      auto phase_diff =
-        static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
+      auto phase_diff = (2 * M_PI + current_azimuth - phase);
       while (phase_diff < M_PI_2 && !scan_pc_->points.empty()) {
         overflow_pc_->points.push_back(scan_pc_->points.back());
         scan_pc_->points.pop_back();
         current_azimuth = scan_pc_->points.back().azimuth;
-        phase_diff =
-          static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
+        phase_diff = (2 * M_PI + current_azimuth - phase);
       }
       overflow_pc_->width = overflow_pc_->points.size();
       scan_pc_->width = scan_pc_->points.size();
