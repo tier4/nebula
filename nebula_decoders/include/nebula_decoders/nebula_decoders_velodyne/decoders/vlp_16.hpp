@@ -29,6 +29,12 @@ public:
   constexpr static int channels_per_firing_sequence = 16;
 
   constexpr static float distance_resolution_m = 0.002f;
+
+  constexpr static double full_firing_cycle_s = 55.296 * 1e-6;
+
+  constexpr static double single_firing_s = 2.304 * 1e-6;
+
+  constexpr static double offset_packet_time = 0;
 };
 }  // namespace drivers
 }  // namespace nebula
