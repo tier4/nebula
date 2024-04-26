@@ -12,13 +12,11 @@ public:
   bool fillAzimuthCache()
   {
     for (uint8_t i = 0; i < 16; i++) {
-      laser_azimuth_cache_[i] = (VLP32_CHANNEL_DURATION / VLP32_SEQ_DURATION) *
-                                (i + i / 2);  // TODO: better understand this calculation
+      laser_azimuth_cache_[i] = (VLP32_CHANNEL_DURATION / VLP32_SEQ_DURATION) * (i + i / 2);
     }
     return true;
   }
 
-  // TODO: implement this function
   uint16_t getAzimuthCorrected(
     uint16_t azimuth, float azimuth_diff, int firing_sequence, int firing_order)
   {
@@ -35,7 +33,13 @@ public:
 
   constexpr static int channels_per_firing_sequence = 32;
 
-  constexpr static float distance_resolution_m = 0.004f;  // TODO: double check this
+  constexpr static float distance_resolution_m = 0.004f;
+
+  constexpr static double full_firing_cycle_s = 55.296 * 1e-6;
+
+  constexpr static double single_firing_s = 2.304 * 1e-6;
+
+  constexpr static double offset_packet_time = 0;
 
 private:
   float laser_azimuth_cache_[16];

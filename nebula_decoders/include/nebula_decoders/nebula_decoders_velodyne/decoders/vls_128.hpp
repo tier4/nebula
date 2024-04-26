@@ -41,6 +41,12 @@ public:
 
   constexpr static float distance_resolution_m = 0.004f;
 
+  constexpr static double full_firing_cycle_s = 53.3 * 1e-6;
+
+  constexpr static double single_firing_s = 2.665 * 1e-6;
+
+  constexpr static double offset_packet_time = 8.7 * 1e-6;
+
 private:
   float laser_azimuth_cache_[16];
 };

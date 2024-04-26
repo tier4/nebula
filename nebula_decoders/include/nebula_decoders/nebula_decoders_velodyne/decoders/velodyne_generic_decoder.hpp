@@ -83,9 +83,9 @@ public:
         CHANNELS_PER_BLOCK + SensorT::num_maintenance_periods);  // y dir size
     }
 
-    double full_firing_cycle_s = 53.3 * 1e-6;
-    double single_firing_s = 2.665 * 1e-6;
-    double offset_packet_time = 8.7 * 1e-6;
+    double full_firing_cycle_s = SensorT::full_firing_cycle_s;
+    double single_firing_s = SensorT::single_firing_s;
+    double offset_packet_time = SensorT::offset_packet_time;
     bool dual_mode = sensor_configuration_->return_mode == ReturnMode::DUAL;
     double firing_sequence_index, data_point_index;
     // compute timing offsets
@@ -354,9 +354,7 @@ public:
 
                 last_block_timestamp_ = block_timestamp;
 
-                // TODO: replace magic numbers 16 and 64
-                double point_time_offset =
-                  timing_offsets_[block][firing_seq * 16 + firing_order + laser_number / 64];
+                double point_time_offset = timing_offsets_[block][channel];
 
                 // Determine return type.
                 uint8_t return_type;
