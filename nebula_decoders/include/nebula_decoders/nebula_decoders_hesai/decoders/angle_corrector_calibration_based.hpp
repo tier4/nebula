@@ -11,7 +11,7 @@ namespace drivers
 {
 
 template <size_t ChannelN, size_t AngleUnit>
-class AngleCorrectorCalibrationBased : public AngleCorrector
+class AngleCorrectorCalibrationBased : public AngleCorrector<HesaiCalibrationConfiguration>
 {
 private:
   static constexpr size_t MAX_AZIMUTH_LEN = 360 * AngleUnit;
@@ -27,9 +27,7 @@ private:
 
 public:
   AngleCorrectorCalibrationBased(
-    const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration,
-    const std::shared_ptr<const HesaiCorrection> & sensor_correction)
-  : AngleCorrector(sensor_calibration, sensor_correction)
+    const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration)
   {
     if (sensor_calibration == nullptr) {
       throw std::runtime_error(
