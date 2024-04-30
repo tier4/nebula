@@ -204,16 +204,12 @@ protected:
 public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
-  /// @param calibration_configuration Calibration for this decoder (can be nullptr if
-  /// correction_configuration is set)
-  /// @param correction_configuration Correction for this decoder (can be nullptr if
-  /// calibration_configuration is set)
+  /// @param correction_data Calibration data for this decoder
   explicit HesaiDecoder(
     const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<const HesaiCalibrationConfiguration> & calibration_configuration,
-    const std::shared_ptr<const HesaiCorrection> & correction_configuration)
+    const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> & correction_data)
   : sensor_configuration_(sensor_configuration),
-    angle_corrector_(calibration_configuration, correction_configuration),
+    angle_corrector_(correction_data),
     logger_(rclcpp::get_logger("HesaiDecoder"))
   {
     logger_.set_level(rclcpp::Logger::Level::Debug);

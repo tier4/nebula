@@ -23,19 +23,11 @@ struct CorrectedAngleData
 
 /// @brief Handles angle correction for given azimuth/channel combinations, as well as trigonometry
 /// lookup tables
+template <typename CorrectionDataT>
 class AngleCorrector
 {
-protected:
-  const std::shared_ptr<const HesaiCalibrationConfiguration> sensor_calibration_;
-  const std::shared_ptr<const HesaiCorrection> sensor_correction_;
-
 public:
-  AngleCorrector(
-    const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration,
-    const std::shared_ptr<const HesaiCorrection> & sensor_correction)
-  : sensor_calibration_(sensor_calibration), sensor_correction_(sensor_correction)
-  {
-  }
+  using correction_data_t = CorrectionDataT;
 
   /// @brief Get the corrected azimuth and elevation for a given block and channel, along with their
   /// sin/cos values.
