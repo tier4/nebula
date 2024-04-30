@@ -10,7 +10,7 @@ namespace drivers
 class VelodyneSensor
 {
 public:
-  virtual int getNumPaddingBlocks(bool dual_return) { return 0; }
+  virtual int getNumPaddingBlocks(bool /* dual_return */) { return 0; }
 
   virtual bool fillAzimuthCache() { return false; }
 

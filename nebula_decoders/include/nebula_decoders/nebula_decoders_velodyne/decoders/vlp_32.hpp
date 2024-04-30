@@ -18,7 +18,7 @@ public:
   }
 
   uint16_t getAzimuthCorrected(
-    uint16_t azimuth, float azimuth_diff, int firing_sequence, int firing_order)
+    uint16_t azimuth, float azimuth_diff, int /* firing_sequence */, int firing_order)
   {
     float azimuth_corrected = azimuth + (azimuth_diff * laser_azimuth_cache_[firing_order]);
 
