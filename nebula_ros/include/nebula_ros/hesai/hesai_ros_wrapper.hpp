@@ -9,7 +9,7 @@
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 #include "nebula_ros/hesai/hw_interface_wrapper.hpp"
 #include "nebula_ros/hesai/hw_monitor_wrapper.hpp"
-#include "nebula_ros/hesai/mt_queue.hpp"
+#include "nebula_ros/common/mt_queue.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
