@@ -1,5 +1,7 @@
 #pragma once
 
+#include "nebula_ros/common/parameter_descriptors.hpp"
+
 #include <boost_tcp_driver/tcp_driver.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/robosense/robosense_common.hpp>

@@ -15,12 +15,8 @@ RobosenseHwMonitorWrapper::RobosenseHwMonitorWrapper(
   status_(nebula::Status::NOT_INITIALIZED),
   sensor_cfg_ptr_(config)
 {
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.read_only = true;
-    descriptor.additional_constraints = "milliseconds";
-    diag_span_ = parent_->declare_parameter<uint16_t>("diag_span", 1000, descriptor);
-  }
+  auto descriptor = param_read_only().set__additional_constraints("milliseconds");
+  diag_span_ = parent_->declare_parameter<uint16_t>("diag_span", 1000, descriptor);
 }
 
 void RobosenseHwMonitorWrapper::InitializeRobosenseDiagnostics()
