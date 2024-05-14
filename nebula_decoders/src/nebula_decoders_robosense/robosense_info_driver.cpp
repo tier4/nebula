@@ -6,7 +6,7 @@ namespace drivers
 {
 
 RobosenseInfoDriver::RobosenseInfoDriver(
-  const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration)
+  const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration)
 {
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;

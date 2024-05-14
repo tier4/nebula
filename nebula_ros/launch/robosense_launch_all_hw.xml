@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="sensor_model" description="Helios|Bpearl"/>
+    <arg name="return_mode" default="Strongest" description="See readme for supported return modes"/>
+    <arg name="frame_id" default="robosense"/>
+    <arg name="scan_phase" default="0.0"/>
+
+    <arg name="sensor_ip" default="192.168.1.202" description="Lidar Sensor IP"/>
+    <arg name="host_ip" default="192.168.1.201" description="Broadcast IP from Sensor"/>
+    <arg name="data_port" default="6701" description="LiDAR Data Port"/>
+    <arg name="gnss_port" default="7792" description="LiDAR GNSS Port"/>
+
+    <arg name="dual_return_distance_threshold" default="0.1" description="Distance threshold of dual return mode"/>
+    <arg name="diag_span" default="1000" description="milliseconds"/>
+    <arg name="launch_hw" default="true"/>
+
+    <node pkg="nebula_ros" exec="robosense_ros_wrapper_node"
+          name="nebula_robosense" output="screen">
+        <param name="sensor_model" value="$(var sensor_model)"/>
+        <param name="return_mode" value="$(var return_mode)"/>
+        <param name="frame_id" value="$(var frame_id)"/>
+        <param name="scan_phase" value="$(var scan_phase)"/>
+        <param name="sensor_ip" value="$(var sensor_ip)"/>
+        <param name="host_ip" value="$(var host_ip)"/>
+        <param name="data_port" value="$(var data_port)"/>
+        <param name="gnss_port" value="$(var gnss_port)"/>
+        <param name="dual_return_distance_threshold" value="$(var dual_return_distance_threshold)"/>
+        <param name="diag_span" value="$(var diag_span)"/>
+        <param name="launch_hw" value="$(var launch_hw)"/>
+    </node>
+
+</launch>

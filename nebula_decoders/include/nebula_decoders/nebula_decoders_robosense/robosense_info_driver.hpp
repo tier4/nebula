@@ -41,7 +41,7 @@ public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this driver
   explicit RobosenseInfoDriver(
-    const std::shared_ptr<drivers::RobosenseSensorConfiguration> & sensor_configuration);
+    const std::shared_ptr<const drivers::RobosenseSensorConfiguration> & sensor_configuration);
 
   /// @brief Get current status of this driver
   /// @return Current status

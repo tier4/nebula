@@ -37,8 +37,8 @@ public:
   /// @param sensor_configuration SensorConfiguration for this driver
   /// @param calibration_configuration CalibrationConfiguration for this driver
   explicit RobosenseDriver(
-    const std::shared_ptr<drivers::RobosenseSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<drivers::RobosenseCalibrationConfiguration> & calibration_configuration);
+    const std::shared_ptr<const drivers::RobosenseSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<const drivers::RobosenseCalibrationConfiguration> & calibration_configuration);
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -53,8 +53,7 @@ public:
   /// @brief Convert RobosenseScan message to point cloud
   /// @param robosense_scan Message
   /// @return tuple of Point cloud and timestamp
-  std::tuple<drivers::NebulaPointCloudPtr, double> ConvertScanToPointcloud(
-    const std::shared_ptr<robosense_msgs::msg::RobosenseScan> & robosense_scan);
+  std::tuple<drivers::NebulaPointCloudPtr, double> ParseCloudPacket(const std::vector<uint8_t> & packet);
 };
 
 }  // namespace drivers

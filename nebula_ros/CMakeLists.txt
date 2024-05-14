@@ -79,33 +79,17 @@ rclcpp_components_register_node(velodyne_driver_ros_wrapper
 
 ## Robosense
 # Hw Interface
-ament_auto_add_library(robosense_hw_ros_wrapper SHARED
-        src/robosense/robosense_hw_interface_ros_wrapper.cpp
+ament_auto_add_library(robosense_ros_wrapper SHARED
+        src/robosense/robosense_ros_wrapper.cpp
+        src/robosense/decoder_wrapper.cpp
+        src/robosense/hw_interface_wrapper.cpp
+        src/robosense/hw_monitor_wrapper.cpp
+        src/common/parameter_descriptors.cpp
         )
 
-rclcpp_components_register_node(robosense_hw_ros_wrapper
-        PLUGIN "RobosenseHwInterfaceRosWrapper"
-        EXECUTABLE robosense_hw_interface_ros_wrapper_node
-        )
-
-# DriverDecoder
-ament_auto_add_library(robosense_driver_ros_wrapper SHARED
-        src/robosense/robosense_decoder_ros_wrapper.cpp
-        )
-
-rclcpp_components_register_node(robosense_driver_ros_wrapper
-        PLUGIN "RobosenseDriverRosWrapper"
-        EXECUTABLE robosense_driver_ros_wrapper_node
-        )
-
-# Monitor
-ament_auto_add_library(robosense_hw_monitor_ros_wrapper SHARED
-        src/robosense/robosense_hw_monitor_ros_wrapper.cpp
-        )
-
-rclcpp_components_register_node(robosense_hw_monitor_ros_wrapper
-        PLUGIN "RobosenseHwMonitorRosWrapper"
-        EXECUTABLE robosense_hw_monitor_ros_wrapper_node
+rclcpp_components_register_node(robosense_ros_wrapper
+        PLUGIN "RobosenseRosWrapper"
+        EXECUTABLE robosense_ros_wrapper_node
         )
 
 ## Continental
