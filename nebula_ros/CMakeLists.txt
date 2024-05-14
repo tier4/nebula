@@ -257,6 +257,7 @@ target_link_libraries(robosense_hw_monitor_ros_wrapper PUBLIC
     ${diagnostic_msgs_TARGETS}
     ${robosense_msgs_TARGETS}
     nebula_decoders::nebula_decoders_robosense
+    nebula_decoders::nebula_decoders_robosense_info
     nebula_hw_interfaces::nebula_hw_interfaces_robosense
 )
 target_include_directories(robosense_hw_monitor_ros_wrapper PUBLIC
