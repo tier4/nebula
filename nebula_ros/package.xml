@@ -23,7 +23,7 @@
   <depend>nebula_hw_interfaces</depend>
   <depend>nebula_msgs</depend>
   <depend>pandar_msgs</depend>
-  <depend>pcl_conversions</depend>
+  <depend>pcl_ros</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>robosense_msgs</depend>

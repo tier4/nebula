@@ -3,7 +3,7 @@ project(nebula_tests)
 
 find_package(ament_cmake_auto REQUIRED)
 
-ament_auto_find_build_dependencies()
+#ament_auto_find_build_dependencies()
 
 # Default to C++17
 if (NOT CMAKE_CXX_STANDARD)
@@ -26,14 +26,20 @@ elseif(${ROS_DISTRO} STREQUAL "humble")
 endif()
 
 
-find_package(PCL REQUIRED)
-find_package(rosbag2_cpp REQUIRED)
-find_package(pcl_conversions REQUIRED)
+find_package(PCL REQUIRED components common io)
+find_package(continental_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
 find_package(nebula_common REQUIRED)
 find_package(nebula_decoders REQUIRED)
 find_package(nebula_hw_interfaces REQUIRED)
+find_package(nebula_msgs REQUIRED)
+find_package(nebula_ros REQUIRED)
+find_package(pcl_conversions REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(rosbag2_cpp REQUIRED)
+
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
@@ -45,15 +51,62 @@ if(BUILD_TESTING)
     # TODO: FIX this path to point to nebula_decoders/calibration
     add_definitions(-D_SRC_CALIBRATION_DIR_PATH="${PROJECT_SOURCE_DIR}/../nebula_decoders/calibration/")
 
-    set(NEBULA_TEST_DEPENDENCIES
-            rclcpp
-            rosbag2_cpp
-            continental_msgs
-            nebula_msgs
-            pandar_msgs
-            velodyne_msgs
-            )
+    set(NEBULA_TEST_INCLUDE_DIRS
+        ${continental_msgs_INCLUDE_DIRS}
+        ${diagnostic_msgs_INCLUDE_DIRS}
+        ${diagnostic_updater_INCLUDE_DIRS}
+        ${nebula_common_INCLUDE_DIRS}
+        ${nebula_decoders_INCLUDE_DIRS}
+        ${nebula_hw_interfaces_INCLUDE_DIRS}
+        ${nebula_msgs_INCLUDE_DIRS}
+        ${nebula_ros_INCLUDE_DIRS}
+        ${pcl_conversions_INCLUDE_DIRS}
+        ${rclcpp_INCLUDE_DIRS}
+        ${rclcpp_components_INCLUDE_DIRS}
+        ${rosbag2_cpp_INCLUDE_DIRS}
+    )
 
+    set(NEBULA_TEST_LIBRARIES
+        #${continental_msgs_TARGETS}
+        ${diagnostic_msgs_TARGETS}
+        ${diagnostic_updater_TARGETS}
+        ${nebula_common_TARGETS}
+        #${nebula_decoders_TARGETS}
+        #${nebula_hw_interfaces_TARGETS}
+        #${nebula_msgs_TARGETS}
+        #${nebula_ros_TARGETS}
+        ${pcl_conversions_LIBRARIES}
+        ${rclcpp_TARGETS}
+        ${rclcpp_components_TARGETS}
+        ${rosbag2_cpp_TARGETS}
+    )
+
+    set(CONTINENTAL_TEST_LIBRARIES
+        ${NEBULA_TEST_LIBRARIES}
+        ${continental_msgs_TARGETS}
+        ${nebula_msgs_TARGETS}
+        nebula_hw_interfaces::nebula_hw_interfaces_continental
+        nebula_decoders::nebula_decoders_continental
+    )
+
+    set(HESAI_TEST_LIBRARIES
+        ${NEBULA_TEST_LIBRARIES}
+        nebula_hw_interfaces::nebula_hw_interfaces_hesai
+        nebula_decoders::nebula_decoders_hesai
+    )
+
+    set(VELODYNE_TEST_LIBRARIES
+        ${NEBULA_TEST_LIBRARIES}
+        nebula_hw_interfaces::nebula_hw_interfaces_velodyne
+        nebula_decoders::nebula_decoders_velodyne
+    )
+
+    message(STATUS "========== | NEBULA_TEST_LIBRARIES: ${NEBULA_TEST_LIBRARIES}")
+
+    #foreach(package ${NEBULA_TEST_DEPENDENCIES})
+    #    message(STATUS "LIBRARIES for ${package}: ${${package}_LIBRARIES}")
+    #    message(STATUS "TARGETS for ${package}: ${${package}_TARGETS}")
+    #endforeach()
 
     add_subdirectory(continental)
     add_subdirectory(hesai)

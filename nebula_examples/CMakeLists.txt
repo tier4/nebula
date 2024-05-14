@@ -11,50 +11,100 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake_auto REQUIRED)
-find_package(PCL REQUIRED COMPONENTS common)
-find_package(PCL REQUIRED)
-find_package(pcl_conversions REQUIRED)
-find_package(yaml-cpp REQUIRED)
 find_package(nebula_decoders REQUIRED)
+find_package(nebula_hw_interfaces REQUIRED)
 find_package(nebula_ros REQUIRED)
 find_package(nebula_common REQUIRED)
+find_package(PCL REQUIRED COMPONENTS common)
+find_package(pcl_conversions REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rosbag2_cpp REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
-ament_auto_find_build_dependencies()
+#ament_auto_find_build_dependencies()
 
 include_directories(
-        include
-        SYSTEM
-        ${YAML_CPP_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${PCL_COMMON_INCLUDE_DIRS}
+    include
+    SYSTEM
+    ${nebula_decoders_INCLUDE_DIRS}
+    ${nebula_ros_INCLUDE_DIRS}
+    ${PCL_INCLUDE_DIRS}
+    ${PCL_COMMON_INCLUDE_DIRS}
+    ${rosbag2_cpp_INCLUDE_DIRS}
+    ${YAML_CPP_INCLUDE_DIRS}
 )
+
+message(STATUS "rosbag_cpp_INCLUDE_DIRS: ${rosbag2_cpp_INCLUDE_DIRS}")
+message(STATUS "rosbag_cpp_LIBRARIES: ${rosbag2_cpp_LIBRARIES}")
+message(STATUS "rosbag_cpp_TARGETS: ${rosbag2_cpp_TARGETS}")
+
+link_libraries(
+    ${rosbag2_cpp_TARGETS}
+    ${PCL_LIBRARIES}
+)
+
+message(STATUS "nebula_ros_INCLUDE_DIRS: ${nebula_ros_INCLUDE_DIRS}")
+
 ## HESAI
 # Offline Lib
-ament_auto_add_library(hesai_ros_offline_extract_pcd SHARED
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_pcd.cpp
+add_library(hesai_ros_offline_extract_pcd SHARED
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_pcd.cpp
 )
-target_link_libraries(hesai_ros_offline_extract_pcd ${PCL_LIBRARIES})
-ament_auto_add_executable(hesai_ros_offline_extract_pcd_node
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_pcd_main.cpp
+target_link_libraries(hesai_ros_offline_extract_pcd PUBLIC
+    nebula_decoders::nebula_decoders_hesai
 )
+
+add_executable(hesai_ros_offline_extract_pcd_node
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_pcd_main.cpp
+)
+
+target_link_libraries(hesai_ros_offline_extract_pcd_node PUBLIC
+    hesai_ros_offline_extract_pcd
+)
+
 # Extraction for TEST Lib
-ament_auto_add_library(hesai_ros_offline_extract_bag_pcd SHARED
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_pcd.cpp
+add_library(hesai_ros_offline_extract_bag_pcd SHARED
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_pcd.cpp
 )
-target_link_libraries(hesai_ros_offline_extract_bag_pcd ${PCL_LIBRARIES})
-ament_auto_add_executable(hesai_ros_offline_extract_bag_pcd_node
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_pcd_main.cpp
+target_link_libraries(hesai_ros_offline_extract_bag_pcd PUBLIC
+    nebula_decoders::nebula_decoders_hesai
+)
+
+add_executable(hesai_ros_offline_extract_bag_pcd_node
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_pcd_main.cpp
+)
+
+target_link_libraries(hesai_ros_offline_extract_bag_pcd_node PUBLIC
+    hesai_ros_offline_extract_bag_pcd
 )
 
 ## Velodyne
 # Extraction for TEST Lib
-ament_auto_add_library(velodyne_ros_offline_extract_bag_pcd SHARED
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_ros_offline_extract_bag_pcd.cpp
+add_library(velodyne_ros_offline_extract_bag_pcd SHARED
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_ros_offline_extract_bag_pcd.cpp
 )
-target_link_libraries(velodyne_ros_offline_extract_bag_pcd ${PCL_LIBRARIES})
-ament_auto_add_executable(velodyne_ros_offline_extract_bag_pcd_node
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_ros_offline_extract_bag_pcd_main.cpp
+target_link_libraries(velodyne_ros_offline_extract_bag_pcd PUBLIC
+    nebula_decoders::nebula_decoders_velodyne
 )
+
+add_executable(velodyne_ros_offline_extract_bag_pcd_node
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_ros_offline_extract_bag_pcd_main.cpp
+)
+
+target_link_libraries(velodyne_ros_offline_extract_bag_pcd_node PUBLIC
+    velodyne_ros_offline_extract_bag_pcd
+)
+
+
+#ament_auto_add_library(velodyne_ros_offline_extract_bag_pcd SHARED
+#    ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_ros_offline_extract_bag_pcd.cpp
+#)
+#target_link_libraries(velodyne_ros_offline_extract_bag_pcd ${PCL_LIBRARIES})
+#ament_auto_add_executable(velodyne_ros_offline_extract_bag_pcd_node
+#    ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_ros_offline_extract_bag_pcd_main.cpp
+#)
+
+
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
