@@ -90,13 +90,25 @@ target_include_directories(nebula_decoders_velodyne PUBLIC
 
 # Robosense
 add_library(nebula_decoders_robosense SHARED
-src/nebula_decoders_robosense/robosense_driver.cpp
+    src/nebula_decoders_robosense/robosense_driver.cpp
 )
 target_link_libraries(nebula_decoders_robosense PUBLIC
     ${robosense_msgs_TARGETS}
     ${common_targets}
 )
 target_include_directories(nebula_decoders_robosense PUBLIC
+    ${robosense_msgs_INCLUDE_DIRS}
+    ${common_include_dirs}
+)
+
+add_library(nebula_decoders_robosense_info SHARED
+    src/nebula_decoders_robosense/robosense_info_driver.cpp
+)
+target_link_libraries(nebula_decoders_robosense_info PUBLIC
+    ${robosense_msgs_TARGETS}
+    ${common_targets}
+)
+target_include_directories(nebula_decoders_robosense_info PUBLIC
     ${robosense_msgs_INCLUDE_DIRS}
     ${common_include_dirs}
 )
@@ -127,6 +139,7 @@ target_include_directories(nebula_decoders_continental PUBLIC
 install(TARGETS nebula_decoders_hesai EXPORT export_nebula_decoders_hesai)
 install(TARGETS nebula_decoders_velodyne EXPORT export_nebula_decoders_velodyne)
 install(TARGETS nebula_decoders_robosense EXPORT export_nebula_decoders_robosense)
+install(TARGETS nebula_decoders_robosense_info EXPORT export_nebula_decoders_robosense_info)
 install(TARGETS nebula_decoders_continental EXPORT export_nebula_decoders_continental)
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
@@ -139,6 +152,7 @@ ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_decoders_hesai)
 ament_export_targets(export_nebula_decoders_velodyne)
 ament_export_targets(export_nebula_decoders_robosense)
+ament_export_targets(export_nebula_decoders_robosense_info)
 ament_export_targets(export_nebula_decoders_continental)
 
 install(

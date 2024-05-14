@@ -234,6 +234,7 @@ add_library(robosense_driver_ros_wrapper SHARED
 target_link_libraries(robosense_driver_ros_wrapper PUBLIC
     ${robosense_msgs_TARGETS}
     nebula_decoders::nebula_decoders_robosense
+    nebula_decoders::nebula_decoders_robosense_info
     nebula_hw_interfaces::nebula_hw_interfaces_robosense
 )
 target_include_directories(robosense_driver_ros_wrapper PUBLIC
