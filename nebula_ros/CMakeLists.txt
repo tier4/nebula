@@ -34,6 +34,21 @@ include_directories(
         ${PCL_COMMON_INCLUDE_DIRS}
 )
 link_libraries(${YAML_CPP_LIBRARIES} ${PCL_LIBRARIES})
+
+## Tutorial
+ament_auto_add_library(tutorial_ros_wrapper SHARED
+        src/tutorial/tutorial_ros_wrapper.cpp
+        src/tutorial/decoder_wrapper.cpp
+        src/tutorial/hw_interface_wrapper.cpp
+        src/tutorial/hw_monitor_wrapper.cpp
+        src/common/parameter_descriptors.cpp
+        )
+
+rclcpp_components_register_node(tutorial_ros_wrapper
+        PLUGIN "TutorialRosWrapper"
+        EXECUTABLE tutorial_ros_wrapper_node
+        )
+
 ## Hesai
 ament_auto_add_library(hesai_ros_wrapper SHARED
         src/hesai/hesai_ros_wrapper.cpp
