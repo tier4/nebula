@@ -11,16 +11,15 @@
 #if (BOOST_VERSION / 100 == 1074)  // Boost 1.74
 #define BOOST_ALLOW_DEPRECATED_HEADERS
 #endif
-#include "boost_tcp_driver/http_client_driver.hpp"
-#include "boost_udp_driver/udp_driver.hpp"
-#include "nebula_common/velodyne/velodyne_common.hpp"
-#include "nebula_common/velodyne/velodyne_status.hpp"
+
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 
-#include <rclcpp/rclcpp.hpp>
+#include <boost_tcp_driver/http_client_driver.hpp>
+#include <boost_udp_driver/udp_driver.hpp>
+#include <nebula_common/velodyne/velodyne_common.hpp>
+#include <nebula_common/velodyne/velodyne_status.hpp>
 
-#include <velodyne_msgs/msg/velodyne_packet.hpp>
-#include <velodyne_msgs/msg/velodyne_scan.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -32,26 +31,14 @@ namespace nebula
 namespace drivers
 {
 /// @brief Hardware interface of velodyne driver
-class VelodyneHwInterface : NebulaHwInterfaceBase
+class VelodyneHwInterface
 {
 private:
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
-  std::shared_ptr<VelodyneSensorConfiguration> sensor_configuration_;
-  std::shared_ptr<VelodyneCalibrationConfiguration> calibration_configuration_;
-  std::unique_ptr<velodyne_msgs::msg::VelodyneScan> scan_cloud_ptr_;
-  std::function<bool(size_t)>
-    is_valid_packet_; /*Lambda Function Array to verify proper packet size*/
-  std::function<void(std::unique_ptr<velodyne_msgs::msg::VelodyneScan> buffer)>
-    scan_reception_callback_; /**This function pointer is called when the scan is complete*/
-
-  uint16_t packet_first_azm_ = 0;
-  uint16_t packet_first_azm_phased_ = 0;
-  uint16_t packet_last_azm_ = 0;
-  uint16_t packet_last_azm_phased_ = 0;
-  uint16_t prev_packet_first_azm_phased_ = 0;
-  uint16_t phase_ = 0;
-  uint processed_packets_ = 0;
+  std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration_;
+  std::function<void(std::vector<uint8_t>&)>
+    cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
 
   std::shared_ptr<boost::asio::io_context> boost_ctx_;
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> http_client_driver_;
@@ -86,7 +73,7 @@ private:
   /// @param tree Current settings (property_tree)
   /// @return Resulting status
   VelodyneStatus CheckAndSetConfig(
-    std::shared_ptr<VelodyneSensorConfiguration> sensor_configuration,
+    std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration,
     boost::property_tree::ptree tree);
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger;
@@ -106,38 +93,38 @@ public:
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer) final;
+  void ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer);
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStart() final;
+  Status SensorInterfaceStart();
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStop() final;
+  Status SensorInterfaceStop();
   /// @brief Printing sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
-  Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration) final;
+  Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration);
   /// @brief Printing calibration configuration
   /// @param calibration_configuration CalibrationConfiguration for the checking
   /// @return Resulting status
   Status GetCalibrationConfiguration(
-    CalibrationConfigurationBase & calibration_configuration) final;
+    CalibrationConfigurationBase & calibration_configuration);
   /// @brief Initializing sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
   Status InitializeSensorConfiguration(
-    std::shared_ptr<SensorConfigurationBase> sensor_configuration);
+    std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration);
   /// @brief Setting sensor configuration with InitializeSensorConfiguration &
   /// CheckAndSetConfigBySnapshotAsync
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
   Status SetSensorConfiguration(
-    std::shared_ptr<SensorConfigurationBase> sensor_configuration) final;
+    std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration);
   /// @brief Registering callback for PandarScan
   /// @param scan_callback Callback function
   /// @return Resulting status
   Status RegisterScanCallback(
-    std::function<void(std::unique_ptr<velodyne_msgs::msg::VelodyneScan>)> scan_callback);
+    std::function<void(std::vector<uint8_t>& packet)> scan_callback);
 
   /// @brief Parsing JSON string to property_tree
   /// @param str JSON string
@@ -244,7 +231,7 @@ public:
   /// @brief Checking the current settings and changing the difference point
   /// @return Resulting status
   VelodyneStatus CheckAndSetConfigBySnapshotAsync(
-    std::shared_ptr<VelodyneSensorConfiguration> sensor_configuration);
+    std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration);
   /// @brief Setting Motor RPM (async)
   /// @param rpm the RPM of the motor
   /// @return Resulting status
