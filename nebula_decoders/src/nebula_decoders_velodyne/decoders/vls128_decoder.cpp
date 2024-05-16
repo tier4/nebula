@@ -12,8 +12,8 @@ namespace drivers
 namespace vls128
 {
 Vls128Decoder::Vls128Decoder(
-  const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration)
+  const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
+  const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> & calibration_configuration)
 {
   sensor_configuration_ = sensor_configuration;
   calibration_configuration_ = calibration_configuration;
@@ -54,11 +54,6 @@ Vls128Decoder::Vls128Decoder(
                               (single_firing_s * firing_group_index) - offset_packet_time;
     }
   }
-}
-
-bool Vls128Decoder::hasScanned()
-{
-  return has_scanned_;
 }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> Vls128Decoder::get_pointcloud()
@@ -139,12 +134,12 @@ void Vls128Decoder::reset_overflow(double time_stamp)
   overflow_pc_->points.reserve(max_pts_);
 }
 
-void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
+void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, int32_t packet_seconds)
 {
-  const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
+  const raw_packet_t * raw = (const raw_packet_t *)packet.data();
   float last_azimuth_diff = 0;
   uint16_t azimuth_next;
-  const uint8_t return_mode = velodyne_packet.data[RETURN_MODE_INDEX];
+  const uint8_t return_mode = packet[RETURN_MODE_INDEX];
   const bool dual_return = (return_mode == RETURN_MODE_DUAL);
 
   for (uint block = 0; block < static_cast<uint>(BLOCKS_PER_PACKET - (4 * dual_return)); block++) {
@@ -223,7 +218,7 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
             block % 2 ? raw->blocks[block - 1].data[k + 1] : raw->blocks[block + 1].data[k + 1];
         }
         // Apply timestamp if this is the first new packet in the scan.
-        auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
+        auto block_timestamp = packet_seconds;
         if (scan_timestamp_ < 0) {
           scan_timestamp_ = block_timestamp;
         }
@@ -240,7 +235,7 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
             j + bank_origin;  // offset the laser in this block by which block it's in
           const uint firing_order = laser_number / 8;  // VLS-128 fires 8 lasers at a time
 
-          VelodyneLaserCorrection & corrections =
+          const VelodyneLaserCorrection & corrections =
             calibration_configuration_->velodyne_calibration.laser_corrections[laser_number];
 
           float distance = current_return.uint * VLP128_DISTANCE_RESOLUTION;

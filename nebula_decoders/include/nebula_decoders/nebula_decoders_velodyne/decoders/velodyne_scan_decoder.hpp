@@ -20,6 +20,7 @@
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 #include <tuple>
+#include <angles/angles.h> 
 
 namespace nebula
 {
@@ -138,17 +139,14 @@ protected:
   /// @brief Point cloud overflowing from one cycle
   drivers::NebulaPointCloudPtr overflow_pc_;
 
-  uint16_t scan_phase_{};
-  uint16_t last_phase_{};
-  bool has_scanned_ = true;
   double dual_return_distance_threshold_{};  // Velodyne does this internally, this will not be
                                              // implemented here
   double scan_timestamp_{};
 
   /// @brief SensorConfiguration for this decoder
-  std::shared_ptr<drivers::VelodyneSensorConfiguration> sensor_configuration_;
+  std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_configuration_;
   /// @brief Calibration for this decoder
-  std::shared_ptr<drivers::VelodyneCalibrationConfiguration> calibration_configuration_;
+  std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration_;
 
 public:
   VelodyneScanDecoder(VelodyneScanDecoder && c) = delete;
@@ -161,7 +159,7 @@ public:
 
   /// @brief Virtual function for parsing and shaping VelodynePacket
   /// @param pandar_packet
-  virtual void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) = 0;
+  virtual void unpack(const std::vector<uint8_t> & packet, int32_t packet_seconds) = 0;
   /// @brief Virtual function for parsing VelodynePacket based on packet structure
   /// @param pandar_packet
   /// @return Resulting flag
@@ -169,7 +167,26 @@ public:
 
   /// @brief Virtual function for getting the flag indicating whether one cycle is ready
   /// @return Readied
-  virtual bool hasScanned() = 0;
+  virtual bool hasScanned() {
+    if (scan_pc_->size() < 2) {
+      return false;
+    }
+
+    float scan_phase = angles::from_degrees(sensor_configuration_->scan_phase);
+    float first_azimuth = scan_pc_->points.front().azimuth - scan_phase;
+    float last_azimuth = scan_pc_->points.back().azimuth - scan_phase;
+
+    if (first_azimuth < 0) {
+      first_azimuth += 2 * M_PI;
+    }
+
+    if (last_azimuth < 0) {
+      last_azimuth += 2 * M_PI;
+    }
+
+    return first_azimuth > last_azimuth;
+  }
+
   /// @brief Calculation of points in each packet
   /// @return # of points
   virtual int pointsPerPacket() = 0;

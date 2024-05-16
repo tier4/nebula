@@ -49,32 +49,17 @@ rclcpp_components_register_node(hesai_ros_wrapper
         )
 
 ## Velodyne
-# Hw Interface
-ament_auto_add_library(velodyne_hw_ros_wrapper SHARED
-        src/velodyne/velodyne_hw_interface_ros_wrapper.cpp
-        )
-rclcpp_components_register_node(velodyne_hw_ros_wrapper
-        PLUGIN "VelodyneHwInterfaceRosWrapper"
-        EXECUTABLE velodyne_hw_ros_wrapper_node
-        )
-
-
-# Monitor
-ament_auto_add_library(velodyne_hw_monitor_ros_wrapper SHARED
-        src/velodyne/velodyne_hw_monitor_ros_wrapper.cpp
-        )
-rclcpp_components_register_node(velodyne_hw_monitor_ros_wrapper
-        PLUGIN "VelodyneHwMonitorRosWrapper"
-        EXECUTABLE velodyne_hw_monitor_ros_wrapper_node
+ament_auto_add_library(velodyne_ros_wrapper SHARED
+        src/velodyne/velodyne_ros_wrapper.cpp
+        src/velodyne/decoder_wrapper.cpp
+        src/velodyne/hw_interface_wrapper.cpp
+        src/velodyne/hw_monitor_wrapper.cpp
+        src/common/parameter_descriptors.cpp
         )
 
-# DriverDecoder
-ament_auto_add_library(velodyne_driver_ros_wrapper SHARED
-        src/velodyne/velodyne_decoder_ros_wrapper.cpp
-        )
-rclcpp_components_register_node(velodyne_driver_ros_wrapper
-        PLUGIN "VelodyneDriverRosWrapper"
-        EXECUTABLE velodyne_driver_ros_wrapper_node
+rclcpp_components_register_node(velodyne_ros_wrapper
+        PLUGIN "VelodyneRosWrapper"
+        EXECUTABLE velodyne_ros_wrapper_node
         )
 
 ## Robosense

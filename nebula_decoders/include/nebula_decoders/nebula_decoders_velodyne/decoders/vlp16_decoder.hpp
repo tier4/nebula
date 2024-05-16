@@ -25,14 +25,11 @@ public:
   /// @param sensor_configuration SensorConfiguration for this decoder
   /// @param calibration_configuration Calibration for this decoder
   explicit Vlp16Decoder(
-    const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration);
+    const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> & calibration_configuration);
   /// @brief Parsing and shaping VelodynePacket
   /// @param velodyne_packet
-  void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) override;
-  /// @brief Get the flag indicating whether one cycle is ready
-  /// @return Readied
-  bool hasScanned() override;
+  void unpack(const std::vector<uint8_t> & packet, int32_t packet_seconds) override;
   /// @brief Calculation of points in each packet
   /// @return # of points
   int pointsPerPacket() override;

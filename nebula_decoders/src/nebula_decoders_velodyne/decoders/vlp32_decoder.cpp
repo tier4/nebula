@@ -12,8 +12,8 @@ namespace drivers
 namespace vlp32
 {
 Vlp32Decoder::Vlp32Decoder(
-  const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration)
+  const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
+  const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> & calibration_configuration)
 {
   sensor_configuration_ = sensor_configuration;
   calibration_configuration_ = calibration_configuration;
@@ -54,11 +54,6 @@ Vlp32Decoder::Vlp32Decoder(
         (full_firing_cycle * dataBlockIndex) + (single_firing * dataPointIndex);
     }
   }
-}
-
-bool Vlp32Decoder::hasScanned()
-{
-  return has_scanned_;
 }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> Vlp32Decoder::get_pointcloud()
@@ -137,10 +132,10 @@ void Vlp32Decoder::reset_overflow(double time_stamp)
   overflow_pc_->points.reserve(max_pts_);
 }
 
-void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
+void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, int32_t packet_seconds)
 {
-  const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
-  uint8_t return_mode = velodyne_packet.data[RETURN_MODE_INDEX];
+  const raw_packet_t * raw = (const raw_packet_t *)packet.data();
+  uint8_t return_mode = packet[RETURN_MODE_INDEX];
   const bool dual_return = (return_mode == RETURN_MODE_DUAL);
 
   for (int i = 0; i < BLOCKS_PER_PACKET; i++) {
@@ -170,7 +165,7 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
           i % 2 ? raw->blocks[i - 1].data[k + 1] : raw->blocks[i + 1].data[k + 1];
       }
       // Apply timestamp if this is the first new packet in the scan.
-      auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
+      auto block_timestamp = packet_seconds;
       if (scan_timestamp_ < 0) {
         scan_timestamp_ = block_timestamp;
       }
