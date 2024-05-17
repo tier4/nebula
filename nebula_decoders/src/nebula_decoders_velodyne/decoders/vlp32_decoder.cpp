@@ -80,12 +80,10 @@ int Vlp32Decoder::pointsPerPacket()
   return BLOCKS_PER_PACKET * SCANS_PER_BLOCK;
 }
 
-void Vlp32Decoder::reset_pointcloud(size_t n_pts, double time_stamp)
+void Vlp32Decoder::reset_pointcloud(double time_stamp)
 {
   //  scan_pc_.reset(new NebulaPointCloud);
   scan_pc_->points.clear();
-  max_pts_ = n_pts * pointsPerPacket();
-  scan_pc_->points.reserve(max_pts_);
   reset_overflow(time_stamp);  // transfer existing overflow points to the cleared pointcloud
 }
 
@@ -134,6 +132,8 @@ void Vlp32Decoder::reset_overflow(double time_stamp)
 
 void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, int32_t packet_seconds)
 {
+  checkAndHandleScanComplete(packet, packet_seconds, phase_);
+
   const raw_packet_t * raw = (const raw_packet_t *)packet.data();
   uint8_t return_mode = packet[RETURN_MODE_INDEX];
   const bool dual_return = (return_mode == RETURN_MODE_DUAL);
