@@ -48,10 +48,11 @@ private:
 
   /// @brief Get value from property_tree
   /// @param pt property_tree
+  /// @param mtx_pt the mutex associated with `pt`
   /// @param key Pey string
   /// @return Value
   std::string GetPtreeValue(
-    std::shared_ptr<boost::property_tree::ptree> pt, const std::string & key);
+    std::shared_ptr<boost::property_tree::ptree> pt, std::mutex & mtx_pt, const std::string & key);
 
   /// @brief Making fixed precision string
   /// @param val Target value
@@ -278,8 +279,9 @@ private:
   std::shared_ptr<rclcpp::Time> current_snapshot_time;
   uint8_t current_diag_status;
 
-  std::timed_mutex tm_status_;
-  std::timed_mutex tm_diag_;
+  std::mutex mtx_snapshot_;
+  std::mutex mtx_status_;
+  std::mutex mtx_diag_;
 
   std::string info_model_;
   std::string info_serial_;
