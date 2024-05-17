@@ -48,21 +48,21 @@ namespace nebula
 namespace ros
 {
 /// @brief Offline velodyne driver usage example (Output PCD data)
-class VelodyneRosOfflineExtractBag final : public rclcpp::Node, NebulaDriverRosWrapperBase
+class VelodyneRosOfflineExtractBag final : public rclcpp::Node
 {
   std::shared_ptr<drivers::VelodyneDriver> driver_ptr_;
   Status wrapper_status_;
 
-  std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_cfg_ptr_;
-  std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
+  std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_cfg_ptr_;
+  std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_cfg_ptr_;
 
   /// @brief Initializing ros wrapper
   /// @param sensor_configuration SensorConfiguration for this driver
   /// @param calibration_configuration CalibrationConfiguration for this driver
   /// @return Resulting status
   Status InitializeDriver(
-    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) override;
+    std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_configuration,
+    std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration);
 
   /// @brief Get configurations from ros parameters
   /// @param sensor_configuration Output of SensorConfiguration
