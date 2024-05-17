@@ -62,7 +62,7 @@ std::tuple<drivers::NebulaPointCloudPtr, double> VelodyneDriver::ParseCloudPacke
   if (scan_decoder_->hasScanned())
   {
     pointcloud = scan_decoder_->get_pointcloud();
-  }  
+  }
 
   return pointcloud;
 }
