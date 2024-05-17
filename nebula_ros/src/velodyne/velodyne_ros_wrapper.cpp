@@ -69,44 +69,44 @@ nebula::Status VelodyneRosWrapper::DeclareAndGetSensorConfigParams()
 {
   nebula::drivers::VelodyneSensorConfiguration config;
 
-  auto _sensor_model = declare_parameter<std::string>("sensor_model", "", param_read_only());
+  auto _sensor_model = declare_parameter<std::string>("sensor_model", param_read_only());
   config.sensor_model = drivers::SensorModelFromString(_sensor_model);
 
-  auto _return_mode = declare_parameter<std::string>("return_mode", "", param_read_write());
+  auto _return_mode = declare_parameter<std::string>("return_mode", param_read_write());
   config.return_mode = drivers::ReturnModeFromString(_return_mode);
 
-  config.host_ip = declare_parameter<std::string>("host_ip", "255.255.255.255", param_read_only());
-  config.sensor_ip = declare_parameter<std::string>("sensor_ip", "192.168.1.201", param_read_only());
-  config.data_port = declare_parameter<uint16_t>("data_port", 2368, param_read_only());
-  config.gnss_port = declare_parameter<uint16_t>("gnss_port", 2369, param_read_only());
-  config.frame_id = declare_parameter<std::string>("frame_id", "pandar", param_read_write());
+  config.host_ip = declare_parameter<std::string>("host_ip", param_read_only());
+  config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());
+  config.data_port = declare_parameter<uint16_t>("data_port", param_read_only());
+  config.gnss_port = declare_parameter<uint16_t>("gnss_port", param_read_only());
+  config.frame_id = declare_parameter<std::string>("frame_id", param_read_write());
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.])";
     descriptor.floating_point_range = float_range(0, 360, 0.01);
-    config.scan_phase = declare_parameter<double>("scan_phase", 0., descriptor);
+    config.scan_phase = declare_parameter<double>("scan_phase", descriptor);
   }
 
-  config.min_range = declare_parameter<double>("min_range", 0.3, param_read_write());
-  config.max_range = declare_parameter<double>("max_range", 300., param_read_write());
-  config.packet_mtu_size = declare_parameter<uint16_t>("packet_mtu_size", 1500, param_read_only());
+  config.min_range = declare_parameter<double>("min_range", param_read_write());
+  config.max_range = declare_parameter<double>("max_range", param_read_write());
+  config.packet_mtu_size = declare_parameter<uint16_t>("packet_mtu_size", param_read_only());
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     descriptor.additional_constraints = "from 300 to 1200, in increments of 60";
     descriptor.integer_range = int_range(300, 1200, 60);
-    config.rotation_speed = declare_parameter<uint16_t>("rotation_speed", 600, descriptor);
+    config.rotation_speed = declare_parameter<uint16_t>("rotation_speed", descriptor);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     descriptor.integer_range = int_range(0, 360, 1);
-    config.cloud_min_angle = declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
+    config.cloud_min_angle = declare_parameter<uint16_t>("cloud_min_angle", descriptor);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     descriptor.integer_range = int_range(0, 360, 1);
-    config.cloud_max_angle = declare_parameter<uint16_t>("cloud_max_angle", 360, descriptor);
+    config.cloud_max_angle = declare_parameter<uint16_t>("cloud_max_angle", descriptor);
   }
 
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::VelodyneSensorConfiguration>(config);

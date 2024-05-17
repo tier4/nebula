@@ -11,7 +11,7 @@ VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
   , logger_(parent_node->get_logger().get_child("HwInterfaceWrapper"))
   , status_(Status::NOT_INITIALIZED)
 {
-  setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", true, param_read_only());
+  setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
 
   hw_interface_->SetLogger(std::make_shared<rclcpp::Logger>(parent_node->get_logger().get_child("HwInterface")));
   status_ = hw_interface_->InitializeSensorConfiguration(config);

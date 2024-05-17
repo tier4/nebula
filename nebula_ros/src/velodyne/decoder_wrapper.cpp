@@ -20,7 +20,7 @@ VelodyneDecoderWrapper::VelodyneDecoderWrapper(rclcpp::Node* const parent_node,
     throw std::runtime_error("VelodyneDecoderWrapper cannot be instantiated without a valid config!");
   }
 
-  calibration_file_path_ = parent_node->declare_parameter<std::string>("calibration_file", "", param_read_write());
+  calibration_file_path_ = parent_node->declare_parameter<std::string>("calibration_file", param_read_write());
   auto calibration_result = GetCalibrationData(calibration_file_path_);
 
   if (!calibration_result.has_value())
