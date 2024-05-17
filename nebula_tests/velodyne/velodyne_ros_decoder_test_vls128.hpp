@@ -20,18 +20,17 @@ namespace nebula
 {
 namespace ros
 {
-class VelodyneRosDecoderTest final : public rclcpp::Node,
-                                     NebulaDriverRosWrapperBase  //, testing::Test
+class VelodyneRosDecoderTest final : public rclcpp::Node
 {
   std::shared_ptr<drivers::VelodyneDriver> driver_ptr_;
   Status wrapper_status_;
 
-  std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_cfg_ptr_;
-  std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
+  std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_cfg_ptr_;
+  std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_cfg_ptr_;
 
   Status InitializeDriver(
-    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) override;
+    std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_configuration,
+    std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration);
 
   Status GetParameters(
     drivers::VelodyneSensorConfiguration & sensor_configuration,

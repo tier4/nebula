@@ -34,26 +34,22 @@ VelodyneRosDecoderTest::VelodyneRosDecoderTest(
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
 
   calibration_cfg_ptr_ =
-    std::make_shared<drivers::VelodyneCalibrationConfiguration>(calibration_configuration);
+    std::make_shared<const drivers::VelodyneCalibrationConfiguration>(calibration_configuration);
 
-  sensor_cfg_ptr_ = std::make_shared<drivers::VelodyneSensorConfiguration>(sensor_configuration);
+  sensor_cfg_ptr_ = std::make_shared<const drivers::VelodyneSensorConfiguration>(sensor_configuration);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
-  wrapper_status_ = InitializeDriver(
-    std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
-    std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_));
+  wrapper_status_ = InitializeDriver(sensor_cfg_ptr_, calibration_cfg_ptr_);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 }
 
 Status VelodyneRosDecoderTest::InitializeDriver(
-  std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-  std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration)
+  std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_configuration,
+  std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration)
 {
   // driver should be initialized here with proper decoder
-  driver_ptr_ = std::make_shared<drivers::VelodyneDriver>(
-    std::static_pointer_cast<drivers::VelodyneSensorConfiguration>(sensor_configuration),
-    std::static_pointer_cast<drivers::VelodyneCalibrationConfiguration>(calibration_configuration));
+  driver_ptr_ = std::make_shared<drivers::VelodyneDriver>(sensor_configuration, calibration_configuration);
   return driver_ptr_->GetStatus();
 }
 
@@ -336,27 +332,31 @@ void VelodyneRosDecoderTest::ReadBag()
                   << bag_message->time_stamp << std::endl;
 
         auto extracted_msg_ptr = std::make_shared<velodyne_msgs::msg::VelodyneScan>(extracted_msg);
-        auto pointcloud_ts = driver_ptr_->ConvertScanToPointcloud(extracted_msg_ptr);
-        pointcloud = std::get<0>(pointcloud_ts);
+        for (auto & pkt : extracted_msg.packets) {
+          auto pointcloud_ts = driver_ptr_->ParseCloudPacket(
+            std::vector<uint8_t>(pkt.data.begin(), pkt.data.end()),
+            pkt.stamp.sec);
+          auto pointcloud = std::get<0>(pointcloud_ts);
 
-        // There are very rare cases where has_scanned_ does not become true, but it is not known
-        // whether it is because of decoder or deserialize_message.
-        if (!pointcloud) continue;
+          if (!pointcloud) {
+            continue;
+          }
 
-        auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
+          auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
 
-        auto target_pcd_path = (pcd_dir / fn);
-        std::cout << target_pcd_path << std::endl;
-        if (target_pcd_path.exists()) {
-          std::cout << "exists: " << target_pcd_path << std::endl;
-          auto rt = pcd_reader.read(target_pcd_path.string(), *ref_pointcloud);
-          std::cout << rt << " loaded: " << target_pcd_path << std::endl;
-          checkPCDs(pointcloud, ref_pointcloud);
-          check_cnt++;
-          // ref_pointcloud.reset(new nebula::drivers::NebulaPointCloud);
-          ref_pointcloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
+          auto target_pcd_path = (pcd_dir / fn);
+          std::cout << target_pcd_path << std::endl;
+          if (target_pcd_path.exists()) {
+            std::cout << "exists: " << target_pcd_path << std::endl;
+            auto rt = pcd_reader.read(target_pcd_path.string(), *ref_pointcloud);
+            std::cout << rt << " loaded: " << target_pcd_path << std::endl;
+            checkPCDs(pointcloud, ref_pointcloud);
+            check_cnt++;
+            // ref_pointcloud.reset(new nebula::drivers::NebulaPointCloud);
+            ref_pointcloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
+          }
+          pointcloud.reset(new nebula::drivers::NebulaPointCloud);
         }
-        pointcloud.reset(new nebula::drivers::NebulaPointCloud);
       }
     }
     EXPECT_GT(check_cnt, 0);
