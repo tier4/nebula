@@ -43,6 +43,8 @@ private:
   std::shared_ptr<boost::asio::io_context> boost_ctx_;
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> http_client_driver_;
 
+  std::mutex mtx_inflight_request_;
+
   std::string TARGET_STATUS{"/cgi/status.json"};
   std::string TARGET_DIAG{"/cgi/diag.json"};
   std::string TARGET_SNAPSHOT{"/cgi/snapshot.hdl"};
@@ -53,6 +55,9 @@ private:
   std::string TARGET_SAVE{"/cgi/save"};
   std::string TARGET_RESET{"/cgi/reset"};
   void StringCallback(const std::string & str);
+
+  std::string HttpGetRequest(const std::string & endpoint);
+  std::string HttpPostRequest(const std::string & endpoint,  const std::string & body);
 
   /// @brief Get a one-off HTTP client to communicate with the hardware
   /// @param ctx IO Context
@@ -203,95 +208,6 @@ public:
   /// @param use_dhcp DHCP on
   /// @return Resulting status
   VelodyneStatus SetNetDhcp(bool use_dhcp);
-
-  /// @brief Initializing HTTP client (async)
-  /// @return Resulting status
-  VelodyneStatus InitHttpClientAsync();
-  /// @brief Getting the current operational state and parameters of the sensor (async)
-  /// @param str_callback Callback function for received JSON string
-  /// @return Resulting status
-  VelodyneStatus GetStatusAsync(std::function<void(const std::string & str)> str_callback);
-  /// @brief Getting the current operational state and parameters of the sensor (async)
-  /// @return Resulting status
-  VelodyneStatus GetStatusAsync();
-  /// @brief Getting diagnostic information from the sensor (async)
-  /// @param str_callback Callback function for received JSON string
-  /// @return Resulting status
-  VelodyneStatus GetDiagAsync(std::function<void(const std::string & str)> str_callback);
-  /// @brief Getting diagnostic information from the sensor (async)
-  /// @return Resulting status
-  VelodyneStatus GetDiagAsync();
-  /// @brief Getting current sensor configuration and status data (async)
-  /// @param str_callback Callback function for received JSON string
-  /// @return Resulting status
-  VelodyneStatus GetSnapshotAsync(std::function<void(const std::string & str)> str_callback);
-  /// @brief Getting current sensor configuration and status data (async)
-  /// @return Resulting status
-  VelodyneStatus GetSnapshotAsync();
-  /// @brief Checking the current settings and changing the difference point
-  /// @return Resulting status
-  VelodyneStatus CheckAndSetConfigBySnapshotAsync(
-    std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration);
-  /// @brief Setting Motor RPM (async)
-  /// @param rpm the RPM of the motor
-  /// @return Resulting status
-  VelodyneStatus SetRpmAsync(uint16_t rpm);
-  /// @brief Setting Field of View Start (async)
-  /// @param fov_start FOV start
-  /// @return Resulting status
-  VelodyneStatus SetFovStartAsync(uint16_t fov_start);
-  /// @brief Setting Field of View End (async)
-  /// @param fov_end FOV end
-  /// @return Resulting status
-  VelodyneStatus SetFovEndAsync(uint16_t fov_end);
-  /// @brief Setting Return Type (async)
-  /// @param return_mode ReturnMode
-  /// @return Resulting status
-  VelodyneStatus SetReturnTypeAsync(ReturnMode return_mode);
-  /// @brief Save Configuration to the LiDAR memory (async)
-  /// @return Resulting status
-  VelodyneStatus SaveConfigAsync();
-  /// @brief Resets the sensor (async)
-  /// @return Resulting status
-  VelodyneStatus ResetSystemAsync();
-  /// @brief Turn laser state on (async)
-  /// @return Resulting status
-  VelodyneStatus LaserOnAsync();
-  /// @brief Turn laser state off (async)
-  /// @return Resulting status
-  VelodyneStatus LaserOffAsync();
-  /// @brief Turn laser state on/off (async)
-  /// @param on is ON
-  /// @return Resulting status
-  VelodyneStatus LaserOnOffAsync(bool on);
-  /// @brief Setting host (destination) IP address (async)
-  /// @param addr destination IP address
-  /// @return Resulting status
-  VelodyneStatus SetHostAddrAsync(std::string addr);
-  /// @brief Setting host (destination) data port (async)
-  /// @param dport destination data port
-  /// @return Resulting status
-  VelodyneStatus SetHostDportAsync(uint16_t dport);
-  /// @brief Setting host (destination) telemetry port (async)
-  /// @param tport destination telemetry port
-  /// @return Resulting status
-  VelodyneStatus SetHostTportAsync(uint16_t tport);
-  /// @brief Setting network (sensor) IP address (async)
-  /// @param addr sensor IP address
-  /// @return Resulting status
-  VelodyneStatus SetNetAddrAsync(std::string addr);
-  /// @brief Setting the network mask of the sensor (async)
-  /// @param mask Network mask
-  /// @return Resulting status
-  VelodyneStatus SetNetMaskAsync(std::string mask);
-  /// @brief Setting the gateway address of the sensor (async)
-  /// @param gateway Gateway address
-  /// @return Resulting status
-  VelodyneStatus SetNetGatewayAsync(std::string gateway);
-  /// @brief This determines if the sensor is to rely on a DHCP server for its IP address (async)
-  /// @param use_dhcp DHCP on
-  /// @return Resulting status
-  VelodyneStatus SetNetDhcpAsync(bool use_dhcp);
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger
