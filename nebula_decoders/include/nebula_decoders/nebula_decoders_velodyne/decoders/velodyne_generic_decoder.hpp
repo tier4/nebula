@@ -84,7 +84,7 @@ public:
 
   std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud()
   {
-    double phase = angles::from_degrees(sensor_configuration_->scan_phase);
+    float phase = angles::from_degrees(sensor_configuration_->scan_phase);
     if (!scan_pc_->points.empty()) {
       auto current_azimuth = scan_pc_->points.back().azimuth;
       auto phase_diff = (2 * M_PI + current_azimuth - phase);
@@ -213,7 +213,7 @@ public:
         // This makes the assumption the difference between the last block and the next packet is
         // the same as the last to the second to last. Assumes RPM doesn't change much between
         // blocks.
-        azimuth_diff = (block == static_cast<uint>(BLOCKS_PER_PACKET - (4 * dual_return) - 1))
+        azimuth_diff = (block == static_cast<float>(BLOCKS_PER_PACKET - (4 * dual_return) - 1))
                          ? 0
                          : last_azimuth_diff;
       }
@@ -285,13 +285,7 @@ public:
 
               // Condition added to avoid calculating points which are not in the interesting
               // defined area (cloud_min_angle < area < cloud_max_angle).
-              if (
-                (azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100 &&
-                 azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 &&
-                 sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle) ||
-                (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
-                 (azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 ||
-                  azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) {
+              if (true) {
                 // convert polar coordinates to Euclidean XYZ.
                 const float cos_vert_angle = corrections.cos_vert_correction;
                 const float sin_vert_angle = corrections.sin_vert_correction;
