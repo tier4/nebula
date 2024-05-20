@@ -134,9 +134,9 @@ enum RETURN_TYPE {
 class VelodyneScanDecoder
 {
 private: 
-  size_t processed_packets_;
-  uint32_t prev_packet_first_azm_phased_;
-  bool has_scanned_;
+  size_t processed_packets_{0};
+  uint32_t prev_packet_first_azm_phased_{0};
+  bool has_scanned_{false};
 
 protected:
   /// @brief Checks if the current packet completes the ongoing scan.
@@ -204,7 +204,7 @@ public:
 
   /// @brief Virtual function for getting the flag indicating whether one cycle is ready
   /// @return Readied
-  virtual bool hasScanned() {
+  bool hasScanned() {
     return has_scanned_;
   }
 
