@@ -5,15 +5,15 @@
     diag_span: 1000
     advanced_diagnostics: false
     launch_hw: false
-    sensor_model: "VLS128"
-    return_mode: "Dual"
+    sensor_model: VLS128
+    return_mode: Dual
     host_ip: "255.255.255.255"
     sensor_ip: "192.168.1.201"
     data_port: 2368
     gnss_port: 2369
     frame_id: velodyne
     scan_phase: 0.0
-    min_range: 3.0
+    min_range: 0.3
     max_range: 300.0
     packet_mtu_size: 1500
     rotation_speed: 360
