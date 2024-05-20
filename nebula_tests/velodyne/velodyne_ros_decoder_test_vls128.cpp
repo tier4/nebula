@@ -225,7 +225,7 @@ Status VelodyneRosDecoderTest::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>(
-      "target_topic", "/sensing/lidar/top/velodyne_packets", descriptor);
+      "target_topic", "/velodyne_packets", descriptor);
     target_topic = this->get_parameter("target_topic").as_string();
   }
 
