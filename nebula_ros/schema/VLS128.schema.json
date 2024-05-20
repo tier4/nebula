@@ -1,14 +1,16 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Parameters for Nebula Velodyne nodes",
+  "vendor": "velodyne",
+  "title": "Parameters for Nebula Velodyne VLS128",
   "type": "object",
   "definitions": {
-    "velodyne_ros_wrapper_node": {
+    "VLS128": {
       "type": "object",
       "properties": {
         "calibration_file": {
           "type": "string",
           "default": "$(find-pkg-share nebula_decoders)/calibration/velodyne/$(var sensor_model).yaml",
+          "pattern": "^.*\\.yaml$",
           "description": "Sensor calibration file."
         },
         "setup_sensor": {
@@ -157,7 +159,7 @@
       "type": "object",
       "properties": {
         "ros__parameters": {
-          "$ref": "#/definitions/velodyne_ros_wrapper_node"
+          "$ref": "#/definitions/VLS128"
         }
       },
       "required": ["ros__parameters"],
