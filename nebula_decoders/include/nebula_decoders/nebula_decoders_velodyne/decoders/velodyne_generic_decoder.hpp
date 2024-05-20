@@ -87,12 +87,14 @@ public:
     float phase = angles::from_degrees(sensor_configuration_->scan_phase);
     if (!scan_pc_->points.empty()) {
       auto current_azimuth = scan_pc_->points.back().azimuth;
-      auto phase_diff = (2 * M_PI + current_azimuth - phase);
+      auto phase_diff =
+        static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
       while (phase_diff < M_PI_2 && !scan_pc_->points.empty()) {
         overflow_pc_->points.push_back(scan_pc_->points.back());
         scan_pc_->points.pop_back();
         current_azimuth = scan_pc_->points.back().azimuth;
-        phase_diff = (2 * M_PI + current_azimuth - phase);
+        phase_diff =
+          static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
       }
       overflow_pc_->width = overflow_pc_->points.size();
       scan_pc_->width = scan_pc_->points.size();
