@@ -34,6 +34,21 @@ include_directories(
         ${PCL_COMMON_INCLUDE_DIRS}
 )
 link_libraries(${YAML_CPP_LIBRARIES} ${PCL_LIBRARIES})
+
+## Seyond
+ament_auto_add_library(seyond_ros_wrapper SHARED
+        src/seyond/seyond_ros_wrapper.cpp
+        src/seyond/decoder_wrapper.cpp
+        src/seyond/hw_interface_wrapper.cpp
+        src/seyond/hw_monitor_wrapper.cpp
+        src/common/parameter_descriptors.cpp
+        )
+
+rclcpp_components_register_node(seyond_ros_wrapper
+        PLUGIN "SeyondRosWrapper"
+        EXECUTABLE seyond_ros_wrapper_node
+        )
+
 ## Hesai
 ament_auto_add_library(hesai_ros_wrapper SHARED
         src/hesai/hesai_ros_wrapper.cpp

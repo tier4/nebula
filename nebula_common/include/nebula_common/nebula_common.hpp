@@ -329,7 +329,9 @@ enum class SensorModel {
   ROBOSENSE_HELIOS,
   ROBOSENSE_BPEARL_V3,
   ROBOSENSE_BPEARL_V4,
-  CONTINENTAL_ARS548
+  CONTINENTAL_ARS548,
+  SEYOND_FALCON_KINETIC,
+  SEYOND_ROBIN_W
 };
 
 /// @brief not used?
@@ -425,6 +427,12 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
       break;
     case SensorModel::CONTINENTAL_ARS548:
       os << "ARS548";
+      break;
+    case SensorModel::SEYOND_FALCON_KINETIC:
+      os << "SEYOND_FALCON_KINETIC";
+      break;
+    case SensorModel::SEYOND_ROBIN_W:
+      os << "SEYOND_ROBIN_W";
       break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
@@ -530,6 +538,9 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
     return SensorModel::ROBOSENSE_BPEARL_V4;
   if (sensor_model == "Bpearl_V3") return SensorModel::ROBOSENSE_BPEARL_V3;
   if (sensor_model == "ARS548") return SensorModel::CONTINENTAL_ARS548;
+  // Seyond
+  if (sensor_model == "Falcon") return SensorModel::SEYOND_FALCON_KINETIC;
+  if (sensor_model == "RobinW") return SensorModel::SEYOND_ROBIN_W;
   return SensorModel::UNKNOWN;
 }
 
@@ -577,6 +588,10 @@ inline std::string SensorModelToString(const SensorModel & sensor_model)
       return "Bpearl_V4";
     case SensorModel::CONTINENTAL_ARS548:
       return "ARS548";
+    case SensorModel::SEYOND_FALCON_KINETIC:
+      return "Falcon";
+    case SensorModel::SEYOND_ROBIN_W:
+      return "RoninW";
     default:
       return "UNKNOWN";
   }
