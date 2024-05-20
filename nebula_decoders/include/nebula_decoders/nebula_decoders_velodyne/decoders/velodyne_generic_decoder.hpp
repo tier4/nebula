@@ -17,40 +17,11 @@ namespace nebula
 {
 namespace drivers
 {
-
-// vlp16 specific constant
-constexpr uint32_t MAX_POINTS = 300000;
-
 /// @brief Velodyne LiDAR decoder
 template <typename SensorT>
 class VelodyneDecoder : public VelodyneScanDecoder
 {
 public:
-  // /// @brief Constructor
-  // /// @param sensor_configuration SensorConfiguration for this decoder
-  // /// @param calibration_configuration Calibration for this decoder
-  // explicit VelodyneDecoder(
-  //   const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
-  //   const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> &
-  //   calibration_configuration);
-  // /// @brief Parsing and shaping VelodynePacket
-  // /// @param velodyne_packet
-  // void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) override;
-  // /// @brief Get the flag indicating whether one cycle is ready
-  // /// @return Readied
-  // bool hasScanned() override;
-  // /// @brief Calculation of points in each packet
-  // /// @return # of points
-  // int pointsPerPacket() override;
-  // /// @brief Get the constructed point cloud
-  // /// @return tuple of Point cloud and timestamp
-  // std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() override;
-  // /// @brief Resetting point cloud buffer
-  // /// @param n_pts # of points
-  // void reset_pointcloud(size_t n_pts, double time_stamp) override;
-  // /// @brief Resetting overflowed point cloud buffer
-  // void reset_overflow(double time_stamp) override;
-
   explicit VelodyneDecoder(
     const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration)
@@ -65,13 +36,13 @@ public:
 
     // Set up cached values for sin and cos of all the possible headings
     for (uint16_t rot_index = 0; rot_index < ROTATION_MAX_UNITS; ++rot_index) {
-      double rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
+      float rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
       rotation_radians_[rot_index] = rotation;
       cos_rot_table_[rot_index] = cosf(rotation);
       sin_rot_table_[rot_index] = sinf(rotation);
     }
 
-    phase_ = (uint16_t)round(sensor_configuration_->scan_phase * 100);
+    phase_ = static_cast<uint16_t>(round(sensor_configuration_->scan_phase * 100));
 
     // fill vls128 laser azimuth cache
     sensor_.fillAzimuthCache();  // TODO: predefine azimuth cache and remove this for performance?
@@ -109,7 +80,6 @@ public:
     }
   }
 
-  // DONE
   bool hasScanned() { return has_scanned_; }
 
   std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud()
@@ -131,10 +101,8 @@ public:
     return std::make_tuple(scan_pc_, scan_timestamp_);
   }
 
-  // DONE
   int pointsPerPacket() { return BLOCKS_PER_PACKET * CHANNELS_PER_BLOCK; }
 
-  // DONE
   void reset_pointcloud(size_t n_pts, double time_stamp)
   {
     //  scan_pc_.reset(new NebulaPointCloud);
@@ -144,7 +112,6 @@ public:
     reset_overflow(time_stamp);  // transfer existing overflow points to the cleared pointcloud
   }
 
-  // DONE
   void reset_overflow(double time_stamp)
   {
     if (overflow_pc_->points.size() == 0) {
@@ -191,7 +158,7 @@ public:
   void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
   {
     const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
-    double last_azimuth_diff = 0;
+    float last_azimuth_diff = 0;
     uint16_t azimuth_next;
     const uint8_t return_mode = velodyne_packet.data[RETURN_MODE_INDEX];
     const bool dual_return = (return_mode == RETURN_MODE_DUAL);
@@ -224,7 +191,7 @@ public:
           return;  // bad packet: skip the rest
       }
 
-      double azimuth_diff;
+      float azimuth_diff;
       uint16_t azimuth;
 
       // Calculate difference between current and next block's azimuth angle.
@@ -238,7 +205,7 @@ public:
         azimuth_next = raw->blocks[block + (1 + dual_return)].rotation;
 
         // Finds the difference between two successive blocks
-        azimuth_diff = static_cast<double>((36000 + azimuth_next - azimuth) % 36000);
+        azimuth_diff = static_cast<float>((36000 + azimuth_next - azimuth) % 36000);
 
         // This is used when the last block is next to predict rotation amount
         last_azimuth_diff = azimuth_diff;
@@ -252,7 +219,7 @@ public:
       }
 
       // Condition added to avoid calculating points which are not in the interesting defined area
-      // (cloud_min_angle < area < cloud_max_angle).
+      // (cloud_min_angle <= area <= cloud_max_angle).
       if (
         (sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle &&
          azimuth >= sensor_configuration_->cloud_min_angle * 100 &&
@@ -304,7 +271,7 @@ public:
             VelodyneLaserCorrection & corrections =
               calibration_configuration_->velodyne_calibration.laser_corrections[laser_number];
 
-            double distance = current_return.uint * SensorT::distance_resolution_m;
+            float distance = current_return.uint * SensorT::distance_resolution_m;
             if (distance > 1e-6) {
               distance += corrections.dist_correction;
             }
@@ -326,25 +293,23 @@ public:
                  (azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 ||
                   azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) {
                 // convert polar coordinates to Euclidean XYZ.
-                const double cos_vert_angle = corrections.cos_vert_correction;
-                const double sin_vert_angle = corrections.sin_vert_correction;
-                const double cos_rot_correction = corrections.cos_rot_correction;
-                const double sin_rot_correction = corrections.sin_rot_correction;
+                const float cos_vert_angle = corrections.cos_vert_correction;
+                const float sin_vert_angle = corrections.sin_vert_correction;
+                const float cos_rot_correction = corrections.cos_rot_correction;
+                const float sin_rot_correction = corrections.sin_rot_correction;
 
-                const double cos_rot_angle =
-                  cos_rot_table_[azimuth_corrected] * cos_rot_correction +
-                  sin_rot_table_[azimuth_corrected] * sin_rot_correction;
-                const double sin_rot_angle =
-                  sin_rot_table_[azimuth_corrected] * cos_rot_correction -
-                  cos_rot_table_[azimuth_corrected] * sin_rot_correction;
+                const float cos_rot_angle = cos_rot_table_[azimuth_corrected] * cos_rot_correction +
+                                            sin_rot_table_[azimuth_corrected] * sin_rot_correction;
+                const float sin_rot_angle = sin_rot_table_[azimuth_corrected] * cos_rot_correction -
+                                            cos_rot_table_[azimuth_corrected] * sin_rot_correction;
 
                 // Compute the distance in the xy plane (w/o accounting for rotation).
-                const double xy_distance = distance * cos_vert_angle;
+                const float xy_distance = distance * cos_vert_angle;
 
                 // Use standard ROS coordinate system (right-hand rule).
-                const double x_coord = xy_distance * cos_rot_angle;     // velodyne y
-                const double y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
-                const double z_coord = distance * sin_vert_angle;       // velodyne z
+                const float x_coord = xy_distance * cos_rot_angle;     // velodyne y
+                const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
+                const float z_coord = distance * sin_vert_angle;                // velodyne z
 
                 const uint8_t intensity = current_block.data[k + 2];
 
@@ -362,7 +327,7 @@ public:
                        other_return.bytes[1] == current_return.bytes[1])) {
                       return_type = static_cast<uint8_t>(drivers::ReturnType::IDENTICAL);
                     } else {
-                      const double other_intensity = block % 2 ? raw->blocks[block - 1].data[k + 2]
+                      const float other_intensity = block % 2 ? raw->blocks[block - 1].data[k + 2]
                                                                : raw->blocks[block + 1].data[k + 2];
 
                       bool first =
@@ -430,13 +395,13 @@ private:
   /// @return Resulting flag
 
   // params used by all velodyne decoders
-  double sin_rot_table_[ROTATION_MAX_UNITS];
-  double cos_rot_table_[ROTATION_MAX_UNITS];
-  double rotation_radians_[ROTATION_MAX_UNITS];
+  float sin_rot_table_[ROTATION_MAX_UNITS];
+  float cos_rot_table_[ROTATION_MAX_UNITS];
+  float rotation_radians_[ROTATION_MAX_UNITS];
   int phase_;
   int max_pts_;
   double last_block_timestamp_;
-  std::vector<std::vector<double>> timing_offsets_;
+  std::vector<std::vector<float>> timing_offsets_;
 
   SensorT sensor_;
 };
