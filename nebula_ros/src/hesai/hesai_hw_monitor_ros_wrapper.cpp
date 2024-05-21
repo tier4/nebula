@@ -74,7 +74,7 @@ HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & o
     RCLCPP_INFO_STREAM(this->get_logger(), "HesaiInventory");
     RCLCPP_INFO_STREAM(this->get_logger(), result);
     info_model = result.get_str_model();
-    info_serial = std::string(result.sn.begin(), result.sn.end());
+    info_serial = std::string(std::begin(result.sn), std::end(result.sn));
     hw_interface_.SetTargetModel(result.model);
     RCLCPP_INFO_STREAM(this->get_logger(), "Model:" << info_model);
     RCLCPP_INFO_STREAM(this->get_logger(), "Serial:" << info_serial);
@@ -481,9 +481,9 @@ void HesaiHwMonitorRosWrapper::HesaiCheckStatus(
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
 
-    diagnostics.add("system_uptime", std::to_string(current_status->system_uptime));
-    diagnostics.add("startup_times", std::to_string(current_status->startup_times));
-    diagnostics.add("total_operation_time", std::to_string(current_status->total_operation_time));
+    diagnostics.add("system_uptime", std::to_string(current_status->system_uptime.value()));
+    diagnostics.add("startup_times", std::to_string(current_status->startup_times.value()));
+    diagnostics.add("total_operation_time", std::to_string(current_status->total_operation_time.value()));
 
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
@@ -532,9 +532,9 @@ void HesaiHwMonitorRosWrapper::HesaiCheckTemperature(
   if (current_status) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
-    for (size_t i = 0; i < current_status->temperature.size(); i++) {
+    for (size_t i = 0; i < std::size(current_status->temperature); i++) {
       diagnostics.add(
-        temperature_names[i], GetFixedPrecisionString(current_status->temperature[i] * 0.01));
+        temperature_names[i], GetFixedPrecisionString(current_status->temperature[i].value() * 0.01));
     }
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
@@ -549,7 +549,7 @@ void HesaiHwMonitorRosWrapper::HesaiCheckRpm(
   if (current_status) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
-    diagnostics.add("motor_speed", std::to_string(current_status->motor_speed));
+    diagnostics.add("motor_speed", std::to_string(current_status->motor_speed.value()));
 
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
@@ -598,11 +598,11 @@ void HesaiHwMonitorRosWrapper::HesaiCheckVoltage(
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
     diagnostics.add(
-      "input_voltage", GetFixedPrecisionString(current_monitor->input_voltage * 0.01) + " V");
+      "input_voltage", GetFixedPrecisionString(current_monitor->input_voltage.value() * 0.01) + " V");
     diagnostics.add(
-      "input_current", GetFixedPrecisionString(current_monitor->input_current * 0.01) + " mA");
+      "input_current", GetFixedPrecisionString(current_monitor->input_current.value() * 0.01) + " mA");
     diagnostics.add(
-      "input_power", GetFixedPrecisionString(current_monitor->input_power * 0.01) + " W");
+      "input_power", GetFixedPrecisionString(current_monitor->input_power.value() * 0.01) + " W");
 
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
