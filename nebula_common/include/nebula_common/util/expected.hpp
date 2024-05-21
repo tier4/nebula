@@ -1,6 +1,8 @@
 #pragma once
 
 #include <variant>
+#include <string>
+#include <exception>
 
 namespace nebula
 {
