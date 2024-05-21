@@ -37,7 +37,6 @@ using SeyondCalibrationConfiguration = nebula::drivers::SeyondCalibrationConfigu
 
 class SeyondRosWrapper final : public rclcpp::Node
 {
-
 public:
   explicit SeyondRosWrapper(const rclcpp::NodeOptions & options);
   ~SeyondRosWrapper() noexcept {};
@@ -56,8 +55,7 @@ private:
   rcl_interfaces::msg::SetParametersResult OnParameterChange(
     const std::vector<rclcpp::Parameter> & p);
 
-  Status ValidateAndSetConfig(
-    std::shared_ptr<const SeyondSensorConfiguration> & new_config);
+  Status ValidateAndSetConfig(std::shared_ptr<const SeyondSensorConfiguration> & new_config);
 
   Status wrapper_status_;
 

@@ -15,7 +15,6 @@ namespace seyond_packet
 
 struct PacketRobinW : public PacketBase<8, 32, 2, 100>
 {
-
 };
 
 #pragma pack(pop)
@@ -24,8 +23,6 @@ struct PacketRobinW : public PacketBase<8, 32, 2, 100>
 
 class RobinW : public SeyondSensor<seyond_packet::PacketRobinW>
 {
-
-
 };
 
 }  // namespace drivers

@@ -15,7 +15,6 @@ namespace seyond_packet
 
 struct PacketFalcon : public PacketBase<8, 32, 2, 100>
 {
-
 };
 
 #pragma pack(pop)
@@ -24,8 +23,6 @@ struct PacketFalcon : public PacketBase<8, 32, 2, 100>
 
 class Falcon : public SeyondSensor<seyond_packet::PacketFalcon>
 {
-
-
 };
 
 }  // namespace drivers

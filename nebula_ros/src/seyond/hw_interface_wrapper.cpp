@@ -6,10 +6,10 @@ namespace ros
 {
 
 SeyondHwInterfaceWrapper::SeyondHwInterfaceWrapper(
-    rclcpp::Node* const parent_node, std::shared_ptr<const SeyondSensorConfiguration>& config)
-  : hw_interface_(new SeyondHwInterface())
-  , logger_(parent_node->get_logger().get_child("HwInterface"))
-  , status_(Status::NOT_INITIALIZED)
+  rclcpp::Node * const parent_node, std::shared_ptr<const SeyondSensorConfiguration> & config)
+: hw_interface_(new SeyondHwInterface()),
+  logger_(parent_node->get_logger().get_child("HwInterface")),
+  status_(Status::NOT_INITIALIZED)
 {
   setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", true, param_read_only());
   bool retry_connect = parent_node->declare_parameter<bool>("retry_hw", true, param_read_only());
@@ -17,11 +17,12 @@ SeyondHwInterfaceWrapper::SeyondHwInterfaceWrapper(
   status_ = hw_interface_->SetSensorConfiguration(config);
 
   if (status_ != Status::OK) {
-    throw std::runtime_error((std::stringstream{} << "Could not initialize HW interface: " << status_).str());
+    throw std::runtime_error(
+      (std::stringstream{} << "Could not initialize HW interface: " << status_).str());
   }
 
   hw_interface_->SetLogger(std::make_shared<rclcpp::Logger>(parent_node->get_logger()));
-  //hw_interface_->SetTargetModel(config->sensor_model);
+  // hw_interface_->SetTargetModel(config->sensor_model);
 
   int retry_count = 0;
 
@@ -43,7 +44,7 @@ SeyondHwInterfaceWrapper::SeyondHwInterfaceWrapper(
 }
 
 void SeyondHwInterfaceWrapper::OnConfigChange(
-    const std::shared_ptr<const SeyondSensorConfiguration>& new_config)
+  const std::shared_ptr<const SeyondSensorConfiguration> & new_config)
 {
   hw_interface_->SetSensorConfiguration(new_config);
   // if (setup_sensor_) {

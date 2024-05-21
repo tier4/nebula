@@ -12,7 +12,6 @@ SeyondHwInterface::SeyondHwInterface()
 
 void SeyondHwInterface::ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer)
 {
-
 }
 
 Status SeyondHwInterface::SensorInterfaceStart()
@@ -31,7 +30,8 @@ Status SeyondHwInterface::SetSensorConfiguration(
   return Status::OK;
 }
 
-Status SeyondHwInterface::GetSensorConfiguration(const SensorConfigurationBase & sensor_configuration)
+Status SeyondHwInterface::GetSensorConfiguration(
+  const SensorConfigurationBase & sensor_configuration)
 {
   return Status::ERROR_1;
 }
@@ -55,17 +55,14 @@ void SeyondHwInterface::SetTargetModel(int model)
 
 void SeyondHwInterface::PrintError(std::string error)
 {
-
 }
 
 void SeyondHwInterface::PrintDebug(std::string debug)
 {
-
 }
 
 void SeyondHwInterface::PrintInfo(std::string info)
 {
-
 }
 
 void SeyondHwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)

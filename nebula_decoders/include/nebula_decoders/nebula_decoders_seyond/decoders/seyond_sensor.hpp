@@ -16,7 +16,6 @@ template <typename PacketT>
 class SeyondSensor
 {
 private:
-
 public:
   typedef PacketT packet_t;
 

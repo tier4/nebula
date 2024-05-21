@@ -86,7 +86,8 @@ public:
   /// @brief Printing calibration configuration
   /// @param calibration_configuration CalibrationConfiguration for the checking
   /// @return Resulting status
-  Status GetCalibrationConfiguration(const CalibrationConfigurationBase & calibration_configuration);
+  Status GetCalibrationConfiguration(
+    const CalibrationConfigurationBase & calibration_configuration);
 
   /// @brief Setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
@@ -101,13 +102,11 @@ public:
   /// @brief Registering callback for NebulaPackets
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterScanCallback(
-    std::function<void(std::vector<uint8_t> &)> scan_callback);
+  Status RegisterScanCallback(std::function<void(std::vector<uint8_t> &)> scan_callback);
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger
   void SetLogger(std::shared_ptr<rclcpp::Logger> logger);
-
 };
 }  // namespace drivers
 }  // namespace nebula

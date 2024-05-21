@@ -4,7 +4,6 @@
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/seyond/seyond_common.hpp>
-
 #include <nebula_hw_interfaces/nebula_hw_interfaces_seyond/seyond_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -26,9 +25,9 @@ using SeyondSensorConfiguration = nebula::drivers::SeyondSensorConfiguration;
 class SeyondHwMonitorWrapper
 {
 public:
-  SeyondHwMonitorWrapper(rclcpp::Node* const parent_node,
-                        const std::shared_ptr<SeyondHwInterface>& hw_interface,
-                        std::shared_ptr<const SeyondSensorConfiguration>& config);
+  SeyondHwMonitorWrapper(
+    rclcpp::Node * const parent_node, const std::shared_ptr<SeyondHwInterface> & hw_interface,
+    std::shared_ptr<const SeyondSensorConfiguration> & config);
 
   void OnConfigChange(const std::shared_ptr<const SeyondSensorConfiguration> & /* new_config */) {}
 
@@ -46,7 +45,7 @@ private:
   /// @brief Get and store diagnostic info from sensor
   void FetchDiagnosticInfo();
 
-  rclcpp::Node* const parent_node_;
+  rclcpp::Node * const parent_node_;
   rclcpp::Logger logger_;
   nebula::Status status_;
   uint16_t diag_span_;

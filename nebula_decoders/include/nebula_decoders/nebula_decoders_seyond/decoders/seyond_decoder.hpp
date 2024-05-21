@@ -34,7 +34,7 @@ protected:
   /// @brief The last decoded packet
   typename SensorT::packet_t packet_;
   /// @brief The last azimuth processed
-  int last_phase_ = -1; // Dummy value to signal last_phase_ has not been set yet
+  int last_phase_ = -1;  // Dummy value to signal last_phase_ has not been set yet
   /// @brief The timestamp of the last completed scan in nanoseconds
   uint64_t output_scan_timestamp_ns_ = 0;
   /// @brief The timestamp of the scan currently in progress
@@ -78,7 +78,8 @@ public:
   /// @param correction_data Calibration data for this decoder
   explicit SeyondDecoder(
     const std::shared_ptr<const SeyondSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> & correction_data)
+    const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> &
+      correction_data)
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(correction_data),
     logger_(rclcpp::get_logger("SeyondDecoder"))
@@ -93,10 +94,7 @@ public:
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
   }
 
-  int unpack(const std::vector<uint8_t> & packet) override
-  {
-    return -1;
-  }
+  int unpack(const std::vector<uint8_t> & packet) override { return -1; }
 
   bool hasScanned() override { return has_scanned_; }
 

@@ -1,8 +1,8 @@
 #ifndef NEBULA_WS_HESAI_SCAN_DECODER_HPP
 #define NEBULA_WS_HESAI_SCAN_DECODER_HPP
 
-#include "nebula_common/seyond/seyond_common.hpp"
 #include "nebula_common/point_types.hpp"
+#include "nebula_common/seyond/seyond_common.hpp"
 
 #include "nebula_msgs/msg/nebula_packet.hpp"
 #include "nebula_msgs/msg/nebula_packets.hpp"
