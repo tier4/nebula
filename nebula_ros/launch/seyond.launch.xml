@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="launch_hw" default="true" />
-    <arg name="sensor_model" description="Pandar64|Pandar40P|PandarXT32|PandarXT32M|PandarAT128|PandarQT64|PandarQT128|Pandar128E4X"/>
+    <arg name="sensor_model" description="Falcon|RobinW"/>
     <arg name="return_mode" default="Dual" description="See readme for supported return modes"/>
     <arg name="frame_id"  default="hesai"/>
     <arg name="scan_phase" default="0.0" />
@@ -34,8 +34,8 @@
 
     <let name="rotation_speed" value="200" if="$(eval '\'$(var sensor_model)\' == \'PandarAT128\'')"/>
 
-    <node pkg="nebula_ros" exec="tutorial_ros_wrapper_node"
-        name="nebulka_tutorial" output="screen">
+    <node pkg="nebula_ros" exec="seyond_ros_wrapper_node"
+        name="seyond" output="screen">
         <param name="sensor_model" value="$(var sensor_model)"/>
         <param name="return_mode" value="$(var return_mode)"/>
         <param name="frame_id" value="$(var frame_id)"/>
