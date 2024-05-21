@@ -26,29 +26,14 @@
 
     <group if="$(eval &quot;'$(var sensor_model)' == 'ARS548' &quot;)" >
 
-        <node pkg="nebula_ros" exec="continental_ars548_driver_ros_wrapper_node" name="continental_ars548_decoder_driver" output="screen">
-            <param name="sensor_model" value="$(var sensor_model)"/>
-            <param name="frame_id" value="$(var frame_id)"/>
-            <param name="base_frame" value="$(var base_frame)"/>
-            <param name="object_frame" value="$(var object_frame)"/>
-            <param name="host_ip" value="$(var host_ip)"/>
-            <param name="sensor_ip" value="$(var sensor_ip)"/>
-            <param name="data_port" value="$(var data_port)"/>
-            <param name="use_sensor_time" value="$(var use_sensor_time)"/>
+        <node pkg="nebula_ros" exec="continental_ars548_ros_wrapper_node" name="nebula_continental_ars548" output="screen">
 
-            <param name="configuration_vehicle_length" value="$(var configuration_vehicle_length)"/>
-            <param name="configuration_vehicle_width" value="$(var configuration_vehicle_width)"/>
-            <param name="configuration_vehicle_height" value="$(var configuration_vehicle_height)"/>
-            <param name="configuration_vehicle_wheelbase" value="$(var configuration_vehicle_wheelbase)"/>
-        </node>
-
-        <node pkg="nebula_ros" exec="continental_ars548_hw_interface_ros_wrapper_node"
-            name="continental_ars548_hw_driver" output="screen" if="$(var launch_hw)">
             <remap from="/diagnostics" to="diagnostics"/>
             <remap from="odometry_input" to="$(var odometry_topic)"/>
             <remap from="acceleration_input" to="$(var acceleration_topic)"/>
             <remap from="steering_angle_input" to="$(var steering_angle_topic)"/>
 
+            <param name="launch_hw" value="$(var launch_hw)"/>
             <param name="sensor_model" value="$(var sensor_model)"/>
             <param name="frame_id" value="$(var frame_id)"/>
             <param name="base_frame" value="$(var base_frame)"/>
@@ -69,44 +54,4 @@
         </node>
     </group>
 
-    <group if="$(eval &quot;'$(var sensor_model)' == 'MultiARS548' &quot;)" >
-
-        <node pkg="nebula_ros" exec="continental_ars548_driver_ros_wrapper_node" name="continental_ars548_decoder_driver" output="screen">
-            <param name="sensor_model" value="ARS548"/>
-            <param name="frame_id" value="$(var frame_id)"/>
-            <param name="base_frame" value="$(var base_frame)"/>
-            <param name="object_frame" value="$(var object_frame)"/>
-            <param name="host_ip" value="$(var host_ip)"/>
-            <param name="sensor_ip" value="$(var sensor_ip)"/>
-            <param name="data_port" value="$(var data_port)"/>
-            <param name="use_sensor_time" value="$(var use_sensor_time)"/>
-
-            <param name="configuration_vehicle_length" value="$(var configuration_vehicle_length)"/>
-            <param name="configuration_vehicle_width" value="$(var configuration_vehicle_width)"/>
-            <param name="configuration_vehicle_height" value="$(var configuration_vehicle_height)"/>
-            <param name="configuration_vehicle_wheelbase" value="$(var configuration_vehicle_wheelbase)"/>
-        </node>
-
-        <node pkg="nebula_ros" exec="multi_continental_ars548_hw_interface_ros_wrapper_node"
-            name="multi_continental_ars548_hw_driver" output="screen" if="$(var launch_hw)">
-            <remap from="/diagnostics" to="diagnostics"/>
-            <remap from="odometry_input" to="$(var odometry_topic)"/>
-            <remap from="acceleration_input" to="$(var acceleration_topic)"/>
-            <remap from="steering_angle_input" to="$(var steering_angle_topic)"/>
-
-            <param name="sensor_model" value="ARS548"/>
-            <param name="frame_ids" value="[$(var frame_id)]"/>
-            <param name="base_frame" value="$(var base_frame)"/>
-            <param name="object_frame" value="$(var object_frame)"/>
-            <param name="host_ip" value="$(var host_ip)"/>
-            <param name="multicast_ip" value="$(var multicast_ip)"/>
-            <param name="data_port" value="$(var data_port)"/>
-            <param name="sensor_ips" value="[$(var sensor_ip)]"/>
-            <param name="configuration_host_port" value="$(var configuration_host_port)"/>
-            <param name="configuration_sensor_port" value="$(var configuration_sensor_port)"/>
-            <param name="use_sensor_time" value="$(var use_sensor_time)"/>
-
-            <param name="use_sim_time" value="false"/>
-        </node>
-    </group>
 </launch>

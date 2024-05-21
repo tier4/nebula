@@ -1,10 +1,11 @@
 #ifndef NEBULA_HW_INTERFACE_BASE_H
 #define NEBULA_HW_INTERFACE_BASE_H
 
+#include "boost_udp_driver/udp_driver.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
-#include "boost_udp_driver/udp_driver.hpp"
 
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -22,7 +23,7 @@ protected:
    * @param buffer Buffer containing the data received from the UDP socket
    * @return Status::OK if no error occurred.
    */
-  virtual void ReceiveSensorPacketCallback([[maybe_unused]] const std::vector<uint8_t> & buffer) {}
+  virtual void ReceiveSensorPacketCallback([[maybe_unused]] std::vector<uint8_t> & buffer) {}
   //  virtual Status RegisterScanCallback(
   //    std::function<void(std::unique_ptr<std::vector<std::vector<uint8_t>>>)> scan_callback) = 0;
 

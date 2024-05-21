@@ -24,31 +24,21 @@ namespace drivers
 {
 namespace continental_ars548
 {
-ContinentalARS548HwInterface::ContinentalARS548HwInterface()
+ContinentalArs548HwInterface::ContinentalArs548HwInterface()
 : sensor_io_context_{new ::drivers::common::IoContext(1)},
-  sensor_udp_driver_{new ::drivers::udp_driver::UdpDriver(*sensor_io_context_)},
-  nebula_packets_ptr_{std::make_unique<nebula_msgs::msg::NebulaPackets>()}
+  sensor_udp_driver_{new ::drivers::udp_driver::UdpDriver(*sensor_io_context_)}
 {
 }
 
-Status ContinentalARS548HwInterface::SetSensorConfiguration(
-  std::shared_ptr<SensorConfigurationBase> sensor_configuration)
+Status ContinentalArs548HwInterface::SetSensorConfiguration(
+  std::shared_ptr<const ContinentalArs548SensorConfiguration> sensor_configuration)
 {
-  Status status = Status::OK;
-
-  try {
-    sensor_configuration_ =
-      std::static_pointer_cast<ContinentalARS548SensorConfiguration>(sensor_configuration);
-  } catch (const std::exception & ex) {
-    status = Status::SENSOR_CONFIG_ERROR;
-    std::cerr << status << std::endl;
-    return status;
-  }
+  sensor_configuration_ = sensor_configuration;
 
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::SensorInterfaceStart()
+Status ContinentalArs548HwInterface::SensorInterfaceStart()
 {
   try {
     sensor_udp_driver_->init_receiver(
@@ -58,7 +48,7 @@ Status ContinentalARS548HwInterface::SensorInterfaceStart()
     sensor_udp_driver_->receiver()->open();
     sensor_udp_driver_->receiver()->bind();
     sensor_udp_driver_->receiver()->asyncReceiveWithSender(std::bind(
-      &ContinentalARS548HwInterface::ReceiveSensorPacketCallbackWithSender, this,
+      &ContinentalArs548HwInterface::ReceiveSensorPacketCallbackWithSender, this,
       std::placeholders::_1, std::placeholders::_2));
 
     sensor_udp_driver_->init_sender(
@@ -80,21 +70,21 @@ Status ContinentalARS548HwInterface::SensorInterfaceStart()
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::RegisterScanCallback(
-  std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> callback)
+Status ContinentalArs548HwInterface::RegisterCallback(
+  std::function<void(std::vector<uint8_t> &)> callback)
 {
-  nebula_packets_reception_callback_ = std::move(callback);
+  callback_ = std::move(callback);
   return Status::OK;
 }
 
-void ContinentalARS548HwInterface::ReceiveSensorPacketCallbackWithSender(
-  const std::vector<uint8_t> & buffer, const std::string & sender_ip)
+void ContinentalArs548HwInterface::ReceiveSensorPacketCallbackWithSender(
+  std::vector<uint8_t> & buffer, const std::string & sender_ip)
 {
   if (sender_ip == sensor_configuration_->sensor_ip) {
     ReceiveSensorPacketCallback(buffer);
   }
 }
-void ContinentalARS548HwInterface::ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer)
+void ContinentalArs548HwInterface::ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer)
 {
   if (buffer.size() < sizeof(HeaderPacket)) {
     PrintError("Unrecognized packet. Too short");
@@ -145,38 +135,35 @@ void ContinentalARS548HwInterface::ReceiveSensorPacketCallback(const std::vector
   }
 }
 
-void ContinentalARS548HwInterface::ProcessFilterStatusPacket(const std::vector<uint8_t> & buffer)
+void ContinentalArs548HwInterface::ProcessFilterStatusPacket(std::vector<uint8_t> & buffer)
 {
   assert(buffer.size() == sizeof(FilterStatusPacket));
   std::memcpy(&filter_status_, buffer.data(), sizeof(FilterStatusPacket));
 }
 
-void ContinentalARS548HwInterface::ProcessDataPacket(const std::vector<uint8_t> & buffer)
+void ContinentalArs548HwInterface::ProcessDataPacket(std::vector<uint8_t> & buffer)
 {
-  nebula_msgs::msg::NebulaPacket nebula_packet;
-  nebula_packet.data = buffer;
-  auto now = std::chrono::system_clock::now();
-  auto now_secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-  auto now_nanosecs =
-    std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-  nebula_packet.stamp.sec = static_cast<int>(now_secs);
-  nebula_packet.stamp.nanosec =
-    static_cast<int>((now_nanosecs / 1000000000.0 - static_cast<double>(now_secs)) * 1000000000);
-  nebula_packets_ptr_->packets.emplace_back(nebula_packet);
+  /*   auto nebula_packet_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
+    nebula_packet_ptr->data = buffer;
+    auto now = std::chrono::system_clock::now();
+    auto now_secs =
+    std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count(); auto
+    now_nanosecs =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+    nebula_packet_ptr->stamp.sec = static_cast<int>(now_secs);
+    nebula_packet_ptr->stamp.nanosec =
+      static_cast<int>((now_nanosecs / 1000000000.0 - static_cast<double>(now_secs)) * 1000000000);
+  */
 
-  nebula_packets_ptr_->header.stamp = nebula_packets_ptr_->packets.front().stamp;
-  nebula_packets_ptr_->header.frame_id = sensor_configuration_->frame_id;
-
-  nebula_packets_reception_callback_(std::move(nebula_packets_ptr_));
-  nebula_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
+  callback_(buffer);
 }
 
-Status ContinentalARS548HwInterface::SensorInterfaceStop()
+Status ContinentalArs548HwInterface::SensorInterfaceStop()
 {
   return Status::ERROR_1;
 }
 
-Status ContinentalARS548HwInterface::GetSensorConfiguration(
+Status ContinentalArs548HwInterface::GetSensorConfiguration(
   SensorConfigurationBase & sensor_configuration)
 {
   std::stringstream ss;
@@ -185,7 +172,7 @@ Status ContinentalARS548HwInterface::GetSensorConfiguration(
   return Status::ERROR_1;
 }
 
-Status ContinentalARS548HwInterface::SetSensorMounting(
+Status ContinentalArs548HwInterface::SetSensorMounting(
   float longitudinal_autosar, float lateral_autosar, float vertical_autosar, float yaw_autosar,
   float pitch_autosar, uint8_t plug_orientation)
 {
@@ -229,7 +216,7 @@ Status ContinentalARS548HwInterface::SetSensorMounting(
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::SetVehicleParameters(
+Status ContinentalArs548HwInterface::SetVehicleParameters(
   float length_autosar, float width_autosar, float height_autosar, float wheel_base_autosar)
 {
   if (
@@ -268,7 +255,7 @@ Status ContinentalARS548HwInterface::SetVehicleParameters(
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::SetRadarParameters(
+Status ContinentalArs548HwInterface::SetRadarParameters(
   uint16_t maximum_distance, uint8_t frequency_slot, uint8_t cycle_time, uint8_t time_slot,
   uint8_t hcc, uint8_t power_save_standstill)
 {
@@ -312,7 +299,7 @@ Status ContinentalARS548HwInterface::SetRadarParameters(
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::SetSensorIPAddress(const std::string & sensor_ip_address)
+Status ContinentalArs548HwInterface::SetSensorIPAddress(const std::string & sensor_ip_address)
 {
   std::array<uint8_t, 4> ip_bytes;
 
@@ -353,7 +340,7 @@ Status ContinentalARS548HwInterface::SetSensorIPAddress(const std::string & sens
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::SetAccelerationLateralCog(float lateral_acceleration)
+Status ContinentalArs548HwInterface::SetAccelerationLateralCog(float lateral_acceleration)
 {
   constexpr uint16_t ACCELERATION_LATERAL_COG_SERVICE_ID = 0;
   constexpr uint16_t ACCELERATION_LATERAL_COG_METHOD_ID = 321;
@@ -384,7 +371,7 @@ Status ContinentalARS548HwInterface::SetAccelerationLateralCog(float lateral_acc
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::SetAccelerationLongitudinalCog(float longitudinal_acceleration)
+Status ContinentalArs548HwInterface::SetAccelerationLongitudinalCog(float longitudinal_acceleration)
 {
   constexpr uint16_t ACCELERATION_LONGITUDINAL_COG_SERVICE_ID = 0;
   constexpr uint16_t ACCELERATION_LONGITUDINAL_COG_METHOD_ID = 322;
@@ -417,7 +404,7 @@ Status ContinentalARS548HwInterface::SetAccelerationLongitudinalCog(float longit
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::SetCharacteristicSpeed(float characteristic_speed)
+Status ContinentalArs548HwInterface::SetCharacteristicSpeed(float characteristic_speed)
 {
   constexpr uint16_t CHARACTERISTIC_SPEED_SERVICE_ID = 0;
   constexpr uint16_t CHARACTERISTIC_SPEED_METHOD_ID = 328;
@@ -448,7 +435,7 @@ Status ContinentalARS548HwInterface::SetCharacteristicSpeed(float characteristic
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::SetDrivingDirection(int direction)
+Status ContinentalArs548HwInterface::SetDrivingDirection(int direction)
 {
   constexpr uint16_t DRIVING_DIRECTION_SERVICE_ID = 0;
   constexpr uint16_t DRIVING_DIRECTION_METHOD_ID = 325;
@@ -484,7 +471,7 @@ Status ContinentalARS548HwInterface::SetDrivingDirection(int direction)
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::SetSteeringAngleFrontAxle(float angle_rad)
+Status ContinentalArs548HwInterface::SetSteeringAngleFrontAxle(float angle_rad)
 {
   constexpr uint16_t STEERING_ANGLE_SERVICE_ID = 0;
   constexpr uint16_t STEERING_ANGLE_METHOD_ID = 327;
@@ -516,7 +503,7 @@ Status ContinentalARS548HwInterface::SetSteeringAngleFrontAxle(float angle_rad)
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::SetVelocityVehicle(float velocity_kmh)
+Status ContinentalArs548HwInterface::SetVelocityVehicle(float velocity_kmh)
 {
   if (velocity_kmh < 0.f || velocity_kmh > 350.f) {
     PrintError("Invalid velocity value");
@@ -547,7 +534,7 @@ Status ContinentalARS548HwInterface::SetVelocityVehicle(float velocity_kmh)
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::SetYawRate(float yaw_rate)
+Status ContinentalArs548HwInterface::SetYawRate(float yaw_rate)
 {
   if (yaw_rate < -163.83 || yaw_rate > 163.83) {
     PrintError("Invalid yaw rate value");
@@ -578,12 +565,12 @@ Status ContinentalARS548HwInterface::SetYawRate(float yaw_rate)
   return Status::OK;
 }
 
-void ContinentalARS548HwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
+void ContinentalArs548HwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
 {
   parent_node_logger = logger;
 }
 
-void ContinentalARS548HwInterface::PrintInfo(std::string info)
+void ContinentalArs548HwInterface::PrintInfo(std::string info)
 {
   if (parent_node_logger) {
     RCLCPP_INFO_STREAM((*parent_node_logger), info);
@@ -592,7 +579,7 @@ void ContinentalARS548HwInterface::PrintInfo(std::string info)
   }
 }
 
-void ContinentalARS548HwInterface::PrintError(std::string error)
+void ContinentalArs548HwInterface::PrintError(std::string error)
 {
   if (parent_node_logger) {
     RCLCPP_ERROR_STREAM((*parent_node_logger), error);
@@ -601,7 +588,7 @@ void ContinentalARS548HwInterface::PrintError(std::string error)
   }
 }
 
-void ContinentalARS548HwInterface::PrintDebug(std::string debug)
+void ContinentalArs548HwInterface::PrintDebug(std::string debug)
 {
   if (parent_node_logger) {
     RCLCPP_DEBUG_STREAM((*parent_node_logger), debug);
@@ -610,7 +597,7 @@ void ContinentalARS548HwInterface::PrintDebug(std::string debug)
   }
 }
 
-void ContinentalARS548HwInterface::PrintDebug(const std::vector<uint8_t> & bytes)
+void ContinentalArs548HwInterface::PrintDebug(const std::vector<uint8_t> & bytes)
 {
   std::stringstream ss;
   for (const auto & b : bytes) {

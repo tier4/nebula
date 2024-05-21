@@ -25,14 +25,19 @@ namespace drivers
 {
 namespace continental_ars548
 {
-ContinentalARS548Decoder::ContinentalARS548Decoder(
-  const std::shared_ptr<continental_ars548::ContinentalARS548SensorConfiguration> &
+ContinentalArs548Decoder::ContinentalArs548Decoder(
+  const std::shared_ptr<const continental_ars548::ContinentalArs548SensorConfiguration> &
     sensor_configuration)
 {
   sensor_configuration_ = sensor_configuration;
 }
 
-Status ContinentalARS548Decoder::RegisterDetectionListCallback(
+Status ContinentalArs548Decoder::GetStatus()
+{
+  return Status::OK;
+}
+
+Status ContinentalArs548Decoder::RegisterDetectionListCallback(
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList>)>
     detection_list_callback)
 {
@@ -40,7 +45,7 @@ Status ContinentalARS548Decoder::RegisterDetectionListCallback(
   return Status::OK;
 }
 
-Status ContinentalARS548Decoder::RegisterObjectListCallback(
+Status ContinentalArs548Decoder::RegisterObjectListCallback(
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList>)>
     object_list_callback)
 {
@@ -48,21 +53,16 @@ Status ContinentalARS548Decoder::RegisterObjectListCallback(
   return Status::OK;
 }
 
-Status ContinentalARS548Decoder::RegisterSensorStatusCallback(
-  std::function<void(const ContinentalARS548Status & status)> sensor_status_callback)
+Status ContinentalArs548Decoder::RegisterSensorStatusCallback(
+  std::function<void(const ContinentalArs548Status & status)> sensor_status_callback)
 {
   sensor_status_callback_ = std::move(sensor_status_callback);
   return Status::OK;
 }
 
-bool ContinentalARS548Decoder::ProcessPackets(
-  const nebula_msgs::msg::NebulaPackets & nebula_packets)
+bool ContinentalArs548Decoder::ProcessPacket(const nebula_msgs::msg::NebulaPacket & nebula_packet)
 {
-  if (nebula_packets.packets.size() != 1) {
-    return false;
-  }
-
-  const auto & data = nebula_packets.packets[0].data;
+  const auto & data = nebula_packet.data;
 
   if (data.size() < sizeof(HeaderPacket)) {
     return false;
@@ -82,13 +82,13 @@ bool ContinentalARS548Decoder::ProcessPackets(
       return false;
     }
 
-    return ParseDetectionsListPacket(data, nebula_packets.header);
+    return ParseDetectionsListPacket(data, nebula_packet.stamp);
   } else if (header.method_id.value() == OBJECT_LIST_METHOD_ID) {
     if (data.size() != OBJECT_LIST_UDP_PAYLOAD || header.length.value() != OBJECT_LIST_PDU_LENGTH) {
       return false;
     }
 
-    return ParseObjectsListPacket(data, nebula_packets.header);
+    return ParseObjectsListPacket(data, nebula_packet.stamp);
   } else if (header.method_id.value() == SENSOR_STATUS_METHOD_ID) {
     if (
       data.size() != SENSOR_STATUS_UDP_PAYLOAD ||
@@ -96,14 +96,14 @@ bool ContinentalARS548Decoder::ProcessPackets(
       return false;
     }
 
-    return ParseSensorStatusPacket(data, nebula_packets.header);
+    return ParseSensorStatusPacket(data, nebula_packet.stamp);
   }
 
   return true;
 }
 
-bool ContinentalARS548Decoder::ParseDetectionsListPacket(
-  const std::vector<uint8_t> & data, const std_msgs::msg::Header & header)
+bool ContinentalArs548Decoder::ParseDetectionsListPacket(
+  const std::vector<uint8_t> & data, const builtin_interfaces::msg::Time & stamp)
 {
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548DetectionList>();
   auto & msg = *msg_ptr;
@@ -119,7 +119,7 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(
     msg.header.stamp.nanosec = detection_list.stamp.timestamp_nanoseconds.value();
     msg.header.stamp.sec = detection_list.stamp.timestamp_seconds.value();
   } else {
-    msg.header.stamp = header.stamp;
+    msg.header.stamp = stamp;
   }
 
   msg.stamp_sync_status = detection_list.stamp.timestamp_sync_status;
@@ -227,8 +227,8 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(
   return true;
 }
 
-bool ContinentalARS548Decoder::ParseObjectsListPacket(
-  const std::vector<uint8_t> & data, const std_msgs::msg::Header & header)
+bool ContinentalArs548Decoder::ParseObjectsListPacket(
+  const std::vector<uint8_t> & data, const builtin_interfaces::msg::Time & stamp)
 {
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548ObjectList>();
   auto & msg = *msg_ptr;
@@ -244,7 +244,7 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(
     msg.header.stamp.nanosec = object_list.stamp.timestamp_nanoseconds.value();
     msg.header.stamp.sec = object_list.stamp.timestamp_seconds.value();
   } else {
-    msg.header.stamp = header.stamp;
+    msg.header.stamp = stamp;
   }
 
   msg.stamp_sync_status = object_list.stamp.timestamp_sync_status;
@@ -379,8 +379,8 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(
   return true;
 }
 
-bool ContinentalARS548Decoder::ParseSensorStatusPacket(
-  const std::vector<uint8_t> & data, [[maybe_unused]] const std_msgs::msg::Header & header)
+bool ContinentalArs548Decoder::ParseSensorStatusPacket(
+  const std::vector<uint8_t> & data, [[maybe_unused]] const builtin_interfaces::msg::Time & stamp)
 {
   SensorStatusPacket sensor_status_packet;
   std::memcpy(&sensor_status_packet, data.data(), sizeof(SensorStatusPacket));

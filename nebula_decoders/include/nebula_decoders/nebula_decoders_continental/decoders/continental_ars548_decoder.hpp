@@ -35,36 +35,40 @@ namespace drivers
 namespace continental_ars548
 {
 /// @brief Continental Radar decoder (ARS548)
-class ContinentalARS548Decoder : public ContinentalPacketsDecoder
+class ContinentalArs548Decoder : public ContinentalPacketsDecoder
 {
 public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
-  explicit ContinentalARS548Decoder(
-    const std::shared_ptr<ContinentalARS548SensorConfiguration> & sensor_configuration);
+  explicit ContinentalArs548Decoder(
+    const std::shared_ptr<const ContinentalArs548SensorConfiguration> & sensor_configuration);
+
+  /// @brief Get current status of this driver
+  /// @return Current status
+  Status GetStatus() override;
 
   /// @brief Function for parsing NebulaPackets
   /// @param nebula_packets
   /// @return Resulting flag
-  bool ProcessPackets(const nebula_msgs::msg::NebulaPackets & nebula_packets) override;
+  bool ProcessPacket(const nebula_msgs::msg::NebulaPacket & nebula_packet) override;
 
   /// @brief Function for parsing detection lists
   /// @param data
   /// @return Resulting flag
   bool ParseDetectionsListPacket(
-    const std::vector<uint8_t> & data, const std_msgs::msg::Header & header);
+    const std::vector<uint8_t> & data, const builtin_interfaces::msg::Time & stamp);
 
   /// @brief Function for parsing object lists
   /// @param data
   /// @return Resulting flag
   bool ParseObjectsListPacket(
-    const std::vector<uint8_t> & data, const std_msgs::msg::Header & header);
+    const std::vector<uint8_t> & data, const builtin_interfaces::msg::Time & stamp);
 
   /// @brief Function for parsing sensor status messages
   /// @param data
   /// @return Resulting flag
   bool ParseSensorStatusPacket(
-    const std::vector<uint8_t> & data, const std_msgs::msg::Header & header);
+    const std::vector<uint8_t> & data, const builtin_interfaces::msg::Time & stamp);
 
   /// @brief Register function to call when a new detection list is processed
   /// @param detection_list_callback
@@ -84,19 +88,20 @@ public:
   /// @param object_list_callback
   /// @return Resulting status
   Status RegisterSensorStatusCallback(
-    std::function<void(const ContinentalARS548Status & status)> sensor_status_callback);
+    std::function<void(const ContinentalArs548Status & status)> sensor_status_callback);
 
 private:
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg)>
     detection_list_callback_;
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg)>
     object_list_callback_;
-  std::function<void(const ContinentalARS548Status & status)> sensor_status_callback_;
+  std::function<void(const ContinentalArs548Status & status)> sensor_status_callback_;
 
-  ContinentalARS548Status radar_status_{};
+  ContinentalArs548Status radar_status_{};
 
   /// @brief SensorConfiguration for this decoder
-  std::shared_ptr<continental_ars548::ContinentalARS548SensorConfiguration> sensor_configuration_;
+  std::shared_ptr<const continental_ars548::ContinentalArs548SensorConfiguration>
+    sensor_configuration_;
 };
 
 }  // namespace continental_ars548

@@ -32,7 +32,6 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
-#include <nebula_msgs/msg/nebula_packets.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -50,15 +49,13 @@ namespace drivers
 namespace continental_ars548
 {
 /// @brief Hardware interface of the Continental ARS548 radar
-class ContinentalARS548HwInterface : NebulaHwInterfaceBase
+class ContinentalArs548HwInterface /*  : NebulaHwInterfaceBase */
 {
 private:
   std::unique_ptr<::drivers::common::IoContext> sensor_io_context_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> sensor_udp_driver_;
-  std::shared_ptr<ContinentalARS548SensorConfiguration> sensor_configuration_;
-  std::unique_ptr<nebula_msgs::msg::NebulaPackets> nebula_packets_ptr_;
-  std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets> buffer)>
-    nebula_packets_reception_callback_;
+  std::shared_ptr<const ContinentalArs548SensorConfiguration> sensor_configuration_;
+  std::function<void(std::vector<uint8_t> &)> callback_;
 
   std::mutex sensor_status_mutex_;
 
@@ -85,49 +82,48 @@ private:
 
 public:
   /// @brief Constructor
-  ContinentalARS548HwInterface();
+  ContinentalArs548HwInterface();
 
   /// @brief Process a new filter status packet
   /// @param buffer The buffer containing the status packet
-  void ProcessFilterStatusPacket(const std::vector<uint8_t> & buffer);
+  void ProcessFilterStatusPacket(std::vector<uint8_t> & buffer);
 
   /// @brief Process a new data packet
   /// @param buffer The buffer containing the data packet
-  void ProcessDataPacket(const std::vector<uint8_t> & buffer);
+  void ProcessDataPacket(std::vector<uint8_t> & buffer);
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
   void ReceiveSensorPacketCallbackWithSender(
-    const std::vector<uint8_t> & buffer, const std::string & sender_ip);
+    std::vector<uint8_t> & buffer, const std::string & sender_ip);
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer) final;
+  void ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer);
 
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStart() final;
+  Status SensorInterfaceStart();
 
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStop() final;
+  Status SensorInterfaceStop();
 
   /// @brief Printing sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
-  Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration) final;
+  Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration);
 
   /// @brief Setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
   Status SetSensorConfiguration(
-    std::shared_ptr<SensorConfigurationBase> sensor_configuration) final;
+    std::shared_ptr<const ContinentalArs548SensorConfiguration> sensor_configuration);
 
-  /// @brief Registering callback for PandarScan
-  /// @param scan_callback Callback function
+  /// @brief Registering callback
+  /// @param callback Callback function
   /// @return Resulting status
-  Status RegisterScanCallback(
-    std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> scan_callback);
+  Status RegisterCallback(std::function<void(std::vector<uint8_t> &)> callback);
 
   /// @brief Set the sensor mounting parameters
   /// @param longitudinal_autosar Desired longitudinal value in autosar coordinates

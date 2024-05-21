@@ -1,0 +1,165 @@
+// Copyright 2024 Tier IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#pragma once
+
+#include <nebula_common/continental/continental_ars548.hpp>
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_common/util/expected.hpp>
+#include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
+#include <nebula_ros/common/parameter_descriptors.hpp>
+#include <nebula_ros/common/watchdog_timer.hpp>
+#include <rclcpp/rclcpp.hpp>
+
+#include <continental_msgs/msg/continental_ars548_detection.hpp>
+#include <continental_msgs/msg/continental_ars548_detection_list.hpp>
+#include <continental_msgs/msg/continental_ars548_object.hpp>
+#include <continental_msgs/msg/continental_ars548_object_list.hpp>
+#include <diagnostic_msgs/msg/diagnostic_array.hpp>
+#include <nebula_msgs/msg/nebula_packet.hpp>
+#include <nebula_msgs/msg/nebula_packets.hpp>
+#include <radar_msgs/msg/radar_scan.hpp>
+#include <radar_msgs/msg/radar_tracks.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
+
+#include <filesystem>
+#include <memory>
+#include <mutex>
+#include <unordered_set>
+#include <vector>
+
+namespace nebula
+{
+namespace ros
+{
+class ContinentalArs548DecoderWrapper
+{
+public:
+  ContinentalArs548DecoderWrapper(
+    rclcpp::Node * const parent_node,
+    std::shared_ptr<
+      const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> & config,
+    bool launch_hw);
+
+  void ProcessPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
+
+  void OnConfigChange(
+    const std::shared_ptr<
+      const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
+      new_config);
+
+  rcl_interfaces::msg::SetParametersResult OnParameterChange(
+    const std::vector<rclcpp::Parameter> & p);
+
+  nebula::Status Status();
+
+  /// @brief Callback to process new ContinentalArs548DetectionList from the driver
+  /// @param msg The new ContinentalArs548DetectionList from the driver
+  void DetectionListCallback(
+    std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg);
+
+  /// @brief Callback to process new ContinentalArs548ObjectList from the driver
+  /// @param msg The new ContinentalArs548ObjectList from the driver
+  void ObjectListCallback(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg);
+
+  /// @brief Callback to process new ContinentalArs548Status from the driver
+  /// @param msg The new ContinentalArs548ObjectList from the driver
+  void SensorStatusCallback(
+    const drivers::continental_ars548::ContinentalArs548Status & sensor_status);
+
+private:
+  nebula::Status InitializeDriver(
+    const std::shared_ptr<
+      const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> & config);
+
+  /// @brief Convert ARS548 detections to a pointcloud
+  /// @param msg The ARS548 detection list msg
+  /// @return Resulting detection pointcloud
+  pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Detection>::Ptr
+  ConvertToPointcloud(const continental_msgs::msg::ContinentalArs548DetectionList & msg);
+
+  /// @brief Convert ARS548 objects to a pointcloud
+  /// @param msg The ARS548 object list msg
+  /// @return Resulting object pointcloud
+  pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Object>::Ptr ConvertToPointcloud(
+    const continental_msgs::msg::ContinentalArs548ObjectList & msg);
+
+  /// @brief Convert ARS548 detections to a standard RadarScan msg
+  /// @param msg The ARS548 detection list msg
+  /// @return Resulting RadarScan msg
+  radar_msgs::msg::RadarScan ConvertToRadarScan(
+    const continental_msgs::msg::ContinentalArs548DetectionList & msg);
+
+  /// @brief Convert ARS548 objects to a standard RadarTracks msg
+  /// @param msg The ARS548 object list msg
+  /// @return Resulting RadarTracks msg
+  radar_msgs::msg::RadarTracks ConvertToRadarTracks(
+    const continental_msgs::msg::ContinentalArs548ObjectList & msg);
+
+  /// @brief Convert ARS548 objects to a standard MarkerArray msg
+  /// @param msg The ARS548 object list msg
+  /// @return Resulting MarkerArray msg
+  visualization_msgs::msg::MarkerArray ConvertToMarkers(
+    const continental_msgs::msg::ContinentalArs548ObjectList & msg);
+
+  /// @brief Convert seconds to chrono::nanoseconds
+  /// @param seconds
+  /// @return chrono::nanoseconds
+  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
+  {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::duration<double>(seconds));
+  }
+
+  nebula::Status status_;
+  rclcpp::Logger logger_;
+
+  std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration>
+    sensor_cfg_{};
+
+  std::shared_ptr<drivers::continental_ars548::ContinentalArs548Decoder> driver_ptr_{};
+  std::mutex mtx_driver_ptr_;
+
+  rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_{};
+
+  rclcpp::Publisher<continental_msgs::msg::ContinentalArs548DetectionList>::SharedPtr
+    detection_list_pub_{};
+  rclcpp::Publisher<continental_msgs::msg::ContinentalArs548ObjectList>::SharedPtr
+    object_list_pub_{};
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr object_pointcloud_pub_{};
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr detection_pointcloud_pub_{};
+  rclcpp::Publisher<radar_msgs::msg::RadarScan>::SharedPtr scan_raw_pub_{};
+  rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr objects_raw_pub_{};
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr objects_markers_pub_{};
+  rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_{};
+
+  std::unordered_set<int> previous_ids_;
+
+  constexpr static int REFERENCE_POINTS_NUM = 9;
+  constexpr static std::array<std::array<double, 2>, REFERENCE_POINTS_NUM> reference_to_center_ = {
+    {{{-1.0, -1.0}},
+     {{-1.0, 0.0}},
+     {{-1.0, 1.0}},
+     {{0.0, 1.0}},
+     {{1.0, 1.0}},
+     {{1.0, 0.0}},
+     {{1.0, -1.0}},
+     {{0.0, -1.0}},
+     {{0.0, 0.0}}}};
+
+  std::shared_ptr<WatchdogTimer> cloud_watchdog_;
+};
+}  // namespace ros
+}  // namespace nebula
