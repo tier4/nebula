@@ -5,24 +5,17 @@ namespace drivers
 {
 SeyondHwInterface::SeyondHwInterface()
 : cloud_io_context_{new ::drivers::common::IoContext(1)},
-  info_io_context_{new ::drivers::common::IoContext(1)},
-  cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
-  info_udp_driver_{new ::drivers::udp_driver::UdpDriver(*info_io_context_)},
-  scan_cloud_ptr_{std::make_unique<nebula_msgs::msg::NebulaPackets>()}
+  m_owned_ctx{new boost::asio::io_context(1)},
+  cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)}
 {
 }
 
-void SeyondHwInterface::ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer)
+void SeyondHwInterface::ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer)
 {
 
 }
 
 Status SeyondHwInterface::SensorInterfaceStart()
-{
-  return Status::OK;
-}
-
-Status SeyondHwInterface::InfoInterfaceStart()
 {
   return Status::OK;
 }
@@ -33,30 +26,24 @@ Status SeyondHwInterface::SensorInterfaceStop()
 }
 
 Status SeyondHwInterface::SetSensorConfiguration(
-  std::shared_ptr<SensorConfigurationBase> sensor_configuration)
+  std::shared_ptr<const SensorConfigurationBase> sensor_configuration)
 {
   return Status::OK;
 }
 
-Status SeyondHwInterface::GetSensorConfiguration(SensorConfigurationBase & sensor_configuration)
-{
-  return Status::ERROR_1;
-}
-
-Status SeyondHwInterface::SetCalibrationConfiguration(
-  CalibrationConfigurationBase & calibration_configuration)
+Status SeyondHwInterface::GetSensorConfiguration(const SensorConfigurationBase & sensor_configuration)
 {
   return Status::ERROR_1;
 }
 
 Status SeyondHwInterface::GetCalibrationConfiguration(
-  CalibrationConfigurationBase & calibration_configuration)
+  const CalibrationConfigurationBase & calibration_configuration)
 {
   return Status::ERROR_1;
 }
 
 Status SeyondHwInterface::RegisterScanCallback(
-  std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets)> scan_callback)
+  std::function<void(std::vector<uint8_t> &)> scan_callback)
 {
   return Status::OK;
 }

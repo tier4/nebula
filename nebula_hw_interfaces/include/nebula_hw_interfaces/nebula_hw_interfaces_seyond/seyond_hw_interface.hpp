@@ -41,15 +41,14 @@ private:
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
   std::shared_ptr<boost::asio::io_context> m_owned_ctx;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
-  std::shared_ptr<::drivers::tcp_driver::TcpDriver> tcp_driver_;
   std::shared_ptr<const SeyondSensorConfiguration> sensor_configuration_;
   std::function<void(std::vector<uint8_t> & buffer)>
     cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
 
   int prev_phase_{};
   int target_model_no;
+  std::shared_ptr<rclcpp::Logger> parent_node_logger_;
 
-  std::shared_ptr<rclcpp::Logger> parent_node_logger;
   /// @brief Printing the string to RCLCPP_INFO_STREAM
   /// @param info Target string
   void PrintInfo(std::string info);
@@ -87,7 +86,7 @@ public:
   /// @brief Printing calibration configuration
   /// @param calibration_configuration CalibrationConfiguration for the checking
   /// @return Resulting status
-  Status GetCalibrationConfiguration(CalibrationConfigurationBase & calibration_configuration);
+  Status GetCalibrationConfiguration(const CalibrationConfigurationBase & calibration_configuration);
 
   /// @brief Setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
