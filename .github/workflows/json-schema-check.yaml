@@ -17,7 +17,8 @@ jobs:
           filters: |
             json_or_yaml:
               - '**/schema/*.schema.json'
-              - '**/config/*.param.yaml'
+              - '**/schema/sub/.json'
+              - '**/config/**/*.param.yaml'
 
   json-schema-check:
     needs: check-if-relevant-files-changed
@@ -27,13 +28,8 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: pip install check-jsonschema colorama
-        shell: bash
-
-      - name: Validate schemas
-        run: python ${GITHUB_ACTION_PATH}/validate_json_schemas.py
-        shell: bash
+      - name: Run json-schema-check
+        uses: autowarefoundation/autoware-github-actions/json-schema-check@v1
 
   no-relevant-changes:
     needs: check-if-relevant-files-changed
