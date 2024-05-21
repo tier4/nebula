@@ -1,157 +1,19 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "vendor": "velodyne",
-  "title": "Parameters for Nebula Velodyne VLP32",
+  "title": "LiDAR Velodyne VLP32 parameters.",
   "type": "object",
   "definitions": {
     "VLP32": {
       "type": "object",
       "properties": {
-        "calibration_file": {
-          "type": "string",
-          "default": "$(find-pkg-share nebula_decoders)/calibration/velodyne/$(var sensor_model).yaml",
-          "pattern": "^.*\\.yaml$",
-          "description": "Sensor calibration file."
-        },
-        "setup_sensor": {
-          "type": "boolean",
-          "default": true,
-          "readOnly": true,
-          "description": "Enable sensor setup on hw-driver."
-        },
-        "diag_span": {
-          "type": "integer",
-          "default": 1000,
-          "minimum": 0,
-          "readOnly": true,
-          "description": "Diagnostics rate."
-        },
-        "advanced_diagnostics": {
-          "type": "boolean",
-          "default": false,
-          "readOnly": true,
-          "description": "Enable advanced diagnostics."
-        },
-        "launch_hw": {
-          "type": "boolean",
-          "readOnly": false,
-          "description": "Launch hardware."
-        },
-        "sensor_model": {
-          "type": "string",
-          "readOnly": true,
-          "enum": ["VLP16", "VLP32", "VLS128"],
-          "description": "Lidar model."
-        },
-        "return_mode": {
-          "type": "string",
-          "enum":["SingleFirst", "SingleStrongest", "SingleLast", "Dual"],
-          "description": "Sensor return mode."
-        },
-        "host_ip": {
-          "type": "string",
-          "default": "255.255.255.255",
-          "pattern": "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
-          "readOnly": true,
-          "description": "Broadcast IP from Sensor."
-        },
-        "sensor_ip": {
-          "type": "string",
-          "default": "192.168.1.201",
-          "pattern": "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
-          "readOnly": true,
-          "description": "Lidar Sensor IP."
-        },
-        "data_port": {
-          "type": "integer",
-          "default": 2368,
-          "minimum": 0,
-          "readOnly": true,
-          "description": "Lidar Data Port."
-        },
-        "gnss_port": {
-          "type": "integer",
-          "default": 2369,
-          "minimum": 0,
-          "readOnly": true,
-          "description": "Lidar GNSS Port."
-        },
-        "frame_id": {
-          "type": "string",
-          "default": "velodyne",
-          "description": "Pointcloud frame_id."
-        },
-        "scan_phase": {
-          "type": "number",
-          "default": 0.0,
-          "minimum": 0.0,
-          "maximum": 360.0,
-          "description": "Sensor scan phase."
-        },
-        "min_range": {
-          "type": "number",
-          "default": 0.3,
-          "minimum": 0.0,
-          "description": "Sensor minimum single point range."
-        },
-        "max_range": {
-          "type": "number",
-          "default": 300.0,
-          "minimum": 0.0,
-          "description": "Sensor maximum single point range."
-        },
-        "packet_mtu_size": {
-          "type": "integer",
-          "default": 1500,
-          "minimum": 0,
-          "readOnly": true,
-          "description": "Packet MTU size."
-        },
-        "rotation_speed": {
-          "type": "integer",
-          "default": 600,
-          "minimum": 300,
-          "maximum": 1200,
-          "multipleOf": 60,
-          "description": "Motor RPM, the sensor's internal spin rate."
-        },
-        "cloud_min_angle": {
-          "type": "integer",
-          "default": 0,
-          "minimum": 0,
-          "maximum": 360,
-          "description": "Field of View, start degrees."
-        },
-        "cloud_max_angle": {
-          "type": "integer",
-          "default": 360,
-          "minimum": 0,
-          "maximum": 360,
-          "description": "Field of View, end degrees."
-        }
       },
-      "required": [
-        "calibration_file",
-        "setup_sensor",
-        "diag_span",
-        "advanced_diagnostics",
-        "launch_hw",
-        "sensor_model",
-        "return_mode",
-        "host_ip",
-        "sensor_ip",
-        "data_port",
-        "gnss_port",
-        "frame_id",
-        "scan_phase",
-        "min_range",
-        "max_range",
-        "packet_mtu_size",
-        "rotation_speed",
-        "cloud_min_angle",
-        "cloud_max_angle"
+      "allOf": [
+        {
+          "$ref": "sub/velodyne.json#/definitions/velodyne"
+        }
       ],
-      "additionalProperties": false
+      "required": [
+      ]
     }
   },
   "properties": {
@@ -162,10 +24,14 @@
           "$ref": "#/definitions/VLP32"
         }
       },
-      "required": ["ros__parameters"],
+      "required": [
+        "ros__parameters"
+      ],
       "additionalProperties": false
     }
   },
-  "required": ["/**"],
+  "required": [
+    "/**"
+  ],
   "additionalProperties": false
 }

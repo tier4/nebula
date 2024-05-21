@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="sensor_model" description="VLP16|VLP32|VLS128"/>
-  <arg name="config_file" default="$(find-pkg-share nebula_ros)/config/velodyne/$(var sensor_model).param.yaml"/>
+  <arg name="config_file" default="$(find-pkg-share nebula_ros)/config/lidar/velodyne/$(var sensor_model).param.yaml"/>
 
   <node pkg="nebula_ros" exec="velodyne_ros_wrapper_node" name="velodyne_ros_wrapper_node" output="screen">
     <param from="$(var config_file)" allow_substs="true"/>

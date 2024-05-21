@@ -1,6 +1,6 @@
 /**:
   ros__parameters:
-    calibration_file: "$(find-pkg-share nebula_decoders)/calibration/velodyne/VLS128.yaml"
+    calibration_file: "$(find-pkg-share nebula_decoders)/calibration/velodyne/VLP16.yaml"
     setup_sensor: true
     diag_span: 1000
     advanced_diagnostics: false
