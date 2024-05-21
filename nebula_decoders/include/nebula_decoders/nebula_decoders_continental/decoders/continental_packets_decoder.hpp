@@ -39,10 +39,14 @@ public:
   virtual ~ContinentalPacketsDecoder() = default;
   ContinentalPacketsDecoder() = default;
 
+  /// @brief Get current status of this driver
+  /// @return Current status
+  virtual Status GetStatus() = 0;
+
   /// @brief Virtual function for parsing NebulaPackets based on packet structure
   /// @param nebula_packets
   /// @return Resulting flag
-  virtual bool ProcessPackets(const nebula_msgs::msg::NebulaPackets & nebula_packets) = 0;
+  virtual bool ProcessPacket(const nebula_msgs::msg::NebulaPacket & nebula_packet) = 0;
 };
 }  // namespace drivers
 }  // namespace nebula
