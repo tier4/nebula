@@ -247,10 +247,12 @@ void HesaiDecoderWrapper::ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::N
     pointcloud = std::get<0>(pointcloud_ts);
   }
 
+  // A pointcloud is only emitted when a scan completes (e.g. 3599 packets do not emit, the 3600th emits one)
   if (pointcloud == nullptr)
   {
-    // todo
-    // RCLCPP_WARN_STREAM(logger_, "Empty cloud parsed.");
+    // Since this ends the function early, the `cloud_watchdog_` will not be updated.
+    // Thus, if pointclouds are not emitted for too long (e.g. when decoder settings are wrong or no packets come in),
+    // the watchdog will log a warning automatically
     return;
   };
 
