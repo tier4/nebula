@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <nebula_ros/continental/continental_ars548_decoder_wrapper.hpp>
+#include <nebula_ros/continental/continental_ars548_decoder_ros_wrapper.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
 
@@ -20,112 +20,222 @@ namespace nebula
 {
 namespace ros
 {
-ContinentalArs548DecoderWrapper::ContinentalArs548DecoderWrapper(
-  rclcpp::Node * const parent_node,
-  std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
-    config,
-  bool launch_hw)
-: status_(nebula::Status::NOT_INITIALIZED),
-  logger_(parent_node->get_logger().get_child("ContinentalArs548Decoder")),
-  sensor_cfg_(config)
+ContinentalArs548DriverRosWrapper::ContinentalArs548DriverRosWrapper(
+  const rclcpp::NodeOptions & options)
+: rclcpp::Node("continental_ars548_driver_ros_wrapper", options), hw_interface_()
 {
-  using std::chrono_literals::operator""us;
-  if (!config) {
-    throw std::runtime_error(
-      "ContinentalArs548DecoderWrapper cannot be instantiated without a valid config!");
+  drivers::continental_ars548::ContinentalArs548SensorConfiguration sensor_configuration;
+
+  setvbuf(stdout, NULL, _IONBF, BUFSIZ);
+
+  hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
+
+  wrapper_status_ = GetParameters(sensor_configuration);
+  if (Status::OK != wrapper_status_) {
+    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << wrapper_status_);
+    return;
   }
+  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
 
-  RCLCPP_INFO(logger_, "Starting Decoder");
+  sensor_cfg_ptr_ =
+    std::make_shared<drivers::continental_ars548::ContinentalArs548SensorConfiguration>(
+      sensor_configuration);
 
-  InitializeDriver(config);
-  status_ = driver_ptr_->GetStatus();
+  wrapper_status_ = InitializeDriver(
+    std::const_pointer_cast<drivers::continental_ars548::ContinentalArs548SensorConfiguration>(
+      sensor_cfg_ptr_));
 
-  if (Status::OK != status_) {
-    throw std::runtime_error(
-      (std::stringstream() << "Error instantiating decoder: " << status_).str());
-  }
-
-  // Publish packets only if HW interface is connected
-  if (launch_hw) {
-    packets_pub_ = parent_node->create_publisher<nebula_msgs::msg::NebulaPackets>(
-      "nebula_packets", rclcpp::SensorDataQoS());
-  }
-
-  auto qos_profile = rmw_qos_profile_sensor_data;
-  auto pointcloud_qos =
-    rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
+  RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
+  packets_sub_ = create_subscription<nebula_msgs::msg::NebulaPackets>(
+    "nebula_packets", rclcpp::SensorDataQoS(),
+    std::bind(
+      &ContinentalArs548DriverRosWrapper::ReceivePacketsMsgCallback, this, std::placeholders::_1));
 
   detection_list_pub_ =
-    parent_node->create_publisher<continental_msgs::msg::ContinentalArs548DetectionList>(
+    this->create_publisher<continental_msgs::msg::ContinentalArs548DetectionList>(
       "continental_detections", rclcpp::SensorDataQoS());
-  object_list_pub_ =
-    parent_node->create_publisher<continental_msgs::msg::ContinentalArs548ObjectList>(
-      "continental_objects", rclcpp::SensorDataQoS());
+  object_list_pub_ = this->create_publisher<continental_msgs::msg::ContinentalArs548ObjectList>(
+    "continental_objects", rclcpp::SensorDataQoS());
 
-  detection_pointcloud_pub_ = parent_node->create_publisher<sensor_msgs::msg::PointCloud2>(
+  detection_pointcloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
     "detection_points", rclcpp::SensorDataQoS());
   object_pointcloud_pub_ =
-    parent_node->create_publisher<sensor_msgs::msg::PointCloud2>("object_points", pointcloud_qos);
+    this->create_publisher<sensor_msgs::msg::PointCloud2>("object_points", rclcpp::SensorDataQoS());
 
   scan_raw_pub_ =
-    parent_node->create_publisher<radar_msgs::msg::RadarScan>("scan_raw", pointcloud_qos);
+    this->create_publisher<radar_msgs::msg::RadarScan>("scan_raw", rclcpp::SensorDataQoS());
 
   objects_raw_pub_ =
-    parent_node->create_publisher<radar_msgs::msg::RadarTracks>("objects_raw", pointcloud_qos);
+    this->create_publisher<radar_msgs::msg::RadarTracks>("objects_raw", rclcpp::SensorDataQoS());
 
   objects_markers_pub_ =
-    parent_node->create_publisher<visualization_msgs::msg::MarkerArray>("marker_array", 10);
+    this->create_publisher<visualization_msgs::msg::MarkerArray>("marker_array", 10);
 
   diagnostics_pub_ =
-    parent_node->create_publisher<diagnostic_msgs::msg::DiagnosticArray>("diagnostics", 10);
-
-  RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
-
-  cloud_watchdog_ =
-    std::make_shared<WatchdogTimer>(*parent_node, 100'000us, [this, parent_node](bool ok) {
-      if (ok) return;
-      RCLCPP_WARN_THROTTLE(
-        logger_, *parent_node->get_clock(), 5000, "Missed pointcloud output deadline");
-    });
+    this->create_publisher<diagnostic_msgs::msg::DiagnosticArray>("diagnostics", 10);
 }
 
-Status ContinentalArs548DecoderWrapper::InitializeDriver(
-  const std::shared_ptr<
-    const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> & config)
+void ContinentalArs548DriverRosWrapper::ReceivePacketsMsgCallback(
+  const nebula_msgs::msg::NebulaPackets::SharedPtr scan_msg)
 {
-  driver_ptr_.reset();
-  driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalArs548Decoder>(config);
+  decoder_ptr_->ProcessPackets(*scan_msg);
+}
 
-  driver_ptr_->RegisterDetectionListCallback(std::bind(
-    &ContinentalArs548DecoderWrapper::DetectionListCallback, this, std::placeholders::_1));
-  driver_ptr_->RegisterObjectListCallback(
-    std::bind(&ContinentalArs548DecoderWrapper::ObjectListCallback, this, std::placeholders::_1));
-  driver_ptr_->RegisterSensorStatusCallback(
-    std::bind(&ContinentalArs548DecoderWrapper::SensorStatusCallback, this, std::placeholders::_1));
-  driver_ptr_->RegisterPacketsCallback(
-    std::bind(&ContinentalArs548DecoderWrapper::PacketsCallback, this, std::placeholders::_1));
+Status ContinentalArs548DriverRosWrapper::InitializeDriver(
+  std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration)
+{
+  decoder_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalArs548Decoder>(
+    std::static_pointer_cast<drivers::continental_ars548::ContinentalArs548SensorConfiguration>(
+      sensor_configuration));
+
+  decoder_ptr_->RegisterDetectionListCallback(std::bind(
+    &ContinentalArs548DriverRosWrapper::DetectionListCallback, this, std::placeholders::_1));
+  decoder_ptr_->RegisterObjectListCallback(
+    std::bind(&ContinentalArs548DriverRosWrapper::ObjectListCallback, this, std::placeholders::_1));
+  decoder_ptr_->RegisterSensorStatusCallback(std::bind(
+    &ContinentalArs548DriverRosWrapper::SensorStatusCallback, this, std::placeholders::_1));
 
   return Status::OK;
 }
 
-void ContinentalArs548DecoderWrapper::OnConfigChange(
-  const std::shared_ptr<
-    const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> & new_config)
+Status ContinentalArs548DriverRosWrapper::GetStatus()
 {
-  std::lock_guard lock(mtx_driver_ptr_);
-  InitializeDriver(new_config);
-  sensor_cfg_ = new_config;
+  return wrapper_status_;
 }
 
-void ContinentalArs548DecoderWrapper::ProcessPacket(
-  std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
+Status ContinentalArs548DriverRosWrapper::GetParameters(
+  drivers::continental_ars548::ContinentalArs548SensorConfiguration & sensor_configuration)
 {
-  driver_ptr_->ProcessPacket(std::move(packet_msg));
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("host_ip", descriptor);
+    sensor_configuration.host_ip = this->get_parameter("host_ip").as_string();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("sensor_ip", descriptor);
+    sensor_configuration.sensor_ip = this->get_parameter("sensor_ip").as_string();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<uint16_t>("data_port", descriptor);
+    sensor_configuration.data_port = this->get_parameter("data_port").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("sensor_model");
+    sensor_configuration.sensor_model =
+      nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("frame_id", descriptor);
+    sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("base_frame", descriptor);
+    sensor_configuration.base_frame = this->get_parameter("base_frame").as_string();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("object_frame", descriptor);
+    sensor_configuration.object_frame = this->get_parameter("object_frame").as_string();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<bool>("use_sensor_time", descriptor);
+    sensor_configuration.use_sensor_time = this->get_parameter("use_sensor_time").as_bool();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("configuration_vehicle_length", descriptor);
+    sensor_configuration.configuration_vehicle_length =
+      static_cast<float>(this->get_parameter("configuration_vehicle_length").as_double());
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("configuration_vehicle_width", descriptor);
+    sensor_configuration.configuration_vehicle_width =
+      static_cast<float>(this->get_parameter("configuration_vehicle_width").as_double());
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("configuration_vehicle_height", descriptor);
+    sensor_configuration.configuration_vehicle_height =
+      static_cast<float>(this->get_parameter("configuration_vehicle_height").as_double());
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<double>("configuration_vehicle_wheelbase", descriptor);
+    sensor_configuration.configuration_vehicle_wheelbase =
+      static_cast<float>(this->get_parameter("configuration_vehicle_wheelbase").as_double());
+  }
 
-  cloud_watchdog_->update();
+  if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
+    return Status::INVALID_SENSOR_MODEL;
+  }
+
+  std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr =
+    std::make_shared<drivers::continental_ars548::ContinentalArs548SensorConfiguration>(
+      sensor_configuration);
+
+  hw_interface_.SetSensorConfiguration(
+    std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
+
+  RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
+  return Status::OK;
 }
 
-void ContinentalArs548DecoderWrapper::DetectionListCallback(
+void ContinentalArs548DriverRosWrapper::DetectionListCallback(
   std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg)
 {
   if (
@@ -154,7 +264,7 @@ void ContinentalArs548DecoderWrapper::DetectionListCallback(
   }
 }
 
-void ContinentalArs548DecoderWrapper::ObjectListCallback(
+void ContinentalArs548DriverRosWrapper::ObjectListCallback(
   std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg)
 {
   if (
@@ -190,20 +300,20 @@ void ContinentalArs548DecoderWrapper::ObjectListCallback(
   }
 }
 
-void ContinentalArs548DecoderWrapper::SensorStatusCallback(
+void ContinentalArs548DriverRosWrapper::SensorStatusCallback(
   const drivers::continental_ars548::ContinentalArs548Status & sensor_status)
 {
   diagnostic_msgs::msg::DiagnosticArray diagnostic_array_msg;
   diagnostic_array_msg.header.stamp.sec = sensor_status.timestamp_seconds;
   diagnostic_array_msg.header.stamp.nanosec = sensor_status.timestamp_nanoseconds;
-  diagnostic_array_msg.header.frame_id = sensor_cfg_->frame_id;
+  diagnostic_array_msg.header.frame_id = sensor_cfg_ptr_->frame_id;
 
   diagnostic_array_msg.status.resize(1);
   auto & status = diagnostic_array_msg.status[0];
   status.values.reserve(36);
   status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  status.hardware_id = sensor_cfg_->frame_id;
-  status.name = sensor_cfg_->frame_id;
+  status.hardware_id = sensor_cfg_ptr_->frame_id;
+  status.name = sensor_cfg_ptr_->frame_id;
   status.message = "Diagnostic messages from ARS548";
 
   auto add_diagnostic = [&status](const std::string & key, const std::string & value) {
@@ -304,18 +414,8 @@ void ContinentalArs548DecoderWrapper::SensorStatusCallback(
   diagnostics_pub_->publish(diagnostic_array_msg);
 }
 
-void ContinentalArs548DecoderWrapper::PacketsCallback(
-  std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg)
-{
-  if (
-    packets_pub_ && (packets_pub_->get_subscription_count() > 0 ||
-                     packets_pub_->get_intra_process_subscription_count() > 0)) {
-    packets_pub_->publish(std::move(msg));
-  }
-}
-
 pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Detection>::Ptr
-ContinentalArs548DecoderWrapper::ConvertToPointcloud(
+ContinentalArs548DriverRosWrapper::ConvertToPointcloud(
   const continental_msgs::msg::ContinentalArs548DetectionList & msg)
 {
   pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Detection>::Ptr output_pointcloud(
@@ -355,7 +455,7 @@ ContinentalArs548DecoderWrapper::ConvertToPointcloud(
 }
 
 pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Object>::Ptr
-ContinentalArs548DecoderWrapper::ConvertToPointcloud(
+ContinentalArs548DriverRosWrapper::ConvertToPointcloud(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
   pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Object>::Ptr output_pointcloud(
@@ -394,7 +494,7 @@ ContinentalArs548DecoderWrapper::ConvertToPointcloud(
   return output_pointcloud;
 }
 
-radar_msgs::msg::RadarScan ContinentalArs548DecoderWrapper::ConvertToRadarScan(
+radar_msgs::msg::RadarScan ContinentalArs548DriverRosWrapper::ConvertToRadarScan(
   const continental_msgs::msg::ContinentalArs548DetectionList & msg)
 {
   radar_msgs::msg::RadarScan output_msg;
@@ -420,7 +520,7 @@ radar_msgs::msg::RadarScan ContinentalArs548DecoderWrapper::ConvertToRadarScan(
   return output_msg;
 }
 
-radar_msgs::msg::RadarTracks ContinentalArs548DecoderWrapper::ConvertToRadarTracks(
+radar_msgs::msg::RadarTracks ContinentalArs548DriverRosWrapper::ConvertToRadarTracks(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
   radar_msgs::msg::RadarTracks output_msg;
@@ -529,7 +629,7 @@ radar_msgs::msg::RadarTracks ContinentalArs548DecoderWrapper::ConvertToRadarTrac
   return output_msg;
 }
 
-visualization_msgs::msg::MarkerArray ContinentalArs548DecoderWrapper::ConvertToMarkers(
+visualization_msgs::msg::MarkerArray ContinentalArs548DriverRosWrapper::ConvertToMarkers(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
   visualization_msgs::msg::MarkerArray marker_array;
@@ -592,7 +692,7 @@ visualization_msgs::msg::MarkerArray ContinentalArs548DecoderWrapper::ConvertToM
     current_ids.emplace(object.object_id);
 
     visualization_msgs::msg::Marker box_marker;
-    box_marker.header.frame_id = sensor_cfg_->object_frame;
+    box_marker.header.frame_id = sensor_cfg_ptr_->object_frame;
     box_marker.header.stamp = msg.header.stamp;
     box_marker.ns = "boxes";
     box_marker.id = object.object_id;
@@ -673,7 +773,7 @@ visualization_msgs::msg::MarkerArray ContinentalArs548DecoderWrapper::ConvertToM
     }
 
     visualization_msgs::msg::Marker delete_marker;
-    delete_marker.header.frame_id = sensor_cfg_->object_frame;
+    delete_marker.header.frame_id = sensor_cfg_ptr_->object_frame;
     delete_marker.header.stamp = msg.header.stamp;
     delete_marker.ns = "boxes";
     delete_marker.id = previous_id;
@@ -697,15 +797,6 @@ visualization_msgs::msg::MarkerArray ContinentalArs548DecoderWrapper::ConvertToM
   return marker_array;
 }
 
-nebula::Status ContinentalArs548DecoderWrapper::Status()
-{
-  std::lock_guard lock(mtx_driver_ptr_);
-
-  if (!driver_ptr_) {
-    return nebula::Status::NOT_INITIALIZED;
-  }
-
-  return driver_ptr_->GetStatus();
-}
+RCLCPP_COMPONENTS_REGISTER_NODE(ContinentalArs548DriverRosWrapper)
 }  // namespace ros
 }  // namespace nebula

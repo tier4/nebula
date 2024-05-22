@@ -163,15 +163,6 @@ Status ContinentalArs548HwInterface::SensorInterfaceStop()
   return Status::ERROR_1;
 }
 
-Status ContinentalArs548HwInterface::GetSensorConfiguration(
-  SensorConfigurationBase & sensor_configuration)
-{
-  std::stringstream ss;
-  ss << sensor_configuration;
-  PrintDebug(ss.str());
-  return Status::ERROR_1;
-}
-
 Status ContinentalArs548HwInterface::SetSensorMounting(
   float longitudinal_autosar, float lateral_autosar, float vertical_autosar, float yaw_autosar,
   float pitch_autosar, uint8_t plug_orientation)

@@ -12,15 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
+#ifndef NEBULA_ContinentalArs548DriverRosWrapper_H
+#define NEBULA_ContinentalArs548DriverRosWrapper_H
 
+#include <ament_index_cpp/get_package_prefix.hpp>
 #include <nebula_common/continental/continental_ars548.hpp>
 #include <nebula_common/nebula_common.hpp>
-#include <nebula_common/util/expected.hpp>
+#include <nebula_common/nebula_status.hpp>
 #include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
-#include <nebula_ros/common/parameter_descriptors.hpp>
-#include <nebula_ros/common/watchdog_timer.hpp>
+#include <nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp>
+#include <nebula_ros/common/nebula_driver_ros_wrapper_base.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
 
 #include <continental_msgs/msg/continental_ars548_detection.hpp>
 #include <continental_msgs/msg/continental_ars548_detection_list.hpp>
@@ -31,39 +34,75 @@
 #include <nebula_msgs/msg/nebula_packets.hpp>
 #include <radar_msgs/msg/radar_scan.hpp>
 #include <radar_msgs/msg/radar_tracks.hpp>
-#include <sensor_msgs/msg/point_cloud2.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
-#include <filesystem>
+#include <chrono>
 #include <memory>
-#include <mutex>
 #include <unordered_set>
-#include <vector>
 
 namespace nebula
 {
 namespace ros
 {
-class ContinentalArs548DecoderWrapper
+/// @brief Ros wrapper of continental radar ethernet driver
+class ContinentalArs548DriverRosWrapper final : public rclcpp::Node, NebulaDriverRosWrapperBase
 {
-public:
-  ContinentalArs548DecoderWrapper(
-    rclcpp::Node * const parent_node,
-    std::shared_ptr<
-      const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> & config,
-    bool launch_hw);
+  std::shared_ptr<drivers::continental_ars548::ContinentalArs548Decoder> decoder_ptr_;
+  Status wrapper_status_;
 
-  void ProcessPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
+  rclcpp::Subscription<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_sub_;
 
-  void OnConfigChange(
-    const std::shared_ptr<
-      const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
-      new_config);
+  rclcpp::Publisher<continental_msgs::msg::ContinentalArs548DetectionList>::SharedPtr
+    detection_list_pub_;
+  rclcpp::Publisher<continental_msgs::msg::ContinentalArs548ObjectList>::SharedPtr object_list_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr object_pointcloud_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr detection_pointcloud_pub_;
+  rclcpp::Publisher<radar_msgs::msg::RadarScan>::SharedPtr scan_raw_pub_;
+  rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr objects_raw_pub_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr objects_markers_pub_;
+  rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_;
 
-  rcl_interfaces::msg::SetParametersResult OnParameterChange(
-    const std::vector<rclcpp::Parameter> & p);
+  std::unordered_set<int> previous_ids_;
 
-  nebula::Status Status();
+  constexpr static int REFERENCE_POINTS_NUM = 9;
+  constexpr static std::array<std::array<double, 2>, REFERENCE_POINTS_NUM> reference_to_center_ = {
+    {{{-1.0, -1.0}},
+     {{-1.0, 0.0}},
+     {{-1.0, 1.0}},
+     {{0.0, 1.0}},
+     {{1.0, 1.0}},
+     {{1.0, 0.0}},
+     {{1.0, -1.0}},
+     {{0.0, -1.0}},
+     {{0.0, 0.0}}}};
+
+  std::shared_ptr<drivers::continental_ars548::ContinentalArs548SensorConfiguration>
+    sensor_cfg_ptr_;
+
+  drivers::continental_ars548::ContinentalArs548HwInterface hw_interface_;
+
+  /// @brief Initializing ros wrapper
+  /// @param sensor_configuration SensorConfiguration for this driver
+  /// @param calibration_configuration CalibrationConfiguration for this driver
+  /// @return Resulting status
+  Status InitializeDriver(std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration);
+
+  /// @brief Get configurations from ros parameters
+  /// @param sensor_configuration Output of SensorConfiguration
+  /// @param calibration_configuration Output of CalibrationConfiguration
+  /// @param correction_configuration Output of CorrectionConfiguration (for AT)
+  /// @return Resulting status
+  Status GetParameters(
+    drivers::continental_ars548::ContinentalArs548SensorConfiguration & sensor_configuration);
+
+  /// @brief Convert seconds to chrono::nanoseconds
+  /// @param seconds
+  /// @return chrono::nanoseconds
+  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
+  {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::duration<double>(seconds));
+  }
 
   /// @brief Callback to process new ContinentalArs548DetectionList from the driver
   /// @param msg The new ContinentalArs548DetectionList from the driver
@@ -79,14 +118,16 @@ public:
   void SensorStatusCallback(
     const drivers::continental_ars548::ContinentalArs548Status & sensor_status);
 
-  /// @brief Callback to process new ContinentalArs548Status from the driver
-  /// @param msg The new ContinentalArs548ObjectList from the driver
-  void PacketsCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg);
+public:
+  explicit ContinentalArs548DriverRosWrapper(const rclcpp::NodeOptions & options);
 
-private:
-  nebula::Status InitializeDriver(
-    const std::shared_ptr<
-      const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> & config);
+  /// @brief Callback for NebulaPackets subscriber
+  /// @param scan_msg Received NebulaPackets
+  void ReceivePacketsMsgCallback(const nebula_msgs::msg::NebulaPackets::SharedPtr scan_msg);
+
+  /// @brief Get current status of this driver
+  /// @return Current status
+  Status GetStatus();
 
   /// @brief Convert ARS548 detections to a pointcloud
   /// @param msg The ARS548 detection list msg
@@ -117,53 +158,9 @@ private:
   /// @return Resulting MarkerArray msg
   visualization_msgs::msg::MarkerArray ConvertToMarkers(
     const continental_msgs::msg::ContinentalArs548ObjectList & msg);
-
-  /// @brief Convert seconds to chrono::nanoseconds
-  /// @param seconds
-  /// @return chrono::nanoseconds
-  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
-  {
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(
-      std::chrono::duration<double>(seconds));
-  }
-
-  nebula::Status status_;
-  rclcpp::Logger logger_;
-
-  std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration>
-    sensor_cfg_{};
-
-  std::shared_ptr<drivers::continental_ars548::ContinentalArs548Decoder> driver_ptr_{};
-  std::mutex mtx_driver_ptr_;
-
-  rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_{};
-
-  rclcpp::Publisher<continental_msgs::msg::ContinentalArs548DetectionList>::SharedPtr
-    detection_list_pub_{};
-  rclcpp::Publisher<continental_msgs::msg::ContinentalArs548ObjectList>::SharedPtr
-    object_list_pub_{};
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr object_pointcloud_pub_{};
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr detection_pointcloud_pub_{};
-  rclcpp::Publisher<radar_msgs::msg::RadarScan>::SharedPtr scan_raw_pub_{};
-  rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr objects_raw_pub_{};
-  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr objects_markers_pub_{};
-  rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_{};
-
-  std::unordered_set<int> previous_ids_;
-
-  constexpr static int REFERENCE_POINTS_NUM = 9;
-  constexpr static std::array<std::array<double, 2>, REFERENCE_POINTS_NUM> reference_to_center_ = {
-    {{{-1.0, -1.0}},
-     {{-1.0, 0.0}},
-     {{-1.0, 1.0}},
-     {{0.0, 1.0}},
-     {{1.0, 1.0}},
-     {{1.0, 0.0}},
-     {{1.0, -1.0}},
-     {{0.0, -1.0}},
-     {{0.0, 0.0}}}};
-
-  std::shared_ptr<WatchdogTimer> cloud_watchdog_;
 };
+
 }  // namespace ros
 }  // namespace nebula
+
+#endif  // NEBULA_ContinentalArs548DriverRosWrapper_H

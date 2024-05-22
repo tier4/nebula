@@ -49,7 +49,7 @@ namespace drivers
 namespace continental_ars548
 {
 /// @brief Hardware interface of the Continental ARS548 radar
-class ContinentalArs548HwInterface /*  : NebulaHwInterfaceBase */
+class ContinentalArs548HwInterface
 {
 private:
   std::unique_ptr<::drivers::common::IoContext> sensor_io_context_;
@@ -108,11 +108,6 @@ public:
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
   Status SensorInterfaceStop();
-
-  /// @brief Printing sensor configuration
-  /// @param sensor_configuration SensorConfiguration for this interface
-  /// @return Resulting status
-  Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration);
 
   /// @brief Setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
