@@ -304,7 +304,7 @@ void HesaiRosDecoderTest::ReadBag(
           continue;
         }
 
-        std::cerr << "PC size: " << pointcloud->size() << std::endl;
+        std::cerr << "Pointcloud size: " << pointcloud->size() << std::endl;
 
         scan_callback(bag_message->time_stamp, scan_timestamp, pointcloud);
       }
