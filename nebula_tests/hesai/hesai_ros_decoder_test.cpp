@@ -60,7 +60,6 @@ Status HesaiRosDecoderTest::InitializeDriver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
   std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calibration_configuration)
 {
-  // driver should be initialized here with proper decoder
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
     std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
     calibration_configuration);
