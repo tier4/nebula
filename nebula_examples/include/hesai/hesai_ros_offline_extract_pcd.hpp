@@ -15,18 +15,18 @@
 #ifndef NEBULA_HesaiRosOfflineExtractSample_H
 #define NEBULA_HesaiRosOfflineExtractSample_H
 
-#include "nebula_common/hesai/hesai_common.hpp"
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
-#include "nebula_ros/common/nebula_driver_ros_wrapper_base.hpp"
-
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_common/nebula_status.hpp>
+#include <nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp>
+#include <nebula_ros/common/nebula_driver_ros_wrapper_base.hpp>
+#include <nebula_ros/common/parameter_descriptors.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
+#include <pandar_msgs/msg/pandar_packet.hpp>
+#include <pandar_msgs/msg/pandar_scan.hpp>
 
 #include <memory>
 #include <string>
@@ -36,7 +36,7 @@ namespace nebula
 namespace ros
 {
 /// @brief Offline hesai driver usage example (Output PCD data)
-class HesaiRosOfflineExtractSample final : public rclcpp::Node, NebulaDriverRosWrapperBase
+class HesaiRosOfflineExtractSample final : public rclcpp::Node
 {
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
   Status wrapper_status_;
@@ -51,17 +51,7 @@ class HesaiRosOfflineExtractSample final : public rclcpp::Node, NebulaDriverRosW
   /// @return Resulting status
   Status InitializeDriver(
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) override;
-
-  /// @brief Initializing ros wrapper for AT
-  /// @param sensor_configuration SensorConfiguration for this driver
-  /// @param calibration_configuration CalibrationConfiguration for this driver
-  /// @param correction_configuration CorrectionConfiguration for this driver
-  /// @return Resulting status
-  Status InitializeDriver(
-    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
-    std::shared_ptr<drivers::HesaiCorrection> correction_configuration);
+    std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calibration_configuration);
 
   /// @brief Get configurations from ros parameters
   /// @param sensor_configuration Output of SensorConfiguration

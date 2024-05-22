@@ -8,6 +8,11 @@
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
 
+#include <memory>
+#include <tuple>
+#include <utility>
+#include <vector>
+
 namespace nebula
 {
 namespace drivers
@@ -18,7 +23,7 @@ class HesaiDecoder : public HesaiScanDecoder
 {
 protected:
   /// @brief Configuration for this decoder
-  const std::shared_ptr<drivers::HesaiSensorConfiguration> sensor_configuration_;
+  const std::shared_ptr<const drivers::HesaiSensorConfiguration> sensor_configuration_;
 
   /// @brief The sensor definition, used for return mode and time offset handling
   SensorT sensor_{};
@@ -34,13 +39,13 @@ protected:
   /// @brief The last decoded packet
   typename SensorT::packet_t packet_;
   /// @brief The last azimuth processed
-  int last_phase_;
+  int last_phase_ = -1;  // Dummy value to signal last_phase_ has not been set yet
   /// @brief The timestamp of the last completed scan in nanoseconds
-  uint64_t output_scan_timestamp_ns_;
+  uint64_t output_scan_timestamp_ns_ = 0;
   /// @brief The timestamp of the scan currently in progress
-  uint64_t decode_scan_timestamp_ns_;
+  uint64_t decode_scan_timestamp_ns_ = 0;
   /// @brief Whether a full scan has been processed
-  bool has_scanned_;
+  bool has_scanned_ = false;
 
   rclcpp::Logger logger_;
 
@@ -52,17 +57,17 @@ protected:
     block_firing_offset_ns_;
 
   /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
-  /// @param pandar_packet The incoming PandarPacket
+  /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
-  bool parsePacket(const pandar_msgs::msg::PandarPacket & pandar_packet)
+  bool parsePacket(const std::vector<uint8_t> & packet)
   {
-    if (pandar_packet.size < sizeof(typename SensorT::packet_t)) {
+    if (packet.size() < sizeof(typename SensorT::packet_t)) {
       RCLCPP_ERROR_STREAM(
-        logger_, "Packet size mismatch:" << pandar_packet.size << " | Expected at least:"
+        logger_, "Packet size mismatch:" << packet.size() << " | Expected at least:"
                                          << sizeof(typename SensorT::packet_t));
       return false;
     }
-    if (std::memcpy(&packet_, pandar_packet.data.data(), sizeof(typename SensorT::packet_t))) {
+    if (std::memcpy(&packet_, packet.data(), sizeof(typename SensorT::packet_t))) {
       // FIXME(mojomex) do validation?
       // RCLCPP_DEBUG(logger_, "Packet parsed successfully");
       return true;
@@ -174,6 +179,10 @@ protected:
   /// @return Whether the scan has completed
   bool checkScanCompleted(uint32_t current_phase, uint32_t sync_phase)
   {
+    if (last_phase_ == -1) {
+      return false;
+    }
+
     return angle_corrector_.hasScanned(current_phase, last_phase_, sync_phase);
   }
 
@@ -200,20 +209,17 @@ protected:
 public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
-  /// @param calibration_configuration Calibration for this decoder (can be nullptr if
-  /// correction_configuration is set)
-  /// @param correction_configuration Correction for this decoder (can be nullptr if
-  /// calibration_configuration is set)
+  /// @param correction_data Calibration data for this decoder
   explicit HesaiDecoder(
-    const std::shared_ptr<HesaiSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<HesaiCalibrationConfiguration> & calibration_configuration,
-    const std::shared_ptr<HesaiCorrection> & correction_configuration)
+    const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> &
+      correction_data)
   : sensor_configuration_(sensor_configuration),
-    angle_corrector_(calibration_configuration, correction_configuration),
+    angle_corrector_(correction_data),
     logger_(rclcpp::get_logger("HesaiDecoder"))
   {
     logger_.set_level(rclcpp::Logger::Level::Debug);
-    RCLCPP_INFO_STREAM(logger_, sensor_configuration_);
+    RCLCPP_INFO_STREAM(logger_, *sensor_configuration_);
 
     decode_pc_.reset(new NebulaPointCloud);
     output_pc_.reset(new NebulaPointCloud);
@@ -222,9 +228,9 @@ public:
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
   }
 
-  int unpack(const pandar_msgs::msg::PandarPacket & pandar_packet) override
+  int unpack(const std::vector<uint8_t> & packet) override
   {
-    if (!parsePacket(pandar_packet)) {
+    if (!parsePacket(packet)) {
       return -1;
     }
 

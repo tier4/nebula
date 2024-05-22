@@ -4,6 +4,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 
 #include <cstdint>
+#include <memory>
 
 namespace nebula
 {
@@ -11,7 +12,7 @@ namespace drivers
 {
 
 template <size_t ChannelN, size_t AngleUnit>
-class AngleCorrectorCalibrationBased : public AngleCorrector
+class AngleCorrectorCalibrationBased : public AngleCorrector<HesaiCalibrationConfiguration>
 {
 private:
   static constexpr size_t MAX_AZIMUTH_LEN = 360 * AngleUnit;
@@ -27,9 +28,7 @@ private:
 
 public:
   AngleCorrectorCalibrationBased(
-    const std::shared_ptr<HesaiCalibrationConfiguration> & sensor_calibration,
-    const std::shared_ptr<HesaiCorrection> & sensor_correction)
-  : AngleCorrector(sensor_calibration, sensor_correction)
+    const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration)
   {
     if (sensor_calibration == nullptr) {
       throw std::runtime_error(
@@ -37,8 +36,8 @@ public:
     }
 
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-      float elevation_angle_deg = sensor_calibration->elev_angle_map[channel_id];
-      float azimuth_offset_deg = sensor_calibration->azimuth_offset_map[channel_id];
+      float elevation_angle_deg = sensor_calibration->elev_angle_map.at(channel_id);
+      float azimuth_offset_deg = sensor_calibration->azimuth_offset_map.at(channel_id);
 
       elevation_angle_rad_[channel_id] = deg2rad(elevation_angle_deg);
       azimuth_offset_rad_[channel_id] = deg2rad(azimuth_offset_deg);
@@ -81,7 +80,7 @@ public:
       (MAX_AZIMUTH_LEN + current_azimuth - sync_azimuth) % MAX_AZIMUTH_LEN;
     uint32_t last_diff_from_sync =
       (MAX_AZIMUTH_LEN + last_azimuth - sync_azimuth) % MAX_AZIMUTH_LEN;
-      
+
     return current_diff_from_sync < last_diff_from_sync;
   }
 };

@@ -2,7 +2,10 @@
 #define NEBULA_COMMON_H
 
 #include <nebula_common/point_types.hpp>
+
 #include <boost/tokenizer.hpp>
+
+#include <algorithm>
 #include <map>
 #include <ostream>
 #include <string>
@@ -342,24 +345,11 @@ enum class datatype {
   FLOAT64 = 8
 };
 
-enum class PtpProfile {
-  IEEE_1588v2 = 0,
-  IEEE_802_1AS,
-  IEEE_802_1AS_AUTO,
-  PROFILE_UNKNOWN
-};
+enum class PtpProfile { IEEE_1588v2 = 0, IEEE_802_1AS, IEEE_802_1AS_AUTO, UNKNOWN_PROFILE };
 
-enum class PtpTransportType {
-  UDP_IP = 0,
-  L2,
-  UNKNOWN_TRANSPORT
-};
+enum class PtpTransportType { UDP_IP = 0, L2, UNKNOWN_TRANSPORT };
 
-enum class PtpSwitchType {
-  NON_TSN = 0,
-  TSN,
-  UNKNOWN_SWITCH
-};
+enum class PtpSwitchType { NON_TSN = 0, TSN, UNKNOWN_SWITCH };
 
 /// @brief not used?
 struct PointField
@@ -618,13 +608,14 @@ inline PtpProfile PtpProfileFromString(const std::string & ptp_profile)
 {
   // Hesai
   auto tmp_str = ptp_profile;
-  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(),
-                 [](unsigned char c){ return std::tolower(c); });
+  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(), [](unsigned char c) {
+    return std::tolower(c);
+  });
   if (tmp_str == "1588v2") return PtpProfile::IEEE_1588v2;
   if (tmp_str == "802.1as") return PtpProfile::IEEE_802_1AS;
   if (tmp_str == "automotive") return PtpProfile::IEEE_802_1AS_AUTO;
 
-  return PtpProfile::PROFILE_UNKNOWN;
+  return PtpProfile::UNKNOWN_PROFILE;
 }
 
 /// @brief Convert PtpProfile enum to string (Overloading the << operator)
@@ -643,7 +634,7 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpProfile 
     case PtpProfile::IEEE_802_1AS_AUTO:
       os << "IEEE_802.1AS Automotive";
       break;
-    case PtpProfile::PROFILE_UNKNOWN:
+    case PtpProfile::UNKNOWN_PROFILE:
       os << "UNKNOWN";
       break;
   }
@@ -657,8 +648,9 @@ inline PtpTransportType PtpTransportTypeFromString(const std::string & transport
 {
   // Hesai
   auto tmp_str = transport_type;
-  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(),
-                 [](unsigned char c){ return std::tolower(c); });
+  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(), [](unsigned char c) {
+    return std::tolower(c);
+  });
   if (tmp_str == "udp") return PtpTransportType::UDP_IP;
   if (tmp_str == "l2") return PtpTransportType::L2;
 
@@ -692,8 +684,9 @@ inline PtpSwitchType PtpSwitchTypeFromString(const std::string & switch_type)
 {
   // Hesai
   auto tmp_str = switch_type;
-  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(),
-                 [](unsigned char c){ return std::tolower(c); });
+  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(), [](unsigned char c) {
+    return std::tolower(c);
+  });
   if (tmp_str == "tsn") return PtpSwitchType::TSN;
   if (tmp_str == "non_tsn") return PtpSwitchType::NON_TSN;
 

@@ -21,6 +21,8 @@
   <depend>nebula_common</depend>
   <depend>nebula_decoders</depend>
   <depend>nebula_hw_interfaces</depend>
+  <depend>nebula_msgs</depend>
+  <depend>pandar_msgs</depend>
   <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
