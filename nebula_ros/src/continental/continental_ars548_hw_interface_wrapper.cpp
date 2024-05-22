@@ -25,17 +25,17 @@ namespace ros
 ContinentalArs548HwInterfaceWrapper::ContinentalArs548HwInterfaceWrapper(
   rclcpp::Node * const parent_node,
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
-    config)
+    config_ptr)
 : parent_node_(parent_node),
   hw_interface_(
     std::make_shared<nebula::drivers::continental_ars548::ContinentalArs548HwInterface>()),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED),
-  config_(config)
+  config_ptr_(config_ptr)
 {
   hw_interface_->SetLogger(
     std::make_shared<rclcpp::Logger>(parent_node->get_logger().get_child("HwInterface")));
-  status_ = hw_interface_->SetSensorConfiguration(config);
+  status_ = hw_interface_->SetSensorConfiguration(config_ptr);
 
   if (status_ != Status::OK) {
     throw std::runtime_error(
@@ -101,10 +101,11 @@ void ContinentalArs548HwInterfaceWrapper::SensorInterfaceStart()
 
 void ContinentalArs548HwInterfaceWrapper::OnConfigChange(
   const std::shared_ptr<
-    const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> & new_config)
+    const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
+    new_config_ptr_ptr)
 {
-  hw_interface_->SetSensorConfiguration(new_config);
-  config_ = new_config;
+  hw_interface_->SetSensorConfiguration(new_config_ptr_ptr);
+  config_ptr_ = new_config_ptr_ptr;
 }
 
 Status ContinentalArs548HwInterfaceWrapper::Status()
@@ -191,12 +192,12 @@ void ContinentalArs548HwInterfaceWrapper::SetSensorMountingRequestCallback(
     geometry_msgs::msg::TransformStamped base_to_sensor_tf;
     try {
       base_to_sensor_tf = tf_buffer->lookupTransform(
-        config_->base_frame, config_->frame_id, rclcpp::Time(0),
+        config_ptr_->base_frame, config_ptr_->frame_id, rclcpp::Time(0),
         rclcpp::Duration::from_seconds(0.5));
     } catch (tf2::TransformException & ex) {
       RCLCPP_ERROR(
         logger_, "Could not obtain the transform from the base frame to %s (%s)",
-        config_->frame_id.c_str(), ex.what());
+        config_ptr_->frame_id.c_str(), ex.what());
       response->success = false;
       response->message = ex.what();
       return;
@@ -207,7 +208,7 @@ void ContinentalArs548HwInterfaceWrapper::SetSensorMountingRequestCallback(
     tf2::Matrix3x3(tf2::Quaternion(quat.x, quat.y, quat.z, quat.w)).getRPY(rpy.x, rpy.y, rpy.z);
 
     longitudinal =
-      base_to_sensor_tf.transform.translation.x - config_->configuration_vehicle_wheelbase;
+      base_to_sensor_tf.transform.translation.x - config_ptr_->configuration_vehicle_wheelbase;
     lateral = base_to_sensor_tf.transform.translation.y;
     vertical = base_to_sensor_tf.transform.translation.z;
     yaw = rpy.z;
@@ -236,29 +237,29 @@ void ContinentalArs548HwInterfaceWrapper::SetVehicleParametersRequestCallback(
   if (vehicle_length < 0.f) {
     RCLCPP_INFO(
       logger_, "Service vehicle_length is invalid. Falling back to configuration value (%.2f)",
-      config_->configuration_vehicle_length);
-    vehicle_length = config_->configuration_vehicle_length;
+      config_ptr_->configuration_vehicle_length);
+    vehicle_length = config_ptr_->configuration_vehicle_length;
   }
 
   if (vehicle_width < 0.f) {
     RCLCPP_INFO(
       logger_, "Service vehicle_width is invalid. Falling back to configuration value (%.2f)",
-      config_->configuration_vehicle_width);
-    vehicle_width = config_->configuration_vehicle_width;
+      config_ptr_->configuration_vehicle_width);
+    vehicle_width = config_ptr_->configuration_vehicle_width;
   }
 
   if (vehicle_height < 0.f) {
     RCLCPP_INFO(
       logger_, "Service vehicle_height is invalid. Falling back to configuration value (%.2f)",
-      config_->configuration_vehicle_height);
-    vehicle_height = config_->configuration_vehicle_height;
+      config_ptr_->configuration_vehicle_height);
+    vehicle_height = config_ptr_->configuration_vehicle_height;
   }
 
   if (vehicle_wheelbase < 0.f) {
     RCLCPP_INFO(
       logger_, "Service vehicle_wheelbase is invalid. Falling back to configuration value (%.2f)",
-      config_->configuration_vehicle_wheelbase);
-    vehicle_wheelbase = config_->configuration_vehicle_wheelbase;
+      config_ptr_->configuration_vehicle_wheelbase);
+    vehicle_wheelbase = config_ptr_->configuration_vehicle_wheelbase;
   }
 
   auto result = hw_interface_->SetVehicleParameters(

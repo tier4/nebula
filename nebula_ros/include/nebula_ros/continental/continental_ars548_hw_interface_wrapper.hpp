@@ -45,7 +45,7 @@ public:
 
   void OnConfigChange(
     const std::shared_ptr<const drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
-      new_config);
+      new_config_ptr);
 
   /// @brief Get current status of the hw interface
   /// @return Current status
@@ -103,26 +103,27 @@ private:
       response);
 
   rclcpp::Node * const parent_node_;
-  std::shared_ptr<drivers::continental_ars548::ContinentalArs548HwInterface> hw_interface_;
+  std::shared_ptr<drivers::continental_ars548::ContinentalArs548HwInterface> hw_interface_{};
   rclcpp::Logger logger_;
-  nebula::Status status_;
+  nebula::Status status_{};
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration>
-    config_;
+    config_ptr_{};
 
-  rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr odometry_sub_;
-  rclcpp::Subscription<geometry_msgs::msg::AccelWithCovarianceStamped>::SharedPtr acceleration_sub_;
-  rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr steering_angle_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr odometry_sub_{};
+  rclcpp::Subscription<geometry_msgs::msg::AccelWithCovarianceStamped>::SharedPtr
+    acceleration_sub_{};
+  rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr steering_angle_sub_{};
 
   bool standstill_{true};
 
   rclcpp::Service<continental_srvs::srv::ContinentalArs548SetNetworkConfiguration>::SharedPtr
-    set_network_configuration_service_server_;
+    set_network_configuration_service_server_{};
   rclcpp::Service<continental_srvs::srv::ContinentalArs548SetSensorMounting>::SharedPtr
-    set_sensor_mounting_service_server_;
+    set_sensor_mounting_service_server_{};
   rclcpp::Service<continental_srvs::srv::ContinentalArs548SetVehicleParameters>::SharedPtr
-    set_vehicle_parameters_service_server_;
+    set_vehicle_parameters_service_server_{};
   rclcpp::Service<continental_srvs::srv::ContinentalArs548SetRadarParameters>::SharedPtr
-    set_radar_parameters_service_server_;
+    set_radar_parameters_service_server_{};
 };
 }  // namespace ros
 }  // namespace nebula

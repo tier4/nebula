@@ -34,7 +34,6 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
-#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <unordered_set>
@@ -78,6 +77,10 @@ public:
   /// @param msg The new ContinentalArs548ObjectList from the driver
   void SensorStatusCallback(
     const drivers::continental_ars548::ContinentalArs548Status & sensor_status);
+
+  /// @brief Callback to process new ContinentalArs548Status from the driver
+  /// @param msg The new ContinentalArs548ObjectList from the driver
+  void PacketsCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg);
 
 private:
   nebula::Status InitializeDriver(
@@ -127,7 +130,7 @@ private:
   rclcpp::Logger logger_;
 
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration>
-    sensor_cfg_{};
+    config_ptr_{};
 
   std::shared_ptr<drivers::continental_ars548::ContinentalArs548Decoder> driver_ptr_{};
   std::mutex mtx_driver_ptr_;

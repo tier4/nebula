@@ -22,7 +22,6 @@ ContinentalArs548RosWrapper::ContinentalArs548RosWrapper(const rclcpp::NodeOptio
 : rclcpp::Node(
     "continental_ars548_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   wrapper_status_(Status::NOT_INITIALIZED),
-  sensor_cfg_ptr_(nullptr),
   packet_queue_(3000),
   hw_interface_wrapper_(),
   decoder_wrapper_()
@@ -36,15 +35,15 @@ ContinentalArs548RosWrapper::ContinentalArs548RosWrapper(const rclcpp::NodeOptio
       (std::stringstream{} << "Sensor configuration invalid: " << wrapper_status_).str());
   }
 
-  RCLCPP_INFO_STREAM(get_logger(), "SensorConfig:" << *sensor_cfg_ptr_);
+  RCLCPP_INFO_STREAM(get_logger(), "SensorConfig:" << *config_ptr_);
 
   launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
 
   if (launch_hw_) {
-    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_);
+    hw_interface_wrapper_.emplace(this, config_ptr_);
   }
 
-  decoder_wrapper_.emplace(this, sensor_cfg_ptr_, launch_hw_);
+  decoder_wrapper_.emplace(this, config_ptr_, launch_hw_);
 
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
@@ -223,31 +222,31 @@ nebula::Status ContinentalArs548RosWrapper::DeclareAndGetSensorConfigParams()
     return Status::INVALID_SENSOR_MODEL;
   }
 
-  auto new_cfg_ptr = std::make_shared<
+  auto new_config_ptr = std::make_shared<
     const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration>(config);
-  return ValidateAndSetConfig(new_cfg_ptr);
+  return ValidateAndSetConfig(new_config_ptr);
 }
 
 Status ContinentalArs548RosWrapper::ValidateAndSetConfig(
   std::shared_ptr<const drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
-    new_config)
+    new_config_ptr)
 {
-  if (new_config->sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
+  if (new_config_ptr->sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
 
-  if (new_config->frame_id.empty()) {
+  if (new_config_ptr->frame_id.empty()) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
   if (hw_interface_wrapper_) {
-    hw_interface_wrapper_->OnConfigChange(new_config);
+    hw_interface_wrapper_->OnConfigChange(new_config_ptr);
   }
   if (decoder_wrapper_) {
-    decoder_wrapper_->OnConfigChange(new_config);
+    decoder_wrapper_->OnConfigChange(new_config_ptr);
   }
 
-  sensor_cfg_ptr_ = new_config;
+  config_ptr_ = new_config_ptr;
   return Status::OK;
 }
 
@@ -304,25 +303,26 @@ rcl_interfaces::msg::SetParametersResult ContinentalArs548RosWrapper::OnParamete
 
   RCLCPP_INFO(get_logger(), "OnParameterChange");
 
-  drivers::continental_ars548::ContinentalArs548SensorConfiguration new_cfg(*sensor_cfg_ptr_);
+  drivers::continental_ars548::ContinentalArs548SensorConfiguration new_config(*config_ptr_);
 
   bool got_any =
-    get_param(p, "frame_id", new_cfg.frame_id) | get_param(p, "base_frame", new_cfg.base_frame) |
-    get_param(p, "object_frame", new_cfg.object_frame) |
-    get_param(p, "configuration_vehicle_length", new_cfg.configuration_vehicle_length) |
-    get_param(p, "configuration_vehicle_width", new_cfg.configuration_vehicle_width) |
-    get_param(p, "configuration_vehicle_height", new_cfg.configuration_vehicle_height) |
-    get_param(p, "configuration_vehicle_wheelbase", new_cfg.configuration_vehicle_wheelbase) |
-    get_param(p, "configuration_host_port", new_cfg.configuration_host_port) |
-    get_param(p, "configuration_sensor_port", new_cfg.configuration_sensor_port);
+    get_param(p, "frame_id", new_config.frame_id) |
+    get_param(p, "base_frame", new_config.base_frame) |
+    get_param(p, "object_frame", new_config.object_frame) |
+    get_param(p, "configuration_vehicle_length", new_config.configuration_vehicle_length) |
+    get_param(p, "configuration_vehicle_width", new_config.configuration_vehicle_width) |
+    get_param(p, "configuration_vehicle_height", new_config.configuration_vehicle_height) |
+    get_param(p, "configuration_vehicle_wheelbase", new_config.configuration_vehicle_wheelbase) |
+    get_param(p, "configuration_host_port", new_config.configuration_host_port) |
+    get_param(p, "configuration_sensor_port", new_config.configuration_sensor_port);
 
   if (!got_any) {
     return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
   }
 
-  auto new_cfg_ptr = std::make_shared<
-    const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration>(new_cfg);
-  auto status = ValidateAndSetConfig(new_cfg_ptr);
+  auto new_config_ptr = std::make_shared<
+    const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration>(new_config);
+  auto status = ValidateAndSetConfig(new_config_ptr);
 
   if (status != Status::OK) {
     RCLCPP_WARN_STREAM(get_logger(), "OnParameterChange aborted: " << status);
@@ -335,20 +335,12 @@ rcl_interfaces::msg::SetParametersResult ContinentalArs548RosWrapper::OnParamete
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-void ContinentalArs548RosWrapper::ReceivePacketCallback(std::vector<uint8_t> & packet)
+void ContinentalArs548RosWrapper::ReceivePacketCallback(
+  std::unique_ptr<nebula_msgs::msg::NebulaPacket> msg_ptr)
 {
   if (!decoder_wrapper_ || decoder_wrapper_->Status() != Status::OK) {
     return;
   }
-
-  const auto now = std::chrono::high_resolution_clock::now();
-  const auto timestamp_ns =
-    std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-
-  auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
-  msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
-  msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
-  msg_ptr->data.swap(packet);
 
   if (!packet_queue_.try_push(std::move(msg_ptr))) {
     RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");
