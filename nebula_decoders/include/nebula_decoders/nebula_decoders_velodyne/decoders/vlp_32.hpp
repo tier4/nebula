@@ -25,6 +25,11 @@ public:
     return static_cast<uint16_t>(round(azimuth_corrected)) % 36000;
   }
 
+  uint16_t getTrueRotation(uint16_t azimuth_corrected, uint16_t current_block_rotation)
+  {
+    return current_block_rotation;
+  }
+
   constexpr static int num_maintenance_periods = 0;
 
   constexpr static int num_simultaneous_firings = 2;

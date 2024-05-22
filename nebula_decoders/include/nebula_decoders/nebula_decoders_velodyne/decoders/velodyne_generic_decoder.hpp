@@ -282,7 +282,7 @@ public:
               distance > sensor_configuration_->min_range &&
               distance < sensor_configuration_->max_range) {
               // Correct for the laser rotation as a function of timing during the firings.
-              const uint16_t azimuth_corrected =
+              uint16_t azimuth_corrected =
                 sensor_.getAzimuthCorrected(azimuth, azimuth_diff, firing_seq, firing_order);
 
               // Condition added to avoid calculating points which are not in the interesting
@@ -294,6 +294,8 @@ public:
                 const float cos_rot_correction = corrections.cos_rot_correction;
                 const float sin_rot_correction = corrections.sin_rot_correction;
 
+                // select correct azimuth if vlp32 currenct_block.rotation, if vlp128 and vlp16 azimuth_corrected
+                azimuth_corrected = sensor_.getTrueRotation(azimuth_corrected, current_block.rotation);
                 const float cos_rot_angle = cos_rot_table_[azimuth_corrected] * cos_rot_correction +
                                             sin_rot_table_[azimuth_corrected] * sin_rot_correction;
                 const float sin_rot_angle = sin_rot_table_[azimuth_corrected] * cos_rot_correction -
