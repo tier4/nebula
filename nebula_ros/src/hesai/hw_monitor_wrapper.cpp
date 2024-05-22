@@ -22,7 +22,7 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(rclcpp::Node* const parent_node,
     case nebula::drivers::SensorModel::HESAI_PANDARAT128:
       temperature_names_.emplace_back("Bottom circuit board T1");
       temperature_names_.emplace_back("Bottom circuit board T2");
-      temperature_names_.emplace_back("Laser emitting board RT_L1(Internal)");
+      temperature_names_.emplace_back("Laser emitting board RT_L1 (Internal)");
       temperature_names_.emplace_back("Laser emitting board RT_L2");
       temperature_names_.emplace_back("Receiving board RT_R");
       temperature_names_.emplace_back("Receiving board RT2");
