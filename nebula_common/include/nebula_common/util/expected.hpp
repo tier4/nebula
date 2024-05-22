@@ -83,9 +83,9 @@ struct expected
     return default_;
   }
 
-  explicit expected(const T & value) { value_ = value; }
+  expected(const T & value) { value_ = value; }  // NOLINT(runtime/explicit)
 
-  explicit expected(const E & error) { value_ = error; }
+  expected(const E & error) { value_ = error; }  // NOLINT(runtime/explicit)
 
 private:
   std::variant<T, E> value_;
