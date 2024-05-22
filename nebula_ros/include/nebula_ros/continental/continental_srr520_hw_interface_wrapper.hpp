@@ -75,11 +75,11 @@ private:
   void syncTimerCallback();
 
   rclcpp::Node * const parent_node_;
-  std::shared_ptr<drivers::continental_srr520::ContinentalSrr520HwInterface> hw_interface_;
+  std::shared_ptr<drivers::continental_srr520::ContinentalSrr520HwInterface> hw_interface_{};
   rclcpp::Logger logger_;
-  nebula::Status status_;
+  nebula::Status status_{};
   std::shared_ptr<const nebula::drivers::continental_srr520::ContinentalSrr520SensorConfiguration>
-    config_ptr_;
+    config_ptr_{};
 
   message_filters::Subscriber<geometry_msgs::msg::TwistWithCovarianceStamped> odometry_sub_;
   message_filters::Subscriber<geometry_msgs::msg::AccelWithCovarianceStamped> acceleration_sub_;
@@ -87,13 +87,13 @@ private:
   using ExactTimeSyncPolicy = message_filters::sync_policies::ExactTime<
     geometry_msgs::msg::TwistWithCovarianceStamped, geometry_msgs::msg::AccelWithCovarianceStamped>;
   using ExactTimeSync = message_filters::Synchronizer<ExactTimeSyncPolicy>;
-  std::shared_ptr<ExactTimeSync> sync_ptr_;
+  std::shared_ptr<ExactTimeSync> sync_ptr_{};
   rclcpp::TimerBase::SharedPtr sync_timer_;
 
   bool standstill_{true};
 
   rclcpp::Service<continental_srvs::srv::ContinentalSrr520SetRadarParameters>::SharedPtr
-    configure_sensor_service_server_;
+    configure_sensor_service_server_{};
 };
 }  // namespace ros
 }  // namespace nebula

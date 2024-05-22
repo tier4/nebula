@@ -30,6 +30,7 @@
 #include <memory>
 #include <regex>
 #include <string>
+#include <utility>
 
 namespace nebula
 {
@@ -289,8 +290,10 @@ void ContinentalRosDecoderTest::ReadBag()
         std::cout << "Found data in topic " << bag_message->topic_name << ": "
                   << bag_message->time_stamp << std::endl;
 
-        auto extracted_msg_ptr = std::make_shared<nebula_msgs::msg::NebulaPackets>(extracted_msg);
-        driver_ptr_->ProcessPackets(extracted_msg);
+        for (auto & packet_msg : extracted_msg.packets) {
+          auto extracted_msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>(packet_msg);
+          driver_ptr_->ProcessPacket(std::move(extracted_msg_ptr));
+        }
       }
     }
   }

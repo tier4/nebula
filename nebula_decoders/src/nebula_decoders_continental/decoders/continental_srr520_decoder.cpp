@@ -72,7 +72,8 @@ Status ContinentalSrr520Decoder::RegisterStatusCallback(
   return Status::OK;
 }
 
-Status ContinentalSrr520Decoder::RegisterSyncFupCallback(std::function<void()> sync_fup_callback)
+Status ContinentalSrr520Decoder::RegisterSyncFupCallback(
+  std::function<void(builtin_interfaces::msg::Time)> sync_fup_callback)
 {
   sync_fup_callback_ = std::move(sync_fup_callback);
   return Status::OK;
@@ -1076,7 +1077,7 @@ void ContinentalSrr520Decoder::ProcessSyncFupPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   if (sync_fup_callback_) {
-    sync_fup_callback_();
+    sync_fup_callback_(packet_msg->stamp);
   }
 
   auto nebula_packets = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -1089,22 +1090,15 @@ void ContinentalSrr520Decoder::ProcessSyncFupPacket(
   }
 }
 
-bool ContinentalSrr520Decoder::ParseStatusPacket(
-  const nebula_msgs::msg::NebulaPackets & nebula_packets)
-{
-  assert(false);
-  return true;
-}
-
 void ContinentalSrr520Decoder::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
 {
-  parent_node_logger = logger;
+  parent_node_logger_ptr_ = logger;
 }
 
 void ContinentalSrr520Decoder::PrintInfo(std::string info)
 {
-  if (parent_node_logger) {
-    RCLCPP_INFO_STREAM((*parent_node_logger), info);
+  if (parent_node_logger_ptr_) {
+    RCLCPP_INFO_STREAM((*parent_node_logger_ptr_), info);
   } else {
     std::cout << info << std::endl;
   }
@@ -1112,8 +1106,8 @@ void ContinentalSrr520Decoder::PrintInfo(std::string info)
 
 void ContinentalSrr520Decoder::PrintError(std::string error)
 {
-  if (parent_node_logger) {
-    RCLCPP_ERROR_STREAM((*parent_node_logger), error);
+  if (parent_node_logger_ptr_) {
+    RCLCPP_ERROR_STREAM((*parent_node_logger_ptr_), error);
   } else {
     std::cerr << error << std::endl;
   }
@@ -1121,8 +1115,8 @@ void ContinentalSrr520Decoder::PrintError(std::string error)
 
 void ContinentalSrr520Decoder::PrintDebug(std::string debug)
 {
-  if (parent_node_logger) {
-    RCLCPP_DEBUG_STREAM((*parent_node_logger), debug);
+  if (parent_node_logger_ptr_) {
+    RCLCPP_DEBUG_STREAM((*parent_node_logger_ptr_), debug);
   } else {
     std::cout << debug << std::endl;
   }

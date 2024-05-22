@@ -57,10 +57,10 @@ public:
 
 private:
   /// @brief Callback from the hw interface's raw data
-  void ReceivePacketCallback(std::unique_ptr<nebula_msgs::msg::NebulaPacket> msg_ptr);
+  void ReceivePacketCallback(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg_ptr);
 
   /// @brief Callback from replayed NebulaPackets
-  void ReceivePacketsMessageCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg);
+  void ReceivePacketsCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg_ptr);
 
   /// @brief Retrieve the parameters from ROS and set the driver and hw interface
   /// @return Resulting status

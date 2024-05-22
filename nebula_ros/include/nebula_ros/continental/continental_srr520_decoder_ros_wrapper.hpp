@@ -87,15 +87,6 @@ class ContinentalSrr520DriverRosWrapper final : public rclcpp::Node, NebulaDrive
   Status GetParameters(
     drivers::continental_srr520::ContinentalSrr520SensorConfiguration & sensor_configuration);
 
-  /// @brief Convert seconds to chrono::nanoseconds
-  /// @param seconds
-  /// @return chrono::nanoseconds
-  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
-  {
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(
-      std::chrono::duration<double>(seconds));
-  }
-
   /// @brief Callback to process new Near ContinentalSrr520DetectionList from the driver
   /// @param msg The new ContinentalSrr520DetectionList from the driver
   void NearDetectionListCallback(

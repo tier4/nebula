@@ -89,7 +89,7 @@ ContinentalSrr520DecoderWrapper::ContinentalSrr520DecoderWrapper(
 
   RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
 
-  cloud_watchdog_ =
+  watchdog_ =
     std::make_shared<WatchdogTimer>(*parent_node, 100'000us, [this, parent_node](bool ok) {
       if (ok) return;
       RCLCPP_WARN_THROTTLE(
@@ -115,7 +115,7 @@ Status ContinentalSrr520DecoderWrapper::InitializeDriver(
 
   if (hw_interface_ptr_) {
     driver_ptr_->RegisterSyncFupCallback(
-      std::bind(&ContinentalSrr520DecoderWrapper::SyncFupCallback, this));
+      std::bind(&ContinentalSrr520DecoderWrapper::SyncFupCallback, this, std::placeholders::_1));
     driver_ptr_->RegisterPacketsCallback(
       std::bind(&ContinentalSrr520DecoderWrapper::PacketsCallback, this, std::placeholders::_1));
   }
@@ -140,7 +140,7 @@ void ContinentalSrr520DecoderWrapper::ProcessPacket(
 {
   driver_ptr_->ProcessPacket(std::move(packet_msg));
 
-  cloud_watchdog_->update();
+  watchdog_->update();
 }
 
 void ContinentalSrr520DecoderWrapper::NearDetectionListCallback(
@@ -574,9 +574,9 @@ visualization_msgs::msg::MarkerArray ContinentalSrr520DecoderWrapper::ConvertToM
   return marker_array;
 }
 
-void ContinentalSrr520DecoderWrapper::SyncFupCallback()
+void ContinentalSrr520DecoderWrapper::SyncFupCallback(builtin_interfaces::msg::Time stamp)
 {
-  hw_interface_ptr_->SensorSyncFup();
+  hw_interface_ptr_->SensorSyncFup(stamp);
 }
 
 void ContinentalSrr520DecoderWrapper::PacketsCallback(

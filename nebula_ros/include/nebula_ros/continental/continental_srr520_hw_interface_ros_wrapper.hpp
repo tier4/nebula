@@ -74,7 +74,7 @@ class ContinentalSrr520HwInterfaceRosWrapper final : public rclcpp::Node,
   drivers::continental_srr520::ContinentalSrr520HwInterface hw_interface_;
   Status interface_status_;
 
-  drivers::continental_srr520::ContinentalSrr520SensorConfiguration sensor_configuration_;
+  drivers::continental_srr520::ContinentalSrr520SensorConfiguration config_ptr_;
 
   /// @brief Received Continental Radar message publisher
   rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_;

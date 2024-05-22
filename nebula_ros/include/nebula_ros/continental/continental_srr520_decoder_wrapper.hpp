@@ -35,7 +35,6 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
-//#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <unordered_set>
@@ -59,7 +58,7 @@ public:
   void OnConfigChange(
     const std::shared_ptr<
       const nebula::drivers::continental_srr520::ContinentalSrr520SensorConfiguration> &
-      new_config);
+      new_config_ptr);
 
   rcl_interfaces::msg::SetParametersResult OnParameterChange(
     const std::vector<rclcpp::Parameter> & p);
@@ -85,7 +84,7 @@ public:
   void StatusCallback(std::unique_ptr<diagnostic_msgs::msg::DiagnosticArray> msg);
 
   /// @brief Callback to process a new SyncFup message from the driver
-  void SyncFupCallback();
+  void SyncFupCallback(builtin_interfaces::msg::Time stamp);
 
   /// @brief Callback to process a new NebulaPackets message from the driver
   /// @param msg The new NebulaPackets from the driver
@@ -126,15 +125,6 @@ private:
   visualization_msgs::msg::MarkerArray ConvertToMarkers(
     const continental_msgs::msg::ContinentalSrr520ObjectList & msg);
 
-  /// @brief Convert seconds to chrono::nanoseconds
-  /// @param seconds
-  /// @return chrono::nanoseconds
-  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
-  {
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(
-      std::chrono::duration<double>(seconds));
-  }
-
   const rclcpp::Node * const parent_node_;
   nebula::Status status_;
   rclcpp::Logger logger_;
@@ -163,21 +153,9 @@ private:
   rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr objects_raw_pub_{};
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr objects_markers_pub_{};
 
-  std::unordered_set<int> previous_ids_;
+  std::unordered_set<int> previous_ids_{};
 
-  /* constexpr static int REFERENCE_POINTS_NUM = 9;
-  constexpr static std::array<std::array<double, 2>, REFERENCE_POINTS_NUM> reference_to_center_ = {
-    {{{-1.0, -1.0}},
-     {{-1.0, 0.0}},
-     {{-1.0, 1.0}},
-     {{0.0, 1.0}},
-     {{1.0, 1.0}},
-     {{1.0, 0.0}},
-     {{1.0, -1.0}},
-     {{0.0, -1.0}},
-     {{0.0, 0.0}}}}; */
-
-  std::shared_ptr<WatchdogTimer> cloud_watchdog_;
+  std::shared_ptr<WatchdogTimer> watchdog_;
 };
 }  // namespace ros
 }  // namespace nebula

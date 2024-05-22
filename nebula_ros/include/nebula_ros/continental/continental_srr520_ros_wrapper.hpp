@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include <ament_index_cpp/get_package_prefix.hpp>
 #include <nebula_common/continental/continental_srr520.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/nebula_status.hpp>
@@ -26,13 +25,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-/* #include <continental_msgs/msg/continental_srr520_detection_list.hpp>
-#include <continental_msgs/msg/continental_srr520_object_list.hpp>
-#include <continental_srvs/srv/continental_srr520_set_radar_parameters.hpp> */
 #include <nebula_msgs/msg/nebula_packet.hpp>
 
-#include <array>
-#include <chrono>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -61,10 +55,10 @@ public:
 
 private:
   /// @brief Callback from the hw interface's raw data
-  void ReceivePacketCallback(std::vector<uint8_t> & packet);
+  void ReceivePacketCallback(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg_ptr);
 
   /// @brief Callback from replayed NebulaPackets
-  void ReceivePacketsMessageCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg);
+  void ReceivePacketsCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packet_packets_msg);
 
   /// @brief Retrieve the parameters from ROS and set the driver and hw interface
   /// @return Resulting status
@@ -83,7 +77,7 @@ private:
   Status wrapper_status_;
 
   std::shared_ptr<const drivers::continental_srr520::ContinentalSrr520SensorConfiguration>
-    sensor_cfg_ptr_{};
+    config_ptr_{};
 
   /// @brief Stores received packets that have not been processed yet by the decoder thread
   mt_queue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;

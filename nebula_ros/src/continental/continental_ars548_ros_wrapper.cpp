@@ -60,8 +60,7 @@ ContinentalArs548RosWrapper::ContinentalArs548RosWrapper(const rclcpp::NodeOptio
   } else {
     packets_sub_ = create_subscription<nebula_msgs::msg::NebulaPackets>(
       "nebula_packets", rclcpp::SensorDataQoS(),
-      std::bind(
-        &ContinentalArs548RosWrapper::ReceivePacketsMessageCallback, this, std::placeholders::_1));
+      std::bind(&ContinentalArs548RosWrapper::ReceivePacketsCallback, this, std::placeholders::_1));
     RCLCPP_INFO_STREAM(
       get_logger(),
       "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
@@ -250,23 +249,35 @@ Status ContinentalArs548RosWrapper::ValidateAndSetConfig(
   return Status::OK;
 }
 
-void ContinentalArs548RosWrapper::ReceivePacketsMessageCallback(
-  std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg)
+void ContinentalArs548RosWrapper::ReceivePacketsCallback(
+  std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg_ptr)
 {
   if (hw_interface_wrapper_) {
     RCLCPP_ERROR_THROTTLE(
       get_logger(), *get_clock(), 1000,
-      "Ignoring NebulaPackets PandarScan. Launch with launch_hw:=false to enable NebulaPackets "
+      "Ignoring NebulaPackets. Launch with launch_hw:=false to enable NebulaPackets "
       "replay.");
     return;
   }
 
-  for (auto & packet : packets_msg->packets) {
+  for (auto & packet : packets_msg_ptr->packets) {
     auto nebula_packet_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
     nebula_packet_ptr->stamp = packet.stamp;
-    std::copy(packet.data.begin(), packet.data.end(), std::back_inserter(nebula_packet_ptr->data));
+    nebula_packet_ptr->data = std::move(packet.data);
 
     packet_queue_.push(std::move(nebula_packet_ptr));
+  }
+}
+
+void ContinentalArs548RosWrapper::ReceivePacketCallback(
+  std::unique_ptr<nebula_msgs::msg::NebulaPacket> msg_ptr)
+{
+  if (!decoder_wrapper_ || decoder_wrapper_->Status() != Status::OK) {
+    return;
+  }
+
+  if (!packet_queue_.try_push(std::move(msg_ptr))) {
+    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");
   }
 }
 
@@ -333,18 +344,6 @@ rcl_interfaces::msg::SetParametersResult ContinentalArs548RosWrapper::OnParamete
   }
 
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
-}
-
-void ContinentalArs548RosWrapper::ReceivePacketCallback(
-  std::unique_ptr<nebula_msgs::msg::NebulaPacket> msg_ptr)
-{
-  if (!decoder_wrapper_ || decoder_wrapper_->Status() != Status::OK) {
-    return;
-  }
-
-  if (!packet_queue_.try_push(std::move(msg_ptr))) {
-    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");
-  }
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(ContinentalArs548RosWrapper)

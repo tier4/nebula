@@ -26,14 +26,15 @@ namespace drivers
 namespace continental_srr520
 {
 ContinentalSrr520HwInterface::ContinentalSrr520HwInterface()
-: nebula_packets_ptr_{std::make_unique<nebula_msgs::msg::NebulaPackets>()}
 {
 }
 
 Status ContinentalSrr520HwInterface::SetSensorConfiguration(
-  std::shared_ptr<const nebula::drivers::continental_srr520::ContinentalSrr520SensorConfiguration>)
+  const std::shared_ptr<
+    const nebula::drivers::continental_srr520::ContinentalSrr520SensorConfiguration>
+    new_config_ptr)
 {
-  sensor_configuration_ = sensor_configuration_;
+  config_ptr_ = new_config_ptr;
 
   return Status::OK;
 }
@@ -43,21 +44,21 @@ Status ContinentalSrr520HwInterface::SensorInterfaceStart()
   std::lock_guard lock(receiver_mutex_);
 
   try {
-    can_sender_ = std::make_unique<::drivers::socketcan::SocketCanSender>(
-      sensor_configuration_->interface, true);
-    can_receiver_ = std::make_unique<::drivers::socketcan::SocketCanReceiver>(
-      sensor_configuration_->interface, true);
+    can_sender_ptr_ =
+      std::make_unique<::drivers::socketcan::SocketCanSender>(config_ptr_->interface, true);
+    can_receiver_ptr_ =
+      std::make_unique<::drivers::socketcan::SocketCanReceiver>(config_ptr_->interface, true);
 
-    can_receiver_->SetCanFilters(
-      ::drivers::socketcan::SocketCanReceiver::CanFilterList(sensor_configuration_->filters));
-    PrintInfo(std::string("applied filters: ") + sensor_configuration_->filters);
+    can_receiver_ptr_->SetCanFilters(
+      ::drivers::socketcan::SocketCanReceiver::CanFilterList(config_ptr_->filters));
+    PrintInfo(std::string("applied filters: ") + config_ptr_->filters);
 
     sensor_interface_active_ = true;
-    receiver_thread_ =
+    receiver_thread_ptr_ =
       std::make_unique<std::thread>(&ContinentalSrr520HwInterface::ReceiveLoop, this);
   } catch (const std::exception & ex) {
     Status status = Status::CAN_CONNECTION_ERROR;
-    std::cerr << status << sensor_configuration_->interface << std::endl;
+    std::cerr << status << config_ptr_->interface << std::endl;
     return status;
   }
   return Status::OK;
@@ -70,10 +71,10 @@ bool ContinentalSrr520HwInterface::SendFrame(const std::array<uint8_t, N> & data
     can_frame_id, 0, ::drivers::socketcan::FrameType::DATA, ::drivers::socketcan::StandardFrame);
 
   try {
-    can_sender_->send_fd(
+    can_sender_ptr_->send_fd(
       data.data(), data.size(), send_id,
       std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::duration<double>(sensor_configuration_->sender_timeout_sec)));
+        std::chrono::duration<double>(config_ptr_->sender_timeout_sec)));
     return true;
   } catch (const std::exception & ex) {
     PrintError(std::string("Error sending CAN message: ") + ex.what());
@@ -93,8 +94,8 @@ void ContinentalSrr520HwInterface::ReceiveLoop()
     {
       std::lock_guard lock(receiver_mutex_);
       receiver_timeout_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::duration<double>(sensor_configuration_->receiver_timeout_sec));
-      use_bus_time = sensor_configuration_->use_bus_time;
+        std::chrono::duration<double>(config_ptr_->receiver_timeout_sec));
+      use_bus_time = config_ptr_->use_bus_time;
 
       if (!sensor_interface_active_) {
         break;
@@ -103,7 +104,7 @@ void ContinentalSrr520HwInterface::ReceiveLoop()
 
     try {
       packet_msg_ptr->data.resize(68);  // 64 bytes of data + 4 bytes of ID
-      receive_id = can_receiver_->receive_fd(
+      receive_id = can_receiver_ptr_->receive_fd(
         packet_msg_ptr->data.data() + 4 * sizeof(uint8_t), receiver_timeout_nsec);
     } catch (const std::exception & ex) {
       PrintError(std::string("Error receiving CAN FD message: ") + ex.what());
@@ -133,8 +134,6 @@ void ContinentalSrr520HwInterface::ReceiveLoop()
     }
 
     nebula_packet_callback_(std::move(packet_msg_ptr));
-
-    // ReceiveSensorPacketCallback(buffer, receive_id.identifier(), stamp);
   }
 }
 
@@ -145,19 +144,19 @@ Status ContinentalSrr520HwInterface::RegisterPacketCallback(
   return Status::OK;
 }
 
-void ContinentalSrr520HwInterface::SensorSyncFup()
+void ContinentalSrr520HwInterface::SensorSyncFup(builtin_interfaces::msg::Time stamp)
 {
-  if (!can_sender_) {
+  if (!can_sender_ptr_) {
     PrintError("Can sender is invalid so can not do follow up");
   }
 
-  if (!sensor_configuration_->sync_use_bus_time || sync_fup_sent_) {
+  if (!config_ptr_->sync_use_bus_time || sync_fup_sent_) {
     return;
   }
 
   auto t0s = last_sync_stamp_;
   t0s.nanosec = 0;
-  const auto t1r = stamp;
+  const auto & t1r = stamp;
 
   builtin_interfaces::msg::Time t4r =
     rclcpp::Time(rclcpp::Time() + (rclcpp::Time(t1r) - rclcpp::Time(t0s)));
@@ -185,7 +184,7 @@ void ContinentalSrr520HwInterface::SensorSyncFup()
 
 void ContinentalSrr520HwInterface::SensorSync()
 {
-  if (!can_sender_) {
+  if (!can_sender_ptr_) {
     PrintError("Can sender is invalid so can not do sync up");
   }
 
@@ -219,7 +218,7 @@ void ContinentalSrr520HwInterface::SensorSync()
 
   SendFrame(data, SYNC_FUP_CAN_MESSAGE_ID);
 
-  if (sensor_configuration_->sync_use_bus_time) {
+  if (config_ptr_->sync_use_bus_time) {
     sync_fup_sent_ = false;
     return;
   }
@@ -243,38 +242,14 @@ void ContinentalSrr520HwInterface::SensorSync()
   sync_fup_sent_ = true;
 }
 
-void ContinentalSrr520HwInterface::ProcessDataPacket(const std::vector<uint8_t> & buffer)
-{
-  nebula_msgs::msg::NebulaPacket nebula_packet;
-  nebula_packet.data = buffer;
-  auto now = std::chrono::system_clock::now();
-  auto now_secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-  auto now_nanosecs =
-    std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-  nebula_packet.stamp.sec = static_cast<int>(now_secs);
-  nebula_packet.stamp.nanosec =
-    static_cast<int>((now_nanosecs / 1000000000.0 - static_cast<double>(now_secs)) * 1000000000);
-  nebula_packets_ptr_->packets.emplace_back(nebula_packet);
-
-  nebula_packets_ptr_->header.stamp = nebula_packets_ptr_->packets.front().stamp;
-
-  {
-    std::lock_guard lock(receiver_mutex_);
-    nebula_packets_ptr_->header.frame_id = sensor_configuration_->frame_id;
-  }
-
-  nebula_packets_reception_callback_(std::move(nebula_packets_ptr_));
-  nebula_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
-}
-
 Status ContinentalSrr520HwInterface::SensorInterfaceStop()
 {
   {
     std::lock_guard l(receiver_mutex_);
-    sensor_interface_active_ = true;
+    sensor_interface_active_ = false;
   }
 
-  receiver_thread_->join();
+  receiver_thread_ptr_->join();
   return Status::ERROR_1;
 }
 
@@ -283,14 +258,14 @@ Status ContinentalSrr520HwInterface::ConfigureSensor(
   float yaw_autosar, float longitudinal_cog, float wheelbase, float cover_damping, bool plug_bottom,
   bool reset)
 {
-  std::cout << "longitudinal_autosar=" << longitudinal_autosar << std::endl;
-  std::cout << "lateral_autosar=" << lateral_autosar << std::endl;
-  std::cout << "vertical_autosar=" << vertical_autosar << std::endl;
-  std::cout << "longitudinal_cog=" << longitudinal_cog << std::endl;
-  std::cout << "wheelbase=" << wheelbase << std::endl;
-  std::cout << "yaw_autosar=" << yaw_autosar << std::endl;
-  std::cout << "sensor_id=" << static_cast<uint16_t>(sensor_id) << std::endl << std::flush;
-  std::cout << "plug_bottom=" << plug_bottom << std::endl;
+  PrintInfo("longitudinal_autosar=" + std::to_string(longitudinal_autosar));
+  PrintInfo("lateral_autosar=" + std::to_string(lateral_autosar));
+  PrintInfo("vertical_autosar=" + std::to_string(vertical_autosar));
+  PrintInfo("longitudinal_cog=" + std::to_string(longitudinal_cog));
+  PrintInfo("wheelbase=" + std::to_string(wheelbase));
+  PrintInfo("yaw_autosar=" + std::to_string(yaw_autosar));
+  PrintInfo("sensor_id=" + std::to_string(static_cast<uint16_t>(sensor_id)));
+  PrintInfo("plug_bottom=" + std::to_string(plug_bottom));
 
   if (
     longitudinal_autosar < -32.767f || longitudinal_autosar > 32.767f ||
@@ -390,13 +365,13 @@ Status ContinentalSrr520HwInterface::SetVehicleDynamics(
 
 void ContinentalSrr520HwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
 {
-  parent_node_logger = logger;
+  parent_node_logger_ptr_ = logger;
 }
 
 void ContinentalSrr520HwInterface::PrintInfo(std::string info)
 {
-  if (parent_node_logger) {
-    RCLCPP_INFO_STREAM((*parent_node_logger), info);
+  if (parent_node_logger_ptr_) {
+    RCLCPP_INFO_STREAM((*parent_node_logger_ptr_), info);
   } else {
     std::cout << info << std::endl;
   }
@@ -404,8 +379,8 @@ void ContinentalSrr520HwInterface::PrintInfo(std::string info)
 
 void ContinentalSrr520HwInterface::PrintError(std::string error)
 {
-  if (parent_node_logger) {
-    RCLCPP_ERROR_STREAM((*parent_node_logger), error);
+  if (parent_node_logger_ptr_) {
+    RCLCPP_ERROR_STREAM((*parent_node_logger_ptr_), error);
   } else {
     std::cerr << error << std::endl;
   }
@@ -413,21 +388,11 @@ void ContinentalSrr520HwInterface::PrintError(std::string error)
 
 void ContinentalSrr520HwInterface::PrintDebug(std::string debug)
 {
-  if (parent_node_logger) {
-    RCLCPP_DEBUG_STREAM((*parent_node_logger), debug);
+  if (parent_node_logger_ptr_) {
+    RCLCPP_DEBUG_STREAM((*parent_node_logger_ptr_), debug);
   } else {
     std::cout << debug << std::endl;
   }
-}
-
-void ContinentalSrr520HwInterface::PrintDebug(const std::vector<uint8_t> & bytes)
-{
-  std::stringstream ss;
-  for (const auto & b : bytes) {
-    ss << static_cast<int>(b) << ", ";
-  }
-  ss << std::endl;
-  PrintDebug(ss.str());
 }
 
 }  // namespace continental_srr520

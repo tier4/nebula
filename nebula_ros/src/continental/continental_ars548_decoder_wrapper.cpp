@@ -81,11 +81,10 @@ ContinentalArs548DecoderWrapper::ContinentalArs548DecoderWrapper(
 
   RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
 
-  cloud_watchdog_ =
+  watchdog_ =
     std::make_shared<WatchdogTimer>(*parent_node, 100'000us, [this, parent_node](bool ok) {
       if (ok) return;
-      RCLCPP_WARN_THROTTLE(
-        logger_, *parent_node->get_clock(), 5000, "Missed pointcloud output deadline");
+      RCLCPP_WARN_THROTTLE(logger_, *parent_node->get_clock(), 5000, "Missed output deadline");
     });
 }
 
@@ -123,7 +122,7 @@ void ContinentalArs548DecoderWrapper::ProcessPacket(
 {
   driver_ptr_->ProcessPacket(std::move(packet_msg));
 
-  cloud_watchdog_->update();
+  watchdog_->update();
 }
 
 void ContinentalArs548DecoderWrapper::DetectionListCallback(

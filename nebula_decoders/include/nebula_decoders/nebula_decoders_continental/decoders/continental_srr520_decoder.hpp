@@ -23,10 +23,10 @@
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
-#include <std_msgs/msg/header.hpp>
 
 #include <array>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace nebula
@@ -52,10 +52,6 @@ public:
   /// @param nebula_packets
   /// @return Resulting flag
   bool ProcessPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg) override;
-
-  bool ParseDetectionsListPacket(const nebula_msgs::msg::NebulaPackets & nebula_packets, bool near);
-  bool ParseObjectsListPacket(const nebula_msgs::msg::NebulaPackets & nebula_packets);
-  bool ParseStatusPacket(const nebula_msgs::msg::NebulaPackets & nebula_packets);
 
   /// @brief Register function to call whenever a new rdi near detection list is processed
   /// @param detection_list_callback
@@ -87,7 +83,8 @@ public:
   /// @brief Register function to call whenever a sync fup packet is processed
   /// @param sync_fup_callback
   /// @return Resulting status
-  Status RegisterSyncFupCallback(std::function<void()> sync_fup_callback);
+  Status RegisterSyncFupCallback(
+    std::function<void(builtin_interfaces::msg::Time)> sync_fup_callback);
 
   /// @brief Register function to call whenever enough packets have been processed
   /// @param object_list_callback
@@ -181,7 +178,7 @@ private:
     object_list_callback_{};
   std::function<void(std::unique_ptr<diagnostic_msgs::msg::DiagnosticArray> msg)>
     status_callback_{};
-  std::function<void()> sync_fup_callback_{};
+  std::function<void(builtin_interfaces::msg::Time)> sync_fup_callback_{};
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg)>
     nebula_packets_callback_{};
 
@@ -197,15 +194,15 @@ private:
   bool first_rdi_hrr_packet_{true};
   bool first_object_packet_{true};
 
-  ScanHeaderPacket rdi_near_header_packet_;
-  ScanHeaderPacket rdi_hrr_header_packet_;
-  ObjectHeaderPacket object_header_packet_;
+  ScanHeaderPacket rdi_near_header_packet_{};
+  ScanHeaderPacket rdi_hrr_header_packet_{};
+  ObjectHeaderPacket object_header_packet_{};
 
   /// @brief SensorConfiguration for this decoder
   std::shared_ptr<const continental_srr520::ContinentalSrr520SensorConfiguration>
     sensor_configuration_{};
 
-  std::shared_ptr<rclcpp::Logger> parent_node_logger;
+  std::shared_ptr<rclcpp::Logger> parent_node_logger_ptr_{};
 };
 
 }  // namespace continental_srr520

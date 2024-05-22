@@ -117,15 +117,6 @@ private:
   visualization_msgs::msg::MarkerArray ConvertToMarkers(
     const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 
-  /// @brief Convert seconds to chrono::nanoseconds
-  /// @param seconds
-  /// @return chrono::nanoseconds
-  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
-  {
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(
-      std::chrono::duration<double>(seconds));
-  }
-
   nebula::Status status_;
   rclcpp::Logger logger_;
 
@@ -148,7 +139,7 @@ private:
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr objects_markers_pub_{};
   rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_{};
 
-  std::unordered_set<int> previous_ids_;
+  std::unordered_set<int> previous_ids_{};
 
   constexpr static int REFERENCE_POINTS_NUM = 9;
   constexpr static std::array<std::array<double, 2>, REFERENCE_POINTS_NUM> reference_to_center_ = {
@@ -162,7 +153,7 @@ private:
      {{0.0, -1.0}},
      {{0.0, 0.0}}}};
 
-  std::shared_ptr<WatchdogTimer> cloud_watchdog_;
+  std::shared_ptr<WatchdogTimer> watchdog_;
 };
 }  // namespace ros
 }  // namespace nebula
