@@ -1,23 +1,22 @@
 #pragma once
 
-#include <variant>
-#include <string>
 #include <exception>
+#include <string>
+#include <variant>
 
 namespace nebula
 {
 namespace util
 {
 
-struct bad_expected_access : public std::exception {
-  bad_expected_access(const std::string & msg) : std::exception(), msg_(msg) {}
+struct bad_expected_access : public std::exception
+{
+  explicit bad_expected_access(const std::string & msg) : std::exception(), msg_(msg) {}
 
-  const char* what() const noexcept override {
-    return msg_.c_str();
-  }
+  const char * what() const noexcept override { return msg_.c_str(); }
 
 private:
-  const std::string msg_; 
+  const std::string msg_;
 };
 
 /// @brief A poor man's backport of C++23's std::expected.
@@ -39,14 +38,16 @@ struct expected
 
   /// @brief Retrieve the value, or throw `bad_expected_access` if an error is contained.
   /// @return The value of type `T`
-  T value() {
+  T value()
+  {
     if (!has_value()) {
       throw bad_expected_access("value() called but containing error");
     }
-    return std::get<T>(value_); 
+    return std::get<T>(value_);
   }
 
-  /// @brief Return the contained value, or, if an error is contained, return the given `default_` instead.
+  /// @brief Return the contained value, or, if an error is contained, return the given `default_`
+  /// instead.
   /// @return The contained value, if any, else `default_`
   T value_or(const T & default_)
   {
@@ -57,30 +58,34 @@ struct expected
   /// @brief If the instance has a value, return the value, else throw std::runtime_error(error_msg)
   /// @param error_msg The message to be included in the thrown exception
   /// @return The value
-  T value_or_throw(const std::string & error_msg) {
+  T value_or_throw(const std::string & error_msg)
+  {
     if (has_value()) return value();
     throw std::runtime_error(error_msg);
   }
 
   /// @brief Retrieve the error, or throw `bad_expected_access` if a value is contained.
   /// @return The error of type `E`
-  E error() {
+  E error()
+  {
     if (has_value()) {
       throw bad_expected_access("error() called but containing value");
     }
-    return std::get<E>(value_); 
+    return std::get<E>(value_);
   }
 
-  /// @brief Return the contained error, or, if a value is contained, return the given `default_` instead.
+  /// @brief Return the contained error, or, if a value is contained, return the given `default_`
+  /// instead.
   /// @return The contained error, if any, else `default_`
-  E error_or(const E & default_) { 
+  E error_or(const E & default_)
+  {
     if (!has_value()) return error();
-    return default_; 
-    }
+    return default_;
+  }
 
-  expected(const T & value) { value_ = value; }
+  explicit expected(const T & value) { value_ = value; }
 
-  expected(const E & error) { value_ = error; }
+  explicit expected(const E & error) { value_ = error; }
 
 private:
   std::variant<T, E> value_;

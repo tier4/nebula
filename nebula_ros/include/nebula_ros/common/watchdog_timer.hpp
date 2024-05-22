@@ -1,9 +1,10 @@
 #pragma once
 
 #include <rclcpp/rclcpp.hpp>
-#include <cstdint>
+
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <functional>
 
 namespace nebula
@@ -16,19 +17,19 @@ class WatchdogTimer
   using watchdog_cb_t = std::function<void(bool)>;
 
 public:
-  WatchdogTimer(rclcpp::Node& node, const std::chrono::microseconds& expected_update_interval, const watchdog_cb_t& callback)
-    : node_(node)
-    , callback_(callback)
-    , expected_update_interval_ns_(
-          std::chrono::duration_cast<std::chrono::nanoseconds>(expected_update_interval).count())
+  WatchdogTimer(
+    rclcpp::Node & node, const std::chrono::microseconds & expected_update_interval,
+    const watchdog_cb_t & callback)
+  : node_(node),
+    callback_(callback),
+    expected_update_interval_ns_(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(expected_update_interval).count())
   {
-    timer_ = node_.create_wall_timer(expected_update_interval, std::bind(&WatchdogTimer::onTimer, this));
+    timer_ =
+      node_.create_wall_timer(expected_update_interval, std::bind(&WatchdogTimer::onTimer, this));
   }
 
-  void update()
-  {
-    last_update_ns_ = node_.get_clock()->now().nanoseconds();
-  }
+  void update() { last_update_ns_ = node_.get_clock()->now().nanoseconds(); }
 
 private:
   void onTimer()
@@ -40,7 +41,7 @@ private:
     callback_(!is_late);
   }
 
-  rclcpp::Node& node_;
+  rclcpp::Node & node_;
   rclcpp::TimerBase::SharedPtr timer_;
   std::atomic<uint64_t> last_update_ns_;
   const watchdog_cb_t callback_;

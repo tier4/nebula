@@ -1,9 +1,10 @@
 #pragma once
 
+#include <chrono>
 #include <condition_variable>
 #include <deque>
 #include <mutex>
-#include <chrono>
+#include <utility>
 
 template <typename T>
 class mt_queue
@@ -15,7 +16,7 @@ private:
   size_t capacity_;
 
 public:
-  mt_queue(size_t capacity) : capacity_(capacity) {}
+  explicit mt_queue(size_t capacity) : capacity_(capacity) {}
 
   bool try_push(T && value)
   {

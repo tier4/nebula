@@ -220,8 +220,7 @@ Status HesaiRosDecoderTest::GetParameters(
   if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
     return Status::INVALID_ECHO_MODE;
   }
-  if (
-    sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
+  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
     return Status::SENSOR_CONFIG_ERROR;
   }
   if (calibration_configuration.calibration_file.empty()) {
@@ -274,7 +273,7 @@ void HesaiRosDecoderTest::ReadBag(
 
   storage_options.uri = params_.bag_path;
   storage_options.storage_id = params_.storage_id;
-  converter_options.output_serialization_format = params_.format;  //"cdr";
+  converter_options.output_serialization_format = params_.format;
   rclcpp::Serialization<pandar_msgs::msg::PandarScan> serialization;
 
   rosbag2_cpp::Reader bag_reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
@@ -296,7 +295,8 @@ void HesaiRosDecoderTest::ReadBag(
       auto extracted_msg_ptr = std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg);
 
       for (auto & pkt : extracted_msg_ptr->packets) {
-        auto pointcloud_ts = driver_ptr_->ParseCloudPacket(std::vector<uint8_t>(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size)));
+        auto pointcloud_ts = driver_ptr_->ParseCloudPacket(
+          std::vector<uint8_t>(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size)));
         auto pointcloud = std::get<0>(pointcloud_ts);
         auto scan_timestamp = std::get<1>(pointcloud_ts);
 

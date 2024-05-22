@@ -79,15 +79,13 @@ std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ParseCloudPacket(
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
   auto logger = rclcpp::get_logger("HesaiDriver");
 
-  if (driver_status_ != nebula::Status::OK)
-  {
+  if (driver_status_ != nebula::Status::OK) {
     RCLCPP_ERROR(logger, "Driver not OK.");
     return pointcloud;
   }
 
   scan_decoder_->unpack(packet);
-  if (scan_decoder_->hasScanned())
-  {
+  if (scan_decoder_->hasScanned()) {
     pointcloud = scan_decoder_->getPointcloud();
   }
 

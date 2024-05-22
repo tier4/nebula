@@ -43,14 +43,16 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
   send_buf.emplace_back(len & 0xff);
   send_buf.insert(send_buf.end(), payload.begin(), payload.end());
 
-  // These are shared_ptrs so that in case of request timeout, the callback (if ever called) can access valid memory
+  // These are shared_ptrs so that in case of request timeout, the callback (if ever called) can
+  // access valid memory
   auto recv_buf = std::make_shared<std::vector<uint8_t>>();
   auto response_complete = std::make_shared<bool>(false);
 
   auto error_code = std::make_shared<ptc_error_t>();
 
   std::stringstream ss;
-  ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(command_id) << " (" << len << ") ";
+  ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(command_id)
+     << " (" << len << ") ";
   std::string log_tag = ss.str();
 
   PrintDebug(log_tag + "Entering lock");
@@ -66,21 +68,26 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
   PrintDebug(log_tag + "Sending payload");
   tcp_driver_->asyncSendReceiveHeaderPayload(
     send_buf,
-    [this, log_tag, command_id, response_complete, error_code](const std::vector<uint8_t> & header_bytes) {
+    [this, log_tag, command_id, response_complete,
+     error_code](const std::vector<uint8_t> & header_bytes) {
       error_code->ptc_error_code = header_bytes[3];
 
-      size_t payload_len = (header_bytes[4] << 24) | (header_bytes[5] << 16) | (header_bytes[6] << 8) | header_bytes[7];
-      PrintDebug(log_tag + "Received header (expecting " + std::to_string(payload_len) + "B payload)");
-      // If command_id in the response does not match, we got a response for another command (or rubbish), probably as a
-      // result of too many simultaneous TCP connections to the sensor (e.g. from GUI, Web UI, another nebula instance, etc.)
+      size_t payload_len = (header_bytes[4] << 24) | (header_bytes[5] << 16) |
+                           (header_bytes[6] << 8) | header_bytes[7];
+      PrintDebug(
+        log_tag + "Received header (expecting " + std::to_string(payload_len) + "B payload)");
+      // If command_id in the response does not match, we got a response for another command (or
+      // rubbish), probably as a result of too many simultaneous TCP connections to the sensor (e.g.
+      // from GUI, Web UI, another nebula instance, etc.)
       if (header_bytes[2] != command_id) {
         error_code->error_flags |= TCP_ERROR_UNRELATED_RESPONSE;
       }
-      if (payload_len == 0) { 
-        *response_complete = true; 
+      if (payload_len == 0) {
+        *response_complete = true;
       }
     },
-    [this, log_tag, recv_buf, response_complete, error_code](const std::vector<uint8_t> & payload_bytes) {
+    [this, log_tag, recv_buf, response_complete,
+     error_code](const std::vector<uint8_t> & payload_bytes) {
       PrintDebug(log_tag + "Received payload");
 
       // Header had payload length 0 (thus, header callback processed request successfully already),
@@ -96,7 +103,7 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
     },
     [this, log_tag, &tm]() {
       PrintDebug(log_tag + "Unlocking mutex");
-      tm.unlock(); 
+      tm.unlock();
       PrintDebug(log_tag + "Unlocked mutex");
     });
   this->IOContextRun();
@@ -177,7 +184,8 @@ Status HesaiHwInterface::SensorInterfaceStop()
   return Status::ERROR_1;
 }
 
-Status HesaiHwInterface::GetSensorConfiguration(const SensorConfigurationBase & sensor_configuration)
+Status HesaiHwInterface::GetSensorConfiguration(
+  const SensorConfigurationBase & sensor_configuration)
 {
   std::stringstream ss;
   ss << sensor_configuration;
@@ -251,7 +259,8 @@ std::vector<uint8_t> HesaiHwInterface::GetLidarCalibrationBytes()
 std::string HesaiHwInterface::GetLidarCalibrationString()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_GET_LIDAR_CALIBRATION);
-  auto calib_data = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
+  auto calib_data =
+    response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   std::string calib_string(calib_data.begin(), calib_data.end());
   return calib_string;
 }
@@ -297,7 +306,8 @@ HesaiPtpDiagTime HesaiHwInterface::GetPtpDiagTime()
 
 HesaiPtpDiagGrandmaster HesaiHwInterface::GetPtpDiagGrandmaster()
 {
-  auto response_or_err = SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_GRANDMASTER_SETTINGS_NP});
+  auto response_or_err =
+    SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_GRANDMASTER_SETTINGS_NP});
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   auto diag_grandmaster = CheckSizeAndParse<HesaiPtpDiagGrandmaster>(response);
 
@@ -476,15 +486,15 @@ HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
       if (response.size() != 5) {
         throw std::runtime_error("Unexpected response payload");
       }
-      
+
       memcpy(&hesai_range_all.start, &response[1], 2);
       memcpy(&hesai_range_all.end, &response[3], 2);
       break;
     case 1:  // for each channel
-      //TODO
+      // TODO(yukkysaito)
       break;
     case 2:  // multi-section FOV
-      //TODO
+      // TODO(yukkysaito)
       break;
   }
 
@@ -756,7 +766,7 @@ HesaiStatus HesaiHwInterface::GetLidarMonitorAsyncHttp(
 HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration, HesaiConfig hesai_config)
 {
-  using namespace std::chrono_literals;
+  using namespace std::chrono_literals;  // NOLINT(build/namespaces)
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
   std::cout << "Start CheckAndSetConfig(HesaiConfig)!!" << std::endl;
 #endif
@@ -788,7 +798,9 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 
   auto current_rotation_speed = hesai_config.spin_rate;
   if (sensor_configuration->rotation_speed != current_rotation_speed.value()) {
-    PrintInfo("current lidar rotation_speed: " + std::to_string(static_cast<int>(current_rotation_speed.value())));
+    PrintInfo(
+      "current lidar rotation_speed: " +
+      std::to_string(static_cast<int>(current_rotation_speed.value())));
     PrintInfo(
       "current configuration rotation_speed: " +
       std::to_string(sensor_configuration->rotation_speed));
@@ -806,8 +818,10 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 
   bool set_flg = false;
   std::stringstream ss;
-  ss << static_cast<int>(hesai_config.dest_ipaddr[0]) << "." << static_cast<int>(hesai_config.dest_ipaddr[1]) << "."
-     << static_cast<int>(hesai_config.dest_ipaddr[2]) << "." << static_cast<int>(hesai_config.dest_ipaddr[3]);
+  ss << static_cast<int>(hesai_config.dest_ipaddr[0]) << "."
+     << static_cast<int>(hesai_config.dest_ipaddr[1]) << "."
+     << static_cast<int>(hesai_config.dest_ipaddr[2]) << "."
+     << static_cast<int>(hesai_config.dest_ipaddr[3]);
   auto current_host_addr = ss.str();
   if (sensor_configuration->host_ip != current_host_addr) {
     set_flg = true;
@@ -818,7 +832,9 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   auto current_host_dport = hesai_config.dest_LiDAR_udp_port;
   if (sensor_configuration->data_port != current_host_dport.value()) {
     set_flg = true;
-    PrintInfo("current lidar dest_LiDAR_udp_port: " + std::to_string(static_cast<int>(current_host_dport.value())));
+    PrintInfo(
+      "current lidar dest_LiDAR_udp_port: " +
+      std::to_string(static_cast<int>(current_host_dport.value())));
     PrintInfo(
       "current configuration data_port: " + std::to_string(sensor_configuration->data_port));
   }
@@ -826,7 +842,9 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   auto current_host_tport = hesai_config.dest_gps_udp_port;
   if (sensor_configuration->gnss_port != current_host_tport.value()) {
     set_flg = true;
-    PrintInfo("current lidar dest_gps_udp_port: " + std::to_string(static_cast<int>(current_host_tport.value())));
+    PrintInfo(
+      "current lidar dest_gps_udp_port: " +
+      std::to_string(static_cast<int>(current_host_tport.value())));
     PrintInfo(
       "current configuration gnss_port: " + std::to_string(sensor_configuration->gnss_port));
   }
@@ -930,18 +948,26 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     set_flg = true;
   } else {
     auto current_cloud_min_angle = hesai_lidar_range_all.start;
-    if (static_cast<int>(sensor_configuration->cloud_min_angle * 10) != current_cloud_min_angle.value()) {
+    if (
+      static_cast<int>(sensor_configuration->cloud_min_angle * 10) !=
+      current_cloud_min_angle.value()) {
       set_flg = true;
-      PrintInfo("current lidar range.start: " + std::to_string(static_cast<int>(current_cloud_min_angle.value())));
+      PrintInfo(
+        "current lidar range.start: " +
+        std::to_string(static_cast<int>(current_cloud_min_angle.value())));
       PrintInfo(
         "current configuration cloud_min_angle: " +
         std::to_string(sensor_configuration->cloud_min_angle));
     }
 
     auto current_cloud_max_angle = hesai_lidar_range_all.end;
-    if (static_cast<int>(sensor_configuration->cloud_max_angle * 10) != current_cloud_max_angle.value()) {
+    if (
+      static_cast<int>(sensor_configuration->cloud_max_angle * 10) !=
+      current_cloud_max_angle.value()) {
       set_flg = true;
-      PrintInfo("current lidar range.end: " + std::to_string(static_cast<int>(current_cloud_max_angle.value())));
+      PrintInfo(
+        "current lidar range.end: " +
+        std::to_string(static_cast<int>(current_cloud_max_angle.value())));
       PrintInfo(
         "current configuration cloud_max_angle: " +
         std::to_string(sensor_configuration->cloud_max_angle));
@@ -1181,7 +1207,8 @@ void HesaiHwInterface::PrintDebug(const std::vector<uint8_t> & bytes)
   PrintDebug(ss.str());
 }
 
-std::string HesaiHwInterface::PrettyPrintPTCError(ptc_error_t error_code) {
+std::string HesaiHwInterface::PrettyPrintPTCError(ptc_error_t error_code)
+{
   if (error_code.ok()) {
     return "No error";
   }
@@ -1191,10 +1218,11 @@ std::string HesaiHwInterface::PrettyPrintPTCError(ptc_error_t error_code) {
   std::stringstream ss;
 
   if (ptc_error) {
-    ss << "Sensor error: 0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(ptc_error) << ' ';
+    ss << "Sensor error: 0x" << std::setfill('0') << std::setw(2) << std::hex
+       << static_cast<int>(ptc_error) << ' ';
   }
 
-  switch(ptc_error) {
+  switch (ptc_error) {
     case PTC_ERROR_CODE_NO_ERROR:
       break;
     case PTC_ERROR_CODE_INVALID_INPUT_PARAM:
@@ -1253,7 +1281,8 @@ std::string HesaiHwInterface::PrettyPrintPTCError(ptc_error_t error_code) {
 }
 
 template <typename T>
-T HesaiHwInterface::CheckSizeAndParse(const std::vector<uint8_t> & data) {
+T HesaiHwInterface::CheckSizeAndParse(const std::vector<uint8_t> & data)
+{
   if (data.size() < sizeof(T)) {
     throw std::runtime_error("Attempted to parse too-small payload");
   } else if (data.size() > sizeof(T)) {
