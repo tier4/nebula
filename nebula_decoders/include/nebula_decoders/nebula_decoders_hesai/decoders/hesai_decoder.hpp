@@ -8,6 +8,11 @@
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
 
+#include <memory>
+#include <tuple>
+#include <utility>
+#include <vector>
+
 namespace nebula
 {
 namespace drivers
@@ -34,7 +39,7 @@ protected:
   /// @brief The last decoded packet
   typename SensorT::packet_t packet_;
   /// @brief The last azimuth processed
-  int last_phase_ = -1; // Dummy value to signal last_phase_ has not been set yet
+  int last_phase_ = -1;  // Dummy value to signal last_phase_ has not been set yet
   /// @brief The timestamp of the last completed scan in nanoseconds
   uint64_t output_scan_timestamp_ns_ = 0;
   /// @brief The timestamp of the scan currently in progress
@@ -177,7 +182,7 @@ protected:
     if (last_phase_ == -1) {
       return false;
     }
-    
+
     return angle_corrector_.hasScanned(current_phase, last_phase_, sync_phase);
   }
 
@@ -207,7 +212,8 @@ public:
   /// @param correction_data Calibration data for this decoder
   explicit HesaiDecoder(
     const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> & correction_data)
+    const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> &
+      correction_data)
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(correction_data),
     logger_(rclcpp::get_logger("HesaiDecoder"))
@@ -247,7 +253,7 @@ public:
         sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS);
 
       if (scan_completed) {
-          std::swap(decode_pc_, output_pc_);
+        std::swap(decode_pc_, output_pc_);
         decode_pc_->clear();
         has_scanned_ = true;
         output_scan_timestamp_ns_ = decode_scan_timestamp_ns_;

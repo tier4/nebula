@@ -26,6 +26,7 @@ def get_sensor_make(sensor_name):
         return "Continental", None
     return "unrecognized_sensor_model", None
 
+
 def get_plugin_name(sensor_make, sensor_model):
     if sensor_make.lower() != "continental":
         return sensor_make
@@ -34,8 +35,10 @@ def get_plugin_name(sensor_make, sensor_model):
     else:
         return "invalid_plugin"
 
+
 def is_hw_monitor_available(sensor_make):
     return sensor_make.lower() != "continental"
+
 
 def launch_setup(context, *args, **kwargs):
     # Model and make
@@ -44,7 +47,9 @@ def launch_setup(context, *args, **kwargs):
     sensor_make, sensor_extension = get_sensor_make(sensor_model)
 
     if sensor_make.lower() == "hesai":
-        raise ValueError("\n  `nebula_launch.py` is deprecated. For Hesai sensors, use `hesai_launch_all_hw.xml` instead.")
+        raise ValueError(
+            "\n  `nebula_launch.py` is deprecated. For Hesai sensors, use `hesai_launch_all_hw.xml` instead."
+        )
 
     nebula_decoders_share_dir = get_package_share_directory("nebula_decoders")
     nebula_ros_share_dir = get_package_share_directory("nebula_ros")
@@ -53,23 +58,36 @@ def launch_setup(context, *args, **kwargs):
     sensor_params_fp = LaunchConfiguration("config_file").perform(context)
     if sensor_params_fp == "":
         warnings.warn("No config file provided, using sensor model default", RuntimeWarning)
-        sensor_params_fp = os.path.join(nebula_ros_share_dir, "config", sensor_make.lower(), sensor_model + ".yaml")
+        sensor_params_fp = os.path.join(
+            nebula_ros_share_dir, "config", sensor_make.lower(), sensor_model + ".yaml"
+        )
 
     if not os.path.exists(sensor_params_fp):
         sensor_params_fp = os.path.join(nebula_ros_share_dir, "config", "BaseParams.yaml")
-    assert os.path.exists(sensor_params_fp), "Sensor params yaml file under config/ was not found: {}".format(sensor_params_fp)
+    assert os.path.exists(
+        sensor_params_fp
+    ), "Sensor params yaml file under config/ was not found: {}".format(sensor_params_fp)
 
     sensor_calib_fp = sensor_corr_fp = ""
     if sensor_extension is not None:  # Velodyne and Hesai
-        sensor_calib_fp = os.path.join(nebula_decoders_share_dir, "calibration", sensor_make.lower(), sensor_model + sensor_extension)
-        assert os.path.exists(sensor_calib_fp), "Sensor calib file under calibration/ was not found: {}".format(sensor_calib_fp)
+        sensor_calib_fp = os.path.join(
+            nebula_decoders_share_dir,
+            "calibration",
+            sensor_make.lower(),
+            sensor_model + sensor_extension,
+        )
+        assert os.path.exists(
+            sensor_calib_fp
+        ), "Sensor calib file under calibration/ was not found: {}".format(sensor_calib_fp)
 
         if sensor_model.lower() == "pandarat128":
             sensor_corr_fp = os.path.splitext(sensor_calib_fp)[0] + ".dat"
-            assert os.path.exists(sensor_corr_fp), "Sensor corr file under calibration/ was not found: {}".format(sensor_corr_fp)
+            assert os.path.exists(
+                sensor_corr_fp
+            ), "Sensor corr file under calibration/ was not found: {}".format(sensor_corr_fp)
 
     with open(sensor_params_fp, "r") as f:
-            sensor_params = yaml.safe_load(f)["/**"]["ros__parameters"]
+        sensor_params = yaml.safe_load(f)["/**"]["ros__parameters"]
     nodes = []
     launch_hw = LaunchConfiguration("launch_hw").perform(context) == "true"
 
@@ -78,8 +96,8 @@ def launch_setup(context, *args, **kwargs):
             # HwInterface
             ComposableNode(
                 package="nebula_ros",
-                plugin=get_plugin_name(sensor_make, sensor_model)+"HwInterfaceRosWrapper",
-                name=sensor_make.lower()+"_hw_interface_ros_wrapper_node",
+                plugin=get_plugin_name(sensor_make, sensor_model) + "HwInterfaceRosWrapper",
+                name=sensor_make.lower() + "_hw_interface_ros_wrapper_node",
                 parameters=[
                     sensor_params,
                     {
@@ -97,14 +115,13 @@ def launch_setup(context, *args, **kwargs):
             ),
         )
 
-
     if launch_hw and is_hw_monitor_available(sensor_make):
         nodes.append(
             # HwMonitor
             ComposableNode(
                 package="nebula_ros",
-                plugin=sensor_make+"HwMonitorRosWrapper",
-                name=sensor_make.lower()+"_hw_monitor_ros_wrapper_node",
+                plugin=sensor_make + "HwMonitorRosWrapper",
+                name=sensor_make.lower() + "_hw_monitor_ros_wrapper_node",
                 parameters=[
                     sensor_params,
                     {
@@ -119,8 +136,8 @@ def launch_setup(context, *args, **kwargs):
     nodes.append(
         ComposableNode(
             package="nebula_ros",
-            plugin=get_plugin_name(sensor_make, sensor_model)+"DriverRosWrapper",
-            name=sensor_make.lower()+"_driver_ros_wrapper_node",
+            plugin=get_plugin_name(sensor_make, sensor_model) + "DriverRosWrapper",
+            name=sensor_make.lower() + "_driver_ros_wrapper_node",
             parameters=[
                 sensor_params,
                 {
@@ -146,7 +163,7 @@ def launch_setup(context, *args, **kwargs):
 
     container_kwargs = {}
     if LaunchConfiguration("debug_logging").perform(context) == "true":
-        container_kwargs["ros_arguments"] = ['--log-level', 'debug']
+        container_kwargs["ros_arguments"] = ["--log-level", "debug"]
 
     container = ComposableNodeContainer(
         name="nebula_ros_node",

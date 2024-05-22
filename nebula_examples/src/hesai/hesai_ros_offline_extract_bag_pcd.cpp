@@ -76,7 +76,10 @@ Status HesaiRosOfflineExtractBag::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status HesaiRosOfflineExtractBag::GetStatus() {return wrapper_status_;}
+Status HesaiRosOfflineExtractBag::GetStatus()
+{
+  return wrapper_status_;
+}
 
 Status HesaiRosOfflineExtractBag::GetParameters(
   drivers::HesaiSensorConfiguration & sensor_configuration,
@@ -84,14 +87,13 @@ Status HesaiRosOfflineExtractBag::GetParameters(
   drivers::HesaiCorrection & correction_configuration)
 {
   auto sensor_model_ = this->declare_parameter<std::string>("sensor_model", "", param_read_only());
-  sensor_configuration.sensor_model =
-    nebula::drivers::SensorModelFromString(sensor_model_);
+  sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(sensor_model_);
   auto return_mode_ = this->declare_parameter<std::string>("return_mode", "", param_read_only());
   sensor_configuration.return_mode =
     nebula::drivers::ReturnModeFromStringHesai(return_mode_, sensor_configuration.sensor_model);
   this->declare_parameter<std::string>("frame_id", "pandar", param_read_only());
   sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
-  
+
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
@@ -100,9 +102,11 @@ Status HesaiRosOfflineExtractBag::GetParameters(
     this->get_parameter("scan_phase").as_double();
   }
 
-  calibration_configuration.calibration_file =this->declare_parameter<std::string>("calibration_file", "", param_read_only());
+  calibration_configuration.calibration_file =
+    this->declare_parameter<std::string>("calibration_file", "", param_read_only());
   if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
-    correction_file_path = this->declare_parameter<std::string>("correction_file", "", param_read_only());
+    correction_file_path =
+      this->declare_parameter<std::string>("correction_file", "", param_read_only());
   }
 
   bag_path = this->declare_parameter<std::string>("bag_path", "", param_read_only());
@@ -215,7 +219,7 @@ Status HesaiRosOfflineExtractBag::ReadBag()
 
       nebula_msgs::msg::NebulaPacket nebula_pkt;
       nebula_pkt.stamp = pkt.stamp;
-      nebula_pkt.data.swap(pkt_data); // move storage from `pkt_data` to `data`
+      nebula_pkt.data.swap(pkt_data);  // move storage from `pkt_data` to `data`
       nebula_msg.packets.push_back(nebula_pkt);
 
       if (!pointcloud) {
@@ -233,7 +237,7 @@ Status HesaiRosOfflineExtractBag::ReadBag()
         bag_writer->open(storage_options_w, converter_options_w);
         bag_writer->create_topic(
           {bag_message->topic_name, "nebula_msgs/msg/NebulaPackets", rmw_get_serialization_format(),
-            ""});
+           ""});
       }
 
       bag_writer->write(bag_message);
@@ -248,7 +252,7 @@ Status HesaiRosOfflineExtractBag::ReadBag()
           pcd_writer.writeBinary((o_dir / fn).string(), *pointcloud);
         }
       }
-      
+
       if (out_num <= out_cnt) {
         break;
       }

@@ -14,9 +14,11 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
-#include <memory>
+#include <tuple>
+#include <vector>
 
 namespace nebula
 {

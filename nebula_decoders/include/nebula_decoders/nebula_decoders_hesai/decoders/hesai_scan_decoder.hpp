@@ -8,6 +8,7 @@
 #include "pandar_msgs/msg/pandar_scan.hpp"
 
 #include <tuple>
+#include <vector>
 
 namespace nebula
 {

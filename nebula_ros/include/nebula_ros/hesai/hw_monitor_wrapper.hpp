@@ -4,7 +4,6 @@
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/hesai/hesai_common.hpp>
-
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -15,6 +14,8 @@
 
 #include <array>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -23,18 +24,22 @@ namespace ros
 class HesaiHwMonitorWrapper
 {
 public:
-  HesaiHwMonitorWrapper(rclcpp::Node* const parent_node,
-                        const std::shared_ptr<nebula::drivers::HesaiHwInterface>& hw_interface,
-                        std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration>& config);
+  HesaiHwMonitorWrapper(
+    rclcpp::Node * const parent_node,
+    const std::shared_ptr<nebula::drivers::HesaiHwInterface> & hw_interface,
+    std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config);
 
-  void OnConfigChange(const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & /* new_config */) {}
+  void OnConfigChange(
+    const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & /* new_config */)
+  {
+  }
 
   nebula::Status Status();
 
 private:
   void InitializeHesaiDiagnostics();
 
-  std::string GetPtreeValue(boost::property_tree::ptree* pt, const std::string& key);
+  std::string GetPtreeValue(boost::property_tree::ptree * pt, const std::string & key);
 
   std::string GetFixedPrecisionString(double val, int pre);
 
@@ -44,24 +49,24 @@ private:
 
   void OnHesaiLidarMonitorTimer();
 
-  void HesaiCheckStatus(diagnostic_updater::DiagnosticStatusWrapper& diagnostics);
+  void HesaiCheckStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWrapper& diagnostics);
+  void HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckTemperature(diagnostic_updater::DiagnosticStatusWrapper& diagnostics);
+  void HesaiCheckTemperature(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWrapper& diagnostics);
+  void HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckVoltageHttp(diagnostic_updater::DiagnosticStatusWrapper& diagnostics);
+  void HesaiCheckVoltageHttp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckVoltage(diagnostic_updater::DiagnosticStatusWrapper& diagnostics);
+  void HesaiCheckVoltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
   rclcpp::Logger logger_;
   diagnostic_updater::Updater diagnostics_updater_;
   nebula::Status status_;
 
   const std::shared_ptr<nebula::drivers::HesaiHwInterface> hw_interface_;
-  rclcpp::Node* const parent_node_;
+  rclcpp::Node * const parent_node_;
 
   uint16_t diag_span_;
   rclcpp::TimerBase::SharedPtr diagnostics_update_timer_{};

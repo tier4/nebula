@@ -44,7 +44,8 @@ public:
   /// @param sync_azimuth The azimuth set in the sensor configuration, for which the
   /// timestamp is aligned to the full second
   /// @return true if the current azimuth is in a different scan than the last one, false otherwise
-  virtual bool hasScanned(uint32_t current_azimuth, uint32_t last_azimuth, uint32_t sync_azimuth) = 0;
+  virtual bool hasScanned(
+    uint32_t current_azimuth, uint32_t last_azimuth, uint32_t sync_azimuth) = 0;
 };
 
 }  // namespace drivers

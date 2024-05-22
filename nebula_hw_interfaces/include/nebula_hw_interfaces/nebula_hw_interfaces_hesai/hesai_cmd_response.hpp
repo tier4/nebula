@@ -10,7 +10,7 @@
 #include <ostream>
 #include <string>
 
-using namespace boost::endian;
+using namespace boost::endian;  // NOLINT(build/namespaces)
 
 namespace nebula
 {
@@ -100,7 +100,7 @@ struct HesaiPtpDiagTime
     os << ", ";
     os << "gmTimeBaseIndicator: " << arg.gmTimeBaseIndicator;
     os << ", ";
-    //FIXME: lastGmPhaseChange is a binary number, displaying it as string is incorrect
+    // FIXME: lastGmPhaseChange is a binary number, displaying it as string is incorrect
     os << "lastGmPhaseChange: "
        << std::string(std::begin(arg.lastGmPhaseChange), std::end(arg.lastGmPhaseChange));
     os << ", ";
@@ -158,7 +158,9 @@ struct HesaiInventory
     os << "sn: " << std::string(arg.sn, strnlen(arg.sn, sizeof(arg.sn)));
     os << ", ";
     os << "date_of_manufacture: "
-       << std::string(arg.date_of_manufacture, strnlen(arg.date_of_manufacture, sizeof(arg.date_of_manufacture)));
+       << std::string(
+            arg.date_of_manufacture,
+            strnlen(arg.date_of_manufacture, sizeof(arg.date_of_manufacture)));
     os << ", ";
     os << "mac: ";
 
@@ -256,7 +258,7 @@ struct HesaiConfig
   uint8_t motor_status;
   uint8_t vlan_flag;
   big_uint16_buf_t vlan_id;
-  uint8_t clock_data_fmt; //FIXME: labeled as gps_nmea_sentence in AT128, OT128 datasheets
+  uint8_t clock_data_fmt;  // FIXME: labeled as gps_nmea_sentence in AT128, OT128 datasheets
   uint8_t noise_filtering;
   uint8_t reflectivity_mapping;
   uint8_t reserved[6];
@@ -266,29 +268,17 @@ struct HesaiConfig
     std::ios initial_format(nullptr);
     initial_format.copyfmt(os);
 
-    os << "ipaddr: " 
-       << +arg.ipaddr[0] << "." 
-       << +arg.ipaddr[1] << "." 
-       << +arg.ipaddr[2] << "." 
+    os << "ipaddr: " << +arg.ipaddr[0] << "." << +arg.ipaddr[1] << "." << +arg.ipaddr[2] << "."
        << +arg.ipaddr[3];
     os << ", ";
-    os << "mask: " 
-       << +arg.mask[0] << "." 
-       << +arg.mask[1] << "."
-       << +arg.mask[2] << "." 
+    os << "mask: " << +arg.mask[0] << "." << +arg.mask[1] << "." << +arg.mask[2] << "."
        << +arg.mask[3];
     os << ", ";
-    os << "gateway: " 
-       << +arg.gateway[0] << "." 
-       << +arg.gateway[1] << "." 
-       << +arg.gateway[2] << "." 
+    os << "gateway: " << +arg.gateway[0] << "." << +arg.gateway[1] << "." << +arg.gateway[2] << "."
        << +arg.gateway[3];
     os << ", ";
-    os << "dest_ipaddr: " 
-       << +arg.dest_ipaddr[0] << "."
-       << +arg.dest_ipaddr[1] << "." 
-       << +arg.dest_ipaddr[2] << "."
-       << +arg.dest_ipaddr[3];
+    os << "dest_ipaddr: " << +arg.dest_ipaddr[0] << "." << +arg.dest_ipaddr[1] << "."
+       << +arg.dest_ipaddr[2] << "." << +arg.dest_ipaddr[3];
     os << ", ";
     os << "dest_LiDAR_udp_port: " << arg.dest_LiDAR_udp_port;
     os << ", ";
@@ -351,7 +341,7 @@ struct HesaiLidarStatus
   big_uint32_buf_t startup_times;
   big_uint32_buf_t total_operation_time;
   uint8_t ptp_clock_status;
-  uint8_t reserved[5]; // FIXME: 4 bytes labeled as humidity in OT128 datasheet
+  uint8_t reserved[5];  // FIXME: 4 bytes labeled as humidity in OT128 datasheet
 
   friend std::ostream & operator<<(std::ostream & os, nebula::HesaiLidarStatus const & arg)
   {
@@ -463,7 +453,7 @@ struct HesaiPtpConfig
   int8_t logAnnounceInterval;
   int8_t logSyncInterval;
   int8_t logMinDelayReqInterval;
-  //FIXME: this format is not correct for OT128, or for AT128 on 802.1AS
+  // FIXME: this format is not correct for OT128, or for AT128 on 802.1AS
 
   friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpConfig const & arg)
   {
@@ -489,7 +479,7 @@ struct HesaiPtpConfig
 /// @brief struct of PTC_COMMAND_LIDAR_MONITOR
 struct HesaiLidarMonitor
 {
-  //FIXME: this format is not correct for OT128
+  // FIXME: this format is not correct for OT128
   big_int32_buf_t input_voltage;
   big_int32_buf_t input_current;
   big_int32_buf_t input_power;

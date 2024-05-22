@@ -4,8 +4,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 
 #include <cstdint>
-
-#define _(x) '"' << #x << "\": " << x << ", "
+#include <memory>
 
 namespace nebula
 {
@@ -30,8 +29,8 @@ private:
   {
     // Assumes that:
     // * none of the startFrames are defined as > 360 deg (< 0 not possible since they are unsigned)
-    // * the fields are arranged in ascending order (e.g. field 1: 20-140deg, field 2: 140-260deg etc.)
-    // These assumptions hold for AT128E2X.
+    // * the fields are arranged in ascending order (e.g. field 1: 20-140deg, field 2: 140-260deg
+    // etc.) These assumptions hold for AT128E2X.
     int field = correction_->frameNumber - 1;
     for (size_t i = 0; i < correction_->frameNumber; ++i) {
       if (azimuth < correction_->startFrame[i]) return field;
@@ -43,10 +42,9 @@ private:
   }
 
 public:
-  AngleCorrectorCorrectionBased(
+  explicit AngleCorrectorCorrectionBased(
     const std::shared_ptr<const HesaiCorrection> & sensor_correction)
-  : correction_(sensor_correction),
-    logger_(rclcpp::get_logger("AngleCorrectorCorrectionBased"))
+  : correction_(sensor_correction), logger_(rclcpp::get_logger("AngleCorrectorCorrectionBased"))
   {
     if (sensor_correction == nullptr) {
       throw std::runtime_error(
@@ -83,7 +81,8 @@ public:
             cos_[azimuth], sin_[elevation], cos_[elevation]};
   }
 
-  bool hasScanned(uint32_t current_azimuth, uint32_t last_azimuth, uint32_t /*sync_azimuth*/) override
+  bool hasScanned(
+    uint32_t current_azimuth, uint32_t last_azimuth, uint32_t /*sync_azimuth*/) override
   {
     // For AT128, the scan is always cut at the beginning of the field:
     // If we would cut at `sync_azimuth`, the points left of it would be

@@ -21,6 +21,8 @@
   <depend>nebula_common</depend>
   <depend>nebula_decoders</depend>
   <depend>nebula_hw_interfaces</depend>
+  <depend>nebula_msgs</depend>
+  <depend>pandar_msgs</depend>
   <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
@@ -31,8 +33,6 @@
   <depend>velodyne_msgs</depend>
   <depend>visualization_msgs</depend>
   <depend>yaml-cpp</depend>
-  <depend>nebula_msgs</depend>
-  <depend>pandar_msgs</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>
