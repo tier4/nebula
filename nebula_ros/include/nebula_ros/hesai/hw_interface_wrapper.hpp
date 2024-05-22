@@ -3,7 +3,6 @@
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
-
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -16,10 +15,12 @@ namespace ros
 class HesaiHwInterfaceWrapper
 {
 public:
-  HesaiHwInterfaceWrapper(rclcpp::Node* const parent_node,
-                          std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration>& config);
+  HesaiHwInterfaceWrapper(
+    rclcpp::Node * const parent_node,
+    std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config);
 
-  void OnConfigChange(const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config);
+  void OnConfigChange(
+    const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config);
 
   nebula::Status Status();
 

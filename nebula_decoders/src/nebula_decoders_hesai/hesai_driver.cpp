@@ -86,8 +86,7 @@ std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ParseCloudPacket(
   }
 
   scan_decoder_->unpack(packet);
-  if (scan_decoder_->hasScanned())
-  {
+  if (scan_decoder_->hasScanned()) {
     pointcloud = scan_decoder_->getPointcloud();
   }
 

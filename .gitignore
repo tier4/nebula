@@ -29,3 +29,6 @@ site/
 
 # qcreator stuff
 CMakeLists.txt.user
+
+# pre-commit
+node_modules/

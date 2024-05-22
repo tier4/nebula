@@ -13,7 +13,9 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
+#include <memory>
 #include <regex>
+#include <string>
 
 namespace nebula
 {
@@ -54,7 +56,10 @@ Status VelodyneRosDecoderTest::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status VelodyneRosDecoderTest::GetStatus() { return wrapper_status_; }
+Status VelodyneRosDecoderTest::GetStatus()
+{
+  return wrapper_status_;
+}
 
 Status VelodyneRosDecoderTest::GetParameters(
   drivers::VelodyneSensorConfiguration & sensor_configuration,
@@ -312,9 +317,9 @@ void VelodyneRosDecoderTest::ReadBag()
 
   storage_options.uri = bag_path;
   storage_options.storage_id = storage_id;
+  converter_options.output_serialization_format = format;
   rclcpp::Serialization<velodyne_msgs::msg::VelodyneScan> serialization;
   nebula::drivers::NebulaPointCloudPtr pointcloud(new nebula::drivers::NebulaPointCloud);
-  // nebula::drivers::NebulaPointCloudPtr ref_pointcloud(new nebula::drivers::NebulaPointCloud);
   pcl::PointCloud<pcl::PointXYZ>::Ptr ref_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
   {
     rosbag2_cpp::Reader bag_reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());

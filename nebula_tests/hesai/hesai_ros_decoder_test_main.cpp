@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -19,72 +21,15 @@ namespace test
 {
 
 const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[6] = {
-  {
-    "Pandar40P",
-    "Dual",
-    "Pandar40P.csv",
-    "40p/1673400149412331409",
-    "",
-    "hesai",
-    0,
-    0.3f,
-    200.f
-  },
-  {
-    "Pandar64",
-    "Dual",
-    "Pandar64.csv",
-    "64/1673403880599376836",
-    "",
-    "hesai",
-    0,
-    0.3f,
-    200.f
-  },
-  {
-    "PandarAT128",
-    "LastStrongest",
-    "PandarAT128.csv",
-    "at128/1679653308406038376",
-    "PandarAT128.dat",
-    "hesai",
-    0,
-    1.f,
-    180.f
-  },
-  {
-    "PandarQT64",
-    "Dual",
-    "PandarQT64.csv",
-    "qt64/1673401195788312575",
-    "",
-    "hesai",
-    0,
-    0.1f,
-    60.f
-  },
-  {
-    "PandarXT32",
-    "Dual",
-    "PandarXT32.csv",
-    "xt32/1673400677802009732",
-    "",
-    "hesai",
-    0,
-    0.05f,
-    120.f
-  },
-  {
-    "PandarXT32M",
-    "LastStrongest",
-    "PandarXT32M.csv",
-    "xt32m/1660893203042895158",
-    "",
-    "hesai",
-    0,
-    0.5f,
-    300.f
-  }};
+  {"Pandar40P", "Dual", "Pandar40P.csv", "40p/1673400149412331409", "", "hesai", 0, 0.3f, 200.f},
+  {"Pandar64", "Dual", "Pandar64.csv", "64/1673403880599376836", "", "hesai", 0, 0.3f, 200.f},
+  {"PandarAT128", "LastStrongest", "PandarAT128.csv", "at128/1679653308406038376",
+   "PandarAT128.dat", "hesai", 0, 1.f, 180.f},
+  {"PandarQT64", "Dual", "PandarQT64.csv", "qt64/1673401195788312575", "", "hesai", 0, 0.1f, 60.f},
+  {"PandarXT32", "Dual", "PandarXT32.csv", "xt32/1673400677802009732", "", "hesai", 0, 0.05f,
+   120.f},
+  {"PandarXT32M", "LastStrongest", "PandarXT32M.csv", "xt32m/1660893203042895158", "", "hesai", 0,
+   0.5f, 300.f}};
 
 // Compares geometrical output of decoder against pre-recorded reference pointcloud.
 TEST_P(DecoderTest, TestPcd)

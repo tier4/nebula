@@ -35,7 +35,7 @@
 
     <let name="rotation_speed" value="200" if="$(eval '\'$(var sensor_model)\' == \'PandarAT128\'')"/>
 
-    <node_container pkg="rclcpp_components" exec="component_container" name="nebula_container" 
+    <node_container pkg="rclcpp_components" exec="component_container" name="nebula_container"
         output="screen" ros_args="--log-level $(var debug_level)" namespace="">
         <composable_node pkg="nebula_ros" plugin="HesaiRosWrapper"
                name="nebula_hesai">
@@ -47,7 +47,7 @@
             <param name="calibration_file" value="$(var calibration_file)"/>
             <param name="correction_file" value="$(var correction_file)"/>
             <param name="launch_hw" value="$(var launch_hw)"/>
-    
+
             <param name="host_ip" value="$(var host_ip)"/>
             <param name="data_port" value="$(var data_port)"/>
             <param name="gnss_port" value="$(var gnss_port)"/>
@@ -62,7 +62,7 @@
             <param name="ptp_domain" value="$(var ptp_domain)"/>
             <param name="ptp_transport_type" value="$(var ptp_transport_type)"/>
             <param name="ptp_switch_type" value="$(var ptp_switch_type)"/>
-    
+
             <param name="diag_span" value="$(var diag_span)"/>
         </composable_node>
     </node_container>

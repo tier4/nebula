@@ -16,6 +16,8 @@
 #include <filesystem>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -23,22 +25,26 @@ namespace ros
 {
 class HesaiDecoderWrapper
 {
-  using get_calibration_result_t =
-      nebula::util::expected<std::shared_ptr<drivers::HesaiCalibrationConfigurationBase>, nebula::Status>;
+  using get_calibration_result_t = nebula::util::expected<
+    std::shared_ptr<drivers::HesaiCalibrationConfigurationBase>, nebula::Status>;
 
 public:
-  HesaiDecoderWrapper(rclcpp::Node* const parent_node,
-                      const std::shared_ptr<nebula::drivers::HesaiHwInterface>& hw_interface,
-                      std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration>& config);
+  HesaiDecoderWrapper(
+    rclcpp::Node * const parent_node,
+    const std::shared_ptr<nebula::drivers::HesaiHwInterface> & hw_interface,
+    std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config);
 
   void ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
-  void OnConfigChange(const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration>& new_config);
+  void OnConfigChange(
+    const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config);
 
-  void
-  OnCalibrationChange(const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase>& new_calibration);
+  void OnCalibrationChange(
+    const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> &
+      new_calibration);
 
-  rcl_interfaces::msg::SetParametersResult OnParameterChange(const std::vector<rclcpp::Parameter>& p);
+  rcl_interfaces::msg::SetParametersResult OnParameterChange(
+    const std::vector<rclcpp::Parameter> & p);
 
   nebula::Status Status();
 
@@ -48,19 +54,23 @@ private:
   /// 2. If downloaded file available, load that file
   /// 3. Load the file given by `calibration_file_path`
   /// @param calibration_file_path The file to use if no better option is available
-  /// @param ignore_others If true, skip straight so step 3 above, ignoring better calibration options
+  /// @param ignore_others If true, skip straight so step 3 above, ignoring better calibration
+  /// options
   /// @return The calibration data if successful, or an error code if not
-  get_calibration_result_t GetCalibrationData(const std::string& calibration_file_path, bool ignore_others = false);
+  get_calibration_result_t GetCalibrationData(
+    const std::string & calibration_file_path, bool ignore_others = false);
 
-  void PublishCloud(std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
-                    const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr& publisher);
+  void PublishCloud(
+    std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
+    const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher);
 
   /// @brief Convert seconds to chrono::nanoseconds
   /// @param seconds
   /// @return chrono::nanoseconds
   static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
   {
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(seconds));
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::duration<double>(seconds));
   }
 
   nebula::Status status_;

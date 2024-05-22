@@ -221,7 +221,8 @@ uint64_t get_timestamp_ns(const PacketT & packet)
   return packet.tail.date_time.get_seconds() * 1000000000 + packet.tail.timestamp * 1000;
 }
 
-/// @brief Get the distance unit of the given packet type in meters. Distance values in the packet, multiplied by this value, yield the distance in meters.
+/// @brief Get the distance unit of the given packet type in meters. Distance values in the packet,
+/// multiplied by this value, yield the distance in meters.
 /// @tparam PacketT The packet type
 /// @param packet The packet to get the distance unit from
 /// @return The distance unit in meters

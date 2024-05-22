@@ -30,6 +30,7 @@
 
 #include <memory>
 #include <mutex>
+#include <string>
 #include <vector>
 
 namespace nebula
@@ -168,6 +169,12 @@ private:
   /// @return A string description of all errors in this code
   std::string PrettyPrintPTCError(ptc_error_t error_code);
 
+  /// @brief Checks if the data size matches that of the struct to be parsed, and parses the struct.
+  /// If data is too small, a std::runtime_error is thrown. If data is too large, a warning is
+  /// printed and the struct is parsed with the first sizeof(T) bytes.
+  template <typename T>
+  T CheckSizeAndParse(const std::vector<uint8_t> & data);
+
   /// @brief Send a PTC request with an optional payload, and return the full response payload.
   /// Blocking.
   /// @param command_id PTC command number.
@@ -217,8 +224,7 @@ public:
   /// @brief Registering callback for PandarScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterScanCallback(
-    std::function<void(std::vector<uint8_t> &)> scan_callback);
+  Status RegisterScanCallback(std::function<void(std::vector<uint8_t> &)> scan_callback);
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_CALIBRATION
   /// @return Resulting status
   std::string GetLidarCalibrationString();
