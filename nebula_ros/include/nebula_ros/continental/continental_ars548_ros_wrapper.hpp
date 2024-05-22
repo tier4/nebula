@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <ament_index_cpp/get_package_prefix.hpp>
-#include <boost_tcp_driver/tcp_driver.hpp>
 #include <nebula_common/continental/continental_ars548.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/nebula_status.hpp>
@@ -31,8 +29,6 @@
 #include <continental_msgs/msg/continental_ars548_object_list.hpp>
 #include <nebula_msgs/msg/nebula_packet.hpp>
 
-#include <array>
-#include <chrono>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -61,7 +57,7 @@ public:
 
 private:
   /// @brief Callback from the hw interface's raw data
-  void ReceivePacketCallback(std::vector<uint8_t> & packet);
+  void ReceivePacketCallback(std::unique_ptr<nebula_msgs::msg::NebulaPacket> msg_ptr);
 
   /// @brief Callback from replayed NebulaPackets
   void ReceivePacketsMessageCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg);
@@ -83,7 +79,7 @@ private:
   Status wrapper_status_;
 
   std::shared_ptr<const drivers::continental_ars548::ContinentalArs548SensorConfiguration>
-    sensor_cfg_ptr_{};
+    config_ptr_{};
 
   /// @brief Stores received packets that have not been processed yet by the decoder thread
   mt_queue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
@@ -99,7 +95,7 @@ private:
 
   std::mutex mtx_config_;
 
-  OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_;
+  OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_{};
 };
 
 }  // namespace ros

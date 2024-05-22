@@ -34,7 +34,6 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
-#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <unordered_set>
@@ -131,7 +130,7 @@ private:
   rclcpp::Logger logger_;
 
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration>
-    sensor_cfg_{};
+    config_ptr_{};
 
   std::shared_ptr<drivers::continental_ars548::ContinentalArs548Decoder> driver_ptr_{};
   std::mutex mtx_driver_ptr_;

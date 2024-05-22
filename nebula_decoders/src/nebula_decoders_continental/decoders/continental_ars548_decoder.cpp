@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp"
-
-#include "nebula_common/continental/continental_ars548.hpp"
+#include <nebula_common/continental/continental_ars548.hpp>
+#include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
 
 #include <cmath>
 #include <utility>
@@ -29,7 +28,7 @@ ContinentalArs548Decoder::ContinentalArs548Decoder(
   const std::shared_ptr<const continental_ars548::ContinentalArs548SensorConfiguration> &
     sensor_configuration)
 {
-  sensor_configuration_ = sensor_configuration;
+  config_ptr_ = sensor_configuration;
 }
 
 Status ContinentalArs548Decoder::GetStatus()
@@ -121,9 +120,9 @@ bool ContinentalArs548Decoder::ParseDetectionsListPacket(
 
   std::memcpy(&detection_list, packet_msg->data.data(), sizeof(DetectionListPacket));
 
-  msg.header.frame_id = sensor_configuration_->frame_id;
+  msg.header.frame_id = config_ptr_->frame_id;
 
-  if (sensor_configuration_->use_sensor_time) {
+  if (config_ptr_->use_sensor_time) {
     msg.header.stamp.nanosec = detection_list.stamp.timestamp_nanoseconds.value();
     msg.header.stamp.sec = detection_list.stamp.timestamp_seconds.value();
   } else {
@@ -246,9 +245,9 @@ bool ContinentalArs548Decoder::ParseObjectsListPacket(
 
   std::memcpy(&object_list, packet_msg->data.data(), sizeof(object_list));
 
-  msg.header.frame_id = sensor_configuration_->object_frame;
+  msg.header.frame_id = config_ptr_->object_frame;
 
-  if (sensor_configuration_->use_sensor_time) {
+  if (config_ptr_->use_sensor_time) {
     msg.header.stamp.nanosec = object_list.stamp.timestamp_nanoseconds.value();
     msg.header.stamp.sec = object_list.stamp.timestamp_seconds.value();
   } else {

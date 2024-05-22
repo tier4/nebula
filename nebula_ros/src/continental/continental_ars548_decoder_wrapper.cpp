@@ -23,21 +23,21 @@ namespace ros
 ContinentalArs548DecoderWrapper::ContinentalArs548DecoderWrapper(
   rclcpp::Node * const parent_node,
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
-    config,
+    config_ptr,
   bool launch_hw)
 : status_(nebula::Status::NOT_INITIALIZED),
   logger_(parent_node->get_logger().get_child("ContinentalArs548Decoder")),
-  sensor_cfg_(config)
+  config_ptr_(config_ptr)
 {
   using std::chrono_literals::operator""us;
-  if (!config) {
+  if (!config_ptr) {
     throw std::runtime_error(
       "ContinentalArs548DecoderWrapper cannot be instantiated without a valid config!");
   }
 
   RCLCPP_INFO(logger_, "Starting Decoder");
 
-  InitializeDriver(config);
+  InitializeDriver(config_ptr);
   status_ = driver_ptr_->GetStatus();
 
   if (Status::OK != status_) {
@@ -110,11 +110,12 @@ Status ContinentalArs548DecoderWrapper::InitializeDriver(
 
 void ContinentalArs548DecoderWrapper::OnConfigChange(
   const std::shared_ptr<
-    const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> & new_config)
+    const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
+    new_config_ptr)
 {
   std::lock_guard lock(mtx_driver_ptr_);
-  InitializeDriver(new_config);
-  sensor_cfg_ = new_config;
+  InitializeDriver(new_config_ptr);
+  config_ptr_ = new_config_ptr;
 }
 
 void ContinentalArs548DecoderWrapper::ProcessPacket(
@@ -196,14 +197,14 @@ void ContinentalArs548DecoderWrapper::SensorStatusCallback(
   diagnostic_msgs::msg::DiagnosticArray diagnostic_array_msg;
   diagnostic_array_msg.header.stamp.sec = sensor_status.timestamp_seconds;
   diagnostic_array_msg.header.stamp.nanosec = sensor_status.timestamp_nanoseconds;
-  diagnostic_array_msg.header.frame_id = sensor_cfg_->frame_id;
+  diagnostic_array_msg.header.frame_id = config_ptr_->frame_id;
 
   diagnostic_array_msg.status.resize(1);
   auto & status = diagnostic_array_msg.status[0];
   status.values.reserve(36);
   status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  status.hardware_id = sensor_cfg_->frame_id;
-  status.name = sensor_cfg_->frame_id;
+  status.hardware_id = config_ptr_->frame_id;
+  status.name = config_ptr_->frame_id;
   status.message = "Diagnostic messages from ARS548";
 
   auto add_diagnostic = [&status](const std::string & key, const std::string & value) {
@@ -592,7 +593,7 @@ visualization_msgs::msg::MarkerArray ContinentalArs548DecoderWrapper::ConvertToM
     current_ids.emplace(object.object_id);
 
     visualization_msgs::msg::Marker box_marker;
-    box_marker.header.frame_id = sensor_cfg_->object_frame;
+    box_marker.header.frame_id = config_ptr_->object_frame;
     box_marker.header.stamp = msg.header.stamp;
     box_marker.ns = "boxes";
     box_marker.id = object.object_id;
@@ -673,7 +674,7 @@ visualization_msgs::msg::MarkerArray ContinentalArs548DecoderWrapper::ConvertToM
     }
 
     visualization_msgs::msg::Marker delete_marker;
-    delete_marker.header.frame_id = sensor_cfg_->object_frame;
+    delete_marker.header.frame_id = config_ptr_->object_frame;
     delete_marker.header.stamp = msg.header.stamp;
     delete_marker.ns = "boxes";
     delete_marker.id = previous_id;
