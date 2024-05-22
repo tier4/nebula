@@ -155,7 +155,7 @@ HesaiDecoderWrapper::get_calibration_result_t HesaiDecoderWrapper::GetCalibratio
     calibration_file_path_from_sensor = calibration_file_path.substr(0, ext_pos);
     // TODO(mojomex): if multiple different sensors of the same type are used, this will mix up
     // their calibration data
-    calibration_file_path_from_sensor += "_from_sensor";
+    calibration_file_path_from_sensor += "_from_sensor_" + sensor_cfg_->sensor_ip;
     calibration_file_path_from_sensor +=
       calibration_file_path.substr(ext_pos, calibration_file_path.size() - ext_pos);
   }
