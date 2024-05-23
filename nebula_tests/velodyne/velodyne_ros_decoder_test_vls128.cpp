@@ -317,7 +317,6 @@ void VelodyneRosDecoderTest::ReadBag()
 
   storage_options.uri = bag_path;
   storage_options.storage_id = storage_id;
-  converter_options.output_serialization_format = format;
   rclcpp::Serialization<velodyne_msgs::msg::VelodyneScan> serialization;
   nebula::drivers::NebulaPointCloudPtr pointcloud(new nebula::drivers::NebulaPointCloud);
   pcl::PointCloud<pcl::PointXYZ>::Ptr ref_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
