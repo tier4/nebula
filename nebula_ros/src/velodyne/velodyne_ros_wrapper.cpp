@@ -150,7 +150,7 @@ void VelodyneRosWrapper::ReceiveScanMessageCallback(std::unique_ptr<velodyne_msg
   if (hw_interface_wrapper_)
   {
     RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 1000,
-                          "Ignoring received PandarScan. Launch with launch_hw:=false to enable PandarScan replay.");
+                          "Ignoring received VelodyneScan. Launch with launch_hw:=false to enable VelodyneScan replay.");
     return;
   }
 
