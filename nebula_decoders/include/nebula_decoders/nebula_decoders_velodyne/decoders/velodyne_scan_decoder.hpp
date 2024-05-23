@@ -1,26 +1,26 @@
 #ifndef NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
 #define NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
+#include "nebula_common/point_types.hpp"
+#include "nebula_common/velodyne/velodyne_calibration_decoder.hpp"
+#include "nebula_common/velodyne/velodyne_common.hpp"
+
 #include <rclcpp/rclcpp.hpp>
+
+#include <velodyne_msgs/msg/velodyne_packet.hpp>
+#include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 #include <boost/format.hpp>
 
+#include <angles/angles.h>
 #include <pcl/point_cloud.h>
 
 #include <cerrno>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 #include <string>
-#include <vector>
-
-#include "nebula_common/point_types.hpp"
-#include "nebula_common/velodyne/velodyne_calibration_decoder.hpp"
-#include "nebula_common/velodyne/velodyne_common.hpp"
-
-#include <velodyne_msgs/msg/velodyne_packet.hpp>
-#include <velodyne_msgs/msg/velodyne_scan.hpp>
-
 #include <tuple>
-#include <angles/angles.h> 
+#include <vector>
 
 namespace nebula
 {
@@ -133,7 +133,7 @@ enum RETURN_TYPE {
 /// @brief Base class for Velodyne LiDAR decoder
 class VelodyneScanDecoder
 {
-private: 
+private:
   size_t processed_packets_{0};
   uint32_t prev_packet_first_azm_phased_{0};
   bool has_scanned_{false};
@@ -145,18 +145,20 @@ protected:
   /// @param packet The packet buffer to extract azimuths from
   /// @param packet_seconds The seconds-since-epoch part of the packet's timestamp
   /// @param phase The sensor's scan phase used for scan cutting
-  void checkAndHandleScanComplete(const std::vector<uint8_t> & packet, int32_t packet_seconds, const uint32_t phase) {
-    if  (has_scanned_) {
+  void checkAndHandleScanComplete(
+    const std::vector<uint8_t> & packet, int32_t packet_seconds, const uint32_t phase)
+  {
+    if (has_scanned_) {
       processed_packets_ = 0;
       reset_pointcloud(packet_seconds);
     }
-    
+
     has_scanned_ = false;
     processed_packets_++;
 
     // Check if scan is complete
     uint32_t packet_first_azm = packet[2];  // lower word of azimuth block 0
-    packet_first_azm |= packet[3] << 8;  // higher word of azimuth block 0
+    packet_first_azm |= packet[3] << 8;     // higher word of azimuth block 0
 
     uint32_t packet_last_azm = packet[1102];
     packet_last_azm |= packet[1103] << 8;
@@ -204,9 +206,7 @@ public:
 
   /// @brief Virtual function for getting the flag indicating whether one cycle is ready
   /// @return Readied
-  bool hasScanned() {
-    return has_scanned_;
-  }
+  bool hasScanned() { return has_scanned_; }
 
   /// @brief Calculation of points in each packet
   /// @return # of points

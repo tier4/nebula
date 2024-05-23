@@ -1,13 +1,12 @@
 #ifndef NEBULA_VelodyneRosDecoderTestVls128_H
 #define NEBULA_VelodyneRosDecoderTestVls128_H
 
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_common/velodyne/velodyne_common.hpp"
-#include "nebula_decoders/nebula_decoders_velodyne/velodyne_driver.hpp"
-#include "nebula_ros/common/nebula_driver_ros_wrapper_base.hpp"
-
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_common/nebula_status.hpp>
+#include <nebula_common/velodyne/velodyne_common.hpp>
+#include <nebula_decoders/nebula_decoders_velodyne/velodyne_driver.hpp>
+#include <nebula_ros/common/nebula_driver_ros_wrapper_base.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
@@ -15,6 +14,9 @@
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 #include <gtest/gtest.h>
+
+#include <memory>
+#include <string>
 
 namespace nebula
 {
@@ -49,16 +51,7 @@ public:
   void ReceiveScanMsgCallback(const velodyne_msgs::msg::VelodyneScan::SharedPtr scan_msg);
   Status GetStatus();
   void ReadBag();
-  /*
-  void SetUp() override {
-    // Setup things that should occur before every test instance should go here
-    RCLCPP_ERROR_STREAM(this->get_logger(), "DONE WITH SETUP!!");
-  }
 
-  void TearDown() override {
-    std::cout << "DONE WITH TEARDOWN" << std::endl;
-  }
-*/
 private:
   std::string bag_path;
   std::string storage_id;

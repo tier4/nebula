@@ -1,9 +1,9 @@
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vls128_decoder.hpp"
 
+#include <angles/angles.h>
+
 #include <cmath>
 #include <utility>
-
-#include <angles/angles.h> 
 
 namespace nebula
 {
@@ -13,7 +13,8 @@ namespace vls128
 {
 Vls128Decoder::Vls128Decoder(
   const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> & calibration_configuration)
+  const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> &
+    calibration_configuration)
 {
   sensor_configuration_ = sensor_configuration;
   calibration_configuration_ = calibration_configuration;
@@ -337,10 +338,10 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, int32_t packet_s
               current_point.intensity = intensity;
               scan_pc_->points.emplace_back(current_point);
             }  // 2nd scan area condition
-          }    // distance condition
-        }      // empty "else"
-      }        // (uint j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE)
-    }          // scan area condition
+          }  // distance condition
+        }  // empty "else"
+      }  // (uint j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE)
+    }  // scan area condition
   }  // for (uint block = 0; block < static_cast < uint > (BLOCKS_PER_PACKET - (4 * dual_return));
      // block++)
 }

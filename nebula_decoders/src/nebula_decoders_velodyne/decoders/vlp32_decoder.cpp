@@ -1,9 +1,9 @@
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vlp32_decoder.hpp"
 
+#include <angles/angles.h>
+
 #include <cmath>
 #include <utility>
-
-#include <angles/angles.h> 
 
 namespace nebula
 {
@@ -13,7 +13,8 @@ namespace vlp32
 {
 Vlp32Decoder::Vlp32Decoder(
   const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> & calibration_configuration)
+  const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> &
+    calibration_configuration)
 {
   sensor_configuration_ = sensor_configuration;
   calibration_configuration_ = calibration_configuration;

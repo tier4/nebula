@@ -1,21 +1,22 @@
 #include "velodyne_ros_decoder_test_vls128.hpp"
 
-#include "rclcpp/serialization.hpp"
-#include "rclcpp/serialized_message.hpp"
-#include "rcpputils/filesystem_helper.hpp"
-#include "rcutils/time.h"
-#include "rosbag2_cpp/reader.hpp"
-#include "rosbag2_cpp/readers/sequential_reader.hpp"
-#include "rosbag2_cpp/writer.hpp"
-#include "rosbag2_cpp/writers/sequential_writer.hpp"
-#include "rosbag2_storage/storage_options.hpp"
+#include <rclcpp/serialization.hpp>
+#include <rclcpp/serialized_message.hpp>
+#include <rcpputils/filesystem_helper.hpp>
+#include <rosbag2_cpp/reader.hpp>
+#include <rosbag2_cpp/readers/sequential_reader.hpp>
+#include <rosbag2_cpp/writer.hpp>
+#include <rosbag2_cpp/writers/sequential_writer.hpp>
+#include <rosbag2_storage/storage_options.hpp>
 
 #include <gtest/gtest.h>
+#include <rcutils/time.h>
 
 #include <filesystem>
 #include <memory>
 #include <regex>
 #include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -38,8 +39,8 @@ VelodyneRosDecoderTest::VelodyneRosDecoderTest(
   calibration_cfg_ptr_ =
     std::make_shared<const drivers::VelodyneCalibrationConfiguration>(calibration_configuration);
 
-  sensor_cfg_ptr_ = std::make_shared<const drivers::VelodyneSensorConfiguration>(sensor_configuration);
-
+  sensor_cfg_ptr_ =
+    std::make_shared<const drivers::VelodyneSensorConfiguration>(sensor_configuration);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
   wrapper_status_ = InitializeDriver(sensor_cfg_ptr_, calibration_cfg_ptr_);
@@ -52,7 +53,8 @@ Status VelodyneRosDecoderTest::InitializeDriver(
   std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration)
 {
   // driver should be initialized here with proper decoder
-  driver_ptr_ = std::make_shared<drivers::VelodyneDriver>(sensor_configuration, calibration_configuration);
+  driver_ptr_ =
+    std::make_shared<drivers::VelodyneDriver>(sensor_configuration, calibration_configuration);
   return driver_ptr_->GetStatus();
 }
 
@@ -224,8 +226,7 @@ Status VelodyneRosDecoderTest::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>(
-      "target_topic", "/velodyne_packets", descriptor);
+    this->declare_parameter<std::string>("target_topic", "/velodyne_packets", descriptor);
     target_topic = this->get_parameter("target_topic").as_string();
   }
 
@@ -339,8 +340,7 @@ void VelodyneRosDecoderTest::ReadBag()
         auto extracted_msg_ptr = std::make_shared<velodyne_msgs::msg::VelodyneScan>(extracted_msg);
         for (auto & pkt : extracted_msg.packets) {
           auto pointcloud_ts = driver_ptr_->ParseCloudPacket(
-            std::vector<uint8_t>(pkt.data.begin(), pkt.data.end()),
-            pkt.stamp.sec);
+            std::vector<uint8_t>(pkt.data.begin(), pkt.data.end()), pkt.stamp.sec);
           auto pointcloud = std::get<0>(pointcloud_ts);
 
           if (!pointcloud) {
@@ -357,7 +357,6 @@ void VelodyneRosDecoderTest::ReadBag()
             std::cout << rt << " loaded: " << target_pcd_path << std::endl;
             checkPCDs(pointcloud, ref_pointcloud);
             check_cnt++;
-            // ref_pointcloud.reset(new nebula::drivers::NebulaPointCloud);
             ref_pointcloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
           }
           pointcloud.reset(new nebula::drivers::NebulaPointCloud);

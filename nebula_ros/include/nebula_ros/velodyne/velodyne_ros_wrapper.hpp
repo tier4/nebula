@@ -24,9 +24,11 @@
 
 #include <array>
 #include <chrono>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <thread>
+#include <vector>
 
 namespace nebula
 {

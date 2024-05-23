@@ -18,13 +18,14 @@
 #include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_common/velodyne/velodyne_common.hpp>
 #include <nebula_common/velodyne/velodyne_status.hpp>
-
 #include <rclcpp/rclcpp.hpp>
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -37,7 +38,7 @@ private:
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
   std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration_;
-  std::function<void(std::vector<uint8_t>&)>
+  std::function<void(std::vector<uint8_t> &)>
     cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
 
   std::shared_ptr<boost::asio::io_context> boost_ctx_;
@@ -57,7 +58,7 @@ private:
   void StringCallback(const std::string & str);
 
   std::string HttpGetRequest(const std::string & endpoint);
-  std::string HttpPostRequest(const std::string & endpoint,  const std::string & body);
+  std::string HttpPostRequest(const std::string & endpoint, const std::string & body);
 
   /// @brief Get a one-off HTTP client to communicate with the hardware
   /// @param ctx IO Context
@@ -112,8 +113,7 @@ public:
   /// @brief Printing calibration configuration
   /// @param calibration_configuration CalibrationConfiguration for the checking
   /// @return Resulting status
-  Status GetCalibrationConfiguration(
-    CalibrationConfigurationBase & calibration_configuration);
+  Status GetCalibrationConfiguration(CalibrationConfigurationBase & calibration_configuration);
   /// @brief Initializing sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
@@ -128,8 +128,7 @@ public:
   /// @brief Registering callback for PandarScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterScanCallback(
-    std::function<void(std::vector<uint8_t>& packet)> scan_callback);
+  Status RegisterScanCallback(std::function<void(std::vector<uint8_t> & packet)> scan_callback);
 
   /// @brief Parsing JSON string to property_tree
   /// @param str JSON string

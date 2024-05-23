@@ -14,6 +14,8 @@
 
 #include <array>
 #include <memory>
+#include <string>
+#include <tuple>
 
 namespace nebula
 {
@@ -267,7 +269,6 @@ private:
 
   uint16_t diag_span_;
   bool show_advanced_diagnostics_;
-
 
   rclcpp::TimerBase::SharedPtr diagnostics_snapshot_timer_;
   rclcpp::TimerBase::SharedPtr diagnostics_update_timer_;

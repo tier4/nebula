@@ -36,7 +36,8 @@ VelodyneRosDecoderTest::VelodyneRosDecoderTest(
   calibration_cfg_ptr_ =
     std::make_shared<const drivers::VelodyneCalibrationConfiguration>(calibration_configuration);
 
-  sensor_cfg_ptr_ = std::make_shared<const drivers::VelodyneSensorConfiguration>(sensor_configuration);
+  sensor_cfg_ptr_ =
+    std::make_shared<const drivers::VelodyneSensorConfiguration>(sensor_configuration);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
   wrapper_status_ = InitializeDriver(sensor_cfg_ptr_, calibration_cfg_ptr_);
@@ -49,7 +50,8 @@ Status VelodyneRosDecoderTest::InitializeDriver(
   std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration)
 {
   // driver should be initialized here with proper decoder
-  driver_ptr_ = std::make_shared<drivers::VelodyneDriver>(sensor_configuration, calibration_configuration);
+  driver_ptr_ =
+    std::make_shared<drivers::VelodyneDriver>(sensor_configuration, calibration_configuration);
   return driver_ptr_->GetStatus();
 }
 
@@ -314,10 +316,9 @@ void VelodyneRosDecoderTest::ReadBag()
 
   storage_options.uri = bag_path;
   storage_options.storage_id = storage_id;
-  converter_options.output_serialization_format = format;  //"cdr";
+  converter_options.output_serialization_format = format;
   rclcpp::Serialization<velodyne_msgs::msg::VelodyneScan> serialization;
   nebula::drivers::NebulaPointCloudPtr pointcloud(new nebula::drivers::NebulaPointCloud);
-  // nebula::drivers::NebulaPointCloudPtr ref_pointcloud(new nebula::drivers::NebulaPointCloud);
   pcl::PointCloud<pcl::PointXYZ>::Ptr ref_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
   {
     rosbag2_cpp::Reader bag_reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
@@ -338,8 +339,7 @@ void VelodyneRosDecoderTest::ReadBag()
         auto extracted_msg_ptr = std::make_shared<velodyne_msgs::msg::VelodyneScan>(extracted_msg);
         for (auto & pkt : extracted_msg.packets) {
           auto pointcloud_ts = driver_ptr_->ParseCloudPacket(
-            std::vector<uint8_t>(pkt.data.begin(), pkt.data.end()),
-            pkt.stamp.sec);
+            std::vector<uint8_t>(pkt.data.begin(), pkt.data.end()), pkt.stamp.sec);
           auto pointcloud = std::get<0>(pointcloud_ts);
 
           if (!pointcloud) {
@@ -357,7 +357,6 @@ void VelodyneRosDecoderTest::ReadBag()
             std::cout << rt << " loaded: " << target_pcd_path << std::endl;
             checkPCDs(pointcloud, ref_pointcloud);
             check_cnt++;
-            // ref_pointcloud.reset(new nebula::drivers::NebulaPointCloud);
             ref_pointcloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
           }
           pointcloud.reset(new nebula::drivers::NebulaPointCloud);

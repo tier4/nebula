@@ -6,6 +6,9 @@
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 #include <array>
+#include <memory>
+#include <tuple>
+#include <vector>
 
 namespace nebula
 {
@@ -22,7 +25,8 @@ public:
   /// @param calibration_configuration Calibration for this decoder
   explicit Vls128Decoder(
     const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> & calibration_configuration);
+    const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> &
+      calibration_configuration);
   /// @brief Parsing and shaping VelodynePacket
   /// @param velodyne_packet
   void unpack(const std::vector<uint8_t> & packet, int32_t packet_seconds) override;

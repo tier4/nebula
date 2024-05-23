@@ -14,8 +14,11 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <tuple>
+#include <vector>
 
 namespace nebula
 {
@@ -37,7 +40,8 @@ public:
   /// @param calibration_configuration CalibrationConfiguration for this driver
   VelodyneDriver(
     const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> & calibration_configuration);
+    const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> &
+      calibration_configuration);
 
   /// @brief Setting CalibrationConfiguration (not used)
   /// @param calibration_configuration

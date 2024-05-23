@@ -10,7 +10,8 @@ namespace drivers
 {
 VelodyneDriver::VelodyneDriver(
   const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> & calibration_configuration)
+  const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> &
+    calibration_configuration)
 {
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;
@@ -51,16 +52,14 @@ std::tuple<drivers::NebulaPointCloudPtr, double> VelodyneDriver::ParseCloudPacke
 {
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
 
-  if (driver_status_ != nebula::Status::OK)
-  {
+  if (driver_status_ != nebula::Status::OK) {
     auto logger = rclcpp::get_logger("VelodyneDriver");
     RCLCPP_ERROR(logger, "Driver not OK.");
     return pointcloud;
   }
 
   scan_decoder_->unpack(packet, packet_seconds);
-  if (scan_decoder_->hasScanned())
-  {
+  if (scan_decoder_->hasScanned()) {
     pointcloud = scan_decoder_->get_pointcloud();
   }
 

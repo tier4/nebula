@@ -24,7 +24,8 @@ std::string VelodyneHwInterface::HttpGetRequest(const std::string & endpoint)
   return response;
 }
 
-std::string VelodyneHwInterface::HttpPostRequest(const std::string & endpoint, const std::string & body)
+std::string VelodyneHwInterface::HttpPostRequest(
+  const std::string & endpoint, const std::string & body)
 {
   std::lock_guard lock(mtx_inflight_request_);
   if (!http_client_driver_->client()->isOpen()) {
@@ -72,7 +73,7 @@ Status VelodyneHwInterface::SensorInterfaceStart()
 }
 
 Status VelodyneHwInterface::RegisterScanCallback(
-  std::function<void(std::vector<uint8_t>& packet)> scan_callback)
+  std::function<void(std::vector<uint8_t> & packet)> scan_callback)
 {
   cloud_packet_callback_ = std::move(scan_callback);
   return Status::OK;
@@ -389,8 +390,8 @@ VelodyneStatus VelodyneHwInterface::SetNetGateway(std::string gateway)
 
 VelodyneStatus VelodyneHwInterface::SetNetDhcp(bool use_dhcp)
 {
-  auto rt = HttpPostRequest(
-    TARGET_NET, (boost::format("dhcp=%s") % (use_dhcp ? "on" : "off")).str());
+  auto rt =
+    HttpPostRequest(TARGET_NET, (boost::format("dhcp=%s") % (use_dhcp ? "on" : "off")).str());
   StringCallback(rt);
   return Status::OK;
 }

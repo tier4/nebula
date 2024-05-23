@@ -26,7 +26,8 @@ public:
   /// @param calibration_configuration Calibration for this decoder
   explicit Vlp16Decoder(
     const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> & calibration_configuration);
+    const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> &
+      calibration_configuration);
   /// @brief Parsing and shaping VelodynePacket
   /// @param velodyne_packet
   void unpack(const std::vector<uint8_t> & packet, int32_t packet_seconds) override;

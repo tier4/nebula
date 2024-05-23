@@ -35,10 +35,11 @@ VelodyneRosOfflineExtractBag::VelodyneRosOfflineExtractBag(
   calibration_cfg_ptr_ =
     std::make_shared<const drivers::VelodyneCalibrationConfiguration>(calibration_configuration);
 
-  sensor_cfg_ptr_ = std::make_shared<const drivers::VelodyneSensorConfiguration>(sensor_configuration);
+  sensor_cfg_ptr_ =
+    std::make_shared<const drivers::VelodyneSensorConfiguration>(sensor_configuration);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
-  wrapper_status_ = InitializeDriver(sensor_cfg_ptr_ ,calibration_cfg_ptr_);
+  wrapper_status_ = InitializeDriver(sensor_cfg_ptr_, calibration_cfg_ptr_);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 }
@@ -48,11 +49,15 @@ Status VelodyneRosOfflineExtractBag::InitializeDriver(
   std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration)
 {
   // driver should be initialized here with proper decoder
-  driver_ptr_ = std::make_shared<drivers::VelodyneDriver>(sensor_configuration, calibration_configuration);
+  driver_ptr_ =
+    std::make_shared<drivers::VelodyneDriver>(sensor_configuration, calibration_configuration);
   return driver_ptr_->GetStatus();
 }
 
-Status VelodyneRosOfflineExtractBag::GetStatus() {return wrapper_status_;}
+Status VelodyneRosOfflineExtractBag::GetStatus()
+{
+  return wrapper_status_;
+}
 
 Status VelodyneRosOfflineExtractBag::GetParameters(
   drivers::VelodyneSensorConfiguration & sensor_configuration,
@@ -356,7 +361,7 @@ Status VelodyneRosOfflineExtractBag::ReadBag()
             writer_->open(storage_options_w, converter_options_w);
             writer_->create_topic(
               {bag_message->topic_name, "velodyne_msgs/msg/VelodyneScan",
-                rmw_get_serialization_format(), ""});
+               rmw_get_serialization_format(), ""});
             needs_open = false;
           }
           writer_->write(bag_message);

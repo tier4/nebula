@@ -17,6 +17,8 @@
 #include <filesystem>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
