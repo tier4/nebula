@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Radar Continental ARS548 parameters.",
+  "type": "object",
+  "definitions": {
+    "ARS548": {
+      "type": "object",
+      "properties": {
+      },
+      "allOf": [
+        {
+          "$ref": "sub/continental.json#/definitions/continental"
+        }
+      ],
+      "required": [
+      ]
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/ARS548"
+        }
+      },
+      "required": [
+        "ros__parameters"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "/**"
+  ],
+  "additionalProperties": false
+}

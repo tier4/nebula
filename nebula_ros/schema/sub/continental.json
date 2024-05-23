@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Radar Continental common parameters.",
+  "type": "object",
+  "definitions": {
+    "continental": {
+      "type": "object",
+      "properties": {
+        "multicast_ip": {
+          "type": "string",
+          "default": "224.0.0.2",
+          "pattern": "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
+          "readOnly": true,
+          "description": "Multicast IPv4 address."
+        },
+        "sensor_model": {
+          "type": "string",
+          "readOnly": true,
+          "enum": [
+            "ARS548"
+          ],
+          "description": "Radar Continental model."
+        },
+        "configuration_host_port": {
+          "type": "integer",
+          "default": 42401,
+          "minimum": 0,
+          "readOnly": true,
+          "description": "Host configuration port."
+        },
+        "configuration_sensor_port": {
+          "type": "integer",
+          "default": 42101,
+          "minimum": 0,
+          "readOnly": true,
+          "description": "Sensor configuration port."
+        },
+        "use_sensor_time": {
+          "type": "boolean",
+          "default": false,
+          "readOnly": true,
+          "description": "Use sensor time."
+        },
+        "configuration_vehicle_length": {
+          "type": "number",
+          "default": 4.9,
+          "minimum": 0.0,
+          "readOnly": true,
+          "description": "New vehicle length."
+        },
+        "configuration_vehicle_width": {
+          "type": "number",
+          "default": 1.9,
+          "minimum": 0.0,
+          "readOnly": true,
+          "description": "New vehicle width."
+        },
+        "configuration_vehicle_height": {
+          "type": "number",
+          "default": 2.5,
+          "minimum": 0.0,
+          "readOnly": true,
+          "description": "New vehicle height."
+        },
+        "configuration_vehicle_wheelbase": {
+          "type": "number",
+          "default": 2.8,
+          "minimum": 0.0,
+          "readOnly": true,
+          "description": "New vehicle wheelbase"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "radar.json#/definitions/radar"
+        }
+      ],
+      "required": [
+        "multicast_ip",
+        "sensor_model",
+        "configuration_host_port",
+        "configuration_sensor_port",
+        "use_sensor_time",
+        "configuration_vehicle_length",
+        "configuration_vehicle_width",
+        "configuration_vehicle_height",
+        "configuration_vehicle_wheelbase"
+      ]
+    }
+  }
+}
