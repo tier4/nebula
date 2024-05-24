@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LiDAR Robosense Bpearl parameters.",
+  "type": "object",
+  "definitions": {
+    "Bpearl": {
+      "type": "object",
+      "properties": {
+      },
+      "allOf": [
+        {
+          "$ref": "sub/robosense.json#/definitions/robosense"
+        }
+      ],
+      "required": [
+      ]
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/Bpearl"
+        }
+      },
+      "required": [
+        "ros__parameters"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "/**"
+  ],
+  "additionalProperties": false
+}
