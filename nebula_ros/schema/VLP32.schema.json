@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LiDAR Velodyne VLP32 parameters.",
+  "type": "object",
+  "definitions": {
+    "VLP32": {
+      "type": "object",
+      "properties": {
+      },
+      "allOf": [
+        {
+          "$ref": "sub/velodyne.json#/definitions/velodyne"
+        }
+      ],
+      "required": [
+      ]
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/VLP32"
+        }
+      },
+      "required": [
+        "ros__parameters"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "/**"
+  ],
+  "additionalProperties": false
+}
