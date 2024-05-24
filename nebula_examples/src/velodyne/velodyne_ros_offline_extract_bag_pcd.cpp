@@ -33,30 +33,31 @@ VelodyneRosOfflineExtractBag::VelodyneRosOfflineExtractBag(
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
 
   calibration_cfg_ptr_ =
-    std::make_shared<drivers::VelodyneCalibrationConfiguration>(calibration_configuration);
+    std::make_shared<const drivers::VelodyneCalibrationConfiguration>(calibration_configuration);
 
-  sensor_cfg_ptr_ = std::make_shared<drivers::VelodyneSensorConfiguration>(sensor_configuration);
+  sensor_cfg_ptr_ =
+    std::make_shared<const drivers::VelodyneSensorConfiguration>(sensor_configuration);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
-  wrapper_status_ = InitializeDriver(
-    std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
-    std::static_pointer_cast<drivers::CalibrationConfigurationBase>(calibration_cfg_ptr_));
+  wrapper_status_ = InitializeDriver(sensor_cfg_ptr_, calibration_cfg_ptr_);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 }
 
 Status VelodyneRosOfflineExtractBag::InitializeDriver(
-  std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-  std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration)
+  std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_configuration,
+  std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration)
 {
   // driver should be initialized here with proper decoder
-  driver_ptr_ = std::make_shared<drivers::VelodyneDriver>(
-    std::static_pointer_cast<drivers::VelodyneSensorConfiguration>(sensor_configuration),
-    std::static_pointer_cast<drivers::VelodyneCalibrationConfiguration>(calibration_configuration));
+  driver_ptr_ =
+    std::make_shared<drivers::VelodyneDriver>(sensor_configuration, calibration_configuration);
   return driver_ptr_->GetStatus();
 }
 
-Status VelodyneRosOfflineExtractBag::GetStatus() {return wrapper_status_;}
+Status VelodyneRosOfflineExtractBag::GetStatus()
+{
+  return wrapper_status_;
+}
 
 Status VelodyneRosOfflineExtractBag::GetParameters(
   drivers::VelodyneSensorConfiguration & sensor_configuration,
@@ -338,37 +339,46 @@ Status VelodyneRosOfflineExtractBag::ReadBag()
         //        nebula::drivers::NebulaPointCloudPtr pointcloud =
         //        driver_ptr_->ConvertScanToPointcloud(
         //          std::make_shared<velodyne_msgs::msg::VelodyneScan>(extracted_msg));
-        auto pointcloud_ts = driver_ptr_->ConvertScanToPointcloud(
-          std::make_shared<velodyne_msgs::msg::VelodyneScan>(extracted_msg));
-        auto pointcloud = std::get<0>(pointcloud_ts);
-        auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
 
-        if (needs_open) {
-          const rosbag2_storage::StorageOptions storage_options_w(
-            {(o_dir / std::to_string(bag_message->time_stamp)).string(), "sqlite3"});
-          const rosbag2_cpp::ConverterOptions converter_options_w(
-            {rmw_get_serialization_format(), rmw_get_serialization_format()});
-          writer_ = std::make_unique<rosbag2_cpp::writers::SequentialWriter>();
-          writer_->open(storage_options_w, converter_options_w);
-          writer_->create_topic(
-            {bag_message->topic_name, "velodyne_msgs/msg/VelodyneScan",
-              rmw_get_serialization_format(), ""});
-          needs_open = false;
-        }
-        writer_->write(bag_message);
-        cnt++;
-        if (skip_num < cnt) {
-          out_cnt++;
-          if (only_xyz) {
-            pcl::PointCloud<pcl::PointXYZ> cloud_xyz;
-            pcl::copyPointCloud(*pointcloud, cloud_xyz);
-            writer.writeBinary((o_dir / fn).string(), cloud_xyz);
-          } else {
-            writer.writeBinary((o_dir / fn).string(), *pointcloud);
+        for (auto & pkt : extracted_msg.packets) {
+          auto pointcloud_ts = driver_ptr_->ParseCloudPacket(
+            std::vector<uint8_t>(pkt.data.begin(), std::next(pkt.data.begin(), pkt.data.size())),
+            pkt.stamp.sec);
+          auto pointcloud = std::get<0>(pointcloud_ts);
+
+          if (!pointcloud) {
+            continue;
           }
-        }
-        if (out_num <= out_cnt) {
-          break;
+
+          auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
+
+          if (needs_open) {
+            const rosbag2_storage::StorageOptions storage_options_w(
+              {(o_dir / std::to_string(bag_message->time_stamp)).string(), "sqlite3"});
+            const rosbag2_cpp::ConverterOptions converter_options_w(
+              {rmw_get_serialization_format(), rmw_get_serialization_format()});
+            writer_ = std::make_unique<rosbag2_cpp::writers::SequentialWriter>();
+            writer_->open(storage_options_w, converter_options_w);
+            writer_->create_topic(
+              {bag_message->topic_name, "velodyne_msgs/msg/VelodyneScan",
+               rmw_get_serialization_format(), ""});
+            needs_open = false;
+          }
+          writer_->write(bag_message);
+          cnt++;
+          if (skip_num < cnt) {
+            out_cnt++;
+            if (only_xyz) {
+              pcl::PointCloud<pcl::PointXYZ> cloud_xyz;
+              pcl::copyPointCloud(*pointcloud, cloud_xyz);
+              writer.writeBinary((o_dir / fn).string(), cloud_xyz);
+            } else {
+              writer.writeBinary((o_dir / fn).string(), *pointcloud);
+            }
+          }
+          if (out_num <= out_cnt) {
+            break;
+          }
         }
       }
     }

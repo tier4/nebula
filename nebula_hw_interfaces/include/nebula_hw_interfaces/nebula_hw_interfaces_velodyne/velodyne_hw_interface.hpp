@@ -11,50 +11,40 @@
 #if (BOOST_VERSION / 100 == 1074)  // Boost 1.74
 #define BOOST_ALLOW_DEPRECATED_HEADERS
 #endif
-#include "boost_tcp_driver/http_client_driver.hpp"
-#include "boost_udp_driver/udp_driver.hpp"
-#include "nebula_common/velodyne/velodyne_common.hpp"
-#include "nebula_common/velodyne/velodyne_status.hpp"
+
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 
+#include <boost_tcp_driver/http_client_driver.hpp>
+#include <boost_udp_driver/udp_driver.hpp>
+#include <nebula_common/velodyne/velodyne_common.hpp>
+#include <nebula_common/velodyne/velodyne_status.hpp>
 #include <rclcpp/rclcpp.hpp>
-
-#include <velodyne_msgs/msg/velodyne_packet.hpp>
-#include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
 namespace drivers
 {
 /// @brief Hardware interface of velodyne driver
-class VelodyneHwInterface : NebulaHwInterfaceBase
+class VelodyneHwInterface
 {
 private:
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
-  std::shared_ptr<VelodyneSensorConfiguration> sensor_configuration_;
-  std::shared_ptr<VelodyneCalibrationConfiguration> calibration_configuration_;
-  std::unique_ptr<velodyne_msgs::msg::VelodyneScan> scan_cloud_ptr_;
-  std::function<bool(size_t)>
-    is_valid_packet_; /*Lambda Function Array to verify proper packet size*/
-  std::function<void(std::unique_ptr<velodyne_msgs::msg::VelodyneScan> buffer)>
-    scan_reception_callback_; /**This function pointer is called when the scan is complete*/
-
-  uint16_t packet_first_azm_ = 0;
-  uint16_t packet_first_azm_phased_ = 0;
-  uint16_t packet_last_azm_ = 0;
-  uint16_t packet_last_azm_phased_ = 0;
-  uint16_t prev_packet_first_azm_phased_ = 0;
-  uint16_t phase_ = 0;
-  uint processed_packets_ = 0;
+  std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration_;
+  std::function<void(std::vector<uint8_t> &)>
+    cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
 
   std::shared_ptr<boost::asio::io_context> boost_ctx_;
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> http_client_driver_;
+
+  std::mutex mtx_inflight_request_;
 
   std::string TARGET_STATUS{"/cgi/status.json"};
   std::string TARGET_DIAG{"/cgi/diag.json"};
@@ -66,6 +56,9 @@ private:
   std::string TARGET_SAVE{"/cgi/save"};
   std::string TARGET_RESET{"/cgi/reset"};
   void StringCallback(const std::string & str);
+
+  std::string HttpGetRequest(const std::string & endpoint);
+  std::string HttpPostRequest(const std::string & endpoint, const std::string & body);
 
   /// @brief Get a one-off HTTP client to communicate with the hardware
   /// @param ctx IO Context
@@ -86,7 +79,7 @@ private:
   /// @param tree Current settings (property_tree)
   /// @return Resulting status
   VelodyneStatus CheckAndSetConfig(
-    std::shared_ptr<VelodyneSensorConfiguration> sensor_configuration,
+    std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration,
     boost::property_tree::ptree tree);
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger;
@@ -106,38 +99,36 @@ public:
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer) final;
+  void ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer);
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStart() final;
+  Status SensorInterfaceStart();
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStop() final;
+  Status SensorInterfaceStop();
   /// @brief Printing sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
-  Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration) final;
+  Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration);
   /// @brief Printing calibration configuration
   /// @param calibration_configuration CalibrationConfiguration for the checking
   /// @return Resulting status
-  Status GetCalibrationConfiguration(
-    CalibrationConfigurationBase & calibration_configuration) final;
+  Status GetCalibrationConfiguration(CalibrationConfigurationBase & calibration_configuration);
   /// @brief Initializing sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
   Status InitializeSensorConfiguration(
-    std::shared_ptr<SensorConfigurationBase> sensor_configuration);
+    std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration);
   /// @brief Setting sensor configuration with InitializeSensorConfiguration &
   /// CheckAndSetConfigBySnapshotAsync
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
   Status SetSensorConfiguration(
-    std::shared_ptr<SensorConfigurationBase> sensor_configuration) final;
+    std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration);
   /// @brief Registering callback for PandarScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterScanCallback(
-    std::function<void(std::unique_ptr<velodyne_msgs::msg::VelodyneScan>)> scan_callback);
+  Status RegisterScanCallback(std::function<void(std::vector<uint8_t> & packet)> scan_callback);
 
   /// @brief Parsing JSON string to property_tree
   /// @param str JSON string
@@ -216,95 +207,6 @@ public:
   /// @param use_dhcp DHCP on
   /// @return Resulting status
   VelodyneStatus SetNetDhcp(bool use_dhcp);
-
-  /// @brief Initializing HTTP client (async)
-  /// @return Resulting status
-  VelodyneStatus InitHttpClientAsync();
-  /// @brief Getting the current operational state and parameters of the sensor (async)
-  /// @param str_callback Callback function for received JSON string
-  /// @return Resulting status
-  VelodyneStatus GetStatusAsync(std::function<void(const std::string & str)> str_callback);
-  /// @brief Getting the current operational state and parameters of the sensor (async)
-  /// @return Resulting status
-  VelodyneStatus GetStatusAsync();
-  /// @brief Getting diagnostic information from the sensor (async)
-  /// @param str_callback Callback function for received JSON string
-  /// @return Resulting status
-  VelodyneStatus GetDiagAsync(std::function<void(const std::string & str)> str_callback);
-  /// @brief Getting diagnostic information from the sensor (async)
-  /// @return Resulting status
-  VelodyneStatus GetDiagAsync();
-  /// @brief Getting current sensor configuration and status data (async)
-  /// @param str_callback Callback function for received JSON string
-  /// @return Resulting status
-  VelodyneStatus GetSnapshotAsync(std::function<void(const std::string & str)> str_callback);
-  /// @brief Getting current sensor configuration and status data (async)
-  /// @return Resulting status
-  VelodyneStatus GetSnapshotAsync();
-  /// @brief Checking the current settings and changing the difference point
-  /// @return Resulting status
-  VelodyneStatus CheckAndSetConfigBySnapshotAsync(
-    std::shared_ptr<VelodyneSensorConfiguration> sensor_configuration);
-  /// @brief Setting Motor RPM (async)
-  /// @param rpm the RPM of the motor
-  /// @return Resulting status
-  VelodyneStatus SetRpmAsync(uint16_t rpm);
-  /// @brief Setting Field of View Start (async)
-  /// @param fov_start FOV start
-  /// @return Resulting status
-  VelodyneStatus SetFovStartAsync(uint16_t fov_start);
-  /// @brief Setting Field of View End (async)
-  /// @param fov_end FOV end
-  /// @return Resulting status
-  VelodyneStatus SetFovEndAsync(uint16_t fov_end);
-  /// @brief Setting Return Type (async)
-  /// @param return_mode ReturnMode
-  /// @return Resulting status
-  VelodyneStatus SetReturnTypeAsync(ReturnMode return_mode);
-  /// @brief Save Configuration to the LiDAR memory (async)
-  /// @return Resulting status
-  VelodyneStatus SaveConfigAsync();
-  /// @brief Resets the sensor (async)
-  /// @return Resulting status
-  VelodyneStatus ResetSystemAsync();
-  /// @brief Turn laser state on (async)
-  /// @return Resulting status
-  VelodyneStatus LaserOnAsync();
-  /// @brief Turn laser state off (async)
-  /// @return Resulting status
-  VelodyneStatus LaserOffAsync();
-  /// @brief Turn laser state on/off (async)
-  /// @param on is ON
-  /// @return Resulting status
-  VelodyneStatus LaserOnOffAsync(bool on);
-  /// @brief Setting host (destination) IP address (async)
-  /// @param addr destination IP address
-  /// @return Resulting status
-  VelodyneStatus SetHostAddrAsync(std::string addr);
-  /// @brief Setting host (destination) data port (async)
-  /// @param dport destination data port
-  /// @return Resulting status
-  VelodyneStatus SetHostDportAsync(uint16_t dport);
-  /// @brief Setting host (destination) telemetry port (async)
-  /// @param tport destination telemetry port
-  /// @return Resulting status
-  VelodyneStatus SetHostTportAsync(uint16_t tport);
-  /// @brief Setting network (sensor) IP address (async)
-  /// @param addr sensor IP address
-  /// @return Resulting status
-  VelodyneStatus SetNetAddrAsync(std::string addr);
-  /// @brief Setting the network mask of the sensor (async)
-  /// @param mask Network mask
-  /// @return Resulting status
-  VelodyneStatus SetNetMaskAsync(std::string mask);
-  /// @brief Setting the gateway address of the sensor (async)
-  /// @param gateway Gateway address
-  /// @return Resulting status
-  VelodyneStatus SetNetGatewayAsync(std::string gateway);
-  /// @brief This determines if the sensor is to rely on a DHCP server for its IP address (async)
-  /// @param use_dhcp DHCP on
-  /// @return Resulting status
-  VelodyneStatus SetNetDhcpAsync(bool use_dhcp);
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger

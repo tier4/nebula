@@ -1,25 +1,27 @@
 #ifndef NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
 #define NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
+
+#include <nebula_common/point_types.hpp>
+#include <nebula_common/velodyne/velodyne_calibration_decoder.hpp>
+#include <nebula_common/velodyne/velodyne_common.hpp>
+
 #include <rclcpp/rclcpp.hpp>
+
+#include <velodyne_msgs/msg/velodyne_packet.hpp>
+#include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 #include <boost/format.hpp>
 
+#include <angles/angles.h>
 #include <pcl/point_cloud.h>
 
 #include <cerrno>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 #include <string>
-#include <vector>
-
-#include "nebula_common/point_types.hpp"
-#include "nebula_common/velodyne/velodyne_calibration_decoder.hpp"
-#include "nebula_common/velodyne/velodyne_common.hpp"
-
-#include <velodyne_msgs/msg/velodyne_packet.hpp>
-#include <velodyne_msgs/msg/velodyne_scan.hpp>
-
 #include <tuple>
+#include <vector>
 
 namespace nebula
 {
@@ -68,6 +70,10 @@ static const float VLS128_CHANNEL_DURATION =
   2.665f;  // [µs] Channels corresponds to one laser firing
 static const float VLS128_SEQ_DURATION =
   53.3f;  // [µs] Sequence is a set of laser firings including recharging
+
+static const size_t OFFSET_FIRST_AZIMUTH = 2;
+static const size_t OFFSET_LAST_AZIMUTH = 1102;
+static const uint32_t DEGREE_SUBDIVISIONS = 100;
 
 /** \brief Raw Velodyne data block.
  *
@@ -132,23 +138,60 @@ enum RETURN_TYPE {
 /// @brief Base class for Velodyne LiDAR decoder
 class VelodyneScanDecoder
 {
+private:
+  size_t processed_packets_{0};
+  uint32_t prev_packet_first_azm_phased_{0};
+  bool has_scanned_{false};
+
 protected:
+  /// @brief Checks if the current packet completes the ongoing scan.
+  /// TODO: this has been moved from velodyne_hw_interface.cpp and is a temporary solution until
+  /// the Velodyne decoder uses the same structure as Hesai/Robosense
+  /// @param packet The packet buffer to extract azimuths from
+  /// @param packet_seconds The seconds-since-epoch part of the packet's timestamp
+  /// @param phase The sensor's scan phase used for scan cutting
+  void checkAndHandleScanComplete(
+    const std::vector<uint8_t> & packet, int32_t packet_seconds, const uint32_t phase)
+  {
+    if (has_scanned_) {
+      processed_packets_ = 0;
+      reset_pointcloud(packet_seconds);
+    }
+
+    has_scanned_ = false;
+    processed_packets_++;
+
+    uint32_t packet_first_azm = packet[OFFSET_FIRST_AZIMUTH];  // lower word of azimuth block 0
+    packet_first_azm |= packet[OFFSET_FIRST_AZIMUTH + 1] << 8; // higher word of azimuth block 0
+
+    uint32_t packet_last_azm = packet[OFFSET_LAST_AZIMUTH];
+    packet_last_azm |= packet[OFFSET_LAST_AZIMUTH + 1] << 8;
+
+    const uint32_t max_azi = 360 * DEGREE_SUBDIVISIONS;
+
+    uint32_t packet_first_azm_phased = (max_azi + packet_first_azm - phase) % max_azi;
+    uint32_t packet_last_azm_phased = (max_azi + packet_last_azm - phase) % max_azi;
+
+    has_scanned_ =
+      processed_packets_ > 1 && (packet_last_azm_phased < packet_first_azm_phased ||
+                                 packet_first_azm_phased < prev_packet_first_azm_phased_);
+
+    prev_packet_first_azm_phased_ = packet_first_azm_phased;
+  }
+
   /// @brief Decoded point cloud
   drivers::NebulaPointCloudPtr scan_pc_;
   /// @brief Point cloud overflowing from one cycle
   drivers::NebulaPointCloudPtr overflow_pc_;
 
-  uint16_t scan_phase_{};
-  uint16_t last_phase_{};
-  bool has_scanned_ = true;
   double dual_return_distance_threshold_{};  // Velodyne does this internally, this will not be
                                              // implemented here
   double scan_timestamp_{};
 
   /// @brief SensorConfiguration for this decoder
-  std::shared_ptr<drivers::VelodyneSensorConfiguration> sensor_configuration_;
+  std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_configuration_;
   /// @brief Calibration for this decoder
-  std::shared_ptr<drivers::VelodyneCalibrationConfiguration> calibration_configuration_;
+  std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration_;
 
 public:
   VelodyneScanDecoder(VelodyneScanDecoder && c) = delete;
@@ -161,7 +204,7 @@ public:
 
   /// @brief Virtual function for parsing and shaping VelodynePacket
   /// @param pandar_packet
-  virtual void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) = 0;
+  virtual void unpack(const std::vector<uint8_t> & packet, int32_t packet_seconds) = 0;
   /// @brief Virtual function for parsing VelodynePacket based on packet structure
   /// @param pandar_packet
   /// @return Resulting flag
@@ -169,7 +212,8 @@ public:
 
   /// @brief Virtual function for getting the flag indicating whether one cycle is ready
   /// @return Readied
-  virtual bool hasScanned() = 0;
+  bool hasScanned() { return has_scanned_; }
+
   /// @brief Calculation of points in each packet
   /// @return # of points
   virtual int pointsPerPacket() = 0;
@@ -178,8 +222,7 @@ public:
   /// @return tuple of Point cloud and timestamp
   virtual std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() = 0;
   /// @brief Resetting point cloud buffer
-  /// @param n_pts # of points
-  virtual void reset_pointcloud(size_t n_pts, double time_stamp) = 0;
+  virtual void reset_pointcloud(double time_stamp) = 0;
   /// @brief Resetting overflowed point cloud buffer
   virtual void reset_overflow(double time_stamp) = 0;
 };

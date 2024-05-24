@@ -1,92 +1,66 @@
-#ifndef NEBULA_VelodyneHwMonitorRosWrapper_H
-#define NEBULA_VelodyneHwMonitorRosWrapper_H
+#pragma once
 
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/velodyne/velodyne_common.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp"
-#include "nebula_ros/common/nebula_hw_monitor_ros_wrapper_base.hpp"
+#include "nebula_ros/common/parameter_descriptors.hpp"
 
-#include <ament_index_cpp/get_package_prefix.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_common/velodyne/velodyne_common.hpp>
+#include <nebula_hw_interfaces/nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
 
-#include <mutex>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/asio.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include <array>
+#include <memory>
+#include <string>
+#include <tuple>
 
 namespace nebula
 {
 namespace ros
 {
-/// @brief Get parameter from rclcpp::Parameter
-/// @tparam T
-/// @param p Parameter from rclcpp parameter callback
-/// @param name Target parameter name
-/// @param value Corresponding value
-/// @return Whether the target name existed
-template <typename T>
-bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & name, T & value)
+class VelodyneHwMonitorWrapper
 {
-  auto it = std::find_if(p.cbegin(), p.cend(), [&name](const rclcpp::Parameter & parameter) {
-    return parameter.get_name() == name;
-  });
-  if (it != p.cend()) {
-    value = it->template get_value<T>();
-    return true;
-  }
-  return false;
-}
-
-/// @brief Hardware monitor ros wrapper of velodyne driver
-class VelodyneHwMonitorRosWrapper final : public rclcpp::Node, NebulaHwMonitorWrapperBase
-{
-  drivers::VelodyneHwInterface hw_interface_;
-  Status interface_status_;
-
-  drivers::VelodyneSensorConfiguration sensor_configuration_;
-  drivers::VelodyneCalibrationConfiguration calibration_configuration_;
-
-  /// @brief Initializing hardware monitor ros wrapper
-  /// @param sensor_configuration SensorConfiguration for this driver
-  /// @return Resulting status
-  Status InitializeHwMonitor(
-    const drivers::SensorConfigurationBase & sensor_configuration) override;
-
 public:
-  explicit VelodyneHwMonitorRosWrapper(const rclcpp::NodeOptions & options);
+  VelodyneHwMonitorWrapper(
+    rclcpp::Node * const parent_node,
+    const std::shared_ptr<nebula::drivers::VelodyneHwInterface> & hw_interface,
+    std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config);
 
-  /// @brief Not used
-  /// @return Current status
-  Status MonitorStart() override;
-  /// @brief Not used
-  /// @return Status::OK
-  Status MonitorStop() override;
-  /// @brief Not used
-  /// @return Status::OK
-  Status Shutdown() override;
-  /// @brief Get configurations from ros parameters
-  /// @param sensor_configuration Output of SensorConfiguration
-  /// @return Resulting status
-  Status GetParameters(drivers::VelodyneSensorConfiguration & sensor_configuration);
+  void OnConfigChange(
+    const std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & /* new_config */)
+  {
+  }
 
-private:  // ROS Diagnostics
-  diagnostic_updater::Updater diagnostics_updater_;
-  /// @brief Initializing diagnostics
+  nebula::Status Status();
+
+private:
   void InitializeVelodyneDiagnostics();
+
+  /// @brief Callback of the timer for getting the current lidar status
+  void OnVelodyneStatusTimer();
+
+  /// @brief Callback of the timer for getting the current lidar snapshot
+  void OnVelodyneSnapshotTimer();
+
+  /// @brief Callback of the timer for getting the current lidar status & updating the diagnostics
+  void OnVelodyneDiagnosticsTimer();
+
   /// @brief Get value from property_tree
   /// @param pt property_tree
+  /// @param mtx_pt the mutex associated with `pt`
   /// @param key Pey string
   /// @return Value
   std::string GetPtreeValue(
-    std::shared_ptr<boost::property_tree::ptree> pt, const std::string & key);
+    std::shared_ptr<boost::property_tree::ptree> pt, std::mutex & mtx_pt, const std::string & key);
+
   /// @brief Making fixed precision string
   /// @param val Target value
   /// @param pre Precision
   /// @return Created string
   std::string GetFixedPrecisionString(double val, int pre = 2);
-  rclcpp::TimerBase::SharedPtr diagnostics_diag_timer_;
-  std::shared_ptr<boost::property_tree::ptree> current_diag_tree;
-  /// @brief Callback of the timer for getting the current lidar status & updating the diagnostics
-  void OnVelodyneDiagnosticsTimer();
 
   /// @brief Getting top:hv from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
@@ -242,8 +216,6 @@ private:  // ROS Diagnostics
   void VelodyneCheckAdctpStat(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   rclcpp::TimerBase::SharedPtr diagnostics_status_timer_;
   std::shared_ptr<boost::property_tree::ptree> current_status_tree;
-  /// @brief Callback of the timer for getting the current lidar status
-  void OnVelodyneStatusTimer();
   /// @brief Check gps:pps_state from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
   void VelodyneCheckGpsPpsState(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
@@ -286,150 +258,110 @@ private:  // ROS Diagnostics
   /// @param diagnostics DiagnosticStatusWrapper
   void VelodyneCheckVoltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  /// @brief Callback of the timer for getting the current lidar snapshot
-  void OnVelodyneSnapshotTimer();
-  rclcpp::TimerBase::SharedPtr diagnostics_snapshot_timer_;
-  rclcpp::TimerBase::SharedPtr diagnostics_update_timer_;
-  std::shared_ptr<std::string> current_snapshot;
-  std::shared_ptr<boost::property_tree::ptree> current_snapshot_tree;
-  std::shared_ptr<rclcpp::Time> current_snapshot_time;
-  //  rclcpp::Time current_snapshot_time;
-  //  std::shared_ptr<uint8_t> current_diag_status;
-  uint8_t current_diag_status;
+  rclcpp::Logger logger_;
+  diagnostic_updater::Updater diagnostics_updater_;
+  nebula::Status status_;
+
+  const std::shared_ptr<nebula::drivers::VelodyneHwInterface> hw_interface_;
+  rclcpp::Node * const parent_node_;
+
+  std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> sensor_configuration_;
 
   uint16_t diag_span_;
-  std::mutex mtx_diag;
-  std::mutex mtx_status;
-  std::mutex mtx_config_;
+  bool show_advanced_diagnostics_;
 
-  /// @brief Test callback function for getting json with curl
-  /// @param err Error
-  /// @param body Received body
-  void curl_callback(std::string err, std::string body);
+  rclcpp::TimerBase::SharedPtr diagnostics_snapshot_timer_;
+  rclcpp::TimerBase::SharedPtr diagnostics_update_timer_;
+  rclcpp::TimerBase::SharedPtr diagnostics_diag_timer_;
 
-  const char * key_volt_temp_top_hv;
-  const char * key_volt_temp_top_ad_temp;
-  const char * key_volt_temp_top_lm20_temp;
-  const char * key_volt_temp_top_pwr_5v;
-  const char * key_volt_temp_top_pwr_2_5v;
-  const char * key_volt_temp_top_pwr_3_3v;
-  const char * key_volt_temp_top_pwr_5v_raw;
-  const char * key_volt_temp_top_pwr_raw;
-  const char * key_volt_temp_top_pwr_vccint;
-  const char * key_volt_temp_bot_i_out;
-  const char * key_volt_temp_bot_pwr_1_2v;
-  const char * key_volt_temp_bot_lm20_temp;
-  const char * key_volt_temp_bot_pwr_5v;
-  const char * key_volt_temp_bot_pwr_2_5v;
-  const char * key_volt_temp_bot_pwr_3_3v;
-  const char * key_volt_temp_bot_pwr_v_in;
-  const char * key_volt_temp_bot_pwr_1_25v;
-  const char * key_vhv;
-  const char * key_adc_nf;
-  const char * key_adc_stats;
-  const char * key_ixe;
-  const char * key_adctp_stat;
-  const char * key_status_gps_pps_state;
-  const char * key_status_gps_pps_position;
-  const char * key_status_motor_state;
-  const char * key_status_motor_rpm;
-  const char * key_status_motor_lock;
-  const char * key_status_motor_phase;
-  const char * key_status_laser_state;
+  std::shared_ptr<std::string> current_snapshot;
+  std::shared_ptr<boost::property_tree::ptree> current_snapshot_tree;
+  std::shared_ptr<boost::property_tree::ptree> current_diag_tree;
+  std::shared_ptr<rclcpp::Time> current_snapshot_time;
+  uint8_t current_diag_status;
 
-  /*
-  const char* name_volt_temp_top_hv;
-  const char* name_volt_temp_top_ad_temp;
-  const char* name_volt_temp_top_lm20_temp;
-  const char* name_volt_temp_top_pwr_5v;
-  const char* name_volt_temp_top_pwr_2_5v;
-  const char* name_volt_temp_top_pwr_3_3v;
-  const char* name_volt_temp_top_pwr_raw;
-  const char* name_volt_temp_top_pwr_vccint;
-  const char* name_volt_temp_bot_i_out;
-  const char* name_volt_temp_bot_pwr_1_2v;
-  const char* name_volt_temp_bot_lm20_temp;
-  const char* name_volt_temp_bot_pwr_5v;
-  const char* name_volt_temp_bot_pwr_2_5v;
-  const char* name_volt_temp_bot_pwr_3_3v;
-  const char* name_volt_temp_bot_pwr_v_in;
-  const char* name_volt_temp_bot_pwr_1_25v;
-  const char* name_vhv;
-  const char* name_adc_nf;
-  const char* name_adc_stats;
-  const char* name_ixe;
-  const char* name_adctp_stat;
-  const char* name_status_gps_pps_state;
-  const char* name_status_gps_pps_position;
-  const char* name_status_motor_state;
-  const char* name_status_motor_rpm;
-  const char* name_status_motor_lock;
-  const char* name_status_motor_phase;
-  const char* name_status_laser_state;
-  */
+  std::mutex mtx_snapshot_;
+  std::mutex mtx_status_;
+  std::mutex mtx_diag_;
 
-  std::string name_volt_temp_top_hv;
-  std::string name_volt_temp_top_ad_temp;
-  std::string name_volt_temp_top_lm20_temp;
-  std::string name_volt_temp_top_pwr_5v;
-  std::string name_volt_temp_top_pwr_2_5v;
-  std::string name_volt_temp_top_pwr_3_3v;
-  std::string name_volt_temp_top_pwr_5v_raw;
-  std::string name_volt_temp_top_pwr_raw;
-  std::string name_volt_temp_top_pwr_vccint;
-  std::string name_volt_temp_bot_i_out;
-  std::string name_volt_temp_bot_pwr_1_2v;
-  std::string name_volt_temp_bot_lm20_temp;
-  std::string name_volt_temp_bot_pwr_5v;
-  std::string name_volt_temp_bot_pwr_2_5v;
-  std::string name_volt_temp_bot_pwr_3_3v;
-  std::string name_volt_temp_bot_pwr_v_in;
-  std::string name_volt_temp_bot_pwr_1_25v;
-  std::string name_vhv;
-  std::string name_adc_nf;
-  std::string name_adc_stats;
-  std::string name_ixe;
-  std::string name_adctp_stat;
-  std::string name_status_gps_pps_state;
-  std::string name_status_gps_pps_position;
-  std::string name_status_motor_state;
-  std::string name_status_motor_rpm;
-  std::string name_status_motor_lock;
-  std::string name_status_motor_phase;
-  std::string name_status_laser_state;
+  std::string info_model_;
+  std::string info_serial_;
 
-  const char * not_supported_message;
-  const char * error_message;
-  std::string message_sep;
+  static constexpr auto key_volt_temp_top_hv = "volt_temp.top.hv";
+  static constexpr auto key_volt_temp_top_ad_temp = "volt_temp.top.ad_temp";  // only32
+  static constexpr auto key_volt_temp_top_lm20_temp = "volt_temp.top.lm20_temp";
+  static constexpr auto key_volt_temp_top_pwr_5v = "volt_temp.top.pwr_5v";
+  static constexpr auto key_volt_temp_top_pwr_2_5v = "volt_temp.top.pwr_2_5v";
+  static constexpr auto key_volt_temp_top_pwr_3_3v = "volt_temp.top.pwr_3_3v";
+  static constexpr auto key_volt_temp_top_pwr_5v_raw = "volt_temp.top.pwr_5v_raw";  // only16
+  static constexpr auto key_volt_temp_top_pwr_raw = "volt_temp.top.pwr_raw";        // only32
+  static constexpr auto key_volt_temp_top_pwr_vccint = "volt_temp.top.pwr_vccint";
+  static constexpr auto key_volt_temp_bot_i_out = "volt_temp.bot.i_out";
+  static constexpr auto key_volt_temp_bot_pwr_1_2v = "volt_temp.bot.pwr_1_2v";
+  static constexpr auto key_volt_temp_bot_lm20_temp = "volt_temp.bot.lm20_temp";
+  static constexpr auto key_volt_temp_bot_pwr_5v = "volt_temp.bot.pwr_5v";
+  static constexpr auto key_volt_temp_bot_pwr_2_5v = "volt_temp.bot.pwr_2_5v";
+  static constexpr auto key_volt_temp_bot_pwr_3_3v = "volt_temp.bot.pwr_3_3v";
+  static constexpr auto key_volt_temp_bot_pwr_v_in = "volt_temp.bot.pwr_v_in";
+  static constexpr auto key_volt_temp_bot_pwr_1_25v = "volt_temp.bot.pwr_1_25v";
+  static constexpr auto key_vhv = "vhv";
+  static constexpr auto key_adc_nf = "adc_nf";
+  static constexpr auto key_adc_stats = "adc_stats";
+  static constexpr auto key_ixe = "ixe";
+  static constexpr auto key_adctp_stat = "adctp_stat";
+  static constexpr auto key_status_gps_pps_state = "gps.pps_state";
+  static constexpr auto key_status_gps_pps_position = "gps.position";
+  static constexpr auto key_status_motor_state = "motor.state";
+  static constexpr auto key_status_motor_rpm = "motor.rpm";
+  static constexpr auto key_status_motor_lock = "motor.lock";
+  static constexpr auto key_status_motor_phase = "motor.phase";
+  static constexpr auto key_status_laser_state = "laser.state";
 
-  const char * key_info_model;
-  const char * key_info_serial;
+  static constexpr auto name_volt_temp_top_hv = "Top HV";
+  static constexpr auto name_volt_temp_top_ad_temp = "Top A/D TD";
+  static constexpr auto name_volt_temp_top_lm20_temp = "Top Temp";
+  static constexpr auto name_volt_temp_top_pwr_5v = "Top 5v";
+  static constexpr auto name_volt_temp_top_pwr_2_5v = "Top 2.5v";
+  static constexpr auto name_volt_temp_top_pwr_3_3v = "Top 3.3v";
+  static constexpr auto name_volt_temp_top_pwr_5v_raw = "Top 5v(RAW)";
+  static constexpr auto name_volt_temp_top_pwr_raw = "Top RAW";
+  static constexpr auto name_volt_temp_top_pwr_vccint = "Top VCCINT";
+  static constexpr auto name_volt_temp_bot_i_out = "Bot I out";
+  static constexpr auto name_volt_temp_bot_pwr_1_2v = "Bot 1.2v";
+  static constexpr auto name_volt_temp_bot_lm20_temp = "Bot Temp";
+  static constexpr auto name_volt_temp_bot_pwr_5v = "Bot 5v";
+  static constexpr auto name_volt_temp_bot_pwr_2_5v = "Bot 2.5v";
+  static constexpr auto name_volt_temp_bot_pwr_3_3v = "Bot 3.3v";
+  static constexpr auto name_volt_temp_bot_pwr_v_in = "Bot V in";
+  static constexpr auto name_volt_temp_bot_pwr_1_25v = "Bot 1.25v";  // N/A?
+  static constexpr auto name_vhv = "VHV";
+  static constexpr auto name_adc_nf = "adc_nf";
+  static constexpr auto name_adc_stats = "adc_stats";
+  static constexpr auto name_ixe = "ixe";
+  static constexpr auto name_adctp_stat = "adctp_stat";
+  static constexpr auto name_status_gps_pps_state = "GPS PPS";
+  static constexpr auto name_status_gps_pps_position = "GPS Position";
+  static constexpr auto name_status_motor_state = "Motor State";
+  static constexpr auto name_status_motor_rpm = "Motor RPM";
+  static constexpr auto name_status_motor_lock = "Motor Lock";
+  static constexpr auto name_status_motor_phase = "Motor Phase";
+  static constexpr auto name_status_laser_state = "Laser State";
 
-  std::string temperature_cold_message;
-  std::string temperature_hot_message;
-  std::string voltage_low_message;
-  std::string voltage_high_message;
-  std::string ampere_low_message;
-  std::string ampere_high_message;
+  const std::string message_sep{": "};
+  static constexpr auto not_supported_message = "Not supported";
+  static constexpr auto error_message = "Error";
 
-  std::string info_model;
-  std::string info_serial;
+  static constexpr auto key_info_model = "info.model";
+  static constexpr auto key_info_serial = "info.serial";
 
-  bool use_advanced_diagnostics;
+  static constexpr auto temperature_cold_message = "temperature cold";
+  static constexpr auto temperature_hot_message = "temperature hot";
 
-  OnSetParametersCallbackHandle::SharedPtr set_param_res_;
-  /// @brief rclcpp parameter callback
-  /// @param parameters Received parameters
-  /// @return SetParametersResult
-  rcl_interfaces::msg::SetParametersResult paramCallback(
-    const std::vector<rclcpp::Parameter> & parameters);
+  static constexpr auto voltage_low_message = "voltage low";
+  static constexpr auto voltage_high_message = "voltage high";
 
-  //  rclcpp::callback_group::CallbackGroup::SharedPtr cbg_;
-  rclcpp::CallbackGroup::SharedPtr cbg_r_;
-  rclcpp::CallbackGroup::SharedPtr cbg_m_;
+  static constexpr auto ampere_low_message = "ampere low";
+  static constexpr auto ampere_high_message = "ampere high";
 };
-
 }  // namespace ros
 }  // namespace nebula
-
-#endif  // NEBULA_VelodyneHwMonitorRosWrapper_H

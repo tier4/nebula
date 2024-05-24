@@ -14,8 +14,11 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <tuple>
+#include <vector>
 
 namespace nebula
 {
@@ -36,8 +39,9 @@ public:
   /// @param sensor_configuration SensorConfiguration for this driver
   /// @param calibration_configuration CalibrationConfiguration for this driver
   VelodyneDriver(
-    const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration);
+    const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> &
+      calibration_configuration);
 
   /// @brief Setting CalibrationConfiguration (not used)
   /// @param calibration_configuration
@@ -52,8 +56,8 @@ public:
   /// @brief Convert VelodyneScan message to point cloud
   /// @param velodyne_scan Message
   /// @return tuple of Point cloud and timestamp
-  std::tuple<drivers::NebulaPointCloudPtr, double> ConvertScanToPointcloud(
-    const std::shared_ptr<velodyne_msgs::msg::VelodyneScan> & velodyne_scan);
+  std::tuple<drivers::NebulaPointCloudPtr, double> ParseCloudPacket(
+    const std::vector<uint8_t> & packet, int32_t packet_seconds);
 };
 
 }  // namespace drivers
