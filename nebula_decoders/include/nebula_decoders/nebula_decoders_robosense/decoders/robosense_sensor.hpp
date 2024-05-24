@@ -17,7 +17,6 @@ namespace drivers
 template <typename PacketT, typename InfoPacketT>
 class RobosenseSensor
 {
-private:
 public:
   typedef PacketT packet_t;
   typedef InfoPacketT info_t;
@@ -35,7 +34,7 @@ public:
   /// @return The relative time offset in nanoseconds
   virtual int getPacketRelativePointTimeOffset(
     uint32_t block_id, uint32_t channel_id,
-    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration) = 0;
+    const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration) = 0;
 
   /// @brief For a given start block index, find the earliest (lowest) relative time offset of any
   /// point in the packet in or after the start block
@@ -45,7 +44,7 @@ public:
   /// after the start block, in nanoseconds
   int getEarliestPointTimeOffsetForBlock(
     uint32_t start_block_id,
-    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration)
+    const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration)
   {
     const auto n_returns = robosense_packet::get_n_returns(sensor_configuration->return_mode);
     int min_offset_ns = std::numeric_limits<int>::max();
@@ -119,6 +118,14 @@ public:
         return ReturnType::UNKNOWN;
     }
   }
+
+  virtual ReturnMode getReturnMode(const info_t & info_packet) = 0;
+
+  virtual RobosenseCalibrationConfiguration getSensorCalibration(const info_t & info_packet) = 0;
+
+  virtual bool getSyncStatus(const info_t & info_packet) = 0;
+
+  virtual std::map<std::string, std::string> getSensorInfo(const info_t & info_packet) = 0;
 };
 }  // namespace drivers
 }  // namespace nebula

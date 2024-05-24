@@ -218,7 +218,7 @@ struct SerialNumber
 /// @brief Get the number of returns for a given return mode
 /// @param return_mode The return mode
 /// @return The number of returns
-size_t get_n_returns(ReturnMode return_mode)
+inline size_t get_n_returns(ReturnMode return_mode)
 {
   if (return_mode == ReturnMode::DUAL) {
     return 2;
@@ -257,7 +257,7 @@ double get_dis_unit(const PacketT & packet)
 /// @brief Convert raw angle value from packet to std::string
 /// @param raw_angle The raw angle value from the packet
 /// @return The angle as std::string
-std::string get_float_value(const uint16_t & raw_angle)
+inline std::string get_float_value(const uint16_t & raw_angle)
 {
   return std::to_string(static_cast<float>(raw_angle) / 100.0f);
 }

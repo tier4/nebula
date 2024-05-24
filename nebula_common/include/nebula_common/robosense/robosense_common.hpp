@@ -25,9 +25,6 @@ struct RobosenseSensorConfiguration : LidarConfigurationBase
   uint16_t gnss_port{};  // difop
   double scan_phase{};   // start/end angle
   double dual_return_distance_threshold{};
-  uint16_t rotation_speed;
-  uint16_t cloud_min_angle;
-  uint16_t cloud_max_angle;
 };
 
 /// @brief Convert RobosenseSensorConfiguration to string (Overloading the << operator)
@@ -37,8 +34,7 @@ struct RobosenseSensorConfiguration : LidarConfigurationBase
 inline std::ostream & operator<<(std::ostream & os, RobosenseSensorConfiguration const & arg)
 {
   os << (LidarConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
-     << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
-     << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle;
+     << ", ScanPhase:" << arg.scan_phase;
   return os;
 }
 
@@ -53,16 +49,6 @@ inline ReturnMode ReturnModeFromStringRobosense(const std::string & return_mode)
   if (return_mode == "First") return ReturnMode::SINGLE_FIRST;
 
   return ReturnMode::UNKNOWN;
-}
-
-size_t GetChannelSize(const SensorModel & model)
-{
-  switch (model) {
-    case SensorModel::ROBOSENSE_BPEARL_V3:
-      return 32;
-    case SensorModel::ROBOSENSE_HELIOS:
-      return 32;
-  }
 }
 
 struct ChannelCorrection

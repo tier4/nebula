@@ -27,7 +27,7 @@ public:
   /// @brief Parses RobosensePacket and add its points to the point cloud
   /// @param msop_packet The incoming MsopPacket
   /// @return The last azimuth processed
-  virtual int unpack(const robosense_msgs::msg::RobosensePacket & msop_packet) = 0;
+  virtual int unpack(const std::vector<uint8_t> & msop_packet) = 0;
 
   /// @brief Indicates whether one full scan is ready
   /// @return Whether a scan is ready

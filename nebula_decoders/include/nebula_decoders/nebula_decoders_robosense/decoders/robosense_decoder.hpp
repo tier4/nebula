@@ -18,7 +18,7 @@ class RobosenseDecoder : public RobosenseScanDecoder
 {
 protected:
   /// @brief Configuration for this decoder
-  const std::shared_ptr<drivers::RobosenseSensorConfiguration> sensor_configuration_;
+  const std::shared_ptr<const drivers::RobosenseSensorConfiguration> sensor_configuration_;
 
   /// @brief The sensor definition, used for return mode and time offset handling
   SensorT sensor_{};
@@ -47,15 +47,15 @@ protected:
   /// @brief Validates and parses MsopPacket. Currently only checks size, not checksums etc.
   /// @param msop_packet The incoming MsopPacket
   /// @return Whether the packet was parsed successfully
-  bool parsePacket(const robosense_msgs::msg::RobosensePacket & msop_packet)
+  bool parsePacket(const std::vector<uint8_t> & msop_packet)
   {
-    if (msop_packet.data.size() < sizeof(typename SensorT::packet_t)) {
+    if (msop_packet.size() < sizeof(typename SensorT::packet_t)) {
       RCLCPP_ERROR_STREAM(
-        logger_, "Packet size mismatch:" << msop_packet.data.size() << " | Expected at least:"
+        logger_, "Packet size mismatch:" << msop_packet.size() << " | Expected at least:"
                                          << sizeof(typename SensorT::packet_t));
       return false;
     }
-    if (std::memcpy(&packet_, msop_packet.data.data(), sizeof(typename SensorT::packet_t))) {
+    if (std::memcpy(&packet_, msop_packet.data(), sizeof(typename SensorT::packet_t))) {
       return true;
     }
 
@@ -189,8 +189,8 @@ public:
   /// @param calibration_configuration Calibration for this decoder
   /// calibration_configuration is set)
   explicit RobosenseDecoder(
-    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<RobosenseCalibrationConfiguration> & calibration_configuration)
+    const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<const RobosenseCalibrationConfiguration> & calibration_configuration)
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(calibration_configuration),
     logger_(rclcpp::get_logger("RobosenseDecoder"))
@@ -205,7 +205,7 @@ public:
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
   }
 
-  int unpack(const robosense_msgs::msg::RobosensePacket & msop_packet) override
+  int unpack(const std::vector<uint8_t> & msop_packet) override
   {
     if (!parsePacket(msop_packet)) {
       return -1;

@@ -209,7 +209,7 @@ public:
 
   int getPacketRelativePointTimeOffset(
     const uint32_t block_id, const uint32_t channel_id,
-    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration) override
+    const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration) override
   {
     if (sensor_configuration->return_mode == ReturnMode::DUAL)
       return firing_time_offset_ns_dual_[block_id][channel_id];

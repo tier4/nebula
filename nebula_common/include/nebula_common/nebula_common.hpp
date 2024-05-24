@@ -327,7 +327,6 @@ enum class SensorModel {
   VELODYNE_HDL32,
   VELODYNE_VLP16,
   ROBOSENSE_HELIOS,
-  ROBOSENSE_BPEARL,
   ROBOSENSE_BPEARL_V3,
   ROBOSENSE_BPEARL_V4,
   CONTINENTAL_ARS548
@@ -417,9 +416,6 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
       break;
     case SensorModel::ROBOSENSE_HELIOS:
       os << "HELIOS";
-      break;
-    case SensorModel::ROBOSENSE_BPEARL:
-      os << "BPEARL";
       break;
     case SensorModel::ROBOSENSE_BPEARL_V3:
       os << "BPEARL V3.0";
@@ -530,9 +526,9 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "VLP16") return SensorModel::VELODYNE_VLP16;
   // Robosense
   if (sensor_model == "Helios") return SensorModel::ROBOSENSE_HELIOS;
-  if (sensor_model == "Bpearl") return SensorModel::ROBOSENSE_BPEARL;
+  if (sensor_model == "Bpearl" || sensor_model == "Bpearl_V4")
+    return SensorModel::ROBOSENSE_BPEARL_V4;
   if (sensor_model == "Bpearl_V3") return SensorModel::ROBOSENSE_BPEARL_V3;
-  if (sensor_model == "Bpearl_V4") return SensorModel::ROBOSENSE_BPEARL_V4;
   if (sensor_model == "ARS548") return SensorModel::CONTINENTAL_ARS548;
   return SensorModel::UNKNOWN;
 }
@@ -575,8 +571,6 @@ inline std::string SensorModelToString(const SensorModel & sensor_model)
     // Robosense
     case SensorModel::ROBOSENSE_HELIOS:
       return "Helios";
-    case SensorModel::ROBOSENSE_BPEARL:
-      return "Bpearl";
     case SensorModel::ROBOSENSE_BPEARL_V3:
       return "Bpearl_V3";
     case SensorModel::ROBOSENSE_BPEARL_V4:

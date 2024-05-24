@@ -28,11 +28,11 @@ struct CorrectedAngleData
 class AngleCorrector
 {
 protected:
-  const std::shared_ptr<RobosenseCalibrationConfiguration> sensor_calibration_;
+  const std::shared_ptr<const RobosenseCalibrationConfiguration> sensor_calibration_;
 
 public:
   explicit AngleCorrector(
-    const std::shared_ptr<RobosenseCalibrationConfiguration> & sensor_calibration)
+    const std::shared_ptr<const RobosenseCalibrationConfiguration> & sensor_calibration)
   : sensor_calibration_(sensor_calibration)
   {
   }
