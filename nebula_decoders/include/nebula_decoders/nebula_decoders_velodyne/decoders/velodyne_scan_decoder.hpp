@@ -1,8 +1,9 @@
 #ifndef NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
 #define NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
-#include "nebula_common/point_types.hpp"
-#include "nebula_common/velodyne/velodyne_calibration_decoder.hpp"
-#include "nebula_common/velodyne/velodyne_common.hpp"
+
+#include <nebula_common/point_types.hpp>
+#include <nebula_common/velodyne/velodyne_calibration_decoder.hpp>
+#include <nebula_common/velodyne/velodyne_common.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -69,6 +70,10 @@ static const float VLS128_CHANNEL_DURATION =
   2.665f;  // [µs] Channels corresponds to one laser firing
 static const float VLS128_SEQ_DURATION =
   53.3f;  // [µs] Sequence is a set of laser firings including recharging
+
+static const size_t OFFSET_FIRST_AZIMUTH = 2;
+static const size_t OFFSET_LAST_AZIMUTH = 1102;
+static const uint32_t DEGREE_SUBDIVISIONS = 100;
 
 /** \brief Raw Velodyne data block.
  *
@@ -156,15 +161,16 @@ protected:
     has_scanned_ = false;
     processed_packets_++;
 
-    // Check if scan is complete
-    uint32_t packet_first_azm = packet[2];  // lower word of azimuth block 0
-    packet_first_azm |= packet[3] << 8;     // higher word of azimuth block 0
+    uint32_t packet_first_azm = packet[OFFSET_FIRST_AZIMUTH];  // lower word of azimuth block 0
+    packet_first_azm |= packet[OFFSET_FIRST_AZIMUTH + 1] << 8; // higher word of azimuth block 0
 
-    uint32_t packet_last_azm = packet[1102];
-    packet_last_azm |= packet[1103] << 8;
+    uint32_t packet_last_azm = packet[OFFSET_LAST_AZIMUTH];
+    packet_last_azm |= packet[OFFSET_LAST_AZIMUTH + 1] << 8;
 
-    uint32_t packet_first_azm_phased = (36000 + packet_first_azm - phase) % 36000;
-    uint32_t packet_last_azm_phased = (36000 + packet_last_azm - phase) % 36000;
+    const uint32_t max_azi = 360 * DEGREE_SUBDIVISIONS;
+
+    uint32_t packet_first_azm_phased = (max_azi + packet_first_azm - phase) % max_azi;
+    uint32_t packet_last_azm_phased = (max_azi + packet_last_azm - phase) % max_azi;
 
     has_scanned_ =
       processed_packets_ > 1 && (packet_last_azm_phased < packet_first_azm_phased ||
