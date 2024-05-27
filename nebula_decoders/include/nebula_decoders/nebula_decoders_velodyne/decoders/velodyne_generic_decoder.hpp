@@ -232,7 +232,7 @@ public:
 
       for (int firing_seq = 0, k = 0;
             firing_seq <
-            std::max(static_cast<long>(SensorT::firing_sequences_per_block), static_cast<long>(1));
+            std::max(static_cast<int>(SensorT::firing_sequences_per_block), static_cast<int>(1));
             firing_seq++) {
         for (int channel = 0;
               channel < CHANNELS_PER_BLOCK && channel < SensorT::channels_per_firing_sequence;
