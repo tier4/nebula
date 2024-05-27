@@ -19,7 +19,7 @@ public:
     return true;
   }
 
-  /// @brief fomula from VLP32 User manual in p.62
+  /// @brief formula from VLP32 User manual in p.62
   /// @param azimuth Azimuth angle
   /// @param azimuth_diff Azimuth difference between a current azimuth and a next azimuth
   /// @param firing_order Firing order

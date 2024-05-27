@@ -27,7 +27,7 @@ public:
     return true;
   }
 
-  /// @brief fomula from VLS128 User manual in p.65
+  /// @brief formula from VLS128 User manual in p.65
   /// @param azimuth Azimuth angle
   /// @param azimuth_diff Azimuth difference
   /// @param firing_order Firing order

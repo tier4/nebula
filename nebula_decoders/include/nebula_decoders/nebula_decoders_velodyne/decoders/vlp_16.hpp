@@ -9,7 +9,7 @@ namespace drivers
 class VLP16 : public VelodyneSensor
 {
 public:
-  /// @brief fomula from VLP16 User manual in p.64
+  /// @brief formula from VLP16 User manual in p.64
   /// @param azimuth Azimuth angle
   /// @param azimuth_diff Azimuth difference
   /// @param firing_sequence Firing sequence
