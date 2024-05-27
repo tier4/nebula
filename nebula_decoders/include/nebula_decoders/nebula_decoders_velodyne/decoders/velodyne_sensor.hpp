@@ -19,7 +19,7 @@ public:
   virtual bool fillAzimuthCache() { return false; }
 
   // calculate the corrected azimuth from each firing timing.
-  /// @brief each VLP calculating code sample in user manual. If you know details, see commens in each <vlp_list>.hpp file.
+  /// @brief each VLP calculating sample code and formula in user manual. If you know details, see commens in each <vlp_list>.hpp file.
   virtual uint16_t getAzimuthCorrected(
     uint16_t azimuth, float azimuth_diff, int firing_sequence, int firing_order) = 0;
 };
