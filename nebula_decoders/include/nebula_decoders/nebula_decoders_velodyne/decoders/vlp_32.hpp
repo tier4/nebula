@@ -32,7 +32,7 @@ public:
     return static_cast<uint16_t>(round(azimuth_corrected)) % 36000;
   }
 
-  // Choose the correct azimuth from the 2 azimuthes
+  // Choose the correct azimuth from the 2 azimuths
   uint16_t getTrueRotation(uint16_t azimuth_corrected, uint16_t current_block_rotation)
   {
     return current_block_rotation;
