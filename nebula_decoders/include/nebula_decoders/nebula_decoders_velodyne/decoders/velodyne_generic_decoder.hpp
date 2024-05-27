@@ -186,8 +186,9 @@ public:
           bank_origin = 96;
           break;
         default:
-          // Do not flood the log with messages, only issue at most one
-          // of these warnings per minute.
+          RCLCPP_ERROR(
+            rclcpp::get_logger("VelodyneDecoder"),
+            "Invalid bank origin detected in packet. Skipping packet.");
           return;  // bad packet: skip the rest
       }
 
@@ -280,7 +281,7 @@ public:
 
           if (
           !(distance > sensor_configuration_->min_range &&
-          distance < sensor_configuration_->max_range)) {
+            distance < sensor_configuration_->max_range)) {
             continue;
           }
           // Correct for the laser rotation as a function of timing during the firings.
