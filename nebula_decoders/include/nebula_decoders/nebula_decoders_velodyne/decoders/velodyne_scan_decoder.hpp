@@ -104,6 +104,7 @@ static const int PACKET_SIZE = 1206;
 static const int BLOCKS_PER_PACKET = 12;
 static const int PACKET_STATUS_SIZE = 4;
 static const int SCANS_PER_PACKET = (SCANS_PER_BLOCK * BLOCKS_PER_PACKET);
+static const int POINTS_PER_PACKET = (SCANS_PER_PACKET * RAW_SCAN_SIZE);
 
 /** \brief Raw Velodyne packet.
  *
@@ -177,9 +178,6 @@ public:
   /// @brief Virtual function for getting the flag indicating whether one cycle is ready
   /// @return Readied
   virtual bool hasScanned() = 0;
-  /// @brief Calculation of points in each packet
-  /// @return # of points
-  virtual int pointsPerPacket() = 0;
 
   /// @brief Virtual function for getting the constructed point cloud
   /// @return tuple of Point cloud and timestamp
