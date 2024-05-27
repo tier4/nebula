@@ -122,10 +122,11 @@ union two_bytes {
   uint8_t bytes[2];
 };
 
-static const int g_packet_size = 1206;
-static const int g_blocks_per_packet = 12;
-static const int g_packet_status_size = 4;
-static const int g_scans_per_packet = (g_scans_per_block * g_blocks_per_packet);
+static const int PACKET_SIZE = 1206;
+static const int BLOCKS_PER_PACKET = 12;
+static const int PACKET_STATUS_SIZE = 4;
+static const int SCANS_PER_PACKET = (SCANS_PER_BLOCK * BLOCKS_PER_PACKET);
+static const int POINTS_PER_PACKET = (SCANS_PER_PACKET * RAW_SCAN_SIZE);
 
 /** \brief Raw Velodyne packet.
  *
@@ -235,11 +236,7 @@ public:
 
   /// @brief Virtual function for getting the flag indicating whether one cycle is ready
   /// @return Readied
-  bool has_scanned() { return has_scanned_; }
-
-  /// @brief Calculation of points in each packet
-  /// @return # of points
-  virtual int points_per_packet() = 0;
+  virtual bool hasScanned() = 0;
 
   /// @brief Virtual function for getting the constructed point cloud
   /// @return tuple of Point cloud and timestamp

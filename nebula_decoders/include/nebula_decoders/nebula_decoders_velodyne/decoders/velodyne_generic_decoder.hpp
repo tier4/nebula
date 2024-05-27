@@ -102,14 +102,12 @@ public:
     }
     return std::make_tuple(scan_pc_, scan_timestamp_);
   }
-
-  int pointsPerPacket() { return BLOCKS_PER_PACKET * CHANNELS_PER_BLOCK; }
   
   void reset_pointcloud(size_t n_pts, double time_stamp)
   {
     //  scan_pc_.reset(new NebulaPointCloud);
     scan_pc_->points.clear();
-    max_pts_ = n_pts * pointsPerPacket();
+    max_pts_ = n_pts * POINTS_PER_PACKET;
     scan_pc_->points.reserve(max_pts_);
     reset_overflow(time_stamp);  // transfer existing overflow points to the cleared pointcloud
   }
