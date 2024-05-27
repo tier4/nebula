@@ -11,7 +11,7 @@ class VelodyneSensor
 {
 public:
   // To ignore an empty data blocks which is created by only VLS128 dual return mode case
-  /// @brief eash VLP lidars packat structure in user manual. If you know details, see commens in each <vlp_list>.hpp file.
+  /// @brief each VLP lidars packat structure in user manual. If you know details, see commens in each <vlp_list>.hpp file.
   virtual int getNumPaddingBlocks(bool /* dual_return */) { return 0; }
 
   // calculate and stack the firing timing for each laser timeing used in getAzimuthCorrected to calculate the corrected azimuth
