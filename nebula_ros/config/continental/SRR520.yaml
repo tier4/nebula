@@ -1,0 +1,15 @@
+/**:
+  ros__parameters:
+    sensor_model: "SRR520"
+    frame_id: "continental"
+    base_frame: "base_link"
+    interface: "can4"
+    receiver_timeout_sec: 0.03
+    sender_timeout_sec: 0.01
+    filters: "0:0"
+    use_bus_time: false
+    new_sensor_id: 0
+    new_plug_bottom: true
+    new_cover_damping: 0.0
+    reset_sensor_configuration: false
+    configuration_vehicle_wheelbase: 2.79

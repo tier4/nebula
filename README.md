@@ -99,6 +99,7 @@ Supported models, where sensor_model is the ROS param to be used at launch:
 | Velodyne     | VLP-32        | VLP32        | VLP32.yaml         | :warning:            |
 | Velodyne     | VLS-128       | VLS128       | VLS128.yaml        | :warning:            |
 | Continental  | ARS548        | ARS548       | ARS548.yaml        | :warning:            |
+| Continental  | SRR520        | SRR520       | SRR520.yaml        | :warning:            |
 
 Test status:\
 :heavy_check_mark:: complete\

@@ -51,21 +51,6 @@ public:
   /// @return Resulting flag
   bool ProcessPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg) override;
 
-  /// @brief Function for parsing detection lists
-  /// @param data
-  /// @return Resulting flag
-  bool ParseDetectionsListPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
-
-  /// @brief Function for parsing object lists
-  /// @param data
-  /// @return Resulting flag
-  bool ParseObjectsListPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
-
-  /// @brief Function for parsing sensor status messages
-  /// @param data
-  /// @return Resulting flag
-  bool ParseSensorStatusPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
-
   /// @brief Register function to call when a new detection list is processed
   /// @param detection_list_callback
   /// @return Resulting status
@@ -111,10 +96,10 @@ private:
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg)>
     detection_list_callback_{};
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg)>
-    object_list_callback_;
-  std::function<void(const ContinentalArs548Status & status)> sensor_status_callback_;
+    object_list_callback_{};
+  std::function<void(const ContinentalArs548Status & status)> sensor_status_callback_{};
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg)>
-    nebula_packets_callback_;
+    nebula_packets_callback_{};
 
   ContinentalArs548Status radar_status_{};
 

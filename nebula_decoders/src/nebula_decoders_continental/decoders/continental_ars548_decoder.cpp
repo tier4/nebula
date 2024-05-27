@@ -89,13 +89,13 @@ bool ContinentalArs548Decoder::ProcessPacket(
       return false;
     }
 
-    return ParseDetectionsListPacket(std::move(packet_msg));
+    ParseDetectionsListPacket(*packet_msg);
   } else if (header.method_id.value() == OBJECT_LIST_METHOD_ID) {
     if (data.size() != OBJECT_LIST_UDP_PAYLOAD || header.length.value() != OBJECT_LIST_PDU_LENGTH) {
       return false;
     }
 
-    return ParseObjectsListPacket(std::move(packet_msg));
+    ParseObjectsListPacket(*packet_msg);
   } else if (header.method_id.value() == SENSOR_STATUS_METHOD_ID) {
     if (
       data.size() != SENSOR_STATUS_UDP_PAYLOAD ||
@@ -103,22 +103,31 @@ bool ContinentalArs548Decoder::ProcessPacket(
       return false;
     }
 
-    return ParseSensorStatusPacket(std::move(packet_msg));
+    ParseSensorStatusPacket(*packet_msg);
+  }
+
+  // Some messages are not parsed but are still sent to the user (e.g., filters)
+  if (nebula_packets_callback_) {
+    auto packets_msg = std::make_unique<nebula_msgs::msg::NebulaPackets>();
+    packets_msg->packets.emplace_back(std::move(*packet_msg));
+    packets_msg->header.stamp = packet_msg->stamp;
+    packets_msg->header.frame_id = config_ptr_->frame_id;
+    nebula_packets_callback_(std::move(packets_msg));
   }
 
   return true;
 }
 
 bool ContinentalArs548Decoder::ParseDetectionsListPacket(
-  std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
+  const nebula_msgs::msg::NebulaPacket & packet_msg)
 {
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548DetectionList>();
   auto & msg = *msg_ptr;
 
   DetectionListPacket detection_list;
-  assert(sizeof(DetectionListPacket) == packet_msg->data.size());
+  assert(sizeof(DetectionListPacket) == packet_msg.data.size());
 
-  std::memcpy(&detection_list, packet_msg->data.data(), sizeof(DetectionListPacket));
+  std::memcpy(&detection_list, packet_msg.data.data(), sizeof(DetectionListPacket));
 
   msg.header.frame_id = config_ptr_->frame_id;
 
@@ -126,7 +135,7 @@ bool ContinentalArs548Decoder::ParseDetectionsListPacket(
     msg.header.stamp.nanosec = detection_list.stamp.timestamp_nanoseconds.value();
     msg.header.stamp.sec = detection_list.stamp.timestamp_seconds.value();
   } else {
-    msg.header.stamp = packet_msg->stamp;
+    msg.header.stamp = packet_msg.stamp;
   }
 
   msg.stamp_sync_status = detection_list.stamp.timestamp_sync_status;
@@ -229,21 +238,23 @@ bool ContinentalArs548Decoder::ParseDetectionsListPacket(
     detection_msg.range_rate_std = detection.range_rate_std.value();
   }
 
-  detection_list_callback_(std::move(msg_ptr));
+  if (detection_list_callback_) {
+    detection_list_callback_(std::move(msg_ptr));
+  }
 
   return true;
 }
 
 bool ContinentalArs548Decoder::ParseObjectsListPacket(
-  std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
+  const nebula_msgs::msg::NebulaPacket & packet_msg)
 {
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548ObjectList>();
   auto & msg = *msg_ptr;
 
   ObjectListPacket object_list;
-  assert(sizeof(ObjectListPacket) == packet_msg->data.size());
+  assert(sizeof(ObjectListPacket) == packet_msg.data.size());
 
-  std::memcpy(&object_list, packet_msg->data.data(), sizeof(object_list));
+  std::memcpy(&object_list, packet_msg.data.data(), sizeof(object_list));
 
   msg.header.frame_id = config_ptr_->object_frame;
 
@@ -251,7 +262,7 @@ bool ContinentalArs548Decoder::ParseObjectsListPacket(
     msg.header.stamp.nanosec = object_list.stamp.timestamp_nanoseconds.value();
     msg.header.stamp.sec = object_list.stamp.timestamp_seconds.value();
   } else {
-    msg.header.stamp = packet_msg->stamp;
+    msg.header.stamp = packet_msg.stamp;
   }
 
   msg.stamp_sync_status = object_list.stamp.timestamp_sync_status;
@@ -381,16 +392,18 @@ bool ContinentalArs548Decoder::ParseObjectsListPacket(
     object_msg.shape_width_edge_mean = object.shape_width_edge_mean.value();
   }
 
-  object_list_callback_(std::move(msg_ptr));
+  if (object_list_callback_) {
+    object_list_callback_(std::move(msg_ptr));
+  }
 
   return true;
 }
 
 bool ContinentalArs548Decoder::ParseSensorStatusPacket(
-  std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
+  const nebula_msgs::msg::NebulaPacket & packet_msg)
 {
   SensorStatusPacket sensor_status_packet;
-  std::memcpy(&sensor_status_packet, packet_msg->data.data(), sizeof(SensorStatusPacket));
+  std::memcpy(&sensor_status_packet, packet_msg.data.data(), sizeof(SensorStatusPacket));
 
   radar_status_.timestamp_nanoseconds = sensor_status_packet.stamp.timestamp_nanoseconds.value();
   radar_status_.timestamp_seconds = sensor_status_packet.stamp.timestamp_seconds.value();
@@ -622,14 +635,6 @@ bool ContinentalArs548Decoder::ParseSensorStatusPacket(
 
   if (sensor_status_callback_) {
     sensor_status_callback_(radar_status_);
-  }
-
-  if (nebula_packets_callback_) {
-    auto packets_msg = std::make_unique<nebula_msgs::msg::NebulaPackets>();
-    packets_msg->packets.emplace_back(std::move(*packet_msg));
-    packets_msg->header.stamp = packet_msg->stamp;
-    packets_msg->header.frame_id = sensor_configuration_->frame_id;
-    nebula_packets_callback_(std::move(packets_msg));
   }
 
   return true;

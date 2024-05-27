@@ -1,0 +1,11 @@
+float32 range
+float32 azimuth_angle
+float32 range_rate
+float32 rcs
+uint8 pdh00
+uint8 pdh01
+uint8 pdh02
+uint8 pdh03
+uint8 pdh04
+uint8 pdh05
+float32 snr

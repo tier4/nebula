@@ -143,7 +143,7 @@ Status ContinentalArs548HwInterface::SetSensorMounting(
     return Status::ERROR_1;
   }
 
-  sensor_udp_driver_->sender()->asyncSend(send_vector);
+  sensor_udp_driver_ptr_->sender()->asyncSend(send_vector);
 
   return Status::OK;
 }
@@ -182,7 +182,7 @@ Status ContinentalArs548HwInterface::SetVehicleParameters(
     return Status::ERROR_1;
   }
 
-  sensor_udp_driver_->sender()->asyncSend(send_vector);
+  sensor_udp_driver_ptr_->sender()->asyncSend(send_vector);
 
   return Status::OK;
 }
@@ -226,7 +226,7 @@ Status ContinentalArs548HwInterface::SetRadarParameters(
     return Status::ERROR_1;
   }
 
-  sensor_udp_driver_->sender()->asyncSend(send_vector);
+  sensor_udp_driver_ptr_->sender()->asyncSend(send_vector);
 
   return Status::OK;
 }
@@ -267,7 +267,7 @@ Status ContinentalArs548HwInterface::SetSensorIPAddress(const std::string & sens
     return Status::ERROR_1;
   }
 
-  sensor_udp_driver_->sender()->asyncSend(send_vector);
+  sensor_udp_driver_ptr_->sender()->asyncSend(send_vector);
 
   return Status::OK;
 }
@@ -298,7 +298,7 @@ Status ContinentalArs548HwInterface::SetAccelerationLateralCog(float lateral_acc
     return Status::ERROR_1;
   }
 
-  sensor_udp_driver_->sender()->asyncSend(send_vector);
+  sensor_udp_driver_ptr_->sender()->asyncSend(send_vector);
 
   return Status::OK;
 }
@@ -331,7 +331,7 @@ Status ContinentalArs548HwInterface::SetAccelerationLongitudinalCog(float longit
     return Status::ERROR_1;
   }
 
-  sensor_udp_driver_->sender()->asyncSend(send_vector);
+  sensor_udp_driver_ptr_->sender()->asyncSend(send_vector);
 
   return Status::OK;
 }
@@ -362,7 +362,7 @@ Status ContinentalArs548HwInterface::SetCharacteristicSpeed(float characteristic
     return Status::ERROR_1;
   }
 
-  sensor_udp_driver_->sender()->asyncSend(send_vector);
+  sensor_udp_driver_ptr_->sender()->asyncSend(send_vector);
 
   return Status::OK;
 }
@@ -398,7 +398,7 @@ Status ContinentalArs548HwInterface::SetDrivingDirection(int direction)
     return Status::ERROR_1;
   }
 
-  sensor_udp_driver_->sender()->asyncSend(send_vector);
+  sensor_udp_driver_ptr_->sender()->asyncSend(send_vector);
 
   return Status::OK;
 }
@@ -430,7 +430,7 @@ Status ContinentalArs548HwInterface::SetSteeringAngleFrontAxle(float angle_rad)
     return Status::ERROR_1;
   }
 
-  sensor_udp_driver_->sender()->asyncSend(send_vector);
+  sensor_udp_driver_ptr_->sender()->asyncSend(send_vector);
 
   return Status::OK;
 }
@@ -461,7 +461,7 @@ Status ContinentalArs548HwInterface::SetVelocityVehicle(float velocity_kmh)
     return Status::ERROR_1;
   }
 
-  sensor_udp_driver_->sender()->asyncSend(send_vector);
+  sensor_udp_driver_ptr_->sender()->asyncSend(send_vector);
 
   return Status::OK;
 }
@@ -492,7 +492,7 @@ Status ContinentalArs548HwInterface::SetYawRate(float yaw_rate)
     return Status::ERROR_1;
   }
 
-  sensor_udp_driver_->sender()->asyncSend(send_vector);
+  sensor_udp_driver_ptr_->sender()->asyncSend(send_vector);
 
   return Status::OK;
 }
