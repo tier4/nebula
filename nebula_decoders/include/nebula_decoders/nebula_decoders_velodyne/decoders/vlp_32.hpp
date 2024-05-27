@@ -9,6 +9,8 @@ namespace drivers
 class VLP32 : public VelodyneSensor
 {
 public:
+// calculate and stack the firing timing for each laser timeing
+/// @brief laser timing for VLP32 from VLP32 User manual in p.61
   bool fillAzimuthCache()
   {
     for (uint8_t i = 0; i < 16; i++) {
@@ -17,6 +19,11 @@ public:
     return true;
   }
 
+  /// @brief fomula from VLP32 User manual in p.62
+  /// @param azimuth Azimuth angle
+  /// @param azimuth_diff Azimuth difference between a current azimuth and a next azimuth
+  /// @param firing_order Firing order
+  /// @return Corrected azimuth
   uint16_t getAzimuthCorrected(
     uint16_t azimuth, float azimuth_diff, int /* firing_sequence */, int firing_order)
   {
@@ -25,6 +32,7 @@ public:
     return static_cast<uint16_t>(round(azimuth_corrected)) % 36000;
   }
 
+  // Choose the correct azimuth from the 2 azimuthes
   uint16_t getTrueRotation(uint16_t azimuth_corrected, uint16_t current_block_rotation)
   {
     return current_block_rotation;
