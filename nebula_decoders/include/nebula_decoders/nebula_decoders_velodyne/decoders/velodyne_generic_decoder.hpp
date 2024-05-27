@@ -104,7 +104,7 @@ public:
   }
 
   int pointsPerPacket() { return BLOCKS_PER_PACKET * CHANNELS_PER_BLOCK; }
-
+  
   void reset_pointcloud(size_t n_pts, double time_stamp)
   {
     //  scan_pc_.reset(new NebulaPointCloud);
@@ -286,7 +286,7 @@ public:
                 sensor_.getAzimuthCorrected(azimuth, azimuth_diff, firing_seq, firing_order);
 
               // Condition added to avoid calculating points which are not in the interesting
-              // defined area (cloud_min_angle < area < cloud_max_angle).
+              // defined area (cloud_min_angle <= area <= cloud_max_angle).
               if (true) {
                 // convert polar coordinates to Euclidean XYZ.
                 const float cos_vert_angle = corrections.cos_vert_correction;

@@ -9,12 +9,16 @@ namespace drivers
 class VLS128 : public VelodyneSensor
 {
 public:
+  // To ignore an empty data blocks in VLS128 case
+  /// @brief VLS128 Dual return mode data structure in VLS128 User manual p.57
   int getNumPaddingBlocks(bool dual_return)
   {
     if (dual_return) return 4;
     return 0;
   }
 
+// calculate and stack the firing timing for each laser timeing
+/// @brief laser timing for VLS128 from VLS128 User manual in p.61
   bool fillAzimuthCache()
   {
     for (uint8_t i = 0; i < 16; i++) {
@@ -23,6 +27,11 @@ public:
     return true;
   }
 
+  /// @brief fomula from VLS128 User manual in p.65
+  /// @param azimuth Azimuth angle
+  /// @param azimuth_diff Azimuth difference
+  /// @param firing_order Firing order
+  /// @return Corrected azimuth
   uint16_t getAzimuthCorrected(
     uint16_t azimuth, float azimuth_diff, int /* firing_sequence */, int firing_order)
   {
