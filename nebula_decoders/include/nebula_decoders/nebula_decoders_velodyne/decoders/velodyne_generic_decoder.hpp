@@ -220,161 +220,159 @@ public:
 
       // Condition added to avoid calculating points which are not in the interesting defined area
       // (cloud_min_angle <= area <= cloud_max_angle).
-      if (
-        (sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle &&
-         azimuth >= sensor_configuration_->cloud_min_angle * 100 &&
-         azimuth <= sensor_configuration_->cloud_max_angle * 100) ||
-        (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
-         (azimuth <= sensor_configuration_->cloud_max_angle * 100 ||
+      if (!(sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle &&
+          azimuth >= sensor_configuration_->cloud_min_angle * 100 &&
+          azimuth <= sensor_configuration_->cloud_max_angle * 100) &&
+          !(sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
+          (azimuth <= sensor_configuration_->cloud_max_angle * 100 ||
           azimuth >= sensor_configuration_->cloud_min_angle * 100))) {
-        for (int firing_seq = 0, k = 0;
-             firing_seq <
-             std::max(static_cast<long>(SensorT::firing_sequences_per_block), static_cast<long>(1));
-             firing_seq++) {
-          for (int channel = 0;
-               channel < CHANNELS_PER_BLOCK && channel < SensorT::channels_per_firing_sequence;
-               channel++, k += RAW_CHANNEL_SIZE) {
-            union two_bytes current_return;
-            union two_bytes other_return;
+            continue;
+          }
+          
+      for (int firing_seq = 0, k = 0;
+            firing_seq <
+            std::max(static_cast<long>(SensorT::firing_sequences_per_block), static_cast<long>(1));
+            firing_seq++) {
+        for (int channel = 0;
+              channel < CHANNELS_PER_BLOCK && channel < SensorT::channels_per_firing_sequence;
+              channel++, k += RAW_CHANNEL_SIZE) {
+          union two_bytes current_return;
+          union two_bytes other_return;
 
-            // Distance extraction.
-            current_return.bytes[0] = current_block.data[k];
-            current_return.bytes[1] = current_block.data[k + 1];
-            if (dual_return) {
-              other_return.bytes[0] =
-                block % 2 ? raw->blocks[block - 1].data[k] : raw->blocks[block + 1].data[k];
-              other_return.bytes[1] =
-                block % 2 ? raw->blocks[block - 1].data[k + 1] : raw->blocks[block + 1].data[k + 1];
-            }
+          // Distance extraction.
+          current_return.bytes[0] = current_block.data[k];
+          current_return.bytes[1] = current_block.data[k + 1];
+          if (dual_return) {
+            other_return.bytes[0] =
+              block % 2 ? raw->blocks[block - 1].data[k] : raw->blocks[block + 1].data[k];
+            other_return.bytes[1] =
+              block % 2 ? raw->blocks[block - 1].data[k + 1] : raw->blocks[block + 1].data[k + 1];
+          }
 
-            // Apply timestamp if this is the first new packet in the scan.
-            auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
-            if (scan_timestamp_ < 0) {
-              scan_timestamp_ = block_timestamp;
-            }
+          // Apply timestamp if this is the first new packet in the scan.
+          auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
+          if (scan_timestamp_ < 0) {
+            scan_timestamp_ = block_timestamp;
+          }
 
-            // Do not process if there is no return, or in dual return mode and the first and last
-            // echos are the same.
-            if (
-              (current_return.bytes[0] == 0 && current_return.bytes[1] == 0) ||
-              (dual_return && block % 2 && other_return.bytes[0] == current_return.bytes[0] &&
-               other_return.bytes[1] == current_return.bytes[1])) {
+          // Do not process if there is no return, or in dual return mode and the first and last
+          // echos are the same.
+          if (
+            (current_return.bytes[0] == 0 && current_return.bytes[1] == 0) ||
+            (dual_return && block % 2 && other_return.bytes[0] == current_return.bytes[0] &&
+              other_return.bytes[1] == current_return.bytes[1])) {
+            continue;
+          }
+
+          const uint laser_number =
+            channel + bank_origin;  // offset the laser in this block by which block it's in
+          const uint firing_order =
+            laser_number / SensorT::num_simultaneous_firings;  // VLS-128 fires 8 lasers at a
+                                                                // time, VLP32 = 2, VLP16 = 1
+
+          VelodyneLaserCorrection & corrections =
+            calibration_configuration_->velodyne_calibration.laser_corrections[laser_number];
+
+          float distance = current_return.uint * SensorT::distance_resolution_m;
+          if (distance > 1e-6) {
+            distance += corrections.dist_correction;
+          }
+
+          if (
+            !(distance > sensor_configuration_->min_range &&
+            distance < sensor_configuration_->max_range)) {
               continue;
             }
+          // Correct for the laser rotation as a function of timing during the firings.
+          uint16_t azimuth_corrected =
+            sensor_.getAzimuthCorrected(azimuth, azimuth_diff, firing_seq, firing_order);
 
-            const uint laser_number =
-              channel + bank_origin;  // offset the laser in this block by which block it's in
-            const uint firing_order =
-              laser_number / SensorT::num_simultaneous_firings;  // VLS-128 fires 8 lasers at a
-                                                                 // time, VLP32 = 2, VLP16 = 1
+            // convert polar coordinates to Euclidean XYZ.
+            const float cos_vert_angle = corrections.cos_vert_correction;
+            const float sin_vert_angle = corrections.sin_vert_correction;
+            const float cos_rot_correction = corrections.cos_rot_correction;
+            const float sin_rot_correction = corrections.sin_rot_correction;
 
-            VelodyneLaserCorrection & corrections =
-              calibration_configuration_->velodyne_calibration.laser_corrections[laser_number];
+            // select correct azimuth if vlp32 current_block.rotation, if vlp128 and vlp16 azimuth_corrected
+            azimuth_corrected = sensor_.getTrueRotation(azimuth_corrected, current_block.rotation);
+            const float cos_rot_angle = cos_rot_table_[azimuth_corrected] * cos_rot_correction +
+                                        sin_rot_table_[azimuth_corrected] * sin_rot_correction;
+            const float sin_rot_angle = sin_rot_table_[azimuth_corrected] * cos_rot_correction -
+                                        cos_rot_table_[azimuth_corrected] * sin_rot_correction;
 
-            float distance = current_return.uint * SensorT::distance_resolution_m;
-            if (distance > 1e-6) {
-              distance += corrections.dist_correction;
-            }
+            // Compute the distance in the xy plane (w/o accounting for rotation).
+            const float xy_distance = distance * cos_vert_angle;
 
-            if (
-              distance > sensor_configuration_->min_range &&
-              distance < sensor_configuration_->max_range) {
-              // Correct for the laser rotation as a function of timing during the firings.
-              uint16_t azimuth_corrected =
-                sensor_.getAzimuthCorrected(azimuth, azimuth_diff, firing_seq, firing_order);
+            // Use standard ROS coordinate system (right-hand rule).
+            const float x_coord = xy_distance * cos_rot_angle;     // velodyne y
+            const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
+            const float z_coord = distance * sin_vert_angle;                // velodyne z
 
-              // Condition added to avoid calculating points which are not in the interesting
-              // defined area (cloud_min_angle <= area <= cloud_max_angle).
-              if (true) {
-                // convert polar coordinates to Euclidean XYZ.
-                const float cos_vert_angle = corrections.cos_vert_correction;
-                const float sin_vert_angle = corrections.sin_vert_correction;
-                const float cos_rot_correction = corrections.cos_rot_correction;
-                const float sin_rot_correction = corrections.sin_rot_correction;
+            const uint8_t intensity = current_block.data[k + 2];
 
-                // select correct azimuth if vlp32 current_block.rotation, if vlp128 and vlp16 azimuth_corrected
-                azimuth_corrected = sensor_.getTrueRotation(azimuth_corrected, current_block.rotation);
-                const float cos_rot_angle = cos_rot_table_[azimuth_corrected] * cos_rot_correction +
-                                            sin_rot_table_[azimuth_corrected] * sin_rot_correction;
-                const float sin_rot_angle = sin_rot_table_[azimuth_corrected] * cos_rot_correction -
-                                            cos_rot_table_[azimuth_corrected] * sin_rot_correction;
+            last_block_timestamp_ = block_timestamp;
 
-                // Compute the distance in the xy plane (w/o accounting for rotation).
-                const float xy_distance = distance * cos_vert_angle;
+            double point_time_offset = timing_offsets_[block][channel];
 
-                // Use standard ROS coordinate system (right-hand rule).
-                const float x_coord = xy_distance * cos_rot_angle;     // velodyne y
-                const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
-                const float z_coord = distance * sin_vert_angle;                // velodyne z
+            // Determine return type.
+            uint8_t return_type;
+            switch (return_mode) {
+              case RETURN_MODE_DUAL:
+                if (
+                  (other_return.bytes[0] == 0 && other_return.bytes[1] == 0) ||
+                  (other_return.bytes[0] == current_return.bytes[0] &&
+                    other_return.bytes[1] == current_return.bytes[1])) {
+                  return_type = static_cast<uint8_t>(drivers::ReturnType::IDENTICAL);
+                } else {
+                  const float other_intensity = block % 2 ? raw->blocks[block - 1].data[k + 2]
+                                                            : raw->blocks[block + 1].data[k + 2];
 
-                const uint8_t intensity = current_block.data[k + 2];
+                  bool first =
+                    other_return.uint >=
+                    current_return
+                      .uint;  // TODO: understand why this differs from VLP16 original decoder
 
-                last_block_timestamp_ = block_timestamp;
-
-                double point_time_offset = timing_offsets_[block][channel];
-
-                // Determine return type.
-                uint8_t return_type;
-                switch (return_mode) {
-                  case RETURN_MODE_DUAL:
-                    if (
-                      (other_return.bytes[0] == 0 && other_return.bytes[1] == 0) ||
-                      (other_return.bytes[0] == current_return.bytes[0] &&
-                       other_return.bytes[1] == current_return.bytes[1])) {
-                      return_type = static_cast<uint8_t>(drivers::ReturnType::IDENTICAL);
-                    } else {
-                      const float other_intensity = block % 2 ? raw->blocks[block - 1].data[k + 2]
-                                                               : raw->blocks[block + 1].data[k + 2];
-
-                      bool first =
-                        other_return.uint >=
-                        current_return
-                          .uint;  // TODO: understand why this differs from VLP16 original decoder
-
-                      bool strongest = other_intensity < intensity;
-                      if (other_intensity == intensity) {
-                        strongest = !first;
-                      }
-                      if (first && strongest) {
-                        return_type = static_cast<uint8_t>(drivers::ReturnType::FIRST_STRONGEST);
-                      } else if (!first && strongest) {
-                        return_type = static_cast<uint8_t>(drivers::ReturnType::LAST_STRONGEST);
-                      } else if (first && !strongest) {
-                        return_type = static_cast<uint8_t>(drivers::ReturnType::FIRST_WEAK);
-                      } else if (!first && !strongest) {
-                        return_type = static_cast<uint8_t>(drivers::ReturnType::LAST_WEAK);
-                      } else {
-                        return_type = static_cast<uint8_t>(drivers::ReturnType::UNKNOWN);
-                      }
-                    }
-                    break;
-                  case RETURN_MODE_STRONGEST:
-                    return_type = static_cast<uint8_t>(drivers::ReturnType::STRONGEST);
-                    break;
-                  case RETURN_MODE_LAST:
-                    return_type = static_cast<uint8_t>(drivers::ReturnType::LAST);
-                    break;
-                  default:
+                  bool strongest = other_intensity < intensity;
+                  if (other_intensity == intensity) {
+                    strongest = !first;
+                  }
+                  if (first && strongest) {
+                    return_type = static_cast<uint8_t>(drivers::ReturnType::FIRST_STRONGEST);
+                  } else if (!first && strongest) {
+                    return_type = static_cast<uint8_t>(drivers::ReturnType::LAST_STRONGEST);
+                  } else if (first && !strongest) {
+                    return_type = static_cast<uint8_t>(drivers::ReturnType::FIRST_WEAK);
+                  } else if (!first && !strongest) {
+                    return_type = static_cast<uint8_t>(drivers::ReturnType::LAST_WEAK);
+                  } else {
                     return_type = static_cast<uint8_t>(drivers::ReturnType::UNKNOWN);
+                  }
                 }
-
-                drivers::NebulaPoint current_point{};
-                current_point.x = x_coord;
-                current_point.y = y_coord;
-                current_point.z = z_coord;
-                current_point.return_type = return_type;
-                current_point.channel = corrections.laser_ring;
-                current_point.azimuth = rotation_radians_[azimuth_corrected];
-                current_point.elevation = sin_vert_angle;
-                current_point.distance = distance;
-                auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
-                if (point_ts < 0) point_ts = 0;
-                current_point.time_stamp = static_cast<uint32_t>(point_ts * 1e9);
-                current_point.intensity = intensity;
-                scan_pc_->points.emplace_back(current_point);
-              }
+                break;
+              case RETURN_MODE_STRONGEST:
+                return_type = static_cast<uint8_t>(drivers::ReturnType::STRONGEST);
+                break;
+              case RETURN_MODE_LAST:
+                return_type = static_cast<uint8_t>(drivers::ReturnType::LAST);
+                break;
+              default:
+                return_type = static_cast<uint8_t>(drivers::ReturnType::UNKNOWN);
             }
-          }
+
+            drivers::NebulaPoint current_point{};
+            current_point.x = x_coord;
+            current_point.y = y_coord;
+            current_point.z = z_coord;
+            current_point.return_type = return_type;
+            current_point.channel = corrections.laser_ring;
+            current_point.azimuth = rotation_radians_[azimuth_corrected];
+            current_point.elevation = sin_vert_angle;
+            current_point.distance = distance;
+            auto point_ts = block_timestamp - scan_timestamp_ + point_time_offset;
+            if (point_ts < 0) point_ts = 0;
+            current_point.time_stamp = static_cast<uint32_t>(point_ts * 1e9);
+            current_point.intensity = intensity;
+            scan_pc_->points.emplace_back(current_point);
         }
       }
     }
