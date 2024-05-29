@@ -62,42 +62,6 @@ static const uint16_t g_return_mode_strongest = 55;
 static const uint16_t g_return_mode_last = 56;
 static const uint16_t g_return_mode_dual = 57;
 
-/** Special Defines for VLP16 support **/
-static const int g_vlp16_firings_per_block = 2;
-static const int g_vlp16_scans_per_firing = 16;
-static const float g_vlp16_block_duration = 110.592f;  // [µs]
-static const float g_vlp16_dsr_toffset = 2.304f;       // [µs]
-static const float g_vlp16_firing_toffset = 55.296f;   // [µs]
-
-/** Special Defines for VLP32 support **/
-static const float g_vlp32_channel_duration = 2.304f;  // [µs]
-static const float g_vlp32_seq_duration = 55.296f;     // [µs]
-
-/** Special Definitions for VLS32 support **/
-static const float VLP32_CHANNEL_DURATION =
-  2.304f;  // [µs] Channels corresponds to one laser firing
-static const float VLP32_SEQ_DURATION =
-  55.296f;  // [µs] Sequence is a set of laser firings including recharging
-
-/** Special Definitions for VLS128 support **/
-static const float g_vlp128_distance_resolution = 0.004f;  // [m]
-
-/** Special Definitions for VLS128 support **/
-// These are used to detect which bank of 32 lasers is in this block
-static const uint16_t BANK_1 = 0xeeff;
-static const uint16_t BANK_2 = 0xddff;
-static const uint16_t BANK_3 = 0xccff;
-static const uint16_t BANK_4 = 0xbbff;
-
-static const float g_vls128_channel_duration =
-  2.665f;  // [µs] Channels corresponds to one laser firing
-static const float g_vls128_seq_duration =
-  53.3f;  // [µs] Sequence is a set of laser firings including recharging
-
-static const size_t g_offset_first_azimuth = 2;
-static const size_t g_offset_last_azimuth = 1102;
-static const uint32_t g_degree_subdivisions = 100;
-
 /** \brief Raw Velodyne data block.
  *
  *  Each block contains data from either the upper or lower laser

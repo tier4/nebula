@@ -61,6 +61,18 @@ public:
 
   constexpr static double offset_packet_time = 8.7 * 1e-6;
 
+  /** Special Definitions for VLS128 support **/
+  constexpr static const float VLP128_DISTANCE_RESOLUTION = 0.004f;  // [m]
+
+  constexpr static const float VLS128_CHANNEL_DURATION = 2.665f;  // [µs] Channels corresponds to one laser firing
+
+  constexpr static const float VLS128_SEQ_DURATION = 53.3f;  // [µs] Sequence is a set of laser firings including recharging
+  // These are used to detect which bank of 32 lasers is in this block
+  constexpr static const uint16_t BANK_1 = 0xeeff;
+  constexpr static const uint16_t BANK_2 = 0xddff;
+  constexpr static const uint16_t BANK_3 = 0xccff;
+  constexpr static const uint16_t BANK_4 = 0xbbff;
+
 private:
   float laser_azimuth_cache_[16];
 };

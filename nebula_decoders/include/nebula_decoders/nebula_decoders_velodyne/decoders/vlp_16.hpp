@@ -47,6 +47,13 @@ public:
   constexpr static double single_firing_s = 2.304 * 1e-6;
 
   constexpr static double offset_packet_time = 0;
+
+  /** Special Defines for VLP16 support **/
+  constexpr static const int VLP16_FIRINGS_PER_BLOCK = 2;
+  constexpr static const int VLP16_SCANS_PER_FIRING = 16;
+  constexpr static const float VLP16_BLOCK_DURATION = 110.592f;  // [µs]
+  constexpr static const float VLP16_DSR_TOFFSET = 2.304f;       // [µs]
+  constexpr static const float VLP16_FIRING_TOFFSET = 55.296f;   // [µs]
 };
 }  // namespace drivers
 }  // namespace nebula
