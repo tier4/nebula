@@ -54,6 +54,13 @@ public:
 
   constexpr static double offset_packet_time = 0;
 
+  /** Special Definitions for VLS32 support **/
+  constexpr static const float VLP32_CHANNEL_DURATION =
+    2.304f;  // [µs] Channels corresponds to one laser firing
+  constexpr static const float VLP32_SEQ_DURATION =
+    55.296f;  // [µs] Sequence is a set of laser firings including recharging
+
+
 private:
   float laser_azimuth_cache_[16];
 };

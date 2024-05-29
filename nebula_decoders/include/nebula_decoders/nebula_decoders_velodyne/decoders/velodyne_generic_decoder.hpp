@@ -173,16 +173,16 @@ public:
       uint bank_origin = 0;
       // Used to detect which bank of 32 lasers is in this block.
       switch (current_block.header) {
-        case BANK_1:
+        case VLS128::BANK_1:
           bank_origin = 0;
           break;
-        case BANK_2:
+        case VLS128::BANK_2:
           bank_origin = 32;
           break;
-        case BANK_3:
+        case VLS128::BANK_3:
           bank_origin = 64;
           break;
-        case BANK_4:
+        case VLS128::BANK_4:
           bank_origin = 96;
           break;
         default:
