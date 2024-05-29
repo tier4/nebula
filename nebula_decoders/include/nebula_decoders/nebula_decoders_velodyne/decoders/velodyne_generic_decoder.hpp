@@ -157,7 +157,11 @@ public:
 
   void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
   {
-    const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
+    // const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
+    raw_packet_t raw_instance;
+    raw_packet_t * raw = &raw_instance;
+    std::memcpy(raw, &velodyne_packet.data[0], sizeof(raw_packet_t));
+
     float last_azimuth_diff = 0;
     uint16_t azimuth_next;
     const uint8_t return_mode = velodyne_packet.data[RETURN_MODE_INDEX];
