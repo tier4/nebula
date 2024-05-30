@@ -50,13 +50,6 @@ struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
   float configuration_vehicle_wheelbase{};
 };
 
-/// @brief struct for Multiple ARS548 sensor configuration
-struct MultiContinentalARS548SensorConfiguration : ContinentalARS548SensorConfiguration
-{
-  std::vector<std::string> sensor_ips{};
-  std::vector<std::string> frame_ids{};
-};
-
 /// @brief Convert ContinentalARS548SensorConfiguration to string (Overloading the <<
 /// operator)
 /// @param os
@@ -74,33 +67,6 @@ inline std::ostream & operator<<(
      << ", ConfigurationVehicleWidth: " << arg.configuration_vehicle_width
      << ", ConfigurationVehicleHeight: " << arg.configuration_vehicle_height
      << ", ConfigurationVehicleWheelbase: " << arg.configuration_vehicle_wheelbase;
-  return os;
-}
-
-/// @brief Convert MultiContinentalARS548SensorConfiguration to string (Overloading the <<
-/// operator)
-/// @param os
-/// @param arg
-/// @return stream
-inline std::ostream & operator<<(
-  std::ostream & os, MultiContinentalARS548SensorConfiguration const & arg)
-{
-  std::stringstream sensor_ips_ss;
-  sensor_ips_ss << "[";
-  for (const auto sensor_ip : arg.sensor_ips) {
-    sensor_ips_ss << sensor_ip << ", ";
-  }
-  sensor_ips_ss << "]";
-
-  std::stringstream frame_ids_ss;
-  frame_ids_ss << "[";
-  for (const auto frame_id : arg.frame_ids) {
-    frame_ids_ss << frame_id << ", ";
-  }
-  frame_ids_ss << "]";
-
-  os << (ContinentalARS548SensorConfiguration)(arg) << ", MulticastIP: " << arg.multicast_ip
-     << ", SensorIPs: " << sensor_ips_ss.str() << ", FrameIds: " << frame_ids_ss.str();
   return os;
 }
 
@@ -613,7 +579,7 @@ struct FilterStatusPacket
 
 #pragma pack(pop)
 
-struct PointArs548Detection
+struct PointARS548Detection
 {
   PCL_ADD_POINT4D;
   float azimuth;
@@ -636,7 +602,7 @@ struct PointArs548Detection
 
 // Note we only use a subset of the data since POINT_CLOUD_REGISTER_POINT_STRUCT has a limit in the
 // number of fields
-struct PointArs548Object
+struct PointARS548Object
 {
   PCL_ADD_POINT4D;
   uint32_t id;
@@ -664,7 +630,7 @@ struct PointArs548Object
 }  // namespace nebula
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::continental_ars548::PointArs548Detection,
+  nebula::drivers::continental_ars548::PointARS548Detection,
   (float, x, x)(float, y, y)(float, z, z)(float, azimuth, azimuth)(float, azimuth_std, azimuth_std)(
     float, elevation, elevation)(float, elevation_std, elevation_std)(float, range, range)(
     float, range_std, range_std)(int8_t, rcs, rcs)(uint16_t, measurement_id, measurement_id)(
@@ -675,7 +641,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
 
 // Note: we can only use up to 20 fields
 POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::continental_ars548::PointArs548Object,
+  nebula::drivers::continental_ars548::PointARS548Object,
   (float, x, x)(float, y, y)(float, z, z)(uint32_t, id, id)(uint16_t, age, age)(
     uint8_t, status_measurement, status_measurement)(uint8_t, status_movement, status_movement)(
     uint8_t, position_reference,

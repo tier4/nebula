@@ -315,15 +315,15 @@ void ContinentalARS548DecoderWrapper::PacketsCallback(
   }
 }
 
-pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Detection>::Ptr
+pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr
 ContinentalARS548DecoderWrapper::ConvertToPointcloud(
   const continental_msgs::msg::ContinentalArs548DetectionList & msg)
 {
-  pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Detection>::Ptr output_pointcloud(
-    new pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Detection>);
+  pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr output_pointcloud(
+    new pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>);
   output_pointcloud->reserve(msg.detections.size());
 
-  nebula::drivers::continental_ars548::PointArs548Detection point{};
+  nebula::drivers::continental_ars548::PointARS548Detection point{};
   for (const auto & detection : msg.detections) {
     point.x =
       std::cos(detection.elevation_angle) * std::cos(detection.azimuth_angle) * detection.range;
@@ -355,15 +355,15 @@ ContinentalARS548DecoderWrapper::ConvertToPointcloud(
   return output_pointcloud;
 }
 
-pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Object>::Ptr
+pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr
 ContinentalARS548DecoderWrapper::ConvertToPointcloud(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
-  pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Object>::Ptr output_pointcloud(
-    new pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Object>);
+  pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr output_pointcloud(
+    new pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>);
   output_pointcloud->reserve(msg.objects.size());
 
-  nebula::drivers::continental_ars548::PointArs548Object point{};
+  nebula::drivers::continental_ars548::PointARS548Object point{};
   for (const auto & object : msg.objects) {
     point.x = static_cast<float>(object.position.x);
     point.y = static_cast<float>(object.position.y);
