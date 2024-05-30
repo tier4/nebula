@@ -41,18 +41,18 @@ namespace ros
 class ContinentalRosDecoderTest final : public rclcpp::Node,
                                         NebulaDriverRosWrapperBase  //, testing::Test
 {
-  std::shared_ptr<drivers::continental_ars548::ContinentalArs548Decoder> driver_ptr_;
+  std::shared_ptr<drivers::continental_ars548::ContinentalARS548Decoder> driver_ptr_;
   Status wrapper_status_;
 
-  std::shared_ptr<drivers::continental_ars548::ContinentalArs548SensorConfiguration>
+  std::shared_ptr<drivers::continental_ars548::ContinentalARS548SensorConfiguration>
     sensor_cfg_ptr_;
 
   Status InitializeDriver(
-    std::shared_ptr<drivers::continental_ars548::ContinentalArs548SensorConfiguration>
+    std::shared_ptr<drivers::continental_ars548::ContinentalARS548SensorConfiguration>
       sensor_configuration);
 
   Status GetParameters(
-    drivers::continental_ars548::ContinentalArs548SensorConfiguration & sensor_configuration);
+    drivers::continental_ars548::ContinentalARS548SensorConfiguration & sensor_configuration);
 
   void CheckResult(const std::string msg_as_string, const std::string & gt_path);
 

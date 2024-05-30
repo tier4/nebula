@@ -33,11 +33,11 @@ namespace drivers
 namespace continental_ars548
 {
 /// @brief Hardware interface of the Continental ARS548 radar
-class ContinentalArs548HwInterface
+class ContinentalARS548HwInterface
 {
 public:
   /// @brief Constructor
-  ContinentalArs548HwInterface();
+  ContinentalARS548HwInterface();
 
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
@@ -51,7 +51,7 @@ public:
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
   Status SetSensorConfiguration(
-    std::shared_ptr<const ContinentalArs548SensorConfiguration> sensor_configuration);
+    std::shared_ptr<const ContinentalARS548SensorConfiguration> sensor_configuration);
 
   /// @brief Registering callback
   /// @param callback Callback function
@@ -165,7 +165,7 @@ private:
 
   std::unique_ptr<::drivers::common::IoContext> sensor_io_context_ptr_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> sensor_udp_driver_ptr_;
-  std::shared_ptr<const ContinentalArs548SensorConfiguration> config_ptr_;
+  std::shared_ptr<const ContinentalARS548SensorConfiguration> config_ptr_;
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket>)> packet_callback_;
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger_ptr_;

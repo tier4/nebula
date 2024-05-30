@@ -43,20 +43,20 @@ namespace nebula
 {
 namespace ros
 {
-class ContinentalArs548DecoderWrapper
+class ContinentalARS548DecoderWrapper
 {
 public:
-  ContinentalArs548DecoderWrapper(
+  ContinentalARS548DecoderWrapper(
     rclcpp::Node * const parent_node,
     std::shared_ptr<
-      const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> & config,
+      const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config,
     bool launch_hw);
 
   void ProcessPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
   void OnConfigChange(
     const std::shared_ptr<
-      const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
+      const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
       new_config);
 
   rcl_interfaces::msg::SetParametersResult OnParameterChange(
@@ -73,19 +73,19 @@ public:
   /// @param msg The new ContinentalArs548ObjectList from the driver
   void ObjectListCallback(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg);
 
-  /// @brief Callback to process new ContinentalArs548Status from the driver
+  /// @brief Callback to process new ContinentalARS548Status from the driver
   /// @param msg The new ContinentalArs548ObjectList from the driver
   void SensorStatusCallback(
-    const drivers::continental_ars548::ContinentalArs548Status & sensor_status);
+    const drivers::continental_ars548::ContinentalARS548Status & sensor_status);
 
-  /// @brief Callback to process new ContinentalArs548Status from the driver
+  /// @brief Callback to process new ContinentalARS548Status from the driver
   /// @param msg The new ContinentalArs548ObjectList from the driver
   void PacketsCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg);
 
 private:
   nebula::Status InitializeDriver(
     const std::shared_ptr<
-      const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> & config);
+      const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config);
 
   /// @brief Convert ARS548 detections to a pointcloud
   /// @param msg The ARS548 detection list msg
@@ -129,10 +129,10 @@ private:
   nebula::Status status_;
   rclcpp::Logger logger_;
 
-  std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration>
+  std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration>
     config_ptr_{};
 
-  std::shared_ptr<drivers::continental_ars548::ContinentalArs548Decoder> driver_ptr_{};
+  std::shared_ptr<drivers::continental_ars548::ContinentalARS548Decoder> driver_ptr_{};
   std::mutex mtx_driver_ptr_;
 
   rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_{};

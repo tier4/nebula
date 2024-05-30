@@ -20,19 +20,19 @@ namespace nebula
 {
 namespace ros
 {
-ContinentalArs548DecoderWrapper::ContinentalArs548DecoderWrapper(
+ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   rclcpp::Node * const parent_node,
-  std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
+  std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
     config_ptr,
   bool launch_hw)
 : status_(nebula::Status::NOT_INITIALIZED),
-  logger_(parent_node->get_logger().get_child("ContinentalArs548Decoder")),
+  logger_(parent_node->get_logger().get_child("ContinentalARS548Decoder")),
   config_ptr_(config_ptr)
 {
   using std::chrono_literals::operator""us;
   if (!config_ptr) {
     throw std::runtime_error(
-      "ContinentalArs548DecoderWrapper cannot be instantiated without a valid config!");
+      "ContinentalARS548DecoderWrapper cannot be instantiated without a valid config!");
   }
 
   RCLCPP_INFO(logger_, "Starting Decoder");
@@ -89,28 +89,28 @@ ContinentalArs548DecoderWrapper::ContinentalArs548DecoderWrapper(
     });
 }
 
-Status ContinentalArs548DecoderWrapper::InitializeDriver(
+Status ContinentalARS548DecoderWrapper::InitializeDriver(
   const std::shared_ptr<
-    const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> & config)
+    const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config)
 {
   driver_ptr_.reset();
-  driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalArs548Decoder>(config);
+  driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalARS548Decoder>(config);
 
   driver_ptr_->RegisterDetectionListCallback(std::bind(
-    &ContinentalArs548DecoderWrapper::DetectionListCallback, this, std::placeholders::_1));
+    &ContinentalARS548DecoderWrapper::DetectionListCallback, this, std::placeholders::_1));
   driver_ptr_->RegisterObjectListCallback(
-    std::bind(&ContinentalArs548DecoderWrapper::ObjectListCallback, this, std::placeholders::_1));
+    std::bind(&ContinentalARS548DecoderWrapper::ObjectListCallback, this, std::placeholders::_1));
   driver_ptr_->RegisterSensorStatusCallback(
-    std::bind(&ContinentalArs548DecoderWrapper::SensorStatusCallback, this, std::placeholders::_1));
+    std::bind(&ContinentalARS548DecoderWrapper::SensorStatusCallback, this, std::placeholders::_1));
   driver_ptr_->RegisterPacketsCallback(
-    std::bind(&ContinentalArs548DecoderWrapper::PacketsCallback, this, std::placeholders::_1));
+    std::bind(&ContinentalARS548DecoderWrapper::PacketsCallback, this, std::placeholders::_1));
 
   return Status::OK;
 }
 
-void ContinentalArs548DecoderWrapper::OnConfigChange(
+void ContinentalARS548DecoderWrapper::OnConfigChange(
   const std::shared_ptr<
-    const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
+    const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
     new_config_ptr)
 {
   std::lock_guard lock(mtx_driver_ptr_);
@@ -118,7 +118,7 @@ void ContinentalArs548DecoderWrapper::OnConfigChange(
   config_ptr_ = new_config_ptr;
 }
 
-void ContinentalArs548DecoderWrapper::ProcessPacket(
+void ContinentalARS548DecoderWrapper::ProcessPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   driver_ptr_->ProcessPacket(std::move(packet_msg));
@@ -126,7 +126,7 @@ void ContinentalArs548DecoderWrapper::ProcessPacket(
   cloud_watchdog_->update();
 }
 
-void ContinentalArs548DecoderWrapper::DetectionListCallback(
+void ContinentalARS548DecoderWrapper::DetectionListCallback(
   std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg)
 {
   if (
@@ -155,7 +155,7 @@ void ContinentalArs548DecoderWrapper::DetectionListCallback(
   }
 }
 
-void ContinentalArs548DecoderWrapper::ObjectListCallback(
+void ContinentalARS548DecoderWrapper::ObjectListCallback(
   std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg)
 {
   if (
@@ -191,8 +191,8 @@ void ContinentalArs548DecoderWrapper::ObjectListCallback(
   }
 }
 
-void ContinentalArs548DecoderWrapper::SensorStatusCallback(
-  const drivers::continental_ars548::ContinentalArs548Status & sensor_status)
+void ContinentalARS548DecoderWrapper::SensorStatusCallback(
+  const drivers::continental_ars548::ContinentalARS548Status & sensor_status)
 {
   diagnostic_msgs::msg::DiagnosticArray diagnostic_array_msg;
   diagnostic_array_msg.header.stamp.sec = sensor_status.timestamp_seconds;
@@ -305,7 +305,7 @@ void ContinentalArs548DecoderWrapper::SensorStatusCallback(
   diagnostics_pub_->publish(diagnostic_array_msg);
 }
 
-void ContinentalArs548DecoderWrapper::PacketsCallback(
+void ContinentalARS548DecoderWrapper::PacketsCallback(
   std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg)
 {
   if (
@@ -316,7 +316,7 @@ void ContinentalArs548DecoderWrapper::PacketsCallback(
 }
 
 pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Detection>::Ptr
-ContinentalArs548DecoderWrapper::ConvertToPointcloud(
+ContinentalARS548DecoderWrapper::ConvertToPointcloud(
   const continental_msgs::msg::ContinentalArs548DetectionList & msg)
 {
   pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Detection>::Ptr output_pointcloud(
@@ -356,7 +356,7 @@ ContinentalArs548DecoderWrapper::ConvertToPointcloud(
 }
 
 pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Object>::Ptr
-ContinentalArs548DecoderWrapper::ConvertToPointcloud(
+ContinentalARS548DecoderWrapper::ConvertToPointcloud(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
   pcl::PointCloud<nebula::drivers::continental_ars548::PointArs548Object>::Ptr output_pointcloud(
@@ -395,7 +395,7 @@ ContinentalArs548DecoderWrapper::ConvertToPointcloud(
   return output_pointcloud;
 }
 
-radar_msgs::msg::RadarScan ContinentalArs548DecoderWrapper::ConvertToRadarScan(
+radar_msgs::msg::RadarScan ContinentalARS548DecoderWrapper::ConvertToRadarScan(
   const continental_msgs::msg::ContinentalArs548DetectionList & msg)
 {
   radar_msgs::msg::RadarScan output_msg;
@@ -421,7 +421,7 @@ radar_msgs::msg::RadarScan ContinentalArs548DecoderWrapper::ConvertToRadarScan(
   return output_msg;
 }
 
-radar_msgs::msg::RadarTracks ContinentalArs548DecoderWrapper::ConvertToRadarTracks(
+radar_msgs::msg::RadarTracks ContinentalARS548DecoderWrapper::ConvertToRadarTracks(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
   radar_msgs::msg::RadarTracks output_msg;
@@ -530,7 +530,7 @@ radar_msgs::msg::RadarTracks ContinentalArs548DecoderWrapper::ConvertToRadarTrac
   return output_msg;
 }
 
-visualization_msgs::msg::MarkerArray ContinentalArs548DecoderWrapper::ConvertToMarkers(
+visualization_msgs::msg::MarkerArray ContinentalARS548DecoderWrapper::ConvertToMarkers(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
   visualization_msgs::msg::MarkerArray marker_array;
@@ -698,7 +698,7 @@ visualization_msgs::msg::MarkerArray ContinentalArs548DecoderWrapper::ConvertToM
   return marker_array;
 }
 
-nebula::Status ContinentalArs548DecoderWrapper::Status()
+nebula::Status ContinentalARS548DecoderWrapper::Status()
 {
   std::lock_guard lock(mtx_driver_ptr_);
 
