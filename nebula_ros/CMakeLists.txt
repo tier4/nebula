@@ -90,6 +90,18 @@ rclcpp_components_register_node(continental_ars548_ros_wrapper
         EXECUTABLE continental_ars548_ros_wrapper_node
         )
 
+ament_auto_add_library(continental_srr520_ros_wrapper SHARED
+        src/continental/continental_srr520_ros_wrapper.cpp
+        src/continental/continental_srr520_decoder_wrapper.cpp
+        src/continental/continental_srr520_hw_interface_wrapper.cpp
+        src/common/parameter_descriptors.cpp
+)
+
+rclcpp_components_register_node(continental_srr520_ros_wrapper
+        PLUGIN "ContinentalSrr520RosWrapper"
+        EXECUTABLE continental_srr520_ros_wrapper_node
+)
+
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()
