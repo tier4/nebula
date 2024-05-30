@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Radar Continental parameters.",
+  "type": "object",
+  "definitions": {
+    "sensor_model": {
+      "$ref": "hardware.json#/definitions/sensor_model",
+      "enum": [
+        "VLP16",
+        "VLP32",
+        "VLS128"
+      ]
+    },
+    "return_mode": {
+      "$ref": "misc.json#/definitions/return_mode",
+      "enum": [
+        "SingleStrongest",
+        "SingleLast",
+        "Dual",
+        "SingleFirst"
+      ]
+    },
+    "rotation_speed": {
+      "$ref": "hardware.json#/definitions/rotation_speed",
+      "default": 600,
+      "minimum": 300,
+      "maximum": 1200,
+      "multipleOf": 60
+    }
+  }
+}

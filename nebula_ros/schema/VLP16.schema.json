@@ -6,14 +6,86 @@
     "VLP16": {
       "type": "object",
       "properties": {
-      },
-      "allOf": [
-        {
-          "$ref": "sub/velodyne.json#/definitions/velodyne"
+        "host_ip": {
+          "$ref": "sub/communication.json#/definitions/host_ip"
+        },
+        "sensor_ip": {
+          "$ref": "sub/communication.json#/definitions/sensor_ip"
+        },
+        "data_port": {
+          "$ref": "sub/communication.json#/definitions/data_port"
+        },
+        "gnss_port": {
+          "$ref": "sub/communication.json#/definitions/gnss_port"
+        },
+        "packet_mtu_size": {
+          "$ref": "sub/communication.json#/definitions/packet_mtu_size"
+        },
+        "launch_hw": {
+          "$ref": "sub/hardware.json#/definitions/launch_hw"
+        },
+        "setup_sensor": {
+          "$ref": "sub/hardware.json#/definitions/setup_sensor"
+        },
+        "frame_id": {
+          "$ref": "sub/topic.json#/definitions/frame_id"
+        },
+        "advanced_diagnostics": {
+          "$ref": "sub/topic.json#/definitions/advanced_diagnostics"
+        },
+        "diag_span": {
+          "$ref": "sub/topic.json#/definitions/diag_span"
+        },
+        "calibration_file": {
+          "$ref": "sub/misc.json#/definitions/calibration_file"
+        },
+        "min_range": {
+          "$ref": "sub/misc.json#/definitions/min_range"
+        },
+        "max_range": {
+          "$ref": "sub/misc.json#/definitions/max_range"
+        },
+        "cloud_min_angle": {
+          "$ref": "sub/misc.json#/definitions/cloud_min_angle"
+        },
+        "cloud_max_angle": {
+          "$ref": "sub/misc.json#/definitions/cloud_max_angle"
+        },
+        "scan_phase": {
+          "$ref": "sub/misc.json#/definitions/scan_phase"
+        },
+        "sensor_model": {
+          "$ref": "sub/lidar_velodyne.json#/definitions/sensor_model"
+        },
+        "rotation_speed": {
+          "$ref": "sub/lidar_velodyne.json#/definitions/rotation_speed"
+        },
+        "return_mode": {
+          "$ref": "sub/lidar_velodyne.json#/definitions/return_mode"
         }
-      ],
+      },
       "required": [
-      ]
+        "host_ip",
+        "sensor_ip",
+        "data_port",
+        "gnss_port",
+        "packet_mtu_size",
+        "launch_hw",
+        "setup_sensor",
+        "frame_id",
+        "advanced_diagnostics",
+        "diag_span",
+        "calibration_file",
+        "min_range",
+        "max_range",
+        "cloud_min_angle",
+        "cloud_max_angle",
+        "scan_phase",
+        "sensor_model",
+        "rotation_speed",
+        "return_mode"
+      ],
+      "additionalProperties": false
     }
   },
   "properties": {
@@ -24,14 +96,10 @@
           "$ref": "#/definitions/VLP16"
         }
       },
-      "required": [
-        "ros__parameters"
-      ],
+      "required": ["ros__parameters"],
       "additionalProperties": false
     }
   },
-  "required": [
-    "/**"
-  ],
+  "required": ["/**"],
   "additionalProperties": false
 }
