@@ -1,4 +1,4 @@
-// Copyright 2024 Tier IV, Inc.
+// Copyright 2024 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -256,7 +256,7 @@ void ContinentalArs548RosWrapper::ReceivePacketsMessageCallback(
   if (hw_interface_wrapper_) {
     RCLCPP_ERROR_THROTTLE(
       get_logger(), *get_clock(), 1000,
-      "Ignoring NebulaPackets PandarScan. Launch with launch_hw:=false to enable NebulaPackets "
+      "Ignoring NebulaPackets. Launch with launch_hw:=false to enable NebulaPackets "
       "replay.");
     return;
   }
