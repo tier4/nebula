@@ -78,30 +78,16 @@ rclcpp_components_register_node(robosense_ros_wrapper
         )
 
 ## Continental
-# Hw Interface
-ament_auto_add_library(continental_ars548_hw_ros_wrapper SHARED
-        src/continental/continental_ars548_hw_interface_ros_wrapper.cpp
-        )
-rclcpp_components_register_node(continental_ars548_hw_ros_wrapper
-        PLUGIN "ContinentalARS548HwInterfaceRosWrapper"
-        EXECUTABLE continental_ars548_hw_interface_ros_wrapper_node
+ament_auto_add_library(continental_ars548_ros_wrapper SHARED
+        src/continental/continental_ars548_ros_wrapper.cpp
+        src/continental/continental_ars548_decoder_wrapper.cpp
+        src/continental/continental_ars548_hw_interface_wrapper.cpp
+        src/common/parameter_descriptors.cpp
         )
 
-ament_auto_add_library(multi_continental_ars548_hw_ros_wrapper SHARED
-        src/continental/multi_continental_ars548_hw_interface_ros_wrapper.cpp
-        )
-rclcpp_components_register_node(multi_continental_ars548_hw_ros_wrapper
-        PLUGIN "MultiContinentalARS548HwInterfaceRosWrapper"
-        EXECUTABLE multi_continental_ars548_hw_interface_ros_wrapper_node
-        )
-
-# DriverDecoder
-ament_auto_add_library(continental_ars548_driver_ros_wrapper SHARED
-        src/continental/continental_ars548_decoder_ros_wrapper.cpp
-        )
-rclcpp_components_register_node(continental_ars548_driver_ros_wrapper
-        PLUGIN "ContinentalARS548DriverRosWrapper"
-        EXECUTABLE continental_ars548_driver_ros_wrapper_node
+rclcpp_components_register_node(continental_ars548_ros_wrapper
+        PLUGIN "ContinentalARS548RosWrapper"
+        EXECUTABLE continental_ars548_ros_wrapper_node
         )
 
 if(BUILD_TESTING)

@@ -1,4 +1,4 @@
-// Copyright 2024 Tier IV, Inc.
+// Copyright 2024 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,19 +17,12 @@
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/nebula_status.hpp>
 
-#include "boost/endian/buffers.hpp"
 #include <boost/algorithm/string/join.hpp>
-#include <boost/format.hpp>
+#include <boost/endian/buffers.hpp>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include <bitset>
-#include <cmath>
-#include <cstddef>
-#include <cstdint>
-#include <ctime>
-#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -57,13 +50,6 @@ struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
   float configuration_vehicle_wheelbase{};
 };
 
-/// @brief struct for Multiple ARS548 sensor configuration
-struct MultiContinentalARS548SensorConfiguration : ContinentalARS548SensorConfiguration
-{
-  std::vector<std::string> sensor_ips{};
-  std::vector<std::string> frame_ids{};
-};
-
 /// @brief Convert ContinentalARS548SensorConfiguration to string (Overloading the <<
 /// operator)
 /// @param os
@@ -81,33 +67,6 @@ inline std::ostream & operator<<(
      << ", ConfigurationVehicleWidth: " << arg.configuration_vehicle_width
      << ", ConfigurationVehicleHeight: " << arg.configuration_vehicle_height
      << ", ConfigurationVehicleWheelbase: " << arg.configuration_vehicle_wheelbase;
-  return os;
-}
-
-/// @brief Convert MultiContinentalARS548SensorConfiguration to string (Overloading the <<
-/// operator)
-/// @param os
-/// @param arg
-/// @return stream
-inline std::ostream & operator<<(
-  std::ostream & os, MultiContinentalARS548SensorConfiguration const & arg)
-{
-  std::stringstream sensor_ips_ss;
-  sensor_ips_ss << "[";
-  for (const auto sensor_ip : arg.sensor_ips) {
-    sensor_ips_ss << sensor_ip << ", ";
-  }
-  sensor_ips_ss << "]";
-
-  std::stringstream frame_ids_ss;
-  frame_ids_ss << "[";
-  for (const auto frame_id : arg.frame_ids) {
-    frame_ids_ss << frame_id << ", ";
-  }
-  frame_ids_ss << "]";
-
-  os << (ContinentalARS548SensorConfiguration)(arg) << ", MulticastIP: " << arg.multicast_ip
-     << ", SensorIPs: " << sensor_ips_ss.str() << ", FrameIds: " << frame_ids_ss.str();
   return os;
 }
 
@@ -327,159 +286,159 @@ struct HeaderPacket
 
 struct HeaderSomeIPPacket
 {
-  big_uint16_buf_t client_id;
-  big_uint16_buf_t session_id;
-  uint8_t protocol_version;
-  uint8_t interface_version;
-  uint8_t message_type;
-  uint8_t return_code;
+  big_uint16_buf_t client_id{};
+  big_uint16_buf_t session_id{};
+  uint8_t protocol_version{};
+  uint8_t interface_version{};
+  uint8_t message_type{};
+  uint8_t return_code{};
 };
 
 struct HeaderE2EP07Packet
 {
-  big_uint64_buf_t crc;
-  big_uint32_buf_t length;
-  big_uint32_buf_t sqc;
-  big_uint32_buf_t data_id;
+  big_uint64_buf_t crc{};
+  big_uint32_buf_t length{};
+  big_uint32_buf_t sqc{};
+  big_uint32_buf_t data_id{};
 };
 
 struct StampSyncStatusPacket
 {
-  big_uint32_buf_t timestamp_nanoseconds;
-  big_uint32_buf_t timestamp_seconds;
-  uint8_t timestamp_sync_status;
+  big_uint32_buf_t timestamp_nanoseconds{};
+  big_uint32_buf_t timestamp_seconds{};
+  uint8_t timestamp_sync_status{};
 };
 
 struct DetectionPacket
 {
-  big_float32_buf_t azimuth_angle;
-  big_float32_buf_t azimuth_angle_std;
-  uint8_t invalid_flags;
-  big_float32_buf_t elevation_angle;
-  big_float32_buf_t elevation_angle_std;
-  big_float32_buf_t range;
-  big_float32_buf_t range_std;
-  big_float32_buf_t range_rate;
-  big_float32_buf_t range_rate_std;
-  int8_t rcs;
-  big_uint16_buf_t measurement_id;
-  uint8_t positive_predictive_value;
-  uint8_t classification;
-  uint8_t multi_target_probability;
-  big_uint16_buf_t object_id;
-  uint8_t ambiguity_flag;
-  big_uint16_buf_t sort_index;
+  big_float32_buf_t azimuth_angle{};
+  big_float32_buf_t azimuth_angle_std{};
+  uint8_t invalid_flags{};
+  big_float32_buf_t elevation_angle{};
+  big_float32_buf_t elevation_angle_std{};
+  big_float32_buf_t range{};
+  big_float32_buf_t range_std{};
+  big_float32_buf_t range_rate{};
+  big_float32_buf_t range_rate_std{};
+  int8_t rcs{};
+  big_uint16_buf_t measurement_id{};
+  uint8_t positive_predictive_value{};
+  uint8_t classification{};
+  uint8_t multi_target_probability{};
+  big_uint16_buf_t object_id{};
+  uint8_t ambiguity_flag{};
+  big_uint16_buf_t sort_index{};
 };
 
 struct DetectionListPacket
 {
-  HeaderPacket header;
-  HeaderSomeIPPacket header_some_ip;
-  HeaderE2EP07Packet header_e2ep07;
-  StampSyncStatusPacket stamp;
-  big_uint32_buf_t event_data_qualifier;
-  uint8_t extended_qualifier;
-  big_uint16_buf_t origin_invalid_flags;
-  big_float32_buf_t origin_x_pos;
-  big_float32_buf_t origin_x_std;
-  big_float32_buf_t origin_y_pos;
-  big_float32_buf_t origin_y_std;
-  big_float32_buf_t origin_z_pos;
-  big_float32_buf_t origin_z_std;
-  big_float32_buf_t origin_roll;
-  big_float32_buf_t origin_roll_std;
-  big_float32_buf_t origin_pitch;
-  big_float32_buf_t origin_pitch_std;
-  big_float32_buf_t origin_yaw;
-  big_float32_buf_t origin_yaw_std;
-  uint8_t list_invalid_flags;
+  HeaderPacket header{};
+  HeaderSomeIPPacket header_some_ip{};
+  HeaderE2EP07Packet header_e2ep07{};
+  StampSyncStatusPacket stamp{};
+  big_uint32_buf_t event_data_qualifier{};
+  uint8_t extended_qualifier{};
+  big_uint16_buf_t origin_invalid_flags{};
+  big_float32_buf_t origin_x_pos{};
+  big_float32_buf_t origin_x_std{};
+  big_float32_buf_t origin_y_pos{};
+  big_float32_buf_t origin_y_std{};
+  big_float32_buf_t origin_z_pos{};
+  big_float32_buf_t origin_z_std{};
+  big_float32_buf_t origin_roll{};
+  big_float32_buf_t origin_roll_std{};
+  big_float32_buf_t origin_pitch{};
+  big_float32_buf_t origin_pitch_std{};
+  big_float32_buf_t origin_yaw{};
+  big_float32_buf_t origin_yaw_std{};
+  uint8_t list_invalid_flags{};
   DetectionPacket detections[MAX_DETECTIONS];
-  big_float32_buf_t list_rad_vel_domain_min;
-  big_float32_buf_t list_rad_vel_domain_max;
-  big_uint32_buf_t number_of_detections;
-  big_float32_buf_t alignment_azimuth_correction;
-  big_float32_buf_t alignment_elevation_correction;
-  uint8_t alignment_status;
+  big_float32_buf_t list_rad_vel_domain_min{};
+  big_float32_buf_t list_rad_vel_domain_max{};
+  big_uint32_buf_t number_of_detections{};
+  big_float32_buf_t alignment_azimuth_correction{};
+  big_float32_buf_t alignment_elevation_correction{};
+  uint8_t alignment_status{};
   uint8_t reserved[14];
 };
 
 struct ObjectPacket
 {
-  big_uint16_buf_t status_sensor;
-  big_uint32_buf_t id;
-  big_uint16_buf_t age;
-  uint8_t status_measurement;
-  uint8_t status_movement;
-  big_uint16_buf_t position_invalid_flags;
-  uint8_t position_reference;
-  big_float32_buf_t position_x;
-  big_float32_buf_t position_x_std;
-  big_float32_buf_t position_y;
-  big_float32_buf_t position_y_std;
-  big_float32_buf_t position_z;
-  big_float32_buf_t position_z_std;
-  big_float32_buf_t position_covariance_xy;
-  big_float32_buf_t position_orientation;
-  big_float32_buf_t position_orientation_std;
-  uint8_t existence_invalid_flags;
-  big_float32_buf_t existence_probability;
-  big_float32_buf_t existence_ppv;
-  uint8_t classification_car;
-  uint8_t classification_truck;
-  uint8_t classification_motorcycle;
-  uint8_t classification_bicycle;
-  uint8_t classification_pedestrian;
-  uint8_t classification_animal;
-  uint8_t classification_hazard;
-  uint8_t classification_unknown;
-  uint8_t classification_overdrivable;
-  uint8_t classification_underdrivable;
-  uint8_t dynamics_abs_vel_invalid_flags;
-  big_float32_buf_t dynamics_abs_vel_x;
-  big_float32_buf_t dynamics_abs_vel_x_std;
-  big_float32_buf_t dynamics_abs_vel_y;
-  big_float32_buf_t dynamics_abs_vel_y_std;
-  big_float32_buf_t dynamics_abs_vel_covariance_xy;
-  uint8_t dynamics_rel_vel_invalid_flags;
-  big_float32_buf_t dynamics_rel_vel_x;
-  big_float32_buf_t dynamics_rel_vel_x_std;
-  big_float32_buf_t dynamics_rel_vel_y;
-  big_float32_buf_t dynamics_rel_vel_y_std;
-  big_float32_buf_t dynamics_rel_vel_covariance_xy;
-  uint8_t dynamics_abs_accel_invalid_flags;
-  big_float32_buf_t dynamics_abs_accel_x;
-  big_float32_buf_t dynamics_abs_accel_x_std;
-  big_float32_buf_t dynamics_abs_accel_y;
-  big_float32_buf_t dynamics_abs_accel_y_std;
-  big_float32_buf_t dynamics_abs_accel_covariance_xy;
-  uint8_t dynamics_rel_accel_invalid_flags;
-  big_float32_buf_t dynamics_rel_accel_x;
-  big_float32_buf_t dynamics_rel_accel_x_std;
-  big_float32_buf_t dynamics_rel_accel_y;
-  big_float32_buf_t dynamics_rel_accel_y_std;
-  big_float32_buf_t dynamics_rel_accel_covariance_xy;
-  uint8_t dynamics_orientation_invalid_flags;
-  big_float32_buf_t dynamics_orientation_rate_mean;
-  big_float32_buf_t dynamics_orientation_rate_std;
-  big_uint32_buf_t shape_length_status;
-  uint8_t shape_length_edge_invalid_flags;
-  big_float32_buf_t shape_length_edge_mean;
-  big_float32_buf_t shape_length_edge_std;
-  big_uint32_buf_t shape_width_status;
-  uint8_t shape_width_edge_invalid_flags;
-  big_float32_buf_t shape_width_edge_mean;
-  big_float32_buf_t shape_width_edge_std;
+  big_uint16_buf_t status_sensor{};
+  big_uint32_buf_t id{};
+  big_uint16_buf_t age{};
+  uint8_t status_measurement{};
+  uint8_t status_movement{};
+  big_uint16_buf_t position_invalid_flags{};
+  uint8_t position_reference{};
+  big_float32_buf_t position_x{};
+  big_float32_buf_t position_x_std{};
+  big_float32_buf_t position_y{};
+  big_float32_buf_t position_y_std{};
+  big_float32_buf_t position_z{};
+  big_float32_buf_t position_z_std{};
+  big_float32_buf_t position_covariance_xy{};
+  big_float32_buf_t position_orientation{};
+  big_float32_buf_t position_orientation_std{};
+  uint8_t existence_invalid_flags{};
+  big_float32_buf_t existence_probability{};
+  big_float32_buf_t existence_ppv{};
+  uint8_t classification_car{};
+  uint8_t classification_truck{};
+  uint8_t classification_motorcycle{};
+  uint8_t classification_bicycle{};
+  uint8_t classification_pedestrian{};
+  uint8_t classification_animal{};
+  uint8_t classification_hazard{};
+  uint8_t classification_unknown{};
+  uint8_t classification_overdrivable{};
+  uint8_t classification_underdrivable{};
+  uint8_t dynamics_abs_vel_invalid_flags{};
+  big_float32_buf_t dynamics_abs_vel_x{};
+  big_float32_buf_t dynamics_abs_vel_x_std{};
+  big_float32_buf_t dynamics_abs_vel_y{};
+  big_float32_buf_t dynamics_abs_vel_y_std{};
+  big_float32_buf_t dynamics_abs_vel_covariance_xy{};
+  uint8_t dynamics_rel_vel_invalid_flags{};
+  big_float32_buf_t dynamics_rel_vel_x{};
+  big_float32_buf_t dynamics_rel_vel_x_std{};
+  big_float32_buf_t dynamics_rel_vel_y{};
+  big_float32_buf_t dynamics_rel_vel_y_std{};
+  big_float32_buf_t dynamics_rel_vel_covariance_xy{};
+  uint8_t dynamics_abs_accel_invalid_flags{};
+  big_float32_buf_t dynamics_abs_accel_x{};
+  big_float32_buf_t dynamics_abs_accel_x_std{};
+  big_float32_buf_t dynamics_abs_accel_y{};
+  big_float32_buf_t dynamics_abs_accel_y_std{};
+  big_float32_buf_t dynamics_abs_accel_covariance_xy{};
+  uint8_t dynamics_rel_accel_invalid_flags{};
+  big_float32_buf_t dynamics_rel_accel_x{};
+  big_float32_buf_t dynamics_rel_accel_x_std{};
+  big_float32_buf_t dynamics_rel_accel_y{};
+  big_float32_buf_t dynamics_rel_accel_y_std{};
+  big_float32_buf_t dynamics_rel_accel_covariance_xy{};
+  uint8_t dynamics_orientation_invalid_flags{};
+  big_float32_buf_t dynamics_orientation_rate_mean{};
+  big_float32_buf_t dynamics_orientation_rate_std{};
+  big_uint32_buf_t shape_length_status{};
+  uint8_t shape_length_edge_invalid_flags{};
+  big_float32_buf_t shape_length_edge_mean{};
+  big_float32_buf_t shape_length_edge_std{};
+  big_uint32_buf_t shape_width_status{};
+  uint8_t shape_width_edge_invalid_flags{};
+  big_float32_buf_t shape_width_edge_mean{};
+  big_float32_buf_t shape_width_edge_std{};
 };
 
 struct ObjectListPacket
 {
-  HeaderPacket header;
-  HeaderSomeIPPacket header_some_ip;
-  HeaderE2EP07Packet header_e2ep07;
-  StampSyncStatusPacket stamp;
-  big_uint32_buf_t event_data_qualifier;
-  uint8_t extended_qualifier;
-  uint8_t number_of_objects;
+  HeaderPacket header{};
+  HeaderSomeIPPacket header_some_ip{};
+  HeaderE2EP07Packet header_e2ep07{};
+  StampSyncStatusPacket stamp{};
+  big_uint32_buf_t event_data_qualifier{};
+  uint8_t extended_qualifier{};
+  uint8_t number_of_objects{};
   ObjectPacket objects[MAX_OBJECTS];
 };
 
@@ -513,24 +472,24 @@ struct StatusConfigurationPacket
 
 struct SensorStatusPacket
 {
-  HeaderPacket header;
-  StampSyncStatusPacket stamp;
-  uint8_t sw_version_major;
-  uint8_t sw_version_minor;
-  uint8_t sw_version_patch;
-  StatusConfigurationPacket status;
-  uint8_t configuration_counter;
-  uint8_t longitudinal_velocity_status;
-  uint8_t longitudinal_acceleration_status;
-  uint8_t lateral_acceleration_status;
-  uint8_t yaw_rate_status;
-  uint8_t steering_angle_status;
-  uint8_t driving_direction_status;
-  uint8_t characteristic_speed_status;
-  uint8_t radar_status;
-  uint8_t voltage_status;
-  uint8_t temperature_status;
-  uint8_t blockage_status;
+  HeaderPacket header{};
+  StampSyncStatusPacket stamp{};
+  uint8_t sw_version_major{};
+  uint8_t sw_version_minor{};
+  uint8_t sw_version_patch{};
+  StatusConfigurationPacket status{};
+  uint8_t configuration_counter{};
+  uint8_t longitudinal_velocity_status{};
+  uint8_t longitudinal_acceleration_status{};
+  uint8_t lateral_acceleration_status{};
+  uint8_t yaw_rate_status{};
+  uint8_t steering_angle_status{};
+  uint8_t driving_direction_status{};
+  uint8_t characteristic_speed_status{};
+  uint8_t radar_status{};
+  uint8_t voltage_status{};
+  uint8_t temperature_status{};
+  uint8_t blockage_status{};
 };
 
 struct ConfigurationPacket
@@ -545,17 +504,17 @@ struct ConfigurationPacket
 
 struct AccelerationLateralCoGPacket
 {
-  HeaderPacket header;
+  HeaderPacket header{};
   uint8_t reserved0[6];
-  big_float32_buf_t acceleration_lateral;
+  big_float32_buf_t acceleration_lateral{};
   uint8_t reserved1[22];
 };
 
 struct AccelerationLongitudinalCoGPacket
 {
-  HeaderPacket header;
+  HeaderPacket header{};
   uint8_t reserved0[6];
-  big_float32_buf_t acceleration_lateral;
+  big_float32_buf_t acceleration_lateral{};
   uint8_t reserved1[22];
 };
 
@@ -569,51 +528,51 @@ struct CharacteristicSpeedPacket
 
 struct DrivingDirectionPacket
 {
-  HeaderPacket header;
-  uint8_t reserved0;
-  uint8_t driving_direction;
+  HeaderPacket header{};
+  uint8_t reserved0{};
+  uint8_t driving_direction{};
   uint8_t reserved1[20];
 };
 
 struct SteeringAngleFrontAxlePacket
 {
-  HeaderPacket header;
+  HeaderPacket header{};
   uint8_t reserved0[6];
-  big_float32_buf_t steering_angle_front_axle;
+  big_float32_buf_t steering_angle_front_axle{};
   uint8_t reserved1[22];
 };
 
 struct VelocityVehiclePacket
 {
-  HeaderPacket header;
+  HeaderPacket header{};
   uint8_t reserved0[3];
-  big_float32_buf_t velocity_vehicle;
+  big_float32_buf_t velocity_vehicle{};
   uint8_t reserved1[21];
 };
 
 struct YawRatePacket
 {
-  HeaderPacket header;
+  HeaderPacket header{};
   uint8_t reserved0[6];
-  big_float32_buf_t yaw_rate;
+  big_float32_buf_t yaw_rate{};
   uint8_t reserved1[22];
 };
 
 struct FilterStatusEntryPacket
 {
-  uint8_t active;
-  uint8_t data_index;
-  big_float32_buf_t min_value;
-  big_float32_buf_t max_value;
+  uint8_t active{};
+  uint8_t data_index{};
+  big_float32_buf_t min_value{};
+  big_float32_buf_t max_value{};
 };
 
 struct FilterStatusPacket
 {
-  HeaderPacket header;
-  StampSyncStatusPacket stamp;
-  uint8_t filter_configuration_counter;
-  uint8_t detection_sort_index;
-  uint8_t object_sort_index;
+  HeaderPacket header{};
+  StampSyncStatusPacket stamp{};
+  uint8_t filter_configuration_counter{};
+  uint8_t detection_sort_index{};
+  uint8_t object_sort_index{};
   FilterStatusEntryPacket detection_filters[DETECTION_FILTER_PROPERTIES_NUM];
   FilterStatusEntryPacket object_filters[OBJECT_FILTER_PROPERTIES_NUM];
 };

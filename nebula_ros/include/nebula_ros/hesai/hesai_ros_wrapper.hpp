@@ -45,7 +45,7 @@ public:
   /// @return Current status
   Status GetStatus();
 
-  /// @brief Start point cloud streaming (Call CloudInterfaceStart of HwInterface)
+  /// @brief Start point cloud streaming (Call SensorInterfaceStart of HwInterface)
   /// @return Resulting status
   Status StreamStart();
 

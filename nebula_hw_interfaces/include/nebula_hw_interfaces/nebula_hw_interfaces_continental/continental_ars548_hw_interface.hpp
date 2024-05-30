@@ -1,4 +1,4 @@
-// Copyright 2024 Tier IV, Inc.
+// Copyright 2024 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,32 +14,15 @@
 
 #ifndef NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
 #define NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
-// Have to define macros to silence warnings about deprecated headers being used by
-// boost/property_tree/ in some versions of boost.
-// See: https://github.com/boostorg/property_tree/issues/51
-#include <boost/version.hpp>
-#if (BOOST_VERSION / 100 >= 1073 && BOOST_VERSION / 100 <= 1076)  // Boost 1.73 - 1.76
-#define BOOST_BIND_GLOBAL_PLACEHOLDERS
-#endif
-#if (BOOST_VERSION / 100 == 1074)  // Boost 1.74
-#define BOOST_ALLOW_DEPRECATED_HEADERS
-#endif
-#include <boost_tcp_driver/http_client_driver.hpp>
-#include <boost_tcp_driver/tcp_driver.hpp>
+
 #include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_common/continental/continental_ars548.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
-#include <nebula_msgs/msg/nebula_packets.hpp>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -50,84 +33,31 @@ namespace drivers
 namespace continental_ars548
 {
 /// @brief Hardware interface of the Continental ARS548 radar
-class ContinentalARS548HwInterface : NebulaHwInterfaceBase
+class ContinentalARS548HwInterface
 {
-private:
-  std::unique_ptr<::drivers::common::IoContext> sensor_io_context_;
-  std::unique_ptr<::drivers::udp_driver::UdpDriver> sensor_udp_driver_;
-  std::shared_ptr<ContinentalARS548SensorConfiguration> sensor_configuration_;
-  std::unique_ptr<nebula_msgs::msg::NebulaPackets> nebula_packets_ptr_;
-  std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets> buffer)>
-    nebula_packets_reception_callback_;
-
-  std::mutex sensor_status_mutex_;
-
-  SensorStatusPacket sensor_status_packet_{};
-  FilterStatusPacket filter_status_{};
-
-  std::shared_ptr<rclcpp::Logger> parent_node_logger;
-
-  /// @brief Printing the string to RCLCPP_INFO_STREAM
-  /// @param info Target string
-  void PrintInfo(std::string info);
-
-  /// @brief Printing the string to RCLCPP_ERROR_STREAM
-  /// @param error Target string
-  void PrintError(std::string error);
-
-  /// @brief Printing the string to RCLCPP_DEBUG_STREAM
-  /// @param debug Target string
-  void PrintDebug(std::string debug);
-
-  /// @brief Printing the bytes to RCLCPP_DEBUG_STREAM
-  /// @param bytes Target byte vector
-  void PrintDebug(const std::vector<uint8_t> & bytes);
-
 public:
   /// @brief Constructor
   ContinentalARS548HwInterface();
 
-  /// @brief Process a new filter status packet
-  /// @param buffer The buffer containing the status packet
-  void ProcessFilterStatusPacket(const std::vector<uint8_t> & buffer);
-
-  /// @brief Process a new data packet
-  /// @param buffer The buffer containing the data packet
-  void ProcessDataPacket(const std::vector<uint8_t> & buffer);
-
-  /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
-  /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallbackWithSender(
-    const std::vector<uint8_t> & buffer, const std::string & sender_ip);
-
-  /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
-  /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer) final;
-
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStart() final;
+  Status SensorInterfaceStart();
 
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStop() final;
-
-  /// @brief Printing sensor configuration
-  /// @param sensor_configuration SensorConfiguration for this interface
-  /// @return Resulting status
-  Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration) final;
+  Status SensorInterfaceStop();
 
   /// @brief Setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
   Status SetSensorConfiguration(
-    std::shared_ptr<SensorConfigurationBase> sensor_configuration) final;
+    std::shared_ptr<const ContinentalARS548SensorConfiguration> sensor_configuration);
 
-  /// @brief Registering callback for PandarScan
-  /// @param scan_callback Callback function
+  /// @brief Registering callback
+  /// @param callback Callback function
   /// @return Resulting status
-  Status RegisterScanCallback(
-    std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> scan_callback);
+  Status RegisterCallback(
+    std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket>)> packet_callback);
 
   /// @brief Set the sensor mounting parameters
   /// @param longitudinal_autosar Desired longitudinal value in autosar coordinates
@@ -210,6 +140,35 @@ public:
   /// @brief Setting rclcpp::Logger
   /// @param node Logger
   void SetLogger(std::shared_ptr<rclcpp::Logger> node);
+
+private:
+  /// @brief Printing the string to RCLCPP_INFO_STREAM
+  /// @param info Target string
+  void PrintInfo(std::string info);
+
+  /// @brief Printing the string to RCLCPP_ERROR_STREAM
+  /// @param error Target string
+  void PrintError(std::string error);
+
+  /// @brief Printing the string to RCLCPP_DEBUG_STREAM
+  /// @param debug Target string
+  void PrintDebug(std::string debug);
+
+  /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
+  /// @param buffer Buffer containing the data received from the UDP socket
+  void ReceiveSensorPacketCallbackWithSender(
+    std::vector<uint8_t> & buffer, const std::string & sender_ip);
+
+  /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
+  /// @param buffer Buffer containing the data received from the UDP socket
+  void ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer);
+
+  std::unique_ptr<::drivers::common::IoContext> sensor_io_context_ptr_;
+  std::unique_ptr<::drivers::udp_driver::UdpDriver> sensor_udp_driver_ptr_;
+  std::shared_ptr<const ContinentalARS548SensorConfiguration> config_ptr_;
+  std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket>)> packet_callback_;
+
+  std::shared_ptr<rclcpp::Logger> parent_node_logger_ptr_;
 };
 }  // namespace continental_ars548
 }  // namespace drivers

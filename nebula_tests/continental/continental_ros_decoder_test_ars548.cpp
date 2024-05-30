@@ -1,4 +1,4 @@
-// Copyright 2024 Tier IV, Inc.
+// Copyright 2024 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@
 #include <memory>
 #include <regex>
 #include <string>
+#include <utility>
 
 namespace nebula
 {
@@ -278,8 +279,9 @@ void ContinentalRosDecoderTest::ReadBag()
 
         ASSERT_EQ(1, extracted_msg.packets.size());
 
-        auto extracted_msg_ptr = std::make_shared<nebula_msgs::msg::NebulaPackets>(extracted_msg);
-        driver_ptr_->ProcessPackets(extracted_msg);
+        auto extracted_msg_ptr =
+          std::make_unique<nebula_msgs::msg::NebulaPacket>(extracted_msg.packets[0]);
+        driver_ptr_->ProcessPacket(std::move(extracted_msg_ptr));
       }
     }
   }
