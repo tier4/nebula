@@ -86,7 +86,7 @@ ament_auto_add_library(continental_ars548_ros_wrapper SHARED
         )
 
 rclcpp_components_register_node(continental_ars548_ros_wrapper
-        PLUGIN "ContinentalArs548RosWrapper"
+        PLUGIN "ContinentalARS548RosWrapper"
         EXECUTABLE continental_ars548_ros_wrapper_node
         )
 
@@ -98,7 +98,7 @@ ament_auto_add_library(continental_srr520_ros_wrapper SHARED
 )
 
 rclcpp_components_register_node(continental_srr520_ros_wrapper
-        PLUGIN "ContinentalSrr520RosWrapper"
+        PLUGIN "ContinentalSRR520RosWrapper"
         EXECUTABLE continental_srr520_ros_wrapper_node
 )
 

@@ -36,11 +36,11 @@ namespace drivers
 namespace continental_srr520
 {
 /// @brief Hardware interface of the Continental SRR520 radar
-class ContinentalSrr520HwInterface
+class ContinentalSRR520HwInterface
 {
 public:
   /// @brief Constructor
-  ContinentalSrr520HwInterface();
+  ContinentalSRR520HwInterface();
 
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
@@ -55,7 +55,7 @@ public:
   /// @return Resulting status
   Status SetSensorConfiguration(
     const std::shared_ptr<
-      const nebula::drivers::continental_srr520::ContinentalSrr520SensorConfiguration>
+      const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
       new_config_ptr);
 
   /// @brief Registering callback for PandarScan
@@ -131,7 +131,7 @@ private:
   std::unique_ptr<::drivers::socketcan::SocketCanSender> can_sender_ptr_;
   std::unique_ptr<std::thread> receiver_thread_ptr_;
 
-  std::shared_ptr<const ContinentalSrr520SensorConfiguration> config_ptr_;
+  std::shared_ptr<const ContinentalSRR520SensorConfiguration> config_ptr_;
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket> buffer)>
     nebula_packet_callback_;
 

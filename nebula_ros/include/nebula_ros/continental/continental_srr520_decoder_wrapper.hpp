@@ -44,20 +44,20 @@ namespace nebula
 {
 namespace ros
 {
-class ContinentalSrr520DecoderWrapper
+class ContinentalSRR520DecoderWrapper
 {
 public:
-  ContinentalSrr520DecoderWrapper(
+  ContinentalSRR520DecoderWrapper(
     rclcpp::Node * const parent_node,
-    std::shared_ptr<const drivers::continental_srr520::ContinentalSrr520SensorConfiguration> &
+    std::shared_ptr<const drivers::continental_srr520::ContinentalSRR520SensorConfiguration> &
       config,
-    std::shared_ptr<drivers::continental_srr520::ContinentalSrr520HwInterface> hw_interface_ptr);
+    std::shared_ptr<drivers::continental_srr520::ContinentalSRR520HwInterface> hw_interface_ptr);
 
   void ProcessPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
   void OnConfigChange(
     const std::shared_ptr<
-      const nebula::drivers::continental_srr520::ContinentalSrr520SensorConfiguration> &
+      const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration> &
       new_config_ptr);
 
   rcl_interfaces::msg::SetParametersResult OnParameterChange(
@@ -93,18 +93,18 @@ public:
 private:
   nebula::Status InitializeDriver(
     const std::shared_ptr<
-      const nebula::drivers::continental_srr520::ContinentalSrr520SensorConfiguration> & config);
+      const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration> & config);
 
   /// @brief Convert SRR520 detections to a pointcloud
   /// @param msg The SRR520 detection list msg
   /// @return Resulting detection pointcloud
-  pcl::PointCloud<nebula::drivers::continental_srr520::PointSrr520Detection>::Ptr
+  pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Detection>::Ptr
   ConvertToPointcloud(const continental_msgs::msg::ContinentalSrr520DetectionList & msg);
 
   /// @brief Convert SRR520 objects to a pointcloud
   /// @param msg The SRR520 object list msg
   /// @return Resulting object pointcloud
-  pcl::PointCloud<nebula::drivers::continental_srr520::PointSrr520Object>::Ptr ConvertToPointcloud(
+  pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Object>::Ptr ConvertToPointcloud(
     const continental_msgs::msg::ContinentalSrr520ObjectList & msg);
 
   /// @brief Convert SRR520 detections to a standard RadarScan msg
@@ -129,11 +129,11 @@ private:
   nebula::Status status_;
   rclcpp::Logger logger_;
 
-  std::shared_ptr<const nebula::drivers::continental_srr520::ContinentalSrr520SensorConfiguration>
+  std::shared_ptr<const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
     sensor_cfg_{};
 
-  std::shared_ptr<drivers::continental_srr520::ContinentalSrr520Decoder> driver_ptr_{};
-  std::shared_ptr<drivers::continental_srr520::ContinentalSrr520HwInterface> hw_interface_ptr_{};
+  std::shared_ptr<drivers::continental_srr520::ContinentalSRR520Decoder> driver_ptr_{};
+  std::shared_ptr<drivers::continental_srr520::ContinentalSRR520HwInterface> hw_interface_ptr_{};
   std::mutex mtx_driver_ptr_;
 
   rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_{};

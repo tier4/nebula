@@ -36,7 +36,7 @@ namespace continental_ars548
 {
 
 /// @brief struct for ARS548 sensor configuration
-struct ContinentalArs548SensorConfiguration : EthernetSensorConfigurationBase
+struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
 {
   std::string multicast_ip{};
   std::string base_frame{};
@@ -51,7 +51,7 @@ struct ContinentalArs548SensorConfiguration : EthernetSensorConfigurationBase
 };
 
 /// @brief struct for Multiple ARS548 sensor configuration
-struct MultiContinentalArs548SensorConfiguration : ContinentalArs548SensorConfiguration
+struct MultiContinentalARS548SensorConfiguration : ContinentalARS548SensorConfiguration
 {
   std::vector<std::string> sensor_ips{};
   std::vector<std::string> frame_ids{};
@@ -63,7 +63,7 @@ struct MultiContinentalArs548SensorConfiguration : ContinentalArs548SensorConfig
 /// @param arg
 /// @return stream
 inline std::ostream & operator<<(
-  std::ostream & os, ContinentalArs548SensorConfiguration const & arg)
+  std::ostream & os, ContinentalARS548SensorConfiguration const & arg)
 {
   os << (EthernetSensorConfigurationBase)(arg) << ", MulticastIP: " << arg.multicast_ip
      << ", BaseFrame: " << arg.base_frame << ", ObjectFrame: " << arg.object_frame
@@ -77,13 +77,13 @@ inline std::ostream & operator<<(
   return os;
 }
 
-/// @brief Convert MultiContinentalArs548SensorConfiguration to string (Overloading the <<
+/// @brief Convert MultiContinentalARS548SensorConfiguration to string (Overloading the <<
 /// operator)
 /// @param os
 /// @param arg
 /// @return stream
 inline std::ostream & operator<<(
-  std::ostream & os, MultiContinentalArs548SensorConfiguration const & arg)
+  std::ostream & os, MultiContinentalARS548SensorConfiguration const & arg)
 {
   std::stringstream sensor_ips_ss;
   sensor_ips_ss << "[";
@@ -99,13 +99,13 @@ inline std::ostream & operator<<(
   }
   frame_ids_ss << "]";
 
-  os << (ContinentalArs548SensorConfiguration)(arg) << ", MulticastIP: " << arg.multicast_ip
+  os << (ContinentalARS548SensorConfiguration)(arg) << ", MulticastIP: " << arg.multicast_ip
      << ", SensorIPs: " << sensor_ips_ss.str() << ", FrameIds: " << frame_ids_ss.str();
   return os;
 }
 
 /// @brief semantic struct of ARS548 Status
-struct ContinentalArs548Status
+struct ContinentalARS548Status
 {
   // Filled with raw sensor data
   uint32_t timestamp_nanoseconds{};
@@ -167,7 +167,7 @@ struct ContinentalArs548Status
   /// @param os
   /// @param arg
   /// @return stream
-  friend std::ostream & operator<<(std::ostream & os, ContinentalArs548Status const & arg)
+  friend std::ostream & operator<<(std::ostream & os, ContinentalARS548Status const & arg)
   {
     os << "timestamp_nanoseconds: " << arg.timestamp_nanoseconds;
     os << ", ";
@@ -613,7 +613,7 @@ struct FilterStatusPacket
 
 #pragma pack(pop)
 
-struct PointArs548Detection
+struct PointARS548Detection
 {
   PCL_ADD_POINT4D;
   float azimuth;
@@ -636,7 +636,7 @@ struct PointArs548Detection
 
 // Note we only use a subset of the data since POINT_CLOUD_REGISTER_POINT_STRUCT has a limit in the
 // number of fields
-struct PointArs548Object
+struct PointARS548Object
 {
   PCL_ADD_POINT4D;
   uint32_t id;
@@ -664,7 +664,7 @@ struct PointArs548Object
 }  // namespace nebula
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::continental_ars548::PointArs548Detection,
+  nebula::drivers::continental_ars548::PointARS548Detection,
   (float, x, x)(float, y, y)(float, z, z)(float, azimuth, azimuth)(float, azimuth_std, azimuth_std)(
     float, elevation, elevation)(float, elevation_std, elevation_std)(float, range, range)(
     float, range_std, range_std)(int8_t, rcs, rcs)(uint16_t, measurement_id, measurement_id)(
@@ -675,7 +675,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
 
 // Note: we can only use up to 20 fields
 POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::continental_ars548::PointArs548Object,
+  nebula::drivers::continental_ars548::PointARS548Object,
   (float, x, x)(float, y, y)(float, z, z)(uint32_t, id, id)(uint16_t, age, age)(
     uint8_t, status_measurement, status_measurement)(uint8_t, status_movement, status_movement)(
     uint8_t, position_reference,

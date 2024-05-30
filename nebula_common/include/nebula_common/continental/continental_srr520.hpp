@@ -40,20 +40,20 @@ namespace continental_srr520
 {
 
 /// @brief struct for SRR520 sensor configuration
-struct ContinentalSrr520SensorConfiguration : CANSensorConfigurationBase
+struct ContinentalSRR520SensorConfiguration : CANSensorConfigurationBase
 {
   std::string base_frame{};
   bool sync_use_bus_time{};
   float configuration_vehicle_wheelbase{};
 };
 
-/// @brief Convert ContinentalSrr520SensorConfiguration to string (Overloading the <<
+/// @brief Convert ContinentalSRR520SensorConfiguration to string (Overloading the <<
 /// operator)
 /// @param os
 /// @param arg
 /// @return stream
 inline std::ostream & operator<<(
-  std::ostream & os, ContinentalSrr520SensorConfiguration const & arg)
+  std::ostream & os, ContinentalSRR520SensorConfiguration const & arg)
 {
   os << (CANSensorConfigurationBase)(arg) << ", BaseFrame: " << arg.base_frame
      << ", SyncUseBusTime: " << arg.sync_use_bus_time
@@ -237,7 +237,7 @@ struct FollowUpPacket
 
 #pragma pack(pop)
 
-struct PointSrr520Detection
+struct PointSRR520Detection
 {
   PCL_ADD_POINT4D;
   float range;
@@ -256,7 +256,7 @@ struct PointSrr520Detection
 
 // Note we only use a subset of the data since POINT_CLOUD_REGISTER_POINT_STRUCT has a limit in the
 // number of fields
-struct PointSrr520Object
+struct PointSRR520Object
 {
   PCL_ADD_POINT4D;
   uint32_t id;
@@ -279,14 +279,14 @@ struct PointSrr520Object
 }  // namespace nebula
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::continental_srr520::PointSrr520Detection,
+  nebula::drivers::continental_srr520::PointSRR520Detection,
   (float, x, x)(float, y, y)(float, z, z)(float, azimuth, azimuth)(float, range, range)(
     float, range_rate, range_rate)(int8_t, rcs, rcs)(uint8_t, pdh00, pdh00)(uint8_t, pdh01, pdh01)(
     uint8_t, pdh02,
     pdh02)(uint16_t, pdh03, pdh03)(uint8_t, pdh04, pdh04)(uint8_t, pdh05, pdh05)(float, snr, snr))
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::continental_srr520::PointSrr520Object,
+  nebula::drivers::continental_srr520::PointSRR520Object,
   (float, x, x)(float, y, y)(float, z, z)(uint32_t, id, id)(uint16_t, age, age)(
     float, orientation,
     orientation)(float, rcs, rcs)(float, score, score)(uint8_t, object_status, object_status)(

@@ -33,26 +33,26 @@ namespace nebula
 {
 namespace ros
 {
-class ContinentalSrr520HwInterfaceWrapper
+class ContinentalSRR520HwInterfaceWrapper
 {
 public:
-  ContinentalSrr520HwInterfaceWrapper(
+  ContinentalSRR520HwInterfaceWrapper(
     rclcpp::Node * const parent_node,
-    std::shared_ptr<const drivers::continental_srr520::ContinentalSrr520SensorConfiguration> &
+    std::shared_ptr<const drivers::continental_srr520::ContinentalSRR520SensorConfiguration> &
       config);
 
   /// @brief Starts the hw interface and subscribes to the input topics
   void SensorInterfaceStart();
 
   void OnConfigChange(
-    const std::shared_ptr<const drivers::continental_srr520::ContinentalSrr520SensorConfiguration> &
+    const std::shared_ptr<const drivers::continental_srr520::ContinentalSRR520SensorConfiguration> &
       new_config);
 
   /// @brief Get current status of the hw interface
   /// @return Current status
   nebula::Status Status();
 
-  std::shared_ptr<drivers::continental_srr520::ContinentalSrr520HwInterface> HwInterface() const;
+  std::shared_ptr<drivers::continental_srr520::ContinentalSRR520HwInterface> HwInterface() const;
 
 private:
   /// @brief Callback to send the odometry information to the radar device
@@ -75,10 +75,10 @@ private:
   void syncTimerCallback();
 
   rclcpp::Node * const parent_node_;
-  std::shared_ptr<drivers::continental_srr520::ContinentalSrr520HwInterface> hw_interface_{};
+  std::shared_ptr<drivers::continental_srr520::ContinentalSRR520HwInterface> hw_interface_{};
   rclcpp::Logger logger_;
   nebula::Status status_{};
-  std::shared_ptr<const nebula::drivers::continental_srr520::ContinentalSrr520SensorConfiguration>
+  std::shared_ptr<const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
     config_ptr_{};
 
   message_filters::Subscriber<geometry_msgs::msg::TwistWithCovarianceStamped> odometry_sub_;

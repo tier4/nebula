@@ -34,13 +34,13 @@ namespace drivers
 namespace continental_ars548
 {
 /// @brief Continental Radar decoder (ARS548)
-class ContinentalArs548Decoder : public ContinentalPacketsDecoder
+class ContinentalARS548Decoder : public ContinentalPacketsDecoder
 {
 public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
-  explicit ContinentalArs548Decoder(
-    const std::shared_ptr<const ContinentalArs548SensorConfiguration> & sensor_configuration);
+  explicit ContinentalARS548Decoder(
+    const std::shared_ptr<const ContinentalARS548SensorConfiguration> & sensor_configuration);
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -69,7 +69,7 @@ public:
   /// @param object_list_callback
   /// @return Resulting status
   Status RegisterSensorStatusCallback(
-    std::function<void(const ContinentalArs548Status & status)> sensor_status_callback);
+    std::function<void(const ContinentalARS548Status & status)> sensor_status_callback);
 
   /// @brief Register function to call when a new sensor status message is processed
   /// @param object_list_callback
@@ -97,14 +97,14 @@ private:
     detection_list_callback_{};
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg)>
     object_list_callback_{};
-  std::function<void(const ContinentalArs548Status & status)> sensor_status_callback_{};
+  std::function<void(const ContinentalARS548Status & status)> sensor_status_callback_{};
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg)>
     nebula_packets_callback_{};
 
-  ContinentalArs548Status radar_status_{};
+  ContinentalARS548Status radar_status_{};
 
   /// @brief SensorConfiguration for this decoder
-  std::shared_ptr<const continental_ars548::ContinentalArs548SensorConfiguration> config_ptr_{};
+  std::shared_ptr<const continental_ars548::ContinentalARS548SensorConfiguration> config_ptr_{};
 };
 
 }  // namespace continental_ars548

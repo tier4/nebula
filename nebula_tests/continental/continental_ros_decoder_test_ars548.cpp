@@ -40,7 +40,7 @@ ContinentalRosDecoderTest::ContinentalRosDecoderTest(
   const rclcpp::NodeOptions & options, const std::string & node_name)
 : rclcpp::Node(node_name, options)
 {
-  drivers::continental_ars548::ContinentalArs548SensorConfiguration sensor_configuration;
+  drivers::continental_ars548::ContinentalARS548SensorConfiguration sensor_configuration;
 
   wrapper_status_ = GetParameters(sensor_configuration);
   if (Status::OK != wrapper_status_) {
@@ -50,12 +50,12 @@ ContinentalRosDecoderTest::ContinentalRosDecoderTest(
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
 
   sensor_cfg_ptr_ =
-    std::make_shared<drivers::continental_ars548::ContinentalArs548SensorConfiguration>(
+    std::make_shared<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
       sensor_configuration);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
   wrapper_status_ = InitializeDriver(
-    std::const_pointer_cast<drivers::continental_ars548::ContinentalArs548SensorConfiguration>(
+    std::const_pointer_cast<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
       sensor_cfg_ptr_));
 
   driver_ptr_->RegisterDetectionListCallback(
@@ -67,12 +67,12 @@ ContinentalRosDecoderTest::ContinentalRosDecoderTest(
 }
 
 Status ContinentalRosDecoderTest::InitializeDriver(
-  std::shared_ptr<drivers::continental_ars548::ContinentalArs548SensorConfiguration>
+  std::shared_ptr<drivers::continental_ars548::ContinentalARS548SensorConfiguration>
     sensor_configuration)
 {
   // driver should be initialized here with proper decoder
-  driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalArs548Decoder>(
-    std::static_pointer_cast<drivers::continental_ars548::ContinentalArs548SensorConfiguration>(
+  driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalARS548Decoder>(
+    std::static_pointer_cast<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
       sensor_configuration));
   return Status::OK;
 }
@@ -83,7 +83,7 @@ Status ContinentalRosDecoderTest::GetStatus()
 }
 
 Status ContinentalRosDecoderTest::GetParameters(
-  drivers::continental_ars548::ContinentalArs548SensorConfiguration & sensor_configuration)
+  drivers::continental_ars548::ContinentalARS548SensorConfiguration & sensor_configuration)
 {
   std::filesystem::path bag_root_dir =
     _SRC_RESOURCES_DIR_PATH;  // variable defined in CMakeLists.txt;

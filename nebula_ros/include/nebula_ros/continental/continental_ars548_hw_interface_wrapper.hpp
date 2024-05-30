@@ -32,26 +32,26 @@ namespace nebula
 {
 namespace ros
 {
-class ContinentalArs548HwInterfaceWrapper
+class ContinentalARS548HwInterfaceWrapper
 {
 public:
-  ContinentalArs548HwInterfaceWrapper(
+  ContinentalARS548HwInterfaceWrapper(
     rclcpp::Node * const parent_node,
-    std::shared_ptr<const drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
+    std::shared_ptr<const drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
       config);
 
   /// @brief Starts the hw interface and subscribes to the input topics
   void SensorInterfaceStart();
 
   void OnConfigChange(
-    const std::shared_ptr<const drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
+    const std::shared_ptr<const drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
       new_config_ptr);
 
   /// @brief Get current status of the hw interface
   /// @return Current status
   nebula::Status Status();
 
-  std::shared_ptr<drivers::continental_ars548::ContinentalArs548HwInterface> HwInterface() const;
+  std::shared_ptr<drivers::continental_ars548::ContinentalARS548HwInterface> HwInterface() const;
 
 private:
   /// @brief Callback to send the odometry information to the radar device
@@ -103,10 +103,10 @@ private:
       response);
 
   rclcpp::Node * const parent_node_;
-  std::shared_ptr<drivers::continental_ars548::ContinentalArs548HwInterface> hw_interface_{};
+  std::shared_ptr<drivers::continental_ars548::ContinentalARS548HwInterface> hw_interface_{};
   rclcpp::Logger logger_;
   nebula::Status status_{};
-  std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalArs548SensorConfiguration>
+  std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration>
     config_ptr_{};
 
   rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr odometry_sub_{};

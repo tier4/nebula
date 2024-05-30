@@ -24,19 +24,19 @@ namespace drivers
 {
 namespace continental_ars548
 {
-ContinentalArs548Decoder::ContinentalArs548Decoder(
-  const std::shared_ptr<const continental_ars548::ContinentalArs548SensorConfiguration> &
+ContinentalARS548Decoder::ContinentalARS548Decoder(
+  const std::shared_ptr<const continental_ars548::ContinentalARS548SensorConfiguration> &
     sensor_configuration)
 {
   config_ptr_ = sensor_configuration;
 }
 
-Status ContinentalArs548Decoder::GetStatus()
+Status ContinentalARS548Decoder::GetStatus()
 {
   return Status::OK;
 }
 
-Status ContinentalArs548Decoder::RegisterDetectionListCallback(
+Status ContinentalARS548Decoder::RegisterDetectionListCallback(
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList>)>
     detection_list_callback)
 {
@@ -44,7 +44,7 @@ Status ContinentalArs548Decoder::RegisterDetectionListCallback(
   return Status::OK;
 }
 
-Status ContinentalArs548Decoder::RegisterObjectListCallback(
+Status ContinentalARS548Decoder::RegisterObjectListCallback(
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList>)>
     object_list_callback)
 {
@@ -52,21 +52,21 @@ Status ContinentalArs548Decoder::RegisterObjectListCallback(
   return Status::OK;
 }
 
-Status ContinentalArs548Decoder::RegisterSensorStatusCallback(
-  std::function<void(const ContinentalArs548Status & status)> sensor_status_callback)
+Status ContinentalARS548Decoder::RegisterSensorStatusCallback(
+  std::function<void(const ContinentalARS548Status & status)> sensor_status_callback)
 {
   sensor_status_callback_ = std::move(sensor_status_callback);
   return Status::OK;
 }
 
-Status ContinentalArs548Decoder::RegisterPacketsCallback(
+Status ContinentalARS548Decoder::RegisterPacketsCallback(
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> nebula_packets_callback)
 {
   nebula_packets_callback_ = std::move(nebula_packets_callback);
   return Status::OK;
 }
 
-bool ContinentalArs548Decoder::ProcessPacket(
+bool ContinentalARS548Decoder::ProcessPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   const auto & data = packet_msg->data;
@@ -118,7 +118,7 @@ bool ContinentalArs548Decoder::ProcessPacket(
   return true;
 }
 
-bool ContinentalArs548Decoder::ParseDetectionsListPacket(
+bool ContinentalARS548Decoder::ParseDetectionsListPacket(
   const nebula_msgs::msg::NebulaPacket & packet_msg)
 {
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548DetectionList>();
@@ -245,7 +245,7 @@ bool ContinentalArs548Decoder::ParseDetectionsListPacket(
   return true;
 }
 
-bool ContinentalArs548Decoder::ParseObjectsListPacket(
+bool ContinentalARS548Decoder::ParseObjectsListPacket(
   const nebula_msgs::msg::NebulaPacket & packet_msg)
 {
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548ObjectList>();
@@ -399,7 +399,7 @@ bool ContinentalArs548Decoder::ParseObjectsListPacket(
   return true;
 }
 
-bool ContinentalArs548Decoder::ParseSensorStatusPacket(
+bool ContinentalARS548Decoder::ParseSensorStatusPacket(
   const nebula_msgs::msg::NebulaPacket & packet_msg)
 {
   SensorStatusPacket sensor_status_packet;

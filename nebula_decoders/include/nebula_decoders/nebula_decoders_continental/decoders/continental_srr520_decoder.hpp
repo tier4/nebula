@@ -36,13 +36,13 @@ namespace drivers
 namespace continental_srr520
 {
 /// @brief Continental Radar decoder (SRR520)
-class ContinentalSrr520Decoder : public ContinentalPacketsDecoder
+class ContinentalSRR520Decoder : public ContinentalPacketsDecoder
 {
 public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
-  explicit ContinentalSrr520Decoder(
-    const std::shared_ptr<const ContinentalSrr520SensorConfiguration> & sensor_configuration);
+  explicit ContinentalSRR520Decoder(
+    const std::shared_ptr<const ContinentalSRR520SensorConfiguration> & sensor_configuration);
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -199,7 +199,7 @@ private:
   ObjectHeaderPacket object_header_packet_{};
 
   /// @brief SensorConfiguration for this decoder
-  std::shared_ptr<const continental_srr520::ContinentalSrr520SensorConfiguration>
+  std::shared_ptr<const continental_srr520::ContinentalSRR520SensorConfiguration>
     sensor_configuration_{};
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger_ptr_{};

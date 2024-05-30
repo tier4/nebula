@@ -29,19 +29,19 @@ namespace drivers
 {
 namespace continental_srr520
 {
-ContinentalSrr520Decoder::ContinentalSrr520Decoder(
-  const std::shared_ptr<const continental_srr520::ContinentalSrr520SensorConfiguration> &
+ContinentalSRR520Decoder::ContinentalSRR520Decoder(
+  const std::shared_ptr<const continental_srr520::ContinentalSRR520SensorConfiguration> &
     sensor_configuration)
 {
   sensor_configuration_ = sensor_configuration;
 }
 
-Status ContinentalSrr520Decoder::GetStatus()
+Status ContinentalSRR520Decoder::GetStatus()
 {
   return Status::OK;
 }
 
-Status ContinentalSrr520Decoder::RegisterNearDetectionListCallback(
+Status ContinentalSRR520Decoder::RegisterNearDetectionListCallback(
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList>)>
     detection_list_callback)
 {
@@ -49,7 +49,7 @@ Status ContinentalSrr520Decoder::RegisterNearDetectionListCallback(
   return Status::OK;
 }
 
-Status ContinentalSrr520Decoder::RegisterHRRDetectionListCallback(
+Status ContinentalSRR520Decoder::RegisterHRRDetectionListCallback(
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList>)>
     detection_list_callback)
 {
@@ -57,7 +57,7 @@ Status ContinentalSrr520Decoder::RegisterHRRDetectionListCallback(
   return Status::OK;
 }
 
-Status ContinentalSrr520Decoder::RegisterObjectListCallback(
+Status ContinentalSRR520Decoder::RegisterObjectListCallback(
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalSrr520ObjectList>)>
     object_list_callback)
 {
@@ -65,28 +65,28 @@ Status ContinentalSrr520Decoder::RegisterObjectListCallback(
   return Status::OK;
 }
 
-Status ContinentalSrr520Decoder::RegisterStatusCallback(
+Status ContinentalSRR520Decoder::RegisterStatusCallback(
   std::function<void(std::unique_ptr<diagnostic_msgs::msg::DiagnosticArray>)> status_callback)
 {
   status_callback_ = std::move(status_callback);
   return Status::OK;
 }
 
-Status ContinentalSrr520Decoder::RegisterSyncFupCallback(
+Status ContinentalSRR520Decoder::RegisterSyncFupCallback(
   std::function<void(builtin_interfaces::msg::Time)> sync_fup_callback)
 {
   sync_fup_callback_ = std::move(sync_fup_callback);
   return Status::OK;
 }
 
-Status ContinentalSrr520Decoder::RegisterPacketsCallback(
+Status ContinentalSRR520Decoder::RegisterPacketsCallback(
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> nebula_packets_callback)
 {
   nebula_packets_callback_ = std::move(nebula_packets_callback);
   return Status::OK;
 }
 
-bool ContinentalSrr520Decoder::ProcessPacket(
+bool ContinentalSRR520Decoder::ProcessPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   const uint32_t can_message_id = (static_cast<uint32_t>(packet_msg->data[0]) << 24) |
@@ -165,7 +165,7 @@ bool ContinentalSrr520Decoder::ProcessPacket(
   return true;
 }
 
-void ContinentalSrr520Decoder::ProcessNearHeaderPacket(
+void ContinentalSRR520Decoder::ProcessNearHeaderPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   rdi_near_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -215,7 +215,7 @@ void ContinentalSrr520Decoder::ProcessNearHeaderPacket(
   rdi_near_packets_ptr_->packets.emplace_back(std::move(*packet_msg));
 }
 
-void ContinentalSrr520Decoder::ProcessNearElementPacket(
+void ContinentalSRR520Decoder::ProcessNearElementPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   if (rdi_near_packets_ptr_->packets.size() == 0) {
@@ -285,7 +285,7 @@ void ContinentalSrr520Decoder::ProcessNearElementPacket(
   rdi_near_packets_ptr_->packets.emplace_back(std::move(*packet_msg));
 }
 
-void ContinentalSrr520Decoder::ProcessHRRHeaderPacket(
+void ContinentalSRR520Decoder::ProcessHRRHeaderPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   rdi_hrr_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -334,7 +334,7 @@ void ContinentalSrr520Decoder::ProcessHRRHeaderPacket(
   rdi_near_packets_ptr_->packets.emplace_back(std::move(*packet_msg));
 }
 
-void ContinentalSrr520Decoder::ProcessHRRElementPacket(
+void ContinentalSRR520Decoder::ProcessHRRElementPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   if (rdi_hrr_packets_ptr_->packets.size() == 0) {
@@ -404,7 +404,7 @@ void ContinentalSrr520Decoder::ProcessHRRElementPacket(
   rdi_hrr_packets_ptr_->packets.emplace_back(std::move(*packet_msg));
 }
 
-void ContinentalSrr520Decoder::ProcessObjectHeaderPacket(
+void ContinentalSRR520Decoder::ProcessObjectHeaderPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   object_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -450,7 +450,7 @@ void ContinentalSrr520Decoder::ProcessObjectHeaderPacket(
   object_packets_ptr_->packets.emplace_back(std::move(*packet_msg));
 }
 
-void ContinentalSrr520Decoder::ProcessObjectElementPacket(
+void ContinentalSRR520Decoder::ProcessObjectElementPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   if (object_packets_ptr_->packets.size() == 0) {
@@ -579,7 +579,7 @@ void ContinentalSrr520Decoder::ProcessObjectElementPacket(
   object_packets_ptr_->packets.emplace_back(std::move(*packet_msg));
 }
 
-void ContinentalSrr520Decoder::ProcessCRCListPacket(
+void ContinentalSRR520Decoder::ProcessCRCListPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   const auto crc_id = packet_msg->data[4];  // first 4 bits are the can id
@@ -595,7 +595,7 @@ void ContinentalSrr520Decoder::ProcessCRCListPacket(
   }
 }
 
-void ContinentalSrr520Decoder::ProcessNearCRCListPacket(
+void ContinentalSRR520Decoder::ProcessNearCRCListPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   if (rdi_near_packets_ptr_->packets.size() != RDI_NEAR_PACKET_NUM + 1) {
@@ -636,7 +636,7 @@ void ContinentalSrr520Decoder::ProcessNearCRCListPacket(
   rdi_near_packets_ptr_.reset();
 }
 
-void ContinentalSrr520Decoder::ProcessHRRCRCListPacket(
+void ContinentalSRR520Decoder::ProcessHRRCRCListPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   if (rdi_hrr_packets_ptr_->packets.size() != RDI_HRR_PACKET_NUM + 1) {
@@ -676,7 +676,7 @@ void ContinentalSrr520Decoder::ProcessHRRCRCListPacket(
   rdi_hrr_packets_ptr_.reset();
 }
 
-void ContinentalSrr520Decoder::ProcessObjectCRCListPacket(
+void ContinentalSRR520Decoder::ProcessObjectCRCListPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   if (object_packets_ptr_->packets.size() != OBJECT_PACKET_NUM + 1) {
@@ -719,7 +719,7 @@ void ContinentalSrr520Decoder::ProcessObjectCRCListPacket(
   object_packets_ptr_.reset();
 }
 
-void ContinentalSrr520Decoder::ProcessSensorStatusPacket(
+void ContinentalSRR520Decoder::ProcessSensorStatusPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   static_assert(sizeof(StatusPacket) == STATUS_PACKET_SIZE);
@@ -1073,7 +1073,7 @@ void ContinentalSrr520Decoder::ProcessSensorStatusPacket(
   }
 }
 
-void ContinentalSrr520Decoder::ProcessSyncFupPacket(
+void ContinentalSRR520Decoder::ProcessSyncFupPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   if (sync_fup_callback_) {
@@ -1090,12 +1090,12 @@ void ContinentalSrr520Decoder::ProcessSyncFupPacket(
   }
 }
 
-void ContinentalSrr520Decoder::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
+void ContinentalSRR520Decoder::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
 {
   parent_node_logger_ptr_ = logger;
 }
 
-void ContinentalSrr520Decoder::PrintInfo(std::string info)
+void ContinentalSRR520Decoder::PrintInfo(std::string info)
 {
   if (parent_node_logger_ptr_) {
     RCLCPP_INFO_STREAM((*parent_node_logger_ptr_), info);
@@ -1104,7 +1104,7 @@ void ContinentalSrr520Decoder::PrintInfo(std::string info)
   }
 }
 
-void ContinentalSrr520Decoder::PrintError(std::string error)
+void ContinentalSRR520Decoder::PrintError(std::string error)
 {
   if (parent_node_logger_ptr_) {
     RCLCPP_ERROR_STREAM((*parent_node_logger_ptr_), error);
@@ -1113,7 +1113,7 @@ void ContinentalSrr520Decoder::PrintError(std::string error)
   }
 }
 
-void ContinentalSrr520Decoder::PrintDebug(std::string debug)
+void ContinentalSRR520Decoder::PrintDebug(std::string debug)
 {
   if (parent_node_logger_ptr_) {
     RCLCPP_DEBUG_STREAM((*parent_node_logger_ptr_), debug);

@@ -20,21 +20,21 @@ namespace nebula
 {
 namespace ros
 {
-ContinentalSrr520DecoderWrapper::ContinentalSrr520DecoderWrapper(
+ContinentalSRR520DecoderWrapper::ContinentalSRR520DecoderWrapper(
   rclcpp::Node * const parent_node,
-  std::shared_ptr<const nebula::drivers::continental_srr520::ContinentalSrr520SensorConfiguration> &
+  std::shared_ptr<const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration> &
     config,
-  std::shared_ptr<drivers::continental_srr520::ContinentalSrr520HwInterface> hw_interface_ptr)
+  std::shared_ptr<drivers::continental_srr520::ContinentalSRR520HwInterface> hw_interface_ptr)
 : parent_node_(parent_node),
   status_(nebula::Status::NOT_INITIALIZED),
-  logger_(parent_node->get_logger().get_child("ContinentalSrr520Decoder")),
+  logger_(parent_node->get_logger().get_child("ContinentalSRR520Decoder")),
   sensor_cfg_(config),
   hw_interface_ptr_(hw_interface_ptr)
 {
   using std::chrono_literals::operator""us;
   if (!config) {
     throw std::runtime_error(
-      "ContinentalSrr520DecoderWrapper cannot be instantiated without a valid config!");
+      "ContinentalSRR520DecoderWrapper cannot be instantiated without a valid config!");
   }
 
   RCLCPP_INFO(logger_, "Starting Decoder");
@@ -97,27 +97,27 @@ ContinentalSrr520DecoderWrapper::ContinentalSrr520DecoderWrapper(
     });
 }
 
-Status ContinentalSrr520DecoderWrapper::InitializeDriver(
+Status ContinentalSRR520DecoderWrapper::InitializeDriver(
   const std::shared_ptr<
-    const nebula::drivers::continental_srr520::ContinentalSrr520SensorConfiguration> & config)
+    const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration> & config)
 {
   driver_ptr_.reset();
-  driver_ptr_ = std::make_shared<drivers::continental_srr520::ContinentalSrr520Decoder>(config);
+  driver_ptr_ = std::make_shared<drivers::continental_srr520::ContinentalSRR520Decoder>(config);
 
   driver_ptr_->RegisterNearDetectionListCallback(std::bind(
-    &ContinentalSrr520DecoderWrapper::NearDetectionListCallback, this, std::placeholders::_1));
+    &ContinentalSRR520DecoderWrapper::NearDetectionListCallback, this, std::placeholders::_1));
   driver_ptr_->RegisterHRRDetectionListCallback(std::bind(
-    &ContinentalSrr520DecoderWrapper::HRRDetectionListCallback, this, std::placeholders::_1));
+    &ContinentalSRR520DecoderWrapper::HRRDetectionListCallback, this, std::placeholders::_1));
   driver_ptr_->RegisterObjectListCallback(
-    std::bind(&ContinentalSrr520DecoderWrapper::ObjectListCallback, this, std::placeholders::_1));
+    std::bind(&ContinentalSRR520DecoderWrapper::ObjectListCallback, this, std::placeholders::_1));
   driver_ptr_->RegisterStatusCallback(
-    std::bind(&ContinentalSrr520DecoderWrapper::StatusCallback, this, std::placeholders::_1));
+    std::bind(&ContinentalSRR520DecoderWrapper::StatusCallback, this, std::placeholders::_1));
 
   if (hw_interface_ptr_) {
     driver_ptr_->RegisterSyncFupCallback(
-      std::bind(&ContinentalSrr520DecoderWrapper::SyncFupCallback, this, std::placeholders::_1));
+      std::bind(&ContinentalSRR520DecoderWrapper::SyncFupCallback, this, std::placeholders::_1));
     driver_ptr_->RegisterPacketsCallback(
-      std::bind(&ContinentalSrr520DecoderWrapper::PacketsCallback, this, std::placeholders::_1));
+      std::bind(&ContinentalSRR520DecoderWrapper::PacketsCallback, this, std::placeholders::_1));
   }
 
   driver_ptr_->SetLogger(
@@ -126,16 +126,16 @@ Status ContinentalSrr520DecoderWrapper::InitializeDriver(
   return Status::OK;
 }
 
-void ContinentalSrr520DecoderWrapper::OnConfigChange(
+void ContinentalSRR520DecoderWrapper::OnConfigChange(
   const std::shared_ptr<
-    const nebula::drivers::continental_srr520::ContinentalSrr520SensorConfiguration> & new_config)
+    const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration> & new_config)
 {
   std::lock_guard lock(mtx_driver_ptr_);
   InitializeDriver(new_config);
   sensor_cfg_ = new_config;
 }
 
-void ContinentalSrr520DecoderWrapper::ProcessPacket(
+void ContinentalSRR520DecoderWrapper::ProcessPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   driver_ptr_->ProcessPacket(std::move(packet_msg));
@@ -143,7 +143,7 @@ void ContinentalSrr520DecoderWrapper::ProcessPacket(
   watchdog_->update();
 }
 
-void ContinentalSrr520DecoderWrapper::NearDetectionListCallback(
+void ContinentalSRR520DecoderWrapper::NearDetectionListCallback(
   std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg)
 {
   if (
@@ -172,7 +172,7 @@ void ContinentalSrr520DecoderWrapper::NearDetectionListCallback(
   }
 }
 
-void ContinentalSrr520DecoderWrapper::HRRDetectionListCallback(
+void ContinentalSRR520DecoderWrapper::HRRDetectionListCallback(
   std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg)
 {
   if (
@@ -201,7 +201,7 @@ void ContinentalSrr520DecoderWrapper::HRRDetectionListCallback(
   }
 }
 
-void ContinentalSrr520DecoderWrapper::ObjectListCallback(
+void ContinentalSRR520DecoderWrapper::ObjectListCallback(
   std::unique_ptr<continental_msgs::msg::ContinentalSrr520ObjectList> msg)
 {
   if (
@@ -237,21 +237,21 @@ void ContinentalSrr520DecoderWrapper::ObjectListCallback(
   }
 }
 
-void ContinentalSrr520DecoderWrapper::StatusCallback(
+void ContinentalSRR520DecoderWrapper::StatusCallback(
   std::unique_ptr<diagnostic_msgs::msg::DiagnosticArray> status_msg_ptr)
 {
   status_pub_->publish(std::move(status_msg_ptr));
 }
 
-pcl::PointCloud<nebula::drivers::continental_srr520::PointSrr520Detection>::Ptr
-ContinentalSrr520DecoderWrapper::ConvertToPointcloud(
+pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Detection>::Ptr
+ContinentalSRR520DecoderWrapper::ConvertToPointcloud(
   const continental_msgs::msg::ContinentalSrr520DetectionList & msg)
 {
-  pcl::PointCloud<nebula::drivers::continental_srr520::PointSrr520Detection>::Ptr output_pointcloud(
-    new pcl::PointCloud<nebula::drivers::continental_srr520::PointSrr520Detection>);
+  pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Detection>::Ptr output_pointcloud(
+    new pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Detection>);
   output_pointcloud->reserve(msg.detections.size());
 
-  nebula::drivers::continental_srr520::PointSrr520Detection point{};
+  nebula::drivers::continental_srr520::PointSRR520Detection point{};
   for (const auto & detection : msg.detections) {
     point.x = std::cos(detection.azimuth_angle) * detection.range;
     point.y = std::sin(detection.azimuth_angle) * detection.range;
@@ -277,15 +277,15 @@ ContinentalSrr520DecoderWrapper::ConvertToPointcloud(
   return output_pointcloud;
 }
 
-pcl::PointCloud<nebula::drivers::continental_srr520::PointSrr520Object>::Ptr
-ContinentalSrr520DecoderWrapper::ConvertToPointcloud(
+pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Object>::Ptr
+ContinentalSRR520DecoderWrapper::ConvertToPointcloud(
   const continental_msgs::msg::ContinentalSrr520ObjectList & msg)
 {
-  pcl::PointCloud<nebula::drivers::continental_srr520::PointSrr520Object>::Ptr output_pointcloud(
-    new pcl::PointCloud<nebula::drivers::continental_srr520::PointSrr520Object>);
+  pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Object>::Ptr output_pointcloud(
+    new pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Object>);
   output_pointcloud->reserve(msg.objects.size());
 
-  nebula::drivers::continental_srr520::PointSrr520Object point{};
+  nebula::drivers::continental_srr520::PointSRR520Object point{};
   for (const auto & object : msg.objects) {
     point.x = object.dist_x;
     point.y = object.dist_y;
@@ -314,7 +314,7 @@ ContinentalSrr520DecoderWrapper::ConvertToPointcloud(
   return output_pointcloud;
 }
 
-radar_msgs::msg::RadarScan ContinentalSrr520DecoderWrapper::ConvertToRadarScan(
+radar_msgs::msg::RadarScan ContinentalSRR520DecoderWrapper::ConvertToRadarScan(
   const continental_msgs::msg::ContinentalSrr520DetectionList & msg)
 {
   radar_msgs::msg::RadarScan output_msg;
@@ -338,7 +338,7 @@ radar_msgs::msg::RadarScan ContinentalSrr520DecoderWrapper::ConvertToRadarScan(
   return output_msg;
 }
 
-radar_msgs::msg::RadarTracks ContinentalSrr520DecoderWrapper::ConvertToRadarTracks(
+radar_msgs::msg::RadarTracks ContinentalSRR520DecoderWrapper::ConvertToRadarTracks(
   const continental_msgs::msg::ContinentalSrr520ObjectList & msg)
 {
   radar_msgs::msg::RadarTracks output_msg;
@@ -409,7 +409,7 @@ radar_msgs::msg::RadarTracks ContinentalSrr520DecoderWrapper::ConvertToRadarTrac
   return output_msg;
 }
 
-visualization_msgs::msg::MarkerArray ContinentalSrr520DecoderWrapper::ConvertToMarkers(
+visualization_msgs::msg::MarkerArray ContinentalSRR520DecoderWrapper::ConvertToMarkers(
   const continental_msgs::msg::ContinentalSrr520ObjectList & msg)
 {
   visualization_msgs::msg::MarkerArray marker_array;
@@ -574,12 +574,12 @@ visualization_msgs::msg::MarkerArray ContinentalSrr520DecoderWrapper::ConvertToM
   return marker_array;
 }
 
-void ContinentalSrr520DecoderWrapper::SyncFupCallback(builtin_interfaces::msg::Time stamp)
+void ContinentalSRR520DecoderWrapper::SyncFupCallback(builtin_interfaces::msg::Time stamp)
 {
   hw_interface_ptr_->SensorSyncFup(stamp);
 }
 
-void ContinentalSrr520DecoderWrapper::PacketsCallback(
+void ContinentalSRR520DecoderWrapper::PacketsCallback(
   std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg)
 {
   if (
@@ -589,7 +589,7 @@ void ContinentalSrr520DecoderWrapper::PacketsCallback(
   }
 }
 
-nebula::Status ContinentalSrr520DecoderWrapper::Status()
+nebula::Status ContinentalSRR520DecoderWrapper::Status()
 {
   std::lock_guard lock(mtx_driver_ptr_);
 

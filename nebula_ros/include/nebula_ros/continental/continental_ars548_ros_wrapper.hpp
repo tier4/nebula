@@ -41,11 +41,11 @@ namespace ros
 {
 
 /// @brief Ros wrapper of continental ars548 driver
-class ContinentalArs548RosWrapper final : public rclcpp::Node
+class ContinentalARS548RosWrapper final : public rclcpp::Node
 {
 public:
-  explicit ContinentalArs548RosWrapper(const rclcpp::NodeOptions & options);
-  ~ContinentalArs548RosWrapper() noexcept {};
+  explicit ContinentalARS548RosWrapper(const rclcpp::NodeOptions & options);
+  ~ContinentalARS548RosWrapper() noexcept {};
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -73,12 +73,12 @@ private:
     const std::vector<rclcpp::Parameter> & p);
 
   Status ValidateAndSetConfig(
-    std::shared_ptr<const drivers::continental_ars548::ContinentalArs548SensorConfiguration> &
+    std::shared_ptr<const drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
       new_config);
 
   Status wrapper_status_;
 
-  std::shared_ptr<const drivers::continental_ars548::ContinentalArs548SensorConfiguration>
+  std::shared_ptr<const drivers::continental_ars548::ContinentalARS548SensorConfiguration>
     config_ptr_{};
 
   /// @brief Stores received packets that have not been processed yet by the decoder thread
@@ -90,8 +90,8 @@ private:
 
   bool launch_hw_{};
 
-  std::optional<ContinentalArs548HwInterfaceWrapper> hw_interface_wrapper_{};
-  std::optional<ContinentalArs548DecoderWrapper> decoder_wrapper_{};
+  std::optional<ContinentalARS548HwInterfaceWrapper> hw_interface_wrapper_{};
+  std::optional<ContinentalARS548DecoderWrapper> decoder_wrapper_{};
 
   std::mutex mtx_config_;
 
