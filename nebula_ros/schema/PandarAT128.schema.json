@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "LiDAR Velodyne PandarAT128 parameters.",
+  "title": "LiDAR Hesai PandarAT128 parameters.",
   "type": "object",
   "definitions": {
     "PandarAT128": {
