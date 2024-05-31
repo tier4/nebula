@@ -21,9 +21,6 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
-
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
