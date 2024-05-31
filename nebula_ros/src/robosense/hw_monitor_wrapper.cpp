@@ -16,7 +16,7 @@ RobosenseHwMonitorWrapper::RobosenseHwMonitorWrapper(
   sensor_cfg_ptr_(config)
 {
   auto descriptor = param_read_only().set__additional_constraints("milliseconds");
-  diag_span_ = parent_->declare_parameter<uint16_t>("diag_span", 1000, descriptor);
+  diag_span_ = parent_->declare_parameter<uint16_t>("diag_span", descriptor);
 }
 
 void RobosenseHwMonitorWrapper::InitializeRobosenseDiagnostics()

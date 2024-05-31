@@ -22,7 +22,7 @@ VelodyneDecoderWrapper::VelodyneDecoderWrapper(
   }
 
   calibration_file_path_ =
-    parent_node->declare_parameter<std::string>("calibration_file", "", param_read_write());
+    parent_node->declare_parameter<std::string>("calibration_file", param_read_write());
   auto calibration_result = GetCalibrationData(calibration_file_path_);
 
   if (!calibration_result.has_value()) {

@@ -65,31 +65,31 @@ nebula::Status RobosenseRosWrapper::DeclareAndGetSensorConfigParams()
 {
   nebula::drivers::RobosenseSensorConfiguration config;
 
-  auto _sensor_model = declare_parameter<std::string>("sensor_model", "", param_read_only());
+  auto _sensor_model = declare_parameter<std::string>("sensor_model", param_read_only());
   config.sensor_model = drivers::SensorModelFromString(_sensor_model);
 
-  auto _return_mode = declare_parameter<std::string>("return_mode", "", param_read_write());
+  auto _return_mode = declare_parameter<std::string>("return_mode", param_read_write());
   config.return_mode = drivers::ReturnModeFromStringRobosense(_return_mode);
 
-  config.host_ip = declare_parameter<std::string>("host_ip", "255.255.255.255", param_read_only());
+  config.host_ip = declare_parameter<std::string>("host_ip", param_read_only());
   config.sensor_ip =
-    declare_parameter<std::string>("sensor_ip", "192.168.1.201", param_read_only());
-  config.data_port = declare_parameter<uint16_t>("data_port", 2368, param_read_only());
-  config.gnss_port = declare_parameter<uint16_t>("gnss_port", 2369, param_read_only());
-  config.frame_id = declare_parameter<std::string>("frame_id", "pandar", param_read_write());
+    declare_parameter<std::string>("sensor_ip", param_read_only());
+  config.data_port = declare_parameter<uint16_t>("data_port", param_read_only());
+  config.gnss_port = declare_parameter<uint16_t>("gnss_port", param_read_only());
+  config.frame_id = declare_parameter<std::string>("frame_id", param_read_write());
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.])";
     descriptor.floating_point_range = float_range(0, 360, 0.01);
-    config.scan_phase = declare_parameter<double>("scan_phase", 0., descriptor);
+    config.scan_phase = declare_parameter<double>("scan_phase", descriptor);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     descriptor.additional_constraints = "Dual return distance threshold [0.01, 0.5]";
     descriptor.floating_point_range = float_range(0.01, 0.5, 0.01);
     config.dual_return_distance_threshold =
-      declare_parameter<double>("dual_return_distance_threshold", 0.1, descriptor);
+      declare_parameter<double>("dual_return_distance_threshold", descriptor);
   }
 
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::RobosenseSensorConfiguration>(config);
