@@ -89,6 +89,9 @@ private:
   std::string storage_id;
   std::string format;
   std::string target_topic;
+  std::size_t near_detection_list_count_{};
+  std::size_t hrr_detection_list_count_{};
+  std::size_t object_list_count_{};
 };
 
 }  // namespace ros

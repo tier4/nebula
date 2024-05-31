@@ -207,6 +207,7 @@ void ContinentalRosDecoderTest::CheckResult(
 void ContinentalRosDecoderTest::HRRDetectionListCallback(
   std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg)
 {
+  hrr_detection_list_count_++;
   EXPECT_EQ(sensor_cfg_ptr_->frame_id, msg->header.frame_id);
   std::string msg_as_string = continental_msgs::msg::to_yaml(*msg);
 
@@ -223,6 +224,7 @@ void ContinentalRosDecoderTest::HRRDetectionListCallback(
 void ContinentalRosDecoderTest::NearDetectionListCallback(
   std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg)
 {
+  near_detection_list_count_++;
   EXPECT_EQ(sensor_cfg_ptr_->frame_id, msg->header.frame_id);
   std::string msg_as_string = continental_msgs::msg::to_yaml(*msg);
 
@@ -239,6 +241,7 @@ void ContinentalRosDecoderTest::NearDetectionListCallback(
 void ContinentalRosDecoderTest::ObjectListCallback(
   std::unique_ptr<continental_msgs::msg::ContinentalSrr520ObjectList> msg)
 {
+  object_list_count_++;
   EXPECT_EQ(sensor_cfg_ptr_->base_frame, msg->header.frame_id);
   std::string msg_as_string = continental_msgs::msg::to_yaml(*msg);
 
@@ -297,6 +300,10 @@ void ContinentalRosDecoderTest::ReadBag()
       }
     }
   }
+
+  EXPECT_EQ(1, near_detection_list_count_);
+  EXPECT_EQ(1, hrr_detection_list_count_);
+  EXPECT_EQ(1, object_list_count_);
 }
 
 }  // namespace ros

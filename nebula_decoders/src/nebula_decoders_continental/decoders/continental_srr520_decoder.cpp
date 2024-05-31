@@ -712,8 +712,6 @@ void ContinentalSRR520Decoder::ProcessObjectCRCListPacket(
   uint16_t computed_crc =
     crc16_packets(object_packets_ptr_->packets.begin(), object_packets_ptr_->packets.end(), 4);
 
-  // uint8_t current_seq = buffer[3];
-
   if (transmitted_crc != computed_crc) {
     PrintError(
       "Object: Transmitted CRC list does not coincide with the computed one. Ignoring packet");
