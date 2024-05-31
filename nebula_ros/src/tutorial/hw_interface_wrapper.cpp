@@ -11,8 +11,8 @@ TutorialHwInterfaceWrapper::TutorialHwInterfaceWrapper(
   , logger_(parent_node->get_logger().get_child("HwInterface"))
   , status_(Status::NOT_INITIALIZED)
 {
-  setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", true, param_read_only());
-  bool retry_connect = parent_node->declare_parameter<bool>("retry_hw", true, param_read_only());
+  setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
+  bool retry_connect = parent_node->declare_parameter<bool>("retry_hw", param_read_only());
 
   status_ = hw_interface_->SetSensorConfiguration(config);
 
