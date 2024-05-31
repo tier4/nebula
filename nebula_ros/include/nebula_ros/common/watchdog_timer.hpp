@@ -36,7 +36,9 @@ private:
   {
     uint64_t now_ns = node_.get_clock()->now().nanoseconds();
 
-    bool is_late = (now_ns - last_update_ns_) > expected_update_interval_ns_;
+    bool is_late = (last_update_ns_ > now_ns)
+                     ? false
+                     : (now_ns - last_update_ns_) > expected_update_interval_ns_;
 
     callback_(!is_late);
   }
