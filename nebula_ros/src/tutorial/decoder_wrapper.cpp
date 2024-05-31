@@ -20,7 +20,7 @@ TutorialDecoderWrapper::TutorialDecoderWrapper(rclcpp::Node* const parent_node,
     throw std::runtime_error("TutorialDecoderWrapper cannot be instantiated without a valid config!");
   }
 
-  auto calibration_file_path = parent_node->declare_parameter<std::string>("calibration_file", "", param_read_write());
+  auto calibration_file_path = parent_node->declare_parameter<std::string>("calibration_file", param_read_write());
   auto calibration_result = GetCalibrationData(calibration_file_path, false);
 
   if (!calibration_result.has_value())

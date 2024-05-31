@@ -13,7 +13,7 @@ TutorialHwMonitorWrapper::TutorialHwMonitorWrapper(rclcpp::Node* const parent_no
   , diagnostics_updater_(parent_node)
   , hw_interface_(hw_interface)
 {
-  diag_span_ = parent_node->declare_parameter<uint16_t>("diag_span", 1000, param_read_only());
+  diag_span_ = parent_node->declare_parameter<uint16_t>("diag_span", param_read_only());
 
   InitializeDiagnostics();
 }
