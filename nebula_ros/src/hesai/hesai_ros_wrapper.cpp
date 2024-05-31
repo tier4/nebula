@@ -91,16 +91,13 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    uint16_t default_value;
     RCLCPP_DEBUG_STREAM(get_logger(), config.sensor_model);
     if (config.sensor_model == nebula::drivers::SensorModel::HESAI_PANDARAT128) {
       descriptor.additional_constraints = "200, 400";
       descriptor.integer_range = int_range(200, 400, 200);
-      default_value = 200;
     } else {
       descriptor.additional_constraints = "300, 600, 1200";
       descriptor.integer_range = int_range(300, 1200, 300);
-      default_value = 600;
     }
     config.rotation_speed =
       declare_parameter<uint16_t>("rotation_speed", descriptor);
