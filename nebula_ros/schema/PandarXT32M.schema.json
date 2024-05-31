@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "LiDAR Velodyne PandarXT32M parameters.",
+  "title": "LiDAR Hesai PandarXT32M parameters.",
   "type": "object",
   "definitions": {
     "PandarXT32M": {
