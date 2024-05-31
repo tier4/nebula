@@ -33,6 +33,12 @@
         "diag_span": {
           "$ref": "sub/topic.json#/definitions/diag_span"
         },
+        "min_range": {
+          "$ref": "sub/misc.json#/definitions/min_range"
+        },
+        "max_range": {
+          "$ref": "sub/misc.json#/definitions/max_range"
+        },
         "cloud_min_angle": {
           "$ref": "sub/misc.json#/definitions/cloud_min_angle"
         },
