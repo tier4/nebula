@@ -22,10 +22,10 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
 
   if (config->sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
     calibration_file_path_ =
-      parent_node->declare_parameter<std::string>("correction_file", "", param_read_write());
+      parent_node->declare_parameter<std::string>("correction_file", param_read_write());
   } else {
     calibration_file_path_ =
-      parent_node->declare_parameter<std::string>("calibration_file", "", param_read_write());
+      parent_node->declare_parameter<std::string>("calibration_file", param_read_write());
   }
 
   auto calibration_result = GetCalibrationData(calibration_file_path_, false);
