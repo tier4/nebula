@@ -22,6 +22,11 @@
       "default": true,
       "readOnly": true,
       "description": "Enable sensor setup on hardware driver."
+    },
+    "retry_hw": {
+      "type": "boolean",
+      "default": true,
+      "description": "hw driver startup retry (false when using pcap)."
     }
   }
 }

@@ -8,6 +8,12 @@
       "default": "$(find-pkg-share nebula_decoders)/calibration/$(var sensor_vendor)/$(var sensor_model).yaml",
       "description": "Sensor calibration file."
     },
+    "correction_file": {
+      "type": "string",
+      "default": "$(find-pkg-share nebula_decoders)/calibration/$(var sensor_vendor)/$(var sensor_model).dat",
+      "pattern": "^.*\\.dat$",
+      "description": "Sensor correction file."
+    },
     "cloud_max_angle": {
       "type": "integer",
       "default": 360,
