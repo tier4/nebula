@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "LiDAR Velodyne Pandar64 parameters.",
+  "title": "LiDAR Hesai Pandar64 parameters.",
   "type": "object",
   "definitions": {
     "Pandar64": {
