@@ -1,9 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "LiDAR Velodyne VLP32 parameters.",
+  "title": "LiDAR Velodyne PandarQT64 parameters.",
   "type": "object",
   "definitions": {
-    "VLP32": {
+    "PandarQT64": {
       "type": "object",
       "properties": {
         "host_ip": {
@@ -16,7 +16,7 @@
           "$ref": "sub/communication.json#/definitions/data_port"
         },
         "gnss_port": {
-          "$ref": "sub/communication.json#/definitions/gnss_port"
+          "$ref": "sub/lidar_hesai.json#/definitions/gnss_port"
         },
         "packet_mtu_size": {
           "$ref": "sub/communication.json#/definitions/packet_mtu_size"
@@ -30,17 +30,8 @@
         "frame_id": {
           "$ref": "sub/topic.json#/definitions/frame_id"
         },
-        "advanced_diagnostics": {
-          "$ref": "sub/topic.json#/definitions/advanced_diagnostics"
-        },
         "diag_span": {
           "$ref": "sub/topic.json#/definitions/diag_span"
-        },
-        "min_range": {
-          "$ref": "sub/misc.json#/definitions/min_range"
-        },
-        "max_range": {
-          "$ref": "sub/misc.json#/definitions/max_range"
         },
         "cloud_min_angle": {
           "$ref": "sub/misc.json#/definitions/cloud_min_angle"
@@ -52,16 +43,39 @@
           "$ref": "sub/misc.json#/definitions/scan_phase"
         },
         "sensor_model": {
-          "$ref": "sub/lidar_velodyne.json#/definitions/sensor_model"
+          "$ref": "sub/lidar_hesai.json#/definitions/sensor_model"
         },
         "calibration_file": {
-          "$ref": "sub/lidar_velodyne.json#/definitions/calibration_file"
+          "$ref": "sub/lidar_hesai.json#/definitions/calibration_file"
         },
         "rotation_speed": {
-          "$ref": "sub/lidar_velodyne.json#/definitions/rotation_speed"
+          "$ref": "sub/lidar_hesai.json#/definitions/rotation_speed"
         },
         "return_mode": {
-          "$ref": "sub/lidar_velodyne.json#/definitions/return_mode"
+          "$ref": "sub/misc.json#/definitions/return_mode",
+          "enum": [
+            "Last",
+            "First",
+            "Dual"
+          ]
+        },
+        "ptp_profile": {
+          "$ref": "sub/communication.json#/definitions/ptp_profile"
+        },
+        "ptp_domain": {
+          "$ref": "sub/communication.json#/definitions/ptp_domain"
+        },
+        "ptp_transport_type": {
+          "$ref": "sub/communication.json#/definitions/ptp_transport_type"
+        },
+        "ptp_switch_type": {
+          "$ref": "sub/communication.json#/definitions/ptp_switch_type"
+        },
+        "retry_hw": {
+          "$ref": "sub/hardware.json#/definitions/retry_hw"
+        },
+        "dual_return_distance_threshold": {
+          "$ref": "sub/misc.json#/definitions/dual_return_distance_threshold"
         }
       },
       "required": [
@@ -73,17 +87,20 @@
         "launch_hw",
         "setup_sensor",
         "frame_id",
-        "advanced_diagnostics",
         "diag_span",
-        "min_range",
-        "max_range",
         "cloud_min_angle",
         "cloud_max_angle",
         "scan_phase",
         "sensor_model",
         "calibration_file",
         "rotation_speed",
-        "return_mode"
+        "return_mode",
+        "ptp_profile",
+        "ptp_domain",
+        "ptp_transport_type",
+        "ptp_switch_type",
+        "retry_hw",
+        "dual_return_distance_threshold"
       ],
       "additionalProperties": false
     }
@@ -93,7 +110,7 @@
       "type": "object",
       "properties": {
         "ros__parameters": {
-          "$ref": "#/definitions/VLP32"
+          "$ref": "#/definitions/PandarQT64"
         },
         "additionalProperties": false
       },

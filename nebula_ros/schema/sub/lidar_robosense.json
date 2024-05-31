@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Radar Continental parameters.",
+  "title": "Lidar Robosense parameters.",
   "type": "object",
   "definitions": {
     "sensor_model": {

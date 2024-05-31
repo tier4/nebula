@@ -36,9 +36,6 @@
         "diag_span": {
           "$ref": "sub/topic.json#/definitions/diag_span"
         },
-        "calibration_file": {
-          "$ref": "sub/misc.json#/definitions/calibration_file"
-        },
         "min_range": {
           "$ref": "sub/misc.json#/definitions/min_range"
         },
@@ -56,6 +53,9 @@
         },
         "sensor_model": {
           "$ref": "sub/lidar_velodyne.json#/definitions/sensor_model"
+        },
+        "calibration_file": {
+          "$ref": "sub/lidar_velodyne.json#/definitions/calibration_file"
         },
         "rotation_speed": {
           "$ref": "sub/lidar_velodyne.json#/definitions/rotation_speed"
@@ -75,13 +75,13 @@
         "frame_id",
         "advanced_diagnostics",
         "diag_span",
-        "calibration_file",
         "min_range",
         "max_range",
         "cloud_min_angle",
         "cloud_max_angle",
         "scan_phase",
         "sensor_model",
+        "calibration_file",
         "rotation_speed",
         "return_mode"
       ],
