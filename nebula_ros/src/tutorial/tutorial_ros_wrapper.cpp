@@ -135,32 +135,6 @@ nebula::Status TutorialRosWrapper::DeclareAndGetSensorConfigParams()
         declare_parameter<double>("dual_return_distance_threshold", descriptor);
   }
 
-  auto _ptp_profile = declare_parameter<std::string>("ptp_profile", param_read_only());
-  config.ptp_profile = drivers::PtpProfileFromString(_ptp_profile);
-
-  auto _ptp_transport = declare_parameter<std::string>("ptp_transport_type", param_read_only());
-  config.ptp_transport_type = drivers::PtpTransportTypeFromString(_ptp_transport);
-
-  if (config.ptp_transport_type != drivers::PtpTransportType::L2 &&
-      config.ptp_profile != drivers::PtpProfile::IEEE_1588v2 &&
-      config.ptp_profile != drivers::PtpProfile::UNKNOWN_PROFILE)
-  {
-    RCLCPP_WARN_STREAM(get_logger(), "PTP transport was set to '" << _ptp_transport << "' but PTP profile '"
-                                                                  << _ptp_profile
-                                                                  << "' only supports 'L2'. Setting it to 'L2'.");
-    config.ptp_transport_type = drivers::PtpTransportType::L2;
-    set_parameter(rclcpp::Parameter("ptp_transport_type", "L2"));
-  }
-
-  auto _ptp_switch = declare_parameter<std::string>("ptp_switch_type", param_read_only());
-  config.ptp_switch_type = drivers::PtpSwitchTypeFromString(_ptp_switch);
-
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
-    descriptor.integer_range = int_range(0, 127, 1);
-    config.ptp_domain = declare_parameter<uint8_t>("ptp_domain", descriptor);
-  }
-
   auto new_cfg_ptr = std::make_shared<const TutorialSensorConfiguration>(config);
   return ValidateAndSetConfig(new_cfg_ptr);
 }
@@ -177,23 +151,6 @@ Status TutorialRosWrapper::ValidateAndSetConfig(std::shared_ptr<const TutorialSe
   }
   if (new_config->frame_id.empty())
   {
-    return Status::SENSOR_CONFIG_ERROR;
-  }
-  if (new_config->ptp_profile == nebula::drivers::PtpProfile::UNKNOWN_PROFILE)
-  {
-    RCLCPP_ERROR_STREAM(get_logger(), "Invalid PTP Profile Provided. Please use '1588v2', '802.1as' or 'automotive'");
-    return Status::SENSOR_CONFIG_ERROR;
-  }
-  if (new_config->ptp_transport_type == nebula::drivers::PtpTransportType::UNKNOWN_TRANSPORT)
-  {
-    RCLCPP_ERROR_STREAM(get_logger(),
-                        "Invalid PTP Transport Provided. Please use 'udp' or 'l2', 'udp' is only available when "
-                        "using the '1588v2' PTP Profile");
-    return Status::SENSOR_CONFIG_ERROR;
-  }
-  if (new_config->ptp_switch_type == nebula::drivers::PtpSwitchType::UNKNOWN_SWITCH)
-  {
-    RCLCPP_ERROR_STREAM(get_logger(), "Invalid PTP Switch Type Provided. Please use 'tsn' or 'non_tsn'");
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -219,7 +176,7 @@ void TutorialRosWrapper::ReceiveScanMessageCallback(std::unique_ptr<nebula_msgs:
   if (hw_interface_wrapper_)
   {
     RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 1000,
-                          "Ignoring received PandarScan. Launch with launch_hw:=false to enable PandarScan replay.");
+                          "Ignoring received packets message. Launch with launch_hw:=false to enable replay.");
     return;
   }
 
@@ -267,15 +224,7 @@ rcl_interfaces::msg::SetParametersResult TutorialRosWrapper::OnParameterChange(c
   // Update sub-wrapper parameters (if any)
   // ////////////////////////////////////////
 
-  // Currently, HW interface and monitor wrappers have only read-only parameters, so their update logic is not
-  // implemented
-  if (decoder_wrapper_)
-  {
-    auto result = decoder_wrapper_->OnParameterChange(p);
-    if (!result.successful) {
-      return result;
-    }
-  }
+  // Currently, all wrappers have only read-only parameters, so their update logic is not implemented
 
   // ////////////////////////////////////////
   // Create new, updated sensor configuration
