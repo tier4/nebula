@@ -8,13 +8,11 @@
 #include <nebula_hw_interfaces/nebula_hw_interfaces_tutorial/tutorial_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include <boost/asio.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/property_tree/ptree.hpp>
-
 #include <array>
 #include <memory>
 #include <optional>
+#include <map>
+#include <string>
 
 namespace nebula
 {
@@ -55,7 +53,7 @@ private:
   rclcpp::TimerBase::SharedPtr diagnostics_update_timer_{};
   rclcpp::TimerBase::SharedPtr fetch_diagnostics_timer_{};
 
-  std::optional<boost::property_tree::ptree> current_diag_info_{};
+  std::map<std::string, std::string> current_diag_info_{};
   std::optional<rclcpp::Time> current_diag_info_time_{};
   std::mutex mtx_current_diag_info_;
 };

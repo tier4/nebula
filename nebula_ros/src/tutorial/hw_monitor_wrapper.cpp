@@ -46,9 +46,13 @@ void TutorialHwMonitorWrapper::ParseAndAddDiagnosticInfo(diagnostic_updater::Dia
   // Add diagnostics values to ROS object
   // ////////////////////////////////////////
 
-  diagnostics.add("voltage", current_diag_info_->get<std::string>("status.voltage"));
+  if (current_diag_info_.empty()) {
+    return;
+  }
 
-  auto error =  current_diag_info_->get<std::string>("status.error");
+  diagnostics.add("voltage", current_diag_info_.at("voltage"));
+
+  auto error =  current_diag_info_.at("error");
   diagnostics.add("error", error);
 
   // ////////////////////////////////////////
@@ -85,10 +89,9 @@ void TutorialHwMonitorWrapper::FetchDiagnosticInfo()
   // This is where you would fetch the newest diagnostics from the sensor using the hardware
   // interface. The below code is just a dummy.
 
-  const char status[] = "{ \"status\": { \"voltage\": 14.00, \"error\": \"No error\" } }";
-  boost::iostreams::stream<boost::iostreams::array_source> stream(status, sizeof(status));
-  boost::property_tree::ptree parsed_diag_info;
-  boost::property_tree::read_json(stream, parsed_diag_info);
+  current_diag_info_.clear();
+  current_diag_info_.insert({"voltage", "14.00"});
+  current_diag_info_.insert({"error", "No error"});
 
   current_diag_info_time_ = parent_node_->now();
 }
