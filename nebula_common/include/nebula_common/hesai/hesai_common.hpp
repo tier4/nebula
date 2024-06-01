@@ -387,6 +387,7 @@ inline ReturnMode ReturnModeFromStringHesai(
     case SensorModel::HESAI_PANDARAT128:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::TUTORIAL_SENSOR:
       if (return_mode == "Last") return ReturnMode::LAST;
       if (return_mode == "Strongest") return ReturnMode::STRONGEST;
       if (return_mode == "LastStrongest") return ReturnMode::DUAL_LAST_STRONGEST;
@@ -421,6 +422,7 @@ inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorMode
     case SensorModel::HESAI_PANDARAT128:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::TUTORIAL_SENSOR:
       if (return_mode == 0) return ReturnMode::LAST;
       if (return_mode == 1) return ReturnMode::STRONGEST;
       if (return_mode == 2) return ReturnMode::DUAL_LAST_STRONGEST;
@@ -454,6 +456,7 @@ inline int IntFromReturnModeHesai(const ReturnMode return_mode, const SensorMode
     case SensorModel::HESAI_PANDARAT128:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::TUTORIAL_SENSOR:
       if (return_mode == ReturnMode::LAST) return 0;
       if (return_mode == ReturnMode::STRONGEST) return 1;
       if (return_mode == ReturnMode::DUAL_LAST_STRONGEST || return_mode == ReturnMode::DUAL)

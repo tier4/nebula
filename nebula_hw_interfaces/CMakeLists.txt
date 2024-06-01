@@ -42,6 +42,9 @@ ament_auto_add_library(nebula_hw_interfaces_continental SHARED
         src/nebula_continental_hw_interfaces/continental_ars548_hw_interface.cpp
         )
 
+ament_auto_add_library(nebula_hw_interfaces_tutorial SHARED
+        src/nebula_tutorial_hw_interfaces/tutorial_hw_interface.cpp
+        )
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)

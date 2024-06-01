@@ -3,10 +3,9 @@
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/tutorial/tutorial_common.hpp>
 
-#include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp>
-#include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
+#include <nebula_hw_interfaces/nebula_hw_interfaces_tutorial/tutorial_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <boost/asio.hpp>
@@ -21,17 +20,15 @@ namespace nebula
 {
 namespace ros
 {
-using TutorialHwInterface = nebula::drivers::HesaiHwInterface;
-using TutorialSensorConfiguration = nebula::drivers::HesaiSensorConfiguration;
 
 class TutorialHwMonitorWrapper
 {
 public:
   TutorialHwMonitorWrapper(rclcpp::Node* const parent_node,
-                        const std::shared_ptr<TutorialHwInterface>& hw_interface,
-                        std::shared_ptr<const TutorialSensorConfiguration>& config);
+                        const std::shared_ptr<nebula::drivers::TutorialHwInterface>& hw_interface,
+                        std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration>& config);
 
-  void OnConfigChange(const std::shared_ptr<const TutorialSensorConfiguration> & /* new_config */) {}
+  void OnConfigChange(const std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration> & /* new_config */) {}
 
   nebula::Status Status();
 
@@ -53,7 +50,7 @@ private:
   uint16_t diag_span_;
   diagnostic_updater::Updater diagnostics_updater_;
 
-  const std::shared_ptr<TutorialHwInterface> hw_interface_;
+  const std::shared_ptr<nebula::drivers::TutorialHwInterface> hw_interface_;
 
   rclcpp::TimerBase::SharedPtr diagnostics_update_timer_{};
   rclcpp::TimerBase::SharedPtr fetch_diagnostics_timer_{};

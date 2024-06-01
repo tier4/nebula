@@ -329,19 +329,8 @@ enum class SensorModel {
   ROBOSENSE_HELIOS,
   ROBOSENSE_BPEARL_V3,
   ROBOSENSE_BPEARL_V4,
-  CONTINENTAL_ARS548
-};
-
-/// @brief not used?
-enum class datatype {
-  INT8 = 1,
-  UINT8 = 2,
-  INT16 = 3,
-  UINT16 = 4,
-  INT32 = 5,
-  UINT32 = 6,
-  FLOAT32 = 7,
-  FLOAT64 = 8
+  CONTINENTAL_ARS548,
+  TUTORIAL_SENSOR
 };
 
 enum class PtpProfile { IEEE_1588v2 = 0, IEEE_802_1AS, IEEE_802_1AS_AUTO, UNKNOWN_PROFILE };
@@ -426,6 +415,8 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::CONTINENTAL_ARS548:
       os << "ARS548";
       break;
+    case SensorModel::TUTORIAL_SENSOR:
+      os << "Tutorial Sensor";
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
       break;
@@ -529,7 +520,12 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "Bpearl" || sensor_model == "Bpearl_V4")
     return SensorModel::ROBOSENSE_BPEARL_V4;
   if (sensor_model == "Bpearl_V3") return SensorModel::ROBOSENSE_BPEARL_V3;
+
+  // Continental
   if (sensor_model == "ARS548") return SensorModel::CONTINENTAL_ARS548;
+
+  // Tutorial
+  if (sensor_model == "TutorialSensor") return SensorModel::TUTORIAL_SENSOR;
   return SensorModel::UNKNOWN;
 }
 
@@ -577,6 +573,8 @@ inline std::string SensorModelToString(const SensorModel & sensor_model)
       return "Bpearl_V4";
     case SensorModel::CONTINENTAL_ARS548:
       return "ARS548";
+    case SensorModel::TUTORIAL_SENSOR:
+      return "TutorialSensor";
     default:
       return "UNKNOWN";
   }
