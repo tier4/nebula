@@ -1,5 +1,7 @@
 #include "nebula_ros/tutorial/hw_monitor_wrapper.hpp"
 
+#include <boost/iostreams/stream.hpp>
+
 namespace nebula
 {
 namespace ros
@@ -20,7 +22,8 @@ TutorialHwMonitorWrapper::TutorialHwMonitorWrapper(rclcpp::Node* const parent_no
 
 void TutorialHwMonitorWrapper::InitializeDiagnostics()
 {
-  std::string hardware_id = ""; // get hardware ID (model:serial_number) from sensor here
+  // get hardware ID (model:serial_number) from sensor here using HW interface
+  std::string hardware_id = "Tutorial:ABC-12345-DEF";
   diagnostics_updater_.setHardwareID(hardware_id);
   RCLCPP_INFO_STREAM(logger_, "hardware_id: " + hardware_id);
 
@@ -39,30 +42,39 @@ void TutorialHwMonitorWrapper::InitializeDiagnostics()
 
 void TutorialHwMonitorWrapper::ParseAndAddDiagnosticInfo(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  // ////////////////////////////////////////
+  // Add diagnostics values to ROS object
+  // ////////////////////////////////////////
 
   diagnostics.add("voltage", current_diag_info_->get<std::string>("status.voltage"));
-  diagnostics.add("error", current_diag_info_->get<std::string>("status.error"));
-  // etc.
 
-  diagnostics.summary(level, "OK");
+  auto error =  current_diag_info_->get<std::string>("status.error");
+  diagnostics.add("error", error);
+
+  // ////////////////////////////////////////
+  // Check error conditions and set status
+  // ////////////////////////////////////////
+
+  if (error != "No error") {
+    diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, error);
+    return;
+  }
+
+  diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "OK");
 }
 
 void TutorialHwMonitorWrapper::TriggerDiagnosticsUpdate()
 {
-  RCLCPP_DEBUG_STREAM(logger_, "OnUpdateTimer");
   auto now = parent_node_->get_clock()->now();
   auto dif = (now - *current_diag_info_time_).seconds();
 
-  RCLCPP_DEBUG_STREAM(logger_, "dif(status): " << dif);
-
   if (diag_span_ * 2.0 < dif * 1000)
   {
-    RCLCPP_DEBUG_STREAM(logger_, "STALE");
+    RCLCPP_WARN_STREAM(logger_, "Diagnostics STALE for " << dif << " s");
   }
   else
   {
-    RCLCPP_DEBUG_STREAM(logger_, "OK");
+    RCLCPP_DEBUG_STREAM(logger_, "Diagnostics OK (up to date)");
   }
 
   diagnostics_updater_.force_update();
@@ -70,13 +82,20 @@ void TutorialHwMonitorWrapper::TriggerDiagnosticsUpdate()
 
 void TutorialHwMonitorWrapper::FetchDiagnosticInfo()
 {
-  current_diag_info_ = {}; // fetch from sensor here
+  // This is where you would fetch the newest diagnostics from the sensor using the hardware
+  // interface. The below code is just a dummy.
+
+  const char status[] = "{ \"status\": { \"voltage\": 14.00, \"error\": \"No error\" } }";
+  boost::iostreams::stream<boost::iostreams::array_source> stream(status, sizeof(status));
+  boost::property_tree::ptree parsed_diag_info;
+  boost::property_tree::read_json(stream, parsed_diag_info);
+
   current_diag_info_time_ = parent_node_->now();
 }
 
 Status TutorialHwMonitorWrapper::Status()
 {
-  return Status::NOT_IMPLEMENTED;  // TODO
+  return Status::OK;
 }
 }  // namespace ros
 }  // namespace nebula

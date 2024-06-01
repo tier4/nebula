@@ -41,13 +41,6 @@ public:
   void OnConfigChange(
     const std::shared_ptr<const TutorialSensorConfiguration> & new_config);
 
-  void OnCalibrationChange(
-    const std::shared_ptr<const TutorialCalibrationConfiguration> &
-      new_calibration);
-
-  rcl_interfaces::msg::SetParametersResult OnParameterChange(
-    const std::vector<rclcpp::Parameter> & p);
-
   nebula::Status Status();
 
 private:
