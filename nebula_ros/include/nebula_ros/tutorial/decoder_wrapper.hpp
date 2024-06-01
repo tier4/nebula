@@ -4,9 +4,9 @@
 #include "nebula_ros/common/watchdog_timer.hpp"
 
 #include <nebula_common/nebula_common.hpp>
-#include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/tutorial/tutorial_common.hpp>
 #include <nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp>
-#include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
+#include <nebula_hw_interfaces/nebula_hw_interfaces_tutorial/tutorial_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
@@ -21,48 +21,40 @@ namespace nebula
 namespace ros
 {
 using TutorialDriver = nebula::drivers::HesaiDriver;
-using TutorialHwInterface = nebula::drivers::HesaiHwInterface;
-using TutorialSensorConfiguration = nebula::drivers::HesaiSensorConfiguration;
 using TutorialCalibrationConfiguration = nebula::drivers::HesaiCalibrationConfiguration;
-using get_calibration_result_t = nebula::util::expected<
-  std::shared_ptr<TutorialCalibrationConfiguration>, nebula::Status>;
+using get_calibration_result_t =
+  nebula::util::expected<std::shared_ptr<TutorialCalibrationConfiguration>, nebula::Status>;
 
 class TutorialDecoderWrapper
 {
-
 public:
   TutorialDecoderWrapper(
     rclcpp::Node * const parent_node,
-    const std::shared_ptr<TutorialHwInterface> & hw_interface,
-    std::shared_ptr<const TutorialSensorConfiguration> & config);
+    const std::shared_ptr<nebula::drivers::TutorialHwInterface> & hw_interface,
+    std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration> & config);
 
   void ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
   void OnConfigChange(
-    const std::shared_ptr<const TutorialSensorConfiguration> & new_config);
+    const std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration> & new_config);
 
   nebula::Status Status();
 
 private:
-  /// @brief Load calibration data from the best available source:
-  /// 1. If sensor connected, download and save from sensor
-  /// 2. If downloaded file available, load that file
-  /// 3. Load the file given by `calibration_file_path`
+  /// @brief Load calibration data from file
   /// @param calibration_file_path The file to use if no better option is available
-  /// @param ignore_others If true, skip straight so step 3 above, ignoring better calibration
-  /// options
   /// @return The calibration data if successful, or an error code if not
-  get_calibration_result_t GetCalibrationData(
-    const std::string & calibration_file_path, bool ignore_others = false);
+  get_calibration_result_t GetCalibrationData(const std::string & calibration_file_path);
 
-  void PublishCloud(std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
-                    const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr& publisher);
+  void PublishCloud(
+    std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
+    const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher);
 
   nebula::Status status_;
   rclcpp::Logger logger_;
 
-  const std::shared_ptr<TutorialHwInterface> hw_interface_;
-  std::shared_ptr<const TutorialSensorConfiguration> sensor_cfg_;
+  const std::shared_ptr<nebula::drivers::TutorialHwInterface> hw_interface_;
+  std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration> sensor_cfg_;
 
   std::string calibration_file_path_{};
   std::shared_ptr<const TutorialCalibrationConfiguration> calibration_cfg_ptr_{};

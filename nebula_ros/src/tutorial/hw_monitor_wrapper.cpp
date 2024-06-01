@@ -7,8 +7,8 @@ namespace nebula
 namespace ros
 {
 TutorialHwMonitorWrapper::TutorialHwMonitorWrapper(rclcpp::Node* const parent_node,
-                                             const std::shared_ptr<TutorialHwInterface>& hw_interface,
-                                             std::shared_ptr<const TutorialSensorConfiguration>& /* config */)
+                                             const std::shared_ptr<nebula::drivers::TutorialHwInterface>& hw_interface,
+                                             std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration>& /* config */)
   : parent_node_(parent_node)
   , logger_(parent_node->get_logger().get_child("HwMonitor"))
   , status_(Status::OK)

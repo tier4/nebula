@@ -10,7 +10,7 @@
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/nebula_status.hpp>
 #include <nebula_common/hesai/hesai_common.hpp>
-#include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
+#include <nebula_common/tutorial/tutorial_common.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
@@ -31,9 +31,8 @@ namespace nebula
 {
 namespace ros
 {
-using TutorialHwInterface = nebula::drivers::HesaiHwInterface;
-using TutorialSensorConfiguration = nebula::drivers::HesaiSensorConfiguration;
 using TutorialCalibrationConfiguration = nebula::drivers::HesaiCalibrationConfiguration;
+constexpr auto returnModeFromString = nebula::drivers::ReturnModeFromStringHesai;
 
 class TutorialRosWrapper final : public rclcpp::Node
 {
@@ -57,11 +56,11 @@ private:
     const std::vector<rclcpp::Parameter> & p);
 
   Status ValidateAndSetConfig(
-    std::shared_ptr<const TutorialSensorConfiguration> & new_config);
+    std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration> & new_config);
 
   Status wrapper_status_;
 
-  std::shared_ptr<const TutorialSensorConfiguration> sensor_cfg_ptr_{};
+  std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration> sensor_cfg_ptr_{};
   std::mutex mtx_config_;
 
   mt_queue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;

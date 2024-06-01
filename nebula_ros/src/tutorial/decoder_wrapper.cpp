@@ -8,8 +8,8 @@ namespace ros
 using namespace std::chrono_literals;
 
 TutorialDecoderWrapper::TutorialDecoderWrapper(rclcpp::Node* const parent_node,
-                                         const std::shared_ptr<TutorialHwInterface>& hw_interface,
-                                         std::shared_ptr<const TutorialSensorConfiguration>& config)
+                                         const std::shared_ptr<nebula::drivers::TutorialHwInterface>& hw_interface,
+                                         std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration>& config)
   : status_(nebula::Status::NOT_INITIALIZED)
   , logger_(parent_node->get_logger().get_child("TutorialDecoder"))
   , hw_interface_(hw_interface)
@@ -21,7 +21,7 @@ TutorialDecoderWrapper::TutorialDecoderWrapper(rclcpp::Node* const parent_node,
   }
 
   auto calibration_file_path = parent_node->declare_parameter<std::string>("calibration_file", param_read_write());
-  auto calibration_result = GetCalibrationData(calibration_file_path, false);
+  auto calibration_result = GetCalibrationData(calibration_file_path);
 
   if (!calibration_result.has_value())
   {
@@ -65,7 +65,7 @@ TutorialDecoderWrapper::TutorialDecoderWrapper(rclcpp::Node* const parent_node,
 }
 
 void TutorialDecoderWrapper::OnConfigChange(
-    const std::shared_ptr<const TutorialSensorConfiguration>& new_config)
+    const std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration>& new_config)
 {
   std::lock_guard lock(mtx_driver_ptr_);
   auto new_driver = std::make_shared<TutorialDriver>(new_config, calibration_cfg_ptr_);
@@ -74,7 +74,7 @@ void TutorialDecoderWrapper::OnConfigChange(
 }
 
 get_calibration_result_t
-TutorialDecoderWrapper::GetCalibrationData(const std::string& calibration_file_path, bool ignore_others)
+TutorialDecoderWrapper::GetCalibrationData(const std::string& calibration_file_path)
 {
   auto calib = std::make_shared<TutorialCalibrationConfiguration>();
 

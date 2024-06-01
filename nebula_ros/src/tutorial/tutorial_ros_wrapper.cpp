@@ -4,24 +4,25 @@ namespace nebula
 {
 namespace ros
 {
-TutorialRosWrapper::TutorialRosWrapper(const rclcpp::NodeOptions& options)
-  : rclcpp::Node("tutorial_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true))
-  , wrapper_status_(Status::NOT_INITIALIZED)
-  , sensor_cfg_ptr_(nullptr)
-  , packet_queue_(3000)
-  , hw_interface_wrapper_()
-  , hw_monitor_wrapper_()
-  , decoder_wrapper_()
+
+TutorialRosWrapper::TutorialRosWrapper(const rclcpp::NodeOptions & options)
+: rclcpp::Node("tutorial_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
+  wrapper_status_(Status::NOT_INITIALIZED),
+  sensor_cfg_ptr_(nullptr),
+  packet_queue_(3000),
+  hw_interface_wrapper_(),
+  hw_monitor_wrapper_(),
+  decoder_wrapper_()
 {
   // ////////////////////////////////////////
   // Define, get and validate ROS parameters
-  // ////////////////////////////////////////  
+  // ////////////////////////////////////////
 
   wrapper_status_ = DeclareAndGetSensorConfigParams();
 
-  if (wrapper_status_ != Status::OK)
-  {
-    throw std::runtime_error((std::stringstream{} << "Sensor configuration invalid: " << wrapper_status_).str());
+  if (wrapper_status_ != Status::OK) {
+    throw std::runtime_error(
+      (std::stringstream{} << "Sensor configuration invalid: " << wrapper_status_).str());
   }
 
   RCLCPP_INFO_STREAM(get_logger(), "SensorConfig: " << *sensor_cfg_ptr_);
@@ -32,8 +33,7 @@ TutorialRosWrapper::TutorialRosWrapper(const rclcpp::NodeOptions& options)
 
   launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
 
-  if (launch_hw_)
-  {
+  if (launch_hw_) {
     hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_);
     hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->HwInterface(), sensor_cfg_ptr_);
   }
@@ -49,8 +49,7 @@ TutorialRosWrapper::TutorialRosWrapper(const rclcpp::NodeOptions& options)
 
   // The decoder is running in its own thread to not block UDP reception
   decoder_thread_ = std::thread([this]() {
-    while (true)
-    {
+    while (true) {
       decoder_wrapper_->ProcessCloudPacket(std::move(packet_queue_.pop()));
     }
   });
@@ -59,40 +58,38 @@ TutorialRosWrapper::TutorialRosWrapper(const rclcpp::NodeOptions& options)
   // Configure packet / scan message routing
   // ////////////////////////////////////////
 
-  if (launch_hw_)
-  {
-    hw_interface_wrapper_->HwInterface()->RegisterScanCallback(
-        std::bind(&TutorialRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
+  if (launch_hw_) {
+    hw_interface_wrapper_->HwInterface()->registerOnSensorPacketCallback(
+      std::bind(&TutorialRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
     StreamStart();
-  }
-  else
-  {
+  } else {
     packets_sub_ = create_subscription<nebula_msgs::msg::NebulaPackets>(
-        "pandar_packets", rclcpp::SensorDataQoS(),
-        std::bind(&TutorialRosWrapper::ReceiveScanMessageCallback, this, std::placeholders::_1));
-    RCLCPP_INFO_STREAM(get_logger(),
-                       "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
+      "pandar_packets", rclcpp::SensorDataQoS(),
+      std::bind(&TutorialRosWrapper::ReceiveScanMessageCallback, this, std::placeholders::_1));
+    RCLCPP_INFO_STREAM(
+      get_logger(),
+      "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
   }
 
   // ////////////////////////////////////////
   // Enable callbacks for config changes
   // ////////////////////////////////////////
 
-  // Register parameter callback after all params have been declared. Otherwise it would be called once for each
-  // declaration
-  parameter_event_cb_ =
-      add_on_set_parameters_callback(std::bind(&TutorialRosWrapper::OnParameterChange, this, std::placeholders::_1));
+  // Register parameter callback after all params have been declared. Otherwise it would be called
+  // once for each declaration
+  parameter_event_cb_ = add_on_set_parameters_callback(
+    std::bind(&TutorialRosWrapper::OnParameterChange, this, std::placeholders::_1));
 }
 
 nebula::Status TutorialRosWrapper::DeclareAndGetSensorConfigParams()
 {
-  TutorialSensorConfiguration config;
+  nebula::drivers::TutorialSensorConfiguration config;
 
   auto _sensor_model = declare_parameter<std::string>("sensor_model", param_read_only());
   config.sensor_model = drivers::SensorModelFromString(_sensor_model);
 
   auto _return_mode = declare_parameter<std::string>("return_mode", param_read_write());
-  config.return_mode = drivers::ReturnModeFromString(_return_mode);
+  config.return_mode = returnModeFromString(_return_mode, config.sensor_model);
 
   config.host_ip = declare_parameter<std::string>("host_ip", param_read_only());
   config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());
@@ -132,38 +129,33 @@ nebula::Status TutorialRosWrapper::DeclareAndGetSensorConfigParams()
     descriptor.additional_constraints = "Dual return distance threshold [0.01, 0.5]";
     descriptor.floating_point_range = float_range(0.01, 0.5, 0.01);
     config.dual_return_distance_threshold =
-        declare_parameter<double>("dual_return_distance_threshold", descriptor);
+      declare_parameter<double>("dual_return_distance_threshold", descriptor);
   }
 
-  auto new_cfg_ptr = std::make_shared<const TutorialSensorConfiguration>(config);
+  auto new_cfg_ptr = std::make_shared<const nebula::drivers::TutorialSensorConfiguration>(config);
   return ValidateAndSetConfig(new_cfg_ptr);
 }
 
-Status TutorialRosWrapper::ValidateAndSetConfig(std::shared_ptr<const TutorialSensorConfiguration>& new_config)
+Status TutorialRosWrapper::ValidateAndSetConfig(
+  std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration> & new_config)
 {
-  if (new_config->sensor_model == nebula::drivers::SensorModel::UNKNOWN)
-  {
+  if (new_config->sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
-  if (new_config->return_mode == nebula::drivers::ReturnMode::UNKNOWN)
-  {
+  if (new_config->return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
     return Status::INVALID_ECHO_MODE;
   }
-  if (new_config->frame_id.empty())
-  {
+  if (new_config->frame_id.empty()) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
-  if (hw_interface_wrapper_)
-  {
+  if (hw_interface_wrapper_) {
     hw_interface_wrapper_->OnConfigChange(new_config);
   }
-  if (hw_monitor_wrapper_)
-  {
+  if (hw_monitor_wrapper_) {
     hw_monitor_wrapper_->OnConfigChange(new_config);
   }
-  if (decoder_wrapper_)
-  {
+  if (decoder_wrapper_) {
     decoder_wrapper_->OnConfigChange(new_config);
   }
 
@@ -171,17 +163,17 @@ Status TutorialRosWrapper::ValidateAndSetConfig(std::shared_ptr<const TutorialSe
   return Status::OK;
 }
 
-void TutorialRosWrapper::ReceiveScanMessageCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> scan_msg)
+void TutorialRosWrapper::ReceiveScanMessageCallback(
+  std::unique_ptr<nebula_msgs::msg::NebulaPackets> scan_msg)
 {
-  if (hw_interface_wrapper_)
-  {
-    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 1000,
-                          "Ignoring received packets message. Launch with launch_hw:=false to enable replay.");
+  if (hw_interface_wrapper_) {
+    RCLCPP_ERROR_THROTTLE(
+      get_logger(), *get_clock(), 1000,
+      "Ignoring received packets message. Launch with launch_hw:=false to enable replay.");
     return;
   }
 
-  for (auto& pkt : scan_msg->packets)
-  {
+  for (auto & pkt : scan_msg->packets) {
     auto nebula_pkt_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
     nebula_pkt_ptr->stamp = pkt.stamp;
     std::copy(pkt.data.begin(), pkt.data.end(), std::back_inserter(nebula_pkt_ptr->data));
@@ -197,26 +189,20 @@ Status TutorialRosWrapper::GetStatus()
 
 Status TutorialRosWrapper::StreamStart()
 {
-  if (!hw_interface_wrapper_)
-  {
+  if (!hw_interface_wrapper_) {
     return Status::UDP_CONNECTION_ERROR;
   }
 
-  if (hw_interface_wrapper_->Status() != Status::OK)
-  {
-    return hw_interface_wrapper_->Status();
-  }
-
-  return hw_interface_wrapper_->HwInterface()->SensorInterfaceStart();
+  return hw_interface_wrapper_->Status();
 }
 
-rcl_interfaces::msg::SetParametersResult TutorialRosWrapper::OnParameterChange(const std::vector<rclcpp::Parameter>& p)
+rcl_interfaces::msg::SetParametersResult TutorialRosWrapper::OnParameterChange(
+  const std::vector<rclcpp::Parameter> & p)
 {
   std::lock_guard lock(mtx_config_);
   using namespace rcl_interfaces::msg;
 
-  if (p.empty())
-  {
+  if (p.empty()) {
     return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
   }
 
@@ -224,24 +210,26 @@ rcl_interfaces::msg::SetParametersResult TutorialRosWrapper::OnParameterChange(c
   // Update sub-wrapper parameters (if any)
   // ////////////////////////////////////////
 
-  // Currently, all wrappers have only read-only parameters, so their update logic is not implemented
+  // Currently, all wrappers have only read-only parameters, so their update logic is not
+  // implemented
 
   // ////////////////////////////////////////
   // Create new, updated sensor configuration
   // ////////////////////////////////////////
 
-  TutorialSensorConfiguration new_cfg(*sensor_cfg_ptr_);
+  nebula::drivers::TutorialSensorConfiguration new_cfg(*sensor_cfg_ptr_);
 
   std::string _return_mode = "";
-  bool got_any = get_param(p, "return_mode", _return_mode) | get_param(p, "frame_id", new_cfg.frame_id) |
-                 get_param(p, "scan_phase", new_cfg.scan_phase) | get_param(p, "min_range", new_cfg.min_range) |
-                 get_param(p, "max_range", new_cfg.max_range) | get_param(p, "rotation_speed", new_cfg.rotation_speed) |
-                 get_param(p, "cloud_min_angle", new_cfg.cloud_min_angle) |
-                 get_param(p, "cloud_max_angle", new_cfg.cloud_max_angle) |
-                 get_param(p, "dual_return_distance_threshold", new_cfg.dual_return_distance_threshold);
+  bool got_any =
+    get_param(p, "return_mode", _return_mode) | get_param(p, "frame_id", new_cfg.frame_id) |
+    get_param(p, "scan_phase", new_cfg.scan_phase) | get_param(p, "min_range", new_cfg.min_range) |
+    get_param(p, "max_range", new_cfg.max_range) |
+    get_param(p, "rotation_speed", new_cfg.rotation_speed) |
+    get_param(p, "cloud_min_angle", new_cfg.cloud_min_angle) |
+    get_param(p, "cloud_max_angle", new_cfg.cloud_max_angle) |
+    get_param(p, "dual_return_distance_threshold", new_cfg.dual_return_distance_threshold);
 
-  if (!got_any)
-  {
+  if (!got_any) {
     return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
   }
 
@@ -252,11 +240,10 @@ rcl_interfaces::msg::SetParametersResult TutorialRosWrapper::OnParameterChange(c
   // Validate and use new config
   // ////////////////////////////////////////
 
-  auto new_cfg_ptr = std::make_shared<const TutorialSensorConfiguration>(new_cfg);
+  auto new_cfg_ptr = std::make_shared<const nebula::drivers::TutorialSensorConfiguration>(new_cfg);
   auto status = ValidateAndSetConfig(new_cfg_ptr);
 
-  if (status != Status::OK)
-  {
+  if (status != Status::OK) {
     RCLCPP_WARN_STREAM(get_logger(), "OnParameterChange aborted: " << status);
     auto result = SetParametersResult();
     result.successful = false;
@@ -267,15 +254,15 @@ rcl_interfaces::msg::SetParametersResult TutorialRosWrapper::OnParameterChange(c
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-void TutorialRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t>& packet)
+void TutorialRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
 {
-  if (!decoder_wrapper_ || decoder_wrapper_->Status() != Status::OK)
-  {
+  if (!decoder_wrapper_ || decoder_wrapper_->Status() != Status::OK) {
     return;
   }
 
   const auto now = std::chrono::high_resolution_clock::now();
-  const auto timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+  const auto timestamp_ns =
+    std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
 
   auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
   msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
@@ -283,8 +270,7 @@ void TutorialRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t>& packet
   msg_ptr->data.swap(packet);
 
   // If the decoder is too slow (= the queue becomes full), packets are dropped here
-  if (!packet_queue_.try_push(std::move(msg_ptr)))
-  {
+  if (!packet_queue_.try_push(std::move(msg_ptr))) {
     RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");
   }
 }
