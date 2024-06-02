@@ -7,7 +7,7 @@ Nebula works with ROS 2 and is the recommended sensor driver for the [Autoware](
 
 ## Documentation
 We recommend you get started with the [Nebula Documention](https://tier4.github.io/nebula/).
-Here you will find information about the bakground of the project, how to install and use with ROS 2, and also how to add new sensors to the Nebula driver.
+Here you will find information about the background of the project, how to install and use with ROS 2, and also how to add new sensors to the Nebula driver.
 - [About Nebula](https://tier4.github.io/nebula/about)
 - [Design](https://tier4.github.io/nebula/design)
 - [Supported Sensors](https://tier4.github.io/nebula/supported_sensors)
