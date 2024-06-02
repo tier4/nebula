@@ -35,13 +35,18 @@ use_directory_urls: true
 ### Navigation ###
 nav:
   - Home: index.md
+  - About: about.md
+  - Installation: installation.md
+  - Launching: usage.md
   - Design: design.md
-  - About Nebula: about.md
-  - Add Your Sensor: add_sensor.md
-  - Hesai Decoder Design: hesai_decoder_design.md
-  - Nebula Common: nebula_common/links.md
-  - Nebula Decoders: nebula_decoders/links.md
-  - Nebula HW Interfaces: nebula_hw_interfaces/links.md
+  - Parameters: parameters.md
+  - Point cloud types: point_types.md
+  - Supported sensors: supported_sensors.md
+  - Tutorials: tutorials.md
+  - Contributing: contributing.md
+  - Nebula common: nebula_common/links.md
+  - Nebula decoders: nebula_decoders/links.md
+  - Nebula HW interfaces: nebula_hw_interfaces/links.md
   - Nebula ROS: nebula_ros/links.md
 
 ### Extra Settings ###
