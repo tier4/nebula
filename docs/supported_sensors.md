@@ -39,7 +39,7 @@ Nebula currently supports the following sensor models, where  `sensor_model` is 
 
 
 Test status:\
-:heavy_check_mark:: complete\
-:warning:: some functionality yet to be tested\
-:x:: untested\
+✅: complete\
+⚠️: some functionality yet to be tested\
+❌: untested\
 \*: AT128 needs software version 3.50.8 or newer for the `scan_angle` setting to work correctly.
