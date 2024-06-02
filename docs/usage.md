@@ -12,5 +12,5 @@ For example, for a Hesai Pandar40P sensor:
 ros2 launch nebula_ros hesai_launch_all_hw.xml sensor_model:=Pandar40P
 ```
 
-## Sensor confguration
+## Sensor configuration
 WIP

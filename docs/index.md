@@ -1,5 +1,5 @@
 # Welcome to the Nebula documentation
-Welcome to the Nebula documentation. Here you will find information about the bakground of the project, how to install and use with ROS 2, and also how to add new sensors to the Nebula driver.
+Welcome to the Nebula documentation. Here you will find information about the background of the project, how to install and use with ROS 2, and also how to add new sensors to the Nebula driver.
 
 # About Nebula
 Nebula is a sensor driver platform that is designed to provide a unified framework for as wide a variety of devices as possible.
@@ -19,7 +19,7 @@ For more information, please refer to [About Nebula](about.md).
 - [Installation](installation.md)
 - [Launching with ROS 2](usage.md)
 
-# Nebula architecure
+# Nebula architecture
 - [Design](design.md)
 - [Parameters](parameters.md)
 - [Point cloud types](point_types.md)
