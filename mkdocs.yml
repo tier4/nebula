@@ -2,6 +2,7 @@
 
 site_name: Nebula
 site_description: Nebula Multi-Sensor Driver Framework
+site_url: https://tier4.github.io/nebula
 
 repo_url: https://github.com/tier4/nebula
 docs_dir: docs
