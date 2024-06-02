@@ -4,7 +4,7 @@ repositories:
     type: git
     url: https://github.com/mojomex/transport_drivers
     version: mutable-buffer-in-udp-callback
-  # Continental compatible version of ROS2 socket CAN
+  # Continental compatible version of ROS 2 socket CAN
   ros2_socketcan:
     type: git
     url: https://github.com/knzo25/ros2_socketcan
