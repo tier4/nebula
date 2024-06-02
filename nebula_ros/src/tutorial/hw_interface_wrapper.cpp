@@ -15,6 +15,10 @@ TutorialHwInterfaceWrapper::TutorialHwInterfaceWrapper(
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED)
 {
+  // This parameter allows for two common workflows:
+  // 1. Setting up the sensor using an external tool (web interface etc.) 
+  //    and not changing settings during runtime
+  // 2. Setting up and running the sensor using Nebula
   setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
 
   if (setup_sensor_) {

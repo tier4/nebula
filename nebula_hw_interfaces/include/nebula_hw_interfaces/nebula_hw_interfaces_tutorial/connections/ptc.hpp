@@ -55,6 +55,11 @@ public:
     }
   }
 
+  /// @brief Send a GET command to the sensor synchronously and return the parsed result
+  /// @tparam T The type of the expected result
+  /// @param command_id The PTC command ID
+  /// @param payload The payload (optional)
+  /// @return The parsed result if there is no error, else throw
   template <typename T>
   T get(const uint8_t command_id, const std::vector<uint8_t> & payload = {})
   {
@@ -64,6 +69,9 @@ public:
     return checkSizeAndParse<T>(response);
   }
 
+  /// @brief Send a SET command to the sensor synchronously
+  /// @param command_id The PTC command ID
+  /// @param payload The payload to set
   void set(const uint8_t command_id, const std::vector<uint8_t> & payload)
   {
     auto response_or_err = sendReceive(command_id, payload);

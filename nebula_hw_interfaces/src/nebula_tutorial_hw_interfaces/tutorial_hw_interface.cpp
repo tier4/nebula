@@ -58,8 +58,16 @@ Status TutorialHwInterface::compareAndSendConfig(const TutorialSensorConfigurati
 {
   using namespace std::chrono_literals;  // NOLINT(build/namespaces)
 
+  // ////////////////////////////////////////
+  // Retrieve current config from sensor
+  // ////////////////////////////////////////
+
   auto current = getConfig();
   logger_->info((std::stringstream() << "Current sensor config: " << current).str());
+
+  // ////////////////////////////////////////
+  // Compare and send updated return mode
+  // ////////////////////////////////////////
 
   auto current_return_mode = returnModeFromInt(current.return_mode, updated.sensor_model);
   if (updated.return_mode != current_return_mode) {
@@ -79,6 +87,10 @@ Status TutorialHwInterface::compareAndSendConfig(const TutorialSensorConfigurati
     setReturnMode(return_mode_int);
   }
 
+  // ////////////////////////////////////////
+  // Compare and send updated motor RPM
+  // ////////////////////////////////////////
+
   auto current_rotation_speed = current.spin_rate;
   if (updated.rotation_speed != current_rotation_speed.value()) {
     logger_->info(
@@ -89,6 +101,10 @@ Status TutorialHwInterface::compareAndSendConfig(const TutorialSensorConfigurati
     logger_->info("Setting up spin rate via TCP." + std::to_string(updated.rotation_speed));
     setSpinRate(updated.rotation_speed);
   }
+
+  // ////////////////////////////////////////
+  // Compare and send updated scan phase
+  // ////////////////////////////////////////
 
   auto sync_angle = static_cast<int>(current.sync_angle.value() / 100);
   auto scan_phase = static_cast<int>(updated.scan_phase);

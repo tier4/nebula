@@ -38,9 +38,6 @@ const uint8_t PTC_COMMAND_GET_CONFIG_INFO = 0x08;
 const uint8_t PTC_COMMAND_SET_SPIN_RATE = 0x17;
 const uint8_t PTC_COMMAND_SET_SYNC_ANGLE = 0x18;
 const uint8_t PTC_COMMAND_SET_RETURN_MODE = 0x1e;
-const uint8_t PTC_COMMAND_SET_LIDAR_RANGE = 0x22;
-const uint8_t PTC_COMMAND_GET_LIDAR_RANGE = 0x23;
-const uint8_t PTC_COMMAND_RESET = 0x25;
 
 class TutorialHwInterface
 {
@@ -55,6 +52,8 @@ public:
     std::shared_ptr<loggers::Logger> logger,
     const std::shared_ptr<const TutorialSensorConfiguration> & sensor_configuration);
 
+  /// @brief Retrieve the configuration from the sensor synchronously
+  /// @return The retrieved config, or throw if an error occurs
   TutorialConfig getConfig();
 
   /// @brief Get current config from sensor, compare with given config, and send config updates to
@@ -74,11 +73,12 @@ public:
   /// @return Resulting status
   Status setSyncAngle(int sync_angle, int angle);
 
-  /// @brief Setting mode with PTC_COMMAND_SET_RETURN_MODE
+  /// @brief Set the return mode (last, strongest, lastStrongest etc.) of the sensor
   /// @param return_mode Return mode
   /// @return Resulting status
   Status setReturnMode(int return_mode);
 
+  /// @brief Register a callback that gets called for each received UDP packet
   Status registerOnSensorPacketCallback(connections::UdpReceiver::callback_t scan_callback)
   {
     cloud_packet_callback_ = std::move(scan_callback);

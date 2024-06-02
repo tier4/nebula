@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="sensor_model" description="TutorialSensor"/>
+    <arg name="sensor_model" description="TutorialSensor | TutorialSensor2 | ..."/>
     <arg name="config_file" default="$(find-pkg-share nebula_ros)/config/lidar/tutorial/$(var sensor_model).param.yaml"/>
 
 

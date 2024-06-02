@@ -27,6 +27,7 @@ void TutorialHwMonitorWrapper::InitializeDiagnostics()
   diagnostics_updater_.setHardwareID(hardware_id);
   RCLCPP_INFO_STREAM(logger_, "hardware_id: " + hardware_id);
 
+  // This handler gets called on `diagnostics_updater_.force_update()`
   diagnostics_updater_.add("diagnostic_info", this, &TutorialHwMonitorWrapper::ParseAndAddDiagnosticInfo);
 
   // Timer to fetch new info from sensor. Choose a sensible period, e.g. once per sec.
@@ -69,6 +70,10 @@ void TutorialHwMonitorWrapper::ParseAndAddDiagnosticInfo(diagnostic_updater::Dia
 
 void TutorialHwMonitorWrapper::TriggerDiagnosticsUpdate()
 {
+  // ////////////////////////////////////////
+  // Watch for diagnostics timeouts
+  // ////////////////////////////////////////
+
   auto now = parent_node_->get_clock()->now();
   auto dif = (now - *current_diag_info_time_).seconds();
 
@@ -80,6 +85,10 @@ void TutorialHwMonitorWrapper::TriggerDiagnosticsUpdate()
   {
     RCLCPP_DEBUG_STREAM(logger_, "Diagnostics OK (up to date)");
   }
+
+  // ////////////////////////////////////////
+  // Publish any new diagnostics
+  // ////////////////////////////////////////
 
   diagnostics_updater_.force_update();
 }

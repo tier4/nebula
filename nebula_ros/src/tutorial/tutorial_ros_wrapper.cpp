@@ -85,6 +85,11 @@ nebula::Status TutorialRosWrapper::DeclareAndGetSensorConfigParams()
 {
   nebula::drivers::TutorialSensorConfiguration config;
 
+  // ////////////////////////////////////////
+  // Read the config parameters as defined
+  // in the schema file
+  // ////////////////////////////////////////
+
   auto _sensor_model = declare_parameter<std::string>("sensor_model", param_read_only());
   config.sensor_model = drivers::SensorModelFromString(_sensor_model);
 
@@ -132,6 +137,8 @@ nebula::Status TutorialRosWrapper::DeclareAndGetSensorConfigParams()
       declare_parameter<double>("dual_return_distance_threshold", descriptor);
   }
 
+  // Configuration is always immutable to prevent modules not being notified of changes.
+  // New configurations are only emitted by `OnParameterChange()`
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::TutorialSensorConfiguration>(config);
   return ValidateAndSetConfig(new_cfg_ptr);
 }
@@ -139,6 +146,10 @@ nebula::Status TutorialRosWrapper::DeclareAndGetSensorConfigParams()
 Status TutorialRosWrapper::ValidateAndSetConfig(
   std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration> & new_config)
 {
+  // ////////////////////////////////////////
+  // Validate new parameters
+  // ////////////////////////////////////////
+
   if (new_config->sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
@@ -148,6 +159,10 @@ Status TutorialRosWrapper::ValidateAndSetConfig(
   if (new_config->frame_id.empty()) {
     return Status::SENSOR_CONFIG_ERROR;
   }
+
+  // ////////////////////////////////////////
+  // Push new config to all modules
+  // ////////////////////////////////////////
 
   if (hw_interface_wrapper_) {
     hw_interface_wrapper_->OnConfigChange(new_config);
@@ -166,6 +181,11 @@ Status TutorialRosWrapper::ValidateAndSetConfig(
 void TutorialRosWrapper::ReceiveScanMessageCallback(
   std::unique_ptr<nebula_msgs::msg::NebulaPackets> scan_msg)
 {
+  // ////////////////////////////////////////
+  // Enable replay of recorded messages when
+  // hardware is not connected
+  // ////////////////////////////////////////
+
   if (hw_interface_wrapper_) {
     RCLCPP_ERROR_THROTTLE(
       get_logger(), *get_clock(), 1000,
@@ -210,8 +230,7 @@ rcl_interfaces::msg::SetParametersResult TutorialRosWrapper::OnParameterChange(
   // Update sub-wrapper parameters (if any)
   // ////////////////////////////////////////
 
-  // Currently, all wrappers have only read-only parameters, so their update logic is not
-  // implemented
+  // The tutorial wrappers have only read-only parameters, so their update logic is not implemented
 
   // ////////////////////////////////////////
   // Create new, updated sensor configuration
@@ -259,6 +278,10 @@ void TutorialRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packe
   if (!decoder_wrapper_ || decoder_wrapper_->Status() != Status::OK) {
     return;
   }
+
+  // ////////////////////////////////////////
+  // Timestamp and move packet into the queue
+  // ////////////////////////////////////////
 
   const auto now = std::chrono::high_resolution_clock::now();
   const auto timestamp_ns =

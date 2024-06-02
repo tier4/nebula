@@ -19,6 +19,8 @@ class UdpReceiver
 public:
   using callback_t = typename std::function<void(std::vector<uint8_t> & buffer)>;
 
+  /// @brief Create a receiving UDP connection and forward received packets to `packet_callback`
+  /// @param packet_callback The function getting called on each received packet
   UdpReceiver(
     std::shared_ptr<nebula::drivers::loggers::Logger> logger, const std::string & host_ip, uint16_t host_port,
     callback_t packet_callback)
@@ -40,8 +42,6 @@ private:
 
   ::drivers::common::IoContext ctx_;
   ::drivers::udp_driver::UdpDriver udp_driver_;
-
-  std::mutex mtx_inflight_tcp_request_;
 };
 
 }  // namespace connections

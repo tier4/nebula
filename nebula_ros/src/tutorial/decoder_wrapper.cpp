@@ -20,6 +20,10 @@ TutorialDecoderWrapper::TutorialDecoderWrapper(rclcpp::Node* const parent_node,
     throw std::runtime_error("TutorialDecoderWrapper cannot be instantiated without a valid config!");
   }
 
+  // ////////////////////////////////////////
+  // Get and validate calibration data
+  // ////////////////////////////////////////
+
   auto calibration_file_path = parent_node->declare_parameter<std::string>("calibration_file", param_read_write());
   auto calibration_result = GetCalibrationData(calibration_file_path);
 
@@ -32,6 +36,10 @@ TutorialDecoderWrapper::TutorialDecoderWrapper(rclcpp::Node* const parent_node,
   calibration_cfg_ptr_ = calibration_result.value();
   RCLCPP_INFO_STREAM(logger_, "Using calibration data from " << calibration_cfg_ptr_->calibration_file);
 
+  // ////////////////////////////////////////
+  // Instantiate decoder
+  // ////////////////////////////////////////
+
   RCLCPP_INFO(logger_, "Starting Decoder");
 
   driver_ptr_ = std::make_shared<TutorialDriver>(config, calibration_cfg_ptr_);
@@ -41,6 +49,10 @@ TutorialDecoderWrapper::TutorialDecoderWrapper(rclcpp::Node* const parent_node,
   {
     throw std::runtime_error((std::stringstream() << "Error instantiating decoder: " << status_).str());
   }
+
+  // ////////////////////////////////////////
+  // Start ROS integrations
+  // ////////////////////////////////////////
 
   // Publish packets only if HW interface is connected
   if (hw_interface_)
@@ -68,6 +80,7 @@ void TutorialDecoderWrapper::OnConfigChange(
     const std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration>& new_config)
 {
   std::lock_guard lock(mtx_driver_ptr_);
+  // Re-instantiate driver on config change
   auto new_driver = std::make_shared<TutorialDriver>(new_config, calibration_cfg_ptr_);
   driver_ptr_ = new_driver;
   sensor_cfg_ = new_config;
@@ -78,15 +91,13 @@ TutorialDecoderWrapper::GetCalibrationData(const std::string& calibration_file_p
 {
   auto calib = std::make_shared<TutorialCalibrationConfiguration>();
 
-  // If downloaded data did not exist or could not be loaded, fall back to a generic file.
-  // If that file does not exist either, return an error code
   if (!std::filesystem::exists(calibration_file_path))
   {
     RCLCPP_ERROR(logger_, "No calibration data found.");
     return nebula::Status(Status::INVALID_CALIBRATION_FILE);
   }
 
-  // Try to load the existing fallback calibration file. Return an error if this fails
+  // Try to load the calibration file. Return an error if this fails
   auto status = calib->LoadFromFile(calibration_file_path);
   if (status != Status::OK)
   {
@@ -94,7 +105,6 @@ TutorialDecoderWrapper::GetCalibrationData(const std::string& calibration_file_p
     return status;
   }
 
-  // Return the fallback calibration file
   calib->calibration_file = calibration_file_path;
   return calib;
 }
