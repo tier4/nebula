@@ -43,10 +43,16 @@
           "$ref": "sub/misc.json#/definitions/correction_file"
         },
         "cloud_min_angle": {
-          "$ref": "sub/misc.json#/definitions/cloud_min_angle"
+          "$ref": "sub/misc.json#/definitions/cloud_min_angle",
+          "default": 30,
+          "minimum": 30,
+          "maximum": 150
         },
         "cloud_max_angle": {
-          "$ref": "sub/misc.json#/definitions/cloud_max_angle"
+          "$ref": "sub/misc.json#/definitions/cloud_max_angle",
+          "default": 150,
+          "minimum": 30,
+          "maximum": 150
         },
         "scan_phase": {
           "$ref": "sub/misc.json#/definitions/scan_phase",
