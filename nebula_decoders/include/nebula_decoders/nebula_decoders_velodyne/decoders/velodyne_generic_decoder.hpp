@@ -3,6 +3,7 @@
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/velodyne_scan_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vlp_16.hpp"
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vls_128.hpp"
+#include "nebula_decoders/nebula_decoders_velodyne/decoders/velodyne_packet.hpp"
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
@@ -35,8 +36,8 @@ public:
     overflow_pc_.reset(new NebulaPointCloud);
 
     // Set up cached values for sin and cos of all the possible headings
-    for (uint16_t rot_index = 0; rot_index < ROTATION_MAX_UNITS; ++rot_index) {
-      float rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
+    for (uint16_t rot_index = 0; rot_index < velodyne_packet::ROTATION_MAX_UNITS; ++rot_index) {
+      float rotation = angles::from_degrees(velodyne_packet::ROTATION_RESOLUTION * rot_index);
       rotation_radians_[rot_index] = rotation;
       cos_rot_table_[rot_index] = cosf(rotation);
       sin_rot_table_[rot_index] = sinf(rotation);
@@ -48,10 +49,10 @@ public:
     sensor_.fillAzimuthCache();  // TODO: predefine azimuth cache and remove this for performance?
 
     // timing table calculation, from velodyne user manual p.64
-    timing_offsets_.resize(BLOCKS_PER_PACKET);  // x dir size
+    timing_offsets_.resize(velodyne_packet::BLOCKS_PER_PACKET);  // x dir size
     for (size_t i = 0; i < timing_offsets_.size(); ++i) {
       timing_offsets_[i].resize(
-        CHANNELS_PER_BLOCK + SensorT::num_maintenance_periods);  // y dir size
+        velodyne_packet::CHANNELS_PER_BLOCK + SensorT::num_maintenance_periods);  // y dir size
     }
 
     double full_firing_cycle_s = SensorT::full_firing_cycle_s;
@@ -107,7 +108,7 @@ public:
   {
     //  scan_pc_.reset(new NebulaPointCloud);
     scan_pc_->points.clear();
-    max_pts_ = n_pts * POINTS_PER_PACKET;
+    max_pts_ = n_pts * velodyne_packet::POINTS_PER_PACKET;
     scan_pc_->points.reserve(max_pts_);
     reset_overflow(time_stamp);  // transfer existing overflow points to the cleared pointcloud
   }
@@ -158,21 +159,21 @@ public:
   void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
   {
     // const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
-    raw_packet_t raw_instance;
-    raw_packet_t * raw = &raw_instance;
-    std::memcpy(raw, &velodyne_packet.data[0], sizeof(raw_packet_t));
+    velodyne_packet::raw_packet_t raw_instance;
+    velodyne_packet::raw_packet_t * raw = &raw_instance;
+    std::memcpy(raw, &velodyne_packet.data[0], sizeof(velodyne_packet::raw_packet_t));
 
     float last_azimuth_diff = 0;
     uint16_t azimuth_next;
-    const uint8_t return_mode = velodyne_packet.data[RETURN_MODE_INDEX];
-    const bool dual_return = (return_mode == RETURN_MODE_DUAL);
+    const uint8_t return_mode = velodyne_packet.data[velodyne_packet::RETURN_MODE_INDEX];
+    const bool dual_return = (return_mode == velodyne_packet::RETURN_MODE_DUAL);
 
     int num_padding_blocks = sensor_.getNumPaddingBlocks(dual_return);
 
-    for (uint block = 0; block < static_cast<uint>(BLOCKS_PER_PACKET - num_padding_blocks);
+    for (uint block = 0; block < static_cast<uint>(velodyne_packet::BLOCKS_PER_PACKET - num_padding_blocks);
          block++) {
       // Cache block for use.
-      const raw_block_t & current_block = raw->blocks[block];
+      const velodyne_packet::raw_block_t & current_block = raw->blocks[block];
 
       uint bank_origin = 0;
       // Used to detect which bank of 32 lasers is in this block.
@@ -205,7 +206,7 @@ public:
       } else {
         azimuth = azimuth_next;
       }
-      if (block < static_cast<uint>(BLOCKS_PER_PACKET - (1 + dual_return))) {
+      if (block < static_cast<uint>(velodyne_packet::BLOCKS_PER_PACKET - (1 + dual_return))) {
         // Get the next block rotation to calculate how far we rotate between blocks
         azimuth_next = raw->blocks[block + (1 + dual_return)].rotation;
 
@@ -218,7 +219,7 @@ public:
         // This makes the assumption the difference between the last block and the next packet is
         // the same as the last to the second to last. Assumes RPM doesn't change much between
         // blocks.
-        azimuth_diff = (block == static_cast<float>(BLOCKS_PER_PACKET - (4 * dual_return) - 1))
+        azimuth_diff = (block == static_cast<float>(velodyne_packet::BLOCKS_PER_PACKET - (4 * dual_return) - 1))
                          ? 0
                          : last_azimuth_diff;
       }
@@ -239,10 +240,10 @@ public:
             std::max(static_cast<int>(SensorT::firing_sequences_per_block), static_cast<int>(1));
             firing_seq++) {
         for (int channel = 0;
-              channel < CHANNELS_PER_BLOCK && channel < SensorT::channels_per_firing_sequence;
-              channel++, k += RAW_CHANNEL_SIZE) {
-          union two_bytes current_return;
-          union two_bytes other_return;
+              channel < velodyne_packet::CHANNELS_PER_BLOCK && channel < SensorT::channels_per_firing_sequence;
+              channel++, k += velodyne_packet::RAW_CHANNEL_SIZE) {
+          union velodyne_packet::two_bytes current_return;
+          union velodyne_packet::two_bytes other_return;
 
           // Distance extraction.
           current_return.bytes[0] = current_block.data[k];
@@ -322,7 +323,7 @@ public:
           // Determine return type.
           uint8_t return_type;
           switch (return_mode) {
-            case RETURN_MODE_DUAL:
+            case velodyne_packet::RETURN_MODE_DUAL:
               if (
                 (other_return.bytes[0] == 0 && other_return.bytes[1] == 0) ||
                 (other_return.bytes[0] == current_return.bytes[0] &&
@@ -354,10 +355,10 @@ public:
                 }
               }
               break;
-            case RETURN_MODE_STRONGEST:
+            case velodyne_packet::RETURN_MODE_STRONGEST:
               return_type = static_cast<uint8_t>(drivers::ReturnType::STRONGEST);
               break;
-            case RETURN_MODE_LAST:
+            case velodyne_packet::RETURN_MODE_LAST:
               return_type = static_cast<uint8_t>(drivers::ReturnType::LAST);
               break;
             default:
@@ -394,9 +395,9 @@ private:
   /// @return Resulting flag
 
   // params used by all velodyne decoders
-  float sin_rot_table_[ROTATION_MAX_UNITS];
-  float cos_rot_table_[ROTATION_MAX_UNITS];
-  float rotation_radians_[ROTATION_MAX_UNITS];
+  float sin_rot_table_[velodyne_packet::ROTATION_MAX_UNITS];
+  float cos_rot_table_[velodyne_packet::ROTATION_MAX_UNITS];
+  float rotation_radians_[velodyne_packet::ROTATION_MAX_UNITS];
   int phase_;
   int max_pts_;
   double last_block_timestamp_;
