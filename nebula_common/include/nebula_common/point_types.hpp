@@ -8,13 +8,13 @@ namespace nebula
 {
 namespace drivers
 {
-struct PointXYZIR
+struct EIGEN_ALIGN16 PointXYZIR
 {
   PCL_ADD_POINT4D;
   float intensity;
   uint16_t ring;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-} EIGEN_ALIGN16;
+};
 
 struct PointXYZICATR
 {
@@ -43,7 +43,7 @@ struct PointXYZIRCAEDT
   std::uint32_t time_stamp;
 };
 
-struct PointXYZIRADT
+struct EIGEN_ALIGN16 PointXYZIRADT
 {
   PCL_ADD_POINT4D;
   float intensity;
@@ -53,7 +53,7 @@ struct PointXYZIRADT
   uint8_t return_type;
   double time_stamp;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-} EIGEN_ALIGN16;
+};
 
 using NebulaPoint = PointXYZIRCAEDT;
 using NebulaPointPtr = std::shared_ptr<NebulaPoint>;
