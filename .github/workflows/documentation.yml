@@ -1,5 +1,9 @@
 name: documentation
 on:
+  push:
+    branches:
+      - develop
+      - main
   pull_request:
     types: [closed]
 permissions:
@@ -9,14 +13,24 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
           key: ${{ github.ref }}
           path: .cache
       - uses: actions/setup-python@v4
         with:
           python-version: 3.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: .cache
+          restore-keys: |
+            mkdocs-material-
       - run: |
           sudo apt update && sudo apt install -y doxygen && \
           pip install mkdocs-material \
@@ -25,4 +39,5 @@ jobs:
           Jinja2 \
           ruamel.yaml && \
           pip install git+https://github.com/JakubAndrysek/mkdoxy
+      - run: pip install mkdocs-material
       - run: mkdocs gh-deploy --force
