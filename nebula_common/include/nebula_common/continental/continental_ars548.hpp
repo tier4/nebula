@@ -620,7 +620,7 @@ struct FilterStatusPacket
 
 #pragma pack(pop)
 
-struct PointARS548Detection
+struct EIGEN_ALIGN16 PointARS548Detection
 {
   PCL_ADD_POINT4D;
   float azimuth;
@@ -639,11 +639,11 @@ struct PointARS548Detection
   uint16_t object_id;
   uint8_t ambiguity_flag;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-} EIGEN_ALIGN16;
+};
 
 // Note we only use a subset of the data since POINT_CLOUD_REGISTER_POINT_STRUCT has a limit in the
 // number of fields
-struct PointARS548Object
+struct EIGEN_ALIGN16 PointARS548Object
 {
   PCL_ADD_POINT4D;
   uint32_t id;
@@ -664,7 +664,7 @@ struct PointARS548Object
   float shape_width_edge_mean;
   float dynamics_orientation_rate_mean;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-} EIGEN_ALIGN16;
+};
 
 }  // namespace continental_ars548
 }  // namespace drivers
