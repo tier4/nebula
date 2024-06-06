@@ -18,7 +18,7 @@
     calibration_file: $(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).csv
     rotation_speed: 600
     return_mode: Dual
-    ptp_profile: "1588v2"
+    ptp_profile: automotive
     ptp_domain: 0
     ptp_transport_type: UDP
     ptp_switch_type: TSN
