@@ -14,7 +14,7 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   hw_interface_(hw_interface),
   parent_node_(parent_node)
 {
-  diag_span_ = parent_node->declare_parameter<uint16_t>("diag_span", 1000, param_read_only());
+  diag_span_ = parent_node->declare_parameter<uint16_t>("diag_span", param_read_only());
 
   switch (config->sensor_model) {
     case nebula::drivers::SensorModel::HESAI_PANDARXT32:

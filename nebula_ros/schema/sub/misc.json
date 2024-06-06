@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Sensors common parameters.",
+  "type": "object",
+  "definitions": {
+    "calibration_file": {
+      "type": "string",
+      "default": "$(find-pkg-share nebula_decoders)/calibration/$(var sensor_vendor)/$(var sensor_model).yaml",
+      "description": "Sensor calibration file."
+    },
+    "correction_file": {
+      "type": "string",
+      "default": "$(find-pkg-share nebula_decoders)/calibration/$(var sensor_vendor)/$(var sensor_model).dat",
+      "pattern": "^.*\\.dat$",
+      "description": "Sensor correction file."
+    },
+    "cloud_max_angle": {
+      "type": "integer",
+      "default": 360,
+      "minimum": 0,
+      "maximum": 360,
+      "description": "Field of View, end degrees."
+    },
+    "cloud_min_angle": {
+      "type": "integer",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 360,
+      "description": "Field of View, start degrees."
+    },
+    "configuration_vehicle_height": {
+      "type": "number",
+      "default": 2.5,
+      "minimum": 0.0,
+      "readOnly": true,
+      "description": "New vehicle height."
+    },
+    "configuration_vehicle_length": {
+      "type": "number",
+      "default": 4.9,
+      "minimum": 0.0,
+      "readOnly": true,
+      "description": "New vehicle length."
+    },
+    "configuration_vehicle_wheelbase": {
+      "type": "number",
+      "default": 2.8,
+      "minimum": 0.0,
+      "readOnly": true,
+      "description": "New vehicle wheelbase."
+    },
+    "configuration_vehicle_width": {
+      "type": "number",
+      "default": 1.9,
+      "minimum": 0.0,
+      "readOnly": true,
+      "description": "New vehicle width."
+    },
+    "dual_return_distance_threshold": {
+      "type": "number",
+      "default": 0.1,
+      "minimum": 0.01,
+      "maximum": 0.5,
+      "description": "Distance threshold between two neighboring points for dual return mode."
+    },
+    "max_range": {
+      "type": "number",
+      "default": 300.0,
+      "minimum": 0.0,
+      "description": "Sensor maximum single point range."
+    },
+    "min_range": {
+      "type": "number",
+      "default": 0.3,
+      "minimum": 0.0,
+      "description": "Sensor minimum single point range."
+    },
+    "return_mode": {
+      "type": "string",
+      "description": "Sensor return mode."
+    },
+    "scan_phase": {
+      "type": "number",
+      "default": 0.0,
+      "minimum": 0.0,
+      "maximum": 360.0,
+      "description": "Sensor scan phase."
+    }
+  }
+}
