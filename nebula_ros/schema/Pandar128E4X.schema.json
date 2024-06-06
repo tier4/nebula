@@ -70,7 +70,10 @@
           ]
         },
         "ptp_profile": {
-          "$ref": "sub/communication.json#/definitions/ptp_profile"
+          "$ref": "sub/communication.json#/definitions/ptp_profile",
+          "enum": [
+            "automotive"
+          ]
         },
         "ptp_domain": {
           "$ref": "sub/communication.json#/definitions/ptp_domain"
