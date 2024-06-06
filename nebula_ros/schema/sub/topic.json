@@ -18,7 +18,7 @@
     "diag_span": {
       "type": "integer",
       "default": 1000,
-      "minimum": 0,
+      "minimum": 1,
       "readOnly": true,
       "description": "Diagnostics rate."
     },
