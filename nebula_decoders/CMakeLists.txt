@@ -154,7 +154,6 @@ ament_export_dependencies(
     yaml-cpp
 )
 
-#ament_auto_package(
 ament_package()
 
 # Set ROS_DISTRO macros
