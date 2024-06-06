@@ -4,6 +4,8 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_128e3x.hpp"
 
+#include <vector>
+
 namespace nebula
 {
 namespace drivers
@@ -23,11 +25,11 @@ typedef Packet128E3X Packet128E4X;
 // FIXME(mojomex):
 // The OT128 datasheet has entirely different numbers (and more azimuth states).
 // With the current sensor version, the numbers from the new datasheet are incorrect
-// (clouds do not sync to ToS but ToS+.052s) 
+// (clouds do not sync to ToS but ToS+.052s)
 class Pandar128E4X : public HesaiSensor<hesai_packet::Packet128E4X>
 {
 private:
-enum OperationalState { HIGH_RESOLUTION = 0, STANDARD = 1 };
+  enum OperationalState { HIGH_RESOLUTION = 0, STANDARD = 1 };
 
   static constexpr int firing_time_offset_static_ns_[128] = {
     49758, 43224, 36690, 30156, 21980, 15446, 8912,  2378,  49758, 43224, 36690, 30156, 2378,
@@ -71,7 +73,7 @@ public:
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 691200;
 
   int getPacketRelativePointTimeOffset(
-    uint32_t block_id, uint32_t channel_id, const packet_t & packet)
+    uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
     int block_offset_ns;

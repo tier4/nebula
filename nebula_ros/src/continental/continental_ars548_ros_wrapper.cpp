@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <nebula_ros/continental/continental_ars548_ros_wrapper.hpp>
+#include "nebula_ros/continental/continental_ars548_ros_wrapper.hpp"
+
+#pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
 namespace nebula
 {
@@ -49,7 +51,7 @@ ContinentalARS548RosWrapper::ContinentalARS548RosWrapper(const rclcpp::NodeOptio
 
   decoder_thread_ = std::thread([this]() {
     while (true) {
-      decoder_wrapper_->ProcessPacket(std::move(packet_queue_.pop()));
+      decoder_wrapper_->ProcessPacket(packet_queue_.pop());
     }
   });
 

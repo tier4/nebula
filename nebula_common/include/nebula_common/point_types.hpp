@@ -4,6 +4,8 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include <memory>
+
 namespace nebula
 {
 namespace drivers
@@ -63,20 +65,15 @@ using NebulaPointCloudPtr = pcl::PointCloud<NebulaPoint>::Ptr;
 }  // namespace drivers
 }  // namespace nebula
 
-POINT_CLOUD_REGISTER_POINT_STRUCT(nebula::drivers::PointXYZIR,
-                                  (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t,
-                                                                                                       ring, ring))
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+  nebula::drivers::PointXYZIR,
+  (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring))
 
-POINT_CLOUD_REGISTER_POINT_STRUCT(nebula::drivers::PointXYZIRADT,
-                                  (float, x, x)
-                                    (float, y, y)
-                                    (float, z, z)
-                                    (float, intensity, intensity)
-                                    (std::uint16_t, ring, ring)
-                                    (float, azimuth, azimuth)
-                                    (float, distance, distance)
-                                    (std::uint8_t, return_type, return_type)
-                                    (double, time_stamp, time_stamp))
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+  nebula::drivers::PointXYZIRADT,
+  (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring)(
+    float, azimuth, azimuth)(float, distance, distance)(std::uint8_t, return_type, return_type)(
+    double, time_stamp, time_stamp))
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(
   nebula::drivers::PointXYZICATR,

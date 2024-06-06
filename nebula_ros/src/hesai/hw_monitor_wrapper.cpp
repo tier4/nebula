@@ -1,5 +1,7 @@
 #include "nebula_ros/hesai/hw_monitor_wrapper.hpp"
 
+#include "nebula_ros/common/parameter_descriptors.hpp"
+
 namespace nebula
 {
 namespace ros

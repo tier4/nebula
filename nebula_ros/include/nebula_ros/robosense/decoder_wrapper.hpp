@@ -13,6 +13,7 @@
 #include <robosense_msgs/msg/robosense_scan.hpp>
 
 #include <chrono>
+#include <memory>
 
 namespace nebula
 {

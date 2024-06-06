@@ -63,7 +63,6 @@ Status RobosenseHwInterface::InfoInterfaceStart()
 
     info_udp_driver_->receiver()->asyncReceive(
       std::bind(&RobosenseHwInterface::ReceiveInfoPacketCallback, this, std::placeholders::_1));
-
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
     std::cerr << status << sensor_configuration_->sensor_ip << ","
@@ -89,14 +88,14 @@ Status RobosenseHwInterface::SetSensorConfiguration(
 }
 
 Status RobosenseHwInterface::RegisterScanCallback(
-  std::function<void(std::vector<uint8_t>&)> scan_callback)
+  std::function<void(std::vector<uint8_t> &)> scan_callback)
 {
   scan_reception_callback_ = std::move(scan_callback);
   return Status::OK;
 }
 
 Status RobosenseHwInterface::RegisterInfoCallback(
-  std::function<void(std::vector<uint8_t>&)> info_callback)
+  std::function<void(std::vector<uint8_t> &)> info_callback)
 {
   info_reception_callback_ = std::move(info_callback);
   return Status::OK;

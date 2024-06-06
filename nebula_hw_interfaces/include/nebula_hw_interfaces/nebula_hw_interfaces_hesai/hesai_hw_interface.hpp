@@ -16,13 +16,9 @@
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/hesai/hesai_status.hpp"
 #include "nebula_common/util/expected.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 
 #include <rclcpp/rclcpp.hpp>
-
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -127,9 +123,6 @@ private:
 
   std::mutex mtx_inflight_tcp_request_;
 
-  int prev_phase_{};
-
-  bool is_solid_state = false;
   int target_model_no;
 
   /// @brief Get a one-off HTTP client to communicate with the hardware

@@ -3,6 +3,7 @@
 #include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v3.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v4.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/helios.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_decoder.hpp"
 
 namespace nebula
 {
@@ -50,20 +51,19 @@ Status RobosenseDriver::SetCalibrationConfiguration(
     calibration_configuration.calibration_file + ")");
 }
 
-std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ParseCloudPacket(const std::vector<uint8_t> & packet)
+std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ParseCloudPacket(
+  const std::vector<uint8_t> & packet)
 {
-std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
+  std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
   auto logger = rclcpp::get_logger("RobosenseDriver");
 
-  if (driver_status_ != nebula::Status::OK)
-  {
+  if (driver_status_ != nebula::Status::OK) {
     RCLCPP_ERROR(logger, "Driver not OK.");
     return pointcloud;
   }
 
   scan_decoder_->unpack(packet);
-  if (scan_decoder_->hasScanned())
-  {
+  if (scan_decoder_->hasScanned()) {
     pointcloud = scan_decoder_->getPointcloud();
   }
 

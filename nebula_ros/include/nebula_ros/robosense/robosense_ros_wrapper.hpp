@@ -1,7 +1,6 @@
 #pragma once
 
 #include "nebula_ros/common/mt_queue.hpp"
-#include "nebula_ros/common/parameter_descriptors.hpp"
 #include "nebula_ros/robosense/decoder_wrapper.hpp"
 #include "nebula_ros/robosense/hw_interface_wrapper.hpp"
 #include "nebula_ros/robosense/hw_monitor_wrapper.hpp"
@@ -24,11 +23,11 @@
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <array>
-#include <chrono>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <thread>
+#include <vector>
 
 namespace nebula
 {

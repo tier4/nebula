@@ -13,8 +13,11 @@
 
 #include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_common/robosense/robosense_common.hpp>
-
 #include <rclcpp/rclcpp.hpp>
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -78,14 +81,12 @@ public:
   /// @brief Registering callback for RobosenseScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterScanCallback(
-    std::function<void(std::vector<uint8_t> &)> scan_callback);
+  Status RegisterScanCallback(std::function<void(std::vector<uint8_t> &)> scan_callback);
 
   /// @brief Registering callback for RobosensePacket
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterInfoCallback(
-    std::function<void(std::vector<uint8_t> &)> info_callback);
+  Status RegisterInfoCallback(std::function<void(std::vector<uint8_t> &)> info_callback);
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger

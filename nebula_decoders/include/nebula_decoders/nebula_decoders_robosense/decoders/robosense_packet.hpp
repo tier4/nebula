@@ -1,12 +1,16 @@
 #pragma once
 
-#include "boost/endian/buffers.hpp"
+#include <nebula_common/robosense/robosense_common.hpp>
+
+#include <boost/endian/buffers.hpp>
 
 #include <cstddef>
 #include <cstdint>
+#include <iomanip>
+#include <sstream>
 #include <string>
 
-using namespace boost::endian;
+using namespace boost::endian;  // NOLINT(build/namespaces)
 
 namespace nebula
 {
@@ -33,7 +37,6 @@ struct Timestamp
     return total_nanoseconds;
   }
 };
-
 
 struct Unit
 {
@@ -137,9 +140,8 @@ struct ChannelAngleCorrection
 
   [[nodiscard]] float getAngle() const
   {
-    return sign.value() == ANGLE_SIGN_FLAG
-             ? static_cast<float>(angle.value()) / 100.0f
-             : static_cast<float>(angle.value()) / -100.0f;
+    return sign.value() == ANGLE_SIGN_FLAG ? static_cast<float>(angle.value()) / 100.0f
+                                           : static_cast<float>(angle.value()) / -100.0f;
   }
 };
 

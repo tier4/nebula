@@ -4,7 +4,6 @@
 #include <nebula_common/point_types.hpp>
 #include <nebula_common/velodyne/velodyne_calibration_decoder.hpp>
 #include <nebula_common/velodyne/velodyne_common.hpp>
-
 #include <rclcpp/rclcpp.hpp>
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
@@ -161,8 +160,8 @@ protected:
     has_scanned_ = false;
     processed_packets_++;
 
-    uint32_t packet_first_azm = packet[OFFSET_FIRST_AZIMUTH];  // lower word of azimuth block 0
-    packet_first_azm |= packet[OFFSET_FIRST_AZIMUTH + 1] << 8; // higher word of azimuth block 0
+    uint32_t packet_first_azm = packet[OFFSET_FIRST_AZIMUTH];   // lower word of azimuth block 0
+    packet_first_azm |= packet[OFFSET_FIRST_AZIMUTH + 1] << 8;  // higher word of azimuth block 0
 
     uint32_t packet_last_azm = packet[OFFSET_LAST_AZIMUTH];
     packet_last_azm |= packet[OFFSET_LAST_AZIMUTH + 1] << 8;

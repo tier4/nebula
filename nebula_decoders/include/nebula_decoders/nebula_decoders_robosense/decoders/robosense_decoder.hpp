@@ -6,8 +6,10 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "robosense_msgs/msg/robosense_packet.hpp"
-#include "robosense_msgs/msg/robosense_scan.hpp"
+#include <memory>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace nebula
 {

@@ -747,7 +747,7 @@ HesaiStatus HesaiHwInterface::GetLidarMonitorAsyncHttp(
   }
 
   hcd->asyncGet(
-    [this, str_callback](const std::string & str) { str_callback(str); },
+    [str_callback](const std::string & str) { str_callback(str); },
     "/pandar.cgi?action=get&object=lidar_monitor");
   boost::system::error_code ec;
   ctx->run(ec);

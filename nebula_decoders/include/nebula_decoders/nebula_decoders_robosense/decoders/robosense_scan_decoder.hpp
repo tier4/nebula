@@ -1,12 +1,9 @@
 #pragma once
 
 #include "nebula_common/point_types.hpp"
-#include "nebula_common/robosense/robosense_common.hpp"
-
-#include "robosense_msgs/msg/robosense_packet.hpp"
-#include "robosense_msgs/msg/robosense_scan.hpp"
 
 #include <tuple>
+#include <vector>
 
 namespace nebula
 {

@@ -1,5 +1,11 @@
 #pragma once
 
+#include <nebula_common/robosense/robosense_common.hpp>
+
+#include <cstdint>
+#include <map>
+#include <string>
+#include <vector>
 namespace nebula
 {
 namespace drivers

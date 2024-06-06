@@ -8,8 +8,11 @@
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
+#include <map>
+#include <memory>
+#include <string>
 
-using namespace boost::endian;
+using namespace boost::endian;  // NOLINT(build/namespaces)
 
 namespace nebula
 {
@@ -256,7 +259,7 @@ public:
       return firing_time_offset_ns_single_[block_id][channel_id];
   }
 
-  ReturnMode getReturnMode(const robosense_packet::helios::InfoPacket & info_packet)
+  ReturnMode getReturnMode(const robosense_packet::helios::InfoPacket & info_packet) override
   {
     switch (info_packet.return_mode.value()) {
       case DUAL_RETURN_FLAG:
@@ -273,12 +276,12 @@ public:
   }
 
   RobosenseCalibrationConfiguration getSensorCalibration(
-    const robosense_packet::helios::InfoPacket & info_packet)
+    const robosense_packet::helios::InfoPacket & info_packet) override
   {
     return info_packet.sensor_calibration.getCalibration();
   }
 
-  bool getSyncStatus(const robosense_packet::helios::InfoPacket & info_packet)
+  bool getSyncStatus(const robosense_packet::helios::InfoPacket & info_packet) override
   {
     switch (info_packet.sync_status.value()) {
       case SYNC_STATUS_INVALID_FLAG:
@@ -293,7 +296,7 @@ public:
   }
 
   std::map<std::string, std::string> getSensorInfo(
-    const robosense_packet::helios::InfoPacket & info_packet)
+    const robosense_packet::helios::InfoPacket & info_packet) override
   {
     std::map<std::string, std::string> sensor_info;
     sensor_info["motor_speed"] = std::to_string(info_packet.motor_speed.value());

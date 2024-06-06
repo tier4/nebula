@@ -1,7 +1,5 @@
 #pragma once
 
-#include "nebula_ros/common/parameter_descriptors.hpp"
-
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp>
@@ -12,7 +10,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -94,7 +91,6 @@ private:
 
   std::vector<std::string> temperature_names_;
 
-  bool setup_sensor;
   const std::string MSG_NOT_SUPPORTED = "Not supported";
   const std::string MSG_ERROR = "Error";
   const std::string MSG_SEP = ": ";

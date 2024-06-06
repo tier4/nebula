@@ -3,12 +3,11 @@
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 
-#include <bitset>
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <optional>
 #include <sstream>
+#include <string>
 #include <vector>
 
 namespace nebula
@@ -74,7 +73,7 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
     std::getline(stream, header);
 
     char sep;
-    int laser_id;
+    size_t laser_id;
     float elevation;
     float azimuth;
     Status load_status = Status::OK;
@@ -174,10 +173,10 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
 
   void CreateCorrectedChannels()
   {
-    for(auto& correction : calibration) {
+    for (auto & correction : calibration) {
       uint16_t channel = 0;
-      for(const auto& compare:calibration) {
-        if(compare.elevation < correction.elevation) ++channel;
+      for (const auto & compare : calibration) {
+        if (compare.elevation < correction.elevation) ++channel;
       }
       correction.channel = channel;
     }

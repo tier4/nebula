@@ -2,12 +2,12 @@
 
 #include "nebula_common/robosense/robosense_common.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_info_decoder_base.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
 #include <cstdint>
-#include <memory>
+#include <map>
+#include <string>
 #include <vector>
 
 namespace nebula

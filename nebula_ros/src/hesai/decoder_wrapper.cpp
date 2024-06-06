@@ -1,5 +1,6 @@
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 
+#pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 namespace nebula
 {
 namespace ros

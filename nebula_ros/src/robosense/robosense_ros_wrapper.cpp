@@ -1,5 +1,9 @@
 #include "nebula_ros/robosense/robosense_ros_wrapper.hpp"
 
+#include "nebula_ros/common/parameter_descriptors.hpp"
+
+#pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
+
 namespace nebula
 {
 namespace ros
@@ -36,7 +40,7 @@ RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
 
   decoder_thread_ = std::thread([this]() {
     while (true) {
-      decoder_wrapper_->ProcessCloudPacket(std::move(packet_queue_.pop()));
+      decoder_wrapper_->ProcessCloudPacket(packet_queue_.pop());
     }
   });
 
@@ -219,7 +223,7 @@ Status RobosenseRosWrapper::StreamStart()
 rcl_interfaces::msg::SetParametersResult RobosenseRosWrapper::OnParameterChange(
   const std::vector<rclcpp::Parameter> & p)
 {
-  using namespace rcl_interfaces::msg;
+  using rcl_interfaces::msg::SetParametersResult;
 
   if (p.empty()) {
     return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");

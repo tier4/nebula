@@ -4,6 +4,7 @@
 #include "nebula_decoders/nebula_decoders_robosense/decoders/angle_corrector.hpp"
 
 #include <cstdint>
+#include <memory>
 
 namespace nebula
 {

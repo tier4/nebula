@@ -1,5 +1,7 @@
 #include "nebula_ros/hesai/hesai_ros_wrapper.hpp"
 
+#pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
+
 namespace nebula
 {
 namespace ros
@@ -38,7 +40,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 
   decoder_thread_ = std::thread([this]() {
     while (true) {
-      decoder_wrapper_->ProcessCloudPacket(std::move(packet_queue_.pop()));
+      decoder_wrapper_->ProcessCloudPacket(packet_queue_.pop());
     }
   });
 

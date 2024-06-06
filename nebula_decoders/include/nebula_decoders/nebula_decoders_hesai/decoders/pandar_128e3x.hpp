@@ -3,6 +3,8 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
+#include <vector>
+
 namespace nebula
 {
 namespace drivers
@@ -208,7 +210,7 @@ public:
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 691200;
 
   int getPacketRelativePointTimeOffset(
-    uint32_t block_id, uint32_t channel_id, const packet_t & packet)
+    uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
     int block_offset_ns = 3148 - 27778 * 2 * (2 - block_id - 1) / n_returns;
