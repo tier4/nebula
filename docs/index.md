@@ -1,9 +1,11 @@
 # Welcome to the Nebula documentation
+
 Welcome to the Nebula documentation. Here you will find information about the background of the project, how to install and use with ROS 2, and also how to add new sensors to the Nebula driver.
 
-# About Nebula
+## About Nebula
+
 Nebula is a sensor driver platform that is designed to provide a unified framework for as wide a variety of devices as possible.
-While it primarily targets Ethernet-based LiDAR sensors, it aims to be easily extendable to support new sensors and interfaces. 
+While it primarily targets Ethernet-based LiDAR sensors, it aims to be easily extendable to support new sensors and interfaces.
 Nebula works with ROS 2 and is the recommended sensor driver for the [Autoware](https://autoware.org/) project. The project aims to provide:
 
 - A universal sensor driver
@@ -15,18 +17,22 @@ Nebula works with ROS 2 and is the recommended sensor driver for the [Autoware](
 
 For more information, please refer to [About Nebula](about.md).
 
-# Getting started
+## Getting started
+
 - [Installation](installation.md)
 - [Launching with ROS 2](usage.md)
 
-# Nebula architecture
+## Nebula architecture
+
 - [Design](design.md)
 - [Parameters](parameters.md)
 - [Point cloud types](point_types.md)
 
-# Supported sensors
+## Supported sensors
+
 - [Supported sensors](supported_sensors.md)
 
-# Development
+## Development
+
 - [Tutorials](tutorials.md)
 - [Contributing](contributing.md)

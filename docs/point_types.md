@@ -53,4 +53,4 @@ These definitions can be found in the `nebula_common/include/point_types.hpp`.
 | `return type` | `uint8` |           | Contains the lase return type according to the sensor configuration.       |
 | `azimuth`     | `float` | `degrees` | Contains the azimuth of the current point.                                 |
 | `distance`    | `float` | `m`       | Contains the distance from the sensor origin to this echo on the XY plane. |
-| `timestamp`   | `float` | `ns`      | Contains the relative time to the triggered scan time.                   
+| `timestamp`   | `float` | `ns`      | Contains the relative time to the triggered scan time.                     |

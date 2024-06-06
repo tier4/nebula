@@ -1,11 +1,12 @@
 # Installing Nebula
 
 ## Requirements
+
 Nebula requires ROS 2 (Galactic or Humble) to build the ROS 2 wrapper.
 Please see the [ROS 2 documentation](https://docs.ros.org/en/humble/index.html) for how to install.
 
-
 ## Getting the source and building
+
 > **Note**
 >
 > A [TCP enabled version of ROS' Transport Driver](https://github.com/mojomex/transport_drivers/tree/mutable-buffer-in-udp-callback) is required to use Nebula.
@@ -28,6 +29,7 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 ## Testing your build
 
 To run Nebula unit tests:
+
 ```bash
 colcon test --event-handlers console_cohesion+ --packages-above nebula_common
 ```

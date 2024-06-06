@@ -55,49 +55,49 @@ plugins:
       projects:
         nebula_common:
           src-dirs: nebula_common/include
-          full-doc: True
+          full-doc: true
           doxy-cfg:
             FILE_PATTERNS: "*.hpp *.h"
-            RECURSIVE: True
-            EXTRACT_ALL: True
-            INLINE_SOURCES: True
-            ENABLE_PREPROCESSING: True
-            MACRO_EXPANSION: True
+            RECURSIVE: true
+            EXTRACT_ALL: true
+            INLINE_SOURCES: true
+            ENABLE_PREPROCESSING: true
+            MACRO_EXPANSION: true
         nebula_decoders:
           src-dirs: nebula_decoders/include
-          full-doc: True
+          full-doc: true
           doxy-cfg:
             FILE_PATTERNS: "*.hpp *.h"
-            RECURSIVE: True
-            EXTRACT_ALL: True
-            INLINE_SOURCES: True
-            ENABLE_PREPROCESSING: True
-            MACRO_EXPANSION: True
+            RECURSIVE: true
+            EXTRACT_ALL: true
+            INLINE_SOURCES: true
+            ENABLE_PREPROCESSING: true
+            MACRO_EXPANSION: true
         nebula_hw_interfaces:
           src-dirs: nebula_hw_interfaces/include
-          full-doc: True
+          full-doc: true
           doxy-cfg:
             FILE_PATTERNS: "*.hpp *.h"
-            RECURSIVE: True
-            EXTRACT_ALL: True
-            INLINE_SOURCES: True
-            ENABLE_PREPROCESSING: True
-            MACRO_EXPANSION: True
+            RECURSIVE: true
+            EXTRACT_ALL: true
+            INLINE_SOURCES: true
+            ENABLE_PREPROCESSING: true
+            MACRO_EXPANSION: true
         nebula_ros:
           src-dirs: nebula_ros/include
-          full-doc: True
+          full-doc: true
           doxy-cfg:
             FILE_PATTERNS: "*.hpp *.h"
-            RECURSIVE: True
-            EXTRACT_ALL: True
-            INLINE_SOURCES: True
-            ENABLE_PREPROCESSING: True
-            MACRO_EXPANSION: True
+            RECURSIVE: true
+            EXTRACT_ALL: true
+            INLINE_SOURCES: true
+            ENABLE_PREPROCESSING: true
+            MACRO_EXPANSION: true
 
       save-api: .mkdoxy
-      full-doc: True
-      debug: False
-      ignore-errors: False
+      full-doc: true
+      debug: false
+      ignore-errors: false
 
   - search:
       lang: en
