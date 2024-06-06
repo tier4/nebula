@@ -6,7 +6,6 @@ target_include_directories(hesai_ros_decoder_test PUBLIC
     ${NEBULA_TEST_INCLUDE_DIRS}
 )
 target_link_libraries(hesai_ros_decoder_test
-    ${PCL_LIBRARIES}
     ${HESAI_TEST_LIBRARIES})
 
 ament_add_gtest(hesai_ros_decoder_test_main
@@ -20,6 +19,5 @@ target_include_directories(hesai_ros_decoder_test_main PUBLIC
 )
 
 target_link_libraries(hesai_ros_decoder_test_main
-    ${PCL_LIBRARIES}
     hesai_ros_decoder_test
 )

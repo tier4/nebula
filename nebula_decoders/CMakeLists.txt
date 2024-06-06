@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 project(nebula_decoders)
 
-find_package(ament_cmake_auto REQUIRED)
-
-#ament_auto_find_build_dependencies()
-
 # Default to C++17
 if (NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 17)
@@ -14,9 +10,9 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
 endif ()
 
-find_package(PCL REQUIRED COMPONENTS common)
-#find_package(pcl_conversions REQUIRED)
 
+find_package(ament_cmake_auto REQUIRED)
+find_package(PCL REQUIRED COMPONENTS common)
 find_package(angles REQUIRED)
 find_package(continental_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
@@ -24,7 +20,6 @@ find_package(nebula_common REQUIRED)
 find_package(nebula_msgs REQUIRED)
 find_package(pandar_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
-find_package(radar_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(robosense_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -34,23 +29,18 @@ find_package(yaml-cpp REQUIRED)
 include_directories(PUBLIC
     include
     SYSTEM
-)
-
-set(common_include_dirs
     ${nebula_common_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
-    ${PCL_COMMON_INCLUDE_DIRS}
     ${pcl_conversions_INCLUDE_DIRS}
-    ${rcl_INCLUDE_DIRS}
     ${rclcpp_INCLUDE_DIRS}
     ${sensor_msgs_INCLUDE_DIRS}
 )
 
-set(common_targets
+link_libraries(
     ${nebula_common_TARGETS}
+    ${PCL_LIBRARIES}
     ${pcl_conversions_LIBRARIES}
-    ${rcl_TARGETS}
     ${rclcpp_TARGETS}
     ${sensor_msgs_TARGETS}
 )
@@ -62,12 +52,10 @@ add_library(nebula_decoders_hesai SHARED
 )
 target_link_libraries(nebula_decoders_hesai PUBLIC
     ${pandar_msgs_TARGETS}
-    ${common_targets}
 )
 
 target_include_directories(nebula_decoders_hesai PUBLIC
     ${pandar_msgs_INCLUDE_DIRS}
-    ${common_include_dirs}
 )
 
 # Velodyne
@@ -80,12 +68,10 @@ add_library(nebula_decoders_velodyne SHARED
 target_link_libraries(nebula_decoders_velodyne PUBLIC
     ${angles_msgs_TARGETS}
     ${velodyne_msgs_TARGETS}
-    ${common_targets}
 )
 target_include_directories(nebula_decoders_velodyne PUBLIC
     ${angles_INCLUDE_DIRS}
     ${velodyne_msgs_INCLUDE_DIRS}
-    ${common_include_dirs}
 )
 
 # Robosense
@@ -94,11 +80,9 @@ add_library(nebula_decoders_robosense SHARED
 )
 target_link_libraries(nebula_decoders_robosense PUBLIC
     ${robosense_msgs_TARGETS}
-    ${common_targets}
 )
 target_include_directories(nebula_decoders_robosense PUBLIC
     ${robosense_msgs_INCLUDE_DIRS}
-    ${common_include_dirs}
 )
 
 add_library(nebula_decoders_robosense_info SHARED
@@ -106,11 +90,9 @@ add_library(nebula_decoders_robosense_info SHARED
 )
 target_link_libraries(nebula_decoders_robosense_info PUBLIC
     ${robosense_msgs_TARGETS}
-    ${common_targets}
 )
 target_include_directories(nebula_decoders_robosense_info PUBLIC
     ${robosense_msgs_INCLUDE_DIRS}
-    ${common_include_dirs}
 )
 
 # Continental
@@ -123,8 +105,6 @@ target_link_libraries(nebula_decoders_continental PUBLIC
     ${boost_udp_driver_TARGETS}
     ${nebula_common_TARGETS}
     ${nebula_msgs_TARGETS}
-    ${radar_msgs_TARGETS}
-    ${common_targets}
 )
 target_include_directories(nebula_decoders_continental PUBLIC
     ${continental_msgs_INCLUDE_DIRS}
@@ -132,8 +112,6 @@ target_include_directories(nebula_decoders_continental PUBLIC
     ${boost_udp_driver_INCLUDE_DIRS}
     ${nebula_common_INCLUDE_DIRS}
     ${nebula_msgs_INCLUDE_DIRS}
-    ${radar_msgs_INCLUDE_DIRS}
-    ${common_include_dirs}
 )
 
 install(TARGETS nebula_decoders_hesai EXPORT export_nebula_decoders_hesai)
@@ -169,10 +147,7 @@ ament_export_dependencies(
     nebula_common
     nebula_msgs
     pandar_msgs
-    radar_msgs
-    rcl
     rclcpp
-    rclcpp_components
     robosense_msgs
     sensor_msgs
     velodyne_msgs

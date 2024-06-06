@@ -20,7 +20,7 @@
   <depend>nebula_msgs</depend>
   <depend>pandar_msgs</depend>
   <depend>pcl_conversions</depend>
-  <depend>radar_msgs</depend>
+  <depend>rclcpp</depend>
   <depend>robosense_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>velodyne_msgs</depend>

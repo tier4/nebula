@@ -24,11 +24,10 @@ if(BUILD_TESTING)
 endif()
 
 include_directories(
-        include
-        SYSTEM
-        ${YAML_CPP_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${PCL_COMMON_INCLUDE_DIRS}
+    include
+    SYSTEM
+    ${YAML_CPP_INCLUDE_DIRS}
+    ${PCL_INCLUDE_DIRS}
 )
 
 link_libraries(

@@ -7,7 +7,6 @@ target_include_directories(velodyne_ros_decoder_test_vlp16 PUBLIC
     ${NEBULA_TEST_INCLUDE_DIRS}
 )
 target_link_libraries(velodyne_ros_decoder_test_vlp16
-    ${PCL_LIBRARIES}
     ${VELODYNE_TEST_LIBRARIES})
 
 ament_add_gtest(velodyne_ros_decoder_test_main_vlp16
@@ -22,7 +21,6 @@ target_include_directories(velodyne_ros_decoder_test_main_vlp16 PUBLIC
     ${NEBULA_TEST_INCLUDE_DIRS}
 )
 target_link_libraries(velodyne_ros_decoder_test_main_vlp16
-    ${PCL_LIBRARIES}
     velodyne_ros_decoder_test_vlp16
 )
 
@@ -37,19 +35,14 @@ ament_add_gtest(velodyne_ros_decoder_test_main_vls128
     velodyne_ros_decoder_test_main_vls128.cpp
 )
 target_link_libraries(velodyne_ros_decoder_test_vls128
-    ${PCL_LIBRARIES}
     ${VELODYNE_TEST_LIBRARIES})
 
-#ament_target_dependencies(velodyne_ros_decoder_test_main_vls128
-#    ${NEBULA_TEST_DEPENDENCIES}
-#)
 target_include_directories(velodyne_ros_decoder_test_main_vls128 PUBLIC
     ${PROJECT_SOURCE_DIR}/src/velodyne
     include
     ${NEBULA_TEST_INCLUDE_DIRS}
 )
 target_link_libraries(velodyne_ros_decoder_test_main_vls128
-    ${PCL_LIBRARIES}
     velodyne_ros_decoder_test_vls128
 )
 
@@ -61,16 +54,13 @@ target_include_directories(velodyne_ros_decoder_test_vlp32 PUBLIC
     ${NEBULA_TEST_INCLUDE_DIRS}
 )
 target_link_libraries(velodyne_ros_decoder_test_vlp32
-    ${PCL_LIBRARIES}
     ${VELODYNE_TEST_LIBRARIES}
 )
 
 ament_add_gtest(velodyne_ros_decoder_test_main_vlp32
     velodyne_ros_decoder_test_main_vlp32.cpp
 )
-#ament_target_dependencies(velodyne_ros_decoder_test_main_vlp32
-#    ${NEBULA_TEST_DEPENDENCIES}
-#)
+
 target_include_directories(velodyne_ros_decoder_test_main_vlp32 PUBLIC
     ${PROJECT_SOURCE_DIR}/src/velodyne
     include

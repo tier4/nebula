@@ -8,7 +8,6 @@ target_include_directories(continental_ros_decoder_test_ars548 PUBLIC
 )
 
 target_link_libraries(continental_ros_decoder_test_ars548
-    ${PCL_LIBRARIES}
     ${CONTINENTAL_TEST_LIBRARIES}
 )
 
@@ -22,6 +21,5 @@ target_include_directories(continental_ros_decoder_test_main_ars548 PUBLIC
     ${NEBULA_TEST_INCLUDE_DIRS}
 )
 target_link_libraries(continental_ros_decoder_test_main_ars548
-    ${PCL_LIBRARIES}
     continental_ros_decoder_test_ars548
 )
