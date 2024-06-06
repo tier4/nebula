@@ -6,7 +6,7 @@
     "launch_hw": {
       "type": "boolean",
       "readOnly": false,
-      "description": "Launch sensor hardware."
+      "description": "Whether network sockets should be opened or not. If disabled, replay from NebulaPackets messages is enabled automatically."
     },
     "rotation_speed": {
       "type": "integer",
