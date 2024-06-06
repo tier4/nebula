@@ -20,7 +20,7 @@
     return_mode: Dual
     ptp_profile: automotive
     ptp_domain: 0
-    ptp_transport_type: UDP
+    ptp_transport_type: L2
     ptp_switch_type: TSN
     retry_hw: true
     dual_return_distance_threshold: 0.1
