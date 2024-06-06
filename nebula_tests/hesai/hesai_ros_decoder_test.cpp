@@ -1,3 +1,5 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "hesai_ros_decoder_test.hpp"
 
 #include "rclcpp/serialization.hpp"

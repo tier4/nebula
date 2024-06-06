@@ -1,3 +1,5 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "velodyne_ros_decoder_test_vlp32.hpp"
 
 #include "rclcpp/serialization.hpp"

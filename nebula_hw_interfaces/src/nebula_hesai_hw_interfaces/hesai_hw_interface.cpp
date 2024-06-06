@@ -1,3 +1,5 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
 
 // #define WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE

@@ -1,3 +1,5 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_ros/robosense/robosense_ros_wrapper.hpp"
 
 #include "nebula_ros/common/parameter_descriptors.hpp"

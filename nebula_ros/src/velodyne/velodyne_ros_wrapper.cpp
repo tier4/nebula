@@ -1,3 +1,5 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_ros/velodyne/velodyne_ros_wrapper.hpp"
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"

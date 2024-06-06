@@ -1,3 +1,5 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_decoders/nebula_decoders_robosense/robosense_info_driver.hpp"
 
 #include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v3.hpp"

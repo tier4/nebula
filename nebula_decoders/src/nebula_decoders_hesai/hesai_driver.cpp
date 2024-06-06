@@ -1,3 +1,5 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_decoder.hpp"

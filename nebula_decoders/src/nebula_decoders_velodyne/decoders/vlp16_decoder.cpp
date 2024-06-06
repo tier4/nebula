@@ -1,3 +1,5 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vlp16_decoder.hpp"
 
 #include <angles/angles.h>
