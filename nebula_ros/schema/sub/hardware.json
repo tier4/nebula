@@ -26,7 +26,7 @@
     "retry_hw": {
       "type": "boolean",
       "default": true,
-      "description": "hw driver startup retry (false when using pcap)."
+      "description": "Whether TCP connections are retried on failure or the driver should instead exit."
     }
   }
 }
