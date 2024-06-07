@@ -40,12 +40,12 @@ public:
     Type_end_of_Status = INVALID_RPM_ERROR
   } _hesai_type;
   HesaiStatus() : _type_num(static_cast<int>(Status::OK)) { _type = static_cast<Type>(type()); }
-  HesaiStatus(Type v) : _type_num(static_cast<int>(v)) { _type = v; }
-  HesaiStatus(HesaiType v) : _type_num(static_cast<int>(v)), _hesai_type(v)
+  explicit HesaiStatus(Type v) : _type_num(static_cast<int>(v)) { _type = v; }
+  explicit HesaiStatus(HesaiType v) : _type_num(static_cast<int>(v)), _hesai_type(v)
   {
     _type = Type::Type_end_of_Status;
   }
-  HesaiStatus(int type) : _type_num(type) {}
+  explicit HesaiStatus(int type) : _type_num(type) {}
   int type() const { return _type_num; }
   friend bool operator==(const HesaiStatus & L, const HesaiStatus & R)
   {

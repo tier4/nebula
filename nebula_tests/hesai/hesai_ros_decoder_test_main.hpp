@@ -16,8 +16,11 @@
 
 #include "hesai_ros_decoder_test.hpp"
 
-#include <gtest/gtest.h>
 #include <rclcpp/rclcpp.hpp>
+
+#include <gtest/gtest.h>
+
+#include <memory>
 
 namespace nebula
 {

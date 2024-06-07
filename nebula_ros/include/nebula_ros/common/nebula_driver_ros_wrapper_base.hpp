@@ -24,8 +24,7 @@
 
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
-#include <string>
-#include <vector>
+#include <memory>
 
 namespace nebula
 {

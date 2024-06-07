@@ -10,16 +10,22 @@ import pytest
 @pytest.mark.rostest
 def generate_test_description():
     test_node = launch_ros.actions.Node(
-        package='nebula_tests',
-        executable='hesai_ros_decoder_test_node_standalone',
-        parameters=['test/hesai_ros_decoder_test.yaml'],
+        package="nebula_tests",
+        executable="hesai_ros_decoder_test_node_standalone",
+        parameters=["test/hesai_ros_decoder_test.yaml"],
     )
-    return launch.LaunchDescription([
-        # other fixture actions
-        test_node,
-        launch_testing.util.KeepAliveProc(),
-        launch_testing.actions.ReadyToTest()
-    ]), locals()
+    return (
+        launch.LaunchDescription(
+            [
+                # other fixture actions
+                test_node,
+                launch_testing.util.KeepAliveProc(),
+                launch_testing.actions.ReadyToTest(),
+            ]
+        ),
+        locals(),
+    )
+
 
 @launch_testing.post_shutdown_test()
 class TestOutcome(unittest.TestCase):

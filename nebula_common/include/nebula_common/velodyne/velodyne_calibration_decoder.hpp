@@ -61,12 +61,8 @@ public:
   bool initialized;
 
 public:
-  explicit VelodyneCalibration()
-  : distance_resolution_m(0.002f), initialized(false)
-  {
-  }
-  explicit VelodyneCalibration(const std::string & calibration_file)
-  : distance_resolution_m(0.002f)
+  VelodyneCalibration() : distance_resolution_m(0.002f), initialized(false) {}
+  explicit VelodyneCalibration(const std::string & calibration_file) : distance_resolution_m(0.002f)
   {
     read(calibration_file);
   }
