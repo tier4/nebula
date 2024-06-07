@@ -1,3 +1,5 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include <nebula_common/nebula_common.hpp>
 
 namespace nebula
