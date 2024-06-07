@@ -5,11 +5,9 @@
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
-#include "nebula_ros/common/nebula_driver_ros_wrapper_base.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
 
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
@@ -69,5 +67,5 @@ void printPCD(nebula::drivers::NebulaPointCloudPtr pp)
   }
 }
 
-}  // namespace ros
+}  // namespace test
 }  // namespace nebula
