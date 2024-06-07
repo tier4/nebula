@@ -40,8 +40,8 @@ public:
     Type_end_of_Status = INVALID_RPM_ERROR
   } _velo_type;
   VelodyneStatus() : _type_num(static_cast<int>(Status::OK)) { _type = static_cast<Type>(type()); }
-  explicit VelodyneStatus(Type v) : _type_num(static_cast<int>(v)) { _type = v; }
-  explicit VelodyneStatus(VelodyneType v) : _type_num(static_cast<int>(v)), _velo_type(v)
+  VelodyneStatus(Type v) : _type_num(static_cast<int>(v)) { _type = v; } // NOLINT(runtime/explicit)
+  VelodyneStatus(VelodyneType v) : _type_num(static_cast<int>(v)), _velo_type(v) // NOLINT(runtime/explicit)
   {
     _type = Type::Type_end_of_Status;
   }
