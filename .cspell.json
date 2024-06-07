@@ -19,6 +19,7 @@
     "gptp",
     "Helios",
     "Hesai",
+    "horiz",
     "Idat",
     "ipaddr",
     "manc",
@@ -48,6 +49,7 @@
     "vccint",
     "Vccint",
     "Vdat",
+    "Wbitwise",
     "XT",
     "XTM",
     "yukkysaito"
