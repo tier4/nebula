@@ -33,11 +33,10 @@ jobs:
             mkdocs-material-
       - run: |
           sudo apt update && sudo apt install -y doxygen && \
-          pip install mkdocs-material \
-          mkdocs \
+          pip install mkdocs \
           mkdocs-material \
           Jinja2 \
           ruamel.yaml && \
           pip install git+https://github.com/JakubAndrysek/mkdoxy
-      - run: pip install mkdocs-material
+      - run: touch .nojekyll
       - run: mkdocs gh-deploy --force
