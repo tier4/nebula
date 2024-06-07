@@ -1,2 +1,3 @@
 *.param.yaml
 *.rviz
+nebula_decoders/calibration/velodyne/*.yaml
