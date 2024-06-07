@@ -85,7 +85,7 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
     return LoadFromString(ss.str());
   }
 
-  nebula::Status LoadFromBytes(const std::vector<uint8_t> & buf)
+  nebula::Status LoadFromBytes(const std::vector<uint8_t> & buf) override
   {
     std::string calibration_string = std::string(buf.begin(), buf.end());
     return LoadFromString(calibration_string);

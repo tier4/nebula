@@ -32,7 +32,7 @@ namespace nebula
 namespace test
 {
 
-void checkPCDs(nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<pcl::PointXYZ>::Ptr pc_ref)
+inline void checkPCDs(nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<pcl::PointXYZ>::Ptr pc_ref)
 {
   EXPECT_EQ(pc->points.size(), pc_ref->points.size());
   auto bound = std::min(pc->points.size(), pc_ref->points.size());
@@ -51,7 +51,7 @@ void checkPCDs(nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<pcl::Poi
   }
 }
 
-void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::NebulaPointCloudPtr pp2)
+inline void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::NebulaPointCloudPtr pp2)
 {
   EXPECT_EQ(pp1->points.size(), pp2->points.size());
   for (uint32_t i = 0; i < pp1->points.size(); i++) {
@@ -68,7 +68,7 @@ void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::Nebula
   }
 }
 
-void printPCD(nebula::drivers::NebulaPointCloudPtr pp)
+inline void printPCD(nebula::drivers::NebulaPointCloudPtr pp)
 {
   for (auto p : pp->points) {
     std::cout << "(" << p.x << ", " << p.y << "," << p.z << "): " << p.intensity << ", "
