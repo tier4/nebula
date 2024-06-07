@@ -39,8 +39,9 @@ public:
     Type_end_of_Status = INVALID_RPM_ERROR
   } _hesai_type;
   HesaiStatus() : _type_num(static_cast<int>(Status::OK)) { _type = static_cast<Type>(type()); }
-  HesaiStatus(Type v) : _type_num(static_cast<int>(v)) { _type = v; } // NOLINT(runtime/explicit)
-  HesaiStatus(HesaiType v) : _type_num(static_cast<int>(v)), _hesai_type(v) // NOLINT(runtime/explicit)
+  /* NOLINT(runtime/explicit) */ HesaiStatus(Type v) : _type_num(static_cast<int>(v)) { _type = v; }
+  /* NOLINT(runtime/explicit) */ HesaiStatus(HesaiType v)
+  : _type_num(static_cast<int>(v)), _hesai_type(v)
   {
     _type = Type::Type_end_of_Status;
   }

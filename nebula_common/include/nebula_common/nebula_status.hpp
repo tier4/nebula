@@ -40,7 +40,7 @@ struct Status
     Type_end_of_Status = ERROR_1
   } _type;
   Status() : _type(Type::OK) {}
-  Status(Type v) : _type(v) {} // NOLINT(runtime/explicit)
+  /* NOLINT(runtime/explicit) */ Status(Type v) : _type(v) {}
   explicit Status(int type) : _type(static_cast<Type>(type)) {}
   Type type() const { return _type; }
   friend bool operator==(const Status & L, const Status & R) { return L.type() == R.type(); }
