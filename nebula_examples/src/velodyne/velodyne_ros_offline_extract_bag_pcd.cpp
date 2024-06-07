@@ -13,6 +13,9 @@
 // limitations under the License.
 
 #include "velodyne/velodyne_ros_offline_extract_bag_pcd.hpp"
+#include <rosbag2_cpp/reader.hpp>
+#include <rosbag2_cpp/writers/sequential_writer.hpp>
+#include <regex>
 
 namespace nebula
 {

@@ -18,7 +18,6 @@
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 
-#include <bitset>
 #include <cmath>
 #include <fstream>
 #include <iostream>

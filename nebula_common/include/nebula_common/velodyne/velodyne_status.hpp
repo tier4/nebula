@@ -18,7 +18,6 @@
 #include "nebula_common/nebula_status.hpp"
 
 #include <ostream>
-#include <string>
 
 namespace nebula
 {

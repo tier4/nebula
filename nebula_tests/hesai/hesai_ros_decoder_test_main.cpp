@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string>

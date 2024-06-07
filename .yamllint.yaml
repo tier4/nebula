@@ -19,3 +19,7 @@ rules:
   quoted-strings:
     level: error
     required: only-when-needed # To keep consistent style
+  indentation:
+    spaces: consistent
+    indent-sequences: true
+    check-multi-line-strings: false

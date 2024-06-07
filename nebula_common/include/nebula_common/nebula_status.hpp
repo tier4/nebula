@@ -16,7 +16,6 @@
 #define NEBULA_STATUS_HPP
 
 #include <ostream>
-#include <string>
 
 namespace nebula
 {
