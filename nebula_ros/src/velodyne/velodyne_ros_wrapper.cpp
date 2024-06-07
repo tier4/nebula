@@ -76,8 +76,7 @@ nebula::Status VelodyneRosWrapper::DeclareAndGetSensorConfigParams()
   config.return_mode = drivers::ReturnModeFromString(_return_mode);
 
   config.host_ip = declare_parameter<std::string>("host_ip", param_read_only());
-  config.sensor_ip =
-    declare_parameter<std::string>("sensor_ip", param_read_only());
+  config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());
   config.data_port = declare_parameter<uint16_t>("data_port", param_read_only());
   config.gnss_port = declare_parameter<uint16_t>("gnss_port", param_read_only());
   config.frame_id = declare_parameter<std::string>("frame_id", param_read_write());

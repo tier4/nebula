@@ -84,7 +84,7 @@
         "L2"
       ],
       "description": "1588v2 supports 'UDP' or 'L2', other profiles only L2 (HW)."
-    },   
+    },
     "ptp_switch_type": {
       "type": "string",
       "default": "TSN",
