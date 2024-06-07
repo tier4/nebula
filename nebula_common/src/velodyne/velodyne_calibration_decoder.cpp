@@ -7,8 +7,9 @@
  */
 
 #include <nebula_common/velodyne/velodyne_calibration_decoder.hpp>
-#include <iostream>
+
 #include <fstream>
+#include <iostream>
 
 #ifdef HAVE_NEW_YAMLCPP
 namespace YAML

@@ -22,7 +22,6 @@
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-
 #include <gtest/gtest.h>
 
 #include <functional>

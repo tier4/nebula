@@ -21,18 +21,20 @@
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_common/nebula_common.hpp>
 #include <rclcpp/rclcpp.hpp>
-
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 
 namespace nebula
 {
 namespace test
 {
 
-inline void checkPCDs(nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<pcl::PointXYZ>::Ptr pc_ref)
+inline void checkPCDs(
+  nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<pcl::PointXYZ>::Ptr pc_ref)
 {
   EXPECT_EQ(pc->points.size(), pc_ref->points.size());
   auto bound = std::min(pc->points.size(), pc_ref->points.size());
@@ -51,7 +53,8 @@ inline void checkPCDs(nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<p
   }
 }
 
-inline void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::NebulaPointCloudPtr pp2)
+inline void checkPCDs(
+  nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::NebulaPointCloudPtr pp2)
 {
   EXPECT_EQ(pp1->points.size(), pp2->points.size());
   for (uint32_t i = 0; i < pp1->points.size(); i++) {
