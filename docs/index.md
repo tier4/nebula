@@ -35,4 +35,4 @@ For more information, please refer to [About Nebula](about.md).
 ## Development
 
 - [Tutorials](tutorials.md)
-- [Contributing](contributing.md)
+- [Contributing](contribute.md)

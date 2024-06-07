@@ -43,7 +43,7 @@ nav:
   - Point cloud types: point_types.md
   - Supported sensors: supported_sensors.md
   - Tutorials: tutorials.md
-  - Contributing: contributing.md
+  - Contributing: contribute.md
   - Nebula common: nebula_common/links.md
   - Nebula decoders: nebula_decoders/links.md
   - Nebula HW interfaces: nebula_hw_interfaces/links.md
