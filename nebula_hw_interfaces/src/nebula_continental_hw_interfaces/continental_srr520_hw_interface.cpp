@@ -186,6 +186,7 @@ void ContinentalSRR520HwInterface::SensorSync()
 {
   if (!can_sender_ptr_) {
     PrintError("Can sender is invalid so can not do sync up");
+    return;
   }
 
   if (!sync_fup_sent_) {
