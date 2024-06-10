@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lidar Hesai parameters.",
+  "type": "object",
+  "definitions": {
+    "sensor_model": {
+      "$ref": "hardware.json#/definitions/sensor_model",
+      "enum": [
+        "Pandar64",
+        "Pandar40P",
+        "PandarXT32",
+        "PandarXT32M",
+        "PandarQT64",
+        "PandarQT128",
+        "Pandar128E4X",
+        "PandarAT128"
+      ]
+    },
+    "calibration_file": {
+      "$ref": "misc.json#/definitions/calibration_file",
+      "default": "$(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).csv"
+    },
+    "gnss_port": {
+      "$ref": "communication.json#/definitions/gnss_port",
+      "default": 10110,
+      "minimum": 0
+    },
+    "rotation_speed": {
+      "$ref": "hardware.json#/definitions/rotation_speed",
+      "default": 600,
+      "minimum": 300,
+      "maximum": 1200,
+      "multipleOf": 60
+    }
+  }
+}

@@ -1,28 +1,43 @@
 name: documentation
 on:
+  push:
+    branches:
+      - develop
+      - main
   pull_request:
     types: [closed]
 permissions:
   contents: write
+  id-token: write
+  pages: write
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    if: github.event_name == 'push' || github.event.pull_request.merged == true
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
           key: ${{ github.ref }}
           path: .cache
       - uses: actions/setup-python@v4
         with:
           python-version: 3.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
       - run: |
           sudo apt update && sudo apt install -y doxygen && \
-          pip install mkdocs-material \
-          mkdocs \
+          pip install mkdocs \
           mkdocs-material \
           Jinja2 \
           ruamel.yaml && \
           pip install git+https://github.com/JakubAndrysek/mkdoxy
-      - run: mkdocs gh-deploy --force
+      - run: mkdocs build --site-dir _site
+      - run: touch _site/.nojekyll
+      - run: |
+          chmod -c -R +rX "_site/" | while read line; do
+            echo "::warning title=Invalid file permissions automatically fixed::$line"
+          done
+      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/deploy-pages@v4

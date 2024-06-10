@@ -1,22 +1,23 @@
-ament_auto_add_library(hesai_ros_decoder_test SHARED
-        hesai_ros_decoder_test.cpp
-        )
-target_link_libraries(hesai_ros_decoder_test ${PCL_LIBRARIES} ${NEBULA_TEST_LIBRARIES})
+
+add_library(hesai_ros_decoder_test SHARED
+    hesai_ros_decoder_test.cpp
+)
+target_include_directories(hesai_ros_decoder_test PUBLIC
+    ${NEBULA_TEST_INCLUDE_DIRS}
+)
+target_link_libraries(hesai_ros_decoder_test
+    ${HESAI_TEST_LIBRARIES})
 
 ament_add_gtest(hesai_ros_decoder_test_main
-        hesai_ros_decoder_test_main.cpp
-        )
-
-ament_target_dependencies(hesai_ros_decoder_test_main
-        ${NEBULA_TEST_DEPENDENCIES}
-        )
+    hesai_ros_decoder_test_main.cpp
+)
 
 target_include_directories(hesai_ros_decoder_test_main PUBLIC
-        ${PROJECT_SOURCE_DIR}/src/hesai
-        include
-        )
+    ${PROJECT_SOURCE_DIR}/src/hesai
+    include
+    ${NEBULA_TEST_INCLUDE_DIRS}
+)
 
 target_link_libraries(hesai_ros_decoder_test_main
-        ${PCL_LIBRARIES}
-        hesai_ros_decoder_test
-        )
+    hesai_ros_decoder_test
+)

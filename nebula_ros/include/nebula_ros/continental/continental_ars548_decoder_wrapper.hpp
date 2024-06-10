@@ -117,6 +117,15 @@ private:
   visualization_msgs::msg::MarkerArray ConvertToMarkers(
     const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 
+  /// @brief Convert seconds to chrono::nanoseconds
+  /// @param seconds
+  /// @return chrono::nanoseconds
+  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
+  {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::duration<double>(seconds));
+  }
+
   nebula::Status status_;
   rclcpp::Logger logger_;
 

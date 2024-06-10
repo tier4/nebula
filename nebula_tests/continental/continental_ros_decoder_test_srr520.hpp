@@ -19,11 +19,9 @@
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_common/velodyne/velodyne_common.hpp"
 #include "nebula_decoders/nebula_decoders_continental/decoders/continental_srr520_decoder.hpp"
-#include "nebula_ros/common/nebula_driver_ros_wrapper_base.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
 
 #include <continental_msgs/msg/continental_srr520_detection_list.hpp>
 #include <continental_msgs/msg/continental_srr520_object_list.hpp>
@@ -38,8 +36,7 @@ namespace nebula
 {
 namespace ros
 {
-class ContinentalRosDecoderTest final : public rclcpp::Node,
-                                        NebulaDriverRosWrapperBase  //, testing::Test
+class ContinentalRosDecoderTest final : public rclcpp::Node //, testing::Test
 {
   std::shared_ptr<drivers::continental_srr520::ContinentalSRR520Decoder> driver_ptr_;
   Status wrapper_status_;

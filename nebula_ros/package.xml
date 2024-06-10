@@ -23,12 +23,10 @@
   <depend>nebula_hw_interfaces</depend>
   <depend>nebula_msgs</depend>
   <depend>pandar_msgs</depend>
-  <depend>pcl_conversions</depend>
+  <depend>radar_msgs</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>robosense_msgs</depend>
-  <depend>tf2_eigen</depend>
-  <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>velodyne_msgs</depend>
   <depend>visualization_msgs</depend>

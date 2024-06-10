@@ -23,7 +23,6 @@
 #include <nebula_ros/common/nebula_driver_ros_wrapper_base.hpp>
 #include <nebula_ros/common/parameter_descriptors.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>

@@ -50,13 +50,6 @@ struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
   float configuration_vehicle_wheelbase{};
 };
 
-/// @brief struct for Multiple ARS548 sensor configuration
-struct MultiContinentalARS548SensorConfiguration : ContinentalARS548SensorConfiguration
-{
-  std::vector<std::string> sensor_ips{};
-  std::vector<std::string> frame_ids{};
-};
-
 /// @brief Convert ContinentalARS548SensorConfiguration to string (Overloading the <<
 /// operator)
 /// @param os
@@ -74,33 +67,6 @@ inline std::ostream & operator<<(
      << ", ConfigurationVehicleWidth: " << arg.configuration_vehicle_width
      << ", ConfigurationVehicleHeight: " << arg.configuration_vehicle_height
      << ", ConfigurationVehicleWheelbase: " << arg.configuration_vehicle_wheelbase;
-  return os;
-}
-
-/// @brief Convert MultiContinentalARS548SensorConfiguration to string (Overloading the <<
-/// operator)
-/// @param os
-/// @param arg
-/// @return stream
-inline std::ostream & operator<<(
-  std::ostream & os, MultiContinentalARS548SensorConfiguration const & arg)
-{
-  std::stringstream sensor_ips_ss;
-  sensor_ips_ss << "[";
-  for (const auto sensor_ip : arg.sensor_ips) {
-    sensor_ips_ss << sensor_ip << ", ";
-  }
-  sensor_ips_ss << "]";
-
-  std::stringstream frame_ids_ss;
-  frame_ids_ss << "[";
-  for (const auto frame_id : arg.frame_ids) {
-    frame_ids_ss << frame_id << ", ";
-  }
-  frame_ids_ss << "]";
-
-  os << (ContinentalARS548SensorConfiguration)(arg) << ", MulticastIP: " << arg.multicast_ip
-     << ", SensorIPs: " << sensor_ips_ss.str() << ", FrameIds: " << frame_ids_ss.str();
   return os;
 }
 
@@ -613,7 +579,7 @@ struct FilterStatusPacket
 
 #pragma pack(pop)
 
-struct PointARS548Detection
+struct EIGEN_ALIGN16 PointARS548Detection
 {
   PCL_ADD_POINT4D;
   float azimuth;
@@ -632,11 +598,11 @@ struct PointARS548Detection
   uint16_t object_id;
   uint8_t ambiguity_flag;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-} EIGEN_ALIGN16;
+};
 
 // Note we only use a subset of the data since POINT_CLOUD_REGISTER_POINT_STRUCT has a limit in the
 // number of fields
-struct PointARS548Object
+struct EIGEN_ALIGN16 PointARS548Object
 {
   PCL_ADD_POINT4D;
   uint32_t id;
@@ -657,7 +623,7 @@ struct PointARS548Object
   float shape_width_edge_mean;
   float dynamics_orientation_rate_mean;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-} EIGEN_ALIGN16;
+};
 
 }  // namespace continental_ars548
 }  // namespace drivers
