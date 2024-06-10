@@ -7,6 +7,6 @@
     launch_hw: true
     receiver_timeout_sec: 0.03
     sender_timeout_sec: 0.01
-    filters: 0:0 # socketcan filters
+    filters: 0:0 # candump-like filters
     use_bus_time: false
     configuration_vehicle_wheelbase: 2.79
