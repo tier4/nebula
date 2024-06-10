@@ -237,7 +237,7 @@ struct FollowUpPacket
 
 #pragma pack(pop)
 
-struct PointSRR520Detection
+struct EIGEN_ALIGN16 PointSRR520Detection
 {
   PCL_ADD_POINT4D;
   float range;
@@ -252,11 +252,11 @@ struct PointSRR520Detection
   uint8_t pdh05;
   float snr;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-} EIGEN_ALIGN16;
+};
 
 // Note we only use a subset of the data since POINT_CLOUD_REGISTER_POINT_STRUCT has a limit in the
 // number of fields
-struct PointSRR520Object
+struct EIGEN_ALIGN16 PointSRR520Object
 {
   PCL_ADD_POINT4D;
   uint32_t id;
@@ -272,7 +272,7 @@ struct PointSRR520Object
   float box_length;
   float box_width;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-} EIGEN_ALIGN16;
+};
 
 }  // namespace continental_srr520
 }  // namespace drivers
