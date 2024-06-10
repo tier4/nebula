@@ -6,6 +6,6 @@
     interface: can4
     receiver_timeout_sec: 0.03
     sender_timeout_sec: 0.01
-    filters: 0:0
+    filters: 0:0 # socketcan filters
     use_bus_time: false
     configuration_vehicle_wheelbase: 2.79

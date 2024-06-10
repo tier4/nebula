@@ -458,7 +458,7 @@ struct CANSensorConfigurationBase : SensorConfigurationBase
   std::string interface;
   float receiver_timeout_sec{};
   float sender_timeout_sec{};
-  std::string filters{};
+  std::string filters{};  // socketcan filters
   bool use_bus_time{};
 };
 
