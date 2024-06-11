@@ -144,13 +144,13 @@ Status ContinentalSRR520HwInterface::RegisterPacketCallback(
   return Status::OK;
 }
 
-void ContinentalSRR520HwInterface::SensorSyncFup(builtin_interfaces::msg::Time stamp)
+void ContinentalSRR520HwInterface::SensorSyncFollowUp(builtin_interfaces::msg::Time stamp)
 {
   if (!can_sender_ptr_) {
     PrintError("Can sender is invalid so can not do follow up");
   }
 
-  if (!config_ptr_->sync_use_bus_time || sync_fup_sent_) {
+  if (!config_ptr_->sync_use_bus_time || sync_follow_up_sent_) {
     return;
   }
 
@@ -172,13 +172,14 @@ void ContinentalSRR520HwInterface::SensorSyncFup(builtin_interfaces::msg::Time s
   data[6] = (t4r_nanoseconds & 0x0000FF00) >> 8;
   data[7] = (t4r_nanoseconds & 0x000000FF) >> 0;
 
-  std::array<uint8_t, 7> fup_crc_array{data[2], data[3], data[4], data[5], data[6], data[7], 0x00};
-  uint8_t fup_crc = crc8h2f(fup_crc_array.begin(), fup_crc_array.end());
-  data[1] = fup_crc;
+  std::array<uint8_t, 7> follow_up_crc_array{data[2], data[3], data[4], data[5],
+                                             data[6], data[7], 0x00};
+  uint8_t follow_up_crc = crc8h2f(follow_up_crc_array.begin(), follow_up_crc_array.end());
+  data[1] = follow_up_crc;
 
-  SendFrame(data, SYNC_FUP_CAN_MESSAGE_ID);
+  SendFrame(data, SYNC_FOLLOW_UP_CAN_MESSAGE_ID);
 
-  sync_fup_sent_ = true;
+  sync_follow_up_sent_ = true;
   sync_counter_ = sync_counter_ == 15 ? 0 : sync_counter_ + 1;
 }
 
@@ -189,8 +190,8 @@ void ContinentalSRR520HwInterface::SensorSync()
     return;
   }
 
-  if (!sync_fup_sent_) {
-    PrintError("We will send a SYNC message without having sent a FUP message first!");
+  if (!sync_follow_up_sent_) {
+    PrintError("We will send a SYNC message without having sent a FollowUp message first!");
   }
 
   auto now = std::chrono::system_clock::now();
@@ -217,10 +218,10 @@ void ContinentalSRR520HwInterface::SensorSync()
   uint8_t sync_crc = crc8h2f(sync_crc_array.begin(), sync_crc_array.end());
   data[1] = sync_crc;
 
-  SendFrame(data, SYNC_FUP_CAN_MESSAGE_ID);
+  SendFrame(data, SYNC_FOLLOW_UP_CAN_MESSAGE_ID);
 
   if (config_ptr_->sync_use_bus_time) {
-    sync_fup_sent_ = false;
+    sync_follow_up_sent_ = false;
     return;
   }
 
@@ -233,14 +234,15 @@ void ContinentalSRR520HwInterface::SensorSync()
   data[6] = (stamp.nanosec & 0x0000FF00) >> 8;
   data[7] = (stamp.nanosec & 0x000000FF) >> 0;
 
-  std::array<uint8_t, 7> fup_crc_array{data[2], data[3], data[4], data[5], data[6], data[7], 0x00};
-  uint8_t fup_crc = crc8h2f(fup_crc_array.begin(), fup_crc_array.end());
-  data[1] = fup_crc;
+  std::array<uint8_t, 7> follow_up_crc_array{data[2], data[3], data[4], data[5],
+                                             data[6], data[7], 0x00};
+  uint8_t follow_up_crc = crc8h2f(follow_up_crc_array.begin(), follow_up_crc_array.end());
+  data[1] = follow_up_crc;
 
-  SendFrame(data, SYNC_FUP_CAN_MESSAGE_ID);
+  SendFrame(data, SYNC_FOLLOW_UP_CAN_MESSAGE_ID);
 
   sync_counter_ = sync_counter_ == 15 ? 0 : sync_counter_ + 1;
-  sync_fup_sent_ = true;
+  sync_follow_up_sent_ = true;
 }
 
 Status ContinentalSRR520HwInterface::SensorInterfaceStop()

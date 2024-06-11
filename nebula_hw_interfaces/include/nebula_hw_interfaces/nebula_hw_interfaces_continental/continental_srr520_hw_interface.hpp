@@ -67,8 +67,8 @@ public:
   /// @brief Sensor synchronization routine
   void SensorSync();
 
-  /// @brief Process a new Sync Fup request
-  void SensorSyncFup(builtin_interfaces::msg::Time stamp);
+  /// @brief Process a new Sync Follow-up request
+  void SensorSyncFollowUp(builtin_interfaces::msg::Time stamp);
 
   /// @brief Configure the sensor
   /// @param sensor_id Desired sensor id
@@ -135,7 +135,7 @@ private:
   bool sensor_interface_active_{};
 
   uint8_t sync_counter_{0};
-  bool sync_fup_sent_{true};
+  bool sync_follow_up_sent_{true};
   builtin_interfaces::msg::Time last_sync_stamp_;
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger_ptr_;

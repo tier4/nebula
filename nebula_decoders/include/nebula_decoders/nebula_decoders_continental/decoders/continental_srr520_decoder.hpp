@@ -80,11 +80,11 @@ public:
   Status RegisterStatusCallback(
     std::function<void(std::unique_ptr<diagnostic_msgs::msg::DiagnosticArray>)> status_callback);
 
-  /// @brief Register function to call whenever a sync fup packet is processed
-  /// @param sync_fup_callback
+  /// @brief Register function to call whenever a sync follow-up packet is processed
+  /// @param sync_follow_up_callback
   /// @return Resulting status
-  Status RegisterSyncFupCallback(
-    std::function<void(builtin_interfaces::msg::Time)> sync_fup_callback);
+  Status RegisterSyncFollowUpCallback(
+    std::function<void(builtin_interfaces::msg::Time)> sync_follow_up_callback);
 
   /// @brief Register function to call whenever enough packets have been processed
   /// @param object_list_callback
@@ -156,7 +156,7 @@ private:
   /// @brief Process a new sensor status packet
   /// @param buffer The buffer containing the status packet
   /// @param stamp The stamp in nanoseconds
-  void ProcessSyncFupPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
+  void ProcessSyncFollowUpPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
   /// @brief Printing the string to RCLCPP_INFO_STREAM
   /// @param info Target string
@@ -178,7 +178,7 @@ private:
     object_list_callback_{};
   std::function<void(std::unique_ptr<diagnostic_msgs::msg::DiagnosticArray> msg)>
     status_callback_{};
-  std::function<void(builtin_interfaces::msg::Time)> sync_fup_callback_{};
+  std::function<void(builtin_interfaces::msg::Time)> sync_follow_up_callback_{};
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg)>
     nebula_packets_callback_{};
 

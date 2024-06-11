@@ -114,8 +114,8 @@ Status ContinentalSRR520DecoderWrapper::InitializeDriver(
     std::bind(&ContinentalSRR520DecoderWrapper::StatusCallback, this, std::placeholders::_1));
 
   if (hw_interface_ptr_) {
-    driver_ptr_->RegisterSyncFupCallback(
-      std::bind(&ContinentalSRR520DecoderWrapper::SyncFupCallback, this, std::placeholders::_1));
+    driver_ptr_->RegisterSyncFollowUpCallback(std::bind(
+      &ContinentalSRR520DecoderWrapper::SyncFollowUpCallback, this, std::placeholders::_1));
     driver_ptr_->RegisterPacketsCallback(
       std::bind(&ContinentalSRR520DecoderWrapper::PacketsCallback, this, std::placeholders::_1));
   }
@@ -574,9 +574,9 @@ visualization_msgs::msg::MarkerArray ContinentalSRR520DecoderWrapper::ConvertToM
   return marker_array;
 }
 
-void ContinentalSRR520DecoderWrapper::SyncFupCallback(builtin_interfaces::msg::Time stamp)
+void ContinentalSRR520DecoderWrapper::SyncFollowUpCallback(builtin_interfaces::msg::Time stamp)
 {
-  hw_interface_ptr_->SensorSyncFup(stamp);
+  hw_interface_ptr_->SensorSyncFollowUp(stamp);
 }
 
 void ContinentalSRR520DecoderWrapper::PacketsCallback(

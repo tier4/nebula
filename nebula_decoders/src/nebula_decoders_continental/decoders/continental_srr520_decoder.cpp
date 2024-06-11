@@ -83,10 +83,10 @@ Status ContinentalSRR520Decoder::RegisterStatusCallback(
   return Status::OK;
 }
 
-Status ContinentalSRR520Decoder::RegisterSyncFupCallback(
-  std::function<void(builtin_interfaces::msg::Time)> sync_fup_callback)
+Status ContinentalSRR520Decoder::RegisterSyncFollowUpCallback(
+  std::function<void(builtin_interfaces::msg::Time)> sync_follow_up_callback)
 {
-  sync_fup_callback_ = std::move(sync_fup_callback);
+  sync_follow_up_callback_ = std::move(sync_follow_up_callback);
   return Status::OK;
 }
 
@@ -160,13 +160,13 @@ bool ContinentalSRR520Decoder::ProcessPacket(
     }
 
     ProcessSensorStatusPacket(std::move(packet_msg));
-  } else if (can_message_id == SYNC_FUP_CAN_MESSAGE_ID) {
-    if (payload_size != SYNC_FUP_CAN_PACKET_SIZE) {
-      PrintError("SYNC_FUP_CAN_MESSAGE_ID message with invalid size");
+  } else if (can_message_id == SYNC_FOLLOW_UP_CAN_MESSAGE_ID) {
+    if (payload_size != SYNC_FOLLOW_UP_CAN_PACKET_SIZE) {
+      PrintError("SYNC_FOLLOW_UP_CAN_MESSAGE_ID message with invalid size");
       return false;
     }
 
-    ProcessSyncFupPacket(std::move(packet_msg));
+    ProcessSyncFollowUpPacket(std::move(packet_msg));
   } else if (
     can_message_id != VEH_DYN_CAN_MESSAGE_ID && can_message_id != SENSOR_CONFIG_CAN_MESSAGE_ID) {
     PrintError("Unrecognized message ID=" + std::to_string(can_message_id));
@@ -1157,11 +1157,11 @@ void ContinentalSRR520Decoder::ProcessSensorStatusPacket(
   }
 }
 
-void ContinentalSRR520Decoder::ProcessSyncFupPacket(
+void ContinentalSRR520Decoder::ProcessSyncFollowUpPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
-  if (sync_fup_callback_) {
-    sync_fup_callback_(packet_msg->stamp);
+  if (sync_follow_up_callback_) {
+    sync_follow_up_callback_(packet_msg->stamp);
   }
 
   auto nebula_packets = std::make_unique<nebula_msgs::msg::NebulaPackets>();

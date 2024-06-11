@@ -83,8 +83,8 @@ public:
   /// @param msg The new DiagnosticArray from the driver
   void StatusCallback(std::unique_ptr<diagnostic_msgs::msg::DiagnosticArray> msg);
 
-  /// @brief Callback to process a new SyncFup message from the driver
-  void SyncFupCallback(builtin_interfaces::msg::Time stamp);
+  /// @brief Callback to process a new SyncFollowUp message from the driver
+  void SyncFollowUpCallback(builtin_interfaces::msg::Time stamp);
 
   /// @brief Callback to process a new NebulaPackets message from the driver
   /// @param msg The new NebulaPackets from the driver
