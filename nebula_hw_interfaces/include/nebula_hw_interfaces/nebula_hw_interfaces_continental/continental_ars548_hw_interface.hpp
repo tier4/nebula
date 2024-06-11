@@ -133,10 +133,6 @@ public:
   /// @return Resulting status
   Status SetYawRate(float yaw_rate);
 
-  /// @brief Checking the current settings and changing the difference point
-  /// @return Resulting status
-  Status CheckAndSetConfig();
-
   /// @brief Setting rclcpp::Logger
   /// @param node Logger
   void SetLogger(std::shared_ptr<rclcpp::Logger> node);
