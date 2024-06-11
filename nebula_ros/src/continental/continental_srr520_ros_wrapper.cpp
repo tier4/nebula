@@ -50,7 +50,7 @@ ContinentalSRR520RosWrapper::ContinentalSRR520RosWrapper(const rclcpp::NodeOptio
 
   decoder_thread_ = std::thread([this]() {
     while (true) {
-      decoder_wrapper_->ProcessPacket(std::move(packet_queue_.pop()));
+      decoder_wrapper_->ProcessPacket(packet_queue_.pop());
     }
   });
 
