@@ -179,6 +179,10 @@ bool ContinentalSRR520Decoder::ProcessPacket(
 void ContinentalSRR520Decoder::ProcessNearHeaderPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
+  constexpr float V_AMBIGUOUS_RESOLUTION = 0.003051851f;
+  constexpr float V_AMBIGUOUS_MIN_VALUE = -100.f;
+  constexpr float MAX_RANGE_RESOLUTION = 0.1f;
+
   first_rdi_near_packet_ = false;
 
   static_assert(sizeof(ScanHeaderPacket) == RDI_NEAR_HEADER_PACKET_SIZE);
@@ -214,8 +218,9 @@ void ContinentalSRR520Decoder::ProcessNearHeaderPacket(
   near_detection_list_ptr_->sequence_counter = rdi_near_header_packet_.u_sequence_counter;
   near_detection_list_ptr_->cycle_counter = rdi_near_header_packet_.u_cycle_counter.value();
   near_detection_list_ptr_->v_ambiguous =
-    0.003051851f * rdi_near_header_packet_.u_v_ambiguous.value() - 100.f;
-  near_detection_list_ptr_->max_range = 0.1f * rdi_near_header_packet_.u_max_range.value();
+    V_AMBIGUOUS_RESOLUTION * rdi_near_header_packet_.u_v_ambiguous.value() + V_AMBIGUOUS_MIN_VALUE;
+  near_detection_list_ptr_->max_range =
+    MAX_RANGE_RESOLUTION * rdi_near_header_packet_.u_max_range.value();
 
   near_detection_list_ptr_->detections.reserve(
     rdi_near_header_packet_.u_number_of_detections.value());
@@ -226,6 +231,17 @@ void ContinentalSRR520Decoder::ProcessNearHeaderPacket(
 void ContinentalSRR520Decoder::ProcessNearElementPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
+  constexpr auto RANGE_RESOLUTION = 0.024420024;
+  constexpr auto AZIMUTH_RESOLUTION = 0.006159986;
+  constexpr auto RANGE_RATE_RESOLUTION = 0.014662757;
+  constexpr auto RCS_RESOLUTION = 0.476190476;
+  constexpr auto SNR_RESOLUTION = 1.7;
+
+  constexpr auto AZIMUTH_MIN_VALUE = -1.570796327;
+  constexpr auto RANGE_RATE_MIN_VALUE = -15.f;
+  constexpr auto RCS_MIN_VALUE = -40.f;
+  constexpr auto SNR_MIN_VALUE = 11.f;
+
   if (rdi_near_packets_ptr_->packets.size() == 0) {
     if (!first_rdi_near_packet_) {
       PrintError("Near element before header. This can happen during the first iteration");
@@ -264,21 +280,21 @@ void ContinentalSRR520Decoder::ProcessNearElementPacket(
     uint16_t u_range =
       (static_cast<uint16_t>(data[0]) << 4) | (static_cast<uint16_t>(data[1] & 0xF0) >> 4);
     assert(u_range <= 4095);
-    detection_msg.range = 0.024420024 * u_range;
+    detection_msg.range = RANGE_RESOLUTION * u_range;
 
     uint16_t u_azimuth =
       (static_cast<uint16_t>(data[1] & 0x0f) << 5) | (static_cast<uint16_t>(data[2] & 0xF8) >> 3);
     assert(u_azimuth <= 510);
-    detection_msg.azimuth_angle = 0.006159986 * u_azimuth - 1.570796327;
+    detection_msg.azimuth_angle = AZIMUTH_RESOLUTION * u_azimuth + AZIMUTH_MIN_VALUE;
 
     uint16_t u_range_rate =
       (static_cast<uint16_t>(data[2] & 0x07) << 8) | static_cast<uint16_t>(data[3]);
     assert(u_range_rate <= 2046);
-    detection_msg.range_rate = 0.014662757 * u_range_rate - 15.f;
+    detection_msg.range_rate = RANGE_RATE_RESOLUTION * u_range_rate + RANGE_RATE_MIN_VALUE;
 
     uint16_t u_rcs = (data[4] & 0xFE) >> 1;
     assert(u_rcs <= 126);
-    detection_msg.rcs = 0.476190476 * u_rcs - 40.f;
+    detection_msg.rcs = RCS_RESOLUTION * u_rcs + RCS_MIN_VALUE;
 
     detection_msg.pdh00 = 100 * (data[4] & 0x01);
     detection_msg.pdh01 = 100 * ((data[5] & 0x80) >> 7);
@@ -287,7 +303,7 @@ void ContinentalSRR520Decoder::ProcessNearElementPacket(
     detection_msg.pdh04 = 100 * ((data[5] & 0x10) >> 4);
 
     uint8_t u_snr = data[5] & 0x0f;
-    detection_msg.snr = 1.7 * u_snr + 11.f;
+    detection_msg.snr = SNR_RESOLUTION * u_snr + SNR_MIN_VALUE;
 
     near_detection_list_ptr_->detections.push_back(detection_msg);
     parsed_detections++;
@@ -299,6 +315,10 @@ void ContinentalSRR520Decoder::ProcessNearElementPacket(
 void ContinentalSRR520Decoder::ProcessHRRHeaderPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
+  constexpr float V_AMBIGUOUS_RESOLUTION = 0.003051851f;
+  constexpr float V_AMBIGUOUS_MIN_VALUE = -100.f;
+  constexpr float MAX_RANGE_RESOLUTION = 0.1f;
+
   first_rdi_hrr_packet_ = false;
 
   static_assert(sizeof(ScanHeaderPacket) == RDI_HRR_HEADER_PACKET_SIZE);
@@ -333,8 +353,9 @@ void ContinentalSRR520Decoder::ProcessHRRHeaderPacket(
   hrr_detection_list_ptr_->sequence_counter = rdi_hrr_header_packet_.u_sequence_counter;
   hrr_detection_list_ptr_->cycle_counter = rdi_hrr_header_packet_.u_cycle_counter.value();
   hrr_detection_list_ptr_->v_ambiguous =
-    0.003051851f * rdi_hrr_header_packet_.u_v_ambiguous.value() - 100.f;
-  hrr_detection_list_ptr_->max_range = 0.1f * rdi_hrr_header_packet_.u_max_range.value();
+    V_AMBIGUOUS_RESOLUTION * rdi_hrr_header_packet_.u_v_ambiguous.value() + V_AMBIGUOUS_MIN_VALUE;
+  hrr_detection_list_ptr_->max_range =
+    MAX_RANGE_RESOLUTION * rdi_hrr_header_packet_.u_max_range.value();
 
   hrr_detection_list_ptr_->detections.reserve(
     rdi_hrr_header_packet_.u_number_of_detections.value());
@@ -345,6 +366,17 @@ void ContinentalSRR520Decoder::ProcessHRRHeaderPacket(
 void ContinentalSRR520Decoder::ProcessHRRElementPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
+  constexpr auto RANGE_RESOLUTION = 0.024420024;
+  constexpr auto AZIMUTH_RESOLUTION = 0.006159986;
+  constexpr auto RANGE_RATE_RESOLUTION = 0.014662757;
+  constexpr auto RCS_RESOLUTION = 0.476190476;
+  constexpr auto SNR_RESOLUTION = 1.7f;
+
+  constexpr auto AZIMUTH_MIN_VALUE = -1.570796327;
+  constexpr auto RANGE_RATE_MIN_VALUE = -15.f;
+  constexpr auto RCS_MIN_VALUE = -40.f;
+  constexpr auto SNR_MIN_VALUE = 11.f;
+
   if (rdi_hrr_packets_ptr_->packets.size() == 0) {
     if (!first_rdi_hrr_packet_) {
       PrintError("HRR element before header. This can happen during the first iteration");
@@ -383,21 +415,21 @@ void ContinentalSRR520Decoder::ProcessHRRElementPacket(
     uint16_t u_range =
       (static_cast<uint16_t>(data[0]) << 4) | (static_cast<uint16_t>(data[1] & 0xF0) >> 4);
     assert(u_range <= 4095);
-    detection_msg.range = 0.024420024 * u_range;
+    detection_msg.range = RANGE_RESOLUTION * u_range;
 
     uint16_t u_azimuth =
       (static_cast<uint16_t>(data[1] & 0x0f) << 5) | (static_cast<uint16_t>(data[2] & 0xF8) >> 3);
     assert(u_azimuth <= 510);
-    detection_msg.azimuth_angle = 0.006159986 * u_azimuth - 1.570796327;
+    detection_msg.azimuth_angle = AZIMUTH_RESOLUTION * u_azimuth + AZIMUTH_MIN_VALUE;
 
     uint16_t u_range_rate =
       (static_cast<uint16_t>(data[2] & 0x07) << 8) | static_cast<uint16_t>(data[3]);
     assert(u_range_rate <= 2046);
-    detection_msg.range_rate = 0.014662757 * u_range_rate - 15.f;
+    detection_msg.range_rate = RANGE_RATE_RESOLUTION * u_range_rate + RANGE_RATE_MIN_VALUE;
 
     uint16_t u_rcs = (data[4] & 0xFE) >> 1;
     assert(u_rcs <= 126);
-    detection_msg.rcs = 0.476190476 * u_rcs - 40.f;
+    detection_msg.rcs = RCS_RESOLUTION * u_rcs + RCS_MIN_VALUE;
 
     detection_msg.pdh00 = 100 * (data[4] & 0x01);
     detection_msg.pdh01 = 100 * ((data[5] & 0x80) >> 7);
@@ -406,7 +438,7 @@ void ContinentalSRR520Decoder::ProcessHRRElementPacket(
     detection_msg.pdh04 = 100 * ((data[5] & 0x10) >> 4);
 
     uint8_t u_snr = data[5] & 0x0f;
-    detection_msg.snr = 1.7 * u_snr + 11.f;
+    detection_msg.snr = SNR_RESOLUTION * u_snr + SNR_MIN_VALUE;
 
     hrr_detection_list_ptr_->detections.push_back(detection_msg);
     parsed_detections++;
@@ -418,6 +450,11 @@ void ContinentalSRR520Decoder::ProcessHRRElementPacket(
 void ContinentalSRR520Decoder::ProcessObjectHeaderPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
+  constexpr auto VX_RESOLUTION = 0.003051851;
+  constexpr auto VX_MIN_VALUE = -100.f;
+  constexpr auto YAW_RATE_RESOLUTION = 9.58766e-05;
+  constexpr auto YAW_RATE_MIN_VALUE = -3.14159;
+
   first_object_packet_ = false;
 
   static_assert(sizeof(ObjectHeaderPacket) == OBJECT_HEADER_PACKET_SIZE);
@@ -449,9 +486,9 @@ void ContinentalSRR520Decoder::ProcessObjectHeaderPacket(
   object_list_ptr_->signal_status = object_header_packet_.u_signal_status;
   object_list_ptr_->sequence_counter = object_header_packet_.u_sequence_counter;
   object_list_ptr_->cycle_counter = object_header_packet_.u_cycle_counter.value();
-  object_list_ptr_->ego_vx = 0.003051851 * object_header_packet_.u_ego_vx.value() - 100.f;
+  object_list_ptr_->ego_vx = VX_RESOLUTION * object_header_packet_.u_ego_vx.value() + VX_MIN_VALUE;
   object_list_ptr_->ego_yaw_rate =
-    9.58766e-05 * object_header_packet_.u_ego_yaw_rate.value() - 3.14159;
+    YAW_RATE_RESOLUTION * object_header_packet_.u_ego_yaw_rate.value() + YAW_RATE_MIN_VALUE;
   object_list_ptr_->motion_type = object_header_packet_.u_motion_type;
 
   object_list_ptr_->objects.reserve(object_header_packet_.u_number_of_objects);
@@ -462,6 +499,23 @@ void ContinentalSRR520Decoder::ProcessObjectHeaderPacket(
 void ContinentalSRR520Decoder::ProcessObjectElementPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
+  constexpr auto DIST_RESOLUTION = 0.009155553;
+  constexpr auto V_ABS_RESOLUTION = 0.009156391;
+  constexpr auto A_ABS_RESOLUTION = 0.019569472;
+  constexpr auto DIST_STD_RESOLUTION = 0.001831166;
+  constexpr auto V_ABS_STD_RESOLUTION = 0.001831166;
+  constexpr auto A_ABS_STD_RESOLUTION = 0.001831166;
+  constexpr auto OBJECT_BOX_RESOLUTION = 0.007326007;
+  constexpr auto OBJECT_ORIENTATION_RESOLUTION = 0.001534729;
+  constexpr auto OBJECT_RCS_RESOLUTION = 0.024425989;
+  constexpr auto OBJECT_SCORE_RESOLUTION = 6.666666667;
+
+  constexpr auto DIST_MIN_VALUE = -300.f;
+  constexpr auto V_ABS_MIN_VALUE = -75.f;
+  constexpr auto A_ABS_MIN_VALUE = -10.f;
+  constexpr auto OBJECT_ORIENTATION_MIN_VALUE = -3.14159;
+  constexpr auto OBJECT_RCS_MIN_VALUE = -50.f;
+
   if (object_packets_ptr_->packets.size() == 0) {
     if (!first_object_packet_) {
       PrintError("Object element before header. This can happen during the first iteration");
@@ -498,86 +552,87 @@ void ContinentalSRR520Decoder::ProcessObjectElementPacket(
     uint16_t u_dist_y = ((static_cast<uint16_t>(data[3]) << 8) | data[4]);
     assert(u_dist_x <= 65534);
     assert(u_dist_y <= 65534);
-    object_msg.dist_x = 0.009155553 * u_dist_x - 300.f;
-    object_msg.dist_y = 0.009155553 * u_dist_y - 300.f;
+    object_msg.dist_x = DIST_RESOLUTION * u_dist_x + DIST_MIN_VALUE;
+    object_msg.dist_y = DIST_RESOLUTION * u_dist_y + DIST_MIN_VALUE;
 
     uint16_t u_v_abs_x =
       (static_cast<uint16_t>(data[5]) << 6) | (static_cast<uint16_t>(data[6] & 0xfc) >> 2);
     assert(u_v_abs_x <= 16382);
-    object_msg.v_abs_x = 0.009156391 * u_v_abs_x - 75.f;
+    object_msg.v_abs_x = V_ABS_RESOLUTION * u_v_abs_x + V_ABS_MIN_VALUE;
 
     uint16_t u_v_abs_y = (static_cast<uint16_t>(data[6] & 0x03) << 12) |
                          (static_cast<uint16_t>(data[7]) << 4) |
                          (static_cast<uint16_t>(data[8] & 0xF0) >> 4);
     assert(u_v_abs_y <= 16382);
-    object_msg.v_abs_y = 0.009156391 * u_v_abs_y - 75.f;
+    object_msg.v_abs_y = V_ABS_RESOLUTION * u_v_abs_y + V_ABS_MIN_VALUE;
 
     uint16_t u_a_abs_x =
       (static_cast<uint16_t>(data[8] & 0x0f) << 6) | (static_cast<uint16_t>(data[9] & 0xfc) >> 2);
     assert(u_a_abs_x <= 1022);
-    object_msg.a_abs_x = 0.019569472 * u_a_abs_x - 10.f;
+    object_msg.a_abs_x = A_ABS_RESOLUTION * u_a_abs_x + A_ABS_MIN_VALUE;
 
     uint16_t u_a_abs_y =
       (static_cast<uint16_t>(data[9] & 0x03) << 8) | static_cast<uint16_t>(data[10]);
     assert(u_a_abs_y <= 1022);
-    object_msg.a_abs_y = 0.019569472 * u_a_abs_y - 10.f;
+    object_msg.a_abs_y = A_ABS_RESOLUTION * u_a_abs_y + A_ABS_MIN_VALUE;
 
     uint16_t u_dist_x_std =
       (static_cast<uint16_t>(data[11]) << 6) | (static_cast<uint16_t>(data[12] & 0xfc) >> 2);
     assert(u_dist_x_std <= 16383);
-    object_msg.dist_x_std = 0.001831166 * u_dist_x_std;
+    object_msg.dist_x_std = DIST_STD_RESOLUTION * u_dist_x_std;
 
     uint16_t u_dist_y_std = (static_cast<uint16_t>(data[12] & 0x03) << 12) |
                             (static_cast<uint16_t>(data[13]) << 4) |
                             (static_cast<uint16_t>(data[14] & 0xF0) >> 4);
     assert(u_dist_y_std <= 16383);
-    object_msg.dist_y_std = 0.001831166 * u_dist_y_std;
+    object_msg.dist_y_std = DIST_STD_RESOLUTION * u_dist_y_std;
 
     uint16_t u_v_abs_x_std = (static_cast<uint16_t>(data[14] & 0x0f) << 10) |
                              (static_cast<uint16_t>(data[15]) << 2) |
                              (static_cast<uint16_t>(data[15] & 0x03) >> 6);
     assert(u_v_abs_x_std <= 16383);
-    object_msg.v_abs_x_std = 0.001831166 * u_v_abs_x_std;
+    object_msg.v_abs_x_std = V_ABS_STD_RESOLUTION * u_v_abs_x_std;
 
     uint16_t u_v_abs_y_std =
       (static_cast<uint16_t>(data[16] & 0x3f) << 8) | static_cast<uint16_t>(data[17]);
     assert(u_v_abs_y_std <= 16383);
-    object_msg.v_abs_y_std = 0.001831166 * u_v_abs_y_std;
+    object_msg.v_abs_y_std = V_ABS_STD_RESOLUTION * u_v_abs_y_std;
 
     uint16_t u_a_abs_x_std =
       (static_cast<uint16_t>(data[18]) << 6) | (static_cast<uint16_t>(data[19] & 0xfc) >> 2);
     assert(u_a_abs_x_std <= 16383);
-    object_msg.a_abs_x_std = 0.001831166 * u_a_abs_x_std;
+    object_msg.a_abs_x_std = A_ABS_STD_RESOLUTION * u_a_abs_x_std;
 
     uint16_t u_a_abs_y_std = (static_cast<uint16_t>(data[19] & 0x03) << 12) |
                              (static_cast<uint16_t>(data[20]) << 4) |
                              (static_cast<uint16_t>(data[21] & 0xF0) >> 4);
     assert(u_a_abs_y_std <= 16383);
-    object_msg.a_abs_y_std = 0.001831166 * u_a_abs_y_std;
+    object_msg.a_abs_y_std = A_ABS_STD_RESOLUTION * u_a_abs_y_std;
 
     uint16_t u_box_length =
       (static_cast<uint16_t>(data[21] & 0x0f) << 8) | static_cast<uint16_t>(data[22]);
     assert(u_box_length <= 4095);
-    object_msg.box_length = 0.007326007 * u_box_length;
+    object_msg.box_length = OBJECT_BOX_RESOLUTION * u_box_length;
 
     uint16_t u_box_width =
       (static_cast<uint16_t>(data[23]) << 4) | (static_cast<uint16_t>(data[24] & 0xF0) >> 4);
     assert(u_box_width <= 4095);
-    object_msg.box_width = 0.007326007 * u_box_width;
+    object_msg.box_width = OBJECT_BOX_RESOLUTION * u_box_width;
 
     uint16_t u_orientation =
       (static_cast<uint16_t>(data[24] & 0x0f) << 8) | static_cast<uint16_t>(data[25]);
     assert(u_orientation <= 4094);
-    object_msg.orientation = 0.001534729 * u_orientation - 3.14159;
+    object_msg.orientation =
+      OBJECT_ORIENTATION_RESOLUTION * u_orientation + OBJECT_ORIENTATION_MIN_VALUE;
 
     uint16_t u_rcs =
       (static_cast<uint16_t>(data[26]) << 4) | (static_cast<uint16_t>(data[27] & 0xF0) >> 4);
     assert(u_rcs <= 4094);
-    object_msg.rcs = 0.024425989 * u_rcs - 50.f;
+    object_msg.rcs = OBJECT_RCS_RESOLUTION * u_rcs + OBJECT_RCS_MIN_VALUE;
 
     uint8_t u_score = data[27] & 0x0f;
     assert(u_score <= 15);
-    object_msg.score = 6.666666667 * u_score;
+    object_msg.score = OBJECT_SCORE_RESOLUTION * u_score;
 
     object_msg.life_cycles = (static_cast<uint16_t>(data[28]) << 8) | data[29];
     assert(object_msg.life_cycles <= 65535);
@@ -740,6 +795,12 @@ void ContinentalSRR520Decoder::ProcessSensorStatusPacket(
 {
   static_assert(sizeof(StatusPacket) == STATUS_PACKET_SIZE);
 
+  constexpr float STATUS_DISTANCE_RESOLUTION = 1e-3f;
+  constexpr float STATUS_DISTANCE_MIN_VALUE = -32.767;
+  constexpr float STATUS_ANGLE_RESOLUTION = 9.58766f;
+  constexpr float STATUS_ANGLE_MIN_VALUE = -3.14159f;
+  constexpr auto STATUS_ANGLE_STD_RESOLUTION = 1.52593e-05;
+
   StatusPacket status_packet;
   std::memcpy(&status_packet, packet_msg->data.data() + 4 * sizeof(uint8_t), sizeof(status_packet));
 
@@ -791,31 +852,37 @@ void ContinentalSRR520Decoder::ProcessSensorStatusPacket(
   diagnostic_values.push_back(key_value);
 
   key_value.key = "long_pos";
-  key_value.value = std::to_string(1e-3 * status_packet.u_long_pos.value() - 32.767);
+  key_value.value = std::to_string(
+    STATUS_DISTANCE_RESOLUTION * status_packet.u_long_pos.value() + STATUS_DISTANCE_MIN_VALUE);
   diagnostic_values.push_back(key_value);
 
   key_value.key = "lat_pos";
-  key_value.value = std::to_string(1e-3 * status_packet.u_lat_pos.value() - 32.767);
+  key_value.value = std::to_string(
+    STATUS_DISTANCE_RESOLUTION * status_packet.u_lat_pos.value() + STATUS_DISTANCE_MIN_VALUE);
   diagnostic_values.push_back(key_value);
 
   key_value.key = "vert_pos";
-  key_value.value = std::to_string(1e-3 * status_packet.u_vert_pos.value() - 32.767);
+  key_value.value = std::to_string(
+    STATUS_DISTANCE_RESOLUTION * status_packet.u_vert_pos.value() + STATUS_DISTANCE_MIN_VALUE);
   diagnostic_values.push_back(key_value);
 
   key_value.key = "long_pos_cog";
-  key_value.value = std::to_string(1e-3 * status_packet.u_long_pos_cog.value() - 32.767);
+  key_value.value = std::to_string(
+    STATUS_DISTANCE_RESOLUTION * status_packet.u_long_pos_cog.value() + STATUS_DISTANCE_MIN_VALUE);
   diagnostic_values.push_back(key_value);
 
   key_value.key = "wheelbase";
-  key_value.value = std::to_string(1e-3 * status_packet.u_wheelbase.value());
+  key_value.value = std::to_string(STATUS_DISTANCE_RESOLUTION * status_packet.u_wheelbase.value());
   diagnostic_values.push_back(key_value);
 
   key_value.key = "yaw_angle";
-  key_value.value = std::to_string(9.58766e-05 * status_packet.u_yaw_angle.value() - 3.14159);
+  key_value.value = std::to_string(
+    STATUS_ANGLE_RESOLUTION * status_packet.u_yaw_angle.value() + STATUS_ANGLE_MIN_VALUE);
   diagnostic_values.push_back(key_value);
 
   key_value.key = "cover_damping";
-  key_value.value = std::to_string(1e-3 * status_packet.u_cover_damping.value() - 32.767);
+  key_value.value = std::to_string(
+    STATUS_DISTANCE_RESOLUTION * status_packet.u_cover_damping.value() + STATUS_DISTANCE_MIN_VALUE);
   diagnostic_values.push_back(key_value);
 
   uint8_t plug_orientation = status_packet.u_plug_orientation & 0b1;
@@ -1052,17 +1119,18 @@ void ContinentalSRR520Decoder::ProcessSensorStatusPacket(
   diagnostic_values.push_back(key_value);
 
   key_value.key = "aln_current_azimuth_std";
-  key_value.value = std::to_string(1.52593e-05 * status_packet.u_aln_current_azimuth_std.value());
+  key_value.value =
+    std::to_string(STATUS_ANGLE_STD_RESOLUTION * status_packet.u_aln_current_azimuth_std.value());
   diagnostic_values.push_back(key_value);
 
   key_value.key = "aln_current_azimuth";
-  key_value.value =
-    std::to_string(9.58766e-05 * status_packet.u_aln_current_azimuth.value() - 3.14159);
+  key_value.value = std::to_string(
+    STATUS_ANGLE_RESOLUTION * status_packet.u_aln_current_azimuth.value() + STATUS_ANGLE_MIN_VALUE);
   diagnostic_values.push_back(key_value);
 
   key_value.key = "aln_current_delta";
-  key_value.value =
-    std::to_string(9.58766e-05 * status_packet.u_aln_current_delta.value() - 3.14159);
+  key_value.value = std::to_string(
+    STATUS_ANGLE_RESOLUTION * status_packet.u_aln_current_delta.value() + STATUS_ANGLE_MIN_VALUE);
   diagnostic_values.push_back(key_value);
 
   uint16_t computed_crc = crc16_packet(packet_msg->data.begin() + 4, packet_msg->data.end() - 3);
