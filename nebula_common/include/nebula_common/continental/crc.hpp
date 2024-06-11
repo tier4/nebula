@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#pragma once
+
+#include <cstdint>
+
 template <typename Iterator>
 int crc16_packets(Iterator begin, Iterator end, int payload_offset)
 {
