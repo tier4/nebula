@@ -213,8 +213,8 @@ void ContinentalSRR520Decoder::ProcessNearHeaderPacket(
   near_detection_list_ptr_->signal_status = rdi_near_header_packet_.u_signal_status;
   near_detection_list_ptr_->sequence_counter = rdi_near_header_packet_.u_sequence_counter;
   near_detection_list_ptr_->cycle_counter = rdi_near_header_packet_.u_cycle_counter.value();
-  near_detection_list_ptr_->vambig =
-    0.003051851f * rdi_near_header_packet_.u_vambig.value() - 100.f;  // cSpell:ignore vambig
+  near_detection_list_ptr_->v_ambiguous =
+    0.003051851f * rdi_near_header_packet_.u_v_ambiguous.value() - 100.f;
   near_detection_list_ptr_->max_range = 0.1f * rdi_near_header_packet_.u_max_range.value();
 
   near_detection_list_ptr_->detections.reserve(
@@ -332,8 +332,8 @@ void ContinentalSRR520Decoder::ProcessHRRHeaderPacket(
   hrr_detection_list_ptr_->signal_status = rdi_hrr_header_packet_.u_signal_status;
   hrr_detection_list_ptr_->sequence_counter = rdi_hrr_header_packet_.u_sequence_counter;
   hrr_detection_list_ptr_->cycle_counter = rdi_hrr_header_packet_.u_cycle_counter.value();
-  hrr_detection_list_ptr_->vambig =
-    0.003051851f * rdi_hrr_header_packet_.u_vambig.value() - 100.f;  // cSpell:ignore vambig
+  hrr_detection_list_ptr_->v_ambiguous =
+    0.003051851f * rdi_hrr_header_packet_.u_v_ambiguous.value() - 100.f;
   hrr_detection_list_ptr_->max_range = 0.1f * rdi_hrr_header_packet_.u_max_range.value();
 
   hrr_detection_list_ptr_->detections.reserve(

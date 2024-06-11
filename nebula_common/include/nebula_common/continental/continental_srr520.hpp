@@ -157,7 +157,7 @@ struct ScanHeaderPacket
   uint8_t u_signal_status;                    // 13
   uint8_t u_sequence_counter;                 // 14
   big_uint32_buf_t u_cycle_counter;           // 15
-  big_uint16_buf_t u_vambig;                  // 19. cSpell:ignore vambig
+  big_uint16_buf_t u_v_ambiguous;             // 19
   big_uint16_buf_t u_max_range;               // 21
   big_uint16_buf_t u_number_of_detections;    // 23
   uint8_t reserved[7];                        // 25

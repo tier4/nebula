@@ -8,7 +8,7 @@ global_time_stamp_sync_status: 1
 signal_status: 1
 sequence_counter: 196
 cycle_counter: 910
-vambig: 23.3772
+v_ambiguous: 23.3772
 max_range: 41.3000
 detections:
   - range: 7.76557
