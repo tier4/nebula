@@ -73,7 +73,7 @@ public:
   /// @brief Configure the sensor
   /// @param sensor_id Desired sensor id
   /// @param longitudinal_autosar Desired longitudinal value in autosar coordinates
-  /// @param lateral_autosar Desired lateral value in autosar coordinates
+  /// @param lateral_autosar Desired lateral value in AUTOSAR coordinates
   /// @param vertical_autosar Desired vertical value in autosar coordinates
   /// @param yaw_autosar Desired yaw value in autosar coordinates
   /// @param longitudinal_cog Desired longitudinal cog
