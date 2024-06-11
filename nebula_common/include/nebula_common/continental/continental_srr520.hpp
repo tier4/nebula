@@ -84,7 +84,7 @@ constexpr int NEAR_CRC_ID = 0;
 constexpr int HRR_CRC_ID = 1;
 constexpr int OBJECT_CRC_ID = 2;
 constexpr int TIME_DOMAIN_ID =
-  0;  // For details, please refer to autosar's "Time Synchronization over CAN" document
+  0;  // For details, please refer to AUTOSAR's "Time Synchronization over CAN" document
 
 constexpr int RDI_NEAR_HEADER_PACKET_SIZE = 32;
 constexpr int RDI_NEAR_ELEMENT_PACKET_SIZE = 64;
