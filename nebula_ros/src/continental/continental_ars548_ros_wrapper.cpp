@@ -76,146 +76,28 @@ nebula::Status ContinentalARS548RosWrapper::DeclareAndGetSensorConfigParams()
 {
   nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration config;
 
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_model");
-    config.sensor_model =
-      nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("host_ip", descriptor);
-    config.host_ip = this->get_parameter("host_ip").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_ip", descriptor);
-    config.sensor_ip = this->get_parameter("sensor_ip").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("multicast_ip", descriptor);
-    config.multicast_ip = this->get_parameter("multicast_ip").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("frame_id", descriptor);
-    config.frame_id = this->get_parameter("frame_id").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("base_frame", descriptor);
-    config.base_frame = this->get_parameter("base_frame").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("object_frame", descriptor);
-    config.object_frame = this->get_parameter("object_frame").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("data_port", descriptor);
-    config.data_port = this->get_parameter("data_port").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("configuration_host_port", descriptor);
-    config.configuration_host_port = this->get_parameter("configuration_host_port").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("configuration_sensor_port", descriptor);
-    config.configuration_sensor_port = this->get_parameter("configuration_sensor_port").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<bool>("use_sensor_time", descriptor);
-    config.use_sensor_time = this->get_parameter("use_sensor_time").as_bool();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("configuration_vehicle_length", descriptor);
-    config.configuration_vehicle_length =
-      static_cast<float>(this->get_parameter("configuration_vehicle_length").as_double());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("configuration_vehicle_width", descriptor);
-    config.configuration_vehicle_width =
-      static_cast<float>(this->get_parameter("configuration_vehicle_width").as_double());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("configuration_vehicle_height", descriptor);
-    config.configuration_vehicle_height =
-      static_cast<float>(this->get_parameter("configuration_vehicle_height").as_double());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("configuration_vehicle_wheelbase", descriptor);
-    config.configuration_vehicle_wheelbase =
-      static_cast<float>(this->get_parameter("configuration_vehicle_wheelbase").as_double());
-  }
+  config.sensor_model = nebula::drivers::SensorModelFromString(
+    declare_parameter<std::string>("sensor_model", param_read_only()));
+  config.host_ip = declare_parameter<std::string>("host_ip", param_read_only());
+  config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());
+  config.multicast_ip = declare_parameter<std::string>("multicast_ip", param_read_only());
+  config.frame_id = declare_parameter<std::string>("frame_id", param_read_write());
+  config.base_frame = declare_parameter<std::string>("base_frame", param_read_write());
+  config.object_frame = declare_parameter<std::string>("object_frame", param_read_write());
+  config.data_port = static_cast<uint16_t>(declare_parameter<int>("data_port", param_read_only()));
+  config.configuration_host_port =
+    static_cast<uint16_t>(declare_parameter<int>("configuration_host_port", param_read_only()));
+  config.configuration_sensor_port =
+    static_cast<uint16_t>(declare_parameter<int>("configuration_sensor_port", param_read_only()));
+  config.use_sensor_time = declare_parameter<bool>("use_sensor_time", param_read_write());
+  config.configuration_vehicle_length = static_cast<float>(
+    declare_parameter<double>("configuration_vehicle_length", param_read_write()));
+  config.configuration_vehicle_width = static_cast<float>(
+    declare_parameter<double>("configuration_vehicle_width", param_read_write()));
+  config.configuration_vehicle_height = static_cast<float>(
+    declare_parameter<double>("configuration_vehicle_height", param_read_write()));
+  config.configuration_vehicle_wheelbase = static_cast<float>(
+    declare_parameter<double>("configuration_vehicle_wheelbase", param_read_write()));
 
   if (config.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;

@@ -77,89 +77,19 @@ nebula::Status ContinentalSRR520RosWrapper::DeclareAndGetSensorConfigParams()
 {
   nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration config;
 
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_model", descriptor);
-    config.sensor_model =
-      nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("interface", descriptor);
-    config.interface = this->get_parameter("interface").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("receiver_timeout_sec", descriptor);
-    config.receiver_timeout_sec = this->get_parameter("receiver_timeout_sec").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("sender_timeout_sec", descriptor);
-    config.sender_timeout_sec = this->get_parameter("sender_timeout_sec").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("filters", descriptor);
-    config.filters = this->get_parameter("filters").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("frame_id", descriptor);
-    config.frame_id = this->get_parameter("frame_id").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("base_frame", descriptor);
-    config.base_frame = this->get_parameter("base_frame").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<bool>("use_bus_time", descriptor);
-    config.use_bus_time = this->get_parameter("use_bus_time").as_bool();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("configuration_vehicle_wheelbase", descriptor);
-    config.configuration_vehicle_wheelbase =
-      static_cast<float>(this->get_parameter("configuration_vehicle_wheelbase").as_double());
-  }
+  config.sensor_model = nebula::drivers::SensorModelFromString(
+    declare_parameter<std::string>("sensor_model", param_read_only()));
+  config.interface = declare_parameter<std::string>("interface", param_read_only());
+  config.receiver_timeout_sec =
+    static_cast<float>(declare_parameter<double>("receiver_timeout_sec", param_read_only()));
+  config.sender_timeout_sec =
+    static_cast<float>(declare_parameter<double>("sender_timeout_sec", param_read_only()));
+  config.filters = declare_parameter<std::string>("filters", param_read_only());
+  config.frame_id = declare_parameter<std::string>("frame_id", param_read_write());
+  config.base_frame = declare_parameter<std::string>("base_frame", param_read_write());
+  config.use_bus_time = declare_parameter<bool>("use_bus_time", param_read_only());
+  config.configuration_vehicle_wheelbase = static_cast<float>(
+    declare_parameter<double>("configuration_vehicle_wheelbase", param_read_only()));
 
   if (config.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
