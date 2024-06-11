@@ -34,6 +34,12 @@
       "readOnly": true,
       "description": "Tracked objects frame."
     },
+    "use_bus_time": {
+      "type": "boolean",
+      "default": false,
+      "readOnly": true,
+      "description": "Use bus time for published sensor data."
+    },
     "use_sensor_time": {
       "type": "boolean",
       "default": false,
