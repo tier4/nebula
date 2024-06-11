@@ -3,7 +3,7 @@
   "title": "Radar Continental SRR520 parameters.",
   "type": "object",
   "definitions": {
-    "ARS548": {
+    "SRR520": {
       "type": "object",
       "properties": {
         "interface": {
