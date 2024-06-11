@@ -53,14 +53,14 @@ public:
   /// @return Resulting flag
   bool ProcessPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg) override;
 
-  /// @brief Register function to call whenever a new rdi near detection list is processed
+  /// @brief Register function to call whenever a new RDI near detection list is processed
   /// @param detection_list_callback
   /// @return Resulting status
   Status RegisterNearDetectionListCallback(
     std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList>)>
       detection_list_callback);
 
-  /// @brief Register function to call whenever a new rdi hrr detection list is processed
+  /// @brief Register function to call whenever a new RDI HRR detection list is processed
   /// @param detection_list_callback
   /// @return Resulting status
   Status RegisterHRRDetectionListCallback(
