@@ -56,7 +56,7 @@ public:
   /// @brief Registering callback
   /// @param callback Callback function
   /// @return Resulting status
-  Status RegisterCallback(
+  Status RegisterPacketCallback(
     std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket>)> packet_callback);
 
   /// @brief Set the sensor mounting parameters

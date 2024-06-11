@@ -54,7 +54,7 @@ ContinentalARS548RosWrapper::ContinentalARS548RosWrapper(const rclcpp::NodeOptio
   });
 
   if (launch_hw_) {
-    hw_interface_wrapper_->HwInterface()->RegisterCallback(
+    hw_interface_wrapper_->HwInterface()->RegisterPacketCallback(
       std::bind(&ContinentalARS548RosWrapper::ReceivePacketCallback, this, std::placeholders::_1));
     StreamStart();
   } else {

@@ -66,7 +66,7 @@ Status ContinentalARS548HwInterface::SensorInterfaceStart()
   return Status::OK;
 }
 
-Status ContinentalARS548HwInterface::RegisterCallback(
+Status ContinentalARS548HwInterface::RegisterPacketCallback(
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket>)> packet_callback)
 {
   packet_callback_ = std::move(packet_callback);

@@ -58,8 +58,8 @@ public:
       const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
       new_config_ptr);
 
-  /// @brief Registering callback for PandarScan
-  /// @param scan_callback Callback function
+  /// @brief Registering callback
+  /// @param callback Callback function
   /// @return Resulting status
   Status RegisterPacketCallback(
     std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket>)> packet_callback);
