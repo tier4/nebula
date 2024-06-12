@@ -80,10 +80,10 @@ public:
   void ReadBag();
 
 private:
-  std::string bag_path{};
-  std::string storage_id{};
-  std::string format{};
-  std::string target_topic{};
+  std::string bag_path_{};
+  std::string storage_id_{};
+  std::string format_{};
+  std::string target_topic_{};
   std::size_t near_detection_list_count_{};
   std::size_t hrr_detection_list_count_{};
   std::size_t object_list_count_{};
