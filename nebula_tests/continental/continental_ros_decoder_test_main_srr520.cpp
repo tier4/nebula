@@ -13,10 +13,8 @@
 // limitations under the License.
 
 #include "continental_ros_decoder_test_srr520.hpp"
-
-#include <rclcpp/rclcpp.hpp>
-
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
+#include "rclcpp/rclcpp.hpp"
 
 #include <memory>
 
