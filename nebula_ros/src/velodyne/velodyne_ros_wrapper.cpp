@@ -82,11 +82,11 @@ nebula::Status VelodyneRosWrapper::DeclareAndGetSensorConfigParams()
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.])";
     descriptor.floating_point_range = float_range(0, 360, 0.01);
-    config.scan_phase = declare_parameter<double>("scan_phase", descriptor);
+    config.scan_phase = declare_fp_parameter(this, "scan_phase", descriptor);
   }
 
-  config.min_range = declare_parameter<double>("min_range", param_read_write());
-  config.max_range = declare_parameter<double>("max_range", param_read_write());
+  config.min_range = declare_fp_parameter(this, "min_range", param_read_write());
+  config.max_range = declare_fp_parameter(this, "max_range", param_read_write());
   config.packet_mtu_size = declare_parameter<uint16_t>("packet_mtu_size", param_read_only());
 
   {

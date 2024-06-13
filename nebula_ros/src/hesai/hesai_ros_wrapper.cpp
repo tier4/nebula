@@ -82,11 +82,11 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.])";
     descriptor.floating_point_range = float_range(0, 360, 0.01);
-    config.scan_phase = declare_parameter<double>("scan_phase", descriptor);
+    config.scan_phase = declare_fp_parameter(this, "scan_phase", descriptor);
   }
 
-  config.min_range = declare_parameter<double>("min_range", param_read_write());
-  config.max_range = declare_parameter<double>("max_range", param_read_write());
+  config.min_range = declare_fp_parameter(this, "min_range", param_read_write());
+  config.max_range = declare_fp_parameter(this, "max_range", param_read_write());
   config.packet_mtu_size = declare_parameter<uint16_t>("packet_mtu_size", param_read_only());
 
   {
@@ -117,7 +117,7 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
     descriptor.additional_constraints = "Dual return distance threshold [0.01, 0.5]";
     descriptor.floating_point_range = float_range(0.01, 0.5, 0.01);
     config.dual_return_distance_threshold =
-      declare_parameter<double>("dual_return_distance_threshold", descriptor);
+      declare_fp_parameter(this, "dual_return_distance_threshold", descriptor);
   }
 
   auto _ptp_profile = declare_parameter<std::string>("ptp_profile", param_read_only());

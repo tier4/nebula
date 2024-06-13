@@ -183,7 +183,7 @@ nebula::Status ContinentalARS548RosWrapper::DeclareAndGetSensorConfigParams()
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("configuration_vehicle_length", descriptor);
+    declare_fp_parameter(this, "configuration_vehicle_length", descriptor);
     config.configuration_vehicle_length =
       static_cast<float>(this->get_parameter("configuration_vehicle_length").as_double());
   }
@@ -193,7 +193,7 @@ nebula::Status ContinentalARS548RosWrapper::DeclareAndGetSensorConfigParams()
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("configuration_vehicle_width", descriptor);
+    declare_fp_parameter(this, "configuration_vehicle_width", descriptor);
     config.configuration_vehicle_width =
       static_cast<float>(this->get_parameter("configuration_vehicle_width").as_double());
   }
@@ -203,7 +203,7 @@ nebula::Status ContinentalARS548RosWrapper::DeclareAndGetSensorConfigParams()
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("configuration_vehicle_height", descriptor);
+    declare_fp_parameter(this, "configuration_vehicle_height", descriptor);
     config.configuration_vehicle_height =
       static_cast<float>(this->get_parameter("configuration_vehicle_height").as_double());
   }
@@ -213,7 +213,7 @@ nebula::Status ContinentalARS548RosWrapper::DeclareAndGetSensorConfigParams()
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("configuration_vehicle_wheelbase", descriptor);
+    declare_fp_parameter(this, "configuration_vehicle_wheelbase", descriptor);
     config.configuration_vehicle_wheelbase =
       static_cast<float>(this->get_parameter("configuration_vehicle_wheelbase").as_double());
   }

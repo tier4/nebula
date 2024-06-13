@@ -21,6 +21,10 @@ rcl_interfaces::msg::ParameterDescriptor::_floating_point_range_type float_range
 rcl_interfaces::msg::ParameterDescriptor::_integer_range_type int_range(
   int start, int stop, int step);
 
+double declare_fp_parameter(
+  rclcpp::Node * node, const std::string & name,
+  rcl_interfaces::msg::ParameterDescriptor descriptor = rcl_interfaces::msg::ParameterDescriptor());
+
 /// @brief Get a parameter's value from a list of parameters, if that parameter is in the list.
 /// @tparam T The parameter's expected value type
 /// @param p A vector of parameters
