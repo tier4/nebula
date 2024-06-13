@@ -15,6 +15,7 @@
 #include "continental_ros_decoder_test_ars548.hpp"
 
 #include "gtest/gtest.h"
+#include "parameter_descriptors.hpp"
 #include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rcpputils/filesystem_helper.hpp"
@@ -87,82 +88,22 @@ Status ContinentalRosDecoderTest::GetParameters(
   std::filesystem::path bag_root_dir =
     _SRC_RESOURCES_DIR_PATH;  // variable defined in CMakeLists.txt;
   bag_root_dir /= "continental";
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_model", "ARS548");
-    sensor_configuration.sensor_model =
-      nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("base_frame", "some_base_frame", descriptor);
-    sensor_configuration.base_frame = this->get_parameter("base_frame").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("object_frame", "some_object_frame", descriptor);
-    sensor_configuration.object_frame = this->get_parameter("object_frame").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("frame_id", "some_sensor_frame", descriptor);
-    sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>(
-      "bag_path", (bag_root_dir / "ars548" / "1708578204").string(), descriptor);
-    bag_path_ = this->get_parameter("bag_path").as_string();
-    std::cout << bag_path_ << std::endl;
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("storage_id", "sqlite3", descriptor);
-    storage_id_ = this->get_parameter("storage_id").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("format", "cdr", descriptor);
-    format_ = this->get_parameter("format").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>(
-      "target_topic", "/sensing/radar/front_center/nebula_packets", descriptor);
-    target_topic_ = this->get_parameter("target_topic").as_string();
-  }
+
+  sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(
+    declare_parameter<std::string>("sensor_model", "ARS548", param_read_only()));
+  sensor_configuration.frame_id =
+    declare_parameter<std::string>("frame_id", "some_sensor_frame", param_read_only());
+  sensor_configuration.base_frame =
+    declare_parameter<std::string>("base_frame", "some_base_frame", param_read_only());
+  sensor_configuration.object_frame =
+    declare_parameter<std::string>("object_frame", "some_object_frame", param_read_only());
+
+  bag_path_ = declare_parameter<std::string>(
+    "bag_path", (bag_root_dir / "ars548" / "1708578204").string(), param_read_only());
+  storage_id_ = declare_parameter<std::string>("storage_id", "sqlite3", param_read_only());
+  format_ = declare_parameter<std::string>("format", "cdr", param_read_only());
+  target_topic_ = declare_parameter<std::string>(
+    "target_topic", "/sensing/radar/front_center/nebula_packets", param_read_only());
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;

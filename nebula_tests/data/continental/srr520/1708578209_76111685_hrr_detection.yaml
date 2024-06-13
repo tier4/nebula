@@ -2,7 +2,7 @@ header:
   stamp:
     sec: 1708578209
     nanosec: 76111685
-  frame_id: some_base_frame
+  frame_id: some_sensor_frame
 internal_time_stamp_usec: 468586189
 global_time_stamp_sync_status: 1
 signal_status: 1
