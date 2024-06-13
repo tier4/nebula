@@ -14,6 +14,7 @@
 
 #include "continental_ros_decoder_test_ars548.hpp"
 
+#include "gtest/gtest.h"
 #include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rcpputils/filesystem_helper.hpp"
@@ -23,8 +24,6 @@
 #include "rosbag2_cpp/writer.hpp"
 #include "rosbag2_cpp/writers/sequential_writer.hpp"
 #include "rosbag2_storage/storage_options.hpp"
-
-#include <gtest/gtest.h>
 
 #include <filesystem>
 #include <memory>
@@ -133,8 +132,8 @@ Status ContinentalRosDecoderTest::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>(
       "bag_path", (bag_root_dir / "ars548" / "1708578204").string(), descriptor);
-    bag_path = this->get_parameter("bag_path").as_string();
-    std::cout << bag_path << std::endl;
+    bag_path_ = this->get_parameter("bag_path").as_string();
+    std::cout << bag_path_ << std::endl;
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -143,7 +142,7 @@ Status ContinentalRosDecoderTest::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("storage_id", "sqlite3", descriptor);
-    storage_id = this->get_parameter("storage_id").as_string();
+    storage_id_ = this->get_parameter("storage_id").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -152,7 +151,7 @@ Status ContinentalRosDecoderTest::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("format", "cdr", descriptor);
-    format = this->get_parameter("format").as_string();
+    format_ = this->get_parameter("format").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -162,7 +161,7 @@ Status ContinentalRosDecoderTest::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>(
       "target_topic", "/sensing/radar/front_center/nebula_packets", descriptor);
-    target_topic = this->get_parameter("target_topic").as_string();
+    target_topic_ = this->get_parameter("target_topic").as_string();
   }
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
@@ -217,7 +216,7 @@ void ContinentalRosDecoderTest::DetectionListCallback(
   std::stringstream detection_path;
   detection_path << msg->header.stamp.sec << "_" << msg->header.stamp.nanosec << "_detection.yaml";
 
-  auto gt_path = rcpputils::fs::path(bag_path).parent_path() / detection_path.str();
+  auto gt_path = rcpputils::fs::path(bag_path_).parent_path() / detection_path.str();
   ASSERT_TRUE(gt_path.exists());
 
   CheckResult(msg_as_string, gt_path.string());
@@ -232,7 +231,7 @@ void ContinentalRosDecoderTest::ObjectListCallback(
   std::stringstream detection_path;
   detection_path << msg->header.stamp.sec << "_" << msg->header.stamp.nanosec << "_object.yaml";
 
-  auto gt_path = rcpputils::fs::path(bag_path).parent_path() / detection_path.str();
+  auto gt_path = rcpputils::fs::path(bag_path_).parent_path() / detection_path.str();
   ASSERT_TRUE(gt_path.exists());
 
   CheckResult(msg_as_string, gt_path.string());
@@ -243,22 +242,22 @@ void ContinentalRosDecoderTest::ReadBag()
   rosbag2_storage::StorageOptions storage_options;
   rosbag2_cpp::ConverterOptions converter_options;
 
-  std::cout << bag_path << std::endl;
-  std::cout << storage_id << std::endl;
-  std::cout << format << std::endl;
-  std::cout << target_topic << std::endl;
+  std::cout << bag_path_ << std::endl;
+  std::cout << storage_id_ << std::endl;
+  std::cout << format_ << std::endl;
+  std::cout << target_topic_ << std::endl;
 
-  auto target_topic_name = target_topic;
+  auto target_topic_name = target_topic_;
   if (target_topic_name.substr(0, 1) == "/") {
     target_topic_name = target_topic_name.substr(1);
   }
   target_topic_name = std::regex_replace(target_topic_name, std::regex("/"), "_");
 
-  rcpputils::fs::path bag_dir(bag_path);
+  rcpputils::fs::path bag_dir(bag_path_);
 
-  storage_options.uri = bag_path;
-  storage_options.storage_id = storage_id;
-  converter_options.output_serialization_format = format;  // "cdr";
+  storage_options.uri = bag_path_;
+  storage_options.storage_id = storage_id_;
+  converter_options.output_serialization_format = format_;  // "cdr";
   rclcpp::Serialization<nebula_msgs::msg::NebulaPackets> serialization;
 
   {
@@ -269,7 +268,7 @@ void ContinentalRosDecoderTest::ReadBag()
 
       std::cout << "Found topic name " << bag_message->topic_name << std::endl;
 
-      if (bag_message->topic_name == target_topic) {
+      if (bag_message->topic_name == target_topic_) {
         nebula_msgs::msg::NebulaPackets extracted_msg;
         rclcpp::SerializedMessage extracted_serialized_msg(*bag_message->serialized_data);
         serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);

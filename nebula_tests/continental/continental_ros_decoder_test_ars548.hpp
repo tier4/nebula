@@ -73,10 +73,10 @@ public:
   void ReadBag();
 
 private:
-  std::string bag_path;
-  std::string storage_id;
-  std::string format;
-  std::string target_topic;
+  std::string bag_path_{};
+  std::string storage_id_{};
+  std::string format_{};
+  std::string target_topic_{};
 };
 
 }  // namespace ros
