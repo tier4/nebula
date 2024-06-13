@@ -19,6 +19,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
         "msg/ContinentalArs548DetectionList.msg"
         "msg/ContinentalArs548Object.msg"
         "msg/ContinentalArs548ObjectList.msg"
+        "msg/ContinentalSrr520Detection.msg"
+        "msg/ContinentalSrr520DetectionList.msg"
+        "msg/ContinentalSrr520Object.msg"
+        "msg/ContinentalSrr520ObjectList.msg"
         DEPENDENCIES
         std_msgs
         geometry_msgs

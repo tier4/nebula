@@ -329,7 +329,8 @@ enum class SensorModel {
   ROBOSENSE_HELIOS,
   ROBOSENSE_BPEARL_V3,
   ROBOSENSE_BPEARL_V4,
-  CONTINENTAL_ARS548
+  CONTINENTAL_ARS548,
+  CONTINENTAL_SRR520
 };
 
 /// @brief not used?
@@ -426,6 +427,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::CONTINENTAL_ARS548:
       os << "ARS548";
       break;
+    case SensorModel::CONTINENTAL_SRR520:
+      os << "SRR520";
+      break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
       break;
@@ -446,6 +450,17 @@ struct EthernetSensorConfigurationBase : SensorConfigurationBase
   std::string host_ip;
   std::string sensor_ip;
   uint16_t data_port;
+};
+
+/// @brief Base struct for CAN-based Sensor configuration
+struct CANSensorConfigurationBase : SensorConfigurationBase
+{
+  std::string interface;
+  float receiver_timeout_sec{};
+  float sender_timeout_sec{};
+  /// @brief Socketcan filters, see the documentation of SocketCanReceiver::CanFilterList for details
+  std::string filters{};
+  bool use_bus_time{};
 };
 
 /// @brief Base struct for Lidar configuration
@@ -480,6 +495,19 @@ inline std::ostream & operator<<(std::ostream & os, EthernetSensorConfigurationB
 {
   os << (SensorConfigurationBase)(arg) << ", HostIP: " << arg.host_ip
      << ", SensorIP: " << arg.sensor_ip << ", DataPort: " << arg.data_port;
+  return os;
+}
+
+/// @brief Convert CANSensorConfigurationBase to string (Overloading the << operator)
+/// @param os
+/// @param arg
+/// @return stream
+inline std::ostream & operator<<(std::ostream & os, CANSensorConfigurationBase const & arg)
+{
+  os << (SensorConfigurationBase)(arg)
+     << ", Interface: " << arg.interface << ", ReceiverTimeoutSec: " << arg.receiver_timeout_sec
+     << ", SenderTimeoutSec: " << arg.sender_timeout_sec << ", Filters: " << arg.filters
+     << ", UseBusTime: " << arg.use_bus_time;
   return os;
 }
 
@@ -529,7 +557,9 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "Bpearl" || sensor_model == "Bpearl_V4")
     return SensorModel::ROBOSENSE_BPEARL_V4;
   if (sensor_model == "Bpearl_V3") return SensorModel::ROBOSENSE_BPEARL_V3;
+  // Continental
   if (sensor_model == "ARS548") return SensorModel::CONTINENTAL_ARS548;
+  if (sensor_model == "SRR520") return SensorModel::CONTINENTAL_SRR520;
   return SensorModel::UNKNOWN;
 }
 
@@ -575,8 +605,11 @@ inline std::string SensorModelToString(const SensorModel & sensor_model)
       return "Bpearl_V3";
     case SensorModel::ROBOSENSE_BPEARL_V4:
       return "Bpearl_V4";
+    // Continental
     case SensorModel::CONTINENTAL_ARS548:
       return "ARS548";
+    case SensorModel::CONTINENTAL_SRR520:
+      return "SRR520";
     default:
       return "UNKNOWN";
   }

@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_ros/continental/continental_ars548_ros_wrapper.hpp"
+#include "nebula_ros/continental/continental_srr520_ros_wrapper.hpp"
 
 namespace nebula
 {
 namespace ros
 {
-ContinentalARS548RosWrapper::ContinentalARS548RosWrapper(const rclcpp::NodeOptions & options)
+ContinentalSRR520RosWrapper::ContinentalSRR520RosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node(
-    "continental_ars548_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
+    "continental_srr520_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   wrapper_status_(Status::NOT_INITIALIZED),
   packet_queue_(3000),
   hw_interface_wrapper_(),
@@ -41,9 +41,10 @@ ContinentalARS548RosWrapper::ContinentalARS548RosWrapper(const rclcpp::NodeOptio
 
   if (launch_hw_) {
     hw_interface_wrapper_.emplace(this, config_ptr_);
+    decoder_wrapper_.emplace(this, config_ptr_, hw_interface_wrapper_->HwInterface());
+  } else {
+    decoder_wrapper_.emplace(this, config_ptr_, nullptr);
   }
-
-  decoder_wrapper_.emplace(this, config_ptr_, launch_hw_);
 
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
@@ -55,12 +56,12 @@ ContinentalARS548RosWrapper::ContinentalARS548RosWrapper(const rclcpp::NodeOptio
 
   if (launch_hw_) {
     hw_interface_wrapper_->HwInterface()->RegisterPacketCallback(
-      std::bind(&ContinentalARS548RosWrapper::ReceivePacketCallback, this, std::placeholders::_1));
+      std::bind(&ContinentalSRR520RosWrapper::ReceivePacketCallback, this, std::placeholders::_1));
     StreamStart();
   } else {
     packets_sub_ = create_subscription<nebula_msgs::msg::NebulaPackets>(
       "nebula_packets", rclcpp::SensorDataQoS(),
-      std::bind(&ContinentalARS548RosWrapper::ReceivePacketsCallback, this, std::placeholders::_1));
+      std::bind(&ContinentalSRR520RosWrapper::ReceivePacketsCallback, this, std::placeholders::_1));
     RCLCPP_INFO_STREAM(
       get_logger(),
       "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
@@ -69,70 +70,61 @@ ContinentalARS548RosWrapper::ContinentalARS548RosWrapper(const rclcpp::NodeOptio
   // Register parameter callback after all params have been declared. Otherwise it would be called
   // once for each declaration
   parameter_event_cb_ = add_on_set_parameters_callback(
-    std::bind(&ContinentalARS548RosWrapper::OnParameterChange, this, std::placeholders::_1));
+    std::bind(&ContinentalSRR520RosWrapper::OnParameterChange, this, std::placeholders::_1));
 }
 
-nebula::Status ContinentalARS548RosWrapper::DeclareAndGetSensorConfigParams()
+nebula::Status ContinentalSRR520RosWrapper::DeclareAndGetSensorConfigParams()
 {
-  nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration config;
+  nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration config;
 
   config.sensor_model = nebula::drivers::SensorModelFromString(
     declare_parameter<std::string>("sensor_model", param_read_only()));
-  config.host_ip = declare_parameter<std::string>("host_ip", param_read_only());
-  config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());
-  config.multicast_ip = declare_parameter<std::string>("multicast_ip", param_read_only());
+  config.interface = declare_parameter<std::string>("interface", param_read_only());
+  config.receiver_timeout_sec =
+    static_cast<float>(declare_parameter<double>("receiver_timeout_sec", param_read_only()));
+  config.sender_timeout_sec =
+    static_cast<float>(declare_parameter<double>("sender_timeout_sec", param_read_only()));
+  config.filters = declare_parameter<std::string>("filters", param_read_only());
   config.frame_id = declare_parameter<std::string>("frame_id", param_read_write());
   config.base_frame = declare_parameter<std::string>("base_frame", param_read_write());
-  config.object_frame = declare_parameter<std::string>("object_frame", param_read_write());
-  config.data_port = static_cast<uint16_t>(declare_parameter<int>("data_port", param_read_only()));
-  config.configuration_host_port =
-    static_cast<uint16_t>(declare_parameter<int>("configuration_host_port", param_read_only()));
-  config.configuration_sensor_port =
-    static_cast<uint16_t>(declare_parameter<int>("configuration_sensor_port", param_read_only()));
-  config.use_sensor_time = declare_parameter<bool>("use_sensor_time", param_read_write());
-  config.configuration_vehicle_length = static_cast<float>(
-    declare_parameter<double>("configuration_vehicle_length", param_read_write()));
-  config.configuration_vehicle_width = static_cast<float>(
-    declare_parameter<double>("configuration_vehicle_width", param_read_write()));
-  config.configuration_vehicle_height = static_cast<float>(
-    declare_parameter<double>("configuration_vehicle_height", param_read_write()));
+  config.use_bus_time = declare_parameter<bool>("use_bus_time", param_read_only());
   config.configuration_vehicle_wheelbase = static_cast<float>(
-    declare_parameter<double>("configuration_vehicle_wheelbase", param_read_write()));
+    declare_parameter<double>("configuration_vehicle_wheelbase", param_read_only()));
 
   if (config.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
 
   auto new_config_ptr = std::make_shared<
-    const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration>(config);
+    const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration>(config);
   return ValidateAndSetConfig(new_config_ptr);
 }
 
-Status ContinentalARS548RosWrapper::ValidateAndSetConfig(
-  std::shared_ptr<const drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
-    new_config_ptr)
+Status ContinentalSRR520RosWrapper::ValidateAndSetConfig(
+  std::shared_ptr<const drivers::continental_srr520::ContinentalSRR520SensorConfiguration> &
+    new_config)
 {
-  if (new_config_ptr->sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
+  if (new_config->sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
 
-  if (new_config_ptr->frame_id.empty()) {
+  if (new_config->frame_id.empty()) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
   if (hw_interface_wrapper_) {
-    hw_interface_wrapper_->OnConfigChange(new_config_ptr);
+    hw_interface_wrapper_->OnConfigChange(new_config);
   }
   if (decoder_wrapper_) {
-    decoder_wrapper_->OnConfigChange(new_config_ptr);
+    decoder_wrapper_->OnConfigChange(new_config);
   }
 
-  config_ptr_ = new_config_ptr;
+  config_ptr_ = new_config;
   return Status::OK;
 }
 
-void ContinentalARS548RosWrapper::ReceivePacketsCallback(
-  std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg_ptr)
+void ContinentalSRR520RosWrapper::ReceivePacketsCallback(
+  std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg)
 {
   if (hw_interface_wrapper_) {
     RCLCPP_ERROR_THROTTLE(
@@ -142,7 +134,7 @@ void ContinentalARS548RosWrapper::ReceivePacketsCallback(
     return;
   }
 
-  for (auto & packet : packets_msg_ptr->packets) {
+  for (auto & packet : packets_msg->packets) {
     auto nebula_packet_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
     nebula_packet_ptr->stamp = packet.stamp;
     nebula_packet_ptr->data = std::move(packet.data);
@@ -151,7 +143,7 @@ void ContinentalARS548RosWrapper::ReceivePacketsCallback(
   }
 }
 
-void ContinentalARS548RosWrapper::ReceivePacketCallback(
+void ContinentalSRR520RosWrapper::ReceivePacketCallback(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> msg_ptr)
 {
   if (!decoder_wrapper_ || decoder_wrapper_->Status() != Status::OK) {
@@ -163,12 +155,12 @@ void ContinentalARS548RosWrapper::ReceivePacketCallback(
   }
 }
 
-Status ContinentalARS548RosWrapper::GetStatus()
+Status ContinentalSRR520RosWrapper::GetStatus()
 {
   return wrapper_status_;
 }
 
-Status ContinentalARS548RosWrapper::StreamStart()
+Status ContinentalSRR520RosWrapper::StreamStart()
 {
   if (!hw_interface_wrapper_) {
     return Status::UDP_CONNECTION_ERROR;
@@ -183,7 +175,7 @@ Status ContinentalARS548RosWrapper::StreamStart()
   return hw_interface_wrapper_->Status();
 }
 
-rcl_interfaces::msg::SetParametersResult ContinentalARS548RosWrapper::OnParameterChange(
+rcl_interfaces::msg::SetParametersResult ContinentalSRR520RosWrapper::OnParameterChange(
   const std::vector<rclcpp::Parameter> & p)
 {
   using rcl_interfaces::msg::SetParametersResult;
@@ -192,29 +184,22 @@ rcl_interfaces::msg::SetParametersResult ContinentalARS548RosWrapper::OnParamete
     return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
   }
 
-  std::scoped_lock lock(mtx_config_);
-
   RCLCPP_INFO(get_logger(), "OnParameterChange");
 
-  drivers::continental_ars548::ContinentalARS548SensorConfiguration new_config(*config_ptr_);
+  drivers::continental_srr520::ContinentalSRR520SensorConfiguration new_config(*config_ptr_);
 
   bool got_any =
     get_param(p, "frame_id", new_config.frame_id) |
     get_param(p, "base_frame", new_config.base_frame) |
-    get_param(p, "object_frame", new_config.object_frame) |
-    get_param(p, "configuration_vehicle_length", new_config.configuration_vehicle_length) |
-    get_param(p, "configuration_vehicle_width", new_config.configuration_vehicle_width) |
-    get_param(p, "configuration_vehicle_height", new_config.configuration_vehicle_height) |
-    get_param(p, "configuration_vehicle_wheelbase", new_config.configuration_vehicle_wheelbase) |
-    get_param(p, "configuration_host_port", new_config.configuration_host_port) |
-    get_param(p, "configuration_sensor_port", new_config.configuration_sensor_port);
+    get_param(p, "use_bus_time", new_config.use_bus_time) |
+    get_param(p, "configuration_vehicle_wheelbase", new_config.configuration_vehicle_wheelbase);
 
   if (!got_any) {
     return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
   }
 
   auto new_config_ptr = std::make_shared<
-    const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration>(new_config);
+    const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration>(new_config);
   auto status = ValidateAndSetConfig(new_config_ptr);
 
   if (status != Status::OK) {
@@ -228,6 +213,6 @@ rcl_interfaces::msg::SetParametersResult ContinentalARS548RosWrapper::OnParamete
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-RCLCPP_COMPONENTS_REGISTER_NODE(ContinentalARS548RosWrapper)
+RCLCPP_COMPONENTS_REGISTER_NODE(ContinentalSRR520RosWrapper)
 }  // namespace ros
 }  // namespace nebula

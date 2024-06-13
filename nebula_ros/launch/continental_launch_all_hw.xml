@@ -17,5 +17,16 @@
             <remap from="steering_angle_input" to="$(var steering_angle_topic)"/>
         </node>
     </group>
+    
+    <group if="$(eval &quot;'$(var sensor_model)' == 'SRR520' &quot;)" >
+
+        <node pkg="nebula_ros" exec="continental_srr520_ros_wrapper_node" name="nebula_continental_srr520" output="screen">
+	    <param from="$(var config_file)" allow_substs="true"/>
+            <remap from="/diagnostics" to="diagnostics"/>
+            <remap from="odometry_input" to="$(var odometry_topic)"/>
+            <remap from="acceleration_input" to="$(var acceleration_topic)"/>
+            <remap from="steering_angle_input" to="$(var steering_angle_topic)"/>
+        </node>
+    </group>
 
 </launch>

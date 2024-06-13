@@ -16,18 +16,16 @@
 
 #include "nebula_ros/common/mt_queue.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
-#include "nebula_ros/continental/continental_ars548_decoder_wrapper.hpp"
-#include "nebula_ros/continental/continental_ars548_hw_interface_wrapper.hpp"
+#include "nebula_ros/continental/continental_srr520_decoder_wrapper.hpp"
+#include "nebula_ros/continental/continental_srr520_hw_interface_wrapper.hpp"
 
-#include <nebula_common/continental/continental_ars548.hpp>
+#include <nebula_common/continental/continental_srr520.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/nebula_status.hpp>
-#include <nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp>
+#include <nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_srr520_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include <continental_msgs/msg/continental_ars548_detection_list.hpp>
-#include <continental_msgs/msg/continental_ars548_object_list.hpp>
 #include <nebula_msgs/msg/nebula_packet.hpp>
 
 #include <memory>
@@ -41,12 +39,12 @@ namespace nebula
 namespace ros
 {
 
-/// @brief Ros wrapper of continental ars548 driver
-class ContinentalARS548RosWrapper final : public rclcpp::Node
+/// @brief Ros wrapper of continental srr520 driver
+class ContinentalSRR520RosWrapper final : public rclcpp::Node
 {
 public:
-  explicit ContinentalARS548RosWrapper(const rclcpp::NodeOptions & options);
-  ~ContinentalARS548RosWrapper() noexcept {};
+  explicit ContinentalSRR520RosWrapper(const rclcpp::NodeOptions & options);
+  ~ContinentalSRR520RosWrapper() noexcept {};
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -61,7 +59,7 @@ private:
   void ReceivePacketCallback(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg_ptr);
 
   /// @brief Callback from replayed NebulaPackets
-  void ReceivePacketsCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg_ptr);
+  void ReceivePacketsCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packet_packets_msg);
 
   /// @brief Retrieve the parameters from ROS and set the driver and hw interface
   /// @return Resulting status
@@ -74,12 +72,12 @@ private:
     const std::vector<rclcpp::Parameter> & p);
 
   Status ValidateAndSetConfig(
-    std::shared_ptr<const drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
+    std::shared_ptr<const drivers::continental_srr520::ContinentalSRR520SensorConfiguration> &
       new_config);
 
   Status wrapper_status_;
 
-  std::shared_ptr<const drivers::continental_ars548::ContinentalARS548SensorConfiguration>
+  std::shared_ptr<const drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
     config_ptr_{};
 
   /// @brief Stores received packets that have not been processed yet by the decoder thread
@@ -91,12 +89,12 @@ private:
 
   bool launch_hw_{};
 
-  std::optional<ContinentalARS548HwInterfaceWrapper> hw_interface_wrapper_{};
-  std::optional<ContinentalARS548DecoderWrapper> decoder_wrapper_{};
+  std::optional<ContinentalSRR520HwInterfaceWrapper> hw_interface_wrapper_{};
+  std::optional<ContinentalSRR520DecoderWrapper> decoder_wrapper_{};
 
   std::mutex mtx_config_;
 
-  OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_{};
+  OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_;
 };
 
 }  // namespace ros

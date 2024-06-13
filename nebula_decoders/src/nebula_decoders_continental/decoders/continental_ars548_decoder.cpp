@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp"
+
 #include <nebula_common/continental/continental_ars548.hpp>
-#include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
 
 #include <cmath>
 #include <utility>

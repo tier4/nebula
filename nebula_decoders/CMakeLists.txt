@@ -98,6 +98,7 @@ target_include_directories(nebula_decoders_robosense_info PUBLIC
 # Continental
 add_library(nebula_decoders_continental SHARED
     src/nebula_decoders_continental/decoders/continental_ars548_decoder.cpp
+    src/nebula_decoders_continental/decoders/continental_srr520_decoder.cpp
 )
 target_link_libraries(nebula_decoders_continental PUBLIC
     ${continental_msgs_TARGETS}

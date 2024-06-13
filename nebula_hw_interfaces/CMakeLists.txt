@@ -17,6 +17,7 @@ find_package(nebula_common)
 find_package(nebula_msgs)
 find_package(pandar_msgs)
 find_package(robosense_msgs)
+find_package(ros2_socketcan)
 find_package(velodyne_msgs)
 
 # Common includes for all targets
@@ -77,15 +78,17 @@ target_include_directories(nebula_hw_interfaces_robosense PUBLIC
 
 add_library(nebula_hw_interfaces_continental SHARED
     src/nebula_continental_hw_interfaces/continental_ars548_hw_interface.cpp
+    src/nebula_continental_hw_interfaces/continental_srr520_hw_interface.cpp
 )
 target_link_libraries(nebula_hw_interfaces_continental PUBLIC
     ${boost_udp_driver_LIBRARIES}
     ${nebula_msgs_TARGETS}
-
+    ${ros2_socketcan_LIBRARIES}
 )
 target_include_directories(nebula_hw_interfaces_continental PUBLIC
     ${boost_udp_driver_INCLUDE_DIRS}
     ${nebula_msgs_INCLUDE_DIRS}
+    ${ros2_socketcan_INCLUDE_DIRS}
 )
 
 install(TARGETS nebula_hw_interfaces_hesai EXPORT export_nebula_hw_interfaces_hesai)
@@ -112,6 +115,7 @@ ament_export_dependencies(
     nebula_msgs
     pandar_msgs
     robosense_msgs
+    ros2_socketcan
     velodyne_msgs
 )
 

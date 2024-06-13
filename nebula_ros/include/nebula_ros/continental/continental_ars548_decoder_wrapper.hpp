@@ -14,12 +14,13 @@
 
 #pragma once
 
+#include "nebula_ros/common/parameter_descriptors.hpp"
+#include "nebula_ros/common/watchdog_timer.hpp"
+
 #include <nebula_common/continental/continental_ars548.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/util/expected.hpp>
 #include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
-#include <nebula_ros/common/parameter_descriptors.hpp>
-#include <nebula_ros/common/watchdog_timer.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <continental_msgs/msg/continental_ars548_detection.hpp>
@@ -148,7 +149,7 @@ private:
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr objects_markers_pub_{};
   rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_{};
 
-  std::unordered_set<int> previous_ids_;
+  std::unordered_set<int> previous_ids_{};
 
   constexpr static int REFERENCE_POINTS_NUM = 9;
   constexpr static std::array<std::array<double, 2>, REFERENCE_POINTS_NUM> reference_to_center_ = {
@@ -162,7 +163,7 @@ private:
      {{0.0, -1.0}},
      {{0.0, 0.0}}}};
 
-  std::shared_ptr<WatchdogTimer> cloud_watchdog_;
+  std::shared_ptr<WatchdogTimer> watchdog_;
 };
 }  // namespace ros
 }  // namespace nebula

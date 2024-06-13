@@ -15,9 +15,10 @@
 #ifndef NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
 #define NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
 
+#include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
+
 #include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_common/continental/continental_ars548.hpp>
-#include <nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
@@ -56,7 +57,7 @@ public:
   /// @brief Registering callback
   /// @param callback Callback function
   /// @return Resulting status
-  Status RegisterCallback(
+  Status RegisterPacketCallback(
     std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket>)> packet_callback);
 
   /// @brief Set the sensor mounting parameters
@@ -132,10 +133,6 @@ public:
   /// @param yaw_rate Current yaw rate
   /// @return Resulting status
   Status SetYawRate(float yaw_rate);
-
-  /// @brief Checking the current settings and changing the difference point
-  /// @return Resulting status
-  Status CheckAndSetConfig();
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger
