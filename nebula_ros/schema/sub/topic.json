@@ -38,7 +38,7 @@
       "type": "boolean",
       "default": false,
       "readOnly": true,
-      "description": "Use bus time for published sensor data."
+      "description": "Use CAN bus time for published sensor data."
     },
     "use_sensor_time": {
       "type": "boolean",
