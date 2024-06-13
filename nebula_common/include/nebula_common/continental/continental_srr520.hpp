@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <nebula_common/nebula_common.hpp>
-#include <nebula_common/nebula_status.hpp>
+#include "nebula_common/nebula_common.hpp"
+#include "nebula_common/nebula_status.hpp"
 
 #include <boost/endian/buffers.hpp>
 
