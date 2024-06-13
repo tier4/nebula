@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <nebula_ros/continental/continental_srr520_hw_interface_wrapper.hpp>
+#include "nebula_ros/continental/continental_srr520_hw_interface_wrapper.hpp"
 
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>

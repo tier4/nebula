@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <nebula_ros/continental/continental_ars548_decoder_wrapper.hpp>
+#include "nebula_ros/continental/continental_ars548_decoder_wrapper.hpp"
 
 #include <pcl_conversions/pcl_conversions.h>
 

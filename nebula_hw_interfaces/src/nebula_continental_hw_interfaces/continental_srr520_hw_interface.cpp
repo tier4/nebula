@@ -13,12 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_srr520_hw_interface.hpp"
+
 #include <nebula_common/continental/continental_srr520.hpp>
 #include <nebula_common/continental/crc.hpp>
-#include <nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_srr520_hw_interface.hpp>
 
 #include <limits>
 #include <sstream>
+
 namespace nebula
 {
 namespace drivers
