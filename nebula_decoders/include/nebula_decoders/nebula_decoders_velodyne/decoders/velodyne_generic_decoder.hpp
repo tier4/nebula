@@ -158,7 +158,6 @@ public:
 
   void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
   {
-    // const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
     velodyne_packet::raw_packet_t raw_instance;
     velodyne_packet::raw_packet_t * raw = &raw_instance;
     std::memcpy(raw, &velodyne_packet.data[0], sizeof(velodyne_packet::raw_packet_t));
@@ -246,13 +245,13 @@ public:
           union velodyne_packet::two_bytes other_return;
 
           // Distance extraction.
-          current_return.bytes[0] = current_block.data[k];
-          current_return.bytes[1] = current_block.data[k + 1];
+          current_return.bytes[0] = current_block.units[k];
+          current_return.bytes[1] = current_block.units[k + 1];
           if (dual_return) {
             other_return.bytes[0] =
-              block % 2 ? raw->blocks[block - 1].data[k] : raw->blocks[block + 1].data[k];
+              block % 2 ? raw->blocks[block - 1].units[k] : raw->blocks[block + 1].units[k];
             other_return.bytes[1] =
-              block % 2 ? raw->blocks[block - 1].data[k + 1] : raw->blocks[block + 1].data[k + 1];
+              block % 2 ? raw->blocks[block - 1].units[k + 1] : raw->blocks[block + 1].units[k + 1];
           }
 
           // Apply timestamp if this is the first new packet in the scan.
@@ -314,7 +313,7 @@ public:
           const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
           const float z_coord = distance * sin_vert_angle;                // velodyne z
 
-          const uint8_t intensity = current_block.data[k + 2];
+          const uint8_t intensity = current_block.units[k + 2];
 
           last_block_timestamp_ = block_timestamp;
 
@@ -330,8 +329,8 @@ public:
                   other_return.bytes[1] == current_return.bytes[1])) {
                 return_type = static_cast<uint8_t>(drivers::ReturnType::IDENTICAL);
               } else {
-                const float other_intensity = block % 2 ? raw->blocks[block - 1].data[k + 2]
-                                                          : raw->blocks[block + 1].data[k + 2];
+                const float other_intensity = block % 2 ? raw->blocks[block - 1].units[k + 2]
+                                                          : raw->blocks[block + 1].units[k + 2];
 
                 bool first =
                   other_return.uint >=
