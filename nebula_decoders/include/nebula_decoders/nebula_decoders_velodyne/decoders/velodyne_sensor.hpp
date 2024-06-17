@@ -18,6 +18,9 @@ public:
   /// calculate and stack the firing timing for each laser timeing used in getAzimuthCorrected to calculate the corrected azimuth
   virtual bool fillAzimuthCache() { return false; }
 
+  /// @brief VSL128User manual p. Packet structure
+  virtual uint getBank(uint bank, uint header) { return bank; }
+
   /// @brief each VLP calculating sample code and formula in user manual. If you know details, see commens in each <vlp_list>.hpp file.
   /// calculate the corrected azimuth from each firing timing.
   virtual uint16_t getAzimuthCorrected(
