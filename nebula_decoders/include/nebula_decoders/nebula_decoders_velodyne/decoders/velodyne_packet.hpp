@@ -14,7 +14,6 @@ namespace velodyne_packet
 /**
  * Raw Velodyne packet constants and structures.
  */
-static const int SIZE_BLOCK = 100;
 static const int RAW_SCAN_SIZE = 3;  // TODO: remove
 static const int RAW_CHANNEL_SIZE = 3;
 static const int SCANS_PER_BLOCK = 32;  // TODO: remove
@@ -22,7 +21,7 @@ static const int CHANNELS_PER_BLOCK = 32;
 static const int BLOCK_DATA_SIZE = (SCANS_PER_BLOCK * RAW_SCAN_SIZE);
 
 static const double ROTATION_RESOLUTION = 0.01;     // [deg]
-static const uint16_t ROTATION_MAX_UNITS = 36000u;  // [deg/100]
+static const uint16_t ROTATION_MAX_UNITS = 360 * 100u;  // [deg/100]
 
 static const size_t RETURN_MODE_INDEX = 1204;
 
@@ -35,7 +34,6 @@ static const uint16_t RETURN_MODE_STRONGEST = 55;
 static const uint16_t RETURN_MODE_LAST = 56;
 static const uint16_t RETURN_MODE_DUAL = 57;
 
-const int PACKET_SIZE = 1206;
 const int BLOCKS_PER_PACKET = 12;
 const int PACKET_STATUS_SIZE = 4;
 const int SCANS_PER_PACKET = (SCANS_PER_BLOCK * BLOCKS_PER_PACKET);
@@ -49,12 +47,12 @@ const int POINTS_PER_PACKET = (SCANS_PER_PACKET * RAW_SCAN_SIZE);
  *
  *  use stdint.h types, so things work with both 64 and 32-bit machines
  */
-typedef struct raw_block
+struct raw_block_t
 {
   uint16_t header;    ///< UPPER_BANK or LOWER_BANK
   uint16_t rotation;  ///< 0-35999, divide by 100 to get degrees
-  uint8_t data[BLOCK_DATA_SIZE];
-} raw_block_t;
+  uint8_t units[BLOCK_DATA_SIZE];
+};
 
 /** \brief Raw Velodyne packet.
  *
