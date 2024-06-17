@@ -47,6 +47,30 @@ public:
     return azimuth_corrected;
   }
 
+  uint getBank(uint bank, uint header) {
+    // Used to detect which bank of 32 lasers is in this block.
+    switch (header) {
+      case BANK_1:
+        bank = 0;
+        break;
+      case BANK_2:
+        bank = 32;
+        break;
+      case BANK_3:
+        bank = 64;
+        break;
+      case BANK_4:
+        bank = 96;
+        break;
+      default:
+        RCLCPP_ERROR(
+          rclcpp::get_logger("VelodyneDecoder"),
+          "Invalid bank origin detected in packet. Skipping packet.");
+        return 0;  // bad packet: skip the rest
+    }
+    return bank;
+  }
+
   constexpr static int num_maintenance_periods = 1;
 
   constexpr static int num_simultaneous_firings = 8;

@@ -175,26 +175,7 @@ public:
       const velodyne_packet::raw_block_t & current_block = raw->blocks[block];
 
       uint bank_origin = 0;
-      // Used to detect which bank of 32 lasers is in this block.
-      switch (current_block.header) {
-        case VLS128::BANK_1:
-          bank_origin = 0;
-          break;
-        case VLS128::BANK_2:
-          bank_origin = 32;
-          break;
-        case VLS128::BANK_3:
-          bank_origin = 64;
-          break;
-        case VLS128::BANK_4:
-          bank_origin = 96;
-          break;
-        default:
-          RCLCPP_ERROR(
-            rclcpp::get_logger("VelodyneDecoder"),
-            "Invalid bank origin detected in packet. Skipping packet.");
-          return;  // bad packet: skip the rest
-      }
+      bank_origin = sensor_.getBank(bank_origin, current_block.header);
 
       float azimuth_diff;
       uint16_t azimuth;
