@@ -1,8 +1,6 @@
 #pragma once
 
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/velodyne_scan_decoder.hpp"
-#include "nebula_decoders/nebula_decoders_velodyne/decoders/vlp_16.hpp"
-#include "nebula_decoders/nebula_decoders_velodyne/decoders/vls_128.hpp"
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/velodyne_packet.hpp"
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
