@@ -26,6 +26,7 @@
 #include <mutex>
 #include <optional>
 #include <thread>
+#include <memory>
 
 namespace nebula
 {
@@ -57,19 +58,19 @@ private:
 
   Status ValidateAndSetConfig(std::shared_ptr<const SeyondSensorConfiguration> & new_config);
 
-  Status wrapper_status_;
+  Status wrapper_status_{};
 
   std::shared_ptr<const SeyondSensorConfiguration> sensor_cfg_ptr_{};
-  std::mutex mtx_config_;
+  std::mutex mtx_config_{};
 
   mt_queue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
 
   /// @brief Thread to isolate decoding from receiving
-  std::thread decoder_thread_;
+  std::thread decoder_thread_{};
 
   rclcpp::Subscription<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_sub_{};
 
-  bool launch_hw_;
+  bool launch_hw_{};
 
   std::optional<SeyondHwInterfaceWrapper> hw_interface_wrapper_;
   std::optional<SeyondHwMonitorWrapper> hw_monitor_wrapper_;

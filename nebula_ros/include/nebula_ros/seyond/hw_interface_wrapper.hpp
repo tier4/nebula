@@ -20,6 +20,7 @@ class SeyondHwInterfaceWrapper
 public:
   SeyondHwInterfaceWrapper(
     rclcpp::Node * const parent_node, std::shared_ptr<const SeyondSensorConfiguration> & config);
+  SeyondHwInterfaceWrapper() = default;
 
   void OnConfigChange(const std::shared_ptr<const SeyondSensorConfiguration> & new_config);
 
@@ -28,10 +29,10 @@ public:
   std::shared_ptr<SeyondHwInterface> HwInterface() const;
 
 private:
-  std::shared_ptr<SeyondHwInterface> hw_interface_;
+  std::shared_ptr<SeyondHwInterface> hw_interface_{};
   rclcpp::Logger logger_;
-  nebula::Status status_;
-  bool setup_sensor_;
+  nebula::Status status_{};
+  bool setup_sensor_{};
 };
 }  // namespace ros
 }  // namespace nebula
