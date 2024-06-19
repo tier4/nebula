@@ -80,6 +80,16 @@ struct SeyondCalibrationConfiguration : public SeyondCalibrationConfigurationBas
 inline ReturnMode ReturnModeFromStringSeyond(
   const std::string & return_mode, const SensorModel & sensor_model)
 {
+  switch (sensor_model) {
+    case SensorModel::SEYOND_FALCON_KINETIC:
+    case SensorModel::SEYOND_ROBIN_W:
+      if (return_mode == "Strongest") return ReturnMode::STRONGEST;
+      if (return_mode == "Dual") return ReturnMode::DUAL;
+      if (return_mode == "DualStrongestLast") return ReturnMode::DUAL_STRONGEST_LAST;
+      break;
+    default:
+      break;
+  }
   return ReturnMode::UNKNOWN;
 }
 
@@ -89,6 +99,16 @@ inline ReturnMode ReturnModeFromStringSeyond(
 /// @return Corresponding ReturnMode
 inline ReturnMode ReturnModeFromIntSeyond(const int return_mode, const SensorModel & sensor_model)
 {
+  switch (sensor_model) {
+    case SensorModel::SEYOND_FALCON_KINETIC:
+    case SensorModel::SEYOND_ROBIN_W:
+      if (return_mode == 1) return ReturnMode::STRONGEST;
+      if (return_mode == 2) return ReturnMode::DUAL;
+      if (return_mode == 3) return ReturnMode::DUAL_STRONGEST_LAST;
+      break;
+    default:
+      break;
+  }
   return ReturnMode::UNKNOWN;
 }
 
@@ -98,7 +118,16 @@ inline ReturnMode ReturnModeFromIntSeyond(const int return_mode, const SensorMod
 /// @return Corresponding return mode number for the hardware
 inline int IntFromReturnModeSeyond(const ReturnMode return_mode, const SensorModel & sensor_model)
 {
-
+  switch (sensor_model) {
+    case SensorModel::SEYOND_FALCON_KINETIC:
+    case SensorModel::SEYOND_ROBIN_W:
+      if (return_mode == ReturnMode::STRONGEST) return 1;
+      if (return_mode == ReturnMode::DUAL) return 2;
+      if (return_mode == ReturnMode::DUAL_STRONGEST_LAST) return 3;
+      break;
+    default:
+      break;
+  }
   return -1;
 }
 

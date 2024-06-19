@@ -13,7 +13,7 @@ SeyondHwInterfaceWrapper::SeyondHwInterfaceWrapper(
   setup_sensor_(false)
 {
   setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", true, param_read_only());
-  //bool retry_connect = parent_node->declare_parameter<bool>("retry_hw", true, param_read_only());
+  bool retry_connect = parent_node->declare_parameter<bool>("retry_hw", true, param_read_only());
 
   status_ = hw_interface_->SetSensorConfiguration(
       std::static_pointer_cast<const drivers::SensorConfigurationBase>(config));
@@ -29,18 +29,24 @@ SeyondHwInterfaceWrapper::SeyondHwInterfaceWrapper(
   int retry_count = 0;
 
   // NOTE: for when TP interface is implemented
-  // while (true)
-  // {
-  //   status_ = hw_interface_->InitializeTcpDriver();
-  //   if (status_ == Status::OK || !retry_connect)
-  //   {
-  //     break;
-  //   }
+  while (true)
+  {
+    status_ = hw_interface_->InitializeTcpDriver();
+    if (status_ == Status::OK || !retry_connect)
+    {
+      break;
+    }
 
-  //   retry_count++;
-  //   std::this_thread::sleep_for(std::chrono::milliseconds(8000));  // >5000
-  //   RCLCPP_WARN_STREAM(logger_, status_ << ". Retry #" << retry_count);
-  // }
+    retry_count++;
+    std::this_thread::sleep_for(std::chrono::milliseconds(8000));  // >5000
+    RCLCPP_WARN_STREAM(logger_, status_ << ". Retry #" << retry_count);
+  }
+
+  if (status_ == Status::OK) {
+    if (setup_sensor_) {
+      hw_interface_->CheckAndSetConfig();
+    }
+  }
 
   status_ = Status::OK;
 }
@@ -50,9 +56,9 @@ void SeyondHwInterfaceWrapper::OnConfigChange(
 {
   hw_interface_->SetSensorConfiguration(
       std::static_pointer_cast<const drivers::SensorConfigurationBase>(new_config));
-  // if (setup_sensor_) {
-  //   hw_interface_->CheckAndSetConfig();
-  // }
+  if (setup_sensor_) {
+    hw_interface_->CheckAndSetConfig();
+  }
 }
 
 Status SeyondHwInterfaceWrapper::Status()

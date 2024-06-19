@@ -88,7 +88,7 @@ nebula::Status SeyondRosWrapper::DeclareAndGetSensorConfigParams()
   config.sensor_model = drivers::SensorModelFromString(_sensor_model);
 
   auto _return_mode = declare_parameter<std::string>("return_mode", "", param_read_write());
-  config.return_mode = drivers::ReturnModeFromString(_return_mode);
+  config.return_mode = drivers::ReturnModeFromStringSeyond(_return_mode, config.sensor_model);
 
   config.host_ip = declare_parameter<std::string>("host_ip", "255.255.255.255", param_read_only());
   config.sensor_ip =
@@ -276,7 +276,8 @@ rcl_interfaces::msg::SetParametersResult SeyondRosWrapper::OnParameterChange(
   }
 
   if (_return_mode.length() > 0)
-    new_cfg.return_mode = nebula::drivers::ReturnModeFromString(_return_mode);
+    new_cfg.return_mode = nebula::drivers::ReturnModeFromStringSeyond(_return_mode,
+                                                                      sensor_cfg_ptr_->sensor_model);
 
   // ////////////////////////////////////////
   // Validate and use new config

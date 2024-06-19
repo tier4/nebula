@@ -77,6 +77,10 @@ public:
   /// @brief Destructor
   ~SeyondHwInterface();
 
+  /// @brief Initializing tcp_driver for TCP communication
+  /// @return Resulting status
+  Status InitializeTcpDriver();
+
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
   void ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer);
@@ -121,6 +125,15 @@ public:
 
   /// @brief Display common information acquired from sensor
   void DisplayCommonVersion();
+
+  /// @brief Setting device return mode
+  /// @param return_mode The mode of return
+  /// @return Resulting status
+  Status SetReturnMode(int return_mode);
+
+  /// @brief validate the current settings then set them
+  /// @return Resulting status
+  Status CheckAndSetConfig();
 };
 }  // namespace drivers
 }  // namespace nebula

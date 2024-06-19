@@ -20,20 +20,13 @@ SeyondHwInterface::~SeyondHwInterface()
 {
 }
 
-void SeyondHwInterface::ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer)
+Status SeyondHwInterface::InitializeTcpDriver()
 {
-  cloud_packet_callback_(buffer);
-}
-
-Status SeyondHwInterface::SensorInterfaceStart()
-{
-  StartUdpStreaming();
-
   // Initialize command sender which communicate with the device via TCP
   try {
-  command_tcp_driver_->init_socket(
-      sensor_configuration_->sensor_ip, SeyondTcpCommandPort, sensor_configuration_->host_ip,
-      SeyondTcpCommandPort);
+    command_tcp_driver_->init_socket(
+        sensor_configuration_->sensor_ip, SeyondTcpCommandPort, sensor_configuration_->host_ip,
+        SeyondTcpCommandPort);
   } catch (const std::exception & ex) {
     std::stringstream ss;
     ss << "SeyondHwInterface::SensorInterfaceStart (init TCP): " << Status::ERROR_1
@@ -44,6 +37,17 @@ Status SeyondHwInterface::SensorInterfaceStart()
   }
 
   DisplayCommonVersion();
+  return Status::OK;
+}
+
+void SeyondHwInterface::ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer)
+{
+  cloud_packet_callback_(buffer);
+}
+
+Status SeyondHwInterface::SensorInterfaceStart()
+{
+  StartUdpStreaming();
 
   // Initialize stream receiver which communicate with the device via UDP
   try {
@@ -203,7 +207,6 @@ Status SeyondHwInterface::StartUdpStreaming()
                             + std::to_string(status_port);
       std::string http_command = "/command/?set_udp_ports_ip=" + payload;
       auto response = stream_starter_http_driver->get(http_command);
-      PrintInfo(response);
       stat = Status::OK;
       break;
     }
@@ -224,6 +227,34 @@ Status SeyondHwInterface::StartUdpStreaming()
   stream_starter_http_driver->client()->close();
 
   return stat;
+}
+
+Status SeyondHwInterface::SetReturnMode(int return_mode)
+{
+  std::string command = "set_i_config manufacture multiple_return_mode " + std::to_string(return_mode);
+  SendCommand(command);
+  return Status::OK;
+}
+
+Status SeyondHwInterface::CheckAndSetConfig()
+{
+  Status ret = Status::ERROR_1;
+  // Set return mode
+  auto return_mode_int = nebula::drivers::IntFromReturnModeSeyond(
+      sensor_configuration_->return_mode, sensor_configuration_->sensor_model);
+  if (return_mode_int < 0) {
+    PrintError(
+        "Invalid Return Mode for this sensor. Please check your settings. Falling back to Dual "
+        "mode.");
+    return_mode_int = nebula::drivers::IntFromReturnModeSeyond(ReturnMode::DUAL,
+                                                               sensor_configuration_->sensor_model);
+
+  }
+  ret = SetReturnMode(return_mode_int);
+  if (ret != Status::OK) {
+    return ret;
+  }
+  return Status::OK;
 }
 
 }  // namespace drivers
