@@ -236,6 +236,30 @@ Status SeyondHwInterface::SetReturnMode(int return_mode)
   return Status::OK;
 }
 
+Status SeyondHwInterface::SetPtpMode(PtpProfile profile)
+{
+  std::string command = "set_i_config time ntp_en 0"; // Disable NTP first just in case
+  SendCommand(command);
+
+  command = "set_i_config time ptp_en 1";
+  SendCommand(command);
+
+  // Show messages regarding support status
+  if (profile != PtpProfile::IEEE_1588v2 && profile != PtpProfile::IEEE_802_1AS_AUTO) {
+    PrintInfo("Unsupported PTP profile was selected. Falling back to IEEE 1588v2");
+  } else if (profile == PtpProfile::IEEE_802_1AS_AUTO) {
+    PrintInfo("\"automotive\" was specified as PTP profile. "
+              "Currently, (PTP domain | PTP transport type | PTP switch type) "
+              "specification is not supported.");
+  }
+
+  int is_gptp = (profile == PtpProfile::IEEE_802_1AS_AUTO);
+  command = "set_i_config time ptp_automotive " + std::to_string(is_gptp);
+  SendCommand(command);
+
+  return Status::OK;
+}
+
 Status SeyondHwInterface::CheckAndSetConfig()
 {
   Status ret = Status::ERROR_1;
@@ -254,6 +278,13 @@ Status SeyondHwInterface::CheckAndSetConfig()
   if (ret != Status::OK) {
     return ret;
   }
+
+  // Set PTP mode
+  ret = SetPtpMode(sensor_configuration_->ptp_profile);
+  if (ret != Status::OK) {
+    return ret;
+  }
+
   return Status::OK;
 }
 

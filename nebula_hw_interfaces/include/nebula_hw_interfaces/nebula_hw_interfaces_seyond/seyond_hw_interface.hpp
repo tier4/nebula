@@ -131,6 +131,12 @@ public:
   /// @return Resulting status
   Status SetReturnMode(int return_mode);
 
+
+  /// @brief Setting PTP profile
+  /// @param profile profile to be set
+  /// @return Resulting status
+  Status SetPtpMode(PtpProfile profile);
+
   /// @brief validate the current settings then set them
   /// @return Resulting status
   Status CheckAndSetConfig();
