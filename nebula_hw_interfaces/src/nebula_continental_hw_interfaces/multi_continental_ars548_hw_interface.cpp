@@ -406,6 +406,14 @@ Status MultiContinentalARS548HwInterface::SetYawRate(float yaw_rate)
   return Status::OK;
 }
 
+Status MultiContinentalARS548HwInterface::CheckAndSetConfig()
+{
+  RCLCPP_ERROR(
+    *parent_node_logger,
+    "This functionality is not yet implemented. Sensor is probably out of sync with config now.");
+  return Status::ERROR_1;
+}
+
 void MultiContinentalARS548HwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
 {
   parent_node_logger = logger;
