@@ -6,6 +6,7 @@
 #include "nebula_common/velodyne/velodyne_common.hpp"
 #include "nebula_decoders/nebula_decoders_velodyne/velodyne_driver.hpp"
 #include "nebula_ros/common/nebula_driver_ros_wrapper_base.hpp"
+#include "nlohmann/json.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
@@ -14,6 +15,8 @@
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
+
+using namespace nlohmann;
 
 namespace nebula
 {

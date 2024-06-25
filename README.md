@@ -214,14 +214,32 @@ Parameters shared by all supported models:
 
 #### Driver parameters
 
-| Parameter        | Type   | Default  | Accepted values  | Description                   |
-| ---------------- | ------ | -------- | ---------------- | ----------------------------- |
-| frame_id         | string | velodyne |                  | ROS frame ID                  |
-| calibration_file | string |          |                  | LiDAR calibration file        |
-| min_range        | double | 0.3      | meters, >= 0.3   | Minimum point range published |
-| max_range        | double | 300.0    | meters, <= 300.0 | Maximum point range published |
-| cloud_min_angle  | uint16 | 0        | degrees [0, 360] | FoV start angle               |
-| cloud_max_angle  | uint16 | 359      | degrees [0, 360] | FoV end angle                 |
+| Parameter                  | Type   | Default  | Accepted values  | Description                                                                                                                        |
+|----------------------------|--------|----------|------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| frame_id                   | string | velodyne |                  | ROS frame ID                                                                                                                       |
+| calibration_file           | string |          |                  | LiDAR calibration file                                                                                                             |
+| min_range                  | double | 0.3      | meters, >= 0.3   | Minimum point range published                                                                                                      |
+| max_range                  | double | 300.0    | meters, <= 300.0 | Maximum point range published                                                                                                      |
+| cloud_min_angle            | uint16 | 0        | degrees [0, 360] | FoV start angle                                                                                                                    |
+| cloud_max_angle            | uint16 | 359      | degrees [0, 360] | FoV end angle                                                                                                                      |
+| enable_ring_section_filter | bool   | false    | true, false      | Toggles filtering out specific ring sectors.                                                                                       |
+| excluded_ring_sectors      | string |          |                  | Identifies and prevents specific ring sectors from being included in the point cloud based on ring ID, start angle, and end angle. |
+
+- `enable_ring_section_filter` toggles a ring-based filter to remove points located within predefined angle ranges.
+- Specify an excluded section using the format `[ring_id, start_angle, end_angle]`.
+- Angles must be in degrees, scaled by a factor of 100. For example, represent `34.44` degrees as `3444`.
+- It's possible to define multiple excluded regions for the same ring, allowing for versatile filtering configurations.
+- Define excluded regions as a string of such regions, seperated by commas. For instance:
+
+```xml
+<node pkg="nebula_ros" exec="velodyne_driver_ros_wrapper_node"
+      name="velodyne_cloud" output="screen">
+  ...
+  <param name="enable_ring_section_filter" value="true"/>
+  <param name="excluded_ring_sectors" type="str"
+         value="[0, 3500, 6900], [1, 3400, 6500], [2, 3200, 4600], [3, 3200, 4600]"/>
+</node>
+```
 
 ## Software design overview
 

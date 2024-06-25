@@ -246,6 +246,59 @@ Status VelodyneDriverRosWrapper::GetParameters(
     }
   }
 
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+    descriptor.read_only = false;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<bool>("enable_ring_section_filter", false, descriptor);
+    sensor_configuration.ring_section_filter =
+      this->get_parameter("enable_ring_section_filter").as_bool();
+    if (sensor_configuration.ring_section_filter) {
+      RCLCPP_DEBUG_STREAM(this->get_logger(), "Ring section filter is active.");
+    } else {
+      RCLCPP_DEBUG_STREAM(this->get_logger(), "Ring section filter is not active.");
+    }
+  }
+
+  if (sensor_configuration.ring_section_filter) {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "";
+    this->declare_parameter<std::string>("excluded_ring_sectors", "", descriptor);
+    std::string sectors = this->get_parameter("excluded_ring_sectors").as_string();
+
+    // Put sectors string inside square brackets so that it can be a valid JSON array
+    sectors = "[" + sectors + "]";
+
+    // Parse the JSON string
+    const auto excluded_sectors_json = json::parse(sectors);
+
+    // Iterate over the parsed JSON array
+    for (const auto & sector : excluded_sectors_json) {
+      // Extract the ring number, start angle, and end angle from each sub-array
+      const int ring_number = sector[0];
+      const uint16_t start = sector[1];
+      const uint16_t end = sector[2];
+
+      // Add the ExcludedRegion to the map under the corresponding ring number
+      sensor_configuration.excluded_ring_sectors[ring_number].emplace_back(
+        drivers::ExcludedRegion{start, end});
+    }
+
+    std::stringstream regions_log;
+    for (const auto & regions : sensor_configuration.excluded_ring_sectors) {
+      regions_log << "\nRing: " << regions.first << '\n';
+      for (const auto & region : regions.second) {
+        regions_log << "(" << region.start << "," << region.end << ")\n";
+      }
+    }
+    RCLCPP_DEBUG_STREAM(get_logger(), regions_log.str());
+  }
+
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
