@@ -8,6 +8,8 @@ on:
     types: [closed]
 permissions:
   contents: write
+  id-token: write
+  pages: write
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -24,20 +26,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
-      - uses: actions/cache@v4
-        with:
-          key: mkdocs-material-${{ env.cache_id }}
-          path: .cache
-          restore-keys: |
-            mkdocs-material-
       - run: |
           sudo apt update && sudo apt install -y doxygen && \
-          pip install mkdocs-material \
-          mkdocs \
+          pip install mkdocs \
           mkdocs-material \
           Jinja2 \
           ruamel.yaml && \
           pip install git+https://github.com/JakubAndrysek/mkdoxy
-      - run: pip install mkdocs-material
-      - run: mkdocs gh-deploy --force
+      - run: mkdocs build --site-dir _site
+      - run: touch _site/.nojekyll
+      - run: |
+          chmod -c -R +rX "_site/" | while read line; do
+            echo "::warning title=Invalid file permissions automatically fixed::$line"
+          done
+      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/deploy-pages@v4

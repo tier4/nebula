@@ -134,6 +134,8 @@ rclcpp_components_register_node(robosense_ros_wrapper
 )
 
 ## Continental
+
+# ARS548
 add_library(continental_ars548_ros_wrapper SHARED
     src/continental/continental_ars548_ros_wrapper.cpp
     src/continental/continental_ars548_decoder_wrapper.cpp
@@ -173,10 +175,51 @@ rclcpp_components_register_node(continental_ars548_ros_wrapper
     EXECUTABLE continental_ars548_ros_wrapper_node
 )
 
+# SRR520
+add_library(continental_srr520_ros_wrapper SHARED
+    src/continental/continental_srr520_ros_wrapper.cpp
+    src/continental/continental_srr520_decoder_wrapper.cpp
+    src/continental/continental_srr520_hw_interface_wrapper.cpp
+    src/common/parameter_descriptors.cpp
+)
+
+target_include_directories(continental_srr520_ros_wrapper PUBLIC
+    ${continental_msgs_INCLUDE_DIRS}
+    ${continental_srvs_INCLUDE_DIRS}
+    ${diagnostic_msgs_INCLUDE_DIRS}
+    ${geometry_msgs_INCLUDE_DIRS}
+    ${nebula_msgs_INCLUDE_DIRS}
+    ${nebula_decoders_INCLUDE_DIRS}
+    ${nebula_hw_interfaces_INCLUDE_DIRS}
+    ${radar_msgs_INCLUDE_DIRS}
+    ${rclcpp_components_INCLUDE_DIRS}
+    ${tf2_ros_INCLUDE_DIRS}
+    ${visualization_msgs_INCLUDE_DIRS}
+)
+
+target_link_libraries(continental_srr520_ros_wrapper PUBLIC
+    ${continental_msgs_TARGETS}
+    ${continental_srvs_TARGETS}
+    ${diagnostic_msgs_TARGETS}
+    ${geometry_msgs_TARGETS}
+    ${nebula_msgs_TARGETS}
+    ${radar_msgs_TARGETS}
+    ${tf2_ros_TARGETS}
+    ${visualization_msgs_TARGETS}
+    nebula_decoders::nebula_decoders_continental
+    nebula_hw_interfaces::nebula_hw_interfaces_continental
+)
+
+rclcpp_components_register_node(continental_srr520_ros_wrapper
+    PLUGIN "ContinentalSRR520RosWrapper"
+    EXECUTABLE continental_srr520_ros_wrapper_node
+)
+
 install(TARGETS hesai_ros_wrapper EXPORT export_hesai_ros_wrapper)
 install(TARGETS velodyne_ros_wrapper EXPORT export_velodyne_ros_wrapper)
 install(TARGETS robosense_ros_wrapper EXPORT export_robosense_ros_wrapper)
 install(TARGETS continental_ars548_ros_wrapper EXPORT export_continental_ars548_ros_wrapper)
+install(TARGETS continental_srr520_ros_wrapper EXPORT export_continental_srr520_ros_wrapper)
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)

@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_ContinentalRosDecoderTestArs548_H
-#define NEBULA_ContinentalRosDecoderTestArs548_H
+#ifndef NEBULA_ContinentalRosDecoderTestsrr520_H
+#define NEBULA_ContinentalRosDecoderTestsrr520_H
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/nebula_status.hpp>
-#include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
+#include <nebula_common/velodyne/velodyne_common.hpp>
+#include <nebula_decoders/nebula_decoders_continental/decoders/continental_srr520_decoder.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include <continental_msgs/msg/continental_ars548_detection_list.hpp>
-#include <continental_msgs/msg/continental_ars548_object_list.hpp>
+#include <continental_msgs/msg/continental_srr520_detection_list.hpp>
+#include <continental_msgs/msg/continental_srr520_object_list.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
 
 #include <gtest/gtest.h>
-#include <yaml-cpp/node/node.h>
 
 #include <memory>
 #include <string>
@@ -37,25 +37,32 @@ namespace ros
 {
 class ContinentalRosDecoderTest final : public rclcpp::Node  //, testing::Test
 {
-  std::shared_ptr<drivers::continental_ars548::ContinentalARS548Decoder> driver_ptr_;
+  std::shared_ptr<drivers::continental_srr520::ContinentalSRR520Decoder> driver_ptr_;
   Status wrapper_status_;
 
-  std::shared_ptr<drivers::continental_ars548::ContinentalARS548SensorConfiguration>
+  std::shared_ptr<drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
     sensor_cfg_ptr_;
 
   Status InitializeDriver(
-    std::shared_ptr<drivers::continental_ars548::ContinentalARS548SensorConfiguration>
+    std::shared_ptr<drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
       sensor_configuration);
 
   Status GetParameters(
-    drivers::continental_ars548::ContinentalARS548SensorConfiguration & sensor_configuration);
+    drivers::continental_srr520::ContinentalSRR520SensorConfiguration & sensor_configuration);
 
   void CheckResult(const std::string msg_as_string, const std::string & gt_path);
 
-  void DetectionListCallback(
-    std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg);
+  void HRRDetectionListCallback(
+    std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg);
 
-  void ObjectListCallback(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg);
+  void NearDetectionListCallback(
+    std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg);
+
+  void StatusCallback([[maybe_unused]] std::unique_ptr<diagnostic_msgs::msg::DiagnosticArray> msg)
+  {
+  }
+
+  void ObjectListCallback(std::unique_ptr<continental_msgs::msg::ContinentalSrr520ObjectList> msg);
 
   void CompareNodes(const YAML::Node & node1, const YAML::Node & node2);
 
@@ -78,9 +85,12 @@ private:
   std::string storage_id_{};
   std::string format_{};
   std::string target_topic_{};
+  std::size_t near_detection_list_count_{};
+  std::size_t hrr_detection_list_count_{};
+  std::size_t object_list_count_{};
 };
 
 }  // namespace ros
 }  // namespace nebula
 
-#endif  // NEBULA_ContinentalRosDecoderTestArs548_H
+#endif  // NEBULA_ContinentalRosDecoderTestsrr520_H

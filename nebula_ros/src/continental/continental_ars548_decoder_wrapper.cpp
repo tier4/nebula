@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <nebula_ros/continental/continental_ars548_decoder_wrapper.hpp>
+#include "nebula_ros/continental/continental_ars548_decoder_wrapper.hpp"
 
 #include <pcl_conversions/pcl_conversions.h>
 
@@ -81,11 +81,10 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
 
   RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
 
-  cloud_watchdog_ =
+  watchdog_ =
     std::make_shared<WatchdogTimer>(*parent_node, 100'000us, [this, parent_node](bool ok) {
       if (ok) return;
-      RCLCPP_WARN_THROTTLE(
-        logger_, *parent_node->get_clock(), 5000, "Missed pointcloud output deadline");
+      RCLCPP_WARN_THROTTLE(logger_, *parent_node->get_clock(), 5000, "Missed output deadline");
     });
 }
 
@@ -123,7 +122,7 @@ void ContinentalARS548DecoderWrapper::ProcessPacket(
 {
   driver_ptr_->ProcessPacket(std::move(packet_msg));
 
-  cloud_watchdog_->update();
+  watchdog_->update();
 }
 
 void ContinentalARS548DecoderWrapper::DetectionListCallback(

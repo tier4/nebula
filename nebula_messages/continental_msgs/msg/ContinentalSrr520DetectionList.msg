@@ -1,0 +1,10 @@
+std_msgs/Header header
+uint32 internal_time_stamp_usec
+uint8 global_time_stamp_sync_status
+uint8 signal_status
+uint8 sequence_counter
+uint32 cycle_counter
+float32 v_ambiguous
+float32 max_range
+
+ContinentalSrr520Detection[] detections

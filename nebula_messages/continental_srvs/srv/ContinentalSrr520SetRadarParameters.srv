@@ -1,0 +1,15 @@
+bool autoconfigure_extrinsics 1
+float32 longitudinal
+float32 lateral
+float32 vertical
+float32 yaw
+float32 pitch
+float32 vehicle_wheelbase -1.0
+
+uint8 sensor_id # The new sensor id
+float32 cover_damping # Cover damping in dB
+bool plug_bottom # Whether the plug is in the bottom
+bool reset_sensor_configuration
+---
+bool success
+string message # status messages

@@ -1,0 +1,365 @@
+header:
+  stamp:
+    sec: 1708578209
+    nanosec: 76111685
+  frame_id: some_sensor_frame
+internal_time_stamp_usec: 468586189
+global_time_stamp_sync_status: 1
+signal_status: 1
+sequence_counter: 196
+cycle_counter: 910
+v_ambiguous: 23.3772
+max_range: 41.3000
+detections:
+  - range: 7.76557
+    azimuth_angle: 0.566719
+    range_rate: 2.28739
+    rcs: -40.0000
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 17.8000
+  - range: 10.7692
+    azimuth_angle: -0.671438
+    range_rate: -5.49853
+    rcs: -40.0000
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 17.8000
+  - range: 22.2222
+    azimuth_angle: -0.572879
+    range_rate: -5.30792
+    rcs: -40.0000
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 16.1000
+  - range: 29.8168
+    azimuth_angle: -1.00408
+    range_rate: -6.56891
+    rcs: -40.0000
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 16.1000
+  - range: 37.8999
+    azimuth_angle: 0.314159
+    range_rate: -0.278592
+    rcs: -23.8095
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 17.8000
+  - range: 38.1929
+    azimuth_angle: 0.461999
+    range_rate: 0.733138
+    rcs: -20.4762
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 19.5000
+  - range: 43.4921
+    azimuth_angle: 0.794638
+    range_rate: 2.74194
+    rcs: -9.52381
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 33.1000
+  - range: 45.8852
+    azimuth_angle: -0.252559
+    range_rate: -3.92962
+    rcs: -25.7143
+    pdh00: 0
+    pdh01: 0
+    pdh02: 100
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 16.1000
+  - range: 45.9585
+    azimuth_angle: -0.671438
+    range_rate: -5.77713
+    rcs: -5.71429
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 36.5000
+  - range: 45.8608
+    azimuth_angle: 0.967118
+    range_rate: 3.81232
+    rcs: -20.9524
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 17.8000
+  - range: 49.9389
+    azimuth_angle: -0.517439
+    range_rate: -5.26393
+    rcs: -2.85714
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 21.2000
+  - range: 50.0366
+    azimuth_angle: -0.283359
+    range_rate: -4.10557
+    rcs: -0.952381
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 31.4000
+  - range: 53.1136
+    azimuth_angle: -0.486639
+    range_rate: -5.01466
+    rcs: -14.2857
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 100
+    pdh05: 0
+    snr: 19.5000
+  - range: 53.8950
+    azimuth_angle: 0.905518
+    range_rate: 3.29912
+    rcs: -22.3810
+    pdh00: 0
+    pdh01: 0
+    pdh02: 100
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 17.8000
+  - range: 55.8486
+    azimuth_angle: -0.480479
+    range_rate: -4.83871
+    rcs: -12.8571
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 17.8000
+  - range: 55.8730
+    azimuth_angle: -0.800798
+    range_rate: -6.62757
+    rcs: -5.23810
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 26.3000
+  - range: 59.7314
+    azimuth_angle: -0.480479
+    range_rate: -5.08798
+    rcs: -1.42857
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 24.6000
+  - range: 60.5128
+    azimuth_angle: -0.794638
+    range_rate: -6.59824
+    rcs: -0.952381
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 24.6000
+  - range: 60.7082
+    azimuth_angle: 1.21968
+    range_rate: 5.10264
+    rcs: 0.952381
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 24.6000
+  - range: 62.7106
+    azimuth_angle: -0.646798
+    range_rate: -5.65982
+    rcs: -9.52381
+    pdh00: 0
+    pdh01: 0
+    pdh02: 100
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 17.8000
+  - range: 66.5934
+    azimuth_angle: 1.24432
+    range_rate: 5.35191
+    rcs: -2.38095
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 31.4000
+  - range: 69.1331
+    azimuth_angle: 0.375759
+    range_rate: 0.0586514
+    rcs: -12.3810
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 29.7000
+  - range: 68.1319
+    azimuth_angle: -0.843918
+    range_rate: -6.31965
+    rcs: -16.1905
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 21.2000
+  - range: 71.8681
+    azimuth_angle: -0.911678
+    range_rate: -6.40762
+    rcs: -17.6190
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 100
+    pdh05: 0
+    snr: 17.8000
+  - range: 72.7473
+    azimuth_angle: 1.13344
+    range_rate: -1.55425
+    rcs: -12.8571
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 19.5000
+  - range: 73.5043
+    azimuth_angle: 0.0369600
+    range_rate: -2.18475
+    rcs: -26.1905
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 19.5000
+  - range: 74.9939
+    azimuth_angle: -0.357279
+    range_rate: -1.43695
+    rcs: -26.1905
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 100
+    pdh05: 0
+    snr: 17.8000
+  - range: 76.3614
+    azimuth_angle: -0.0923997
+    range_rate: -2.87390
+    rcs: -26.6667
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 19.5000
+  - range: 79.9512
+    azimuth_angle: -0.135520
+    range_rate: -3.22581
+    rcs: -14.7619
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 19.5000
+  - range: 82.9792
+    azimuth_angle: 0.0923999
+    range_rate: -1.86217
+    rcs: -5.23810
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 22.9000
+  - range: 84.5177
+    azimuth_angle: -0.190959
+    range_rate: -3.60704
+    rcs: 5.71429
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 29.7000
+  - range: 98.4371
+    azimuth_angle: -0.979438
+    range_rate: -6.70088
+    rcs: -3.33333
+    pdh00: 0
+    pdh01: 0
+    pdh02: 0
+    pdh03: 0
+    pdh04: 0
+    pdh05: 0
+    snr: 17.8000

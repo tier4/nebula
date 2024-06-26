@@ -7,7 +7,7 @@
       "$ref": "hardware.json#/definitions/sensor_model",
       "enum": [
         "ARS548",
-        "SSR520"
+        "SRR520"
       ]
     }
   }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "continental_ros_decoder_test_ars548.hpp"
+#include "continental_ros_decoder_test_srr520.hpp"
 
 #include "parameter_descriptors.hpp"
 
@@ -42,7 +42,7 @@ ContinentalRosDecoderTest::ContinentalRosDecoderTest(
   const rclcpp::NodeOptions & options, const std::string & node_name)
 : rclcpp::Node(node_name, options)
 {
-  drivers::continental_ars548::ContinentalARS548SensorConfiguration sensor_configuration;
+  drivers::continental_srr520::ContinentalSRR520SensorConfiguration sensor_configuration;
 
   wrapper_status_ = GetParameters(sensor_configuration);
   if (Status::OK != wrapper_status_) {
@@ -52,29 +52,33 @@ ContinentalRosDecoderTest::ContinentalRosDecoderTest(
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
 
   sensor_cfg_ptr_ =
-    std::make_shared<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
+    std::make_shared<drivers::continental_srr520::ContinentalSRR520SensorConfiguration>(
       sensor_configuration);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
   wrapper_status_ = InitializeDriver(
-    std::const_pointer_cast<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
+    std::const_pointer_cast<drivers::continental_srr520::ContinentalSRR520SensorConfiguration>(
       sensor_cfg_ptr_));
 
-  driver_ptr_->RegisterDetectionListCallback(
-    std::bind(&ContinentalRosDecoderTest::DetectionListCallback, this, std::placeholders::_1));
+  driver_ptr_->RegisterHRRDetectionListCallback(
+    std::bind(&ContinentalRosDecoderTest::HRRDetectionListCallback, this, std::placeholders::_1));
+  driver_ptr_->RegisterNearDetectionListCallback(
+    std::bind(&ContinentalRosDecoderTest::NearDetectionListCallback, this, std::placeholders::_1));
   driver_ptr_->RegisterObjectListCallback(
     std::bind(&ContinentalRosDecoderTest::ObjectListCallback, this, std::placeholders::_1));
+  driver_ptr_->RegisterStatusCallback(
+    std::bind(&ContinentalRosDecoderTest::StatusCallback, this, std::placeholders::_1));
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 }
 
 Status ContinentalRosDecoderTest::InitializeDriver(
-  std::shared_ptr<drivers::continental_ars548::ContinentalARS548SensorConfiguration>
+  std::shared_ptr<drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
     sensor_configuration)
 {
   // driver should be initialized here with proper decoder
-  driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalARS548Decoder>(
-    std::static_pointer_cast<drivers::continental_ars548::ContinentalARS548SensorConfiguration>(
+  driver_ptr_ = std::make_shared<drivers::continental_srr520::ContinentalSRR520Decoder>(
+    std::static_pointer_cast<drivers::continental_srr520::ContinentalSRR520SensorConfiguration>(
       sensor_configuration));
   return Status::OK;
 }
@@ -85,27 +89,25 @@ Status ContinentalRosDecoderTest::GetStatus()
 }
 
 Status ContinentalRosDecoderTest::GetParameters(
-  drivers::continental_ars548::ContinentalARS548SensorConfiguration & sensor_configuration)
+  drivers::continental_srr520::ContinentalSRR520SensorConfiguration & sensor_configuration)
 {
   std::filesystem::path bag_root_dir =
     _SRC_RESOURCES_DIR_PATH;  // variable defined in CMakeLists.txt;
   bag_root_dir /= "continental";
 
   sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(
-    declare_parameter<std::string>("sensor_model", "ARS548", param_read_only()));
+    declare_parameter<std::string>("sensor_model", "SRR520", param_read_only()));
   sensor_configuration.frame_id =
     declare_parameter<std::string>("frame_id", "some_sensor_frame", param_read_only());
   sensor_configuration.base_frame =
     declare_parameter<std::string>("base_frame", "some_base_frame", param_read_only());
-  sensor_configuration.object_frame =
-    declare_parameter<std::string>("object_frame", "some_object_frame", param_read_only());
 
   bag_path_ = declare_parameter<std::string>(
-    "bag_path", (bag_root_dir / "ars548" / "1708578204").string(), param_read_only());
+    "bag_path", (bag_root_dir / "srr520" / "1708578209").string(), param_read_only());
   storage_id_ = declare_parameter<std::string>("storage_id", "sqlite3", param_read_only());
   format_ = declare_parameter<std::string>("format", "cdr", param_read_only());
   target_topic_ = declare_parameter<std::string>(
-    "target_topic", "/sensing/radar/front_center/nebula_packets", param_read_only());
+    "target_topic", "/sensing/radar/front_left/nebula_packets", param_read_only());
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
@@ -145,19 +147,39 @@ void ContinentalRosDecoderTest::CheckResult(
   CompareNodes(gt_node, current_node);
 
   // To generate the gt
+  // std::cout << gt_path << std::endl;
   // std::ofstream ostream(gt_path);
   // ostream << msg_as_string;
   // ostream.close();
 }
 
-void ContinentalRosDecoderTest::DetectionListCallback(
-  std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg)
+void ContinentalRosDecoderTest::HRRDetectionListCallback(
+  std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg)
 {
+  hrr_detection_list_count_++;
   EXPECT_EQ(sensor_cfg_ptr_->frame_id, msg->header.frame_id);
   std::string msg_as_string = continental_msgs::msg::to_yaml(*msg);
 
   std::stringstream detection_path;
-  detection_path << msg->header.stamp.sec << "_" << msg->header.stamp.nanosec << "_detection.yaml";
+  detection_path << msg->header.stamp.sec << "_" << msg->header.stamp.nanosec
+                 << "_hrr_detection.yaml";
+
+  auto gt_path = rcpputils::fs::path(bag_path_).parent_path() / detection_path.str();
+  ASSERT_TRUE(gt_path.exists());
+
+  CheckResult(msg_as_string, gt_path.string());
+}
+
+void ContinentalRosDecoderTest::NearDetectionListCallback(
+  std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg)
+{
+  near_detection_list_count_++;
+  EXPECT_EQ(sensor_cfg_ptr_->frame_id, msg->header.frame_id);
+  std::string msg_as_string = continental_msgs::msg::to_yaml(*msg);
+
+  std::stringstream detection_path;
+  detection_path << msg->header.stamp.sec << "_" << msg->header.stamp.nanosec
+                 << "_near_detection.yaml";
 
   auto gt_path = rcpputils::fs::path(bag_path_).parent_path() / detection_path.str();
   ASSERT_TRUE(gt_path.exists());
@@ -166,9 +188,10 @@ void ContinentalRosDecoderTest::DetectionListCallback(
 }
 
 void ContinentalRosDecoderTest::ObjectListCallback(
-  std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg)
+  std::unique_ptr<continental_msgs::msg::ContinentalSrr520ObjectList> msg)
 {
-  EXPECT_EQ(sensor_cfg_ptr_->object_frame, msg->header.frame_id);
+  object_list_count_++;
+  EXPECT_EQ(sensor_cfg_ptr_->base_frame, msg->header.frame_id);
   std::string msg_as_string = continental_msgs::msg::to_yaml(*msg);
 
   std::stringstream detection_path;
@@ -219,14 +242,17 @@ void ContinentalRosDecoderTest::ReadBag()
         std::cout << "Found data in topic " << bag_message->topic_name << ": "
                   << bag_message->time_stamp << std::endl;
 
-        ASSERT_EQ(1, extracted_msg.packets.size());
-
-        auto extracted_msg_ptr =
-          std::make_unique<nebula_msgs::msg::NebulaPacket>(extracted_msg.packets[0]);
-        driver_ptr_->ProcessPacket(std::move(extracted_msg_ptr));
+        for (auto & packet_msg : extracted_msg.packets) {
+          auto extracted_msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>(packet_msg);
+          driver_ptr_->ProcessPacket(std::move(extracted_msg_ptr));
+        }
       }
     }
   }
+
+  EXPECT_EQ(1, near_detection_list_count_);
+  EXPECT_EQ(1, hrr_detection_list_count_);
+  EXPECT_EQ(1, object_list_count_);
 }
 
 }  // namespace ros
