@@ -22,12 +22,12 @@
     },
     "gnss_port": {
       "$ref": "communication.json#/definitions/gnss_port",
-      "default": 10110,
+      "default": "10110",
       "minimum": 0
     },
     "rotation_speed": {
       "$ref": "hardware.json#/definitions/rotation_speed",
-      "default": 600,
+      "default": "600",
       "minimum": 300,
       "maximum": 1200,
       "multipleOf": 60

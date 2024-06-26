@@ -12,7 +12,7 @@
     },
     "example_parameter_1": {
       "type": "integer",
-      "default": 42,
+      "default": "42",
       "readOnly": true,
       "description": "Exclusive parameter only for specific sensor vendor."
     },
