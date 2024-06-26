@@ -60,20 +60,26 @@ if(BUILD_TESTING)
     )
 
     set(CONTINENTAL_TEST_LIBRARIES
-        ${NEBULA_TEST_LIBRARIES}
+        ${COMMON_TEST_LIBRARIES}
         nebula_decoders::nebula_decoders_continental
     )
 
     set(HESAI_TEST_LIBRARIES
-        ${NEBULA_TEST_LIBRARIES}
+        ${COMMON_TEST_LIBRARIES}
         nebula_decoders::nebula_decoders_hesai
     )
 
     set(VELODYNE_TEST_LIBRARIES
-        ${NEBULA_TEST_LIBRARIES}
+        ${COMMON_TEST_LIBRARIES}
         nebula_decoders::nebula_decoders_velodyne
     )
 
+    set(AEVA_TEST_LIBRARIES
+        ${COMMON_TEST_LIBRARIES}
+        nebula_hw_interfaces::nebula_hw_interfaces_aeva
+    )
+
+    add_subdirectory(aeva)
     add_subdirectory(continental)
     add_subdirectory(hesai)
     add_subdirectory(velodyne)
