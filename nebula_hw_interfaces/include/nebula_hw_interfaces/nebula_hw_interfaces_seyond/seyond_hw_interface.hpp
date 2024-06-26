@@ -27,37 +27,48 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <memory>
-#include <mutex>
 #include <vector>
 
 namespace nebula
 {
 namespace drivers
 {
+constexpr uint16_t SeyondTcpCommandPort = 8001;
+constexpr uint16_t SeyondHttpCommandPort = 8010;
 /// @brief Hardware interface of seyond driver
 class SeyondHwInterface
 {
 private:
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
-  std::shared_ptr<boost::asio::io_context> m_owned_ctx;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
   std::shared_ptr<const SeyondSensorConfiguration> sensor_configuration_;
   std::function<void(std::vector<uint8_t> & buffer)>
     cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
 
-  int prev_phase_{};
-  int target_model_no;
+  std::shared_ptr<boost::asio::io_context> m_owned_ctx_;
+  std::unique_ptr<::drivers::tcp_driver::TcpDriver> command_tcp_driver_;
+
   std::shared_ptr<rclcpp::Logger> parent_node_logger_;
 
   /// @brief Printing the string to RCLCPP_INFO_STREAM
   /// @param info Target string
   void PrintInfo(std::string info);
+
   /// @brief Printing the string to RCLCPP_ERROR_STREAM
   /// @param error Target string
   void PrintError(std::string error);
+
   /// @brief Printing the string to RCLCPP_DEBUG_STREAM
   /// @param debug Target string
   void PrintDebug(std::string debug);
+
+  /// @brief Send TCP command to the device and return its response as string
+  /// @param commad payload of the command to be sent
+  /// @return string response from the device
+  std::string SendCommand(std::string commad);
+
+  /// @brief Start UDP stream from the device
+  Status StartUdpStreaming();
 
 public:
   /// @brief Constructor
@@ -65,6 +76,10 @@ public:
 
   /// @brief Destructor
   ~SeyondHwInterface();
+
+  /// @brief Initializing tcp_driver for TCP communication
+  /// @return Resulting status
+  Status InitializeTcpDriver();
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
@@ -93,11 +108,11 @@ public:
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
   Status SetSensorConfiguration(
-    std::shared_ptr<const SensorConfigurationBase> sensor_configuration);
+    const std::shared_ptr<const SensorConfigurationBase>& sensor_configuration);
 
-  /// @brief Set target model number
-  /// @param model Model number
-  void SetTargetModel(int model);
+  // /// @brief Set target model number
+  // /// @param model Model number
+  // void SetTargetModel(nebula::drivers::SensorModel model);
 
   /// @brief Registering callback for NebulaPackets
   /// @param scan_callback Callback function
@@ -107,6 +122,24 @@ public:
   /// @brief Setting rclcpp::Logger
   /// @param node Logger
   void SetLogger(std::shared_ptr<rclcpp::Logger> logger);
+
+  /// @brief Display common information acquired from sensor
+  void DisplayCommonVersion();
+
+  /// @brief Setting device return mode
+  /// @param return_mode The mode of return
+  /// @return Resulting status
+  Status SetReturnMode(int return_mode);
+
+
+  /// @brief Setting PTP profile
+  /// @param profile profile to be set
+  /// @return Resulting status
+  Status SetPtpMode(PtpProfile profile);
+
+  /// @brief validate the current settings then set them
+  /// @return Resulting status
+  Status CheckAndSetConfig();
 };
 }  // namespace drivers
 }  // namespace nebula
