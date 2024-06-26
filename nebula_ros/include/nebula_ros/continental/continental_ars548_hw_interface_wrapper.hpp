@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include "nebula_ros/common/parameter_descriptors.hpp"
-
 #include <nebula_common/continental/continental_ars548.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
