@@ -1,0 +1,246 @@
+// Copyright 2024 TIER IV, Inc.
+
+#include "nebula_ros/aeva/aeva_ros_wrapper.hpp"
+
+#include "nebula_hw_interfaces/nebula_hw_interfaces_aeva/connections/pointcloud.hpp"
+#include "nebula_ros/aeva/hw_monitor_wrapper.hpp"
+#include "nebula_ros/common/nebula_packet_stream.hpp"
+#include "nebula_ros/common/parameter_descriptors.hpp"
+#include "nebula_ros/common/rclcpp_logger.hpp"
+#include "nebula_ros/common/watchdog_timer.hpp"
+
+#include <nebula_common/aeva/config_types.hpp>
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_common/nebula_status.hpp>
+#include <nebula_common/util/parsing.hpp>
+#include <nebula_decoders/nebula_decoders_aeva/aeva_aries2_decoder.hpp>
+#include <nebula_hw_interfaces/nebula_hw_interfaces_aeva/aeva_hw_interface.hpp>
+#include <nebula_hw_interfaces/nebula_hw_interfaces_common/connections/stream_buffer.hpp>
+#include <nlohmann/json_fwd.hpp>
+#include <rclcpp/logging.hpp>
+#include <rclcpp/qos.hpp>
+
+#include <nebula_msgs/msg/nebula_packets.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+
+#include <bits/chrono.h>
+#include <pcl/point_cloud.h>
+#include <pcl_conversions/pcl_conversions.h>
+
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
+
+namespace nebula::ros
+{
+using drivers::AevaAries2Decoder;
+using drivers::aeva::Aeries2Config;
+using drivers::connections::PointcloudParser;
+using nlohmann::json;
+using namespace std::chrono_literals;  // NOLINT
+using AevaPointCloudUniquePtr = AevaAries2Decoder::AevaPointCloudUniquePtr;
+
+AevaRosWrapper::AevaRosWrapper(const rclcpp::NodeOptions & options)
+: rclcpp::Node("aeva_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true))
+{
+  auto status = declareAndGetSensorConfigParams();
+
+  if (status != Status::OK) {
+    throw std::runtime_error(
+      (std::stringstream{} << "Sensor configuration invalid: " << status).str());
+  }
+
+  RCLCPP_INFO_STREAM(get_logger(), "SensorConfig: " << *sensor_cfg_ptr_);
+
+  auto qos_profile = rmw_qos_profile_sensor_data;
+  auto pointcloud_qos =
+    rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
+
+  auto launch_hw = declare_parameter<bool>("launch_hw", param_read_only());
+  auto setup_sensor = declare_parameter<bool>("setup_sensor", param_read_only());
+  auto hw_interface_logger = drivers::loggers::RclcppLogger(get_logger()).child("HwInterface");
+
+  if (!launch_hw && setup_sensor) {
+    setup_sensor = false;
+    RCLCPP_WARN(get_logger(), "Ignoring setup_sensor:=true in offline mode.");
+  }
+
+  if (launch_hw) {
+    // ////////////////////////////////////////
+    // If HW is connected, also publish packets
+    // ////////////////////////////////////////
+    hw_interface_.emplace(hw_interface_logger, setup_sensor, sensor_cfg_ptr_);
+    hw_monitor_.emplace(this, sensor_cfg_ptr_);
+
+    packets_pub_ =
+      create_publisher<nebula_msgs::msg::NebulaPackets>("nebula_packets", pointcloud_qos);
+
+    drivers::connections::ObservableByteStream::callback_t raw_packet_cb = [&](const auto & bytes) {
+      this->recordRawPacket(std::move(bytes));
+    };
+
+    hw_interface_->registerRawCloudPacketCallback(std::move(raw_packet_cb));
+
+    hw_interface_->registerTelemetryCallback(
+      [&](const auto & msg) { hw_monitor_->onTelemetryFragment(msg); });
+    hw_interface_->registerHealthCallback([&](auto codes) { hw_monitor_->onHealthCodes(codes); });
+  } else {
+    // ////////////////////////////////////////
+    // If HW is disconnected, subscribe to
+    // packets topic
+    // ////////////////////////////////////////
+    auto packet_stream = std::make_shared<NebulaPacketStream>();
+    auto packet_buffer =
+      std::make_shared<drivers::connections::StreamBuffer>(packet_stream, 100, [&]() {
+        RCLCPP_ERROR_THROTTLE(
+          get_logger(), *get_clock(), 1000,
+          "Packet stream buffer overflowed, packet loss occurred.");
+      });
+
+    packets_sub_ = create_subscription<nebula_msgs::msg::NebulaPackets>(
+      "nebula_packets", rclcpp::SensorDataQoS(),
+      [=](std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets) {
+        packet_stream->onNebulaPackets(std::move(packets));
+      });
+
+    auto pointcloud_parser = std::make_shared<PointcloudParser>(packet_buffer);
+    hw_interface_.emplace(
+      hw_interface_logger, setup_sensor, sensor_cfg_ptr_, pointcloud_parser, nullptr, nullptr,
+      nullptr);
+
+    RCLCPP_INFO_STREAM(
+      get_logger(),
+      "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
+  }
+
+  RCLCPP_DEBUG(get_logger(), "Starting stream");
+
+  PointcloudParser::callback_t pointcloud_message_cb = [this](const auto & message) {
+    decoder_.processPointcloudMessage(message);
+  };
+
+  hw_interface_->registerCloudPacketCallback(std::move(pointcloud_message_cb));
+
+  cloud_pub_ = create_publisher<sensor_msgs::msg::PointCloud2>("/nebula_points", pointcloud_qos);
+
+  cloud_watchdog_ = std::make_shared<WatchdogTimer>(*this, 100'000us, [&](bool ok) {
+    if (ok) return;
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "Missed pointcloud output deadline");
+  });
+
+  {
+    AevaAries2Decoder::callback_t pointcloud_cb =
+      [&](AevaPointCloudUniquePtr cloud_ptr, auto timestamp) {
+        auto now = this->now();
+        cloud_watchdog_->update();
+
+        if (
+          cloud_pub_->get_subscription_count() > 0 ||
+          cloud_pub_->get_intra_process_subscription_count() > 0) {
+          auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
+          pcl::toROSMsg(*cloud_ptr, *ros_pc_msg_ptr);
+          ros_pc_msg_ptr->header.frame_id = sensor_cfg_ptr_->frame_id;
+          ros_pc_msg_ptr->header.stamp = rclcpp::Time(static_cast<int64_t>(timestamp));
+          cloud_pub_->publish(std::move(ros_pc_msg_ptr));
+        }
+
+        std::lock_guard lock(mtx_current_scan_msg_);
+        if (current_scan_msg_ && packets_pub_) {
+          packets_pub_->publish(std::move(current_scan_msg_));
+          current_scan_msg_ = {};
+        }
+      };
+
+    decoder_.registerPointCloudCallback(std::move(pointcloud_cb));
+  }
+}
+
+Status AevaRosWrapper::declareAndGetSensorConfigParams()
+{
+  Aeries2Config config;
+
+  std::string raw_sensor_model = declare_parameter<std::string>("sensor_model", param_read_only());
+  config.sensor_model = drivers::SensorModelFromString(raw_sensor_model);
+  config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());
+  config.frame_id = declare_parameter<std::string>("frame_id", param_read_only());
+  config.dithering_enable_ego_speed =
+    declare_parameter<float>("dithering_enable_ego_speed", param_read_only());
+  config.dithering_pattern_option =
+    declare_parameter<std::string>("dithering_pattern_option", param_read_only());
+  config.ele_offset_rad = declare_parameter<float>("ele_offset_rad", param_read_only());
+  config.elevation_auto_adjustment =
+    declare_parameter<bool>("elevation_auto_adjustment", param_read_only());
+  config.enable_frame_dithering =
+    declare_parameter<bool>("enable_frame_dithering", param_read_only());
+  config.enable_frame_sync = declare_parameter<bool>("enable_frame_sync", param_read_only());
+  config.flip_pattern_vertically =
+    declare_parameter<bool>("flip_pattern_vertically", param_read_only());
+  config.frame_sync_offset_in_ms =
+    declare_parameter<int>("frame_sync_offset_in_ms", param_read_only());
+  config.frame_sync_type = declare_parameter<std::string>("frame_sync_type", param_read_only());
+  config.frame_synchronization_on_rising_edge =
+    declare_parameter<bool>("frame_synchronization_on_rising_edge", param_read_only());
+  config.hfov_adjustment_deg = declare_parameter<float>("hfov_adjustment_deg", param_read_only());
+  config.hfov_rotation_deg = declare_parameter<float>("hfov_rotation_deg", param_read_only());
+  config.highlight_ROI = declare_parameter<bool>("highlight_ROI", param_read_only());
+  config.horizontal_fov_degrees =
+    declare_parameter<std::string>("horizontal_fov_degrees", param_read_only());
+  config.roi_az_offset_rad = declare_parameter<float>("roi_az_offset_rad", param_read_only());
+  config.vertical_pattern = declare_parameter<std::string>("vertical_pattern", param_read_only());
+
+  auto new_cfg_ptr = std::make_shared<const Aeries2Config>(config);
+  return validateAndSetConfig(new_cfg_ptr);
+}
+
+Status AevaRosWrapper::validateAndSetConfig(std::shared_ptr<const Aeries2Config> & new_config)
+{
+  if (!new_config) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  if (new_config->sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
+    return Status::INVALID_SENSOR_MODEL;
+  }
+
+  if (new_config->frame_id.empty()) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  if (hw_interface_) {
+    hw_interface_->onConfigChange(new_config);
+  }
+
+  sensor_cfg_ptr_ = new_config;
+  return Status::OK;
+}
+
+void AevaRosWrapper::recordRawPacket(const std::vector<uint8_t> & vector)
+{
+  std::lock_guard lock(mtx_current_scan_msg_);
+
+  if (
+    !packets_pub_ || (packets_pub_->get_subscription_count() == 0 &&
+                      packets_pub_->get_intra_process_subscription_count() == 0)) {
+    return;
+  }
+
+  auto packet_stamp = now();
+
+  if (!current_scan_msg_) {
+    current_scan_msg_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
+    auto & header = current_scan_msg_->header;
+    header.frame_id = sensor_cfg_ptr_->frame_id;
+    header.stamp = packet_stamp;
+  }
+
+  auto & packet = current_scan_msg_->packets.emplace_back();
+  packet.stamp = packet_stamp;
+  packet.data = vector;
+}
+
+RCLCPP_COMPONENTS_REGISTER_NODE(AevaRosWrapper)
+}  // namespace nebula::ros
