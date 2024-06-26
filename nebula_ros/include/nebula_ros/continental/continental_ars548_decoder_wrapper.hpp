@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "nebula_ros/common/parameter_descriptors.hpp"
 #include "nebula_ros/common/watchdog_timer.hpp"
 
 #include <nebula_common/continental/continental_ars548.hpp>
