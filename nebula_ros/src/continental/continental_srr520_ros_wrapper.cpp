@@ -14,6 +14,8 @@
 
 #include "nebula_ros/continental/continental_srr520_ros_wrapper.hpp"
 
+#include "nebula_ros/common/parameter_descriptors.hpp"
+
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
 namespace nebula::ros
