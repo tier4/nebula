@@ -1,3 +1,5 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
 
 // #define WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
@@ -747,7 +749,7 @@ HesaiStatus HesaiHwInterface::GetLidarMonitorAsyncHttp(
   }
 
   hcd->asyncGet(
-    [this, str_callback](const std::string & str) { str_callback(str); },
+    [str_callback](const std::string & str) { str_callback(str); },
     "/pandar.cgi?action=get&object=lidar_monitor");
   boost::system::error_code ec;
   ctx->run(ec);

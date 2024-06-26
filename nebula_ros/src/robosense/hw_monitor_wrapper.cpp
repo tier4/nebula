@@ -1,4 +1,8 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_ros/robosense/hw_monitor_wrapper.hpp"
+
+#include "nebula_ros/common/parameter_descriptors.hpp"
 
 #include <memory>
 
@@ -83,13 +87,15 @@ void RobosenseHwMonitorWrapper::DiagnosticsCallback(
     current_sensor_info_ = diag_info;
     current_info_time_ = current_time;
   }
-  
+
   if (!diagnostics_updater_) {
     InitializeRobosenseDiagnostics();
   }
 }
 
-void RobosenseHwMonitorWrapper::OnConfigChange(const std::shared_ptr<const nebula::drivers::RobosenseSensorConfiguration> & new_config) {
+void RobosenseHwMonitorWrapper::OnConfigChange(
+  const std::shared_ptr<const nebula::drivers::RobosenseSensorConfiguration> & new_config)
+{
   std::lock_guard lock(mtx_config_);
 
   if (!new_config) {
@@ -102,7 +108,6 @@ void RobosenseHwMonitorWrapper::OnConfigChange(const std::shared_ptr<const nebul
 
   sensor_cfg_ptr_ = new_config;
 }
-
 
 }  // namespace ros
 }  // namespace nebula

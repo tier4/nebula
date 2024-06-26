@@ -1,6 +1,7 @@
 # Running Nebula
 
 ## Launch with default parameters
+
 To launch Nebula as a ROS 2 node with default parameters for your sensor model:
 
 ```bash
@@ -8,9 +9,11 @@ ros2 launch nebula_ros *sensor_vendor_name*_launch_all_hw.xml sensor_model:=*sen
 ```
 
 For example, for a Hesai Pandar40P sensor:
+
 ```bash
 ros2 launch nebula_ros hesai_launch_all_hw.xml sensor_model:=Pandar40P
 ```
 
 ## Sensor configuration
+
 WIP

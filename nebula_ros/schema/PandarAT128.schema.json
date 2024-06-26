@@ -70,7 +70,7 @@
           "$ref": "sub/hardware.json#/definitions/rotation_speed",
           "default": 200,
           "enum": [
-            200, 
+            200,
             400
           ]
         },
@@ -142,9 +142,13 @@
         },
         "additionalProperties": false
       },
-      "required": ["ros__parameters"]
+      "required": [
+        "ros__parameters"
+      ]
     }
   },
-  "required": ["/**"],
+  "required": [
+    "/**"
+  ],
   "additionalProperties": false
 }

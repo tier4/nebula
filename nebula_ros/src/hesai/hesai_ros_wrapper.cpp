@@ -1,4 +1,8 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_ros/hesai/hesai_ros_wrapper.hpp"
+
+#pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
 namespace nebula
 {
@@ -38,7 +42,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 
   decoder_thread_ = std::thread([this]() {
     while (true) {
-      decoder_wrapper_->ProcessCloudPacket(std::move(packet_queue_.pop()));
+      decoder_wrapper_->ProcessCloudPacket(packet_queue_.pop());
     }
   });
 
@@ -72,8 +76,7 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
   config.return_mode = drivers::ReturnModeFromStringHesai(_return_mode, config.sensor_model);
 
   config.host_ip = declare_parameter<std::string>("host_ip", param_read_only());
-  config.sensor_ip =
-    declare_parameter<std::string>("sensor_ip", param_read_only());
+  config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());
   config.data_port = declare_parameter<uint16_t>("data_port", param_read_only());
   config.gnss_port = declare_parameter<uint16_t>("gnss_port", param_read_only());
   config.frame_id = declare_parameter<std::string>("frame_id", param_read_write());
@@ -99,8 +102,7 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
       descriptor.additional_constraints = "300, 600, 1200";
       descriptor.integer_range = int_range(300, 1200, 300);
     }
-    config.rotation_speed =
-      declare_parameter<uint16_t>("rotation_speed", descriptor);
+    config.rotation_speed = declare_parameter<uint16_t>("rotation_speed", descriptor);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();

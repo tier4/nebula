@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
-    host_ip: "255.255.255.255"
-    sensor_ip: "192.168.1.201"
+    host_ip: 255.255.255.255
+    sensor_ip: 192.168.1.201
     data_port: 2368
     gnss_port: 10110
     packet_mtu_size: 1500
@@ -17,7 +17,7 @@
     sensor_model: Pandar64
     rotation_speed: 600
     return_mode: Dual
-    ptp_profile: "1588v2"
+    ptp_profile: 1588v2
     ptp_domain: 0
     ptp_transport_type: UDP
     ptp_switch_type: TSN

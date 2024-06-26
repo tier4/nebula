@@ -1,10 +1,23 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef HESAI_STATUS_HPP
 #define HESAI_STATUS_HPP
 
 #include "nebula_common/nebula_status.hpp"
 
 #include <ostream>
-#include <string>
 
 namespace nebula
 {
@@ -26,12 +39,13 @@ public:
     Type_end_of_Status = INVALID_RPM_ERROR
   } _hesai_type;
   HesaiStatus() : _type_num(static_cast<int>(Status::OK)) { _type = static_cast<Type>(type()); }
-  HesaiStatus(Type v) : _type_num(static_cast<int>(v)) { _type = v; }
-  HesaiStatus(HesaiType v) : _type_num(static_cast<int>(v)), _hesai_type(v)
+  /* NOLINT(runtime/explicit) */ HesaiStatus(Type v) : _type_num(static_cast<int>(v)) { _type = v; }
+  /* NOLINT(runtime/explicit) */ HesaiStatus(HesaiType v)
+  : _type_num(static_cast<int>(v)), _hesai_type(v)
   {
     _type = Type::Type_end_of_Status;
   }
-  HesaiStatus(int type) : _type_num(type) {}
+  explicit HesaiStatus(int type) : _type_num(type) {}
   int type() const { return _type_num; }
   friend bool operator==(const HesaiStatus & L, const HesaiStatus & R)
   {

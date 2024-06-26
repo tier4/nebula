@@ -1,3 +1,5 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "hesai_ros_decoder_test_main.hpp"
 
 #include "hesai_common.hpp"
@@ -9,7 +11,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string>

@@ -15,9 +15,6 @@
 #include <yaml-cpp/yaml.h>
 
 #include <cmath>
-#include <fstream>
-#include <iostream>
-#include <limits>
 #include <map>
 #include <string>
 #include <vector>
@@ -61,12 +58,8 @@ public:
   bool initialized;
 
 public:
-  explicit VelodyneCalibration()
-  : distance_resolution_m(0.002f), initialized(false)
-  {
-  }
-  explicit VelodyneCalibration(const std::string & calibration_file)
-  : distance_resolution_m(0.002f)
+  VelodyneCalibration() : distance_resolution_m(0.002f), initialized(false) {}
+  explicit VelodyneCalibration(const std::string & calibration_file) : distance_resolution_m(0.002f)
   {
     read(calibration_file);
   }

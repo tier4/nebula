@@ -1,10 +1,23 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
 #define NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
 
 #include <nebula_common/point_types.hpp>
 #include <nebula_common/velodyne/velodyne_calibration_decoder.hpp>
 #include <nebula_common/velodyne/velodyne_common.hpp>
-
 #include <rclcpp/rclcpp.hpp>
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
@@ -161,8 +174,8 @@ protected:
     has_scanned_ = false;
     processed_packets_++;
 
-    uint32_t packet_first_azm = packet[OFFSET_FIRST_AZIMUTH];  // lower word of azimuth block 0
-    packet_first_azm |= packet[OFFSET_FIRST_AZIMUTH + 1] << 8; // higher word of azimuth block 0
+    uint32_t packet_first_azm = packet[OFFSET_FIRST_AZIMUTH];   // lower word of azimuth block 0
+    packet_first_azm |= packet[OFFSET_FIRST_AZIMUTH + 1] << 8;  // higher word of azimuth block 0
 
     uint32_t packet_last_azm = packet[OFFSET_LAST_AZIMUTH];
     packet_last_azm |= packet[OFFSET_LAST_AZIMUTH + 1] << 8;

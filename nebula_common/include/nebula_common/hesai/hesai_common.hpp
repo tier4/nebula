@@ -1,10 +1,23 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef NEBULA_HESAI_COMMON_H
 #define NEBULA_HESAI_COMMON_H
 
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 
-#include <bitset>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -72,7 +85,7 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
     return LoadFromString(ss.str());
   }
 
-  nebula::Status LoadFromBytes(const std::vector<uint8_t> & buf)
+  nebula::Status LoadFromBytes(const std::vector<uint8_t> & buf) override
   {
     std::string calibration_string = std::string(buf.begin(), buf.end());
     return LoadFromString(calibration_string);

@@ -1,6 +1,18 @@
-#pragma once
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-#include "nebula_ros/common/parameter_descriptors.hpp"
+#pragma once
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/hesai/hesai_common.hpp>
@@ -12,7 +24,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -94,7 +105,6 @@ private:
 
   std::vector<std::string> temperature_names_;
 
-  bool setup_sensor;
   const std::string MSG_NOT_SUPPORTED = "Not supported";
   const std::string MSG_ERROR = "Error";
   const std::string MSG_SEP = ": ";

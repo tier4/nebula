@@ -1,8 +1,5 @@
 extends: default
 
-ignore: |
-  *.param.yaml
-
 rules:
   braces:
     level: error
@@ -13,6 +10,8 @@ rules:
   document-start:
     level: error
     present: false # Don't need document start markers
+    ignore:
+      - .clang-format # Needs '---' between languages
   line-length: disable # Delegate to Prettier
   truthy:
     level: error
@@ -20,3 +19,7 @@ rules:
   quoted-strings:
     level: error
     required: only-when-needed # To keep consistent style
+  indentation:
+    spaces: consistent
+    indent-sequences: true
+    check-multi-line-strings: false

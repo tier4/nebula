@@ -1,3 +1,17 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef NEBULA_HESAI_HW_INTERFACE_H
 #define NEBULA_HESAI_HW_INTERFACE_H
 // Have to define macros to silence warnings about deprecated headers being used by
@@ -16,13 +30,9 @@
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/hesai/hesai_status.hpp"
 #include "nebula_common/util/expected.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 
 #include <rclcpp/rclcpp.hpp>
-
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -127,9 +137,6 @@ private:
 
   std::mutex mtx_inflight_tcp_request_;
 
-  int prev_phase_{};
-
-  bool is_solid_state = false;
   int target_model_no;
 
   /// @brief Get a one-off HTTP client to communicate with the hardware

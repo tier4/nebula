@@ -1,3 +1,17 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 // Have to define macros to silence warnings about deprecated headers being used by
@@ -13,8 +27,11 @@
 
 #include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_common/robosense/robosense_common.hpp>
-
 #include <rclcpp/rclcpp.hpp>
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -78,14 +95,12 @@ public:
   /// @brief Registering callback for RobosenseScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterScanCallback(
-    std::function<void(std::vector<uint8_t> &)> scan_callback);
+  Status RegisterScanCallback(std::function<void(std::vector<uint8_t> &)> scan_callback);
 
   /// @brief Registering callback for RobosensePacket
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterInfoCallback(
-    std::function<void(std::vector<uint8_t> &)> info_callback);
+  Status RegisterInfoCallback(std::function<void(std::vector<uint8_t> &)> info_callback);
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger

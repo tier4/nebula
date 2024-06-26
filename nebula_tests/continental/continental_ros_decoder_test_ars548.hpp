@@ -18,7 +18,6 @@
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/nebula_status.hpp>
-#include <nebula_common/velodyne/velodyne_common.hpp>
 #include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -27,6 +26,7 @@
 #include <nebula_msgs/msg/nebula_packets.hpp>
 
 #include <gtest/gtest.h>
+#include <yaml-cpp/node/node.h>
 
 #include <memory>
 #include <string>
