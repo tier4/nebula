@@ -5,7 +5,7 @@
   "definitions": {
     "advanced_diagnostics": {
       "type": "boolean",
-      "default": false,
+      "default": "false",
       "readOnly": true,
       "description": "Enable advanced diagnostics."
     },
@@ -17,7 +17,7 @@
     },
     "diag_span": {
       "type": "integer",
-      "default": 1000,
+      "default": "1000",
       "minimum": 1,
       "readOnly": true,
       "description": "Diagnostics rate."
@@ -36,13 +36,13 @@
     },
     "use_bus_time": {
       "type": "boolean",
-      "default": false,
+      "default": "false",
       "readOnly": true,
       "description": "Use CAN bus time for published sensor data."
     },
     "use_sensor_time": {
       "type": "boolean",
-      "default": false,
+      "default": "false",
       "readOnly": true,
       "description": "Use sensor time for published sensor data."
     }
