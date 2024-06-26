@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "nebula_ros/common/mt_queue.hpp"
 #include "nebula_ros/robosense/decoder_wrapper.hpp"
 #include "nebula_ros/robosense/hw_interface_wrapper.hpp"
 #include "nebula_ros/robosense/hw_monitor_wrapper.hpp"
@@ -24,6 +23,7 @@
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/nebula_status.hpp>
 #include <nebula_common/robosense/robosense_common.hpp>
+#include <nebula_common/util/mt_queue.hpp>
 #include <nebula_decoders/nebula_decoders_robosense/robosense_info_driver.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_robosense/robosense_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
