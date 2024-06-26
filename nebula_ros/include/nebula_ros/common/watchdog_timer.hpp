@@ -20,22 +20,21 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <utility>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 class WatchdogTimer
 {
-  using watchdog_cb_t = std::function<void(bool)>;
-
 public:
+  using callback_t = std::function<void(bool)>;
+
   WatchdogTimer(
     rclcpp::Node & node, const std::chrono::microseconds & expected_update_interval,
-    const watchdog_cb_t & callback)
+    callback_t callback)
   : node_(node),
-    callback_(callback),
+    callback_(std::move(callback)),
     expected_update_interval_ns_(
       std::chrono::duration_cast<std::chrono::nanoseconds>(expected_update_interval).count())
   {
@@ -61,11 +60,10 @@ private:
 
   rclcpp::Node & node_;
   rclcpp::TimerBase::SharedPtr timer_;
-  std::atomic<uint64_t> last_update_ns_;
-  const watchdog_cb_t callback_;
+  std::atomic<uint64_t> last_update_ns_{};
+  const callback_t callback_;
 
   const uint64_t expected_update_interval_ns_;
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros
