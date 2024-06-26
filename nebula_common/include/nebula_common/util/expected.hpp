@@ -15,6 +15,7 @@
 #pragma once
 
 #include <exception>
+#include <stdexcept>
 #include <string>
 #include <variant>
 
@@ -45,12 +46,13 @@ private:
 template <typename T, typename E>
 struct expected
 {
-  /// @brief Whether the expected instance holds a value (as opposed to an error).
-  /// Call this before trying to access values via `value()`.
+  /// @brief Whether the expected instance holds a value (as opposed to an
+  /// error). Call this before trying to access values via `value()`.
   /// @return True if a value is contained, false if an error is contained
   bool has_value() { return std::holds_alternative<T>(value_); }
 
-  /// @brief Retrieve the value, or throw `bad_expected_access` if an error is contained.
+  /// @brief Retrieve the value, or throw `bad_expected_access` if an error is
+  /// contained.
   /// @return The value of type `T`
   T value()
   {
@@ -60,8 +62,8 @@ struct expected
     return std::get<T>(value_);
   }
 
-  /// @brief Return the contained value, or, if an error is contained, return the given `default_`
-  /// instead.
+  /// @brief Return the contained value, or, if an error is contained, return
+  /// the given `default_` instead.
   /// @return The contained value, if any, else `default_`
   T value_or(const T & default_)
   {
@@ -69,7 +71,8 @@ struct expected
     return default_;
   }
 
-  /// @brief If the instance has a value, return the value, else throw std::runtime_error(error_msg)
+  /// @brief If the instance has a value, return the value, else throw
+  /// std::runtime_error(error_msg)
   /// @param error_msg The message to be included in the thrown exception
   /// @return The value
   T value_or_throw(const std::string & error_msg)
@@ -78,7 +81,18 @@ struct expected
     throw std::runtime_error(error_msg);
   }
 
-  /// @brief Retrieve the error, or throw `bad_expected_access` if a value is contained.
+  /// @brief If the instance has a value, return the value, else throw the
+  /// contained error instance.
+  /// @return The value
+  /// @throws The error of type `E` if no value is present
+  T value_or_throw()
+  {
+    if (has_value()) return value();
+    throw error();
+  }
+
+  /// @brief Retrieve the error, or throw `bad_expected_access` if a value is
+  /// contained.
   /// @return The error of type `E`
   E error()
   {
@@ -88,8 +102,8 @@ struct expected
     return std::get<E>(value_);
   }
 
-  /// @brief Return the contained error, or, if a value is contained, return the given `default_`
-  /// instead.
+  /// @brief Return the contained error, or, if a value is contained, return the
+  /// given `default_` instead.
   /// @return The contained error, if any, else `default_`
   E error_or(const E & default_)
   {
@@ -97,9 +111,9 @@ struct expected
     return default_;
   }
 
-  expected(const T & value) { value_ = value; }  // NOLINT(runtime/explicit)
+  expected(const T & value) : value_(value) {}  // NOLINT(runtime/explicit)
 
-  expected(const E & error) { value_ = error; }  // NOLINT(runtime/explicit)
+  expected(const E & error) : value_(error) {}  // NOLINT(runtime/explicit)
 
 private:
   std::variant<T, E> value_;
