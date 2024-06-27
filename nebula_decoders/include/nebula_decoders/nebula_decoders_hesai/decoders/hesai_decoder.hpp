@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
@@ -159,6 +160,23 @@ protected:
           }
         }
 
+        CorrectedAngleData corrected_angle_data =
+          angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
+
+        {
+          auto min_angle = deg2rad(sensor_configuration_->cloud_min_angle);
+          auto max_angle = deg2rad(sensor_configuration_->cloud_max_angle);
+          const auto & azimuth = corrected_angle_data.azimuth_rad;
+
+          bool inside_fov =
+            (min_angle <= azimuth && azimuth <= max_angle) ||
+            ((max_angle < min_angle) && (azimuth <= max_angle || min_angle <= azimuth));
+
+          if (!inside_fov) {
+            continue;
+          }
+        }
+
         NebulaPoint point;
         point.distance = distance;
         point.intensity = unit.reflectivity;
@@ -167,8 +185,6 @@ protected:
 
         point.return_type = static_cast<uint8_t>(return_type);
         point.channel = channel_id;
-
-        auto corrected_angle_data = angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
 
         // The raw_azimuth and channel are only used as indices, sin/cos functions use the precise
         // corrected angles
