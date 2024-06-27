@@ -67,8 +67,8 @@ protected:
   {
     if (msop_packet.size() < sizeof(typename SensorT::packet_t)) {
       RCLCPP_ERROR_STREAM(
-        logger_, "Packet size mismatch:" << msop_packet.size() << " | Expected at least:"
-                                         << sizeof(typename SensorT::packet_t));
+        logger_, "Packet size mismatch: " << msop_packet.size() << " | Expected at least: "
+                                          << sizeof(typename SensorT::packet_t));
       return false;
     }
     if (std::memcpy(&packet_, msop_packet.data(), sizeof(typename SensorT::packet_t))) {

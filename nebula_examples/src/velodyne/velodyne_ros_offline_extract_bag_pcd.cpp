@@ -32,7 +32,7 @@ VelodyneRosOfflineExtractBag::VelodyneRosOfflineExtractBag(
 
   wrapper_status_ = GetParameters(sensor_configuration, calibration_configuration);
   if (Status::OK != wrapper_status_) {
-    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << wrapper_status_);
+    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error: " << wrapper_status_);
     return;
   }
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");

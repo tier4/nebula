@@ -46,8 +46,10 @@ struct RobosenseSensorConfiguration : LidarConfigurationBase
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, RobosenseSensorConfiguration const & arg)
 {
-  os << (LidarConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
-     << ", ScanPhase:" << arg.scan_phase;
+  os << "RobosenseSensorConfiguration:" << '\n';
+  os << (LidarConfigurationBase)(arg) << '\n';
+  os << "GnssPort: " << arg.gnss_port << '\n';
+  os << "ScanPhase: " << arg.scan_phase;
   return os;
 }
 

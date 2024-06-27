@@ -50,8 +50,8 @@ public:
     const auto packet_size = raw_packet.size();
     if (packet_size < sizeof(typename SensorT::info_t)) {
       RCLCPP_ERROR_STREAM(
-        logger_, "Packet size mismatch:" << packet_size << " | Expected at least:"
-                                         << sizeof(typename SensorT::info_t));
+        logger_, "Packet size mismatch: " << packet_size << " | Expected at least: "
+                                          << sizeof(typename SensorT::info_t));
       return false;
     }
     try {

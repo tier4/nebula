@@ -17,10 +17,8 @@
 #include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rcpputils/filesystem_helper.hpp"
-#include "rcutils/time.h"
 #include "rosbag2_cpp/reader.hpp"
 #include "rosbag2_cpp/readers/sequential_reader.hpp"
-#include "rosbag2_cpp/writer.hpp"
 #include "rosbag2_cpp/writers/sequential_writer.hpp"
 #include "rosbag2_storage/storage_options.hpp"
 
@@ -41,7 +39,7 @@ HesaiRosOfflineExtractBag::HesaiRosOfflineExtractBag(
   wrapper_status_ =
     GetParameters(sensor_configuration, calibration_configuration, correction_configuration);
   if (Status::OK != wrapper_status_) {
-    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << wrapper_status_);
+    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error: " << wrapper_status_);
     return;
   }
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
@@ -152,7 +150,7 @@ Status HesaiRosOfflineExtractBag::GetParameters(
     }
   }
 
-  RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
+  RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig: " << sensor_configuration);
   return Status::OK;
 }
 
