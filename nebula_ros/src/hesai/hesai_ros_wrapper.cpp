@@ -2,6 +2,8 @@
 
 #include "nebula_ros/hesai/hesai_ros_wrapper.hpp"
 
+#include "nebula_ros/common/parameter_descriptors.hpp"
+
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
 

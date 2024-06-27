@@ -23,6 +23,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
+#include <pandar_msgs/msg/pandar_scan.hpp>
 
 #include <memory>
 #include <mutex>

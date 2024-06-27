@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include "nebula_common/hesai/hesai_common.hpp"
-
 #include <rclcpp/rclcpp.hpp>
 
 #include <cstdint>
