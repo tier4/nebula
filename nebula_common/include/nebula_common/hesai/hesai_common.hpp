@@ -58,6 +58,7 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "FoV Start: " << arg.cloud_min_angle << '\n';
   os << "FoV End: " << arg.cloud_max_angle << '\n';
   os << "Dual Return Distance Threshold: " << arg.dual_return_distance_threshold << '\n';
+  os << "Calibration Path: " << arg.calibration_path << '\n';
   os << "PTP Profile: " << arg.ptp_profile << '\n';
   os << "PTP Domain: " << std::to_string(arg.ptp_domain) << '\n';
   os << "PTP Transport Type: " << arg.ptp_transport_type << '\n';
