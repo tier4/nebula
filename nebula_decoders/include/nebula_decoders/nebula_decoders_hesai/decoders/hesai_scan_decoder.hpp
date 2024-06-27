@@ -15,11 +15,7 @@
 #ifndef NEBULA_WS_HESAI_SCAN_DECODER_HPP
 #define NEBULA_WS_HESAI_SCAN_DECODER_HPP
 
-#include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/point_types.hpp"
-
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
 
 #include <tuple>
 #include <vector>

@@ -26,6 +26,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
+#include <pandar_msgs/msg/pandar_scan.hpp>
+
 #include <boost/algorithm/string/join.hpp>
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>

@@ -22,6 +22,7 @@ HesaiHwInterface::HesaiHwInterface()
   tcp_driver_{new ::drivers::tcp_driver::TcpDriver(m_owned_ctx)}
 {
 }
+
 HesaiHwInterface::~HesaiHwInterface()
 {
   FinalizeTcpDriver();

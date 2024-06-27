@@ -17,11 +17,11 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
+#include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/nebula_common.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
-
+#include <array>
 #include <memory>
 #include <tuple>
 #include <utility>
