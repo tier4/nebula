@@ -14,13 +14,10 @@
 
 #pragma once
 
-#include "boost_tcp_driver/tcp_driver.hpp"
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
 #include "nebula_ros/common/mt_queue.hpp"
-#include "nebula_ros/common/parameter_descriptors.hpp"
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 #include "nebula_ros/hesai/hw_interface_wrapper.hpp"
 #include "nebula_ros/hesai/hw_monitor_wrapper.hpp"
@@ -29,17 +26,14 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
-#include "nebula_msgs/msg/nebula_packet.hpp"
-
 #include <boost/algorithm/string/join.hpp>
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <array>
-#include <chrono>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -51,6 +45,9 @@ namespace ros
 /// @brief Ros wrapper of hesai driver
 class HesaiRosWrapper final : public rclcpp::Node
 {
+  using get_calibration_result_t = nebula::util::expected<
+    std::shared_ptr<drivers::HesaiCalibrationConfigurationBase>, nebula::Status>;
+
 public:
   explicit HesaiRosWrapper(const rclcpp::NodeOptions & options);
   ~HesaiRosWrapper() noexcept {};
@@ -78,6 +75,23 @@ private:
 
   Status ValidateAndSetConfig(
     std::shared_ptr<const drivers::HesaiSensorConfiguration> & new_config);
+
+  /// @brief The ROS 2 parameter holding the calibration file path is called differently depending
+  /// on the sensor model. This function returns the correct parameter name given a model.
+  /// @param model A sensor model
+  /// @return std::string The parameter name
+  std::string getCalibrationParameterName(drivers::SensorModel model) const;
+
+  /// @brief Load calibration data from the best available source:
+  /// 1. If sensor connected, download and save from sensor
+  /// 2. If downloaded file available, load that file
+  /// 3. Load the file given by `calibration_file_path`
+  /// @param calibration_file_path The file to use if no better option is available
+  /// @param ignore_others If true, skip straight so step 3 above, ignoring better calibration
+  /// options
+  /// @return The calibration data if successful, or an error code if not
+  get_calibration_result_t GetCalibrationData(
+    const std::string & calibration_file_path, bool ignore_others = false);
 
   Status wrapper_status_;
 

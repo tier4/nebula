@@ -35,6 +35,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   uint16_t gnss_port{};
   double scan_phase{};
   double dual_return_distance_threshold{};
+  std::string calibration_path{};
   uint16_t rotation_speed;
   uint16_t cloud_min_angle;
   uint16_t cloud_max_angle;
@@ -53,7 +54,8 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
      << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
      << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle
      << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold
-     << ", PtpProfile:" << arg.ptp_profile << ", PtpDomain:" << std::to_string(arg.ptp_domain)
+     << ", CalibrationPath:" << arg.calibration_path << ", PtpProfile:" << arg.ptp_profile
+     << ", PtpDomain:" << std::to_string(arg.ptp_domain)
      << ", PtpTransportType:" << arg.ptp_transport_type
      << ", PtpSwitchType:" << arg.ptp_switch_type;
   return os;
