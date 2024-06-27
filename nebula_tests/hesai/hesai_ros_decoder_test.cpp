@@ -2,12 +2,14 @@
 
 #include "hesai_ros_decoder_test.hpp"
 
-#include "rclcpp/serialization.hpp"
-#include "rclcpp/serialized_message.hpp"
-#include "rcpputils/filesystem_helper.hpp"
-#include "rosbag2_cpp/reader.hpp"
-#include "rosbag2_cpp/readers/sequential_reader.hpp"
-#include "rosbag2_storage/storage_options.hpp"
+#include <rclcpp/serialization.hpp>
+#include <rclcpp/serialized_message.hpp>
+#include <rcpputils/filesystem_helper.hpp>
+#include <rosbag2_cpp/reader.hpp>
+#include <rosbag2_cpp/readers/sequential_reader.hpp>
+#include <rosbag2_storage/storage_options.hpp>
+
+#include <pandar_msgs/msg/pandar_scan.hpp>
 
 #include <gtest/gtest.h>
 
