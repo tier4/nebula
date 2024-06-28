@@ -52,7 +52,7 @@ class HesaiRosWrapper final : public rclcpp::Node
 
 public:
   explicit HesaiRosWrapper(const rclcpp::NodeOptions & options);
-  ~HesaiRosWrapper() noexcept {};
+  ~HesaiRosWrapper() noexcept override = default;
 
   /// @brief Get current status of this driver
   /// @return Current status
