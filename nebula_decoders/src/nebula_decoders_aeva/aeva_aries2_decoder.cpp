@@ -54,7 +54,7 @@ void AevaAries2Decoder::processPointcloudMessage(const aeva::PointCloudMessage &
     point.y = xy_distance * std::cos(point.azimuth);
     point.z = point.distance * std::sin(point.elevation);
 
-    point.v = raw_point.velocity.value();
+    point.distance_rate = raw_point.velocity.value();
     point.intensity = raw_point.intensity;
 
     point.time_stamp = state.absolute_time_ns - cloud_state_.timestamp;
