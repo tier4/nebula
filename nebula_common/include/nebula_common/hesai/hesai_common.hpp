@@ -18,12 +18,14 @@
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <vector>
 namespace nebula
 {
@@ -67,6 +69,8 @@ struct HesaiCalibrationConfigurationBase : public CalibrationConfigurationBase
   virtual nebula::Status LoadFromFile(const std::string & calibration_file) = 0;
   virtual nebula::Status SaveToFileFromBytes(
     const std::string & calibration_file, const std::vector<uint8_t> & buf) = 0;
+
+  virtual std::tuple<float, float> getFovPadding() = 0;
 };
 
 /// @brief struct for Hesai calibration configuration
@@ -167,6 +171,19 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
     ofs << calibration_string;
     ofs.close();
     return Status::OK;
+  }
+
+  std::tuple<float, float> getFovPadding() override
+  {
+    float min = INFINITY;
+    float max = -INFINITY;
+
+    for (const auto & item : azimuth_offset_map) {
+      min = std::min(min, item.second);
+      max = std::max(max, item.second);
+    }
+
+    return {-max, -min};
   }
 };
 
@@ -369,6 +386,12 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
     unsigned int l = azi - i * STEP3;
     float k = 1.f * l / STEP3;
     return round((1 - k) * elevationOffset[ch * 180 + i] + k * elevationOffset[ch * 180 + i + 1]);
+  }
+
+  std::tuple<float, float> getFovPadding() override
+  {
+    // TODO(mojomex): calculate instead of hard-coding
+    return {-5, 5};
   }
 };
 
