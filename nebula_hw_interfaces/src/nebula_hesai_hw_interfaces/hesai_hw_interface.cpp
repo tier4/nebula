@@ -11,9 +11,7 @@
 
 #include <boost/asio.hpp>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 HesaiHwInterface::HesaiHwInterface()
 : cloud_io_context_{new ::drivers::common::IoContext(1)},
@@ -1266,16 +1264,16 @@ std::string HesaiHwInterface::PrettyPrintPTCError(ptc_error_t error_code)
   std::vector<std::string> nebula_errors;
 
   if (error_flags & TCP_ERROR_INCOMPLETE_RESPONSE) {
-    nebula_errors.push_back("Incomplete response payload");
+    nebula_errors.emplace_back("Incomplete response payload");
   }
   if (error_flags & TCP_ERROR_TIMEOUT) {
-    nebula_errors.push_back("Request timeout");
+    nebula_errors.emplace_back("Request timeout");
   }
   if (error_flags & TCP_ERROR_UNEXPECTED_PAYLOAD) {
-    nebula_errors.push_back("Received payload but expected payload length 0");
+    nebula_errors.emplace_back("Received payload but expected payload length 0");
   }
   if (error_flags & TCP_ERROR_UNRELATED_RESPONSE) {
-    nebula_errors.push_back("Received unrelated response");
+    nebula_errors.emplace_back("Received unrelated response");
   }
 
   ss << boost::algorithm::join(nebula_errors, ", ");
@@ -1297,5 +1295,4 @@ T HesaiHwInterface::CheckSizeAndParse(const std::vector<uint8_t> & data)
   return parsed;
 }
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
