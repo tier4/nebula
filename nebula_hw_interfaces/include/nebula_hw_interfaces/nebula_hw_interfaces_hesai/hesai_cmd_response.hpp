@@ -218,7 +218,7 @@ struct HesaiInventory
     return os;
   }
 
-  std::string get_str_model()
+  std::string get_str_model() const
   {
     switch (model) {
       case 0:
@@ -400,7 +400,7 @@ struct HesaiLidarStatus
     return os;
   }
 
-  std::string get_str_gps_pps_lock()
+  [[nodiscard]] std::string get_str_gps_pps_lock() const
   {
     switch (gps_pps_lock) {
       case 1:
@@ -411,7 +411,7 @@ struct HesaiLidarStatus
         return "Unknown";
     }
   }
-  std::string get_str_gps_gprmc_status()
+  [[nodiscard]] std::string get_str_gps_gprmc_status() const
   {
     switch (gps_gprmc_status) {
       case 1:
@@ -422,7 +422,7 @@ struct HesaiLidarStatus
         return "Unknown";
     }
   }
-  std::string get_str_ptp_clock_status()
+  [[nodiscard]] std::string get_str_ptp_clock_status() const
   {
     switch (ptp_clock_status) {
       case 0:

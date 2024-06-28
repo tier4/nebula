@@ -122,10 +122,10 @@ private:
     uint8_t error_flags = 0;
     uint8_t ptc_error_code = 0;
 
-    bool ok() { return !error_flags && !ptc_error_code; }
+    [[nodiscard]] bool ok() const { return !error_flags && !ptc_error_code; }
   };
 
-  typedef nebula::util::expected<std::vector<uint8_t>, ptc_error_t> ptc_cmd_result_t;
+  using ptc_cmd_result_t = nebula::util::expected<std::vector<uint8_t>, ptc_error_t>;
 
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
   std::shared_ptr<boost::asio::io_context> m_owned_ctx;
