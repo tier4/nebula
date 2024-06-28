@@ -26,7 +26,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   hw_monitor_wrapper_(),
   decoder_wrapper_()
 {
-  setvbuf(stdout, NULL, _IONBF, BUFSIZ);
+  setvbuf(stdout, nullptr, _IONBF, BUFSIZ);
 
   wrapper_status_ = DeclareAndGetSensorConfigParams();
 
