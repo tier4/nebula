@@ -17,7 +17,7 @@
             <remap from="steering_angle_input" to="$(var steering_angle_topic)"/>
         </node>
     </group>
-    
+
     <group if="$(eval &quot;'$(var sensor_model)' == 'SRR520' &quot;)" >
 
         <node pkg="nebula_ros" exec="continental_srr520_ros_wrapper_node" name="nebula_continental_srr520" output="screen">
