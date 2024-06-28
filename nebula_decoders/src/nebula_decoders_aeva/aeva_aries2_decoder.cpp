@@ -46,7 +46,7 @@ void AevaAries2Decoder::processPointcloudMessage(const aeva::PointCloudMessage &
     AevaPoint point;
 
     point.distance = raw_point.range.value();
-    point.azimuth = raw_point.azimuth.value() * M_PI_2f;
+    point.azimuth = -raw_point.azimuth.value() * M_PI_2f;
     point.elevation = raw_point.elevation.value() * M_PI_4f;
 
     float xy_distance = point.distance * std::cos(point.elevation);
