@@ -323,6 +323,16 @@ public:
   /// @return Resulting status
   HesaiLidarRangeAll GetLidarRange();
 
+  /**
+   * @brief Given the HW interface's sensor configuration and a given calibration, set the sensor
+   * FoV (min and max angles) with appropriate padding around the FoV set in the configuration. This
+   * compensates for the points lost due to the sensor filtering FoV by raw encoder angle.
+   *
+   * @param calibration The calibration file of the sensor
+   * @return Status If the FoV was updated correctly
+   */
+  [[nodiscard]] Status checkAndSetLidarRange(const HesaiCalibrationConfigurationBase & calibration);
+
   Status SetClockSource(int clock_source);
 
   /// @brief Setting values with PTC_COMMAND_SET_PTP_CONFIG

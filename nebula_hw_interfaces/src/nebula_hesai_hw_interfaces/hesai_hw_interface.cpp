@@ -502,6 +502,28 @@ HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
   return hesai_range_all;
 }
 
+Status HesaiHwInterface::checkAndSetLidarRange(
+  const HesaiCalibrationConfigurationBase & calibration)
+{
+  int cloud_min = sensor_configuration_->cloud_min_angle;
+  int cloud_max = sensor_configuration_->cloud_max_angle;
+
+  // Only oversize the FoV if it is not already the full 360deg
+  if (cloud_max - cloud_min < 3600) {
+    auto padding = calibration.getFovPadding();
+    cloud_min += static_cast<int>(std::get<0>(padding) * 10);
+    cloud_max += static_cast<int>(std::get<1>(padding) * 10);
+  }
+
+  auto clamp = [](int x) {
+    while (x < 0) x += 3600;
+    while (x > 3600) x -= 3600;
+    return x;
+  };
+
+  return SetLidarRange(clamp(cloud_min), clamp(cloud_max));
+}
+
 Status HesaiHwInterface::SetClockSource(int clock_source)
 {
   std::vector<unsigned char> request_payload;
