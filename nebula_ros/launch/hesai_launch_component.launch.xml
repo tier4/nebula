@@ -87,9 +87,9 @@
         </load_composable_node>
 
         <load_composable_node target="PandarContainer">
-            <composable_node pkg="nebula_ros" 
+            <composable_node pkg="nebula_ros"
                              plugin="HesaiHwMonitorRosWrapper"
-                             name="PandarMon" 
+                             name="PandarMon"
                              namespace="/">
                 <param name="sensor_model" value="$(var sensor_model)"/>
                 <param name="return_mode" value="$(var return_mode)"/>

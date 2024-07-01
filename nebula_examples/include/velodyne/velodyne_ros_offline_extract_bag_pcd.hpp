@@ -38,9 +38,8 @@
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
 
-#include <regex>
-
 #include <memory>
+#include <regex>
 #include <string>
 
 namespace nebula

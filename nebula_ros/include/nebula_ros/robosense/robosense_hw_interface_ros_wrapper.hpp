@@ -81,7 +81,8 @@ private:
 
   /// @brief Callback for receiving RobosensePacket
   /// @param difop_buffer Received DIFOP packet
-  void ReceiveInfoDataCallback(std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> difop_buffer);
+  void ReceiveInfoDataCallback(
+    std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> difop_buffer);
 };
 
 }  // namespace ros

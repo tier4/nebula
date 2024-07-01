@@ -57,7 +57,10 @@ Status VelodyneRosDecoderTest::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status VelodyneRosDecoderTest::GetStatus() { return wrapper_status_; }
+Status VelodyneRosDecoderTest::GetStatus()
+{
+  return wrapper_status_;
+}
 
 Status VelodyneRosDecoderTest::GetParameters(
   drivers::VelodyneSensorConfiguration & sensor_configuration,

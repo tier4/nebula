@@ -81,7 +81,7 @@ public:
       (MAX_AZIMUTH_LEN + current_azimuth - sync_azimuth) % MAX_AZIMUTH_LEN;
     uint32_t last_diff_from_sync =
       (MAX_AZIMUTH_LEN + last_azimuth - sync_azimuth) % MAX_AZIMUTH_LEN;
-      
+
     return current_diff_from_sync < last_diff_from_sync;
   }
 };

@@ -11,6 +11,7 @@ This way, runtime overhead for this generalization is `0`.
 ### Packet formats
 
 For all handled Hesai sensors, the packet structure follows this rough format:
+
 1. (optional) header: static sensor info and feature flags
 2. body: point data
 3. tail and other appendices: timestamp, operation mode info
@@ -18,10 +19,11 @@ For all handled Hesai sensors, the packet structure follows this rough format:
 ### Decoding steps
 
 For all handled Hesai sensors, decoding a packet follows these steps:
+
 ```python
 def unpack(packet):
     parse_and_validate(packet)
-    # return group: one (single-return) or more (multi-return) 
+    # return group: one (single-return) or more (multi-return)
     # blocks that belong to the same azimuth
     for return_group in packet:
         if is_start_of_new_scan(return_group):
@@ -40,17 +42,18 @@ def decode(return_group):
         append to pointcloud
 ```
 
-The steps marked with __*__ are model-specific:
+The steps marked with **\*** are model-specific:
 
-* angle correction
-* timing correction
-* return type assignment
+- angle correction
+- timing correction
+- return type assignment
 
 ### Angle correction
 
 There are two approaches between all the supported sensors:
-* Calibration file based
-* Correction file based (currently only used by AT128)
+
+- Calibration file based
+- Correction file based (currently only used by AT128)
 
 For both approaches, sin/cos lookup tables can be computed.
 However, the resolution and calculation of these tables is different.
@@ -60,7 +63,7 @@ However, the resolution and calculation of these tables is different.
 For each laser channel, a fixed elevation angle and azimuth angle offset are defined in the calibration file.
 Thus, sin/cos for elevation are only a function of the laser channel (not dependent on azimuth) while those for azimuth are a function of azimuth AND elevation.
 
-Lookup tables for elevation can thus be sized with `n_channels`, yielding a maximum size of 
+Lookup tables for elevation can thus be sized with `n_channels`, yielding a maximum size of
 `128 * sizeof(float) = 512B` each.
 
 For azimuth, the size is `n_channels * n_azimuths = n_channels * 360 * azimuth_resolution <= 128 * 36000`.
@@ -94,9 +97,10 @@ While there is a wide range of different supported return modes (e.g. single (fi
 Differences only arise in multi-return (dual or triple) in the output order of the returns, and in the handling of some returns being duplicates (e.g. in dual(first, strongest), the first return coincides with the strongest one).
 
 Here is an exhaustive list of differences:
-* For Dual (First, Last) `0x3B`, 128E3X, 128E4X and XT32 reverse the output order (Last, First)
-* For Dual (Last, Strongest) `0x39`, all sensors except XT32M place the second strongest return in the even block if last == strongest
-* For Dual (First, Strongest) `0x3c`, the same as for `0x39` holds.
+
+- For Dual (First, Last) `0x3B`, 128E3X, 128E4X and XT32 reverse the output order (Last, First)
+- For Dual (Last, Strongest) `0x39`, all sensors except XT32M place the second strongest return in the even block if last == strongest
+- For Dual (First, Strongest) `0x3c`, the same as for `0x39` holds.
 
 For all other return modes, duplicate points are output if the two returns coincide.
 
@@ -119,9 +123,10 @@ Return mode handling has a default implementation that is supplemented by additi
 ### `AngleCorrector`
 
 The angle corrector has three main tasks:
-* compute corrected azimuth/elevation for given azimuth and channel
-* implement `hasScanCompleted()` logic that decides where one scan ends and the next starts
-* compute and provide lookup tables for sin/cos/etc.
+
+- compute corrected azimuth/elevation for given azimuth and channel
+- implement `hasScanCompleted()` logic that decides where one scan ends and the next starts
+- compute and provide lookup tables for sin/cos/etc.
 
 The two angle correction types are calibration-based and correction-based. In both approaches, a file from the sensor is used to extract the angle correction for each azimuth/channel.
 For all approaches, cos/sin lookup tables in the appropriate size are generated (see requirements section above).
@@ -133,9 +138,10 @@ It is a template class taking a sensor type `SensorT` from which packet type, an
 Thus, this unified decoder is an almost zero-cost abstraction.
 
 Its tasks are:
-* parsing an incoming packet
-* managing decode/output point buffers
-* converting all points in the packet using the sensor-specific functions of `SensorT` where necessary
+
+- parsing an incoming packet
+- managing decode/output point buffers
+- converting all points in the packet using the sensor-specific functions of `SensorT` where necessary
 
 `HesaiDecoder<SensorT>` is a subclass of the existing `HesaiScanDecoder` to allow all template instantiations to be assigned to variables of the supertype.
 
@@ -144,24 +150,24 @@ Its tasks are:
 To support a new sensor model, first familiarize with the already implemented decoders.
 Then, consult the new sensor's datasheet and identify the following parameters:
 
-| Parameter | Chapter | Possible values | Notes |
-|-|-|-|-|
-| Header format | 3.1 | `Header12B`, `Header8B`, ... | `Header12B` is the standard and comprises the UDP pre-header and header (6+6B) mentioned in the data sheets |
-| Blocks per packet | 3.1 | `2`, `6`, `10`, ... | |
-| Number of channels | 3.1 | `32`, `40`, `64`, ... |  |
-| Unit format | 3.1 | `Unit3B`, `Unit4B`, ... |  |
-| Angle correction | App. 3 | `CALIBRATION`, `CORRECTION`, ... | The datasheet usually specifies whether a calibration/correction file is used |
-| Timing correction | App. 2 |  | There is usually a block and channel component. These come in the form of formulas/lookup tables. For most sensors, these depend on return mode and for some, features like high resolution mode, alternate firing etc. might change the timing |
-| Return type handling | 3.1 |  | Return modes are handled identically for most sensors but some re-order the returns or replace returns if there are duplicates |
-| Bytes per second | 1.4 | |  |
-| Lowest supported frequency | 1.4 | `5 Hz`, `10 Hz`, ... |  |
+| Parameter                  | Chapter | Possible values                  | Notes                                                                                                                                                                                                                                           |
+| -------------------------- | ------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Header format              | 3.1     | `Header12B`, `Header8B`, ...     | `Header12B` is the standard and comprises the UDP pre-header and header (6+6B) mentioned in the data sheets                                                                                                                                     |
+| Blocks per packet          | 3.1     | `2`, `6`, `10`, ...              |                                                                                                                                                                                                                                                 |
+| Number of channels         | 3.1     | `32`, `40`, `64`, ...            |                                                                                                                                                                                                                                                 |
+| Unit format                | 3.1     | `Unit3B`, `Unit4B`, ...          |                                                                                                                                                                                                                                                 |
+| Angle correction           | App. 3  | `CALIBRATION`, `CORRECTION`, ... | The datasheet usually specifies whether a calibration/correction file is used                                                                                                                                                                   |
+| Timing correction          | App. 2  |                                  | There is usually a block and channel component. These come in the form of formulas/lookup tables. For most sensors, these depend on return mode and for some, features like high resolution mode, alternate firing etc. might change the timing |
+| Return type handling       | 3.1     |                                  | Return modes are handled identically for most sensors but some re-order the returns or replace returns if there are duplicates                                                                                                                  |
+| Bytes per second           | 1.4     |                                  |                                                                                                                                                                                                                                                 |
+| Lowest supported frequency | 1.4     | `5 Hz`, `10 Hz`, ...             |                                                                                                                                                                                                                                                 |
 
-| Chapter | Full title |
-|-|-|
-|1.4| Introduction > Specifications|
-|3.1| Data Structure > Point Cloud Data Packet|
-|App. 2| Absolute Time of Point Cloud Data|
-|App. 3| Angle Correction|
+| Chapter | Full title                               |
+| ------- | ---------------------------------------- |
+| 1.4     | Introduction > Specifications            |
+| 3.1     | Data Structure > Point Cloud Data Packet |
+| App. 2  | Absolute Time of Point Cloud Data        |
+| App. 3  | Angle Correction                         |
 
 With this information, create a `PacketMySensor` struct and `SensorMySensor` class.
 Reuse already-defined structs as much as possible (c.f. `Packet128E3X` and `Packet128E4X`).
@@ -169,7 +175,7 @@ Reuse already-defined structs as much as possible (c.f. `Packet128E3X` and `Pack
 Implement timing correction in `SensorMySensor` and define the class constants `float MIN_RANGE`,
 `float MAX_RANGE` and `size_t MAX_SCAN_BUFFER_POINTS`.
 The former two are used for filtering out too-close and too-far away points while the latter is used to
-allocate pointcloud buffers. 
+allocate pointcloud buffers.
 Set `MAX_SCAN_BUFFER_POINTS = bytes_per_second / lowest_supported_frequency` from the parameters found above.
 
 If there are any non-standard features your sensor has, implement them as generically as possible to allow for future sensors to re-use your code.

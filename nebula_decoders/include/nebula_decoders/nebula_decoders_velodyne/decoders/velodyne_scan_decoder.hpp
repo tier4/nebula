@@ -1,6 +1,13 @@
 #ifndef NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
 #define NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
+#include "nebula_common/point_types.hpp"
+#include "nebula_common/velodyne/velodyne_calibration_decoder.hpp"
+#include "nebula_common/velodyne/velodyne_common.hpp"
+
 #include <rclcpp/rclcpp.hpp>
+
+#include <velodyne_msgs/msg/velodyne_packet.hpp>
+#include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 #include <boost/format.hpp>
 
@@ -10,16 +17,8 @@
 #include <cmath>
 #include <cstdint>
 #include <string>
-#include <vector>
-
-#include "nebula_common/point_types.hpp"
-#include "nebula_common/velodyne/velodyne_calibration_decoder.hpp"
-#include "nebula_common/velodyne/velodyne_common.hpp"
-
-#include <velodyne_msgs/msg/velodyne_packet.hpp>
-#include <velodyne_msgs/msg/velodyne_scan.hpp>
-
 #include <tuple>
+#include <vector>
 
 namespace nebula
 {

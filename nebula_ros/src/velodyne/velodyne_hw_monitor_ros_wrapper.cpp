@@ -143,10 +143,19 @@ VelodyneHwMonitorRosWrapper::VelodyneHwMonitorRosWrapper(const rclcpp::NodeOptio
   });
 }
 
-Status VelodyneHwMonitorRosWrapper::MonitorStart() { return interface_status_; }
+Status VelodyneHwMonitorRosWrapper::MonitorStart()
+{
+  return interface_status_;
+}
 
-Status VelodyneHwMonitorRosWrapper::MonitorStop() { return Status::OK; }
-Status VelodyneHwMonitorRosWrapper::Shutdown() { return Status::OK; }
+Status VelodyneHwMonitorRosWrapper::MonitorStop()
+{
+  return Status::OK;
+}
+Status VelodyneHwMonitorRosWrapper::Shutdown()
+{
+  return Status::OK;
+}
 
 Status VelodyneHwMonitorRosWrapper::InitializeHwMonitor(  // todo: don't think this is needed
   const drivers::SensorConfigurationBase & sensor_configuration)

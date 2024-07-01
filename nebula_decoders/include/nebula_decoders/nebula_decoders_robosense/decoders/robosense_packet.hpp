@@ -34,7 +34,6 @@ struct Timestamp
   }
 };
 
-
 struct Unit
 {
   big_uint16_buf_t distance;
@@ -137,9 +136,8 @@ struct ChannelAngleCorrection
 
   [[nodiscard]] float getAngle() const
   {
-    return sign.value() == ANGLE_SIGN_FLAG
-             ? static_cast<float>(angle.value()) / 100.0f
-             : static_cast<float>(angle.value()) / -100.0f;
+    return sign.value() == ANGLE_SIGN_FLAG ? static_cast<float>(angle.value()) / 100.0f
+                                           : static_cast<float>(angle.value()) / -100.0f;
   }
 };
 

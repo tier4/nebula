@@ -23,34 +23,30 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
 #if not defined(TEST_PCAP)
   Status rt = hw_interface_.InitializeTcpDriver();
-  if(this->retry_hw_)
-  {
+  if (this->retry_hw_) {
     int cnt = 0;
     RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << " Retry: " << cnt);
-    while(rt == Status::ERROR_1)
-    {
+    while (rt == Status::ERROR_1) {
       cnt++;
-      std::this_thread::sleep_for(std::chrono::milliseconds(8000));// >5000
+      std::this_thread::sleep_for(std::chrono::milliseconds(8000));  // >5000
       RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Retry: " << cnt);
       rt = hw_interface_.InitializeTcpDriver();
     }
   }
 
-  if(rt != Status::ERROR_1){
-    try{
+  if (rt != Status::ERROR_1) {
+    try {
       std::vector<std::thread> thread_pool{};
-        thread_pool.emplace_back([this] {
-          auto result = hw_interface_.GetInventory();
-          RCLCPP_INFO_STREAM(get_logger(), result);
-          hw_interface_.SetTargetModel(result.model);
-        });
-        for (std::thread & th : thread_pool) {
-          th.join();
-        }
+      thread_pool.emplace_back([this] {
+        auto result = hw_interface_.GetInventory();
+        RCLCPP_INFO_STREAM(get_logger(), result);
+        hw_interface_.SetTargetModel(result.model);
+      });
+      for (std::thread & th : thread_pool) {
+        th.join();
+      }
 
-    }
-    catch (...)
-    {
+    } catch (...) {
       std::cout << "catch (...) in parent" << std::endl;
       RCLCPP_ERROR_STREAM(get_logger(), "Failed to get model from sensor...");
     }
@@ -58,10 +54,10 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
       hw_interface_.CheckAndSetConfig();
       updateParameters();
     }
-  }
-  else
-  {
-    RCLCPP_ERROR_STREAM(get_logger(), "Failed to get model from sensor... Set from config: " << sensor_cfg_ptr->sensor_model);
+  } else {
+    RCLCPP_ERROR_STREAM(
+      get_logger(),
+      "Failed to get model from sensor... Set from config: " << sensor_cfg_ptr->sensor_model);
     hw_interface_.SetTargetModel(sensor_cfg_ptr->sensor_model);
   }
 #endif
@@ -146,7 +142,8 @@ HesaiHwInterfaceRosWrapper::HesaiHwInterfaceRosWrapper(const rclcpp::NodeOptions
   StreamStart();
 }
 
-HesaiHwInterfaceRosWrapper::~HesaiHwInterfaceRosWrapper() {
+HesaiHwInterfaceRosWrapper::~HesaiHwInterfaceRosWrapper()
+{
   RCLCPP_INFO_STREAM(get_logger(), "Closing TcpDriver");
   hw_interface_.FinalizeTcpDriver();
 }
@@ -159,8 +156,14 @@ Status HesaiHwInterfaceRosWrapper::StreamStart()
   return interface_status_;
 }
 
-Status HesaiHwInterfaceRosWrapper::StreamStop() { return Status::OK; }
-Status HesaiHwInterfaceRosWrapper::Shutdown() { return Status::OK; }
+Status HesaiHwInterfaceRosWrapper::StreamStop()
+{
+  return Status::OK;
+}
+Status HesaiHwInterfaceRosWrapper::Shutdown()
+{
+  return Status::OK;
+}
 
 Status HesaiHwInterfaceRosWrapper::InitializeHwInterface(  // todo: don't think this is needed
   const drivers::SensorConfigurationBase & sensor_configuration)
@@ -362,9 +365,9 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("ptp_transport_type", "");
-    sensor_configuration.ptp_transport_type =
-      nebula::drivers::PtpTransportTypeFromString(this->get_parameter("ptp_transport_type").as_string());
-    if(static_cast<int>(sensor_configuration.ptp_profile) > 0) {
+    sensor_configuration.ptp_transport_type = nebula::drivers::PtpTransportTypeFromString(
+      this->get_parameter("ptp_transport_type").as_string());
+    if (static_cast<int>(sensor_configuration.ptp_profile) > 0) {
       sensor_configuration.ptp_transport_type = nebula::drivers::PtpTransportType::L2;
     }
   }
@@ -390,18 +393,23 @@ Status HesaiHwInterfaceRosWrapper::GetParameters(
     sensor_configuration.ptp_domain = this->get_parameter("ptp_domain").as_int();
   }
 
-  if(sensor_configuration.ptp_profile == nebula::drivers::PtpProfile::PROFILE_UNKNOWN) {
-    RCLCPP_ERROR_STREAM(get_logger(), "Invalid PTP Profile Provided. Please use '1588v2', '802.1as' or 'automotive'");
+  if (sensor_configuration.ptp_profile == nebula::drivers::PtpProfile::PROFILE_UNKNOWN) {
+    RCLCPP_ERROR_STREAM(
+      get_logger(), "Invalid PTP Profile Provided. Please use '1588v2', '802.1as' or 'automotive'");
     return Status::SENSOR_CONFIG_ERROR;
   }
-  if(sensor_configuration.ptp_transport_type == nebula::drivers::PtpTransportType::UNKNOWN_TRANSPORT) {
-    RCLCPP_ERROR_STREAM(get_logger(),
-                        "Invalid PTP Transport Provided. Please use 'udp' or 'l2', 'udp' is only available when using the '1588v2' PTP Profile");
+  if (
+    sensor_configuration.ptp_transport_type ==
+    nebula::drivers::PtpTransportType::UNKNOWN_TRANSPORT) {
+    RCLCPP_ERROR_STREAM(
+      get_logger(),
+      "Invalid PTP Transport Provided. Please use 'udp' or 'l2', 'udp' is only available when "
+      "using the '1588v2' PTP Profile");
     return Status::SENSOR_CONFIG_ERROR;
   }
-  if(sensor_configuration.ptp_switch_type == nebula::drivers::PtpSwitchType::UNKNOWN_SWITCH) {
-    RCLCPP_ERROR_STREAM(get_logger(),
-                        "Invalid PTP Switch Type Provided. Please use 'tsn' or 'non_tsn'");
+  if (sensor_configuration.ptp_switch_type == nebula::drivers::PtpSwitchType::UNKNOWN_SWITCH) {
+    RCLCPP_ERROR_STREAM(
+      get_logger(), "Invalid PTP Switch Type Provided. Please use 'tsn' or 'non_tsn'");
     return Status::SENSOR_CONFIG_ERROR;
   }
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
