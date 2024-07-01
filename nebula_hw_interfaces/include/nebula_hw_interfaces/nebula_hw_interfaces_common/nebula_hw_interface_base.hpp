@@ -1,9 +1,9 @@
 #ifndef NEBULA_HW_INTERFACE_BASE_H
 #define NEBULA_HW_INTERFACE_BASE_H
 
+#include "boost_udp_driver/udp_driver.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
-#include "boost_udp_driver/udp_driver.hpp"
 
 #include <stdexcept>
 #include <string>

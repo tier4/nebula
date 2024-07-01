@@ -92,7 +92,10 @@ Status HesaiRosOfflineExtractBag::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status HesaiRosOfflineExtractBag::GetStatus() {return wrapper_status_;}
+Status HesaiRosOfflineExtractBag::GetStatus()
+{
+  return wrapper_status_;
+}
 
 Status HesaiRosOfflineExtractBag::GetParameters(
   drivers::HesaiSensorConfiguration & sensor_configuration,
@@ -119,7 +122,7 @@ Status HesaiRosOfflineExtractBag::GetParameters(
     sensor_configuration.return_mode =
       //      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
       nebula::drivers::ReturnModeFromStringHesai(
-      this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
+        this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -343,7 +346,7 @@ Status HesaiRosOfflineExtractBag::ReadBag()
           writer_->open(storage_options_w, converter_options_w);
           writer_->create_topic(
             {bag_message->topic_name, "pandar_msgs/msg/PandarScan", rmw_get_serialization_format(),
-              ""});
+             ""});
           needs_open = false;
         }
         writer_->write(bag_message);

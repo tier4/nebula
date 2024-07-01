@@ -56,7 +56,10 @@ Status VelodyneRosOfflineExtractBag::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status VelodyneRosOfflineExtractBag::GetStatus() {return wrapper_status_;}
+Status VelodyneRosOfflineExtractBag::GetStatus()
+{
+  return wrapper_status_;
+}
 
 Status VelodyneRosOfflineExtractBag::GetParameters(
   drivers::VelodyneSensorConfiguration & sensor_configuration,
@@ -352,7 +355,7 @@ Status VelodyneRosOfflineExtractBag::ReadBag()
           writer_->open(storage_options_w, converter_options_w);
           writer_->create_topic(
             {bag_message->topic_name, "velodyne_msgs/msg/VelodyneScan",
-              rmw_get_serialization_format(), ""});
+             rmw_get_serialization_format(), ""});
           needs_open = false;
         }
         writer_->write(bag_message);

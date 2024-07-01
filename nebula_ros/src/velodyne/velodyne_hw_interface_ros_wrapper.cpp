@@ -62,8 +62,14 @@ Status VelodyneHwInterfaceRosWrapper::StreamStart()
   return interface_status_;
 }
 
-Status VelodyneHwInterfaceRosWrapper::StreamStop() { return Status::OK; }
-Status VelodyneHwInterfaceRosWrapper::Shutdown() { return Status::OK; }
+Status VelodyneHwInterfaceRosWrapper::StreamStop()
+{
+  return Status::OK;
+}
+Status VelodyneHwInterfaceRosWrapper::Shutdown()
+{
+  return Status::OK;
+}
 
 Status VelodyneHwInterfaceRosWrapper::InitializeHwInterface(  // todo: don't think this is needed
   const drivers::SensorConfigurationBase & sensor_configuration)

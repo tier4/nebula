@@ -86,7 +86,8 @@ void VelodyneDriverRosWrapper::ReceiveScanMsgCallback(
   }
 
   auto runtime = std::chrono::high_resolution_clock::now() - t_start;
-  RCLCPP_DEBUG(get_logger(), "PROFILING {'d_total': %lu, 'n_out': %lu}", runtime.count(), pointcloud->size());
+  RCLCPP_DEBUG(
+    get_logger(), "PROFILING {'d_total': %lu, 'n_out': %lu}", runtime.count(), pointcloud->size());
 }
 
 void VelodyneDriverRosWrapper::PublishCloud(
@@ -111,7 +112,10 @@ Status VelodyneDriverRosWrapper::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status VelodyneDriverRosWrapper::GetStatus() { return wrapper_status_; }
+Status VelodyneDriverRosWrapper::GetStatus()
+{
+  return wrapper_status_;
+}
 
 Status VelodyneDriverRosWrapper::GetParameters(
   drivers::VelodyneSensorConfiguration & sensor_configuration,

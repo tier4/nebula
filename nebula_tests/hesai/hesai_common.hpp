@@ -69,5 +69,5 @@ void printPCD(nebula::drivers::NebulaPointCloudPtr pp)
   }
 }
 
-}  // namespace ros
+}  // namespace test
 }  // namespace nebula

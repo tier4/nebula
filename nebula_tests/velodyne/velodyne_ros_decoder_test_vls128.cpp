@@ -57,7 +57,10 @@ Status VelodyneRosDecoderTest::InitializeDriver(
   return driver_ptr_->GetStatus();
 }
 
-Status VelodyneRosDecoderTest::GetStatus() { return wrapper_status_; }
+Status VelodyneRosDecoderTest::GetStatus()
+{
+  return wrapper_status_;
+}
 
 Status VelodyneRosDecoderTest::GetParameters(
   drivers::VelodyneSensorConfiguration & sensor_configuration,
@@ -222,8 +225,7 @@ Status VelodyneRosDecoderTest::GetParameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>(
-      "target_topic", "/velodyne_packets", descriptor);
+    this->declare_parameter<std::string>("target_topic", "/velodyne_packets", descriptor);
     target_topic = this->get_parameter("target_topic").as_string();
   }
 

@@ -29,8 +29,8 @@ private:
   {
     // Assumes that:
     // * none of the startFrames are defined as > 360 deg (< 0 not possible since they are unsigned)
-    // * the fields are arranged in ascending order (e.g. field 1: 20-140deg, field 2: 140-260deg etc.)
-    // These assumptions hold for AT128E2X.
+    // * the fields are arranged in ascending order (e.g. field 1: 20-140deg, field 2: 140-260deg
+    // etc.) These assumptions hold for AT128E2X.
     int field = sensor_correction_->frameNumber - 1;
     for (size_t i = 0; i < sensor_correction_->frameNumber; ++i) {
       if (azimuth < sensor_correction_->startFrame[i]) return field;
@@ -84,7 +84,8 @@ public:
             cos_[azimuth], sin_[elevation], cos_[elevation]};
   }
 
-  bool hasScanned(uint32_t current_azimuth, uint32_t last_azimuth, uint32_t /*sync_azimuth*/) override
+  bool hasScanned(
+    uint32_t current_azimuth, uint32_t last_azimuth, uint32_t /*sync_azimuth*/) override
   {
     // For AT128, the scan is always cut at the beginning of the field:
     // If we would cut at `sync_azimuth`, the points left of it would be

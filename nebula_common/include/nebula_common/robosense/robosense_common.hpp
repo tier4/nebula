@@ -188,10 +188,10 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
 
   void CreateCorrectedChannels()
   {
-    for(auto& correction : calibration) {
+    for (auto & correction : calibration) {
       uint16_t channel = 0;
-      for(const auto& compare:calibration) {
-        if(compare.elevation < correction.elevation) ++channel;
+      for (const auto & compare : calibration) {
+        if (compare.elevation < correction.elevation) ++channel;
       }
       correction.channel = channel;
     }
