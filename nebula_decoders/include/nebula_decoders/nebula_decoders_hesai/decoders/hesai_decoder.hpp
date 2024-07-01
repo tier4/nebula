@@ -202,20 +202,6 @@ protected:
     }
   }
 
-  /// @brief Checks whether the last processed block was the last block of a scan
-  /// @param current_phase The azimuth of the last processed block
-  /// @param sync_phase The azimuth set in the sensor configuration, for which the
-  /// timestamp is aligned to the full second
-  /// @return Whether the scan has completed
-  bool checkScanCompleted(uint32_t current_phase, uint32_t sync_phase)
-  {
-    if (last_phase_ == -1) {
-      return false;
-    }
-
-    return angle_corrector_.hasScanned(current_phase, last_phase_, sync_phase);
-  }
-
   /// @brief Get the distance of the given unit in meters
   float getDistance(const typename SensorT::packet_t::body_t::block_t::unit_t & unit)
   {
@@ -236,6 +222,24 @@ protected:
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
   }
 
+  /**
+   * @brief Return the appropriate scan cut azimuth based on whether the configured FoV is 360
+   * degrees (use scan phase for cutting) or less (use max angle for cutting).
+   *
+   * @param config The sensor configuration to use
+   * @return uint32_t The scan cut azimuth in 10ths of degrees
+   */
+  [[nodiscard]] uint32_t getCutAngle() const
+  {
+    if (
+      sensor_configuration_->cloud_min_angle == 0 &&
+      sensor_configuration_->cloud_max_angle == 3600) {
+      return static_cast<uint32_t>(sensor_configuration_->scan_phase * 10);
+    }
+
+    return sensor_configuration_->cloud_max_angle;
+  }
+
 public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
@@ -245,14 +249,14 @@ public:
     const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> &
       correction_data)
   : sensor_configuration_(sensor_configuration),
-    angle_corrector_(correction_data),
+    angle_corrector_(correction_data, deg2rad(getCutAngle() / 10.0)),
     logger_(rclcpp::get_logger("HesaiDecoder"))
   {
     logger_.set_level(rclcpp::Logger::Level::Debug);
     RCLCPP_INFO_STREAM(logger_, *sensor_configuration_);
 
-    decode_pc_.reset(new NebulaPointCloud);
-    output_pc_.reset(new NebulaPointCloud);
+    decode_pc_ = std::make_shared<NebulaPointCloud>();
+    output_pc_ = std::make_shared<NebulaPointCloud>();
 
     decode_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
@@ -273,14 +277,11 @@ public:
     }
 
     const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
-    uint32_t current_azimuth;
-
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
-      current_azimuth = packet_.body.blocks[block_id].get_azimuth();
+      convertReturns(block_id, n_returns);
 
-      bool scan_completed = checkScanCompleted(
-        current_azimuth,
-        sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS);
+      auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
+      bool scan_completed = angle_corrector_.blockCompletesScan(block_azimuth);
 
       if (scan_completed) {
         std::swap(decode_pc_, output_pc_);
@@ -295,8 +296,7 @@ public:
                                     sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
       }
 
-      convertReturns(block_id, n_returns);
-      last_phase_ = current_azimuth;
+      last_phase_ = block_azimuth;
     }
 
     return last_phase_;

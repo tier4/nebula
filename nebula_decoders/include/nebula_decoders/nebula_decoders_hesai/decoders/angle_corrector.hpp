@@ -49,15 +49,10 @@ public:
   /// @return The corrected angles (azimuth, elevation) in radians and their sin/cos values
   virtual CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) = 0;
 
-  /// @brief Returns true if the current azimuth lies in a different (new) scan compared to the last
-  /// azimuth
-  /// @param current_azimuth The current azimuth value in the sensor's angle resolution
-  /// @param last_azimuth The last azimuth in the sensor's angle resolution
-  /// @param sync_azimuth The azimuth set in the sensor configuration, for which the
-  /// timestamp is aligned to the full second
-  /// @return true if the current azimuth is in a different scan than the last one, false otherwise
-  virtual bool hasScanned(
-    uint32_t current_azimuth, uint32_t last_azimuth, uint32_t sync_azimuth) = 0;
+  /// @brief Returns whether the given block (azimuth) is the last in the current scan
+  /// @param block_azimuth The current azimuth value in the sensor's angle resolution
+  /// @return true if the current azimuth is the last in the current scan, false otherwise
+  virtual bool blockCompletesScan(uint32_t block_azimuth) = 0;
 };
 
 }  // namespace drivers
