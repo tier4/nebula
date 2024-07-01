@@ -70,7 +70,7 @@ struct HesaiCalibrationConfigurationBase : public CalibrationConfigurationBase
   virtual nebula::Status SaveToFileFromBytes(
     const std::string & calibration_file, const std::vector<uint8_t> & buf) = 0;
 
-  virtual std::tuple<float, float> getFovPadding() = 0;
+  [[nodiscard]] virtual std::tuple<float, float> getFovPadding() const = 0;
 };
 
 /// @brief struct for Hesai calibration configuration
@@ -173,7 +173,7 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
     return Status::OK;
   }
 
-  std::tuple<float, float> getFovPadding() override
+  [[nodiscard]] std::tuple<float, float> getFovPadding() const override
   {
     float min = INFINITY;
     float max = -INFINITY;
@@ -368,7 +368,7 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   /// @param ch The channel id
   /// @param azi The precision azimuth in (0.01 / 256) degree unit
   /// @return The azimuth adjustment in 0.01 degree unit
-  int8_t getAzimuthAdjustV3(uint8_t ch, uint32_t azi) const
+  [[nodiscard]] int8_t getAzimuthAdjustV3(uint8_t ch, uint32_t azi) const
   {
     unsigned int i = std::floor(1.f * azi / STEP3);
     unsigned int l = azi - i * STEP3;
@@ -380,7 +380,7 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   /// @param ch The channel id
   /// @param azi The precision azimuth in (0.01 / 256) degree unit
   /// @return The elevation adjustment in 0.01 degree unit
-  int8_t getElevationAdjustV3(uint8_t ch, uint32_t azi) const
+  [[nodiscard]] int8_t getElevationAdjustV3(uint8_t ch, uint32_t azi) const
   {
     unsigned int i = std::floor(1.f * azi / STEP3);
     unsigned int l = azi - i * STEP3;
@@ -388,7 +388,7 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
     return round((1 - k) * elevationOffset[ch * 180 + i] + k * elevationOffset[ch * 180 + i + 1]);
   }
 
-  std::tuple<float, float> getFovPadding() override
+  [[nodiscard]] std::tuple<float, float> getFovPadding() const override
   {
     // TODO(mojomex): calculate instead of hard-coding
     return {-5, 5};
