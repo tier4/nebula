@@ -17,8 +17,12 @@
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -35,6 +39,8 @@ private:
 
   std::array<float, MAX_AZIMUTH_LENGTH> cos_{};
   std::array<float, MAX_AZIMUTH_LENGTH> sin_{};
+
+  std::vector<uint32_t> cut_azimuths_;
 
   /// @brief For a given azimuth value, find its corresponding output field
   /// @param azimuth The azimuth to get the field for
@@ -57,7 +63,7 @@ private:
 
 public:
   explicit AngleCorrectorCorrectionBased(
-    const std::shared_ptr<const HesaiCorrection> & sensor_correction)
+    const std::shared_ptr<const HesaiCorrection> & sensor_correction, float scan_cut_azimuth_rad)
   : correction_(sensor_correction), logger_(rclcpp::get_logger("AngleCorrectorCorrectionBased"))
   {
     if (sensor_correction == nullptr) {
@@ -71,6 +77,31 @@ public:
       float rad = 2.f * i * M_PI / MAX_AZIMUTH_LENGTH;
       cos_[i] = cosf(rad);
       sin_[i] = sinf(rad);
+    }
+
+    for (size_t field_id = 0; field_id < correction_->frameNumber; ++field_id) {
+      auto start = correction_->startFrame[field_id];
+      auto end = correction_->endFrame[field_id];
+      auto raw_azimuth = start;
+      for (; raw_azimuth != end; raw_azimuth = (raw_azimuth + 1) % MAX_AZIMUTH_LENGTH) {
+        for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
+          auto corrected_azimuth = getCorrectedAngleData(raw_azimuth, channel_id).azimuth_rad;
+          if (corrected_azimuth < scan_cut_azimuth_rad) {
+            break;  // Not all channels are past the cut azimuth, search at next raw azimuth
+          }
+        }
+
+        // All channels are past the cut azimuth, add this raw_azimuths to the cut azimuths
+        break;
+      }
+
+      cut_azimuths_.push_back(raw_azimuth);
+    }
+
+    if (cut_azimuths_.size() != correction_->frameNumber) {
+      throw std::runtime_error(
+        "Sensor has " + std::to_string(correction_->frameNumber) +
+        " fields but calculation resulted in " + std::to_string(cut_azimuths_.size()));
     }
   }
 
@@ -95,17 +126,11 @@ public:
             cos_[azimuth], sin_[elevation], cos_[elevation]};
   }
 
-  bool hasScanned(
-    uint32_t current_azimuth, uint32_t last_azimuth, uint32_t /*sync_azimuth*/) override
+  bool blockCompletesScan(uint32_t block_azimuth) override
   {
-    // For AT128, the scan is always cut at the beginning of the field:
-    // If we would cut at `sync_azimuth`, the points left of it would be
-    // from the previous field and therefore significantly older than the
-    // points right of it.
-    // This also means that the pointcloud timestamp is only at top of second
-    // if the `sync_azimuth` aligns with the beginning of the field (e.g. 30deg for AT128).
-    // The absolute point time for points at `sync_azimuth` is still at top of second.
-    return findField(current_azimuth) != findField(last_azimuth);
+    auto begin = cut_azimuths_.cbegin();
+    auto end = cut_azimuths_.cend();
+    return std::find(begin, end, block_azimuth) != end;
   }
 };
 

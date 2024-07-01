@@ -17,6 +17,9 @@
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 
+#include <nebula_common/nebula_common.hpp>
+
+#include <cmath>
 #include <cstdint>
 #include <memory>
 
@@ -40,9 +43,12 @@ private:
   std::array<std::array<float, ChannelN>, MAX_AZIMUTH_LEN> azimuth_cos_{};
   std::array<std::array<float, ChannelN>, MAX_AZIMUTH_LEN> azimuth_sin_{};
 
+  uint32_t scan_cut_block_azimuth_{};
+
 public:
   AngleCorrectorCalibrationBased(
-    const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration)
+    const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration,
+    float scan_cut_azimuth_rad)
   {
     if (sensor_calibration == nullptr) {
       throw std::runtime_error(
@@ -71,6 +77,21 @@ public:
         azimuth_sin_[block_azimuth][channel_id] = sinf(precision_azimuth);
       }
     }
+
+    auto scan_cut_block_azimuth = static_cast<uint32_t>(rad2deg(scan_cut_azimuth_rad) * 10.0);
+    while (true) {
+      auto block_azimuth_rad = block_azimuth_rad_[scan_cut_block_azimuth];
+      for (auto correction : azimuth_offset_rad_) {
+        if (block_azimuth_rad + correction < scan_cut_azimuth_rad) {
+          scan_cut_block_azimuth_++;
+          break;
+        }
+      }
+
+      break;
+    }
+
+    scan_cut_block_azimuth_ = scan_cut_block_azimuth;
   }
 
   CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) override
@@ -87,15 +108,9 @@ public:
       elevation_cos_[channel_id]};
   }
 
-  bool hasScanned(uint32_t current_azimuth, uint32_t last_azimuth, uint32_t sync_azimuth) override
+  bool blockCompletesScan(uint32_t current_azimuth) override
   {
-    // Cut the scan when the azimuth passes over the sync_azimuth
-    uint32_t current_diff_from_sync =
-      (MAX_AZIMUTH_LEN + current_azimuth - sync_azimuth) % MAX_AZIMUTH_LEN;
-    uint32_t last_diff_from_sync =
-      (MAX_AZIMUTH_LEN + last_azimuth - sync_azimuth) % MAX_AZIMUTH_LEN;
-
-    return current_diff_from_sync < last_diff_from_sync;
+    return current_azimuth == scan_cut_block_azimuth_;
   }
 };
 
