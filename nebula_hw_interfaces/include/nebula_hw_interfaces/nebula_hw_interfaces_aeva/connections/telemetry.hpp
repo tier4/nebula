@@ -124,21 +124,29 @@ protected:
         case aeva::TelemetryDataType::kUInt8:
           value = telemetry_detail::parse_number_array<uint8_t>(
             [](const auto * ref) { return *ref; }, entry_data_raw);
+          break;
         case aeva::TelemetryDataType::kInt8:
           value = telemetry_detail::parse_number_array<int8_t>(
             [](const auto * ref) { return static_cast<int8_t>(*ref); }, entry_data_raw);
+          break;
         case aeva::TelemetryDataType::kUInt16:
           value = telemetry_detail::parse_number_array<uint16_t>(&load_little_u16, entry_data_raw);
+          break;
         case aeva::TelemetryDataType::kInt16:
           value = telemetry_detail::parse_number_array<int16_t>(&load_little_s16, entry_data_raw);
+          break;
         case aeva::TelemetryDataType::kUInt32:
           value = telemetry_detail::parse_number_array<uint32_t>(&load_little_u32, entry_data_raw);
+          break;
         case aeva::TelemetryDataType::kInt32:
           value = telemetry_detail::parse_number_array<int32_t>(&load_little_s32, entry_data_raw);
+          break;
         case aeva::TelemetryDataType::kUInt64:
           value = telemetry_detail::parse_number_array<uint64_t>(&load_little_u64, entry_data_raw);
+          break;
         case aeva::TelemetryDataType::kInt64:
           value = telemetry_detail::parse_number_array<int64_t>(&load_little_s64, entry_data_raw);
+          break;
         case aeva::TelemetryDataType::kFloat:
           value = telemetry_detail::parse_number_array<float>(
             [](const uint8_t * ref) {
@@ -148,6 +156,7 @@ protected:
               return result;
             },
             entry_data_raw);
+          break;
         case aeva::TelemetryDataType::kDouble:
           value = telemetry_detail::parse_number_array<double>(
             [](const uint8_t * ref) {
@@ -157,6 +166,7 @@ protected:
               return result;
             },
             entry_data_raw);
+          break;
         case aeva::TelemetryDataType::kChar:
           auto overrides = telemetry_detail::TYPE_OVERRIDES;
           bool has_override = std::find(overrides.begin(), overrides.end(), key) != overrides.end();
@@ -191,7 +201,7 @@ protected:
   }
 
 private:
-  callback_t callback_{};
+  callback_t callback_;
 };
 
 }  // namespace nebula::drivers::connections
