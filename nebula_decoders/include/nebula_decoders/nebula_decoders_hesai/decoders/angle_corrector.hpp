@@ -52,7 +52,7 @@ public:
   /// @brief Returns whether the given block (azimuth) is the last in the current scan
   /// @param block_azimuth The current azimuth value in the sensor's angle resolution
   /// @return true if the current azimuth is the last in the current scan, false otherwise
-  virtual bool blockCompletesScan(uint32_t block_azimuth) = 0;
+  virtual bool blockCompletesScan(uint32_t block_azimuth, uint32_t last_azimuth) = 0;
 };
 
 }  // namespace drivers
