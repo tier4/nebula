@@ -1,5 +1,5 @@
-#ifndef NEBULA_WS_HESAI_SCAN_DECODER_HPP
-#define NEBULA_WS_HESAI_SCAN_DECODER_HPP
+#ifndef NEBULA_WS_SEYOND_SCAN_DECODER_HPP
+#define NEBULA_WS_SEYOND_SCAN_DECODER_HPP
 
 #include "nebula_common/point_types.hpp"
 #include "nebula_common/seyond/seyond_common.hpp"
@@ -25,8 +25,8 @@ public:
   virtual ~SeyondScanDecoder() = default;
   SeyondScanDecoder() = default;
 
-  /// @brief Parses PandarPacket and add its points to the point cloud
-  /// @param packet The incoming PandarPacket
+  /// @brief Parses NebulaPacket and add its points to the point cloud
+  /// @param packet The incoming NebulaPacket
   /// @return The last azimuth processed
   virtual int unpack(const std::vector<uint8_t> & packet) = 0;
 
@@ -40,4 +40,4 @@ public:
 };
 }  // namespace drivers
 }  // namespace nebula
-#endif  // NEBULA_WS_HESAI_SCAN_DECODER_HPP
+#endif  // NEBULA_WS_SEYOND_SCAN_DECODER_HPP

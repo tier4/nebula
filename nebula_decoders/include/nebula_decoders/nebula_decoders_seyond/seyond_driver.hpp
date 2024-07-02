@@ -31,7 +31,7 @@ private:
   /// @brief Decoder according to the model
   std::shared_ptr<SeyondScanDecoder> scan_decoder_;
 
-  template <typename SensorT>
+  // template <typename SensorT>
   std::shared_ptr<SeyondScanDecoder> InitializeDecoder(
     const std::shared_ptr<const drivers::SeyondSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const drivers::SeyondCalibrationConfigurationBase> &

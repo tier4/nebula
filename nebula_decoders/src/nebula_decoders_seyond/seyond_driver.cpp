@@ -1,46 +1,17 @@
 #include "nebula_decoders/nebula_decoders_seyond/seyond_driver.hpp"
 
-#include "nebula_decoders/nebula_decoders_seyond/decoders/falcon.hpp"
-#include "nebula_decoders/nebula_decoders_seyond/decoders/robin_w.hpp"
-
-// #define WITH_DEBUG_STD_COUT_SEYOND_CLIENT // Use std::cout messages for debugging
-
 namespace nebula
 {
 namespace drivers
 {
+
 SeyondDriver::SeyondDriver(
   const std::shared_ptr<const SeyondSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<const SeyondCalibrationConfigurationBase> & calibration_data)
+  const std::shared_ptr<const SeyondCalibrationConfigurationBase> & calibration_configuration)
 {
-  // initialize proper parser from cloud config's model and echo mode
-  driver_status_ = nebula::Status::OK;
-
-  switch (sensor_configuration->sensor_model) {
-    case SensorModel::SEYOND_FALCON_KINETIC:
-      scan_decoder_ = InitializeDecoder<Falcon>(sensor_configuration, calibration_data);
-      break;
-    case SensorModel::SEYOND_ROBIN_W:
-      scan_decoder_ = InitializeDecoder<RobinW>(sensor_configuration, calibration_data);
-      break;
-    case SensorModel::UNKNOWN:
-      driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;
-      throw std::runtime_error("Invalid sensor model.");
-    default:
-      driver_status_ = nebula::Status::NOT_INITIALIZED;
-      throw std::runtime_error("Driver not Implemented for selected sensor.");
-  }
-}
-
-template <typename SensorT>
-std::shared_ptr<SeyondScanDecoder> SeyondDriver::InitializeDecoder(
-  const std::shared_ptr<const drivers::SeyondSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<const drivers::SeyondCalibrationConfigurationBase> &
-    calibration_configuration)
-{
-  // using CalibT = typename SensorT::angle_corrector_t::correction_data_t;
-  // return std::make_shared<SeyondDecoder<SensorT>>(
-  //   sensor_configuration, std::dynamic_pointer_cast<const CalibT>(calibration_configuration));
+  // scan_decoder_.reset(
+  //   new seyond_packet::SeyondDecoder(sensor_configuration, calibration_configuration));
+  scan_decoder_ = InitializeDecoder(sensor_configuration, calibration_configuration);
 }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> SeyondDriver::ParseCloudPacket(
@@ -59,15 +30,30 @@ std::tuple<drivers::NebulaPointCloudPtr, double> SeyondDriver::ParseCloudPacket(
     pointcloud = scan_decoder_->getPointcloud();
   }
 
+  // int cnt = 0;
+  // for (auto & packet : seyond_scan->packets) {
+  //   if (scan_decoder_->unpack(packet) == 0) {
+  //     cnt++;
+  //   } else {
+  //     RCLCPP_ERROR_STREAM(
+  //       logger, "Failed to unpack packet with timestamp ");
+  //   }
+  // }
+
+  // pointcloud = scan_decoder_->getPointcloud();
+
+  // if (cnt == 0) {
+  //   RCLCPP_ERROR_STREAM(
+  //     logger, "Scanned " << seyond_scan->packets.size() << " packets, but no "
+  //                        << "pointclouds were generated.");
+  // }
+
   return pointcloud;
 }
 
 Status SeyondDriver::SetCalibrationConfiguration(
   const SeyondCalibrationConfigurationBase & calibration_configuration)
 {
-  throw std::runtime_error(
-    "SetCalibrationConfiguration. Not yet implemented (" +
-    calibration_configuration.calibration_file + ")");
 }
 
 Status SeyondDriver::GetStatus()
