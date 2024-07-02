@@ -74,9 +74,9 @@ public:
   Status SetCalibrationConfiguration(
     const HesaiCalibrationConfigurationBase & calibration_configuration);
 
-  /// @brief Convert PandarScan message to point cloud
-  /// @param pandar_scan Message
-  /// @return tuple of Point cloud and timestamp
+  /// @brief Convert raw packet to pointcloud
+  /// @param packet Packet to convert
+  /// @return Tuple of pointcloud and timestamp
   std::tuple<drivers::NebulaPointCloudPtr, double> ParseCloudPacket(
     const std::vector<uint8_t> & packet);
 };
