@@ -44,19 +44,19 @@
         },
         "cloud_min_angle": {
           "$ref": "sub/misc.json#/definitions/cloud_min_angle",
-          "default": 30,
+          "default": "30",
           "minimum": 30,
           "maximum": 150
         },
         "cloud_max_angle": {
           "$ref": "sub/misc.json#/definitions/cloud_max_angle",
-          "default": 150,
+          "default": "150",
           "minimum": 30,
           "maximum": 150
         },
         "scan_phase": {
           "$ref": "sub/misc.json#/definitions/scan_phase",
-          "default": 30.0,
+          "default": "30.0",
           "minimum": 30.0,
           "maximum": 150.0
         },
@@ -68,7 +68,7 @@
         },
         "rotation_speed": {
           "$ref": "sub/hardware.json#/definitions/rotation_speed",
-          "default": 200,
+          "default": "200",
           "enum": [
             200,
             400
