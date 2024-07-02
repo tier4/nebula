@@ -17,7 +17,6 @@
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 
-#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
@@ -126,11 +125,20 @@ public:
             cos_[azimuth], sin_[elevation], cos_[elevation]};
   }
 
-  bool blockCompletesScan(uint32_t block_azimuth) override
+  bool blockCompletesScan(uint32_t block_azimuth, uint32_t last_azimuth) override
   {
-    auto begin = cut_azimuths_.cbegin();
-    auto end = cut_azimuths_.cend();
-    return std::find(begin, end, block_azimuth) != end;
+    for (auto cut_azimuth : cut_azimuths_) {
+      if (cut_azimuth < last_azimuth) {
+        cut_azimuth += MAX_AZIMUTH_LENGTH;
+      }
+
+      auto current_azimuth = block_azimuth;
+      if (current_azimuth < last_azimuth) {
+        current_azimuth += MAX_AZIMUTH_LENGTH;
+      }
+
+      return current_azimuth >= cut_azimuth && last_azimuth < cut_azimuth;
+    }
   }
 };
 

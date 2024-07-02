@@ -19,6 +19,7 @@
 
 #include <nebula_common/nebula_common.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <memory>
@@ -43,7 +44,7 @@ private:
   std::array<std::array<float, ChannelN>, MAX_AZIMUTH_LEN> azimuth_cos_{};
   std::array<std::array<float, ChannelN>, MAX_AZIMUTH_LEN> azimuth_sin_{};
 
-  uint32_t scan_cut_block_azimuth_{};
+  const uint32_t scan_cut_block_azimuth_{};
 
 public:
   AngleCorrectorCalibrationBased(
@@ -78,20 +79,17 @@ public:
       }
     }
 
-    auto scan_cut_block_azimuth = static_cast<uint32_t>(rad2deg(scan_cut_azimuth_rad) * 10.0);
-    while (true) {
-      auto block_azimuth_rad = block_azimuth_rad_[scan_cut_block_azimuth];
-      for (auto correction : azimuth_offset_rad_) {
-        if (block_azimuth_rad + correction < scan_cut_azimuth_rad) {
-          scan_cut_block_azimuth_++;
-          break;
-        }
-      }
+    auto min_azimuth_offset = -std::min(azimuth_offset_rad_);
 
-      break;
+    auto cut_azimuth = std::ceil(rad2deg(scan_cut_azimuth_rad + min_azimuth_offset) * AngleUnit);
+    if (cut_azimuth > MAX_AZIMUTH_LEN) {
+      cut_azimuth -= MAX_AZIMUTH_LEN;
     }
 
-    scan_cut_block_azimuth_ = scan_cut_block_azimuth;
+    scan_cut_block_azimuth_ = cut_azimuth;
+
+    std::cout << "Cut angle setting: " << rad2deg(scan_cut_azimuth_rad)
+              << " deg, calculated: " << scan_cut_block_azimuth_ / 100.0 << " deg" << std::endl;
   }
 
   CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) override
@@ -108,9 +106,18 @@ public:
       elevation_cos_[channel_id]};
   }
 
-  bool blockCompletesScan(uint32_t current_azimuth) override
+  bool blockCompletesScan(uint32_t current_azimuth, uint32_t last_azimuth) override
   {
-    return current_azimuth == scan_cut_block_azimuth_;
+    auto cut_azimuth = scan_cut_block_azimuth_;
+    if (cut_azimuth < last_azimuth) {
+      cut_azimuth += MAX_AZIMUTH_LEN;
+    }
+
+    if (current_azimuth < last_azimuth) {
+      current_azimuth += MAX_AZIMUTH_LEN;
+    }
+
+    return current_azimuth >= cut_azimuth && last_azimuth < cut_azimuth;
   }
 };
 
