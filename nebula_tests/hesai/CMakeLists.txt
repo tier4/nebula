@@ -21,3 +21,16 @@ target_include_directories(hesai_ros_decoder_test_main PUBLIC
 target_link_libraries(hesai_ros_decoder_test_main
     hesai_ros_decoder_test
 )
+
+ament_add_gtest(hesai_scan_cutting_test
+    hesai_scan_cutting_test.cpp
+)
+
+target_link_libraries(hesai_scan_cutting_test
+    ${HESAI_TEST_LIBRARIES})
+
+target_include_directories(hesai_scan_cutting_test PUBLIC
+    ${PROJECT_SOURCE_DIR}/src/hesai
+    include
+    ${NEBULA_TEST_INCLUDE_DIRS}
+)

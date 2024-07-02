@@ -44,7 +44,7 @@ private:
   std::array<std::array<float, ChannelN>, MAX_AZIMUTH_LEN> azimuth_cos_{};
   std::array<std::array<float, ChannelN>, MAX_AZIMUTH_LEN> azimuth_sin_{};
 
-  const uint32_t scan_cut_block_azimuth_{};
+  uint32_t scan_cut_block_azimuth_{};
 
 public:
   AngleCorrectorCalibrationBased(
@@ -79,7 +79,8 @@ public:
       }
     }
 
-    auto min_azimuth_offset = -std::min(azimuth_offset_rad_);
+    auto min_azimuth_offset =
+      -*std::min_element(azimuth_offset_rad_.begin(), azimuth_offset_rad_.end());
 
     auto cut_azimuth = std::ceil(rad2deg(scan_cut_azimuth_rad + min_azimuth_offset) * AngleUnit);
     if (cut_azimuth > MAX_AZIMUTH_LEN) {
@@ -87,9 +88,6 @@ public:
     }
 
     scan_cut_block_azimuth_ = cut_azimuth;
-
-    std::cout << "Cut angle setting: " << rad2deg(scan_cut_azimuth_rad)
-              << " deg, calculated: " << scan_cut_block_azimuth_ / 100.0 << " deg" << std::endl;
   }
 
   CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) override
