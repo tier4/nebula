@@ -237,7 +237,7 @@ protected:
       return static_cast<uint32_t>(sensor_configuration_->scan_phase * 10);
     }
 
-    return sensor_configuration_->cloud_max_angle;
+    return sensor_configuration_->cloud_max_angle * 10;
   }
 
 public:
@@ -281,7 +281,7 @@ public:
       convertReturns(block_id, n_returns);
 
       auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
-      bool scan_completed = angle_corrector_.blockCompletesScan(block_azimuth);
+      bool scan_completed = angle_corrector_.blockCompletesScan(block_azimuth, last_phase_);
 
       if (scan_completed) {
         std::swap(decode_pc_, output_pc_);
