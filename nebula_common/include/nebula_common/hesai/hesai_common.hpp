@@ -35,6 +35,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   uint16_t gnss_port{};
   double scan_phase{};
   double dual_return_distance_threshold{};
+  std::string calibration_path{};
   uint16_t rotation_speed;
   uint16_t cloud_min_angle;
   uint16_t cloud_max_angle;
@@ -49,13 +50,18 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration const & arg)
 {
-  os << (LidarConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
-     << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
-     << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle
-     << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold
-     << ", PtpProfile:" << arg.ptp_profile << ", PtpDomain:" << std::to_string(arg.ptp_domain)
-     << ", PtpTransportType:" << arg.ptp_transport_type
-     << ", PtpSwitchType:" << arg.ptp_switch_type;
+  os << "HesaiSensorConfiguration:" << '\n';
+  os << (LidarConfigurationBase)(arg) << '\n';
+  os << "GnssPort: " << arg.gnss_port << '\n';
+  os << "ScanPhase: " << arg.scan_phase << '\n';
+  os << "RotationSpeed: " << arg.rotation_speed << '\n';
+  os << "FOV(Start): " << arg.cloud_min_angle << '\n';
+  os << "FOV(End): " << arg.cloud_max_angle << '\n';
+  os << "DualReturnDistanceThreshold: " << arg.dual_return_distance_threshold << '\n';
+  os << "PtpProfile: " << arg.ptp_profile << '\n';
+  os << "PtpDomain: " << std::to_string(arg.ptp_domain) << '\n';
+  os << "PtpTransportType: " << arg.ptp_transport_type << '\n';
+  os << "PtpSwitchType: " << arg.ptp_switch_type;
   return os;
 }
 
@@ -106,7 +112,7 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
 
       std::vector<std::string> actual_tokens(tok.begin(), tok.end());
       if (actual_tokens.size() < expected_cols || actual_tokens.size() > expected_cols) {
-        std::cerr << "Ignoring line with unexpected data:" << line << std::endl;
+        std::cerr << "Ignoring line with unexpected data: " << line << std::endl;
         continue;
       }
 
@@ -318,10 +324,10 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   inline nebula::Status SaveToFileFromBytes(
     const std::string & correction_file, const std::vector<uint8_t> & buf) override
   {
-    std::cerr << "Saving in:" << correction_file << "\n";
+    std::cerr << "Saving in: " << correction_file << "\n";
     std::ofstream ofs(correction_file, std::ios::trunc | std::ios::binary);
     if (!ofs) {
-      std::cerr << "Could not create file:" << correction_file << "\n";
+      std::cerr << "Could not create file: " << correction_file << "\n";
       return Status::CANNOT_SAVE_FILE;
     }
     std::cerr << "Writing start...." << buf.size() << "\n";

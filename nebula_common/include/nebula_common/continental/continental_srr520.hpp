@@ -15,21 +15,16 @@
 #pragma once
 
 #include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
 
 #include <boost/endian/buffers.hpp>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include <bitset>
 #include <cmath>
-#include <cstddef>
 #include <cstdint>
 #include <ctime>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 #include <string>
 
 namespace nebula
@@ -55,9 +50,11 @@ struct ContinentalSRR520SensorConfiguration : CANSensorConfigurationBase
 inline std::ostream & operator<<(
   std::ostream & os, ContinentalSRR520SensorConfiguration const & arg)
 {
-  os << (CANSensorConfigurationBase)(arg) << ", BaseFrame: " << arg.base_frame
-     << ", SyncUseBusTime: " << arg.sync_use_bus_time
-     << ", ConfigurationVehicleWheelbase: " << arg.configuration_vehicle_wheelbase;
+  os << "ContinentalSRR520SensorConfiguration:" << '\n';
+  os << (CANSensorConfigurationBase)(arg) << '\n';
+  os << "BaseFrame: " << arg.base_frame << '\n';
+  os << "SyncUseBusTime: " << arg.sync_use_bus_time << '\n';
+  os << "ConfigurationVehicleWheelbase: " << arg.configuration_vehicle_wheelbase;
   return os;
 }
 

@@ -39,9 +39,13 @@ struct VelodyneSensorConfiguration : LidarConfigurationBase
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, VelodyneSensorConfiguration const & arg)
 {
-  os << (LidarConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
-     << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
-     << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle;
+  os << "VelodyneSensorConfiguration:" << '\n';
+  os << (LidarConfigurationBase)(arg) << '\n';
+  os << "GnssPort: " << arg.gnss_port << '\n';
+  os << "ScanPhase: " << arg.scan_phase << '\n';
+  os << "RotationSpeed: " << arg.rotation_speed << '\n';
+  os << "FOV(Start): " << arg.cloud_min_angle << '\n';
+  os << "FOV(End): " << arg.cloud_max_angle;
   return os;
 }
 

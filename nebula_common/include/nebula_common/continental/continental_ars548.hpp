@@ -15,7 +15,6 @@
 #pragma once
 
 #include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/endian/buffers.hpp>
@@ -24,9 +23,7 @@
 #include <pcl/point_types.h>
 
 #include <iostream>
-#include <sstream>
 #include <string>
-#include <vector>
 
 namespace nebula
 {
@@ -58,15 +55,18 @@ struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
 inline std::ostream & operator<<(
   std::ostream & os, ContinentalARS548SensorConfiguration const & arg)
 {
-  os << (EthernetSensorConfigurationBase)(arg) << ", MulticastIP: " << arg.multicast_ip
-     << ", BaseFrame: " << arg.base_frame << ", ObjectFrame: " << arg.object_frame
-     << ", ConfigurationHostPort: " << arg.configuration_host_port
-     << ", ConfigurationSensorPort: " << arg.configuration_sensor_port
-     << ", UseSensorTime: " << arg.use_sensor_time
-     << ", ConfigurationVehicleLength: " << arg.configuration_vehicle_length
-     << ", ConfigurationVehicleWidth: " << arg.configuration_vehicle_width
-     << ", ConfigurationVehicleHeight: " << arg.configuration_vehicle_height
-     << ", ConfigurationVehicleWheelbase: " << arg.configuration_vehicle_wheelbase;
+  os << "ContinentalARS548SensorConfiguration:" << '\n';
+  os << (EthernetSensorConfigurationBase)(arg) << '\n';
+  os << "MulticastIP: " << arg.multicast_ip << '\n';
+  os << "BaseFrame: " << arg.base_frame << '\n';
+  os << "ObjectFrame: " << arg.object_frame << '\n';
+  os << "ConfigurationHostPort: " << arg.configuration_host_port << '\n';
+  os << "ConfigurationSensorPort: " << arg.configuration_sensor_port << '\n';
+  os << "UseSensorTime: " << arg.use_sensor_time << '\n';
+  os << "ConfigurationVehicleLength: " << arg.configuration_vehicle_length << '\n';
+  os << "ConfigurationVehicleWidth: " << arg.configuration_vehicle_width << '\n';
+  os << "ConfigurationVehicleHeight: " << arg.configuration_vehicle_height << '\n';
+  os << "ConfigurationVehicleWheelbase: " << arg.configuration_vehicle_wheelbase;
   return os;
 }
 

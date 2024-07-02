@@ -35,8 +35,8 @@ VelodyneHwMonitorWrapper::VelodyneHwMonitorWrapper(
   try {
     info_model_ = GetPtreeValue(current_snapshot_tree, mtx_snapshot_, key_info_model);
     info_serial_ = GetPtreeValue(current_snapshot_tree, mtx_snapshot_, key_info_serial);
-    RCLCPP_INFO_STREAM(logger_, "Model:" << info_model_);
-    RCLCPP_INFO_STREAM(logger_, "Serial:" << info_serial_);
+    RCLCPP_INFO_STREAM(logger_, "Model: " << info_model_);
+    RCLCPP_INFO_STREAM(logger_, "Serial: " << info_serial_);
   } catch (boost::bad_lexical_cast & ex) {
     RCLCPP_ERROR(logger_, " Error: Can't get model and serial");
     return;
@@ -737,8 +737,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
       std::ostringstream os;
       for (auto v = child->begin(); v != child->end(); ++v) {
         os << "(";
-        os << "mean:" << v->second.get<std::string>("mean") << ", ";
-        os << "stddev:" << v->second.get<std::string>("stddev") << ", ";
+        os << "mean: " << v->second.get<std::string>("mean") << ", ";
+        os << "stddev: " << v->second.get<std::string>("stddev") << ", ";
         os << "), ";
       }
       mes = os.str();

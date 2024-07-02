@@ -59,8 +59,8 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   std::cout << result << std::endl;
   info_model_ = result.get_str_model();
   info_serial_ = std::string(std::begin(result.sn), std::end(result.sn));
-  RCLCPP_INFO_STREAM(logger_, "Model:" << info_model_);
-  RCLCPP_INFO_STREAM(logger_, "Serial:" << info_serial_);
+  RCLCPP_INFO_STREAM(logger_, "Model: " << info_model_);
+  RCLCPP_INFO_STREAM(logger_, "Serial: " << info_serial_);
   InitializeHesaiDiagnostics();
 }
 

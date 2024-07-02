@@ -56,7 +56,7 @@ Status RobosenseHwInterface::InfoInterfaceStart()
   try {
     std::cout << "Starting UDP server for info packets on: " << *sensor_configuration_ << std::endl;
     PrintInfo(
-      "Starting UDP server for info packets on: " + sensor_configuration_->sensor_ip + ":" +
+      "Starting UDP server for info packets on: " + sensor_configuration_->sensor_ip + ": " +
       std::to_string(sensor_configuration_->gnss_port));
     info_udp_driver_->init_receiver(
       sensor_configuration_->host_ip, sensor_configuration_->gnss_port);

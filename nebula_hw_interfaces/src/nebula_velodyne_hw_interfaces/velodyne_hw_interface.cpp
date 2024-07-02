@@ -129,7 +129,7 @@ boost::property_tree::ptree VelodyneHwInterface::ParseJson(const std::string & s
     ss << str;
     boost::property_tree::read_json(ss, tree);
   } catch (boost::property_tree::json_parser_error & e) {
-    std::cerr << "Error on ParseJson:" << e.what() << std::endl;
+    std::cerr << "Error on ParseJson: " << e.what() << std::endl;
   }
   return tree;
 }
