@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -83,15 +84,19 @@ public:
       auto end = correction_->endFrame[field_id];
       auto raw_azimuth = start;
       for (; raw_azimuth != end; raw_azimuth = (raw_azimuth + 1) % MAX_AZIMUTH_LENGTH) {
+        bool all_channels_complete = true;
         for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
           auto corrected_azimuth = getCorrectedAngleData(raw_azimuth, channel_id).azimuth_rad;
           if (corrected_azimuth < scan_cut_azimuth_rad) {
+            all_channels_complete = false;
             break;  // Not all channels are past the cut azimuth, search at next raw azimuth
           }
         }
 
         // All channels are past the cut azimuth, add this raw_azimuths to the cut azimuths
-        break;
+        if (all_channels_complete) {
+          break;
+        }
       }
 
       cut_azimuths_.push_back(raw_azimuth);
@@ -137,8 +142,12 @@ public:
         current_azimuth += MAX_AZIMUTH_LENGTH;
       }
 
-      return current_azimuth >= cut_azimuth && last_azimuth < cut_azimuth;
+      if (current_azimuth >= cut_azimuth && last_azimuth < cut_azimuth) {
+        return true;
+      }
     }
+
+    return false;
   }
 };
 

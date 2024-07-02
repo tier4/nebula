@@ -8,9 +8,9 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <gtest/gtest.h>
-#include <stdlib.h>
-#include <time.h>
 
+#include <cstdlib>
+#include <ctime>
 #include <functional>
 #include <memory>
 #include <string>
@@ -123,7 +123,7 @@ void DecoderTest::SetUp()
   logger_->set_level(rclcpp::Logger::Level::Info);
 
   RCLCPP_DEBUG_STREAM(*logger_, "Testing " << decoder_params.sensor_model);
-  setvbuf(stdout, NULL, _IONBF, BUFSIZ);
+  setvbuf(stdout, nullptr, _IONBF, BUFSIZ);
 
   std::string node_name = "nebula_hesai_decoder_test";
 
