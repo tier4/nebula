@@ -1,0 +1,209 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LiDAR Aeva Aeries II parameters.",
+  "type": "object",
+  "definitions": {
+    "Aeries2": {
+      "type": "object",
+      "properties": {
+        "sensor_ip": {
+          "$ref": "sub/communication.json#/definitions/sensor_ip"
+        },
+        "launch_hw": {
+          "$ref": "sub/hardware.json#/definitions/launch_hw"
+        },
+        "frame_id": {
+          "$ref": "sub/topic.json#/definitions/frame_id"
+        },
+        "sensor_model": {
+          "$ref": "sub/lidar_aeva.json#/definitions/sensor_model"
+        },
+        "setup_sensor": {
+          "$ref": "sub/hardware.json#/definitions/setup_sensor"
+        },
+        "diag_span": {
+          "$ref": "sub/topic.json#/definitions/diag_span"
+        },
+        "dithering_enable_ego_speed": {
+          "type": "number",
+          "readOnly": false,
+          "description": "The ego speed in m/s from which pointcloud dithering (different patterns per frame) is enabled.",
+          "max": 200.0,
+          "min": 0.0,
+          "default": 40.0
+        },
+        "dithering_pattern_option": {
+          "type": "string",
+          "readOnly": false,
+          "description": "The dithering pattern to use if enabled.",
+          "enum": [
+            "dithering_pattern_1",
+            "dithering_pattern_2"
+          ],
+          "default": "dithering_pattern_1"
+        },
+        "ele_offset_rad": {
+          "type": "number",
+          "readOnly": false,
+          "description": "Elevation offset used to align ROI to ground level at a certain distance.",
+          "max": 0.35,
+          "min": -0.35,
+          "default": 0.0
+        },
+        "elevation_auto_adjustment": {
+          "type": "boolean",
+          "readOnly": false,
+          "description": "Adjusts elevation to a long-range setting when the car is going sufficiently fast.",
+          "default": false
+        },
+        "enable_frame_dithering": {
+          "type": "boolean",
+          "readOnly": false,
+          "description": "Whether dithering is enabled.",
+          "default": false
+        },
+        "enable_frame_sync": {
+          "type": "boolean",
+          "readOnly": false,
+          "description": "Whether to sync pointcloud frame output to a given sub-second offset.",
+          "default": true
+        },
+        "flip_pattern_vertically": {
+          "type": "boolean",
+          "readOnly": false,
+          "description": "Whether to flip the scan pattern vertically.",
+          "default": false
+        },
+        "frame_sync_offset_in_ms": {
+          "type": "integer",
+          "readOnly": false,
+          "description": "The sub-second offset to sync pointcloud frame starts to. 0 for top-of-second alignment. In practice, 999 achieves results closer to top-of-second",
+          "min": 0,
+          "max": 999,
+          "default": 999
+        },
+        "frame_sync_type": {
+          "type": "string",
+          "readOnly": false,
+          "description": "Whether to start sync at an absolute timestamp in the future, or from the nearest second.",
+          "enum": [
+            "absolute_time",
+            "nearest_second"
+          ],
+          "default": "nearest_second"
+        },
+        "frame_synchronization_on_rising_edge": {
+          "type": "boolean",
+          "readOnly": false,
+          "description": "Contact vendor for info.",
+          "default": true
+        },
+        "hfov_adjustment_deg": {
+          "type": "number",
+          "readOnly": false,
+          "description": "The number of degrees to expend or shrink the horizontal field of view by.",
+          "max": 100.0,
+          "min": -100.0,
+          "default": 0.0
+        },
+        "hfov_rotation_deg": {
+          "type": "number",
+          "readOnly": false,
+          "description": "Number of degrees to shift the horizontal field of view to the left (-) or right (+).",
+          "max": 100.0,
+          "min": -100.0,
+          "default": 0.0
+        },
+        "highlight_ROI": {
+          "type": "boolean",
+          "readOnly": false,
+          "description": "A debug option to visually highlight points in the  configured region of interest.",
+          "default": false
+        },
+        "horizontal_fov_degrees": {
+          "type": "string",
+          "readOnly": false,
+          "description": "The horizontal field of view of the sensor. Larger FoVs use more power.",
+          "enum": [
+            "110Degrees",
+            "120Degrees"
+          ],
+          "default": "110Degrees"
+        },
+        "roi_az_offset_rad": {
+          "type": "number",
+          "readOnly": false,
+          "description": "Shift the ROI (if configured) to the left (-) or right (+).",
+          "max": 0.2094,
+          "min": -0.2094,
+          "default": 0.0
+        },
+        "vertical_pattern": {
+          "type": "string",
+          "readOnly": false,
+          "description": "The scan pattern to use. Refer to the user manual for details.",
+          "enum": [
+            "40-12-ROI-1m",
+            "40-14.4-ROI",
+            "40-14.4-ROI-1m",
+            "40-14.4-ROI-EGL",
+            "40-28.8-ROI",
+            "64-14.4-ROI-1m",
+            "64-16-ROI",
+            "64-16-ROI-1m",
+            "64-19.2-ROI-1m",
+            "64-19.2-ROI-2-EGL",
+            "64-28.8-ROI",
+            "80-19.2-Uniform",
+            "80-24-ROI-2",
+            "cal_192_384-19.2-Uniform-5f"
+          ],
+          "default": "40-14.4-ROI"
+        }
+      },
+      "required": [
+        "sensor_ip",
+        "launch_hw",
+        "frame_id",
+        "sensor_model",
+        "setup_sensor",
+        "diag_span",
+        "dithering_enable_ego_speed",
+        "dithering_pattern_option",
+        "ele_offset_rad",
+        "elevation_auto_adjustment",
+        "enable_frame_dithering",
+        "enable_frame_sync",
+        "flip_pattern_vertically",
+        "frame_sync_offset_in_ms",
+        "frame_sync_type",
+        "frame_synchronization_on_rising_edge",
+        "hfov_adjustment_deg",
+        "hfov_rotation_deg",
+        "highlight_ROI",
+        "horizontal_fov_degrees",
+        "roi_az_offset_rad",
+        "vertical_pattern"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/Aeries2"
+        }
+      },
+      "required": [
+        "ros__parameters"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "/**"
+  ],
+  "additionalProperties": false
+}

@@ -31,6 +31,12 @@ Nebula currently supports the following sensor models, where `sensor_model` is t
 | Bpearl | Bpearl         | Bpearl.yaml        | ⚠️          |
 | Helios | Helios         | Helios.yaml        | ⚠️          |
 
+## Aeva LiDARs
+
+| Model     | `sensor_model` | Configuration file | Test status |
+| --------- | -------------- | ------------------ | ----------- |
+| Aeries II | Aeries2        | Aeries2.param.yaml | ⚠️          |
+
 ## Continental radars
 
 | Model  | `sensor_model` | Configuration file | Test status |

@@ -20,7 +20,6 @@
 #include <boost/tokenizer.hpp>
 
 #include <algorithm>
-#include <map>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -344,7 +343,8 @@ enum class SensorModel {
   ROBOSENSE_BPEARL_V3,
   ROBOSENSE_BPEARL_V4,
   CONTINENTAL_ARS548,
-  CONTINENTAL_SRR520
+  CONTINENTAL_SRR520,
+  AEVA_AERIES2
 };
 
 /// @brief not used?
@@ -443,6 +443,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
       break;
     case SensorModel::CONTINENTAL_SRR520:
       os << "SRR520";
+      break;
+    case SensorModel::AEVA_AERIES2:
+      os << "Aeries II";
       break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
@@ -575,6 +578,7 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   // Continental
   if (sensor_model == "ARS548") return SensorModel::CONTINENTAL_ARS548;
   if (sensor_model == "SRR520") return SensorModel::CONTINENTAL_SRR520;
+  if (sensor_model == "Aeries2") return SensorModel::AEVA_AERIES2;
   return SensorModel::UNKNOWN;
 }
 
@@ -625,6 +629,8 @@ inline std::string SensorModelToString(const SensorModel & sensor_model)
       return "ARS548";
     case SensorModel::CONTINENTAL_SRR520:
       return "SRR520";
+    case SensorModel::AEVA_AERIES2:
+      return "Aeries II";
     default:
       return "UNKNOWN";
   }

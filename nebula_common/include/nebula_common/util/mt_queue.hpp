@@ -21,7 +21,7 @@
 #include <utility>
 
 template <typename T>
-class mt_queue
+class MtQueue
 {
 private:
   std::mutex mutex_;
@@ -30,9 +30,9 @@ private:
   size_t capacity_;
 
 public:
-  explicit mt_queue(size_t capacity) : capacity_(capacity) {}
+  explicit MtQueue(size_t capacity) : capacity_(capacity) {}
 
-  bool try_push(T && value)
+  bool tryPush(T && value)
   {
     std::unique_lock<std::mutex> lock(this->mutex_);
     bool can_push = queue_.size() < capacity_;
