@@ -2,6 +2,10 @@
 
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 
+#include <nebula_common/hesai/hesai_common.hpp>
+
+#include <memory>
+
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 namespace nebula
 {
@@ -12,33 +16,21 @@ using namespace std::chrono_literals;  // NOLINT(build/namespaces)
 
 HesaiDecoderWrapper::HesaiDecoderWrapper(
   rclcpp::Node * const parent_node,
-  const std::shared_ptr<nebula::drivers::HesaiHwInterface> & hw_interface,
-  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config)
+  const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
+  const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration)
 : status_(nebula::Status::NOT_INITIALIZED),
   logger_(parent_node->get_logger().get_child("HesaiDecoder")),
-  hw_interface_(hw_interface),
-  sensor_cfg_(config)
+  sensor_cfg_(config),
+  calibration_cfg_ptr_(calibration)
 {
-  if (!config) {
+  if (!sensor_cfg_) {
     throw std::runtime_error("HesaiDecoderWrapper cannot be instantiated without a valid config!");
   }
 
-  if (config->sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
-    calibration_file_path_ =
-      parent_node->declare_parameter<std::string>("correction_file", param_read_write());
-  } else {
-    calibration_file_path_ =
-      parent_node->declare_parameter<std::string>("calibration_file", param_read_write());
+  if (!calibration_cfg_ptr_) {
+    throw std::runtime_error("HesaiDecoderWrapper cannot be instantiated without a valid config!");
   }
 
-  auto calibration_result = GetCalibrationData(calibration_file_path_, false);
-
-  if (!calibration_result.has_value()) {
-    throw std::runtime_error(
-      (std::stringstream() << "No valid calibration found: " << calibration_result.error()).str());
-  }
-
-  calibration_cfg_ptr_ = calibration_result.value();
   RCLCPP_INFO_STREAM(
     logger_, "Using calibration data from " << calibration_cfg_ptr_->calibration_file);
 
@@ -96,126 +88,6 @@ void HesaiDecoderWrapper::OnCalibrationChange(
   auto new_driver = std::make_shared<drivers::HesaiDriver>(sensor_cfg_, new_calibration);
   driver_ptr_ = new_driver;
   calibration_cfg_ptr_ = new_calibration;
-  calibration_file_path_ = calibration_cfg_ptr_->calibration_file;
-}
-
-rcl_interfaces::msg::SetParametersResult HesaiDecoderWrapper::OnParameterChange(
-  const std::vector<rclcpp::Parameter> & p)
-{
-  using rcl_interfaces::msg::SetParametersResult;
-
-  std::string calibration_path = "";
-
-  // Only one of the two parameters is defined, so not checking for sensor model explicitly here is
-  // fine
-  bool got_any = get_param(p, "calibration_file", calibration_path) |
-                 get_param(p, "correction_file", calibration_path);
-  if (!got_any) {
-    return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
-  }
-
-  if (!std::filesystem::exists(calibration_path)) {
-    auto result = SetParametersResult();
-    result.successful = false;
-    result.reason =
-      "The given calibration path does not exist, ignoring: '" + calibration_path + "'";
-    return result;
-  }
-
-  auto get_calibration_result = GetCalibrationData(calibration_path, true);
-  if (!get_calibration_result.has_value()) {
-    auto result = SetParametersResult();
-    result.successful = false;
-    result.reason =
-      (std::stringstream() << "Could not change calibration file to '" << calibration_path
-                           << "': " << get_calibration_result.error())
-        .str();
-    return result;
-  }
-
-  OnCalibrationChange(get_calibration_result.value());
-  RCLCPP_INFO_STREAM(
-    logger_, "Changed calibration to '" << calibration_cfg_ptr_->calibration_file << "'");
-  return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
-}
-
-HesaiDecoderWrapper::get_calibration_result_t HesaiDecoderWrapper::GetCalibrationData(
-  const std::string & calibration_file_path, bool ignore_others)
-{
-  std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calib;
-
-  if (sensor_cfg_->sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
-    calib = std::make_shared<drivers::HesaiCorrection>();
-  } else {
-    calib = std::make_shared<drivers::HesaiCalibrationConfiguration>();
-  }
-
-  bool hw_connected = hw_interface_ != nullptr;
-  std::string calibration_file_path_from_sensor;
-
-  {
-    int ext_pos = calibration_file_path.find_last_of('.');
-    calibration_file_path_from_sensor = calibration_file_path.substr(0, ext_pos);
-    // TODO(mojomex): if multiple different sensors of the same type are used, this will mix up
-    // their calibration data
-    calibration_file_path_from_sensor += "_from_sensor_" + sensor_cfg_->sensor_ip;
-    calibration_file_path_from_sensor +=
-      calibration_file_path.substr(ext_pos, calibration_file_path.size() - ext_pos);
-  }
-
-  // If a sensor is connected, try to download and save its calibration data
-  if (!ignore_others && hw_connected) {
-    try {
-      auto raw_data = hw_interface_->GetLidarCalibrationBytes();
-      RCLCPP_INFO(logger_, "Downloaded calibration data from sensor.");
-      auto status = calib->SaveToFileFromBytes(calibration_file_path_from_sensor, raw_data);
-      if (status != Status::OK) {
-        RCLCPP_ERROR_STREAM(logger_, "Could not save calibration data: " << status);
-      } else {
-        RCLCPP_INFO_STREAM(
-          logger_, "Saved downloaded data to " << calibration_file_path_from_sensor);
-      }
-    } catch (std::runtime_error & e) {
-      RCLCPP_ERROR_STREAM(logger_, "Could not download calibration data: " << e.what());
-    }
-  }
-
-  // If saved calibration data from a sensor exists (either just downloaded above, or previously),
-  // try to load it
-  if (!ignore_others && std::filesystem::exists(calibration_file_path_from_sensor)) {
-    auto status = calib->LoadFromFile(calibration_file_path_from_sensor);
-    if (status == Status::OK) {
-      calib->calibration_file = calibration_file_path_from_sensor;
-      return calib;
-    }
-
-    RCLCPP_ERROR_STREAM(logger_, "Could not load downloaded calibration data: " << status);
-  } else if (!ignore_others) {
-    RCLCPP_ERROR(logger_, "No downloaded calibration data found.");
-  }
-
-  if (!ignore_others) {
-    RCLCPP_WARN(logger_, "Falling back to generic calibration file.");
-  }
-
-  // If downloaded data did not exist or could not be loaded, fall back to a generic file.
-  // If that file does not exist either, return an error code
-  if (!std::filesystem::exists(calibration_file_path)) {
-    RCLCPP_ERROR(logger_, "No calibration data found.");
-    return nebula::Status(Status::INVALID_CALIBRATION_FILE);
-  }
-
-  // Try to load the existing fallback calibration file. Return an error if this fails
-  auto status = calib->LoadFromFile(calibration_file_path);
-  if (status != Status::OK) {
-    RCLCPP_ERROR_STREAM(
-      logger_, "Could not load calibration file at '" << calibration_file_path << "'");
-    return status;
-  }
-
-  // Return the fallback calibration file
-  calib->calibration_file = calibration_file_path;
-  return calib;
 }
 
 void HesaiDecoderWrapper::ProcessCloudPacket(

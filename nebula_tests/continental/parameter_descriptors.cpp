@@ -1,3 +1,5 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "parameter_descriptors.hpp"
 
 namespace nebula

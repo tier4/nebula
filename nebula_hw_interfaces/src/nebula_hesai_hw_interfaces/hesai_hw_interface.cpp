@@ -11,9 +11,7 @@
 
 #include <boost/asio.hpp>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 HesaiHwInterface::HesaiHwInterface()
 : cloud_io_context_{new ::drivers::common::IoContext(1)},
@@ -22,6 +20,7 @@ HesaiHwInterface::HesaiHwInterface()
   tcp_driver_{new ::drivers::tcp_driver::TcpDriver(m_owned_ctx)}
 {
 }
+
 HesaiHwInterface::~HesaiHwInterface()
 {
   FinalizeTcpDriver();
@@ -442,6 +441,9 @@ Status HesaiHwInterface::SetControlPort(
 
 Status HesaiHwInterface::SetLidarRange(int method, std::vector<unsigned char> data)
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
   // 0 - for all channels : 5-1 bytes
   // 1 - for each channel : 323-1 bytes
   // 2 - multi-section FOV : 1347-1 bytes
@@ -456,6 +458,9 @@ Status HesaiHwInterface::SetLidarRange(int method, std::vector<unsigned char> da
 
 Status HesaiHwInterface::SetLidarRange(int start, int end)
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
   // 0 - for all channels : 5-1 bytes
   // 1 - for each channel : 323-1 bytes
   // 2 - multi-section FOV : 1347-1 bytes
@@ -474,6 +479,9 @@ Status HesaiHwInterface::SetLidarRange(int start, int end)
 
 HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    throw std::runtime_error("Not supported on this sensor");
+  }
   auto response_or_err = SendReceive(PTC_COMMAND_GET_LIDAR_RANGE);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
@@ -501,6 +509,36 @@ HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
   }
 
   return hesai_range_all;
+}
+
+Status HesaiHwInterface::checkAndSetLidarRange(
+  const HesaiCalibrationConfigurationBase & calibration)
+{
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  int cloud_min = sensor_configuration_->cloud_min_angle * 10;
+  int cloud_max = sensor_configuration_->cloud_max_angle * 10;
+
+  std::cout << "Starting with HW FoV of " << cloud_min << "~" << cloud_max << std::endl;
+
+  // Only oversize the FoV if it is not already the full 360deg
+  if (cloud_min != 0 || cloud_max != 3600) {
+    auto padding = calibration.getFovPadding();
+    cloud_min += floor(std::get<0>(padding) * 10);
+    cloud_max += ceil(std::get<1>(padding) * 10);
+  }
+
+  auto clamp = [](int x) {
+    while (x < 0) x += 3600;
+    while (x > 3600) x -= 3600;
+    return x;
+  };
+
+  std::cout << "Setting HW FoV to " << cloud_min << "~" << cloud_max << std::endl;
+
+  return SetLidarRange(clamp(cloud_min), clamp(cloud_max));
 }
 
 Status HesaiHwInterface::SetClockSource(int clock_source)
@@ -1009,6 +1047,10 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
   });
   t.join();
 
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    return Status::OK;
+  }
+
   std::thread t2([this] {
     auto result = GetLidarRange();
     std::stringstream ss;
@@ -1265,16 +1307,16 @@ std::string HesaiHwInterface::PrettyPrintPTCError(ptc_error_t error_code)
   std::vector<std::string> nebula_errors;
 
   if (error_flags & TCP_ERROR_INCOMPLETE_RESPONSE) {
-    nebula_errors.push_back("Incomplete response payload");
+    nebula_errors.emplace_back("Incomplete response payload");
   }
   if (error_flags & TCP_ERROR_TIMEOUT) {
-    nebula_errors.push_back("Request timeout");
+    nebula_errors.emplace_back("Request timeout");
   }
   if (error_flags & TCP_ERROR_UNEXPECTED_PAYLOAD) {
-    nebula_errors.push_back("Received payload but expected payload length 0");
+    nebula_errors.emplace_back("Received payload but expected payload length 0");
   }
   if (error_flags & TCP_ERROR_UNRELATED_RESPONSE) {
-    nebula_errors.push_back("Received unrelated response");
+    nebula_errors.emplace_back("Received unrelated response");
   }
 
   ss << boost::algorithm::join(nebula_errors, ", ");
@@ -1296,5 +1338,4 @@ T HesaiHwInterface::CheckSizeAndParse(const std::vector<uint8_t> & data)
   return parsed;
 }
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

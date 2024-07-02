@@ -18,12 +18,14 @@
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <vector>
 namespace nebula
 {
@@ -35,6 +37,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   uint16_t gnss_port{};
   double scan_phase{};
   double dual_return_distance_threshold{};
+  std::string calibration_path{};
   uint16_t rotation_speed;
   uint16_t cloud_min_angle;
   uint16_t cloud_max_angle;
@@ -53,7 +56,8 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
      << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
      << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle
      << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold
-     << ", PtpProfile:" << arg.ptp_profile << ", PtpDomain:" << std::to_string(arg.ptp_domain)
+     << ", CalibrationPath:" << arg.calibration_path << ", PtpProfile:" << arg.ptp_profile
+     << ", PtpDomain:" << std::to_string(arg.ptp_domain)
      << ", PtpTransportType:" << arg.ptp_transport_type
      << ", PtpSwitchType:" << arg.ptp_switch_type;
   return os;
@@ -65,6 +69,8 @@ struct HesaiCalibrationConfigurationBase : public CalibrationConfigurationBase
   virtual nebula::Status LoadFromFile(const std::string & calibration_file) = 0;
   virtual nebula::Status SaveToFileFromBytes(
     const std::string & calibration_file, const std::vector<uint8_t> & buf) = 0;
+
+  [[nodiscard]] virtual std::tuple<float, float> getFovPadding() const = 0;
 };
 
 /// @brief struct for Hesai calibration configuration
@@ -165,6 +171,19 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
     ofs << calibration_string;
     ofs.close();
     return Status::OK;
+  }
+
+  [[nodiscard]] std::tuple<float, float> getFovPadding() const override
+  {
+    float min = INFINITY;
+    float max = -INFINITY;
+
+    for (const auto & item : azimuth_offset_map) {
+      min = std::min(min, item.second);
+      max = std::max(max, item.second);
+    }
+
+    return {-max, -min};
   }
 };
 
@@ -349,7 +368,7 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   /// @param ch The channel id
   /// @param azi The precision azimuth in (0.01 / 256) degree unit
   /// @return The azimuth adjustment in 0.01 degree unit
-  int8_t getAzimuthAdjustV3(uint8_t ch, uint32_t azi) const
+  [[nodiscard]] int8_t getAzimuthAdjustV3(uint8_t ch, uint32_t azi) const
   {
     unsigned int i = std::floor(1.f * azi / STEP3);
     unsigned int l = azi - i * STEP3;
@@ -361,12 +380,18 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   /// @param ch The channel id
   /// @param azi The precision azimuth in (0.01 / 256) degree unit
   /// @return The elevation adjustment in 0.01 degree unit
-  int8_t getElevationAdjustV3(uint8_t ch, uint32_t azi) const
+  [[nodiscard]] int8_t getElevationAdjustV3(uint8_t ch, uint32_t azi) const
   {
     unsigned int i = std::floor(1.f * azi / STEP3);
     unsigned int l = azi - i * STEP3;
     float k = 1.f * l / STEP3;
     return round((1 - k) * elevationOffset[ch * 180 + i] + k * elevationOffset[ch * 180 + i + 1]);
+  }
+
+  [[nodiscard]] std::tuple<float, float> getFovPadding() const override
+  {
+    // TODO(mojomex): calculate instead of hard-coding
+    return {-5, 5};
   }
 };
 

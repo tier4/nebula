@@ -2,15 +2,16 @@
 
 #include "hesai_ros_decoder_test.hpp"
 
-#include "rclcpp/serialization.hpp"
-#include "rclcpp/serialized_message.hpp"
-#include "rcpputils/filesystem_helper.hpp"
-#include "rcutils/time.h"
-#include "rosbag2_cpp/reader.hpp"
-#include "rosbag2_cpp/readers/sequential_reader.hpp"
-#include "rosbag2_cpp/writer.hpp"
-#include "rosbag2_cpp/writers/sequential_writer.hpp"
-#include "rosbag2_storage/storage_options.hpp"
+#include "nebula_common/nebula_common.hpp"
+
+#include <rclcpp/serialization.hpp>
+#include <rclcpp/serialized_message.hpp>
+#include <rcpputils/filesystem_helper.hpp>
+#include <rosbag2_cpp/reader.hpp>
+#include <rosbag2_cpp/readers/sequential_reader.hpp>
+#include <rosbag2_storage/storage_options.hpp>
+
+#include <pandar_msgs/msg/pandar_scan.hpp>
 
 #include <gtest/gtest.h>
 
@@ -82,6 +83,10 @@ Status HesaiRosDecoderTest::GetParameters(
   calibration_dir /= "hesai";
   std::filesystem::path bag_root_dir = _SRC_RESOURCES_DIR_PATH;
   bag_root_dir /= "hesai";
+
+  sensor_configuration.cloud_min_angle = 0;
+  sensor_configuration.cloud_max_angle = 360;
+
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
@@ -92,6 +97,12 @@ Status HesaiRosDecoderTest::GetParameters(
     sensor_configuration.sensor_model =
       nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
   }
+
+  if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
+    sensor_configuration.cloud_min_angle = 30;
+    sensor_configuration.cloud_max_angle = 150;
+  }
+
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
