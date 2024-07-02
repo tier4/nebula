@@ -14,6 +14,8 @@ For example, for a Hesai Pandar40P sensor:
 ros2 launch nebula_ros hesai_launch_all_hw.xml sensor_model:=Pandar40P
 ```
 
+Refer to the list of [supported sensors](supported_sensors.md) for more information on the avaliable sensors and configuration options.
+
 ## Sensor configuration
 
 WIP
