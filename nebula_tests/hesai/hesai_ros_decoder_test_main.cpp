@@ -5,9 +5,13 @@
 #include "hesai_common.hpp"
 #include "hesai_ros_decoder_test.hpp"
 
+#include <pcl/impl/point_types.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <gtest/gtest.h>
+#include <pcl/conversions.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_cloud.h>
 
 #include <cstdlib>
 #include <ctime>
@@ -39,7 +43,7 @@ TEST_P(DecoderTest, TestPcd)
   rcpputils::fs::path bag_dir(hesai_driver_->params_.bag_path);
   rcpputils::fs::path pcd_dir = bag_dir.parent_path();
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr ref_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
+  auto ref_pointcloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
   int check_cnt = 0;
 
   auto scan_callback = [&](
@@ -58,7 +62,7 @@ TEST_P(DecoderTest, TestPcd)
       checkPCDs(pointcloud, ref_pointcloud);
       check_cnt++;
       // ref_pointcloud.reset(new nebula::drivers::NebulaPointCloud);
-      ref_pointcloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
+      ref_pointcloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
     }
   };
 
