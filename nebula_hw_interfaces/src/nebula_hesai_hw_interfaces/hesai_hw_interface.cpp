@@ -441,6 +441,9 @@ Status HesaiHwInterface::SetControlPort(
 
 Status HesaiHwInterface::SetLidarRange(int method, std::vector<unsigned char> data)
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
   // 0 - for all channels : 5-1 bytes
   // 1 - for each channel : 323-1 bytes
   // 2 - multi-section FOV : 1347-1 bytes
@@ -455,6 +458,9 @@ Status HesaiHwInterface::SetLidarRange(int method, std::vector<unsigned char> da
 
 Status HesaiHwInterface::SetLidarRange(int start, int end)
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
   // 0 - for all channels : 5-1 bytes
   // 1 - for each channel : 323-1 bytes
   // 2 - multi-section FOV : 1347-1 bytes
@@ -473,6 +479,9 @@ Status HesaiHwInterface::SetLidarRange(int start, int end)
 
 HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    throw std::runtime_error("Not supported on this sensor");
+  }
   auto response_or_err = SendReceive(PTC_COMMAND_GET_LIDAR_RANGE);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
@@ -505,6 +514,10 @@ HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
 Status HesaiHwInterface::checkAndSetLidarRange(
   const HesaiCalibrationConfigurationBase & calibration)
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
   int cloud_min = sensor_configuration_->cloud_min_angle * 10;
   int cloud_max = sensor_configuration_->cloud_max_angle * 10;
 
@@ -1033,6 +1046,10 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
       std::static_pointer_cast<const HesaiSensorConfiguration>(sensor_configuration_), result);
   });
   t.join();
+
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    return Status::OK;
+  }
 
   std::thread t2([this] {
     auto result = GetLidarRange();

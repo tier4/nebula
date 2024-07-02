@@ -52,7 +52,9 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
       (std::stringstream() << "No valid calibration found: " << calibration_result.error()).str());
   }
 
-  if (hw_interface_wrapper_) {
+  if (
+    hw_interface_wrapper_ &&
+    sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDARAT128) {
     auto status =
       hw_interface_wrapper_->HwInterface()->checkAndSetLidarRange(*calibration_result.value());
     if (status != Status::OK) {
@@ -350,7 +352,9 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
     RCLCPP_INFO_STREAM(get_logger(), "Changed calibration to '" << new_cfg.calibration_path << "'");
   }
 
-  if (new_calibration_ptr && hw_interface_wrapper_) {
+  if (
+    new_calibration_ptr && hw_interface_wrapper_ &&
+    sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDARAT128) {
     auto status = hw_interface_wrapper_->HwInterface()->checkAndSetLidarRange(*new_calibration_ptr);
     if (status != Status::OK) {
       RCLCPP_ERROR_STREAM(
