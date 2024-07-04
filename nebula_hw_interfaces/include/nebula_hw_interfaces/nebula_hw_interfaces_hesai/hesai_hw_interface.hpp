@@ -314,7 +314,7 @@ public:
   /// @brief Getting values with PTC_COMMAND_GET_LIDAR_RANGE
   /// @return Resulting status
   HesaiLidarRangeAll get_lidar_range();
-  /// @brief Setting values with PTC_COMMAND_GET_HIGH_RESOLUTION_MODE
+  /// @brief Setting values with PTC_COMMAND_SET_HIGH_RESOLUTION_MODE
   /// @return Resulting status
   Status set_high_resolution_mode(bool enable);
   /// @brief Getting values with PTC_COMMAND_GET_HIGH_RESOLUTION_MODE

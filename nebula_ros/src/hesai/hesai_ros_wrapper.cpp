@@ -142,7 +142,13 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
   config.min_range = declare_parameter<double>("min_range", param_read_write());
   config.max_range = declare_parameter<double>("max_range", param_read_write());
   config.packet_mtu_size = declare_parameter<uint16_t>("packet_mtu_size", param_read_only());
-  config.hires_mode = this->declare_parameter<bool>("hires_mode", param_read_write());
+
+  config.hires_mode = false;
+  if (
+    config.sensor_model == drivers::SensorModel::HESAI_PANDAR128_E4X ||
+    config.sensor_model == drivers::SensorModel::HESAI_PANDAR128_E3X) {
+    config.hires_mode = this->declare_parameter<bool>("hires_mode", param_read_write());
+  }
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
