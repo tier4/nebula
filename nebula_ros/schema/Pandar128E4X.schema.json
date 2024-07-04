@@ -92,6 +92,9 @@
         },
         "dual_return_distance_threshold": {
           "$ref": "sub/misc.json#/definitions/dual_return_distance_threshold"
+        },
+        "hires_mode": {
+          "$ref": "sub/lidar_hesai.json#/definitions/hires_mode"
         }
       },
       "required": [

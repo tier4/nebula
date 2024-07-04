@@ -31,6 +31,11 @@
       "minimum": 300,
       "maximum": 1200,
       "multipleOf": 60
+    },
+    "hires_mode": {
+      "type": "boolean",
+      "description": "Whether to turn on or off the sensor's high resolution mode",
+      "default": false
     }
   }
 }
