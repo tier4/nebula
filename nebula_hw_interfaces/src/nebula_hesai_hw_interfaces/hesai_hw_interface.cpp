@@ -2,6 +2,8 @@
 
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
 
+#include <stdexcept>
+
 // #define WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
 
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
@@ -628,6 +630,10 @@ Status HesaiHwInterface::SetRotDir(int mode)
 
 HesaiLidarMonitor HesaiHwInterface::GetLidarMonitor()
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    throw std::runtime_error("Not supported on this sensor");
+  }
+
   auto response_or_err = SendReceive(PTC_COMMAND_LIDAR_MONITOR);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return CheckSizeAndParse<HesaiLidarMonitor>(response);

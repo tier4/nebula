@@ -105,6 +105,8 @@ private:
 
   std::vector<std::string> temperature_names_;
 
+  bool supports_monitor_;
+
   const std::string MSG_NOT_SUPPORTED = "Not supported";
   const std::string MSG_ERROR = "Error";
   const std::string MSG_SEP = ": ";
