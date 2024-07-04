@@ -153,10 +153,17 @@ enum class ReconfigRequestType : uint8_t {
   kInvalid = 5
 };
 
-inline bool is_error_code(uint32_t health_code)
+struct HealthCode
 {
-  return (health_code & (1u << 31u)) != 0;
-}
+  explicit HealthCode(uint32_t value) : value_(value) {}
+
+  [[nodiscard]] bool is_error() const { return (value_ & ERROR_MASK) != 0; }
+  [[nodiscard]] uint32_t get() const { return value_ & ~ERROR_MASK; }
+
+private:
+  uint32_t value_;
+  static const uint32_t ERROR_MASK = 1u << 31u;
+};
 
 struct ReconfigMessage
 {

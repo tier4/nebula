@@ -31,11 +31,12 @@ namespace nebula::drivers::connections
 {
 
 using namespace boost::endian;  //  NOLINT
+using aeva::HealthCode;
 
 class HealthParser : public AevaParser<AevaStreamType::kHealth>
 {
 public:
-  using callback_t = std::function<void(std::vector<uint32_t>)>;
+  using callback_t = std::function<void(std::vector<HealthCode>)>;
 
   explicit HealthParser(std::shared_ptr<PullableByteStream> incoming_byte_stream)
   : AevaParser<AevaStreamType::kHealth>(std::move(incoming_byte_stream))
@@ -54,13 +55,13 @@ protected:
       message_header.message_length - sizeof(MessageHeader) - sizeof(n_entries),
       "Unexpected size of health code list");
 
-    std::vector<uint32_t> entries;
+    std::vector<HealthCode> entries;
     entries.reserve(n_entries);
 
     for (size_t i = 0; i < n_entries; ++i) {
       auto pointer = &*payload_bytes.consumeUnsafe(sizeof(uint32_t)).cbegin();
       auto entry = load_little_u32(pointer);
-      entries.push_back(entry);
+      entries.emplace_back(entry);
     }
 
     if (callback_) {
