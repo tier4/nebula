@@ -64,7 +64,7 @@ protected:
   }
 
 private:
-  callback_t callback_{};
+  callback_t callback_;
 };
 
 }  // namespace nebula::drivers::connections

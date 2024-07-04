@@ -164,7 +164,6 @@ public:
 
   void registerBytesCallback(callback_t callback) override
   {
-    std::lock_guard lock(mtx_bytes_callback_);
     bytes_callback_ = std::move(callback);
   }
 
@@ -175,8 +174,6 @@ protected:
    */
   void onLowLevelMessage()
   {
-    std::lock_guard lock(mtx_bytes_callback_);
-
     std::vector<uint8_t> some_ip_raw;
     incoming_->read(some_ip_raw, sizeof(SomeIpHeader));
     if (bytes_callback_) {
@@ -210,8 +207,7 @@ private:
 
   std::shared_ptr<PullableByteStream> incoming_;
 
-  std::mutex mtx_bytes_callback_;
-  callback_t bytes_callback_{};
+  callback_t bytes_callback_;
 };
 
 template <AevaStreamType StreamId>
