@@ -16,6 +16,7 @@
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/aeva/config_types.hpp>
+#include <nebula_common/aeva/packet_types.hpp>
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
@@ -38,6 +39,7 @@
 namespace nebula::ros
 {
 
+using drivers::aeva::HealthCode;
 using nlohmann::json;
 
 class AevaHwMonitorWrapper
@@ -48,7 +50,7 @@ public:
 
   void onTelemetryFragment(const json & diff);
 
-  void onHealthCodes(std::vector<uint32_t> health_codes);
+  void onHealthCodes(std::vector<HealthCode> health_codes);
 
 private:
   struct NodeTelemetry
@@ -64,7 +66,7 @@ private:
 
   struct HealthState
   {
-    std::vector<uint32_t> codes;
+    std::vector<HealthCode> codes;
     rclcpp::Time last_update;
   };
 
