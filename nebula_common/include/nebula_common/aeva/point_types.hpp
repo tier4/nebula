@@ -24,7 +24,7 @@ struct EIGEN_ALIGN16 PointXYZVIRCAEDT
   float x;
   float y;
   float z;
-  float distance_rate;
+  float range_rate;
   uint8_t intensity;
   uint8_t return_type;
   uint16_t channel;
@@ -39,7 +39,8 @@ struct EIGEN_ALIGN16 PointXYZVIRCAEDT
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(  // NOLINT
   nebula::drivers::aeva::PointXYZVIRCAEDT,
-  (float, x, x)(float, y, y)(float, z, z)(float, distance_rate, distance_rate)(
-    std::uint8_t, intensity, intensity)(std::uint8_t, return_type, return_type)(
-    std::uint16_t, channel, channel)(float, azimuth, azimuth)(float, elevation, elevation)(
-    float, distance, distance)(std::uint32_t, time_stamp, time_stamp))
+  (float, x,
+   x)(float, y, y)(float, z, z)(float, range_rate, range_rate)(std::uint8_t, intensity, intensity)(
+    std::uint8_t, return_type,
+    return_type)(std::uint16_t, channel, channel)(float, azimuth, azimuth)(
+    float, elevation, elevation)(float, distance, distance)(std::uint32_t, time_stamp, time_stamp))
