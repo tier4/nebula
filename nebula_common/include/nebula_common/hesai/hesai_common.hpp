@@ -55,8 +55,7 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
      << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle
      << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold
      << ", PtpProfile:" << arg.ptp_profile << ", PtpDomain:" << std::to_string(arg.ptp_domain)
-     << ", PtpTransportType:" << arg.ptp_transport_type
-     << ", PtpSwitchType:" << arg.ptp_switch_type
+     << ", PtpTransportType:" << arg.ptp_transport_type << ", PtpSwitchType:" << arg.ptp_switch_type
      << ", HighResolutionMode:" << arg.hires_mode;
   return os;
 }

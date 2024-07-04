@@ -503,7 +503,8 @@ HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
   return hesai_range_all;
 }
 
-Status HesaiHwInterface::SetHighResolutionMode(bool enable) {
+Status HesaiHwInterface::SetHighResolutionMode(bool enable)
+{
   std::vector<unsigned char> request_payload;
   request_payload.emplace_back(enable ? 0x01 : 0x00);
 
@@ -512,7 +513,8 @@ Status HesaiHwInterface::SetHighResolutionMode(bool enable) {
   return Status::OK;
 }
 
-bool HesaiHwInterface::GetHighResolutionMode() {
+bool HesaiHwInterface::GetHighResolutionMode()
+{
   auto response_or_err = SendReceive(PTC_COMMAND_GET_HIGH_RESOLUTION_MODE);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
@@ -950,7 +952,6 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     auto hires_currently_enabled = GetHighResolutionMode();
 
     if (hires_currently_enabled != sensor_configuration->hires_mode) {
-
       PrintInfo("current lidar hires_mode: " + std::to_string(hires_currently_enabled));
       PrintInfo(
         "current configuration hires_mode: " + std::to_string(sensor_configuration->hires_mode));
