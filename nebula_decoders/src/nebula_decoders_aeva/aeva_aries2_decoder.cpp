@@ -2,6 +2,8 @@
 
 #include "nebula_decoders/nebula_decoders_aeva/aeva_aries2_decoder.hpp"
 
+#include <nebula_common/nebula_common.hpp>
+
 namespace nebula::drivers
 {
 
@@ -35,7 +37,7 @@ void AevaAries2Decoder::processPointcloudMessage(const aeva::PointCloudMessage &
       state.line_index++;
     }
 
-    if (!raw_point.valid || raw_point.signal_quality < 60) {
+    if (!raw_point.valid) {
       continue;
     }
 
@@ -48,6 +50,22 @@ void AevaAries2Decoder::processPointcloudMessage(const aeva::PointCloudMessage &
     point.distance = raw_point.range.value();
     point.azimuth = -raw_point.azimuth.value() * M_PI_2f;
     point.elevation = raw_point.elevation.value() * M_PI_4f;
+
+    ReturnType return_type{ReturnType::UNKNOWN};
+    // TODO(mojomex): Currently, there is no info published by the sensor on which return mode is
+    // active. Here, the default one is hardcoded for now.
+    switch (raw_point.peak_id) {
+      case 0:
+        return_type = ReturnType::STRONGEST;
+        break;
+      case 1:
+        return_type = ReturnType::SECONDSTRONGEST;
+        break;
+      default:
+        return_type = ReturnType::UNKNOWN;
+    }
+
+    point.return_type = static_cast<uint8_t>(return_type);
 
     float xy_distance = point.distance * std::cos(point.elevation);
     point.x = xy_distance * std::sin(point.azimuth);
