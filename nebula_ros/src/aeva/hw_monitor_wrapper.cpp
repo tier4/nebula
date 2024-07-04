@@ -25,6 +25,7 @@ namespace nebula::ros
 {
 
 using diagnostic_msgs::msg::DiagnosticStatus;
+using drivers::aeva::HealthCode;
 using nebula::util::get_if_exists;
 
 AevaHwMonitorWrapper::AevaHwMonitorWrapper(
@@ -86,7 +87,7 @@ void AevaHwMonitorWrapper::onTelemetryFragment(const json & diff)
   }
 }
 
-void AevaHwMonitorWrapper::onHealthCodes(std::vector<uint32_t> health_codes)
+void AevaHwMonitorWrapper::onHealthCodes(std::vector<HealthCode> health_codes)
 {
   std::scoped_lock lock(mtx_health_, mtx_hardware_id_);
 
@@ -148,17 +149,16 @@ void AevaHwMonitorWrapper::publishDiagnostics()
   status.name = "aeva.health";
 
   if (health_) {
-    auto & codes = health_->codes;
-
     json warning_codes = json::array();
     json error_codes = json::array();
 
-    std::copy_if(codes.cbegin(), codes.cend(), std::back_inserter(warning_codes), [](auto code) {
-      return !drivers::aeva::is_error_code(code);
-    });
-
-    std::copy_if(
-      codes.cbegin(), codes.cend(), std::back_inserter(error_codes), drivers::aeva::is_error_code);
+    for (const auto & code : health_->codes) {
+      if (code.is_error()) {
+        error_codes.push_back(code.get());
+      } else {
+        warning_codes.push_back(code.get());
+      }
+    }
 
     if (!error_codes.empty()) {
       status.level = DiagnosticStatus::ERROR;
