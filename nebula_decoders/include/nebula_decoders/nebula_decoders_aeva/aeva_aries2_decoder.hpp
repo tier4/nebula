@@ -16,6 +16,7 @@
 
 #include <nebula_common/aeva/packet_types.hpp>
 #include <nebula_common/aeva/point_types.hpp>
+#include <nebula_common/nebula_common.hpp>
 
 #include <pcl/point_cloud.h>
 #include <sys/types.h>
@@ -61,7 +62,7 @@ private:
     uint64_t timestamp;
   };
 
-  callback_t callback_{};
+  callback_t callback_;
   PointcloudState cloud_state_{};
 
   std::mutex mtx_callback_;
