@@ -116,7 +116,7 @@ AevaRosWrapper::AevaRosWrapper(const rclcpp::NodeOptions & options)
       "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
   }
 
-  RCLCPP_DEBUG(get_logger(), "Starting stream");
+  RCLCPP_INFO(get_logger(), "Starting stream");
 
   PointcloudParser::callback_t pointcloud_message_cb = [this](const auto & message) {
     decoder_.processPointcloudMessage(message);
@@ -126,7 +126,7 @@ AevaRosWrapper::AevaRosWrapper(const rclcpp::NodeOptions & options)
 
   cloud_pub_ = create_publisher<sensor_msgs::msg::PointCloud2>("/nebula_points", pointcloud_qos);
 
-  cloud_watchdog_ = std::make_shared<WatchdogTimer>(*this, 100'000us, [&](bool ok) {
+  cloud_watchdog_ = std::make_shared<WatchdogTimer>(*this, 110'000us, [&](bool ok) {
     if (ok) return;
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "Missed pointcloud output deadline");
   });
