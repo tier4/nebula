@@ -25,7 +25,6 @@
 #include <exception>
 #include <iterator>
 #include <memory>
-#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -204,9 +203,7 @@ protected:
 
 private:
   std::thread thread_;
-
   std::shared_ptr<PullableByteStream> incoming_;
-
   callback_t bytes_callback_;
 };
 

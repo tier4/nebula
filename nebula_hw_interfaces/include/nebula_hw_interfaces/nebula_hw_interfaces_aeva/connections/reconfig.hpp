@@ -69,7 +69,6 @@ public:
   json setParameter(std::string node_name, std::string key, json value)
   {
     json request_body = {{node_name, {{key, {{"value", value}}}}}};
-    std::cerr << "Sending request with body: \n" << request_body.dump(2) << std::endl;
     ReconfigMessage request = {ReconfigRequestType::kChangeRequest, request_body};
 
     ReconfigMessage response = doRequest(request);

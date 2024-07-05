@@ -55,22 +55,27 @@ private:
   Status declareAndGetSensorConfigParams();
   Status validateAndSetConfig(std::shared_ptr<const drivers::aeva::Aeries2Config> & new_config);
 
+  rcl_interfaces::msg::SetParametersResult onParameterChange(
+    const std::vector<rclcpp::Parameter> & p);
+
   void recordRawPacket(const std::vector<uint8_t> & bytes);
 
-  rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_{};
+  rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_;
   std::mutex mtx_current_scan_msg_;
-  nebula_msgs::msg::NebulaPackets::UniquePtr current_scan_msg_{};
+  nebula_msgs::msg::NebulaPackets::UniquePtr current_scan_msg_;
 
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_{};
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
   std::shared_ptr<nebula::ros::WatchdogTimer> cloud_watchdog_;
 
-  rclcpp::Subscription<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_sub_{};
+  rclcpp::Subscription<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_sub_;
 
   std::shared_ptr<const drivers::aeva::Aeries2Config> sensor_cfg_ptr_;
 
   std::optional<drivers::AevaHwInterface> hw_interface_;
   std::optional<AevaHwMonitorWrapper> hw_monitor_;
-  drivers::AevaAries2Decoder decoder_{};
+  drivers::AevaAries2Decoder decoder_;
+
+  OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_;
 };
 
 }  // namespace nebula::ros

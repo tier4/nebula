@@ -28,6 +28,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -131,31 +132,32 @@ AevaRosWrapper::AevaRosWrapper(const rclcpp::NodeOptions & options)
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "Missed pointcloud output deadline");
   });
 
-  {
-    AevaAries2Decoder::callback_t pointcloud_cb =
-      [&](AevaPointCloudUniquePtr cloud_ptr, auto timestamp) {
-        auto now = this->now();
-        cloud_watchdog_->update();
+  AevaAries2Decoder::callback_t pointcloud_cb =
+    [&](AevaPointCloudUniquePtr cloud_ptr, auto timestamp) {
+      auto now = this->now();
+      cloud_watchdog_->update();
 
-        if (
-          cloud_pub_->get_subscription_count() > 0 ||
-          cloud_pub_->get_intra_process_subscription_count() > 0) {
-          auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-          pcl::toROSMsg(*cloud_ptr, *ros_pc_msg_ptr);
-          ros_pc_msg_ptr->header.frame_id = sensor_cfg_ptr_->frame_id;
-          ros_pc_msg_ptr->header.stamp = rclcpp::Time(static_cast<int64_t>(timestamp));
-          cloud_pub_->publish(std::move(ros_pc_msg_ptr));
-        }
+      if (
+        cloud_pub_->get_subscription_count() > 0 ||
+        cloud_pub_->get_intra_process_subscription_count() > 0) {
+        auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
+        pcl::toROSMsg(*cloud_ptr, *ros_pc_msg_ptr);
+        ros_pc_msg_ptr->header.frame_id = sensor_cfg_ptr_->frame_id;
+        ros_pc_msg_ptr->header.stamp = rclcpp::Time(static_cast<int64_t>(timestamp));
+        cloud_pub_->publish(std::move(ros_pc_msg_ptr));
+      }
 
-        std::lock_guard lock(mtx_current_scan_msg_);
-        if (current_scan_msg_ && packets_pub_) {
-          packets_pub_->publish(std::move(current_scan_msg_));
-          current_scan_msg_ = {};
-        }
-      };
+      std::lock_guard lock(mtx_current_scan_msg_);
+      if (current_scan_msg_ && packets_pub_) {
+        packets_pub_->publish(std::move(current_scan_msg_));
+        current_scan_msg_ = {};
+      }
+    };
 
-    decoder_.registerPointCloudCallback(std::move(pointcloud_cb));
-  }
+  decoder_.registerPointCloudCallback(std::move(pointcloud_cb));
+
+  parameter_event_cb_ =
+    add_on_set_parameters_callback([this](const auto & p) { return onParameterChange(p); });
 }
 
 Status AevaRosWrapper::declareAndGetSensorConfigParams()
@@ -167,29 +169,29 @@ Status AevaRosWrapper::declareAndGetSensorConfigParams()
   config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());
   config.frame_id = declare_parameter<std::string>("frame_id", param_read_only());
   config.dithering_enable_ego_speed =
-    declare_parameter<float>("dithering_enable_ego_speed", param_read_only());
+    declare_parameter<float>("dithering_enable_ego_speed", param_read_write());
   config.dithering_pattern_option =
-    declare_parameter<std::string>("dithering_pattern_option", param_read_only());
-  config.ele_offset_rad = declare_parameter<float>("ele_offset_rad", param_read_only());
+    declare_parameter<std::string>("dithering_pattern_option", param_read_write());
+  config.ele_offset_rad = declare_parameter<float>("ele_offset_rad", param_read_write());
   config.elevation_auto_adjustment =
-    declare_parameter<bool>("elevation_auto_adjustment", param_read_only());
+    declare_parameter<bool>("elevation_auto_adjustment", param_read_write());
   config.enable_frame_dithering =
-    declare_parameter<bool>("enable_frame_dithering", param_read_only());
-  config.enable_frame_sync = declare_parameter<bool>("enable_frame_sync", param_read_only());
+    declare_parameter<bool>("enable_frame_dithering", param_read_write());
+  config.enable_frame_sync = declare_parameter<bool>("enable_frame_sync", param_read_write());
   config.flip_pattern_vertically =
-    declare_parameter<bool>("flip_pattern_vertically", param_read_only());
+    declare_parameter<bool>("flip_pattern_vertically", param_read_write());
   config.frame_sync_offset_in_ms =
-    declare_parameter<int>("frame_sync_offset_in_ms", param_read_only());
-  config.frame_sync_type = declare_parameter<std::string>("frame_sync_type", param_read_only());
+    declare_parameter<int>("frame_sync_offset_in_ms", param_read_write());
+  config.frame_sync_type = declare_parameter<std::string>("frame_sync_type", param_read_write());
   config.frame_synchronization_on_rising_edge =
-    declare_parameter<bool>("frame_synchronization_on_rising_edge", param_read_only());
-  config.hfov_adjustment_deg = declare_parameter<float>("hfov_adjustment_deg", param_read_only());
-  config.hfov_rotation_deg = declare_parameter<float>("hfov_rotation_deg", param_read_only());
-  config.highlight_ROI = declare_parameter<bool>("highlight_ROI", param_read_only());
+    declare_parameter<bool>("frame_synchronization_on_rising_edge", param_read_write());
+  config.hfov_adjustment_deg = declare_parameter<float>("hfov_adjustment_deg", param_read_write());
+  config.hfov_rotation_deg = declare_parameter<float>("hfov_rotation_deg", param_read_write());
+  config.highlight_ROI = declare_parameter<bool>("highlight_ROI", param_read_write());
   config.horizontal_fov_degrees =
-    declare_parameter<std::string>("horizontal_fov_degrees", param_read_only());
-  config.roi_az_offset_rad = declare_parameter<float>("roi_az_offset_rad", param_read_only());
-  config.vertical_pattern = declare_parameter<std::string>("vertical_pattern", param_read_only());
+    declare_parameter<std::string>("horizontal_fov_degrees", param_read_write());
+  config.roi_az_offset_rad = declare_parameter<float>("roi_az_offset_rad", param_read_write());
+  config.vertical_pattern = declare_parameter<std::string>("vertical_pattern", param_read_write());
 
   auto new_cfg_ptr = std::make_shared<const Aeries2Config>(config);
   return validateAndSetConfig(new_cfg_ptr);
@@ -210,11 +212,59 @@ Status AevaRosWrapper::validateAndSetConfig(std::shared_ptr<const Aeries2Config>
   }
 
   if (hw_interface_) {
-    hw_interface_->onConfigChange(new_config);
+    try {
+      hw_interface_->onConfigChange(new_config);
+    } catch (const std::runtime_error & e) {
+      RCLCPP_ERROR_STREAM(get_logger(), "Sending configuration to sensor failed: " << e.what());
+      return Status::SENSOR_CONFIG_ERROR;
+    }
   }
 
   sensor_cfg_ptr_ = new_config;
   return Status::OK;
+}
+
+rcl_interfaces::msg::SetParametersResult AevaRosWrapper::onParameterChange(
+  const std::vector<rclcpp::Parameter> & p)
+{
+  using rcl_interfaces::msg::SetParametersResult;
+  Aeries2Config config;
+
+  bool got_any =
+    get_param(p, "dithering_enable_ego_speed", config.dithering_enable_ego_speed) |
+    get_param(p, "dithering_pattern_option", config.dithering_pattern_option) |
+    get_param(p, "ele_offset_rad", config.ele_offset_rad) |
+    get_param(p, "elevation_auto_adjustment", config.elevation_auto_adjustment) |
+    get_param(p, "enable_frame_dithering", config.enable_frame_dithering) |
+    get_param(p, "enable_frame_sync", config.enable_frame_sync) |
+    get_param(p, "flip_pattern_vertically", config.flip_pattern_vertically) |
+    get_param(p, "frame_sync_offset_in_ms", config.frame_sync_offset_in_ms) |
+    get_param(p, "frame_sync_type", config.frame_sync_type) |
+    get_param(
+      p, "frame_synchronization_on_rising_edge", config.frame_synchronization_on_rising_edge) |
+    get_param(p, "hfov_adjustment_deg", config.hfov_adjustment_deg) |
+    get_param(p, "hfov_rotation_deg", config.hfov_rotation_deg) |
+    get_param(p, "highlight_ROI", config.highlight_ROI) |
+    get_param(p, "horizontal_fov_degrees", config.horizontal_fov_degrees) |
+    get_param(p, "roi_az_offset_rad", config.roi_az_offset_rad) |
+    get_param(p, "vertical_pattern", config.vertical_pattern);
+
+  if (!got_any) {
+    return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
+  }
+
+  auto new_cfg_ptr = std::make_shared<const Aeries2Config>(config);
+  auto status = validateAndSetConfig(new_cfg_ptr);
+
+  if (status != Status::OK) {
+    RCLCPP_WARN_STREAM(get_logger(), "OnParameterChange aborted: " << status);
+    auto result = SetParametersResult();
+    result.successful = false;
+    result.reason = (std::stringstream() << "Invalid configuration: " << status).str();
+    return result;
+  }
+
+  return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
 void AevaRosWrapper::recordRawPacket(const std::vector<uint8_t> & vector)
