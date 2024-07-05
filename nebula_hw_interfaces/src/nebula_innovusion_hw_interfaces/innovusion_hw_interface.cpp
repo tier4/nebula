@@ -269,10 +269,10 @@ void InnovusionHwInterface::UpdateUnicastIpPort(const std::string &strUnicastIp,
     RobinSetUdpPortIP(strLocalIp, uLocalPort);
   } else if(sensor_configuration_->sensor_model == nebula::drivers::SensorModel::INNOVUSION_FALCON){
     std::string strSendInfo = std::to_string(uLocalPort) + "," + std::to_string(uLocalPort)
-      + "," + std::to_string(uLocalPort) + "," + strLocalIp;
+                              + "," + std::to_string(uLocalPort);
     std::cout << "UpdateFalconUnicastIpPort, strSendInfo:" << strSendInfo << std::endl;
 
-    SetSensorParameter("force_udp_ports_ip", strSendInfo);
+    SetSensorParameter("udp_ports_ip", strSendInfo);
   } else {
     std::cout << "UpdateUnicastIpPort, not support sensor model" << std::endl;
   }
@@ -284,7 +284,7 @@ void InnovusionHwInterface::RobinSetUdpPortIP(std::string strUdpIp, uint16_t uUd
     + ",\"port_message\":" + std::to_string(uUdpPort) + ",\"port_status\":" + std::to_string(uUdpPort) + "}";
   std::cout << "UpdateFalconUnicastIpPort, strSendInfo:" << strSendInfo << std::endl;
 
-  auto rt = http_client_driver_->post("/v1/lidar/force_udp_ports_ip", strSendInfo);
+  auto rt = http_client_driver_->post("/v1/lidar/udp_ports_ip", strSendInfo);
   http_client_driver_->client()->close();
   std::cout << "UpdateRobinUnicastIpPort, rt:" << rt << std::endl;
 }
