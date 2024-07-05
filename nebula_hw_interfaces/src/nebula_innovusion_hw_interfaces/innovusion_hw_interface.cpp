@@ -265,9 +265,8 @@ void InnovusionHwInterface::UpdateUnicastIpPort(const std::string &strUnicastIp,
     return;
   }
 
-  if(sensor_configuration_->sensor_model == nebula::drivers::SensorModel::INNOVUSION_ROBIN){
-    RobinSetUdpPortIP(strLocalIp, uLocalPort);
-  } else if(sensor_configuration_->sensor_model == nebula::drivers::SensorModel::INNOVUSION_FALCON){
+  if(sensor_configuration_->sensor_model == nebula::drivers::SensorModel::INNOVUSION_ROBIN ||
+     sensor_configuration_->sensor_model == nebula::drivers::SensorModel::INNOVUSION_FALCON){
     std::string strSendInfo = std::to_string(uLocalPort) + "," + std::to_string(uLocalPort)
                               + "," + std::to_string(uLocalPort);
     std::cout << "UpdateFalconUnicastIpPort, strSendInfo:" << strSendInfo << std::endl;
