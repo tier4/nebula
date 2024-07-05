@@ -46,7 +46,7 @@ ContinentalRosDecoderTest::ContinentalRosDecoderTest(
 
   wrapper_status_ = GetParameters(sensor_configuration);
   if (Status::OK != wrapper_status_) {
-    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << wrapper_status_);
+    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error: " << wrapper_status_);
     return;
   }
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
@@ -113,7 +113,7 @@ Status ContinentalRosDecoderTest::GetParameters(
     return Status::INVALID_SENSOR_MODEL;
   }
 
-  RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
+  RCLCPP_INFO_STREAM(this->get_logger(), "Sensor Configuration: " << sensor_configuration);
   return Status::OK;
 }
 

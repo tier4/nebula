@@ -59,8 +59,8 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   std::cout << result << std::endl;
   info_model_ = result.get_str_model();
   info_serial_ = std::string(std::begin(result.sn), std::end(result.sn));
-  RCLCPP_INFO_STREAM(logger_, "Model:" << info_model_);
-  RCLCPP_INFO_STREAM(logger_, "Serial:" << info_serial_);
+  RCLCPP_INFO_STREAM(logger_, "Model: " << info_model_);
+  RCLCPP_INFO_STREAM(logger_, "Serial: " << info_serial_);
   InitializeHesaiDiagnostics();
 }
 
@@ -71,7 +71,7 @@ void HesaiHwMonitorWrapper::InitializeHesaiDiagnostics()
   std::ostringstream os;
   auto hardware_id = info_model_ + ": " + info_serial_;
   diagnostics_updater_.setHardwareID(hardware_id);
-  RCLCPP_INFO_STREAM(logger_, "hardware_id: " + hardware_id);
+  RCLCPP_INFO_STREAM(logger_, "Hardware ID: " + hardware_id);
 
   diagnostics_updater_.add("hesai_status", this, &HesaiHwMonitorWrapper::HesaiCheckStatus);
   diagnostics_updater_.add("hesai_ptp", this, &HesaiHwMonitorWrapper::HesaiCheckPtp);

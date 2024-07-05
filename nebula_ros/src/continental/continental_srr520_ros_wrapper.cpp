@@ -14,6 +14,8 @@
 
 #include "nebula_ros/continental/continental_srr520_ros_wrapper.hpp"
 
+#pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
+
 namespace nebula
 {
 namespace ros
@@ -35,7 +37,7 @@ ContinentalSRR520RosWrapper::ContinentalSRR520RosWrapper(const rclcpp::NodeOptio
       (std::stringstream{} << "Sensor configuration invalid: " << wrapper_status_).str());
   }
 
-  RCLCPP_INFO_STREAM(get_logger(), "SensorConfig:" << *config_ptr_);
+  RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *config_ptr_);
 
   launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
 

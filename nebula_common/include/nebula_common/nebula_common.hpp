@@ -20,7 +20,6 @@
 #include <boost/tokenizer.hpp>
 
 #include <algorithm>
-#include <map>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -498,7 +497,8 @@ struct LidarConfigurationBase : EthernetSensorConfigurationBase
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, SensorConfigurationBase const & arg)
 {
-  os << "SensorModel: " << arg.sensor_model << ", FrameID: " << arg.frame_id;
+  os << "Sensor Model: " << arg.sensor_model << '\n';
+  os << "Frame ID: " << arg.frame_id;
   return os;
 }
 
@@ -508,8 +508,10 @@ inline std::ostream & operator<<(std::ostream & os, SensorConfigurationBase cons
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, EthernetSensorConfigurationBase const & arg)
 {
-  os << (SensorConfigurationBase)(arg) << ", HostIP: " << arg.host_ip
-     << ", SensorIP: " << arg.sensor_ip << ", DataPort: " << arg.data_port;
+  os << (SensorConfigurationBase)(arg) << '\n';
+  os << "Host IP: " << arg.host_ip << '\n';
+  os << "Sensor IP: " << arg.sensor_ip << '\n';
+  os << "Data Port: " << arg.data_port;
   return os;
 }
 
@@ -519,10 +521,12 @@ inline std::ostream & operator<<(std::ostream & os, EthernetSensorConfigurationB
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, CANSensorConfigurationBase const & arg)
 {
-  os << (SensorConfigurationBase)(arg)
-     << ", Interface: " << arg.interface << ", ReceiverTimeoutSec: " << arg.receiver_timeout_sec
-     << ", SenderTimeoutSec: " << arg.sender_timeout_sec << ", Filters: " << arg.filters
-     << ", UseBusTime: " << arg.use_bus_time;
+  os << (SensorConfigurationBase)(arg) << '\n';
+  os << "Interface: " << arg.interface << '\n';
+  os << "Receiver Timeout (s): " << arg.receiver_timeout_sec << '\n';
+  os << "Sender Timeout (s): " << arg.sender_timeout_sec << '\n';
+  os << "Filters: " << arg.filters << '\n';
+  os << "Use Bus Time: " << arg.use_bus_time;
   return os;
 }
 
@@ -533,9 +537,11 @@ inline std::ostream & operator<<(std::ostream & os, CANSensorConfigurationBase c
 inline std::ostream & operator<<(
   std::ostream & os, nebula::drivers::LidarConfigurationBase const & arg)
 {
-  os << (EthernetSensorConfigurationBase)(arg) << ", ReturnMode: " << arg.return_mode
-     << ", Frequency: " << arg.frequency_ms << ", MTU: " << arg.packet_mtu_size
-     << ", Use sensor time: " << arg.use_sensor_time;
+  os << (EthernetSensorConfigurationBase)(arg) << '\n';
+  os << "Return Mode: " << arg.return_mode << '\n';
+  os << "Frequency: " << arg.frequency_ms << '\n';
+  os << "MTU: " << arg.packet_mtu_size << '\n';
+  os << "Use Sensor Time: " << arg.use_sensor_time;
   return os;
 }
 
