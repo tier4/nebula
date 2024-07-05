@@ -55,18 +55,18 @@ struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
 inline std::ostream & operator<<(
   std::ostream & os, ContinentalARS548SensorConfiguration const & arg)
 {
-  os << "ContinentalARS548SensorConfiguration:" << '\n';
+  os << "Continental ARS548 Sensor Configuration:" << '\n';
   os << (EthernetSensorConfigurationBase)(arg) << '\n';
-  os << "MulticastIP: " << arg.multicast_ip << '\n';
-  os << "BaseFrame: " << arg.base_frame << '\n';
-  os << "ObjectFrame: " << arg.object_frame << '\n';
-  os << "ConfigurationHostPort: " << arg.configuration_host_port << '\n';
-  os << "ConfigurationSensorPort: " << arg.configuration_sensor_port << '\n';
-  os << "UseSensorTime: " << arg.use_sensor_time << '\n';
-  os << "ConfigurationVehicleLength: " << arg.configuration_vehicle_length << '\n';
-  os << "ConfigurationVehicleWidth: " << arg.configuration_vehicle_width << '\n';
-  os << "ConfigurationVehicleHeight: " << arg.configuration_vehicle_height << '\n';
-  os << "ConfigurationVehicleWheelbase: " << arg.configuration_vehicle_wheelbase;
+  os << "Multicast IP: " << arg.multicast_ip << '\n';
+  os << "Base Frame: " << arg.base_frame << '\n';
+  os << "Object Frame: " << arg.object_frame << '\n';
+  os << "Host Port: " << arg.configuration_host_port << '\n';
+  os << "Sensor Port: " << arg.configuration_sensor_port << '\n';
+  os << "UseSensor Time: " << arg.use_sensor_time << '\n';
+  os << "Vehicle Length: " << arg.configuration_vehicle_length << '\n';
+  os << "Vehicle Width: " << arg.configuration_vehicle_width << '\n';
+  os << "Vehicle Height: " << arg.configuration_vehicle_height << '\n';
+  os << "Vehicle Wheelbase: " << arg.configuration_vehicle_wheelbase;
   return os;
 }
 

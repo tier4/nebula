@@ -52,7 +52,7 @@ void VelodyneHwMonitorWrapper::InitializeVelodyneDiagnostics()
   std::ostringstream os;
   auto hardware_id = info_model_ + ": " + info_serial_;
   diagnostics_updater_.setHardwareID(hardware_id);
-  RCLCPP_INFO_STREAM(logger_, "hardware_id" << hardware_id);
+  RCLCPP_INFO_STREAM(logger_, "Hardware ID: " << hardware_id);
 
   if (show_advanced_diagnostics_) {
     diagnostics_updater_.add(

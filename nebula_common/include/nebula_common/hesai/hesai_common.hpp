@@ -50,18 +50,18 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration const & arg)
 {
-  os << "HesaiSensorConfiguration:" << '\n';
+  os << "Hesai Sensor Configuration:" << '\n';
   os << (LidarConfigurationBase)(arg) << '\n';
-  os << "GnssPort: " << arg.gnss_port << '\n';
-  os << "ScanPhase: " << arg.scan_phase << '\n';
-  os << "RotationSpeed: " << arg.rotation_speed << '\n';
-  os << "FOV(Start): " << arg.cloud_min_angle << '\n';
-  os << "FOV(End): " << arg.cloud_max_angle << '\n';
-  os << "DualReturnDistanceThreshold: " << arg.dual_return_distance_threshold << '\n';
-  os << "PtpProfile: " << arg.ptp_profile << '\n';
-  os << "PtpDomain: " << std::to_string(arg.ptp_domain) << '\n';
-  os << "PtpTransportType: " << arg.ptp_transport_type << '\n';
-  os << "PtpSwitchType: " << arg.ptp_switch_type;
+  os << "GNSS Port: " << arg.gnss_port << '\n';
+  os << "Scan Phase: " << arg.scan_phase << '\n';
+  os << "Rotation Speed: " << arg.rotation_speed << '\n';
+  os << "FoV Start: " << arg.cloud_min_angle << '\n';
+  os << "FoV End: " << arg.cloud_max_angle << '\n';
+  os << "Dual Return Distance Threshold: " << arg.dual_return_distance_threshold << '\n';
+  os << "PTP Profile: " << arg.ptp_profile << '\n';
+  os << "PTP Domain: " << std::to_string(arg.ptp_domain) << '\n';
+  os << "PTP Transport Type: " << arg.ptp_transport_type << '\n';
+  os << "PTP Switch Type: " << arg.ptp_switch_type;
   return os;
 }
 

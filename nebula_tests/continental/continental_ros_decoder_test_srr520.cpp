@@ -113,7 +113,7 @@ Status ContinentalRosDecoderTest::GetParameters(
     return Status::INVALID_SENSOR_MODEL;
   }
 
-  RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig: " << sensor_configuration);
+  RCLCPP_INFO_STREAM(this->get_logger(), "Sensor Configuration: " << sensor_configuration);
   return Status::OK;
 }
 

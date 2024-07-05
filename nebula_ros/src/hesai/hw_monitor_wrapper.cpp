@@ -71,7 +71,7 @@ void HesaiHwMonitorWrapper::InitializeHesaiDiagnostics()
   std::ostringstream os;
   auto hardware_id = info_model_ + ": " + info_serial_;
   diagnostics_updater_.setHardwareID(hardware_id);
-  RCLCPP_INFO_STREAM(logger_, "hardware_id: " + hardware_id);
+  RCLCPP_INFO_STREAM(logger_, "Hardware ID: " + hardware_id);
 
   diagnostics_updater_.add("hesai_status", this, &HesaiHwMonitorWrapper::HesaiCheckStatus);
   diagnostics_updater_.add("hesai_ptp", this, &HesaiHwMonitorWrapper::HesaiCheckPtp);

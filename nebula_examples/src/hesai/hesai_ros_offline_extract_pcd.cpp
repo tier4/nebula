@@ -148,7 +148,7 @@ Status HesaiRosOfflineExtractSample::GetParameters(
     }
   }
 
-  RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig: " << sensor_configuration);
+  RCLCPP_INFO_STREAM(this->get_logger(), "Sensor Configuration: " << sensor_configuration);
   return Status::OK;
 }
 

@@ -50,11 +50,11 @@ struct ContinentalSRR520SensorConfiguration : CANSensorConfigurationBase
 inline std::ostream & operator<<(
   std::ostream & os, ContinentalSRR520SensorConfiguration const & arg)
 {
-  os << "ContinentalSRR520SensorConfiguration:" << '\n';
+  os << "Continental SRR520 Sensor Configuration:" << '\n';
   os << (CANSensorConfigurationBase)(arg) << '\n';
-  os << "BaseFrame: " << arg.base_frame << '\n';
-  os << "SyncUseBusTime: " << arg.sync_use_bus_time << '\n';
-  os << "ConfigurationVehicleWheelbase: " << arg.configuration_vehicle_wheelbase;
+  os << "Base Frame: " << arg.base_frame << '\n';
+  os << "Sync Use Bus Time: " << arg.sync_use_bus_time << '\n';
+  os << "Vehicle Wheelbase: " << arg.configuration_vehicle_wheelbase;
   return os;
 }
 
