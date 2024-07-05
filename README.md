@@ -23,10 +23,10 @@ Here you will find information about the background of the project, how to insta
 
 ## Quick start
 
-Nebula builds with ROS 2 Galactic and Humble. 
+Nebula builds with ROS 2 Galactic and Humble.
 
-> **Note** 
-> 
+> **Note**
+>
 > Boost version 1.74.0 or later is required. A manual install may be required in Ubuntu versions earlier than 22.04.
 
 > **Note**
