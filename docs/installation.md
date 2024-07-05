@@ -7,8 +7,8 @@ Please see the [ROS 2 documentation](https://docs.ros.org/en/humble/index.html) 
 
 ## Getting the source and building
 
-> **Note** 
-> 
+> **Note**
+>
 > Boost version 1.74.0 or later is required. A manual install may be required in Ubuntu versions earlier than 22.04.
 
 > **Note**
