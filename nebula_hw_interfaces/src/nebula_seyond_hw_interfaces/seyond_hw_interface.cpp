@@ -53,7 +53,7 @@ Status SeyondHwInterface::SensorInterfaceStart()
   try {
     std::cout << "Starting UDP server on: " << *sensor_configuration_ << std::endl;
     cloud_udp_driver_->init_receiver(
-        sensor_configuration_->host_ip, sensor_configuration_->data_port);
+        sensor_configuration_->host_ip, sensor_configuration_->data_port, kSeyondPktMax);
     cloud_udp_driver_->receiver()->open();
     cloud_udp_driver_->receiver()->bind();
     cloud_udp_driver_->receiver()->asyncReceive(
@@ -211,11 +211,10 @@ Status SeyondHwInterface::StartUdpStreaming()
       break;
     }
     case SensorModel::SEYOND_ROBIN_W: {
-      std::string payload = "{\"ip\":\"" + sensor_configuration_->sensor_ip
-                            + "\",\"port_data\":" + std::to_string(data_port)
-                            + ",\"port_message\":" + std::to_string(message_port)
-                            + ",\"port_status\":" +  std::to_string(status_port) + "}";
-      stream_starter_http_driver->post( "/v1/lidar/force_udp_ports_ip", payload);
+      std::string payload = std::to_string(data_port) + "," + std::to_string(message_port) + ","
+                            + std::to_string(status_port);
+      std::string http_command = "/command/?set_udp_ports_ip=" + payload;
+      auto response = stream_starter_http_driver->get(http_command);
       stat = Status::OK;
       break;
     }

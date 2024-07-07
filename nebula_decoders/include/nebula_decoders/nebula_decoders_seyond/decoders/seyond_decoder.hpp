@@ -41,22 +41,42 @@ class SeyondDecoder : public SeyondScanDecoder
 {
 protected:
   /// @brief Configuration for this decoder
-  const std::shared_ptr<drivers::SeyondSensorConfiguration> sensor_configuration_;
-  const std::shared_ptr<drivers::SeyondCalibrationConfiguration> calibration_configuration_;
+  const std::shared_ptr<const drivers::SeyondSensorConfiguration> sensor_configuration_;
+  const std::shared_ptr<const drivers::SeyondCalibrationConfiguration> calibration_configuration_;
 
-  /// @brief The sensor definition, used for return mode and time offset handling
   /// @brief The point cloud new points get added to
   NebulaPointCloudPtr decode_pc_;
   /// @brief The point cloud that is returned when a scan is complete
   NebulaPointCloudPtr output_pc_;
   /// @brief The timestamp of the last completed scan in nanoseconds
-  uint64_t output_scan_timestamp_ns_;
+  uint64_t output_scan_timestamp_ns_ = 0;
+  /// @brief The timestamp of the scan currently in progress
+  uint64_t decode_scan_timestamp_ns_ = 0;
+  /// @brief Whether a full scan has been processed
+  bool has_scanned_ = false;
+  /// @brief The ID of the previously processed packet
+  uint64_t current_packet_id_ = 0;
   rclcpp::Logger logger_;
   std::vector<uint8_t> xyz_from_sphere_;
 
 private:
   static int init_;
   static int v_angle_offset_[SEYOND_ITEM_TYPE_MAX][kSeyondChannelNumber];
+
+  static const uint16_t kSeyondMagicNumberDataPacket = 0x176A;
+  static const uint16_t kSeyondProtocolOldHeaderLen = 54;
+  static const uint16_t kSeyondProtocolNewHeaderLen = 70;
+  static const uint16_t kSeyondCommonHeaderLength = 26;
+  static const uint16_t kSeyondPktIdSection = 26;
+  static const uint16_t kSeyondPktIdLength = 8;
+  static const uint16_t kSeyondPktTypeIndex = 38;
+  static const uint16_t kSeyondPktSizeSectionIndex = 10;
+  static const uint16_t kSeyondPktSizeSectionLength = 4;
+  static const uint16_t kSeyondPktMajorVersionSection = 2;
+  static const uint16_t kSeyondPktMinorVersionSection = 3;
+  static const uint16_t kSeyondPktVersionSectionLen = 1;
+  static const uint32_t kSeyondProtocolMajorV1 = 1;
+
   static const uint32_t kTableShift_ = 9;
   static const uint32_t kTableStep_ = 1 << kTableShift_;
   static const uint32_t kTableHalfStep_ = 1 << (kTableShift_ - 1);
@@ -99,8 +119,10 @@ public:
   /// @param sensor_configuration SensorConfiguration for this decoder
   /// @param calibration_configuration Calibration for this decoder
   explicit SeyondDecoder(
-    const std::shared_ptr<SeyondSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<SeyondCalibrationConfiguration> & calibration_configuration);
+    const std::shared_ptr<const SeyondSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<const SeyondCalibrationConfiguration> & calibration_configuration);
+
+  bool hasScanned() override { return has_scanned_; }
 
   int unpack(const std::vector<uint8_t> & packet) override;
 
@@ -111,40 +133,40 @@ public:
   static double lookup_sin_table_in_unit(int i);
 
   static inline bool is_xyz_data(uint32_t packet_type) {
-    SeyondItemType inno_type = static_cast<SeyondItemType>(packet_type);
+    SeyondItemType seyond_type = static_cast<SeyondItemType>(packet_type);
     bool bSuccess = false;
-    if(inno_type == SEYOND_ITEM_TYPE_XYZ_POINTCLOUD || inno_type == SEYOND_ROBINE_ITEM_TYPE_XYZ_POINTCLOUD
-        ||inno_type == SEYOND_ROBINW_ITEM_TYPE_XYZ_POINTCLOUD||inno_type== SEYOND_FALCONII_DOT_1_ITEM_TYPE_XYZ_POINTCLOUD) {
+    if(seyond_type == SEYOND_ITEM_TYPE_XYZ_POINTCLOUD || seyond_type == SEYOND_ROBINE_ITEM_TYPE_XYZ_POINTCLOUD
+        ||seyond_type == SEYOND_ROBINW_ITEM_TYPE_XYZ_POINTCLOUD||seyond_type== SEYOND_FALCONII_DOT_1_ITEM_TYPE_XYZ_POINTCLOUD) {
       bSuccess =  true;
     }
     return bSuccess;
   }
 
   static inline bool is_sphere_data(uint32_t packet_type) {
-    SeyondItemType inno_type = static_cast<SeyondItemType>(packet_type);
+    SeyondItemType seyond_type = static_cast<SeyondItemType>(packet_type);
     bool bSuccess = false;
-    if(inno_type == SEYOND_ITEM_TYPE_SPHERE_POINTCLOUD || inno_type == SEYOND_ROBINE_ITEM_TYPE_SPHERE_POINTCLOUD
-        ||inno_type == SEYOND_ROBINW_ITEM_TYPE_SPHERE_POINTCLOUD||inno_type== SEYOND_FALCONII_DOT_1_ITEM_TYPE_SPHERE_POINTCLOUD) {
+    if(seyond_type == SEYOND_ITEM_TYPE_SPHERE_POINTCLOUD || seyond_type == SEYOND_ROBINE_ITEM_TYPE_SPHERE_POINTCLOUD
+        ||seyond_type == SEYOND_ROBINW_ITEM_TYPE_SPHERE_POINTCLOUD||seyond_type== SEYOND_FALCONII_DOT_1_ITEM_TYPE_SPHERE_POINTCLOUD) {
       bSuccess =  true;
     }
     return bSuccess;
   }
 
   static inline bool is_en_xyz_data(uint32_t packet_type) {
-    SeyondItemType inno_type = static_cast<SeyondItemType>(packet_type);
+    SeyondItemType seyond_type = static_cast<SeyondItemType>(packet_type);
     bool bSuccess = false;
-    if(inno_type == SEYOND_ROBINE_ITEM_TYPE_XYZ_POINTCLOUD
-        ||inno_type == SEYOND_ROBINW_ITEM_TYPE_XYZ_POINTCLOUD||inno_type== SEYOND_FALCONII_DOT_1_ITEM_TYPE_XYZ_POINTCLOUD) {
+    if(seyond_type == SEYOND_ROBINE_ITEM_TYPE_XYZ_POINTCLOUD
+        ||seyond_type == SEYOND_ROBINW_ITEM_TYPE_XYZ_POINTCLOUD||seyond_type== SEYOND_FALCONII_DOT_1_ITEM_TYPE_XYZ_POINTCLOUD) {
       bSuccess =  true;
     }
     return bSuccess;
   }
 
   static inline bool is_en_sphere_data(uint32_t packet_type) {
-    SeyondItemType inno_type = static_cast<SeyondItemType>(packet_type);
+    SeyondItemType seyond_type = static_cast<SeyondItemType>(packet_type);
     bool bSuccess = false;
-    if(inno_type == SEYOND_ROBINE_ITEM_TYPE_SPHERE_POINTCLOUD || inno_type == SEYOND_ROBINW_ITEM_TYPE_SPHERE_POINTCLOUD
-        ||inno_type == SEYOND_FALCONII_DOT_1_ITEM_TYPE_SPHERE_POINTCLOUD) {
+    if(seyond_type == SEYOND_ROBINE_ITEM_TYPE_SPHERE_POINTCLOUD || seyond_type == SEYOND_ROBINW_ITEM_TYPE_SPHERE_POINTCLOUD
+        ||seyond_type == SEYOND_FALCONII_DOT_1_ITEM_TYPE_SPHERE_POINTCLOUD) {
       bSuccess =  true;
     }
     return bSuccess;
@@ -356,9 +378,9 @@ public:
         }
       };
 
-      if (SeyondDecoder::iterate_inno_data_packet_cpoints<SeyondBlock, SeyondBlockHeader, SeyondBlock1, SeyondBlock2,
+      if (SeyondDecoder::iterate_seyond_data_packet_cpoints<SeyondBlock, SeyondBlockHeader, SeyondBlock1, SeyondBlock2,
                                                               SeyondChannelPoint>(pkt, count_callback) == 0) {
-        std::cerr << "iterate_inno_data_packet_cpoints failed" << std::endl;
+        std::cerr << "iterate_seyond_data_packet_cpoints failed" << std::endl;
       }
 
       return item_count;
@@ -370,7 +392,7 @@ public:
         }
       };
 
-      (void)SeyondDecoder::iterate_inno_data_packet_cpoints<SeyondEnBlock, SeyondEnBlockHeader, SeyondEnBlock1,
+      (void)SeyondDecoder::iterate_seyond_data_packet_cpoints<SeyondEnBlock, SeyondEnBlockHeader, SeyondEnBlock1,
                                                                 SeyondEnBlock2, SeyondEnChannelPoint>(pkt, count_callback);
       return item_count;
     } else {
@@ -380,7 +402,7 @@ public:
   }
 
   template <typename Block, typename BlockHeader, typename Block1, typename Block2, typename Point, typename Callback>
-  static uint32_t iterate_inno_data_packet_cpoints(const SeyondDataPacket &in_pkt, Callback in_callback) {
+  static uint32_t iterate_seyond_data_packet_cpoints(const SeyondDataPacket &in_pkt, Callback in_callback) {
     uint32_t out_count{0};
     uint32_t unit_size{0};
     uint32_t mr = SeyondDecoder::get_return_times(static_cast<SeyondMultipleReturnMode>(in_pkt.multi_return_mode));
@@ -396,7 +418,7 @@ public:
     uint32_t tmp_idx = 0;
     for (; tmp_idx < in_pkt.item_number; tmp_idx++) {
       if (tmp_idx == 0) {
-        const SeyondBlock1 * const block_ptr = &in_pkt.inno_block1s[0];
+        const SeyondBlock1 * const block_ptr = &in_pkt.seyond_block1s[0];
         std::memcpy(&block, &block_ptr, sizeof(Block*));
       } else {
         int8_t *byte_ptr = nullptr;
@@ -425,7 +447,14 @@ public:
   }
 
 private:
-  void setup_table_(double inno_angle_unit);
+  /// @brief check packet vaild
+  /// @param buffer Point Udp Data Buffer
+  bool IsPacketValid(const std::vector<uint8_t> & buffer);
+  /// @brief Printing the string to RCLCPP_INFO_STREAM
+  /// @param buffer Point Udp Data Buffer
+  void ProtocolCompatibility(std::vector<uint8_t> & buffer);
+
+  void setup_table_(double seyond_angle_unit);
   static bool convert_to_xyz_pointcloud(const SeyondDataPacket &src, SeyondDataPacket *dest, size_t dest_size, bool append);
   void data_packet_parse_(const SeyondDataPacket *pkt);
   template <typename PointType>

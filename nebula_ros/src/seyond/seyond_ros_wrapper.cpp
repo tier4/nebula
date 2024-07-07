@@ -34,7 +34,7 @@ SeyondRosWrapper::SeyondRosWrapper(const rclcpp::NodeOptions & options)
 
   if (launch_hw_) {
     hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_);
-    hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->HwInterface(), sensor_cfg_ptr_);
+    //hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->HwInterface(), sensor_cfg_ptr_);
   }
 
   // ////////////////////////////////////////
@@ -201,7 +201,7 @@ void SeyondRosWrapper::ReceiveScanMessageCallback(
   if (hw_interface_wrapper_) {
     RCLCPP_ERROR_THROTTLE(
       get_logger(), *get_clock(), 1000,
-      "Ignoring received PandarScan. Launch with launch_hw:=false to enable PandarScan replay.");
+      "Ignoring received NebulaPackets. Launch with launch_hw:=false to enable NebulaPackets replay.");
     return;
   }
 
@@ -248,12 +248,12 @@ rcl_interfaces::msg::SetParametersResult SeyondRosWrapper::OnParameterChange(
 
   // Currently, HW interface and monitor wrappers have only read-only parameters, so their update
   // logic is not implemented
-  if (decoder_wrapper_) {
-    auto result = decoder_wrapper_->OnParameterChange(p);
-    if (!result.successful) {
-      return result;
-    }
-  }
+  // if (decoder_wrapper_) {
+  //   auto result = decoder_wrapper_->OnParameterChange(p);
+  //   if (!result.successful) {
+  //     return result;
+  //   }
+  // }
 
   // ////////////////////////////////////////
   // Create new, updated sensor configuration

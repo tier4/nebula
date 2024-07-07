@@ -22,6 +22,8 @@ struct SeyondSensorConfiguration : public LidarConfigurationBase
   uint16_t rotation_speed;
   uint16_t cloud_min_angle;
   uint16_t cloud_max_angle;
+  uint16_t cloud_min_range;
+  uint16_t cloud_max_range;
   PtpProfile ptp_profile;
   uint8_t ptp_domain;
   PtpTransportType ptp_transport_type;
@@ -36,6 +38,7 @@ inline std::ostream & operator<<(std::ostream & os, SeyondSensorConfiguration co
   os << (LidarConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
      << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
      << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle
+     << ", MinRange:" << arg.cloud_min_range << ", MaxRange:" << arg.cloud_max_range
      << ", DualReturnDistanceThreshold:" << arg.dual_return_distance_threshold
      << ", PtpProfile:" << arg.ptp_profile << ", PtpDomain:" << std::to_string(arg.ptp_domain)
      << ", PtpTransportType:" << arg.ptp_transport_type

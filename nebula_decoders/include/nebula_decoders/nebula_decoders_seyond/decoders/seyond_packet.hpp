@@ -417,7 +417,7 @@ typedef DEFINE_SEYOND_COMPACT_STRUCT(SeyondEnBlock2) {
 DEFINE_SEYOND_COMPACT_STRUCT_END
 
 
-static inline size_t innoblock_get_idx(size_t channel, size_t r) {
+static inline size_t seyondblock_get_idx(size_t channel, size_t r) {
   /* r0_ch0 r0_ch1 r0_ch2 r0_ch3 r1_ch0 r1_ch1 r1_ch2 r1_ch3 */
   return channel + (r << kSeyondChannelNumberBit);
 }
@@ -514,13 +514,13 @@ typedef DEFINE_SEYOND_COMPACT_STRUCT(SeyondDataPacket) {
 # if !defined(_MSC_VER)
   union {
     char payload[0];
-    SeyondBlock1 inno_block1s[0];
-    SeyondBlock2 inno_block2s[0];
+    SeyondBlock1 seyond_block1s[0];
+    SeyondBlock2 seyond_block2s[0];
     SeyondMessage messages[0];
     SeyondXyzPoint xyz_points[0];
         // Robin & Falcon2.1
-    SeyondEnBlock1 inno_en_block1s[0];
-    SeyondEnBlock2 inno_en_block2s[0];
+    SeyondEnBlock1 seyond_en_block1s[0];
+    SeyondEnBlock2 seyond_en_block2s[0];
     SeyondEnXyzPoint en_xyz_points[0];
   };
 #else

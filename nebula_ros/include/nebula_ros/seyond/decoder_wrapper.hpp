@@ -38,9 +38,6 @@ public:
 
   void OnConfigChange(const std::shared_ptr<const SeyondSensorConfiguration> & new_config);
 
-  rcl_interfaces::msg::SetParametersResult OnParameterChange(
-    const std::vector<rclcpp::Parameter> & p);
-
   nebula::Status Status();
 
 private:

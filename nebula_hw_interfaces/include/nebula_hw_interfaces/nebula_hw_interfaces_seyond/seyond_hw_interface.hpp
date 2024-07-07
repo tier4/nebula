@@ -35,6 +35,7 @@ namespace drivers
 {
 constexpr uint16_t SeyondTcpCommandPort = 8001;
 constexpr uint16_t SeyondHttpCommandPort = 8010;
+constexpr uint32_t kSeyondPktMax = 10000;
 /// @brief Hardware interface of seyond driver
 class SeyondHwInterface
 {

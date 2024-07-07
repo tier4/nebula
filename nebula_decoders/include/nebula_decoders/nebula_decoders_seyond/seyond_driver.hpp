@@ -34,17 +34,17 @@ private:
   // template <typename SensorT>
   std::shared_ptr<SeyondScanDecoder> InitializeDecoder(
     const std::shared_ptr<const drivers::SeyondSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<const drivers::SeyondCalibrationConfigurationBase> &
+    const std::shared_ptr<const drivers::SeyondCalibrationConfiguration> &
       calibration_configuration);
 
 public:
   SeyondDriver() = delete;
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this driver
-  /// @param calibration_configuration CalibrationConfiguration for this driver (either
+  /// @param calibration_configuration CalibrationConfiguration for this driver
   explicit SeyondDriver(
     const std::shared_ptr<const drivers::SeyondSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<const drivers::SeyondCalibrationConfigurationBase> &
+    const std::shared_ptr<const drivers::SeyondCalibrationConfiguration> &
       calibration_configuration);
 
   /// @brief Get current status of this driver
@@ -55,7 +55,7 @@ public:
   /// @param calibration_configuration
   /// @return Resulting status
   Status SetCalibrationConfiguration(
-    const SeyondCalibrationConfigurationBase & calibration_configuration);
+    const SeyondCalibrationConfiguration & calibration_configuration);
 
   /// @brief Convert NebulaPackets message to point cloud
   /// @param nebula_packets Message
