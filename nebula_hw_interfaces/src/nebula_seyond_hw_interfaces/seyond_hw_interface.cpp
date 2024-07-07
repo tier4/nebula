@@ -25,12 +25,11 @@ Status SeyondHwInterface::InitializeTcpDriver()
   // Initialize command sender which communicate with the device via TCP
   try {
     command_tcp_driver_->init_socket(
-        sensor_configuration_->sensor_ip, SeyondTcpCommandPort, sensor_configuration_->host_ip,
-        SeyondTcpCommandPort);
+      sensor_configuration_->sensor_ip, SeyondTcpCommandPort, sensor_configuration_->host_ip,
+      SeyondTcpCommandPort);
   } catch (const std::exception & ex) {
     std::stringstream ss;
-    ss << "SeyondHwInterface::SensorInterfaceStart (init TCP): " << Status::ERROR_1
-       << std::endl;
+    ss << "SeyondHwInterface::SensorInterfaceStart (init TCP): " << Status::ERROR_1 << std::endl;
     PrintError(ss.str());
     command_tcp_driver_->closeSync();
     return Status::ERROR_1;
@@ -53,11 +52,11 @@ Status SeyondHwInterface::SensorInterfaceStart()
   try {
     std::cout << "Starting UDP server on: " << *sensor_configuration_ << std::endl;
     cloud_udp_driver_->init_receiver(
-        sensor_configuration_->host_ip, sensor_configuration_->data_port, kSeyondPktMax);
+      sensor_configuration_->host_ip, sensor_configuration_->data_port, kSeyondPktMax);
     cloud_udp_driver_->receiver()->open();
     cloud_udp_driver_->receiver()->bind();
     cloud_udp_driver_->receiver()->asyncReceive(
-        std::bind(&SeyondHwInterface::ReceiveSensorPacketCallback, this, std::placeholders::_1));
+      std::bind(&SeyondHwInterface::ReceiveSensorPacketCallback, this, std::placeholders::_1));
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
     std::cerr << status << sensor_configuration_->sensor_ip << ", "
@@ -73,14 +72,15 @@ Status SeyondHwInterface::SensorInterfaceStop()
 }
 
 Status SeyondHwInterface::SetSensorConfiguration(
-  const std::shared_ptr<const SensorConfigurationBase>& sensor_configuration)
+  const std::shared_ptr<const SensorConfigurationBase> & sensor_configuration)
 {
   if (!(sensor_configuration->sensor_model == SensorModel::SEYOND_FALCON_KINETIC ||
         sensor_configuration->sensor_model == SensorModel::SEYOND_ROBIN_W)) {
     return Status::INVALID_SENSOR_MODEL;
   }
 
-  sensor_configuration_ = std::static_pointer_cast<const SeyondSensorConfiguration>(sensor_configuration);
+  sensor_configuration_ =
+    std::static_pointer_cast<const SeyondSensorConfiguration>(sensor_configuration);
 
   return Status::OK;
 }
@@ -133,7 +133,7 @@ void SeyondHwInterface::PrintDebug(std::string debug)
 
 void SeyondHwInterface::PrintInfo(std::string info)
 {
-if (parent_node_logger_) {
+  if (parent_node_logger_) {
     RCLCPP_INFO_STREAM((*parent_node_logger_), info);
   } else {
     std::cout << info << std::endl;
@@ -148,7 +148,7 @@ void SeyondHwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
 void SeyondHwInterface::DisplayCommonVersion()
 {
   std::stringstream info;
-  info << "*************** Innovusion Lidar Version Info ***************" <<std::endl;
+  info << "*************** Innovusion Lidar Version Info ***************" << std::endl;
   info << "sw_version:" << SendCommand("get_version") << std::endl;
   info << "sn:" << SendCommand("get_sn") << std::endl;
   info << "framerate:" << SendCommand("get_i_config motor galvo_framerate") << std::endl;
@@ -172,7 +172,7 @@ std::string SeyondHwInterface::SendCommand(std::string command)
 
   boost::asio::streambuf rec_buf;
   command_tcp_driver_->socket()->receive(rec_buf);
-  std::string rec_str = boost::asio::buffer_cast<const char*>(rec_buf.data());
+  std::string rec_str = boost::asio::buffer_cast<const char *>(rec_buf.data());
   command_tcp_driver_->closeSync();
   return rec_str;
 }
@@ -182,11 +182,12 @@ Status SeyondHwInterface::StartUdpStreaming()
   // XXX: This streaming-starting command need to be sent via HTTP as of now
   auto stream_starter_ctx = std::make_shared<boost::asio::io_context>(1);
   auto stream_starter_http_driver = std::unique_ptr<::drivers::tcp_driver::HttpClientDriver>(
-      new ::drivers::tcp_driver::HttpClientDriver(stream_starter_ctx));
+    new ::drivers::tcp_driver::HttpClientDriver(stream_starter_ctx));
 
   // Initialize stream starter which communicate with the device via HTTP
   try {
-    stream_starter_http_driver->init_client(sensor_configuration_->sensor_ip, SeyondHttpCommandPort);
+    stream_starter_http_driver->init_client(
+      sensor_configuration_->sensor_ip, SeyondHttpCommandPort);
   } catch (const std::exception & ex) {
     std::stringstream ss;
     ss << "SeyondHwInterface::SensorInterfaceStart (init HTTP): " << Status::HTTP_CONNECTION_ERROR
@@ -200,19 +201,18 @@ Status SeyondHwInterface::StartUdpStreaming()
   uint16_t status_port = sensor_configuration_->data_port;
   uint16_t message_port = sensor_configuration_->data_port;
   Status stat;
-  switch (sensor_configuration_->sensor_model)
-  {
+  switch (sensor_configuration_->sensor_model) {
     case SensorModel::SEYOND_FALCON_KINETIC: {
-      std::string payload = std::to_string(data_port) + "," + std::to_string(message_port) + ","
-                            + std::to_string(status_port);
+      std::string payload = std::to_string(data_port) + "," + std::to_string(message_port) + "," +
+                            std::to_string(status_port);
       std::string http_command = "/command/?set_udp_ports_ip=" + payload;
       auto response = stream_starter_http_driver->get(http_command);
       stat = Status::OK;
       break;
     }
     case SensorModel::SEYOND_ROBIN_W: {
-      std::string payload = std::to_string(data_port) + "," + std::to_string(message_port) + ","
-                            + std::to_string(status_port);
+      std::string payload = std::to_string(data_port) + "," + std::to_string(message_port) + "," +
+                            std::to_string(status_port);
       std::string http_command = "/command/?set_udp_ports_ip=" + payload;
       auto response = stream_starter_http_driver->get(http_command);
       stat = Status::OK;
@@ -230,14 +230,15 @@ Status SeyondHwInterface::StartUdpStreaming()
 
 Status SeyondHwInterface::SetReturnMode(int return_mode)
 {
-  std::string command = "set_i_config manufacture multiple_return_mode " + std::to_string(return_mode);
+  std::string command =
+    "set_i_config manufacture multiple_return_mode " + std::to_string(return_mode);
   SendCommand(command);
   return Status::OK;
 }
 
 Status SeyondHwInterface::SetPtpMode(PtpProfile profile)
 {
-  std::string command = "set_i_config time ntp_en 0"; // Disable NTP first just in case
+  std::string command = "set_i_config time ntp_en 0";  // Disable NTP first just in case
   SendCommand(command);
 
   command = "set_i_config time ptp_en 1";
@@ -247,9 +248,10 @@ Status SeyondHwInterface::SetPtpMode(PtpProfile profile)
   if (profile != PtpProfile::IEEE_1588v2 && profile != PtpProfile::IEEE_802_1AS_AUTO) {
     PrintInfo("Unsupported PTP profile was selected. Falling back to IEEE 1588v2");
   } else if (profile == PtpProfile::IEEE_802_1AS_AUTO) {
-    PrintInfo("\"automotive\" was specified as PTP profile. "
-              "Currently, (PTP domain | PTP transport type | PTP switch type) "
-              "specification is not supported.");
+    PrintInfo(
+      "\"automotive\" was specified as PTP profile. "
+      "Currently, (PTP domain | PTP transport type | PTP switch type) "
+      "specification is not supported.");
   }
 
   int is_gptp = (profile == PtpProfile::IEEE_802_1AS_AUTO);
@@ -264,14 +266,13 @@ Status SeyondHwInterface::CheckAndSetConfig()
   Status ret = Status::ERROR_1;
   // Set return mode
   auto return_mode_int = nebula::drivers::IntFromReturnModeSeyond(
-      sensor_configuration_->return_mode, sensor_configuration_->sensor_model);
+    sensor_configuration_->return_mode, sensor_configuration_->sensor_model);
   if (return_mode_int < 0) {
     PrintError(
-        "Invalid Return Mode for this sensor. Please check your settings. Falling back to Dual "
-        "mode.");
-    return_mode_int = nebula::drivers::IntFromReturnModeSeyond(ReturnMode::DUAL,
-                                                               sensor_configuration_->sensor_model);
-
+      "Invalid Return Mode for this sensor. Please check your settings. Falling back to Dual "
+      "mode.");
+    return_mode_int = nebula::drivers::IntFromReturnModeSeyond(
+      ReturnMode::DUAL, sensor_configuration_->sensor_model);
   }
   ret = SetReturnMode(return_mode_int);
   if (ret != Status::OK) {

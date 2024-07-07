@@ -14,31 +14,27 @@ int32_t SeyondDecoder::atan_table_[2 * kATanTableSize];
 
 // for robinW
 const uint8_t SeyondDecoder::robinw_channel_mapping[48] = {
-  0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44,
-  1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45,
-  2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46,
-  3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47,
+  0, 4, 8,  12, 16, 20, 24, 28, 32, 36, 40, 44, 1, 5, 9,  13, 17, 21, 25, 29, 33, 37, 41, 45,
+  2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46, 3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47,
 };
 
 const uint8_t SeyondDecoder::robine_channel_mapping[48] = {
-  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,
-  12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
-  24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
-  36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47
-};
+  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+  24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47};
 
 int SeyondDecoder::v_angle_offset_[SEYOND_ITEM_TYPE_MAX][kSeyondChannelNumber];
-int8_t SeyondDecoder::nps_adjustment_[kVTableSize_][kHTableSize_][kSeyondChannelNumber][kXZSize_];  // NOLINT
+int8_t SeyondDecoder::nps_adjustment_[kVTableSize_][kHTableSize_][kSeyondChannelNumber]
+                                     [kXZSize_];  // NOLINT
 const double SeyondDecoder::kAdjustmentUnitInMeter_ = 0.0025;
 const double SeyondDecoder::kAdjustmentUnitInMeterRobin_ = 0.001;
 int8_t SeyondDecoder::robin_nps_adjustment_[kRobinScanlines_][kHTableSize_][kXYZSize_];  // NOLINT
 
 SeyondDecoder::SeyondDecoder(
-    const std::shared_ptr<const SeyondSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<const SeyondCalibrationConfiguration> & calibration_configuration)
-  : sensor_configuration_(sensor_configuration),
-    calibration_configuration_(calibration_configuration),
-    logger_(rclcpp::get_logger("SeyondDecoder"))
+  const std::shared_ptr<const SeyondSensorConfiguration> & sensor_configuration,
+  const std::shared_ptr<const SeyondCalibrationConfiguration> & calibration_configuration)
+: sensor_configuration_(sensor_configuration),
+  calibration_configuration_(calibration_configuration),
+  logger_(rclcpp::get_logger("SeyondDecoder"))
 {
   logger_.set_level(rclcpp::Logger::Level::Debug);
   RCLCPP_INFO_STREAM(logger_, sensor_configuration_);
@@ -55,7 +51,9 @@ SeyondDecoder::SeyondDecoder(
 }
 
 template <typename PointType>
-void SeyondDecoder::point_xyz_data_parse_(bool is_en_data, bool is_use_refl, uint32_t point_num, PointType point_ptr) {
+void SeyondDecoder::point_xyz_data_parse_(
+  bool is_en_data, bool is_use_refl, uint32_t point_num, PointType point_ptr)
+{
   for (uint32_t i = 0; i < point_num; ++i, ++point_ptr) {
     drivers::NebulaPoint point;
     if (point_ptr->channel >= kSeyondChannelNumber) {
@@ -63,8 +61,9 @@ void SeyondDecoder::point_xyz_data_parse_(bool is_en_data, bool is_use_refl, uin
       continue;
     }
 
-    if ((point_ptr->radius < sensor_configuration_->cloud_min_range) ||
-        (point_ptr->radius > sensor_configuration_->cloud_max_range)) {
+    if (
+      (point_ptr->radius < sensor_configuration_->cloud_min_range) ||
+      (point_ptr->radius > sensor_configuration_->cloud_max_range)) {
       continue;
     }
 
@@ -90,7 +89,8 @@ void SeyondDecoder::point_xyz_data_parse_(bool is_en_data, bool is_use_refl, uin
   }
 }
 
-bool SeyondDecoder::IsPacketValid(const std::vector<uint8_t> & buffer) {
+bool SeyondDecoder::IsPacketValid(const std::vector<uint8_t> & buffer)
+{
   uint32_t send_packet_size = 0;
   std::memcpy(&send_packet_size, &buffer[kSeyondPktSizeSectionIndex], kSeyondPktSizeSectionLength);
 
@@ -104,17 +104,17 @@ bool SeyondDecoder::IsPacketValid(const std::vector<uint8_t> & buffer) {
   uint16_t packet_type = buffer[kSeyondPktTypeIndex];
 
   // check packet is data packet
-  if ((magic_number != kSeyondMagicNumberDataPacket) ||
-      (packet_type == 2) || (packet_type == 3)) {
+  if ((magic_number != kSeyondMagicNumberDataPacket) || (packet_type == 2) || (packet_type == 3)) {
     return false;
   }
 
   return true;
 }
 
-void SeyondDecoder::ProtocolCompatibility(std::vector<uint8_t> & buffer) {
+void SeyondDecoder::ProtocolCompatibility(std::vector<uint8_t> & buffer)
+{
   uint8_t major_version = buffer[kSeyondPktMajorVersionSection];
-  uint32_t* packet_size = reinterpret_cast<uint32_t *>(&buffer[kSeyondPktSizeSectionIndex]);
+  uint32_t * packet_size = reinterpret_cast<uint32_t *>(&buffer[kSeyondPktSizeSectionIndex]);
 
   if (major_version == kSeyondProtocolMajorV1) {
     // add 16 bytes to the headr
@@ -123,17 +123,20 @@ void SeyondDecoder::ProtocolCompatibility(std::vector<uint8_t> & buffer) {
   }
 }
 
-void SeyondDecoder::data_packet_parse_(const SeyondDataPacket *pkt) {
+void SeyondDecoder::data_packet_parse_(const SeyondDataPacket * pkt)
+{
   current_ts_start_ = pkt->common.ts_start_us / us_in_second_c;
   // adapt different data structures form different lidar
   if (is_en_xyz_data(pkt->type)) {
-    const SeyondEnXyzPoint *pt =
-      reinterpret_cast<const SeyondEnXyzPoint *>(reinterpret_cast<const char *>(pkt) + sizeof(SeyondDataPacket));
-    point_xyz_data_parse_<const SeyondEnXyzPoint *>(true, pkt->use_reflectance, pkt->item_number, pt);
+    const SeyondEnXyzPoint * pt = reinterpret_cast<const SeyondEnXyzPoint *>(
+      reinterpret_cast<const char *>(pkt) + sizeof(SeyondDataPacket));
+    point_xyz_data_parse_<const SeyondEnXyzPoint *>(
+      true, pkt->use_reflectance, pkt->item_number, pt);
   } else {
-    const SeyondXyzPoint *pt =
-      reinterpret_cast<const SeyondXyzPoint *>(reinterpret_cast<const char *>(pkt) + sizeof(SeyondDataPacket));
-    point_xyz_data_parse_<const SeyondXyzPoint *>(false, pkt->use_reflectance, pkt->item_number, pt);
+    const SeyondXyzPoint * pt = reinterpret_cast<const SeyondXyzPoint *>(
+      reinterpret_cast<const char *>(pkt) + sizeof(SeyondDataPacket));
+    point_xyz_data_parse_<const SeyondXyzPoint *>(
+      false, pkt->use_reflectance, pkt->item_number, pt);
   }
   output_scan_timestamp_ns_ = pkt->common.ts_start_us * 1000;
 }
@@ -167,12 +170,12 @@ int SeyondDecoder::unpack(const std::vector<uint8_t> & packet)
     current_packet_id_ = packet_id;
   }
 
-  const SeyondDataPacket *seyond_pkt =
+  const SeyondDataPacket * seyond_pkt =
     reinterpret_cast<const SeyondDataPacket *>(reinterpret_cast<const char *>(&packet_copy[0]));
   if (is_sphere_data(seyond_pkt->type)) {
     // convert sphere to xyz
-    bool ret_val =
-      convert_to_xyz_pointcloud(*seyond_pkt, reinterpret_cast<SeyondDataPacket *>(&xyz_from_sphere_[0]), kConvertSize, false);
+    bool ret_val = convert_to_xyz_pointcloud(
+      *seyond_pkt, reinterpret_cast<SeyondDataPacket *>(&xyz_from_sphere_[0]), kConvertSize, false);
     if (!ret_val) {
       RCLCPP_ERROR_STREAM(logger_, "convert_to_xyz_pointcloud failed");
       return -1;
@@ -181,7 +184,7 @@ int SeyondDecoder::unpack(const std::vector<uint8_t> & packet)
   } else if (is_xyz_data(seyond_pkt->type)) {
     data_packet_parse_(seyond_pkt);
   } else {
-    RCLCPP_ERROR_STREAM(logger_, "cframe type" <<  seyond_pkt->type << "is not supported");
+    RCLCPP_ERROR_STREAM(logger_, "cframe type" << seyond_pkt->type << "is not supported");
   }
 
   decode_scan_timestamp_ns_ = seyond_pkt->common.ts_start_us * 1000;
@@ -192,20 +195,24 @@ int SeyondDecoder::unpack(const std::vector<uint8_t> & packet)
   return 0;
 }
 
-std::tuple<drivers::NebulaPointCloudPtr, double> SeyondDecoder::getPointcloud() {
+std::tuple<drivers::NebulaPointCloudPtr, double> SeyondDecoder::getPointcloud()
+{
   double scan_timestamp_s = static_cast<double>(output_scan_timestamp_ns_) * 1e-9;
   return std::make_pair(output_pc_, scan_timestamp_s);
 }
 
-double SeyondDecoder::lookup_cos_table_in_unit(int i) {
+double SeyondDecoder::lookup_cos_table_in_unit(int i)
+{
   return cos_table_[i];
 }
 
-double SeyondDecoder::lookup_sin_table_in_unit(int i) {
+double SeyondDecoder::lookup_sin_table_in_unit(int i)
+{
   return sin_table_[i];
 }
 
-void SeyondDecoder::setup_table_(double seyond_angle_unit) {
+void SeyondDecoder::setup_table_(double seyond_angle_unit)
+{
   for (int32_t i = 0; i <= kAngleTableSize; ++i) {
     double angle = i * kRadPerSeyondAngleUnit;
     cos_table_[i] = cos(angle);
@@ -214,30 +221,32 @@ void SeyondDecoder::setup_table_(double seyond_angle_unit) {
 
   for (int32_t i = -kASinTableSize; i < kASinTableSize; i++) {
     asin_table_[i + kASinTableSize] =
-        static_cast<int32_t>(asin(i/static_cast<double>(kAsinTableScale))
-                             / seyond_angle_unit);
+      static_cast<int32_t>(asin(i / static_cast<double>(kAsinTableScale)) / seyond_angle_unit);
   }
 
   for (int32_t i = -kATanTableSize; i < kATanTableSize; i++) {
     atan_table_[i + kATanTableSize] =
-        static_cast<int32_t>(atan(i/static_cast<double>(kAtanTableScale))
-                             / seyond_angle_unit);
+      static_cast<int32_t>(atan(i / static_cast<double>(kAtanTableScale)) / seyond_angle_unit);
   }
 }
 
-void SeyondDecoder::init_f(void) {
+void SeyondDecoder::init_f(void)
+{
   init_f_falcon();
   init_f_robin();
 }
 
-int SeyondDecoder::init_f_falcon(void) {
+int SeyondDecoder::init_f_falcon(void)
+{
   for (uint32_t ich = 0; ich < kSeyondChannelNumber; ich++) {
     v_angle_offset_[SEYOND_ITEM_TYPE_SPHERE_POINTCLOUD][ich] = ich * kSeyondFaconVAngleDiffBase;
     // falconII NT3
-    v_angle_offset_[SEYOND_FALCONII_DOT_1_ITEM_TYPE_SPHERE_POINTCLOUD][ich] = ich * kSeyondFaconVAngleDiffBase;
+    v_angle_offset_[SEYOND_FALCONII_DOT_1_ITEM_TYPE_SPHERE_POINTCLOUD][ich] =
+      ich * kSeyondFaconVAngleDiffBase;
   }
   // init the nps_adjustment_
-  size_t input_size = (kVTableEffeHalfSize_ * 2 + 1) * (kHTableEffeHalfSize_ * 2 + 1) * 2 * kSeyondChannelNumber;
+  size_t input_size =
+    (kVTableEffeHalfSize_ * 2 + 1) * (kHTableEffeHalfSize_ * 2 + 1) * 2 * kSeyondChannelNumber;
   memset(nps_adjustment_, 0, sizeof(nps_adjustment_));
   static double k_max[2] = {-100, -100};
   static double k_min[2] = {100, 100};
@@ -258,10 +267,13 @@ int SeyondDecoder::init_f_falcon(void) {
   return 0;
 }
 
-int SeyondDecoder::init_f_robin(void) {
+int SeyondDecoder::init_f_robin(void)
+{
   for (uint32_t ich = 0; ich < kSeyondChannelNumber; ich++) {
-    v_angle_offset_[SEYOND_ROBINE_ITEM_TYPE_SPHERE_POINTCLOUD][ich] = ich * kSeyondRobinEVAngleDiffBase;
-    v_angle_offset_[SEYOND_ROBINW_ITEM_TYPE_SPHERE_POINTCLOUD][ich] = ich * kSeyondRobinWVAngleDiffBase;
+    v_angle_offset_[SEYOND_ROBINE_ITEM_TYPE_SPHERE_POINTCLOUD][ich] =
+      ich * kSeyondRobinEVAngleDiffBase;
+    v_angle_offset_[SEYOND_ROBINW_ITEM_TYPE_SPHERE_POINTCLOUD][ich] =
+      ich * kSeyondRobinWVAngleDiffBase;
   }
 
   // init the nps_adjustment_
@@ -284,8 +296,10 @@ int SeyondDecoder::init_f_robin(void) {
   return 0;
 }
 
-void SeyondDecoder::get_xyzr_meter(const SeyondBlockAngles angles, const uint32_t radius_unit,
-                                         const uint32_t channel, SeyondXyzrD *result, SeyondItemType type) {
+void SeyondDecoder::get_xyzr_meter(
+  const SeyondBlockAngles angles, const uint32_t radius_unit, const uint32_t channel,
+  SeyondXyzrD * result, SeyondItemType type)
+{
   if (type == SEYOND_ITEM_TYPE_SPHERE_POINTCLOUD) {
     result->radius = radius_unit * kMeterPerSeyondDistanceUnit200;
   } else {
@@ -313,7 +327,9 @@ void SeyondDecoder::get_xyzr_meter(const SeyondBlockAngles angles, const uint32_
   }
 
   // falconI & falconII
-  if (type == SEYOND_ITEM_TYPE_SPHERE_POINTCLOUD || type == SEYOND_FALCONII_DOT_1_ITEM_TYPE_SPHERE_POINTCLOUD) {
+  if (
+    type == SEYOND_ITEM_TYPE_SPHERE_POINTCLOUD ||
+    type == SEYOND_FALCONII_DOT_1_ITEM_TYPE_SPHERE_POINTCLOUD) {
     double x_adj, z_adj;
     lookup_xz_adjustment_(angles, channel, &x_adj, &z_adj);
     result->x += x_adj;
@@ -329,7 +345,8 @@ void SeyondDecoder::get_xyzr_meter(const SeyondBlockAngles angles, const uint32_
   return;
 }
 
-bool SeyondDecoder::check_data_packet(const SeyondDataPacket &pkt, size_t size) {
+bool SeyondDecoder::check_data_packet(const SeyondDataPacket & pkt, size_t size)
+{
   if (pkt.common.version.magic_number != kSeyondMagicNumberDataPacket) {
     std::cout << "bad magic " << pkt.common.version.magic_number << std::endl;
     return false;
@@ -340,70 +357,77 @@ bool SeyondDecoder::check_data_packet(const SeyondDataPacket &pkt, size_t size) 
   }
   bool is_data = true;
   switch (pkt.type) {
-  case SEYOND_ITEM_TYPE_SPHERE_POINTCLOUD:
-  if (pkt.multi_return_mode == SEYOND_MULTIPLE_RETURN_MODE_SINGLE) {
-    if (pkt.item_size != sizeof(SeyondBlock1)) {
-      std::cout << "bad block1 item size " << pkt.item_size << " " << sizeof(SeyondBlock1) << std::endl;
-      return false;
-    }
-  } else if (pkt.multi_return_mode == SEYOND_MULTIPLE_RETURN_MODE_2_STRONGEST ||
-              pkt.multi_return_mode == SEYOND_MULTIPLE_RETURN_MODE_2_STRONGEST_FURTHEST) {
-    if (pkt.item_size != sizeof(SeyondBlock2)) {
-      std::cout << "bad block2 item size " << pkt.item_size << " " << sizeof(SeyondBlock2) << std::endl;
-      return false;
-    }
-  } else {
-    std::cout << "bad return_mode " << pkt.multi_return_mode << std::endl;
-    return false;
-  }
-  break;
-  case SEYOND_ROBINE_ITEM_TYPE_SPHERE_POINTCLOUD:
-  case SEYOND_ROBINW_ITEM_TYPE_SPHERE_POINTCLOUD:
-  case SEYOND_FALCONII_DOT_1_ITEM_TYPE_SPHERE_POINTCLOUD:
-    if (pkt.multi_return_mode == SEYOND_MULTIPLE_RETURN_MODE_SINGLE) {
-      if (pkt.item_size != sizeof(SeyondEnBlock1)) {
-        std::cout << "bad block1 item size " << pkt.item_size << " " << sizeof(SeyondEnBlock1) << std::endl;
+    case SEYOND_ITEM_TYPE_SPHERE_POINTCLOUD:
+      if (pkt.multi_return_mode == SEYOND_MULTIPLE_RETURN_MODE_SINGLE) {
+        if (pkt.item_size != sizeof(SeyondBlock1)) {
+          std::cout << "bad block1 item size " << pkt.item_size << " " << sizeof(SeyondBlock1)
+                    << std::endl;
+          return false;
+        }
+      } else if (
+        pkt.multi_return_mode == SEYOND_MULTIPLE_RETURN_MODE_2_STRONGEST ||
+        pkt.multi_return_mode == SEYOND_MULTIPLE_RETURN_MODE_2_STRONGEST_FURTHEST) {
+        if (pkt.item_size != sizeof(SeyondBlock2)) {
+          std::cout << "bad block2 item size " << pkt.item_size << " " << sizeof(SeyondBlock2)
+                    << std::endl;
+          return false;
+        }
+      } else {
+        std::cout << "bad return_mode " << pkt.multi_return_mode << std::endl;
         return false;
       }
-    } else if (pkt.multi_return_mode == SEYOND_MULTIPLE_RETURN_MODE_2_STRONGEST ||
-               pkt.multi_return_mode == SEYOND_MULTIPLE_RETURN_MODE_2_STRONGEST_FURTHEST) {
-      if (pkt.item_size != sizeof(SeyondEnBlock2)) {
-        std::cout << "bad block2 item size " << pkt.item_size << " " << sizeof(SeyondEnBlock2) << std::endl;
+      break;
+    case SEYOND_ROBINE_ITEM_TYPE_SPHERE_POINTCLOUD:
+    case SEYOND_ROBINW_ITEM_TYPE_SPHERE_POINTCLOUD:
+    case SEYOND_FALCONII_DOT_1_ITEM_TYPE_SPHERE_POINTCLOUD:
+      if (pkt.multi_return_mode == SEYOND_MULTIPLE_RETURN_MODE_SINGLE) {
+        if (pkt.item_size != sizeof(SeyondEnBlock1)) {
+          std::cout << "bad block1 item size " << pkt.item_size << " " << sizeof(SeyondEnBlock1)
+                    << std::endl;
+          return false;
+        }
+      } else if (
+        pkt.multi_return_mode == SEYOND_MULTIPLE_RETURN_MODE_2_STRONGEST ||
+        pkt.multi_return_mode == SEYOND_MULTIPLE_RETURN_MODE_2_STRONGEST_FURTHEST) {
+        if (pkt.item_size != sizeof(SeyondEnBlock2)) {
+          std::cout << "bad block2 item size " << pkt.item_size << " " << sizeof(SeyondEnBlock2)
+                    << std::endl;
+          return false;
+        }
+      } else {
+        std::cout << "bad return_mode " << pkt.multi_return_mode << std::endl;
         return false;
       }
-    } else {
-      std::cout << "bad return_mode " << pkt.multi_return_mode << std::endl;
-      return false;
-    }
-    break;
-  case SEYOND_ITEM_TYPE_XYZ_POINTCLOUD:
-    if (pkt.item_size != sizeof(SeyondXyzPoint)) {
-      std::cout << "bad SeyondXyzPoint item size " << pkt.item_size << std::endl;
-      return false;
-    }
-    break;
-  case SEYOND_ROBINE_ITEM_TYPE_XYZ_POINTCLOUD:
-  case SEYOND_ROBINW_ITEM_TYPE_XYZ_POINTCLOUD:
-  case SEYOND_FALCONII_DOT_1_ITEM_TYPE_XYZ_POINTCLOUD:
-    if (pkt.item_size != sizeof(SeyondEnXyzPoint)) {
-      std::cout << "bad SeyondEnXyzPoint item size " << pkt.item_size << std::endl;
-      return false;
-    }
-    break;
-  default:
-    is_data = false;
-    break;
+      break;
+    case SEYOND_ITEM_TYPE_XYZ_POINTCLOUD:
+      if (pkt.item_size != sizeof(SeyondXyzPoint)) {
+        std::cout << "bad SeyondXyzPoint item size " << pkt.item_size << std::endl;
+        return false;
+      }
+      break;
+    case SEYOND_ROBINE_ITEM_TYPE_XYZ_POINTCLOUD:
+    case SEYOND_ROBINW_ITEM_TYPE_XYZ_POINTCLOUD:
+    case SEYOND_FALCONII_DOT_1_ITEM_TYPE_XYZ_POINTCLOUD:
+      if (pkt.item_size != sizeof(SeyondEnXyzPoint)) {
+        std::cout << "bad SeyondEnXyzPoint item size " << pkt.item_size << std::endl;
+        return false;
+      }
+      break;
+    default:
+      is_data = false;
+      break;
   }
 
   if (is_data) {
-    size_t s =
-        get_data_packet_size(SeyondItemType(pkt.type), pkt.item_number, SeyondMultipleReturnMode(pkt.multi_return_mode));
+    size_t s = get_data_packet_size(
+      SeyondItemType(pkt.type), pkt.item_number, SeyondMultipleReturnMode(pkt.multi_return_mode));
     if (pkt.common.size != s) {
       std::cout << "bad size " << s << " " << pkt.common.size << std::endl;
       return false;
     }
     if (pkt.common.version.major_version > kSeyondMajorVersionDataPacket) {
-      std::cout << "please upgrade client sdk, lidar protocol major version:" << pkt.common.version.major_version
+      std::cout << "please upgrade client sdk, lidar protocol major version:"
+                << pkt.common.version.major_version
                 << " sdk major version:" << kSeyondMajorVersionDataPacket << std::endl;
       return false;
     }
@@ -413,13 +437,16 @@ bool SeyondDecoder::check_data_packet(const SeyondDataPacket &pkt, size_t size) 
       std::cout << "bad item_number " << pkt.item_number << std::endl;
       return false;
     }
-    const SeyondMessage *messages = reinterpret_cast<const SeyondMessage *>(pkt.payload);
-    if (static_cast<uint32_t>(pkt.item_size) != messages[0].size || pkt.item_size <= sizeof(SeyondMessage)) {
+    const SeyondMessage * messages = reinterpret_cast<const SeyondMessage *>(pkt.payload);
+    if (
+      static_cast<uint32_t>(pkt.item_size) != messages[0].size ||
+      pkt.item_size <= sizeof(SeyondMessage)) {
       std::cout << "bad message size " << pkt.item_size << " " << messages[0].size << std::endl;
       return false;
     }
     if (pkt.common.size != pkt.item_size + sizeof(SeyondDataPacket)) {
-      std::cout << "bad message size " << pkt.common.size << " " << pkt.item_size + sizeof(SeyondDataPacket) << std::endl;
+      std::cout << "bad message size " << pkt.common.size << " "
+                << pkt.item_size + sizeof(SeyondDataPacket) << std::endl;
       return false;
     }
     return true;
@@ -429,8 +456,9 @@ bool SeyondDecoder::check_data_packet(const SeyondDataPacket &pkt, size_t size) 
   }
 }
 
-bool SeyondDecoder::convert_to_xyz_pointcloud(const SeyondDataPacket &src, SeyondDataPacket *dest, size_t dest_size,
-                                                    bool append) {
+bool SeyondDecoder::convert_to_xyz_pointcloud(
+  const SeyondDataPacket & src, SeyondDataPacket * dest, size_t dest_size, bool append)
+{
   if (!is_sphere_data(src.type)) {
     std::cout << "invalid type: " << src.type << std::endl;
     return false;
@@ -457,7 +485,8 @@ bool SeyondDecoder::convert_to_xyz_pointcloud(const SeyondDataPacket &src, Seyon
   if (!append) {
     required_size = sizeof(SeyondDataPacket);
     if (required_size > dest_size) {
-      std::cout << "not enough size " << "required_size " <<required_size << "dest_size " << dest_size;
+      std::cout << "not enough size "
+                << "required_size " << required_size << "dest_size " << dest_size;
       return false;
     }
     memcpy(dest, &src, sizeof(SeyondDataPacket));
@@ -472,7 +501,8 @@ bool SeyondDecoder::convert_to_xyz_pointcloud(const SeyondDataPacket &src, Seyon
   } else {
     required_size = dest->common.size;
     if (src.common.ts_start_us < dest->common.ts_start_us) {
-      std::cout << "cannot merge earlier packet " << src.common.ts_start_us << " " << dest->common.ts_start_us << std::endl;
+      std::cout << "cannot merge earlier packet " << src.common.ts_start_us << " "
+                << dest->common.ts_start_us << std::endl;
       return false;
     }
     time_adjust_10us = (src.common.ts_start_us - dest->common.ts_start_us) / 10;
@@ -480,44 +510,50 @@ bool SeyondDecoder::convert_to_xyz_pointcloud(const SeyondDataPacket &src, Seyon
 
   {
     if (src.type == SEYOND_ITEM_TYPE_SPHERE_POINTCLOUD) {
-      (void)iterate_seyond_data_packet_cpoints<SeyondBlock, SeyondBlockHeader, SeyondBlock1, SeyondBlock2, SeyondChannelPoint>(
-          src, [&](const SeyondDataPacketPointsCallbackParams<SeyondBlock, SeyondChannelPoint> &in_params) {
-            if (in_params.pt.radius > 0) {
-              SeyondXyzPoint &ipt = dest->xyz_points[dest->item_number];
-              required_size += static_cast<uint32_t>(sizeof(SeyondXyzPoint));
-              if (required_size > dest_size) {
-                std::cerr << "no enough size required_size:" << required_size << ",dest_size:" << dest_size
-                          << std::endl;
-              } else {
-                (void)get_xyz_point(in_params.block.header, in_params.pt, in_params.angle.angles[in_params.channel],
-                                    in_params.channel, &ipt);
-                ipt.multi_return = in_params.multi_return;
-                ipt.is_2nd_return = in_params.pt.is_2nd_return;
-                ipt.ts_10us += time_adjust_10us;
-                dest->item_number++;
-              }
+      (void)iterate_seyond_data_packet_cpoints<
+        SeyondBlock, SeyondBlockHeader, SeyondBlock1, SeyondBlock2, SeyondChannelPoint>(
+        src,
+        [&](
+          const SeyondDataPacketPointsCallbackParams<SeyondBlock, SeyondChannelPoint> & in_params) {
+          if (in_params.pt.radius > 0) {
+            SeyondXyzPoint & ipt = dest->xyz_points[dest->item_number];
+            required_size += static_cast<uint32_t>(sizeof(SeyondXyzPoint));
+            if (required_size > dest_size) {
+              std::cerr << "no enough size required_size:" << required_size
+                        << ",dest_size:" << dest_size << std::endl;
+            } else {
+              (void)get_xyz_point(
+                in_params.block.header, in_params.pt, in_params.angle.angles[in_params.channel],
+                in_params.channel, &ipt);
+              ipt.multi_return = in_params.multi_return;
+              ipt.is_2nd_return = in_params.pt.is_2nd_return;
+              ipt.ts_10us += time_adjust_10us;
+              dest->item_number++;
             }
-          });
+          }
+        });
     } else {
-      (void)iterate_seyond_data_packet_cpoints<SeyondEnBlock, SeyondEnBlockHeader, SeyondEnBlock1, SeyondEnBlock2,
-                                             SeyondEnChannelPoint>(
-          src, [&](const SeyondDataPacketPointsCallbackParams<SeyondEnBlock, SeyondEnChannelPoint> &in_params) {
-            if (in_params.pt.radius > 0) {
-              SeyondEnXyzPoint &ipt = dest->en_xyz_points[dest->item_number];
-              required_size += static_cast<uint32_t>(sizeof(SeyondEnXyzPoint));
-              if (required_size > dest_size) {
-                std::cerr << "no enough size required_size en:" << required_size << ",dest_size:" << dest_size
-                          << std::endl;
-              } else {
-                (void)get_xyz_point(in_params.block.header, in_params.pt, in_params.angle.angles[in_params.channel],
-                                    in_params.channel, &ipt, static_cast<SeyondItemType>(in_params.pkt.type));
-                ipt.multi_return = in_params.multi_return;
-                ipt.is_2nd_return = in_params.pt.is_2nd_return;
-                ipt.ts_10us += time_adjust_10us;
-                dest->item_number++;
-              }
+      (void)iterate_seyond_data_packet_cpoints<
+        SeyondEnBlock, SeyondEnBlockHeader, SeyondEnBlock1, SeyondEnBlock2, SeyondEnChannelPoint>(
+        src, [&](const SeyondDataPacketPointsCallbackParams<SeyondEnBlock, SeyondEnChannelPoint> &
+                   in_params) {
+          if (in_params.pt.radius > 0) {
+            SeyondEnXyzPoint & ipt = dest->en_xyz_points[dest->item_number];
+            required_size += static_cast<uint32_t>(sizeof(SeyondEnXyzPoint));
+            if (required_size > dest_size) {
+              std::cerr << "no enough size required_size en:" << required_size
+                        << ",dest_size:" << dest_size << std::endl;
+            } else {
+              (void)get_xyz_point(
+                in_params.block.header, in_params.pt, in_params.angle.angles[in_params.channel],
+                in_params.channel, &ipt, static_cast<SeyondItemType>(in_params.pkt.type));
+              ipt.multi_return = in_params.multi_return;
+              ipt.is_2nd_return = in_params.pt.is_2nd_return;
+              ipt.ts_10us += time_adjust_10us;
+              dest->item_number++;
             }
-          });
+          }
+        });
     }
   }
 

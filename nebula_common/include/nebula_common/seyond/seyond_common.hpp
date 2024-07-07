@@ -8,7 +8,10 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <sstream>
+#include <string>
+
 namespace nebula
 {
 namespace drivers
@@ -48,7 +51,6 @@ inline std::ostream & operator<<(std::ostream & os, SeyondSensorConfiguration co
 
 struct SeyondCalibrationConfigurationBase : public CalibrationConfigurationBase
 {
-
 };
 
 /// @brief struct for Seyond calibration configuration

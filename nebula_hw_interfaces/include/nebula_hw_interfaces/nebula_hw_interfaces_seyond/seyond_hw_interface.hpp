@@ -27,6 +27,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace nebula
@@ -109,7 +110,7 @@ public:
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
   Status SetSensorConfiguration(
-    const std::shared_ptr<const SensorConfigurationBase>& sensor_configuration);
+    const std::shared_ptr<const SensorConfigurationBase> & sensor_configuration);
 
   // /// @brief Set target model number
   // /// @param model Model number
@@ -131,7 +132,6 @@ public:
   /// @param return_mode The mode of return
   /// @return Resulting status
   Status SetReturnMode(int return_mode);
-
 
   /// @brief Setting PTP profile
   /// @param profile profile to be set

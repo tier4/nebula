@@ -34,7 +34,7 @@ SeyondRosWrapper::SeyondRosWrapper(const rclcpp::NodeOptions & options)
 
   if (launch_hw_) {
     hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_);
-    //hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->HwInterface(), sensor_cfg_ptr_);
+    // hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->HwInterface(), sensor_cfg_ptr_);
   }
 
   // ////////////////////////////////////////
@@ -201,7 +201,8 @@ void SeyondRosWrapper::ReceiveScanMessageCallback(
   if (hw_interface_wrapper_) {
     RCLCPP_ERROR_THROTTLE(
       get_logger(), *get_clock(), 1000,
-      "Ignoring received NebulaPackets. Launch with launch_hw:=false to enable NebulaPackets replay.");
+      "Ignoring received NebulaPackets. Launch with launch_hw:=false to enable NebulaPackets "
+      "replay.");
     return;
   }
 
@@ -276,8 +277,8 @@ rcl_interfaces::msg::SetParametersResult SeyondRosWrapper::OnParameterChange(
   }
 
   if (_return_mode.length() > 0)
-    new_cfg.return_mode = nebula::drivers::ReturnModeFromStringSeyond(_return_mode,
-                                                                      sensor_cfg_ptr_->sensor_model);
+    new_cfg.return_mode =
+      nebula::drivers::ReturnModeFromStringSeyond(_return_mode, sensor_cfg_ptr_->sensor_model);
 
   // ////////////////////////////////////////
   // Validate and use new config

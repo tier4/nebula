@@ -14,10 +14,9 @@ SeyondDriver::SeyondDriver(
   scan_decoder_ = InitializeDecoder(sensor_configuration, calibration_configuration);
 }
 
-  std::shared_ptr<SeyondScanDecoder> SeyondDriver::InitializeDecoder(
-    const std::shared_ptr<const drivers::SeyondSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<const drivers::SeyondCalibrationConfiguration> &
-      calibration_configuration)
+std::shared_ptr<SeyondScanDecoder> SeyondDriver::InitializeDecoder(
+  const std::shared_ptr<const drivers::SeyondSensorConfiguration> & sensor_configuration,
+  const std::shared_ptr<const drivers::SeyondCalibrationConfiguration> & calibration_configuration)
 {
   return std::make_shared<seyond_packet::SeyondDecoder>(
     sensor_configuration, calibration_configuration);
@@ -63,7 +62,6 @@ std::tuple<drivers::NebulaPointCloudPtr, double> SeyondDriver::ParseCloudPacket(
 Status SeyondDriver::SetCalibrationConfiguration(
   const SeyondCalibrationConfiguration & calibration_configuration)
 {
-
 }
 
 Status SeyondDriver::GetStatus()

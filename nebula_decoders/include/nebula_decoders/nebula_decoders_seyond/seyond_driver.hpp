@@ -17,6 +17,8 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <tuple>
+#include <vector>
 
 namespace nebula
 {
