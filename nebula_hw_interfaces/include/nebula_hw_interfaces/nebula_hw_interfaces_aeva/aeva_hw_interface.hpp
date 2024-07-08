@@ -119,26 +119,11 @@ public:
       throw std::runtime_error("Reached maximum retries while trying to fetch manifest");
     }
 
-    tryReconfig(
-      manifest, "scanner", "dithering_enable_ego_speed", config->dithering_enable_ego_speed);
-    tryReconfig(manifest, "scanner", "dithering_pattern_option", config->dithering_pattern_option);
-    tryReconfig(manifest, "scanner", "ele_offset_rad", config->ele_offset_rad);
-    tryReconfig(
-      manifest, "scanner", "elevation_auto_adjustment", config->elevation_auto_adjustment);
-    tryReconfig(manifest, "scanner", "enable_frame_dithering", config->enable_frame_dithering);
-    tryReconfig(manifest, "scanner", "enable_frame_sync", config->enable_frame_sync);
-    tryReconfig(manifest, "scanner", "flip_pattern_vertically", config->flip_pattern_vertically);
-    tryReconfig(manifest, "scanner", "frame_sync_offset_in_ms", config->frame_sync_offset_in_ms);
-    tryReconfig(manifest, "scanner", "frame_sync_type", config->frame_sync_type);
-    tryReconfig(
-      manifest, "scanner", "frame_synchronization_on_rising_edge",
-      config->frame_synchronization_on_rising_edge);
-    tryReconfig(manifest, "scanner", "hfov_adjustment_deg", config->hfov_adjustment_deg);
-    tryReconfig(manifest, "scanner", "hfov_rotation_deg", config->hfov_rotation_deg);
-    tryReconfig(manifest, "scanner", "highlight_ROI", config->highlight_ROI);
-    tryReconfig(manifest, "scanner", "horizontal_fov_degrees", config->horizontal_fov_degrees);
-    tryReconfig(manifest, "scanner", "roi_az_offset_rad", config->roi_az_offset_rad);
-    tryReconfig(manifest, "scanner", "vertical_pattern", config->vertical_pattern);
+    for (const auto & category : config->tree.items()) {
+      for (const auto & setting : category.value().items()) {
+        tryReconfig(manifest, category.key(), setting.key(), setting.value());
+      }
+    }
   }
 
   void registerCloudPacketCallback(PointcloudParser::callback_t callback)
@@ -162,11 +147,11 @@ public:
   }
 
 private:
-  template <typename T>
   void tryReconfig(
-    const json & manifest, const std::string & node_name, const std::string & key, const T & value)
+    const json & manifest, const std::string & node_name, const std::string & key,
+    const json & value)
   {
-    auto old_value_opt = util::get_if_exists<T>(manifest, {node_name, key, "value"});
+    auto old_value_opt = util::get_if_exists<json>(manifest, {node_name, key, "value"});
     if (old_value_opt && old_value_opt.value() == value) return;
 
     try {
@@ -179,14 +164,7 @@ private:
     // Value was successfully updated
     // ////////////////////////////////////////
 
-    std::string value_str;
-    if constexpr (std::is_same_v<T, std::string>) {
-      value_str = value;
-    } else {
-      value_str = std::to_string(value);
-    }
-
-    logger_->info("Set " + node_name + "." + key + " to " + value_str);
+    logger_->info("Set " + node_name + "." + key + " to " + value.dump());
   }
 
   static std::shared_ptr<ReconfigParser> makeReconfigApi(

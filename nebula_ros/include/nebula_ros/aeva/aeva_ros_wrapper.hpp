@@ -15,6 +15,7 @@
 #pragma once
 
 #include "nebula_ros/aeva/hw_monitor_wrapper.hpp"
+#include "nebula_ros/common/parameter_descriptors.hpp"
 #include "nebula_ros/common/watchdog_timer.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
@@ -22,9 +23,11 @@
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/nebula_status.hpp>
 #include <nebula_common/util/mt_queue.hpp>
+#include <nebula_common/util/parsing.hpp>
 #include <nebula_decoders/nebula_decoders_aeva/aeva_aeries2_decoder.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_aeva/aeva_hw_interface.hpp>
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/subscription.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
@@ -40,10 +43,13 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace nebula::ros
 {
+
+using nlohmann::json;
 
 /// @brief Ros wrapper of hesai driver
 class AevaRosWrapper final : public rclcpp::Node
@@ -53,6 +59,30 @@ public:
 
 private:
   Status declareAndGetSensorConfigParams();
+
+  template <typename T>
+  void declareJsonParam(const std::string & dot_delimited_path, json & inout_tree)
+  {
+    json param_value = declare_parameter<T>(dot_delimited_path, param_read_write());
+    json tree_patch = util::to_json_tree(param_value, util::to_json_path(dot_delimited_path));
+    inout_tree.update(tree_patch, true);
+  }
+
+  template <typename T>
+  bool getJsonParam(
+    const std::vector<rclcpp::Parameter> & p, const std::string & dot_delimited_path,
+    json & inout_tree)
+  {
+    T value;
+    bool got_param = get_param(p, dot_delimited_path, value);
+    if (!got_param) return false;
+
+    json json_value = value;
+    json tree_patch = util::to_json_tree(json_value, util::to_json_path(dot_delimited_path));
+    inout_tree.update(tree_patch, true);
+    return true;
+  }
+
   Status validateAndSetConfig(std::shared_ptr<const drivers::aeva::Aeries2Config> & new_config);
 
   rcl_interfaces::msg::SetParametersResult onParameterChange(
