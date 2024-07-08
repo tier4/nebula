@@ -5,9 +5,7 @@
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
-
 #include <angles/angles.h>
-
 #include <array>
 #include <cmath>
 #include <utility>
@@ -215,7 +213,7 @@ public:
 
         for (int unit_idx = 0; unit_idx < velodyne_packet::CHANNELS_PER_BLOCK; ++unit_idx) {
           uint16_t current_distance;
-          uint16_t other_distance;
+          uint16_t other_distance = 0;
           int firing_seq = sensor_.getFiringOrder(unit_idx, SensorT::channels_per_firing_sequence);
           int channel = sensor_.getChannelNumber(unit_idx);
 

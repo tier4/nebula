@@ -19,21 +19,21 @@ public:
   virtual bool fillAzimuthCache() { return false; }
 
   /// @brief VSL128User manual p. Packet structure
-  virtual uint getBank(uint bank, uint header) { return bank; }
+  virtual uint getBank(uint bank, uint /* header */) { return bank; }
 
   /// @brief each VLP calculating sample code and formula in user manual. If you know details, see commens in each <vlp_list>.hpp file.
   /// calculate the corrected azimuth from each firing timing.
   virtual uint16_t getAzimuthCorrected(
     uint16_t azimuth, float azimuth_diff, int firing_sequence, int firing_order) = 0;
 
-  /// @brief each VLP calculating sample code and formula in user manual.
-  /// Choose the correct azimuth from the 2 azimuths
-  virtual int getFiringOrder(int channels_per_block, int scans_per_firing) { return 0; }
+  /// @brief each VLP calculating sample code and formula in user manual. Check packet structure.
+  /// Get a correct firing order
+  virtual int getFiringOrder(int /* channels_per_block */, int /* scans_per_firing */) { return 0; }
 
-  /// @brief each VLP calculating sample code and formula in user manual.
-  /// Choose the correct azimuth from the 2 azimuths
-  virtual int getChannelNumber(int unit_idx) { return 0; }
-  
+  /// @brief each VLP calculating sample code and formula in user manual. Check packet structure.
+  /// Get a correct channel number
+  virtual int getChannelNumber(int /* unit_idx */) { return 0; }
+
 };
 }  // namespace drivers
 }  // namespace nebula
