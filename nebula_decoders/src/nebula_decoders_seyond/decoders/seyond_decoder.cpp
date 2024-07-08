@@ -168,7 +168,8 @@ int SeyondDecoder::unpack(const std::vector<uint8_t> & packet)
   }
 
   // Publish the whole frame data if scan is complete
-  // TODO(drwnz): have to handl eout-of-order packets. Currently just tossing anything that arrives out of order.
+  // TODO(drwnz): have to handl eout-of-order packets. Currently just tossing anything that arrives
+  // out of order.
   if (current_packet_id_ != packet_id) {
     // std::cout << "Old packet ID: " << current_packet_id_ << ", New packet ID: " << packet_id <<
     // " No. points: " << decode_pc_->size() << std::endl;
@@ -177,8 +178,7 @@ int SeyondDecoder::unpack(const std::vector<uint8_t> & packet)
       decode_pc_->clear();
       has_scanned_ = true;
       current_packet_id_ = packet_id;
-    }
-    else {
+    } else {
       std::cout << "packet arrived out of order, discarded" << std::endl;
       return -1;
     }
