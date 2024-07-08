@@ -1,0 +1,116 @@
+#pragma once
+#include "nebula_decoders/nebula_decoders_velodyne/decoders/velodyne_sensor.hpp"
+
+namespace nebula
+{
+namespace drivers
+{
+
+class VLS128 : public VelodyneSensor
+{
+public:
+  // To ignore an empty data blocks in VLS128 case
+  /// @brief VLS128 Dual return mode data structure in VLS128 User manual p.57
+  int getNumPaddingBlocks(bool dual_return)
+  {
+    if (dual_return) return 4;
+    return 0;
+  }
+
+// calculate and stack the firing timing for each laser timeing
+/// @brief laser timing for VLS128 from VLS128 User manual in p.61
+  bool fillAzimuthCache()
+  {
+    for (uint8_t i = 0; i < 16; i++) {
+      laser_azimuth_cache_[i] = (VLS128_CHANNEL_DURATION / VLS128_SEQ_DURATION) * (i + i / 8);
+    }
+    return true;
+  }
+
+  /// @brief formula from VLS128 User manual in p.65
+  /// @param azimuth Azimuth angle
+  /// @param azimuth_diff Azimuth difference
+  /// @param firing_order Firing order
+  /// @return Corrected azimuth
+  uint16_t getAzimuthCorrected(
+    uint16_t azimuth, float azimuth_diff, int /* firing_sequence */, int firing_order)
+  {
+    float azimuth_corrected = azimuth + (azimuth_diff * laser_azimuth_cache_[firing_order]);
+
+    return static_cast<uint16_t>(round(azimuth_corrected)) % 36000;
+  }
+
+  // Not succeed nebula_test on only VLP32 so add this function
+  // Choose the correct azimuth from the 2 azimuths
+  uint16_t getTrueRotation(uint16_t azimuth_corrected, uint16_t /* current_block_rotation */)
+  {
+    return azimuth_corrected;
+  }
+
+  uint getBank(uint bank, uint header) {
+    // Used to detect which bank of 32 lasers is in this block.
+    switch (header) {
+      case BANK_1:
+        bank = 0;
+        break;
+      case BANK_2:
+        bank = 32;
+        break;
+      case BANK_3:
+        bank = 64;
+        break;
+      case BANK_4:
+        bank = 96;
+        break;
+      default:
+        RCLCPP_ERROR(
+          rclcpp::get_logger("VelodyneDecoder"),
+          "Invalid bank origin detected in packet. Skipping packet.");
+        return 0;  // bad packet: skip the rest
+    }
+    return bank;
+  }
+
+  int getFiringOrder(int channels, int scans_per_firing)
+  {
+    return channels / scans_per_firing;
+  }
+
+  int getChannelNumber(int unit_idx)
+  {
+    return unit_idx % channels_per_firing_sequence;
+  }
+
+  constexpr static int num_maintenance_periods = 1;
+
+  constexpr static int num_simultaneous_firings = 8;
+
+  constexpr static double firing_sequences_per_block = 0.25;
+
+  constexpr static int channels_per_firing_sequence = 128;
+
+  constexpr static float distance_resolution_m = 0.004f;
+
+  constexpr static double full_firing_cycle_s = 53.3 * 1e-6;
+
+  constexpr static double single_firing_s = 2.665 * 1e-6;
+
+  constexpr static double offset_packet_time = 8.7 * 1e-6;
+
+  /** Special Definitions for VLS128 support **/
+  constexpr static const float VLP128_DISTANCE_RESOLUTION = 0.004f;  // [m]
+
+  constexpr static const float VLS128_CHANNEL_DURATION = 2.665f;  // [µs] Channels corresponds to one laser firing
+
+  constexpr static const float VLS128_SEQ_DURATION = 53.3f;  // [µs] Sequence is a set of laser firings including recharging
+  // These are used to detect which bank of 32 lasers is in this block
+  constexpr static const uint16_t BANK_1 = 0xeeff;
+  constexpr static const uint16_t BANK_2 = 0xddff;
+  constexpr static const uint16_t BANK_3 = 0xccff;
+  constexpr static const uint16_t BANK_4 = 0xbbff;
+
+private:
+  float laser_azimuth_cache_[16];
+};
+}  // namespace drivers
+}  // namespace nebula
