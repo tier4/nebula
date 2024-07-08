@@ -151,7 +151,7 @@ class AevaParser : public ObservableByteStream
 {
 public:
   explicit AevaParser(std::shared_ptr<PullableByteStream> incoming_byte_stream)
-  : incoming_(std::move(incoming_byte_stream)), running_(true)
+  : running_(true), incoming_(std::move(incoming_byte_stream))
   {
     if (!incoming_) {
       throw std::runtime_error("Incoming byte stream cannot be null");
@@ -206,7 +206,9 @@ protected:
     onMessage(message_header, payload_view);
   }
 
-  virtual void onMessage(const MessageHeader & message_header, ByteView & payload_bytes) = 0;
+  virtual void onMessage(const MessageHeader & /* message_header */, ByteView & /* payload_bytes */)
+  {
+  }
 
 private:
   std::thread thread_;

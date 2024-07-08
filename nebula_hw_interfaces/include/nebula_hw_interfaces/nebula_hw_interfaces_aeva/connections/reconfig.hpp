@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "nebula_common/loggers/logger.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_aeva/connections/aeva_api.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/byte_stream.hpp"
 
@@ -21,6 +22,10 @@
 #include <nebula_common/aeva/packet_types.hpp>
 #include <nlohmann/json.hpp>
 
+#include <boost/algorithm/string/join.hpp>
+
+#include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <cstdlib>
 #include <memory>
@@ -44,26 +49,34 @@ class ReconfigParser : public AevaParser<AevaStreamType::kReconfig>,
                        public AevaSender<AevaStreamType::kReconfig>
 {
 public:
-  using callback_t = std::function<void(const ReconfigMessage &)>;
+  using callback_t = std::function<void(uint64_t, const ReconfigMessage &)>;
 
   explicit ReconfigParser(
     std::shared_ptr<PullableByteStream> incoming_byte_stream,
-    std::shared_ptr<WritableByteStream> outgoing_byte_stream)
+    std::shared_ptr<WritableByteStream> outgoing_byte_stream,
+    std::shared_ptr<loggers::Logger> logger)
   : AevaParser<AevaStreamType::kReconfig>(std::move(incoming_byte_stream)),
-    AevaSender<AevaStreamType::kReconfig>(std::move(outgoing_byte_stream))
+    AevaSender<AevaStreamType::kReconfig>(std::move(outgoing_byte_stream)),
+    logger_(std::move(logger))
   {
   }
 
   json getManifest()
   {
     ReconfigMessage request{ReconfigRequestType::kManifestRequest, {}};
-    ReconfigMessage response = doRequest(request);
+    auto responses = doRequest(request, N_MANIFEST_RESPONSES_EXPECTED);
 
-    if (!response.body) {
-      throw std::runtime_error("Expected manifest body but got empty response");
+    json result{};
+
+    for (const auto & response : responses) {
+      if (!response.body) {
+        throw std::runtime_error("Expected manifest body but got empty response");
+      }
+
+      result.update(*response.body);
     }
 
-    return *response.body;
+    return result;
   }
 
   json setParameter(std::string node_name, std::string key, json value)
@@ -71,7 +84,8 @@ public:
     json request_body = {{node_name, {{key, {{"value", value}}}}}};
     ReconfigMessage request = {ReconfigRequestType::kChangeRequest, request_body};
 
-    ReconfigMessage response = doRequest(request);
+    auto response = doRequest(request);
+
     if (response.type != aeva::ReconfigRequestType::kChangeApproved) {
       std::stringstream ss{};
       ss << "change request failed";
@@ -90,7 +104,14 @@ public:
   }
 
 private:
-  ReconfigMessage doRequest(ReconfigMessage request)
+  ReconfigMessage doRequest(const ReconfigMessage & request)
+  {
+    auto responses = doRequest(request, 1);
+    return responses.at(0);
+  }
+
+  std::vector<ReconfigMessage> doRequest(
+    const ReconfigMessage & request, size_t n_responses_expected)
   {
     std::lock_guard lock(mtx_inflight_);
 
@@ -99,10 +120,8 @@ private:
     // ////////////////////////////////////////
 
     uint64_t request_id = std::rand();
-    {
-      std::lock_guard lock(mtx_inflight_request_id_);
-      inflight_request_id_.emplace(request_id);
-    }
+
+    NEBULA_LOG_STREAM(logger_->debug, "Sent " << request.type << ", id=" << request_id);
 
     ReconfigRequestType type = request.type;
     uint8_t encoding_type = 0;
@@ -131,30 +150,50 @@ private:
     // Send and wait for response with timeout
     // ////////////////////////////////////////
 
-    std::timed_mutex tm;
-    tm.lock();
+    std::timed_mutex tm_callback_timeout;
+    tm_callback_timeout.lock();
 
-    ReconfigMessage response{};
+    std::mutex mtx_responses;
+    std::vector<ReconfigMessage> responses{};
+    responses.reserve(n_responses_expected);
 
-    callback_ = [this, &tm, request_id, &response](const auto & message) {
-      std::lock_guard lock(mtx_inflight_request_id_);
-      if (!inflight_request_id_ || inflight_request_id_.value() != request_id) {
-        // Spurious message reached this callback, the references to `response` and `tm` might not
-        // be valid Exit without trying to access possibly invalid references and let request
-        // timeout
+    auto request_valid = std::make_shared<std::atomic_bool>(true);
+
+    callback_ = [this, request_valid, n_responses_expected, request_id, &responses, &mtx_responses,
+                 &tm_callback_timeout](uint64_t response_id, const auto & message) {
+      if (!*request_valid) {
+        NEBULA_LOG_STREAM(
+          logger_->error, "Received " << message.type << ", id=" << response_id
+                                      << "for no longer valid request id=" << request_id);
         return;
       }
 
-      response = message;
-      tm.unlock();
+      if (response_id != request_id) {
+        // Spurious message reached this callback, the references to `response` and `tm` might not
+        // be valid Exit without trying to access possibly invalid references and let request
+        // timeout
+        NEBULA_LOG_STREAM(
+          logger_->error, "Spurious " << message.type << " received, id=" << response_id
+                                      << ". Expected id=" << request_id);
+        return;
+      }
+
+      {
+        std::lock_guard lock(mtx_responses);
+        responses.push_back(message);
+
+        if (responses.size() == n_responses_expected) {
+          tm_callback_timeout.unlock();
+        }
+      }
     };
 
     sendMessage(bytes);
-    auto request_timed_out = !tm.try_lock_for(3s);
+    auto request_timed_out = !tm_callback_timeout.try_lock_for(20s);
 
     {
-      std::lock_guard lock(mtx_inflight_request_id_);
-      inflight_request_id_.reset();
+      *request_valid = false;
+      callback_ = {};
     }
 
     if (request_timed_out) {
@@ -165,17 +204,32 @@ private:
     // Do validation and return response
     // ////////////////////////////////////////
 
-    bool response_type_valid = (request.type == aeva::ReconfigRequestType::kManifestRequest &&
-                                response.type == aeva::ReconfigRequestType::kManifestResponse) ||
-                               (request.type == aeva::ReconfigRequestType::kChangeRequest &&
-                                (response.type == aeva::ReconfigRequestType::kChangeApproved ||
-                                 response.type == aeva::ReconfigRequestType::kChangeIgnored));
+    auto response_type_valid = [&](const ReconfigMessage & response) {
+      return (request.type == aeva::ReconfigRequestType::kManifestRequest &&
+              response.type == aeva::ReconfigRequestType::kManifestResponse) ||
+             (request.type == aeva::ReconfigRequestType::kChangeRequest &&
+              (response.type == aeva::ReconfigRequestType::kChangeApproved ||
+               response.type == aeva::ReconfigRequestType::kChangeIgnored));
+    };
 
-    if (!response_type_valid) {
-      throw std::runtime_error("Invalid response type received");
+    std::vector<std::string> response_types;
+    response_types.reserve(responses.size());
+    for (const auto & response : responses) {
+      response_types.push_back((std::stringstream{} << response.type).str());
     }
 
-    return response;
+    NEBULA_LOG_STREAM(
+      logger_->debug, "Got " + boost::join(response_types, ", ") + " for "
+                        << request.type << ", id=" << request_id);
+
+    if (!std::all_of(responses.cbegin(), responses.cend(), response_type_valid)) {
+      std::stringstream msg{};
+      msg << "Invalid responses for " << request.type << ", id=" << request_id << ": ";
+      msg << boost::join(response_types, "; ");
+      throw std::runtime_error(msg.str());
+    }
+
+    return responses;
   }
 
 protected:
@@ -202,15 +256,17 @@ protected:
     message.body = nlohmann::json::parse(data_raw.cbegin(), data_raw.cend());
 
     if (callback_) {
-      callback_(message);
+      callback_(request_id, message);
     }
   }
 
 private:
-  callback_t callback_{};
-  std::mutex mtx_inflight_{};
-  std::mutex mtx_inflight_request_id_{};
-  std::optional<uint64_t> inflight_request_id_{};
+  std::shared_ptr<loggers::Logger> logger_;
+  callback_t callback_;
+  std::mutex mtx_inflight_;
+
+  // scanner, calibration, system_config, spc_converter, dsp_control, self_test, window_measurement
+  static const size_t N_MANIFEST_RESPONSES_EXPECTED = 7;
 };
 
 }  // namespace nebula::drivers::connections
