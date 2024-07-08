@@ -11,28 +11,35 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
+#include <memory>
+
 using nebula::drivers::aeva::PointCloudMessage;
 using nebula::drivers::connections::PointcloudParser;
 
 TEST(TestParsing, Pointcloud)  // NOLINT
 {
-  size_t n_callback_invocations = 0;
+  using std::chrono_literals::operator""ms;
+
+  auto mock_byte_stream = std::make_shared<nebula::test::MockByteStream>(STREAM);
+  PointcloudParser parser(mock_byte_stream);
+  std::atomic_bool done = false;
 
   PointcloudParser::callback_t callback = [&](const PointCloudMessage & arg) {
-    EXPECT_EQ(n_callback_invocations, 0);
+    if (done) return;
 
     EXPECT_EQ(arg.header.aeva_marker, 0xAE5Au);
     EXPECT_EQ(arg.header.platform, 2);
 
     EXPECT_GT(arg.points.size(), 0);
-
-    n_callback_invocations++;
+    EXPECT_TRUE(mock_byte_stream->done());
+    EXPECT_EQ(mock_byte_stream->getReadCount(), 2);
+    done = true;
   };
 
-  auto mock_byte_stream = std::make_shared<nebula::test::MockByteStream>(STREAM);
-
-  PointcloudParser parser(mock_byte_stream);
   parser.registerCallback(std::move(callback));
 
-  EXPECT_EQ(n_callback_invocations, 1);
+  mock_byte_stream->run();
+  while (!done) {
+  }
 }

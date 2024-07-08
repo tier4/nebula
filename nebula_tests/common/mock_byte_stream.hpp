@@ -14,6 +14,9 @@
 
 #include <nebula_hw_interfaces/nebula_hw_interfaces_common/connections/byte_stream.hpp>
 
+#include <gtest/gtest.h>
+
+#include <atomic>
 #include <cstdint>
 #include <vector>
 
@@ -25,16 +28,34 @@ class MockByteStream final : public drivers::connections::PullableByteStream
 public:
   explicit MockByteStream(const std::vector<std::vector<uint8_t>> & stream) : stream_(stream) {}
 
-  void read(std::vector<uint8_t> & into, size_t /* n_bytes */) override
+  void read(std::vector<uint8_t> & into, size_t n_bytes) override
   {
-    auto from = stream_[index_++];
+    while (!running_) {
+    }
+    read_count_++;
+    const auto & from = stream_[index_++];
+    ASSERT_EQ(from.size(), n_bytes);
     into.clear();
     into.insert(into.end(), from.cbegin(), from.cend());
+
+    if (index_ == stream_.size()) {
+      done_ = true;
+      index_ = 0;
+    }
   }
+
+  void run() { running_ = true; }
+
+  bool done() { return done_; }
+
+  size_t getReadCount() { return read_count_; }
 
 private:
   const std::vector<std::vector<uint8_t>> & stream_;
-  size_t index_{};
+  std::atomic_size_t index_{0};
+  std::atomic_size_t read_count_{0};
+  std::atomic_bool running_{false};
+  std::atomic_bool done_{false};
 };
 
 }  // namespace nebula::test
