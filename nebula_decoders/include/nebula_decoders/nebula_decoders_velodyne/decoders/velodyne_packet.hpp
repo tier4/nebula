@@ -15,10 +15,8 @@ namespace velodyne_packet
  * Raw Velodyne packet constants and structures.
  */
 static const int RAW_SCAN_SIZE = 3;  // TODO: remove
-static const int RAW_CHANNEL_SIZE = 3;
 static const int SCANS_PER_BLOCK = 32;  // TODO: remove
 static const int CHANNELS_PER_BLOCK = 32;
-static const int BLOCK_DATA_SIZE = (SCANS_PER_BLOCK * RAW_SCAN_SIZE);
 
 static const double ROTATION_RESOLUTION = 0.01;     // [deg]
 static const uint16_t ROTATION_MAX_UNITS = 360 * 100u;  // [deg/100]
