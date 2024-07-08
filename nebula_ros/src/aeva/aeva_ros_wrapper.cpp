@@ -223,6 +223,17 @@ Status AevaRosWrapper::validateAndSetConfig(std::shared_ptr<const Aeries2Config>
     }
   }
 
+  auto return_mode_opt = new_config->getReturnMode();
+
+  if (return_mode_opt && *return_mode_opt == drivers::ReturnMode::UNKNOWN) {
+    RCLCPP_ERROR_STREAM(get_logger(), "Invalid return mode");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  if (return_mode_opt) {
+    decoder_.onParameterChange(*return_mode_opt);
+  }
+
   sensor_cfg_ptr_ = new_config;
   return Status::OK;
 }

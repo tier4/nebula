@@ -21,6 +21,7 @@
 #include <pcl/point_cloud.h>
 #include <sys/types.h>
 
+#include <atomic>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -46,6 +47,8 @@ public:
 
   void registerPointCloudCallback(callback_t callback);
 
+  void onParameterChange(ReturnMode return_mode);
+
 private:
   struct DecoderState
   {
@@ -62,9 +65,10 @@ private:
     uint64_t timestamp;
   };
 
-  callback_t callback_;
-  PointcloudState cloud_state_{};
+  ReturnType getReturnType(uint32_t peak_id);
 
-  std::mutex mtx_callback_;
+  callback_t callback_;
+  std::atomic<ReturnMode> return_mode_;
+  PointcloudState cloud_state_{};
 };
 }  // namespace nebula::drivers
