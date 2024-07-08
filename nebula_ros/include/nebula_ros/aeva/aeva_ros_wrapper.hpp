@@ -22,7 +22,7 @@
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/nebula_status.hpp>
 #include <nebula_common/util/mt_queue.hpp>
-#include <nebula_decoders/nebula_decoders_aeva/aeva_aries2_decoder.hpp>
+#include <nebula_decoders/nebula_decoders_aeva/aeva_aeries2_decoder.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_aeva/aeva_hw_interface.hpp>
 #include <nlohmann/json.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -73,7 +73,7 @@ private:
 
   std::optional<drivers::AevaHwInterface> hw_interface_;
   std::optional<AevaHwMonitorWrapper> hw_monitor_;
-  drivers::AevaAries2Decoder decoder_;
+  drivers::AevaAeries2Decoder decoder_;
 
   OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_;
 };

@@ -31,7 +31,7 @@
 namespace nebula::drivers
 {
 
-class AevaAries2Decoder
+class AevaAeries2Decoder
 {
 public:
   using AevaPoint = aeva::PointXYZVIRCAEDT;
@@ -40,7 +40,7 @@ public:
 
   using callback_t = std::function<void(AevaPointCloudUniquePtr, uint64_t)>;
 
-  AevaAries2Decoder() : cloud_state_({std::make_unique<AevaPointCloud>(), 0}) {}
+  AevaAeries2Decoder() : cloud_state_({std::make_unique<AevaPointCloud>(), 0}) {}
 
   void processPointcloudMessage(const aeva::PointCloudMessage & message);
 
