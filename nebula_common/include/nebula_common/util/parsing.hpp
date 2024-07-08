@@ -15,6 +15,10 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
+
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 #include <optional>
 #include <string>
@@ -24,6 +28,24 @@ namespace nebula::util
 {
 
 using nlohmann::json;
+
+inline std::vector<std::string> to_json_path(const std::string & dot_delimited_path)
+{
+  std::vector<std::string> result;
+  boost::split(result, dot_delimited_path, boost::is_any_of("."));
+  return result;
+}
+
+inline json to_json_tree(const json & node, const std::vector<std::string> & path)
+{
+  json result = node;
+  for (auto it = path.crbegin(); it != path.crend(); ++it) {
+    auto current_key = *it;
+    result = {{current_key, result}};
+  }
+
+  return result;
+}
 
 template <typename T>
 bool update_if_exists(const json & node, const std::vector<std::string> & path, T & out_value)
