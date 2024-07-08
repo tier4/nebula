@@ -37,25 +37,6 @@ std::tuple<drivers::NebulaPointCloudPtr, double> SeyondDriver::ParseCloudPacket(
   if (scan_decoder_->hasScanned()) {
     pointcloud = scan_decoder_->getPointcloud();
   }
-
-  // int cnt = 0;
-  // for (auto & packet : seyond_scan->packets) {
-  //   if (scan_decoder_->unpack(packet) == 0) {
-  //     cnt++;
-  //   } else {
-  //     RCLCPP_ERROR_STREAM(
-  //       logger, "Failed to unpack packet with timestamp ");
-  //   }
-  // }
-
-  // pointcloud = scan_decoder_->getPointcloud();
-
-  // if (cnt == 0) {
-  //   RCLCPP_ERROR_STREAM(
-  //     logger, "Scanned " << seyond_scan->packets.size() << " packets, but no "
-  //                        << "pointclouds were generated.");
-  // }
-
   return pointcloud;
 }
 

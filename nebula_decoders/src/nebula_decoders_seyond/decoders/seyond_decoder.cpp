@@ -42,6 +42,7 @@ SeyondDecoder::SeyondDecoder(
   decode_pc_.reset(new NebulaPointCloud);
   output_pc_.reset(new NebulaPointCloud);
 
+  // TODO(drwnz): Find the right values for each sensor
   decode_pc_->reserve(2000000);
   output_pc_->reserve(2000000);
 
@@ -103,8 +104,11 @@ bool SeyondDecoder::IsPacketValid(const std::vector<uint8_t> & buffer)
   uint16_t magic_number = ((buffer[1] << 8) | buffer[0]);
   uint16_t packet_type = buffer[kSeyondPktTypeIndex];
 
+
   // check packet is data packet
-  if ((magic_number != kSeyondMagicNumberDataPacket) || (packet_type == 2) || (packet_type == 3)) {
+  // TODO(drwnz): [Falcon] sometimes report data packet as 51 not 1.
+  // TODO(drwnz): [Falcon] here packet size check is used to prevent un-decodable short data packet causing errors.
+  if ((magic_number != kSeyondMagicNumberDataPacket) || (packet_type == 2) || (packet_type == 3) || (send_packet_size < 60)) {
     return false;
   }
 
@@ -146,7 +150,6 @@ int SeyondDecoder::unpack(const std::vector<uint8_t> & packet)
   std::vector<uint8_t> packet_copy = packet;
   if (!IsPacketValid(packet_copy)) {
     return -1;
-    std::cout << "Packet invalid" << std::endl;
   }
 
   ProtocolCompatibility(packet_copy);
@@ -164,6 +167,7 @@ int SeyondDecoder::unpack(const std::vector<uint8_t> & packet)
 
   // Publish the whole frame data if scan is complete
   if (current_packet_id_ != packet_id) {
+    // std::cout << "Old packet ID: " << current_packet_id_ << ", New packet ID: " << packet_id << std::endl;
     std::swap(decode_pc_, output_pc_);
     decode_pc_->clear();
     has_scanned_ = true;
