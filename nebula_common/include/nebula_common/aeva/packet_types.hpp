@@ -19,6 +19,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <ostream>
+#include <string>
 #include <vector>
 
 namespace nebula::drivers::aeva
@@ -152,6 +154,24 @@ enum class ReconfigRequestType : uint8_t {
   kChangeIgnored = 4,
   kInvalid = 5
 };
+
+inline std::ostream & operator<<(std::ostream & os, const ReconfigRequestType & arg)
+{
+  switch (arg) {
+    case ReconfigRequestType::kManifestRequest:
+      return os << "manifest request";
+    case ReconfigRequestType::kManifestResponse:
+      return os << "manifest response";
+    case ReconfigRequestType::kChangeRequest:
+      return os << "change request";
+    case ReconfigRequestType::kChangeApproved:
+      return os << "change approved";
+    case ReconfigRequestType::kChangeIgnored:
+      return os << "change ignored";
+    default:
+      return os << "invalid: " + std::to_string(static_cast<int>(arg));
+  }
+}
 
 struct HealthCode
 {

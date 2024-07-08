@@ -59,8 +59,8 @@ public:
     std::shared_ptr<loggers::Logger> logger, bool setup_sensor,
     const std::shared_ptr<const aeva::Aeries2Config> & config)
   : AevaHwInterface(
-      std::move(logger), setup_sensor, config, makepointcloudApi(*config),
-      makeTelemetryApi(*config), makeReconfigApi(*config), makeHealthApi(*config))
+      logger, setup_sensor, config, makepointcloudApi(*config), makeTelemetryApi(*config),
+      makeReconfigApi(*config, logger), makeHealthApi(*config))
   {
   }
 
@@ -111,7 +111,7 @@ public:
         }
       } catch (const std::runtime_error & e) {
         logger_->error(std::string("Could not fetch sensor manifest: ") + e.what());
-        reconfig_api_ = makeReconfigApi(*config);
+        reconfig_api_ = makeReconfigApi(*config, logger_);
       }
     }
 
@@ -119,7 +119,6 @@ public:
       throw std::runtime_error("Reached maximum retries while trying to fetch manifest");
     }
 
-    tryReconfig(manifest, "scanner", "sensor_ip", config->sensor_ip);
     tryReconfig(
       manifest, "scanner", "dithering_enable_ego_speed", config->dithering_enable_ego_speed);
     tryReconfig(manifest, "scanner", "dithering_pattern_option", config->dithering_pattern_option);
@@ -190,11 +189,12 @@ private:
     logger_->info("Set " + node_name + "." + key + " to " + value_str);
   }
 
-  static std::shared_ptr<ReconfigParser> makeReconfigApi(const aeva::Aeries2Config & config)
+  static std::shared_ptr<ReconfigParser> makeReconfigApi(
+    const aeva::Aeries2Config & config, const std::shared_ptr<loggers::Logger> & logger)
   {
     return std::make_shared<ReconfigParser>(
       std::make_shared<TcpStream>(config.sensor_ip, 41007),
-      std::make_shared<TcpSender>(config.sensor_ip, 21901));
+      std::make_shared<TcpSender>(config.sensor_ip, 21901), logger->child("ReconfigApi"));
   }
 
   static std::shared_ptr<PointcloudParser> makepointcloudApi(const aeva::Aeries2Config & config)

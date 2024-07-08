@@ -17,6 +17,7 @@
 #include <nebula_hw_interfaces/nebula_hw_interfaces_aeva/aeva_hw_interface.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_common/connections/stream_buffer.hpp>
 #include <nlohmann/json_fwd.hpp>
+#include <rclcpp/logger.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/qos.hpp>
 
@@ -228,7 +229,7 @@ rcl_interfaces::msg::SetParametersResult AevaRosWrapper::onParameterChange(
   const std::vector<rclcpp::Parameter> & p)
 {
   using rcl_interfaces::msg::SetParametersResult;
-  Aeries2Config config;
+  Aeries2Config config = *sensor_cfg_ptr_;
 
   bool got_any =
     get_param(p, "dithering_enable_ego_speed", config.dithering_enable_ego_speed) |
