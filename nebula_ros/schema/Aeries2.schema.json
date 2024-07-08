@@ -16,7 +16,7 @@
         },
         "frame_id": {
           "$ref": "sub/topic.json#/definitions/frame_id",
-          "default": "aeva"
+          "default": "nebula"
         },
         "sensor_model": {
           "$ref": "sub/lidar_aeva.json#/definitions/sensor_model",
