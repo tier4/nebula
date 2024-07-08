@@ -117,7 +117,7 @@ target_include_directories(nebula_decoders_continental PUBLIC
 
 # Aeva
 add_library(nebula_decoders_aeva SHARED
-src/nebula_decoders_aeva/aeva_aries2_decoder.cpp
+src/nebula_decoders_aeva/aeva_aeries2_decoder.cpp
 
 )
 target_link_libraries(nebula_decoders_aeva PUBLIC

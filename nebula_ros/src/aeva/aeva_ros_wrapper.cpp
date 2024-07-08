@@ -13,7 +13,7 @@
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/nebula_status.hpp>
 #include <nebula_common/util/parsing.hpp>
-#include <nebula_decoders/nebula_decoders_aeva/aeva_aries2_decoder.hpp>
+#include <nebula_decoders/nebula_decoders_aeva/aeva_aeries2_decoder.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_aeva/aeva_hw_interface.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_common/connections/stream_buffer.hpp>
 #include <nlohmann/json_fwd.hpp>
@@ -37,12 +37,12 @@
 
 namespace nebula::ros
 {
-using drivers::AevaAries2Decoder;
+using drivers::AevaAeries2Decoder;
 using drivers::aeva::Aeries2Config;
 using drivers::connections::PointcloudParser;
 using nlohmann::json;
 using namespace std::chrono_literals;  // NOLINT
-using AevaPointCloudUniquePtr = AevaAries2Decoder::AevaPointCloudUniquePtr;
+using AevaPointCloudUniquePtr = AevaAeries2Decoder::AevaPointCloudUniquePtr;
 
 AevaRosWrapper::AevaRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("aeva_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true))
@@ -132,7 +132,7 @@ AevaRosWrapper::AevaRosWrapper(const rclcpp::NodeOptions & options)
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "Missed pointcloud output deadline");
   });
 
-  AevaAries2Decoder::callback_t pointcloud_cb =
+  AevaAeries2Decoder::callback_t pointcloud_cb =
     [&](AevaPointCloudUniquePtr cloud_ptr, auto timestamp) {
       auto now = this->now();
       cloud_watchdog_->update();

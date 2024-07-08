@@ -1,13 +1,13 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_decoders/nebula_decoders_aeva/aeva_aries2_decoder.hpp"
+#include "nebula_decoders/nebula_decoders_aeva/aeva_aeries2_decoder.hpp"
 
 #include <nebula_common/nebula_common.hpp>
 
 namespace nebula::drivers
 {
 
-void AevaAries2Decoder::processPointcloudMessage(const aeva::PointCloudMessage & message)
+void AevaAeries2Decoder::processPointcloudMessage(const aeva::PointCloudMessage & message)
 {
   DecoderState state{
     message.header.frame_sync_index, message.header.ns_per_index, message.header.line_index, 0,
@@ -82,7 +82,7 @@ void AevaAries2Decoder::processPointcloudMessage(const aeva::PointCloudMessage &
   }
 }
 
-void AevaAries2Decoder::registerPointCloudCallback(
+void AevaAeries2Decoder::registerPointCloudCallback(
   std::function<void(std::unique_ptr<AevaPointCloud>, uint64_t)> callback)
 {
   std::lock_guard lock(mtx_callback_);
