@@ -19,6 +19,7 @@
 
 #include <nebula_common/aeva/packet_types.hpp>
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -150,20 +151,26 @@ class AevaParser : public ObservableByteStream
 {
 public:
   explicit AevaParser(std::shared_ptr<PullableByteStream> incoming_byte_stream)
-  : incoming_(std::move(incoming_byte_stream))
+  : incoming_(std::move(incoming_byte_stream)), running_(true)
   {
     if (!incoming_) {
       throw std::runtime_error("Incoming byte stream cannot be null");
     }
 
     thread_ = std::thread([&]() {
-      while (true) onLowLevelMessage();
+      while (running_) onLowLevelMessage();
     });
   }
 
   void registerBytesCallback(callback_t callback) override
   {
     bytes_callback_ = std::move(callback);
+  }
+
+  ~AevaParser() override
+  {
+    running_ = false;
+    thread_.join();
   }
 
 protected:
@@ -203,6 +210,8 @@ protected:
 
 private:
   std::thread thread_;
+  std::atomic_bool running_;
+
   std::shared_ptr<PullableByteStream> incoming_;
   callback_t bytes_callback_;
 };
