@@ -104,11 +104,13 @@ bool SeyondDecoder::IsPacketValid(const std::vector<uint8_t> & buffer)
   uint16_t magic_number = ((buffer[1] << 8) | buffer[0]);
   uint16_t packet_type = buffer[kSeyondPktTypeIndex];
 
-
   // check packet is data packet
   // TODO(drwnz): [Falcon] sometimes report data packet as 51 not 1.
-  // TODO(drwnz): [Falcon] here packet size check is used to prevent un-decodable short data packet causing errors.
-  if ((magic_number != kSeyondMagicNumberDataPacket) || (packet_type == 2) || (packet_type == 3) || (send_packet_size < 60)) {
+  // TODO(drwnz): [Falcon] here packet size check is used to prevent un-decodable short data packet
+  // causing errors.
+  if (
+    (magic_number != kSeyondMagicNumberDataPacket) || (packet_type == 2) || (packet_type == 3) ||
+    (send_packet_size < 60)) {
     return false;
   }
 
@@ -166,12 +168,20 @@ int SeyondDecoder::unpack(const std::vector<uint8_t> & packet)
   }
 
   // Publish the whole frame data if scan is complete
+  // TODO(drwnz): have to handl eout-of-order packets. Currently just tossing anything that arrives out of order.
   if (current_packet_id_ != packet_id) {
-    // std::cout << "Old packet ID: " << current_packet_id_ << ", New packet ID: " << packet_id << std::endl;
-    std::swap(decode_pc_, output_pc_);
-    decode_pc_->clear();
-    has_scanned_ = true;
-    current_packet_id_ = packet_id;
+    // std::cout << "Old packet ID: " << current_packet_id_ << ", New packet ID: " << packet_id <<
+    // " No. points: " << decode_pc_->size() << std::endl;
+    if ((current_packet_id_ < packet_id) || (packet_id == 0)) {
+      std::swap(decode_pc_, output_pc_);
+      decode_pc_->clear();
+      has_scanned_ = true;
+      current_packet_id_ = packet_id;
+    }
+    else {
+      std::cout << "packet arrived out of order, discarded" << std::endl;
+      return -1;
+    }
   }
 
   const SeyondDataPacket * seyond_pkt =
