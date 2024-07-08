@@ -173,7 +173,7 @@ public:
       const velodyne_packet::raw_block_t & current_block = raw->blocks[block];
 
       uint bank_origin = 0;
-      bank_origin = sensor_.getBank(bank_origin, current_block.header);
+      bank_origin = sensor_.getBank(bank_origin, current_block.flag);
 
       float azimuth_diff;
       uint16_t azimuth;
@@ -213,24 +213,16 @@ public:
             continue;
           }
 
-      for (int firing_seq = 0, k = 0;
-            firing_seq <
-            std::max(static_cast<int>(SensorT::firing_sequences_per_block), static_cast<int>(1));
-            firing_seq++) {
-        for (int channel = 0;
-              channel < velodyne_packet::CHANNELS_PER_BLOCK && channel < SensorT::channels_per_firing_sequence;
-              channel++, k += velodyne_packet::RAW_CHANNEL_SIZE) {
-          union velodyne_packet::two_bytes current_return;
-          union velodyne_packet::two_bytes other_return;
+        for (int unit_idx = 0; unit_idx < velodyne_packet::CHANNELS_PER_BLOCK; ++unit_idx) {
+          uint16_t current_distance;
+          uint16_t other_distance;
+          int firing_seq = sensor_.getFiringOrder(unit_idx, SensorT::channels_per_firing_sequence);
+          int channel = sensor_.getChannelNumber(unit_idx);
 
           // Distance extraction.
-          current_return.bytes[0] = current_block.units[k];
-          current_return.bytes[1] = current_block.units[k + 1];
+          current_distance = current_block.units[unit_idx].distance;
           if (dual_return) {
-            other_return.bytes[0] =
-              block % 2 ? raw->blocks[block - 1].units[k] : raw->blocks[block + 1].units[k];
-            other_return.bytes[1] =
-              block % 2 ? raw->blocks[block - 1].units[k + 1] : raw->blocks[block + 1].units[k + 1];
+            other_distance = block % 2 ? raw->blocks[block - 1].units[unit_idx].distance : raw->blocks[block + 1].units[unit_idx].distance;
           }
 
           // Apply timestamp if this is the first new packet in the scan.
@@ -242,9 +234,8 @@ public:
           // Do not process if there is no return, or in dual return mode and the first and last
           // echos are the same.
           if (
-            (current_return.bytes[0] == 0 && current_return.bytes[1] == 0) ||
-            (dual_return && block % 2 && other_return.bytes[0] == current_return.bytes[0] &&
-              other_return.bytes[1] == current_return.bytes[1])) {
+            (current_distance == 0) ||
+            (dual_return && block % 2 && current_distance == other_distance)) {
             continue;
           }
 
@@ -257,7 +248,7 @@ public:
           VelodyneLaserCorrection & corrections =
             calibration_configuration_->velodyne_calibration.laser_corrections[laser_number];
 
-          float distance = current_return.uint * SensorT::distance_resolution_m;
+          float distance = current_distance * SensorT::distance_resolution_m;
           if (distance > 1e-6) {
             distance += corrections.dist_correction;
           }
@@ -292,7 +283,7 @@ public:
           const float y_coord = -(xy_distance * sin_rot_angle);  // velodyne x
           const float z_coord = distance * sin_vert_angle;                // velodyne z
 
-          const uint8_t intensity = current_block.units[k + 2];
+          const uint8_t intensity = current_block.units[unit_idx].reflectivity;
 
           last_block_timestamp_ = block_timestamp;
 
@@ -303,18 +294,16 @@ public:
           switch (return_mode) {
             case velodyne_packet::RETURN_MODE_DUAL:
               if (
-                (other_return.bytes[0] == 0 && other_return.bytes[1] == 0) ||
-                (other_return.bytes[0] == current_return.bytes[0] &&
-                  other_return.bytes[1] == current_return.bytes[1])) {
+                (other_distance == 0) ||
+                (other_distance == current_distance)) {
                 return_type = static_cast<uint8_t>(drivers::ReturnType::IDENTICAL);
               } else {
-                const float other_intensity = block % 2 ? raw->blocks[block - 1].units[k + 2]
-                                                          : raw->blocks[block + 1].units[k + 2];
+                const float other_intensity = block % 2 ? raw->blocks[block - 1].units[unit_idx].reflectivity
+                                                          : raw->blocks[block + 1].units[unit_idx].reflectivity;
 
                 bool first =
-                  other_return.uint >=
-                  current_return
-                    .uint;  // TODO: understand why this differs from VLP16 original decoder
+                  other_distance >=
+                  current_distance;  // TODO: understand why this differs from VLP16 original decoder
 
                 bool strongest = other_intensity < intensity;
                 if (other_intensity == intensity) {
@@ -358,7 +347,7 @@ public:
           current_point.intensity = intensity;
           scan_pc_->points.emplace_back(current_point);
         }
-      }
+      // }
     }
   }
 
