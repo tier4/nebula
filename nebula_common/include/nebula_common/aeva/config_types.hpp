@@ -15,10 +15,12 @@
 #pragma once
 
 #include "nebula_common/nebula_common.hpp"
+#include "nebula_common/util/parsing.hpp"
 
 #include <nlohmann/json.hpp>
 
 #include <cstdint>
+#include <optional>
 #include <ostream>
 #include <string>
 
@@ -31,6 +33,18 @@ struct Aeries2Config : public SensorConfigurationBase
 {
   std::string sensor_ip;
   json tree;
+
+  [[nodiscard]] std::optional<ReturnMode> getReturnMode() const
+  {
+    auto mode_name = util::get_if_exists<std::string>(tree, {"dsp_control", "second_peak_type"});
+
+    if (!mode_name) return {};
+    if (mode_name == "strongest") return ReturnMode::DUAL_STRONGEST_SECONDSTRONGEST;
+    if (mode_name == "farthest") return ReturnMode::DUAL_STRONGEST_LAST;
+    if (mode_name == "closest") return ReturnMode::DUAL_STRONGEST_FIRST;
+
+    return ReturnMode::UNKNOWN;
+  }
 };
 
 inline std::ostream & operator<<(std::ostream & os, const Aeries2Config & arg)

@@ -22,8 +22,6 @@ void AevaAeries2Decoder::processPointcloudMessage(const aeva::PointCloudMessage 
     }
 
     if (static_cast<ssize_t>(i) == state.new_frame_index) {
-      std::scoped_lock lock(mtx_callback_);
-
       if (callback_) {
         callback_(std::move(cloud_state_.cloud), cloud_state_.timestamp);
       }
@@ -51,19 +49,7 @@ void AevaAeries2Decoder::processPointcloudMessage(const aeva::PointCloudMessage 
     point.azimuth = -raw_point.azimuth.value() * M_PI_2f;
     point.elevation = raw_point.elevation.value() * M_PI_4f;
 
-    ReturnType return_type{ReturnType::UNKNOWN};
-    // TODO(mojomex): Currently, there is no info published by the sensor on which return mode is
-    // active. Here, the default one is hardcoded for now.
-    switch (raw_point.peak_id) {
-      case 0:
-        return_type = ReturnType::STRONGEST;
-        break;
-      case 1:
-        return_type = ReturnType::SECONDSTRONGEST;
-        break;
-      default:
-        return_type = ReturnType::UNKNOWN;
-    }
+    ReturnType return_type = getReturnType(raw_point.peak_id);
 
     point.return_type = static_cast<uint8_t>(return_type);
 
@@ -82,10 +68,32 @@ void AevaAeries2Decoder::processPointcloudMessage(const aeva::PointCloudMessage 
   }
 }
 
+ReturnType AevaAeries2Decoder::getReturnType(uint32_t peak_id)
+{
+  if (peak_id == 0) return ReturnType::STRONGEST;
+  if (peak_id > 1) return ReturnType::UNKNOWN;
+
+  switch (return_mode_.load()) {
+    case ReturnMode::DUAL_STRONGEST_FIRST:
+      return ReturnType::FIRST;
+    case ReturnMode::DUAL_STRONGEST_LAST:
+      return ReturnType::LAST;
+    case ReturnMode::DUAL_STRONGEST_SECONDSTRONGEST:
+      return ReturnType::SECONDSTRONGEST;
+    default:
+      return ReturnType::UNKNOWN;
+  }
+}
+
+void AevaAeries2Decoder::onParameterChange(ReturnMode return_mode)
+{
+  return_mode_.store(return_mode);
+}
+
 void AevaAeries2Decoder::registerPointCloudCallback(
   std::function<void(std::unique_ptr<AevaPointCloud>, uint64_t)> callback)
 {
-  std::lock_guard lock(mtx_callback_);
   callback_ = std::move(callback);
 }
+
 }  // namespace nebula::drivers

@@ -64,6 +64,7 @@ enum class ReturnMode : uint8_t {
   FIRST,
   DUAL_LAST_FIRST,
   DUAL_FIRST_STRONGEST,
+  DUAL_STRONGEST_SECONDSTRONGEST,
   DUAL
 };
 
@@ -196,6 +197,8 @@ inline uint8_t return_mode_to_int(const ReturnMode & mode)
     case ReturnMode::DUAL:
       return 18;
       break;
+    case ReturnMode::DUAL_STRONGEST_SECONDSTRONGEST:
+      return 19;
     default:
     case ReturnMode::UNKNOWN:
       return 0;
@@ -305,6 +308,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnMode 
       break;
     case ReturnMode::DUAL_FIRST_STRONGEST:
       os << "FirstStrongest";
+      break;
+    case ReturnMode::DUAL_STRONGEST_SECONDSTRONGEST:
+      os << "StrongestSecondstrongest";
       break;
     case ReturnMode::DUAL:
       os << "Dual";
