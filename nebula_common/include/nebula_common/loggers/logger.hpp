@@ -15,7 +15,14 @@
 #pragma once
 
 #include <memory>
+#include <sstream>
 #include <string>
+
+#define NEBULA_LOG_STREAM(log_func, stream_args)           \
+  {                                                        \
+    auto msg = (std::stringstream{} << stream_args).str(); \
+    log_func(msg);                                         \
+  }
 
 namespace nebula::drivers::loggers
 {
