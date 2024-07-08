@@ -39,6 +39,16 @@ public:
     return current_block_rotation;
   }
 
+  int getFiringOrder(int channels, int scans_per_firing)
+  {
+    return channels / scans_per_firing;
+  }
+  
+  int getChannelNumber(int unit_idx)
+  {
+    return unit_idx % channels_per_firing_sequence;
+  }
+
   constexpr static int num_maintenance_periods = 0;
 
   constexpr static int num_simultaneous_firings = 2;

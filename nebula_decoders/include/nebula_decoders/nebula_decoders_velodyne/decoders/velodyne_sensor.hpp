@@ -25,6 +25,15 @@ public:
   /// calculate the corrected azimuth from each firing timing.
   virtual uint16_t getAzimuthCorrected(
     uint16_t azimuth, float azimuth_diff, int firing_sequence, int firing_order) = 0;
+
+  /// @brief each VLP calculating sample code and formula in user manual.
+  /// Choose the correct azimuth from the 2 azimuths
+  virtual int getFiringOrder(int channels_per_block, int scans_per_firing) { return 0; }
+
+  /// @brief each VLP calculating sample code and formula in user manual.
+  /// Choose the correct azimuth from the 2 azimuths
+  virtual int getChannelNumber(int unit_idx) { return 0; }
+  
 };
 }  // namespace drivers
 }  // namespace nebula
