@@ -169,30 +169,32 @@ Status AevaRosWrapper::declareAndGetSensorConfigParams()
   config.sensor_model = drivers::SensorModelFromString(raw_sensor_model);
   config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());
   config.frame_id = declare_parameter<std::string>("frame_id", param_read_only());
-  config.dithering_enable_ego_speed =
-    declare_parameter<float>("dithering_enable_ego_speed", param_read_write());
-  config.dithering_pattern_option =
-    declare_parameter<std::string>("dithering_pattern_option", param_read_write());
-  config.ele_offset_rad = declare_parameter<float>("ele_offset_rad", param_read_write());
-  config.elevation_auto_adjustment =
-    declare_parameter<bool>("elevation_auto_adjustment", param_read_write());
-  config.enable_frame_dithering =
-    declare_parameter<bool>("enable_frame_dithering", param_read_write());
-  config.enable_frame_sync = declare_parameter<bool>("enable_frame_sync", param_read_write());
-  config.flip_pattern_vertically =
-    declare_parameter<bool>("flip_pattern_vertically", param_read_write());
-  config.frame_sync_offset_in_ms =
-    declare_parameter<int>("frame_sync_offset_in_ms", param_read_write());
-  config.frame_sync_type = declare_parameter<std::string>("frame_sync_type", param_read_write());
-  config.frame_synchronization_on_rising_edge =
-    declare_parameter<bool>("frame_synchronization_on_rising_edge", param_read_write());
-  config.hfov_adjustment_deg = declare_parameter<float>("hfov_adjustment_deg", param_read_write());
-  config.hfov_rotation_deg = declare_parameter<float>("hfov_rotation_deg", param_read_write());
-  config.highlight_ROI = declare_parameter<bool>("highlight_ROI", param_read_write());
-  config.horizontal_fov_degrees =
-    declare_parameter<std::string>("horizontal_fov_degrees", param_read_write());
-  config.roi_az_offset_rad = declare_parameter<float>("roi_az_offset_rad", param_read_write());
-  config.vertical_pattern = declare_parameter<std::string>("vertical_pattern", param_read_write());
+
+  declareJsonParam<float>("scanner.dithering_enable_ego_speed", config.tree);
+  declareJsonParam<std::string>("scanner.dithering_pattern_option", config.tree);
+  declareJsonParam<float>("scanner.ele_offset_rad", config.tree);
+  declareJsonParam<bool>("scanner.elevation_auto_adjustment", config.tree);
+  declareJsonParam<bool>("scanner.enable_frame_dithering", config.tree);
+  declareJsonParam<bool>("scanner.enable_frame_sync", config.tree);
+  declareJsonParam<bool>("scanner.flip_pattern_vertically", config.tree);
+  declareJsonParam<uint16_t>("scanner.frame_sync_offset_in_ms", config.tree);
+  declareJsonParam<std::string>("scanner.frame_sync_type", config.tree);
+  declareJsonParam<bool>("scanner.frame_synchronization_on_rising_edge", config.tree);
+  declareJsonParam<float>("scanner.hfov_adjustment_deg", config.tree);
+  declareJsonParam<float>("scanner.hfov_rotation_deg", config.tree);
+  declareJsonParam<bool>("scanner.highlight_ROI", config.tree);
+  declareJsonParam<std::string>("scanner.horizontal_fov_degrees", config.tree);
+  declareJsonParam<float>("scanner.roi_az_offset_rad", config.tree);
+  declareJsonParam<std::string>("scanner.vertical_pattern", config.tree);
+  declareJsonParam<std::string>("system_config.range_modes", config.tree);
+  declareJsonParam<std::string>("system_config.sensitivity_mode", config.tree);
+  declareJsonParam<std::string>("system_config.thermal_throttling_setting", config.tree);
+  declareJsonParam<bool>("spc_converter.discard_points_in_ambiguity_region", config.tree);
+  declareJsonParam<bool>("spc_converter.display_all_points", config.tree);
+  declareJsonParam<bool>("spc_converter.enable_min_range_filter", config.tree);
+  declareJsonParam<std::string>("dsp_control.second_peak_type", config.tree);
+  declareJsonParam<bool>("dsp_control.use_foveated_velocity_bias", config.tree);
+  declareJsonParam<std::string>("dsp_control.velocity_bias_pattern_options", config.tree);
 
   auto new_cfg_ptr = std::make_shared<const Aeries2Config>(config);
   return validateAndSetConfig(new_cfg_ptr);
@@ -232,23 +234,31 @@ rcl_interfaces::msg::SetParametersResult AevaRosWrapper::onParameterChange(
   Aeries2Config config = *sensor_cfg_ptr_;
 
   bool got_any =
-    get_param(p, "dithering_enable_ego_speed", config.dithering_enable_ego_speed) |
-    get_param(p, "dithering_pattern_option", config.dithering_pattern_option) |
-    get_param(p, "ele_offset_rad", config.ele_offset_rad) |
-    get_param(p, "elevation_auto_adjustment", config.elevation_auto_adjustment) |
-    get_param(p, "enable_frame_dithering", config.enable_frame_dithering) |
-    get_param(p, "enable_frame_sync", config.enable_frame_sync) |
-    get_param(p, "flip_pattern_vertically", config.flip_pattern_vertically) |
-    get_param(p, "frame_sync_offset_in_ms", config.frame_sync_offset_in_ms) |
-    get_param(p, "frame_sync_type", config.frame_sync_type) |
-    get_param(
-      p, "frame_synchronization_on_rising_edge", config.frame_synchronization_on_rising_edge) |
-    get_param(p, "hfov_adjustment_deg", config.hfov_adjustment_deg) |
-    get_param(p, "hfov_rotation_deg", config.hfov_rotation_deg) |
-    get_param(p, "highlight_ROI", config.highlight_ROI) |
-    get_param(p, "horizontal_fov_degrees", config.horizontal_fov_degrees) |
-    get_param(p, "roi_az_offset_rad", config.roi_az_offset_rad) |
-    get_param(p, "vertical_pattern", config.vertical_pattern);
+    getJsonParam<float>(p, "scanner.dithering_enable_ego_speed", config.tree) |
+    getJsonParam<std::string>(p, "scanner.dithering_pattern_option", config.tree) |
+    getJsonParam<float>(p, "scanner.ele_offset_rad", config.tree) |
+    getJsonParam<bool>(p, "scanner.elevation_auto_adjustment", config.tree) |
+    getJsonParam<bool>(p, "scanner.enable_frame_dithering", config.tree) |
+    getJsonParam<bool>(p, "scanner.enable_frame_sync", config.tree) |
+    getJsonParam<bool>(p, "scanner.flip_pattern_vertically", config.tree) |
+    getJsonParam<uint16_t>(p, "scanner.frame_sync_offset_in_ms", config.tree) |
+    getJsonParam<std::string>(p, "scanner.frame_sync_type", config.tree) |
+    getJsonParam<bool>(p, "scanner.frame_synchronization_on_rising_edge", config.tree) |
+    getJsonParam<float>(p, "scanner.hfov_adjustment_deg", config.tree) |
+    getJsonParam<float>(p, "scanner.hfov_rotation_deg", config.tree) |
+    getJsonParam<bool>(p, "scanner.highlight_ROI", config.tree) |
+    getJsonParam<std::string>(p, "scanner.horizontal_fov_degrees", config.tree) |
+    getJsonParam<float>(p, "scanner.roi_az_offset_rad", config.tree) |
+    getJsonParam<std::string>(p, "scanner.vertical_pattern", config.tree) |
+    getJsonParam<std::string>(p, "system_config.range_modes", config.tree) |
+    getJsonParam<std::string>(p, "system_config.sensitivity_mode", config.tree) |
+    getJsonParam<std::string>(p, "system_config.thermal_throttling_setting", config.tree) |
+    getJsonParam<bool>(p, "spc_converter.discard_points_in_ambiguity_region", config.tree) |
+    getJsonParam<bool>(p, "spc_converter.display_all_points", config.tree) |
+    getJsonParam<bool>(p, "spc_converter.enable_min_range_filter", config.tree) |
+    getJsonParam<std::string>(p, "dsp_control.second_peak_type", config.tree) |
+    getJsonParam<bool>(p, "dsp_control.use_foveated_velocity_bias", config.tree) |
+    getJsonParam<std::string>(p, "dsp_control.velocity_bias_pattern_options", config.tree);
 
   if (!got_any) {
     return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
