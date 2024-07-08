@@ -2,7 +2,7 @@
   ros__parameters:
     sensor_ip: 192.168.2.201
     launch_hw: true
-    frame_id: aeva
+    frame_id: nebula
     sensor_model: Aeries2
     setup_sensor: true
     diag_span: 1000
