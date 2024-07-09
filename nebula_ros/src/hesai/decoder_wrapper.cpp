@@ -3,6 +3,8 @@
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
+#include <rclcpp/logging.hpp>
+#include <rclcpp/time.hpp>
 
 #include <memory>
 
@@ -20,6 +22,7 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration)
 : status_(nebula::Status::NOT_INITIALIZED),
   logger_(parent_node->get_logger().get_child("HesaiDecoder")),
+  parent_node_(*parent_node),
   sensor_cfg_(config),
   calibration_cfg_ptr_(calibration)
 {
@@ -126,6 +129,9 @@ void HesaiDecoderWrapper::ProcessCloudPacket(
   }
 
   cloud_watchdog_->update();
+
+  auto sys_pc_time_diff = parent_node_.now().seconds() - std::get<1>(pointcloud_ts);
+  RCLCPP_INFO_STREAM(logger_, "#DIFF(s) = " << std::setprecision(6) << std::setfill('0') << std::setw(9) << sys_pc_time_diff);
 
   // Publish scan message only if it has been written to
   if (current_scan_msg_ && !current_scan_msg_->packets.empty()) {

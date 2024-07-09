@@ -67,6 +67,7 @@ private:
 
   nebula::Status status_;
   rclcpp::Logger logger_;
+  rclcpp::Node & parent_node_;
 
   const std::shared_ptr<nebula::drivers::HesaiHwInterface> hw_interface_;
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> sensor_cfg_;
