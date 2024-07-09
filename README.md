@@ -28,7 +28,7 @@ Nebula builds with ROS 2 Galactic and Humble.
 > **Note**
 >
 > Boost version 1.74.0 or later is required. A manual install may be required in Ubuntu versions earlier than 22.04.
-
+>
 > **Note**
 >
 > A [TCP enabled version of ROS' Transport Driver](https://github.com/mojomex/transport_drivers/tree/mutable-buffer-in-udp-callback) is required to use Nebula.
