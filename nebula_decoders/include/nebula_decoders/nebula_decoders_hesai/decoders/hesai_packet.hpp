@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <ctime>
+#include <stdexcept>
 
 namespace nebula
 {

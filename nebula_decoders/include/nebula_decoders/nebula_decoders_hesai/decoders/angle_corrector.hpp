@@ -49,10 +49,42 @@ public:
   /// @return The corrected angles (azimuth, elevation) in radians and their sin/cos values
   virtual CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) = 0;
 
-  /// @brief Returns whether the given block (azimuth) is the last in the current scan
-  /// @param block_azimuth The current azimuth value in the sensor's angle resolution
-  /// @return true if the current azimuth is the last in the current scan, false otherwise
-  virtual bool blockCompletesScan(uint32_t block_azimuth, uint32_t last_azimuth) = 0;
+  /**
+   * @brief Determines whether the given channel passed the end angle of the FoV when going from
+   * `last_raw_azimuth` to `current_raw_azimuth`.
+   *
+   * @param current_raw_azimuth The current raw block azimuth
+   * @param last_raw_azimuth the last processed block azimuth
+   * @param channel_id The channel's ID
+   * @return true if the channel passed the FoV end angle
+   * @return false otherwise
+   */
+  [[nodiscard]] virtual bool didChannelPassFovEnd(
+    uint32_t current_raw_azimuth, uint32_t last_raw_azimuth, uint32_t channel_id) const = 0;
+
+  /**
+   * @brief Determines whether the given channel passed the start angle of the FoV when going from
+   * `last_raw_azimuth` to `current_raw_azimuth`.
+   *
+   * @param current_raw_azimuth The current raw block azimuth
+   * @param last_raw_azimuth the last processed block azimuth
+   * @param channel_id The channel's ID
+   * @return true if the channel passed the FoV start angle
+   * @return false otherwise
+   */
+  [[nodiscard]] virtual bool didChannelPassFovStart(
+    uint32_t current_raw_azimuth, uint32_t last_raw_azimuth, uint32_t channel_id) const = 0;
+
+  /**
+   * @brief Determines if the given channel's corrected azimuth is within FoV bounds for the given
+   * `raw_azimuth`
+   *
+   * @param raw_azimuth The raw block azimuth
+   * @param channel_id The channel's ID
+   * @return true if the channel is within FoV bounds
+   * @return false otherwise
+   */
+  [[nodiscard]] virtual bool isChannelInFov(uint32_t raw_azimuth, uint32_t channel_id) const = 0;
 };
 
 }  // namespace drivers

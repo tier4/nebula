@@ -58,7 +58,7 @@ class AngleCorrectorWrapper
 {
 public:
   virtual bool blockCompletesScan(uint32_t block_azimuth, uint32_t last_azimuth) = 0;
-
+  virtual bool blockStartsScan(uint32_t block_azimuth, uint32_t last_azimuth) = 0;
   virtual float getCorrectedAzimuth(uint32_t block_azimuth, uint32_t channel_id) = 0;
 };
 
@@ -68,14 +68,19 @@ class AngleCorrectorWrapperImpl final : public AngleCorrectorWrapper
 public:
   AngleCorrectorWrapperImpl(
     const std::shared_ptr<const typename T::correction_data_t> & sensor_calibration,
-    float scan_cut_azimuth_rad)
-  : angle_corrector_(sensor_calibration, scan_cut_azimuth_rad)
+    float start_angle_rad, float end_angle_rad)
+  : angle_corrector_(sensor_calibration, start_angle_rad, end_angle_rad)
   {
   }
 
   bool blockCompletesScan(uint32_t block_azimuth, uint32_t last_azimuth) override
   {
-    return angle_corrector_.blockCompletesScan(block_azimuth, last_azimuth);
+    return false;  // todo
+  }
+
+  bool blockStartsScan(uint32_t block_azimuth, uint32_t last_azimuth) override
+  {
+    return false;  // todo
   }
 
   float getCorrectedAzimuth(uint32_t block_azimuth, uint32_t channel_id) override
@@ -94,14 +99,18 @@ protected:
   {
     auto params = GetParam();
 
-    uint16_t cut_angle_deg{};
+    uint16_t scan_start{};
+    uint16_t scan_end{};
+
     if (params.cloud_min_angle == 0 && params.cloud_max_angle == 360) {
-      cut_angle_deg = params.scan_phase;
+      scan_start = scan_end = params.scan_phase;
     } else {
-      cut_angle_deg = params.cloud_max_angle;
+      scan_start = params.cloud_min_angle;
+      scan_end = params.cloud_max_angle;
     }
 
-    cut_angle_rad_ = deg2rad(cut_angle_deg);
+    scan_start_rad_ = deg2rad(scan_start);
+    scan_end_rad_ = deg2rad(scan_end);
 
     auto absolute_path = _SRC_CALIBRATION_DIR_PATH "hesai/" + params.calibration_file_path;
 
@@ -123,22 +132,22 @@ protected:
         case 32:
           angle_corrector_ =
             std::make_shared<AngleCorrectorWrapperImpl<AngleCorrectorCalibrationBased<32, 100>>>(
-              calibration, cut_angle_rad_);
+              calibration, scan_start_rad_, scan_end_rad_);
           break;
         case 40:
           angle_corrector_ =
             std::make_shared<AngleCorrectorWrapperImpl<AngleCorrectorCalibrationBased<40, 100>>>(
-              calibration, cut_angle_rad_);
+              calibration, scan_start_rad_, scan_end_rad_);
           break;
         case 64:
           angle_corrector_ =
             std::make_shared<AngleCorrectorWrapperImpl<AngleCorrectorCalibrationBased<64, 100>>>(
-              calibration, cut_angle_rad_);
+              calibration, scan_start_rad_, scan_end_rad_);
           break;
         case 128:
           angle_corrector_ =
             std::make_shared<AngleCorrectorWrapperImpl<AngleCorrectorCalibrationBased<128, 100>>>(
-              calibration, cut_angle_rad_);
+              calibration, scan_start_rad_, scan_end_rad_);
           break;
         default:
           throw std::runtime_error(
@@ -160,7 +169,7 @@ protected:
 
       angle_corrector_ =
         std::make_shared<AngleCorrectorWrapperImpl<AngleCorrectorCorrectionBased<128, 25600>>>(
-          correction, deg2rad(params.cloud_max_angle));
+          correction, scan_start_rad_, scan_end_rad_);
     }
 
     assert(angle_corrector_);
@@ -169,7 +178,8 @@ protected:
   void TearDown() override {}
 
   std::shared_ptr<AngleCorrectorWrapper> angle_corrector_;
-  float cut_angle_rad_;
+  float scan_start_rad_;
+  float scan_end_rad_;
   int angle_unit_;
   size_t n_channels_;
   size_t n_expected_cuts_;

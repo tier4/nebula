@@ -1,12 +1,8 @@
 #include "hesai_scan_cutting_test.hpp"
 
-#include "nebula_common/nebula_common.hpp"
-
 #include <gtest/gtest.h>
 
-#include <cstdint>
 #include <iomanip>
-#include <ios>
 #include <string>
 
 namespace nebula::test
@@ -29,23 +25,23 @@ TEST_P(ScanCuttingTest, TestAngles)
   for (auto resolution : angle_resolutions) {
     auto step = angle_unit_ / resolution;
     auto last_angle = 360 * angle_unit_ - step;
-    auto n_cuts = 0;
+    auto n_ends = 0;
     for (auto i = 0; i < 360 * angle_unit_; i += step) {
       auto angle = i % (360 * angle_unit_);
-      bool cut = angle_corrector_->blockCompletesScan(angle, last_angle);
+      bool scan_complete = angle_corrector_->blockCompletesScan(angle, last_angle);
 
-      if (cut) {
-        n_cuts++;
+      if (scan_complete) {
+        n_ends++;
 
         for (size_t channel_id = 0; channel_id < n_channels_; ++channel_id) {
           auto corrected_angle_rad = angle_corrector_->getCorrectedAzimuth(angle, channel_id);
-          EXPECT_GT(corrected_angle_rad, cut_angle_rad_);
+          EXPECT_GT(corrected_angle_rad, scan_end_rad_);
         }
 
         bool any_unfinished = false;
         for (size_t channel_id = 0; channel_id < n_channels_; ++channel_id) {
           auto corrected_angle_rad = angle_corrector_->getCorrectedAzimuth(last_angle, channel_id);
-          if (corrected_angle_rad <= cut_angle_rad_) {
+          if (corrected_angle_rad <= scan_end_rad_) {
             any_unfinished = true;
             break;
           }
@@ -56,7 +52,7 @@ TEST_P(ScanCuttingTest, TestAngles)
       last_angle = angle;
     }
 
-    EXPECT_EQ(n_cuts, n_expected_cuts_);
+    EXPECT_EQ(n_ends, n_expected_cuts_);
   }
 }
 
