@@ -49,6 +49,8 @@ private:
   std::array<uint32_t, ChannelN> scan_start_block_azimuths_{};
   std::array<uint32_t, ChannelN> scan_end_block_azimuths_{};
 
+  bool is_360_;
+
 public:
   AngleCorrectorCalibrationBased(
     const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration,
@@ -56,6 +58,8 @@ public:
   {
     std::cout << "Config'd FoV: " << rad2deg(fov_start_azimuth_rad) << " -- "
               << rad2deg(fov_end_azimuth_rad) << std::endl;
+
+    is_360_ = fov_end_azimuth_rad == fov_end_azimuth_rad;
 
     if (sensor_calibration == nullptr) {
       throw std::runtime_error(

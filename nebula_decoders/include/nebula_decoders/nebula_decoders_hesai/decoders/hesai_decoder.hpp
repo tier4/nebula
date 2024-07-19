@@ -272,6 +272,8 @@ public:
 
   int unpack(const std::vector<uint8_t> & packet) override
   {
+    static int starts = 0;
+    static int ends = 0;
     if (!parsePacket(packet)) {
       return -1;
     }
@@ -290,21 +292,21 @@ public:
     const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
       auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
+      convertReturns(block_id, n_returns);
 
       auto cut_events = scan_cutter_.update(block_azimuth);
 
-      if (cut_events.cloud_started) {
-        output_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
-                                    sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
-      }
-
-      convertReturns(block_id, n_returns);
-
       if (cut_events.cloud_ended) {
-        RCLCPP_INFO(logger_, "cut on: %7.3f", block_azimuth / 100.);
+        RCLCPP_INFO(logger_, "[%5d]   END on: %7.3f", ++ends, block_azimuth / 100.);
         std::swap(decode_pc_, output_pc_);
         std::swap(decode_scan_timestamp_ns_, output_scan_timestamp_ns_);
         has_scanned_ = true;
+      }
+
+      if (cut_events.cloud_started) {
+        RCLCPP_INFO(logger_, "[%5d] START on: %7.3f", ++starts, block_azimuth / 100.);
+        decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
+                                    sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
       }
     }
 
