@@ -37,7 +37,7 @@ AevaHwMonitorWrapper::AevaHwMonitorWrapper(
   diag_span_ = parent_node->declare_parameter<uint16_t>("diag_span", 500, param_read_only());
 
   diagnostics_pub_ =
-    parent_node->create_publisher<diagnostic_msgs::msg::DiagnosticArray>("/diagnostics", 10);
+    parent_node->create_publisher<diagnostic_msgs::msg::DiagnosticArray>("diagnostics", 10);
 
   diagnostics_pub_timer_ = parent_node->create_wall_timer(
     std::chrono::milliseconds(diag_span_), [&]() { publishDiagnostics(); });
