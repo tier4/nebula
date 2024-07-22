@@ -16,7 +16,7 @@
 #include <nebula_decoders/nebula_decoders_aeva/aeva_aeries2_decoder.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_aeva/aeva_hw_interface.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_common/connections/stream_buffer.hpp>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <rclcpp/logger.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/qos.hpp>

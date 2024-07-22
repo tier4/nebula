@@ -6,7 +6,7 @@
 
 #include <nebula_common/aeva/packet_types.hpp>
 #include <nebula_common/util/parsing.hpp>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 
 #include <diagnostic_msgs/msg/detail/diagnostic_array__builder.hpp>
 #include <diagnostic_msgs/msg/detail/diagnostic_array__struct.hpp>
