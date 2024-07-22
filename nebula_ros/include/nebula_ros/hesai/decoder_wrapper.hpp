@@ -16,14 +16,18 @@
 
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
+#include "nebula_ros/common/mt_queue.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
 #include "nebula_ros/common/watchdog_timer.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
+#include <nebula_common/point_types.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include "nebula_msgs/msg/detail/nebula_packets__struct.hpp"
 #include "nebula_msgs/msg/nebula_packet.hpp"
+#include "nebula_msgs/msg/nebula_packets.hpp"
 #include "pandar_msgs/msg/pandar_packet.hpp"
 #include "pandar_msgs/msg/pandar_scan.hpp"
 
@@ -31,6 +35,9 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <thread>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace nebula
@@ -63,6 +70,13 @@ public:
   nebula::Status Status();
 
 private:
+  struct PublishData
+  {
+    nebula_msgs::msg::NebulaPackets::UniquePtr packets;
+    drivers::NebulaPointCloudPtr cloud;
+    double cloud_timestamp_s;
+  };
+
   /// @brief Load calibration data from the best available source:
   /// 1. If sensor connected, download and save from sensor
   /// 2. If downloaded file available, load that file
@@ -73,6 +87,8 @@ private:
   /// @return The calibration data if successful, or an error code if not
   get_calibration_result_t GetCalibrationData(
     const std::string & calibration_file_path, bool ignore_others = false);
+
+  void publish(PublishData && data);
 
   void PublishCloud(
     std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
@@ -93,18 +109,21 @@ private:
   const std::shared_ptr<nebula::drivers::HesaiHwInterface> hw_interface_;
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> sensor_cfg_;
 
-  std::string calibration_file_path_{};
-  std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> calibration_cfg_ptr_{};
+  std::string calibration_file_path_;
+  std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> calibration_cfg_ptr_;
 
-  std::shared_ptr<drivers::HesaiDriver> driver_ptr_{};
+  std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
   std::mutex mtx_driver_ptr_;
 
-  rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr packets_pub_{};
-  pandar_msgs::msg::PandarScan::UniquePtr current_scan_msg_{};
+  mt_queue<PublishData> publish_queue_;
+  std::thread pub_thread_;
 
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_{};
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_{};
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_{};
+  rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr packets_pub_;
+  nebula_msgs::msg::NebulaPackets::UniquePtr current_scan_msg_;
+
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_;
 
   std::shared_ptr<WatchdogTimer> cloud_watchdog_;
 };

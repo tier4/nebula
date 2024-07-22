@@ -18,8 +18,6 @@
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
-#include "nebula_ros/common/mt_queue.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 #include "nebula_ros/hesai/hw_interface_wrapper.hpp"
@@ -82,11 +80,6 @@ private:
   Status wrapper_status_;
 
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> sensor_cfg_ptr_{};
-
-  /// @brief Stores received packets that have not been processed yet by the decoder thread
-  mt_queue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
-  /// @brief Thread to isolate decoding from receiving
-  std::thread decoder_thread_;
 
   rclcpp::Subscription<pandar_msgs::msg::PandarScan>::SharedPtr packets_sub_{};
 
