@@ -13,6 +13,8 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32m.hpp"
 
+#include <rclcpp/logging.hpp>
+
 // #define WITH_DEBUG_STD_COUT_HESAI_CLIENT // Use std::cout messages for debugging
 
 namespace nebula
