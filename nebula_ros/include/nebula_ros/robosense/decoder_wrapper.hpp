@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "nebula_ros/common/mt_queue.hpp"
 #include "nebula_ros/common/watchdog_timer.hpp"
 
 #include <nebula_common/nebula_common.hpp>
@@ -24,6 +25,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
+#include <nebula_msgs/msg/nebula_packets.hpp>
 #include <robosense_msgs/msg/robosense_scan.hpp>
 
 #include <chrono>
@@ -51,6 +53,15 @@ public:
   nebula::Status Status();
 
 private:
+  struct PublishData
+  {
+    nebula_msgs::msg::NebulaPackets::UniquePtr packets;
+    drivers::NebulaPointCloudPtr cloud;
+    double cloud_timestamp_s;
+  };
+
+  void publish(PublishData && data);
+
   void PublishCloud(
     std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
     const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher);
@@ -69,17 +80,20 @@ private:
 
   std::shared_ptr<nebula::drivers::RobosenseHwInterface> hw_interface_;
   std::shared_ptr<const drivers::RobosenseSensorConfiguration> sensor_cfg_;
-  std::shared_ptr<const drivers::RobosenseCalibrationConfiguration> calibration_cfg_ptr_{};
+  std::shared_ptr<const drivers::RobosenseCalibrationConfiguration> calibration_cfg_ptr_;
 
   std::shared_ptr<drivers::RobosenseDriver> driver_ptr_;
   std::mutex mtx_driver_ptr_;
 
-  rclcpp::Publisher<robosense_msgs::msg::RobosenseScan>::SharedPtr packets_pub_{};
-  robosense_msgs::msg::RobosenseScan::UniquePtr current_scan_msg_{};
+  rclcpp::Publisher<robosense_msgs::msg::RobosenseScan>::SharedPtr packets_pub_;
+  nebula_msgs::msg::NebulaPackets::UniquePtr current_scan_msg_;
 
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_{};
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_{};
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_{};
+  mt_queue<PublishData> publish_queue_;
+  std::thread pub_thread_;
+
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_;
 
   std::shared_ptr<WatchdogTimer> cloud_watchdog_;
 };

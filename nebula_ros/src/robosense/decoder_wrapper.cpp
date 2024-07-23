@@ -19,7 +19,9 @@ RobosenseDecoderWrapper::RobosenseDecoderWrapper(
   hw_interface_(hw_interface),
   sensor_cfg_(config),
   calibration_cfg_ptr_(calibration),
-  driver_ptr_(new drivers::RobosenseDriver(config, calibration))
+  driver_ptr_(new drivers::RobosenseDriver(config, calibration)),
+  current_scan_msg_(std::make_unique<nebula_msgs::msg::NebulaPackets>()),
+  publish_queue_(1)
 {
   status_ = driver_ptr_->GetStatus();
 
@@ -30,7 +32,6 @@ RobosenseDecoderWrapper::RobosenseDecoderWrapper(
 
   // Publish packets only if HW interface is connected
   if (hw_interface_) {
-    current_scan_msg_ = std::make_unique<robosense_msgs::msg::RobosenseScan>();
     packets_pub_ = parent_node->create_publisher<robosense_msgs::msg::RobosenseScan>(
       "robosense_packets", rclcpp::SensorDataQoS());
   }
@@ -55,24 +56,29 @@ RobosenseDecoderWrapper::RobosenseDecoderWrapper(
         logger_, *parent_node->get_clock(), 5000, "Missed pointcloud output deadline");
     });
 
+  pub_thread_ = std::thread([&]() {
+    while (true) {
+      auto publish_data = publish_queue_.pop();
+      publish(std::move(publish_data));
+    }
+  });
+
   RCLCPP_INFO(logger_, "Initialized decoder wrapper.");
 }
 
 void RobosenseDecoderWrapper::ProcessCloudPacket(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
+  auto & packet = *packet_msg;
+
   // Accumulate packets for recording only if someone is subscribed to the topic (for performance)
-  if (
-    hw_interface_ && (packets_pub_->get_subscription_count() > 0 ||
-                      packets_pub_->get_intra_process_subscription_count() > 0)) {
+  if (hw_interface_) {
     if (current_scan_msg_->packets.size() == 0) {
       current_scan_msg_->header.stamp = packet_msg->stamp;
+      current_scan_msg_->header.frame_id = sensor_cfg_->frame_id;
     }
 
-    robosense_msgs::msg::RobosensePacket robosense_packet_msg{};
-    robosense_packet_msg.stamp = packet_msg->stamp;
-    std::copy(packet_msg->data.begin(), packet_msg->data.end(), robosense_packet_msg.data.begin());
-    current_scan_msg_->packets.emplace_back(std::move(robosense_packet_msg));
+    packet = current_scan_msg_->packets.emplace_back(std::move(*packet_msg));
   }
 
   std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts{};
@@ -80,7 +86,7 @@ void RobosenseDecoderWrapper::ProcessCloudPacket(
 
   {
     std::lock_guard lock(mtx_driver_ptr_);
-    pointcloud_ts = driver_ptr_->ParseCloudPacket(packet_msg->data);
+    pointcloud_ts = driver_ptr_->ParseCloudPacket(packet.data);
     pointcloud = std::get<0>(pointcloud_ts);
   }
 
@@ -88,45 +94,8 @@ void RobosenseDecoderWrapper::ProcessCloudPacket(
     return;
   }
 
-  cloud_watchdog_->update();
-
-  // Publish scan message only if it has been written to
-  if (current_scan_msg_ && !current_scan_msg_->packets.empty()) {
-    packets_pub_->publish(std::move(current_scan_msg_));
-    current_scan_msg_ = std::make_unique<robosense_msgs::msg::RobosenseScan>();
-  }
-
-  if (
-    nebula_points_pub_->get_subscription_count() > 0 ||
-    nebula_points_pub_->get_intra_process_subscription_count() > 0) {
-    auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
-    ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    PublishCloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
-  }
-  if (
-    aw_points_base_pub_->get_subscription_count() > 0 ||
-    aw_points_base_pub_->get_intra_process_subscription_count() > 0) {
-    const auto autoware_cloud_xyzi =
-      nebula::drivers::convertPointXYZIRCAEDTToPointXYZIR(pointcloud);
-    auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*autoware_cloud_xyzi, *ros_pc_msg_ptr);
-    ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    PublishCloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
-  }
-  if (
-    aw_points_ex_pub_->get_subscription_count() > 0 ||
-    aw_points_ex_pub_->get_intra_process_subscription_count() > 0) {
-    const auto autoware_ex_cloud = nebula::drivers::convertPointXYZIRCAEDTToPointXYZIRADT(
-      pointcloud, std::get<1>(pointcloud_ts));
-    auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
-    ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    PublishCloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
-  }
+  publish_queue_.try_push({std::move(current_scan_msg_), pointcloud, std::get<1>(pointcloud_ts)});
+  current_scan_msg_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
 }
 
 void RobosenseDecoderWrapper::OnConfigChange(
@@ -143,6 +112,57 @@ void RobosenseDecoderWrapper::OnConfigChange(
 nebula::Status RobosenseDecoderWrapper::Status()
 {
   return status_;
+}
+
+void RobosenseDecoderWrapper::publish(PublishData && data)
+{
+  auto pointcloud = data.cloud;
+  auto header_stamp = rclcpp::Time(SecondsToChronoNanoSeconds(data.cloud_timestamp_s).count());
+
+  cloud_watchdog_->update();
+
+  // Publish scan message only if it has been written to
+  if (current_scan_msg_ && !current_scan_msg_->packets.empty()) {
+    auto robosense_scan = std::make_unique<robosense_msgs::msg::RobosenseScan>();
+    robosense_scan->header = data.packets->header;
+
+    for (const auto & pkt : data.packets->packets) {
+      auto & robosense_pkt = robosense_scan->packets.emplace_back();
+      robosense_pkt.stamp = pkt.stamp;
+      std::copy(pkt.data.begin(), pkt.data.end(), robosense_pkt.data.begin());
+    }
+
+    packets_pub_->publish(std::move(robosense_scan));
+  }
+
+  if (
+    nebula_points_pub_->get_subscription_count() > 0 ||
+    nebula_points_pub_->get_intra_process_subscription_count() > 0) {
+    auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
+    pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
+    ros_pc_msg_ptr->header.stamp = header_stamp;
+    PublishCloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
+  }
+  if (
+    aw_points_base_pub_->get_subscription_count() > 0 ||
+    aw_points_base_pub_->get_intra_process_subscription_count() > 0) {
+    const auto autoware_cloud_xyzi =
+      nebula::drivers::convertPointXYZIRCAEDTToPointXYZIR(pointcloud);
+    auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
+    pcl::toROSMsg(*autoware_cloud_xyzi, *ros_pc_msg_ptr);
+    ros_pc_msg_ptr->header.stamp = header_stamp;
+    PublishCloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
+  }
+  if (
+    aw_points_ex_pub_->get_subscription_count() > 0 ||
+    aw_points_ex_pub_->get_intra_process_subscription_count() > 0) {
+    const auto autoware_ex_cloud =
+      nebula::drivers::convertPointXYZIRCAEDTToPointXYZIRADT(pointcloud, data.cloud_timestamp_s);
+    auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
+    pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
+    ros_pc_msg_ptr->header.stamp = header_stamp;
+    PublishCloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
+  }
 }
 
 void RobosenseDecoderWrapper::PublishCloud(

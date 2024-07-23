@@ -13,11 +13,7 @@ namespace ros
 RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("robosense_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   wrapper_status_(Status::NOT_INITIALIZED),
-  sensor_cfg_ptr_(nullptr),
-  packet_queue_(3000),
-  hw_interface_wrapper_(),
-  hw_monitor_wrapper_(),
-  decoder_wrapper_()
+  sensor_cfg_ptr_(nullptr)
 {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
@@ -39,12 +35,6 @@ RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
   }
 
   RCLCPP_DEBUG(get_logger(), "Starting stream");
-
-  decoder_thread_ = std::thread([this]() {
-    while (true) {
-      decoder_wrapper_->ProcessCloudPacket(packet_queue_.pop());
-    }
-  });
 
   if (launch_hw_) {
     hw_interface_wrapper_->HwInterface()->RegisterScanCallback(
@@ -144,7 +134,7 @@ void RobosenseRosWrapper::ReceiveScanMessageCallback(
     nebula_pkt_ptr->stamp = pkt.stamp;
     std::copy(pkt.data.begin(), pkt.data.end(), std::back_inserter(nebula_pkt_ptr->data));
 
-    packet_queue_.push(std::move(nebula_pkt_ptr));
+    decoder_wrapper_->ProcessCloudPacket(std::move(nebula_pkt_ptr));
   }
 }
 
@@ -281,9 +271,7 @@ void RobosenseRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & pack
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
   msg_ptr->data.swap(packet);
 
-  if (!packet_queue_.try_push(std::move(msg_ptr))) {
-    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");
-  }
+  decoder_wrapper_->ProcessCloudPacket(std::move(msg_ptr));
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(RobosenseRosWrapper)
