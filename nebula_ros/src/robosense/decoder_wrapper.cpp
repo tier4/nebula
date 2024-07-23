@@ -122,7 +122,7 @@ void RobosenseDecoderWrapper::publish(PublishData && data)
   cloud_watchdog_->update();
 
   // Publish scan message only if it has been written to
-  if (current_scan_msg_ && !current_scan_msg_->packets.empty()) {
+  if (!data.packets->packets.empty()) {
     auto robosense_scan = std::make_unique<robosense_msgs::msg::RobosenseScan>();
     robosense_scan->header = data.packets->header;
 

@@ -207,7 +207,7 @@ void VelodyneDecoderWrapper::publish(PublishData && data)
   cloud_watchdog_->update();
 
   // Publish scan message only if it has been written to
-  if (current_scan_msg_ && !current_scan_msg_->packets.empty()) {
+  if (data.packets->packets.empty()) {
     auto velodyne_scan = std::make_unique<velodyne_msgs::msg::VelodyneScan>();
     velodyne_scan->header = data.packets->header;
 
