@@ -237,7 +237,7 @@ protected:
     if (
       sensor_configuration_->cloud_min_angle == 0 &&
       sensor_configuration_->cloud_max_angle == 360) {
-      auto angle_deg = sensor_configuration_->scan_phase;
+      auto angle_deg = sensor_configuration_->cut_angle;
       start_angle = end_angle = angle_deg;
     } else {
       start_angle = sensor_configuration_->cloud_min_angle;

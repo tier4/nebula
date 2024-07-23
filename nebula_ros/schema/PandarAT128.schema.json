@@ -54,8 +54,14 @@
           "minimum": 30,
           "maximum": 150
         },
-        "scan_phase": {
-          "$ref": "sub/misc.json#/definitions/scan_phase",
+        "sync_angle": {
+          "$ref": "sub/lidar_hesai.json#/definitions/sync_angle",
+          "default": "30",
+          "minimum": 30,
+          "maximum": 150
+        },
+        "cut_angle": {
+          "$ref": "sub/lidar_hesai.json#/definitions/cut_angle",
           "default": "30.0",
           "minimum": 30.0,
           "maximum": 150.0
@@ -118,7 +124,8 @@
         "correction_file",
         "cloud_min_angle",
         "cloud_max_angle",
-        "scan_phase",
+        "sync_angle",
+        "cut_angle",
         "sensor_model",
         "calibration_file",
         "rotation_speed",

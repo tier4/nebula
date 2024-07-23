@@ -357,8 +357,13 @@ Status HesaiHwInterface::SetSpinRate(uint16_t rpm)
 
 Status HesaiHwInterface::SetSyncAngle(int sync_angle, int angle)
 {
+  if (sync_angle < 0 || sync_angle > 360) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
   std::vector<unsigned char> request_payload;
-  request_payload.emplace_back(sync_angle & 0xff);
+  // 360 is converted to 0
+  request_payload.emplace_back((sync_angle % 360) & 0xff);
   request_payload.emplace_back((angle >> 8) & 0xff);
   request_payload.emplace_back(angle & 0xff);
 
@@ -910,17 +915,18 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 
   if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128) {
     set_flg = true;
-    auto sync_angle = static_cast<int>(hesai_config.sync_angle.value() / 100);
-    auto scan_phase = static_cast<int>(sensor_configuration->scan_phase);
+    auto sensor_sync_angle = static_cast<int>(hesai_config.sync_angle.value() / 100);
+    auto config_sync_angle = sensor_configuration->sync_angle;
     int sync_flg = 1;
-    if (scan_phase != sync_angle) {
+    if (config_sync_angle != sensor_sync_angle) {
       set_flg = true;
     }
     if (sync_flg && set_flg) {
       PrintInfo("current lidar sync: " + std::to_string(hesai_config.sync));
-      PrintInfo("current lidar sync_angle: " + std::to_string(sync_angle));
-      PrintInfo("current configuration scan_phase: " + std::to_string(scan_phase));
-      std::thread t([this, sync_flg, scan_phase] { SetSyncAngle(sync_flg, scan_phase); });
+      PrintInfo("current lidar sync_angle: " + std::to_string(sensor_sync_angle));
+      PrintInfo("current configuration sync_angle: " + std::to_string(config_sync_angle));
+      std::thread t(
+        [this, sync_flg, config_sync_angle] { SetSyncAngle(sync_flg, config_sync_angle); });
       t.join();
       std::this_thread::sleep_for(wait_time);
     }
@@ -956,7 +962,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     std::this_thread::sleep_for(wait_time);
   } else {  // AT128 only supports PTP setup via HTTP
     PrintInfo("Trying to set SyncAngle via HTTP");
-    SetSyncAngleSyncHttp(1, static_cast<int>(sensor_configuration->scan_phase));
+    SetSyncAngleSyncHttp(1, sensor_configuration->sync_angle);
     std::ostringstream tmp_ostringstream;
     tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
                       << ", Domain: " << sensor_configuration->ptp_domain

@@ -110,9 +110,14 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.])";
     descriptor.floating_point_range = float_range(0, 360, 0.01);
-    config.scan_phase = declare_parameter<double>("scan_phase", descriptor);
+    config.cut_angle = declare_parameter<double>("cut_angle", descriptor);
+  }
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
+    descriptor.integer_range = int_range(0, 360, 1);
+    config.sync_angle = declare_parameter<uint16_t>("sync_angle", descriptor);
   }
 
   config.min_range = declare_parameter<double>("min_range", param_read_write());
@@ -286,8 +291,8 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
 
   bool got_any =
     get_param(p, "return_mode", _return_mode) | get_param(p, "frame_id", new_cfg.frame_id) |
-    get_param(p, "scan_phase", new_cfg.scan_phase) | get_param(p, "min_range", new_cfg.min_range) |
-    get_param(p, "max_range", new_cfg.max_range) |
+    get_param(p, "sync_angle", new_cfg.sync_angle) | get_param(p, "cut_angle", new_cfg.cut_angle) |
+    get_param(p, "min_range", new_cfg.min_range) | get_param(p, "max_range", new_cfg.max_range) |
     get_param(p, "rotation_speed", new_cfg.rotation_speed) |
     get_param(p, "cloud_min_angle", new_cfg.cloud_min_angle) |
     get_param(p, "cloud_max_angle", new_cfg.cloud_max_angle) |
