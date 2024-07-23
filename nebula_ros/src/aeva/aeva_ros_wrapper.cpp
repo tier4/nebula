@@ -96,7 +96,7 @@ AevaRosWrapper::AevaRosWrapper(const rclcpp::NodeOptions & options)
     // ////////////////////////////////////////
     auto packet_stream = std::make_shared<NebulaPacketStream>();
     auto packet_buffer =
-      std::make_shared<drivers::connections::StreamBuffer>(packet_stream, 100, [&]() {
+      std::make_shared<drivers::connections::StreamBuffer>(packet_stream, 1000, [&]() {
         RCLCPP_ERROR_THROTTLE(
           get_logger(), *get_clock(), 1000,
           "Packet stream buffer overflowed, packet loss occurred.");
