@@ -252,7 +252,6 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
           float azimuth_corrected_f = azimuth + (azimuth_diff * vls_128_laser_azimuth_cache_[firing_order]) - corrections.rot_correction * 180.0 / M_PI * 100;
           
           if (azimuth_corrected_f < 0.0){
-            // std::cout << "azimuth_corrected_f: " << azimuth_corrected_f << std::endl;
             azimuth_corrected_f += 36000.0;
           }
           // const int16_t azimuth_corrected = ((int16_t)round(azimuth_corrected_f)) % 36000;
@@ -342,11 +341,6 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               current_point.intensity = intensity;
               scan_pc_->points.emplace_back(current_point);
             }  // 2nd scan area condition
-            else{
-              std::cout << "azimuth_corrected: " << azimuth_corrected << std::endl;
-              std::cout << "cloud_min_angle: " << sensor_configuration_->cloud_min_angle << std::endl;
-              std::cout << "cloud_max_angle: " << sensor_configuration_->cloud_max_angle << std::endl;
-            }
           }    // distance condition
         }      // empty "else"
       }        // (uint j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE)

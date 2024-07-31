@@ -145,7 +145,7 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
   uint8_t return_mode = velodyne_packet.data[RETURN_MODE_INDEX];
   const bool dual_return = (return_mode == RETURN_MODE_DUAL);
 
-  for (int i = 0; i < BLOCKS_PER_PACKET; i++) {
+  for (uint i = 0; i < BLOCKS_PER_PACKET; i++) {
     int bank_origin = 0;
     if (raw->blocks[i].header == LOWER_BANK) {
       // lower bank lasers are [32..63]
@@ -178,7 +178,7 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
                        : last_azimuth_diff;
     }
 
-    for (int j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE) {
+    for (uint j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE) {
       float x, y, z;
       uint8_t intensity;
       const uint8_t laser_number = j + bank_origin;
@@ -232,15 +232,12 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
             raw->blocks[i].rotation >= sensor_configuration_->cloud_min_angle * 100))) {
           const float cos_vert_angle = corrections.cos_vert_correction;
           const float sin_vert_angle = corrections.sin_vert_correction;
-          const float cos_rot_correction = corrections.cos_rot_correction;
-          const float sin_rot_correction = corrections.sin_rot_correction;
-
           float azimuth_corrected_f = azimuth + (azimuth_diff * VLP32_CHANNEL_DURATION / VLP32_SEQ_DURATION * j) - corrections.rot_correction * 180.0 / M_PI * 100;
           if (azimuth_corrected_f < 0) {
             azimuth_corrected_f += 36000;
           }
           const uint16_t azimuth_corrected =
-            (static_cast<uint16_t>(round(azimuth_corrected_f))) % 36000;
+            (static_cast<uint16_t>(std::round(azimuth_corrected_f))) % 36000;
 
           const float cos_rot_angle = cos_rot_table_[azimuth_corrected];
           const float sin_rot_angle = sin_rot_table_[azimuth_corrected];

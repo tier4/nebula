@@ -52,7 +52,6 @@ private:
   float sin_rot_table_[ROTATION_MAX_UNITS];
   float cos_rot_table_[ROTATION_MAX_UNITS];
   float rotation_radians_[ROTATION_MAX_UNITS];
-  // float vlp_32_laser_azimuth_cache_[16];
   std::vector<std::vector<float>> timing_offsets_;
   int phase_;
   int max_pts_;
