@@ -254,8 +254,7 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
           if (azimuth_corrected_f < 0.0){
             azimuth_corrected_f += 36000.0;
           }
-          // const int16_t azimuth_corrected = ((int16_t)round(azimuth_corrected_f)) % 36000;
-          const uint16_t azimuth_corrected = ((uint16_t)round(azimuth_corrected_f)) % 36000;
+          const uint16_t azimuth_corrected = ((uint16_t)std::round(azimuth_corrected_f)) % 36000;
 
           if (
             distance > sensor_configuration_->min_range &&
