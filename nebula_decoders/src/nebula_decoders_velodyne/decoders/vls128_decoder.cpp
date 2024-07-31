@@ -249,8 +249,13 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
           }
 
           // Correct for the laser rotation as a function of timing during the firings.
-          const float azimuth_corrected_f =
-            azimuth + (azimuth_diff * vls_128_laser_azimuth_cache_[firing_order]);
+          float azimuth_corrected_f = azimuth + (azimuth_diff * vls_128_laser_azimuth_cache_[firing_order]) - corrections.rot_correction * 180.0 / M_PI * 100;
+          
+          if (azimuth_corrected_f < 0.0){
+            // std::cout << "azimuth_corrected_f: " << azimuth_corrected_f << std::endl;
+            azimuth_corrected_f += 36000.0;
+          }
+          // const int16_t azimuth_corrected = ((int16_t)round(azimuth_corrected_f)) % 36000;
           const uint16_t azimuth_corrected = ((uint16_t)round(azimuth_corrected_f)) % 36000;
 
           if (
@@ -268,13 +273,8 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               // convert polar coordinates to Euclidean XYZ.
               const float cos_vert_angle = corrections.cos_vert_correction;
               const float sin_vert_angle = corrections.sin_vert_correction;
-              const float cos_rot_correction = corrections.cos_rot_correction;
-              const float sin_rot_correction = corrections.sin_rot_correction;
-
-              const float cos_rot_angle = cos_rot_table_[azimuth_corrected] * cos_rot_correction +
-                                          sin_rot_table_[azimuth_corrected] * sin_rot_correction;
-              const float sin_rot_angle = sin_rot_table_[azimuth_corrected] * cos_rot_correction -
-                                          cos_rot_table_[azimuth_corrected] * sin_rot_correction;
+              const float cos_rot_angle = cos_rot_table_[azimuth_corrected];
+              const float sin_rot_angle = sin_rot_table_[azimuth_corrected];
 
               // Compute the distance in the xy plane (w/o accounting for rotation).
               const float xy_distance = distance * cos_vert_angle;
@@ -342,6 +342,11 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
               current_point.intensity = intensity;
               scan_pc_->points.emplace_back(current_point);
             }  // 2nd scan area condition
+            else{
+              std::cout << "azimuth_corrected: " << azimuth_corrected << std::endl;
+              std::cout << "cloud_min_angle: " << sensor_configuration_->cloud_min_angle << std::endl;
+              std::cout << "cloud_max_angle: " << sensor_configuration_->cloud_max_angle << std::endl;
+            }
           }    // distance condition
         }      // empty "else"
       }        // (uint j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE)
