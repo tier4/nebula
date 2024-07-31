@@ -234,7 +234,6 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
                  VLP16_BLOCK_DURATION) - corrections.rot_correction * 180.0 / M_PI * 100;
           
               if (azimuth_corrected_f < 0.0){
-                // std::cout << "azimuth_corrected_f: " << azimuth_corrected_f << std::endl;
                 azimuth_corrected_f += 36000.0;
               }
               const uint16_t azimuth_corrected =
