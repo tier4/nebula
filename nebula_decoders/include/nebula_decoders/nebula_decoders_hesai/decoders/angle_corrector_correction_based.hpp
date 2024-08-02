@@ -205,7 +205,8 @@ public:
     for (const auto & frame_angles : frame_angle_info_) {
       if (
         angle_is_between(frame_angles.timestamp_reset, frame_angles.scan_emit, current_azimuth) ||
-        angle_is_between(frame_angles.timestamp_reset, frame_angles.scan_emit, last_azimuth)) return true;
+        angle_is_between(frame_angles.timestamp_reset, frame_angles.scan_emit, last_azimuth))
+        return true;
     }
 
     return false;
