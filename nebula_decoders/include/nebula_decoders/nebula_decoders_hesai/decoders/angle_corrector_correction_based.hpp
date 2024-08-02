@@ -73,8 +73,8 @@ private:
 
 public:
   explicit AngleCorrectorCorrectionBased(
-    const std::shared_ptr<const HesaiCorrection> & sensor_correction, float fov_start_azimuth_rad,
-    float fov_end_azimuth_rad)
+    const std::shared_ptr<const HesaiCorrection> & sensor_correction, double fov_start_azimuth_rad,
+    double fov_end_azimuth_rad, double /* scan_cut_azimuth_rad */)
   : correction_(sensor_correction), logger_(rclcpp::get_logger("AngleCorrectorCorrectionBased"))
   {
     if (sensor_correction == nullptr) {
@@ -129,13 +129,17 @@ public:
           }
         }
 
-        assert(start_angle_found);
-        assert(end_angle_found);
+        if (!start_angle_found || !end_angle_found) {
+          throw std::runtime_error("Fatal error while initializing angle correction");
+        }
       }
     }
 
-    assert(scan_start_block_azimuths_.size() == sensor_correction->frameNumber);
-    assert(scan_end_block_azimuths_.size() == sensor_correction->frameNumber);
+    if (
+      scan_start_block_azimuths_.size() != sensor_correction->frameNumber ||
+      scan_end_block_azimuths_.size() != sensor_correction->frameNumber) {
+      throw std::runtime_error("Fatal error while initializing angle correction");
+    }
   }
 
   CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) override
@@ -159,40 +163,25 @@ public:
             cos_[azimuth], sin_[elevation], cos_[elevation]};
   }
 
-  [[nodiscard]] bool didChannelPassFovEnd(
-    uint32_t current_raw_azimuth, uint32_t last_raw_azimuth, uint32_t channel_id) const override
+  bool passedEmitAngle(uint32_t /* last_azimuth */, uint32_t /* current_azimuth */) override
   {
-    for (auto channel_end_azimuths : scan_end_block_azimuths_) {
-      auto raw_end_azimuth = channel_end_azimuths[channel_id];
-      if (angle_is_between(last_raw_azimuth, current_raw_azimuth, raw_end_azimuth, false, true))
-        return true;
-    }
-
-    return false;
+    throw std::runtime_error("not implemented");
   }
 
-  [[nodiscard]] bool didChannelPassFovStart(
-    uint32_t current_raw_azimuth, uint32_t last_raw_azimuth, uint32_t channel_id) const override
+  bool passedTimestampResetAngle(
+    uint32_t /* last_azimuth */, uint32_t /* current_azimuth */) override
   {
-    for (auto channel_start_azimuths : scan_start_block_azimuths_) {
-      auto raw_start_azimuth = channel_start_azimuths[channel_id];
-      if (angle_is_between(last_raw_azimuth, current_raw_azimuth, raw_start_azimuth, false, true))
-        return true;
-    }
-
-    return false;
+    throw std::runtime_error("not implemented");
   }
 
-  [[nodiscard]] bool isChannelInFov(uint32_t raw_azimuth, uint32_t channel_id) const override
+  bool isInsideFoV(uint32_t /* current_azimuth */) override
   {
-    for (size_t frame_id = 0; frame_id < scan_start_block_azimuths_.size(); ++frame_id) {
-      auto raw_start_azimuth = scan_start_block_azimuths_[frame_id][channel_id];
-      auto raw_end_azimuth = scan_end_block_azimuths_[frame_id][channel_id];
+    throw std::runtime_error("not implemented");
+  }
 
-      if (angle_is_between(raw_start_azimuth, raw_end_azimuth, raw_azimuth)) return true;
-    }
-
-    return false;
+  bool isInsideOverlap(uint32_t /* current_azimuth */) override
+  {
+    throw std::runtime_error("not implemented");
   }
 };
 

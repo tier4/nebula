@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <ostream>
 
 namespace nebula
@@ -46,21 +47,18 @@ private:
   std::array<std::array<float, ChannelN>, MAX_AZIMUTH> azimuth_cos_{};
   std::array<std::array<float, ChannelN>, MAX_AZIMUTH> azimuth_sin_{};
 
-  std::array<uint32_t, ChannelN> scan_start_block_azimuths_{};
-  std::array<uint32_t, ChannelN> scan_end_block_azimuths_{};
+  uint32_t emit_angle_raw_;
+  uint32_t timestamp_reset_angle_raw_;
+  uint32_t fov_start_raw_;
+  uint32_t fov_end_raw_;
 
   bool is_360_;
 
 public:
   AngleCorrectorCalibrationBased(
     const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration,
-    float fov_start_azimuth_rad, float fov_end_azimuth_rad)
+    double fov_start_azimuth_deg, double fov_end_azimuth_deg, double scan_cut_azimuth_deg)
   {
-    std::cout << "Config'd FoV: " << rad2deg(fov_start_azimuth_rad) << " -- "
-              << rad2deg(fov_end_azimuth_rad) << std::endl;
-
-    is_360_ = fov_end_azimuth_rad == fov_end_azimuth_rad;
-
     if (sensor_calibration == nullptr) {
       throw std::runtime_error(
         "Cannot instantiate AngleCorrectorCalibrationBased without calibration data");
@@ -70,28 +68,57 @@ public:
     // Elevation lookup tables
     // ////////////////////////////////////////
 
+    int32_t correction_min = INT32_MAX;
+    int32_t correction_max = INT32_MIN;
+
+    auto round_away_from_zero = [](float value) {
+      return (value < 0) ? std::floor(value) : std::ceil(value);
+    };
+
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
       float elevation_angle_deg = sensor_calibration->elev_angle_map.at(channel_id);
       float azimuth_offset_deg = sensor_calibration->azimuth_offset_map.at(channel_id);
+
+      int32_t azimuth_offset_raw = round_away_from_zero(azimuth_offset_deg * AngleUnit);
+      correction_min = std::min(correction_min, azimuth_offset_raw);
+      correction_max = std::max(correction_max, azimuth_offset_raw);
 
       elevation_angle_rad_[channel_id] = deg2rad(elevation_angle_deg);
       azimuth_offset_rad_[channel_id] = deg2rad(azimuth_offset_deg);
 
       elevation_cos_[channel_id] = cosf(elevation_angle_rad_[channel_id]);
       elevation_sin_[channel_id] = sinf(elevation_angle_rad_[channel_id]);
+    }
 
-      // Calculate block azimuth where this channel's corrected azimuth aligns with the FoV start
-      auto start_azimuth_rad = fov_start_azimuth_rad - azimuth_offset_rad_[channel_id];
-      int32_t start_azimuth = std::floor(rad2deg(start_azimuth_rad) * AngleUnit);
-      scan_start_block_azimuths_[channel_id] = normalize_angle<int32_t>(start_azimuth, MAX_AZIMUTH);
+    // ////////////////////////////////////////
+    // Raw azimuth threshold angles
+    // ////////////////////////////////////////
 
-      // Calculate block azimuth where this channel's corrected azimuth aligns with the FoV end
-      auto end_azimuth_rad = fov_end_azimuth_rad - azimuth_offset_rad_[channel_id];
-      int32_t end_azimuth = std::floor(rad2deg(end_azimuth_rad) * AngleUnit);
-      scan_end_block_azimuths_[channel_id] = normalize_angle<int32_t>(end_azimuth, MAX_AZIMUTH);
+    int32_t emit_angle_raw = std::ceil(scan_cut_azimuth_deg * AngleUnit);
+    emit_angle_raw -= correction_min;
+    emit_angle_raw_ = normalize_angle<int32_t>(emit_angle_raw, MAX_AZIMUTH);
 
-      std::cout << "Channel " << channel_id << ": " << scan_start_block_azimuths_[channel_id]
-                << " -- " << scan_end_block_azimuths_[channel_id] << std::endl;
+    int32_t fov_start_raw = std::floor(fov_start_azimuth_deg * AngleUnit);
+    fov_start_raw -= correction_max;
+    fov_start_raw_ = normalize_angle<int32_t>(fov_start_raw, MAX_AZIMUTH);
+
+    int32_t fov_end_raw = std::ceil(fov_end_azimuth_deg * AngleUnit);
+    fov_end_raw -= correction_min;
+    fov_end_raw_ = normalize_angle<int32_t>(fov_end_raw, MAX_AZIMUTH);
+
+    // Reset timestamp on FoV start if FoV < 360 deg and scan is cut at FoV end.
+    // Otherwise, reset timestamp on publish
+    is_360_ =
+      normalize_angle(fov_start_azimuth_deg, 360.) == normalize_angle(fov_end_azimuth_deg, 360.);
+    bool reset_timestamp_on_publish = is_360_ || (normalize_angle(fov_end_azimuth_deg, 360.) !=
+                                                  normalize_angle(scan_cut_azimuth_deg, 360.));
+
+    if (reset_timestamp_on_publish) {
+      int32_t timestamp_reset_angle_raw = std::floor(scan_cut_azimuth_deg * AngleUnit);
+      timestamp_reset_angle_raw -= correction_max;
+      timestamp_reset_angle_raw_ = normalize_angle<int32_t>(timestamp_reset_angle_raw, MAX_AZIMUTH);
+    } else {
+      timestamp_reset_angle_raw_ = fov_start_raw_;
     }
 
     // ////////////////////////////////////////
@@ -114,6 +141,8 @@ public:
   CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) override
   {
     float azimuth_rad = block_azimuth_rad_[block_azimuth] + azimuth_offset_rad_[channel_id];
+    azimuth_rad = normalize_angle(azimuth_rad, M_PIf * 2);
+
     float elevation_rad = elevation_angle_rad_[channel_id];
 
     return {
@@ -125,25 +154,25 @@ public:
       elevation_cos_[channel_id]};
   }
 
-  [[nodiscard]] bool didChannelPassFovEnd(
-    uint32_t current_raw_azimuth, uint32_t last_raw_azimuth, uint32_t channel_id) const override
+  bool passedEmitAngle(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
-    auto end = scan_end_block_azimuths_[channel_id];
-    return angle_is_between(last_raw_azimuth, current_raw_azimuth, end, false, true);
+    return angle_is_between(last_azimuth, current_azimuth, emit_angle_raw_, false);
   }
 
-  [[nodiscard]] bool didChannelPassFovStart(
-    uint32_t current_raw_azimuth, uint32_t last_raw_azimuth, uint32_t channel_id) const override
+  bool passedTimestampResetAngle(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
-    auto start = scan_start_block_azimuths_[channel_id];
-    return angle_is_between(last_raw_azimuth, current_raw_azimuth, start, false, true);
+    return angle_is_between(last_azimuth, current_azimuth, timestamp_reset_angle_raw_, false);
   }
 
-  [[nodiscard]] bool isChannelInFov(uint32_t raw_azimuth, uint32_t channel_id) const override
+  bool isInsideFoV(uint32_t current_azimuth) override
   {
-    auto start = scan_start_block_azimuths_[channel_id];
-    auto end = scan_end_block_azimuths_[channel_id];
-    return angle_is_between(start, end, raw_azimuth);
+    if (is_360_) return true;
+    return angle_is_between(fov_start_raw_, fov_end_raw_ + 10, current_azimuth);
+  }
+
+  bool isInsideOverlap(uint32_t current_azimuth) override
+  {
+    return angle_is_between(timestamp_reset_angle_raw_, emit_angle_raw_ + 10, current_azimuth);
   }
 };
 

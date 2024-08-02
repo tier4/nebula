@@ -14,10 +14,10 @@
 
 #pragma once
 
+#include "nebula_decoders/nebula_decoders_common/angles.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/scan_cutter.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
@@ -26,6 +26,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <memory>
 #include <tuple>
 #include <utility>
@@ -39,6 +40,13 @@ namespace drivers
 template <typename SensorT>
 class HesaiDecoder : public HesaiScanDecoder
 {
+  struct ScanCutAngles
+  {
+    float fov_min;
+    float fov_max;
+    float scan_emit_angle;
+  };
+
 protected:
   /// @brief Configuration for this decoder
   const std::shared_ptr<const drivers::HesaiSensorConfiguration> sensor_configuration_;
@@ -64,7 +72,8 @@ protected:
   /// @brief Whether a full scan has been processed
   bool has_scanned_ = false;
 
-  ScanCutter<SensorT::packet_t::N_CHANNELS, typename SensorT::angle_corrector_t> scan_cutter_;
+  ScanCutAngles scan_cut_angles_;
+  uint32_t last_azimuth_;
 
   rclcpp::Logger logger_;
 
@@ -166,18 +175,30 @@ protected:
         //   }
         // }
 
-        if (!angle_corrector_.isChannelInFov(raw_azimuth, channel_id)) {
+        CorrectedAngleData corrected_angle_data =
+          angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
+        auto azimuth = corrected_angle_data.azimuth_rad;
+
+        bool in_fov = angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.fov_max, azimuth);
+        if (!in_fov) {
           continue;
         }
 
-        bool in_current_scan = scan_cutter_.isInCurrentScan(channel_id);
+        bool in_current_scan = true;
+
+        if (
+          angle_corrector_.isInsideOverlap(raw_azimuth) &&
+          angle_is_between(
+            scan_cut_angles_.scan_emit_angle,
+            scan_cut_angles_.scan_emit_angle + 10.f / 180 * static_cast<float>(M_PI), azimuth)) {
+          in_current_scan = false;
+        }
+
+        // angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.scan_emit_angle, azimuth);
 
         auto pc = in_current_scan ? decode_pc_ : output_pc_;
         auto scan_timestamp_ns =
           in_current_scan ? decode_scan_timestamp_ns_ : output_scan_timestamp_ns_;
-
-        CorrectedAngleData corrected_angle_data =
-          angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
 
         NebulaPoint & point = pc->emplace_back();
         point.distance = distance;
@@ -197,7 +218,7 @@ protected:
 
         // The driver wrapper converts to degrees, expects radians
         point.azimuth = corrected_angle_data.azimuth_rad;
-        point.elevation = corrected_angle_data.elevation_rad;
+        point.elevation = raw_azimuth;
       }
     }
   }
@@ -223,30 +244,6 @@ protected:
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
   }
 
-  /**
-   * @brief Return the appropriate scan cut azimuth based on whether the configured FoV is 360
-   * degrees (use scan phase for cutting) or less (use max angle for cutting).
-   *
-   * @return uint32_t The scan cut azimuth in 10ths of degrees
-   */
-  [[nodiscard]] std::pair<float, float> getFovAnglesRad() const
-  {
-    double start_angle{};
-    double end_angle{};
-
-    if (
-      sensor_configuration_->cloud_min_angle == 0 &&
-      sensor_configuration_->cloud_max_angle == 360) {
-      auto angle_deg = sensor_configuration_->cut_angle;
-      start_angle = end_angle = angle_deg;
-    } else {
-      start_angle = sensor_configuration_->cloud_min_angle;
-      end_angle = sensor_configuration_->cloud_max_angle;
-    }
-
-    return std::make_pair(deg2rad(start_angle), deg2rad(end_angle));
-  }
-
 public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
@@ -256,8 +253,9 @@ public:
     const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> &
       correction_data)
   : sensor_configuration_(sensor_configuration),
-    angle_corrector_(correction_data, getFovAnglesRad().first, getFovAnglesRad().second),
-    scan_cutter_(angle_corrector_),
+    angle_corrector_(
+      correction_data, sensor_configuration_->cloud_min_angle,
+      sensor_configuration_->cloud_max_angle, sensor_configuration_->cut_angle),
     logger_(rclcpp::get_logger("HesaiDecoder"))
   {
     logger_.set_level(rclcpp::Logger::Level::Debug);
@@ -268,6 +266,10 @@ public:
 
     decode_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
+
+    scan_cut_angles_ = {
+      deg2rad(sensor_configuration_->cloud_min_angle),
+      deg2rad(sensor_configuration_->cloud_max_angle), deg2rad(sensor_configuration_->cut_angle)};
   }
 
   int unpack(const std::vector<uint8_t> & packet) override
@@ -292,25 +294,41 @@ public:
     const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
       auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
+
+      if (angle_corrector_.passedTimestampResetAngle(last_azimuth_, block_azimuth)) {
+        RCLCPP_INFO(logger_, "[%5d] START on: %7.3f", ++starts, block_azimuth / 100.);
+
+        if (sensor_configuration_->cut_angle == sensor_configuration_->cloud_max_angle) {
+          decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
+                                      sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
+        } else {
+          output_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
+                                      sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
+        }
+
+        // RCLCPP_INFO(logger_, "[%5d]          out - dec = %7.3f ms", ++starts,
+        // (output_scan_timestamp_ns_ - decode_scan_timestamp_ns_) / 1e6);
+      }
+
+      if (!angle_corrector_.isInsideFoV(block_azimuth)) {
+        continue;
+      }
+
       convertReturns(block_id, n_returns);
 
-      auto cut_events = scan_cutter_.update(block_azimuth);
-
-      if (cut_events.cloud_ended) {
+      if (angle_corrector_.passedEmitAngle(last_azimuth_, block_azimuth)) {
         RCLCPP_INFO(logger_, "[%5d]   END on: %7.3f", ++ends, block_azimuth / 100.);
+
         std::swap(decode_pc_, output_pc_);
         std::swap(decode_scan_timestamp_ns_, output_scan_timestamp_ns_);
+
         has_scanned_ = true;
       }
 
-      if (cut_events.cloud_started) {
-        RCLCPP_INFO(logger_, "[%5d] START on: %7.3f", ++starts, block_azimuth / 100.);
-        decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
-                                    sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
-      }
+      last_azimuth_ = block_azimuth;
     }
 
-    return 0;  // todo
+    return last_azimuth_;
   }
 
   bool hasScanned() override { return has_scanned_; }

@@ -28,7 +28,6 @@ template <typename T>
 bool angle_is_between(
   T start_angle, T end_angle, T angle, bool start_inclusive = true, bool end_inclusive = true)
 {
-  if (start_inclusive && end_inclusive && start_angle == end_angle) return true;
   if (!start_inclusive && angle == start_angle) return false;
   if (!end_inclusive && angle == end_angle) return false;
 
@@ -46,18 +45,6 @@ T normalize_angle(T angle, T max_angle)
 {
   T factor = std::floor((1.0 * angle) / max_angle);
   return angle - (factor * max_angle);
-}
-
-/**
- * @brief Whether `angle` has passed `threshold_angle` in a clockwise rotation. This function
- * defines 'passed' as `angle` being in the half of the circle starting at `threshold_angle`. This
- * function is unit-independent. `max_angle` is 360 for degrees, 2 * M_PI for radians, etc.
- */
-template <typename T>
-bool is_past_angle(T angle, T threshold_angle, T max_angle)
-{
-  T threshold_plus_180 = normalize_angle(threshold_angle + max_angle / 2, max_angle);
-  return angle_is_between(threshold_angle, threshold_plus_180, angle);
 }
 
 }  // namespace nebula::drivers
