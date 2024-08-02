@@ -18,6 +18,8 @@
 #include "nebula_decoders/nebula_decoders_common/angles.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 
+#include <nebula_common/nebula_common.hpp>
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -103,47 +105,45 @@ public:
     // Scan start/end correction lookups
     // ////////////////////////////////////////
 
+    auto fov_start_rad = deg2rad(fov_start_azimuth_deg);
+    auto fov_end_rad = deg2rad(fov_end_azimuth_deg);
+    auto scan_cut_rad = deg2rad(scan_cut_azimuth_deg);
+
     // For each field (= mirror), find the raw block azimuths corresponding FoV start and end
     for (size_t field_id = 0; field_id < correction_->frameNumber; ++field_id) {
       auto frame_start = correction_->startFrame[field_id];
       auto frame_end = correction_->endFrame[field_id];
 
-      // For each channel, find the raw start/end azimuths for the current frame
-      auto & channel_start_azimuths = scan_start_block_azimuths_.emplace_back();
-      auto & channel_end_azimuths = scan_end_block_azimuths_.emplace_back();
-      for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-        auto current_azimuth = frame_start;
-        auto start_angle_found = false;
-        auto end_angle_found = false;
-        for (; current_azimuth != frame_end;
-             current_azimuth = (current_azimuth + 1) % MAX_AZIMUTH) {
-          auto corrected_azimuth = getCorrectedAngleData(current_azimuth, channel_id).azimuth_rad;
+      auto unset = UINT32_MAX;
+      auto & angle_info = frame_angle_info_.emplace_back({unset, unset, unset, unset});
 
-          // First, iterate through azimuths until FoV start is reached, record as start angle.
-          // Then, search for azimuth until the FoV end is reached, record as end angle and end
-          // iteration. In all other cases, skip to the next azimuth,
-          if (!start_angle_found && corrected_azimuth >= deg2rad(fov_start_azimuth_deg)) {
-            start_angle_found = true;
-            channel_start_azimuths[channel_id] = current_azimuth;
-          } else if (!start_angle_found || corrected_azimuth < deg2rad(fov_end_azimuth_deg)) {
-            continue;
-          } else {
-            end_angle_found = true;
-            channel_end_azimuths[channel_id] = current_azimuth;
-            break;
-          }
+      for (uint32_t azimuth = frame_start; azimuth != frame_end;
+           azimuth = (azimuth + 1) % MAX_AZIMUTH) {
+        bool all_geq_fov_start = true;
+        bool all_geq_fov_end = true;
+        bool any_geq_scan_cut = false;
+        bool all_geq_scan_cut = true;
+
+        for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
+          auto corrected_azimuth = getCorrectedAngleData(azimuth, channel_id).azimuth_rad;
+          all_geq_fov_start &= corrected_azimuth >= fov_start_rad;
+          all_geq_fov_end &= corrected_azimuth >= fov_end_rad;
+          all_geq_scan_cut &= corrected_azimuth >= scan_cut_rad;
+          any_geq_scan_cut |= corrected_azimuth >= scan_cut_rad;
         }
 
-        if (!start_angle_found || !end_angle_found) {
-          throw std::runtime_error("Fatal error while initializing angle correction");
-        }
+        if (all_geq_fov_start && angle_info.fov_start != unset) angle_info.fov_start = azimuth;
+        if (all_geq_fov_end && angle_info.fov_end != unset) angle_info.fov_end = azimuth;
+        if (all_geq_scan_cut && angle_info.scan_emit != unset) angle_info.scan_emit = azimuth;
+        if (any_geq_scan_cut && angle_info.timestamp_reset != unset)
+          angle_info.timestamp_reset = azimuth;
       }
-    }
 
-    if (
-      scan_start_block_azimuths_.size() != sensor_correction->frameNumber ||
-      scan_end_block_azimuths_.size() != sensor_correction->frameNumber) {
-      throw std::runtime_error("Fatal error while initializing angle correction");
+      if (
+        angle_info.fov_start == unset || angle_info.fov_end == unset ||
+        angle_info.scan_emit == unset || angle_info.timestamp_reset == unset) {
+        throw std::runtime_error("Not all necessary angles found!");
+      }
     }
   }
 
@@ -170,22 +170,45 @@ public:
 
   bool passedEmitAngle(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
-    throw std::runtime_error("not implemented");
+    for (const auto & frame_angles : frame_angle_info_) {
+      if (angle_is_between(last_azimuth, current_azimuth, frame_angles.scan_emit, false))
+        return true;
+    }
+
+    return false;
   }
 
   bool passedTimestampResetAngle(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
-    throw std::runtime_error("not implemented");
+    for (const auto & frame_angles : frame_angle_info_) {
+      if (angle_is_between(last_azimuth, current_azimuth, frame_angles.timestamp_reset, false))
+        return true;
+    }
+
+    return false;
   }
 
   bool isInsideFoV(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
-    throw std::runtime_error("not implemented");
+    for (const auto & frame_angles : frame_angle_info_) {
+      if (
+        angle_is_between(frame_angles.fov_start, frame_angles.fov_end, current_azimuth) ||
+        angle_is_between(frame_angles.fov_start, frame_angles.fov_end, last_azimuth))
+        return true;
+    }
+
+    return false;
   }
 
   bool isInsideOverlap(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
-    throw std::runtime_error("not implemented");
+    for (const auto & frame_angles : frame_angle_info_) {
+      if (
+        angle_is_between(frame_angles.timestamp_reset, frame_angles.scan_emit, current_azimuth) ||
+        angle_is_between(frame_angles.timestamp_reset, frame_angles.scan_emit, last_azimuth)) return true;
+    }
+
+    return false;
   }
 };
 
