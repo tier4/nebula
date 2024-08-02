@@ -47,10 +47,15 @@ private:
   std::array<float, MAX_AZIMUTH> cos_{};
   std::array<float, MAX_AZIMUTH> sin_{};
 
-  /// For N mirrors (= pointclouds output per 360deg rotation), the vector has length N
-  std::vector<std::array<uint32_t, ChannelN>> scan_start_block_azimuths_;
-  /// For N mirrors (= pointclouds output per 360deg rotation), the vector has length N
-  std::vector<std::array<uint32_t, ChannelN>> scan_end_block_azimuths_;
+  struct FrameAngleInfo
+  {
+    uint32_t fov_start;
+    uint32_t fov_end;
+    uint32_t timestamp_reset;
+    uint32_t scan_emit;
+  };
+
+  std::vector<FrameAngleInfo> frame_angle_info_;
 
   /// @brief For a given azimuth value, find its corresponding output field
   /// @param azimuth The azimuth to get the field for
@@ -73,8 +78,8 @@ private:
 
 public:
   explicit AngleCorrectorCorrectionBased(
-    const std::shared_ptr<const HesaiCorrection> & sensor_correction, double fov_start_azimuth_rad,
-    double fov_end_azimuth_rad, double /* scan_cut_azimuth_rad */)
+    const std::shared_ptr<const HesaiCorrection> & sensor_correction, double fov_start_azimuth_deg,
+    double fov_end_azimuth_deg, double scan_cut_azimuth_deg)
   : correction_(sensor_correction), logger_(rclcpp::get_logger("AngleCorrectorCorrectionBased"))
   {
     if (sensor_correction == nullptr) {
@@ -117,10 +122,10 @@ public:
           // First, iterate through azimuths until FoV start is reached, record as start angle.
           // Then, search for azimuth until the FoV end is reached, record as end angle and end
           // iteration. In all other cases, skip to the next azimuth,
-          if (!start_angle_found && corrected_azimuth >= fov_start_azimuth_rad) {
+          if (!start_angle_found && corrected_azimuth >= deg2rad(fov_start_azimuth_deg)) {
             start_angle_found = true;
             channel_start_azimuths[channel_id] = current_azimuth;
-          } else if (!start_angle_found || corrected_azimuth < fov_end_azimuth_rad) {
+          } else if (!start_angle_found || corrected_azimuth < deg2rad(fov_end_azimuth_deg)) {
             continue;
           } else {
             end_angle_found = true;
@@ -163,23 +168,22 @@ public:
             cos_[azimuth], sin_[elevation], cos_[elevation]};
   }
 
-  bool passedEmitAngle(uint32_t /* last_azimuth */, uint32_t /* current_azimuth */) override
+  bool passedEmitAngle(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
     throw std::runtime_error("not implemented");
   }
 
-  bool passedTimestampResetAngle(
-    uint32_t /* last_azimuth */, uint32_t /* current_azimuth */) override
+  bool passedTimestampResetAngle(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
     throw std::runtime_error("not implemented");
   }
 
-  bool isInsideFoV(uint32_t /* last_azimuth */, uint32_t /* current_azimuth */) override
+  bool isInsideFoV(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
     throw std::runtime_error("not implemented");
   }
 
-  bool isInsideOverlap(uint32_t /* last_azimuth */, uint32_t /* current_azimuth */) override
+  bool isInsideOverlap(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
     throw std::runtime_error("not implemented");
   }
