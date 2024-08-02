@@ -47,6 +47,7 @@ private:
   std::array<std::array<float, ChannelN>, MAX_AZIMUTH> azimuth_cos_{};
   std::array<std::array<float, ChannelN>, MAX_AZIMUTH> azimuth_sin_{};
 
+public:
   uint32_t emit_angle_raw_;
   uint32_t timestamp_reset_angle_raw_;
   uint32_t fov_start_raw_;
@@ -54,7 +55,6 @@ private:
 
   bool is_360_;
 
-public:
   AngleCorrectorCalibrationBased(
     const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration,
     double fov_start_azimuth_deg, double fov_end_azimuth_deg, double scan_cut_azimuth_deg)
@@ -164,15 +164,17 @@ public:
     return angle_is_between(last_azimuth, current_azimuth, timestamp_reset_angle_raw_, false);
   }
 
-  bool isInsideFoV(uint32_t current_azimuth) override
+  bool isInsideFoV(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
     if (is_360_) return true;
-    return angle_is_between(fov_start_raw_, fov_end_raw_ + 10, current_azimuth);
+    return angle_is_between(fov_start_raw_, fov_end_raw_, current_azimuth) ||
+           angle_is_between(timestamp_reset_angle_raw_, emit_angle_raw_, last_azimuth);
   }
 
-  bool isInsideOverlap(uint32_t current_azimuth) override
+  bool isInsideOverlap(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
-    return angle_is_between(timestamp_reset_angle_raw_, emit_angle_raw_ + 10, current_azimuth);
+    return angle_is_between(timestamp_reset_angle_raw_, emit_angle_raw_, current_azimuth) ||
+           angle_is_between(timestamp_reset_angle_raw_, emit_angle_raw_, last_azimuth);
   }
 };
 

@@ -525,8 +525,8 @@ Status HesaiHwInterface::checkAndSetLidarRange(
     return Status::SENSOR_CONFIG_ERROR;
   }
 
-  int cloud_min = 0;     // sensor_configuration_->cloud_min_angle * 10;
-  int cloud_max = 3600;  // sensor_configuration_->cloud_max_angle * 10;
+  int cloud_min = sensor_configuration_->cloud_min_angle * 10;
+  int cloud_max = sensor_configuration_->cloud_max_angle * 10;
 
   std::cout << "Starting with HW FoV of " << cloud_min << "~" << cloud_max << std::endl;
 

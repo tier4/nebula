@@ -51,8 +51,8 @@ public:
 
   virtual bool passedEmitAngle(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
   virtual bool passedTimestampResetAngle(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
-  virtual bool isInsideFoV(uint32_t current_azimuth) = 0;
-  virtual bool isInsideOverlap(uint32_t current_azimuth) = 0;
+  virtual bool isInsideFoV(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
+  virtual bool isInsideOverlap(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
 };
 
 }  // namespace drivers

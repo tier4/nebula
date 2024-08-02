@@ -174,12 +174,12 @@ public:
     throw std::runtime_error("not implemented");
   }
 
-  bool isInsideFoV(uint32_t /* current_azimuth */) override
+  bool isInsideFoV(uint32_t /* last_azimuth */, uint32_t /* current_azimuth */) override
   {
     throw std::runtime_error("not implemented");
   }
 
-  bool isInsideOverlap(uint32_t /* current_azimuth */) override
+  bool isInsideOverlap(uint32_t /* last_azimuth */, uint32_t /* current_azimuth */) override
   {
     throw std::runtime_error("not implemented");
   }
