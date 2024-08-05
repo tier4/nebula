@@ -103,7 +103,8 @@ private:
 
     uint32_t next = (start + end) / 2;
 
-    bool result_next = all_channels(normalize_angle<uint32_t>(next, MAX_AZIMUTH), threshold, any, eq_ok);
+    bool result_next =
+      all_channels(normalize_angle<uint32_t>(next, MAX_AZIMUTH), threshold, any, eq_ok);
     if (result_next) return bin_search(start, next, threshold, any, eq_ok);
     return bin_search(next + 1, end, threshold, any, eq_ok);
   }
@@ -149,8 +150,10 @@ public:
 
       angle_info.fov_start = bin_search(frame_start, frame_end, fov_start_rad, false, true);
       angle_info.fov_end = bin_search(angle_info.fov_start, frame_end, fov_end_rad, false, true);
-      angle_info.scan_emit = bin_search(angle_info.fov_start, angle_info.fov_end, scan_cut_rad, false, true);
-      angle_info.timestamp_reset = bin_search(angle_info.fov_start, angle_info.fov_end, scan_cut_rad, true, true);
+      angle_info.scan_emit =
+        bin_search(angle_info.fov_start, angle_info.fov_end, scan_cut_rad, false, true);
+      angle_info.timestamp_reset =
+        bin_search(angle_info.fov_start, angle_info.fov_end, scan_cut_rad, true, true);
 
       if (
         angle_info.fov_start == FrameAngleInfo::unset ||
