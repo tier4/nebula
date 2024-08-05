@@ -46,9 +46,9 @@ HesaiDriver::HesaiDriver(
     case SensorModel::HESAI_PANDARXT32M:
       scan_decoder_ = InitializeDecoder<PandarXT32M>(sensor_configuration, calibration_data);
       break;
-    // case SensorModel::HESAI_PANDARAT128:
-    //   scan_decoder_ = InitializeDecoder<PandarAT128>(sensor_configuration, calibration_data);
-    //   break;
+    case SensorModel::HESAI_PANDARAT128:
+      scan_decoder_ = InitializeDecoder<PandarAT128>(sensor_configuration, calibration_data);
+      break;
     case SensorModel::HESAI_PANDAR128_E3X:
       scan_decoder_ = InitializeDecoder<Pandar128E3X>(sensor_configuration, calibration_data);
       break;

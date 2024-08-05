@@ -297,8 +297,7 @@ public:
 
       if (angle_corrector_.passedTimestampResetAngle(last_azimuth_, block_azimuth)) {
         RCLCPP_INFO(
-          logger_, "[%5d] START on: %7.3f  (time angle = %7.3f)", ++starts, block_azimuth / 100.,
-          angle_corrector_.timestamp_reset_angle_raw_ / 100.);
+          logger_, "[%5d] START on: %7.3f", ++starts, block_azimuth / 100.);
 
         if (sensor_configuration_->cut_angle == sensor_configuration_->cloud_max_angle) {
           decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
@@ -317,8 +316,7 @@ public:
 
       if (angle_corrector_.passedEmitAngle(last_azimuth_, block_azimuth)) {
         RCLCPP_INFO(
-          logger_, "[%5d]   END on: %7.3f (emit angle = %7.3f)", ++ends, block_azimuth / 100.,
-          angle_corrector_.emit_angle_raw_ / 100.);
+          logger_, "[%5d]   END on: %7.3f", ++ends, block_azimuth / 100.);
 
         std::swap(decode_pc_, output_pc_);
         std::swap(decode_scan_timestamp_ns_, output_scan_timestamp_ns_);

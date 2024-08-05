@@ -51,10 +51,11 @@ private:
 
   struct FrameAngleInfo
   {
-    uint32_t fov_start;
-    uint32_t fov_end;
-    uint32_t timestamp_reset;
-    uint32_t scan_emit;
+    static constexpr uint32_t unset = UINT32_MAX;
+    uint32_t fov_start = unset;
+    uint32_t fov_end = unset;
+    uint32_t timestamp_reset = unset;
+    uint32_t scan_emit = unset;
   };
 
   std::vector<FrameAngleInfo> frame_angle_info_;
@@ -76,6 +77,35 @@ private:
 
     // This is never reached if correction_ is correct
     return field;
+  }
+
+  uint32_t all_channels(uint32_t azi, double threshold, bool any, bool eq_ok)
+  {
+    for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
+      auto azi_corr = getCorrectedAngleData(azi, channel_id).azimuth_rad;
+      if (!any && (azi_corr < threshold || (!eq_ok && azi_corr == threshold))) return false;
+      if (any && (azi_corr > threshold || (eq_ok && azi_corr == threshold))) return true;
+    }
+
+    return !any;
+  }
+
+  uint32_t bin_search(uint32_t start, uint32_t end, double threshold, bool any, bool eq_ok)
+  {
+    if (start > end) return FrameAngleInfo::unset;
+
+    if (end - start <= 1) {
+      bool result_start =
+        all_channels(normalize_angle<uint32_t>(start, MAX_AZIMUTH), threshold, any, eq_ok);
+      if (result_start) return start;
+      return end;
+    }
+
+    uint32_t next = (start + end) / 2;
+
+    bool result_next = all_channels(normalize_angle<uint32_t>(next, MAX_AZIMUTH), threshold, any, eq_ok);
+    if (result_next) return bin_search(start, next, threshold, any, eq_ok);
+    return bin_search(next + 1, end, threshold, any, eq_ok);
   }
 
 public:
@@ -113,35 +143,20 @@ public:
     for (size_t field_id = 0; field_id < correction_->frameNumber; ++field_id) {
       auto frame_start = correction_->startFrame[field_id];
       auto frame_end = correction_->endFrame[field_id];
+      if (frame_end < frame_start) frame_end += MAX_AZIMUTH;
 
-      auto unset = UINT32_MAX;
-      auto & angle_info = frame_angle_info_.emplace_back({unset, unset, unset, unset});
+      FrameAngleInfo & angle_info = frame_angle_info_.emplace_back();
 
-      for (uint32_t azimuth = frame_start; azimuth != frame_end;
-           azimuth = (azimuth + 1) % MAX_AZIMUTH) {
-        bool all_geq_fov_start = true;
-        bool all_geq_fov_end = true;
-        bool any_geq_scan_cut = false;
-        bool all_geq_scan_cut = true;
-
-        for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-          auto corrected_azimuth = getCorrectedAngleData(azimuth, channel_id).azimuth_rad;
-          all_geq_fov_start &= corrected_azimuth >= fov_start_rad;
-          all_geq_fov_end &= corrected_azimuth >= fov_end_rad;
-          all_geq_scan_cut &= corrected_azimuth >= scan_cut_rad;
-          any_geq_scan_cut |= corrected_azimuth >= scan_cut_rad;
-        }
-
-        if (all_geq_fov_start && angle_info.fov_start != unset) angle_info.fov_start = azimuth;
-        if (all_geq_fov_end && angle_info.fov_end != unset) angle_info.fov_end = azimuth;
-        if (all_geq_scan_cut && angle_info.scan_emit != unset) angle_info.scan_emit = azimuth;
-        if (any_geq_scan_cut && angle_info.timestamp_reset != unset)
-          angle_info.timestamp_reset = azimuth;
-      }
+      angle_info.fov_start = bin_search(frame_start, frame_end, fov_start_rad, false, true);
+      angle_info.fov_end = bin_search(angle_info.fov_start, frame_end, fov_end_rad, false, true);
+      angle_info.scan_emit = bin_search(angle_info.fov_start, angle_info.fov_end, scan_cut_rad, false, true);
+      angle_info.timestamp_reset = bin_search(angle_info.fov_start, angle_info.fov_end, scan_cut_rad, true, true);
 
       if (
-        angle_info.fov_start == unset || angle_info.fov_end == unset ||
-        angle_info.scan_emit == unset || angle_info.timestamp_reset == unset) {
+        angle_info.fov_start == FrameAngleInfo::unset ||
+        angle_info.fov_end == FrameAngleInfo::unset ||
+        angle_info.scan_emit == FrameAngleInfo::unset ||
+        angle_info.timestamp_reset == FrameAngleInfo::unset) {
         throw std::runtime_error("Not all necessary angles found!");
       }
     }
