@@ -74,7 +74,7 @@ protected:
   bool has_scanned_ = false;
 
   ScanCutAngles scan_cut_angles_;
-  uint32_t last_azimuth_;
+  uint32_t last_azimuth_ = 0;
 
   rclcpp::Logger logger_;
 
@@ -130,17 +130,17 @@ protected:
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
         auto & unit = *return_units[block_offset];
 
-        // if (unit.distance == 0) {
-        //   continue;
-        // }
+        if (unit.distance == 0) {
+          continue;
+        }
 
-        float distance = 6.0f + block_offset;  // getDistance(unit);
+        float distance = getDistance(unit);
 
         if (
           distance < SensorT::MIN_RANGE || SensorT::MAX_RANGE < distance ||
           distance < sensor_configuration_->min_range ||
           sensor_configuration_->max_range < distance) {
-          // continue;
+          continue;
         }
 
         auto return_type = sensor_.getReturnType(
@@ -148,33 +148,31 @@ protected:
           block_offset, return_units);
 
         // Keep only last of multiple identical points
-        if (
-          /* return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1 */ block_offset !=
-          0) {
+        if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
           continue;
         }
 
         // Keep only last (if any) of multiple points that are too close
-        // if (block_offset != n_blocks - 1) {
-        //   bool is_below_multi_return_threshold = false;
+        if (block_offset != n_blocks - 1) {
+          bool is_below_multi_return_threshold = false;
 
-        //   for (size_t return_idx = 0; return_idx < n_blocks; ++return_idx) {
-        //     if (return_idx == block_offset) {
-        //       continue;
-        //     }
+          for (size_t return_idx = 0; return_idx < n_blocks; ++return_idx) {
+            if (return_idx == block_offset) {
+              continue;
+            }
 
-        //     if (
-        //       fabsf(getDistance(*return_units[return_idx]) - distance) <
-        //       sensor_configuration_->dual_return_distance_threshold) {
-        //       is_below_multi_return_threshold = true;
-        //       break;
-        //     }
-        //   }
+            if (
+              fabsf(getDistance(*return_units[return_idx]) - distance) <
+              sensor_configuration_->dual_return_distance_threshold) {
+              is_below_multi_return_threshold = true;
+              break;
+            }
+          }
 
-        //   if (is_below_multi_return_threshold) {
-        //     continue;
-        //   }
-        // }
+          if (is_below_multi_return_threshold) {
+            continue;
+          }
+        }
 
         CorrectedAngleData corrected_angle_data =
           angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
@@ -190,12 +188,10 @@ protected:
         if (
           angle_corrector_.isInsideOverlap(last_azimuth_, raw_azimuth) &&
           angle_is_between(
-            scan_cut_angles_.scan_emit_angle,
-            scan_cut_angles_.scan_emit_angle + 10.f / 180 * static_cast<float>(M_PI), azimuth)) {
+            scan_cut_angles_.scan_emit_angle, scan_cut_angles_.scan_emit_angle + deg2rad(20),
+            azimuth)) {
           in_current_scan = false;
         }
-
-        // angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.scan_emit_angle, azimuth);
 
         auto pc = in_current_scan ? decode_pc_ : output_pc_;
         auto scan_timestamp_ns =
@@ -203,7 +199,7 @@ protected:
 
         NebulaPoint & point = pc->emplace_back();
         point.distance = distance;
-        point.intensity = in_current_scan;
+        point.intensity = unit.reflectivity;
         point.time_stamp = getPointTimeRelative(
           scan_timestamp_ns, packet_timestamp_ns, block_offset + start_block_id, channel_id);
 
@@ -275,8 +271,6 @@ public:
 
   int unpack(const std::vector<uint8_t> & packet) override
   {
-    static int starts = 0;
-    static int ends = 0;
     if (!parsePacket(packet)) {
       return -1;
     }
@@ -297,8 +291,6 @@ public:
       auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
 
       if (angle_corrector_.passedTimestampResetAngle(last_azimuth_, block_azimuth)) {
-        // RCLCPP_INFO(logger_, "[%5d] START on: %7.3f", ++starts, block_azimuth / 25600.);
-
         if (sensor_configuration_->cut_angle == sensor_configuration_->cloud_max_angle) {
           decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
                                       sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
@@ -316,37 +308,8 @@ public:
       convertReturns(block_id, n_returns);
 
       if (angle_corrector_.passedEmitAngle(last_azimuth_, block_azimuth)) {
-        // RCLCPP_INFO(logger_, "[%5d]   END on: %7.3f", ++ends, block_azimuth / 25600.);
-
-        for (int i = 0; i < 50; ++i) {
-          NebulaPoint & p = decode_pc_->emplace_back();
-          p.azimuth = deg2rad(300);
-          p.elevation = 0;
-          p.intensity = 0;
-          p.channel = 0;
-          p.return_type = 0;
-          p.time_stamp = 1.5e8;
-          p.distance = 5.9 / 50. * i;
-          p.z = 0;
-          p.x = p.distance * std::cos(p.azimuth);
-          p.y = p.distance * std::sin(p.azimuth);
-
-          NebulaPoint & p2 = decode_pc_->emplace_back();
-          p2.azimuth = deg2rad(60);
-          p2.elevation = 0;
-          p2.intensity = 0;
-          p2.channel = 0;
-          p2.return_type = 0;
-          p2.time_stamp = 1.5e8;
-          p2.distance = 5.9 / 50. * i;
-          p2.z = 0;
-          p2.x = p2.distance * std::cos(p2.azimuth);
-          p2.y = p2.distance * std::sin(p2.azimuth);
-        }
-
         std::swap(decode_pc_, output_pc_);
         std::swap(decode_scan_timestamp_ns_, output_scan_timestamp_ns_);
-
         has_scanned_ = true;
       }
 

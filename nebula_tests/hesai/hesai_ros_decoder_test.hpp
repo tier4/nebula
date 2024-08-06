@@ -49,7 +49,8 @@ struct HesaiRosDecoderTestParams
   std::string bag_path;
   std::string correction_file = "";
   std::string frame_id = "hesai";
-  double scan_phase = 0.;
+  uint16_t sync_angle = 0;
+  double cut_angle = 0.;
   double min_range = 0.3;
   double max_range = 300.;
   std::string storage_id = "sqlite3";
@@ -67,7 +68,8 @@ inline std::ostream & operator<<(
             << "bag_path=" << arg.bag_path << ", "
             << "correction_file=" << arg.correction_file << ", "
             << "frame_id=" << arg.frame_id << ", "
-            << "scan_phase=" << arg.scan_phase << ", "
+            << "sync_angle=" << arg.sync_angle << ", "
+            << "cut_angle=" << arg.cut_angle << ", "
             << "min_range=" << arg.min_range << ", "
             << "max_range=" << arg.max_range << ", "
             << "storage_id=" << arg.storage_id << ", "

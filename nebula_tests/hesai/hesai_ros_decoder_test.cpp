@@ -2,6 +2,7 @@
 
 #include "hesai_ros_decoder_test.hpp"
 
+#include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_common.hpp"
 
 #include <rclcpp/serialization.hpp>
@@ -15,6 +16,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cstring>
 #include <filesystem>
 #include <regex>
 
@@ -131,8 +133,20 @@ Status HesaiRosDecoderTest::GetParameters(
     rcl_interfaces::msg::FloatingPointRange range;
     range.set__from_value(0).set__to_value(360).set__step(0.01);
     descriptor.floating_point_range = {range};
-    this->declare_parameter<double>("scan_phase", params_.scan_phase, descriptor);
-    sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
+    this->declare_parameter<uint16_t>("sync_angle", params_.sync_angle, descriptor);
+    sensor_configuration.sync_angle = this->get_parameter("sync_angle").as_int();
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    descriptor.read_only = true;
+    descriptor.dynamic_typing = false;
+    descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
+    rcl_interfaces::msg::FloatingPointRange range;
+    range.set__from_value(0).set__to_value(360).set__step(0.01);
+    descriptor.floating_point_range = {range};
+    this->declare_parameter<double>("cut_angle", params_.cut_angle, descriptor);
+    sensor_configuration.cut_angle = this->get_parameter("cut_angle").as_double();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -232,7 +246,7 @@ Status HesaiRosDecoderTest::GetParameters(
   if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
     return Status::INVALID_ECHO_MODE;
   }
-  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
+  if (sensor_configuration.frame_id.empty()) {
     return Status::SENSOR_CONFIG_ERROR;
   }
   if (calibration_configuration.calibration_file.empty()) {
