@@ -21,6 +21,7 @@
 
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
+#include <nebula_common/point_types.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -218,7 +219,7 @@ protected:
 
         // The driver wrapper converts to degrees, expects radians
         point.azimuth = corrected_angle_data.azimuth_rad;
-        point.elevation = raw_azimuth;
+        point.elevation = corrected_angle_data.elevation_rad;
       }
     }
   }
@@ -296,7 +297,7 @@ public:
       auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
 
       if (angle_corrector_.passedTimestampResetAngle(last_azimuth_, block_azimuth)) {
-        RCLCPP_INFO(logger_, "[%5d] START on: %7.3f", ++starts, block_azimuth / 100.);
+        // RCLCPP_INFO(logger_, "[%5d] START on: %7.3f", ++starts, block_azimuth / 25600.);
 
         if (sensor_configuration_->cut_angle == sensor_configuration_->cloud_max_angle) {
           decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
@@ -308,13 +309,40 @@ public:
       }
 
       if (!angle_corrector_.isInsideFoV(last_azimuth_, block_azimuth)) {
+        last_azimuth_ = block_azimuth;
         continue;
       }
 
       convertReturns(block_id, n_returns);
 
       if (angle_corrector_.passedEmitAngle(last_azimuth_, block_azimuth)) {
-        RCLCPP_INFO(logger_, "[%5d]   END on: %7.3f", ++ends, block_azimuth / 100.);
+        // RCLCPP_INFO(logger_, "[%5d]   END on: %7.3f", ++ends, block_azimuth / 25600.);
+
+        for (int i = 0; i < 50; ++i) {
+          NebulaPoint & p = decode_pc_->emplace_back();
+          p.azimuth = deg2rad(300);
+          p.elevation = 0;
+          p.intensity = 0;
+          p.channel = 0;
+          p.return_type = 0;
+          p.time_stamp = 1.5e8;
+          p.distance = 5.9 / 50. * i;
+          p.z = 0;
+          p.x = p.distance * std::cos(p.azimuth);
+          p.y = p.distance * std::sin(p.azimuth);
+
+          NebulaPoint & p2 = decode_pc_->emplace_back();
+          p2.azimuth = deg2rad(60);
+          p2.elevation = 0;
+          p2.intensity = 0;
+          p2.channel = 0;
+          p2.return_type = 0;
+          p2.time_stamp = 1.5e8;
+          p2.distance = 5.9 / 50. * i;
+          p2.z = 0;
+          p2.x = p2.distance * std::cos(p2.azimuth);
+          p2.y = p2.distance * std::sin(p2.azimuth);
+        }
 
         std::swap(decode_pc_, output_pc_);
         std::swap(decode_scan_timestamp_ns_, output_scan_timestamp_ns_);

@@ -148,7 +148,7 @@ public:
 
       FrameAngleInfo & angle_info = frame_angle_info_.emplace_back();
 
-      angle_info.fov_start = bin_search(frame_start, frame_end, fov_start_rad, false, true);
+      angle_info.fov_start = bin_search(frame_start, frame_end, fov_start_rad, true, true);
       angle_info.fov_end = bin_search(angle_info.fov_start, frame_end, fov_end_rad, false, true);
       angle_info.scan_emit =
         bin_search(angle_info.fov_start, angle_info.fov_end, scan_cut_rad, false, true);
@@ -161,6 +161,14 @@ public:
         angle_info.scan_emit == FrameAngleInfo::unset ||
         angle_info.timestamp_reset == FrameAngleInfo::unset) {
         throw std::runtime_error("Not all necessary angles found!");
+      }
+
+      if (fov_start_rad == scan_cut_rad) {
+        angle_info.timestamp_reset = angle_info.fov_start;
+        angle_info.scan_emit = angle_info.fov_start;
+      } else if (fov_end_rad == scan_cut_rad) {
+        angle_info.timestamp_reset = angle_info.fov_start;
+        angle_info.scan_emit = angle_info.fov_end;
       }
     }
   }
@@ -210,8 +218,8 @@ public:
   {
     for (const auto & frame_angles : frame_angle_info_) {
       if (
-        angle_is_between(frame_angles.fov_start, frame_angles.fov_end, current_azimuth) ||
-        angle_is_between(frame_angles.fov_start, frame_angles.fov_end, last_azimuth))
+        angle_is_between(frame_angles.fov_start, frame_angles.fov_end, current_azimuth, false) ||
+        angle_is_between(frame_angles.fov_start, frame_angles.fov_end, last_azimuth, false))
         return true;
     }
 
