@@ -28,6 +28,7 @@ find_package(robosense_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 include_directories(
     include
@@ -36,12 +37,14 @@ include_directories(
     ${YAML_CPP_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
     ${rclcpp_components_INCLUDE_DIRS}
+    ${NLOHMANN_JSON_INCLUDE_DIRS}
 )
 
 link_libraries(
     ${nebula_common_TARGETS}
     ${YAML_CPP_LIBRARIES}
     ${PCL_LIBRARIES}
+    ${NLOHMANN_JSON_LIBRARIES}
 )
 
 ## Hesai

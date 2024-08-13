@@ -7,6 +7,7 @@
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_decoders/nebula_decoders_common/angles.hpp>
+#include <nebula_decoders/nebula_decoders_common/point_filters/parser.hpp>
 
 #include <cstdint>
 #include <filesystem>
@@ -201,6 +202,13 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
     config.ptp_domain = declare_parameter<uint8_t>("ptp_domain", descriptor);
   }
 
+  auto point_filters_raw = declare_parameter<std::string>("point_filters", param_read_write());
+  auto point_filters = drivers::parse_point_filters(point_filters_raw);
+  if (!point_filters.has_value()) {
+    throw std::runtime_error("Could not parse point filters: " + point_filters.error());
+  }
+  config.point_filters = point_filters.value();
+
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(config);
   return validate_and_set_config(new_cfg_ptr);
 }
@@ -322,6 +330,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
   std::string _return_mode{};
   std::string calibration_parameter_name =
     get_calibration_parameter_name(sensor_cfg_ptr_->sensor_model);
+  std::string point_filters_raw;
 
   bool got_any =
     get_param(p, "return_mode", _return_mode) | get_param(p, "frame_id", new_cfg.frame_id) |
@@ -331,6 +340,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     get_param(p, "cloud_min_angle", new_cfg.cloud_min_angle) |
     get_param(p, "cloud_max_angle", new_cfg.cloud_max_angle) |
     get_param(p, "dual_return_distance_threshold", new_cfg.dual_return_distance_threshold) |
+    get_param(p, "point_filters", point_filters_raw) |
     get_param(p, calibration_parameter_name, new_cfg.calibration_path);
 
   // Currently, all of the sub-wrappers read-only parameters, so they do not be queried for updates
@@ -374,6 +384,17 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     }
 
     new_calibration_ptr = get_calibration_result.value();
+  }
+
+  if (!point_filters_raw.empty()) {
+    auto point_filters = drivers::parse_point_filters(point_filters_raw);
+    if (!point_filters.has_value()) {
+      SetParametersResult result{};
+      result.successful = false;
+      result.reason = "Could not parse point filters: " + point_filters.error();
+      return result;
+    }
+    new_cfg.point_filters = point_filters.value();
   }
 
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(new_cfg);

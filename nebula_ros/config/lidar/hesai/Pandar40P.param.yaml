@@ -27,3 +27,4 @@
     ptp_switch_type: TSN
     retry_hw: true
     dual_return_distance_threshold: 0.1
+    point_filters: "{}"

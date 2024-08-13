@@ -85,6 +85,12 @@
       "minimum": 0.0,
       "maximum": 360.0,
       "description": "Sensor scan phase."
+    },
+    "point_filters": {
+      "type": "string",
+      "default": "\"{}\"",
+      "pattern": "^\\{.*?\\}$",
+      "description": "A map of filter definitions {\"filter_type1\": filter_def1, \"filter_type2\": filter_def2} to filter points while decoding"
     }
   }
 }
