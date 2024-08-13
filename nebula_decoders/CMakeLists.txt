@@ -25,6 +25,7 @@ find_package(robosense_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(velodyne_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 include_directories(PUBLIC
     include
@@ -35,6 +36,7 @@ include_directories(PUBLIC
     ${pcl_conversions_INCLUDE_DIRS}
     ${rclcpp_INCLUDE_DIRS}
     ${sensor_msgs_INCLUDE_DIRS}
+    ${NLOHMANN_JSON_INCLUDE_DIRS}
 )
 
 link_libraries(
@@ -43,6 +45,7 @@ link_libraries(
     ${pcl_conversions_LIBRARIES}
     ${rclcpp_TARGETS}
     ${sensor_msgs_TARGETS}
+    ${NLOHMANN_JSON_LIBRARIES}
 )
 
 # Lidar Decoders
@@ -153,6 +156,7 @@ ament_export_dependencies(
     sensor_msgs
     velodyne_msgs
     yaml-cpp
+    nlohmann_json
 )
 
 ament_package()
