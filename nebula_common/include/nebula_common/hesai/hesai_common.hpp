@@ -18,12 +18,14 @@
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_common/util/string_conversions.hpp"
+#include "nebula_common/point_filters/point_filter.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -49,6 +51,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   uint8_t ptp_domain;
   PtpTransportType ptp_transport_type;
   PtpSwitchType ptp_switch_type;
+  std::vector<std::shared_ptr<PointFilter>> point_filters;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
