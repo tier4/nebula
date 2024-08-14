@@ -223,7 +223,7 @@ Status VelodyneRosDecoderTest::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>(
-      "target_topic", "/sensing/lidar/top/velodyne_packets", descriptor);
+      "target_topic", "/velodyne_packets", descriptor);
     target_topic = this->get_parameter("target_topic").as_string();
   }
 
@@ -315,7 +315,6 @@ void VelodyneRosDecoderTest::ReadBag()
 
   storage_options.uri = bag_path;
   storage_options.storage_id = storage_id;
-  converter_options.output_serialization_format = format;  //"cdr";
   rclcpp::Serialization<velodyne_msgs::msg::VelodyneScan> serialization;
   nebula::drivers::NebulaPointCloudPtr pointcloud(new nebula::drivers::NebulaPointCloud);
   // nebula::drivers::NebulaPointCloudPtr ref_pointcloud(new nebula::drivers::NebulaPointCloud);
