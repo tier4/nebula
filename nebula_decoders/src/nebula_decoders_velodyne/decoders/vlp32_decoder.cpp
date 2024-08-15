@@ -140,16 +140,45 @@ void Vlp32Decoder::reset_overflow(double time_stamp)
 void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
 {
   const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
+  float last_azimuth_diff = 0;
+  uint16_t azimuth_next;
   uint8_t return_mode = velodyne_packet.data[RETURN_MODE_INDEX];
   const bool dual_return = (return_mode == RETURN_MODE_DUAL);
 
-  for (int i = 0; i < BLOCKS_PER_PACKET; i++) {
+  for (uint i = 0; i < BLOCKS_PER_PACKET; i++) {
     int bank_origin = 0;
     if (raw->blocks[i].header == LOWER_BANK) {
       // lower bank lasers are [32..63]
       bank_origin = 32;
     }
-    for (int j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE) {
+    float azimuth_diff;
+    uint16_t azimuth;
+
+    // Calculate difference between current and next block's azimuth angle.
+    if (i == 0) {
+      azimuth = raw->blocks[i].rotation;
+    } else {
+      azimuth = azimuth_next;
+    }
+    if (i < static_cast<uint>(BLOCKS_PER_PACKET - (1 + dual_return))) {
+      // Get the next block rotation to calculate how far we rotate between blocks
+      azimuth_next = raw->blocks[i + (1 + dual_return)].rotation;
+
+      // Finds the difference between two successive blocks
+      azimuth_diff = static_cast<float>((36000 + azimuth_next - azimuth) % 36000);
+
+      // This is used when the last block is next to predict rotation amount
+      last_azimuth_diff = azimuth_diff;
+    } else {
+      // This makes the assumption the difference between the last block and the next packet is the
+      // same as the last to the second to last.
+      // Assumes RPM doesn't change much between blocks.
+      azimuth_diff = (i == static_cast<uint>(BLOCKS_PER_PACKET - (4 * dual_return) - 1))
+                       ? 0
+                       : last_azimuth_diff;
+    }
+
+    for (uint j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE) {
       float x, y, z;
       uint8_t intensity;
       const uint8_t laser_number = j + bank_origin;
@@ -203,13 +232,15 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
             raw->blocks[i].rotation >= sensor_configuration_->cloud_min_angle * 100))) {
           const float cos_vert_angle = corrections.cos_vert_correction;
           const float sin_vert_angle = corrections.sin_vert_correction;
-          const float cos_rot_correction = corrections.cos_rot_correction;
-          const float sin_rot_correction = corrections.sin_rot_correction;
+          float azimuth_corrected_f = azimuth + (azimuth_diff * VLP32_CHANNEL_DURATION / VLP32_SEQ_DURATION * j) - corrections.rot_correction * 180.0 / M_PI * 100;
+          if (azimuth_corrected_f < 0) {
+            azimuth_corrected_f += 36000;
+          }
+          const uint16_t azimuth_corrected =
+            (static_cast<uint16_t>(std::round(azimuth_corrected_f))) % 36000;
 
-          const float cos_rot_angle = cos_rot_table_[block.rotation] * cos_rot_correction +
-                                      sin_rot_table_[block.rotation] * sin_rot_correction;
-          const float sin_rot_angle = sin_rot_table_[block.rotation] * cos_rot_correction -
-                                      cos_rot_table_[block.rotation] * sin_rot_correction;
+          const float cos_rot_angle = cos_rot_table_[azimuth_corrected];
+          const float sin_rot_angle = sin_rot_table_[azimuth_corrected];
 
           const float horiz_offset = corrections.horiz_offset_correction;
           const float vert_offset = corrections.vert_offset_correction;

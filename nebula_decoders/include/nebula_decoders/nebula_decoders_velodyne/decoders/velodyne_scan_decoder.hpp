@@ -54,6 +54,10 @@ static const float VLP16_BLOCK_DURATION = 110.592f;  // [µs]
 static const float VLP16_DSR_TOFFSET = 2.304f;       // [µs]
 static const float VLP16_FIRING_TOFFSET = 55.296f;   // [µs]
 
+/** Special Defines for VLP32 support **/
+static const float VLP32_CHANNEL_DURATION = 2.304f;       // [µs]
+static const float VLP32_SEQ_DURATION = 55.296f;   // [µs]
+
 /** Special Definitions for VLS128 support **/
 static const float VLP128_DISTANCE_RESOLUTION = 0.004f;  // [m]
 
