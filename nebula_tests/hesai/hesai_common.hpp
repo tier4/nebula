@@ -34,6 +34,7 @@ namespace test
 inline void checkPCDs(
   nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<pcl::PointXYZ>::Ptr pc_ref)
 {
+  ASSERT_GT(pc->points.size(), 0);
   EXPECT_EQ(pc->points.size(), pc_ref->points.size());
   auto bound = std::min(pc->points.size(), pc_ref->points.size());
   for (uint32_t i = 0; i < bound; i++) {
