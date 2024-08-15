@@ -86,159 +86,24 @@ Status HesaiRosDecoderTest::GetParameters(
   std::filesystem::path bag_root_dir = _SRC_RESOURCES_DIR_PATH;
   bag_root_dir /= "hesai";
 
-  sensor_configuration.cloud_min_angle = 0;
-  sensor_configuration.cloud_max_angle = 360;
+  sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(params_.sensor_model);
+  sensor_configuration.return_mode = nebula::drivers::ReturnModeFromStringHesai(
+    params_.return_mode, sensor_configuration.sensor_model);
+  sensor_configuration.frame_id = params_.frame_id;
+  sensor_configuration.sync_angle = params_.sync_angle;
+  sensor_configuration.cut_angle = params_.cut_angle;
+  sensor_configuration.cloud_min_angle = params_.fov_start;
+  sensor_configuration.cloud_max_angle = params_.fov_end;
+  sensor_configuration.min_range = params_.min_range;
+  sensor_configuration.max_range = params_.max_range;
 
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_model", params_.sensor_model, descriptor);
-    sensor_configuration.sensor_model =
-      nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
-  }
-
-  if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
-    sensor_configuration.cloud_min_angle = 30;
-    sensor_configuration.cloud_max_angle = 150;
-  }
-
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("return_mode", params_.return_mode, descriptor);
-    sensor_configuration.return_mode = nebula::drivers::ReturnModeFromStringHesai(
-      this->get_parameter("return_mode").as_string(), sensor_configuration.sensor_model);
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("frame_id", params_.frame_id, descriptor);
-    sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
-    rcl_interfaces::msg::FloatingPointRange range;
-    range.set__from_value(0).set__to_value(360).set__step(0.01);
-    descriptor.floating_point_range = {range};
-    this->declare_parameter<uint16_t>("sync_angle", params_.sync_angle, descriptor);
-    sensor_configuration.sync_angle = this->get_parameter("sync_angle").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
-    rcl_interfaces::msg::FloatingPointRange range;
-    range.set__from_value(0).set__to_value(360).set__step(0.01);
-    descriptor.floating_point_range = {range};
-    this->declare_parameter<double>("cut_angle", params_.cut_angle, descriptor);
-    sensor_configuration.cut_angle = this->get_parameter("cut_angle").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>(
-      "calibration_file", (calibration_dir / params_.calibration_file).string(), descriptor);
-    calibration_configuration.calibration_file =
-      this->get_parameter("calibration_file").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("min_range", params_.min_range, descriptor);
-    sensor_configuration.min_range = this->get_parameter("min_range").as_double();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<double>("max_range", params_.max_range, descriptor);
-    sensor_configuration.max_range = this->get_parameter("max_range").as_double();
-  }
-  if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>(
-      "correction_file", (calibration_dir / params_.correction_file).string(), descriptor);
-    params_.correction_file = this->get_parameter("correction_file").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>(
-      "bag_path", (bag_root_dir / params_.bag_path).string(), descriptor);
-    params_.bag_path = this->get_parameter("bag_path").as_string();
-    RCLCPP_DEBUG_STREAM(get_logger(), "Bag path relative to test root: " << params_.bag_path);
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("storage_id", params_.storage_id, descriptor);
-    params_.storage_id = this->get_parameter("storage_id").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("format", params_.format, descriptor);
-    params_.format = this->get_parameter("format").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("target_topic", params_.target_topic, descriptor);
-    params_.target_topic = this->get_parameter("target_topic").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
-    descriptor.read_only = false;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "Dual return distance threshold [0.01, 0.5]";
-    rcl_interfaces::msg::FloatingPointRange range;
-    range.set__from_value(0.00).set__to_value(0.5).set__step(0.01);
-    descriptor.floating_point_range = {range};
-    this->declare_parameter<double>(
-      "dual_return_distance_threshold", params_.dual_return_distance_threshold, descriptor);
-    sensor_configuration.dual_return_distance_threshold =
-      this->get_parameter("dual_return_distance_threshold").as_double();
-  }
+  sensor_configuration.calibration_path = (calibration_dir / params_.calibration_file).string();
+  params_.bag_path = (bag_root_dir / params_.bag_path).string();
+  RCLCPP_DEBUG_STREAM(get_logger(), "Bag path relative to test root: " << params_.bag_path);
+  params_.storage_id = params_.storage_id;
+  params_.format = params_.format;
+  params_.target_topic = params_.target_topic;
+  sensor_configuration.dual_return_distance_threshold = params_.dual_return_distance_threshold;
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
@@ -249,32 +114,30 @@ Status HesaiRosDecoderTest::GetParameters(
   if (sensor_configuration.frame_id.empty()) {
     return Status::SENSOR_CONFIG_ERROR;
   }
-  if (calibration_configuration.calibration_file.empty()) {
+
+  if (sensor_configuration.calibration_path.empty()) {
     return Status::INVALID_CALIBRATION_FILE;
-  } else {
-    auto cal_status =
-      calibration_configuration.LoadFromFile(calibration_configuration.calibration_file);
+  }
+
+  if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
+    auto cal_status = correction_configuration.LoadFromFile(sensor_configuration.calibration_path);
     if (cal_status != Status::OK) {
       RCLCPP_ERROR_STREAM(
         this->get_logger(),
-        "Given Calibration File: '" << calibration_configuration.calibration_file << "'");
+        "Invalid correction file: '" << sensor_configuration.calibration_path << "'");
+      return cal_status;
+    }
+  } else {
+    auto cal_status = calibration_configuration.LoadFromFile(sensor_configuration.calibration_path);
+    if (cal_status != Status::OK) {
+      RCLCPP_ERROR_STREAM(
+        this->get_logger(),
+        "Invalid calibration file: '" << sensor_configuration.calibration_path << "'");
       return cal_status;
     }
   }
-  if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
-    if (params_.correction_file.empty()) {
-      return Status::INVALID_CALIBRATION_FILE;
-    } else {
-      auto cal_status = correction_configuration.LoadFromFile(params_.correction_file);
-      if (cal_status != Status::OK) {
-        RCLCPP_ERROR_STREAM(
-          this->get_logger(), "Given Correction File: '" << params_.correction_file << "'");
-        return cal_status;
-      }
-    }
-  }
 
-  RCLCPP_INFO_STREAM(this->get_logger(), "Sensor Configuration: " << sensor_configuration);
+  RCLCPP_INFO_STREAM(this->get_logger(), "Sensor configuration: " << sensor_configuration);
   return Status::OK;
 }
 
@@ -329,8 +192,6 @@ void HesaiRosDecoderTest::ReadBag(
         if (!pointcloud) {
           continue;
         }
-
-        std::cerr << "Pointcloud size: " << pointcloud->size() << std::endl;
 
         scan_callback(bag_message->time_stamp, scan_timestamp, pointcloud);
       }
