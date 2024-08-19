@@ -80,8 +80,8 @@ struct SecondsSinceEpoch
   [[nodiscard]] uint64_t getSeconds() const
   {
     uint64_t seconds = 0;
-    for (int i = 0; i < 5; ++i) {
-      seconds = (seconds << 8) | this->seconds[i];
+    for (unsigned char second : this->seconds) {
+      seconds = (seconds << 8) | second;
     }
     return seconds;
   }
