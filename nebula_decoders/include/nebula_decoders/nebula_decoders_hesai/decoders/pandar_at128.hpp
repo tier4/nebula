@@ -44,8 +44,8 @@ struct TailAT128E2X
 
 struct PacketAT128E2X : public PacketBase<2, 128, 2, 100 * 256>
 {
-  typedef Body<FineAzimuthBlock<Unit4B, PacketAT128E2X::N_CHANNELS>, PacketAT128E2X::N_BLOCKS>
-    body_t;
+  using body_t =
+    Body<FineAzimuthBlock<Unit4B, PacketAT128E2X::N_CHANNELS>, PacketAT128E2X::N_BLOCKS>;
   Header12B header;
   body_t body;
   uint32_t crc_body;

@@ -26,10 +26,10 @@ namespace hesai_packet
 
 #pragma pack(push, 1)
 
-typedef TailXT32 TailXT32M2X;
+using TailXT32M2X = TailXT32;
 struct PacketXT32M2X : public PacketBase<6, 32, 3, 100>
 {
-  typedef Body<Block<Unit4B, PacketXT32M2X::N_CHANNELS>, PacketXT32M2X::N_BLOCKS> body_t;
+  using body_t = Body<Block<Unit4B, PacketXT32M2X::N_CHANNELS>, PacketXT32M2X::N_BLOCKS>;
   Header12B header;
   body_t body;
   TailXT32M2X tail;

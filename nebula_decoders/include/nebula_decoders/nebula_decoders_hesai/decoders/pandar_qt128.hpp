@@ -44,7 +44,7 @@ struct TailQT128C2X
 
 struct PacketQT128C2X : public PacketBase<2, 128, 2, 100>
 {
-  typedef Body<Block<Unit4B, PacketQT128C2X::N_CHANNELS>, PacketQT128C2X::N_BLOCKS> body_t;
+  using body_t = Body<Block<Unit4B, PacketQT128C2X::N_CHANNELS>, PacketQT128C2X::N_BLOCKS>;
   Header12B header;
   body_t body;
   uint32_t crc_body;

@@ -26,10 +26,10 @@ namespace hesai_packet
 
 #pragma pack(push, 1)
 
-typedef Tail40P Tail64;
+using Tail64 = Tail40P;
 struct Packet64 : public PacketBase<6, 64, 2, 100>
 {
-  typedef Body<Block<Unit3B, Packet64::N_CHANNELS>, Packet64::N_BLOCKS> body_t;
+  using body_t = Body<Block<Unit3B, Packet64::N_CHANNELS>, Packet64::N_BLOCKS>;
   Header8B header;
   body_t body;
   Tail64 tail;

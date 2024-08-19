@@ -28,7 +28,7 @@ namespace hesai_packet
 
 #pragma pack(push, 1)
 
-typedef Packet128E3X Packet128E4X;
+using Packet128E4X = Packet128E3X;
 
 #pragma pack(pop)
 

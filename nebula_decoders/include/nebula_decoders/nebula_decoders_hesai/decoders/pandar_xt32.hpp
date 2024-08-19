@@ -39,7 +39,7 @@ struct TailXT32
 
 struct PacketXT32 : public PacketBase<8, 32, 2, 100>
 {
-  typedef Body<Block<Unit4B, PacketXT32::N_CHANNELS>, PacketXT32::N_BLOCKS> body_t;
+  using body_t = Body<Block<Unit4B, PacketXT32::N_CHANNELS>, PacketXT32::N_BLOCKS>;
   Header12B header;
   body_t body;
   TailXT32 tail;

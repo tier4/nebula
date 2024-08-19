@@ -142,7 +142,7 @@ struct Block
 {
   uint16_t azimuth;
   UnitT units[UnitN];
-  typedef UnitT unit_t;
+  using unit_t = UnitT;
 
   uint32_t get_azimuth() const { return azimuth; }
 };
@@ -150,7 +150,7 @@ struct Block
 template <typename UnitT, size_t UnitN>
 struct FineAzimuthBlock
 {
-  typedef UnitT unit_t;
+  using unit_t = UnitT;
   uint16_t azimuth;
   uint8_t fine_azimuth;
   UnitT units[UnitN];
@@ -161,7 +161,7 @@ struct FineAzimuthBlock
 template <typename UnitT, size_t UnitN>
 struct SOBBlock
 {
-  typedef UnitT unit_t;
+  using unit_t = UnitT;
 
   /// @brief Start of Block, 0xFFEE
   uint16_t sob;
@@ -174,7 +174,7 @@ struct SOBBlock
 template <typename BlockT, size_t BlockN>
 struct Body
 {
-  typedef BlockT block_t;
+  using block_t = BlockT;
   BlockT blocks[BlockN];
 };
 

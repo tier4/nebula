@@ -37,7 +37,7 @@ struct TailQT64
 
 struct PacketQT64 : public PacketBase<4, 64, 2, 100>
 {
-  typedef Body<Block<Unit4B, PacketQT64::N_CHANNELS>, PacketQT64::N_BLOCKS> body_t;
+  using body_t = Body<Block<Unit4B, PacketQT64::N_CHANNELS>, PacketQT64::N_BLOCKS>;
   Header12B header;
   body_t body;
   TailQT64 tail;

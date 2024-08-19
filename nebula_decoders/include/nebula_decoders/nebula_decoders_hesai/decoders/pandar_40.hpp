@@ -43,7 +43,7 @@ struct Tail40P
 
 struct Packet40P : public PacketBase<10, 40, 2, 100>
 {
-  typedef Body<SOBBlock<Unit3B, Packet40P::N_CHANNELS>, Packet40P::N_BLOCKS> body_t;
+  using body_t = Body<SOBBlock<Unit3B, Packet40P::N_CHANNELS>, Packet40P::N_BLOCKS>;
   body_t body;
   Tail40P tail;
 };

@@ -85,12 +85,11 @@ private:
   };
 
 public:
-  typedef PacketT packet_t;
-  typedef typename std::conditional<
+  using packet_t = PacketT;
+  using angle_corrector_t = typename std::conditional<
     (AngleCorrection == AngleCorrectionType::CALIBRATION),
     AngleCorrectorCalibrationBased<PacketT::N_CHANNELS, PacketT::DEGREE_SUBDIVISIONS>,
-    AngleCorrectorCorrectionBased<PacketT::N_CHANNELS, PacketT::DEGREE_SUBDIVISIONS>>::type
-    angle_corrector_t;
+    AngleCorrectorCorrectionBased<PacketT::N_CHANNELS, PacketT::DEGREE_SUBDIVISIONS>>::type;
 
   HesaiSensor() = default;
   virtual ~HesaiSensor() = default;
