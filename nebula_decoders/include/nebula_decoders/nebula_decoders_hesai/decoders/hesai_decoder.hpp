@@ -19,9 +19,6 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
-
 #include <memory>
 #include <tuple>
 #include <utility>
