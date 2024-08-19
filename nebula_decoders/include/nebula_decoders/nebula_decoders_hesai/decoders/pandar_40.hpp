@@ -54,7 +54,7 @@ struct Packet40P : public PacketBase<10, 40, 2, 100>
 /// packet type without a header.
 /// @return 0.004 (4mm)
 template <>
-double get_dis_unit<Packet40P>(const Packet40P & /* packet */)
+inline double get_dis_unit<Packet40P>(const Packet40P & /* packet */)
 {
   return 4 / 1000.;
 }
