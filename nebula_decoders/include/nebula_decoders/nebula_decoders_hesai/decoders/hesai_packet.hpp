@@ -17,12 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <ctime>
-
-namespace nebula
-{
-namespace drivers
-{
-namespace hesai_packet
+namespace nebula::drivers::hesai_packet
 {
 
 // FIXME(mojomex) This is a workaround for the compiler being pedantic about casting `enum class`s
@@ -247,6 +242,4 @@ double get_dis_unit(const PacketT & packet)
   return packet.header.dis_unit / 1000.;
 }
 
-}  // namespace hesai_packet
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::hesai_packet

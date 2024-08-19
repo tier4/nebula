@@ -24,9 +24,7 @@
 #include <tuple>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Base class for Hesai LiDAR decoder
 class HesaiScanDecoder
@@ -53,6 +51,6 @@ public:
   /// @return A tuple of point cloud and timestamp in nanoseconds
   virtual std::tuple<drivers::NebulaPointCloudPtr, double> getPointcloud() = 0;
 };
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
+
 #endif  // NEBULA_WS_HESAI_SCAN_DECODER_HPP

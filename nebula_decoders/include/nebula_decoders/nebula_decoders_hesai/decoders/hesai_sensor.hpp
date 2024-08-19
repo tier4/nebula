@@ -23,9 +23,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 enum class AngleCorrectionType { CALIBRATION, CORRECTION };
@@ -193,5 +191,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

@@ -27,9 +27,7 @@
 #include <utility>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 template <typename SensorT>
@@ -295,5 +293,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

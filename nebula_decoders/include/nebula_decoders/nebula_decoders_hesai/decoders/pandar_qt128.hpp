@@ -17,9 +17,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -113,5 +111,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

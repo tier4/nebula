@@ -19,9 +19,7 @@
 
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -287,5 +285,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
