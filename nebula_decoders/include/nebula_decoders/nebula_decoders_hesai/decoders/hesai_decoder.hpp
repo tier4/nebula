@@ -19,17 +19,12 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
-
 #include <memory>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 template <typename SensorT>
@@ -99,7 +94,7 @@ protected:
   void convertReturns(size_t start_block_id, size_t n_blocks)
   {
     uint64_t packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
-    uint32_t raw_azimuth = packet_.body.blocks[start_block_id].get_azimuth();
+    uint32_t raw_azimuth = packet_.body.blocks[start_block_id].getAzimuth();
 
     std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units;
 
@@ -172,9 +167,9 @@ protected:
 
         // The raw_azimuth and channel are only used as indices, sin/cos functions use the precise
         // corrected angles
-        float xyDistance = distance * corrected_angle_data.cos_elevation;
-        point.x = xyDistance * corrected_angle_data.sin_azimuth;
-        point.y = xyDistance * corrected_angle_data.cos_azimuth;
+        float xy_distance = distance * corrected_angle_data.cos_elevation;
+        point.x = xy_distance * corrected_angle_data.sin_azimuth;
+        point.y = xy_distance * corrected_angle_data.cos_azimuth;
         point.z = distance * corrected_angle_data.sin_elevation;
 
         // The driver wrapper converts to degrees, expects radians
@@ -235,8 +230,8 @@ public:
     logger_.set_level(rclcpp::Logger::Level::Debug);
     RCLCPP_INFO_STREAM(logger_, *sensor_configuration_);
 
-    decode_pc_.reset(new NebulaPointCloud);
-    output_pc_.reset(new NebulaPointCloud);
+    decode_pc_ = std::make_shared<NebulaPointCloud>();
+    output_pc_ = std::make_shared<NebulaPointCloud>();
 
     decode_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
@@ -257,10 +252,10 @@ public:
     }
 
     const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
-    uint32_t current_azimuth;
+    uint32_t current_azimuth = 0;
 
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
-      current_azimuth = packet_.body.blocks[block_id].get_azimuth();
+      current_azimuth = packet_.body.blocks[block_id].getAzimuth();
 
       bool scan_completed = checkScanCompleted(
         current_azimuth,
@@ -295,5 +290,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

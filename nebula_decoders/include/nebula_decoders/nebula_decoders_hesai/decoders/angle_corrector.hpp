@@ -14,15 +14,11 @@
 
 #pragma once
 
-#include "nebula_common/hesai/hesai_common.hpp"
-
 #include <rclcpp/rclcpp.hpp>
 
 #include <cstdint>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 struct CorrectedAngleData
@@ -62,5 +58,4 @@ public:
     uint32_t current_azimuth, uint32_t last_azimuth, uint32_t sync_azimuth) = 0;
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

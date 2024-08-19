@@ -17,9 +17,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -45,7 +43,7 @@ struct Tail40P
 
 struct Packet40P : public PacketBase<10, 40, 2, 100>
 {
-  typedef Body<SOBBlock<Unit3B, Packet40P::N_CHANNELS>, Packet40P::N_BLOCKS> body_t;
+  using body_t = Body<SOBBlock<Unit3B, Packet40P::N_CHANNELS>, Packet40P::N_BLOCKS>;
   body_t body;
   Tail40P tail;
 };
@@ -56,7 +54,7 @@ struct Packet40P : public PacketBase<10, 40, 2, 100>
 /// packet type without a header.
 /// @return 0.004 (4mm)
 template <>
-double get_dis_unit<Packet40P>(const Packet40P & /* packet */)
+inline double get_dis_unit<Packet40P>(const Packet40P & /* packet */)
 {
   return 4 / 1000.;
 }
@@ -86,5 +84,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

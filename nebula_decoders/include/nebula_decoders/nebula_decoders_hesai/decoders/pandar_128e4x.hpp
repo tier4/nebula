@@ -20,9 +20,7 @@
 
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -30,7 +28,7 @@ namespace hesai_packet
 
 #pragma pack(push, 1)
 
-typedef Packet128E3X Packet128E4X;
+using Packet128E4X = Packet128E3X;
 
 #pragma pack(pop)
 
@@ -90,14 +88,14 @@ public:
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
-    int block_offset_ns;
+    int block_offset_ns = 0;
     if (n_returns == 1) {
       block_offset_ns = -27778 * 2 * (2 - block_id - 1);
     } else {
       block_offset_ns = 0;
     }
 
-    int channel_offset_ns;
+    int channel_offset_ns = 0;
     bool is_hires_mode = packet.tail.operational_state == OperationalState::HIGH_RESOLUTION;
     auto azimuth_state = packet.tail.geAzimuthState(block_id);
 
@@ -135,5 +133,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

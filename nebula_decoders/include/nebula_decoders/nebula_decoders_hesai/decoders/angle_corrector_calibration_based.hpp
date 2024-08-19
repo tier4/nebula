@@ -20,9 +20,7 @@
 #include <cstdint>
 #include <memory>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 template <size_t ChannelN, size_t AngleUnit>
@@ -41,7 +39,7 @@ private:
   std::array<std::array<float, ChannelN>, MAX_AZIMUTH_LEN> azimuth_sin_{};
 
 public:
-  AngleCorrectorCalibrationBased(
+  explicit AngleCorrectorCalibrationBased(
     const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration)
   {
     if (sensor_calibration == nullptr) {
@@ -99,5 +97,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
