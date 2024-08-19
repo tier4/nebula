@@ -39,7 +39,7 @@ private:
   std::array<std::array<float, ChannelN>, MAX_AZIMUTH_LEN> azimuth_sin_{};
 
 public:
-  AngleCorrectorCalibrationBased(
+  explicit AngleCorrectorCalibrationBased(
     const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration)
   {
     if (sensor_calibration == nullptr) {
