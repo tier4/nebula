@@ -1,0 +1,2110 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Nebula Multi-Sensor Driver Framework">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.31">
+    
+    
+      
+        <title>Namespace nebula::drivers - Nebula</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.3cba04c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#namespace-nebuladrivers" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Nebula" class="md-header__button md-logo" aria-label="Nebula" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Nebula
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Namespace nebula::drivers
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="grey" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/tier4/nebula" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../design/" class="md-tabs__link">
+        
+  
+    
+  
+  Design
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../about/" class="md-tabs__link">
+        
+  
+    
+  
+  About Nebula
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../add_sensor/" class="md-tabs__link">
+        
+  
+    
+  
+  Add Your Sensor
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../hesai_decoder_design/" class="md-tabs__link">
+        
+  
+    
+  
+  Hesai Decoder Design
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../links/" class="md-tabs__link">
+        
+  
+    
+  
+  Nebula Common
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../nebula_decoders/links/" class="md-tabs__link">
+        
+  
+    
+  
+  Nebula Decoders
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../nebula_hw_interfaces/links/" class="md-tabs__link">
+        
+  
+    
+  
+  Nebula HW Interfaces
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../nebula_ros/links/" class="md-tabs__link">
+        
+  
+    
+  
+  Nebula ROS
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Nebula" class="md-nav__button md-logo" aria-label="Nebula" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Nebula
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/tier4/nebula" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About Nebula
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add_sensor/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add Your Sensor
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hesai_decoder_design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Hesai Decoder Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../links/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nebula Common
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../nebula_decoders/links/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nebula Decoders
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../nebula_hw_interfaces/links/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nebula HW Interfaces
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../nebula_ros/links/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nebula ROS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#namespaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      Namespaces
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Classes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#public-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Public Types
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#public-attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Public Attributes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#public-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Public Functions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#public-static-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Public Static Functions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#public-types-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Public Types Documentation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Public Types Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enum-coordinatemode" class="md-nav__link">
+    <span class="md-ellipsis">
+      enum CoordinateMode
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typedef-nebulapoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      typedef NebulaPoint
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typedef-nebulapointcloud" class="md-nav__link">
+    <span class="md-ellipsis">
+      typedef NebulaPointCloud
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typedef-nebulapointcloudptr" class="md-nav__link">
+    <span class="md-ellipsis">
+      typedef NebulaPointCloudPtr
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typedef-nebulapointptr" class="md-nav__link">
+    <span class="md-ellipsis">
+      typedef NebulaPointPtr
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enum-ptpprofile" class="md-nav__link">
+    <span class="md-ellipsis">
+      enum PtpProfile
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enum-ptpswitchtype" class="md-nav__link">
+    <span class="md-ellipsis">
+      enum PtpSwitchType
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enum-ptptransporttype" class="md-nav__link">
+    <span class="md-ellipsis">
+      enum PtpTransportType
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enum-returnmode" class="md-nav__link">
+    <span class="md-ellipsis">
+      enum ReturnMode
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enum-returntype" class="md-nav__link">
+    <span class="md-ellipsis">
+      enum ReturnType
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enum-sensormodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      enum SensorModel
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enum-datatype" class="md-nav__link">
+    <span class="md-ellipsis">
+      enum datatype
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#public-attributes-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Public Attributes Documentation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Public Attributes Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#variable-bpearl_v4_flag" class="md-nav__link">
+    <span class="md-ellipsis">
+      variable BPEARL_V4_FLAG
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#public-functions-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Public Functions Documentation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Public Functions Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#function-getchannelsize" class="md-nav__link">
+    <span class="md-ellipsis">
+      function GetChannelSize
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-intfromreturnmodehesai" class="md-nav__link">
+    <span class="md-ellipsis">
+      function IntFromReturnModeHesai
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-ptpprofilefromstring" class="md-nav__link">
+    <span class="md-ellipsis">
+      function PtpProfileFromString
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-ptpswitchtypefromstring" class="md-nav__link">
+    <span class="md-ellipsis">
+      function PtpSwitchTypeFromString
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-ptptransporttypefromstring" class="md-nav__link">
+    <span class="md-ellipsis">
+      function PtpTransportTypeFromString
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-returnmodefrominthesai" class="md-nav__link">
+    <span class="md-ellipsis">
+      function ReturnModeFromIntHesai
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-returnmodefromstring" class="md-nav__link">
+    <span class="md-ellipsis">
+      function ReturnModeFromString
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-returnmodefromstringhesai" class="md-nav__link">
+    <span class="md-ellipsis">
+      function ReturnModeFromStringHesai
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-returnmodefromstringrobosense" class="md-nav__link">
+    <span class="md-ellipsis">
+      function ReturnModeFromStringRobosense
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-returnmodefromstringvelodyne" class="md-nav__link">
+    <span class="md-ellipsis">
+      function ReturnModeFromStringVelodyne
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-returnmodetoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      function ReturnModeToInt
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-returnmodetoreturntype" class="md-nav__link">
+    <span class="md-ellipsis">
+      function ReturnModeToReturnType
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-sensormodelfromstring" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SensorModelFromString
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-sensormodeltostring" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SensorModelToString
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-convertpointxyziradttopointxyzir" class="md-nav__link">
+    <span class="md-ellipsis">
+      function convertPointXYZIRADTToPointXYZIR
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-convertpointxyzircaedttopointxyzir" class="md-nav__link">
+    <span class="md-ellipsis">
+      function convertPointXYZIRCAEDTToPointXYZIR
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-convertpointxyzircaedttopointxyziradt" class="md-nav__link">
+    <span class="md-ellipsis">
+      function convertPointXYZIRCAEDTToPointXYZIRADT
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-operator" class="md-nav__link">
+    <span class="md-ellipsis">
+      function operator&lt;&lt;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-operator_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      function operator&lt;&lt;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-operator_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      function operator&lt;&lt;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-operator_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      function operator&lt;&lt;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-operator_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      function operator&lt;&lt;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-operator_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      function operator&lt;&lt;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-operator_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      function operator&lt;&lt;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-operator_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      function operator&lt;&lt;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-operator_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      function operator&lt;&lt;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-operator_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      function operator&lt;&lt;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-operator_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      function operator&lt;&lt;
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-operator_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      function operator&lt;&lt;
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#public-static-functions-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Public Static Functions Documentation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Public Static Functions Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#function-deg2rad" class="md-nav__link">
+    <span class="md-ellipsis">
+      function deg2rad
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-rad2deg" class="md-nav__link">
+    <span class="md-ellipsis">
+      function rad2deg
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="namespace-nebuladrivers">Namespace nebula::drivers</h1>
+<p><a href="../namespaces/"><strong>Namespace List</strong></a> <strong>&gt;</strong> <a href="../namespacenebula/"><strong>nebula</strong></a> <strong>&gt;</strong> <a href="./"><strong>drivers</strong></a></p>
+<h2 id="namespaces">Namespaces</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Type</th>
+<th style="text-align: left;">Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">namespace</td>
+<td style="text-align: left;"><a href="../namespacenebula_1_1drivers_1_1continental__ars548/"><strong>continental_ars548</strong></a> <br></td>
+</tr>
+</tbody>
+</table>
+<h2 id="classes">Classes</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Type</th>
+<th style="text-align: left;">Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1CalibrationConfigurationBase/"><strong>CalibrationConfigurationBase</strong></a> <br><em>Base struct for Calibration configuration (Requires extensions in child struct)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1ChannelCorrection/"><strong>ChannelCorrection</strong></a> <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1EthernetSensorConfigurationBase/"><strong>EthernetSensorConfigurationBase</strong></a> <br><em>Base struct for Ethernet-based Sensor configuration.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1HesaiCalibrationConfiguration/"><strong>HesaiCalibrationConfiguration</strong></a> <br><em>struct for Hesai calibration configuration</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1HesaiCorrection/"><strong>HesaiCorrection</strong></a> <br><em>struct for Hesai correction configuration (for AT)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1HesaiSensorConfiguration/"><strong>HesaiSensorConfiguration</strong></a> <br><em>struct for Hesai sensor configuration</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1LidarConfigurationBase/"><strong>LidarConfigurationBase</strong></a> <br><em>Base struct for Lidar configuration.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1PointField/"><strong>PointField</strong></a> <br><em>not used?</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1PointXYZICATR/"><strong>PointXYZICATR</strong></a> <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1PointXYZIR/"><strong>PointXYZIR</strong></a> <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1PointXYZIRADT/"><strong>PointXYZIRADT</strong></a> <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1PointXYZIRCAEDT/"><strong>PointXYZIRCAEDT</strong></a> <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1RobosenseCalibrationConfiguration/"><strong>RobosenseCalibrationConfiguration</strong></a> <br><em>struct for Robosense calibration configuration</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1RobosenseSensorConfiguration/"><strong>RobosenseSensorConfiguration</strong></a> <br><em>struct for Robosense sensor configuration</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1SensorConfigurationBase/"><strong>SensorConfigurationBase</strong></a> <br><em>Base struct for Sensor configuration.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">class</td>
+<td style="text-align: left;"><a href="../classnebula_1_1drivers_1_1VelodyneCalibration/"><strong>VelodyneCalibration</strong></a> <br><em>Calibration information for the entire device.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1VelodyneCalibrationConfiguration/"><strong>VelodyneCalibrationConfiguration</strong></a> <br><em>struct for Velodyne calibration configuration</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1VelodyneLaserCorrection/"><strong>VelodyneLaserCorrection</strong></a> <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">struct</td>
+<td style="text-align: left;"><a href="../structnebula_1_1drivers_1_1VelodyneSensorConfiguration/"><strong>VelodyneSensorConfiguration</strong></a> <br><em>struct for Velodyne sensor configuration</em></td>
+</tr>
+</tbody>
+</table>
+<h2 id="public-types">Public Types</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Type</th>
+<th style="text-align: left;">Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">enum</td>
+<td style="text-align: left;"><a href="#enum-coordinatemode"><strong>CoordinateMode</strong></a>  <br><em>Coordinate mode for Velodyne's setting (need to check)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">typedef <a href="../structnebula_1_1drivers_1_1PointXYZIRCAEDT/"><strong>PointXYZIRCAEDT</strong></a></td>
+<td style="text-align: left;"><a href="#typedef-nebulapoint"><strong>NebulaPoint</strong></a>  <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">typedef pcl::PointCloud&lt; <a href="./#typedef-nebulapoint"><strong>NebulaPoint</strong></a> &gt;</td>
+<td style="text-align: left;"><a href="#typedef-nebulapointcloud"><strong>NebulaPointCloud</strong></a>  <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">typedef pcl::PointCloud&lt; <a href="./#typedef-nebulapoint"><strong>NebulaPoint</strong></a> &gt;::Ptr</td>
+<td style="text-align: left;"><a href="#typedef-nebulapointcloudptr"><strong>NebulaPointCloudPtr</strong></a>  <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">typedef std::shared_ptr&lt; <a href="./#typedef-nebulapoint"><strong>NebulaPoint</strong></a> &gt;</td>
+<td style="text-align: left;"><a href="#typedef-nebulapointptr"><strong>NebulaPointPtr</strong></a>  <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">enum</td>
+<td style="text-align: left;"><a href="#enum-ptpprofile"><strong>PtpProfile</strong></a>  <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">enum</td>
+<td style="text-align: left;"><a href="#enum-ptpswitchtype"><strong>PtpSwitchType</strong></a>  <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">enum</td>
+<td style="text-align: left;"><a href="#enum-ptptransporttype"><strong>PtpTransportType</strong></a>  <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">enum uint8_t</td>
+<td style="text-align: left;"><a href="#enum-returnmode"><strong>ReturnMode</strong></a>  <br><em>Return mode of each LiDAR.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">enum uint8_t</td>
+<td style="text-align: left;"><a href="#enum-returntype"><strong>ReturnType</strong></a>  <br><em>Return type of each scan.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">enum</td>
+<td style="text-align: left;"><a href="#enum-sensormodel"><strong>SensorModel</strong></a>  <br><em>Type of sensor.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">enum</td>
+<td style="text-align: left;"><a href="#enum-datatype"><strong>datatype</strong></a>  <br><em>not used?</em></td>
+</tr>
+</tbody>
+</table>
+<h2 id="public-attributes">Public Attributes</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Type</th>
+<th style="text-align: left;">Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">constexpr uint8_t</td>
+<td style="text-align: left;"><a href="#variable-bpearl_v4_flag"><strong>BPEARL_V4_FLAG</strong></a>   = = 0x04<br></td>
+</tr>
+</tbody>
+</table>
+<h2 id="public-functions">Public Functions</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Type</th>
+<th style="text-align: left;">Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">size_t</td>
+<td style="text-align: left;"><a href="#function-getchannelsize"><strong>GetChannelSize</strong></a> (const <a href="./#enum-sensormodel"><strong>SensorModel</strong></a> &amp; model) <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">int</td>
+<td style="text-align: left;"><a href="#function-intfromreturnmodehesai"><strong>IntFromReturnModeHesai</strong></a> (const <a href="./#enum-returnmode"><strong>ReturnMode</strong></a> return_mode, const <a href="./#enum-sensormodel"><strong>SensorModel</strong></a> &amp; sensor_model) <br><em>Convert ReturnMode enum to return mode number.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;"><a href="./#enum-ptpprofile"><strong>PtpProfile</strong></a></td>
+<td style="text-align: left;"><a href="#function-ptpprofilefromstring"><strong>PtpProfileFromString</strong></a> (const std::string &amp; ptp_profile) <br><em>Converts String to PTP Profile.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;"><a href="./#enum-ptpswitchtype"><strong>PtpSwitchType</strong></a></td>
+<td style="text-align: left;"><a href="#function-ptpswitchtypefromstring"><strong>PtpSwitchTypeFromString</strong></a> (const std::string &amp; switch_type) <br><em>Converts String to PTP SwitchType.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;"><a href="./#enum-ptptransporttype"><strong>PtpTransportType</strong></a></td>
+<td style="text-align: left;"><a href="#function-ptptransporttypefromstring"><strong>PtpTransportTypeFromString</strong></a> (const std::string &amp; transport_type) <br><em>Converts String to PTP TransportType.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;"><a href="./#enum-returnmode"><strong>ReturnMode</strong></a></td>
+<td style="text-align: left;"><a href="#function-returnmodefrominthesai"><strong>ReturnModeFromIntHesai</strong></a> (const int return_mode, const <a href="./#enum-sensormodel"><strong>SensorModel</strong></a> &amp; sensor_model) <br><em>Convert return mode number to ReturnMode enum.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;"><a href="./#enum-returnmode"><strong>ReturnMode</strong></a></td>
+<td style="text-align: left;"><a href="#function-returnmodefromstring"><strong>ReturnModeFromString</strong></a> (const std::string &amp; return_mode) <br><em>Convert return mode name to ReturnMode enum.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;"><a href="./#enum-returnmode"><strong>ReturnMode</strong></a></td>
+<td style="text-align: left;"><a href="#function-returnmodefromstringhesai"><strong>ReturnModeFromStringHesai</strong></a> (const std::string &amp; return_mode, const <a href="./#enum-sensormodel"><strong>SensorModel</strong></a> &amp; sensor_model) <br><em>Convert return mode name to ReturnMode enum (Hesai-specific ReturnModeFromString)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;"><a href="./#enum-returnmode"><strong>ReturnMode</strong></a></td>
+<td style="text-align: left;"><a href="#function-returnmodefromstringrobosense"><strong>ReturnModeFromStringRobosense</strong></a> (const std::string &amp; return_mode) <br><em>Convert return mode name to ReturnMode enum (Robosense-specific ReturnModeFromString)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;"><a href="./#enum-returnmode"><strong>ReturnMode</strong></a></td>
+<td style="text-align: left;"><a href="#function-returnmodefromstringvelodyne"><strong>ReturnModeFromStringVelodyne</strong></a> (const std::string &amp; return_mode) <br><em>Convert return mode name to ReturnMode enum (Velodyne-specific ReturnModeFromString)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">uint8_t</td>
+<td style="text-align: left;"><a href="#function-returnmodetoint"><strong>ReturnModeToInt</strong></a> (const <a href="./#enum-returnmode"><strong>ReturnMode</strong></a> &amp; mode) <br><em>Convert ReturnMode enum to integer.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;"><a href="./#enum-returntype"><strong>ReturnType</strong></a></td>
+<td style="text-align: left;"><a href="#function-returnmodetoreturntype"><strong>ReturnModeToReturnType</strong></a> (const <a href="./#enum-returnmode"><strong>ReturnMode</strong></a> &amp; mode) <br><em>Convert ReturnMode enum to ReturnType enum for Pandar AT, XTM (temporary, not used)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;"><a href="./#enum-sensormodel"><strong>SensorModel</strong></a></td>
+<td style="text-align: left;"><a href="#function-sensormodelfromstring"><strong>SensorModelFromString</strong></a> (const std::string &amp; sensor_model) <br><em>Convert sensor name to SensorModel enum (Upper and lower case letters must match)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">std::string</td>
+<td style="text-align: left;"><a href="#function-sensormodeltostring"><strong>SensorModelToString</strong></a> (const <a href="./#enum-sensormodel"><strong>SensorModel</strong></a> &amp; sensor_model) <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">pcl::PointCloud&lt; <a href="../structnebula_1_1drivers_1_1PointXYZIR/"><strong>PointXYZIR</strong></a> &gt;::Ptr</td>
+<td style="text-align: left;"><a href="#function-convertpointxyziradttopointxyzir"><strong>convertPointXYZIRADTToPointXYZIR</strong></a> (const pcl::PointCloud&lt; <a href="../structnebula_1_1drivers_1_1PointXYZIRADT/"><strong>PointXYZIRADT</strong></a> &gt;::ConstPtr &amp; input_pointcloud) <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">pcl::PointCloud&lt; <a href="../structnebula_1_1drivers_1_1PointXYZIR/"><strong>PointXYZIR</strong></a> &gt;::Ptr</td>
+<td style="text-align: left;"><a href="#function-convertpointxyzircaedttopointxyzir"><strong>convertPointXYZIRCAEDTToPointXYZIR</strong></a> (const pcl::PointCloud&lt; <a href="../structnebula_1_1drivers_1_1PointXYZIRCAEDT/"><strong>PointXYZIRCAEDT</strong></a> &gt;::ConstPtr &amp; input_pointcloud) <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">pcl::PointCloud&lt; <a href="../structnebula_1_1drivers_1_1PointXYZIRADT/"><strong>PointXYZIRADT</strong></a> &gt;::Ptr</td>
+<td style="text-align: left;"><a href="#function-convertpointxyzircaedttopointxyziradt"><strong>convertPointXYZIRCAEDTToPointXYZIRADT</strong></a> (const pcl::PointCloud&lt; <a href="../structnebula_1_1drivers_1_1PointXYZIRCAEDT/"><strong>PointXYZIRCAEDT</strong></a> &gt;::ConstPtr &amp; input_pointcloud, double stamp) <br></td>
+</tr>
+<tr>
+<td style="text-align: right;">std::ostream &amp;</td>
+<td style="text-align: left;"><a href="#function-operator"><strong>operator&lt;&lt;</strong></a> (std::ostream &amp; os, <a href="../structnebula_1_1drivers_1_1HesaiSensorConfiguration/"><strong>HesaiSensorConfiguration</strong></a> const &amp; arg) <br><em>Convert</em> <a href="../structnebula_1_1drivers_1_1HesaiSensorConfiguration/"><em><strong>HesaiSensorConfiguration</strong></em></a> <em>to string (Overloading the &lt;&lt; operator)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">std::ostream &amp;</td>
+<td style="text-align: left;"><a href="#function-operator_1"><strong>operator&lt;&lt;</strong></a> (std::ostream &amp; os, <a href="./#enum-returntype"><strong>nebula::drivers::ReturnType</strong></a> const &amp; arg) <br><em>Convert ReturnType enum to string (Overloading the &lt;&lt; operator)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">std::ostream &amp;</td>
+<td style="text-align: left;"><a href="#function-operator_2"><strong>operator&lt;&lt;</strong></a> (std::ostream &amp; os, <a href="./#enum-returnmode"><strong>nebula::drivers::ReturnMode</strong></a> const &amp; arg) <br><em>Convert ReturnMode enum to string (Overloading the &lt;&lt; operator)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">std::ostream &amp;</td>
+<td style="text-align: left;"><a href="#function-operator_3"><strong>operator&lt;&lt;</strong></a> (std::ostream &amp; os, <a href="./#enum-sensormodel"><strong>nebula::drivers::SensorModel</strong></a> const &amp; arg) <br><em>Convert SensorModel enum to string (Overloading the &lt;&lt; operator)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">std::ostream &amp;</td>
+<td style="text-align: left;"><a href="#function-operator_4"><strong>operator&lt;&lt;</strong></a> (std::ostream &amp; os, <a href="../structnebula_1_1drivers_1_1SensorConfigurationBase/"><strong>SensorConfigurationBase</strong></a> const &amp; arg) <br><em>Convert</em> <a href="../structnebula_1_1drivers_1_1SensorConfigurationBase/"><em><strong>SensorConfigurationBase</strong></em></a> <em>to string (Overloading the &lt;&lt; operator)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">std::ostream &amp;</td>
+<td style="text-align: left;"><a href="#function-operator_5"><strong>operator&lt;&lt;</strong></a> (std::ostream &amp; os, <a href="../structnebula_1_1drivers_1_1EthernetSensorConfigurationBase/"><strong>EthernetSensorConfigurationBase</strong></a> const &amp; arg) <br><em>Convert</em> <a href="../structnebula_1_1drivers_1_1EthernetSensorConfigurationBase/"><em><strong>EthernetSensorConfigurationBase</strong></em></a> <em>to string (Overloading the &lt;&lt; operator)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">std::ostream &amp;</td>
+<td style="text-align: left;"><a href="#function-operator_6"><strong>operator&lt;&lt;</strong></a> (std::ostream &amp; os, <a href="../structnebula_1_1drivers_1_1LidarConfigurationBase/"><strong>nebula::drivers::LidarConfigurationBase</strong></a> const &amp; arg) <br><em>Convert</em> <a href="../structnebula_1_1drivers_1_1LidarConfigurationBase/"><em><strong>LidarConfigurationBase</strong></em></a> <em>to string (Overloading the &lt;&lt; operator)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">std::ostream &amp;</td>
+<td style="text-align: left;"><a href="#function-operator_7"><strong>operator&lt;&lt;</strong></a> (std::ostream &amp; os, <a href="./#enum-ptpprofile"><strong>nebula::drivers::PtpProfile</strong></a> const &amp; arg) <br><em>Convert PtpProfile enum to string (Overloading the &lt;&lt; operator)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">std::ostream &amp;</td>
+<td style="text-align: left;"><a href="#function-operator_8"><strong>operator&lt;&lt;</strong></a> (std::ostream &amp; os, <a href="./#enum-ptptransporttype"><strong>nebula::drivers::PtpTransportType</strong></a> const &amp; arg) <br><em>Convert PtpTransportType enum to string (Overloading the &lt;&lt; operator)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">std::ostream &amp;</td>
+<td style="text-align: left;"><a href="#function-operator_9"><strong>operator&lt;&lt;</strong></a> (std::ostream &amp; os, <a href="./#enum-ptpswitchtype"><strong>nebula::drivers::PtpSwitchType</strong></a> const &amp; arg) <br><em>Convert PtpSwitchType enum to string (Overloading the &lt;&lt; operator)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">std::ostream &amp;</td>
+<td style="text-align: left;"><a href="#function-operator_10"><strong>operator&lt;&lt;</strong></a> (std::ostream &amp; os, <a href="../structnebula_1_1drivers_1_1RobosenseSensorConfiguration/"><strong>RobosenseSensorConfiguration</strong></a> const &amp; arg) <br><em>Convert</em> <a href="../structnebula_1_1drivers_1_1RobosenseSensorConfiguration/"><em><strong>RobosenseSensorConfiguration</strong></em></a> <em>to string (Overloading the &lt;&lt; operator)</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">std::ostream &amp;</td>
+<td style="text-align: left;"><a href="#function-operator_11"><strong>operator&lt;&lt;</strong></a> (std::ostream &amp; os, <a href="../structnebula_1_1drivers_1_1VelodyneSensorConfiguration/"><strong>VelodyneSensorConfiguration</strong></a> const &amp; arg) <br><em>Convert</em> <a href="../structnebula_1_1drivers_1_1VelodyneSensorConfiguration/"><em><strong>VelodyneSensorConfiguration</strong></em></a> <em>to string (Overloading the &lt;&lt; operator)</em></td>
+</tr>
+</tbody>
+</table>
+<h2 id="public-static-functions">Public Static Functions</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Type</th>
+<th style="text-align: left;">Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">float</td>
+<td style="text-align: left;"><a href="#function-deg2rad"><strong>deg2rad</strong></a> (double degrees) <br><em>Converts degrees to radians.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">float</td>
+<td style="text-align: left;"><a href="#function-rad2deg"><strong>rad2deg</strong></a> (double radians) <br><em>Converts radians to degrees.</em></td>
+</tr>
+</tbody>
+</table>
+<h2 id="public-types-documentation">Public Types Documentation</h2>
+<h3 id="enum-coordinatemode">enum CoordinateMode</h3>
+<div class="highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">CoordinateMode</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">UNKNOWN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="n">CARTESIAN</span><span class="p">,</span>
+<span class="w">    </span><span class="n">SPHERICAL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">CYLINDRICAL</span>
+<span class="p">};</span>
+</code></pre></div>
+<hr>
+
+<h3 id="typedef-nebulapoint">typedef NebulaPoint</h3>
+<div class="highlight"><pre><span></span><code><span class="k">using</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">NebulaPoint</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">typedef</span><span class="w"> </span><span class="n">PointXYZIRCAEDT</span><span class="p">;</span>
+</code></pre></div>
+<hr>
+
+<h3 id="typedef-nebulapointcloud">typedef NebulaPointCloud</h3>
+<div class="highlight"><pre><span></span><code><span class="k">using</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">NebulaPointCloud</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">typedef</span><span class="w"> </span><span class="n">pcl</span><span class="o">::</span><span class="n">PointCloud</span><span class="o">&lt;</span><span class="n">NebulaPoint</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div>
+<hr>
+
+<h3 id="typedef-nebulapointcloudptr">typedef NebulaPointCloudPtr</h3>
+<div class="highlight"><pre><span></span><code><span class="k">using</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">NebulaPointCloudPtr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">typedef</span><span class="w"> </span><span class="n">pcl</span><span class="o">::</span><span class="n">PointCloud</span><span class="o">&lt;</span><span class="n">NebulaPoint</span><span class="o">&gt;::</span><span class="n">Ptr</span><span class="p">;</span>
+</code></pre></div>
+<hr>
+
+<h3 id="typedef-nebulapointptr">typedef NebulaPointPtr</h3>
+<div class="highlight"><pre><span></span><code><span class="k">using</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">NebulaPointPtr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">typedef</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">NebulaPoint</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div>
+<hr>
+
+<h3 id="enum-ptpprofile">enum PtpProfile</h3>
+<div class="highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">PtpProfile</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">IEEE_1588v2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="n">IEEE_802_1AS</span><span class="p">,</span>
+<span class="w">    </span><span class="n">IEEE_802_1AS_AUTO</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PROFILE_UNKNOWN</span>
+<span class="p">};</span>
+</code></pre></div>
+<hr>
+
+<h3 id="enum-ptpswitchtype">enum PtpSwitchType</h3>
+<div class="highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">PtpSwitchType</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">NON_TSN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="n">TSN</span><span class="p">,</span>
+<span class="w">    </span><span class="n">UNKNOWN_SWITCH</span>
+<span class="p">};</span>
+</code></pre></div>
+<hr>
+
+<h3 id="enum-ptptransporttype">enum PtpTransportType</h3>
+<div class="highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">PtpTransportType</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">UDP_IP</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="n">L2</span><span class="p">,</span>
+<span class="w">    </span><span class="n">UNKNOWN_TRANSPORT</span>
+<span class="p">};</span>
+</code></pre></div>
+<hr>
+
+<h3 id="enum-returnmode">enum ReturnMode</h3>
+<div class="highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">ReturnMode</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">UNKNOWN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="n">SINGLE_STRONGEST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">SINGLE_LAST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">DUAL_FIRST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">DUAL_LAST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">DUAL_ONLY</span><span class="p">,</span>
+<span class="w">    </span><span class="n">SINGLE_FIRST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">DUAL_STRONGEST_FIRST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">DUAL_STRONGEST_LAST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">DUAL_WEAK_FIRST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">DUAL_WEAK_LAST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">TRIPLE</span><span class="p">,</span>
+<span class="w">    </span><span class="n">LAST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">STRONGEST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">DUAL_LAST_STRONGEST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">FIRST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">DUAL_LAST_FIRST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">DUAL_FIRST_STRONGEST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">DUAL</span>
+<span class="p">};</span>
+</code></pre></div>
+<hr>
+
+<h3 id="enum-returntype">enum ReturnType</h3>
+<div class="highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">ReturnType</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">UNKNOWN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="n">LAST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">FIRST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">STRONGEST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">FIRST_WEAK</span><span class="p">,</span>
+<span class="w">    </span><span class="n">LAST_WEAK</span><span class="p">,</span>
+<span class="w">    </span><span class="n">IDENTICAL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">SECOND</span><span class="p">,</span>
+<span class="w">    </span><span class="n">SECONDSTRONGEST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">FIRST_STRONGEST</span><span class="p">,</span>
+<span class="w">    </span><span class="n">LAST_STRONGEST</span>
+<span class="p">};</span>
+</code></pre></div>
+<hr>
+
+<h3 id="enum-sensormodel">enum SensorModel</h3>
+<div class="highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">SensorModel</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">UNKNOWN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="n">HESAI_PANDAR64</span><span class="p">,</span>
+<span class="w">    </span><span class="n">HESAI_PANDAR40P</span><span class="p">,</span>
+<span class="w">    </span><span class="n">HESAI_PANDAR40M</span><span class="p">,</span>
+<span class="w">    </span><span class="n">HESAI_PANDARQT64</span><span class="p">,</span>
+<span class="w">    </span><span class="n">HESAI_PANDARQT128</span><span class="p">,</span>
+<span class="w">    </span><span class="n">HESAI_PANDARXT32</span><span class="p">,</span>
+<span class="w">    </span><span class="n">HESAI_PANDARXT32M</span><span class="p">,</span>
+<span class="w">    </span><span class="n">HESAI_PANDARAT128</span><span class="p">,</span>
+<span class="w">    </span><span class="n">HESAI_PANDAR128_E3X</span><span class="p">,</span>
+<span class="w">    </span><span class="n">HESAI_PANDAR128_E4X</span><span class="p">,</span>
+<span class="w">    </span><span class="n">VELODYNE_VLS128</span><span class="p">,</span>
+<span class="w">    </span><span class="n">VELODYNE_HDL64</span><span class="p">,</span>
+<span class="w">    </span><span class="n">VELODYNE_VLP32</span><span class="p">,</span>
+<span class="w">    </span><span class="n">VELODYNE_VLP32MR</span><span class="p">,</span>
+<span class="w">    </span><span class="n">VELODYNE_HDL32</span><span class="p">,</span>
+<span class="w">    </span><span class="n">VELODYNE_VLP16</span><span class="p">,</span>
+<span class="w">    </span><span class="n">ROBOSENSE_HELIOS</span><span class="p">,</span>
+<span class="w">    </span><span class="n">ROBOSENSE_BPEARL</span><span class="p">,</span>
+<span class="w">    </span><span class="n">ROBOSENSE_BPEARL_V3</span><span class="p">,</span>
+<span class="w">    </span><span class="n">ROBOSENSE_BPEARL_V4</span><span class="p">,</span>
+<span class="w">    </span><span class="n">CONTINENTAL_ARS548</span>
+<span class="p">};</span>
+</code></pre></div>
+<hr>
+
+<h3 id="enum-datatype">enum datatype</h3>
+<div class="highlight"><pre><span></span><code><span class="k">enum</span><span class="w"> </span><span class="nc">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">datatype</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">INT8</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="n">UINT8</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">    </span><span class="n">INT16</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">    </span><span class="n">UINT16</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">    </span><span class="n">INT32</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">    </span><span class="n">UINT32</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span>
+<span class="w">    </span><span class="n">FLOAT32</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<span class="w">    </span><span class="n">FLOAT64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span>
+<span class="p">};</span>
+</code></pre></div>
+<hr>
+<h2 id="public-attributes-documentation">Public Attributes Documentation</h2>
+<h3 id="variable-bpearl_v4_flag">variable BPEARL_V4_FLAG</h3>
+<div class="highlight"><pre><span></span><code><span class="k">constexpr</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">BPEARL_V4_FLAG</span><span class="p">;</span>
+</code></pre></div>
+<hr>
+<h2 id="public-functions-documentation">Public Functions Documentation</h2>
+<h3 id="function-getchannelsize">function GetChannelSize</h3>
+<div class="highlight"><pre><span></span><code><span class="kt">size_t</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">GetChannelSize</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">SensorModel</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">model</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div>
+<hr>
+
+<h3 id="function-intfromreturnmodehesai">function IntFromReturnModeHesai</h3>
+<p><em>Convert ReturnMode enum to return mode number.</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">IntFromReturnModeHesai</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">ReturnMode</span><span class="w"> </span><span class="n">return_mode</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">SensorModel</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">sensor_model</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>return_mode</code> target ReturnMode </li>
+<li><code>sensor_model</code> Model for correct conversion </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Corresponding return mode number for the hardware </p>
+<hr>
+
+<h3 id="function-ptpprofilefromstring">function PtpProfileFromString</h3>
+<p><em>Converts String to PTP Profile.</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">PtpProfile</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">PtpProfileFromString</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">ptp_profile</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>ptp_profile</code> Profile as String </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Corresponding PtpProfile </p>
+<hr>
+
+<h3 id="function-ptpswitchtypefromstring">function PtpSwitchTypeFromString</h3>
+<p><em>Converts String to PTP SwitchType.</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">PtpSwitchType</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">PtpSwitchTypeFromString</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">switch_type</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>switch_type</code> Switch as String </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Corresponding PtpSwitchType </p>
+<hr>
+
+<h3 id="function-ptptransporttypefromstring">function PtpTransportTypeFromString</h3>
+<p><em>Converts String to PTP TransportType.</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">PtpTransportType</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">PtpTransportTypeFromString</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">transport_type</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>transport_type</code> Transport as String </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Corresponding PtpTransportType </p>
+<hr>
+
+<h3 id="function-returnmodefrominthesai">function ReturnModeFromIntHesai</h3>
+<p><em>Convert return mode number to ReturnMode enum.</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">ReturnMode</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">ReturnModeFromIntHesai</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">return_mode</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">SensorModel</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">sensor_model</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>return_mode</code> Return mode number from the hardware response </li>
+<li><code>sensor_model</code> Model for correct conversion </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Corresponding ReturnMode </p>
+<hr>
+
+<h3 id="function-returnmodefromstring">function ReturnModeFromString</h3>
+<p><em>Convert return mode name to ReturnMode enum.</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">ReturnMode</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">ReturnModeFromString</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">return_mode</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>return_mode</code> Return mode name (Upper and lower case letters must match) </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Corresponding ReturnMode </p>
+<hr>
+
+<h3 id="function-returnmodefromstringhesai">function ReturnModeFromStringHesai</h3>
+<p><em>Convert return mode name to ReturnMode enum (Hesai-specific ReturnModeFromString)</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">ReturnMode</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">ReturnModeFromStringHesai</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">return_mode</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">SensorModel</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">sensor_model</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>return_mode</code> Return mode name (Upper and lower case letters must match) </li>
+<li><code>sensor_model</code> Model for correct conversion </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Corresponding ReturnMode </p>
+<hr>
+
+<h3 id="function-returnmodefromstringrobosense">function ReturnModeFromStringRobosense</h3>
+<p><em>Convert return mode name to ReturnMode enum (Robosense-specific ReturnModeFromString)</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">ReturnMode</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">ReturnModeFromStringRobosense</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">return_mode</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>return_mode</code> Return mode name (Upper and lower case letters must match) </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Corresponding ReturnMode </p>
+<hr>
+
+<h3 id="function-returnmodefromstringvelodyne">function ReturnModeFromStringVelodyne</h3>
+<p><em>Convert return mode name to ReturnMode enum (Velodyne-specific ReturnModeFromString)</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">ReturnMode</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">ReturnModeFromStringVelodyne</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">return_mode</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>return_mode</code> Return mode name (Upper and lower case letters must match) </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Corresponding ReturnMode </p>
+<hr>
+
+<h3 id="function-returnmodetoint">function ReturnModeToInt</h3>
+<p><em>Convert ReturnMode enum to integer.</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">ReturnModeToInt</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">ReturnMode</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mode</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>mode</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Corresponding number </p>
+<hr>
+
+<h3 id="function-returnmodetoreturntype">function ReturnModeToReturnType</h3>
+<p><em>Convert ReturnMode enum to ReturnType enum for Pandar AT, XTM (temporary, not used)</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">ReturnType</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">ReturnModeToReturnType</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">ReturnMode</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mode</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>mode</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Corresponding mode </p>
+<hr>
+
+<h3 id="function-sensormodelfromstring">function SensorModelFromString</h3>
+<p><em>Convert sensor name to SensorModel enum (Upper and lower case letters must match)</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">SensorModel</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">SensorModelFromString</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">sensor_model</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sensor_model</code> Sensor name (Upper and lower case letters must match) </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Corresponding SensorModel </p>
+<hr>
+
+<h3 id="function-sensormodeltostring">function SensorModelToString</h3>
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">SensorModelToString</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">SensorModel</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">sensor_model</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div>
+<hr>
+
+<h3 id="function-convertpointxyziradttopointxyzir">function convertPointXYZIRADTToPointXYZIR</h3>
+<div class="highlight"><pre><span></span><code><span class="n">pcl</span><span class="o">::</span><span class="n">PointCloud</span><span class="o">&lt;</span><span class="w"> </span><span class="n">PointXYZIR</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">Ptr</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">convertPointXYZIRADTToPointXYZIR</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pcl</span><span class="o">::</span><span class="n">PointCloud</span><span class="o">&lt;</span><span class="w"> </span><span class="n">PointXYZIRADT</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">ConstPtr</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">input_pointcloud</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div>
+<hr>
+
+<h3 id="function-convertpointxyzircaedttopointxyzir">function convertPointXYZIRCAEDTToPointXYZIR</h3>
+<div class="highlight"><pre><span></span><code><span class="n">pcl</span><span class="o">::</span><span class="n">PointCloud</span><span class="o">&lt;</span><span class="w"> </span><span class="n">PointXYZIR</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">Ptr</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">convertPointXYZIRCAEDTToPointXYZIR</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pcl</span><span class="o">::</span><span class="n">PointCloud</span><span class="o">&lt;</span><span class="w"> </span><span class="n">PointXYZIRCAEDT</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">ConstPtr</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">input_pointcloud</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div>
+<hr>
+
+<h3 id="function-convertpointxyzircaedttopointxyziradt">function convertPointXYZIRCAEDTToPointXYZIRADT</h3>
+<div class="highlight"><pre><span></span><code><span class="n">pcl</span><span class="o">::</span><span class="n">PointCloud</span><span class="o">&lt;</span><span class="w"> </span><span class="n">PointXYZIRADT</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">Ptr</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">convertPointXYZIRCAEDTToPointXYZIRADT</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pcl</span><span class="o">::</span><span class="n">PointCloud</span><span class="o">&lt;</span><span class="w"> </span><span class="n">PointXYZIRCAEDT</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">ConstPtr</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">input_pointcloud</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">stamp</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div>
+<hr>
+
+<h3 id="function-operator">function operator&lt;&lt;</h3>
+<p><em>Convert</em> <a href="../structnebula_1_1drivers_1_1HesaiSensorConfiguration/"><em><strong>HesaiSensorConfiguration</strong></em></a> <em>to string (Overloading the &lt;&lt; operator)</em>
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span>
+<span class="w">    </span><span class="n">HesaiSensorConfiguration</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">arg</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>os</code> </li>
+<li><code>arg</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>stream </p>
+<hr>
+
+<h3 id="function-operator_1">function operator&lt;&lt;</h3>
+<p><em>Convert ReturnType enum to string (Overloading the &lt;&lt; operator)</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span>
+<span class="w">    </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">ReturnType</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">arg</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>os</code> </li>
+<li><code>arg</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>stream </p>
+<hr>
+
+<h3 id="function-operator_2">function operator&lt;&lt;</h3>
+<p><em>Convert ReturnMode enum to string (Overloading the &lt;&lt; operator)</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span>
+<span class="w">    </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">ReturnMode</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">arg</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>os</code> </li>
+<li><code>arg</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>stream </p>
+<hr>
+
+<h3 id="function-operator_3">function operator&lt;&lt;</h3>
+<p><em>Convert SensorModel enum to string (Overloading the &lt;&lt; operator)</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span>
+<span class="w">    </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">SensorModel</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">arg</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>os</code> </li>
+<li><code>arg</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>stream </p>
+<hr>
+
+<h3 id="function-operator_4">function operator&lt;&lt;</h3>
+<p><em>Convert</em> <a href="../structnebula_1_1drivers_1_1SensorConfigurationBase/"><em><strong>SensorConfigurationBase</strong></em></a> <em>to string (Overloading the &lt;&lt; operator)</em>
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span>
+<span class="w">    </span><span class="n">SensorConfigurationBase</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">arg</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>os</code> </li>
+<li><code>arg</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>stream </p>
+<hr>
+
+<h3 id="function-operator_5">function operator&lt;&lt;</h3>
+<p><em>Convert</em> <a href="../structnebula_1_1drivers_1_1EthernetSensorConfigurationBase/"><em><strong>EthernetSensorConfigurationBase</strong></em></a> <em>to string (Overloading the &lt;&lt; operator)</em>
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span>
+<span class="w">    </span><span class="n">EthernetSensorConfigurationBase</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">arg</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>os</code> </li>
+<li><code>arg</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>stream </p>
+<hr>
+
+<h3 id="function-operator_6">function operator&lt;&lt;</h3>
+<p><em>Convert</em> <a href="../structnebula_1_1drivers_1_1LidarConfigurationBase/"><em><strong>LidarConfigurationBase</strong></em></a> <em>to string (Overloading the &lt;&lt; operator)</em>
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span>
+<span class="w">    </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">LidarConfigurationBase</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">arg</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>os</code> </li>
+<li><code>arg</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>stream </p>
+<hr>
+
+<h3 id="function-operator_7">function operator&lt;&lt;</h3>
+<p><em>Convert PtpProfile enum to string (Overloading the &lt;&lt; operator)</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span>
+<span class="w">    </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">PtpProfile</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">arg</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>os</code> </li>
+<li><code>arg</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>stream </p>
+<hr>
+
+<h3 id="function-operator_8">function operator&lt;&lt;</h3>
+<p><em>Convert PtpTransportType enum to string (Overloading the &lt;&lt; operator)</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span>
+<span class="w">    </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">PtpTransportType</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">arg</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>os</code> </li>
+<li><code>arg</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>stream </p>
+<hr>
+
+<h3 id="function-operator_9">function operator&lt;&lt;</h3>
+<p><em>Convert PtpSwitchType enum to string (Overloading the &lt;&lt; operator)</em> 
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span>
+<span class="w">    </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">PtpSwitchType</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">arg</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>os</code> </li>
+<li><code>arg</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>stream </p>
+<hr>
+
+<h3 id="function-operator_10">function operator&lt;&lt;</h3>
+<p><em>Convert</em> <a href="../structnebula_1_1drivers_1_1RobosenseSensorConfiguration/"><em><strong>RobosenseSensorConfiguration</strong></em></a> <em>to string (Overloading the &lt;&lt; operator)</em>
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span>
+<span class="w">    </span><span class="n">RobosenseSensorConfiguration</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">arg</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>os</code> </li>
+<li><code>arg</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>stream </p>
+<hr>
+
+<h3 id="function-operator_11">function operator&lt;&lt;</h3>
+<p><em>Convert</em> <a href="../structnebula_1_1drivers_1_1VelodyneSensorConfiguration/"><em><strong>VelodyneSensorConfiguration</strong></em></a> <em>to string (Overloading the &lt;&lt; operator)</em>
+<div class="highlight"><pre><span></span><code><span class="kr">inline</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span>
+<span class="w">    </span><span class="n">VelodyneSensorConfiguration</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">arg</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>os</code> </li>
+<li><code>arg</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>stream </p>
+<hr>
+<h2 id="public-static-functions-documentation">Public Static Functions Documentation</h2>
+<h3 id="function-deg2rad">function deg2rad</h3>
+<p><em>Converts degrees to radians.</em> 
+<div class="highlight"><pre><span></span><code><span class="k">static</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">deg2rad</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">degrees</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>radians</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>degrees </p>
+<hr>
+
+<h3 id="function-rad2deg">function rad2deg</h3>
+<p><em>Converts radians to degrees.</em> 
+<div class="highlight"><pre><span></span><code><span class="k">static</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">rad2deg</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">radians</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>radians</code> </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>degrees </p>
+<hr>
+
+<hr />
+<p>The documentation for this class was generated from the following file <code>nebula_common/include/nebula_common/continental/continental_ars548.hpp</code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2023 TIER IV, Inc.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+    
+  </body>
+</html>

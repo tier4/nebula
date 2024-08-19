@@ -1,0 +1,1442 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Nebula Multi-Sensor Driver Framework">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.31">
+    
+    
+      
+        <title>Class nebula::drivers::continental_ars548::ContinentalARS548HwInterface - Nebula</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.3cba04c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#class-nebuladriverscontinental_ars548continentalars548hwinterface" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Nebula" class="md-header__button md-logo" aria-label="Nebula" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Nebula
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Class nebula::drivers::continental_ars548::ContinentalARS548HwInterface
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="grey" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/tier4/nebula" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../design/" class="md-tabs__link">
+        
+  
+    
+  
+  Design
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../about/" class="md-tabs__link">
+        
+  
+    
+  
+  About Nebula
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../add_sensor/" class="md-tabs__link">
+        
+  
+    
+  
+  Add Your Sensor
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../hesai_decoder_design/" class="md-tabs__link">
+        
+  
+    
+  
+  Hesai Decoder Design
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../nebula_common/links/" class="md-tabs__link">
+        
+  
+    
+  
+  Nebula Common
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../nebula_decoders/links/" class="md-tabs__link">
+        
+  
+    
+  
+  Nebula Decoders
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../links/" class="md-tabs__link">
+        
+  
+    
+  
+  Nebula HW Interfaces
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../nebula_ros/links/" class="md-tabs__link">
+        
+  
+    
+  
+  Nebula ROS
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Nebula" class="md-nav__button md-logo" aria-label="Nebula" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Nebula
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/tier4/nebula" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About Nebula
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add_sensor/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add Your Sensor
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hesai_decoder_design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Hesai Decoder Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../nebula_common/links/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nebula Common
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../nebula_decoders/links/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nebula Decoders
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../links/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nebula HW Interfaces
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../nebula_ros/links/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Nebula ROS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#public-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Public Functions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#public-functions-inherited-from-nebuladriversnebulahwinterfacebase" class="md-nav__link">
+    <span class="md-ellipsis">
+      Public Functions inherited from nebula::drivers::NebulaHwInterfaceBase
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#protected-functions-inherited-from-nebuladriversnebulahwinterfacebase" class="md-nav__link">
+    <span class="md-ellipsis">
+      Protected Functions inherited from nebula::drivers::NebulaHwInterfaceBase
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#public-functions-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Public Functions Documentation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Public Functions Documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#function-checkandsetconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      function CheckAndSetConfig
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-continentalars548hwinterface" class="md-nav__link">
+    <span class="md-ellipsis">
+      function ContinentalARS548HwInterface
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-getsensorconfiguration" class="md-nav__link">
+    <span class="md-ellipsis">
+      function GetSensorConfiguration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-processdatapacket" class="md-nav__link">
+    <span class="md-ellipsis">
+      function ProcessDataPacket
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-processfilterstatuspacket" class="md-nav__link">
+    <span class="md-ellipsis">
+      function ProcessFilterStatusPacket
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-receivesensorpacketcallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      function ReceiveSensorPacketCallback
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-receivesensorpacketcallbackwithsender" class="md-nav__link">
+    <span class="md-ellipsis">
+      function ReceiveSensorPacketCallbackWithSender
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-registerscancallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      function RegisterScanCallback
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-sensorinterfacestart" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SensorInterfaceStart
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-sensorinterfacestop" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SensorInterfaceStop
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setaccelerationlateralcog" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SetAccelerationLateralCog
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setaccelerationlongitudinalcog" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SetAccelerationLongitudinalCog
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setcharacteristicspeed" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SetCharacteristicSpeed
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setdrivingdirection" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SetDrivingDirection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setlogger" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SetLogger
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setradarparameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SetRadarParameters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setsensorconfiguration" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SetSensorConfiguration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setsensoripaddress" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SetSensorIPAddress
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setsensormounting" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SetSensorMounting
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setsteeringanglefrontaxle" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SetSteeringAngleFrontAxle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setvehicleparameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SetVehicleParameters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setvelocityvehicle" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SetVelocityVehicle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setyawrate" class="md-nav__link">
+    <span class="md-ellipsis">
+      function SetYawRate
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="class-nebuladriverscontinental_ars548continentalars548hwinterface">Class nebula::drivers::continental_ars548::ContinentalARS548HwInterface</h1>
+<p><a href="../annotated/"><strong>ClassList</strong></a> <strong>&gt;</strong> <a href="../namespacenebula/"><strong>nebula</strong></a> <strong>&gt;</strong> <a href="../namespacenebula_1_1drivers/"><strong>drivers</strong></a> <strong>&gt;</strong> <a href="../namespacenebula_1_1drivers_1_1continental__ars548/"><strong>continental_ars548</strong></a> <strong>&gt;</strong> <a href="./"><strong>ContinentalARS548HwInterface</strong></a></p>
+<p><em>Hardware interface of the Continental ARS548 radar.</em> </p>
+<ul>
+<li><code>#include &lt;continental_ars548_hw_interface.hpp&gt;</code></li>
+</ul>
+<p>Inherits the following classes: <a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/">nebula::drivers::NebulaHwInterfaceBase</a></p>
+<h2 id="public-functions">Public Functions</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Type</th>
+<th style="text-align: left;">Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">Status</td>
+<td style="text-align: left;"><a href="#function-checkandsetconfig"><strong>CheckAndSetConfig</strong></a> () <br><em>Checking the current settings and changing the difference point.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;"></td>
+<td style="text-align: left;"><a href="#function-continentalars548hwinterface"><strong>ContinentalARS548HwInterface</strong></a> () <br><em>Constructor.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">virtual Status</td>
+<td style="text-align: left;"><a href="#function-getsensorconfiguration"><strong>GetSensorConfiguration</strong></a> (SensorConfigurationBase &amp; sensor_configuration) <br><em>Printing sensor configuration.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">void</td>
+<td style="text-align: left;"><a href="#function-processdatapacket"><strong>ProcessDataPacket</strong></a> (const std::vector&lt; uint8_t &gt; &amp; buffer) <br><em>Process a new data packet.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">void</td>
+<td style="text-align: left;"><a href="#function-processfilterstatuspacket"><strong>ProcessFilterStatusPacket</strong></a> (const std::vector&lt; uint8_t &gt; &amp; buffer) <br><em>Process a new filter status packet.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">void</td>
+<td style="text-align: left;"><a href="#function-receivesensorpacketcallback"><strong>ReceiveSensorPacketCallback</strong></a> (const std::vector&lt; uint8_t &gt; &amp; buffer) <br><em>Callback function to receive the Cloud Packet data from the UDP Driver.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">void</td>
+<td style="text-align: left;"><a href="#function-receivesensorpacketcallbackwithsender"><strong>ReceiveSensorPacketCallbackWithSender</strong></a> (const std::vector&lt; uint8_t &gt; &amp; buffer, const std::string &amp; sender_ip) <br><em>Callback function to receive the Cloud Packet data from the UDP Driver.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">Status</td>
+<td style="text-align: left;"><a href="#function-registerscancallback"><strong>RegisterScanCallback</strong></a> (std::function&lt; void(std::unique_ptr&lt; nebula_msgs::msg::NebulaPackets &gt;)&gt; scan_callback) <br><em>Registering callback for PandarScan.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">virtual Status</td>
+<td style="text-align: left;"><a href="#function-sensorinterfacestart"><strong>SensorInterfaceStart</strong></a> () <br><em>Starting the interface that handles UDP streams.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">virtual Status</td>
+<td style="text-align: left;"><a href="#function-sensorinterfacestop"><strong>SensorInterfaceStop</strong></a> () <br><em>Function for stopping the interface that handles UDP streams.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">Status</td>
+<td style="text-align: left;"><a href="#function-setaccelerationlateralcog"><strong>SetAccelerationLateralCog</strong></a> (float lateral_acceleration) <br><em>Set the current lateral acceleration.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">Status</td>
+<td style="text-align: left;"><a href="#function-setaccelerationlongitudinalcog"><strong>SetAccelerationLongitudinalCog</strong></a> (float longitudinal_acceleration) <br><em>Set the current longitudinal acceleration.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">Status</td>
+<td style="text-align: left;"><a href="#function-setcharacteristicspeed"><strong>SetCharacteristicSpeed</strong></a> (float characteristic_speed) <br><em>Set the characteristic speed.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">Status</td>
+<td style="text-align: left;"><a href="#function-setdrivingdirection"><strong>SetDrivingDirection</strong></a> (int direction) <br><em>Set the current direction.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">void</td>
+<td style="text-align: left;"><a href="#function-setlogger"><strong>SetLogger</strong></a> (std::shared_ptr&lt; rclcpp::Logger &gt; node) <br><em>Setting rclcpp::Logger.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">Status</td>
+<td style="text-align: left;"><a href="#function-setradarparameters"><strong>SetRadarParameters</strong></a> (uint16_t maximum_distance, uint8_t frequency_slot, uint8_t cycle_time, uint8_t time_slot, uint8_t hcc, uint8_t power_save_standstill) <br><em>Set the radar parameters.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">virtual Status</td>
+<td style="text-align: left;"><a href="#function-setsensorconfiguration"><strong>SetSensorConfiguration</strong></a> (std::shared_ptr&lt; SensorConfigurationBase &gt; sensor_configuration) <br><em>Setting sensor configuration.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">Status</td>
+<td style="text-align: left;"><a href="#function-setsensoripaddress"><strong>SetSensorIPAddress</strong></a> (const std::string &amp; sensor_ip_address) <br><em>Set the sensor ip address.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">Status</td>
+<td style="text-align: left;"><a href="#function-setsensormounting"><strong>SetSensorMounting</strong></a> (float longitudinal_autosar, float lateral_autosar, float vertical_autosar, float yaw_autosar, float pitch_autosar, uint8_t plug_orientation) <br><em>Set the sensor mounting parameters.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">Status</td>
+<td style="text-align: left;"><a href="#function-setsteeringanglefrontaxle"><strong>SetSteeringAngleFrontAxle</strong></a> (float angle_rad) <br><em>Set the current steering angle.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">Status</td>
+<td style="text-align: left;"><a href="#function-setvehicleparameters"><strong>SetVehicleParameters</strong></a> (float length_autosar, float width_autosar, float height_autosar, float wheel_base_autosar) <br><em>Set the vehicle parameters.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">Status</td>
+<td style="text-align: left;"><a href="#function-setvelocityvehicle"><strong>SetVelocityVehicle</strong></a> (float velocity) <br><em>Set the current vehicle velocity.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">Status</td>
+<td style="text-align: left;"><a href="#function-setyawrate"><strong>SetYawRate</strong></a> (float yaw_rate) <br><em>Set the current yaw rate.</em></td>
+</tr>
+</tbody>
+</table>
+<h2 id="public-functions-inherited-from-nebuladriversnebulahwinterfacebase">Public Functions inherited from nebula::drivers::NebulaHwInterfaceBase</h2>
+<p>See <a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/">nebula::drivers::NebulaHwInterfaceBase</a></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Type</th>
+<th style="text-align: left;">Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">virtual Status</td>
+<td style="text-align: left;"><a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-getcalibrationconfiguration"><strong>GetCalibrationConfiguration</strong></a> (] CalibrationConfigurationBase &amp; calibration_configuration) <br><em>Virtual function for printing calibration configuration.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">virtual Status</td>
+<td style="text-align: left;"><a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-getsensorconfiguration"><strong>GetSensorConfiguration</strong></a> (SensorConfigurationBase &amp; sensor_configuration) = 0<br><em>Virtual function for printing sensor configuration.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;"></td>
+<td style="text-align: left;"><a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-nebulahwinterfacebase-13"><strong>NebulaHwInterfaceBase</strong></a> (<a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/"><strong>NebulaHwInterfaceBase</strong></a> &amp;&amp; c) = delete<br></td>
+</tr>
+<tr>
+<td style="text-align: right;"></td>
+<td style="text-align: left;"><a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-nebulahwinterfacebase-23"><strong>NebulaHwInterfaceBase</strong></a> (const <a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/"><strong>NebulaHwInterfaceBase</strong></a> &amp; c) = delete<br></td>
+</tr>
+<tr>
+<td style="text-align: right;"></td>
+<td style="text-align: left;"><a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-nebulahwinterfacebase-33"><strong>NebulaHwInterfaceBase</strong></a> () = default<br></td>
+</tr>
+<tr>
+<td style="text-align: right;">virtual Status</td>
+<td style="text-align: left;"><a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-sensorinterfacestart"><strong>SensorInterfaceStart</strong></a> () = 0<br><em>Virtual function for starting the interface that handles UDP streams.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">virtual Status</td>
+<td style="text-align: left;"><a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-sensorinterfacestop"><strong>SensorInterfaceStop</strong></a> () = 0<br><em>Virtual function for stopping the interface that handles UDP streams.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;">virtual Status</td>
+<td style="text-align: left;"><a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-setsensorconfiguration"><strong>SetSensorConfiguration</strong></a> (std::shared_ptr&lt; SensorConfigurationBase &gt; sensor_configuration) = 0<br><em>Virtual function for setting sensor configuration.</em></td>
+</tr>
+<tr>
+<td style="text-align: right;"><a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/"><strong>NebulaHwInterfaceBase</strong></a> &amp;</td>
+<td style="text-align: left;"><a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-operator"><strong>operator=</strong></a> (<a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/"><strong>NebulaHwInterfaceBase</strong></a> &amp;&amp; c) = delete<br></td>
+</tr>
+<tr>
+<td style="text-align: right;"><a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/"><strong>NebulaHwInterfaceBase</strong></a> &amp;</td>
+<td style="text-align: left;"><a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-operator_1"><strong>operator=</strong></a> (const <a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/"><strong>NebulaHwInterfaceBase</strong></a> &amp; c) = delete<br></td>
+</tr>
+</tbody>
+</table>
+<h2 id="protected-functions-inherited-from-nebuladriversnebulahwinterfacebase">Protected Functions inherited from nebula::drivers::NebulaHwInterfaceBase</h2>
+<p>See <a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/">nebula::drivers::NebulaHwInterfaceBase</a></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Type</th>
+<th style="text-align: left;">Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">virtual void</td>
+<td style="text-align: left;"><a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-receivesensorpacketcallback"><strong>ReceiveSensorPacketCallback</strong></a> (] const std::vector&lt; uint8_t &gt; &amp; buffer) <br></td>
+</tr>
+</tbody>
+</table>
+<h2 id="public-functions-documentation">Public Functions Documentation</h2>
+<h3 id="function-checkandsetconfig">function CheckAndSetConfig</h3>
+<p><em>Checking the current settings and changing the difference point.</em> 
+<div class="highlight"><pre><span></span><code><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">CheckAndSetConfig</span><span class="w"> </span><span class="p">()</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<hr>
+
+<h3 id="function-continentalars548hwinterface">function ContinentalARS548HwInterface</h3>
+<div class="highlight"><pre><span></span><code><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="w"> </span><span class="p">()</span><span class="w"> </span>
+</code></pre></div>
+<hr>
+
+<h3 id="function-getsensorconfiguration">function GetSensorConfiguration</h3>
+<p><em>Printing sensor configuration.</em> 
+<div class="highlight"><pre><span></span><code><span class="k">virtual</span><span class="w"> </span><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">GetSensorConfiguration</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">SensorConfigurationBase</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">sensor_configuration</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sensor_configuration</code> SensorConfiguration for this interface </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<p>Implements <a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-getsensorconfiguration"><em>nebula::drivers::NebulaHwInterfaceBase::GetSensorConfiguration</em></a></p>
+<hr>
+
+<h3 id="function-processdatapacket">function ProcessDataPacket</h3>
+<p><em>Process a new data packet.</em> 
+<div class="highlight"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">ProcessDataPacket</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">buffer</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>buffer</code> The buffer containing the data packet </li>
+</ul>
+<hr>
+
+<h3 id="function-processfilterstatuspacket">function ProcessFilterStatusPacket</h3>
+<p><em>Process a new filter status packet.</em> 
+<div class="highlight"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">ProcessFilterStatusPacket</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">buffer</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>buffer</code> The buffer containing the status packet </li>
+</ul>
+<hr>
+
+<h3 id="function-receivesensorpacketcallback">function ReceiveSensorPacketCallback</h3>
+<p><em>Callback function to receive the Cloud Packet data from the UDP Driver.</em> 
+<div class="highlight"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">ReceiveSensorPacketCallback</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">buffer</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>buffer</code> Buffer containing the data received from the UDP socket </li>
+</ul>
+<hr>
+
+<h3 id="function-receivesensorpacketcallbackwithsender">function ReceiveSensorPacketCallbackWithSender</h3>
+<p><em>Callback function to receive the Cloud Packet data from the UDP Driver.</em> 
+<div class="highlight"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">ReceiveSensorPacketCallbackWithSender</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">uint8_t</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">sender_ip</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>buffer</code> Buffer containing the data received from the UDP socket </li>
+</ul>
+<hr>
+
+<h3 id="function-registerscancallback">function RegisterScanCallback</h3>
+<p><em>Registering callback for PandarScan.</em> 
+<div class="highlight"><pre><span></span><code><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">RegisterScanCallback</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">void</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="w"> </span><span class="n">nebula_msgs</span><span class="o">::</span><span class="n">msg</span><span class="o">::</span><span class="n">NebulaPackets</span><span class="w"> </span><span class="o">&gt;</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">scan_callback</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>scan_callback</code> Callback function </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<hr>
+
+<h3 id="function-sensorinterfacestart">function SensorInterfaceStart</h3>
+<p><em>Starting the interface that handles UDP streams.</em> 
+<div class="highlight"><pre><span></span><code><span class="k">virtual</span><span class="w"> </span><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SensorInterfaceStart</span><span class="w"> </span><span class="p">()</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<p>Implements <a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-sensorinterfacestart"><em>nebula::drivers::NebulaHwInterfaceBase::SensorInterfaceStart</em></a></p>
+<hr>
+
+<h3 id="function-sensorinterfacestop">function SensorInterfaceStop</h3>
+<p><em>Function for stopping the interface that handles UDP streams.</em> 
+<div class="highlight"><pre><span></span><code><span class="k">virtual</span><span class="w"> </span><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SensorInterfaceStop</span><span class="w"> </span><span class="p">()</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<p>Implements <a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-sensorinterfacestop"><em>nebula::drivers::NebulaHwInterfaceBase::SensorInterfaceStop</em></a></p>
+<hr>
+
+<h3 id="function-setaccelerationlateralcog">function SetAccelerationLateralCog</h3>
+<p><em>Set the current lateral acceleration.</em> 
+<div class="highlight"><pre><span></span><code><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SetAccelerationLateralCog</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">lateral_acceleration</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>lateral_acceleration</code> Current lateral acceleration </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<hr>
+
+<h3 id="function-setaccelerationlongitudinalcog">function SetAccelerationLongitudinalCog</h3>
+<p><em>Set the current longitudinal acceleration.</em> 
+<div class="highlight"><pre><span></span><code><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SetAccelerationLongitudinalCog</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">longitudinal_acceleration</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>longitudinal_acceleration</code> Current longitudinal acceleration </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<hr>
+
+<h3 id="function-setcharacteristicspeed">function SetCharacteristicSpeed</h3>
+<p><em>Set the characteristic speed.</em> 
+<div class="highlight"><pre><span></span><code><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SetCharacteristicSpeed</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">characteristic_speed</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>characteristic_speed</code> Characteristic speed </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<hr>
+
+<h3 id="function-setdrivingdirection">function SetDrivingDirection</h3>
+<p><em>Set the current direction.</em> 
+<div class="highlight"><pre><span></span><code><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SetDrivingDirection</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">direction</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>direction</code> Current driving direction </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<hr>
+
+<h3 id="function-setlogger">function SetLogger</h3>
+<p><em>Setting rclcpp::Logger.</em> 
+<div class="highlight"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SetLogger</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="w"> </span><span class="n">rclcpp</span><span class="o">::</span><span class="n">Logger</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">node</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>node</code> Logger </li>
+</ul>
+<hr>
+
+<h3 id="function-setradarparameters">function SetRadarParameters</h3>
+<p><em>Set the radar parameters.</em> 
+<div class="highlight"><pre><span></span><code><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SetRadarParameters</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">maximum_distance</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">frequency_slot</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">cycle_time</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">time_slot</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">hcc</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">power_save_standstill</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>maximum_distance</code> Desired maximum detection distance (93m &lt;= v &lt;= 1514m) </li>
+<li><code>frequency_slot</code> Desired frequency slot (0 = Low (76.23 GHz), 1 = Mid (76.48 GHz), 2 = High (76.73 GHz)) </li>
+<li><code>cycle_time</code> Desired cycle time value (50ms &lt;= v &lt;= 100ms) </li>
+<li><code>time_slot</code> Desired time slot value (10ms &lt;= v &lt;= 90ms) </li>
+<li><code>hcc</code> Desired hcc value (1 = Worldwide, 2 = Japan) </li>
+<li><code>power_save_standstill</code> Desired power_save_standstill value (0 = Off, 1 = On) </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<hr>
+
+<h3 id="function-setsensorconfiguration">function SetSensorConfiguration</h3>
+<p><em>Setting sensor configuration.</em> 
+<div class="highlight"><pre><span></span><code><span class="k">virtual</span><span class="w"> </span><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SetSensorConfiguration</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="w"> </span><span class="n">SensorConfigurationBase</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">sensor_configuration</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sensor_configuration</code> SensorConfiguration for this interface </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<p>Implements <a href="../classnebula_1_1drivers_1_1NebulaHwInterfaceBase/#function-setsensorconfiguration"><em>nebula::drivers::NebulaHwInterfaceBase::SetSensorConfiguration</em></a></p>
+<hr>
+
+<h3 id="function-setsensoripaddress">function SetSensorIPAddress</h3>
+<p><em>Set the sensor ip address.</em> 
+<div class="highlight"><pre><span></span><code><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SetSensorIPAddress</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">sensor_ip_address</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sensor_ip_address</code> Desired sensor ip address </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<hr>
+
+<h3 id="function-setsensormounting">function SetSensorMounting</h3>
+<p><em>Set the sensor mounting parameters.</em> 
+<div class="highlight"><pre><span></span><code><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SetSensorMounting</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">longitudinal_autosar</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">lateral_autosar</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">vertical_autosar</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">yaw_autosar</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">pitch_autosar</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">plug_orientation</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>longitudinal_autosar</code> Desired longitudinal value in autosar coordinates </li>
+<li><code>lateral_autosar</code> Desired lateral value in autosar coordinates </li>
+<li><code>vertical_autosar</code> Desired vertical value in autosar coordinates </li>
+<li><code>yaw_autosar</code> Desired yaw value in autosar coordinates </li>
+<li><code>pitch_autosar</code> Desired pitch value in autosar coordinates </li>
+<li><code>plug_orientation</code> Desired plug orientation (0 = PLUG_RIGHT, 1 = PLUG_LEFT) </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<hr>
+
+<h3 id="function-setsteeringanglefrontaxle">function SetSteeringAngleFrontAxle</h3>
+<p><em>Set the current steering angle.</em> 
+<div class="highlight"><pre><span></span><code><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SetSteeringAngleFrontAxle</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">angle_rad</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>angle_rad</code> Current steering angle in radians </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<hr>
+
+<h3 id="function-setvehicleparameters">function SetVehicleParameters</h3>
+<p><em>Set the vehicle parameters.</em> 
+<div class="highlight"><pre><span></span><code><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SetVehicleParameters</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">length_autosar</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">width_autosar</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">height_autosar</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">wheel_base_autosar</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>length_autosar</code> Desired vehicle length value </li>
+<li><code>width_autosar</code> Desired vehicle width value </li>
+<li><code>height_autosar</code> Desired height value </li>
+<li><code>wheel_base_autosar</code> Desired wheel base value </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<hr>
+
+<h3 id="function-setvelocityvehicle">function SetVelocityVehicle</h3>
+<p><em>Set the current vehicle velocity.</em> 
+<div class="highlight"><pre><span></span><code><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SetVelocityVehicle</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">velocity</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>velocity</code> Current vehicle velocity </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<hr>
+
+<h3 id="function-setyawrate">function SetYawRate</h3>
+<p><em>Set the current yaw rate.</em> 
+<div class="highlight"><pre><span></span><code><span class="n">Status</span><span class="w"> </span><span class="n">nebula</span><span class="o">::</span><span class="n">drivers</span><span class="o">::</span><span class="n">continental_ars548</span><span class="o">::</span><span class="n">ContinentalARS548HwInterface</span><span class="o">::</span><span class="n">SetYawRate</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">yaw_rate</span>
+<span class="p">)</span><span class="w"> </span>
+</code></pre></div></p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>yaw_rate</code> Current yaw rate </li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Resulting status </p>
+<hr>
+
+<hr />
+<p>The documentation for this class was generated from the following file <code>nebula_hw_interfaces/include/nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp</code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2023 TIER IV, Inc.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+    
+  </body>
+</html>
