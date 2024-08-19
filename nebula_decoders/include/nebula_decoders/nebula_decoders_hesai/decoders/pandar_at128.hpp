@@ -17,9 +17,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -46,8 +44,8 @@ struct TailAT128E2X
 
 struct PacketAT128E2X : public PacketBase<2, 128, 2, 100 * 256>
 {
-  typedef Body<FineAzimuthBlock<Unit4B, PacketAT128E2X::N_CHANNELS>, PacketAT128E2X::N_BLOCKS>
-    body_t;
+  using body_t =
+    Body<FineAzimuthBlock<Unit4B, PacketAT128E2X::N_CHANNELS>, PacketAT128E2X::N_BLOCKS>;
   Header12B header;
   body_t body;
   uint32_t crc_body;
@@ -87,7 +85,7 @@ public:
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
-    int block_offset_ns;
+    int block_offset_ns = 0;
     if (n_returns == 1) {
       block_offset_ns = -9249 - 41666 * (2 - block_id);
     } else {
@@ -98,5 +96,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

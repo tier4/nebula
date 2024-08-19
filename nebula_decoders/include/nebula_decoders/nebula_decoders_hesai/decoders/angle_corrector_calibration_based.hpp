@@ -28,9 +28,7 @@
 #include <ostream>
 #include <utility>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 template <size_t ChannelN, size_t AngleUnit>
@@ -56,7 +54,7 @@ public:
 
   bool is_360_;
 
-  AngleCorrectorCalibrationBased(
+  explicit AngleCorrectorCalibrationBased(
     const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration,
     double fov_start_azimuth_deg, double fov_end_azimuth_deg, double scan_cut_azimuth_deg)
   {
@@ -179,5 +177,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

@@ -33,9 +33,7 @@
 #include <utility>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 template <typename SensorT>
@@ -114,7 +112,7 @@ protected:
   void convertReturns(size_t start_block_id, size_t n_blocks)
   {
     uint64_t packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
-    uint32_t raw_azimuth = packet_.body.blocks[start_block_id].get_azimuth();
+    uint32_t raw_azimuth = packet_.body.blocks[start_block_id].getAzimuth();
 
     std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units;
 
@@ -288,7 +286,7 @@ public:
 
     const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
-      auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
+      auto block_azimuth = packet_.body.blocks[block_id].getAzimuth();
 
       if (angle_corrector_.passedTimestampResetAngle(last_azimuth_, block_azimuth)) {
         if (sensor_configuration_->cut_angle == sensor_configuration_->cloud_max_angle) {
@@ -328,5 +326,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

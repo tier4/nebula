@@ -34,9 +34,7 @@
 #include <utility>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 template <size_t ChannelN, size_t AngleUnit>
@@ -240,5 +238,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

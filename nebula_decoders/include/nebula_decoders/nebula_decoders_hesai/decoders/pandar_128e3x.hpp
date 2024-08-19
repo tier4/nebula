@@ -19,9 +19,7 @@
 
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -68,7 +66,7 @@ struct Tail128E3X
 
 struct Packet128E3X : public PacketBase<2, 128, 2, 100>
 {
-  typedef Body<Block<Unit3B, Packet128E3X::N_CHANNELS>, Packet128E3X::N_BLOCKS> body_t;
+  using body_t = Body<Block<Unit3B, Packet128E3X::N_CHANNELS>, Packet128E3X::N_BLOCKS>;
   Header12B header;
   body_t body;
   uint32_t crc_body;
@@ -229,7 +227,7 @@ public:
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
     int block_offset_ns = 3148 - 27778 * 2 * (2 - block_id - 1) / n_returns;
 
-    int channel_offset_ns;
+    int channel_offset_ns = 0;
     bool is_hires_mode = packet.tail.operational_state == OperationalState::HIGH_RESOLUTION;
     bool is_nearfield = (hesai_packet::get_dis_unit(packet) *
                          packet.body.blocks[block_id].units[channel_id].distance) <= 2.85f;
@@ -287,5 +285,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
