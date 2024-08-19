@@ -112,7 +112,7 @@ public:
   int getEarliestPointTimeOffsetForBlock(uint32_t start_block_id, const PacketT & packet)
   {
     unsigned int n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
-    int min_offset_ns = 0xFFFFFFFF;  // MAXINT
+    int min_offset_ns = 0x7FFFFFFF;  // MAXINT (max. positive value)
 
     for (uint32_t block_id = start_block_id; block_id < start_block_id + n_returns; ++block_id) {
       for (uint32_t channel_id = 0; channel_id < PacketT::N_CHANNELS; ++channel_id) {

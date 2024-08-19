@@ -233,8 +233,8 @@ public:
     logger_.set_level(rclcpp::Logger::Level::Debug);
     RCLCPP_INFO_STREAM(logger_, *sensor_configuration_);
 
-    decode_pc_.reset(new NebulaPointCloud);
-    output_pc_.reset(new NebulaPointCloud);
+    decode_pc_ = std::make_shared<NebulaPointCloud>();
+    output_pc_ = std::make_shared<NebulaPointCloud>();
 
     decode_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
@@ -255,7 +255,7 @@ public:
     }
 
     const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
-    uint32_t current_azimuth;
+    uint32_t current_azimuth = 0;
 
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
       current_azimuth = packet_.body.blocks[block_id].get_azimuth();

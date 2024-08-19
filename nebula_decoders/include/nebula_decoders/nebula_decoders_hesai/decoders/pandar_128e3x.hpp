@@ -227,7 +227,7 @@ public:
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
     int block_offset_ns = 3148 - 27778 * 2 * (2 - block_id - 1) / n_returns;
 
-    int channel_offset_ns;
+    int channel_offset_ns = 0;
     bool is_hires_mode = packet.tail.operational_state == OperationalState::HIGH_RESOLUTION;
     bool is_nearfield = (hesai_packet::get_dis_unit(packet) *
                          packet.body.blocks[block_id].units[channel_id].distance) <= 2.85f;

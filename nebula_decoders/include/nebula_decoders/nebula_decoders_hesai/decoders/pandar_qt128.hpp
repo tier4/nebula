@@ -100,7 +100,7 @@ public:
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
     int block_offset_ns = 9000 + 111110 * (2 - block_id - 1) / n_returns;
 
-    int channel_offset_ns;
+    int channel_offset_ns = 0;
     if (n_returns == 1) {
       channel_offset_ns = block_id % 2 == 0 ? loop1[channel_id] : loop2[channel_id];
     } else {
