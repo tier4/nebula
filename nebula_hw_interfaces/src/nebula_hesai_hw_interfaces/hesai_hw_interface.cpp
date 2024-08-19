@@ -1,4 +1,5 @@
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
+#include <sstream>
 
 // #define WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
 
@@ -335,7 +336,9 @@ boost::property_tree::ptree HesaiHwInterface::ParseJson(const std::string & str)
 {
   boost::property_tree::ptree tree;
   try {
-    boost::property_tree::read_json(str, tree);
+    std::stringstream ss;
+    ss << str;
+    boost::property_tree::read_json(ss, tree);
   } catch (boost::property_tree::json_parser_error & e) {
     std::cerr << e.what() << std::endl;
   }
@@ -811,10 +814,13 @@ Status HesaiHwInterface::SetLidarRange(int start, int end)
 
 HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
 {
+  HesaiLidarRangeAll hesai_range_all{};
   auto response_ptr = SendReceive(PTC_COMMAND_GET_LIDAR_RANGE);
-  auto & response = *response_ptr;
+  if (!response_ptr) return hesai_range_all;
 
-  HesaiLidarRangeAll hesai_range_all;
+  auto & response = *response_ptr;
+  if (response.empty()) return hesai_range_all;
+
   int payload_pos = 0;
   int method = static_cast<int>(response[payload_pos++]);
   switch (method) {
@@ -920,10 +926,13 @@ Status HesaiHwInterface::SetRotDir(int mode)
 
 HesaiLidarMonitor HesaiHwInterface::GetLidarMonitor()
 {
+  HesaiLidarMonitor hesai_lidar_monitor{};
   auto response_ptr = SendReceive(PTC_COMMAND_LIDAR_MONITOR);
-  auto & response = *response_ptr;
+  if (!response_ptr) return hesai_lidar_monitor;
 
-  HesaiLidarMonitor hesai_lidar_monitor;
+  auto & response = *response_ptr;
+  if (response.empty()) return hesai_lidar_monitor;
+
   int payload_pos = 0;
   hesai_lidar_monitor.input_voltage = response[payload_pos++] << 24;
   hesai_lidar_monitor.input_voltage = hesai_lidar_monitor.input_voltage | response[payload_pos++]

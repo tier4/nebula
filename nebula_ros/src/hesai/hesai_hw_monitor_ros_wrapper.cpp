@@ -1,5 +1,7 @@
 #include "nebula_ros/hesai/hesai_hw_monitor_ros_wrapper.hpp"
 
+#include <nebula_common/nebula_common.hpp>
+
 namespace nebula
 {
 namespace ros
@@ -61,10 +63,9 @@ HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & o
   hw_interface_.SetLogger(std::make_shared<rclcpp::Logger>(this->get_logger()));
   hw_interface_.SetSensorConfiguration(
     std::static_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr));
-  while(hw_interface_.InitializeTcpDriver() == Status::ERROR_1)
-  {
+  while (hw_interface_.InitializeTcpDriver() == Status::ERROR_1) {
     RCLCPP_WARN(this->get_logger(), "Could not initialize TCP driver, retrying in 8s...");
-    std::this_thread::sleep_for(std::chrono::milliseconds(8000));// >5000
+    std::this_thread::sleep_for(std::chrono::milliseconds(8000));  // >5000
   }
   std::vector<std::thread> thread_pool{};
   thread_pool.emplace_back([this] {
@@ -88,10 +89,19 @@ HesaiHwMonitorRosWrapper::HesaiHwMonitorRosWrapper(const rclcpp::NodeOptions & o
     std::bind(&HesaiHwMonitorRosWrapper::paramCallback, this, std::placeholders::_1));
 }
 
-Status HesaiHwMonitorRosWrapper::MonitorStart() { return interface_status_; }
+Status HesaiHwMonitorRosWrapper::MonitorStart()
+{
+  return interface_status_;
+}
 
-Status HesaiHwMonitorRosWrapper::MonitorStop() { return Status::OK; }
-Status HesaiHwMonitorRosWrapper::Shutdown() { return Status::OK; }
+Status HesaiHwMonitorRosWrapper::MonitorStop()
+{
+  return Status::OK;
+}
+Status HesaiHwMonitorRosWrapper::Shutdown()
+{
+  return Status::OK;
+}
 
 Status HesaiHwMonitorRosWrapper::InitializeHwMonitor(  // todo: don't think this is needed
   const drivers::SensorConfigurationBase & sensor_configuration)
@@ -304,8 +314,8 @@ void HesaiHwMonitorRosWrapper::InitializeHesaiDiagnostics()
   current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
   current_monitor_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
 
-  auto fetch_diag_from_sensor = [this](){ 
-    OnHesaiStatusTimer(); 
+  auto fetch_diag_from_sensor = [this]() {
+    OnHesaiStatusTimer();
     if (hw_interface_.UseHttpGetLidarMonitor()) {
       OnHesaiLidarMonitorTimerHttp();
     } else {
@@ -313,9 +323,10 @@ void HesaiHwMonitorRosWrapper::InitializeHesaiDiagnostics()
     }
   };
 
-  fetch_diagnostics_timer_ = std::make_shared<rclcpp::GenericTimer<decltype(fetch_diag_from_sensor)>>(
-    this->get_clock(), std::chrono::milliseconds(diag_span_), std::move(fetch_diag_from_sensor),
-    this->get_node_base_interface()->get_context());
+  fetch_diagnostics_timer_ =
+    std::make_shared<rclcpp::GenericTimer<decltype(fetch_diag_from_sensor)>>(
+      this->get_clock(), std::chrono::milliseconds(diag_span_), std::move(fetch_diag_from_sensor),
+      this->get_node_base_interface()->get_context());
   this->get_node_timers_interface()->add_timer(fetch_diagnostics_timer_, cbg_m_);
 
   if (hw_interface_.UseHttpGetLidarMonitor()) {
@@ -597,6 +608,15 @@ void HesaiHwMonitorRosWrapper::HesaiCheckVoltage(
   if (current_monitor) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
+
+    if (sensor_configuration_.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
+      diagnostics.add("input_voltage", not_supported_message);
+      diagnostics.add("input_current", not_supported_message);
+      diagnostics.add("input_power", not_supported_message);
+      diagnostics.summary(level, "");
+      return;
+    }
+
     diagnostics.add(
       "input_voltage", GetFixedPrecisionString(current_monitor->input_voltage * 0.01) + " V");
     diagnostics.add(
@@ -610,11 +630,12 @@ void HesaiHwMonitorRosWrapper::HesaiCheckVoltage(
   }
 }
 
-  HesaiHwMonitorRosWrapper::~HesaiHwMonitorRosWrapper() {
-    RCLCPP_INFO_STREAM(get_logger(), "Closing TcpDriver");
-    hw_interface_.FinalizeTcpDriver();
-  }
+HesaiHwMonitorRosWrapper::~HesaiHwMonitorRosWrapper()
+{
+  RCLCPP_INFO_STREAM(get_logger(), "Closing TcpDriver");
+  hw_interface_.FinalizeTcpDriver();
+}
 
-  RCLCPP_COMPONENTS_REGISTER_NODE(HesaiHwMonitorRosWrapper)
+RCLCPP_COMPONENTS_REGISTER_NODE(HesaiHwMonitorRosWrapper)
 }  // namespace ros
 }  // namespace nebula
