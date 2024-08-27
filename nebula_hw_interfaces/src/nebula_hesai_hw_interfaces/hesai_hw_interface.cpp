@@ -154,6 +154,10 @@ Status HesaiHwInterface::SensorInterfaceStart()
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
     PrintError("init ok");
 #endif
+    cloud_udp_driver_->receiver()->open();
+#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
+    PrintError("open ok");
+#endif
 
     bool success = cloud_udp_driver_->receiver()->setKernelBufferSize(UDP_SOCKET_BUFFER_SIZE);
     if (!success) {
@@ -163,10 +167,6 @@ Status HesaiHwInterface::SensorInterfaceStart()
       return Status::ERROR_1;
     }
 
-    cloud_udp_driver_->receiver()->open();
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    PrintError("open ok");
-#endif
     cloud_udp_driver_->receiver()->bind();
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
     PrintError("bind ok");
