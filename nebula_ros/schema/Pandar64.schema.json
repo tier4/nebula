@@ -12,6 +12,9 @@
         "sensor_ip": {
           "$ref": "sub/communication.json#/definitions/sensor_ip"
         },
+        "multicast_ip": {
+          "$ref": "sub/lidar_hesai.json#/definitions/multicast_ip"
+        },
         "data_port": {
           "$ref": "sub/communication.json#/definitions/data_port"
         },
@@ -85,6 +88,7 @@
       "required": [
         "host_ip",
         "sensor_ip",
+        "multicast_ip",
         "data_port",
         "gnss_port",
         "packet_mtu_size",
