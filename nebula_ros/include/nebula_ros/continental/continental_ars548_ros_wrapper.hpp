@@ -46,7 +46,7 @@ class ContinentalARS548RosWrapper final : public rclcpp::Node
 {
 public:
   explicit ContinentalARS548RosWrapper(const rclcpp::NodeOptions & options);
-  ~ContinentalARS548RosWrapper() noexcept {};
+  ~ContinentalARS548RosWrapper() noexcept override = default;
 
   /// @brief Get current status of this driver
   /// @return Current status
