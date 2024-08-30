@@ -26,6 +26,7 @@
 #include <continental_srvs/srv/continental_ars548_set_vehicle_parameters.hpp>
 #include <geometry_msgs/msg/accel_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
+#include <std_msgs/msg/float32.hpp>
 
 #include <memory>
 
