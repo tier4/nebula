@@ -19,7 +19,8 @@ using namespace std::chrono_literals;  // NOLINT(build/namespaces)
 HesaiDecoderWrapper::HesaiDecoderWrapper(
   rclcpp::Node * const parent_node,
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
-  const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration)
+  const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration,
+  bool publish_packets)
 : status_(nebula::Status::NOT_INITIALIZED),
   logger_(parent_node->get_logger().get_child("HesaiDecoder")),
   parent_node_(*parent_node),
@@ -47,8 +48,8 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
       (std::stringstream() << "Error instantiating decoder: " << status_).str());
   }
 
-  // Publish packets only if HW interface is connected
-  if (hw_interface_) {
+  // Publish packets only if enabled by the ROS wrapper
+  if (publish_packets) {
     current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
     packets_pub_ = parent_node->create_publisher<pandar_msgs::msg::PandarScan>(
       "pandar_packets", rclcpp::SensorDataQoS());
@@ -98,8 +99,8 @@ void HesaiDecoderWrapper::ProcessCloudPacket(
 {
   // Accumulate packets for recording only if someone is subscribed to the topic (for performance)
   if (
-    hw_interface_ && (packets_pub_->get_subscription_count() > 0 ||
-                      packets_pub_->get_intra_process_subscription_count() > 0)) {
+    packets_pub_ && (packets_pub_->get_subscription_count() > 0 ||
+                     packets_pub_->get_intra_process_subscription_count() > 0)) {
     if (current_scan_msg_->packets.size() == 0) {
       current_scan_msg_->header.stamp = packet_msg->stamp;
     }

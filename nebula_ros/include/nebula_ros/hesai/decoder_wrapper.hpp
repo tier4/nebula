@@ -38,7 +38,8 @@ public:
   HesaiDecoderWrapper(
     rclcpp::Node * const parent_node,
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
-    const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> & calibration);
+    const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> & calibration,
+    bool publish_packets);
 
   void ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
@@ -69,7 +70,6 @@ private:
   rclcpp::Logger logger_;
   rclcpp::Node & parent_node_;
 
-  const std::shared_ptr<nebula::drivers::HesaiHwInterface> hw_interface_;
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> sensor_cfg_;
   std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> calibration_cfg_ptr_{};
 
