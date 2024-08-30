@@ -217,7 +217,6 @@ protected:
         for (const auto & filter : sensor_configuration_->point_filters) {
           if (filter->excluded(point)) {
             pc->points.pop_back();
-            perf_cnt_.n_filt++;
             break;
           }
         }
