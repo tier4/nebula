@@ -56,6 +56,7 @@ if(BUILD_TESTING)
 
     set(CONTINENTAL_TEST_LIBRARIES
         ${NEBULA_TEST_LIBRARIES}
+        ${diagnostic_updater_TARGETS}
         nebula_decoders::nebula_decoders_continental
     )
 

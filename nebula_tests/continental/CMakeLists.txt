@@ -6,6 +6,7 @@ add_library(continental_ros_decoder_test_ars548 SHARED
 
 target_include_directories(continental_ros_decoder_test_ars548 PUBLIC
     ${NEBULA_TEST_INCLUDE_DIRS}
+    ${diagnostic_updater_INCLUDE_DIRS}
 )
 
 target_link_libraries(continental_ros_decoder_test_ars548
@@ -32,6 +33,7 @@ add_library(continental_ros_decoder_test_srr520 SHARED
 
 target_include_directories(continental_ros_decoder_test_srr520 PUBLIC
     ${NEBULA_TEST_INCLUDE_DIRS}
+    ${diagnostic_updater_INCLUDE_DIRS}
 )
 
 target_link_libraries(continental_ros_decoder_test_srr520
