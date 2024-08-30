@@ -2,6 +2,10 @@
 
 #include "nebula_ros/hesai/hesai_ros_wrapper.hpp"
 
+#include "nebula_ros/common/parameter_descriptors.hpp"
+
+#include <string>
+
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
 namespace nebula
