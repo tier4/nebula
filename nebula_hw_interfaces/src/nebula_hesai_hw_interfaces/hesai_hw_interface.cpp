@@ -144,8 +144,15 @@ Status HesaiHwInterface::SensorInterfaceStart()
 {
   try {
     std::cout << "Starting UDP server on: " << *sensor_configuration_ << std::endl;
-    cloud_udp_driver_->init_receiver(
-      sensor_configuration_->host_ip, sensor_configuration_->data_port);
+    if (sensor_configuration_->multicast_ip.empty()) {
+      cloud_udp_driver_->init_receiver(
+        sensor_configuration_->host_ip, sensor_configuration_->data_port);
+    } else {
+      cloud_udp_driver_->init_receiver(
+        sensor_configuration_->multicast_ip, sensor_configuration_->data_port,
+        sensor_configuration_->host_ip, sensor_configuration_->data_port);
+      cloud_udp_driver_->receiver()->setMulticast(true);
+    }
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
     PrintError("init ok");
 #endif
@@ -165,8 +172,8 @@ Status HesaiHwInterface::SensorInterfaceStart()
 #endif
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
-    std::cerr << status << sensor_configuration_->sensor_ip << ","
-              << sensor_configuration_->data_port << std::endl;
+    std::cerr << status << " for " << sensor_configuration_->sensor_ip << ":"
+              << sensor_configuration_->data_port << " - " << ex.what() << std::endl;
     return status;
   }
   return Status::OK;
@@ -839,10 +846,13 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
      << static_cast<int>(hesai_config.dest_ipaddr[2]) << "."
      << static_cast<int>(hesai_config.dest_ipaddr[3]);
   auto current_host_addr = ss.str();
-  if (sensor_configuration->host_ip != current_host_addr) {
+  auto desired_host_addr = sensor_configuration->multicast_ip.empty()
+                             ? sensor_configuration->host_ip
+                             : sensor_configuration->multicast_ip;
+  if (desired_host_addr != current_host_addr) {
     set_flg = true;
     PrintInfo("current lidar dest_ipaddr: " + current_host_addr);
-    PrintInfo("current configuration host_ip: " + sensor_configuration->host_ip);
+    PrintInfo("current configuration host_ip: " + desired_host_addr);
   }
 
   auto current_host_dport = hesai_config.dest_LiDAR_udp_port;
@@ -867,7 +877,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 
   if (set_flg) {
     std::vector<std::string> list_string;
-    boost::split(list_string, sensor_configuration->host_ip, boost::is_any_of("."));
+    boost::split(list_string, desired_host_addr, boost::is_any_of("."));
     std::thread t([this, sensor_configuration, list_string] {
       SetDestinationIp(
         std::stoi(list_string[0]), std::stoi(list_string[1]), std::stoi(list_string[2]),
