@@ -59,6 +59,7 @@
           "enum": [
             "Last",
             "Strongest",
+            "LastStrongest",
             "Dual"
           ]
         },
