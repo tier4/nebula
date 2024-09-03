@@ -111,6 +111,17 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
+    descriptor.integer_range = int_range(0, 360, 1);
+    config.cloud_min_angle = declare_parameter<uint16_t>("cloud_min_angle", descriptor);
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
+    descriptor.integer_range = int_range(0, 360, 1);
+    config.cloud_max_angle = declare_parameter<uint16_t>("cloud_max_angle", descriptor);
+  }
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     descriptor.floating_point_range = float_range(0, 359.99, 0.01);
     descriptor.description =
       "At which angle to start a new scan. Cannot be equal to the start angle in a non-260 deg "
@@ -143,16 +154,6 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
       descriptor.integer_range = int_range(300, 1200, 300);
     }
     config.rotation_speed = declare_parameter<uint16_t>("rotation_speed", descriptor);
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.integer_range = int_range(0, 360, 1);
-    config.cloud_min_angle = declare_parameter<uint16_t>("cloud_min_angle", descriptor);
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.integer_range = int_range(0, 360, 1);
-    config.cloud_max_angle = declare_parameter<uint16_t>("cloud_max_angle", descriptor);
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
