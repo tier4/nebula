@@ -203,7 +203,7 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
   }
 
   auto point_filters_raw = declare_parameter<std::string>("point_filters", param_read_write());
-  auto point_filters = drivers::parse_point_filters(point_filters_raw);
+  auto point_filters = drivers::parse_point_filters(point_filters_raw, config.sensor_model);
   if (!point_filters.has_value()) {
     throw std::runtime_error("Could not parse point filters: " + point_filters.error());
   }
@@ -387,7 +387,8 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
   }
 
   if (!point_filters_raw.empty()) {
-    auto point_filters = drivers::parse_point_filters(point_filters_raw);
+    auto point_filters =
+      drivers::parse_point_filters(point_filters_raw, sensor_cfg_ptr_->sensor_model);
     if (!point_filters.has_value()) {
       SetParametersResult result{};
       result.successful = false;

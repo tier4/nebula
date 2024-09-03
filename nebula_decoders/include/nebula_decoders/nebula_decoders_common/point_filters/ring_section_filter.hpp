@@ -34,9 +34,19 @@ namespace nebula::drivers
 
 using namespace std::string_literals;  // NOLINT
 
+/**
+ * @brief Filters out angular sections on the configured rings.
+ */
 class RingSectionFilter : public PointFilter
 {
 public:
+  /**
+   * @brief Construct a new ring section filter given a list of (channel_id, start_deg, end_deg)
+   * tuples.
+   *
+   * @param excluded_sections_deg A list of (channel_id, start_deg, end_deg) tuples which should be
+   * excluded. Sections wrapping around the 360/0 deg boundary are handled correctly.
+   */
   explicit RingSectionFilter(
     const std::vector<std::tuple<uint32_t, float, float>> & excluded_sections_deg)
   {
@@ -82,8 +92,12 @@ public:
    * filter if parsed successfully, an error message otherwise.
    */
   static nebula::util::expected<RingSectionFilter, std::string> fromJson(
-    const nlohmann::json & json)
+    const nlohmann::json & json, SensorModel sensor_model)
   {
+    auto sensor_n_channels_result = get_n_channels(sensor_model);
+    if (!sensor_n_channels_result.has_value()) return sensor_n_channels_result.error();
+    uint32_t sensor_n_channels = sensor_n_channels_result.value();
+
     std::vector<std::tuple<uint32_t, float, float>> parsed_sections;
 
     if (!json.is_array()) {
@@ -110,6 +124,10 @@ public:
       uint32_t channel_id = sector[0];
       float start_deg = sector[1];
       float end_deg = sector[2];
+
+      if (channel_id >= sensor_n_channels) {
+        return "sensor supports at most " + std::to_string(sensor_n_channels) + " channels";
+      }
 
       parsed_sections.emplace_back(channel_id, start_deg, end_deg);
     }
