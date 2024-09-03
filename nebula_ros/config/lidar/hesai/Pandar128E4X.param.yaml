@@ -1,8 +1,8 @@
 /**:
   ros__parameters:
-    host_ip: 192.168.1.10
+    host_ip: 255.255.255.255
     sensor_ip: 192.168.1.201
-    multicast_ip: 239.1.1.234
+    multicast_ip: ""
     data_port: 2368
     gnss_port: 10110
     packet_mtu_size: 1500
