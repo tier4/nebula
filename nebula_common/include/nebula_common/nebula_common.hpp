@@ -15,17 +15,23 @@
 #ifndef NEBULA_COMMON_H
 #define NEBULA_COMMON_H
 
+#include "nebula_common/util/expected.hpp"
+
 #include <nebula_common/point_types.hpp>
 
 #include <boost/tokenizer.hpp>
 
 #include <algorithm>
+#include <cstdint>
 #include <ostream>
 #include <string>
 #include <vector>
 
 namespace nebula::drivers
 {
+
+using std::string_literals::operator""s;
+
 /// @brief Coordinate mode for Velodyne's setting (need to check)
 enum class CoordinateMode { UNKNOWN = 0, CARTESIAN, SPHERICAL, CYLINDRICAL };
 
@@ -631,6 +637,47 @@ inline std::string sensor_model_to_string(const SensorModel & sensor_model)
       return "SRR520";
     default:
       return "UNKNOWN";
+  }
+}
+
+/**
+ * @brief Get the number of channels a specific sensor model has. A string error message is returned
+ * for sensors that do not have a meaningful channel number.
+ *
+ * @param sensor_model The sensor model of interest
+ * @return nebula::util::expected<uint32_t, std::string> The number of channels on success, or a
+ * string error message.
+ */
+inline nebula::util::expected<uint32_t, std::string> get_n_channels(
+  const SensorModel & sensor_model)
+{
+  switch (sensor_model) {
+    case SensorModel::VELODYNE_VLP16:
+      return 16;
+    case SensorModel::VELODYNE_VLP32:
+    case SensorModel::VELODYNE_VLP32MR:
+    case SensorModel::VELODYNE_HDL32:
+    case SensorModel::HESAI_PANDARXT32:
+    case SensorModel::HESAI_PANDARXT32M:
+    case SensorModel::ROBOSENSE_HELIOS:
+    case SensorModel::ROBOSENSE_BPEARL_V3:
+    case SensorModel::ROBOSENSE_BPEARL_V4:
+      return 32;
+    case SensorModel::HESAI_PANDAR40P:
+    case SensorModel::HESAI_PANDAR40M:
+      return 40;
+    case SensorModel::VELODYNE_HDL64:
+    case SensorModel::HESAI_PANDAR64:
+    case SensorModel::HESAI_PANDARQT64:
+      return 64;
+    case SensorModel::VELODYNE_VLS128:
+    case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR128_E3X:
+    case SensorModel::HESAI_PANDAR128_E4X:
+      return 128;
+    default:
+      return "unsupported sensor model"s;
   }
 }
 
