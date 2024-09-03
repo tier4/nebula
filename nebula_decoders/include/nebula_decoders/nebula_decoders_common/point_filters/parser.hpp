@@ -16,6 +16,7 @@
 
 #include "nebula_decoders/nebula_decoders_common/point_filters/ring_section_filter.hpp"
 
+#include <nebula_common/nebula_common.hpp>
 #include <nebula_common/point_filters/point_filter.hpp>
 #include <nebula_common/util/expected.hpp>
 #include <nlohmann/json.hpp>
@@ -31,7 +32,7 @@ using nlohmann::json;
 using namespace std::string_literals;  // NOLINT
 
 nebula::util::expected<std::vector<std::shared_ptr<PointFilter>>, std::string> parse_point_filters(
-  const std::string & s)
+  const std::string & s, SensorModel sensor_model)
 {
   std::vector<std::shared_ptr<PointFilter>> parsed_filters;
 
@@ -48,7 +49,7 @@ nebula::util::expected<std::vector<std::shared_ptr<PointFilter>>, std::string> p
 
   for (const auto & [key, value] : j.items()) {
     if (key == "ring_section_filter") {
-      auto parsed = RingSectionFilter::fromJson(value);
+      auto parsed = RingSectionFilter::fromJson(value, sensor_model);
       if (!parsed.has_value()) {
         return "Could not parse " + key + ": " + parsed.error();
       }
