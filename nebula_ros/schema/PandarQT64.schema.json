@@ -62,6 +62,7 @@
           "enum": [
             "Last",
             "First",
+            "LastFirst",
             "Dual"
           ]
         },
