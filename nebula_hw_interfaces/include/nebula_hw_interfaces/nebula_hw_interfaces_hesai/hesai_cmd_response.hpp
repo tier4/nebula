@@ -326,14 +326,14 @@ inline std::ostream & operator<<(std::ostream & os, HesaiConfigBase const & arg)
   return os;
 }
 
-struct OTAT128HesaiConfig: HesaiConfigBase
+struct HesaiConfig_OT128_AT128: HesaiConfigBase
 {
   uint8_t gps_nmea_sentence;
   uint8_t noise_filtering;
   uint8_t reflectivity_mapping;
   unsigned char reserved[6];
 
-  json to_json(OTAT128HesaiConfig & instance)
+  json to_json(HesaiConfig_OT128_AT128 & instance)
   {
     json j = HesaiConfigBase::to_json(instance);
     j["gps_nmea_sentence"] = instance.gps_nmea_sentence;
@@ -344,7 +344,7 @@ struct OTAT128HesaiConfig: HesaiConfigBase
   }
 };
 
-inline std::ostream & operator<<(std::ostream & os, OTAT128HesaiConfig const & arg)
+inline std::ostream & operator<<(std::ostream & os, HesaiConfig_OT128_AT128 const & arg)
 {
   os << (HesaiConfigBase)(arg) << '\n';
   os << ", ";
@@ -364,14 +364,14 @@ inline std::ostream & operator<<(std::ostream & os, OTAT128HesaiConfig const & a
   return os;
 }
 
-struct XT40pHesaiConfig: HesaiConfigBase
+struct HesaiConfig_XT_40p: HesaiConfigBase
 {
   uint8_t clock_data_fmt;
   uint8_t noise_filtering;
   uint8_t reflectivity_mapping;
   unsigned char reserved[6];
 
-  json to_json(XT40pHesaiConfig & instance)
+  json to_json(HesaiConfig_XT_40p & instance)
   {
     json j = HesaiConfigBase::to_json(instance);
     j["clock_data_fmt"] = instance.clock_data_fmt;
@@ -382,7 +382,7 @@ struct XT40pHesaiConfig: HesaiConfigBase
   }
 };
 
-inline std::ostream & operator<<(std::ostream & os, XT40pHesaiConfig const & arg)
+inline std::ostream & operator<<(std::ostream & os, HesaiConfig_XT_40p const & arg)
 {
   os << (HesaiConfigBase)(arg) << '\n';
   os << ", ";

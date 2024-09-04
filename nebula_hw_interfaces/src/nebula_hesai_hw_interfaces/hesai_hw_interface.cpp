@@ -335,29 +335,29 @@ std::shared_ptr<HesaiConfigBase> HesaiHwInterface::GetConfig()
   {
     case SensorModel::HESAI_PANDAR40P:
     {
-      XT40pHesaiConfig hesai_config = CheckSizeAndParse<XT40pHesaiConfig>(response);
-      auto ptr = std::make_shared<XT40pHesaiConfig>(hesai_config);
+      HesaiConfig_XT_40p hesai_config = CheckSizeAndParse<HesaiConfig_XT_40p>(response);
+      auto ptr = std::make_shared<HesaiConfig_XT_40p>(hesai_config);
       std::cout << "Config: " << hesai_config << std::endl;
       return ptr;
     }
     case SensorModel::HESAI_PANDARQT128:
     {
-      OTAT128HesaiConfig hesai_config = CheckSizeAndParse<OTAT128HesaiConfig>(response);
-      auto ptr = std::make_shared<OTAT128HesaiConfig>(hesai_config);
+      HesaiConfig_OT128_AT128 hesai_config = CheckSizeAndParse<HesaiConfig_OT128_AT128>(response);
+      auto ptr = std::make_shared<HesaiConfig_OT128_AT128>(hesai_config);
       std::cout << "Config: " << hesai_config << std::endl;
       return ptr;
     }
     case SensorModel::HESAI_PANDARAT128:
     {
-      OTAT128HesaiConfig hesai_config = CheckSizeAndParse<OTAT128HesaiConfig>(response);
-      auto ptr = std::make_shared<OTAT128HesaiConfig>(hesai_config);
+      HesaiConfig_OT128_AT128 hesai_config = CheckSizeAndParse<HesaiConfig_OT128_AT128>(response);
+      auto ptr = std::make_shared<HesaiConfig_OT128_AT128>(hesai_config);
       std::cout << "Config: " << hesai_config << std::endl;
       return ptr;
     }
     case SensorModel::HESAI_PANDARXT32:
     {
-      XT40pHesaiConfig hesai_config = CheckSizeAndParse<XT40pHesaiConfig>(response);
-      auto ptr = std::make_shared<XT40pHesaiConfig>(hesai_config);
+      HesaiConfig_XT_40p hesai_config = CheckSizeAndParse<HesaiConfig_XT_40p>(response);
+      auto ptr = std::make_shared<HesaiConfig_XT_40p>(hesai_config);
       std::cout << "Config: " << hesai_config << std::endl;
       return ptr;
     }
