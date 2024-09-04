@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="sensor_model" default="ARS548"/>
+    <arg name="launch_hw" default="true" description="Whether to connect to a real sensor (true) or to accept packet messages (false).">
+        <choice value="true" />
+        <choice value="false" />
+    </arg>
     <arg name="config_file" default="$(find-pkg-share nebula_ros)/config/radar/continental/$(var sensor_model).param.yaml"/>
 
     <arg name="odometry_topic" default="odometry_input"/>
@@ -11,6 +15,7 @@
 
         <node pkg="nebula_ros" exec="continental_ars548_ros_wrapper_node" name="nebula_continental_ars548" output="screen">
             <param from="$(var config_file)" allow_substs="true"/>
+            <param name="launch_hw" value="$(var launch_hw)"></param>
             <remap from="/diagnostics" to="diagnostics"/>
             <remap from="odometry_input" to="$(var odometry_topic)"/>
             <remap from="acceleration_input" to="$(var acceleration_topic)"/>
@@ -21,7 +26,8 @@
     <group if="$(eval &quot;'$(var sensor_model)' == 'SRR520' &quot;)" >
 
         <node pkg="nebula_ros" exec="continental_srr520_ros_wrapper_node" name="nebula_continental_srr520" output="screen">
-	    <param from="$(var config_file)" allow_substs="true"/>
+	        <param from="$(var config_file)" allow_substs="true"/>
+            <param name="launch_hw" value="$(var launch_hw)"></param>
             <remap from="/diagnostics" to="diagnostics"/>
             <remap from="odometry_input" to="$(var odometry_topic)"/>
             <remap from="acceleration_input" to="$(var acceleration_topic)"/>
