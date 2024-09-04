@@ -23,8 +23,10 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
+#include <nlohmann/json.hpp>
 
 using namespace boost::endian;  // NOLINT(build/namespaces)
+using nlohmann::json;
 
 namespace nebula
 {
@@ -251,7 +253,7 @@ struct HesaiInventory
 };
 
 /// @brief struct of PTC_COMMAND_GET_CONFIG_INFO
-struct HesaiConfig
+struct HesaiConfigBase
 {
   uint8_t ipaddr[4];
   uint8_t mask[4];
@@ -272,77 +274,134 @@ struct HesaiConfig
   uint8_t motor_status;
   uint8_t vlan_flag;
   big_uint16_buf_t vlan_id;
-  uint8_t clock_data_fmt;  // FIXME: labeled as gps_nmea_sentence in AT128, OT128 datasheets
-  uint8_t noise_filtering;
-  uint8_t reflectivity_mapping;
-  uint8_t reserved[6];
 
-  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiConfig const & arg)
+  json to_json(HesaiConfigBase & instance)
   {
-    std::ios initial_format(nullptr);
-    initial_format.copyfmt(os);
+    json j;
+    j["ipaddr"] = instance.ipaddr;
+    j["mask"] = instance.mask;
+    j["gateway"] = instance.gateway;
+    j["dest_ipaddr"] = instance.dest_ipaddr;
+    j["dest_LiDAR_udp_port"] = instance.dest_LiDAR_udp_port.value();
+    j["dest_gps_udp_port"] = instance.dest_gps_udp_port.value();
+    j["spin_rate"] = instance.spin_rate.value();
+    j["sync"] = instance.sync;
+    j["sync_angle"] = instance.sync_angle.value();
+    j["start_angle"] = instance.start_angle.value();
+    j["stop_angle"] = instance.stop_angle.value();
+    j["clock_source"] = instance.clock_source;
+    j["udp_seq"] = instance.udp_seq;
+    j["trigger_method"] = instance.trigger_method;
+    j["return_mode"] = instance.return_mode;
+    j["standby_mode"] = instance.standby_mode;
+    j["motor_status"] = instance.motor_status;
+    j["vlan_flag"] = instance.vlan_flag;
+    j["vlan_id"] = instance.vlan_id.value();
 
-    os << "ipaddr: " << +arg.ipaddr[0] << "." << +arg.ipaddr[1] << "." << +arg.ipaddr[2] << "."
-       << +arg.ipaddr[3];
-    os << ", ";
-    os << "mask: " << +arg.mask[0] << "." << +arg.mask[1] << "." << +arg.mask[2] << "."
-       << +arg.mask[3];
-    os << ", ";
-    os << "gateway: " << +arg.gateway[0] << "." << +arg.gateway[1] << "." << +arg.gateway[2] << "."
-       << +arg.gateway[3];
-    os << ", ";
-    os << "dest_ipaddr: " << +arg.dest_ipaddr[0] << "." << +arg.dest_ipaddr[1] << "."
-       << +arg.dest_ipaddr[2] << "." << +arg.dest_ipaddr[3];
-    os << ", ";
-    os << "dest_LiDAR_udp_port: " << arg.dest_LiDAR_udp_port;
-    os << ", ";
-    os << "dest_gps_udp_port: " << arg.dest_gps_udp_port;
-    os << ", ";
-    os << "spin_rate: " << arg.spin_rate;
-    os << ", ";
-    os << "sync: " << +arg.sync;
-    os << ", ";
-    os << "sync_angle: " << arg.sync_angle;
-    os << ", ";
-    os << "start_angle: " << arg.start_angle;
-    os << ", ";
-    os << "stop_angle: " << arg.stop_angle;
-    os << ", ";
-    os << "clock_source: " << +arg.clock_source;
-    os << ", ";
-    os << "udp_seq: " << +arg.udp_seq;
-    os << ", ";
-    os << "trigger_method: " << +arg.trigger_method;
-    os << ", ";
-    os << "return_mode: " << +arg.return_mode;
-    os << ", ";
-    os << "standby_mode: " << +arg.standby_mode;
-    os << ", ";
-    os << "motor_status: " << +arg.motor_status;
-    os << ", ";
-    os << "vlan_flag: " << +arg.vlan_flag;
-    os << ", ";
-    os << "vlan_id: " << arg.vlan_id;
-    os << ", ";
-    os << "clock_data_fmt: " << +arg.clock_data_fmt;
-    os << ", ";
-    os << "noise_filtering: " << +arg.noise_filtering;
-    os << ", ";
-    os << "reflectivity_mapping: " << +arg.reflectivity_mapping;
-    os << ", ";
-    os << "reserved: ";
-
-    for (size_t i = 0; i < sizeof(arg.reserved); i++) {
-      if (i != 0) {
-        os << ' ';
-      }
-      os << std::hex << std::setfill('0') << std::setw(2) << (+arg.reserved[i]);
-    }
-    os.copyfmt(initial_format);
-
-    return os;
+    return j;
   }
 };
+
+inline std::ostream & operator<<(std::ostream & os, HesaiConfigBase const & arg)
+{
+  os << "ipaddr: " << arg.ipaddr << '\n';
+  os << "mask: " << arg.mask << '\n';
+  os << "gateway: " << arg.gateway << '\n';
+  os << "dest_ipaddr: " << arg.dest_ipaddr << '\n';
+  os << "dest_LiDAR_udp_port: " << arg.dest_LiDAR_udp_port << '\n';
+  os << "dest_gps_udp_port: " << arg.dest_gps_udp_port << '\n';
+  os << "spin_rate: " << arg.spin_rate << '\n';
+  os << "sync: " << +arg.sync << '\n';
+  os << "sync_angle: " << arg.sync_angle << '\n';
+  os << "start_angle: " << arg.start_angle << '\n';
+  os << "stop_angle: " << arg.stop_angle << '\n';
+  os << "clock_source: " << +arg.clock_source << '\n';
+  os << "udp_seq: " << +arg.udp_seq << '\n';
+  os << "trigger_method: " << +arg.trigger_method << '\n';
+  os << "return_mode: " << +arg.return_mode << '\n';
+  os << "standby_mode: " << +arg.standby_mode << '\n';
+  os << "motor_status: " << +arg.motor_status << '\n';
+  os << "vlan_flag: " << +arg.vlan_flag << '\n';
+  os << "vlan_id: " << arg.vlan_id;
+  return os;
+}
+
+struct OTAT128HesaiConfig: HesaiConfigBase
+{
+  uint8_t gps_nmea_sentence;
+  uint8_t noise_filtering;
+  uint8_t reflectivity_mapping;
+  unsigned char reserved[6];
+
+  json to_json(OTAT128HesaiConfig & instance)
+  {
+    json j = HesaiConfigBase::to_json(instance);
+    j["gps_nmea_sentence"] = instance.gps_nmea_sentence;
+    j["noise_filtering"] = instance.noise_filtering;
+    j["reflectivity_mapping"] = instance.reflectivity_mapping;
+
+    return j;
+  }
+};
+
+inline std::ostream & operator<<(std::ostream & os, OTAT128HesaiConfig const & arg)
+{
+  os << (HesaiConfigBase)(arg) << '\n';
+  os << ", ";
+  os << "gps_nmea_sentence: " << +arg.gps_nmea_sentence;
+  os << ", ";
+  os << "noise_filtering: " << +arg.noise_filtering;
+  os << ", ";
+  os << "reflectivity_mapping: " << +arg.reflectivity_mapping;
+  os << ", ";
+  os << "reserved: ";
+  for (size_t i = 0; i < sizeof(arg.reserved); i++) {
+    if (i != 0) {
+      os << ' ';
+    }
+    os << std::hex << std::setfill('0') << std::setw(2) << (+arg.reserved[i]);
+  }
+  return os;
+}
+
+struct XT40pHesaiConfig: HesaiConfigBase
+{
+  uint8_t clock_data_fmt;
+  uint8_t noise_filtering;
+  uint8_t reflectivity_mapping;
+  unsigned char reserved[6];
+
+  json to_json(XT40pHesaiConfig & instance)
+  {
+    json j = HesaiConfigBase::to_json(instance);
+    j["clock_data_fmt"] = instance.clock_data_fmt;
+    j["noise_filtering"] = instance.noise_filtering;
+    j["reflectivity_mapping"] = instance.reflectivity_mapping;
+
+    return j;
+  }
+};
+
+inline std::ostream & operator<<(std::ostream & os, XT40pHesaiConfig const & arg)
+{
+  os << (HesaiConfigBase)(arg) << '\n';
+  os << ", ";
+  os << "clock_data_fmt: " << +arg.clock_data_fmt;
+  os << ", ";
+  os << "noise_filtering: " << +arg.noise_filtering;
+  os << ", ";
+  os << "reflectivity_mapping: " << +arg.reflectivity_mapping;
+  os << ", ";
+  os << "reserved: ";    return os;
+  os << "reserved: ";
+  for (size_t i = 0; i < sizeof(arg.reserved); i++) {
+    if (i != 0) {
+      os << ' ';
+    }
+    os << std::hex << std::setfill('0') << std::setw(2) << (+arg.reserved[i]);
+  }
+  return os;
+}
 
 /// @brief struct of PTC_COMMAND_GET_LIDAR_STATUS
 struct HesaiLidarStatus

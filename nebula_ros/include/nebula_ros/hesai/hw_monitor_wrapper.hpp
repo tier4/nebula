@@ -85,7 +85,7 @@ private:
 
   std::unique_ptr<HesaiLidarStatus> current_status_{};
   std::unique_ptr<HesaiLidarMonitor> current_monitor_{};
-  std::unique_ptr<HesaiConfig> current_config_{};
+  std::unique_ptr<std::shared_ptr<HesaiConfigBase>> current_config_{};
   std::unique_ptr<HesaiInventory> current_inventory_{};
   std::unique_ptr<boost::property_tree::ptree> current_lidar_monitor_tree_{};
 

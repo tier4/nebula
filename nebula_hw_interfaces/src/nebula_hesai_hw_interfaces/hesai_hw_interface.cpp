@@ -327,13 +327,46 @@ HesaiInventory HesaiHwInterface::GetInventory()
   return CheckSizeAndParse<HesaiInventory>(response);
 }
 
-HesaiConfig HesaiHwInterface::GetConfig()
+std::shared_ptr<HesaiConfigBase> HesaiHwInterface::GetConfig()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_GET_CONFIG_INFO);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
-  auto hesai_config = CheckSizeAndParse<HesaiConfig>(response);
-  std::cout << "Config: " << hesai_config << std::endl;
-  return hesai_config;
+  switch (sensor_configuration_->sensor_model)
+  {
+    case SensorModel::HESAI_PANDAR40P:
+    {
+      XT40pHesaiConfig hesai_config = CheckSizeAndParse<XT40pHesaiConfig>(response);
+      auto ptr = std::make_shared<XT40pHesaiConfig>(hesai_config);
+      std::cout << "Config: " << hesai_config << std::endl;
+      return ptr;
+    }
+    case SensorModel::HESAI_PANDARQT128:
+    {
+      OTAT128HesaiConfig hesai_config = CheckSizeAndParse<OTAT128HesaiConfig>(response);
+      auto ptr = std::make_shared<OTAT128HesaiConfig>(hesai_config);
+      std::cout << "Config: " << hesai_config << std::endl;
+      return ptr;
+    }
+    case SensorModel::HESAI_PANDARAT128:
+    {
+      OTAT128HesaiConfig hesai_config = CheckSizeAndParse<OTAT128HesaiConfig>(response);
+      auto ptr = std::make_shared<OTAT128HesaiConfig>(hesai_config);
+      std::cout << "Config: " << hesai_config << std::endl;
+      return ptr;
+    }
+    case SensorModel::HESAI_PANDARXT32:
+    {
+      XT40pHesaiConfig hesai_config = CheckSizeAndParse<XT40pHesaiConfig>(response);
+      auto ptr = std::make_shared<XT40pHesaiConfig>(hesai_config);
+      std::cout << "Config: " << hesai_config << std::endl;
+      return ptr;
+    }
+    default:
+    {
+      std::cerr << "This is not Hesai LiDAR" << std::endl;
+      return nullptr;
+    }
+  }
 }
 
 HesaiLidarStatus HesaiHwInterface::GetLidarStatus()
@@ -766,14 +799,14 @@ HesaiStatus HesaiHwInterface::GetLidarMonitorAsyncHttp(
 }
 
 HesaiStatus HesaiHwInterface::CheckAndSetConfig(
-  std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration, HesaiConfig hesai_config)
+  std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration, std::shared_ptr<HesaiConfigBase> hesai_config)
 {
   using namespace std::chrono_literals;  // NOLINT(build/namespaces)
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
   std::cout << "Start CheckAndSetConfig(HesaiConfig)!!" << std::endl;
 #endif
   auto current_return_mode = nebula::drivers::ReturnModeFromIntHesai(
-    hesai_config.return_mode, sensor_configuration->sensor_model);
+    hesai_config->return_mode, sensor_configuration->sensor_model);
   // Avoids spamming the sensor, which leads to failure when configuring it.
   auto wait_time = 100ms;
   if (sensor_configuration->return_mode != current_return_mode) {
@@ -798,7 +831,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     std::this_thread::sleep_for(wait_time);
   }
 
-  auto current_rotation_speed = hesai_config.spin_rate;
+  auto current_rotation_speed = hesai_config->spin_rate;
   if (sensor_configuration->rotation_speed != current_rotation_speed.value()) {
     PrintInfo(
       "current lidar rotation_speed: " +
@@ -820,10 +853,10 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 
   bool set_flg = false;
   std::stringstream ss;
-  ss << static_cast<int>(hesai_config.dest_ipaddr[0]) << "."
-     << static_cast<int>(hesai_config.dest_ipaddr[1]) << "."
-     << static_cast<int>(hesai_config.dest_ipaddr[2]) << "."
-     << static_cast<int>(hesai_config.dest_ipaddr[3]);
+  ss << static_cast<int>(hesai_config->dest_ipaddr[0]) << "."
+     << static_cast<int>(hesai_config->dest_ipaddr[1]) << "."
+     << static_cast<int>(hesai_config->dest_ipaddr[2]) << "."
+     << static_cast<int>(hesai_config->dest_ipaddr[3]);
   auto current_host_addr = ss.str();
   if (sensor_configuration->host_ip != current_host_addr) {
     set_flg = true;
@@ -831,7 +864,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     PrintInfo("current configuration host_ip: " + sensor_configuration->host_ip);
   }
 
-  auto current_host_dport = hesai_config.dest_LiDAR_udp_port;
+  auto current_host_dport = hesai_config->dest_LiDAR_udp_port;
   if (sensor_configuration->data_port != current_host_dport.value()) {
     set_flg = true;
     PrintInfo(
@@ -841,7 +874,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
       "current configuration data_port: " + std::to_string(sensor_configuration->data_port));
   }
 
-  auto current_host_tport = hesai_config.dest_gps_udp_port;
+  auto current_host_tport = hesai_config->dest_gps_udp_port;
   if (sensor_configuration->gnss_port != current_host_tport.value()) {
     set_flg = true;
     PrintInfo(
@@ -866,14 +899,14 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 
   if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128) {
     set_flg = true;
-    auto sync_angle = static_cast<int>(hesai_config.sync_angle.value() / 100);
+    auto sync_angle = static_cast<int>(hesai_config->sync_angle.value() / 100);
     auto scan_phase = static_cast<int>(sensor_configuration->scan_phase);
     int sync_flg = 1;
     if (scan_phase != sync_angle) {
       set_flg = true;
     }
     if (sync_flg && set_flg) {
-      PrintInfo("current lidar sync: " + std::to_string(hesai_config.sync));
+      PrintInfo("current lidar sync: " + std::to_string(hesai_config->sync));
       PrintInfo("current lidar sync_angle: " + std::to_string(sync_angle));
       PrintInfo("current configuration scan_phase: " + std::to_string(scan_phase));
       std::thread t([this, sync_flg, scan_phase] { SetSyncAngle(sync_flg, scan_phase); });

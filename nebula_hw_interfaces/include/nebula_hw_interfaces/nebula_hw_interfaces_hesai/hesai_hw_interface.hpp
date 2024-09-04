@@ -255,7 +255,7 @@ public:
   HesaiInventory GetInventory();
   /// @brief Getting data with PTC_COMMAND_GET_CONFIG_INFO
   /// @return Resulting status
-  HesaiConfig GetConfig();
+  std::shared_ptr<HesaiConfigBase> GetConfig();
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_STATUS
   /// @return Resulting status
   HesaiLidarStatus GetLidarStatus();
@@ -397,7 +397,7 @@ public:
   /// @param hesai_config Current HesaiConfig
   /// @return Resulting status
   HesaiStatus CheckAndSetConfig(
-    std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration, HesaiConfig hesai_config);
+    std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration, std::shared_ptr<HesaiConfigBase> hesai_config);
   /// @brief Checking the current settings and changing the difference point
   /// @param sensor_configuration Current SensorConfiguration
   /// @param hesai_lidar_range_all Current HesaiLidarRangeAll
