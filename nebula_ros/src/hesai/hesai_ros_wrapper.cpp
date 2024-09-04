@@ -111,16 +111,11 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.floating_point_range = float_range(0, 360, 0.01);
+    descriptor.floating_point_range = float_range(0, 359.99, 0.01);
+    descriptor.description =
+      "At which angle to start a new scan. Cannot be equal to the start angle in a non-260 deg "
+      "FoV. Choose the end angle instead.";
     config.cut_angle = declare_parameter<double>("cut_angle", descriptor);
-  }
-
-  if (config.cut_angle == 360.0) {
-    RCLCPP_WARN_STREAM(
-      get_logger(),
-      "Cut angle was set to 360 deg, overriding with canonical representation of 0 deg.");
-    config.cut_angle = 0.0;
-    set_parameter(rclcpp::Parameter("cut_angle", 0.0));
   }
 
   {
@@ -230,9 +225,9 @@ Status HesaiRosWrapper::ValidateAndSetConfig(
         new_config->cloud_min_angle, new_config->cloud_max_angle, new_config->cut_angle)) {
     RCLCPP_ERROR(get_logger(), "Cannot cut scan outside of the FoV.");
   }
-  if (
-    new_config->sensor_model == drivers::SensorModel::HESAI_PANDARAT128 &&
-    new_config->cut_angle == new_config->cloud_min_angle) {
+
+  bool fov_is_360 = new_config->cloud_min_angle == 0 && new_config->cloud_max_angle == 360;
+  if (!fov_is_360 && new_config->cut_angle == new_config->cloud_min_angle) {
     RCLCPP_ERROR(
       get_logger(), "Cannot cut scan right at the start of the FoV. Cut at the end instead.");
     return Status::SENSOR_CONFIG_ERROR;
@@ -326,13 +321,6 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
 
   if (_return_mode.length() > 0)
     new_cfg.return_mode = nebula::drivers::ReturnModeFromString(_return_mode);
-
-  if (new_cfg.cut_angle == 360.0) {
-    RCLCPP_WARN_STREAM(
-      get_logger(),
-      "Cut angle was set to 360 deg, overriding with canonical representation of 0 deg.");
-    new_cfg.cut_angle = 0.0;
-  }
 
   // ////////////////////////////////////////
   // Get and validate new calibration, if any
