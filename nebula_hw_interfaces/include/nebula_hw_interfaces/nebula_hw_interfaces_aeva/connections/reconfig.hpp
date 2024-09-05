@@ -43,7 +43,7 @@ namespace nebula::drivers::connections
 using aeva::ReconfigMessage;
 using aeva::ReconfigRequestType;
 using nlohmann::json;
-using namespace std::chrono_literals;  // NOLINT
+using std::chrono_literals::operator""s;
 
 class ReconfigParser : public AevaParser<AevaStreamType::kReconfig>,
                        public AevaSender<AevaStreamType::kReconfig>
