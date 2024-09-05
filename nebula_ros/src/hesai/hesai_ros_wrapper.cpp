@@ -324,7 +324,8 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
   }
 
   if (_return_mode.length() > 0)
-    new_cfg.return_mode = nebula::drivers::ReturnModeFromString(_return_mode);
+    new_cfg.return_mode =
+      nebula::drivers::ReturnModeFromStringHesai(_return_mode, sensor_cfg_ptr_->sensor_model);
 
   // ////////////////////////////////////////
   // Get and validate new calibration, if any

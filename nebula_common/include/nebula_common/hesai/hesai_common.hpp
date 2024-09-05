@@ -17,6 +17,7 @@
 
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
+#include "nebula_common/util/string_conversions.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -24,6 +25,7 @@
 #include <iostream>
 #include <map>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -428,28 +430,34 @@ inline ReturnMode ReturnModeFromStringHesai(
   const std::string & return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {
+    case SensorModel::HESAI_PANDARXT32:
     case SensorModel::HESAI_PANDARXT32M:
-    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
       if (return_mode == "Last") return ReturnMode::LAST;
       if (return_mode == "Strongest") return ReturnMode::STRONGEST;
-      if (return_mode == "LastStrongest") return ReturnMode::DUAL_LAST_STRONGEST;
+      if (return_mode == "Dual" || return_mode == "LastStrongest")
+        return ReturnMode::DUAL_LAST_STRONGEST;
       if (return_mode == "First") return ReturnMode::FIRST;
       if (return_mode == "LastFirst") return ReturnMode::DUAL_LAST_FIRST;
       if (return_mode == "FirstStrongest") return ReturnMode::DUAL_FIRST_STRONGEST;
-      if (return_mode == "Dual") return ReturnMode::DUAL;
       break;
     case SensorModel::HESAI_PANDARQT64:
       if (return_mode == "Last") return ReturnMode::LAST;
-      if (return_mode == "Dual") return ReturnMode::DUAL;
+      if (return_mode == "Dual" || return_mode == "LastFirst") return ReturnMode::DUAL_LAST_FIRST;
       if (return_mode == "First") return ReturnMode::FIRST;
       break;
-    default:
+    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR64:
+    case SensorModel::HESAI_PANDAR40P:
       if (return_mode == "Last") return ReturnMode::LAST;
       if (return_mode == "Strongest") return ReturnMode::STRONGEST;
-      if (return_mode == "Dual") return ReturnMode::DUAL;
+      if (return_mode == "Dual" || return_mode == "LastStrongest")
+        return ReturnMode::DUAL_LAST_STRONGEST;
       break;
+    default:
+      throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
   }
 
   return ReturnMode::UNKNOWN;
@@ -462,8 +470,9 @@ inline ReturnMode ReturnModeFromStringHesai(
 inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {
+    case SensorModel::HESAI_PANDARXT32:
     case SensorModel::HESAI_PANDARXT32M:
-    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
       if (return_mode == 0) return ReturnMode::LAST;
@@ -475,14 +484,18 @@ inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorMode
       break;
     case SensorModel::HESAI_PANDARQT64:
       if (return_mode == 0) return ReturnMode::LAST;
-      if (return_mode == 2) return ReturnMode::DUAL;
+      if (return_mode == 2) return ReturnMode::DUAL_LAST_FIRST;
       if (return_mode == 3) return ReturnMode::FIRST;
       break;
-    default:
+    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR64:
+    case SensorModel::HESAI_PANDAR40P:
       if (return_mode == 0) return ReturnMode::LAST;
       if (return_mode == 1) return ReturnMode::STRONGEST;
-      if (return_mode == 2) return ReturnMode::DUAL;
+      if (return_mode == 2) return ReturnMode::DUAL_LAST_STRONGEST;
       break;
+    default:
+      throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
   }
 
   return ReturnMode::UNKNOWN;
@@ -495,13 +508,14 @@ inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorMode
 inline int IntFromReturnModeHesai(const ReturnMode return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {
+    case SensorModel::HESAI_PANDARXT32:
     case SensorModel::HESAI_PANDARXT32M:
-    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
       if (return_mode == ReturnMode::LAST) return 0;
       if (return_mode == ReturnMode::STRONGEST) return 1;
-      if (return_mode == ReturnMode::DUAL_LAST_STRONGEST || return_mode == ReturnMode::DUAL)
+      if (return_mode == ReturnMode::DUAL || return_mode == ReturnMode::DUAL_LAST_STRONGEST)
         return 2;
       if (return_mode == ReturnMode::FIRST) return 3;
       if (return_mode == ReturnMode::DUAL_LAST_FIRST) return 4;
@@ -509,14 +523,19 @@ inline int IntFromReturnModeHesai(const ReturnMode return_mode, const SensorMode
       break;
     case SensorModel::HESAI_PANDARQT64:
       if (return_mode == ReturnMode::LAST) return 0;
-      if (return_mode == ReturnMode::DUAL) return 2;
+      if (return_mode == ReturnMode::DUAL || return_mode == ReturnMode::DUAL_LAST_FIRST) return 2;
       if (return_mode == ReturnMode::FIRST) return 3;
       break;
-    default:
+    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR64:
+    case SensorModel::HESAI_PANDAR40P:
       if (return_mode == ReturnMode::LAST) return 0;
       if (return_mode == ReturnMode::STRONGEST) return 1;
-      if (return_mode == ReturnMode::DUAL) return 2;
+      if (return_mode == ReturnMode::DUAL || return_mode == ReturnMode::DUAL_LAST_STRONGEST)
+        return 2;
       break;
+    default:
+      throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
   }
 
   return -1;

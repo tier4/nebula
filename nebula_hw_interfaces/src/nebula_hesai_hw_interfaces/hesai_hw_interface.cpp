@@ -2,6 +2,7 @@
 
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
 
+#include <sstream>
 #include <stdexcept>
 
 // #define WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
@@ -246,7 +247,9 @@ boost::property_tree::ptree HesaiHwInterface::ParseJson(const std::string & str)
 {
   boost::property_tree::ptree tree;
   try {
-    boost::property_tree::read_json(str, tree);
+    std::stringstream ss;
+    ss << str;
+    boost::property_tree::read_json(ss, tree);
   } catch (boost::property_tree::json_parser_error & e) {
     std::cerr << e.what() << std::endl;
   }
@@ -496,7 +499,7 @@ HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
     throw std::runtime_error("Response payload too short");
   }
 
-  HesaiLidarRangeAll hesai_range_all;
+  HesaiLidarRangeAll hesai_range_all{};
   hesai_range_all.method = response[0];
   switch (hesai_range_all.method) {
     case 0:  // for all channels
@@ -640,6 +643,12 @@ HesaiLidarMonitor HesaiHwInterface::GetLidarMonitor()
   }
 
   auto response_or_err = SendReceive(PTC_COMMAND_LIDAR_MONITOR);
+
+  // FIXME(mojomex): this is a hotfix for sensors that do not support this command
+  if (!response_or_err.has_value()) {
+    return HesaiLidarMonitor{};
+  }
+
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return CheckSizeAndParse<HesaiLidarMonitor>(response);
 }
