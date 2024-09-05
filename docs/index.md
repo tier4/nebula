@@ -27,6 +27,7 @@ For more information, please refer to [About Nebula](about.md).
 - [Design](design.md)
 - [Parameters](parameters.md)
 - [Point cloud types](point_types.md)
+- [Point filters](filters.md)
 
 ## Supported sensors
 

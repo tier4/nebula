@@ -214,6 +214,12 @@ protected:
         // The driver wrapper converts to degrees, expects radians
         point.azimuth = corrected_angle_data.azimuth_rad;
         point.elevation = corrected_angle_data.elevation_rad;
+        for (const auto & filter : sensor_configuration_->point_filters) {
+          if (filter->excluded(point)) {
+            pc->points.pop_back();
+            break;
+          }
+        }
       }
     }
   }
