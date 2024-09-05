@@ -97,9 +97,16 @@ Status HesaiRosOfflineExtractSample::GetParameters(
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
+    descriptor.integer_range = int_range(0, 360, 1);
+    sensor_configuration.sync_angle =
+      declare_parameter<uint16_t>("sync_angle", 0., param_read_only());
+  }
+
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
+    descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
     descriptor.floating_point_range = float_range(0, 360, 0.01);
-    sensor_configuration.scan_phase =
-      declare_parameter<double>("scan_phase", 0., param_read_only());
+    sensor_configuration.cut_angle = declare_parameter<double>("cut_angle", 0., param_read_only());
   }
 
   calibration_configuration.calibration_file =
@@ -120,7 +127,7 @@ Status HesaiRosOfflineExtractSample::GetParameters(
   if (sensor_configuration.return_mode == nebula::drivers::ReturnMode::UNKNOWN) {
     return Status::INVALID_ECHO_MODE;
   }
-  if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
+  if (sensor_configuration.frame_id.empty()) {
     return Status::SENSOR_CONFIG_ERROR;
   }
   if (calibration_configuration.calibration_file.empty()) {

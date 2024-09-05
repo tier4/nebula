@@ -29,16 +29,16 @@ template <size_t ChannelN, size_t AngleUnit>
 class AngleCorrectorCalibrationBased : public AngleCorrector
 {
 private:
-  static constexpr size_t MAX_AZIMUTH_LEN = 360 * AngleUnit;
+  static constexpr size_t MAX_AZIMUTH = 360 * AngleUnit;
 
   std::array<float, ChannelN> elevation_angle_rad_{};
   std::array<float, ChannelN> azimuth_offset_rad_{};
-  std::array<float, MAX_AZIMUTH_LEN> block_azimuth_rad_{};
+  std::array<float, MAX_AZIMUTH> block_azimuth_rad_{};
 
   std::array<float, ChannelN> elevation_cos_{};
   std::array<float, ChannelN> elevation_sin_{};
-  std::array<std::array<float, ChannelN>, MAX_AZIMUTH_LEN> azimuth_cos_{};
-  std::array<std::array<float, ChannelN>, MAX_AZIMUTH_LEN> azimuth_sin_{};
+  std::array<std::array<float, ChannelN>, MAX_AZIMUTH> azimuth_cos_{};
+  std::array<std::array<float, ChannelN>, MAX_AZIMUTH> azimuth_sin_{};
 
 public:
   explicit AngleCorrectorCalibrationBased(
@@ -62,7 +62,7 @@ public:
       elevation_sin_[channel_id] = sinf(elevation_angle_rad_[channel_id]);
     }
 
-    for (size_t block_azimuth = 0; block_azimuth < MAX_AZIMUTH_LEN; block_azimuth++) {
+    for (size_t block_azimuth = 0; block_azimuth < MAX_AZIMUTH; block_azimuth++) {
       block_azimuth_rad_[block_azimuth] = deg2rad(block_azimuth / static_cast<double>(AngleUnit));
 
       for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {

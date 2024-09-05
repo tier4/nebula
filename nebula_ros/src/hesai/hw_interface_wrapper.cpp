@@ -2,6 +2,8 @@
 
 #include "nebula_ros/hesai/hw_interface_wrapper.hpp"
 
+#include "nebula_ros/common/parameter_descriptors.hpp"
+
 namespace nebula
 {
 namespace ros
