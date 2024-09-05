@@ -24,6 +24,7 @@ endif()
 find_package(ament_cmake_auto REQUIRED)
 find_package(nebula_common REQUIRED)
 find_package(nebula_decoders REQUIRED)
+find_package(nebula_hw_interfaces REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(rosbag2_cpp REQUIRED)
 find_package(diagnostic_updater REQUIRED)
@@ -40,35 +41,45 @@ if(BUILD_TESTING)
     add_definitions(-D_SRC_CALIBRATION_DIR_PATH="${PROJECT_SOURCE_DIR}/../nebula_decoders/calibration/")
 
     set(NEBULA_TEST_INCLUDE_DIRS
+        ./
         ${nebula_common_INCLUDE_DIRS}
         ${nebula_decoders_INCLUDE_DIRS}
+        ${nebula_hw_interfaces_INCLUDE_DIRS}
         ${PCL_INCLUDE_DIRS}
         ${rosbag2_cpp_INCLUDE_DIRS}
         ${diagnostic_updater_INCLUDE_DIRS}
+        ${nebula_tests_common_INCLUDE_DIRS}
     )
 
-    set(NEBULA_TEST_LIBRARIES
+    set(COMMON_TEST_LIBRARIES
         ${nebula_common_TARGETS}
         ${PCL_LIBRARIES}
         ${rosbag2_cpp_TARGETS}
         ${diagnostic_updater_TARGETS}
+        ${nebula_tests_common}
     )
 
     set(CONTINENTAL_TEST_LIBRARIES
-        ${NEBULA_TEST_LIBRARIES}
+        ${COMMON_TEST_LIBRARIES}
         nebula_decoders::nebula_decoders_continental
     )
 
     set(HESAI_TEST_LIBRARIES
-        ${NEBULA_TEST_LIBRARIES}
+        ${COMMON_TEST_LIBRARIES}
         nebula_decoders::nebula_decoders_hesai
     )
 
     set(VELODYNE_TEST_LIBRARIES
-        ${NEBULA_TEST_LIBRARIES}
+        ${COMMON_TEST_LIBRARIES}
         nebula_decoders::nebula_decoders_velodyne
     )
 
+    set(AEVA_TEST_LIBRARIES
+        ${COMMON_TEST_LIBRARIES}
+        nebula_hw_interfaces::nebula_hw_interfaces_aeva
+    )
+
+    add_subdirectory(aeva)
     add_subdirectory(continental)
     add_subdirectory(hesai)
     add_subdirectory(velodyne)

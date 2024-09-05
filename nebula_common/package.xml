@@ -13,6 +13,7 @@
   <buildtool_depend>ros_environment</buildtool_depend>
 
   <depend>libpcl-all-dev</depend>
+  <depend>nlohmann-json-dev</depend>
   <depend>yaml-cpp</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
