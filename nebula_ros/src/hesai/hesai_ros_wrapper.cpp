@@ -120,7 +120,11 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.integer_range = int_range(0, 359, 1);
+    if (config.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
+      descriptor.integer_range = int_range(30, 150, 1);
+    } else {
+      descriptor.integer_range = int_range(0, 359, 1);
+    }
     config.sync_angle = declare_parameter<uint16_t>("sync_angle", descriptor);
   }
 
