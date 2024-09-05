@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="sensor_model" description="Helios|Bpearl"/>
+  <arg name="sensor_model">
+    <choice value="Helios" />
+    <choice value="Bpearl" />
+  </arg>
   <arg name="config_file" default="$(find-pkg-share nebula_ros)/config/lidar/robosense/$(var sensor_model).param.yaml"/>
 
   <node pkg="nebula_ros" exec="robosense_ros_wrapper_node" name="robosense_ros_wrapper_node" output="screen">
