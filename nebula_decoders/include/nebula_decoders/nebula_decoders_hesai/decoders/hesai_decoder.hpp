@@ -14,11 +14,20 @@
 
 #pragma once
 
+#include "nebula_decoders/nebula_decoders_common/angles.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
+#include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_common/point_types.hpp>
+#include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <memory>
 #include <tuple>
 #include <utility>
@@ -30,6 +39,13 @@ namespace nebula::drivers
 template <typename SensorT>
 class HesaiDecoder : public HesaiScanDecoder
 {
+  struct ScanCutAngles
+  {
+    float fov_min;
+    float fov_max;
+    float scan_emit_angle;
+  };
+
 protected:
   /// @brief Configuration for this decoder
   const std::shared_ptr<const drivers::HesaiSensorConfiguration> sensor_configuration_;
@@ -47,14 +63,16 @@ protected:
 
   /// @brief The last decoded packet
   typename SensorT::packet_t packet_;
-  /// @brief The last azimuth processed
-  int last_phase_ = -1;  // Dummy value to signal last_phase_ has not been set yet
+
   /// @brief The timestamp of the last completed scan in nanoseconds
   uint64_t output_scan_timestamp_ns_ = 0;
   /// @brief The timestamp of the scan currently in progress
   uint64_t decode_scan_timestamp_ns_ = 0;
   /// @brief Whether a full scan has been processed
   bool has_scanned_ = false;
+
+  ScanCutAngles scan_cut_angles_;
+  uint32_t last_azimuth_ = 0;
 
   rclcpp::Logger logger_;
 
@@ -114,7 +132,7 @@ protected:
           continue;
         }
 
-        auto distance = getDistance(unit);
+        float distance = getDistance(unit);
 
         if (
           distance < SensorT::MIN_RANGE || SensorT::MAX_RANGE < distance ||
@@ -154,16 +172,37 @@ protected:
           }
         }
 
-        NebulaPoint point;
+        CorrectedAngleData corrected_angle_data =
+          angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
+        auto azimuth = corrected_angle_data.azimuth_rad;
+
+        bool in_fov = angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.fov_max, azimuth);
+        if (!in_fov) {
+          continue;
+        }
+
+        bool in_current_scan = true;
+
+        if (
+          angle_corrector_.isInsideOverlap(last_azimuth_, raw_azimuth) &&
+          angle_is_between(
+            scan_cut_angles_.scan_emit_angle, scan_cut_angles_.scan_emit_angle + deg2rad(20),
+            azimuth)) {
+          in_current_scan = false;
+        }
+
+        auto pc = in_current_scan ? decode_pc_ : output_pc_;
+        auto scan_timestamp_ns =
+          in_current_scan ? decode_scan_timestamp_ns_ : output_scan_timestamp_ns_;
+
+        NebulaPoint & point = pc->emplace_back();
         point.distance = distance;
         point.intensity = unit.reflectivity;
-        point.time_stamp =
-          getPointTimeRelative(packet_timestamp_ns, block_offset + start_block_id, channel_id);
+        point.time_stamp = getPointTimeRelative(
+          scan_timestamp_ns, packet_timestamp_ns, block_offset + start_block_id, channel_id);
 
         point.return_type = static_cast<uint8_t>(return_type);
         point.channel = channel_id;
-
-        auto corrected_angle_data = angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
 
         // The raw_azimuth and channel are only used as indices, sin/cos functions use the precise
         // corrected angles
@@ -175,24 +214,8 @@ protected:
         // The driver wrapper converts to degrees, expects radians
         point.azimuth = corrected_angle_data.azimuth_rad;
         point.elevation = corrected_angle_data.elevation_rad;
-
-        decode_pc_->emplace_back(point);
       }
     }
-  }
-
-  /// @brief Checks whether the last processed block was the last block of a scan
-  /// @param current_phase The azimuth of the last processed block
-  /// @param sync_phase The azimuth set in the sensor configuration, for which the
-  /// timestamp is aligned to the full second
-  /// @return Whether the scan has completed
-  bool checkScanCompleted(uint32_t current_phase, uint32_t sync_phase)
-  {
-    if (last_phase_ == -1) {
-      return false;
-    }
-
-    return angle_corrector_.hasScanned(current_phase, last_phase_, sync_phase);
   }
 
   /// @brief Get the distance of the given unit in meters
@@ -203,15 +226,16 @@ protected:
 
   /// @brief Get timestamp of point in nanoseconds, relative to scan timestamp. Includes firing time
   /// offset correction for channel and block
+  /// @param scan_timestamp_ns Start timestamp of the current scan in nanoseconds
   /// @param packet_timestamp_ns The timestamp of the current PandarPacket in nanoseconds
   /// @param block_id The block index of the point
   /// @param channel_id The channel index of the point
-  uint32_t getPointTimeRelative(uint64_t packet_timestamp_ns, size_t block_id, size_t channel_id)
+  uint32_t getPointTimeRelative(
+    uint64_t scan_timestamp_ns, uint64_t packet_timestamp_ns, size_t block_id, size_t channel_id)
   {
     auto point_to_packet_offset_ns =
       sensor_.getPacketRelativePointTimeOffset(block_id, channel_id, packet_);
-    auto packet_to_scan_offset_ns =
-      static_cast<uint32_t>(packet_timestamp_ns - decode_scan_timestamp_ns_);
+    auto packet_to_scan_offset_ns = static_cast<uint32_t>(packet_timestamp_ns - scan_timestamp_ns);
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
   }
 
@@ -224,7 +248,9 @@ public:
     const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> &
       correction_data)
   : sensor_configuration_(sensor_configuration),
-    angle_corrector_(correction_data),
+    angle_corrector_(
+      correction_data, sensor_configuration_->cloud_min_angle,
+      sensor_configuration_->cloud_max_angle, sensor_configuration_->cut_angle),
     logger_(rclcpp::get_logger("HesaiDecoder"))
   {
     logger_.set_level(rclcpp::Logger::Level::Debug);
@@ -235,6 +261,10 @@ public:
 
     decode_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
+
+    scan_cut_angles_ = {
+      deg2rad(sensor_configuration_->cloud_min_angle),
+      deg2rad(sensor_configuration_->cloud_max_angle), deg2rad(sensor_configuration_->cut_angle)};
   }
 
   int unpack(const std::vector<uint8_t> & packet) override
@@ -243,42 +273,48 @@ public:
       return -1;
     }
 
+    // This is the first scan, set scan timestamp to whatever packet arrived first
     if (decode_scan_timestamp_ns_ == 0) {
-      decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_);
+      decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
+                                  sensor_.getEarliestPointTimeOffsetForBlock(0, packet_);
     }
 
     if (has_scanned_) {
+      output_pc_->clear();
       has_scanned_ = false;
     }
 
     const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
-    uint32_t current_azimuth = 0;
-
     for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
-      current_azimuth = packet_.body.blocks[block_id].getAzimuth();
+      auto block_azimuth = packet_.body.blocks[block_id].getAzimuth();
 
-      bool scan_completed = checkScanCompleted(
-        current_azimuth,
-        sensor_configuration_->scan_phase * SensorT::packet_t::DEGREE_SUBDIVISIONS);
+      if (angle_corrector_.passedTimestampResetAngle(last_azimuth_, block_azimuth)) {
+        if (sensor_configuration_->cut_angle == sensor_configuration_->cloud_max_angle) {
+          decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
+                                      sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
+        } else {
+          output_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
+                                      sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
+        }
+      }
 
-      if (scan_completed) {
-        std::swap(decode_pc_, output_pc_);
-        decode_pc_->clear();
-        has_scanned_ = true;
-        output_scan_timestamp_ns_ = decode_scan_timestamp_ns_;
-
-        // A new scan starts within the current packet, so the new scan's timestamp must be
-        // calculated as the packet timestamp plus the lowest time offset of any point in the
-        // remainder of the packet
-        decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
-                                    sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
+      if (!angle_corrector_.isInsideFoV(last_azimuth_, block_azimuth)) {
+        last_azimuth_ = block_azimuth;
+        continue;
       }
 
       convertReturns(block_id, n_returns);
-      last_phase_ = current_azimuth;
+
+      if (angle_corrector_.passedEmitAngle(last_azimuth_, block_azimuth)) {
+        std::swap(decode_pc_, output_pc_);
+        std::swap(decode_scan_timestamp_ns_, output_scan_timestamp_ns_);
+        has_scanned_ = true;
+      }
+
+      last_azimuth_ = block_azimuth;
     }
 
-    return last_phase_;
+    return last_azimuth_;
   }
 
   bool hasScanned() override { return has_scanned_; }
