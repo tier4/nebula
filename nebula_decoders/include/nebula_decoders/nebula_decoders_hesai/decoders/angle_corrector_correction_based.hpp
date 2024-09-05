@@ -176,18 +176,23 @@ public:
   {
     int field = findField(block_azimuth);
 
-    auto elevation =
-      correction_->elevation[channel_id] +
-      correction_->getElevationAdjustV3(channel_id, block_azimuth) * (AngleUnit / 100);
+    int32_t elevation = correction_->elevation[channel_id] +
+                        correction_->getElevationAdjustV3(channel_id, block_azimuth) *
+                          static_cast<int32_t>(AngleUnit / 100);
+
+    // Allow negative angles in the radian value. This makes visualization of this field nicer and
+    // should have no other mathematical implications in downstream modules.
+    float elevation_rad = 2.f * elevation * M_PI / MAX_AZIMUTH;
+    // Then, normalize the integer value to the positive [0, MAX_AZIMUTH] range for array indexing
     elevation = (MAX_AZIMUTH + elevation) % MAX_AZIMUTH;
 
-    auto azimuth = (block_azimuth + MAX_AZIMUTH - correction_->startFrame[field]) * 2 -
-                   correction_->azimuth[channel_id] +
-                   correction_->getAzimuthAdjustV3(channel_id, block_azimuth) * (AngleUnit / 100);
+    int32_t azimuth = (block_azimuth + MAX_AZIMUTH - correction_->startFrame[field]) * 2 -
+                      correction_->azimuth[channel_id] +
+                      correction_->getAzimuthAdjustV3(channel_id, block_azimuth) *
+                        static_cast<int32_t>(AngleUnit / 100);
     azimuth = (MAX_AZIMUTH + azimuth) % MAX_AZIMUTH;
 
     float azimuth_rad = 2.f * azimuth * M_PI / MAX_AZIMUTH;
-    float elevation_rad = 2.f * elevation * M_PI / MAX_AZIMUTH;
 
     return {azimuth_rad,   elevation_rad,   sin_[azimuth],
             cos_[azimuth], sin_[elevation], cos_[elevation]};
