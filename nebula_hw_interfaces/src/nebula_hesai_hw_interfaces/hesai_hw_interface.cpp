@@ -2,7 +2,12 @@
 
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
 
+#include "nebula_common/nebula_status.hpp"
+
+#include <boost/asio/socket_base.hpp>
+
 #include <sstream>
+#include <string>
 
 // #define WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
 
@@ -153,6 +158,15 @@ Status HesaiHwInterface::SensorInterfaceStart()
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
     PrintError("open ok");
 #endif
+
+    bool success = cloud_udp_driver_->receiver()->setKernelBufferSize(UDP_SOCKET_BUFFER_SIZE);
+    if (!success) {
+      PrintError(
+        "Could not set receive buffer size. Try increasing net.core.rmem_max to " +
+        std::to_string(UDP_SOCKET_BUFFER_SIZE) + " B.");
+      return Status::ERROR_1;
+    }
+
     cloud_udp_driver_->receiver()->bind();
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
     PrintError("bind ok");
