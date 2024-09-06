@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="sensor_model" default="ARS548"/>
+    <arg name="sensor_model">
+        <choice value="ARS548" />
+        <choice value="SRR520" />
+    </arg>
     <arg name="config_file" default="$(find-pkg-share nebula_ros)/config/radar/continental/$(var sensor_model).param.yaml"/>
 
     <arg name="odometry_topic" default="odometry_input"/>
