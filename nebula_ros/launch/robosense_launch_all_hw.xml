@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="sensor_model" description="Helios|Bpearl"/>
+  <arg name="sensor_model">
+    <choice value="Helios" />
+    <choice value="Bpearl" />
+  </arg>
   <arg name="launch_hw" default="true" description="Whether to connect to a real sensor (true) or to accept packet messages (false).">
     <choice value="true" />
     <choice value="false" />

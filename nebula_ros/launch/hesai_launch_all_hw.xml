@@ -1,6 +1,15 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="sensor_model" description="Pandar64|Pandar40P|PandarXT32|PandarXT32M|PandarAT128|PandarQT64|PandarQT128|Pandar128E4X"/>
+  <arg name="sensor_model">
+    <choice value="Pandar40P" />
+    <choice value="Pandar64" />
+    <choice value="Pandar128E4X" />
+    <choice value="PandarAT128" />
+    <choice value="PandarQT64" />
+    <choice value="PandarQT128" />
+    <choice value="PandarXT32" />
+    <choice value="PandarXT32M" />
+  </arg>
   <arg name="launch_hw" default="true" description="Whether to connect to a real sensor (true) or to accept packet messages (false).">
     <choice value="true" />
     <choice value="false" />

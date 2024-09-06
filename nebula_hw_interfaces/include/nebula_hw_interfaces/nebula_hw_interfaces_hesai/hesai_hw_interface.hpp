@@ -18,6 +18,8 @@
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
 #include <boost/version.hpp>
+
+#include <cstddef>
 #if (BOOST_VERSION / 100 >= 1073 && BOOST_VERSION / 100 <= 1076)  // Boost 1.73 - 1.76
 #define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #endif
@@ -102,6 +104,12 @@ const uint16_t PANDAR40P_EXTENDED_PACKET_SIZE = 1266;
 const uint16_t PANDAR128_E4X_PACKET_SIZE = 861;
 const uint16_t PANDAR128_E4X_EXTENDED_PACKET_SIZE = 1117;
 const uint16_t MTU_SIZE = 1500;
+
+/// @brief The kernel buffer size in bytes to use for receiving UDP packets. If the buffer is too
+/// small to bridge scheduling and processing delays, packets will be dropped. This corresponds to
+/// the net.core.rmem_default setting in Linux. The current value is hardcoded to accommodate one
+/// pointcloud worth of OT128 packets (currently the highest data rate sensor supported).
+const size_t UDP_SOCKET_BUFFER_SIZE = MTU_SIZE * 3600;
 
 // Time interval between Announce messages, in units of log seconds (default: 1)
 const int PTP_LOG_ANNOUNCE_INTERVAL = 1;

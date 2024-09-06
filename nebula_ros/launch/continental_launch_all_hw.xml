@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="sensor_model" default="ARS548"/>
+    <arg name="sensor_model">
+        <choice value="ARS548" />
+        <choice value="SRR520" />
+    </arg>
     <arg name="launch_hw" default="true" description="Whether to connect to a real sensor (true) or to accept packet messages (false).">
         <choice value="true" />
         <choice value="false" />
