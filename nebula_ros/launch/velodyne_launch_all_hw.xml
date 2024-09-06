@@ -9,7 +9,7 @@
 
   <node pkg="nebula_ros" exec="velodyne_ros_wrapper_node" name="velodyne_ros_wrapper_node" output="screen">
     <param from="$(var config_file)" allow_substs="true"/>
-    <param name="launch_hw" value="$(var launch_hw)"></param>
+    <param name="launch_hw" value="$(var launch_hw)"/>
   </node>
 
 </launch>
