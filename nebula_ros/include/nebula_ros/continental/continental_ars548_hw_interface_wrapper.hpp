@@ -66,7 +66,7 @@ private:
 
   /// @brief Callback to send the steering angle information to the radar device
   /// @param msg The steering angle message
-  void steeringAngleCallback(const std_msgs::msg::Float32::SharedPtr msg);
+  void SteeringAngleCallback(const std_msgs::msg::Float32::SharedPtr msg);
 
   /// @brief Service callback to set the new sensor ip
   /// @param request service request

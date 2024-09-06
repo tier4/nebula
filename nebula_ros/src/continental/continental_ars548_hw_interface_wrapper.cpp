@@ -67,8 +67,7 @@ void ContinentalARS548HwInterfaceWrapper::SensorInterfaceStart()
     steering_angle_sub_ = parent_node_->create_subscription<std_msgs::msg::Float32>(
       "steering_angle_input", rclcpp::SensorDataQoS(),
       std::bind(
-        &::nebula::ros::ContinentalARS548HwInterfaceWrapper::steeringAngleCallback, this,
-        std::placeholders::_1));
+        &ContinentalARS548HwInterfaceWrapper::SteeringAngleCallback, this, std::placeholders::_1));
 
     set_network_configuration_service_server_ =
       parent_node_->create_service<continental_srvs::srv::ContinentalArs548SetNetworkConfiguration>(
@@ -152,7 +151,7 @@ void ContinentalARS548HwInterfaceWrapper::AccelerationCallback(
   hw_interface_->SetAccelerationLongitudinalCog(msg->accel.accel.linear.x);
 }
 
-void ContinentalARS548HwInterfaceWrapper::steeringAngleCallback(
+void ContinentalARS548HwInterfaceWrapper::SteeringAngleCallback(
   const std_msgs::msg::Float32::SharedPtr msg)
 {
   constexpr float rad_to_deg = 180.f / M_PI;
