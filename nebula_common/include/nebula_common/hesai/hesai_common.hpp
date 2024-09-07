@@ -34,6 +34,7 @@ namespace drivers
 /// @brief struct for Hesai sensor configuration
 struct HesaiSensorConfiguration : public LidarConfigurationBase
 {
+  std::string multicast_ip;
   uint16_t gnss_port{};
   double scan_phase{};
   double dual_return_distance_threshold{};
@@ -54,6 +55,8 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
 {
   os << "Hesai Sensor Configuration:" << '\n';
   os << (LidarConfigurationBase)(arg) << '\n';
+  os << "Multicast: "
+     << (arg.multicast_ip.empty() ? "disabled" : "enabled, group " + arg.multicast_ip) << '\n';
   os << "GNSS Port: " << arg.gnss_port << '\n';
   os << "Scan Phase: " << arg.scan_phase << '\n';
   os << "Rotation Speed: " << arg.rotation_speed << '\n';
