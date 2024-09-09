@@ -14,6 +14,8 @@
 
 #include "nebula_ros/continental/continental_ars548_ros_wrapper.hpp"
 
+#include "nebula_ros/common/parameter_descriptors.hpp"
+
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
 namespace nebula
@@ -160,7 +162,7 @@ void ContinentalARS548RosWrapper::ReceivePacketCallback(
     return;
   }
 
-  if (!packet_queue_.try_push(std::move(msg_ptr))) {
+  if (!packet_queue_.tryPush(std::move(msg_ptr))) {
     RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");
   }
 }
