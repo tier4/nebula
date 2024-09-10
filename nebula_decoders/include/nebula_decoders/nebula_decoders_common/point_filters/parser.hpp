@@ -34,6 +34,10 @@ using namespace std::string_literals;  // NOLINT
 nebula::util::expected<std::vector<std::shared_ptr<PointFilter>>, std::string> parse_point_filters(
   const std::string & s, SensorModel sensor_model)
 {
+  if (s.empty()) {
+    return std::vector<std::shared_ptr<PointFilter>>{};
+  }
+
   std::vector<std::shared_ptr<PointFilter>> parsed_filters;
 
   json j;
