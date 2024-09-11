@@ -52,7 +52,10 @@
           "$ref": "sub/misc.json#/definitions/scan_phase"
         },
         "sensor_model": {
-          "$ref": "sub/lidar_velodyne.json#/definitions/sensor_model"
+          "$ref": "sub/lidar_velodyne.json#/definitions/sensor_model",
+          "enum": [
+            "VLP16"
+          ]
         },
         "calibration_file": {
           "$ref": "sub/lidar_velodyne.json#/definitions/calibration_file"
