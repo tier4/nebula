@@ -46,7 +46,10 @@
           "$ref": "sub/misc.json#/definitions/dual_return_distance_threshold"
         },
         "sensor_model": {
-          "$ref": "sub/lidar_robosense.json#/definitions/sensor_model"
+          "$ref": "sub/lidar_robosense.json#/definitions/sensor_model",
+          "enum": [
+            "Helios"
+          ]
         },
         "return_mode": {
           "$ref": "sub/lidar_robosense.json#/definitions/return_mode"

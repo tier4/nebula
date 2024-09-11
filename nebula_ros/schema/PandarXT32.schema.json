@@ -55,7 +55,10 @@
           "$ref": "sub/lidar_hesai.json#/definitions/cut_angle"
         },
         "sensor_model": {
-          "$ref": "sub/lidar_hesai.json#/definitions/sensor_model"
+          "$ref": "sub/lidar_hesai.json#/definitions/sensor_model",
+          "enum": [
+            "PandarXT32"
+          ]
         },
         "calibration_file": {
           "$ref": "sub/lidar_hesai.json#/definitions/calibration_file"

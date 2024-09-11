@@ -70,7 +70,10 @@
           "maximum": 150.0
         },
         "sensor_model": {
-          "$ref": "sub/lidar_hesai.json#/definitions/sensor_model"
+          "$ref": "sub/lidar_hesai.json#/definitions/sensor_model",
+          "enum": [
+            "PandarAT128"
+          ]
         },
         "calibration_file": {
           "$ref": "sub/lidar_hesai.json#/definitions/calibration_file"
