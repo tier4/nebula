@@ -39,7 +39,17 @@ nav:
   - Installation: installation.md
   - Launching: usage.md
   - Design: design.md
-  - Parameters: parameters.md
+  - Parameters:
+      - parameters.md
+      - Vendors:
+          - Hesai:
+              - parameters/vendors/hesai/common.md
+          - Velodyne:
+              - parameters/vendors/velodyne/common.md
+          - Robosense:
+              - parameters/vendors/robosense/common.md
+          - Continental:
+              - parameters/vendors/continental/common.md
   - Point cloud types: point_types.md
   - Supported sensors: supported_sensors.md
   - Tutorials: tutorials.md
@@ -137,6 +147,8 @@ nav:
 
 ### Extra Settings ###
 plugins:
+  - macros:
+      module_name: mkdocs_macros
   - mkdoxy:
       projects:
         nebula_common:
