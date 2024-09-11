@@ -5,6 +5,7 @@
 #include <boost/format.hpp>
 
 #include <ostream>
+#include <iomanip>
 
 namespace nebula
 {
