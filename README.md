@@ -21,6 +21,8 @@ Here you will find information about the background of the project, how to insta
 - [Contributing](https://tier4.github.io/nebula/contribute)
 - [Tutorials](https://tier4.github.io/nebula/tutorials)
 
+To build and serve the documentation locally, see the build steps further below.
+
 ## Quick start
 
 Nebula builds with ROS 2 Galactic and Humble.
@@ -46,6 +48,14 @@ vcs import src < src/build_depends.repos
 rosdep install --from-paths src --ignore-src -y -r
 # Build Nebula
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+```
+
+_(optional)_ To build and serve the documentation, run the following commands in your workspace:
+
+```shell
+cd src
+pip3 install -r docs/requirements.txt
+mkdocs serve
 ```
 
 To launch Nebula as a ROS 2 node with default parameters for your sensor model:
