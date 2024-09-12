@@ -223,13 +223,20 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
         distance < sensor_configuration_->max_range) {
         /*condition added to avoid calculating points which are not
             in the interesting defined area (min_angle < area < max_angle)*/
-        if (
+        const bool is_within_min_max_angle =
           (block.rotation >= sensor_configuration_->cloud_min_angle * 100 &&
            block.rotation <= sensor_configuration_->cloud_max_angle * 100 &&
-           sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle) ||
+           sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle);
+
+        const bool is_outside_max_min_angle =
           (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
            (raw->blocks[i].rotation <= sensor_configuration_->cloud_max_angle * 100 ||
-            raw->blocks[i].rotation >= sensor_configuration_->cloud_min_angle * 100))) {
+            raw->blocks[i].rotation >= sensor_configuration_->cloud_min_angle * 100));
+
+        const bool is_not_excluded_point =
+          !check_excluded_point(corrections.laser_ring, block.rotation);
+
+        if ((is_within_min_max_angle || is_outside_max_min_angle) && is_not_excluded_point) {
           const float cos_vert_angle = corrections.cos_vert_correction;
           const float sin_vert_angle = corrections.sin_vert_correction;
           float azimuth_corrected_f = azimuth + (azimuth_diff * VLP32_CHANNEL_DURATION / VLP32_SEQ_DURATION * j) - corrections.rot_correction * 180.0 / M_PI * 100;

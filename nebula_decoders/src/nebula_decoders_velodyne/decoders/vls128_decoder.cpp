@@ -261,13 +261,20 @@ void Vls128Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_p
             distance < sensor_configuration_->max_range) {
             // Condition added to avoid calculating points which are not in the interesting defined
             // area (cloud_min_angle < area < cloud_max_angle).
-            if (
+            const bool is_within_min_max_angle =
               (azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100 &&
                azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 &&
-               sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle) ||
+               sensor_configuration_->cloud_min_angle < sensor_configuration_->cloud_max_angle);
+
+            const bool is_outside_max_min_angle =
               (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle &&
                (azimuth_corrected <= sensor_configuration_->cloud_max_angle * 100 ||
-                azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100))) {
+                azimuth_corrected >= sensor_configuration_->cloud_min_angle * 100));
+
+            const bool is_not_excluded_point =
+              !check_excluded_point(corrections.laser_ring, azimuth_corrected);
+
+            if ((is_within_min_max_angle || is_outside_max_min_angle) && is_not_excluded_point) {
               // convert polar coordinates to Euclidean XYZ.
               const float cos_vert_angle = corrections.cos_vert_correction;
               const float sin_vert_angle = corrections.sin_vert_correction;
