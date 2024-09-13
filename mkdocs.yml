@@ -35,37 +35,36 @@ use_directory_urls: true
 ### Navigation ###
 nav:
   - Home: index.md
+  - Supported sensors: supported_sensors.md
   - Installation: installation.md
-  - Launching: usage.md
-  - Design: design.md
+  - Usage: usage.md
   - Parameters:
       - parameters.md
-      - Vendors:
-          - Hesai:
-              - parameters/vendors/hesai/common.md
-              - Pandar40P: parameters/vendors/hesai/pandar40p.md
-              - Pandar64: parameters/vendors/hesai/pandar64.md
-              - OT128: parameters/vendors/hesai/ot128.md
-              - QT64: parameters/vendors/hesai/qt64.md
-              - QT128: parameters/vendors/hesai/qt128.md
-              - AT128: parameters/vendors/hesai/at128.md
-              - XT32: parameters/vendors/hesai/xt32.md
-              - XT32M: parameters/vendors/hesai/xt32m.md
-          - Velodyne:
-              - parameters/vendors/velodyne/common.md
-              - VLP16: parameters/vendors/velodyne/vlp16.md
-              - VLP32: parameters/vendors/velodyne/vlp32.md
-              - VLS128: parameters/vendors/velodyne/vls128.md
-          - Robosense:
-              - parameters/vendors/robosense/common.md
-              - BPearl: parameters/vendors/robosense/bpearl.md
-              - Helios: parameters/vendors/robosense/helios.md
-          - Continental:
-              - parameters/vendors/continental/common.md
-              - ARS548: parameters/vendors/continental/ars548.md
-              - SRR520: parameters/vendors/continental/srr520.md
+      - Hesai:
+          - parameters/vendors/hesai/common.md
+          - Pandar40P: parameters/vendors/hesai/pandar40p.md
+          - Pandar64: parameters/vendors/hesai/pandar64.md
+          - OT128: parameters/vendors/hesai/ot128.md
+          - QT64: parameters/vendors/hesai/qt64.md
+          - QT128: parameters/vendors/hesai/qt128.md
+          - AT128: parameters/vendors/hesai/at128.md
+          - XT32: parameters/vendors/hesai/xt32.md
+          - XT32M: parameters/vendors/hesai/xt32m.md
+      - Velodyne:
+          - parameters/vendors/velodyne/common.md
+          - VLP16: parameters/vendors/velodyne/vlp16.md
+          - VLP32: parameters/vendors/velodyne/vlp32.md
+          - VLS128: parameters/vendors/velodyne/vls128.md
+      - Robosense:
+          - parameters/vendors/robosense/common.md
+          - BPearl: parameters/vendors/robosense/bpearl.md
+          - Helios: parameters/vendors/robosense/helios.md
+      - Continental:
+          - parameters/vendors/continental/common.md
+          - ARS548: parameters/vendors/continental/ars548.md
+          - SRR520: parameters/vendors/continental/srr520.md
   - Point cloud types: point_types.md
-  - Supported sensors: supported_sensors.md
+  - Design: design.md
   - Tutorials: tutorials.md
   - Contributing: contribute.md
   - API reference:
@@ -215,5 +214,7 @@ plugins:
       lang: en
 
 markdown_extensions:
+  - admonition
+  - pymdownx.details
   - pymdownx.highlight
   - pymdownx.superfences
