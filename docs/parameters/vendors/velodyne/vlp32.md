@@ -1,1 +1,1 @@
-{{ json_to_markdown("nebula_ros/schema/VLP32.schema.json", include_refs=True) }}
+{{ json_to_markdown("nebula_ros/schema/VLP32.schema.json") }}
