@@ -35,7 +35,6 @@ use_directory_urls: true
 ### Navigation ###
 nav:
   - Home: index.md
-  - About: about.md
   - Installation: installation.md
   - Launching: usage.md
   - Design: design.md
