@@ -95,9 +95,7 @@ def extract_parameter_info(
             params.append(param)
         else:  # if the object is namespace, then dive deeper in to json value
             params.extend(
-                extract_parameter_info(
-                    v["properties"], k + ".", file_directory, include_refs
-                )
+                extract_parameter_info(v["properties"], k + ".", file_directory, include_refs)
             )
     return params
 
