@@ -45,7 +45,10 @@ def format_param_range(param):
 
 
 def extract_parameter_info(
-    parameters: dict, namespace="", file_directory: str = "", include_refs=False
+    parameters: dict,
+    namespace="",
+    file_directory: str = "",
+    include_refs=False,
 ):
     params = []
     for k, v in parameters.items():
@@ -92,7 +95,9 @@ def extract_parameter_info(
             params.append(param)
         else:  # if the object is namespace, then dive deeper in to json value
             params.extend(
-                extract_parameter_info(v["properties"], k + ".", file_directory, include_refs)
+                extract_parameter_info(
+                    v["properties"], k + ".", file_directory, include_refs
+                )
             )
     return params
 
@@ -117,7 +122,7 @@ def define_env(env):
     def json_to_markdown(
         json_schema_file_path,
         json_path=["definitions", 0, "properties"],
-        include_refs=False,
+        include_refs=True,
     ):
         with open(json_schema_file_path) as f:
             data = json.load(f)

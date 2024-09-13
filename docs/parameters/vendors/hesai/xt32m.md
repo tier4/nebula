@@ -1,1 +1,1 @@
-{{ json_to_markdown("nebula_ros/schema/PandarXT32M.schema.json", include_refs=True) }}
+{{ json_to_markdown("nebula_ros/schema/PandarXT32M.schema.json") }}
