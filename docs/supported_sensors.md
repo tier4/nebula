@@ -15,10 +15,10 @@ The `sensor_model` parameter below decides which sensor driver is launched.
 
 | Model        | `sensor_model` | Configuration file      | Test status |
 | ------------ | -------------- | ----------------------- | ----------- |
-| Pandar64     | Pandar64       | Pandar64.param.yaml     | ✅          |
+| Pandar64     | Pandar64       | Pandar64.param.yaml     | ⚠️          |
 | Pandar 40P   | Pandar40P      | Pandar40P.param.yaml    | ✅          |
 | Pandar XT32  | PandarXT32     | PandarXT32.param.yaml   | ✅          |
-| Pandar XT32M | PandarXT32M    | PandarXT32M.param.yaml  | ✅          |
+| Pandar XT32M | PandarXT32M    | PandarXT32M.param.yaml  | ⚠️          |
 | Pandar QT64  | PandarQT64     | PandarQT64.param.yaml   | ✅          |
 | Pandar QT128 | PandarQT128    | PandarQT128.param.yaml  | ✅          |
 | Pandar AT128 | PandarAT128    | PandarAT128.param.yaml  | ✅\*        |
