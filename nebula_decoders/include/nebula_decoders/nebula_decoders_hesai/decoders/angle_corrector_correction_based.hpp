@@ -126,7 +126,7 @@ public:
     // ////////////////////////////////////////
 
     for (size_t i = 0; i < MAX_AZIMUTH; ++i) {
-      float rad = 2.f * i * M_PI / MAX_AZIMUTH;
+      float rad = 2.f * i * M_PIf / MAX_AZIMUTH;
       cos_[i] = cosf(rad);
       sin_[i] = sinf(rad);
     }
@@ -187,8 +187,8 @@ public:
       correction_->getAzimuthAdjustV3(channel_id, block_azimuth) * (AngleUnit / 100);
     azimuth = (MAX_AZIMUTH + azimuth) % MAX_AZIMUTH;
 
-    float azimuth_rad = 2.f * azimuth * M_PI / MAX_AZIMUTH;
-    float elevation_rad = 2.f * elevation * M_PI / MAX_AZIMUTH;
+    float azimuth_rad = 2.f * azimuth * M_PIf / MAX_AZIMUTH;
+    float elevation_rad = 2.f * elevation * M_PIf / MAX_AZIMUTH;
 
     return {azimuth_rad,   elevation_rad,   sin_[azimuth],
             cos_[azimuth], sin_[elevation], cos_[elevation]};
