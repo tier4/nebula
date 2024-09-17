@@ -176,14 +176,15 @@ public:
   {
     int field = findField(block_azimuth);
 
-    auto elevation =
+    int32_t elevation =
       correction_->elevation[channel_id] +
       correction_->getElevationAdjustV3(channel_id, block_azimuth) * (AngleUnit / 100);
     elevation = (MAX_AZIMUTH + elevation) % MAX_AZIMUTH;
 
-    auto azimuth = (block_azimuth + MAX_AZIMUTH - correction_->startFrame[field]) * 2 -
-                   correction_->azimuth[channel_id] +
-                   correction_->getAzimuthAdjustV3(channel_id, block_azimuth) * (AngleUnit / 100);
+    int32_t azimuth =
+      (block_azimuth + MAX_AZIMUTH - correction_->startFrame[field]) * 2 -
+      correction_->azimuth[channel_id] +
+      correction_->getAzimuthAdjustV3(channel_id, block_azimuth) * (AngleUnit / 100);
     azimuth = (MAX_AZIMUTH + azimuth) % MAX_AZIMUTH;
 
     float azimuth_rad = 2.f * azimuth * M_PI / MAX_AZIMUTH;
