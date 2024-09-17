@@ -113,7 +113,7 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
-    descriptor.floating_point_range = float_range(0, 359.99, 0.01);
+    descriptor.floating_point_range = float_range(0, 360, 0.01);
     descriptor.description =
       "At which angle to start a new scan. Cannot be equal to the start angle in a non-360 deg "
       "FoV. Choose the end angle instead.";
@@ -237,6 +237,13 @@ Status HesaiRosWrapper::ValidateAndSetConfig(
   if (!fov_is_360 && new_config->cut_angle == new_config->cloud_min_angle) {
     RCLCPP_ERROR(
       get_logger(), "Cannot cut scan right at the start of the FoV. Cut at the end instead.");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  // Handling cutting at 360deg (as opposed to 0deg) for a full 360deg FoV requires a special case
+  // in the cutting logic. Thus, require the user to cut at 0deg.
+  if (fov_is_360 && new_config->cut_angle == 360) {
+    RCLCPP_ERROR(get_logger(), "Cannot cut a 360deg FoV at 360deg. Cut at 0deg instead.");
     return Status::SENSOR_CONFIG_ERROR;
   }
 
