@@ -33,14 +33,48 @@ This means that for different parameter combinations, different timing behaviors
 
 Depending on whether `cut_angle` and `sync_angle` are aligned, the point cloud time stamp will be somewhere in `[ToS, ToS + 100 ms)` assuming a `10 Hz` LiDAR.
 
+The below figure illustrates the various angles at play. Solid lines represent corrected angles, while dotted ones represent encoder angles.
+Note that a range of encoder angles can contribute points to the same corrected angle: each channel can have a different azimuth correction term.
+The upper bounds of these areas of influence are shown in orange and are auto-calculated by Nebula.
+
+![Explanation of the angles involved in scan cutting and timing](sensor_angles.svg)
+
+<!-- prettier-ignore-start -->
+!!! note
+    The parts of the correction ranges that are outside of the (corrected) FoV also need to be captured by the sensor as they contribute points to regions within the FoV.
+    Nebula automatically sets the sensors' FoV settings to an oversized range compared to the desired corrected FoV.
+<!-- prettier-ignore-end -->
+
+The two examples shown below illustrate the behavior of a `cut_angle` inside the FoV (left) and one that coincides with the `cloud_max_angle`.
+Scans are always published on `cut_angle`, so the timestamp has a jump from `100 ms` to `0 ms` in the left scan: the points near `0 ms` were inserted into the scan first,
+while those near `100 ms` were inserted at the end of the scan.
+
+The example on the right has timestamps ranging from `0 ms` at `90 deg`, and `62.5 ms` at `315 deg`. The cloud is published at `315 deg`, but the timestamp is reset at `90 deg`,
+resulting in a range of point times much less than `100 ms`. See the table below for the exact parameters used in this figure.
+
+![Examples of the angles shown above](sensor_angle_examples.svg)
+
+<!-- prettier-ignore-start -->
+!!! note
+    Setting `cut_angle = cloud_max_angle` for non-360 deg FoVs results in the cloud being published right at the end of the FoV, meaning that there is 0 latency where the decoder has to wait for points to arrive.
+    In comparison, when cutting somewhere inside the FoV, the decoder has to wait after `cloud_max_angle` has been passed until the FoV is entered again at `cloud_min_angle` to complete the scan, resulting in a
+    latency from first point to scan publication of `100 ms`.
+
+    In general, the scan latency (from the time of the first point until publication) can be expressed as `L = (cloud_max_angle - cloud_min_angle) / 360 * 1000 ms / framerate` where w.l.o.g. `cloud_max_angle >=` `cloud_min_angle`.
+<!-- prettier-ignore-end -->
+
 **Examples:**
 
-| `cloud_min_angle` | `cloud_max_angle` | `cut_angle` | `sync_angle` | Resulting cloud timestamp |
-| ----------------: | ----------------: | ----------: | -----------: | ------------------------: |
-|                 0 |               360 |           0 |            0 |                       ToS |
-|                 0 |               180 |           0 |            0 |                       ToS |
-|                 0 |               360 |         180 |            0 |               ToS + 50 ms |
-|                90 |               360 |         360 |            0 |               ToS + 25 ms |
+The last two rows correspond to the examples in the above figure.
+
+| `cloud_min_angle` | `cloud_max_angle` | `cut_angle` | `sync_angle` | Scan timestamp | Scan latency |
+| ----------------: | ----------------: | ----------: | -----------: | -------------: | -----------: |
+|                 0 |               360 |           0 |            0 |            ToS |       100 ms |
+|                 0 |               180 |           0 |            0 |            ToS |       100 ms |
+|                 0 |               360 |         180 |            0 |    ToS + 50 ms |       100 ms |
+|                90 |               360 |         360 |            0 |    ToS + 25 ms |        75 ms |
+|                90 |               315 |         180 |           30 |    ToS + 17 ms |       100 ms |
+|                90 |               315 |         315 |           30 |    ToS + 17 ms |        63 ms |
 
 ### `cloud_min_angle` and `cloud_max_angle`
 
