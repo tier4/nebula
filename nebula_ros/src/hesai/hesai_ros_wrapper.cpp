@@ -228,6 +228,7 @@ Status HesaiRosWrapper::ValidateAndSetConfig(
   if (!drivers::angle_is_between<double>(
         new_config->cloud_min_angle, new_config->cloud_max_angle, new_config->cut_angle)) {
     RCLCPP_ERROR(get_logger(), "Cannot cut scan outside of the FoV.");
+    return Status::SENSOR_CONFIG_ERROR;
   }
 
   bool fov_is_360 = new_config->cloud_min_angle == 0 && new_config->cloud_max_angle == 360;
