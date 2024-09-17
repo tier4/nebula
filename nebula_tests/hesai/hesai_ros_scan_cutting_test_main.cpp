@@ -100,7 +100,8 @@ TEST_P(ScanCuttingTest, FovAlignment)
     bool is_at128 = drivers::SensorModelFromString(hesai_driver_->params_.sensor_model) ==
                     drivers::SensorModel::HESAI_PANDARAT128;
     // There is a bug in AT128's firm- or hardware that skips a few channels at the beginning of the
-    // defined FoV. for that reason, relax test conditions in the case where that bug happens
+    // defined FoV. for that reason, relax test conditions in the case where that bug happens.
+    // Bug observed on SW ver. 3.50.15, FW ver. 3.10b830, RPU ver. 3.50.008
     bool is_at128_bug = is_at128 && hesai_driver_->params_.fov_start <= 30 + 3;
 
     if (is_at128_bug) {
