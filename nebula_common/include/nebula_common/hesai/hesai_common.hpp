@@ -400,6 +400,10 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   [[nodiscard]] std::tuple<float, float> getFovPadding() const override
   {
     // TODO(mojomex): calculate instead of hard-coding
+    // The reason this is tricky is that an upper bound over all azimuth/elevation combinations has
+    // to be found. For other sensors, this is only a function of elevation, so the search space is
+    // tiny compared to AT128. We should be able to find an upper bound of `getAzimuthAdjustV3` but
+    // I have not invested the time for now.
     return {-5, 5};
   }
 };
