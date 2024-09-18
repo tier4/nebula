@@ -32,6 +32,20 @@
       "maximum": 1200,
       "multipleOf": 60
     },
+    "sync_angle": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 359,
+      "default": "0",
+      "description": "The angle in whole degrees which should be hit on top-of-second."
+    },
+    "cut_angle": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 360,
+      "default": "0.0",
+      "description": "The angle in degrees at which pointclouds are cut/published."
+    },
     "multicast_ip": {
       "type": "string",
       "default": "\"\"",

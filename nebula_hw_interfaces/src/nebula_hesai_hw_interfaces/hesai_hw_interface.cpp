@@ -7,6 +7,7 @@
 #include <boost/asio/socket_base.hpp>
 
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 // #define WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
@@ -18,9 +19,7 @@
 
 #include <boost/asio.hpp>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 HesaiHwInterface::HesaiHwInterface()
 : cloud_io_context_{new ::drivers::common::IoContext(1)},
@@ -29,6 +28,7 @@ HesaiHwInterface::HesaiHwInterface()
   tcp_driver_{new ::drivers::tcp_driver::TcpDriver(m_owned_ctx)}
 {
 }
+
 HesaiHwInterface::~HesaiHwInterface()
 {
   FinalizeTcpDriver();
@@ -381,8 +381,13 @@ Status HesaiHwInterface::SetSpinRate(uint16_t rpm)
 
 Status HesaiHwInterface::SetSyncAngle(int sync_angle, int angle)
 {
+  if (sync_angle < 0 || sync_angle > 360) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
   std::vector<unsigned char> request_payload;
-  request_payload.emplace_back(sync_angle & 0xff);
+  // 360 is converted to 0
+  request_payload.emplace_back((sync_angle % 360) & 0xff);
   request_payload.emplace_back((angle >> 8) & 0xff);
   request_payload.emplace_back(angle & 0xff);
 
@@ -467,6 +472,9 @@ Status HesaiHwInterface::SetControlPort(
 
 Status HesaiHwInterface::SetLidarRange(int method, std::vector<unsigned char> data)
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
   // 0 - for all channels : 5-1 bytes
   // 1 - for each channel : 323-1 bytes
   // 2 - multi-section FOV : 1347-1 bytes
@@ -479,18 +487,21 @@ Status HesaiHwInterface::SetLidarRange(int method, std::vector<unsigned char> da
   return Status::OK;
 }
 
-Status HesaiHwInterface::SetLidarRange(int start, int end)
+Status HesaiHwInterface::SetLidarRange(int start_ddeg, int end_ddeg)
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
   // 0 - for all channels : 5-1 bytes
   // 1 - for each channel : 323-1 bytes
   // 2 - multi-section FOV : 1347-1 bytes
   std::vector<unsigned char> request_payload;
   int method = 0;
   request_payload.emplace_back(method & 0xff);
-  request_payload.emplace_back((start >> 8) & 0xff);
-  request_payload.emplace_back(start & 0xff);
-  request_payload.emplace_back((end >> 8) & 0xff);
-  request_payload.emplace_back(end & 0xff);
+  request_payload.emplace_back((start_ddeg >> 8) & 0xff);
+  request_payload.emplace_back(start_ddeg & 0xff);
+  request_payload.emplace_back((end_ddeg >> 8) & 0xff);
+  request_payload.emplace_back(end_ddeg & 0xff);
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_LIDAR_RANGE, request_payload);
   response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
@@ -499,18 +510,17 @@ Status HesaiHwInterface::SetLidarRange(int start, int end)
 
 HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
 {
-  HesaiLidarRangeAll hesai_range_all{};
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    throw std::runtime_error("Not supported on this sensor");
+  }
   auto response_or_err = SendReceive(PTC_COMMAND_GET_LIDAR_RANGE);
-
-  // FIXME(mojomex): this is a hotfix for sensors that do not support this command
-  if (!response_or_err.has_value()) return hesai_range_all;
-
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
   if (response.size() < 1) {
     throw std::runtime_error("Response payload too short");
   }
 
+  HesaiLidarRangeAll hesai_range_all{};
   hesai_range_all.method = response[0];
   switch (hesai_range_all.method) {
     case 0:  // for all channels
@@ -530,6 +540,32 @@ HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
   }
 
   return hesai_range_all;
+}
+
+Status HesaiHwInterface::checkAndSetLidarRange(
+  const HesaiCalibrationConfigurationBase & calibration)
+{
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  int cloud_min_ddeg = sensor_configuration_->cloud_min_angle * 10;
+  int cloud_max_ddeg = sensor_configuration_->cloud_max_angle * 10;
+
+  // Only oversize the FoV if it is not already the full 360deg
+  if (cloud_min_ddeg != 0 || cloud_max_ddeg != 3600) {
+    auto padding_deg = calibration.getFovPadding();
+    cloud_min_ddeg += floor(std::get<0>(padding_deg) * 10);
+    cloud_max_ddeg += ceil(std::get<1>(padding_deg) * 10);
+  }
+
+  auto clamp = [](int angle_ddeg) {
+    while (angle_ddeg < 0) angle_ddeg += 3600;
+    while (angle_ddeg > 3600) angle_ddeg -= 3600;
+    return angle_ddeg;
+  };
+
+  return SetLidarRange(clamp(cloud_min_ddeg), clamp(cloud_max_ddeg));
 }
 
 Status HesaiHwInterface::SetClockSource(int clock_source)
@@ -619,6 +655,10 @@ Status HesaiHwInterface::SetRotDir(int mode)
 
 HesaiLidarMonitor HesaiHwInterface::GetLidarMonitor()
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    throw std::runtime_error("Not supported on this sensor");
+  }
+
   auto response_or_err = SendReceive(PTC_COMMAND_LIDAR_MONITOR);
 
   // FIXME(mojomex): this is a hotfix for sensors that do not support this command
@@ -904,17 +944,18 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 
   if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128) {
     set_flg = true;
-    auto sync_angle = static_cast<int>(hesai_config.sync_angle.value() / 100);
-    auto scan_phase = static_cast<int>(sensor_configuration->scan_phase);
+    auto sensor_sync_angle = static_cast<int>(hesai_config.sync_angle.value() / 100);
+    auto config_sync_angle = sensor_configuration->sync_angle;
     int sync_flg = 1;
-    if (scan_phase != sync_angle) {
+    if (config_sync_angle != sensor_sync_angle) {
       set_flg = true;
     }
     if (sync_flg && set_flg) {
       PrintInfo("current lidar sync: " + std::to_string(hesai_config.sync));
-      PrintInfo("current lidar sync_angle: " + std::to_string(sync_angle));
-      PrintInfo("current configuration scan_phase: " + std::to_string(scan_phase));
-      std::thread t([this, sync_flg, scan_phase] { SetSyncAngle(sync_flg, scan_phase); });
+      PrintInfo("current lidar sync_angle: " + std::to_string(sensor_sync_angle));
+      PrintInfo("current configuration sync_angle: " + std::to_string(config_sync_angle));
+      std::thread t(
+        [this, sync_flg, config_sync_angle] { SetSyncAngle(sync_flg, config_sync_angle); });
       t.join();
       std::this_thread::sleep_for(wait_time);
     }
@@ -950,7 +991,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     std::this_thread::sleep_for(wait_time);
   } else {  // AT128 only supports PTP setup via HTTP
     PrintInfo("Trying to set SyncAngle via HTTP");
-    SetSyncAngleSyncHttp(1, static_cast<int>(sensor_configuration->scan_phase));
+    SetSyncAngleSyncHttp(1, sensor_configuration->sync_angle);
     std::ostringstream tmp_ostringstream;
     tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
                       << ", Domain: " << sensor_configuration->ptp_domain
@@ -987,27 +1028,27 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 #endif
     set_flg = true;
   } else {
-    auto current_cloud_min_angle = hesai_lidar_range_all.start;
+    auto current_cloud_min_angle_ddeg = hesai_lidar_range_all.start;
     if (
       static_cast<int>(sensor_configuration->cloud_min_angle * 10) !=
-      current_cloud_min_angle.value()) {
+      current_cloud_min_angle_ddeg.value()) {
       set_flg = true;
       PrintInfo(
         "current lidar range.start: " +
-        std::to_string(static_cast<int>(current_cloud_min_angle.value())));
+        std::to_string(static_cast<int>(current_cloud_min_angle_ddeg.value())));
       PrintInfo(
         "current configuration cloud_min_angle: " +
         std::to_string(sensor_configuration->cloud_min_angle));
     }
 
-    auto current_cloud_max_angle = hesai_lidar_range_all.end;
+    auto current_cloud_max_angle_ddeg = hesai_lidar_range_all.end;
     if (
       static_cast<int>(sensor_configuration->cloud_max_angle * 10) !=
-      current_cloud_max_angle.value()) {
+      current_cloud_max_angle_ddeg.value()) {
       set_flg = true;
       PrintInfo(
         "current lidar range.end: " +
-        std::to_string(static_cast<int>(current_cloud_max_angle.value())));
+        std::to_string(static_cast<int>(current_cloud_max_angle_ddeg.value())));
       PrintInfo(
         "current configuration cloud_max_angle: " +
         std::to_string(sensor_configuration->cloud_max_angle));
@@ -1018,9 +1059,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     std::thread t([this, sensor_configuration] {
       SetLidarRange(
         static_cast<int>(sensor_configuration->cloud_min_angle * 10),
-        static_cast<int>(sensor_configuration->cloud_max_angle * 10)  //,
-                                                                      //      false
-      );
+        static_cast<int>(sensor_configuration->cloud_max_angle * 10));
     });
     t.join();
   }
@@ -1046,6 +1085,10 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
       std::static_pointer_cast<const HesaiSensorConfiguration>(sensor_configuration_), result);
   });
   t.join();
+
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+    return Status::OK;
+  }
 
   std::thread t2([this] {
     auto result = GetLidarRange();
@@ -1303,16 +1346,16 @@ std::string HesaiHwInterface::PrettyPrintPTCError(ptc_error_t error_code)
   std::vector<std::string> nebula_errors;
 
   if (error_flags & TCP_ERROR_INCOMPLETE_RESPONSE) {
-    nebula_errors.push_back("Incomplete response payload");
+    nebula_errors.emplace_back("Incomplete response payload");
   }
   if (error_flags & TCP_ERROR_TIMEOUT) {
-    nebula_errors.push_back("Request timeout");
+    nebula_errors.emplace_back("Request timeout");
   }
   if (error_flags & TCP_ERROR_UNEXPECTED_PAYLOAD) {
-    nebula_errors.push_back("Received payload but expected payload length 0");
+    nebula_errors.emplace_back("Received payload but expected payload length 0");
   }
   if (error_flags & TCP_ERROR_UNRELATED_RESPONSE) {
-    nebula_errors.push_back("Received unrelated response");
+    nebula_errors.emplace_back("Received unrelated response");
   }
 
   ss << boost::algorithm::join(nebula_errors, ", ");
@@ -1334,5 +1377,4 @@ T HesaiHwInterface::CheckSizeAndParse(const std::vector<uint8_t> & data)
   return parsed;
 }
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

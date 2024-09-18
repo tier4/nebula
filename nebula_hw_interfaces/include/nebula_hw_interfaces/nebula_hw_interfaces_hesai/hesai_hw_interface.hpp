@@ -130,10 +130,10 @@ private:
     uint8_t error_flags = 0;
     uint8_t ptc_error_code = 0;
 
-    bool ok() { return !error_flags && !ptc_error_code; }
+    [[nodiscard]] bool ok() const { return !error_flags && !ptc_error_code; }
   };
 
-  typedef nebula::util::expected<std::vector<uint8_t>, ptc_error_t> ptc_cmd_result_t;
+  using ptc_cmd_result_t = nebula::util::expected<std::vector<uint8_t>, ptc_error_t>;
 
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
   std::shared_ptr<boost::asio::io_context> m_owned_ctx;
@@ -330,6 +330,16 @@ public:
   /// @brief Getting values with PTC_COMMAND_GET_LIDAR_RANGE
   /// @return Resulting status
   HesaiLidarRangeAll GetLidarRange();
+
+  /**
+   * @brief Given the HW interface's sensor configuration and a given calibration, set the sensor
+   * FoV (min and max angles) with appropriate padding around the FoV set in the configuration. This
+   * compensates for the points lost due to the sensor filtering FoV by raw encoder angle.
+   *
+   * @param calibration The calibration file of the sensor
+   * @return Status Resulting status of setting the FoV
+   */
+  [[nodiscard]] Status checkAndSetLidarRange(const HesaiCalibrationConfigurationBase & calibration);
 
   Status SetClockSource(int clock_source);
 

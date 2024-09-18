@@ -4,6 +4,8 @@
 
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
+#include <nebula_common/nebula_common.hpp>
+
 namespace nebula
 {
 namespace ros
@@ -52,6 +54,8 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
       break;
   }
 
+  supports_monitor_ = config->sensor_model != drivers::SensorModel::HESAI_PANDARAT128;
+
   auto result = hw_interface->GetInventory();
   current_inventory_.reset(new HesaiInventory(result));
   current_inventory_time_.reset(new rclcpp::Time(parent_node->get_clock()->now()));
@@ -88,6 +92,9 @@ void HesaiHwMonitorWrapper::InitializeHesaiDiagnostics()
 
   auto fetch_diag_from_sensor = [this]() {
     OnHesaiStatusTimer();
+
+    if (!supports_monitor_) return;
+
     if (hw_interface_->UseHttpGetLidarMonitor()) {
       OnHesaiLidarMonitorTimerHttp();
     } else {

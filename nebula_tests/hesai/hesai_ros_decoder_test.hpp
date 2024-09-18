@@ -14,12 +14,11 @@
 
 #pragma once
 
-#include "nebula_common/hesai/hesai_common.hpp"
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
-
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_common/nebula_status.hpp>
+#include <nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <gtest/gtest.h>
@@ -45,11 +44,13 @@ struct HesaiRosDecoderTestParams
 {
   std::string sensor_model;
   std::string return_mode;
-  std::string calibration_file = "";
+  std::string calibration_file;
   std::string bag_path;
-  std::string correction_file = "";
   std::string frame_id = "hesai";
-  double scan_phase = 0.;
+  uint16_t sync_angle = 0;
+  double cut_angle = 0.;
+  double fov_start = 0.;
+  double fov_end = 360.;
   double min_range = 0.3;
   double max_range = 300.;
   std::string storage_id = "sqlite3";
@@ -65,9 +66,11 @@ inline std::ostream & operator<<(
             << "return_mode=" << arg.return_mode << ", "
             << "calibration_file=" << arg.calibration_file << ", "
             << "bag_path=" << arg.bag_path << ", "
-            << "correction_file=" << arg.correction_file << ", "
             << "frame_id=" << arg.frame_id << ", "
-            << "scan_phase=" << arg.scan_phase << ", "
+            << "sync_angle=" << arg.sync_angle << ", "
+            << "cut_angle=" << arg.cut_angle << ", "
+            << "fov_start=" << arg.fov_start << ", "
+            << "fov_end=" << arg.fov_end << ", "
             << "min_range=" << arg.min_range << ", "
             << "max_range=" << arg.max_range << ", "
             << "storage_id=" << arg.storage_id << ", "
