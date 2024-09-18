@@ -487,7 +487,7 @@ Status HesaiHwInterface::SetLidarRange(int method, std::vector<unsigned char> da
   return Status::OK;
 }
 
-Status HesaiHwInterface::SetLidarRange(int start, int end)
+Status HesaiHwInterface::SetLidarRange(int start_ddeg, int end_ddeg)
 {
   if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
     return Status::SENSOR_CONFIG_ERROR;
@@ -498,10 +498,10 @@ Status HesaiHwInterface::SetLidarRange(int start, int end)
   std::vector<unsigned char> request_payload;
   int method = 0;
   request_payload.emplace_back(method & 0xff);
-  request_payload.emplace_back((start >> 8) & 0xff);
-  request_payload.emplace_back(start & 0xff);
-  request_payload.emplace_back((end >> 8) & 0xff);
-  request_payload.emplace_back(end & 0xff);
+  request_payload.emplace_back((start_ddeg >> 8) & 0xff);
+  request_payload.emplace_back(start_ddeg & 0xff);
+  request_payload.emplace_back((end_ddeg >> 8) & 0xff);
+  request_payload.emplace_back(end_ddeg & 0xff);
 
   auto response_or_err = SendReceive(PTC_COMMAND_SET_LIDAR_RANGE, request_payload);
   response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
@@ -549,23 +549,23 @@ Status HesaiHwInterface::checkAndSetLidarRange(
     return Status::SENSOR_CONFIG_ERROR;
   }
 
-  int cloud_min = sensor_configuration_->cloud_min_angle * 10;
-  int cloud_max = sensor_configuration_->cloud_max_angle * 10;
+  int cloud_min_ddeg = sensor_configuration_->cloud_min_angle * 10;
+  int cloud_max_ddeg = sensor_configuration_->cloud_max_angle * 10;
 
   // Only oversize the FoV if it is not already the full 360deg
-  if (cloud_min != 0 || cloud_max != 3600) {
-    auto padding = calibration.getFovPadding();
-    cloud_min += floor(std::get<0>(padding) * 10);
-    cloud_max += ceil(std::get<1>(padding) * 10);
+  if (cloud_min_ddeg != 0 || cloud_max_ddeg != 3600) {
+    auto padding_deg = calibration.getFovPadding();
+    cloud_min_ddeg += floor(std::get<0>(padding_deg) * 10);
+    cloud_max_ddeg += ceil(std::get<1>(padding_deg) * 10);
   }
 
-  auto clamp = [](int x) {
-    while (x < 0) x += 3600;
-    while (x > 3600) x -= 3600;
-    return x;
+  auto clamp = [](int angle_ddeg) {
+    while (angle_ddeg < 0) angle_ddeg += 3600;
+    while (angle_ddeg > 3600) angle_ddeg -= 3600;
+    return angle_ddeg;
   };
 
-  return SetLidarRange(clamp(cloud_min), clamp(cloud_max));
+  return SetLidarRange(clamp(cloud_min_ddeg), clamp(cloud_max_ddeg));
 }
 
 Status HesaiHwInterface::SetClockSource(int clock_source)
@@ -1028,27 +1028,27 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 #endif
     set_flg = true;
   } else {
-    auto current_cloud_min_angle = hesai_lidar_range_all.start;
+    auto current_cloud_min_angle_ddeg = hesai_lidar_range_all.start;
     if (
       static_cast<int>(sensor_configuration->cloud_min_angle * 10) !=
-      current_cloud_min_angle.value()) {
+      current_cloud_min_angle_ddeg.value()) {
       set_flg = true;
       PrintInfo(
         "current lidar range.start: " +
-        std::to_string(static_cast<int>(current_cloud_min_angle.value())));
+        std::to_string(static_cast<int>(current_cloud_min_angle_ddeg.value())));
       PrintInfo(
         "current configuration cloud_min_angle: " +
         std::to_string(sensor_configuration->cloud_min_angle));
     }
 
-    auto current_cloud_max_angle = hesai_lidar_range_all.end;
+    auto current_cloud_max_angle_ddeg = hesai_lidar_range_all.end;
     if (
       static_cast<int>(sensor_configuration->cloud_max_angle * 10) !=
-      current_cloud_max_angle.value()) {
+      current_cloud_max_angle_ddeg.value()) {
       set_flg = true;
       PrintInfo(
         "current lidar range.end: " +
-        std::to_string(static_cast<int>(current_cloud_max_angle.value())));
+        std::to_string(static_cast<int>(current_cloud_max_angle_ddeg.value())));
       PrintInfo(
         "current configuration cloud_max_angle: " +
         std::to_string(sensor_configuration->cloud_max_angle));
@@ -1059,9 +1059,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     std::thread t([this, sensor_configuration] {
       SetLidarRange(
         static_cast<int>(sensor_configuration->cloud_min_angle * 10),
-        static_cast<int>(sensor_configuration->cloud_max_angle * 10)  //,
-                                                                      //      false
-      );
+        static_cast<int>(sensor_configuration->cloud_max_angle * 10));
     });
     t.join();
   }
