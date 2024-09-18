@@ -78,7 +78,9 @@ private:
     return field;
   }
 
-  uint32_t all_channels(uint32_t azi, double threshold, bool any, bool eq_ok)
+  /// @brief For raw encoder angle `azi`, return whether all (any if `any == true`) channels'
+  /// corrected azimuths are greater (or equal if `eq_ok == true`) than `threshold`.
+  bool are_corrected_angles_above_threshold(uint32_t azi, double threshold, bool any, bool eq_ok)
   {
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
       auto azi_corr = getCorrectedAngleData(azi, channel_id).azimuth_rad;
@@ -89,21 +91,24 @@ private:
     return !any;
   }
 
+  /// @brief Find and return the first raw encoder angle between the raw `start` and `end` endcoder
+  /// angles for which all (any if `any == true`) channels' corrected azimuth is greater than (or
+  /// equal to if `eq_ok == true`) `threshold`. Return `FrameAngleInfo::unset` if no angle is found.
   uint32_t bin_search(uint32_t start, uint32_t end, double threshold, bool any, bool eq_ok)
   {
     if (start > end) return FrameAngleInfo::unset;
 
     if (end - start <= 1) {
-      bool result_start =
-        all_channels(normalize_angle<uint32_t>(start, MAX_AZIMUTH), threshold, any, eq_ok);
+      bool result_start = are_corrected_angles_above_threshold(
+        normalize_angle<uint32_t>(start, MAX_AZIMUTH), threshold, any, eq_ok);
       if (result_start) return start;
       return end;
     }
 
     uint32_t next = (start + end) / 2;
 
-    bool result_next =
-      all_channels(normalize_angle<uint32_t>(next, MAX_AZIMUTH), threshold, any, eq_ok);
+    bool result_next = are_corrected_angles_above_threshold(
+      normalize_angle<uint32_t>(next, MAX_AZIMUTH), threshold, any, eq_ok);
     if (result_next) return bin_search(start, next, threshold, any, eq_ok);
     return bin_search(next + 1, end, threshold, any, eq_ok);
   }
