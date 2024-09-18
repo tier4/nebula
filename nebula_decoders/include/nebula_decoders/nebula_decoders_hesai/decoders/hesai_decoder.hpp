@@ -174,7 +174,7 @@ protected:
 
         CorrectedAngleData corrected_angle_data =
           angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
-        auto azimuth = corrected_angle_data.azimuth_rad;
+        float azimuth = corrected_angle_data.azimuth_rad;
 
         bool in_fov = angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.fov_max, azimuth);
         if (!in_fov) {
@@ -192,7 +192,7 @@ protected:
         }
 
         auto pc = in_current_scan ? decode_pc_ : output_pc_;
-        auto scan_timestamp_ns =
+        uint64_t scan_timestamp_ns =
           in_current_scan ? decode_scan_timestamp_ns_ : output_scan_timestamp_ns_;
 
         NebulaPoint & point = pc->emplace_back();
