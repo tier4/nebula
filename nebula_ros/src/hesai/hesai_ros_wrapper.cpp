@@ -392,7 +392,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
     auto status = hw_interface_wrapper_->HwInterface()->checkAndSetLidarRange(*new_calibration_ptr);
     if (status != Status::OK) {
       RCLCPP_ERROR_STREAM(
-        get_logger(), "Could not change FoV but config already changed: " << status);
+        get_logger(), "Sensor configuration updated, but setting hardware FoV failed: " << status);
     }
   }
 
