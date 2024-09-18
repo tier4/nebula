@@ -80,7 +80,7 @@ private:
 
   /// @brief The ROS 2 parameter holding the calibration file path is called differently depending
   /// on the sensor model. This function returns the correct parameter name given a model.
-  /// @param model A sensor model
+  /// @param model The sensor model
   /// @return std::string The parameter name
   std::string getCalibrationParameterName(drivers::SensorModel model) const;
 

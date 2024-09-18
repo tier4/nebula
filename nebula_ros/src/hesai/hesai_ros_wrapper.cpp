@@ -115,7 +115,7 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     descriptor.floating_point_range = float_range(0, 360, 0.01);
     descriptor.description =
-      "At which angle to start a new scan. Cannot be equal to the start angle in a non-360 deg "
+      "Angle at which to cut the scan. Cannot be equal to the start angle in a non-360 deg "
       "FoV. Choose the end angle instead.";
     config.cut_angle = declare_parameter<double>("cut_angle", descriptor);
   }
