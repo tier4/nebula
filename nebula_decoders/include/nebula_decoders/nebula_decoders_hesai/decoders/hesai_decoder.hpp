@@ -289,12 +289,22 @@ public:
       auto block_azimuth = packet_.body.blocks[block_id].getAzimuth();
 
       if (angle_corrector_.passedTimestampResetAngle(last_azimuth_, block_azimuth)) {
+        uint64_t new_scan_timestamp_ns =
+          hesai_packet::get_timestamp_ns(packet_) +
+          sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
+
         if (sensor_configuration_->cut_angle == sensor_configuration_->cloud_max_angle) {
-          decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
-                                      sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
+          // In the non-360 deg case, if the cut angle and FoV end coincide, the old pointcloud has
+          // already been swapped and published before the timestamp reset angle is reached. Thus,
+          // the `decode` pointcloud is now empty and will be decoded to. Reset its timestamp.
+          decode_scan_timestamp_ns_ = new_scan_timestamp_ns;
         } else {
-          output_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
-                                      sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
+          /// When not cutting at the end of the FoV (i.e. the FoV is 360 deg or a cut occurs
+          /// somewhere within a non-360 deg FoV), the current scan is still being decoded to the
+          /// `decode` pointcloud but at the same time, points for the next pointcloud are arriving
+          /// and will be decoded to the `output` pointcloud (please forgive the naming for now).
+          /// Thus, reset the output pointcloud's timestamp.
+          output_scan_timestamp_ns_ = new_scan_timestamp_ns;
         }
       }
 
@@ -306,6 +316,8 @@ public:
       convertReturns(block_id, n_returns);
 
       if (angle_corrector_.passedEmitAngle(last_azimuth_, block_azimuth)) {
+        // The current `decode` pointcloud is ready for publishing, swap buffers to continue with
+        // the last `output` pointcloud as the `decode pointcloud.
         std::swap(decode_pc_, output_pc_);
         std::swap(decode_scan_timestamp_ns_, output_scan_timestamp_ns_);
         has_scanned_ = true;
