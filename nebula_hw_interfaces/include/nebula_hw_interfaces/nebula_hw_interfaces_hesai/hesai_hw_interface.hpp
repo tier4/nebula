@@ -337,7 +337,7 @@ public:
    * compensates for the points lost due to the sensor filtering FoV by raw encoder angle.
    *
    * @param calibration The calibration file of the sensor
-   * @return Status Resulting status of setting the FoV 
+   * @return Status Resulting status of setting the FoV
    */
   [[nodiscard]] Status checkAndSetLidarRange(const HesaiCalibrationConfigurationBase & calibration);
 
