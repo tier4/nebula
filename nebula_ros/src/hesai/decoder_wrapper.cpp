@@ -131,12 +131,6 @@ void HesaiDecoderWrapper::ProcessCloudPacket(
 
   cloud_watchdog_->update();
 
-  auto sys_pc_time_diff = parent_node_.now().seconds() - std::get<1>(pointcloud_ts);
-  // RCLCPP_INFO_STREAM(
-  //   logger_,
-  //   "#DIFF(s) = " << std::setprecision(6) << std::setfill('0') << std::setw(9) <<
-  //   sys_pc_time_diff);
-
   // Publish scan message only if it has been written to
   if (current_scan_msg_ && !current_scan_msg_->packets.empty()) {
     packets_pub_->publish(std::move(current_scan_msg_));
