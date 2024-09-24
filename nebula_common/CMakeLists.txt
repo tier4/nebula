@@ -36,7 +36,6 @@ link_libraries(
 )
 
 add_library(nebula_common SHARED
-    src/nebula_common.cpp
     src/velodyne/velodyne_calibration_decoder.cpp
 )
 

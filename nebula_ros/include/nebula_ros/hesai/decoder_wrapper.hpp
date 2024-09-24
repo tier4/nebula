@@ -80,8 +80,6 @@ private:
   pandar_msgs::msg::PandarScan::UniquePtr current_scan_msg_{};
 
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_{};
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_{};
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_{};
 
   std::shared_ptr<WatchdogTimer> cloud_watchdog_;
 };
