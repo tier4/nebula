@@ -1,28 +1,37 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef NEBULA_HESAI_DRIVER_H
 #define NEBULA_HESAI_DRIVER_H
 
 #include "nebula_common/hesai/hesai_common.hpp"
-#include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_common/point_types.hpp"
-#include "nebula_decoders/nebula_decoders_common/nebula_driver_base.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_decoder.hpp"
-
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
 #include <pcl_conversions/pcl_conversions.h>
 
-#include <iostream>
-#include <stdexcept>
-#include <string>
+#include <memory>
+#include <tuple>
+#include <vector>
 
 namespace nebula
 {
 namespace drivers
 {
 /// @brief Hesai driver
-class HesaiDriver : NebulaDriverBase
+class HesaiDriver
 {
 private:
   /// @brief Current driver status
@@ -30,16 +39,22 @@ private:
   /// @brief Decoder according to the model
   std::shared_ptr<HesaiScanDecoder> scan_decoder_;
 
+  template <typename SensorT>
+  std::shared_ptr<HesaiScanDecoder> InitializeDecoder(
+    const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
+      calibration_configuration);
+
 public:
   HesaiDriver() = delete;
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this driver
-  /// @param calibration_configuration CalibrationConfiguration for this driver
-  /// @param correction_configuration CorrectionConfiguration for this driver (for AT)
+  /// @param calibration_configuration CalibrationConfiguration for this driver (either
+  /// HesaiCalibrationConfiguration for sensors other than AT128 or HesaiCorrection for AT128)
   explicit HesaiDriver(
-    const std::shared_ptr<drivers::HesaiSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<drivers::HesaiCalibrationConfiguration> & calibration_configuration,
-    const std::shared_ptr<drivers::HesaiCorrection> & correction_configuration = nullptr);
+    const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
+      calibration_configuration);
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -49,13 +64,13 @@ public:
   /// @param calibration_configuration
   /// @return Resulting status
   Status SetCalibrationConfiguration(
-    const CalibrationConfigurationBase & calibration_configuration) override;
+    const HesaiCalibrationConfigurationBase & calibration_configuration);
 
-  /// @brief Convert PandarScan message to point cloud
-  /// @param pandar_scan Message
-  /// @return tuple of Point cloud and timestamp
-  std::tuple<drivers::NebulaPointCloudPtr, double> ConvertScanToPointcloud(
-    const std::shared_ptr<pandar_msgs::msg::PandarScan> & pandar_scan);
+  /// @brief Convert raw packet to pointcloud
+  /// @param packet Packet to convert
+  /// @return Tuple of pointcloud and timestamp
+  std::tuple<drivers::NebulaPointCloudPtr, double> ParseCloudPacket(
+    const std::vector<uint8_t> & packet);
 };
 
 }  // namespace drivers

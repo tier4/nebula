@@ -1,14 +1,27 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 
-#include <bitset>
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <optional>
 #include <sstream>
+#include <string>
 #include <vector>
 
 namespace nebula
@@ -25,9 +38,6 @@ struct RobosenseSensorConfiguration : LidarConfigurationBase
   uint16_t gnss_port{};  // difop
   double scan_phase{};   // start/end angle
   double dual_return_distance_threshold{};
-  uint16_t rotation_speed;
-  uint16_t cloud_min_angle;
-  uint16_t cloud_max_angle;
 };
 
 /// @brief Convert RobosenseSensorConfiguration to string (Overloading the << operator)
@@ -36,9 +46,10 @@ struct RobosenseSensorConfiguration : LidarConfigurationBase
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, RobosenseSensorConfiguration const & arg)
 {
-  os << (LidarConfigurationBase)(arg) << ", GnssPort: " << arg.gnss_port
-     << ", ScanPhase:" << arg.scan_phase << ", RotationSpeed:" << arg.rotation_speed
-     << ", FOV(Start):" << arg.cloud_min_angle << ", FOV(End):" << arg.cloud_max_angle;
+  os << "Robosense Sensor Configuration:" << '\n';
+  os << (LidarConfigurationBase)(arg) << '\n';
+  os << "GNSS Port: " << arg.gnss_port << '\n';
+  os << "Scan Phase: " << arg.scan_phase;
   return os;
 }
 
@@ -53,16 +64,6 @@ inline ReturnMode ReturnModeFromStringRobosense(const std::string & return_mode)
   if (return_mode == "First") return ReturnMode::SINGLE_FIRST;
 
   return ReturnMode::UNKNOWN;
-}
-
-size_t GetChannelSize(const SensorModel & model)
-{
-  switch (model) {
-    case SensorModel::ROBOSENSE_BPEARL_V3:
-      return 32;
-    case SensorModel::ROBOSENSE_HELIOS:
-      return 32;
-  }
 }
 
 struct ChannelCorrection
@@ -88,7 +89,7 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
     std::getline(stream, header);
 
     char sep;
-    int laser_id;
+    size_t laser_id;
     float elevation;
     float azimuth;
     Status load_status = Status::OK;
@@ -188,10 +189,10 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
 
   void CreateCorrectedChannels()
   {
-    for(auto& correction : calibration) {
+    for (auto & correction : calibration) {
       uint16_t channel = 0;
-      for(const auto& compare:calibration) {
-        if(compare.elevation < correction.elevation) ++channel;
+      for (const auto & compare : calibration) {
+        if (compare.elevation < correction.elevation) ++channel;
       }
       correction.channel = channel;
     }

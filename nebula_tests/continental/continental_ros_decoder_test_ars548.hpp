@@ -1,4 +1,4 @@
-// Copyright 2024 Tier IV, Inc.
+// Copyright 2024 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,21 +15,18 @@
 #ifndef NEBULA_ContinentalRosDecoderTestArs548_H
 #define NEBULA_ContinentalRosDecoderTestArs548_H
 
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_common/velodyne/velodyne_common.hpp"
-#include "nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp"
-#include "nebula_ros/common/nebula_driver_ros_wrapper_base.hpp"
-
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_common/nebula_status.hpp>
+#include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
 
 #include <continental_msgs/msg/continental_ars548_detection_list.hpp>
 #include <continental_msgs/msg/continental_ars548_object_list.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
 
 #include <gtest/gtest.h>
+#include <yaml-cpp/node/node.h>
 
 #include <memory>
 #include <string>
@@ -38,8 +35,7 @@ namespace nebula
 {
 namespace ros
 {
-class ContinentalRosDecoderTest final : public rclcpp::Node,
-                                        NebulaDriverRosWrapperBase  //, testing::Test
+class ContinentalRosDecoderTest final : public rclcpp::Node  //, testing::Test
 {
   std::shared_ptr<drivers::continental_ars548::ContinentalARS548Decoder> driver_ptr_;
   Status wrapper_status_;
@@ -78,10 +74,10 @@ public:
   void ReadBag();
 
 private:
-  std::string bag_path;
-  std::string storage_id;
-  std::string format;
-  std::string target_topic;
+  std::string bag_path_{};
+  std::string storage_id_{};
+  std::string format_{};
+  std::string target_topic_{};
 };
 
 }  // namespace ros

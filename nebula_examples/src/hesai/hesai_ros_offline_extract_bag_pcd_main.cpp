@@ -36,7 +36,6 @@ int main(int argc, char * argv[])
   if (driver_status == nebula::Status::OK) {
     RCLCPP_INFO_STREAM(rclcpp::get_logger(node_name), "Reading Started");
     driver_status = hesai_driver->ReadBag();
-    //    exec.spin();
   } else {
     RCLCPP_ERROR_STREAM(rclcpp::get_logger(node_name), driver_status);
   }

@@ -1,11 +1,25 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
-namespace nebula
-{
-namespace drivers
+#include <vector>
+
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -52,7 +66,7 @@ struct Tail128E3X
 
 struct Packet128E3X : public PacketBase<2, 128, 2, 100>
 {
-  typedef Body<Block<Unit3B, Packet128E3X::N_CHANNELS>, Packet128E3X::N_BLOCKS> body_t;
+  using body_t = Body<Block<Unit3B, Packet128E3X::N_CHANNELS>, Packet128E3X::N_BLOCKS>;
   Header12B header;
   body_t body;
   uint32_t crc_body;
@@ -208,12 +222,12 @@ public:
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 691200;
 
   int getPacketRelativePointTimeOffset(
-    uint32_t block_id, uint32_t channel_id, const packet_t & packet)
+    uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
     int block_offset_ns = 3148 - 27778 * 2 * (2 - block_id - 1) / n_returns;
 
-    int channel_offset_ns;
+    int channel_offset_ns = 0;
     bool is_hires_mode = packet.tail.operational_state == OperationalState::HIGH_RESOLUTION;
     bool is_nearfield = (hesai_packet::get_dis_unit(packet) *
                          packet.body.blocks[block_id].units[channel_id].distance) <= 2.85f;
@@ -271,5 +285,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

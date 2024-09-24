@@ -1,8 +1,21 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef NEBULA_STATUS_HPP
 #define NEBULA_STATUS_HPP
 
 #include <ostream>
-#include <string>
 
 namespace nebula
 {
@@ -14,6 +27,7 @@ struct Status
   enum Type {
     OK = 0,
     UDP_CONNECTION_ERROR,
+    CAN_CONNECTION_ERROR,
     SENSOR_CONFIG_ERROR,
     INVALID_SENSOR_MODEL,
     INVALID_ECHO_MODE,
@@ -27,8 +41,8 @@ struct Status
     Type_end_of_Status = ERROR_1
   } _type;
   Status() : _type(Type::OK) {}
-  Status(Type v) : _type(v) {}
-  Status(int type) : _type(static_cast<Type>(type)) {}
+  /* NOLINT(runtime/explicit) */ Status(Type v) : _type(v) {}
+  explicit Status(int type) : _type(static_cast<Type>(type)) {}
   Type type() const { return _type; }
   friend bool operator==(const Status & L, const Status & R) { return L.type() == R.type(); }
   friend bool operator!=(const Status & L, const Status & R) { return L.type() != R.type(); }

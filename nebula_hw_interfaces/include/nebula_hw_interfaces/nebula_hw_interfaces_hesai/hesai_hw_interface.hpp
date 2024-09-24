@@ -1,9 +1,25 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef NEBULA_HESAI_HW_INTERFACE_H
 #define NEBULA_HESAI_HW_INTERFACE_H
 // Have to define macros to silence warnings about deprecated headers being used by
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
 #include <boost/version.hpp>
+
+#include <cstddef>
 #if (BOOST_VERSION / 100 >= 1073 && BOOST_VERSION / 100 <= 1076)  // Boost 1.73 - 1.76
 #define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #endif
@@ -15,13 +31,10 @@
 #include "boost_udp_driver/udp_driver.hpp"
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/hesai/hesai_status.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
+#include "nebula_common/util/expected.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 
 #include <rclcpp/rclcpp.hpp>
-
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -29,6 +42,8 @@
 
 #include <memory>
 #include <mutex>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -63,6 +78,20 @@ const uint8_t PTC_COMMAND_RESET = 0x25;
 const uint8_t PTC_COMMAND_SET_ROTATE_DIRECTION = 0x2a;
 const uint8_t PTC_COMMAND_LIDAR_MONITOR = 0x27;
 
+const uint8_t PTC_ERROR_CODE_NO_ERROR = 0x00;
+const uint8_t PTC_ERROR_CODE_INVALID_INPUT_PARAM = 0x01;
+const uint8_t PTC_ERROR_CODE_SERVER_CONN_FAILED = 0x02;
+const uint8_t PTC_ERROR_CODE_INVALID_DATA = 0x03;
+const uint8_t PTC_ERROR_CODE_OUT_OF_MEMORY = 0x04;
+const uint8_t PTC_ERROR_CODE_UNSUPPORTED_CMD = 0x05;
+const uint8_t PTC_ERROR_CODE_FPGA_COMM_FAILED = 0x06;
+const uint8_t PTC_ERROR_CODE_OTHER = 0x07;
+
+const uint8_t TCP_ERROR_UNRELATED_RESPONSE = 1;
+const uint8_t TCP_ERROR_UNEXPECTED_PAYLOAD = 2;
+const uint8_t TCP_ERROR_TIMEOUT = 4;
+const uint8_t TCP_ERROR_INCOMPLETE_RESPONSE = 8;
+
 const uint16_t PANDARQT64_PACKET_SIZE = 1072;
 const uint16_t PANDARQT128_PACKET_SIZE = 1127;
 const uint16_t PANDARXT32_PACKET_SIZE = 1080;
@@ -74,13 +103,18 @@ const uint16_t PANDAR40_PACKET_SIZE = 1262;
 const uint16_t PANDAR40P_EXTENDED_PACKET_SIZE = 1266;
 const uint16_t PANDAR128_E4X_PACKET_SIZE = 861;
 const uint16_t PANDAR128_E4X_EXTENDED_PACKET_SIZE = 1117;
-
 const uint16_t MTU_SIZE = 1500;
 
+/// @brief The kernel buffer size in bytes to use for receiving UDP packets. If the buffer is too
+/// small to bridge scheduling and processing delays, packets will be dropped. This corresponds to
+/// the net.core.rmem_default setting in Linux. The current value is hardcoded to accommodate one
+/// pointcloud worth of OT128 packets (currently the highest data rate sensor supported).
+const size_t UDP_SOCKET_BUFFER_SIZE = MTU_SIZE * 3600;
+
 // Time interval between Announce messages, in units of log seconds (default: 1)
-const int PTP_LOG_ANNOUNCE_INTERVAL = 1; 
+const int PTP_LOG_ANNOUNCE_INTERVAL = 1;
 // Time interval between Sync messages, in units of log seconds (default: 1)
-const int PTP_SYNC_INTERVAL = 1;  
+const int PTP_SYNC_INTERVAL = 1;
 // Minimum permitted mean time between Delay_Req messages, in units of log seconds (default: 0)
 const int PTP_LOG_MIN_DELAY_INTERVAL = 0;
 
@@ -88,26 +122,29 @@ const int HESAI_LIDAR_GPS_CLOCK_SOURCE = 0;
 const int HESAI_LIDAR_PTP_CLOCK_SOURCE = 1;
 
 /// @brief Hardware interface of hesai driver
-class HesaiHwInterface : NebulaHwInterfaceBase
+class HesaiHwInterface
 {
 private:
+  struct ptc_error_t
+  {
+    uint8_t error_flags = 0;
+    uint8_t ptc_error_code = 0;
+
+    [[nodiscard]] bool ok() const { return !error_flags && !ptc_error_code; }
+  };
+
+  using ptc_cmd_result_t = nebula::util::expected<std::vector<uint8_t>, ptc_error_t>;
+
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
   std::shared_ptr<boost::asio::io_context> m_owned_ctx;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
   std::shared_ptr<::drivers::tcp_driver::TcpDriver> tcp_driver_;
-  std::shared_ptr<HesaiSensorConfiguration> sensor_configuration_;
-  std::shared_ptr<HesaiCalibrationConfiguration> calibration_configuration_;
-  size_t azimuth_index_{};
-  size_t mtu_size_{};
-  std::unique_ptr<pandar_msgs::msg::PandarScan> scan_cloud_ptr_;
-  std::function<bool(size_t)>
-    is_valid_packet_; /*Lambda Function Array to verify proper packet size*/
-  std::function<void(std::unique_ptr<pandar_msgs::msg::PandarScan> buffer)>
-    scan_reception_callback_; /**This function pointer is called when the scan is complete*/
+  std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration_;
+  std::function<void(std::vector<uint8_t> & buffer)>
+    cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
 
-  int prev_phase_{};
+  std::mutex mtx_inflight_tcp_request_;
 
-  bool is_solid_state = false;
   int target_model_no;
 
   /// @brief Get a one-off HTTP client to communicate with the hardware
@@ -141,13 +178,24 @@ private:
   /// @param bytes Target byte vector
   void PrintDebug(const std::vector<uint8_t> & bytes);
 
+  /// @brief Convert an error code to a human-readable string
+  /// @param error_code The error code, containing the sensor's error code (if any), along with
+  /// flags such as TCP_ERROR_UNRELATED_RESPONSE etc.
+  /// @return A string description of all errors in this code
+  std::string PrettyPrintPTCError(ptc_error_t error_code);
+
+  /// @brief Checks if the data size matches that of the struct to be parsed, and parses the struct.
+  /// If data is too small, a std::runtime_error is thrown. If data is too large, a warning is
+  /// printed and the struct is parsed with the first sizeof(T) bytes.
+  template <typename T>
+  T CheckSizeAndParse(const std::vector<uint8_t> & data);
+
   /// @brief Send a PTC request with an optional payload, and return the full response payload.
   /// Blocking.
   /// @param command_id PTC command number.
   /// @param payload Payload bytes of the PTC command. Not including the 8-byte PTC header.
   /// @return The returned payload, if successful, or nullptr.
-  std::shared_ptr<std::vector<uint8_t>> SendReceive(
-    const uint8_t command_id, const std::vector<uint8_t> & payload = {});
+  ptc_cmd_result_t SendReceive(const uint8_t command_id, const std::vector<uint8_t> & payload = {});
 
 public:
   /// @brief Constructor
@@ -168,17 +216,17 @@ public:
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer) final;
+  void ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer);
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStart() final;
+  Status SensorInterfaceStart();
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStop() final;
+  Status SensorInterfaceStop();
   /// @brief Printing sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
-  Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration) final;
+  Status GetSensorConfiguration(const SensorConfigurationBase & sensor_configuration);
   /// @brief Printing calibration configuration
   /// @param calibration_configuration CalibrationConfiguration for the checking
   /// @return Resulting status
@@ -187,12 +235,11 @@ public:
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
   Status SetSensorConfiguration(
-    std::shared_ptr<SensorConfigurationBase> sensor_configuration) final;
+    std::shared_ptr<const SensorConfigurationBase> sensor_configuration);
   /// @brief Registering callback for PandarScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterScanCallback(
-    std::function<void(std::unique_ptr<pandar_msgs::msg::PandarScan>)> scan_callback);
+  Status RegisterScanCallback(std::function<void(std::vector<uint8_t> &)> scan_callback);
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_CALIBRATION
   /// @return Resulting status
   std::string GetLidarCalibrationString();
@@ -284,6 +331,16 @@ public:
   /// @return Resulting status
   HesaiLidarRangeAll GetLidarRange();
 
+  /**
+   * @brief Given the HW interface's sensor configuration and a given calibration, set the sensor
+   * FoV (min and max angles) with appropriate padding around the FoV set in the configuration. This
+   * compensates for the points lost due to the sensor filtering FoV by raw encoder angle.
+   *
+   * @param calibration The calibration file of the sensor
+   * @return Status Resulting status of setting the FoV
+   */
+  [[nodiscard]] Status checkAndSetLidarRange(const HesaiCalibrationConfigurationBase & calibration);
+
   Status SetClockSource(int clock_source);
 
   /// @brief Setting values with PTC_COMMAND_SET_PTP_CONFIG
@@ -358,13 +415,13 @@ public:
   /// @param hesai_config Current HesaiConfig
   /// @return Resulting status
   HesaiStatus CheckAndSetConfig(
-    std::shared_ptr<HesaiSensorConfiguration> sensor_configuration, HesaiConfig hesai_config);
+    std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration, HesaiConfig hesai_config);
   /// @brief Checking the current settings and changing the difference point
   /// @param sensor_configuration Current SensorConfiguration
   /// @param hesai_lidar_range_all Current HesaiLidarRangeAll
   /// @return Resulting status
   HesaiStatus CheckAndSetConfig(
-    std::shared_ptr<HesaiSensorConfiguration> sensor_configuration,
+    std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration,
     HesaiLidarRangeAll hesai_lidar_range_all);
   /// @brief Checking the current settings and changing the difference point
   /// @return Resulting status

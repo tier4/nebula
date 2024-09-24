@@ -1,22 +1,31 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
-#include "hesai_common.hpp"
-#include "nebula_common/hesai/hesai_common.hpp"
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
-#include "nebula_ros/common/nebula_driver_ros_wrapper_base.hpp"
-
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_common/nebula_status.hpp>
+#include <nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
 
 #include <gtest/gtest.h>
 
 #include <functional>
+#include <memory>
+#include <string>
 
 #ifndef _SRC_CALIBRATION_DIR_PATH
 #define _SRC_CALIBRATION_DIR_PATH ""
@@ -35,11 +44,13 @@ struct HesaiRosDecoderTestParams
 {
   std::string sensor_model;
   std::string return_mode;
-  std::string calibration_file = "";
+  std::string calibration_file;
   std::string bag_path;
-  std::string correction_file = "";
   std::string frame_id = "hesai";
-  double scan_phase = 0.;
+  uint16_t sync_angle = 0;
+  double cut_angle = 0.;
+  double fov_start = 0.;
+  double fov_end = 360.;
   double min_range = 0.3;
   double max_range = 300.;
   std::string storage_id = "sqlite3";
@@ -48,9 +59,29 @@ struct HesaiRosDecoderTestParams
   double dual_return_distance_threshold = 0.1;
 };
 
+inline std::ostream & operator<<(
+  std::ostream & os, nebula::ros::HesaiRosDecoderTestParams const & arg)
+{
+  return os << "sensor_model=" << arg.sensor_model << ", "
+            << "return_mode=" << arg.return_mode << ", "
+            << "calibration_file=" << arg.calibration_file << ", "
+            << "bag_path=" << arg.bag_path << ", "
+            << "frame_id=" << arg.frame_id << ", "
+            << "sync_angle=" << arg.sync_angle << ", "
+            << "cut_angle=" << arg.cut_angle << ", "
+            << "fov_start=" << arg.fov_start << ", "
+            << "fov_end=" << arg.fov_end << ", "
+            << "min_range=" << arg.min_range << ", "
+            << "max_range=" << arg.max_range << ", "
+            << "storage_id=" << arg.storage_id << ", "
+            << "format=" << arg.format << ", "
+            << "target_topic=" << arg.target_topic << ", "
+            << "dual_return_distance_threshold=" << arg.dual_return_distance_threshold << ", ";
+}
+
 /// @brief Testing decoder of pandar 40p (Keeps HesaiDriverRosWrapper structure as much as
 /// possible)
-class HesaiRosDecoderTest final : public rclcpp::Node, NebulaDriverRosWrapperBase  //, testing::Test
+class HesaiRosDecoderTest final : public rclcpp::Node
 {
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
   Status wrapper_status_;
@@ -65,17 +96,7 @@ class HesaiRosDecoderTest final : public rclcpp::Node, NebulaDriverRosWrapperBas
   /// @return Resulting status
   Status InitializeDriver(
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) override;
-
-  /// @brief Initializing ros wrapper for AT
-  /// @param sensor_configuration SensorConfiguration for this driver
-  /// @param calibration_configuration CalibrationConfiguration for this driver
-  /// @param correction_configuration CorrectionConfiguration for this driver
-  /// @return Resulting status
-  Status InitializeDriver(
-    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration,
-    std::shared_ptr<drivers::HesaiCorrection> correction_configuration);
+    std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calibration_configuration);
 
   /// @brief Get configurations (Magic numbers for Pandar40P is described, each function can be
   /// integrated if the ros parameter can be passed to Google Test)

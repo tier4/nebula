@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="sensor_model">
+    <choice value="Helios" />
+    <choice value="Bpearl" />
+  </arg>
+  <arg name="launch_hw" default="true" description="Whether to connect to a real sensor (true) or to accept packet messages (false).">
+    <choice value="true" />
+    <choice value="false" />
+  </arg>
+  <arg name="config_file" default="$(find-pkg-share nebula_ros)/config/lidar/robosense/$(var sensor_model).param.yaml"/>
+
+  <node pkg="nebula_ros" exec="robosense_ros_wrapper_node" name="robosense_ros_wrapper_node" output="screen">
+    <param from="$(var config_file)" allow_substs="true"/>
+    <param name="launch_hw" value="$(var launch_hw)"/>
+  </node>
+
+</launch>

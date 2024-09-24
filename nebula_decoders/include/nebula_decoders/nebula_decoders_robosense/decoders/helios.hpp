@@ -1,3 +1,17 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
@@ -8,8 +22,11 @@
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
+#include <map>
+#include <memory>
+#include <string>
 
-using namespace boost::endian;
+using namespace boost::endian;  // NOLINT(build/namespaces)
 
 namespace nebula
 {
@@ -248,7 +265,7 @@ public:
 
   int getPacketRelativePointTimeOffset(
     const uint32_t block_id, const uint32_t channel_id,
-    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration) override
+    const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration) override
   {
     if (sensor_configuration->return_mode == ReturnMode::DUAL)
       return firing_time_offset_ns_dual_[block_id][channel_id];
@@ -256,7 +273,7 @@ public:
       return firing_time_offset_ns_single_[block_id][channel_id];
   }
 
-  ReturnMode getReturnMode(const robosense_packet::helios::InfoPacket & info_packet)
+  ReturnMode getReturnMode(const robosense_packet::helios::InfoPacket & info_packet) override
   {
     switch (info_packet.return_mode.value()) {
       case DUAL_RETURN_FLAG:
@@ -273,12 +290,12 @@ public:
   }
 
   RobosenseCalibrationConfiguration getSensorCalibration(
-    const robosense_packet::helios::InfoPacket & info_packet)
+    const robosense_packet::helios::InfoPacket & info_packet) override
   {
     return info_packet.sensor_calibration.getCalibration();
   }
 
-  bool getSyncStatus(const robosense_packet::helios::InfoPacket & info_packet)
+  bool getSyncStatus(const robosense_packet::helios::InfoPacket & info_packet) override
   {
     switch (info_packet.sync_status.value()) {
       case SYNC_STATUS_INVALID_FLAG:
@@ -293,7 +310,7 @@ public:
   }
 
   std::map<std::string, std::string> getSensorInfo(
-    const robosense_packet::helios::InfoPacket & info_packet)
+    const robosense_packet::helios::InfoPacket & info_packet) override
   {
     std::map<std::string, std::string> sensor_info;
     sensor_info["motor_speed"] = std::to_string(info_packet.motor_speed.value());

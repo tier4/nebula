@@ -2,5 +2,10 @@ repositories:
   # TCP version of transport drivers
   transport_drivers:
     type: git
-    url: https://github.com/MapIV/transport_drivers
-    version: boost
+    url: https://github.com/mojomex/transport_drivers
+    version: feat-set-rmem
+  # Continental compatible version of ROS 2 socket CAN
+  ros2_socketcan:
+    type: git
+    url: https://github.com/knzo25/ros2_socketcan
+    version: feat/continental_fd

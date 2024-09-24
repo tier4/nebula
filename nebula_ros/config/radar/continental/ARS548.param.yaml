@@ -1,0 +1,18 @@
+/**:
+  ros__parameters:
+    host_ip: 10.13.1.166
+    sensor_ip: 10.13.1.114
+    data_port: 42102
+    frame_id: continental
+    base_frame: base_link
+    object_frame: base_link
+    launch_hw: true
+    multicast_ip: 224.0.2.2
+    sensor_model: ARS548
+    configuration_host_port: 42401
+    configuration_sensor_port: 42101
+    use_sensor_time: false
+    configuration_vehicle_length: 4.89
+    configuration_vehicle_width: 1.896
+    configuration_vehicle_height: 2.5
+    configuration_vehicle_wheelbase: 2.79

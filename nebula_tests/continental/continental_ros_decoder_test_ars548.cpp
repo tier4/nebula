@@ -1,4 +1,4 @@
-// Copyright 2024 Tier IV, Inc.
+// Copyright 2024 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,22 +14,25 @@
 
 #include "continental_ros_decoder_test_ars548.hpp"
 
-#include "rclcpp/serialization.hpp"
-#include "rclcpp/serialized_message.hpp"
-#include "rcpputils/filesystem_helper.hpp"
-#include "rcutils/time.h"
-#include "rosbag2_cpp/reader.hpp"
-#include "rosbag2_cpp/readers/sequential_reader.hpp"
-#include "rosbag2_cpp/writer.hpp"
-#include "rosbag2_cpp/writers/sequential_writer.hpp"
-#include "rosbag2_storage/storage_options.hpp"
+#include "parameter_descriptors.hpp"
+
+#include <rclcpp/serialization.hpp>
+#include <rclcpp/serialized_message.hpp>
+#include <rcpputils/filesystem_helper.hpp>
+#include <rosbag2_cpp/reader.hpp>
+#include <rosbag2_cpp/readers/sequential_reader.hpp>
+#include <rosbag2_cpp/writer.hpp>
+#include <rosbag2_cpp/writers/sequential_writer.hpp>
+#include <rosbag2_storage/storage_options.hpp>
 
 #include <gtest/gtest.h>
+#include <rcutils/time.h>
 
 #include <filesystem>
 #include <memory>
 #include <regex>
 #include <string>
+#include <utility>
 
 namespace nebula
 {
@@ -43,7 +46,7 @@ ContinentalRosDecoderTest::ContinentalRosDecoderTest(
 
   wrapper_status_ = GetParameters(sensor_configuration);
   if (Status::OK != wrapper_status_) {
-    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error:" << wrapper_status_);
+    RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error: " << wrapper_status_);
     return;
   }
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Starting...");
@@ -87,88 +90,28 @@ Status ContinentalRosDecoderTest::GetParameters(
   std::filesystem::path bag_root_dir =
     _SRC_RESOURCES_DIR_PATH;  // variable defined in CMakeLists.txt;
   bag_root_dir /= "continental";
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_model", "ARS548");
-    sensor_configuration.sensor_model =
-      nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("base_frame", "some_base_frame", descriptor);
-    sensor_configuration.base_frame = this->get_parameter("base_frame").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("object_frame", "some_object_frame", descriptor);
-    sensor_configuration.object_frame = this->get_parameter("object_frame").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("frame_id", "some_sensor_frame", descriptor);
-    sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>(
-      "bag_path", (bag_root_dir / "ars548" / "1708578204").string(), descriptor);
-    bag_path = this->get_parameter("bag_path").as_string();
-    std::cout << bag_path << std::endl;
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("storage_id", "sqlite3", descriptor);
-    storage_id = this->get_parameter("storage_id").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("format", "cdr", descriptor);
-    format = this->get_parameter("format").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>(
-      "target_topic", "/sensing/radar/front_center/nebula_packets", descriptor);
-    target_topic = this->get_parameter("target_topic").as_string();
-  }
+
+  sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(
+    declare_parameter<std::string>("sensor_model", "ARS548", param_read_only()));
+  sensor_configuration.frame_id =
+    declare_parameter<std::string>("frame_id", "some_sensor_frame", param_read_only());
+  sensor_configuration.base_frame =
+    declare_parameter<std::string>("base_frame", "some_base_frame", param_read_only());
+  sensor_configuration.object_frame =
+    declare_parameter<std::string>("object_frame", "some_object_frame", param_read_only());
+
+  bag_path_ = declare_parameter<std::string>(
+    "bag_path", (bag_root_dir / "ars548" / "1708578204").string(), param_read_only());
+  storage_id_ = declare_parameter<std::string>("storage_id", "sqlite3", param_read_only());
+  format_ = declare_parameter<std::string>("format", "cdr", param_read_only());
+  target_topic_ = declare_parameter<std::string>(
+    "target_topic", "/sensing/radar/front_center/nebula_packets", param_read_only());
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
 
-  RCLCPP_INFO_STREAM(this->get_logger(), "SensorConfig:" << sensor_configuration);
+  RCLCPP_INFO_STREAM(this->get_logger(), "Sensor Configuration: " << sensor_configuration);
   return Status::OK;
 }
 
@@ -216,7 +159,7 @@ void ContinentalRosDecoderTest::DetectionListCallback(
   std::stringstream detection_path;
   detection_path << msg->header.stamp.sec << "_" << msg->header.stamp.nanosec << "_detection.yaml";
 
-  auto gt_path = rcpputils::fs::path(bag_path).parent_path() / detection_path.str();
+  auto gt_path = rcpputils::fs::path(bag_path_).parent_path() / detection_path.str();
   ASSERT_TRUE(gt_path.exists());
 
   CheckResult(msg_as_string, gt_path.string());
@@ -231,7 +174,7 @@ void ContinentalRosDecoderTest::ObjectListCallback(
   std::stringstream detection_path;
   detection_path << msg->header.stamp.sec << "_" << msg->header.stamp.nanosec << "_object.yaml";
 
-  auto gt_path = rcpputils::fs::path(bag_path).parent_path() / detection_path.str();
+  auto gt_path = rcpputils::fs::path(bag_path_).parent_path() / detection_path.str();
   ASSERT_TRUE(gt_path.exists());
 
   CheckResult(msg_as_string, gt_path.string());
@@ -242,22 +185,22 @@ void ContinentalRosDecoderTest::ReadBag()
   rosbag2_storage::StorageOptions storage_options;
   rosbag2_cpp::ConverterOptions converter_options;
 
-  std::cout << bag_path << std::endl;
-  std::cout << storage_id << std::endl;
-  std::cout << format << std::endl;
-  std::cout << target_topic << std::endl;
+  std::cout << bag_path_ << std::endl;
+  std::cout << storage_id_ << std::endl;
+  std::cout << format_ << std::endl;
+  std::cout << target_topic_ << std::endl;
 
-  auto target_topic_name = target_topic;
+  auto target_topic_name = target_topic_;
   if (target_topic_name.substr(0, 1) == "/") {
     target_topic_name = target_topic_name.substr(1);
   }
   target_topic_name = std::regex_replace(target_topic_name, std::regex("/"), "_");
 
-  rcpputils::fs::path bag_dir(bag_path);
+  rcpputils::fs::path bag_dir(bag_path_);
 
-  storage_options.uri = bag_path;
-  storage_options.storage_id = storage_id;
-  converter_options.output_serialization_format = format;  // "cdr";
+  storage_options.uri = bag_path_;
+  storage_options.storage_id = storage_id_;
+  converter_options.output_serialization_format = format_;  // "cdr";
   rclcpp::Serialization<nebula_msgs::msg::NebulaPackets> serialization;
 
   {
@@ -268,7 +211,7 @@ void ContinentalRosDecoderTest::ReadBag()
 
       std::cout << "Found topic name " << bag_message->topic_name << std::endl;
 
-      if (bag_message->topic_name == target_topic) {
+      if (bag_message->topic_name == target_topic_) {
         nebula_msgs::msg::NebulaPackets extracted_msg;
         rclcpp::SerializedMessage extracted_serialized_msg(*bag_message->serialized_data);
         serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
@@ -278,8 +221,9 @@ void ContinentalRosDecoderTest::ReadBag()
 
         ASSERT_EQ(1, extracted_msg.packets.size());
 
-        auto extracted_msg_ptr = std::make_shared<nebula_msgs::msg::NebulaPackets>(extracted_msg);
-        driver_ptr_->ProcessPackets(extracted_msg);
+        auto extracted_msg_ptr =
+          std::make_unique<nebula_msgs::msg::NebulaPacket>(extracted_msg.packets[0]);
+        driver_ptr_->ProcessPacket(std::move(extracted_msg_ptr));
       }
     }
   }

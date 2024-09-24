@@ -1,8 +1,11 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_decoders/nebula_decoders_robosense/robosense_driver.hpp"
 
 #include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v3.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v4.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/helios.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_decoder.hpp"
 
 namespace nebula
 {
@@ -10,8 +13,8 @@ namespace drivers
 {
 
 RobosenseDriver::RobosenseDriver(
-  const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<RobosenseCalibrationConfiguration> & calibration_configuration)
+  const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration,
+  const std::shared_ptr<const RobosenseCalibrationConfiguration> & calibration_configuration)
 {
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;
@@ -50,8 +53,8 @@ Status RobosenseDriver::SetCalibrationConfiguration(
     calibration_configuration.calibration_file + ")");
 }
 
-std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ConvertScanToPointcloud(
-  const std::shared_ptr<robosense_msgs::msg::RobosenseScan> & robosense_scan)
+std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ParseCloudPacket(
+  const std::vector<uint8_t> & packet)
 {
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
   auto logger = rclcpp::get_logger("RobosenseDriver");
@@ -61,19 +64,9 @@ std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ConvertScanToP
     return pointcloud;
   }
 
-  int cnt = 0, last_azimuth = 0;
-  for (auto & packet : robosense_scan->packets) {
-    last_azimuth = scan_decoder_->unpack(packet);
-    if (scan_decoder_->hasScanned()) {
-      pointcloud = scan_decoder_->getPointcloud();
-      cnt++;
-    }
-  }
-
-  if (cnt == 0) {
-    RCLCPP_ERROR_STREAM(
-      logger, "Scanned " << robosense_scan->packets.size() << " packets, but no "
-                         << "pointclouds were generated. Last azimuth: " << last_azimuth);
+  scan_decoder_->unpack(packet);
+  if (scan_decoder_->hasScanned()) {
+    pointcloud = scan_decoder_->getPointcloud();
   }
 
   return pointcloud;

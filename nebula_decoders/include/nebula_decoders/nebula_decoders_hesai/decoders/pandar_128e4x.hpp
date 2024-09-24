@@ -1,12 +1,26 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_128e3x.hpp"
 
-namespace nebula
-{
-namespace drivers
+#include <vector>
+
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -14,7 +28,7 @@ namespace hesai_packet
 
 #pragma pack(push, 1)
 
-typedef Packet128E3X Packet128E4X;
+using Packet128E4X = Packet128E3X;
 
 #pragma pack(pop)
 
@@ -23,11 +37,11 @@ typedef Packet128E3X Packet128E4X;
 // FIXME(mojomex):
 // The OT128 datasheet has entirely different numbers (and more azimuth states).
 // With the current sensor version, the numbers from the new datasheet are incorrect
-// (clouds do not sync to ToS but ToS+.052s) 
+// (clouds do not sync to ToS but ToS+.052s)
 class Pandar128E4X : public HesaiSensor<hesai_packet::Packet128E4X>
 {
 private:
-enum OperationalState { HIGH_RESOLUTION = 0, STANDARD = 1 };
+  enum OperationalState { HIGH_RESOLUTION = 0, STANDARD = 1 };
 
   static constexpr int firing_time_offset_static_ns_[128] = {
     49758, 43224, 36690, 30156, 21980, 15446, 8912,  2378,  49758, 43224, 36690, 30156, 2378,
@@ -71,17 +85,17 @@ public:
   static constexpr size_t MAX_SCAN_BUFFER_POINTS = 691200;
 
   int getPacketRelativePointTimeOffset(
-    uint32_t block_id, uint32_t channel_id, const packet_t & packet)
+    uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
-    int block_offset_ns;
+    int block_offset_ns = 0;
     if (n_returns == 1) {
       block_offset_ns = -27778 * 2 * (2 - block_id - 1);
     } else {
       block_offset_ns = 0;
     }
 
-    int channel_offset_ns;
+    int channel_offset_ns = 0;
     bool is_hires_mode = packet.tail.operational_state == OperationalState::HIGH_RESOLUTION;
     auto azimuth_state = packet.tail.geAzimuthState(block_id);
 
@@ -119,5 +133,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

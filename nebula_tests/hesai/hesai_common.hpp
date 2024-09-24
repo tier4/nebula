@@ -1,21 +1,28 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
-#include "nebula_common/hesai/hesai_common.hpp"
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
-#include "nebula_ros/common/nebula_driver_ros_wrapper_base.hpp"
-
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_common/nebula_status.hpp>
+#include <nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp>
+#include <nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
-
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
 
 #include <gtest/gtest.h>
-#include <time.h>
 
 #include <algorithm>
 
@@ -24,8 +31,10 @@ namespace nebula
 namespace test
 {
 
-void checkPCDs(nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<pcl::PointXYZ>::Ptr pc_ref)
+inline void checkPCDs(
+  nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<pcl::PointXYZ>::Ptr pc_ref)
 {
+  ASSERT_GT(pc->points.size(), 0);
   EXPECT_EQ(pc->points.size(), pc_ref->points.size());
   auto bound = std::min(pc->points.size(), pc_ref->points.size());
   for (uint32_t i = 0; i < bound; i++) {
@@ -43,7 +52,8 @@ void checkPCDs(nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<pcl::Poi
   }
 }
 
-void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::NebulaPointCloudPtr pp2)
+inline void checkPCDs(
+  nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::NebulaPointCloudPtr pp2)
 {
   EXPECT_EQ(pp1->points.size(), pp2->points.size());
   for (uint32_t i = 0; i < pp1->points.size(); i++) {
@@ -60,7 +70,7 @@ void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::Nebula
   }
 }
 
-void printPCD(nebula::drivers::NebulaPointCloudPtr pp)
+inline void printPCD(nebula::drivers::NebulaPointCloudPtr pp)
 {
   for (auto p : pp->points) {
     std::cout << "(" << p.x << ", " << p.y << "," << p.z << "): " << p.intensity << ", "
@@ -69,5 +79,5 @@ void printPCD(nebula::drivers::NebulaPointCloudPtr pp)
   }
 }
 
-}  // namespace ros
+}  // namespace test
 }  // namespace nebula

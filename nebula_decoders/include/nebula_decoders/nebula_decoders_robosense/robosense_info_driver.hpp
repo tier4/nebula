@@ -1,25 +1,32 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
-#include "nebula_common/point_types.hpp"
 #include "nebula_common/robosense/robosense_common.hpp"
-#include "nebula_decoders/nebula_decoders_common/nebula_driver_base.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v3.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v4.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/helios.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_decoder.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_info_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_info_decoder_base.hpp"
-
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
 
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <iostream>
+#include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -41,7 +48,7 @@ public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this driver
   explicit RobosenseInfoDriver(
-    const std::shared_ptr<drivers::RobosenseSensorConfiguration> & sensor_configuration);
+    const std::shared_ptr<const drivers::RobosenseSensorConfiguration> & sensor_configuration);
 
   /// @brief Get current status of this driver
   /// @return Current status

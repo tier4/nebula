@@ -1,4 +1,4 @@
-// Copyright 2024 Tier IV, Inc.
+// Copyright 2024 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,15 +14,15 @@
 
 #pragma once
 
+#include "nebula_decoders/nebula_decoders_continental/decoders/continental_packets_decoder.hpp"
+
 #include <nebula_common/continental/continental_ars548.hpp>
-#include <nebula_decoders/nebula_decoders_continental/decoders/continental_packets_decoder.hpp>
 
 #include <continental_msgs/msg/continental_ars548_detection_list.hpp>
 #include <continental_msgs/msg/continental_ars548_object_list.hpp>
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
-#include <std_msgs/msg/header.hpp>
 
 #include <array>
 #include <memory>
@@ -41,30 +41,16 @@ public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
   explicit ContinentalARS548Decoder(
-    const std::shared_ptr<ContinentalARS548SensorConfiguration> & sensor_configuration);
+    const std::shared_ptr<const ContinentalARS548SensorConfiguration> & sensor_configuration);
+
+  /// @brief Get current status of this driver
+  /// @return Current status
+  Status GetStatus() override;
 
   /// @brief Function for parsing NebulaPackets
   /// @param nebula_packets
   /// @return Resulting flag
-  bool ProcessPackets(const nebula_msgs::msg::NebulaPackets & nebula_packets) override;
-
-  /// @brief Function for parsing detection lists
-  /// @param data
-  /// @return Resulting flag
-  bool ParseDetectionsListPacket(
-    const std::vector<uint8_t> & data, const std_msgs::msg::Header & header);
-
-  /// @brief Function for parsing object lists
-  /// @param data
-  /// @return Resulting flag
-  bool ParseObjectsListPacket(
-    const std::vector<uint8_t> & data, const std_msgs::msg::Header & header);
-
-  /// @brief Function for parsing sensor status messages
-  /// @param data
-  /// @return Resulting flag
-  bool ParseSensorStatusPacket(
-    const std::vector<uint8_t> & data, const std_msgs::msg::Header & header);
+  bool ProcessPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg) override;
 
   /// @brief Register function to call when a new detection list is processed
   /// @param detection_list_callback
@@ -86,17 +72,40 @@ public:
   Status RegisterSensorStatusCallback(
     std::function<void(const ContinentalARS548Status & status)> sensor_status_callback);
 
+  /// @brief Register function to call when a new sensor status message is processed
+  /// @param object_list_callback
+  /// @return Resulting status
+  Status RegisterPacketsCallback(
+    std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> packets_callback);
+
 private:
+  /// @brief Function for parsing detection lists
+  /// @param data
+  /// @return Resulting flag
+  bool ParseDetectionsListPacket(const nebula_msgs::msg::NebulaPacket & packet_msg);
+
+  /// @brief Function for parsing object lists
+  /// @param data
+  /// @return Resulting flag
+  bool ParseObjectsListPacket(const nebula_msgs::msg::NebulaPacket & packet_msg);
+
+  /// @brief Function for parsing sensor status messages
+  /// @param data
+  /// @return Resulting flag
+  bool ParseSensorStatusPacket(const nebula_msgs::msg::NebulaPacket & packet_msg);
+
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg)>
-    detection_list_callback_;
+    detection_list_callback_{};
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg)>
-    object_list_callback_;
-  std::function<void(const ContinentalARS548Status & status)> sensor_status_callback_;
+    object_list_callback_{};
+  std::function<void(const ContinentalARS548Status & status)> sensor_status_callback_{};
+  std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg)>
+    nebula_packets_callback_{};
 
   ContinentalARS548Status radar_status_{};
 
   /// @brief SensorConfiguration for this decoder
-  std::shared_ptr<continental_ars548::ContinentalARS548SensorConfiguration> sensor_configuration_;
+  std::shared_ptr<const continental_ars548::ContinentalARS548SensorConfiguration> config_ptr_{};
 };
 
 }  // namespace continental_ars548

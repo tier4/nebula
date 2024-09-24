@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Communication parameters.",
+  "type": "object",
+  "definitions": {
+    "configuration_host_port": {
+      "type": "integer",
+      "default": "42401",
+      "minimum": 0,
+      "readOnly": true,
+      "description": "Host configuration port."
+    },
+    "configuration_sensor_port": {
+      "type": "integer",
+      "default": "42101",
+      "minimum": 0,
+      "readOnly": true,
+      "description": "Sensor configuration port."
+    },
+    "data_port": {
+      "type": "integer",
+      "default": "2368",
+      "minimum": 0,
+      "readOnly": true,
+      "description": "Sensor data port."
+    },
+    "filters": {
+      "type": "string",
+      "default": "0:0",
+      "description": "candump-style filters for CAN frames."
+    },
+    "gnss_port": {
+      "type": "integer",
+      "default": "2369",
+      "minimum": 0,
+      "readOnly": true,
+      "description": "GNSS port."
+    },
+    "host_ip": {
+      "type": "string",
+      "default": "255.255.255.255",
+      "pattern": "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
+      "readOnly": true,
+      "description": "Host IPv4 address."
+    },
+    "interface": {
+      "type": "string",
+      "default": "can",
+      "description": "CAN interface name."
+    },
+    "multicast_ip": {
+      "type": "string",
+      "default": "224.0.0.2",
+      "pattern": "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
+      "readOnly": true,
+      "description": "Multicast IPv4 address."
+    },
+    "packet_mtu_size": {
+      "type": "integer",
+      "default": "1500",
+      "minimum": 0,
+      "readOnly": true,
+      "description": "Packet MTU size."
+    },
+    "sensor_ip": {
+      "type": "string",
+      "default": "192.168.1.201",
+      "pattern": "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$",
+      "readOnly": true,
+      "description": "Sensor IPv4 address."
+    },
+    "ptp_profile": {
+      "type": "string",
+      "default": "1588v2",
+      "enum": [
+        "1588v2",
+        "802.1as",
+        "automotive"
+      ],
+      "description": "PTP profile."
+    },
+    "ptp_domain": {
+      "type": "integer",
+      "default": "0",
+      "minimum": 0,
+      "maximum": 127,
+      "description": "PTP domain (PTP operates within a logical scope)."
+    },
+    "ptp_transport_type": {
+      "type": "string",
+      "default": "UDP",
+      "enum": [
+        "UDP",
+        "L2"
+      ],
+      "description": "1588v2 supports 'UDP' or 'L2', other profiles only L2 (HW)."
+    },
+    "ptp_switch_type": {
+      "type": "string",
+      "default": "TSN",
+      "enum": [
+        "TSN",
+        "NON_TSN"
+      ],
+      "description": "For automotive profile,'TSN' or 'NON_TSN'."
+    },
+    "receiver_timeout_sec": {
+      "type": "number",
+      "default": "0.03",
+      "minimum": 0.0,
+      "description": "Timeout for reading data from the CAN bus."
+    },
+    "sender_timeout_sec": {
+      "type": "number",
+      "default": "0.01",
+      "minimum": 0.0,
+      "description": "Timeout for sending data to the CAN bus."
+    }
+  }
+}

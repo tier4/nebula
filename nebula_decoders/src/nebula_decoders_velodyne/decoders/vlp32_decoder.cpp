@@ -1,9 +1,11 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vlp32_decoder.hpp"
+
+#include <angles/angles.h>
 
 #include <cmath>
 #include <utility>
-
-#include <angles/angles.h> 
 
 namespace nebula
 {
@@ -12,8 +14,9 @@ namespace drivers
 namespace vlp32
 {
 Vlp32Decoder::Vlp32Decoder(
-  const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration)
+  const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
+  const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> &
+    calibration_configuration)
 {
   sensor_configuration_ = sensor_configuration;
   calibration_configuration_ = calibration_configuration;
@@ -56,11 +59,6 @@ Vlp32Decoder::Vlp32Decoder(
   }
 }
 
-bool Vlp32Decoder::hasScanned()
-{
-  return has_scanned_;
-}
-
 std::tuple<drivers::NebulaPointCloudPtr, double> Vlp32Decoder::get_pointcloud()
 {
   double phase = angles::from_degrees(sensor_configuration_->scan_phase);
@@ -85,12 +83,10 @@ int Vlp32Decoder::pointsPerPacket()
   return BLOCKS_PER_PACKET * SCANS_PER_BLOCK;
 }
 
-void Vlp32Decoder::reset_pointcloud(size_t n_pts, double time_stamp)
+void Vlp32Decoder::reset_pointcloud(double time_stamp)
 {
   //  scan_pc_.reset(new NebulaPointCloud);
   scan_pc_->points.clear();
-  max_pts_ = n_pts * pointsPerPacket();
-  scan_pc_->points.reserve(max_pts_);
   reset_overflow(time_stamp);  // transfer existing overflow points to the cleared pointcloud
 }
 
@@ -137,12 +133,14 @@ void Vlp32Decoder::reset_overflow(double time_stamp)
   overflow_pc_->points.reserve(max_pts_);
 }
 
-void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
+void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, int32_t packet_seconds)
 {
-  const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
+  checkAndHandleScanComplete(packet, packet_seconds, phase_);
+
+  const raw_packet_t * raw = (const raw_packet_t *)packet.data();
   float last_azimuth_diff = 0;
   uint16_t azimuth_next;
-  uint8_t return_mode = velodyne_packet.data[RETURN_MODE_INDEX];
+  uint8_t return_mode = packet[RETURN_MODE_INDEX];
   const bool dual_return = (return_mode == RETURN_MODE_DUAL);
 
   for (uint i = 0; i < BLOCKS_PER_PACKET; i++) {
@@ -173,9 +171,8 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
       // This makes the assumption the difference between the last block and the next packet is the
       // same as the last to the second to last.
       // Assumes RPM doesn't change much between blocks.
-      azimuth_diff = (i == static_cast<uint>(BLOCKS_PER_PACKET - (4 * dual_return) - 1))
-                       ? 0
-                       : last_azimuth_diff;
+      azimuth_diff =
+        (i == static_cast<uint>(BLOCKS_PER_PACKET - (4 * dual_return) - 1)) ? 0 : last_azimuth_diff;
     }
 
     for (uint j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE) {
@@ -199,7 +196,7 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
           i % 2 ? raw->blocks[i - 1].data[k + 1] : raw->blocks[i + 1].data[k + 1];
       }
       // Apply timestamp if this is the first new packet in the scan.
-      auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
+      auto block_timestamp = packet_seconds;
       if (scan_timestamp_ < 0) {
         scan_timestamp_ = block_timestamp;
       }
@@ -232,7 +229,9 @@ void Vlp32Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
             raw->blocks[i].rotation >= sensor_configuration_->cloud_min_angle * 100))) {
           const float cos_vert_angle = corrections.cos_vert_correction;
           const float sin_vert_angle = corrections.sin_vert_correction;
-          float azimuth_corrected_f = azimuth + (azimuth_diff * VLP32_CHANNEL_DURATION / VLP32_SEQ_DURATION * j) - corrections.rot_correction * 180.0 / M_PI * 100;
+          float azimuth_corrected_f =
+            azimuth + (azimuth_diff * VLP32_CHANNEL_DURATION / VLP32_SEQ_DURATION * j) -
+            corrections.rot_correction * 180.0 / M_PI * 100;
           if (azimuth_corrected_f < 0) {
             azimuth_corrected_f += 36000;
           }

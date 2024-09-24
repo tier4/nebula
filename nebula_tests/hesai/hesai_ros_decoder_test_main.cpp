@@ -1,17 +1,25 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "hesai_ros_decoder_test_main.hpp"
 
 #include "hesai_common.hpp"
 #include "hesai_ros_decoder_test.hpp"
 
+#include <pcl/impl/point_types.hpp>
+#include <rclcpp/executors/single_threaded_executor.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <gtest/gtest.h>
-#include <stdlib.h>
-#include <time.h>
+#include <pcl/conversions.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_cloud.h>
 
-#include <algorithm>
+#include <cstdlib>
+#include <ctime>
 #include <functional>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -19,72 +27,18 @@ namespace test
 {
 
 const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[6] = {
-  {
-    "Pandar40P",
-    "Dual",
-    "Pandar40P.csv",
-    "40p/1673400149412331409",
-    "",
-    "hesai",
-    0,
-    0.3f,
-    200.f
-  },
-  {
-    "Pandar64",
-    "Dual",
-    "Pandar64.csv",
-    "64/1673403880599376836",
-    "",
-    "hesai",
-    0,
-    0.3f,
-    200.f
-  },
-  {
-    "PandarAT128",
-    "LastStrongest",
-    "PandarAT128.csv",
-    "at128/1679653308406038376",
-    "PandarAT128.dat",
-    "hesai",
-    0,
-    1.f,
-    180.f
-  },
-  {
-    "PandarQT64",
-    "Dual",
-    "PandarQT64.csv",
-    "qt64/1673401195788312575",
-    "",
-    "hesai",
-    0,
-    0.1f,
-    60.f
-  },
-  {
-    "PandarXT32",
-    "Dual",
-    "PandarXT32.csv",
-    "xt32/1673400677802009732",
-    "",
-    "hesai",
-    0,
-    0.05f,
-    120.f
-  },
-  {
-    "PandarXT32M",
-    "LastStrongest",
-    "PandarXT32M.csv",
-    "xt32m/1660893203042895158",
-    "",
-    "hesai",
-    0,
-    0.5f,
-    300.f
-  }};
+  {"Pandar40P", "Dual", "Pandar40P.csv", "40p/1673400149412331409", "hesai", 0, 0.0, 0., 360., 0.3f,
+   200.f},
+  {"Pandar64", "Dual", "Pandar64.csv", "64/1673403880599376836", "hesai", 0, 0.0, 0., 360., 0.3f,
+   200.f},
+  {"PandarAT128", "LastStrongest", "PandarAT128.dat", "at128/1679653308406038376", "hesai", 0,
+   150.0, 30., 150., 1.f, 180.f},
+  {"PandarQT64", "Dual", "PandarQT64.csv", "qt64/1673401195788312575", "hesai", 0, 0.0, 0., 360.,
+   0.1f, 60.f},
+  {"PandarXT32", "Dual", "PandarXT32.csv", "xt32/1673400677802009732", "hesai", 0, 0.0, 0., 360.,
+   0.05f, 120.f},
+  {"PandarXT32M", "LastStrongest", "PandarXT32M.csv", "xt32m/1660893203042895158", "hesai", 0, 0.0,
+   0., 360., 0.5f, 300.f}};
 
 // Compares geometrical output of decoder against pre-recorded reference pointcloud.
 TEST_P(DecoderTest, TestPcd)
@@ -93,7 +47,7 @@ TEST_P(DecoderTest, TestPcd)
   rcpputils::fs::path bag_dir(hesai_driver_->params_.bag_path);
   rcpputils::fs::path pcd_dir = bag_dir.parent_path();
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr ref_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
+  auto ref_pointcloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
   int check_cnt = 0;
 
   auto scan_callback = [&](
@@ -112,7 +66,7 @@ TEST_P(DecoderTest, TestPcd)
       checkPCDs(pointcloud, ref_pointcloud);
       check_cnt++;
       // ref_pointcloud.reset(new nebula::drivers::NebulaPointCloud);
-      ref_pointcloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
+      ref_pointcloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
     }
   };
 
@@ -124,6 +78,9 @@ TEST_P(DecoderTest, TestPcd)
 // are not affected by timezones and are always output in UST.
 TEST_P(DecoderTest, TestTimezone)
 {
+  TearDown();
+  SetUp();
+
   // For each pointcloud decoded, this will contain the pointcloud timestamp returned by the driver
   std::vector<uint64_t> decoded_timestamps;
 
@@ -141,6 +98,8 @@ TEST_P(DecoderTest, TestTimezone)
   ASSERT_STREQ(tzname[0], "GMT");
   auto gmt = timezone;
   hesai_driver_->ReadBag(scan_callback);
+
+  ASSERT_GT(decoded_timestamps.size(), 0U);
 
   // Then, reset driver and timestamps vector for the next decode run
   TearDown();
@@ -175,16 +134,12 @@ void DecoderTest::SetUp()
   logger_->set_level(rclcpp::Logger::Level::Info);
 
   RCLCPP_DEBUG_STREAM(*logger_, "Testing " << decoder_params.sensor_model);
-  setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
   std::string node_name = "nebula_hesai_decoder_test";
-
-  rclcpp::executors::SingleThreadedExecutor exec;
   rclcpp::NodeOptions options;
 
   hesai_driver_ =
     std::make_shared<nebula::ros::HesaiRosDecoderTest>(options, node_name, decoder_params);
-  exec.add_node(hesai_driver_->get_node_base_interface());
 
   nebula::Status driver_status = hesai_driver_->GetStatus();
   if (driver_status != nebula::Status::OK) {

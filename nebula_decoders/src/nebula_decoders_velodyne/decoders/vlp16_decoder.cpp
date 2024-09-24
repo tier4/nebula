@@ -1,9 +1,11 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vlp16_decoder.hpp"
+
+#include <angles/angles.h>
 
 #include <cmath>
 #include <utility>
-
-#include <angles/angles.h> 
 
 namespace nebula
 {
@@ -12,8 +14,9 @@ namespace drivers
 namespace vlp16
 {
 Vlp16Decoder::Vlp16Decoder(
-  const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration)
+  const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
+  const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> &
+    calibration_configuration)
 {
   sensor_configuration_ = sensor_configuration;
   calibration_configuration_ = calibration_configuration;
@@ -56,11 +59,6 @@ Vlp16Decoder::Vlp16Decoder(
   phase_ = (uint16_t)round(sensor_configuration_->scan_phase * 100);
 }
 
-bool Vlp16Decoder::hasScanned()
-{
-  return has_scanned_;
-}
-
 std::tuple<drivers::NebulaPointCloudPtr, double> Vlp16Decoder::get_pointcloud()
 {
   double phase = angles::from_degrees(sensor_configuration_->scan_phase);
@@ -87,11 +85,9 @@ int Vlp16Decoder::pointsPerPacket()
   return BLOCKS_PER_PACKET * VLP16_FIRINGS_PER_BLOCK * VLP16_SCANS_PER_FIRING;
 }
 
-void Vlp16Decoder::reset_pointcloud(size_t n_pts, double time_stamp)
+void Vlp16Decoder::reset_pointcloud(double time_stamp)
 {
   scan_pc_->points.clear();
-  max_pts_ = n_pts * pointsPerPacket();
-  scan_pc_->points.reserve(max_pts_);
   reset_overflow(time_stamp);  // transfer existing overflow points to the cleared pointcloud
 }
 
@@ -138,12 +134,14 @@ void Vlp16Decoder::reset_overflow(double time_stamp)
   overflow_pc_->points.reserve(max_pts_);
 }
 
-void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
+void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, int32_t packet_seconds)
 {
-  const raw_packet_t * raw = (const raw_packet_t *)&velodyne_packet.data[0];
+  checkAndHandleScanComplete(packet, packet_seconds, phase_);
+
+  const raw_packet_t * raw = (const raw_packet_t *)packet.data();
   float last_azimuth_diff = 0;
   uint16_t azimuth_next;
-  const uint8_t return_mode = velodyne_packet.data[RETURN_MODE_INDEX];
+  const uint8_t return_mode = packet[RETURN_MODE_INDEX];
   const bool dual_return = (return_mode == RETURN_MODE_DUAL);
 
   for (uint block = 0; block < BLOCKS_PER_PACKET; block++) {
@@ -203,7 +201,7 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
               block % 2 ? raw->blocks[block - 1].data[k + 1] : raw->blocks[block + 1].data[k + 1];
           }
           // Apply timestamp if this is the first new packet in the scan.
-          auto block_timestamp = rclcpp::Time(velodyne_packet.stamp).seconds();
+          auto block_timestamp = packet_seconds;
           if (scan_timestamp_ < 0) {
             scan_timestamp_ = block_timestamp;
           }
@@ -216,7 +214,7 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
             continue;
           }
           {
-            VelodyneLaserCorrection & corrections =
+            const VelodyneLaserCorrection & corrections =
               calibration_configuration_->velodyne_calibration.laser_corrections[dsr];
             float distance = current_return.uint *
                              calibration_configuration_->velodyne_calibration.distance_resolution_m;
@@ -231,9 +229,10 @@ void Vlp16Decoder::unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_pa
               float azimuth_corrected_f =
                 azimuth +
                 (azimuth_diff * ((dsr * VLP16_DSR_TOFFSET) + (firing * VLP16_FIRING_TOFFSET)) /
-                 VLP16_BLOCK_DURATION) - corrections.rot_correction * 180.0 / M_PI * 100;
-          
-              if (azimuth_corrected_f < 0.0){
+                 VLP16_BLOCK_DURATION) -
+                corrections.rot_correction * 180.0 / M_PI * 100;
+
+              if (azimuth_corrected_f < 0.0) {
                 azimuth_corrected_f += 36000.0;
               }
               const uint16_t azimuth_corrected =

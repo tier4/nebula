@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Radar Continental ARS548 parameters.",
+  "type": "object",
+  "definitions": {
+    "ARS548": {
+      "type": "object",
+      "properties": {
+        "host_ip": {
+          "$ref": "sub/communication.json#/definitions/host_ip"
+        },
+        "sensor_ip": {
+          "$ref": "sub/communication.json#/definitions/sensor_ip"
+        },
+        "multicast_ip": {
+          "$ref": "sub/communication.json#/definitions/multicast_ip"
+        },
+        "data_port": {
+          "$ref": "sub/communication.json#/definitions/data_port"
+        },
+        "configuration_host_port": {
+          "$ref": "sub/communication.json#/definitions/configuration_host_port"
+        },
+        "configuration_sensor_port": {
+          "$ref": "sub/communication.json#/definitions/configuration_sensor_port"
+        },
+        "launch_hw": {
+          "$ref": "sub/hardware.json#/definitions/launch_hw"
+        },
+        "frame_id": {
+          "$ref": "sub/topic.json#/definitions/frame_id"
+        },
+        "base_frame": {
+          "$ref": "sub/topic.json#/definitions/base_frame"
+        },
+        "object_frame": {
+          "$ref": "sub/topic.json#/definitions/object_frame"
+        },
+        "use_sensor_time": {
+          "$ref": "sub/topic.json#/definitions/use_sensor_time"
+        },
+        "configuration_vehicle_length": {
+          "$ref": "sub/misc.json#/definitions/configuration_vehicle_length"
+        },
+        "configuration_vehicle_width": {
+          "$ref": "sub/misc.json#/definitions/configuration_vehicle_width"
+        },
+        "configuration_vehicle_height": {
+          "$ref": "sub/misc.json#/definitions/configuration_vehicle_height"
+        },
+        "configuration_vehicle_wheelbase": {
+          "$ref": "sub/misc.json#/definitions/configuration_vehicle_wheelbase"
+        },
+        "sensor_model": {
+          "$ref": "sub/radar_continental.json#/definitions/sensor_model"
+        }
+      },
+      "required": [
+        "host_ip",
+        "sensor_ip",
+        "multicast_ip",
+        "data_port",
+        "configuration_host_port",
+        "configuration_sensor_port",
+        "launch_hw",
+        "configuration_vehicle_length",
+        "configuration_vehicle_width",
+        "configuration_vehicle_height",
+        "configuration_vehicle_wheelbase",
+        "sensor_model"
+      ]
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/ARS548"
+        }
+      },
+      "required": [
+        "ros__parameters"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "/**"
+  ],
+  "additionalProperties": false
+}

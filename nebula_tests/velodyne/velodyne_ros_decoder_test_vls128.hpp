@@ -1,37 +1,50 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef NEBULA_VelodyneRosDecoderTestVls128_H
 #define NEBULA_VelodyneRosDecoderTestVls128_H
 
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_common/velodyne/velodyne_common.hpp"
-#include "nebula_decoders/nebula_decoders_velodyne/velodyne_driver.hpp"
-#include "nebula_ros/common/nebula_driver_ros_wrapper_base.hpp"
-
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_common/nebula_status.hpp>
+#include <nebula_common/velodyne/velodyne_common.hpp>
+#include <nebula_decoders/nebula_decoders_velodyne/velodyne_driver.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 #include <gtest/gtest.h>
 
+#include <memory>
+#include <string>
+
 namespace nebula
 {
 namespace ros
 {
-class VelodyneRosDecoderTest final : public rclcpp::Node,
-                                     NebulaDriverRosWrapperBase  //, testing::Test
+class VelodyneRosDecoderTest final : public rclcpp::Node
 {
   std::shared_ptr<drivers::VelodyneDriver> driver_ptr_;
   Status wrapper_status_;
 
-  std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_cfg_ptr_;
-  std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
+  std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_cfg_ptr_;
+  std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_cfg_ptr_;
 
   Status InitializeDriver(
-    std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
-    std::shared_ptr<drivers::CalibrationConfigurationBase> calibration_configuration) override;
+    std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_configuration,
+    std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration);
 
   Status GetParameters(
     drivers::VelodyneSensorConfiguration & sensor_configuration,
@@ -50,16 +63,7 @@ public:
   void ReceiveScanMsgCallback(const velodyne_msgs::msg::VelodyneScan::SharedPtr scan_msg);
   Status GetStatus();
   void ReadBag();
-  /*
-  void SetUp() override {
-    // Setup things that should occur before every test instance should go here
-    RCLCPP_ERROR_STREAM(this->get_logger(), "DONE WITH SETUP!!");
-  }
 
-  void TearDown() override {
-    std::cout << "DONE WITH TEARDOWN" << std::endl;
-  }
-*/
 private:
   std::string bag_path;
   std::string storage_id;

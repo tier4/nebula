@@ -1,11 +1,23 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -32,7 +44,7 @@ struct TailQT128C2X
 
 struct PacketQT128C2X : public PacketBase<2, 128, 2, 100>
 {
-  typedef Body<Block<Unit4B, PacketQT128C2X::N_CHANNELS>, PacketQT128C2X::N_BLOCKS> body_t;
+  using body_t = Body<Block<Unit4B, PacketQT128C2X::N_CHANNELS>, PacketQT128C2X::N_BLOCKS>;
   Header12B header;
   body_t body;
   uint32_t crc_body;
@@ -88,7 +100,7 @@ public:
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
     int block_offset_ns = 9000 + 111110 * (2 - block_id - 1) / n_returns;
 
-    int channel_offset_ns;
+    int channel_offset_ns = 0;
     if (n_returns == 1) {
       channel_offset_ns = block_id % 2 == 0 ? loop1[channel_id] : loop2[channel_id];
     } else {
@@ -99,5 +111,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

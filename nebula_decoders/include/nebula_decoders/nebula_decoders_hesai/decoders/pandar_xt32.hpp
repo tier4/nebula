@@ -1,11 +1,25 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
-namespace nebula
-{
-namespace drivers
+#include <vector>
+
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -25,7 +39,7 @@ struct TailXT32
 
 struct PacketXT32 : public PacketBase<8, 32, 2, 100>
 {
-  typedef Body<Block<Unit4B, PacketXT32::N_CHANNELS>, PacketXT32::N_BLOCKS> body_t;
+  using body_t = Body<Block<Unit4B, PacketXT32::N_CHANNELS>, PacketXT32::N_BLOCKS>;
   Header12B header;
   body_t body;
   TailXT32 tail;
@@ -73,5 +87,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

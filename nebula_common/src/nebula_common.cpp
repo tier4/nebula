@@ -1,3 +1,5 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include <nebula_common/nebula_common.hpp>
 
 namespace nebula
@@ -60,7 +62,7 @@ pcl::PointCloud<PointXYZIRADT>::Ptr convertPointXYZIRCAEDTToPointXYZIRADT(
     point.ring = p.channel;
     point.azimuth = rad2deg(p.azimuth) * 100.0;
     point.distance = p.distance;
-    point.time_stamp = stamp + static_cast<double>(p.time_stamp)*1e-9;
+    point.time_stamp = stamp + static_cast<double>(p.time_stamp) * 1e-9;
     output_pointcloud->points.emplace_back(point);
   }
 

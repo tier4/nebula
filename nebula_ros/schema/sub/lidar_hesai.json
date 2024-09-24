@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lidar Hesai parameters.",
+  "type": "object",
+  "definitions": {
+    "sensor_model": {
+      "$ref": "hardware.json#/definitions/sensor_model",
+      "enum": [
+        "Pandar64",
+        "Pandar40P",
+        "PandarXT32",
+        "PandarXT32M",
+        "PandarQT64",
+        "PandarQT128",
+        "Pandar128E4X",
+        "PandarAT128"
+      ]
+    },
+    "calibration_file": {
+      "$ref": "misc.json#/definitions/calibration_file",
+      "default": "$(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).csv"
+    },
+    "gnss_port": {
+      "$ref": "communication.json#/definitions/gnss_port",
+      "default": "10110",
+      "minimum": 0
+    },
+    "rotation_speed": {
+      "$ref": "hardware.json#/definitions/rotation_speed",
+      "default": "600",
+      "minimum": 300,
+      "maximum": 1200,
+      "multipleOf": 60
+    },
+    "sync_angle": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 359,
+      "default": "0",
+      "description": "The angle in whole degrees which should be hit on top-of-second."
+    },
+    "cut_angle": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 360,
+      "default": "0.0",
+      "description": "The angle in degrees at which pointclouds are cut/published."
+    },
+    "multicast_ip": {
+      "type": "string",
+      "default": "\"\"",
+      "pattern": "(^((22[4-9]|23[0-9])\\.)((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){2}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$)|",
+      "readOnly": true,
+      "description": "Multicast IPv4 address (leave empty to disable multicast)."
+    }
+  }
+}

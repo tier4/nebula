@@ -1,3 +1,17 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_common/robosense/robosense_common.hpp"
@@ -6,8 +20,10 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "robosense_msgs/msg/robosense_packet.hpp"
-#include "robosense_msgs/msg/robosense_scan.hpp"
+#include <memory>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace nebula
 {
@@ -18,7 +34,7 @@ class RobosenseDecoder : public RobosenseScanDecoder
 {
 protected:
   /// @brief Configuration for this decoder
-  const std::shared_ptr<drivers::RobosenseSensorConfiguration> sensor_configuration_;
+  const std::shared_ptr<const drivers::RobosenseSensorConfiguration> sensor_configuration_;
 
   /// @brief The sensor definition, used for return mode and time offset handling
   SensorT sensor_{};
@@ -47,15 +63,15 @@ protected:
   /// @brief Validates and parses MsopPacket. Currently only checks size, not checksums etc.
   /// @param msop_packet The incoming MsopPacket
   /// @return Whether the packet was parsed successfully
-  bool parsePacket(const robosense_msgs::msg::RobosensePacket & msop_packet)
+  bool parsePacket(const std::vector<uint8_t> & msop_packet)
   {
-    if (msop_packet.data.size() < sizeof(typename SensorT::packet_t)) {
+    if (msop_packet.size() < sizeof(typename SensorT::packet_t)) {
       RCLCPP_ERROR_STREAM(
-        logger_, "Packet size mismatch:" << msop_packet.data.size() << " | Expected at least:"
-                                         << sizeof(typename SensorT::packet_t));
+        logger_, "Packet size mismatch: " << msop_packet.size() << " | Expected at least: "
+                                          << sizeof(typename SensorT::packet_t));
       return false;
     }
-    if (std::memcpy(&packet_, msop_packet.data.data(), sizeof(typename SensorT::packet_t))) {
+    if (std::memcpy(&packet_, msop_packet.data(), sizeof(typename SensorT::packet_t))) {
       return true;
     }
 
@@ -189,8 +205,8 @@ public:
   /// @param calibration_configuration Calibration for this decoder
   /// calibration_configuration is set)
   explicit RobosenseDecoder(
-    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<RobosenseCalibrationConfiguration> & calibration_configuration)
+    const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<const RobosenseCalibrationConfiguration> & calibration_configuration)
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(calibration_configuration),
     logger_(rclcpp::get_logger("RobosenseDecoder"))
@@ -205,7 +221,7 @@ public:
     output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
   }
 
-  int unpack(const robosense_msgs::msg::RobosensePacket & msop_packet) override
+  int unpack(const std::vector<uint8_t> & msop_packet) override
   {
     if (!parsePacket(msop_packet)) {
       return -1;

@@ -1,3 +1,17 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_common/nebula_common.hpp"
@@ -5,7 +19,11 @@
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
 
 #include <cstdint>
-#include <type_traits>
+#include <limits>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -17,7 +35,6 @@ namespace drivers
 template <typename PacketT, typename InfoPacketT>
 class RobosenseSensor
 {
-private:
 public:
   typedef PacketT packet_t;
   typedef InfoPacketT info_t;
@@ -35,7 +52,7 @@ public:
   /// @return The relative time offset in nanoseconds
   virtual int getPacketRelativePointTimeOffset(
     uint32_t block_id, uint32_t channel_id,
-    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration) = 0;
+    const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration) = 0;
 
   /// @brief For a given start block index, find the earliest (lowest) relative time offset of any
   /// point in the packet in or after the start block
@@ -45,7 +62,7 @@ public:
   /// after the start block, in nanoseconds
   int getEarliestPointTimeOffsetForBlock(
     uint32_t start_block_id,
-    const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration)
+    const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration)
   {
     const auto n_returns = robosense_packet::get_n_returns(sensor_configuration->return_mode);
     int min_offset_ns = std::numeric_limits<int>::max();
@@ -119,6 +136,14 @@ public:
         return ReturnType::UNKNOWN;
     }
   }
+
+  virtual ReturnMode getReturnMode(const info_t & info_packet) = 0;
+
+  virtual RobosenseCalibrationConfiguration getSensorCalibration(const info_t & info_packet) = 0;
+
+  virtual bool getSyncStatus(const info_t & info_packet) = 0;
+
+  virtual std::map<std::string, std::string> getSensorInfo(const info_t & info_packet) = 0;
 };
 }  // namespace drivers
 }  // namespace nebula

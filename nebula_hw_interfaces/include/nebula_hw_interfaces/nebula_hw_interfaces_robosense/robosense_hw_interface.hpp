@@ -1,3 +1,17 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 // Have to define macros to silence warnings about deprecated headers being used by
@@ -11,15 +25,13 @@
 #define BOOST_ALLOW_DEPRECATED_HEADERS
 #endif
 
-#include "boost_udp_driver/udp_driver.hpp"
-#include "nebula_common/robosense/robosense_common.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
-
+#include <boost_udp_driver/udp_driver.hpp>
+#include <nebula_common/robosense/robosense_common.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include "robosense_msgs/msg/robosense_info_packet.hpp"
-#include "robosense_msgs/msg/robosense_packet.hpp"
-#include "robosense_msgs/msg/robosense_scan.hpp"
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -32,27 +44,17 @@ constexpr uint16_t BPEARL_PACKET_SIZE = 1248;
 constexpr uint16_t BPEARL_INFO_PACKET_SIZE = 1248;
 
 /// @brief Hardware interface of Robosense driver
-class RobosenseHwInterface : NebulaHwInterfaceBase
+class RobosenseHwInterface
 {
 private:
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
   std::unique_ptr<::drivers::common::IoContext> info_io_context_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> info_udp_driver_;
-  std::shared_ptr<RobosenseSensorConfiguration> sensor_configuration_;
-  std::unique_ptr<robosense_msgs::msg::RobosenseScan> scan_cloud_ptr_;
-  size_t azimuth_index_{44};  // For Helios and Bpearl 42 byte header + 2 byte flag
-  int prev_phase_{};
-  std::atomic<bool> is_info_received{false};         // To check if DIFOP is received
-  std::optional<std::vector<uint8_t>> info_buffer_;  // To hold DIFOP data
-  std::optional<SensorModel> sensor_model_;          // To hold sensor model
-  std::function<bool(size_t)>
-    is_valid_packet_; /*Lambda Function Array to verify proper packet size for data*/
-  std::function<bool(size_t)>
-    is_valid_info_packet_; /*Lambda Function Array to verify proper packet size for info*/
-  std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseScan> buffer)>
+  std::shared_ptr<const RobosenseSensorConfiguration> sensor_configuration_;
+  std::function<void(std::vector<uint8_t> & buffer)>
     scan_reception_callback_; /**This function pointer is called when the scan is complete*/
-  std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket> buffer)>
+  std::function<void(std::vector<uint8_t> & buffer)>
     info_reception_callback_; /**This function pointer is called when DIFOP packet is received*/
   std::shared_ptr<rclcpp::Logger> parent_node_logger_;
 
@@ -70,52 +72,35 @@ public:
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer) final;
+  void ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer);
 
   /// @brief Callback function to receive the Info Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveInfoPacketCallback(const std::vector<uint8_t> & buffer);
+  void ReceiveInfoPacketCallback(std::vector<uint8_t> & buffer);
 
   /// @brief Starting the interface that handles UDP streams for MSOP packets
   /// @return Resulting status
-  Status SensorInterfaceStart() final;
+  Status SensorInterfaceStart();
 
   /// @brief Starting the interface that handles UDP streams for DIFOP packets
   /// @return Resulting status
   Status InfoInterfaceStart();
 
-  /// @brief Function for stopping the interface that handles UDP streams
-  /// @return Resulting status
-  Status SensorInterfaceStop() final;
-
   /// @brief Setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
   Status SetSensorConfiguration(
-    std::shared_ptr<SensorConfigurationBase> sensor_configuration) final;
-
-  /// @brief Printing sensor configuration
-  /// @param sensor_configuration SensorConfiguration for this interface
-  /// @return Resulting status
-  Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration) final;
-
-  /// @brief Printing calibration configuration
-  /// @param calibration_configuration CalibrationConfiguration for the checking
-  /// @return Resulting status
-  Status GetCalibrationConfiguration(
-    CalibrationConfigurationBase & calibration_configuration) override;
+    std::shared_ptr<const RobosenseSensorConfiguration> sensor_configuration);
 
   /// @brief Registering callback for RobosenseScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterScanCallback(
-    std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseScan>)> scan_callback);
+  Status RegisterScanCallback(std::function<void(std::vector<uint8_t> &)> scan_callback);
 
   /// @brief Registering callback for RobosensePacket
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterInfoCallback(
-    std::function<void(std::unique_ptr<robosense_msgs::msg::RobosenseInfoPacket>)> info_callback);
+  Status RegisterInfoCallback(std::function<void(std::vector<uint8_t> &)> info_callback);
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger

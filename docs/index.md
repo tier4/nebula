@@ -1,72 +1,38 @@
-# Nebula introduction
+# Welcome to the Nebula documentation
 
-The project is separated into four main parts:
-プロジェクトは主となる 4 つのパートに分かれている：
-Lidar ドライバ、ROS ラッパー、HWI インターフェイスだ。
+Welcome to the Nebula documentation. Here you will find information about the background of the project, how to install and use with ROS 2, and also how to add new sensors to the Nebula driver.
 
-- Common: `nebula_common`. This packages contains the structures, data types, calibration and configuration definitions used among all the packages.
-- Drivers: `nebula_decoders`. The Drivers take care of all the data parsing and conversion. Lidar ドライバは、全てのセンサ通信とデータパーシングを管理している。
-- ROS Nodes Wrappers: `nebula_ros`, The ROSWrappers are a lightweight layer responsible for the data conversion between the LidarDriver point cloud and the corresponding ROS counterparts. The ROSWrapper also provides methods for configuration and the obtention of the status information of the Lidar. ROS ラッパーは、Lidar ドライバ点群と対応する ROS のカウンターパーツのデータ変換を掌る軽量のレイヤである。 ROS ラッパーは、構成方法、Lidar のステータス情報取得の方法を提供している。
-- HWInterface: `nebula_hw_interfaces`. The HWInterface offers an abstraction layer between the parser and the sensor communication. HW インターフェイスは、パーサとセンサ間の抽象化レイヤを提供している。
+## About Nebula
 
-# Nebula Common
+Nebula is a sensor driver platform that is designed to provide a unified framework for as wide a variety of devices as possible.
+While it primarily targets Ethernet-based LiDAR sensors, it aims to be easily extendable to support new sensors and interfaces.
+Nebula works with ROS 2 and is the recommended sensor driver for the [Autoware](https://autoware.org/) project. The project aims to provide:
 
-The Nebula common package contains structure definition such as configuration, calibration, point types.
-It also contains other common status strings and conversions used among all the packages.
+- A universal sensor driver
+  - Supporting an increasing number of LiDAR, radar and camera sensors
+- 100% open source, with a no-binaries policy
+- ROS 2 wrappers for easy inclusion in robotics and self-driving vehicle projects
+- A driver solution to suit current Autoware requirements
+  - Interfaces and pointcloud type updates made in unison with Autoware developments
 
-## Point Types
+For more information, please refer to [About Nebula](about.md).
 
-Nebula supports three point cloud output types.
-However, it can easily be extended to support other custom point cloud types.
+## Getting started
 
-These definitions can be found in the `nebula_common/include/point_types.hpp`.
+- [Installation](installation.md)
+- [Launching with ROS 2](usage.md)
 
-### PointXYZIR
+## Nebula architecture
 
-| Field         | Type    | Units | Description                                                          |
-| ------------- | ------- | ----- | -------------------------------------------------------------------- |
-| `x`           | `float` | `m`   | Contains the abscissa member of the point in cartesian coordinates.  |
-| `y`           | `float` | `m`   | Contains the ordinate member of the point in cartesian coordinates.  |
-| `z`           | `float` | `m`   | Contains the applicate member of the point in cartesian coordinates. |
-| `intensity`   | `uint8` |       | Contains the laser energy return value as reported by the sensor.    |
-| `return type` | `uint8` |       | Contains the lase return type according to the sensor configuration. |
+- [Design](design.md)
+- [Parameters](parameters.md)
+- [Point cloud types](point_types.md)
 
-### PointXYZICAETR
+## Supported sensors
 
-| Field         | Type    | Units | Description                                                          |
-| ------------- | ------- | ----- | -------------------------------------------------------------------- |
-| `x`           | `float` | `m`   | Contains the abscissa member of the point in cartesian coordinates.  |
-| `y`           | `float` | `m`   | Contains the ordinate member of the point in cartesian coordinates.  |
-| `z`           | `float` | `m`   | Contains the applicate member of the point in cartesian coordinates. |
-| `intensity`   | `uint8` |       | Contains the laser energy return value as reported by the sensor.    |
-| `channel`     | `uint8` |       | Contains the laser channel id.                                       |
-| `azimuth`     | `float` | `rad` | Contains the azimuth of the current point.                           |
-| `elevation`   | `float` | `rad` | Contains the elevation of the current point.                         |
-| `timestamp`   | `float` | `ns`  | Contains the relative time to the triggered scan time.               |
-| `return type` | `uint8` |       | Contains the lase return type according to the sensor configuration. |
+- [Supported sensors](supported_sensors.md)
 
-### PointXYZICATR
+## Development
 
-| Field         | Type    | Units     | Description                                                          |
-| ------------- | ------- | --------- | -------------------------------------------------------------------- |
-| `x`           | `float` | `m`       | Contains the abscissa member of the point in cartesian coordinates.  |
-| `y`           | `float` | `m`       | Contains the ordinate member of the point in cartesian coordinates.  |
-| `z`           | `float` | `m`       | Contains the applicate member of the point in cartesian coordinates. |
-| `intensity`   | `uint8` |           | Contains the laser energy return value as reported by the sensor.    |
-| `channel`     | `uint8` |           | Contains the laser channel id.                                       |
-| `azimuth`     | `float` | `degrees` | Contains the azimuth of the current point.                           |
-| `timestamp`   | `float` | `ns`      | Contains the relative time to the triggered scan time.               |
-| `return type` | `uint8` |           | Contains the lase return type according to the sensor configuration. |
-
-### PointXYZIRADT
-
-| Field         | Type    | Units     | Description                                                                |
-| ------------- | ------- | --------- | -------------------------------------------------------------------------- |
-| `x`           | `float` | `m`       | Contains the abscissa member of the point in cartesian coordinates.        |
-| `y`           | `float` | `m`       | Contains the ordinate member of the point in cartesian coordinates.        |
-| `z`           | `float` | `m`       | Contains the applicate member of the point in cartesian coordinates.       |
-| `intensity`   | `uint8` |           | Contains the laser energy return value as reported by the sensor.          |
-| `return type` | `uint8` |           | Contains the lase return type according to the sensor configuration.       |
-| `azimuth`     | `float` | `degrees` | Contains the azimuth of the current point.                                 |
-| `distance`    | `float` | `m`       | Contains the distance from the sensor origin to this echo on the XY plane. |
-| `timestamp`   | `float` | `ns`      | Contains the relative time to the triggered scan time.                     |
+- [Tutorials](tutorials.md)
+- [Contributing](contribute.md)

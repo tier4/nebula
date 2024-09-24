@@ -1,4 +1,11 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_decoders/nebula_decoders_robosense/robosense_info_driver.hpp"
+
+#include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v3.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v4.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/decoders/helios.hpp"
+#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_info_decoder.hpp"
 
 namespace nebula
 {
@@ -6,7 +13,7 @@ namespace drivers
 {
 
 RobosenseInfoDriver::RobosenseInfoDriver(
-  const std::shared_ptr<RobosenseSensorConfiguration> & sensor_configuration)
+  const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration)
 {
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;

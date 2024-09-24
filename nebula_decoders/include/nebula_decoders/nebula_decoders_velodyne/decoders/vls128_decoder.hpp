@@ -1,3 +1,17 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/velodyne_scan_decoder.hpp"
@@ -6,6 +20,9 @@
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
 
 #include <array>
+#include <memory>
+#include <tuple>
+#include <vector>
 
 namespace nebula
 {
@@ -21,14 +38,12 @@ public:
   /// @param sensor_configuration SensorConfiguration for this decoder
   /// @param calibration_configuration Calibration for this decoder
   explicit Vls128Decoder(
-    const std::shared_ptr<drivers::VelodyneSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<drivers::VelodyneCalibrationConfiguration> & calibration_configuration);
+    const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
+    const std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> &
+      calibration_configuration);
   /// @brief Parsing and shaping VelodynePacket
   /// @param velodyne_packet
-  void unpack(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) override;
-  /// @brief Get the flag indicating whether one cycle is ready
-  /// @return Readied
-  bool hasScanned() override;
+  void unpack(const std::vector<uint8_t> & packet, int32_t packet_seconds) override;
   /// @brief Calculation of points in each packet
   /// @return # of points
   int pointsPerPacket() override;
@@ -36,8 +51,7 @@ public:
   /// @return tuple of Point cloud and timestamp
   std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() override;
   /// @brief Resetting point cloud buffer
-  /// @param n_pts # of points
-  void reset_pointcloud(size_t n_pts, double time_stamp) override;
+  void reset_pointcloud(double time_stamp) override;
   /// @brief Resetting overflowed point cloud buffer
   void reset_overflow(double time_stamp) override;
 

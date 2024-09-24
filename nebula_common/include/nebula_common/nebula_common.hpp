@@ -1,9 +1,25 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef NEBULA_COMMON_H
 #define NEBULA_COMMON_H
 
 #include <nebula_common/point_types.hpp>
+
 #include <boost/tokenizer.hpp>
-#include <map>
+
+#include <algorithm>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -324,10 +340,10 @@ enum class SensorModel {
   VELODYNE_HDL32,
   VELODYNE_VLP16,
   ROBOSENSE_HELIOS,
-  ROBOSENSE_BPEARL,
   ROBOSENSE_BPEARL_V3,
   ROBOSENSE_BPEARL_V4,
-  CONTINENTAL_ARS548
+  CONTINENTAL_ARS548,
+  CONTINENTAL_SRR520
 };
 
 /// @brief not used?
@@ -342,24 +358,11 @@ enum class datatype {
   FLOAT64 = 8
 };
 
-enum class PtpProfile {
-  IEEE_1588v2 = 0,
-  IEEE_802_1AS,
-  IEEE_802_1AS_AUTO,
-  PROFILE_UNKNOWN
-};
+enum class PtpProfile { IEEE_1588v2 = 0, IEEE_802_1AS, IEEE_802_1AS_AUTO, UNKNOWN_PROFILE };
 
-enum class PtpTransportType {
-  UDP_IP = 0,
-  L2,
-  UNKNOWN_TRANSPORT
-};
+enum class PtpTransportType { UDP_IP = 0, L2, UNKNOWN_TRANSPORT };
 
-enum class PtpSwitchType {
-  NON_TSN = 0,
-  TSN,
-  UNKNOWN_SWITCH
-};
+enum class PtpSwitchType { NON_TSN = 0, TSN, UNKNOWN_SWITCH };
 
 /// @brief not used?
 struct PointField
@@ -428,9 +431,6 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::ROBOSENSE_HELIOS:
       os << "HELIOS";
       break;
-    case SensorModel::ROBOSENSE_BPEARL:
-      os << "BPEARL";
-      break;
     case SensorModel::ROBOSENSE_BPEARL_V3:
       os << "BPEARL V3.0";
       break;
@@ -439,6 +439,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
       break;
     case SensorModel::CONTINENTAL_ARS548:
       os << "ARS548";
+      break;
+    case SensorModel::CONTINENTAL_SRR520:
+      os << "SRR520";
       break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
@@ -462,6 +465,18 @@ struct EthernetSensorConfigurationBase : SensorConfigurationBase
   uint16_t data_port;
 };
 
+/// @brief Base struct for CAN-based Sensor configuration
+struct CANSensorConfigurationBase : SensorConfigurationBase
+{
+  std::string interface;
+  float receiver_timeout_sec{};
+  float sender_timeout_sec{};
+  /// @brief Socketcan filters, see the documentation of SocketCanReceiver::CanFilterList for
+  /// details
+  std::string filters{};
+  bool use_bus_time{};
+};
+
 /// @brief Base struct for Lidar configuration
 struct LidarConfigurationBase : EthernetSensorConfigurationBase
 {
@@ -482,7 +497,8 @@ struct LidarConfigurationBase : EthernetSensorConfigurationBase
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, SensorConfigurationBase const & arg)
 {
-  os << "SensorModel: " << arg.sensor_model << ", FrameID: " << arg.frame_id;
+  os << "Sensor Model: " << arg.sensor_model << '\n';
+  os << "Frame ID: " << arg.frame_id;
   return os;
 }
 
@@ -492,8 +508,25 @@ inline std::ostream & operator<<(std::ostream & os, SensorConfigurationBase cons
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, EthernetSensorConfigurationBase const & arg)
 {
-  os << (SensorConfigurationBase)(arg) << ", HostIP: " << arg.host_ip
-     << ", SensorIP: " << arg.sensor_ip << ", DataPort: " << arg.data_port;
+  os << (SensorConfigurationBase)(arg) << '\n';
+  os << "Host IP: " << arg.host_ip << '\n';
+  os << "Sensor IP: " << arg.sensor_ip << '\n';
+  os << "Data Port: " << arg.data_port;
+  return os;
+}
+
+/// @brief Convert CANSensorConfigurationBase to string (Overloading the << operator)
+/// @param os
+/// @param arg
+/// @return stream
+inline std::ostream & operator<<(std::ostream & os, CANSensorConfigurationBase const & arg)
+{
+  os << (SensorConfigurationBase)(arg) << '\n';
+  os << "Interface: " << arg.interface << '\n';
+  os << "Receiver Timeout (s): " << arg.receiver_timeout_sec << '\n';
+  os << "Sender Timeout (s): " << arg.sender_timeout_sec << '\n';
+  os << "Filters: " << arg.filters << '\n';
+  os << "Use Bus Time: " << arg.use_bus_time;
   return os;
 }
 
@@ -504,9 +537,11 @@ inline std::ostream & operator<<(std::ostream & os, EthernetSensorConfigurationB
 inline std::ostream & operator<<(
   std::ostream & os, nebula::drivers::LidarConfigurationBase const & arg)
 {
-  os << (EthernetSensorConfigurationBase)(arg) << ", ReturnMode: " << arg.return_mode
-     << ", Frequency: " << arg.frequency_ms << ", MTU: " << arg.packet_mtu_size
-     << ", Use sensor time: " << arg.use_sensor_time;
+  os << (EthernetSensorConfigurationBase)(arg) << '\n';
+  os << "Return Mode: " << arg.return_mode << '\n';
+  os << "Frequency: " << arg.frequency_ms << '\n';
+  os << "MTU: " << arg.packet_mtu_size << '\n';
+  os << "Use Sensor Time: " << arg.use_sensor_time;
   return os;
 }
 
@@ -540,10 +575,12 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   if (sensor_model == "VLP16") return SensorModel::VELODYNE_VLP16;
   // Robosense
   if (sensor_model == "Helios") return SensorModel::ROBOSENSE_HELIOS;
-  if (sensor_model == "Bpearl") return SensorModel::ROBOSENSE_BPEARL;
+  if (sensor_model == "Bpearl" || sensor_model == "Bpearl_V4")
+    return SensorModel::ROBOSENSE_BPEARL_V4;
   if (sensor_model == "Bpearl_V3") return SensorModel::ROBOSENSE_BPEARL_V3;
-  if (sensor_model == "Bpearl_V4") return SensorModel::ROBOSENSE_BPEARL_V4;
+  // Continental
   if (sensor_model == "ARS548") return SensorModel::CONTINENTAL_ARS548;
+  if (sensor_model == "SRR520") return SensorModel::CONTINENTAL_SRR520;
   return SensorModel::UNKNOWN;
 }
 
@@ -585,14 +622,15 @@ inline std::string SensorModelToString(const SensorModel & sensor_model)
     // Robosense
     case SensorModel::ROBOSENSE_HELIOS:
       return "Helios";
-    case SensorModel::ROBOSENSE_BPEARL:
-      return "Bpearl";
     case SensorModel::ROBOSENSE_BPEARL_V3:
       return "Bpearl_V3";
     case SensorModel::ROBOSENSE_BPEARL_V4:
       return "Bpearl_V4";
+    // Continental
     case SensorModel::CONTINENTAL_ARS548:
       return "ARS548";
+    case SensorModel::CONTINENTAL_SRR520:
+      return "SRR520";
     default:
       return "UNKNOWN";
   }
@@ -618,13 +656,14 @@ inline PtpProfile PtpProfileFromString(const std::string & ptp_profile)
 {
   // Hesai
   auto tmp_str = ptp_profile;
-  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(),
-                 [](unsigned char c){ return std::tolower(c); });
+  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(), [](unsigned char c) {
+    return std::tolower(c);
+  });
   if (tmp_str == "1588v2") return PtpProfile::IEEE_1588v2;
   if (tmp_str == "802.1as") return PtpProfile::IEEE_802_1AS;
   if (tmp_str == "automotive") return PtpProfile::IEEE_802_1AS_AUTO;
 
-  return PtpProfile::PROFILE_UNKNOWN;
+  return PtpProfile::UNKNOWN_PROFILE;
 }
 
 /// @brief Convert PtpProfile enum to string (Overloading the << operator)
@@ -643,7 +682,7 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpProfile 
     case PtpProfile::IEEE_802_1AS_AUTO:
       os << "IEEE_802.1AS Automotive";
       break;
-    case PtpProfile::PROFILE_UNKNOWN:
+    case PtpProfile::UNKNOWN_PROFILE:
       os << "UNKNOWN";
       break;
   }
@@ -657,8 +696,9 @@ inline PtpTransportType PtpTransportTypeFromString(const std::string & transport
 {
   // Hesai
   auto tmp_str = transport_type;
-  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(),
-                 [](unsigned char c){ return std::tolower(c); });
+  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(), [](unsigned char c) {
+    return std::tolower(c);
+  });
   if (tmp_str == "udp") return PtpTransportType::UDP_IP;
   if (tmp_str == "l2") return PtpTransportType::L2;
 
@@ -692,8 +732,9 @@ inline PtpSwitchType PtpSwitchTypeFromString(const std::string & switch_type)
 {
   // Hesai
   auto tmp_str = switch_type;
-  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(),
-                 [](unsigned char c){ return std::tolower(c); });
+  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(), [](unsigned char c) {
+    return std::tolower(c);
+  });
   if (tmp_str == "tsn") return PtpSwitchType::TSN;
   if (tmp_str == "non_tsn") return PtpSwitchType::NON_TSN;
 

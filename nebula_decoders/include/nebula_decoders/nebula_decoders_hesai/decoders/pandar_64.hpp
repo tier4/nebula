@@ -1,12 +1,24 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_40.hpp"
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -14,10 +26,10 @@ namespace hesai_packet
 
 #pragma pack(push, 1)
 
-typedef Tail40P Tail64;
+using Tail64 = Tail40P;
 struct Packet64 : public PacketBase<6, 64, 2, 100>
 {
-  typedef Body<Block<Unit3B, Packet64::N_CHANNELS>, Packet64::N_BLOCKS> body_t;
+  using body_t = Body<Block<Unit3B, Packet64::N_CHANNELS>, Packet64::N_BLOCKS>;
   Header8B header;
   body_t body;
   Tail64 tail;
@@ -52,5 +64,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

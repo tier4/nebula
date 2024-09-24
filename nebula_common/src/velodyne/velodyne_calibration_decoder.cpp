@@ -8,6 +8,9 @@
 
 #include <nebula_common/velodyne/velodyne_calibration_decoder.hpp>
 
+#include <fstream>
+#include <iostream>
+
 #ifdef HAVE_NEW_YAMLCPP
 namespace YAML
 {
@@ -25,22 +28,22 @@ namespace nebula
 {
 namespace drivers
 {
-const std::string NUM_LASERS = "num_lasers";
-const std::string DISTANCE_RESOLUTION = "distance_resolution";
-const std::string LASERS = "lasers";
-const std::string LASER_ID = "laser_id";
-const std::string ROT_CORRECTION = "rot_correction";
-const std::string VERT_CORRECTION = "vert_correction";
-const std::string DIST_CORRECTION = "dist_correction";
-const std::string TWO_PT_CORRECTION_AVAILABLE = "two_pt_correction_available";
-const std::string DIST_CORRECTION_X = "dist_correction_x";
-const std::string DIST_CORRECTION_Y = "dist_correction_y";
-const std::string VERT_OFFSET_CORRECTION = "vert_offset_correction";
-const std::string HORIZ_OFFSET_CORRECTION = "horiz_offset_correction";
-const std::string MAX_INTENSITY = "max_intensity";
-const std::string MIN_INTENSITY = "min_intensity";
-const std::string FOCAL_DISTANCE = "focal_distance";
-const std::string FOCAL_SLOPE = "focal_slope";
+const char NUM_LASERS[] = "num_lasers";
+const char DISTANCE_RESOLUTION[] = "distance_resolution";
+const char LASERS[] = "lasers";
+const char LASER_ID[] = "laser_id";
+const char ROT_CORRECTION[] = "rot_correction";
+const char VERT_CORRECTION[] = "vert_correction";
+const char DIST_CORRECTION[] = "dist_correction";
+const char TWO_PT_CORRECTION_AVAILABLE[] = "two_pt_correction_available";
+const char DIST_CORRECTION_X[] = "dist_correction_x";
+const char DIST_CORRECTION_Y[] = "dist_correction_y";
+const char VERT_OFFSET_CORRECTION[] = "vert_offset_correction";
+const char HORIZ_OFFSET_CORRECTION[] = "horiz_offset_correction";
+const char MAX_INTENSITY[] = "max_intensity";
+const char MIN_INTENSITY[] = "min_intensity";
+const char FOCAL_DISTANCE[] = "focal_distance";
+const char FOCAL_SLOPE[] = "focal_slope";
 
 /** Read calibration for a single laser. */
 void operator>>(const YAML::Node & node, std::pair<int, VelodyneLaserCorrection> & correction)
@@ -158,7 +161,6 @@ void operator>>(const YAML::Node & node, VelodyneCalibration & calibration)
     }
 
     if (next_index < num_lasers) {  // anything found in this ring?
-
       // store this ring number with its corresponding laser number
       calibration.laser_corrections[next_index].laser_ring = ring;
       next_angle = min_seen;

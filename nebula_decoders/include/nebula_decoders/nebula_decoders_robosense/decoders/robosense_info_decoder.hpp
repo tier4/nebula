@@ -1,13 +1,27 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_common/robosense/robosense_common.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_info_decoder_base.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
 #include <cstdint>
-#include <memory>
+#include <map>
+#include <string>
 #include <vector>
 
 namespace nebula
@@ -36,8 +50,8 @@ public:
     const auto packet_size = raw_packet.size();
     if (packet_size < sizeof(typename SensorT::info_t)) {
       RCLCPP_ERROR_STREAM(
-        logger_, "Packet size mismatch:" << packet_size << " | Expected at least:"
-                                         << sizeof(typename SensorT::info_t));
+        logger_, "Packet size mismatch: " << packet_size << " | Expected at least: "
+                                          << sizeof(typename SensorT::info_t));
       return false;
     }
     try {
