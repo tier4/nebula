@@ -55,7 +55,10 @@
           "$ref": "sub/lidar_hesai.json#/definitions/cut_angle"
         },
         "sensor_model": {
-          "$ref": "sub/lidar_hesai.json#/definitions/sensor_model"
+          "$ref": "sub/lidar_hesai.json#/definitions/sensor_model",
+          "enum": [
+            "Pandar64"
+          ]
         },
         "rotation_speed": {
           "$ref": "sub/lidar_hesai.json#/definitions/rotation_speed"
