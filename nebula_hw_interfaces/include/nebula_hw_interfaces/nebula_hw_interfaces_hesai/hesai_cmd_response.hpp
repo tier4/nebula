@@ -27,6 +27,7 @@
 
 using namespace boost::endian;  // NOLINT(build/namespaces)
 
+
 namespace nebula
 {
 
