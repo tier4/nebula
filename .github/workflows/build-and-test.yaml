@@ -58,9 +58,12 @@ jobs:
 
       - name: Upload coverage to CodeCov
         if: ${{ steps.test.outputs.coverage-report-files != '' }}
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ${{ steps.test.outputs.coverage-report-files }}
+          exclude: build/*,nebula_examples/*
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: tier4/nebula
           fail_ci_if_error: false
           verbose: true
           flags: total
