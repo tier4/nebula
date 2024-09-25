@@ -1,5 +1,9 @@
 # Nebula
 
+[![build-and-test](https://github.com/tier4/nebula/actions/workflows/build-and-test.yaml/badge.svg)](https://github.com/tier4/nebula/actions/workflows/build-and-test.yaml)
+[![documentation](https://github.com/tier4/nebula/actions/workflows/documentation.yml/badge.svg)](https://github.com/tier4/nebula/actions/workflows/documentation.yml)
+[![codecov](https://codecov.io/gh/tier4/nebula/branch/main/graph/badge.svg)](https://codecov.io/gh/tier4/nebula)
+
 ## Welcome to Nebula, the universal sensor driver
 
 Nebula is a sensor driver platform that is designed to provide a unified framework for as wide a variety of devices as possible.
