@@ -63,7 +63,6 @@ jobs:
           files: ${{ steps.test.outputs.coverage-report-files }}
           exclude: build/*,nebula_examples/*
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: tier4/nebula
           fail_ci_if_error: false
           verbose: true
           flags: total
