@@ -71,7 +71,7 @@ public:
   /// @param velodyne_scan Message
   /// @return tuple of Point cloud and timestamp
   std::tuple<drivers::NebulaPointCloudPtr, double> ParseCloudPacket(
-    const std::vector<uint8_t> & packet, int32_t packet_seconds);
+    const std::vector<uint8_t> & packet, double packet_seconds);
 };
 
 }  // namespace drivers

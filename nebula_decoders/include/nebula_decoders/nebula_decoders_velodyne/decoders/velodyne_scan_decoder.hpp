@@ -221,7 +221,7 @@ public:
 
   /// @brief Virtual function for parsing and shaping VelodynePacket
   /// @param pandar_packet
-  virtual void unpack(const std::vector<uint8_t> & packet, int32_t packet_seconds) = 0;
+  virtual void unpack(const std::vector<uint8_t> & packet, double packet_seconds) = 0;
   /// @brief Virtual function for parsing VelodynePacket based on packet structure
   /// @param pandar_packet
   /// @return Resulting flag

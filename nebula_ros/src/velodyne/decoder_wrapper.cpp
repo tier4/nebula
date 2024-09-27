@@ -2,6 +2,8 @@
 
 #include "nebula_ros/velodyne/decoder_wrapper.hpp"
 
+#include <rclcpp/time.hpp>
+
 namespace nebula
 {
 namespace ros
@@ -176,7 +178,8 @@ void VelodyneDecoderWrapper::ProcessCloudPacket(
   nebula::drivers::NebulaPointCloudPtr pointcloud = nullptr;
   {
     std::lock_guard lock(mtx_driver_ptr_);
-    pointcloud_ts = driver_ptr_->ParseCloudPacket(packet_msg->data, packet_msg->stamp.sec);
+    pointcloud_ts =
+      driver_ptr_->ParseCloudPacket(packet_msg->data, rclcpp::Time(packet_msg->stamp).seconds());
     pointcloud = std::get<0>(pointcloud_ts);
   }
 

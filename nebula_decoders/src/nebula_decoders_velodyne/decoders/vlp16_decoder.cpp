@@ -134,7 +134,7 @@ void Vlp16Decoder::reset_overflow(double time_stamp)
   overflow_pc_->points.reserve(max_pts_);
 }
 
-void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, int32_t packet_seconds)
+void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
 {
   checkAndHandleScanComplete(packet, packet_seconds, phase_);
 
