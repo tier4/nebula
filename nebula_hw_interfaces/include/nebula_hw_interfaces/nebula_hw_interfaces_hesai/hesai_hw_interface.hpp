@@ -258,7 +258,7 @@ public:
   std::shared_ptr<HesaiConfigBase> GetConfig();
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_STATUS
   /// @return Resulting status
-  HesaiLidarStatus GetLidarStatus();
+  std::shared_ptr<HesaiLidarStatusBase> GetLidarStatus();
   /// @brief Setting value with PTC_COMMAND_SET_SPIN_RATE
   /// @param rpm Spin rate
   /// @return Resulting status

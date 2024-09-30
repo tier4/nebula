@@ -4,6 +4,11 @@
 
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
+#include <nlohmann/json.hpp>
+#include <string>
+
+using nlohmann::json;
+
 namespace nebula
 {
 namespace ros
@@ -159,7 +164,7 @@ void HesaiHwMonitorWrapper::OnHesaiStatusTimer()
     auto result = hw_interface_->GetLidarStatus();
     std::scoped_lock lock(mtx_lidar_status_);
     current_status_time_.reset(new rclcpp::Time(parent_node_->get_clock()->now()));
-    current_status_.reset(new HesaiLidarStatus(result));
+    current_status_ = result;
   } catch (const std::system_error & error) {
     RCLCPP_ERROR_STREAM(
       rclcpp::get_logger("HesaiHwMonitorWrapper::OnHesaiStatusTimer(std::system_error)"),
@@ -217,20 +222,15 @@ void HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimer()
   RCLCPP_DEBUG_STREAM(logger_, "OnHesaiLidarMonitorTimer END");
 }
 
-void HesaiHwMonitorWrapper::HesaiCheckStatus(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+void HesaiHwMonitorWrapper::HesaiCheckStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
-    uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-    std::vector<std::string> msg;
-
-    diagnostics.add("system_uptime", std::to_string(current_status_->system_uptime.value()));
-    diagnostics.add("startup_times", std::to_string(current_status_->startup_times.value()));
-    diagnostics.add(
-      "total_operation_time", std::to_string(current_status_->total_operation_time.value()));
-
-    diagnostics.summary(level, boost::algorithm::join(msg, ", "));
+    json data = current_status_->to_json();
+    for (auto & [key, value] : data.items()) {
+      diagnostics.add(key, value);
+      std::cout << key << " : " << value << std::endl;
+    }
   } else {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
   }
@@ -240,48 +240,29 @@ void HesaiHwMonitorWrapper::HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWr
 {
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
-    uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-    std::vector<std::string> msg;
-    auto gps_status = current_status_->get_str_gps_pps_lock();
-    auto gprmc_status = current_status_->get_str_gps_gprmc_status();
-    auto ptp_status = current_status_->get_str_ptp_clock_status();
-    std::transform(gps_status.cbegin(), gps_status.cend(), gps_status.begin(), toupper);
-    std::transform(gprmc_status.cbegin(), gprmc_status.cend(), gprmc_status.begin(), toupper);
-    std::transform(ptp_status.cbegin(), ptp_status.cend(), ptp_status.begin(), toupper);
-    diagnostics.add("gps_pps_lock", gps_status);
-    diagnostics.add("gps_gprmc_status", gprmc_status);
-    diagnostics.add("ptp_clock_status", ptp_status);
-    if (gps_status != "UNKNOWN") {
-      msg.emplace_back("gps_pps_lock: " + gps_status);
-    }
-    if (gprmc_status != "UNKNOWN") {
-      msg.emplace_back("gprmc_status: " + gprmc_status);
-    }
-    if (ptp_status != "UNKNOWN") {
-      msg.emplace_back("ptp_status: " + ptp_status);
-    }
-    if (ptp_status == "FREE RUN" && gps_status == "UNKNOWN") {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-    }
-    diagnostics.summary(level, boost::algorithm::join(msg, ", "));
-  } else {
+  json data = current_status_->to_json();
+    for (auto & [key, value] : data.items()) {
+      diagnostics.add(key, value);
+      std::cout << key << " : " << value << std::endl;
+    } 
+  }else {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
   }
 }
 
-void HesaiHwMonitorWrapper::HesaiCheckTemperature(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+void HesaiHwMonitorWrapper::HesaiCheckTemperature(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
-    uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-    std::vector<std::string> msg;
-    for (size_t i = 0; i < std::size(current_status_->temperature); i++) {
-      diagnostics.add(
-        temperature_names_[i],
-        GetFixedPrecisionString(current_status_->temperature[i].value() * 0.01, 3));
+    json data = current_status_->to_json();
+    for (auto & [key, value] : data.items()) {
+      // Skip execpt temperture
+      if (key != "temperture") {continue;}
+      for (auto & [key, value] : data.items()) {
+        diagnostics.add(key, value);
+        std::cout << key << " : " << value << std::endl;    
+      }
     }
-    diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
   }

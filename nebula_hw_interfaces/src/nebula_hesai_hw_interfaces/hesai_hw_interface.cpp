@@ -340,7 +340,7 @@ std::shared_ptr<HesaiConfigBase> HesaiHwInterface::GetConfig()
       std::cout << "Config: " << hesai_config << std::endl;
       return ptr;
     }
-    case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::HESAI_PANDAR128_E4X:
     {
       HesaiConfig_OT128_AT128 hesai_config = CheckSizeAndParse<HesaiConfig_OT128_AT128>(response);
       auto ptr = std::make_shared<HesaiConfig_OT128_AT128>(hesai_config);
@@ -369,11 +369,48 @@ std::shared_ptr<HesaiConfigBase> HesaiHwInterface::GetConfig()
   }
 }
 
-HesaiLidarStatus HesaiHwInterface::GetLidarStatus()
+std::shared_ptr<HesaiLidarStatusBase> HesaiHwInterface::GetLidarStatus()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_GET_LIDAR_STATUS);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
-  return CheckSizeAndParse<HesaiLidarStatus>(response);
+  // auto hesai_lidar_status_base_ptr = std::make_shared<HesaiLidarStatusBase>(response);
+  // return hesai_lidar_status_base_ptr;
+  switch (sensor_configuration_->sensor_model)
+  {
+    case SensorModel::HESAI_PANDAR40P:
+    {
+      auto hesai_config = CheckSizeAndParse<HesaiLidarStatus_XT_40p>(response);
+      auto ptr = std::make_shared<HesaiLidarStatus_XT_40p>(hesai_config);
+      std::cout << "Config: " << hesai_config << std::endl;
+      return ptr;
+    }
+    case SensorModel::HESAI_PANDAR128_E4X:
+    {
+      auto hesai_config = CheckSizeAndParse<HesaiLidarStatusOT128>(response);
+      auto ptr = std::make_shared<HesaiLidarStatusOT128>(hesai_config);
+      std::cout << "Config: " << hesai_config << std::endl;
+      return ptr;
+    }
+    case SensorModel::HESAI_PANDARAT128:
+    {
+      auto hesai_config = CheckSizeAndParse<HesaiLidarStatusAT128>(response);
+      auto ptr = std::make_shared<HesaiLidarStatusAT128>(hesai_config);
+      std::cout << "Config: " << hesai_config << std::endl;
+      return ptr;
+    }
+    case SensorModel::HESAI_PANDARXT32:
+    {
+      auto hesai_config = CheckSizeAndParse<HesaiLidarStatus_XT_40p>(response);
+      auto ptr = std::make_shared<HesaiLidarStatus_XT_40p>(hesai_config);
+      std::cout << "Config: " << hesai_config << std::endl;
+      return ptr;
+    }
+    default:
+    {
+      std::cerr << "This is not Hesai LiDAR" << std::endl;
+      return nullptr;
+    }
+  }
 }
 
 Status HesaiHwInterface::SetSpinRate(uint16_t rpm)
@@ -1319,6 +1356,7 @@ template <typename T>
 T HesaiHwInterface::CheckSizeAndParse(const std::vector<uint8_t> & data)
 {
   if (data.size() < sizeof(T)) {
+    std::cout << "data.size() = " << data.size() << "T size" << sizeof(T) << std::endl;
     throw std::runtime_error("Attempted to parse too-small payload");
   } else if (data.size() > sizeof(T)) {
     PrintError("Sensor returned longer payload than expected. Will parse anyway.");

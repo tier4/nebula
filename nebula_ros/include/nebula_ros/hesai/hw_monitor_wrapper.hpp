@@ -48,6 +48,8 @@ public:
   nebula::Status Status();
 
 private:
+  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> sensor_configuration_;
+
   void InitializeHesaiDiagnostics();
 
   std::string GetPtreeValue(boost::property_tree::ptree * pt, const std::string & key);
@@ -83,11 +85,11 @@ private:
   rclcpp::TimerBase::SharedPtr diagnostics_update_timer_{};
   rclcpp::TimerBase::SharedPtr fetch_diagnostics_timer_{};
 
-  std::unique_ptr<HesaiLidarStatus> current_status_{};
-  std::unique_ptr<HesaiLidarMonitor> current_monitor_{};
-  std::unique_ptr<std::shared_ptr<HesaiConfigBase>> current_config_{};
-  std::unique_ptr<HesaiInventory> current_inventory_{};
-  std::unique_ptr<boost::property_tree::ptree> current_lidar_monitor_tree_{};
+  std::shared_ptr<HesaiLidarStatusBase> current_status_{};
+  std::shared_ptr<HesaiLidarMonitor> current_monitor_{};
+  std::shared_ptr<std::shared_ptr<HesaiConfigBase>> current_config_{};
+  std::shared_ptr<HesaiInventory> current_inventory_{};
+  std::shared_ptr<boost::property_tree::ptree> current_lidar_monitor_tree_{};
 
   std::unique_ptr<rclcpp::Time> current_status_time_{};
   std::unique_ptr<rclcpp::Time> current_config_time_{};
