@@ -45,7 +45,7 @@ struct TailAT128E2X
 struct PacketAT128E2X : public PacketBase<2, 128, 2, 100 * 256>
 {
   using body_t =
-    Body<FineAzimuthBlock<Unit4B, PacketAT128E2X::N_CHANNELS>, PacketAT128E2X::N_BLOCKS>;
+    Body<FineAzimuthBlock<Unit4B, PacketAT128E2X::n_channels>, PacketAT128E2X::n_blocks>;
   Header12B header;
   body_t body;
   uint32_t crc_body;
@@ -64,7 +64,7 @@ class PandarAT128
 : public HesaiSensor<hesai_packet::PacketAT128E2X, AngleCorrectionType::CORRECTION>
 {
 private:
-  static constexpr int firing_time_offset_ns_[128] = {
+  static constexpr int firing_time_offset_ns[128] = {
     0,     0,     8240,  4112,  4144,  8240,  0,     0,     12424, 4144,  4112,  8264,  12376,
     12376, 8264,  12424, 0,     0,     4112,  8240,  4144,  0,     0,     4144,  12424, 8264,
     4112,  12376, 12376, 12424, 8264,  848,   2504,  4976,  6616,  6616,  9112,  2504,  848,
@@ -77,11 +77,11 @@ private:
     0,     0,     12424, 8264,  8240,  4144,  8264,  8240,  12376, 12376, 8264};
 
 public:
-  static constexpr float MIN_RANGE = 1.f;
-  static constexpr float MAX_RANGE = 180.0f;
-  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 307200;
+  static constexpr float min_range = 1.f;
+  static constexpr float max_range = 180.0f;
+  static constexpr size_t max_scan_buffer_points = 307200;
 
-  int getPacketRelativePointTimeOffset(
+  int get_packet_relative_point_time_offset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
@@ -92,7 +92,7 @@ public:
       block_offset_ns = -9249 - 41666;
     }
 
-    return block_offset_ns + firing_time_offset_ns_[channel_id];
+    return block_offset_ns + firing_time_offset_ns[channel_id];
   }
 };
 

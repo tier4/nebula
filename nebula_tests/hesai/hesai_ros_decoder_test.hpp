@@ -127,11 +127,11 @@ public:
 
   /// @brief Get current status of this driver
   /// @return Current status
-  Status GetStatus();
+  Status get_status();
 
   /// @brief Read the specified bag file and compare the constructed point clouds with the
   /// corresponding PCD files
-  void ReadBag(
+  void read_bag(
     std::function<void(uint64_t, uint64_t, nebula::drivers::NebulaPointCloudPtr)> scan_callback);
 
   HesaiRosDecoderTestParams params_;

@@ -26,7 +26,7 @@
 
 namespace nebula::test
 {
-const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[] = {
+const nebula::ros::HesaiRosDecoderTestParams g_test_configs[] = {
   {"Pandar64", "Dual", "Pandar64.csv", "64/all_points", "hesai", 0, 0.0, 0., 360., 0.3f, 200.f},
   {"Pandar64", "Dual", "Pandar64.csv", "64/all_points", "hesai", 0, 180.0, 0., 360., 0.3f, 200.f},
   {"Pandar64", "Dual", "Pandar64.csv", "64/all_points", "hesai", 0, 90.0, 90., 270., 0.3f, 200.f},
@@ -128,7 +128,7 @@ TEST_P(ScanCuttingTest, FovAlignment)
     check_cnt++;
   };
 
-  hesai_driver_->ReadBag(scan_callback);
+  hesai_driver_->read_bag(scan_callback);
   EXPECT_GT(check_cnt, 0);
 }
 
@@ -146,7 +146,7 @@ void ScanCuttingTest::SetUp()
   hesai_driver_ =
     std::make_shared<nebula::ros::HesaiRosDecoderTest>(options, node_name, decoder_params);
 
-  nebula::Status driver_status = hesai_driver_->GetStatus();
+  nebula::Status driver_status = hesai_driver_->get_status();
   if (driver_status != nebula::Status::OK) {
     throw std::runtime_error("Could not initialize driver");
   }
@@ -160,7 +160,7 @@ void ScanCuttingTest::TearDown()
 }
 
 INSTANTIATE_TEST_SUITE_P(
-  TestMain, ScanCuttingTest, testing::ValuesIn(TEST_CONFIGS),
+  TestMain, ScanCuttingTest, testing::ValuesIn(g_test_configs),
   [](const testing::TestParamInfo<nebula::ros::HesaiRosDecoderTestParams> & p) {
     return p.param.sensor_model + "__cut" + std::to_string(static_cast<int>(p.param.cut_angle)) +
            "__fov_start" + std::to_string(static_cast<int>(p.param.fov_start)) + "__fov_end" +

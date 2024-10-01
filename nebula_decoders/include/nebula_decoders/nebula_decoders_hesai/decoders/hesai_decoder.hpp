@@ -77,16 +77,16 @@ protected:
   rclcpp::Logger logger_;
 
   /// @brief For each channel, its firing offset relative to the block in nanoseconds
-  std::array<int, SensorT::packet_t::N_CHANNELS> channel_firing_offset_ns_;
+  std::array<int, SensorT::packet_t::n_channels> channel_firing_offset_ns_;
   /// @brief For each return mode, the firing offset of each block relative to its packet in
   /// nanoseconds
-  std::array<std::array<int, SensorT::packet_t::N_BLOCKS>, SensorT::packet_t::MAX_RETURNS>
+  std::array<std::array<int, SensorT::packet_t::n_blocks>, SensorT::packet_t::max_returns>
     block_firing_offset_ns_;
 
   /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
   /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
-  bool parsePacket(const std::vector<uint8_t> & packet)
+  bool parse_packet(const std::vector<uint8_t> & packet)
   {
     if (packet.size() < sizeof(typename SensorT::packet_t)) {
       RCLCPP_ERROR_STREAM(
@@ -109,14 +109,14 @@ protected:
   /// @param start_block_id The first block in the group of returns
   /// @param n_blocks The number of returns in the group (has to align with the `n_returns` field in
   /// the packet footer)
-  void convertReturns(size_t start_block_id, size_t n_blocks)
+  void convert_returns(size_t start_block_id, size_t n_blocks)
   {
     uint64_t packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
-    uint32_t raw_azimuth = packet_.body.blocks[start_block_id].getAzimuth();
+    uint32_t raw_azimuth = packet_.body.blocks[start_block_id].get_azimuth();
 
     std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units;
 
-    for (size_t channel_id = 0; channel_id < SensorT::packet_t::N_CHANNELS; ++channel_id) {
+    for (size_t channel_id = 0; channel_id < SensorT::packet_t::n_channels; ++channel_id) {
       // Find the units corresponding to the same return group as the current one.
       // These are used to find duplicates in multi-return mode.
       return_units.clear();
@@ -132,16 +132,16 @@ protected:
           continue;
         }
 
-        float distance = getDistance(unit);
+        float distance = get_distance(unit);
 
         if (
-          distance < SensorT::MIN_RANGE || SensorT::MAX_RANGE < distance ||
+          distance < SensorT::min_range || SensorT::max_range < distance ||
           distance < sensor_configuration_->min_range ||
           sensor_configuration_->max_range < distance) {
           continue;
         }
 
-        auto return_type = sensor_.getReturnType(
+        auto return_type = sensor_.get_return_type(
           static_cast<hesai_packet::return_mode::ReturnMode>(packet_.tail.return_mode),
           block_offset, return_units);
 
@@ -160,7 +160,7 @@ protected:
             }
 
             if (
-              fabsf(getDistance(*return_units[return_idx]) - distance) <
+              fabsf(get_distance(*return_units[return_idx]) - distance) <
               sensor_configuration_->dual_return_distance_threshold) {
               is_below_multi_return_threshold = true;
               break;
@@ -173,7 +173,7 @@ protected:
         }
 
         CorrectedAngleData corrected_angle_data =
-          angle_corrector_.getCorrectedAngleData(raw_azimuth, channel_id);
+          angle_corrector_.get_corrected_angle_data(raw_azimuth, channel_id);
         float azimuth = corrected_angle_data.azimuth_rad;
 
         bool in_fov = angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.fov_max, azimuth);
@@ -184,7 +184,7 @@ protected:
         bool in_current_scan = true;
 
         if (
-          angle_corrector_.isInsideOverlap(last_azimuth_, raw_azimuth) &&
+          angle_corrector_.is_inside_overlap(last_azimuth_, raw_azimuth) &&
           angle_is_between(
             scan_cut_angles_.scan_emit_angle, scan_cut_angles_.scan_emit_angle + deg2rad(20),
             azimuth)) {
@@ -198,7 +198,7 @@ protected:
         NebulaPoint & point = pc->emplace_back();
         point.distance = distance;
         point.intensity = unit.reflectivity;
-        point.time_stamp = getPointTimeRelative(
+        point.time_stamp = get_point_time_relative(
           scan_timestamp_ns, packet_timestamp_ns, block_offset + start_block_id, channel_id);
 
         point.return_type = static_cast<uint8_t>(return_type);
@@ -219,7 +219,7 @@ protected:
   }
 
   /// @brief Get the distance of the given unit in meters
-  float getDistance(const typename SensorT::packet_t::body_t::block_t::unit_t & unit)
+  float get_distance(const typename SensorT::packet_t::body_t::block_t::unit_t & unit)
   {
     return unit.distance * hesai_packet::get_dis_unit(packet_);
   }
@@ -230,11 +230,11 @@ protected:
   /// @param packet_timestamp_ns The timestamp of the current PandarPacket in nanoseconds
   /// @param block_id The block index of the point
   /// @param channel_id The channel index of the point
-  uint32_t getPointTimeRelative(
+  uint32_t get_point_time_relative(
     uint64_t scan_timestamp_ns, uint64_t packet_timestamp_ns, size_t block_id, size_t channel_id)
   {
     auto point_to_packet_offset_ns =
-      sensor_.getPacketRelativePointTimeOffset(block_id, channel_id, packet_);
+      sensor_.get_packet_relative_point_time_offset(block_id, channel_id, packet_);
     auto packet_to_scan_offset_ns = static_cast<uint32_t>(packet_timestamp_ns - scan_timestamp_ns);
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
   }
@@ -259,8 +259,8 @@ public:
     decode_pc_ = std::make_shared<NebulaPointCloud>();
     output_pc_ = std::make_shared<NebulaPointCloud>();
 
-    decode_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
-    output_pc_->reserve(SensorT::MAX_SCAN_BUFFER_POINTS);
+    decode_pc_->reserve(SensorT::max_scan_buffer_points);
+    output_pc_->reserve(SensorT::max_scan_buffer_points);
 
     scan_cut_angles_ = {
       deg2rad(sensor_configuration_->cloud_min_angle),
@@ -269,14 +269,14 @@ public:
 
   int unpack(const std::vector<uint8_t> & packet) override
   {
-    if (!parsePacket(packet)) {
+    if (!parse_packet(packet)) {
       return -1;
     }
 
     // This is the first scan, set scan timestamp to whatever packet arrived first
     if (decode_scan_timestamp_ns_ == 0) {
       decode_scan_timestamp_ns_ = hesai_packet::get_timestamp_ns(packet_) +
-                                  sensor_.getEarliestPointTimeOffsetForBlock(0, packet_);
+                                  sensor_.get_earliest_point_time_offset_for_block(0, packet_);
     }
 
     if (has_scanned_) {
@@ -285,13 +285,13 @@ public:
     }
 
     const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
-    for (size_t block_id = 0; block_id < SensorT::packet_t::N_BLOCKS; block_id += n_returns) {
-      auto block_azimuth = packet_.body.blocks[block_id].getAzimuth();
+    for (size_t block_id = 0; block_id < SensorT::packet_t::n_blocks; block_id += n_returns) {
+      auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
 
-      if (angle_corrector_.passedTimestampResetAngle(last_azimuth_, block_azimuth)) {
+      if (angle_corrector_.passed_timestamp_reset_angle(last_azimuth_, block_azimuth)) {
         uint64_t new_scan_timestamp_ns =
           hesai_packet::get_timestamp_ns(packet_) +
-          sensor_.getEarliestPointTimeOffsetForBlock(block_id, packet_);
+          sensor_.get_earliest_point_time_offset_for_block(block_id, packet_);
 
         if (sensor_configuration_->cut_angle == sensor_configuration_->cloud_max_angle) {
           // In the non-360 deg case, if the cut angle and FoV end coincide, the old pointcloud has
@@ -308,14 +308,14 @@ public:
         }
       }
 
-      if (!angle_corrector_.isInsideFoV(last_azimuth_, block_azimuth)) {
+      if (!angle_corrector_.is_inside_fov(last_azimuth_, block_azimuth)) {
         last_azimuth_ = block_azimuth;
         continue;
       }
 
-      convertReturns(block_id, n_returns);
+      convert_returns(block_id, n_returns);
 
-      if (angle_corrector_.passedEmitAngle(last_azimuth_, block_azimuth)) {
+      if (angle_corrector_.passed_emit_angle(last_azimuth_, block_azimuth)) {
         // The current `decode` pointcloud is ready for publishing, swap buffers to continue with
         // the last `output` pointcloud as the `decode pointcloud.
         std::swap(decode_pc_, output_pc_);
@@ -329,9 +329,9 @@ public:
     return last_azimuth_;
   }
 
-  bool hasScanned() override { return has_scanned_; }
+  bool has_scanned() override { return has_scanned_; }
 
-  std::tuple<drivers::NebulaPointCloudPtr, double> getPointcloud() override
+  std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() override
   {
     double scan_timestamp_s = static_cast<double>(output_scan_timestamp_ns_) * 1e-9;
     return std::make_pair(output_pc_, scan_timestamp_s);

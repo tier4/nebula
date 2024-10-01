@@ -41,12 +41,12 @@ template <size_t ChannelN, size_t AngleUnit>
 class AngleCorrectorCorrectionBased : public AngleCorrector<HesaiCorrection>
 {
 private:
-  static constexpr size_t MAX_AZIMUTH = 360 * AngleUnit;
+  static constexpr size_t max_azimuth = 360 * AngleUnit;
   const std::shared_ptr<const HesaiCorrection> correction_;
   rclcpp::Logger logger_;
 
-  std::array<float, MAX_AZIMUTH> cos_{};
-  std::array<float, MAX_AZIMUTH> sin_{};
+  std::array<float, max_azimuth> cos_{};
+  std::array<float, max_azimuth> sin_{};
 
   struct FrameAngleInfo
   {
@@ -62,7 +62,7 @@ private:
   /// @brief For a given azimuth value, find its corresponding output field
   /// @param azimuth The azimuth to get the field for
   /// @return The correct output field, as specified in @ref HesaiCorrection
-  int findField(uint32_t azimuth)
+  int find_field(uint32_t azimuth)
   {
     // Assumes that:
     // * none of the startFrames are defined as > 360 deg (< 0 not possible since they are unsigned)
@@ -83,7 +83,7 @@ private:
   bool are_corrected_angles_above_threshold(uint32_t azi, double threshold, bool any, bool eq_ok)
   {
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-      auto azi_corr = getCorrectedAngleData(azi, channel_id).azimuth_rad;
+      auto azi_corr = get_corrected_angle_data(azi, channel_id).azimuth_rad;
       if (!any && (azi_corr < threshold || (!eq_ok && azi_corr == threshold))) return false;
       if (any && (azi_corr > threshold || (eq_ok && azi_corr == threshold))) return true;
     }
@@ -100,7 +100,7 @@ private:
 
     if (end - start <= 1) {
       bool result_start = are_corrected_angles_above_threshold(
-        normalize_angle<uint32_t>(start, MAX_AZIMUTH), threshold, any, eq_ok);
+        normalize_angle<uint32_t>(start, max_azimuth), threshold, any, eq_ok);
       if (result_start) return start;
       return end;
     }
@@ -108,7 +108,7 @@ private:
     uint32_t next = (start + end) / 2;
 
     bool result_next = are_corrected_angles_above_threshold(
-      normalize_angle<uint32_t>(next, MAX_AZIMUTH), threshold, any, eq_ok);
+      normalize_angle<uint32_t>(next, max_azimuth), threshold, any, eq_ok);
     if (result_next) return bin_search(start, next, threshold, any, eq_ok);
     return bin_search(next + 1, end, threshold, any, eq_ok);
   }
@@ -130,8 +130,8 @@ public:
     // Trigonometry lookup tables
     // ////////////////////////////////////////
 
-    for (size_t i = 0; i < MAX_AZIMUTH; ++i) {
-      float rad = 2.f * i * M_PIf / MAX_AZIMUTH;
+    for (size_t i = 0; i < max_azimuth; ++i) {
+      float rad = 2.f * i * M_PIf / max_azimuth;
       cos_[i] = cosf(rad);
       sin_[i] = sinf(rad);
     }
@@ -148,7 +148,7 @@ public:
     for (size_t field_id = 0; field_id < correction_->frameNumber; ++field_id) {
       auto frame_start = correction_->startFrame[field_id];
       auto frame_end = correction_->endFrame[field_id];
-      if (frame_end < frame_start) frame_end += MAX_AZIMUTH;
+      if (frame_end < frame_start) frame_end += max_azimuth;
 
       FrameAngleInfo & angle_info = frame_angle_info_.emplace_back();
 
@@ -177,33 +177,33 @@ public:
     }
   }
 
-  CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) override
+  CorrectedAngleData get_corrected_angle_data(uint32_t block_azimuth, uint32_t channel_id) override
   {
-    int field = findField(block_azimuth);
+    int field = find_field(block_azimuth);
 
     int32_t elevation = correction_->elevation[channel_id] +
-                        correction_->getElevationAdjustV3(channel_id, block_azimuth) *
+                        correction_->get_elevation_adjust_v3(channel_id, block_azimuth) *
                           static_cast<int32_t>(AngleUnit / 100);
 
     // Allow negative angles in the radian value. This makes visualization of this field nicer and
     // should have no other mathematical implications in downstream modules.
-    float elevation_rad = 2.f * elevation * M_PI / MAX_AZIMUTH;
+    float elevation_rad = 2.f * elevation * M_PI / max_azimuth;
     // Then, normalize the integer value to the positive [0, MAX_AZIMUTH] range for array indexing
-    elevation = (MAX_AZIMUTH + elevation) % MAX_AZIMUTH;
+    elevation = (max_azimuth + elevation) % max_azimuth;
 
-    int32_t azimuth = (block_azimuth + MAX_AZIMUTH - correction_->startFrame[field]) * 2 -
+    int32_t azimuth = (block_azimuth + max_azimuth - correction_->startFrame[field]) * 2 -
                       correction_->azimuth[channel_id] +
-                      correction_->getAzimuthAdjustV3(channel_id, block_azimuth) *
+                      correction_->get_azimuth_adjust_v3(channel_id, block_azimuth) *
                         static_cast<int32_t>(AngleUnit / 100);
-    azimuth = (MAX_AZIMUTH + azimuth) % MAX_AZIMUTH;
+    azimuth = (max_azimuth + azimuth) % max_azimuth;
 
-    float azimuth_rad = 2.f * azimuth * M_PI / MAX_AZIMUTH;
+    float azimuth_rad = 2.f * azimuth * M_PI / max_azimuth;
 
     return {azimuth_rad,   elevation_rad,   sin_[azimuth],
             cos_[azimuth], sin_[elevation], cos_[elevation]};
   }
 
-  bool passedEmitAngle(uint32_t last_azimuth, uint32_t current_azimuth) override
+  bool passed_emit_angle(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
     for (const auto & frame_angles : frame_angle_info_) {
       if (angle_is_between(last_azimuth, current_azimuth, frame_angles.scan_emit, false))
@@ -213,7 +213,7 @@ public:
     return false;
   }
 
-  bool passedTimestampResetAngle(uint32_t last_azimuth, uint32_t current_azimuth) override
+  bool passed_timestamp_reset_angle(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
     for (const auto & frame_angles : frame_angle_info_) {
       if (angle_is_between(last_azimuth, current_azimuth, frame_angles.timestamp_reset, false))
@@ -223,7 +223,7 @@ public:
     return false;
   }
 
-  bool isInsideFoV(uint32_t last_azimuth, uint32_t current_azimuth) override
+  bool is_inside_fov(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
     for (const auto & frame_angles : frame_angle_info_) {
       if (
@@ -235,7 +235,7 @@ public:
     return false;
   }
 
-  bool isInsideOverlap(uint32_t last_azimuth, uint32_t current_azimuth) override
+  bool is_inside_overlap(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
     for (const auto & frame_angles : frame_angle_info_) {
       if (

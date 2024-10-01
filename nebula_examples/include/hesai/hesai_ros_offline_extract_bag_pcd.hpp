@@ -44,16 +44,16 @@ class HesaiRosOfflineExtractBag final : public rclcpp::Node
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_cfg_ptr_;
   std::shared_ptr<drivers::HesaiCorrection> correction_cfg_ptr_;
 
-  Status InitializeDriver(
+  Status initialize_driver(
     std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
     std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calibration_configuration);
 
-  Status GetParameters(
+  Status get_parameters(
     drivers::HesaiSensorConfiguration & sensor_configuration,
     drivers::HesaiCalibrationConfiguration & calibration_configuration,
     drivers::HesaiCorrection & correction_configuration);
 
-  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
+  static inline std::chrono::nanoseconds seconds_to_chrono_nano_seconds(const double seconds)
   {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::duration<double>(seconds));
@@ -63,19 +63,19 @@ public:
   explicit HesaiRosOfflineExtractBag(
     const rclcpp::NodeOptions & options, const std::string & node_name);
 
-  Status GetStatus();
-  Status ReadBag();
+  Status get_status();
+  Status read_bag();
 
 private:
-  std::string bag_path;
-  std::string storage_id;
-  std::string out_path;
-  std::string format;
-  std::string target_topic;
-  std::string correction_file_path;
-  int out_num;
-  int skip_num;
-  bool only_xyz;
+  std::string bag_path_;
+  std::string storage_id_;
+  std::string out_path_;
+  std::string format_;
+  std::string target_topic_;
+  std::string correction_file_path_;
+  int out_num_;
+  int skip_num_;
+  bool only_xyz_;
 };
 
 }  // namespace ros

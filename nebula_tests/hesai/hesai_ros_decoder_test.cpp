@@ -68,10 +68,10 @@ Status HesaiRosDecoderTest::InitializeDriver(
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
     std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
     calibration_configuration);
-  return driver_ptr_->GetStatus();
+  return driver_ptr_->get_status();
 }
 
-Status HesaiRosDecoderTest::GetStatus()
+Status HesaiRosDecoderTest::get_status()
 {
   return wrapper_status_;
 }
@@ -88,7 +88,7 @@ Status HesaiRosDecoderTest::GetParameters(
 
   sensor_configuration.sensor_model =
     nebula::drivers::sensor_model_from_string(params_.sensor_model);
-  sensor_configuration.return_mode = nebula::drivers::ReturnModeFromStringHesai(
+  sensor_configuration.return_mode = nebula::drivers::return_mode_from_string_hesai(
     params_.return_mode, sensor_configuration.sensor_model);
   sensor_configuration.frame_id = params_.frame_id;
   sensor_configuration.sync_angle = params_.sync_angle;
@@ -121,7 +121,8 @@ Status HesaiRosDecoderTest::GetParameters(
   }
 
   if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
-    auto cal_status = correction_configuration.LoadFromFile(sensor_configuration.calibration_path);
+    auto cal_status =
+      correction_configuration.load_from_file(sensor_configuration.calibration_path);
     if (cal_status != Status::OK) {
       RCLCPP_ERROR_STREAM(
         this->get_logger(),
@@ -129,7 +130,8 @@ Status HesaiRosDecoderTest::GetParameters(
       return cal_status;
     }
   } else {
-    auto cal_status = calibration_configuration.LoadFromFile(sensor_configuration.calibration_path);
+    auto cal_status =
+      calibration_configuration.load_from_file(sensor_configuration.calibration_path);
     if (cal_status != Status::OK) {
       RCLCPP_ERROR_STREAM(
         this->get_logger(),
@@ -142,7 +144,7 @@ Status HesaiRosDecoderTest::GetParameters(
   return Status::OK;
 }
 
-void HesaiRosDecoderTest::ReadBag(
+void HesaiRosDecoderTest::read_bag(
   std::function<void(uint64_t, uint64_t, nebula::drivers::NebulaPointCloudPtr)> scan_callback)
 {
   rosbag2_storage::StorageOptions storage_options;
@@ -185,7 +187,7 @@ void HesaiRosDecoderTest::ReadBag(
       auto extracted_msg_ptr = std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg);
 
       for (auto & pkt : extracted_msg_ptr->packets) {
-        auto pointcloud_ts = driver_ptr_->ParseCloudPacket(
+        auto pointcloud_ts = driver_ptr_->parse_cloud_packet(
           std::vector<uint8_t>(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size)));
         auto pointcloud = std::get<0>(pointcloud_ts);
         auto scan_timestamp = std::get<1>(pointcloud_ts);

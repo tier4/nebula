@@ -40,37 +40,37 @@ public:
     const std::shared_ptr<nebula::drivers::HesaiHwInterface> & hw_interface,
     std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config);
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & /* new_config */)
   {
   }
 
-  nebula::Status Status();
+  nebula::Status status();
 
 private:
-  void InitializeHesaiDiagnostics();
+  void initialize_hesai_diagnostics();
 
-  std::string GetPtreeValue(boost::property_tree::ptree * pt, const std::string & key);
+  std::string get_ptree_value(boost::property_tree::ptree * pt, const std::string & key);
 
-  std::string GetFixedPrecisionString(double val, int pre);
+  std::string get_fixed_precision_string(double val, int pre);
 
-  void OnHesaiStatusTimer();
+  void on_hesai_status_timer();
 
-  void OnHesaiLidarMonitorTimerHttp();
+  void on_hesai_lidar_monitor_timer_http();
 
-  void OnHesaiLidarMonitorTimer();
+  void on_hesai_lidar_monitor_timer();
 
-  void HesaiCheckStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void hesai_check_status(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void hesai_check_ptp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckTemperature(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void hesai_check_temperature(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void hesai_check_rpm(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckVoltageHttp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void hesai_check_voltage_http(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckVoltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void hesai_check_voltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
   rclcpp::Logger logger_;
   diagnostic_updater::Updater diagnostics_updater_;
@@ -107,9 +107,9 @@ private:
 
   bool supports_monitor_;
 
-  const std::string MSG_NOT_SUPPORTED = "Not supported";
-  const std::string MSG_ERROR = "Error";
-  const std::string MSG_SEP = ": ";
+  const std::string MSG_NOT_SUPPORTED_ = "Not supported";
+  const std::string MSG_ERROR_ = "Error";
+  const std::string MSG_SEP_ = ": ";
 };
 }  // namespace ros
 }  // namespace nebula
