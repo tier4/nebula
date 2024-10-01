@@ -15,13 +15,13 @@ To build Nebula run the following commands in your workspace:
 
 ```bash
 # In workspace
-mkdir src
-git clone https://github.com/tier4/nebula.git src
+git clone https://github.com/tier4/nebula.git
+cd nebula
 # Import dependencies
-vcs import src < src/build_depends.repos
-rosdep install --from-paths src --ignore-src -y -r
+vcs import < build_depends.repos
+rosdep install --from-paths . --ignore-src -y -r
 # Build Nebula
-colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 ```
 
 ## Testing your build
