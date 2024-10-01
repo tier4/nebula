@@ -60,7 +60,7 @@ public:
   /// @brief Setting CalibrationConfiguration (not used)
   /// @param calibration_configuration
   /// @return Resulting status
-  Status SetCalibrationConfiguration(
+  Status set_calibration_configuration(
     const CalibrationConfigurationBase & calibration_configuration) override;
 
   /// @brief Get current status of this driver

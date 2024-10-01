@@ -41,7 +41,7 @@ public:
   /// @brief Virtual function for setting calibration configuration
   /// @param calibration_configuration CalibrationConfiguration including file path
   /// @return Resulting status
-  virtual Status SetCalibrationConfiguration(
+  virtual Status set_calibration_configuration(
     const CalibrationConfigurationBase & calibration_configuration) = 0;
 };
 

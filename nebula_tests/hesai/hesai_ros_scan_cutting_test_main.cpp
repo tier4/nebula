@@ -97,7 +97,7 @@ TEST_P(ScanCuttingTest, FovAlignment)
         threshold_angle, drivers::normalize_angle(fov_max_rad, 2 * M_PIf), p.azimuth);
     }
 
-    bool is_at128 = drivers::SensorModelFromString(hesai_driver_->params_.sensor_model) ==
+    bool is_at128 = drivers::sensor_model_from_string(hesai_driver_->params_.sensor_model) ==
                     drivers::SensorModel::HESAI_PANDARAT128;
     // There is a bug in AT128's firm- or hardware that skips a few channels at the beginning of the
     // defined FoV. for that reason, relax test conditions in the case where that bug happens.

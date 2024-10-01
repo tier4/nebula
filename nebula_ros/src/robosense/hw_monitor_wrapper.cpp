@@ -32,7 +32,7 @@ void RobosenseHwMonitorWrapper::InitializeRobosenseDiagnostics()
     return;
   }
 
-  auto hw_id = nebula::drivers::SensorModelToString(sensor_cfg_ptr_->sensor_model) + ": " +
+  auto hw_id = nebula::drivers::sensor_model_to_string(sensor_cfg_ptr_->sensor_model) + ": " +
                current_sensor_info_["serial_number"];
 
   RCLCPP_INFO(logger_, "InitializeRobosenseDiagnostics");

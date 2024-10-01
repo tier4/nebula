@@ -72,7 +72,7 @@ enum class ReturnMode : uint8_t {
 /// @brief Convert ReturnMode enum to ReturnType enum for Pandar AT, XTM (temporary, not used)
 /// @param mode
 /// @return Corresponding mode
-inline ReturnType ReturnModeToReturnType(const ReturnMode & mode)
+inline ReturnType return_mode_to_return_type(const ReturnMode & mode)
 {
   switch (mode) {
     case ReturnMode::SINGLE_STRONGEST:
@@ -140,7 +140,7 @@ inline ReturnType ReturnModeToReturnType(const ReturnMode & mode)
 /// @brief Convert ReturnMode enum to integer
 /// @param mode
 /// @return Corresponding number
-inline uint8_t ReturnModeToInt(const ReturnMode & mode)
+inline uint8_t return_mode_to_int(const ReturnMode & mode)
 {
   switch (mode) {
     case ReturnMode::SINGLE_STRONGEST:
@@ -554,7 +554,7 @@ struct CalibrationConfigurationBase
 /// @brief Convert sensor name to SensorModel enum (Upper and lower case letters must match)
 /// @param sensor_model Sensor name (Upper and lower case letters must match)
 /// @return Corresponding SensorModel
-inline SensorModel SensorModelFromString(const std::string & sensor_model)
+inline SensorModel sensor_model_from_string(const std::string & sensor_model)
 {
   // Hesai
   if (sensor_model == "Pandar64") return SensorModel::HESAI_PANDAR64;
@@ -584,7 +584,7 @@ inline SensorModel SensorModelFromString(const std::string & sensor_model)
   return SensorModel::UNKNOWN;
 }
 
-inline std::string SensorModelToString(const SensorModel & sensor_model)
+inline std::string sensor_model_to_string(const SensorModel & sensor_model)
 {
   switch (sensor_model) {
     // Hesai
@@ -639,7 +639,7 @@ inline std::string SensorModelToString(const SensorModel & sensor_model)
 /// @brief Convert return mode name to ReturnMode enum
 /// @param return_mode Return mode name (Upper and lower case letters must match)
 /// @return Corresponding ReturnMode
-inline ReturnMode ReturnModeFromString(const std::string & return_mode)
+inline ReturnMode return_mode_from_string(const std::string & return_mode)
 {
   if (return_mode == "SingleFirst") return ReturnMode::SINGLE_FIRST;
   if (return_mode == "SingleStrongest") return ReturnMode::SINGLE_STRONGEST;
@@ -652,7 +652,7 @@ inline ReturnMode ReturnModeFromString(const std::string & return_mode)
 /// @brief Converts String to PTP Profile
 /// @param ptp_profile Profile as String
 /// @return Corresponding PtpProfile
-inline PtpProfile PtpProfileFromString(const std::string & ptp_profile)
+inline PtpProfile ptp_profile_from_string(const std::string & ptp_profile)
 {
   // Hesai
   auto tmp_str = ptp_profile;
@@ -692,7 +692,7 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpProfile 
 /// @brief Converts String to PTP TransportType
 /// @param transport_type Transport as String
 /// @return Corresponding PtpTransportType
-inline PtpTransportType PtpTransportTypeFromString(const std::string & transport_type)
+inline PtpTransportType ptp_transport_type_from_string(const std::string & transport_type)
 {
   // Hesai
   auto tmp_str = transport_type;
@@ -728,7 +728,7 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpTranspor
 /// @brief Converts String to PTP SwitchType
 /// @param switch_type Switch as String
 /// @return Corresponding PtpSwitchType
-inline PtpSwitchType PtpSwitchTypeFromString(const std::string & switch_type)
+inline PtpSwitchType ptp_switch_type_from_string(const std::string & switch_type)
 {
   // Hesai
   auto tmp_str = switch_type;
@@ -761,13 +761,13 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpSwitchTy
   return os;
 }
 
-[[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr convertPointXYZIRADTToPointXYZIR(
+[[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr convert_point_xyziradt_to_point_xyzir(
   const pcl::PointCloud<PointXYZIRADT>::ConstPtr & input_pointcloud);
 
-[[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr convertPointXYZIRCAEDTToPointXYZIR(
+[[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr convert_point_xyzircaedt_to_point_xyzir(
   const pcl::PointCloud<PointXYZIRCAEDT>::ConstPtr & input_pointcloud);
 
-pcl::PointCloud<PointXYZIRADT>::Ptr convertPointXYZIRCAEDTToPointXYZIRADT(
+pcl::PointCloud<PointXYZIRADT>::Ptr convert_point_xyzircaedt_to_point_xyziradt(
   const pcl::PointCloud<PointXYZIRCAEDT>::ConstPtr & input_pointcloud, double stamp);
 
 /// @brief Converts degrees to radians

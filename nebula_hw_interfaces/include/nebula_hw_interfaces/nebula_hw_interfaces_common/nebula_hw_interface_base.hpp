@@ -34,7 +34,7 @@ protected:
    * @param buffer Buffer containing the data received from the UDP socket
    * @return Status::OK if no error occurred.
    */
-  virtual void ReceiveSensorPacketCallback([[maybe_unused]] std::vector<uint8_t> & buffer) {}
+  virtual void receive_sensor_packet_callback([[maybe_unused]] std::vector<uint8_t> & buffer) {}
   //  virtual Status RegisterScanCallback(
   //    std::function<void(std::unique_ptr<std::vector<std::vector<uint8_t>>>)> scan_callback) = 0;
 
@@ -48,29 +48,29 @@ public:
 
   /// @brief Virtual function for starting the interface that handles UDP streams
   /// @return Resulting status
-  virtual Status SensorInterfaceStart() = 0;
+  virtual Status sensor_interface_start() = 0;
 
   /// @brief Virtual function for stopping the interface that handles UDP streams
   /// @return Resulting status
-  virtual Status SensorInterfaceStop() = 0;
+  virtual Status sensor_interface_stop() = 0;
   // You may want to also implement GpsInterfaceStart() and ReceiveGpsCallback, but that is sensor
   // specific.
 
   /// @brief Virtual function for setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
-  virtual Status SetSensorConfiguration(
+  virtual Status set_sensor_configuration(
     std::shared_ptr<SensorConfigurationBase> sensor_configuration) = 0;
 
   /// @brief Virtual function for printing sensor configuration
   /// @param sensor_configuration SensorConfiguration for the checking
   /// @return Resulting status
-  virtual Status GetSensorConfiguration(SensorConfigurationBase & sensor_configuration) = 0;
+  virtual Status get_sensor_configuration(SensorConfigurationBase & sensor_configuration) = 0;
 
   /// @brief Virtual function for printing calibration configuration
   /// @param calibration_configuration CalibrationConfiguration for the checking
   /// @return Resulting status
-  virtual Status GetCalibrationConfiguration(
+  virtual Status get_calibration_configuration(
     [[maybe_unused]] CalibrationConfigurationBase & calibration_configuration)
   {
     return Status::NOT_IMPLEMENTED;

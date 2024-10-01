@@ -109,7 +109,7 @@ void RobosenseDecoderWrapper::ProcessCloudPacket(
     aw_points_base_pub_->get_subscription_count() > 0 ||
     aw_points_base_pub_->get_intra_process_subscription_count() > 0) {
     const auto autoware_cloud_xyzi =
-      nebula::drivers::convertPointXYZIRCAEDTToPointXYZIR(pointcloud);
+      nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(pointcloud);
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_cloud_xyzi, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
@@ -119,7 +119,7 @@ void RobosenseDecoderWrapper::ProcessCloudPacket(
   if (
     aw_points_ex_pub_->get_subscription_count() > 0 ||
     aw_points_ex_pub_->get_intra_process_subscription_count() > 0) {
-    const auto autoware_ex_cloud = nebula::drivers::convertPointXYZIRCAEDTToPointXYZIRADT(
+    const auto autoware_ex_cloud = nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(
       pointcloud, std::get<1>(pointcloud_ts));
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);

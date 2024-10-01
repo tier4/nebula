@@ -101,11 +101,11 @@ std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ParseCloudPacket(
   return pointcloud;
 }
 
-Status HesaiDriver::SetCalibrationConfiguration(
+Status HesaiDriver::set_calibration_configuration(
   const HesaiCalibrationConfigurationBase & calibration_configuration)
 {
   throw std::runtime_error(
-    "SetCalibrationConfiguration. Not yet implemented (" +
+    "set_calibration_configuration. Not yet implemented (" +
     calibration_configuration.calibration_file + ")");
 }
 

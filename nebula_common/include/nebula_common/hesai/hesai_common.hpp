@@ -429,7 +429,7 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
 <option value="6">First Return + Last Return + Strongest Return</option>
 */
 
-/// @brief Convert return mode name to ReturnMode enum (Hesai-specific ReturnModeFromString)
+/// @brief Convert return mode name to ReturnMode enum (Hesai-specific return_mode_from_string)
 /// @param return_mode Return mode name (Upper and lower case letters must match)
 /// @param sensor_model Model for correct conversion
 /// @return Corresponding ReturnMode

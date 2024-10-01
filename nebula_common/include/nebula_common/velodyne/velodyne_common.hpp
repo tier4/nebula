@@ -69,7 +69,7 @@ struct VelodyneCalibrationConfiguration : CalibrationConfigurationBase
   }
 };
 
-/// @brief Convert return mode name to ReturnMode enum (Velodyne-specific ReturnModeFromString)
+/// @brief Convert return mode name to ReturnMode enum (Velodyne-specific return_mode_from_string)
 /// @param return_mode Return mode name (Upper and lower case letters must match)
 /// @return Corresponding ReturnMode
 inline ReturnMode ReturnModeFromStringVelodyne(const std::string & return_mode)

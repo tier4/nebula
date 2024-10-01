@@ -41,11 +41,11 @@ VelodyneDriver::VelodyneDriver(
   }
 }
 
-Status VelodyneDriver::SetCalibrationConfiguration(
+Status VelodyneDriver::set_calibration_configuration(
   const CalibrationConfigurationBase & calibration_configuration)
 {
   throw std::runtime_error(
-    "SetCalibrationConfiguration. Not yet implemented (" +
+    "set_calibration_configuration. Not yet implemented (" +
     calibration_configuration.calibration_file + ")");
 }
 

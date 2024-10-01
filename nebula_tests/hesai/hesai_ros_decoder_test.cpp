@@ -86,7 +86,8 @@ Status HesaiRosDecoderTest::GetParameters(
   std::filesystem::path bag_root_dir = _SRC_RESOURCES_DIR_PATH;
   bag_root_dir /= "hesai";
 
-  sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(params_.sensor_model);
+  sensor_configuration.sensor_model =
+    nebula::drivers::sensor_model_from_string(params_.sensor_model);
   sensor_configuration.return_mode = nebula::drivers::ReturnModeFromStringHesai(
     params_.return_mode, sensor_configuration.sensor_model);
   sensor_configuration.frame_id = params_.frame_id;

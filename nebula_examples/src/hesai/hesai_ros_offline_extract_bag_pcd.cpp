@@ -85,7 +85,7 @@ Status HesaiRosOfflineExtractBag::GetParameters(
   drivers::HesaiCorrection & correction_configuration)
 {
   auto sensor_model_ = this->declare_parameter<std::string>("sensor_model", "", param_read_only());
-  sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(sensor_model_);
+  sensor_configuration.sensor_model = nebula::drivers::sensor_model_from_string(sensor_model_);
   auto return_mode_ = this->declare_parameter<std::string>("return_mode", "", param_read_only());
   sensor_configuration.return_mode =
     nebula::drivers::ReturnModeFromStringHesai(return_mode_, sensor_configuration.sensor_model);

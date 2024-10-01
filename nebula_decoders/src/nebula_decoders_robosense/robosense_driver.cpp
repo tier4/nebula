@@ -45,11 +45,11 @@ Status RobosenseDriver::GetStatus()
   return driver_status_;
 }
 
-Status RobosenseDriver::SetCalibrationConfiguration(
+Status RobosenseDriver::set_calibration_configuration(
   const CalibrationConfigurationBase & calibration_configuration)
 {
   throw std::runtime_error(
-    "SetCalibrationConfiguration. Not yet implemented (" +
+    "set_calibration_configuration. Not yet implemented (" +
     calibration_configuration.calibration_file + ")");
 }
 

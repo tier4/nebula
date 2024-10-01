@@ -63,7 +63,7 @@ public:
   /// @brief Setting CalibrationConfiguration (not used)
   /// @param calibration_configuration
   /// @return Resulting status
-  Status SetCalibrationConfiguration(
+  Status set_calibration_configuration(
     const HesaiCalibrationConfigurationBase & calibration_configuration);
 
   /// @brief Convert raw packet to pointcloud

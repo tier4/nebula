@@ -78,7 +78,7 @@ nebula::Status ContinentalARS548RosWrapper::DeclareAndGetSensorConfigParams()
 {
   nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration config;
 
-  config.sensor_model = nebula::drivers::SensorModelFromString(
+  config.sensor_model = nebula::drivers::sensor_model_from_string(
     declare_parameter<std::string>("sensor_model", param_read_only()));
   config.host_ip = declare_parameter<std::string>("host_ip", param_read_only());
   config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());

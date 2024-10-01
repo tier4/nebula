@@ -53,7 +53,7 @@ inline std::ostream & operator<<(std::ostream & os, RobosenseSensorConfiguration
   return os;
 }
 
-/// @brief Convert return mode name to ReturnMode enum (Robosense-specific ReturnModeFromString)
+/// @brief Convert return mode name to ReturnMode enum (Robosense-specific return_mode_from_string)
 /// @param return_mode Return mode name (Upper and lower case letters must match)
 /// @return Corresponding ReturnMode
 inline ReturnMode ReturnModeFromStringRobosense(const std::string & return_mode)

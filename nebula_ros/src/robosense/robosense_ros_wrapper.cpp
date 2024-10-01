@@ -72,7 +72,7 @@ nebula::Status RobosenseRosWrapper::DeclareAndGetSensorConfigParams()
   nebula::drivers::RobosenseSensorConfiguration config;
 
   auto _sensor_model = declare_parameter<std::string>("sensor_model", param_read_only());
-  config.sensor_model = drivers::SensorModelFromString(_sensor_model);
+  config.sensor_model = drivers::sensor_model_from_string(_sensor_model);
 
   auto _return_mode = declare_parameter<std::string>("return_mode", param_read_write());
   config.return_mode = drivers::ReturnModeFromStringRobosense(_return_mode);
@@ -250,7 +250,7 @@ rcl_interfaces::msg::SetParametersResult RobosenseRosWrapper::OnParameterChange(
   }
 
   if (_return_mode.length() > 0)
-    new_cfg.return_mode = nebula::drivers::ReturnModeFromString(_return_mode);
+    new_cfg.return_mode = nebula::drivers::return_mode_from_string(_return_mode);
 
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::RobosenseSensorConfiguration>(new_cfg);
   auto status = ValidateAndSetConfig(new_cfg_ptr);

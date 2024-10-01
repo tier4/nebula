@@ -79,7 +79,7 @@ nebula::Status ContinentalSRR520RosWrapper::DeclareAndGetSensorConfigParams()
 {
   nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration config;
 
-  config.sensor_model = nebula::drivers::SensorModelFromString(
+  config.sensor_model = nebula::drivers::sensor_model_from_string(
     declare_parameter<std::string>("sensor_model", param_read_only()));
   config.interface = declare_parameter<std::string>("interface", param_read_only());
   config.receiver_timeout_sec =

@@ -95,7 +95,7 @@ Status ContinentalRosDecoderTest::GetParameters(
     _SRC_RESOURCES_DIR_PATH;  // variable defined in CMakeLists.txt;
   bag_root_dir /= "continental";
 
-  sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(
+  sensor_configuration.sensor_model = nebula::drivers::sensor_model_from_string(
     declare_parameter<std::string>("sensor_model", "SRR520", param_read_only()));
   sensor_configuration.frame_id =
     declare_parameter<std::string>("frame_id", "some_sensor_frame", param_read_only());

@@ -99,7 +99,7 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
   nebula::drivers::HesaiSensorConfiguration config;
 
   auto _sensor_model = declare_parameter<std::string>("sensor_model", param_read_only());
-  config.sensor_model = drivers::SensorModelFromString(_sensor_model);
+  config.sensor_model = drivers::sensor_model_from_string(_sensor_model);
 
   auto _return_mode = declare_parameter<std::string>("return_mode", param_read_write());
   config.return_mode = drivers::ReturnModeFromStringHesai(_return_mode, config.sensor_model);
@@ -169,10 +169,10 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
     declare_parameter<std::string>(calibration_parameter_name, param_read_write());
 
   auto _ptp_profile = declare_parameter<std::string>("ptp_profile", param_read_only());
-  config.ptp_profile = drivers::PtpProfileFromString(_ptp_profile);
+  config.ptp_profile = drivers::ptp_profile_from_string(_ptp_profile);
 
   auto _ptp_transport = declare_parameter<std::string>("ptp_transport_type", param_read_only());
-  config.ptp_transport_type = drivers::PtpTransportTypeFromString(_ptp_transport);
+  config.ptp_transport_type = drivers::ptp_transport_type_from_string(_ptp_transport);
 
   if (
     config.ptp_transport_type != drivers::PtpTransportType::L2 &&
@@ -187,7 +187,7 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
   }
 
   auto _ptp_switch = declare_parameter<std::string>("ptp_switch_type", param_read_only());
-  config.ptp_switch_type = drivers::PtpSwitchTypeFromString(_ptp_switch);
+  config.ptp_switch_type = drivers::ptp_switch_type_from_string(_ptp_switch);
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();

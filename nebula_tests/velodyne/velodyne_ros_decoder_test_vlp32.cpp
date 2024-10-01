@@ -78,7 +78,7 @@ Status VelodyneRosDecoderTest::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("sensor_model", "VLP32");
     sensor_configuration.sensor_model =
-      nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
+      nebula::drivers::sensor_model_from_string(this->get_parameter("sensor_model").as_string());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -88,7 +88,7 @@ Status VelodyneRosDecoderTest::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("return_mode", "SingleStrongest", descriptor);
     sensor_configuration.return_mode =
-      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
+      nebula::drivers::return_mode_from_string(this->get_parameter("return_mode").as_string());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
