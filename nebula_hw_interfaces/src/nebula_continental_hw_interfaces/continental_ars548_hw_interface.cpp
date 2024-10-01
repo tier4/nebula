@@ -448,15 +448,15 @@ Status ContinentalARS548HwInterface::SetVelocityVehicle(float velocity_kmh)
   constexpr uint8_t VELOCITY_VEHICLE_LENGTH = 28;
   const int VELOCITY_VEHICLE_UDP_SIZE = 36;
 
-  VelocityVehiclePacket steering_angle_front_axle_packet{};
+  VelocityVehiclePacket velocity_vehicle_packet{};
   static_assert(sizeof(VelocityVehiclePacket) == VELOCITY_VEHICLE_UDP_SIZE);
-  steering_angle_front_axle_packet.header.service_id = VELOCITY_VEHICLE_SERVICE_ID;
-  steering_angle_front_axle_packet.header.method_id = VELOCITY_VEHICLE_METHOD_ID;
-  steering_angle_front_axle_packet.header.length = VELOCITY_VEHICLE_LENGTH;
-  steering_angle_front_axle_packet.velocity_vehicle = velocity_kmh;
+  velocity_vehicle_packet.header.service_id = VELOCITY_VEHICLE_SERVICE_ID;
+  velocity_vehicle_packet.header.method_id = VELOCITY_VEHICLE_METHOD_ID;
+  velocity_vehicle_packet.header.length = VELOCITY_VEHICLE_LENGTH;
+  velocity_vehicle_packet.velocity_vehicle = velocity_kmh;
 
   std::vector<uint8_t> send_vector(sizeof(VelocityVehiclePacket));
-  std::memcpy(send_vector.data(), &steering_angle_front_axle_packet, sizeof(VelocityVehiclePacket));
+  std::memcpy(send_vector.data(), &velocity_vehicle_packet, sizeof(VelocityVehiclePacket));
 
   if (!sensor_udp_driver_ptr_->sender()->isOpen()) {
     return Status::ERROR_1;
