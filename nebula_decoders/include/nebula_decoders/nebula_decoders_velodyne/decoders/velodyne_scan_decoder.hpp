@@ -165,10 +165,10 @@ protected:
   /// TODO: this has been moved from velodyne_hw_interface.cpp and is a temporary solution until
   /// the Velodyne decoder uses the same structure as Hesai/Robosense
   /// @param packet The packet buffer to extract azimuths from
-  /// @param packet_seconds The seconds-since-epoch part of the packet's timestamp
+  /// @param packet_seconds The packet's timestamp in seconds, including the sub-second part
   /// @param phase The sensor's scan phase used for scan cutting
   void checkAndHandleScanComplete(
-    const std::vector<uint8_t> & packet, int32_t packet_seconds, const uint32_t phase)
+    const std::vector<uint8_t> & packet, double packet_seconds, const uint32_t phase)
   {
     if (has_scanned_) {
       processed_packets_ = 0;
