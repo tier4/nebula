@@ -40,7 +40,7 @@ RobosenseDriver::RobosenseDriver(
   }
 }
 
-Status RobosenseDriver::GetStatus()
+Status RobosenseDriver::get_status()
 {
   return driver_status_;
 }
@@ -53,7 +53,7 @@ Status RobosenseDriver::set_calibration_configuration(
     calibration_configuration.calibration_file + ")");
 }
 
-std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ParseCloudPacket(
+std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::parse_cloud_packet(
   const std::vector<uint8_t> & packet)
 {
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
@@ -65,8 +65,8 @@ std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ParseCloudPack
   }
 
   scan_decoder_->unpack(packet);
-  if (scan_decoder_->hasScanned()) {
-    pointcloud = scan_decoder_->getPointcloud();
+  if (scan_decoder_->has_scanned()) {
+    pointcloud = scan_decoder_->get_pointcloud();
   }
 
   return pointcloud;

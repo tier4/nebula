@@ -39,23 +39,23 @@ public:
   /// @brief Parses DIFOP and add its telemetry
   /// @param raw_packet The incoming DIFOP packet
   /// @return Whether the packet was parsed successfully
-  virtual bool parsePacket(const std::vector<uint8_t> & raw_packet) = 0;
+  virtual bool parse_packet(const std::vector<uint8_t> & raw_packet) = 0;
 
   /// @brief Get the sensor telemetry
   /// @return The sensor telemetry
-  virtual std::map<std::string, std::string> getSensorInfo() = 0;
+  virtual std::map<std::string, std::string> get_sensor_info() = 0;
 
   /// @brief Get the laser return mode
   /// @return The laser return mode
-  virtual ReturnMode getReturnMode() = 0;
+  virtual ReturnMode get_return_mode() = 0;
 
   /// @brief Get sensor calibration
   /// @return The sensor calibration
-  virtual RobosenseCalibrationConfiguration getSensorCalibration() = 0;
+  virtual RobosenseCalibrationConfiguration get_sensor_calibration() = 0;
 
   /// @brief Get the status of time synchronization
   /// @return True if the sensor's clock is synchronized
-  virtual bool getSyncStatus() = 0;
+  virtual bool get_sync_status() = 0;
 };
 
 }  // namespace drivers

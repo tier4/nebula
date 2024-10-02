@@ -21,7 +21,7 @@ RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
 {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
-  wrapper_status_ = DeclareAndGetSensorConfigParams();
+  wrapper_status_ = declare_and_get_sensor_config_params();
 
   if (wrapper_status_ != Status::OK) {
     throw std::runtime_error(
@@ -42,20 +42,20 @@ RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
 
   decoder_thread_ = std::thread([this]() {
     while (true) {
-      decoder_wrapper_->ProcessCloudPacket(packet_queue_.pop());
+      decoder_wrapper_->process_cloud_packet(packet_queue_.pop());
     }
   });
 
   if (launch_hw_) {
-    hw_interface_wrapper_->HwInterface()->RegisterScanCallback(
-      std::bind(&RobosenseRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
-    hw_interface_wrapper_->HwInterface()->RegisterInfoCallback(
-      std::bind(&RobosenseRosWrapper::ReceiveInfoPacketCallback, this, std::placeholders::_1));
-    StreamStart();
+    hw_interface_wrapper_->hw_interface()->register_scan_callback(
+      std::bind(&RobosenseRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1));
+    hw_interface_wrapper_->hw_interface()->register_info_callback(
+      std::bind(&RobosenseRosWrapper::receive_info_packet_callback, this, std::placeholders::_1));
+    stream_start();
   } else {
     packets_sub_ = create_subscription<robosense_msgs::msg::RobosenseScan>(
       "robosense_packets", rclcpp::SensorDataQoS(),
-      std::bind(&RobosenseRosWrapper::ReceiveScanMessageCallback, this, std::placeholders::_1));
+      std::bind(&RobosenseRosWrapper::receive_scan_message_callback, this, std::placeholders::_1));
     RCLCPP_INFO_STREAM(
       get_logger(),
       "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
@@ -64,10 +64,10 @@ RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
   // Register parameter callback after all params have been declared. Otherwise it would be called
   // once for each declaration
   parameter_event_cb_ = add_on_set_parameters_callback(
-    std::bind(&RobosenseRosWrapper::OnParameterChange, this, std::placeholders::_1));
+    std::bind(&RobosenseRosWrapper::on_parameter_change, this, std::placeholders::_1));
 }
 
-nebula::Status RobosenseRosWrapper::DeclareAndGetSensorConfigParams()
+nebula::Status RobosenseRosWrapper::declare_and_get_sensor_config_params()
 {
   nebula::drivers::RobosenseSensorConfiguration config;
 
@@ -75,7 +75,7 @@ nebula::Status RobosenseRosWrapper::DeclareAndGetSensorConfigParams()
   config.sensor_model = drivers::sensor_model_from_string(_sensor_model);
 
   auto _return_mode = declare_parameter<std::string>("return_mode", param_read_write());
-  config.return_mode = drivers::ReturnModeFromStringRobosense(_return_mode);
+  config.return_mode = drivers::return_mode_from_string_robosense(_return_mode);
 
   config.host_ip = declare_parameter<std::string>("host_ip", param_read_only());
   config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());
@@ -98,10 +98,10 @@ nebula::Status RobosenseRosWrapper::DeclareAndGetSensorConfigParams()
   }
 
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::RobosenseSensorConfiguration>(config);
-  return ValidateAndSetConfig(new_cfg_ptr);
+  return validate_and_set_config(new_cfg_ptr);
 }
 
-Status RobosenseRosWrapper::ValidateAndSetConfig(
+Status RobosenseRosWrapper::validate_and_set_config(
   std::shared_ptr<const drivers::RobosenseSensorConfiguration> & new_config)
 {
   if (new_config->sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
@@ -115,20 +115,20 @@ Status RobosenseRosWrapper::ValidateAndSetConfig(
   }
 
   if (hw_interface_wrapper_) {
-    hw_interface_wrapper_->OnConfigChange(new_config);
+    hw_interface_wrapper_->on_config_change(new_config);
   }
   if (hw_monitor_wrapper_) {
-    hw_monitor_wrapper_->OnConfigChange(new_config);
+    hw_monitor_wrapper_->on_config_change(new_config);
   }
   if (decoder_wrapper_) {
-    decoder_wrapper_->OnConfigChange(new_config);
+    decoder_wrapper_->on_config_change(new_config);
   }
 
   sensor_cfg_ptr_ = new_config;
   return Status::OK;
 }
 
-void RobosenseRosWrapper::ReceiveScanMessageCallback(
+void RobosenseRosWrapper::receive_scan_message_callback(
   std::unique_ptr<robosense_msgs::msg::RobosenseScan> scan_msg)
 {
   if (hw_interface_wrapper_) {
@@ -148,14 +148,14 @@ void RobosenseRosWrapper::ReceiveScanMessageCallback(
   }
 }
 
-void RobosenseRosWrapper::ReceiveInfoPacketCallback(std::vector<uint8_t> & packet)
+void RobosenseRosWrapper::receive_info_packet_callback(std::vector<uint8_t> & packet)
 {
   if (!sensor_cfg_ptr_ || !info_driver_) {
     throw std::runtime_error(
       "Wrapper already receiving packets despite not being fully initialized yet.");
   }
 
-  auto status = info_driver_->DecodeInfoPacket(packet);
+  auto status = info_driver_->decode_info_packet(packet);
 
   if (status != nebula::Status::OK) {
     RCLCPP_ERROR_STREAM_THROTTLE(
@@ -165,14 +165,14 @@ void RobosenseRosWrapper::ReceiveInfoPacketCallback(std::vector<uint8_t> & packe
 
   if (!decoder_wrapper_) {
     auto new_cfg = *sensor_cfg_ptr_;
-    new_cfg.return_mode = info_driver_->GetReturnMode();
-    new_cfg.use_sensor_time = info_driver_->GetSyncStatus();
-    auto calib = info_driver_->GetSensorCalibration();
-    calib.CreateCorrectedChannels();
+    new_cfg.return_mode = info_driver_->get_return_mode();
+    new_cfg.use_sensor_time = info_driver_->get_sync_status();
+    auto calib = info_driver_->get_sensor_calibration();
+    calib.create_corrected_channels();
 
     auto new_cfg_ptr =
       std::make_shared<const nebula::drivers::RobosenseSensorConfiguration>(new_cfg);
-    status = ValidateAndSetConfig(new_cfg_ptr);
+    status = validate_and_set_config(new_cfg_ptr);
 
     if (status != nebula::Status::OK) {
       RCLCPP_ERROR_STREAM_THROTTLE(
@@ -184,44 +184,44 @@ void RobosenseRosWrapper::ReceiveInfoPacketCallback(std::vector<uint8_t> & packe
     auto calib_ptr =
       std::make_shared<const nebula::drivers::RobosenseCalibrationConfiguration>(std::move(calib));
     decoder_wrapper_.emplace(
-      this, hw_interface_wrapper_ ? hw_interface_wrapper_->HwInterface() : nullptr, sensor_cfg_ptr_,
-      calib_ptr);
+      this, hw_interface_wrapper_ ? hw_interface_wrapper_->hw_interface() : nullptr,
+      sensor_cfg_ptr_, calib_ptr);
     RCLCPP_INFO_STREAM(
-      this->get_logger(), "Initialized decoder wrapper: " << decoder_wrapper_->Status());
+      this->get_logger(), "Initialized decoder wrapper: " << decoder_wrapper_->status());
   }
 
   if (!hw_monitor_wrapper_) {
     return;
   }
 
-  hw_monitor_wrapper_->DiagnosticsCallback(info_driver_->GetSensorInfo());
+  hw_monitor_wrapper_->diagnostics_callback(info_driver_->get_sensor_info());
 }
 
-Status RobosenseRosWrapper::GetStatus()
+Status RobosenseRosWrapper::get_status()
 {
   return wrapper_status_;
 }
 
-Status RobosenseRosWrapper::StreamStart()
+Status RobosenseRosWrapper::stream_start()
 {
   if (!hw_interface_wrapper_) {
     return Status::UDP_CONNECTION_ERROR;
   }
 
-  if (hw_interface_wrapper_->Status() != Status::OK) {
-    return hw_interface_wrapper_->Status();
+  if (hw_interface_wrapper_->status() != Status::OK) {
+    return hw_interface_wrapper_->status();
   }
 
-  auto info_status = hw_interface_wrapper_->HwInterface()->InfoInterfaceStart();
+  auto info_status = hw_interface_wrapper_->hw_interface()->info_interface_start();
 
   if (info_status != Status::OK) {
     return info_status;
   }
 
-  return hw_interface_wrapper_->HwInterface()->SensorInterfaceStart();
+  return hw_interface_wrapper_->hw_interface()->sensor_interface_start();
 }
 
-rcl_interfaces::msg::SetParametersResult RobosenseRosWrapper::OnParameterChange(
+rcl_interfaces::msg::SetParametersResult RobosenseRosWrapper::on_parameter_change(
   const std::vector<rclcpp::Parameter> & p)
 {
   using rcl_interfaces::msg::SetParametersResult;
@@ -253,7 +253,7 @@ rcl_interfaces::msg::SetParametersResult RobosenseRosWrapper::OnParameterChange(
     new_cfg.return_mode = nebula::drivers::return_mode_from_string(_return_mode);
 
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::RobosenseSensorConfiguration>(new_cfg);
-  auto status = ValidateAndSetConfig(new_cfg_ptr);
+  auto status = validate_and_set_config(new_cfg_ptr);
 
   if (status != Status::OK) {
     RCLCPP_WARN_STREAM(get_logger(), "OnParameterChange aborted: " << status);
@@ -266,9 +266,9 @@ rcl_interfaces::msg::SetParametersResult RobosenseRosWrapper::OnParameterChange(
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-void RobosenseRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
+void RobosenseRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & packet)
 {
-  if (!decoder_wrapper_ || decoder_wrapper_->Status() != Status::OK) {
+  if (!decoder_wrapper_ || decoder_wrapper_->status() != Status::OK) {
     return;
   }
 

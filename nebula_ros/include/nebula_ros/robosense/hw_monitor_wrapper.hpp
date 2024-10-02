@@ -43,22 +43,22 @@ public:
     rclcpp::Node * const parent_node,
     std::shared_ptr<const nebula::drivers::RobosenseSensorConfiguration> & config);
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<const nebula::drivers::RobosenseSensorConfiguration> & new_config);
 
   /// @brief Callback for receiving DIFOP packet
   /// @param info_msg Received DIFOP packet
-  void DiagnosticsCallback(const std::map<std::string, std::string> & diag_info);
+  void diagnostics_callback(const std::map<std::string, std::string> & diag_info);
 
 private:
   /// @brief Initializing diagnostics
-  void InitializeRobosenseDiagnostics();
+  void initialize_robosense_diagnostics();
   /// @brief Callback of the timer for getting the current lidar status
-  void OnRobosenseStatusTimer();
+  void on_robosense_status_timer();
 
   /// @brief Check status information from RobosenseLidarStatus for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void RobosenseCheckStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void robosense_check_status(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
   rclcpp::Node * parent_;
   rclcpp::Logger logger_;

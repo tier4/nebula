@@ -32,12 +32,12 @@ public:
     rclcpp::Node * const parent_node,
     std::shared_ptr<const nebula::drivers::RobosenseSensorConfiguration> & config);
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<const nebula::drivers::RobosenseSensorConfiguration> & new_config);
 
-  nebula::Status Status();
+  nebula::Status status();
 
-  std::shared_ptr<drivers::RobosenseHwInterface> HwInterface() const;
+  std::shared_ptr<drivers::RobosenseHwInterface> hw_interface() const;
 
 private:
   std::shared_ptr<drivers::RobosenseHwInterface> hw_interface_;

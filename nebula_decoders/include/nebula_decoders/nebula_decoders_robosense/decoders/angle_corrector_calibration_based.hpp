@@ -29,16 +29,16 @@ template <size_t ChannelN, size_t AngleUnit>
 class AngleCorrectorCalibrationBased : public AngleCorrector
 {
 private:
-  static constexpr size_t MAX_AZIMUTH = 360 * AngleUnit;
+  static constexpr size_t max_azimuth = 360 * AngleUnit;
 
   std::array<float, ChannelN> elevation_angle_rad_{};
   std::array<float, ChannelN> azimuth_offset_rad_{};
-  std::array<float, MAX_AZIMUTH> block_azimuth_rad_{};
+  std::array<float, max_azimuth> block_azimuth_rad_{};
 
   std::array<float, ChannelN> elevation_cos_{};
   std::array<float, ChannelN> elevation_sin_{};
-  std::array<std::array<float, ChannelN>, MAX_AZIMUTH> azimuth_cos_{};
-  std::array<std::array<float, ChannelN>, MAX_AZIMUTH> azimuth_sin_{};
+  std::array<std::array<float, ChannelN>, max_azimuth> azimuth_cos_{};
+  std::array<std::array<float, ChannelN>, max_azimuth> azimuth_sin_{};
 
 public:
   explicit AngleCorrectorCalibrationBased(
@@ -51,7 +51,7 @@ public:
     }
 
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-      const auto correction = sensor_calibration->GetCorrection(channel_id);
+      const auto correction = sensor_calibration->get_correction(channel_id);
       float elevation_angle_deg = correction.elevation;
       float azimuth_offset_deg = correction.azimuth;
 
@@ -62,7 +62,7 @@ public:
       elevation_sin_[channel_id] = sinf(elevation_angle_rad_[channel_id]);
     }
 
-    for (size_t block_azimuth = 0; block_azimuth < MAX_AZIMUTH; block_azimuth++) {
+    for (size_t block_azimuth = 0; block_azimuth < max_azimuth; block_azimuth++) {
       block_azimuth_rad_[block_azimuth] = deg2rad(block_azimuth / static_cast<double>(AngleUnit));
 
       for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
@@ -75,7 +75,7 @@ public:
     }
   }
 
-  CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) override
+  CorrectedAngleData get_corrected_angle_data(uint32_t block_azimuth, uint32_t channel_id) override
   {
     float azimuth_rad = block_azimuth_rad_[block_azimuth] + azimuth_offset_rad_[channel_id];
     float elevation_rad = elevation_angle_rad_[channel_id];
@@ -90,7 +90,7 @@ public:
       sensor_calibration_->calibration[channel_id].channel};
   }
 
-  bool hasScanned(int current_azimuth, int last_azimuth) override
+  bool has_scanned(int current_azimuth, int last_azimuth) override
   {
     return current_azimuth < last_azimuth;
   }
