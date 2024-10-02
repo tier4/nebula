@@ -47,7 +47,7 @@ class VelodyneRosDecoderTest final : public rclcpp::Node
   /// @param sensor_configuration SensorConfiguration for this driver
   /// @param calibration_configuration CalibrationConfiguration for this driver
   /// @return Resulting status
-  Status InitializeDriver(
+  Status initialize_driver(
     std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_configuration,
     std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration);
 
@@ -56,14 +56,14 @@ class VelodyneRosDecoderTest final : public rclcpp::Node
   /// @param sensor_configuration Output of SensorConfiguration
   /// @param calibration_configuration Output of CalibrationConfiguration
   /// @return Resulting status
-  Status GetParameters(
+  Status get_parameters(
     drivers::VelodyneSensorConfiguration & sensor_configuration,
     drivers::VelodyneCalibrationConfiguration & calibration_configuration);
 
   /// @brief Convert seconds to chrono::nanoseconds
   /// @param seconds
   /// @return chrono::nanoseconds
-  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
+  static inline std::chrono::nanoseconds seconds_to_chrono_nano_seconds(const double seconds)
   {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::duration<double>(seconds));
@@ -75,11 +75,11 @@ public:
 
   /// @brief Get current status of this driver
   /// @return Current status
-  Status GetStatus();
+  Status get_status();
 
   /// @brief Read the specified bag file and compare the constructed point clouds with the
   /// corresponding PCD files
-  void ReadBag();
+  void read_bag();
   /*
   void SetUp() override {
     // Setup things that should occur before every test instance should go here
@@ -91,11 +91,11 @@ public:
   }
 */
 private:
-  std::string bag_path;
-  std::string storage_id;
-  std::string format;
-  std::string target_topic;
-  std::string correction_file_path;
+  std::string bag_path_;
+  std::string storage_id_;
+  std::string format_;
+  std::string target_topic_;
+  std::string correction_file_path_;
 };
 
 }  // namespace ros

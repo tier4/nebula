@@ -28,45 +28,45 @@ namespace nebula
 {
 namespace drivers
 {
-const char NUM_LASERS[] = "num_lasers";
-const char DISTANCE_RESOLUTION[] = "distance_resolution";
-const char LASERS[] = "lasers";
-const char LASER_ID[] = "laser_id";
-const char ROT_CORRECTION[] = "rot_correction";
-const char VERT_CORRECTION[] = "vert_correction";
-const char DIST_CORRECTION[] = "dist_correction";
-const char TWO_PT_CORRECTION_AVAILABLE[] = "two_pt_correction_available";
-const char DIST_CORRECTION_X[] = "dist_correction_x";
-const char DIST_CORRECTION_Y[] = "dist_correction_y";
-const char VERT_OFFSET_CORRECTION[] = "vert_offset_correction";
-const char HORIZ_OFFSET_CORRECTION[] = "horiz_offset_correction";
-const char MAX_INTENSITY[] = "max_intensity";
-const char MIN_INTENSITY[] = "min_intensity";
-const char FOCAL_DISTANCE[] = "focal_distance";
-const char FOCAL_SLOPE[] = "focal_slope";
+const char g_num_lasers[] = "num_lasers";
+const char g_distance_resolution[] = "distance_resolution";
+const char g_lasers[] = "lasers";
+const char g_laser_id[] = "laser_id";
+const char g_rot_correction[] = "rot_correction";
+const char g_vert_correction[] = "vert_correction";
+const char g_dist_correction[] = "dist_correction";
+const char g_two_pt_correction_available[] = "two_pt_correction_available";
+const char g_dist_correction_x[] = "dist_correction_x";
+const char g_dist_correction_y[] = "dist_correction_y";
+const char g_vert_offset_correction[] = "vert_offset_correction";
+const char g_horiz_offset_correction[] = "horiz_offset_correction";
+const char g_max_intensity[] = "max_intensity";
+const char g_min_intensity[] = "min_intensity";
+const char g_focal_distance[] = "focal_distance";
+const char g_focal_slope[] = "focal_slope";
 
 /** Read calibration for a single laser. */
 void operator>>(const YAML::Node & node, std::pair<int, VelodyneLaserCorrection> & correction)
 {
-  node[LASER_ID] >> correction.first;
-  node[ROT_CORRECTION] >> correction.second.rot_correction;
-  node[VERT_CORRECTION] >> correction.second.vert_correction;
-  node[DIST_CORRECTION] >> correction.second.dist_correction;
+  node[g_laser_id] >> correction.first;
+  node[g_rot_correction] >> correction.second.rot_correction;
+  node[g_vert_correction] >> correction.second.vert_correction;
+  node[g_dist_correction] >> correction.second.dist_correction;
 #ifdef HAVE_NEW_YAMLCPP
-  if (node[TWO_PT_CORRECTION_AVAILABLE])
-    node[TWO_PT_CORRECTION_AVAILABLE] >> correction.second.two_pt_correction_available;
+  if (node[g_two_pt_correction_available])
+    node[g_two_pt_correction_available] >> correction.second.two_pt_correction_available;
 #else
   if (const YAML::Node * pName = node.FindValue(TWO_PT_CORRECTION_AVAILABLE))
     *pName >> correction.second.two_pt_correction_available;
 #endif
   else
     correction.second.two_pt_correction_available = false;
-  node[DIST_CORRECTION_X] >> correction.second.dist_correction_x;
-  node[DIST_CORRECTION_Y] >> correction.second.dist_correction_y;
-  node[VERT_OFFSET_CORRECTION] >> correction.second.vert_offset_correction;
+  node[g_dist_correction_x] >> correction.second.dist_correction_x;
+  node[g_dist_correction_y] >> correction.second.dist_correction_y;
+  node[g_vert_offset_correction] >> correction.second.vert_offset_correction;
 #ifdef HAVE_NEW_YAMLCPP
-  if (node[HORIZ_OFFSET_CORRECTION])
-    node[HORIZ_OFFSET_CORRECTION] >> correction.second.horiz_offset_correction;
+  if (node[g_horiz_offset_correction])
+    node[g_horiz_offset_correction] >> correction.second.horiz_offset_correction;
 #else
   if (const YAML::Node * pName = node.FindValue(HORIZ_OFFSET_CORRECTION))
     *pName >> correction.second.horiz_offset_correction;
@@ -76,8 +76,8 @@ void operator>>(const YAML::Node & node, std::pair<int, VelodyneLaserCorrection>
 
   const YAML::Node * max_intensity_node = NULL;
 #ifdef HAVE_NEW_YAMLCPP
-  if (node[MAX_INTENSITY]) {
-    const YAML::Node max_intensity_node_ref = node[MAX_INTENSITY];
+  if (node[g_max_intensity]) {
+    const YAML::Node max_intensity_node_ref = node[g_max_intensity];
     max_intensity_node = &max_intensity_node_ref;
   }
 #else
@@ -93,8 +93,8 @@ void operator>>(const YAML::Node & node, std::pair<int, VelodyneLaserCorrection>
 
   const YAML::Node * min_intensity_node = NULL;
 #ifdef HAVE_NEW_YAMLCPP
-  if (node[MIN_INTENSITY]) {
-    const YAML::Node min_intensity_node_ref = node[MIN_INTENSITY];
+  if (node[g_min_intensity]) {
+    const YAML::Node min_intensity_node_ref = node[g_min_intensity];
     min_intensity_node = &min_intensity_node_ref;
   }
 #else
@@ -107,8 +107,8 @@ void operator>>(const YAML::Node & node, std::pair<int, VelodyneLaserCorrection>
   } else {
     correction.second.min_intensity = 0;
   }
-  node[FOCAL_DISTANCE] >> correction.second.focal_distance;
-  node[FOCAL_SLOPE] >> correction.second.focal_slope;
+  node[g_focal_distance] >> correction.second.focal_distance;
+  node[g_focal_slope] >> correction.second.focal_slope;
 
   // Calculate cached values
   correction.second.cos_rot_correction = cosf(correction.second.rot_correction);
@@ -123,10 +123,10 @@ void operator>>(const YAML::Node & node, std::pair<int, VelodyneLaserCorrection>
 void operator>>(const YAML::Node & node, VelodyneCalibration & calibration)
 {
   int num_lasers;
-  node[NUM_LASERS] >> num_lasers;
+  node[g_num_lasers] >> num_lasers;
   float distance_resolution_m;
-  node[DISTANCE_RESOLUTION] >> distance_resolution_m;
-  const YAML::Node & lasers = node[LASERS];
+  node[g_distance_resolution] >> distance_resolution_m;
+  const YAML::Node & lasers = node[g_lasers];
   calibration.laser_corrections.clear();
   calibration.num_lasers = num_lasers;
   calibration.distance_resolution_m = distance_resolution_m;
@@ -172,22 +172,22 @@ YAML::Emitter & operator<<(
   YAML::Emitter & out, const std::pair<int, VelodyneLaserCorrection> correction)
 {
   out << YAML::BeginMap;
-  out << YAML::Key << LASER_ID << YAML::Value << correction.first;
-  out << YAML::Key << ROT_CORRECTION << YAML::Value << correction.second.rot_correction;
-  out << YAML::Key << VERT_CORRECTION << YAML::Value << correction.second.vert_correction;
-  out << YAML::Key << DIST_CORRECTION << YAML::Value << correction.second.dist_correction;
-  out << YAML::Key << TWO_PT_CORRECTION_AVAILABLE << YAML::Value
+  out << YAML::Key << g_laser_id << YAML::Value << correction.first;
+  out << YAML::Key << g_rot_correction << YAML::Value << correction.second.rot_correction;
+  out << YAML::Key << g_vert_correction << YAML::Value << correction.second.vert_correction;
+  out << YAML::Key << g_dist_correction << YAML::Value << correction.second.dist_correction;
+  out << YAML::Key << g_two_pt_correction_available << YAML::Value
       << correction.second.two_pt_correction_available;
-  out << YAML::Key << DIST_CORRECTION_X << YAML::Value << correction.second.dist_correction_x;
-  out << YAML::Key << DIST_CORRECTION_Y << YAML::Value << correction.second.dist_correction_y;
-  out << YAML::Key << VERT_OFFSET_CORRECTION << YAML::Value
+  out << YAML::Key << g_dist_correction_x << YAML::Value << correction.second.dist_correction_x;
+  out << YAML::Key << g_dist_correction_y << YAML::Value << correction.second.dist_correction_y;
+  out << YAML::Key << g_vert_offset_correction << YAML::Value
       << correction.second.vert_offset_correction;
-  out << YAML::Key << HORIZ_OFFSET_CORRECTION << YAML::Value
+  out << YAML::Key << g_horiz_offset_correction << YAML::Value
       << correction.second.horiz_offset_correction;
-  out << YAML::Key << MAX_INTENSITY << YAML::Value << correction.second.max_intensity;
-  out << YAML::Key << MIN_INTENSITY << YAML::Value << correction.second.min_intensity;
-  out << YAML::Key << FOCAL_DISTANCE << YAML::Value << correction.second.focal_distance;
-  out << YAML::Key << FOCAL_SLOPE << YAML::Value << correction.second.focal_slope;
+  out << YAML::Key << g_max_intensity << YAML::Value << correction.second.max_intensity;
+  out << YAML::Key << g_min_intensity << YAML::Value << correction.second.min_intensity;
+  out << YAML::Key << g_focal_distance << YAML::Value << correction.second.focal_distance;
+  out << YAML::Key << g_focal_slope << YAML::Value << correction.second.focal_slope;
   out << YAML::EndMap;
   return out;
 }
@@ -195,9 +195,9 @@ YAML::Emitter & operator<<(
 YAML::Emitter & operator<<(YAML::Emitter & out, const VelodyneCalibration & calibration)
 {
   out << YAML::BeginMap;
-  out << YAML::Key << NUM_LASERS << YAML::Value << calibration.laser_corrections.size();
-  out << YAML::Key << DISTANCE_RESOLUTION << YAML::Value << calibration.distance_resolution_m;
-  out << YAML::Key << LASERS << YAML::Value << YAML::BeginSeq;
+  out << YAML::Key << g_num_lasers << YAML::Value << calibration.laser_corrections.size();
+  out << YAML::Key << g_distance_resolution << YAML::Value << calibration.distance_resolution_m;
+  out << YAML::Key << g_lasers << YAML::Value << YAML::BeginSeq;
   for (std::map<int, VelodyneLaserCorrection>::const_iterator it =
          calibration.laser_corrections_map.begin();
        it != calibration.laser_corrections_map.end(); it++) {

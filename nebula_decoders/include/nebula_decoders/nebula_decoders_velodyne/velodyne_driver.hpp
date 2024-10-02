@@ -65,12 +65,12 @@ public:
 
   /// @brief Get current status of this driver
   /// @return Current status
-  Status GetStatus();
+  Status get_status();
 
   /// @brief Convert VelodyneScan message to point cloud
   /// @param velodyne_scan Message
   /// @return tuple of Point cloud and timestamp
-  std::tuple<drivers::NebulaPointCloudPtr, double> ParseCloudPacket(
+  std::tuple<drivers::NebulaPointCloudPtr, double> parse_cloud_packet(
     const std::vector<uint8_t> & packet, double packet_seconds);
 };
 

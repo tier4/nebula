@@ -49,7 +49,7 @@ Status VelodyneDriver::set_calibration_configuration(
     calibration_configuration.calibration_file + ")");
 }
 
-std::tuple<drivers::NebulaPointCloudPtr, double> VelodyneDriver::ParseCloudPacket(
+std::tuple<drivers::NebulaPointCloudPtr, double> VelodyneDriver::parse_cloud_packet(
   const std::vector<uint8_t> & packet, double packet_seconds)
 {
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
@@ -61,13 +61,13 @@ std::tuple<drivers::NebulaPointCloudPtr, double> VelodyneDriver::ParseCloudPacke
   }
 
   scan_decoder_->unpack(packet, packet_seconds);
-  if (scan_decoder_->hasScanned()) {
+  if (scan_decoder_->has_scanned()) {
     pointcloud = scan_decoder_->get_pointcloud();
   }
 
   return pointcloud;
 }
-Status VelodyneDriver::GetStatus()
+Status VelodyneDriver::get_status()
 {
   return driver_status_;
 }

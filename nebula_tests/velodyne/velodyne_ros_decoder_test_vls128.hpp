@@ -42,15 +42,15 @@ class VelodyneRosDecoderTest final : public rclcpp::Node
   std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_cfg_ptr_;
   std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_cfg_ptr_;
 
-  Status InitializeDriver(
+  Status initialize_driver(
     std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_configuration,
     std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration);
 
-  Status GetParameters(
+  Status get_parameters(
     drivers::VelodyneSensorConfiguration & sensor_configuration,
     drivers::VelodyneCalibrationConfiguration & calibration_configuration);
 
-  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
+  static inline std::chrono::nanoseconds seconds_to_chrono_nano_seconds(const double seconds)
   {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::duration<double>(seconds));
@@ -60,16 +60,16 @@ public:
   explicit VelodyneRosDecoderTest(
     const rclcpp::NodeOptions & options, const std::string & node_name);
 
-  void ReceiveScanMsgCallback(const velodyne_msgs::msg::VelodyneScan::SharedPtr scan_msg);
-  Status GetStatus();
-  void ReadBag();
+  void receive_scan_msg_callback(const velodyne_msgs::msg::VelodyneScan::SharedPtr scan_msg);
+  Status get_status();
+  void read_bag();
 
 private:
-  std::string bag_path;
-  std::string storage_id;
-  std::string format;
-  std::string target_topic;
-  std::string correction_file_path;
+  std::string bag_path_;
+  std::string storage_id_;
+  std::string format_;
+  std::string target_topic_;
+  std::string correction_file_path_;
 };
 
 }  // namespace ros

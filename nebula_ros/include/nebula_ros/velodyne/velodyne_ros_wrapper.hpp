@@ -58,26 +58,26 @@ public:
 
   /// @brief Get current status of this driver
   /// @return Current status
-  Status GetStatus();
+  Status get_status();
 
   /// @brief Start point cloud streaming (Call SensorInterfaceStart of HwInterface)
   /// @return Resulting status
-  Status StreamStart();
+  Status stream_start();
 
 private:
-  void ReceiveCloudPacketCallback(std::vector<uint8_t> & packet);
+  void receive_cloud_packet_callback(std::vector<uint8_t> & packet);
 
-  void ReceiveScanMessageCallback(std::unique_ptr<velodyne_msgs::msg::VelodyneScan> scan_msg);
+  void receive_scan_message_callback(std::unique_ptr<velodyne_msgs::msg::VelodyneScan> scan_msg);
 
-  Status DeclareAndGetSensorConfigParams();
+  Status declare_and_get_sensor_config_params();
 
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
   /// @return SetParametersResult
-  rcl_interfaces::msg::SetParametersResult OnParameterChange(
+  rcl_interfaces::msg::SetParametersResult on_parameter_change(
     const std::vector<rclcpp::Parameter> & p);
 
-  Status ValidateAndSetConfig(
+  Status validate_and_set_config(
     std::shared_ptr<const drivers::VelodyneSensorConfiguration> & new_config);
 
   Status wrapper_status_;

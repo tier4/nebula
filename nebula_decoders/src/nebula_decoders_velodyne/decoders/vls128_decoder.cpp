@@ -27,8 +27,8 @@ Vls128Decoder::Vls128Decoder(
   overflow_pc_.reset(new NebulaPointCloud);
 
   // Set up cached values for sin and cos of all the possible headings
-  for (uint16_t rot_index = 0; rot_index < ROTATION_MAX_UNITS; ++rot_index) {
-    float rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
+  for (uint16_t rot_index = 0; rot_index < g_rotation_max_units; ++rot_index) {
+    float rotation = angles::from_degrees(g_rotation_resolution * rot_index);
     rotation_radians_[rot_index] = rotation;
     cos_rot_table_[rot_index] = cosf(rotation);
     sin_rot_table_[rot_index] = sinf(rotation);
@@ -37,7 +37,8 @@ Vls128Decoder::Vls128Decoder(
   phase_ = (uint16_t)round(sensor_configuration_->scan_phase * 100);
 
   for (uint8_t i = 0; i < 16; i++) {
-    vls_128_laser_azimuth_cache_[i] = (VLS128_CHANNEL_DURATION / VLS128_SEQ_DURATION) * (i + i / 8);
+    vls_128_laser_azimuth_cache_[i] =
+      (g_vls128_channel_duration / g_vls128_seq_duration) * (i + i / 8);
   }
   // timing table calculation, from velodyne user manual p.64
   timing_offsets_.resize(3);
@@ -80,9 +81,9 @@ std::tuple<drivers::NebulaPointCloudPtr, double> Vls128Decoder::get_pointcloud()
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
-int Vls128Decoder::pointsPerPacket()
+int Vls128Decoder::points_per_packet()
 {
-  return BLOCKS_PER_PACKET * SCANS_PER_BLOCK;
+  return g_blocks_per_packet * g_scans_per_block;
 }
 
 void Vls128Decoder::reset_pointcloud(double time_stamp)
@@ -137,31 +138,32 @@ void Vls128Decoder::reset_overflow(double time_stamp)
 
 void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
 {
-  checkAndHandleScanComplete(packet, packet_seconds, phase_);
+  check_and_handle_scan_complete(packet, packet_seconds, phase_);
 
   const raw_packet_t * raw = (const raw_packet_t *)packet.data();
   float last_azimuth_diff = 0;
   uint16_t azimuth_next;
-  const uint8_t return_mode = packet[RETURN_MODE_INDEX];
-  const bool dual_return = (return_mode == RETURN_MODE_DUAL);
+  const uint8_t return_mode = packet[g_return_mode_index];
+  const bool dual_return = (return_mode == g_return_mode_dual);
 
-  for (uint block = 0; block < static_cast<uint>(BLOCKS_PER_PACKET - (4 * dual_return)); block++) {
+  for (uint block = 0; block < static_cast<uint>(g_blocks_per_packet - (4 * dual_return));
+       block++) {
     // Cache block for use.
     const raw_block_t & current_block = raw->blocks[block];
 
     uint bank_origin = 0;
     // Used to detect which bank of 32 lasers is in this block.
     switch (current_block.header) {
-      case VLS128_BANK_1:
+      case g_vls128_bank_1:
         bank_origin = 0;
         break;
-      case VLS128_BANK_2:
+      case g_vls128_bank_2:
         bank_origin = 32;
         break;
-      case VLS128_BANK_3:
+      case g_vls128_bank_3:
         bank_origin = 64;
         break;
-      case VLS128_BANK_4:
+      case g_vls128_bank_4:
         bank_origin = 96;
         break;
       default:
@@ -179,7 +181,7 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
     } else {
       azimuth = azimuth_next;
     }
-    if (block < static_cast<uint>(BLOCKS_PER_PACKET - (1 + dual_return))) {
+    if (block < static_cast<uint>(g_blocks_per_packet - (1 + dual_return))) {
       // Get the next block rotation to calculate how far we rotate between blocks
       azimuth_next = raw->blocks[block + (1 + dual_return)].rotation;
 
@@ -192,7 +194,7 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
       // This makes the assumption the difference between the last block and the next packet is the
       // same as the last to the second to last.
       // Assumes RPM doesn't change much between blocks.
-      azimuth_diff = (block == static_cast<uint>(BLOCKS_PER_PACKET - (4 * dual_return) - 1))
+      azimuth_diff = (block == static_cast<uint>(g_blocks_per_packet - (4 * dual_return) - 1))
                        ? 0
                        : last_azimuth_diff;
     }
@@ -206,7 +208,7 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
        azimuth <= sensor_configuration_->cloud_max_angle * 100) ||
       //         azimuth <= sensor_configuration_->cloud_max_angle) ||
       (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle)) {
-      for (size_t j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE) {
+      for (size_t j = 0, k = 0; j < g_scans_per_block; j++, k += g_raw_scan_size) {
         union two_bytes current_return {
         };
         union two_bytes other_return {
@@ -241,7 +243,7 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
           const VelodyneLaserCorrection & corrections =
             calibration_configuration_->velodyne_calibration.laser_corrections[laser_number];
 
-          float distance = current_return.uint * VLP128_DISTANCE_RESOLUTION;
+          float distance = current_return.uint * g_vlp128_distance_resolution;
           if (distance > 1e-6) {
             distance += corrections.dist_correction;
           }
@@ -289,7 +291,7 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
               // Determine return type.
               uint8_t return_type;
               switch (return_mode) {
-                case RETURN_MODE_DUAL:
+                case g_return_mode_dual:
                   if (
                     (other_return.bytes[0] == 0 && other_return.bytes[1] == 0) ||
                     (other_return.bytes[0] == current_return.bytes[0] &&
@@ -316,10 +318,10 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
                     }
                   }
                   break;
-                case RETURN_MODE_STRONGEST:
+                case g_return_mode_strongest:
                   return_type = static_cast<uint8_t>(drivers::ReturnType::STRONGEST);
                   break;
-                case RETURN_MODE_LAST:
+                case g_return_mode_last:
                   return_type = static_cast<uint8_t>(drivers::ReturnType::LAST);
                   break;
                 default:
@@ -348,7 +350,7 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
      // block++)
 }
 
-bool Vls128Decoder::parsePacket(
+bool Vls128Decoder::parse_packet(
   [[maybe_unused]] const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
 {
   return 0;

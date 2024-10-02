@@ -27,14 +27,14 @@ Vlp16Decoder::Vlp16Decoder(
   overflow_pc_.reset(new NebulaPointCloud);
 
   // Set up cached values for sin and cos of all the possible headings
-  for (uint16_t rot_index = 0; rot_index < ROTATION_MAX_UNITS; ++rot_index) {
-    float rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
+  for (uint16_t rot_index = 0; rot_index < g_rotation_max_units; ++rot_index) {
+    float rotation = angles::from_degrees(g_rotation_resolution * rot_index);
     rotation_radians_[rot_index] = rotation;
     cos_rot_table_[rot_index] = cosf(rotation);
     sin_rot_table_[rot_index] = sinf(rotation);
   }
   // timing table calculation, from velodyne user manual p.64
-  timing_offsets_.resize(BLOCKS_PER_PACKET);
+  timing_offsets_.resize(g_blocks_per_packet);
   for (size_t i = 0; i < timing_offsets_.size(); ++i) {
     timing_offsets_[i].resize(32);
   }
@@ -80,9 +80,9 @@ std::tuple<drivers::NebulaPointCloudPtr, double> Vlp16Decoder::get_pointcloud()
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
-int Vlp16Decoder::pointsPerPacket()
+int Vlp16Decoder::points_per_packet()
 {
-  return BLOCKS_PER_PACKET * VLP16_FIRINGS_PER_BLOCK * VLP16_SCANS_PER_FIRING;
+  return g_blocks_per_packet * g_vlp16_firings_per_block * g_vlp16_scans_per_firing;
 }
 
 void Vlp16Decoder::reset_pointcloud(double time_stamp)
@@ -136,18 +136,18 @@ void Vlp16Decoder::reset_overflow(double time_stamp)
 
 void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
 {
-  checkAndHandleScanComplete(packet, packet_seconds, phase_);
+  check_and_handle_scan_complete(packet, packet_seconds, phase_);
 
   const raw_packet_t * raw = (const raw_packet_t *)packet.data();
   float last_azimuth_diff = 0;
   uint16_t azimuth_next;
-  const uint8_t return_mode = packet[RETURN_MODE_INDEX];
-  const bool dual_return = (return_mode == RETURN_MODE_DUAL);
+  const uint8_t return_mode = packet[g_return_mode_index];
+  const bool dual_return = (return_mode == g_return_mode_dual);
 
-  for (uint block = 0; block < BLOCKS_PER_PACKET; block++) {
+  for (uint block = 0; block < g_blocks_per_packet; block++) {
     // Cache block for use.
     const raw_block_t & current_block = raw->blocks[block];
-    if (UPPER_BANK != raw->blocks[block].header) {
+    if (g_upper_bank != raw->blocks[block].header) {
       // Do not flood the log with messages, only issue at most one
       // of these warnings per minute.
       return;  // bad packet: skip the rest
@@ -162,7 +162,7 @@ void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
     } else {
       azimuth = azimuth_next;
     }
-    if (block < static_cast<uint>(BLOCKS_PER_PACKET - (1 + dual_return))) {
+    if (block < static_cast<uint>(g_blocks_per_packet - (1 + dual_return))) {
       // Get the next block rotation to calculate how far we rotate between blocks.
       azimuth_next = raw->blocks[block + (1 + dual_return)].rotation;
 
@@ -176,7 +176,7 @@ void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
       // same as the last to the second to last.
       // Assumes RPM doesn't change much between blocks.
       azimuth_diff =
-        (block == static_cast<uint>(BLOCKS_PER_PACKET - dual_return - 1) ? 0 : last_azimuth_diff);
+        (block == static_cast<uint>(g_blocks_per_packet - dual_return - 1) ? 0 : last_azimuth_diff);
     }
 
     // Condition added to avoid calculating points which are not in the interesting defined area
@@ -186,8 +186,8 @@ void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
        azimuth >= sensor_configuration_->cloud_min_angle * 100 &&
        azimuth <= sensor_configuration_->cloud_max_angle * 100) ||
       (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle)) {
-      for (int firing = 0, k = 0; firing < VLP16_FIRINGS_PER_BLOCK; ++firing) {
-        for (int dsr = 0; dsr < VLP16_SCANS_PER_FIRING; dsr++, k += RAW_SCAN_SIZE) {
+      for (int firing = 0, k = 0; firing < g_vlp16_firings_per_block; ++firing) {
+        for (int dsr = 0; dsr < g_vlp16_scans_per_firing; dsr++, k += g_raw_scan_size) {
           union two_bytes current_return;
           union two_bytes other_return;
           // Distance extraction.
@@ -228,8 +228,8 @@ void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
               // Correct for the laser rotation as a function of timing during the firings.
               float azimuth_corrected_f =
                 azimuth +
-                (azimuth_diff * ((dsr * VLP16_DSR_TOFFSET) + (firing * VLP16_FIRING_TOFFSET)) /
-                 VLP16_BLOCK_DURATION) -
+                (azimuth_diff * ((dsr * g_vlp16_dsr_toffset) + (firing * g_vlp16_firing_toffset)) /
+                 g_vlp16_block_duration) -
                 corrections.rot_correction * 180.0 / M_PI * 100;
 
               if (azimuth_corrected_f < 0.0) {
@@ -269,7 +269,7 @@ void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
                 // Determine return type.
                 uint8_t return_type;
                 switch (return_mode) {
-                  case RETURN_MODE_DUAL:
+                  case g_return_mode_dual:
                     if (
                       (other_return.bytes[0] == 0 && other_return.bytes[1] == 0) ||
                       (other_return.bytes[0] == current_return.bytes[0] &&
@@ -297,10 +297,10 @@ void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
                       }
                     }
                     break;
-                  case RETURN_MODE_STRONGEST:
+                  case g_return_mode_strongest:
                     return_type = static_cast<uint8_t>(drivers::ReturnType::STRONGEST);
                     break;
-                  case RETURN_MODE_LAST:
+                  case g_return_mode_last:
                     return_type = static_cast<uint8_t>(drivers::ReturnType::LAST);
                     break;
                   default:
@@ -329,7 +329,7 @@ void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
   }
 }
 
-bool Vlp16Decoder::parsePacket(
+bool Vlp16Decoder::parse_packet(
   [[maybe_unused]] const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
 {
   return 0;
