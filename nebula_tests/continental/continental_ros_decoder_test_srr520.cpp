@@ -44,7 +44,7 @@ ContinentalRosDecoderTest::ContinentalRosDecoderTest(
 {
   drivers::continental_srr520::ContinentalSRR520SensorConfiguration sensor_configuration;
 
-  wrapper_status_ = GetParameters(sensor_configuration);
+  wrapper_status_ = get_parameters(sensor_configuration);
   if (Status::OK != wrapper_status_) {
     RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error: " << wrapper_status_);
     return;
@@ -56,23 +56,23 @@ ContinentalRosDecoderTest::ContinentalRosDecoderTest(
       sensor_configuration);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
-  wrapper_status_ = InitializeDriver(
+  wrapper_status_ = initialize_driver(
     std::const_pointer_cast<drivers::continental_srr520::ContinentalSRR520SensorConfiguration>(
       sensor_cfg_ptr_));
 
-  driver_ptr_->RegisterHRRDetectionListCallback(
-    std::bind(&ContinentalRosDecoderTest::HRRDetectionListCallback, this, std::placeholders::_1));
-  driver_ptr_->RegisterNearDetectionListCallback(
-    std::bind(&ContinentalRosDecoderTest::NearDetectionListCallback, this, std::placeholders::_1));
-  driver_ptr_->RegisterObjectListCallback(
-    std::bind(&ContinentalRosDecoderTest::ObjectListCallback, this, std::placeholders::_1));
-  driver_ptr_->RegisterStatusCallback(
-    std::bind(&ContinentalRosDecoderTest::StatusCallback, this, std::placeholders::_1));
+  driver_ptr_->register_hrr_detection_list_callback(std::bind(
+    &ContinentalRosDecoderTest::hrr_detection_list_callback, this, std::placeholders::_1));
+  driver_ptr_->register_near_detection_list_callback(std::bind(
+    &ContinentalRosDecoderTest::near_detection_list_callback, this, std::placeholders::_1));
+  driver_ptr_->register_object_list_callback(
+    std::bind(&ContinentalRosDecoderTest::object_list_callback, this, std::placeholders::_1));
+  driver_ptr_->register_status_callback(
+    std::bind(&ContinentalRosDecoderTest::status_callback, this, std::placeholders::_1));
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 }
 
-Status ContinentalRosDecoderTest::InitializeDriver(
+Status ContinentalRosDecoderTest::initialize_driver(
   std::shared_ptr<drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
     sensor_configuration)
 {
@@ -83,12 +83,12 @@ Status ContinentalRosDecoderTest::InitializeDriver(
   return Status::OK;
 }
 
-Status ContinentalRosDecoderTest::GetStatus()
+Status ContinentalRosDecoderTest::get_status()
 {
   return wrapper_status_;
 }
 
-Status ContinentalRosDecoderTest::GetParameters(
+Status ContinentalRosDecoderTest::get_parameters(
   drivers::continental_srr520::ContinentalSRR520SensorConfiguration & sensor_configuration)
 {
   std::filesystem::path bag_root_dir =
@@ -117,7 +117,7 @@ Status ContinentalRosDecoderTest::GetParameters(
   return Status::OK;
 }
 
-void ContinentalRosDecoderTest::CompareNodes(const YAML::Node & node1, const YAML::Node & node2)
+void ContinentalRosDecoderTest::compare_nodes(const YAML::Node & node1, const YAML::Node & node2)
 {
   ASSERT_EQ(node1.IsDefined(), node2.IsDefined());
   ASSERT_EQ(node1.IsMap(), node2.IsMap());
@@ -127,24 +127,24 @@ void ContinentalRosDecoderTest::CompareNodes(const YAML::Node & node1, const YAM
 
   if (node1.IsMap()) {
     for (YAML::const_iterator it = node1.begin(); it != node1.end(); ++it) {
-      CompareNodes(it->second, node2[it->first.as<std::string>()]);
+      compare_nodes(it->second, node2[it->first.as<std::string>()]);
     }
   } else if (node1.IsScalar()) {
     ASSERT_EQ(node1.as<std::string>(), node2.as<std::string>());
   } else if (node1.IsSequence()) {
     ASSERT_EQ(node1.size(), node2.size());
     for (std::size_t i = 0; i < node1.size(); i++) {
-      CompareNodes(node1[i], node2[i]);
+      compare_nodes(node1[i], node2[i]);
     }
   }
 }
 
-void ContinentalRosDecoderTest::CheckResult(
+void ContinentalRosDecoderTest::check_result(
   const std::string msg_as_string, const std::string & gt_path)
 {
   YAML::Node current_node = YAML::Load(msg_as_string);
   YAML::Node gt_node = YAML::LoadFile(gt_path);
-  CompareNodes(gt_node, current_node);
+  compare_nodes(gt_node, current_node);
 
   // To generate the gt
   // std::cout << gt_path << std::endl;
@@ -153,7 +153,7 @@ void ContinentalRosDecoderTest::CheckResult(
   // ostream.close();
 }
 
-void ContinentalRosDecoderTest::HRRDetectionListCallback(
+void ContinentalRosDecoderTest::hrr_detection_list_callback(
   std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg)
 {
   hrr_detection_list_count_++;
@@ -167,10 +167,10 @@ void ContinentalRosDecoderTest::HRRDetectionListCallback(
   auto gt_path = rcpputils::fs::path(bag_path_).parent_path() / detection_path.str();
   ASSERT_TRUE(gt_path.exists());
 
-  CheckResult(msg_as_string, gt_path.string());
+  check_result(msg_as_string, gt_path.string());
 }
 
-void ContinentalRosDecoderTest::NearDetectionListCallback(
+void ContinentalRosDecoderTest::near_detection_list_callback(
   std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg)
 {
   near_detection_list_count_++;
@@ -184,10 +184,10 @@ void ContinentalRosDecoderTest::NearDetectionListCallback(
   auto gt_path = rcpputils::fs::path(bag_path_).parent_path() / detection_path.str();
   ASSERT_TRUE(gt_path.exists());
 
-  CheckResult(msg_as_string, gt_path.string());
+  check_result(msg_as_string, gt_path.string());
 }
 
-void ContinentalRosDecoderTest::ObjectListCallback(
+void ContinentalRosDecoderTest::object_list_callback(
   std::unique_ptr<continental_msgs::msg::ContinentalSrr520ObjectList> msg)
 {
   object_list_count_++;
@@ -200,10 +200,10 @@ void ContinentalRosDecoderTest::ObjectListCallback(
   auto gt_path = rcpputils::fs::path(bag_path_).parent_path() / detection_path.str();
   ASSERT_TRUE(gt_path.exists());
 
-  CheckResult(msg_as_string, gt_path.string());
+  check_result(msg_as_string, gt_path.string());
 }
 
-void ContinentalRosDecoderTest::ReadBag()
+void ContinentalRosDecoderTest::read_bag()
 {
   rosbag2_storage::StorageOptions storage_options;
   rosbag2_cpp::ConverterOptions converter_options;
@@ -244,7 +244,7 @@ void ContinentalRosDecoderTest::ReadBag()
 
         for (auto & packet_msg : extracted_msg.packets) {
           auto extracted_msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>(packet_msg);
-          driver_ptr_->ProcessPacket(std::move(extracted_msg_ptr));
+          driver_ptr_->process_packet(std::move(extracted_msg_ptr));
         }
       }
     }

@@ -37,8 +37,8 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
 
   RCLCPP_INFO(logger_, "Starting Decoder");
 
-  InitializeDriver(config_ptr);
-  status_ = driver_ptr_->GetStatus();
+  initialize_driver(config_ptr);
+  status_ = driver_ptr_->get_status();
 
   if (Status::OK != status_) {
     throw std::runtime_error(
@@ -88,50 +88,50 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
     });
 }
 
-Status ContinentalARS548DecoderWrapper::InitializeDriver(
+Status ContinentalARS548DecoderWrapper::initialize_driver(
   const std::shared_ptr<
     const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config)
 {
   driver_ptr_.reset();
   driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalARS548Decoder>(config);
 
-  driver_ptr_->RegisterDetectionListCallback(std::bind(
-    &ContinentalARS548DecoderWrapper::DetectionListCallback, this, std::placeholders::_1));
-  driver_ptr_->RegisterObjectListCallback(
-    std::bind(&ContinentalARS548DecoderWrapper::ObjectListCallback, this, std::placeholders::_1));
-  driver_ptr_->RegisterSensorStatusCallback(
-    std::bind(&ContinentalARS548DecoderWrapper::SensorStatusCallback, this, std::placeholders::_1));
-  driver_ptr_->RegisterPacketsCallback(
-    std::bind(&ContinentalARS548DecoderWrapper::PacketsCallback, this, std::placeholders::_1));
+  driver_ptr_->register_detection_list_callback(std::bind(
+    &ContinentalARS548DecoderWrapper::detection_list_callback, this, std::placeholders::_1));
+  driver_ptr_->register_object_list_callback(
+    std::bind(&ContinentalARS548DecoderWrapper::object_list_callback, this, std::placeholders::_1));
+  driver_ptr_->register_sensor_status_callback(std::bind(
+    &ContinentalARS548DecoderWrapper::sensor_status_callback, this, std::placeholders::_1));
+  driver_ptr_->register_packets_callback(
+    std::bind(&ContinentalARS548DecoderWrapper::packets_callback, this, std::placeholders::_1));
 
   return Status::OK;
 }
 
-void ContinentalARS548DecoderWrapper::OnConfigChange(
+void ContinentalARS548DecoderWrapper::on_config_change(
   const std::shared_ptr<
     const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
     new_config_ptr)
 {
   std::lock_guard lock(mtx_driver_ptr_);
-  InitializeDriver(new_config_ptr);
+  initialize_driver(new_config_ptr);
   config_ptr_ = new_config_ptr;
 }
 
-void ContinentalARS548DecoderWrapper::ProcessPacket(
+void ContinentalARS548DecoderWrapper::process_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
-  driver_ptr_->ProcessPacket(std::move(packet_msg));
+  driver_ptr_->process_packet(std::move(packet_msg));
 
   watchdog_->update();
 }
 
-void ContinentalARS548DecoderWrapper::DetectionListCallback(
+void ContinentalARS548DecoderWrapper::detection_list_callback(
   std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg)
 {
   if (
     detection_pointcloud_pub_->get_subscription_count() > 0 ||
     detection_pointcloud_pub_->get_intra_process_subscription_count() > 0) {
-    const auto detection_pointcloud_ptr = ConvertToPointcloud(*msg);
+    const auto detection_pointcloud_ptr = convert_to_pointcloud(*msg);
     auto detection_pointcloud_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*detection_pointcloud_ptr, *detection_pointcloud_msg_ptr);
 
@@ -142,7 +142,7 @@ void ContinentalARS548DecoderWrapper::DetectionListCallback(
   if (
     scan_raw_pub_->get_subscription_count() > 0 ||
     scan_raw_pub_->get_intra_process_subscription_count() > 0) {
-    auto radar_scan_msg = ConvertToRadarScan(*msg);
+    auto radar_scan_msg = convert_to_radar_scan(*msg);
     radar_scan_msg.header = msg->header;
     scan_raw_pub_->publish(std::move(radar_scan_msg));
   }
@@ -154,13 +154,13 @@ void ContinentalARS548DecoderWrapper::DetectionListCallback(
   }
 }
 
-void ContinentalARS548DecoderWrapper::ObjectListCallback(
+void ContinentalARS548DecoderWrapper::object_list_callback(
   std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg)
 {
   if (
     object_pointcloud_pub_->get_subscription_count() > 0 ||
     object_pointcloud_pub_->get_intra_process_subscription_count() > 0) {
-    const auto object_pointcloud_ptr = ConvertToPointcloud(*msg);
+    const auto object_pointcloud_ptr = convert_to_pointcloud(*msg);
     auto object_pointcloud_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*object_pointcloud_ptr, *object_pointcloud_msg_ptr);
 
@@ -171,7 +171,7 @@ void ContinentalARS548DecoderWrapper::ObjectListCallback(
   if (
     objects_raw_pub_->get_subscription_count() > 0 ||
     objects_raw_pub_->get_intra_process_subscription_count() > 0) {
-    auto objects_raw_msg = ConvertToRadarTracks(*msg);
+    auto objects_raw_msg = convert_to_radar_tracks(*msg);
     objects_raw_msg.header = msg->header;
     objects_raw_pub_->publish(std::move(objects_raw_msg));
   }
@@ -179,7 +179,7 @@ void ContinentalARS548DecoderWrapper::ObjectListCallback(
   if (
     objects_markers_pub_->get_subscription_count() > 0 ||
     objects_markers_pub_->get_intra_process_subscription_count() > 0) {
-    auto marker_array_msg = ConvertToMarkers(*msg);
+    auto marker_array_msg = convert_to_markers(*msg);
     objects_markers_pub_->publish(std::move(marker_array_msg));
   }
 
@@ -190,7 +190,7 @@ void ContinentalARS548DecoderWrapper::ObjectListCallback(
   }
 }
 
-void ContinentalARS548DecoderWrapper::SensorStatusCallback(
+void ContinentalARS548DecoderWrapper::sensor_status_callback(
   const drivers::continental_ars548::ContinentalARS548Status & sensor_status)
 {
   diagnostic_msgs::msg::DiagnosticArray diagnostic_array_msg;
@@ -304,7 +304,7 @@ void ContinentalARS548DecoderWrapper::SensorStatusCallback(
   diagnostics_pub_->publish(diagnostic_array_msg);
 }
 
-void ContinentalARS548DecoderWrapper::PacketsCallback(
+void ContinentalARS548DecoderWrapper::packets_callback(
   std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg)
 {
   if (
@@ -315,7 +315,7 @@ void ContinentalARS548DecoderWrapper::PacketsCallback(
 }
 
 pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr
-ContinentalARS548DecoderWrapper::ConvertToPointcloud(
+ContinentalARS548DecoderWrapper::convert_to_pointcloud(
   const continental_msgs::msg::ContinentalArs548DetectionList & msg)
 {
   pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr output_pointcloud(
@@ -355,7 +355,7 @@ ContinentalARS548DecoderWrapper::ConvertToPointcloud(
 }
 
 pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr
-ContinentalARS548DecoderWrapper::ConvertToPointcloud(
+ContinentalARS548DecoderWrapper::convert_to_pointcloud(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
   pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr output_pointcloud(
@@ -394,7 +394,7 @@ ContinentalARS548DecoderWrapper::ConvertToPointcloud(
   return output_pointcloud;
 }
 
-radar_msgs::msg::RadarScan ContinentalARS548DecoderWrapper::ConvertToRadarScan(
+radar_msgs::msg::RadarScan ContinentalARS548DecoderWrapper::convert_to_radar_scan(
   const continental_msgs::msg::ContinentalArs548DetectionList & msg)
 {
   radar_msgs::msg::RadarScan output_msg;
@@ -420,20 +420,20 @@ radar_msgs::msg::RadarScan ContinentalARS548DecoderWrapper::ConvertToRadarScan(
   return output_msg;
 }
 
-radar_msgs::msg::RadarTracks ContinentalARS548DecoderWrapper::ConvertToRadarTracks(
+radar_msgs::msg::RadarTracks ContinentalARS548DecoderWrapper::convert_to_radar_tracks(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
   radar_msgs::msg::RadarTracks output_msg;
   output_msg.tracks.reserve(msg.objects.size());
   output_msg.header = msg.header;
 
-  constexpr int16_t UNKNOWN_ID = 32000;
-  constexpr int16_t CAR_ID = 32001;
-  constexpr int16_t TRUCK_ID = 32002;
-  constexpr int16_t MOTORCYCLE_ID = 32005;
-  constexpr int16_t BICYCLE_ID = 32006;
-  constexpr int16_t PEDESTRIAN_ID = 32007;
-  constexpr float INVALID_COVARIANCE = 1e6;
+  constexpr int16_t unknown_id = 32000;
+  constexpr int16_t car_id = 32001;
+  constexpr int16_t truck_id = 32002;
+  constexpr int16_t motorcycle_id = 32005;
+  constexpr int16_t bicycle_id = 32006;
+  constexpr int16_t pedestrian_id = 32007;
+  constexpr float invalid_covariance = 1e6;
 
   radar_msgs::msg::RadarTrack track_msg;
   for (const auto & object : msg.objects) {
@@ -449,11 +449,11 @@ radar_msgs::msg::RadarTracks ContinentalARS548DecoderWrapper::ConvertToRadarTrac
     const int reference_index = std::min<int>(object.position_reference, 8);
     const double & yaw = object.orientation;
     track_msg.position.x = object.position.x +
-                           std::cos(yaw) * half_length * reference_to_center_[reference_index][0] -
-                           std::sin(yaw) * half_width * reference_to_center_[reference_index][1];
+                           std::cos(yaw) * half_length * reference_to_center[reference_index][0] -
+                           std::sin(yaw) * half_width * reference_to_center[reference_index][1];
     track_msg.position.y = object.position.y +
-                           std::sin(yaw) * half_length * reference_to_center_[reference_index][0] +
-                           std::cos(yaw) * half_width * reference_to_center_[reference_index][1];
+                           std::sin(yaw) * half_length * reference_to_center[reference_index][0] +
+                           std::cos(yaw) * half_width * reference_to_center[reference_index][1];
     track_msg.position.z = object.position.z;
 
     track_msg.velocity = object.absolute_velocity;
@@ -463,27 +463,27 @@ radar_msgs::msg::RadarTracks ContinentalARS548DecoderWrapper::ConvertToRadarTrac
     track_msg.size.z = 1.f;
 
     uint8_t max_score = object.classification_unknown;
-    track_msg.classification = UNKNOWN_ID;
+    track_msg.classification = unknown_id;
 
     if (object.classification_car > max_score) {
       max_score = object.classification_car;
-      track_msg.classification = CAR_ID;
+      track_msg.classification = car_id;
     }
     if (object.classification_truck > max_score) {
       max_score = object.classification_truck;
-      track_msg.classification = TRUCK_ID;
+      track_msg.classification = truck_id;
     }
     if (object.classification_motorcycle > max_score) {
       max_score = object.classification_motorcycle;
-      track_msg.classification = MOTORCYCLE_ID;
+      track_msg.classification = motorcycle_id;
     }
     if (object.classification_bicycle > max_score) {
       max_score = object.classification_bicycle;
-      track_msg.classification = BICYCLE_ID;
+      track_msg.classification = bicycle_id;
     }
     if (object.classification_pedestrian > max_score) {
       max_score = object.classification_pedestrian;
-      track_msg.classification = PEDESTRIAN_ID;
+      track_msg.classification = pedestrian_id;
     }
 
     track_msg.position_covariance[0] =
@@ -516,12 +516,12 @@ radar_msgs::msg::RadarTracks ContinentalARS548DecoderWrapper::ConvertToRadarTrac
     track_msg.acceleration_covariance[5] =
       static_cast<float>(object.absolute_acceleration_std.z * object.absolute_acceleration_std.z);
 
-    track_msg.size_covariance[0] = INVALID_COVARIANCE;
+    track_msg.size_covariance[0] = invalid_covariance;
     track_msg.size_covariance[1] = 0.f;
     track_msg.size_covariance[2] = 0.f;
-    track_msg.size_covariance[3] = INVALID_COVARIANCE;
+    track_msg.size_covariance[3] = invalid_covariance;
     track_msg.size_covariance[4] = 0.f;
-    track_msg.size_covariance[5] = INVALID_COVARIANCE;
+    track_msg.size_covariance[5] = invalid_covariance;
 
     output_msg.tracks.emplace_back(track_msg);
   }
@@ -529,14 +529,14 @@ radar_msgs::msg::RadarTracks ContinentalARS548DecoderWrapper::ConvertToRadarTrac
   return output_msg;
 }
 
-visualization_msgs::msg::MarkerArray ContinentalARS548DecoderWrapper::ConvertToMarkers(
+visualization_msgs::msg::MarkerArray ContinentalARS548DecoderWrapper::convert_to_markers(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
   visualization_msgs::msg::MarkerArray marker_array;
   marker_array.markers.reserve(4 * msg.objects.size());
 
-  constexpr int LINE_STRIP_CORNERS_NUM = 17;
-  constexpr std::array<std::array<double, 3>, LINE_STRIP_CORNERS_NUM> cube_corners = {
+  constexpr int line_strip_corners_num = 17;
+  constexpr std::array<std::array<double, 3>, line_strip_corners_num> cube_corners = {
     {{{-1.0, -1.0, -1.0}},
      {{-1.0, -1.0, 1.0}},
      {{-1.0, 1.0, 1.0}},
@@ -555,8 +555,8 @@ visualization_msgs::msg::MarkerArray ContinentalARS548DecoderWrapper::ConvertToM
      {{-1.0, 1.0, -1.0}},
      {{1.0, 1.0, -1.0}}}};
 
-  constexpr int PALETTE_SIZE = 32;
-  constexpr std::array<std::array<double, 3>, PALETTE_SIZE> color_array = {{
+  constexpr int palette_size = 32;
+  constexpr std::array<std::array<double, 3>, palette_size> color_array = {{
     {{1.0, 0.0, 0.0}},       {{0.0, 1.0, 0.0}},
     {{0.0, 0.0, 1.0}},  // Red, Green, Blue
     {{1.0, 1.0, 0.0}},       {{0.0, 1.0, 1.0}},
@@ -586,7 +586,7 @@ visualization_msgs::msg::MarkerArray ContinentalARS548DecoderWrapper::ConvertToM
   for (const auto & object : msg.objects) {
     const double half_length = 0.5 * object.shape_length_edge_mean;
     const double half_width = 0.5 * object.shape_width_edge_mean;
-    constexpr double DEFAULT_HALF_SIZE = 1.0;
+    constexpr double default_half_size = 1.0;
     const int reference_index = std::min<int>(object.position_reference, 8);
     const double & yaw = object.orientation;
     current_ids.emplace(object.object_id);
@@ -599,18 +599,18 @@ visualization_msgs::msg::MarkerArray ContinentalARS548DecoderWrapper::ConvertToM
     box_marker.action = visualization_msgs::msg::Marker::ADD;
     box_marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
     box_marker.lifetime = rclcpp::Duration::from_seconds(0);
-    box_marker.color.r = color_array[object.object_id % PALETTE_SIZE][0];
-    box_marker.color.g = color_array[object.object_id % PALETTE_SIZE][1];
-    box_marker.color.b = color_array[object.object_id % PALETTE_SIZE][2];
+    box_marker.color.r = color_array[object.object_id % palette_size][0];
+    box_marker.color.g = color_array[object.object_id % palette_size][1];
+    box_marker.color.b = color_array[object.object_id % palette_size][2];
     box_marker.color.a = 1.0;
     box_marker.scale.x = 0.1;
 
     box_marker.pose.position.x =
-      object.position.x + std::cos(yaw) * half_length * reference_to_center_[reference_index][0] -
-      std::sin(yaw) * half_width * reference_to_center_[reference_index][1];
+      object.position.x + std::cos(yaw) * half_length * reference_to_center[reference_index][0] -
+      std::sin(yaw) * half_width * reference_to_center[reference_index][1];
     box_marker.pose.position.y =
-      object.position.y + std::sin(yaw) * half_length * reference_to_center_[reference_index][0] +
-      std::cos(yaw) * half_width * reference_to_center_[reference_index][1];
+      object.position.y + std::sin(yaw) * half_length * reference_to_center[reference_index][0] +
+      std::cos(yaw) * half_width * reference_to_center[reference_index][1];
     box_marker.pose.position.z = object.position.z;
     box_marker.pose.orientation.w = std::cos(0.5 * yaw);
     box_marker.pose.orientation.z = std::sin(0.5 * yaw);
@@ -619,7 +619,7 @@ visualization_msgs::msg::MarkerArray ContinentalARS548DecoderWrapper::ConvertToM
       geometry_msgs::msg::Point p;
       p.x = half_length * corner[0];
       p.y = half_width * corner[1];
-      p.z = DEFAULT_HALF_SIZE * corner[2];
+      p.z = default_half_size * corner[2];
       box_marker.points.emplace_back(p);
     }
 
@@ -697,7 +697,7 @@ visualization_msgs::msg::MarkerArray ContinentalARS548DecoderWrapper::ConvertToM
   return marker_array;
 }
 
-nebula::Status ContinentalARS548DecoderWrapper::Status()
+nebula::Status ContinentalARS548DecoderWrapper::status()
 {
   std::lock_guard lock(mtx_driver_ptr_);
 
@@ -705,7 +705,7 @@ nebula::Status ContinentalARS548DecoderWrapper::Status()
     return nebula::Status::NOT_INITIALIZED;
   }
 
-  return driver_ptr_->GetStatus();
+  return driver_ptr_->get_status();
 }
 }  // namespace ros
 }  // namespace nebula

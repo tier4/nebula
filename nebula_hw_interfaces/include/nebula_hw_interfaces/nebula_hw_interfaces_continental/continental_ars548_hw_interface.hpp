@@ -42,22 +42,22 @@ public:
 
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStart();
+  Status sensor_interface_start();
 
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStop();
+  Status sensor_interface_stop();
 
   /// @brief Setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
-  Status SetSensorConfiguration(
+  Status set_sensor_configuration(
     std::shared_ptr<const ContinentalARS548SensorConfiguration> sensor_configuration);
 
   /// @brief Registering callback
   /// @param callback Callback function
   /// @return Resulting status
-  Status RegisterPacketCallback(
+  Status register_packet_callback(
     std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket>)> packet_callback);
 
   /// @brief Set the sensor mounting parameters
@@ -68,7 +68,7 @@ public:
   /// @param pitch_autosar Desired pitch value in autosar coordinates
   /// @param plug_orientation Desired plug orientation (0 = PLUG_RIGHT, 1 = PLUG_LEFT)
   /// @return Resulting status
-  Status SetSensorMounting(
+  Status set_sensor_mounting(
     float longitudinal_autosar, float lateral_autosar, float vertical_autosar, float yaw_autosar,
     float pitch_autosar, uint8_t plug_orientation);
 
@@ -78,7 +78,7 @@ public:
   /// @param height_autosar Desired height value
   /// @param wheel_base_autosar Desired wheel base value
   /// @return Resulting status
-  Status SetVehicleParameters(
+  Status set_vehicle_parameters(
     float length_autosar, float width_autosar, float height_autosar, float wheel_base_autosar);
 
   /// @brief Set the radar parameters
@@ -90,75 +90,75 @@ public:
   /// @param hcc Desired hcc value (1 = Worldwide, 2 = Japan)
   /// @param power_save_standstill Desired power_save_standstill value (0 = Off, 1 = On)
   /// @return Resulting status
-  Status SetRadarParameters(
+  Status set_radar_parameters(
     uint16_t maximum_distance, uint8_t frequency_slot, uint8_t cycle_time, uint8_t time_slot,
     uint8_t hcc, uint8_t power_save_standstill);
 
   /// @brief Set the sensor ip address
   /// @param sensor_ip_address Desired sensor ip address
   /// @return Resulting status
-  Status SetSensorIPAddress(const std::string & sensor_ip_address);
+  Status set_sensor_ip_address(const std::string & sensor_ip_address);
 
   /// @brief Set the current lateral acceleration
   /// @param lateral_acceleration Current lateral acceleration
   /// @return Resulting status
-  Status SetAccelerationLateralCog(float lateral_acceleration);
+  Status set_acceleration_lateral_cog(float lateral_acceleration);
 
   /// @brief Set the current longitudinal acceleration
   /// @param longitudinal_acceleration Current longitudinal acceleration
   /// @return Resulting status
-  Status SetAccelerationLongitudinalCog(float longitudinal_acceleration);
+  Status set_acceleration_longitudinal_cog(float longitudinal_acceleration);
 
   /// @brief Set the characteristic speed
   /// @param characteristic_speed Characteristic speed
   /// @return Resulting status
-  Status SetCharacteristicSpeed(float characteristic_speed);
+  Status set_characteristic_speed(float characteristic_speed);
 
   /// @brief Set the current direction
   /// @param direction Current driving direction
   /// @return Resulting status
-  Status SetDrivingDirection(int direction);
+  Status set_driving_direction(int direction);
 
   /// @brief Set the current steering angle
   /// @param angle_rad Current steering angle in radians
   /// @return Resulting status
-  Status SetSteeringAngleFrontAxle(float angle_rad);
+  Status set_steering_angle_front_axle(float angle_rad);
 
   /// @brief Set the current vehicle velocity
   /// @param velocity Current vehicle velocity
   /// @return Resulting status
-  Status SetVelocityVehicle(float velocity);
+  Status set_velocity_vehicle(float velocity);
 
   /// @brief Set the current yaw rate
   /// @param yaw_rate Current yaw rate
   /// @return Resulting status
-  Status SetYawRate(float yaw_rate);
+  Status set_yaw_rate(float yaw_rate);
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger
-  void SetLogger(std::shared_ptr<rclcpp::Logger> node);
+  void set_logger(std::shared_ptr<rclcpp::Logger> node);
 
 private:
   /// @brief Printing the string to RCLCPP_INFO_STREAM
   /// @param info Target string
-  void PrintInfo(std::string info);
+  void print_info(std::string info);
 
   /// @brief Printing the string to RCLCPP_ERROR_STREAM
   /// @param error Target string
-  void PrintError(std::string error);
+  void print_error(std::string error);
 
   /// @brief Printing the string to RCLCPP_DEBUG_STREAM
   /// @param debug Target string
-  void PrintDebug(std::string debug);
+  void print_debug(std::string debug);
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallbackWithSender(
+  void receive_sensor_packet_callback_with_sender(
     std::vector<uint8_t> & buffer, const std::string & sender_ip);
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer);
+  void receive_sensor_packet_callback(std::vector<uint8_t> & buffer);
 
   std::unique_ptr<::drivers::common::IoContext> sensor_io_context_ptr_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> sensor_udp_driver_ptr_;

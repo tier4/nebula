@@ -43,37 +43,37 @@ public:
       config);
 
   /// @brief Starts the hw interface and subscribes to the input topics
-  void SensorInterfaceStart();
+  void sensor_interface_start();
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<const drivers::continental_srr520::ContinentalSRR520SensorConfiguration> &
       new_config);
 
   /// @brief Get current status of the hw interface
   /// @return Current status
-  nebula::Status Status();
+  nebula::Status status();
 
-  std::shared_ptr<drivers::continental_srr520::ContinentalSRR520HwInterface> HwInterface() const;
+  std::shared_ptr<drivers::continental_srr520::ContinentalSRR520HwInterface> hw_interface() const;
 
 private:
   /// @brief Callback to send the odometry information to the radar device
   /// @param odometry_msg The odometry message
   /// @param acceleration_msg The acceleration message
-  void dynamicsCallback(
+  void dynamics_callback(
     const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr & odometry_msg,
     const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr & acceleration_msg);
 
   /// @brief Service callback to set the new sensor mounting position
   /// @param request Empty service request
   /// @param response Empty service response
-  void ConfigureSensorRequestCallback(
+  void configure_sensor_request_callback(
     const std::shared_ptr<continental_srvs::srv::ContinentalSrr520SetRadarParameters::Request>
       request,
     const std::shared_ptr<continental_srvs::srv::ContinentalSrr520SetRadarParameters::Response>
       response);
 
   /// @brief Method periodically called to initiate the sensor synchronization mechanism
-  void syncTimerCallback();
+  void sync_timer_callback();
 
   rclcpp::Node * const parent_node_;
   std::shared_ptr<drivers::continental_srr520::ContinentalSRR520HwInterface> hw_interface_{};

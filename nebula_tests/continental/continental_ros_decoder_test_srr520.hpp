@@ -43,30 +43,31 @@ class ContinentalRosDecoderTest final : public rclcpp::Node  //, testing::Test
   std::shared_ptr<drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
     sensor_cfg_ptr_;
 
-  Status InitializeDriver(
+  Status initialize_driver(
     std::shared_ptr<drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
       sensor_configuration);
 
-  Status GetParameters(
+  Status get_parameters(
     drivers::continental_srr520::ContinentalSRR520SensorConfiguration & sensor_configuration);
 
-  void CheckResult(const std::string msg_as_string, const std::string & gt_path);
+  void check_result(const std::string msg_as_string, const std::string & gt_path);
 
-  void HRRDetectionListCallback(
+  void hrr_detection_list_callback(
     std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg);
 
-  void NearDetectionListCallback(
+  void near_detection_list_callback(
     std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg);
 
-  void StatusCallback([[maybe_unused]] std::unique_ptr<diagnostic_msgs::msg::DiagnosticArray> msg)
+  void status_callback([[maybe_unused]] std::unique_ptr<diagnostic_msgs::msg::DiagnosticArray> msg)
   {
   }
 
-  void ObjectListCallback(std::unique_ptr<continental_msgs::msg::ContinentalSrr520ObjectList> msg);
+  void object_list_callback(
+    std::unique_ptr<continental_msgs::msg::ContinentalSrr520ObjectList> msg);
 
-  void CompareNodes(const YAML::Node & node1, const YAML::Node & node2);
+  void compare_nodes(const YAML::Node & node1, const YAML::Node & node2);
 
-  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
+  static inline std::chrono::nanoseconds seconds_to_chrono_nano_seconds(const double seconds)
   {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::duration<double>(seconds));
@@ -76,9 +77,9 @@ public:
   explicit ContinentalRosDecoderTest(
     const rclcpp::NodeOptions & options, const std::string & node_name);
 
-  void ReceiveScanMsgCallback(const nebula_msgs::msg::NebulaPackets::SharedPtr scan_msg);
-  Status GetStatus();
-  void ReadBag();
+  void receive_scan_msg_callback(const nebula_msgs::msg::NebulaPackets::SharedPtr scan_msg);
+  Status get_status();
+  void read_bag();
 
 private:
   std::string bag_path_{};

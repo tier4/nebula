@@ -53,38 +53,39 @@ public:
       const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config,
     bool launch_hw);
 
-  void ProcessPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
+  void process_packet(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<
       const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
       new_config);
 
-  rcl_interfaces::msg::SetParametersResult OnParameterChange(
+  rcl_interfaces::msg::SetParametersResult on_parameter_change(
     const std::vector<rclcpp::Parameter> & p);
 
-  nebula::Status Status();
+  nebula::Status status();
 
   /// @brief Callback to process new ContinentalArs548DetectionList from the driver
   /// @param msg The new ContinentalArs548DetectionList from the driver
-  void DetectionListCallback(
+  void detection_list_callback(
     std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg);
 
   /// @brief Callback to process new ContinentalArs548ObjectList from the driver
   /// @param msg The new ContinentalArs548ObjectList from the driver
-  void ObjectListCallback(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg);
+  void object_list_callback(
+    std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg);
 
   /// @brief Callback to process new ContinentalARS548Status from the driver
   /// @param msg The new ContinentalArs548ObjectList from the driver
-  void SensorStatusCallback(
+  void sensor_status_callback(
     const drivers::continental_ars548::ContinentalARS548Status & sensor_status);
 
   /// @brief Callback to process new ContinentalARS548Status from the driver
   /// @param msg The new ContinentalArs548ObjectList from the driver
-  void PacketsCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg);
+  void packets_callback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg);
 
 private:
-  nebula::Status InitializeDriver(
+  nebula::Status initialize_driver(
     const std::shared_ptr<
       const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config);
 
@@ -92,36 +93,36 @@ private:
   /// @param msg The ARS548 detection list msg
   /// @return Resulting detection pointcloud
   pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr
-  ConvertToPointcloud(const continental_msgs::msg::ContinentalArs548DetectionList & msg);
+  convert_to_pointcloud(const continental_msgs::msg::ContinentalArs548DetectionList & msg);
 
   /// @brief Convert ARS548 objects to a pointcloud
   /// @param msg The ARS548 object list msg
   /// @return Resulting object pointcloud
-  pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr ConvertToPointcloud(
-    const continental_msgs::msg::ContinentalArs548ObjectList & msg);
+  pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr
+  convert_to_pointcloud(const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 
   /// @brief Convert ARS548 detections to a standard RadarScan msg
   /// @param msg The ARS548 detection list msg
   /// @return Resulting RadarScan msg
-  radar_msgs::msg::RadarScan ConvertToRadarScan(
+  radar_msgs::msg::RadarScan convert_to_radar_scan(
     const continental_msgs::msg::ContinentalArs548DetectionList & msg);
 
   /// @brief Convert ARS548 objects to a standard RadarTracks msg
   /// @param msg The ARS548 object list msg
   /// @return Resulting RadarTracks msg
-  radar_msgs::msg::RadarTracks ConvertToRadarTracks(
+  radar_msgs::msg::RadarTracks convert_to_radar_tracks(
     const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 
   /// @brief Convert ARS548 objects to a standard MarkerArray msg
   /// @param msg The ARS548 object list msg
   /// @return Resulting MarkerArray msg
-  visualization_msgs::msg::MarkerArray ConvertToMarkers(
+  visualization_msgs::msg::MarkerArray convert_to_markers(
     const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 
   /// @brief Convert seconds to chrono::nanoseconds
   /// @param seconds
   /// @return chrono::nanoseconds
-  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
+  static inline std::chrono::nanoseconds seconds_to_chrono_nano_seconds(const double seconds)
   {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::duration<double>(seconds));
@@ -151,8 +152,8 @@ private:
 
   std::unordered_set<int> previous_ids_{};
 
-  constexpr static int REFERENCE_POINTS_NUM = 9;
-  constexpr static std::array<std::array<double, 2>, REFERENCE_POINTS_NUM> reference_to_center_ = {
+  constexpr static int reference_points_num = 9;
+  constexpr static std::array<std::array<double, 2>, reference_points_num> reference_to_center = {
     {{{-1.0, -1.0}},
      {{-1.0, 0.0}},
      {{-1.0, 1.0}},
