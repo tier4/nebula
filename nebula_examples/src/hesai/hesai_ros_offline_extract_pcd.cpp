@@ -20,6 +20,8 @@
 #include "rosbag2_cpp/reader.hpp"
 #include "rosbag2_cpp/readers/sequential_reader.hpp"
 #include "rosbag2_storage/storage_options.hpp"
+
+#include <nebula_common/hesai/hesai_common.hpp>
 // #include <boost/filesystem/path.hpp>
 // #include <boost/filesystem/operations.hpp>
 
@@ -38,7 +40,7 @@ HesaiRosOfflineExtractSample::HesaiRosOfflineExtractSample(
   drivers::HesaiCorrection correction_configuration;
 
   wrapper_status_ =
-    GetParameters(sensor_configuration, calibration_configuration, correction_configuration);
+    get_parameters(sensor_configuration, calibration_configuration, correction_configuration);
   if (Status::OK != wrapper_status_) {
     RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error: " << wrapper_status_);
     return;
@@ -53,11 +55,11 @@ HesaiRosOfflineExtractSample::HesaiRosOfflineExtractSample(
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
   if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
     correction_cfg_ptr_ = std::make_shared<drivers::HesaiCorrection>(correction_configuration);
-    wrapper_status_ = InitializeDriver(
+    wrapper_status_ = initialize_driver(
       std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
       correction_cfg_ptr_);
   } else {
-    wrapper_status_ = InitializeDriver(
+    wrapper_status_ = initialize_driver(
       std::const_pointer_cast<drivers::SensorConfigurationBase>(sensor_cfg_ptr_),
       calibration_cfg_ptr_);
   }
@@ -65,7 +67,7 @@ HesaiRosOfflineExtractSample::HesaiRosOfflineExtractSample(
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 }
 
-Status HesaiRosOfflineExtractSample::InitializeDriver(
+Status HesaiRosOfflineExtractSample::initialize_driver(
   std::shared_ptr<drivers::SensorConfigurationBase> sensor_configuration,
   std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calibration_configuration)
 {
@@ -73,24 +75,24 @@ Status HesaiRosOfflineExtractSample::InitializeDriver(
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
     std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
     calibration_configuration);
-  return driver_ptr_->GetStatus();
+  return driver_ptr_->get_status();
 }
 
-Status HesaiRosOfflineExtractSample::GetStatus()
+Status HesaiRosOfflineExtractSample::get_status()
 {
   return wrapper_status_;
 }
 
-Status HesaiRosOfflineExtractSample::GetParameters(
+Status HesaiRosOfflineExtractSample::get_parameters(
   drivers::HesaiSensorConfiguration & sensor_configuration,
   drivers::HesaiCalibrationConfiguration & calibration_configuration,
   drivers::HesaiCorrection & correction_configuration)
 {
   auto sensor_model_ = this->declare_parameter<std::string>("sensor_model", "");
-  sensor_configuration.sensor_model = nebula::drivers::SensorModelFromString(sensor_model_);
+  sensor_configuration.sensor_model = nebula::drivers::sensor_model_from_string(sensor_model_);
   auto return_mode_ = this->declare_parameter<std::string>("return_mode", "", param_read_only());
   sensor_configuration.return_mode =
-    nebula::drivers::ReturnModeFromStringHesai(return_mode_, sensor_configuration.sensor_model);
+    nebula::drivers::return_mode_from_string_hesai(return_mode_, sensor_configuration.sensor_model);
   sensor_configuration.frame_id =
     declare_parameter<std::string>("frame_id", "pandar", param_read_only());
 
@@ -112,14 +114,15 @@ Status HesaiRosOfflineExtractSample::GetParameters(
   calibration_configuration.calibration_file =
     declare_parameter<std::string>("calibration_file", "", param_read_only());
   if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
-    correction_file_path = declare_parameter<std::string>("correction_file", "", param_read_only());
+    correction_file_path_ =
+      declare_parameter<std::string>("correction_file", "", param_read_only());
   }
 
-  bag_path = declare_parameter<std::string>("bag_path", "", param_read_only());
-  storage_id = declare_parameter<std::string>("storage_id", "sqlite3", param_read_only());
-  out_path = declare_parameter<std::string>("out_path", "", param_read_only());
-  format = declare_parameter<std::string>("format", "cdr", param_read_only());
-  target_topic = declare_parameter<std::string>("target_topic", "", param_read_only());
+  bag_path_ = declare_parameter<std::string>("bag_path", "", param_read_only());
+  storage_id_ = declare_parameter<std::string>("storage_id", "sqlite3", param_read_only());
+  out_path_ = declare_parameter<std::string>("out_path", "", param_read_only());
+  format_ = declare_parameter<std::string>("format", "cdr", param_read_only());
+  target_topic_ = declare_parameter<std::string>("target_topic", "", param_read_only());
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
@@ -134,7 +137,7 @@ Status HesaiRosOfflineExtractSample::GetParameters(
     return Status::INVALID_CALIBRATION_FILE;
   } else {
     auto cal_status =
-      calibration_configuration.LoadFromFile(calibration_configuration.calibration_file);
+      calibration_configuration.load_from_file(calibration_configuration.calibration_file);
     if (cal_status != Status::OK) {
       RCLCPP_ERROR_STREAM(
         this->get_logger(),
@@ -143,13 +146,13 @@ Status HesaiRosOfflineExtractSample::GetParameters(
     }
   }
   if (sensor_configuration.sensor_model == drivers::SensorModel::HESAI_PANDARAT128) {
-    if (correction_file_path.empty()) {
+    if (correction_file_path_.empty()) {
       return Status::INVALID_CALIBRATION_FILE;
     } else {
-      auto cal_status = correction_configuration.LoadFromFile(correction_file_path);
+      auto cal_status = correction_configuration.load_from_file(correction_file_path_);
       if (cal_status != Status::OK) {
         RCLCPP_ERROR_STREAM(
-          this->get_logger(), "Given Correction File: '" << correction_file_path << "'");
+          this->get_logger(), "Given Correction File: '" << correction_file_path_ << "'");
         return cal_status;
       }
     }
@@ -159,19 +162,19 @@ Status HesaiRosOfflineExtractSample::GetParameters(
   return Status::OK;
 }
 
-Status HesaiRosOfflineExtractSample::ReadBag()
+Status HesaiRosOfflineExtractSample::read_bag()
 {
   rosbag2_storage::StorageOptions storage_options;
   rosbag2_cpp::ConverterOptions converter_options;
 
-  std::cout << bag_path << std::endl;
-  std::cout << storage_id << std::endl;
-  std::cout << out_path << std::endl;
-  std::cout << format << std::endl;
-  std::cout << target_topic << std::endl;
+  std::cout << bag_path_ << std::endl;
+  std::cout << storage_id_ << std::endl;
+  std::cout << out_path_ << std::endl;
+  std::cout << format_ << std::endl;
+  std::cout << target_topic_ << std::endl;
 
-  rcpputils::fs::path o_dir(out_path);
-  auto target_topic_name = target_topic;
+  rcpputils::fs::path o_dir(out_path_);
+  auto target_topic_name = target_topic_;
   if (target_topic_name.substr(0, 1) == "/") {
     target_topic_name = target_topic_name.substr(1);
   }
@@ -183,9 +186,9 @@ Status HesaiRosOfflineExtractSample::ReadBag()
 
   pcl::PCDWriter writer;
 
-  storage_options.uri = bag_path;
-  storage_options.storage_id = storage_id;
-  converter_options.output_serialization_format = format;
+  storage_options.uri = bag_path_;
+  storage_options.storage_id = storage_id_;
+  converter_options.output_serialization_format = format_;
 
   rosbag2_cpp::Reader reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
   reader.open(storage_options, converter_options);
@@ -194,7 +197,7 @@ Status HesaiRosOfflineExtractSample::ReadBag()
 
     std::cout << "Found topic name " << bag_message->topic_name << std::endl;
 
-    if (bag_message->topic_name != target_topic) {
+    if (bag_message->topic_name != target_topic_) {
       continue;
     }
 
@@ -207,7 +210,7 @@ Status HesaiRosOfflineExtractSample::ReadBag()
               << bag_message->time_stamp << std::endl;
 
     for (auto & pkt : extracted_msg.packets) {
-      auto pointcloud_ts = driver_ptr_->ParseCloudPacket(
+      auto pointcloud_ts = driver_ptr_->parse_cloud_packet(
         std::vector<uint8_t>(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size)));
       auto pointcloud = std::get<0>(pointcloud_ts);
 

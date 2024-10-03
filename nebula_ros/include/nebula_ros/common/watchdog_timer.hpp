@@ -40,13 +40,13 @@ public:
       std::chrono::duration_cast<std::chrono::nanoseconds>(expected_update_interval).count())
   {
     timer_ =
-      node_.create_wall_timer(expected_update_interval, std::bind(&WatchdogTimer::onTimer, this));
+      node_.create_wall_timer(expected_update_interval, std::bind(&WatchdogTimer::on_timer, this));
   }
 
   void update() { last_update_ns_ = node_.get_clock()->now().nanoseconds(); }
 
 private:
-  void onTimer()
+  void on_timer()
   {
     uint64_t now_ns = node_.get_clock()->now().nanoseconds();
 

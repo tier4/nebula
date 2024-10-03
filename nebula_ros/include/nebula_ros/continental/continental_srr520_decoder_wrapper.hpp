@@ -54,45 +54,46 @@ public:
       config,
     std::shared_ptr<drivers::continental_srr520::ContinentalSRR520HwInterface> hw_interface_ptr);
 
-  void ProcessPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
+  void process_packet(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<
       const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration> &
       new_config_ptr);
 
-  rcl_interfaces::msg::SetParametersResult OnParameterChange(
+  rcl_interfaces::msg::SetParametersResult on_parameter_change(
     const std::vector<rclcpp::Parameter> & p);
 
-  nebula::Status Status();
+  nebula::Status status();
 
   /// @brief Callback to process a new Near ContinentalSrr520DetectionList from the driver
   /// @param msg The new ContinentalSrr520DetectionList from the driver
-  void NearDetectionListCallback(
+  void near_detection_list_callback(
     std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg);
 
   /// @brief Callback to process a new HRR ContinentalSrr520DetectionList from the driver
   /// @param msg The new ContinentalSrr520DetectionList from the driver
-  void HRRDetectionListCallback(
+  void hrr_detection_list_callback(
     std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList> msg);
 
   /// @brief Callback to process a new ContinentalSrr520ObjectList from the driver
   /// @param msg The new ContinentalSrr520ObjectList from the driver
-  void ObjectListCallback(std::unique_ptr<continental_msgs::msg::ContinentalSrr520ObjectList> msg);
+  void object_list_callback(
+    std::unique_ptr<continental_msgs::msg::ContinentalSrr520ObjectList> msg);
 
   /// @brief Callback to process a new DiagnosticArray from the driver
   /// @param msg The new DiagnosticArray from the driver
-  void StatusCallback(std::unique_ptr<diagnostic_msgs::msg::DiagnosticArray> msg);
+  void status_callback(std::unique_ptr<diagnostic_msgs::msg::DiagnosticArray> msg);
 
   /// @brief Callback to process a new SyncFollowUp message from the driver
-  void SyncFollowUpCallback(builtin_interfaces::msg::Time stamp);
+  void sync_follow_up_callback(builtin_interfaces::msg::Time stamp);
 
   /// @brief Callback to process a new NebulaPackets message from the driver
   /// @param msg The new NebulaPackets from the driver
-  void PacketsCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg);
+  void packets_callback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg);
 
 private:
-  nebula::Status InitializeDriver(
+  nebula::Status initialize_driver(
     const std::shared_ptr<
       const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration> & config);
 
@@ -100,30 +101,30 @@ private:
   /// @param msg The SRR520 detection list msg
   /// @return Resulting detection pointcloud
   pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Detection>::Ptr
-  ConvertToPointcloud(const continental_msgs::msg::ContinentalSrr520DetectionList & msg);
+  convert_to_pointcloud(const continental_msgs::msg::ContinentalSrr520DetectionList & msg);
 
   /// @brief Convert SRR520 objects to a pointcloud
   /// @param msg The SRR520 object list msg
   /// @return Resulting object pointcloud
-  pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Object>::Ptr ConvertToPointcloud(
-    const continental_msgs::msg::ContinentalSrr520ObjectList & msg);
+  pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Object>::Ptr
+  convert_to_pointcloud(const continental_msgs::msg::ContinentalSrr520ObjectList & msg);
 
   /// @brief Convert SRR520 detections to a standard RadarScan msg
   /// @param msg The SRR520 detection list msg
   /// @return Resulting RadarScan msg
-  radar_msgs::msg::RadarScan ConvertToRadarScan(
+  radar_msgs::msg::RadarScan convert_to_radar_scan(
     const continental_msgs::msg::ContinentalSrr520DetectionList & msg);
 
   /// @brief Convert SRR520 objects to a standard RadarTracks msg
   /// @param msg The SRR520 object list msg
   /// @return Resulting RadarTracks msg
-  radar_msgs::msg::RadarTracks ConvertToRadarTracks(
+  radar_msgs::msg::RadarTracks convert_to_radar_tracks(
     const continental_msgs::msg::ContinentalSrr520ObjectList & msg);
 
   /// @brief Convert SRR520 objects to a standard MarkerArray msg
   /// @param msg The SRR520 object list msg
   /// @return Resulting MarkerArray msg
-  visualization_msgs::msg::MarkerArray ConvertToMarkers(
+  visualization_msgs::msg::MarkerArray convert_to_markers(
     const continental_msgs::msg::ContinentalSrr520ObjectList & msg);
 
   const rclcpp::Node * const parent_node_;

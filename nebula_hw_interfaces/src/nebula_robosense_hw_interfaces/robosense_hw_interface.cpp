@@ -13,7 +13,7 @@ RobosenseHwInterface::RobosenseHwInterface()
 {
 }
 
-void RobosenseHwInterface::ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer)
+void RobosenseHwInterface::receive_sensor_packet_callback(std::vector<uint8_t> & buffer)
 {
   if (!scan_reception_callback_) {
     return;
@@ -22,7 +22,7 @@ void RobosenseHwInterface::ReceiveSensorPacketCallback(std::vector<uint8_t> & bu
   scan_reception_callback_(buffer);
 }
 
-void RobosenseHwInterface::ReceiveInfoPacketCallback(std::vector<uint8_t> & buffer)
+void RobosenseHwInterface::receive_info_packet_callback(std::vector<uint8_t> & buffer)
 {
   if (!info_reception_callback_) {
     return;
@@ -31,7 +31,7 @@ void RobosenseHwInterface::ReceiveInfoPacketCallback(std::vector<uint8_t> & buff
   info_reception_callback_(buffer);
 }
 
-Status RobosenseHwInterface::SensorInterfaceStart()
+Status RobosenseHwInterface::sensor_interface_start()
 {
   try {
     std::cout << "Starting UDP server for data packets on: " << *sensor_configuration_ << std::endl;
@@ -40,8 +40,8 @@ Status RobosenseHwInterface::SensorInterfaceStart()
     cloud_udp_driver_->receiver()->open();
     cloud_udp_driver_->receiver()->bind();
 
-    cloud_udp_driver_->receiver()->asyncReceive(
-      std::bind(&RobosenseHwInterface::ReceiveSensorPacketCallback, this, std::placeholders::_1));
+    cloud_udp_driver_->receiver()->asyncReceive(std::bind(
+      &RobosenseHwInterface::receive_sensor_packet_callback, this, std::placeholders::_1));
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
     std::cerr << status << sensor_configuration_->sensor_ip << ","
@@ -51,11 +51,11 @@ Status RobosenseHwInterface::SensorInterfaceStart()
   return Status::OK;
 }
 
-Status RobosenseHwInterface::InfoInterfaceStart()
+Status RobosenseHwInterface::info_interface_start()
 {
   try {
     std::cout << "Starting UDP server for info packets on: " << *sensor_configuration_ << std::endl;
-    PrintInfo(
+    print_info(
       "Starting UDP server for info packets on: " + sensor_configuration_->sensor_ip + ": " +
       std::to_string(sensor_configuration_->gnss_port));
     info_udp_driver_->init_receiver(
@@ -64,7 +64,7 @@ Status RobosenseHwInterface::InfoInterfaceStart()
     info_udp_driver_->receiver()->bind();
 
     info_udp_driver_->receiver()->asyncReceive(
-      std::bind(&RobosenseHwInterface::ReceiveInfoPacketCallback, this, std::placeholders::_1));
+      std::bind(&RobosenseHwInterface::receive_info_packet_callback, this, std::placeholders::_1));
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
     std::cerr << status << sensor_configuration_->sensor_ip << ","
@@ -75,7 +75,7 @@ Status RobosenseHwInterface::InfoInterfaceStart()
   return Status::OK;
 }
 
-Status RobosenseHwInterface::SetSensorConfiguration(
+Status RobosenseHwInterface::set_sensor_configuration(
   std::shared_ptr<const RobosenseSensorConfiguration> sensor_configuration)
 {
   if (!(sensor_configuration->sensor_model == SensorModel::ROBOSENSE_BPEARL_V3 ||
@@ -89,21 +89,21 @@ Status RobosenseHwInterface::SetSensorConfiguration(
   return Status::OK;
 }
 
-Status RobosenseHwInterface::RegisterScanCallback(
+Status RobosenseHwInterface::register_scan_callback(
   std::function<void(std::vector<uint8_t> &)> scan_callback)
 {
   scan_reception_callback_ = std::move(scan_callback);
   return Status::OK;
 }
 
-Status RobosenseHwInterface::RegisterInfoCallback(
+Status RobosenseHwInterface::register_info_callback(
   std::function<void(std::vector<uint8_t> &)> info_callback)
 {
   info_reception_callback_ = std::move(info_callback);
   return Status::OK;
 }
 
-void RobosenseHwInterface::PrintDebug(std::string debug)
+void RobosenseHwInterface::print_debug(std::string debug)
 {
   if (parent_node_logger_) {
     RCLCPP_DEBUG_STREAM((*parent_node_logger_), debug);
@@ -112,7 +112,7 @@ void RobosenseHwInterface::PrintDebug(std::string debug)
   }
 }
 
-void RobosenseHwInterface::PrintInfo(std::string info)
+void RobosenseHwInterface::print_info(std::string info)
 {
   if (parent_node_logger_) {
     RCLCPP_INFO_STREAM((*parent_node_logger_), info);
@@ -121,7 +121,7 @@ void RobosenseHwInterface::PrintInfo(std::string info)
   }
 }
 
-void RobosenseHwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
+void RobosenseHwInterface::set_logger(std::shared_ptr<rclcpp::Logger> logger)
 {
   parent_node_logger_ = logger;
 }

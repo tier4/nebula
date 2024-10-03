@@ -40,7 +40,7 @@ private:
   std::shared_ptr<HesaiScanDecoder> scan_decoder_;
 
   template <typename SensorT>
-  std::shared_ptr<HesaiScanDecoder> InitializeDecoder(
+  std::shared_ptr<HesaiScanDecoder> initialize_decoder(
     const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
       calibration_configuration);
@@ -58,18 +58,18 @@ public:
 
   /// @brief Get current status of this driver
   /// @return Current status
-  Status GetStatus();
+  Status get_status();
 
   /// @brief Setting CalibrationConfiguration (not used)
   /// @param calibration_configuration
   /// @return Resulting status
-  Status SetCalibrationConfiguration(
+  Status set_calibration_configuration(
     const HesaiCalibrationConfigurationBase & calibration_configuration);
 
   /// @brief Convert raw packet to pointcloud
   /// @param packet Packet to convert
   /// @return Tuple of pointcloud and timestamp
-  std::tuple<drivers::NebulaPointCloudPtr, double> ParseCloudPacket(
+  std::tuple<drivers::NebulaPointCloudPtr, double> parse_cloud_packet(
     const std::vector<uint8_t> & packet);
 };
 

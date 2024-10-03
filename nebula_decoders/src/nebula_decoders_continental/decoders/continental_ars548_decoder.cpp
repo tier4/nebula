@@ -32,12 +32,12 @@ ContinentalARS548Decoder::ContinentalARS548Decoder(
   config_ptr_ = sensor_configuration;
 }
 
-Status ContinentalARS548Decoder::GetStatus()
+Status ContinentalARS548Decoder::get_status()
 {
   return Status::OK;
 }
 
-Status ContinentalARS548Decoder::RegisterDetectionListCallback(
+Status ContinentalARS548Decoder::register_detection_list_callback(
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList>)>
     detection_list_callback)
 {
@@ -45,7 +45,7 @@ Status ContinentalARS548Decoder::RegisterDetectionListCallback(
   return Status::OK;
 }
 
-Status ContinentalARS548Decoder::RegisterObjectListCallback(
+Status ContinentalARS548Decoder::register_object_list_callback(
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList>)>
     object_list_callback)
 {
@@ -53,21 +53,21 @@ Status ContinentalARS548Decoder::RegisterObjectListCallback(
   return Status::OK;
 }
 
-Status ContinentalARS548Decoder::RegisterSensorStatusCallback(
+Status ContinentalARS548Decoder::register_sensor_status_callback(
   std::function<void(const ContinentalARS548Status & status)> sensor_status_callback)
 {
   sensor_status_callback_ = std::move(sensor_status_callback);
   return Status::OK;
 }
 
-Status ContinentalARS548Decoder::RegisterPacketsCallback(
+Status ContinentalARS548Decoder::register_packets_callback(
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> nebula_packets_callback)
 {
   nebula_packets_callback_ = std::move(nebula_packets_callback);
   return Status::OK;
 }
 
-bool ContinentalARS548Decoder::ProcessPacket(
+bool ContinentalARS548Decoder::process_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   const auto & data = packet_msg->data;
@@ -83,28 +83,28 @@ bool ContinentalARS548Decoder::ProcessPacket(
     return false;
   }
 
-  if (header.method_id.value() == DETECTION_LIST_METHOD_ID) {
+  if (header.method_id.value() == detection_list_method_id) {
     if (
-      data.size() != DETECTION_LIST_UDP_PAYLOAD ||
-      header.length.value() != DETECTION_LIST_PDU_LENGTH) {
+      data.size() != detection_list_udp_payload ||
+      header.length.value() != detection_list_pdu_length) {
       return false;
     }
 
-    ParseDetectionsListPacket(*packet_msg);
-  } else if (header.method_id.value() == OBJECT_LIST_METHOD_ID) {
-    if (data.size() != OBJECT_LIST_UDP_PAYLOAD || header.length.value() != OBJECT_LIST_PDU_LENGTH) {
+    parse_detections_list_packet(*packet_msg);
+  } else if (header.method_id.value() == object_list_method_id) {
+    if (data.size() != object_list_udp_payload || header.length.value() != object_list_pdu_length) {
       return false;
     }
 
-    ParseObjectsListPacket(*packet_msg);
-  } else if (header.method_id.value() == SENSOR_STATUS_METHOD_ID) {
+    parse_objects_list_packet(*packet_msg);
+  } else if (header.method_id.value() == sensor_status_method_id) {
     if (
-      data.size() != SENSOR_STATUS_UDP_PAYLOAD ||
-      header.length.value() != SENSOR_STATUS_PDU_LENGTH) {
+      data.size() != sensor_status_udp_payload ||
+      header.length.value() != sensor_status_pdu_length) {
       return false;
     }
 
-    ParseSensorStatusPacket(*packet_msg);
+    parse_sensor_status_packet(*packet_msg);
   }
 
   // Some messages are not parsed but are still sent to the user (e.g., filters)
@@ -119,7 +119,7 @@ bool ContinentalARS548Decoder::ProcessPacket(
   return true;
 }
 
-bool ContinentalARS548Decoder::ParseDetectionsListPacket(
+bool ContinentalARS548Decoder::parse_detections_list_packet(
   const nebula_msgs::msg::NebulaPacket & packet_msg)
 {
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548DetectionList>();
@@ -246,7 +246,7 @@ bool ContinentalARS548Decoder::ParseDetectionsListPacket(
   return true;
 }
 
-bool ContinentalARS548Decoder::ParseObjectsListPacket(
+bool ContinentalARS548Decoder::parse_objects_list_packet(
   const nebula_msgs::msg::NebulaPacket & packet_msg)
 {
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548ObjectList>();
@@ -400,7 +400,7 @@ bool ContinentalARS548Decoder::ParseObjectsListPacket(
   return true;
 }
 
-bool ContinentalARS548Decoder::ParseSensorStatusPacket(
+bool ContinentalARS548Decoder::parse_sensor_status_packet(
   const nebula_msgs::msg::NebulaPacket & packet_msg)
 {
   SensorStatusPacket sensor_status_packet;
@@ -410,13 +410,13 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
   radar_status_.timestamp_seconds = sensor_status_packet.stamp.timestamp_seconds.value();
 
   switch (sensor_status_packet.stamp.timestamp_sync_status) {
-    case SYNC_OK:
+    case sync_ok:
       radar_status_.timestamp_sync_status = "1:SYNC_OK";
       break;
-    case NEVER_SYNC:
+    case never_sync:
       radar_status_.timestamp_sync_status = "2:NEVER_SYNC";
       break;
-    case SYNC_LOST:
+    case sync_lost:
       radar_status_.timestamp_sync_status = "3:SYNC_LOST";
       break;
     default:
@@ -430,10 +430,10 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
   radar_status_.sw_version_patch = sensor_status_packet.sw_version_patch;
 
   switch (sensor_status_packet.status.plug_orientation) {
-    case PLUG_RIGHT:
+    case plug_right:
       radar_status_.plug_orientation = "0:PLUG_RIGHT";
       break;
-    case PLUG_LEFT:
+    case plug_left:
       radar_status_.plug_orientation = "1:PLUG_LEFT";
       break;
     default:
@@ -456,13 +456,13 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
   radar_status_.wheel_base = sensor_status_packet.status.wheelbase.value();
 
   switch (sensor_status_packet.status.frequency_slot) {
-    case FREQUENCY_SLOT_LOW:
+    case frequency_slot_low:
       radar_status_.frequency_slot = "0:Low (76.23 GHz)";
       break;
-    case FREQUENCY_SLOT_MID:
+    case frequency_slot_mid:
       radar_status_.frequency_slot = "1:Mid (76.48 GHz)";
       break;
-    case FREQUENCY_SLOT_HIGH:
+    case frequency_slot_high:
       radar_status_.frequency_slot = "2:High (76.73 GHz)";
       break;
     default:
@@ -475,10 +475,10 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
   radar_status_.time_slot = sensor_status_packet.status.time_slot;
 
   switch (sensor_status_packet.status.hcc) {
-    case HCC_WORLDWIDE:
+    case hcc_worldwide:
       radar_status_.hcc = "1:Worldwide";
       break;
-    case HCC_JAPAN:
+    case hcc_japan:
       radar_status_.hcc = "1:Japan";
       break;
     default:
@@ -487,10 +487,10 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
   }
 
   switch (sensor_status_packet.status.powersave_standstill) {
-    case POWERSAVE_STANDSTILL_OFF:
+    case powersave_standstill_off:
       radar_status_.power_save_standstill = "0:Off";
       break;
-    case POWERSAVE_STANDSTILL_ON:
+    case powersave_standstill_on:
       radar_status_.power_save_standstill = "1:On";
       break;
     default:
@@ -516,9 +516,9 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
 
   auto vdy_value_to_string = [](uint8_t value) -> std::string {
     switch (value) {
-      case VDY_OK:
+      case vdy_ok:
         return "0:VDY_OK";
-      case VDY_NOTOK:
+      case vdy_notok:
         return "1:VDY_NOTOK";
       default:
         return std::to_string(value) + ":Invalid";
@@ -541,13 +541,13 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
     vdy_value_to_string(sensor_status_packet.characteristic_speed_status);
 
   switch (sensor_status_packet.radar_status) {
-    case STATE_INIT:
+    case state_init:
       radar_status_.radar_status = "0:STATE_INIT";
       break;
-    case STATE_OK:
+    case state_ok:
       radar_status_.radar_status = "1:STATE_OK";
       break;
-    case STATE_INVALID:
+    case state_invalid:
       radar_status_.radar_status = "2:STATE_INVALID";
       break;
     default:
@@ -596,19 +596,19 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
   const uint8_t & blockage_status1 = (sensor_status_packet.blockage_status & 0xf0) >> 4;
 
   switch (blockage_status0) {
-    case BLOCKAGE_STATUS_BLIND:
+    case blockage_status_blind:
       radar_status_.blockage_status = "0:Blind";
       break;
-    case BLOCKAGE_STATUS_HIGH:
+    case blockage_status_high:
       radar_status_.blockage_status = "1:High";
       break;
-    case BLOCKAGE_STATUS_MID:
+    case blockage_status_mid:
       radar_status_.blockage_status = "2:Mid";
       break;
-    case BLOCKAGE_STATUS_LOW:
+    case blockage_status_low:
       radar_status_.blockage_status = "3:Low";
       break;
-    case BLOCKAGE_STATUS_NONE:
+    case blockage_status_none:
       radar_status_.blockage_status = "4:None";
       break;
     default:
@@ -617,13 +617,13 @@ bool ContinentalARS548Decoder::ParseSensorStatusPacket(
   }
 
   switch (blockage_status1) {
-    case BLOCKAGE_TEST_FAILED:
+    case blockage_test_failed:
       radar_status_.blockage_status += ". 0:Self test failed";
       break;
-    case BLOCKAGE_TEST_PASSED:
+    case blockage_test_passed:
       radar_status_.blockage_status += ". 1:Self test passed";
       break;
-    case BLOCKAGE_TEST_ONGOING:
+    case blockage_test_ongoing:
       radar_status_.blockage_status += ". 2:Self test ongoing";
       break;
     default:

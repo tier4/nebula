@@ -52,19 +52,19 @@ public:
 
   /// @brief Get current status of this driver
   /// @return Current status
-  Status GetStatus();
+  Status get_status();
 
-  Status DecodeInfoPacket(const std::vector<uint8_t> & packet);
+  Status decode_info_packet(const std::vector<uint8_t> & packet);
 
-  std::map<std::string, std::string> GetSensorInfo();
+  std::map<std::string, std::string> get_sensor_info();
 
-  ReturnMode GetReturnMode();
+  ReturnMode get_return_mode();
 
-  RobosenseCalibrationConfiguration GetSensorCalibration();
+  RobosenseCalibrationConfiguration get_sensor_calibration();
 
   /// @brief Get the status of time synchronization
   /// @return True if the sensor's clock is synchronized
-  bool GetSyncStatus();
+  bool get_sync_status();
 };
 
 }  // namespace drivers

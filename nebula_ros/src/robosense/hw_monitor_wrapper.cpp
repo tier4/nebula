@@ -23,7 +23,7 @@ RobosenseHwMonitorWrapper::RobosenseHwMonitorWrapper(
   diag_span_ = parent_->declare_parameter<uint16_t>("diag_span", descriptor);
 }
 
-void RobosenseHwMonitorWrapper::InitializeRobosenseDiagnostics()
+void RobosenseHwMonitorWrapper::initialize_robosense_diagnostics()
 {
   std::scoped_lock lock(mtx_config_, mtx_current_sensor_info_);
 
@@ -32,7 +32,7 @@ void RobosenseHwMonitorWrapper::InitializeRobosenseDiagnostics()
     return;
   }
 
-  auto hw_id = nebula::drivers::SensorModelToString(sensor_cfg_ptr_->sensor_model) + ": " +
+  auto hw_id = nebula::drivers::sensor_model_to_string(sensor_cfg_ptr_->sensor_model) + ": " +
                current_sensor_info_["serial_number"];
 
   RCLCPP_INFO(logger_, "InitializeRobosenseDiagnostics");
@@ -41,7 +41,7 @@ void RobosenseHwMonitorWrapper::InitializeRobosenseDiagnostics()
   RCLCPP_INFO_STREAM(logger_, "hardware_id: " + hw_id);
 
   diagnostics_updater_->add(
-    "robosense_status", this, &RobosenseHwMonitorWrapper::RobosenseCheckStatus);
+    "robosense_status", this, &RobosenseHwMonitorWrapper::robosense_check_status);
 
   auto on_timer_update = [this] {
     RCLCPP_DEBUG(logger_, "OnUpdateTimer");
@@ -64,7 +64,7 @@ void RobosenseHwMonitorWrapper::InitializeRobosenseDiagnostics()
   RCLCPP_DEBUG_STREAM(logger_, "add_timer");
 }
 
-void RobosenseHwMonitorWrapper::RobosenseCheckStatus(
+void RobosenseHwMonitorWrapper::robosense_check_status(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   std::lock_guard lock(mtx_current_sensor_info_);
@@ -77,7 +77,7 @@ void RobosenseHwMonitorWrapper::RobosenseCheckStatus(
   diagnostics.summary(level, "OK");
 }
 
-void RobosenseHwMonitorWrapper::DiagnosticsCallback(
+void RobosenseHwMonitorWrapper::diagnostics_callback(
   const std::map<std::string, std::string> & diag_info)
 {
   auto current_time = parent_->get_clock()->now();
@@ -89,11 +89,11 @@ void RobosenseHwMonitorWrapper::DiagnosticsCallback(
   }
 
   if (!diagnostics_updater_) {
-    InitializeRobosenseDiagnostics();
+    initialize_robosense_diagnostics();
   }
 }
 
-void RobosenseHwMonitorWrapper::OnConfigChange(
+void RobosenseHwMonitorWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::RobosenseSensorConfiguration> & new_config)
 {
   std::lock_guard lock(mtx_config_);

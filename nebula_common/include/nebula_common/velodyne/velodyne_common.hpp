@@ -53,7 +53,7 @@ inline std::ostream & operator<<(std::ostream & os, VelodyneSensorConfiguration 
 struct VelodyneCalibrationConfiguration : CalibrationConfigurationBase
 {
   VelodyneCalibration velodyne_calibration;
-  inline nebula::Status LoadFromFile(const std::string & calibration_file)
+  inline nebula::Status load_from_file(const std::string & calibration_file)
   {
     velodyne_calibration.read(calibration_file);
     if (!velodyne_calibration.initialized) {
@@ -62,17 +62,17 @@ struct VelodyneCalibrationConfiguration : CalibrationConfigurationBase
       return Status::OK;
     }
   }
-  inline nebula::Status SaveFile(const std::string & calibration_file)
+  inline nebula::Status save_file(const std::string & calibration_file)
   {
     velodyne_calibration.write(calibration_file);
     return Status::OK;
   }
 };
 
-/// @brief Convert return mode name to ReturnMode enum (Velodyne-specific ReturnModeFromString)
+/// @brief Convert return mode name to ReturnMode enum (Velodyne-specific return_mode_from_string)
 /// @param return_mode Return mode name (Upper and lower case letters must match)
 /// @return Corresponding ReturnMode
-inline ReturnMode ReturnModeFromStringVelodyne(const std::string & return_mode)
+inline ReturnMode return_mode_from_string_velodyne(const std::string & return_mode)
 {
   if (return_mode == "Strongest") return ReturnMode::SINGLE_STRONGEST;
   if (return_mode == "Last") return ReturnMode::SINGLE_LAST;

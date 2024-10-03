@@ -2,6 +2,7 @@
 
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
 
+#include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 
 #include <boost/asio/socket_base.hpp>
@@ -554,7 +555,7 @@ Status HesaiHwInterface::checkAndSetLidarRange(
 
   // Only oversize the FoV if it is not already the full 360deg
   if (cloud_min_ddeg != 0 || cloud_max_ddeg != 3600) {
-    auto padding_deg = calibration.getFovPadding();
+    auto padding_deg = calibration.get_fov_padding();
     cloud_min_ddeg += floor(std::get<0>(padding_deg) * 10);
     cloud_max_ddeg += ceil(std::get<1>(padding_deg) * 10);
   }
@@ -847,7 +848,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
   std::cout << "Start CheckAndSetConfig(HesaiConfig)!!" << std::endl;
 #endif
-  auto current_return_mode = nebula::drivers::ReturnModeFromIntHesai(
+  auto current_return_mode = nebula::drivers::return_mode_from_int_hesai(
     hesai_config.return_mode, sensor_configuration->sensor_model);
   // Avoids spamming the sensor, which leads to failure when configuring it.
   auto wait_time = 100ms;
@@ -859,7 +860,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     ss2 << sensor_configuration->return_mode;
     PrintInfo("Current Configuration return_mode: " + ss2.str());
     std::thread t([this, sensor_configuration] {
-      auto return_mode_int = nebula::drivers::IntFromReturnModeHesai(
+      auto return_mode_int = nebula::drivers::int_from_return_mode_hesai(
         sensor_configuration->return_mode, sensor_configuration->sensor_model);
       if (return_mode_int < 0) {
         PrintError(

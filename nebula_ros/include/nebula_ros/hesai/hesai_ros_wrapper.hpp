@@ -57,33 +57,33 @@ public:
 
   /// @brief Get current status of this driver
   /// @return Current status
-  Status GetStatus();
+  Status get_status();
 
   /// @brief Start point cloud streaming (Call SensorInterfaceStart of HwInterface)
   /// @return Resulting status
-  Status StreamStart();
+  Status stream_start();
 
 private:
-  void ReceiveCloudPacketCallback(std::vector<uint8_t> & packet);
+  void receive_cloud_packet_callback(std::vector<uint8_t> & packet);
 
-  void ReceiveScanMessageCallback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg);
+  void receive_scan_message_callback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg);
 
-  Status DeclareAndGetSensorConfigParams();
+  Status declare_and_get_sensor_config_params();
 
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
   /// @return SetParametersResult
-  rcl_interfaces::msg::SetParametersResult OnParameterChange(
+  rcl_interfaces::msg::SetParametersResult on_parameter_change(
     const std::vector<rclcpp::Parameter> & p);
 
-  Status ValidateAndSetConfig(
+  Status validate_and_set_config(
     std::shared_ptr<const drivers::HesaiSensorConfiguration> & new_config);
 
   /// @brief The ROS 2 parameter holding the calibration file path is called differently depending
   /// on the sensor model. This function returns the correct parameter name given a model.
   /// @param model The sensor model
   /// @return std::string The parameter name
-  std::string getCalibrationParameterName(drivers::SensorModel model) const;
+  std::string get_calibration_parameter_name(drivers::SensorModel model) const;
 
   /// @brief Load calibration data from the best available source:
   /// 1. If sensor connected, download and save from sensor
@@ -93,7 +93,7 @@ private:
   /// @param ignore_others If true, skip straight so step 3 above, ignoring better calibration
   /// options
   /// @return The calibration data if successful, or an error code if not
-  get_calibration_result_t GetCalibrationData(
+  get_calibration_result_t get_calibration_data(
     const std::string & calibration_file_path, bool ignore_others = false);
 
   Status wrapper_status_;
@@ -101,7 +101,7 @@ private:
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> sensor_cfg_ptr_{};
 
   /// @brief Stores received packets that have not been processed yet by the decoder thread
-  mt_queue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
+  MtQueue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
   /// @brief Thread to isolate decoding from receiving
   std::thread decoder_thread_;
 

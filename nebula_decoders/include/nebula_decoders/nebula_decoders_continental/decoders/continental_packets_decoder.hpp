@@ -41,12 +41,12 @@ public:
 
   /// @brief Get current status of this driver
   /// @return Current status
-  virtual Status GetStatus() = 0;
+  virtual Status get_status() = 0;
 
   /// @brief Virtual function for parsing a NebulaPacket
   /// @param packet_msg
   /// @return Resulting flag
-  virtual bool ProcessPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg) = 0;
+  virtual bool process_packet(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg) = 0;
 };
 }  // namespace drivers
 }  // namespace nebula

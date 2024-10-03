@@ -62,7 +62,7 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   status_ = Status::OK;
 }
 
-void HesaiHwInterfaceWrapper::OnConfigChange(
+void HesaiHwInterfaceWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config)
 {
   hw_interface_->SetSensorConfiguration(
@@ -72,12 +72,12 @@ void HesaiHwInterfaceWrapper::OnConfigChange(
   }
 }
 
-Status HesaiHwInterfaceWrapper::Status()
+Status HesaiHwInterfaceWrapper::status()
 {
   return status_;
 }
 
-std::shared_ptr<drivers::HesaiHwInterface> HesaiHwInterfaceWrapper::HwInterface() const
+std::shared_ptr<drivers::HesaiHwInterface> HesaiHwInterfaceWrapper::hw_interface() const
 {
   return hw_interface_;
 }

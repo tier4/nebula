@@ -38,36 +38,36 @@ RobosenseInfoDriver::RobosenseInfoDriver(
   }
 }
 
-Status RobosenseInfoDriver::GetStatus()
+Status RobosenseInfoDriver::get_status()
 {
   return driver_status_;
 }
 
-Status RobosenseInfoDriver::DecodeInfoPacket(const std::vector<uint8_t> & packet)
+Status RobosenseInfoDriver::decode_info_packet(const std::vector<uint8_t> & packet)
 {
-  const auto parsed = info_decoder_->parsePacket(packet);
+  const auto parsed = info_decoder_->parse_packet(packet);
   if (parsed) return nebula::Status::OK;
   return nebula::Status::ERROR_1;
 }
 
-std::map<std::string, std::string> RobosenseInfoDriver::GetSensorInfo()
+std::map<std::string, std::string> RobosenseInfoDriver::get_sensor_info()
 {
-  return info_decoder_->getSensorInfo();
+  return info_decoder_->get_sensor_info();
 }
 
-ReturnMode RobosenseInfoDriver::GetReturnMode()
+ReturnMode RobosenseInfoDriver::get_return_mode()
 {
-  return info_decoder_->getReturnMode();
+  return info_decoder_->get_return_mode();
 }
 
-RobosenseCalibrationConfiguration RobosenseInfoDriver::GetSensorCalibration()
+RobosenseCalibrationConfiguration RobosenseInfoDriver::get_sensor_calibration()
 {
-  return info_decoder_->getSensorCalibration();
+  return info_decoder_->get_sensor_calibration();
 }
 
-bool RobosenseInfoDriver::GetSyncStatus()
+bool RobosenseInfoDriver::get_sync_status()
 {
-  return info_decoder_->getSyncStatus();
+  return info_decoder_->get_sync_status();
 }
 
 }  // namespace drivers

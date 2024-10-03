@@ -54,18 +54,18 @@ public:
 
   /// @brief Get current status of this driver
   /// @return Current status
-  Status GetStatus();
+  Status get_status();
 
   /// @brief Setting CalibrationConfiguration (not used)
   /// @param calibration_configuration
   /// @return Resulting status
-  Status SetCalibrationConfiguration(
+  Status set_calibration_configuration(
     const CalibrationConfigurationBase & calibration_configuration) override;
 
   /// @brief Convert RobosenseScan message to point cloud
   /// @param robosense_scan Message
   /// @return tuple of Point cloud and timestamp
-  std::tuple<drivers::NebulaPointCloudPtr, double> ParseCloudPacket(
+  std::tuple<drivers::NebulaPointCloudPtr, double> parse_cloud_packet(
     const std::vector<uint8_t> & packet);
 };
 

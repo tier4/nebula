@@ -27,8 +27,8 @@ Vlp32Decoder::Vlp32Decoder(
   overflow_pc_.reset(new NebulaPointCloud);
 
   // Set up cached values for sin and cos of all the possible headings
-  for (uint16_t rot_index = 0; rot_index < ROTATION_MAX_UNITS; ++rot_index) {
-    float rotation = angles::from_degrees(ROTATION_RESOLUTION * rot_index);
+  for (uint16_t rot_index = 0; rot_index < g_rotation_max_units; ++rot_index) {
+    float rotation = angles::from_degrees(g_rotation_resolution * rot_index);
     rotation_radians_[rot_index] = rotation;
     cos_rot_table_[rot_index] = cosf(rotation);
     sin_rot_table_[rot_index] = sinf(rotation);
@@ -78,9 +78,9 @@ std::tuple<drivers::NebulaPointCloudPtr, double> Vlp32Decoder::get_pointcloud()
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
 
-int Vlp32Decoder::pointsPerPacket()
+int Vlp32Decoder::points_per_packet()
 {
-  return BLOCKS_PER_PACKET * SCANS_PER_BLOCK;
+  return g_blocks_per_packet * g_scans_per_block;
 }
 
 void Vlp32Decoder::reset_pointcloud(double time_stamp)
@@ -135,17 +135,17 @@ void Vlp32Decoder::reset_overflow(double time_stamp)
 
 void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
 {
-  checkAndHandleScanComplete(packet, packet_seconds, phase_);
+  check_and_handle_scan_complete(packet, packet_seconds, phase_);
 
   const raw_packet_t * raw = (const raw_packet_t *)packet.data();
   float last_azimuth_diff = 0;
   uint16_t azimuth_next;
-  uint8_t return_mode = packet[RETURN_MODE_INDEX];
-  const bool dual_return = (return_mode == RETURN_MODE_DUAL);
+  uint8_t return_mode = packet[g_return_mode_index];
+  const bool dual_return = (return_mode == g_return_mode_dual);
 
-  for (uint i = 0; i < BLOCKS_PER_PACKET; i++) {
+  for (uint i = 0; i < g_blocks_per_packet; i++) {
     int bank_origin = 0;
-    if (raw->blocks[i].header == LOWER_BANK) {
+    if (raw->blocks[i].header == g_lower_bank) {
       // lower bank lasers are [32..63]
       bank_origin = 32;
     }
@@ -158,7 +158,7 @@ void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
     } else {
       azimuth = azimuth_next;
     }
-    if (i < static_cast<uint>(BLOCKS_PER_PACKET - (1 + dual_return))) {
+    if (i < static_cast<uint>(g_blocks_per_packet - (1 + dual_return))) {
       // Get the next block rotation to calculate how far we rotate between blocks
       azimuth_next = raw->blocks[i + (1 + dual_return)].rotation;
 
@@ -171,11 +171,12 @@ void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
       // This makes the assumption the difference between the last block and the next packet is the
       // same as the last to the second to last.
       // Assumes RPM doesn't change much between blocks.
-      azimuth_diff =
-        (i == static_cast<uint>(BLOCKS_PER_PACKET - (4 * dual_return) - 1)) ? 0 : last_azimuth_diff;
+      azimuth_diff = (i == static_cast<uint>(g_blocks_per_packet - (4 * dual_return) - 1))
+                       ? 0
+                       : last_azimuth_diff;
     }
 
-    for (uint j = 0, k = 0; j < SCANS_PER_BLOCK; j++, k += RAW_SCAN_SIZE) {
+    for (uint j = 0, k = 0; j < g_scans_per_block; j++, k += g_raw_scan_size) {
       float x, y, z;
       uint8_t intensity;
       const uint8_t laser_number = j + bank_origin;
@@ -230,7 +231,7 @@ void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
           const float cos_vert_angle = corrections.cos_vert_correction;
           const float sin_vert_angle = corrections.sin_vert_correction;
           float azimuth_corrected_f =
-            azimuth + (azimuth_diff * VLP32_CHANNEL_DURATION / VLP32_SEQ_DURATION * j) -
+            azimuth + (azimuth_diff * g_vlp32_channel_duration / g_vlp32_seq_duration * j) -
             corrections.rot_correction * 180.0 / M_PI * 100;
           if (azimuth_corrected_f < 0) {
             azimuth_corrected_f += 36000;
@@ -329,7 +330,7 @@ void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
 
           nebula::drivers::ReturnType return_type;
           switch (return_mode) {
-            case RETURN_MODE_DUAL:
+            case g_return_mode_dual:
               if (
                 (other_return.bytes[0] == 0 && other_return.bytes[1] == 0) ||
                 (other_return.bytes[0] == current_return.bytes[0] &&
@@ -356,10 +357,10 @@ void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
                 }
               }
               break;
-            case RETURN_MODE_STRONGEST:
+            case g_return_mode_strongest:
               return_type = drivers::ReturnType::STRONGEST;
               break;
-            case RETURN_MODE_LAST:
+            case g_return_mode_last:
               return_type = drivers::ReturnType::LAST;
               break;
             default:
@@ -385,7 +386,7 @@ void Vlp32Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
   }
 }
 
-bool Vlp32Decoder::parsePacket(
+bool Vlp32Decoder::parse_packet(
   [[maybe_unused]] const velodyne_msgs::msg::VelodynePacket & velodyne_packet)
 {
   return 0;

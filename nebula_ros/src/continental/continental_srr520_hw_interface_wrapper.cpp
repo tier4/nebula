@@ -33,9 +33,9 @@ ContinentalSRR520HwInterfaceWrapper::ContinentalSRR520HwInterfaceWrapper(
   status_(Status::NOT_INITIALIZED),
   config_ptr_(config_ptr)
 {
-  hw_interface_->SetLogger(
+  hw_interface_->set_logger(
     std::make_shared<rclcpp::Logger>(parent_node->get_logger().get_child("HwInterface")));
-  status_ = hw_interface_->SetSensorConfiguration(config_ptr_);
+  status_ = hw_interface_->set_sensor_configuration(config_ptr_);
 
   if (status_ != Status::OK) {
     throw std::runtime_error(
@@ -45,12 +45,12 @@ ContinentalSRR520HwInterfaceWrapper::ContinentalSRR520HwInterfaceWrapper(
   status_ = Status::OK;
 }
 
-void ContinentalSRR520HwInterfaceWrapper::SensorInterfaceStart()
+void ContinentalSRR520HwInterfaceWrapper::sensor_interface_start()
 {
   using std::chrono_literals::operator""ms;
 
   if (Status::OK == status_) {
-    hw_interface_->SensorInterfaceStart();
+    hw_interface_->sensor_interface_start();
   }
 
   if (Status::OK == status_) {
@@ -59,41 +59,42 @@ void ContinentalSRR520HwInterfaceWrapper::SensorInterfaceStart()
 
     sync_ptr_ =
       std::make_shared<ExactTimeSync>(ExactTimeSyncPolicy(10), odometry_sub_, acceleration_sub_);
-    sync_ptr_->registerCallback(&ContinentalSRR520HwInterfaceWrapper::dynamicsCallback, this);
+    sync_ptr_->registerCallback(&ContinentalSRR520HwInterfaceWrapper::dynamics_callback, this);
 
     configure_sensor_service_server_ =
       parent_node_->create_service<continental_srvs::srv::ContinentalSrr520SetRadarParameters>(
-        "configure_sensor", std::bind(
-                              &ContinentalSRR520HwInterfaceWrapper::ConfigureSensorRequestCallback,
-                              this, std::placeholders::_1, std::placeholders::_2));
+        "configure_sensor",
+        std::bind(
+          &ContinentalSRR520HwInterfaceWrapper::configure_sensor_request_callback, this,
+          std::placeholders::_1, std::placeholders::_2));
 
     sync_timer_ = rclcpp::create_timer(
       parent_node_, parent_node_->get_clock(), 100ms,
-      std::bind(&ContinentalSRR520HwInterfaceWrapper::syncTimerCallback, this));
+      std::bind(&ContinentalSRR520HwInterfaceWrapper::sync_timer_callback, this));
   }
 }
 
-void ContinentalSRR520HwInterfaceWrapper::OnConfigChange(
+void ContinentalSRR520HwInterfaceWrapper::on_config_change(
   const std::shared_ptr<
     const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration> &
     new_config_ptr)
 {
-  hw_interface_->SetSensorConfiguration(new_config_ptr);
+  hw_interface_->set_sensor_configuration(new_config_ptr);
   config_ptr_ = new_config_ptr;
 }
 
-Status ContinentalSRR520HwInterfaceWrapper::Status()
+Status ContinentalSRR520HwInterfaceWrapper::status()
 {
   return status_;
 }
 
 std::shared_ptr<drivers::continental_srr520::ContinentalSRR520HwInterface>
-ContinentalSRR520HwInterfaceWrapper::HwInterface() const
+ContinentalSRR520HwInterfaceWrapper::hw_interface() const
 {
   return hw_interface_;
 }
 
-void ContinentalSRR520HwInterfaceWrapper::dynamicsCallback(
+void ContinentalSRR520HwInterfaceWrapper::dynamics_callback(
   const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr & odometry_msg,
   const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr & acceleration_msg)
 {
@@ -106,12 +107,12 @@ void ContinentalSRR520HwInterfaceWrapper::dynamicsCallback(
     standstill_ = true;
   }
 
-  hw_interface_->SetVehicleDynamics(
+  hw_interface_->set_vehicle_dynamics(
     acceleration_msg->accel.accel.linear.x, acceleration_msg->accel.accel.linear.y,
     odometry_msg->twist.twist.angular.z, odometry_msg->twist.twist.linear.x, standstill_);
 }
 
-void ContinentalSRR520HwInterfaceWrapper::ConfigureSensorRequestCallback(
+void ContinentalSRR520HwInterfaceWrapper::configure_sensor_request_callback(
   const std::shared_ptr<continental_srvs::srv::ContinentalSrr520SetRadarParameters::Request>
     request,
   const std::shared_ptr<continental_srvs::srv::ContinentalSrr520SetRadarParameters::Response>
@@ -165,7 +166,7 @@ void ContinentalSRR520HwInterfaceWrapper::ConfigureSensorRequestCallback(
 
   yaw = std::min<float>(std::max<float>(yaw, -3.14159f), 3.14159f);
 
-  auto result = hw_interface_->ConfigureSensor(
+  auto result = hw_interface_->configure_sensor(
     request->sensor_id, longitudinal, lateral, vertical, yaw,
     longitudinal + 0.5 * vehicle_wheelbase, vehicle_wheelbase, request->cover_damping,
     request->plug_bottom, request->reset_sensor_configuration);
@@ -174,9 +175,9 @@ void ContinentalSRR520HwInterfaceWrapper::ConfigureSensorRequestCallback(
   response->message = (std::stringstream() << result).str();
 }
 
-void ContinentalSRR520HwInterfaceWrapper::syncTimerCallback()
+void ContinentalSRR520HwInterfaceWrapper::sync_timer_callback()
 {
-  hw_interface_->SensorSync();
+  hw_interface_->sensor_sync();
 }
 
 }  // namespace ros

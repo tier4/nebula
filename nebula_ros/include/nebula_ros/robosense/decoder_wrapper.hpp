@@ -43,22 +43,22 @@ public:
     const std::shared_ptr<const nebula::drivers::RobosenseSensorConfiguration> & config,
     const std::shared_ptr<const nebula::drivers::RobosenseCalibrationConfiguration> & calibration);
 
-  void ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
+  void process_cloud_packet(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<const nebula::drivers::RobosenseSensorConfiguration> & new_config);
 
-  nebula::Status Status();
+  nebula::Status status();
 
 private:
-  void PublishCloud(
+  void publish_cloud(
     std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
     const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher);
 
   /// @brief Convert seconds to chrono::nanoseconds
   /// @param seconds
   /// @return chrono::nanoseconds
-  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
+  static inline std::chrono::nanoseconds seconds_to_chrono_nano_seconds(const double seconds)
   {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::duration<double>(seconds));
