@@ -21,9 +21,7 @@
 #include <memory>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Base class for hardware interface of each LiDAR
 class NebulaHwInterfaceBase
@@ -77,7 +75,6 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 
 #endif  // NEBULA_HW_INTERFACE_BASE_H

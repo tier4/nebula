@@ -35,9 +35,7 @@
 #define _SRC_RESOURCES_DIR_PATH ""
 #endif
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 struct HesaiRosDecoderTestParams
@@ -137,5 +135,4 @@ public:
   HesaiRosDecoderTestParams params_;
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

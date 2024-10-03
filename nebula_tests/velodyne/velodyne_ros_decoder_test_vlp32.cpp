@@ -15,9 +15,7 @@
 #include <regex>
 #include <vector>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 VelodyneRosDecoderTest::VelodyneRosDecoderTest(
   const rclcpp::NodeOptions & options, const std::string & node_name)
@@ -368,5 +366,4 @@ void VelodyneRosDecoderTest::read_bag()
   }
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

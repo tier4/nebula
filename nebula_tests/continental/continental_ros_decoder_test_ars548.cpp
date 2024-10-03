@@ -34,9 +34,7 @@
 #include <string>
 #include <utility>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 ContinentalRosDecoderTest::ContinentalRosDecoderTest(
   const rclcpp::NodeOptions & options, const std::string & node_name)
@@ -229,5 +227,4 @@ void ContinentalRosDecoderTest::read_bag()
   }
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

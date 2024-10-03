@@ -20,9 +20,7 @@
 #include <map>
 #include <string>
 #include <vector>
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 class RobosenseInfoDecoderBase
@@ -58,5 +56,4 @@ public:
   virtual bool get_sync_status() = 0;
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

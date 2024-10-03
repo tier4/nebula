@@ -34,9 +34,7 @@
 #include <tuple>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Velodyne driver
 class VelodyneDriver : NebulaDriverBase
@@ -74,7 +72,6 @@ public:
     const std::vector<uint8_t> & packet, double packet_seconds);
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 
 #endif  // NEBULA_VELODYNE_DRIVER_H

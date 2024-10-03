@@ -27,9 +27,7 @@
 
 #include <regex>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 HesaiRosOfflineExtractSample::HesaiRosOfflineExtractSample(
   const rclcpp::NodeOptions & options, const std::string & node_name)
@@ -226,5 +224,4 @@ Status HesaiRosOfflineExtractSample::read_bag()
   return Status::OK;
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

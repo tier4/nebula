@@ -31,9 +31,7 @@
 #include <memory>
 #include <string>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class ContinentalRosDecoderTest final : public rclcpp::Node  //, testing::Test
 {
@@ -91,7 +89,6 @@ private:
   std::size_t object_list_count_{};
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros
 
 #endif  // NEBULA_ContinentalRosDecoderTestsrr520_H

@@ -34,9 +34,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class VelodyneDecoderWrapper
 {
@@ -103,5 +101,4 @@ private:
 
   std::shared_ptr<WatchdogTimer> cloud_watchdog_;
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

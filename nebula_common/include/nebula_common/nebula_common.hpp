@@ -24,9 +24,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Coordinate mode for Velodyne's setting (need to check)
 enum class CoordinateMode { UNKNOWN = 0, CARTESIAN, SPHERICAL, CYLINDRICAL };
@@ -785,7 +783,6 @@ static inline float rad2deg(double radians)
 {
   return radians * 180.0 / M_PI;
 }
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 
 #endif  // NEBULA_CONFIGURATION_BASE_H

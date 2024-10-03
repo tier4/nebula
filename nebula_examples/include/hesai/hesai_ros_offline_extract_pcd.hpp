@@ -29,9 +29,7 @@
 #include <memory>
 #include <string>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 /// @brief Offline hesai driver usage example (Output PCD data)
 class HesaiRosOfflineExtractSample final : public rclcpp::Node
@@ -90,7 +88,6 @@ private:
   std::string correction_file_path_;
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros
 
 #endif  // NEBULA_HesaiRosOfflineExtractSample_H

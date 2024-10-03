@@ -4,9 +4,7 @@
 
 #include <rclcpp/time.hpp>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 using namespace std::chrono_literals;  // NOLINT(build/namespaces)
@@ -249,5 +247,4 @@ nebula::Status VelodyneDecoderWrapper::status()
 
   return driver_ptr_->get_status();
 }
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

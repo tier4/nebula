@@ -19,9 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 struct VelodyneLaserCorrection
 {
@@ -68,7 +66,6 @@ public:
   void write(const std::string & calibration_file);
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 
 #endif  // NEBULA_VELODYNE_CALIBRATION_DECODER_H

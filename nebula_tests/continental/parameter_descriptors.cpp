@@ -2,9 +2,7 @@
 
 #include "parameter_descriptors.hpp"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 rcl_interfaces::msg::ParameterDescriptor param_read_write()
@@ -32,5 +30,4 @@ rcl_interfaces::msg::ParameterDescriptor::_integer_range_type int_range(
     rcl_interfaces::msg::IntegerRange().set__from_value(start).set__to_value(stop).set__step(step)};
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

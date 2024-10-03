@@ -1,9 +1,7 @@
 // Copyright 2024 TIER IV, Inc.
 
 #include "nebula_hw_interfaces/nebula_hw_interfaces_robosense/robosense_hw_interface.hpp"
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 RobosenseHwInterface::RobosenseHwInterface()
 : cloud_io_context_(new ::drivers::common::IoContext(1)),
@@ -126,5 +124,4 @@ void RobosenseHwInterface::set_logger(std::shared_ptr<rclcpp::Logger> logger)
   parent_node_logger_ = logger;
 }
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

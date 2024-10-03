@@ -30,11 +30,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace continental_srr520
+namespace nebula::drivers::continental_srr520
 {
 /// @brief Hardware interface of the Continental SRR520 radar
 class ContinentalSRR520HwInterface
@@ -141,8 +137,6 @@ private:
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger_ptr_;
 };
-}  // namespace continental_srr520
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::continental_srr520
 
 #endif  // NEBULA_CONTINENTAL_SRR520_HW_INTERFACE_H

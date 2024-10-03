@@ -28,13 +28,9 @@
 
 using namespace boost::endian;  // NOLINT(build/namespaces)
 
-namespace nebula
+namespace nebula::drivers
 {
-namespace drivers
-{
-namespace robosense_packet
-{
-namespace helios
+namespace robosense_packet::helios
 {
 #pragma pack(push, 1)
 
@@ -161,8 +157,7 @@ struct InfoPacket
 };
 
 #pragma pack(pop)
-}  // namespace helios
-}  // namespace robosense_packet
+}  // namespace robosense_packet::helios
 
 class Helios
 : public RobosenseSensor<robosense_packet::helios::Packet, robosense_packet::helios::InfoPacket>
@@ -468,5 +463,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

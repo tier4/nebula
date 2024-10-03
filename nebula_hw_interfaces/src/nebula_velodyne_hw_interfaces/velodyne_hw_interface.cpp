@@ -2,9 +2,7 @@
 
 #include "nebula_hw_interfaces/nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp"
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 VelodyneHwInterface::VelodyneHwInterface()
 : cloud_io_context_{new ::drivers::common::IoContext(1)},
@@ -430,5 +428,4 @@ void VelodyneHwInterface::print_debug(std::string debug)
   }
 }
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

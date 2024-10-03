@@ -6,9 +6,7 @@
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vlp32_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vls128_decoder.hpp"
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 VelodyneDriver::VelodyneDriver(
   const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
@@ -72,5 +70,4 @@ Status VelodyneDriver::get_status()
   return driver_status_;
 }
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

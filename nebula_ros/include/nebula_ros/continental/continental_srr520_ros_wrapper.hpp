@@ -34,9 +34,7 @@
 #include <thread>
 #include <vector>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 /// @brief Ros wrapper of continental srr520 driver
@@ -98,5 +96,4 @@ private:
   OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_;
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

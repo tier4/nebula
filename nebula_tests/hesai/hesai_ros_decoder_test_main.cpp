@@ -21,9 +21,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace test
+namespace nebula::test
 {
 
 const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[6] = {
@@ -160,8 +158,7 @@ INSTANTIATE_TEST_SUITE_P(
     return p.param.sensor_model;
   });
 
-}  // namespace test
-}  // namespace nebula
+}  // namespace nebula::test
 
 int main(int argc, char * argv[])
 {

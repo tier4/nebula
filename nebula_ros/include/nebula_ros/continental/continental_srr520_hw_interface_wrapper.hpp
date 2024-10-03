@@ -30,9 +30,7 @@
 
 #include <memory>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class ContinentalSRR520HwInterfaceWrapper
 {
@@ -96,5 +94,4 @@ private:
   rclcpp::Service<continental_srvs::srv::ContinentalSrr520SetRadarParameters>::SharedPtr
     configure_sensor_service_server_{};
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

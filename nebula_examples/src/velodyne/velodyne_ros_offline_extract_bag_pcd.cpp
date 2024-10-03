@@ -19,9 +19,7 @@
 
 #include <regex>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 VelodyneRosOfflineExtractBag::VelodyneRosOfflineExtractBag(
   const rclcpp::NodeOptions & options, const std::string & node_name)
@@ -392,5 +390,4 @@ Status VelodyneRosOfflineExtractBag::read_bag()
   return Status::OK;
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

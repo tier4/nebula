@@ -25,9 +25,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 /// @brief Base class for all sensor definitions
@@ -145,5 +143,4 @@ public:
 
   virtual std::map<std::string, std::string> get_sensor_info(const info_t & info_packet) = 0;
 };
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

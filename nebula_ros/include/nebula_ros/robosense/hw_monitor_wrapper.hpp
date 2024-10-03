@@ -30,9 +30,7 @@
 #include <mutex>
 #include <string>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 /// @brief Hardware monitor ros wrapper of robosense driver
@@ -77,5 +75,4 @@ private:
   uint16_t diag_span_{1000};
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

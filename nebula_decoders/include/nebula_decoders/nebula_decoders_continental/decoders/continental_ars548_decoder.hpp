@@ -28,11 +28,7 @@
 #include <memory>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace continental_ars548
+namespace nebula::drivers::continental_ars548
 {
 /// @brief Continental Radar decoder (ARS548)
 class ContinentalARS548Decoder : public ContinentalPacketsDecoder
@@ -108,6 +104,4 @@ private:
   std::shared_ptr<const continental_ars548::ContinentalARS548SensorConfiguration> config_ptr_{};
 };
 
-}  // namespace continental_ars548
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::continental_ars548

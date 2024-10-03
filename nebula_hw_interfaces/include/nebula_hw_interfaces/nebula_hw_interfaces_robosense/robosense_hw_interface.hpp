@@ -33,9 +33,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 constexpr uint16_t mtu_size = 1248;
 constexpr uint16_t helios_packet_size = 1248;
@@ -107,5 +105,4 @@ public:
   void set_logger(std::shared_ptr<rclcpp::Logger> logger);
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

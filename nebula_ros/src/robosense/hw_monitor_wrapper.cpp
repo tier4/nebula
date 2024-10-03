@@ -6,9 +6,7 @@
 
 #include <memory>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 RobosenseHwMonitorWrapper::RobosenseHwMonitorWrapper(
   rclcpp::Node * const parent_node,
@@ -109,5 +107,4 @@ void RobosenseHwMonitorWrapper::on_config_change(
   sensor_cfg_ptr_ = new_config;
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

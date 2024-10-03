@@ -23,9 +23,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Base class for each sensor driver
 class NebulaDriverBase
@@ -45,6 +43,5 @@ public:
     const CalibrationConfigurationBase & calibration_configuration) = 0;
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 #endif  // NEBULA_DRIVER_BASE_H

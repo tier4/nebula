@@ -2,9 +2,7 @@
 
 #include "nebula_ros/robosense/hw_interface_wrapper.hpp"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 RobosenseHwInterfaceWrapper::RobosenseHwInterfaceWrapper(
   rclcpp::Node * const parent_node,
@@ -39,5 +37,4 @@ std::shared_ptr<drivers::RobosenseHwInterface> RobosenseHwInterfaceWrapper::hw_i
   return hw_interface_;
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

@@ -40,9 +40,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class ContinentalARS548DecoderWrapper
 {
@@ -166,5 +164,4 @@ private:
 
   std::shared_ptr<WatchdogTimer> watchdog_;
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

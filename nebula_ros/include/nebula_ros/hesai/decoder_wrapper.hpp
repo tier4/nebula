@@ -28,9 +28,7 @@
 #include <memory>
 #include <mutex>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class HesaiDecoderWrapper
 {
@@ -85,5 +83,4 @@ private:
 
   std::shared_ptr<WatchdogTimer> cloud_watchdog_;
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros
