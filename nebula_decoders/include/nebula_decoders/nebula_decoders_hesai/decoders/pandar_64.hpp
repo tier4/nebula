@@ -29,7 +29,7 @@ namespace hesai_packet
 using Tail64 = Tail40P;
 struct Packet64 : public PacketBase<6, 64, 2, 100>
 {
-  using body_t = Body<Block<Unit3B, Packet64::N_CHANNELS>, Packet64::N_BLOCKS>;
+  using body_t = Body<Block<Unit3B, Packet64::n_channels>, Packet64::n_blocks>;
   Header8B header;
   body_t body;
   Tail64 tail;
@@ -42,7 +42,7 @@ struct Packet64 : public PacketBase<6, 64, 2, 100>
 class Pandar64 : public HesaiSensor<hesai_packet::Packet64>
 {
 private:
-  static constexpr int firing_time_offset_ns_[64] = {
+  static constexpr int firing_time_offset_ns[64] = {
     -23180, -21876, -20572, -19268, -17964, -16660, -11444, -46796, -7532,  -36956, -50732,
     -54668, -40892, -44828, -31052, -34988, -48764, -52700, -38924, -42860, -29084, -33020,
     -46796, -25148, -36956, -50732, -27116, -40892, -44828, -31052, -34988, -48764, -25148,
@@ -51,16 +51,16 @@ private:
     -11444, -6228,  -15356, -10140, -4924,  -3620,  -14052, -8836,  -12748};
 
 public:
-  static constexpr float MIN_RANGE = 0.3f;
-  static constexpr float MAX_RANGE = 200.f;
-  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 230400;
+  static constexpr float min_range = 0.3f;
+  static constexpr float max_range = 200.f;
+  static constexpr size_t max_scan_buffer_points = 230400;
 
-  int getPacketRelativePointTimeOffset(
+  int get_packet_relative_point_time_offset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
     int block_offset_ns = -42580 - 55560 * ((6 - block_id - 1) / n_returns);
-    return block_offset_ns + firing_time_offset_ns_[channel_id];
+    return block_offset_ns + firing_time_offset_ns[channel_id];
   }
 };
 

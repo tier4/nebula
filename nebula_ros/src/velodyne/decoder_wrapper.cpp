@@ -4,9 +4,7 @@
 
 #include <rclcpp/time.hpp>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 using namespace std::chrono_literals;  // NOLINT(build/namespaces)
@@ -27,7 +25,7 @@ VelodyneDecoderWrapper::VelodyneDecoderWrapper(
 
   calibration_file_path_ =
     parent_node->declare_parameter<std::string>("calibration_file", param_read_write());
-  auto calibration_result = GetCalibrationData(calibration_file_path_);
+  auto calibration_result = get_calibration_data(calibration_file_path_);
 
   if (!calibration_result.has_value()) {
     throw std::runtime_error(
@@ -41,7 +39,7 @@ VelodyneDecoderWrapper::VelodyneDecoderWrapper(
   RCLCPP_INFO(logger_, "Starting Decoder");
 
   driver_ptr_ = std::make_shared<drivers::VelodyneDriver>(config, calibration_cfg_ptr_);
-  status_ = driver_ptr_->GetStatus();
+  status_ = driver_ptr_->get_status();
 
   if (Status::OK != status_) {
     throw std::runtime_error(
@@ -76,7 +74,7 @@ VelodyneDecoderWrapper::VelodyneDecoderWrapper(
     });
 }
 
-void VelodyneDecoderWrapper::OnConfigChange(
+void VelodyneDecoderWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & new_config)
 {
   std::lock_guard lock(mtx_driver_ptr_);
@@ -85,7 +83,7 @@ void VelodyneDecoderWrapper::OnConfigChange(
   sensor_cfg_ = new_config;
 }
 
-void VelodyneDecoderWrapper::OnCalibrationChange(
+void VelodyneDecoderWrapper::on_calibration_change(
   const std::shared_ptr<const nebula::drivers::VelodyneCalibrationConfiguration> & new_calibration)
 {
   std::lock_guard lock(mtx_driver_ptr_);
@@ -95,7 +93,7 @@ void VelodyneDecoderWrapper::OnCalibrationChange(
   calibration_file_path_ = calibration_cfg_ptr_->calibration_file;
 }
 
-rcl_interfaces::msg::SetParametersResult VelodyneDecoderWrapper::OnParameterChange(
+rcl_interfaces::msg::SetParametersResult VelodyneDecoderWrapper::on_parameter_change(
   const std::vector<rclcpp::Parameter> & p)
 {
   using rcl_interfaces::msg::SetParametersResult;
@@ -115,7 +113,7 @@ rcl_interfaces::msg::SetParametersResult VelodyneDecoderWrapper::OnParameterChan
     return result;
   }
 
-  auto get_calibration_result = GetCalibrationData(calibration_path);
+  auto get_calibration_result = get_calibration_data(calibration_path);
   if (!get_calibration_result.has_value()) {
     auto result = SetParametersResult();
     result.successful = false;
@@ -126,13 +124,13 @@ rcl_interfaces::msg::SetParametersResult VelodyneDecoderWrapper::OnParameterChan
     return result;
   }
 
-  OnCalibrationChange(get_calibration_result.value());
+  on_calibration_change(get_calibration_result.value());
   RCLCPP_INFO_STREAM(
     logger_, "Changed calibration to '" << calibration_cfg_ptr_->calibration_file << "'");
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-VelodyneDecoderWrapper::get_calibration_result_t VelodyneDecoderWrapper::GetCalibrationData(
+VelodyneDecoderWrapper::get_calibration_result_t VelodyneDecoderWrapper::get_calibration_data(
   const std::string & calibration_file_path)
 {
   auto calib = std::make_shared<drivers::VelodyneCalibrationConfiguration>();
@@ -145,7 +143,7 @@ VelodyneDecoderWrapper::get_calibration_result_t VelodyneDecoderWrapper::GetCali
   }
 
   // Try to load the existing fallback calibration file. Return an error if this fails
-  auto status = calib->LoadFromFile(calibration_file_path);
+  auto status = calib->load_from_file(calibration_file_path);
   if (status != Status::OK) {
     RCLCPP_ERROR_STREAM(
       logger_, "Could not load calibration file at '" << calibration_file_path << "'");
@@ -157,7 +155,7 @@ VelodyneDecoderWrapper::get_calibration_result_t VelodyneDecoderWrapper::GetCali
   return calib;
 }
 
-void VelodyneDecoderWrapper::ProcessCloudPacket(
+void VelodyneDecoderWrapper::process_cloud_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   // Accumulate packets for recording only if someone is subscribed to the topic (for performance)
@@ -179,7 +177,7 @@ void VelodyneDecoderWrapper::ProcessCloudPacket(
   {
     std::lock_guard lock(mtx_driver_ptr_);
     pointcloud_ts =
-      driver_ptr_->ParseCloudPacket(packet_msg->data, rclcpp::Time(packet_msg->stamp).seconds());
+      driver_ptr_->parse_cloud_packet(packet_msg->data, rclcpp::Time(packet_msg->stamp).seconds());
     pointcloud = std::get<0>(pointcloud_ts);
   }
 
@@ -201,34 +199,34 @@ void VelodyneDecoderWrapper::ProcessCloudPacket(
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    PublishCloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
+      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+    publish_cloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
   }
   if (
     aw_points_base_pub_->get_subscription_count() > 0 ||
     aw_points_base_pub_->get_intra_process_subscription_count() > 0) {
     const auto autoware_cloud_xyzi =
-      nebula::drivers::convertPointXYZIRCAEDTToPointXYZIR(pointcloud);
+      nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(pointcloud);
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_cloud_xyzi, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    PublishCloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
+      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+    publish_cloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
   }
   if (
     aw_points_ex_pub_->get_subscription_count() > 0 ||
     aw_points_ex_pub_->get_intra_process_subscription_count() > 0) {
-    const auto autoware_ex_cloud = nebula::drivers::convertPointXYZIRCAEDTToPointXYZIRADT(
+    const auto autoware_ex_cloud = nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(
       pointcloud, std::get<1>(pointcloud_ts));
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    PublishCloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
+      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+    publish_cloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
   }
 }
 
-void VelodyneDecoderWrapper::PublishCloud(
+void VelodyneDecoderWrapper::publish_cloud(
   std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher)
 {
@@ -239,7 +237,7 @@ void VelodyneDecoderWrapper::PublishCloud(
   publisher->publish(std::move(pointcloud));
 }
 
-nebula::Status VelodyneDecoderWrapper::Status()
+nebula::Status VelodyneDecoderWrapper::status()
 {
   std::lock_guard lock(mtx_driver_ptr_);
 
@@ -247,7 +245,6 @@ nebula::Status VelodyneDecoderWrapper::Status()
     return nebula::Status::NOT_INITIALIZED;
   }
 
-  return driver_ptr_->GetStatus();
+  return driver_ptr_->get_status();
 }
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

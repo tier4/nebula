@@ -58,7 +58,7 @@ struct Tail128E3X
   /// @brief Get the azimuth state of the given block in the packet
   /// @param block_id The block ID (i.e. its index in the packet). Valid IDs are 0 and 1.
   /// @return The azimuth state number of the block
-  uint8_t geAzimuthState(unsigned int block_id) const
+  uint8_t get_azimuth_state(unsigned int block_id) const
   {
     return (azimuth_state >> (14 - block_id * 2)) & 0b11;
   }
@@ -66,7 +66,7 @@ struct Tail128E3X
 
 struct Packet128E3X : public PacketBase<2, 128, 2, 100>
 {
-  using body_t = Body<Block<Unit3B, Packet128E3X::N_CHANNELS>, Packet128E3X::N_BLOCKS>;
+  using body_t = Body<Block<Unit3B, Packet128E3X::n_channels>, Packet128E3X::n_blocks>;
   Header12B header;
   body_t body;
   uint32_t crc_body;
@@ -87,7 +87,7 @@ class Pandar128E3X : public HesaiSensor<hesai_packet::Packet128E3X>
 private:
   enum OperationalState { HIGH_RESOLUTION = 0, SHUTDOWN = 1, STANDARD = 2, ENERGY_SAVING = 3 };
 
-  static constexpr int hires_as0_far_offset_ns_[128] = {
+  static constexpr int hires_as0_far_offset_ns[128] = {
     4436,  -1,    776,   2431,  4436,  -1,    6441,  -1,    -1,    776,   2431,  6441,  -1,
     -1,    -1,    -1,    -1,    6441,  -1,    776,   2431,  -1,    -1,    -1,    4436,  10381,
     14951, 12666, 14951, 19521, 19521, 8096,  12666, 12666, 10381, 24091, 17236, 24091, 14951,
@@ -99,7 +99,7 @@ private:
     4436,  -1,    -1,    -1,    6441,  -1,    -1,    -1,    776,   4436,  -1,    2431,  -1,
     -1,    776,   -1,    4436,  6441,  -1,    -1,    2431,  776,   6441,  -1};
 
-  static constexpr int hires_as0_near_offset_ns_[128] = {
+  static constexpr int hires_as0_near_offset_ns[128] = {
     5201, -1,    1541, -1, -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1, -1, -1, 7206,  -1,
     -1,   3196,  -1,   -1, -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1, -1, -1, -1,    -1,
     -1,   27056, -1,   -1, -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1,   -1, -1, -1, -1,    -1,
@@ -108,7 +108,7 @@ private:
     -1,   -1,    -1,   -1, -1, -1, -1, -1, -1, 5681, -1, -1, -1, -1,   -1, -1, -1, -1,    -1,
     -1,   -1,    -1,   -1, -1, -1, -1, -1, -1, -1,   -1, -1, -1, -1};
 
-  static constexpr int hires_as1_far_offset_ns_[128] = {
+  static constexpr int hires_as1_far_offset_ns[128] = {
     -1,    776,   -1,    -1,    -1,    2781,  -1,    4786,  6441,  -1,    -1,    -1,    776,
     6441,  2781,  776,   4786,  -1,    4786,  -1,    -1,    2781,  6441,  4786,  -1,    10731,
     15301, 13016, 15301, 19871, 19871, 8446,  13016, 13016, 10731, 24441, 17586, 24441, 15301,
@@ -120,7 +120,7 @@ private:
     -1,    2781,  776,   4786,  -1,    6441,  6441,  4786,  -1,    -1,    4786,  -1,    2781,
     6441,  -1,    776,   -1,    -1,    6441,  2781,  -1,    -1,    -1,    776};
 
-  static constexpr int hires_as1_near_offset_ns_[128] = {
+  static constexpr int hires_as1_near_offset_ns[128] = {
     -1, -1, -1, -1, -1, 4026, -1,    -1, 7206,  -1, -1, -1, -1, -1, 3546, -1,   -1, -1, -1,
     -1, -1, -1, -1, -1, -1,   12126, -1, -1,    -1, -1, -1, -1, -1, -1,   -1,   -1, -1, -1,
     -1, -1, -1, -1, -1, -1,   -1,    -1, 27406, -1, -1, -1, -1, -1, -1,   -1,   -1, -1, -1,
@@ -129,7 +129,7 @@ private:
     -1, -1, -1, -1, -1, -1,   2021,  -1, -1,    -1, -1, -1, -1, -1, -1,   7686, -1, -1, -1,
     -1, -1, -1, -1, -1, 1541, -1,    -1, -1,    -1, -1, -1, -1, -1};
 
-  static constexpr int hires_as2_far_offset_ns_[128] = {
+  static constexpr int hires_as2_far_offset_ns[128] = {
     4436,  -1,    776,   2781,  4436,  -1,    6 - 191, -1,    -1,    776,   2781,  6091,  -1,
     -1,    -1,    -1,    -1,    6091,  -1,    776,     2781,  -1,    -1,    -1,    4436,  10381,
     14951, 12666, 14951, 19521, 19521, 8096,  12666,   12666, 10381, 24091, 17236, 24091, 14951,
@@ -141,7 +141,7 @@ private:
     4436,  -1,    -1,    -1,    6091,  -1,    -1,      -1,    776,   4436,  -1,    2781,  -1,
     -1,    776,   -1,    4436,  6091,  -1,    -1,      2781,  776,   6091,  -1};
 
-  static constexpr int hires_as2_near_offset_ns_[128] = {
+  static constexpr int hires_as2_near_offset_ns[128] = {
     -1,   -1, -1, -1,   -1, -1, -1, -1, -1, -1, -1, 7336, -1, -1,    -1, -1,    -1,   -1, -1,
     -1,   -1, -1, -1,   -1, -1, -1, -1, -1, -1, -1, -1,   -1, 14061, -1, -1,    -1,   -1, -1,
     -1,   -1, -1, -1,   -1, -1, -1, -1, -1, -1, -1, -1,   -1, -1,    -1, 27056, -1,   -1, -1,
@@ -150,7 +150,7 @@ private:
     2021, -1, -1, 3546, -1, -1, -1, -1, -1, -1, -1, -1,   -1, -1,    -1, -1,    -1,   -1, 5201,
     -1,   -1, -1, -1,   -1, -1, -1, -1, -1, -1, -1, 1541, -1, -1};
 
-  static constexpr int hires_as3_far_offset_ns_[128] = {
+  static constexpr int hires_as3_far_offset_ns[128] = {
     -1,    776,   -1,    -1,    -1,    2431,  -1,    4086,  6091,  -1,    -1,    -1,    776,
     6091,  2431,  776,   4086,  -1,    4086,  -1,    -1,    2431,  6091,  4086,  -1,    10031,
     14601, 12316, 14601, 19171, 19171, 7746,  12316, 12316, 10031, 23741, 16886, 23741, 14601,
@@ -162,7 +162,7 @@ private:
     -1,    2431,  776,   4086,  -1,    6091,  6091,  4086,  -1,    -1,    4086,  -1,    2431,
     6091,  -1,    776,   -1,    -1,    6091,  2431,  -1,    -1,    -1,    776};
 
-  static constexpr int hires_as3_near_offset_ns_[128] = {
+  static constexpr int hires_as3_near_offset_ns[128] = {
     -1, -1, -1,   -1,    -1,   -1,    -1, -1, -1,   -1, -1,    -1, -1,   -1,  -1, -1, -1, -1, -1,
     -1, -1, -1,   -1,    4851, -1,    -1, -1, -1,   -1, -1,    -1, -1,   -1,  -1, -1, -1, -1, -1,
     -1, -1, -1,   -1,    -1,   -1,    -1, -1, -1,   -1, -1,    -1, -1,   -1,  -1, -1, -1, -1, -1,
@@ -171,7 +171,7 @@ private:
     -1, -1, -1,   -1,    -1,   -1,    -1, -1, -1,   -1, -1,    -1, 5331, -1,  -1, -1, -1, -1, -1,
     -1, -1, 3196, -1,    -1,   -1,    -1, -1, 6856, -1, -1,    -1, -1,   1541};
 
-  static constexpr int standard_as0_far_offset_ns_[128] = {
+  static constexpr int standard_as0_far_offset_ns[128] = {
     4436,  28554, 776,   2431,  4436,  30559, 6441,  32564, 34219, 776,   2431,  6441,  28554,
     34219, 30559, 28554, 32564, 6441,  32564, 776,   2431,  30559, 34219, 32564, 4436,  38509,
     43079, 12666, 43079, 19521, 19521, 36224, 12666, 12666, 38509, 52219, 17236, 52219, 43079,
@@ -183,7 +183,7 @@ private:
     4436,  30559, 28554, 32564, 6441,  34219, 34219, 32564, 776,   4436,  32564, 2431,  30559,
     34219, 776,   28554, 4436,  6441,  34219, 30559, 2431,  776,   6441,  28554};
 
-  static constexpr int standard_as0_near_offset_ns_[128] = {
+  static constexpr int standard_as0_near_offset_ns[128] = {
     5201, -1,   1541, -1, -1,   31804, -1, -1,    34984, -1,    -1,    -1, -1, -1, 31324, -1,
     -1,   7206, -1,   -1, 3196, -1,    -1, -1,    -1,    39904, -1,    -1, -1, -1, -1,    -1,
     -1,   -1,   -1,   -1, -1,   -1,    -1, 27056, -1,    -1,    -1,    -1, -1, -1, 55184, -1,
@@ -193,7 +193,7 @@ private:
     -1,   -1,   -1,   -1, -1,   29799, -1, -1,    5681,  -1,    -1,    -1, -1, -1, 35464, -1,
     -1,   -1,   -1,   -1, -1,   -1,    -1, 29319, -1,    -1,    -1,    -1, -1, -1, -1,    -1};
 
-  static constexpr int standard_as1_far_offset_ns_[128] = {
+  static constexpr int standard_as1_far_offset_ns[128] = {
     4436,  28554, 776,   2781,  4436,  30209, 6091,  31864, 33869, 776,   2781,  6091,  28554,
     33869, 30209, 28554, 31864, 6091,  31864, 776,   2781,  30209, 33869, 31864, 4436,  37809,
     42379, 12666, 42379, 19521, 19521, 35524, 12666, 12666, 37809, 51519, 17236, 51519, 42379,
@@ -205,7 +205,7 @@ private:
     4436,  30209, 28554, 31864, 6091,  33869, 33869, 31864, 776,   4436,  31864, 2781,  30209,
     33869, 776,   28554, 4436,  6091,  33869, 30209, 2781,  776,   6091,  28554};
 
-  static constexpr int standard_as1_near_offset_ns_[128] = {
+  static constexpr int standard_as1_near_offset_ns[128] = {
     -1,    -1, -1,    -1, -1, -1,   -1,    -1,    -1,    -1, -1, 7336,  -1, -1, -1,
     -1,    -1, -1,    -1, -1, -1,   -1,    -1,    32629, -1, -1, -1,    -1, -1, -1,
     -1,    -1, 14061, -1, -1, -1,   -1,    -1,    -1,    -1, -1, -1,    -1, -1, -1,
@@ -217,11 +217,11 @@ private:
     -1,    -1, 34634, -1, -1, 1541, -1,    29319};
 
 public:
-  static constexpr float MIN_RANGE = 0.1;
-  static constexpr float MAX_RANGE = 230.0;
-  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 691200;
+  static constexpr float min_range = 0.1;
+  static constexpr float max_range = 230.0;
+  static constexpr size_t max_scan_buffer_points = 691200;
 
-  int getPacketRelativePointTimeOffset(
+  int get_packet_relative_point_time_offset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
@@ -231,32 +231,32 @@ public:
     bool is_hires_mode = packet.tail.operational_state == OperationalState::HIGH_RESOLUTION;
     bool is_nearfield = (hesai_packet::get_dis_unit(packet) *
                          packet.body.blocks[block_id].units[channel_id].distance) <= 2.85f;
-    auto azimuth_state = packet.tail.geAzimuthState(block_id);
+    auto azimuth_state = packet.tail.get_azimuth_state(block_id);
 
     if (is_hires_mode && azimuth_state == 0 && !is_nearfield)
-      channel_offset_ns = hires_as0_far_offset_ns_[channel_id];
+      channel_offset_ns = hires_as0_far_offset_ns[channel_id];
     else if (is_hires_mode && azimuth_state == 0 && is_nearfield)
-      channel_offset_ns = hires_as0_near_offset_ns_[channel_id];
+      channel_offset_ns = hires_as0_near_offset_ns[channel_id];
     else if (is_hires_mode && azimuth_state == 1 && !is_nearfield)
-      channel_offset_ns = hires_as1_far_offset_ns_[channel_id];
+      channel_offset_ns = hires_as1_far_offset_ns[channel_id];
     else if (is_hires_mode && azimuth_state == 1 && is_nearfield)
-      channel_offset_ns = hires_as1_near_offset_ns_[channel_id];
+      channel_offset_ns = hires_as1_near_offset_ns[channel_id];
     else if (is_hires_mode && azimuth_state == 2 && !is_nearfield)
-      channel_offset_ns = hires_as2_far_offset_ns_[channel_id];
+      channel_offset_ns = hires_as2_far_offset_ns[channel_id];
     else if (is_hires_mode && azimuth_state == 2 && is_nearfield)
-      channel_offset_ns = hires_as2_near_offset_ns_[channel_id];
+      channel_offset_ns = hires_as2_near_offset_ns[channel_id];
     else if (is_hires_mode && azimuth_state == 3 && !is_nearfield)
-      channel_offset_ns = hires_as3_far_offset_ns_[channel_id];
+      channel_offset_ns = hires_as3_far_offset_ns[channel_id];
     else if (is_hires_mode && azimuth_state == 3 && is_nearfield)
-      channel_offset_ns = hires_as3_near_offset_ns_[channel_id];
+      channel_offset_ns = hires_as3_near_offset_ns[channel_id];
     else if (!is_hires_mode && azimuth_state == 0 && !is_nearfield)
-      channel_offset_ns = standard_as0_far_offset_ns_[channel_id];
+      channel_offset_ns = standard_as0_far_offset_ns[channel_id];
     else if (!is_hires_mode && azimuth_state == 0 && is_nearfield)
-      channel_offset_ns = standard_as0_near_offset_ns_[channel_id];
+      channel_offset_ns = standard_as0_near_offset_ns[channel_id];
     else if (!is_hires_mode && azimuth_state == 1 && !is_nearfield)
-      channel_offset_ns = standard_as1_far_offset_ns_[channel_id];
+      channel_offset_ns = standard_as1_far_offset_ns[channel_id];
     else if (!is_hires_mode && azimuth_state == 1 && is_nearfield)
-      channel_offset_ns = standard_as1_near_offset_ns_[channel_id];
+      channel_offset_ns = standard_as1_near_offset_ns[channel_id];
     else
       throw std::runtime_error(
         "Invalid combination of operational state and azimuth state and nearfield firing");
@@ -264,11 +264,12 @@ public:
     return block_offset_ns + channel_offset_ns;
   }
 
-  ReturnType getReturnType(
+  ReturnType get_return_type(
     hesai_packet::return_mode::ReturnMode return_mode, unsigned int return_idx,
     const std::vector<const typename packet_t::body_t::block_t::unit_t *> & return_units) override
   {
-    auto return_type = HesaiSensor<packet_t>::getReturnType(return_mode, return_idx, return_units);
+    auto return_type =
+      HesaiSensor<packet_t>::get_return_type(return_mode, return_idx, return_units);
     if (return_type == ReturnType::IDENTICAL) {
       return return_type;
     }

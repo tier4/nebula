@@ -30,7 +30,7 @@ namespace drivers
 {
 
 // Flag for detecting Bpearl version
-constexpr uint8_t BPEARL_V4_FLAG = 0x04;
+constexpr uint8_t bpearl_v4_flag = 0x04;
 
 /// @brief struct for Robosense sensor configuration
 struct RobosenseSensorConfiguration : LidarConfigurationBase
@@ -53,10 +53,10 @@ inline std::ostream & operator<<(std::ostream & os, RobosenseSensorConfiguration
   return os;
 }
 
-/// @brief Convert return mode name to ReturnMode enum (Robosense-specific ReturnModeFromString)
+/// @brief Convert return mode name to ReturnMode enum (Robosense-specific return_mode_from_string)
 /// @param return_mode Return mode name (Upper and lower case letters must match)
 /// @return Corresponding ReturnMode
-inline ReturnMode ReturnModeFromStringRobosense(const std::string & return_mode)
+inline ReturnMode return_mode_from_string_robosense(const std::string & return_mode)
 {
   if (return_mode == "Dual") return ReturnMode::DUAL;
   if (return_mode == "Strongest") return ReturnMode::SINGLE_STRONGEST;
@@ -80,10 +80,10 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
 {
   std::vector<ChannelCorrection> calibration;
 
-  void SetChannelSize(const size_t channel_num) { calibration.resize(channel_num); }
+  void set_channel_size(const size_t channel_num) { calibration.resize(channel_num); }
 
   template <typename stream_t>
-  inline nebula::Status LoadFromStream(stream_t & stream)
+  inline nebula::Status load_from_stream(stream_t & stream)
   {
     std::string header;
     std::getline(stream, header);
@@ -134,14 +134,14 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
     return load_status;
   }
 
-  inline nebula::Status LoadFromFile(const std::string & calibration_file)
+  inline nebula::Status load_from_file(const std::string & calibration_file)
   {
     std::ifstream ifs(calibration_file);
     if (!ifs) {
       return Status::INVALID_CALIBRATION_FILE;
     }
 
-    const auto status = LoadFromStream(ifs);
+    const auto status = load_from_stream(ifs);
     ifs.close();
     return status;
   }
@@ -149,21 +149,21 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
   /// @brief Loading calibration data (not used)
   /// @param calibration_content
   /// @return Resulting status
-  inline nebula::Status LoadFromString(const std::string & calibration_content)
+  inline nebula::Status load_from_string(const std::string & calibration_content)
   {
     std::stringstream ss;
     ss << calibration_content;
 
-    const auto status = LoadFromStream(ss);
+    const auto status = load_from_stream(ss);
     return status;
   }
 
-  //  inline nebula::Status LoadFromDifop(const std::string & calibration_file)
+  //  inline nebula::Status load_from_difop(const std::string & calibration_file)
 
   /// @brief Saving calibration data (not used)
   /// @param calibration_file
   /// @return Resulting status
-  inline nebula::Status SaveFile(const std::string & calibration_file)
+  inline nebula::Status save_file(const std::string & calibration_file)
   {
     std::ofstream ofs(calibration_file);
     if (!ofs) {
@@ -182,12 +182,12 @@ struct RobosenseCalibrationConfiguration : CalibrationConfigurationBase
     return Status::OK;
   }
 
-  [[nodiscard]] inline ChannelCorrection GetCorrection(const size_t channel_id) const
+  [[nodiscard]] inline ChannelCorrection get_correction(const size_t channel_id) const
   {
     return calibration[channel_id];
   }
 
-  void CreateCorrectedChannels()
+  void create_corrected_channels()
   {
     for (auto & correction : calibration) {
       uint16_t channel = 0;

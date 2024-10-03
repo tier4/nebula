@@ -45,9 +45,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 const int PandarTcpCommandPort = 9347;
 const uint8_t PTC_COMMAND_DUMMY_BYTE = 0x00;
@@ -461,7 +459,6 @@ public:
   /// @param node Logger
   void SetLogger(std::shared_ptr<rclcpp::Logger> node);
 };
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 
 #endif  // NEBULA_HESAI_HW_INTERFACE_H

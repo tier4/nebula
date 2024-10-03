@@ -5,11 +5,15 @@
 # Visual Studio Code
 .vscode/
 *.code-workspace
+*.env
 
 # colcon
 build/
 install/
 log/
+
+# Clangd
+.cache/
 
 # profiling
 profiling_output/
@@ -17,6 +21,7 @@ profiling_output/
 # Python
 srv/_*.py
 *.pyc
+__pycache__
 
 # Ignore generated docs
 *.dox

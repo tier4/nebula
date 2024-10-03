@@ -64,49 +64,49 @@ using boost::endian::big_uint32_buf_t;
 using boost::endian::big_uint64_buf_t;
 
 // CAN MSG IDS
-constexpr int RDI_NEAR_HEADER_CAN_MESSAGE_ID = 900;
-constexpr int RDI_NEAR_ELEMENT_CAN_MESSAGE_ID = 901;
-constexpr int RDI_HRR_HEADER_CAN_MESSAGE_ID = 1100;
-constexpr int RDI_HRR_ELEMENT_CAN_MESSAGE_ID = 1101;
-constexpr int OBJECT_HEADER_CAN_MESSAGE_ID = 1200;
-constexpr int OBJECT_CAN_MESSAGE_ID = 1201;
-constexpr int CRC_LIST_CAN_MESSAGE_ID = 800;
-constexpr int STATUS_CAN_MESSAGE_ID = 700;
-constexpr int SYNC_FOLLOW_UP_CAN_MESSAGE_ID = 53;
-constexpr int VEH_DYN_CAN_MESSAGE_ID = 600;
-constexpr int SENSOR_CONFIG_CAN_MESSAGE_ID = 601;
+constexpr int rdi_near_header_can_message_id = 900;
+constexpr int rdi_near_element_can_message_id = 901;
+constexpr int rdi_hrr_header_can_message_id = 1100;
+constexpr int rdi_hrr_element_can_message_id = 1101;
+constexpr int object_header_can_message_id = 1200;
+constexpr int object_can_message_id = 1201;
+constexpr int crc_list_can_message_id = 800;
+constexpr int status_can_message_id = 700;
+constexpr int sync_follow_up_can_message_id = 53;
+constexpr int veh_dyn_can_message_id = 600;
+constexpr int sensor_config_can_message_id = 601;
 
 // CRC IDS
-constexpr int NEAR_CRC_ID = 0;
-constexpr int HRR_CRC_ID = 1;
-constexpr int OBJECT_CRC_ID = 2;
-constexpr int TIME_DOMAIN_ID =
+constexpr int near_crc_id = 0;
+constexpr int hrr_crc_id = 1;
+constexpr int object_crc_id = 2;
+constexpr int time_domain_id =
   0;  // For details, please refer to AUTOSAR's "Time Synchronization over CAN" document
 
-constexpr int RDI_NEAR_HEADER_PACKET_SIZE = 32;
-constexpr int RDI_NEAR_ELEMENT_PACKET_SIZE = 64;
-constexpr int RDI_HRR_HEADER_PACKET_SIZE = 32;
-constexpr int RDI_HRR_ELEMENT_PACKET_SIZE = 64;
-constexpr int OBJECT_HEADER_PACKET_SIZE = 32;
-constexpr int OBJECT_PACKET_SIZE = 64;
-constexpr int CRC_LIST_PACKET_SIZE = 4;
-constexpr int STATUS_PACKET_SIZE = 64;
-constexpr int SYNC_FOLLOW_UP_CAN_PACKET_SIZE = 8;
-constexpr int VEH_DYN_CAN_PACKET_SIZE = 8;
-constexpr int CONFIGURATION_PACKET_SIZE = 16;
+constexpr int rdi_near_header_packet_size = 32;
+constexpr int rdi_near_element_packet_size = 64;
+constexpr int rdi_hrr_header_packet_size = 32;
+constexpr int rdi_hrr_element_packet_size = 64;
+constexpr int object_header_packet_size = 32;
+constexpr int object_packet_size = 64;
+constexpr int crc_list_packet_size = 4;
+constexpr int status_packet_size = 64;
+constexpr int sync_follow_up_can_packet_size = 8;
+constexpr int veh_dyn_can_packet_size = 8;
+constexpr int configuration_packet_size = 16;
 
-constexpr int RDI_NEAR_PACKET_NUM = 50;
-constexpr int RDI_HRR_PACKET_NUM = 20;
-constexpr int OBJECT_PACKET_NUM = 20;
+constexpr int rdi_near_packet_num = 50;
+constexpr int rdi_hrr_packet_num = 20;
+constexpr int object_packet_num = 20;
 
-constexpr int FRAGMENTS_PER_DETECTION_PACKET = 10;
-constexpr int FRAGMENTS_PER_OBJECT_PACKET = 2;
-constexpr int DETECTION_FRAGMENT_SIZE = 6;
-constexpr int OBJECT_FRAGMENT_SIZE = 31;
+constexpr int fragments_per_detection_packet = 10;
+constexpr int fragments_per_object_packet = 2;
+constexpr int detection_fragment_size = 6;
+constexpr int object_fragment_size = 31;
 
-constexpr int MAX_RDI_NEAR_DETECTIONS = RDI_NEAR_PACKET_NUM * FRAGMENTS_PER_DETECTION_PACKET;
-constexpr int MAX_RDI_HRR_DETECTIONS = RDI_HRR_PACKET_NUM * FRAGMENTS_PER_DETECTION_PACKET;
-constexpr int MAX_OBJECTS = OBJECT_PACKET_NUM * FRAGMENTS_PER_OBJECT_PACKET;
+constexpr int max_rdi_near_detections = rdi_near_packet_num * fragments_per_detection_packet;
+constexpr int max_rdi_hrr_detections = rdi_hrr_packet_num * fragments_per_detection_packet;
+constexpr int max_objects = object_packet_num * fragments_per_object_packet;
 
 #pragma pack(push, 1)
 
@@ -162,12 +162,12 @@ struct ScanHeaderPacket
 
 struct DetectionFragmentPacket
 {
-  uint8_t data[DETECTION_FRAGMENT_SIZE];
+  uint8_t data[detection_fragment_size];
 };
 
 struct DetectionPacket
 {
-  DetectionFragmentPacket fragments[FRAGMENTS_PER_DETECTION_PACKET];  // 0 - 59
+  DetectionFragmentPacket fragments[fragments_per_detection_packet];  // 0 - 59
   uint8_t reserved0;                                                  // 60
   uint8_t reserved1;                                                  // 61
   uint8_t u_message_counter;                                          // 62
@@ -192,12 +192,12 @@ struct ObjectHeaderPacket
 
 struct ObjectFragmentPacket
 {
-  uint8_t data[OBJECT_FRAGMENT_SIZE];
+  uint8_t data[object_fragment_size];
 };
 
 struct ObjectPacket
 {
-  ObjectFragmentPacket fragments[FRAGMENTS_PER_OBJECT_PACKET];  // 0 - 61
+  ObjectFragmentPacket fragments[fragments_per_object_packet];  // 0 - 61
   uint8_t u_message_counter;                                    // 62
   uint8_t u_sequence_counter;                                   // 63
 };

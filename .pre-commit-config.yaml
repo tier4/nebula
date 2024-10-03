@@ -87,7 +87,9 @@ repos:
     rev: 1.6.1
     hooks:
       - id: cpplint
-        args: [--quiet]
+        # runtime/arrays uses the name of the variable to determine const-ness.
+        # This does not play well with our naming conventions
+        args: [--quiet, --filter=-runtime/arrays]
         exclude: .cu
 
 exclude: .svg

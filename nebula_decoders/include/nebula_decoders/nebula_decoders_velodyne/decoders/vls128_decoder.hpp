@@ -24,11 +24,7 @@
 #include <tuple>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace vls128
+namespace nebula::drivers::vls128
 {
 /// @brief Velodyne LiDAR decoder (VLS128)
 class Vls128Decoder : public VelodyneScanDecoder
@@ -46,7 +42,7 @@ public:
   void unpack(const std::vector<uint8_t> & packet, double packet_seconds) override;
   /// @brief Calculation of points in each packet
   /// @return # of points
-  int pointsPerPacket() override;
+  int points_per_packet() override;
   /// @brief Get the constructed point cloud
   /// @return tuple of Point cloud and timestamp
   std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() override;
@@ -59,10 +55,10 @@ private:
   /// @brief Parsing VelodynePacket based on packet structure
   /// @param velodyne_packet
   /// @return Resulting flag
-  bool parsePacket(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) override;
-  float sin_rot_table_[ROTATION_MAX_UNITS];
-  float cos_rot_table_[ROTATION_MAX_UNITS];
-  float rotation_radians_[ROTATION_MAX_UNITS];
+  bool parse_packet(const velodyne_msgs::msg::VelodynePacket & velodyne_packet) override;
+  float sin_rot_table_[g_rotation_max_units];
+  float cos_rot_table_[g_rotation_max_units];
+  float rotation_radians_[g_rotation_max_units];
   float vls_128_laser_azimuth_cache_[16];
   int phase_;
   int max_pts_;
@@ -70,6 +66,4 @@ private:
   std::vector<std::vector<float>> timing_offsets_;
 };
 
-}  // namespace vls128
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::vls128

@@ -16,9 +16,7 @@
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 ContinentalSRR520RosWrapper::ContinentalSRR520RosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node(
@@ -30,7 +28,7 @@ ContinentalSRR520RosWrapper::ContinentalSRR520RosWrapper(const rclcpp::NodeOptio
 {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
-  wrapper_status_ = DeclareAndGetSensorConfigParams();
+  wrapper_status_ = declare_and_get_sensor_config_params();
 
   if (wrapper_status_ != Status::OK) {
     throw std::runtime_error(
@@ -43,7 +41,7 @@ ContinentalSRR520RosWrapper::ContinentalSRR520RosWrapper(const rclcpp::NodeOptio
 
   if (launch_hw_) {
     hw_interface_wrapper_.emplace(this, config_ptr_);
-    decoder_wrapper_.emplace(this, config_ptr_, hw_interface_wrapper_->HwInterface());
+    decoder_wrapper_.emplace(this, config_ptr_, hw_interface_wrapper_->hw_interface());
   } else {
     decoder_wrapper_.emplace(this, config_ptr_, nullptr);
   }
@@ -52,18 +50,19 @@ ContinentalSRR520RosWrapper::ContinentalSRR520RosWrapper(const rclcpp::NodeOptio
 
   decoder_thread_ = std::thread([this]() {
     while (true) {
-      decoder_wrapper_->ProcessPacket(packet_queue_.pop());
+      decoder_wrapper_->process_packet(packet_queue_.pop());
     }
   });
 
   if (launch_hw_) {
-    hw_interface_wrapper_->HwInterface()->RegisterPacketCallback(
-      std::bind(&ContinentalSRR520RosWrapper::ReceivePacketCallback, this, std::placeholders::_1));
-    StreamStart();
+    hw_interface_wrapper_->hw_interface()->register_packet_callback(std::bind(
+      &ContinentalSRR520RosWrapper::receive_packet_callback, this, std::placeholders::_1));
+    stream_start();
   } else {
     packets_sub_ = create_subscription<nebula_msgs::msg::NebulaPackets>(
       "nebula_packets", rclcpp::SensorDataQoS(),
-      std::bind(&ContinentalSRR520RosWrapper::ReceivePacketsCallback, this, std::placeholders::_1));
+      std::bind(
+        &ContinentalSRR520RosWrapper::receive_packets_callback, this, std::placeholders::_1));
     RCLCPP_INFO_STREAM(
       get_logger(),
       "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
@@ -72,14 +71,14 @@ ContinentalSRR520RosWrapper::ContinentalSRR520RosWrapper(const rclcpp::NodeOptio
   // Register parameter callback after all params have been declared. Otherwise it would be called
   // once for each declaration
   parameter_event_cb_ = add_on_set_parameters_callback(
-    std::bind(&ContinentalSRR520RosWrapper::OnParameterChange, this, std::placeholders::_1));
+    std::bind(&ContinentalSRR520RosWrapper::on_parameter_change, this, std::placeholders::_1));
 }
 
-nebula::Status ContinentalSRR520RosWrapper::DeclareAndGetSensorConfigParams()
+nebula::Status ContinentalSRR520RosWrapper::declare_and_get_sensor_config_params()
 {
   nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration config;
 
-  config.sensor_model = nebula::drivers::SensorModelFromString(
+  config.sensor_model = nebula::drivers::sensor_model_from_string(
     declare_parameter<std::string>("sensor_model", param_read_only()));
   config.interface = declare_parameter<std::string>("interface", param_read_only());
   config.receiver_timeout_sec =
@@ -99,10 +98,10 @@ nebula::Status ContinentalSRR520RosWrapper::DeclareAndGetSensorConfigParams()
 
   auto new_config_ptr = std::make_shared<
     const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration>(config);
-  return ValidateAndSetConfig(new_config_ptr);
+  return validate_and_set_config(new_config_ptr);
 }
 
-Status ContinentalSRR520RosWrapper::ValidateAndSetConfig(
+Status ContinentalSRR520RosWrapper::validate_and_set_config(
   std::shared_ptr<const drivers::continental_srr520::ContinentalSRR520SensorConfiguration> &
     new_config)
 {
@@ -115,17 +114,17 @@ Status ContinentalSRR520RosWrapper::ValidateAndSetConfig(
   }
 
   if (hw_interface_wrapper_) {
-    hw_interface_wrapper_->OnConfigChange(new_config);
+    hw_interface_wrapper_->on_config_change(new_config);
   }
   if (decoder_wrapper_) {
-    decoder_wrapper_->OnConfigChange(new_config);
+    decoder_wrapper_->on_config_change(new_config);
   }
 
   config_ptr_ = new_config;
   return Status::OK;
 }
 
-void ContinentalSRR520RosWrapper::ReceivePacketsCallback(
+void ContinentalSRR520RosWrapper::receive_packets_callback(
   std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg)
 {
   if (hw_interface_wrapper_) {
@@ -145,10 +144,10 @@ void ContinentalSRR520RosWrapper::ReceivePacketsCallback(
   }
 }
 
-void ContinentalSRR520RosWrapper::ReceivePacketCallback(
+void ContinentalSRR520RosWrapper::receive_packet_callback(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> msg_ptr)
 {
-  if (!decoder_wrapper_ || decoder_wrapper_->Status() != Status::OK) {
+  if (!decoder_wrapper_ || decoder_wrapper_->status() != Status::OK) {
     return;
   }
 
@@ -157,27 +156,27 @@ void ContinentalSRR520RosWrapper::ReceivePacketCallback(
   }
 }
 
-Status ContinentalSRR520RosWrapper::GetStatus()
+Status ContinentalSRR520RosWrapper::get_status()
 {
   return wrapper_status_;
 }
 
-Status ContinentalSRR520RosWrapper::StreamStart()
+Status ContinentalSRR520RosWrapper::stream_start()
 {
   if (!hw_interface_wrapper_) {
     return Status::UDP_CONNECTION_ERROR;
   }
 
-  if (hw_interface_wrapper_->Status() != Status::OK) {
-    return hw_interface_wrapper_->Status();
+  if (hw_interface_wrapper_->status() != Status::OK) {
+    return hw_interface_wrapper_->status();
   }
 
-  hw_interface_wrapper_->SensorInterfaceStart();
+  hw_interface_wrapper_->sensor_interface_start();
 
-  return hw_interface_wrapper_->Status();
+  return hw_interface_wrapper_->status();
 }
 
-rcl_interfaces::msg::SetParametersResult ContinentalSRR520RosWrapper::OnParameterChange(
+rcl_interfaces::msg::SetParametersResult ContinentalSRR520RosWrapper::on_parameter_change(
   const std::vector<rclcpp::Parameter> & p)
 {
   using rcl_interfaces::msg::SetParametersResult;
@@ -202,7 +201,7 @@ rcl_interfaces::msg::SetParametersResult ContinentalSRR520RosWrapper::OnParamete
 
   auto new_config_ptr = std::make_shared<
     const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration>(new_config);
-  auto status = ValidateAndSetConfig(new_config_ptr);
+  auto status = validate_and_set_config(new_config_ptr);
 
   if (status != Status::OK) {
     RCLCPP_WARN_STREAM(get_logger(), "OnParameterChange aborted: " << status);
@@ -216,5 +215,4 @@ rcl_interfaces::msg::SetParametersResult ContinentalSRR520RosWrapper::OnParamete
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(ContinentalSRR520RosWrapper)
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

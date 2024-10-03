@@ -29,7 +29,7 @@ namespace hesai_packet
 using TailXT32M2X = TailXT32;
 struct PacketXT32M2X : public PacketBase<6, 32, 3, 100>
 {
-  using body_t = Body<Block<Unit4B, PacketXT32M2X::N_CHANNELS>, PacketXT32M2X::N_BLOCKS>;
+  using body_t = Body<Block<Unit4B, PacketXT32M2X::n_channels>, PacketXT32M2X::n_blocks>;
   Header12B header;
   body_t body;
   TailXT32M2X tail;
@@ -43,11 +43,11 @@ struct PacketXT32M2X : public PacketBase<6, 32, 3, 100>
 class PandarXT32M : public HesaiSensor<hesai_packet::PacketXT32M2X>
 {
 public:
-  static constexpr float MIN_RANGE = 0.5f;
-  static constexpr float MAX_RANGE = 300.0f;
-  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 384000;
+  static constexpr float min_range = 0.5f;
+  static constexpr float max_range = 300.0f;
+  static constexpr size_t max_scan_buffer_points = 384000;
 
-  int getPacketRelativePointTimeOffset(
+  int get_packet_relative_point_time_offset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);

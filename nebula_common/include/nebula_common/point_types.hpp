@@ -20,9 +20,7 @@
 
 #include <memory>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 struct EIGEN_ALIGN16 PointXYZIR
 {
@@ -76,8 +74,7 @@ using NebulaPointPtr = std::shared_ptr<NebulaPoint>;
 using NebulaPointCloud = pcl::PointCloud<NebulaPoint>;
 using NebulaPointCloudPtr = pcl::PointCloud<NebulaPoint>::Ptr;
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(
   nebula::drivers::PointXYZIR,

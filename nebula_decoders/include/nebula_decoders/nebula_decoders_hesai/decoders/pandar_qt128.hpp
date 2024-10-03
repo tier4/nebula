@@ -44,7 +44,7 @@ struct TailQT128C2X
 
 struct PacketQT128C2X : public PacketBase<2, 128, 2, 100>
 {
-  using body_t = Body<Block<Unit4B, PacketQT128C2X::N_CHANNELS>, PacketQT128C2X::N_BLOCKS>;
+  using body_t = Body<Block<Unit4B, PacketQT128C2X::n_channels>, PacketQT128C2X::n_blocks>;
   Header12B header;
   body_t body;
   uint32_t crc_body;
@@ -90,11 +90,11 @@ private:
     17296, 67984, 42640, 45808, 71152,  20464, 96496, 99664, 23632, 74320, 48976};
 
 public:
-  static constexpr float MIN_RANGE = 0.05;
-  static constexpr float MAX_RANGE = 50.0;
-  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 172800;
+  static constexpr float min_range = 0.05;
+  static constexpr float max_range = 50.0;
+  static constexpr size_t max_scan_buffer_points = 172800;
 
-  int getPacketRelativePointTimeOffset(
+  int get_packet_relative_point_time_offset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);

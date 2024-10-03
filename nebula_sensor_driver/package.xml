@@ -12,7 +12,6 @@
   <exec_depend>nebula_common</exec_depend>
   <exec_depend>nebula_decoders</exec_depend>
   <exec_depend>nebula_examples</exec_depend>
-  <exec_depend>nebula_examples</exec_depend>
   <exec_depend>nebula_hw_interfaces</exec_depend>
   <exec_depend>nebula_ros</exec_depend>
   <exec_depend>nebula_tests</exec_depend>

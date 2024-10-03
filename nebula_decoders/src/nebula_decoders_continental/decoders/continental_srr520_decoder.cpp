@@ -22,11 +22,7 @@
 #include <cmath>
 #include <utility>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace continental_srr520
+namespace nebula::drivers::continental_srr520
 {
 ContinentalSRR520Decoder::ContinentalSRR520Decoder(
   const std::shared_ptr<const continental_srr520::ContinentalSRR520SensorConfiguration> &
@@ -46,12 +42,12 @@ ContinentalSRR520Decoder::ContinentalSRR520Decoder(
   object_list_ptr_ = std::make_unique<continental_msgs::msg::ContinentalSrr520ObjectList>();
 }
 
-Status ContinentalSRR520Decoder::GetStatus()
+Status ContinentalSRR520Decoder::get_status()
 {
   return Status::OK;
 }
 
-Status ContinentalSRR520Decoder::RegisterNearDetectionListCallback(
+Status ContinentalSRR520Decoder::register_near_detection_list_callback(
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList>)>
     detection_list_callback)
 {
@@ -59,7 +55,7 @@ Status ContinentalSRR520Decoder::RegisterNearDetectionListCallback(
   return Status::OK;
 }
 
-Status ContinentalSRR520Decoder::RegisterHRRDetectionListCallback(
+Status ContinentalSRR520Decoder::register_hrr_detection_list_callback(
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalSrr520DetectionList>)>
     detection_list_callback)
 {
@@ -67,7 +63,7 @@ Status ContinentalSRR520Decoder::RegisterHRRDetectionListCallback(
   return Status::OK;
 }
 
-Status ContinentalSRR520Decoder::RegisterObjectListCallback(
+Status ContinentalSRR520Decoder::register_object_list_callback(
   std::function<void(std::unique_ptr<continental_msgs::msg::ContinentalSrr520ObjectList>)>
     object_list_callback)
 {
@@ -75,28 +71,28 @@ Status ContinentalSRR520Decoder::RegisterObjectListCallback(
   return Status::OK;
 }
 
-Status ContinentalSRR520Decoder::RegisterStatusCallback(
+Status ContinentalSRR520Decoder::register_status_callback(
   std::function<void(std::unique_ptr<diagnostic_msgs::msg::DiagnosticArray>)> status_callback)
 {
   status_callback_ = std::move(status_callback);
   return Status::OK;
 }
 
-Status ContinentalSRR520Decoder::RegisterSyncFollowUpCallback(
+Status ContinentalSRR520Decoder::register_sync_follow_up_callback(
   std::function<void(builtin_interfaces::msg::Time)> sync_follow_up_callback)
 {
   sync_follow_up_callback_ = std::move(sync_follow_up_callback);
   return Status::OK;
 }
 
-Status ContinentalSRR520Decoder::RegisterPacketsCallback(
+Status ContinentalSRR520Decoder::register_packets_callback(
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> nebula_packets_callback)
 {
   nebula_packets_callback_ = std::move(nebula_packets_callback);
   return Status::OK;
 }
 
-bool ContinentalSRR520Decoder::ProcessPacket(
+bool ContinentalSRR520Decoder::process_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   const uint32_t can_message_id = (static_cast<uint32_t>(packet_msg->data[0]) << 24) |
@@ -106,87 +102,87 @@ bool ContinentalSRR520Decoder::ProcessPacket(
 
   std::size_t payload_size = packet_msg->data.size() - 4;
 
-  if (can_message_id == RDI_NEAR_HEADER_CAN_MESSAGE_ID) {
-    if (payload_size != RDI_NEAR_HEADER_PACKET_SIZE) {
-      PrintError("RDI_NEAR_HEADER_CAN_MESSAGE_ID message with invalid size");
+  if (can_message_id == rdi_near_header_can_message_id) {
+    if (payload_size != rdi_near_header_packet_size) {
+      print_error("rdi_near_header_can_message_id message with invalid size");
       return false;
     }
-    ProcessNearHeaderPacket(std::move(packet_msg));
-  } else if (can_message_id == RDI_NEAR_ELEMENT_CAN_MESSAGE_ID) {
-    if (payload_size != RDI_NEAR_ELEMENT_PACKET_SIZE) {
-      PrintError("RDI_NEAR_ELEMENT_CAN_MESSAGE_ID message with invalid size");
-      return false;
-    }
-
-    ProcessNearElementPacket(std::move(packet_msg));
-  } else if (can_message_id == RDI_HRR_HEADER_CAN_MESSAGE_ID) {
-    if (payload_size != RDI_HRR_HEADER_PACKET_SIZE) {
-      PrintError("RDI_HRR_HEADER_CAN_MESSAGE_ID message with invalid size");
-      return false;
-    }
-    ProcessHRRHeaderPacket(std::move(packet_msg));
-  } else if (can_message_id == RDI_HRR_ELEMENT_CAN_MESSAGE_ID) {
-    if (payload_size != RDI_HRR_ELEMENT_PACKET_SIZE) {
-      PrintError("RDI_HRR_ELEMENT_CAN_MESSAGE_ID message with invalid size");
+    process_near_header_packet(std::move(packet_msg));
+  } else if (can_message_id == rdi_near_element_can_message_id) {
+    if (payload_size != rdi_near_element_packet_size) {
+      print_error("rdi_near_element_can_message_id message with invalid size");
       return false;
     }
 
-    ProcessHRRElementPacket(std::move(packet_msg));
-  } else if (can_message_id == OBJECT_HEADER_CAN_MESSAGE_ID) {
-    if (payload_size != OBJECT_HEADER_PACKET_SIZE) {
-      PrintError("OBJECT_HEADER_CAN_MESSAGE_ID message with invalid size");
+    process_near_element_packet(std::move(packet_msg));
+  } else if (can_message_id == rdi_hrr_header_can_message_id) {
+    if (payload_size != rdi_hrr_header_packet_size) {
+      print_error("rdi_hrr_header_can_message_id message with invalid size");
       return false;
     }
-    ProcessObjectHeaderPacket(std::move(packet_msg));
-  } else if (can_message_id == OBJECT_CAN_MESSAGE_ID) {
-    if (payload_size != OBJECT_PACKET_SIZE) {
-      PrintError("OBJECT_ELEMENT_CAN_MESSAGE_ID message with invalid size");
-      return false;
-    }
-
-    ProcessObjectElementPacket(std::move(packet_msg));
-  } else if (can_message_id == CRC_LIST_CAN_MESSAGE_ID) {
-    if (payload_size != CRC_LIST_PACKET_SIZE) {
-      PrintError("CRC_LIST_CAN_MESSAGE_ID message with invalid size");
+    process_hrr_header_packet(std::move(packet_msg));
+  } else if (can_message_id == rdi_hrr_element_can_message_id) {
+    if (payload_size != rdi_hrr_element_packet_size) {
+      print_error("rdi_hrr_element_can_message_id message with invalid size");
       return false;
     }
 
-    ProcessCRCListPacket(std::move(packet_msg));
-  } else if (can_message_id == STATUS_CAN_MESSAGE_ID) {
-    if (payload_size != STATUS_PACKET_SIZE) {
-      PrintError("CRC_LIST_CAN_MESSAGE_ID message with invalid size");
+    process_hrr_element_packet(std::move(packet_msg));
+  } else if (can_message_id == object_header_can_message_id) {
+    if (payload_size != object_header_packet_size) {
+      print_error("object_header_can_message_id message with invalid size");
+      return false;
+    }
+    process_object_header_packet(std::move(packet_msg));
+  } else if (can_message_id == object_can_message_id) {
+    if (payload_size != object_packet_size) {
+      print_error("object_element_can_message_id message with invalid size");
       return false;
     }
 
-    ProcessSensorStatusPacket(std::move(packet_msg));
-  } else if (can_message_id == SYNC_FOLLOW_UP_CAN_MESSAGE_ID) {
-    if (payload_size != SYNC_FOLLOW_UP_CAN_PACKET_SIZE) {
-      PrintError("SYNC_FOLLOW_UP_CAN_MESSAGE_ID message with invalid size");
+    process_object_element_packet(std::move(packet_msg));
+  } else if (can_message_id == crc_list_can_message_id) {
+    if (payload_size != crc_list_packet_size) {
+      print_error("crc_list_can_message_id message with invalid size");
       return false;
     }
 
-    ProcessSyncFollowUpPacket(std::move(packet_msg));
+    process_crc_list_packet(std::move(packet_msg));
+  } else if (can_message_id == status_can_message_id) {
+    if (payload_size != status_packet_size) {
+      print_error("crc_list_can_message_id message with invalid size");
+      return false;
+    }
+
+    process_sensor_status_packet(std::move(packet_msg));
+  } else if (can_message_id == sync_follow_up_can_message_id) {
+    if (payload_size != sync_follow_up_can_packet_size) {
+      print_error("sync_follow_up_can_message_id message with invalid size");
+      return false;
+    }
+
+    process_sync_follow_up_packet(std::move(packet_msg));
   } else if (
-    can_message_id != VEH_DYN_CAN_MESSAGE_ID && can_message_id != SENSOR_CONFIG_CAN_MESSAGE_ID) {
-    PrintError("Unrecognized message ID=" + std::to_string(can_message_id));
+    can_message_id != veh_dyn_can_message_id && can_message_id != sensor_config_can_message_id) {
+    print_error("Unrecognized message ID=" + std::to_string(can_message_id));
     return false;
   }
 
   return true;
 }
 
-void ContinentalSRR520Decoder::ProcessNearHeaderPacket(
+void ContinentalSRR520Decoder::process_near_header_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
-  constexpr float V_AMBIGUOUS_RESOLUTION = 0.003051851f;
-  constexpr float V_AMBIGUOUS_MIN_VALUE = -100.f;
-  constexpr float MAX_RANGE_RESOLUTION = 0.1f;
+  constexpr float v_ambiguous_resolution = 0.003051851f;
+  constexpr float v_ambiguous_min_value = -100.f;
+  constexpr float max_range_resolution = 0.1f;
 
   first_rdi_near_packet_ = false;
 
-  static_assert(sizeof(ScanHeaderPacket) == RDI_NEAR_HEADER_PACKET_SIZE);
-  static_assert(sizeof(DetectionPacket) == RDI_NEAR_ELEMENT_PACKET_SIZE);
-  assert(packet_msg->data.size() == RDI_NEAR_HEADER_PACKET_SIZE + 4);
+  static_assert(sizeof(ScanHeaderPacket) == rdi_near_header_packet_size);
+  static_assert(sizeof(DetectionPacket) == rdi_near_element_packet_size);
+  assert(packet_msg->data.size() == rdi_near_header_packet_size + 4);
 
   std::memcpy(
     &rdi_near_header_packet_, packet_msg->data.data() + 4 * sizeof(uint8_t),
@@ -217,9 +213,9 @@ void ContinentalSRR520Decoder::ProcessNearHeaderPacket(
   near_detection_list_ptr_->sequence_counter = rdi_near_header_packet_.u_sequence_counter;
   near_detection_list_ptr_->cycle_counter = rdi_near_header_packet_.u_cycle_counter.value();
   near_detection_list_ptr_->v_ambiguous =
-    V_AMBIGUOUS_RESOLUTION * rdi_near_header_packet_.u_v_ambiguous.value() + V_AMBIGUOUS_MIN_VALUE;
+    v_ambiguous_resolution * rdi_near_header_packet_.u_v_ambiguous.value() + v_ambiguous_min_value;
   near_detection_list_ptr_->max_range =
-    MAX_RANGE_RESOLUTION * rdi_near_header_packet_.u_max_range.value();
+    max_range_resolution * rdi_near_header_packet_.u_max_range.value();
 
   near_detection_list_ptr_->detections.reserve(
     rdi_near_header_packet_.u_number_of_detections.value());
@@ -227,23 +223,23 @@ void ContinentalSRR520Decoder::ProcessNearHeaderPacket(
   rdi_near_packets_ptr_->packets.emplace_back(std::move(*packet_msg));
 }
 
-void ContinentalSRR520Decoder::ProcessNearElementPacket(
+void ContinentalSRR520Decoder::process_near_element_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
-  constexpr auto RANGE_RESOLUTION = 0.024420024;
-  constexpr auto AZIMUTH_RESOLUTION = 0.006159986;
-  constexpr auto RANGE_RATE_RESOLUTION = 0.014662757;
-  constexpr auto RCS_RESOLUTION = 0.476190476;
-  constexpr auto SNR_RESOLUTION = 1.7;
+  constexpr auto range_resolution = 0.024420024;
+  constexpr auto azimuth_resolution = 0.006159986;
+  constexpr auto range_rate_resolution = 0.014662757;
+  constexpr auto rcs_resolution = 0.476190476;
+  constexpr auto snr_resolution = 1.7;
 
-  constexpr auto AZIMUTH_MIN_VALUE = -1.570796327;
-  constexpr auto RANGE_RATE_MIN_VALUE = -15.f;
-  constexpr auto RCS_MIN_VALUE = -40.f;
-  constexpr auto SNR_MIN_VALUE = 11.f;
+  constexpr auto azimuth_min_value = -1.570796327;
+  constexpr auto range_rate_min_value = -15.f;
+  constexpr auto rcs_min_value = -40.f;
+  constexpr auto snr_min_value = 11.f;
 
   if (rdi_near_packets_ptr_->packets.size() == 0) {
     if (!first_rdi_near_packet_) {
-      PrintError("Near element before header. This can happen during the first iteration");
+      print_error("Near element before header. This can happen during the first iteration");
     }
     return;
   }
@@ -261,8 +257,8 @@ void ContinentalSRR520Decoder::ProcessNearElementPacket(
   std::memcpy(
     &detection_packet, packet_msg->data.data() + 4 * sizeof(uint8_t), sizeof(DetectionPacket));
 
-  static_assert(sizeof(DetectionPacket) == RDI_NEAR_ELEMENT_PACKET_SIZE);
-  assert(packet_msg->data.size() == RDI_NEAR_ELEMENT_PACKET_SIZE + 4);
+  static_assert(sizeof(DetectionPacket) == rdi_near_element_packet_size);
+  assert(packet_msg->data.size() == rdi_near_element_packet_size + 4);
   assert(rdi_near_header_packet_.u_sequence_counter == detection_packet.u_sequence_counter);
   assert(
     rdi_near_packets_ptr_->packets.size() ==
@@ -279,21 +275,21 @@ void ContinentalSRR520Decoder::ProcessNearElementPacket(
     uint16_t u_range =
       (static_cast<uint16_t>(data[0]) << 4) | (static_cast<uint16_t>(data[1] & 0xF0) >> 4);
     assert(u_range <= 4095);
-    detection_msg.range = RANGE_RESOLUTION * u_range;
+    detection_msg.range = range_resolution * u_range;
 
     uint16_t u_azimuth =
       (static_cast<uint16_t>(data[1] & 0x0f) << 5) | (static_cast<uint16_t>(data[2] & 0xF8) >> 3);
     assert(u_azimuth <= 510);
-    detection_msg.azimuth_angle = AZIMUTH_RESOLUTION * u_azimuth + AZIMUTH_MIN_VALUE;
+    detection_msg.azimuth_angle = azimuth_resolution * u_azimuth + azimuth_min_value;
 
     uint16_t u_range_rate =
       (static_cast<uint16_t>(data[2] & 0x07) << 8) | static_cast<uint16_t>(data[3]);
     assert(u_range_rate <= 2046);
-    detection_msg.range_rate = RANGE_RATE_RESOLUTION * u_range_rate + RANGE_RATE_MIN_VALUE;
+    detection_msg.range_rate = range_rate_resolution * u_range_rate + range_rate_min_value;
 
     uint16_t u_rcs = (data[4] & 0xFE) >> 1;
     assert(u_rcs <= 126);
-    detection_msg.rcs = RCS_RESOLUTION * u_rcs + RCS_MIN_VALUE;
+    detection_msg.rcs = rcs_resolution * u_rcs + rcs_min_value;
 
     detection_msg.pdh00 = 100 * (data[4] & 0x01);
     detection_msg.pdh01 = 100 * ((data[5] & 0x80) >> 7);
@@ -302,7 +298,7 @@ void ContinentalSRR520Decoder::ProcessNearElementPacket(
     detection_msg.pdh04 = 100 * ((data[5] & 0x10) >> 4);
 
     uint8_t u_snr = data[5] & 0x0f;
-    detection_msg.snr = SNR_RESOLUTION * u_snr + SNR_MIN_VALUE;
+    detection_msg.snr = snr_resolution * u_snr + snr_min_value;
 
     near_detection_list_ptr_->detections.push_back(detection_msg);
     parsed_detections++;
@@ -311,7 +307,7 @@ void ContinentalSRR520Decoder::ProcessNearElementPacket(
   rdi_near_packets_ptr_->packets.emplace_back(std::move(*packet_msg));
 }
 
-void ContinentalSRR520Decoder::ProcessHRRHeaderPacket(
+void ContinentalSRR520Decoder::process_hrr_header_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   constexpr float V_AMBIGUOUS_RESOLUTION = 0.003051851f;
@@ -320,8 +316,8 @@ void ContinentalSRR520Decoder::ProcessHRRHeaderPacket(
 
   first_rdi_hrr_packet_ = false;
 
-  static_assert(sizeof(ScanHeaderPacket) == RDI_HRR_HEADER_PACKET_SIZE);
-  assert(packet_msg->data.size() == RDI_HRR_HEADER_PACKET_SIZE + 4);
+  static_assert(sizeof(ScanHeaderPacket) == rdi_hrr_header_packet_size);
+  assert(packet_msg->data.size() == rdi_hrr_header_packet_size + 4);
 
   std::memcpy(
     &rdi_hrr_header_packet_, packet_msg->data.data() + 4 * sizeof(uint8_t),
@@ -362,7 +358,7 @@ void ContinentalSRR520Decoder::ProcessHRRHeaderPacket(
   rdi_hrr_packets_ptr_->packets.emplace_back(std::move(*packet_msg));
 }
 
-void ContinentalSRR520Decoder::ProcessHRRElementPacket(
+void ContinentalSRR520Decoder::process_hrr_element_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   constexpr auto RANGE_RESOLUTION = 0.024420024;
@@ -378,7 +374,7 @@ void ContinentalSRR520Decoder::ProcessHRRElementPacket(
 
   if (rdi_hrr_packets_ptr_->packets.size() == 0) {
     if (!first_rdi_hrr_packet_) {
-      PrintError("HRR element before header. This can happen during the first iteration");
+      print_error("HRR element before header. This can happen during the first iteration");
     }
     return;
   }
@@ -396,8 +392,8 @@ void ContinentalSRR520Decoder::ProcessHRRElementPacket(
   std::memcpy(
     &detection_packet, packet_msg->data.data() + 4 * sizeof(uint8_t), sizeof(DetectionPacket));
 
-  static_assert(sizeof(DetectionPacket) == RDI_HRR_ELEMENT_PACKET_SIZE);
-  assert(packet_msg->data.size() == RDI_HRR_ELEMENT_PACKET_SIZE + 4);
+  static_assert(sizeof(DetectionPacket) == rdi_hrr_element_packet_size);
+  assert(packet_msg->data.size() == rdi_hrr_element_packet_size + 4);
   assert(rdi_hrr_header_packet_.u_sequence_counter == detection_packet.u_sequence_counter);
   assert(
     rdi_hrr_packets_ptr_->packets.size() ==
@@ -446,7 +442,7 @@ void ContinentalSRR520Decoder::ProcessHRRElementPacket(
   rdi_hrr_packets_ptr_->packets.emplace_back(std::move(*packet_msg));
 }
 
-void ContinentalSRR520Decoder::ProcessObjectHeaderPacket(
+void ContinentalSRR520Decoder::process_object_header_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   constexpr auto VX_RESOLUTION = 0.003051851;
@@ -456,8 +452,8 @@ void ContinentalSRR520Decoder::ProcessObjectHeaderPacket(
 
   first_object_packet_ = false;
 
-  static_assert(sizeof(ObjectHeaderPacket) == OBJECT_HEADER_PACKET_SIZE);
-  assert(packet_msg->data.size() == OBJECT_HEADER_PACKET_SIZE + 4);
+  static_assert(sizeof(ObjectHeaderPacket) == object_header_packet_size);
+  assert(packet_msg->data.size() == object_header_packet_size + 4);
 
   std::memcpy(
     &object_header_packet_, packet_msg->data.data() + 4 * sizeof(uint8_t),
@@ -495,7 +491,7 @@ void ContinentalSRR520Decoder::ProcessObjectHeaderPacket(
   object_packets_ptr_->packets.emplace_back(std::move(*packet_msg));
 }
 
-void ContinentalSRR520Decoder::ProcessObjectElementPacket(
+void ContinentalSRR520Decoder::process_object_element_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   constexpr auto DIST_RESOLUTION = 0.009155553;
@@ -517,7 +513,7 @@ void ContinentalSRR520Decoder::ProcessObjectElementPacket(
 
   if (object_packets_ptr_->packets.size() == 0) {
     if (!first_object_packet_) {
-      PrintError("Object element before header. This can happen during the first iteration");
+      print_error("Object element before header. This can happen during the first iteration");
     }
     return;
   }
@@ -530,8 +526,8 @@ void ContinentalSRR520Decoder::ProcessObjectElementPacket(
   ObjectPacket object_packet;
   std::memcpy(&object_packet, packet_msg->data.data() + 4 * sizeof(uint8_t), sizeof(ObjectPacket));
 
-  static_assert(sizeof(ObjectPacket) == OBJECT_PACKET_SIZE);
-  assert(packet_msg->data.size() == OBJECT_PACKET_SIZE + 4);
+  static_assert(sizeof(ObjectPacket) == object_packet_size);
+  assert(packet_msg->data.size() == object_packet_size + 4);
   assert(object_header_packet_.u_sequence_counter == object_packet.u_sequence_counter);
   assert(
     object_packets_ptr_->packets.size() ==
@@ -645,28 +641,28 @@ void ContinentalSRR520Decoder::ProcessObjectElementPacket(
   object_packets_ptr_->packets.emplace_back(std::move(*packet_msg));
 }
 
-void ContinentalSRR520Decoder::ProcessCRCListPacket(
+void ContinentalSRR520Decoder::process_crc_list_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   const auto crc_id = packet_msg->data[4];  // first 4 bits are the can id
 
-  if (crc_id == NEAR_CRC_ID) {
-    ProcessNearCRCListPacket(std::move(packet_msg));
-  } else if (crc_id == HRR_CRC_ID) {
-    ProcessHRRCRCListPacket(std::move(packet_msg));  // cspell: ignore HRRCRC
-  } else if (crc_id == OBJECT_CRC_ID) {
-    ProcessObjectCRCListPacket(std::move(packet_msg));
+  if (crc_id == near_crc_id) {
+    process_near_crc_list_packet(std::move(packet_msg));
+  } else if (crc_id == hrr_crc_id) {
+    process_hrrcrc_list_packet(std::move(packet_msg));  // cspell: ignore HRRCRC
+  } else if (crc_id == object_crc_id) {
+    process_object_crc_list_packet(std::move(packet_msg));
   } else {
-    PrintError(std::string("Unrecognized CRC id=") + std::to_string(crc_id));
+    print_error(std::string("Unrecognized CRC id=") + std::to_string(crc_id));
   }
 }
 
-void ContinentalSRR520Decoder::ProcessNearCRCListPacket(
+void ContinentalSRR520Decoder::process_near_crc_list_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
-  if (rdi_near_packets_ptr_->packets.size() != RDI_NEAR_PACKET_NUM + 1) {
+  if (rdi_near_packets_ptr_->packets.size() != rdi_near_packet_num + 1) {
     if (!first_rdi_near_packet_) {
-      PrintError("Incorrect number of RDI Near elements before CRC list");
+      print_error("Incorrect number of RDI Near elements before CRC list");
     }
 
     rdi_near_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -681,7 +677,7 @@ void ContinentalSRR520Decoder::ProcessNearCRCListPacket(
     crc16_packets(rdi_near_packets_ptr_->packets.begin(), rdi_near_packets_ptr_->packets.end(), 4);
 
   if (transmitted_crc != computed_crc) {
-    PrintError(
+    print_error(
       "RDI Near: Transmitted CRC list does not coincide with the computed one. Ignoring packet");
 
     rdi_near_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -705,12 +701,12 @@ void ContinentalSRR520Decoder::ProcessNearCRCListPacket(
     std::make_unique<continental_msgs::msg::ContinentalSrr520DetectionList>();
 }
 
-void ContinentalSRR520Decoder::ProcessHRRCRCListPacket(
+void ContinentalSRR520Decoder::process_hrrcrc_list_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
-  if (rdi_hrr_packets_ptr_->packets.size() != RDI_HRR_PACKET_NUM + 1) {
+  if (rdi_hrr_packets_ptr_->packets.size() != rdi_hrr_packet_num + 1) {
     if (!first_rdi_hrr_packet_) {
-      PrintError("Incorrect number of RDI HRR elements before CRC list");
+      print_error("Incorrect number of RDI HRR elements before CRC list");
     }
 
     rdi_hrr_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -725,7 +721,7 @@ void ContinentalSRR520Decoder::ProcessHRRCRCListPacket(
     crc16_packets(rdi_hrr_packets_ptr_->packets.begin(), rdi_hrr_packets_ptr_->packets.end(), 4);
 
   if (transmitted_crc != computed_crc) {
-    PrintError(
+    print_error(
       "RDI HRR: Transmitted CRC list does not coincide with the computed one. Ignoring packet");
     rdi_hrr_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
     hrr_detection_list_ptr_ =
@@ -748,12 +744,12 @@ void ContinentalSRR520Decoder::ProcessHRRCRCListPacket(
     std::make_unique<continental_msgs::msg::ContinentalSrr520DetectionList>();
 }
 
-void ContinentalSRR520Decoder::ProcessObjectCRCListPacket(
+void ContinentalSRR520Decoder::process_object_crc_list_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
-  if (object_packets_ptr_->packets.size() != OBJECT_PACKET_NUM + 1) {
+  if (object_packets_ptr_->packets.size() != object_packet_num + 1) {
     if (!first_object_packet_) {
-      PrintError("Incorrect number of object packages before CRC list");
+      print_error("Incorrect number of object packages before CRC list");
     }
 
     object_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -767,7 +763,7 @@ void ContinentalSRR520Decoder::ProcessObjectCRCListPacket(
     crc16_packets(object_packets_ptr_->packets.begin(), object_packets_ptr_->packets.end(), 4);
 
   if (transmitted_crc != computed_crc) {
-    PrintError(
+    print_error(
       "Object: Transmitted CRC list does not coincide with the computed one. Ignoring packet");
 
     object_packets_ptr_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
@@ -789,16 +785,16 @@ void ContinentalSRR520Decoder::ProcessObjectCRCListPacket(
   object_list_ptr_ = std::make_unique<continental_msgs::msg::ContinentalSrr520ObjectList>();
 }
 
-void ContinentalSRR520Decoder::ProcessSensorStatusPacket(
+void ContinentalSRR520Decoder::process_sensor_status_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
-  static_assert(sizeof(StatusPacket) == STATUS_PACKET_SIZE);
+  static_assert(sizeof(StatusPacket) == status_packet_size);
 
-  constexpr float STATUS_DISTANCE_RESOLUTION = 1e-3f;
-  constexpr float STATUS_DISTANCE_MIN_VALUE = -32.767;
-  constexpr float STATUS_ANGLE_RESOLUTION = 9.58766f;
-  constexpr float STATUS_ANGLE_MIN_VALUE = -3.14159f;
-  constexpr auto STATUS_ANGLE_STD_RESOLUTION = 1.52593e-05;
+  constexpr float status_distance_resolution = 1e-3f;
+  constexpr float status_distance_min_value = -32.767;
+  constexpr float status_angle_resolution = 9.58766f;
+  constexpr float status_angle_min_value = -3.14159f;
+  constexpr auto status_angle_std_resolution = 1.52593e-05;
 
   StatusPacket status_packet;
   std::memcpy(&status_packet, packet_msg->data.data() + 4 * sizeof(uint8_t), sizeof(status_packet));
@@ -852,36 +848,36 @@ void ContinentalSRR520Decoder::ProcessSensorStatusPacket(
 
   key_value.key = "long_pos";
   key_value.value = std::to_string(
-    STATUS_DISTANCE_RESOLUTION * status_packet.u_long_pos.value() + STATUS_DISTANCE_MIN_VALUE);
+    status_distance_resolution * status_packet.u_long_pos.value() + status_distance_min_value);
   diagnostic_values.push_back(key_value);
 
   key_value.key = "lat_pos";
   key_value.value = std::to_string(
-    STATUS_DISTANCE_RESOLUTION * status_packet.u_lat_pos.value() + STATUS_DISTANCE_MIN_VALUE);
+    status_distance_resolution * status_packet.u_lat_pos.value() + status_distance_min_value);
   diagnostic_values.push_back(key_value);
 
   key_value.key = "vert_pos";
   key_value.value = std::to_string(
-    STATUS_DISTANCE_RESOLUTION * status_packet.u_vert_pos.value() + STATUS_DISTANCE_MIN_VALUE);
+    status_distance_resolution * status_packet.u_vert_pos.value() + status_distance_min_value);
   diagnostic_values.push_back(key_value);
 
   key_value.key = "long_pos_cog";
   key_value.value = std::to_string(
-    STATUS_DISTANCE_RESOLUTION * status_packet.u_long_pos_cog.value() + STATUS_DISTANCE_MIN_VALUE);
+    status_distance_resolution * status_packet.u_long_pos_cog.value() + status_distance_min_value);
   diagnostic_values.push_back(key_value);
 
   key_value.key = "wheelbase";
-  key_value.value = std::to_string(STATUS_DISTANCE_RESOLUTION * status_packet.u_wheelbase.value());
+  key_value.value = std::to_string(status_distance_resolution * status_packet.u_wheelbase.value());
   diagnostic_values.push_back(key_value);
 
   key_value.key = "yaw_angle";
   key_value.value = std::to_string(
-    STATUS_ANGLE_RESOLUTION * status_packet.u_yaw_angle.value() + STATUS_ANGLE_MIN_VALUE);
+    status_angle_resolution * status_packet.u_yaw_angle.value() + status_angle_min_value);
   diagnostic_values.push_back(key_value);
 
   key_value.key = "cover_damping";
   key_value.value = std::to_string(
-    STATUS_DISTANCE_RESOLUTION * status_packet.u_cover_damping.value() + STATUS_DISTANCE_MIN_VALUE);
+    status_distance_resolution * status_packet.u_cover_damping.value() + status_distance_min_value);
   diagnostic_values.push_back(key_value);
 
   uint8_t plug_orientation = status_packet.u_plug_orientation & 0b1;
@@ -1119,17 +1115,17 @@ void ContinentalSRR520Decoder::ProcessSensorStatusPacket(
 
   key_value.key = "aln_current_azimuth_std";
   key_value.value =
-    std::to_string(STATUS_ANGLE_STD_RESOLUTION * status_packet.u_aln_current_azimuth_std.value());
+    std::to_string(status_angle_std_resolution * status_packet.u_aln_current_azimuth_std.value());
   diagnostic_values.push_back(key_value);
 
   key_value.key = "aln_current_azimuth";
   key_value.value = std::to_string(
-    STATUS_ANGLE_RESOLUTION * status_packet.u_aln_current_azimuth.value() + STATUS_ANGLE_MIN_VALUE);
+    status_angle_resolution * status_packet.u_aln_current_azimuth.value() + status_angle_min_value);
   diagnostic_values.push_back(key_value);
 
   key_value.key = "aln_current_delta";
   key_value.value = std::to_string(
-    STATUS_ANGLE_RESOLUTION * status_packet.u_aln_current_delta.value() + STATUS_ANGLE_MIN_VALUE);
+    status_angle_resolution * status_packet.u_aln_current_delta.value() + status_angle_min_value);
   diagnostic_values.push_back(key_value);
 
   uint16_t computed_crc = crc16_packet(packet_msg->data.begin() + 4, packet_msg->data.end() - 3);
@@ -1156,7 +1152,7 @@ void ContinentalSRR520Decoder::ProcessSensorStatusPacket(
   }
 }
 
-void ContinentalSRR520Decoder::ProcessSyncFollowUpPacket(
+void ContinentalSRR520Decoder::process_sync_follow_up_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   if (sync_follow_up_callback_) {
@@ -1173,12 +1169,12 @@ void ContinentalSRR520Decoder::ProcessSyncFollowUpPacket(
   }
 }
 
-void ContinentalSRR520Decoder::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
+void ContinentalSRR520Decoder::set_logger(std::shared_ptr<rclcpp::Logger> logger)
 {
   parent_node_logger_ptr_ = logger;
 }
 
-void ContinentalSRR520Decoder::PrintInfo(std::string info)
+void ContinentalSRR520Decoder::print_info(std::string info)
 {
   if (parent_node_logger_ptr_) {
     RCLCPP_INFO_STREAM((*parent_node_logger_ptr_), info);
@@ -1187,7 +1183,7 @@ void ContinentalSRR520Decoder::PrintInfo(std::string info)
   }
 }
 
-void ContinentalSRR520Decoder::PrintError(std::string error)
+void ContinentalSRR520Decoder::print_error(std::string error)
 {
   if (parent_node_logger_ptr_) {
     RCLCPP_ERROR_STREAM((*parent_node_logger_ptr_), error);
@@ -1196,7 +1192,7 @@ void ContinentalSRR520Decoder::PrintError(std::string error)
   }
 }
 
-void ContinentalSRR520Decoder::PrintDebug(std::string debug)
+void ContinentalSRR520Decoder::print_debug(std::string debug)
 {
   if (parent_node_logger_ptr_) {
     RCLCPP_DEBUG_STREAM((*parent_node_logger_ptr_), debug);
@@ -1205,6 +1201,4 @@ void ContinentalSRR520Decoder::PrintDebug(std::string debug)
   }
 }
 
-}  // namespace continental_srr520
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::continental_srr520

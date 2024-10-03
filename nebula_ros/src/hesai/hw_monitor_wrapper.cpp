@@ -6,9 +6,7 @@
 
 #include <nebula_common/nebula_common.hpp>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   rclcpp::Node * const parent_node,
@@ -65,23 +63,23 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   info_serial_ = std::string(std::begin(result.sn), std::end(result.sn));
   RCLCPP_INFO_STREAM(logger_, "Model: " << info_model_);
   RCLCPP_INFO_STREAM(logger_, "Serial: " << info_serial_);
-  InitializeHesaiDiagnostics();
+  initialize_hesai_diagnostics();
 }
 
-void HesaiHwMonitorWrapper::InitializeHesaiDiagnostics()
+void HesaiHwMonitorWrapper::initialize_hesai_diagnostics()
 {
-  RCLCPP_INFO_STREAM(logger_, "InitializeHesaiDiagnostics");
+  RCLCPP_INFO_STREAM(logger_, "initialize_hesai_diagnostics");
   using std::chrono_literals::operator""s;
   std::ostringstream os;
   auto hardware_id = info_model_ + ": " + info_serial_;
   diagnostics_updater_.setHardwareID(hardware_id);
   RCLCPP_INFO_STREAM(logger_, "Hardware ID: " + hardware_id);
 
-  diagnostics_updater_.add("hesai_status", this, &HesaiHwMonitorWrapper::HesaiCheckStatus);
-  diagnostics_updater_.add("hesai_ptp", this, &HesaiHwMonitorWrapper::HesaiCheckPtp);
+  diagnostics_updater_.add("hesai_status", this, &HesaiHwMonitorWrapper::hesai_check_status);
+  diagnostics_updater_.add("hesai_ptp", this, &HesaiHwMonitorWrapper::hesai_check_ptp);
   diagnostics_updater_.add(
-    "hesai_temperature", this, &HesaiHwMonitorWrapper::HesaiCheckTemperature);
-  diagnostics_updater_.add("hesai_rpm", this, &HesaiHwMonitorWrapper::HesaiCheckRpm);
+    "hesai_temperature", this, &HesaiHwMonitorWrapper::hesai_check_temperature);
+  diagnostics_updater_.add("hesai_rpm", this, &HesaiHwMonitorWrapper::hesai_check_rpm);
 
   current_status_.reset();
   current_monitor_.reset();
@@ -91,14 +89,14 @@ void HesaiHwMonitorWrapper::InitializeHesaiDiagnostics()
   current_monitor_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
 
   auto fetch_diag_from_sensor = [this]() {
-    OnHesaiStatusTimer();
+    on_hesai_status_timer();
 
     if (!supports_monitor_) return;
 
     if (hw_interface_->UseHttpGetLidarMonitor()) {
-      OnHesaiLidarMonitorTimerHttp();
+      on_hesai_lidar_monitor_timer_http();
     } else {
-      OnHesaiLidarMonitorTimer();
+      on_hesai_lidar_monitor_timer();
     }
   };
 
@@ -106,9 +104,10 @@ void HesaiHwMonitorWrapper::InitializeHesaiDiagnostics()
     std::chrono::milliseconds(diag_span_), std::move(fetch_diag_from_sensor));
 
   if (hw_interface_->UseHttpGetLidarMonitor()) {
-    diagnostics_updater_.add("hesai_voltage", this, &HesaiHwMonitorWrapper::HesaiCheckVoltageHttp);
+    diagnostics_updater_.add(
+      "hesai_voltage", this, &HesaiHwMonitorWrapper::hesai_check_voltage_http);
   } else {
-    diagnostics_updater_.add("hesai_voltage", this, &HesaiHwMonitorWrapper::HesaiCheckVoltage);
+    diagnostics_updater_.add("hesai_voltage", this, &HesaiHwMonitorWrapper::hesai_check_voltage);
   }
 
   auto on_timer_update = [this] {
@@ -142,26 +141,26 @@ void HesaiHwMonitorWrapper::InitializeHesaiDiagnostics()
   RCLCPP_DEBUG_STREAM(logger_, "add_timer");
 }
 
-std::string HesaiHwMonitorWrapper::GetPtreeValue(
+std::string HesaiHwMonitorWrapper::get_ptree_value(
   boost::property_tree::ptree * pt, const std::string & key)
 {
   boost::optional<std::string> value = pt->get_optional<std::string>(key);
   if (value) {
     return value.get();
   } else {
-    return MSG_NOT_SUPPORTED;
+    return MSG_NOT_SUPPORTED_;
   }
 }
-std::string HesaiHwMonitorWrapper::GetFixedPrecisionString(double val, int pre)
+std::string HesaiHwMonitorWrapper::get_fixed_precision_string(double val, int pre)
 {
   std::stringstream ss;
   ss << std::fixed << std::setprecision(pre) << val;
   return ss.str();
 }
 
-void HesaiHwMonitorWrapper::OnHesaiStatusTimer()
+void HesaiHwMonitorWrapper::on_hesai_status_timer()
 {
-  RCLCPP_DEBUG_STREAM(logger_, "OnHesaiStatusTimer" << std::endl);
+  RCLCPP_DEBUG_STREAM(logger_, "on_hesai_status_timer" << std::endl);
   try {
     auto result = hw_interface_->GetLidarStatus();
     std::scoped_lock lock(mtx_lidar_status_);
@@ -169,19 +168,20 @@ void HesaiHwMonitorWrapper::OnHesaiStatusTimer()
     current_status_.reset(new HesaiLidarStatus(result));
   } catch (const std::system_error & error) {
     RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger("HesaiHwMonitorWrapper::OnHesaiStatusTimer(std::system_error)"),
+      rclcpp::get_logger("HesaiHwMonitorWrapper::on_hesai_status_timer(std::system_error)"),
       error.what());
   } catch (const boost::system::system_error & error) {
     RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger("HesaiHwMonitorWrapper::OnHesaiStatusTimer(boost::system::system_error)"),
+      rclcpp::get_logger(
+        "HesaiHwMonitorWrapper::on_hesai_status_timer(boost::system::system_error)"),
       error.what());
   }
-  RCLCPP_DEBUG_STREAM(logger_, "OnHesaiStatusTimer END" << std::endl);
+  RCLCPP_DEBUG_STREAM(logger_, "on_hesai_status_timer END" << std::endl);
 }
 
-void HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimerHttp()
+void HesaiHwMonitorWrapper::on_hesai_lidar_monitor_timer_http()
 {
-  RCLCPP_DEBUG_STREAM(logger_, "OnHesaiLidarMonitorTimerHttp");
+  RCLCPP_DEBUG_STREAM(logger_, "on_hesai_lidar_monitor_timer_http");
   try {
     hw_interface_->GetLidarMonitorAsyncHttp([this](const std::string & str) {
       std::scoped_lock lock(mtx_lidar_monitor_);
@@ -191,21 +191,22 @@ void HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimerHttp()
     });
   } catch (const std::system_error & error) {
     RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger("HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimerHttp(std::system_error)"),
+      rclcpp::get_logger(
+        "HesaiHwMonitorWrapper::on_hesai_lidar_monitor_timer_http(std::system_error)"),
       error.what());
   } catch (const boost::system::system_error & error) {
     RCLCPP_ERROR_STREAM(
       rclcpp::get_logger(
-        "HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimerHttp(boost::system::system_"
+        "HesaiHwMonitorWrapper::on_hesai_lidar_monitor_timer_http(boost::system::system_"
         "error)"),
       error.what());
   }
-  RCLCPP_DEBUG_STREAM(logger_, "OnHesaiLidarMonitorTimerHttp END");
+  RCLCPP_DEBUG_STREAM(logger_, "on_hesai_lidar_monitor_timer_http END");
 }
 
-void HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimer()
+void HesaiHwMonitorWrapper::on_hesai_lidar_monitor_timer()
 {
-  RCLCPP_DEBUG_STREAM(logger_, "OnHesaiLidarMonitorTimer");
+  RCLCPP_DEBUG_STREAM(logger_, "on_hesai_lidar_monitor_timer");
   try {
     auto result = hw_interface_->GetLidarMonitor();
     std::scoped_lock lock(mtx_lidar_monitor_);
@@ -213,18 +214,19 @@ void HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimer()
     current_monitor_.reset(new HesaiLidarMonitor(result));
   } catch (const std::system_error & error) {
     RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger("HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimer(std::system_error)"),
+      rclcpp::get_logger("HesaiHwMonitorWrapper::on_hesai_lidar_monitor_timer(std::system_error)"),
       error.what());
   } catch (const boost::system::system_error & error) {
     RCLCPP_ERROR_STREAM(
-      rclcpp::get_logger("HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimer(boost::system::system_"
-                         "error)"),
+      rclcpp::get_logger(
+        "HesaiHwMonitorWrapper::on_hesai_lidar_monitor_timer(boost::system::system_"
+        "error)"),
       error.what());
   }
-  RCLCPP_DEBUG_STREAM(logger_, "OnHesaiLidarMonitorTimer END");
+  RCLCPP_DEBUG_STREAM(logger_, "on_hesai_lidar_monitor_timer END");
 }
 
-void HesaiHwMonitorWrapper::HesaiCheckStatus(
+void HesaiHwMonitorWrapper::hesai_check_status(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   std::scoped_lock lock(mtx_lidar_status_);
@@ -243,7 +245,8 @@ void HesaiHwMonitorWrapper::HesaiCheckStatus(
   }
 }
 
-void HesaiHwMonitorWrapper::HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+void HesaiHwMonitorWrapper::hesai_check_ptp(
+  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
@@ -276,7 +279,7 @@ void HesaiHwMonitorWrapper::HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWr
   }
 }
 
-void HesaiHwMonitorWrapper::HesaiCheckTemperature(
+void HesaiHwMonitorWrapper::hesai_check_temperature(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   std::scoped_lock lock(mtx_lidar_status_);
@@ -286,7 +289,7 @@ void HesaiHwMonitorWrapper::HesaiCheckTemperature(
     for (size_t i = 0; i < std::size(current_status_->temperature); i++) {
       diagnostics.add(
         temperature_names_[i],
-        GetFixedPrecisionString(current_status_->temperature[i].value() * 0.01, 3));
+        get_fixed_precision_string(current_status_->temperature[i].value() * 0.01, 3));
     }
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
@@ -294,7 +297,8 @@ void HesaiHwMonitorWrapper::HesaiCheckTemperature(
   }
 }
 
-void HesaiHwMonitorWrapper::HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+void HesaiHwMonitorWrapper::hesai_check_rpm(
+  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
@@ -308,7 +312,7 @@ void HesaiHwMonitorWrapper::HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWr
   }
 }
 
-void HesaiHwMonitorWrapper::HesaiCheckVoltageHttp(
+void HesaiHwMonitorWrapper::hesai_check_voltage_http(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   std::scoped_lock lock(mtx_lidar_monitor_);
@@ -320,18 +324,18 @@ void HesaiHwMonitorWrapper::HesaiCheckVoltageHttp(
     std::string mes;
     key = "lidarInCur";
     try {
-      mes = GetPtreeValue(current_lidar_monitor_tree_.get(), "Body." + key);
+      mes = get_ptree_value(current_lidar_monitor_tree_.get(), "Body." + key);
     } catch (boost::bad_lexical_cast & ex) {
       level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-      mes = MSG_ERROR + std::string(ex.what());
+      mes = MSG_ERROR_ + std::string(ex.what());
     }
     diagnostics.add(key, mes);
     key = "lidarInVol";
     try {
-      mes = GetPtreeValue(current_lidar_monitor_tree_.get(), "Body." + key);
+      mes = get_ptree_value(current_lidar_monitor_tree_.get(), "Body." + key);
     } catch (boost::bad_lexical_cast & ex) {
       level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-      mes = MSG_ERROR + std::string(ex.what());
+      mes = MSG_ERROR_ + std::string(ex.what());
     }
     diagnostics.add(key, mes);
 
@@ -341,7 +345,7 @@ void HesaiHwMonitorWrapper::HesaiCheckVoltageHttp(
   }
 }
 
-void HesaiHwMonitorWrapper::HesaiCheckVoltage(
+void HesaiHwMonitorWrapper::hesai_check_voltage(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   std::scoped_lock lock(mtx_lidar_monitor_);
@@ -350,14 +354,15 @@ void HesaiHwMonitorWrapper::HesaiCheckVoltage(
     std::vector<std::string> msg;
     diagnostics.add(
       "input_voltage",
-      GetFixedPrecisionString(current_monitor_->input_voltage.value() * 0.01, 3) + " V");
+      get_fixed_precision_string(current_monitor_->input_voltage.value() * 0.01, 3) + " V");
     diagnostics.add(
-      "input_current", GetFixedPrecisionString(current_monitor_->input_current.value() * 0.01, 3) +
-                         " m"
-                         "A");
+      "input_current",
+      get_fixed_precision_string(current_monitor_->input_current.value() * 0.01, 3) +
+        " m"
+        "A");
     diagnostics.add(
       "input_power",
-      GetFixedPrecisionString(current_monitor_->input_power.value() * 0.01, 3) + " W");
+      get_fixed_precision_string(current_monitor_->input_power.value() * 0.01, 3) + " W");
 
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
@@ -365,9 +370,8 @@ void HesaiHwMonitorWrapper::HesaiCheckVoltage(
   }
 }
 
-Status HesaiHwMonitorWrapper::Status()
+Status HesaiHwMonitorWrapper::status()
 {
   return Status::OK;
 }
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

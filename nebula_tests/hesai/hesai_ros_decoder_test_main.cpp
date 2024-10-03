@@ -21,9 +21,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace test
+namespace nebula::test
 {
 
 const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[6] = {
@@ -63,14 +61,14 @@ TEST_P(DecoderTest, TestPcd)
       RCLCPP_DEBUG_STREAM(*logger_, "exists: " << target_pcd_path);
       auto rt = pcd_reader.read(target_pcd_path.string(), *ref_pointcloud);
       RCLCPP_DEBUG_STREAM(*logger_, rt << " loaded: " << target_pcd_path);
-      checkPCDs(pointcloud, ref_pointcloud);
+      check_pcds(pointcloud, ref_pointcloud);
       check_cnt++;
       // ref_pointcloud.reset(new nebula::drivers::NebulaPointCloud);
       ref_pointcloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
     }
   };
 
-  hesai_driver_->ReadBag(scan_callback);
+  hesai_driver_->read_bag(scan_callback);
   EXPECT_GT(check_cnt, 0);
 }
 
@@ -97,7 +95,7 @@ TEST_P(DecoderTest, TestTimezone)
   tzset();
   ASSERT_STREQ(tzname[0], "GMT");
   auto gmt = timezone;
-  hesai_driver_->ReadBag(scan_callback);
+  hesai_driver_->read_bag(scan_callback);
 
   ASSERT_GT(decoded_timestamps.size(), 0U);
 
@@ -113,7 +111,7 @@ TEST_P(DecoderTest, TestTimezone)
   tzset();
   ASSERT_STREQ(tzname[0], "JST");
   auto jst = timezone;
-  hesai_driver_->ReadBag(scan_callback);
+  hesai_driver_->read_bag(scan_callback);
 
   // Wrong timezone settings do not throw an error, they just result in UST+0.
   // Thus, verify that timezone setting has effect on local timestamp
@@ -141,7 +139,7 @@ void DecoderTest::SetUp()
   hesai_driver_ =
     std::make_shared<nebula::ros::HesaiRosDecoderTest>(options, node_name, decoder_params);
 
-  nebula::Status driver_status = hesai_driver_->GetStatus();
+  nebula::Status driver_status = hesai_driver_->get_status();
   if (driver_status != nebula::Status::OK) {
     throw std::runtime_error("Could not initialize driver");
   }
@@ -160,8 +158,7 @@ INSTANTIATE_TEST_SUITE_P(
     return p.param.sensor_model;
   });
 
-}  // namespace test
-}  // namespace nebula
+}  // namespace nebula::test
 
 int main(int argc, char * argv[])
 {

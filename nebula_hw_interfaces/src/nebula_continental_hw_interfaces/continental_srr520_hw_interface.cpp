@@ -21,17 +21,13 @@
 #include <limits>
 #include <sstream>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace continental_srr520
+namespace nebula::drivers::continental_srr520
 {
 ContinentalSRR520HwInterface::ContinentalSRR520HwInterface()
 {
 }
 
-Status ContinentalSRR520HwInterface::SetSensorConfiguration(
+Status ContinentalSRR520HwInterface::set_sensor_configuration(
   const std::shared_ptr<
     const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
     new_config_ptr)
@@ -41,7 +37,7 @@ Status ContinentalSRR520HwInterface::SetSensorConfiguration(
   return Status::OK;
 }
 
-Status ContinentalSRR520HwInterface::SensorInterfaceStart()
+Status ContinentalSRR520HwInterface::sensor_interface_start()
 {
   std::lock_guard lock(receiver_mutex_);
 
@@ -53,11 +49,11 @@ Status ContinentalSRR520HwInterface::SensorInterfaceStart()
 
     can_receiver_ptr_->SetCanFilters(
       ::drivers::socketcan::SocketCanReceiver::CanFilterList(config_ptr_->filters));
-    PrintInfo(std::string("applied filters: ") + config_ptr_->filters);
+    print_info(std::string("applied filters: ") + config_ptr_->filters);
 
     sensor_interface_active_ = true;
     receiver_thread_ptr_ =
-      std::make_unique<std::thread>(&ContinentalSRR520HwInterface::ReceiveLoop, this);
+      std::make_unique<std::thread>(&ContinentalSRR520HwInterface::receive_loop, this);
   } catch (const std::exception & ex) {
     Status status = Status::CAN_CONNECTION_ERROR;
     std::cerr << status << config_ptr_->interface << std::endl;
@@ -67,7 +63,7 @@ Status ContinentalSRR520HwInterface::SensorInterfaceStart()
 }
 
 template <std::size_t N>
-bool ContinentalSRR520HwInterface::SendFrame(const std::array<uint8_t, N> & data, int can_frame_id)
+bool ContinentalSRR520HwInterface::send_frame(const std::array<uint8_t, N> & data, int can_frame_id)
 {
   ::drivers::socketcan::CanId send_id(
     can_frame_id, 0, ::drivers::socketcan::FrameType::DATA, ::drivers::socketcan::StandardFrame);
@@ -79,12 +75,12 @@ bool ContinentalSRR520HwInterface::SendFrame(const std::array<uint8_t, N> & data
         std::chrono::duration<double>(config_ptr_->sender_timeout_sec)));
     return true;
   } catch (const std::exception & ex) {
-    PrintError(std::string("Error sending CAN message: ") + ex.what());
+    print_error(std::string("Error sending CAN message: ") + ex.what());
     return false;
   }
 }
 
-void ContinentalSRR520HwInterface::ReceiveLoop()
+void ContinentalSRR520HwInterface::receive_loop()
 {
   ::drivers::socketcan::CanId receive_id{};
   std::chrono::nanoseconds receiver_timeout_nsec;
@@ -109,7 +105,7 @@ void ContinentalSRR520HwInterface::ReceiveLoop()
       receive_id = can_receiver_ptr_->receive_fd(
         packet_msg_ptr->data.data() + 4 * sizeof(uint8_t), receiver_timeout_nsec);
     } catch (const std::exception & ex) {
-      PrintError(std::string("Error receiving CAN FD message: ") + ex.what());
+      print_error(std::string("Error receiving CAN FD message: ") + ex.what());
       continue;
     }
 
@@ -131,7 +127,7 @@ void ContinentalSRR520HwInterface::ReceiveLoop()
     packet_msg_ptr->stamp.nanosec = stamp % 1'000'000'000;
 
     if (receive_id.frame_type() == ::drivers::socketcan::FrameType::ERROR) {
-      PrintError("CAN FD message is an error frame");
+      print_error("CAN FD message is an error frame");
       continue;
     }
 
@@ -139,17 +135,17 @@ void ContinentalSRR520HwInterface::ReceiveLoop()
   }
 }
 
-Status ContinentalSRR520HwInterface::RegisterPacketCallback(
+Status ContinentalSRR520HwInterface::register_packet_callback(
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket>)> callback)
 {
   nebula_packet_callback_ = std::move(callback);
   return Status::OK;
 }
 
-void ContinentalSRR520HwInterface::SensorSyncFollowUp(builtin_interfaces::msg::Time stamp)
+void ContinentalSRR520HwInterface::sensor_sync_follow_up(builtin_interfaces::msg::Time stamp)
 {
   if (!can_sender_ptr_) {
-    PrintError("Can sender is invalid so can not do follow up");
+    print_error("Can sender is invalid so can not do follow up");
   }
 
   if (!config_ptr_->sync_use_bus_time || sync_follow_up_sent_) {
@@ -166,7 +162,7 @@ void ContinentalSRR520HwInterface::SensorSyncFollowUp(builtin_interfaces::msg::T
   uint32_t t4r_nanoseconds = t4r.nanosec;
   std::array<uint8_t, 8> data;
   data[0] = 0x28;  // mode 0x18 is without CRC
-  data[2] = (((static_cast<uint16_t>(TIME_DOMAIN_ID) << 4) & 0xF0)) |
+  data[2] = (((static_cast<uint16_t>(time_domain_id) << 4) & 0xF0)) |
             (sync_counter_ & 0x0F);  // Domain and counter
   data[3] = t4r_seconds & 0x3;       // SGW and OVS
   data[4] = (t4r_nanoseconds & 0xFF000000) >> 24;
@@ -179,21 +175,21 @@ void ContinentalSRR520HwInterface::SensorSyncFollowUp(builtin_interfaces::msg::T
   uint8_t follow_up_crc = crc8h2f(follow_up_crc_array.begin(), follow_up_crc_array.end());
   data[1] = follow_up_crc;
 
-  SendFrame(data, SYNC_FOLLOW_UP_CAN_MESSAGE_ID);
+  send_frame(data, sync_follow_up_can_message_id);
 
   sync_follow_up_sent_ = true;
   sync_counter_ = sync_counter_ == 15 ? 0 : sync_counter_ + 1;
 }
 
-void ContinentalSRR520HwInterface::SensorSync()
+void ContinentalSRR520HwInterface::sensor_sync()
 {
   if (!can_sender_ptr_) {
-    PrintError("Can sender is invalid so can not do sync up");
+    print_error("Can sender is invalid so can not do sync up");
     return;
   }
 
   if (!sync_follow_up_sent_) {
-    PrintError("We will send a SYNC message without having sent a FollowUp message first!");
+    print_error("We will send a SYNC message without having sent a FollowUp message first!");
   }
 
   auto now = std::chrono::system_clock::now();
@@ -208,7 +204,7 @@ void ContinentalSRR520HwInterface::SensorSync()
 
   std::array<uint8_t, 8> data;
   data[0] = 0x20;  // mode 0x10 is without CRC
-  data[2] = (((static_cast<uint16_t>(TIME_DOMAIN_ID) << 4) & 0xF0)) |
+  data[2] = (((static_cast<uint16_t>(time_domain_id) << 4) & 0xF0)) |
             (sync_counter_ & 0x0F);  // Domain and counter
   data[3] = 0;                       // use data
   data[4] = (stamp.sec & 0xFF000000) >> 24;
@@ -220,7 +216,7 @@ void ContinentalSRR520HwInterface::SensorSync()
   uint8_t sync_crc = crc8h2f(sync_crc_array.begin(), sync_crc_array.end());
   data[1] = sync_crc;
 
-  SendFrame(data, SYNC_FOLLOW_UP_CAN_MESSAGE_ID);
+  send_frame(data, sync_follow_up_can_message_id);
 
   if (config_ptr_->sync_use_bus_time) {
     sync_follow_up_sent_ = false;
@@ -228,7 +224,7 @@ void ContinentalSRR520HwInterface::SensorSync()
   }
 
   data[0] = 0x28;  // mode 0x18 is without CRC
-  data[2] = (((static_cast<uint16_t>(TIME_DOMAIN_ID) << 4) & 0xF0)) |
+  data[2] = (((static_cast<uint16_t>(time_domain_id) << 4) & 0xF0)) |
             (sync_counter_ & 0x0F);  // Domain and counter
   data[3] = 0;                       // SGW and OVS
   data[4] = (stamp.nanosec & 0xFF000000) >> 24;
@@ -241,13 +237,13 @@ void ContinentalSRR520HwInterface::SensorSync()
   uint8_t follow_up_crc = crc8h2f(follow_up_crc_array.begin(), follow_up_crc_array.end());
   data[1] = follow_up_crc;
 
-  SendFrame(data, SYNC_FOLLOW_UP_CAN_MESSAGE_ID);
+  send_frame(data, sync_follow_up_can_message_id);
 
   sync_counter_ = sync_counter_ == 15 ? 0 : sync_counter_ + 1;
   sync_follow_up_sent_ = true;
 }
 
-Status ContinentalSRR520HwInterface::SensorInterfaceStop()
+Status ContinentalSRR520HwInterface::sensor_interface_stop()
 {
   {
     std::lock_guard l(receiver_mutex_);
@@ -258,19 +254,19 @@ Status ContinentalSRR520HwInterface::SensorInterfaceStop()
   return Status::ERROR_1;
 }
 
-Status ContinentalSRR520HwInterface::ConfigureSensor(
+Status ContinentalSRR520HwInterface::configure_sensor(
   uint8_t sensor_id, float longitudinal_autosar, float lateral_autosar, float vertical_autosar,
   float yaw_autosar, float longitudinal_cog, float wheelbase, float cover_damping, bool plug_bottom,
   bool reset)
 {
-  PrintInfo("longitudinal_autosar=" + std::to_string(longitudinal_autosar));
-  PrintInfo("lateral_autosar=" + std::to_string(lateral_autosar));
-  PrintInfo("vertical_autosar=" + std::to_string(vertical_autosar));
-  PrintInfo("longitudinal_cog=" + std::to_string(longitudinal_cog));
-  PrintInfo("wheelbase=" + std::to_string(wheelbase));
-  PrintInfo("yaw_autosar=" + std::to_string(yaw_autosar));
-  PrintInfo("sensor_id=" + std::to_string(static_cast<uint16_t>(sensor_id)));
-  PrintInfo("plug_bottom=" + std::to_string(plug_bottom));
+  print_info("longitudinal_autosar=" + std::to_string(longitudinal_autosar));
+  print_info("lateral_autosar=" + std::to_string(lateral_autosar));
+  print_info("vertical_autosar=" + std::to_string(vertical_autosar));
+  print_info("longitudinal_cog=" + std::to_string(longitudinal_cog));
+  print_info("wheelbase=" + std::to_string(wheelbase));
+  print_info("yaw_autosar=" + std::to_string(yaw_autosar));
+  print_info("sensor_id=" + std::to_string(static_cast<uint16_t>(sensor_id)));
+  print_info("plug_bottom=" + std::to_string(plug_bottom));
 
   if (
     longitudinal_autosar < -32.767f || longitudinal_autosar > 32.767f ||
@@ -278,7 +274,7 @@ Status ContinentalSRR520HwInterface::ConfigureSensor(
     vertical_autosar > 32.767f || longitudinal_cog < -32.767f || longitudinal_cog > 32.767f ||
     wheelbase < 0.f || wheelbase > 65.534f || yaw_autosar < -3.14159f || yaw_autosar > 3.14159f ||
     cover_damping < -32.767f || cover_damping > 32.767f) {
-    PrintError("Sensor configuration values out of range!");
+    print_error("Sensor configuration values out of range!");
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -317,14 +313,14 @@ Status ContinentalSRR520HwInterface::ConfigureSensor(
   uint8_t reset_value = reset ? 0x80 : 0x00;
   data[15] = plug_value | reset_value;
 
-  if (SendFrame(data, SENSOR_CONFIG_CAN_MESSAGE_ID)) {
+  if (send_frame(data, sensor_config_can_message_id)) {
     return Status::OK;
   } else {
     return Status::CAN_CONNECTION_ERROR;
   }
 }
 
-Status ContinentalSRR520HwInterface::SetVehicleDynamics(
+Status ContinentalSRR520HwInterface::set_vehicle_dynamics(
   float longitudinal_acceleration, float lateral_acceleration, float yaw_rate,
   float longitudinal_velocity, bool standstill)
 {
@@ -332,7 +328,7 @@ Status ContinentalSRR520HwInterface::SetVehicleDynamics(
     longitudinal_acceleration < -12.7 || longitudinal_acceleration > 12.7 ||
     lateral_acceleration < -12.7 || lateral_acceleration > 12.7 || yaw_rate < -3.14159 ||
     yaw_rate > 3.14159 || abs(longitudinal_velocity) > 100.0) {
-    PrintError("Vehicle dynamics out of range!");
+    print_error("Vehicle dynamics out of range!");
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -361,19 +357,19 @@ Status ContinentalSRR520HwInterface::SetVehicleDynamics(
   data[6] = 0x00;
   data[7] = 0x00;
 
-  if (SendFrame(data, VEH_DYN_CAN_MESSAGE_ID)) {
+  if (send_frame(data, veh_dyn_can_message_id)) {
     return Status::OK;
   } else {
     return Status::CAN_CONNECTION_ERROR;
   }
 }
 
-void ContinentalSRR520HwInterface::SetLogger(std::shared_ptr<rclcpp::Logger> logger)
+void ContinentalSRR520HwInterface::set_logger(std::shared_ptr<rclcpp::Logger> logger)
 {
   parent_node_logger_ptr_ = logger;
 }
 
-void ContinentalSRR520HwInterface::PrintInfo(std::string info)
+void ContinentalSRR520HwInterface::print_info(std::string info)
 {
   if (parent_node_logger_ptr_) {
     RCLCPP_INFO_STREAM((*parent_node_logger_ptr_), info);
@@ -382,7 +378,7 @@ void ContinentalSRR520HwInterface::PrintInfo(std::string info)
   }
 }
 
-void ContinentalSRR520HwInterface::PrintError(std::string error)
+void ContinentalSRR520HwInterface::print_error(std::string error)
 {
   if (parent_node_logger_ptr_) {
     RCLCPP_ERROR_STREAM((*parent_node_logger_ptr_), error);
@@ -391,7 +387,7 @@ void ContinentalSRR520HwInterface::PrintError(std::string error)
   }
 }
 
-void ContinentalSRR520HwInterface::PrintDebug(std::string debug)
+void ContinentalSRR520HwInterface::print_debug(std::string debug)
 {
   if (parent_node_logger_ptr_) {
     RCLCPP_DEBUG_STREAM((*parent_node_logger_ptr_), debug);
@@ -400,6 +396,4 @@ void ContinentalSRR520HwInterface::PrintDebug(std::string debug)
   }
 }
 
-}  // namespace continental_srr520
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::continental_srr520

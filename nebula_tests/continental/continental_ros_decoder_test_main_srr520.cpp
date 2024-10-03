@@ -25,7 +25,7 @@ std::shared_ptr<nebula::ros::ContinentalRosDecoderTest> continental_driver;
 TEST(TestDecoder, TestBag)
 {
   std::cout << "TEST(TestDecoder, TestBag)" << std::endl;
-  continental_driver->ReadBag();
+  continental_driver->read_bag();
 }
 
 int main(int argc, char * argv[])
@@ -44,7 +44,7 @@ int main(int argc, char * argv[])
   exec.add_node(continental_driver->get_node_base_interface());
 
   RCLCPP_INFO_STREAM(rclcpp::get_logger(node_name), "Get Status");
-  nebula::Status driver_status = continental_driver->GetStatus();
+  nebula::Status driver_status = continental_driver->get_status();
   int result = 0;
   if (driver_status == nebula::Status::OK) {
     RCLCPP_INFO_STREAM(rclcpp::get_logger(node_name), "Reading Started");
