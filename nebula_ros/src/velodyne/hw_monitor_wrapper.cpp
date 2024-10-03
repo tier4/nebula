@@ -2,9 +2,7 @@
 
 #include "nebula_ros/velodyne/hw_monitor_wrapper.hpp"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 VelodyneHwMonitorWrapper::VelodyneHwMonitorWrapper(
   rclcpp::Node * const parent_node,
@@ -1513,5 +1511,4 @@ Status VelodyneHwMonitorWrapper::status()
 {
   return Status::OK;
 }
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

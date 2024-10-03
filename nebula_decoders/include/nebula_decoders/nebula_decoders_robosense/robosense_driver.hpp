@@ -27,9 +27,7 @@
 #include <tuple>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Robosense driver
 class RobosenseDriver : NebulaDriverBase
@@ -69,5 +67,4 @@ public:
     const std::vector<uint8_t> & packet);
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

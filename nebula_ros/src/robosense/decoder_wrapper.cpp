@@ -2,9 +2,7 @@
 
 #include "nebula_ros/robosense/decoder_wrapper.hpp"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 using namespace std::chrono_literals;  // NOLINT(build/namespaces)
@@ -157,5 +155,4 @@ void RobosenseDecoderWrapper::publish_cloud(
   publisher->publish(std::move(pointcloud));
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

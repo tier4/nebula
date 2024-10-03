@@ -41,9 +41,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Hardware interface of velodyne driver
 class VelodyneHwInterface
@@ -227,7 +225,6 @@ public:
   void set_logger(std::shared_ptr<rclcpp::Logger> node);
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 
 #endif  // NEBULA_VELODYNE_HW_INTERFACE_H

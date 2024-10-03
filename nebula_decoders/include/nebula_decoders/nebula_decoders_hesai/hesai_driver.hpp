@@ -26,9 +26,7 @@
 #include <tuple>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Hesai driver
 class HesaiDriver
@@ -73,7 +71,6 @@ public:
     const std::vector<uint8_t> & packet);
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 
 #endif  // NEBULA_HESAI_DRIVER_H

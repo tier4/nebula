@@ -26,9 +26,7 @@
 
 #include <algorithm>
 
-namespace nebula
-{
-namespace test
+namespace nebula::test
 {
 
 inline void check_pcds(
@@ -79,5 +77,4 @@ inline void print_pcd(nebula::drivers::NebulaPointCloudPtr pp)
   }
 }
 
-}  // namespace test
-}  // namespace nebula
+}  // namespace nebula::test

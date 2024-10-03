@@ -17,11 +17,7 @@
 
 #include <nebula_common/continental/continental_ars548.hpp>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace continental_ars548
+namespace nebula::drivers::continental_ars548
 {
 ContinentalARS548HwInterface::ContinentalARS548HwInterface()
 : sensor_io_context_ptr_{new ::drivers::common::IoContext(1)},
@@ -531,6 +527,4 @@ void ContinentalARS548HwInterface::print_debug(std::string debug)
   }
 }
 
-}  // namespace continental_ars548
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::continental_ars548

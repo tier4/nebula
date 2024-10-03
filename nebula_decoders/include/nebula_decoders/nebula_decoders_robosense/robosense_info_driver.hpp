@@ -28,9 +28,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Robosense driver
 class RobosenseInfoDriver
@@ -67,5 +65,4 @@ public:
   bool get_sync_status();
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

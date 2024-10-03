@@ -6,9 +6,7 @@
 
 #include <nebula_common/nebula_common.hpp>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   rclcpp::Node * const parent_node,
@@ -376,5 +374,4 @@ Status HesaiHwMonitorWrapper::status()
 {
   return Status::OK;
 }
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

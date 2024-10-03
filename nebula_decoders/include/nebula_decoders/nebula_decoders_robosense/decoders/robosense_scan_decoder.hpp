@@ -19,9 +19,7 @@
 #include <tuple>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Base class for Robosense LiDAR decoder
 class RobosenseScanDecoder
@@ -49,5 +47,4 @@ public:
   virtual std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() = 0;
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

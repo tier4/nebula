@@ -6,9 +6,7 @@
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("robosense_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
@@ -287,5 +285,4 @@ void RobosenseRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & p
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(RobosenseRosWrapper)
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

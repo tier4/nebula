@@ -9,9 +9,7 @@
 #include <memory>
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 using namespace std::chrono_literals;  // NOLINT(build/namespaces)
@@ -191,5 +189,4 @@ nebula::Status HesaiDecoderWrapper::status()
 
   return driver_ptr_->get_status();
 }
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

@@ -21,9 +21,7 @@
 #include <cstdint>
 #include <memory>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 struct CorrectedAngleData
@@ -68,5 +66,4 @@ public:
   virtual bool has_scanned(int current_azimuth, int last_azimuth) = 0;
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

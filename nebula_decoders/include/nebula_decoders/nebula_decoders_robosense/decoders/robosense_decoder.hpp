@@ -25,9 +25,7 @@
 #include <utility>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 template <typename SensorT>
 class RobosenseDecoder : public RobosenseScanDecoder
@@ -281,5 +279,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

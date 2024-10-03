@@ -9,9 +9,7 @@
 
 namespace nebula
 {
-namespace drivers
-{
-namespace vlp32
+namespace drivers::vlp32
 {
 Vlp32Decoder::Vlp32Decoder(
   const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
@@ -392,6 +390,5 @@ bool Vlp32Decoder::parse_packet(
   return 0;
 }
 
-}  // namespace vlp32
-}  // namespace drivers
+}  // namespace drivers::vlp32
 }  // namespace nebula

@@ -24,11 +24,7 @@
 #include <tuple>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace vlp32
+namespace nebula::drivers::vlp32
 {
 /// @brief Velodyne LiDAR decoder (VLP32)
 class Vlp32Decoder : public VelodyneScanDecoder
@@ -69,6 +65,4 @@ private:
   double last_block_timestamp_;
 };
 
-}  // namespace vlp32
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::vlp32

@@ -28,9 +28,7 @@
 
 using namespace boost::endian;  // NOLINT(build/namespaces)
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 namespace robosense_packet
 {
@@ -392,5 +390,4 @@ public:
     return sensor_info;
   }
 };
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

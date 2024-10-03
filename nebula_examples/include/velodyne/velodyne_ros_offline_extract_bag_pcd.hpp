@@ -28,9 +28,7 @@
 #include <memory>
 #include <string>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 /// @brief Offline velodyne driver usage example (Output PCD data)
 class VelodyneRosOfflineExtractBag final : public rclcpp::Node
@@ -88,7 +86,6 @@ private:
   bool only_xyz_;
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros
 
 #endif  // NEBULA_VelodyneRosOfflineExtractBag_H

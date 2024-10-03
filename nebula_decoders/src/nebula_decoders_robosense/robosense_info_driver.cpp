@@ -7,9 +7,7 @@
 #include "nebula_decoders/nebula_decoders_robosense/decoders/helios.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_info_decoder.hpp"
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 RobosenseInfoDriver::RobosenseInfoDriver(
@@ -70,5 +68,4 @@ bool RobosenseInfoDriver::get_sync_status()
   return info_decoder_->get_sync_status();
 }
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

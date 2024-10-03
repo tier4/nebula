@@ -24,9 +24,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 template <typename SensorT>
@@ -94,5 +92,4 @@ public:
   bool get_sync_status() override { return sensor_.get_sync_status(packet_); }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

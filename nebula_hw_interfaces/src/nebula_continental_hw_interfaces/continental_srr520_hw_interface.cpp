@@ -21,11 +21,7 @@
 #include <limits>
 #include <sstream>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace continental_srr520
+namespace nebula::drivers::continental_srr520
 {
 ContinentalSRR520HwInterface::ContinentalSRR520HwInterface()
 {
@@ -400,6 +396,4 @@ void ContinentalSRR520HwInterface::print_debug(std::string debug)
   }
 }
 
-}  // namespace continental_srr520
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::continental_srr520

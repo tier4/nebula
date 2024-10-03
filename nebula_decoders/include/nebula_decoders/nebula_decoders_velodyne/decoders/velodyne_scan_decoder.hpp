@@ -36,9 +36,7 @@
 #include <tuple>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /**
  * Raw Velodyne packet constants and structures.
@@ -244,7 +242,6 @@ public:
   virtual void reset_overflow(double time_stamp) = 0;
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 
 #endif  // NEBULA_WS_VELODYNE_SCAN_DECODER_HPP

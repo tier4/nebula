@@ -24,9 +24,7 @@ void operator>>(const YAML::Node & node, T & i)
 }  // namespace YAML
 #endif  // HAVE_NEW_YAMLCPP
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 const char g_num_lasers[] = "num_lasers";
 const char g_distance_resolution[] = "distance_resolution";
@@ -242,5 +240,4 @@ void VelodyneCalibration::write(const std::string & calibration_file)
   fout.close();
 }
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

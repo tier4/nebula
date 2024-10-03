@@ -27,11 +27,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace continental_ars548
+namespace nebula::drivers::continental_ars548
 {
 /// @brief Hardware interface of the Continental ARS548 radar
 class ContinentalARS548HwInterface
@@ -167,8 +163,6 @@ private:
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger_ptr_;
 };
-}  // namespace continental_ars548
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::continental_ars548
 
 #endif  // NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H

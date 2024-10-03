@@ -28,9 +28,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class HesaiHwMonitorWrapper
 {
@@ -111,5 +109,4 @@ private:
   const std::string MSG_ERROR_ = "Error";
   const std::string MSG_SEP_ = ": ";
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

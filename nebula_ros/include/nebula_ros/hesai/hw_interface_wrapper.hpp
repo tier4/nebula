@@ -20,9 +20,7 @@
 
 #include <memory>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class HesaiHwInterfaceWrapper
 {
@@ -44,5 +42,4 @@ private:
   nebula::Status status_;
   bool setup_sensor_;
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

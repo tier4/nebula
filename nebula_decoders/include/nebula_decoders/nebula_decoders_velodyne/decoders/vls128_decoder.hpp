@@ -24,11 +24,7 @@
 #include <tuple>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace vls128
+namespace nebula::drivers::vls128
 {
 /// @brief Velodyne LiDAR decoder (VLS128)
 class Vls128Decoder : public VelodyneScanDecoder
@@ -70,6 +66,4 @@ private:
   std::vector<std::vector<float>> timing_offsets_;
 };
 
-}  // namespace vls128
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::vls128

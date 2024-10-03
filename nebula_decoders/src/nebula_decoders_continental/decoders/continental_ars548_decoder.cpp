@@ -19,11 +19,7 @@
 #include <cmath>
 #include <utility>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace continental_ars548
+namespace nebula::drivers::continental_ars548
 {
 ContinentalARS548Decoder::ContinentalARS548Decoder(
   const std::shared_ptr<const continental_ars548::ContinentalARS548SensorConfiguration> &
@@ -641,6 +637,4 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
   return true;
 }
 
-}  // namespace continental_ars548
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::continental_ars548

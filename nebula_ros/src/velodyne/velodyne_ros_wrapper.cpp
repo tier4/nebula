@@ -4,9 +4,7 @@
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("velodyne_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
@@ -253,5 +251,4 @@ void VelodyneRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & pa
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(VelodyneRosWrapper)
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

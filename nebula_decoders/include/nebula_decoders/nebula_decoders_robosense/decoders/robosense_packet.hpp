@@ -26,11 +26,7 @@
 
 using namespace boost::endian;  // NOLINT(build/namespaces)
 
-namespace nebula
-{
-namespace drivers
-{
-namespace robosense_packet
+namespace nebula::drivers::robosense_packet
 {
 
 #pragma pack(push, 1)
@@ -278,6 +274,4 @@ inline std::string get_float_value(const uint16_t & raw_angle)
   return std::to_string(static_cast<float>(raw_angle) / 100.0f);
 }
 
-}  // namespace robosense_packet
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::robosense_packet

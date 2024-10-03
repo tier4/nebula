@@ -9,9 +9,7 @@
 
 namespace nebula
 {
-namespace drivers
-{
-namespace vls128
+namespace drivers::vls128
 {
 Vls128Decoder::Vls128Decoder(
   const std::shared_ptr<const drivers::VelodyneSensorConfiguration> & sensor_configuration,
@@ -356,6 +354,5 @@ bool Vls128Decoder::parse_packet(
   return 0;
 }
 
-}  // namespace vls128
-}  // namespace drivers
+}  // namespace drivers::vls128
 }  // namespace nebula

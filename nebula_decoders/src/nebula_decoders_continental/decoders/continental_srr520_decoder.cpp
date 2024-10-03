@@ -22,11 +22,7 @@
 #include <cmath>
 #include <utility>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace continental_srr520
+namespace nebula::drivers::continental_srr520
 {
 ContinentalSRR520Decoder::ContinentalSRR520Decoder(
   const std::shared_ptr<const continental_srr520::ContinentalSRR520SensorConfiguration> &
@@ -1205,6 +1201,4 @@ void ContinentalSRR520Decoder::print_debug(std::string debug)
   }
 }
 
-}  // namespace continental_srr520
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::continental_srr520

@@ -20,9 +20,7 @@
 #include <filesystem>
 #include <regex>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 HesaiRosDecoderTest::HesaiRosDecoderTest(
   const rclcpp::NodeOptions & options, const std::string & node_name,
@@ -202,5 +200,4 @@ void HesaiRosDecoderTest::read_bag(
   }
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

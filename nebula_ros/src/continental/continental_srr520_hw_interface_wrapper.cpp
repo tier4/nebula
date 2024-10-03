@@ -17,9 +17,7 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 ContinentalSRR520HwInterfaceWrapper::ContinentalSRR520HwInterfaceWrapper(
@@ -180,5 +178,4 @@ void ContinentalSRR520HwInterfaceWrapper::sync_timer_callback()
   hw_interface_->sensor_sync();
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

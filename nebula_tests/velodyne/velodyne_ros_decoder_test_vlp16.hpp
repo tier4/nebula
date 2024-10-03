@@ -30,9 +30,7 @@
 #include <memory>
 #include <string>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 /// @brief Testing decoder of VLP16 (Keeps VelodyneDriverRosWrapper structure as much as possible)
 class VelodyneRosDecoderTest final : public rclcpp::Node
@@ -98,7 +96,6 @@ private:
   std::string correction_file_path_;
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros
 
 #endif  // NEBULA_VelodyneRosDecoderTestVlp16_H

@@ -15,9 +15,7 @@
 
 // #define WITH_DEBUG_STD_COUT_HESAI_CLIENT // Use std::cout messages for debugging
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 HesaiDriver::HesaiDriver(
   const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
@@ -114,5 +112,4 @@ Status HesaiDriver::get_status()
   return driver_status_;
 }
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

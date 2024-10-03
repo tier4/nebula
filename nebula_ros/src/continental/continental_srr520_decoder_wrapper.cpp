@@ -16,9 +16,7 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 ContinentalSRR520DecoderWrapper::ContinentalSRR520DecoderWrapper(
   rclcpp::Node * const parent_node,
@@ -599,5 +597,4 @@ nebula::Status ContinentalSRR520DecoderWrapper::status()
 
   return driver_ptr_->get_status();
 }
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

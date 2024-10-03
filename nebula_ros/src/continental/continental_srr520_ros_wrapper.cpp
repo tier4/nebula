@@ -16,9 +16,7 @@
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 ContinentalSRR520RosWrapper::ContinentalSRR520RosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node(
@@ -217,5 +215,4 @@ rcl_interfaces::msg::SetParametersResult ContinentalSRR520RosWrapper::on_paramet
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(ContinentalSRR520RosWrapper)
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

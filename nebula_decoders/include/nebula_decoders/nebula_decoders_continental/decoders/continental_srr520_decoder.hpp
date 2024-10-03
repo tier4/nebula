@@ -30,11 +30,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace continental_srr520
+namespace nebula::drivers::continental_srr520
 {
 /// @brief Continental Radar decoder (SRR520)
 class ContinentalSRR520Decoder : public ContinentalPacketsDecoder
@@ -206,6 +202,4 @@ private:
   std::shared_ptr<rclcpp::Logger> parent_node_logger_ptr_{};
 };
 
-}  // namespace continental_srr520
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::continental_srr520

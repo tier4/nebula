@@ -17,9 +17,7 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 ContinentalARS548HwInterfaceWrapper::ContinentalARS548HwInterfaceWrapper(
@@ -285,5 +283,4 @@ void ContinentalARS548HwInterfaceWrapper::set_radar_parameters_request_callback(
   response->message = (std::stringstream() << result).str();
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

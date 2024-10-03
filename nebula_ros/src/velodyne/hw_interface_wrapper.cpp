@@ -2,9 +2,7 @@
 
 #include "nebula_ros/velodyne/hw_interface_wrapper.hpp"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
@@ -65,5 +63,4 @@ std::shared_ptr<drivers::VelodyneHwInterface> VelodyneHwInterfaceWrapper::hw_int
   return hw_interface_;
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

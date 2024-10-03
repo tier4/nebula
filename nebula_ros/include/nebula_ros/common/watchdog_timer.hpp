@@ -21,9 +21,7 @@
 #include <cstdint>
 #include <functional>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 class WatchdogTimer
@@ -67,5 +65,4 @@ private:
   const uint64_t expected_update_interval_ns_;
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

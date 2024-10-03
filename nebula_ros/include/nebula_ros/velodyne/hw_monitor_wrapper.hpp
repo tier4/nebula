@@ -31,9 +31,7 @@
 #include <string>
 #include <tuple>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class VelodyneHwMonitorWrapper
 {
@@ -377,5 +375,4 @@ private:
   static constexpr auto ampere_low_message = "ampere low";
   static constexpr auto ampere_high_message = "ampere high";
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

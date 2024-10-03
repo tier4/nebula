@@ -7,9 +7,7 @@
 #include "nebula_decoders/nebula_decoders_robosense/decoders/helios.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_decoder.hpp"
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 RobosenseDriver::RobosenseDriver(
@@ -72,5 +70,4 @@ std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::parse_cloud_pa
   return pointcloud;
 }
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

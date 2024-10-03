@@ -4,9 +4,7 @@
 
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
@@ -82,5 +80,4 @@ std::shared_ptr<drivers::HesaiHwInterface> HesaiHwInterfaceWrapper::hw_interface
   return hw_interface_;
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

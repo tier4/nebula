@@ -21,9 +21,7 @@
 
 #include <memory>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class RobosenseHwInterfaceWrapper
 {
@@ -45,5 +43,4 @@ private:
   nebula::Status status_;
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

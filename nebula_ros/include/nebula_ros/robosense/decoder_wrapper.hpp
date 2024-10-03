@@ -29,9 +29,7 @@
 #include <chrono>
 #include <memory>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 /// @brief Ros wrapper of robosense driver
 class RobosenseDecoderWrapper
@@ -84,5 +82,4 @@ private:
   std::shared_ptr<WatchdogTimer> cloud_watchdog_;
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

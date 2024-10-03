@@ -17,9 +17,7 @@
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
@@ -507,5 +505,4 @@ HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::get_calibration_data(
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(HesaiRosWrapper)
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

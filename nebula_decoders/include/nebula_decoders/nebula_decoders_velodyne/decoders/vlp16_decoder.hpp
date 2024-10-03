@@ -24,11 +24,7 @@
 #include <tuple>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace vlp16
+namespace nebula::drivers::vlp16
 {
 constexpr uint32_t max_points = 300000;
 /// @brief Velodyne LiDAR decoder (VLP16)
@@ -70,6 +66,4 @@ private:
   std::vector<std::vector<float>> timing_offsets_;
 };
 
-}  // namespace vlp16
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::vlp16
