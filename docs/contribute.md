@@ -18,6 +18,7 @@ Before submitting your contributions, please take a moment to review our guideli
   pre-commit install
   ```
 
+- Set up your IDE to use Clang-Tidy with the `.clang-tidy` configuration found in the repository root
 - Docs are found at [tier4.github.io/nebula](https://tier4.github.io/nebula)
 
 ## How to Contribute
@@ -66,6 +67,7 @@ Hotfix PRs should be against the `master` branch.
 A good PR fulfills all of the following:
 
 - passes pre-commit
+- conforms to the repo's `.clang-tidy` and `.clang-format`
 - passes all CI checks
 - a single clearly stated goal
 - every line changed directly contributes to that goal
