@@ -274,7 +274,7 @@ void HesaiHwMonitorWrapper::HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWr
   if (current_status_) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
-    diagnostics.add("motor_speed", std::to_string(current_status_->motor_speed.value()));
+    diagnostics.add("motor_speed", std::to_string(current_status_->value.motor_speed.value()));
 
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {

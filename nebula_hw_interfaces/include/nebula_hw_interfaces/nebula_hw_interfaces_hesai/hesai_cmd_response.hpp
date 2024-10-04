@@ -410,21 +410,30 @@ inline std::ostream & operator<<(std::ostream & os, HesaiConfig_XT_40p const & a
 /// @brief struct of PTC_COMMAND_GET_LIDAR_STATUS
 struct HesaiLidarStatusBase
 {
-  big_uint32_buf_t system_uptime;
-  big_uint16_buf_t motor_speed;
+  struct Internal{
+    big_uint32_buf_t system_uptime;
+    big_uint16_buf_t motor_speed;
+  };
 
   json to_json()
   {
     json j;
-    j["system_uptime"] = system_uptime.value();
-    j["motor_speed"] = motor_speed.value();
+    j["system_uptime"] = value.system_uptime.value();
+    j["motor_speed"] = value.motor_speed.value();
     j.update(to_child_json());
 
     return j;
   }
+  
+  // protected:
+  virtual json to_child_json() = 0;
 
-  protected:
-    virtual json to_child_json() = 0;
+  virtual const Internal & get()
+  {
+    return value;
+  }
+
+  Internal value;
 
   std::string get_str_gps_pps_lock();
   std::string get_str_gps_gprmc_status();
@@ -433,25 +442,45 @@ struct HesaiLidarStatusBase
 
 inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusBase const & arg)
 {
-  os << "system_uptime: " << arg.system_uptime << "\n";
-  os << "motor_speed: " << arg.motor_speed;
+  os << "system_uptime: " << arg.value.system_uptime << "\n";
+  os << "motor_speed: " << arg.value.motor_speed;
   
   return os;
 }
 
 struct HesaiLidarStatusAT128: HesaiLidarStatusBase
 {
-  uint temperture[9];
-  uint8_t gps_pps_lock;
-  uint8_t gps_gprmc_status;
-  big_int32_buf_t startup_times;
-  big_int32_buf_t total_operation_time;
-  uint8_t ptp_status;
-  unsigned char reserve[1];
-  
+  struct Internal: HesaiLidarStatusBase::Internal{
+    uint temperture[9];
+    uint8_t gps_pps_lock;
+    uint8_t gps_gprmc_status;
+    big_int32_buf_t startup_times;
+    big_int32_buf_t total_operation_time;
+    uint8_t ptp_status;
+    unsigned char reserve[1];
+  };
+  HesaiLidarStatusAT128(Internal value) : value(value) {}
+  json to_child_json() override
+  {
+    json j;
+    j["temperture"] = value.temperture;
+    j["gps_pps_lock"] = value.gps_pps_lock;
+    j["gps_gprmc_status"] = value.gps_gprmc_status;
+    j["startup_times"] = value.startup_times.value();
+    j["total_operation_time"] = value.total_operation_time.value();
+    j["ptp_status"] = value.ptp_status;
+    j["reserve"] = value.reserve;
+
+    return j;
+  }
+  const HesaiLidarStatusBase::Internal & get() override
+  {
+    return value;
+  }
+  Internal value;
   std::string get_str_gps_pps_lock()
   {
-    switch (gps_pps_lock) {
+    switch (value.gps_pps_lock) {
       case 1:
         return "Lock";
       case 0:
@@ -462,7 +491,7 @@ struct HesaiLidarStatusAT128: HesaiLidarStatusBase
   }
   std::string get_str_gps_gprmc_status()
   {
-    switch (gps_gprmc_status) {
+    switch (value.gps_gprmc_status) {
       case 1:
         return "Lock";
       case 0:
@@ -473,7 +502,7 @@ struct HesaiLidarStatusAT128: HesaiLidarStatusBase
   }
   std::string get_str_ptp_clock_status()
   {
-    switch (ptp_status) {
+    switch (value.ptp_status) {
       case 0:
         return "free run";
       case 1:
@@ -485,54 +514,48 @@ struct HesaiLidarStatusAT128: HesaiLidarStatusBase
       default:
         return "Unknown";
     }
-  }
-  
-  json to_child_json() override
-  {
-    json j;
-    j["temperture"] = temperture;
-    j["gps_pps_lock"] = gps_pps_lock;
-    j["gps_gprmc_status"] = gps_gprmc_status;
-    j["startup_times"] = startup_times.value();
-    j["total_operation_time"] = total_operation_time.value();
-    j["ptp_status"] = ptp_status; 
-    j["reserve"] = reserve;
-    return j;
   }
 };
 
 inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusAT128 const & arg)
 {
   // os << (HesaiLidarStatusBase)(arg) << '\n';
-  os << "temperture: " << arg.temperture << '\n';
-  os << "gps_pps_lock: " << +arg.gps_pps_lock << '\n';
-  os << "gps_gprmc_status: " << +arg.gps_gprmc_status << '\n';
-  os << "startup_times: " << arg.startup_times << '\n';
-  os << "total_operation_time: " << arg.total_operation_time << '\n';
-  os << "ptp_status: " << +arg.ptp_status << '\n';
-  for (size_t i = 0; i < sizeof(arg.reserve); i++) {
+  os << "temperture: " << arg.value.temperture << '\n';
+  os << "gps_pps_lock: " << +arg.value.gps_pps_lock << '\n';
+  os << "gps_gprmc_status: " << +arg.value.gps_gprmc_status << '\n';
+  os << "startup_times: " << arg.value.startup_times << '\n';
+  os << "total_operation_time: " << arg.value.total_operation_time << '\n';
+  os << "ptp_status: " << +arg.value.ptp_status << '\n';
+  for (size_t i = 0; i < sizeof(arg.value.reserve); i++) {
     if (i != 0) {
       os << ' ';
     }
-    os << std::hex << std::setfill('0') << std::setw(2) << (+arg.reserve[i]);
+    os << std::hex << std::setfill('0') << std::setw(2) << (+arg.value.reserve[i]);
   }  
   return os;
 }
 
 struct HesaiLidarStatusOT128: HesaiLidarStatusBase
 {
-  int temperture[8];
-  uint8_t gps_pps_lock;
-  uint8_t gps_gprmc_status;
-  big_int32_buf_t startup_times;
-  big_int32_buf_t total_operation_time;
-  uint8_t ptp_status;
-  big_uint32_buf_t humidity;
-  unsigned char reserve[1];
-
+  struct Internal: HesaiLidarStatusBase::Internal{
+    int temperture[8];
+    uint8_t gps_pps_lock;
+    uint8_t gps_gprmc_status;
+    big_int32_buf_t startup_times;
+    big_int32_buf_t total_operation_time;
+    uint8_t ptp_status;
+    big_uint32_buf_t humidity;
+    unsigned char reserve[1];
+  };
+  HesaiLidarStatusOT128(Internal value) : value(value) {}
+  const HesaiLidarStatusBase::Internal & get() override
+  {
+    return value;
+  }
+  Internal value;
   std::string get_str_gps_pps_lock()
   {
-    switch (gps_pps_lock) {
+    switch (value.gps_pps_lock) {
       case 1:
         return "Lock";
       case 0:
@@ -543,7 +566,7 @@ struct HesaiLidarStatusOT128: HesaiLidarStatusBase
   }
   std::string get_str_gps_gprmc_status()
   {
-    switch (gps_gprmc_status) {
+    switch (value.gps_gprmc_status) {
       case 1:
         return "Lock";
       case 0:
@@ -554,7 +577,7 @@ struct HesaiLidarStatusOT128: HesaiLidarStatusBase
   }
   std::string get_str_ptp_clock_status()
   {
-    switch (ptp_status) {
+    switch (value.ptp_status) {
       case 0:
         return "free run";
       case 1:
@@ -571,14 +594,14 @@ struct HesaiLidarStatusOT128: HesaiLidarStatusBase
   json to_child_json() override
   {
     json j;
-    j["temperture"] = temperture;
-    j["gps_pps_lock"] = gps_pps_lock;
-    j["gps_gprmc_status"] = gps_gprmc_status;
-    j["startup_times"] = startup_times.value();
-    j["total_operation_time"] = total_operation_time.value();
-    j["ptp_status"] = ptp_status;
-    j["humidity"] = humidity.value();
-    j["reserve"] = reserve;
+    j["temperture"] = value.temperture;
+    j["gps_pps_lock"] = value.gps_pps_lock;
+    j["gps_gprmc_status"] = value.gps_gprmc_status;
+    j["startup_times"] = value.startup_times.value();
+    j["total_operation_time"] = value.total_operation_time.value();
+    j["ptp_status"] = value.ptp_status;
+    j["humidity"] = value.humidity.value();
+    j["reserve"] = value.reserve;
 
     return j;
   }
@@ -587,35 +610,42 @@ struct HesaiLidarStatusOT128: HesaiLidarStatusBase
 inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusOT128 const & arg)
 {
   // os << (HesaiLidarStatusBase)(arg) << '\n';
-  os << "temperture: " << arg.temperture << '\n';
-  os << "gps_pps_lock: " << +arg.gps_pps_lock << '\n';
-  os << "gps_gprmc_status: " << +arg.gps_gprmc_status << '\n';
-  os << "startup_times: " << arg.startup_times << '\n';
-  os << "total_operation_time: " << arg.total_operation_time << '\n';
-  os << "ptp_status: " << +arg.ptp_status << '\n';
-  os << "humidity: " << arg.humidity << '\n';
-  for (size_t i = 0; i < sizeof(arg.reserve); i++) {
+  os << "temperture: " << arg.value.temperture << '\n';
+  os << "gps_pps_lock: " << +arg.value.gps_pps_lock << '\n';
+  os << "gps_gprmc_status: " << +arg.value.gps_gprmc_status << '\n';
+  os << "startup_times: " << arg.value.startup_times << '\n';
+  os << "total_operation_time: " << arg.value.total_operation_time << '\n';
+  os << "ptp_status: " << +arg.value.ptp_status << '\n';
+  os << "humidity: " << arg.value.humidity << '\n';
+  for (size_t i = 0; i < sizeof(arg.value.reserve); i++) {
     if (i != 0) {
       os << ' ';
     }
-    os << std::hex << std::setfill('0') << std::setw(2) << (+arg.reserve[i]);
+    os << std::hex << std::setfill('0') << std::setw(2) << (+arg.value.reserve[i]);
   }
   return os;
 }
 
 struct HesaiLidarStatus_XT_40p: HesaiLidarStatusBase
 {
-  int temperture[8];
-  uint8_t gps_pps_lock;
-  uint8_t gps_gprmc_status;
-  big_int32_buf_t startup_times;
-  big_int32_buf_t total_operation_time;
-  uint8_t ptp_status;
-  unsigned char reserve[5];
-  
+  struct Internal: HesaiLidarStatusBase::Internal{
+    int temperture[8];
+    uint8_t gps_pps_lock;
+    uint8_t gps_gprmc_status;
+    big_int32_buf_t startup_times;
+    big_int32_buf_t total_operation_time;
+    uint8_t ptp_status;
+    unsigned char reserve[5];
+  };
+  HesaiLidarStatus_XT_40p(Internal value) : value(value) {}
+  const HesaiLidarStatusBase::Internal & get() override
+  {
+    return value;
+  }
+  Internal value;
   std::string get_str_gps_pps_lock()
   {
-    switch (gps_pps_lock) {
+    switch (value.gps_pps_lock) {
       case 1:
         return "Lock";
       case 0:
@@ -626,7 +656,7 @@ struct HesaiLidarStatus_XT_40p: HesaiLidarStatusBase
   }
   std::string get_str_gps_gprmc_status()
   {
-    switch (gps_gprmc_status) {
+    switch (value.gps_gprmc_status) {
       case 1:
         return "Lock";
       case 0:
@@ -637,7 +667,7 @@ struct HesaiLidarStatus_XT_40p: HesaiLidarStatusBase
   }
   std::string get_str_ptp_clock_status()
   {
-    switch (ptp_status) {
+    switch (value.ptp_status) {
       case 0:
         return "free run";
       case 1:
@@ -653,13 +683,13 @@ struct HesaiLidarStatus_XT_40p: HesaiLidarStatusBase
   json to_child_json() override
   {
     json j;
-    j["temperture"] = temperture;
-    j["gps_pps_lock"] = gps_pps_lock;
-    j["gps_gprmc_status"] = gps_gprmc_status;
-    j["startup_times"] = startup_times.value();
-    j["total_operation_time"] = total_operation_time.value();
-    j["ptp_status"] = ptp_status;
-    j["reserve"] = reserve;
+    j["temperture"] = value.temperture;
+    j["gps_pps_lock"] = value.gps_pps_lock;
+    j["gps_gprmc_status"] = value.gps_gprmc_status;
+    j["startup_times"] = value.startup_times.value();
+    j["total_operation_time"] = value.total_operation_time.value();
+    j["ptp_status"] = value.ptp_status;
+    j["reserve"] = value.reserve;
 
     return j;
   }
@@ -668,17 +698,17 @@ struct HesaiLidarStatus_XT_40p: HesaiLidarStatusBase
 inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatus_XT_40p const & arg)
 {
   // os << (HesaiLidarStatusBase)(arg) << '\n';
-  os << "temperture: " << arg.temperture << '\n';
-  os << "gps_pps_lock: " << +arg.gps_pps_lock << '\n';
-  os << "gps_gprmc_status: " << +arg.gps_gprmc_status << '\n';
-  os << "startup_times: " << arg.startup_times << '\n';
-  os << "total_operation_time: " << arg.total_operation_time << '\n';
-  os << "ptp_status: " << +arg.ptp_status << '\n';
-  for (size_t i = 0; i < sizeof(arg.reserve); i++) {
+  os << "temperture: " << arg.value.temperture << '\n';
+  os << "gps_pps_lock: " << +arg.value.gps_pps_lock << '\n';
+  os << "gps_gprmc_status: " << +arg.value.gps_gprmc_status << '\n';
+  os << "startup_times: " << arg.value.startup_times << '\n';
+  os << "total_operation_time: " << arg.value.total_operation_time << '\n';
+  os << "ptp_status: " << +arg.value.ptp_status << '\n';
+  for (size_t i = 0; i < sizeof(arg.value.reserve); i++) {
     if (i != 0) {
       os << ' ';
     }
-    os << std::hex << std::setfill('0') << std::setw(2) << (+arg.reserve[i]);
+    os << std::hex << std::setfill('0') << std::setw(2) << (+arg.value.reserve[i]);
   }
   return os;
 }
