@@ -207,10 +207,8 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
       //         azimuth <= sensor_configuration_->cloud_max_angle) ||
       (sensor_configuration_->cloud_min_angle > sensor_configuration_->cloud_max_angle)) {
       for (size_t j = 0, k = 0; j < g_scans_per_block; j++, k += g_raw_scan_size) {
-        union two_bytes current_return {
-        };
-        union two_bytes other_return {
-        };
+        union two_bytes current_return{};
+        union two_bytes other_return{};
         // Distance extraction.
         current_return.bytes[0] = current_block.data[k];
         current_return.bytes[1] = current_block.data[k + 1];
