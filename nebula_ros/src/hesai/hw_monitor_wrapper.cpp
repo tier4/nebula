@@ -261,8 +261,8 @@ void HesaiHwMonitorWrapper::HesaiCheckTemperature(diagnostic_updater::Diagnostic
   if (current_status_) {
     json data = current_status_->to_json();
     for (auto & [key, value] : data.items()) {
-      // Skip execpt temperture
-      if (key != "temperture") {continue;}
+      // Skip execpt temperature
+      if (key != "temperature") {continue;}
       for (auto & [key, value] : data.items()) {
         diagnostics.add(key, value);
         std::cout << key << " : " << value << std::endl;    

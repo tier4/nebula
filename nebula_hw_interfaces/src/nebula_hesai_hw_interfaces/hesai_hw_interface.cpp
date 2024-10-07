@@ -381,33 +381,33 @@ std::shared_ptr<HesaiLidarStatusBase> HesaiHwInterface::GetLidarStatus()
     {
       auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatus_XT_40p::Internal>(response);
       auto ptr = std::make_shared<HesaiLidarStatus_XT_40p>(hesai_lidarstatus);
-      std::cout << "Config: " << hesai_lidarstatus << std::endl;
+      std::cout << "LiDAR_Status: " << ptr->to_json() << std::endl;
       return ptr;
     }
     case SensorModel::HESAI_PANDAR128_E4X:
     {
       auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatusOT128::Internal>(response);
       auto ptr = std::make_shared<HesaiLidarStatusOT128>(hesai_lidarstatus);
-      std::cout << "Config: " << hesai_lidarstatus << std::endl;
+      std::cout << "LiDAR_Status: " << ptr->to_json() << std::endl;
       return ptr;
     }
     case SensorModel::HESAI_PANDARAT128:
     {
       auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatusAT128::Internal>(response);
       auto ptr = std::make_shared<HesaiLidarStatusAT128>(hesai_lidarstatus);
-      std::cout << "Config: " << hesai_lidarstatus << std::endl;
+      std::cout << "LiDAR_Status: " << ptr->to_json() << std::endl;
       return ptr;
     }
     case SensorModel::HESAI_PANDARXT32:
     {
       auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatus_XT_40p::Internal>(response);
       auto ptr = std::make_shared<HesaiLidarStatus_XT_40p>(hesai_lidarstatus);
-      std::cout << "Config: " << hesai_lidarstatus << std::endl;
+      std::cout << "LiDAR_Status: " << ptr->to_json() << std::endl;
       return ptr;
     }
     default:
     {
-      std::cerr << "This is not Hesai LiDAR" << std::endl;
+      std::cerr << "This Hesai LiDAR has no lidar_status TCP" << std::endl;
       return nullptr;
     }
   }
