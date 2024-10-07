@@ -208,7 +208,7 @@ void HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimer()
     auto result = hw_interface_->GetLidarMonitor();
     std::scoped_lock lock(mtx_lidar_monitor_);
     current_lidar_monitor_time_.reset(new rclcpp::Time(parent_node_->get_clock()->now()));
-    current_monitor_.reset(new HesaiLidarMonitor(result));
+    current_monitor_.reset(new HesaiLidarMonitor_OT128(result));
   } catch (const std::system_error & error) {
     RCLCPP_ERROR_STREAM(
       rclcpp::get_logger("HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimer(std::system_error)"),
@@ -238,6 +238,8 @@ void HesaiHwMonitorWrapper::HesaiCheckStatus(diagnostic_updater::DiagnosticStatu
 
 void HesaiHwMonitorWrapper::HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::vector<std::string> msg;
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
   json data = current_status_->to_json();
@@ -245,6 +247,7 @@ void HesaiHwMonitorWrapper::HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWr
       diagnostics.add(key, value);
       std::cout << key << " : " << value << std::endl;
     } 
+  diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   }else {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
   }
@@ -252,6 +255,8 @@ void HesaiHwMonitorWrapper::HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWr
 
 void HesaiHwMonitorWrapper::HesaiCheckTemperature(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::vector<std::string> msg;
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
     json data = current_status_->to_json();
@@ -263,6 +268,7 @@ void HesaiHwMonitorWrapper::HesaiCheckTemperature(diagnostic_updater::Diagnostic
         std::cout << key << " : " << value << std::endl;    
       }
     }
+  diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
   }
@@ -274,8 +280,13 @@ void HesaiHwMonitorWrapper::HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWr
   if (current_status_) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
-    diagnostics.add("motor_speed", std::to_string(current_status_->value.motor_speed.value()));
-
+    json data = current_status_->to_json();
+    for (auto & [key, value] : data.items()) {
+      if(key == "motor_speed") {
+        diagnostics.add(key, value);
+        std::cout << key << " : " << value << std::endl;
+      }
+    }
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
@@ -322,16 +333,11 @@ void HesaiHwMonitorWrapper::HesaiCheckVoltage(
   if (current_monitor_) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
-    diagnostics.add(
-      "input_voltage",
-      GetFixedPrecisionString(current_monitor_->input_voltage.value() * 0.01, 3) + " V");
-    diagnostics.add(
-      "input_current", GetFixedPrecisionString(current_monitor_->input_current.value() * 0.01, 3) +
-                         " m"
-                         "A");
-    diagnostics.add(
-      "input_power",
-      GetFixedPrecisionString(current_monitor_->input_power.value() * 0.01, 3) + " W");
+    json data = current_monitor_->to_json();
+    for (auto & [key, value] : data.items()) {
+      diagnostics.add(key, value);
+      std::cout << key << " : " << value << std::endl;
+    }
 
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {

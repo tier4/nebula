@@ -352,7 +352,7 @@ public:
   Status SetRotDir(int mode);
   /// @brief Getting data with PTC_COMMAND_LIDAR_MONITOR
   /// @return Resulting status
-  HesaiLidarMonitor GetLidarMonitor();
+  HesaiLidarMonitor_OT128 GetLidarMonitor();
 
   /// @brief Call run() of IO Context
   void IOContextRun();

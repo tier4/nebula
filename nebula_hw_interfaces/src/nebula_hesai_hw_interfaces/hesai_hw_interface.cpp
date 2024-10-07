@@ -658,11 +658,11 @@ Status HesaiHwInterface::SetRotDir(int mode)
   return Status::OK;
 }
 
-HesaiLidarMonitor HesaiHwInterface::GetLidarMonitor()
+HesaiLidarMonitor_OT128 HesaiHwInterface::GetLidarMonitor()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_LIDAR_MONITOR);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
-  return CheckSizeAndParse<HesaiLidarMonitor>(response);
+  return CheckSizeAndParse<HesaiLidarMonitor_OT128>(response);
 }
 
 void HesaiHwInterface::IOContextRun()

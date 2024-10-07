@@ -285,9 +285,9 @@ struct HesaiConfigBase
     j["dest_ipaddr"] = instance.dest_ipaddr;
     j["dest_LiDAR_udp_port"] = instance.dest_LiDAR_udp_port.value();
     j["dest_gps_udp_port"] = instance.dest_gps_udp_port.value();
-    j["spin_rate"] = instance.spin_rate.value();
+    j["spin_rate"] = std::to_string(instance.spin_rate.value()) + " RPM";
     j["sync"] = instance.sync;
-    j["sync_angle"] = instance.sync_angle.value();
+    j["sync_angle"] = std::to_string(instance.sync * 0.01) + " degree";
     j["start_angle"] = instance.start_angle.value();
     j["stop_angle"] = instance.stop_angle.value();
     j["clock_source"] = instance.clock_source;
@@ -418,8 +418,8 @@ struct HesaiLidarStatusBase
   json to_json()
   {
     json j;
-    j["system_uptime"] = value.system_uptime.value();
-    j["motor_speed"] = value.motor_speed.value();
+    j["system_uptime"] = std::to_string(value.system_uptime.value()) + " sec";
+    j["motor_speed"] = std::to_string(value.motor_speed.value()) + " RPM";
     j.update(to_child_json());
 
     return j;
@@ -600,7 +600,7 @@ struct HesaiLidarStatusOT128: HesaiLidarStatusBase
     j["startup_times"] = value.startup_times.value();
     j["total_operation_time"] = value.total_operation_time.value();
     j["ptp_status"] = value.ptp_status;
-    j["humidity"] = value.humidity.value();
+    j["humidity"] = std::to_string(value.humidity.value() * 0.1) + " %";
     j["reserve"] = value.reserve;
 
     return j;
@@ -766,11 +766,11 @@ struct HesaiPtpConfig
 };
 
 /// @brief struct of PTC_COMMAND_LIDAR_MONITOR
-struct HesaiLidarMonitor
+struct HesaiLidarMonitor_OT128
 {
   // FIXME: this format is not correct for OT128
-  big_int32_buf_t input_voltage;
   big_int32_buf_t input_current;
+  big_int32_buf_t input_voltage;
   big_int32_buf_t input_power;
   big_int32_buf_t phase_offset;
   uint8_t reserved[48];
@@ -778,10 +778,10 @@ struct HesaiLidarMonitor
   json to_json()
   {
     json j;
-    j["input_voltage"] = input_voltage.value();
-    j["input_current"] = input_current.value();
-    j["input_power"] = input_power.value();
-    j["phase_offset"] = phase_offset.value();
+    j["input_current"] = std::to_string(input_current.value() * 0.01) + " mA";
+    j["input_voltage"] = std::to_string(input_voltage.value() * 0.01) + " V";
+    j["input_power"] = std::to_string(input_power.value() * 0.01) + " W";
+    j["phase_offset"] = std::to_string(phase_offset.value() * 0.01) + " degree";
     j["reserved"] = reserved;
 
     return j;
@@ -790,13 +790,15 @@ struct HesaiLidarMonitor
 };
 
 
-inline std::ostream & operator<<(std::ostream & os, HesaiLidarMonitor const & arg)
+inline std::ostream & operator<<(std::ostream & os, HesaiLidarMonitor_OT128 const & arg)
 {
-  os << "input_voltage: " << arg.input_voltage;
-  os << ", ";
   os << "input_current: " << arg.input_current;
   os << ", ";
+  os << "input_voltage: " << arg.input_voltage;
+  os << ", ";
   os << "input_power: " << arg.input_power;
+  os << ", ";
+  os << "phase_offset: " << arg.phase_offset;
   os << ", ";
   os << "reserved: ";
   for (size_t i = 0; i < sizeof(arg.reserved); i++) {
