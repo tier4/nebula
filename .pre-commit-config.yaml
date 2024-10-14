@@ -4,7 +4,7 @@ ci:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-json
       - id: check-merge-conflict
@@ -19,13 +19,13 @@ repos:
         args: [--markdown-linebreak-ext=md]
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.40.0
+    rev: v0.42.0
     hooks:
       - id: markdownlint
         args: [-c, .markdownlint.yaml, --fix]
 
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
 
@@ -35,7 +35,7 @@ repos:
       - id: yamllint
 
   - repo: https://github.com/tier4/pre-commit-hooks-ros
-    rev: v0.8.0
+    rev: v0.10.0
     hooks:
       - id: prettier-package-xml
       - id: sort-package-xml
@@ -46,7 +46,7 @@ repos:
       - id: shellcheck
 
   - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.8.0-1
+    rev: v3.9.0-1
     hooks:
       - id: shfmt
         args: [-w, -s, -i=4]
@@ -57,13 +57,13 @@ repos:
       - id: isort
 
   - repo: https://github.com/psf/black
-    rev: 24.4.2
+    rev: 24.10.0
     hooks:
       - id: black
         args: [--line-length=100]
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
+    rev: 7.1.1
     hooks:
       - id: flake8
         additional_dependencies:
@@ -79,12 +79,12 @@ repos:
           ]
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v18.1.5
+    rev: v19.1.1
     hooks:
       - id: clang-format
 
   - repo: https://github.com/cpplint/cpplint
-    rev: 1.6.1
+    rev: 2.0.0
     hooks:
       - id: cpplint
         # runtime/arrays uses the name of the variable to determine const-ness.
