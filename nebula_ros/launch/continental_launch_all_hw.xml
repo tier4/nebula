@@ -4,6 +4,8 @@
         <choice value="ARS548" />
         <choice value="SRR520" />
     </arg>
+    <arg name="frame_id" />
+    <arg name="sensor_ip" />
     <arg name="launch_hw" default="true" description="Whether to connect to a real sensor (true) or to accept packet messages (false).">
         <choice value="true" />
         <choice value="false" />
@@ -19,6 +21,8 @@
         <node pkg="nebula_ros" exec="continental_ars548_ros_wrapper_node" name="nebula_continental_ars548" output="screen">
             <param from="$(var config_file)" allow_substs="true"/>
             <param name="launch_hw" value="$(var launch_hw)"/>
+            <param name="frame_id" value="$(var frame_id)" />
+            <param name="sensor_ip" value="$(var sensor_ip)" />
             <remap from="/diagnostics" to="diagnostics"/>
             <remap from="odometry_input" to="$(var odometry_topic)"/>
             <remap from="acceleration_input" to="$(var acceleration_topic)"/>
