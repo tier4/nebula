@@ -7,10 +7,12 @@ namespace nebula::ros
 
 VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
   rclcpp::Node * const parent_node,
-  std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config)
+  std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config,
+  bool communicate_with_sensor)
 : hw_interface_(new nebula::drivers::VelodyneHwInterface()),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
-  status_(Status::NOT_INITIALIZED)
+  status_(Status::NOT_INITIALIZED),
+  communicate_with_sensor_(communicate_with_sensor)
 {
   setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
 
@@ -21,6 +23,11 @@ VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
   if (status_ != Status::OK) {
     throw std::runtime_error(
       (std::stringstream{} << "Could not initialize HW interface: " << status_).str());
+  }
+
+  if (!communicate_with_sensor_) {
+    // No need to initialize http client if communication is disabled
+    return;
   }
 
   status_ = hw_interface_->init_http_client();
@@ -46,6 +53,10 @@ VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
 void VelodyneHwInterfaceWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & new_config)
 {
+  if (!communicate_with_sensor_) {
+    RCLCPP_ERROR_STREAM(logger_, "Cannot change sensor configuration: communication with sensor is disabled");
+    return;
+  }
   hw_interface_->initialize_sensor_configuration(new_config);
   hw_interface_->init_http_client();
   if (setup_sensor_) {

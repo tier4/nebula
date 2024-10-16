@@ -27,10 +27,13 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
 
   launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
+  bool communicate_with_sensor = declare_parameter<bool>("communicate_with_sensor", param_read_only());
 
   if (launch_hw_) {
-    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_);
-    hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
+    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_, communicate_with_sensor);
+    if (communicate_with_sensor) { // hardware monitor requires communication with sensor
+      hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
+    }
   }
 
   decoder_wrapper_.emplace(

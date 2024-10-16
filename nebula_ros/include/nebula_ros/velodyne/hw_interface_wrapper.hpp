@@ -29,7 +29,8 @@ class VelodyneHwInterfaceWrapper
 public:
   VelodyneHwInterfaceWrapper(
     rclcpp::Node * const parent_node,
-    std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config);
+    std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config,
+    bool communicate_with_sensor = true);
 
   void on_config_change(
     const std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & new_config);
@@ -43,5 +44,6 @@ private:
   rclcpp::Logger logger_;
   nebula::Status status_;
   bool setup_sensor_;
+  bool communicate_with_sensor_;
 };
 }  // namespace nebula::ros
