@@ -60,21 +60,22 @@ Parameters shared by all supported models:
 
 ### Hardware interface parameters
 
-| Parameter                      | Type   | Default         | Accepted values   | Description                    |
-| ------------------------------ | ------ | --------------- | ----------------- | ------------------------------ |
-| frame_id                       | string | hesai           |                   | ROS frame ID                   |
-| sensor_ip                      | string | 192.168.1.201   |                   | Sensor IP                      |
-| host_ip                        | string | 255.255.255.255 |                   | Host IP                        |
-| data_port                      | uint16 | 2368            |                   | Sensor port                    |
-| gnss_port                      | uint16 | 2369            |                   | GNSS port                      |
-| frequency_ms                   | uint16 | 100             | milliseconds, > 0 | Time per scan                  |
-| packet_mtu_size                | uint16 | 1500            |                   | Packet MTU size                |
-| rotation_speed                 | uint16 | 600             |                   | Rotation speed                 |
-| cloud_min_angle                | uint16 | 0               | degrees [0, 360]  | FoV start angle                |
-| cloud_max_angle                | uint16 | 359             | degrees [0, 360]  | FoV end angle                  |
-| dual_return_distance_threshold | double | 0.1             |                   | Dual return distance threshold |
-| diag_span                      | uint16 | 1000            | milliseconds, > 0 | Diagnostic span                |
-| setup_sensor                   | bool   | True            | True, False       | Configure sensor settings      |
+| Parameter                      | Type   | Default         | Accepted values   | Description                                                  |
+| ------------------------------ | ------ | --------------- | ----------------- | ------------------------------------------------------------ |
+| frame_id                       | string | hesai           |                   | ROS frame ID                                                 |
+| sensor_ip                      | string | 192.168.1.201   |                   | Sensor IP                                                    |
+| host_ip                        | string | 255.255.255.255 |                   | Host IP                                                      |
+| data_port                      | uint16 | 2368            |                   | Sensor port                                                  |
+| gnss_port                      | uint16 | 2369            |                   | GNSS port                                                    |
+| frequency_ms                   | uint16 | 100             | milliseconds, > 0 | Time per scan                                                |
+| packet_mtu_size                | uint16 | 1500            |                   | Packet MTU size                                              |
+| rotation_speed                 | uint16 | 600             |                   | Rotation speed                                               |
+| cloud_min_angle                | uint16 | 0               | degrees [0, 360]  | FoV start angle                                              |
+| cloud_max_angle                | uint16 | 359             | degrees [0, 360]  | FoV end angle                                                |
+| dual_return_distance_threshold | double | 0.1             |                   | Dual return distance threshold                               |
+| diag_span                      | uint16 | 1000            | milliseconds, > 0 | Diagnostic span                                              |
+| setup_sensor                   | bool   | True            | True, False       | Configure sensor settings                                    |
+| communicate_with_sensor        | bool   | True            | True, False       | Enable communication with sensor (listen mode only if false) |
 
 ### Driver parameters
 

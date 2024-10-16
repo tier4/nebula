@@ -40,20 +40,24 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
 
   launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
+  bool communicate_with_sensor = declare_parameter<bool>("communicate_with_sensor", param_read_only());
 
   if (launch_hw_) {
-    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_);
-    hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
+    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_, communicate_with_sensor);
+    if (communicate_with_sensor) { // hardware monitor requires communication with sensor
+      hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
+    }
   }
 
-  auto calibration_result = get_calibration_data(sensor_cfg_ptr_->calibration_path);
+  bool force_load_caibration_from_file = !communicate_with_sensor;
+  auto calibration_result = get_calibration_data(sensor_cfg_ptr_->calibration_path, force_load_caibration_from_file);
   if (!calibration_result.has_value()) {
     throw std::runtime_error(
       (std::stringstream() << "No valid calibration found: " << calibration_result.error()).str());
   }
 
   if (
-    hw_interface_wrapper_ &&
+    hw_interface_wrapper_ && communicate_with_sensor &&
     sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDARAT128) {
     auto status =
       hw_interface_wrapper_->hw_interface()->checkAndSetLidarRange(*calibration_result.value());

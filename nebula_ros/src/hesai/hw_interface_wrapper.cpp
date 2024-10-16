@@ -9,10 +9,11 @@ namespace nebula::ros
 
 HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   rclcpp::Node * const parent_node,
-  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config)
+  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config, bool communicate_with_sensor)
 : hw_interface_(new nebula::drivers::HesaiHwInterface()),
   logger_(parent_node->get_logger().get_child("HwInterface")),
-  status_(Status::NOT_INITIALIZED)
+  status_(Status::NOT_INITIALIZED),
+  communicate_with_sensor_(communicate_with_sensor)
 {
   setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
   bool retry_connect = parent_node->declare_parameter<bool>("retry_hw", param_read_only());
@@ -27,6 +28,11 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
 
   hw_interface_->SetLogger(std::make_shared<rclcpp::Logger>(parent_node->get_logger()));
   hw_interface_->SetTargetModel(config->sensor_model);
+
+  if (!communicate_with_sensor_) {
+    // No need to initialize Tcp if communication is disabled
+    return;
+  }
 
   int retry_count = 0;
 
@@ -63,6 +69,10 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
 void HesaiHwInterfaceWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config)
 {
+  if (!communicate_with_sensor_) {
+    RCLCPP_ERROR_STREAM(logger_, "Cannot change sensor configuration: communication with sensor is disabled");
+    return;
+  }
   hw_interface_->SetSensorConfiguration(
     std::static_pointer_cast<const nebula::drivers::SensorConfigurationBase>(new_config));
   if (setup_sensor_) {
