@@ -9,7 +9,8 @@ namespace nebula::ros
 
 HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   rclcpp::Node * const parent_node,
-  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config, bool communicate_with_sensor)
+  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
+  bool communicate_with_sensor)
 : hw_interface_(new nebula::drivers::HesaiHwInterface()),
   logger_(parent_node->get_logger().get_child("HwInterface")),
   status_(Status::NOT_INITIALIZED),

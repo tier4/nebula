@@ -27,7 +27,8 @@ class HesaiHwInterfaceWrapper
 public:
   HesaiHwInterfaceWrapper(
     rclcpp::Node * const parent_node,
-    std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config, bool communicate_with_sensor = true);
+    std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
+    bool communicate_with_sensor = true);
 
   void on_config_change(
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config);
