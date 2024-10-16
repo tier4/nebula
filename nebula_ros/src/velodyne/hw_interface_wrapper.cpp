@@ -26,7 +26,7 @@ VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
   }
 
   if (!communicate_with_sensor_) {
-    // No need to initialize http client if communication is disabled
+    // Do not initialize http client if communication is disabled
     return;
   }
 
@@ -53,14 +53,12 @@ VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
 void VelodyneHwInterfaceWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & new_config)
 {
-  if (!communicate_with_sensor_) {
-    RCLCPP_ERROR_STREAM(logger_, "Cannot change sensor configuration: communication with sensor is disabled");
-    return;
-  }
   hw_interface_->initialize_sensor_configuration(new_config);
-  hw_interface_->init_http_client();
-  if (setup_sensor_) {
-    hw_interface_->set_sensor_configuration(new_config);
+  if (communicate_with_sensor_) {
+    hw_interface_->init_http_client();
+    if (setup_sensor_) {
+      hw_interface_->set_sensor_configuration(new_config);
+    }
   }
 }
 

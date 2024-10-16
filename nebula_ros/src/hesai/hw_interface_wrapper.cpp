@@ -30,7 +30,7 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   hw_interface_->SetTargetModel(config->sensor_model);
 
   if (!communicate_with_sensor_) {
-    // No need to initialize Tcp if communication is disabled
+    // Do not initialize Tcp if communication is disabled
     return;
   }
 
@@ -69,13 +69,9 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
 void HesaiHwInterfaceWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config)
 {
-  if (!communicate_with_sensor_) {
-    RCLCPP_ERROR_STREAM(logger_, "Cannot change sensor configuration: communication with sensor is disabled");
-    return;
-  }
   hw_interface_->SetSensorConfiguration(
     std::static_pointer_cast<const nebula::drivers::SensorConfigurationBase>(new_config));
-  if (setup_sensor_) {
+  if (communicate_with_sensor_ && setup_sensor_) {
     hw_interface_->CheckAndSetConfig();
   }
 }
