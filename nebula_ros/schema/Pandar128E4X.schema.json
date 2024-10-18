@@ -77,18 +77,14 @@
         },
         "ptp_profile": {
           "$ref": "sub/communication.json#/definitions/ptp_profile",
-          "enum": [
-            "automotive"
-          ]
+          "enum": ["automotive"]
         },
         "ptp_domain": {
           "$ref": "sub/communication.json#/definitions/ptp_domain"
         },
         "ptp_transport_type": {
           "$ref": "sub/communication.json#/definitions/ptp_transport_type",
-          "enum": [
-            "L2"
-          ]
+          "enum": ["L2"]
         },
         "ptp_switch_type": {
           "$ref": "sub/communication.json#/definitions/ptp_switch_type"
@@ -138,13 +134,9 @@
         },
         "additionalProperties": false
       },
-      "required": [
-        "ros__parameters"
-      ]
+      "required": ["ros__parameters"]
     }
   },
-  "required": [
-    "/**"
-  ],
+  "required": ["/**"],
   "additionalProperties": false
 }
