@@ -8,11 +8,11 @@ namespace nebula::ros
 VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
   rclcpp::Node * const parent_node,
   std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config,
-  bool communicate_with_sensor)
+  bool use_udp_only)
 : hw_interface_(new nebula::drivers::VelodyneHwInterface()),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED),
-  communicate_with_sensor_(communicate_with_sensor)
+  use_udp_only_(use_udp_only)
 {
   setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
 
@@ -25,8 +25,8 @@ VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
       (std::stringstream{} << "Could not initialize HW interface: " << status_).str());
   }
 
-  if (!communicate_with_sensor_) {
-    // Do not initialize http client if communication is disabled
+  if (use_udp_only_) {
+    // Do not initialize http client
     return;
   }
 
@@ -54,11 +54,12 @@ void VelodyneHwInterfaceWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & new_config)
 {
   hw_interface_->initialize_sensor_configuration(new_config);
-  if (communicate_with_sensor_) {
-    hw_interface_->init_http_client();
-    if (setup_sensor_) {
-      hw_interface_->set_sensor_configuration(new_config);
-    }
+  if (use_udp_only_) {
+    return;
+  }
+  hw_interface_->init_http_client();
+  if (setup_sensor_) {
+    hw_interface_->set_sensor_configuration(new_config);
   }
 }
 

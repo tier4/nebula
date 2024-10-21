@@ -9,12 +9,11 @@ namespace nebula::ros
 
 HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   rclcpp::Node * const parent_node,
-  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
-  bool communicate_with_sensor)
+  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config, bool use_udp_only)
 : hw_interface_(new nebula::drivers::HesaiHwInterface()),
   logger_(parent_node->get_logger().get_child("HwInterface")),
   status_(Status::NOT_INITIALIZED),
-  communicate_with_sensor_(communicate_with_sensor)
+  use_udp_only_(use_udp_only)
 {
   setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
   bool retry_connect = parent_node->declare_parameter<bool>("retry_hw", param_read_only());
@@ -30,8 +29,8 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   hw_interface_->SetLogger(std::make_shared<rclcpp::Logger>(parent_node->get_logger()));
   hw_interface_->SetTargetModel(config->sensor_model);
 
-  if (!communicate_with_sensor_) {
-    // Do not initialize Tcp if communication is disabled
+  if (use_udp_only) {
+    // Do not initialize TCP
     return;
   }
 
@@ -72,7 +71,7 @@ void HesaiHwInterfaceWrapper::on_config_change(
 {
   hw_interface_->SetSensorConfiguration(
     std::static_pointer_cast<const nebula::drivers::SensorConfigurationBase>(new_config));
-  if (communicate_with_sensor_ && setup_sensor_) {
+  if (!use_udp_only_ && setup_sensor_) {
     hw_interface_->CheckAndSetConfig();
   }
 }

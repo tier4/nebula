@@ -7,7 +7,7 @@
     packet_mtu_size: 1500
     launch_hw: true
     setup_sensor: true
-    communicate_with_sensor: true
+    udp_only: false
     frame_id: velodyne
     advanced_diagnostics: false
     diag_span: 1000

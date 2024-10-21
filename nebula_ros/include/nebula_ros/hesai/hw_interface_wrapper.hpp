@@ -28,7 +28,7 @@ public:
   HesaiHwInterfaceWrapper(
     rclcpp::Node * const parent_node,
     std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
-    bool communicate_with_sensor = true);
+    bool use_udp_only = false);
 
   void on_config_change(
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config);
@@ -42,6 +42,6 @@ private:
   rclcpp::Logger logger_;
   nebula::Status status_;
   bool setup_sensor_;
-  bool communicate_with_sensor_;
+  bool use_udp_only_;
 };
 }  // namespace nebula::ros
