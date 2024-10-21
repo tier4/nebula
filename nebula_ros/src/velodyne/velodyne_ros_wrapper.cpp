@@ -27,10 +27,20 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
 
   launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
+  bool use_udp_only = declare_parameter<bool>("udp_only", param_read_only());
+
+  if (use_udp_only) {
+    RCLCPP_INFO_STREAM(
+      get_logger(),
+      "UDP-only mode is enabled. Settings checks, synchronization, and diagnostics publishing are "
+      "disabled.");
+  }
 
   if (launch_hw_) {
-    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_);
-    hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
+    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_, use_udp_only);
+    if (!use_udp_only) {  // hardware monitor requires HTTP connection
+      hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
+    }
   }
 
   decoder_wrapper_.emplace(
