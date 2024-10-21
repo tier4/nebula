@@ -215,11 +215,42 @@ rclcpp_components_register_node(continental_srr520_ros_wrapper
     EXECUTABLE continental_srr520_ros_wrapper_node
 )
 
+## Tutorial
+add_library(tutorial_ros_wrapper SHARED
+    src/tutorial/tutorial_ros_wrapper.cpp
+    src/tutorial/decoder_wrapper.cpp
+    src/tutorial/hw_interface_wrapper.cpp
+    src/tutorial/hw_monitor_wrapper.cpp
+    src/common/parameter_descriptors.cpp
+)
+
+target_include_directories(tutorial_ros_wrapper PUBLIC
+    ${diagnostic_updater_INCLUDE_DIRS}
+    ${nebula_decoders_INCLUDE_DIRS}
+    ${nebula_hw_interfaces_INCLUDE_DIRS}
+    ${pandar_msgs_INCLUDE_DIRS}
+)
+
+target_link_libraries(tutorial_ros_wrapper PUBLIC
+    ${diagnostic_msgs_TARGETS}
+    ${diagnostic_updater_TARGETS}
+    ${pandar_msgs_TARGETS}
+    nebula_decoders::nebula_decoders_hesai
+    nebula_hw_interfaces::nebula_hw_interfaces_tutorial
+)
+
+
+rclcpp_components_register_node(tutorial_ros_wrapper
+        PLUGIN "TutorialRosWrapper"
+        EXECUTABLE tutorial_ros_wrapper_node
+)
+
 install(TARGETS hesai_ros_wrapper EXPORT export_hesai_ros_wrapper)
 install(TARGETS velodyne_ros_wrapper EXPORT export_velodyne_ros_wrapper)
 install(TARGETS robosense_ros_wrapper EXPORT export_robosense_ros_wrapper)
 install(TARGETS continental_ars548_ros_wrapper EXPORT export_continental_ars548_ros_wrapper)
 install(TARGETS continental_srr520_ros_wrapper EXPORT export_continental_srr520_ros_wrapper)
+install(TARGETS tutorial_ros_wrapper EXPORT export_tutorial_ros_wrapper)
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
@@ -232,6 +263,7 @@ ament_export_targets(export_hesai_ros_wrapper)
 ament_export_targets(export_velodyne_ros_wrapper)
 ament_export_targets(export_robosense_ros_wrapper)
 ament_export_targets(export_continental_ars548_ros_wrapper)
+ament_export_targets(export_tutorial_ros_wrapper)
 
 install(
   DIRECTORY config launch

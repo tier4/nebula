@@ -1,26 +1,29 @@
+// Copyright 2024 TIER IV, Inc.
+
 #include "nebula_ros/tutorial/hw_monitor_wrapper.hpp"
+
+#include "nebula_ros/common/parameter_descriptors.hpp"
 
 #include <boost/iostreams/stream.hpp>
 
-namespace nebula
+namespace nebula::ros
 {
-namespace ros
-{
-TutorialHwMonitorWrapper::TutorialHwMonitorWrapper(rclcpp::Node* const parent_node,
-                                             const std::shared_ptr<nebula::drivers::TutorialHwInterface>& hw_interface,
-                                             std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration>& /* config */)
-  : parent_node_(parent_node)
-  , logger_(parent_node->get_logger().get_child("HwMonitor"))
-  , status_(Status::OK)
-  , diagnostics_updater_(parent_node)
-  , hw_interface_(hw_interface)
+TutorialHwMonitorWrapper::TutorialHwMonitorWrapper(
+  rclcpp::Node * const parent_node,
+  const std::shared_ptr<nebula::drivers::TutorialHwInterface> & hw_interface,
+  std::shared_ptr<const nebula::drivers::TutorialSensorConfiguration> & /* config */)
+: parent_node_(parent_node),
+  logger_(parent_node->get_logger().get_child("HwMonitor")),
+  status_(Status::OK),
+  diagnostics_updater_(parent_node),
+  hw_interface_(hw_interface)
 {
   diag_span_ = parent_node->declare_parameter<uint16_t>("diag_span", param_read_only());
 
-  InitializeDiagnostics();
+  initialize_diagnostics();
 }
 
-void TutorialHwMonitorWrapper::InitializeDiagnostics()
+void TutorialHwMonitorWrapper::initialize_diagnostics()
 {
   // get hardware ID (model:serial_number) from sensor here using HW interface
   std::string hardware_id = "Tutorial:ABC-12345-DEF";
@@ -28,20 +31,22 @@ void TutorialHwMonitorWrapper::InitializeDiagnostics()
   RCLCPP_INFO_STREAM(logger_, "hardware_id: " + hardware_id);
 
   // This handler gets called on `diagnostics_updater_.force_update()`
-  diagnostics_updater_.add("diagnostic_info", this, &TutorialHwMonitorWrapper::ParseAndAddDiagnosticInfo);
+  diagnostics_updater_.add(
+    "diagnostic_info", this, &TutorialHwMonitorWrapper::parse_and_add_diagnostic_info);
 
   // Timer to fetch new info from sensor. Choose a sensible period, e.g. once per sec.
-  fetch_diagnostics_timer_ =
-      parent_node_->create_wall_timer(std::chrono::milliseconds(1000),
-      std::bind(&TutorialHwMonitorWrapper::FetchDiagnosticInfo, this));
+  fetch_diagnostics_timer_ = parent_node_->create_wall_timer(
+    std::chrono::milliseconds(1000),
+    std::bind(&TutorialHwMonitorWrapper::fetch_diagnostic_info, this));
 
   // Timer to trigger diagnostic_updater updates and to check if fetched data is stale
-  diagnostics_update_timer_ =
-    parent_node_->create_wall_timer(std::chrono::milliseconds(diag_span_),
-      std::bind(&TutorialHwMonitorWrapper::TriggerDiagnosticsUpdate, this));
+  diagnostics_update_timer_ = parent_node_->create_wall_timer(
+    std::chrono::milliseconds(diag_span_),
+    std::bind(&TutorialHwMonitorWrapper::trigger_diagnostics_update, this));
 }
 
-void TutorialHwMonitorWrapper::ParseAndAddDiagnosticInfo(diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
+void TutorialHwMonitorWrapper::parse_and_add_diagnostic_info(
+  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
   // ////////////////////////////////////////
   // Add diagnostics values to ROS object
@@ -53,7 +58,7 @@ void TutorialHwMonitorWrapper::ParseAndAddDiagnosticInfo(diagnostic_updater::Dia
 
   diagnostics.add("voltage", current_diag_info_.at("voltage"));
 
-  auto error =  current_diag_info_.at("error");
+  auto error = current_diag_info_.at("error");
   diagnostics.add("error", error);
 
   // ////////////////////////////////////////
@@ -68,7 +73,7 @@ void TutorialHwMonitorWrapper::ParseAndAddDiagnosticInfo(diagnostic_updater::Dia
   diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "OK");
 }
 
-void TutorialHwMonitorWrapper::TriggerDiagnosticsUpdate()
+void TutorialHwMonitorWrapper::trigger_diagnostics_update()
 {
   // ////////////////////////////////////////
   // Watch for diagnostics timeouts
@@ -77,12 +82,9 @@ void TutorialHwMonitorWrapper::TriggerDiagnosticsUpdate()
   auto now = parent_node_->get_clock()->now();
   auto dif = (now - *current_diag_info_time_).seconds();
 
-  if (diag_span_ * 2.0 < dif * 1000)
-  {
+  if (diag_span_ * 2.0 < dif * 1000) {
     RCLCPP_WARN_STREAM(logger_, "Diagnostics STALE for " << dif << " s");
-  }
-  else
-  {
+  } else {
     RCLCPP_DEBUG_STREAM(logger_, "Diagnostics OK (up to date)");
   }
 
@@ -93,7 +95,7 @@ void TutorialHwMonitorWrapper::TriggerDiagnosticsUpdate()
   diagnostics_updater_.force_update();
 }
 
-void TutorialHwMonitorWrapper::FetchDiagnosticInfo()
+void TutorialHwMonitorWrapper::fetch_diagnostic_info()
 {
   // This is where you would fetch the newest diagnostics from the sensor using the hardware
   // interface. The below code is just a dummy.
@@ -105,9 +107,8 @@ void TutorialHwMonitorWrapper::FetchDiagnosticInfo()
   current_diag_info_time_ = parent_node_->now();
 }
 
-Status TutorialHwMonitorWrapper::Status()
+Status TutorialHwMonitorWrapper::status()
 {
   return Status::OK;
 }
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros
