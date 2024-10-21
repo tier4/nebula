@@ -32,7 +32,8 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
   if (use_udp_only) {
     RCLCPP_INFO_STREAM(
       get_logger(),
-      "UDP-only mode is enabled. Settings checks, synchronization, and diagnostics publishing are disabled.");
+      "UDP-only mode is enabled. Settings checks, synchronization, and diagnostics publishing are "
+      "disabled.");
   }
 
   if (launch_hw_) {

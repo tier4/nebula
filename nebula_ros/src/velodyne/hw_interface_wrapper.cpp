@@ -7,8 +7,7 @@ namespace nebula::ros
 
 VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
   rclcpp::Node * const parent_node,
-  std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config,
-  bool use_udp_only)
+  std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config, bool use_udp_only)
 : hw_interface_(new nebula::drivers::VelodyneHwInterface()),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED),

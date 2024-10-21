@@ -45,7 +45,8 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   if (use_udp_only) {
     RCLCPP_INFO_STREAM(
       get_logger(),
-      "UDP-only mode is enabled. Settings checks, synchronization, and diagnostics publishing are disabled.");
+      "UDP-only mode is enabled. Settings checks, synchronization, and diagnostics publishing are "
+      "disabled.");
   }
 
   if (launch_hw_) {
@@ -55,7 +56,8 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     }
   }
 
-  bool force_load_caibration_from_file = use_udp_only;  // Downloading from device requires TCP connection
+  bool force_load_caibration_from_file =
+    use_udp_only;  // Downloading from device requires TCP connection
   auto calibration_result =
     get_calibration_data(sensor_cfg_ptr_->calibration_path, force_load_caibration_from_file);
   if (!calibration_result.has_value()) {
