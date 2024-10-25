@@ -22,15 +22,12 @@ jobs:
             build-depends-repos: build_depends.repos
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Free disk space (Ubuntu)
-        uses: jlumbroso/free-disk-space@v1.2.0
+        uses: actions/checkout@v4
         with:
-          tool-cache: false
-          dotnet: false
-          swap-storage: false
-          large-packages: false
+          fetch-depth: 1
+
+      - name: Show disk space before the tasks
+        run: df -h
 
       - name: Remove exec_depend
         uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1
@@ -61,7 +58,9 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           files: ${{ steps.test.outputs.coverage-report-files }}
-          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
           verbose: true
           flags: total
+
+      - name: Show disk space after the tasks
+        run: df -h

@@ -1,3 +1,2 @@
-*.yaml
+*.param.yaml
 *.rviz
-*.json
