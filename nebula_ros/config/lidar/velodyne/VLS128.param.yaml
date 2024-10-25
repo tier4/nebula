@@ -5,9 +5,7 @@
     data_port: 2368
     gnss_port: 2369
     packet_mtu_size: 1500
-    launch_hw: true
-    setup_sensor: true
-    udp_only: false
+    connection_mode: full
     frame_id: velodyne
     advanced_diagnostics: false
     diag_span: 1000
