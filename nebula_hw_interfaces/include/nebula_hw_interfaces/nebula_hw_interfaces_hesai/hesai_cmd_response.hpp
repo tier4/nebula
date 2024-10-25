@@ -433,9 +433,43 @@ struct HesaiLidarStatusBase
   virtual json sensor_specifics_to_json() = 0;
  [[nodiscard]] virtual const Internal & get() const = 0;
 
-  std::string get_str_gps_pps_lock();
-  std::string get_str_gps_gprmc_status();
-  std::string get_str_ptp_clock_status();
+  std::string get_str_gps_pps_lock(uint8_t value)
+  {
+    switch (value) {
+      case 1:
+        return "Lock";
+      case 0:
+        return "Unlock";
+      default:
+        return "Unknown";
+    }
+  }
+  std::string get_str_gps_gprmc_status(uint8_t value)
+  {
+    switch (value) {
+      case 1:
+        return "Lock";
+      case 0:
+        return "Unlock";
+      default:
+        return "Unknown";
+    }
+  }
+  std::string get_str_ptp_clock_status(uint8_t value)
+  {
+    switch (value) {
+      case 0:
+        return "free run";
+      case 1:
+        return "tracking";
+      case 2:
+        return "locked";
+      case 3:
+        return "frozen";
+      default:
+        return "Unknown";
+    }
+  }
 };
 
 inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusBase const & arg)
@@ -472,11 +506,11 @@ struct HesaiLidarStatusAT128: public HesaiLidarStatusBase
     temperature["pb temperature"] = std::to_string(value.temperature[7].value() * 0.01) + " deg";
     temperature["hot temperature"] = std::to_string(value.temperature[8].value() * 0.01) + " deg";
     j["temperature"] = temperature;
-    j["gps_pps_lock"] = get_str_gps_pps_lock();
-    j["gps_gprmc_status"] = get_str_gps_gprmc_status();
+    j["gps_pps_lock"] = get_str_gps_pps_lock(value.gps_pps_lock);
+    j["gps_gprmc_status"] = get_str_gps_gprmc_status(value.gps_gprmc_status);
     j["startup_times"] = value.startup_times.value();
     j["total_operation_time"] = std::to_string(value.total_operation_time.value()) + " min";
-    j["ptp_status"] = get_str_ptp_clock_status();
+    j["ptp_status"] = get_str_ptp_clock_status(value.ptp_status);
     j["reserve"] = value.reserve;
 
     return j;
@@ -492,7 +526,7 @@ inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusAT128 & arg)
 {
   for (auto & [key, value] : arg.to_json().items()) {
     os << key << " : " << value << std::endl;
-  }
+  }  
   return os;
 }
 
@@ -526,11 +560,11 @@ struct HesaiLidarStatusOT128: public HesaiLidarStatusBase
     temperature["Top circuit RT3 temperature"] = std::to_string(value.temperature[6].value() * 0.01) + " deg";
     temperature["Top circuit RT4 temperature"] = std::to_string(value.temperature[7].value() * 0.01) + " deg";
     j["temperature"] = temperature;
-    j["gps_pps_lock"] = get_str_gps_pps_lock();
-    j["gps_gprmc_status"] = get_str_gps_gprmc_status();
+    j["gps_pps_lock"] = get_str_gps_pps_lock(value.gps_pps_lock);
+    j["gps_gprmc_status"] = get_str_gps_gprmc_status(value.gps_gprmc_status);
     j["startup_times"] = value.startup_times.value();
     j["total_operation_time"] = std::to_string(value.total_operation_time.value()) + " min";
-    j["ptp_status"] = get_str_ptp_clock_status();
+    j["ptp_status"] = get_str_ptp_clock_status(value.ptp_status);
     j["humidity"] = std::to_string(value.humidity.value() * 0.1) + " %";
     j["reserve"] = value.reserve;
 
@@ -576,11 +610,11 @@ struct HesaiLidarStatus_XT_40p: public HesaiLidarStatusBase
     temperature["Top circuit RT4 temperature"] = std::to_string(value.temperature[6].value() * 0.01) + " deg";
     temperature["Top circuit RT5 temperature"] = std::to_string(value.temperature[7].value() * 0.01) + " deg";
     j["temperature"] = temperature;
-    j["gps_pps_lock"] = get_str_gps_pps_lock();
-    j["gps_gprmc_status"] = get_str_gps_gprmc_status();
+    j["gps_pps_lock"] = get_str_gps_pps_lock(value.gps_pps_lock);
+    j["gps_gprmc_status"] = get_str_gps_gprmc_status(value.gps_gprmc_status);
     j["startup_times"] = value.startup_times.value();
     j["total_operation_time"] = std::to_string(value.total_operation_time.value()) + " min";
-    j["ptp_status"] = get_str_ptp_clock_status();
+    j["ptp_status"] = get_str_ptp_clock_status(value.ptp_status);
     j["reserve"] = value.reserve;
 
     return j;
