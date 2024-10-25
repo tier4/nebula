@@ -227,7 +227,7 @@ void HesaiHwMonitorWrapper::HesaiCheckStatus(diagnostic_updater::DiagnosticStatu
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
     json data = current_status_->to_json();
-    for (auto & [key, value] : data.items()) {
+    for (const auto & [key, value] : data.items()) {
       diagnostics.add(key, value);
       std::cout << key << " : " << value << std::endl;
     }
@@ -243,9 +243,9 @@ void HesaiHwMonitorWrapper::HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWr
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
   json data = current_status_->to_json();
-    for (auto & [key, value] : data.items()) {
+    for (const auto & [key, value] : data.items()) {
       diagnostics.add(key, value);
-      std::cout << key << " : " << value << std::endl;
+      
     } 
   diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   }else {
@@ -260,12 +260,11 @@ void HesaiHwMonitorWrapper::HesaiCheckTemperature(diagnostic_updater::Diagnostic
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
     json data = current_status_->to_json();
-    for (auto & [key, value] : data.items()) {
+    for (const auto & [key, value] : data.items()) {
       // Skip execpt temperature
       if (key != "temperature") {continue;}
-      for (auto & [key, value] : data.items()) {
-        diagnostics.add(key, value);
-        std::cout << key << " : " << value << std::endl;    
+      for (const auto & [key, value] : value.items()) {
+        diagnostics.add(key, value);  
       }
     }
   diagnostics.summary(level, boost::algorithm::join(msg, ", "));
@@ -281,10 +280,9 @@ void HesaiHwMonitorWrapper::HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWr
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
     json data = current_status_->to_json();
-    for (auto & [key, value] : data.items()) {
+    for (const auto & [key, value] : data.items()) {
       if(key == "motor_speed") {
         diagnostics.add(key, value);
-        std::cout << key << " : " << value << std::endl;
       }
     }
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
@@ -334,9 +332,8 @@ void HesaiHwMonitorWrapper::HesaiCheckVoltage(
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
     json data = current_monitor_->to_json();
-    for (auto & [key, value] : data.items()) {
+    for (const auto & [key, value] : data.items()) {
       diagnostics.add(key, value);
-      std::cout << key << " : " << value << std::endl;
     }
 
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));

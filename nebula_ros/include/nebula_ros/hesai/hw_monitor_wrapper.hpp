@@ -48,8 +48,6 @@ public:
   nebula::Status Status();
 
 private:
-  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> sensor_configuration_;
-
   void InitializeHesaiDiagnostics();
 
   std::string GetPtreeValue(boost::property_tree::ptree * pt, const std::string & key);
@@ -87,7 +85,7 @@ private:
 
   std::shared_ptr<HesaiLidarStatusBase> current_status_{};
   std::shared_ptr<HesaiLidarMonitor_OT128> current_monitor_{};
-  std::shared_ptr<std::shared_ptr<HesaiConfigBase>> current_config_{};
+  std::shared_ptr<HesaiConfigBase> current_config_{};
   std::shared_ptr<HesaiInventory> current_inventory_{};
   std::shared_ptr<boost::property_tree::ptree> current_lidar_monitor_tree_{};
 

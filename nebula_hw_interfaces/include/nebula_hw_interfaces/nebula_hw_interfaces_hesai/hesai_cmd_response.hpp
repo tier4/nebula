@@ -22,15 +22,14 @@
 #include <array>
 #include <cstdint>
 #include <ostream>
+#include <sstream>
 #include <string>
 #include <nlohmann/json.hpp>
-#include <nlohmann/json_fwd.hpp>
 
 using namespace boost::endian;  // NOLINT(build/namespaces)
-using nlohmann::json;
-
 namespace nebula
 {
+using nlohmann::json;
 
 #pragma pack(push, 1)
 
@@ -281,15 +280,32 @@ struct HesaiConfigBase
   json to_json()
   {
     json j;
-    j["ipaddr"] = get().ipaddr;
-    j["mask"] = get().mask;
-    j["gateway"] = get().gateway;
-    j["dest_ipaddr"] = get().dest_ipaddr;
+    std::stringstream ss;
+    ss << static_cast<int>(get().ipaddr[0]) << "."
+       << static_cast<int>(get().ipaddr[1]) << "."
+       << static_cast<int>(get().ipaddr[2]) << "."
+       << static_cast<int>(get().ipaddr[3]);
+    j["ipaddr"] = ss.str();
+    ss << static_cast<int>(get().mask[0]) << "."
+       << static_cast<int>(get().mask[1]) << "."
+       << static_cast<int>(get().mask[2]) << "."
+       << static_cast<int>(get().mask[3]);
+    j["mask"] = ss.str();
+    ss << static_cast<int>(get().gateway[0]) << "."
+       << static_cast<int>(get().gateway[1]) << "."
+       << static_cast<int>(get().gateway[2]) << "."
+       << static_cast<int>(get().gateway[3]);
+    j["gateway"] = ss.str();
+    ss << static_cast<int>(get().dest_ipaddr[0]) << "."
+       << static_cast<int>(get().dest_ipaddr[1]) << "."
+       << static_cast<int>(get().dest_ipaddr[2]) << "."
+       << static_cast<int>(get().dest_ipaddr[3]);
+    j["dest_ipaddr"] = ss.str();
     j["dest_LiDAR_udp_port"] = get().dest_LiDAR_udp_port.value();
     j["dest_gps_udp_port"] = get().dest_gps_udp_port.value();
     j["spin_rate"] = std::to_string(get().spin_rate.value()) + " RPM";
     j["sync"] = get().sync;
-    j["sync_angle"] = std::to_string(get().sync * 0.01) + " degree";
+    j["sync_angle"] = std::to_string(get().sync * 0.01) + " deg";
     j["start_angle"] = get().start_angle.value();
     j["stop_angle"] = get().stop_angle.value();
     j["clock_source"] = get().clock_source;
@@ -300,40 +316,24 @@ struct HesaiConfigBase
     j["motor_status"] = get().motor_status;
     j["vlan_flag"] = get().vlan_flag;
     j["vlan_id"] = get().vlan_id.value();
-    j.update(to_child_json());
+    j.update(sensor_specifics_to_json());
 
     return j;
   }
 
-  virtual json to_child_json() = 0;
+  virtual json sensor_specifics_to_json() = 0;
   [[nodiscard]] virtual const Internal & get() const = 0;
 };
 
-inline std::ostream & operator<<(std::ostream & os, HesaiConfigBase const & arg)
+inline std::ostream & operator<<(std::ostream & os, HesaiConfigBase & arg)
 {
-  os << "ipaddr: " << arg.get().ipaddr << '\n';
-  os << "mask: " << arg.get().mask << '\n';
-  os << "gateway: " << arg.get().gateway << '\n';
-  os << "dest_ipaddr: " << arg.get().dest_ipaddr << '\n';
-  os << "dest_LiDAR_udp_port: " << arg.get().dest_LiDAR_udp_port << '\n';
-  os << "dest_gps_udp_port: " << arg.get().dest_gps_udp_port << '\n';
-  os << "spin_rate: " << arg.get().spin_rate << '\n';
-  os << "sync: " << +arg.get().sync << '\n';
-  os << "sync_angle: " << arg.get().sync_angle << '\n';
-  os << "start_angle: " << arg.get().start_angle << '\n';
-  os << "stop_angle: " << arg.get().stop_angle << '\n';
-  os << "clock_source: " << +arg.get().clock_source << '\n';
-  os << "udp_seq: " << +arg.get().udp_seq << '\n';
-  os << "trigger_method: " << +arg.get().trigger_method << '\n';
-  os << "return_mode: " << +arg.get().return_mode << '\n';
-  os << "standby_mode: " << +arg.get().standby_mode << '\n';
-  os << "motor_status: " << +arg.get().motor_status << '\n';
-  os << "vlan_flag: " << +arg.get().vlan_flag << '\n';
-  os << "vlan_id: " << arg.get().vlan_id;
+  for (auto & [key, value] : arg.to_json().items()) {
+    os << key << " : " << value << std::endl;
+  }
   return os;
 }
 
-struct HesaiConfig_OT128_AT128: HesaiConfigBase
+struct HesaiConfig_OT128_AT128: public HesaiConfigBase
 {
   struct Internal : HesaiConfigBase::Internal{
     uint8_t gps_nmea_sentence;
@@ -347,9 +347,7 @@ struct HesaiConfig_OT128_AT128: HesaiConfigBase
   {
     return value;
   }
-  Internal value;
-
-  json to_child_json() override
+  json sensor_specifics_to_json() override
   {
     json j;
     j["gps_nmea_sentence"] = value.gps_nmea_sentence;
@@ -358,6 +356,7 @@ struct HesaiConfig_OT128_AT128: HesaiConfigBase
 
     return j;
   }
+  Internal value;
 };
 
 inline std::ostream & operator<<(std::ostream & os, HesaiConfig_OT128_AT128 const & arg)
@@ -378,7 +377,7 @@ inline std::ostream & operator<<(std::ostream & os, HesaiConfig_OT128_AT128 cons
   return os;
 }
 
-struct HesaiConfig_XT_40p: HesaiConfigBase
+struct HesaiConfig_XT_40p: public HesaiConfigBase
 {
   struct Internal : HesaiConfigBase::Internal{
     uint8_t clock_data_fmt;
@@ -392,9 +391,7 @@ struct HesaiConfig_XT_40p: HesaiConfigBase
   {
     return value;
   }
-  Internal value;
-
-  json to_child_json() override
+  json sensor_specifics_to_json() override
   {
     json j;
     j["clock_data_fmt"] = value.clock_data_fmt;
@@ -403,22 +400,13 @@ struct HesaiConfig_XT_40p: HesaiConfigBase
 
     return j;
   }
+  Internal value;
 };
 
-inline std::ostream & operator<<(std::ostream & os, HesaiConfig_XT_40p const & arg)
+inline std::ostream & operator<<(std::ostream & os, HesaiConfig_XT_40p & arg)
 {
-  os << "clock_data_fmt: " << +arg.value.clock_data_fmt;
-  os << ", ";
-  os << "noise_filtering: " << +arg.value.noise_filtering;
-  os << ", ";
-  os << "reflectivity_mapping: " << +arg.value.reflectivity_mapping;
-  os << ", ";
-  os << "reserved: ";
-  for (size_t i = 0; i < sizeof(arg.value.reserved); i++) {
-    if (i != 0) {
-      os << ' ';
-    }
-    os << std::hex << std::setfill('0') << std::setw(2) << (+arg.value.reserved[i]);
+  for (auto & [key, value] : arg.to_json().items()) {
+    os << key << " : " << value << std::endl;
   }
   return os;
 }
@@ -434,15 +422,15 @@ struct HesaiLidarStatusBase
   json to_json()
   {
     json j;
-    j["system_uptime"] = std::to_string(get().system_uptime.value()) + " sec";
+    j["system_uptime"] = std::to_string(get().system_uptime.value()) + " s";
     j["motor_speed"] = std::to_string(get().motor_speed.value()) + " RPM";
-    j.update(to_child_json());
+    j.update(sensor_specifics_to_json());
 
     return j;
   }
   
   // protected:
-  virtual json to_child_json() = 0;
+  virtual json sensor_specifics_to_json() = 0;
  [[nodiscard]] virtual const Internal & get() const = 0;
 
   std::string get_str_gps_pps_lock();
@@ -470,18 +458,20 @@ struct HesaiLidarStatusAT128: public HesaiLidarStatusBase
     unsigned char reserve[1];
   };
   HesaiLidarStatusAT128(Internal value) : value(value) {}
-  json to_child_json() override
+  json sensor_specifics_to_json() override
   {
     json j;
-    j["temp_tx1"] = std::to_string(value.temperature[0].value() * 0.01) + " degree";
-    j["temp_tx2"] = std::to_string(value.temperature[1].value() * 0.01) + " degree";
-    j["fpga_temp"] = std::to_string(value.temperature[2].value() * 0.01) + " degree";
-    j["temp_rx1"] = std::to_string(value.temperature[3].value() * 0.01) + " degree";
-    j["temp_rx2"] = std::to_string(value.temperature[4].value() * 0.01) + " degree";
-    j["temp_mb1"] = std::to_string(value.temperature[5].value() * 0.01) + " degree";
-    j["temp_mb2"] = std::to_string(value.temperature[6].value() * 0.01) + " degree";
-    j["temp_pb"] = std::to_string(value.temperature[7].value() * 0.01) + " degree";
-    j["temp_hot"] = std::to_string(value.temperature[8].value() * 0.01) + " degree";
+    json temperature;
+    temperature["tx1 temperature"] = std::to_string(value.temperature[0].value() * 0.01) + " deg";
+    temperature["tx2 temperature"] = std::to_string(value.temperature[1].value() * 0.01) + " deg";
+    temperature["fpga temperature"] = std::to_string(value.temperature[2].value() * 0.01) + " deg";
+    temperature["rx1 temperature"] = std::to_string(value.temperature[3].value() * 0.01) + " deg";
+    temperature["rx2 temperature"] = std::to_string(value.temperature[4].value() * 0.01) + " deg";
+    temperature["mb1 temperature"] = std::to_string(value.temperature[5].value() * 0.01) + " deg";
+    temperature["mb2 temperature"] = std::to_string(value.temperature[6].value() * 0.01) + " deg";
+    temperature["pb temperature"] = std::to_string(value.temperature[7].value() * 0.01) + " deg";
+    temperature["hot temperature"] = std::to_string(value.temperature[8].value() * 0.01) + " deg";
+    j["temperature"] = temperature;
     j["gps_pps_lock"] = get_str_gps_pps_lock();
     j["gps_gprmc_status"] = get_str_gps_gprmc_status();
     j["startup_times"] = value.startup_times.value();
@@ -496,59 +486,13 @@ struct HesaiLidarStatusAT128: public HesaiLidarStatusBase
     return value;
   }
   Internal value;
-  std::string get_str_gps_pps_lock()
-  {
-    switch (value.gps_pps_lock) {
-      case 1:
-        return "Lock";
-      case 0:
-        return "Unlock";
-      default:
-        return "Unknown";
-    }
-  }
-  std::string get_str_gps_gprmc_status()
-  {
-    switch (value.gps_gprmc_status) {
-      case 1:
-        return "Lock";
-      case 0:
-        return "Unlock";
-      default:
-        return "Unknown";
-    }
-  }
-  std::string get_str_ptp_clock_status()
-  {
-    switch (value.ptp_status) {
-      case 0:
-        return "free run";
-      case 1:
-        return "tracking";
-      case 2:
-        return "locked";
-      case 3:
-        return "frozen";
-      default:
-        return "Unknown";
-    }
-  }
 };
 
-inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusAT128 const & arg)
+inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusAT128 & arg)
 {
-  os << "temperature: " << arg.value.temperature << '\n';
-  os << "gps_pps_lock: " << +arg.value.gps_pps_lock << '\n';
-  os << "gps_gprmc_status: " << +arg.value.gps_gprmc_status << '\n';
-  os << "startup_times: " << arg.value.startup_times << '\n';
-  os << "total_operation_time: " << arg.value.total_operation_time << '\n';
-  os << "ptp_status: " << +arg.value.ptp_status << '\n';
-  for (size_t i = 0; i < sizeof(arg.value.reserve); i++) {
-    if (i != 0) {
-      os << ' ';
-    }
-    os << std::hex << std::setfill('0') << std::setw(2) << (+arg.value.reserve[i]);
-  }  
+  for (auto & [key, value] : arg.to_json().items()) {
+    os << key << " : " << value << std::endl;
+  }
   return os;
 }
 
@@ -569,56 +513,19 @@ struct HesaiLidarStatusOT128: public HesaiLidarStatusBase
   {
     return value;
   }
-  Internal value;
-  std::string get_str_gps_pps_lock()
-  {
-    switch (value.gps_pps_lock) {
-      case 1:
-        return "Lock";
-      case 0:
-        return "Unlock";
-      default:
-        return "Unknown";
-    }
-  }
-  std::string get_str_gps_gprmc_status()
-  {
-    switch (value.gps_gprmc_status) {
-      case 1:
-        return "Lock";
-      case 0:
-        return "Unlock";
-      default:
-        return "Unknown";
-    }
-  }
-  std::string get_str_ptp_clock_status()
-  {
-    switch (value.ptp_status) {
-      case 0:
-        return "free run";
-      case 1:
-        return "tracking";
-      case 2:
-        return "locked";
-      case 3:
-        return "frozen";
-      default:
-        return "Unknown";
-    }
-  }
-
-  json to_child_json() override
+  json sensor_specifics_to_json() override
   {
     json j;
-    j["Bottom circuit board T1 temperature"] = std::to_string(value.temperature[0].value() * 0.01) + " degree";
-    j["Bottom circuit board T2 temperature"] = std::to_string(value.temperature[1].value() * 0.01) + " degree";
-    j["Laser emitting board RT_L1"] = std::to_string(value.temperature[2].value() * 0.01) + " degree";
-    j["Laser emitting board RT_L2"] = std::to_string(value.temperature[3].value() * 0.01) + " degree";
-    j["Laser Receiving board RT_R"] = std::to_string(value.temperature[4].value() * 0.01) + " degree";
-    j["Laser Receiving board RT2"] = std::to_string(value.temperature[5].value() * 0.01) + " degree";
-    j["Top circuit RT3"] = std::to_string(value.temperature[6].value() * 0.01) + " degree";
-    j["Top circuit RT4"] = std::to_string(value.temperature[7].value() * 0.01) + " degree";
+    json temperature;
+    temperature["Bottom circuit board T1 temperature"] = std::to_string(value.temperature[0].value() * 0.01) + " deg";
+    temperature["Bottom circuit board T2 temperature"] = std::to_string(value.temperature[1].value() * 0.01) + " deg";
+    temperature["Laser emitting board RT_L1 temperature"] = std::to_string(value.temperature[2].value() * 0.01) + " deg";
+    temperature["Laser emitting board RT_L2 temperature"] = std::to_string(value.temperature[3].value() * 0.01) + " deg";
+    temperature["Laser Receiving board RT_R temperature"] = std::to_string(value.temperature[4].value() * 0.01) + " deg";
+    temperature["Laser Receiving board RT2 temperature"] = std::to_string(value.temperature[5].value() * 0.01) + " deg";
+    temperature["Top circuit RT3 temperature"] = std::to_string(value.temperature[6].value() * 0.01) + " deg";
+    temperature["Top circuit RT4 temperature"] = std::to_string(value.temperature[7].value() * 0.01) + " deg";
+    j["temperature"] = temperature;
     j["gps_pps_lock"] = get_str_gps_pps_lock();
     j["gps_gprmc_status"] = get_str_gps_gprmc_status();
     j["startup_times"] = value.startup_times.value();
@@ -629,22 +536,13 @@ struct HesaiLidarStatusOT128: public HesaiLidarStatusBase
 
     return j;
   }
+  Internal value;
 };
 
-inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusOT128 const & arg)
+inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusOT128 & arg)
 {
-  os << "temperature: " << arg.value.temperature << '\n';
-  os << "gps_pps_lock: " << +arg.value.gps_pps_lock << '\n';
-  os << "gps_gprmc_status: " << +arg.value.gps_gprmc_status << '\n';
-  os << "startup_times: " << arg.value.startup_times << '\n';
-  os << "total_operation_time: " << arg.value.total_operation_time << '\n';
-  os << "ptp_status: " << +arg.value.ptp_status << '\n';
-  os << "humidity: " << arg.value.humidity << '\n';
-  for (size_t i = 0; i < sizeof(arg.value.reserve); i++) {
-    if (i != 0) {
-      os << ' ';
-    }
-    os << std::hex << std::setfill('0') << std::setw(2) << (+arg.value.reserve[i]);
+  for (auto & [key, value] : arg.to_json().items()) {
+    os << key << " : " << value << std::endl;
   }
   return os;
 }
@@ -665,55 +563,19 @@ struct HesaiLidarStatus_XT_40p: public HesaiLidarStatusBase
   {
     return value;
   }
-  Internal value;
-  std::string get_str_gps_pps_lock()
-  {
-    switch (value.gps_pps_lock) {
-      case 1:
-        return "Lock";
-      case 0:
-        return "Unlock";
-      default:
-        return "Unknown";
-    }
-  }
-  std::string get_str_gps_gprmc_status()
-  {
-    switch (value.gps_gprmc_status) {
-      case 1:
-        return "Lock";
-      case 0:
-        return "Unlock";
-      default:
-        return "Unknown";
-    }
-  }
-  std::string get_str_ptp_clock_status()
-  {
-    switch (value.ptp_status) {
-      case 0:
-        return "free run";
-      case 1:
-        return "tracking";
-      case 2:
-        return "locked";
-      case 3:
-        return "frozen";
-      default:
-        return "Unknown";
-    }
-  }
-  json to_child_json() override
+  json sensor_specifics_to_json() override
   {
     json j;
-    j["Bottom circuit board T1 temperature"] = std::to_string(value.temperature[0].value() * 0.01) + " degree";
-    j["Bottom circuit board T2 temperature"] = std::to_string(value.temperature[1].value() * 0.01) + " degree";
-    j["Laser emitting board RT_L"] = std::to_string(value.temperature[2].value() * 0.01) + " degree";
-    j["Laser emitting board RT_R"] = std::to_string(value.temperature[3].value() * 0.01) + " degree";
-    j["Laser Receiving board RT2"] = std::to_string(value.temperature[4].value() * 0.01) + " degree";
-    j["Top circult RT3"] = std::to_string(value.temperature[5].value() * 0.01) + " degree";
-    j["Top circuit RT4"] = std::to_string(value.temperature[6].value() * 0.01) + " degree";
-    j["Top circuit RT5"] = std::to_string(value.temperature[7].value() * 0.01) + " degree";
+    json temperature;
+    temperature["Bottom circuit board T1 temperature"] = std::to_string(value.temperature[0].value() * 0.01) + " deg";
+    temperature["Bottom circuit board T2 temperature"] = std::to_string(value.temperature[1].value() * 0.01) + " deg";
+    temperature["Laser emitting board RT_L temperature"] = std::to_string(value.temperature[2].value() * 0.01) + " deg";
+    temperature["Laser emitting board RT_R temperature"] = std::to_string(value.temperature[3].value() * 0.01) + " deg";
+    temperature["Laser Receiving board RT2 temperature"] = std::to_string(value.temperature[4].value() * 0.01) + " deg";
+    temperature["Top circult RT3 temperature"] = std::to_string(value.temperature[5].value() * 0.01) + " deg";
+    temperature["Top circuit RT4 temperature"] = std::to_string(value.temperature[6].value() * 0.01) + " deg";
+    temperature["Top circuit RT5 temperature"] = std::to_string(value.temperature[7].value() * 0.01) + " deg";
+    j["temperature"] = temperature;
     j["gps_pps_lock"] = get_str_gps_pps_lock();
     j["gps_gprmc_status"] = get_str_gps_gprmc_status();
     j["startup_times"] = value.startup_times.value();
@@ -723,22 +585,13 @@ struct HesaiLidarStatus_XT_40p: public HesaiLidarStatusBase
 
     return j;
   }
+  Internal value;
 };
 
-inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatus_XT_40p const & arg)
+inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatus_XT_40p & arg)
 {
-  // os << (HesaiLidarStatusBase)(arg) << '\n';
-  os << "temperature: " << arg.value.temperature << '\n';
-  os << "gps_pps_lock: " << +arg.value.gps_pps_lock << '\n';
-  os << "gps_gprmc_status: " << +arg.value.gps_gprmc_status << '\n';
-  os << "startup_times: " << arg.value.startup_times << '\n';
-  os << "total_operation_time: " << arg.value.total_operation_time << '\n';
-  os << "ptp_status: " << +arg.value.ptp_status << '\n';
-  for (size_t i = 0; i < sizeof(arg.value.reserve); i++) {
-    if (i != 0) {
-      os << ' ';
-    }
-    os << std::hex << std::setfill('0') << std::setw(2) << (+arg.value.reserve[i]);
+  for (auto & [key, value] : arg.to_json().items()) {
+    os << key << " : " << value << std::endl;
   }
   return os;
 }
@@ -811,12 +664,11 @@ struct HesaiLidarMonitor_OT128
     j["input_current"] = std::to_string(input_current.value() * 0.01) + " mA";
     j["input_voltage"] = std::to_string(input_voltage.value() * 0.01) + " V";
     j["input_power"] = std::to_string(input_power.value() * 0.01) + " W";
-    j["phase_offset"] = std::to_string(phase_offset.value() * 0.01) + " degree";
+    j["phase_offset"] = std::to_string(phase_offset.value() * 0.01) + " deg";
     j["reserved"] = reserved;
 
     return j;
   }
-
 };
 
 
