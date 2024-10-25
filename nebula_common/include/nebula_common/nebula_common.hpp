@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -343,6 +344,41 @@ enum class SensorModel {
   CONTINENTAL_ARS548,
   CONTINENTAL_SRR520
 };
+
+enum class ConnectionMode {
+  /// No network connection, listen to replayed packets on a ROS 2 topic
+  OFFLINE,
+  /// Passive mode where Nebula does not inquire any settings or diagnostics, only listens via UDP
+  UDP_ONLY,
+  /// Nebula compares settings with the sensor and runs all other functionality, but does not modify
+  /// sensor settings
+  SKIP_SETUP,
+  /// All supported network functionality is enabled
+  FULL
+};
+
+inline std::ostream & operator<<(std::ostream & os, ConnectionMode const & arg)
+{
+  switch (arg) {
+    case ConnectionMode::OFFLINE:
+      return os << "offline";
+    case ConnectionMode::UDP_ONLY:
+      return os << "UDP only";
+    case ConnectionMode::SKIP_SETUP:
+      return os << "skip setup";
+    case ConnectionMode::FULL:
+      return os << "full";
+  }
+}
+
+inline ConnectionMode connection_mode_from_string(const std::string & str)
+{
+  if (str == "offline") return ConnectionMode::OFFLINE;
+  if (str == "udp_only") return ConnectionMode::UDP_ONLY;
+  if (str == "skip_setup") return ConnectionMode::SKIP_SETUP;
+  if (str == "full") return ConnectionMode::FULL;
+  throw std::runtime_error("Unknown connection mode " + str);
+}
 
 /// @brief not used?
 enum class datatype {
