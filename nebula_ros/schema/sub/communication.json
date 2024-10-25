@@ -72,11 +72,7 @@
     "ptp_profile": {
       "type": "string",
       "default": "1588v2",
-      "enum": [
-        "1588v2",
-        "802.1as",
-        "automotive"
-      ],
+      "enum": ["1588v2", "802.1as", "automotive"],
       "description": "PTP profile."
     },
     "ptp_domain": {
@@ -89,19 +85,13 @@
     "ptp_transport_type": {
       "type": "string",
       "default": "UDP",
-      "enum": [
-        "UDP",
-        "L2"
-      ],
+      "enum": ["UDP", "L2"],
       "description": "1588v2 supports 'UDP' or 'L2', other profiles only L2 (HW)."
     },
     "ptp_switch_type": {
       "type": "string",
       "default": "TSN",
-      "enum": [
-        "TSN",
-        "NON_TSN"
-      ],
+      "enum": ["TSN", "NON_TSN"],
       "description": "For automotive profile,'TSN' or 'NON_TSN'."
     },
     "receiver_timeout_sec": {
