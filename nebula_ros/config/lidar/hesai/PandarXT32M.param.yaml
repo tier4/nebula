@@ -8,6 +8,7 @@
     packet_mtu_size: 1500
     launch_hw: true
     setup_sensor: true
+    udp_only: false
     frame_id: hesai
     diag_span: 1000
     min_range: 0.3
