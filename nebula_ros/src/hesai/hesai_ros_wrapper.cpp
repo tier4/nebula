@@ -39,34 +39,34 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
 
-  launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
-  bool use_udp_only = declare_parameter<bool>("udp_only", param_read_only());
+  {
+    auto connection_mode = declare_parameter<std::string>("connection_mode", param_read_only());
+    connection_mode_ = drivers::connection_mode_from_string(connection_mode);
+  }
 
-  if (use_udp_only) {
+  if (connection_mode_ == drivers::ConnectionMode::UDP_ONLY) {
     RCLCPP_INFO_STREAM(
       get_logger(),
       "UDP-only mode is enabled. Settings checks, synchronization, and diagnostics publishing are "
       "disabled.");
   }
 
-  if (launch_hw_) {
-    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_, use_udp_only);
-    if (!use_udp_only) {  // hardware monitor requires TCP connection
+  if (connection_mode_ != drivers::ConnectionMode::OFFLINE) {
+    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_, connection_mode_);
+    // hardware monitor requires TCP connection
+    if (connection_mode_ != drivers::ConnectionMode::UDP_ONLY) {
       hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
     }
   }
 
-  bool force_load_caibration_from_file =
-    use_udp_only;  // Downloading from device requires TCP connection
-  auto calibration_result =
-    get_calibration_data(sensor_cfg_ptr_->calibration_path, force_load_caibration_from_file);
+  auto calibration_result = get_calibration_data(sensor_cfg_ptr_->calibration_path);
   if (!calibration_result.has_value()) {
     throw std::runtime_error(
       (std::stringstream() << "No valid calibration found: " << calibration_result.error()).str());
   }
 
   if (
-    hw_interface_wrapper_ && !use_udp_only &&
+    hw_interface_wrapper_ && connection_mode_ == drivers::ConnectionMode::FULL &&
     sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDARAT128) {
     auto status =
       hw_interface_wrapper_->hw_interface()->checkAndSetLidarRange(*calibration_result.value());
@@ -76,7 +76,9 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     }
   }
 
-  decoder_wrapper_.emplace(this, sensor_cfg_ptr_, calibration_result.value(), launch_hw_);
+  decoder_wrapper_.emplace(
+    this, sensor_cfg_ptr_, calibration_result.value(),
+    connection_mode_ != drivers::ConnectionMode::OFFLINE);
 
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
@@ -86,7 +88,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     }
   });
 
-  if (launch_hw_) {
+  if (connection_mode_ != drivers::ConnectionMode::OFFLINE) {
     hw_interface_wrapper_->hw_interface()->RegisterScanCallback(
       std::bind(&HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1));
     stream_start();
@@ -463,7 +465,9 @@ HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::get_calibration_data(
   }
 
   // If a sensor is connected, try to download and save its calibration data
-  if (!ignore_others && launch_hw_) {
+  if (
+    !ignore_others && connection_mode_ != drivers::ConnectionMode::OFFLINE &&
+    connection_mode_ != drivers::ConnectionMode::UDP_ONLY) {
     try {
       auto raw_data = hw_interface_wrapper_->hw_interface()->GetLidarCalibrationBytes();
       RCLCPP_INFO(logger, "Downloaded calibration data from sensor.");
