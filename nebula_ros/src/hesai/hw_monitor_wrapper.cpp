@@ -227,9 +227,8 @@ void HesaiHwMonitorWrapper::HesaiCheckStatus(diagnostic_updater::DiagnosticStatu
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
     json data = current_status_->to_json();
-    for (const auto & [key, value] : data.items()) {
-      diagnostics.add(key, value);
-      std::cout << key << " : " << value << std::endl;
+    if(data.contains("motor_speed")) {
+      diagnostics.add("motor_speed", data["motor_speed"]);
     }
   } else {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
@@ -245,7 +244,6 @@ void HesaiHwMonitorWrapper::HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWr
   json data = current_status_->to_json();
     for (const auto & [key, value] : data.items()) {
       diagnostics.add(key, value);
-      
     } 
   diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   }else {
@@ -260,10 +258,8 @@ void HesaiHwMonitorWrapper::HesaiCheckTemperature(diagnostic_updater::Diagnostic
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
     json data = current_status_->to_json();
-    for (const auto & [key, value] : data.items()) {
-      // Skip execpt temperature
-      if (key != "temperature") {continue;}
-      for (const auto & [key, value] : value.items()) {
+    if (data.contains("temperature")) {
+      for (const auto & [key, value] : data["temperature"].items()) {
         diagnostics.add(key, value);  
       }
     }
@@ -280,10 +276,8 @@ void HesaiHwMonitorWrapper::HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWr
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
     json data = current_status_->to_json();
-    for (const auto & [key, value] : data.items()) {
-      if(key == "motor_speed") {
-        diagnostics.add(key, value);
-      }
+    if(data.contains("motor_speed")) {
+      diagnostics.add("motor_speed", data["motor_speed"]);
     }
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {

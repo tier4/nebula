@@ -22,6 +22,7 @@
 #include <array>
 #include <cstdint>
 #include <ostream>
+#include <queue>
 #include <sstream>
 #include <string>
 #include <nlohmann/json.hpp>
@@ -280,27 +281,38 @@ struct HesaiConfigBase
   json to_json()
   {
     json j;
-    std::stringstream ss;
-    ss << static_cast<int>(get().ipaddr[0]) << "."
-       << static_cast<int>(get().ipaddr[1]) << "."
-       << static_cast<int>(get().ipaddr[2]) << "."
-       << static_cast<int>(get().ipaddr[3]);
-    j["ipaddr"] = ss.str();
-    ss << static_cast<int>(get().mask[0]) << "."
-       << static_cast<int>(get().mask[1]) << "."
-       << static_cast<int>(get().mask[2]) << "."
-       << static_cast<int>(get().mask[3]);
-    j["mask"] = ss.str();
-    ss << static_cast<int>(get().gateway[0]) << "."
-       << static_cast<int>(get().gateway[1]) << "."
-       << static_cast<int>(get().gateway[2]) << "."
-       << static_cast<int>(get().gateway[3]);
-    j["gateway"] = ss.str();
-    ss << static_cast<int>(get().dest_ipaddr[0]) << "."
-       << static_cast<int>(get().dest_ipaddr[1]) << "."
-       << static_cast<int>(get().dest_ipaddr[2]) << "."
-       << static_cast<int>(get().dest_ipaddr[3]);
-    j["dest_ipaddr"] = ss.str();
+    {
+      std::stringstream ss;
+      ss << static_cast<int>(get().ipaddr[0]) << "."
+        << static_cast<int>(get().ipaddr[1]) << "."
+        << static_cast<int>(get().ipaddr[2]) << "."
+        << static_cast<int>(get().ipaddr[3]);
+      j["ipaddr"] = ss.str();
+    }
+    {
+      std::stringstream ss;
+      ss << static_cast<int>(get().mask[0]) << "."
+        << static_cast<int>(get().mask[1]) << "."
+        << static_cast<int>(get().mask[2]) << "."
+        << static_cast<int>(get().mask[3]);
+      j["mask"] = ss.str();
+    }
+    {
+      std::stringstream ss;
+      ss << static_cast<int>(get().gateway[0]) << "."
+        << static_cast<int>(get().gateway[1]) << "."
+        << static_cast<int>(get().gateway[2]) << "."
+        << static_cast<int>(get().gateway[3]);
+      j["gateway"] = ss.str();
+    }
+    {
+      std::stringstream ss;
+      ss << static_cast<int>(get().dest_ipaddr[0]) << "."
+        << static_cast<int>(get().dest_ipaddr[1]) << "."
+        << static_cast<int>(get().dest_ipaddr[2]) << "."
+        << static_cast<int>(get().dest_ipaddr[3]);
+      j["dest_ipaddr"] = ss.str();
+    }
     j["dest_LiDAR_udp_port"] = get().dest_LiDAR_udp_port.value();
     j["dest_gps_udp_port"] = get().dest_gps_udp_port.value();
     j["spin_rate"] = std::to_string(get().spin_rate.value()) + " RPM";
@@ -321,8 +333,10 @@ struct HesaiConfigBase
     return j;
   }
 
-  virtual json sensor_specifics_to_json() = 0;
   [[nodiscard]] virtual const Internal & get() const = 0;
+
+  protected:
+    virtual json sensor_specifics_to_json() = 0;
 };
 
 inline std::ostream & operator<<(std::ostream & os, HesaiConfigBase & arg)
@@ -356,23 +370,14 @@ struct HesaiConfig_OT128_AT128: public HesaiConfigBase
 
     return j;
   }
-  Internal value;
+  private:
+    Internal value;
 };
 
-inline std::ostream & operator<<(std::ostream & os, HesaiConfig_OT128_AT128 const & arg)
+inline std::ostream & operator<<(std::ostream & os, HesaiConfig_OT128_AT128 & arg)
 {
-  os << "gps_nmea_sentence: " << +arg.value.gps_nmea_sentence;
-  os << ", ";
-  os << "noise_filtering: " << +arg.value.noise_filtering;
-  os << ", ";
-  os << "reflectivity_mapping: " << +arg.value.reflectivity_mapping;
-  os << ", ";
-  os << "reserved: ";
-  for (size_t i = 0; i < sizeof(arg.value.reserved); i++) {
-    if (i != 0) {
-      os << ' ';
-    }
-    os << std::hex << std::setfill('0') << std::setw(2) << (+arg.value.reserved[i]);
+  for (auto & [key, value] : arg.to_json().items()) {
+    os << key << " : " << value << std::endl;
   }
   return os;
 }
@@ -400,7 +405,8 @@ struct HesaiConfig_XT_40p: public HesaiConfigBase
 
     return j;
   }
-  Internal value;
+  private:
+    Internal value;
 };
 
 inline std::ostream & operator<<(std::ostream & os, HesaiConfig_XT_40p & arg)
@@ -429,9 +435,10 @@ struct HesaiLidarStatusBase
     return j;
   }
   
-  // protected:
-  virtual json sensor_specifics_to_json() = 0;
  [[nodiscard]] virtual const Internal & get() const = 0;
+
+  protected:
+    virtual json sensor_specifics_to_json() = 0;
 
   std::string get_str_gps_pps_lock(uint8_t value)
   {
@@ -489,7 +496,7 @@ struct HesaiLidarStatusAT128: public HesaiLidarStatusBase
     big_int32_buf_t startup_times;
     big_int32_buf_t total_operation_time;
     uint8_t ptp_status;
-    unsigned char reserve[1];
+    unsigned char reserved[1];
   };
   HesaiLidarStatusAT128(Internal value) : value(value) {}
   json sensor_specifics_to_json() override
@@ -511,7 +518,7 @@ struct HesaiLidarStatusAT128: public HesaiLidarStatusBase
     j["startup_times"] = value.startup_times.value();
     j["total_operation_time"] = std::to_string(value.total_operation_time.value()) + " min";
     j["ptp_status"] = get_str_ptp_clock_status(value.ptp_status);
-    j["reserve"] = value.reserve;
+    j["reserved"] = value.reserved;
 
     return j;
   }
@@ -519,7 +526,8 @@ struct HesaiLidarStatusAT128: public HesaiLidarStatusBase
   {
     return value;
   }
-  Internal value;
+  private:
+    Internal value;
 };
 
 inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusAT128 & arg)
@@ -540,7 +548,7 @@ struct HesaiLidarStatusOT128: public HesaiLidarStatusBase
     big_int32_buf_t total_operation_time;
     uint8_t ptp_status;
     big_uint32_buf_t humidity;
-    unsigned char reserve[1];
+    unsigned char reserved[1];
   };
   HesaiLidarStatusOT128(Internal value) : value(value) {}
   [[nodiscard]] const HesaiLidarStatusBase::Internal & get() const override
@@ -566,11 +574,12 @@ struct HesaiLidarStatusOT128: public HesaiLidarStatusBase
     j["total_operation_time"] = std::to_string(value.total_operation_time.value()) + " min";
     j["ptp_status"] = get_str_ptp_clock_status(value.ptp_status);
     j["humidity"] = std::to_string(value.humidity.value() * 0.1) + " %";
-    j["reserve"] = value.reserve;
+    j["reserved"] = value.reserved;
 
     return j;
   }
-  Internal value;
+  private:
+    Internal value;
 };
 
 inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusOT128 & arg)
@@ -590,7 +599,7 @@ struct HesaiLidarStatus_XT_40p: public HesaiLidarStatusBase
     big_int32_buf_t startup_times;
     big_int32_buf_t total_operation_time;
     uint8_t ptp_status;
-    unsigned char reserve[5];
+    unsigned char reserved[5];
   };
   HesaiLidarStatus_XT_40p(Internal value) : value(value) {}
   [[nodiscard]] const HesaiLidarStatusBase::Internal & get() const override
@@ -615,11 +624,12 @@ struct HesaiLidarStatus_XT_40p: public HesaiLidarStatusBase
     j["startup_times"] = value.startup_times.value();
     j["total_operation_time"] = std::to_string(value.total_operation_time.value()) + " min";
     j["ptp_status"] = get_str_ptp_clock_status(value.ptp_status);
-    j["reserve"] = value.reserve;
+    j["reserved"] = value.reserved;
 
     return j;
   }
-  Internal value;
+  private:
+    Internal value;
 };
 
 inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatus_XT_40p & arg)
