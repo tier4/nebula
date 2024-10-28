@@ -227,8 +227,9 @@ void HesaiHwMonitorWrapper::HesaiCheckStatus(diagnostic_updater::DiagnosticStatu
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
     json data = current_status_->to_json();
-    if(data.contains("motor_speed")) {
-      diagnostics.add("motor_speed", data["motor_speed"]);
+    for (const auto & [key, value] : data.items()) {
+      if (key == "motor_speed" || key == "temperature") continue;
+      diagnostics.add(key, value);
     }
   } else {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
