@@ -7,12 +7,29 @@
 #include <nebula_common/nebula_common.hpp>
 #include <nlohmann/json.hpp>
 
+#include <diagnostic_msgs/msg/detail/diagnostic_status__struct.hpp>
+
 #include <string>
 
 namespace nebula::ros
 {
 
 using nlohmann::json;
+
+void HesaiHwMonitorWrapper::add_json_item_to_diagnostics(
+  diagnostic_updater::DiagnosticStatusWrapper & diagnostics, const std::string & key,
+  const json & value)
+{
+  if (key.find("reserved") != std::string::npos) return;
+
+  switch (value.type()) {
+    case nlohmann::detail::value_t::string:
+      diagnostics.add(key, value.template get<std::string>());
+      break;
+    default:
+      diagnostics.add(key, value.dump());
+  }
+}
 
 HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   rclcpp::Node * const parent_node,
@@ -240,8 +257,9 @@ void HesaiHwMonitorWrapper::hesai_check_status(
     json data = current_status_->to_json();
     for (const auto & [key, value] : data.items()) {
       if (key == "motor_speed" || key == "temperature") continue;
-      diagnostics.add(key, value);
+      add_json_item_to_diagnostics(diagnostics, key, value);
     }
+    diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "");
   } else {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
   }
@@ -256,7 +274,7 @@ void HesaiHwMonitorWrapper::hesai_check_ptp(
   if (current_status_) {
     json data = current_status_->to_json();
     for (const auto & [key, value] : data.items()) {
-      diagnostics.add(key, value);
+      add_json_item_to_diagnostics(diagnostics, key, value);
     }
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
@@ -274,7 +292,7 @@ void HesaiHwMonitorWrapper::hesai_check_temperature(
     json data = current_status_->to_json();
     if (data.contains("temperature")) {
       for (const auto & [key, value] : data["temperature"].items()) {
-        diagnostics.add(key, value);
+        add_json_item_to_diagnostics(diagnostics, key, value);
       }
     }
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
@@ -292,7 +310,7 @@ void HesaiHwMonitorWrapper::hesai_check_rpm(
     std::vector<std::string> msg;
     json data = current_status_->to_json();
     if (data.contains("motor_speed")) {
-      diagnostics.add("motor_speed", data["motor_speed"]);
+      add_json_item_to_diagnostics(diagnostics, "motor_speed", data["motor_speed"]);
     }
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
@@ -317,7 +335,7 @@ void HesaiHwMonitorWrapper::hesai_check_voltage_http(
       level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
       mes = MSG_ERROR_ + std::string(ex.what());
     }
-    diagnostics.add(key, mes);
+    add_json_item_to_diagnostics(diagnostics, key, mes);
     key = "lidarInVol";
     try {
       mes = get_ptree_value(current_lidar_monitor_tree_.get(), "Body." + key);
@@ -325,7 +343,7 @@ void HesaiHwMonitorWrapper::hesai_check_voltage_http(
       level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
       mes = MSG_ERROR_ + std::string(ex.what());
     }
-    diagnostics.add(key, mes);
+    add_json_item_to_diagnostics(diagnostics, key, mes);
 
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
@@ -342,7 +360,7 @@ void HesaiHwMonitorWrapper::hesai_check_voltage(
     std::vector<std::string> msg;
     json data = current_monitor_->to_json();
     for (const auto & [key, value] : data.items()) {
-      diagnostics.add(key, value);
+      add_json_item_to_diagnostics(diagnostics, key, value);
     }
 
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));

@@ -30,6 +30,7 @@
 
 namespace nebula::ros
 {
+
 class HesaiHwMonitorWrapper
 {
 public:
@@ -46,6 +47,10 @@ public:
   nebula::Status status();
 
 private:
+  static void add_json_item_to_diagnostics(
+    diagnostic_updater::DiagnosticStatusWrapper & diagnostics, const std::string & key,
+    const json & value);
+
   void initialize_hesai_diagnostics();
 
   std::string get_ptree_value(boost::property_tree::ptree * pt, const std::string & key);
