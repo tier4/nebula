@@ -344,7 +344,7 @@ inline std::ostream & operator<<(std::ostream & os, HesaiConfigBase & arg)
 
 struct HesaiConfig_OT128_AT128 : public HesaiConfigBase
 {
-  struct Internal : HesaiConfigBase::Internal
+  struct Internal : public HesaiConfigBase::Internal
   {
     uint8_t gps_nmea_sentence;
     uint8_t noise_filtering;
@@ -353,7 +353,9 @@ struct HesaiConfig_OT128_AT128 : public HesaiConfigBase
   };
 
   explicit HesaiConfig_OT128_AT128(Internal value) : value(value) {}
+
   [[nodiscard]] const HesaiConfigBase::Internal & get() const override { return value; }
+
   json sensor_specifics_to_json() override
   {
     json j;
@@ -378,7 +380,7 @@ inline std::ostream & operator<<(std::ostream & os, HesaiConfig_OT128_AT128 & ar
 
 struct HesaiConfig_XT_40p : public HesaiConfigBase
 {
-  struct Internal : HesaiConfigBase::Internal
+  struct Internal : public HesaiConfigBase::Internal
   {
     uint8_t clock_data_fmt;
     uint8_t noise_filtering;
@@ -387,7 +389,9 @@ struct HesaiConfig_XT_40p : public HesaiConfigBase
   };
 
   explicit HesaiConfig_XT_40p(Internal value) : value(value) {}
+
   [[nodiscard]] const HesaiConfigBase::Internal & get() const override { return value; }
+
   json sensor_specifics_to_json() override
   {
     json j;
@@ -493,7 +497,9 @@ struct HesaiLidarStatusAT128 : public HesaiLidarStatusBase
     uint8_t ptp_status;
     unsigned char reserved[1];
   };
+
   explicit HesaiLidarStatusAT128(Internal value) : value(value) {}
+
   json sensor_specifics_to_json() override
   {
     json j;
@@ -545,7 +551,9 @@ struct HesaiLidarStatusOT128 : public HesaiLidarStatusBase
     unsigned char reserved[1];
   };
   explicit HesaiLidarStatusOT128(Internal value) : value(value) {}
+
   [[nodiscard]] const HesaiLidarStatusBase::Internal & get() const override { return value; }
+
   json sensor_specifics_to_json() override
   {
     json j;
@@ -603,7 +611,9 @@ struct HesaiLidarStatus_XT_40p : public HesaiLidarStatusBase
     unsigned char reserved[5];
   };
   explicit HesaiLidarStatus_XT_40p(Internal value) : value(value) {}
+
   [[nodiscard]] const HesaiLidarStatusBase::Internal & get() const override { return value; }
+
   json sensor_specifics_to_json() override
   {
     json j;
