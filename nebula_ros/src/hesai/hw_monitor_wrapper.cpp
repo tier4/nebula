@@ -256,7 +256,12 @@ void HesaiHwMonitorWrapper::hesai_check_status(
   if (current_status_) {
     json data = current_status_->to_json();
     for (const auto & [key, value] : data.items()) {
-      if (key == "motor_speed" || key == "temperature") continue;
+      if (
+        key == "motor_speed" || key == "temperature" ||
+        (key.find("ptp") != std::string::npos || key.find("gps") != std::string::npos)) {
+        continue;
+      }
+
       add_json_item_to_diagnostics(diagnostics, key, value);
     }
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "");
@@ -274,6 +279,10 @@ void HesaiHwMonitorWrapper::hesai_check_ptp(
   if (current_status_) {
     json data = current_status_->to_json();
     for (const auto & [key, value] : data.items()) {
+      if (key.find("ptp") == std::string::npos && key.find("gps") == std::string::npos) {
+        continue;
+      }
+
       add_json_item_to_diagnostics(diagnostics, key, value);
     }
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
