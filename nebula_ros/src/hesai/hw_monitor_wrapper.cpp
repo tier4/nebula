@@ -273,8 +273,8 @@ void HesaiHwMonitorWrapper::hesai_check_status(
 void HesaiHwMonitorWrapper::hesai_check_ptp(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::vector<std::string> msg;
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+  std::string msg = "not synchronized";
   std::scoped_lock lock(mtx_lidar_status_);
   if (current_status_) {
     json data = current_status_->to_json();
@@ -283,9 +283,17 @@ void HesaiHwMonitorWrapper::hesai_check_ptp(
         continue;
       }
 
+      if (value.type() == json::value_t::string) {
+        auto str = value.template get<std::string>();
+        if (str == "Lock" || str == "locked") {
+          level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+          msg = "synchronized";
+        }
+      }
+
       add_json_item_to_diagnostics(diagnostics, key, value);
     }
-    diagnostics.summary(level, boost::algorithm::join(msg, ", "));
+    diagnostics.summary(level, msg);
   } else {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "No data available");
   }
