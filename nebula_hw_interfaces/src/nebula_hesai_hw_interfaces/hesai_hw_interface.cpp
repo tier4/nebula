@@ -3,7 +3,12 @@
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
 
 #include "nebula_common/hesai/hesai_common.hpp"
+#include "nebula_common/hesai/hesai_status.hpp"
 #include "nebula_common/nebula_status.hpp"
+#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
+
+#include <nlohmann/json.hpp>
+#include <rclcpp/logging.hpp>
 
 #include <boost/asio/socket_base.hpp>
 
@@ -23,6 +28,10 @@
 
 namespace nebula::drivers
 {
+
+using std::string_literals::operator""s;
+using nlohmann::json;
+
 HesaiHwInterface::HesaiHwInterface()
 : cloud_io_context_{new ::drivers::common::IoContext(1)},
   m_owned_ctx{new boost::asio::io_context(1)},
@@ -327,11 +336,33 @@ HesaiPtpDiagGrandmaster HesaiHwInterface::GetPtpDiagGrandmaster()
   return diag_grandmaster;
 }
 
-HesaiInventory HesaiHwInterface::GetInventory()
+std::shared_ptr<HesaiInventoryBase> HesaiHwInterface::GetInventory()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_GET_INVENTORY_INFO);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
-  return CheckSizeAndParse<HesaiInventory>(response);
+
+  switch (sensor_configuration_->sensor_model) {
+    case SensorModel::HESAI_PANDARXT32:
+    case SensorModel::HESAI_PANDAR40P: {
+      auto lidar_config = CheckSizeAndParse<HesaiInventory_XT32_40P::Internal>(response);
+      return std::make_shared<HesaiInventory_XT32_40P>(lidar_config);
+    }
+    case SensorModel::HESAI_PANDARQT128: {
+      auto lidar_config = CheckSizeAndParse<HesaiInventory_QT128::Internal>(response);
+      return std::make_shared<HesaiInventory_QT128>(lidar_config);
+    }
+    case SensorModel::HESAI_PANDARAT128: {
+      auto lidar_config = CheckSizeAndParse<HesaiInventory_AT128::Internal>(response);
+      return std::make_shared<HesaiInventory_AT128>(lidar_config);
+    }
+    case SensorModel::HESAI_PANDAR128_E4X: {
+      auto lidar_config = CheckSizeAndParse<HesaiInventory_OT128::Internal>(response);
+      return std::make_shared<HesaiInventory_OT128>(lidar_config);
+    }
+    default: {
+      throw std::runtime_error("Not supported for this LiDAR model");
+    }
+  }
 }
 
 std::shared_ptr<HesaiConfigBase> HesaiHwInterface::GetConfig()
@@ -662,7 +693,7 @@ Status HesaiHwInterface::SetRotDir(int mode)
   return Status::OK;
 }
 
-HesaiLidarMonitor_OT128 HesaiHwInterface::GetLidarMonitor()
+HesaiLidarMonitor HesaiHwInterface::GetLidarMonitor()
 {
   if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
     throw std::runtime_error("Not supported on this sensor");
@@ -670,7 +701,7 @@ HesaiLidarMonitor_OT128 HesaiHwInterface::GetLidarMonitor()
 
   auto response_or_err = SendReceive(PTC_COMMAND_LIDAR_MONITOR);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
-  return CheckSizeAndParse<HesaiLidarMonitor_OT128>(response);
+  return CheckSizeAndParse<HesaiLidarMonitor>(response);
 }
 
 void HesaiHwInterface::IOContextRun()
@@ -714,6 +745,29 @@ HesaiStatus HesaiHwInterface::GetHttpClientDriverOnce(
 void HesaiHwInterface::str_cb(const std::string & str)
 {
   PrintInfo(str);
+}
+
+std::pair<HesaiStatus, std::string> HesaiHwInterface::unwrap_http_response(
+  const std::string & response)
+{
+  json j;
+  try {
+    j = json::parse(response);
+  } catch (const json::parse_error & e) {
+    return {Status::ERROR_1, "JSON response malformed: "s + e.what()};
+  }
+
+  if (!j.contains("Head") || !j["Head"].contains("ErrorCode") || !j["Head"].contains("Message")) {
+    return {Status::ERROR_1, "Unexpected JSON structure"};
+  }
+
+  json error_code = j["Head"]["ErrorCode"];
+  json message = j["Head"]["Message"];
+  if (error_code == "0") {
+    return {Status::OK, message};
+  }
+
+  return {Status::ERROR_1, message};
 }
 
 HesaiStatus HesaiHwInterface::SetSpinSpeedAsyncHttp(
@@ -776,8 +830,7 @@ HesaiStatus HesaiHwInterface::SetPtpConfigSyncHttp(
               logMinDelayReqInterval % 0)
                .str());
   ctx->run();
-  PrintInfo(response);
-  return Status::OK;
+  return unwrap_http_response(response).first;
 }
 
 HesaiStatus HesaiHwInterface::SetPtpConfigSyncHttp(
@@ -803,11 +856,9 @@ HesaiStatus HesaiHwInterface::SetSyncAngleSyncHttp(
                                 "}") %
                   enable % angle)
                    .str();
-  PrintInfo(tmp_str);
   auto response = hcd->get(tmp_str);
   ctx->run();
-  PrintInfo(response);
-  return Status::OK;
+  return unwrap_http_response(response).first;
 }
 
 HesaiStatus HesaiHwInterface::SetSyncAngleSyncHttp(int enable, int angle)
@@ -1366,8 +1417,11 @@ T HesaiHwInterface::CheckSizeAndParse(const std::vector<uint8_t> & data)
 {
   if (data.size() < sizeof(T)) {
     throw std::runtime_error("Attempted to parse too-small payload");
-  } else if (data.size() > sizeof(T)) {
-    PrintError("Sensor returned longer payload than expected. Will parse anyway.");
+  }
+
+  if (data.size() > sizeof(T)) {
+    RCLCPP_WARN_ONCE(
+      *parent_node_logger, "Sensor returned longer payload than expected. Will parse anyway.");
   }
 
   T parsed;

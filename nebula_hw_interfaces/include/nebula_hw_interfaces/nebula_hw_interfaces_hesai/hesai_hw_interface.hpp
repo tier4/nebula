@@ -17,6 +17,8 @@
 // Have to define macros to silence warnings about deprecated headers being used by
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
+#include "nebula_common/nebula_status.hpp"
+
 #include <boost/version.hpp>
 
 #include <cstddef>
@@ -43,6 +45,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace nebula::drivers
@@ -195,6 +198,8 @@ private:
   /// @return The returned payload, if successful, or nullptr.
   ptc_cmd_result_t SendReceive(const uint8_t command_id, const std::vector<uint8_t> & payload = {});
 
+  static std::pair<HesaiStatus, std::string> unwrap_http_response(const std::string & response);
+
 public:
   /// @brief Constructor
   HesaiHwInterface();
@@ -258,7 +263,7 @@ public:
   HesaiPtpDiagGrandmaster GetPtpDiagGrandmaster();
   /// @brief Getting data with PTC_COMMAND_GET_INVENTORY_INFO
   /// @return Resulting status
-  HesaiInventory GetInventory();
+  std::shared_ptr<HesaiInventoryBase> GetInventory();
   /// @brief Getting data with PTC_COMMAND_GET_CONFIG_INFO
   /// @return Resulting status
   std::shared_ptr<HesaiConfigBase> GetConfig();
@@ -368,7 +373,7 @@ public:
   Status SetRotDir(int mode);
   /// @brief Getting data with PTC_COMMAND_LIDAR_MONITOR
   /// @return Resulting status
-  HesaiLidarMonitor_OT128 GetLidarMonitor();
+  HesaiLidarMonitor GetLidarMonitor();
 
   /// @brief Call run() of IO Context
   void IOContextRun();

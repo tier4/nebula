@@ -15,23 +15,28 @@
 #ifndef HESAI_CMD_RESPONSE_HPP
 #define HESAI_CMD_RESPONSE_HPP
 
+#include <nebula_common/util/string_conversions.hpp>
 #include <nlohmann/json.hpp>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/endian/buffers.hpp>
 #include <boost/format.hpp>
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <iomanip>
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 using namespace boost::endian;  // NOLINT(build/namespaces)
 namespace nebula
 {
-using nlohmann::json;
+
+using nebula::util::to_string;
+using nlohmann::ordered_json;
 
 #pragma pack(push, 1)
 
@@ -57,7 +62,7 @@ struct HesaiPtpDiagStatus
 /// @brief PTP TLV PORT_DATA_SET struct of PTC_COMMAND_PTP_DIAGNOSTICS
 struct HesaiPtpDiagPort
 {
-  uint8_t portIdentity[10];
+  char portIdentity[10];
   big_int32_buf_t portState;
   big_int32_buf_t logMinDelayReqInterval;
   big_int64_buf_t peerMeanPathDelay;
@@ -70,7 +75,7 @@ struct HesaiPtpDiagPort
 
   friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpDiagPort const & arg)
   {
-    os << "portIdentity: " << std::string(std::begin(arg.portIdentity), std::end(arg.portIdentity));
+    os << "portIdentity: " << to_string(arg.portIdentity);
     os << ", ";
     os << "portState: " << arg.portState;
     os << ", ";
@@ -153,75 +158,64 @@ struct HesaiPtpDiagGrandmaster
 };
 
 /// @brief struct of PTC_COMMAND_GET_INVENTORY_INFO
-struct HesaiInventory
+struct HesaiInventoryBase
 {
-  char sn[18];
-  char date_of_manufacture[16];
-  uint8_t mac[6];
-  char sw_ver[16];
-  char hw_ver[16];
-  char control_fw_ver[16];
-  char sensor_fw_ver[16];
-  big_uint16_buf_t angle_offset;
-  uint8_t model;
-  uint8_t motor_type;
-  uint8_t num_of_lines;
-  uint8_t reserved[11];
-
-  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiInventory const & arg)
+  struct Internal
   {
-    std::ios initial_format(nullptr);
-    initial_format.copyfmt(os);
+    char sn[18];
+    char date_of_manufacture[16];
+    uint8_t mac[6];
+    char sw_ver[16];
+    char hw_ver[16];
+    char control_fw_ver[16];
+    char sensor_fw_ver[16];
+  };
 
-    os << "sn: " << std::string(arg.sn, strnlen(arg.sn, sizeof(arg.sn)));
-    os << ", ";
-    os << "date_of_manufacture: "
-       << std::string(
-            arg.date_of_manufacture,
-            strnlen(arg.date_of_manufacture, sizeof(arg.date_of_manufacture)));
-    os << ", ";
-    os << "mac: ";
+  [[nodiscard]] ordered_json to_json() const
+  {
+    const Internal & val = get();
+    ordered_json j;
+    j["sn"] = to_string(val.sn);
+    j["date_of_manufacture"] = to_string(val.date_of_manufacture);
 
-    for (size_t i = 0; i < sizeof(arg.mac); i++) {
-      if (i != 0) {
-        os << ':';
+    {
+      std::stringstream ss;
+      for (size_t i = 0; i < sizeof(val.mac); i++) {
+        if (i != 0) {
+          ss << ':';
+        }
+        ss << std::hex << std::setfill('0') << std::setw(2) << (+val.mac[i]);
       }
-      os << std::hex << std::setfill('0') << std::setw(2) << (+arg.mac[i]);
+      j["mac"] = ss.str();
     }
-    os.copyfmt(initial_format);
 
-    os << ", ";
-    os << "sw_ver: " << std::string(arg.sw_ver, strnlen(arg.sw_ver, sizeof(arg.sw_ver)));
-    os << ", ";
-    os << "hw_ver: " << std::string(arg.hw_ver, strnlen(arg.hw_ver, sizeof(arg.hw_ver)));
-    os << ", ";
-    os << "control_fw_ver: "
-       << std::string(arg.control_fw_ver, strnlen(arg.control_fw_ver, sizeof(arg.control_fw_ver)));
-    os << ", ";
-    os << "sensor_fw_ver: "
-       << std::string(arg.sensor_fw_ver, strnlen(arg.sensor_fw_ver, sizeof(arg.sensor_fw_ver)));
-    os << ", ";
-    os << "angle_offset: " << arg.angle_offset;
-    os << ", ";
-    os << "model: " << +arg.model;
-    os << ", ";
-    os << "motor_type: " << +arg.motor_type;
-    os << ", ";
-    os << "num_of_lines: " << +arg.num_of_lines;
-    os << ", ";
+    j["sw_ver"] = to_string(val.sw_ver);
+    j["hw_ver"] = to_string(val.hw_ver);
+    j["control_fw_ver"] = to_string(val.control_fw_ver);
+    j["sensor_fw_ver"] = to_string(val.sensor_fw_ver);
+    j.update(sensor_specifics_to_json());
 
-    for (size_t i = 0; i < sizeof(arg.reserved); i++) {
-      if (i != 0) {
-        os << ' ';
-      }
-      os << std::hex << std::setfill('0') << std::setw(2) << (+arg.reserved[i]);
-    }
-    os.copyfmt(initial_format);
-
-    return os;
+    return j;
   }
 
-  std::string get_str_model() const
+  [[nodiscard]] virtual uint8_t model_number() const = 0;
+
+  [[nodiscard]] virtual const Internal & get() const = 0;
+
+protected:
+  [[nodiscard]] virtual ordered_json sensor_specifics_to_json() const = 0;
+
+  friend std::ostream & operator<<(std::ostream & os, const HesaiInventoryBase & arg)
+  {
+    ordered_json j = arg.to_json();
+    std::vector<std::string> kv_pairs;
+    for (const auto & [key, value] : j.items()) {
+      kv_pairs.emplace_back(key + ": " + to_string(value));
+    }
+    return os << boost::algorithm::join(kv_pairs, ", ");
+  }
+
+  [[nodiscard]] std::string get_str_model(uint8_t model) const
   {
     switch (model) {
       case 0:
@@ -246,12 +240,174 @@ struct HesaiInventory
         return "PandarXT32M";
       case 42:
         return "OT128";
+      case 40:
       case 48:
         return "PandarAT128";
       default:
         return "Unknown(" + std::to_string(static_cast<int>(model)) + ")";
     }
   }
+
+  [[nodiscard]] std::string get_motor_type(uint8_t motor_type) const
+  {
+    switch (motor_type) {
+      case 0:
+        return "unidirectional";
+      case 1:
+        return "bidirectional";
+      default:
+        return "unknown";
+    }
+  }
+};
+
+struct HesaiInventory_OT128 : public HesaiInventoryBase
+{
+  struct Internal : public HesaiInventoryBase::Internal
+  {
+    big_int16_buf_t zero_angle_offset;
+    uint8_t product_model;
+    uint8_t motor_type;
+    uint8_t num_of_lines;
+    char pn[32];
+    uint8_t customer_pn_enable;
+    char customer_pn[20];
+  };
+
+  explicit HesaiInventory_OT128(Internal value) : value(value) {}
+
+  [[nodiscard]] uint8_t model_number() const override { return value.product_model; }
+
+  [[nodiscard]] const HesaiInventoryBase::Internal & get() const override { return value; }
+
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
+  {
+    ordered_json j;
+    j["zero_angle_offset"] = value.zero_angle_offset.value();
+    j["model"] = get_str_model(value.product_model);
+    j["motor_type"] = get_motor_type(value.motor_type);
+    j["num_of_lines"] = value.num_of_lines;
+    j["pn"] = to_string(value.pn);
+
+    if (value.customer_pn_enable) {
+      j["customer_pn"] = to_string(value.customer_pn);
+    }
+
+    return j;
+  }
+
+private:
+  Internal value;
+};
+
+struct HesaiInventory_XT32_40P : public HesaiInventoryBase
+{
+  struct Internal : public HesaiInventoryBase::Internal
+  {
+    big_int16_buf_t zero_angle_offset;
+    uint8_t product_model;
+    uint8_t motor_type;
+    uint8_t num_of_lines;
+    uint8_t reserved[11];
+  };
+
+  explicit HesaiInventory_XT32_40P(Internal value) : value(value) {}
+
+  [[nodiscard]] uint8_t model_number() const override { return value.product_model; }
+
+  [[nodiscard]] const HesaiInventoryBase::Internal & get() const override { return value; }
+
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
+  {
+    ordered_json j;
+    j["zero_angle_offset"] = value.zero_angle_offset.value();
+    j["model"] = get_str_model(value.product_model);
+    j["motor_type"] = get_motor_type(value.motor_type);
+    j["num_of_lines"] = value.num_of_lines;
+    return j;
+  }
+
+private:
+  Internal value;
+};
+
+struct HesaiInventory_QT128 : public HesaiInventoryBase
+{
+  struct Internal : public HesaiInventoryBase::Internal
+  {
+    big_int16_buf_t zero_angle_offset;
+    big_int16_buf_t angle_offset_cc;
+    uint8_t product_model;
+    uint8_t motor_type;
+    uint8_t num_of_lines;
+    char pn[32];
+    uint8_t reserved;
+  };
+
+  explicit HesaiInventory_QT128(Internal value) : value(value) {}
+
+  [[nodiscard]] uint8_t model_number() const override { return value.product_model; }
+
+  [[nodiscard]] const HesaiInventoryBase::Internal & get() const override { return value; }
+
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
+  {
+    ordered_json j;
+    j["zero_angle_offset"] = value.zero_angle_offset.value();
+    j["zero_angle_offset_cc"] = value.angle_offset_cc.value();
+    j["model"] = get_str_model(value.product_model);
+    j["motor_type"] = get_motor_type(value.motor_type);
+    j["num_of_lines"] = value.num_of_lines;
+    j["pn"] = to_string(value.pn);
+    return j;
+  }
+
+private:
+  Internal value;
+};
+
+struct HesaiInventory_AT128 : public HesaiInventoryBase
+{
+  struct Internal : public HesaiInventoryBase::Internal
+  {
+    // zero_angle_offset from datasheet does not exist
+    char fpga_para_ver[16];
+    char fpga_cfg_ver[16];
+    char fpga_para_sha[16];
+    char fpga_cfg_sha[16];
+    big_int16_buf_t unused_angle_offset;
+    uint8_t product_model;
+    uint8_t motor_type;
+    uint8_t num_of_lines;  // this is also not in the datasheet but definitely exists
+    uint8_t motor_correction_flag;
+    uint8_t encoder_disk_correction_flag;
+    uint8_t reserved[9];
+  };
+
+  explicit HesaiInventory_AT128(Internal value) : value(value) {}
+
+  [[nodiscard]] uint8_t model_number() const override { return value.product_model; }
+
+  [[nodiscard]] const HesaiInventoryBase::Internal & get() const override { return value; }
+
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
+  {
+    ordered_json j;
+    j["fpga_para_ver"] = to_string(value.fpga_para_ver);
+    j["fpga_cfg_ver"] = to_string(value.fpga_cfg_ver);
+    j["fpga_para_sha"] = to_string(value.fpga_para_sha);
+    j["fpga_cfg_sha"] = to_string(value.fpga_cfg_sha);
+    j["model"] = get_str_model(value.product_model);
+    j["motor_type"] = get_motor_type(value.motor_type);
+    j["num_of_lines"] = value.num_of_lines;
+    j["motor_correction_flag"] = value.motor_correction_flag ? "finished" : "not finished";
+    j["encoder_disk_correction_flag"] =
+      value.encoder_disk_correction_flag ? "finished" : "not finished";
+    return j;
+  }
+
+private:
+  Internal value;
 };
 
 /// @brief struct of PTC_COMMAND_GET_CONFIG_INFO
@@ -280,9 +436,11 @@ struct HesaiConfigBase
     big_uint16_buf_t vlan_id;
   };
 
-  json to_json()
+  virtual ~HesaiConfigBase() = default;
+
+  [[nodiscard]] ordered_json to_json() const
   {
-    json j;
+    ordered_json j;
     {
       std::stringstream ss;
       ss << static_cast<int>(get().ipaddr[0]) << "." << static_cast<int>(get().ipaddr[1]) << "."
@@ -331,13 +489,14 @@ struct HesaiConfigBase
   [[nodiscard]] virtual const Internal & get() const = 0;
 
 protected:
-  virtual json sensor_specifics_to_json() = 0;
+  [[nodiscard]] virtual ordered_json sensor_specifics_to_json() const = 0;
 };
 
-inline std::ostream & operator<<(std::ostream & os, HesaiConfigBase & arg)
+inline std::ostream & operator<<(std::ostream & os, const HesaiConfigBase & arg)
 {
-  for (auto & [key, value] : arg.to_json().items()) {
-    os << key << " : " << value << std::endl;
+  ordered_json j = arg.to_json();
+  for (const auto & [key, value] : j.items()) {
+    os << key << ": " << to_string(value) << '\n';
   }
   return os;
 }
@@ -356,9 +515,9 @@ struct HesaiConfig_OT128_AT128 : public HesaiConfigBase
 
   [[nodiscard]] const HesaiConfigBase::Internal & get() const override { return value; }
 
-  json sensor_specifics_to_json() override
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
   {
-    json j;
+    ordered_json j;
     j["gps_nmea_sentence"] = value.gps_nmea_sentence;
     j["noise_filtering"] = value.noise_filtering;
     j["reflectivity_mapping"] = value.reflectivity_mapping;
@@ -369,14 +528,6 @@ struct HesaiConfig_OT128_AT128 : public HesaiConfigBase
 private:
   Internal value;
 };
-
-inline std::ostream & operator<<(std::ostream & os, HesaiConfig_OT128_AT128 & arg)
-{
-  for (auto & [key, value] : arg.to_json().items()) {
-    os << key << " : " << value << std::endl;
-  }
-  return os;
-}
 
 struct HesaiConfig_XT_40p : public HesaiConfigBase
 {
@@ -392,9 +543,9 @@ struct HesaiConfig_XT_40p : public HesaiConfigBase
 
   [[nodiscard]] const HesaiConfigBase::Internal & get() const override { return value; }
 
-  json sensor_specifics_to_json() override
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
   {
-    json j;
+    ordered_json j;
     j["clock_data_fmt"] = value.clock_data_fmt;
     j["noise_filtering"] = value.noise_filtering;
     j["reflectivity_mapping"] = value.reflectivity_mapping;
@@ -406,14 +557,6 @@ private:
   Internal value;
 };
 
-inline std::ostream & operator<<(std::ostream & os, HesaiConfig_XT_40p & arg)
-{
-  for (auto & [key, value] : arg.to_json().items()) {
-    os << key << " : " << value << std::endl;
-  }
-  return os;
-}
-
 /// @brief struct of PTC_COMMAND_GET_LIDAR_STATUS
 struct HesaiLidarStatusBase
 {
@@ -423,9 +566,11 @@ struct HesaiLidarStatusBase
     big_uint16_buf_t motor_speed;
   };
 
-  json to_json()
+  virtual ~HesaiLidarStatusBase() = default;
+
+  [[nodiscard]] ordered_json to_json() const
   {
-    json j;
+    ordered_json j;
     j["system_uptime"] = std::to_string(get().system_uptime.value()) + " s";
     j["motor_speed"] = std::to_string(get().motor_speed.value()) + " RPM";
     j.update(sensor_specifics_to_json());
@@ -436,28 +581,28 @@ struct HesaiLidarStatusBase
   [[nodiscard]] virtual const Internal & get() const = 0;
 
 protected:
-  virtual json sensor_specifics_to_json() = 0;
+  [[nodiscard]] virtual ordered_json sensor_specifics_to_json() const = 0;
 
   [[nodiscard]] std::string get_str_gps_pps_lock(uint8_t value) const
   {
     switch (value) {
       case 1:
-        return "Lock";
+        return "locked";
       case 0:
-        return "Unlock";
+        return "not locked";
       default:
-        return "Unknown";
+        return "unknown";
     }
   }
   [[nodiscard]] std::string get_str_gps_gprmc_status(uint8_t value) const
   {
     switch (value) {
       case 1:
-        return "Lock";
+        return "locked";
       case 0:
-        return "Unlock";
+        return "not locked";
       default:
-        return "Unknown";
+        return "unknown";
     }
   }
   [[nodiscard]] std::string get_str_ptp_clock_status(uint8_t value) const
@@ -472,16 +617,17 @@ protected:
       case 3:
         return "frozen";
       default:
-        return "Unknown";
+        return "unknown";
     }
   }
 };
 
-inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusBase const & arg)
+inline std::ostream & operator<<(std::ostream & os, const HesaiLidarStatusBase & arg)
 {
-  os << "system_uptime: " << arg.get().system_uptime << "\n";
-  os << "motor_speed: " << arg.get().motor_speed;
-
+  ordered_json j = arg.to_json();
+  for (const auto & [key, value] : j.items()) {
+    os << key << ": " << to_string(value) << '\n';
+  }
   return os;
 }
 
@@ -490,20 +636,20 @@ struct HesaiLidarStatusAT128 : public HesaiLidarStatusBase
   struct Internal : public HesaiLidarStatusBase::Internal
   {
     big_int32_buf_t temperature[9];
-    uint8_t gps_pps_lock;
-    uint8_t gps_gprmc_status;
+    uint8_t unused_gps_pps_lock;
+    uint8_t unused_gps_gprmc_status;
     big_int32_buf_t startup_times;
     big_int32_buf_t total_operation_time;
     uint8_t ptp_status;
-    unsigned char reserved[1];
+    unsigned char reserved[5];
   };
 
   explicit HesaiLidarStatusAT128(Internal value) : value(value) {}
 
-  json sensor_specifics_to_json() override
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
   {
-    json j;
-    json temperature;
+    ordered_json j;
+    ordered_json temperature;
     temperature["tx1 temperature"] = std::to_string(value.temperature[0].value() * 0.01) + " deg";
     temperature["tx2 temperature"] = std::to_string(value.temperature[1].value() * 0.01) + " deg";
     temperature["fpga temperature"] = std::to_string(value.temperature[2].value() * 0.01) + " deg";
@@ -514,12 +660,9 @@ struct HesaiLidarStatusAT128 : public HesaiLidarStatusBase
     temperature["pb temperature"] = std::to_string(value.temperature[7].value() * 0.01) + " deg";
     temperature["hot temperature"] = std::to_string(value.temperature[8].value() * 0.01) + " deg";
     j["temperature"] = temperature;
-    j["gps_pps_lock"] = get_str_gps_pps_lock(value.gps_pps_lock);
-    j["gps_gprmc_status"] = get_str_gps_gprmc_status(value.gps_gprmc_status);
     j["startup_times"] = value.startup_times.value();
     j["total_operation_time"] = std::to_string(value.total_operation_time.value()) + " min";
     j["ptp_status"] = get_str_ptp_clock_status(value.ptp_status);
-    j["reserved"] = value.reserved;
 
     return j;
   }
@@ -528,14 +671,6 @@ struct HesaiLidarStatusAT128 : public HesaiLidarStatusBase
 private:
   Internal value;
 };
-
-inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusAT128 & arg)
-{
-  for (auto & [key, value] : arg.to_json().items()) {
-    os << key << " : " << value << std::endl;
-  }
-  return os;
-}
 
 struct HesaiLidarStatusOT128 : public HesaiLidarStatusBase
 {
@@ -554,10 +689,10 @@ struct HesaiLidarStatusOT128 : public HesaiLidarStatusBase
 
   [[nodiscard]] const HesaiLidarStatusBase::Internal & get() const override { return value; }
 
-  json sensor_specifics_to_json() override
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
   {
-    json j;
-    json temperature;
+    ordered_json j;
+    ordered_json temperature;
     temperature["Bottom circuit board T1 temperature"] =
       std::to_string(value.temperature[0].value() * 0.01) + " deg";
     temperature["Bottom circuit board T2 temperature"] =
@@ -581,7 +716,6 @@ struct HesaiLidarStatusOT128 : public HesaiLidarStatusBase
     j["total_operation_time"] = std::to_string(value.total_operation_time.value()) + " min";
     j["ptp_status"] = get_str_ptp_clock_status(value.ptp_status);
     j["humidity"] = std::to_string(value.humidity.value() * 0.1) + " %";
-    j["reserved"] = value.reserved;
 
     return j;
   }
@@ -589,14 +723,6 @@ struct HesaiLidarStatusOT128 : public HesaiLidarStatusBase
 private:
   Internal value;
 };
-
-inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatusOT128 & arg)
-{
-  for (auto & [key, value] : arg.to_json().items()) {
-    os << key << " : " << value << std::endl;
-  }
-  return os;
-}
 
 struct HesaiLidarStatus_XT_40p : public HesaiLidarStatusBase
 {
@@ -614,10 +740,10 @@ struct HesaiLidarStatus_XT_40p : public HesaiLidarStatusBase
 
   [[nodiscard]] const HesaiLidarStatusBase::Internal & get() const override { return value; }
 
-  json sensor_specifics_to_json() override
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
   {
-    json j;
-    json temperature;
+    ordered_json j;
+    ordered_json temperature;
     temperature["Bottom circuit board T1 temperature"] =
       std::to_string(value.temperature[0].value() * 0.01) + " deg";
     temperature["Bottom circuit board T2 temperature"] =
@@ -640,7 +766,6 @@ struct HesaiLidarStatus_XT_40p : public HesaiLidarStatusBase
     j["startup_times"] = value.startup_times.value();
     j["total_operation_time"] = std::to_string(value.total_operation_time.value()) + " min";
     j["ptp_status"] = get_str_ptp_clock_status(value.ptp_status);
-    j["reserved"] = value.reserved;
 
     return j;
   }
@@ -648,14 +773,6 @@ struct HesaiLidarStatus_XT_40p : public HesaiLidarStatusBase
 private:
   Internal value;
 };
-
-inline std::ostream & operator<<(std::ostream & os, HesaiLidarStatus_XT_40p & arg)
-{
-  for (auto & [key, value] : arg.to_json().items()) {
-    os << key << " : " << value << std::endl;
-  }
-  return os;
-}
 
 /// @brief struct of PTC_COMMAND_GET_LIDAR_RANGE
 struct HesaiLidarRangeAll
@@ -710,44 +827,31 @@ struct HesaiPtpConfig
 };
 
 /// @brief struct of PTC_COMMAND_LIDAR_MONITOR
-struct HesaiLidarMonitor_OT128
+struct HesaiLidarMonitor
 {
-  // FIXME: this format is not correct for OT128
   big_int32_buf_t input_current;
   big_int32_buf_t input_voltage;
   big_int32_buf_t input_power;
   big_int32_buf_t phase_offset;
   uint8_t reserved[48];
 
-  json to_json()
+  [[nodiscard]] ordered_json to_json() const
   {
-    json j;
+    ordered_json j;
     j["input_current"] = std::to_string(input_current.value() * 0.01) + " mA";
     j["input_voltage"] = std::to_string(input_voltage.value() * 0.01) + " V";
     j["input_power"] = std::to_string(input_power.value() * 0.01) + " W";
     j["phase_offset"] = std::to_string(phase_offset.value() * 0.01) + " deg";
-    j["reserved"] = reserved;
 
     return j;
   }
 };
 
-inline std::ostream & operator<<(std::ostream & os, HesaiLidarMonitor_OT128 const & arg)
+inline std::ostream & operator<<(std::ostream & os, const HesaiLidarMonitor & arg)
 {
-  os << "input_current: " << arg.input_current;
-  os << ", ";
-  os << "input_voltage: " << arg.input_voltage;
-  os << ", ";
-  os << "input_power: " << arg.input_power;
-  os << ", ";
-  os << "phase_offset: " << arg.phase_offset;
-  os << ", ";
-  os << "reserved: ";
-  for (size_t i = 0; i < sizeof(arg.reserved); i++) {
-    if (i != 0) {
-      os << ' ';
-    }
-    os << std::hex << std::setfill('0') << std::setw(2) << (static_cast<int>(arg.reserved[i]));
+  ordered_json j = arg.to_json();
+  for (const auto & [key, value] : j.items()) {
+    os << key << ": " << to_string(value) << '\n';
   }
   return os;
 }
