@@ -150,7 +150,7 @@ Status HesaiHwInterface::SetSensorConfiguration(
 Status HesaiHwInterface::SensorInterfaceStart()
 {
   try {
-    std::cout << "Starting UDP server on: " << *sensor_configuration_ << std::endl;
+    PrintInfo("Starting UDP receiver");
     if (sensor_configuration_->multicast_ip.empty()) {
       cloud_udp_driver_->init_receiver(
         sensor_configuration_->host_ip, sensor_configuration_->data_port);

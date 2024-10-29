@@ -254,7 +254,6 @@ public:
     logger_(rclcpp::get_logger("HesaiDecoder"))
   {
     logger_.set_level(rclcpp::Logger::Level::Debug);
-    RCLCPP_INFO_STREAM(logger_, *sensor_configuration_);
 
     decode_pc_ = std::make_shared<NebulaPointCloud>();
     output_pc_ = std::make_shared<NebulaPointCloud>();
