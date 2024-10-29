@@ -18,9 +18,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32.hpp"
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -28,10 +26,10 @@ namespace hesai_packet
 
 #pragma pack(push, 1)
 
-typedef TailXT32 TailXT32M2X;
+using TailXT32M2X = TailXT32;
 struct PacketXT32M2X : public PacketBase<6, 32, 3, 100>
 {
-  typedef Body<Block<Unit4B, PacketXT32M2X::N_CHANNELS>, PacketXT32M2X::N_BLOCKS> body_t;
+  using body_t = Body<Block<Unit4B, PacketXT32M2X::n_channels>, PacketXT32M2X::n_blocks>;
   Header12B header;
   body_t body;
   TailXT32M2X tail;
@@ -45,15 +43,15 @@ struct PacketXT32M2X : public PacketBase<6, 32, 3, 100>
 class PandarXT32M : public HesaiSensor<hesai_packet::PacketXT32M2X>
 {
 public:
-  static constexpr float MIN_RANGE = 0.5f;
-  static constexpr float MAX_RANGE = 300.0f;
-  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 384000;
+  static constexpr float min_range = 0.5f;
+  static constexpr float max_range = 300.0f;
+  static constexpr size_t max_scan_buffer_points = 384000;
 
-  int getPacketRelativePointTimeOffset(
+  int get_packet_relative_point_time_offset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
-    int block_offset_ns;
+    int block_offset_ns = 0;
     if (n_returns < 3) {
       block_offset_ns = 5632 - 50000 * ((8 - block_id - 1) / n_returns);
     } else /* n_returns == 3 */ {
@@ -69,5 +67,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

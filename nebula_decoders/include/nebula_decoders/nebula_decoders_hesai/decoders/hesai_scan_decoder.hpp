@@ -15,18 +15,13 @@
 #ifndef NEBULA_WS_HESAI_SCAN_DECODER_HPP
 #define NEBULA_WS_HESAI_SCAN_DECODER_HPP
 
-#include "nebula_common/hesai/hesai_common.hpp"
-#include "nebula_common/point_types.hpp"
-
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
+#include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/point_types.hpp>
 
 #include <tuple>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Base class for Hesai LiDAR decoder
 class HesaiScanDecoder
@@ -47,12 +42,12 @@ public:
 
   /// @brief Indicates whether one full scan is ready
   /// @return Whether a scan is ready
-  virtual bool hasScanned() = 0;
+  virtual bool has_scanned() = 0;
 
   /// @brief Returns the point cloud and timestamp of the last scan
   /// @return A tuple of point cloud and timestamp in nanoseconds
-  virtual std::tuple<drivers::NebulaPointCloudPtr, double> getPointcloud() = 0;
+  virtual std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() = 0;
 };
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
+
 #endif  // NEBULA_WS_HESAI_SCAN_DECODER_HPP

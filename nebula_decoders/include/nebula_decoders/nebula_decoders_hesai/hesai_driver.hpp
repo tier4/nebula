@@ -16,27 +16,17 @@
 #define NEBULA_HESAI_DRIVER_H
 
 #include "nebula_common/hesai/hesai_common.hpp"
-#include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_common/point_types.hpp"
-#include "nebula_decoders/nebula_decoders_common/nebula_driver_base.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_decoder.hpp"
-
-#include "pandar_msgs/msg/pandar_packet.hpp"
-#include "pandar_msgs/msg/pandar_scan.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
 #include <pcl_conversions/pcl_conversions.h>
 
-#include <iostream>
 #include <memory>
-#include <stdexcept>
-#include <string>
 #include <tuple>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Hesai driver
 class HesaiDriver
@@ -48,7 +38,7 @@ private:
   std::shared_ptr<HesaiScanDecoder> scan_decoder_;
 
   template <typename SensorT>
-  std::shared_ptr<HesaiScanDecoder> InitializeDecoder(
+  std::shared_ptr<HesaiScanDecoder> initialize_decoder(
     const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
       calibration_configuration);
@@ -66,22 +56,21 @@ public:
 
   /// @brief Get current status of this driver
   /// @return Current status
-  Status GetStatus();
+  Status get_status();
 
   /// @brief Setting CalibrationConfiguration (not used)
   /// @param calibration_configuration
   /// @return Resulting status
-  Status SetCalibrationConfiguration(
+  Status set_calibration_configuration(
     const HesaiCalibrationConfigurationBase & calibration_configuration);
 
   /// @brief Convert raw packet to pointcloud
   /// @param packet Packet to convert
   /// @return Tuple of pointcloud and timestamp
-  std::tuple<drivers::NebulaPointCloudPtr, double> ParseCloudPacket(
+  std::tuple<drivers::NebulaPointCloudPtr, double> parse_cloud_packet(
     const std::vector<uint8_t> & packet);
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 
 #endif  // NEBULA_HESAI_DRIVER_H

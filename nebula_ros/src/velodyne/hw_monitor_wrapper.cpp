@@ -2,9 +2,7 @@
 
 #include "nebula_ros/velodyne/hw_monitor_wrapper.hpp"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 VelodyneHwMonitorWrapper::VelodyneHwMonitorWrapper(
   rclcpp::Node * const parent_node,
@@ -22,19 +20,19 @@ VelodyneHwMonitorWrapper::VelodyneHwMonitorWrapper(
     parent_node->declare_parameter<bool>("advanced_diagnostics", param_read_only());
 
   std::cout << "Get model name and serial." << std::endl;
-  auto str = hw_interface_->GetSnapshot();
-  current_snapshot_time.reset(new rclcpp::Time(parent_node_->now()));
-  current_snapshot_tree =
-    std::make_shared<boost::property_tree::ptree>(hw_interface_->ParseJson(str));
-  current_diag_tree =
-    std::make_shared<boost::property_tree::ptree>(current_snapshot_tree->get_child("diag"));
-  current_status_tree =
-    std::make_shared<boost::property_tree::ptree>(current_snapshot_tree->get_child("status"));
-  current_snapshot.reset(new std::string(str));
+  auto str = hw_interface_->get_snapshot();
+  current_snapshot_time_.reset(new rclcpp::Time(parent_node_->now()));
+  current_snapshot_tree_ =
+    std::make_shared<boost::property_tree::ptree>(hw_interface_->parse_json(str));
+  current_diag_tree_ =
+    std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("diag"));
+  current_status_tree_ =
+    std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("status"));
+  current_snapshot_.reset(new std::string(str));
 
   try {
-    info_model_ = GetPtreeValue(current_snapshot_tree, mtx_snapshot_, key_info_model);
-    info_serial_ = GetPtreeValue(current_snapshot_tree, mtx_snapshot_, key_info_serial);
+    info_model_ = get_ptree_value(current_snapshot_tree_, mtx_snapshot_, key_info_model);
+    info_serial_ = get_ptree_value(current_snapshot_tree_, mtx_snapshot_, key_info_serial);
     RCLCPP_INFO_STREAM(logger_, "Model: " << info_model_);
     RCLCPP_INFO_STREAM(logger_, "Serial: " << info_serial_);
   } catch (boost::bad_lexical_cast & ex) {
@@ -42,10 +40,10 @@ VelodyneHwMonitorWrapper::VelodyneHwMonitorWrapper(
     return;
   }
 
-  InitializeVelodyneDiagnostics();
+  initialize_velodyne_diagnostics();
 }
 
-void VelodyneHwMonitorWrapper::InitializeVelodyneDiagnostics()
+void VelodyneHwMonitorWrapper::initialize_velodyne_diagnostics()
 {
   RCLCPP_INFO_STREAM(logger_, "InitializeVelodyneDiagnostics");
   using std::chrono_literals::operator""s;
@@ -57,114 +55,115 @@ void VelodyneHwMonitorWrapper::InitializeVelodyneDiagnostics()
   if (show_advanced_diagnostics_) {
     diagnostics_updater_.add(
       "velodyne_snapshot-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckSnapshot);
+      &VelodyneHwMonitorWrapper::velodyne_check_snapshot);
 
     diagnostics_updater_.add(
       "velodyne_volt_temp_top_hv-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckTopHv);
+      &VelodyneHwMonitorWrapper::velodyne_check_top_hv);
     if (sensor_configuration_->sensor_model != nebula::drivers::SensorModel::VELODYNE_VLP16) {
       diagnostics_updater_.add(
         "velodyne_volt_temp_top_ad_temp-" + sensor_configuration_->frame_id, this,
-        &VelodyneHwMonitorWrapper::VelodyneCheckTopAdTemp);
+        &VelodyneHwMonitorWrapper::velodyne_check_top_ad_temp);
     }
     diagnostics_updater_.add(
       "velodyne_volt_temp_top_lm20_temp-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckTopLm20Temp);
+      &VelodyneHwMonitorWrapper::velodyne_check_top_lm20_temp);
     diagnostics_updater_.add(
       "velodyne_volt_temp_top_pwr_5v-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckTopPwr5v);
+      &VelodyneHwMonitorWrapper::velodyne_check_top_pwr5v);
     diagnostics_updater_.add(
       "velodyne_volt_temp_top_pwr_2_5v-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckTopPwr25v);
+      &VelodyneHwMonitorWrapper::velodyne_check_top_pwr25v);
     diagnostics_updater_.add(
       "velodyne_volt_temp_top_pwr_3_3v-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckTopPwr33v);
+      &VelodyneHwMonitorWrapper::velodyne_check_top_pwr33v);
     diagnostics_updater_.add(
       "velodyne_volt_temp_top_pwr_raw-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckTopPwrRaw);
+      &VelodyneHwMonitorWrapper::velodyne_check_top_pwr_raw);
     diagnostics_updater_.add(
       "velodyne_volt_temp_top_pwr_vccint-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckTopPwrVccint);
+      &VelodyneHwMonitorWrapper::velodyne_check_top_pwr_vccint);
     diagnostics_updater_.add(
       "velodyne_volt_temp_bot_i_out-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckBotIOut);
+      &VelodyneHwMonitorWrapper::velodyne_check_bot_i_out);
     diagnostics_updater_.add(
       "velodyne_volt_temp_bot_pwr_1_2v-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckBotPwr12v);
+      &VelodyneHwMonitorWrapper::velodyne_check_bot_pwr12v);
     diagnostics_updater_.add(
       "velodyne_volt_temp_bot_lm20_temp-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckBotLm20Temp);
+      &VelodyneHwMonitorWrapper::velodyne_check_bot_lm20_temp);
     diagnostics_updater_.add(
       "velodyne_volt_temp_bot_pwr_5v-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckBotPwr5v);
+      &VelodyneHwMonitorWrapper::velodyne_check_bot_pwr5v);
     diagnostics_updater_.add(
       "velodyne_volt_temp_bot_pwr_2_5v-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckBotPwr25v);
+      &VelodyneHwMonitorWrapper::velodyne_check_bot_pwr25v);
     diagnostics_updater_.add(
       "velodyne_volt_temp_bot_pwr_3_3v-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckBotPwr33v);
+      &VelodyneHwMonitorWrapper::velodyne_check_bot_pwr33v);
     diagnostics_updater_.add(
       "velodyne_volt_temp_bot_pwr_v_in-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckBotPwrVIn);
+      &VelodyneHwMonitorWrapper::velodyne_check_bot_pwr_v_in);
     diagnostics_updater_.add(
       "velodyne_volt_temp_bot_pwr_1_25v-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckBotPwr125v);
+      &VelodyneHwMonitorWrapper::velodyne_check_bot_pwr125v);
     diagnostics_updater_.add(
       "velodyne_vhv-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckVhv);
+      &VelodyneHwMonitorWrapper::velodyne_check_vhv);
     diagnostics_updater_.add(
       "velodyne_adc_nf-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckAdcNf);
+      &VelodyneHwMonitorWrapper::velodyne_check_adc_nf);
     diagnostics_updater_.add(
       "velodyne_adc_stats-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckAdcStats);
+      &VelodyneHwMonitorWrapper::velodyne_check_adc_stats);
     diagnostics_updater_.add(
       "velodyne_ixe-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckIxe);
+      &VelodyneHwMonitorWrapper::velodyne_check_ixe);
     diagnostics_updater_.add(
       "velodyne_adctp_stat-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckAdctpStat);
+      &VelodyneHwMonitorWrapper::velodyne_check_adctp_stat);
 
     diagnostics_updater_.add(
       "velodyne_status_gps_pps_state-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckGpsPpsState);
+      &VelodyneHwMonitorWrapper::velodyne_check_gps_pps_state);
     diagnostics_updater_.add(
       "velodyne_status_gps_pps_position-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckGpsPosition);
+      &VelodyneHwMonitorWrapper::velodyne_check_gps_position);
     diagnostics_updater_.add(
       "velodyne_status_motor_state-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckMotorState);
+      &VelodyneHwMonitorWrapper::velodyne_check_motor_state);
     diagnostics_updater_.add(
       "velodyne_status_motor_rpm-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckMotorRpm);
+      &VelodyneHwMonitorWrapper::velodyne_check_motor_rpm);
     diagnostics_updater_.add(
       "velodyne_status_motor_lock-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckMotorLock);
+      &VelodyneHwMonitorWrapper::velodyne_check_motor_lock);
     diagnostics_updater_.add(
       "velodyne_status_motor_phase-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckMotorPhase);
+      &VelodyneHwMonitorWrapper::velodyne_check_motor_phase);
     diagnostics_updater_.add(
       "velodyne_status_laser_state-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::VelodyneCheckLaserState);
+      &VelodyneHwMonitorWrapper::velodyne_check_laser_state);
   }
 
-  diagnostics_updater_.add("velodyne_status", this, &VelodyneHwMonitorWrapper::VelodyneCheckStatus);
-  diagnostics_updater_.add("velodyne_pps", this, &VelodyneHwMonitorWrapper::VelodyneCheckPps);
   diagnostics_updater_.add(
-    "velodyne_temperature", this, &VelodyneHwMonitorWrapper::VelodyneCheckTemperature);
-  diagnostics_updater_.add("velodyne_rpm", this, &VelodyneHwMonitorWrapper::VelodyneCheckRpm);
+    "velodyne_status", this, &VelodyneHwMonitorWrapper::velodyne_check_status);
+  diagnostics_updater_.add("velodyne_pps", this, &VelodyneHwMonitorWrapper::velodyne_check_pps);
   diagnostics_updater_.add(
-    "velodyne_voltage", this, &VelodyneHwMonitorWrapper::VelodyneCheckVoltage);
+    "velodyne_temperature", this, &VelodyneHwMonitorWrapper::velodyne_check_temperature);
+  diagnostics_updater_.add("velodyne_rpm", this, &VelodyneHwMonitorWrapper::velodyne_check_rpm);
+  diagnostics_updater_.add(
+    "velodyne_voltage", this, &VelodyneHwMonitorWrapper::velodyne_check_voltage);
 
   {
     std::lock_guard lock(mtx_snapshot_);
-    current_snapshot.reset(new std::string(""));
-    current_snapshot_time.reset(new rclcpp::Time(parent_node_->now()));
+    current_snapshot_.reset(new std::string(""));
+    current_snapshot_time_.reset(new rclcpp::Time(parent_node_->now()));
   }
 
-  current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+  current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
 
-  auto on_timer_snapshot = [this] { OnVelodyneSnapshotTimer(); };
+  auto on_timer_snapshot = [this] { on_velodyne_snapshot_timer(); };
   diagnostics_snapshot_timer_ = parent_node_->create_wall_timer(
     std::chrono::milliseconds(diag_span_), std::move(on_timer_snapshot));
 
@@ -173,13 +172,13 @@ void VelodyneHwMonitorWrapper::InitializeVelodyneDiagnostics()
     double dif;
     {
       std::lock_guard lock(mtx_snapshot_);
-      dif = (now - *current_snapshot_time).seconds();
+      dif = (now - *current_snapshot_time_).seconds();
     }
     if (diag_span_ * 2.0 < dif * 1000) {
-      current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+      current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
       RCLCPP_DEBUG_STREAM(logger_, "STALE");
     } else {
-      current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::OK;
+      current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::OK;
       RCLCPP_DEBUG_STREAM(logger_, "OK");
     }
     diagnostics_updater_.force_update();
@@ -188,37 +187,37 @@ void VelodyneHwMonitorWrapper::InitializeVelodyneDiagnostics()
     parent_node_->create_wall_timer(std::chrono::milliseconds(1000), std::move(on_timer_update));
 }
 
-void VelodyneHwMonitorWrapper::OnVelodyneSnapshotTimer()
+void VelodyneHwMonitorWrapper::on_velodyne_snapshot_timer()
 {
-  auto str = hw_interface_->GetSnapshot();
-  auto ptree = hw_interface_->ParseJson(str);
+  auto str = hw_interface_->get_snapshot();
+  auto ptree = hw_interface_->parse_json(str);
 
   {
     std::lock_guard lock(mtx_snapshot_);
 
-    current_snapshot_time.reset(new rclcpp::Time(parent_node_->now()));
-    current_snapshot_tree = std::make_shared<boost::property_tree::ptree>(ptree);
-    current_diag_tree =
-      std::make_shared<boost::property_tree::ptree>(current_snapshot_tree->get_child("diag"));
-    current_status_tree =
-      std::make_shared<boost::property_tree::ptree>(current_snapshot_tree->get_child("status"));
-    current_snapshot.reset(new std::string(str));
+    current_snapshot_time_.reset(new rclcpp::Time(parent_node_->now()));
+    current_snapshot_tree_ = std::make_shared<boost::property_tree::ptree>(ptree);
+    current_diag_tree_ =
+      std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("diag"));
+    current_status_tree_ =
+      std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("status"));
+    current_snapshot_.reset(new std::string(str));
   }
 }
 
-void VelodyneHwMonitorWrapper::OnVelodyneDiagnosticsTimer()
+void VelodyneHwMonitorWrapper::on_velodyne_diagnostics_timer()
 {
   std::cout << "OnVelodyneDiagnosticsTimer" << std::endl;
-  auto str = hw_interface_->GetDiag();
+  auto str = hw_interface_->get_diag();
   {
     std::lock_guard lock(mtx_diag_);
-    current_diag_tree =
-      std::make_shared<boost::property_tree::ptree>(hw_interface_->ParseJson(str));
+    current_diag_tree_ =
+      std::make_shared<boost::property_tree::ptree>(hw_interface_->parse_json(str));
   }
   diagnostics_updater_.force_update();
 }
 
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetTopHv()
+std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::velodyne_get_top_hv()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
@@ -227,36 +226,16 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
   try {
     double val = 0.0;
     val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_top_hv));
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_top_hv));
     val = 101.0 * (val * 5.0 / 4096.0 - 5.0);
     if (val < -150.0) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_hv + message_sep + voltage_low_message;
+      error_mes = name_volt_temp_top_hv + message_sep_ + voltage_low_message;
     } else if (-132.0 < val) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_hv + message_sep + voltage_high_message;
+      error_mes = name_volt_temp_top_hv + message_sep_ + voltage_high_message;
     }
-    mes = GetFixedPrecisionString(val) + " V";
-  } catch (boost::bad_lexical_cast & ex) {
-    not_ex = false;
-    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-    mes = error_message;
-  }
-  return std::make_tuple(not_ex, level, mes, error_mes);
-}
-
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetTopAdTemp()
-{
-  bool not_ex = true;
-  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::string mes;
-  std::string error_mes;
-  try {
-    double val = 0.0;
-    val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_top_ad_temp));
-    val = val * 5.0 / 4096.0;
-    mes = GetFixedPrecisionString(val) + " V";
+    mes = get_fixed_precision_string(val) + " V";
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -266,7 +245,7 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
 }
 
 std::tuple<bool, uint8_t, std::string, std::string>
-VelodyneHwMonitorWrapper::VelodyneGetTopLm20Temp()
+VelodyneHwMonitorWrapper::velodyne_get_top_ad_temp()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
@@ -275,98 +254,38 @@ VelodyneHwMonitorWrapper::VelodyneGetTopLm20Temp()
   try {
     double val = 0.0;
     val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_top_lm20_temp));
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_top_ad_temp));
+    val = val * 5.0 / 4096.0;
+    mes = get_fixed_precision_string(val) + " V";
+  } catch (boost::bad_lexical_cast & ex) {
+    not_ex = false;
+    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    mes = error_message;
+  }
+  return std::make_tuple(not_ex, level, mes, error_mes);
+}
+
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_top_lm20_temp()
+{
+  bool not_ex = true;
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::string mes;
+  std::string error_mes;
+  try {
+    double val = 0.0;
+    val = boost::lexical_cast<double>(
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_top_lm20_temp));
     val = -1481.96 + std::sqrt(2.1962e6 + ((1.8639 - val * 5.0 / 4096.0) / 3.88e-6));
     if (val < -25.0) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_lm20_temp + message_sep + temperature_cold_message;
+      error_mes = name_volt_temp_top_lm20_temp + message_sep_ + temperature_cold_message;
     } else if (90.0 < val) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_lm20_temp + message_sep + temperature_hot_message;
+      error_mes = name_volt_temp_top_lm20_temp + message_sep_ + temperature_hot_message;
     }
     //    mes = boost::lexical_cast<std::string>(val) + " C";
-    mes = GetFixedPrecisionString(val) + " C";
-  } catch (boost::bad_lexical_cast & ex) {
-    not_ex = false;
-    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-    mes = error_message;
-  }
-  return std::make_tuple(not_ex, level, mes, error_mes);
-}
-
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetTopPwr5v()
-{
-  bool not_ex = true;
-  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::string mes;
-  std::string error_mes;
-  try {
-    double val = 0.0;
-    val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_top_pwr_5v));
-    val = 2.0 * val * 5.0 / 4096.0;
-    if (val < 4.8) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_pwr_5v + message_sep + voltage_low_message;
-    } else if (5.2 < val) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_pwr_5v + message_sep + voltage_high_message;
-    }
-    mes = GetFixedPrecisionString(val) + " V";
-  } catch (boost::bad_lexical_cast & ex) {
-    not_ex = false;
-    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-    mes = error_message;
-  }
-  return std::make_tuple(not_ex, level, mes, error_mes);
-}
-
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetTopPwr25v()
-{
-  bool not_ex = true;
-  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::string mes;
-  std::string error_mes;
-  try {
-    double val = 0.0;
-    val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_top_pwr_2_5v));
-    val = val * 5.0 / 4096.0;
-    if (val < 2.3) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_pwr_2_5v + message_sep + voltage_low_message;
-    } else if (2.7 < val) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_pwr_2_5v + message_sep + voltage_high_message;
-    }
-    mes = GetFixedPrecisionString(val) + " V";
-  } catch (boost::bad_lexical_cast & ex) {
-    not_ex = false;
-    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-    mes = error_message;
-  }
-  return std::make_tuple(not_ex, level, mes, error_mes);
-}
-
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetTopPwr33v()
-{
-  bool not_ex = true;
-  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::string mes;
-  std::string error_mes;
-  try {
-    double val = 0.0;
-    val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_top_pwr_3_3v));
-    val = val * 5.0 / 4096.0;
-    if (val < 3.1) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_pwr_3_3v + message_sep + voltage_low_message;
-    } else if (3.5 < val) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_pwr_3_3v + message_sep + voltage_high_message;
-    }
-    mes = GetFixedPrecisionString(val) + " V";
+    mes = get_fixed_precision_string(val) + " C";
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -376,7 +295,7 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
 }
 
 std::tuple<bool, uint8_t, std::string, std::string>
-VelodyneHwMonitorWrapper::VelodyneGetTopPwr5vRaw()
+VelodyneHwMonitorWrapper::velodyne_get_top_pwr5v()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
@@ -385,16 +304,16 @@ VelodyneHwMonitorWrapper::VelodyneGetTopPwr5vRaw()
   try {
     double val = 0.0;
     val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_top_pwr_5v_raw));
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_top_pwr_5v));
     val = 2.0 * val * 5.0 / 4096.0;
-    if (val < 2.3) {
+    if (val < 4.8) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_pwr_5v_raw + message_sep + voltage_low_message;
-    } else if (2.7 < val) {
+      error_mes = name_volt_temp_top_pwr_5v + message_sep_ + voltage_low_message;
+    } else if (5.2 < val) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_pwr_5v_raw + message_sep + voltage_high_message;
+      error_mes = name_volt_temp_top_pwr_5v + message_sep_ + voltage_high_message;
     }
-    mes = GetFixedPrecisionString(val) + " V";
+    mes = get_fixed_precision_string(val) + " V";
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -403,7 +322,8 @@ VelodyneHwMonitorWrapper::VelodyneGetTopPwr5vRaw()
   return std::make_tuple(not_ex, level, mes, error_mes);
 }
 
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetTopPwrRaw()
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_top_pwr25v()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
@@ -412,16 +332,100 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
   try {
     double val = 0.0;
     val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_top_pwr_raw));
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_top_pwr_2_5v));
+    val = val * 5.0 / 4096.0;
+    if (val < 2.3) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_top_pwr_2_5v + message_sep_ + voltage_low_message;
+    } else if (2.7 < val) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_top_pwr_2_5v + message_sep_ + voltage_high_message;
+    }
+    mes = get_fixed_precision_string(val) + " V";
+  } catch (boost::bad_lexical_cast & ex) {
+    not_ex = false;
+    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    mes = error_message;
+  }
+  return std::make_tuple(not_ex, level, mes, error_mes);
+}
+
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_top_pwr33v()
+{
+  bool not_ex = true;
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::string mes;
+  std::string error_mes;
+  try {
+    double val = 0.0;
+    val = boost::lexical_cast<double>(
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_top_pwr_3_3v));
+    val = val * 5.0 / 4096.0;
+    if (val < 3.1) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_top_pwr_3_3v + message_sep_ + voltage_low_message;
+    } else if (3.5 < val) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_top_pwr_3_3v + message_sep_ + voltage_high_message;
+    }
+    mes = get_fixed_precision_string(val) + " V";
+  } catch (boost::bad_lexical_cast & ex) {
+    not_ex = false;
+    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    mes = error_message;
+  }
+  return std::make_tuple(not_ex, level, mes, error_mes);
+}
+
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_top_pwr5v_raw()
+{
+  bool not_ex = true;
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::string mes;
+  std::string error_mes;
+  try {
+    double val = 0.0;
+    val = boost::lexical_cast<double>(
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_top_pwr_5v_raw));
+    val = 2.0 * val * 5.0 / 4096.0;
+    if (val < 2.3) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_top_pwr_5v_raw + message_sep_ + voltage_low_message;
+    } else if (2.7 < val) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_top_pwr_5v_raw + message_sep_ + voltage_high_message;
+    }
+    mes = get_fixed_precision_string(val) + " V";
+  } catch (boost::bad_lexical_cast & ex) {
+    not_ex = false;
+    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    mes = error_message;
+  }
+  return std::make_tuple(not_ex, level, mes, error_mes);
+}
+
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_top_pwr_raw()
+{
+  bool not_ex = true;
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::string mes;
+  std::string error_mes;
+  try {
+    double val = 0.0;
+    val = boost::lexical_cast<double>(
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_top_pwr_raw));
     val = val * 5.0 / 4096.0;
     if (val < 1.6) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_pwr_raw + message_sep + voltage_low_message;
+      error_mes = name_volt_temp_top_pwr_raw + message_sep_ + voltage_low_message;
     } else if (1.9 < val) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_pwr_raw + message_sep + voltage_high_message;
+      error_mes = name_volt_temp_top_pwr_raw + message_sep_ + voltage_high_message;
     }
-    mes = GetFixedPrecisionString(val) + " V";
+    mes = get_fixed_precision_string(val) + " V";
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -431,7 +435,7 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
 }
 
 std::tuple<bool, uint8_t, std::string, std::string>
-VelodyneHwMonitorWrapper::VelodyneGetTopPwrVccint()
+VelodyneHwMonitorWrapper::velodyne_get_top_pwr_vccint()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
@@ -440,17 +444,17 @@ VelodyneHwMonitorWrapper::VelodyneGetTopPwrVccint()
   try {
     double val = 0.0;
     val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_top_pwr_vccint));
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_top_pwr_vccint));
     val = val * 5.0 / 4096.0;
     if (val < 1.0) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_pwr_vccint + message_sep + voltage_low_message;
+      error_mes = name_volt_temp_top_pwr_vccint + message_sep_ + voltage_low_message;
     } else if (1.4 < val) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_top_pwr_vccint + message_sep + voltage_high_message;
+      error_mes = name_volt_temp_top_pwr_vccint + message_sep_ + voltage_high_message;
     }
     //    mes = boost::lexical_cast<std::string>(val) + " V";
-    mes = GetFixedPrecisionString(val) + " V";
+    mes = get_fixed_precision_string(val) + " V";
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -459,7 +463,8 @@ VelodyneHwMonitorWrapper::VelodyneGetTopPwrVccint()
   return std::make_tuple(not_ex, level, mes, error_mes);
 }
 
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetBotIOut()
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_bot_i_out()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
@@ -468,43 +473,16 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
   try {
     double val = 0.0;
     val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_bot_i_out));
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_bot_i_out));
     val = 10.0 * (val * 5.0 / 4096.0 - 2.5);
     if (val < 0.3) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_i_out + message_sep + ampere_low_message;
+      error_mes = name_volt_temp_bot_i_out + message_sep_ + ampere_low_message;
     } else if (1.0 < val) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_i_out + message_sep + ampere_high_message;
+      error_mes = name_volt_temp_bot_i_out + message_sep_ + ampere_high_message;
     }
-    mes = GetFixedPrecisionString(val) + " A";
-  } catch (boost::bad_lexical_cast & ex) {
-    not_ex = false;
-    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-    mes = error_message;
-  }
-  return std::make_tuple(not_ex, level, mes, error_mes);
-}
-
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetBotPwr12v()
-{
-  bool not_ex = true;
-  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::string mes;
-  std::string error_mes;
-  try {
-    double val = 0.0;
-    val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_bot_pwr_1_2v));
-    val = val * 5.0 / 4096.0;
-    if (val < 1.0) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_pwr_1_2v + message_sep + voltage_low_message;
-    } else if (1.4 < val) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_pwr_1_2v + message_sep + voltage_high_message;
-    }
-    mes = GetFixedPrecisionString(val) + " V";
+    mes = get_fixed_precision_string(val) + " A";
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -514,7 +492,7 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
 }
 
 std::tuple<bool, uint8_t, std::string, std::string>
-VelodyneHwMonitorWrapper::VelodyneGetBotLm20Temp()
+VelodyneHwMonitorWrapper::velodyne_get_bot_pwr12v()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
@@ -523,125 +501,45 @@ VelodyneHwMonitorWrapper::VelodyneGetBotLm20Temp()
   try {
     double val = 0.0;
     val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_bot_lm20_temp));
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_bot_pwr_1_2v));
+    val = val * 5.0 / 4096.0;
+    if (val < 1.0) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_bot_pwr_1_2v + message_sep_ + voltage_low_message;
+    } else if (1.4 < val) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_bot_pwr_1_2v + message_sep_ + voltage_high_message;
+    }
+    mes = get_fixed_precision_string(val) + " V";
+  } catch (boost::bad_lexical_cast & ex) {
+    not_ex = false;
+    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    mes = error_message;
+  }
+  return std::make_tuple(not_ex, level, mes, error_mes);
+}
+
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_bot_lm20_temp()
+{
+  bool not_ex = true;
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::string mes;
+  std::string error_mes;
+  try {
+    double val = 0.0;
+    val = boost::lexical_cast<double>(
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_bot_lm20_temp));
     val = -1481.96 + std::sqrt(2.1962e6 + ((1.8639 - val * 5.0 / 4096.0) / 3.88e-6));
     if (val < -25.0) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_lm20_temp + message_sep + temperature_cold_message;
+      error_mes = name_volt_temp_bot_lm20_temp + message_sep_ + temperature_cold_message;
     } else if (90.0 < val) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_lm20_temp + message_sep + temperature_hot_message;
+      error_mes = name_volt_temp_bot_lm20_temp + message_sep_ + temperature_hot_message;
     }
     //    mes = boost::lexical_cast<std::string>(val) + " C";
-    mes = GetFixedPrecisionString(val) + " C";
-  } catch (boost::bad_lexical_cast & ex) {
-    not_ex = false;
-    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-    mes = error_message;
-  }
-  return std::make_tuple(not_ex, level, mes, error_mes);
-}
-
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetBotPwr5v()
-{
-  bool not_ex = true;
-  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::string mes;
-  std::string error_mes;
-  try {
-    double val = 0.0;
-    val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_bot_pwr_5v));
-    val = 2.0 * val * 5.0 / 4096.0;
-    if (val < 4.8) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_pwr_5v + message_sep + voltage_low_message;
-    } else if (5.2 < val) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_pwr_5v + message_sep + voltage_high_message;
-    }
-    mes = GetFixedPrecisionString(val) + " V";
-  } catch (boost::bad_lexical_cast & ex) {
-    not_ex = false;
-    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-    mes = error_message;
-  }
-  return std::make_tuple(not_ex, level, mes, error_mes);
-}
-
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetBotPwr25v()
-{
-  bool not_ex = true;
-  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::string mes;
-  std::string error_mes;
-  try {
-    double val = 0.0;
-    val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_bot_pwr_2_5v));
-    val = val * 5.0 / 4096.0;
-    if (val < 2.3) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_pwr_2_5v + message_sep + voltage_low_message;
-    } else if (2.7 < val) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_pwr_2_5v + message_sep + voltage_high_message;
-    }
-    mes = GetFixedPrecisionString(val) + " V";
-  } catch (boost::bad_lexical_cast & ex) {
-    not_ex = false;
-    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-    mes = error_message;
-  }
-  return std::make_tuple(not_ex, level, mes, error_mes);
-}
-
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetBotPwr33v()
-{
-  bool not_ex = true;
-  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::string mes;
-  std::string error_mes;
-  try {
-    double val = 0.0;
-    val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_bot_pwr_3_3v));
-    val = val * 5.0 / 4096.0;
-    if (val < 3.1) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_pwr_3_3v + message_sep + voltage_low_message;
-    } else if (3.5 < val) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_pwr_3_3v + message_sep + voltage_high_message;
-    }
-    mes = GetFixedPrecisionString(val) + " V";
-  } catch (boost::bad_lexical_cast & ex) {
-    not_ex = false;
-    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-    mes = error_message;
-  }
-  return std::make_tuple(not_ex, level, mes, error_mes);
-}
-
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetBotPwrVIn()
-{
-  bool not_ex = true;
-  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::string mes;
-  std::string error_mes;
-  try {
-    double val = 0.0;
-    val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_bot_pwr_v_in));
-    val = 11.0 * val * 5.0 / 4096.0;
-    if (val < 8.0) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_pwr_v_in + message_sep + voltage_low_message;
-    } else if (19.0 < val) {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_pwr_v_in + message_sep + voltage_high_message;
-    }
-    mes = GetFixedPrecisionString(val) + " V";
+    mes = get_fixed_precision_string(val) + " C";
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -651,7 +549,7 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
 }
 
 std::tuple<bool, uint8_t, std::string, std::string>
-VelodyneHwMonitorWrapper::VelodyneGetBotPwr125v()
+VelodyneHwMonitorWrapper::velodyne_get_bot_pwr5v()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
@@ -660,16 +558,16 @@ VelodyneHwMonitorWrapper::VelodyneGetBotPwr125v()
   try {
     double val = 0.0;
     val = boost::lexical_cast<double>(
-      GetPtreeValue(current_diag_tree, mtx_diag_, key_volt_temp_bot_pwr_1_25v));
-    val = val * 5.0 / 4096.0;
-    if (val < 1.0) {
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_bot_pwr_5v));
+    val = 2.0 * val * 5.0 / 4096.0;
+    if (val < 4.8) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_pwr_1_25v + message_sep + voltage_low_message;
-    } else if (1.4 < val) {
+      error_mes = name_volt_temp_bot_pwr_5v + message_sep_ + voltage_low_message;
+    } else if (5.2 < val) {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-      error_mes = name_volt_temp_bot_pwr_1_25v + message_sep + voltage_high_message;
+      error_mes = name_volt_temp_bot_pwr_5v + message_sep_ + voltage_high_message;
     }
-    mes = GetFixedPrecisionString(val) + " V";
+    mes = get_fixed_precision_string(val) + " V";
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -678,7 +576,8 @@ VelodyneHwMonitorWrapper::VelodyneGetBotPwr125v()
   return std::make_tuple(not_ex, level, mes, error_mes);
 }
 
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetVhv()
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_bot_pwr25v()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
@@ -686,7 +585,118 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
   std::string error_mes;
   try {
     double val = 0.0;
-    val = boost::lexical_cast<double>(GetPtreeValue(current_diag_tree, mtx_diag_, key_vhv));
+    val = boost::lexical_cast<double>(
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_bot_pwr_2_5v));
+    val = val * 5.0 / 4096.0;
+    if (val < 2.3) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_bot_pwr_2_5v + message_sep_ + voltage_low_message;
+    } else if (2.7 < val) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_bot_pwr_2_5v + message_sep_ + voltage_high_message;
+    }
+    mes = get_fixed_precision_string(val) + " V";
+  } catch (boost::bad_lexical_cast & ex) {
+    not_ex = false;
+    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    mes = error_message;
+  }
+  return std::make_tuple(not_ex, level, mes, error_mes);
+}
+
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_bot_pwr33v()
+{
+  bool not_ex = true;
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::string mes;
+  std::string error_mes;
+  try {
+    double val = 0.0;
+    val = boost::lexical_cast<double>(
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_bot_pwr_3_3v));
+    val = val * 5.0 / 4096.0;
+    if (val < 3.1) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_bot_pwr_3_3v + message_sep_ + voltage_low_message;
+    } else if (3.5 < val) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_bot_pwr_3_3v + message_sep_ + voltage_high_message;
+    }
+    mes = get_fixed_precision_string(val) + " V";
+  } catch (boost::bad_lexical_cast & ex) {
+    not_ex = false;
+    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    mes = error_message;
+  }
+  return std::make_tuple(not_ex, level, mes, error_mes);
+}
+
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_bot_pwr_v_in()
+{
+  bool not_ex = true;
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::string mes;
+  std::string error_mes;
+  try {
+    double val = 0.0;
+    val = boost::lexical_cast<double>(
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_bot_pwr_v_in));
+    val = 11.0 * val * 5.0 / 4096.0;
+    if (val < 8.0) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_bot_pwr_v_in + message_sep_ + voltage_low_message;
+    } else if (19.0 < val) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_bot_pwr_v_in + message_sep_ + voltage_high_message;
+    }
+    mes = get_fixed_precision_string(val) + " V";
+  } catch (boost::bad_lexical_cast & ex) {
+    not_ex = false;
+    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    mes = error_message;
+  }
+  return std::make_tuple(not_ex, level, mes, error_mes);
+}
+
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_bot_pwr125v()
+{
+  bool not_ex = true;
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::string mes;
+  std::string error_mes;
+  try {
+    double val = 0.0;
+    val = boost::lexical_cast<double>(
+      get_ptree_value(current_diag_tree_, mtx_diag_, key_volt_temp_bot_pwr_1_25v));
+    val = val * 5.0 / 4096.0;
+    if (val < 1.0) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_bot_pwr_1_25v + message_sep_ + voltage_low_message;
+    } else if (1.4 < val) {
+      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      error_mes = name_volt_temp_bot_pwr_1_25v + message_sep_ + voltage_high_message;
+    }
+    mes = get_fixed_precision_string(val) + " V";
+  } catch (boost::bad_lexical_cast & ex) {
+    not_ex = false;
+    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    mes = error_message;
+  }
+  return std::make_tuple(not_ex, level, mes, error_mes);
+}
+
+std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::velodyne_get_vhv()
+{
+  bool not_ex = true;
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::string mes;
+  std::string error_mes;
+  try {
+    double val = 0.0;
+    val = boost::lexical_cast<double>(get_ptree_value(current_diag_tree_, mtx_diag_, key_vhv));
     mes = boost::lexical_cast<std::string>(val);
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
@@ -696,7 +706,7 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
   return std::make_tuple(not_ex, level, mes, error_mes);
 }
 
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetAdcNf()
+std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::velodyne_get_adc_nf()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
@@ -705,7 +715,7 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
   try {
     std::ostringstream os;
     boost::optional<boost::property_tree::ptree &> child =
-      current_diag_tree->get_child_optional(key_adc_nf);
+      current_diag_tree_->get_child_optional(key_adc_nf);
     if (child) {
       std::ostringstream os;
       for (auto v = child->begin(); v != child->end(); ++v) {
@@ -723,7 +733,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
   return std::make_tuple(not_ex, level, mes, error_mes);
 }
 
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetAdcStats()
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_adc_stats()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
@@ -732,7 +743,7 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
   try {
     std::ostringstream os;
     boost::optional<boost::property_tree::ptree &> child =
-      current_diag_tree->get_child_optional(key_adc_stats);
+      current_diag_tree_->get_child_optional(key_adc_stats);
     if (child) {
       std::ostringstream os;
       for (auto v = child->begin(); v != child->end(); ++v) {
@@ -753,14 +764,14 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
   return std::make_tuple(not_ex, level, mes, error_mes);
 }
 
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetIxe()
+std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::velodyne_get_ixe()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
   std::string mes;
   std::string error_mes;
   try {
-    mes = GetPtreeValue(current_diag_tree, mtx_diag_, key_ixe);
+    mes = get_ptree_value(current_diag_tree_, mtx_diag_, key_ixe);
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -769,7 +780,8 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
   return std::make_tuple(not_ex, level, mes, error_mes);
 }
 
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetAdctpStat()
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_adctp_stat()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
@@ -778,7 +790,7 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
   try {
     std::ostringstream os;
     boost::optional<boost::property_tree::ptree &> child =
-      current_diag_tree->get_child_optional(key_adctp_stat);
+      current_diag_tree_->get_child_optional(key_adctp_stat);
     if (child) {
       std::ostringstream os;
       for (auto v = child->begin(); v != child->end(); ++v) {
@@ -797,14 +809,14 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
 }
 
 std::tuple<bool, uint8_t, std::string, std::string>
-VelodyneHwMonitorWrapper::VelodyneGetGpsPpsState()
+VelodyneHwMonitorWrapper::velodyne_get_gps_pps_state()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
   std::string mes;
   std::string error_mes;
   try {
-    mes = GetPtreeValue(current_status_tree, mtx_status_, key_status_gps_pps_state);
+    mes = get_ptree_value(current_status_tree_, mtx_status_, key_status_gps_pps_state);
     if (mes == "Absent") {
       level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
       error_mes = mes;
@@ -821,14 +833,14 @@ VelodyneHwMonitorWrapper::VelodyneGetGpsPpsState()
 }
 
 std::tuple<bool, uint8_t, std::string, std::string>
-VelodyneHwMonitorWrapper::VelodyneGetGpsPosition()
+VelodyneHwMonitorWrapper::velodyne_get_gps_position()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
   std::string mes;
   std::string error_mes;
   try {
-    mes = GetPtreeValue(current_status_tree, mtx_status_, key_status_gps_pps_position);
+    mes = get_ptree_value(current_status_tree_, mtx_status_, key_status_gps_pps_position);
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -838,46 +850,14 @@ VelodyneHwMonitorWrapper::VelodyneGetGpsPosition()
 }
 
 std::tuple<bool, uint8_t, std::string, std::string>
-VelodyneHwMonitorWrapper::VelodyneGetMotorState()
+VelodyneHwMonitorWrapper::velodyne_get_motor_state()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
   std::string mes;
   std::string error_mes;
   try {
-    mes = GetPtreeValue(current_status_tree, mtx_status_, key_status_motor_state);
-  } catch (boost::bad_lexical_cast & ex) {
-    not_ex = false;
-    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-    mes = error_message;
-  }
-  return std::make_tuple(not_ex, level, mes, error_mes);
-}
-
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetMotorRpm()
-{
-  bool not_ex = true;
-  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::string mes;
-  std::string error_mes;
-  try {
-    mes = GetPtreeValue(current_status_tree, mtx_status_, key_status_motor_rpm);
-  } catch (boost::bad_lexical_cast & ex) {
-    not_ex = false;
-    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-    mes = error_message;
-  }
-  return std::make_tuple(not_ex, level, mes, error_mes);
-}
-
-std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::VelodyneGetMotorLock()
-{
-  bool not_ex = true;
-  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::string mes;
-  std::string error_mes;
-  try {
-    mes = GetPtreeValue(current_status_tree, mtx_status_, key_status_motor_lock);
+    mes = get_ptree_value(current_status_tree_, mtx_status_, key_status_motor_state);
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -887,14 +867,14 @@ std::tuple<bool, uint8_t, std::string, std::string> VelodyneHwMonitorWrapper::Ve
 }
 
 std::tuple<bool, uint8_t, std::string, std::string>
-VelodyneHwMonitorWrapper::VelodyneGetMotorPhase()
+VelodyneHwMonitorWrapper::velodyne_get_motor_rpm()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
   std::string mes;
   std::string error_mes;
   try {
-    mes = GetPtreeValue(current_status_tree, mtx_status_, key_status_motor_phase);
+    mes = get_ptree_value(current_status_tree_, mtx_status_, key_status_motor_rpm);
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -904,14 +884,14 @@ VelodyneHwMonitorWrapper::VelodyneGetMotorPhase()
 }
 
 std::tuple<bool, uint8_t, std::string, std::string>
-VelodyneHwMonitorWrapper::VelodyneGetLaserState()
+VelodyneHwMonitorWrapper::velodyne_get_motor_lock()
 {
   bool not_ex = true;
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
   std::string mes;
   std::string error_mes;
   try {
-    mes = GetPtreeValue(current_status_tree, mtx_status_, key_status_laser_state);
+    mes = get_ptree_value(current_status_tree_, mtx_status_, key_status_motor_lock);
   } catch (boost::bad_lexical_cast & ex) {
     not_ex = false;
     level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
@@ -920,371 +900,347 @@ VelodyneHwMonitorWrapper::VelodyneGetLaserState()
   return std::make_tuple(not_ex, level, mes, error_mes);
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckTopHv(
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_motor_phase()
+{
+  bool not_ex = true;
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::string mes;
+  std::string error_mes;
+  try {
+    mes = get_ptree_value(current_status_tree_, mtx_status_, key_status_motor_phase);
+  } catch (boost::bad_lexical_cast & ex) {
+    not_ex = false;
+    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    mes = error_message;
+  }
+  return std::make_tuple(not_ex, level, mes, error_mes);
+}
+
+std::tuple<bool, uint8_t, std::string, std::string>
+VelodyneHwMonitorWrapper::velodyne_get_laser_state()
+{
+  bool not_ex = true;
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::string mes;
+  std::string error_mes;
+  try {
+    mes = get_ptree_value(current_status_tree_, mtx_status_, key_status_laser_state);
+  } catch (boost::bad_lexical_cast & ex) {
+    not_ex = false;
+    level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    mes = error_message;
+  }
+  return std::make_tuple(not_ex, level, mes, error_mes);
+}
+
+void VelodyneHwMonitorWrapper::velodyne_check_top_hv(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetTopHv();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_top_hv();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckTopAdTemp(
+void VelodyneHwMonitorWrapper::velodyne_check_top_ad_temp(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetTopAdTemp();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_top_ad_temp();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckTopLm20Temp(
+void VelodyneHwMonitorWrapper::velodyne_check_top_lm20_temp(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetTopLm20Temp();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_top_lm20_temp();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckTopPwr5v(
+void VelodyneHwMonitorWrapper::velodyne_check_top_pwr5v(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetTopPwr5v();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_top_pwr5v();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckTopPwr25v(
+void VelodyneHwMonitorWrapper::velodyne_check_top_pwr25v(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetTopPwr25v();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_top_pwr25v();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckTopPwr33v(
+void VelodyneHwMonitorWrapper::velodyne_check_top_pwr33v(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetTopPwr33v();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_top_pwr33v();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckTopPwrRaw(
+void VelodyneHwMonitorWrapper::velodyne_check_top_pwr_raw(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetTopPwrRaw();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_top_pwr_raw();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckTopPwrVccint(
+void VelodyneHwMonitorWrapper::velodyne_check_top_pwr_vccint(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetTopPwrVccint();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_top_pwr_vccint();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckBotIOut(
+void VelodyneHwMonitorWrapper::velodyne_check_bot_i_out(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetBotIOut();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_bot_i_out();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckBotPwr12v(
+void VelodyneHwMonitorWrapper::velodyne_check_bot_pwr12v(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetBotPwr12v();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_bot_pwr12v();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckBotLm20Temp(
+void VelodyneHwMonitorWrapper::velodyne_check_bot_lm20_temp(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetBotLm20Temp();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_bot_lm20_temp();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckBotPwr5v(
+void VelodyneHwMonitorWrapper::velodyne_check_bot_pwr5v(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetBotPwr5v();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_bot_pwr5v();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckBotPwr25v(
+void VelodyneHwMonitorWrapper::velodyne_check_bot_pwr25v(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetBotPwr25v();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_bot_pwr25v();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckBotPwr33v(
+void VelodyneHwMonitorWrapper::velodyne_check_bot_pwr33v(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetBotPwr33v();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_bot_pwr33v();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckBotPwrVIn(
+void VelodyneHwMonitorWrapper::velodyne_check_bot_pwr_v_in(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetBotPwrVIn();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_bot_pwr_v_in();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckBotPwr125v(
+void VelodyneHwMonitorWrapper::velodyne_check_bot_pwr125v(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetBotPwr125v();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_bot_pwr125v();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckVhv(
+void VelodyneHwMonitorWrapper::velodyne_check_vhv(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetVhv();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_vhv();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckAdcNf(
+void VelodyneHwMonitorWrapper::velodyne_check_adc_nf(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetAdcNf();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_adc_nf();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckAdcStats(
+void VelodyneHwMonitorWrapper::velodyne_check_adc_stats(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetAdcStats();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_adc_stats();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckIxe(
+void VelodyneHwMonitorWrapper::velodyne_check_ixe(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetIxe();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_ixe();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckAdctpStat(
+void VelodyneHwMonitorWrapper::velodyne_check_adctp_stat(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
-    auto tpl = VelodyneGetAdctpStat();
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
+    auto tpl = velodyne_get_adctp_stat();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::OnVelodyneStatusTimer()
+void VelodyneHwMonitorWrapper::on_velodyne_status_timer()
 {
-  auto str = hw_interface_->GetStatus();
+  auto str = hw_interface_->get_status();
   {
     std::lock_guard lock(mtx_status_);
-    current_status_tree =
-      std::make_shared<boost::property_tree::ptree>(hw_interface_->ParseJson(str));
+    current_status_tree_ =
+      std::make_shared<boost::property_tree::ptree>(hw_interface_->parse_json(str));
   }
   diagnostics_updater_.force_update();
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckGpsPpsState(
+void VelodyneHwMonitorWrapper::velodyne_check_gps_pps_state(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_status_tree &&
-    !VelodyneHwMonitorWrapper::current_status_tree->empty()) {
-    auto tpl = VelodyneGetGpsPpsState();
+  if (current_status_tree_ && !current_status_tree_->empty()) {
+    auto tpl = velodyne_get_gps_pps_state();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckGpsPosition(
+void VelodyneHwMonitorWrapper::velodyne_check_gps_position(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_status_tree &&
-    !VelodyneHwMonitorWrapper::current_status_tree->empty()) {
-    auto tpl = VelodyneGetGpsPosition();
+  if (current_status_tree_ && !current_status_tree_->empty()) {
+    auto tpl = velodyne_get_gps_position();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckMotorState(
+void VelodyneHwMonitorWrapper::velodyne_check_motor_state(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_status_tree &&
-    !VelodyneHwMonitorWrapper::current_status_tree->empty()) {
-    auto tpl = VelodyneGetMotorState();
+  if (current_status_tree_ && !current_status_tree_->empty()) {
+    auto tpl = velodyne_get_motor_state();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckMotorRpm(
+void VelodyneHwMonitorWrapper::velodyne_check_motor_rpm(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_status_tree &&
-    !VelodyneHwMonitorWrapper::current_status_tree->empty()) {
-    auto tpl = VelodyneGetMotorRpm();
+  if (current_status_tree_ && !current_status_tree_->empty()) {
+    auto tpl = velodyne_get_motor_rpm();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckMotorLock(
+void VelodyneHwMonitorWrapper::velodyne_check_motor_lock(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_status_tree &&
-    !VelodyneHwMonitorWrapper::current_status_tree->empty()) {
-    auto tpl = VelodyneGetMotorLock();
+  if (current_status_tree_ && !current_status_tree_->empty()) {
+    auto tpl = velodyne_get_motor_lock();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckMotorPhase(
+void VelodyneHwMonitorWrapper::velodyne_check_motor_phase(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_status_tree &&
-    !VelodyneHwMonitorWrapper::current_status_tree->empty()) {
-    auto tpl = VelodyneGetMotorPhase();
+  if (current_status_tree_ && !current_status_tree_->empty()) {
+    auto tpl = velodyne_get_motor_phase();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckLaserState(
+void VelodyneHwMonitorWrapper::velodyne_check_laser_state(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_status_tree &&
-    !VelodyneHwMonitorWrapper::current_status_tree->empty()) {
-    auto tpl = VelodyneGetLaserState();
+  if (current_status_tree_ && !current_status_tree_->empty()) {
+    auto tpl = velodyne_get_laser_state();
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckSnapshot(
+void VelodyneHwMonitorWrapper::velodyne_check_snapshot(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  uint8_t level = current_diag_status;
+  uint8_t level = current_diag_status_;
   diagnostics.add("sensor", sensor_configuration_->frame_id);
-  diagnostics.summary(level, *current_snapshot);
+  diagnostics.summary(level, *current_snapshot_);
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckStatus(
+void VelodyneHwMonitorWrapper::velodyne_check_status(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_status_tree &&
-    !VelodyneHwMonitorWrapper::current_status_tree->empty()) {
+  if (current_status_tree_ && !current_status_tree_->empty()) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
 
-    auto tpl = VelodyneGetMotorState();
+    auto tpl = velodyne_get_motor_state();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1293,7 +1249,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckStatus(
     }
     diagnostics.add(name_status_motor_state, std::get<2>(tpl));
 
-    tpl = VelodyneGetLaserState();
+    tpl = velodyne_get_laser_state();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1306,16 +1262,14 @@ void VelodyneHwMonitorWrapper::VelodyneCheckStatus(
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckPps(
+void VelodyneHwMonitorWrapper::velodyne_check_pps(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_status_tree &&
-    !VelodyneHwMonitorWrapper::current_status_tree->empty()) {
+  if (current_status_tree_ && !current_status_tree_->empty()) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
 
-    auto tpl = VelodyneGetGpsPpsState();
+    auto tpl = velodyne_get_gps_pps_state();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1324,7 +1278,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckPps(
     }
     diagnostics.add(name_status_gps_pps_state, std::get<2>(tpl));
 
-    tpl = VelodyneGetGpsPosition();
+    tpl = velodyne_get_gps_position();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1337,16 +1291,14 @@ void VelodyneHwMonitorWrapper::VelodyneCheckPps(
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckTemperature(
+void VelodyneHwMonitorWrapper::velodyne_check_temperature(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
 
-    auto tpl = VelodyneGetTopLm20Temp();
+    auto tpl = velodyne_get_top_lm20_temp();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1355,7 +1307,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckTemperature(
     }
     diagnostics.add(name_volt_temp_top_lm20_temp, std::get<2>(tpl));
 
-    tpl = VelodyneGetBotLm20Temp();
+    tpl = velodyne_get_bot_lm20_temp();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1368,16 +1320,14 @@ void VelodyneHwMonitorWrapper::VelodyneCheckTemperature(
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckRpm(
+void VelodyneHwMonitorWrapper::velodyne_check_rpm(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
 
-    auto tpl = VelodyneGetMotorRpm();
+    auto tpl = velodyne_get_motor_rpm();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1386,7 +1336,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckRpm(
     }
     diagnostics.add(name_status_motor_rpm, std::get<2>(tpl));
 
-    tpl = VelodyneGetMotorLock();
+    tpl = velodyne_get_motor_lock();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1399,16 +1349,14 @@ void VelodyneHwMonitorWrapper::VelodyneCheckRpm(
   }
 }
 
-void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
+void VelodyneHwMonitorWrapper::velodyne_check_voltage(
   diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
 {
-  if (
-    VelodyneHwMonitorWrapper::current_diag_tree &&
-    !VelodyneHwMonitorWrapper::current_diag_tree->empty()) {
+  if (current_diag_tree_ && !current_diag_tree_->empty()) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
 
-    auto tpl = VelodyneGetTopHv();
+    auto tpl = velodyne_get_top_hv();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1417,7 +1365,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
     }
     diagnostics.add(name_volt_temp_top_hv, std::get<2>(tpl));
 
-    tpl = VelodyneGetTopPwr5v();
+    tpl = velodyne_get_top_pwr5v();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1426,7 +1374,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
     }
     diagnostics.add(name_volt_temp_top_pwr_5v, std::get<2>(tpl));
 
-    tpl = VelodyneGetTopPwr25v();
+    tpl = velodyne_get_top_pwr25v();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1435,7 +1383,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
     }
     diagnostics.add(name_volt_temp_top_pwr_2_5v, std::get<2>(tpl));
 
-    tpl = VelodyneGetTopPwr33v();
+    tpl = velodyne_get_top_pwr33v();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1445,7 +1393,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
     diagnostics.add(name_volt_temp_top_pwr_3_3v, std::get<2>(tpl));
 
     if (sensor_configuration_->sensor_model == nebula::drivers::SensorModel::VELODYNE_VLP16) {
-      tpl = VelodyneGetTopPwr5vRaw();
+      tpl = velodyne_get_top_pwr5v_raw();
       if (std::get<0>(tpl)) {
         level = std::max(level, std::get<1>(tpl));
         if (0 < std::get<3>(tpl).length()) {
@@ -1454,7 +1402,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
       }
       diagnostics.add(name_volt_temp_top_pwr_5v_raw, std::get<2>(tpl));
     } else {
-      tpl = VelodyneGetTopPwrRaw();
+      tpl = velodyne_get_top_pwr_raw();
       if (std::get<0>(tpl)) {
         level = std::max(level, std::get<1>(tpl));
         if (0 < std::get<3>(tpl).length()) {
@@ -1464,7 +1412,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
       diagnostics.add(name_volt_temp_top_pwr_raw, std::get<2>(tpl));
     }
 
-    tpl = VelodyneGetTopPwrVccint();
+    tpl = velodyne_get_top_pwr_vccint();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1473,7 +1421,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
     }
     diagnostics.add(name_volt_temp_top_pwr_vccint, std::get<2>(tpl));
 
-    tpl = VelodyneGetBotIOut();
+    tpl = velodyne_get_bot_i_out();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1482,7 +1430,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
     }
     diagnostics.add(name_volt_temp_bot_i_out, std::get<2>(tpl));
 
-    tpl = VelodyneGetBotPwr12v();
+    tpl = velodyne_get_bot_pwr12v();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1491,7 +1439,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
     }
     diagnostics.add(name_volt_temp_bot_pwr_1_2v, std::get<2>(tpl));
 
-    tpl = VelodyneGetBotPwr5v();
+    tpl = velodyne_get_bot_pwr5v();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1500,7 +1448,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
     }
     diagnostics.add(name_volt_temp_bot_pwr_5v, std::get<2>(tpl));
 
-    tpl = VelodyneGetBotPwr25v();
+    tpl = velodyne_get_bot_pwr25v();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1509,7 +1457,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
     }
     diagnostics.add(name_volt_temp_bot_pwr_2_5v, std::get<2>(tpl));
 
-    tpl = VelodyneGetBotPwr33v();
+    tpl = velodyne_get_bot_pwr33v();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1518,7 +1466,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
     }
     diagnostics.add(name_volt_temp_bot_pwr_3_3v, std::get<2>(tpl));
 
-    tpl = VelodyneGetBotPwrVIn();
+    tpl = velodyne_get_bot_pwr_v_in();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1527,7 +1475,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
     }
     diagnostics.add(name_volt_temp_bot_pwr_v_in, std::get<2>(tpl));
 
-    tpl = VelodyneGetBotPwr125v();
+    tpl = velodyne_get_bot_pwr125v();
     if (std::get<0>(tpl)) {
       level = std::max(level, std::get<1>(tpl));
       if (0 < std::get<3>(tpl).length()) {
@@ -1540,7 +1488,7 @@ void VelodyneHwMonitorWrapper::VelodyneCheckVoltage(
   }
 }
 
-std::string VelodyneHwMonitorWrapper::GetPtreeValue(
+std::string VelodyneHwMonitorWrapper::get_ptree_value(
   std::shared_ptr<boost::property_tree::ptree> pt, std::mutex & mtx_pt, const std::string & key)
 {
   std::lock_guard lock(mtx_pt);
@@ -1552,16 +1500,15 @@ std::string VelodyneHwMonitorWrapper::GetPtreeValue(
   }
 }
 
-std::string VelodyneHwMonitorWrapper::GetFixedPrecisionString(double val, int pre)
+std::string VelodyneHwMonitorWrapper::get_fixed_precision_string(double val, int pre)
 {
   std::stringstream ss;
   ss << std::fixed << std::setprecision(pre) << val;
   return ss.str();
 }
 
-Status VelodyneHwMonitorWrapper::Status()
+Status VelodyneHwMonitorWrapper::status()
 {
   return Status::OK;
 }
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

@@ -34,9 +34,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class VelodyneDecoderWrapper
 {
@@ -49,34 +47,34 @@ public:
     const std::shared_ptr<nebula::drivers::VelodyneHwInterface> & hw_interface,
     std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config);
 
-  void ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
+  void process_cloud_packet(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & new_config);
 
-  void OnCalibrationChange(
+  void on_calibration_change(
     const std::shared_ptr<const nebula::drivers::VelodyneCalibrationConfiguration> &
       new_calibration);
 
-  rcl_interfaces::msg::SetParametersResult OnParameterChange(
+  rcl_interfaces::msg::SetParametersResult on_parameter_change(
     const std::vector<rclcpp::Parameter> & p);
 
-  nebula::Status Status();
+  nebula::Status status();
 
 private:
   /// @brief Load calibration data from file
   /// @param calibration_file_path The file to read from
   /// @return The calibration data if successful, or an error code if not
-  get_calibration_result_t GetCalibrationData(const std::string & calibration_file_path);
+  get_calibration_result_t get_calibration_data(const std::string & calibration_file_path);
 
-  void PublishCloud(
+  void publish_cloud(
     std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
     const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher);
 
   /// @brief Convert seconds to chrono::nanoseconds
   /// @param seconds
   /// @return chrono::nanoseconds
-  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
+  static inline std::chrono::nanoseconds seconds_to_chrono_nano_seconds(const double seconds)
   {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::duration<double>(seconds));
@@ -103,5 +101,4 @@ private:
 
   std::shared_ptr<WatchdogTimer> cloud_watchdog_;
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

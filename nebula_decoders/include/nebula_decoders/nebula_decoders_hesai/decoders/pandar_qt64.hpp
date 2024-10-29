@@ -17,9 +17,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -39,7 +37,7 @@ struct TailQT64
 
 struct PacketQT64 : public PacketBase<4, 64, 2, 100>
 {
-  typedef Body<Block<Unit4B, PacketQT64::N_CHANNELS>, PacketQT64::N_BLOCKS> body_t;
+  using body_t = Body<Block<Unit4B, PacketQT64::n_channels>, PacketQT64::n_blocks>;
   Header12B header;
   body_t body;
   TailQT64 tail;
@@ -53,7 +51,7 @@ struct PacketQT64 : public PacketBase<4, 64, 2, 100>
 class PandarQT64 : public HesaiSensor<hesai_packet::PacketQT64>
 {
 private:
-  static constexpr int firing_time_offset_ns_[64] = {
+  static constexpr int firing_time_offset_ns[64] = {
     12310,  14370,  16430,  18490,  20540,  22600,  24660,  26710,  29160,  31220,  33280,
     35340,  37390,  39450,  41500,  43560,  46610,  48670,  50730,  52780,  54840,  56900,
     58950,  61010,  63450,  65520,  67580,  69630,  71690,  73740,  75800,  77860,  80900,
@@ -62,18 +60,17 @@ private:
     12960,  132050, 134110, 136170, 138220, 140280, 142340, 144390, 146450};
 
 public:
-  static constexpr float MIN_RANGE = 0.1f;
-  static constexpr float MAX_RANGE = 60.f;
-  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 76800;
+  static constexpr float min_range = 0.1f;
+  static constexpr float max_range = 60.f;
+  static constexpr size_t max_scan_buffer_points = 76800;
 
-  int getPacketRelativePointTimeOffset(
+  int get_packet_relative_point_time_offset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
     int block_offset_ns = 25710 + (500000 * (block_id / n_returns)) / 3;
-    return block_offset_ns + firing_time_offset_ns_[channel_id];
+    return block_offset_ns + firing_time_offset_ns[channel_id];
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

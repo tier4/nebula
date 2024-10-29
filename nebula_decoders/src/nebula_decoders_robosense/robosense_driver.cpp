@@ -7,9 +7,7 @@
 #include "nebula_decoders/nebula_decoders_robosense/decoders/helios.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_decoder.hpp"
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 RobosenseDriver::RobosenseDriver(
@@ -40,20 +38,20 @@ RobosenseDriver::RobosenseDriver(
   }
 }
 
-Status RobosenseDriver::GetStatus()
+Status RobosenseDriver::get_status()
 {
   return driver_status_;
 }
 
-Status RobosenseDriver::SetCalibrationConfiguration(
+Status RobosenseDriver::set_calibration_configuration(
   const CalibrationConfigurationBase & calibration_configuration)
 {
   throw std::runtime_error(
-    "SetCalibrationConfiguration. Not yet implemented (" +
+    "set_calibration_configuration. Not yet implemented (" +
     calibration_configuration.calibration_file + ")");
 }
 
-std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ParseCloudPacket(
+std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::parse_cloud_packet(
   const std::vector<uint8_t> & packet)
 {
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
@@ -65,12 +63,11 @@ std::tuple<drivers::NebulaPointCloudPtr, double> RobosenseDriver::ParseCloudPack
   }
 
   scan_decoder_->unpack(packet);
-  if (scan_decoder_->hasScanned()) {
-    pointcloud = scan_decoder_->getPointcloud();
+  if (scan_decoder_->has_scanned()) {
+    pointcloud = scan_decoder_->get_pointcloud();
   }
 
   return pointcloud;
 }
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

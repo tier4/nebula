@@ -25,9 +25,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 /// @brief Base class for all sensor definitions
@@ -38,7 +36,7 @@ class RobosenseSensor
 public:
   typedef PacketT packet_t;
   typedef InfoPacketT info_t;
-  typedef class AngleCorrectorCalibrationBased<PacketT::N_CHANNELS, PacketT::DEGREE_SUBDIVISIONS>
+  typedef class AngleCorrectorCalibrationBased<PacketT::n_channels, PacketT::degree_subdivisions>
     angle_corrector_t;
 
   RobosenseSensor() = default;
@@ -50,7 +48,7 @@ public:
   /// @param channel_id The point's channel id
   /// @param sensor_configuration The sensor configuration
   /// @return The relative time offset in nanoseconds
-  virtual int getPacketRelativePointTimeOffset(
+  virtual int get_packet_relative_point_time_offset(
     uint32_t block_id, uint32_t channel_id,
     const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration) = 0;
 
@@ -60,7 +58,7 @@ public:
   /// @param sensor_configuration The sensor configuration
   /// @return The lowest point time offset (relative to the packet timestamp) of any point in or
   /// after the start block, in nanoseconds
-  int getEarliestPointTimeOffsetForBlock(
+  int get_earliest_point_time_offset_for_block(
     uint32_t start_block_id,
     const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration)
   {
@@ -68,10 +66,10 @@ public:
     int min_offset_ns = std::numeric_limits<int>::max();
 
     for (uint32_t block_id = start_block_id; block_id < start_block_id + n_returns; ++block_id) {
-      for (uint32_t channel_id = 0; channel_id < PacketT::N_CHANNELS; ++channel_id) {
+      for (uint32_t channel_id = 0; channel_id < PacketT::n_channels; ++channel_id) {
         min_offset_ns = std::min(
           min_offset_ns,
-          getPacketRelativePointTimeOffset(block_id, channel_id, sensor_configuration));
+          get_packet_relative_point_time_offset(block_id, channel_id, sensor_configuration));
       }
     }
 
@@ -111,7 +109,7 @@ public:
   /// @param return_units The units corresponding to all the returns in the group. These are usually
   /// from the same column across adjascent blocks.
   /// @return The return type of the point
-  virtual ReturnType getReturnType(
+  virtual ReturnType get_return_type(
     ReturnMode return_mode, unsigned int return_idx,
     const std::vector<const typename PacketT::body_t::block_t::unit_t *> & return_units)
   {
@@ -137,13 +135,12 @@ public:
     }
   }
 
-  virtual ReturnMode getReturnMode(const info_t & info_packet) = 0;
+  virtual ReturnMode get_return_mode(const info_t & info_packet) = 0;
 
-  virtual RobosenseCalibrationConfiguration getSensorCalibration(const info_t & info_packet) = 0;
+  virtual RobosenseCalibrationConfiguration get_sensor_calibration(const info_t & info_packet) = 0;
 
-  virtual bool getSyncStatus(const info_t & info_packet) = 0;
+  virtual bool get_sync_status(const info_t & info_packet) = 0;
 
-  virtual std::map<std::string, std::string> getSensorInfo(const info_t & info_packet) = 0;
+  virtual std::map<std::string, std::string> get_sensor_info(const info_t & info_packet) = 0;
 };
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

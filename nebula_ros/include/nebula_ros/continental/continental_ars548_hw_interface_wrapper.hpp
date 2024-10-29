@@ -26,12 +26,11 @@
 #include <continental_srvs/srv/continental_ars548_set_vehicle_parameters.hpp>
 #include <geometry_msgs/msg/accel_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
+#include <std_msgs/msg/float32.hpp>
 
 #include <memory>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class ContinentalARS548HwInterfaceWrapper
 {
@@ -42,35 +41,35 @@ public:
       config);
 
   /// @brief Starts the hw interface and subscribes to the input topics
-  void SensorInterfaceStart();
+  void sensor_interface_start();
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<const drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
       new_config_ptr);
 
   /// @brief Get current status of the hw interface
   /// @return Current status
-  nebula::Status Status();
+  nebula::Status status();
 
-  std::shared_ptr<drivers::continental_ars548::ContinentalARS548HwInterface> HwInterface() const;
+  std::shared_ptr<drivers::continental_ars548::ContinentalARS548HwInterface> hw_interface() const;
 
 private:
   /// @brief Callback to send the odometry information to the radar device
   /// @param msg The odometry message
-  void OdometryCallback(const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg);
+  void odometry_callback(const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg);
 
   /// @brief Callback to send the acceleration information to the radar device
   /// @param msg The acceleration message
-  void AccelerationCallback(const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr msg);
+  void acceleration_callback(const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr msg);
 
   /// @brief Callback to send the steering angle information to the radar device
   /// @param msg The steering angle message
-  void SteeringAngleCallback(const std_msgs::msg::Float32::SharedPtr msg);
+  void steering_angle_callback(const std_msgs::msg::Float32::SharedPtr msg);
 
   /// @brief Service callback to set the new sensor ip
   /// @param request service request
   /// @param response service response
-  void SetNetworkConfigurationRequestCallback(
+  void set_network_configuration_request_callback(
     const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetNetworkConfiguration::Request>
       request,
     const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetNetworkConfiguration::Response>
@@ -79,7 +78,7 @@ private:
   /// @brief Service callback to set the new sensor mounting position
   /// @param request service request
   /// @param response service response
-  void SetSensorMountingRequestCallback(
+  void set_sensor_mounting_request_callback(
     const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetSensorMounting::Request>
       request,
     const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetSensorMounting::Response>
@@ -88,7 +87,7 @@ private:
   /// @brief Service callback to set the new vehicle parameters
   /// @param request service request
   /// @param response service response
-  void SetVehicleParametersRequestCallback(
+  void set_vehicle_parameters_request_callback(
     const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetVehicleParameters::Request>
       request,
     const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetVehicleParameters::Response>
@@ -97,7 +96,7 @@ private:
   /// @brief Service callback to set the new radar parameters
   /// @param request service request
   /// @param response service response
-  void SetRadarParametersRequestCallback(
+  void set_radar_parameters_request_callback(
     const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetRadarParameters::Request>
       request,
     const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetRadarParameters::Response>
@@ -126,5 +125,4 @@ private:
   rclcpp::Service<continental_srvs::srv::ContinentalArs548SetRadarParameters>::SharedPtr
     set_radar_parameters_service_server_{};
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

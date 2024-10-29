@@ -20,9 +20,7 @@
 
 #include <string>
 #include <vector>
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 rcl_interfaces::msg::ParameterDescriptor param_read_write();
@@ -54,5 +52,4 @@ bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & nam
   return false;
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

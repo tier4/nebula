@@ -30,11 +30,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
-{
-namespace continental_srr520
+namespace nebula::drivers::continental_srr520
 {
 /// @brief Hardware interface of the Continental SRR520 radar
 class ContinentalSRR520HwInterface
@@ -45,16 +41,16 @@ public:
 
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStart();
+  Status sensor_interface_start();
 
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStop();
+  Status sensor_interface_stop();
 
   /// @brief Setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
-  Status SetSensorConfiguration(
+  Status set_sensor_configuration(
     const std::shared_ptr<
       const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
       new_config_ptr);
@@ -62,14 +58,14 @@ public:
   /// @brief Registering callback
   /// @param callback Callback function
   /// @return Resulting status
-  Status RegisterPacketCallback(
+  Status register_packet_callback(
     std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket>)> packet_callback);
 
   /// @brief Sensor synchronization routine
-  void SensorSync();
+  void sensor_sync();
 
   /// @brief Process a new Sync Follow-up request
-  void SensorSyncFollowUp(builtin_interfaces::msg::Time stamp);
+  void sensor_sync_follow_up(builtin_interfaces::msg::Time stamp);
 
   /// @brief Configure the sensor
   /// @param sensor_id Desired sensor id
@@ -83,7 +79,7 @@ public:
   /// @param plug_bottom Desired plug bottom
   /// @param reset Rest the sensor to its default values
   /// @return Resulting status
-  Status ConfigureSensor(
+  Status configure_sensor(
     uint8_t sensor_id, float longitudinal_autosar, float lateral_autosar, float vertical_autosar,
     float yaw_autosar, float longitudinal_cog, float wheelbase, float cover_damping,
     bool plug_bottom, bool reset);
@@ -95,34 +91,34 @@ public:
   /// @param longitudinal_velocity Longitudinal velocity
   /// @param driving_direction Driving direction
   /// @return Resulting status
-  Status SetVehicleDynamics(
+  Status set_vehicle_dynamics(
     float longitudinal_acceleration, float lateral_acceleration, float yaw_rate,
     float longitudinal_velocity, bool standstill);
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger
-  void SetLogger(std::shared_ptr<rclcpp::Logger> node);
+  void set_logger(std::shared_ptr<rclcpp::Logger> node);
 
 private:
   /// @brief Send a Fd frame
   /// @param data a buffer containing the data to send
   template <std::size_t N>
-  bool SendFrame(const std::array<uint8_t, N> & data, int can_frame_id);
+  bool send_frame(const std::array<uint8_t, N> & data, int can_frame_id);
 
   /// @brief Printing the string to RCLCPP_INFO_STREAM
   /// @param info Target string
-  void PrintInfo(std::string info);
+  void print_info(std::string info);
 
   /// @brief Printing the string to RCLCPP_ERROR_STREAM
   /// @param error Target string
-  void PrintError(std::string error);
+  void print_error(std::string error);
 
   /// @brief Printing the string to RCLCPP_DEBUG_STREAM
   /// @param debug Target string
-  void PrintDebug(std::string debug);
+  void print_debug(std::string debug);
 
   /// @brief Main loop of the CAN receiver thread
-  void ReceiveLoop();
+  void receive_loop();
 
   std::unique_ptr<::drivers::socketcan::SocketCanReceiver> can_receiver_ptr_;
   std::unique_ptr<::drivers::socketcan::SocketCanSender> can_sender_ptr_;
@@ -141,8 +137,6 @@ private:
 
   std::shared_ptr<rclcpp::Logger> parent_node_logger_ptr_;
 };
-}  // namespace continental_srr520
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers::continental_srr520
 
 #endif  // NEBULA_CONTINENTAL_SRR520_HW_INTERFACE_H

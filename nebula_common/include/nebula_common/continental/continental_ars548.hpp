@@ -216,64 +216,64 @@ using boost::endian::big_uint16_buf_t;
 using boost::endian::big_uint32_buf_t;
 using boost::endian::big_uint64_buf_t;
 
-constexpr int CONFIGURATION_SERVICE_ID = 0;
-constexpr int CONFIGURATION_METHOD_ID = 390;
-constexpr int CONFIGURATION_PAYLOAD_LENGTH = 56;
-constexpr int CONFIGURATION_UDP_LENGTH = 64;
+constexpr int configuration_service_id = 0;
+constexpr int configuration_method_id = 390;
+constexpr int configuration_payload_length = 56;
+constexpr int configuration_udp_length = 64;
 
-constexpr int DETECTION_LIST_METHOD_ID = 336;
-constexpr int OBJECT_LIST_METHOD_ID = 329;
-constexpr int SENSOR_STATUS_METHOD_ID = 380;
-constexpr int FILTER_STATUS_METHOD_ID = 396;
+constexpr int detection_list_method_id = 336;
+constexpr int object_list_method_id = 329;
+constexpr int sensor_status_method_id = 380;
+constexpr int filter_status_method_id = 396;
 
-constexpr int DETECTION_LIST_UDP_PAYLOAD = 35336;
-constexpr int OBJECT_LIST_UDP_PAYLOAD = 9401;
-constexpr int SENSOR_STATUS_UDP_PAYLOAD = 84;
-constexpr int FILTER_STATUS_UDP_PAYLOAD = 330;
+constexpr int detection_list_udp_payload = 35336;
+constexpr int object_list_udp_payload = 9401;
+constexpr int sensor_status_udp_payload = 84;
+constexpr int filter_status_udp_payload = 330;
 
-constexpr int DETECTION_LIST_PDU_LENGTH = 35328;
-constexpr int OBJECT_LIST_PDU_LENGTH = 9393;
-constexpr int SENSOR_STATUS_PDU_LENGTH = 76;
-constexpr int FILTER_STATUS_PDU_LENGTH = 322;
+constexpr int detection_list_pdu_length = 35328;
+constexpr int object_list_pdu_length = 9393;
+constexpr int sensor_status_pdu_length = 76;
+constexpr int filter_status_pdu_length = 322;
 
-constexpr int DETECTION_FILTER_PROPERTIES_NUM = 7;
-constexpr int OBJECT_FILTER_PROPERTIES_NUM = 24;
-constexpr int MAX_DETECTIONS = 800;
-constexpr int MAX_OBJECTS = 50;
+constexpr int detection_filter_properties_num = 7;
+constexpr int object_filter_properties_num = 24;
+constexpr int max_detections = 800;
+constexpr int max_objects = 50;
 
-constexpr int SYNC_OK = 1;
-constexpr int NEVER_SYNC = 2;
-constexpr int SYNC_LOST = 3;
+constexpr int sync_ok = 1;
+constexpr int never_sync = 2;
+constexpr int sync_lost = 3;
 
-constexpr int PLUG_RIGHT = 0;
-constexpr int PLUG_LEFT = 1;
+constexpr int plug_right = 0;
+constexpr int plug_left = 1;
 
-constexpr int FREQUENCY_SLOT_LOW = 0;
-constexpr int FREQUENCY_SLOT_MID = 1;
-constexpr int FREQUENCY_SLOT_HIGH = 2;
+constexpr int frequency_slot_low = 0;
+constexpr int frequency_slot_mid = 1;
+constexpr int frequency_slot_high = 2;
 
-constexpr int HCC_WORLDWIDE = 1;
-constexpr int HCC_JAPAN = 2;
+constexpr int hcc_worldwide = 1;
+constexpr int hcc_japan = 2;
 
-constexpr int POWERSAVE_STANDSTILL_OFF = 0;
-constexpr int POWERSAVE_STANDSTILL_ON = 1;
+constexpr int powersave_standstill_off = 0;
+constexpr int powersave_standstill_on = 1;
 
-constexpr int VDY_OK = 0;
-constexpr int VDY_NOTOK = 1;
+constexpr int vdy_ok = 0;
+constexpr int vdy_notok = 1;
 
-constexpr int STATE_INIT = 0;
-constexpr int STATE_OK = 1;
-constexpr int STATE_INVALID = 2;
+constexpr int state_init = 0;
+constexpr int state_ok = 1;
+constexpr int state_invalid = 2;
 
-constexpr int BLOCKAGE_STATUS_BLIND = 0;
-constexpr int BLOCKAGE_STATUS_HIGH = 1;
-constexpr int BLOCKAGE_STATUS_MID = 2;
-constexpr int BLOCKAGE_STATUS_LOW = 3;
-constexpr int BLOCKAGE_STATUS_NONE = 4;
+constexpr int blockage_status_blind = 0;
+constexpr int blockage_status_high = 1;
+constexpr int blockage_status_mid = 2;
+constexpr int blockage_status_low = 3;
+constexpr int blockage_status_none = 4;
 
-constexpr int BLOCKAGE_TEST_FAILED = 0;
-constexpr int BLOCKAGE_TEST_PASSED = 1;
-constexpr int BLOCKAGE_TEST_ONGOING = 2;
+constexpr int blockage_test_failed = 0;
+constexpr int blockage_test_passed = 1;
+constexpr int blockage_test_ongoing = 2;
 
 #pragma pack(push, 1)
 
@@ -352,7 +352,7 @@ struct DetectionListPacket
   big_float32_buf_t origin_yaw{};
   big_float32_buf_t origin_yaw_std{};
   uint8_t list_invalid_flags{};
-  DetectionPacket detections[MAX_DETECTIONS];
+  DetectionPacket detections[max_detections];
   big_float32_buf_t list_rad_vel_domain_min{};
   big_float32_buf_t list_rad_vel_domain_max{};
   big_uint32_buf_t number_of_detections{};
@@ -439,7 +439,7 @@ struct ObjectListPacket
   big_uint32_buf_t event_data_qualifier{};
   uint8_t extended_qualifier{};
   uint8_t number_of_objects{};
-  ObjectPacket objects[MAX_OBJECTS];
+  ObjectPacket objects[max_objects];
 };
 
 struct StatusConfigurationPacket
@@ -573,8 +573,8 @@ struct FilterStatusPacket
   uint8_t filter_configuration_counter{};
   uint8_t detection_sort_index{};
   uint8_t object_sort_index{};
-  FilterStatusEntryPacket detection_filters[DETECTION_FILTER_PROPERTIES_NUM];
-  FilterStatusEntryPacket object_filters[OBJECT_FILTER_PROPERTIES_NUM];
+  FilterStatusEntryPacket detection_filters[detection_filter_properties_num];
+  FilterStatusEntryPacket object_filters[object_filter_properties_num];
 };
 
 #pragma pack(pop)

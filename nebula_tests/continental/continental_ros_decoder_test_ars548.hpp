@@ -31,9 +31,7 @@
 #include <memory>
 #include <string>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class ContinentalRosDecoderTest final : public rclcpp::Node  //, testing::Test
 {
@@ -43,23 +41,24 @@ class ContinentalRosDecoderTest final : public rclcpp::Node  //, testing::Test
   std::shared_ptr<drivers::continental_ars548::ContinentalARS548SensorConfiguration>
     sensor_cfg_ptr_;
 
-  Status InitializeDriver(
+  Status initialize_driver(
     std::shared_ptr<drivers::continental_ars548::ContinentalARS548SensorConfiguration>
       sensor_configuration);
 
-  Status GetParameters(
+  Status get_parameters(
     drivers::continental_ars548::ContinentalARS548SensorConfiguration & sensor_configuration);
 
-  void CheckResult(const std::string msg_as_string, const std::string & gt_path);
+  void check_result(const std::string msg_as_string, const std::string & gt_path);
 
-  void DetectionListCallback(
+  void detection_list_callback(
     std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg);
 
-  void ObjectListCallback(std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg);
+  void object_list_callback(
+    std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg);
 
-  void CompareNodes(const YAML::Node & node1, const YAML::Node & node2);
+  void compare_nodes(const YAML::Node & node1, const YAML::Node & node2);
 
-  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
+  static inline std::chrono::nanoseconds seconds_to_chrono_nano_seconds(const double seconds)
   {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::duration<double>(seconds));
@@ -69,9 +68,9 @@ public:
   explicit ContinentalRosDecoderTest(
     const rclcpp::NodeOptions & options, const std::string & node_name);
 
-  void ReceiveScanMsgCallback(const nebula_msgs::msg::NebulaPackets::SharedPtr scan_msg);
-  Status GetStatus();
-  void ReadBag();
+  void receive_scan_msg_callback(const nebula_msgs::msg::NebulaPackets::SharedPtr scan_msg);
+  Status get_status();
+  void read_bag();
 
 private:
   std::string bag_path_{};
@@ -80,7 +79,6 @@ private:
   std::string target_topic_{};
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros
 
 #endif  // NEBULA_ContinentalRosDecoderTestArs548_H

@@ -23,9 +23,7 @@
 #include <memory>
 #include <tuple>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Base class for Continental Radar decoder
 class ContinentalPacketsDecoder
@@ -41,13 +39,12 @@ public:
 
   /// @brief Get current status of this driver
   /// @return Current status
-  virtual Status GetStatus() = 0;
+  virtual Status get_status() = 0;
 
   /// @brief Virtual function for parsing a NebulaPacket
   /// @param packet_msg
   /// @return Resulting flag
-  virtual bool ProcessPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg) = 0;
+  virtual bool process_packet(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg) = 0;
 };
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 #endif  // NEBULA_WS_CONTINENTAL_PACKETS_DECODER_HPP

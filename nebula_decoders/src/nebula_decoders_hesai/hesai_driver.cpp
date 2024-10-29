@@ -15,9 +15,7 @@
 
 // #define WITH_DEBUG_STD_COUT_HESAI_CLIENT // Use std::cout messages for debugging
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 HesaiDriver::HesaiDriver(
   const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
@@ -28,32 +26,32 @@ HesaiDriver::HesaiDriver(
 
   switch (sensor_configuration->sensor_model) {
     case SensorModel::HESAI_PANDAR64:
-      scan_decoder_ = InitializeDecoder<Pandar64>(sensor_configuration, calibration_data);
+      scan_decoder_ = initialize_decoder<Pandar64>(sensor_configuration, calibration_data);
       break;
     case SensorModel::HESAI_PANDAR40P:
     case SensorModel::HESAI_PANDAR40M:
-      scan_decoder_ = InitializeDecoder<Pandar40>(sensor_configuration, calibration_data);
+      scan_decoder_ = initialize_decoder<Pandar40>(sensor_configuration, calibration_data);
       break;
     case SensorModel::HESAI_PANDARQT64:
-      scan_decoder_ = InitializeDecoder<PandarQT64>(sensor_configuration, calibration_data);
+      scan_decoder_ = initialize_decoder<PandarQT64>(sensor_configuration, calibration_data);
       break;
     case SensorModel::HESAI_PANDARQT128:
-      scan_decoder_ = InitializeDecoder<PandarQT128>(sensor_configuration, calibration_data);
+      scan_decoder_ = initialize_decoder<PandarQT128>(sensor_configuration, calibration_data);
       break;
     case SensorModel::HESAI_PANDARXT32:
-      scan_decoder_ = InitializeDecoder<PandarXT32>(sensor_configuration, calibration_data);
+      scan_decoder_ = initialize_decoder<PandarXT32>(sensor_configuration, calibration_data);
       break;
     case SensorModel::HESAI_PANDARXT32M:
-      scan_decoder_ = InitializeDecoder<PandarXT32M>(sensor_configuration, calibration_data);
+      scan_decoder_ = initialize_decoder<PandarXT32M>(sensor_configuration, calibration_data);
       break;
     case SensorModel::HESAI_PANDARAT128:
-      scan_decoder_ = InitializeDecoder<PandarAT128>(sensor_configuration, calibration_data);
+      scan_decoder_ = initialize_decoder<PandarAT128>(sensor_configuration, calibration_data);
       break;
     case SensorModel::HESAI_PANDAR128_E3X:
-      scan_decoder_ = InitializeDecoder<Pandar128E3X>(sensor_configuration, calibration_data);
+      scan_decoder_ = initialize_decoder<Pandar128E3X>(sensor_configuration, calibration_data);
       break;
     case SensorModel::HESAI_PANDAR128_E4X:
-      scan_decoder_ = InitializeDecoder<Pandar128E4X>(sensor_configuration, calibration_data);
+      scan_decoder_ = initialize_decoder<Pandar128E4X>(sensor_configuration, calibration_data);
       break;
     case SensorModel::UNKNOWN:
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;
@@ -65,7 +63,7 @@ HesaiDriver::HesaiDriver(
 }
 
 template <typename SensorT>
-std::shared_ptr<HesaiScanDecoder> HesaiDriver::InitializeDecoder(
+std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
   const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
   const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
     calibration_configuration)
@@ -75,7 +73,7 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::InitializeDecoder(
     sensor_configuration, std::dynamic_pointer_cast<const CalibT>(calibration_configuration));
 }
 
-std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ParseCloudPacket(
+std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::parse_cloud_packet(
   const std::vector<uint8_t> & packet)
 {
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
@@ -87,8 +85,8 @@ std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ParseCloudPacket(
   }
 
   scan_decoder_->unpack(packet);
-  if (scan_decoder_->hasScanned()) {
-    pointcloud = scan_decoder_->getPointcloud();
+  if (scan_decoder_->has_scanned()) {
+    pointcloud = scan_decoder_->get_pointcloud();
   }
 
   // todo
@@ -101,18 +99,17 @@ std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::ParseCloudPacket(
   return pointcloud;
 }
 
-Status HesaiDriver::SetCalibrationConfiguration(
+Status HesaiDriver::set_calibration_configuration(
   const HesaiCalibrationConfigurationBase & calibration_configuration)
 {
   throw std::runtime_error(
-    "SetCalibrationConfiguration. Not yet implemented (" +
+    "set_calibration_configuration. Not yet implemented (" +
     calibration_configuration.calibration_file + ")");
 }
 
-Status HesaiDriver::GetStatus()
+Status HesaiDriver::get_status()
 {
   return driver_status_;
 }
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

@@ -18,6 +18,8 @@
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
 #include <boost/version.hpp>
+
+#include <cstddef>
 #if (BOOST_VERSION / 100 >= 1073 && BOOST_VERSION / 100 <= 1076)  // Boost 1.73 - 1.76
 #define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #endif
@@ -43,9 +45,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 const int PandarTcpCommandPort = 9347;
 const uint8_t PTC_COMMAND_DUMMY_BYTE = 0x00;
@@ -103,6 +103,12 @@ const uint16_t PANDAR128_E4X_PACKET_SIZE = 861;
 const uint16_t PANDAR128_E4X_EXTENDED_PACKET_SIZE = 1117;
 const uint16_t MTU_SIZE = 1500;
 
+/// @brief The kernel buffer size in bytes to use for receiving UDP packets. If the buffer is too
+/// small to bridge scheduling and processing delays, packets will be dropped. This corresponds to
+/// the net.core.rmem_default setting in Linux. The current value is hardcoded to accommodate one
+/// pointcloud worth of OT128 packets (currently the highest data rate sensor supported).
+const size_t UDP_SOCKET_BUFFER_SIZE = MTU_SIZE * 3600;
+
 // Time interval between Announce messages, in units of log seconds (default: 1)
 const int PTP_LOG_ANNOUNCE_INTERVAL = 1;
 // Time interval between Sync messages, in units of log seconds (default: 1)
@@ -122,10 +128,10 @@ private:
     uint8_t error_flags = 0;
     uint8_t ptc_error_code = 0;
 
-    bool ok() { return !error_flags && !ptc_error_code; }
+    [[nodiscard]] bool ok() const { return !error_flags && !ptc_error_code; }
   };
 
-  typedef nebula::util::expected<std::vector<uint8_t>, ptc_error_t> ptc_cmd_result_t;
+  using ptc_cmd_result_t = nebula::util::expected<std::vector<uint8_t>, ptc_error_t>;
 
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
   std::shared_ptr<boost::asio::io_context> m_owned_ctx;
@@ -323,6 +329,16 @@ public:
   /// @return Resulting status
   HesaiLidarRangeAll GetLidarRange();
 
+  /**
+   * @brief Given the HW interface's sensor configuration and a given calibration, set the sensor
+   * FoV (min and max angles) with appropriate padding around the FoV set in the configuration. This
+   * compensates for the points lost due to the sensor filtering FoV by raw encoder angle.
+   *
+   * @param calibration The calibration file of the sensor
+   * @return Status Resulting status of setting the FoV
+   */
+  [[nodiscard]] Status checkAndSetLidarRange(const HesaiCalibrationConfigurationBase & calibration);
+
   Status SetClockSource(int clock_source);
 
   /// @brief Setting values with PTC_COMMAND_SET_PTP_CONFIG
@@ -397,7 +413,8 @@ public:
   /// @param hesai_config Current HesaiConfig
   /// @return Resulting status
   HesaiStatus CheckAndSetConfig(
-    std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration, std::shared_ptr<HesaiConfigBase> hesai_config);
+    std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration,
+    std::shared_ptr<HesaiConfigBase> hesai_config);
   /// @brief Checking the current settings and changing the difference point
   /// @param sensor_configuration Current SensorConfiguration
   /// @param hesai_lidar_range_all Current HesaiLidarRangeAll
@@ -443,7 +460,6 @@ public:
   /// @param node Logger
   void SetLogger(std::shared_ptr<rclcpp::Logger> node);
 };
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 
 #endif  // NEBULA_HESAI_HW_INTERFACE_H

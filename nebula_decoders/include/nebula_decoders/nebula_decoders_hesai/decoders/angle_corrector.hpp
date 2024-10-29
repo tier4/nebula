@@ -14,15 +14,11 @@
 
 #pragma once
 
-#include "nebula_common/hesai/hesai_common.hpp"
-
 #include <rclcpp/rclcpp.hpp>
 
 #include <cstdint>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 struct CorrectedAngleData
@@ -49,18 +45,13 @@ public:
   /// angle unit
   /// @param channel_id The laser channel's id
   /// @return The corrected angles (azimuth, elevation) in radians and their sin/cos values
-  virtual CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) = 0;
+  virtual CorrectedAngleData get_corrected_angle_data(
+    uint32_t block_azimuth, uint32_t channel_id) = 0;
 
-  /// @brief Returns true if the current azimuth lies in a different (new) scan compared to the last
-  /// azimuth
-  /// @param current_azimuth The current azimuth value in the sensor's angle resolution
-  /// @param last_azimuth The last azimuth in the sensor's angle resolution
-  /// @param sync_azimuth The azimuth set in the sensor configuration, for which the
-  /// timestamp is aligned to the full second
-  /// @return true if the current azimuth is in a different scan than the last one, false otherwise
-  virtual bool hasScanned(
-    uint32_t current_azimuth, uint32_t last_azimuth, uint32_t sync_azimuth) = 0;
+  virtual bool passed_emit_angle(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
+  virtual bool passed_timestamp_reset_angle(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
+  virtual bool is_inside_fov(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
+  virtual bool is_inside_overlap(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

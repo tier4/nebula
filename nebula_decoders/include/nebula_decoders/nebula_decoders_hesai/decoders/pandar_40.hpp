@@ -17,9 +17,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 namespace hesai_packet
@@ -45,7 +43,7 @@ struct Tail40P
 
 struct Packet40P : public PacketBase<10, 40, 2, 100>
 {
-  typedef Body<SOBBlock<Unit3B, Packet40P::N_CHANNELS>, Packet40P::N_BLOCKS> body_t;
+  using body_t = Body<SOBBlock<Unit3B, Packet40P::n_channels>, Packet40P::n_blocks>;
   body_t body;
   Tail40P tail;
 };
@@ -56,7 +54,7 @@ struct Packet40P : public PacketBase<10, 40, 2, 100>
 /// packet type without a header.
 /// @return 0.004 (4mm)
 template <>
-double get_dis_unit<Packet40P>(const Packet40P & /* packet */)
+inline double get_dis_unit<Packet40P>(const Packet40P & /* packet */)
 {
   return 4 / 1000.;
 }
@@ -73,11 +71,11 @@ private:
     -21920, -9500,  -43520, -29770, -17350, -4920,  -42220, -28470, -16040, -3620};
 
 public:
-  static constexpr float MIN_RANGE = 0.3f;
-  static constexpr float MAX_RANGE = 200.f;
-  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 144000;
+  static constexpr float min_range = 0.3f;
+  static constexpr float max_range = 200.f;
+  static constexpr size_t max_scan_buffer_points = 144000;
 
-  int getPacketRelativePointTimeOffset(
+  int get_packet_relative_point_time_offset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
@@ -86,5 +84,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

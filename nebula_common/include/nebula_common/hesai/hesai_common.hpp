@@ -17,13 +17,17 @@
 
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
+#include "nebula_common/util/string_conversions.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <vector>
 namespace nebula
 {
@@ -32,10 +36,12 @@ namespace drivers
 /// @brief struct for Hesai sensor configuration
 struct HesaiSensorConfiguration : public LidarConfigurationBase
 {
+  std::string multicast_ip;
   uint16_t gnss_port{};
-  double scan_phase{};
+  uint16_t sync_angle{};
+  double cut_angle{};
   double dual_return_distance_threshold{};
-  std::string calibration_path{};
+  std::string calibration_path;
   uint16_t rotation_speed;
   uint16_t cloud_min_angle;
   uint16_t cloud_max_angle;
@@ -52,12 +58,16 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
 {
   os << "Hesai Sensor Configuration:" << '\n';
   os << (LidarConfigurationBase)(arg) << '\n';
+  os << "Multicast: "
+     << (arg.multicast_ip.empty() ? "disabled" : "enabled, group " + arg.multicast_ip) << '\n';
   os << "GNSS Port: " << arg.gnss_port << '\n';
-  os << "Scan Phase: " << arg.scan_phase << '\n';
   os << "Rotation Speed: " << arg.rotation_speed << '\n';
+  os << "Sync Angle: " << arg.sync_angle << '\n';
+  os << "Cut Angle: " << arg.cut_angle << '\n';
   os << "FoV Start: " << arg.cloud_min_angle << '\n';
   os << "FoV End: " << arg.cloud_max_angle << '\n';
   os << "Dual Return Distance Threshold: " << arg.dual_return_distance_threshold << '\n';
+  os << "Calibration Path: " << arg.calibration_path << '\n';
   os << "PTP Profile: " << arg.ptp_profile << '\n';
   os << "PTP Domain: " << std::to_string(arg.ptp_domain) << '\n';
   os << "PTP Transport Type: " << arg.ptp_transport_type << '\n';
@@ -67,10 +77,12 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
 
 struct HesaiCalibrationConfigurationBase : public CalibrationConfigurationBase
 {
-  virtual nebula::Status LoadFromBytes(const std::vector<uint8_t> & buf) = 0;
-  virtual nebula::Status LoadFromFile(const std::string & calibration_file) = 0;
-  virtual nebula::Status SaveToFileFromBytes(
+  virtual nebula::Status load_from_bytes(const std::vector<uint8_t> & buf) = 0;
+  virtual nebula::Status load_from_file(const std::string & calibration_file) = 0;
+  virtual nebula::Status save_to_file_from_bytes(
     const std::string & calibration_file, const std::vector<uint8_t> & buf) = 0;
+
+  [[nodiscard]] virtual std::tuple<float, float> get_fov_padding() const = 0;
 };
 
 /// @brief struct for Hesai calibration configuration
@@ -79,7 +91,7 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
   std::map<size_t, float> elev_angle_map;
   std::map<size_t, float> azimuth_offset_map;
 
-  inline nebula::Status LoadFromFile(const std::string & calibration_file) override
+  inline nebula::Status load_from_file(const std::string & calibration_file) override
   {
     std::ifstream ifs(calibration_file);
     if (!ifs) {
@@ -88,19 +100,19 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
     std::ostringstream ss;
     ss << ifs.rdbuf();  // reading data
     ifs.close();
-    return LoadFromString(ss.str());
+    return load_from_string(ss.str());
   }
 
-  nebula::Status LoadFromBytes(const std::vector<uint8_t> & buf) override
+  nebula::Status load_from_bytes(const std::vector<uint8_t> & buf) override
   {
     std::string calibration_string = std::string(buf.begin(), buf.end());
-    return LoadFromString(calibration_string);
+    return load_from_string(calibration_string);
   }
 
   /// @brief Loading calibration data
   /// @param calibration_content
   /// @return Resulting status
-  inline nebula::Status LoadFromString(const std::string & calibration_content)
+  inline nebula::Status load_from_string(const std::string & calibration_content)
   {
     std::stringstream ss;
     ss << calibration_content;
@@ -132,7 +144,7 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
   /// @brief Saving calibration data (not used)
   /// @param calibration_file
   /// @return Resulting status
-  inline nebula::Status SaveToFile(const std::string & calibration_file)
+  inline nebula::Status save_to_file(const std::string & calibration_file)
   {
     std::ofstream ofs(calibration_file);
     if (!ofs) {
@@ -150,18 +162,18 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
     return Status::OK;
   }
 
-  nebula::Status SaveToFileFromBytes(
+  nebula::Status save_to_file_from_bytes(
     const std::string & calibration_file, const std::vector<uint8_t> & buf) override
   {
     std::string calibration_string = std::string(buf.begin(), buf.end());
-    return SaveFileFromString(calibration_file, calibration_string);
+    return save_file_from_string(calibration_file, calibration_string);
   }
 
   /// @brief Saving calibration data from string
   /// @param calibration_file path
   /// @param calibration_string calibration string
   /// @return Resulting status
-  inline nebula::Status SaveFileFromString(
+  inline nebula::Status save_file_from_string(
     const std::string & calibration_file, const std::string & calibration_string)
   {
     std::ofstream ofs(calibration_file);
@@ -171,6 +183,19 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
     ofs << calibration_string;
     ofs.close();
     return Status::OK;
+  }
+
+  [[nodiscard]] std::tuple<float, float> get_fov_padding() const override
+  {
+    float min = INFINITY;
+    float max = -INFINITY;
+
+    for (const auto & item : azimuth_offset_map) {
+      min = std::min(min, item.second);
+      max = std::max(max, item.second);
+    }
+
+    return {-max, -min};
   }
 };
 
@@ -197,7 +222,7 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   /// @brief Load correction data from file
   /// @param buf Binary buffer
   /// @return Resulting status
-  inline nebula::Status LoadFromBytes(const std::vector<uint8_t> & buf) override
+  inline nebula::Status load_from_bytes(const std::vector<uint8_t> & buf) override
   {
     size_t index;
     for (index = 0; index < buf.size() - 1; index++) {
@@ -298,7 +323,7 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   /// @brief Load correction data from file
   /// @param correction_file path
   /// @return Resulting status
-  inline nebula::Status LoadFromFile(const std::string & correction_file) override
+  inline nebula::Status load_from_file(const std::string & correction_file) override
   {
     std::ifstream ifs(correction_file, std::ios::in | std::ios::binary);
     if (!ifs) {
@@ -311,7 +336,7 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
       ifs.read(reinterpret_cast<char *>(&c), sizeof(unsigned char));
       buf.emplace_back(c);
     }
-    LoadFromBytes(buf);
+    load_from_bytes(buf);
 
     ifs.close();
     return Status::OK;
@@ -321,7 +346,7 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   /// @param correction_file path
   /// @param buf correction binary
   /// @return Resulting status
-  inline nebula::Status SaveToFileFromBytes(
+  inline nebula::Status save_to_file_from_bytes(
     const std::string & correction_file, const std::vector<uint8_t> & buf) override
   {
     std::cerr << "Saving in: " << correction_file << "\n";
@@ -349,17 +374,17 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
     return Status::INVALID_CALIBRATION_FILE;
   }
 
-  static const int STEP3 = 200 * 256;
+  static const int g_step3 = 200 * 256;
 
   /// @brief Get azimuth adjustment for channel and precision azimuth
   /// @param ch The channel id
   /// @param azi The precision azimuth in (0.01 / 256) degree unit
   /// @return The azimuth adjustment in 0.01 degree unit
-  int8_t getAzimuthAdjustV3(uint8_t ch, uint32_t azi) const
+  [[nodiscard]] int8_t get_azimuth_adjust_v3(uint8_t ch, uint32_t azi) const
   {
-    unsigned int i = std::floor(1.f * azi / STEP3);
-    unsigned int l = azi - i * STEP3;
-    float k = 1.f * l / STEP3;
+    unsigned int i = std::floor(1.f * azi / g_step3);
+    unsigned int l = azi - i * g_step3;
+    float k = 1.f * l / g_step3;
     return round((1 - k) * azimuthOffset[ch * 180 + i] + k * azimuthOffset[ch * 180 + i + 1]);
   }
 
@@ -367,12 +392,22 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   /// @param ch The channel id
   /// @param azi The precision azimuth in (0.01 / 256) degree unit
   /// @return The elevation adjustment in 0.01 degree unit
-  int8_t getElevationAdjustV3(uint8_t ch, uint32_t azi) const
+  [[nodiscard]] int8_t get_elevation_adjust_v3(uint8_t ch, uint32_t azi) const
   {
-    unsigned int i = std::floor(1.f * azi / STEP3);
-    unsigned int l = azi - i * STEP3;
-    float k = 1.f * l / STEP3;
+    unsigned int i = std::floor(1.f * azi / g_step3);
+    unsigned int l = azi - i * g_step3;
+    float k = 1.f * l / g_step3;
     return round((1 - k) * elevationOffset[ch * 180 + i] + k * elevationOffset[ch * 180 + i + 1]);
+  }
+
+  [[nodiscard]] std::tuple<float, float> get_fov_padding() const override
+  {
+    // TODO(mojomex): calculate instead of hard-coding
+    // The reason this is tricky is that an upper bound over all azimuth/elevation combinations has
+    // to be found. For other sensors, this is only a function of elevation, so the search space is
+    // tiny compared to AT128. We should be able to find an upper bound of `getAzimuthAdjustV3` but
+    // I have not invested the time for now.
+    return {-5, 5};
   }
 };
 
@@ -394,36 +429,42 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
 <option value="6">First Return + Last Return + Strongest Return</option>
 */
 
-/// @brief Convert return mode name to ReturnMode enum (Hesai-specific ReturnModeFromString)
+/// @brief Convert return mode name to ReturnMode enum (Hesai-specific return_mode_from_string)
 /// @param return_mode Return mode name (Upper and lower case letters must match)
 /// @param sensor_model Model for correct conversion
 /// @return Corresponding ReturnMode
-inline ReturnMode ReturnModeFromStringHesai(
+inline ReturnMode return_mode_from_string_hesai(
   const std::string & return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {
+    case SensorModel::HESAI_PANDARXT32:
     case SensorModel::HESAI_PANDARXT32M:
-    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
       if (return_mode == "Last") return ReturnMode::LAST;
       if (return_mode == "Strongest") return ReturnMode::STRONGEST;
-      if (return_mode == "LastStrongest") return ReturnMode::DUAL_LAST_STRONGEST;
+      if (return_mode == "Dual" || return_mode == "LastStrongest")
+        return ReturnMode::DUAL_LAST_STRONGEST;
       if (return_mode == "First") return ReturnMode::FIRST;
       if (return_mode == "LastFirst") return ReturnMode::DUAL_LAST_FIRST;
       if (return_mode == "FirstStrongest") return ReturnMode::DUAL_FIRST_STRONGEST;
-      if (return_mode == "Dual") return ReturnMode::DUAL;
       break;
     case SensorModel::HESAI_PANDARQT64:
       if (return_mode == "Last") return ReturnMode::LAST;
-      if (return_mode == "Dual") return ReturnMode::DUAL;
+      if (return_mode == "Dual" || return_mode == "LastFirst") return ReturnMode::DUAL_LAST_FIRST;
       if (return_mode == "First") return ReturnMode::FIRST;
       break;
-    default:
+    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR64:
+    case SensorModel::HESAI_PANDAR40P:
       if (return_mode == "Last") return ReturnMode::LAST;
       if (return_mode == "Strongest") return ReturnMode::STRONGEST;
-      if (return_mode == "Dual") return ReturnMode::DUAL;
+      if (return_mode == "Dual" || return_mode == "LastStrongest")
+        return ReturnMode::DUAL_LAST_STRONGEST;
       break;
+    default:
+      throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
   }
 
   return ReturnMode::UNKNOWN;
@@ -433,11 +474,13 @@ inline ReturnMode ReturnModeFromStringHesai(
 /// @param return_mode Return mode number from the hardware response
 /// @param sensor_model Model for correct conversion
 /// @return Corresponding ReturnMode
-inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorModel & sensor_model)
+inline ReturnMode return_mode_from_int_hesai(
+  const int return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {
+    case SensorModel::HESAI_PANDARXT32:
     case SensorModel::HESAI_PANDARXT32M:
-    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
       if (return_mode == 0) return ReturnMode::LAST;
@@ -449,14 +492,18 @@ inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorMode
       break;
     case SensorModel::HESAI_PANDARQT64:
       if (return_mode == 0) return ReturnMode::LAST;
-      if (return_mode == 2) return ReturnMode::DUAL;
+      if (return_mode == 2) return ReturnMode::DUAL_LAST_FIRST;
       if (return_mode == 3) return ReturnMode::FIRST;
       break;
-    default:
+    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR64:
+    case SensorModel::HESAI_PANDAR40P:
       if (return_mode == 0) return ReturnMode::LAST;
       if (return_mode == 1) return ReturnMode::STRONGEST;
-      if (return_mode == 2) return ReturnMode::DUAL;
+      if (return_mode == 2) return ReturnMode::DUAL_LAST_STRONGEST;
       break;
+    default:
+      throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
   }
 
   return ReturnMode::UNKNOWN;
@@ -466,16 +513,18 @@ inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorMode
 /// @param return_mode target ReturnMode
 /// @param sensor_model Model for correct conversion
 /// @return Corresponding return mode number for the hardware
-inline int IntFromReturnModeHesai(const ReturnMode return_mode, const SensorModel & sensor_model)
+inline int int_from_return_mode_hesai(
+  const ReturnMode return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {
+    case SensorModel::HESAI_PANDARXT32:
     case SensorModel::HESAI_PANDARXT32M:
-    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
       if (return_mode == ReturnMode::LAST) return 0;
       if (return_mode == ReturnMode::STRONGEST) return 1;
-      if (return_mode == ReturnMode::DUAL_LAST_STRONGEST || return_mode == ReturnMode::DUAL)
+      if (return_mode == ReturnMode::DUAL || return_mode == ReturnMode::DUAL_LAST_STRONGEST)
         return 2;
       if (return_mode == ReturnMode::FIRST) return 3;
       if (return_mode == ReturnMode::DUAL_LAST_FIRST) return 4;
@@ -483,14 +532,19 @@ inline int IntFromReturnModeHesai(const ReturnMode return_mode, const SensorMode
       break;
     case SensorModel::HESAI_PANDARQT64:
       if (return_mode == ReturnMode::LAST) return 0;
-      if (return_mode == ReturnMode::DUAL) return 2;
+      if (return_mode == ReturnMode::DUAL || return_mode == ReturnMode::DUAL_LAST_FIRST) return 2;
       if (return_mode == ReturnMode::FIRST) return 3;
       break;
-    default:
+    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR64:
+    case SensorModel::HESAI_PANDAR40P:
       if (return_mode == ReturnMode::LAST) return 0;
       if (return_mode == ReturnMode::STRONGEST) return 1;
-      if (return_mode == ReturnMode::DUAL) return 2;
+      if (return_mode == ReturnMode::DUAL || return_mode == ReturnMode::DUAL_LAST_STRONGEST)
+        return 2;
       break;
+    default:
+      throw std::runtime_error("Unsupported sensor model: " + util::to_string(sensor_model));
   }
 
   return -1;

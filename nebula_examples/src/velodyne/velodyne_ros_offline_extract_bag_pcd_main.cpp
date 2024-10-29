@@ -33,10 +33,10 @@ int main(int argc, char * argv[])
   exec.add_node(velodyne_driver->get_node_base_interface());
 
   RCLCPP_INFO_STREAM(rclcpp::get_logger(node_name), "Get Status");
-  nebula::Status driver_status = velodyne_driver->GetStatus();
+  nebula::Status driver_status = velodyne_driver->get_status();
   if (driver_status == nebula::Status::OK) {
     RCLCPP_INFO_STREAM(rclcpp::get_logger(node_name), "Reading Started");
-    driver_status = velodyne_driver->ReadBag();
+    driver_status = velodyne_driver->read_bag();
     //    exec.spin();
   } else {
     RCLCPP_ERROR_STREAM(rclcpp::get_logger(node_name), driver_status);

@@ -17,9 +17,7 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 ContinentalARS548HwInterfaceWrapper::ContinentalARS548HwInterfaceWrapper(
@@ -33,9 +31,9 @@ ContinentalARS548HwInterfaceWrapper::ContinentalARS548HwInterfaceWrapper(
   status_(Status::NOT_INITIALIZED),
   config_ptr_(config_ptr)
 {
-  hw_interface_->SetLogger(
+  hw_interface_->set_logger(
     std::make_shared<rclcpp::Logger>(parent_node->get_logger().get_child("HwInterface")));
-  status_ = hw_interface_->SetSensorConfiguration(config_ptr);
+  status_ = hw_interface_->set_sensor_configuration(config_ptr);
 
   if (status_ != Status::OK) {
     throw std::runtime_error(
@@ -45,10 +43,10 @@ ContinentalARS548HwInterfaceWrapper::ContinentalARS548HwInterfaceWrapper(
   status_ = Status::OK;
 }
 
-void ContinentalARS548HwInterfaceWrapper::SensorInterfaceStart()
+void ContinentalARS548HwInterfaceWrapper::sensor_interface_start()
 {
   if (Status::OK == status_) {
-    hw_interface_->SensorInterfaceStart();
+    hw_interface_->sensor_interface_start();
   }
 
   if (Status::OK == status_) {
@@ -56,70 +54,72 @@ void ContinentalARS548HwInterfaceWrapper::SensorInterfaceStart()
       parent_node_->create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
         "odometry_input", rclcpp::QoS{1},
         std::bind(
-          &ContinentalARS548HwInterfaceWrapper::OdometryCallback, this, std::placeholders::_1));
+          &ContinentalARS548HwInterfaceWrapper::odometry_callback, this, std::placeholders::_1));
 
     acceleration_sub_ =
       parent_node_->create_subscription<geometry_msgs::msg::AccelWithCovarianceStamped>(
         "acceleration_input", rclcpp::QoS{1},
         std::bind(
-          &ContinentalARS548HwInterfaceWrapper::AccelerationCallback, this, std::placeholders::_1));
+          &ContinentalARS548HwInterfaceWrapper::acceleration_callback, this,
+          std::placeholders::_1));
 
     steering_angle_sub_ = parent_node_->create_subscription<std_msgs::msg::Float32>(
       "steering_angle_input", rclcpp::SensorDataQoS(),
       std::bind(
-        &ContinentalARS548HwInterfaceWrapper::SteeringAngleCallback, this, std::placeholders::_1));
+        &ContinentalARS548HwInterfaceWrapper::steering_angle_callback, this,
+        std::placeholders::_1));
 
     set_network_configuration_service_server_ =
       parent_node_->create_service<continental_srvs::srv::ContinentalArs548SetNetworkConfiguration>(
         "set_network_configuration",
         std::bind(
-          &ContinentalARS548HwInterfaceWrapper::SetNetworkConfigurationRequestCallback, this,
+          &ContinentalARS548HwInterfaceWrapper::set_network_configuration_request_callback, this,
           std::placeholders::_1, std::placeholders::_2));
 
     set_sensor_mounting_service_server_ =
       parent_node_->create_service<continental_srvs::srv::ContinentalArs548SetSensorMounting>(
         "set_sensor_mounting",
         std::bind(
-          &ContinentalARS548HwInterfaceWrapper::SetSensorMountingRequestCallback, this,
+          &ContinentalARS548HwInterfaceWrapper::set_sensor_mounting_request_callback, this,
           std::placeholders::_1, std::placeholders::_2));
 
     set_vehicle_parameters_service_server_ =
       parent_node_->create_service<continental_srvs::srv::ContinentalArs548SetVehicleParameters>(
         "set_vehicle_parameters",
         std::bind(
-          &ContinentalARS548HwInterfaceWrapper::SetVehicleParametersRequestCallback, this,
+          &ContinentalARS548HwInterfaceWrapper::set_vehicle_parameters_request_callback, this,
           std::placeholders::_1, std::placeholders::_2));
 
     set_radar_parameters_service_server_ =
       parent_node_->create_service<continental_srvs::srv::ContinentalArs548SetRadarParameters>(
         "set_radar_parameters",
         std::bind(
-          &ContinentalARS548HwInterfaceWrapper::SetRadarParametersRequestCallback, this,
+          &ContinentalARS548HwInterfaceWrapper::set_radar_parameters_request_callback, this,
           std::placeholders::_1, std::placeholders::_2));
   }
 }
 
-void ContinentalARS548HwInterfaceWrapper::OnConfigChange(
+void ContinentalARS548HwInterfaceWrapper::on_config_change(
   const std::shared_ptr<
     const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
     new_config_ptr_ptr)
 {
-  hw_interface_->SetSensorConfiguration(new_config_ptr_ptr);
+  hw_interface_->set_sensor_configuration(new_config_ptr_ptr);
   config_ptr_ = new_config_ptr_ptr;
 }
 
-Status ContinentalARS548HwInterfaceWrapper::Status()
+Status ContinentalARS548HwInterfaceWrapper::status()
 {
   return status_;
 }
 
 std::shared_ptr<drivers::continental_ars548::ContinentalARS548HwInterface>
-ContinentalARS548HwInterfaceWrapper::HwInterface() const
+ContinentalARS548HwInterfaceWrapper::hw_interface() const
 {
   return hw_interface_;
 }
 
-void ContinentalARS548HwInterfaceWrapper::OdometryCallback(
+void ContinentalARS548HwInterfaceWrapper::odometry_callback(
   const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg)
 {
   constexpr float speed_to_standstill = 0.5f;
@@ -132,44 +132,44 @@ void ContinentalARS548HwInterfaceWrapper::OdometryCallback(
   }
 
   if (standstill_) {
-    hw_interface_->SetDrivingDirection(0);
+    hw_interface_->set_driving_direction(0);
   } else {
-    hw_interface_->SetDrivingDirection(msg->twist.twist.linear.x > 0.f ? 1 : -1);
+    hw_interface_->set_driving_direction(msg->twist.twist.linear.x > 0.f ? 1 : -1);
   }
 
   constexpr float ms_to_kmh = 3.6f;
-  hw_interface_->SetVelocityVehicle(ms_to_kmh * std::abs(msg->twist.twist.linear.x));
+  hw_interface_->set_velocity_vehicle(ms_to_kmh * std::abs(msg->twist.twist.linear.x));
 
   constexpr float rad_to_deg = 180.f / M_PI;
-  hw_interface_->SetYawRate(rad_to_deg * msg->twist.twist.angular.z);
+  hw_interface_->set_yaw_rate(rad_to_deg * msg->twist.twist.angular.z);
 }
 
-void ContinentalARS548HwInterfaceWrapper::AccelerationCallback(
+void ContinentalARS548HwInterfaceWrapper::acceleration_callback(
   const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr msg)
 {
-  hw_interface_->SetAccelerationLateralCog(msg->accel.accel.linear.y);
-  hw_interface_->SetAccelerationLongitudinalCog(msg->accel.accel.linear.x);
+  hw_interface_->set_acceleration_lateral_cog(msg->accel.accel.linear.y);
+  hw_interface_->set_acceleration_longitudinal_cog(msg->accel.accel.linear.x);
 }
 
-void ContinentalARS548HwInterfaceWrapper::SteeringAngleCallback(
+void ContinentalARS548HwInterfaceWrapper::steering_angle_callback(
   const std_msgs::msg::Float32::SharedPtr msg)
 {
   constexpr float rad_to_deg = 180.f / M_PI;
-  hw_interface_->SetSteeringAngleFrontAxle(rad_to_deg * msg->data);
+  hw_interface_->set_steering_angle_front_axle(rad_to_deg * msg->data);
 }
 
-void ContinentalARS548HwInterfaceWrapper::SetNetworkConfigurationRequestCallback(
+void ContinentalARS548HwInterfaceWrapper::set_network_configuration_request_callback(
   const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetNetworkConfiguration::Request>
     request,
   const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetNetworkConfiguration::Response>
     response)
 {
-  auto result = hw_interface_->SetSensorIPAddress(request->sensor_ip.data);
+  auto result = hw_interface_->set_sensor_ip_address(request->sensor_ip.data);
   response->success = result == Status::OK;
   response->message = (std::stringstream() << result).str();
 }
 
-void ContinentalARS548HwInterfaceWrapper::SetSensorMountingRequestCallback(
+void ContinentalARS548HwInterfaceWrapper::set_sensor_mounting_request_callback(
   const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetSensorMounting::Request> request,
   const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetSensorMounting::Response>
     response)
@@ -215,14 +215,14 @@ void ContinentalARS548HwInterfaceWrapper::SetSensorMountingRequestCallback(
     pitch = rpy.y;
   }
 
-  auto result = hw_interface_->SetSensorMounting(
+  auto result = hw_interface_->set_sensor_mounting(
     longitudinal, lateral, vertical, yaw, pitch, request->plug_orientation);
 
   response->success = result == Status::OK;
   response->message = (std::stringstream() << result).str();
 }
 
-void ContinentalARS548HwInterfaceWrapper::SetVehicleParametersRequestCallback(
+void ContinentalARS548HwInterfaceWrapper::set_vehicle_parameters_request_callback(
   [[maybe_unused]] const std::shared_ptr<
     continental_srvs::srv::ContinentalArs548SetVehicleParameters::Request>
     request,
@@ -262,20 +262,20 @@ void ContinentalARS548HwInterfaceWrapper::SetVehicleParametersRequestCallback(
     vehicle_wheelbase = config_ptr_->configuration_vehicle_wheelbase;
   }
 
-  auto result = hw_interface_->SetVehicleParameters(
+  auto result = hw_interface_->set_vehicle_parameters(
     vehicle_length, vehicle_width, vehicle_height, vehicle_wheelbase);
 
   response->success = result == Status::OK;
   response->message = (std::stringstream() << result).str();
 }
 
-void ContinentalARS548HwInterfaceWrapper::SetRadarParametersRequestCallback(
+void ContinentalARS548HwInterfaceWrapper::set_radar_parameters_request_callback(
   const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetRadarParameters::Request>
     request,
   const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetRadarParameters::Response>
     response)
 {
-  auto result = hw_interface_->SetRadarParameters(
+  auto result = hw_interface_->set_radar_parameters(
     request->maximum_distance, request->frequency_slot, request->cycle_time, request->time_slot,
     request->country_code, request->powersave_standstill);
 
@@ -283,5 +283,4 @@ void ContinentalARS548HwInterfaceWrapper::SetRadarParametersRequestCallback(
   response->message = (std::stringstream() << result).str();
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

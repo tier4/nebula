@@ -36,9 +36,7 @@
 #include <thread>
 #include <vector>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 /// @brief Ros wrapper of continental ars548 driver
@@ -46,34 +44,34 @@ class ContinentalARS548RosWrapper final : public rclcpp::Node
 {
 public:
   explicit ContinentalARS548RosWrapper(const rclcpp::NodeOptions & options);
-  ~ContinentalARS548RosWrapper() noexcept {};
+  ~ContinentalARS548RosWrapper() noexcept override = default;
 
   /// @brief Get current status of this driver
   /// @return Current status
-  Status GetStatus();
+  Status get_status();
 
   /// @brief Start data streaming (Call SensorInterfaceStart of HwInterface)
   /// @return Resulting status
-  Status StreamStart();
+  Status stream_start();
 
 private:
   /// @brief Callback from the hw interface's raw data
-  void ReceivePacketCallback(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg_ptr);
+  void receive_packet_callback(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg_ptr);
 
   /// @brief Callback from replayed NebulaPackets
-  void ReceivePacketsCallback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg_ptr);
+  void receive_packets_callback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg_ptr);
 
   /// @brief Retrieve the parameters from ROS and set the driver and hw interface
   /// @return Resulting status
-  Status DeclareAndGetSensorConfigParams();
+  Status declare_and_get_sensor_config_params();
 
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
   /// @return SetParametersResult
-  rcl_interfaces::msg::SetParametersResult OnParameterChange(
+  rcl_interfaces::msg::SetParametersResult on_parameter_change(
     const std::vector<rclcpp::Parameter> & p);
 
-  Status ValidateAndSetConfig(
+  Status validate_and_set_config(
     std::shared_ptr<const drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
       new_config);
 
@@ -83,7 +81,7 @@ private:
     config_ptr_{};
 
   /// @brief Stores received packets that have not been processed yet by the decoder thread
-  mt_queue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
+  MtQueue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
   /// @brief Thread to isolate decoding from receiving
   std::thread decoder_thread_;
 
@@ -99,5 +97,4 @@ private:
   OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_{};
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros
