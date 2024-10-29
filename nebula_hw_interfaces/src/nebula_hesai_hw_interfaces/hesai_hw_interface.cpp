@@ -339,25 +339,21 @@ std::shared_ptr<HesaiConfigBase> HesaiHwInterface::GetConfig()
   auto response_or_err = SendReceive(PTC_COMMAND_GET_CONFIG_INFO);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
-  std::shared_ptr<HesaiConfigBase> result = nullptr;
   switch (sensor_configuration_->sensor_model) {
     case SensorModel::HESAI_PANDAR40P:
     case SensorModel::HESAI_PANDARXT32: {
       auto lidar_config = CheckSizeAndParse<HesaiConfig_XT_40p::Internal>(response);
-      result = std::make_shared<HesaiConfig_XT_40p>(lidar_config);
+      return std::make_shared<HesaiConfig_XT_40p>(lidar_config);
     }
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARAT128: {
       auto lidar_config = CheckSizeAndParse<HesaiConfig_OT128_AT128::Internal>(response);
-      result = std::make_shared<HesaiConfig_OT128_AT128>(lidar_config);
+      return std::make_shared<HesaiConfig_OT128_AT128>(lidar_config);
     }
     default: {
       throw std::runtime_error("This LiDAR has no LiDAR_Config TCP");
     }
   }
-
-  assert(result != nullptr);
-  return result;
 }
 
 std::shared_ptr<HesaiLidarStatusBase> HesaiHwInterface::GetLidarStatus()
@@ -365,28 +361,24 @@ std::shared_ptr<HesaiLidarStatusBase> HesaiHwInterface::GetLidarStatus()
   auto response_or_err = SendReceive(PTC_COMMAND_GET_LIDAR_STATUS);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
-  std::shared_ptr<HesaiLidarStatusBase> result = nullptr;
   switch (sensor_configuration_->sensor_model) {
     case SensorModel::HESAI_PANDAR40P:
     case SensorModel::HESAI_PANDARXT32: {
       auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatus_XT_40p::Internal>(response);
-      result = std::make_shared<HesaiLidarStatus_XT_40p>(hesai_lidarstatus);
+      return std::make_shared<HesaiLidarStatus_XT_40p>(hesai_lidarstatus);
     }
     case SensorModel::HESAI_PANDAR128_E4X: {
       auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatusOT128::Internal>(response);
-      result = std::make_shared<HesaiLidarStatusOT128>(hesai_lidarstatus);
+      return std::make_shared<HesaiLidarStatusOT128>(hesai_lidarstatus);
     }
     case SensorModel::HESAI_PANDARAT128: {
       auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatusAT128::Internal>(response);
-      result = std::make_shared<HesaiLidarStatusAT128>(hesai_lidarstatus);
+      return std::make_shared<HesaiLidarStatusAT128>(hesai_lidarstatus);
     }
     default: {
       throw std::runtime_error("This LiDAR has no LiDAR_Config TCP");
     }
   }
-
-  assert(result != nullptr);
-  return result;
 }
 
 Status HesaiHwInterface::SetSpinRate(uint16_t rpm)
