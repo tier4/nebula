@@ -7,6 +7,7 @@
 
 #include <boost/asio/socket_base.hpp>
 
+#include <cassert>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -298,11 +299,6 @@ HesaiPtpDiagStatus HesaiHwInterface::GetPtpDiagStatus()
   auto response_or_err = SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_STATUS});
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   auto diag_status = CheckSizeAndParse<HesaiPtpDiagStatus>(response);
-
-  std::stringstream ss;
-  ss << "HesaiHwInterface::GetPtpDiagStatus: " << diag_status;
-  PrintInfo(ss.str());
-
   return diag_status;
 }
 
@@ -311,11 +307,6 @@ HesaiPtpDiagPort HesaiHwInterface::GetPtpDiagPort()
   auto response_or_err = SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_PORT_DATA_SET});
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   auto diag_port = CheckSizeAndParse<HesaiPtpDiagPort>(response);
-
-  std::stringstream ss;
-  ss << "HesaiHwInterface::GetPtpDiagPort: " << diag_port;
-  PrintInfo(ss.str());
-
   return diag_port;
 }
 
@@ -324,11 +315,6 @@ HesaiPtpDiagTime HesaiHwInterface::GetPtpDiagTime()
   auto response_or_err = SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_TIME_STATUS_NP});
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   auto diag_time = CheckSizeAndParse<HesaiPtpDiagTime>(response);
-
-  std::stringstream ss;
-  ss << "HesaiHwInterface::GetPtpDiagTime: " << diag_time;
-  PrintInfo(ss.str());
-
   return diag_time;
 }
 
@@ -338,11 +324,6 @@ HesaiPtpDiagGrandmaster HesaiHwInterface::GetPtpDiagGrandmaster()
     SendReceive(PTC_COMMAND_PTP_DIAGNOSTICS, {PTC_COMMAND_PTP_GRANDMASTER_SETTINGS_NP});
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   auto diag_grandmaster = CheckSizeAndParse<HesaiPtpDiagGrandmaster>(response);
-
-  std::stringstream ss;
-  ss << "HesaiHwInterface::GetPtpDiagGrandmaster: " << diag_grandmaster;
-  PrintInfo(ss.str());
-
   return diag_grandmaster;
 }
 
@@ -358,55 +339,54 @@ std::shared_ptr<HesaiConfigBase> HesaiHwInterface::GetConfig()
   auto response_or_err = SendReceive(PTC_COMMAND_GET_CONFIG_INFO);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
+  std::shared_ptr<HesaiConfigBase> result = nullptr;
   switch (sensor_configuration_->sensor_model) {
     case SensorModel::HESAI_PANDAR40P:
     case SensorModel::HESAI_PANDARXT32: {
       auto lidar_config = CheckSizeAndParse<HesaiConfig_XT_40p::Internal>(response);
-      auto ptr = std::make_shared<HesaiConfig_XT_40p>(lidar_config);
-      PrintInfo("Config: " + ptr->to_json().dump());
-      return ptr;
+      result = std::make_shared<HesaiConfig_XT_40p>(lidar_config);
     }
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARAT128: {
       auto lidar_config = CheckSizeAndParse<HesaiConfig_OT128_AT128::Internal>(response);
-      auto ptr = std::make_shared<HesaiConfig_OT128_AT128>(lidar_config);
-      PrintInfo("Config: " + ptr->to_json().dump());
-      return ptr;
+      result = std::make_shared<HesaiConfig_OT128_AT128>(lidar_config);
     }
     default: {
       throw std::runtime_error("This LiDAR has no LiDAR_Config TCP");
     }
   }
+
+  assert(result != nullptr);
+  return result;
 }
 
 std::shared_ptr<HesaiLidarStatusBase> HesaiHwInterface::GetLidarStatus()
 {
   auto response_or_err = SendReceive(PTC_COMMAND_GET_LIDAR_STATUS);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
+
+  std::shared_ptr<HesaiLidarStatusBase> result = nullptr;
   switch (sensor_configuration_->sensor_model) {
     case SensorModel::HESAI_PANDAR40P:
     case SensorModel::HESAI_PANDARXT32: {
       auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatus_XT_40p::Internal>(response);
-      auto ptr = std::make_shared<HesaiLidarStatus_XT_40p>(hesai_lidarstatus);
-      PrintInfo("LiDAR_Status: " + ptr->to_json().dump());
-      return ptr;
+      result = std::make_shared<HesaiLidarStatus_XT_40p>(hesai_lidarstatus);
     }
     case SensorModel::HESAI_PANDAR128_E4X: {
       auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatusOT128::Internal>(response);
-      auto ptr = std::make_shared<HesaiLidarStatusOT128>(hesai_lidarstatus);
-      PrintInfo("LiDAR_Status: " + ptr->to_json().dump());
-      return ptr;
+      result = std::make_shared<HesaiLidarStatusOT128>(hesai_lidarstatus);
     }
     case SensorModel::HESAI_PANDARAT128: {
       auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatusAT128::Internal>(response);
-      auto ptr = std::make_shared<HesaiLidarStatusAT128>(hesai_lidarstatus);
-      PrintInfo("LiDAR_Status: " + ptr->to_json().dump());
-      return ptr;
+      result = std::make_shared<HesaiLidarStatusAT128>(hesai_lidarstatus);
     }
     default: {
       throw std::runtime_error("This LiDAR has no LiDAR_Config TCP");
     }
   }
+
+  assert(result != nullptr);
+  return result;
 }
 
 Status HesaiHwInterface::SetSpinRate(uint16_t rpm)
@@ -669,10 +649,6 @@ HesaiPtpConfig HesaiHwInterface::GetPtpConfig()
 
   size_t bytes_to_parse = (hesai_ptp_config.status == 0) ? sizeof(HesaiPtpConfig) : 4;
   memcpy(&hesai_ptp_config, response.data(), bytes_to_parse);
-
-  std::stringstream ss;
-  ss << "HesaiHwInterface::GetPtpConfig: " << hesai_ptp_config;
-  PrintInfo(ss.str());
 
   return hesai_ptp_config;
 }
