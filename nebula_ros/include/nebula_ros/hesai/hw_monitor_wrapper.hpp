@@ -103,9 +103,6 @@ private:
   std::mutex mtx_lidar_status_;
   std::mutex mtx_lidar_monitor_;
 
-  std::string info_model_;
-  std::string info_serial_;
-
   std::vector<std::string> temperature_names_;
 
   bool supports_monitor_;

@@ -80,24 +80,21 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   auto result = hw_interface->GetInventory();
   current_inventory_.reset(new HesaiInventory(result));
   current_inventory_time_.reset(new rclcpp::Time(parent_node->get_clock()->now()));
-  std::cout << "HesaiInventory" << std::endl;
-  std::cout << result << std::endl;
-  info_model_ = result.get_str_model();
-  info_serial_ = std::string(std::begin(result.sn), std::end(result.sn));
-  RCLCPP_INFO_STREAM(logger_, "Model: " << info_model_);
-  RCLCPP_INFO_STREAM(logger_, "Serial: " << info_serial_);
+  RCLCPP_INFO_STREAM(logger_, "Inventory info: " << result);
+
+  std::string model = result.get_str_model();
+  std::string serial = std::string(std::begin(result.sn), std::end(result.sn));
+  auto hardware_id = model + ": " + serial;
+  diagnostics_updater_.setHardwareID(hardware_id);
+  RCLCPP_INFO_STREAM(logger_, "Hardware ID: " + hardware_id);
+
   initialize_hesai_diagnostics();
 }
 
 void HesaiHwMonitorWrapper::initialize_hesai_diagnostics()
 {
-  RCLCPP_INFO_STREAM(logger_, "initialize_hesai_diagnostics");
   using std::chrono_literals::operator""s;
   std::ostringstream os;
-  auto hardware_id = info_model_ + ": " + info_serial_;
-  diagnostics_updater_.setHardwareID(hardware_id);
-  RCLCPP_INFO_STREAM(logger_, "Hardware ID: " + hardware_id);
-
   diagnostics_updater_.add("hesai_status", this, &HesaiHwMonitorWrapper::hesai_check_status);
   diagnostics_updater_.add("hesai_ptp", this, &HesaiHwMonitorWrapper::hesai_check_ptp);
   diagnostics_updater_.add(

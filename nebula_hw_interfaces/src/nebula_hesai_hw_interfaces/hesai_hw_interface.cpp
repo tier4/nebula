@@ -1082,10 +1082,6 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
 #endif
   std::thread t([this] {
     auto result = GetConfig();
-
-    std::stringstream ss;
-    ss << result;
-    PrintInfo(ss.str());
     CheckAndSetConfig(
       std::static_pointer_cast<const HesaiSensorConfiguration>(sensor_configuration_), result);
   });
@@ -1097,9 +1093,6 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
 
   std::thread t2([this] {
     auto result = GetLidarRange();
-    std::stringstream ss;
-    ss << result;
-    PrintInfo(ss.str());
     CheckAndSetConfig(
       std::static_pointer_cast<const HesaiSensorConfiguration>(sensor_configuration_), result);
   });
