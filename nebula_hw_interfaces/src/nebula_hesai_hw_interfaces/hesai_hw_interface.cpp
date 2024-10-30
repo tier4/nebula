@@ -13,8 +13,6 @@
 
 #include <boost/asio/socket_base.hpp>
 
-#include <cxxabi.h>
-
 #include <cassert>
 #include <sstream>
 #include <stdexcept>
@@ -1432,10 +1430,9 @@ T HesaiHwInterface::CheckSizeAndParse(const std::vector<uint8_t> & data)
   }
 
   if (data.size() > sizeof(T)) {
-    RCLCPP_WARN_STREAM_ONCE(
-      *parent_node_logger, "Sensor returned longer payload than expected for "
-                             << abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, nullptr)
-                             << ". Truncating and parsing anyway.");
+    RCLCPP_WARN_ONCE(
+      *parent_node_logger,
+      "Sensor returned longer payload than expected. Truncating and parsing anyway.");
   }
 
   T parsed;
