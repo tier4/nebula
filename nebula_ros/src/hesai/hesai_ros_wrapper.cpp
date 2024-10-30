@@ -65,9 +65,11 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
       (std::stringstream() << "No valid calibration found: " << calibration_result.error()).str());
   }
 
-  if (
-    hw_interface_wrapper_ && !use_udp_only &&
-    sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDARAT128) {
+  bool lidar_range_supported =
+    sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDARAT128 &&
+    sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDAR64;
+
+  if (hw_interface_wrapper_ && !use_udp_only && lidar_range_supported) {
     auto status =
       hw_interface_wrapper_->hw_interface()->checkAndSetLidarRange(*calibration_result.value());
     if (status != Status::OK) {

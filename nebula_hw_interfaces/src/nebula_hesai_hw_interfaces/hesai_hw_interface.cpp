@@ -4,6 +4,7 @@
 
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/hesai/hesai_status.hpp"
+#include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 
@@ -11,6 +12,8 @@
 #include <rclcpp/logging.hpp>
 
 #include <boost/asio/socket_base.hpp>
+
+#include <cxxabi.h>
 
 #include <cassert>
 #include <sstream>
@@ -343,6 +346,7 @@ std::shared_ptr<HesaiInventoryBase> HesaiHwInterface::GetInventory()
 
   switch (sensor_configuration_->sensor_model) {
     case SensorModel::HESAI_PANDARXT32:
+    case SensorModel::HESAI_PANDAR64:
     case SensorModel::HESAI_PANDAR40P: {
       auto lidar_config = CheckSizeAndParse<HesaiInventory_XT32_40P::Internal>(response);
       return std::make_shared<HesaiInventory_XT32_40P>(lidar_config);
@@ -372,9 +376,10 @@ std::shared_ptr<HesaiConfigBase> HesaiHwInterface::GetConfig()
 
   switch (sensor_configuration_->sensor_model) {
     case SensorModel::HESAI_PANDAR40P:
+    case SensorModel::HESAI_PANDAR64:
     case SensorModel::HESAI_PANDARXT32: {
-      auto lidar_config = CheckSizeAndParse<HesaiConfig_XT_40p::Internal>(response);
-      return std::make_shared<HesaiConfig_XT_40p>(lidar_config);
+      auto lidar_config = CheckSizeAndParse<HesaiConfig_XT_40p_64::Internal>(response);
+      return std::make_shared<HesaiConfig_XT_40p_64>(lidar_config);
     }
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARAT128: {
@@ -394,6 +399,7 @@ std::shared_ptr<HesaiLidarStatusBase> HesaiHwInterface::GetLidarStatus()
 
   switch (sensor_configuration_->sensor_model) {
     case SensorModel::HESAI_PANDAR40P:
+    case SensorModel::HESAI_PANDAR64:
     case SensorModel::HESAI_PANDARXT32: {
       auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatus_XT_40p::Internal>(response);
       return std::make_shared<HesaiLidarStatus_XT_40p>(hesai_lidarstatus);
@@ -533,9 +539,12 @@ Status HesaiHwInterface::SetLidarRange(int method, std::vector<unsigned char> da
 
 Status HesaiHwInterface::SetLidarRange(int start_ddeg, int end_ddeg)
 {
-  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+  if (
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
     return Status::SENSOR_CONFIG_ERROR;
   }
+
   // 0 - for all channels : 5-1 bytes
   // 1 - for each channel : 323-1 bytes
   // 2 - multi-section FOV : 1347-1 bytes
@@ -554,9 +563,12 @@ Status HesaiHwInterface::SetLidarRange(int start_ddeg, int end_ddeg)
 
 HesaiLidarRangeAll HesaiHwInterface::GetLidarRange()
 {
-  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+  if (
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
     throw std::runtime_error("Not supported on this sensor");
   }
+
   auto response_or_err = SendReceive(PTC_COMMAND_GET_LIDAR_RANGE);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
 
@@ -1138,7 +1150,9 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig()
   });
   t.join();
 
-  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+  if (
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
     return Status::OK;
   }
 
@@ -1420,8 +1434,10 @@ T HesaiHwInterface::CheckSizeAndParse(const std::vector<uint8_t> & data)
   }
 
   if (data.size() > sizeof(T)) {
-    RCLCPP_WARN_ONCE(
-      *parent_node_logger, "Sensor returned longer payload than expected. Will parse anyway.");
+    RCLCPP_WARN_STREAM_ONCE(
+      *parent_node_logger, "Sensor returned longer payload than expected for "
+                             << abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, nullptr)
+                             << ". Truncating and parsing anyway.");
   }
 
   T parsed;

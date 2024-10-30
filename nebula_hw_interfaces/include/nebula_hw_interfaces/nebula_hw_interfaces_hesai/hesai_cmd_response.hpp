@@ -529,7 +529,7 @@ private:
   Internal value;
 };
 
-struct HesaiConfig_XT_40p : public HesaiConfigBase
+struct HesaiConfig_XT_40p_64 : public HesaiConfigBase
 {
   struct Internal : public HesaiConfigBase::Internal
   {
@@ -539,7 +539,7 @@ struct HesaiConfig_XT_40p : public HesaiConfigBase
     unsigned char reserved[6];
   };
 
-  explicit HesaiConfig_XT_40p(Internal value) : value(value) {}
+  explicit HesaiConfig_XT_40p_64(Internal value) : value(value) {}
 
   [[nodiscard]] const HesaiConfigBase::Internal & get() const override { return value; }
 
