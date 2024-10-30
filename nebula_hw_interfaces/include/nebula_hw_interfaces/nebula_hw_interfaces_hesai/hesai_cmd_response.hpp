@@ -173,6 +173,8 @@ struct HesaiInventoryBase
     char sensor_fw_ver[16];
   };
 
+  virtual ~HesaiInventoryBase() = default;
+
   [[nodiscard]] ordered_json to_json() const
   {
     const Internal & val = get();
@@ -217,7 +219,7 @@ protected:
     return os << boost::algorithm::join(kv_pairs, ", ");
   }
 
-  [[nodiscard]] std::string get_str_model(uint8_t model) const
+  [[nodiscard]] static std::string get_str_model(uint8_t model)
   {
     switch (model) {
       case 0:
@@ -250,7 +252,7 @@ protected:
     }
   }
 
-  [[nodiscard]] std::string get_motor_type(uint8_t motor_type) const
+  [[nodiscard]] static std::string get_motor_type(uint8_t motor_type)
   {
     switch (motor_type) {
       case 0:
@@ -585,7 +587,7 @@ struct HesaiLidarStatusBase
 protected:
   [[nodiscard]] virtual ordered_json sensor_specifics_to_json() const = 0;
 
-  [[nodiscard]] std::string get_str_gps_pps_lock(uint8_t value) const
+  [[nodiscard]] static std::string get_str_gps_pps_lock(uint8_t value)
   {
     switch (value) {
       case 1:
@@ -596,7 +598,7 @@ protected:
         return "unknown";
     }
   }
-  [[nodiscard]] std::string get_str_gps_gprmc_status(uint8_t value) const
+  [[nodiscard]] static std::string get_str_gps_gprmc_status(uint8_t value)
   {
     switch (value) {
       case 1:
@@ -607,7 +609,7 @@ protected:
         return "unknown";
     }
   }
-  [[nodiscard]] std::string get_str_ptp_clock_status(uint8_t value) const
+  [[nodiscard]] static std::string get_str_ptp_clock_status(uint8_t value)
   {
     switch (value) {
       case 0:
