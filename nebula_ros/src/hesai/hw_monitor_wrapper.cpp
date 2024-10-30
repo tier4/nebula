@@ -45,7 +45,9 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
 {
   diag_span_ = parent_node->declare_parameter<uint16_t>("diag_span", param_read_only());
 
-  supports_monitor_ = config->sensor_model != drivers::SensorModel::HESAI_PANDARAT128;
+  bool monitor_enabled = config->sensor_model != drivers::SensorModel::HESAI_PANDARAT128 &&
+                         config->sensor_model != drivers::SensorModel::HESAI_PANDAR40P &&
+                         config->sensor_model != drivers::SensorModel::HESAI_PANDAR64;
 
   std::shared_ptr<HesaiInventoryBase> inventory = hw_interface->GetInventory();
   RCLCPP_INFO_STREAM(logger_, "Inventory info: " << *inventory);
@@ -57,10 +59,10 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   diagnostics_updater_.setHardwareID(hardware_id);
   RCLCPP_INFO_STREAM(logger_, "Hardware ID: " + hardware_id);
 
-  initialize_hesai_diagnostics();
+  initialize_hesai_diagnostics(monitor_enabled);
 }
 
-void HesaiHwMonitorWrapper::initialize_hesai_diagnostics()
+void HesaiHwMonitorWrapper::initialize_hesai_diagnostics(bool monitor_enabled)
 {
   using std::chrono_literals::operator""s;
   std::ostringstream os;
@@ -71,16 +73,17 @@ void HesaiHwMonitorWrapper::initialize_hesai_diagnostics()
   diagnostics_updater_.add("hesai_rpm", this, &HesaiHwMonitorWrapper::hesai_check_rpm);
 
   current_status_.reset();
-  current_monitor_.reset();
   current_status_time_ = std::make_unique<rclcpp::Time>(parent_node_->get_clock()->now());
-  current_lidar_monitor_time_ = std::make_unique<rclcpp::Time>(parent_node_->get_clock()->now());
   current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+
+  current_monitor_.reset();
+  current_lidar_monitor_time_ = std::make_unique<rclcpp::Time>(parent_node_->get_clock()->now());
   current_monitor_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
 
-  auto fetch_diag_from_sensor = [this]() {
+  auto fetch_diag_from_sensor = [this, monitor_enabled]() {
     on_hesai_status_timer();
 
-    if (!supports_monitor_) return;
+    if (!monitor_enabled) return;
 
     if (hw_interface_->UseHttpGetLidarMonitor()) {
       on_hesai_lidar_monitor_timer_http();
@@ -92,14 +95,16 @@ void HesaiHwMonitorWrapper::initialize_hesai_diagnostics()
   fetch_diagnostics_timer_ = parent_node_->create_wall_timer(
     std::chrono::milliseconds(diag_span_), std::move(fetch_diag_from_sensor));
 
-  if (hw_interface_->UseHttpGetLidarMonitor()) {
-    diagnostics_updater_.add(
-      "hesai_voltage", this, &HesaiHwMonitorWrapper::hesai_check_voltage_http);
-  } else {
-    diagnostics_updater_.add("hesai_voltage", this, &HesaiHwMonitorWrapper::hesai_check_voltage);
+  if (monitor_enabled) {
+    if (hw_interface_->UseHttpGetLidarMonitor()) {
+      diagnostics_updater_.add(
+        "hesai_voltage", this, &HesaiHwMonitorWrapper::hesai_check_voltage_http);
+    } else {
+      diagnostics_updater_.add("hesai_voltage", this, &HesaiHwMonitorWrapper::hesai_check_voltage);
+    }
   }
 
-  auto on_timer_update = [this] {
+  auto on_timer_update = [this, monitor_enabled] {
     RCLCPP_DEBUG_STREAM(logger_, "OnUpdateTimer");
     auto now = parent_node_->get_clock()->now();
     auto dif = (now - *current_status_time_).seconds();
@@ -113,6 +118,9 @@ void HesaiHwMonitorWrapper::initialize_hesai_diagnostics()
       current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::OK;
       RCLCPP_DEBUG_STREAM(logger_, "OK");
     }
+
+    if (!monitor_enabled) return;
+
     dif = (now - *current_lidar_monitor_time_).seconds();
     RCLCPP_DEBUG_STREAM(logger_, "dif(monitor): " << dif);
     if (diag_span_ * 2.0 < dif * 1000) {

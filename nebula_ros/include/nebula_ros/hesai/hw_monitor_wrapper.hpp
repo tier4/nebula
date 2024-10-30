@@ -54,7 +54,7 @@ private:
     diagnostic_updater::DiagnosticStatusWrapper & diagnostics, const std::string & key,
     const json & value);
 
-  void initialize_hesai_diagnostics();
+  void initialize_hesai_diagnostics(bool monitor_enabled);
 
   std::string get_ptree_value(boost::property_tree::ptree * pt, const std::string & key);
 
@@ -103,8 +103,6 @@ private:
 
   std::mutex mtx_lidar_status_;
   std::mutex mtx_lidar_monitor_;
-
-  bool supports_monitor_;
 
   const std::string MSG_NOT_SUPPORTED_ = "Not supported";
   const std::string MSG_ERROR_ = "Error";
