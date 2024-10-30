@@ -377,9 +377,10 @@ std::shared_ptr<HesaiConfigBase> HesaiHwInterface::GetConfig()
   switch (sensor_configuration_->sensor_model) {
     case SensorModel::HESAI_PANDAR40P:
     case SensorModel::HESAI_PANDAR64:
+    case SensorModel::HESAI_PANDARQT128:
     case SensorModel::HESAI_PANDARXT32: {
-      auto lidar_config = CheckSizeAndParse<HesaiConfig_XT_40p_64::Internal>(response);
-      return std::make_shared<HesaiConfig_XT_40p_64>(lidar_config);
+      auto lidar_config = CheckSizeAndParse<HesaiConfig_XT_40P_64_QT128::Internal>(response);
+      return std::make_shared<HesaiConfig_XT_40P_64_QT128>(lidar_config);
     }
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARAT128: {
@@ -411,6 +412,10 @@ std::shared_ptr<HesaiLidarStatusBase> HesaiHwInterface::GetLidarStatus()
     case SensorModel::HESAI_PANDARAT128: {
       auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatusAT128::Internal>(response);
       return std::make_shared<HesaiLidarStatusAT128>(hesai_lidarstatus);
+    }
+    case SensorModel::HESAI_PANDARQT128: {
+      auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatusQT128::Internal>(response);
+      return std::make_shared<HesaiLidarStatusQT128>(hesai_lidarstatus);
     }
     default: {
       throw std::runtime_error("This LiDAR has no LiDAR_Config TCP");

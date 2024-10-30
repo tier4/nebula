@@ -17,6 +17,7 @@
 
 #include <nebula_common/util/string_conversions.hpp>
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/endian/buffers.hpp>
@@ -29,6 +30,7 @@
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 using namespace boost::endian;  // NOLINT(build/namespaces)
@@ -529,7 +531,7 @@ private:
   Internal value;
 };
 
-struct HesaiConfig_XT_40p_64 : public HesaiConfigBase
+struct HesaiConfig_XT_40P_64_QT128 : public HesaiConfigBase
 {
   struct Internal : public HesaiConfigBase::Internal
   {
@@ -539,7 +541,7 @@ struct HesaiConfig_XT_40p_64 : public HesaiConfigBase
     unsigned char reserved[6];
   };
 
-  explicit HesaiConfig_XT_40p_64(Internal value) : value(value) {}
+  explicit HesaiConfig_XT_40P_64_QT128(Internal value) : value(value) {}
 
   [[nodiscard]] const HesaiConfigBase::Internal & get() const override { return value; }
 
@@ -631,7 +633,7 @@ inline std::ostream & operator<<(std::ostream & os, const HesaiLidarStatusBase &
   return os;
 }
 
-struct HesaiLidarStatusAT128 : public HesaiLidarStatusBase
+struct HesaiLidarStatus_AT128_QT128 : public HesaiLidarStatusBase
 {
   struct Internal : public HesaiLidarStatusBase::Internal
   {
@@ -644,21 +646,15 @@ struct HesaiLidarStatusAT128 : public HesaiLidarStatusBase
     unsigned char reserved[5];
   };
 
-  explicit HesaiLidarStatusAT128(Internal value) : value(value) {}
-
   [[nodiscard]] ordered_json sensor_specifics_to_json() const override
   {
     ordered_json j;
     ordered_json temperature;
-    temperature["tx1 temperature"] = std::to_string(value.temperature[0].value() * 0.01) + " deg";
-    temperature["tx2 temperature"] = std::to_string(value.temperature[1].value() * 0.01) + " deg";
-    temperature["fpga temperature"] = std::to_string(value.temperature[2].value() * 0.01) + " deg";
-    temperature["rx1 temperature"] = std::to_string(value.temperature[3].value() * 0.01) + " deg";
-    temperature["rx2 temperature"] = std::to_string(value.temperature[4].value() * 0.01) + " deg";
-    temperature["mb1 temperature"] = std::to_string(value.temperature[5].value() * 0.01) + " deg";
-    temperature["mb2 temperature"] = std::to_string(value.temperature[6].value() * 0.01) + " deg";
-    temperature["pb temperature"] = std::to_string(value.temperature[7].value() * 0.01) + " deg";
-    temperature["hot temperature"] = std::to_string(value.temperature[8].value() * 0.01) + " deg";
+    const auto temperature_names = get_temperature_names();
+    for (size_t i = 0; i < temperature_names.size(); ++i) {
+      temperature[temperature_names[i]] =
+        std::to_string(value.temperature[i].value() * 0.01) + " deg";
+    }
     j["temperature"] = temperature;
     j["startup_times"] = value.startup_times.value();
     j["total_operation_time"] = std::to_string(value.total_operation_time.value()) + " min";
@@ -668,8 +664,49 @@ struct HesaiLidarStatusAT128 : public HesaiLidarStatusBase
   }
   [[nodiscard]] const HesaiLidarStatusBase::Internal & get() const override { return value; }
 
+protected:
+  explicit HesaiLidarStatus_AT128_QT128(Internal value) : value(value) {}
+
+  [[nodiscard]] virtual std::array<std::string, 9> get_temperature_names() const = 0;
+
 private:
   Internal value;
+};
+
+struct HesaiLidarStatusAT128 : public HesaiLidarStatus_AT128_QT128
+{
+  explicit HesaiLidarStatusAT128(Internal value) : HesaiLidarStatus_AT128_QT128(value) {}
+
+protected:
+  [[nodiscard]] std::array<std::string, 9> get_temperature_names() const override
+  {
+    return {
+      "tx1 temperature", "tx2 temperature", "fpga temperature",
+      "rx1 temperature", "rx2 temperature", "mb1 temperature",
+      "mb2 temperature", "pb temperature",  "hot temperature",
+    };
+  }
+};
+
+struct HesaiLidarStatusQT128 : public HesaiLidarStatus_AT128_QT128
+{
+  explicit HesaiLidarStatusQT128(Internal value) : HesaiLidarStatus_AT128_QT128(value) {}
+
+protected:
+  [[nodiscard]] std::array<std::string, 9> get_temperature_names() const override
+  {
+    return {
+      "Bottom circuit board T1 temperature",
+      "Bottom circuit board T2 temperature",
+      "Internal temperature",
+      "Laser emitting board RT1 temperature",
+      "Laser emitting board RT2 temperature",
+      "Receiving board RT1 temperature",
+      "Receiving board RT2 temperature",
+      "Top circuit RT1 temperature",
+      "Top circuit RT2 temperature",
+    };
+  }
 };
 
 struct HesaiLidarStatusOT128 : public HesaiLidarStatusBase
