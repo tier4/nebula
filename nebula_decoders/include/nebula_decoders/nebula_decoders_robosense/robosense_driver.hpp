@@ -34,7 +34,7 @@ class RobosenseDriver : NebulaDriverBase
 {
 private:
   /// @brief Current driver status
-  Status driver_status_;
+  Status driver_status_{Status::NOT_INITIALIZED};
 
   /// @brief Decoder according to the model
   std::shared_ptr<RobosenseScanDecoder> scan_decoder_;
