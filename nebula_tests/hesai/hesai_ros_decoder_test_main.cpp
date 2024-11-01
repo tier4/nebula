@@ -24,7 +24,7 @@
 namespace nebula::test
 {
 
-const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[6] = {
+const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[8] = {
   {"Pandar40P", "Dual", "Pandar40P.csv", "40p/1673400149412331409", "hesai", 0, 0.0, 0., 360., 0.3f,
    200.f},
   {"Pandar64", "Dual", "Pandar64.csv", "64/1673403880599376836", "hesai", 0, 0.0, 0., 360., 0.3f,
@@ -36,7 +36,11 @@ const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[6] = {
   {"PandarXT32", "Dual", "PandarXT32.csv", "xt32/1673400677802009732", "hesai", 0, 0.0, 0., 360.,
    0.05f, 120.f},
   {"PandarXT32M", "LastStrongest", "PandarXT32M.csv", "xt32m/1660893203042895158", "hesai", 0, 0.0,
-   0., 360., 0.5f, 300.f}};
+   0., 360., 0.5f, 300.f},
+  {"PandarQT128", "LastStrongest", "PandarQT128.csv", "qt128/1730273789074637152", "hesai", 0, 0.0,
+   0., 360., 0.3f, 300.f},
+  {"Pandar128E4X", "LastStrongest", "Pandar128E4X.csv", "ot128/1730271167765338806", "hesai", 0,
+   0.0, 0., 360., 0.3f, 300.f}};
 
 // Compares geometrical output of decoder against pre-recorded reference pointcloud.
 TEST_P(DecoderTest, TestPcd)
