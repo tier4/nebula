@@ -89,8 +89,7 @@ int Vls128Decoder::pointsPerPacket()
 
 void Vls128Decoder::reset_pointcloud(size_t n_pts, double time_stamp)
 {
-  //  scan_pc_.reset(new NebulaPointCloud);
-  scan_pc_->points.clear();
+  scan_pc_->clear();
   max_pts_ = n_pts * pointsPerPacket();
   scan_pc_->points.reserve(max_pts_);
   reset_overflow(time_stamp);  // transfer existing overflow points to the cleared pointcloud
