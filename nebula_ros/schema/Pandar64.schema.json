@@ -60,6 +60,9 @@
         "sensor_model": {
           "$ref": "sub/lidar_hesai.json#/definitions/sensor_model"
         },
+        "calibration_file": {
+          "$ref": "sub/lidar_hesai.json#/definitions/calibration_file"
+        },
         "rotation_speed": {
           "$ref": "sub/lidar_hesai.json#/definitions/rotation_speed"
         },
@@ -108,6 +111,7 @@
         "sync_angle",
         "cut_angle",
         "sensor_model",
+        "calibration_file",
         "rotation_speed",
         "return_mode",
         "ptp_profile",
