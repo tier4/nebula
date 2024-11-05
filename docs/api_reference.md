@@ -1,3 +1,5 @@
+# API Reference
+
 Nebula is divided into several modules:
 
 - **Common**, for type definitions and utilities
