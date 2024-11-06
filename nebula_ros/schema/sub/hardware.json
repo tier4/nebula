@@ -18,22 +18,10 @@
       "readOnly": true,
       "description": "Sensor model."
     },
-    "setup_sensor": {
-      "type": "boolean",
-      "default": "true",
-      "readOnly": true,
-      "description": "Enable sensor setup on hardware driver."
-    },
     "retry_hw": {
       "type": "boolean",
       "default": "true",
       "description": "Whether TCP connections are retried on failure or the driver should instead exit."
-    },
-    "udp_only": {
-      "type": "boolean",
-      "default": "false",
-      "readOnly": true,
-      "description": "Use UDP protocol only (settings synchronization and diagnostics publishing are disabled)."
     }
   }
 }

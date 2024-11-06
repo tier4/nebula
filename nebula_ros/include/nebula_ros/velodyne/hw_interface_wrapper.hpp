@@ -16,6 +16,7 @@
 
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
+#include <nebula_common/nebula_common.hpp>
 #include <nebula_common/velodyne/velodyne_common.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -30,7 +31,7 @@ public:
   VelodyneHwInterfaceWrapper(
     rclcpp::Node * const parent_node,
     std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config,
-    bool use_udp_only = false);
+    drivers::ConnectionMode connection_mode);
 
   void on_config_change(
     const std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & new_config);
@@ -43,7 +44,6 @@ private:
   std::shared_ptr<drivers::VelodyneHwInterface> hw_interface_;
   rclcpp::Logger logger_;
   nebula::Status status_;
-  bool setup_sensor_;
-  bool use_udp_only_;
+  drivers::ConnectionMode connection_mode_;
 };
 }  // namespace nebula::ros

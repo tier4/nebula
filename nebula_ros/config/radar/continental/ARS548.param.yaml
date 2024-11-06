@@ -6,7 +6,7 @@
     frame_id: continental
     base_frame: base_link
     object_frame: base_link
-    launch_hw: true
+    connection_mode: full
     multicast_ip: 224.0.2.2
     sensor_model: ARS548
     configuration_host_port: 42401

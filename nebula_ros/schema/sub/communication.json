@@ -115,6 +115,17 @@
       "default": "0.01",
       "minimum": 0.0,
       "description": "Timeout for sending data to the CAN bus."
+    },
+    "connection_mode": {
+      "type": "string",
+      "enum": [
+        "offline",
+        "udp_only",
+        "skip_setup",
+        "full"
+      ],
+      "default": "full",
+      "description": "Whether to connect to no sensor and listen to a packets topic (offline), listen to sensor outputs only with limited diagnostics and no settings sync (udp_only), connect fully but not change sensor settings (skip_setup) or to connect fully with settings sync."
     }
   }
 }

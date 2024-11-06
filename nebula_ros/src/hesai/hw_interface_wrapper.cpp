@@ -4,18 +4,24 @@
 
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
+#include <nebula_common/nebula_common.hpp>
+
+#include <cassert>
+
 namespace nebula::ros
 {
 
 HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   rclcpp::Node * const parent_node,
-  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config, bool use_udp_only)
+  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
+  drivers::ConnectionMode connection_mode)
 : hw_interface_(new nebula::drivers::HesaiHwInterface()),
   logger_(parent_node->get_logger().get_child("HwInterface")),
   status_(Status::NOT_INITIALIZED),
-  use_udp_only_(use_udp_only)
+  connection_mode_(connection_mode)
 {
-  setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
+  assert(connection_mode_ != drivers::ConnectionMode::OFFLINE);
+
   bool retry_connect = parent_node->declare_parameter<bool>("retry_hw", param_read_only());
 
   status_ = hw_interface_->SetSensorConfiguration(
@@ -29,7 +35,7 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   hw_interface_->SetLogger(std::make_shared<rclcpp::Logger>(parent_node->get_logger()));
   hw_interface_->SetTargetModel(config->sensor_model);
 
-  if (use_udp_only) {
+  if (connection_mode_ == drivers::ConnectionMode::UDP_ONLY) {
     // Do not initialize TCP
     return;
   }
@@ -55,7 +61,7 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
     } catch (...) {
       RCLCPP_ERROR_STREAM(logger_, "Failed to get model from sensor...");
     }
-    if (setup_sensor_) {
+    if (connection_mode_ == drivers::ConnectionMode::FULL) {
       hw_interface_->CheckAndSetConfig();
     }
   } else {
@@ -71,7 +77,7 @@ void HesaiHwInterfaceWrapper::on_config_change(
 {
   hw_interface_->SetSensorConfiguration(
     std::static_pointer_cast<const nebula::drivers::SensorConfigurationBase>(new_config));
-  if (!use_udp_only_ && setup_sensor_) {
+  if (connection_mode_ == drivers::ConnectionMode::FULL) {
     hw_interface_->CheckAndSetConfig();
   }
 }

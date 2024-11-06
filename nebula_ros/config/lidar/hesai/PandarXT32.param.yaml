@@ -6,9 +6,7 @@
     data_port: 2368
     gnss_port: 10110
     packet_mtu_size: 1500
-    launch_hw: true
-    setup_sensor: true
-    udp_only: false
+    connection_mode: full
     frame_id: hesai
     diag_span: 1000
     min_range: 0.3

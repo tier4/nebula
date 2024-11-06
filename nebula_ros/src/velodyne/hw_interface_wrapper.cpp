@@ -2,18 +2,23 @@
 
 #include "nebula_ros/velodyne/hw_interface_wrapper.hpp"
 
+#include <nebula_common/nebula_common.hpp>
+
+#include <cassert>
+
 namespace nebula::ros
 {
 
 VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
   rclcpp::Node * const parent_node,
-  std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config, bool use_udp_only)
+  std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config,
+  drivers::ConnectionMode connection_mode)
 : hw_interface_(new nebula::drivers::VelodyneHwInterface()),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED),
-  use_udp_only_(use_udp_only)
+  connection_mode_(connection_mode)
 {
-  setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
+  assert(connection_mode_ != drivers::ConnectionMode::OFFLINE);
 
   hw_interface_->set_logger(
     std::make_shared<rclcpp::Logger>(parent_node->get_logger().get_child("HwInterface")));
@@ -24,7 +29,7 @@ VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
       (std::stringstream{} << "Could not initialize HW interface: " << status_).str());
   }
 
-  if (use_udp_only_) {
+  if (connection_mode_ == drivers::ConnectionMode::UDP_ONLY) {
     // Do not initialize http client
     return;
   }
@@ -36,7 +41,7 @@ VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
       (std::stringstream{} << "Could not initialize HTTP client: " << status_).str());
   }
 
-  if (setup_sensor_) {
+  if (connection_mode_ == drivers::ConnectionMode::FULL) {
     RCLCPP_INFO_STREAM(logger_, "Setting sensor configuration");
     status_ = hw_interface_->set_sensor_configuration(config);
   }
@@ -53,11 +58,11 @@ void VelodyneHwInterfaceWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & new_config)
 {
   hw_interface_->initialize_sensor_configuration(new_config);
-  if (use_udp_only_) {
+  if (connection_mode_ == drivers::ConnectionMode::UDP_ONLY) {
     return;
   }
   hw_interface_->init_http_client();
-  if (setup_sensor_) {
+  if (connection_mode_ == drivers::ConnectionMode::FULL) {
     hw_interface_->set_sensor_configuration(new_config);
   }
 }

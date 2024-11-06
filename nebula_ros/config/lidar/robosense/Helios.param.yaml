@@ -5,7 +5,7 @@
     data_port: 2368
     gnss_port: 2369
     packet_mtu_size: 1500
-    launch_hw: true
+    connection_mode: full
     setup_sensor: true
     frame_id: robosense
     diag_span: 1000

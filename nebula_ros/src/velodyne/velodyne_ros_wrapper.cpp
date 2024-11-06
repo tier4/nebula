@@ -2,6 +2,8 @@
 
 #include "nebula_ros/velodyne/velodyne_ros_wrapper.hpp"
 
+#include <nebula_common/nebula_common.hpp>
+
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
 namespace nebula::ros
@@ -26,19 +28,22 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
 
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
 
-  launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
-  bool use_udp_only = declare_parameter<bool>("udp_only", param_read_only());
+  {
+    auto connection_mode = declare_parameter<std::string>("connection_mode", param_read_only());
+    connection_mode_ = drivers::connection_mode_from_string(connection_mode);
+  }
 
-  if (use_udp_only) {
+  if (connection_mode_ == drivers::ConnectionMode::UDP_ONLY) {
     RCLCPP_INFO_STREAM(
       get_logger(),
       "UDP-only mode is enabled. Settings checks, synchronization, and diagnostics publishing are "
       "disabled.");
   }
 
-  if (launch_hw_) {
-    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_, use_udp_only);
-    if (!use_udp_only) {  // hardware monitor requires HTTP connection
+  if (connection_mode_ != drivers::ConnectionMode::OFFLINE) {
+    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_, connection_mode_);
+    // hardware monitor requires HTTP connection
+    if (connection_mode_ != drivers::ConnectionMode::UDP_ONLY) {
       hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
     }
   }
@@ -54,7 +59,7 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
     }
   });
 
-  if (launch_hw_) {
+  if (connection_mode_ != drivers::ConnectionMode::OFFLINE) {
     hw_interface_wrapper_->hw_interface()->register_scan_callback(
       std::bind(&VelodyneRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1));
     stream_start();

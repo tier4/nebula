@@ -105,7 +105,7 @@ private:
 
   rclcpp::Subscription<pandar_msgs::msg::PandarScan>::SharedPtr packets_sub_{};
 
-  bool launch_hw_;
+  drivers::ConnectionMode connection_mode_;
 
   std::optional<HesaiHwInterfaceWrapper> hw_interface_wrapper_;
   std::optional<HesaiHwMonitorWrapper> hw_monitor_wrapper_;

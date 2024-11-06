@@ -15,6 +15,7 @@
 #pragma once
 
 #include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/nebula_common.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -28,7 +29,7 @@ public:
   HesaiHwInterfaceWrapper(
     rclcpp::Node * const parent_node,
     std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
-    bool use_udp_only = false);
+    drivers::ConnectionMode connection_mode);
 
   void on_config_change(
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config);
@@ -41,7 +42,6 @@ private:
   std::shared_ptr<drivers::HesaiHwInterface> hw_interface_;
   rclcpp::Logger logger_;
   nebula::Status status_;
-  bool setup_sensor_;
-  bool use_udp_only_;
+  drivers::ConnectionMode connection_mode_;
 };
 }  // namespace nebula::ros

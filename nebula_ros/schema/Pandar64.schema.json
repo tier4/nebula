@@ -24,14 +24,8 @@
         "packet_mtu_size": {
           "$ref": "sub/communication.json#/definitions/packet_mtu_size"
         },
-        "launch_hw": {
-          "$ref": "sub/hardware.json#/definitions/launch_hw"
-        },
-        "setup_sensor": {
-          "$ref": "sub/hardware.json#/definitions/setup_sensor"
-        },
-        "udp_only": {
-          "$ref": "sub/hardware.json#/definitions/udp_only"
+        "connection_mode": {
+          "$ref": "sub/hardware.json#/definitions/connection_mode"
         },
         "frame_id": {
           "$ref": "sub/topic.json#/definitions/frame_id"
@@ -98,9 +92,7 @@
         "data_port",
         "gnss_port",
         "packet_mtu_size",
-        "launch_hw",
-        "setup_sensor",
-        "udp_only",
+        "connection_mode",
         "frame_id",
         "diag_span",
         "cloud_min_angle",

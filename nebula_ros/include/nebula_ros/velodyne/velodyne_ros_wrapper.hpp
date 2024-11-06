@@ -89,7 +89,7 @@ private:
 
   rclcpp::Subscription<velodyne_msgs::msg::VelodyneScan>::SharedPtr packets_sub_{};
 
-  bool launch_hw_;
+  drivers::ConnectionMode connection_mode_;
 
   std::optional<VelodyneHwInterfaceWrapper> hw_interface_wrapper_;
   std::optional<VelodyneHwMonitorWrapper> hw_monitor_wrapper_;
