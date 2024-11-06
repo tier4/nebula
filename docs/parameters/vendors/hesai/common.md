@@ -28,7 +28,7 @@ Scan cutting influences the time stamps of points and the point cloud headers.
 The point cloud header time stamp is always the absolute time of the earliest (theoretical) point in the cloud.
 This means that for different parameter combinations, different timing behaviors are observed:
 
-- `cut_angle` is in `(cloud_min_angle, cloud_max_angle)` (both bounds exclusive): the earliest point is the one directly after `cut_angle`
+- `cut_angle` is within `(cloud_min_angle, cloud_max_angle)` (both bounds exclusive): the earliest point is the one directly after `cut_angle`
 - `cut_angle = cloud_max_angle` and the FoV is not 360 deg: the earliest point is at `cloud_min_angle`
 
 Depending on whether `cut_angle` and `sync_angle` are aligned, the point cloud time stamp will be somewhere in `[ToS, ToS + 100 ms)` assuming a `10 Hz` LiDAR.
@@ -42,7 +42,7 @@ The upper bounds of these areas of influence are shown in orange and are auto-ca
 <!-- prettier-ignore-start -->
 !!! note
     The parts of the correction ranges that are outside of the (corrected) FoV also need to be captured by the sensor as they contribute points to regions within the FoV.
-    Nebula automatically sets the sensors' FoV settings to an oversized range compared to the desired corrected FoV.
+    Nebula automatically sets the sensor's FoV settings to an oversized range compared to the desired corrected FoV.
 <!-- prettier-ignore-end -->
 
 The two examples shown below illustrate the behavior of a `cut_angle` inside the FoV (left) and one that coincides with the `cloud_max_angle`.

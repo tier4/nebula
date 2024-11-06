@@ -29,7 +29,7 @@ If disabled, the current configuration state is downloaded from the sensor, and 
 
 This parameter is mainly used for TCP communication, such as diagnostics and for setting parameters.
 TCP connections will be made to `sensor_ip`, and if `multicast_ip` is supported and set to a multicast group,
-Nebula will drop all UDP traffic received via multicast and not sent from `sensor_ip`.
+Nebula will drop all UDP traffic received via multicast that was not sent from `sensor_ip`.
 
 #### `host_ip`
 
@@ -43,7 +43,7 @@ Set this parameter to the IP address of your host.
 
 #### `multicast_ip`
 
-Sensors for which Nebula supports IP multicast, `multicast_ip` can be set to an address in `224.0.0.0/28` (the range from `224.0.0.0` to `239.255.255.255`).
+For sensors with IP multicast support in Nebula, `multicast_ip` can be set to an address in `224.0.0.0/28` (the range from `224.0.0.0` to `239.255.255.255`).
 Nebula will then configure the sensor to send its data to that group, and Nebula will join that group and accept only data sent by `sensor_ip`.
 Set this parameter to `""` to disable multicast.
 
@@ -60,7 +60,7 @@ The name of the CAN interface the sensor is connected to. Find available interfa
 
 #### `filters`
 
-A string expressing the filters used to accept/reject arriving CAN frames. See [man candump](https://manpages.ubuntu.com/manpages/jammy/man1/candump.1.html) for info on syntax.
+A string expressing the filters used to accept/reject arriving CAN frames. See [man candump](https://manpages.ubuntu.com/manpages/jammy/man1/candump.1.html) for syntax information.
 You can install `candump` via `apt install can-utils`.
 
 ## ROS-Specific Settings
@@ -71,11 +71,11 @@ The TF2 frame ID used for the published point clouds, objects, etc.
 
 ## LiDAR-Specific Settings
 
-These settings are common to most LiDARs, but the supported ranges or options supported by specific sensor models can vary. Refer to the sensor's parameter page for details.
+These settings are common to most LiDARs, but the ranges or options supported by specific sensor models can vary. Please refer to the individual sensor parameter pages for details.
 
 ### `rotation_speed`
 
-The rotations per minute (RPM) the sensor's motor should spin at (mechanical LiDARs only). To calculate the resulting frame rate in frames per second (FPS), use `FPS = RPM / 60`.
+The revolutions per minute (RPM) setting for the sensor's motor (mechanical LiDARs only). To calculate the resulting frame rate in frames per second (FPS), use `FPS = RPM / 60`.
 
 ### `min_range`
 
