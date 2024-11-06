@@ -9,9 +9,9 @@
 ### `launch_hw`
 
 Whether to connect to a real sensor or to accept replayed packets from a topic like `/<vendor>_packets` or `/nebula_packets`.
-Both behaviors are mutually exclusive: replayed packets are only accepted if no sensor is connected, and packets are only published on the above topics if a sensor is connected.
+These behaviors are mutually exclusive: replayed packets are only accepted if no sensor is connected, and packets are only published on the above topics if a sensor is connected.
 If enabled, Nebula connects to the sensor over UDP/TCP/CAN/etc. and publishes packets on the above topics but does not subscribe to them.
-If disabled, Nebula subscribes to packets on `/<vendor>_packets` or `/nebula_packets` but does not publish packets on these topics
+If disabled, Nebula subscribes to packets on `/<vendor>_packets` or `/nebula_packets` but does not publish packets on these topics.
 
 ### `setup_sensor`
 
