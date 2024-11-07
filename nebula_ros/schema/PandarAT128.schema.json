@@ -96,16 +96,16 @@
           ]
         },
         "ptp_profile": {
-          "$ref": "sub/communication.json#/definitions/ptp_profile"
+          "$ref": "sub/lidar_hesai.json#/definitions/ptp_profile"
         },
         "ptp_domain": {
-          "$ref": "sub/communication.json#/definitions/ptp_domain"
+          "$ref": "sub/lidar_hesai.json#/definitions/ptp_domain"
         },
         "ptp_transport_type": {
-          "$ref": "sub/communication.json#/definitions/ptp_transport_type"
+          "$ref": "sub/lidar_hesai.json#/definitions/ptp_transport_type"
         },
         "ptp_switch_type": {
-          "$ref": "sub/communication.json#/definitions/ptp_switch_type"
+          "$ref": "sub/lidar_hesai.json#/definitions/ptp_switch_type"
         },
         "retry_hw": {
           "$ref": "sub/hardware.json#/definitions/retry_hw"
