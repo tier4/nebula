@@ -349,18 +349,15 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   inline nebula::Status save_to_file_from_bytes(
     const std::string & correction_file, const std::vector<uint8_t> & buf) override
   {
-    std::cerr << "Saving in: " << correction_file << "\n";
     std::ofstream ofs(correction_file, std::ios::trunc | std::ios::binary);
     if (!ofs) {
       std::cerr << "Could not create file: " << correction_file << "\n";
       return Status::CANNOT_SAVE_FILE;
     }
-    std::cerr << "Writing start...." << buf.size() << "\n";
     bool sop_received = false;
     for (const auto & byte : buf) {
       if (!sop_received) {
         if (byte == 0xEE) {
-          std::cerr << "SOP received....\n";
           sop_received = true;
         }
       }
@@ -368,7 +365,6 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
         ofs << byte;
       }
     }
-    std::cerr << "Closing file\n";
     ofs.close();
     if (sop_received) return Status::OK;
     return Status::INVALID_CALIBRATION_FILE;

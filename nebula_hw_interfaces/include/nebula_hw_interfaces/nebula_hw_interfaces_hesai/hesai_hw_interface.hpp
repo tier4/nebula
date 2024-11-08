@@ -17,6 +17,8 @@
 // Have to define macros to silence warnings about deprecated headers being used by
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
+#include "nebula_common/nebula_status.hpp"
+
 #include <boost/version.hpp>
 
 #include <cstddef>
@@ -43,6 +45,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace nebula::drivers
@@ -195,6 +198,8 @@ private:
   /// @return The returned payload, if successful, or nullptr.
   ptc_cmd_result_t SendReceive(const uint8_t command_id, const std::vector<uint8_t> & payload = {});
 
+  static std::pair<HesaiStatus, std::string> unwrap_http_response(const std::string & response);
+
 public:
   /// @brief Constructor
   HesaiHwInterface();
@@ -258,13 +263,13 @@ public:
   HesaiPtpDiagGrandmaster GetPtpDiagGrandmaster();
   /// @brief Getting data with PTC_COMMAND_GET_INVENTORY_INFO
   /// @return Resulting status
-  HesaiInventory GetInventory();
+  std::shared_ptr<HesaiInventoryBase> GetInventory();
   /// @brief Getting data with PTC_COMMAND_GET_CONFIG_INFO
   /// @return Resulting status
-  HesaiConfig GetConfig();
+  std::shared_ptr<HesaiConfigBase> GetConfig();
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_STATUS
   /// @return Resulting status
-  HesaiLidarStatus GetLidarStatus();
+  std::shared_ptr<HesaiLidarStatusBase> GetLidarStatus();
   /// @brief Setting value with PTC_COMMAND_SET_SPIN_RATE
   /// @param rpm Spin rate
   /// @return Resulting status
@@ -413,7 +418,8 @@ public:
   /// @param hesai_config Current HesaiConfig
   /// @return Resulting status
   HesaiStatus CheckAndSetConfig(
-    std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration, HesaiConfig hesai_config);
+    std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration,
+    std::shared_ptr<HesaiConfigBase> hesai_config);
   /// @brief Checking the current settings and changing the difference point
   /// @param sensor_configuration Current SensorConfiguration
   /// @param hesai_lidar_range_all Current HesaiLidarRangeAll

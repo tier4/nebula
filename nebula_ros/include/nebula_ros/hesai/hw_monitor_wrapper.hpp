@@ -18,6 +18,7 @@
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
+#include <nlohmann/json.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <boost/asio.hpp>
@@ -30,6 +31,9 @@
 
 namespace nebula::ros
 {
+
+using nlohmann::json;
+
 class HesaiHwMonitorWrapper
 {
 public:
@@ -46,7 +50,11 @@ public:
   nebula::Status status();
 
 private:
-  void initialize_hesai_diagnostics();
+  static void add_json_item_to_diagnostics(
+    diagnostic_updater::DiagnosticStatusWrapper & diagnostics, const std::string & key,
+    const json & value);
+
+  void initialize_hesai_diagnostics(bool monitor_enabled);
 
   std::string get_ptree_value(boost::property_tree::ptree * pt, const std::string & key);
 
@@ -81,15 +89,13 @@ private:
   rclcpp::TimerBase::SharedPtr diagnostics_update_timer_{};
   rclcpp::TimerBase::SharedPtr fetch_diagnostics_timer_{};
 
-  std::unique_ptr<HesaiLidarStatus> current_status_{};
-  std::unique_ptr<HesaiLidarMonitor> current_monitor_{};
-  std::unique_ptr<HesaiConfig> current_config_{};
-  std::unique_ptr<HesaiInventory> current_inventory_{};
-  std::unique_ptr<boost::property_tree::ptree> current_lidar_monitor_tree_{};
+  std::shared_ptr<HesaiLidarStatusBase> current_status_{};
+  std::shared_ptr<HesaiLidarMonitor> current_monitor_{};
+  std::shared_ptr<HesaiConfigBase> current_config_{};
+  std::shared_ptr<boost::property_tree::ptree> current_lidar_monitor_tree_{};
 
   std::unique_ptr<rclcpp::Time> current_status_time_{};
   std::unique_ptr<rclcpp::Time> current_config_time_{};
-  std::unique_ptr<rclcpp::Time> current_inventory_time_{};
   std::unique_ptr<rclcpp::Time> current_lidar_monitor_time_{};
 
   uint8_t current_diag_status_;
@@ -97,13 +103,6 @@ private:
 
   std::mutex mtx_lidar_status_;
   std::mutex mtx_lidar_monitor_;
-
-  std::string info_model_;
-  std::string info_serial_;
-
-  std::vector<std::string> temperature_names_;
-
-  bool supports_monitor_;
 
   const std::string MSG_NOT_SUPPORTED_ = "Not supported";
   const std::string MSG_ERROR_ = "Error";
