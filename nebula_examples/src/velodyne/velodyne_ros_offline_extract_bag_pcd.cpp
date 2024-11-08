@@ -17,6 +17,7 @@
 #include <rosbag2_cpp/reader.hpp>
 #include <rosbag2_cpp/writers/sequential_writer.hpp>
 
+#include <cmath>
 #include <regex>
 
 namespace nebula::ros
@@ -175,8 +176,10 @@ Status VelodyneRosOfflineExtractBag::get_parameters(
   } else {
     double min_angle = fmod(fmod(view_direction + view_width / 2, 2 * M_PI) + 2 * M_PI, 2 * M_PI);
     double max_angle = fmod(fmod(view_direction - view_width / 2, 2 * M_PI) + 2 * M_PI, 2 * M_PI);
-    sensor_configuration.cloud_min_angle = 100 * (2 * M_PI - min_angle) * 180 / M_PI + 0.5;
-    sensor_configuration.cloud_max_angle = 100 * (2 * M_PI - max_angle) * 180 / M_PI + 0.5;
+    sensor_configuration.cloud_min_angle =
+      static_cast<int>(std::lround(100 * (2 * M_PI - min_angle) * 180 / M_PI));
+    sensor_configuration.cloud_max_angle =
+      static_cast<int>(std::lround(100 * (2 * M_PI - max_angle) * 180 / M_PI));
     if (sensor_configuration.cloud_min_angle == sensor_configuration.cloud_max_angle) {
       // avoid returning empty cloud if min_angle = max_angle
       sensor_configuration.cloud_min_angle = 0;
