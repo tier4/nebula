@@ -4,6 +4,7 @@
 
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
+#include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/nebula_common.hpp>
 
 namespace nebula::ros
@@ -13,7 +14,8 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   const std::shared_ptr<nebula::drivers::HesaiHwInterface> & hw_interface,
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config)
 : logger_(parent_node->get_logger().get_child("HwMonitor")),
-  diagnostics_updater_(parent_node),
+  diagnostics_updater_(
+    (parent_node->declare_parameter<bool>("diagnostic_updater.use_fqn", true), parent_node)),
   status_(Status::OK),
   hw_interface_(hw_interface),
   parent_node_(parent_node)

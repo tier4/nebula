@@ -4,6 +4,13 @@
 
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
+#include <rclcpp/qos.hpp>
+
+#include <robosense_msgs/msg/detail/robosense_info_packet__struct.hpp>
+
+#include <algorithm>
+#include <iterator>
+
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
 namespace nebula::ros
@@ -12,10 +19,7 @@ RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("robosense_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   wrapper_status_(Status::NOT_INITIALIZED),
   sensor_cfg_ptr_(nullptr),
-  packet_queue_(3000),
-  hw_interface_wrapper_(),
-  hw_monitor_wrapper_(),
-  decoder_wrapper_()
+  packet_queue_(3000)
 {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
@@ -28,23 +32,28 @@ RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
 
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
 
+  info_driver_.emplace(sensor_cfg_ptr_);
+
   launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
 
   if (launch_hw_) {
     hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_);
     hw_monitor_wrapper_.emplace(this, sensor_cfg_ptr_);
-    info_driver_.emplace(sensor_cfg_ptr_);
   }
 
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
   decoder_thread_ = std::thread([this]() {
     while (true) {
+      if (!decoder_wrapper_) continue;
       decoder_wrapper_->process_cloud_packet(packet_queue_.pop());
     }
   });
 
   if (launch_hw_) {
+    info_packets_pub_ =
+      create_publisher<robosense_msgs::msg::RobosenseInfoPacket>("robosense_info_packets", 10);
+
     hw_interface_wrapper_->hw_interface()->register_scan_callback(
       std::bind(&RobosenseRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1));
     hw_interface_wrapper_->hw_interface()->register_info_callback(
@@ -54,9 +63,16 @@ RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
     packets_sub_ = create_subscription<robosense_msgs::msg::RobosenseScan>(
       "robosense_packets", rclcpp::SensorDataQoS(),
       std::bind(&RobosenseRosWrapper::receive_scan_message_callback, this, std::placeholders::_1));
+    info_packets_sub_ = create_subscription<robosense_msgs::msg::RobosenseInfoPacket>(
+      "robosense_info_packets", 10, [this](const robosense_msgs::msg::RobosenseInfoPacket & msg) {
+        std::vector<uint8_t> raw_packet;
+        std::copy(msg.packet.data.cbegin(), msg.packet.data.cend(), std::back_inserter(raw_packet));
+        receive_info_packet_callback(raw_packet);
+      });
     RCLCPP_INFO_STREAM(
-      get_logger(),
-      "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
+      get_logger(), "Hardware connection disabled, listening for packets on "
+                      << packets_sub_->get_topic_name() << " and "
+                      << info_packets_sub_->get_topic_name());
   }
 
   // Register parameter callback after all params have been declared. Otherwise it would be called
@@ -151,6 +167,18 @@ void RobosenseRosWrapper::receive_info_packet_callback(std::vector<uint8_t> & pa
   if (!sensor_cfg_ptr_ || !info_driver_) {
     throw std::runtime_error(
       "Wrapper already receiving packets despite not being fully initialized yet.");
+  }
+
+  if (info_packets_pub_) {
+    robosense_msgs::msg::RobosenseInfoPacket info_packet{};
+    if (packet.size() != info_packet.packet.data.size()) {
+      RCLCPP_ERROR_THROTTLE(
+        get_logger(), *get_clock(), 1000, "Could not publish info packet: size unsupported");
+    } else {
+      std::copy(packet.cbegin(), packet.cend(), info_packet.packet.data.begin());
+      info_packet.packet.stamp = now();
+      info_packets_pub_->publish(info_packet);
+    }
   }
 
   auto status = info_driver_->decode_info_packet(packet);
