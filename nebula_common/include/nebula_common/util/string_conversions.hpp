@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <nlohmann/json.hpp>
+
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -39,6 +41,22 @@ std::enable_if_t<IsStreamable<T>::value, std::string> to_string(const T & value)
   std::stringstream ss{};
   ss << value;
   return ss.str();
+}
+
+template <size_t N>
+std::string to_string(const char value[N])
+{
+  return std::string(value, strnlen(value, N));
+}
+
+inline std::string to_string(const nlohmann::ordered_json & j)
+{
+  return j.is_string() ? j.template get<std::string>() : j.dump();
+}
+
+inline std::string to_string(const nlohmann::json & j)
+{
+  return to_string(nlohmann::ordered_json(j));
 }
 
 }  // namespace nebula::util
