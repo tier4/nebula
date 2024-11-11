@@ -74,7 +74,7 @@ A good PR fulfills all of the following:
 - Includes unit tests for added/fixed functionality where applicable
 - New functionality is documented
 - Has a reproducible evaluation/testing method where applicable
-    - e.g. Rosbags or PCAPs attached
+  - e.g. Rosbags or PCAPs attached
   - Easily runnable benchmarks are included for performance optimizations
 
 We cannot start a review before pre-commit and CI are passing.
