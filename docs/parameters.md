@@ -1,123 +1,96 @@
-# ROS parameters for supported sensors
+# Common Parameters
 
-> **Note**
->
-> The information on this page may be out of date.
-> Please refer to the configuration in the relevant `*sensor_model*.param.yaml` file for you sensor, to confirm what parameters are available,
+- Sensor-specific parameters are defined in `nebula_ros/schema/<sensor_model>.schema.json` and are described in the sensor-specific parameter pages in this tab.
+- Vendor-specific parameters can be found on the vendor pages in this tab.
+- Parameters common to all or most sensors, regardless of vendor, are explained on this page.
 
-## Common ROS parameters
+## Connection Mode Settings
 
-Parameters shared by all supported models:
+### `launch_hw`
 
-| Parameter    | Type   | Default          | Accepted values            | Description      |
-| ------------ | ------ | ---------------- | -------------------------- | ---------------- |
-| sensor_model | string |                  | See supported models       |                  |
-| return_mode  | string |                  | See supported return modes |                  |
-| frame_id     | string | Sensor dependent |                            | ROS frame ID     |
-| scan_phase   | double | 0.0              | degrees [0.0, 360.0]       | Scan start angle |
+Whether to connect to a real sensor or to accept replayed packets from a topic like `/<vendor>_packets` or `/nebula_packets`.
+These behaviors are mutually exclusive: replayed packets are only accepted if no sensor is connected, and packets are only published on the above topics if a sensor is connected.
+If enabled, Nebula connects to the sensor over UDP/TCP/CAN/etc. and publishes packets on the above topics but does not subscribe to them.
+If disabled, Nebula subscribes to packets on `/<vendor>_packets` or `/nebula_packets` but does not publish packets on these topics.
 
-## Hesai specific parameters
+### `setup_sensor`
 
-### Supported return modes per model
+_Only applies if `launch_hw = true`_
 
-| Sensor model | return_mode    | Mode   |
-| ------------ | -------------- | ------ |
-| Pandar XT32M | Last           | Single |
-| Pandar XT32M | Strongest      | Single |
-| Pandar XT32M | LastStrongest  | Dual   |
-| Pandar XT32M | First          | Single |
-| Pandar XT32M | LastFirst      | Dual   |
-| Pandar XT32M | FirstStrongest | Dual   |
-| Pandar XT32M | Dual           | Dual   |
-| ---          | ---            | ---    |
-| Pandar AT128 | Last           | Single |
-| Pandar AT128 | Strongest      | Single |
-| Pandar AT128 | LastStrongest  | Dual   |
-| Pandar AT128 | First          | Single |
-| Pandar AT128 | LastFirst      | Dual   |
-| Pandar AT128 | FirstStrongest | Dual   |
-| Pandar AT128 | Dual           | Dual   |
-| ---          | ---            | ---    |
-| Pandar QT128 | Last           | Single |
-| Pandar QT128 | Strongest      | Single |
-| Pandar QT128 | LastStrongest  | Dual   |
-| Pandar QT128 | First          | Single |
-| Pandar QT128 | LastFirst      | Dual   |
-| Pandar QT128 | FirstStrongest | Dual   |
-| Pandar QT128 | Dual           | Dual   |
-| ---          | ---            | ---    |
-| Pandar QT64  | Last           | Single |
-| Pandar QT64  | Dual           | Dual   |
-| Pandar QT64  | First          | Single |
-| ---          | ---            | ---    |
-| Pandar 40P   | Last           | Single |
-| Pandar 40P   | Strongest      | Single |
-| Pandar 40P   | Dual           | Dual   |
-| ---          | ---            | ---    |
-| Pandar 64    | Last           | Single |
-| Pandar 64    | Strongest      | Single |
-| Pandar 64    | Dual           | Dual   |
+Whether to set up the sensor with the values from Nebula's parameters or to just check and warn if they are different.
+If enabled, Nebula checks current sensor configuration state, and updates the sensor's parameters where they differ from Nebula's.
+If disabled, the current configuration state is downloaded from the sensor, and Nebula warns if its parameters are different than the ones from the sensor but no sensor settings are changed.
 
-### Hardware interface parameters
+## Network Settings
 
-| Parameter                      | Type   | Default         | Accepted values   | Description                                                                              |
-| ------------------------------ | ------ | --------------- | ----------------- | ---------------------------------------------------------------------------------------- |
-| frame_id                       | string | hesai           |                   | ROS frame ID                                                                             |
-| sensor_ip                      | string | 192.168.1.201   |                   | Sensor IP                                                                                |
-| host_ip                        | string | 255.255.255.255 |                   | Host IP                                                                                  |
-| data_port                      | uint16 | 2368            |                   | Sensor port                                                                              |
-| gnss_port                      | uint16 | 2369            |                   | GNSS port                                                                                |
-| frequency_ms                   | uint16 | 100             | milliseconds, > 0 | Time per scan                                                                            |
-| packet_mtu_size                | uint16 | 1500            |                   | Packet MTU size                                                                          |
-| rotation_speed                 | uint16 | 600             |                   | Rotation speed                                                                           |
-| cloud_min_angle                | uint16 | 0               | degrees [0, 360]  | FoV start angle                                                                          |
-| cloud_max_angle                | uint16 | 359             | degrees [0, 360]  | FoV end angle                                                                            |
-| dual_return_distance_threshold | double | 0.1             |                   | Dual return distance threshold                                                           |
-| diag_span                      | uint16 | 1000            | milliseconds, > 0 | Diagnostic span                                                                          |
-| setup_sensor                   | bool   | True            | True, False       | Configure sensor settings                                                                |
-| udp_only                       | bool   | False           | True, False       | Use UDP protocol only (settings synchronization and diagnostics publishing are disabled) |
+### IP-Based Sensors
 
-### Driver parameters
+#### `sensor_ip`
 
-| Parameter        | Type   | Default | Accepted values | Description            |
-| ---------------- | ------ | ------- | --------------- | ---------------------- |
-| frame_id         | string | hesai   |                 | ROS frame ID           |
-| calibration_file | string |         |                 | LiDAR calibration file |
-| correction_file  | string |         |                 | LiDAR correction file  |
+This parameter is mainly used for TCP communication, such as diagnostics and for setting parameters.
+TCP connections will be made to `sensor_ip`, and if `multicast_ip` is supported and set to a multicast group,
+Nebula will drop all UDP traffic received via multicast that was not sent from `sensor_ip`.
 
-## Velodyne specific parameters
+#### `host_ip`
 
-### Supported return modes
+UDP sockets are bound to this IP, and for sensors supporting it, Nebula will change the sensor's host IP setting to this address.
+Set this parameter to the IP address of your host.
 
-| return_mode     | Mode               |
-| --------------- | ------------------ |
-| SingleFirst     | Single (First)     |
-| SingleStrongest | Single (Strongest) |
-| SingleLast      | Single (Last)      |
-| Dual            | Dual               |
+!!! warning
 
-### Hardware interface parameters
+    This parameter can be set to `255.255.255.255` to receive packets on any interface. However, this will set the sensor to use IP broadcast.
+    IP multicast may also break with this setting, as the UDP socket cannot determine the correct network interface.
 
-| Parameter       | Type   | Default         | Accepted values   | Description                                                                              |
-| --------------- | ------ | --------------- | ----------------- | ---------------------------------------------------------------------------------------- |
-| frame_id        | string | velodyne        |                   | ROS frame ID                                                                             |
-| sensor_ip       | string | 192.168.1.201   |                   | Sensor IP                                                                                |
-| host_ip         | string | 255.255.255.255 |                   | Host IP                                                                                  |
-| data_port       | uint16 | 2368            |                   | Sensor port                                                                              |
-| gnss_port       | uint16 | 2369            |                   | GNSS port                                                                                |
-| frequency_ms    | uint16 | 100             | milliseconds, > 0 | Time per scan                                                                            |
-| packet_mtu_size | uint16 | 1500            |                   | Packet MTU size                                                                          |
-| cloud_min_angle | uint16 | 0               | degrees [0, 360]  | FoV start angle                                                                          |
-| cloud_max_angle | uint16 | 359             | degrees [0, 360]  | FoV end angle                                                                            |
-| udp_only        | bool   | False           | True, False       | Use UDP protocol only (settings synchronization and diagnostics publishing are disabled) |
+#### `multicast_ip`
 
-### Driver parameters
+For sensors with IP multicast support in Nebula, `multicast_ip` can be set to an address in `224.0.0.0/28` (the range from `224.0.0.0` to `239.255.255.255`).
+Nebula will then configure the sensor to send its data to that group, and Nebula will join that group and accept only data sent by `sensor_ip`.
+Set this parameter to `""` to disable multicast.
 
-| Parameter        | Type   | Default  | Accepted values  | Description                   |
-| ---------------- | ------ | -------- | ---------------- | ----------------------------- |
-| frame_id         | string | velodyne |                  | ROS frame ID                  |
-| calibration_file | string |          |                  | LiDAR calibration file        |
-| min_range        | double | 0.3      | meters, >= 0.3   | Minimum point range published |
-| max_range        | double | 300.0    | meters, <= 300.0 | Maximum point range published |
-| cloud_min_angle  | uint16 | 0        | degrees [0, 360] | FoV start angle               |
-| cloud_max_angle  | uint16 | 359      | degrees [0, 360] | FoV end angle                 |
+#### `data_port`, `gnss_port`, etc
+
+The ports at which data streams from the sensor arrive. If multiple sensors are connected to one machine, make sure that sensor data streams are separated by setting these ports to different values for each sensor.
+These settings have to be mirrored in the sensor's settings for sensors where Nebula cannot set them automatically (e.g. Robosense).
+
+### CAN-FD-Based Sensors
+
+#### `interface`
+
+The name of the CAN interface the sensor is connected to. Find available interfaces via `ip link show type can`.
+
+#### `filters`
+
+A string expressing the filters used to accept/reject arriving CAN frames. See [man candump](https://manpages.ubuntu.com/manpages/jammy/man1/candump.1.html) for syntax information.
+You can install `candump` via `apt install can-utils`.
+
+## ROS-Specific Settings
+
+### `frame_id`
+
+The TF2 frame ID used for the published point clouds, objects, etc.
+
+## LiDAR-Specific Settings
+
+These settings are common to most LiDARs, but the ranges or options supported by specific sensor models can vary. Please refer to the individual sensor parameter pages for details.
+
+### `rotation_speed`
+
+The revolutions per minute (RPM) setting for the sensor's motor (mechanical LiDARs only). To calculate the resulting frame rate in frames per second (FPS), use `FPS = RPM / 60`.
+
+### `min_range`
+
+The minimum distance in meters for any point. Points closer than this are filtered out.
+
+### `max_range`
+
+The maximum distance in meters for any point. Points farther away than this are filtered out.
+
+### `return_mode`
+
+Each laser beam can result in multiple returns: if there is a semi-transparent object in front of a solid one, a first weak return, and a strong last return will be reported.
+Depending on perception requirements, one might be interested in specific returns, e.g. the strongest and last returns, or only the first return.
+This parameter is used to set this preference.
+
+### `dual_return_distance_threshold`
+
+For multiple returns that are close together, the points will be fused into one if they are below this threshold (in meters).

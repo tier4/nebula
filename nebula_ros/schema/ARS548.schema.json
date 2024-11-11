@@ -52,7 +52,10 @@
           "$ref": "sub/misc.json#/definitions/configuration_vehicle_wheelbase"
         },
         "sensor_model": {
-          "$ref": "sub/radar_continental.json#/definitions/sensor_model"
+          "$ref": "sub/radar_continental.json#/definitions/sensor_model",
+          "enum": [
+            "ARS548"
+          ]
         }
       },
       "required": [
