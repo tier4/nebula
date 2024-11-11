@@ -18,6 +18,7 @@
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
+#include <nlohmann/json.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <boost/asio.hpp>
@@ -28,10 +29,11 @@
 #include <string>
 #include <vector>
 
-namespace nebula
+namespace nebula::ros
 {
-namespace ros
-{
+
+using nlohmann::json;
+
 class HesaiHwMonitorWrapper
 {
 public:
@@ -40,37 +42,41 @@ public:
     const std::shared_ptr<nebula::drivers::HesaiHwInterface> & hw_interface,
     std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config);
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & /* new_config */)
   {
   }
 
-  nebula::Status Status();
+  nebula::Status status();
 
 private:
-  void InitializeHesaiDiagnostics();
+  static void add_json_item_to_diagnostics(
+    diagnostic_updater::DiagnosticStatusWrapper & diagnostics, const std::string & key,
+    const json & value);
 
-  std::string GetPtreeValue(boost::property_tree::ptree * pt, const std::string & key);
+  void initialize_hesai_diagnostics(bool monitor_enabled);
 
-  std::string GetFixedPrecisionString(double val, int pre);
+  std::string get_ptree_value(boost::property_tree::ptree * pt, const std::string & key);
 
-  void OnHesaiStatusTimer();
+  std::string get_fixed_precision_string(double val, int pre);
 
-  void OnHesaiLidarMonitorTimerHttp();
+  void on_hesai_status_timer();
 
-  void OnHesaiLidarMonitorTimer();
+  void on_hesai_lidar_monitor_timer_http();
 
-  void HesaiCheckStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void on_hesai_lidar_monitor_timer();
 
-  void HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void hesai_check_status(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckTemperature(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void hesai_check_ptp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckRpm(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void hesai_check_temperature(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckVoltageHttp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void hesai_check_rpm(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  void HesaiCheckVoltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void hesai_check_voltage_http(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+
+  void hesai_check_voltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
   rclcpp::Logger logger_;
   diagnostic_updater::Updater diagnostics_updater_;
@@ -83,15 +89,13 @@ private:
   rclcpp::TimerBase::SharedPtr diagnostics_update_timer_{};
   rclcpp::TimerBase::SharedPtr fetch_diagnostics_timer_{};
 
-  std::unique_ptr<HesaiLidarStatus> current_status_{};
-  std::unique_ptr<HesaiLidarMonitor> current_monitor_{};
-  std::unique_ptr<HesaiConfig> current_config_{};
-  std::unique_ptr<HesaiInventory> current_inventory_{};
-  std::unique_ptr<boost::property_tree::ptree> current_lidar_monitor_tree_{};
+  std::shared_ptr<HesaiLidarStatusBase> current_status_{};
+  std::shared_ptr<HesaiLidarMonitor> current_monitor_{};
+  std::shared_ptr<HesaiConfigBase> current_config_{};
+  std::shared_ptr<boost::property_tree::ptree> current_lidar_monitor_tree_{};
 
   std::unique_ptr<rclcpp::Time> current_status_time_{};
   std::unique_ptr<rclcpp::Time> current_config_time_{};
-  std::unique_ptr<rclcpp::Time> current_inventory_time_{};
   std::unique_ptr<rclcpp::Time> current_lidar_monitor_time_{};
 
   uint8_t current_diag_status_;
@@ -100,16 +104,8 @@ private:
   std::mutex mtx_lidar_status_;
   std::mutex mtx_lidar_monitor_;
 
-  std::string info_model_;
-  std::string info_serial_;
-
-  std::vector<std::string> temperature_names_;
-
-  bool supports_monitor_;
-
-  const std::string MSG_NOT_SUPPORTED = "Not supported";
-  const std::string MSG_ERROR = "Error";
-  const std::string MSG_SEP = ": ";
+  const std::string MSG_NOT_SUPPORTED_ = "Not supported";
+  const std::string MSG_ERROR_ = "Error";
+  const std::string MSG_SEP_ = ": ";
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

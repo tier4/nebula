@@ -24,9 +24,7 @@
 #include <string>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 template <typename SensorT>
@@ -45,7 +43,7 @@ public:
   /// @brief Validates and parses DIFOP packet. Currently only checks size, not checksums etc.
   /// @param raw_packet The incoming DIFOP packet
   /// @return Whether the packet was parsed successfully
-  bool parsePacket(const std::vector<uint8_t> & raw_packet) override
+  bool parse_packet(const std::vector<uint8_t> & raw_packet) override
   {
     const auto packet_size = raw_packet.size();
     if (packet_size < sizeof(typename SensorT::info_t)) {
@@ -73,26 +71,25 @@ public:
 
   /// @brief Get the sensor telemetry
   /// @return The sensor telemetry
-  std::map<std::string, std::string> getSensorInfo() override
+  std::map<std::string, std::string> get_sensor_info() override
   {
-    return sensor_.getSensorInfo(packet_);
+    return sensor_.get_sensor_info(packet_);
   }
 
   /// @brief Get the laser return mode
   /// @return The laser return mode
-  ReturnMode getReturnMode() override { return sensor_.getReturnMode(packet_); }
+  ReturnMode get_return_mode() override { return sensor_.get_return_mode(packet_); }
 
   /// @brief Get sensor calibration
   /// @return The sensor calibration
-  RobosenseCalibrationConfiguration getSensorCalibration() override
+  RobosenseCalibrationConfiguration get_sensor_calibration() override
   {
-    return sensor_.getSensorCalibration(packet_);
+    return sensor_.get_sensor_calibration(packet_);
   }
 
   /// @brief Get the status of time synchronization
   /// @return True if the sensor's clock is synchronized
-  bool getSyncStatus() override { return sensor_.getSyncStatus(packet_); }
+  bool get_sync_status() override { return sensor_.get_sync_status(packet_); }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

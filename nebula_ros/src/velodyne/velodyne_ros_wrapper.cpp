@@ -4,9 +4,7 @@
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("velodyne_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
@@ -19,7 +17,7 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
 {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
-  wrapper_status_ = DeclareAndGetSensorConfigParams();
+  wrapper_status_ = declare_and_get_sensor_config_params();
 
   if (wrapper_status_ != Status::OK) {
     throw std::runtime_error(
@@ -29,31 +27,41 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
 
   launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
+  bool use_udp_only = declare_parameter<bool>("udp_only", param_read_only());
+
+  if (use_udp_only) {
+    RCLCPP_INFO_STREAM(
+      get_logger(),
+      "UDP-only mode is enabled. Settings checks, synchronization, and diagnostics publishing are "
+      "disabled.");
+  }
 
   if (launch_hw_) {
-    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_);
-    hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->HwInterface(), sensor_cfg_ptr_);
+    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_, use_udp_only);
+    if (!use_udp_only) {  // hardware monitor requires HTTP connection
+      hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
+    }
   }
 
   decoder_wrapper_.emplace(
-    this, hw_interface_wrapper_ ? hw_interface_wrapper_->HwInterface() : nullptr, sensor_cfg_ptr_);
+    this, hw_interface_wrapper_ ? hw_interface_wrapper_->hw_interface() : nullptr, sensor_cfg_ptr_);
 
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
   decoder_thread_ = std::thread([this]() {
     while (true) {
-      decoder_wrapper_->ProcessCloudPacket(packet_queue_.pop());
+      decoder_wrapper_->process_cloud_packet(packet_queue_.pop());
     }
   });
 
   if (launch_hw_) {
-    hw_interface_wrapper_->HwInterface()->RegisterScanCallback(
-      std::bind(&VelodyneRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
-    StreamStart();
+    hw_interface_wrapper_->hw_interface()->register_scan_callback(
+      std::bind(&VelodyneRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1));
+    stream_start();
   } else {
     packets_sub_ = create_subscription<velodyne_msgs::msg::VelodyneScan>(
       "velodyne_packets", rclcpp::SensorDataQoS(),
-      std::bind(&VelodyneRosWrapper::ReceiveScanMessageCallback, this, std::placeholders::_1));
+      std::bind(&VelodyneRosWrapper::receive_scan_message_callback, this, std::placeholders::_1));
     RCLCPP_INFO_STREAM(
       get_logger(),
       "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
@@ -62,18 +70,18 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
   // Register parameter callback after all params have been declared. Otherwise it would be called
   // once for each declaration
   parameter_event_cb_ = add_on_set_parameters_callback(
-    std::bind(&VelodyneRosWrapper::OnParameterChange, this, std::placeholders::_1));
+    std::bind(&VelodyneRosWrapper::on_parameter_change, this, std::placeholders::_1));
 }
 
-nebula::Status VelodyneRosWrapper::DeclareAndGetSensorConfigParams()
+nebula::Status VelodyneRosWrapper::declare_and_get_sensor_config_params()
 {
   nebula::drivers::VelodyneSensorConfiguration config;
 
   auto _sensor_model = declare_parameter<std::string>("sensor_model", param_read_only());
-  config.sensor_model = drivers::SensorModelFromString(_sensor_model);
+  config.sensor_model = drivers::sensor_model_from_string(_sensor_model);
 
   auto _return_mode = declare_parameter<std::string>("return_mode", param_read_write());
-  config.return_mode = drivers::ReturnModeFromString(_return_mode);
+  config.return_mode = drivers::return_mode_from_string(_return_mode);
 
   config.host_ip = declare_parameter<std::string>("host_ip", param_read_only());
   config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());
@@ -110,10 +118,10 @@ nebula::Status VelodyneRosWrapper::DeclareAndGetSensorConfigParams()
   }
 
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::VelodyneSensorConfiguration>(config);
-  return ValidateAndSetConfig(new_cfg_ptr);
+  return validate_and_set_config(new_cfg_ptr);
 }
 
-Status VelodyneRosWrapper::ValidateAndSetConfig(
+Status VelodyneRosWrapper::validate_and_set_config(
   std::shared_ptr<const drivers::VelodyneSensorConfiguration> & new_config)
 {
   if (new_config->sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
@@ -127,20 +135,20 @@ Status VelodyneRosWrapper::ValidateAndSetConfig(
   }
 
   if (hw_interface_wrapper_) {
-    hw_interface_wrapper_->OnConfigChange(new_config);
+    hw_interface_wrapper_->on_config_change(new_config);
   }
   if (hw_monitor_wrapper_) {
-    hw_monitor_wrapper_->OnConfigChange(new_config);
+    hw_monitor_wrapper_->on_config_change(new_config);
   }
   if (decoder_wrapper_) {
-    decoder_wrapper_->OnConfigChange(new_config);
+    decoder_wrapper_->on_config_change(new_config);
   }
 
   sensor_cfg_ptr_ = new_config;
   return Status::OK;
 }
 
-void VelodyneRosWrapper::ReceiveScanMessageCallback(
+void VelodyneRosWrapper::receive_scan_message_callback(
   std::unique_ptr<velodyne_msgs::msg::VelodyneScan> scan_msg)
 {
   if (hw_interface_wrapper_) {
@@ -160,25 +168,25 @@ void VelodyneRosWrapper::ReceiveScanMessageCallback(
   }
 }
 
-Status VelodyneRosWrapper::GetStatus()
+Status VelodyneRosWrapper::get_status()
 {
   return wrapper_status_;
 }
 
-Status VelodyneRosWrapper::StreamStart()
+Status VelodyneRosWrapper::stream_start()
 {
   if (!hw_interface_wrapper_) {
     return Status::UDP_CONNECTION_ERROR;
   }
 
-  if (hw_interface_wrapper_->Status() != Status::OK) {
-    return hw_interface_wrapper_->Status();
+  if (hw_interface_wrapper_->status() != Status::OK) {
+    return hw_interface_wrapper_->status();
   }
 
-  return hw_interface_wrapper_->HwInterface()->SensorInterfaceStart();
+  return hw_interface_wrapper_->hw_interface()->sensor_interface_start();
 }
 
-rcl_interfaces::msg::SetParametersResult VelodyneRosWrapper::OnParameterChange(
+rcl_interfaces::msg::SetParametersResult VelodyneRosWrapper::on_parameter_change(
   const std::vector<rclcpp::Parameter> & p)
 {
   using rcl_interfaces::msg::SetParametersResult;
@@ -205,7 +213,7 @@ rcl_interfaces::msg::SetParametersResult VelodyneRosWrapper::OnParameterChange(
   // Currently, HW interface and monitor wrappers have only read-only parameters, so their update
   // logic is not implemented
   if (decoder_wrapper_) {
-    auto result = decoder_wrapper_->OnParameterChange(p);
+    auto result = decoder_wrapper_->on_parameter_change(p);
     if (!result.successful) {
       return result;
     }
@@ -216,10 +224,10 @@ rcl_interfaces::msg::SetParametersResult VelodyneRosWrapper::OnParameterChange(
   }
 
   if (_return_mode.length() > 0)
-    new_cfg.return_mode = nebula::drivers::ReturnModeFromString(_return_mode);
+    new_cfg.return_mode = nebula::drivers::return_mode_from_string(_return_mode);
 
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::VelodyneSensorConfiguration>(new_cfg);
-  auto status = ValidateAndSetConfig(new_cfg_ptr);
+  auto status = validate_and_set_config(new_cfg_ptr);
 
   if (status != Status::OK) {
     RCLCPP_WARN_STREAM(get_logger(), "OnParameterChange aborted: " << status);
@@ -232,9 +240,9 @@ rcl_interfaces::msg::SetParametersResult VelodyneRosWrapper::OnParameterChange(
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-void VelodyneRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
+void VelodyneRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & packet)
 {
-  if (!decoder_wrapper_ || decoder_wrapper_->Status() != Status::OK) {
+  if (!decoder_wrapper_ || decoder_wrapper_->status() != Status::OK) {
     return;
   }
 
@@ -253,5 +261,4 @@ void VelodyneRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packe
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(VelodyneRosWrapper)
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

@@ -28,13 +28,9 @@
 
 using namespace boost::endian;  // NOLINT(build/namespaces)
 
-namespace nebula
+namespace nebula::drivers
 {
-namespace drivers
-{
-namespace robosense_packet
-{
-namespace helios
+namespace robosense_packet::helios
 {
 #pragma pack(push, 1)
 
@@ -57,7 +53,7 @@ struct Header
 
 struct Packet : public PacketBase<12, 32, 2, 100>
 {
-  typedef Body<Block<Unit, Packet::N_CHANNELS>, Packet::N_BLOCKS> body_t;
+  typedef Body<Block<Unit, Packet::n_channels>, Packet::n_blocks> body_t;
   Header header;
   body_t body;
   big_uint48_buf_t tail;
@@ -161,14 +157,13 @@ struct InfoPacket
 };
 
 #pragma pack(pop)
-}  // namespace helios
-}  // namespace robosense_packet
+}  // namespace robosense_packet::helios
 
 class Helios
 : public RobosenseSensor<robosense_packet::helios::Packet, robosense_packet::helios::InfoPacket>
 {
 private:
-  static constexpr int firing_time_offset_ns_single_[12][32] = {
+  static constexpr int firing_time_offset_ns_single[12][32] = {
     {0,     1570,  3150,  4720,  6300,  7870,  9450,  11360, 13260, 15170, 17080,
      18990, 20560, 22140, 23710, 25290, 26530, 29010, 27770, 30250, 31490, 32730,
      33980, 35220, 36460, 37700, 38940, 40180, 41420, 42670, 43910, 45150},
@@ -206,7 +201,7 @@ private:
      630100, 631670, 633250, 634820, 636400, 637640, 640120, 638880, 641360, 642600, 645090,
      643850, 646330, 647570, 648810, 650050, 651290, 652540, 653780, 655020, 656260}};
 
-  static constexpr int firing_time_offset_ns_dual_[12][32]{
+  static constexpr int firing_time_offset_ns_dual[12][32]{
     {0,     1570,  3150,  4720,  6300,  7870,  9450,  11360, 13260, 15170, 17080,
      18990, 20560, 22140, 23710, 25290, 26530, 27770, 29010, 30250, 31490, 32730,
      33980, 35220, 36460, 37700, 38940, 40180, 41420, 42670, 43910, 45150},
@@ -244,72 +239,72 @@ private:
      296770, 298340, 299920, 301490, 303060, 304310, 305550, 306790, 308030, 309270, 310510,
      311750, 313000, 314240, 315480, 316720, 317960, 319200, 320440, 321680, 322930}};
 
-  static constexpr uint8_t DUAL_RETURN_FLAG = 0x00;
-  static constexpr uint8_t STRONGEST_RETURN_FLAG = 0x04;
-  static constexpr uint8_t LAST_RETURN_FLAG = 0x05;
-  static constexpr uint8_t FIRST_RETURN_FLAG = 0x06;
+  static constexpr uint8_t dual_return_flag = 0x00;
+  static constexpr uint8_t strongest_return_flag = 0x04;
+  static constexpr uint8_t last_return_flag = 0x05;
+  static constexpr uint8_t first_return_flag = 0x06;
 
-  static constexpr uint8_t SYNC_MODE_GPS_FLAG = 0x00;
-  static constexpr uint8_t SYNC_MODE_E2E_FLAG = 0x01;
-  static constexpr uint8_t SYNC_MODE_P2P_FLAG = 0x02;
-  static constexpr uint8_t SYNC_MODE_GPTP_FLAG = 0x03;
+  static constexpr uint8_t sync_mode_gps_flag = 0x00;
+  static constexpr uint8_t sync_mode_e2e_flag = 0x01;
+  static constexpr uint8_t sync_mode_p2p_flag = 0x02;
+  static constexpr uint8_t sync_mode_gptp_flag = 0x03;
 
-  static constexpr uint8_t SYNC_STATUS_INVALID_FLAG = 0x00;
-  static constexpr uint8_t SYNC_STATUS_GPS_SUCCESS_FLAG = 0x01;
-  static constexpr uint8_t SYNC_STATUS_PTP_SUCCESS_FLAG = 0x02;
+  static constexpr uint8_t sync_status_invalid_flag = 0x00;
+  static constexpr uint8_t sync_status_gps_success_flag = 0x01;
+  static constexpr uint8_t sync_status_ptp_success_flag = 0x02;
 
 public:
-  static constexpr float MIN_RANGE = 0.2f;
-  static constexpr float MAX_RANGE = 150.f;
-  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 1152000;
+  static constexpr float min_range = 0.2f;
+  static constexpr float max_range = 150.f;
+  static constexpr size_t max_scan_buffer_points = 1152000;
 
-  int getPacketRelativePointTimeOffset(
+  int get_packet_relative_point_time_offset(
     const uint32_t block_id, const uint32_t channel_id,
     const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration) override
   {
     if (sensor_configuration->return_mode == ReturnMode::DUAL)
-      return firing_time_offset_ns_dual_[block_id][channel_id];
+      return firing_time_offset_ns_dual[block_id][channel_id];
     else
-      return firing_time_offset_ns_single_[block_id][channel_id];
+      return firing_time_offset_ns_single[block_id][channel_id];
   }
 
-  ReturnMode getReturnMode(const robosense_packet::helios::InfoPacket & info_packet) override
+  ReturnMode get_return_mode(const robosense_packet::helios::InfoPacket & info_packet) override
   {
     switch (info_packet.return_mode.value()) {
-      case DUAL_RETURN_FLAG:
+      case dual_return_flag:
         return ReturnMode::DUAL;
-      case STRONGEST_RETURN_FLAG:
+      case strongest_return_flag:
         return ReturnMode::SINGLE_STRONGEST;
-      case LAST_RETURN_FLAG:
+      case last_return_flag:
         return ReturnMode::SINGLE_LAST;
-      case FIRST_RETURN_FLAG:
+      case first_return_flag:
         return ReturnMode::SINGLE_FIRST;
       default:
         return ReturnMode::UNKNOWN;
     }
   }
 
-  RobosenseCalibrationConfiguration getSensorCalibration(
+  RobosenseCalibrationConfiguration get_sensor_calibration(
     const robosense_packet::helios::InfoPacket & info_packet) override
   {
-    return info_packet.sensor_calibration.getCalibration();
+    return info_packet.sensor_calibration.get_calibration();
   }
 
-  bool getSyncStatus(const robosense_packet::helios::InfoPacket & info_packet) override
+  bool get_sync_status(const robosense_packet::helios::InfoPacket & info_packet) override
   {
     switch (info_packet.sync_status.value()) {
-      case SYNC_STATUS_INVALID_FLAG:
+      case sync_status_invalid_flag:
         return false;
-      case SYNC_STATUS_GPS_SUCCESS_FLAG:
+      case sync_status_gps_success_flag:
         return true;
-      case SYNC_STATUS_PTP_SUCCESS_FLAG:
+      case sync_status_ptp_success_flag:
         return true;
       default:
         return false;
     }
   }
 
-  std::map<std::string, std::string> getSensorInfo(
+  std::map<std::string, std::string> get_sensor_info(
     const robosense_packet::helios::InfoPacket & info_packet) override
   {
     std::map<std::string, std::string> sensor_info;
@@ -346,16 +341,16 @@ public:
     sensor_info["zero_angle_offset"] = std::to_string(info_packet.zero_angle_offset.value());
 
     switch (info_packet.return_mode.value()) {
-      case DUAL_RETURN_FLAG:
+      case dual_return_flag:
         sensor_info["return_mode"] = "dual";
         break;
-      case STRONGEST_RETURN_FLAG:
+      case strongest_return_flag:
         sensor_info["return_mode"] = "strongest";
         break;
-      case LAST_RETURN_FLAG:
+      case last_return_flag:
         sensor_info["return_mode"] = "last";
         break;
-      case FIRST_RETURN_FLAG:
+      case first_return_flag:
         sensor_info["return_mode"] = "first";
         break;
       default:
@@ -364,16 +359,16 @@ public:
     }
 
     switch (info_packet.time_sync_mode.value()) {
-      case SYNC_MODE_GPS_FLAG:
+      case sync_mode_gps_flag:
         sensor_info["time_sync_mode"] = "gps";
         break;
-      case SYNC_MODE_E2E_FLAG:
+      case sync_mode_e2e_flag:
         sensor_info["time_sync_mode"] = "e2e";
         break;
-      case SYNC_MODE_P2P_FLAG:
+      case sync_mode_p2p_flag:
         sensor_info["time_sync_mode"] = "p2p";
         break;
-      case SYNC_MODE_GPTP_FLAG:
+      case sync_mode_gptp_flag:
         sensor_info["time_sync_mode"] = "gptp";
         break;
       default:
@@ -382,13 +377,13 @@ public:
     }
 
     switch (info_packet.sync_status.value()) {
-      case SYNC_STATUS_INVALID_FLAG:
+      case sync_status_invalid_flag:
         sensor_info["sync_status"] = "time_sync_invalid";
         break;
-      case SYNC_STATUS_GPS_SUCCESS_FLAG:
+      case sync_status_gps_success_flag:
         sensor_info["sync_status"] = "gps_time_sync_successful";
         break;
-      case SYNC_STATUS_PTP_SUCCESS_FLAG:
+      case sync_status_ptp_success_flag:
         sensor_info["sync_status"] = "ptp_time_sync_successful";
         break;
       default:
@@ -468,5 +463,4 @@ public:
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

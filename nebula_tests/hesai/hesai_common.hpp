@@ -26,12 +26,10 @@
 
 #include <algorithm>
 
-namespace nebula
-{
-namespace test
+namespace nebula::test
 {
 
-inline void checkPCDs(
+inline void check_pcds(
   nebula::drivers::NebulaPointCloudPtr pc, pcl::PointCloud<pcl::PointXYZ>::Ptr pc_ref)
 {
   ASSERT_GT(pc->points.size(), 0);
@@ -52,7 +50,7 @@ inline void checkPCDs(
   }
 }
 
-inline void checkPCDs(
+inline void check_pcds(
   nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::NebulaPointCloudPtr pp2)
 {
   EXPECT_EQ(pp1->points.size(), pp2->points.size());
@@ -70,7 +68,7 @@ inline void checkPCDs(
   }
 }
 
-inline void printPCD(nebula::drivers::NebulaPointCloudPtr pp)
+inline void print_pcd(nebula::drivers::NebulaPointCloudPtr pp)
 {
   for (auto p : pp->points) {
     std::cout << "(" << p.x << ", " << p.y << "," << p.z << "): " << p.intensity << ", "
@@ -79,5 +77,4 @@ inline void printPCD(nebula::drivers::NebulaPointCloudPtr pp)
   }
 }
 
-}  // namespace test
-}  // namespace nebula
+}  // namespace nebula::test

@@ -31,9 +31,7 @@
 #include <string>
 #include <tuple>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class VelodyneHwMonitorWrapper
 {
@@ -43,234 +41,234 @@ public:
     const std::shared_ptr<nebula::drivers::VelodyneHwInterface> & hw_interface,
     std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config);
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & /* new_config */)
   {
   }
 
-  nebula::Status Status();
+  nebula::Status status();
 
 private:
-  void InitializeVelodyneDiagnostics();
+  void initialize_velodyne_diagnostics();
 
   /// @brief Callback of the timer for getting the current lidar status
-  void OnVelodyneStatusTimer();
+  void on_velodyne_status_timer();
 
   /// @brief Callback of the timer for getting the current lidar snapshot
-  void OnVelodyneSnapshotTimer();
+  void on_velodyne_snapshot_timer();
 
   /// @brief Callback of the timer for getting the current lidar status & updating the diagnostics
-  void OnVelodyneDiagnosticsTimer();
+  void on_velodyne_diagnostics_timer();
 
   /// @brief Get value from property_tree
   /// @param pt property_tree
   /// @param mtx_pt the mutex associated with `pt`
   /// @param key Pey string
   /// @return Value
-  std::string GetPtreeValue(
+  std::string get_ptree_value(
     std::shared_ptr<boost::property_tree::ptree> pt, std::mutex & mtx_pt, const std::string & key);
 
   /// @brief Making fixed precision string
   /// @param val Target value
   /// @param pre Precision
   /// @return Created string
-  std::string GetFixedPrecisionString(double val, int pre = 2);
+  std::string get_fixed_precision_string(double val, int pre = 2);
 
   /// @brief Getting top:hv from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopHv();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_top_hv();
   /// @brief Getting top:ad_temp from the current property_tree (only VLP32)
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopAdTemp();  // only32
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_top_ad_temp();  // only32
   /// @brief Getting top:lm20_temp from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopLm20Temp();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_top_lm20_temp();
   /// @brief Getting top:pwr_5v from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5v();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_top_pwr5v();
   /// @brief Getting top:pwr_2_5v from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr25v();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_top_pwr25v();
   /// @brief Getting top:pwr_3_3v from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr33v();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_top_pwr33v();
   /// @brief Getting top:pwr_5v_raw from the current property_tree (only VLP16)
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwr5vRaw();  // only16
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_top_pwr5v_raw();  // only16
   /// @brief Getting top:pwr_raw from the current property_tree (only VLP32)
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrRaw();  // only32
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_top_pwr_raw();  // only32
   /// @brief Getting top:pwr_vccint from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetTopPwrVccint();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_top_pwr_vccint();
   /// @brief Getting bot:i_out from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotIOut();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_bot_i_out();
   /// @brief Getting bot:pwr_1_2v from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwr12v();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_bot_pwr12v();
   /// @brief Getting bot:lm20_temp from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotLm20Temp();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_bot_lm20_temp();
   /// @brief Getting bot:pwr_5v from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwr5v();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_bot_pwr5v();
   /// @brief Getting bot:pwr_2_5v from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwr25v();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_bot_pwr25v();
   /// @brief Getting bot:pwr_3_3v from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwr33v();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_bot_pwr33v();
   /// @brief Getting bot:pwr_v_in from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwrVIn();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_bot_pwr_v_in();
   /// @brief Getting bot:pwr_1_25v from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetBotPwr125v();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_bot_pwr125v();
   /// @brief Getting vhv from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetVhv();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_vhv();
   /// @brief Getting adc_nf from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetAdcNf();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_adc_nf();
   /// @brief Getting adc_stats from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetAdcStats();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_adc_stats();
   /// @brief Getting ixe from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetIxe();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_ixe();
   /// @brief Getting adctp_stat from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetAdctpStat();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_adctp_stat();
 
   /// @brief Getting gps:pps_state from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetGpsPpsState();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_gps_pps_state();
   /// @brief Getting gps:position from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetGpsPosition();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_gps_position();
   /// @brief Getting motor:state from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetMotorState();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_motor_state();
   /// @brief Getting motor:rpm from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetMotorRpm();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_motor_rpm();
   /// @brief Getting motor:lock from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetMotorLock();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_motor_lock();
   /// @brief Getting motor:phase from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetMotorPhase();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_motor_phase();
   /// @brief Getting laser:state from the current property_tree
   /// @return tuple<Got exception, Error level, Information message, Error message>
-  std::tuple<bool, uint8_t, std::string, std::string> VelodyneGetLaserState();
+  std::tuple<bool, uint8_t, std::string, std::string> velodyne_get_laser_state();
 
   /// @brief Check top:hv from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckTopHv(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_top_hv(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check top:ad_temp from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckTopAdTemp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_top_ad_temp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check top:lm20_temp from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckTopLm20Temp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_top_lm20_temp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check top:pwr_5v from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckTopPwr5v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_top_pwr5v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check top:pwr_2_5v from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckTopPwr25v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_top_pwr25v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check top:pwr_3_3v from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckTopPwr33v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_top_pwr33v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check top:pwr_raw from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckTopPwrRaw(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_top_pwr_raw(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check top:pwr_vccint from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckTopPwrVccint(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_top_pwr_vccint(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check bot:i_out from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckBotIOut(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_bot_i_out(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check bot:pwr_1_2v from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckBotPwr12v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_bot_pwr12v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check bot:lm20_temp from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckBotLm20Temp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_bot_lm20_temp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check bot:pwr_5v from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckBotPwr5v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_bot_pwr5v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check bot:pwr_2_5v from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckBotPwr25v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_bot_pwr25v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check bot:pwr_3_3v from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckBotPwr33v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_bot_pwr33v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check bot:pwr_v_in from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckBotPwrVIn(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_bot_pwr_v_in(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check bot:pwr_1_25v from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckBotPwr125v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_bot_pwr125v(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check vhv from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckVhv(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_vhv(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check adc_nf from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckAdcNf(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_adc_nf(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check adc_stats from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckAdcStats(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_adc_stats(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check ixe from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckIxe(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_ixe(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check adctp_stat from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckAdctpStat(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_adctp_stat(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   rclcpp::TimerBase::SharedPtr diagnostics_status_timer_;
-  std::shared_ptr<boost::property_tree::ptree> current_status_tree;
+  std::shared_ptr<boost::property_tree::ptree> current_status_tree_;
   /// @brief Check gps:pps_state from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckGpsPpsState(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_gps_pps_state(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check gps:position from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckGpsPosition(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_gps_position(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check motor:state from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckMotorState(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_motor_state(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check motor:rpm from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckMotorRpm(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_motor_rpm(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check motor:lock from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckMotorLock(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_motor_lock(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check motor:phase from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckMotorPhase(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_motor_phase(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check laser:state from the current property_tree for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckLaserState(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_laser_state(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
   /// @brief Check the current snapshot for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckSnapshot(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_snapshot(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
   /// @brief Check the current states of motor & laser for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_status(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check the current gps information for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckPps(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_pps(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check the current temperatures for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckTemperature(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_temperature(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check the current rpm for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckRpm(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_rpm(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
   /// @brief Check the current voltages for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckVoltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
+  void velodyne_check_voltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
   rclcpp::Logger logger_;
   diagnostic_updater::Updater diagnostics_updater_;
@@ -288,11 +286,11 @@ private:
   rclcpp::TimerBase::SharedPtr diagnostics_update_timer_;
   rclcpp::TimerBase::SharedPtr diagnostics_diag_timer_;
 
-  std::shared_ptr<std::string> current_snapshot;
-  std::shared_ptr<boost::property_tree::ptree> current_snapshot_tree;
-  std::shared_ptr<boost::property_tree::ptree> current_diag_tree;
-  std::shared_ptr<rclcpp::Time> current_snapshot_time;
-  uint8_t current_diag_status;
+  std::shared_ptr<std::string> current_snapshot_;
+  std::shared_ptr<boost::property_tree::ptree> current_snapshot_tree_;
+  std::shared_ptr<boost::property_tree::ptree> current_diag_tree_;
+  std::shared_ptr<rclcpp::Time> current_snapshot_time_;
+  uint8_t current_diag_status_;
 
   std::mutex mtx_snapshot_;
   std::mutex mtx_status_;
@@ -361,7 +359,7 @@ private:
   static constexpr auto name_status_motor_phase = "Motor Phase";
   static constexpr auto name_status_laser_state = "Laser State";
 
-  const std::string message_sep{": "};
+  const std::string message_sep_{": "};
   static constexpr auto not_supported_message = "Not supported";
   static constexpr auto error_message = "Error";
 
@@ -377,5 +375,4 @@ private:
   static constexpr auto ampere_low_message = "ampere low";
   static constexpr auto ampere_high_message = "ampere high";
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

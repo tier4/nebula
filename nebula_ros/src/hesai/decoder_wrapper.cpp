@@ -9,9 +9,7 @@
 #include <memory>
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 using namespace std::chrono_literals;  // NOLINT(build/namespaces)
@@ -41,7 +39,7 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   RCLCPP_INFO(logger_, "Starting Decoder");
 
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(config, calibration_cfg_ptr_);
-  status_ = driver_ptr_->GetStatus();
+  status_ = driver_ptr_->get_status();
 
   if (Status::OK != status_) {
     throw std::runtime_error(
@@ -76,7 +74,7 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
     });
 }
 
-void HesaiDecoderWrapper::OnConfigChange(
+void HesaiDecoderWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config)
 {
   std::lock_guard lock(mtx_driver_ptr_);
@@ -85,7 +83,7 @@ void HesaiDecoderWrapper::OnConfigChange(
   sensor_cfg_ = new_config;
 }
 
-void HesaiDecoderWrapper::OnCalibrationChange(
+void HesaiDecoderWrapper::on_calibration_change(
   const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> & new_calibration)
 {
   std::lock_guard lock(mtx_driver_ptr_);
@@ -94,7 +92,7 @@ void HesaiDecoderWrapper::OnCalibrationChange(
   calibration_cfg_ptr_ = new_calibration;
 }
 
-void HesaiDecoderWrapper::ProcessCloudPacket(
+void HesaiDecoderWrapper::process_cloud_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   // Accumulate packets for recording only if someone is subscribed to the topic (for performance)
@@ -116,7 +114,7 @@ void HesaiDecoderWrapper::ProcessCloudPacket(
   nebula::drivers::NebulaPointCloudPtr pointcloud = nullptr;
   {
     std::lock_guard lock(mtx_driver_ptr_);
-    pointcloud_ts = driver_ptr_->ParseCloudPacket(packet_msg->data);
+    pointcloud_ts = driver_ptr_->parse_cloud_packet(packet_msg->data);
     pointcloud = std::get<0>(pointcloud_ts);
   }
 
@@ -143,34 +141,34 @@ void HesaiDecoderWrapper::ProcessCloudPacket(
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    PublishCloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
+      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+    publish_cloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
   }
   if (
     aw_points_base_pub_->get_subscription_count() > 0 ||
     aw_points_base_pub_->get_intra_process_subscription_count() > 0) {
     const auto autoware_cloud_xyzi =
-      nebula::drivers::convertPointXYZIRCAEDTToPointXYZIR(pointcloud);
+      nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(pointcloud);
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_cloud_xyzi, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    PublishCloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
+      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+    publish_cloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
   }
   if (
     aw_points_ex_pub_->get_subscription_count() > 0 ||
     aw_points_ex_pub_->get_intra_process_subscription_count() > 0) {
-    const auto autoware_ex_cloud = nebula::drivers::convertPointXYZIRCAEDTToPointXYZIRADT(
+    const auto autoware_ex_cloud = nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(
       pointcloud, std::get<1>(pointcloud_ts));
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(SecondsToChronoNanoSeconds(std::get<1>(pointcloud_ts)).count());
-    PublishCloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
+      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+    publish_cloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
   }
 }
 
-void HesaiDecoderWrapper::PublishCloud(
+void HesaiDecoderWrapper::publish_cloud(
   std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
   const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher)
 {
@@ -181,7 +179,7 @@ void HesaiDecoderWrapper::PublishCloud(
   publisher->publish(std::move(pointcloud));
 }
 
-nebula::Status HesaiDecoderWrapper::Status()
+nebula::Status HesaiDecoderWrapper::status()
 {
   std::lock_guard lock(mtx_driver_ptr_);
 
@@ -189,7 +187,6 @@ nebula::Status HesaiDecoderWrapper::Status()
     return nebula::Status::NOT_INITIALIZED;
   }
 
-  return driver_ptr_->GetStatus();
+  return driver_ptr_->get_status();
 }
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

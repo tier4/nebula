@@ -19,9 +19,7 @@
 #include <tuple>
 #include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 /// @brief Base class for Robosense LiDAR decoder
 class RobosenseScanDecoder
@@ -42,12 +40,11 @@ public:
 
   /// @brief Indicates whether one full scan is ready
   /// @return Whether a scan is ready
-  virtual bool hasScanned() = 0;
+  virtual bool has_scanned() = 0;
 
   /// @brief Returns the point cloud and timestamp of the last scan
   /// @return A tuple of point cloud and timestamp in nanoseconds
-  virtual std::tuple<drivers::NebulaPointCloudPtr, double> getPointcloud() = 0;
+  virtual std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() = 0;
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

@@ -39,7 +39,7 @@ struct TailXT32
 
 struct PacketXT32 : public PacketBase<8, 32, 2, 100>
 {
-  using body_t = Body<Block<Unit4B, PacketXT32::N_CHANNELS>, PacketXT32::N_BLOCKS>;
+  using body_t = Body<Block<Unit4B, PacketXT32::n_channels>, PacketXT32::n_blocks>;
   Header12B header;
   body_t body;
   TailXT32 tail;
@@ -53,11 +53,11 @@ struct PacketXT32 : public PacketBase<8, 32, 2, 100>
 class PandarXT32 : public HesaiSensor<hesai_packet::PacketXT32>
 {
 public:
-  static constexpr float MIN_RANGE = 0.05f;
-  static constexpr float MAX_RANGE = 120.0f;
-  static constexpr size_t MAX_SCAN_BUFFER_POINTS = 256000;
+  static constexpr float min_range = 0.05f;
+  static constexpr float max_range = 120.0f;
+  static constexpr size_t max_scan_buffer_points = 256000;
 
-  int getPacketRelativePointTimeOffset(
+  int get_packet_relative_point_time_offset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
@@ -66,11 +66,12 @@ public:
     return block_offset_ns + channel_offset_ns;
   }
 
-  ReturnType getReturnType(
+  ReturnType get_return_type(
     hesai_packet::return_mode::ReturnMode return_mode, unsigned int return_idx,
     const std::vector<const typename packet_t::body_t::block_t::unit_t *> & return_units) override
   {
-    auto return_type = HesaiSensor<packet_t>::getReturnType(return_mode, return_idx, return_units);
+    auto return_type =
+      HesaiSensor<packet_t>::get_return_type(return_mode, return_idx, return_units);
     if (return_type == ReturnType::IDENTICAL) {
       return return_type;
     }

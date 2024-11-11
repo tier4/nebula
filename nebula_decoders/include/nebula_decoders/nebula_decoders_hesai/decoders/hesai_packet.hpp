@@ -57,7 +57,7 @@ struct DateTime
 
   /// @brief Get seconds since epoch
   /// @return Whole seconds since epoch
-  [[nodiscard]] uint64_t getSeconds() const
+  [[nodiscard]] uint64_t get_seconds() const
   {
     std::tm tm{};
     tm.tm_year = year - 1900 + YearOffset;
@@ -78,7 +78,7 @@ struct SecondsSinceEpoch
 
   /// @brief Get seconds since epoch
   /// @return Whole seconds since epoch
-  [[nodiscard]] uint64_t getSeconds() const
+  [[nodiscard]] uint64_t get_seconds() const
   {
     uint64_t seconds = 0;
     for (unsigned char second : this->seconds) {
@@ -145,7 +145,7 @@ struct Block
   UnitT units[UnitN];
   using unit_t = UnitT;
 
-  [[nodiscard]] uint32_t getAzimuth() const { return azimuth; }
+  [[nodiscard]] uint32_t get_azimuth() const { return azimuth; }
 };
 
 template <typename UnitT, size_t UnitN>
@@ -156,7 +156,7 @@ struct FineAzimuthBlock
   uint8_t fine_azimuth;
   UnitT units[UnitN];
 
-  [[nodiscard]] uint32_t getAzimuth() const { return (azimuth << 8) + fine_azimuth; }
+  [[nodiscard]] uint32_t get_azimuth() const { return (azimuth << 8) + fine_azimuth; }
 };
 
 template <typename UnitT, size_t UnitN>
@@ -169,7 +169,7 @@ struct SOBBlock
   uint16_t azimuth;
   UnitT units[UnitN];
 
-  [[nodiscard]] uint32_t getAzimuth() const { return azimuth; }
+  [[nodiscard]] uint32_t get_azimuth() const { return azimuth; }
 };
 
 template <typename BlockT, size_t BlockN>
@@ -189,10 +189,10 @@ struct Body
 template <size_t nBlocks, size_t nChannels, size_t maxReturns, size_t degreeSubdivisions>
 struct PacketBase
 {
-  static constexpr size_t N_BLOCKS = nBlocks;
-  static constexpr size_t N_CHANNELS = nChannels;
-  static constexpr size_t MAX_RETURNS = maxReturns;
-  static constexpr size_t DEGREE_SUBDIVISIONS = degreeSubdivisions;
+  static constexpr size_t n_blocks = nBlocks;
+  static constexpr size_t n_channels = nChannels;
+  static constexpr size_t max_returns = maxReturns;
+  static constexpr size_t degree_subdivisions = degreeSubdivisions;
 };
 
 #pragma pack(pop)
@@ -228,7 +228,7 @@ inline int get_n_returns(uint8_t return_mode)
 template <typename PacketT>
 uint64_t get_timestamp_ns(const PacketT & packet)
 {
-  return packet.tail.date_time.getSeconds() * 1000000000 + packet.tail.timestamp * 1000;
+  return packet.tail.date_time.get_seconds() * 1000000000 + packet.tail.timestamp * 1000;
 }
 
 /// @brief Get the distance unit of the given packet type in meters. Distance values in the packet,

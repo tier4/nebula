@@ -11,13 +11,12 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <filesystem>
 #include <regex>
 #include <vector>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 VelodyneRosDecoderTest::VelodyneRosDecoderTest(
   const rclcpp::NodeOptions & options, const std::string & node_name)
@@ -26,7 +25,7 @@ VelodyneRosDecoderTest::VelodyneRosDecoderTest(
   drivers::VelodyneCalibrationConfiguration calibration_configuration;
   drivers::VelodyneSensorConfiguration sensor_configuration;
 
-  wrapper_status_ = GetParameters(sensor_configuration, calibration_configuration);
+  wrapper_status_ = get_parameters(sensor_configuration, calibration_configuration);
   if (Status::OK != wrapper_status_) {
     RCLCPP_ERROR_STREAM(this->get_logger(), this->get_name() << " Error: " << wrapper_status_);
     return;
@@ -40,27 +39,27 @@ VelodyneRosDecoderTest::VelodyneRosDecoderTest(
     std::make_shared<const drivers::VelodyneSensorConfiguration>(sensor_configuration);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << ". Driver ");
-  wrapper_status_ = InitializeDriver(sensor_cfg_ptr_, calibration_cfg_ptr_);
+  wrapper_status_ = initialize_driver(sensor_cfg_ptr_, calibration_cfg_ptr_);
 
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 }
 
-Status VelodyneRosDecoderTest::InitializeDriver(
+Status VelodyneRosDecoderTest::initialize_driver(
   std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_configuration,
   std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration)
 {
   // driver should be initialized here with proper decoder
   driver_ptr_ =
     std::make_shared<drivers::VelodyneDriver>(sensor_configuration, calibration_configuration);
-  return driver_ptr_->GetStatus();
+  return driver_ptr_->get_status();
 }
 
-Status VelodyneRosDecoderTest::GetStatus()
+Status VelodyneRosDecoderTest::get_status()
 {
   return wrapper_status_;
 }
 
-Status VelodyneRosDecoderTest::GetParameters(
+Status VelodyneRosDecoderTest::get_parameters(
   drivers::VelodyneSensorConfiguration & sensor_configuration,
   drivers::VelodyneCalibrationConfiguration & calibration_configuration)
 {
@@ -78,7 +77,7 @@ Status VelodyneRosDecoderTest::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("sensor_model", "VLP32");
     sensor_configuration.sensor_model =
-      nebula::drivers::SensorModelFromString(this->get_parameter("sensor_model").as_string());
+      nebula::drivers::sensor_model_from_string(this->get_parameter("sensor_model").as_string());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -88,7 +87,7 @@ Status VelodyneRosDecoderTest::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("return_mode", "SingleStrongest", descriptor);
     sensor_configuration.return_mode =
-      nebula::drivers::ReturnModeFromString(this->get_parameter("return_mode").as_string());
+      nebula::drivers::return_mode_from_string(this->get_parameter("return_mode").as_string());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -180,8 +179,10 @@ Status VelodyneRosDecoderTest::GetParameters(
   } else {
     double min_angle = fmod(fmod(view_direction + view_width / 2, 2 * M_PI) + 2 * M_PI, 2 * M_PI);
     double max_angle = fmod(fmod(view_direction - view_width / 2, 2 * M_PI) + 2 * M_PI, 2 * M_PI);
-    sensor_configuration.cloud_min_angle = 100 * (2 * M_PI - min_angle) * 180 / M_PI + 0.5;
-    sensor_configuration.cloud_max_angle = 100 * (2 * M_PI - max_angle) * 180 / M_PI + 0.5;
+    sensor_configuration.cloud_min_angle =
+      static_cast<int>(std::lround(100 * (2 * M_PI - min_angle) * 180 / M_PI));
+    sensor_configuration.cloud_max_angle =
+      static_cast<int>(std::lround(100 * (2 * M_PI - max_angle) * 180 / M_PI));
     if (sensor_configuration.cloud_min_angle == sensor_configuration.cloud_max_angle) {
       // avoid returning empty cloud if min_angle = max_angle
       sensor_configuration.cloud_min_angle = 0;
@@ -196,8 +197,8 @@ Status VelodyneRosDecoderTest::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>(
       "bag_path", (bag_root_dir / "vlp32" / "1713492677464078412").string(), descriptor);
-    bag_path = this->get_parameter("bag_path").as_string();
-    std::cout << bag_path << std::endl;
+    bag_path_ = this->get_parameter("bag_path").as_string();
+    std::cout << bag_path_ << std::endl;
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -206,7 +207,7 @@ Status VelodyneRosDecoderTest::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("storage_id", "sqlite3", descriptor);
-    storage_id = this->get_parameter("storage_id").as_string();
+    storage_id_ = this->get_parameter("storage_id").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -215,7 +216,7 @@ Status VelodyneRosDecoderTest::GetParameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("format", "cdr", descriptor);
-    format = this->get_parameter("format").as_string();
+    format_ = this->get_parameter("format").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -225,7 +226,7 @@ Status VelodyneRosDecoderTest::GetParameters(
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>(
       "target_topic", "/sensing/lidar/front/velodyne_packets", descriptor);
-    target_topic = this->get_parameter("target_topic").as_string();
+    target_topic_ = this->get_parameter("target_topic").as_string();
   }
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
@@ -241,7 +242,7 @@ Status VelodyneRosDecoderTest::GetParameters(
     return Status::INVALID_CALIBRATION_FILE;
   } else {
     auto cal_status =
-      calibration_configuration.LoadFromFile(calibration_configuration.calibration_file);
+      calibration_configuration.load_from_file(calibration_configuration.calibration_file);
     if (cal_status != Status::OK) {
       RCLCPP_ERROR_STREAM(
         this->get_logger(),
@@ -254,7 +255,7 @@ Status VelodyneRosDecoderTest::GetParameters(
   return Status::OK;
 }
 
-void printPCD(nebula::drivers::NebulaPointCloudPtr pp)
+void print_pcd(nebula::drivers::NebulaPointCloudPtr pp)
 {
   for (auto p : pp->points) {
     std::cout << "(" << p.x << ", " << p.y << "," << p.z << "): " << p.intensity << ", "
@@ -263,7 +264,7 @@ void printPCD(nebula::drivers::NebulaPointCloudPtr pp)
   }
 }
 
-void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::NebulaPointCloudPtr pp2)
+void check_pcds(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::NebulaPointCloudPtr pp2)
 {
   EXPECT_EQ(pp1->points.size(), pp2->points.size());
   for (uint32_t i = 0; i < pp1->points.size(); i++) {
@@ -280,7 +281,7 @@ void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::Nebula
   }
 }
 
-void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, pcl::PointCloud<pcl::PointXYZ>::Ptr pp2)
+void check_pcds(nebula::drivers::NebulaPointCloudPtr pp1, pcl::PointCloud<pcl::PointXYZ>::Ptr pp2)
 {
   EXPECT_EQ(pp1->points.size(), pp2->points.size());
   for (uint32_t i = 0; i < pp1->points.size(); i++) {
@@ -292,17 +293,17 @@ void checkPCDs(nebula::drivers::NebulaPointCloudPtr pp1, pcl::PointCloud<pcl::Po
   }
 }
 
-void VelodyneRosDecoderTest::ReadBag()
+void VelodyneRosDecoderTest::read_bag()
 {
   rosbag2_storage::StorageOptions storage_options;
   rosbag2_cpp::ConverterOptions converter_options;
 
-  std::cout << bag_path << std::endl;
-  std::cout << storage_id << std::endl;
-  std::cout << format << std::endl;
-  std::cout << target_topic << std::endl;
+  std::cout << bag_path_ << std::endl;
+  std::cout << storage_id_ << std::endl;
+  std::cout << format_ << std::endl;
+  std::cout << target_topic_ << std::endl;
 
-  auto target_topic_name = target_topic;
+  auto target_topic_name = target_topic_;
   if (target_topic_name.substr(0, 1) == "/") {
     target_topic_name = target_topic_name.substr(1);
   }
@@ -310,13 +311,13 @@ void VelodyneRosDecoderTest::ReadBag()
 
   pcl::PCDReader pcd_reader;
 
-  rcpputils::fs::path bag_dir(bag_path);
+  rcpputils::fs::path bag_dir(bag_path_);
   rcpputils::fs::path pcd_dir = bag_dir.parent_path();
   int check_cnt = 0;
 
-  storage_options.uri = bag_path;
-  storage_options.storage_id = storage_id;
-  converter_options.output_serialization_format = format;
+  storage_options.uri = bag_path_;
+  storage_options.storage_id = storage_id_;
+  converter_options.output_serialization_format = format_;
   rclcpp::Serialization<velodyne_msgs::msg::VelodyneScan> serialization;
   nebula::drivers::NebulaPointCloudPtr pointcloud(new nebula::drivers::NebulaPointCloud);
   pcl::PointCloud<pcl::PointXYZ>::Ptr ref_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
@@ -328,7 +329,7 @@ void VelodyneRosDecoderTest::ReadBag()
 
       std::cout << "Found topic name " << bag_message->topic_name << std::endl;
 
-      if (bag_message->topic_name == target_topic) {
+      if (bag_message->topic_name == target_topic_) {
         velodyne_msgs::msg::VelodyneScan extracted_msg;
         rclcpp::SerializedMessage extracted_serialized_msg(*bag_message->serialized_data);
         serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
@@ -338,7 +339,7 @@ void VelodyneRosDecoderTest::ReadBag()
 
         auto extracted_msg_ptr = std::make_shared<velodyne_msgs::msg::VelodyneScan>(extracted_msg);
         for (auto & pkt : extracted_msg.packets) {
-          auto pointcloud_ts = driver_ptr_->ParseCloudPacket(
+          auto pointcloud_ts = driver_ptr_->parse_cloud_packet(
             std::vector<uint8_t>(pkt.data.begin(), pkt.data.end()), pkt.stamp.sec);
           auto pointcloud = std::get<0>(pointcloud_ts);
 
@@ -355,7 +356,7 @@ void VelodyneRosDecoderTest::ReadBag()
             std::cout << "exists: " << target_pcd_path << std::endl;
             auto rt = pcd_reader.read(target_pcd_path.string(), *ref_pointcloud);
             std::cout << rt << " loaded: " << target_pcd_path << std::endl;
-            checkPCDs(pointcloud, ref_pointcloud);
+            check_pcds(pointcloud, ref_pointcloud);
             check_cnt++;
             ref_pointcloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
           }
@@ -368,5 +369,4 @@ void VelodyneRosDecoderTest::ReadBag()
   }
 }
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

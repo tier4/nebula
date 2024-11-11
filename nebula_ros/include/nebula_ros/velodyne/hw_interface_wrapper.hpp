@@ -22,29 +22,28 @@
 
 #include <memory>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class VelodyneHwInterfaceWrapper
 {
 public:
   VelodyneHwInterfaceWrapper(
     rclcpp::Node * const parent_node,
-    std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config);
+    std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & config,
+    bool use_udp_only = false);
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<const nebula::drivers::VelodyneSensorConfiguration> & new_config);
 
-  nebula::Status Status();
+  nebula::Status status();
 
-  std::shared_ptr<drivers::VelodyneHwInterface> HwInterface() const;
+  std::shared_ptr<drivers::VelodyneHwInterface> hw_interface() const;
 
 private:
   std::shared_ptr<drivers::VelodyneHwInterface> hw_interface_;
   rclcpp::Logger logger_;
   nebula::Status status_;
   bool setup_sensor_;
+  bool use_udp_only_;
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

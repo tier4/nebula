@@ -2,11 +2,9 @@
 
 #include <nebula_common/nebula_common.hpp>
 
-namespace nebula
+namespace nebula::drivers
 {
-namespace drivers
-{
-[[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr convertPointXYZIRADTToPointXYZIR(
+[[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr convert_point_xyziradt_to_point_xyzir(
   const pcl::PointCloud<PointXYZIRADT>::ConstPtr & input_pointcloud)
 {
   pcl::PointCloud<PointXYZIR>::Ptr output_pointcloud(new pcl::PointCloud<PointXYZIR>);
@@ -27,7 +25,7 @@ namespace drivers
   return output_pointcloud;
 }
 
-pcl::PointCloud<PointXYZIR>::Ptr convertPointXYZIRCAEDTToPointXYZIR(
+pcl::PointCloud<PointXYZIR>::Ptr convert_point_xyzircaedt_to_point_xyzir(
   const pcl::PointCloud<PointXYZIRCAEDT>::ConstPtr & input_pointcloud)
 {
   pcl::PointCloud<PointXYZIR>::Ptr output_pointcloud(new pcl::PointCloud<PointXYZIR>);
@@ -48,7 +46,7 @@ pcl::PointCloud<PointXYZIR>::Ptr convertPointXYZIRCAEDTToPointXYZIR(
   return output_pointcloud;
 }
 
-pcl::PointCloud<PointXYZIRADT>::Ptr convertPointXYZIRCAEDTToPointXYZIRADT(
+pcl::PointCloud<PointXYZIRADT>::Ptr convert_point_xyzircaedt_to_point_xyziradt(
   const pcl::PointCloud<PointXYZIRCAEDT>::ConstPtr & input_pointcloud, const double stamp)
 {
   pcl::PointCloud<PointXYZIRADT>::Ptr output_pointcloud(new pcl::PointCloud<PointXYZIRADT>);
@@ -71,6 +69,4 @@ pcl::PointCloud<PointXYZIRADT>::Ptr convertPointXYZIRCAEDTToPointXYZIRADT(
   output_pointcloud->width = output_pointcloud->points.size();
   return output_pointcloud;
 }
-}  // namespace drivers
-
-}  // namespace nebula
+}  // namespace nebula::drivers

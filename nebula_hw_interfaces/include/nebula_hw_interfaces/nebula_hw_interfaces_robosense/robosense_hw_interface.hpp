@@ -33,15 +33,13 @@
 #include <string>
 #include <vector>
 
-namespace nebula
+namespace nebula::drivers
 {
-namespace drivers
-{
-constexpr uint16_t MTU_SIZE = 1248;
-constexpr uint16_t HELIOS_PACKET_SIZE = 1248;
-constexpr uint16_t HELIOS_INFO_PACKET_SIZE = 1248;
-constexpr uint16_t BPEARL_PACKET_SIZE = 1248;
-constexpr uint16_t BPEARL_INFO_PACKET_SIZE = 1248;
+constexpr uint16_t mtu_size = 1248;
+constexpr uint16_t helios_packet_size = 1248;
+constexpr uint16_t helios_info_packet_size = 1248;
+constexpr uint16_t bpearl_packet_size = 1248;
+constexpr uint16_t bpearl_info_packet_size = 1248;
 
 /// @brief Hardware interface of Robosense driver
 class RobosenseHwInterface
@@ -60,11 +58,11 @@ private:
 
   /// @brief Printing the string to RCLCPP_INFO_STREAM
   /// @param info Target string
-  void PrintInfo(std::string info);
+  void print_info(std::string info);
 
   /// @brief Printing the string to RCLCPP_DEBUG_STREAM
   /// @param debug Target string
-  void PrintDebug(std::string debug);
+  void print_debug(std::string debug);
 
 public:
   /// @brief Constructor
@@ -72,40 +70,39 @@ public:
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer);
+  void receive_sensor_packet_callback(std::vector<uint8_t> & buffer);
 
   /// @brief Callback function to receive the Info Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveInfoPacketCallback(std::vector<uint8_t> & buffer);
+  void receive_info_packet_callback(std::vector<uint8_t> & buffer);
 
   /// @brief Starting the interface that handles UDP streams for MSOP packets
   /// @return Resulting status
-  Status SensorInterfaceStart();
+  Status sensor_interface_start();
 
   /// @brief Starting the interface that handles UDP streams for DIFOP packets
   /// @return Resulting status
-  Status InfoInterfaceStart();
+  Status info_interface_start();
 
   /// @brief Setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
-  Status SetSensorConfiguration(
+  Status set_sensor_configuration(
     std::shared_ptr<const RobosenseSensorConfiguration> sensor_configuration);
 
   /// @brief Registering callback for RobosenseScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterScanCallback(std::function<void(std::vector<uint8_t> &)> scan_callback);
+  Status register_scan_callback(std::function<void(std::vector<uint8_t> &)> scan_callback);
 
   /// @brief Registering callback for RobosensePacket
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterInfoCallback(std::function<void(std::vector<uint8_t> &)> info_callback);
+  Status register_info_callback(std::function<void(std::vector<uint8_t> &)> info_callback);
 
   /// @brief Setting rclcpp::Logger
   /// @param node Logger
-  void SetLogger(std::shared_ptr<rclcpp::Logger> logger);
+  void set_logger(std::shared_ptr<rclcpp::Logger> logger);
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

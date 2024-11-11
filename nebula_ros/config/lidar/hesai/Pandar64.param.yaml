@@ -8,6 +8,7 @@
     packet_mtu_size: 1500
     launch_hw: true
     setup_sensor: true
+    udp_only: false
     frame_id: hesai
     diag_span: 1000
     min_range: 0.3
@@ -17,6 +18,7 @@
     sync_angle: 0
     cut_angle: 0.0
     sensor_model: Pandar64
+    calibration_file: $(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).csv
     rotation_speed: 600
     return_mode: Dual
     ptp_profile: 1588v2

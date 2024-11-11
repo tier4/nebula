@@ -28,9 +28,7 @@
 #include <memory>
 #include <mutex>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class HesaiDecoderWrapper
 {
@@ -41,26 +39,26 @@ public:
     const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> & calibration,
     bool publish_packets);
 
-  void ProcessCloudPacket(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
+  void process_cloud_packet(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config);
 
-  void OnCalibrationChange(
+  void on_calibration_change(
     const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> &
       new_calibration);
 
-  nebula::Status Status();
+  nebula::Status status();
 
 private:
-  void PublishCloud(
+  void publish_cloud(
     std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
     const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher);
 
   /// @brief Convert seconds to chrono::nanoseconds
   /// @param seconds
   /// @return chrono::nanoseconds
-  static inline std::chrono::nanoseconds SecondsToChronoNanoSeconds(const double seconds)
+  static inline std::chrono::nanoseconds seconds_to_chrono_nano_seconds(const double seconds)
   {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::duration<double>(seconds));
@@ -85,5 +83,4 @@ private:
 
   std::shared_ptr<WatchdogTimer> cloud_watchdog_;
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

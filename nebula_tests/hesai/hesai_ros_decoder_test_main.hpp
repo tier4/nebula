@@ -22,9 +22,7 @@
 
 #include <memory>
 
-namespace nebula
-{
-namespace test
+namespace nebula::test
 {
 class DecoderTest : public ::testing::TestWithParam<nebula::ros::HesaiRosDecoderTestParams>
 {
@@ -39,5 +37,4 @@ protected:
   std::shared_ptr<rclcpp::Logger> logger_;
 };
 
-}  // namespace test
-}  // namespace nebula
+}  // namespace nebula::test

@@ -20,29 +20,28 @@
 
 #include <memory>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 class HesaiHwInterfaceWrapper
 {
 public:
   HesaiHwInterfaceWrapper(
     rclcpp::Node * const parent_node,
-    std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config);
+    std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
+    bool use_udp_only = false);
 
-  void OnConfigChange(
+  void on_config_change(
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config);
 
-  nebula::Status Status();
+  nebula::Status status();
 
-  std::shared_ptr<drivers::HesaiHwInterface> HwInterface() const;
+  std::shared_ptr<drivers::HesaiHwInterface> hw_interface() const;
 
 private:
   std::shared_ptr<drivers::HesaiHwInterface> hw_interface_;
   rclcpp::Logger logger_;
   nebula::Status status_;
   bool setup_sensor_;
+  bool use_udp_only_;
 };
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

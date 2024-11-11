@@ -77,12 +77,12 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
 
 struct HesaiCalibrationConfigurationBase : public CalibrationConfigurationBase
 {
-  virtual nebula::Status LoadFromBytes(const std::vector<uint8_t> & buf) = 0;
-  virtual nebula::Status LoadFromFile(const std::string & calibration_file) = 0;
-  virtual nebula::Status SaveToFileFromBytes(
+  virtual nebula::Status load_from_bytes(const std::vector<uint8_t> & buf) = 0;
+  virtual nebula::Status load_from_file(const std::string & calibration_file) = 0;
+  virtual nebula::Status save_to_file_from_bytes(
     const std::string & calibration_file, const std::vector<uint8_t> & buf) = 0;
 
-  [[nodiscard]] virtual std::tuple<float, float> getFovPadding() const = 0;
+  [[nodiscard]] virtual std::tuple<float, float> get_fov_padding() const = 0;
 };
 
 /// @brief struct for Hesai calibration configuration
@@ -91,7 +91,7 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
   std::map<size_t, float> elev_angle_map;
   std::map<size_t, float> azimuth_offset_map;
 
-  inline nebula::Status LoadFromFile(const std::string & calibration_file) override
+  inline nebula::Status load_from_file(const std::string & calibration_file) override
   {
     std::ifstream ifs(calibration_file);
     if (!ifs) {
@@ -100,19 +100,19 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
     std::ostringstream ss;
     ss << ifs.rdbuf();  // reading data
     ifs.close();
-    return LoadFromString(ss.str());
+    return load_from_string(ss.str());
   }
 
-  nebula::Status LoadFromBytes(const std::vector<uint8_t> & buf) override
+  nebula::Status load_from_bytes(const std::vector<uint8_t> & buf) override
   {
     std::string calibration_string = std::string(buf.begin(), buf.end());
-    return LoadFromString(calibration_string);
+    return load_from_string(calibration_string);
   }
 
   /// @brief Loading calibration data
   /// @param calibration_content
   /// @return Resulting status
-  inline nebula::Status LoadFromString(const std::string & calibration_content)
+  inline nebula::Status load_from_string(const std::string & calibration_content)
   {
     std::stringstream ss;
     ss << calibration_content;
@@ -144,7 +144,7 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
   /// @brief Saving calibration data (not used)
   /// @param calibration_file
   /// @return Resulting status
-  inline nebula::Status SaveToFile(const std::string & calibration_file)
+  inline nebula::Status save_to_file(const std::string & calibration_file)
   {
     std::ofstream ofs(calibration_file);
     if (!ofs) {
@@ -162,18 +162,18 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
     return Status::OK;
   }
 
-  nebula::Status SaveToFileFromBytes(
+  nebula::Status save_to_file_from_bytes(
     const std::string & calibration_file, const std::vector<uint8_t> & buf) override
   {
     std::string calibration_string = std::string(buf.begin(), buf.end());
-    return SaveFileFromString(calibration_file, calibration_string);
+    return save_file_from_string(calibration_file, calibration_string);
   }
 
   /// @brief Saving calibration data from string
   /// @param calibration_file path
   /// @param calibration_string calibration string
   /// @return Resulting status
-  inline nebula::Status SaveFileFromString(
+  inline nebula::Status save_file_from_string(
     const std::string & calibration_file, const std::string & calibration_string)
   {
     std::ofstream ofs(calibration_file);
@@ -185,7 +185,7 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
     return Status::OK;
   }
 
-  [[nodiscard]] std::tuple<float, float> getFovPadding() const override
+  [[nodiscard]] std::tuple<float, float> get_fov_padding() const override
   {
     float min = INFINITY;
     float max = -INFINITY;
@@ -222,7 +222,7 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   /// @brief Load correction data from file
   /// @param buf Binary buffer
   /// @return Resulting status
-  inline nebula::Status LoadFromBytes(const std::vector<uint8_t> & buf) override
+  inline nebula::Status load_from_bytes(const std::vector<uint8_t> & buf) override
   {
     size_t index;
     for (index = 0; index < buf.size() - 1; index++) {
@@ -323,7 +323,7 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   /// @brief Load correction data from file
   /// @param correction_file path
   /// @return Resulting status
-  inline nebula::Status LoadFromFile(const std::string & correction_file) override
+  inline nebula::Status load_from_file(const std::string & correction_file) override
   {
     std::ifstream ifs(correction_file, std::ios::in | std::ios::binary);
     if (!ifs) {
@@ -336,7 +336,7 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
       ifs.read(reinterpret_cast<char *>(&c), sizeof(unsigned char));
       buf.emplace_back(c);
     }
-    LoadFromBytes(buf);
+    load_from_bytes(buf);
 
     ifs.close();
     return Status::OK;
@@ -346,21 +346,18 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   /// @param correction_file path
   /// @param buf correction binary
   /// @return Resulting status
-  inline nebula::Status SaveToFileFromBytes(
+  inline nebula::Status save_to_file_from_bytes(
     const std::string & correction_file, const std::vector<uint8_t> & buf) override
   {
-    std::cerr << "Saving in: " << correction_file << "\n";
     std::ofstream ofs(correction_file, std::ios::trunc | std::ios::binary);
     if (!ofs) {
       std::cerr << "Could not create file: " << correction_file << "\n";
       return Status::CANNOT_SAVE_FILE;
     }
-    std::cerr << "Writing start...." << buf.size() << "\n";
     bool sop_received = false;
     for (const auto & byte : buf) {
       if (!sop_received) {
         if (byte == 0xEE) {
-          std::cerr << "SOP received....\n";
           sop_received = true;
         }
       }
@@ -368,23 +365,22 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
         ofs << byte;
       }
     }
-    std::cerr << "Closing file\n";
     ofs.close();
     if (sop_received) return Status::OK;
     return Status::INVALID_CALIBRATION_FILE;
   }
 
-  static const int STEP3 = 200 * 256;
+  static const int g_step3 = 200 * 256;
 
   /// @brief Get azimuth adjustment for channel and precision azimuth
   /// @param ch The channel id
   /// @param azi The precision azimuth in (0.01 / 256) degree unit
   /// @return The azimuth adjustment in 0.01 degree unit
-  [[nodiscard]] int8_t getAzimuthAdjustV3(uint8_t ch, uint32_t azi) const
+  [[nodiscard]] int8_t get_azimuth_adjust_v3(uint8_t ch, uint32_t azi) const
   {
-    unsigned int i = std::floor(1.f * azi / STEP3);
-    unsigned int l = azi - i * STEP3;
-    float k = 1.f * l / STEP3;
+    unsigned int i = std::floor(1.f * azi / g_step3);
+    unsigned int l = azi - i * g_step3;
+    float k = 1.f * l / g_step3;
     return round((1 - k) * azimuthOffset[ch * 180 + i] + k * azimuthOffset[ch * 180 + i + 1]);
   }
 
@@ -392,15 +388,15 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   /// @param ch The channel id
   /// @param azi The precision azimuth in (0.01 / 256) degree unit
   /// @return The elevation adjustment in 0.01 degree unit
-  [[nodiscard]] int8_t getElevationAdjustV3(uint8_t ch, uint32_t azi) const
+  [[nodiscard]] int8_t get_elevation_adjust_v3(uint8_t ch, uint32_t azi) const
   {
-    unsigned int i = std::floor(1.f * azi / STEP3);
-    unsigned int l = azi - i * STEP3;
-    float k = 1.f * l / STEP3;
+    unsigned int i = std::floor(1.f * azi / g_step3);
+    unsigned int l = azi - i * g_step3;
+    float k = 1.f * l / g_step3;
     return round((1 - k) * elevationOffset[ch * 180 + i] + k * elevationOffset[ch * 180 + i + 1]);
   }
 
-  [[nodiscard]] std::tuple<float, float> getFovPadding() const override
+  [[nodiscard]] std::tuple<float, float> get_fov_padding() const override
   {
     // TODO(mojomex): calculate instead of hard-coding
     // The reason this is tricky is that an upper bound over all azimuth/elevation combinations has
@@ -429,11 +425,11 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
 <option value="6">First Return + Last Return + Strongest Return</option>
 */
 
-/// @brief Convert return mode name to ReturnMode enum (Hesai-specific ReturnModeFromString)
+/// @brief Convert return mode name to ReturnMode enum (Hesai-specific return_mode_from_string)
 /// @param return_mode Return mode name (Upper and lower case letters must match)
 /// @param sensor_model Model for correct conversion
 /// @return Corresponding ReturnMode
-inline ReturnMode ReturnModeFromStringHesai(
+inline ReturnMode return_mode_from_string_hesai(
   const std::string & return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {
@@ -474,7 +470,8 @@ inline ReturnMode ReturnModeFromStringHesai(
 /// @param return_mode Return mode number from the hardware response
 /// @param sensor_model Model for correct conversion
 /// @return Corresponding ReturnMode
-inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorModel & sensor_model)
+inline ReturnMode return_mode_from_int_hesai(
+  const int return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {
     case SensorModel::HESAI_PANDARXT32:
@@ -512,7 +509,8 @@ inline ReturnMode ReturnModeFromIntHesai(const int return_mode, const SensorMode
 /// @param return_mode target ReturnMode
 /// @param sensor_model Model for correct conversion
 /// @return Corresponding return mode number for the hardware
-inline int IntFromReturnModeHesai(const ReturnMode return_mode, const SensorModel & sensor_model)
+inline int int_from_return_mode_hesai(
+  const ReturnMode return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {
     case SensorModel::HESAI_PANDARXT32:

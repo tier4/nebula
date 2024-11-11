@@ -4,6 +4,7 @@ project(nebula_common)
 find_package(ament_cmake_auto REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(yaml-cpp REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 # Default to C++17
 if (NOT CMAKE_CXX_STANDARD)
@@ -28,11 +29,13 @@ include_directories(
     SYSTEM
     ${YAML_CPP_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
+    ${NLOHMANN_JSON_INCLUDE_DIRS}
 )
 
 link_libraries(
     ${PCL_LIBRARIES}
     ${YAML_CPP_LIBRARIES}
+    ${NLOHMANN_JSON_LIBRARIES}
 )
 
 add_library(nebula_common SHARED

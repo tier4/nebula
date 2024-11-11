@@ -17,9 +17,7 @@
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
@@ -32,7 +30,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 {
   setvbuf(stdout, nullptr, _IONBF, BUFSIZ);
 
-  wrapper_status_ = DeclareAndGetSensorConfigParams();
+  wrapper_status_ = declare_and_get_sensor_config_params();
 
   if (wrapper_status_ != Status::OK) {
     throw std::runtime_error(
@@ -42,23 +40,38 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
 
   launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
+  bool use_udp_only = declare_parameter<bool>("udp_only", param_read_only());
 
-  if (launch_hw_) {
-    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_);
-    hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->HwInterface(), sensor_cfg_ptr_);
+  if (use_udp_only) {
+    RCLCPP_INFO_STREAM(
+      get_logger(),
+      "UDP-only mode is enabled. Settings checks, synchronization, and diagnostics publishing are "
+      "disabled.");
   }
 
-  auto calibration_result = GetCalibrationData(sensor_cfg_ptr_->calibration_path);
+  if (launch_hw_) {
+    hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_, use_udp_only);
+    if (!use_udp_only) {  // hardware monitor requires TCP connection
+      hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
+    }
+  }
+
+  bool force_load_caibration_from_file =
+    use_udp_only;  // Downloading from device requires TCP connection
+  auto calibration_result =
+    get_calibration_data(sensor_cfg_ptr_->calibration_path, force_load_caibration_from_file);
   if (!calibration_result.has_value()) {
     throw std::runtime_error(
       (std::stringstream() << "No valid calibration found: " << calibration_result.error()).str());
   }
 
-  if (
-    hw_interface_wrapper_ &&
-    sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDARAT128) {
+  bool lidar_range_supported =
+    sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDARAT128 &&
+    sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDAR64;
+
+  if (hw_interface_wrapper_ && !use_udp_only && lidar_range_supported) {
     auto status =
-      hw_interface_wrapper_->HwInterface()->checkAndSetLidarRange(*calibration_result.value());
+      hw_interface_wrapper_->hw_interface()->checkAndSetLidarRange(*calibration_result.value());
     if (status != Status::OK) {
       throw std::runtime_error(
         (std::stringstream{} << "Could not set sensor FoV: " << status).str());
@@ -71,18 +84,18 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 
   decoder_thread_ = std::thread([this]() {
     while (true) {
-      decoder_wrapper_->ProcessCloudPacket(packet_queue_.pop());
+      decoder_wrapper_->process_cloud_packet(packet_queue_.pop());
     }
   });
 
   if (launch_hw_) {
-    hw_interface_wrapper_->HwInterface()->RegisterScanCallback(
-      std::bind(&HesaiRosWrapper::ReceiveCloudPacketCallback, this, std::placeholders::_1));
-    StreamStart();
+    hw_interface_wrapper_->hw_interface()->RegisterScanCallback(
+      std::bind(&HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1));
+    stream_start();
   } else {
     packets_sub_ = create_subscription<pandar_msgs::msg::PandarScan>(
       "pandar_packets", rclcpp::SensorDataQoS(),
-      std::bind(&HesaiRosWrapper::ReceiveScanMessageCallback, this, std::placeholders::_1));
+      std::bind(&HesaiRosWrapper::receive_scan_message_callback, this, std::placeholders::_1));
     RCLCPP_INFO_STREAM(
       get_logger(),
       "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
@@ -91,18 +104,18 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   // Register parameter callback after all params have been declared. Otherwise it would be called
   // once for each declaration
   parameter_event_cb_ = add_on_set_parameters_callback(
-    std::bind(&HesaiRosWrapper::OnParameterChange, this, std::placeholders::_1));
+    std::bind(&HesaiRosWrapper::on_parameter_change, this, std::placeholders::_1));
 }
 
-nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
+nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
 {
   nebula::drivers::HesaiSensorConfiguration config;
 
   auto _sensor_model = declare_parameter<std::string>("sensor_model", param_read_only());
-  config.sensor_model = drivers::SensorModelFromString(_sensor_model);
+  config.sensor_model = drivers::sensor_model_from_string(_sensor_model);
 
   auto _return_mode = declare_parameter<std::string>("return_mode", param_read_write());
-  config.return_mode = drivers::ReturnModeFromStringHesai(_return_mode, config.sensor_model);
+  config.return_mode = drivers::return_mode_from_string_hesai(_return_mode, config.sensor_model);
 
   config.host_ip = declare_parameter<std::string>("host_ip", param_read_only());
   config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());
@@ -164,15 +177,15 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
       declare_parameter<double>("dual_return_distance_threshold", descriptor);
   }
 
-  std::string calibration_parameter_name = getCalibrationParameterName(config.sensor_model);
+  std::string calibration_parameter_name = get_calibration_parameter_name(config.sensor_model);
   config.calibration_path =
     declare_parameter<std::string>(calibration_parameter_name, param_read_write());
 
   auto _ptp_profile = declare_parameter<std::string>("ptp_profile", param_read_only());
-  config.ptp_profile = drivers::PtpProfileFromString(_ptp_profile);
+  config.ptp_profile = drivers::ptp_profile_from_string(_ptp_profile);
 
   auto _ptp_transport = declare_parameter<std::string>("ptp_transport_type", param_read_only());
-  config.ptp_transport_type = drivers::PtpTransportTypeFromString(_ptp_transport);
+  config.ptp_transport_type = drivers::ptp_transport_type_from_string(_ptp_transport);
 
   if (
     config.ptp_transport_type != drivers::PtpTransportType::L2 &&
@@ -187,7 +200,7 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
   }
 
   auto _ptp_switch = declare_parameter<std::string>("ptp_switch_type", param_read_only());
-  config.ptp_switch_type = drivers::PtpSwitchTypeFromString(_ptp_switch);
+  config.ptp_switch_type = drivers::ptp_switch_type_from_string(_ptp_switch);
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
@@ -196,10 +209,10 @@ nebula::Status HesaiRosWrapper::DeclareAndGetSensorConfigParams()
   }
 
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(config);
-  return ValidateAndSetConfig(new_cfg_ptr);
+  return validate_and_set_config(new_cfg_ptr);
 }
 
-Status HesaiRosWrapper::ValidateAndSetConfig(
+Status HesaiRosWrapper::validate_and_set_config(
   std::shared_ptr<const drivers::HesaiSensorConfiguration> & new_config)
 {
   if (new_config->sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
@@ -248,20 +261,20 @@ Status HesaiRosWrapper::ValidateAndSetConfig(
   }
 
   if (hw_interface_wrapper_) {
-    hw_interface_wrapper_->OnConfigChange(new_config);
+    hw_interface_wrapper_->on_config_change(new_config);
   }
   if (hw_monitor_wrapper_) {
-    hw_monitor_wrapper_->OnConfigChange(new_config);
+    hw_monitor_wrapper_->on_config_change(new_config);
   }
   if (decoder_wrapper_) {
-    decoder_wrapper_->OnConfigChange(new_config);
+    decoder_wrapper_->on_config_change(new_config);
   }
 
   sensor_cfg_ptr_ = new_config;
   return Status::OK;
 }
 
-void HesaiRosWrapper::ReceiveScanMessageCallback(
+void HesaiRosWrapper::receive_scan_message_callback(
   std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg)
 {
   if (hw_interface_wrapper_) {
@@ -280,25 +293,25 @@ void HesaiRosWrapper::ReceiveScanMessageCallback(
   }
 }
 
-Status HesaiRosWrapper::GetStatus()
+Status HesaiRosWrapper::get_status()
 {
   return wrapper_status_;
 }
 
-Status HesaiRosWrapper::StreamStart()
+Status HesaiRosWrapper::stream_start()
 {
   if (!hw_interface_wrapper_) {
     return Status::UDP_CONNECTION_ERROR;
   }
 
-  if (hw_interface_wrapper_->Status() != Status::OK) {
-    return hw_interface_wrapper_->Status();
+  if (hw_interface_wrapper_->status() != Status::OK) {
+    return hw_interface_wrapper_->status();
   }
 
-  return hw_interface_wrapper_->HwInterface()->SensorInterfaceStart();
+  return hw_interface_wrapper_->hw_interface()->SensorInterfaceStart();
 }
 
-rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
+rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
   const std::vector<rclcpp::Parameter> & p)
 {
   using rcl_interfaces::msg::SetParametersResult;
@@ -315,7 +328,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
 
   std::string _return_mode{};
   std::string calibration_parameter_name =
-    getCalibrationParameterName(sensor_cfg_ptr_->sensor_model);
+    get_calibration_parameter_name(sensor_cfg_ptr_->sensor_model);
 
   bool got_any =
     get_param(p, "return_mode", _return_mode) | get_param(p, "frame_id", new_cfg.frame_id) |
@@ -335,7 +348,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
 
   if (_return_mode.length() > 0)
     new_cfg.return_mode =
-      nebula::drivers::ReturnModeFromStringHesai(_return_mode, sensor_cfg_ptr_->sensor_model);
+      nebula::drivers::return_mode_from_string_hesai(_return_mode, sensor_cfg_ptr_->sensor_model);
 
   // ////////////////////////////////////////
   // Get and validate new calibration, if any
@@ -356,7 +369,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
     }
 
     // Fail early and do not set the new config if getting calibration data failed.
-    auto get_calibration_result = GetCalibrationData(new_cfg.calibration_path, true);
+    auto get_calibration_result = get_calibration_data(new_cfg.calibration_path, true);
     if (!get_calibration_result.has_value()) {
       auto result = SetParametersResult();
       result.successful = false;
@@ -371,7 +384,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
   }
 
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(new_cfg);
-  auto status = ValidateAndSetConfig(new_cfg_ptr);
+  auto status = validate_and_set_config(new_cfg_ptr);
   if (status != Status::OK) {
     RCLCPP_WARN_STREAM(get_logger(), "OnParameterChange aborted: " << status);
     auto result = SetParametersResult();
@@ -382,14 +395,15 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
 
   // Set calibration (if any) only once all parameters have been validated
   if (new_calibration_ptr) {
-    decoder_wrapper_->OnCalibrationChange(new_calibration_ptr);
+    decoder_wrapper_->on_calibration_change(new_calibration_ptr);
     RCLCPP_INFO_STREAM(get_logger(), "Changed calibration to '" << new_cfg.calibration_path << "'");
   }
 
   if (
     new_calibration_ptr && hw_interface_wrapper_ &&
     sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDARAT128) {
-    auto status = hw_interface_wrapper_->HwInterface()->checkAndSetLidarRange(*new_calibration_ptr);
+    auto status =
+      hw_interface_wrapper_->hw_interface()->checkAndSetLidarRange(*new_calibration_ptr);
     if (status != Status::OK) {
       RCLCPP_ERROR_STREAM(
         get_logger(), "Sensor configuration updated, but setting hardware FoV failed: " << status);
@@ -399,9 +413,9 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
+void HesaiRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & packet)
 {
-  if (!decoder_wrapper_ || decoder_wrapper_->Status() != Status::OK) {
+  if (!decoder_wrapper_ || decoder_wrapper_->status() != Status::OK) {
     return;
   }
 
@@ -419,7 +433,7 @@ void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
   }
 }
 
-std::string HesaiRosWrapper::getCalibrationParameterName(drivers::SensorModel model) const
+std::string HesaiRosWrapper::get_calibration_parameter_name(drivers::SensorModel model) const
 {
   if (model == drivers::SensorModel::HESAI_PANDARAT128) {
     return "correction_file";
@@ -428,7 +442,7 @@ std::string HesaiRosWrapper::getCalibrationParameterName(drivers::SensorModel mo
   return "calibration_file";
 }
 
-HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::GetCalibrationData(
+HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::get_calibration_data(
   const std::string & calibration_file_path, bool ignore_others)
 {
   std::shared_ptr<drivers::HesaiCalibrationConfigurationBase> calib;
@@ -453,9 +467,9 @@ HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::GetCalibrationData(
   // If a sensor is connected, try to download and save its calibration data
   if (!ignore_others && launch_hw_) {
     try {
-      auto raw_data = hw_interface_wrapper_->HwInterface()->GetLidarCalibrationBytes();
+      auto raw_data = hw_interface_wrapper_->hw_interface()->GetLidarCalibrationBytes();
       RCLCPP_INFO(logger, "Downloaded calibration data from sensor.");
-      auto status = calib->SaveToFileFromBytes(calibration_file_path_from_sensor, raw_data);
+      auto status = calib->save_to_file_from_bytes(calibration_file_path_from_sensor, raw_data);
       if (status != Status::OK) {
         RCLCPP_ERROR_STREAM(logger, "Could not save calibration data: " << status);
       } else {
@@ -470,7 +484,7 @@ HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::GetCalibrationData(
   // If saved calibration data from a sensor exists (either just downloaded above, or previously),
   // try to load it
   if (!ignore_others && std::filesystem::exists(calibration_file_path_from_sensor)) {
-    auto status = calib->LoadFromFile(calibration_file_path_from_sensor);
+    auto status = calib->load_from_file(calibration_file_path_from_sensor);
     if (status == Status::OK) {
       calib->calibration_file = calibration_file_path_from_sensor;
       return calib;
@@ -493,7 +507,7 @@ HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::GetCalibrationData(
   }
 
   // Try to load the existing fallback calibration file. Return an error if this fails
-  auto status = calib->LoadFromFile(calibration_file_path);
+  auto status = calib->load_from_file(calibration_file_path);
   if (status != Status::OK) {
     RCLCPP_ERROR_STREAM(
       logger, "Could not load calibration file at '" << calibration_file_path << "'");
@@ -506,5 +520,4 @@ HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::GetCalibrationData(
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(HesaiRosWrapper)
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

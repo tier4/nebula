@@ -30,6 +30,7 @@
 #include <rclcpp_components/register_node_macro.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
+#include <robosense_msgs/msg/detail/robosense_info_packet__struct.hpp>
 #include <robosense_msgs/msg/robosense_info_packet.hpp>
 #include <robosense_msgs/msg/robosense_scan.hpp>
 
@@ -43,9 +44,7 @@
 #include <thread>
 #include <vector>
 
-namespace nebula
-{
-namespace ros
+namespace nebula::ros
 {
 
 /// @brief Ros wrapper of robosense driver
@@ -57,40 +56,43 @@ public:
 
   /// @brief Get current status of this driver
   /// @return Current status
-  Status GetStatus();
+  Status get_status();
 
   /// @brief Start point cloud streaming (Call CloudInterfaceStart of HwInterface)
   /// @return Resulting status
-  Status StreamStart();
+  Status stream_start();
 
 private:
-  void ReceiveCloudPacketCallback(std::vector<uint8_t> & packet);
+  void receive_cloud_packet_callback(std::vector<uint8_t> & packet);
 
-  void ReceiveInfoPacketCallback(std::vector<uint8_t> & packet);
+  void receive_info_packet_callback(std::vector<uint8_t> & packet);
 
-  void ReceiveScanMessageCallback(std::unique_ptr<robosense_msgs::msg::RobosenseScan> scan_msg);
+  void receive_scan_message_callback(std::unique_ptr<robosense_msgs::msg::RobosenseScan> scan_msg);
 
-  nebula::Status DeclareAndGetSensorConfigParams();
+  nebula::Status declare_and_get_sensor_config_params();
 
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
   /// @return SetParametersResult
-  rcl_interfaces::msg::SetParametersResult OnParameterChange(
+  rcl_interfaces::msg::SetParametersResult on_parameter_change(
     const std::vector<rclcpp::Parameter> & p);
 
-  nebula::Status ValidateAndSetConfig(
+  nebula::Status validate_and_set_config(
     std::shared_ptr<const drivers::RobosenseSensorConfiguration> & new_config);
 
   nebula::Status wrapper_status_;
 
-  std::shared_ptr<const nebula::drivers::RobosenseSensorConfiguration> sensor_cfg_ptr_{};
+  std::shared_ptr<const nebula::drivers::RobosenseSensorConfiguration> sensor_cfg_ptr_;
 
   /// @brief Stores received packets that have not been processed yet by the decoder thread
-  mt_queue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
+  MtQueue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
   /// @brief Thread to isolate decoding from receiving
   std::thread decoder_thread_;
 
-  rclcpp::Subscription<robosense_msgs::msg::RobosenseScan>::SharedPtr packets_sub_{};
+  rclcpp::Publisher<robosense_msgs::msg::RobosenseInfoPacket>::SharedPtr info_packets_pub_;
+
+  rclcpp::Subscription<robosense_msgs::msg::RobosenseScan>::SharedPtr packets_sub_;
+  rclcpp::Subscription<robosense_msgs::msg::RobosenseInfoPacket>::SharedPtr info_packets_sub_;
 
   bool launch_hw_;
 
@@ -105,5 +107,4 @@ private:
   OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_;
 };
 
-}  // namespace ros
-}  // namespace nebula
+}  // namespace nebula::ros

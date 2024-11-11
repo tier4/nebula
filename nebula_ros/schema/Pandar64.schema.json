@@ -30,6 +30,9 @@
         "setup_sensor": {
           "$ref": "sub/hardware.json#/definitions/setup_sensor"
         },
+        "udp_only": {
+          "$ref": "sub/hardware.json#/definitions/udp_only"
+        },
         "frame_id": {
           "$ref": "sub/topic.json#/definitions/frame_id"
         },
@@ -59,6 +62,9 @@
           "enum": [
             "Pandar64"
           ]
+        },
+        "calibration_file": {
+          "$ref": "sub/lidar_hesai.json#/definitions/calibration_file"
         },
         "rotation_speed": {
           "$ref": "sub/lidar_hesai.json#/definitions/rotation_speed"
@@ -100,6 +106,7 @@
         "packet_mtu_size",
         "launch_hw",
         "setup_sensor",
+        "udp_only",
         "frame_id",
         "diag_span",
         "cloud_min_angle",
@@ -107,6 +114,7 @@
         "sync_angle",
         "cut_angle",
         "sensor_model",
+        "calibration_file",
         "rotation_speed",
         "return_mode",
         "ptp_profile",

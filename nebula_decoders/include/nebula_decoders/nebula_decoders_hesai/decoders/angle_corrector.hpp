@@ -45,12 +45,13 @@ public:
   /// angle unit
   /// @param channel_id The laser channel's id
   /// @return The corrected angles (azimuth, elevation) in radians and their sin/cos values
-  virtual CorrectedAngleData getCorrectedAngleData(uint32_t block_azimuth, uint32_t channel_id) = 0;
+  virtual CorrectedAngleData get_corrected_angle_data(
+    uint32_t block_azimuth, uint32_t channel_id) = 0;
 
-  virtual bool passedEmitAngle(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
-  virtual bool passedTimestampResetAngle(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
-  virtual bool isInsideFoV(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
-  virtual bool isInsideOverlap(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
+  virtual bool passed_emit_angle(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
+  virtual bool passed_timestamp_reset_angle(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
+  virtual bool is_inside_fov(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
+  virtual bool is_inside_overlap(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
 };
 
 }  // namespace nebula::drivers
