@@ -173,7 +173,6 @@ Status AevaRosWrapper::declareAndGetSensorConfigParams()
   declareJsonParam<float>("scanner.dithering_enable_ego_speed", config.tree);
   declareJsonParam<std::string>("scanner.dithering_pattern_option", config.tree);
   declareJsonParam<float>("scanner.ele_offset_rad", config.tree);
-  declareJsonParam<bool>("scanner.elevation_auto_adjustment", config.tree);
   declareJsonParam<bool>("scanner.enable_frame_dithering", config.tree);
   declareJsonParam<bool>("scanner.enable_frame_sync", config.tree);
   declareJsonParam<bool>("scanner.flip_pattern_vertically", config.tree);
@@ -248,7 +247,6 @@ rcl_interfaces::msg::SetParametersResult AevaRosWrapper::onParameterChange(
     getJsonParam<float>(p, "scanner.dithering_enable_ego_speed", config.tree) |
     getJsonParam<std::string>(p, "scanner.dithering_pattern_option", config.tree) |
     getJsonParam<float>(p, "scanner.ele_offset_rad", config.tree) |
-    getJsonParam<bool>(p, "scanner.elevation_auto_adjustment", config.tree) |
     getJsonParam<bool>(p, "scanner.enable_frame_dithering", config.tree) |
     getJsonParam<bool>(p, "scanner.enable_frame_sync", config.tree) |
     getJsonParam<bool>(p, "scanner.flip_pattern_vertically", config.tree) |

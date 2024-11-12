@@ -9,7 +9,6 @@
     scanner.dithering_enable_ego_speed: 40.0
     scanner.dithering_pattern_option: dithering_pattern_1
     scanner.ele_offset_rad: 0.0
-    scanner.elevation_auto_adjustment: false
     scanner.enable_frame_dithering: false
     scanner.enable_frame_sync: true
     scanner.flip_pattern_vertically: false

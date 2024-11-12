@@ -57,12 +57,6 @@
           "min": -0.35,
           "default": "0.0"
         },
-        "scanner.elevation_auto_adjustment": {
-          "type": "boolean",
-          "readOnly": false,
-          "description": "Adjusts elevation to a long-range setting when the car is going sufficiently fast.",
-          "default": "false"
-        },
         "scanner.enable_frame_dithering": {
           "type": "boolean",
           "readOnly": false,
