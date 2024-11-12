@@ -45,7 +45,9 @@ The `sensor_model` parameter below decides which sensor driver is launched.
 
 | Model     | `sensor_model` | Configuration file | Test status |
 | --------- | -------------- | ------------------ | ----------- |
-| Aeries II | Aeries2        | Aeries2.param.yaml | ⚠️          |
+| Aeries II | Aeries2        | Aeries2.param.yaml | ⚠️\*        |
+
+\*: The Aeries II has been tested with firmware version 14.0.0.
 
 ## Continental radars
 
