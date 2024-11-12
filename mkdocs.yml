@@ -162,6 +162,10 @@ nav:
 plugins:
   - macros:
       module_name: mkdocs_macros
+      render_by_default: false
+      force_render_paths: |
+        *
+        !*_source.md
   - mkdoxy:
       projects:
         nebula_common:
