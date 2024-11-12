@@ -166,7 +166,7 @@ Status AevaRosWrapper::declareAndGetSensorConfigParams()
   Aeries2Config config;
 
   std::string raw_sensor_model = declare_parameter<std::string>("sensor_model", param_read_only());
-  config.sensor_model = drivers::SensorModelFromString(raw_sensor_model);
+  config.sensor_model = drivers::sensor_model_from_string(raw_sensor_model);
   config.sensor_ip = declare_parameter<std::string>("sensor_ip", param_read_only());
   config.frame_id = declare_parameter<std::string>("frame_id", param_read_only());
 
