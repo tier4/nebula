@@ -33,7 +33,8 @@ jobs:
           mkdocs-material \
           Jinja2 \
           ruamel.yaml && \
-          pip install git+https://github.com/JakubAndrysek/mkdoxy
+          pip install git+https://github.com/JakubAndrysek/mkdoxy && \
+          pip install docs/requirements.txt
       - run: mkdocs build --site-dir _site
       - run: touch _site/.nojekyll
       - run: |
