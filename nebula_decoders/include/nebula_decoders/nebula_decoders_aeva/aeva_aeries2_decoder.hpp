@@ -27,7 +27,6 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <mutex>
 
 namespace nebula::drivers
 {
@@ -43,11 +42,11 @@ public:
 
   AevaAeries2Decoder() : cloud_state_({std::make_unique<AevaPointCloud>(), 0}) {}
 
-  void processPointcloudMessage(const aeva::PointCloudMessage & message);
+  void process_pointcloud_message(const aeva::PointCloudMessage & message);
 
-  void registerPointCloudCallback(callback_t callback);
+  void register_point_cloud_callback(callback_t callback);
 
-  void onParameterChange(ReturnMode return_mode);
+  void on_parameter_change(ReturnMode return_mode);
 
 private:
   struct DecoderState
@@ -65,10 +64,10 @@ private:
     uint64_t timestamp;
   };
 
-  ReturnType getReturnType(uint32_t peak_id);
+  [[nodiscard]] ReturnType get_return_type(uint32_t peak_id) const;
 
   callback_t callback_;
-  std::atomic<ReturnMode> return_mode_;
+  std::atomic<ReturnMode> return_mode_{ReturnMode::UNKNOWN};
   PointcloudState cloud_state_{};
 };
 }  // namespace nebula::drivers

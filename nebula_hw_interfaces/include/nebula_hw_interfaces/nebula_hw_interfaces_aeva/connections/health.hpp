@@ -30,7 +30,6 @@
 namespace nebula::drivers::connections
 {
 
-using namespace boost::endian;  //  NOLINT
 using aeva::HealthCode;
 
 class HealthParser : public AevaParser<AevaStreamType::kHealth>
@@ -43,10 +42,10 @@ public:
   {
   }
 
-  void registerCallback(callback_t callback) { callback_ = std::move(callback); }
+  void register_callback(callback_t callback) { callback_ = std::move(callback); }
 
 protected:
-  void onMessage(const MessageHeader & message_header, ByteView & payload_bytes) override
+  void on_message(const MessageHeader & message_header, ByteView & payload_bytes) override
   {
     auto n_entries = pull_and_parse<uint64_t>(payload_bytes);
 
@@ -59,8 +58,8 @@ protected:
     entries.reserve(n_entries);
 
     for (size_t i = 0; i < n_entries; ++i) {
-      auto pointer = &*payload_bytes.consumeUnsafe(sizeof(uint32_t)).cbegin();
-      auto entry = load_little_u32(pointer);
+      auto pointer = &*payload_bytes.consume_unsafe(sizeof(uint32_t)).cbegin();
+      auto entry = boost::endian::load_little_u32(pointer);
       entries.emplace_back(entry);
     }
 

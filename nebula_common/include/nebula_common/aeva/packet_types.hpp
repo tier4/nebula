@@ -177,12 +177,12 @@ struct HealthCode
 {
   explicit HealthCode(uint32_t value) : value_(value) {}
 
-  [[nodiscard]] bool is_error() const { return (value_ & ERROR_MASK) != 0; }
-  [[nodiscard]] uint32_t get() const { return value_ & ~ERROR_MASK; }
+  [[nodiscard]] bool is_error() const { return (value_ & g_error_mask) != 0; }
+  [[nodiscard]] uint32_t get() const { return value_ & ~g_error_mask; }
 
 private:
   uint32_t value_;
-  static const uint32_t ERROR_MASK = 1u << 31u;
+  static const uint32_t g_error_mask = 1u << 31u;
 };
 
 struct ReconfigMessage

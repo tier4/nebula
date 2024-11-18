@@ -47,8 +47,8 @@ public:
     buffer_(packets_buffered),
     packet_loss_callback_(std::move(packet_loss_callback))
   {
-    underlying_->registerBytesCallback(
-      [&](auto bytes) { onBytesFromUnderlying(std::move(bytes)); });
+    underlying_->register_bytes_callback(
+      [this](auto bytes) { on_bytes_from_underlying(std::move(bytes)); });
   }
 
   void read(std::vector<uint8_t> & into, size_t n_bytes) override
@@ -94,7 +94,7 @@ public:
   }
 
 private:
-  void onBytesFromUnderlying(std::vector<uint8_t> bytes)
+  void on_bytes_from_underlying(std::vector<uint8_t> bytes)
   {
     auto ptr = std::make_unique<std::vector<uint8_t>>();
     ptr->swap(bytes);

@@ -34,13 +34,13 @@ public:
   ObservableByteStream() = default;
 
   ObservableByteStream(const ObservableByteStream &) = default;
-  ObservableByteStream(ObservableByteStream &&) = delete;
+  ObservableByteStream(ObservableByteStream &&) = default;
   ObservableByteStream & operator=(const ObservableByteStream &) = default;
-  ObservableByteStream & operator=(ObservableByteStream &&) = delete;
+  ObservableByteStream & operator=(ObservableByteStream &&) = default;
 
   virtual ~ObservableByteStream() = default;
 
-  virtual void registerBytesCallback(callback_t callback) = 0;
+  virtual void register_bytes_callback(callback_t callback) = 0;
 };
 
 /**
@@ -52,9 +52,9 @@ public:
   PullableByteStream() = default;
 
   PullableByteStream(const PullableByteStream &) = default;
-  PullableByteStream(PullableByteStream &&) = delete;
+  PullableByteStream(PullableByteStream &&) = default;
   PullableByteStream & operator=(const PullableByteStream &) = default;
-  PullableByteStream & operator=(PullableByteStream &&) = delete;
+  PullableByteStream & operator=(PullableByteStream &&) = default;
 
   virtual ~PullableByteStream() = default;
 
@@ -70,9 +70,9 @@ public:
   WritableByteStream() = default;
 
   WritableByteStream(const WritableByteStream &) = default;
-  WritableByteStream(WritableByteStream &&) = delete;
+  WritableByteStream(WritableByteStream &&) = default;
   WritableByteStream & operator=(const WritableByteStream &) = default;
-  WritableByteStream & operator=(WritableByteStream &&) = delete;
+  WritableByteStream & operator=(WritableByteStream &&) = default;
 
   virtual ~WritableByteStream() = default;
 

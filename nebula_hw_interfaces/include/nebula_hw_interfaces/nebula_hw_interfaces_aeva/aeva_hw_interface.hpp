@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "nebula_common/util/parsing.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_aeva/connections/health.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_aeva/connections/pointcloud.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_aeva/connections/reconfig.hpp"
@@ -28,9 +27,7 @@
 #include <nlohmann/json.hpp>
 
 #include <memory>
-#include <stdexcept>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 namespace nebula::drivers
@@ -56,11 +53,11 @@ public:
    * and the sensor settings
    */
   AevaHwInterface(
-    std::shared_ptr<loggers::Logger> logger, bool setup_sensor,
+    const std::shared_ptr<loggers::Logger> & logger, bool setup_sensor,
     const std::shared_ptr<const aeva::Aeries2Config> & config)
   : AevaHwInterface(
-      logger, setup_sensor, config, makepointcloudApi(*config), makeTelemetryApi(*config),
-      makeReconfigApi(*config, logger), makeHealthApi(*config))
+      logger, setup_sensor, config, make_pointcloud_api(*config), make_telemetry_api(*config),
+      make_reconfig_api(*config, logger), make_health_api(*config))
   {
   }
 
@@ -76,13 +73,13 @@ public:
    * @param health_api  The health endpoint. Can be null.
    */
   AevaHwInterface(
-    std::shared_ptr<loggers::Logger> logger, bool setup_sensor,
+    const std::shared_ptr<loggers::Logger> & logger, bool setup_sensor,
     const std::shared_ptr<const aeva::Aeries2Config> & config,
     std::shared_ptr<PointcloudParser> pointcloud_api,
     std::shared_ptr<TelemetryParser> telemetry_api, std::shared_ptr<ReconfigParser> reconfig_api,
     std::shared_ptr<HealthParser> health_api)
   : setup_sensor_(setup_sensor),
-    logger_(std::move(logger)),
+    logger_(logger),
     pointcloud_api_(std::move(pointcloud_api)),
     telemetry_api_(std::move(telemetry_api)),
     reconfig_api_(std::move(reconfig_api)),
@@ -90,105 +87,34 @@ public:
   {
     if (setup_sensor_ && reconfig_api_) {
       logger_->info("Configuring sensor...");
-      onConfigChange(config);
+      on_config_change(config);
       logger_->info("Config OK");
     }
   }
 
-  void onConfigChange(const std::shared_ptr<const aeva::Aeries2Config> & config)
-  {
-    if (!reconfig_api_ || !setup_sensor_) return;
+  void on_config_change(const std::shared_ptr<const aeva::Aeries2Config> & config);
 
-    json manifest{};
-    for (uint32_t i = 0; i < MANIFEST_RETRIES && manifest.is_null(); ++i) {
-      try {
-        if (i > 0) {
-          logger_->info("Re-trying to fetch manifest");
-        }
-        manifest = reconfig_api_->getManifest();
-        if (i > 0) {
-          logger_->info("Manifest OK");
-        }
-      } catch (const std::runtime_error & e) {
-        logger_->error(std::string("Could not fetch sensor manifest: ") + e.what());
-        reconfig_api_ = makeReconfigApi(*config, logger_);
-      }
-    }
+  void register_cloud_packet_callback(PointcloudParser::callback_t callback);
 
-    if (manifest.is_null()) {
-      throw std::runtime_error("Reached maximum retries while trying to fetch manifest");
-    }
+  void register_raw_cloud_packet_callback(connections::ObservableByteStream::callback_t callback);
 
-    for (const auto & category : config->tree.items()) {
-      for (const auto & setting : category.value().items()) {
-        tryReconfig(manifest, category.key(), setting.key(), setting.value());
-      }
-    }
-  }
+  void register_health_callback(HealthParser::callback_t callback);
 
-  void registerCloudPacketCallback(PointcloudParser::callback_t callback)
-  {
-    pointcloud_api_->registerCallback(std::move(callback));
-  }
-
-  void registerRawCloudPacketCallback(connections::ObservableByteStream::callback_t callback)
-  {
-    pointcloud_api_->registerBytesCallback(std::move(callback));
-  }
-
-  void registerHealthCallback(HealthParser::callback_t callback)
-  {
-    health_api_->registerCallback(std::move(callback));
-  }
-
-  void registerTelemetryCallback(TelemetryParser::callback_t callback)
-  {
-    telemetry_api_->registerCallback(std::move(callback));
-  }
+  void register_telemetry_callback(TelemetryParser::callback_t callback);
 
 private:
-  void tryReconfig(
+  void try_reconfig(
     const json & manifest, const std::string & node_name, const std::string & key,
-    const json & value)
-  {
-    auto old_value_opt = util::get_if_exists<json>(manifest, {node_name, key, "value"});
-    if (old_value_opt && old_value_opt.value() == value) return;
+    const json & value);
 
-    try {
-      reconfig_api_->setParameter(node_name, key, value);
-    } catch (const std::runtime_error & e) {
-      throw std::runtime_error("Could not set " + node_name + "." + key + ": " + e.what());
-    }
+  static std::shared_ptr<ReconfigParser> make_reconfig_api(
+    const aeva::Aeries2Config & config, const std::shared_ptr<loggers::Logger> & logger);
 
-    // ////////////////////////////////////////
-    // Value was successfully updated
-    // ////////////////////////////////////////
+  static std::shared_ptr<PointcloudParser> make_pointcloud_api(const aeva::Aeries2Config & config);
 
-    logger_->info("Set " + node_name + "." + key + " to " + value.dump());
-  }
+  static std::shared_ptr<HealthParser> make_health_api(const aeva::Aeries2Config & config);
 
-  static std::shared_ptr<ReconfigParser> makeReconfigApi(
-    const aeva::Aeries2Config & config, const std::shared_ptr<loggers::Logger> & logger)
-  {
-    return std::make_shared<ReconfigParser>(
-      std::make_shared<TcpStream>(config.sensor_ip, 41007),
-      std::make_shared<TcpSender>(config.sensor_ip, 21901), logger->child("ReconfigApi"));
-  }
-
-  static std::shared_ptr<PointcloudParser> makepointcloudApi(const aeva::Aeries2Config & config)
-  {
-    return std::make_shared<PointcloudParser>(std::make_shared<TcpStream>(config.sensor_ip, 41000));
-  }
-
-  static std::shared_ptr<HealthParser> makeHealthApi(const aeva::Aeries2Config & config)
-  {
-    return std::make_shared<HealthParser>(std::make_shared<TcpStream>(config.sensor_ip, 41001));
-  }
-
-  static std::shared_ptr<TelemetryParser> makeTelemetryApi(const aeva::Aeries2Config & config)
-  {
-    return std::make_shared<TelemetryParser>(std::make_shared<TcpStream>(config.sensor_ip, 41003));
-  }
+  static std::shared_ptr<TelemetryParser> make_telemetry_api(const aeva::Aeries2Config & config);
 
   const bool setup_sensor_;
   std::shared_ptr<loggers::Logger> logger_;
@@ -197,9 +123,9 @@ private:
   std::shared_ptr<ReconfigParser> reconfig_api_;
   std::shared_ptr<HealthParser> health_api_;
 
-  // Fetching the sensor manifest sometimes times out. In those cases, retry the below number of
-  // times.
-  static const uint8_t MANIFEST_RETRIES = 3;
+  /// Fetching the sensor manifest sometimes times out. In those cases, retry the below number of
+  /// times.
+  static const uint8_t g_manifest_retries = 3;
 };
 
 }  // namespace nebula::drivers

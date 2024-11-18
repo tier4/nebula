@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <memory>
+#include <thread>
 
 using nebula::drivers::aeva::PointCloudMessage;
 using nebula::drivers::connections::PointcloudParser;
@@ -33,13 +34,14 @@ TEST(TestParsing, Pointcloud)  // NOLINT
 
     EXPECT_GT(arg.points.size(), 0);
     EXPECT_TRUE(mock_byte_stream->done());
-    EXPECT_EQ(mock_byte_stream->getReadCount(), 2);
+    EXPECT_EQ(mock_byte_stream->get_read_count(), 2);
     done = true;
   };
 
-  parser.registerCallback(std::move(callback));
+  parser.register_callback(std::move(callback));
 
   mock_byte_stream->run();
   while (!done) {
+    std::this_thread::yield();
   }
 }

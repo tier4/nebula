@@ -4,10 +4,12 @@
 
 #include <nebula_common/nebula_common.hpp>
 
+#include <cstdint>
+
 namespace nebula::drivers
 {
 
-void AevaAeries2Decoder::processPointcloudMessage(const aeva::PointCloudMessage & message)
+void AevaAeries2Decoder::process_pointcloud_message(const aeva::PointCloudMessage & message)
 {
   DecoderState state{
     message.header.frame_sync_index, message.header.ns_per_index, message.header.line_index, 0,
@@ -49,7 +51,7 @@ void AevaAeries2Decoder::processPointcloudMessage(const aeva::PointCloudMessage 
     point.azimuth = -raw_point.azimuth.value() * M_PI_2f;
     point.elevation = raw_point.elevation.value() * M_PI_4f;
 
-    ReturnType return_type = getReturnType(raw_point.peak_id);
+    ReturnType return_type = get_return_type(raw_point.peak_id);
 
     point.return_type = static_cast<uint8_t>(return_type);
 
@@ -61,14 +63,14 @@ void AevaAeries2Decoder::processPointcloudMessage(const aeva::PointCloudMessage 
     point.range_rate = raw_point.velocity.value();
     point.intensity = raw_point.intensity;
 
-    point.time_stamp = state.absolute_time_ns - cloud_state_.timestamp;
-    point.channel = state.line_index;
+    point.time_stamp = static_cast<uint32_t>(state.absolute_time_ns - cloud_state_.timestamp);
+    point.channel = static_cast<uint16_t>(state.line_index);
 
     cloud_state_.cloud->emplace_back(point);
   }
 }
 
-ReturnType AevaAeries2Decoder::getReturnType(uint32_t peak_id)
+ReturnType AevaAeries2Decoder::get_return_type(uint32_t peak_id) const
 {
   if (peak_id == 0) return ReturnType::STRONGEST;
   if (peak_id > 1) return ReturnType::UNKNOWN;
@@ -85,12 +87,12 @@ ReturnType AevaAeries2Decoder::getReturnType(uint32_t peak_id)
   }
 }
 
-void AevaAeries2Decoder::onParameterChange(ReturnMode return_mode)
+void AevaAeries2Decoder::on_parameter_change(ReturnMode return_mode)
 {
   return_mode_.store(return_mode);
 }
 
-void AevaAeries2Decoder::registerPointCloudCallback(
+void AevaAeries2Decoder::register_point_cloud_callback(
   std::function<void(std::unique_ptr<AevaPointCloud>, uint64_t)> callback)
 {
   callback_ = std::move(callback);

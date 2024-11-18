@@ -57,10 +57,10 @@ public:
   explicit AevaRosWrapper(const rclcpp::NodeOptions & options);
 
 private:
-  Status declareAndGetSensorConfigParams();
+  Status declare_and_get_sensor_config_params();
 
   template <typename T>
-  void declareJsonParam(const std::string & dot_delimited_path, json & inout_tree)
+  void declare_json_param(const std::string & dot_delimited_path, json & inout_tree)
   {
     json param_value = declare_parameter<T>(dot_delimited_path, param_read_write());
     json tree_patch = util::to_json_tree(param_value, util::to_json_path(dot_delimited_path));
@@ -68,9 +68,9 @@ private:
   }
 
   template <typename T>
-  bool getJsonParam(
+  bool get_json_param(
     const std::vector<rclcpp::Parameter> & p, const std::string & dot_delimited_path,
-    json & inout_tree)
+    json & inout_tree) const
   {
     T value;
     bool got_param = get_param(p, dot_delimited_path, value);
@@ -82,12 +82,13 @@ private:
     return true;
   }
 
-  Status validateAndSetConfig(std::shared_ptr<const drivers::aeva::Aeries2Config> & new_config);
+  Status validate_and_set_config(
+    const std::shared_ptr<const drivers::aeva::Aeries2Config> & new_config);
 
-  rcl_interfaces::msg::SetParametersResult onParameterChange(
+  rcl_interfaces::msg::SetParametersResult on_parameter_change(
     const std::vector<rclcpp::Parameter> & p);
 
-  void recordRawPacket(const std::vector<uint8_t> & bytes);
+  void record_raw_packet(const std::vector<uint8_t> & bytes);
 
   rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_;
   std::mutex mtx_current_scan_msg_;

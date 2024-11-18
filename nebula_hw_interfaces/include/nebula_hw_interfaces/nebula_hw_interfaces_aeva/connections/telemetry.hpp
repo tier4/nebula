@@ -42,7 +42,7 @@ using namespace boost::endian;  //  NOLINT
 namespace telemetry_detail
 {
 
-const std::vector<std::string> TYPE_OVERRIDES = {
+const std::vector<std::string> g_type_overrides = {
   "display_all_points",
   "hfov_adjustment_deg",
   "hfov_rotation_deg",
@@ -87,10 +87,10 @@ public:
   {
   }
 
-  void registerCallback(callback_t callback) { callback_ = std::move(callback); }
+  void register_callback(callback_t callback) { callback_ = std::move(callback); }
 
 protected:
-  void onMessage(const MessageHeader & message_header, ByteView & payload_bytes) override
+  void on_message(const MessageHeader & message_header, ByteView & payload_bytes) override
   {
     auto payload_size = pull_and_parse<uint32_t>(payload_bytes);
 
@@ -168,12 +168,12 @@ protected:
             entry_data_raw);
           break;
         case aeva::TelemetryDataType::kChar:
-          auto overrides = telemetry_detail::TYPE_OVERRIDES;
+          auto overrides = telemetry_detail::g_type_overrides;
           bool has_override = std::find(overrides.begin(), overrides.end(), key) != overrides.end();
           if (has_override) {
             uint64_t raw_value = 0;
-            for (auto it = entry_data_raw.cbegin(); it != entry_data_raw.cend(); ++it) {
-              raw_value = (raw_value << 8u) | *it;
+            for (const uint8_t & it : entry_data_raw) {
+              raw_value = (raw_value << 8u) | it;
             }
 
             value = static_cast<int64_t>(raw_value);
