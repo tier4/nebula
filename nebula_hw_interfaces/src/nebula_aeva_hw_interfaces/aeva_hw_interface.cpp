@@ -16,6 +16,8 @@
 
 #include "nebula_hw_interfaces/nebula_hw_interfaces_aeva/aeva_hw_interface.hpp"
 
+#include "nebula_hw_interfaces/nebula_hw_interfaces_aeva/connections/aeva_api.hpp"
+
 namespace nebula::drivers
 {
 
@@ -94,25 +96,29 @@ std::shared_ptr<ReconfigParser> AevaHwInterface::make_reconfig_api(
   const aeva::Aeries2Config & config, const std::shared_ptr<loggers::Logger> & logger)
 {
   return std::make_shared<ReconfigParser>(
-    std::make_shared<TcpStream>(config.sensor_ip, 41007),
-    std::make_shared<TcpSender>(config.sensor_ip, 21901), logger->child("ReconfigApi"));
+    std::make_shared<TcpStream>(config.sensor_ip, connections::aeva::g_port_reconfig_response),
+    std::make_shared<TcpSender>(config.sensor_ip, connections::aeva::g_port_reconfig_request),
+    logger->child("ReconfigApi"));
 }
 
 std::shared_ptr<PointcloudParser> AevaHwInterface::make_pointcloud_api(
   const aeva::Aeries2Config & config)
 {
-  return std::make_shared<PointcloudParser>(std::make_shared<TcpStream>(config.sensor_ip, 41000));
+  return std::make_shared<PointcloudParser>(
+    std::make_shared<TcpStream>(config.sensor_ip, connections::aeva::g_port_spherical_point_cloud));
 }
 
 std::shared_ptr<HealthParser> AevaHwInterface::make_health_api(const aeva::Aeries2Config & config)
 {
-  return std::make_shared<HealthParser>(std::make_shared<TcpStream>(config.sensor_ip, 41001));
+  return std::make_shared<HealthParser>(
+    std::make_shared<TcpStream>(config.sensor_ip, connections::aeva::g_port_health));
 }
 
 std::shared_ptr<TelemetryParser> AevaHwInterface::make_telemetry_api(
   const aeva::Aeries2Config & config)
 {
-  return std::make_shared<TelemetryParser>(std::make_shared<TcpStream>(config.sensor_ip, 41003));
+  return std::make_shared<TelemetryParser>(
+    std::make_shared<TcpStream>(config.sensor_ip, connections::aeva::g_port_telemetry));
 }
 
 }  // namespace nebula::drivers
