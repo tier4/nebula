@@ -37,6 +37,17 @@ namespace nebula::drivers::connections::aeva
 
 static const uint16_t g_aeva_header = 0xAEFA;
 
+static const uint16_t g_port_spherical_point_cloud = 41000;
+static const uint16_t g_port_health = 41001;
+static const uint16_t g_port_config = 41002;
+static const uint16_t g_port_telemetry = 41003;
+static const uint16_t g_port_calibration = 41005;
+static const uint16_t g_port_image = 41006;
+static const uint16_t g_port_reconfig_request = 21901;
+static const uint16_t g_port_reconfig_response = 41007;
+static const uint16_t g_port_log = 41009;
+static const uint16_t g_port_imu = 41010;
+
 enum class AevaStreamType : uint16_t {
   kSphericalPointCloud = 0,
   kHealth = 1,
