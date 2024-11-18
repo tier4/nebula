@@ -16,7 +16,7 @@
 #include <thread>
 
 using nebula::drivers::aeva::PointCloudMessage;
-using nebula::drivers::connections::PointcloudParser;
+using nebula::drivers::connections::aeva::PointcloudParser;
 
 TEST(TestParsing, Pointcloud)  // NOLINT
 {

@@ -39,8 +39,8 @@
 namespace nebula::ros
 {
 using drivers::AevaAeries2Decoder;
+using drivers::PointcloudParser;
 using drivers::aeva::Aeries2Config;
-using drivers::connections::PointcloudParser;
 using nlohmann::json;
 using namespace std::chrono_literals;  // NOLINT
 using AevaPointCloudUniquePtr = AevaAeries2Decoder::AevaPointCloudUniquePtr;

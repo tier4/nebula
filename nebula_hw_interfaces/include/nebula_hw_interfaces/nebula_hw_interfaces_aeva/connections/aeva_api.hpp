@@ -32,7 +32,7 @@
 #include <utility>
 #include <vector>
 
-namespace nebula::drivers::connections
+namespace nebula::drivers::connections::aeva
 {
 
 static const uint16_t g_aeva_header = 0xAEFA;
@@ -276,4 +276,4 @@ private:
   uint16_t sequence_number_{};
 };
 
-}  // namespace nebula::drivers::connections
+}  // namespace nebula::drivers::connections::aeva

@@ -37,11 +37,11 @@
 #include <utility>
 #include <vector>
 
-namespace nebula::drivers::connections
+namespace nebula::drivers::connections::aeva
 {
 
-using aeva::ReconfigMessage;
-using aeva::ReconfigRequestType;
+using drivers::aeva::ReconfigMessage;
+using drivers::aeva::ReconfigRequestType;
 using nlohmann::json;
 using namespace std::chrono_literals;  // NOLINT
 
@@ -269,4 +269,4 @@ private:
   static const size_t g_n_manifest_responses_expected = 7;
 };
 
-}  // namespace nebula::drivers::connections
+}  // namespace nebula::drivers::connections::aeva

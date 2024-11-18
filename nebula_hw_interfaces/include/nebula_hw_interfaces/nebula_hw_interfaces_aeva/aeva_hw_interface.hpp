@@ -33,12 +33,12 @@
 namespace nebula::drivers
 {
 
-using connections::HealthParser;
-using connections::PointcloudParser;
-using connections::ReconfigParser;
 using connections::TcpSender;
 using connections::TcpStream;
-using connections::TelemetryParser;
+using connections::aeva::HealthParser;
+using connections::aeva::PointcloudParser;
+using connections::aeva::ReconfigParser;
+using connections::aeva::TelemetryParser;
 using nlohmann::json;
 
 class AevaHwInterface

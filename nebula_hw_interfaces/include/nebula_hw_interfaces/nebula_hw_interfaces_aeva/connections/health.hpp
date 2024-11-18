@@ -27,10 +27,10 @@
 #include <utility>
 #include <vector>
 
-namespace nebula::drivers::connections
+namespace nebula::drivers::connections::aeva
 {
 
-using aeva::HealthCode;
+using drivers::aeva::HealthCode;
 
 class HealthParser : public AevaParser<AevaStreamType::kHealth>
 {
@@ -72,4 +72,4 @@ private:
   callback_t callback_;
 };
 
-}  // namespace nebula::drivers::connections
+}  // namespace nebula::drivers::connections::aeva
