@@ -35,6 +35,28 @@
 namespace nebula::drivers::connections
 {
 
+static const uint16_t g_aeva_header = 0xAEFA;
+
+enum class AevaStreamType : uint16_t {
+  kSphericalPointCloud = 0,
+  kHealth = 1,
+  kConfig = 2,
+  kTelemetry = 3,
+  kVelocityEstimate = 4,
+  kCalibration = 5,
+  kImage = 6,
+  kReconfig = 7,
+  kVehicleStateEstimate = 8,
+  kLog = 9,
+  kImu = 10,
+  kObjectList = 12,
+  kEstimatedDetectionRange = 33,
+  kUnknown = 0xFFFFu
+};
+
+using nebula::drivers::aeva::MessageHeader;
+using nebula::drivers::aeva::SomeIpHeader;
+
 class ParseError : public std::exception
 {
 };
@@ -58,8 +80,6 @@ private:
   const std::string message_;
 };
 
-static const uint16_t g_aeva_header = 0xAEFA;
-
 template <typename A, typename E>
 void expect_eq(A actual, E expected, const std::string & message)
 {
@@ -75,26 +95,6 @@ void expect_geq(A actual, E expected, const std::string & message)
   auto cast_expected = static_cast<int64_t>(expected);
   if (cast_actual < cast_expected) throw MismatchError(message, cast_expected, cast_actual);
 }
-
-enum class AevaStreamType : uint16_t {
-  kSphericalPointCloud = 0,
-  kHealth = 1,
-  kConfig = 2,
-  kTelemetry = 3,
-  kVelocityEstimate = 4,
-  kCalibration = 5,
-  kImage = 6,
-  kReconfig = 7,
-  kVehicleStateEstimate = 8,
-  kLog = 9,
-  kImu = 10,
-  kObjectList = 12,
-  kEstimatedDetectionRange = 33,
-  kUnknown = 0xFFFFu
-};
-
-using nebula::drivers::aeva::MessageHeader;
-using nebula::drivers::aeva::SomeIpHeader;
 
 template <typename T>
 T pull_and_parse(
