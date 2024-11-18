@@ -47,7 +47,7 @@ struct Aeries2Config : public SensorConfigurationBase
 
   friend std::ostream & operator<<(std::ostream & os, const Aeries2Config & arg)
   {
-    os << "Aeva Aeries2 Sensor Configuration:\n";
+    os << "Aeva Aeries II Sensor Configuration:\n";
     os << "Sensor Model: " << arg.sensor_model << '\n';
     os << "Frame ID: " << arg.frame_id << '\n';
     os << "Sensor IP: " << arg.sensor_ip;
