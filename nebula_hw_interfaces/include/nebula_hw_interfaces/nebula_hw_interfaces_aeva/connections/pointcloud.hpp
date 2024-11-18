@@ -38,10 +38,10 @@ public:
   {
   }
 
-  void registerCallback(callback_t callback) { callback_ = std::move(callback); }
+  void register_callback(callback_t callback) { callback_ = std::move(callback); }
 
 protected:
-  void onMessage(const MessageHeader & message_header, ByteView & payload_bytes) override
+  void on_message(const MessageHeader & message_header, ByteView & payload_bytes) override
   {
     PointCloudMessage message{};
     message.header = pull_and_parse<PointcloudMsgSubheaderAndMetadata>(payload_bytes);

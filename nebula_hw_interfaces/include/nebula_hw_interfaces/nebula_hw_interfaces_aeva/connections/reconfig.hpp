@@ -61,10 +61,10 @@ public:
   {
   }
 
-  json getManifest()
+  json get_manifest()
   {
     ReconfigMessage request{ReconfigRequestType::kManifestRequest, {}};
-    auto responses = doRequest(request, N_MANIFEST_RESPONSES_EXPECTED);
+    auto responses = do_request(request, g_n_manifest_responses_expected);
 
     json result{};
 
@@ -79,12 +79,12 @@ public:
     return result;
   }
 
-  json setParameter(std::string node_name, std::string key, json value)
+  json set_parameter(std::string node_name, std::string key, json value)
   {
     json request_body = {{node_name, {{key, {{"value", value}}}}}};
     ReconfigMessage request = {ReconfigRequestType::kChangeRequest, request_body};
 
-    auto response = doRequest(request);
+    auto response = do_request(request);
 
     if (response.type != aeva::ReconfigRequestType::kChangeApproved) {
       std::stringstream ss{};
@@ -104,13 +104,13 @@ public:
   }
 
 private:
-  ReconfigMessage doRequest(const ReconfigMessage & request)
+  ReconfigMessage do_request(const ReconfigMessage & request)
   {
-    auto responses = doRequest(request, 1);
+    auto responses = do_request(request, 1);
     return responses.at(0);
   }
 
-  std::vector<ReconfigMessage> doRequest(
+  std::vector<ReconfigMessage> do_request(
     const ReconfigMessage & request, size_t n_responses_expected)
   {
     std::lock_guard lock(mtx_inflight_);
@@ -133,7 +133,7 @@ private:
       message_payload = std::vector<uint8_t>(body_string.begin(), body_string.end());
     }
 
-    uint32_t data_size = message_payload.size();
+    auto data_size = static_cast<uint32_t>(message_payload.size());
 
     std::vector<uint8_t> bytes;
     bytes.reserve(
@@ -188,7 +188,7 @@ private:
       }
     };
 
-    sendMessage(bytes);
+    send_message(bytes);
     auto request_timed_out = !tm_callback_timeout.try_lock_for(20s);
 
     {
@@ -233,7 +233,7 @@ private:
   }
 
 protected:
-  void onMessage(const MessageHeader & message_header, ByteView & payload_bytes) override
+  void on_message(const MessageHeader & message_header, ByteView & payload_bytes) override
   {
     ReconfigMessage message{};
 
@@ -266,7 +266,7 @@ private:
   std::mutex mtx_inflight_;
 
   // scanner, calibration, system_config, spc_converter, dsp_control, self_test, window_measurement
-  static const size_t N_MANIFEST_RESPONSES_EXPECTED = 7;
+  static const size_t g_n_manifest_responses_expected = 7;
 };
 
 }  // namespace nebula::drivers::connections

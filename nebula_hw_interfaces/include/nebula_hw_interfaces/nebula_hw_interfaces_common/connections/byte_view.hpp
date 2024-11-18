@@ -38,7 +38,7 @@ public:
 
 private:
   using iter_t = std::vector<uint8_t>::const_iterator;
-  using consume_result_t = nebula::util::expected<Slice, std::runtime_error>;
+  using consume_result_t = nebula::util::expected<Slice, std::out_of_range>;
 
 public:
   explicit ByteView(const std::vector<uint8_t> & underlying)
@@ -57,11 +57,11 @@ public:
    * @param n_bytes The number of bytes to consume
    * @return Slice The consumed bytes
    */
-  Slice consumeUnsafe(size_t n_bytes)
+  Slice consume_unsafe(size_t n_bytes)
   {
     auto n = static_cast<int64_t>(n_bytes);
     if (n > size()) {
-      throw std::runtime_error("Index out of bounds");
+      throw std::out_of_range("Index out of bounds");
     }
 
     auto new_cbegin = std::next(cbegin_, n);
@@ -81,8 +81,8 @@ public:
   [[nodiscard]] consume_result_t consume(size_t n_bytes)
   {
     try {
-      return consumeUnsafe(n_bytes);
-    } catch (const std::runtime_error & e) {
+      return consume_unsafe(n_bytes);
+    } catch (const std::out_of_range & e) {
       return e;
     }
   }
@@ -98,8 +98,10 @@ public:
     friend ByteView;
 
   public:
+    [[nodiscard]] auto begin() const { return cbegin_; }
     [[nodiscard]] auto cbegin() const { return cbegin_; }
 
+    [[nodiscard]] auto end() const { return cend_; }
     [[nodiscard]] auto cend() const { return cend_; }
 
     [[nodiscard]] ssize_t size() const { return std::distance(cbegin_, cend_); }

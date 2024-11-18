@@ -62,8 +62,7 @@ bool update_if_exists(const json & node, const std::vector<std::string> & path, 
 template <typename T>
 std::optional<T> get_if_exists(const json & node, const std::vector<std::string> & path)
 {
-  T result;
-  if (update_if_exists(node, path, result)) {
+  if (T result; update_if_exists(node, path, result)) {
     return result;
   }
 

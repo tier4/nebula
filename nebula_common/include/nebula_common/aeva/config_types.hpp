@@ -19,7 +19,6 @@
 
 #include <nlohmann/json.hpp>
 
-#include <cstdint>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -34,7 +33,7 @@ struct Aeries2Config : public SensorConfigurationBase
   std::string sensor_ip;
   json tree;
 
-  [[nodiscard]] std::optional<ReturnMode> getReturnMode() const
+  [[nodiscard]] std::optional<ReturnMode> get_return_mode() const
   {
     auto mode_name = util::get_if_exists<std::string>(tree, {"dsp_control", "second_peak_type"});
 
@@ -45,24 +44,24 @@ struct Aeries2Config : public SensorConfigurationBase
 
     return ReturnMode::UNKNOWN;
   }
-};
 
-inline std::ostream & operator<<(std::ostream & os, const Aeries2Config & arg)
-{
-  os << "Aeva Aeries2 Sensor Configuration:\n";
-  os << "Sensor Model: " << arg.sensor_model << '\n';
-  os << "Frame ID: " << arg.frame_id << '\n';
-  os << "Sensor IP: " << arg.sensor_ip;
+  friend std::ostream & operator<<(std::ostream & os, const Aeries2Config & arg)
+  {
+    os << "Aeva Aeries2 Sensor Configuration:\n";
+    os << "Sensor Model: " << arg.sensor_model << '\n';
+    os << "Frame ID: " << arg.frame_id << '\n';
+    os << "Sensor IP: " << arg.sensor_ip;
 
-  for (const auto & category : arg.tree.items()) {
-    os << '\n' << category.key() << ":";
-    auto category_settings = category.value();
-    for (const auto & setting : category_settings.items()) {
-      os << "\n  " << setting.key() << ": " << setting.value();
+    for (const auto & category : arg.tree.items()) {
+      os << '\n' << category.key() << ":";
+      auto category_settings = category.value();
+      for (const auto & setting : category_settings.items()) {
+        os << "\n  " << setting.key() << ": " << setting.value();
+      }
     }
-  }
 
-  return os;
-}
+    return os;
+  }
+};
 
 }  // namespace nebula::drivers::aeva

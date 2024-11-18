@@ -58,7 +58,7 @@ private:
   const std::string message_;
 };
 
-static const uint16_t AEVA_HEADER = 0xAEFA;
+static const uint16_t g_aeva_header = 0xAEFA;
 
 template <typename A, typename E>
 void expect_eq(A actual, E expected, const std::string & message)
@@ -102,7 +102,7 @@ T pull_and_parse(
   const std::vector<uint8_t>::const_iterator & cend)
 {
   if (std::distance(cbegin, cend) != sizeof(T)) {
-    throw std::runtime_error("Number of bytes provided does not match type's size.");
+    throw std::out_of_range("Number of bytes provided does not match type's size.");
   }
 
   T result{};
@@ -151,21 +151,21 @@ class AevaParser : public ObservableByteStream
 {
 public:
   explicit AevaParser(std::shared_ptr<PullableByteStream> incoming_byte_stream)
-  : running_(true), incoming_(std::move(incoming_byte_stream))
+  : incoming_(std::move(incoming_byte_stream))
   {
     if (!incoming_) {
-      throw std::runtime_error("Incoming byte stream cannot be null");
+      throw std::invalid_argument("Incoming byte stream cannot be null");
     }
 
-    thread_ = std::thread([&]() {
-      while (running_) onLowLevelMessage();
+    thread_ = std::thread([this]() {
+      while (running_) on_low_level_message();
     });
   }
 
-  void registerBytesCallback(callback_t callback) override
-  {
-    bytes_callback_ = std::move(callback);
-  }
+  AevaParser(const AevaParser &) = default;
+  AevaParser(AevaParser &&) noexcept = default;
+  AevaParser & operator=(const AevaParser &) = default;
+  AevaParser & operator=(AevaParser &&) noexcept = default;
 
   ~AevaParser() override
   {
@@ -173,12 +173,17 @@ public:
     thread_.join();
   }
 
+  void register_bytes_callback(callback_t callback) override
+  {
+    bytes_callback_ = std::move(callback);
+  }
+
 protected:
   /**
    * @brief Attempts to read one message from the stream, blocking. Parses the SomeIP and
    * MessageHeader part of an API message before calling the higher-level `onMessage` parser.
    */
-  void onLowLevelMessage()
+  void on_low_level_message()
   {
     std::vector<uint8_t> some_ip_raw;
     incoming_->read(some_ip_raw, sizeof(SomeIpHeader));
@@ -203,16 +208,19 @@ protected:
     expect_eq(message_header.message_type, StreamId, "Unexpected message type");
     expect_eq(message_header.message_length, payload_length, "Payload size mismatch");
 
-    onMessage(message_header, payload_view);
+    on_message(message_header, payload_view);
   }
 
-  virtual void onMessage(const MessageHeader & /* message_header */, ByteView & /* payload_bytes */)
+  virtual void on_message(
+    const MessageHeader & /* message_header */, ByteView & /* payload_bytes */)
   {
+    // Why this refuses to compile with a pure virtual function is beyond me.
+    assert(false);
   }
 
 private:
   std::thread thread_;
-  std::atomic_bool running_;
+  std::atomic_bool running_{true};
 
   std::shared_ptr<PullableByteStream> incoming_;
   callback_t bytes_callback_;
@@ -232,7 +240,7 @@ protected:
    * @brief Sends the serialized message payload `bytes` over the outgoing byte stream, prepending
    * the SomeIp and Message headers.
    */
-  void sendMessage(std::vector<uint8_t> bytes)
+  void send_message(std::vector<uint8_t> bytes)
   {
     sequence_number_++;
 

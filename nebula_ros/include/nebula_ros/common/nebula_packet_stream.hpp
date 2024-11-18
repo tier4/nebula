@@ -34,13 +34,13 @@ class NebulaPacketStream : public drivers::connections::ObservableByteStream
 public:
   NebulaPacketStream() = default;
 
-  void registerBytesCallback(callback_t callback) override
+  void register_bytes_callback(callback_t callback) override
   {
     std::lock_guard lock(mtx_callback_);
     callback_ = std::move(callback);
   }
 
-  void onNebulaPackets(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets)
+  void on_nebula_packets(std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets)
   {
     std::lock_guard lock(mtx_callback_);
     if (!callback_) return;
@@ -51,8 +51,8 @@ public:
   }
 
 private:
-  std::mutex mtx_callback_{};
-  callback_t callback_{};
+  std::mutex mtx_callback_;
+  callback_t callback_;
 };
 
 }  // namespace nebula::ros

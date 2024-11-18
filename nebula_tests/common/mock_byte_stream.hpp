@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <thread>
 #include <vector>
 
 namespace nebula::test
@@ -31,6 +32,7 @@ public:
   void read(std::vector<uint8_t> & into, size_t n_bytes) override
   {
     while (!running_) {
+      std::this_thread::yield();
     }
     read_count_++;
     const auto & from = stream_[index_++];
@@ -46,9 +48,9 @@ public:
 
   void run() { running_ = true; }
 
-  bool done() { return done_; }
+  [[nodiscard]] bool done() const { return done_; }
 
-  size_t getReadCount() { return read_count_; }
+  [[nodiscard]] size_t get_read_count() const { return read_count_; }
 
 private:
   const std::vector<std::vector<uint8_t>> & stream_;

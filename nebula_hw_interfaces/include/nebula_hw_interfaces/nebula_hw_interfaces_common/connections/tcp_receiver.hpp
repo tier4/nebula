@@ -37,7 +37,6 @@ class TcpStream : public PullableByteStream
 {
 public:
   TcpStream(const std::string & sensor_ip, uint16_t sensor_port)
-  : io_service_(1), socket_(io_service_)
   {
     boost::asio::ip::tcp::resolver resolver(io_service_);
     boost::asio::ip::tcp::resolver::query query(
@@ -54,8 +53,8 @@ public:
   }
 
 private:
-  boost::asio::io_service io_service_;
-  boost::asio::ip::tcp::socket socket_;
+  boost::asio::io_service io_service_{1};
+  boost::asio::ip::tcp::socket socket_{io_service_};
 };
 
 }  // namespace nebula::drivers::connections
