@@ -1,10 +1,14 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="sensor_model" description="Aeries2"/>
-  <arg name="config_file" default="$(find-pkg-share nebula_ros)/config/lidar/aeva/$(var sensor_model).param.yaml"/>
+  <arg name="sensor_model">
+    <choice value="Aeries2" />
+  </arg>
+
+  <arg name="config_file"
+    default="$(find-pkg-share nebula_ros)/config/lidar/aeva/$(var sensor_model).param.yaml" />
 
   <node pkg="nebula_ros" exec="aeva_ros_wrapper_node" name="aeva_ros_wrapper_node" output="screen">
-    <param from="$(var config_file)" allow_substs="true"/>
+    <param from="$(var config_file)" allow_substs="true" />
   </node>
 
 </launch>
