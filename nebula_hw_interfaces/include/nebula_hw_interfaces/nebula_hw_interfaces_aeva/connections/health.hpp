@@ -58,8 +58,8 @@ protected:
     entries.reserve(n_entries);
 
     for (size_t i = 0; i < n_entries; ++i) {
-      auto pointer = &*payload_bytes.consume_unsafe(sizeof(uint32_t)).cbegin();
-      auto entry = boost::endian::load_little_u32(pointer);
+      auto health_code_raw = payload_bytes.consume_unsafe(sizeof(uint32_t)).cbegin();
+      auto entry = boost::endian::load_little_u32(health_code_raw.base());
       entries.emplace_back(entry);
     }
 
