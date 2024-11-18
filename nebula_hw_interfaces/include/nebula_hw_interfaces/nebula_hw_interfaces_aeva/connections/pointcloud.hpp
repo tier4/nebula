@@ -21,7 +21,7 @@
 #include <memory>
 #include <utility>
 
-namespace nebula::drivers::connections
+namespace nebula::drivers::connections::aeva
 {
 
 using nebula::drivers::aeva::PointCloudMessage;
@@ -67,4 +67,4 @@ private:
   callback_t callback_;
 };
 
-}  // namespace nebula::drivers::connections
+}  // namespace nebula::drivers::connections::aeva
