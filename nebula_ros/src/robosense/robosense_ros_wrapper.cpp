@@ -307,7 +307,7 @@ void RobosenseRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & p
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
   msg_ptr->data.swap(packet);
 
-  if (!packet_queue_.try_push(std::move(msg_ptr))) {
+  if (!packet_queue_.tryPush(std::move(msg_ptr))) {
     RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");
   }
 }

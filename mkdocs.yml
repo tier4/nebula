@@ -63,6 +63,8 @@ nav:
           - parameters/vendors/continental/common.md
           - ARS548: parameters/vendors/continental/ars548.md
           - SRR520: parameters/vendors/continental/srr520.md
+      - Aeva:
+          - Aeries II: parameters/vendors/aeva/aeries2.md
   - Point cloud types: point_types.md
   - Design: design.md
   - Tutorials: tutorials.md

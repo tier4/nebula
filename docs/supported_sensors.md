@@ -41,6 +41,14 @@ The `sensor_model` parameter below decides which sensor driver is launched.
 | Bpearl | Bpearl         | Bpearl.param.yaml  | ⚠️          |
 | Helios | Helios         | Helios.param.yaml  | ⚠️          |
 
+## Aeva LiDARs
+
+| Model     | `sensor_model` | Configuration file | Test status |
+| --------- | -------------- | ------------------ | ----------- |
+| Aeries II | Aeries2        | Aeries2.param.yaml | ⚠️\*        |
+
+\*: The Aeries II has been tested with firmware version 14.0.0.
+
 ## Continental radars
 
 | Model  | `sensor_model` | Configuration file | Test status |

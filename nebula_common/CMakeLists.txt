@@ -4,7 +4,7 @@ project(nebula_common)
 find_package(ament_cmake_auto REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(yaml-cpp REQUIRED)
-find_package(nlohmann_json REQUIRED)
+find_package(nlohmann_json 3.10.5 REQUIRED)
 
 # Default to C++17
 if (NOT CMAKE_CXX_STANDARD)
