@@ -1,20 +1,34 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/velodyne_sensor.hpp"
 
-namespace nebula
-{
-namespace drivers
+#include <cmath>
+
+namespace nebula::drivers
 {
 class VLP32 : public VelodyneSensor
 {
 public:
-// calculate and stack the firing timing for each laser timeing
-/// @brief laser timing for VLP32 from VLP32 User manual in p.61
-  bool fillAzimuthCache()
+  // calculate and stack the firing timing for each laser timeing
+  /// @brief laser timing for VLP32 from VLP32 User manual in p.61
+  bool fill_azimuth_cache() override
   {
     for (uint8_t i = 0; i < 16; i++) {
-      laser_azimuth_cache_[i] = (VLP32_CHANNEL_DURATION / VLP32_SEQ_DURATION) * (i + i / 2);
+      laser_azimuth_cache_[i] = (vlp32_channel_duration / vlp32_seq_duration) * (i + i / 2);
     }
     return true;
   }
@@ -24,8 +38,8 @@ public:
   /// @param azimuth_diff Azimuth difference between a current azimuth and a next azimuth
   /// @param firing_order Firing order
   /// @return Corrected azimuth
-  uint16_t getAzimuthCorrected(
-    uint16_t azimuth, float azimuth_diff, int /* firing_sequence */, int firing_order)
+  uint16_t get_azimuth_corrected(
+    uint16_t azimuth, float azimuth_diff, int /* firing_sequence */, int firing_order) override
   {
     float azimuth_corrected = azimuth + (azimuth_diff * laser_azimuth_cache_[firing_order]);
 
@@ -34,20 +48,17 @@ public:
 
   // Not succeed nebula_test on only VLP32 so add this function
   // Choose the correct azimuth from the 2 azimuths
-  uint16_t getTrueRotation(uint16_t /* azimuth_corrected */, uint16_t current_block_rotation)
+  uint16_t get_true_rotation(uint16_t /* azimuth_corrected */, uint16_t current_block_rotation)
   {
     return current_block_rotation;
   }
 
-  int getFiringOrder(int channels, int scans_per_firing)
+  int get_firing_order(int channels, int scans_per_firing) override
   {
     return channels / scans_per_firing;
   }
-  
-  int getChannelNumber(int unit_idx)
-  {
-    return unit_idx % channels_per_firing_sequence;
-  }
+
+  int get_channel_number(int unit_idx) override { return unit_idx % channels_per_firing_sequence; }
 
   constexpr static int num_maintenance_periods = 0;
 
@@ -66,14 +77,12 @@ public:
   constexpr static double offset_packet_time = 0;
 
   /** Special Definitions for VLS32 support **/
-  constexpr static const float VLP32_CHANNEL_DURATION =
+  constexpr static const float vlp32_channel_duration =
     2.304f;  // [µs] Channels corresponds to one laser firing
-  constexpr static const float VLP32_SEQ_DURATION =
+  constexpr static const float vlp32_seq_duration =
     55.296f;  // [µs] Sequence is a set of laser firings including recharging
-
 
 private:
   float laser_azimuth_cache_[16];
 };
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers

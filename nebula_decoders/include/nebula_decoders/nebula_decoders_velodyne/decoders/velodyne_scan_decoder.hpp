@@ -32,7 +32,6 @@
 #include <cmath>
 #include <cstdint>
 #include <memory>
-#include <string>
 #include <tuple>
 #include <vector>
 
@@ -44,9 +43,13 @@ class VelodyneScanDecoder
 private:
   size_t processed_packets_{0};
   uint32_t prev_packet_first_azm_phased_{0};
-  bool has_scanned_{false};
+
+  static const size_t g_offset_first_azimuth = 2;
+  static const size_t g_offset_last_azimuth = 1102;
+  static const uint32_t g_degree_subdivisions = 100;
 
 protected:
+  bool has_scanned_{false};
   /// @brief Checks if the current packet completes the ongoing scan.
   /// TODO: this has been moved from velodyne_hw_interface.cpp and is a temporary solution until
   /// the Velodyne decoder uses the same structure as Hesai/Robosense
@@ -115,7 +118,7 @@ public:
 
   /// @brief Virtual function for getting the flag indicating whether one cycle is ready
   /// @return Readied
-  virtual bool hasScanned() = 0;
+  virtual bool has_scanned() = 0;
 
   /// @brief Virtual function for getting the constructed point cloud
   /// @return tuple of Point cloud and timestamp
