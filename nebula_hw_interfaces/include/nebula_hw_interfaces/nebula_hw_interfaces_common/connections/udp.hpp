@@ -198,6 +198,8 @@ public:
 
     int result = ::bind(sock_fd_, (struct sockaddr *)&addr, sizeof(addr));
     if (result == -1) throw SocketError(errno);
+
+    state_ = State::BOUND;
     return *this;
   }
 
