@@ -76,12 +76,37 @@ private:
     sockaddr_in sender_addr;
   };
 
+  class DropMonitor
+  {
+    uint32_t last_drop_counter_{0};
+
+  public:
+    uint32_t get_drops_since_last_receive(uint32_t current_drop_counter)
+    {
+      uint32_t last = last_drop_counter_;
+      last_drop_counter_ = current_drop_counter;
+
+      bool counter_did_wrap = current_drop_counter < last;
+      if (counter_did_wrap) {
+        return (UINT32_MAX - last) + current_drop_counter;
+      }
+
+      return current_drop_counter - last;
+    }
+  };
+
   enum class State { UNINITIALIZED, INITIALIZED, BOUND, ACTIVE };
 
   static const int g_poll_timeout_ms = 10;
 
 public:
-  using callback_t = std::function<void(const std::vector<uint8_t> &, uint64_t)>;
+  struct ReceiveMetadata
+  {
+    std::optional<uint64_t> timestamp_ns;
+    uint64_t drops_since_last_receive{0};
+  };
+
+  using callback_t = std::function<void(const std::vector<uint8_t> &, const ReceiveMetadata &)>;
 
   /**
    * @brief Construct a UDP socket with timestamp measuring enabled. The minimal way to start
@@ -93,11 +118,15 @@ public:
     if (sock_fd == -1) throw SocketError(errno);
 
     int enable = 1;
-    int result = setsockopt(sock_fd, SOL_SOCKET, SO_TIMESTAMP, &enable, sizeof(enable)) < 0;
+    int result = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
     if (result < 0) throw SocketError(errno);
 
-    int reuse = 1;
-    result = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+    // Enable kernel-space receive time measurement
+    result = setsockopt(sock_fd, SOL_SOCKET, SO_TIMESTAMP, &enable, sizeof(enable));
+    if (result < 0) throw SocketError(errno);
+
+    // Enable reporting on packets dropped due to full UDP receive buffer
+    result = setsockopt(sock_fd, SOL_SOCKET, SO_RXQ_OVFL, &enable, sizeof(enable));
     if (result < 0) throw SocketError(errno);
 
     poll_fd_ = {sock_fd, POLLIN, 0};
@@ -248,33 +277,38 @@ private:
         if (received < 0) throw SocketError(errno);
         if (!is_accepted_sender(msg_header.sender_addr)) continue;
 
-        auto timestamp_ns_opt = get_receive_timestamp(msg_header.msg);
-        if (!timestamp_ns_opt) continue;
-
-        uint64_t timestamp_ns = timestamp_ns_opt.value();
+        auto metadata = get_receive_metadata(msg_header.msg);
 
         buffer.resize(received);
-        callback_(buffer, timestamp_ns);
+        callback_(buffer, metadata);
       }
     });
   }
 
-  std::optional<uint64_t> get_receive_timestamp(msghdr & msg)
+  ReceiveMetadata get_receive_metadata(msghdr & msg)
   {
-    timeval const * tv = nullptr;
+    ReceiveMetadata result;
     for (cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-      if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMP) {
-        tv = (struct timeval *)CMSG_DATA(cmsg);
-        break;
+      if (cmsg->cmsg_level != SOL_SOCKET) continue;
+
+      switch (cmsg->cmsg_type) {
+        case SO_TIMESTAMP: {
+          timeval const * tv = (timeval const *)CMSG_DATA(cmsg);
+          uint64_t timestamp_ns = tv->tv_sec * 1'000'000'000 + tv->tv_usec * 1000;
+          result.timestamp_ns.emplace(timestamp_ns);
+          break;
+        }
+        case SO_RXQ_OVFL: {
+          uint32_t const * drops = (uint32_t const *)CMSG_DATA(cmsg);
+          result.drops_since_last_receive = drop_monitor_.get_drops_since_last_receive(*drops);
+          break;
+        }
+        default:
+          continue;
       }
     }
 
-    if (!tv) {
-      return {};
-    }
-
-    uint64_t timestamp_ns = tv->tv_sec * 1'000'000'000 + tv->tv_usec * 1000;
-    return timestamp_ns;
+    return result;
   }
 
   util::expected<bool, int> is_data_available()
@@ -326,6 +360,8 @@ private:
   std::optional<Endpoint> sender_;
   std::thread receive_thread_;
   callback_t callback_;
+
+  DropMonitor drop_monitor_;
 };
 
 }  // namespace nebula::drivers::connections
