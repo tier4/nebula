@@ -158,7 +158,8 @@ public:
 
   /**
    * @brief Bind the socket to host IP and port given in `init()`. If `join_multicast_group()` was
-   * called before this function, the socket will be bound to `group_ip` instead.
+   * called before this function, the socket will be bound to `group_ip` instead. At least `init()`
+   * has to have been called before.
    */
   UdpSocket & bind()
   {
@@ -179,11 +180,16 @@ public:
   /**
    * @brief Register a callback for processing received packets and start the receiver thread. The
    * callback will be called for each received packet, and will be executed in the receive thread.
+   * Has to be called on a bound socket (`bind()` has to have been called before).
    *
    * @param callback The function to be executed for each received packet.
    */
   UdpSocket & subscribe(callback_t && callback)
   {
+    if (state_ < State::BOUND) throw SocketError("Socket has to be bound first");
+
+    if (state_ > State::BOUND) throw SocketError("Cannot re-subscribe to socket");
+
     callback_ = std::move(callback);
     launch_receiver();
     return *this;
