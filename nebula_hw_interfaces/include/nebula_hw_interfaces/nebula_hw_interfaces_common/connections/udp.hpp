@@ -84,6 +84,10 @@ public:
     int result = setsockopt(sock_fd, SOL_SOCKET, SO_TIMESTAMP, &enable, sizeof(enable)) < 0;
     if (result < 0) throw SocketError((errno));
 
+    int reuse = 1;
+    result = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+    if (result < 0) throw SocketError((errno));
+
     sock_fd_ = sock_fd;
   }
 
