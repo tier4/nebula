@@ -81,7 +81,7 @@ private:
   static const int g_poll_timeout_ms = 10;
 
 public:
-  using callback_t = std::function<void(const std::vector<std::byte> &, uint64_t)>;
+  using callback_t = std::function<void(const std::vector<uint8_t> &, uint64_t)>;
 
   /**
    * @brief Construct a UDP socket with timestamp measuring enabled. The minimal way to start
@@ -167,7 +167,6 @@ public:
   UdpSocket & join_multicast_group(const std::string & group_ip)
   {
     if (state_ < State::INITIALIZED) throw UsageError("Socket has to be initialized first");
-
     if (state_ >= State::BOUND)
       throw UsageError("Multicast groups have to be joined before binding");
 
@@ -190,7 +189,6 @@ public:
   UdpSocket & bind()
   {
     if (state_ < State::INITIALIZED) throw UsageError("Socket has to be initialized first");
-
     if (state_ >= State::BOUND) throw UsageError("Re-binding already bound socket");
 
     sockaddr_in addr{};
@@ -213,7 +211,6 @@ public:
   UdpSocket & subscribe(callback_t && callback)
   {
     if (state_ < State::BOUND) throw UsageError("Socket has to be bound first");
-
     if (state_ > State::BOUND) throw UsageError("Cannot re-subscribe to socket");
 
     callback_ = std::move(callback);
@@ -236,7 +233,7 @@ private:
 
     state_ = State::ACTIVE;
     receive_thread_ = std::thread([this]() {
-      std::vector<std::byte> buffer;
+      std::vector<uint8_t> buffer;
       while (state_ == State::ACTIVE) {
         auto data_available = is_data_available();
         if (!data_available.has_value()) throw SocketError(data_available.error());
@@ -294,7 +291,7 @@ private:
     return std::strncmp(sender_->ip.c_str(), sender_name.data(), INET_ADDRSTRLEN) == 0;
   }
 
-  MsgBuffers make_msg_header(std::vector<std::byte> & receive_buffer) const
+  MsgBuffers make_msg_header(std::vector<uint8_t> & receive_buffer) const
   {
     msghdr msg{};
     iovec iov{};
