@@ -148,12 +148,11 @@ public:
     if (state_ >= State::BOUND)
       throw SocketError("Multicast groups have to be joined before binding");
 
-    struct ip_mreq mreq;
+    ip_mreq mreq;
     mreq.imr_multiaddr.s_addr = inet_addr(group_ip.c_str());  // Multicast group address
     mreq.imr_interface.s_addr = inet_addr(host_.ip.c_str());
 
-    int result = setsockopt(
-      sock_fd_, IPPROTO_IP, IP_ADD_MEMBERSHIP, reinterpret_cast<std::byte *>(&mreq), sizeof(mreq));
+    int result = setsockopt(sock_fd_, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
     if (result < 0) throw SocketError((errno));
 
     multicast_ip_.emplace(group_ip);
