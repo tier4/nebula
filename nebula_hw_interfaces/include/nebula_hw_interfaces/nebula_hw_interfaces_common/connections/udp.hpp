@@ -82,11 +82,11 @@ public:
 
     int enable = 1;
     int result = setsockopt(sock_fd, SOL_SOCKET, SO_TIMESTAMP, &enable, sizeof(enable)) < 0;
-    if (result < 0) throw SocketError((errno));
+    if (result < 0) throw SocketError(errno);
 
     int reuse = 1;
     result = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
-    if (result < 0) throw SocketError((errno));
+    if (result < 0) throw SocketError(errno);
 
     sock_fd_ = sock_fd;
   }
@@ -153,7 +153,7 @@ public:
     mreq.imr_interface.s_addr = inet_addr(host_.ip.c_str());
 
     int result = setsockopt(sock_fd_, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
-    if (result < 0) throw SocketError((errno));
+    if (result < 0) throw SocketError(errno);
 
     multicast_ip_.emplace(group_ip);
     return *this;
@@ -176,7 +176,7 @@ public:
     addr.sin_addr.s_addr = multicast_ip_ ? inet_addr(multicast_ip_->c_str()) : INADDR_ANY;
 
     int result = ::bind(sock_fd_, (struct sockaddr *)&addr, sizeof(addr));
-    if (result == -1) throw SocketError((errno));
+    if (result == -1) throw SocketError(errno);
     return *this;
   }
 
@@ -219,7 +219,7 @@ private:
         auto msg_header = make_msg_header(buffer);
 
         ssize_t received = recvmsg(sock_fd_, &msg_header.msg, 0);
-        if (received < 0) throw SocketError((errno));
+        if (received < 0) throw SocketError(errno);
         if (!is_accepted_sender(msg_header.sender_addr)) continue;
 
         auto timestamp_ns_opt = get_receive_timestamp(msg_header.msg);
