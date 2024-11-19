@@ -18,6 +18,7 @@
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
 #include <nebula_common/nebula_status.hpp>
+#include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
 
 #include <boost/version.hpp>
 
@@ -32,7 +33,6 @@
 
 #include <boost_tcp_driver/http_client_driver.hpp>
 #include <boost_tcp_driver/tcp_driver.hpp>
-#include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/hesai/hesai_status.hpp>
 #include <nebula_common/loggers/logger.hpp>
@@ -128,12 +128,11 @@ private:
   using ptc_cmd_result_t = nebula::util::expected<std::vector<uint8_t>, ptc_error_t>;
 
   std::shared_ptr<loggers::Logger> logger_;
-  std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
+  std::optional<connections::UdpSocket> udp_socket_;
   std::shared_ptr<boost::asio::io_context> m_owned_ctx_;
-  std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
   std::shared_ptr<::drivers::tcp_driver::TcpDriver> tcp_driver_;
   std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration_;
-  std::function<void(std::vector<uint8_t> & buffer)>
+  std::function<void(const std::vector<uint8_t> & buffer)>
     cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
 
   std::mutex mtx_inflight_tcp_request_;
@@ -198,7 +197,7 @@ public:
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void receive_sensor_packet_callback(std::vector<uint8_t> & buffer);
+  void receive_sensor_packet_callback(const std::vector<uint8_t> & buffer);
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
   Status sensor_interface_start();
@@ -221,7 +220,7 @@ public:
   /// @brief Registering callback for PandarScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status register_scan_callback(std::function<void(std::vector<uint8_t> &)> scan_callback);
+  Status register_scan_callback(std::function<void(const std::vector<uint8_t> &)> scan_callback);
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_CALIBRATION
   /// @return Resulting status
   std::string get_lidar_calibration_string();

@@ -61,7 +61,7 @@ public:
   Status stream_start();
 
 private:
-  void receive_cloud_packet_callback(std::vector<uint8_t> & packet);
+  void receive_cloud_packet_callback(const std::vector<uint8_t> & packet);
 
   void receive_scan_message_callback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg);
 
