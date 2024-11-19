@@ -31,6 +31,7 @@
 #include <exception>
 #include <functional>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <utility>
@@ -50,6 +51,12 @@ public:
 
 private:
   std::string what_;
+};
+
+class UsageError : public std::runtime_error
+{
+public:
+  explicit UsageError(const std::string & msg) : std::runtime_error(msg) {}
 };
 
 class UdpSocket
@@ -106,7 +113,7 @@ public:
    */
   UdpSocket & init(const std::string & host_ip, uint16_t host_port)
   {
-    if (state_ > State::INITIALIZED) throw SocketError("Socket must be initialized before binding");
+    if (state_ > State::INITIALIZED) throw UsageError("Socket must be initialized before binding");
 
     host_ = {host_ip, host_port};
     state_ = State::INITIALIZED;
@@ -121,7 +128,7 @@ public:
    */
   UdpSocket & limit_to_sender(const std::string & sender_ip, uint16_t sender_port)
   {
-    if (state_ > State::INITIALIZED) throw SocketError("Buffer size has to be set before binding");
+    if (state_ > State::INITIALIZED) throw UsageError("Buffer size has to be set before binding");
 
     sender_.emplace(Endpoint{sender_ip, sender_port});
     return *this;
@@ -135,7 +142,7 @@ public:
    */
   UdpSocket & set_mtu(size_t bytes)
   {
-    if (state_ > State::INITIALIZED) throw SocketError("Buffer size has to be set before binding");
+    if (state_ > State::INITIALIZED) throw UsageError("Buffer size has to be set before binding");
 
     buffer_size_ = bytes;
     return *this;
@@ -149,10 +156,10 @@ public:
    */
   UdpSocket & join_multicast_group(const std::string & group_ip)
   {
-    if (state_ < State::INITIALIZED) throw SocketError("Socket has to be initialized first");
+    if (state_ < State::INITIALIZED) throw UsageError("Socket has to be initialized first");
 
     if (state_ >= State::BOUND)
-      throw SocketError("Multicast groups have to be joined before binding");
+      throw UsageError("Multicast groups have to be joined before binding");
 
     ip_mreq mreq;
     mreq.imr_multiaddr.s_addr = inet_addr(group_ip.c_str());  // Multicast group address
@@ -172,9 +179,9 @@ public:
    */
   UdpSocket & bind()
   {
-    if (state_ < State::INITIALIZED) throw SocketError("Socket has to be initialized first");
+    if (state_ < State::INITIALIZED) throw UsageError("Socket has to be initialized first");
 
-    if (state_ >= State::BOUND) throw SocketError("Re-binding already bound socket");
+    if (state_ >= State::BOUND) throw UsageError("Re-binding already bound socket");
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
@@ -195,9 +202,9 @@ public:
    */
   UdpSocket & subscribe(callback_t && callback)
   {
-    if (state_ < State::BOUND) throw SocketError("Socket has to be bound first");
+    if (state_ < State::BOUND) throw UsageError("Socket has to be bound first");
 
-    if (state_ > State::BOUND) throw SocketError("Cannot re-subscribe to socket");
+    if (state_ > State::BOUND) throw UsageError("Cannot re-subscribe to socket");
 
     callback_ = std::move(callback);
     launch_receiver();
