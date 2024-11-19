@@ -51,7 +51,11 @@ class HesaiRosWrapper final : public rclcpp::Node
 
 public:
   explicit HesaiRosWrapper(const rclcpp::NodeOptions & options);
-  ~HesaiRosWrapper() noexcept override = default;
+  ~HesaiRosWrapper() noexcept override
+  {
+    if (!hw_interface_wrapper_) return;
+    hw_interface_wrapper_->hw_interface()->SensorInterfaceStop();
+  };
 
   /// @brief Get current status of this driver
   /// @return Current status
