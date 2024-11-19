@@ -225,6 +225,13 @@ Status HesaiRosWrapper::validate_and_set_config(
   if (new_config->frame_id.empty()) {
     return Status::SENSOR_CONFIG_ERROR;
   }
+  if (!new_config->multicast_ip.empty() && new_config->host_ip == "255.255.255.255") {
+    RCLCPP_ERROR(
+      get_logger(),
+      "A concrete host IP must be given when multicast is enabled, otherwise the correct network "
+      "interface cannot be determined.");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
   if (new_config->ptp_profile == nebula::drivers::PtpProfile::UNKNOWN_PROFILE) {
     RCLCPP_ERROR(
       get_logger(), "Invalid PTP Profile Provided. Please use '1588v2', '802.1as' or 'automotive'");
