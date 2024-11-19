@@ -148,6 +148,16 @@ public:
     return *this;
   }
 
+  UdpSocket & set_socket_buffer_size(size_t bytes)
+  {
+    if (state_ > State::INITIALIZED) throw UsageError("Buffer size has to be set before binding");
+
+    auto buf_size = static_cast<int>(bytes);
+    int result = setsockopt(sock_fd_, SOL_SOCKET, SO_RCVBUF, &buf_size, sizeof(buf_size));
+    if (result < 0) throw SocketError(errno);
+    return *this;
+  }
+
   /**
    * @brief Join an IP multicast group. Only one group can be joined by the socket.
    *
