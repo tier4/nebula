@@ -197,7 +197,8 @@ void HesaiHwInterface::ReceiveSensorPacketCallback(const std::vector<uint8_t> & 
 
 Status HesaiHwInterface::SensorInterfaceStop()
 {
-  return Status::ERROR_1;
+  udp_socket_.unsubscribe();
+  return Status::OK;
 }
 
 Status HesaiHwInterface::GetSensorConfiguration(
