@@ -14,8 +14,11 @@
 
 #pragma once
 
+#include <nebula_common/util/expected.hpp>
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <sys/poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -68,6 +71,8 @@ private:
 
   enum class State { UNINITIALIZED, INITIALIZED, BOUND, ACTIVE };
 
+  static const int g_poll_timeout_ms = 10;
+
 public:
   using callback_t = std::function<void(const std::vector<std::byte> &, uint64_t)>;
 
@@ -88,6 +93,7 @@ public:
     result = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
     if (result < 0) throw SocketError(errno);
 
+    poll_fd_ = {sock_fd, POLLIN, 0};
     sock_fd_ = sock_fd;
   }
 
@@ -215,6 +221,10 @@ private:
     receive_thread_ = std::thread([this]() {
       std::vector<std::byte> buffer;
       while (state_ == State::ACTIVE) {
+        auto data_available = is_data_available();
+        if (!data_available.has_value()) throw SocketError(data_available.error());
+        if (!data_available.value()) continue;
+
         buffer.resize(buffer_size_);
         auto msg_header = make_msg_header(buffer);
 
@@ -251,6 +261,13 @@ private:
     return timestamp_ns;
   }
 
+  util::expected<bool, int> is_data_available()
+  {
+    int status = poll(&poll_fd_, 1, g_poll_timeout_ms);
+    if (status < 0) return errno;
+    return (poll_fd_.revents & POLLIN) && (status > 0);
+  }
+
   bool is_accepted_sender(const sockaddr_in & sender_addr)
   {
     if (!sender_) return true;
@@ -283,7 +300,10 @@ private:
   }
 
   std::atomic<State> state_{State::UNINITIALIZED};
+
   int sock_fd_;
+  pollfd poll_fd_;
+
   size_t buffer_size_ = 1500;
   Endpoint host_;
   std::optional<std::string> multicast_ip_;
