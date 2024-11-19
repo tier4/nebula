@@ -249,10 +249,20 @@ public:
     return *this;
   }
 
-  ~UdpSocket()
+  /**
+   * @brief Gracefully stops the active receiver thread (if any) but keeps the socket alive. The
+   * same socket can later be subscribed again.
+   */
+  UdpSocket & unsubscribe()
   {
     if (state_ == State::ACTIVE) state_ = State::BOUND;
     if (receive_thread_.joinable()) receive_thread_.join();
+    return *this;
+  }
+
+  ~UdpSocket()
+  {
+    unsubscribe();
     close(sock_fd_);
   }
 
