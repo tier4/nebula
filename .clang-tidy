@@ -1,3 +1,17 @@
+# All disabled checks have to come with an explanatory comment that states why they were disabled!
+#
+# modernize-use-trailing-return-type:
+#  Purely stylistic, makes function signature longer
+#
+# readability-identifier-length:
+#  Things like std::ostream os; nlohmann::json j; are popular. Reviewer can decide on those cases
+#
+# readability-implicit-bool-conversion:
+#  Makes packet-parsing (bool field that occupies a byte or bitfield) annoying
+#
+# hicpp-special-member-functions:
+#  Alias for cppcoreguidelines-special-member-functions, which is enabled. If both are enabled,
+#  the CheckOptions below have to be specified twice.
 Checks: "
   *,
   -abseil-*,
