@@ -12,7 +12,8 @@ Checks: "
   -zircon-*,
   -modernize-use-trailing-return-type,
   -readability-identifier-length,
-  -readability-implicit-bool-conversion"
+  -readability-implicit-bool-conversion,
+  -hicpp-special-member-functions"
 
 # WarningsAsErrors have been taken from:
 # https://github.com/autowarefoundation/autoware/blob/3591106/.clang-tidy-ci
