@@ -10,12 +10,13 @@ Checks: "
   -mpi-*,
   -objc-*,
   -zircon-*,
-  -modernize-use-trailing-return-type"
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length,
+  -readability-implicit-bool-conversion"
 
 # WarningsAsErrors have been taken from:
 # https://github.com/autowarefoundation/autoware/blob/3591106/.clang-tidy-ci
 WarningsAsErrors: "
-  // severity: HIGH
   bugprone-dangling-handle,
   bugprone-fold-init-type,
   bugprone-inaccurate-erase,
@@ -32,10 +33,6 @@ WarningsAsErrors: "
   bugprone-unchecked-optional-access,
   bugprone-unused-raii,
   bugprone-use-after-move,
-  misc-non-copyable-objects,
-  misc-throw-by-value-catch-by-reference,
-
-  // severity: MEDIUM
   bugprone-assert-side-effect,
   bugprone-bad-signal-to-kill-thread,
   bugprone-copy-constructor-init,
@@ -61,11 +58,17 @@ WarningsAsErrors: "
   bugprone-unhandled-self-assignment,
   bugprone-unused-return-value,
   bugprone-virtual-near-miss,
+  cppcoreguidelines-slicing,
+  cppcoreguidelines-special-member-functions,
+  cppcoreguidelines-pro-bounds-constant-array-index,
+  cppcoreguidelines-virtual-class-destructor,
   cppcoreguidelines-init-variables,
   cppcoreguidelines-narrowing-conversions,
   google-build-explicit-make-pair,
   google-build-namespaces,
   google-explicit-constructor,
+  misc-non-copyable-objects,
+  misc-throw-by-value-catch-by-reference,
   misc-definitions-in-headers,
   misc-new-delete-overloads,
   misc-redundant-expression,
@@ -100,3 +103,5 @@ CheckOptions:
     value: g_
   - key: readability-identifier-naming.ConstexprVariableCase
     value: lower_case
+  - key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
+    value: true
