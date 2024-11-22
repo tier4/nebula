@@ -158,7 +158,7 @@ public:
    */
   UdpSocket & limit_to_sender(const std::string & sender_ip, uint16_t sender_port)
   {
-    if (state_ > State::INITIALIZED) throw UsageError("Buffer size has to be set before binding");
+    if (state_ >= State::ACTIVE) throw UsageError("Sender has to be set before subscribing");
 
     sender_.emplace(Endpoint{sender_ip, sender_port});
     return *this;
@@ -172,7 +172,7 @@ public:
    */
   UdpSocket & set_mtu(size_t bytes)
   {
-    if (state_ > State::INITIALIZED) throw UsageError("Buffer size has to be set before binding");
+    if (state_ >= State::ACTIVE) throw UsageError("MTU size has to be set before subscribing");
 
     buffer_size_ = bytes;
     return *this;
@@ -181,6 +181,8 @@ public:
   UdpSocket & set_socket_buffer_size(size_t bytes)
   {
     if (state_ > State::INITIALIZED) throw UsageError("Buffer size has to be set before binding");
+    if (bytes > static_cast<size_t>(INT32_MAX))
+      throw UsageError("The maximum value supported (0x7FFFFFF) has been exceeded");
 
     auto buf_size = static_cast<int>(bytes);
     int result = setsockopt(sock_fd_, SOL_SOCKET, SO_RCVBUF, &buf_size, sizeof(buf_size));
