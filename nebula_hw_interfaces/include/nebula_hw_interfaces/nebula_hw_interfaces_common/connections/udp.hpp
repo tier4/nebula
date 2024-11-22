@@ -22,6 +22,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <cerrno>
@@ -286,15 +287,17 @@ private:
         buffer.resize(buffer_size_);
         auto msg_header = make_msg_header(buffer);
 
-        ssize_t received = recvmsg(sock_fd_, &msg_header.msg, MSG_TRUNC);
-        if (received < 0) throw SocketError(errno);
+        ssize_t recv_result = recvmsg(sock_fd_, &msg_header.msg, MSG_TRUNC);
+        if (recv_result < 0) throw SocketError(errno);
+        size_t untruncated_packet_length = recv_result;
+
         if (!is_accepted_sender(msg_header.sender_addr)) continue;
 
         ReceiveMetadata metadata;
         get_receive_metadata(msg_header.msg, metadata);
-        metadata.truncated = static_cast<size_t>(received) > buffer_size_;
+        metadata.truncated = untruncated_packet_length > buffer_size_;
 
-        buffer.resize(received);
+        buffer.resize(std::min(buffer_size_, untruncated_packet_length));
         callback_(buffer, metadata);
       }
     });

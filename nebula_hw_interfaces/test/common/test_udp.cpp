@@ -159,7 +159,7 @@ TEST(test_udp, test_receiving_oversized)
 {
   const size_t mtu = 1500;
   std::vector<uint8_t> payload;
-  payload.resize(mtu + 1);
+  payload.resize(mtu + 1, 0x42);
   UdpSocket sock{};
   sock.init(localhost_ip, host_port).set_mtu(mtu).bind();
 
@@ -170,9 +170,23 @@ TEST(test_udp, test_receiving_oversized)
 
   ASSERT_TRUE(result_opt.has_value());
   auto const & [recv_payload, metadata] = result_opt.value();
+  ASSERT_EQ(recv_payload.size(), mtu);
   ASSERT_TRUE(std::equal(recv_payload.begin(), recv_payload.end(), payload.begin()));
   ASSERT_TRUE(metadata.truncated);
   ASSERT_EQ(metadata.drops_since_last_receive, 0);
+}
+
+TEST(test_udp, test_filtering_sender)
+{
+  std::vector<uint8_t> payload{1, 2, 3};
+  UdpSocket sock{};
+  sock.init(localhost_ip, host_port).bind().limit_to_sender(sender_ip, sender_port);
+
+  auto err_no_opt = udp_send(localhost_ip, host_port, payload);
+  if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
+
+  auto result_opt = receive_once(sock, send_receive_timeout);
+  ASSERT_FALSE(result_opt.has_value());
 }
 
 }  // namespace nebula::drivers::connections
