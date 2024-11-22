@@ -53,11 +53,10 @@ std::optional<int> udp_send(
   return {};
 }
 
-template<typename _T, typename _R>
+template <typename _T, typename _R>
 std::optional<
   std::pair<std::vector<uint8_t>, nebula::drivers::connections::UdpSocket::ReceiveMetadata>>
-receive_once(
-  nebula::drivers::connections::UdpSocket & sock, std::chrono::duration<_T, _R> timeout)
+receive_once(nebula::drivers::connections::UdpSocket & sock, std::chrono::duration<_T, _R> timeout)
 {
   std::condition_variable cv_received_result;
   std::mutex mtx_result;
