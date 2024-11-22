@@ -17,6 +17,8 @@
 // Have to define macros to silence warnings about deprecated headers being used by
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
+#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/connections/tcp.hpp"
+
 #include <nebula_common/nebula_status.hpp>
 
 #include <boost/version.hpp>
@@ -31,7 +33,6 @@
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 
 #include <boost_tcp_driver/http_client_driver.hpp>
-#include <boost_tcp_driver/tcp_driver.hpp>
 #include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/hesai/hesai_status.hpp>
@@ -138,9 +139,8 @@ private:
 
   std::shared_ptr<loggers::Logger> logger_;
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
-  std::shared_ptr<boost::asio::io_context> m_owned_ctx;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
-  std::shared_ptr<::drivers::tcp_driver::TcpDriver> tcp_driver_;
+  std::shared_ptr<connections::AbstractTcpSocket> tcp_socket_;
   std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration_;
   std::function<void(std::vector<uint8_t> & buffer)>
     cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
@@ -189,7 +189,9 @@ private:
 
 public:
   /// @brief Constructor
-  explicit HesaiHwInterface(std::shared_ptr<loggers::Logger> logger);
+  HesaiHwInterface(
+    std::shared_ptr<loggers::Logger> logger,
+    std::shared_ptr<connections::AbstractTcpSocket> tcp_socket);
   /// @brief Destructor
   ~HesaiHwInterface();
   /// @brief Initializing tcp_driver for TCP communication
@@ -361,12 +363,6 @@ public:
   /// @brief Getting data with PTC_COMMAND_LIDAR_MONITOR
   /// @return Resulting status
   HesaiLidarMonitor GetLidarMonitor();
-
-  /// @brief Call run() of IO Context
-  void IOContextRun();
-  /// @brief GetIO Context
-  /// @return IO Context
-  std::shared_ptr<boost::asio::io_context> GetIOContext();
 
   /// @brief Setting spin_speed via HTTP API
   /// @param ctx IO Context used

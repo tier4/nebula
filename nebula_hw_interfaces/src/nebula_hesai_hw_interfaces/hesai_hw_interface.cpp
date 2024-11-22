@@ -36,12 +36,13 @@ namespace nebula::drivers
 using std::string_literals::operator""s;
 using nlohmann::json;
 
-HesaiHwInterface::HesaiHwInterface(std::shared_ptr<loggers::Logger> logger)
+HesaiHwInterface::HesaiHwInterface(
+  std::shared_ptr<loggers::Logger> logger,
+  std::shared_ptr<connections::AbstractTcpSocket> tcp_socket)
 : logger_(std::move(logger)),
   cloud_io_context_{new ::drivers::common::IoContext(1)},
-  m_owned_ctx{new boost::asio::io_context(1)},
   cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
-  tcp_driver_{new ::drivers::tcp_driver::TcpDriver(m_owned_ctx)},
+  tcp_socket_{std::move(tcp_socket)},
   target_model_no(NebulaModelToHesaiModelNo(SensorModel::UNKNOWN))
 {
 }
@@ -86,13 +87,8 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
   std::timed_mutex tm;
   tm.lock();
 
-  if (tcp_driver_->GetIOContext()->stopped()) {
-    logger_->debug(log_tag + "IOContext was stopped");
-    tcp_driver_->GetIOContext()->restart();
-  }
-
   logger_->debug(log_tag + "Sending payload");
-  tcp_driver_->asyncSendReceiveHeaderPayload(
+  tcp_socket_->async_ptc_request(
     send_buf,
     [this, log_tag, command_id, response_complete,
      error_code](const std::vector<uint8_t> & header_bytes) {
@@ -118,7 +114,7 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
 
       // Header had payload length 0 (thus, header callback processed request successfully already),
       // but we still received a payload: invalid state
-      if (*response_complete == true) {
+      if (*response_complete) {
         error_code->error_flags |= TCP_ERROR_UNEXPECTED_PAYLOAD;
         return;
       }
@@ -132,7 +128,6 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
       tm.unlock();
       logger_->debug(log_tag + "Unlocked mutex");
     });
-  this->IOContextRun();
   if (!tm.try_lock_for(std::chrono::seconds(1))) {
     logger_->error(log_tag + "Request did not finish within 1s");
     error_code->error_flags |= TCP_ERROR_TIMEOUT;
@@ -244,40 +239,16 @@ Status HesaiHwInterface::GetCalibrationConfiguration(
 
 Status HesaiHwInterface::InitializeTcpDriver()
 {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "HesaiHwInterface::InitializeTcpDriver" << std::endl;
-  std::cout << "st: tcp_driver_->init_socket" << std::endl;
-  std::cout << "sensor_configuration_->sensor_ip=" << sensor_configuration_->sensor_ip << std::endl;
-  std::cout << "sensor_configuration_->host_ip=" << sensor_configuration_->host_ip << std::endl;
-  std::cout << "PandarTcpCommandPort=" << PandarTcpCommandPort << std::endl;
-#endif
-  tcp_driver_->init_socket(
-    sensor_configuration_->sensor_ip, PandarTcpCommandPort, sensor_configuration_->host_ip,
+  tcp_socket_->init(
+    sensor_configuration_->host_ip, PandarTcpCommandPort, sensor_configuration_->sensor_ip,
     PandarTcpCommandPort);
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "ed: tcp_driver_->init_socket" << std::endl;
-#endif
-  if (!tcp_driver_->open()) {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << "!tcp_driver_->open()" << std::endl;
-#endif
-    //    tcp_driver_->close();
-    tcp_driver_->closeSync();
-    return Status::ERROR_1;
-  }
+  tcp_socket_->bind();
   return Status::OK;
 }
 
 Status HesaiHwInterface::FinalizeTcpDriver()
 {
-  try {
-    if (tcp_driver_) {
-      tcp_driver_->close();
-    }
-  } catch (std::exception & e) {
-    logger_->error("Error while finalizing the TcpDriver");
-    return Status::UDP_CONNECTION_ERROR;
-  }
+  tcp_socket_->close();
   return Status::OK;
 }
 
@@ -715,16 +686,6 @@ HesaiLidarMonitor HesaiHwInterface::GetLidarMonitor()
   auto response_or_err = SendReceive(PTC_COMMAND_LIDAR_MONITOR);
   auto response = response_or_err.value_or_throw(PrettyPrintPTCError(response_or_err.error_or({})));
   return CheckSizeAndParse<HesaiLidarMonitor>(response);
-}
-
-void HesaiHwInterface::IOContextRun()
-{
-  m_owned_ctx->run();
-}
-
-std::shared_ptr<boost::asio::io_context> HesaiHwInterface::GetIOContext()
-{
-  return m_owned_ctx;
 }
 
 HesaiStatus HesaiHwInterface::GetHttpClientDriverOnce(
