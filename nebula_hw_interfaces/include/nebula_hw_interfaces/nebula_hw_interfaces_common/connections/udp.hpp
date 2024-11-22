@@ -104,6 +104,7 @@ public:
   {
     std::optional<uint64_t> timestamp_ns;
     uint64_t drops_since_last_receive{0};
+    bool truncated;
   };
 
   using callback_t = std::function<void(const std::vector<uint8_t> &, const ReceiveMetadata &)>;
@@ -283,11 +284,13 @@ private:
         buffer.resize(buffer_size_);
         auto msg_header = make_msg_header(buffer);
 
-        ssize_t received = recvmsg(sock_fd_, &msg_header.msg, 0);
+        ssize_t received = recvmsg(sock_fd_, &msg_header.msg, MSG_TRUNC);
         if (received < 0) throw SocketError(errno);
         if (!is_accepted_sender(msg_header.sender_addr)) continue;
 
-        auto metadata = get_receive_metadata(msg_header.msg);
+        ReceiveMetadata metadata;
+        get_receive_metadata(msg_header.msg, metadata);
+        metadata.truncated = static_cast<size_t>(received) > buffer_size_;
 
         buffer.resize(received);
         callback_(buffer, metadata);
@@ -295,30 +298,28 @@ private:
     });
   }
 
-  ReceiveMetadata get_receive_metadata(msghdr & msg)
+  void get_receive_metadata(msghdr & msg, ReceiveMetadata & inout_metadata)
   {
-    ReceiveMetadata result;
     for (cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
       if (cmsg->cmsg_level != SOL_SOCKET) continue;
 
       switch (cmsg->cmsg_type) {
         case SO_TIMESTAMP: {
-          timeval const * tv = (timeval const *)CMSG_DATA(cmsg);
+          auto tv = (timeval const *)CMSG_DATA(cmsg);
           uint64_t timestamp_ns = tv->tv_sec * 1'000'000'000 + tv->tv_usec * 1000;
-          result.timestamp_ns.emplace(timestamp_ns);
+          inout_metadata.timestamp_ns.emplace(timestamp_ns);
           break;
         }
         case SO_RXQ_OVFL: {
-          uint32_t const * drops = (uint32_t const *)CMSG_DATA(cmsg);
-          result.drops_since_last_receive = drop_monitor_.get_drops_since_last_receive(*drops);
+          auto drops = (uint32_t const *)CMSG_DATA(cmsg);
+          inout_metadata.drops_since_last_receive =
+            drop_monitor_.get_drops_since_last_receive(*drops);
           break;
         }
         default:
           continue;
       }
     }
-
-    return result;
   }
 
   util::expected<bool, int> is_data_available()
