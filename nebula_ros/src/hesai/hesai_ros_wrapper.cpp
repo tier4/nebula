@@ -8,6 +8,7 @@
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_decoders/nebula_decoders_common/angles.hpp>
 
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -217,6 +218,13 @@ Status HesaiRosWrapper::validate_and_set_config(
   if (new_config->frame_id.empty()) {
     return Status::SENSOR_CONFIG_ERROR;
   }
+  if (!new_config->multicast_ip.empty() && new_config->host_ip == "255.255.255.255") {
+    RCLCPP_ERROR(
+      get_logger(),
+      "A concrete host IP must be given when multicast is enabled, otherwise the correct network "
+      "interface cannot be determined.");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
   if (new_config->ptp_profile == nebula::drivers::PtpProfile::UNKNOWN_PROFILE) {
     RCLCPP_ERROR(
       get_logger(), "Invalid PTP Profile Provided. Please use '1588v2', '802.1as' or 'automotive'");
@@ -406,7 +414,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-void HesaiRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & packet)
+void HesaiRosWrapper::receive_cloud_packet_callback(const std::vector<uint8_t> & packet)
 {
   if (!decoder_wrapper_ || decoder_wrapper_->status() != Status::OK) {
     return;
@@ -419,7 +427,7 @@ void HesaiRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & packe
   auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
   msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
-  msg_ptr->data.swap(packet);
+  msg_ptr->data = packet;
 
   decoder_wrapper_->process_cloud_packet(std::move(msg_ptr));
 }

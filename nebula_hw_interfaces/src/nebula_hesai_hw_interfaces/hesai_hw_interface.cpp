@@ -6,6 +6,7 @@
 #include "nebula_common/hesai/hesai_status.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
+#include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 
 #include <nlohmann/json.hpp>
@@ -14,6 +15,7 @@
 #include <boost/asio/socket_base.hpp>
 
 #include <cassert>
+#include <cstddef>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -34,9 +36,7 @@ using std::string_literals::operator""s;
 using nlohmann::json;
 
 HesaiHwInterface::HesaiHwInterface()
-: cloud_io_context_{new ::drivers::common::IoContext(1)},
-  m_owned_ctx{new boost::asio::io_context(1)},
-  cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
+: m_owned_ctx{new boost::asio::io_context(1)},
   tcp_driver_{new ::drivers::tcp_driver::TcpDriver(m_owned_ctx)}
 {
 }
@@ -159,66 +159,46 @@ Status HesaiHwInterface::SetSensorConfiguration(
 
 Status HesaiHwInterface::SensorInterfaceStart()
 {
-  try {
-    PrintInfo("Starting UDP receiver");
-    if (sensor_configuration_->multicast_ip.empty()) {
-      cloud_udp_driver_->init_receiver(
-        sensor_configuration_->host_ip, sensor_configuration_->data_port);
-    } else {
-      cloud_udp_driver_->init_receiver(
-        sensor_configuration_->multicast_ip, sensor_configuration_->data_port,
-        sensor_configuration_->host_ip, sensor_configuration_->data_port);
-      cloud_udp_driver_->receiver()->setMulticast(true);
-    }
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    PrintError("init ok");
-#endif
-    cloud_udp_driver_->receiver()->open();
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    PrintError("open ok");
-#endif
-
-    bool success = cloud_udp_driver_->receiver()->setKernelBufferSize(UDP_SOCKET_BUFFER_SIZE);
-    if (!success) {
-      PrintError(
-        "Could not set receive buffer size. Try increasing net.core.rmem_max to " +
-        std::to_string(UDP_SOCKET_BUFFER_SIZE) + " B.");
-      return Status::ERROR_1;
-    }
-
-    cloud_udp_driver_->receiver()->bind();
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    PrintError("bind ok");
-#endif
-
-    cloud_udp_driver_->receiver()->asyncReceive(
-      std::bind(&HesaiHwInterface::ReceiveSensorPacketCallback, this, std::placeholders::_1));
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    PrintError("async receive set");
-#endif
-  } catch (const std::exception & ex) {
-    Status status = Status::UDP_CONNECTION_ERROR;
-    std::cerr << status << " for " << sensor_configuration_->sensor_ip << ":"
-              << sensor_configuration_->data_port << " - " << ex.what() << std::endl;
-    return status;
+  udp_socket_.init(sensor_configuration_->host_ip, sensor_configuration_->data_port);
+  if (!sensor_configuration_->multicast_ip.empty()) {
+    udp_socket_.join_multicast_group(sensor_configuration_->multicast_ip);
   }
+
+  udp_socket_.set_mtu(MTU_SIZE);
+
+  try {
+    udp_socket_.set_socket_buffer_size(UDP_SOCKET_BUFFER_SIZE);
+  } catch (const connections::SocketError & e) {
+    throw std::runtime_error(
+      "Could not set socket receive buffer size to " + std::to_string(UDP_SOCKET_BUFFER_SIZE) +
+      ". Try increasing net.core.rmem_max.");
+  }
+
+  udp_socket_.bind().subscribe([&](
+                                 const std::vector<uint8_t> & packet,
+                                 const connections::UdpSocket::ReceiveMetadata & /* metadata */) {
+    ReceiveSensorPacketCallback(packet);
+  });
+
   return Status::OK;
 }
 
 Status HesaiHwInterface::RegisterScanCallback(
-  std::function<void(std::vector<uint8_t> &)> scan_callback)
+  std::function<void(const std::vector<uint8_t> &)> scan_callback)
 {
   cloud_packet_callback_ = std::move(scan_callback);
   return Status::OK;
 }
 
-void HesaiHwInterface::ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer)
+void HesaiHwInterface::ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer)
 {
   cloud_packet_callback_(buffer);
 }
+
 Status HesaiHwInterface::SensorInterfaceStop()
 {
-  return Status::ERROR_1;
+  udp_socket_.unsubscribe();
+  return Status::OK;
 }
 
 Status HesaiHwInterface::GetSensorConfiguration(
