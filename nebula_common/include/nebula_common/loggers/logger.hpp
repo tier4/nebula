@@ -31,11 +31,6 @@ namespace nebula::drivers::loggers
 class Logger
 {
 public:
-  Logger() = default;
-  Logger(const Logger &) = default;
-  Logger(Logger &&) = delete;
-  Logger & operator=(const Logger &) = default;
-  Logger & operator=(Logger &&) = delete;
   virtual ~Logger() = default;
 
   virtual void debug(const std::string & message) = 0;
