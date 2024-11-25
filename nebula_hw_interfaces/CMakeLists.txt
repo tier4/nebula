@@ -101,6 +101,7 @@ if(BUILD_TESTING)
 
     find_package(ament_cmake_gtest REQUIRED)
     find_package(ament_cmake_gmock REQUIRED)
+    find_package(nlohmann_json)
 
     ament_add_gtest(test_udp
         test/common/test_udp.cpp
@@ -120,10 +121,12 @@ if(BUILD_TESTING)
         ${nebula_hw_interfaces_hesai_INCLUDE_DIRS}
         ${boost_tcp_driver_INCLUDE_DIRS}
         ${boost_udp_driver_INCLUDE_DIRS}
+        ${nlohmann_json_INCLUDE_DIRS}
         include
         test)
 
     target_link_libraries(hesai_test_ptc
+        ${nlohmann_json_LIBRARIES}
         nebula_hw_interfaces_hesai
     )
 endif()

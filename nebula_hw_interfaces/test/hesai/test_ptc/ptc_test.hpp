@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "hesai/test_ptc/tcp_mock.hpp"
+#include "hesai/test_ptc/tcp_socket_mock.hpp"
 #include "nebula_common/loggers/console_logger.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
@@ -32,8 +32,6 @@ protected:
   void SetUp() override {}
 
   void TearDown() override {}
-
-  static auto make_mock_tcp_socket() { return std::make_shared<connections::MockTcpSocket>(); }
 
   static auto make_hw_interface(std::shared_ptr<connections::MockTcpSocket> tcp_socket)
   {

@@ -1,6 +1,8 @@
 // Copyright 2024 TIER IV, Inc.
 
 #include "hesai/test_ptc/ptc_test.hpp"
+#include "hesai/test_ptc/tcp_socket_mock.hpp"
+#include "hesai/test_ptc/tcp_socket_replay.hpp"
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_common.hpp"
 
@@ -10,6 +12,7 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
+#include <memory>
 
 namespace nebula::drivers
 {
@@ -79,7 +82,7 @@ auto make_sensor_config(SensorModel model)
 TEST_P(PtcTest, ConnectionLifecycle)
 {
   /* Constructor does not immediately connect, destructor closes socket */ {
-    auto tcp_sock_ptr = make_mock_tcp_socket();
+    auto tcp_sock_ptr = std::make_shared<connections::MockTcpSocket>();
     auto & tcp_sock = *tcp_sock_ptr;
 
     EXPECT_CALL(tcp_sock, close()).Times(AtLeast(1));
@@ -87,7 +90,7 @@ TEST_P(PtcTest, ConnectionLifecycle)
   }
 
   /* Full lifecycle without sending/receiving */ {
-    auto tcp_sock_ptr = make_mock_tcp_socket();
+    auto tcp_sock_ptr = std::make_shared<connections::MockTcpSocket>();
     auto & tcp_sock = *tcp_sock_ptr;
 
     InSequence seq;
@@ -102,6 +105,33 @@ TEST_P(PtcTest, ConnectionLifecycle)
     hw_interface->InitializeTcpDriver();
     hw_interface->FinalizeTcpDriver();
   }
+}
+
+TEST_P(PtcTest, PtcCommunication)
+{
+  const auto & model = GetParam();
+  auto conversation_db = connections::parse_conversation_db("a");
+  if (!conversation_db.has_value()) {
+    GTEST_SKIP() << "no conversation database found for " << model;
+  }
+
+  connections::ReplayTcpSocket::ptc_handler_t cb = [&conversation_db](
+                                                     const auto & request, const auto & cb_header,
+                                                     const auto & cb_payload,
+                                                     const auto & cb_completion) {
+    if (conversation_db.find(request) == conversation_db.end()) {
+      throw "not";
+    }
+
+    const auto & responses = conversation_db[ptc_packet];
+
+    for (const message_t & response : responses) {
+      auto header = message_t(response.cbegin(), std::next(response.cbegin(), g_ptc_header_size));
+      cb_header(header);
+      cb_payload(response);
+      cb_completion();
+    }
+  };
 }
 
 INSTANTIATE_TEST_SUITE_P(TestMain, PtcTest, testing::ValuesIn(g_models_under_test));
