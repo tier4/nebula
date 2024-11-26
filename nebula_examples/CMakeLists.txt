@@ -45,7 +45,7 @@ target_link_libraries(hesai_ros_offline_extract_pcd PUBLIC
     nebula_decoders::nebula_decoders_hesai
 )
 
-add_executable(hesai_ros_offline_extract_pcd_node
+ament_auto_add_executable(hesai_ros_offline_extract_pcd_node
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_pcd_main.cpp
 )
 
@@ -62,12 +62,28 @@ target_link_libraries(hesai_ros_offline_extract_bag_pcd PUBLIC
     nebula_decoders::nebula_decoders_hesai
 )
 
-add_executable(hesai_ros_offline_extract_bag_pcd_node
+ament_auto_add_executable(hesai_ros_offline_extract_bag_pcd_node
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_pcd_main.cpp
 )
 
 target_link_libraries(hesai_ros_offline_extract_bag_pcd_node PUBLIC
     hesai_ros_offline_extract_bag_pcd
+)
+# Extraction for Hesai ROSBag
+add_library(hesai_ros_offline_extract_bag_decode SHARED
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_decode.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/common/parameter_descriptors.cpp
+)
+target_link_libraries(hesai_ros_offline_extract_bag_decode PUBLIC
+    nebula_decoders::nebula_decoders_hesai
+)
+
+ament_auto_add_executable(hesai_ros_offline_extract_bag_decode_node
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_decode_main.cpp
+)
+
+target_link_libraries(hesai_ros_offline_extract_bag_decode_node PUBLIC
+    hesai_ros_offline_extract_bag_decode
 )
 
 ## Velodyne
@@ -79,7 +95,7 @@ target_link_libraries(velodyne_ros_offline_extract_bag_pcd PUBLIC
     nebula_decoders::nebula_decoders_velodyne
 )
 
-add_executable(velodyne_ros_offline_extract_bag_pcd_node
+ament_auto_add_executable(velodyne_ros_offline_extract_bag_pcd_node
     ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_ros_offline_extract_bag_pcd_main.cpp
 )
 
