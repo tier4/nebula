@@ -172,7 +172,8 @@ private:
   /// @param command_id PTC command number.
   /// @param payload Payload bytes of the PTC command. Not including the 8-byte PTC header.
   /// @return The returned payload, if successful, or nullptr.
-  ptc_cmd_result_t send_receive(const uint8_t command_id, const std::vector<uint8_t> & payload = {});
+  ptc_cmd_result_t send_receive(
+    const uint8_t command_id, const std::vector<uint8_t> & payload = {});
 
   static std::pair<HesaiStatus, std::string> unwrap_http_response(const std::string & response);
 
@@ -318,7 +319,8 @@ public:
    * @param calibration The calibration file of the sensor
    * @return Status Resulting status of setting the FoV
    */
-  [[nodiscard]] Status check_and_set_lidar_range(const HesaiCalibrationConfigurationBase & calibration);
+  [[nodiscard]] Status check_and_set_lidar_range(
+    const HesaiCalibrationConfigurationBase & calibration);
 
   Status set_clock_source(int clock_source);
 
@@ -387,7 +389,8 @@ public:
   /// @brief Getting lidar_monitor via HTTP API
   /// @param str_callback Callback function for received string
   /// @return Resulting status
-  HesaiStatus get_lidar_monitor_async_http(std::function<void(const std::string & str)> str_callback);
+  HesaiStatus get_lidar_monitor_async_http(
+    std::function<void(const std::string & str)> str_callback);
 
   /// @brief Checking the current settings and changing the difference point
   /// @param sensor_configuration Current SensorConfiguration

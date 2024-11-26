@@ -312,23 +312,28 @@ std::string HesaiHwInterface::get_lidar_calibration_string()
 HesaiPtpDiagStatus HesaiHwInterface::get_ptp_diag_status()
 {
   auto response_or_err = send_receive(g_ptc_command_ptp_diagnostics, {g_ptc_command_ptp_status});
-  auto response = response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
   auto diag_status = check_size_and_parse<HesaiPtpDiagStatus>(response);
   return diag_status;
 }
 
 HesaiPtpDiagPort HesaiHwInterface::get_ptp_diag_port()
 {
-  auto response_or_err = send_receive(g_ptc_command_ptp_diagnostics, {g_ptc_command_ptp_port_data_set});
-  auto response = response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  auto response_or_err =
+    send_receive(g_ptc_command_ptp_diagnostics, {g_ptc_command_ptp_port_data_set});
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
   auto diag_port = check_size_and_parse<HesaiPtpDiagPort>(response);
   return diag_port;
 }
 
 HesaiPtpDiagTime HesaiHwInterface::get_ptp_diag_time()
 {
-  auto response_or_err = send_receive(g_ptc_command_ptp_diagnostics, {g_ptc_command_ptp_time_status_np});
-  auto response = response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  auto response_or_err =
+    send_receive(g_ptc_command_ptp_diagnostics, {g_ptc_command_ptp_time_status_np});
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
   auto diag_time = check_size_and_parse<HesaiPtpDiagTime>(response);
   return diag_time;
 }
@@ -337,7 +342,8 @@ HesaiPtpDiagGrandmaster HesaiHwInterface::get_ptp_diag_grandmaster()
 {
   auto response_or_err =
     send_receive(g_ptc_command_ptp_diagnostics, {g_ptc_command_ptp_grandmaster_settings_np});
-  auto response = response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
   auto diag_grandmaster = check_size_and_parse<HesaiPtpDiagGrandmaster>(response);
   return diag_grandmaster;
 }
@@ -345,7 +351,8 @@ HesaiPtpDiagGrandmaster HesaiHwInterface::get_ptp_diag_grandmaster()
 std::shared_ptr<HesaiInventoryBase> HesaiHwInterface::get_inventory()
 {
   auto response_or_err = send_receive(g_ptc_command_get_inventory_info);
-  auto response = response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
 
   switch (sensor_configuration_->sensor_model) {
     default:
@@ -372,7 +379,8 @@ std::shared_ptr<HesaiInventoryBase> HesaiHwInterface::get_inventory()
 std::shared_ptr<HesaiConfigBase> HesaiHwInterface::get_config()
 {
   auto response_or_err = send_receive(g_ptc_command_get_config_info);
-  auto response = response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
 
   switch (sensor_configuration_->sensor_model) {
     default:
@@ -394,7 +402,8 @@ std::shared_ptr<HesaiConfigBase> HesaiHwInterface::get_config()
 std::shared_ptr<HesaiLidarStatusBase> HesaiHwInterface::get_lidar_status()
 {
   auto response_or_err = send_receive(g_ptc_command_get_lidar_status);
-  auto response = response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
 
   switch (sensor_configuration_->sensor_model) {
     default:
@@ -571,7 +580,8 @@ HesaiLidarRangeAll HesaiHwInterface::get_lidar_range()
   }
 
   auto response_or_err = send_receive(g_ptc_command_get_lidar_range);
-  auto response = response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
 
   if (response.size() < 1) {
     throw std::runtime_error("Response payload too short");
@@ -672,7 +682,8 @@ Status HesaiHwInterface::set_ptp_config(
 HesaiPtpConfig HesaiHwInterface::get_ptp_config()
 {
   auto response_or_err = send_receive(g_ptc_command_get_ptp_config);
-  auto response = response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
 
   if (response.size() < sizeof(HesaiPtpConfig)) {
     throw std::runtime_error("HesaiPtpConfig has unexpected payload size");
@@ -713,7 +724,8 @@ HesaiLidarMonitor HesaiHwInterface::get_lidar_monitor()
   }
 
   auto response_or_err = send_receive(g_ptc_command_lidar_monitor);
-  auto response = response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
   return check_size_and_parse<HesaiLidarMonitor>(response);
 }
 
