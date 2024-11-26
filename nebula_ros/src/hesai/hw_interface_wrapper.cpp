@@ -24,7 +24,7 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
   bool retry_connect = parent_node->declare_parameter<bool>("retry_hw", param_read_only());
 
-  status_ = hw_interface_->SetSensorConfiguration(
+  status_ = hw_interface_->set_sensor_configuration(
     std::static_pointer_cast<const drivers::SensorConfigurationBase>(config));
 
   if (status_ != Status::OK) {
@@ -32,7 +32,7 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
       (std::stringstream{} << "Could not initialize HW interface: " << status_).str());
   }
 
-  hw_interface_->SetTargetModel(config->sensor_model);
+  hw_interface_->set_target_model(config->sensor_model);
 
   if (use_udp_only) {
     // Do not initialize TCP
@@ -42,7 +42,7 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   int retry_count = 0;
 
   while (true) {
-    status_ = hw_interface_->InitializeTcpDriver();
+    status_ = hw_interface_->initialize_tcp_driver();
     if (status_ == Status::OK || !retry_connect) {
       break;
     }
@@ -54,13 +54,13 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
 
   if (status_ == Status::OK) {
     try {
-      auto inventory = hw_interface_->GetInventory();
-      hw_interface_->SetTargetModel(inventory->model_number());
+      auto inventory = hw_interface_->get_inventory();
+      hw_interface_->set_target_model(inventory->model_number());
     } catch (...) {
       RCLCPP_ERROR_STREAM(logger_, "Failed to get model from sensor...");
     }
     if (setup_sensor_) {
-      hw_interface_->CheckAndSetConfig();
+      hw_interface_->check_and_set_config();
     }
   } else {
     RCLCPP_ERROR_STREAM(
@@ -73,10 +73,10 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
 void HesaiHwInterfaceWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config)
 {
-  hw_interface_->SetSensorConfiguration(
+  hw_interface_->set_sensor_configuration(
     std::static_pointer_cast<const nebula::drivers::SensorConfigurationBase>(new_config));
   if (!use_udp_only_ && setup_sensor_) {
-    hw_interface_->CheckAndSetConfig();
+    hw_interface_->check_and_set_config();
   }
 }
 
