@@ -17,7 +17,10 @@
 // Have to define macros to silence warnings about deprecated headers being used by
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
-#include "nebula_common/nebula_status.hpp"
+#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/connections/tcp.hpp"
+#include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
+
+#include <nebula_common/nebula_status.hpp>
 
 #include <boost/version.hpp>
 
@@ -28,15 +31,13 @@
 #if (BOOST_VERSION / 100 == 1074)  // Boost 1.74
 #define BOOST_ALLOW_DEPRECATED_HEADERS
 #endif
-#include "boost_tcp_driver/http_client_driver.hpp"
-#include "boost_tcp_driver/tcp_driver.hpp"
-#include "boost_udp_driver/udp_driver.hpp"
-#include "nebula_common/hesai/hesai_common.hpp"
-#include "nebula_common/hesai/hesai_status.hpp"
-#include "nebula_common/util/expected.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 
-#include <rclcpp/rclcpp.hpp>
+#include <boost_tcp_driver/http_client_driver.hpp>
+#include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/hesai/hesai_status.hpp>
+#include <nebula_common/loggers/logger.hpp>
+#include <nebula_common/util/expected.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -136,12 +137,11 @@ private:
 
   using ptc_cmd_result_t = nebula::util::expected<std::vector<uint8_t>, ptc_error_t>;
 
-  std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
-  std::shared_ptr<boost::asio::io_context> m_owned_ctx;
-  std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
-  std::shared_ptr<::drivers::tcp_driver::TcpDriver> tcp_driver_;
+  std::shared_ptr<loggers::Logger> logger_;
+  connections::UdpSocket udp_socket_{};
+  std::shared_ptr<connections::AbstractTcpSocket> tcp_socket_;
   std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration_;
-  std::function<void(std::vector<uint8_t> & buffer)>
+  std::function<void(const std::vector<uint8_t> & buffer)>
     cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
 
   std::mutex mtx_inflight_tcp_request_;
@@ -164,20 +164,6 @@ private:
   /// @brief A callback that receives a string (just prints)
   /// @param str Received string
   void str_cb(const std::string & str);
-
-  std::shared_ptr<rclcpp::Logger> parent_node_logger;
-  /// @brief Printing the string to RCLCPP_INFO_STREAM
-  /// @param info Target string
-  void PrintInfo(std::string info);
-  /// @brief Printing the string to RCLCPP_ERROR_STREAM
-  /// @param error Target string
-  void PrintError(std::string error);
-  /// @brief Printing the string to RCLCPP_DEBUG_STREAM
-  /// @param debug Target string
-  void PrintDebug(std::string debug);
-  /// @brief Printing the bytes to RCLCPP_DEBUG_STREAM
-  /// @param bytes Target byte vector
-  void PrintDebug(const std::vector<uint8_t> & bytes);
 
   /// @brief Convert an error code to a human-readable string
   /// @param error_code The error code, containing the sensor's error code (if any), along with
@@ -202,7 +188,9 @@ private:
 
 public:
   /// @brief Constructor
-  HesaiHwInterface();
+  HesaiHwInterface(
+    std::shared_ptr<loggers::Logger> logger,
+    std::shared_ptr<connections::AbstractTcpSocket> tcp_socket);
   /// @brief Destructor
   ~HesaiHwInterface();
   /// @brief Initializing tcp_driver for TCP communication
@@ -219,7 +207,7 @@ public:
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer);
+  void ReceiveSensorPacketCallback(const std::vector<uint8_t> & buffer);
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
   Status SensorInterfaceStart();
@@ -242,7 +230,7 @@ public:
   /// @brief Registering callback for PandarScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterScanCallback(std::function<void(std::vector<uint8_t> &)> scan_callback);
+  Status RegisterScanCallback(std::function<void(const std::vector<uint8_t> &)> scan_callback);
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_CALIBRATION
   /// @return Resulting status
   std::string GetLidarCalibrationString();
@@ -375,12 +363,6 @@ public:
   /// @return Resulting status
   HesaiLidarMonitor GetLidarMonitor();
 
-  /// @brief Call run() of IO Context
-  void IOContextRun();
-  /// @brief GetIO Context
-  /// @return IO Context
-  std::shared_ptr<boost::asio::io_context> GetIOContext();
-
   /// @brief Setting spin_speed via HTTP API
   /// @param ctx IO Context used
   /// @param rpm spin_speed (300, 600, 1200)
@@ -460,10 +442,6 @@ public:
   /// @brief Whether to use HTTP for getting LidarMonitor
   /// @return Use HTTP
   bool UseHttpGetLidarMonitor();
-
-  /// @brief Setting rclcpp::Logger
-  /// @param node Logger
-  void SetLogger(std::shared_ptr<rclcpp::Logger> node);
 };
 }  // namespace nebula::drivers
 
