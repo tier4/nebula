@@ -33,6 +33,9 @@
     <node pkg="nebula_examples" exec="hesai_ros_offline_extract_bag_pcd_node"
           name="hesai_cloud" output="screen">
         <param from="$(var lidar_parameter_file)"/>
+        <param name="is_write_to_pcd" value="$(var is_write_to_pcd)"/>
+        <param name="is_write_to_rosbag" value="$(var is_write_to_rosbag)"/>
+        <param name="is_write_packets_to_rosbag" value="$(var is_write_packets_to_rosbag)"/>
         <param name="sensor_model" value="$(var sensor_model)"/>
         <param name="return_mode" value="$(var return_mode)"/>
         <param name="frame_id" value="$(var frame_id)"/>
