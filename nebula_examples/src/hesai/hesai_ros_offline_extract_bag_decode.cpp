@@ -262,9 +262,9 @@ Status HesaiRosOfflineExtractBagDecode::read_bag()
         continue;
       }
       out_cnt++;
-      // Create ROS2 Pointcloud and Write to ROSBag
+      // Create ROS Pointcloud and Write to ROSBag
       {
-        // Create ROS2 Pointcloud from PCL pointcloud
+        // Create ROS Pointcloud from PCL pointcloud
         sensor_msgs::msg::PointCloud2 cloud_msg;
         pcl::toROSMsg(*pointcloud, cloud_msg);
         cloud_msg.header = extracted_msg.header;

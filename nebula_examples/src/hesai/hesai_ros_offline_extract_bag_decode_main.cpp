@@ -28,11 +28,11 @@
  * operations.
  *
  * The script performs the following steps:
- * 1. Initializes ROS2 node and executor
+ * 1. Initializes ROS node and executor
  * 2. Creates an instance of HesaiRosOfflineExtractBagDecode
  * 3. Checks driver status
  * 4. If status is OK, reads and processes the input bag
- * 5. Shuts down ROS2 node after processing completes
+ * 5. Shuts down ROS node after processing completes
  */
 
 int main(int argc, char * argv[])
