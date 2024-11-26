@@ -15,8 +15,8 @@
     <arg name="out_path" default="output_rosbag"/>
 
     <!-- output sample number configuration -->
-    <arg name="out_num" default="3999"/>
-    <arg name="skip_num" default="0"/>
+    <arg name="out_num" default="5"/>
+    <arg name="skip_num" default="1"/>
 
     <!-- LiDAR configuration overriding parameter file -->
     <arg name="scan_phase" default="0.0" />
