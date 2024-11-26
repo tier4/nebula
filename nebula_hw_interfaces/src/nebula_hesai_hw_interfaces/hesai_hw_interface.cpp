@@ -36,8 +36,8 @@ namespace nebula::drivers
 using std::string_literals::operator""s;
 using nlohmann::json;
 
-HesaiHwInterface::HesaiHwInterface(std::shared_ptr<loggers::Logger> logger)
-: logger_(std::move(logger)),
+HesaiHwInterface::HesaiHwInterface(const std::shared_ptr<loggers::Logger> & logger)
+: logger_(logger),
   cloud_io_context_{new ::drivers::common::IoContext(1)},
   m_owned_ctx{new boost::asio::io_context(1)},
   cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},

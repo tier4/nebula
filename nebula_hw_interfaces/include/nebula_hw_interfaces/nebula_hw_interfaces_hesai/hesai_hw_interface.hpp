@@ -189,7 +189,7 @@ private:
 
 public:
   /// @brief Constructor
-  explicit HesaiHwInterface(std::shared_ptr<loggers::Logger> logger);
+  explicit HesaiHwInterface(const std::shared_ptr<loggers::Logger> & logger);
   /// @brief Destructor
   ~HesaiHwInterface();
   /// @brief Initializing tcp_driver for TCP communication
