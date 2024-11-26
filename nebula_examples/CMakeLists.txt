@@ -46,7 +46,7 @@ target_link_libraries(hesai_ros_offline_extract_pcd PUBLIC
 )
 
 add_executable(hesai_ros_offline_extract_pcd_node
-    src/hesai/hesai_ros_offline_extract_pcd_main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_pcd_main.cpp
 )
 list(APPEND ${PROJECT_NAME}_EXECUTABLES hesai_ros_offline_extract_pcd_node)
 
@@ -64,7 +64,7 @@ target_link_libraries(hesai_ros_offline_extract_bag_pcd PUBLIC
 )
 
 add_executable(hesai_ros_offline_extract_bag_pcd_node
-    src/hesai/hesai_ros_offline_extract_bag_pcd_main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_pcd_main.cpp
 )
 list(APPEND ${PROJECT_NAME}_EXECUTABLES hesai_ros_offline_extract_bag_pcd_node)
 
@@ -81,7 +81,7 @@ target_link_libraries(hesai_ros_offline_extract_bag_decode PUBLIC
 )
 
 add_executable(hesai_ros_offline_extract_bag_decode_node
-    src/hesai/hesai_ros_offline_extract_bag_decode_main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_decode_main.cpp
 )
 list(APPEND ${PROJECT_NAME}_EXECUTABLES hesai_ros_offline_extract_bag_decode_node)
 
@@ -99,7 +99,7 @@ target_link_libraries(velodyne_ros_offline_extract_bag_pcd PUBLIC
 )
 
 add_executable(velodyne_ros_offline_extract_bag_pcd_node
-    src/velodyne/velodyne_ros_offline_extract_bag_pcd_main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_ros_offline_extract_bag_pcd_main.cpp
 )
 list(APPEND ${PROJECT_NAME}_EXECUTABLES velodyne_ros_offline_extract_bag_pcd_node)
 
