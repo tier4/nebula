@@ -75,6 +75,8 @@ const uint8_t g_ptc_command_set_lidar_range = 0x22;
 const uint8_t g_ptc_command_get_lidar_range = 0x23;
 const uint8_t g_ptc_command_set_ptp_config = 0x24;
 const uint8_t g_ptc_command_get_ptp_config = 0x26;
+const uint8_t g_ptp_command_set_ptp_lock_offset = 0x39;
+const uint8_t g_ptp_command_get_ptp_lock_offset = 0x3a;
 const uint8_t g_ptc_command_reset = 0x25;
 const uint8_t g_ptc_command_set_rotate_direction = 0x2a;
 const uint8_t g_ptc_command_lidar_monitor = 0x27;
@@ -342,6 +344,11 @@ public:
   /// @brief Getting data with PTC_COMMAND_GET_PTP_CONFIG
   /// @return Resulting status
   HesaiPtpConfig get_ptp_config();
+
+  Status set_ptp_lock_offset(uint8_t lock_offset);
+
+  uint8_t get_ptp_lock_offset();
+
   /// @brief Sending command with PTC_COMMAND_RESET
   /// @return Resulting status
   Status send_reset();

@@ -700,6 +700,23 @@ HesaiPtpConfig HesaiHwInterface::get_ptp_config()
   return hesai_ptp_config;
 }
 
+Status HesaiHwInterface::set_ptp_lock_offset(uint8_t lock_offset_us)
+{
+  std::vector<uint8_t> request_payload;
+  request_payload.emplace_back(lock_offset_us);
+
+  auto response_or_err = send_receive(g_ptp_command_set_ptp_lock_offset, request_payload);
+  response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  return Status::OK;
+}
+
+uint8_t HesaiHwInterface::get_ptp_lock_offset()
+{
+  auto response_or_err = send_receive(g_ptp_command_get_ptp_lock_offset);
+  auto response = response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  return check_size_and_parse<uint8_t>(response);
+}
+
 Status HesaiHwInterface::send_reset()
 {
   auto response_or_err = send_receive(g_ptc_command_reset);
