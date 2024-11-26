@@ -269,8 +269,8 @@ void HesaiHwMonitorWrapper::HesaiCheckPtp(diagnostic_updater::DiagnosticStatusWr
     if (ptp_status != "UNKNOWN") {
       msg.emplace_back("ptp_status: " + ptp_status);
     }
-    if (ptp_status == "FREE RUN" && gps_status == "UNKNOWN") {
-      level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+    if (ptp_status == "FREE RUN" || ptp_status == "FROZEN") {
+      level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
     }
     diagnostics.summary(level, boost::algorithm::join(msg, ", "));
   } else {
