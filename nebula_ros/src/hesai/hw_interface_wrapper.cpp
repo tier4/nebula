@@ -2,7 +2,7 @@
 
 #include "nebula_ros/hesai/hw_interface_wrapper.hpp"
 
-#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
+#include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
 #include "nebula_ros/common/parameter_descriptors.hpp"
 #include "nebula_ros/common/rclcpp_logger.hpp"
 
