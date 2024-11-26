@@ -27,7 +27,6 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   wrapper_status_(Status::NOT_INITIALIZED),
   sensor_cfg_ptr_(nullptr),
-  packet_queue_(3000),
   hw_interface_wrapper_(),
   hw_monitor_wrapper_(),
   decoder_wrapper_()
@@ -80,12 +79,6 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   decoder_wrapper_.emplace(this, sensor_cfg_ptr_, calibration_result.value(), launch_hw_);
 
   RCLCPP_DEBUG(get_logger(), "Starting stream");
-
-  decoder_thread_ = std::thread([this]() {
-    while (true) {
-      decoder_wrapper_->ProcessCloudPacket(packet_queue_.pop());
-    }
-  });
 
   if (launch_hw_) {
     hw_interface_wrapper_->HwInterface()->RegisterScanCallback(
@@ -295,7 +288,7 @@ void HesaiRosWrapper::ReceiveScanMessageCallback(
     nebula_pkt_ptr->stamp = pkt.stamp;
     std::copy(pkt.data.begin(), pkt.data.end(), std::back_inserter(nebula_pkt_ptr->data));
 
-    packet_queue_.push(std::move(nebula_pkt_ptr));
+    decoder_wrapper_->ProcessCloudPacket(std::move(nebula_pkt_ptr));
   }
 }
 
@@ -447,9 +440,7 @@ void HesaiRosWrapper::receive_cloud_packet_callback(const std::vector<uint8_t> &
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
   msg_ptr->data = packet;
 
-  if (!packet_queue_.tryPush(std::move(msg_ptr))) {
-    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");
-  }
+  decoder_wrapper_->ProcessCloudPacket(std::move(msg_ptr));
 }
 
 std::string HesaiRosWrapper::getCalibrationParameterName(drivers::SensorModel model) const

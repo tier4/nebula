@@ -105,11 +105,6 @@ private:
 
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> sensor_cfg_ptr_{};
 
-  /// @brief Stores received packets that have not been processed yet by the decoder thread
-  MtQueue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
-  /// @brief Thread to isolate decoding from receiving
-  std::thread decoder_thread_;
-
   rclcpp::Subscription<pandar_msgs::msg::PandarScan>::SharedPtr packets_sub_{};
 
   bool launch_hw_;
