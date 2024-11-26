@@ -5,7 +5,7 @@
     <arg name="is_write_to_rosbag" default="true"/>
     <arg name="is_write_packets_to_rosbag" default="false"/>
 
-    sensor related configuration
+    <!-- sensor related configuration -->
     <arg name="sensor_model" default="Pandar128E4X" description="Pandar64|Pandar40P|PandarXT32|PandarXT32M|PandarAT128|PandarQT64"/>
     <arg name="lidar_parameter_file" default="$(find-pkg-share nebula_ros)/config/lidar/hesai/Pandar128E4X.params.yaml"/>
     <arg name="bag_path" default="rosbags/default_2024-10-24-10-50-48_p0900"/>
