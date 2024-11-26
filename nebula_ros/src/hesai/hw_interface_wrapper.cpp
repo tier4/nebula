@@ -15,13 +15,12 @@ namespace ros
 
 HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   rclcpp::Node * const parent_node,
-  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config, bool use_udp_only)
+  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config)
 : hw_interface_(std::make_shared<drivers::HesaiHwInterface>(
     drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"),
     std::move(std::make_unique<drivers::connections::TcpSocket>()))),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
-  status_(Status::NOT_INITIALIZED),
-  use_udp_only_(use_udp_only)
+  status_(Status::NOT_INITIALIZED)
 {
   setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
   bool retry_connect = parent_node->declare_parameter<bool>("retry_hw", param_read_only());

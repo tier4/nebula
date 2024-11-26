@@ -57,7 +57,7 @@ public:
   ~HesaiRosWrapper() noexcept override
   {
     if (!hw_interface_wrapper_) return;
-    hw_interface_wrapper_->hw_interface()->SensorInterfaceStop();
+    hw_interface_wrapper_->HwInterface()->SensorInterfaceStop();
   };
 
   /// @brief Get current status of this driver

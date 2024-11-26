@@ -563,7 +563,7 @@ Status HesaiHwInterface::checkAndSetLidarRange(
 
   // Only oversize the FoV if it is not already the full 360deg
   if (cloud_min_ddeg != 0 || cloud_max_ddeg != 3600) {
-    auto padding_deg = calibration.get_fov_padding();
+    auto padding_deg = calibration.getFovPadding();
     cloud_min_ddeg += floor(std::get<0>(padding_deg) * 10);
     cloud_max_ddeg += ceil(std::get<1>(padding_deg) * 10);
   }
@@ -723,30 +723,6 @@ std::pair<HesaiStatus, std::string> HesaiHwInterface::unwrap_http_response(
   }
 
   return {Status::ERROR_1, message};
-  logger_->info(str);
-}
-
-std::pair<HesaiStatus, std::string> HesaiHwInterface::unwrap_http_response(
-  const std::string & response)
-{
-  json j;
-  try {
-    j = json::parse(response);
-  } catch (const json::parse_error & e) {
-    return {Status::ERROR_1, "JSON response malformed: "s + e.what()};
-  }
-
-  if (!j.contains("Head") || !j["Head"].contains("ErrorCode") || !j["Head"].contains("Message")) {
-    return {Status::ERROR_1, "Unexpected JSON structure"};
-  }
-
-  json error_code = j["Head"]["ErrorCode"];
-  json message = j["Head"]["Message"];
-  if (error_code == "0") {
-    return {Status::OK, message};
-  }
-
-  return {Status::ERROR_1, message};
 }
 
 HesaiStatus HesaiHwInterface::SetSpinSpeedAsyncHttp(
@@ -882,7 +858,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
   std::cout << "Start CheckAndSetConfig(HesaiConfig)!!" << std::endl;
 #endif
   const auto hesai_config = hesai_config_ptr->get();
-  auto current_return_mode = nebula::drivers::return_mode_from_int_hesai(
+  auto current_return_mode = nebula::drivers::ReturnModeFromIntHesai(
     hesai_config.return_mode, sensor_configuration->sensor_model);
   // Avoids spamming the sensor, which leads to failure when configuring it.
   auto wait_time = 100ms;
@@ -894,7 +870,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
     ss2 << sensor_configuration->return_mode;
     logger_->info("Current Configuration return_mode: " + ss2.str());
     std::thread t([this, sensor_configuration] {
-      auto return_mode_int = nebula::drivers::int_from_return_mode_hesai(
+      auto return_mode_int = nebula::drivers::IntFromReturnModeHesai(
         sensor_configuration->return_mode, sensor_configuration->sensor_model);
       if (return_mode_int < 0) {
         logger_->error(
