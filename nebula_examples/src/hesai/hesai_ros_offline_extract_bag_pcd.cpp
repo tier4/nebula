@@ -24,6 +24,8 @@
 
 #include <nebula_common/hesai/hesai_common.hpp>
 
+#include <pcl_conversions/pcl_conversions.h>
+
 #include <regex>
 
 namespace nebula::ros
@@ -91,6 +93,7 @@ Status HesaiRosOfflineExtractBag::get_parameters(
     nebula::drivers::return_mode_from_string_hesai(return_mode_, sensor_configuration.sensor_model);
   this->declare_parameter<std::string>("frame_id", "pandar", param_read_only());
   sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
+  frame_id_ = sensor_configuration.frame_id;
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
@@ -105,6 +108,19 @@ Status HesaiRosOfflineExtractBag::get_parameters(
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
     descriptor.floating_point_range = float_range(0, 360, 0.01);
     sensor_configuration.cut_angle = declare_parameter<double>("cut_angle", 0., param_read_only());
+    sensor_configuration.cloud_min_angle =
+      declare_parameter<uint16_t>("cloud_min_angle", 0, param_read_only());
+    sensor_configuration.cloud_max_angle =
+      declare_parameter<uint16_t>("cloud_max_angle", 360, param_read_only());
+    sensor_configuration.rotation_speed =
+      declare_parameter<uint16_t>("rotation_speed", 600, param_read_only());
+    sensor_configuration.dual_return_distance_threshold =
+      declare_parameter<double>("dual_return_distance_threshold", 0.1, param_read_only());
+    sensor_configuration.min_range = declare_parameter<double>("min_range", 0.3, param_read_only());
+    sensor_configuration.max_range =
+      declare_parameter<double>("max_range", 300.0, param_read_only());
+    sensor_configuration.packet_mtu_size =
+      declare_parameter<uint16_t>("packet_mtu_size", 1500, param_read_only());
   }
 
   calibration_configuration.calibration_file =
@@ -122,6 +138,13 @@ Status HesaiRosOfflineExtractBag::get_parameters(
   skip_num_ = this->declare_parameter<uint16_t>("skip_num", 3, param_read_only());
   only_xyz_ = this->declare_parameter<bool>("only_xyz", false, param_read_only());
   target_topic_ = this->declare_parameter<std::string>("target_topic", "", param_read_only());
+  output_pointcloud_topic_ =
+    this->declare_parameter<std::string>("output_topic", "", param_read_only());
+  write_pcd_flag_ = this->declare_parameter<bool>("is_write_to_pcd", false, param_read_only());
+  write_rosbag_pointcloud_flag_ =
+    this->declare_parameter<bool>("is_write_to_rosbag", true, param_read_only());
+  write_rosbag_packets_flag_ =
+    this->declare_parameter<bool>("is_write_packets_to_rosbag", false, param_read_only());
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
@@ -197,6 +220,7 @@ Status HesaiRosOfflineExtractBag::read_bag()
   reader.open(storage_options, converter_options);
   int cnt = 0;
   int out_cnt = 0;
+  bool pointcloud_enough = false;
   while (reader.has_next()) {
     auto bag_message = reader.read_next();
 
@@ -240,27 +264,70 @@ Status HesaiRosOfflineExtractBag::read_bag()
           {rmw_get_serialization_format(), rmw_get_serialization_format()});
         bag_writer = std::make_unique<rosbag2_cpp::writers::SequentialWriter>();
         bag_writer->open(storage_options_w, converter_options_w);
-        bag_writer->create_topic(
-          {bag_message->topic_name, "nebula_msgs/msg/NebulaPackets", rmw_get_serialization_format(),
-           ""});
+        if (write_rosbag_packets_flag_) {
+          bag_writer->create_topic(
+            {bag_message->topic_name, "nebula_msgs/msg/NebulaPackets",
+             rmw_get_serialization_format(), ""});
+        }
+        if (write_rosbag_pointcloud_flag_) {
+          bag_writer->create_topic(
+            {output_pointcloud_topic_, "sensor_msgs/msg/PointCloud2",
+             rmw_get_serialization_format(), ""});
+        }
       }
 
-      bag_writer->write(bag_message);
+      if (write_rosbag_packets_flag_) {
+        bag_writer->write(bag_message);
+      }
+
       cnt++;
       if (skip_num_ < cnt) {
         out_cnt++;
-        if (only_xyz_) {
-          pcl::PointCloud<pcl::PointXYZ> cloud_xyz;
-          pcl::copyPointCloud(*pointcloud, cloud_xyz);
-          pcd_writer.writeBinary((o_dir / fn).string(), cloud_xyz);
-        } else {
-          pcd_writer.writeBinary((o_dir / fn).string(), *pointcloud);
+
+        if (write_pcd_flag_) {
+          if (only_xyz_) {
+            pcl::PointCloud<pcl::PointXYZ> cloud_xyz;
+            pcl::copyPointCloud(*pointcloud, cloud_xyz);
+            pcd_writer.writeBinary((o_dir / fn).string(), cloud_xyz);
+          } else {
+            pcd_writer.writeBinary((o_dir / fn).string(), *pointcloud);
+          }
+        }
+
+        if (write_rosbag_packets_flag_) {
+          // Create ROS Pointcloud from PCL pointcloud
+          sensor_msgs::msg::PointCloud2 cloud_msg;
+          pcl::toROSMsg(*pointcloud, cloud_msg);
+          cloud_msg.header = extracted_msg.header;
+          cloud_msg.header.frame_id = frame_id_;
+
+          // Create a serialized message for the pointcloud
+          rclcpp::SerializedMessage cloud_serialized_msg;
+          rclcpp::Serialization<sensor_msgs::msg::PointCloud2> cloud_serialization;
+          cloud_serialization.serialize_message(&cloud_msg, &cloud_serialized_msg);
+
+          // Create a bag message for the pointcloud
+          auto cloud_bag_msg = std::make_shared<rosbag2_storage::SerializedBagMessage>();
+          cloud_bag_msg->topic_name = output_pointcloud_topic_;
+          cloud_bag_msg->time_stamp = bag_message->time_stamp;
+
+          // Create a new shared_ptr for the serialized data
+          cloud_bag_msg->serialized_data = std::make_shared<rcutils_uint8_array_t>(
+            cloud_serialized_msg.get_rcl_serialized_message());
+
+          // Write both messages to the bag
+          bag_writer->write(cloud_bag_msg);
         }
       }
 
       if (out_num_ <= out_cnt) {
+        pointcloud_enough = true;
         break;
       }
+    }
+
+    if (pointcloud_enough) {
+      break;
     }
   }
   return Status::OK;

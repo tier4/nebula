@@ -71,23 +71,6 @@ list(APPEND ${PROJECT_NAME}_EXECUTABLES hesai_ros_offline_extract_bag_pcd_node)
 target_link_libraries(hesai_ros_offline_extract_bag_pcd_node PUBLIC
     hesai_ros_offline_extract_bag_pcd
 )
-# Extraction for Hesai ROSBag
-add_library(hesai_ros_offline_extract_bag_decode SHARED
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_decode.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/common/parameter_descriptors.cpp
-)
-target_link_libraries(hesai_ros_offline_extract_bag_decode PUBLIC
-    nebula_decoders::nebula_decoders_hesai
-)
-
-add_executable(hesai_ros_offline_extract_bag_decode_node
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_decode_main.cpp
-)
-list(APPEND ${PROJECT_NAME}_EXECUTABLES hesai_ros_offline_extract_bag_decode_node)
-
-target_link_libraries(hesai_ros_offline_extract_bag_decode_node PUBLIC
-    hesai_ros_offline_extract_bag_decode
-)
 
 ## Velodyne
 # Extraction for TEST Lib
