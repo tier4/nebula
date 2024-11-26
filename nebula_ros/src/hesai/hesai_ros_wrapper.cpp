@@ -9,6 +9,7 @@
 #include <nebula_decoders/nebula_decoders_common/angles.hpp>
 #include <nebula_decoders/nebula_decoders_common/point_filters/parser.hpp>
 
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -43,6 +44,14 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
 
   launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
+  bool use_udp_only = declare_parameter<bool>("udp_only", false, param_read_only());
+
+  if (use_udp_only) {
+    RCLCPP_INFO_STREAM(
+      get_logger(),
+      "UDP-only mode is enabled. Settings checks, synchronization, and diagnostics publishing are "
+      "disabled.");
+  }
 
   if (launch_hw_) {
     hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_);
@@ -220,6 +229,13 @@ Status HesaiRosWrapper::ValidateAndSetConfig(
     return Status::INVALID_ECHO_MODE;
   }
   if (new_config->frame_id.empty()) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+  if (!new_config->multicast_ip.empty() && new_config->host_ip == "255.255.255.255") {
+    RCLCPP_ERROR(
+      get_logger(),
+      "A concrete host IP must be given when multicast is enabled, otherwise the correct network "
+      "interface cannot be determined.");
     return Status::SENSOR_CONFIG_ERROR;
   }
   if (new_config->ptp_profile == nebula::drivers::PtpProfile::UNKNOWN_PROFILE) {
@@ -417,6 +433,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::OnParameterChange(
 }
 
 void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
+void HesaiRosWrapper::receive_cloud_packet_callback(const std::vector<uint8_t> & packet)
 {
   if (!decoder_wrapper_ || decoder_wrapper_->Status() != Status::OK) {
     return;
@@ -429,7 +446,7 @@ void HesaiRosWrapper::ReceiveCloudPacketCallback(std::vector<uint8_t> & packet)
   auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
   msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
-  msg_ptr->data.swap(packet);
+  msg_ptr->data = packet;
 
   if (!packet_queue_.tryPush(std::move(msg_ptr))) {
     RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");

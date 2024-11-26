@@ -18,10 +18,8 @@
 
 #include <cstdio>
 #include <iostream>
-#include <istream>
 #include <memory>
 #include <ostream>
-#include <sstream>
 #include <string>
 #include <utility>
 
@@ -33,10 +31,10 @@ class ConsoleLogger : public Logger
 public:
   explicit ConsoleLogger(std::string name) : name_(std::move(name)) {}
 
-  void debug(const std::string & message) override { printTagged(std::cout, "DEBUG", message); }
-  void info(const std::string & message) override { printTagged(std::cout, "INFO", message); }
-  void warn(const std::string & message) override { printTagged(std::cerr, "WARN", message); }
-  void error(const std::string & message) override { printTagged(std::cerr, "ERROR", message); }
+  void debug(const std::string & message) override { print_tagged(std::cout, "DEBUG", message); }
+  void info(const std::string & message) override { print_tagged(std::cout, "INFO", message); }
+  void warn(const std::string & message) override { print_tagged(std::cerr, "WARN", message); }
+  void error(const std::string & message) override { print_tagged(std::cerr, "ERROR", message); }
 
   std::shared_ptr<Logger> child(const std::string & name) override
   {
@@ -44,9 +42,9 @@ public:
   }
 
 private:
-  const std::string name_;
+  std::string name_;
 
-  void printTagged(std::ostream & os, const std::string & severity, const std::string & message)
+  void print_tagged(std::ostream & os, const std::string & severity, const std::string & message)
   {
     // In multithreaded logging, building the string first (... + ...) and then shifting to the
     // stream will ensure that no other logger outputs between string fragments

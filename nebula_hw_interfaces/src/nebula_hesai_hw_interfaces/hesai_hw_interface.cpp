@@ -6,6 +6,7 @@
 #include "nebula_common/hesai/hesai_status.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
+#include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 
 #include <nlohmann/json.hpp>
@@ -14,6 +15,7 @@
 #include <boost/asio/socket_base.hpp>
 
 #include <cassert>
+#include <cstddef>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -36,11 +38,12 @@ namespace nebula::drivers
 using std::string_literals::operator""s;
 using nlohmann::json;
 
-HesaiHwInterface::HesaiHwInterface()
-: cloud_io_context_{new ::drivers::common::IoContext(1)},
-  m_owned_ctx{new boost::asio::io_context(1)},
-  cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
-  tcp_driver_{new ::drivers::tcp_driver::TcpDriver(m_owned_ctx)}
+HesaiHwInterface::HesaiHwInterface(
+  std::shared_ptr<loggers::Logger> logger,
+  std::shared_ptr<connections::AbstractTcpSocket> tcp_socket)
+: logger_(std::move(logger)),
+  tcp_socket_{std::move(tcp_socket)},
+  target_model_no(NebulaModelToHesaiModelNo(SensorModel::UNKNOWN))
 {
 }
 
@@ -156,49 +159,28 @@ Status HesaiHwInterface::SetSensorConfiguration(
 
 Status HesaiHwInterface::SensorInterfaceStart()
 {
-  try {
-    PrintInfo("Starting UDP receiver");
-    if (sensor_configuration_->multicast_ip.empty()) {
-      cloud_udp_driver_->init_receiver(
-        sensor_configuration_->host_ip, sensor_configuration_->data_port);
-    } else {
-      cloud_udp_driver_->init_receiver(
-        sensor_configuration_->multicast_ip, sensor_configuration_->data_port,
-        sensor_configuration_->host_ip, sensor_configuration_->data_port);
-      cloud_udp_driver_->receiver()->setMulticast(true);
-    }
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    PrintError("init ok");
-#endif
-    cloud_udp_driver_->receiver()->open();
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    PrintError("open ok");
-#endif
-
-    bool success = cloud_udp_driver_->receiver()->setKernelBufferSize(UDP_SOCKET_BUFFER_SIZE);
-    if (!success) {
-      PrintError(
-        "Could not set receive buffer size. Try increasing net.core.rmem_max to " +
-        std::to_string(UDP_SOCKET_BUFFER_SIZE) + " B.");
-      return Status::ERROR_1;
-    }
-
-    cloud_udp_driver_->receiver()->bind();
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    PrintError("bind ok");
-#endif
-
-    cloud_udp_driver_->receiver()->asyncReceive(
-      std::bind(&HesaiHwInterface::ReceiveSensorPacketCallback, this, std::placeholders::_1));
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    PrintError("async receive set");
-#endif
-  } catch (const std::exception & ex) {
-    Status status = Status::UDP_CONNECTION_ERROR;
-    std::cerr << status << " for " << sensor_configuration_->sensor_ip << ":"
-              << sensor_configuration_->data_port << " - " << ex.what() << std::endl;
-    return status;
+  udp_socket_.init(sensor_configuration_->host_ip, sensor_configuration_->data_port);
+  if (!sensor_configuration_->multicast_ip.empty()) {
+    udp_socket_.join_multicast_group(sensor_configuration_->multicast_ip);
   }
+
+  udp_socket_.set_mtu(MTU_SIZE);
+
+  try {
+    udp_socket_.set_socket_buffer_size(UDP_SOCKET_BUFFER_SIZE);
+  } catch (const connections::SocketError & e) {
+    throw std::runtime_error(
+      "Could not set socket receive buffer size to " + std::to_string(UDP_SOCKET_BUFFER_SIZE) +
+      ". Try increasing net.core.rmem_max.");
+  }
+
+  udp_socket_.bind().subscribe([&](
+                                 const std::vector<uint8_t> & packet,
+                                 const connections::UdpSocket::ReceiveMetadata & metadata) {
+    if (metadata.drops_since_last_receive) std::cout << metadata.drops_since_last_receive << '\n';
+    ReceiveSensorPacketCallback(packet);
+  });
+
   return Status::OK;
 }
 
@@ -741,6 +723,7 @@ std::pair<HesaiStatus, std::string> HesaiHwInterface::unwrap_http_response(
   }
 
   return {Status::ERROR_1, message};
+  logger_->info(str);
 }
 
 std::pair<HesaiStatus, std::string> HesaiHwInterface::unwrap_http_response(
@@ -1088,7 +1071,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
       logger_->info(
         "current lidar range.start: " +
         std::to_string(static_cast<int>(current_cloud_min_angle_ddeg.value())));
-      PrintInfo(
+      logger_->info(
         "current configuration cloud_min_angle: " +
         std::to_string(sensor_configuration->cloud_min_angle));
     }
@@ -1101,7 +1084,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
       logger_->info(
         "current lidar range.end: " +
         std::to_string(static_cast<int>(current_cloud_max_angle_ddeg.value())));
-      PrintInfo(
+      logger_->info(
         "current configuration cloud_max_angle: " +
         std::to_string(sensor_configuration->cloud_max_angle));
     }
@@ -1376,9 +1359,13 @@ T HesaiHwInterface::CheckSizeAndParse(const std::vector<uint8_t> & data)
   }
 
   if (data.size() > sizeof(T)) {
-    RCLCPP_WARN_ONCE(
-      *parent_node_logger,
-      "Sensor returned longer payload than expected. Truncating and parsing anyway.");
+    // TODO(mojomex): having  a static variable for this is not optimal, but the loggers::Logger
+    // class does not support things like _ONCE macros yet
+    static bool already_warned_for_this_type = false;
+    if (!already_warned_for_this_type) {
+      logger_->warn("Sensor returned longer payload than expected. Truncating and parsing anyway.");
+      already_warned_for_this_type = true;
+    }
   }
 
   T parsed;

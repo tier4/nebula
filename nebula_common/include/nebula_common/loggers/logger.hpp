@@ -18,10 +18,11 @@
 #include <sstream>
 #include <string>
 
-#define NEBULA_LOG_STREAM(log_func, stream_args)           \
-  {                                                        \
-    auto msg = (std::stringstream{} << stream_args).str(); \
-    log_func(msg);                                         \
+#define NEBULA_LOG_STREAM(log_func, stream_args) \
+  {                                              \
+    std::stringstream ss{};                      \
+    ss << stream_args;                           \
+    log_func(ss.str());                          \
   }
 
 namespace nebula::drivers::loggers

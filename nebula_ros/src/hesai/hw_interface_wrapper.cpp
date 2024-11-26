@@ -2,7 +2,11 @@
 
 #include "nebula_ros/hesai/hw_interface_wrapper.hpp"
 
+#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
+#include "nebula_ros/common/rclcpp_logger.hpp"
+
+#include <memory>
 
 namespace nebula
 {
@@ -11,10 +15,13 @@ namespace ros
 
 HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   rclcpp::Node * const parent_node,
-  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config)
-: hw_interface_(new nebula::drivers::HesaiHwInterface()),
-  logger_(parent_node->get_logger().get_child("HwInterface")),
-  status_(Status::NOT_INITIALIZED)
+  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config, bool use_udp_only)
+: hw_interface_(std::make_shared<drivers::HesaiHwInterface>(
+    drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"),
+    std::move(std::make_unique<drivers::connections::TcpSocket>()))),
+  logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
+  status_(Status::NOT_INITIALIZED),
+  use_udp_only_(use_udp_only)
 {
   setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
   bool retry_connect = parent_node->declare_parameter<bool>("retry_hw", param_read_only());
@@ -27,7 +34,6 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
       (std::stringstream{} << "Could not initialize HW interface: " << status_).str());
   }
 
-  hw_interface_->SetLogger(std::make_shared<rclcpp::Logger>(parent_node->get_logger()));
   hw_interface_->SetTargetModel(config->sensor_model);
 
   int retry_count = 0;
