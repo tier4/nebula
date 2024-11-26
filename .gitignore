@@ -11,6 +11,9 @@ build/
 install/
 log/
 
+# clangd
+.cache/
+
 # profiling
 profiling_output/
 
