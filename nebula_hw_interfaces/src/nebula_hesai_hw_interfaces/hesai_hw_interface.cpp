@@ -4,6 +4,7 @@
 
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/hesai/hesai_status.hpp"
+#include "nebula_common/loggers/logger.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
@@ -1085,6 +1086,15 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
 
     t.join();
     logger_->debug("Thread finished");
+
+    uint8_t sensor_ptp_lock_threshold = get_ptp_lock_offset();
+    if (sensor_ptp_lock_threshold != sensor_configuration_->ptp_lock_threshold) {
+      NEBULA_LOG_STREAM(
+        logger_->info, "changing sensor PTP lock offset from "
+                         << static_cast<int>(sensor_ptp_lock_threshold) << " to "
+                         << static_cast<int>(sensor_configuration_->ptp_lock_threshold));
+      set_ptp_lock_offset(sensor_configuration_->ptp_lock_threshold);
+    }
 
     std::this_thread::sleep_for(wait_time);
   } else {  // AT128 only supports PTP setup via HTTP
