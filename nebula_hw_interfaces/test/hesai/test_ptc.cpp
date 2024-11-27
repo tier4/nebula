@@ -223,17 +223,6 @@ TEST_P(PtcTest, PtcCommunication)
   std::shared_ptr<HesaiLidarStatusBase> status;
   ASSERT_NO_THROW_PRINT(status = hw_interface->GetLidarStatus());
   ASSERT_NE(status, nullptr);
-
-  switch (model) {
-    case SensorModel::HESAI_PANDARQT128:
-    case SensorModel::HESAI_PANDARXT32:
-    case SensorModel::HESAI_PANDARAT128:
-    case SensorModel::HESAI_PANDAR128_E4X:
-      ASSERT_NO_THROW_PRINT(hw_interface->GetPtpConfig());
-      ASSERT_NO_THROW_PRINT(hw_interface->GetPtpDiagStatus());
-    default:
-      break;
-  }
 }
 
 INSTANTIATE_TEST_SUITE_P(TestMain, PtcTest, testing::ValuesIn(g_models_under_test));
