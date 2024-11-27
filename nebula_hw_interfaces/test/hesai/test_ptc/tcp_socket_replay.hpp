@@ -21,12 +21,11 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <cstddef>
 #include <cstdlib>
 #include <cstring>
-#include <exception>
 #include <fstream>
 #include <functional>
-#include <iterator>
 #include <map>
 #include <stdexcept>
 #include <string>
@@ -47,20 +46,17 @@ class ParseError : public std::runtime_error
 {
 public:
   explicit ParseError(const std::string & msg) : std::runtime_error(msg) {}
-
-  ParseError() : std::runtime_error("unknown format") {}
 };
 
 namespace impl
 {
-const size_t g_ptc_header_size = 8;
 const std::string_view g_hex_prefix = "0x";
 
 inline util::expected<message_t, ParseError> parse_message(const std::string & json_str)
 {
   if (std::string_view json_view = json_str;
-      !std::equal(json_view.cbegin(), g_hex_prefix.cbegin(), g_hex_prefix.cend())) {
-    return ParseError();
+      !std::equal(g_hex_prefix.cbegin(), g_hex_prefix.cend(), json_view.cbegin())) {
+    return ParseError{"hex string not starting with expected "s + std::string(g_hex_prefix)};
   }
 
   message_t result;
@@ -68,7 +64,9 @@ inline util::expected<message_t, ParseError> parse_message(const std::string & j
     std::string hex_pair = json_str.substr(i, 2);
     uint8_t byte = strtoul(hex_pair.c_str(), nullptr, 16);
     if (errno) {
-      return ParseError(strerror(errno));
+      std::array<char, 1024> strerror_buf{};
+      strerror_r(errno, strerror_buf.data(), strerror_buf.size());
+      return ParseError(std::string(strerror_buf.begin()));
     }
     result.emplace_back(byte);
   }
@@ -87,17 +85,17 @@ inline util::expected<conversation_db_t, ParseError> parse_conversation_db(
 
   json raw_db = json::parse(ifs);
   if (!raw_db.contains("rules") || !raw_db["rules"].is_array()) {
-    return ParseError{};
+    return ParseError{"key rules not found or not an array"};
   }
 
   conversation_db_t result;
   for (const auto & obj : raw_db["rules"]) {
     if (!obj.contains("request") || !obj["request"].is_string()) {
-      return ParseError{};
+      return ParseError{"key request not found or not a string"};
     }
 
     if (!obj.contains("responses") || !obj["responses"].is_array()) {
-      return ParseError{};
+      return ParseError{"key responses not found or not an array"};
     }
 
     auto request_exp = impl::parse_message(obj["request"]);
@@ -108,10 +106,10 @@ inline util::expected<conversation_db_t, ParseError> parse_conversation_db(
     std::vector<message_t> responses;
     for (const auto & response : obj["responses"]) {
       if (!response.is_string()) {
-        return ParseError{};
+        return ParseError{"response is not a string"};
       }
 
-      auto parsed_message_exp = impl::parse_message(obj.template get<std::string>());
+      auto parsed_message_exp = impl::parse_message(response.template get<std::string>());
       if (!parsed_message_exp.has_value()) {
         return parsed_message_exp.error();
       }

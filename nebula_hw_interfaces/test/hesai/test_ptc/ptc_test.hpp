@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include "hesai/test_ptc/tcp_socket_mock.hpp"
 #include "nebula_common/loggers/console_logger.hpp"
 #include "nebula_common/nebula_common.hpp"
+#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/connections/tcp.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
 
 #include <gtest/gtest.h>
@@ -29,11 +29,11 @@ namespace nebula::drivers
 class PtcTest : public ::testing::TestWithParam<SensorModel>
 {
 protected:
-  void SetUp() override {}
+  void SetUp() override { std::cout << "GetParam() = " << GetParam() << '\n'; }
 
   void TearDown() override {}
 
-  static auto make_hw_interface(std::shared_ptr<connections::MockTcpSocket> tcp_socket)
+  static auto make_hw_interface(std::shared_ptr<connections::AbstractTcpSocket> tcp_socket)
   {
     auto model = GetParam();
 

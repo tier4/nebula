@@ -103,6 +103,8 @@ if(BUILD_TESTING)
     find_package(ament_cmake_gmock REQUIRED)
     find_package(nlohmann_json)
 
+    add_definitions(-D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
+
     ament_add_gtest(test_udp
         test/common/test_udp.cpp
     )
