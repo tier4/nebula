@@ -137,14 +137,13 @@ Status HesaiRosOfflineExtractBag::get_parameters(
   out_num_ = this->declare_parameter<uint16_t>("out_num", 3, param_read_only());
   skip_num_ = this->declare_parameter<uint16_t>("skip_num", 3, param_read_only());
   only_xyz_ = this->declare_parameter<bool>("only_xyz", false, param_read_only());
-  target_topic_ = this->declare_parameter<std::string>("target_topic", "", param_read_only());
+  input_topic_ = this->declare_parameter<std::string>("input_topic", "", param_read_only());
   output_pointcloud_topic_ =
     this->declare_parameter<std::string>("output_topic", "", param_read_only());
-  write_pcd_flag_ = this->declare_parameter<bool>("is_write_to_pcd", false, param_read_only());
-  write_rosbag_pointcloud_flag_ =
-    this->declare_parameter<bool>("is_write_to_rosbag", true, param_read_only());
-  write_rosbag_packets_flag_ =
-    this->declare_parameter<bool>("is_write_packets_to_rosbag", false, param_read_only());
+  output_pcd_ = this->declare_parameter<bool>("output_pcd", false, param_read_only());
+  output_rosbag_ = this->declare_parameter<bool>("output_rosbag", true, param_read_only());
+  forward_packets_to_rosbag_ =
+    this->declare_parameter<bool>("forward_packets_to_rosbag", false, param_read_only());
 
   if (sensor_configuration.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
@@ -193,18 +192,18 @@ Status HesaiRosOfflineExtractBag::read_bag()
   std::cout << storage_id_ << std::endl;
   std::cout << out_path_ << std::endl;
   std::cout << format_ << std::endl;
-  std::cout << target_topic_ << std::endl;
+  std::cout << input_topic_ << std::endl;
   std::cout << out_num_ << std::endl;
   std::cout << skip_num_ << std::endl;
   std::cout << only_xyz_ << std::endl;
 
   rcpputils::fs::path o_dir(out_path_);
-  auto target_topic_name = target_topic_;
-  if (target_topic_name.substr(0, 1) == "/") {
-    target_topic_name = target_topic_name.substr(1);
+  auto input_topic_name = input_topic_;
+  if (input_topic_name.substr(0, 1) == "/") {
+    input_topic_name = input_topic_name.substr(1);
   }
-  target_topic_name = std::regex_replace(target_topic_name, std::regex("/"), "_");
-  o_dir = o_dir / rcpputils::fs::path(target_topic_name);
+  input_topic_name = std::regex_replace(input_topic_name, std::regex("/"), "_");
+  o_dir = o_dir / rcpputils::fs::path(input_topic_name);
   if (rcpputils::fs::create_directories(o_dir)) {
     std::cout << "created: " << o_dir << std::endl;
   }
@@ -220,13 +219,13 @@ Status HesaiRosOfflineExtractBag::read_bag()
   reader.open(storage_options, converter_options);
   int cnt = 0;
   int out_cnt = 0;
-  bool pointcloud_enough = false;
+  bool output_limit_reached = false;
   while (reader.has_next()) {
     auto bag_message = reader.read_next();
 
     std::cout << "Found topic name " << bag_message->topic_name << std::endl;
 
-    if (bag_message->topic_name != target_topic_) {
+    if (bag_message->topic_name != input_topic_) {
       continue;
     }
 
@@ -238,6 +237,31 @@ Status HesaiRosOfflineExtractBag::read_bag()
 
     std::cout << "Found data in topic " << bag_message->topic_name << ": "
               << bag_message->time_stamp << std::endl;
+
+    // Initialize the bag writer if it is not initialized
+    if (!bag_writer) {
+      const rosbag2_storage::StorageOptions storage_options_w(
+        {(o_dir / std::to_string(bag_message->time_stamp)).string(), "sqlite3"});
+      const rosbag2_cpp::ConverterOptions converter_options_w(
+        {rmw_get_serialization_format(), rmw_get_serialization_format()});
+      bag_writer = std::make_unique<rosbag2_cpp::writers::SequentialWriter>();
+      bag_writer->open(storage_options_w, converter_options_w);
+      if (forward_packets_to_rosbag_) {
+        bag_writer->create_topic(
+          {bag_message->topic_name, "nebula_msgs/msg/NebulaPackets", rmw_get_serialization_format(),
+           ""});
+      }
+      if (output_rosbag_) {
+        bag_writer->create_topic(
+          {output_pointcloud_topic_, "sensor_msgs/msg/PointCloud2", rmw_get_serialization_format(),
+           ""});
+      }
+    }
+
+    // Forward the bag_message
+    if (forward_packets_to_rosbag_) {
+      bag_writer->write(bag_message);
+    }
 
     nebula_msgs::msg::NebulaPackets nebula_msg;
     nebula_msg.header = extracted_msg.header;
@@ -257,34 +281,11 @@ Status HesaiRosOfflineExtractBag::read_bag()
 
       auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
 
-      if (!bag_writer) {
-        const rosbag2_storage::StorageOptions storage_options_w(
-          {(o_dir / std::to_string(bag_message->time_stamp)).string(), "sqlite3"});
-        const rosbag2_cpp::ConverterOptions converter_options_w(
-          {rmw_get_serialization_format(), rmw_get_serialization_format()});
-        bag_writer = std::make_unique<rosbag2_cpp::writers::SequentialWriter>();
-        bag_writer->open(storage_options_w, converter_options_w);
-        if (write_rosbag_packets_flag_) {
-          bag_writer->create_topic(
-            {bag_message->topic_name, "nebula_msgs/msg/NebulaPackets",
-             rmw_get_serialization_format(), ""});
-        }
-        if (write_rosbag_pointcloud_flag_) {
-          bag_writer->create_topic(
-            {output_pointcloud_topic_, "sensor_msgs/msg/PointCloud2",
-             rmw_get_serialization_format(), ""});
-        }
-      }
-
-      if (write_rosbag_packets_flag_) {
-        bag_writer->write(bag_message);
-      }
-
       cnt++;
       if (skip_num_ < cnt) {
         out_cnt++;
 
-        if (write_pcd_flag_) {
+        if (output_pcd_) {
           if (only_xyz_) {
             pcl::PointCloud<pcl::PointXYZ> cloud_xyz;
             pcl::copyPointCloud(*pointcloud, cloud_xyz);
@@ -294,7 +295,7 @@ Status HesaiRosOfflineExtractBag::read_bag()
           }
         }
 
-        if (write_rosbag_packets_flag_) {
+        if (output_rosbag_) {
           // Create ROS Pointcloud from PCL pointcloud
           sensor_msgs::msg::PointCloud2 cloud_msg;
           pcl::toROSMsg(*pointcloud, cloud_msg);
@@ -321,12 +322,12 @@ Status HesaiRosOfflineExtractBag::read_bag()
       }
 
       if (out_num_ <= out_cnt) {
-        pointcloud_enough = true;
+        output_limit_reached = true;
         break;
       }
     }
 
-    if (pointcloud_enough) {
+    if (output_limit_reached) {
       break;
     }
   }

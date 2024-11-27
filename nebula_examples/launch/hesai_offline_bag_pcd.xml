@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <launch>
     <!-- action selection -->
-    <arg name="is_write_to_pcd" default="false"/>
-    <arg name="is_write_to_rosbag" default="true"/>
-    <arg name="is_write_packets_to_rosbag" default="false"/>
+    <arg name="output_pcd" default="false"/>
+    <arg name="output_rosbag" default="true"/>
+    <arg name="forward_packets_to_rosbag" default="false"/>
 
     <!-- sensor related configuration -->
     <arg name="sensor_model" default="Pandar128E4X" description="Pandar64|Pandar40P|PandarXT32|PandarXT32M|PandarAT128|PandarQT64"/>
     <arg name="lidar_parameter_file" default="$(find-pkg-share nebula_ros)/config/lidar/hesai/Pandar128E4X.params.yaml"/>
     <arg name="bag_path" default="rosbags/default_2024-10-24-10-50-48_p0900"/>
-    <arg name="target_topic" default="/sensing/lidar/top/pandar_packets"/>
+    <arg name="input_topic" default="/sensing/lidar/top/pandar_packets"/>
     <arg name="output_topic" default="/sensing/lidar/top/pointcloud"/>
     <arg name="frame_id"  default="lidar_top"/>
     <arg name="out_path" default="output_rosbag"/>
@@ -33,9 +33,9 @@
     <node pkg="nebula_examples" exec="hesai_ros_offline_extract_bag_pcd_node"
           name="hesai_cloud" output="screen">
         <param from="$(var lidar_parameter_file)"/>
-        <param name="is_write_to_pcd" value="$(var is_write_to_pcd)"/>
-        <param name="is_write_to_rosbag" value="$(var is_write_to_rosbag)"/>
-        <param name="is_write_packets_to_rosbag" value="$(var is_write_packets_to_rosbag)"/>
+        <param name="output_pcd" value="$(var output_pcd)"/>
+        <param name="output_rosbag" value="$(var output_rosbag)"/>
+        <param name="forward_packets_to_rosbag" value="$(var forward_packets_to_rosbag)"/>
         <param name="sensor_model" value="$(var sensor_model)"/>
         <param name="return_mode" value="$(var return_mode)"/>
         <param name="frame_id" value="$(var frame_id)"/>
@@ -46,7 +46,7 @@
         <param name="storage_id" value="$(var storage_id)"/>
         <param name="out_path" value="$(var out_path)"/>
         <param name="format" value="$(var format)"/>
-        <param name="target_topic" value="$(var target_topic)"/>
+        <param name="input_topic" value="$(var input_topic)"/>
         <param name="output_topic" value="$(var output_topic)"/>
         <param name="out_num" value="$(var out_num)"/>
         <param name="skip_num" value="$(var skip_num)"/>
