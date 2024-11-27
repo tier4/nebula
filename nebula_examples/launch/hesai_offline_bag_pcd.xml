@@ -2,7 +2,7 @@
 <launch>
     <!-- action selection -->
     <arg name="output_pcd" default="true" description="determine if write decoded pointclouds to PCD files"/>
-    <arg name="output_rosbag" default="true" description="determine if write decoded pointclous to new ROSBag"/>
+    <arg name="output_rosbag" default="true" description="determine if write decoded pointclouds to new ROSBag"/>
     <arg name="forward_packets_to_rosbag" default="false" description="determine if forward the packets into the ROSBag"/>
 
     <!-- sensor related configuration -->
