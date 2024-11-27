@@ -62,11 +62,10 @@ inline util::expected<message_t, ParseError> parse_message(const std::string & j
   message_t result;
   for (size_t i = g_hex_prefix.length(); i < json_str.length(); i += 2) {
     std::string hex_pair = json_str.substr(i, 2);
-    uint8_t byte = strtoul(hex_pair.c_str(), nullptr, 16);
-    if (errno) {
-      std::array<char, 1024> strerror_buf{};
-      strerror_r(errno, strerror_buf.data(), strerror_buf.size());
-      return ParseError(std::string(strerror_buf.begin()));
+    char * endptr = nullptr;
+    uint8_t byte = strtoul(hex_pair.c_str(), &endptr, 16);
+    if (endptr != hex_pair.c_str() + 2) {
+      return ParseError{"String '" + hex_pair + "' is not a valid hex pair"};
     }
     result.emplace_back(byte);
   }
