@@ -1,29 +1,22 @@
 <?xml version="1.0"?>
 <launch>
     <!-- action selection -->
-    <arg name="output_pcd" default="false"/>
-    <arg name="output_rosbag" default="true"/>
-    <arg name="forward_packets_to_rosbag" default="false"/>
+    <arg name="output_pcd" default="true" description="determine if write decoded pointclouds to PCD files"/>
+    <arg name="output_rosbag" default="true" description="determine if write decoded pointclous to new ROSBag"/>
+    <arg name="forward_packets_to_rosbag" default="false" description="determine if forward the packets into the ROSBag"/>
 
     <!-- sensor related configuration -->
-    <arg name="sensor_model" default="Pandar128E4X" description="Pandar64|Pandar40P|PandarXT32|PandarXT32M|PandarAT128|PandarQT64"/>
-    <arg name="lidar_parameter_file" default="$(find-pkg-share nebula_ros)/config/lidar/hesai/Pandar128E4X.params.yaml"/>
-    <arg name="bag_path" default="rosbags/default_2024-10-24-10-50-48_p0900"/>
-    <arg name="input_topic" default="/sensing/lidar/top/pandar_packets"/>
-    <arg name="output_topic" default="/sensing/lidar/top/pointcloud"/>
-    <arg name="frame_id"  default="lidar_top"/>
-    <arg name="out_path" default="output_rosbag"/>
+    <arg name="sensor_model"  description="Pandar64|Pandar40P|PandarXT32|PandarXT32M|PandarAT128|PandarQT64|Pandar128E4X"/>
+    <arg name="lidar_parameter_file" description="Path: LiDAR configuration yaml similar to nebula_ros/config/lidar/hesai/*.yaml"/>
+    <arg name="bag_path" description="String: Directory of the ROSBag"/>
+    <arg name="input_topic" description="String: Packet topic of the ROSBag"/>
+    <arg name="output_topic" description="String: Output point cloud topic"/>
+    <arg name="out_path" description="Path: output directory"/>
 
     <!-- output sample number configuration -->
     <arg name="out_num" default="5"/>
     <arg name="skip_num" default="1"/>
 
-    <!-- LiDAR configuration overriding parameter file -->
-    <arg name="scan_phase" default="0.0" />
-    <arg name="return_mode" default="Dual" description="See readme for supported return modes"/>
-
-    <arg name="calibration_file" default="$(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).csv"/>
-    <arg name="correction_file" default="$(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).dat"/>
 
     <arg name="storage_id" default="sqlite3"/>
     <arg name="format" default="cdr"/>
@@ -32,22 +25,16 @@
 
     <node pkg="nebula_examples" exec="hesai_ros_offline_extract_bag_pcd_node"
           name="hesai_cloud" output="screen">
-        <param from="$(var lidar_parameter_file)"/>
+        <param from="$(var lidar_parameter_file)" allow_substs="true" />
         <param name="output_pcd" value="$(var output_pcd)"/>
         <param name="output_rosbag" value="$(var output_rosbag)"/>
         <param name="forward_packets_to_rosbag" value="$(var forward_packets_to_rosbag)"/>
-        <param name="sensor_model" value="$(var sensor_model)"/>
-        <param name="return_mode" value="$(var return_mode)"/>
-        <param name="frame_id" value="$(var frame_id)"/>
-        <param name="scan_phase" value="$(var scan_phase)"/>
-        <param name="calibration_file" value="$(var calibration_file)"/>
-        <param name="correction_file" value="$(var correction_file)"/>
         <param name="bag_path" value="$(var bag_path)"/>
-        <param name="storage_id" value="$(var storage_id)"/>
         <param name="out_path" value="$(var out_path)"/>
-        <param name="format" value="$(var format)"/>
         <param name="input_topic" value="$(var input_topic)"/>
         <param name="output_topic" value="$(var output_topic)"/>
+        <param name="storage_id" value="$(var storage_id)"/>
+        <param name="format" value="$(var format)"/>
         <param name="out_num" value="$(var out_num)"/>
         <param name="skip_num" value="$(var skip_num)"/>
     </node>
