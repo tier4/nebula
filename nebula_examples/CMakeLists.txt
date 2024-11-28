@@ -48,7 +48,6 @@ target_link_libraries(hesai_ros_offline_extract_pcd PUBLIC
 add_executable(hesai_ros_offline_extract_pcd_node
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_pcd_main.cpp
 )
-list(APPEND ${PROJECT_NAME}_EXECUTABLES hesai_ros_offline_extract_pcd_node)
 
 target_link_libraries(hesai_ros_offline_extract_pcd_node PUBLIC
     hesai_ros_offline_extract_pcd
@@ -66,7 +65,6 @@ target_link_libraries(hesai_ros_offline_extract_bag_pcd PUBLIC
 add_executable(hesai_ros_offline_extract_bag_pcd_node
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai/hesai_ros_offline_extract_bag_pcd_main.cpp
 )
-list(APPEND ${PROJECT_NAME}_EXECUTABLES hesai_ros_offline_extract_bag_pcd_node)
 
 target_link_libraries(hesai_ros_offline_extract_bag_pcd_node PUBLIC
     hesai_ros_offline_extract_bag_pcd
@@ -84,7 +82,6 @@ target_link_libraries(velodyne_ros_offline_extract_bag_pcd PUBLIC
 add_executable(velodyne_ros_offline_extract_bag_pcd_node
     ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_ros_offline_extract_bag_pcd_main.cpp
 )
-list(APPEND ${PROJECT_NAME}_EXECUTABLES velodyne_ros_offline_extract_bag_pcd_node)
 
 target_link_libraries(velodyne_ros_offline_extract_bag_pcd_node PUBLIC
     velodyne_ros_offline_extract_bag_pcd
@@ -94,6 +91,13 @@ if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()
 endif()
+
+install(TARGETS hesai_ros_offline_extract_pcd_node
+                hesai_ros_offline_extract_bag_pcd_node
+                velodyne_ros_offline_extract_bag_pcd_node
+        DESTINATION lib/${PROJECT_NAME}
+)
+
 
 ament_auto_package(
     INSTALL_TO_SHARE
