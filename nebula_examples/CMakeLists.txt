@@ -98,7 +98,6 @@ install(TARGETS hesai_ros_offline_extract_pcd_node
         DESTINATION lib/${PROJECT_NAME}
 )
 
-
 ament_auto_package(
     INSTALL_TO_SHARE
     launch
