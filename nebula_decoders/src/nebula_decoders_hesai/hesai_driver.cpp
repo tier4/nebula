@@ -10,6 +10,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_at128.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt128.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt64.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt16.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32m.hpp"
 
@@ -37,6 +38,9 @@ HesaiDriver::HesaiDriver(
       break;
     case SensorModel::HESAI_PANDARQT128:
       scan_decoder_ = initialize_decoder<PandarQT128>(sensor_configuration, calibration_data);
+      break;
+    case SensorModel::HESAI_PANDARXT16:
+      scan_decoder_ = initialize_decoder<PandarXT16>(sensor_configuration, calibration_data);
       break;
     case SensorModel::HESAI_PANDARXT32:
       scan_decoder_ = initialize_decoder<PandarXT32>(sensor_configuration, calibration_data);

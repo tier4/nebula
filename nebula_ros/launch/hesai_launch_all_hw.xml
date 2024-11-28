@@ -7,6 +7,7 @@
     <choice value="PandarAT128" />
     <choice value="PandarQT64" />
     <choice value="PandarQT128" />
+    <choice value="PandarXT16" />
     <choice value="PandarXT32" />
     <choice value="PandarXT32M" />
   </arg>

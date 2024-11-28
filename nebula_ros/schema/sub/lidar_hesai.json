@@ -8,6 +8,7 @@
       "enum": [
         "Pandar64",
         "Pandar40P",
+        "PandarXT16",
         "PandarXT32",
         "PandarXT32M",
         "PandarQT64",

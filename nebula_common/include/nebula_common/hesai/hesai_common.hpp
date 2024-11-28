@@ -513,6 +513,7 @@ inline int int_from_return_mode_hesai(
   const ReturnMode return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {
+    case SensorModel::HESAI_PANDARXT16:
     case SensorModel::HESAI_PANDARXT32:
     case SensorModel::HESAI_PANDARXT32M:
     case SensorModel::HESAI_PANDAR128_E3X:

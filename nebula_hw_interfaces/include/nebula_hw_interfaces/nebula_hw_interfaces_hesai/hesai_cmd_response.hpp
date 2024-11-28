@@ -304,7 +304,7 @@ private:
   Internal value;
 };
 
-struct HesaiInventory_XT32_40P : public HesaiInventoryBase
+struct HesaiInventory_XT16_32_40P : public HesaiInventoryBase
 {
   struct Internal : public HesaiInventoryBase::Internal
   {
@@ -315,7 +315,7 @@ struct HesaiInventory_XT32_40P : public HesaiInventoryBase
     uint8_t reserved[11];
   };
 
-  explicit HesaiInventory_XT32_40P(Internal value) : value(value) {}
+  explicit HesaiInventory_XT16_32_40P(Internal value) : value(value) {}
 
   [[nodiscard]] uint8_t model_number() const override { return value.product_model; }
 

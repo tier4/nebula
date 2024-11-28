@@ -349,10 +349,11 @@ std::shared_ptr<HesaiInventoryBase> HesaiHwInterface::GetInventory()
 
   switch (sensor_configuration_->sensor_model) {
     default:
+    case SensorModel::HESAI_PANDARXT16:
     case SensorModel::HESAI_PANDARXT32:
     case SensorModel::HESAI_PANDAR40P: {
-      auto lidar_config = CheckSizeAndParse<HesaiInventory_XT32_40P::Internal>(response);
-      return std::make_shared<HesaiInventory_XT32_40P>(lidar_config);
+      auto lidar_config = CheckSizeAndParse<HesaiInventory_XT16_32_40P::Internal>(response);
+      return std::make_shared<HesaiInventory_XT16_32_40P>(lidar_config);
     }
     case SensorModel::HESAI_PANDARQT128: {
       auto lidar_config = CheckSizeAndParse<HesaiInventory_QT128::Internal>(response);
@@ -379,6 +380,7 @@ std::shared_ptr<HesaiConfigBase> HesaiHwInterface::GetConfig()
     case SensorModel::HESAI_PANDAR40P:
     case SensorModel::HESAI_PANDAR64:
     case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::HESAI_PANDARXT16:
     case SensorModel::HESAI_PANDARXT32: {
       auto lidar_config = CheckSizeAndParse<HesaiConfig_XT_40P_64_QT128::Internal>(response);
       return std::make_shared<HesaiConfig_XT_40P_64_QT128>(lidar_config);
@@ -400,6 +402,7 @@ std::shared_ptr<HesaiLidarStatusBase> HesaiHwInterface::GetLidarStatus()
     default:
     case SensorModel::HESAI_PANDAR40P:
     case SensorModel::HESAI_PANDAR64:
+    case SensorModel::HESAI_PANDARXT16:
     case SensorModel::HESAI_PANDARXT32: {
       auto hesai_lidarstatus = CheckSizeAndParse<HesaiLidarStatus_XT_40p::Internal>(response);
       return std::make_shared<HesaiLidarStatus_XT_40p>(hesai_lidarstatus);
@@ -1034,6 +1037,7 @@ HesaiStatus HesaiHwInterface::CheckAndSetConfig(
         sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR40P ||
         sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR64 ||
         sensor_configuration->sensor_model == SensorModel::HESAI_PANDARQT64 ||
+        sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT16 ||
         sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32 ||
         sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32M) {
         logger_->info("Trying to set Clock source to PTP");
@@ -1197,6 +1201,8 @@ int HesaiHwInterface::NebulaModelToHesaiModelNo(nebula::drivers::SensorModel mod
       return 17;
     case SensorModel::HESAI_PANDARXT32:
       return 25;
+    case SensorModel::HESAI_PANDARXT16:
+      return 26;
     case SensorModel::HESAI_PANDARQT128:
       return 32;
     case SensorModel::HESAI_PANDARXT32M:
