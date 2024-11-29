@@ -265,6 +265,9 @@ void HesaiHwMonitorWrapper::hesai_check_ptp(
         if (str == "locked") {
           level = diagnostic_msgs::msg::DiagnosticStatus::OK;
           msg = "synchronized";
+        } else if (str == "tracking") {
+          level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+          msg = "synchronized, degraded";
         }
       }
 
