@@ -1087,13 +1087,17 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
     t.join();
     logger_->debug("Thread finished");
 
-    uint8_t sensor_ptp_lock_threshold = get_ptp_lock_offset();
-    if (sensor_ptp_lock_threshold != sensor_configuration_->ptp_lock_threshold) {
-      NEBULA_LOG_STREAM(
-        logger_->info, "changing sensor PTP lock offset from "
-                         << static_cast<int>(sensor_ptp_lock_threshold) << " to "
-                         << static_cast<int>(sensor_configuration_->ptp_lock_threshold));
-      set_ptp_lock_offset(sensor_configuration_->ptp_lock_threshold);
+    if (
+      sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X ||
+      sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARQT128) {
+      uint8_t sensor_ptp_lock_threshold = get_ptp_lock_offset();
+      if (sensor_ptp_lock_threshold != sensor_configuration_->ptp_lock_threshold) {
+        NEBULA_LOG_STREAM(
+          logger_->info, "changing sensor PTP lock offset from "
+                           << static_cast<int>(sensor_ptp_lock_threshold) << " to "
+                           << static_cast<int>(sensor_configuration_->ptp_lock_threshold));
+        set_ptp_lock_offset(sensor_configuration_->ptp_lock_threshold);
+      }
     }
 
     std::this_thread::sleep_for(wait_time);
