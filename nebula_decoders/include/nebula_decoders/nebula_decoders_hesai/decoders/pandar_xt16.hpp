@@ -55,7 +55,7 @@ class PandarXT16 : public HesaiSensor<hesai_packet::PacketXT16>
 public:
   static constexpr float min_range = 0.05f;
   static constexpr float max_range = 120.0f;
-  static constexpr size_t max_scan_buffer_points = 128000;
+  static constexpr size_t max_scan_buffer_points = 256000;
 
   int get_packet_relative_point_time_offset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override

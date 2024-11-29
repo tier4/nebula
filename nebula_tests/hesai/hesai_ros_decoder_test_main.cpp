@@ -24,7 +24,7 @@
 namespace nebula::test
 {
 
-const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[8] = {
+const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[9] = {
   {"Pandar40P", "Dual", "Pandar40P.csv", "40p/1673400149412331409", "hesai", 0, 0.0, 0., 360., 0.3f,
    200.f},
   {"Pandar64", "Dual", "Pandar64.csv", "64/1673403880599376836", "hesai", 0, 0.0, 0., 360., 0.3f,
@@ -33,8 +33,8 @@ const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[8] = {
    150.0, 30., 150., 1.f, 180.f},
   {"PandarQT64", "Dual", "PandarQT64.csv", "qt64/1673401195788312575", "hesai", 0, 0.0, 0., 360.,
    0.1f, 60.f},
-  // {"PandarXT16", "Dual", "PandarXT16.csv", "xt32/1673400677802009732", "hesai", 0, 0.0, 0., 360.,
-  //  0.05f, 120.f},
+  {"PandarXT16", "Dual", "PandarXT16.csv", "xt16/1732848127890747768", "hesai", 0, 0.0, 0., 360.,
+   0.05f, 120.f},
   {"PandarXT32", "Dual", "PandarXT32.csv", "xt32/1673400677802009732", "hesai", 0, 0.0, 0., 360.,
    0.05f, 120.f},
   {"PandarXT32M", "LastStrongest", "PandarXT32M.csv", "xt32m/1660893203042895158", "hesai", 0, 0.0,
