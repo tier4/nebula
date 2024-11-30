@@ -51,7 +51,7 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
                          config->sensor_model != drivers::SensorModel::HESAI_PANDAR40P &&
                          config->sensor_model != drivers::SensorModel::HESAI_PANDAR64;
 
-  std::shared_ptr<HesaiInventoryBase> inventory = hw_interface->GetInventory();
+  std::shared_ptr<HesaiInventoryBase> inventory = hw_interface->get_inventory();
   RCLCPP_INFO_STREAM(logger_, "Inventory info: " << *inventory);
   json inventory_json = inventory->to_json();
 
@@ -87,7 +87,7 @@ void HesaiHwMonitorWrapper::initialize_hesai_diagnostics(bool monitor_enabled)
 
     if (!monitor_enabled) return;
 
-    if (hw_interface_->UseHttpGetLidarMonitor()) {
+    if (hw_interface_->use_http_get_lidar_monitor()) {
       on_hesai_lidar_monitor_timer_http();
     } else {
       on_hesai_lidar_monitor_timer();
@@ -98,7 +98,7 @@ void HesaiHwMonitorWrapper::initialize_hesai_diagnostics(bool monitor_enabled)
     std::chrono::milliseconds(diag_span_), std::move(fetch_diag_from_sensor));
 
   if (monitor_enabled) {
-    if (hw_interface_->UseHttpGetLidarMonitor()) {
+    if (hw_interface_->use_http_get_lidar_monitor()) {
       diagnostics_updater_.add(
         "hesai_voltage", this, &HesaiHwMonitorWrapper::hesai_check_voltage_http);
     } else {
@@ -161,7 +161,7 @@ void HesaiHwMonitorWrapper::on_hesai_status_timer()
 {
   RCLCPP_DEBUG_STREAM(logger_, "on_hesai_status_timer" << std::endl);
   try {
-    auto result = hw_interface_->GetLidarStatus();
+    auto result = hw_interface_->get_lidar_status();
     std::scoped_lock lock(mtx_lidar_status_);
     current_status_time_ = std::make_unique<rclcpp::Time>(parent_node_->get_clock()->now());
     current_status_ = result;
@@ -182,12 +182,12 @@ void HesaiHwMonitorWrapper::on_hesai_lidar_monitor_timer_http()
 {
   RCLCPP_DEBUG_STREAM(logger_, "on_hesai_lidar_monitor_timer_http");
   try {
-    hw_interface_->GetLidarMonitorAsyncHttp([this](const std::string & str) {
+    hw_interface_->get_lidar_monitor_async_http([this](const std::string & str) {
       std::scoped_lock lock(mtx_lidar_monitor_);
       current_lidar_monitor_time_ =
         std::make_unique<rclcpp::Time>(parent_node_->get_clock()->now());
       current_lidar_monitor_tree_ =
-        std::make_unique<boost::property_tree::ptree>(hw_interface_->ParseJson(str));
+        std::make_unique<boost::property_tree::ptree>(hw_interface_->parse_json(str));
     });
   } catch (const std::system_error & error) {
     RCLCPP_ERROR_STREAM(
@@ -208,7 +208,7 @@ void HesaiHwMonitorWrapper::on_hesai_lidar_monitor_timer()
 {
   RCLCPP_DEBUG_STREAM(logger_, "on_hesai_lidar_monitor_timer");
   try {
-    auto result = hw_interface_->GetLidarMonitor();
+    auto result = hw_interface_->get_lidar_monitor();
     std::scoped_lock lock(mtx_lidar_monitor_);
     current_lidar_monitor_time_ = std::make_unique<rclcpp::Time>(parent_node_->get_clock()->now());
     current_monitor_ = std::make_shared<HesaiLidarMonitor>(result);
