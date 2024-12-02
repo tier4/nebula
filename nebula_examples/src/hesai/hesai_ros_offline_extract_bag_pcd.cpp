@@ -321,7 +321,7 @@ Status HesaiRosOfflineExtractBag::read_bag()
         }
       }
 
-      if (out_num_ <= out_cnt) {
+      if (out_num_ != 0 && out_num_ <= out_cnt) {
         output_limit_reached = true;
         break;
       }
