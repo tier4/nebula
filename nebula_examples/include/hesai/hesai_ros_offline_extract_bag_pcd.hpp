@@ -69,11 +69,17 @@ private:
   std::string storage_id_;
   std::string out_path_;
   std::string format_;
-  std::string target_topic_;
+  std::string input_topic_;
   std::string correction_file_path_;
+  std::string frame_id_;
+  std::string output_pointcloud_topic_;
   int out_num_;
   int skip_num_;
   bool only_xyz_;
+
+  bool output_pcd_;
+  bool output_rosbag_;
+  bool forward_packets_to_rosbag_;
 };
 
 }  // namespace nebula::ros
