@@ -27,15 +27,7 @@ namespace hesai_packet
 
 #pragma pack(push, 1)
 
-struct TailXT16
-{
-  uint8_t reserved1[10];
-  uint8_t return_mode;
-  uint16_t motor_speed;
-  DateTime<1900> date_time;
-  uint32_t timestamp;
-  uint8_t factory_information;
-};
+using TailXT16 = TailXT32;
 
 struct PacketXT16 : public PacketBase<8, 16, 2, 100>
 {
@@ -55,7 +47,7 @@ class PandarXT16 : public HesaiSensor<hesai_packet::PacketXT16>
 public:
   static constexpr float min_range = 0.05f;
   static constexpr float max_range = 120.0f;
-  static constexpr size_t max_scan_buffer_points = 256000;
+  static constexpr size_t max_scan_buffer_points = 128000;
 
   int get_packet_relative_point_time_offset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override

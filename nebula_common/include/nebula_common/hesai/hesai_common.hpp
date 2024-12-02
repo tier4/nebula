@@ -433,6 +433,7 @@ inline ReturnMode return_mode_from_string_hesai(
   const std::string & return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {
+    case SensorModel::HESAI_PANDARXT16:
     case SensorModel::HESAI_PANDARXT32:
     case SensorModel::HESAI_PANDARXT32M:
     case SensorModel::HESAI_PANDAR128_E3X:
@@ -474,6 +475,7 @@ inline ReturnMode return_mode_from_int_hesai(
   const int return_mode, const SensorModel & sensor_model)
 {
   switch (sensor_model) {
+    case SensorModel::HESAI_PANDARXT16:
     case SensorModel::HESAI_PANDARXT32:
     case SensorModel::HESAI_PANDARXT32M:
     case SensorModel::HESAI_PANDAR128_E3X:
