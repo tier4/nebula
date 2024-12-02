@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <launch>
     <!-- action selection -->
-    <arg name="output_pcd" default="true" description="determine if write decoded pointclouds to PCD files"/>
-    <arg name="output_rosbag" default="true" description="determine if write decoded pointclouds to new ROSBag"/>
-    <arg name="forward_packets_to_rosbag" default="false" description="determine if forward the packets into the ROSBag"/>
+    <arg name="output_pcd" default="true" description="Whether to output each decoded pointclouds to a PCD file"/>
+    <arg name="output_rosbag" default="true" description="Whether to output the decoded pointclouds to a new RosBag"/>
+    <arg name="forward_packets_to_rosbag" default="false" description="Whether to copy the input packets to the output RosBag"/>
 
     <!-- sensor related configuration -->
     <arg name="sensor_model"  description="Pandar64|Pandar40P|PandarXT32|PandarXT32M|PandarAT128|PandarQT64|Pandar128E4X"/>
