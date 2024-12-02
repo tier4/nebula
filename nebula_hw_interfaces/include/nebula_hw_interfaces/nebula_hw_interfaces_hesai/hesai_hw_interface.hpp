@@ -50,77 +50,66 @@
 
 namespace nebula::drivers
 {
-const int PandarTcpCommandPort = 9347;
-const uint8_t PTC_COMMAND_DUMMY_BYTE = 0x00;
-const uint8_t PTC_COMMAND_HEADER_HIGH = 0x47;
-const uint8_t PTC_COMMAND_HEADER_LOW = 0x74;
-const uint8_t PTC_COMMAND_GET_LIDAR_CALIBRATION = 0x05;
-const uint8_t PTC_COMMAND_PTP_DIAGNOSTICS = 0x06;
-const uint8_t PTC_COMMAND_PTP_STATUS = 0x01;
-const uint8_t PTC_COMMAND_PTP_PORT_DATA_SET = 0x02;
-const uint8_t PTC_COMMAND_PTP_TIME_STATUS_NP = 0x03;
-const uint8_t PTC_COMMAND_PTP_GRANDMASTER_SETTINGS_NP = 0x04;
-const uint8_t PTC_COMMAND_GET_INVENTORY_INFO = 0x07;
-const uint8_t PTC_COMMAND_GET_CONFIG_INFO = 0x08;
-const uint8_t PTC_COMMAND_GET_LIDAR_STATUS = 0x09;
-const uint8_t PTC_COMMAND_SET_SPIN_RATE = 0x17;
-const uint8_t PTC_COMMAND_SET_SYNC_ANGLE = 0x18;
-const uint8_t PTC_COMMAND_SET_TRIGGER_METHOD = 0x1b;
-const uint8_t PTC_COMMAND_SET_STANDBY_MODE = 0x1c;
-const uint8_t PTC_COMMAND_SET_RETURN_MODE = 0x1e;
-const uint8_t PTC_COMMAND_SET_CLOCK_SOURCE = 0x1f;
-const uint8_t PTC_COMMAND_SET_DESTINATION_IP = 0x20;
-const uint8_t PTC_COMMAND_SET_CONTROL_PORT = 0x21;
-const uint8_t PTC_COMMAND_SET_LIDAR_RANGE = 0x22;
-const uint8_t PTC_COMMAND_GET_LIDAR_RANGE = 0x23;
-const uint8_t PTC_COMMAND_SET_PTP_CONFIG = 0x24;
-const uint8_t PTC_COMMAND_GET_PTP_CONFIG = 0x26;
-const uint8_t PTC_COMMAND_RESET = 0x25;
-const uint8_t PTC_COMMAND_SET_ROTATE_DIRECTION = 0x2a;
-const uint8_t PTC_COMMAND_LIDAR_MONITOR = 0x27;
+const int g_pandar_tcp_command_port = 9347;
+const uint8_t g_ptc_command_dummy_byte = 0x00;
+const uint8_t g_ptc_command_header_high = 0x47;
+const uint8_t g_ptc_command_header_low = 0x74;
+const uint8_t g_ptc_command_get_lidar_calibration = 0x05;
+const uint8_t g_ptc_command_ptp_diagnostics = 0x06;
+const uint8_t g_ptc_command_ptp_status = 0x01;
+const uint8_t g_ptc_command_ptp_port_data_set = 0x02;
+const uint8_t g_ptc_command_ptp_time_status_np = 0x03;
+const uint8_t g_ptc_command_ptp_grandmaster_settings_np = 0x04;
+const uint8_t g_ptc_command_get_inventory_info = 0x07;
+const uint8_t g_ptc_command_get_config_info = 0x08;
+const uint8_t g_ptc_command_get_lidar_status = 0x09;
+const uint8_t g_ptc_command_set_spin_rate = 0x17;
+const uint8_t g_ptc_command_set_sync_angle = 0x18;
+const uint8_t g_ptc_command_set_trigger_method = 0x1b;
+const uint8_t g_ptc_command_set_standby_mode = 0x1c;
+const uint8_t g_ptc_command_set_return_mode = 0x1e;
+const uint8_t g_ptc_command_set_clock_source = 0x1f;
+const uint8_t g_ptc_command_set_destination_ip = 0x20;
+const uint8_t g_ptc_command_set_control_port = 0x21;
+const uint8_t g_ptc_command_set_lidar_range = 0x22;
+const uint8_t g_ptc_command_get_lidar_range = 0x23;
+const uint8_t g_ptc_command_set_ptp_config = 0x24;
+const uint8_t g_ptc_command_get_ptp_config = 0x26;
+const uint8_t g_ptc_command_reset = 0x25;
+const uint8_t g_ptc_command_set_rotate_direction = 0x2a;
+const uint8_t g_ptc_command_lidar_monitor = 0x27;
 
-const uint8_t PTC_ERROR_CODE_NO_ERROR = 0x00;
-const uint8_t PTC_ERROR_CODE_INVALID_INPUT_PARAM = 0x01;
-const uint8_t PTC_ERROR_CODE_SERVER_CONN_FAILED = 0x02;
-const uint8_t PTC_ERROR_CODE_INVALID_DATA = 0x03;
-const uint8_t PTC_ERROR_CODE_OUT_OF_MEMORY = 0x04;
-const uint8_t PTC_ERROR_CODE_UNSUPPORTED_CMD = 0x05;
-const uint8_t PTC_ERROR_CODE_FPGA_COMM_FAILED = 0x06;
-const uint8_t PTC_ERROR_CODE_OTHER = 0x07;
+const uint8_t g_ptc_error_code_no_error = 0x00;
+const uint8_t g_ptc_error_code_invalid_input_param = 0x01;
+const uint8_t g_ptc_error_code_server_conn_failed = 0x02;
+const uint8_t g_ptc_error_code_invalid_data = 0x03;
+const uint8_t g_ptc_error_code_out_of_memory = 0x04;
+const uint8_t g_ptc_error_code_unsupported_cmd = 0x05;
+const uint8_t g_ptc_error_code_fpga_comm_failed = 0x06;
+const uint8_t g_ptc_error_code_other = 0x07;
 
-const uint8_t TCP_ERROR_UNRELATED_RESPONSE = 1;
-const uint8_t TCP_ERROR_UNEXPECTED_PAYLOAD = 2;
-const uint8_t TCP_ERROR_TIMEOUT = 4;
-const uint8_t TCP_ERROR_INCOMPLETE_RESPONSE = 8;
+const uint8_t g_tcp_error_unrelated_response = 1;
+const uint8_t g_tcp_error_unexpected_payload = 2;
+const uint8_t g_tcp_error_timeout = 4;
+const uint8_t g_tcp_error_incomplete_response = 8;
 
-const uint16_t PANDARQT64_PACKET_SIZE = 1072;
-const uint16_t PANDARQT128_PACKET_SIZE = 1127;
-const uint16_t PANDARXT32_PACKET_SIZE = 1080;
-const uint16_t PANDARXT32M_PACKET_SIZE = 820;
-const uint16_t PANDARAT128_PACKET_SIZE = 1118;
-const uint16_t PANDAR64_PACKET_SIZE = 1194;
-const uint16_t PANDAR64_EXTENDED_PACKET_SIZE = 1198;
-const uint16_t PANDAR40_PACKET_SIZE = 1262;
-const uint16_t PANDAR40P_EXTENDED_PACKET_SIZE = 1266;
-const uint16_t PANDAR128_E4X_PACKET_SIZE = 861;
-const uint16_t PANDAR128_E4X_EXTENDED_PACKET_SIZE = 1117;
-const uint16_t MTU_SIZE = 1500;
+const uint16_t g_mtu_size = 1500;
 
 /// @brief The kernel buffer size in bytes to use for receiving UDP packets. If the buffer is too
 /// small to bridge scheduling and processing delays, packets will be dropped. This corresponds to
 /// the net.core.rmem_default setting in Linux. The current value is hardcoded to accommodate one
 /// pointcloud worth of OT128 packets (currently the highest data rate sensor supported).
-const size_t UDP_SOCKET_BUFFER_SIZE = MTU_SIZE * 3600;
+const size_t g_udp_socket_buffer_size = g_mtu_size * 3600;
 
 // Time interval between Announce messages, in units of log seconds (default: 1)
-const int PTP_LOG_ANNOUNCE_INTERVAL = 1;
+const int g_ptp_log_announce_interval = 1;
 // Time interval between Sync messages, in units of log seconds (default: 1)
-const int PTP_SYNC_INTERVAL = 1;
+const int g_ptp_sync_interval = 1;
 // Minimum permitted mean time between Delay_Req messages, in units of log seconds (default: 0)
-const int PTP_LOG_MIN_DELAY_INTERVAL = 0;
+const int g_ptp_log_min_delay_interval = 0;
 
-const int HESAI_LIDAR_GPS_CLOCK_SOURCE = 0;
-const int HESAI_LIDAR_PTP_CLOCK_SOURCE = 1;
+const int g_hesai_lidar_gps_clock_source = 0;
+const int g_hesai_lidar_ptp_clock_source = 1;
 
 /// @brief Hardware interface of hesai driver
 class HesaiHwInterface
@@ -138,7 +127,7 @@ private:
 
   std::shared_ptr<loggers::Logger> logger_;
   std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
-  std::shared_ptr<boost::asio::io_context> m_owned_ctx;
+  std::shared_ptr<boost::asio::io_context> m_owned_ctx_;
   std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
   std::shared_ptr<::drivers::tcp_driver::TcpDriver> tcp_driver_;
   std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration_;
@@ -147,20 +136,20 @@ private:
 
   std::mutex mtx_inflight_tcp_request_;
 
-  int target_model_no;
+  int target_model_no_;
 
   /// @brief Get a one-off HTTP client to communicate with the hardware
   /// @param ctx IO Context
   /// @param hcd Got http client driver
   /// @return Resulting status
-  HesaiStatus GetHttpClientDriverOnce(
+  HesaiStatus get_http_client_driver_once(
     std::shared_ptr<boost::asio::io_context> ctx,
     std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd);
   /// @brief Get a one-off HTTP client to communicate with the hardware (without specifying
   /// io_context)
   /// @param hcd Got http client driver
   /// @return Resulting status
-  HesaiStatus GetHttpClientDriverOnce(
+  HesaiStatus get_http_client_driver_once(
     std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd);
   /// @brief A callback that receives a string (just prints)
   /// @param str Received string
@@ -170,20 +159,21 @@ private:
   /// @param error_code The error code, containing the sensor's error code (if any), along with
   /// flags such as TCP_ERROR_UNRELATED_RESPONSE etc.
   /// @return A string description of all errors in this code
-  std::string PrettyPrintPTCError(ptc_error_t error_code);
+  std::string pretty_print_ptc_error(ptc_error_t error_code);
 
   /// @brief Checks if the data size matches that of the struct to be parsed, and parses the struct.
   /// If data is too small, a std::runtime_error is thrown. If data is too large, a warning is
   /// printed and the struct is parsed with the first sizeof(T) bytes.
   template <typename T>
-  T CheckSizeAndParse(const std::vector<uint8_t> & data);
+  T check_size_and_parse(const std::vector<uint8_t> & data);
 
   /// @brief Send a PTC request with an optional payload, and return the full response payload.
   /// Blocking.
   /// @param command_id PTC command number.
   /// @param payload Payload bytes of the PTC command. Not including the 8-byte PTC header.
   /// @return The returned payload, if successful, or nullptr.
-  ptc_cmd_result_t SendReceive(const uint8_t command_id, const std::vector<uint8_t> & payload = {});
+  ptc_cmd_result_t send_receive(
+    const uint8_t command_id, const std::vector<uint8_t> & payload = {});
 
   static std::pair<HesaiStatus, std::string> unwrap_http_response(const std::string & response);
 
@@ -195,89 +185,89 @@ public:
   /// @brief Initializing tcp_driver for TCP communication
   /// @param setup_sensor Whether to also initialize tcp_driver for sensor configuration
   /// @return Resulting status
-  Status InitializeTcpDriver();
+  Status initialize_tcp_driver();
   /// @brief Closes the TcpDriver and related resources
   /// @return Status result
-  Status FinalizeTcpDriver();
+  Status finalize_tcp_driver();
   /// @brief Parsing json string to property_tree
   /// @param str JSON string
   /// @return Parsed property_tree
-  boost::property_tree::ptree ParseJson(const std::string & str);
+  boost::property_tree::ptree parse_json(const std::string & str);
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void ReceiveSensorPacketCallback(std::vector<uint8_t> & buffer);
+  void receive_sensor_packet_callback(std::vector<uint8_t> & buffer);
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStart();
+  Status sensor_interface_start();
   /// @brief Function for stopping the interface that handles UDP streams
   /// @return Resulting status
-  Status SensorInterfaceStop();
+  Status sensor_interface_stop();
   /// @brief Printing sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
-  Status GetSensorConfiguration(const SensorConfigurationBase & sensor_configuration);
+  Status get_sensor_configuration(const SensorConfigurationBase & sensor_configuration);
   /// @brief Printing calibration configuration
   /// @param calibration_configuration CalibrationConfiguration for the checking
   /// @return Resulting status
-  Status GetCalibrationConfiguration(CalibrationConfigurationBase & calibration_configuration);
+  Status get_calibration_configuration(CalibrationConfigurationBase & calibration_configuration);
   /// @brief Setting sensor configuration
   /// @param sensor_configuration SensorConfiguration for this interface
   /// @return Resulting status
-  Status SetSensorConfiguration(
+  Status set_sensor_configuration(
     std::shared_ptr<const SensorConfigurationBase> sensor_configuration);
   /// @brief Registering callback for PandarScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status RegisterScanCallback(std::function<void(std::vector<uint8_t> &)> scan_callback);
+  Status register_scan_callback(std::function<void(std::vector<uint8_t> &)> scan_callback);
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_CALIBRATION
   /// @return Resulting status
-  std::string GetLidarCalibrationString();
+  std::string get_lidar_calibration_string();
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_CALIBRATION
   /// @return Resulting status
-  std::vector<uint8_t> GetLidarCalibrationBytes();
+  std::vector<uint8_t> get_lidar_calibration_bytes();
   /// @brief Getting data with PTC_COMMAND_PTP_DIAGNOSTICS (PTP STATUS)
   /// @return Resulting status
-  HesaiPtpDiagStatus GetPtpDiagStatus();
+  HesaiPtpDiagStatus get_ptp_diag_status();
   /// @brief Getting data with PTC_COMMAND_PTP_DIAGNOSTICS (PTP TLV PORT_DATA_SET)
   /// @return Resulting status
-  HesaiPtpDiagPort GetPtpDiagPort();
+  HesaiPtpDiagPort get_ptp_diag_port();
   /// @brief Getting data with PTC_COMMAND_PTP_DIAGNOSTICS (PTP TLV TIME_STATUS_NP)
   /// @return Resulting status
-  HesaiPtpDiagTime GetPtpDiagTime();
+  HesaiPtpDiagTime get_ptp_diag_time();
   /// @brief Getting data with PTC_COMMAND_PTP_DIAGNOSTICS (PTP TLV GRANDMASTER_SETTINGS_NP)
   /// @return Resulting status
-  HesaiPtpDiagGrandmaster GetPtpDiagGrandmaster();
+  HesaiPtpDiagGrandmaster get_ptp_diag_grandmaster();
   /// @brief Getting data with PTC_COMMAND_GET_INVENTORY_INFO
   /// @return Resulting status
-  std::shared_ptr<HesaiInventoryBase> GetInventory();
+  std::shared_ptr<HesaiInventoryBase> get_inventory();
   /// @brief Getting data with PTC_COMMAND_GET_CONFIG_INFO
   /// @return Resulting status
-  std::shared_ptr<HesaiConfigBase> GetConfig();
+  std::shared_ptr<HesaiConfigBase> get_config();
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_STATUS
   /// @return Resulting status
-  std::shared_ptr<HesaiLidarStatusBase> GetLidarStatus();
+  std::shared_ptr<HesaiLidarStatusBase> get_lidar_status();
   /// @brief Setting value with PTC_COMMAND_SET_SPIN_RATE
   /// @param rpm Spin rate
   /// @return Resulting status
-  Status SetSpinRate(uint16_t rpm);
+  Status set_spin_rate(uint16_t rpm);
   /// @brief Setting value with PTC_COMMAND_SET_SYNC_ANGLE
   /// @param sync_angle Sync angle enable flag
   /// @param angle Angle value
   /// @return Resulting status
-  Status SetSyncAngle(int sync_angle, int angle);
+  Status set_sync_angle(int sync_angle, int angle);
   /// @brief Setting mode with PTC_COMMAND_SET_TRIGGER_METHOD
   /// @param trigger_method Trigger method
   /// @return Resulting status
-  Status SetTriggerMethod(int trigger_method);
+  Status set_trigger_method(int trigger_method);
   /// @brief Setting mode with PTC_COMMAND_SET_STANDBY_MODE
   /// @param standby_mode Standby mode
   /// @return Resulting status
-  Status SetStandbyMode(int standby_mode);
+  Status set_standby_mode(int standby_mode);
   /// @brief Setting mode with PTC_COMMAND_SET_RETURN_MODE
   /// @param return_mode Return mode
   /// @return Resulting status
-  Status SetReturnMode(int return_mode);
+  Status set_return_mode(int return_mode);
   /// @brief Setting IP with PTC_COMMAND_SET_DESTINATION_IP
   /// @param dest_ip_1 The 1st byte represents the 1st section
   /// @param dest_ip_2 The 2nd byte represents the 2nd section
@@ -286,7 +276,7 @@ public:
   /// @param port LiDAR Destination Port
   /// @param gps_port GPS Destination Port
   /// @return Resulting status
-  Status SetDestinationIp(
+  Status set_destination_ip(
     int dest_ip_1, int dest_ip_2, int dest_ip_3, int dest_ip_4, int port, int gps_port);
   /// @brief Setting IP with PTC_COMMAND_SET_CONTROL_PORT
   /// @param ip_1 Device IP of the 1st byte represents the 1st section
@@ -304,22 +294,22 @@ public:
   /// @param vlan_flg VLAN Status
   /// @param vlan_id VLAN ID
   /// @return Resulting status
-  Status SetControlPort(
+  Status set_control_port(
     int ip_1, int ip_2, int ip_3, int ip_4, int mask_1, int mask_2, int mask_3, int mask_4,
     int gateway_1, int gateway_2, int gateway_3, int gateway_4, int vlan_flg, int vlan_id);
   /// @brief Setting values with PTC_COMMAND_SET_LIDAR_RANGE
   /// @param method Method
   /// @param data Set data
   /// @return Resulting status
-  Status SetLidarRange(int method, std::vector<unsigned char> data);
+  Status set_lidar_range(int method, std::vector<unsigned char> data);
   /// @brief Setting values with PTC_COMMAND_SET_LIDAR_RANGE
   /// @param start Start angle
   /// @param end End angle
   /// @return Resulting status
-  Status SetLidarRange(int start, int end);
+  Status set_lidar_range(int start, int end);
   /// @brief Getting values with PTC_COMMAND_GET_LIDAR_RANGE
   /// @return Resulting status
-  HesaiLidarRangeAll GetLidarRange();
+  HesaiLidarRangeAll get_lidar_range();
 
   /**
    * @brief Given the HW interface's sensor configuration and a given calibration, set the sensor
@@ -329,9 +319,10 @@ public:
    * @param calibration The calibration file of the sensor
    * @return Status Resulting status of setting the FoV
    */
-  [[nodiscard]] Status checkAndSetLidarRange(const HesaiCalibrationConfigurationBase & calibration);
+  [[nodiscard]] Status check_and_set_lidar_range(
+    const HesaiCalibrationConfigurationBase & calibration);
 
-  Status SetClockSource(int clock_source);
+  Status set_clock_source(int clock_source);
 
   /// @brief Setting values with PTC_COMMAND_SET_PTP_CONFIG
   /// @param profile IEEE timing and synchronization standard
@@ -345,108 +336,109 @@ public:
   /// @param logMinDelayReqInterval Minimum permitted mean time between Delay_Req messages, in units
   /// of log seconds (default: 0)
   /// @return Resulting status
-  Status SetPtpConfig(
+  Status set_ptp_config(
     int profile, int domain, int network, int switch_type, int logAnnounceInterval = 1,
     int logSyncInterval = 1, int logMinDelayReqInterval = 0);
   /// @brief Getting data with PTC_COMMAND_GET_PTP_CONFIG
   /// @return Resulting status
-  HesaiPtpConfig GetPtpConfig();
+  HesaiPtpConfig get_ptp_config();
   /// @brief Sending command with PTC_COMMAND_RESET
   /// @return Resulting status
-  Status SendReset();
+  Status send_reset();
   /// @brief Setting values with PTC_COMMAND_SET_ROTATE_DIRECTION
   /// @param mode Rotation of the motor
   /// @return Resulting status
-  Status SetRotDir(int mode);
+  Status set_rot_dir(int mode);
   /// @brief Getting data with PTC_COMMAND_LIDAR_MONITOR
   /// @return Resulting status
-  HesaiLidarMonitor GetLidarMonitor();
+  HesaiLidarMonitor get_lidar_monitor();
 
   /// @brief Call run() of IO Context
-  void IOContextRun();
+  void io_context_run();
   /// @brief GetIO Context
   /// @return IO Context
-  std::shared_ptr<boost::asio::io_context> GetIOContext();
+  std::shared_ptr<boost::asio::io_context> get_io_context();
 
   /// @brief Setting spin_speed via HTTP API
   /// @param ctx IO Context used
   /// @param rpm spin_speed (300, 600, 1200)
   /// @return Resulting status
-  HesaiStatus SetSpinSpeedAsyncHttp(std::shared_ptr<boost::asio::io_context> ctx, uint16_t rpm);
+  HesaiStatus set_spin_speed_async_http(std::shared_ptr<boost::asio::io_context> ctx, uint16_t rpm);
   /// @brief Setting spin_speed via HTTP API
   /// @param rpm spin_speed (300, 600, 1200)
   /// @return Resulting status
-  HesaiStatus SetSpinSpeedAsyncHttp(uint16_t rpm);
+  HesaiStatus set_spin_speed_async_http(uint16_t rpm);
 
-  HesaiStatus SetPtpConfigSyncHttp(
+  HesaiStatus set_ptp_config_sync_http(
     std::shared_ptr<boost::asio::io_context> ctx, int profile, int domain, int network,
     int logAnnounceInterval, int logSyncInterval, int logMinDelayReqInterval);
-  HesaiStatus SetPtpConfigSyncHttp(
+  HesaiStatus set_ptp_config_sync_http(
     int profile, int domain, int network, int logAnnounceInterval, int logSyncInterval,
     int logMinDelayReqInterval);
-  HesaiStatus SetSyncAngleSyncHttp(
+  HesaiStatus set_sync_angle_sync_http(
     std::shared_ptr<boost::asio::io_context> ctx, int enable, int angle);
-  HesaiStatus SetSyncAngleSyncHttp(int enable, int angle);
+  HesaiStatus set_sync_angle_sync_http(int enable, int angle);
 
   /// @brief Getting lidar_monitor via HTTP API
   /// @param ctx IO Context
   /// @param str_callback Callback function for received string
   /// @return Resulting status
-  HesaiStatus GetLidarMonitorAsyncHttp(
+  HesaiStatus get_lidar_monitor_async_http(
     std::shared_ptr<boost::asio::io_context> ctx,
     std::function<void(const std::string & str)> str_callback);
   /// @brief Getting lidar_monitor via HTTP API
   /// @param str_callback Callback function for received string
   /// @return Resulting status
-  HesaiStatus GetLidarMonitorAsyncHttp(std::function<void(const std::string & str)> str_callback);
+  HesaiStatus get_lidar_monitor_async_http(
+    std::function<void(const std::string & str)> str_callback);
 
   /// @brief Checking the current settings and changing the difference point
   /// @param sensor_configuration Current SensorConfiguration
   /// @param hesai_config Current HesaiConfig
   /// @return Resulting status
-  HesaiStatus CheckAndSetConfig(
+  HesaiStatus check_and_set_config(
     std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration,
     std::shared_ptr<HesaiConfigBase> hesai_config);
   /// @brief Checking the current settings and changing the difference point
   /// @param sensor_configuration Current SensorConfiguration
   /// @param hesai_lidar_range_all Current HesaiLidarRangeAll
   /// @return Resulting status
-  HesaiStatus CheckAndSetConfig(
+  HesaiStatus check_and_set_config(
     std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration,
     HesaiLidarRangeAll hesai_lidar_range_all);
   /// @brief Checking the current settings and changing the difference point
   /// @return Resulting status
-  HesaiStatus CheckAndSetConfig();
+  HesaiStatus check_and_set_config();
 
   /// @brief Convert to model in Hesai protocol from nebula::drivers::SensorModel
   /// @param model
   /// @return
-  int NebulaModelToHesaiModelNo(nebula::drivers::SensorModel model);
+  int nebula_model_to_hesai_model_no(nebula::drivers::SensorModel model);
 
   /// @brief Set target model number (for proper use of HTTP and TCP according to the support of the
   /// target model)
   /// @param model Model number
-  void SetTargetModel(int model);
+  void set_target_model(int model);
 
   /// @brief Set target model number (for proper use of HTTP and TCP according to the support of the
   /// target model)
   /// @param model Model
-  void SetTargetModel(nebula::drivers::SensorModel model);
+  void set_target_model(nebula::drivers::SensorModel model);
 
   /// @brief Whether to use HTTP for setting SpinRate
   /// @param model Model number
   /// @return Use HTTP
-  bool UseHttpSetSpinRate(int model);
+  bool use_http_set_spin_rate(int model);
   /// @brief Whether to use HTTP for setting SpinRate
   /// @return Use HTTP
-  bool UseHttpSetSpinRate();
+  bool use_http_set_spin_rate();
   /// @brief Whether to use HTTP for getting LidarMonitor
   /// @param model Model number
   /// @return Use HTTP
-  bool UseHttpGetLidarMonitor(int model);
+  bool use_http_get_lidar_monitor(int model);
   /// @brief Whether to use HTTP for getting LidarMonitor
   /// @return Use HTTP
-  bool UseHttpGetLidarMonitor();
+  bool use_http_get_lidar_monitor();
 };
 }  // namespace nebula::drivers
 
