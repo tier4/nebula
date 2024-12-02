@@ -16,6 +16,7 @@
 
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32.hpp"
 
 #include <vector>
 
