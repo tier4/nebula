@@ -8,14 +8,14 @@
     <!-- sensor related configuration -->
     <arg name="sensor_model"  description="Pandar64|Pandar40P|PandarXT32|PandarXT32M|PandarAT128|PandarQT64|Pandar128E4X"/>
     <arg name="lidar_parameter_file" default="$(find-pkg-share nebula_ros)/config/lidar/hesai/$(var sensor_model).param.yaml" description="Path: LiDAR configuration yaml"/>
-    <arg name="bag_path" description="String: Directory of the ROSBag"/>
-    <arg name="input_topic" description="String: Packet topic of the ROSBag"/>
-    <arg name="output_topic" description="String: Output point cloud topic"/>
-    <arg name="out_path" description="Path: output directory"/>
 
     <!-- output sample number configuration -->
-    <arg name="out_num" description="Int: maximum number of sample collect"/>
-    <arg name="skip_num" description="Int: number of the first few samples to neglect"/>
+    <arg name="out_num" default="0" description="The maximum number of pointclouds to output. 0 to output all pointclouds"/>
+    <arg name="skip_num" default="0" description="The number of pointclouds to discard at the beginning"/>
+    <arg name="bag_path" description="Path of the input RosBag"/>
+    <arg name="input_topic" default="/pandar_packets" description="Name of the input packets topic, e.g. /pandar_packets"/>
+    <arg name="output_topic" default="/pandar_points" description="Name of the output pointcloud topic"/>
+    <arg name="out_path" description="Directory path to which the output RosBag and PCDs will be saved"/>
 
 
     <arg name="storage_id" default="sqlite3"/>
