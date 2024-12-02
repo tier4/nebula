@@ -24,6 +24,14 @@ While this is not found in the PTP standards, this influences how often the sens
 Set this to `TSN` if your switch supports gPTP or the AutoSAR protocol, and `NON_TSN` if the switch does not.
 In the latter case, the sensor will measure more often.
 
+### `ptp_lock_threshold`
+
+_Only applies to `OT128` and `QT128`_
+
+The maximum difference between the sensor and PTP master that will still be considered `locked` by the sensor, in microseconds.
+When this threshold is crossed, the sensor will report its synchronization state to be `tracking`.
+Nebula's hardware monitor treats only the `locked` state as `OK`, `tracking` as `WARNING` and `frozen` and `free run` as `ERROR`.
+
 ## Scan Cutting and Field of View
 
 Scan cutting influences the time stamps of points and the point cloud headers.
