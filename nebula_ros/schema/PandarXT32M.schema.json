@@ -93,6 +93,9 @@
         "ptp_switch_type": {
           "$ref": "sub/lidar_hesai.json#/definitions/ptp_switch_type"
         },
+        "ptp_lock_threshold": {
+          "$ref": "sub/lidar_hesai.json#/definitions/ptp_lock_threshold"
+        },
         "retry_hw": {
           "$ref": "sub/hardware.json#/definitions/retry_hw"
         },
@@ -124,6 +127,7 @@
         "ptp_domain",
         "ptp_transport_type",
         "ptp_switch_type",
+        "ptp_lock_threshold",
         "retry_hw",
         "dual_return_distance_threshold"
       ],
