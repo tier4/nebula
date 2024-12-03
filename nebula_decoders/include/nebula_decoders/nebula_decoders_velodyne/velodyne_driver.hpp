@@ -19,7 +19,6 @@
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_common/point_types.hpp"
 #include "nebula_common/velodyne/velodyne_common.hpp"
-#include "nebula_decoders/nebula_decoders_common/nebula_driver_base.hpp"
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/velodyne_scan_decoder.hpp"
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
@@ -27,17 +26,14 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 
-#include <iostream>
 #include <memory>
-#include <stdexcept>
-#include <string>
 #include <tuple>
 #include <vector>
 
 namespace nebula::drivers
 {
 /// @brief Velodyne driver
-class VelodyneDriver : NebulaDriverBase
+class VelodyneDriver
 {
 private:
   /// @brief Current driver status
@@ -59,7 +55,7 @@ public:
   /// @param calibration_configuration
   /// @return Resulting status
   Status set_calibration_configuration(
-    const CalibrationConfigurationBase & calibration_configuration) override;
+    const CalibrationConfigurationBase & calibration_configuration);
 
   /// @brief Get current status of this driver
   /// @return Current status
