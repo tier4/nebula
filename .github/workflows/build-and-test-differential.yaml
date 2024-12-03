@@ -78,7 +78,7 @@ jobs:
         id: upload-compile-db
         uses: actions/upload-artifact@v4
         with:
-          name: compilation-database-diff-${{ github.head_ref }}
+          name: compilation-database-diff-${{ github.sha }}
           path: build/compile_commands.json
           if-no-files-found: error
 
@@ -110,7 +110,7 @@ jobs:
         id: download-compile-db
         uses: actions/download-artifact@v4
         with:
-          name: compilation-database-diff-${{ github.head_ref }}
+          name: compilation-database-diff-${{ github.sha }}
 
       - name: Install FB Infer
         id: fb-infer-install
