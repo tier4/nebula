@@ -483,7 +483,7 @@ HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::get_calibration_data(
 
     RCLCPP_ERROR_STREAM(logger, "Could not load downloaded calibration data: " << status);
   } else if (!ignore_others) {
-    RCLCPP_ERROR(logger, "No downloaded calibration data found.");
+    RCLCPP_WARN(logger, "No downloaded calibration data found.");
   }
 
   if (!ignore_others) {
