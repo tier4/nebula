@@ -72,6 +72,14 @@ jobs:
           du -sh ${CCACHE_DIR} && ccache -s
         shell: bash
 
+      - name: Upload compilation database
+        id: upload-compile-db
+        uses: actions/upload-artifact@v4
+        with:
+          name: compilation-database-diff-${{ github.head_ref }}
+          path: build/compile_commands.json
+          if-no-files-found: error
+
       - name: Test
         id: test
         if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
@@ -90,3 +98,35 @@ jobs:
           fail_ci_if_error: false
           verbose: true
           flags: differential
+
+  fb-infer-differential:
+    runs-on: ubuntu-latest
+    needs: [build-and-test-differential]
+    steps:
+      - name: Install FB Infer
+        id: fb-infer-install
+        env:
+          VERSION: 1.2.0
+        run: |
+          curl -sSL "https://github.com/facebook/infer/releases/download/v$VERSION/infer-linux-x86_64-v$VERSION.tar.xz" \
+          sudo ln -s "infer-linux-x86_64-v$VERSION/bin/infer" ./infer
+
+      - name: Download compilation database
+        id: download-compile-db
+        uses: actions/download-artifact@v4
+        with:
+          name: compilation-database-diff-${{ github.head_ref }}
+
+      - name: Run FB Infer
+        id: fb-infer-run
+        run: |
+          git diff --name-only ${{ github.head_ref }}..${{ github.base_ref }} > changed-files.txt
+          infer run --changed-files-index changed-files.txt --compilation-database ./compile_commands.json
+
+      - name: Upload FB Infer Report
+        id: fb-infer-upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: infer-report-diff-${{ github.head_ref }}
+          path: infer-out/report.*
+          if-no-files-found: error
