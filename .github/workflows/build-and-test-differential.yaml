@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Remove exec_depend
         uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1
@@ -121,6 +123,8 @@ jobs:
       - name: Check out repository
         if: ${{ steps.download-compile-db.outcome == 'success' }}
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Install FB Infer
         id: fb-infer-install
