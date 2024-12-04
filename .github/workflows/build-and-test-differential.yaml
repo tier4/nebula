@@ -137,6 +137,11 @@ jobs:
           sudo mv infer-linux-x86_64-v${VERSION} /usr/local/infer
           echo "PATH=/usr/local/infer/bin:$PATH" >> $GITHUB_ENV
 
+      - name: Debug log
+        run: |
+          pwd
+          ls -R
+
       - name: Run FB Infer
         id: fb-infer-run
         if: ${{ steps.fb-infer-install.outcome == 'success' }}
