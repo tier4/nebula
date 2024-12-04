@@ -111,6 +111,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: compilation-database-diff-${{ github.sha }}
+        continue-on-error: true
 
       - name: Install FB Infer
         id: fb-infer-install
