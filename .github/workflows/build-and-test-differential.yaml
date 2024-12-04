@@ -119,11 +119,11 @@ jobs:
 
       - name: Install Clang-15
         run: |
-          sudo apt-get -y -q update
-          sudo apt-get -y -q install --install-recommends clang-15 clang-tidy-15 clangd-15
-          sudo apt-get -y -q install clang-15-doc wasi-libc llvm-15-doc
-          sudo apt-get -y -q install libomp-15-dev libomp-15-doc # For OpenMP support in Clang
-          sudo apt-get -y -q install libstdc++-12-dev
+          sudo apt-get -yqq update
+          sudo apt-get -yqq install --install-recommends clang-15 clang-tidy-15 clangd-15
+          sudo apt-get -yqq install clang-15-doc wasi-libc llvm-15-doc
+          sudo apt-get -yqq install libomp-15-dev libomp-15-doc # For OpenMP support in Clang
+          sudo apt-get -yqq install libstdc++-12-dev
           echo "CC=/usr/bin/clang-15" >> $GITHUB_ENV
           echo "CXX=/usr/bin/clang++-15" >> $GITHUB_ENV
 
@@ -136,7 +136,7 @@ jobs:
         run: |
           export BASENAME="infer-linux-x86_64-v${VERSION}"
           export FILENAME="${BASENAME}.tar.xz"
-          sudo apt-get -y -q install curl tar
+          sudo apt-get -yqq install curl tar
           curl -sSLO "https://github.com/facebook/infer/releases/download/v${VERSION}/${FILENAME}"
           tar -xf "$FILENAME"
           rm "$FILENAME"
@@ -168,6 +168,6 @@ jobs:
         if: ${{ steps.fb-infer-run.outcome == 'success' }}
         uses: actions/upload-artifact@v4
         with:
-          name: infer-report-diff-${{ github.head_ref }}
+          name: infer-report-diff-${{ github.sha }}
           path: infer-out/report.*
           if-no-files-found: error
