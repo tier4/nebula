@@ -113,18 +113,17 @@ jobs:
     needs: [build-and-test-differential]
     if: ${{ needs.build-and-test-differential.result }}
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
       - name: Download static analysis resources
         id: download-compile-db
         uses: actions/download-artifact@v4
         with:
           name: static-analysis-resources-${{ github.sha }}
         continue-on-error: true
-
-      - name: Check out repository
-        if: ${{ steps.download-compile-db.outcome == 'success' }}
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Install FB Infer
         id: fb-infer-install
