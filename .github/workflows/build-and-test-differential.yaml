@@ -94,7 +94,6 @@ jobs:
 
   fb-infer-differential:
     runs-on: ubuntu-latest
-    needs: [build-and-test-differential]
     container: ${{ matrix.container }}
     strategy:
       fail-fast: false
