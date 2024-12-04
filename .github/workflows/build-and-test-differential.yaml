@@ -24,8 +24,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Remove exec_depend
         uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1
@@ -73,13 +71,20 @@ jobs:
           du -sh ${CCACHE_DIR} && ccache -s
         shell: bash
 
-      - name: Upload compilation database
+      - name: Upload build artifacts for static analysis
         if: ${{ steps.build.outcome == 'success' }}
-        id: upload-compile-db
         uses: actions/upload-artifact@v4
         with:
-          name: compilation-database-diff-${{ github.sha }}
-          path: build/compile_commands.json
+          name: static-analysis-resources-${{ github.sha }}
+          path: |
+            build/compile_commands.json
+            build/**/*.c
+            build/**/*.cc
+            build/**/*.cpp
+            build/**/*.h
+            build/**/*.hh
+            build/**/*.hpp
+            dependency_ws/
           if-no-files-found: error
 
       - name: Test
@@ -106,12 +111,16 @@ jobs:
     needs: [build-and-test-differential]
     if: ${{ needs.build-and-test-differential.result }}
     steps:
-      - name: Download compilation database
+      - name: Download static analysis resources
         id: download-compile-db
         uses: actions/download-artifact@v4
         with:
-          name: compilation-database-diff-${{ github.sha }}
+          name: static-analysis-resources-${{ github.sha }}
         continue-on-error: true
+
+      - name: Check out repository
+        if: ${{ steps.download-compile-db.outcome == 'success' }}
+        uses: actions/checkout@v3
 
       - name: Install FB Infer
         id: fb-infer-install
@@ -128,8 +137,7 @@ jobs:
         id: fb-infer-run
         if: ${{ steps.fb-infer-install.outcome == 'success' }}
         run: |
-          git diff --name-only ${{ github.head_ref }}..${{ github.base_ref }} > changed-files.txt
-          infer run --changed-files-index changed-files.txt --compilation-database ./compile_commands.json
+          infer run --compilation-database build/compile_commands.json
 
       - name: Upload FB Infer Report
         id: fb-infer-upload
