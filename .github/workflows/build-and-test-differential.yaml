@@ -143,6 +143,7 @@ jobs:
         run: |
           export BASENAME="infer-linux-x86_64-v${VERSION}"
           export FILENAME="${BASENAME}.tar.xz"
+          sudo apt install curl
           curl -sSLO "https://github.com/facebook/infer/releases/download/v${VERSION}/${FILENAME}"
           tar -xf "$FILENAME"
           rm "$FILENAME"
