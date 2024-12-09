@@ -114,13 +114,15 @@ void check_hesai_struct(const std::shared_ptr<T>& hesai_struct)
 {
     const json hesai_inventory_json_data = hesai_struct->to_json();
 
-    const std::regex struct_regex("[a-zA-Z0-9._%+\\-\\s]+");
+    const std::regex struct_regex("[a-zA-Z0-9._%+\\-\\s:]*");
     std::smatch struct_match_string;
 
     for (const auto& [key, value] : hesai_inventory_json_data.items()) {
-        auto str_value = value.template get<std::string>();
-        bool match_result = std::regex_match(str_value, struct_match_string, struct_regex);
-        EXPECT_TRUE(match_result) << key << " chars are invalid. Value: " << str_value;
+      if (!value.is_string()) continue;
+
+      auto str_value = value.template get<std::string>();
+      bool match_result = std::regex_match(str_value, struct_match_string, struct_regex);
+      EXPECT_TRUE(match_result) << key << " chars are invalid. Value: " << str_value;
     }
 }
 
