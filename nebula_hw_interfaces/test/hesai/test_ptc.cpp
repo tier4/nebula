@@ -19,6 +19,8 @@
 #include <iomanip>
 #include <memory>
 #include <sstream>
+#include <regex>
+#include <nlohmann/json.hpp> 
 
 #ifndef _TEST_RESOURCES_PATH
 static_assert(false, "No test resources path defined");
@@ -47,6 +49,7 @@ using testing::_;
 using testing::AtLeast;
 using testing::Exactly;
 using testing::InSequence;
+using nlohmann::json;
 
 const SensorModel g_models_under_test[] = {
   SensorModel::HESAI_PANDAR64,      SensorModel::HESAI_PANDAR40P,  SensorModel::HESAI_PANDARQT64,
@@ -104,6 +107,21 @@ auto make_sensor_config(SensorModel model)
     PtpSwitchType::NON_TSN};
 
   return std::make_shared<HesaiSensorConfiguration>(config);
+}
+
+template <typename T>
+void check_hesai_struct(const std::shared_ptr<T>& hesai_struct)
+{
+    const json hesai_inventory_json_data = hesai_struct->to_json();
+
+    const std::regex struct_regex("[a-zA-Z0-9._%+\\-\\s]+");
+    std::smatch struct_match_string;
+
+    for (const auto& [key, value] : hesai_inventory_json_data.items()) {
+        auto str_value = value.template get<std::string>();
+        bool match_result = std::regex_match(str_value, struct_match_string, struct_regex);
+        EXPECT_TRUE(match_result) << key << " chars are invalid. Value: " << str_value;
+    }
 }
 
 TEST_P(PtcTest, ConnectionLifecycle)
@@ -223,6 +241,12 @@ TEST_P(PtcTest, PtcCommunication)
   std::shared_ptr<HesaiLidarStatusBase> status;
   ASSERT_NO_THROW_PRINT(status = hw_interface->GetLidarStatus());
   ASSERT_NE(status, nullptr);
+
+  // check that all fields are valid
+  check_hesai_struct<HesaiConfigBase>(config);
+  check_hesai_struct<HesaiInventoryBase>(inventory);
+  check_hesai_struct<HesaiLidarStatusBase>(status);
+
 }
 
 INSTANTIATE_TEST_SUITE_P(TestMain, PtcTest, testing::ValuesIn(g_models_under_test));
