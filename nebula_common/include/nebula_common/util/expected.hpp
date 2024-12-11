@@ -99,9 +99,9 @@ struct expected
   }
 
   expected(const T & value) : value_(value) {}  // NOLINT(runtime/explicit)
-  expected(T && value) : value_(value) {}  // NOLINT(runtime/explicit)
+  expected(T && value) : value_(value) {}       // NOLINT(runtime/explicit)
   expected(const E & error) : value_(error) {}  // NOLINT(runtime/explicit)
-  expected(E && error) : value_(error) {}  // NOLINT(runtime/explicit)
+  expected(E && error) : value_(error) {}       // NOLINT(runtime/explicit)
 
 private:
   std::variant<T, E> value_;
