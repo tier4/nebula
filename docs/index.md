@@ -25,6 +25,7 @@ Nebula works with ROS 2 and is the recommended sensor driver for the [Autoware](
 - [Design](design.md)
 - [Parameters](parameters.md)
 - [Point cloud types](point_types.md)
+- [Point filters](filters.md)
 
 ## Supported sensors
 
