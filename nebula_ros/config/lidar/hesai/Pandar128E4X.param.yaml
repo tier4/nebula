@@ -25,6 +25,7 @@
     ptp_domain: 0
     ptp_transport_type: L2
     ptp_switch_type: TSN
+    ptp_lock_threshold: 100
     retry_hw: true
     dual_return_distance_threshold: 0.1
     point_filters: "{}"

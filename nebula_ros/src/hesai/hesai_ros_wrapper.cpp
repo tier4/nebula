@@ -71,7 +71,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 
   if (hw_interface_wrapper_ && !use_udp_only && lidar_range_supported) {
     auto status =
-      hw_interface_wrapper_->hw_interface()->checkAndSetLidarRange(*calibration_result.value());
+      hw_interface_wrapper_->hw_interface()->check_and_set_lidar_range(*calibration_result.value());
     if (status != Status::OK) {
       throw std::runtime_error(
         (std::stringstream{} << "Could not set sensor FoV: " << status).str());
@@ -83,7 +83,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
   if (launch_hw_) {
-    hw_interface_wrapper_->hw_interface()->RegisterScanCallback(
+    hw_interface_wrapper_->hw_interface()->register_scan_callback(
       std::bind(&HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1));
     stream_start();
   } else {
@@ -175,31 +175,36 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
   config.calibration_path =
     declare_parameter<std::string>(calibration_parameter_name, param_read_write());
 
-  auto _ptp_profile = declare_parameter<std::string>("ptp_profile", param_read_only());
-  config.ptp_profile = drivers::ptp_profile_from_string(_ptp_profile);
+  auto ptp_profile = declare_parameter<std::string>("ptp_profile", param_read_only());
+  config.ptp_profile = drivers::ptp_profile_from_string(ptp_profile);
 
-  auto _ptp_transport = declare_parameter<std::string>("ptp_transport_type", param_read_only());
-  config.ptp_transport_type = drivers::ptp_transport_type_from_string(_ptp_transport);
+  auto ptp_transport = declare_parameter<std::string>("ptp_transport_type", param_read_only());
+  config.ptp_transport_type = drivers::ptp_transport_type_from_string(ptp_transport);
 
   if (
     config.ptp_transport_type != drivers::PtpTransportType::L2 &&
     config.ptp_profile != drivers::PtpProfile::IEEE_1588v2 &&
     config.ptp_profile != drivers::PtpProfile::UNKNOWN_PROFILE) {
     RCLCPP_WARN_STREAM(
-      get_logger(), "PTP transport was set to '" << _ptp_transport << "' but PTP profile '"
-                                                 << _ptp_profile
+      get_logger(), "PTP transport was set to '" << ptp_transport << "' but PTP profile '"
+                                                 << ptp_profile
                                                  << "' only supports 'L2'. Setting it to 'L2'.");
     config.ptp_transport_type = drivers::PtpTransportType::L2;
     set_parameter(rclcpp::Parameter("ptp_transport_type", "L2"));
   }
 
-  auto _ptp_switch = declare_parameter<std::string>("ptp_switch_type", param_read_only());
-  config.ptp_switch_type = drivers::ptp_switch_type_from_string(_ptp_switch);
+  auto ptp_switch = declare_parameter<std::string>("ptp_switch_type", param_read_only());
+  config.ptp_switch_type = drivers::ptp_switch_type_from_string(ptp_switch);
 
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
     descriptor.integer_range = int_range(0, 127, 1);
     config.ptp_domain = declare_parameter<uint8_t>("ptp_domain", descriptor);
+  }
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
+    descriptor.integer_range = int_range(1, 100, 1);
+    config.ptp_lock_threshold = declare_parameter<uint8_t>("ptp_lock_threshold", descriptor);
   }
 
   auto point_filters_raw = declare_parameter<std::string>("point_filters", param_read_write());
@@ -309,7 +314,7 @@ Status HesaiRosWrapper::stream_start()
     return hw_interface_wrapper_->status();
   }
 
-  return hw_interface_wrapper_->hw_interface()->SensorInterfaceStart();
+  return hw_interface_wrapper_->hw_interface()->sensor_interface_start();
 }
 
 rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
@@ -418,7 +423,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     new_calibration_ptr && hw_interface_wrapper_ &&
     sensor_cfg_ptr_->sensor_model != drivers::SensorModel::HESAI_PANDARAT128) {
     auto status =
-      hw_interface_wrapper_->hw_interface()->checkAndSetLidarRange(*new_calibration_ptr);
+      hw_interface_wrapper_->hw_interface()->check_and_set_lidar_range(*new_calibration_ptr);
     if (status != Status::OK) {
       RCLCPP_ERROR_STREAM(
         get_logger(), "Sensor configuration updated, but setting hardware FoV failed: " << status);
@@ -480,7 +485,7 @@ HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::get_calibration_data(
   // If a sensor is connected, try to download and save its calibration data
   if (!ignore_others && launch_hw_) {
     try {
-      auto raw_data = hw_interface_wrapper_->hw_interface()->GetLidarCalibrationBytes();
+      auto raw_data = hw_interface_wrapper_->hw_interface()->get_lidar_calibration_bytes();
       RCLCPP_INFO(logger, "Downloaded calibration data from sensor.");
       auto status = calib->save_to_file_from_bytes(calibration_file_path_from_sensor, raw_data);
       if (status != Status::OK) {
@@ -505,7 +510,7 @@ HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::get_calibration_data(
 
     RCLCPP_ERROR_STREAM(logger, "Could not load downloaded calibration data: " << status);
   } else if (!ignore_others) {
-    RCLCPP_ERROR(logger, "No downloaded calibration data found.");
+    RCLCPP_WARN(logger, "No downloaded calibration data found.");
   }
 
   if (!ignore_others) {

@@ -92,6 +92,12 @@ if(BUILD_TESTING)
     ament_lint_auto_find_test_dependencies()
 endif()
 
+install(TARGETS hesai_ros_offline_extract_pcd_node
+                hesai_ros_offline_extract_bag_pcd_node
+                velodyne_ros_offline_extract_bag_pcd_node
+        DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_auto_package(
     INSTALL_TO_SHARE
     launch
