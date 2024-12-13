@@ -62,6 +62,12 @@ const uint16_t g_ptc_port = 9347;
 const size_t g_ptc_header_size = 8;
 const char g_host_ip[] = "192.168.42.42";
 const char g_sensor_ip[] = "192.168.84.84";
+const int rpm_min = 0;
+const int rpm_max = 1200;
+const int temperature_min = -100;
+const int temperature_max = 200;
+const int electricity_min = 0;
+const int electricity_max = 100;
 
 auto make_sensor_config(SensorModel model)
 {
@@ -109,21 +115,78 @@ auto make_sensor_config(SensorModel model)
   return std::make_shared<HesaiSensorConfiguration>(config);
 }
 
+void check_value_range(float value, std::string key)
+{
+  if (key == "motor_speed" || key == "spin_rate"){
+    EXPECT_TRUE(0 <= value and value <= 1200);
+  }else if (key == "temperature"){
+    EXPECT_TRUE(-100 <= value and value <= 200);
+  }else if (key == "input_current" || key == "input_voltage" || key == "input_power"){
+    EXPECT_TRUE(0 <= value and value <= 100);
+  }
+}
+
 template <typename T>
 void check_hesai_struct(const std::shared_ptr<T>& hesai_struct)
 {
-    const json hesai_inventory_json_data = hesai_struct->to_json();
+    const json hesai_struct_json_data = hesai_struct->to_json();
 
-    const std::regex struct_regex("[a-zA-Z0-9._%+\\-\\s:]*");
-    std::smatch struct_match_string;
+    for (const auto& [key, value] : hesai_struct_json_data.items()) {
+      // string
+      if (value.is_string()){
+        std::string str_value = value.template get<std::string>();
+        std::smatch struct_match_string;
+        const std::regex struct_regex("[a-zA-Z0-9._%+\\-\\s:]*");
+        EXPECT_TRUE(std::regex_match(str_value, struct_match_string, struct_regex)) << key << " chars are invalid. Value: " << str_value;
 
-    for (const auto& [key, value] : hesai_inventory_json_data.items()) {
-      if (!value.is_string()) continue;
+        const std::regex number_regex("([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)");
+        std::smatch struct_match_string_float;
+        if (std::regex_match(str_value, struct_match_string_float, number_regex)){
+          // std::cout << "true key: " << key << " value: " << str_value << std::endl;
+          float number_value = std::stof(str_value);
+          check_value_range(number_value, key);
+        }else{
+          // std::cout << "false key: " << key << " value: " << str_value << std::endl;
+          continue;
+        }
+      }else if (value.is_object()) {
+      // Nsted JSON Object
+      for (const auto& [sub_key, sub_value] : value.items()) {
+          if (sub_value.is_string()) {
+            std::string str_value = sub_value.template get<std::string>();
+            const std::regex number_regex("([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)");
+            std::smatch struct_match_string_float;
 
-      auto str_value = value.template get<std::string>();
-      bool match_result = std::regex_match(str_value, struct_match_string, struct_regex);
-      EXPECT_TRUE(match_result) << key << " chars are invalid. Value: " << str_value;
-    }
+            if (std::regex_search(str_value, struct_match_string_float, number_regex)) {
+              float number_value = std::stof(struct_match_string_float[0].str());
+              check_value_range(number_value, sub_key);
+            }
+          } else if (sub_value.is_number()) {
+            float number_value = sub_value.is_number_float()
+                                      ? static_cast<float>(sub_value.template get<double>())
+                                      : static_cast<float>(sub_value.template get<int>());
+            check_value_range(number_value, sub_key);
+          }
+        }
+      }else{
+      // number
+        std::smatch struct_match_string;
+        const std::regex struct_regex("[a-zA-Z0-9._%+\\-\\s:]*");
+        if (value.is_number()) {
+          if (value.is_number_float()) {
+            auto number_value = static_cast<float>(value.template get<double>());
+            auto string_value = std::to_string(number_value);
+            EXPECT_TRUE(std::regex_match(string_value, struct_match_string, struct_regex)) << key << " chars are invalid. Value: ";
+            check_value_range(number_value, key);
+          } else if (value.is_number_integer()) {
+            auto number_value = static_cast<float>(value.template get<int>());
+            auto string_value = std::to_string(number_value);
+            EXPECT_TRUE(std::regex_match(string_value, struct_match_string, struct_regex)) << key << " chars are invalid. Value: ";
+            check_value_range(number_value, key);
+          }
+        }
+      }
+  }
 }
 
 TEST_P(PtcTest, ConnectionLifecycle)
