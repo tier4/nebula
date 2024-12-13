@@ -244,7 +244,8 @@ public:
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(host_.port);
-    addr.sin_addr.s_addr = multicast_ip_ ? inet_addr(multicast_ip_->c_str()) : INADDR_ANY;
+    const std::string & bind_ip = multicast_ip_ ? *multicast_ip_ : host_.ip;
+    addr.sin_addr.s_addr = inet_addr(bind_ip.c_str());
 
     int result = ::bind(sock_fd_, (struct sockaddr *)&addr, sizeof(addr));
     if (result == -1) throw SocketError(errno);
