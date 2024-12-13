@@ -301,6 +301,8 @@ private:
         buffer.resize(buffer_size_);
         auto msg_header = make_msg_header(buffer);
 
+        // As per `man recvmsg`, zero-length datagrams are permitted and valid. Since the socket is
+        // blocking, a recv_result of 0 means we received a valid 0-length datagram.
         ssize_t recv_result = recvmsg(sock_fd_, &msg_header.msg, MSG_TRUNC);
         if (recv_result < 0) throw SocketError(errno);
         size_t untruncated_packet_length = recv_result;
