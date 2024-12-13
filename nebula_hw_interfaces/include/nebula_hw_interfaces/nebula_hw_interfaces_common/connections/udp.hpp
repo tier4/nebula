@@ -14,6 +14,12 @@
 
 #pragma once
 
+#include <array>
+#ifndef _GNU_SOURCE
+// See `man strerror_r`
+#define _GNU_SOURCE
+#endif
+
 #include <nebula_common/util/expected.hpp>
 
 #include <arpa/inet.h>
@@ -34,6 +40,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -43,10 +50,17 @@ namespace nebula::drivers::connections
 
 class SocketError : public std::exception
 {
-public:
-  explicit SocketError(int err_no) : what_(strerror(err_no)) {}
+  static constexpr size_t gnu_max_strerror_length = 1024;
 
-  explicit SocketError(const char * msg) : what_(msg) {}
+public:
+  explicit SocketError(int err_no)
+  {
+    std::array<char, gnu_max_strerror_length> msg_buf;
+    std::string_view msg = strerror_r(err_no, msg_buf.data(), msg_buf.size());
+    what_ = std::string{msg};
+  }
+
+  explicit SocketError(const std::string_view & msg) : what_(msg) {}
 
   const char * what() const noexcept override { return what_.c_str(); }
 
@@ -144,7 +158,7 @@ public:
    */
   UdpSocket & init(const std::string & host_ip, uint16_t host_port)
   {
-    if (state_ > State::INITIALIZED) throw UsageError("Socket must be initialized before binding");
+    if (state_ >= State::INITIALIZED) throw UsageError("Socket must be initialized before binding");
 
     host_ = {host_ip, host_port};
     state_ = State::INITIALIZED;
