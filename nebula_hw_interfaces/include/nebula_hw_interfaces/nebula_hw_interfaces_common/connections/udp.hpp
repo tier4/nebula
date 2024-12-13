@@ -135,15 +135,15 @@ public:
 
     int enable = 1;
     int result = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
-    if (result < 0) throw SocketError(errno);
+    if (result == -1) throw SocketError(errno);
 
     // Enable kernel-space receive time measurement
     result = setsockopt(sock_fd, SOL_SOCKET, SO_TIMESTAMP, &enable, sizeof(enable));
-    if (result < 0) throw SocketError(errno);
+    if (result == -1) throw SocketError(errno);
 
     // Enable reporting on packets dropped due to full UDP receive buffer
     result = setsockopt(sock_fd, SOL_SOCKET, SO_RXQ_OVFL, &enable, sizeof(enable));
-    if (result < 0) throw SocketError(errno);
+    if (result == -1) throw SocketError(errno);
 
     poll_fd_ = {sock_fd, POLLIN, 0};
     sock_fd_ = sock_fd;
@@ -201,7 +201,7 @@ public:
 
     auto buf_size = static_cast<int>(bytes);
     int result = setsockopt(sock_fd_, SOL_SOCKET, SO_RCVBUF, &buf_size, sizeof(buf_size));
-    if (result < 0) throw SocketError(errno);
+    if (result == -1) throw SocketError(errno);
     return *this;
   }
 
@@ -222,7 +222,7 @@ public:
     mreq.imr_interface.s_addr = inet_addr(host_.ip.c_str());
 
     int result = setsockopt(sock_fd_, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
-    if (result < 0) throw SocketError(errno);
+    if (result == -1) throw SocketError(errno);
 
     multicast_ip_.emplace(group_ip);
     return *this;
@@ -344,7 +344,7 @@ private:
   util::expected<bool, int> is_data_available()
   {
     int status = poll(&poll_fd_, 1, g_poll_timeout_ms);
-    if (status < 0) return errno;
+    if (status == -1) return errno;
     return (poll_fd_.revents & POLLIN) && (status > 0);
   }
 
