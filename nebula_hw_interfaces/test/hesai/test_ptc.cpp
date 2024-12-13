@@ -126,67 +126,39 @@ void check_value_range(float value, std::string key)
   }
 }
 
-template <typename T>
-void check_hesai_struct(const std::shared_ptr<T>& hesai_struct)
-{
-    const json hesai_struct_json_data = hesai_struct->to_json();
-
-    for (const auto& [key, value] : hesai_struct_json_data.items()) {
-      // string
-      if (value.is_string()){
-        std::string str_value = value.template get<std::string>();
-        std::smatch struct_match_string;
+// 値を処理する汎用関数
+void check_struct_value(const std::string& key, const json& value) {
+    if (value.is_string()) {
+        std::string str_value = value.get<std::string>();
         const std::regex struct_regex("[a-zA-Z0-9._%+\\-\\s:]*");
-        EXPECT_TRUE(std::regex_match(str_value, struct_match_string, struct_regex)) << key << " chars are invalid. Value: " << str_value;
+        EXPECT_TRUE(std::regex_match(str_value, struct_regex)) << key << " chars are invalid. Value: " << str_value;
 
         const std::regex number_regex("([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)");
         std::smatch struct_match_string_float;
-        if (std::regex_match(str_value, struct_match_string_float, number_regex)){
-          // std::cout << "true key: " << key << " value: " << str_value << std::endl;
-          float number_value = std::stof(str_value);
-          check_value_range(number_value, key);
-        }else{
-          // std::cout << "false key: " << key << " value: " << str_value << std::endl;
-          continue;
-        }
-      }else if (value.is_object()) {
-      // Nested JSON Object
-      for (const auto& [sub_key, sub_value] : value.items()) {
-          if (sub_value.is_string()) {
-            std::string str_value = sub_value.template get<std::string>();
-            const std::regex number_regex("([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)");
-            std::smatch struct_match_string_float;
 
-            if (std::regex_search(str_value, struct_match_string_float, number_regex)) {
-              float number_value = std::stof(struct_match_string_float[0].str());
-              check_value_range(number_value, sub_key);
-            }
-          } else if (sub_value.is_number()) {
-            float number_value = sub_value.is_number_float()
-                                      ? static_cast<float>(sub_value.template get<double>())
-                                      : static_cast<float>(sub_value.template get<int>());
-            check_value_range(number_value, sub_key);
-          }
-        }
-      }else{
-      // number
-        std::smatch struct_match_string;
-        const std::regex struct_regex("[a-zA-Z0-9._%+\\-\\s:]*");
-        if (value.is_number()) {
-          if (value.is_number_float()) {
-            auto number_value = static_cast<float>(value.template get<double>());
-            auto string_value = std::to_string(number_value);
-            EXPECT_TRUE(std::regex_match(string_value, struct_match_string, struct_regex)) << key << " chars are invalid. Value: ";
+        if (std::regex_match(str_value, struct_match_string_float, number_regex)) {
+            float number_value = std::stof(struct_match_string_float[0].str());
             check_value_range(number_value, key);
-          } else if (value.is_number_integer()) {
-            auto number_value = static_cast<float>(value.template get<int>());
-            auto string_value = std::to_string(number_value);
-            EXPECT_TRUE(std::regex_match(string_value, struct_match_string, struct_regex)) << key << " chars are invalid. Value: ";
-            check_value_range(number_value, key);
-          }
         }
-      }
-  }
+    } else if (value.is_number()) {
+        float number_value = value.is_number_float() ? static_cast<float>(value.get<double>()) : static_cast<float>(value.get<int>());
+        check_value_range(number_value, key);
+    } else if (value.is_object()) {
+        for (const auto& [sub_key, sub_value] : value.items()) {
+            check_struct_value(sub_key, sub_value);
+        }
+    } else {
+        EXPECT_TRUE(false) << key << " contains unsupported value type.";
+    }
+}
+
+// メインチェック関数
+template <typename T>
+void check_hesai_struct(const std::shared_ptr<T>& hesai_struct) {
+    const json hesai_struct_json_data = hesai_struct->to_json();
+    for (const auto& [key, value] : hesai_struct_json_data.items()) {
+        check_struct_value(key, value);
+    }
 }
 
 TEST_P(PtcTest, ConnectionLifecycle)
