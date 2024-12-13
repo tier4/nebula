@@ -126,7 +126,6 @@ void check_value_range(float value, std::string key)
   }
 }
 
-// 値を処理する汎用関数
 void check_struct_value(const std::string& key, const json& value) {
     if (value.is_string()) {
         std::string str_value = value.get<std::string>();
@@ -152,7 +151,6 @@ void check_struct_value(const std::string& key, const json& value) {
     }
 }
 
-// メインチェック関数
 template <typename T>
 void check_hesai_struct(const std::shared_ptr<T>& hesai_struct) {
     const json hesai_struct_json_data = hesai_struct->to_json();
