@@ -113,6 +113,7 @@ private:
   enum class State { UNINITIALIZED, INITIALIZED, BOUND, ACTIVE };
 
   static const int g_poll_timeout_ms = 10;
+  static constexpr std::string_view broadcast_ip{"255.255.255.255"};
 
 public:
   struct ReceiveMetadata
@@ -159,6 +160,8 @@ public:
   UdpSocket & init(const std::string & host_ip, uint16_t host_port)
   {
     if (state_ >= State::INITIALIZED) throw UsageError("Socket must be initialized before binding");
+    if (host_ip == broadcast_ip)
+      throw UsageError("Do not bind to broadcast IP. Bind to 0.0.0.0 or a specific IP instead.");
 
     host_ = {host_ip, host_port};
     state_ = State::INITIALIZED;
