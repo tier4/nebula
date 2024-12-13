@@ -370,7 +370,7 @@ private:
   int sock_fd_;
   pollfd poll_fd_;
 
-  size_t buffer_size_ = 1500;
+  size_t buffer_size_{1500};
   Endpoint host_;
   std::optional<std::string> multicast_ip_;
   std::optional<Endpoint> sender_;
