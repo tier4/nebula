@@ -115,14 +115,14 @@ private:
   static constexpr std::string_view broadcast_ip{"255.255.255.255"};
 
 public:
-  struct ReceiveMetadata
+  struct RxMetadata
   {
     std::optional<uint64_t> timestamp_ns;
     uint64_t drops_since_last_receive{0};
     bool truncated;
   };
 
-  using callback_t = std::function<void(const std::vector<uint8_t> &, const ReceiveMetadata &)>;
+  using callback_t = std::function<void(const std::vector<uint8_t> &, const RxMetadata &)>;
 
   /**
    * @brief Construct a UDP socket with timestamp measuring enabled. The minimal way to start
@@ -329,7 +329,7 @@ private:
 
         if (!is_accepted_sender(msg_header.sender_addr)) continue;
 
-        ReceiveMetadata metadata;
+        RxMetadata metadata;
         get_receive_metadata(msg_header.msg, metadata);
         metadata.truncated = untruncated_packet_length > buffer_size_;
 
@@ -339,7 +339,7 @@ private:
     });
   }
 
-  void get_receive_metadata(msghdr & msg, ReceiveMetadata & inout_metadata)
+  void get_receive_metadata(msghdr & msg, RxMetadata & inout_metadata)
   {
     for (cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
       if (cmsg->cmsg_level != SOL_SOCKET) continue;

@@ -55,14 +55,13 @@ std::optional<int> udp_send(
 }
 
 template <typename _T, typename _R>
-std::optional<
-  std::pair<std::vector<uint8_t>, nebula::drivers::connections::UdpSocket::ReceiveMetadata>>
+std::optional<std::pair<std::vector<uint8_t>, nebula::drivers::connections::UdpSocket::RxMetadata>>
 receive_once(nebula::drivers::connections::UdpSocket & sock, std::chrono::duration<_T, _R> timeout)
 {
   std::condition_variable cv_received_result;
   std::mutex mtx_result;
   std::optional<
-    std::pair<std::vector<uint8_t>, nebula::drivers::connections::UdpSocket::ReceiveMetadata>>
+    std::pair<std::vector<uint8_t>, nebula::drivers::connections::UdpSocket::RxMetadata>>
     result;
 
   sock.subscribe([&](const auto & data, const auto & metadata) {
