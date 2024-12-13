@@ -150,7 +150,7 @@ void check_hesai_struct(const std::shared_ptr<T>& hesai_struct)
           continue;
         }
       }else if (value.is_object()) {
-      // Nsted JSON Object
+      // Nested JSON Object
       for (const auto& [sub_key, sub_value] : value.items()) {
           if (sub_value.is_string()) {
             std::string str_value = sub_value.template get<std::string>();
