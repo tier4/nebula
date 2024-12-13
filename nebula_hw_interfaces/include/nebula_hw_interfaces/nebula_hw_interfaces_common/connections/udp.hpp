@@ -112,7 +112,6 @@ private:
 
   enum class State { UNINITIALIZED, INITIALIZED, BOUND, ACTIVE };
 
-  static const int g_poll_timeout_ms = 10;
   static constexpr std::string_view broadcast_ip{"255.255.255.255"};
 
 public:
@@ -193,6 +192,23 @@ public:
     if (state_ >= State::ACTIVE) throw UsageError("MTU size has to be set before subscribing");
 
     buffer_size_ = bytes;
+    return *this;
+  }
+
+  /**
+   * @brief Set the interval at which the socket polls for new data. THis should be longer than the
+   * expected interval of packets arriving in order to not poll unnecessarily often, and should be
+   * shorter than the acceptable time delay for `unsubscribe()`. The `unsubscribe()` function blocks
+   * up to one full poll interval before returning.
+   *
+   * @param interval_ms The desired polling interval. See `man poll` for the meanings of 0 and
+   * negative values.
+   */
+  UdpSocket & set_polling_interval(int32_t interval_ms)
+  {
+    if (state_ >= State::ACTIVE) throw UsageError("Poll timeout has to be set before subscribing");
+
+    polling_interval_ms_ = interval_ms;
     return *this;
   }
 
@@ -349,7 +365,7 @@ private:
 
   util::expected<bool, int> is_data_available()
   {
-    int status = poll(&poll_fd_, 1, g_poll_timeout_ms);
+    int status = poll(&poll_fd_, 1, polling_interval_ms_);
     if (status == -1) return errno;
     return (poll_fd_.revents & POLLIN) && (status > 0);
   }
@@ -389,6 +405,7 @@ private:
 
   int sock_fd_;
   pollfd poll_fd_;
+  int32_t polling_interval_ms_{10};
 
   size_t buffer_size_{1500};
   Endpoint host_;
