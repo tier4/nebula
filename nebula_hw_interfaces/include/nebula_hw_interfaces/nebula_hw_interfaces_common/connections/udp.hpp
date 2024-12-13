@@ -79,7 +79,7 @@ class UdpSocket
 private:
   struct Endpoint
   {
-    std::string ip;
+    in_addr ip;
     uint16_t port;
   };
 
@@ -159,10 +159,12 @@ public:
   UdpSocket & init(const std::string & host_ip, uint16_t host_port)
   {
     if (state_ >= State::INITIALIZED) throw UsageError("Socket must be initialized before binding");
-    if (host_ip == broadcast_ip)
+
+    in_addr host_in_addr = parse_ip_or_throw(host_ip);
+    if (host_in_addr.s_addr == INADDR_BROADCAST)
       throw UsageError("Do not bind to broadcast IP. Bind to 0.0.0.0 or a specific IP instead.");
 
-    host_ = {host_ip, host_port};
+    host_ = {host_in_addr, host_port};
     state_ = State::INITIALIZED;
     return *this;
   }
@@ -177,7 +179,7 @@ public:
   {
     if (state_ >= State::ACTIVE) throw UsageError("Sender has to be set before subscribing");
 
-    sender_.emplace(Endpoint{sender_ip, sender_port});
+    sender_.emplace(Endpoint{parse_ip_or_throw(sender_ip), sender_port});
     return *this;
   }
 
@@ -236,14 +238,12 @@ public:
     if (state_ >= State::BOUND)
       throw UsageError("Multicast groups have to be joined before binding");
 
-    ip_mreq mreq;
-    mreq.imr_multiaddr.s_addr = inet_addr(group_ip.c_str());  // Multicast group address
-    mreq.imr_interface.s_addr = inet_addr(host_.ip.c_str());
+    ip_mreq mreq{parse_ip_or_throw(group_ip), host_.ip};
 
     int result = setsockopt(sock_fd_, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
     if (result == -1) throw SocketError(errno);
 
-    multicast_ip_.emplace(group_ip);
+    multicast_ip_.emplace(mreq.imr_multiaddr);
     return *this;
   }
 
@@ -260,8 +260,7 @@ public:
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(host_.port);
-    const std::string & bind_ip = multicast_ip_ ? *multicast_ip_ : host_.ip;
-    addr.sin_addr.s_addr = inet_addr(bind_ip.c_str());
+    addr.sin_addr = multicast_ip_ ? *multicast_ip_ : host_.ip;
 
     int result = ::bind(sock_fd_, (struct sockaddr *)&addr, sizeof(addr));
     if (result == -1) throw SocketError(errno);
@@ -373,13 +372,10 @@ private:
   bool is_accepted_sender(const sockaddr_in & sender_addr)
   {
     if (!sender_) return true;
-
-    std::array<char, INET_ADDRSTRLEN> sender_name;
-    inet_ntop(AF_INET, &sender_addr.sin_addr, sender_name.data(), INET_ADDRSTRLEN);
-    return std::strncmp(sender_->ip.c_str(), sender_name.data(), INET_ADDRSTRLEN) == 0;
+    return sender_addr.sin_addr.s_addr == sender_->ip.s_addr;
   }
 
-  MsgBuffers make_msg_header(std::vector<uint8_t> & receive_buffer) const
+  static MsgBuffers make_msg_header(std::vector<uint8_t> & receive_buffer)
   {
     msghdr msg{};
     iovec iov{};
@@ -401,6 +397,14 @@ private:
     return MsgBuffers{msg, iov, control, sender_addr};
   }
 
+  static in_addr parse_ip_or_throw(const std::string & ip)
+  {
+    in_addr parsed_addr;
+    bool valid = inet_aton(ip.c_str(), &parsed_addr);
+    if (!valid) throw UsageError("Invalid IP address given");
+    return parsed_addr;
+  }
+
   std::atomic<State> state_{State::UNINITIALIZED};
 
   int sock_fd_;
@@ -409,7 +413,7 @@ private:
 
   size_t buffer_size_{1500};
   Endpoint host_;
-  std::optional<std::string> multicast_ip_;
+  std::optional<in_addr> multicast_ip_;
   std::optional<Endpoint> sender_;
   std::thread receive_thread_;
   callback_t callback_;
