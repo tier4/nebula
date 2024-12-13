@@ -59,14 +59,14 @@ TEST(test_udp, test_basic_lifecycle)
 
 TEST(test_udp, test_special_addresses_bind)
 {
-  ASSERT_NO_THROW(UdpSocket().init(broadcast_ip, host_port).bind());
+  ASSERT_THROW(UdpSocket().init(broadcast_ip, host_port), UsageError);
   ASSERT_NO_THROW(UdpSocket().init(any_ip, host_port).bind());
 }
 
-TEST(test_udp, test_wildcard_multicast_join_error)
+TEST(test_udp, test_joining_invalid_multicast_group)
 {
   ASSERT_THROW(
-    UdpSocket().init(broadcast_ip, host_port).join_multicast_group(multicast_group).bind(),
+    UdpSocket().init(localhost_ip, host_port).join_multicast_group(broadcast_ip).bind(),
     SocketError);
 }
 
@@ -98,13 +98,11 @@ TEST(test_udp, test_correct_usage_is_enforced)
 
   // The following functions can be called in any order, any number of times
   ASSERT_NO_THROW(UdpSocket().limit_to_sender(sender_ip, sender_port));
-  ASSERT_NO_THROW(UdpSocket().init(localhost_ip, host_port));
-  ASSERT_NO_THROW(UdpSocket()
-                    .limit_to_sender(sender_ip, sender_port)
-                    .init(localhost_ip, host_port)
-                    .limit_to_sender(sender_ip, sender_port)
-                    .init(localhost_ip, host_port)
-                    .bind());
+  ASSERT_NO_THROW(
+    UdpSocket().limit_to_sender(sender_ip, sender_port).limit_to_sender(sender_ip, sender_port));
+
+  // Sockets cannot be re-initialized
+  ASSERT_THROW(UdpSocket().init(localhost_ip, host_port).init(localhost_ip, host_port), UsageError);
 
   // Sockets cannot be re-bound
   ASSERT_THROW(UdpSocket().init(localhost_ip, host_port).bind().bind(), UsageError);
