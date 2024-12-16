@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include <array>
 #ifndef _GNU_SOURCE
 // See `man strerror_r`
 #define _GNU_SOURCE
@@ -29,6 +28,7 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cassert>
 #include <cerrno>
@@ -43,6 +43,7 @@
 #include <string_view>
 #include <thread>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace nebula::drivers::connections
@@ -76,13 +77,188 @@ public:
 
 class UdpSocket
 {
-private:
   struct Endpoint
   {
     in_addr ip;
     uint16_t port;
   };
 
+  class SockFd
+  {
+    int sock_fd_;
+
+  public:
+    SockFd() : sock_fd_{-1} {}
+    SockFd(int sock_fd) : sock_fd_{sock_fd} {}
+    SockFd(SockFd && other) noexcept : sock_fd_{other.sock_fd_} { other.sock_fd_ = -1; }
+
+    SockFd(const SockFd &) = delete;
+    SockFd & operator=(const SockFd &) = delete;
+    SockFd & operator=(SockFd && other)
+    {
+      std::swap(sock_fd_, other.sock_fd_);
+      return *this;
+    };
+
+    ~SockFd()
+    {
+      if (sock_fd_ == -1) return;
+      close(sock_fd_);
+    }
+
+    [[nodiscard]] int get() const { return sock_fd_; }
+
+    template <typename T>
+    [[nodiscard]] util::expected<std::monostate, SocketError> setsockopt(
+      int level, int optname, const T & optval)
+    {
+      int result = ::setsockopt(sock_fd_, level, optname, &optval, sizeof(T));
+      if (result == -1) return SocketError(errno);
+      return std::monostate{};
+    }
+  };
+
+  struct SocketConfig
+  {
+    int32_t polling_interval_ms{10};
+
+    size_t buffer_size{1500};
+    Endpoint host;
+    std::optional<in_addr> multicast_ip;
+    std::optional<Endpoint> sender;
+  };
+
+  UdpSocket(SockFd sock_fd, SocketConfig config)
+  : sock_fd_(std::move(sock_fd)), poll_fd_{sock_fd_.get(), POLLIN, 0}, config_{std::move(config)}
+  {
+  }
+
+public:
+  class Builder
+  {
+  public:
+    /**
+     * @brief Build a UDP socket with timestamp measuring enabled. The minimal way to start
+     * receiving on the socket is `UdpSocket::Builder(...).bind().subscribe(...);`.
+     *
+     * @param host_ip The address to bind to.
+     * @param host_port The port to bind to.
+     */
+    Builder(const std::string & host_ip, uint16_t host_port)
+    {
+      in_addr host_in_addr = parse_ip_or_throw(host_ip);
+      if (host_in_addr.s_addr == INADDR_BROADCAST)
+        throw UsageError("Do not bind to broadcast IP. Bind to 0.0.0.0 or a specific IP instead.");
+
+      config_.host = {host_in_addr, host_port};
+
+      int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
+      if (sock_fd == -1) throw SocketError(errno);
+      sock_fd_ = SockFd{sock_fd};
+
+      sock_fd_.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1).value_or_throw();
+
+      // Enable kernel-space receive time measurement
+      sock_fd_.setsockopt(SOL_SOCKET, SO_TIMESTAMP, 1).value_or_throw();
+
+      // Enable reporting on packets dropped due to full UDP receive buffer
+      sock_fd_.setsockopt(SOL_SOCKET, SO_RXQ_OVFL, 1).value_or_throw();
+    }
+
+    /**
+     * @brief Set the socket to drop all packets not coming from `sender_ip` and `sender_port`.
+     *
+     * @param sender_ip The only allowed sender IP. Cannot be a multicast or broadcast address.
+     * @param sender_port The only allowed sender port.
+     */
+    Builder && limit_to_sender(const std::string & sender_ip, uint16_t sender_port)
+    {
+      config_.sender.emplace(Endpoint{parse_ip_or_throw(sender_ip), sender_port});
+      return std::move(*this);
+    }
+
+    /**
+     * @brief Set the MTU this socket supports. While this can be set arbitrarily, it is best set to
+     * the MTU of the network interface, or to the maximum expected packet length.
+     *
+     * @param bytes The MTU size. The default value is 1500.
+     */
+    Builder && set_mtu(size_t bytes)
+    {
+      config_.buffer_size = bytes;
+      return std::move(*this);
+    }
+
+    /**
+     * @brief Set the internal socket receive buffer size. See `SO_RCVBUF` in `man 7 socket` for
+     * more information.
+     *
+     * @param bytes The desired buffer size in bytes.
+     */
+    Builder && set_socket_buffer_size(size_t bytes)
+    {
+      if (bytes > static_cast<size_t>(INT32_MAX))
+        throw UsageError("The maximum value supported (0x7FFFFFF) has been exceeded");
+
+      auto buf_size = static_cast<int>(bytes);
+      sock_fd_.setsockopt(SOL_SOCKET, SO_RCVBUF, buf_size).value_or_throw();
+      return std::move(*this);
+    }
+
+    /**
+     * @brief Join an IP multicast group. Only one group can be joined by the socket.
+     *
+     * @param group_ip The multicast IP. It has to be in the multicast range `224.0.0.0/4` (between
+     * `224.0.0.0` and `239.255.255.255`).
+     */
+    Builder && join_multicast_group(const std::string & group_ip)
+    {
+      ip_mreq mreq{parse_ip_or_throw(group_ip), config_.host.ip};
+
+      sock_fd_.setsockopt(IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq).value_or_throw();
+      config_.multicast_ip.emplace(mreq.imr_multiaddr);
+      return std::move(*this);
+    }
+
+    /**
+     * @brief Set the interval at which the socket polls for new data. THis should be longer than
+     * the expected interval of packets arriving in order to not poll unnecessarily often, and
+     * should be shorter than the acceptable time delay for `unsubscribe()`. The `unsubscribe()`
+     * function blocks up to one full poll interval before returning.
+     *
+     * @param interval_ms The desired polling interval. See `man poll` for the meanings of 0 and
+     * negative values.
+     */
+    Builder && set_polling_interval(int32_t interval_ms)
+    {
+      config_.polling_interval_ms = interval_ms;
+      return std::move(*this);
+    }
+
+    /**
+     * @brief Bind the socket to host IP and port given in `init()`. If `join_multicast_group()` was
+     * called before this function, the socket will be bound to `group_ip` instead. At least
+     * `init()` has to have been called before.
+     */
+    UdpSocket bind() &&
+    {
+      sockaddr_in addr{};
+      addr.sin_family = AF_INET;
+      addr.sin_port = htons(config_.host.port);
+      addr.sin_addr = config_.multicast_ip ? *config_.multicast_ip : config_.host.ip;
+
+      int result = ::bind(sock_fd_.get(), (struct sockaddr *)&addr, sizeof(addr));
+      if (result == -1) throw SocketError(errno);
+
+      return UdpSocket{std::move(sock_fd_), config_};
+    }
+
+  private:
+    SockFd sock_fd_;
+    SocketConfig config_;
+  };
+
+private:
   struct MsgBuffers
   {
     msghdr msg{};
@@ -110,10 +286,6 @@ private:
     }
   };
 
-  enum class State { UNINITIALIZED, INITIALIZED, BOUND, ACTIVE };
-
-  static constexpr std::string_view broadcast_ip{"255.255.255.255"};
-
 public:
   struct RxMetadata
   {
@@ -125,151 +297,6 @@ public:
   using callback_t = std::function<void(const std::vector<uint8_t> &, const RxMetadata &)>;
 
   /**
-   * @brief Construct a UDP socket with timestamp measuring enabled. The minimal way to start
-   * receiving on the socket is `UdpSocket().init(...).bind().subscribe(...);`.
-   */
-  UdpSocket()
-  {
-    int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock_fd == -1) throw SocketError(errno);
-
-    int enable = 1;
-    int result = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
-    if (result == -1) throw SocketError(errno);
-
-    // Enable kernel-space receive time measurement
-    result = setsockopt(sock_fd, SOL_SOCKET, SO_TIMESTAMP, &enable, sizeof(enable));
-    if (result == -1) throw SocketError(errno);
-
-    // Enable reporting on packets dropped due to full UDP receive buffer
-    result = setsockopt(sock_fd, SOL_SOCKET, SO_RXQ_OVFL, &enable, sizeof(enable));
-    if (result == -1) throw SocketError(errno);
-
-    poll_fd_ = {sock_fd, POLLIN, 0};
-    sock_fd_ = sock_fd;
-  }
-
-  /**
-   * @brief Specify the host address and port for this socket to be bound to. To bind the socket,
-   * call the `bind()` function.
-   *
-   * @param host_ip The address to bind to.
-   * @param host_port The port to bind to.
-   */
-  UdpSocket & init(const std::string & host_ip, uint16_t host_port)
-  {
-    if (state_ >= State::INITIALIZED) throw UsageError("Socket must be initialized before binding");
-
-    in_addr host_in_addr = parse_ip_or_throw(host_ip);
-    if (host_in_addr.s_addr == INADDR_BROADCAST)
-      throw UsageError("Do not bind to broadcast IP. Bind to 0.0.0.0 or a specific IP instead.");
-
-    host_ = {host_in_addr, host_port};
-    state_ = State::INITIALIZED;
-    return *this;
-  }
-
-  /**
-   * @brief Set the socket to drop all packets not coming from `sender_ip` and `sender_port`.
-   *
-   * @param sender_ip The only allowed sender IP. Cannot be a multicast or broadcast address.
-   * @param sender_port The only allowed sender port.
-   */
-  UdpSocket & limit_to_sender(const std::string & sender_ip, uint16_t sender_port)
-  {
-    if (state_ >= State::ACTIVE) throw UsageError("Sender has to be set before subscribing");
-
-    sender_.emplace(Endpoint{parse_ip_or_throw(sender_ip), sender_port});
-    return *this;
-  }
-
-  /**
-   * @brief Set the MTU this socket supports. While this can be set arbitrarily, it is best set to
-   * the MTU of the network interface, or to the maximum expected packet length.
-   *
-   * @param bytes The MTU size. The default value is 1500.
-   */
-  UdpSocket & set_mtu(size_t bytes)
-  {
-    if (state_ >= State::ACTIVE) throw UsageError("MTU size has to be set before subscribing");
-
-    buffer_size_ = bytes;
-    return *this;
-  }
-
-  /**
-   * @brief Set the interval at which the socket polls for new data. THis should be longer than the
-   * expected interval of packets arriving in order to not poll unnecessarily often, and should be
-   * shorter than the acceptable time delay for `unsubscribe()`. The `unsubscribe()` function blocks
-   * up to one full poll interval before returning.
-   *
-   * @param interval_ms The desired polling interval. See `man poll` for the meanings of 0 and
-   * negative values.
-   */
-  UdpSocket & set_polling_interval(int32_t interval_ms)
-  {
-    if (state_ >= State::ACTIVE) throw UsageError("Poll timeout has to be set before subscribing");
-
-    polling_interval_ms_ = interval_ms;
-    return *this;
-  }
-
-  UdpSocket & set_socket_buffer_size(size_t bytes)
-  {
-    if (state_ > State::INITIALIZED) throw UsageError("Buffer size has to be set before binding");
-    if (bytes > static_cast<size_t>(INT32_MAX))
-      throw UsageError("The maximum value supported (0x7FFFFFF) has been exceeded");
-
-    auto buf_size = static_cast<int>(bytes);
-    int result = setsockopt(sock_fd_, SOL_SOCKET, SO_RCVBUF, &buf_size, sizeof(buf_size));
-    if (result == -1) throw SocketError(errno);
-    return *this;
-  }
-
-  /**
-   * @brief Join an IP multicast group. Only one group can be joined by the socket.
-   *
-   * @param group_ip The multicast IP. It has to be in the multicast range `224.0.0.0/4` (between
-   * `224.0.0.0` and `239.255.255.255`).
-   */
-  UdpSocket & join_multicast_group(const std::string & group_ip)
-  {
-    if (state_ < State::INITIALIZED) throw UsageError("Socket has to be initialized first");
-    if (state_ >= State::BOUND)
-      throw UsageError("Multicast groups have to be joined before binding");
-
-    ip_mreq mreq{parse_ip_or_throw(group_ip), host_.ip};
-
-    int result = setsockopt(sock_fd_, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq));
-    if (result == -1) throw SocketError(errno);
-
-    multicast_ip_.emplace(mreq.imr_multiaddr);
-    return *this;
-  }
-
-  /**
-   * @brief Bind the socket to host IP and port given in `init()`. If `join_multicast_group()` was
-   * called before this function, the socket will be bound to `group_ip` instead. At least `init()`
-   * has to have been called before.
-   */
-  UdpSocket & bind()
-  {
-    if (state_ < State::INITIALIZED) throw UsageError("Socket has to be initialized first");
-    if (state_ >= State::BOUND) throw UsageError("Re-binding already bound socket");
-
-    sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(host_.port);
-    addr.sin_addr = multicast_ip_ ? *multicast_ip_ : host_.ip;
-
-    int result = ::bind(sock_fd_, (struct sockaddr *)&addr, sizeof(addr));
-    if (result == -1) throw SocketError(errno);
-
-    state_ = State::BOUND;
-    return *this;
-  }
-
-  /**
    * @brief Register a callback for processing received packets and start the receiver thread. The
    * callback will be called for each received packet, and will be executed in the receive thread.
    * Has to be called on a bound socket (`bind()` has to have been called before).
@@ -278,9 +305,7 @@ public:
    */
   UdpSocket & subscribe(callback_t && callback)
   {
-    if (state_ < State::BOUND) throw UsageError("Socket has to be bound first");
-    if (state_ > State::BOUND) throw UsageError("Cannot re-subscribe to socket");
-
+    unsubscribe();
     callback_ = std::move(callback);
     launch_receiver();
     return *this;
@@ -292,37 +317,39 @@ public:
    */
   UdpSocket & unsubscribe()
   {
-    if (state_ == State::ACTIVE) state_ = State::BOUND;
-    if (receive_thread_.joinable()) receive_thread_.join();
+    running_ = false;
+    if (receive_thread_.joinable()) {
+      receive_thread_.join();
+    }
     return *this;
   }
 
-  ~UdpSocket()
-  {
-    unsubscribe();
-    close(sock_fd_);
-  }
+  UdpSocket(const UdpSocket &) = delete;
+  UdpSocket(UdpSocket &&) = delete;
+  UdpSocket & operator=(const UdpSocket &) = delete;
+  UdpSocket & operator=(UdpSocket &&) = delete;
+
+  ~UdpSocket() { unsubscribe(); }
 
 private:
   void launch_receiver()
   {
-    assert(state_ == State::BOUND);
     assert(callback_);
 
-    state_ = State::ACTIVE;
+    running_ = true;
     receive_thread_ = std::thread([this]() {
       std::vector<uint8_t> buffer;
-      while (state_ == State::ACTIVE) {
+      while (running_) {
         auto data_available = is_data_available();
         if (!data_available.has_value()) throw SocketError(data_available.error());
         if (!data_available.value()) continue;
 
-        buffer.resize(buffer_size_);
+        buffer.resize(config_.buffer_size);
         auto msg_header = make_msg_header(buffer);
 
         // As per `man recvmsg`, zero-length datagrams are permitted and valid. Since the socket is
         // blocking, a recv_result of 0 means we received a valid 0-length datagram.
-        ssize_t recv_result = recvmsg(sock_fd_, &msg_header.msg, MSG_TRUNC);
+        ssize_t recv_result = recvmsg(sock_fd_.get(), &msg_header.msg, MSG_TRUNC);
         if (recv_result < 0) throw SocketError(errno);
         size_t untruncated_packet_length = recv_result;
 
@@ -330,9 +357,9 @@ private:
 
         RxMetadata metadata;
         get_receive_metadata(msg_header.msg, metadata);
-        metadata.truncated = untruncated_packet_length > buffer_size_;
+        metadata.truncated = untruncated_packet_length > config_.buffer_size;
 
-        buffer.resize(std::min(buffer_size_, untruncated_packet_length));
+        buffer.resize(std::min(config_.buffer_size, untruncated_packet_length));
         callback_(buffer, metadata);
       }
     });
@@ -364,15 +391,15 @@ private:
 
   util::expected<bool, int> is_data_available()
   {
-    int status = poll(&poll_fd_, 1, polling_interval_ms_);
+    int status = poll(&poll_fd_, 1, config_.polling_interval_ms);
     if (status == -1) return errno;
     return (poll_fd_.revents & POLLIN) && (status > 0);
   }
 
   bool is_accepted_sender(const sockaddr_in & sender_addr)
   {
-    if (!sender_) return true;
-    return sender_addr.sin_addr.s_addr == sender_->ip.s_addr;
+    if (!config_.sender) return true;
+    return sender_addr.sin_addr.s_addr == config_.sender->ip.s_addr;
   }
 
   static MsgBuffers make_msg_header(std::vector<uint8_t> & receive_buffer)
@@ -405,16 +432,12 @@ private:
     return parsed_addr;
   }
 
-  std::atomic<State> state_{State::UNINITIALIZED};
-
-  int sock_fd_;
+  SockFd sock_fd_;
   pollfd poll_fd_;
-  int32_t polling_interval_ms_{10};
 
-  size_t buffer_size_{1500};
-  Endpoint host_;
-  std::optional<in_addr> multicast_ip_;
-  std::optional<Endpoint> sender_;
+  SocketConfig config_;
+
+  std::atomic_bool running_{false};
   std::thread receive_thread_;
   callback_t callback_;
 

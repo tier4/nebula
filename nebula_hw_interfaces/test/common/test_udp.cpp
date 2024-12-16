@@ -54,19 +54,19 @@ util::expected<uint64_t, std::string> read_sys_param(const std::string & param_f
 TEST(test_udp, test_basic_lifecycle)
 {
   ASSERT_NO_THROW(
-    UdpSocket().init(localhost_ip, host_port).bind().subscribe(empty_cb()).unsubscribe());
+    UdpSocket::Builder(localhost_ip, host_port).bind().subscribe(empty_cb()).unsubscribe());
 }
 
 TEST(test_udp, test_special_addresses_bind)
 {
-  ASSERT_THROW(UdpSocket().init(broadcast_ip, host_port), UsageError);
-  ASSERT_NO_THROW(UdpSocket().init(any_ip, host_port).bind());
+  ASSERT_THROW(UdpSocket::Builder(broadcast_ip, host_port), UsageError);
+  ASSERT_NO_THROW(UdpSocket::Builder(any_ip, host_port).bind());
 }
 
 TEST(test_udp, test_joining_invalid_multicast_group)
 {
   ASSERT_THROW(
-    UdpSocket().init(localhost_ip, host_port).join_multicast_group(broadcast_ip).bind(),
+    UdpSocket::Builder(localhost_ip, host_port).join_multicast_group(broadcast_ip).bind(),
     SocketError);
 }
 
@@ -78,12 +78,11 @@ TEST(test_udp, test_buffer_resize)
 
   // Setting buffer sizes up to and including rmem_max shall succeed
   ASSERT_NO_THROW(
-    UdpSocket().init(localhost_ip, host_port).set_socket_buffer_size(rmem_max).bind());
+    UdpSocket::Builder(localhost_ip, host_port).set_socket_buffer_size(rmem_max).bind());
 
   // Linux only supports sizes up to INT32_MAX
   ASSERT_THROW(
-    UdpSocket()
-      .init(localhost_ip, host_port)
+    UdpSocket::Builder(localhost_ip, host_port)
       .set_socket_buffer_size(static_cast<size_t>(INT32_MAX) + 1)
       .bind(),
     UsageError);
@@ -91,53 +90,38 @@ TEST(test_udp, test_buffer_resize)
 
 TEST(test_udp, test_correct_usage_is_enforced)
 {
-  // These functions require other functions (e.g. `init()`) to be called beforehand
-  ASSERT_THROW(UdpSocket().bind(), UsageError);
-  ASSERT_THROW(UdpSocket().join_multicast_group(multicast_group), UsageError);
-  ASSERT_THROW(UdpSocket().subscribe(empty_cb()), UsageError);
-
   // The following functions can be called in any order, any number of times
-  ASSERT_NO_THROW(UdpSocket().limit_to_sender(sender_ip, sender_port));
+  ASSERT_NO_THROW(UdpSocket::Builder(localhost_ip, host_port)
+                    .set_polling_interval(20)
+                    .set_socket_buffer_size(3000)
+                    .join_multicast_group(multicast_group)
+                    .set_mtu(1600)
+                    .limit_to_sender(sender_ip, sender_port)
+                    .set_polling_interval(20)
+                    .set_socket_buffer_size(3000)
+                    .set_mtu(1600)
+                    .limit_to_sender(sender_ip, sender_port)
+                    .bind());
+
+  // Pre-existing subscriptions shall be gracefully unsubscribed when a new subscription is created
   ASSERT_NO_THROW(
-    UdpSocket().limit_to_sender(sender_ip, sender_port).limit_to_sender(sender_ip, sender_port));
+    UdpSocket::Builder(localhost_ip, host_port).bind().subscribe(empty_cb()).subscribe(empty_cb()));
 
-  // Sockets cannot be re-initialized
-  ASSERT_THROW(UdpSocket().init(localhost_ip, host_port).init(localhost_ip, host_port), UsageError);
-
-  // Sockets cannot be re-bound
-  ASSERT_THROW(UdpSocket().init(localhost_ip, host_port).bind().bind(), UsageError);
-
-  ASSERT_THROW(
-    UdpSocket().init(localhost_ip, host_port).bind().init(localhost_ip, host_port), UsageError);
-  ASSERT_NO_THROW(
-    UdpSocket().init(localhost_ip, host_port).bind().limit_to_sender(sender_ip, sender_port));
-
-  // Only bound sockets can be subscribed
-  ASSERT_THROW(UdpSocket().init(localhost_ip, host_port).subscribe(empty_cb()), UsageError);
-  ASSERT_NO_THROW(UdpSocket().init(localhost_ip, host_port).bind().subscribe(empty_cb()));
-
-  // Only one callback can exist
-  ASSERT_THROW(
-    UdpSocket().init(localhost_ip, host_port).bind().subscribe(empty_cb()).subscribe(empty_cb()),
-    UsageError);
-
-  // But un- and re-subscribing shall be supported
-  ASSERT_NO_THROW(UdpSocket()
-                    .init(localhost_ip, host_port)
+  // Explicitly unsubscribing shall be supported
+  ASSERT_NO_THROW(UdpSocket::Builder(localhost_ip, host_port)
                     .bind()
                     .subscribe(empty_cb())
                     .unsubscribe()
                     .subscribe(empty_cb()));
 
   // Unsubscribing on a non-subscribed socket shall also be supported
-  ASSERT_NO_THROW(UdpSocket().unsubscribe());
+  ASSERT_NO_THROW(UdpSocket::Builder(localhost_ip, host_port).bind().unsubscribe());
 }
 
 TEST(test_udp, test_receiving)
 {
   const std::vector<uint8_t> payload{1, 2, 3};
-  UdpSocket sock{};
-  sock.init(localhost_ip, host_port).bind();
+  auto sock = UdpSocket::Builder(localhost_ip, host_port).bind();
 
   auto err_no_opt = udp_send(localhost_ip, host_port, payload);
   if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
@@ -158,8 +142,7 @@ TEST(test_udp, test_receiving_oversized)
   const size_t mtu = 1500;
   std::vector<uint8_t> payload;
   payload.resize(mtu + 1, 0x42);
-  UdpSocket sock{};
-  sock.init(localhost_ip, host_port).set_mtu(mtu).bind();
+  auto sock = UdpSocket::Builder(localhost_ip, host_port).set_mtu(mtu).bind();
 
   auto err_no_opt = udp_send(localhost_ip, host_port, payload);
   if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
@@ -177,8 +160,8 @@ TEST(test_udp, test_receiving_oversized)
 TEST(test_udp, test_filtering_sender)
 {
   std::vector<uint8_t> payload{1, 2, 3};
-  UdpSocket sock{};
-  sock.init(localhost_ip, host_port).bind().limit_to_sender(sender_ip, sender_port);
+  auto sock =
+    UdpSocket::Builder(localhost_ip, host_port).limit_to_sender(sender_ip, sender_port).bind();
 
   auto err_no_opt = udp_send(localhost_ip, host_port, payload);
   if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
