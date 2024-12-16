@@ -80,7 +80,8 @@ struct expected
   }
 
   /// @brief If the instance has a value, return the value, else throw the stored error instance.
-  T value_or_throw() {
+  T value_or_throw()
+  {
     if (has_value()) return value();
     throw error();
   }
