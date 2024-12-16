@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
-
 #include "nebula_hw_interfaces/nebula_hw_interfaces_aeva/aeva_hw_interface.hpp"
 
 #include "nebula_hw_interfaces/nebula_hw_interfaces_aeva/connections/aeva_api.hpp"
