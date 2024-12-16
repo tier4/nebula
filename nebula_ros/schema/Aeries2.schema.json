@@ -233,7 +233,6 @@
         "scanner.dithering_enable_ego_speed",
         "scanner.dithering_pattern_option",
         "scanner.ele_offset_rad",
-        "scanner.elevation_auto_adjustment",
         "scanner.enable_frame_dithering",
         "scanner.enable_frame_sync",
         "scanner.flip_pattern_vertically",
