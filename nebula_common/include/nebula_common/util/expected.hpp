@@ -79,6 +79,12 @@ struct expected
     throw std::runtime_error(error_msg);
   }
 
+  /// @brief If the instance has a value, return the value, else throw the stored error instance.
+  T value_or_throw() {
+    if (has_value()) return value();
+    throw error();
+  }
+
   /// @brief Retrieve the error, or throw `bad_expected_access` if a value is contained.
   /// @return The error of type `E`
   E error()
