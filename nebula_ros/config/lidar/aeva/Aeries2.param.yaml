@@ -1,0 +1,32 @@
+/**:
+  ros__parameters:
+    sensor_ip: 192.168.2.201
+    launch_hw: true
+    frame_id: nebula
+    sensor_model: Aeries2
+    setup_sensor: true
+    diag_span: 1000
+    scanner.dithering_enable_ego_speed: 40.0
+    scanner.dithering_pattern_option: dithering_pattern_1
+    scanner.ele_offset_rad: 0.0
+    scanner.enable_frame_dithering: false
+    scanner.enable_frame_sync: true
+    scanner.flip_pattern_vertically: false
+    scanner.frame_sync_offset_in_ms: 999
+    scanner.frame_sync_type: nearest_second
+    scanner.frame_synchronization_on_rising_edge: false
+    scanner.hfov_adjustment_deg: 0.0
+    scanner.hfov_rotation_deg: 0.0
+    scanner.highlight_ROI: false
+    scanner.horizontal_fov_degrees: 110Degrees
+    scanner.roi_az_offset_rad: 0.0
+    scanner.vertical_pattern: 40-14.4-ROI
+    system_config.range_modes: Normal Range
+    system_config.sensitivity_mode: normal
+    system_config.thermal_throttling_setting: Active
+    spc_converter.discard_points_in_ambiguity_region: false
+    spc_converter.display_all_points: false
+    spc_converter.enable_min_range_filter: true
+    dsp_control.second_peak_type: strongest
+    dsp_control.use_foveated_velocity_bias: false
+    dsp_control.velocity_bias_pattern_options: velocity_bias_pattern_1
