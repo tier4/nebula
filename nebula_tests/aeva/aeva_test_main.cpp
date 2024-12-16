@@ -44,7 +44,6 @@ TEST(TestParsing, Pointcloud)  // NOLINT
   }
 }
 
-
 int main(int argc, char * argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
