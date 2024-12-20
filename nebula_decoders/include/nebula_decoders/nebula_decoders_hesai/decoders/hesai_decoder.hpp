@@ -22,6 +22,7 @@
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/point_types.hpp>
+#include <nlohmann/json.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -32,7 +33,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-#include <nlohmann/json.hpp>
 
 namespace nebula::drivers
 {
@@ -133,14 +133,20 @@ protected:
   std::array<std::array<int, SensorT::packet_t::n_blocks>, SensorT::packet_t::max_returns>
     block_firing_offset_ns_;
 
-  void get_minmax_info(const NebulaPoint &point)
+  void get_minmax_info(const NebulaPoint & point)
   {
-    decode_filtered_info_.raw_azimuth_start = std::min(decode_filtered_info_.raw_azimuth_start, point.azimuth);
-    decode_filtered_info_.raw_azimuth_end = std::max(decode_filtered_info_.raw_azimuth_end, point.azimuth);
-    decode_filtered_info_.packet_timestamp_start = std::min(decode_filtered_info_.packet_timestamp_start, point.time_stamp);
-    decode_filtered_info_.packet_timestamp_end = std::max(decode_filtered_info_.packet_timestamp_end, point.time_stamp);
-    decode_filtered_info_.distance_start = std::min(decode_filtered_info_.distance_start, point.distance);
-    decode_filtered_info_.disntance_end = std::max(decode_filtered_info_.disntance_end, point.distance);
+    decode_filtered_info_.raw_azimuth_start =
+      std::min(decode_filtered_info_.raw_azimuth_start, point.azimuth);
+    decode_filtered_info_.raw_azimuth_end =
+      std::max(decode_filtered_info_.raw_azimuth_end, point.azimuth);
+    decode_filtered_info_.packet_timestamp_start =
+      std::min(decode_filtered_info_.packet_timestamp_start, point.time_stamp);
+    decode_filtered_info_.packet_timestamp_end =
+      std::max(decode_filtered_info_.packet_timestamp_end, point.time_stamp);
+    decode_filtered_info_.distance_start =
+      std::min(decode_filtered_info_.distance_start, point.distance);
+    decode_filtered_info_.disntance_end =
+      std::max(decode_filtered_info_.disntance_end, point.distance);
   }
 
   /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
