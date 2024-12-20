@@ -43,7 +43,7 @@ struct HesaiDecodeFilteredInfo
   uint16_t fov_counter = 0;
   uint16_t timestamp_counter = 0;
   float distance_start = 0;
-  float disntance_end = 0;
+  float distance_end = 0;
   float raw_azimuth_start = 0;
   float raw_azimuth_end = 0;
   std::uint32_t packet_timestamp_start = 0;
@@ -74,7 +74,7 @@ struct HesaiDecodeFilteredInfo
     j["fov_counter"] = fov_counter;
     j["timestamp_counter"] = timestamp_counter;
     j["distance_start"] = distance_start;
-    j["disntance_end"] = disntance_end;
+    j["distance_end"] = distance_end;
     j["raw_azimuth_start"] = raw_azimuth_start;
     j["raw_azimuth_end"] = raw_azimuth_end;
     j["packet_timestamp_start"] = packet_timestamp_start;
@@ -145,8 +145,8 @@ protected:
       std::max(decode_filtered_info_.packet_timestamp_end, point.time_stamp);
     decode_filtered_info_.distance_start =
       std::min(decode_filtered_info_.distance_start, point.distance);
-    decode_filtered_info_.disntance_end =
-      std::max(decode_filtered_info_.disntance_end, point.distance);
+    decode_filtered_info_.distance_end =
+      std::max(decode_filtered_info_.distance_end, point.distance);
   }
 
   /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
