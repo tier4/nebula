@@ -85,12 +85,13 @@ class UdpSocket
 
   class SockFd
   {
+    static const int uninitialized = -1;
     int sock_fd_;
 
   public:
-    SockFd() : sock_fd_{-1} {}
+    SockFd() : sock_fd_{uninitialized} {}
     SockFd(int sock_fd) : sock_fd_{sock_fd} {}
-    SockFd(SockFd && other) noexcept : sock_fd_{other.sock_fd_} { other.sock_fd_ = -1; }
+    SockFd(SockFd && other) noexcept : sock_fd_{other.sock_fd_} { other.sock_fd_ = uninitialized; }
 
     SockFd(const SockFd &) = delete;
     SockFd & operator=(const SockFd &) = delete;
@@ -102,7 +103,7 @@ class UdpSocket
 
     ~SockFd()
     {
-      if (sock_fd_ == -1) return;
+      if (sock_fd_ == uninitialized) return;
       close(sock_fd_);
     }
 
