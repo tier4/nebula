@@ -90,7 +90,7 @@ class UdpSocket
 
   public:
     SockFd() : sock_fd_{uninitialized} {}
-    SockFd(int sock_fd) : sock_fd_{sock_fd} {}
+    explicit SockFd(int sock_fd) : sock_fd_{sock_fd} {}
     SockFd(SockFd && other) noexcept : sock_fd_{other.sock_fd_} { other.sock_fd_ = uninitialized; }
 
     SockFd(const SockFd &) = delete;
