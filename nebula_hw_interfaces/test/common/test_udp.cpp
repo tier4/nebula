@@ -16,6 +16,7 @@
 #include <fstream>
 #include <optional>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace nebula::drivers::connections
@@ -175,6 +176,29 @@ TEST(test_udp, test_filtering_sender)
 
   auto result_opt = receive_once(sock, send_receive_timeout);
   ASSERT_FALSE(result_opt.has_value());
+}
+
+TEST(test_udp, test_moveable)
+{
+  std::vector<uint8_t> payload{1, 2, 3};
+
+  size_t n_received = 0;
+
+  auto sock = UdpSocket::Builder(localhost_ip, host_port).bind();
+  sock.subscribe([&n_received](const auto &, const auto &) { n_received++; });
+
+  auto err_no_opt = udp_send(localhost_ip, host_port, payload);
+  if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
+
+  // The subscription moves to the new socket object
+  UdpSocket sock2{std::move(sock)};
+  ASSERT_TRUE(sock2.is_subscribed());
+
+  err_no_opt = udp_send(localhost_ip, host_port, payload);
+  if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
+
+  std::this_thread::sleep_for(100ms);
+  ASSERT_EQ(n_received, 2);
 }
 
 }  // namespace nebula::drivers::connections

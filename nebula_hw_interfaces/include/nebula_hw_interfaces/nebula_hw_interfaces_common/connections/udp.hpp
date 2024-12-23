@@ -312,6 +312,8 @@ public:
     return *this;
   }
 
+  bool is_subscribed() { return running_; }
+
   /**
    * @brief Gracefully stops the active receiver thread (if any) but keeps the socket alive. The
    * same socket can later be subscribed again.
@@ -326,7 +328,15 @@ public:
   }
 
   UdpSocket(const UdpSocket &) = delete;
-  UdpSocket(UdpSocket &&) = delete;
+  UdpSocket(UdpSocket && other)
+  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))),
+    poll_fd_(std::move(other.poll_fd_)),
+    config_(std::move(other.config_)),
+    drop_monitor_(std::move(other.drop_monitor_))
+  {
+    if (other.callback_) subscribe(std::move(other.callback_));
+  };
+
   UdpSocket & operator=(const UdpSocket &) = delete;
   UdpSocket & operator=(UdpSocket &&) = delete;
 
