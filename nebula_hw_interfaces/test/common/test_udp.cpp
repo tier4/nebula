@@ -27,6 +27,7 @@ static const char localhost_ip[] = "127.0.0.1";
 static const char broadcast_ip[] = "255.255.255.255";
 static const char any_ip[] = "0.0.0.0";
 static const char multicast_group[] = "230.1.2.3";
+static const char multicast_group2[] = "230.4.5.6";
 
 static const char sender_ip[] = "192.168.201";
 static const uint16_t sender_port = 7373;
@@ -94,7 +95,6 @@ TEST(test_udp, test_correct_usage_is_enforced)
   ASSERT_NO_THROW(UdpSocket::Builder(localhost_ip, host_port)
                     .set_polling_interval(20)
                     .set_socket_buffer_size(3000)
-                    .join_multicast_group(multicast_group)
                     .set_mtu(1600)
                     .limit_to_sender(sender_ip, sender_port)
                     .set_polling_interval(20)
@@ -102,6 +102,13 @@ TEST(test_udp, test_correct_usage_is_enforced)
                     .set_mtu(1600)
                     .limit_to_sender(sender_ip, sender_port)
                     .bind());
+
+  // Only one multicast group can be joined
+  ASSERT_THROW(
+    UdpSocket::Builder(localhost_ip, host_port)
+      .join_multicast_group(multicast_group)
+      .join_multicast_group(multicast_group2),
+    UsageError);
 
   // Pre-existing subscriptions shall be gracefully unsubscribed when a new subscription is created
   ASSERT_NO_THROW(

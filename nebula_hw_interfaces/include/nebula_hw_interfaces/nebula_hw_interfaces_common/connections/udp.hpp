@@ -214,6 +214,8 @@ public:
      */
     Builder && join_multicast_group(const std::string & group_ip)
     {
+      if (config_.multicast_ip)
+        throw UsageError("Only one multicast group can be joined by this socket");
       ip_mreq mreq{parse_ip_or_throw(group_ip), config_.host.ip};
 
       sock_fd_.setsockopt(IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq).value_or_throw();
