@@ -129,6 +129,33 @@ class UdpSocket
     std::optional<Endpoint> sender;
   };
 
+  struct MsgBuffers
+  {
+    msghdr msg{};
+    iovec iov{};
+    std::array<std::byte, 1024> control;
+    sockaddr_in sender_addr;
+  };
+
+  class DropMonitor
+  {
+    uint32_t last_drop_counter_{0};
+
+  public:
+    uint32_t get_drops_since_last_receive(uint32_t current_drop_counter)
+    {
+      uint32_t last = last_drop_counter_;
+      last_drop_counter_ = current_drop_counter;
+
+      bool counter_did_wrap = current_drop_counter < last;
+      if (counter_did_wrap) {
+        return (UINT32_MAX - last) + current_drop_counter;
+      }
+
+      return current_drop_counter - last;
+    }
+  };
+
   UdpSocket(SockFd sock_fd, SocketConfig config)
   : sock_fd_(std::move(sock_fd)), poll_fd_{sock_fd_.get(), POLLIN, 0}, config_{std::move(config)}
   {
@@ -261,35 +288,6 @@ public:
     SocketConfig config_;
   };
 
-private:
-  struct MsgBuffers
-  {
-    msghdr msg{};
-    iovec iov{};
-    std::array<std::byte, 1024> control;
-    sockaddr_in sender_addr;
-  };
-
-  class DropMonitor
-  {
-    uint32_t last_drop_counter_{0};
-
-  public:
-    uint32_t get_drops_since_last_receive(uint32_t current_drop_counter)
-    {
-      uint32_t last = last_drop_counter_;
-      last_drop_counter_ = current_drop_counter;
-
-      bool counter_did_wrap = current_drop_counter < last;
-      if (counter_did_wrap) {
-        return (UINT32_MAX - last) + current_drop_counter;
-      }
-
-      return current_drop_counter - last;
-    }
-  };
-
-public:
   struct RxMetadata
   {
     std::optional<uint64_t> timestamp_ns;
