@@ -225,6 +225,13 @@ Status HesaiRosWrapper::validate_and_set_config(
   if (new_config->frame_id.empty()) {
     return Status::SENSOR_CONFIG_ERROR;
   }
+  if (new_config->host_ip == "255.255.255.255") {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Due to potential network performance issues when using IP broadcast for sensor data, Nebula "
+      "disallows use of the broadcast IP. Please specify the concrete host IP instead.");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
   if (new_config->ptp_profile == nebula::drivers::PtpProfile::UNKNOWN_PROFILE) {
     RCLCPP_ERROR(
       get_logger(), "Invalid PTP Profile Provided. Please use '1588v2', '802.1as' or 'automotive'");
