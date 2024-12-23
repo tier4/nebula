@@ -22,6 +22,7 @@
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/point_types.hpp>
+#include <nlohmann/json.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -35,6 +36,52 @@
 
 namespace nebula::drivers
 {
+
+struct HesaiDecodeFilteredInfo
+{
+  uint16_t distance_counter = 0;
+  uint16_t fov_counter = 0;
+  uint16_t timestamp_counter = 0;
+  float distance_start = 0;
+  float distance_end = 0;
+  float raw_azimuth_start = 0;
+  float raw_azimuth_end = 0;
+  std::uint32_t packet_timestamp_start = 0;
+  std::uint32_t packet_timestamp_end = 0;
+  NebulaPointCloud point_azimuth_start;
+  NebulaPointCloud point_azimuth_end;
+  NebulaPointCloud point_timestamp_start;
+  NebulaPointCloud point_timestamp_end;
+
+  void clear()
+  {
+    distance_counter = 0;
+    fov_counter = 0;
+    raw_azimuth_start = 0;
+    raw_azimuth_end = 0;
+    packet_timestamp_start = 0;
+    packet_timestamp_end = 0;
+    point_azimuth_start = NebulaPointCloud();
+    point_azimuth_end = NebulaPointCloud();
+    point_timestamp_start = NebulaPointCloud();
+    point_timestamp_end = NebulaPointCloud();
+  }
+
+  [[nodiscard]] nlohmann::ordered_json to_json() const
+  {
+    nlohmann::ordered_json j;
+    j["distance_counter"] = distance_counter;
+    j["fov_counter"] = fov_counter;
+    j["timestamp_counter"] = timestamp_counter;
+    j["distance_start"] = distance_start;
+    j["distance_end"] = distance_end;
+    j["raw_azimuth_start"] = raw_azimuth_start;
+    j["raw_azimuth_end"] = raw_azimuth_end;
+    j["packet_timestamp_start"] = packet_timestamp_start;
+    j["packet_timestamp_end"] = packet_timestamp_end;
+    return j;
+  }
+};
 
 template <typename SensorT>
 class HesaiDecoder : public HesaiScanDecoder
@@ -76,12 +123,31 @@ protected:
 
   rclcpp::Logger logger_;
 
+  // filtered pointcloud counter
+  HesaiDecodeFilteredInfo decode_filtered_info_;
+
   /// @brief For each channel, its firing offset relative to the block in nanoseconds
   std::array<int, SensorT::packet_t::n_channels> channel_firing_offset_ns_;
   /// @brief For each return mode, the firing offset of each block relative to its packet in
   /// nanoseconds
   std::array<std::array<int, SensorT::packet_t::n_blocks>, SensorT::packet_t::max_returns>
     block_firing_offset_ns_;
+
+  void get_minmax_info(const NebulaPoint & point)
+  {
+    decode_filtered_info_.raw_azimuth_start =
+      std::min(decode_filtered_info_.raw_azimuth_start, point.azimuth);
+    decode_filtered_info_.raw_azimuth_end =
+      std::max(decode_filtered_info_.raw_azimuth_end, point.azimuth);
+    decode_filtered_info_.packet_timestamp_start =
+      std::min(decode_filtered_info_.packet_timestamp_start, point.time_stamp);
+    decode_filtered_info_.packet_timestamp_end =
+      std::max(decode_filtered_info_.packet_timestamp_end, point.time_stamp);
+    decode_filtered_info_.distance_start =
+      std::min(decode_filtered_info_.distance_start, point.distance);
+    decode_filtered_info_.distance_end =
+      std::max(decode_filtered_info_.distance_end, point.distance);
+  }
 
   /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
   /// @param packet The incoming PandarPacket
@@ -138,6 +204,7 @@ protected:
           distance < SensorT::min_range || SensorT::max_range < distance ||
           distance < sensor_configuration_->min_range ||
           sensor_configuration_->max_range < distance) {
+          decode_filtered_info_.distance_counter++;
           continue;
         }
 
@@ -178,6 +245,7 @@ protected:
 
         bool in_fov = angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.fov_max, azimuth);
         if (!in_fov) {
+          decode_filtered_info_.fov_counter++;
           continue;
         }
 
@@ -214,6 +282,8 @@ protected:
         // The driver wrapper converts to degrees, expects radians
         point.azimuth = corrected_angle_data.azimuth_rad;
         point.elevation = corrected_angle_data.elevation_rad;
+
+        get_minmax_info(point);
       }
     }
   }
