@@ -42,10 +42,11 @@ namespace nebula::drivers
 using std::string_literals::operator""s;
 using nlohmann::json;
 
-HesaiHwInterface::HesaiHwInterface(const std::shared_ptr<loggers::Logger> & logger)
+HesaiHwInterface::HesaiHwInterface(
+  const std::shared_ptr<loggers::Logger> & logger,
+  std::shared_ptr<connections::AbstractTcpSocket> tcp_socket)
 : logger_(logger),
-  m_owned_ctx_{new boost::asio::io_context(1)},
-  tcp_driver_{new ::drivers::tcp_driver::TcpDriver(m_owned_ctx_)},
+  tcp_socket_{std::move(tcp_socket)},
   target_model_no_(nebula_model_to_hesai_model_no(SensorModel::UNKNOWN))
 {
 }
@@ -90,13 +91,8 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
   std::timed_mutex tm;
   tm.lock();
 
-  if (tcp_driver_->GetIOContext()->stopped()) {
-    logger_->debug(log_tag + "IOContext was stopped");
-    tcp_driver_->GetIOContext()->restart();
-  }
-
   logger_->debug(log_tag + "Sending payload");
-  tcp_driver_->asyncSendReceiveHeaderPayload(
+  tcp_socket_->async_ptc_request(
     send_buf,
     [this, log_tag, command_id, response_complete,
      error_code](const std::vector<uint8_t> & header_bytes) {
@@ -136,7 +132,6 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
       tm.unlock();
       logger_->debug(log_tag + "Unlocked mutex");
     });
-  this->io_context_run();
   if (!tm.try_lock_for(std::chrono::seconds(1))) {
     logger_->error(log_tag + "Request did not finish within 1s");
     error_code->error_flags |= g_tcp_error_timeout;
@@ -233,40 +228,16 @@ Status HesaiHwInterface::get_calibration_configuration(
 
 Status HesaiHwInterface::initialize_tcp_driver()
 {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "HesaiHwInterface::InitializeTcpDriver" << std::endl;
-  std::cout << "st: tcp_driver_->init_socket" << std::endl;
-  std::cout << "sensor_configuration_->sensor_ip=" << sensor_configuration_->sensor_ip << std::endl;
-  std::cout << "sensor_configuration_->host_ip=" << sensor_configuration_->host_ip << std::endl;
-  std::cout << "PandarTcpCommandPort=" << PandarTcpCommandPort << std::endl;
-#endif
-  tcp_driver_->init_socket(
-    sensor_configuration_->sensor_ip, g_pandar_tcp_command_port, sensor_configuration_->host_ip,
+  tcp_socket_->init(
+    sensor_configuration_->host_ip, g_pandar_tcp_command_port, sensor_configuration_->sensor_ip,
     g_pandar_tcp_command_port);
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "ed: tcp_driver_->init_socket" << std::endl;
-#endif
-  if (!tcp_driver_->open()) {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << "!tcp_driver_->open()" << std::endl;
-#endif
-    //    tcp_driver_->close();
-    tcp_driver_->closeSync();
-    return Status::ERROR_1;
-  }
+  tcp_socket_->bind();
   return Status::OK;
 }
 
 Status HesaiHwInterface::finalize_tcp_driver()
 {
-  try {
-    if (tcp_driver_) {
-      tcp_driver_->close();
-    }
-  } catch (std::exception & e) {
-    logger_->error("Error while finalizing the TcpDriver");
-    return Status::UDP_CONNECTION_ERROR;
-  }
+  tcp_socket_->close();
   return Status::OK;
 }
 
@@ -737,16 +708,6 @@ HesaiLidarMonitor HesaiHwInterface::get_lidar_monitor()
   auto response =
     response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
   return check_size_and_parse<HesaiLidarMonitor>(response);
-}
-
-void HesaiHwInterface::io_context_run()
-{
-  m_owned_ctx_->run();
-}
-
-std::shared_ptr<boost::asio::io_context> HesaiHwInterface::get_io_context()
-{
-  return m_owned_ctx_;
 }
 
 HesaiStatus HesaiHwInterface::get_http_client_driver_once(

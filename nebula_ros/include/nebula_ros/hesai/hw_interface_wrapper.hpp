@@ -15,6 +15,7 @@
 #pragma once
 
 #include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/connections/tcp.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 
