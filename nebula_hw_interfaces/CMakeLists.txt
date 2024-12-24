@@ -100,6 +100,10 @@ if(BUILD_TESTING)
     ament_lint_auto_find_test_dependencies()
 
     find_package(ament_cmake_gtest REQUIRED)
+    find_package(ament_cmake_gmock REQUIRED)
+    find_package(nlohmann_json)
+
+    add_definitions(-D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
 
     ament_add_gtest(test_udp
         test/common/test_udp.cpp
@@ -109,6 +113,24 @@ if(BUILD_TESTING)
         ${nebula_common_INCLUDE_DIRS}
         include
         test)
+
+    ament_add_gmock(hesai_test_ptc
+        test/hesai/test_ptc.cpp
+    )
+
+    target_include_directories(hesai_test_ptc PUBLIC
+        ${nebula_common_INCLUDE_DIRS}
+        ${nebula_hw_interfaces_hesai_INCLUDE_DIRS}
+        ${boost_tcp_driver_INCLUDE_DIRS}
+        ${boost_udp_driver_INCLUDE_DIRS}
+        ${nlohmann_json_INCLUDE_DIRS}
+        include
+        test)
+
+    target_link_libraries(hesai_test_ptc
+        ${nlohmann_json_LIBRARIES}
+        nebula_hw_interfaces_hesai
+    )
 endif()
 
 ament_export_include_directories("include/${PROJECT_NAME}")
