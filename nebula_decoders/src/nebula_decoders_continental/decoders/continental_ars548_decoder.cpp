@@ -345,6 +345,20 @@ bool ContinentalARS548Decoder::parse_objects_list_packet(
     object_msg.orientation = object.position_orientation.value();
     object_msg.orientation_std = object.position_orientation_std.value();
 
+    if (
+      std::abs(radar_status_.yaw) > 5.0 * M_PI / 180.0 &&
+      std::abs(radar_status_.yaw) < 90.0 * M_PI / 180.0) {
+      const double dx = radar_status_.longitudinal + radar_status_.wheel_base;
+      const double dy = radar_status_.lateral;
+      double x = object_msg.position.x - dx;
+      double y = object_msg.position.y - dy;
+      const auto & yaw = radar_status_.yaw;
+
+      object_msg.position.x = x * std::cos(yaw) - y * std::sin(yaw) + dx;
+      object_msg.position.y = x * std::sin(yaw) + y * std::cos(yaw) + dy;
+      object_msg.orientation += yaw;
+    }
+
     object_msg.existence_probability = object.existence_probability.value();
     object_msg.classification_car = object.classification_car;
     object_msg.classification_truck = object.classification_truck;
