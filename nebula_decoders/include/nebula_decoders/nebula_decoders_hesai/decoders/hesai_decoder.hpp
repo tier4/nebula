@@ -18,16 +18,13 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
-
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/point_types.hpp>
 #include <nlohmann/json.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
-
 #include <sys/types.h>
-
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -45,8 +42,10 @@ struct HesaiDecodeFilteredInfo
   uint16_t fov_filtered_count = 0;
   uint16_t timestamp_filtered_count = 0;
   uint16_t invalid_point_count = 0;
-  uint16_t identical_return_count = 0;
-  uint16_t mutliple_return_count = 0;
+  uint16_t identical_return_point_count = 0;
+  uint16_t mutliple_return_point_count = 0;
+  uint16_t total_kept_point_count = 0;
+  uint16_t invalid_packet_count = 0;
   float cloud_distance_min_m = 0;
   float cloud_distance_max_m = 0;
   float cloud_azimuth_min_rad = 0;
@@ -60,8 +59,10 @@ struct HesaiDecodeFilteredInfo
     fov_filtered_count = 0;
     timestamp_filtered_count = 0;
     invalid_point_count = 0;
-    identical_return_count = 0;
-    mutliple_return_count = 0;
+    identical_return_point_count = 0;
+    mutliple_return_point_count = 0;
+    total_kept_point_count = 0;
+    invalid_packet_count = 0;
     cloud_distance_min_m = 0;
     cloud_distance_max_m = 0;
     cloud_azimuth_min_rad = 0;
@@ -90,33 +91,42 @@ struct HesaiDecodeFilteredInfo
     nlohmann::json invalid_j;
     invalid_j["filter"] = "invalid";
     invalid_j["invalid_point_count"] = invalid_point_count;
+    invalid_j["invalid_packet_count"] = invalid_packet_count;
     nlohmann::json identical_j;
     identical_j["filter"] = "identical";
-    identical_j["identical_return_count"] = identical_return_count;
+    identical_j["identical_return_point_count"] = identical_return_point_count;
     nlohmann::json multiple_j;
     multiple_j["filter"] = "multiple";
-    multiple_j["mutliple_return_count"] = mutliple_return_count;
+    multiple_j["mutliple_return_point_count"] = mutliple_return_point_count;
 
     nlohmann::json j;
     j["filter_pipeline"] = nlohmann::json::array({
       distance_j,
       fov_j,
       timestamp_j,
+      invalid_j,
+      identical_j,
+      multiple_j,
     });
-
+    j["total_kept_point_count"] = total_kept_point_count;
+    
     return j;
   }
 
   void get_minmax_info(const NebulaPoint & point)
   {
-    cloud_azimuth_min_rad = std::min(cloud_azimuth_min_rad, point.azimuth);
-    cloud_azimuth_max_rad = std::max(cloud_azimuth_max_rad, point.azimuth);
+    cloud_azimuth_min_rad =
+      std::min(cloud_azimuth_min_rad, point.azimuth);
+    cloud_azimuth_max_rad =
+      std::max(cloud_azimuth_max_rad, point.azimuth);
     packet_timestamp_min_ns =
       std::min(packet_timestamp_min_ns, static_cast<uint64_t>(point.time_stamp));
     packet_timestamp_max_ns =
       std::max(packet_timestamp_max_ns, static_cast<uint64_t>(point.time_stamp));
-    cloud_distance_min_m = std::min(cloud_distance_min_m, point.distance);
-    cloud_distance_max_m = std::max(cloud_distance_max_m, point.distance);
+    cloud_distance_min_m =
+      std::min(cloud_distance_min_m, point.distance);
+    cloud_distance_max_m =
+      std::max(cloud_distance_max_m, point.distance);
   }
 };
 
@@ -236,7 +246,7 @@ protected:
 
         // Keep only last of multiple identical points
         if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
-          decode_filtered_info_.identical_return_count++;
+          decode_filtered_info_.identical_return_point_count++;
           continue;
         }
 
@@ -258,7 +268,7 @@ protected:
           }
 
           if (is_below_multi_return_threshold) {
-            decode_filtered_info_.mutliple_return_count++;
+            decode_filtered_info_.mutliple_return_point_count++;
             continue;
           }
         }
@@ -308,6 +318,7 @@ protected:
         point.elevation = corrected_angle_data.elevation_rad;
 
         decode_filtered_info_.get_minmax_info(point);
+        decode_filtered_info_.total_kept_point_count++;
       }
     }
   }
@@ -363,6 +374,7 @@ public:
   int unpack(const std::vector<uint8_t> & packet) override
   {
     if (!parse_packet(packet)) {
+      decode_filtered_info_.invalid_packet_count++;
       return -1;
     }
 
@@ -417,7 +429,10 @@ public:
         nlohmann::ordered_json j = decode_filtered_info_.to_json();
         std::cout << "=======================" << std::endl;
         for (const auto & [key, value] : j.items()) {
-          std::cout << key << ": " << value << std::endl;
+          std::cout << key << ": "  << std::endl;
+          for (const auto & [k, v] : value.items()) {
+            std::cout << k << ": " << v << std::endl;
+          }
         }
         std::cout << "=======================" << std::endl;
         decode_filtered_info_.clear();
