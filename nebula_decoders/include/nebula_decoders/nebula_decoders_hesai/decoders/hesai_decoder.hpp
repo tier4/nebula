@@ -18,13 +18,16 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
+
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/point_types.hpp>
 #include <nlohmann/json.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
+
 #include <sys/types.h>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -100,24 +103,20 @@ struct HesaiDecodeFilteredInfo
       fov_j,
       timestamp_j,
     });
-    
+
     return j;
   }
 
   void get_minmax_info(const NebulaPoint & point)
   {
-    cloud_azimuth_min_rad =
-      std::min(cloud_azimuth_min_rad, point.azimuth);
-    cloud_azimuth_max_rad =
-      std::max(cloud_azimuth_max_rad, point.azimuth);
+    cloud_azimuth_min_rad = std::min(cloud_azimuth_min_rad, point.azimuth);
+    cloud_azimuth_max_rad = std::max(cloud_azimuth_max_rad, point.azimuth);
     packet_timestamp_min_ns =
       std::min(packet_timestamp_min_ns, static_cast<uint64_t>(point.time_stamp));
     packet_timestamp_max_ns =
       std::max(packet_timestamp_max_ns, static_cast<uint64_t>(point.time_stamp));
-    cloud_distance_min_m =
-      std::min(cloud_distance_min_m, point.distance);
-    cloud_distance_max_m =
-      std::max(cloud_distance_max_m, point.distance);
+    cloud_distance_min_m = std::min(cloud_distance_min_m, point.distance);
+    cloud_distance_max_m = std::max(cloud_distance_max_m, point.distance);
   }
 };
 
