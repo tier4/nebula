@@ -18,14 +18,13 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
-
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/point_types.hpp>
 #include <nlohmann/json.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
-
+#include <sys/types.h>
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -39,47 +38,86 @@ namespace nebula::drivers
 
 struct HesaiDecodeFilteredInfo
 {
-  uint16_t distance_counter = 0;
-  uint16_t fov_counter = 0;
-  uint16_t timestamp_counter = 0;
-  float distance_start = 0;
-  float distance_end = 0;
-  float raw_azimuth_start = 0;
-  float raw_azimuth_end = 0;
-  std::uint32_t packet_timestamp_start = 0;
-  std::uint32_t packet_timestamp_end = 0;
-  NebulaPointCloud point_azimuth_start;
-  NebulaPointCloud point_azimuth_end;
-  NebulaPointCloud point_timestamp_start;
-  NebulaPointCloud point_timestamp_end;
+  uint16_t distance_filtered_count = 0;
+  uint16_t fov_filtered_count = 0;
+  uint16_t timestamp_filtered_count = 0;
+  uint16_t invalid_point_count = 0;
+  uint16_t identical_return_count = 0;
+  uint16_t mutliple_return_count = 0;
+  float cloud_distance_min_m = 0;
+  float cloud_distance_max_m = 0;
+  float cloud_azimuth_min_rad = 0;
+  float cloud_azimuth_max_rad = 0;
+  uint64_t packet_timestamp_min_ns = 0;
+  uint64_t packet_timestamp_max_ns = 0;
 
   void clear()
   {
-    distance_counter = 0;
-    fov_counter = 0;
-    raw_azimuth_start = 0;
-    raw_azimuth_end = 0;
-    packet_timestamp_start = 0;
-    packet_timestamp_end = 0;
-    point_azimuth_start = NebulaPointCloud();
-    point_azimuth_end = NebulaPointCloud();
-    point_timestamp_start = NebulaPointCloud();
-    point_timestamp_end = NebulaPointCloud();
+    distance_filtered_count = 0;
+    fov_filtered_count = 0;
+    timestamp_filtered_count = 0;
+    invalid_point_count = 0;
+    identical_return_count = 0;
+    mutliple_return_count = 0;
+    cloud_distance_min_m = 0;
+    cloud_distance_max_m = 0;
+    cloud_azimuth_min_rad = 0;
+    cloud_azimuth_max_rad = 0;
+    packet_timestamp_min_ns = 0;
+    packet_timestamp_max_ns = 0;
   }
 
   [[nodiscard]] nlohmann::ordered_json to_json() const
   {
-    nlohmann::ordered_json j;
-    j["distance_counter"] = distance_counter;
-    j["fov_counter"] = fov_counter;
-    j["timestamp_counter"] = timestamp_counter;
-    j["distance_start"] = distance_start;
-    j["distance_end"] = distance_end;
-    j["raw_azimuth_start"] = raw_azimuth_start;
-    j["raw_azimuth_end"] = raw_azimuth_end;
-    j["packet_timestamp_start"] = packet_timestamp_start;
-    j["packet_timestamp_end"] = packet_timestamp_end;
+    nlohmann::json distance_j;
+    distance_j["filter"] = "distance";
+    distance_j["distance_filtered_count"] = distance_filtered_count;
+    distance_j["cloud_distance_min_m"] = cloud_distance_min_m;
+    distance_j["cloud_distance_max_m"] = cloud_distance_max_m;
+    nlohmann::json fov_j;
+    fov_j["filter"] = "fov";
+    fov_j["fov_filtered_count"] = fov_filtered_count;
+    fov_j["cloud_azimuth_min_rad"] = cloud_azimuth_min_rad;
+    fov_j["cloud_azimuth_max_rad"] = cloud_azimuth_max_rad;
+    nlohmann::json timestamp_j;
+    timestamp_j["filter"] = "timestamp";
+    timestamp_j["timestamp_filtered_count"] = timestamp_filtered_count;
+    timestamp_j["packet_timestamp_min_ns"] = packet_timestamp_min_ns;
+    timestamp_j["packet_timestamp_max_ns"] = packet_timestamp_max_ns;
+    nlohmann::json invalid_j;
+    invalid_j["filter"] = "invalid";
+    invalid_j["invalid_point_count"] = invalid_point_count;
+    nlohmann::json identical_j;
+    identical_j["filter"] = "identical";
+    identical_j["identical_return_count"] = identical_return_count;
+    nlohmann::json multiple_j;
+    multiple_j["filter"] = "multiple";
+    multiple_j["mutliple_return_count"] = mutliple_return_count;
+
+    nlohmann::json j;
+    j["filter_pipeline"] = nlohmann::json::array({
+      distance_j,
+      fov_j,
+      timestamp_j,
+    });
+    
     return j;
+  }
+
+  void get_minmax_info(const NebulaPoint & point)
+  {
+    cloud_azimuth_min_rad =
+      std::min(cloud_azimuth_min_rad, point.azimuth);
+    cloud_azimuth_max_rad =
+      std::max(cloud_azimuth_max_rad, point.azimuth);
+    packet_timestamp_min_ns =
+      std::min(packet_timestamp_min_ns, static_cast<uint64_t>(point.time_stamp));
+    packet_timestamp_max_ns =
+      std::max(packet_timestamp_max_ns, static_cast<uint64_t>(point.time_stamp));
+    cloud_distance_min_m =
+      std::min(cloud_distance_min_m, point.distance);
+    cloud_distance_max_m =
+      std::max(cloud_distance_max_m, point.distance);
   }
 };
 
@@ -133,22 +171,6 @@ protected:
   std::array<std::array<int, SensorT::packet_t::n_blocks>, SensorT::packet_t::max_returns>
     block_firing_offset_ns_;
 
-  void get_minmax_info(const NebulaPoint & point)
-  {
-    decode_filtered_info_.raw_azimuth_start =
-      std::min(decode_filtered_info_.raw_azimuth_start, point.azimuth);
-    decode_filtered_info_.raw_azimuth_end =
-      std::max(decode_filtered_info_.raw_azimuth_end, point.azimuth);
-    decode_filtered_info_.packet_timestamp_start =
-      std::min(decode_filtered_info_.packet_timestamp_start, point.time_stamp);
-    decode_filtered_info_.packet_timestamp_end =
-      std::max(decode_filtered_info_.packet_timestamp_end, point.time_stamp);
-    decode_filtered_info_.distance_start =
-      std::min(decode_filtered_info_.distance_start, point.distance);
-    decode_filtered_info_.distance_end =
-      std::max(decode_filtered_info_.distance_end, point.distance);
-  }
-
   /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
   /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
@@ -195,6 +217,7 @@ protected:
         auto & unit = *return_units[block_offset];
 
         if (unit.distance == 0) {
+          decode_filtered_info_.invalid_point_count++;
           continue;
         }
 
@@ -204,7 +227,7 @@ protected:
           distance < SensorT::min_range || SensorT::max_range < distance ||
           distance < sensor_configuration_->min_range ||
           sensor_configuration_->max_range < distance) {
-          decode_filtered_info_.distance_counter++;
+          decode_filtered_info_.distance_filtered_count++;
           continue;
         }
 
@@ -214,6 +237,7 @@ protected:
 
         // Keep only last of multiple identical points
         if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
+          decode_filtered_info_.identical_return_count++;
           continue;
         }
 
@@ -235,6 +259,7 @@ protected:
           }
 
           if (is_below_multi_return_threshold) {
+            decode_filtered_info_.mutliple_return_count++;
             continue;
           }
         }
@@ -245,7 +270,7 @@ protected:
 
         bool in_fov = angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.fov_max, azimuth);
         if (!in_fov) {
-          decode_filtered_info_.fov_counter++;
+          decode_filtered_info_.fov_filtered_count++;
           continue;
         }
 
@@ -283,7 +308,7 @@ protected:
         point.azimuth = corrected_angle_data.azimuth_rad;
         point.elevation = corrected_angle_data.elevation_rad;
 
-        get_minmax_info(point);
+        decode_filtered_info_.get_minmax_info(point);
       }
     }
   }
@@ -390,6 +415,13 @@ public:
         std::swap(decode_pc_, output_pc_);
         std::swap(decode_scan_timestamp_ns_, output_scan_timestamp_ns_);
         has_scanned_ = true;
+        nlohmann::ordered_json j = decode_filtered_info_.to_json();
+        std::cout << "=======================" << std::endl;
+        for (const auto & [key, value] : j.items()) {
+          std::cout << key << ": " << value << std::endl;
+        }
+        std::cout << "=======================" << std::endl;
+        decode_filtered_info_.clear();
       }
 
       last_azimuth_ = block_azimuth;
