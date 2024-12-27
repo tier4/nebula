@@ -45,7 +45,7 @@ struct HesaiDecodeFilteredInfo
   uint16_t fov_filtered_count = 0;
   uint16_t timestamp_filtered_count = 0;
   uint16_t invalid_point_count = 0;
-  uint16_t identical_return_point_count = 0;
+  uint16_t multiple_return_point_count = 0;
   uint16_t mutliple_return_point_count = 0;
   uint16_t total_kept_point_count = 0;
   uint16_t invalid_packet_count = 0;
@@ -62,7 +62,7 @@ struct HesaiDecodeFilteredInfo
     fov_filtered_count = 0;
     timestamp_filtered_count = 0;
     invalid_point_count = 0;
-    identical_return_point_count = 0;
+    multiple_return_point_count = 0;
     mutliple_return_point_count = 0;
     total_kept_point_count = 0;
     invalid_packet_count = 0;
@@ -97,7 +97,7 @@ struct HesaiDecodeFilteredInfo
     invalid_j["invalid_packet_count"] = invalid_packet_count;
     nlohmann::json identical_j;
     identical_j["filter"] = "identical";
-    identical_j["identical_return_point_count"] = identical_return_point_count;
+    identical_j["multiple_return_point_count"] = multiple_return_point_count;
     nlohmann::json multiple_j;
     multiple_j["filter"] = "multiple";
     multiple_j["mutliple_return_point_count"] = mutliple_return_point_count;
@@ -245,7 +245,7 @@ protected:
 
         // Keep only last of multiple identical points
         if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
-          decode_filtered_info_.identical_return_point_count++;
+          decode_filtered_info_.multiple_return_point_count++;
           continue;
         }
 
