@@ -191,6 +191,19 @@ void ContinentalARS548DecoderWrapper::object_list_callback(
 void ContinentalARS548DecoderWrapper::sensor_status_callback(
   const drivers::continental_ars548::ContinentalARS548Status & sensor_status)
 {
+  diagnostic_msgs::msg::DiagnosticArray diagnostic_array_msg;
+  diagnostic_array_msg.header.stamp.sec = sensor_status.timestamp_seconds;
+  diagnostic_array_msg.header.stamp.nanosec = sensor_status.timestamp_nanoseconds;
+  diagnostic_array_msg.header.frame_id = config_ptr_->frame_id;
+
+  diagnostic_array_msg.status.resize(1);
+  auto & status = diagnostic_array_msg.status[0];
+  status.values.reserve(36);
+  status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  status.hardware_id = config_ptr_->frame_id;
+  status.name = config_ptr_->frame_id;
+  status.message = "Diagnostic messages from ARS548";
+
   // cSpell:ignore knzo25
   // NOTE(knzo25): In the radar firmware used when developing this driver,
   // corner radars are not supported. We can partially address this,
@@ -208,20 +221,12 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
       "can partially address this, but the coordinates look only spatially correct (not the "
       "dynamics). so its use is the responsibility of the user. Corner radars are expected to be "
       "supported in a new firmware version, but this is not yet confirmed.");
+
+    status.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+    status.message +=
+      ". Unsupported mounting configuration (corner radar). This should only be used for "
+      "evaluation purposes.";
   }
-
-  diagnostic_msgs::msg::DiagnosticArray diagnostic_array_msg;
-  diagnostic_array_msg.header.stamp.sec = sensor_status.timestamp_seconds;
-  diagnostic_array_msg.header.stamp.nanosec = sensor_status.timestamp_nanoseconds;
-  diagnostic_array_msg.header.frame_id = config_ptr_->frame_id;
-
-  diagnostic_array_msg.status.resize(1);
-  auto & status = diagnostic_array_msg.status[0];
-  status.values.reserve(36);
-  status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  status.hardware_id = config_ptr_->frame_id;
-  status.name = config_ptr_->frame_id;
-  status.message = "Diagnostic messages from ARS548";
 
   auto add_diagnostic = [&status](const std::string & key, const std::string & value) {
     diagnostic_msgs::msg::KeyValue key_value;
