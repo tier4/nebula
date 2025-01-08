@@ -345,6 +345,12 @@ bool ContinentalARS548Decoder::parse_objects_list_packet(
     object_msg.orientation = object.position_orientation.value();
     object_msg.orientation_std = object.position_orientation_std.value();
 
+    // NOTE(knzo25): In the radar firmware used when developing this driver,
+    // corner radars are not supported. We can partially address this,
+    // but the coordinates look only spatially correct (not the dynamics).
+    // so its use is the responsibility of the user.
+    // Corner radars are expected to be supported in a new firmware version,
+    // but this is not yet confirmed.
     if (
       std::abs(radar_status_.yaw) > 5.0 * M_PI / 180.0 &&
       std::abs(radar_status_.yaw) < 90.0 * M_PI / 180.0) {
