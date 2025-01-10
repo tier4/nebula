@@ -93,7 +93,7 @@ struct HesaiDecodeFilteredInfo
       identical_j,
       multiple_j,
     });
-    j["pointcloud_bounds"] ={
+    j["pointcloud_bounds"] = {
       j["azimuth_deg"] = pointcloud_bounds_azimuth_j,
       j["distance_m"] = pointcloud_bounds_distance_j,
       j["timestamp_ns"] = pointcloud_bounds_timestamp_j,
