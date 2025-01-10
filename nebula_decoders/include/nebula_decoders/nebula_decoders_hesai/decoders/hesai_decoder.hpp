@@ -25,11 +25,11 @@
 #include <nlohmann/json.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <cstdint>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <memory>
 #include <tuple>
 #include <utility>
@@ -414,7 +414,6 @@ public:
         }
         std::cout << "=======================" << std::endl;
         decode_filtered_info_ = HesaiDecodeFilteredInfo{};
-
       }
 
       last_azimuth_ = block_azimuth;
