@@ -57,39 +57,48 @@ struct HesaiDecodeFilteredInfo
   [[nodiscard]] nlohmann::ordered_json to_json() const
   {
     nlohmann::json distance_j;
-    distance_j["filter"] = "distance";
-    distance_j["distance_filtered_count"] = distance_filtered_count;
-    distance_j["cloud_distance_min_m"] = cloud_distance_min_m;
-    distance_j["cloud_distance_max_m"] = cloud_distance_max_m;
+    distance_j["name"] = "distance";
+    distance_j["filtered_count"] = distance_filtered_count;
+    // distance_j["cloud_distance_min_m"] = cloud_distance_min_m;
+    // distance_j["cloud_distance_max_m"] = cloud_distance_max_m;
     nlohmann::json fov_j;
-    fov_j["filter"] = "fov";
-    fov_j["fov_filtered_count"] = fov_filtered_count;
-    fov_j["cloud_azimuth_min_deg"] = cloud_azimuth_min_deg;
-    fov_j["cloud_azimuth_max_rad"] = cloud_azimuth_max_rad;
-    nlohmann::json timestamp_j;
-    timestamp_j["filter"] = "timestamp";
-    timestamp_j["packet_timestamp_min_ns"] = packet_timestamp_min_ns;
-    timestamp_j["packet_timestamp_max_ns"] = packet_timestamp_max_ns;
+    fov_j["name"] = "fov";
+    fov_j["filtered_count"] = fov_filtered_count;
+    // fov_j["cloud_azimuth_min_deg"] = cloud_azimuth_min_deg;
+    // fov_j["cloud_azimuth_max_rad"] = cloud_azimuth_max_rad;
+    nlohmann::json identical_j;
+    identical_j["name"] = "identical";
+    identical_j["filtered_count"] = identical_filtered_count;
+    nlohmann::json multiple_j;
+    multiple_j["name"] = "multiple";
+    multiple_j["filtered_count"] = multiple_return_filtered_count;
     nlohmann::json invalid_j;
-    invalid_j["filter"] = "invalid";
+    invalid_j["name"] = "invalid";
     invalid_j["invalid_point_count"] = invalid_point_count;
     invalid_j["invalid_packet_count"] = invalid_packet_count;
-    nlohmann::json identical_j;
-    identical_j["filter"] = "identical";
-    identical_j["identical_filtered_count"] = identical_filtered_count;
-    nlohmann::json multiple_j;
-    multiple_j["filter"] = "multiple";
-    multiple_j["multiple_return_filtered_count"] = multiple_return_filtered_count;
+    nlohmann::json pointcloud_bounds_azimuth_j;
+    pointcloud_bounds_azimuth_j["min"] = cloud_azimuth_min_deg;
+    pointcloud_bounds_azimuth_j["max"] = cloud_azimuth_max_rad;
+    nlohmann::json pointcloud_bounds_distance_j;
+    pointcloud_bounds_distance_j["min"] = cloud_distance_min_m;
+    pointcloud_bounds_distance_j["max"] = cloud_distance_max_m;
+    nlohmann::json pointcloud_bounds_timestamp_j;
+    pointcloud_bounds_timestamp_j["min"] = packet_timestamp_min_ns;
+    pointcloud_bounds_timestamp_j["max"] = packet_timestamp_max_ns;
 
     nlohmann::json j;
     j["filter_pipeline"] = nlohmann::json::array({
       distance_j,
       fov_j,
-      timestamp_j,
-      invalid_j,
       identical_j,
       multiple_j,
     });
+    j["pointcloud_bounds"] ={
+      j["azimuth_deg"] = pointcloud_bounds_azimuth_j,
+      j["distance_m"] = pointcloud_bounds_distance_j,
+      j["timestamp_ns"] = pointcloud_bounds_timestamp_j,
+    };
+    j["invalid_filter"] = invalid_j;
     j["total_kept_point_count"] = total_kept_point_count;
 
     return j;
