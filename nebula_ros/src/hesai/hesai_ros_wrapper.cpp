@@ -209,6 +209,9 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
     config.ptp_lock_threshold = declare_parameter<uint8_t>("ptp_lock_threshold", descriptor);
   }
 
+  config.downsample_mask_path =
+    declare_parameter<std::string>("point_filters.downsample_mask.path", "", param_read_write());
+
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(config);
   return validate_and_set_config(new_cfg_ptr);
 }
@@ -265,6 +268,14 @@ Status HesaiRosWrapper::validate_and_set_config(
   // in the cutting logic. Thus, require the user to cut at 0deg.
   if (fov_is_360 && new_config->cut_angle == 360) {
     RCLCPP_ERROR(get_logger(), "Cannot cut a 360deg FoV at 360deg. Cut at 0deg instead.");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  if (
+    !new_config->downsample_mask_path.empty() &&
+    !std::filesystem::exists(new_config->downsample_mask_path)) {
+    RCLCPP_ERROR_STREAM(
+      get_logger(), "Downsample mask not found: " << new_config->downsample_mask_path);
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -346,7 +357,8 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     get_param(p, "cloud_min_angle", new_cfg.cloud_min_angle) |
     get_param(p, "cloud_max_angle", new_cfg.cloud_max_angle) |
     get_param(p, "dual_return_distance_threshold", new_cfg.dual_return_distance_threshold) |
-    get_param(p, calibration_parameter_name, new_cfg.calibration_path);
+    get_param(p, calibration_parameter_name, new_cfg.calibration_path) |
+    get_param(p, "point_filters.downsample_mask.path", new_cfg.downsample_mask_path);
 
   // Currently, all of the sub-wrappers read-only parameters, so they do not be queried for updates
 
