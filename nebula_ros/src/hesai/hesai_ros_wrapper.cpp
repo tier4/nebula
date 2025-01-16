@@ -460,27 +460,21 @@ HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::get_calibration_data(
     calib = std::make_shared<drivers::HesaiCalibrationConfiguration>();
   }
 
-  std::string calibration_file_path_from_sensor;
-
-  {
-    int ext_pos = calibration_file_path.find_last_of('.');
-    calibration_file_path_from_sensor = calibration_file_path.substr(0, ext_pos);
-    calibration_file_path_from_sensor += "_from_sensor_" + sensor_cfg_ptr_->sensor_ip;
-    calibration_file_path_from_sensor +=
-      calibration_file_path.substr(ext_pos, calibration_file_path.size() - ext_pos);
-  }
+  std::filesystem::path calibration_from_sensor_path{calibration_file_path};
+  calibration_from_sensor_path = calibration_from_sensor_path.replace_extension(
+    "_from_sensor_" + sensor_cfg_ptr_->sensor_ip +
+    calibration_from_sensor_path.extension().string());
 
   // If a sensor is connected, try to download and save its calibration data
   if (!ignore_others && launch_hw_) {
     try {
       auto raw_data = hw_interface_wrapper_->hw_interface()->get_lidar_calibration_bytes();
       RCLCPP_INFO(logger, "Downloaded calibration data from sensor.");
-      auto status = calib->save_to_file_from_bytes(calibration_file_path_from_sensor, raw_data);
+      auto status = calib->save_to_file_from_bytes(calibration_from_sensor_path, raw_data);
       if (status != Status::OK) {
         RCLCPP_ERROR_STREAM(logger, "Could not save calibration data: " << status);
       } else {
-        RCLCPP_INFO_STREAM(
-          logger, "Saved downloaded data to " << calibration_file_path_from_sensor);
+        RCLCPP_INFO_STREAM(logger, "Saved downloaded data to " << calibration_from_sensor_path);
       }
     } catch (std::runtime_error & e) {
       RCLCPP_ERROR_STREAM(logger, "Could not download calibration data: " << e.what());
@@ -489,10 +483,10 @@ HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::get_calibration_data(
 
   // If saved calibration data from a sensor exists (either just downloaded above, or previously),
   // try to load it
-  if (!ignore_others && std::filesystem::exists(calibration_file_path_from_sensor)) {
-    auto status = calib->load_from_file(calibration_file_path_from_sensor);
+  if (!ignore_others && std::filesystem::exists(calibration_from_sensor_path)) {
+    auto status = calib->load_from_file(calibration_from_sensor_path);
     if (status == Status::OK) {
-      calib->calibration_file = calibration_file_path_from_sensor;
+      calib->calibration_file = calibration_from_sensor_path;
       return calib;
     }
 
