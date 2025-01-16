@@ -34,7 +34,7 @@ The following filter types are supported:
 
 | Filter Name            | Filter Type       | Hesai | Robosense | Velodyne |
 | ---------------------- | ----------------- | :---: | :-------: | :------: |
-| Downsample Mask Filter | `downsample_mask` |  ❌   |    ❌     |    ❌    |
+| Downsample Mask Filter | `downsample_mask` |  ✅   |    ❌     |    ❌    |
 
 Compatibility:  
 ✅: compatible  
