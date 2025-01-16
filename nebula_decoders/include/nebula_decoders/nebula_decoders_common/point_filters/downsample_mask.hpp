@@ -30,6 +30,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
@@ -85,12 +86,12 @@ class DownsampleMaskFilter
 
 public:
   DownsampleMaskFilter(
-    const std::string_view & filename, AngleRange<int32_t> azimuth_range_mdeg,
-    int32_t azimuth_peak_resolution_mdeg, size_t n_channels,
-    const std::shared_ptr<loggers::Logger> & logger)
+    const std::string & filename, AngleRange<int32_t> azimuth_range_mdeg,
+    uint32_t azimuth_peak_resolution_mdeg, size_t n_channels,
+    const std::shared_ptr<loggers::Logger> & logger, bool export_dithered_mask = false)
   : azimuth_range_{deg2rad(azimuth_range_mdeg.min / 1000.), deg2rad(azimuth_range_mdeg.max / 1000.)}
   {
-    png::image<png::gray_pixel> factors(filename.data());
+    png::image<png::gray_pixel> factors(filename);
 
     size_t mask_cols = azimuth_range_mdeg.extent() / azimuth_peak_resolution_mdeg;
     size_t mask_rows = n_channels;
@@ -106,18 +107,16 @@ public:
       }
     }
 
-    std::string out_filename{filename};
-    size_t ext_pos = out_filename.find_last_of('.');
-    if (ext_pos != std::string::npos) {
-      out_filename = out_filename.substr(0, ext_pos);
-    }
-    out_filename += "_dithered.png";
+    if (export_dithered_mask) {
+      std::filesystem::path out_path{filename};
+      out_path = out_path.replace_extension("_dithered.png");
 
-    try {
-      dithered.write(out_filename);
-      logger->info("Wrote dithered mask to " + out_filename);
-    } catch (const png::std_error & e) {
-      logger->warn("Could not write " + out_filename + ": " + e.what());
+      try {
+        dithered.write(out_path);
+        logger->info("Wrote dithered mask to " + out_path.native());
+      } catch (const png::std_error & e) {
+        logger->warn("Could not write " + out_path.native() + ": " + e.what());
+      }
     }
   }
 
@@ -129,7 +128,7 @@ public:
     auto y = point.channel;
 
     bool x_out_of_bounds = x < 0 || x >= mask_.cols();
-    bool y_out_of_bounds = y < 0 || y >= mask_.rows();
+    bool y_out_of_bounds = y >= mask_.rows();
 
     return x_out_of_bounds || y_out_of_bounds || !mask_.coeff(y, x);
   }
