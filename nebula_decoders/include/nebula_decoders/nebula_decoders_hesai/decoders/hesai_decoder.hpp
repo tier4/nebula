@@ -15,6 +15,7 @@
 #pragma once
 
 #include "nebula_decoders/nebula_decoders_common/angles.hpp"
+#include "nebula_decoders/nebula_decoders_common/point_filters/downsample_mask.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
@@ -85,6 +86,8 @@ private:
   /// nanoseconds
   std::array<std::array<int, SensorT::packet_t::n_blocks>, SensorT::packet_t::max_returns>
     block_firing_offset_ns_;
+
+  std::optional<point_filters::DownsampleMaskFilter> mask_filter_;
 
   /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
   /// @param packet The incoming PandarPacket
@@ -198,7 +201,7 @@ private:
         uint64_t scan_timestamp_ns =
           in_current_scan ? decode_scan_timestamp_ns_ : output_scan_timestamp_ns_;
 
-        NebulaPoint & point = pc->emplace_back();
+        NebulaPoint point;
         point.distance = distance;
         point.intensity = unit.reflectivity;
         point.time_stamp = get_point_time_relative(
@@ -217,6 +220,10 @@ private:
         // The driver wrapper converts to degrees, expects radians
         point.azimuth = corrected_angle_data.azimuth_rad;
         point.elevation = corrected_angle_data.elevation_rad;
+
+        if (!mask_filter_ || !mask_filter_->excluded(point)) {
+          pc->emplace_back(point);
+        }
       }
     }
   }
@@ -262,6 +269,13 @@ public:
   {
     decode_pc_ = std::make_shared<NebulaPointCloud>();
     output_pc_ = std::make_shared<NebulaPointCloud>();
+
+    if (!sensor_configuration->downsample_mask_path.empty()) {
+      mask_filter_ = point_filters::DownsampleMaskFilter(
+        sensor_configuration->downsample_mask_path, SensorT::fov_mdeg.azimuth,
+        SensorT::peak_resolution_mdeg.azimuth, SensorT::packet_t::n_channels,
+        logger_->child("Downsample Mask"), true);
+    }
 
     decode_pc_->reserve(SensorT::max_scan_buffer_points);
     output_pc_->reserve(SensorT::max_scan_buffer_points);

@@ -75,8 +75,8 @@ public:
   static constexpr float min_range = 0.3f;
   static constexpr float max_range = 200.f;
   static constexpr size_t max_scan_buffer_points = 144000;
-  static constexpr FieldOfView<int32_t> fov_mdeg{{0, 360'000}, {-25'000, 15'000}};
-  static constexpr AnglePair<int32_t> peak_resolution_mdeg{200, 334};
+  static constexpr FieldOfView<int32_t, MilliDegrees> fov_mdeg{{0, 360'000}, {-25'000, 15'000}};
+  static constexpr AnglePair<int32_t, MilliDegrees> peak_resolution_mdeg{200, 334};
 
   int get_packet_relative_point_time_offset(
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
