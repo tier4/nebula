@@ -101,7 +101,7 @@ TEST(TestDownsampleMask, TestFilter)
   for (int32_t azimuth_mdeg = azi_range_mdeg.min - 1; azimuth_mdeg < azi_range_mdeg.max + 1;
        azimuth_mdeg += azi_step_mdeg) {
     for (uint8_t channel = 0; channel < n_channels + 1; ++channel) {
-      NebulaPoint p;
+      NebulaPoint p{};
       p.channel = channel;
       p.azimuth = nebula::drivers::deg2rad(azimuth_mdeg / 1000.);
 

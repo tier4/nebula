@@ -61,7 +61,8 @@ inline void dither(
 
   auto should_keep = [denominator](uint32_t numerator, uint32_t pos) {
     for (uint32_t i = 0; i < numerator; ++i) {
-      size_t dithered_pos = std::round(denominator / static_cast<double>(numerator) * i);
+      auto dithered_pos =
+        static_cast<size_t>(std::round(denominator / static_cast<double>(numerator) * i));
       if (dithered_pos == pos) return true;
     }
     return false;
@@ -125,7 +126,7 @@ public:
   {
     double azi_normalized = (point.azimuth - azimuth_range_.min) / azimuth_range_.extent();
 
-    auto x = static_cast<ssize_t>(azi_normalized * mask_.cols());
+    auto x = static_cast<ssize_t>(std::round(azi_normalized * static_cast<double>(mask_.cols())));
     auto y = point.channel;
 
     bool x_out_of_bounds = x < 0 || x >= mask_.cols();
