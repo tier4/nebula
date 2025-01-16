@@ -109,7 +109,8 @@ public:
 
     if (export_dithered_mask) {
       std::filesystem::path out_path{filename};
-      out_path = out_path.replace_extension("_dithered.png");
+      out_path = out_path.replace_filename(
+        out_path.stem().string() + "_dithered" + out_path.extension().string());
 
       try {
         dithered.write(out_path);
