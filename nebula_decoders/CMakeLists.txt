@@ -25,6 +25,7 @@ find_package(robosense_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(velodyne_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(PNG REQUIRED)
 
 include_directories(PUBLIC
     include
@@ -125,6 +126,17 @@ install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()
+
+    find_package(ament_cmake_gtest REQUIRED)
+
+    add_definitions(-D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
+
+    ament_add_gtest(test_downsample_mask tests/point_filters/test_downsample_mask.cpp)
+    target_link_libraries(test_downsample_mask
+        ${PNG_LIBRARIES})
+    target_include_directories(test_downsample_mask PUBLIC
+        include
+        ${PNG_INCLUDE_DIRS})
 endif()
 
 ament_export_include_directories("include/${PROJECT_NAME}")
