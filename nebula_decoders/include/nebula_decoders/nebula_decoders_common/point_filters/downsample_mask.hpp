@@ -103,7 +103,7 @@ public:
 
     for (size_t y = 0; y < dithered.get_height(); ++y) {
       for (size_t x = 0; x < dithered.get_width(); ++x) {
-        mask_.coeffRef(y, x) = dithered.get_pixel(x, y);
+        mask_.coeffRef(static_cast<int32_t>(y), static_cast<int32_t>(x)) = dithered.get_pixel(x, y);
       }
     }
 
