@@ -245,6 +245,16 @@ bool ContinentalARS548Decoder::parse_detections_list_packet(
 bool ContinentalARS548Decoder::parse_objects_list_packet(
   const nebula_msgs::msg::NebulaPacket & packet_msg)
 {
+  // cSpell:ignore knzo25
+  // NOTE(knzo25): In the radar firmware used when developing this driver,
+  // corner radars were not supported. When a new firmware addresses this,
+  // the driver will be updated.
+  if (
+    std::abs(radar_status_.yaw) > 5.0 * M_PI / 180.0 &&
+    std::abs(radar_status_.yaw) < 90.0 * M_PI / 180.0) {
+    return true;
+  }
+
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548ObjectList>();
   auto & msg = *msg_ptr;
 
@@ -344,27 +354,6 @@ bool ContinentalARS548Decoder::parse_objects_list_packet(
 
     object_msg.orientation = object.position_orientation.value();
     object_msg.orientation_std = object.position_orientation_std.value();
-
-    // cSpell:ignore knzo25
-    // NOTE(knzo25): In the radar firmware used when developing this driver,
-    // corner radars are not supported. We can partially address this,
-    // but the coordinates look only spatially correct (not the dynamics).
-    // so its use is the responsibility of the user.
-    // Corner radars are expected to be supported in a new firmware version,
-    // but this is not yet confirmed.
-    if (
-      std::abs(radar_status_.yaw) > 5.0 * M_PI / 180.0 &&
-      std::abs(radar_status_.yaw) < 90.0 * M_PI / 180.0) {
-      const double dx = radar_status_.longitudinal + radar_status_.wheel_base;
-      const double dy = radar_status_.lateral;
-      double x = object_msg.position.x - dx;
-      double y = object_msg.position.y - dy;
-      const auto & yaw = radar_status_.yaw;
-
-      object_msg.position.x = x * std::cos(yaw) - y * std::sin(yaw) + dx;
-      object_msg.position.y = x * std::sin(yaw) + y * std::cos(yaw) + dy;
-      object_msg.orientation += yaw;
-    }
 
     object_msg.existence_probability = object.existence_probability.value();
     object_msg.classification_car = object.classification_car;

@@ -217,18 +217,13 @@ void ContinentalARS548HwInterfaceWrapper::set_sensor_mounting_request_callback(
 
   // cSpell:ignore knzo25
   // NOTE(knzo25): In the radar firmware used when developing this driver,
-  // corner radars are not supported. We can partially address this,
-  // but the coordinates look only spatially correct (not the dynamics).
-  // so its use is the responsibility of the user.
-  // Corner radars are expected to be supported in a new firmware version,
-  // but this is not yet confirmed.
+  // corner radars were not supported. When a new firmware addresses this,
+  // the driver will be updated.
   if (std::abs(yaw) > 5.0 * M_PI / 180.0 && std::abs(yaw) < 90.0 * M_PI / 180.0) {
     RCLCPP_WARN(
       logger_,
-      "This radar has been configured as a corner radar, which is not supported by the sensor. We "
-      "can partially address this, but the coordinates look only spatially correct (not the "
-      "dynamics). so its use is the responsibility of the user. Corner radars are expected to be "
-      "supported in a new firmware version, but this is not yet confirmed.");
+      "You are attempting to configure the device as a corner radar, which is not supported so "
+      "far.");
   }
 
   auto result = hw_interface_->set_sensor_mounting(

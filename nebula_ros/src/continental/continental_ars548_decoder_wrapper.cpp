@@ -206,26 +206,21 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
 
   // cSpell:ignore knzo25
   // NOTE(knzo25): In the radar firmware used when developing this driver,
-  // corner radars are not supported. We can partially address this,
-  // but the coordinates look only spatially correct (not the dynamics).
-  // so its use is the responsibility of the user.
-  // Corner radars are expected to be supported in a new firmware version,
-  // but this is not yet confirmed.
+  // corner radars were not supported. When a new firmware addresses this,
+  // the driver will be updated.
   if (
     std::abs(sensor_status.yaw) > 5.0 * M_PI / 180.0 &&
     std::abs(sensor_status.yaw) < 90.0 * M_PI / 180.0) {
     rclcpp::Clock clock{RCL_ROS_TIME};
     RCLCPP_WARN_THROTTLE(
       logger_, clock, 5000,
-      "This radar has been configured as a corner radar, which is not supported by the sensor. We "
-      "can partially address this, but the coordinates look only spatially correct (not the "
-      "dynamics). so its use is the responsibility of the user. Corner radars are expected to be "
-      "supported in a new firmware version, but this is not yet confirmed.");
+      "This radar has been configured as a corner radar, which is not supported by the sensor. The "
+      "driver will not output any objects");
 
     status.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
     status.message +=
-      ". Unsupported mounting configuration (corner radar). This should only be used for "
-      "evaluation purposes.";
+      ". Unsupported mounting configuration (corner radar). Only detections should be used under "
+      "these conditions.";
   }
 
   auto add_diagnostic = [&status](const std::string & key, const std::string & value) {
