@@ -249,9 +249,7 @@ bool ContinentalARS548Decoder::parse_objects_list_packet(
   // NOTE(knzo25): In the radar firmware used when developing this driver,
   // corner radars were not supported. When a new firmware addresses this,
   // the driver will be updated.
-  if (
-    std::abs(radar_status_.yaw) > 5.0 * M_PI / 180.0 &&
-    std::abs(radar_status_.yaw) < 90.0 * M_PI / 180.0) {
+  if (nebula::drivers::continental_ars548::is_corner_radar(radar_status_.yaw)) {
     return true;
   }
 
