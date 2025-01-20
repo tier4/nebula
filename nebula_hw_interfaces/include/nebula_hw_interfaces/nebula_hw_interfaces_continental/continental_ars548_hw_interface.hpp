@@ -87,8 +87,8 @@ public:
   /// @param power_save_standstill Desired power_save_standstill value (0 = Off, 1 = On)
   /// @return Resulting status
   Status set_radar_parameters(
-    uint16_t maximum_distance, uint8_t frequency_slot, uint8_t cycle_time, uint8_t time_slot,
-    uint8_t hcc, uint8_t power_save_standstill);
+    uint16_t maximum_distance, std::string frequency_band, uint8_t cycle_time, uint8_t time_slot,
+    std::string country_code, uint8_t power_save_standstill);
 
   /// @brief Set the sensor ip address
   /// @param sensor_ip_address Desired sensor ip address

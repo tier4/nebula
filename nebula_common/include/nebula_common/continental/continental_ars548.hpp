@@ -253,9 +253,17 @@ constexpr int sync_lost = 3;
 constexpr int plug_right = 0;
 constexpr int plug_left = 1;
 
+constexpr int maximum_distance_min_value = 93;
+constexpr int maximum_distance_max_value = 1514;
+
 constexpr int frequency_slot_low = 0;
 constexpr int frequency_slot_mid = 1;
 constexpr int frequency_slot_high = 2;
+
+constexpr int min_cycle_time_ms = 50;
+constexpr int max_cycle_time_ms = 100;
+
+constexpr int min_time_slot_ms = 10;
 
 constexpr int hcc_worldwide = 1;
 constexpr int hcc_japan = 2;

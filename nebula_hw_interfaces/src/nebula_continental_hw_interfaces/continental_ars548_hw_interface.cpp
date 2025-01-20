@@ -185,14 +185,46 @@ Status ContinentalARS548HwInterface::set_vehicle_parameters(
 }
 
 Status ContinentalARS548HwInterface::set_radar_parameters(
-  uint16_t maximum_distance, uint8_t frequency_slot, uint8_t cycle_time, uint8_t time_slot,
-  uint8_t hcc, uint8_t power_save_standstill)
+  uint16_t maximum_distance, std::string frequency_band, uint8_t cycle_time_ms,
+  uint8_t time_slot_ms, std::string country_code, uint8_t power_save_standstill)
 {
+  uint8_t frequency_slot = 0;
+  uint8_t hcc = 0;
+
+  if (frequency_band == "low") {
+    frequency_slot = frequency_slot_low;
+  } else if (frequency_band == "mid") {
+    frequency_slot = frequency_slot_mid;
+  } else if (frequency_band == "high") {
+    frequency_slot = frequency_slot_high;
+  } else {
+    print_error("Invalid frequency_band value");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  if (country_code == "worldwide") {
+    hcc = hcc_worldwide;
+  } else if (country_code == "japan") {
+    hcc = hcc_japan;
+  } else {
+    print_error("Invalid country_code value");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
   if (
-    maximum_distance < 93 || maximum_distance > 1514 || frequency_slot > 2 || cycle_time < 50 ||
-    cycle_time > 100 || time_slot < 10 || time_slot > 90 || hcc < 1 || hcc > 2 ||
-    power_save_standstill > 1) {
-    print_error("Invalid SetRadarParameters values");
+    maximum_distance < maximum_distance_min_value ||
+    maximum_distance > maximum_distance_max_value) {
+    print_error("Invalid maximum_distance value");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  if (cycle_time_ms < min_cycle_time_ms || cycle_time_ms > max_cycle_time_ms) {
+    print_error("Invalid cycle_time_ms value");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  if (time_slot_ms < min_time_slot_ms || time_slot_ms > cycle_time_ms - 1) {
+    print_error("Invalid time_slot_ms value");
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -203,8 +235,8 @@ Status ContinentalARS548HwInterface::set_radar_parameters(
   configuration_packet.header.length = configuration_payload_length;
   configuration_packet.configuration.maximum_distance = maximum_distance;
   configuration_packet.configuration.frequency_slot = frequency_slot;
-  configuration_packet.configuration.cycle_time = cycle_time;
-  configuration_packet.configuration.time_slot = time_slot;
+  configuration_packet.configuration.cycle_time = cycle_time_ms;
+  configuration_packet.configuration.time_slot = time_slot_ms;
   configuration_packet.configuration.hcc = hcc;
   configuration_packet.configuration.powersave_standstill = power_save_standstill;
   configuration_packet.new_radar_parameters = 1;
@@ -214,8 +246,8 @@ Status ContinentalARS548HwInterface::set_radar_parameters(
 
   print_info("maximum_distance = " + std::to_string(maximum_distance));
   print_info("frequency_slot = " + std::to_string(frequency_slot));
-  print_info("cycle_time = " + std::to_string(cycle_time));
-  print_info("time_slot = " + std::to_string(time_slot));
+  print_info("cycle_time = " + std::to_string(cycle_time_ms));
+  print_info("time_slot = " + std::to_string(time_slot_ms));
   print_info("hcc = " + std::to_string(hcc));
   print_info("power_save_standstill = " + std::to_string(power_save_standstill));
 
