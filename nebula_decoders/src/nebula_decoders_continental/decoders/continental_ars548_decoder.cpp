@@ -245,6 +245,14 @@ bool ContinentalARS548Decoder::parse_detections_list_packet(
 bool ContinentalARS548Decoder::parse_objects_list_packet(
   const nebula_msgs::msg::NebulaPacket & packet_msg)
 {
+  // cSpell:ignore knzo25
+  // NOTE(knzo25): In the radar firmware used when developing this driver,
+  // corner radars were not supported. When a new firmware addresses this,
+  // the driver will be updated.
+  if (nebula::drivers::continental_ars548::is_corner_radar(radar_status_.yaw)) {
+    return true;
+  }
+
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548ObjectList>();
   auto & msg = *msg_ptr;
 
