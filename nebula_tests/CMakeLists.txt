@@ -24,6 +24,7 @@ endif()
 find_package(ament_cmake_auto REQUIRED)
 find_package(nebula_common REQUIRED)
 find_package(nebula_decoders REQUIRED)
+find_package(nebula_ros REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(rosbag2_cpp REQUIRED)
 find_package(diagnostic_updater REQUIRED)
@@ -42,6 +43,7 @@ if(BUILD_TESTING)
     set(NEBULA_TEST_INCLUDE_DIRS
         ${nebula_common_INCLUDE_DIRS}
         ${nebula_decoders_INCLUDE_DIRS}
+        ${nebula_ros_INCLUDE_DIRS}
         ${PCL_INCLUDE_DIRS}
         ${rosbag2_cpp_INCLUDE_DIRS}
         ${diagnostic_updater_INCLUDE_DIRS}
@@ -49,6 +51,7 @@ if(BUILD_TESTING)
 
     set(NEBULA_TEST_LIBRARIES
         ${nebula_common_TARGETS}
+        ${nebula_ros_TARGETS}
         ${PCL_LIBRARIES}
         ${rosbag2_cpp_TARGETS}
         ${diagnostic_updater_TARGETS}

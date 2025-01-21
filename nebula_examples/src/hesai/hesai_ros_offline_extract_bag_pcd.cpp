@@ -14,18 +14,19 @@
 
 #include "hesai/hesai_ros_offline_extract_bag_pcd.hpp"
 
-#include "rclcpp/serialization.hpp"
-#include "rclcpp/serialized_message.hpp"
-#include "rcpputils/filesystem_helper.hpp"
-#include "rosbag2_cpp/reader.hpp"
-#include "rosbag2_cpp/readers/sequential_reader.hpp"
-#include "rosbag2_cpp/writers/sequential_writer.hpp"
-#include "rosbag2_storage/storage_options.hpp"
-
 #include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_ros/common/rclcpp_logger.hpp>
+#include <rclcpp/serialization.hpp>
+#include <rclcpp/serialized_message.hpp>
+#include <rcpputils/filesystem_helper.hpp>
+#include <rosbag2_cpp/reader.hpp>
+#include <rosbag2_cpp/readers/sequential_reader.hpp>
+#include <rosbag2_cpp/writers/sequential_writer.hpp>
+#include <rosbag2_storage/storage_options.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <memory>
 #include <regex>
 
 namespace nebula::ros
@@ -72,7 +73,7 @@ Status HesaiRosOfflineExtractBag::initialize_driver(
 {
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
     std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
-    calibration_configuration);
+    calibration_configuration, std::make_shared<drivers::loggers::RclcppLogger>(get_logger()));
   return driver_ptr_->get_status();
 }
 

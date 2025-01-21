@@ -16,6 +16,8 @@
   <depend>continental_msgs</depend>
   <depend>diagnostic_msgs</depend>
   <depend>libpcl-all-dev</depend>
+  <depend>libpng++-dev</depend>
+  <depend>libpng-dev</depend>
   <depend>nebula_common</depend>
   <depend>nebula_msgs</depend>
   <depend>pandar_msgs</depend>

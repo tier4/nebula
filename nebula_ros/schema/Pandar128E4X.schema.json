@@ -107,6 +107,9 @@
         },
         "dual_return_distance_threshold": {
           "$ref": "sub/misc.json#/definitions/dual_return_distance_threshold"
+        },
+        "point_filters": {
+          "$ref": "sub/misc.json#/definitions/point_filters"
         }
       },
       "required": [

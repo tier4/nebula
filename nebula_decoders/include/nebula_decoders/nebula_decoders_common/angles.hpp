@@ -18,6 +18,29 @@
 namespace nebula::drivers
 {
 
+template <typename T>
+struct AnglePair
+{
+  T azimuth;
+  T elevation;
+};
+
+template <typename T>
+struct AngleRange
+{
+  T min;
+  T max;
+
+  [[nodiscard]] T extent() const { return max - min; }
+};
+
+template <typename T>
+struct FieldOfView
+{
+  AngleRange<T> azimuth;
+  AngleRange<T> elevation;
+};
+
 /**
  * @brief Tests if `angle` is in the region of the circle defined by `start_angle` and `end_angle`.
  * Notably, `end_angle` can be smaller than `start_angle`, in which case the region passes over the

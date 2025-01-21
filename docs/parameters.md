@@ -94,3 +94,7 @@ This parameter is used to set this preference.
 ### `dual_return_distance_threshold`
 
 For multiple returns that are close together, the points will be fused into one if they are below this threshold (in meters).
+
+### `point_filters`
+
+Filters that are applied while decoding the pointcloud. For the full reference, see [Point filters](filters.md).

@@ -15,6 +15,7 @@
   <depend>diagnostic_updater</depend>
   <depend>nebula_common</depend>
   <depend>nebula_decoders</depend>
+  <depend>nebula_ros</depend>
   <depend>rosbag2_cpp</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
