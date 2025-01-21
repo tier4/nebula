@@ -125,6 +125,9 @@ ContinentalARS548HwInterfaceWrapper::hw_interface() const
 void ContinentalARS548HwInterfaceWrapper::odometry_callback(
   const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg)
 {
+  using nebula::drivers::continental_ars548::max_odometry_hz;
+  using nebula::drivers::continental_ars548::min_odometry_hz;
+
   if (last_odometry_stamp_ == 0.0) {
     last_odometry_stamp_ = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
   } else {
@@ -172,6 +175,9 @@ void ContinentalARS548HwInterfaceWrapper::odometry_callback(
 void ContinentalARS548HwInterfaceWrapper::acceleration_callback(
   const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr msg)
 {
+  using nebula::drivers::continental_ars548::max_odometry_hz;
+  using nebula::drivers::continental_ars548::min_odometry_hz;
+
   if (last_acceleration_stamp_ == 0.0) {
     last_acceleration_stamp_ = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
   } else {
@@ -201,6 +207,9 @@ void ContinentalARS548HwInterfaceWrapper::acceleration_callback(
 void ContinentalARS548HwInterfaceWrapper::steering_angle_callback(
   const std_msgs::msg::Float32::SharedPtr msg)
 {
+  using nebula::drivers::continental_ars548::max_odometry_hz;
+  using nebula::drivers::continental_ars548::min_odometry_hz;
+
   const auto now = std::chrono::high_resolution_clock::now();
   const auto stamp =
     1e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
