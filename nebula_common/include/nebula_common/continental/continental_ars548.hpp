@@ -264,6 +264,7 @@ constexpr int min_cycle_time_ms = 50;
 constexpr int max_cycle_time_ms = 100;
 
 constexpr int min_time_slot_ms = 10;
+constexpr int max_time_slot_ms = 90;
 
 constexpr int hcc_worldwide = 1;
 constexpr int hcc_japan = 2;

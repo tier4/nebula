@@ -135,10 +135,6 @@ void ContinentalARS548HwInterfaceWrapper::odometry_callback(
   }
 
   double estimated_hz = 1.0 / odometry_ring_buffer_.get_average();
-  RCLCPP_ERROR(
-    logger_,
-    "The current odometry rate is %.2f Hz. The sensor requires a rate in the range of 10Hz to 50Hz",
-    estimated_hz);
 
   if (odometry_ring_buffer_.is_full() && (estimated_hz < 10.0 || estimated_hz > 50.0)) {
     rclcpp::Clock clock{RCL_ROS_TIME};
@@ -183,13 +179,6 @@ void ContinentalARS548HwInterfaceWrapper::acceleration_callback(
     acceleration_ring_buffer_.push_back(dt);
   }
 
-  double estimated_hz = 1.0 / acceleration_ring_buffer_.get_average();
-  RCLCPP_ERROR(
-    logger_,
-    "The current acceleration rate is %.2f Hz. The sensor requires a rate in the range of 10Hz to "
-    "50Hz",
-    estimated_hz);
-
   if (acceleration_ring_buffer_.is_full() && (estimated_hz < 10.0 || estimated_hz > 50.0)) {
     rclcpp::Clock clock{RCL_ROS_TIME};
     RCLCPP_WARN_THROTTLE(
@@ -217,13 +206,6 @@ void ContinentalARS548HwInterfaceWrapper::steering_angle_callback(
     last_steering_angle_stamp_ = stamp;
     steering_angle_ring_buffer_.push_back(dt);
   }
-
-  double estimated_hz = 1.0 / steering_angle_ring_buffer_.get_average();
-  RCLCPP_ERROR(
-    logger_,
-    "The current steering angle rate is %.2f Hz. The sensor requires a rate in the range of 10Hz "
-    "to 50Hz",
-    estimated_hz);
 
   if (steering_angle_ring_buffer_.is_full() && (estimated_hz < 10.0 || estimated_hz > 50.0)) {
     rclcpp::Clock clock{RCL_ROS_TIME};

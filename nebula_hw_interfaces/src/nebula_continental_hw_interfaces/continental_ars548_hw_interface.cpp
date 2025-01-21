@@ -223,7 +223,9 @@ Status ContinentalARS548HwInterface::set_radar_parameters(
     return Status::SENSOR_CONFIG_ERROR;
   }
 
-  if (time_slot_ms < min_time_slot_ms || time_slot_ms > cycle_time_ms - 1) {
+  if (
+    time_slot_ms < min_time_slot_ms || time_slot_ms > cycle_time_ms - 1 ||
+    time_slot_ms > max_time_slot_ms) {
     print_error("Invalid time_slot_ms value");
     return Status::SENSOR_CONFIG_ERROR;
   }
