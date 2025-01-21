@@ -136,7 +136,9 @@ void ContinentalARS548HwInterfaceWrapper::odometry_callback(
 
   double estimated_hz = 1.0 / odometry_ring_buffer_.get_average();
 
-  if (odometry_ring_buffer_.is_full() && (estimated_hz < 10.0 || estimated_hz > 50.0)) {
+  if (
+    odometry_ring_buffer_.is_full() && (estimated_hz < static_cast<double>(min_odometry_hz) ||
+                                        estimated_hz > static_cast<double>(max_odometry_hz))) {
     rclcpp::Clock clock{RCL_ROS_TIME};
     RCLCPP_WARN_THROTTLE(
       logger_, clock, 5000,
@@ -179,7 +181,11 @@ void ContinentalARS548HwInterfaceWrapper::acceleration_callback(
     acceleration_ring_buffer_.push_back(dt);
   }
 
-  if (acceleration_ring_buffer_.is_full() && (estimated_hz < 10.0 || estimated_hz > 50.0)) {
+  double estimated_hz = 1.0 / acceleration_ring_buffer_.get_average();
+
+  if (
+    acceleration_ring_buffer_.is_full() && (estimated_hz < static_cast<double>(min_odometry_hz) ||
+                                            estimated_hz > static_cast<double>(max_odometry_hz))) {
     rclcpp::Clock clock{RCL_ROS_TIME};
     RCLCPP_WARN_THROTTLE(
       logger_, clock, 5000,
@@ -207,7 +213,12 @@ void ContinentalARS548HwInterfaceWrapper::steering_angle_callback(
     steering_angle_ring_buffer_.push_back(dt);
   }
 
-  if (steering_angle_ring_buffer_.is_full() && (estimated_hz < 10.0 || estimated_hz > 50.0)) {
+  double estimated_hz = 1.0 / steering_angle_ring_buffer_.get_average();
+
+  if (
+    steering_angle_ring_buffer_.is_full() &&
+    (estimated_hz < static_cast<double>(min_odometry_hz) ||
+     estimated_hz > static_cast<double>(max_odometry_hz))) {
     rclcpp::Clock clock{RCL_ROS_TIME};
     RCLCPP_WARN_THROTTLE(
       logger_, clock, 5000,

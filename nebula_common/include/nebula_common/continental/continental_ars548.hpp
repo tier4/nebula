@@ -289,6 +289,9 @@ constexpr int blockage_test_failed = 0;
 constexpr int blockage_test_passed = 1;
 constexpr int blockage_test_ongoing = 2;
 
+constexpr int min_odometry_hz = 10;
+constexpr int max_odometry_hz = 50;
+
 #pragma pack(push, 1)
 
 struct HeaderPacket
