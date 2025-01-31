@@ -6,6 +6,7 @@
 
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
+#include <nebula_common/util/string_conversions.hpp>
 #include <nebula_decoders/nebula_decoders_common/angles.hpp>
 
 #include <cstdint>
@@ -32,8 +33,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   wrapper_status_ = declare_and_get_sensor_config_params();
 
   if (wrapper_status_ != Status::OK) {
-    throw std::runtime_error(
-      (std::stringstream{} << "Sensor configuration invalid: " << wrapper_status_).str());
+    throw std::runtime_error("Sensor configuration invalid: " + util::to_string(wrapper_status_));
   }
 
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
@@ -61,7 +61,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     get_calibration_data(sensor_cfg_ptr_->calibration_path, force_load_caibration_from_file);
   if (!calibration_result.has_value()) {
     throw std::runtime_error(
-      (std::stringstream() << "No valid calibration found: " << calibration_result.error()).str());
+      "No valid calibration found: " + util::to_string(calibration_result.error()));
   }
 
   bool lidar_range_supported =
@@ -72,8 +72,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     auto status =
       hw_interface_wrapper_->hw_interface()->check_and_set_lidar_range(*calibration_result.value());
     if (status != Status::OK) {
-      throw std::runtime_error(
-        (std::stringstream{} << "Could not set sensor FoV: " << status).str());
+      throw std::runtime_error("Could not set sensor FoV: " + util::to_string(status));
     }
   }
 
@@ -387,7 +386,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     RCLCPP_WARN_STREAM(get_logger(), "OnParameterChange aborted: " << status);
     auto result = SetParametersResult();
     result.successful = false;
-    result.reason = (std::stringstream() << "Invalid configuration: " << status).str();
+    result.reason = "Invalid configuration: " + util::to_string(status);
     return result;
   }
 

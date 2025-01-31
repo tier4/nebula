@@ -2,6 +2,8 @@
 
 #include "nebula_ros/robosense/hw_interface_wrapper.hpp"
 
+#include <nebula_common/util/string_conversions.hpp>
+
 namespace nebula::ros
 {
 RobosenseHwInterfaceWrapper::RobosenseHwInterfaceWrapper(
@@ -16,8 +18,7 @@ RobosenseHwInterfaceWrapper::RobosenseHwInterfaceWrapper(
   status_ = hw_interface_->set_sensor_configuration(config);
 
   if (Status::OK != status_) {
-    throw std::runtime_error(
-      (std::stringstream{} << "Sensor configuration invalid: " << status_).str());
+    throw std::runtime_error("Sensor configuration invalid: " + util::to_string(status_));
   }
 }
 

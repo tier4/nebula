@@ -4,6 +4,7 @@
 
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
+#include <nebula_common/util/string_conversions.hpp>
 #include <rclcpp/qos.hpp>
 
 #include <robosense_msgs/msg/detail/robosense_info_packet__struct.hpp>
@@ -26,8 +27,7 @@ RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
   wrapper_status_ = declare_and_get_sensor_config_params();
 
   if (wrapper_status_ != Status::OK) {
-    throw std::runtime_error(
-      (std::stringstream{} << "Sensor configuration invalid: " << wrapper_status_).str());
+    throw std::runtime_error("Sensor configuration invalid: " + util::to_string(wrapper_status_));
   }
 
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
@@ -285,7 +285,7 @@ rcl_interfaces::msg::SetParametersResult RobosenseRosWrapper::on_parameter_chang
     RCLCPP_WARN_STREAM(get_logger(), "OnParameterChange aborted: " << status);
     auto result = SetParametersResult();
     result.successful = false;
-    result.reason = (std::stringstream() << "Invalid configuration: " << status).str();
+    result.reason = "Invalid configuration: " + util::to_string(status);
     return result;
   }
 

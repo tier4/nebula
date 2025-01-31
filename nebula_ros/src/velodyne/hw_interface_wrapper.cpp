@@ -2,6 +2,8 @@
 
 #include "nebula_ros/velodyne/hw_interface_wrapper.hpp"
 
+#include <nebula_common/util/string_conversions.hpp>
+
 namespace nebula::ros
 {
 
@@ -20,8 +22,7 @@ VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
   status_ = hw_interface_->initialize_sensor_configuration(config);
 
   if (status_ != Status::OK) {
-    throw std::runtime_error(
-      (std::stringstream{} << "Could not initialize HW interface: " << status_).str());
+    throw std::runtime_error("Could not initialize HW interface: " + util::to_string(status_));
   }
 
   if (use_udp_only_) {
@@ -32,8 +33,7 @@ VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
   status_ = hw_interface_->init_http_client();
 
   if (status_ != Status::OK) {
-    throw std::runtime_error(
-      (std::stringstream{} << "Could not initialize HTTP client: " << status_).str());
+    throw std::runtime_error("Could not initialize HTTP client: " + util::to_string(status_));
   }
 
   if (setup_sensor_) {
@@ -42,8 +42,7 @@ VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
   }
 
   if (status_ != Status::OK) {
-    throw std::runtime_error(
-      (std::stringstream{} << "Could not set sensor configuration: " << status_).str());
+    throw std::runtime_error("Could not set sensor configuration: " + util::to_string(status_));
   }
 
   status_ = Status::OK;

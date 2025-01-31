@@ -14,6 +14,8 @@
 
 #include "nebula_ros/continental/continental_srr520_decoder_wrapper.hpp"
 
+#include <nebula_common/util/string_conversions.hpp>
+
 #include <pcl_conversions/pcl_conversions.h>
 
 namespace nebula::ros
@@ -41,8 +43,7 @@ ContinentalSRR520DecoderWrapper::ContinentalSRR520DecoderWrapper(
   status_ = driver_ptr_->get_status();
 
   if (Status::OK != status_) {
-    throw std::runtime_error(
-      (std::stringstream() << "Error instantiating decoder: " << status_).str());
+    throw std::runtime_error("Error instantiating decoder: " + util::to_string(status_));
   }
 
   // Publish packets only if HW interface is connected

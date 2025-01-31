@@ -2,6 +2,7 @@
 
 #include "nebula_ros/velodyne/decoder_wrapper.hpp"
 
+#include <nebula_common/util/string_conversions.hpp>
 #include <rclcpp/time.hpp>
 
 namespace nebula::ros
@@ -29,7 +30,7 @@ VelodyneDecoderWrapper::VelodyneDecoderWrapper(
 
   if (!calibration_result.has_value()) {
     throw std::runtime_error(
-      (std::stringstream() << "No valid calibration found: " << calibration_result.error()).str());
+      "No valid calibration found: " + util::to_string(calibration_result.error()));
   }
 
   calibration_cfg_ptr_ = calibration_result.value();
@@ -42,8 +43,7 @@ VelodyneDecoderWrapper::VelodyneDecoderWrapper(
   status_ = driver_ptr_->get_status();
 
   if (Status::OK != status_) {
-    throw std::runtime_error(
-      (std::stringstream() << "Error instantiating decoder: " << status_).str());
+    throw std::runtime_error("Error instantiating decoder: " + util::to_string(status_));
   }
 
   // Publish packets only if HW interface is connected
@@ -117,10 +117,8 @@ rcl_interfaces::msg::SetParametersResult VelodyneDecoderWrapper::on_parameter_ch
   if (!get_calibration_result.has_value()) {
     auto result = SetParametersResult();
     result.successful = false;
-    result.reason =
-      (std::stringstream() << "Could not change calibration file to '" << calibration_path
-                           << "': " << get_calibration_result.error())
-        .str();
+    result.reason = "Could not change calibration file to '" + calibration_path +
+                    "': " + util::to_string(get_calibration_result.error());
     return result;
   }
 
