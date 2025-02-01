@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "nebula_ros/common/sync_diag_client.hpp"
+
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp>
@@ -26,8 +28,8 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <memory>
+#include <optional>
 #include <string>
-#include <vector>
 
 namespace nebula::ros
 {
@@ -66,6 +68,8 @@ private:
 
   void on_hesai_lidar_monitor_timer();
 
+  void on_sync_diag_timer();
+
   void hesai_check_status(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
   void hesai_check_ptp(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
@@ -103,6 +107,8 @@ private:
 
   std::mutex mtx_lidar_status_;
   std::mutex mtx_lidar_monitor_;
+
+  std::optional<SyncDiagClient> sync_diag_client_;
 
   const std::string MSG_NOT_SUPPORTED_ = "Not supported";
   const std::string MSG_ERROR_ = "Error";
