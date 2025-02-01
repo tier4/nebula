@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_HESAI_DRIVER_H
-#define NEBULA_HESAI_DRIVER_H
+#ifndef NEBULA_DECODERS__NEBULA_DECODERS_HESAI__HESAI_DRIVER_HPP_
+#define NEBULA_DECODERS__NEBULA_DECODERS_HESAI__HESAI_DRIVER_HPP_
 
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_status.hpp"
@@ -73,4 +73,4 @@ public:
 
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_HESAI_DRIVER_H
+#endif  // NEBULA_DECODERS__NEBULA_DECODERS_HESAI__HESAI_DRIVER_HPP_
