@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -29,6 +30,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 namespace nebula
 {
@@ -82,6 +84,10 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "Downsample Filter: "
      << (arg.downsample_mask_path ? "enabled, path: " + arg.downsample_mask_path.value()
                                   : "disabled");
+  os << "Synchronization Diagnostics: "
+     << (arg.sync_master ? ("enabled, master at " + arg.sync_master->first + ':' +
+                            std::to_string(arg.sync_master->second))
+                         : "disabled");
   return os;
 }
 
