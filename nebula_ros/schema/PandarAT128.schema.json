@@ -118,6 +118,9 @@
         },
         "dual_return_distance_threshold": {
           "$ref": "sub/misc.json#/definitions/dual_return_distance_threshold"
+        },
+        "point_filters": {
+          "$ref": "sub/misc.json#/definitions/point_filters"
         }
       },
       "required": [
@@ -147,7 +150,8 @@
         "ptp_switch_type",
         "ptp_lock_threshold",
         "retry_hw",
-        "dual_return_distance_threshold"
+        "dual_return_distance_threshold",
+        "point_filters"
       ],
       "additionalProperties": false
     }

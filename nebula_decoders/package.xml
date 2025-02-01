@@ -18,6 +18,7 @@
   <depend>libpcl-all-dev</depend>
   <depend>nebula_common</depend>
   <depend>nebula_msgs</depend>
+  <depend>nlohmann-json-dev</depend>
   <depend>pandar_msgs</depend>
   <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>
