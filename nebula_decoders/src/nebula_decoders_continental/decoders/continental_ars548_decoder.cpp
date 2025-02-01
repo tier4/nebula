@@ -483,7 +483,7 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
       radar_status_.hcc = "1:Worldwide";
       break;
     case hcc_japan:
-      radar_status_.hcc = "1:Japan";
+      radar_status_.hcc = "2:Japan";
       break;
     default:
       radar_status_.hcc = std::to_string(sensor_status_packet.status.hcc) + ":Invalid hcc";
