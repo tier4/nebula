@@ -206,6 +206,17 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
     config.ptp_lock_threshold = declare_parameter<uint8_t>("ptp_lock_threshold", descriptor);
   }
 
+  {
+    const int32_t unset = -1;
+    auto sync_master_port =
+      declare_parameter<int32_t>("sync_diagnostics.master_port", unset, param_read_only());
+    if (sync_master_port != unset) {
+      auto sync_master_ip =
+        declare_parameter<std::string>("sync_diagnostics.master_ip", param_read_only());
+      config.sync_master.emplace(sync_master_ip, static_cast<uint16_t>(sync_master_port));
+    }
+  }
+
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(config);
   return validate_and_set_config(new_cfg_ptr);
 }

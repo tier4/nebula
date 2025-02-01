@@ -119,19 +119,6 @@ struct PtpTlvPortDataSet
   }
 };
 
-/*
-class TimeStatusNp:
-    tlv_type = "TIME_STATUS_NP"
-    master_offset: int
-    ingress_time: int
-    cumulativeScaledRateOffset: float
-    scaledLastGmPhaseChange: int
-    gmTimeBaseIndicator: int
-    lastGmPhaseChange: float
-    gmPresent: str
-    gmIdentity: str
-*/
-
 struct PtpTlvGmPhaseChange
 {
   big_uint16_buf_t msb;

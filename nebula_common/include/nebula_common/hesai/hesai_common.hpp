@@ -21,13 +21,16 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 namespace nebula
 {
@@ -50,6 +53,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   PtpTransportType ptp_transport_type;
   PtpSwitchType ptp_switch_type;
   uint8_t ptp_lock_threshold;
+  std::optional<std::pair<std::string, uint16_t>> sync_master;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -74,6 +78,10 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "PTP Transport Type: " << arg.ptp_transport_type << '\n';
   os << "PTP Switch Type: " << arg.ptp_switch_type << '\n';
   os << "PTP Lock Threshold: " << std::to_string(arg.ptp_lock_threshold);
+  os << "Synchronization Diagnostics: "
+     << (arg.sync_master ? ("enabled, master at " + arg.sync_master->first + ':' +
+                            std::to_string(arg.sync_master->second))
+                         : "disabled");
   return os;
 }
 

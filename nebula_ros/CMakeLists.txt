@@ -28,6 +28,7 @@ find_package(robosense_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(sync_tooling_msgs REQUIRED)
 
 include_directories(
     include
@@ -53,17 +54,22 @@ add_library(hesai_ros_wrapper SHARED
     src/common/parameter_descriptors.cpp
 )
 
+message(sync_tooling_msgs_INCLUDE_DIRS=${sync_tooling_msgs_INCLUDE_DIRS})
+message(sync_tooling_msgs_TARGETS=${sync_tooling_msgs_TARGETS})
+
 target_include_directories(hesai_ros_wrapper PUBLIC
     ${diagnostic_updater_INCLUDE_DIRS}
     ${nebula_decoders_INCLUDE_DIRS}
     ${nebula_hw_interfaces_INCLUDE_DIRS}
     ${pandar_msgs_INCLUDE_DIRS}
+    ${sync_tooling_msgs_INCLUDE_DIRS}
 )
 
 target_link_libraries(hesai_ros_wrapper PUBLIC
     ${diagnostic_msgs_TARGETS}
     ${diagnostic_updater_TARGETS}
     ${pandar_msgs_TARGETS}
+    ${sync_tooling_msgs_TARGETS}
     nebula_decoders::nebula_decoders_hesai
     nebula_hw_interfaces::nebula_hw_interfaces_hesai
 )
