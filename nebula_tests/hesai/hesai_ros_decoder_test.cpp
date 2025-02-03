@@ -18,7 +18,10 @@
 
 #include <cstring>
 #include <filesystem>
+#include <memory>
 #include <regex>
+#include <string>
+#include <vector>
 
 namespace nebula::ros
 {

@@ -15,10 +15,13 @@
 #include <boost/asio/socket_base.hpp>
 
 #include <cassert>
+#include <iostream>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <vector>
 
 // #define WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
 

@@ -10,7 +10,12 @@
 #include <robosense_msgs/msg/detail/robosense_info_packet__struct.hpp>
 
 #include <algorithm>
+#include <cstdio>
 #include <iterator>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 

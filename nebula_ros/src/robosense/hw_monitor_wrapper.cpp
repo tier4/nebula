@@ -4,7 +4,10 @@
 
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
+#include <map>
 #include <memory>
+#include <string>
+#include <utility>
 
 namespace nebula::ros
 {

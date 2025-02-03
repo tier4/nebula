@@ -2,6 +2,11 @@
 
 #include "nebula_hw_interfaces/nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp"
 
+#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace nebula::drivers
 {
 VelodyneHwInterface::VelodyneHwInterface()

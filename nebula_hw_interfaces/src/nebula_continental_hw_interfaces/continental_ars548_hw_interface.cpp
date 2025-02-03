@@ -17,6 +17,12 @@
 
 #include <nebula_common/continental/continental_ars548.hpp>
 
+#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 namespace nebula::drivers::continental_ars548
 {
 ContinentalARS548HwInterface::ContinentalARS548HwInterface()

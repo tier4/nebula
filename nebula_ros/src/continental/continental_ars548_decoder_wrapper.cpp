@@ -18,6 +18,12 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <unordered_set>
+#include <utility>
+
 namespace nebula::ros
 {
 ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(

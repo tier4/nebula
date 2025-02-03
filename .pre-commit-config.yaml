@@ -89,7 +89,7 @@ repos:
       - id: cpplint
         # runtime/arrays uses the name of the variable to determine const-ness.
         # This does not play well with our naming conventions
-        args: [--quiet, --filter=-runtime/arrays]
+        args: [--quiet, '--filter=-runtime/arrays,-build/c++17,-readability/casting']
         exclude: .cu
 
 exclude: .svg

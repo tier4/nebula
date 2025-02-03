@@ -5,6 +5,13 @@
 #include <nebula_common/util/string_conversions.hpp>
 #include <rclcpp/time.hpp>
 
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+
 namespace nebula::ros
 {
 
