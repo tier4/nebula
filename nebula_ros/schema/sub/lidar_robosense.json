@@ -5,19 +5,11 @@
   "definitions": {
     "sensor_model": {
       "$ref": "hardware.json#/definitions/sensor_model",
-      "enum": [
-        "Helios",
-        "Bpearl"
-      ]
+      "enum": ["Helios", "Bpearl"]
     },
     "return_mode": {
       "$ref": "misc.json#/definitions/return_mode",
-      "enum": [
-        "Dual",
-        "Strongest",
-        "Last",
-        "First"
-      ]
+      "enum": ["Dual", "Strongest", "Last", "First"]
     }
   }
 }
