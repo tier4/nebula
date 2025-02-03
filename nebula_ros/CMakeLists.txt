@@ -224,7 +224,19 @@ install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
+    find_package(ros_testing REQUIRED)
+
     ament_lint_auto_find_test_dependencies()
+
+    foreach(MODEL Pandar40P Pandar64 PandarQT64 PandarQT128 Pandar128E4X PandarAT128 PandarXT32 PandarXT32M)
+        string(TOLOWER ${MODEL}_smoke_test test_name)
+        add_ros_test(
+            test/smoke_test.py
+            TARGET ${test_name}
+            ARGS "launch_file_path:=${PROJECT_SOURCE_DIR}/launch/nebula_launch.py" "sensor_model:=${MODEL}"
+            TIMEOUT "10"
+        )
+    endforeach()
 endif()
 
 ament_export_include_directories("include/${PROJECT_NAME}")
