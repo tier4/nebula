@@ -59,9 +59,7 @@
         },
         "sensor_model": {
           "$ref": "sub/lidar_hesai.json#/definitions/sensor_model",
-          "enum": [
-            "Pandar128E4X"
-          ]
+          "enum": ["Pandar128E4X"]
         },
         "calibration_file": {
           "$ref": "sub/lidar_hesai.json#/definitions/calibration_file"
@@ -83,18 +81,14 @@
         },
         "ptp_profile": {
           "$ref": "sub/lidar_hesai.json#/definitions/ptp_profile",
-          "enum": [
-            "automotive"
-          ]
+          "enum": ["automotive"]
         },
         "ptp_domain": {
           "$ref": "sub/lidar_hesai.json#/definitions/ptp_domain"
         },
         "ptp_transport_type": {
           "$ref": "sub/lidar_hesai.json#/definitions/ptp_transport_type",
-          "enum": [
-            "L2"
-          ]
+          "enum": ["L2"]
         },
         "ptp_switch_type": {
           "$ref": "sub/lidar_hesai.json#/definitions/ptp_switch_type"
@@ -149,13 +143,9 @@
         },
         "additionalProperties": false
       },
-      "required": [
-        "ros__parameters"
-      ]
+      "required": ["ros__parameters"]
     }
   },
-  "required": [
-    "/**"
-  ],
+  "required": ["/**"],
   "additionalProperties": false
 }
