@@ -1,6 +1,6 @@
 /**:
   ros__parameters:
-    host_ip: 255.255.255.255
+    host_ip: 192.168.1.10
     sensor_ip: 192.168.1.201
     multicast_ip: ""
     data_port: 2368
@@ -25,5 +25,6 @@
     ptp_domain: 0
     ptp_transport_type: UDP
     ptp_switch_type: TSN
+    ptp_lock_threshold: 100
     retry_hw: true
     dual_return_distance_threshold: 0.1
