@@ -35,15 +35,15 @@ def generate_test_description():
 
 class DummyTest(unittest.TestCase):
     def test_wait_for_node_ready(self):
-        """Waiting for the node is ready."""
+        """Waiting for the node coming online."""
         rclpy.init()
         test_node = rclpy.create_node("test_node")
         # Wait until both dummy node "test_node" and real tested node are registered and then kill
         # both of them, if tested node does not register within `timeout` seconds test will fail
         start_time = time.time()
         timeout = 2  # seconds
-        timeout_msg = "Smoke test timeout has been reached ({}s)".format(timeout)
-        print("waiting for Nodes to be ready")
+        timeout_msg = "Smoke test timeout has been exceeded ({}s)".format(timeout)
+        print("waiting for nodes to be ready")
         while len(test_node.get_node_names()) < 2:
             assert time.time() - start_time < timeout, timeout_msg
             time.sleep(0.1)
@@ -51,6 +51,6 @@ class DummyTest(unittest.TestCase):
 
 
 @launch_testing.post_shutdown_test()
-class TestYourNodeShutdown(unittest.TestCase):
+class TestCleanShutdown(unittest.TestCase):
     def test_exit_code(self, proc_info):
         launch_testing.asserts.assertExitCodes(proc_info)
