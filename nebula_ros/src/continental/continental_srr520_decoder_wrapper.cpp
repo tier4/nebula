@@ -18,6 +18,10 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <memory>
+#include <unordered_set>
+#include <utility>
+
 namespace nebula::ros
 {
 ContinentalSRR520DecoderWrapper::ContinentalSRR520DecoderWrapper(

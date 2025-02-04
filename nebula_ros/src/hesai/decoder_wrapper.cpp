@@ -7,7 +7,10 @@
 #include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 
+#include <algorithm>
 #include <memory>
+#include <tuple>
+#include <utility>
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 namespace nebula::ros

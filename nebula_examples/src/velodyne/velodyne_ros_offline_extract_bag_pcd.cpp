@@ -18,7 +18,11 @@
 #include <rosbag2_cpp/writers/sequential_writer.hpp>
 
 #include <cmath>
+#include <iostream>
+#include <memory>
 #include <regex>
+#include <string>
+#include <vector>
 
 namespace nebula::ros
 {

@@ -2,6 +2,14 @@
 
 #include "nebula_ros/velodyne/hw_monitor_wrapper.hpp"
 
+#include <algorithm>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+
 namespace nebula::ros
 {
 VelodyneHwMonitorWrapper::VelodyneHwMonitorWrapper(

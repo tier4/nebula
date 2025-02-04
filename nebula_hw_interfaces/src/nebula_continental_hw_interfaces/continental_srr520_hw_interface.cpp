@@ -18,8 +18,12 @@
 #include <nebula_common/continental/continental_srr520.hpp>
 #include <nebula_common/continental/crc.hpp>
 
+#include <iostream>
 #include <limits>
+#include <memory>
 #include <sstream>
+#include <string>
+#include <utility>
 
 namespace nebula::drivers::continental_srr520
 {

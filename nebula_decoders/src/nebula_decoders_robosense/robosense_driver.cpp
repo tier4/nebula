@@ -7,6 +7,10 @@
 #include "nebula_decoders/nebula_decoders_robosense/decoders/helios.hpp"
 #include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_decoder.hpp"
 
+#include <memory>
+#include <tuple>
+#include <vector>
+
 namespace nebula::drivers
 {
 

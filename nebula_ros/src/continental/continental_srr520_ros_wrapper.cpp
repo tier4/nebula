@@ -16,6 +16,12 @@
 
 #include <nebula_common/util/string_conversions.hpp>
 
+#include <cstdio>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
 namespace nebula::ros

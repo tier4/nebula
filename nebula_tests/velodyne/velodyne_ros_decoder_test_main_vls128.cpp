@@ -6,7 +6,10 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdio>
+#include <iostream>
 #include <memory>
+#include <string>
 
 std::shared_ptr<nebula::ros::VelodyneRosDecoderTest> velodyne_driver;
 

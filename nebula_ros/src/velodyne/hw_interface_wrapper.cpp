@@ -4,6 +4,8 @@
 
 #include <nebula_common/util/string_conversions.hpp>
 
+#include <memory>
+
 namespace nebula::ros
 {
 

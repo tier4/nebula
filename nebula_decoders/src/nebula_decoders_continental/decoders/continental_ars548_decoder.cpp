@@ -17,7 +17,10 @@
 #include <nebula_common/continental/continental_ars548.hpp>
 
 #include <cmath>
+#include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 
 namespace nebula::drivers::continental_ars548
 {

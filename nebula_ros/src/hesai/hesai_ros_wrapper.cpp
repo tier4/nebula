@@ -9,12 +9,16 @@
 #include <nebula_common/util/string_conversions.hpp>
 #include <nebula_decoders/nebula_decoders_common/angles.hpp>
 
+#include <algorithm>
 #include <cstdint>
+#include <cstdio>
 #include <filesystem>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
