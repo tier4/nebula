@@ -69,6 +69,22 @@ private:
 
   Status declare_and_get_sensor_config_params();
 
+  void reconfigure_hw_interface();
+
+  void create_packet_subscriber();
+  void reset_packet_subscriber();
+
+  // HW interface management
+  void bringup_hw(bool);
+  void cleanup_on_hw_reconfigure();
+  void setup_on_hw_reconfigure();
+
+  // Decoder thread management
+  void configure_decoder_wrapper_thread();
+  void start_decoder_thread();
+  void stop_decoder_thread();
+  void exit_decoder_thread();
+
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
   /// @return SetParametersResult
@@ -90,10 +106,19 @@ private:
   rclcpp::Subscription<velodyne_msgs::msg::VelodyneScan>::SharedPtr packets_sub_{};
 
   bool launch_hw_;
+  bool use_udp_only_;
+
+  std::mutex decoder_thread_mutex_;
+  std::condition_variable decoder_thread_cv_;
+  bool decoder_thread_running_ = false;
+  bool exit_decoder_thread_ = false;
+  bool restart_hw_ = false;
+  bool restart_packet_subscriber_ = false;
 
   std::optional<VelodyneHwInterfaceWrapper> hw_interface_wrapper_;
   std::optional<VelodyneHwMonitorWrapper> hw_monitor_wrapper_;
   std::optional<VelodyneDecoderWrapper> decoder_wrapper_;
+  rclcpp::TimerBase::SharedPtr hw_reconfigure_timer_;
 
   std::mutex mtx_config_;
 
