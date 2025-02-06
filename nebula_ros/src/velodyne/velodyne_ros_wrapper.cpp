@@ -66,12 +66,14 @@ void VelodyneRosWrapper::reconfigure_hw_interface()
     bringup_hw(use_udp_only_);
     setup_on_hw_reconfigure();
     restart_hw_ = false;
+    hw_reconfigure_timer_->cancel();
   }
 
   if (restart_packet_subscriber_) {
     create_packet_subscriber();
     setup_on_hw_reconfigure();
     restart_packet_subscriber_ = false;
+    hw_reconfigure_timer_->cancel();
   }
 }
 
@@ -313,6 +315,7 @@ rcl_interfaces::msg::SetParametersResult VelodyneRosWrapper::on_parameter_change
     reset_packet_subscriber();
     cleanup_on_hw_reconfigure();
     restart_hw_ = true;
+    hw_reconfigure_timer_->reset();
   }
 
   if (got_any && !launch_hw_ && hw_interface_wrapper_) {
@@ -320,6 +323,7 @@ rcl_interfaces::msg::SetParametersResult VelodyneRosWrapper::on_parameter_change
     cleanup_on_hw_reconfigure();
     reset_packet_subscriber();
     restart_packet_subscriber_ = true;
+    hw_reconfigure_timer_->reset();
   }
 
   // Currently, HW interface and monitor wrappers have only read-only parameters, so their update
