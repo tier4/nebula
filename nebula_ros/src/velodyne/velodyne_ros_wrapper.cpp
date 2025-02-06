@@ -26,6 +26,7 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
   hw_reconfigure_timer_(this->create_wall_timer(
     std::chrono::seconds(1), std::bind(&VelodyneRosWrapper::reconfigure_hw_interface, this)))
 {
+  hw_reconfigure_timer_->cancel();  // Cancel the timer until the HW interface is initialized
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
   wrapper_status_ = declare_and_get_sensor_config_params();
@@ -52,7 +53,8 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
     create_packet_subscriber();
   }
 
-  decoder_thread_ = std::thread(&VelodyneRosWrapper::configure_decoder_wrapper_thread, this);
+  set_decoder_wrapper();
+  decoder_thread_ = std::jthread(&VelodyneRosWrapper::decoder_wrapper_thread, this);
 
   // Register parameter callback after all params have been declared. Otherwise it would be called
   // once for each declaration
@@ -87,48 +89,19 @@ void VelodyneRosWrapper::create_packet_subscriber()
     "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
 }
 
-void VelodyneRosWrapper::configure_decoder_wrapper_thread()
+void VelodyneRosWrapper::set_decoder_wrapper()
 {
   decoder_wrapper_.emplace(
     this, hw_interface_wrapper_ ? hw_interface_wrapper_->hw_interface() : nullptr, sensor_cfg_ptr_);
+}
 
+void VelodyneRosWrapper::decoder_wrapper_thread(std::stop_token stoken)
+{
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
-  while (true) {
-    std::unique_lock lock(decoder_thread_mutex_);
-    decoder_thread_cv_.wait(
-      lock, [this] { return decoder_thread_running_ || exit_decoder_thread_; });
-
-    if (exit_decoder_thread_) {
-      break;
-    }
+  while (!stoken.stop_requested()) {
     decoder_wrapper_->process_cloud_packet(packet_queue_.pop());
-
-    if (!decoder_thread_running_) {
-      continue;
-    }
   }
-}
-
-void VelodyneRosWrapper::start_decoder_thread()
-{
-  std::scoped_lock lock(decoder_thread_mutex_);
-  decoder_thread_running_ = true;
-  decoder_thread_cv_.notify_one();
-}
-
-void VelodyneRosWrapper::stop_decoder_thread()
-{
-  std::scoped_lock lock(decoder_thread_mutex_);
-  decoder_thread_running_ = false;
-  decoder_thread_cv_.notify_one();
-}
-
-void VelodyneRosWrapper::exit_decoder_thread()
-{
-  std::scoped_lock lock(decoder_thread_mutex_);
-  exit_decoder_thread_ = true;
-  decoder_thread_cv_.notify_one();
 }
 
 void VelodyneRosWrapper::bringup_hw(bool use_udp_only)
@@ -259,23 +232,18 @@ Status VelodyneRosWrapper::stream_start()
 void VelodyneRosWrapper::cleanup_on_hw_reconfigure()
 {
   stop_decoder_thread();
-  exit_decoder_thread();
-  decoder_thread_.join();
   if (hw_interface_wrapper_) {
     hw_interface_wrapper_.reset();
   }
   if (hw_monitor_wrapper_) {
     hw_monitor_wrapper_.reset();
   }
-  if (decoder_wrapper_) {
-    decoder_wrapper_.reset();
-  }
 }
 
 void VelodyneRosWrapper::setup_on_hw_reconfigure()
 {
-  decoder_thread_ = std::thread(&VelodyneRosWrapper::configure_decoder_wrapper_thread, this);
-  start_decoder_thread();
+  set_decoder_wrapper();
+  decoder_thread_ = std::jthread(&VelodyneRosWrapper::decoder_wrapper_thread, this);
 }
 
 void VelodyneRosWrapper::reset_packet_subscriber()
@@ -311,17 +279,20 @@ rcl_interfaces::msg::SetParametersResult VelodyneRosWrapper::on_parameter_change
     get_param(p, "launch_hw", launch_hw_);
 
   if (got_any && launch_hw_ && !hw_interface_wrapper_) {
-    RCLCPP_INFO(get_logger(), "(re)Configuring HW interface");
+    RCLCPP_INFO(get_logger(), "Cancelling packet subscription...");
     reset_packet_subscriber();
+    RCLCPP_INFO(get_logger(), "Resetting HW interface and HW Monitor wrappers...");
     cleanup_on_hw_reconfigure();
+    RCLCPP_INFO(get_logger(), "(re)Configuring HW interface");
     restart_hw_ = true;
     hw_reconfigure_timer_->reset();
   }
 
   if (got_any && !launch_hw_ && hw_interface_wrapper_) {
-    RCLCPP_INFO(get_logger(), "(re) Configuring packet subscriber");
+    RCLCPP_INFO(get_logger(), "Resetting HW interface and HW Monitor wrappers...");
     cleanup_on_hw_reconfigure();
     reset_packet_subscriber();
+    RCLCPP_INFO(get_logger(), "(re) Configuring packet subscriber");
     restart_packet_subscriber_ = true;
     hw_reconfigure_timer_->reset();
   }
