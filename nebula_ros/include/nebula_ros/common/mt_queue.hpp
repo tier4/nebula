@@ -46,7 +46,7 @@ public:
   void push(T && value)
   {
     std::unique_lock<std::mutex> lock(this->mutex_);
-    this->cv_not_full_.wait(lock, [=] { return this->queue_.size() < this->capacity_; });
+    this->cv_not_full_.wait(lock, [this] { return this->queue_.size() < this->capacity_; });
     queue_.push_front(std::move(value));
     this->cv_not_empty_.notify_all();
   }
@@ -54,7 +54,7 @@ public:
   T pop()
   {
     std::unique_lock<std::mutex> lock(this->mutex_);
-    this->cv_not_empty_.wait(lock, [=] { return !this->queue_.empty(); });
+    this->cv_not_empty_.wait(lock, [this] { return !this->queue_.empty(); });
     T return_value(std::move(this->queue_.back()));
     this->queue_.pop_back();
     this->cv_not_full_.notify_all();
