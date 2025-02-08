@@ -77,7 +77,7 @@ private:
   // HW interface management
   void bringup_hw(bool);
   void cleanup_on_hw_reconfigure();
-  void setup_on_hw_reconfigure();
+  void setup_decoder();
 
   // Decoder thread management
   void decoder_wrapper_thread(std::stop_token stoken);

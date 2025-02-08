@@ -61,4 +61,17 @@ public:
 
     return return_value;
   }
+
+  std::pair<T, bool> pop(std::chrono::milliseconds timeout)
+  {
+    std::unique_lock<std::mutex> lock(this->mutex_);
+    if (!this->cv_not_empty_.wait_for(lock, timeout, [this] { return !this->queue_.empty(); })) {
+      return std::make_pair(T(), false);
+    }
+    T return_value(std::move(this->queue_.back()));
+    this->queue_.pop_back();
+    this->cv_not_full_.notify_all();
+
+    return std::make_pair(std::move(return_value), true);
+  }
 };
