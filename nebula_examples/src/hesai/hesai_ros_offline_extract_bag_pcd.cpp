@@ -26,7 +26,11 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <iostream>
+#include <memory>
 #include <regex>
+#include <string>
+#include <vector>
 
 namespace nebula::ros
 {

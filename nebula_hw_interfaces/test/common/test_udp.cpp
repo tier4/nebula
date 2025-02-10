@@ -17,6 +17,7 @@
 #include <optional>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 namespace nebula::drivers::connections

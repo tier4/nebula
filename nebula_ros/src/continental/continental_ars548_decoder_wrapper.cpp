@@ -14,7 +14,15 @@
 
 #include "nebula_ros/continental/continental_ars548_decoder_wrapper.hpp"
 
+#include <nebula_common/util/string_conversions.hpp>
+
 #include <pcl_conversions/pcl_conversions.h>
+
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <unordered_set>
+#include <utility>
 
 namespace nebula::ros
 {
@@ -39,8 +47,7 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   status_ = driver_ptr_->get_status();
 
   if (Status::OK != status_) {
-    throw std::runtime_error(
-      (std::stringstream() << "Error instantiating decoder: " << status_).str());
+    throw std::runtime_error("Error instantiating decoder: " + util::to_string(status_));
   }
 
   // Publish packets only if HW interface is connected

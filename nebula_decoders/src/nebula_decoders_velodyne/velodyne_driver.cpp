@@ -6,6 +6,10 @@
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vlp32_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_velodyne/decoders/vls128_decoder.hpp"
 
+#include <memory>
+#include <tuple>
+#include <vector>
+
 namespace nebula::drivers
 {
 VelodyneDriver::VelodyneDriver(

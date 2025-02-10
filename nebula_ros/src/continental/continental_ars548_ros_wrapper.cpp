@@ -14,6 +14,14 @@
 
 #include "nebula_ros/continental/continental_ars548_ros_wrapper.hpp"
 
+#include <nebula_common/util/string_conversions.hpp>
+
+#include <cstdio>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
 namespace nebula::ros
@@ -31,8 +39,7 @@ ContinentalARS548RosWrapper::ContinentalARS548RosWrapper(const rclcpp::NodeOptio
   wrapper_status_ = declare_and_get_sensor_config_params();
 
   if (wrapper_status_ != Status::OK) {
-    throw std::runtime_error(
-      (std::stringstream{} << "Sensor configuration invalid: " << wrapper_status_).str());
+    throw std::runtime_error("Sensor configuration invalid: " + util::to_string(wrapper_status_));
   }
 
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *config_ptr_);
@@ -222,7 +229,7 @@ rcl_interfaces::msg::SetParametersResult ContinentalARS548RosWrapper::on_paramet
     RCLCPP_WARN_STREAM(get_logger(), "OnParameterChange aborted: " << status);
     auto result = SetParametersResult();
     result.successful = false;
-    result.reason = (std::stringstream() << "Invalid configuration: " << status).str();
+    result.reason = "Invalid configuration: " + util::to_string(status);
     return result;
   }
 
