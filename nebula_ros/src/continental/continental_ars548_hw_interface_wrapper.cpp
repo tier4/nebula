@@ -30,9 +30,15 @@ ContinentalARS548HwInterfaceWrapper::ContinentalARS548HwInterfaceWrapper(
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED),
   config_ptr_(config_ptr),
-  odometry_ring_buffer_(100),
-  acceleration_ring_buffer_(100),
-  steering_angle_ring_buffer_(100)
+  odometry_rate_checker_(
+    nebula::drivers::continental_ars548::min_odometry_hz,
+    nebula::drivers::continental_ars548::max_odometry_hz, 100),
+  acceleration_rate_checker_(
+    nebula::drivers::continental_ars548::min_odometry_hz,
+    nebula::drivers::continental_ars548::max_odometry_hz, 100),
+  steering_angle_rate_checker_(
+    nebula::drivers::continental_ars548::min_odometry_hz,
+    nebula::drivers::continental_ars548::max_odometry_hz, 100)
 {
   hw_interface_->set_logger(
     std::make_shared<rclcpp::Logger>(parent_node->get_logger().get_child("HwInterface")));
@@ -128,20 +134,10 @@ void ContinentalARS548HwInterfaceWrapper::odometry_callback(
   using nebula::drivers::continental_ars548::max_odometry_hz;
   using nebula::drivers::continental_ars548::min_odometry_hz;
 
-  if (last_odometry_stamp_ == 0.0) {
-    last_odometry_stamp_ = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
-  } else {
-    double current_time = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
-    double dt = current_time - last_odometry_stamp_;
-    last_odometry_stamp_ = current_time;
-    odometry_ring_buffer_.push_back(dt);
-  }
+  double stamp = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
 
-  double estimated_hz = 1.0 / odometry_ring_buffer_.get_average();
-
-  if (
-    odometry_ring_buffer_.is_full() && (estimated_hz < static_cast<double>(min_odometry_hz) ||
-                                        estimated_hz > static_cast<double>(max_odometry_hz))) {
+  if (!odometry_rate_checker_.is_valid(stamp)) {
+    double estimated_hz = odometry_rate_checker_.get_average();
     rclcpp::Clock clock{RCL_ROS_TIME};
     RCLCPP_WARN_THROTTLE(
       logger_, clock, 5000,
@@ -178,20 +174,10 @@ void ContinentalARS548HwInterfaceWrapper::acceleration_callback(
   using nebula::drivers::continental_ars548::max_odometry_hz;
   using nebula::drivers::continental_ars548::min_odometry_hz;
 
-  if (last_acceleration_stamp_ == 0.0) {
-    last_acceleration_stamp_ = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
-  } else {
-    double current_time = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
-    double dt = current_time - last_acceleration_stamp_;
-    last_acceleration_stamp_ = current_time;
-    acceleration_ring_buffer_.push_back(dt);
-  }
+  double stamp = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
 
-  double estimated_hz = 1.0 / acceleration_ring_buffer_.get_average();
-
-  if (
-    acceleration_ring_buffer_.is_full() && (estimated_hz < static_cast<double>(min_odometry_hz) ||
-                                            estimated_hz > static_cast<double>(max_odometry_hz))) {
+  if (!acceleration_rate_checker_.is_valid(stamp)) {
+    double estimated_hz = acceleration_rate_checker_.get_average();
     rclcpp::Clock clock{RCL_ROS_TIME};
     RCLCPP_WARN_THROTTLE(
       logger_, clock, 5000,
@@ -211,23 +197,11 @@ void ContinentalARS548HwInterfaceWrapper::steering_angle_callback(
   using nebula::drivers::continental_ars548::min_odometry_hz;
 
   const auto now = std::chrono::high_resolution_clock::now();
-  const auto stamp =
+  const double stamp =
     1e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
 
-  if (last_steering_angle_stamp_ == 0.0) {
-    last_steering_angle_stamp_ = stamp;
-  } else {
-    double dt = stamp - last_steering_angle_stamp_;
-    last_steering_angle_stamp_ = stamp;
-    steering_angle_ring_buffer_.push_back(dt);
-  }
-
-  double estimated_hz = 1.0 / steering_angle_ring_buffer_.get_average();
-
-  if (
-    steering_angle_ring_buffer_.is_full() &&
-    (estimated_hz < static_cast<double>(min_odometry_hz) ||
-     estimated_hz > static_cast<double>(max_odometry_hz))) {
+  if (!steering_angle_rate_checker_.is_valid(stamp)) {
+    double estimated_hz = steering_angle_rate_checker_.get_average();
     rclcpp::Clock clock{RCL_ROS_TIME};
     RCLCPP_WARN_THROTTLE(
       logger_, clock, 5000,
