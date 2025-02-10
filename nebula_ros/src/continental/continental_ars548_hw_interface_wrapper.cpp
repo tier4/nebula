@@ -181,9 +181,9 @@ void ContinentalARS548HwInterfaceWrapper::acceleration_callback(
     rclcpp::Clock clock{RCL_ROS_TIME};
     RCLCPP_WARN_THROTTLE(
       logger_, clock, 5000,
-      "Current acceleration rate is %.2f Hz. The sensor requires a rate in the range of 10Hz to "
-      "50Hz",
-      estimated_hz);
+      "Current acceleration rate is %.2f Hz. The sensor requires a rate in the range of %dHz to "
+      "%dHz",
+      estimated_hz, min_odometry_hz, max_odometry_hz);
   }
 
   hw_interface_->set_acceleration_lateral_cog(msg->accel.accel.linear.y);
@@ -205,9 +205,9 @@ void ContinentalARS548HwInterfaceWrapper::steering_angle_callback(
     rclcpp::Clock clock{RCL_ROS_TIME};
     RCLCPP_WARN_THROTTLE(
       logger_, clock, 5000,
-      "Current steering angle rate is %.2f Hz. The sensor requires a rate in the range of 10Hz to "
-      "50Hz",
-      estimated_hz);
+      "Current steering angle rate is %.2f Hz. The sensor requires a rate in the range of %dHz to "
+      "%dHz",
+      estimated_hz, min_odometry_hz, max_odometry_hz);
   }
 
   constexpr float rad_to_deg = 180.f / M_PI;
