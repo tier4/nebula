@@ -15,6 +15,7 @@
 #pragma once
 
 #include <nebula_common/util/errno.hpp>
+#include <nebula_common/util/expected.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_common/connections/http.hpp>
 
 #include <google/protobuf/message.h>
@@ -29,6 +30,7 @@
 #include <cerrno>
 #include <climits>
 #include <cstdint>
+#include <future>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -95,14 +97,27 @@ private:
     return std::string{hostname_raw.data()};
   }
 
-  bool send_proto(const google::protobuf::Message & msg)
+  nebula::util::expected<std::monostate, std::string> send_proto(
+    const google::protobuf::Message & msg)
   {
     bool success = msg.SerializeToString(&serialization_buffer_);
-    if (!success) return false;
+    if (!success) {
+      return std::string("Failed to serialize protobuf message");
+    }
+
+    // Check if there's a pending request and it's not ready
+    if (
+      last_request_ &&
+      last_request_->wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
+      return std::string("Previous request still in flight");
+    }
 
     auto future = http_client_.async_post(
       "/update_graph", serialization_buffer_,
       drivers::connections::HttpClient::content_type_cotest_stream);
+
+    last_request_ = std::optional(std::move(future));
+    return std::monostate{};  // Return monostate to indicate success
   }
 
   drivers::connections::HttpClient http_client_;
@@ -111,6 +126,7 @@ private:
   std::string sensor_id_;
 
   std::string serialization_buffer_;
+  std::optional<std::future<drivers::connections::HttpClient::HttpResponse>> last_request_;
 };
 
 }  // namespace nebula::ros
