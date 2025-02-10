@@ -185,32 +185,9 @@ Status ContinentalARS548HwInterface::set_vehicle_parameters(
 }
 
 Status ContinentalARS548HwInterface::set_radar_parameters(
-  uint16_t maximum_distance, std::string frequency_band, uint8_t cycle_time_ms,
-  uint8_t time_slot_ms, std::string country_code, uint8_t power_save_standstill)
+  uint16_t maximum_distance, uint8_t frequency_slot, uint8_t cycle_time_ms, uint8_t time_slot_ms,
+  uint8_t hcc, uint8_t power_save_standstill)
 {
-  uint8_t frequency_slot = 0;
-  uint8_t hcc = 0;
-
-  if (frequency_band == "low") {
-    frequency_slot = frequency_slot_low;
-  } else if (frequency_band == "mid") {
-    frequency_slot = frequency_slot_mid;
-  } else if (frequency_band == "high") {
-    frequency_slot = frequency_slot_high;
-  } else {
-    print_error("Invalid frequency_band value");
-    return Status::SENSOR_CONFIG_ERROR;
-  }
-
-  if (country_code == "worldwide") {
-    hcc = hcc_worldwide;
-  } else if (country_code == "japan") {
-    hcc = hcc_japan;
-  } else {
-    print_error("Invalid country_code value");
-    return Status::SENSOR_CONFIG_ERROR;
-  }
-
   if (
     maximum_distance < maximum_distance_min_value ||
     maximum_distance > maximum_distance_max_value) {

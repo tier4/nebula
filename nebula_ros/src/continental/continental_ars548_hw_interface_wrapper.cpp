@@ -368,9 +368,47 @@ void ContinentalARS548HwInterfaceWrapper::set_radar_parameters_request_callback(
   const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetRadarParameters::Response>
     response)
 {
+  const auto FREQUENCY_BAND_LOW =
+    continental_srvs::srv::ContinentalArs548SetRadarParameters::Request::FREQUENCY_BAND_LOW;
+  const auto FREQUENCY_BAND_MID =
+    continental_srvs::srv::ContinentalArs548SetRadarParameters::Request::FREQUENCY_BAND_MID;
+  const auto FREQUENCY_BAND_HIGH =
+    continental_srvs::srv::ContinentalArs548SetRadarParameters::Request::FREQUENCY_BAND_HIGH;
+  const auto COUNTRY_CODE_JAPAN =
+    continental_srvs::srv::ContinentalArs548SetRadarParameters::Request::COUNTRY_CODE_JAPAN;
+  const auto COUNTRY_CODE_WORLDWIDE =
+    continental_srvs::srv::ContinentalArs548SetRadarParameters::Request::COUNTRY_CODE_WORLDWIDE;
+
+  uint8_t frequency_slot = 0;
+  uint8_t hcc = 0;
+
+  if (request->frequency_band == FREQUENCY_BAND_LOW) {
+    frequency_slot = nebula::drivers::continental_ars548::frequency_slot_low;
+  } else if (request->frequency_band == FREQUENCY_BAND_MID) {
+    frequency_slot = nebula::drivers::continental_ars548::frequency_slot_mid;
+  } else if (request->frequency_band == FREQUENCY_BAND_HIGH) {
+    frequency_slot = nebula::drivers::continental_ars548::frequency_slot_high;
+  } else {
+    RCLCPP_ERROR(logger_, "Invalid frequency_band value");
+    response->success = false;
+    response->message = "Invalid frequency_band value";
+    return;
+  }
+
+  if (request->country_code == COUNTRY_CODE_WORLDWIDE) {
+    hcc = nebula::drivers::continental_ars548::hcc_worldwide;
+  } else if (request->country_code == COUNTRY_CODE_JAPAN) {
+    hcc = nebula::drivers::continental_ars548::hcc_japan;
+  } else {
+    RCLCPP_ERROR(logger_, "Invalid country_code value");
+    response->success = false;
+    response->message = "Invalid country_code value";
+    return;
+  }
+
   auto result = hw_interface_->set_radar_parameters(
-    request->maximum_distance, request->frequency_band, request->cycle_time_ms,
-    request->time_slot_ms, request->country_code, request->powersave_standstill);
+    request->maximum_distance, frequency_slot, request->cycle_time_ms, request->time_slot_ms, hcc,
+    request->powersave_standstill);
 
   response->success = result == Status::OK;
   response->message = (std::stringstream() << result).str();

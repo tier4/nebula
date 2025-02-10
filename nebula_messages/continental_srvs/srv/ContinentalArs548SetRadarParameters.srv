@@ -1,3 +1,8 @@
+string FREQUENCY_BAND_LOW="low"
+string FREQUENCY_BAND_MID="mid"
+string FREQUENCY_BAND_HIGH="high"
+string COUNTRY_CODE_JAPAN="japan"
+string COUNTRY_CODE_WORLDWIDE="worldwide"
 uint16 maximum_distance
 string frequency_band
 uint16 cycle_time_ms
