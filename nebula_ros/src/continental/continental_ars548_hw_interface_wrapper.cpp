@@ -145,9 +145,9 @@ void ContinentalARS548HwInterfaceWrapper::odometry_callback(
     rclcpp::Clock clock{RCL_ROS_TIME};
     RCLCPP_WARN_THROTTLE(
       logger_, clock, 5000,
-      "The current odometry rate is %.2f Hz. The sensor requires a rate in the range of 10Hz to "
-      "50Hz",
-      estimated_hz);
+      "The current odometry rate is %.2f Hz. The sensor requires a rate in the range of %dHz to "
+      "%dHz",
+      estimated_hz, min_odometry_hz, max_odometry_hz);
   }
 
   constexpr float speed_to_standstill = 0.5f;
