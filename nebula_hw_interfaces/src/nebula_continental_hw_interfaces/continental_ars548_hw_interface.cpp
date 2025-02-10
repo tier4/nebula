@@ -247,9 +247,9 @@ Status ContinentalARS548HwInterface::set_radar_parameters(
   std::memcpy(send_vector.data(), &configuration_packet, sizeof(ConfigurationPacket));
 
   print_info("maximum_distance = " + std::to_string(maximum_distance));
-  print_info("frequency_slot = " + std::to_string(frequency_slot));
-  print_info("cycle_time = " + std::to_string(cycle_time_ms));
-  print_info("time_slot = " + std::to_string(time_slot_ms));
+  print_info("frequency_slot = " + std::to_string(frequency_slot) + " ms");
+  print_info("cycle_time = " + std::to_string(cycle_time_ms) + " ms");
+  print_info("time_slot = " + std::to_string(time_slot_ms) + " ms");
   print_info("hcc = " + std::to_string(hcc));
   print_info("power_save_standstill = " + std::to_string(power_save_standstill));
 
