@@ -20,26 +20,36 @@ VelodyneHwInterface::VelodyneHwInterface()
 std::string VelodyneHwInterface::http_get_request(const std::string & endpoint)
 {
   std::lock_guard lock(mtx_inflight_request_);
-  if (!http_client_driver_->client()->isOpen()) {
-    http_client_driver_->client()->open();
-  }
+  try {
+    if (!http_client_driver_->client()->isOpen()) {
+      http_client_driver_->client()->open();
+    }
 
-  std::string response = http_client_driver_->get(endpoint);
-  http_client_driver_->client()->close();
-  return response;
+    std::string response = http_client_driver_->get(endpoint);
+    http_client_driver_->client()->close();
+    return response;
+  } catch (const std::exception & ex) {
+    VelodyneStatus status = Status::HTTP_CONNECTION_ERROR;
+    return status;
+  }
 }
 
 std::string VelodyneHwInterface::http_post_request(
   const std::string & endpoint, const std::string & body)
 {
   std::lock_guard lock(mtx_inflight_request_);
-  if (!http_client_driver_->client()->isOpen()) {
-    http_client_driver_->client()->open();
-  }
+  try {
+    if (!http_client_driver_->client()->isOpen()) {
+      http_client_driver_->client()->open();
+    }
 
-  std::string response = http_client_driver_->post(endpoint, body);
-  http_client_driver_->client()->close();
-  return response;
+    std::string response = http_client_driver_->post(endpoint, body);
+    http_client_driver_->client()->close();
+    return response;
+  } catch (const std::exception & ex) {
+    VelodyneStatus status = Status::HTTP_CONNECTION_ERROR;
+    return status;
+  }
 }
 
 Status VelodyneHwInterface::initialize_sensor_configuration(
