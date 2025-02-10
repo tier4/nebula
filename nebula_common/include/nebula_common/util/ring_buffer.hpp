@@ -25,47 +25,30 @@ template <typename T>
 class RingBuffer
 {
 public:
-  explicit RingBuffer(std::size_t capacity) : capacity_(capacity) { buffer_.resize(capacity_); }
+  explicit RingBuffer(std::size_t capacity) { buffer_.reserve(capacity); }
 
   void push_back(const T & value)
   {
     if (is_full()) {
       sum_ -= buffer_[index_];
+      buffer_[index_] = value;
+    } else {
+      buffer_.push_back(value);
     }
 
     sum_ += value;
-    buffer_[index_] = value;
-    index_ = (index_ + 1) % capacity_;
-    size_ = std::min(size_ + 1, capacity_);
+    index_ = (index_ + 1) % buffer_.capacity();
   }
 
-  T & operator[](std::size_t index)
-  {
-    if (index >= size_) {
-      throw std::out_of_range("Index out of range");
-    }
-    return buffer_[(index_ + index) % size_];
-  }
+  std::size_t size() const { return buffer_.size(); }
 
-  const T & operator[](std::size_t index) const
-  {
-    if (index >= size_) {
-      throw std::out_of_range("Index out of range");
-    }
-    return buffer_[(index_ + index) % size_];
-  }
+  bool is_full() const { return buffer_.size() == buffer_.capacity(); }
 
-  std::size_t size() const { return size_; }
-
-  bool is_full() const { return size_ == capacity_; }
-
-  T get_average() const { return sum_ / size_; }
+  T get_average() const { return sum_ / buffer_.size(); }
 
 private:
   T sum_{};
   std::vector<T> buffer_;
-  std::size_t capacity_;
-  std::size_t size_{0};
   std::size_t index_{0};
 };
 
