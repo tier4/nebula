@@ -115,8 +115,9 @@ VelodyneStatus VelodyneHwInterface::init_http_client()
       }
       return Status::OK;
     } catch (const std::exception & ex) {
-      std::cerr << "Error initializing lidar: " << ex.what() << std::endl;
-      std::cerr << "Retrying after 5 seconds..." << std::endl;
+      RCLCPP_INFO_ONCE(
+        *parent_node_logger_, "Cannot connect to lidar because of: %s. Will keep trying...",
+        ex.what());
       std::this_thread::sleep_for(std::chrono::seconds(5));
     }
   }
