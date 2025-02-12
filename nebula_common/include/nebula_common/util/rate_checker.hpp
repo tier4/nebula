@@ -30,9 +30,7 @@ public:
   bool is_valid(double stamp)
   {
     if (last_stamp_ > 0.0) {
-      double current_time = stamp;
-      double dt = stamp - last_stamp_;
-      ring_buffer_.push_back(dt);
+      ring_buffer_.push_back(stamp - last_stamp_);
     }
 
     last_stamp_ = stamp;
