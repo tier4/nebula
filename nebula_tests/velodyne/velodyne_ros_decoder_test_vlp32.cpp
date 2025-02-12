@@ -13,7 +13,10 @@
 
 #include <cmath>
 #include <filesystem>
+#include <iostream>
+#include <memory>
 #include <regex>
+#include <string>
 #include <vector>
 
 namespace nebula::ros

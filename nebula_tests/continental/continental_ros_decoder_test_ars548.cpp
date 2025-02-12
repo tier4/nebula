@@ -29,6 +29,7 @@
 #include <rcutils/time.h>
 
 #include <filesystem>
+#include <iostream>
 #include <memory>
 #include <regex>
 #include <string>

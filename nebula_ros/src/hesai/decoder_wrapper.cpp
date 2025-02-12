@@ -3,10 +3,14 @@
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/util/string_conversions.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 
+#include <algorithm>
 #include <memory>
+#include <tuple>
+#include <utility>
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 namespace nebula::ros
@@ -42,8 +46,7 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   status_ = driver_ptr_->get_status();
 
   if (Status::OK != status_) {
-    throw std::runtime_error(
-      (std::stringstream() << "Error instantiating decoder: " << status_).str());
+    throw std::runtime_error("Error instantiating decoder: " + util::to_string(status_));
   }
 
   // Publish packets only if enabled by the ROS wrapper

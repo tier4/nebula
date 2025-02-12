@@ -14,8 +14,12 @@
 
 #include "nebula_ros/continental/continental_ars548_hw_interface_wrapper.hpp"
 
+#include <nebula_common/util/string_conversions.hpp>
+
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
+
+#include <memory>
 
 namespace nebula::ros
 {
@@ -45,8 +49,7 @@ ContinentalARS548HwInterfaceWrapper::ContinentalARS548HwInterfaceWrapper(
   status_ = hw_interface_->set_sensor_configuration(config_ptr);
 
   if (status_ != Status::OK) {
-    throw std::runtime_error(
-      (std::stringstream{} << "Could not initialize HW interface: " << status_).str());
+    throw std::runtime_error("Could not initialize HW interface: " + util::to_string(status_));
   }
 
   status_ = Status::OK;
@@ -231,7 +234,7 @@ void ContinentalARS548HwInterfaceWrapper::set_network_configuration_request_call
 {
   auto result = hw_interface_->set_sensor_ip_address(request->sensor_ip.data);
   response->success = result == Status::OK;
-  response->message = (std::stringstream() << result).str();
+  response->message = util::to_string(result);
 }
 
 void ContinentalARS548HwInterfaceWrapper::set_sensor_mounting_request_callback(
@@ -295,7 +298,7 @@ void ContinentalARS548HwInterfaceWrapper::set_sensor_mounting_request_callback(
     longitudinal, lateral, vertical, yaw, pitch, request->plug_orientation);
 
   response->success = result == Status::OK;
-  response->message = (std::stringstream() << result).str();
+  response->message = util::to_string(result);
 }
 
 void ContinentalARS548HwInterfaceWrapper::set_vehicle_parameters_request_callback(
@@ -342,7 +345,7 @@ void ContinentalARS548HwInterfaceWrapper::set_vehicle_parameters_request_callbac
     vehicle_length, vehicle_width, vehicle_height, vehicle_wheelbase);
 
   response->success = result == Status::OK;
-  response->message = (std::stringstream() << result).str();
+  response->message = util::to_string(result);
 }
 
 void ContinentalARS548HwInterfaceWrapper::set_radar_parameters_request_callback(
@@ -385,7 +388,7 @@ void ContinentalARS548HwInterfaceWrapper::set_radar_parameters_request_callback(
     request->powersave_standstill);
 
   response->success = result == Status::OK;
-  response->message = (std::stringstream() << result).str();
+  response->message = util::to_string(result);
 }
 
 }  // namespace nebula::ros

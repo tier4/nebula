@@ -14,8 +14,13 @@
 
 #include "nebula_ros/continental/continental_srr520_hw_interface_wrapper.hpp"
 
+#include <nebula_common/util/string_conversions.hpp>
+
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
+
+#include <algorithm>
+#include <memory>
 
 namespace nebula::ros
 {
@@ -36,8 +41,7 @@ ContinentalSRR520HwInterfaceWrapper::ContinentalSRR520HwInterfaceWrapper(
   status_ = hw_interface_->set_sensor_configuration(config_ptr_);
 
   if (status_ != Status::OK) {
-    throw std::runtime_error(
-      (std::stringstream{} << "Could not initialize HW interface: " << status_).str());
+    throw std::runtime_error("Could not initialize HW interface: " + util::to_string(status_));
   }
 
   status_ = Status::OK;
@@ -170,7 +174,7 @@ void ContinentalSRR520HwInterfaceWrapper::configure_sensor_request_callback(
     request->plug_bottom, request->reset_sensor_configuration);
 
   response->success = result == Status::OK;
-  response->message = (std::stringstream() << result).str();
+  response->message = util::to_string(result);
 }
 
 void ContinentalSRR520HwInterfaceWrapper::sync_timer_callback()

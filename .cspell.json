@@ -49,6 +49,7 @@
     "stds",
     "struct",
     "structs",
+    "TOLOWER",
     "UDP_SEQ",
     "usec",
     "vccint",

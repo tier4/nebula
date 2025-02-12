@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LiDAR Hesai PandarXT16 parameters.",
+  "type": "object",
+  "definitions": {
+    "PandarXT16": {
+      "type": "object",
+      "properties": {
+        "host_ip": {
+          "$ref": "sub/communication.json#/definitions/host_ip"
+        },
+        "sensor_ip": {
+          "$ref": "sub/communication.json#/definitions/sensor_ip"
+        },
+        "multicast_ip": {
+          "$ref": "sub/lidar_hesai.json#/definitions/multicast_ip"
+        },
+        "data_port": {
+          "$ref": "sub/communication.json#/definitions/data_port"
+        },
+        "gnss_port": {
+          "$ref": "sub/lidar_hesai.json#/definitions/gnss_port"
+        },
+        "packet_mtu_size": {
+          "$ref": "sub/communication.json#/definitions/packet_mtu_size"
+        },
+        "launch_hw": {
+          "$ref": "sub/hardware.json#/definitions/launch_hw"
+        },
+        "setup_sensor": {
+          "$ref": "sub/hardware.json#/definitions/setup_sensor"
+        },
+        "udp_only": {
+          "$ref": "sub/hardware.json#/definitions/udp_only"
+        },
+        "frame_id": {
+          "$ref": "sub/topic.json#/definitions/frame_id"
+        },
+        "diag_span": {
+          "$ref": "sub/topic.json#/definitions/diag_span"
+        },
+        "min_range": {
+          "$ref": "sub/misc.json#/definitions/min_range"
+        },
+        "max_range": {
+          "$ref": "sub/misc.json#/definitions/max_range"
+        },
+        "cloud_min_angle": {
+          "$ref": "sub/misc.json#/definitions/cloud_min_angle"
+        },
+        "cloud_max_angle": {
+          "$ref": "sub/misc.json#/definitions/cloud_max_angle"
+        },
+        "sync_angle": {
+          "$ref": "sub/lidar_hesai.json#/definitions/sync_angle"
+        },
+        "cut_angle": {
+          "$ref": "sub/lidar_hesai.json#/definitions/cut_angle"
+        },
+        "sensor_model": {
+          "$ref": "sub/lidar_hesai.json#/definitions/sensor_model",
+          "enum": [
+            "PandarXT16"
+          ]
+        },
+        "calibration_file": {
+          "$ref": "sub/lidar_hesai.json#/definitions/calibration_file"
+        },
+        "rotation_speed": {
+          "$ref": "sub/lidar_hesai.json#/definitions/rotation_speed"
+        },
+        "return_mode": {
+          "$ref": "sub/misc.json#/definitions/return_mode",
+          "enum": [
+            "Last",
+            "Strongest",
+            "LastStrongest",
+            "First",
+            "LastFirst",
+            "FirstStrongest",
+            "Dual"
+          ]
+        },
+        "ptp_profile": {
+          "$ref": "sub/lidar_hesai.json#/definitions/ptp_profile"
+        },
+        "ptp_domain": {
+          "$ref": "sub/lidar_hesai.json#/definitions/ptp_domain"
+        },
+        "ptp_transport_type": {
+          "$ref": "sub/lidar_hesai.json#/definitions/ptp_transport_type"
+        },
+        "ptp_switch_type": {
+          "$ref": "sub/lidar_hesai.json#/definitions/ptp_switch_type"
+        },
+        "ptp_lock_threshold": {
+          "$ref": "sub/lidar_hesai.json#/definitions/ptp_lock_threshold"
+        },
+        "retry_hw": {
+          "$ref": "sub/hardware.json#/definitions/retry_hw"
+        },
+        "dual_return_distance_threshold": {
+          "$ref": "sub/misc.json#/definitions/dual_return_distance_threshold"
+        }
+      },
+      "required": [
+        "host_ip",
+        "sensor_ip",
+        "multicast_ip",
+        "data_port",
+        "gnss_port",
+        "packet_mtu_size",
+        "launch_hw",
+        "setup_sensor",
+        "udp_only",
+        "frame_id",
+        "diag_span",
+        "cloud_min_angle",
+        "cloud_max_angle",
+        "sync_angle",
+        "cut_angle",
+        "sensor_model",
+        "calibration_file",
+        "rotation_speed",
+        "return_mode",
+        "ptp_profile",
+        "ptp_domain",
+        "ptp_transport_type",
+        "ptp_switch_type",
+        "ptp_lock_threshold",
+        "retry_hw",
+        "dual_return_distance_threshold"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/PandarXT16"
+        },
+        "additionalProperties": false
+      },
+      "required": [
+        "ros__parameters"
+      ]
+    }
+  },
+  "required": [
+    "/**"
+  ],
+  "additionalProperties": false
+}

@@ -2,6 +2,15 @@
 
 #include "nebula_ros/velodyne/velodyne_ros_wrapper.hpp"
 
+#include <nebula_common/util/string_conversions.hpp>
+
+#include <algorithm>
+#include <cstdio>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
 namespace nebula::ros
@@ -20,8 +29,7 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
   wrapper_status_ = declare_and_get_sensor_config_params();
 
   if (wrapper_status_ != Status::OK) {
-    throw std::runtime_error(
-      (std::stringstream{} << "Sensor configuration invalid: " << wrapper_status_).str());
+    throw std::runtime_error("Sensor configuration invalid: " + util::to_string(wrapper_status_));
   }
 
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
@@ -233,7 +241,7 @@ rcl_interfaces::msg::SetParametersResult VelodyneRosWrapper::on_parameter_change
     RCLCPP_WARN_STREAM(get_logger(), "OnParameterChange aborted: " << status);
     auto result = SetParametersResult();
     result.successful = false;
-    result.reason = (std::stringstream() << "Invalid configuration: " << status).str();
+    result.reason = "Invalid configuration: " + util::to_string(status);
     return result;
   }
 

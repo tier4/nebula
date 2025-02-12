@@ -30,6 +30,7 @@ SENSOR_MODELS_HESAI = [
     "PandarAT128",
     "PandarQT64",
     "PandarQT128",
+    "PandarXT16",
     "PandarXT32",
     "PandarXT32M",
 ]
