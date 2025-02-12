@@ -29,7 +29,7 @@ VelodyneHwMonitorWrapper::VelodyneHwMonitorWrapper(
 
   std::cout << "Get model name and serial." << std::endl;
   auto str = hw_interface_->get_snapshot();
-  if (!str.has_value()) return; 
+  if (!str.has_value()) return;
   current_snapshot_time_.reset(new rclcpp::Time(parent_node_->now()));
   current_snapshot_tree_ =
     std::make_shared<boost::property_tree::ptree>(hw_interface_->parse_json(str));
@@ -199,7 +199,7 @@ void VelodyneHwMonitorWrapper::initialize_velodyne_diagnostics()
 void VelodyneHwMonitorWrapper::on_velodyne_snapshot_timer()
 {
   auto str = hw_interface_->get_snapshot();
-  if (!str.has_value()) return; 
+  if (!str.has_value()) return;
   auto ptree = hw_interface_->parse_json(str);
 
   {
@@ -219,7 +219,7 @@ void VelodyneHwMonitorWrapper::on_velodyne_diagnostics_timer()
 {
   std::cout << "OnVelodyneDiagnosticsTimer" << std::endl;
   auto str = hw_interface_->get_diag();
-  if (!str.has_value()) return; 
+  if (!str.has_value()) return;
 
   {
     std::lock_guard lock(mtx_diag_);
@@ -1159,7 +1159,7 @@ void VelodyneHwMonitorWrapper::velodyne_check_adctp_stat(
 void VelodyneHwMonitorWrapper::on_velodyne_status_timer()
 {
   auto str = hw_interface_->get_status();
-  if (!str.has_value() ) return;
+  if (!str.has_value()) return;
   {
     std::lock_guard lock(mtx_status_);
     current_status_tree_ =

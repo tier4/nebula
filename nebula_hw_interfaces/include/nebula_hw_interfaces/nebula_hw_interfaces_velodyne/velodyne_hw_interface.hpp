@@ -26,8 +26,8 @@
 #define BOOST_ALLOW_DEPRECATED_HEADERS
 #endif
 
-#include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 #include "nebula_common/util/expected.hpp"
+#include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 
 #include <boost_tcp_driver/http_client_driver.hpp>
 #include <boost_udp_driver/udp_driver.hpp>
@@ -70,8 +70,9 @@ private:
   std::string target_reset_{"/cgi/reset"};
   void string_callback(const std::string & str);
 
-  nebula::util::expected<std::string, Status>  http_get_request(const std::string & endpoint);
-  nebula::util::expected<std::string, Status>  http_post_request(const std::string & endpoint, const std::string & body);
+  nebula::util::expected<std::string, Status> http_get_request(const std::string & endpoint);
+  nebula::util::expected<std::string, Status> http_post_request(
+    const std::string & endpoint, const std::string & body);
 
   /// @brief Get a one-off HTTP client to communicate with the hardware
   /// @param ctx IO Context

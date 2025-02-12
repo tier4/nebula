@@ -73,8 +73,9 @@ nebula::util::expected<std::string, Status> VelodyneHwInterface::http_post_reque
       if (retry == max_retries - 1) {
         return nebula::util::expected<std::string, Status>(Status::HTTP_CONNECTION_ERROR);
       }
-      print_debug("HTTP POST retry " + std::to_string(retry + 1) + "/" +
-                 std::to_string(max_retries) + ": " + std::string(ex.what()));
+      print_debug(
+        "HTTP POST retry " + std::to_string(retry + 1) + "/" + std::to_string(max_retries) + ": " +
+        std::string(ex.what()));
 
       if (http_client_driver_->client()->isOpen()) {
         try {
