@@ -103,10 +103,10 @@ Status VelodyneHwInterface::set_sensor_configuration(
   std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration)
 {
   auto snapshot = get_snapshot();
-  if (!snapshot_result.has_value()) {
+  if (!snapshot.has_value()) {
     return Status::HTTP_CONNECTION_ERROR;
   }
-  auto tree = parse_json(snapshot);
+  auto tree = parse_json(snapshot.value());
   VelodyneStatus status = check_and_set_config(sensor_configuration, tree);
 
   return status;
