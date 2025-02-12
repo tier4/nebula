@@ -211,7 +211,7 @@ void VelodyneHwMonitorWrapper::on_velodyne_snapshot_timer()
       std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("diag"));
     current_status_tree_ =
       std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("status"));
-    current_snapshot_.reset(new std::string(str));
+    current_snapshot_.reset(new std::string(str.value()));
   }
 }
 
