@@ -27,18 +27,19 @@ public:
   {
   }
 
-  bool is_valid(double stamp)
+  bool is_full() const { return ring_buffer_.is_full(); }
+
+  void update(double stamp)
   {
     if (last_stamp_) {
       ring_buffer_.push_back(stamp - last_stamp_.value());
     }
 
     last_stamp_ = stamp;
+  }
 
-    if (!ring_buffer_.is_full()) {
-      return true;
-    }
-
+  bool is_valid() const
+  {
     double average = get_average();
     return average >= min_rate_hz_ && average <= max_rate_hz_;
   }
