@@ -41,7 +41,7 @@ public:
       return true;
     }
 
-    double average = 1.0 / ring_buffer_.get_average();
+    double average = get_average();
     return average >= min_rate_hz_ && average <= max_rate_hz_;
   }
 
