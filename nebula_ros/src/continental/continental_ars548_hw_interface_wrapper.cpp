@@ -347,28 +347,34 @@ void ContinentalARS548HwInterfaceWrapper::set_radar_parameters_request_callback(
   uint8_t frequency_slot = 0;
   uint8_t hcc = 0;
 
-  if (request->frequency_band == Request::FREQUENCY_BAND_LOW) {
-    frequency_slot = nebula::drivers::continental_ars548::frequency_slot_low;
-  } else if (request->frequency_band == Request::FREQUENCY_BAND_MID) {
-    frequency_slot = nebula::drivers::continental_ars548::frequency_slot_mid;
-  } else if (request->frequency_band == Request::FREQUENCY_BAND_HIGH) {
-    frequency_slot = nebula::drivers::continental_ars548::frequency_slot_high;
-  } else {
-    RCLCPP_ERROR(logger_, "Invalid frequency_band value");
-    response->success = false;
-    response->message = "Invalid frequency_band value";
-    return;
+  switch (request->frequency_band) {
+    case Request::FREQUENCY_BAND_LOW:
+      hcc = nebula::drivers::continental_ars548::frequency_slot_low break;
+    case Request::FREQUENCY_BAND_MID:
+      hcc = nebula::drivers::continental_ars548::frequency_slot_mid;
+      break;
+    case Request::FREQUENCY_BAND_HIGH:
+      hcc = nebula::drivers::continental_ars548::frequency_slot_high;
+      break;
+    default:
+      RCLCPP_ERROR(logger_, "Invalid frequency_band value");
+      response->success = false;
+      response->message = "Invalid frequency_band value";
+      return;
   }
 
-  if (request->country_code == Request::COUNTRY_CODE_WORLDWIDE) {
-    hcc = nebula::drivers::continental_ars548::hcc_worldwide;
-  } else if (request->country_code == Request::COUNTRY_CODE_JAPAN) {
-    hcc = nebula::drivers::continental_ars548::hcc_japan;
-  } else {
-    RCLCPP_ERROR(logger_, "Invalid country_code value");
-    response->success = false;
-    response->message = "Invalid country_code value";
-    return;
+  switch (request->country_code) {
+    case Request::COUNTRY_CODE_WORLDWIDE:
+      hcc = nebula::drivers::continental_ars548::hcc_worldwide;
+      break;
+    case Request::COUNTRY_CODE_JAPAN:
+      hcc = nebula::drivers::continental_ars548::hcc_japan;
+      break;
+    default:
+      RCLCPP_ERROR(logger_, "Invalid country_code value");
+      response->success = false;
+      response->message = "Invalid country_code value";
+      return;
   }
 
   auto result = hw_interface_->set_radar_parameters(
