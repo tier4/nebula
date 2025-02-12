@@ -27,6 +27,7 @@
 #endif
 
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
+#include "nebula_common/util/expected.hpp"
 
 #include <boost_tcp_driver/http_client_driver.hpp>
 #include <boost_udp_driver/udp_driver.hpp>
@@ -69,8 +70,8 @@ private:
   std::string target_reset_{"/cgi/reset"};
   void string_callback(const std::string & str);
 
-  std::string http_get_request(const std::string & endpoint);
-  std::string http_post_request(const std::string & endpoint, const std::string & body);
+  nebula::util::expected<std::string, Status>  http_get_request(const std::string & endpoint);
+  nebula::util::expected<std::string, Status>  http_post_request(const std::string & endpoint, const std::string & body);
 
   /// @brief Get a one-off HTTP client to communicate with the hardware
   /// @param ctx IO Context
@@ -152,13 +153,13 @@ public:
   VelodyneStatus init_http_client();
   /// @brief Getting the current operational state and parameters of the sensor (sync)
   /// @return Resulting JSON string
-  std::string get_status();
+  nebula::util::expected<std::string, Status> get_status();
   /// @brief Getting diagnostic information from the sensor (sync)
   /// @return Resulting JSON string
-  std::string get_diag();
+  nebula::util::expected<std::string, Status> get_diag();
   /// @brief Getting current sensor configuration and status data (sync)
   /// @return Resulting JSON string
-  std::string get_snapshot();
+  nebula::util::expected<std::string, Status> get_snapshot();
   /// @brief Setting Motor RPM (sync)
   /// @param rpm the RPM of the motor
   /// @return Resulting status
