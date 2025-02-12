@@ -342,25 +342,16 @@ void ContinentalARS548HwInterfaceWrapper::set_radar_parameters_request_callback(
   const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetRadarParameters::Response>
     response)
 {
-  const auto FREQUENCY_BAND_LOW =
-    continental_srvs::srv::ContinentalArs548SetRadarParameters::Request::FREQUENCY_BAND_LOW;
-  const auto FREQUENCY_BAND_MID =
-    continental_srvs::srv::ContinentalArs548SetRadarParameters::Request::FREQUENCY_BAND_MID;
-  const auto FREQUENCY_BAND_HIGH =
-    continental_srvs::srv::ContinentalArs548SetRadarParameters::Request::FREQUENCY_BAND_HIGH;
-  const auto COUNTRY_CODE_JAPAN =
-    continental_srvs::srv::ContinentalArs548SetRadarParameters::Request::COUNTRY_CODE_JAPAN;
-  const auto COUNTRY_CODE_WORLDWIDE =
-    continental_srvs::srv::ContinentalArs548SetRadarParameters::Request::COUNTRY_CODE_WORLDWIDE;
+  using Request = continental_srvs::srv::ContinentalArs548SetRadarParameters::Request;
 
   uint8_t frequency_slot = 0;
   uint8_t hcc = 0;
 
-  if (request->frequency_band == FREQUENCY_BAND_LOW) {
+  if (request->frequency_band == Request::FREQUENCY_BAND_LOW) {
     frequency_slot = nebula::drivers::continental_ars548::frequency_slot_low;
-  } else if (request->frequency_band == FREQUENCY_BAND_MID) {
+  } else if (request->frequency_band == Request::FREQUENCY_BAND_MID) {
     frequency_slot = nebula::drivers::continental_ars548::frequency_slot_mid;
-  } else if (request->frequency_band == FREQUENCY_BAND_HIGH) {
+  } else if (request->frequency_band == Request::FREQUENCY_BAND_HIGH) {
     frequency_slot = nebula::drivers::continental_ars548::frequency_slot_high;
   } else {
     RCLCPP_ERROR(logger_, "Invalid frequency_band value");
@@ -369,9 +360,9 @@ void ContinentalARS548HwInterfaceWrapper::set_radar_parameters_request_callback(
     return;
   }
 
-  if (request->country_code == COUNTRY_CODE_WORLDWIDE) {
+  if (request->country_code == Request::COUNTRY_CODE_WORLDWIDE) {
     hcc = nebula::drivers::continental_ars548::hcc_worldwide;
-  } else if (request->country_code == COUNTRY_CODE_JAPAN) {
+  } else if (request->country_code == Request::COUNTRY_CODE_JAPAN) {
     hcc = nebula::drivers::continental_ars548::hcc_japan;
   } else {
     RCLCPP_ERROR(logger_, "Invalid country_code value");
