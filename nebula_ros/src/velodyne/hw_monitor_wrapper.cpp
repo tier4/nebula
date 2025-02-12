@@ -199,7 +199,7 @@ void VelodyneHwMonitorWrapper::initialize_velodyne_diagnostics()
 void VelodyneHwMonitorWrapper::on_velodyne_snapshot_timer()
 {
   auto str = hw_interface_->get_snapshot();
-  if (!str.has_value()) return; 
+  if (!str.has_value()) return;
   auto ptree = hw_interface_->parse_json(str.value());
 
   {
