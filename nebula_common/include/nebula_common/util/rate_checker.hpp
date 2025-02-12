@@ -22,8 +22,8 @@ namespace nebula::util
 class RateChecker
 {
 public:
-  RateChecker(double min_rate, double max_rate, std::size_t buffer_size)
-  : min_rate_(min_rate), max_rate_(max_rate), ring_buffer_(buffer_size)
+  RateChecker(double min_rate_hz, double max_rate_hz, std::size_t buffer_size)
+  : min_rate_hz_(min_rate_hz), max_rate_hz_(max_rate_hz), ring_buffer_(buffer_size)
   {
   }
 
@@ -42,15 +42,15 @@ public:
     }
 
     double average = 1.0 / ring_buffer_.get_average();
-    return average >= min_rate_ && average <= max_rate_;
+    return average >= min_rate_hz_ && average <= max_rate_hz_;
   }
 
   double get_average() const { return 1.0 / ring_buffer_.get_average(); }
 
 private:
   double last_stamp_{0.0};
-  double min_rate_;
-  double max_rate_;
+  double min_rate_hz_;
+  double max_rate_hz_;
   RingBuffer<double> ring_buffer_;
 };
 
