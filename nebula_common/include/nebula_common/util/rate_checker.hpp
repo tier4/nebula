@@ -29,8 +29,8 @@ public:
 
   bool is_valid(double stamp)
   {
-    if (last_stamp_ > 0.0) {
-      ring_buffer_.push_back(stamp - last_stamp_);
+    if (last_stamp_) {
+      ring_buffer_.push_back(stamp - last_stamp_.value());
     }
 
     last_stamp_ = stamp;
@@ -46,7 +46,7 @@ public:
   double get_average() const { return 1.0 / ring_buffer_.get_average(); }
 
 private:
-  double last_stamp_{0.0};
+  std::optional<double> last_stamp_;
   double min_rate_hz_;
   double max_rate_hz_;
   RingBuffer<double> ring_buffer_;
