@@ -215,11 +215,11 @@ rclcpp_components_register_node(continental_srr520_ros_wrapper
     EXECUTABLE continental_srr520_ros_wrapper_node
 )
 
-install(TARGETS hesai_ros_wrapper EXPORT export_hesai_ros_wrapper)
-install(TARGETS velodyne_ros_wrapper EXPORT export_velodyne_ros_wrapper)
-install(TARGETS robosense_ros_wrapper EXPORT export_robosense_ros_wrapper)
-install(TARGETS continental_ars548_ros_wrapper EXPORT export_continental_ars548_ros_wrapper)
-install(TARGETS continental_srr520_ros_wrapper EXPORT export_continental_srr520_ros_wrapper)
+install(TARGETS hesai_ros_wrapper EXPORT export_hesai_ros_wrapper LIBRARY DESTINATION lib)
+install(TARGETS velodyne_ros_wrapper EXPORT export_velodyne_ros_wrapper LIBRARY DESTINATION lib)
+install(TARGETS robosense_ros_wrapper EXPORT export_robosense_ros_wrapper LIBRARY DESTINATION lib)
+install(TARGETS continental_ars548_ros_wrapper EXPORT export_continental_ars548_ros_wrapper LIBRARY DESTINATION lib)
+install(TARGETS continental_srr520_ros_wrapper EXPORT export_continental_srr520_ros_wrapper LIBRARY DESTINATION lib)
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
