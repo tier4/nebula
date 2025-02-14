@@ -15,6 +15,9 @@ log/
 # Clangd
 .cache/
 
+# FB Infer
+infer-out*/
+
 # profiling
 profiling_output/
 
