@@ -143,31 +143,59 @@ jobs:
           sudo mv "$BASENAME" /usr/local/infer
           echo "PATH=/usr/local/infer/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Build
-        id: build
-        if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
-        uses: autowarefoundation/autoware-github-actions/colcon-build@v1
+      - name: Restore main branch infer cache
+        id: cache-infer-restore
+        uses: actions/cache/restore@v4
         with:
-          rosdistro: ${{ matrix.rosdistro }}
-          target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
-          build-depends-repos: ${{ matrix.build-depends-repos }}
+          path: infer-out-main
+          key: infer-main-${{ github.base_ref }}-${{ github.event.pull_request.base.sha }}
 
-      - name: Debug log
+      - name: Build and analyze feature branch
+        id: feature-analysis
+        if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
         run: |
-          pwd
-          ls -R
+          # Run infer on feature branch
+          infer capture --compilation-database build/compile_commands.json
+          infer analyze
 
-      - name: Run FB Infer
-        id: fb-infer-run
-        if: ${{ steps.build.outcome == 'success' }}
+          # Store feature branch report
+          mv infer-out infer-out-feature
+
+      - name: Analyze main branch (if no cache)
+        if: ${{ steps.cache-infer-restore.outputs.cache-hit != 'true' && steps.feature-analysis.outcome == 'success' }}
         run: |
-          infer run --compilation-database build/compile_commands.json
+          # Checkout main
+          git checkout ${{ github.base_ref }}
 
-      - name: Upload FB Infer Report
-        id: fb-infer-upload
-        if: ${{ steps.fb-infer-run.outcome == 'success' }}
+          # Build main branch
+          rm -rf build/ install/ log/
+          colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+          # Run infer on main branch
+          infer capture --compilation-database build/compile_commands.json
+          infer analyze
+
+          # Save main branch results for caching
+          mv infer-out infer-out-main
+
+      - name: Cache main branch infer results
+        if: ${{ steps.cache-infer-restore.outputs.cache-hit != 'true' && steps.feature-analysis.outcome == 'success' }}
+        uses: actions/cache/save@v4
+        with:
+          path: infer-out-main
+          key: infer-main-${{ github.base_ref }}-${{ github.event.pull_request.base.sha }}
+
+      - name: Compare reports
+        if: ${{ steps.feature-analysis.outcome == 'success' }}
+        run: |
+            infer reportdiff --report-current infer-out-feature/report.json --report-previous infer-out-main/report.json
+
+      - name: Upload FB Infer Reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: infer-report-diff-${{ github.sha }}
-          path: infer-out/report.*
+          name: infer-reports-${{ github.sha }}
+          path: |
+            infer-out-feature/report.json
+            infer-out/differential/*
           if-no-files-found: error
