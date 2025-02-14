@@ -92,6 +92,16 @@ public:
     const std::shared_ptr<loggers::Logger> & logger, bool export_dithered_mask = false)
   : azimuth_range_{deg2rad(azimuth_range_mdeg.min / 1000.), deg2rad(azimuth_range_mdeg.max / 1000.)}
   {
+    if (azimuth_peak_resolution_mdeg == 0) {
+      throw std::invalid_argument("azimuth_peak_resolution_mdeg must be positive");
+    }
+    if (azimuth_range_.extent() <= 0) {
+      throw std::invalid_argument("azimuth range extent must be positive");
+    }
+    if (n_channels == 0) {
+      throw std::invalid_argument("n_channels must be positive");
+    }
+
     png::image<png::gray_pixel> factors(filename);
 
     size_t mask_cols = azimuth_range_mdeg.extent() / azimuth_peak_resolution_mdeg;
