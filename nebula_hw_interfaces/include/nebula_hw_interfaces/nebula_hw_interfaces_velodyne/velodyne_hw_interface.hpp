@@ -88,14 +88,16 @@ private:
         return nebula::util::expected<std::string, VelodyneStatus>(response);
       } catch (const std::exception & ex) {
         if (retry == max_retries - 1) {
-          return nebula::util::expected<std::string, VelodyneStatus>(VelodyneStatus::HTTP_CONNECTION_ERROR);
+          return nebula::util::expected<std::string, VelodyneStatus>(
+            VelodyneStatus::HTTP_CONNECTION_ERROR);
         }
 
         if (client->client()->isOpen()) {
           try {
             client->client()->close();
           } catch (const std::exception & ex) {
-            return nebula::util::expected<std::string, VelodyneStatus>(VelodyneStatus::HTTP_CONNECTION_ERROR);
+            return nebula::util::expected<std::string, VelodyneStatus>(
+              VelodyneStatus::HTTP_CONNECTION_ERROR);
           }
         }
 
@@ -103,10 +105,12 @@ private:
       }
     }
 
-    return nebula::util::expected<std::string, VelodyneStatus>(VelodyneStatus::HTTP_CONNECTION_ERROR);
+    return nebula::util::expected<std::string, VelodyneStatus>(
+      VelodyneStatus::HTTP_CONNECTION_ERROR);
   }
 
-  nebula::util::expected<std::string, VelodyneStatus> http_get_request(const std::string & endpoint);
+  nebula::util::expected<std::string, VelodyneStatus> http_get_request(
+    const std::string & endpoint);
   nebula::util::expected<std::string, VelodyneStatus> http_post_request(
     const std::string & endpoint, const std::string & body);
 
