@@ -19,11 +19,12 @@ VelodyneHwInterface::VelodyneHwInterface()
 
 template <typename CallbackType>
 nebula::util::expected<std::string, Status> do_http_request_with_retries(
-  CallbackType do_request, std::shared_ptr<drivers::tcp_driver::HttpClientDriver> client)
+  CallbackType do_request,
+  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & client)
 {
   constexpr int max_retries = 3;
   constexpr int retry_delay_ms = 100;
-
+  
   for (int retry = 0; retry < max_retries; ++retry) {
     try {
       if (!client->client()->isOpen()) {
@@ -37,7 +38,7 @@ nebula::util::expected<std::string, Status> do_http_request_with_retries(
       if (retry == max_retries - 1) {
         return nebula::util::expected<std::string, Status>(Status::HTTP_CONNECTION_ERROR);
       }
-
+      
       if (client->client()->isOpen()) {
         try {
           client->client()->close();
@@ -45,11 +46,11 @@ nebula::util::expected<std::string, Status> do_http_request_with_retries(
           return nebula::util::expected<std::string, Status>(Status::HTTP_CONNECTION_ERROR);
         }
       }
-
+      
       std::this_thread::sleep_for(std::chrono::milliseconds(retry_delay_ms));
     }
   }
-
+  
   return nebula::util::expected<std::string, Status>(Status::HTTP_CONNECTION_ERROR);
 }
 
@@ -57,16 +58,20 @@ nebula::util::expected<std::string, Status> VelodyneHwInterface::http_get_reques
   const std::string & endpoint)
 {
   std::lock_guard lock(mtx_inflight_request_);
-  return do_http_request_with_retries(
-    [&]() { return http_client_driver_->get(endpoint); }, http_client_driver_);
+  auto do_request = [this, &endpoint]() {
+    return http_client_driver_->get(endpoint);
+  };
+  return do_http_request_with_retries(do_request, http_client_driver_);
 }
 
 nebula::util::expected<std::string, Status> VelodyneHwInterface::http_post_request(
   const std::string & endpoint, const std::string & body)
 {
   std::lock_guard lock(mtx_inflight_request_);
-  return do_http_request_with_retries(
-    [&]() { return http_client_driver_->post(endpoint, body); }, http_client_driver_);
+  auto do_request = [this, &endpoint, &body]() {
+    return http_client_driver_->post(endpoint, body);
+  };
+  return do_http_request_with_retries(do_request, http_client_driver_);
 }
 
 Status VelodyneHwInterface::initialize_sensor_configuration(
