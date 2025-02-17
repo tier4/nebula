@@ -72,12 +72,11 @@ private:
 
   template <typename CallbackType>
   nebula::util::expected<std::string, Status> do_http_request_with_retries(
-    CallbackType do_request,
-    std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & client)
+    CallbackType do_request, std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & client)
   {
     constexpr int max_retries = 3;
     constexpr int retry_delay_ms = 100;
-    
+
     for (int retry = 0; retry < max_retries; ++retry) {
       try {
         if (!client->client()->isOpen()) {
@@ -91,7 +90,7 @@ private:
         if (retry == max_retries - 1) {
           return nebula::util::expected<std::string, Status>(Status::HTTP_CONNECTION_ERROR);
         }
-        
+
         if (client->client()->isOpen()) {
           try {
             client->client()->close();
@@ -99,11 +98,11 @@ private:
             return nebula::util::expected<std::string, Status>(Status::HTTP_CONNECTION_ERROR);
           }
         }
-        
+
         std::this_thread::sleep_for(std::chrono::milliseconds(retry_delay_ms));
       }
     }
-    
+
     return nebula::util::expected<std::string, Status>(Status::HTTP_CONNECTION_ERROR);
   }
 
