@@ -30,6 +30,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <vector>
 
 #ifndef _TEST_RESOURCES_PATH
 #define _TEST_RESOURCES_PATH "INVALID"
