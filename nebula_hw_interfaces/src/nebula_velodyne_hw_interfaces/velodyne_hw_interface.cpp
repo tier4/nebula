@@ -86,7 +86,7 @@ Status VelodyneHwInterface::set_sensor_configuration(
 {
   auto snapshot = get_snapshot();
   if (!snapshot.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return snapshot.error();
   }
   auto tree = parse_json(snapshot.value());
   VelodyneStatus status = check_and_set_config(sensor_configuration, tree);
