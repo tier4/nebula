@@ -29,14 +29,15 @@ VelodyneHwMonitorWrapper::VelodyneHwMonitorWrapper(
 
   std::cout << "Get model name and serial." << std::endl;
   auto str = hw_interface_->get_snapshot();
+  if (!str.has_value()) return;
   current_snapshot_time_.reset(new rclcpp::Time(parent_node_->now()));
   current_snapshot_tree_ =
-    std::make_shared<boost::property_tree::ptree>(hw_interface_->parse_json(str));
+    std::make_shared<boost::property_tree::ptree>(hw_interface_->parse_json(str.value()));
   current_diag_tree_ =
     std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("diag"));
   current_status_tree_ =
     std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("status"));
-  current_snapshot_.reset(new std::string(str));
+  current_snapshot_.reset(new std::string(str.value()));
 
   try {
     info_model_ = get_ptree_value(current_snapshot_tree_, mtx_snapshot_, key_info_model);
@@ -198,7 +199,8 @@ void VelodyneHwMonitorWrapper::initialize_velodyne_diagnostics()
 void VelodyneHwMonitorWrapper::on_velodyne_snapshot_timer()
 {
   auto str = hw_interface_->get_snapshot();
-  auto ptree = hw_interface_->parse_json(str);
+  if (!str.has_value()) return;
+  auto ptree = hw_interface_->parse_json(str.value());
 
   {
     std::lock_guard lock(mtx_snapshot_);
@@ -209,7 +211,7 @@ void VelodyneHwMonitorWrapper::on_velodyne_snapshot_timer()
       std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("diag"));
     current_status_tree_ =
       std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("status"));
-    current_snapshot_.reset(new std::string(str));
+    current_snapshot_.reset(new std::string(str.value()));
   }
 }
 
@@ -217,10 +219,12 @@ void VelodyneHwMonitorWrapper::on_velodyne_diagnostics_timer()
 {
   std::cout << "OnVelodyneDiagnosticsTimer" << std::endl;
   auto str = hw_interface_->get_diag();
+  if (!str.has_value()) return;
+
   {
     std::lock_guard lock(mtx_diag_);
     current_diag_tree_ =
-      std::make_shared<boost::property_tree::ptree>(hw_interface_->parse_json(str));
+      std::make_shared<boost::property_tree::ptree>(hw_interface_->parse_json(str.value()));
   }
   diagnostics_updater_.force_update();
 }
@@ -1155,10 +1159,11 @@ void VelodyneHwMonitorWrapper::velodyne_check_adctp_stat(
 void VelodyneHwMonitorWrapper::on_velodyne_status_timer()
 {
   auto str = hw_interface_->get_status();
+  if (!str.has_value()) return;
   {
     std::lock_guard lock(mtx_status_);
     current_status_tree_ =
-      std::make_shared<boost::property_tree::ptree>(hw_interface_->parse_json(str));
+      std::make_shared<boost::property_tree::ptree>(hw_interface_->parse_json(str.value()));
   }
   diagnostics_updater_.force_update();
 }
