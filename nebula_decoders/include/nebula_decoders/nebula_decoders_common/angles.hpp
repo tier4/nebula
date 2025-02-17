@@ -15,8 +15,58 @@
 #pragma once
 
 #include <cmath>
+#include <cstdint>
+
 namespace nebula::drivers
 {
+
+struct Radians
+{
+  static constexpr double circle_modulus = 2 * M_PI;
+};
+
+template <uint32_t Subdivisions>
+struct ScaledDegrees
+{
+  static constexpr double circle_modulus = 360 * Subdivisions;
+};
+
+using Degrees = ScaledDegrees<1>;
+using DeciDegrees = ScaledDegrees<10>;
+using CentiDegrees = ScaledDegrees<100>;
+using MilliDegrees = ScaledDegrees<1000>;
+
+template <typename T, typename AngleUnit>
+struct AnglePair
+{
+  T azimuth;
+  T elevation;
+};
+
+/// @brief A range defined by a start and end angle. Crossing the 0/circle_modulus boundary (end <
+/// start) is allowed.
+/// @tparam T The type of the angle.
+/// @tparam AngleUnit The unit of the angle.
+template <typename T, typename AngleUnit>
+struct AngleRange
+{
+  T start;
+  T end;
+
+  /// @brief The extent of the range, taking into account the 0/circle_modulus boundary. Will always
+  /// be positive.
+  [[nodiscard]] T extent() const
+  {
+    return (end < start) ? AngleUnit::circle_modulus - start + end : end - start;
+  }
+};
+
+template <typename T, typename AngleUnit>
+struct FieldOfView
+{
+  AngleRange<T, AngleUnit> azimuth;
+  AngleRange<T, AngleUnit> elevation;
+};
 
 /**
  * @brief Tests if `angle` is in the region of the circle defined by `start_angle` and `end_angle`.

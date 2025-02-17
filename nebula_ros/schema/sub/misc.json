@@ -85,6 +85,28 @@
       "minimum": 0.0,
       "maximum": 360.0,
       "description": "Sensor scan phase."
+    },
+    "point_filters": {
+      "title": "Filters to apply while decoding",
+      "type": "object",
+      "properties": {
+        "downsample_mask": {
+          "title": "A 2D boolean mask to filter regions of the pointcloud",
+          "type": "object",
+          "properties": {
+            "path": {
+              "title": "Path to a grayscale PNG mask (0: filter all, 128: keep 50%, 255: keep all)",
+              "type": "string",
+              "default": "\"\""
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   }
 }
