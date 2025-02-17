@@ -17,7 +17,7 @@ VelodyneHwInterface::VelodyneHwInterface()
 {
 }
 
-nebula::util::expected<std::string, Status> VelodyneHwInterface::http_get_request(
+nebula::util::expected<std::string, VelodyneStatus> VelodyneHwInterface::http_get_request(
   const std::string & endpoint)
 {
   std::lock_guard lock(mtx_inflight_request_);
@@ -25,7 +25,7 @@ nebula::util::expected<std::string, Status> VelodyneHwInterface::http_get_reques
   return do_http_request_with_retries(do_request, http_client_driver_);
 }
 
-nebula::util::expected<std::string, Status> VelodyneHwInterface::http_post_request(
+nebula::util::expected<std::string, VelodyneStatus> VelodyneHwInterface::http_post_request(
   const std::string & endpoint, const std::string & body)
 {
   std::lock_guard lock(mtx_inflight_request_);
@@ -239,12 +239,12 @@ VelodyneStatus VelodyneHwInterface::check_and_set_config(
 
 // sync
 
-nebula::util::expected<std::string, Status> VelodyneHwInterface::get_status()
+nebula::util::expected<std::string, VelodyneStatus> VelodyneHwInterface::get_status()
 {
   return http_get_request(target_status_);
 }
 
-nebula::util::expected<std::string, Status> VelodyneHwInterface::get_diag()
+nebula::util::expected<std::string, VelodyneStatus> VelodyneHwInterface::get_diag()
 {
   auto response = http_get_request(target_diag_);
   if (response.has_value()) {
@@ -253,7 +253,7 @@ nebula::util::expected<std::string, Status> VelodyneHwInterface::get_diag()
   return response;
 }
 
-nebula::util::expected<std::string, Status> VelodyneHwInterface::get_snapshot()
+nebula::util::expected<std::string, VelodyneStatus> VelodyneHwInterface::get_snapshot()
 {
   return http_get_request(target_snapshot_);
 }
