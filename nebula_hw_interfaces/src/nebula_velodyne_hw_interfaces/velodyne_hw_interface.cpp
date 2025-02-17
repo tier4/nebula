@@ -98,7 +98,7 @@ Status VelodyneHwInterface::get_sensor_configuration(SensorConfigurationBase & s
   std::stringstream ss;
   ss << sensor_configuration;
   print_debug(ss.str());
-  return Status::HTTP_CONNECTION_ERROR;
+  return Status::ERROR_1;
 }
 
 VelodyneStatus VelodyneHwInterface::init_http_client()
@@ -265,7 +265,7 @@ VelodyneStatus VelodyneHwInterface::set_rpm(uint16_t rpm)
   }
   auto rt = http_post_request(target_setting_, (boost::format("rpm=%d") % rpm).str());
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -278,7 +278,7 @@ VelodyneStatus VelodyneHwInterface::set_fov_start(uint16_t fov_start)
   }
   auto rt = http_post_request(target_fov_, (boost::format("start=%d") % fov_start).str());
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -291,7 +291,7 @@ VelodyneStatus VelodyneHwInterface::set_fov_end(uint16_t fov_end)
   }
   auto rt = http_post_request(target_fov_, (boost::format("end=%d") % fov_end).str());
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -315,7 +315,7 @@ VelodyneStatus VelodyneHwInterface::set_return_type(nebula::drivers::ReturnMode 
   }
   auto rt = http_post_request(target_setting_, body_str);
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -326,7 +326,7 @@ VelodyneStatus VelodyneHwInterface::save_config()
   std::string body_str = "submit";
   auto rt = http_post_request(target_save_, body_str);
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -337,7 +337,7 @@ VelodyneStatus VelodyneHwInterface::reset_system()
   std::string body_str = "reset_system";
   auto rt = http_post_request(target_reset_, body_str);
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -348,7 +348,7 @@ VelodyneStatus VelodyneHwInterface::laser_on()
   std::string body_str = "laser=on";
   auto rt = http_post_request(target_setting_, body_str);
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -359,7 +359,7 @@ VelodyneStatus VelodyneHwInterface::laser_off()
   std::string body_str = "laser=off";
   auto rt = http_post_request(target_setting_, body_str);
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -370,7 +370,7 @@ VelodyneStatus VelodyneHwInterface::laser_on_off(bool on)
   std::string body_str = (boost::format("laser=%s") % (on ? "on" : "off")).str();
   auto rt = http_post_request(target_setting_, body_str);
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -380,7 +380,7 @@ VelodyneStatus VelodyneHwInterface::set_host_addr(std::string addr)
 {
   auto rt = http_post_request(target_host_, (boost::format("addr=%s") % addr).str());
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -390,7 +390,7 @@ VelodyneStatus VelodyneHwInterface::set_host_dport(uint16_t dport)
 {
   auto rt = http_post_request(target_host_, (boost::format("dport=%d") % dport).str());
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -400,7 +400,7 @@ VelodyneStatus VelodyneHwInterface::set_host_tport(uint16_t tport)
 {
   auto rt = http_post_request(target_host_, (boost::format("tport=%d") % tport).str());
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -410,7 +410,7 @@ VelodyneStatus VelodyneHwInterface::set_net_addr(std::string addr)
 {
   auto rt = http_post_request(target_net_, (boost::format("addr=%s") % addr).str());
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -420,7 +420,7 @@ VelodyneStatus VelodyneHwInterface::set_net_mask(std::string mask)
 {
   auto rt = http_post_request(target_net_, (boost::format("mask=%s") % mask).str());
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -430,7 +430,7 @@ VelodyneStatus VelodyneHwInterface::set_net_gateway(std::string gateway)
 {
   auto rt = http_post_request(target_net_, (boost::format("gateway=%s") % gateway).str());
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
@@ -441,7 +441,7 @@ VelodyneStatus VelodyneHwInterface::set_net_dhcp(bool use_dhcp)
   auto rt =
     http_post_request(target_net_, (boost::format("dhcp=%s") % (use_dhcp ? "on" : "off")).str());
   if (!rt.has_value()) {
-    return Status::HTTP_CONNECTION_ERROR;
+    return rt.error();
   }
   string_callback(rt.value());
   return Status::OK;
