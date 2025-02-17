@@ -17,79 +17,59 @@ VelodyneHwInterface::VelodyneHwInterface()
 {
 }
 
-nebula::util::expected<std::string, Status> VelodyneHwInterface::http_get_request(
-  const std::string & endpoint)
+template <typename CallbackType>
+nebula::util::expected<std::string, Status> do_http_request_with_retries(
+  CallbackType do_request,
+  std::shared_ptr<drivers::tcp_driver::HttpClientDriver> client)
 {
-  std::lock_guard lock(mtx_inflight_request_);
   constexpr int max_retries = 3;
   constexpr int retry_delay_ms = 100;
-
+  
   for (int retry = 0; retry < max_retries; ++retry) {
     try {
-      if (!http_client_driver_->client()->isOpen()) {
-        http_client_driver_->client()->open();
+      if (!client->client()->isOpen()) {
+        client->client()->open();
       }
 
-      std::string response = http_client_driver_->get(endpoint);
-      http_client_driver_->client()->close();
+      std::string response = do_request();
+      client->client()->close();
       return nebula::util::expected<std::string, Status>(response);
     } catch (const std::exception & ex) {
       if (retry == max_retries - 1) {
         return nebula::util::expected<std::string, Status>(Status::HTTP_CONNECTION_ERROR);
       }
-
-      if (http_client_driver_->client()->isOpen()) {
+      
+      if (client->client()->isOpen()) {
         try {
-          http_client_driver_->client()->close();
+          client->client()->close();
         } catch (const std::exception & ex) {
           return nebula::util::expected<std::string, Status>(Status::HTTP_CONNECTION_ERROR);
         }
       }
-
+      
       std::this_thread::sleep_for(std::chrono::milliseconds(retry_delay_ms));
     }
   }
-
+  
   return nebula::util::expected<std::string, Status>(Status::HTTP_CONNECTION_ERROR);
+}
+
+nebula::util::expected<std::string, Status> VelodyneHwInterface::http_get_request(
+  const std::string & endpoint)
+{
+  std::lock_guard lock(mtx_inflight_request_);
+  return do_http_request_with_retries(
+    [&]() { return http_client_driver_->get(endpoint); },
+    http_client_driver_);
 }
 
 nebula::util::expected<std::string, Status> VelodyneHwInterface::http_post_request(
   const std::string & endpoint, const std::string & body)
 {
   std::lock_guard lock(mtx_inflight_request_);
-  constexpr int max_retries = 3;
-  constexpr int retry_delay_ms = 100;
-
-  for (int retry = 0; retry < max_retries; ++retry) {
-    try {
-      if (!http_client_driver_->client()->isOpen()) {
-        http_client_driver_->client()->open();
-      }
-
-      std::string response = http_client_driver_->post(endpoint, body);
-      http_client_driver_->client()->close();
-      return nebula::util::expected<std::string, Status>(response);
-    } catch (const std::exception & ex) {
-      if (retry == max_retries - 1) {
-        return nebula::util::expected<std::string, Status>(Status::HTTP_CONNECTION_ERROR);
-      }
-      print_debug(
-        "HTTP POST retry " + std::to_string(retry + 1) + "/" + std::to_string(max_retries) + ": " +
-        std::string(ex.what()));
-
-      if (http_client_driver_->client()->isOpen()) {
-        try {
-          http_client_driver_->client()->close();
-        } catch (const std::exception & ex) {
-          return nebula::util::expected<std::string, Status>(Status::HTTP_CONNECTION_ERROR);
-        }
-      }
-
-      std::this_thread::sleep_for(std::chrono::milliseconds(retry_delay_ms));
-    }
-  }
-
-  return nebula::util::expected<std::string, Status>(Status::HTTP_CONNECTION_ERROR);
+  return do_http_request_with_retries(
+    [&]() { return http_client_driver_->post(endpoint, body); },
+    http_client_driver_);
 }
 
 Status VelodyneHwInterface::initialize_sensor_configuration(
