@@ -80,13 +80,14 @@ TEST(TestDownsampleMask, TestDithering)
 TEST(TestDownsampleMask, TestFilter)
 {
   using nebula::drivers::AngleRange;
+  using nebula::drivers::MilliDegrees;
   using nebula::drivers::NebulaPoint;
   using nebula::drivers::loggers::ConsoleLogger;
   using nebula::drivers::point_filters::DownsampleMaskFilter;
 
   auto logger = std::make_shared<ConsoleLogger>("TestFilter");
   auto image_path = downsample_mask_path() / ("q50.png");
-  AngleRange<int32_t> azi_range_mdeg{-5, 5};
+  AngleRange<int32_t, MilliDegrees> azi_range_mdeg{-5, 5};
   uint16_t azi_step_mdeg = 1;
   uint8_t n_channels = 10;
 
@@ -99,7 +100,7 @@ TEST(TestDownsampleMask, TestFilter)
   uint8_t channel_kept_max = std::numeric_limits<uint8_t>::min();
 
   // Test points across the whole range, and also slightly outside the bounds (bound +-1)
-  for (int32_t azimuth_mdeg = azi_range_mdeg.min - 1; azimuth_mdeg < azi_range_mdeg.max + 1;
+  for (int32_t azimuth_mdeg = azi_range_mdeg.start - 1; azimuth_mdeg < azi_range_mdeg.end + 1;
        azimuth_mdeg += azi_step_mdeg) {
     for (uint8_t channel = 0; channel < n_channels + 1; ++channel) {
       NebulaPoint p{};
@@ -123,8 +124,8 @@ TEST(TestDownsampleMask, TestFilter)
   // The mask has white pixels at all borders, so it is expected that points at all borders have
   // been kept. It is also expected that no points beyond the borders have been kept. The upper
   // bounds are exclusive, thus `max - 1` here
-  EXPECT_EQ(azi_kept_min, azi_range_mdeg.min);
-  EXPECT_EQ(azi_kept_max, azi_range_mdeg.max - 1);
+  EXPECT_EQ(azi_kept_min, azi_range_mdeg.start);
+  EXPECT_EQ(azi_kept_max, azi_range_mdeg.end - 1);
   EXPECT_EQ(channel_kept_min, 0);
   EXPECT_EQ(channel_kept_max, n_channels - 1);
 }

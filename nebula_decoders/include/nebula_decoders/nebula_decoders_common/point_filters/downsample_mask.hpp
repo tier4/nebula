@@ -86,10 +86,11 @@ class DownsampleMaskFilter
 
 public:
   DownsampleMaskFilter(
-    const std::string & filename, AngleRange<int32_t> azimuth_range_mdeg,
+    const std::string & filename, AngleRange<int32_t, MilliDegrees> azimuth_range_mdeg,
     uint32_t azimuth_peak_resolution_mdeg, size_t n_channels,
     const std::shared_ptr<loggers::Logger> & logger, bool export_dithered_mask = false)
-  : azimuth_range_{deg2rad(azimuth_range_mdeg.min / 1000.), deg2rad(azimuth_range_mdeg.max / 1000.)}
+  : azimuth_range_{
+      deg2rad(azimuth_range_mdeg.start / 1000.), deg2rad(azimuth_range_mdeg.end / 1000.)}
   {
     if (azimuth_peak_resolution_mdeg == 0) {
       throw std::invalid_argument("azimuth_peak_resolution_mdeg must be positive");
@@ -133,7 +134,7 @@ public:
 
   bool excluded(const NebulaPoint & point)
   {
-    double azi_normalized = (point.azimuth - azimuth_range_.min) / azimuth_range_.extent();
+    double azi_normalized = (point.azimuth - azimuth_range_.start) / azimuth_range_.extent();
 
     auto x = static_cast<ssize_t>(std::round(azi_normalized * static_cast<double>(mask_.cols())));
     auto y = point.channel;
@@ -145,7 +146,7 @@ public:
   }
 
 private:
-  AngleRange<double> azimuth_range_;
+  AngleRange<double, Radians> azimuth_range_;
   Eigen::MatrixX<uint8_t> mask_;
 };
 
