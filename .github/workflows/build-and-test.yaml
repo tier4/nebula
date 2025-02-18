@@ -64,8 +64,7 @@ jobs:
       - name: Attempt to restore ccache
         uses: actions/cache/restore@v4
         with:
-          path: |
-            ${CCACHE_DIR}
+          path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.arch }}-${{ matrix.rosdistro }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             ccache-${{ runner.arch }}-${{ matrix.rosdistro }}-
@@ -92,8 +91,7 @@ jobs:
       - name: Upload ccache to cache
         uses: actions/cache/save@v4
         with:
-          path: |
-            ${CCACHE_DIR}
+          path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.arch }}-${{ matrix.rosdistro }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Test
