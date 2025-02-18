@@ -89,9 +89,16 @@ ros2 param set /<vendor>_ros_wrapper_node point_filters.downsample_mask.path ""'
 
 #### Behavior
 
+<!-- prettier-ignore-start -->
+!!! warning
+    Color spaces in image editors can be confusing and can lead to unexpected results (more/less downsampling than expected). 
+    To work on monochrome images, use the `Grayscale` color mode and use the `Value` in the HSV color space to choose greyscale values.
+    For example, a `Value` (HSV) of 50% is equal to a downsampling factor of 2, but a `Luminosity` (LCh) of 50% is equal to a downsampling factor of 2.17.
+    Check the generated `_dithered.png` mask to see whether you are getting the expected results.
+<!-- prettier-ignore-end -->
+
 - Greyscale values are quantized to the nearest 10th (yielding 11 quantization levels in total)
 - Mask resolution is dictated by the sensor's maximum FoV, the number of channels (for rotational LiDARs) and the peak angular resolution:
   - For a 40-channel LiDAR with `360 deg` FoV and `0.1 deg` peak azimuth resolution, the mask has to be `(360 / 0.1, 40) = (3600, 40)` pixels
   - Currently, non-rotational LiDARs are not yet supported
-- Image editors like GIMP use perceptual color profiles, which can lead to unexpected results (more/less downsampling than expected). Check the generated `_dithered.png` mask to see if you are affected.
 - Dithering performed by Nebula is spatial only, meaning that it stays constant over time. Decoded points are checked against the nearest pixel in the dithered mask
