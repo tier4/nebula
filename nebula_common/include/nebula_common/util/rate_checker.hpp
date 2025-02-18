@@ -16,6 +16,8 @@
 
 #include "nebula_common/util/ring_buffer.hpp"
 
+#include <optional>
+
 namespace nebula::util
 {
 
@@ -27,7 +29,7 @@ public:
   {
   }
 
-  bool is_full() const { return ring_buffer_.is_full(); }
+  [[nodiscard]] bool is_full() const { return ring_buffer_.is_full(); }
 
   void update(double stamp)
   {
@@ -38,13 +40,14 @@ public:
     last_stamp_ = stamp;
   }
 
-  bool is_valid() const
+  [[nodiscard]] bool is_valid() const
   {
+    if (ring_buffer_.size() == 0) return false;
     double average = get_average();
     return average >= min_rate_hz_ && average <= max_rate_hz_;
   }
 
-  double get_average() const { return 1.0 / ring_buffer_.get_average(); }
+  [[nodiscard]] double get_average() const { return 1.0 / ring_buffer_.get_average(); }
 
 private:
   std::optional<double> last_stamp_;
