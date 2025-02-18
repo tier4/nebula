@@ -270,9 +270,9 @@ public:
     decode_pc_ = std::make_shared<NebulaPointCloud>();
     output_pc_ = std::make_shared<NebulaPointCloud>();
 
-    if (!sensor_configuration->downsample_mask_path.empty()) {
+    if (sensor_configuration->downsample_mask_path) {
       mask_filter_ = point_filters::DownsampleMaskFilter(
-        sensor_configuration->downsample_mask_path, SensorT::fov_mdeg.azimuth,
+        sensor_configuration->downsample_mask_path.value(), SensorT::fov_mdeg.azimuth,
         SensorT::peak_resolution_mdeg.azimuth, SensorT::packet_t::n_channels,
         logger_->child("Downsample Mask"), true);
     }

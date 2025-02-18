@@ -209,8 +209,15 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
     config.ptp_lock_threshold = declare_parameter<uint8_t>("ptp_lock_threshold", descriptor);
   }
 
-  config.downsample_mask_path =
-    declare_parameter<std::string>("point_filters.downsample_mask.path", "", param_read_write());
+  {
+    auto downsample_mask_path =
+      declare_parameter<std::string>("point_filters.downsample_mask.path", "", param_read_write());
+    if (downsample_mask_path.empty()) {
+      config.downsample_mask_path = std::nullopt;
+    } else {
+      config.downsample_mask_path = downsample_mask_path;
+    }
+  }
 
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(config);
   return validate_and_set_config(new_cfg_ptr);
@@ -272,10 +279,10 @@ Status HesaiRosWrapper::validate_and_set_config(
   }
 
   if (
-    !new_config->downsample_mask_path.empty() &&
-    !std::filesystem::exists(new_config->downsample_mask_path)) {
+    new_config->downsample_mask_path &&
+    !std::filesystem::exists(new_config->downsample_mask_path.value())) {
     RCLCPP_ERROR_STREAM(
-      get_logger(), "Downsample mask not found: " << new_config->downsample_mask_path);
+      get_logger(), "Downsample mask not found: " << new_config->downsample_mask_path.value());
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -345,12 +352,13 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
 
   drivers::HesaiSensorConfiguration new_cfg(*sensor_cfg_ptr_);
 
-  std::string _return_mode{};
+  std::string return_mode{};
   std::string calibration_parameter_name =
     get_calibration_parameter_name(sensor_cfg_ptr_->sensor_model);
+  std::string downsample_mask_path = new_cfg.downsample_mask_path.value_or("");
 
   bool got_any =
-    get_param(p, "return_mode", _return_mode) | get_param(p, "frame_id", new_cfg.frame_id) |
+    get_param(p, "return_mode", return_mode) | get_param(p, "frame_id", new_cfg.frame_id) |
     get_param(p, "sync_angle", new_cfg.sync_angle) | get_param(p, "cut_angle", new_cfg.cut_angle) |
     get_param(p, "min_range", new_cfg.min_range) | get_param(p, "max_range", new_cfg.max_range) |
     get_param(p, "rotation_speed", new_cfg.rotation_speed) |
@@ -358,7 +366,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     get_param(p, "cloud_max_angle", new_cfg.cloud_max_angle) |
     get_param(p, "dual_return_distance_threshold", new_cfg.dual_return_distance_threshold) |
     get_param(p, calibration_parameter_name, new_cfg.calibration_path) |
-    get_param(p, "point_filters.downsample_mask.path", new_cfg.downsample_mask_path);
+    get_param(p, "point_filters.downsample_mask.path", downsample_mask_path);
 
   // Currently, all of the sub-wrappers read-only parameters, so they do not be queried for updates
 
@@ -366,9 +374,16 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
   }
 
-  if (_return_mode.length() > 0)
+  if (return_mode.empty()) {
     new_cfg.return_mode =
-      nebula::drivers::return_mode_from_string_hesai(_return_mode, sensor_cfg_ptr_->sensor_model);
+      nebula::drivers::return_mode_from_string_hesai(return_mode, sensor_cfg_ptr_->sensor_model);
+  }
+
+  if (!downsample_mask_path.empty()) {
+    new_cfg.downsample_mask_path = downsample_mask_path;
+  } else {
+    new_cfg.downsample_mask_path = std::nullopt;
+  }
 
   // ////////////////////////////////////////
   // Get and validate new calibration, if any

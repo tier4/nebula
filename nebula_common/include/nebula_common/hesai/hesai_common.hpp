@@ -24,6 +24,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -50,7 +51,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   PtpTransportType ptp_transport_type;
   PtpSwitchType ptp_switch_type;
   uint8_t ptp_lock_threshold;
-  std::string downsample_mask_path;
+  std::optional<std::string> downsample_mask_path;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -61,7 +62,7 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "Hesai Sensor Configuration:" << '\n';
   os << (LidarConfigurationBase)(arg) << '\n';
   os << "Multicast: "
-     << (arg.multicast_ip.empty() ? "disabled" : "enabled, group " + arg.multicast_ip) << '\n';
+     << (arg.multicast_ip.empty() ? "disabled" : "enabled, group: " + arg.multicast_ip) << '\n';
   os << "GNSS Port: " << arg.gnss_port << '\n';
   os << "Rotation Speed: " << arg.rotation_speed << '\n';
   os << "Sync Angle: " << arg.sync_angle << '\n';
@@ -75,7 +76,9 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "PTP Transport Type: " << arg.ptp_transport_type << '\n';
   os << "PTP Switch Type: " << arg.ptp_switch_type << '\n';
   os << "PTP Lock Threshold: " << std::to_string(arg.ptp_lock_threshold) << '\n';
-  os << "Downsample Mask Path: " << arg.downsample_mask_path;
+  os << "Downsample Filter: "
+     << (arg.downsample_mask_path ? "enabled, path: " + arg.downsample_mask_path.value()
+                                  : "disabled");
   return os;
 }
 
