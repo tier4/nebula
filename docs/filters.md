@@ -91,7 +91,7 @@ ros2 param set /<vendor>_ros_wrapper_node point_filters.downsample_mask.path ""'
 
 <!-- prettier-ignore-start -->
 !!! warning
-    Color spaces in image editors can be confusing and can lead to unexpected results (more/less downsampling than expected). 
+    Color spaces in image editors can be confusing and can lead to unexpected results (more/less downsampling than expected).
     To work on monochrome images, use the `Grayscale` color mode and use the `Value` in the HSV color space to choose greyscale values.
     For example, a `Value` (HSV) of 50% is equal to a downsampling factor of 2, but a `Luminosity` (LCh) of 50% is equal to a downsampling factor of 2.17.
     Check the generated `_dithered.png` mask to see whether you are getting the expected results.
