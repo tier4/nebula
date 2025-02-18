@@ -191,14 +191,25 @@ Status ContinentalARS548HwInterface::set_vehicle_parameters(
 }
 
 Status ContinentalARS548HwInterface::set_radar_parameters(
-  uint16_t maximum_distance, uint8_t frequency_slot, uint8_t cycle_time, uint8_t time_slot,
+  uint16_t maximum_distance, uint8_t frequency_slot, uint8_t cycle_time_ms, uint8_t time_slot_ms,
   uint8_t hcc, uint8_t power_save_standstill)
 {
   if (
-    maximum_distance < 93 || maximum_distance > 1514 || frequency_slot > 2 || cycle_time < 50 ||
-    cycle_time > 100 || time_slot < 10 || time_slot > 90 || hcc < 1 || hcc > 2 ||
-    power_save_standstill > 1) {
-    print_error("Invalid SetRadarParameters values");
+    maximum_distance < maximum_distance_min_value ||
+    maximum_distance > maximum_distance_max_value) {
+    print_error("Invalid maximum_distance value");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  if (cycle_time_ms < min_cycle_time_ms || cycle_time_ms > max_cycle_time_ms) {
+    print_error("Invalid cycle_time_ms value");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  if (
+    time_slot_ms < min_time_slot_ms || time_slot_ms > cycle_time_ms - 1 ||
+    time_slot_ms > max_time_slot_ms) {
+    print_error("Invalid time_slot_ms value");
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -209,8 +220,8 @@ Status ContinentalARS548HwInterface::set_radar_parameters(
   configuration_packet.header.length = configuration_payload_length;
   configuration_packet.configuration.maximum_distance = maximum_distance;
   configuration_packet.configuration.frequency_slot = frequency_slot;
-  configuration_packet.configuration.cycle_time = cycle_time;
-  configuration_packet.configuration.time_slot = time_slot;
+  configuration_packet.configuration.cycle_time = cycle_time_ms;
+  configuration_packet.configuration.time_slot = time_slot_ms;
   configuration_packet.configuration.hcc = hcc;
   configuration_packet.configuration.powersave_standstill = power_save_standstill;
   configuration_packet.new_radar_parameters = 1;
@@ -219,9 +230,9 @@ Status ContinentalARS548HwInterface::set_radar_parameters(
   std::memcpy(send_vector.data(), &configuration_packet, sizeof(ConfigurationPacket));
 
   print_info("maximum_distance = " + std::to_string(maximum_distance));
-  print_info("frequency_slot = " + std::to_string(frequency_slot));
-  print_info("cycle_time = " + std::to_string(cycle_time));
-  print_info("time_slot = " + std::to_string(time_slot));
+  print_info("frequency_slot = " + std::to_string(frequency_slot) + " ms");
+  print_info("cycle_time = " + std::to_string(cycle_time_ms) + " ms");
+  print_info("time_slot = " + std::to_string(time_slot_ms) + " ms");
   print_info("hcc = " + std::to_string(hcc));
   print_info("power_save_standstill = " + std::to_string(power_save_standstill));
 
