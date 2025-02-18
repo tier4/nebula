@@ -34,6 +34,10 @@ jobs:
         id: get-modified-packages
         uses: autowarefoundation/autoware-github-actions/get-modified-packages@v1
 
+      - name: Install ccache
+        run: sudo apt-get update && sudo apt-get install -y ccache
+        shell: bash
+
       - name: Create ccache directory
         run: |
           mkdir -p ${CCACHE_DIR}

@@ -45,6 +45,10 @@ jobs:
         id: get-self-packages
         uses: autowarefoundation/autoware-github-actions/get-self-packages@v1
 
+      - name: Install ccache
+        run: sudo apt-get update && sudo apt-get install -y ccache
+        shell: bash
+
       - name: Create ccache directory
         run: |
           mkdir -p ${CCACHE_DIR}
