@@ -40,11 +40,17 @@ public:
     index_ = (index_ + 1) % buffer_.capacity();
   }
 
-  std::size_t size() const { return buffer_.size(); }
+  [[nodiscard]] std::size_t size() const { return buffer_.size(); }
 
-  bool is_full() const { return buffer_.size() == buffer_.capacity(); }
+  [[nodiscard]] bool is_full() const { return buffer_.size() == buffer_.capacity(); }
 
-  T get_average() const { return sum_ / buffer_.size(); }
+  [[nodiscard]] T get_average() const
+  {
+    if (buffer_.size() == 0) {
+      throw std::runtime_error("Buffer is empty");
+    }
+    return sum_ / buffer_.size();
+  }
 
 private:
   T sum_{};
