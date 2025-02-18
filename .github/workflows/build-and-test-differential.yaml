@@ -150,8 +150,17 @@ jobs:
           path: infer-out-main
           key: infer-main-${{ github.base_ref }}-${{ github.event.pull_request.base.sha }}
 
-      - name: Build and analyze feature branch
-        id: feature-analysis
+      - name: Build feature branch
+        id: build-feature
+        if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
+        uses: autowarefoundation/autoware-github-actions/colcon-build@v1
+        with:
+          rosdistro: ${{ matrix.rosdistro }}
+          target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
+          build-depends-repos: ${{ matrix.build-depends-repos }}
+
+      - name: Analyze feature branch
+        id: analyze-feature
         if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
         run: |
           # Run infer on feature branch
@@ -191,7 +200,6 @@ jobs:
             infer reportdiff --report-current infer-out-feature/report.json --report-previous infer-out-main/report.json
 
       - name: Upload FB Infer Reports
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: infer-reports-${{ github.sha }}
