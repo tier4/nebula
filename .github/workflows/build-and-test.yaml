@@ -22,6 +22,7 @@ jobs:
             build-depends-repos: build_depends.repos
     env:
       CCACHE_DIR: /root/.ccache
+      CCACHE_SIZE: 10G
       CC: /usr/lib/ccache/gcc
       CXX: /usr/lib/ccache/g++
 
@@ -48,6 +49,12 @@ jobs:
         run: |
           mkdir -p ${CCACHE_DIR}
           du -sh ${CCACHE_DIR} && ccache -s
+        shell: bash
+
+      - name: Limit ccache size
+        run: |
+          rm -f "${CCACHE_DIR}/ccache.conf"
+          echo -e "max_size = ${CCACHE_SIZE}" > "${CCACHE_DIR}/ccache.conf"
         shell: bash
 
       - name: Attempt to restore ccache
