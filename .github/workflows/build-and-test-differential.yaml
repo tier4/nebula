@@ -241,6 +241,12 @@ jobs:
           du -sh ${CCACHE_DIR} && ccache -s
         shell: bash
 
+      - name: Cache ccache
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.arch }}-${{ matrix.rosdistro }}-${{ github.run_id }}-${{ github.run_attempt }}
+
       - name: Analyze main branch
         id: analyze-main
         if: ${{ steps.cache-infer-restore.outputs.cache-hit != 'true' }}
