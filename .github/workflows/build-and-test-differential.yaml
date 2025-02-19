@@ -272,6 +272,7 @@ jobs:
           mv infer-out ${INFER_REPORT_PARENT_DIR}/infer-out-differential
 
       - name: Upload FB Infer Reports
+        id: upload-infer-reports
         uses: actions/upload-artifact@v4
         with:
           name: infer-reports-${{ github.sha }}
@@ -279,3 +280,31 @@ jobs:
             ${{ env.INFER_REPORT_PARENT_DIR }}/infer-out-feature/report.json
             ${{ env.INFER_REPORT_PARENT_DIR }}/infer-out-differential/*
           if-no-files-found: error
+
+      - name: Generate Infer summary
+        id: generate-infer-summary
+        if: ${{ steps.analyze-feature.outcome == 'success' }}
+        run: |
+          python .github/workflows/scripts/summarize-infer-diff.py \
+            ${INFER_REPORT_PARENT_DIR}/infer-out-differential \
+            ${{ steps.upload-infer-reports.outputs.artifact-url }} \
+            ${INFER_REPORT_PARENT_DIR}/infer-summary.md
+
+      - name: Find Comment
+        if: ${{ steps.generate-infer-summary.outcome == 'success' }}
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: github-actions[bot]
+          body-includes: FB Infer Differential Analysis
+
+      # If the comment-id is empty, this creates a new comment
+      - name: Post or update PR comment
+        if: ${{ steps.generate-infer-summary.outcome == 'success' }}
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-file: ${{ env.INFER_REPORT_PARENT_DIR }}/infer-summary.md
+          edit-mode: replace
