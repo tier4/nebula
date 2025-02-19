@@ -276,6 +276,6 @@ jobs:
         with:
           name: infer-reports-${{ github.sha }}
           path: |
-            ${INFER_REPORT_PARENT_DIR}/infer-out-feature/report.json
-            ${INFER_REPORT_PARENT_DIR}/infer-out-differential/*
+            ${{ env.INFER_REPORT_PARENT_DIR }}/infer-out-feature/report.json
+            ${{ env.INFER_REPORT_PARENT_DIR }}/infer-out-differential/*
           if-no-files-found: error
