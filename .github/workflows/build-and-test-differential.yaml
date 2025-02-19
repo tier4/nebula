@@ -292,7 +292,7 @@ jobs:
         if: ${{ steps.analyze-feature.outcome == 'success' }}
         run: |
           python3 .github/workflows/scripts/summarize-infer-diff.py \
-            ${INFER_REPORT_PARENT_DIR}/infer-out-differential \
+            ${INFER_REPORT_PARENT_DIR}/infer-out-differential/differential \
             ${{ steps.upload-infer-reports.outputs.artifact-url }} \
             ${INFER_REPORT_PARENT_DIR}/infer-summary.md
 
