@@ -31,7 +31,7 @@ def create_markdown_table(
 
     lines = []
     lines.append("| Bug Type | Pre-existing | Fixed | Introduced |")
-    lines.append("|----------|--------------|-------|------------|")
+    lines.append("|----------|-------------:|------:|-----------:|")
 
     # Add rows
     for bug_type in sorted(all_bug_types):
@@ -46,27 +46,15 @@ def create_markdown_table(
 def summarize_diff(
     fixed_counts: Dict[str, int],
     introduced_counts: Dict[str, int],
-) -> tuple[str, str]:
+) -> str:
     if sum(introduced_counts.values()) == 0 and sum(fixed_counts.values()) > 0:
-        return (
-            ":green_circle:",
-            f"🎉 Fixed {sum(fixed_counts.values())} bugs without introducing new ones!",
-        )
+        return f"Fixed {sum(fixed_counts.values())} bugs without introducing new ones! 🎉"
     elif sum(introduced_counts.values()) == 0:
-        return (
-            ":green_circle:",
-            "✅ No new bugs introduced",
-        )
+        return "No new bugs introduced ✅"
     elif sum(fixed_counts.values()) > 0:
-        return (
-            ":orange_circle:",
-            f"⚠️ Fixed {sum(fixed_counts.values())} bugs but introduced {sum(introduced_counts.values())} new ones",
-        )
+        return f"Fixed {sum(fixed_counts.values())} bugs but introduced {sum(introduced_counts.values())} new ones ⚠️"
     else:
-        return (
-            ":red_circle:",
-            f"❌ Introduced {sum(introduced_counts.values())} new bugs without fixing any existing ones",
-        )
+        return f"Introduced {sum(introduced_counts.values())} new bugs without fixing any existing ones ❌"
 
 
 def main():
@@ -99,14 +87,19 @@ def main():
     fixed_counts = count_by_type(fixed)
     introduced_counts = count_by_type(introduced)
 
-    status, comment = summarize_diff(fixed_counts, introduced_counts)
-    header = f"## {status} ⊢ FB Infer Differential Analysis Results"
+    header = f"## [FB Infer]({args.artifact_url}) Report"
+    comment = summarize_diff(fixed_counts, introduced_counts)
     table = create_markdown_table(pre_counts, fixed_counts, introduced_counts)
-    artifact_comment = (
-        f"To see the full list of bugs, download the [full Infer report]({args.artifact_url})."
-    )
+    artifact_comment = f"[Download the full Infer report]({args.artifact_url})."
 
-    markdown = f"{header}\n\n{table}\n\n{comment}\n\n{artifact_comment}"
+    markdown = (
+        f"{header}\n\n"
+        f"{comment}\n\n"
+        f"<details><summary>Additional details</summary>\n\n"
+        f"{table}\n\n"
+        f"</details>\n\n"
+        f"{artifact_comment}"
+    )
 
     # Write to file
     with open(args.output_path, "w") as f:
