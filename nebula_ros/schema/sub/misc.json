@@ -96,6 +96,7 @@
           "properties": {
             "path": {
               "title": "Path to a grayscale PNG mask (0: filter all, 128: keep 50%, 255: keep all)",
+              "description": "See [Filters](/filters/) for more information.",
               "type": "string",
               "default": "\"\""
             }

@@ -87,6 +87,25 @@ The filter can be disabled by omitting the `downsample_mask` config item, or by 
 ros2 param set /<vendor>_ros_wrapper_node point_filters.downsample_mask.path ""'
 ```
 
+The required resolution of the mask is sensor-dependent:
+
+| Sensor Model | Required Resolution |
+| ------------ | ------------------- |
+| Pandar40P    | 1800 x 40           |
+| Pandar64     | 1800 x 64           |
+| PandarXT16   | 2000 x 16           |
+| PandarXT32   | 2000 x 32           |
+| PandarXT32M  | 2000 x 32           |
+| PandarAT128  | 1200 x 128          |
+| PandarQT64   | 600 x 64            |
+| PandarQT128  | 900 x 128           |
+| Pandar128E4X | 3600 x 128          |
+
+<!-- prettier-ignore-start -->
+!!! warning
+    If the mask resolution does not match the required resolution, Nebula will not start (if configured on launch) or reject the setting (if set during runtime).
+<!-- prettier-ignore-end -->
+
 #### Behavior
 
 <!-- prettier-ignore-start -->
