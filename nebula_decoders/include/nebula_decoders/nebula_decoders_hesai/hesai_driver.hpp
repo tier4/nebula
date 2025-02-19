@@ -20,6 +20,8 @@
 #include "nebula_common/point_types.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
+#include <nebula_common/loggers/logger.hpp>
+
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <memory>
@@ -34,6 +36,7 @@ class HesaiDriver
 private:
   /// @brief Current driver status
   Status driver_status_;
+  std::shared_ptr<loggers::Logger> logger_;
   /// @brief Decoder according to the model
   std::shared_ptr<HesaiScanDecoder> scan_decoder_;
 
@@ -52,7 +55,8 @@ public:
   explicit HesaiDriver(
     const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
-      calibration_configuration);
+      calibration_configuration,
+    const std::shared_ptr<loggers::Logger> & logger);
 
   /// @brief Get current status of this driver
   /// @return Current status

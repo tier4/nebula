@@ -167,6 +167,7 @@ plugins:
       force_render_paths: |
         *
         !*_source.md
+        !class*.md
   - mkdoxy:
       projects:
         nebula_common:

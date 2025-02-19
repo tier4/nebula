@@ -31,6 +31,7 @@ include_directories(
 
 link_libraries(
     ${nebula_common_TARGETS}
+    ${nebula_ros_TARGETS}
     ${rosbag2_cpp_TARGETS}
     ${PCL_LIBRARIES}
 )

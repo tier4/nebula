@@ -2,6 +2,8 @@
 
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 
+#include "nebula_ros/common/rclcpp_logger.hpp"
+
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/util/string_conversions.hpp>
 #include <rclcpp/logging.hpp>
@@ -42,7 +44,8 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
 
   RCLCPP_INFO(logger_, "Starting Decoder");
 
-  driver_ptr_ = std::make_shared<drivers::HesaiDriver>(config, calibration_cfg_ptr_);
+  driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
+    config, calibration_cfg_ptr_, std::make_shared<drivers::loggers::RclcppLogger>(logger_));
   status_ = driver_ptr_->get_status();
 
   if (Status::OK != status_) {
@@ -81,7 +84,8 @@ void HesaiDecoderWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config)
 {
   std::lock_guard lock(mtx_driver_ptr_);
-  auto new_driver = std::make_shared<drivers::HesaiDriver>(new_config, calibration_cfg_ptr_);
+  auto new_driver = std::make_shared<drivers::HesaiDriver>(
+    new_config, calibration_cfg_ptr_, std::make_shared<drivers::loggers::RclcppLogger>(logger_));
   driver_ptr_ = new_driver;
   sensor_cfg_ = new_config;
 }
@@ -90,7 +94,8 @@ void HesaiDecoderWrapper::on_calibration_change(
   const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> & new_calibration)
 {
   std::lock_guard lock(mtx_driver_ptr_);
-  auto new_driver = std::make_shared<drivers::HesaiDriver>(sensor_cfg_, new_calibration);
+  auto new_driver = std::make_shared<drivers::HesaiDriver>(
+    sensor_cfg_, new_calibration, std::make_shared<drivers::loggers::RclcppLogger>(logger_));
   driver_ptr_ = new_driver;
   calibration_cfg_ptr_ = new_calibration;
 }

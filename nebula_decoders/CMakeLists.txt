@@ -53,10 +53,12 @@ add_library(nebula_decoders_hesai SHARED
 )
 target_link_libraries(nebula_decoders_hesai PUBLIC
     ${pandar_msgs_TARGETS}
+    ${PNG_LIBRARIES}
 )
 
 target_include_directories(nebula_decoders_hesai PUBLIC
     ${pandar_msgs_INCLUDE_DIRS}
+    ${PNG_INCLUDE_DIRS}
 )
 
 # Velodyne
