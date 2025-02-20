@@ -1,0 +1,43 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        # allow slight decreases in coverage compared to the base ref
+        threshold: 1%
+
+ignore:
+  - ^build.* # for generated message wrappers
+  - ^nebula_examples.* # not safety-related
+
+comment:
+  layout: header, diff, flags, components
+
+component_management:
+  default_rules:
+    statuses:
+      - type: project # inherit project rules for coverage statuses
+  individual_components:
+    - component_id: common
+      name: Common
+      paths:
+        - "!**hesai**"
+        - "!**velodyne**"
+        - "!**continental**"
+        - "!**robosense**"
+    - component_id: hesai
+      name: Hesai
+      paths:
+        - "**hesai**"
+    - component_id: velodyne
+      name: Velodyne
+      paths:
+        - "**velodyne**"
+    - component_id: continental
+      name: Continental
+      paths:
+        - "**continental**"
+    - component_id: robosense
+      name: Robosense
+      paths:
+        - "**robosense**"
