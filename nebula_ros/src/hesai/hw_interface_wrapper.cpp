@@ -9,6 +9,7 @@
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
 
 #include <memory>
+#include <utility>
 
 namespace nebula::ros
 {

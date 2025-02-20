@@ -17,8 +17,11 @@
 #include <exception>
 #include <filesystem>
 #include <iomanip>
+#include <iostream>
 #include <memory>
 #include <sstream>
+#include <utility>
+#include <vector>
 
 #ifndef _TEST_RESOURCES_PATH
 static_assert(false, "No test resources path defined");
