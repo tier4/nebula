@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "nebula_ros/common/mt_queue.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
 #include "nebula_ros/velodyne/decoder_wrapper.hpp"
 #include "nebula_ros/velodyne/hw_interface_wrapper.hpp"
