@@ -102,6 +102,7 @@ TEST(TestUdp, TestCorrectUsageIsEnforced)
                     .set_polling_interval(20)
                     .set_socket_buffer_size(3000)
                     .set_mtu(1600)
+                    .set_send_destination(sender_ip, sender_port)
                     .limit_to_sender(sender_ip, sender_port)
                     .bind());
 
@@ -200,6 +201,27 @@ TEST(TestUdp, TestMoveable)
 
   std::this_thread::sleep_for(100ms);
   ASSERT_EQ(n_received, 2);
+}
+
+TEST(TestUdp, TestSending)
+{
+  const std::vector<uint8_t> payload{1, 2, 3};
+
+  // A socket without a send destination shall not be able to send
+  auto sock = UdpSocket::Builder(localhost_ip, host_port).bind();
+  ASSERT_THROW(sock.send(payload), UsageError);
+
+  // A socket with a send destination shall be able to send
+  auto sock2 = UdpSocket::Builder(localhost_ip, host_port)
+                 .set_send_destination(localhost_ip, host_port)
+                 .bind();
+  ASSERT_NO_THROW(sock2.send(payload));
+
+  // The sent payload shall be received by the destination
+  auto result3 = receive_once(sock2, send_receive_timeout);
+  ASSERT_TRUE(result3.has_value());
+  auto const & [recv_payload, metadata] = result3.value();
+  ASSERT_EQ(recv_payload, payload);
 }
 
 }  // namespace nebula::drivers::connections
