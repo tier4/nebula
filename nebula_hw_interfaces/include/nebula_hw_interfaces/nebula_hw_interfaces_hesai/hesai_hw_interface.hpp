@@ -18,7 +18,6 @@
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
-
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/connections/tcp.hpp"
 
 #include <nebula_common/nebula_status.hpp>
