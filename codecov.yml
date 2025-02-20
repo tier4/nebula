@@ -1,3 +1,11 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        # allow slight decreases in coverage compared to the base ref
+        threshold: 1%
+
 ignore:
   - ^build.* # for generated message wrappers
   - ^nebula_examples.* # not safety-related
