@@ -1,0 +1,3 @@
+ignore:
+  - ^build.* # for generated message wrappers
+  - ^nebula_examples.* # not safety-related
