@@ -37,7 +37,7 @@ def generate_test_description():
 class TestCorrectStartup(unittest.TestCase):
     def test_wait_for_startup_then_shutdown(self):
         self.proc_output: launch_testing.ActiveIoHandler
-        self.proc_output.assertWaitFor("Wrapper=OK", timeout=2)
+        self.proc_output.assertWaitFor("Hardware connection disabled", timeout=2)
 
 
 @launch_testing.post_shutdown_test()
