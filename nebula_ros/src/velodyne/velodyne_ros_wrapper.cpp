@@ -18,11 +18,7 @@ namespace nebula::ros
 VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("velodyne_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   wrapper_status_(Status::NOT_INITIALIZED),
-  sensor_cfg_ptr_(nullptr),
-  packet_queue_(3000),
-  hw_interface_wrapper_(),
-  hw_monitor_wrapper_(),
-  decoder_wrapper_()
+  sensor_cfg_ptr_(nullptr)
 {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
@@ -55,12 +51,6 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
     this, hw_interface_wrapper_ ? hw_interface_wrapper_->hw_interface() : nullptr, sensor_cfg_ptr_);
 
   RCLCPP_DEBUG(get_logger(), "Starting stream");
-
-  decoder_thread_ = std::thread([this]() {
-    while (true) {
-      decoder_wrapper_->process_cloud_packet(packet_queue_.pop());
-    }
-  });
 
   if (launch_hw_) {
     hw_interface_wrapper_->hw_interface()->register_scan_callback(
@@ -172,7 +162,7 @@ void VelodyneRosWrapper::receive_scan_message_callback(
     nebula_pkt_ptr->stamp = pkt.stamp;
     std::copy(pkt.data.begin(), pkt.data.end(), std::back_inserter(nebula_pkt_ptr->data));
 
-    packet_queue_.push(std::move(nebula_pkt_ptr));
+    decoder_wrapper_->process_cloud_packet(std::move(nebula_pkt_ptr));
   }
 }
 
@@ -263,9 +253,7 @@ void VelodyneRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & pa
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
   msg_ptr->data.swap(packet);
 
-  if (!packet_queue_.try_push(std::move(msg_ptr))) {
-    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");
-  }
+  decoder_wrapper_->process_cloud_packet(std::move(msg_ptr));
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(VelodyneRosWrapper)
