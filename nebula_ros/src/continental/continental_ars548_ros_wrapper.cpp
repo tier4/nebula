@@ -29,10 +29,7 @@ namespace nebula::ros
 ContinentalARS548RosWrapper::ContinentalARS548RosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node(
     "continental_ars548_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
-  wrapper_status_(Status::NOT_INITIALIZED),
-  packet_queue_(3000),
-  hw_interface_wrapper_(),
-  decoder_wrapper_()
+  wrapper_status_(Status::NOT_INITIALIZED)
 {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
@@ -53,12 +50,6 @@ ContinentalARS548RosWrapper::ContinentalARS548RosWrapper(const rclcpp::NodeOptio
   decoder_wrapper_.emplace(this, config_ptr_, launch_hw_);
 
   RCLCPP_DEBUG(get_logger(), "Starting stream");
-
-  decoder_thread_ = std::thread([this]() {
-    while (true) {
-      decoder_wrapper_->process_packet(packet_queue_.pop());
-    }
-  });
 
   if (launch_hw_) {
     hw_interface_wrapper_->hw_interface()->register_packet_callback(std::bind(
@@ -155,7 +146,7 @@ void ContinentalARS548RosWrapper::receive_packets_callback(
     nebula_packet_ptr->stamp = packet.stamp;
     nebula_packet_ptr->data = std::move(packet.data);
 
-    packet_queue_.push(std::move(nebula_packet_ptr));
+    decoder_wrapper_->process_packet(std::move(nebula_packet_ptr));
   }
 }
 
@@ -166,9 +157,7 @@ void ContinentalARS548RosWrapper::receive_packet_callback(
     return;
   }
 
-  if (!packet_queue_.try_push(std::move(msg_ptr))) {
-    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 500, "Packet(s) dropped");
-  }
+  decoder_wrapper_->process_packet(std::move(msg_ptr));
 }
 
 Status ContinentalARS548RosWrapper::get_status()
