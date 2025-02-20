@@ -54,26 +54,26 @@ util::expected<uint64_t, std::string> read_sys_param(const std::string & param_f
   return param;
 }
 
-TEST(test_udp, test_basic_lifecycle)
+TEST(TestUdp, TestBasicLifecycle)
 {
   ASSERT_NO_THROW(
     UdpSocket::Builder(localhost_ip, host_port).bind().subscribe(empty_cb()).unsubscribe());
 }
 
-TEST(test_udp, test_special_addresses_bind)
+TEST(TestUdp, TestSpecialAddressesBind)
 {
   ASSERT_THROW(UdpSocket::Builder(broadcast_ip, host_port), UsageError);
   ASSERT_NO_THROW(UdpSocket::Builder(any_ip, host_port).bind());
 }
 
-TEST(test_udp, test_joining_invalid_multicast_group)
+TEST(TestUdp, TestJoiningInvalidMulticastGroup)
 {
   ASSERT_THROW(
     UdpSocket::Builder(localhost_ip, host_port).join_multicast_group(broadcast_ip).bind(),
     SocketError);
 }
 
-TEST(test_udp, test_buffer_resize)
+TEST(TestUdp, TestBufferResize)
 {
   auto rmem_max_maybe = read_sys_param("net.core.rmem_max");
   if (!rmem_max_maybe.has_value()) GTEST_SKIP() << rmem_max_maybe.error();
@@ -91,7 +91,7 @@ TEST(test_udp, test_buffer_resize)
     UsageError);
 }
 
-TEST(test_udp, test_correct_usage_is_enforced)
+TEST(TestUdp, TestCorrectUsageIsEnforced)
 {
   // The following functions can be called in any order, any number of times
   ASSERT_NO_THROW(UdpSocket::Builder(localhost_ip, host_port)
@@ -127,7 +127,7 @@ TEST(test_udp, test_correct_usage_is_enforced)
   ASSERT_NO_THROW(UdpSocket::Builder(localhost_ip, host_port).bind().unsubscribe());
 }
 
-TEST(test_udp, test_receiving)
+TEST(TestUdp, TestReceiving)
 {
   const std::vector<uint8_t> payload{1, 2, 3};
   auto sock = UdpSocket::Builder(localhost_ip, host_port).bind();
@@ -146,7 +146,7 @@ TEST(test_udp, test_receiving)
   // TODO(mojomex): currently cannot test timestamping on loopback interface (no timestamp produced)
 }
 
-TEST(test_udp, test_receiving_oversized)
+TEST(TestUdp, TestReceivingOversized)
 {
   const size_t mtu = 1500;
   std::vector<uint8_t> payload;
@@ -166,7 +166,7 @@ TEST(test_udp, test_receiving_oversized)
   ASSERT_EQ(metadata.drops_since_last_receive, 0);
 }
 
-TEST(test_udp, test_filtering_sender)
+TEST(TestUdp, TestFilteringSender)
 {
   std::vector<uint8_t> payload{1, 2, 3};
   auto sock =
@@ -179,7 +179,7 @@ TEST(test_udp, test_filtering_sender)
   ASSERT_FALSE(result_opt.has_value());
 }
 
-TEST(test_udp, test_moveable)
+TEST(TestUdp, TestMoveable)
 {
   std::vector<uint8_t> payload{1, 2, 3};
 
