@@ -18,25 +18,26 @@
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <cerrno>
 #include <chrono>
-#include <condition_variable>
 #include <cstdint>
 #include <cstring>
+#include <future>
 #include <optional>
 #include <utility>
 #include <vector>
 
-std::optional<int> udp_send(
+inline std::optional<int> udp_send(
   const char * to_ip, uint16_t to_port, const std::vector<uint8_t> & bytes)
 {
   int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock_fd < 0) return errno;
 
   int enable = 1;
-  int result = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
+  ssize_t result = setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
   if (result < 0) return errno;
 
   sockaddr_in receiver_addr{};
@@ -58,20 +59,22 @@ template <typename _T, typename _R>
 std::optional<std::pair<std::vector<uint8_t>, nebula::drivers::connections::UdpSocket::RxMetadata>>
 receive_once(nebula::drivers::connections::UdpSocket & sock, std::chrono::duration<_T, _R> timeout)
 {
-  std::condition_variable cv_received_result;
-  std::mutex mtx_result;
-  std::optional<
-    std::pair<std::vector<uint8_t>, nebula::drivers::connections::UdpSocket::RxMetadata>>
-    result;
+  std::promise<std::pair<std::vector<uint8_t>, nebula::drivers::connections::UdpSocket::RxMetadata>>
+    promise;
+  auto future = promise.get_future();
+  bool done = false;
 
-  sock.subscribe([&](const auto & data, const auto & metadata) {
-    std::lock_guard lock(mtx_result);
-    result.emplace(data, metadata);
-    cv_received_result.notify_one();
+  sock.subscribe([&done, &promise](const auto & data, const auto & metadata) {
+    if (done) return;
+    promise.set_value({data, metadata});
+    done = true;
   });
 
-  std::unique_lock lock(mtx_result);
-  cv_received_result.wait_for(lock, timeout, [&result]() { return result.has_value(); });
+  auto status = future.wait_for(timeout);
   sock.unsubscribe();
-  return result;
+
+  if (status == std::future_status::ready) {
+    return future.get();
+  }
+  return std::nullopt;
 }
