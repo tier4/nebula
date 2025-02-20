@@ -136,6 +136,7 @@ class UdpSocket
     Endpoint host;
     std::optional<in_addr> multicast_ip;
     std::optional<Endpoint> sender_filter;
+    std::optional<Endpoint> send_to;
   };
 
   struct MsgBuffers
@@ -211,6 +212,18 @@ public:
     Builder && limit_to_sender(const std::string & sender_ip, uint16_t sender_port)
     {
       config_.sender_filter.emplace(Endpoint{parse_ip(sender_ip).value_or_throw(), sender_port});
+      return std::move(*this);
+    }
+
+    /**
+     * @brief Set the destination to send packets to.
+     *
+     * @param dest_ip The destination IP address.
+     * @param dest_port The destination port.
+     */
+    Builder && set_send_destination(const std::string & dest_ip, uint16_t dest_port)
+    {
+      config_.send_to.emplace(Endpoint{parse_ip(dest_ip).value_or_throw(), dest_port});
       return std::move(*this);
     }
 
@@ -334,6 +347,28 @@ public:
       receive_thread_.join();
     }
     return *this;
+  }
+
+  /**
+   * @brief Send a datagram to the destination set in `set_send_destination()`.
+   *
+   * @param data The data to send
+   * @throw UsageError If no destination has been set via `set_send_destination()`
+   * @throw SocketError If the send operation fails
+   */
+  void send(const std::vector<uint8_t> & data)
+  {
+    if (!config_.send_to) throw UsageError("No destination set");
+
+    sockaddr_in dest_addr{};
+    dest_addr.sin_family = AF_INET;
+    dest_addr.sin_port = htons(config_.send_to->port);
+    dest_addr.sin_addr = config_.send_to->ip;
+
+    ssize_t result = sendto(
+      sock_fd_.get(), data.data(), data.size(), 0, (sockaddr *)&dest_addr, sizeof(dest_addr));
+
+    if (result == -1) throw SocketError(errno);
   }
 
   UdpSocket(const UdpSocket &) = delete;
