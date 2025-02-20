@@ -266,10 +266,6 @@ private:  // ROS Diagnostics
   /// @param diagnostics DiagnosticStatusWrapper
   void VelodyneCheckLaserState(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  /// @brief Check the current snapshot for diagnostic_updater
-  /// @param diagnostics DiagnosticStatusWrapper
-  void VelodyneCheckSnapshot(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
-
   /// @brief Check the current states of motor & laser for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
   void VelodyneCheckStatus(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
@@ -286,16 +282,7 @@ private:  // ROS Diagnostics
   /// @param diagnostics DiagnosticStatusWrapper
   void VelodyneCheckVoltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  /// @brief Callback of the timer for getting the current lidar snapshot
-  void OnVelodyneSnapshotTimer();
-  rclcpp::TimerBase::SharedPtr diagnostics_snapshot_timer_;
   rclcpp::TimerBase::SharedPtr diagnostics_update_timer_;
-  std::shared_ptr<std::string> current_snapshot;
-  std::shared_ptr<boost::property_tree::ptree> current_snapshot_tree;
-  std::shared_ptr<rclcpp::Time> current_snapshot_time;
-  //  rclcpp::Time current_snapshot_time;
-  //  std::shared_ptr<uint8_t> current_diag_status;
-  uint8_t current_diag_status;
 
   uint16_t diag_span_;
   std::mutex mtx_diag;

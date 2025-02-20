@@ -118,14 +118,12 @@ VelodyneHwMonitorRosWrapper::VelodyneHwMonitorRosWrapper(const rclcpp::NodeOptio
 
   std::cout << "Get model name and serial." << std::endl;
   hw_interface_.GetSnapshotAsync([this](const std::string & str) {
-    current_snapshot_time.reset(new rclcpp::Time(this->get_clock()->now()));
-    current_snapshot_tree =
+    auto current_snapshot_tree =
       std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
     current_diag_tree =
       std::make_shared<boost::property_tree::ptree>(current_snapshot_tree->get_child("diag"));
     current_status_tree =
       std::make_shared<boost::property_tree::ptree>(current_snapshot_tree->get_child("status"));
-    current_snapshot.reset(new std::string(str));
 
     try {
       info_model = GetPtreeValue(current_snapshot_tree, key_info_model);
@@ -330,10 +328,6 @@ void VelodyneHwMonitorRosWrapper::InitializeVelodyneDiagnostics()
 
   if (use_advanced_diagnostics) {
     diagnostics_updater_.add(
-      "velodyne_snapshot-" + sensor_configuration_.frame_id, this,
-      &VelodyneHwMonitorRosWrapper::VelodyneCheckSnapshot);
-
-    diagnostics_updater_.add(
       "velodyne_volt_temp_top_hv-" + sensor_configuration_.frame_id, this,
       &VelodyneHwMonitorRosWrapper::VelodyneCheckTopHv);
     if (sensor_configuration_.sensor_model != nebula::drivers::SensorModel::VELODYNE_VLP16) {
@@ -431,26 +425,7 @@ void VelodyneHwMonitorRosWrapper::InitializeVelodyneDiagnostics()
   diagnostics_updater_.add(
     "velodyne_voltage", this, &VelodyneHwMonitorRosWrapper::VelodyneCheckVoltage);
 
-  current_snapshot.reset(new std::string(""));
-  current_snapshot_time.reset(new rclcpp::Time(this->get_clock()->now()));
-  current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
-
-  auto on_timer_snapshot = [this] { OnVelodyneSnapshotTimer(); };
-  diagnostics_snapshot_timer_ = std::make_shared<rclcpp::GenericTimer<decltype(on_timer_snapshot)>>(
-    this->get_clock(), std::chrono::milliseconds(diag_span_), std::move(on_timer_snapshot),
-    this->get_node_base_interface()->get_context());
-  this->get_node_timers_interface()->add_timer(diagnostics_snapshot_timer_, cbg_m_);
-
   auto on_timer_update = [this] {
-    auto now = this->get_clock()->now();
-    auto dif = (now - *current_snapshot_time).seconds();
-    if (diag_span_ * 2.0 < dif * 1000) {
-      current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::STALE;
-      RCLCPP_DEBUG_STREAM(get_logger(), "STALE");
-    } else {
-      current_diag_status = diagnostic_msgs::msg::DiagnosticStatus::OK;
-      RCLCPP_DEBUG_STREAM(get_logger(), "OK");
-    }
     diagnostics_updater_.force_update();
   };
   diagnostics_update_timer_ = std::make_shared<rclcpp::GenericTimer<decltype(on_timer_update)>>(
@@ -1671,29 +1646,6 @@ void VelodyneHwMonitorRosWrapper::VelodyneCheckLaserState(
     diagnostics.add("sensor", sensor_configuration_.frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
-}
-
-void VelodyneHwMonitorRosWrapper::VelodyneCheckSnapshot(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
-{
-  uint8_t level = current_diag_status;
-  diagnostics.add("sensor", sensor_configuration_.frame_id);
-  diagnostics.summary(level, *current_snapshot);
-  //  }
-}
-
-void VelodyneHwMonitorRosWrapper::OnVelodyneSnapshotTimer()
-{
-  hw_interface_.GetSnapshotAsync([this](const std::string & str) {
-    current_snapshot_time.reset(new rclcpp::Time(this->get_clock()->now()));
-    current_snapshot_tree =
-      std::make_shared<boost::property_tree::ptree>(hw_interface_.ParseJson(str));
-    current_diag_tree =
-      std::make_shared<boost::property_tree::ptree>(current_snapshot_tree->get_child("diag"));
-    current_status_tree =
-      std::make_shared<boost::property_tree::ptree>(current_snapshot_tree->get_child("status"));
-    current_snapshot.reset(new std::string(str));
-  });
 }
 
 void VelodyneHwMonitorRosWrapper::VelodyneCheckStatus(
