@@ -25,17 +25,17 @@ namespace nebula::drivers::connections
 
 using std::chrono_literals::operator""ms;
 
-static const char localhost_ip[] = "127.0.0.1";
-static const char broadcast_ip[] = "255.255.255.255";
-static const char any_ip[] = "0.0.0.0";
-static const char multicast_group[] = "230.1.2.3";
-static const char multicast_group2[] = "230.4.5.6";
+static const char * const g_localhost_ip = "127.0.0.1";
+static const char * const g_broadcast_ip = "255.255.255.255";
+static const char * const g_any_ip = "0.0.0.0";
+static const char * const g_multicast_group = "230.1.2.3";
+static const char * const g_multicast_group2 = "230.4.5.6";
 
-static const char sender_ip[] = "192.168.201";
-static const uint16_t sender_port = 7373;
-static const uint16_t host_port = 6262;
+static const char * const g_sender_ip = "192.168.201.100";
+static const uint16_t g_sender_port = 7373;
+static const uint16_t g_host_port = 6262;
 
-static const std::chrono::duration send_receive_timeout = 100ms;
+static const std::chrono::duration g_send_receive_timeout = 100ms;
 
 UdpSocket::callback_t empty_cb()
 {
@@ -57,19 +57,19 @@ util::expected<uint64_t, std::string> read_sys_param(const std::string & param_f
 TEST(TestUdp, TestBasicLifecycle)
 {
   ASSERT_NO_THROW(
-    UdpSocket::Builder(localhost_ip, host_port).bind().subscribe(empty_cb()).unsubscribe());
+    UdpSocket::Builder(g_localhost_ip, g_host_port).bind().subscribe(empty_cb()).unsubscribe());
 }
 
 TEST(TestUdp, TestSpecialAddressesBind)
 {
-  ASSERT_THROW(UdpSocket::Builder(broadcast_ip, host_port), UsageError);
-  ASSERT_NO_THROW(UdpSocket::Builder(any_ip, host_port).bind());
+  ASSERT_THROW(UdpSocket::Builder(g_broadcast_ip, g_host_port), UsageError);
+  ASSERT_NO_THROW(UdpSocket::Builder(g_any_ip, g_host_port).bind());
 }
 
 TEST(TestUdp, TestJoiningInvalidMulticastGroup)
 {
   ASSERT_THROW(
-    UdpSocket::Builder(localhost_ip, host_port).join_multicast_group(broadcast_ip).bind(),
+    UdpSocket::Builder(g_localhost_ip, g_host_port).join_multicast_group(g_broadcast_ip).bind(),
     SocketError);
 }
 
@@ -81,11 +81,11 @@ TEST(TestUdp, TestBufferResize)
 
   // Setting buffer sizes up to and including rmem_max shall succeed
   ASSERT_NO_THROW(
-    UdpSocket::Builder(localhost_ip, host_port).set_socket_buffer_size(rmem_max).bind());
+    UdpSocket::Builder(g_localhost_ip, g_host_port).set_socket_buffer_size(rmem_max).bind());
 
   // Linux only supports sizes up to INT32_MAX
   ASSERT_THROW(
-    UdpSocket::Builder(localhost_ip, host_port)
+    UdpSocket::Builder(g_localhost_ip, g_host_port)
       .set_socket_buffer_size(static_cast<size_t>(INT32_MAX) + 1)
       .bind(),
     UsageError);
@@ -94,49 +94,51 @@ TEST(TestUdp, TestBufferResize)
 TEST(TestUdp, TestCorrectUsageIsEnforced)
 {
   // The following functions can be called in any order, any number of times
-  ASSERT_NO_THROW(UdpSocket::Builder(localhost_ip, host_port)
+  ASSERT_NO_THROW(UdpSocket::Builder(g_localhost_ip, g_host_port)
                     .set_polling_interval(20)
                     .set_socket_buffer_size(3000)
                     .set_mtu(1600)
-                    .limit_to_sender(sender_ip, sender_port)
+                    .limit_to_sender(g_sender_ip, g_sender_port)
                     .set_polling_interval(20)
                     .set_socket_buffer_size(3000)
                     .set_mtu(1600)
-                    .set_send_destination(sender_ip, sender_port)
-                    .limit_to_sender(sender_ip, sender_port)
+                    .set_send_destination(g_sender_ip, g_sender_port)
+                    .limit_to_sender(g_sender_ip, g_sender_port)
                     .bind());
 
   // Only one multicast group can be joined
   ASSERT_THROW(
-    UdpSocket::Builder(localhost_ip, host_port)
-      .join_multicast_group(multicast_group)
-      .join_multicast_group(multicast_group2),
+    UdpSocket::Builder(g_localhost_ip, g_host_port)
+      .join_multicast_group(g_multicast_group)
+      .join_multicast_group(g_multicast_group2),
     UsageError);
 
   // Pre-existing subscriptions shall be gracefully unsubscribed when a new subscription is created
-  ASSERT_NO_THROW(
-    UdpSocket::Builder(localhost_ip, host_port).bind().subscribe(empty_cb()).subscribe(empty_cb()));
+  ASSERT_NO_THROW(UdpSocket::Builder(g_localhost_ip, g_host_port)
+                    .bind()
+                    .subscribe(empty_cb())
+                    .subscribe(empty_cb()));
 
   // Explicitly unsubscribing shall be supported
-  ASSERT_NO_THROW(UdpSocket::Builder(localhost_ip, host_port)
+  ASSERT_NO_THROW(UdpSocket::Builder(g_localhost_ip, g_host_port)
                     .bind()
                     .subscribe(empty_cb())
                     .unsubscribe()
                     .subscribe(empty_cb()));
 
   // Unsubscribing on a non-subscribed socket shall also be supported
-  ASSERT_NO_THROW(UdpSocket::Builder(localhost_ip, host_port).bind().unsubscribe());
+  ASSERT_NO_THROW(UdpSocket::Builder(g_localhost_ip, g_host_port).bind().unsubscribe());
 }
 
 TEST(TestUdp, TestReceiving)
 {
   const std::vector<uint8_t> payload{1, 2, 3};
-  auto sock = UdpSocket::Builder(localhost_ip, host_port).bind();
+  auto sock = UdpSocket::Builder(g_localhost_ip, g_host_port).bind();
 
-  auto err_no_opt = udp_send(localhost_ip, host_port, payload);
+  auto err_no_opt = udp_send(g_localhost_ip, g_host_port, payload);
   if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
 
-  auto result_opt = receive_once(sock, send_receive_timeout);
+  auto result_opt = receive_once(sock, g_send_receive_timeout);
 
   ASSERT_TRUE(result_opt.has_value());
   auto const & [recv_payload, metadata] = result_opt.value();
@@ -152,12 +154,12 @@ TEST(TestUdp, TestReceivingOversized)
   const size_t mtu = 1500;
   std::vector<uint8_t> payload;
   payload.resize(mtu + 1, 0x42);
-  auto sock = UdpSocket::Builder(localhost_ip, host_port).set_mtu(mtu).bind();
+  auto sock = UdpSocket::Builder(g_localhost_ip, g_host_port).set_mtu(mtu).bind();
 
-  auto err_no_opt = udp_send(localhost_ip, host_port, payload);
+  auto err_no_opt = udp_send(g_localhost_ip, g_host_port, payload);
   if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
 
-  auto result_opt = receive_once(sock, send_receive_timeout);
+  auto result_opt = receive_once(sock, g_send_receive_timeout);
 
   ASSERT_TRUE(result_opt.has_value());
   auto const & [recv_payload, metadata] = result_opt.value();
@@ -170,13 +172,14 @@ TEST(TestUdp, TestReceivingOversized)
 TEST(TestUdp, TestFilteringSender)
 {
   std::vector<uint8_t> payload{1, 2, 3};
-  auto sock =
-    UdpSocket::Builder(localhost_ip, host_port).limit_to_sender(sender_ip, sender_port).bind();
+  auto sock = UdpSocket::Builder(g_localhost_ip, g_host_port)
+                .limit_to_sender(g_sender_ip, g_sender_port)
+                .bind();
 
-  auto err_no_opt = udp_send(localhost_ip, host_port, payload);
+  auto err_no_opt = udp_send(g_localhost_ip, g_host_port, payload);
   if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
 
-  auto result_opt = receive_once(sock, send_receive_timeout);
+  auto result_opt = receive_once(sock, g_send_receive_timeout);
   ASSERT_FALSE(result_opt.has_value());
 }
 
@@ -186,17 +189,17 @@ TEST(TestUdp, TestMoveable)
 
   size_t n_received = 0;
 
-  auto sock = UdpSocket::Builder(localhost_ip, host_port).bind();
+  auto sock = UdpSocket::Builder(g_localhost_ip, g_host_port).bind();
   sock.subscribe([&n_received](const auto &, const auto &) { n_received++; });
 
-  auto err_no_opt = udp_send(localhost_ip, host_port, payload);
+  auto err_no_opt = udp_send(g_localhost_ip, g_host_port, payload);
   if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
 
   // The subscription moves to the new socket object
   UdpSocket sock2{std::move(sock)};
   ASSERT_TRUE(sock2.is_subscribed());
 
-  err_no_opt = udp_send(localhost_ip, host_port, payload);
+  err_no_opt = udp_send(g_localhost_ip, g_host_port, payload);
   if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
 
   std::this_thread::sleep_for(100ms);
@@ -208,17 +211,17 @@ TEST(TestUdp, TestSending)
   const std::vector<uint8_t> payload{1, 2, 3};
 
   // A socket without a send destination shall not be able to send
-  auto sock = UdpSocket::Builder(localhost_ip, host_port).bind();
+  auto sock = UdpSocket::Builder(g_localhost_ip, g_host_port).bind();
   ASSERT_THROW(sock.send(payload), UsageError);
 
   // A socket with a send destination shall be able to send
-  auto sock2 = UdpSocket::Builder(localhost_ip, host_port)
-                 .set_send_destination(localhost_ip, host_port)
+  auto sock2 = UdpSocket::Builder(g_localhost_ip, g_host_port)
+                 .set_send_destination(g_localhost_ip, g_host_port)
                  .bind();
   ASSERT_NO_THROW(sock2.send(payload));
 
   // The sent payload shall be received by the destination
-  auto result3 = receive_once(sock2, send_receive_timeout);
+  auto result3 = receive_once(sock2, g_send_receive_timeout);
   ASSERT_TRUE(result3.has_value());
   auto const & [recv_payload, metadata] = result3.value();
   ASSERT_EQ(recv_payload, payload);
