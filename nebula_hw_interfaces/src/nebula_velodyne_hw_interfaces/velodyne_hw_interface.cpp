@@ -103,16 +103,20 @@ Status VelodyneHwInterface::get_sensor_configuration(SensorConfigurationBase & s
 
 VelodyneStatus VelodyneHwInterface::init_http_client()
 {
-  try {
-    http_client_driver_->init_client(sensor_configuration_->sensor_ip, 80);
-    if (!http_client_driver_->client()->isOpen()) {
-      http_client_driver_->client()->open();
+  while (true) {
+    try {
+      http_client_driver_->init_client(sensor_configuration_->sensor_ip, 80);
+      if (!http_client_driver_->client()->isOpen()) {
+        http_client_driver_->client()->open();
+      }
+      return Status::OK;
+    } catch (const std::exception & ex) {
+      RCLCPP_INFO_ONCE(
+        *parent_node_logger_, "Cannot connect to lidar because of: %s. Will keep trying...",
+        ex.what());
+      std::this_thread::sleep_for(std::chrono::seconds(5));
     }
-  } catch (const std::exception & ex) {
-    VelodyneStatus status = Status::HTTP_CONNECTION_ERROR;
-    return status;
   }
-  return Status::OK;
 }
 
 void VelodyneHwInterface::string_callback(const std::string & str)
