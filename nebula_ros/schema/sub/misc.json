@@ -101,9 +101,7 @@
               "default": "\"\""
             }
           },
-          "required": [
-            "path"
-          ],
+          "required": ["path"],
           "additionalProperties": false
         }
       },

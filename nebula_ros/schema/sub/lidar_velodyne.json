@@ -5,11 +5,7 @@
   "definitions": {
     "sensor_model": {
       "$ref": "hardware.json#/definitions/sensor_model",
-      "enum": [
-        "VLP16",
-        "VLP32",
-        "VLS128"
-      ]
+      "enum": ["VLP16", "VLP32", "VLS128"]
     },
     "calibration_file": {
       "$ref": "misc.json#/definitions/calibration_file",
@@ -17,12 +13,7 @@
     },
     "return_mode": {
       "$ref": "misc.json#/definitions/return_mode",
-      "enum": [
-        "SingleStrongest",
-        "SingleLast",
-        "Dual",
-        "SingleFirst"
-      ]
+      "enum": ["SingleStrongest", "SingleLast", "Dual", "SingleFirst"]
     },
     "rotation_speed": {
       "$ref": "hardware.json#/definitions/rotation_speed",
