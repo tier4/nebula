@@ -27,13 +27,13 @@
 #include <memory>
 #include <string>
 
-#ifndef _SRC_CALIBRATION_DIR_PATH
-#define _SRC_CALIBRATION_DIR_PATH ""
+#ifndef NEBULA_TESTS__HESAI__HESAI_ROS_DECODER_TEST_HPP_
+#define NEBULA_TESTS__HESAI__HESAI_ROS_DECODER_TEST_HPP_
 #endif
 
 #ifndef _SRC_RESOURCES_DIR_PATH
 #define _SRC_RESOURCES_DIR_PATH ""
-#endif
+#endif  // NEBULA_TESTS__HESAI__HESAI_ROS_DECODER_TEST_HPP_
 
 namespace nebula::ros
 {
