@@ -59,9 +59,7 @@
         },
         "sensor_model": {
           "$ref": "sub/lidar_hesai.json#/definitions/sensor_model",
-          "enum": [
-            "PandarXT32M"
-          ]
+          "enum": ["PandarXT32M"]
         },
         "calibration_file": {
           "$ref": "sub/lidar_hesai.json#/definitions/calibration_file"
@@ -146,13 +144,9 @@
         },
         "additionalProperties": false
       },
-      "required": [
-        "ros__parameters"
-      ]
+      "required": ["ros__parameters"]
     }
   },
-  "required": [
-    "/**"
-  ],
+  "required": ["/**"],
   "additionalProperties": false
 }
