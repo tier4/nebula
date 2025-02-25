@@ -161,8 +161,7 @@ void VelodyneHwMonitorWrapper::initialize_velodyne_diagnostics()
   diagnostics_updater_.add(
     "velodyne_voltage", this, &VelodyneHwMonitorWrapper::velodyne_check_voltage);
 
-  diagnostics_update_timer_ = parent_node_->create_wall_timer(
-    std::chrono::milliseconds(1000), [this] { diagnostics_updater_.force_update(); });
+  diagnostics_updater_.setPeriod(1.0);
 }
 
 void VelodyneHwMonitorWrapper::on_velodyne_diagnostics_timer()
