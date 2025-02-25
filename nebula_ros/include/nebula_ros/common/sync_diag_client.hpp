@@ -90,9 +90,13 @@ public:
 private:
   static std::string get_hostname()
   {
-    std::array<char, HOST_NAME_MAX + 1> hostname_raw;  // NOLINT
+    std::array<char, HOST_NAME_MAX + 1> hostname_raw{};
     auto result = gethostname(hostname_raw.data(), hostname_raw.size());
-    if (result == -1) throw std::runtime_error(util::errno_to_string(errno));
+
+    if (result == -1) {
+      throw std::runtime_error(util::errno_to_string(errno));
+    }
+
     hostname_raw.at(hostname_raw.size() - 1) = '\0';
     return std::string{hostname_raw.data()};
   }
