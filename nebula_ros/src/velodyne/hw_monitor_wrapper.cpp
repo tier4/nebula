@@ -31,18 +31,19 @@ VelodyneHwMonitorWrapper::VelodyneHwMonitorWrapper(
   std::cout << "Get model name and serial." << std::endl;
   auto str = hw_interface_->get_snapshot();
   if (!str.has_value()) return;
-  current_snapshot_time_.reset(new rclcpp::Time(parent_node_->now()));
-  current_snapshot_tree_ =
+
+  auto snapshot_tree =
     std::make_shared<boost::property_tree::ptree>(hw_interface_->parse_json(str.value()));
   current_diag_tree_ =
-    std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("diag"));
+    std::make_shared<boost::property_tree::ptree>(snapshot_tree->get_child("diag"));
   current_status_tree_ =
-    std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("status"));
-  current_snapshot_.reset(new std::string(str.value()));
+    std::make_shared<boost::property_tree::ptree>(snapshot_tree->get_child("status"));
 
   try {
-    info_model_ = get_ptree_value(current_snapshot_tree_, mtx_snapshot_, key_info_model);
-    info_serial_ = get_ptree_value(current_snapshot_tree_, mtx_snapshot_, key_info_serial);
+    // get_ptree_value requires a mutex but we are only accessing a local variable
+    std::mutex dummy_mtx;
+    info_model_ = get_ptree_value(snapshot_tree, dummy_mtx, key_info_model);
+    info_serial_ = get_ptree_value(snapshot_tree, dummy_mtx, key_info_serial);
     RCLCPP_INFO_STREAM(logger_, "Model: " << info_model_);
     RCLCPP_INFO_STREAM(logger_, "Serial: " << info_serial_);
   } catch (boost::bad_lexical_cast & ex) {
@@ -63,10 +64,6 @@ void VelodyneHwMonitorWrapper::initialize_velodyne_diagnostics()
   RCLCPP_INFO_STREAM(logger_, "Hardware ID: " << hardware_id);
 
   if (show_advanced_diagnostics_) {
-    diagnostics_updater_.add(
-      "velodyne_snapshot-" + sensor_configuration_->frame_id, this,
-      &VelodyneHwMonitorWrapper::velodyne_check_snapshot);
-
     diagnostics_updater_.add(
       "velodyne_volt_temp_top_hv-" + sensor_configuration_->frame_id, this,
       &VelodyneHwMonitorWrapper::velodyne_check_top_hv);
@@ -165,55 +162,7 @@ void VelodyneHwMonitorWrapper::initialize_velodyne_diagnostics()
   diagnostics_updater_.add(
     "velodyne_voltage", this, &VelodyneHwMonitorWrapper::velodyne_check_voltage);
 
-  {
-    std::lock_guard lock(mtx_snapshot_);
-    current_snapshot_.reset(new std::string(""));
-    current_snapshot_time_.reset(new rclcpp::Time(parent_node_->now()));
-  }
-
-  current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
-
-  auto on_timer_snapshot = [this] { on_velodyne_snapshot_timer(); };
-  diagnostics_snapshot_timer_ = parent_node_->create_wall_timer(
-    std::chrono::milliseconds(diag_span_), std::move(on_timer_snapshot));
-
-  auto on_timer_update = [this] {
-    auto now = parent_node_->now();
-    double dif;
-    {
-      std::lock_guard lock(mtx_snapshot_);
-      dif = (now - *current_snapshot_time_).seconds();
-    }
-    if (diag_span_ * 2.0 < dif * 1000) {
-      current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::STALE;
-      RCLCPP_DEBUG_STREAM(logger_, "STALE");
-    } else {
-      current_diag_status_ = diagnostic_msgs::msg::DiagnosticStatus::OK;
-      RCLCPP_DEBUG_STREAM(logger_, "OK");
-    }
-    diagnostics_updater_.force_update();
-  };
-  diagnostics_update_timer_ =
-    parent_node_->create_wall_timer(std::chrono::milliseconds(1000), std::move(on_timer_update));
-}
-
-void VelodyneHwMonitorWrapper::on_velodyne_snapshot_timer()
-{
-  auto str = hw_interface_->get_snapshot();
-  if (!str.has_value()) return;
-  auto ptree = hw_interface_->parse_json(str.value());
-
-  {
-    std::lock_guard lock(mtx_snapshot_);
-
-    current_snapshot_time_.reset(new rclcpp::Time(parent_node_->now()));
-    current_snapshot_tree_ = std::make_shared<boost::property_tree::ptree>(ptree);
-    current_diag_tree_ =
-      std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("diag"));
-    current_status_tree_ =
-      std::make_shared<boost::property_tree::ptree>(current_snapshot_tree_->get_child("status"));
-    current_snapshot_.reset(new std::string(str.value()));
-  }
+  diagnostics_updater_.setPeriod(1.0);
 }
 
 void VelodyneHwMonitorWrapper::on_velodyne_diagnostics_timer()
@@ -1237,14 +1186,6 @@ void VelodyneHwMonitorWrapper::velodyne_check_laser_state(
     diagnostics.add("sensor", sensor_configuration_->frame_id);
     diagnostics.summary(std::get<1>(tpl), std::get<2>(tpl));
   }
-}
-
-void VelodyneHwMonitorWrapper::velodyne_check_snapshot(
-  diagnostic_updater::DiagnosticStatusWrapper & diagnostics)
-{
-  uint8_t level = current_diag_status_;
-  diagnostics.add("sensor", sensor_configuration_->frame_id);
-  diagnostics.summary(level, *current_snapshot_);
 }
 
 void VelodyneHwMonitorWrapper::velodyne_check_status(
