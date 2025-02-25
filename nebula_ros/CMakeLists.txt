@@ -280,6 +280,7 @@ ament_export_dependencies(
     velodyne_msgs
     visualization_msgs
     yaml-cpp
+    sync_tooling_msgs
 )
 
 ament_package()
