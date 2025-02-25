@@ -46,8 +46,8 @@ class HttpClient
   static constexpr uint8_t http_version = 11;
 
 public:
-  static constexpr char content_type_json[] = "application/json";
-  static constexpr char content_type_cotest_stream[] = "application/octet-stream";
+  static constexpr char const * const content_type_json = "application/json";
+  static constexpr char const * const content_type_cotest_stream = "application/octet-stream";
 
   struct HttpResponse
   {
