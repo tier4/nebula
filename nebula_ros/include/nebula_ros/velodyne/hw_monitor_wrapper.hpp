@@ -265,7 +265,6 @@ private:
 
   rclcpp::Logger logger_;
   diagnostic_updater::Updater diagnostics_updater_;
-  nebula::Status status_;
 
   const std::shared_ptr<nebula::drivers::VelodyneHwInterface> hw_interface_;
   rclcpp::Node * const parent_node_;
@@ -275,8 +274,6 @@ private:
   uint16_t diag_span_;
   bool show_advanced_diagnostics_;
 
-  rclcpp::TimerBase::SharedPtr diagnostics_update_timer_;
-  rclcpp::TimerBase::SharedPtr diagnostics_diag_timer_;
 
   std::shared_ptr<boost::property_tree::ptree> current_diag_tree_;
 
