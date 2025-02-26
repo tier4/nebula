@@ -336,6 +336,122 @@ void ContinentalARS548DecoderWrapper::packets_callback(
   }
 }
 
+sensor_msgs::msg::PointCloud2 ContinentalARS548DecoderWrapper::convert_to_autoware_radar_detections(
+  [[maybe_unused]] const continental_msgs::msg::ContinentalArs548DetectionList & msg)
+{
+  return sensor_msgs::msg::PointCloud2();
+}
+
+autoware_sensing_msgs::msg::RadarObjects
+ContinentalARS548DecoderWrapper::convert_to_autoware_radar_objects(
+  const continental_msgs::msg::ContinentalArs548ObjectList & msg)
+{
+  autoware_sensing_msgs::msg::RadarObjects autoware_objects;
+  autoware_objects.header = msg.header;
+  autoware_objects.objects.reserve(msg.objects.size());
+
+  for (const auto & continental_object : msg.objects) {
+    autoware_sensing_msgs::msg::RadarObject autoware_object;
+    autoware_object.object_id = continental_object.object_id;
+    autoware_object.age = continental_object.age;
+    autoware_object.measurement_status = continental_object.status_measurement;
+    autoware_object.orientation = continental_object.orientation;
+    autoware_object.orientation_std = continental_object.orientation_std;
+    autoware_object.orientation_rate = continental_object.orientation_rate_mean;
+    autoware_object.orientation_rate_std = continental_object.orientation_rate_std;
+    autoware_object.existence_probability = continental_object.existence_probability;
+
+    // Position
+    const double half_length = 0.5 * continental_object.shape_length_edge_mean;
+    const double half_width = 0.5 * continental_object.shape_width_edge_mean;
+    // There are 9 possible reference points. In the case of an invalid reference point, we fall
+    // back to the center
+    const int reference_index = std::min<int>(continental_object.position_reference, 8);
+    const double & yaw = continental_object.orientation;
+    autoware_object.position.x =
+      continental_object.position.x +
+      std::cos(yaw) * half_length * reference_to_center[reference_index][0] -
+      std::sin(yaw) * half_width * reference_to_center[reference_index][1];
+    autoware_object.position.y =
+      continental_object.position.y +
+      std::sin(yaw) * half_length * reference_to_center[reference_index][0] +
+      std::cos(yaw) * half_width * reference_to_center[reference_index][1];
+    autoware_object.position.z = continental_object.position.z;
+
+    autoware_object.velocity = continental_object.absolute_velocity;
+    autoware_object.acceleration = continental_object.absolute_acceleration;
+    autoware_object.shape.x = continental_object.shape_length_edge_mean;
+    autoware_object.shape.y = continental_object.shape_width_edge_mean;
+    autoware_object.shape.z = 1.f;
+
+    autoware_sensing_msgs::msg::RadarClassification classification;
+    autoware_object.classifications.reserve(10);
+
+    classification.label = autoware_sensing_msgs::msg::RadarClassification::UNKNOWN;
+    classification.probability = continental_object.classification_unknown;
+    autoware_object.classifications.push_back(classification);
+
+    classification.label = autoware_sensing_msgs::msg::RadarClassification::CAR;
+    classification.probability = continental_object.classification_car;
+    autoware_object.classifications.push_back(classification);
+
+    classification.label = autoware_sensing_msgs::msg::RadarClassification::TRUCK;
+    classification.probability = continental_object.classification_truck;
+    autoware_object.classifications.push_back(classification);
+
+    classification.label = autoware_sensing_msgs::msg::RadarClassification::MOTORCYCLE;
+    classification.probability = continental_object.classification_motorcycle;
+    autoware_object.classifications.push_back(classification);
+
+    classification.label = autoware_sensing_msgs::msg::RadarClassification::BICYCLE;
+    classification.probability = continental_object.classification_bicycle;
+    autoware_object.classifications.push_back(classification);
+
+    classification.label = autoware_sensing_msgs::msg::RadarClassification::PEDESTRIAN;
+    classification.probability = continental_object.classification_pedestrian;
+    autoware_object.classifications.push_back(classification);
+
+    classification.label = autoware_sensing_msgs::msg::RadarClassification::ANIMAL;
+    classification.probability = continental_object.classification_animal;
+    autoware_object.classifications.push_back(classification);
+
+    classification.label = autoware_sensing_msgs::msg::RadarClassification::HAZARD;
+    classification.probability = continental_object.classification_hazard;
+    autoware_object.classifications.push_back(classification);
+
+    auto fill_cov_matrix =
+      [](const double & x, const double & y, const double & xy, std::array<float, 6> & cov_matrix) {
+        cov_matrix[0] = static_cast<float>(x * x);
+        cov_matrix[1] = static_cast<float>(xy);
+        cov_matrix[2] = autoware_sensing_msgs::msg::RadarObject::INVALID_COV_VALUE;
+        cov_matrix[3] = static_cast<float>(y * y);
+        cov_matrix[4] = autoware_sensing_msgs::msg::RadarObject::INVALID_COV_VALUE;
+        cov_matrix[5] = autoware_sensing_msgs::msg::RadarObject::INVALID_COV_VALUE;
+      };
+
+    fill_cov_matrix(
+      continental_object.position_std.x, continental_object.position_std.y,
+      continental_object.position_covariance_xy, autoware_object.position_cov);
+
+    fill_cov_matrix(
+      continental_object.absolute_velocity_std.x, continental_object.absolute_velocity_std.y,
+      continental_object.absolute_velocity_covariance_xy, autoware_object.velocity_cov);
+
+    fill_cov_matrix(
+      continental_object.absolute_acceleration_std.x,
+      continental_object.absolute_acceleration_std.y,
+      continental_object.absolute_acceleration_covariance_xy, autoware_object.acceleration_cov);
+
+    std::fill(
+      autoware_object.shape_cov.begin(), autoware_object.shape_cov.end(),
+      autoware_sensing_msgs::msg::RadarObject::INVALID_COV_VALUE);
+
+    autoware_objects.objects.push_back(autoware_object);
+  }
+
+  return autoware_objects;
+}
+
 pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr
 ContinentalARS548DecoderWrapper::convert_to_pointcloud(
   const continental_msgs::msg::ContinentalArs548DetectionList & msg)

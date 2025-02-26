@@ -23,6 +23,9 @@
 #include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <autoware_sensing_msgs/msg/radar_classification.hpp>
+#include <autoware_sensing_msgs/msg/radar_info.hpp>
+#include <autoware_sensing_msgs/msg/radar_objects.hpp>
 #include <continental_msgs/msg/continental_ars548_detection.hpp>
 #include <continental_msgs/msg/continental_ars548_detection_list.hpp>
 #include <continental_msgs/msg/continental_ars548_object.hpp>
@@ -86,6 +89,18 @@ private:
   nebula::Status initialize_driver(
     const std::shared_ptr<
       const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config);
+
+  /// @brief Convert ARS548 detections to a autoware's radar PointCloud2 msg
+  /// @param msg The ARS548 objects list msg
+  /// @return Resulting PointCloud2 msg
+  sensor_msgs::msg::PointCloud2 convert_to_autoware_radar_detections(
+    const continental_msgs::msg::ContinentalArs548DetectionList & msg);
+
+  /// @brief Convert ARS548 objects to a autoware's PointCloud2 msg
+  /// @param msg The ARS548 objects list msg
+  /// @return Resulting RadarObjects msg
+  autoware_sensing_msgs::msg::RadarObjects convert_to_autoware_radar_objects(
+    const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 
   /// @brief Convert ARS548 detections to a pointcloud
   /// @param msg The ARS548 detection list msg
