@@ -67,7 +67,8 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   RCLCPP_INFO_STREAM(logger_, "Hardware ID: " + hardware_id);
 
   if (config->sync_master) {
-    sync_diag_client_.emplace(config->sync_master->first, config->sync_master->second, hardware_id);
+    sync_diag_client_.emplace(
+      config->sync_master->first, config->sync_master->second, hardware_id, config->ptp_domain);
   }
 
   initialize_hesai_diagnostics(monitor_enabled);
@@ -242,6 +243,12 @@ void HesaiHwMonitorWrapper::on_sync_diag_timer()
 
   try {
     auto port_ds = hw_interface_->get_ptp_diag_port();
+    auto result = sync_diag_client_->submit_port_state_update(
+      port_ds.portIdentity.clock_id.to_json(), port_ds.portIdentity.port_number.value(),
+      port_ds.portState);
+    if (!result.has_value()) {
+      RCLCPP_WARN_STREAM(logger_, "Could not send port state update: " << result.error());
+    }
   } catch (const std::runtime_error & e) {
     RCLCPP_ERROR_STREAM(logger_, "Could not get port dataset from sensor: " << e.what());
   }
@@ -249,11 +256,14 @@ void HesaiHwMonitorWrapper::on_sync_diag_timer()
   try {
     auto time_status_np = hw_interface_->get_ptp_diag_time();
     if (time_status_np.gmPresent.value()) {
-      sync_diag_client_->submit_master_update(
+      auto result = sync_diag_client_->submit_master_update(
         time_status_np.gmIdentity.to_json().template get<std::string>());
+      if (!result.has_value()) {
+        RCLCPP_WARN_STREAM(logger_, "Could not send clock master update: " << result.error());
+      }
     }
   } catch (const std::runtime_error & e) {
-    RCLCPP_ERROR_STREAM(logger_, "Could not get port dataset from sensor: " << e.what());
+    RCLCPP_ERROR_STREAM(logger_, "Could not get time status dataset from sensor: " << e.what());
   }
 }
 
