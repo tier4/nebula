@@ -19,7 +19,6 @@ VelodyneHwMonitorWrapper::VelodyneHwMonitorWrapper(
 : logger_(parent_node->get_logger().get_child("HwMonitor")),
   diagnostics_updater_(
     (parent_node->declare_parameter<bool>("diagnostic_updater.use_fqn", true), parent_node)),
-  status_(Status::OK),
   hw_interface_(hw_interface),
   parent_node_(parent_node),
   sensor_configuration_(config)
