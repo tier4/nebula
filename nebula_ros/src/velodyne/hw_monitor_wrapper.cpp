@@ -24,9 +24,17 @@ VelodyneHwMonitorWrapper::VelodyneHwMonitorWrapper(
   parent_node_(parent_node),
   sensor_configuration_(config)
 {
-  diag_span_ = parent_node->declare_parameter<uint16_t>("diag_span", param_read_only());
-  show_advanced_diagnostics_ =
-    parent_node->declare_parameter<bool>("advanced_diagnostics", param_read_only());
+  if (parent_node->has_parameter("diag_span")) {
+    diag_span_ = parent_node->get_parameter("diag_span").as_int();
+  } else {
+    diag_span_ = parent_node->declare_parameter<uint16_t>("diag_span", param_read_only());
+  }
+  if (parent_node->has_parameter("advanced_diagnostics")) {
+    show_advanced_diagnostics_ = parent_node->get_parameter("advanced_diagnostics").as_bool();
+  } else {
+    show_advanced_diagnostics_ =
+      parent_node->declare_parameter<bool>("advanced_diagnostics", param_read_only());
+  }
 
   std::cout << "Get model name and serial." << std::endl;
   auto str = hw_interface_->get_snapshot();

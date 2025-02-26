@@ -31,8 +31,12 @@ VelodyneDecoderWrapper::VelodyneDecoderWrapper(
       "VelodyneDecoderWrapper cannot be instantiated without a valid config!");
   }
 
-  calibration_file_path_ =
-    parent_node->declare_parameter<std::string>("calibration_file", param_read_write());
+  if (parent_node->has_parameter("calibration_file")) {
+    calibration_file_path_ = parent_node->get_parameter("calibration_file").as_string();
+  } else {
+    calibration_file_path_ =
+      parent_node->declare_parameter<std::string>("calibration_file", param_read_write());
+  }
   auto calibration_result = get_calibration_data(calibration_file_path_);
 
   if (!calibration_result.has_value()) {
