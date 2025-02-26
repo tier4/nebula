@@ -23,6 +23,9 @@
 #include <sync_tooling_msgs/clock_diff_measurement.pb.h>
 #include <sync_tooling_msgs/clock_id.pb.h>
 #include <sync_tooling_msgs/clock_master_update.pb.h>
+#include <sync_tooling_msgs/graph_update.pb.h>
+#include <sync_tooling_msgs/port_state.pb.h>
+#include <sync_tooling_msgs/port_state_update.pb.h>
 #include <sync_tooling_msgs/ptp_parent_update.pb.h>
 #include <sync_tooling_msgs/system_clock_id.pb.h>
 #include <unistd.h>
@@ -42,49 +45,72 @@ namespace nebula::ros
 class SyncDiagClient
 {
 public:
-  SyncDiagClient(std::string master_ip, uint16_t master_port, std::string sensor_id)
+  using send_result_t = nebula::util::expected<std::monostate, std::string>;
+
+  SyncDiagClient(
+    std::string master_ip, uint16_t master_port, std::string sensor_id, uint8_t ptp_domain_id)
   : http_client_(std::move(master_ip), std::to_string(master_port)),
     hostname_(get_hostname()),
-    sensor_id_(std::move(sensor_id))
+    sensor_id_(std::move(sensor_id)),
+    ptp_domain_id_(ptp_domain_id)
   {
   }
 
-  void submit_clock_alias(const std::string & ptp_clock_id)
+  [[nodiscard]] send_result_t submit_clock_alias(const std::string & ptp_clock_id)
   {
-    ClockAliasUpdate u;
-    u.add_aliases()->mutable_frame_id()->set_frame(sensor_id_);
-    u.add_aliases()->mutable_ptp_clock_id()->set_id(ptp_clock_id);
-    send_proto(u);
+    GraphUpdate gu;
+    ClockAliasUpdate * u = gu.mutable_clock_alias_update();
+    u->add_aliases()->mutable_frame_id()->set_frame(sensor_id_);
+    u->add_aliases()->mutable_ptp_clock_id()->set_id(ptp_clock_id);
+    return send_proto(gu);
   }
 
-  void submit_clock_diff_measurement(int64_t diff_ns)
+  [[nodiscard]] send_result_t submit_clock_diff_measurement(int64_t diff_ns)
   {
-    ClockDiffMeasurement m{};
-    m.set_diff_ns(diff_ns);
-    m.mutable_src()->mutable_system_clock_id()->set_hostname(hostname_);
-    m.mutable_dst()->mutable_frame_id()->set_frame(sensor_id_);
-    send_proto(m);
+    GraphUpdate gu;
+    ClockDiffMeasurement * m = gu.mutable_clock_diff_measurement();
+    m->set_diff_ns(diff_ns);
+    m->mutable_src()->mutable_system_clock_id()->set_hostname(hostname_);
+    m->mutable_dst()->mutable_frame_id()->set_frame(sensor_id_);
+    return send_proto(gu);
   }
 
-  void submit_master_update(std::optional<std::string> master_clock_id)
+  [[nodiscard]] send_result_t submit_master_update(std::optional<std::string> master_clock_id)
   {
-    ClockMasterUpdate u;
-    u.mutable_clock_id()->mutable_frame_id()->set_frame(sensor_id_);
+    GraphUpdate gu;
+    ClockMasterUpdate * u = gu.mutable_clock_master_update();
+    u->mutable_clock_id()->mutable_frame_id()->set_frame(sensor_id_);
     if (master_clock_id) {
-      u.mutable_master()->mutable_ptp_clock_id()->set_id(master_clock_id.value());
+      u->mutable_master()->mutable_ptp_clock_id()->set_id(master_clock_id.value());
     } else {
-      u.clear_master();
+      u->clear_master();
     }
-    send_proto(u);
+    return send_proto(gu);
   }
 
-  void submit_parent_port(const std::string & parent_clock_id, uint16_t port_number)
+  [[nodiscard]] send_result_t submit_parent_port(
+    const std::string & parent_clock_id, uint16_t port_number)
   {
-    PtpParentUpdate u;
-    u.mutable_clock_id()->mutable_frame_id()->set_frame(sensor_id_);
-    u.mutable_parent()->mutable_clock_id()->mutable_ptp_clock_id()->set_id(parent_clock_id);
-    u.mutable_parent()->set_port_number(port_number);
-    send_proto(u);
+    GraphUpdate gu;
+    PtpParentUpdate * u = gu.mutable_ptp_parent_update();
+    u->mutable_clock_id()->mutable_frame_id()->set_frame(sensor_id_);
+    u->mutable_parent()->mutable_clock_id()->mutable_ptp_clock_id()->set_id(parent_clock_id);
+    u->mutable_parent()->set_port_number(port_number);
+    u->mutable_parent()->set_ptp_domain(ptp_domain_id_);
+    return send_proto(gu);
+  }
+
+  [[nodiscard]] send_result_t submit_port_state_update(
+    const std::string & ptp_clock_id, uint16_t port_number, uint8_t port_state)
+  {
+    GraphUpdate gu;
+    PortStateUpdate * u = gu.mutable_port_state_update();
+    u->mutable_port_id()->mutable_clock_id()->mutable_ptp_clock_id()->set_id(ptp_clock_id);
+    u->mutable_port_id()->set_port_number(port_number);
+    u->mutable_port_id()->set_ptp_domain(ptp_domain_id_);
+
+    u->set_port_state(static_cast<PortState>(port_state));
+    return send_proto(gu);
   }
 
 private:
@@ -101,8 +127,7 @@ private:
     return std::string{hostname_raw.data()};
   }
 
-  nebula::util::expected<std::monostate, std::string> send_proto(
-    const google::protobuf::Message & msg)
+  [[nodiscard]] send_result_t send_proto(const GraphUpdate & msg)
   {
     bool success = msg.SerializeToString(&serialization_buffer_);
     if (!success) {
@@ -113,6 +138,7 @@ private:
     if (
       last_request_ &&
       last_request_->wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
+      last_request_.reset();
       return std::string("Previous request still in flight");
     }
 
@@ -128,6 +154,7 @@ private:
 
   std::string hostname_;
   std::string sensor_id_;
+  uint8_t ptp_domain_id_;
 
   std::string serialization_buffer_;
   std::optional<std::future<drivers::connections::HttpClient::HttpResponse>> last_request_;
