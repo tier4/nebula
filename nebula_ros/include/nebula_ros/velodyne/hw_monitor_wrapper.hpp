@@ -274,7 +274,6 @@ private:
   uint16_t diag_span_;
   bool show_advanced_diagnostics_;
 
-
   std::shared_ptr<boost::property_tree::ptree> current_diag_tree_;
 
   std::mutex mtx_status_;
