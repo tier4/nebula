@@ -59,8 +59,6 @@ struct HesaiDecodeFilteredInfo
     nlohmann::ordered_json distance_j;
     distance_j["name"] = "distance";
     distance_j["filtered_count"] = distance_filtered_count;
-    // distance_j["cloud_distance_min_m"] = cloud_distance_min_m;
-    // distance_j["cloud_distance_max_m"] = cloud_distance_max_m;
     nlohmann::ordered_json fov_j;
     fov_j["name"] = "fov";
     fov_j["filtered_count"] = fov_filtered_count;
