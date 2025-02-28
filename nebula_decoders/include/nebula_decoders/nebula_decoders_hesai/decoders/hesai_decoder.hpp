@@ -48,57 +48,55 @@ struct HesaiDecodeFilteredInfo
   uint64_t total_kept_point_count = 0;
   uint64_t invalid_packet_count = 0;
   float cloud_distance_min_m = std::numeric_limits<float>::infinity();
-  float cloud_distance_max_m = std::numeric_limits<float>::lowest();
+  float cloud_distance_max_m = -std::numeric_limits<float>::infinity();
   float cloud_azimuth_min_deg = std::numeric_limits<float>::infinity();
-  float cloud_azimuth_max_rad = std::numeric_limits<float>::lowest();
+  float cloud_azimuth_max_deg = -std::numeric_limits<float>::infinity();
   uint64_t packet_timestamp_min_ns = std::numeric_limits<uint64_t>::max();
   uint64_t packet_timestamp_max_ns = std::numeric_limits<uint64_t>::min();
 
   [[nodiscard]] nlohmann::ordered_json to_json() const
   {
-    nlohmann::json distance_j;
+    nlohmann::ordered_json distance_j;
     distance_j["name"] = "distance";
     distance_j["filtered_count"] = distance_filtered_count;
     // distance_j["cloud_distance_min_m"] = cloud_distance_min_m;
     // distance_j["cloud_distance_max_m"] = cloud_distance_max_m;
-    nlohmann::json fov_j;
+    nlohmann::ordered_json fov_j;
     fov_j["name"] = "fov";
     fov_j["filtered_count"] = fov_filtered_count;
-    // fov_j["cloud_azimuth_min_deg"] = cloud_azimuth_min_deg;
-    // fov_j["cloud_azimuth_max_rad"] = cloud_azimuth_max_rad;
-    nlohmann::json identical_j;
+    nlohmann::ordered_json identical_j;
     identical_j["name"] = "identical";
     identical_j["filtered_count"] = identical_filtered_count;
-    nlohmann::json multiple_j;
+    nlohmann::ordered_json multiple_j;
     multiple_j["name"] = "multiple";
     multiple_j["filtered_count"] = multiple_return_filtered_count;
-    nlohmann::json invalid_j;
+    nlohmann::ordered_json invalid_j;
     invalid_j["name"] = "invalid";
     invalid_j["invalid_point_count"] = invalid_point_count;
-    invalid_j["invalid_packet_count"] = invalid_packet_count;
-    nlohmann::json pointcloud_bounds_azimuth_j;
+    nlohmann::ordered_json pointcloud_bounds_azimuth_j;
     pointcloud_bounds_azimuth_j["min"] = cloud_azimuth_min_deg;
-    pointcloud_bounds_azimuth_j["max"] = cloud_azimuth_max_rad;
-    nlohmann::json pointcloud_bounds_distance_j;
+    pointcloud_bounds_azimuth_j["max"] = cloud_azimuth_max_deg;
+    nlohmann::ordered_json pointcloud_bounds_distance_j;
     pointcloud_bounds_distance_j["min"] = cloud_distance_min_m;
     pointcloud_bounds_distance_j["max"] = cloud_distance_max_m;
-    nlohmann::json pointcloud_bounds_timestamp_j;
+    nlohmann::ordered_json pointcloud_bounds_timestamp_j;
     pointcloud_bounds_timestamp_j["min"] = packet_timestamp_min_ns;
     pointcloud_bounds_timestamp_j["max"] = packet_timestamp_max_ns;
 
-    nlohmann::json j;
-    j["filter_pipeline"] = nlohmann::json::array({
+    nlohmann::ordered_json j;
+    j["filter_pipeline"] = nlohmann::ordered_json::array({
+      invalid_j,
       distance_j,
       fov_j,
       identical_j,
       multiple_j,
     });
     j["pointcloud_bounds"] = {
-      j["azimuth_deg"] = pointcloud_bounds_azimuth_j,
-      j["distance_m"] = pointcloud_bounds_distance_j,
-      j["timestamp_ns"] = pointcloud_bounds_timestamp_j,
+      {"azimuth_deg", pointcloud_bounds_azimuth_j},
+      {"distance_m", pointcloud_bounds_distance_j},
+      {"timestamp_ns", pointcloud_bounds_timestamp_j},
     };
-    j["invalid_filter"] = invalid_j;
+    j["invalid_packet_count"] = invalid_packet_count;
     j["total_kept_point_count"] = total_kept_point_count;
 
     return j;
@@ -106,8 +104,8 @@ struct HesaiDecodeFilteredInfo
 
   void update_pointcloud_bounds(const NebulaPoint & point)
   {
-    cloud_azimuth_min_deg = std::min(cloud_azimuth_min_deg, point.azimuth);
-    cloud_azimuth_max_rad = std::max(cloud_azimuth_max_rad, point.azimuth);
+    cloud_azimuth_min_deg = static_cast<float>(std::min(cloud_azimuth_min_deg, point.azimuth * (180.0f / static_cast<float>(M_PI))));   
+    cloud_azimuth_max_deg = static_cast<float>(std::max(cloud_azimuth_max_deg, point.azimuth * (180.0f / static_cast<float>(M_PI))));
     packet_timestamp_min_ns =
       std::min(packet_timestamp_min_ns, static_cast<uint64_t>(point.time_stamp));
     packet_timestamp_max_ns =
@@ -415,12 +413,7 @@ public:
         has_scanned_ = true;
         nlohmann::ordered_json j = decode_filtered_info_.to_json();
         std::cout << "=======================" << std::endl;
-        for (const auto & [key, value] : j.items()) {
-          std::cout << key << ": " << std::endl;
-          for (const auto & [k, v] : value.items()) {
-            std::cout << k << ": " << v << std::endl;
-          }
-        }
+        std::cout << j.dump(2) << std::endl;
         std::cout << "=======================" << std::endl;
         decode_filtered_info_ = HesaiDecodeFilteredInfo{};
       }
