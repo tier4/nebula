@@ -70,7 +70,7 @@ struct HesaiDecodeFilteredInfo
     multiple_j["filtered_count"] = multiple_return_filtered_count;
     nlohmann::ordered_json invalid_j;
     invalid_j["name"] = "invalid";
-    invalid_j["invalid_point_count"] = invalid_point_count;
+    invalid_j["filtered_count"] = invalid_point_count;
     nlohmann::ordered_json pointcloud_bounds_azimuth_j;
     pointcloud_bounds_azimuth_j["min"] = cloud_azimuth_min_deg;
     pointcloud_bounds_azimuth_j["max"] = cloud_azimuth_max_deg;
