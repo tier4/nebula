@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_COMMON_H
-#define NEBULA_COMMON_H
+#ifndef NEBULA_COMMON__NEBULA_COMMON_HPP_
+#define NEBULA_COMMON__NEBULA_COMMON_HPP_
 
 #include <nebula_common/point_types.hpp>
 
@@ -792,4 +792,4 @@ static inline float rad2deg(double radians)
 }
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_CONFIGURATION_BASE_H
+#endif  // NEBULA_COMMON__NEBULA_COMMON_HPP_
