@@ -167,6 +167,7 @@ void ContinentalARS548DecoderWrapper::detection_list_callback(
     detection_msgs_counter_ % config_ptr_->radar_info_rate_subsample == 0 &&
     (radar_info_pub_->get_subscription_count() > 0 ||
      radar_info_pub_->get_intra_process_subscription_count() > 0)) {
+    radar_info_msg_.header.stamp = msg->header.stamp;
     radar_info_pub_->publish(radar_info_msg_);
   }
 
