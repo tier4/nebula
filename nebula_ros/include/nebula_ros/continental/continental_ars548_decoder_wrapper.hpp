@@ -31,6 +31,7 @@
 #include <continental_msgs/msg/continental_ars548_object.hpp>
 #include <continental_msgs/msg/continental_ars548_object_list.hpp>
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
+#include <geometry_msgs/msg/vector3.hpp>
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
 #include <radar_msgs/msg/radar_scan.hpp>
@@ -89,6 +90,16 @@ private:
   nebula::Status initialize_driver(
     const std::shared_ptr<
       const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config);
+
+  // @brief Create a RadarInfo message for the ARS548 radar
+  // @return RadarInfo message
+  void create_radar_info();
+
+  // @brief Convert an ARS548 reference point to the center of an object
+  // @return Thee center of the object
+  geometry_msgs::msg::Point reference_point_to_center(
+    const geometry_msgs::msg::Point & reference_point, double yaw, double length, double width,
+    int reference_index);
 
   /// @brief Convert ARS548 detections to a autoware's radar PointCloud2 msg
   /// @param msg The ARS548 objects list msg
@@ -158,15 +169,20 @@ private:
     object_list_pub_{};
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr object_pointcloud_pub_{};
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr detection_pointcloud_pub_{};
+  rclcpp::Publisher<autoware_sensing_msgs::msg::RadarObjects>::SharedPtr autoware_objects_pub_{};
   rclcpp::Publisher<radar_msgs::msg::RadarScan>::SharedPtr scan_raw_pub_{};
   rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr objects_raw_pub_{};
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr objects_markers_pub_{};
   rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_{};
+  rclcpp::Publisher<autoware_sensing_msgs::msg::RadarInfo>::SharedPtr radar_info_pub_{};
+
+  autoware_sensing_msgs::msg::RadarInfo radar_info_msg_{};
+  std::size_t detection_msgs_counter_{0};
 
   std::unordered_set<int> previous_ids_{};
 
   constexpr static int reference_points_num = 9;
-  constexpr static std::array<std::array<double, 2>, reference_points_num> reference_to_center = {
+  constexpr static std::array<std::array<double, 2>, reference_points_num> reference_to_center_ = {
     {{{-1.0, -1.0}},
      {{-1.0, 0.0}},
      {{-1.0, 1.0}},
