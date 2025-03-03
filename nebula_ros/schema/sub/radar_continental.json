@@ -5,10 +5,7 @@
   "definitions": {
     "sensor_model": {
       "$ref": "hardware.json#/definitions/sensor_model",
-      "enum": [
-        "ARS548",
-        "SRR520"
-      ]
+      "enum": ["ARS548", "SRR520"]
     }
   }
 }
