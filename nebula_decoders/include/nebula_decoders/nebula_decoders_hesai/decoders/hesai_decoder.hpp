@@ -46,9 +46,9 @@ namespace nebula::drivers
 template <typename SensorT>
 class HesaiDecoder : public HesaiScanDecoder
 {
-  struct HesaiDecodeFilteredInfo
+  struct PointcloudDecodeStatistics
   {
-    explicit HesaiDecodeFilteredInfo(bool has_downsample_mask_filter)
+    explicit PointcloudDecodeStatistics(bool has_downsample_mask_filter)
     : downsample_mask_filtered_count(
         has_downsample_mask_filter ? std::make_optional(0) : std::nullopt)
     {
@@ -190,8 +190,7 @@ private:
 
   std::optional<point_filters::DownsampleMaskFilter> mask_filter_;
 
-  // filtered pointcloud counter
-  HesaiDecodeFilteredInfo decode_filtered_info_;
+  PointcloudDecodeStatistics pointcloud_decode_statistics_;
 
   /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
   /// @param packet The incoming PandarPacket
@@ -239,7 +238,7 @@ private:
         auto & unit = *return_units[block_offset];
 
         if (unit.distance == 0) {
-          decode_filtered_info_.invalid_point_count++;
+          pointcloud_decode_statistics_.invalid_point_count++;
           continue;
         }
 
@@ -249,7 +248,7 @@ private:
           distance < SensorT::min_range || SensorT::max_range < distance ||
           distance < sensor_configuration_->min_range ||
           sensor_configuration_->max_range < distance) {
-          decode_filtered_info_.distance_filtered_count++;
+          pointcloud_decode_statistics_.distance_filtered_count++;
           continue;
         }
 
@@ -259,7 +258,7 @@ private:
 
         // Keep only last of multiple identical points
         if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
-          decode_filtered_info_.identical_filtered_count++;
+          pointcloud_decode_statistics_.identical_filtered_count++;
           continue;
         }
 
@@ -281,7 +280,7 @@ private:
           }
 
           if (is_below_multi_return_threshold) {
-            decode_filtered_info_.multiple_return_filtered_count++;
+            pointcloud_decode_statistics_.multiple_return_filtered_count++;
             continue;
           }
         }
@@ -292,7 +291,7 @@ private:
 
         bool in_fov = angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.fov_max, azimuth);
         if (!in_fov) {
-          decode_filtered_info_.fov_filtered_count++;
+          pointcloud_decode_statistics_.fov_filtered_count++;
           continue;
         }
 
@@ -331,13 +330,13 @@ private:
         point.elevation = corrected_angle_data.elevation_rad;
 
         if (mask_filter_ && mask_filter_->excluded(point)) {
-          (*decode_filtered_info_.downsample_mask_filtered_count)++;
+          (*pointcloud_decode_statistics_.downsample_mask_filtered_count)++;
           continue;
         }
 
         pc->emplace_back(point);
-        decode_filtered_info_.update_pointcloud_bounds(point);
-        decode_filtered_info_.total_kept_point_count++;
+        pointcloud_decode_statistics_.update_pointcloud_bounds(point);
+        pointcloud_decode_statistics_.total_kept_point_count++;
       }
     }
   }
@@ -380,7 +379,7 @@ public:
       {deg2rad(sensor_configuration_->cloud_min_angle),
        deg2rad(sensor_configuration_->cloud_max_angle), deg2rad(sensor_configuration_->cut_angle)}),
     logger_(logger),
-    decode_filtered_info_(false)
+    pointcloud_decode_statistics_(false)
   {
     decode_pc_ = std::make_shared<NebulaPointCloud>();
     output_pc_ = std::make_shared<NebulaPointCloud>();
@@ -394,13 +393,13 @@ public:
         logger_->child("Downsample Mask"), true);
     }
 
-    decode_filtered_info_ = HesaiDecodeFilteredInfo(mask_filter_.has_value());
+    pointcloud_decode_statistics_ = PointcloudDecodeStatistics(mask_filter_.has_value());
   }
 
   int unpack(const std::vector<uint8_t> & packet) override
   {
     if (!parse_packet(packet)) {
-      decode_filtered_info_.invalid_packet_count++;
+      pointcloud_decode_statistics_.invalid_packet_count++;
       return -1;
     }
 
@@ -452,11 +451,11 @@ public:
         std::swap(decode_pc_, output_pc_);
         std::swap(decode_scan_timestamp_ns_, output_scan_timestamp_ns_);
         has_scanned_ = true;
-        nlohmann::ordered_json j = decode_filtered_info_.to_json();
+        nlohmann::ordered_json j = pointcloud_decode_statistics_.to_json();
         std::cout << "=======================" << std::endl;
         std::cout << j.dump(2) << std::endl;
         std::cout << "=======================" << std::endl;
-        decode_filtered_info_ = HesaiDecodeFilteredInfo(mask_filter_.has_value());
+        pointcloud_decode_statistics_ = PointcloudDecodeStatistics(mask_filter_.has_value());
       }
 
       last_azimuth_ = block_azimuth;
