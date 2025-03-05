@@ -331,7 +331,7 @@ private:
         point.elevation = corrected_angle_data.elevation_rad;
 
         if (mask_filter_ && mask_filter_->excluded(point)) {
-          *decode_filtered_info_.downsample_mask_filtered_count++;
+          (*decode_filtered_info_.downsample_mask_filtered_count)++;
           continue;
         }
 
@@ -379,7 +379,8 @@ public:
     scan_cut_angles_(
       {deg2rad(sensor_configuration_->cloud_min_angle),
        deg2rad(sensor_configuration_->cloud_max_angle), deg2rad(sensor_configuration_->cut_angle)}),
-    logger_(logger)
+    logger_(logger),
+    decode_filtered_info_(false)
   {
     decode_pc_ = std::make_shared<NebulaPointCloud>();
     output_pc_ = std::make_shared<NebulaPointCloud>();
