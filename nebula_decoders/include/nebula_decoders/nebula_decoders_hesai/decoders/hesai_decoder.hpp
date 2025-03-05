@@ -32,6 +32,8 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <iostream>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <tuple>
@@ -41,86 +43,107 @@
 namespace nebula::drivers
 {
 
-struct HesaiDecodeFilteredInfo
-{
-  uint64_t distance_filtered_count = 0;
-  uint64_t fov_filtered_count = 0;
-  uint64_t invalid_point_count = 0;
-  uint64_t identical_filtered_count = 0;
-  uint64_t multiple_return_filtered_count = 0;
-  uint64_t total_kept_point_count = 0;
-  uint64_t invalid_packet_count = 0;
-  float cloud_distance_min_m = std::numeric_limits<float>::infinity();
-  float cloud_distance_max_m = -std::numeric_limits<float>::infinity();
-  float cloud_azimuth_min_deg = std::numeric_limits<float>::infinity();
-  float cloud_azimuth_max_deg = -std::numeric_limits<float>::infinity();
-  uint64_t packet_timestamp_min_ns = std::numeric_limits<uint64_t>::max();
-  uint64_t packet_timestamp_max_ns = std::numeric_limits<uint64_t>::min();
-
-  [[nodiscard]] nlohmann::ordered_json to_json() const
-  {
-    nlohmann::ordered_json distance_j;
-    distance_j["name"] = "distance";
-    distance_j["filtered_count"] = distance_filtered_count;
-    nlohmann::ordered_json fov_j;
-    fov_j["name"] = "fov";
-    fov_j["filtered_count"] = fov_filtered_count;
-    nlohmann::ordered_json identical_j;
-    identical_j["name"] = "identical";
-    identical_j["filtered_count"] = identical_filtered_count;
-    nlohmann::ordered_json multiple_j;
-    multiple_j["name"] = "multiple";
-    multiple_j["filtered_count"] = multiple_return_filtered_count;
-    nlohmann::ordered_json invalid_j;
-    invalid_j["name"] = "invalid";
-    invalid_j["filtered_count"] = invalid_point_count;
-    nlohmann::ordered_json pointcloud_bounds_azimuth_j;
-    pointcloud_bounds_azimuth_j["min"] = cloud_azimuth_min_deg;
-    pointcloud_bounds_azimuth_j["max"] = cloud_azimuth_max_deg;
-    nlohmann::ordered_json pointcloud_bounds_distance_j;
-    pointcloud_bounds_distance_j["min"] = cloud_distance_min_m;
-    pointcloud_bounds_distance_j["max"] = cloud_distance_max_m;
-    nlohmann::ordered_json pointcloud_bounds_timestamp_j;
-    pointcloud_bounds_timestamp_j["min"] = packet_timestamp_min_ns;
-    pointcloud_bounds_timestamp_j["max"] = packet_timestamp_max_ns;
-
-    nlohmann::ordered_json j;
-    j["filter_pipeline"] = nlohmann::ordered_json::array({
-      invalid_j,
-      distance_j,
-      fov_j,
-      identical_j,
-      multiple_j,
-    });
-    j["pointcloud_bounds"] = {
-      {"azimuth_deg", pointcloud_bounds_azimuth_j},
-      {"distance_m", pointcloud_bounds_distance_j},
-      {"timestamp_ns", pointcloud_bounds_timestamp_j},
-    };
-    j["invalid_packet_count"] = invalid_packet_count;
-    j["total_kept_point_count"] = total_kept_point_count;
-
-    return j;
-  }
-
-  void update_pointcloud_bounds(const NebulaPoint & point)
-  {
-    cloud_azimuth_min_deg = static_cast<float>(
-      std::min(cloud_azimuth_min_deg, point.azimuth * (180.0f / static_cast<float>(M_PI))));
-    cloud_azimuth_max_deg = static_cast<float>(
-      std::max(cloud_azimuth_max_deg, point.azimuth * (180.0f / static_cast<float>(M_PI))));
-    packet_timestamp_min_ns =
-      std::min(packet_timestamp_min_ns, static_cast<uint64_t>(point.time_stamp));
-    packet_timestamp_max_ns =
-      std::max(packet_timestamp_max_ns, static_cast<uint64_t>(point.time_stamp));
-    cloud_distance_min_m = std::min(cloud_distance_min_m, point.distance);
-    cloud_distance_max_m = std::max(cloud_distance_max_m, point.distance);
-  }
-};
-
 template <typename SensorT>
 class HesaiDecoder : public HesaiScanDecoder
 {
+  struct HesaiDecodeFilteredInfo
+  {
+    explicit HesaiDecodeFilteredInfo(bool has_downsample_mask_filter)
+    : downsample_mask_filtered_count(
+        has_downsample_mask_filter ? std::make_optional(0) : std::nullopt)
+    {
+    }
+
+    uint64_t distance_filtered_count = 0;
+    uint64_t fov_filtered_count = 0;
+    uint64_t invalid_point_count = 0;
+    uint64_t identical_filtered_count = 0;
+    uint64_t multiple_return_filtered_count = 0;
+    std::optional<uint64_t> downsample_mask_filtered_count = 0;
+
+    uint64_t total_kept_point_count = 0;
+    uint64_t invalid_packet_count = 0;
+
+    float cloud_distance_min_m = std::numeric_limits<float>::infinity();
+    float cloud_distance_max_m = -std::numeric_limits<float>::infinity();
+    float cloud_azimuth_min_deg = std::numeric_limits<float>::infinity();
+    float cloud_azimuth_max_deg = -std::numeric_limits<float>::infinity();
+    uint32_t packet_timestamp_min_ns = std::numeric_limits<uint32_t>::max();
+    uint32_t packet_timestamp_max_ns = std::numeric_limits<uint32_t>::min();
+
+    [[nodiscard]] nlohmann::ordered_json to_json() const
+    {
+      nlohmann::ordered_json distance_j;
+      distance_j["name"] = "distance";
+      distance_j["filtered_count"] = distance_filtered_count;
+
+      nlohmann::ordered_json fov_j;
+      fov_j["name"] = "fov";
+      fov_j["filtered_count"] = fov_filtered_count;
+
+      nlohmann::ordered_json identical_j;
+      identical_j["name"] = "identical";
+      identical_j["filtered_count"] = identical_filtered_count;
+
+      nlohmann::ordered_json multiple_j;
+      multiple_j["name"] = "multiple";
+      multiple_j["filtered_count"] = multiple_return_filtered_count;
+
+      nlohmann::ordered_json invalid_j;
+      invalid_j["name"] = "invalid";
+      invalid_j["filtered_count"] = invalid_point_count;
+
+      nlohmann::ordered_json pointcloud_bounds_azimuth_j;
+      pointcloud_bounds_azimuth_j["min"] = cloud_azimuth_min_deg;
+      pointcloud_bounds_azimuth_j["max"] = cloud_azimuth_max_deg;
+
+      nlohmann::ordered_json pointcloud_bounds_distance_j;
+      pointcloud_bounds_distance_j["min"] = cloud_distance_min_m;
+      pointcloud_bounds_distance_j["max"] = cloud_distance_max_m;
+
+      nlohmann::ordered_json pointcloud_bounds_timestamp_j;
+      pointcloud_bounds_timestamp_j["min"] = packet_timestamp_min_ns;
+      pointcloud_bounds_timestamp_j["max"] = packet_timestamp_max_ns;
+
+      nlohmann::ordered_json j;
+      j["filter_pipeline"] = nlohmann::ordered_json::array({
+        invalid_j,
+        distance_j,
+        fov_j,
+        identical_j,
+        multiple_j,
+      });
+
+      if (downsample_mask_filtered_count.has_value()) {
+        nlohmann::ordered_json downsample_j;
+        downsample_j["name"] = "downsample_mask";
+        downsample_j["filtered_count"] = downsample_mask_filtered_count.value();
+        j["filter_pipeline"].push_back(downsample_j);
+      }
+
+      j["pointcloud_bounds"] = {
+        {"azimuth_deg", pointcloud_bounds_azimuth_j},
+        {"distance_m", pointcloud_bounds_distance_j},
+        {"timestamp_ns", pointcloud_bounds_timestamp_j},
+      };
+
+      j["invalid_packet_count"] = invalid_packet_count;
+      j["total_kept_point_count"] = total_kept_point_count;
+
+      return j;
+    }
+
+    void update_pointcloud_bounds(const NebulaPoint & point)
+    {
+      cloud_azimuth_min_deg = std::min(cloud_azimuth_min_deg, rad2deg(point.azimuth));
+      cloud_azimuth_max_deg = std::max(cloud_azimuth_max_deg, rad2deg(point.azimuth));
+      packet_timestamp_min_ns = std::min(packet_timestamp_min_ns, point.time_stamp);
+      packet_timestamp_max_ns = std::max(packet_timestamp_max_ns, point.time_stamp);
+      cloud_distance_min_m = std::min(cloud_distance_min_m, point.distance);
+      cloud_distance_max_m = std::max(cloud_distance_max_m, point.distance);
+    }
+  };
+
   struct ScanCutAngles
   {
     float fov_min;
@@ -158,9 +181,6 @@ private:
 
   std::shared_ptr<loggers::Logger> logger_;
 
-  // filtered pointcloud counter
-  HesaiDecodeFilteredInfo decode_filtered_info_;
-
   /// @brief For each channel, its firing offset relative to the block in nanoseconds
   std::array<int, SensorT::packet_t::n_channels> channel_firing_offset_ns_;
   /// @brief For each return mode, the firing offset of each block relative to its packet in
@@ -169,6 +189,9 @@ private:
     block_firing_offset_ns_;
 
   std::optional<point_filters::DownsampleMaskFilter> mask_filter_;
+
+  // filtered pointcloud counter
+  HesaiDecodeFilteredInfo decode_filtered_info_;
 
   /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
   /// @param packet The incoming PandarPacket
@@ -308,6 +331,7 @@ private:
         point.elevation = corrected_angle_data.elevation_rad;
 
         if (mask_filter_ && mask_filter_->excluded(point)) {
+          *decode_filtered_info_.downsample_mask_filtered_count++;
           continue;
         }
 
@@ -359,6 +383,8 @@ public:
   {
     decode_pc_ = std::make_shared<NebulaPointCloud>();
     output_pc_ = std::make_shared<NebulaPointCloud>();
+    decode_pc_->reserve(SensorT::max_scan_buffer_points);
+    output_pc_->reserve(SensorT::max_scan_buffer_points);
 
     if (sensor_configuration->downsample_mask_path) {
       mask_filter_ = point_filters::DownsampleMaskFilter(
@@ -367,8 +393,7 @@ public:
         logger_->child("Downsample Mask"), true);
     }
 
-    decode_pc_->reserve(SensorT::max_scan_buffer_points);
-    output_pc_->reserve(SensorT::max_scan_buffer_points);
+    decode_filtered_info_ = HesaiDecodeFilteredInfo(mask_filter_.has_value());
   }
 
   int unpack(const std::vector<uint8_t> & packet) override
@@ -430,7 +455,7 @@ public:
         std::cout << "=======================" << std::endl;
         std::cout << j.dump(2) << std::endl;
         std::cout << "=======================" << std::endl;
-        decode_filtered_info_ = HesaiDecodeFilteredInfo{};
+        decode_filtered_info_ = HesaiDecodeFilteredInfo(mask_filter_.has_value());
       }
 
       last_azimuth_ = block_azimuth;
