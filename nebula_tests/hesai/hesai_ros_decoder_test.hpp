@@ -130,7 +130,7 @@ public:
   /// @brief Read the specified bag file and compare the constructed point clouds with the
   /// corresponding PCD files
   void read_bag(
-    std::function<void(uint64_t, uint64_t, nebula::drivers::NebulaPointCloudPtr)> scan_callback);
+    std::function<void(uint64_t, double, nebula::drivers::NebulaPointCloudPtr)> scan_callback);
 
   HesaiRosDecoderTestParams params_;
 };

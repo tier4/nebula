@@ -146,7 +146,7 @@ Status HesaiRosDecoderTest::GetParameters(
 }
 
 void HesaiRosDecoderTest::read_bag(
-  std::function<void(uint64_t, uint64_t, nebula::drivers::NebulaPointCloudPtr)> scan_callback)
+  std::function<void(uint64_t, double, nebula::drivers::NebulaPointCloudPtr)> scan_callback)
 {
   rosbag2_storage::StorageOptions storage_options;
   rosbag2_cpp::ConverterOptions converter_options;
@@ -188,16 +188,15 @@ void HesaiRosDecoderTest::read_bag(
       auto extracted_msg_ptr = std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg);
 
       for (auto & pkt : extracted_msg_ptr->packets) {
-        auto pointcloud_ts = driver_ptr_->parse_cloud_packet(
+        auto decode_result = driver_ptr_->parse_cloud_packet(
           std::vector<uint8_t>(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size)));
-        auto pointcloud = std::get<0>(pointcloud_ts);
-        auto scan_timestamp = std::get<1>(pointcloud_ts);
 
-        if (!pointcloud) {
+        if (!decode_result) {
           continue;
         }
+        const auto & [pointcloud, timestamp_s, decode_stats] = decode_result.value();
 
-        scan_callback(bag_message->time_stamp, scan_timestamp, pointcloud);
+        scan_callback(bag_message->time_stamp, timestamp_s, pointcloud);
       }
     }
   }
