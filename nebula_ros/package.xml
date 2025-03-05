@@ -12,13 +12,14 @@
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>ros_environment</buildtool_depend>
   <buildtool_depend>ros_testing</buildtool_depend>
+  <build_depend>libpcl-all-dev</build_depend>
+  <build_export_depend>libpcl-all-dev</build_export_depend>
 
   <depend>continental_msgs</depend>
   <depend>continental_srvs</depend>
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
   <depend>geometry_msgs</depend>
-  <depend>libpcl-all-dev</depend>
   <depend>nebula_common</depend>
   <depend>nebula_decoders</depend>
   <depend>nebula_hw_interfaces</depend>
