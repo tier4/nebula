@@ -146,7 +146,7 @@ Status HesaiRosDecoderTest::GetParameters(
 }
 
 void HesaiRosDecoderTest::read_bag(
-  std::function<void(uint64_t, uint64_t, nebula::drivers::NebulaPointCloudPtr)> scan_callback)
+  std::function<void(uint64_t, double, nebula::drivers::NebulaPointCloudPtr)> scan_callback)
 {
   rosbag2_storage::StorageOptions storage_options;
   rosbag2_cpp::ConverterOptions converter_options;
