@@ -374,7 +374,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
   }
 
-  if (return_mode.empty()) {
+  if (!return_mode.empty()) {
     new_cfg.return_mode =
       nebula::drivers::return_mode_from_string_hesai(return_mode, sensor_cfg_ptr_->sensor_model);
   }
