@@ -14,7 +14,15 @@
 
 #include "nebula_ros/continental/continental_ars548_decoder_wrapper.hpp"
 
+#include <nebula_common/util/string_conversions.hpp>
+
 #include <pcl_conversions/pcl_conversions.h>
+
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <unordered_set>
+#include <utility>
 
 namespace nebula::ros
 {
@@ -39,8 +47,7 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   status_ = driver_ptr_->get_status();
 
   if (Status::OK != status_) {
-    throw std::runtime_error(
-      (std::stringstream() << "Error instantiating decoder: " << status_).str());
+    throw std::runtime_error("Error instantiating decoder: " + util::to_string(status_));
   }
 
   // Publish packets only if HW interface is connected
@@ -203,6 +210,23 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
   status.hardware_id = config_ptr_->frame_id;
   status.name = config_ptr_->frame_id;
   status.message = "Diagnostic messages from ARS548";
+
+  // cSpell:ignore knzo25
+  // NOTE(knzo25): In the radar firmware used when developing this driver,
+  // corner radars were not supported. When a new firmware addresses this,
+  // the driver will be updated.
+  if (nebula::drivers::continental_ars548::is_corner_radar(sensor_status.yaw)) {
+    rclcpp::Clock clock{RCL_ROS_TIME};
+    RCLCPP_WARN_THROTTLE(
+      logger_, clock, 5000,
+      "This radar has been configured as a corner radar, which is not supported by the sensor. The "
+      "driver will not output any objects");
+
+    status.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+    status.message +=
+      ". Unsupported mounting configuration (corner radar). Only detections should be used under "
+      "these conditions.";
+  }
 
   auto add_diagnostic = [&status](const std::string & key, const std::string & value) {
     diagnostic_msgs::msg::KeyValue key_value;

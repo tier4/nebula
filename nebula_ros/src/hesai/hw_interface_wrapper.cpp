@@ -5,6 +5,7 @@
 #include "nebula_ros/common/parameter_descriptors.hpp"
 #include "nebula_ros/common/rclcpp_logger.hpp"
 
+#include <nebula_common/util/string_conversions.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
 
 #include <memory>
@@ -28,8 +29,7 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
     std::static_pointer_cast<const drivers::SensorConfigurationBase>(config));
 
   if (status_ != Status::OK) {
-    throw std::runtime_error(
-      (std::stringstream{} << "Could not initialize HW interface: " << status_).str());
+    throw std::runtime_error("Could not initialize HW interface: " + util::to_string(status_));
   }
 
   hw_interface_->set_target_model(config->sensor_model);

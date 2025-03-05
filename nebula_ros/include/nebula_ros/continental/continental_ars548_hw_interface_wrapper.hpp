@@ -17,6 +17,7 @@
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
 #include <nebula_common/continental/continental_ars548.hpp>
+#include <nebula_common/util/rate_checker.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -113,6 +114,10 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::AccelWithCovarianceStamped>::SharedPtr
     acceleration_sub_{};
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr steering_angle_sub_{};
+
+  nebula::util::RateChecker odometry_rate_checker_;
+  nebula::util::RateChecker acceleration_rate_checker_;
+  nebula::util::RateChecker steering_angle_rate_checker_;
 
   bool standstill_{true};
 

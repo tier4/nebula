@@ -14,8 +14,12 @@
 
 #include "nebula_ros/continental/continental_ars548_hw_interface_wrapper.hpp"
 
+#include <nebula_common/util/string_conversions.hpp>
+
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
+
+#include <memory>
 
 namespace nebula::ros
 {
@@ -29,15 +33,23 @@ ContinentalARS548HwInterfaceWrapper::ContinentalARS548HwInterfaceWrapper(
     std::make_shared<nebula::drivers::continental_ars548::ContinentalARS548HwInterface>()),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED),
-  config_ptr_(config_ptr)
+  config_ptr_(config_ptr),
+  odometry_rate_checker_(
+    nebula::drivers::continental_ars548::min_odometry_hz,
+    nebula::drivers::continental_ars548::max_odometry_hz, 100),
+  acceleration_rate_checker_(
+    nebula::drivers::continental_ars548::min_odometry_hz,
+    nebula::drivers::continental_ars548::max_odometry_hz, 100),
+  steering_angle_rate_checker_(
+    nebula::drivers::continental_ars548::min_odometry_hz,
+    nebula::drivers::continental_ars548::max_odometry_hz, 100)
 {
   hw_interface_->set_logger(
     std::make_shared<rclcpp::Logger>(parent_node->get_logger().get_child("HwInterface")));
   status_ = hw_interface_->set_sensor_configuration(config_ptr);
 
   if (status_ != Status::OK) {
-    throw std::runtime_error(
-      (std::stringstream{} << "Could not initialize HW interface: " << status_).str());
+    throw std::runtime_error("Could not initialize HW interface: " + util::to_string(status_));
   }
 
   status_ = Status::OK;
@@ -122,6 +134,24 @@ ContinentalARS548HwInterfaceWrapper::hw_interface() const
 void ContinentalARS548HwInterfaceWrapper::odometry_callback(
   const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg)
 {
+  using nebula::drivers::continental_ars548::max_odometry_hz;
+  using nebula::drivers::continental_ars548::min_odometry_hz;
+
+  double stamp = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
+  odometry_rate_checker_.update(stamp);
+
+  if (!odometry_rate_checker_.is_full()) {
+    return;
+  } else if (!odometry_rate_checker_.is_valid()) {
+    double estimated_hz = odometry_rate_checker_.get_average();
+    rclcpp::Clock clock{RCL_ROS_TIME};
+    RCLCPP_WARN_THROTTLE(
+      logger_, clock, 5000,
+      "The current odometry rate is %.2f Hz. The sensor requires a rate in the range of %dHz to "
+      "%dHz",
+      estimated_hz, min_odometry_hz, max_odometry_hz);
+  }
+
   constexpr float speed_to_standstill = 0.5f;
   constexpr float speed_to_moving = 2.f;
 
@@ -147,6 +177,24 @@ void ContinentalARS548HwInterfaceWrapper::odometry_callback(
 void ContinentalARS548HwInterfaceWrapper::acceleration_callback(
   const geometry_msgs::msg::AccelWithCovarianceStamped::SharedPtr msg)
 {
+  using nebula::drivers::continental_ars548::max_odometry_hz;
+  using nebula::drivers::continental_ars548::min_odometry_hz;
+
+  double stamp = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
+  acceleration_rate_checker_.update(stamp);
+
+  if (!acceleration_rate_checker_.is_full()) {
+    return;
+  } else if (!acceleration_rate_checker_.is_valid()) {
+    double estimated_hz = acceleration_rate_checker_.get_average();
+    rclcpp::Clock clock{RCL_ROS_TIME};
+    RCLCPP_WARN_THROTTLE(
+      logger_, clock, 5000,
+      "Current acceleration rate is %.2f Hz. The sensor requires a rate in the range of %dHz to "
+      "%dHz",
+      estimated_hz, min_odometry_hz, max_odometry_hz);
+  }
+
   hw_interface_->set_acceleration_lateral_cog(msg->accel.accel.linear.y);
   hw_interface_->set_acceleration_longitudinal_cog(msg->accel.accel.linear.x);
 }
@@ -154,6 +202,26 @@ void ContinentalARS548HwInterfaceWrapper::acceleration_callback(
 void ContinentalARS548HwInterfaceWrapper::steering_angle_callback(
   const std_msgs::msg::Float32::SharedPtr msg)
 {
+  using nebula::drivers::continental_ars548::max_odometry_hz;
+  using nebula::drivers::continental_ars548::min_odometry_hz;
+
+  const auto now = std::chrono::high_resolution_clock::now();
+  const double stamp =
+    1e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+  steering_angle_rate_checker_.update(stamp);
+
+  if (!steering_angle_rate_checker_.is_full()) {
+    return;
+  } else if (!steering_angle_rate_checker_.is_valid()) {
+    double estimated_hz = steering_angle_rate_checker_.get_average();
+    rclcpp::Clock clock{RCL_ROS_TIME};
+    RCLCPP_WARN_THROTTLE(
+      logger_, clock, 5000,
+      "Current steering angle rate is %.2f Hz. The sensor requires a rate in the range of %dHz to "
+      "%dHz",
+      estimated_hz, min_odometry_hz, max_odometry_hz);
+  }
+
   constexpr float rad_to_deg = 180.f / M_PI;
   hw_interface_->set_steering_angle_front_axle(rad_to_deg * msg->data);
 }
@@ -166,7 +234,7 @@ void ContinentalARS548HwInterfaceWrapper::set_network_configuration_request_call
 {
   auto result = hw_interface_->set_sensor_ip_address(request->sensor_ip.data);
   response->success = result == Status::OK;
-  response->message = (std::stringstream() << result).str();
+  response->message = util::to_string(result);
 }
 
 void ContinentalARS548HwInterfaceWrapper::set_sensor_mounting_request_callback(
@@ -215,11 +283,22 @@ void ContinentalARS548HwInterfaceWrapper::set_sensor_mounting_request_callback(
     pitch = rpy.y;
   }
 
+  // cSpell:ignore knzo25
+  // NOTE(knzo25): In the radar firmware used when developing this driver,
+  // corner radars were not supported. When a new firmware addresses this,
+  // the driver will be updated.
+  if (nebula::drivers::continental_ars548::is_corner_radar(yaw)) {
+    RCLCPP_WARN(
+      logger_,
+      "You are attempting to configure the device as a corner radar, which is not supported so "
+      "far.");
+  }
+
   auto result = hw_interface_->set_sensor_mounting(
     longitudinal, lateral, vertical, yaw, pitch, request->plug_orientation);
 
   response->success = result == Status::OK;
-  response->message = (std::stringstream() << result).str();
+  response->message = util::to_string(result);
 }
 
 void ContinentalARS548HwInterfaceWrapper::set_vehicle_parameters_request_callback(
@@ -266,7 +345,7 @@ void ContinentalARS548HwInterfaceWrapper::set_vehicle_parameters_request_callbac
     vehicle_length, vehicle_width, vehicle_height, vehicle_wheelbase);
 
   response->success = result == Status::OK;
-  response->message = (std::stringstream() << result).str();
+  response->message = util::to_string(result);
 }
 
 void ContinentalARS548HwInterfaceWrapper::set_radar_parameters_request_callback(
@@ -275,12 +354,41 @@ void ContinentalARS548HwInterfaceWrapper::set_radar_parameters_request_callback(
   const std::shared_ptr<continental_srvs::srv::ContinentalArs548SetRadarParameters::Response>
     response)
 {
+  using Request = continental_srvs::srv::ContinentalArs548SetRadarParameters::Request;
+
+  uint8_t frequency_slot = 0;
+  uint8_t hcc = 0;
+
+  if (request->frequency_band == Request::FREQUENCY_BAND_LOW) {
+    frequency_slot = nebula::drivers::continental_ars548::frequency_slot_low;
+  } else if (request->frequency_band == Request::FREQUENCY_BAND_MID) {
+    frequency_slot = nebula::drivers::continental_ars548::frequency_slot_mid;
+  } else if (request->frequency_band == Request::FREQUENCY_BAND_HIGH) {
+    frequency_slot = nebula::drivers::continental_ars548::frequency_slot_high;
+  } else {
+    RCLCPP_ERROR(logger_, "Invalid frequency_band value");
+    response->success = false;
+    response->message = "Invalid frequency_band value";
+    return;
+  }
+
+  if (request->country_code == Request::COUNTRY_CODE_WORLDWIDE) {
+    hcc = nebula::drivers::continental_ars548::hcc_worldwide;
+  } else if (request->country_code == Request::COUNTRY_CODE_JAPAN) {
+    hcc = nebula::drivers::continental_ars548::hcc_japan;
+  } else {
+    RCLCPP_ERROR(logger_, "Invalid country_code value");
+    response->success = false;
+    response->message = "Invalid country_code value";
+    return;
+  }
+
   auto result = hw_interface_->set_radar_parameters(
-    request->maximum_distance, request->frequency_slot, request->cycle_time, request->time_slot,
-    request->country_code, request->powersave_standstill);
+    request->maximum_distance, frequency_slot, request->cycle_time_ms, request->time_slot_ms, hcc,
+    request->powersave_standstill);
 
   response->success = result == Status::OK;
-  response->message = (std::stringstream() << result).str();
+  response->message = util::to_string(result);
 }
 
 }  // namespace nebula::ros

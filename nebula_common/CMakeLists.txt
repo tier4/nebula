@@ -21,7 +21,15 @@ endif(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
+    find_package(ament_cmake_gtest REQUIRED)
     ament_lint_auto_find_test_dependencies()
+
+    ament_add_gtest(test_rate_checker
+        test/test_rate_checker.cpp
+    )
+    target_link_libraries(test_rate_checker
+        nebula_common
+    )
 endif()
 
 include_directories(

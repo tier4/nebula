@@ -10,6 +10,10 @@
 
 #include <fstream>
 #include <iostream>
+#include <limits>
+#include <map>
+#include <string>
+#include <utility>
 
 #ifdef HAVE_NEW_YAMLCPP
 namespace YAML

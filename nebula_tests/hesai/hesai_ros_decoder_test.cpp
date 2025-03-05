@@ -2,9 +2,9 @@
 
 #include "hesai_ros_decoder_test.hpp"
 
-#include "nebula_common/hesai/hesai_common.hpp"
-#include "nebula_common/nebula_common.hpp"
-
+#include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/nebula_common.hpp>
+#include <nebula_ros/common/rclcpp_logger.hpp>
 #include <rclcpp/serialization.hpp>
 #include <rclcpp/serialized_message.hpp>
 #include <rcpputils/filesystem_helper.hpp>
@@ -18,7 +18,10 @@
 
 #include <cstring>
 #include <filesystem>
+#include <memory>
 #include <regex>
+#include <string>
+#include <vector>
 
 namespace nebula::ros
 {
@@ -65,7 +68,7 @@ Status HesaiRosDecoderTest::InitializeDriver(
 {
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
     std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
-    calibration_configuration);
+    calibration_configuration, std::make_shared<drivers::loggers::RclcppLogger>(get_logger()));
   return driver_ptr_->get_status();
 }
 

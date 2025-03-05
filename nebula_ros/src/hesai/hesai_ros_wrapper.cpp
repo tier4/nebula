@@ -6,14 +6,19 @@
 
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
+#include <nebula_common/util/string_conversions.hpp>
 #include <nebula_decoders/nebula_decoders_common/angles.hpp>
 
+#include <algorithm>
 #include <cstdint>
+#include <cstdio>
 #include <filesystem>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 
@@ -32,8 +37,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   wrapper_status_ = declare_and_get_sensor_config_params();
 
   if (wrapper_status_ != Status::OK) {
-    throw std::runtime_error(
-      (std::stringstream{} << "Sensor configuration invalid: " << wrapper_status_).str());
+    throw std::runtime_error("Sensor configuration invalid: " + util::to_string(wrapper_status_));
   }
 
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
@@ -61,7 +65,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     get_calibration_data(sensor_cfg_ptr_->calibration_path, force_load_caibration_from_file);
   if (!calibration_result.has_value()) {
     throw std::runtime_error(
-      (std::stringstream() << "No valid calibration found: " << calibration_result.error()).str());
+      "No valid calibration found: " + util::to_string(calibration_result.error()));
   }
 
   bool lidar_range_supported =
@@ -72,8 +76,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     auto status =
       hw_interface_wrapper_->hw_interface()->check_and_set_lidar_range(*calibration_result.value());
     if (status != Status::OK) {
-      throw std::runtime_error(
-        (std::stringstream{} << "Could not set sensor FoV: " << status).str());
+      throw std::runtime_error("Could not set sensor FoV: " + util::to_string(status));
     }
   }
 
@@ -206,6 +209,16 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
     config.ptp_lock_threshold = declare_parameter<uint8_t>("ptp_lock_threshold", descriptor);
   }
 
+  {
+    auto downsample_mask_path =
+      declare_parameter<std::string>("point_filters.downsample_mask.path", "", param_read_write());
+    if (downsample_mask_path.empty()) {
+      config.downsample_mask_path = std::nullopt;
+    } else {
+      config.downsample_mask_path = downsample_mask_path;
+    }
+  }
+
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(config);
   return validate_and_set_config(new_cfg_ptr);
 }
@@ -220,6 +233,13 @@ Status HesaiRosWrapper::validate_and_set_config(
     return Status::INVALID_ECHO_MODE;
   }
   if (new_config->frame_id.empty()) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+  if (new_config->host_ip == "255.255.255.255") {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Due to potential network performance issues when using IP broadcast for sensor data, Nebula "
+      "disallows use of the broadcast IP. Please specify the concrete host IP instead.");
     return Status::SENSOR_CONFIG_ERROR;
   }
   if (new_config->ptp_profile == nebula::drivers::PtpProfile::UNKNOWN_PROFILE) {
@@ -255,6 +275,14 @@ Status HesaiRosWrapper::validate_and_set_config(
   // in the cutting logic. Thus, require the user to cut at 0deg.
   if (fov_is_360 && new_config->cut_angle == 360) {
     RCLCPP_ERROR(get_logger(), "Cannot cut a 360deg FoV at 360deg. Cut at 0deg instead.");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  if (
+    new_config->downsample_mask_path &&
+    !std::filesystem::exists(new_config->downsample_mask_path.value())) {
+    RCLCPP_ERROR_STREAM(
+      get_logger(), "Downsample mask not found: " << new_config->downsample_mask_path.value());
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -324,19 +352,21 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
 
   drivers::HesaiSensorConfiguration new_cfg(*sensor_cfg_ptr_);
 
-  std::string _return_mode{};
+  std::string return_mode{};
   std::string calibration_parameter_name =
     get_calibration_parameter_name(sensor_cfg_ptr_->sensor_model);
+  std::string downsample_mask_path = new_cfg.downsample_mask_path.value_or("");
 
   bool got_any =
-    get_param(p, "return_mode", _return_mode) | get_param(p, "frame_id", new_cfg.frame_id) |
+    get_param(p, "return_mode", return_mode) | get_param(p, "frame_id", new_cfg.frame_id) |
     get_param(p, "sync_angle", new_cfg.sync_angle) | get_param(p, "cut_angle", new_cfg.cut_angle) |
     get_param(p, "min_range", new_cfg.min_range) | get_param(p, "max_range", new_cfg.max_range) |
     get_param(p, "rotation_speed", new_cfg.rotation_speed) |
     get_param(p, "cloud_min_angle", new_cfg.cloud_min_angle) |
     get_param(p, "cloud_max_angle", new_cfg.cloud_max_angle) |
     get_param(p, "dual_return_distance_threshold", new_cfg.dual_return_distance_threshold) |
-    get_param(p, calibration_parameter_name, new_cfg.calibration_path);
+    get_param(p, calibration_parameter_name, new_cfg.calibration_path) |
+    get_param(p, "point_filters.downsample_mask.path", downsample_mask_path);
 
   // Currently, all of the sub-wrappers read-only parameters, so they do not be queried for updates
 
@@ -344,9 +374,16 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
   }
 
-  if (_return_mode.length() > 0)
+  if (return_mode.empty()) {
     new_cfg.return_mode =
-      nebula::drivers::return_mode_from_string_hesai(_return_mode, sensor_cfg_ptr_->sensor_model);
+      nebula::drivers::return_mode_from_string_hesai(return_mode, sensor_cfg_ptr_->sensor_model);
+  }
+
+  if (!downsample_mask_path.empty()) {
+    new_cfg.downsample_mask_path = downsample_mask_path;
+  } else {
+    new_cfg.downsample_mask_path = std::nullopt;
+  }
 
   // ////////////////////////////////////////
   // Get and validate new calibration, if any
@@ -387,7 +424,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     RCLCPP_WARN_STREAM(get_logger(), "OnParameterChange aborted: " << status);
     auto result = SetParametersResult();
     result.successful = false;
-    result.reason = (std::stringstream() << "Invalid configuration: " << status).str();
+    result.reason = "Invalid configuration: " + util::to_string(status);
     return result;
   }
 
@@ -411,7 +448,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-void HesaiRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & packet)
+void HesaiRosWrapper::receive_cloud_packet_callback(const std::vector<uint8_t> & packet)
 {
   if (!decoder_wrapper_ || decoder_wrapper_->status() != Status::OK) {
     return;
@@ -424,7 +461,7 @@ void HesaiRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & packe
   auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
   msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
-  msg_ptr->data.swap(packet);
+  msg_ptr->data = packet;
 
   decoder_wrapper_->process_cloud_packet(std::move(msg_ptr));
 }
@@ -450,27 +487,21 @@ HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::get_calibration_data(
     calib = std::make_shared<drivers::HesaiCalibrationConfiguration>();
   }
 
-  std::string calibration_file_path_from_sensor;
-
-  {
-    int ext_pos = calibration_file_path.find_last_of('.');
-    calibration_file_path_from_sensor = calibration_file_path.substr(0, ext_pos);
-    calibration_file_path_from_sensor += "_from_sensor_" + sensor_cfg_ptr_->sensor_ip;
-    calibration_file_path_from_sensor +=
-      calibration_file_path.substr(ext_pos, calibration_file_path.size() - ext_pos);
-  }
+  std::filesystem::path calibration_from_sensor_path{calibration_file_path};
+  calibration_from_sensor_path = calibration_from_sensor_path.replace_extension(
+    "_from_sensor_" + sensor_cfg_ptr_->sensor_ip +
+    calibration_from_sensor_path.extension().string());
 
   // If a sensor is connected, try to download and save its calibration data
   if (!ignore_others && launch_hw_) {
     try {
       auto raw_data = hw_interface_wrapper_->hw_interface()->get_lidar_calibration_bytes();
       RCLCPP_INFO(logger, "Downloaded calibration data from sensor.");
-      auto status = calib->save_to_file_from_bytes(calibration_file_path_from_sensor, raw_data);
+      auto status = calib->save_to_file_from_bytes(calibration_from_sensor_path, raw_data);
       if (status != Status::OK) {
         RCLCPP_ERROR_STREAM(logger, "Could not save calibration data: " << status);
       } else {
-        RCLCPP_INFO_STREAM(
-          logger, "Saved downloaded data to " << calibration_file_path_from_sensor);
+        RCLCPP_INFO_STREAM(logger, "Saved downloaded data to " << calibration_from_sensor_path);
       }
     } catch (std::runtime_error & e) {
       RCLCPP_ERROR_STREAM(logger, "Could not download calibration data: " << e.what());
@@ -479,10 +510,10 @@ HesaiRosWrapper::get_calibration_result_t HesaiRosWrapper::get_calibration_data(
 
   // If saved calibration data from a sensor exists (either just downloaded above, or previously),
   // try to load it
-  if (!ignore_others && std::filesystem::exists(calibration_file_path_from_sensor)) {
-    auto status = calib->load_from_file(calibration_file_path_from_sensor);
+  if (!ignore_others && std::filesystem::exists(calibration_from_sensor_path)) {
+    auto status = calib->load_from_file(calibration_from_sensor_path);
     if (status == Status::OK) {
-      calib->calibration_file = calibration_file_path_from_sensor;
+      calib->calibration_file = calibration_from_sensor_path;
       return calib;
     }
 

@@ -48,6 +48,7 @@ nav:
           - QT64: parameters/vendors/hesai/qt64.md
           - QT128: parameters/vendors/hesai/qt128.md
           - AT128: parameters/vendors/hesai/at128.md
+          - XT16: parameters/vendors/hesai/xt16.md
           - XT32: parameters/vendors/hesai/xt32.md
           - XT32M: parameters/vendors/hesai/xt32m.md
       - Velodyne:
@@ -166,6 +167,7 @@ plugins:
       force_render_paths: |
         *
         !*_source.md
+        !class*.md
   - mkdoxy:
       projects:
         nebula_common:

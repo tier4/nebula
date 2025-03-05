@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>nebula_examples</name>
-  <version>0.2.0</version>
+  <version>0.2.4</version>
   <description>Nebula Offline Processing Samples</description>
   <maintainer email="contact@perceptionengine.jp">Perception Engine</maintainer>
 
@@ -11,8 +11,9 @@
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>ros_environment</buildtool_depend>
+  <build_depend>libpcl-all-dev</build_depend>
+  <build_export_depend>libpcl-all-dev</build_export_depend>
 
-  <depend>libpcl-all-dev</depend>
   <depend>nebula_common</depend>
   <depend>nebula_decoders</depend>
   <depend>nebula_ros</depend>

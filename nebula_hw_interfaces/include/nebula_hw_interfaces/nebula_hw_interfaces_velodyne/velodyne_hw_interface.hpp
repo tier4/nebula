@@ -26,6 +26,7 @@
 #define BOOST_ALLOW_DEPRECATED_HEADERS
 #endif
 
+#include "nebula_common/util/expected.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 
 #include <boost_tcp_driver/http_client_driver.hpp>
@@ -69,8 +70,49 @@ private:
   std::string target_reset_{"/cgi/reset"};
   void string_callback(const std::string & str);
 
-  std::string http_get_request(const std::string & endpoint);
-  std::string http_post_request(const std::string & endpoint, const std::string & body);
+  template <typename CallbackType>
+  nebula::util::expected<std::string, VelodyneStatus> do_http_request_with_retries(
+    CallbackType do_request, std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & client)
+  {
+    constexpr int max_retries = 3;
+    constexpr int retry_delay_ms = 100;
+
+    for (int retry = 0; retry < max_retries; ++retry) {
+      try {
+        if (!client->client()->isOpen()) {
+          client->client()->open();
+        }
+
+        std::string response = do_request();
+        client->client()->close();
+        return nebula::util::expected<std::string, VelodyneStatus>(response);
+      } catch (const std::exception & ex) {
+        if (retry == max_retries - 1) {
+          return nebula::util::expected<std::string, VelodyneStatus>(
+            VelodyneStatus::HTTP_CONNECTION_ERROR);
+        }
+
+        if (client->client()->isOpen()) {
+          try {
+            client->client()->close();
+          } catch (const std::exception & ex) {
+            return nebula::util::expected<std::string, VelodyneStatus>(
+              VelodyneStatus::HTTP_CONNECTION_ERROR);
+          }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(retry_delay_ms));
+      }
+    }
+
+    return nebula::util::expected<std::string, VelodyneStatus>(
+      VelodyneStatus::HTTP_CONNECTION_ERROR);
+  }
+
+  nebula::util::expected<std::string, VelodyneStatus> http_get_request(
+    const std::string & endpoint);
+  nebula::util::expected<std::string, VelodyneStatus> http_post_request(
+    const std::string & endpoint, const std::string & body);
 
   /// @brief Get a one-off HTTP client to communicate with the hardware
   /// @param ctx IO Context
@@ -152,13 +194,13 @@ public:
   VelodyneStatus init_http_client();
   /// @brief Getting the current operational state and parameters of the sensor (sync)
   /// @return Resulting JSON string
-  std::string get_status();
+  nebula::util::expected<std::string, VelodyneStatus> get_status();
   /// @brief Getting diagnostic information from the sensor (sync)
   /// @return Resulting JSON string
-  std::string get_diag();
+  nebula::util::expected<std::string, VelodyneStatus> get_diag();
   /// @brief Getting current sensor configuration and status data (sync)
   /// @return Resulting JSON string
-  std::string get_snapshot();
+  nebula::util::expected<std::string, VelodyneStatus> get_snapshot();
   /// @brief Setting Motor RPM (sync)
   /// @param rpm the RPM of the motor
   /// @return Resulting status

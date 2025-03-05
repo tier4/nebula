@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>nebula_tests</name>
-  <version>0.2.0</version>
+  <version>0.2.4</version>
   <description>Nebula Lidar Drivers</description>
   <maintainer email="contact@map4.jp">MAP IV</maintainer>
 
@@ -15,6 +15,8 @@
   <depend>diagnostic_updater</depend>
   <depend>nebula_common</depend>
   <depend>nebula_decoders</depend>
+  <depend>nebula_hw_interfaces</depend>
+  <depend>nebula_ros</depend>
   <depend>rosbag2_cpp</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>

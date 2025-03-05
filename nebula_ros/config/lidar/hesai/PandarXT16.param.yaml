@@ -1,0 +1,30 @@
+/**:
+  ros__parameters:
+    host_ip: 192.168.1.10
+    sensor_ip: 192.168.1.201
+    multicast_ip: ""
+    data_port: 2368
+    gnss_port: 10110
+    packet_mtu_size: 1500
+    launch_hw: true
+    setup_sensor: true
+    udp_only: false
+    frame_id: hesai
+    diag_span: 1000
+    min_range: 0.05
+    max_range: 120.0
+    cloud_min_angle: 0
+    cloud_max_angle: 360
+    sync_angle: 0
+    cut_angle: 0.0
+    sensor_model: PandarXT16
+    calibration_file: $(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).csv
+    rotation_speed: 600
+    return_mode: Dual
+    ptp_profile: 1588v2
+    ptp_domain: 0
+    ptp_transport_type: UDP
+    ptp_switch_type: TSN
+    ptp_lock_threshold: 100
+    retry_hw: true
+    dual_return_distance_threshold: 0.1

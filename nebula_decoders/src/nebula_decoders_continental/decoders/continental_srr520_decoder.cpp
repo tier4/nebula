@@ -20,7 +20,11 @@
 #include <boost/algorithm/string/join.hpp>
 
 #include <cmath>
+#include <iostream>
+#include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 
 namespace nebula::drivers::continental_srr520
 {

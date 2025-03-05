@@ -15,11 +15,13 @@
 #pragma once
 
 #include "nebula_decoders/nebula_decoders_common/angles.hpp"
+#include "nebula_decoders/nebula_decoders_common/point_filters/downsample_mask.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/loggers/logger.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/point_types.hpp>
 #include <nlohmann/json.hpp>
@@ -31,6 +33,7 @@
 #include <cmath>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -123,7 +126,7 @@ class HesaiDecoder : public HesaiScanDecoder
     float scan_emit_angle;
   };
 
-protected:
+private:
   /// @brief Configuration for this decoder
   const std::shared_ptr<const drivers::HesaiSensorConfiguration> sensor_configuration_;
 
@@ -151,7 +154,7 @@ protected:
   ScanCutAngles scan_cut_angles_;
   uint32_t last_azimuth_ = 0;
 
-  rclcpp::Logger logger_;
+  std::shared_ptr<loggers::Logger> logger_;
 
   // filtered pointcloud counter
   HesaiDecodeFilteredInfo decode_filtered_info_;
@@ -163,15 +166,17 @@ protected:
   std::array<std::array<int, SensorT::packet_t::n_blocks>, SensorT::packet_t::max_returns>
     block_firing_offset_ns_;
 
+  std::optional<point_filters::DownsampleMaskFilter> mask_filter_;
+
   /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
   /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
   bool parse_packet(const std::vector<uint8_t> & packet)
   {
     if (packet.size() < sizeof(typename SensorT::packet_t)) {
-      RCLCPP_ERROR_STREAM(
-        logger_, "Packet size mismatch: " << packet.size() << " | Expected at least: "
-                                          << sizeof(typename SensorT::packet_t));
+      NEBULA_LOG_STREAM(
+        logger_->error, "Packet size mismatch: " << packet.size() << " | Expected at least: "
+                                                 << sizeof(typename SensorT::packet_t));
       return false;
     }
     if (std::memcpy(&packet_, packet.data(), sizeof(typename SensorT::packet_t))) {
@@ -180,7 +185,7 @@ protected:
       return true;
     }
 
-    RCLCPP_ERROR(logger_, "Packet memcopy failed");
+    logger_->error("Packet memcopy failed");
     return false;
   }
 
@@ -280,7 +285,7 @@ protected:
         uint64_t scan_timestamp_ns =
           in_current_scan ? decode_scan_timestamp_ns_ : output_scan_timestamp_ns_;
 
-        NebulaPoint & point = pc->emplace_back();
+        NebulaPoint point;
         point.distance = distance;
         point.intensity = unit.reflectivity;
         point.time_stamp = get_point_time_relative(
@@ -300,6 +305,11 @@ protected:
         point.azimuth = corrected_angle_data.azimuth_rad;
         point.elevation = corrected_angle_data.elevation_rad;
 
+        if (mask_filter_ && mask_filter_->excluded(point)) {
+          continue;
+        }
+
+        pc->emplace_back(point);
         decode_filtered_info_.update_pointcloud_bounds(point);
         decode_filtered_info_.total_kept_point_count++;
       }
@@ -334,24 +344,29 @@ public:
   explicit HesaiDecoder(
     const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> &
-      correction_data)
+      correction_data,
+    const std::shared_ptr<loggers::Logger> & logger)
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(
       correction_data, sensor_configuration_->cloud_min_angle,
       sensor_configuration_->cloud_max_angle, sensor_configuration_->cut_angle),
-    logger_(rclcpp::get_logger("HesaiDecoder"))
+    scan_cut_angles_(
+      {deg2rad(sensor_configuration_->cloud_min_angle),
+       deg2rad(sensor_configuration_->cloud_max_angle), deg2rad(sensor_configuration_->cut_angle)}),
+    logger_(logger)
   {
-    logger_.set_level(rclcpp::Logger::Level::Debug);
-
     decode_pc_ = std::make_shared<NebulaPointCloud>();
     output_pc_ = std::make_shared<NebulaPointCloud>();
 
+    if (sensor_configuration->downsample_mask_path) {
+      mask_filter_ = point_filters::DownsampleMaskFilter(
+        sensor_configuration->downsample_mask_path.value(), SensorT::fov_mdeg.azimuth,
+        SensorT::peak_resolution_mdeg.azimuth, SensorT::packet_t::n_channels,
+        logger_->child("Downsample Mask"), true);
+    }
+
     decode_pc_->reserve(SensorT::max_scan_buffer_points);
     output_pc_->reserve(SensorT::max_scan_buffer_points);
-
-    scan_cut_angles_ = {
-      deg2rad(sensor_configuration_->cloud_min_angle),
-      deg2rad(sensor_configuration_->cloud_max_angle), deg2rad(sensor_configuration_->cut_angle)};
   }
 
   int unpack(const std::vector<uint8_t> & packet) override

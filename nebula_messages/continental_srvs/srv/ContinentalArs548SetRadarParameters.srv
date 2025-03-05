@@ -1,8 +1,13 @@
+string FREQUENCY_BAND_LOW="low"
+string FREQUENCY_BAND_MID="mid"
+string FREQUENCY_BAND_HIGH="high"
+string COUNTRY_CODE_JAPAN="japan"
+string COUNTRY_CODE_WORLDWIDE="worldwide"
 uint16 maximum_distance
-uint16 frequency_slot
-uint16 cycle_time
-uint16 time_slot
-uint16 country_code
+string frequency_band
+uint16 cycle_time_ms
+uint16 time_slot_ms
+string country_code
 uint16 powersave_standstill
 ---
 bool success

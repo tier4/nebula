@@ -10,16 +10,21 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_at128.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt128.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt64.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt16.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32m.hpp"
 
-// #define WITH_DEBUG_STD_COUT_HESAI_CLIENT // Use std::cout messages for debugging
+#include <memory>
+#include <tuple>
+#include <vector>
 
 namespace nebula::drivers
 {
 HesaiDriver::HesaiDriver(
   const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<const HesaiCalibrationConfigurationBase> & calibration_data)
+  const std::shared_ptr<const HesaiCalibrationConfigurationBase> & calibration_data,
+  const std::shared_ptr<loggers::Logger> & logger)
+: logger_(logger)
 {
   // initialize proper parser from cloud config's model and echo mode
   driver_status_ = nebula::Status::OK;
@@ -37,6 +42,9 @@ HesaiDriver::HesaiDriver(
       break;
     case SensorModel::HESAI_PANDARQT128:
       scan_decoder_ = initialize_decoder<PandarQT128>(sensor_configuration, calibration_data);
+      break;
+    case SensorModel::HESAI_PANDARXT16:
+      scan_decoder_ = initialize_decoder<PandarXT16>(sensor_configuration, calibration_data);
       break;
     case SensorModel::HESAI_PANDARXT32:
       scan_decoder_ = initialize_decoder<PandarXT32>(sensor_configuration, calibration_data);
@@ -70,17 +78,17 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
 {
   using CalibT = typename SensorT::angle_corrector_t::correction_data_t;
   return std::make_shared<HesaiDecoder<SensorT>>(
-    sensor_configuration, std::dynamic_pointer_cast<const CalibT>(calibration_configuration));
+    sensor_configuration, std::dynamic_pointer_cast<const CalibT>(calibration_configuration),
+    logger_->child("Decoder"));
 }
 
 std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::parse_cloud_packet(
   const std::vector<uint8_t> & packet)
 {
   std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
-  auto logger = rclcpp::get_logger("HesaiDriver");
 
   if (driver_status_ != nebula::Status::OK) {
-    RCLCPP_ERROR(logger, "Driver not OK.");
+    logger_->error("Driver not OK.");
     return pointcloud;
   }
 
@@ -88,13 +96,6 @@ std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::parse_cloud_packet
   if (scan_decoder_->has_scanned()) {
     pointcloud = scan_decoder_->get_pointcloud();
   }
-
-  // todo
-  // if (cnt == 0) {
-  //   RCLCPP_ERROR_STREAM(
-  //     logger, "Scanned " << pandar_scan->packets.size() << " packets, but no "
-  //                        << "pointclouds were generated. Last azimuth: " << last_azimuth);
-  // }
 
   return pointcloud;
 }

@@ -17,7 +17,10 @@
 #include <nebula_common/continental/continental_ars548.hpp>
 
 #include <cmath>
+#include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 
 namespace nebula::drivers::continental_ars548
 {
@@ -245,6 +248,14 @@ bool ContinentalARS548Decoder::parse_detections_list_packet(
 bool ContinentalARS548Decoder::parse_objects_list_packet(
   const nebula_msgs::msg::NebulaPacket & packet_msg)
 {
+  // cSpell:ignore knzo25
+  // NOTE(knzo25): In the radar firmware used when developing this driver,
+  // corner radars were not supported. When a new firmware addresses this,
+  // the driver will be updated.
+  if (nebula::drivers::continental_ars548::is_corner_radar(radar_status_.yaw)) {
+    return true;
+  }
+
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548ObjectList>();
   auto & msg = *msg_ptr;
 
@@ -475,7 +486,7 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
       radar_status_.hcc = "1:Worldwide";
       break;
     case hcc_japan:
-      radar_status_.hcc = "1:Japan";
+      radar_status_.hcc = "2:Japan";
       break;
     default:
       radar_status_.hcc = std::to_string(sensor_status_packet.status.hcc) + ":Invalid hcc";

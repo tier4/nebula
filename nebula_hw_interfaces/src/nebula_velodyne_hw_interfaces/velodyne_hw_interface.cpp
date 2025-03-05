@@ -2,6 +2,11 @@
 
 #include "nebula_hw_interfaces/nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp"
 
+#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace nebula::drivers
 {
 VelodyneHwInterface::VelodyneHwInterface()
@@ -12,29 +17,22 @@ VelodyneHwInterface::VelodyneHwInterface()
 {
 }
 
-std::string VelodyneHwInterface::http_get_request(const std::string & endpoint)
+nebula::util::expected<std::string, VelodyneStatus> VelodyneHwInterface::http_get_request(
+  const std::string & endpoint)
 {
   std::lock_guard lock(mtx_inflight_request_);
-  if (!http_client_driver_->client()->isOpen()) {
-    http_client_driver_->client()->open();
-  }
-
-  std::string response = http_client_driver_->get(endpoint);
-  http_client_driver_->client()->close();
-  return response;
+  auto do_request = [this, &endpoint]() { return http_client_driver_->get(endpoint); };
+  return do_http_request_with_retries(do_request, http_client_driver_);
 }
 
-std::string VelodyneHwInterface::http_post_request(
+nebula::util::expected<std::string, VelodyneStatus> VelodyneHwInterface::http_post_request(
   const std::string & endpoint, const std::string & body)
 {
   std::lock_guard lock(mtx_inflight_request_);
-  if (!http_client_driver_->client()->isOpen()) {
-    http_client_driver_->client()->open();
-  }
-
-  std::string response = http_client_driver_->post(endpoint, body);
-  http_client_driver_->client()->close();
-  return response;
+  auto do_request = [this, &endpoint, &body]() {
+    return http_client_driver_->post(endpoint, body);
+  };
+  return do_http_request_with_retries(do_request, http_client_driver_);
 }
 
 Status VelodyneHwInterface::initialize_sensor_configuration(
@@ -48,7 +46,10 @@ Status VelodyneHwInterface::set_sensor_configuration(
   std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration)
 {
   auto snapshot = get_snapshot();
-  auto tree = parse_json(snapshot);
+  if (!snapshot.has_value()) {
+    return snapshot.error();
+  }
+  auto tree = parse_json(snapshot.value());
   VelodyneStatus status = check_and_set_config(sensor_configuration, tree);
 
   return status;
@@ -238,19 +239,21 @@ VelodyneStatus VelodyneHwInterface::check_and_set_config(
 
 // sync
 
-std::string VelodyneHwInterface::get_status()
+nebula::util::expected<std::string, VelodyneStatus> VelodyneHwInterface::get_status()
 {
   return http_get_request(target_status_);
 }
 
-std::string VelodyneHwInterface::get_diag()
+nebula::util::expected<std::string, VelodyneStatus> VelodyneHwInterface::get_diag()
 {
-  auto rt = http_get_request(target_diag_);
-  std::cout << "read_response: " << rt << std::endl;
-  return rt;
+  auto response = http_get_request(target_diag_);
+  if (response.has_value()) {
+    std::cout << "read_response: " << response.value() << std::endl;
+  }
+  return response;
 }
 
-std::string VelodyneHwInterface::get_snapshot()
+nebula::util::expected<std::string, VelodyneStatus> VelodyneHwInterface::get_snapshot()
 {
   return http_get_request(target_snapshot_);
 }
@@ -261,7 +264,10 @@ VelodyneStatus VelodyneHwInterface::set_rpm(uint16_t rpm)
     return VelodyneStatus::INVALID_RPM_ERROR;
   }
   auto rt = http_post_request(target_setting_, (boost::format("rpm=%d") % rpm).str());
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
@@ -271,7 +277,10 @@ VelodyneStatus VelodyneHwInterface::set_fov_start(uint16_t fov_start)
     return VelodyneStatus::INVALID_FOV_ERROR;
   }
   auto rt = http_post_request(target_fov_, (boost::format("start=%d") % fov_start).str());
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
@@ -281,7 +290,10 @@ VelodyneStatus VelodyneHwInterface::set_fov_end(uint16_t fov_end)
     return VelodyneStatus::INVALID_FOV_ERROR;
   }
   auto rt = http_post_request(target_fov_, (boost::format("end=%d") % fov_end).str());
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
@@ -302,7 +314,10 @@ VelodyneStatus VelodyneHwInterface::set_return_type(nebula::drivers::ReturnMode 
       return VelodyneStatus::INVALID_RETURN_MODE_ERROR;
   }
   auto rt = http_post_request(target_setting_, body_str);
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
@@ -310,7 +325,10 @@ VelodyneStatus VelodyneHwInterface::save_config()
 {
   std::string body_str = "submit";
   auto rt = http_post_request(target_save_, body_str);
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
@@ -318,7 +336,10 @@ VelodyneStatus VelodyneHwInterface::reset_system()
 {
   std::string body_str = "reset_system";
   auto rt = http_post_request(target_reset_, body_str);
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
@@ -326,7 +347,10 @@ VelodyneStatus VelodyneHwInterface::laser_on()
 {
   std::string body_str = "laser=on";
   auto rt = http_post_request(target_setting_, body_str);
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
@@ -334,7 +358,10 @@ VelodyneStatus VelodyneHwInterface::laser_off()
 {
   std::string body_str = "laser=off";
   auto rt = http_post_request(target_setting_, body_str);
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
@@ -342,49 +369,70 @@ VelodyneStatus VelodyneHwInterface::laser_on_off(bool on)
 {
   std::string body_str = (boost::format("laser=%s") % (on ? "on" : "off")).str();
   auto rt = http_post_request(target_setting_, body_str);
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
 VelodyneStatus VelodyneHwInterface::set_host_addr(std::string addr)
 {
   auto rt = http_post_request(target_host_, (boost::format("addr=%s") % addr).str());
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
 VelodyneStatus VelodyneHwInterface::set_host_dport(uint16_t dport)
 {
   auto rt = http_post_request(target_host_, (boost::format("dport=%d") % dport).str());
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
 VelodyneStatus VelodyneHwInterface::set_host_tport(uint16_t tport)
 {
   auto rt = http_post_request(target_host_, (boost::format("tport=%d") % tport).str());
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
 VelodyneStatus VelodyneHwInterface::set_net_addr(std::string addr)
 {
   auto rt = http_post_request(target_net_, (boost::format("addr=%s") % addr).str());
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
 VelodyneStatus VelodyneHwInterface::set_net_mask(std::string mask)
 {
   auto rt = http_post_request(target_net_, (boost::format("mask=%s") % mask).str());
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
 VelodyneStatus VelodyneHwInterface::set_net_gateway(std::string gateway)
 {
   auto rt = http_post_request(target_net_, (boost::format("gateway=%s") % gateway).str());
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 
@@ -392,7 +440,10 @@ VelodyneStatus VelodyneHwInterface::set_net_dhcp(bool use_dhcp)
 {
   auto rt =
     http_post_request(target_net_, (boost::format("dhcp=%s") % (use_dhcp ? "on" : "off")).str());
-  string_callback(rt);
+  if (!rt.has_value()) {
+    return rt.error();
+  }
+  string_callback(rt.value());
   return Status::OK;
 }
 

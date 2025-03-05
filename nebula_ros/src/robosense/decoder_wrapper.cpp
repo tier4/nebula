@@ -2,6 +2,12 @@
 
 #include "nebula_ros/robosense/decoder_wrapper.hpp"
 
+#include <algorithm>
+#include <cstdio>
+#include <memory>
+#include <tuple>
+#include <utility>
+
 namespace nebula::ros
 {
 
