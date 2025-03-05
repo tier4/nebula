@@ -228,7 +228,7 @@ if(BUILD_TESTING)
 
     ament_lint_auto_find_test_dependencies()
 
-    foreach(MODEL Pandar40P Pandar64 PandarQT64 PandarQT128 Pandar128E4X PandarAT128 PandarXT16 PandarXT32 PandarXT32M)
+    foreach(MODEL Pandar40P Pandar64 PandarQT64 PandarQT128 Pandar128E4X PandarAT128 PandarXT16 PandarXT32 PandarXT32M ARS548)
         string(TOLOWER ${MODEL}_smoke_test test_name)
         add_ros_test(
             test/smoke_test.py
