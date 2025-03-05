@@ -105,8 +105,10 @@ struct HesaiDecodeFilteredInfo
 
   void update_pointcloud_bounds(const NebulaPoint & point)
   {
-    cloud_azimuth_min_deg = static_cast<float>(std::min(cloud_azimuth_min_deg, point.azimuth * (180.0f / static_cast<float>(M_PI))));   
-    cloud_azimuth_max_deg = static_cast<float>(std::max(cloud_azimuth_max_deg, point.azimuth * (180.0f / static_cast<float>(M_PI))));
+    cloud_azimuth_min_deg = static_cast<float>(
+      std::min(cloud_azimuth_min_deg, point.azimuth * (180.0f / static_cast<float>(M_PI))));
+    cloud_azimuth_max_deg = static_cast<float>(
+      std::max(cloud_azimuth_max_deg, point.azimuth * (180.0f / static_cast<float>(M_PI))));
     packet_timestamp_min_ns =
       std::min(packet_timestamp_min_ns, static_cast<uint64_t>(point.time_stamp));
     packet_timestamp_max_ns =
