@@ -46,6 +46,7 @@ struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
   uint16_t configuration_host_port{};
   uint16_t configuration_sensor_port{};
   bool use_sensor_time{};
+  int radar_info_rate_subsample{};
   float configuration_vehicle_length{};
   float configuration_vehicle_width{};
   float configuration_vehicle_height{};
@@ -68,6 +69,7 @@ inline std::ostream & operator<<(
   os << "Host Port: " << arg.configuration_host_port << '\n';
   os << "Sensor Port: " << arg.configuration_sensor_port << '\n';
   os << "UseSensor Time: " << arg.use_sensor_time << '\n';
+  os << "RadarInfoRateSubsample: " << arg.radar_info_rate_subsample << '\n';
   os << "Vehicle Length: " << arg.configuration_vehicle_length << '\n';
   os << "Vehicle Width: " << arg.configuration_vehicle_width << '\n';
   os << "Vehicle Height: " << arg.configuration_vehicle_height << '\n';
@@ -291,6 +293,74 @@ constexpr int blockage_test_ongoing = 2;
 
 constexpr int min_odometry_hz = 10;
 constexpr int max_odometry_hz = 50;
+
+struct FieldInfo
+{
+  FieldInfo(
+    bool min_value_available, bool max_value_available, bool resolution_available, float min_value,
+    float max_value, float resolution)
+  : min_value_available(min_value_available),
+    max_value_available(max_value_available),
+    resolution_available(resolution_available),
+    min_value(min_value),
+    max_value(max_value),
+    resolution(resolution)
+  {
+  }
+  bool min_value_available;
+  bool max_value_available;
+  bool resolution_available;
+  float min_value;
+  float max_value;
+  float resolution;
+};
+
+// Detection field infos
+const FieldInfo azimuth_info{true, true, false, -M_PI, M_PI, 0.f};
+const FieldInfo azimuth_std_info{true, true, false, 0.f, 1.f, 0.f};
+const FieldInfo elevation_info{true, true, false, -M_PI, M_PI, 0.f};
+const FieldInfo elevation_std_info{true, true, false, 0.f, 1.f, 0.f};
+
+const FieldInfo range_info{true, true, false, 0.f, 301.f, 0.f};
+const FieldInfo range_std_info{true, true, false, 0.f, 1.f, 0.f};
+const FieldInfo range_rate_info{true, true, false, -100.f, 100.f, 0.f};
+const FieldInfo range_rate_std_info{true, true, false, 0.f, 1.f, 0.f};
+
+const FieldInfo rcs_info{true, true, true, -128.f, 127.f, 1.f};
+const FieldInfo measurement_id_info{true, true, true, 0.f, 65535.f, 1.f};
+const FieldInfo positive_predictive_value_info{true, true, true, 0.f, 100.f, 1.f};
+const FieldInfo classification_info{true, true, true, 0.f, 255.f, 1.f};
+const FieldInfo multi_target_probability_info{true, true, true, 0.f, 100.f, 1.f};
+const FieldInfo object_id_info{true, true, false, 0.f, 65535.f, 1.f};
+const FieldInfo ambiguity_flag_info{true, true, true, 0.f, 100.f, 1.f};
+
+// Object field infos
+const FieldInfo age_info{true, true, true, 0.f, 65535.f, 1.f};
+const FieldInfo measurement_status_info{true, true, true, 0.f, 255.f, 1.f};
+const FieldInfo movement_status_info{true, true, true, 0.f, 255.f, 1.f};
+
+const FieldInfo position_x_info{true, true, false, -1600.f, 1600.f, 0.f};
+const FieldInfo position_y_info{true, true, false, -1600.f, 1600.f, 0.f};
+const FieldInfo position_z_info{true, true, false, -1600.f, 1600.f, 0.f};
+
+const FieldInfo velocity_x_info{false, false, false, 0.f, 0.f, 0.f};
+const FieldInfo velocity_y_info{false, false, false, 0.f, 0.f, 0.f};
+const FieldInfo velocity_z_info{false, false, false, 0.f, 0.f, 0.f};
+
+const FieldInfo acceleration_x_info{false, false, false, 0.f, 0.f, 0.f};
+const FieldInfo acceleration_y_info{false, false, false, 0.f, 0.f, 0.f};
+const FieldInfo acceleration_z_info{false, false, false, 0.f, 0.f, 0.f};
+
+const FieldInfo shape_x_info{false, false, false, 0.f, 0.f, 0.f};
+const FieldInfo shape_y_info{false, false, false, 0.f, 0.f, 0.f};
+const FieldInfo shape_z_info{false, false, false, 0.f, 0.f, 0.f};
+
+const FieldInfo orientation_info{true, true, false, -M_PI, M_PI, 0.f};
+const FieldInfo orientation_std_info{false, false, false, 0.f, 0.f, 0.f};
+const FieldInfo orientation_rate_info{false, false, false, -M_PI, M_PI, 0.f};
+const FieldInfo orientation_rate_std_info{false, false, false, 0.f, 0.f, 0.f};
+
+const FieldInfo existence_probability_info{true, true, true, 0.f, 100.f, 1.f};
 
 #pragma pack(push, 1)
 
