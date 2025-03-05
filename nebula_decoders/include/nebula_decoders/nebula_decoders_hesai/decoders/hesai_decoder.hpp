@@ -411,6 +411,7 @@ public:
 
     if (has_scanned_) {
       output_pc_->clear();
+      pointcloud_decode_statistics_ = PointcloudDecodeStatistics(mask_filter_.has_value());
       has_scanned_ = false;
     }
 
@@ -451,11 +452,6 @@ public:
         std::swap(decode_pc_, output_pc_);
         std::swap(decode_scan_timestamp_ns_, output_scan_timestamp_ns_);
         has_scanned_ = true;
-        nlohmann::ordered_json j = pointcloud_decode_statistics_.to_json();
-        std::cout << "=======================" << std::endl;
-        std::cout << j.dump(2) << std::endl;
-        std::cout << "=======================" << std::endl;
-        pointcloud_decode_statistics_ = PointcloudDecodeStatistics(mask_filter_.has_value());
       }
 
       last_azimuth_ = block_azimuth;
@@ -466,10 +462,10 @@ public:
 
   bool has_scanned() override { return has_scanned_; }
 
-  std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() override
+  std::tuple<drivers::NebulaPointCloudPtr, double, nlohmann::ordered_json> get_pointcloud() override
   {
     double scan_timestamp_s = static_cast<double>(output_scan_timestamp_ns_) * 1e-9;
-    return std::make_pair(output_pc_, scan_timestamp_s);
+    return {output_pc_, scan_timestamp_s, pointcloud_decode_statistics_.to_json()};
   }
 };
 

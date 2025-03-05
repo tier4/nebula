@@ -208,9 +208,9 @@ Status HesaiRosOfflineExtractSample::read_bag()
               << bag_message->time_stamp << std::endl;
 
     for (auto & pkt : extracted_msg.packets) {
-      auto pointcloud_ts = driver_ptr_->parse_cloud_packet(
+      auto parse_result = driver_ptr_->parse_cloud_packet(
         std::vector<uint8_t>(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size)));
-      auto pointcloud = std::get<0>(pointcloud_ts);
+      const auto & [pointcloud, timestamp_s, decode_stats] = parse_result.value();
 
       if (!pointcloud) {
         continue;

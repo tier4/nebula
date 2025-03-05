@@ -271,8 +271,8 @@ Status HesaiRosOfflineExtractBag::read_bag()
     nebula_msg.header = extracted_msg.header;
     for (auto & pkt : extracted_msg.packets) {
       std::vector<uint8_t> pkt_data(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size));
-      auto pointcloud_ts = driver_ptr_->parse_cloud_packet(pkt_data);
-      auto pointcloud = std::get<0>(pointcloud_ts);
+      auto parse_result = driver_ptr_->parse_cloud_packet(pkt_data);
+      const auto & [pointcloud, timestamp_s, decode_stats] = parse_result.value();
 
       nebula_msgs::msg::NebulaPacket nebula_pkt;
       nebula_pkt.stamp = pkt.stamp;

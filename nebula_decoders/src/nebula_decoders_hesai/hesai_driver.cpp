@@ -82,22 +82,19 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
     logger_->child("Decoder"));
 }
 
-std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::parse_cloud_packet(
-  const std::vector<uint8_t> & packet)
+HesaiDriver::parse_result_t HesaiDriver::parse_cloud_packet(const std::vector<uint8_t> & packet)
 {
-  std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
-
   if (driver_status_ != nebula::Status::OK) {
     logger_->error("Driver not OK.");
-    return pointcloud;
+    return {};
   }
 
   scan_decoder_->unpack(packet);
   if (scan_decoder_->has_scanned()) {
-    pointcloud = scan_decoder_->get_pointcloud();
+    return scan_decoder_->get_pointcloud();
   }
 
-  return pointcloud;
+  return {};
 }
 
 Status HesaiDriver::set_calibration_configuration(
