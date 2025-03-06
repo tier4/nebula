@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <nebula_common/util/expected.hpp>
+
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/context.hpp>
@@ -31,7 +33,9 @@
 #include <future>
 #include <memory>
 #include <string>
+#include <thread>
 #include <utility>
+#include <variant>
 
 namespace nebula::drivers::connections
 {
@@ -47,7 +51,7 @@ class HttpClient
 
 public:
   static constexpr char const * const content_type_json = "application/json";
-  static constexpr char const * const content_type_cotest_stream = "application/octet-stream";
+  static constexpr char const * const content_type_octet_stream = "application/octet-stream";
 
   struct HttpResponse
   {
@@ -55,12 +59,7 @@ public:
     std::string body;
   };
 
-  HttpClient(std::string host, std::string port) : host_(std::move(host)), port_(std::move(port))
-  {
-    tcp::resolver resolver(ioc_);
-    auto endpoints = resolver.resolve(host_, port_);
-    stream_.connect(endpoints);
-  }
+  HttpClient(std::string host, std::string port) : host_(std::move(host)), port_(std::move(port)) {}
 
   [[nodiscard]] HttpResponse get(const std::string & target)
   {
@@ -99,8 +98,23 @@ public:
   }
 
 private:
-  HttpResponse execute_request(http::request<http::string_body> & req)
+  util::expected<std::monostate, boost::beast::system_error> try_connect()
   {
+    tcp::resolver resolver(ioc_);
+
+    try {
+      auto endpoints = resolver.resolve(host_, port_);
+      stream_.connect(endpoints);
+    } catch (boost::beast::system_error & e) {
+      return e;
+    }
+
+    return std::monostate{};
+  }
+
+  HttpResponse execute_request(const http::request<http::string_body> & req)
+  {
+    try_connect().value_or_throw();
     http::write(stream_, req);
     http::response<http::string_body> res;
     beast::flat_buffer buf;
@@ -113,26 +127,14 @@ private:
     auto promise = std::make_shared<std::promise<HttpResponse>>();
     auto future = promise->get_future();
 
-    http::async_write(
-      stream_, req,
-      [this, req = std::move(req), promise = std::move(promise)](beast::error_code ec, size_t) {
-        if (ec) {
-          promise->set_exception(std::make_exception_ptr(beast::system_error{ec}));
-          return;
-        }
-
-        http::response<http::string_body> res;
-        beast::flat_buffer buf;
-        http::async_read(
-          stream_, buf, res,
-          [promise, buf = std::move(buf), res = std::move(res)](beast::error_code ec, size_t) {
-            if (ec) {
-              promise->set_exception(std::make_exception_ptr(beast::system_error{ec}));
-              return;
-            }
-            promise->set_value(HttpResponse{res.result(), res.body()});
-          });
-      });
+    std::thread([this, req = std::move(req), promise = std::move(promise)]() {
+      try {
+        HttpResponse response = execute_request(req);
+        promise->set_value(response);
+      } catch (std::exception & e) {
+        promise->set_exception(std::make_exception_ptr(e));
+      }
+    }).detach();
 
     return future;
   }
