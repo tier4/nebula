@@ -14,6 +14,7 @@
 #include <diagnostic_msgs/msg/detail/diagnostic_status__struct.hpp>
 
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -67,8 +68,10 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   RCLCPP_INFO_STREAM(logger_, "Hardware ID: " + hardware_id);
 
   if (config->sync_master) {
+    std::string human_readable_sensor_name = model + '@' + config->sensor_ip;
     sync_diag_client_.emplace(
-      config->sync_master->first, config->sync_master->second, hardware_id, config->ptp_domain);
+      config->sync_master->first, config->sync_master->second, human_readable_sensor_name,
+      config->ptp_domain);
   }
 
   initialize_hesai_diagnostics(monitor_enabled);
@@ -241,11 +244,17 @@ void HesaiHwMonitorWrapper::on_sync_diag_timer()
 {
   if (!sync_diag_client_) return;
 
+  auto port_ds = hw_interface_->get_ptp_diag_port();
   try {
-    auto port_ds = hw_interface_->get_ptp_diag_port();
     auto result = sync_diag_client_->submit_port_state_update(
       port_ds.portIdentity.clock_id.to_json(), port_ds.portIdentity.port_number.value(),
       port_ds.portState);
+    if (!result.has_value()) {
+      RCLCPP_WARN_STREAM(logger_, "Could not send port state update: " << result.error());
+    }
+
+    result = sync_diag_client_->submit_clock_alias(
+      port_ds.portIdentity.clock_id.to_json().template get<std::string>());
     if (!result.has_value()) {
       RCLCPP_WARN_STREAM(logger_, "Could not send port state update: " << result.error());
     }
@@ -253,16 +262,19 @@ void HesaiHwMonitorWrapper::on_sync_diag_timer()
     RCLCPP_ERROR_STREAM(logger_, "Could not get port dataset from sensor: " << e.what());
   }
 
+  auto time_status_np = hw_interface_->get_ptp_diag_time();
   try {
-    auto time_status_np = hw_interface_->get_ptp_diag_time();
+    std::optional<std::string> master_clock_id{};
     if (time_status_np.gmPresent.value()) {
-      auto result = sync_diag_client_->submit_master_update(
-        time_status_np.gmIdentity.to_json().template get<std::string>());
-      if (!result.has_value()) {
-        RCLCPP_WARN_STREAM(logger_, "Could not send clock master update: " << result.error());
-      }
+      master_clock_id.emplace(time_status_np.gmIdentity.to_json().template get<std::string>());
     }
-  } catch (const std::runtime_error & e) {
+    auto result = sync_diag_client_->submit_master_update(master_clock_id);
+    if (!result.has_value()) {
+      RCLCPP_WARN_STREAM(logger_, "Could not send clock master update: " << result.error());
+    }
+  }
+
+  catch (const std::runtime_error & e) {
     RCLCPP_ERROR_STREAM(logger_, "Could not get time status dataset from sensor: " << e.what());
   }
 }
