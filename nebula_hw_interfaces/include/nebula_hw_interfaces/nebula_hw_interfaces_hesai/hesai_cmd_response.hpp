@@ -69,9 +69,19 @@ struct PtpTlvClockIdentity
   [[nodiscard]] nlohmann::ordered_json to_json() const
   {
     std::stringstream ss;
-    for (const auto & b : id) {
-      ss << std::hex << std::setw(2) << std::setfill('0') << +b;
-    }
+
+    auto put_byte = [&](uint8_t b) { ss << std::hex << std::setw(2) << std::setfill('0') << +b; };
+
+    put_byte(id[0]);
+    put_byte(id[1]);
+    put_byte(id[2]);
+    ss << '.';
+    put_byte(id[3]);
+    put_byte(id[4]);
+    ss << '.';
+    put_byte(id[5]);
+    put_byte(id[6]);
+    put_byte(id[7]);
 
     return ss.str();
   }
