@@ -134,19 +134,10 @@ private:
       return std::string("Failed to serialize protobuf message");
     }
 
-    // Check if there's a pending request and it's not ready
-    if (
-      last_request_ &&
-      last_request_->wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
-      last_request_.reset();
-      return std::string("Previous request still in flight");
-    }
-
-    auto future = http_client_.async_post(
+    auto response = http_client_.post(
       "/update_graph", serialization_buffer_,
-      drivers::connections::HttpClient::content_type_cotest_stream);
+      drivers::connections::HttpClient::content_type_octet_stream);
 
-    last_request_ = std::optional(std::move(future));
     return std::monostate{};  // Return monostate to indicate success
   }
 
