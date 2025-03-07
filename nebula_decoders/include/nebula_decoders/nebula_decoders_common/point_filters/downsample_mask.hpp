@@ -31,6 +31,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
@@ -39,12 +40,23 @@
 namespace nebula::drivers::point_filters
 {
 
+/** A function that takes an x (azimuth) and y (channel) coordinate and outputs
+ * a combined dither pattern index. The default implementation is (x + y) and yields
+ * a dither pattern skewed by 45deg.
+ *
+ * Some scan patterns (e.g. OT128 hi-res mode) have their own dithering patterns that
+ * might interfere with this default. Providing a custom function with knowledge of
+ * such interferences can improve issues like flickering or banding.
+ */
+using DitherTransform = std::function<size_t(size_t x, size_t y)>;
+const DitherTransform g_default_dither_transform = [](size_t x, size_t y) { return x + y; };
+
 namespace impl
 {
 
 inline void dither(
   const png::image<png::gray_pixel> & in, png::image<png::gray_pixel> & out,
-  uint8_t quantization_levels)
+  uint8_t quantization_levels, const DitherTransform & transform)
 {
   if (in.get_width() != out.get_width() || in.get_height() != out.get_height()) {
     std::stringstream ss;
@@ -71,7 +83,7 @@ inline void dither(
     for (size_t x = 0; x < out.get_width(); ++x) {
       const auto & pixel = in.get_pixel(x, y);
       uint32_t numerator = static_cast<uint32_t>(pixel) * denominator / 255;
-      size_t pos = (x + y) % denominator;
+      size_t pos = transform(x, y) % denominator;
       bool keep = should_keep(numerator, pos);
       out.set_pixel(x, y, keep * 255);
     }
@@ -88,7 +100,8 @@ public:
   DownsampleMaskFilter(
     const std::string & filename, AngleRange<int32_t, MilliDegrees> azimuth_range_mdeg,
     uint32_t azimuth_peak_resolution_mdeg, size_t n_channels,
-    const std::shared_ptr<loggers::Logger> & logger, bool export_dithered_mask = false)
+    const std::shared_ptr<loggers::Logger> & logger, bool export_dithered_mask,
+    const DitherTransform & dither_transform)
   : azimuth_range_{
       deg2rad(azimuth_range_mdeg.start / 1000.), deg2rad(azimuth_range_mdeg.end / 1000.)}
   {
@@ -108,7 +121,7 @@ public:
     size_t mask_rows = n_channels;
 
     png::image<png::gray_pixel> dithered(mask_cols, mask_rows);
-    impl::dither(factors, dithered, g_quantization_levels);
+    impl::dither(factors, dithered, g_quantization_levels, dither_transform);
 
     mask_ = Eigen::MatrixX<uint8_t>(mask_rows, mask_cols);
 
