@@ -43,6 +43,7 @@ static std::filesystem::path downsample_mask_path()
 
 TEST(TestDownsampleMask, TestDithering)
 {
+  using nebula::drivers::point_filters::g_default_dither_transform;
   using nebula::drivers::point_filters::impl::dither;
 
   size_t quantization_levels = 10;
@@ -57,7 +58,7 @@ TEST(TestDownsampleMask, TestDithering)
 
     png::image<png::gray_pixel> in{image_path};
     png::image<png::gray_pixel> out{in.get_width(), in.get_height()};
-    dither(in, out, quantization_levels);
+    dither(in, out, quantization_levels, g_default_dither_transform);
 
     size_t n_kept = 0;
     for (size_t x = 0; x < w; ++x) {
@@ -84,6 +85,7 @@ TEST(TestDownsampleMask, TestFilter)
   using nebula::drivers::NebulaPoint;
   using nebula::drivers::loggers::ConsoleLogger;
   using nebula::drivers::point_filters::DownsampleMaskFilter;
+  using nebula::drivers::point_filters::g_default_dither_transform;
 
   auto logger = std::make_shared<ConsoleLogger>("TestFilter");
   auto image_path = downsample_mask_path() / ("q50.png");
@@ -91,7 +93,9 @@ TEST(TestDownsampleMask, TestFilter)
   uint16_t azi_step_mdeg = 1;
   uint8_t n_channels = 10;
 
-  DownsampleMaskFilter f{image_path.native(), azi_range_mdeg, azi_step_mdeg, n_channels, logger};
+  DownsampleMaskFilter f{
+    image_path.native(),       azi_range_mdeg, azi_step_mdeg, n_channels, logger, false,
+    g_default_dither_transform};
 
   size_t n_kept = 0;
   int32_t azi_kept_min = std::numeric_limits<int32_t>::max();

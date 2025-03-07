@@ -274,7 +274,7 @@ public:
       mask_filter_ = point_filters::DownsampleMaskFilter(
         sensor_configuration->downsample_mask_path.value(), SensorT::fov_mdeg.azimuth,
         SensorT::peak_resolution_mdeg.azimuth, SensorT::packet_t::n_channels,
-        logger_->child("Downsample Mask"), true);
+        logger_->child("Downsample Mask"), true, sensor_.get_dither_transform());
     }
 
     decode_pc_->reserve(SensorT::max_scan_buffer_points);
