@@ -27,6 +27,7 @@
 #include <Eigen/src/Core/Matrix.h>
 #include <sys/types.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
