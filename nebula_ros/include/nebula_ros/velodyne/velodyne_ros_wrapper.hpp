@@ -69,6 +69,21 @@ private:
 
   Status declare_and_get_sensor_config_params();
 
+  void reconfigure_hw_interface();
+
+  void create_packet_subscriber();
+  void reset_packet_subscriber();
+
+  // HW interface management
+  void bringup_hw(bool);
+  void cleanup_on_hw_reconfigure();
+  void setup_decoder();
+
+  // Decoder thread management
+  void decoder_wrapper_thread(std::stop_token stoken);
+  void set_decoder_wrapper();
+  void stop_decoder_thread() { decoder_thread_.request_stop(); }
+
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
   /// @return SetParametersResult
@@ -85,15 +100,20 @@ private:
   /// @brief Stores received packets that have not been processed yet by the decoder thread
   MtQueue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
   /// @brief Thread to isolate decoding from receiving
-  std::thread decoder_thread_;
+  std::jthread decoder_thread_;
 
   rclcpp::Subscription<velodyne_msgs::msg::VelodyneScan>::SharedPtr packets_sub_{};
 
   bool launch_hw_;
+  bool use_udp_only_;
+
+  bool restart_hw_ = false;
+  bool restart_packet_subscriber_ = false;
 
   std::optional<VelodyneHwInterfaceWrapper> hw_interface_wrapper_;
   std::optional<VelodyneHwMonitorWrapper> hw_monitor_wrapper_;
   std::optional<VelodyneDecoderWrapper> decoder_wrapper_;
+  rclcpp::TimerBase::SharedPtr hw_reconfigure_timer_;
 
   std::mutex mtx_config_;
 

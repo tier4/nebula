@@ -17,8 +17,11 @@ VelodyneHwInterfaceWrapper::VelodyneHwInterfaceWrapper(
   status_(Status::NOT_INITIALIZED),
   use_udp_only_(use_udp_only)
 {
-  setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
-
+  if (parent_node->has_parameter("setup_sensor")) {
+    setup_sensor_ = parent_node->get_parameter("setup_sensor").as_bool();
+  } else {
+    setup_sensor_ = parent_node->declare_parameter<bool>("setup_sensor", param_read_only());
+  }
   hw_interface_->set_logger(
     std::make_shared<rclcpp::Logger>(parent_node->get_logger().get_child("HwInterface")));
   status_ = hw_interface_->initialize_sensor_configuration(config);
