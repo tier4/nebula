@@ -18,6 +18,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_128e3x.hpp"
 
+#include <iostream>
 #include <vector>
 
 namespace nebula::drivers
@@ -133,6 +134,38 @@ public:
     }
 
     return return_type;
+  }
+
+  [[nodiscard]] point_filters::DitherTransform get_dither_transform() const override
+  {
+    return [](size_t x, size_t y) {
+      // Dithering in hi-res mode is done in groups of 4 channels, with the first and second
+      // pair being alternated per block (cycle length 2) like this (* is active, . is inactive):
+      // channel |  block
+      //         | 1 2 3 4
+      // --------+--------
+      //     y+0 | * . * .
+      //     y+1 | * . * .
+      //     y+2 | . * . *
+      //     y+3 | . * . *
+
+      const size_t pair_n_channels = 2;
+      const size_t group_n_channels = 4;
+      const size_t cycle_n_blocks = 2;
+
+      // The dithering pattern is 2 blocks wide and 4 channels tall, quantize the positions in
+      // each 2x4 tile to the same position (x/2*2, y/4*4). This eliminates flicker that would
+      // otherwise happen.
+      size_t x_quant = (x / cycle_n_blocks * cycle_n_blocks);
+      size_t y_quant = (y / group_n_channels * group_n_channels);
+
+      // In each channel pair, the normal 45deg dithering offset can be applied normally
+      // as the relative position within each pair remains constant, regardless of the dithering
+      // cycle.
+      size_t y_offset = (y % pair_n_channels);
+
+      return x_quant + y_quant + y_offset;
+    };
   }
 };
 
