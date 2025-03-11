@@ -47,13 +47,13 @@ repos:
       - id: shellcheck
 
   - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.10.0-2
+    rev: v3.11.0-1
     hooks:
       - id: shfmt
         args: [-w, -s, -i=4]
 
   - repo: https://github.com/pycqa/isort
-    rev: 6.0.0
+    rev: 6.0.1
     hooks:
       - id: isort
 
