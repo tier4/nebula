@@ -108,8 +108,9 @@ private:
   std::mutex mtx_lidar_status_;
   std::mutex mtx_lidar_monitor_;
 
-  public:
+public:
   std::optional<SyncDiagClient> sync_diag_client_;
+
 private:
   const std::string MSG_NOT_SUPPORTED_ = "Not supported";
   const std::string MSG_ERROR_ = "Error";
