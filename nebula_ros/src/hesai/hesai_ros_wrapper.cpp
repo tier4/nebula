@@ -87,8 +87,9 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
   if (launch_hw_) {
-    hw_interface_wrapper_->hw_interface()->register_scan_callback(
-      std::bind(&HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1, std::placeholders::_2));
+    hw_interface_wrapper_->hw_interface()->register_scan_callback(std::bind(
+      &HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1,
+      std::placeholders::_2));
     stream_start();
   } else {
     packets_sub_ = create_subscription<pandar_msgs::msg::PandarScan>(
@@ -461,7 +462,8 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-void HesaiRosWrapper::receive_cloud_packet_callback(const std::vector<uint8_t> & packet, const drivers::connections::UdpSocket::RxMetadata & metadata)
+void HesaiRosWrapper::receive_cloud_packet_callback(
+  const std::vector<uint8_t> & packet, const drivers::connections::UdpSocket::RxMetadata & metadata)
 {
   if (!decoder_wrapper_ || decoder_wrapper_->status() != Status::OK) {
     return;
@@ -479,16 +481,19 @@ void HesaiRosWrapper::receive_cloud_packet_callback(const std::vector<uint8_t> &
   uint64_t sensor_timestamp_ns = timestamp_ns;
   switch (sensor_cfg_ptr_->sensor_model) {
     case drivers::SensorModel::HESAI_PANDAR128_E4X:
-        sensor_timestamp_ns = drivers::hesai_packet::get_timestamp_ns(*reinterpret_cast<drivers::hesai_packet::Packet128E4X*>(msg_ptr->data.data()));
-        break;
-      case drivers::SensorModel::HESAI_PANDARQT128:
-        sensor_timestamp_ns = drivers::hesai_packet::get_timestamp_ns(*reinterpret_cast<drivers::hesai_packet::PacketQT128C2X*>(msg_ptr->data.data()));
-        break;
-    }
+      sensor_timestamp_ns = drivers::hesai_packet::get_timestamp_ns(
+        *reinterpret_cast<drivers::hesai_packet::Packet128E4X *>(msg_ptr->data.data()));
+      break;
+    case drivers::SensorModel::HESAI_PANDARQT128:
+      sensor_timestamp_ns = drivers::hesai_packet::get_timestamp_ns(
+        *reinterpret_cast<drivers::hesai_packet::PacketQT128C2X *>(msg_ptr->data.data()));
+      break;
+  }
 
   if (metadata.timestamp_ns && hw_monitor_wrapper_ && hw_monitor_wrapper_->sync_diag_client_) {
     try {
-    hw_monitor_wrapper_->sync_diag_client_->submit_clock_diff_measurement(*metadata.timestamp_ns - sensor_timestamp_ns);
+      hw_monitor_wrapper_->sync_diag_client_->submit_clock_diff_measurement(
+        *metadata.timestamp_ns - sensor_timestamp_ns);
     } catch (...) {
       RCLCPP_ERROR(get_logger(), "Could not send measurement");
     }

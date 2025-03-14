@@ -200,7 +200,8 @@ Status HesaiHwInterface::register_scan_callback(connections::UdpSocket::callback
   return Status::OK;
 }
 
-void HesaiHwInterface::receive_sensor_packet_callback(const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata)
+void HesaiHwInterface::receive_sensor_packet_callback(
+  const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata)
 {
   cloud_packet_callback_(buffer, metadata);
 }

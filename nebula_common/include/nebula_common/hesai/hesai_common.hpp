@@ -81,7 +81,8 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "PTP Lock Threshold: " << std::to_string(arg.ptp_lock_threshold) << '\n';
   os << "Downsample Filter: "
      << (arg.downsample_mask_path ? "enabled, path: " + arg.downsample_mask_path.value()
-                                  : "disabled") << '\n';
+                                  : "disabled")
+     << '\n';
   os << "Synchronization Diagnostics: "
      << (arg.sync_master ? ("enabled, master at " + arg.sync_master->first + ':' +
                             std::to_string(arg.sync_master->second))
