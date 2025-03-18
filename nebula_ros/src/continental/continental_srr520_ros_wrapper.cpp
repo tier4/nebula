@@ -62,8 +62,9 @@ ContinentalSRR520RosWrapper::ContinentalSRR520RosWrapper(const rclcpp::NodeOptio
   });
 
   if (launch_hw_) {
-    hw_interface_wrapper_->hw_interface()->register_packet_callback(std::bind(
-      &ContinentalSRR520RosWrapper::receive_packet_callback, this, std::placeholders::_1));
+    hw_interface_wrapper_->hw_interface()->register_packet_callback(
+      std::bind(
+        &ContinentalSRR520RosWrapper::receive_packet_callback, this, std::placeholders::_1));
     stream_start();
   } else {
     packets_sub_ = create_subscription<nebula_msgs::msg::NebulaPackets>(

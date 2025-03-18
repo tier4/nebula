@@ -851,19 +851,19 @@ HesaiStatus HesaiHwInterface::set_ptp_config_sync_http(
     return st;
   }
 
-  auto response =
-    hcd->get((boost::format("/pandar.cgi?action=set&object=lidar&key=ptp_configuration&value={"
-                            "\"Profile\": %d,"
-                            "\"Domain\": %d,"
-                            "\"Network\": %d,"
-                            "\"LogAnnounceInterval\": %d,"
-                            "\"LogSyncInterval\": %d,"
-                            "\"LogMinDelayReqInterval\": %d,"
-                            "\"tsn_switch\": %d"
-                            "}") %
-              profile % domain % network % logAnnounceInterval % logSyncInterval %
-              logMinDelayReqInterval % 0)
-               .str());
+  auto response = hcd->get((boost::format(
+                              "/pandar.cgi?action=set&object=lidar&key=ptp_configuration&value={"
+                              "\"Profile\": %d,"
+                              "\"Domain\": %d,"
+                              "\"Network\": %d,"
+                              "\"LogAnnounceInterval\": %d,"
+                              "\"LogSyncInterval\": %d,"
+                              "\"LogMinDelayReqInterval\": %d,"
+                              "\"tsn_switch\": %d"
+                              "}") %
+                            profile % domain % network % logAnnounceInterval % logSyncInterval %
+                            logMinDelayReqInterval % 0)
+                             .str());
   ctx->run();
   return unwrap_http_response(response).first;
 }
@@ -885,10 +885,11 @@ HesaiStatus HesaiHwInterface::set_sync_angle_sync_http(
   if (st != Status::OK) {
     return st;
   }
-  auto tmp_str = (boost::format("/pandar.cgi?action=set&object=lidar_sync&key=sync_angle&value={"
-                                "\"sync\": %d,"
-                                "\"syncAngle\": %d"
-                                "}") %
+  auto tmp_str = (boost::format(
+                    "/pandar.cgi?action=set&object=lidar_sync&key=sync_angle&value={"
+                    "\"sync\": %d,"
+                    "\"syncAngle\": %d"
+                    "}") %
                   enable % angle)
                    .str();
   auto response = hcd->get(tmp_str);
