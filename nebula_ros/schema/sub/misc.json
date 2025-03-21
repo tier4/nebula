@@ -108,6 +108,23 @@
         }
       },
       "additionalProperties": false
+    },
+    "sync_diagnostics": {
+      "type": "object",
+      "properties": {
+        "master_ip": {
+          "type": "string"
+        },
+        "master_port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
+      },
+      "required": [
+        "master_ip",
+        "master_port"
+      ]
     }
   }
 }
