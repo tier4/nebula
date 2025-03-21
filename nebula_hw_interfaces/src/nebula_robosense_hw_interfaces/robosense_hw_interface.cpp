@@ -43,8 +43,9 @@ Status RobosenseHwInterface::sensor_interface_start()
     cloud_udp_driver_->receiver()->open();
     cloud_udp_driver_->receiver()->bind();
 
-    cloud_udp_driver_->receiver()->asyncReceive(std::bind(
-      &RobosenseHwInterface::receive_sensor_packet_callback, this, std::placeholders::_1));
+    cloud_udp_driver_->receiver()->asyncReceive(
+      std::bind(
+        &RobosenseHwInterface::receive_sensor_packet_callback, this, std::placeholders::_1));
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
     std::cerr << status << sensor_configuration_->sensor_ip << ","
