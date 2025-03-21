@@ -170,6 +170,14 @@ VelodyneStatus VelodyneHwInterface::check_and_set_config(
   target_key = "config.fov.start";
   auto current_cloud_min_angle = tree.get<std::uint16_t>(target_key);
   int setting_cloud_min_angle = sensor_configuration->cloud_min_angle;
+  // // FIXME
+  // if (sensor_configuration->sensor_model == SensorModel::VELODYNE_VLP16) {
+  //   if (setting_cloud_min_angle < 5){
+  //     setting_cloud_min_angle = setting_cloud_min_angle + 360 - 5;
+  //   }else{
+  //     setting_cloud_min_angle -= 5;
+  //   }
+  // }
   // Velodyne only allows a maximum of 359 in the setting
   if (setting_cloud_min_angle == 360) {
     setting_cloud_min_angle = 359;
@@ -186,6 +194,16 @@ VelodyneStatus VelodyneHwInterface::check_and_set_config(
   target_key = "config.fov.end";
   auto current_cloud_max_angle = tree.get<std::uint16_t>(target_key);
   int setting_cloud_max_angle = sensor_configuration->cloud_max_angle;
+  // FIXME
+  if (sensor_configuration->sensor_model == SensorModel::VELODYNE_VLP16) {
+    if (setting_cloud_max_angle > 354){
+      setting_cloud_max_angle = 360;
+    }else{
+      std::cout << "setting_cloud_max_angle: " << setting_cloud_max_angle << std::endl;
+      setting_cloud_max_angle += 5;
+      std::cout << "setting_cloud_max_angle: " << setting_cloud_max_angle << std::endl;
+    }
+  }
   // Velodyne only allows a maximum of 359 in the setting
   if (setting_cloud_max_angle == 360) {
     setting_cloud_max_angle = 359;
