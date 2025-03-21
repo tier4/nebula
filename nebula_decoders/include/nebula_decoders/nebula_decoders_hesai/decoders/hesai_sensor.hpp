@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "nebula_decoders/nebula_decoders_common/point_filters/downsample_mask.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector_calibration_based.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector_correction_based.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
@@ -188,6 +189,11 @@ public:
       default:
         return ReturnType::UNKNOWN;
     }
+  }
+
+  [[nodiscard]] virtual point_filters::DitherTransform get_dither_transform() const
+  {
+    return point_filters::g_default_dither_transform;
   }
 };
 
