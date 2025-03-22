@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
-#define NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
+#ifndef NEBULA_HW_INTERFACES__NEBULA_HW_INTERFACES_CONTINENTAL__CONTINENTAL_ARS548_HW_INTERFACE_HPP_
+#define NEBULA_HW_INTERFACES__NEBULA_HW_INTERFACES_CONTINENTAL__CONTINENTAL_ARS548_HW_INTERFACE_HPP_
 
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 
@@ -165,4 +165,4 @@ private:
 };
 }  // namespace nebula::drivers::continental_ars548
 
-#endif  // NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
+#endif  // NEBULA_HW_INTERFACES__NEBULA_HW_INTERFACES_CONTINENTAL__CONTINENTAL_ARS548_HW_INTERFACE_HPP_
