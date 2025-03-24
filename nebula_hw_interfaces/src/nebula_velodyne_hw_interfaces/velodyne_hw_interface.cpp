@@ -172,11 +172,14 @@ VelodyneStatus VelodyneHwInterface::check_and_set_config(
   int setting_cloud_max_angle = sensor_configuration->cloud_max_angle;
 
   // FIXME: VLP16 has problems for timestamp. Whatch github issue #292
-  // VLP16 timestamps are weird when pointcloud are filtered by filtered by same hardware fov as software fov. To improve this, we need to set the hardware fov wider than the software fov.
+  // VLP16 timestamps are weird when pointcloud are filtered by filtered by same hardware fov as
+  // software fov. To improve this, we need to set the hardware fov wider than the software fov.
   if (sensor_configuration->sensor_model == SensorModel::VELODYNE_VLP16) {
     int angle_diff = (setting_cloud_max_angle - setting_cloud_min_angle + 360) % 360;
 
-    if (angle_diff == 0 || (angle_diff >= 360 - 2 * fov_tolerance_deg && setting_cloud_min_angle < setting_cloud_max_angle)) {
+    if (
+      angle_diff == 0 || (angle_diff >= 360 - 2 * fov_tolerance_deg &&
+                          setting_cloud_min_angle < setting_cloud_max_angle)) {
       setting_cloud_min_angle = 0;
       setting_cloud_max_angle = 359;
     } else {
