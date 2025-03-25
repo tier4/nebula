@@ -110,6 +110,9 @@
         },
         "point_filters": {
           "$ref": "sub/misc.json#/definitions/point_filters"
+        },
+        "hires_mode": {
+          "$ref": "sub/lidar_hesai.json#/definitions/hires_mode"
         }
       },
       "required": [
