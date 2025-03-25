@@ -78,6 +78,7 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "PTP Switch Type: " << arg.ptp_switch_type << '\n';
   os << "High Resolution Mode: " << arg.hires_mode << '\n';
   os << "PTP Lock Threshold: " << std::to_string(arg.ptp_lock_threshold) << '\n';
+  os << "High Resolution Mode: " << (arg.hires_mode ? "enabled" : "disabled") << '\n';
   os << "Downsample Filter: "
      << (arg.downsample_mask_path ? "enabled, path: " + arg.downsample_mask_path.value()
                                   : "disabled");
