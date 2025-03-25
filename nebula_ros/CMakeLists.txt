@@ -12,7 +12,7 @@ endif ()
 
 find_package(ament_cmake_auto REQUIRED)
 find_package(PCL REQUIRED components common)
-find_package(autoware_sensing_msgs REQUIRED)
+find_package(autoware_perception_msgs REQUIRED)
 find_package(continental_msgs REQUIRED)
 find_package(continental_srvs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
@@ -145,7 +145,7 @@ add_library(continental_ars548_ros_wrapper SHARED
 )
 
 target_include_directories(continental_ars548_ros_wrapper PUBLIC
-    ${autoware_sensing_msgs_INCLUDE_DIRS}
+    ${autoware_perception_msgs_INCLUDE_DIRS}
     ${continental_msgs_INCLUDE_DIRS}
     ${continental_srvs_INCLUDE_DIRS}
     ${diagnostic_msgs_INCLUDE_DIRS}
@@ -160,7 +160,7 @@ target_include_directories(continental_ars548_ros_wrapper PUBLIC
 )
 
 target_link_libraries(continental_ars548_ros_wrapper PUBLIC
-    ${autoware_sensing_msgs_TARGETS}
+    ${autoware_perception_msgs_TARGETS}
     ${continental_msgs_TARGETS}
     ${continental_srvs_TARGETS}
     ${diagnostic_msgs_TARGETS}

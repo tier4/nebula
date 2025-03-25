@@ -69,8 +69,9 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   object_pointcloud_pub_ = parent_node->create_publisher<sensor_msgs::msg::PointCloud2>(
     "object_points", rclcpp::SensorDataQoS());
 
-  autoware_objects_pub_ = parent_node->create_publisher<autoware_sensing_msgs::msg::RadarObjects>(
-    "radar_objects", rclcpp::SensorDataQoS());
+  autoware_objects_pub_ =
+    parent_node->create_publisher<autoware_perception_msgs::msg::RadarObjects>(
+      "radar_objects", rclcpp::SensorDataQoS());
 
   scan_raw_pub_ =
     parent_node->create_publisher<radar_msgs::msg::RadarScan>("scan_raw", rclcpp::SensorDataQoS());
@@ -84,7 +85,7 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   diagnostics_pub_ =
     parent_node->create_publisher<diagnostic_msgs::msg::DiagnosticArray>("diagnostics", 10);
 
-  radar_info_pub_ = parent_node->create_publisher<autoware_sensing_msgs::msg::RadarInfo>(
+  radar_info_pub_ = parent_node->create_publisher<autoware_perception_msgs::msg::RadarInfo>(
     "radar_info", rclcpp::SensorDataQoS());
 
   RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
@@ -363,20 +364,20 @@ void ContinentalARS548DecoderWrapper::create_radar_info()
   namespace continental_ns = nebula::drivers::continental_ars548;
   radar_info_msg_.header.frame_id = config_ptr_->frame_id;
 
-  auto make_field_info = [](
-                           const std::string & field_name,
-                           const continental_ns::FieldInfo & field_info,
-                           std::vector<autoware_sensing_msgs::msg::RadarFieldInfo> & fields_msg) {
-    autoware_sensing_msgs::msg::RadarFieldInfo field;
-    field.field_name.data = field_name;
-    field.min_value_available = field_info.min_value_available;
-    field.max_value_available = field_info.max_value_available;
-    field.resolution_available = field_info.resolution_available;
-    field.min_value = field_info.min_value;
-    field.max_value = field_info.max_value;
-    field.resolution = field_info.resolution;
-    fields_msg.push_back(field);
-  };
+  auto make_field_info =
+    [](
+      const std::string & field_name, const continental_ns::FieldInfo & field_info,
+      std::vector<autoware_perception_msgs::msg::RadarFieldInfo> & fields_msg) {
+      autoware_perception_msgs::msg::RadarFieldInfo field;
+      field.field_name.data = field_name;
+      field.min_value_available = field_info.min_value_available;
+      field.max_value_available = field_info.max_value_available;
+      field.resolution_available = field_info.resolution_available;
+      field.min_value = field_info.min_value;
+      field.max_value = field_info.max_value;
+      field.resolution = field_info.resolution;
+      fields_msg.push_back(field);
+    };
 
   // Detection field infos
   make_field_info("azimuth", continental_ns::azimuth_info, radar_info_msg_.detection_fields_info);
@@ -452,14 +453,14 @@ void ContinentalARS548DecoderWrapper::create_radar_info()
     radar_info_msg_.object_fields_info);
 
   radar_info_msg_.available_classes = {
-    autoware_sensing_msgs::msg::RadarClassification::UNKNOWN,
-    autoware_sensing_msgs::msg::RadarClassification::CAR,
-    autoware_sensing_msgs::msg::RadarClassification::TRUCK,
-    autoware_sensing_msgs::msg::RadarClassification::MOTORCYCLE,
-    autoware_sensing_msgs::msg::RadarClassification::BICYCLE,
-    autoware_sensing_msgs::msg::RadarClassification::PEDESTRIAN,
-    autoware_sensing_msgs::msg::RadarClassification::ANIMAL,
-    autoware_sensing_msgs::msg::RadarClassification::HAZARD};
+    autoware_perception_msgs::msg::ObjectClassification::UNKNOWN,
+    autoware_perception_msgs::msg::ObjectClassification::CAR,
+    autoware_perception_msgs::msg::ObjectClassification::TRUCK,
+    autoware_perception_msgs::msg::ObjectClassification::MOTORCYCLE,
+    autoware_perception_msgs::msg::ObjectClassification::BICYCLE,
+    autoware_perception_msgs::msg::ObjectClassification::PEDESTRIAN,
+    autoware_perception_msgs::msg::ObjectClassification::ANIMAL,
+    autoware_perception_msgs::msg::ObjectClassification::HAZARD};
 
   radar_info_msg_.absolute_dynamics = true;
 }
@@ -483,25 +484,65 @@ geometry_msgs::msg::Point ContinentalARS548DecoderWrapper::reference_point_to_ce
   return center;
 }
 
-autoware_sensing_msgs::msg::RadarObjects
+autoware_perception_msgs::msg::RadarObjects
 ContinentalARS548DecoderWrapper::convert_to_autoware_radar_objects(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
-  autoware_sensing_msgs::msg::RadarObjects autoware_objects;
+  namespace continental_ns = nebula::drivers::continental_ars548;
+  using autoware_perception_msgs::msg::ObjectClassification;
+  using autoware_perception_msgs::msg::RadarObject;
+  using autoware_perception_msgs::msg::RadarObjects;
+
+  RadarObjects autoware_objects;
   autoware_objects.header = msg.header;
   autoware_objects.objects.reserve(msg.objects.size());
 
   for (const auto & continental_object : msg.objects) {
-    autoware_sensing_msgs::msg::RadarObject autoware_object;
+    RadarObject autoware_object;
     autoware_object.object_id = continental_object.object_id;
     autoware_object.age = continental_object.age;
     autoware_object.measurement_status = continental_object.status_measurement;
     autoware_object.movement_status = continental_object.status_movement;
+
+    switch (continental_object.status_measurement) {
+      case continental_ns::measurement_status_measured:
+        autoware_object.measurement_status = RadarObject::MEASUREMENT_STATUS_MEASURED;
+        break;
+      case continental_ns::measurement_status_predicted:
+        autoware_object.measurement_status = RadarObject::MEASUREMENT_STATUS_PREDICTED;
+        break;
+      case continental_ns::measurement_status_new:
+        autoware_object.measurement_status = RadarObject::MEASUREMENT_STATUS_NEW;
+        break;
+      case continental_ns::measurement_status_invalid:
+        autoware_object.measurement_status = RadarObject::MEASUREMENT_STATUS_INVALID;
+        break;
+      default:
+        autoware_object.measurement_status = RadarObject::MEASUREMENT_STATUS_UNKNOWN;
+        break;
+    }
+
+    switch (continental_object.status_movement) {
+      case continental_ns::movement_status_dynamic:
+        autoware_object.movement_status = RadarObject::MOVEMENT_STATUS_DYNAMIC;
+        break;
+      case continental_ns::movement_status_static:
+        autoware_object.movement_status = RadarObject::MOVEMENT_STATUS_STATIC;
+        break;
+      case continental_ns::movement_status_invalid:
+        autoware_object.movement_status = RadarObject::MOVEMENT_STATUS_INVALID;
+        break;
+      default:
+        autoware_object.movement_status = RadarObject::MOVEMENT_STATUS_UNKNOWN;
+        break;
+    }
+
     autoware_object.orientation = continental_object.orientation;
     autoware_object.orientation_std = continental_object.orientation_std;
     autoware_object.orientation_rate = continental_object.orientation_rate_mean;
     autoware_object.orientation_rate_std = continental_object.orientation_rate_std;
-    autoware_object.existence_probability = continental_object.existence_probability;
+    autoware_object.existence_probability =
+      continental_object.existence_probability / continental_ns::raw_prob_norm;
 
     // Position
     // There are 9 possible reference points. In the case of an invalid reference point, we fall
@@ -514,71 +555,80 @@ ContinentalARS548DecoderWrapper::convert_to_autoware_radar_objects(
 
     autoware_object.velocity = continental_object.absolute_velocity;
     autoware_object.acceleration = continental_object.absolute_acceleration;
-    autoware_object.shape.x = continental_object.shape_length_edge_mean;
-    autoware_object.shape.y = continental_object.shape_width_edge_mean;
-    autoware_object.shape.z = 1.f;
+    autoware_object.size.x = continental_object.shape_length_edge_mean;
+    autoware_object.size.y = continental_object.shape_width_edge_mean;
+    autoware_object.size.z = 1.f;
 
-    autoware_sensing_msgs::msg::RadarClassification classification;
+    ObjectClassification classification;
     autoware_object.classifications.reserve(10);
 
-    classification.label = autoware_sensing_msgs::msg::RadarClassification::UNKNOWN;
-    classification.probability = continental_object.classification_unknown;
+    classification.label = ObjectClassification::UNKNOWN;
+    classification.probability =
+      continental_object.classification_unknown / continental_ns::raw_prob_norm;
     autoware_object.classifications.push_back(classification);
 
-    classification.label = autoware_sensing_msgs::msg::RadarClassification::CAR;
-    classification.probability = continental_object.classification_car;
+    classification.label = ObjectClassification::CAR;
+    classification.probability =
+      continental_object.classification_car / continental_ns::raw_prob_norm;
     autoware_object.classifications.push_back(classification);
 
-    classification.label = autoware_sensing_msgs::msg::RadarClassification::TRUCK;
-    classification.probability = continental_object.classification_truck;
+    classification.label = ObjectClassification::TRUCK;
+    classification.probability =
+      continental_object.classification_truck / continental_ns::raw_prob_norm;
     autoware_object.classifications.push_back(classification);
 
-    classification.label = autoware_sensing_msgs::msg::RadarClassification::MOTORCYCLE;
-    classification.probability = continental_object.classification_motorcycle;
+    classification.label = ObjectClassification::MOTORCYCLE;
+    classification.probability =
+      continental_object.classification_motorcycle / continental_ns::raw_prob_norm;
     autoware_object.classifications.push_back(classification);
 
-    classification.label = autoware_sensing_msgs::msg::RadarClassification::BICYCLE;
-    classification.probability = continental_object.classification_bicycle;
+    classification.label = ObjectClassification::BICYCLE;
+    classification.probability =
+      continental_object.classification_bicycle / continental_ns::raw_prob_norm;
     autoware_object.classifications.push_back(classification);
 
-    classification.label = autoware_sensing_msgs::msg::RadarClassification::PEDESTRIAN;
-    classification.probability = continental_object.classification_pedestrian;
+    classification.label = ObjectClassification::PEDESTRIAN;
+    classification.probability =
+      continental_object.classification_pedestrian / continental_ns::raw_prob_norm;
     autoware_object.classifications.push_back(classification);
 
-    classification.label = autoware_sensing_msgs::msg::RadarClassification::ANIMAL;
-    classification.probability = continental_object.classification_animal;
+    classification.label = ObjectClassification::ANIMAL;
+    classification.probability =
+      continental_object.classification_animal / continental_ns::raw_prob_norm;
     autoware_object.classifications.push_back(classification);
 
-    classification.label = autoware_sensing_msgs::msg::RadarClassification::HAZARD;
-    classification.probability = continental_object.classification_hazard;
+    classification.label = ObjectClassification::HAZARD;
+    classification.probability =
+      continental_object.classification_hazard / continental_ns::raw_prob_norm;
     autoware_object.classifications.push_back(classification);
 
     auto fill_cov_matrix =
       [](const double & x, const double & y, const double & xy, std::array<float, 6> & cov_matrix) {
         cov_matrix[0] = static_cast<float>(x * x);
         cov_matrix[1] = static_cast<float>(xy);
-        cov_matrix[2] = autoware_sensing_msgs::msg::RadarObject::INVALID_COV_VALUE;
+        cov_matrix[2] = RadarObject::INVALID_COV_VALUE;
         cov_matrix[3] = static_cast<float>(y * y);
-        cov_matrix[4] = autoware_sensing_msgs::msg::RadarObject::INVALID_COV_VALUE;
-        cov_matrix[5] = autoware_sensing_msgs::msg::RadarObject::INVALID_COV_VALUE;
+        cov_matrix[4] = RadarObject::INVALID_COV_VALUE;
+        cov_matrix[5] = RadarObject::INVALID_COV_VALUE;
       };
 
     fill_cov_matrix(
       continental_object.position_std.x, continental_object.position_std.y,
-      continental_object.position_covariance_xy, autoware_object.position_cov);
+      continental_object.position_covariance_xy, autoware_object.position_covariance);
 
     fill_cov_matrix(
       continental_object.absolute_velocity_std.x, continental_object.absolute_velocity_std.y,
-      continental_object.absolute_velocity_covariance_xy, autoware_object.velocity_cov);
+      continental_object.absolute_velocity_covariance_xy, autoware_object.velocity_covariance);
 
     fill_cov_matrix(
       continental_object.absolute_acceleration_std.x,
       continental_object.absolute_acceleration_std.y,
-      continental_object.absolute_acceleration_covariance_xy, autoware_object.acceleration_cov);
+      continental_object.absolute_acceleration_covariance_xy,
+      autoware_object.acceleration_covariance);
 
     std::fill(
-      autoware_object.shape_cov.begin(), autoware_object.shape_cov.end(),
-      autoware_sensing_msgs::msg::RadarObject::INVALID_COV_VALUE);
+      autoware_object.size_covariance.begin(), autoware_object.size_covariance.end(),
+      RadarObject::INVALID_COV_VALUE);
 
     autoware_objects.objects.push_back(autoware_object);
   }
@@ -590,6 +640,8 @@ pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr
 ContinentalARS548DecoderWrapper::convert_to_pointcloud(
   const continental_msgs::msg::ContinentalArs548DetectionList & msg)
 {
+  namespace continental_ns = nebula::drivers::continental_ars548;
+
   pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr output_pointcloud(
     new pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>);
   output_pointcloud->reserve(msg.detections.size());
@@ -614,9 +666,10 @@ ContinentalARS548DecoderWrapper::convert_to_pointcloud(
     point.measurement_id = detection.measurement_id;
     point.positive_predictive_value = detection.positive_predictive_value;
     point.classification = detection.classification;
-    point.multi_target_probability = detection.multi_target_probability;
+    point.multi_target_probability =
+      detection.multi_target_probability / continental_ns::raw_prob_norm;
     point.object_id = detection.object_id;
-    point.ambiguity_flag = detection.ambiguity_flag;
+    point.ambiguity_flag = detection.ambiguity_flag / continental_ns::raw_prob_norm;
 
     output_pointcloud->points.emplace_back(point);
   }

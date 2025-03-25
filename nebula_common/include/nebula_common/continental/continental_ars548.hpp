@@ -248,12 +248,23 @@ constexpr int object_filter_properties_num = 24;
 constexpr int max_detections = 800;
 constexpr int max_objects = 50;
 
+constexpr int measurement_status_measured = 0;
+constexpr int measurement_status_predicted = 1;
+constexpr int measurement_status_new = 2;
+constexpr int measurement_status_invalid = 255;
+
+constexpr int movement_status_dynamic = 0;
+constexpr int movement_status_static = 1;
+constexpr int movement_status_invalid = 255;
+
 constexpr int sync_ok = 1;
 constexpr int never_sync = 2;
 constexpr int sync_lost = 3;
 
 constexpr int plug_right = 0;
 constexpr int plug_left = 1;
+
+constexpr float raw_prob_norm = 100.f;
 
 constexpr int maximum_distance_min_value = 93;
 constexpr int maximum_distance_max_value = 1514;
@@ -330,9 +341,9 @@ const FieldInfo rcs_info{true, true, true, -128.f, 127.f, 1.f};
 const FieldInfo measurement_id_info{true, true, true, 0.f, 65535.f, 1.f};
 const FieldInfo positive_predictive_value_info{true, true, true, 0.f, 100.f, 1.f};
 const FieldInfo classification_info{true, true, true, 0.f, 255.f, 1.f};
-const FieldInfo multi_target_probability_info{true, true, true, 0.f, 100.f, 1.f};
+const FieldInfo multi_target_probability_info{true, true, true, 0.f, 1.f, 0.01f};
 const FieldInfo object_id_info{true, true, false, 0.f, 65535.f, 1.f};
-const FieldInfo ambiguity_flag_info{true, true, true, 0.f, 100.f, 1.f};
+const FieldInfo ambiguity_flag_info{true, true, true, 0.f, 1.f, 0.01f};
 
 // Object field infos
 const FieldInfo age_info{true, true, true, 0.f, 65535.f, 1.f};
@@ -360,7 +371,7 @@ const FieldInfo orientation_std_info{false, false, false, 0.f, 0.f, 0.f};
 const FieldInfo orientation_rate_info{false, false, false, -M_PI, M_PI, 0.f};
 const FieldInfo orientation_rate_std_info{false, false, false, 0.f, 0.f, 0.f};
 
-const FieldInfo existence_probability_info{true, true, true, 0.f, 100.f, 1.f};
+const FieldInfo existence_probability_info{true, true, true, 0.f, 1.f, 0.01f};
 
 #pragma pack(push, 1)
 
