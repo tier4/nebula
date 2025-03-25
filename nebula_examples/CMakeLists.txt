@@ -11,6 +11,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake_auto REQUIRED)
+find_package(autoware_perception_msgs REQUIRED)
 find_package(nebula_common REQUIRED)
 find_package(nebula_decoders REQUIRED)
 find_package(nebula_ros REQUIRED)
@@ -21,6 +22,7 @@ find_package(yaml-cpp REQUIRED)
 include_directories(
     include
     SYSTEM
+    ${autoware_perception_msgs_INCLUDE_DIRS}
     ${nebula_common_INCLUDE_DIRS}
     ${nebula_decoders_INCLUDE_DIRS}
     ${nebula_ros_INCLUDE_DIRS}
@@ -30,6 +32,7 @@ include_directories(
 )
 
 link_libraries(
+    ${autoware_perception_msgs_TARGETS}
     ${nebula_common_TARGETS}
     ${nebula_ros_TARGETS}
     ${rosbag2_cpp_TARGETS}
