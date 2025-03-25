@@ -94,17 +94,19 @@ TEST(TestUdp, TestBufferResize)
 TEST(TestUdp, TestCorrectUsageIsEnforced)
 {
   // The following functions can be called in any order, any number of times
-  ASSERT_NO_THROW(UdpSocket::Builder(g_localhost_ip, g_host_port)
-                    .set_polling_interval(20)
-                    .set_socket_buffer_size(3000)
-                    .set_mtu(1600)
-                    .limit_to_sender(g_sender_ip, g_sender_port)
-                    .set_polling_interval(20)
-                    .set_socket_buffer_size(3000)
-                    .set_mtu(1600)
-                    .set_send_destination(g_sender_ip, g_sender_port)
-                    .limit_to_sender(g_sender_ip, g_sender_port)
-                    .bind());
+  ASSERT_NO_THROW(
+    UdpSocket::Builder(g_localhost_ip, g_host_port)
+      .set_polling_interval(20)
+      .set_socket_buffer_size(3000)
+      .set_mtu(1600)
+      .limit_to_sender(g_sender_ip, g_sender_port)
+      .set_polling_interval(20)
+      .set_socket_buffer_size(3000)
+      .set_mtu(1600)
+      .set_send_destination(g_sender_ip, g_sender_port)
+      .limit_to_sender(g_sender_ip, g_sender_port)
+      .bind());
+
 
   // Only one multicast group can be joined
   ASSERT_THROW(
@@ -120,11 +122,12 @@ TEST(TestUdp, TestCorrectUsageIsEnforced)
                     .subscribe(empty_cb()));
 
   // Explicitly unsubscribing shall be supported
-  ASSERT_NO_THROW(UdpSocket::Builder(g_localhost_ip, g_host_port)
-                    .bind()
-                    .subscribe(empty_cb())
-                    .unsubscribe()
-                    .subscribe(empty_cb()));
+  ASSERT_NO_THROW(
+    UdpSocket::Builder(g_localhost_ip, g_host_port)
+      .bind()
+      .subscribe(empty_cb())
+      .unsubscribe()
+      .subscribe(empty_cb()));
 
   // Unsubscribing on a non-subscribed socket shall also be supported
   ASSERT_NO_THROW(UdpSocket::Builder(g_localhost_ip, g_host_port).bind().unsubscribe());
