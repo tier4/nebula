@@ -107,7 +107,6 @@ TEST(TestUdp, TestCorrectUsageIsEnforced)
       .limit_to_sender(g_sender_ip, g_sender_port)
       .bind());
 
-
   // Only one multicast group can be joined
   ASSERT_THROW(
     UdpSocket::Builder(g_localhost_ip, g_host_port)
@@ -116,10 +115,11 @@ TEST(TestUdp, TestCorrectUsageIsEnforced)
     UsageError);
 
   // Pre-existing subscriptions shall be gracefully unsubscribed when a new subscription is created
-  ASSERT_NO_THROW(UdpSocket::Builder(g_localhost_ip, g_host_port)
-                    .bind()
-                    .subscribe(empty_cb())
-                    .subscribe(empty_cb()));
+  ASSERT_NO_THROW(
+    UdpSocket::Builder(g_localhost_ip, g_host_port)
+      .bind()
+      .subscribe(empty_cb())
+      .subscribe(empty_cb()));
 
   // Explicitly unsubscribing shall be supported
   ASSERT_NO_THROW(
