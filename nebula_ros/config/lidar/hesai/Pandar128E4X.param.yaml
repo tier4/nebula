@@ -28,3 +28,4 @@
     ptp_lock_threshold: 100
     retry_hw: true
     dual_return_distance_threshold: 0.1
+    hires_mode: true
