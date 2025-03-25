@@ -614,7 +614,8 @@ Status HesaiHwInterface::set_high_resolution_mode(bool enable)
 bool HesaiHwInterface::get_high_resolution_mode()
 {
   auto response_or_err = send_receive(g_ptc_command_get_high_resolution_mode);
-  auto response = response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
 
   if (response.size() != 1) {
     throw std::runtime_error("Unexpected payload size");
