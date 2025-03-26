@@ -49,10 +49,11 @@ inline ClockId make_ptp_clock_id(const std::string & ptp_clock_id)
   return id;
 }
 
-inline ClockId make_sensor_clock_id(const std::string & sensor_name)
+inline ClockId make_sensor_clock_id(const std::string & sensor_name, const std::string & sensor_ip)
 {
   ClockId id;
-  id.mutable_frame_id()->set_frame(sensor_name);
+  id.mutable_sensor_id()->set_name(sensor_name);
+  id.mutable_sensor_id()->set_ip(sensor_ip);
   return id;
 }
 
@@ -62,10 +63,11 @@ public:
   using send_result_t = nebula::util::expected<std::monostate, std::string>;
 
   SyncDiagClient(
-    std::string master_ip, uint16_t master_port, std::string sensor_id, uint8_t ptp_domain_id)
+    std::string master_ip, uint16_t master_port, const std::string & sensor_name,
+    const std::string & sensor_ip, uint8_t ptp_domain_id)
   : http_client_(std::move(master_ip), std::to_string(master_port)),
     hostname_(get_hostname()),
-    sensor_id_(std::move(sensor_id)),
+    sensor_id_(make_sensor_clock_id(sensor_name, sensor_ip)),
     ptp_domain_id_(ptp_domain_id)
   {
   }
@@ -74,7 +76,7 @@ public:
   {
     GraphUpdate gu;
     ClockAliasUpdate * u = gu.mutable_clock_alias_update();
-    u->add_aliases()->mutable_frame_id()->set_frame(sensor_id_);
+    u->add_aliases()->CopyFrom(sensor_id_);
     u->add_aliases()->mutable_ptp_clock_id()->set_id(ptp_clock_id);
     return send_proto(gu);
   }
@@ -85,7 +87,7 @@ public:
     ClockDiffMeasurement * m = gu.mutable_clock_diff_measurement();
     m->set_diff_ns(diff_ns);
     m->mutable_src()->mutable_system_clock_id()->set_hostname(hostname_);
-    m->mutable_dst()->mutable_frame_id()->set_frame(sensor_id_);
+    m->mutable_dst()->CopyFrom(sensor_id_);
     return send_proto(gu);
   }
 
@@ -93,7 +95,7 @@ public:
   {
     GraphUpdate gu;
     ClockMasterUpdate * u = gu.mutable_clock_master_update();
-    u->mutable_clock_id()->mutable_frame_id()->set_frame(sensor_id_);
+    u->mutable_clock_id()->CopyFrom(sensor_id_);
     if (master_clock_id) {
       u->mutable_master()->mutable_ptp_clock_id()->set_id(master_clock_id.value());
     } else {
@@ -107,7 +109,7 @@ public:
   {
     GraphUpdate gu;
     PtpParentUpdate * u = gu.mutable_ptp_parent_update();
-    u->mutable_clock_id()->mutable_frame_id()->set_frame(sensor_id_);
+    u->mutable_clock_id()->CopyFrom(sensor_id_);
     u->mutable_parent()->mutable_clock_id()->mutable_ptp_clock_id()->set_id(parent_clock_id);
     u->mutable_parent()->set_port_number(port_number);
     u->mutable_parent()->set_ptp_domain(ptp_domain_id_);
@@ -158,7 +160,7 @@ private:
   drivers::connections::HttpClient http_client_;
 
   std::string hostname_;
-  std::string sensor_id_;
+  ClockId sensor_id_;
   uint8_t ptp_domain_id_;
 
   std::string serialization_buffer_;
