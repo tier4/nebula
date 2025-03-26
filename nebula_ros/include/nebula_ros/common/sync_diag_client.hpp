@@ -150,9 +150,13 @@ private:
       return std::string("Failed to serialize protobuf message");
     }
 
-    auto response = http_client_.post(
-      "/update_graph", serialization_buffer_,
-      drivers::connections::HttpClient::content_type_octet_stream);
+    try {
+      auto response = http_client_.post(
+        "/update_graph", serialization_buffer_,
+        drivers::connections::HttpClient::content_type_octet_stream);
+    } catch (const std::exception & e) {
+      return std::string("could not send a POST request: ") + e.what();
+    }
 
     return std::monostate{};  // Return monostate to indicate success
   }
