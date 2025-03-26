@@ -23,6 +23,7 @@
 #include <pcl/point_types.h>
 
 #include <iostream>
+#include <optional>
 #include <string>
 
 namespace nebula
@@ -50,6 +51,7 @@ struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
   float configuration_vehicle_width{};
   float configuration_vehicle_height{};
   float configuration_vehicle_wheelbase{};
+  std::optional<std::pair<std::string, uint16_t>> sync_master;
 };
 
 /// @brief Convert ContinentalARS548SensorConfiguration to string (Overloading the <<
@@ -71,7 +73,11 @@ inline std::ostream & operator<<(
   os << "Vehicle Length: " << arg.configuration_vehicle_length << '\n';
   os << "Vehicle Width: " << arg.configuration_vehicle_width << '\n';
   os << "Vehicle Height: " << arg.configuration_vehicle_height << '\n';
-  os << "Vehicle Wheelbase: " << arg.configuration_vehicle_wheelbase;
+  os << "Vehicle Wheelbase: " << arg.configuration_vehicle_wheelbase << '\n';
+  os << "Synchronization Diagnostics: "
+     << (arg.sync_master ? ("enabled, master at " + arg.sync_master->first + ':' +
+                            std::to_string(arg.sync_master->second))
+                         : "disabled");
   return os;
 }
 
