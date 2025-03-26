@@ -163,6 +163,7 @@ target_include_directories(continental_ars548_ros_wrapper PUBLIC
     ${rclcpp_components_INCLUDE_DIRS}
     ${tf2_ros_INCLUDE_DIRS}
     ${visualization_msgs_INCLUDE_DIRS}
+    ${sync_tooling_msgs_INCLUDE_DIRS}
 )
 
 target_link_libraries(continental_ars548_ros_wrapper PUBLIC
@@ -175,6 +176,7 @@ target_link_libraries(continental_ars548_ros_wrapper PUBLIC
     ${radar_msgs_TARGETS}
     ${tf2_ros_TARGETS}
     ${visualization_msgs_TARGETS}
+    ${sync_tooling_msgs_TARGETS}
     nebula_decoders::nebula_decoders_continental
     nebula_hw_interfaces::nebula_hw_interfaces_continental
 )

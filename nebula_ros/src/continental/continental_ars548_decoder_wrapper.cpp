@@ -14,11 +14,16 @@
 
 #include "nebula_ros/continental/continental_ars548_decoder_wrapper.hpp"
 
+#include "nebula_ros/common/sync_diag_client.hpp"
+
 #include <nebula_common/util/string_conversions.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
+#include <sync_tooling_msgs/port_id.pb.h>
+#include <sync_tooling_msgs/port_state.pb.h>
 
 #include <algorithm>
+#include <chrono>
 #include <limits>
 #include <memory>
 #include <string>
@@ -106,16 +111,33 @@ Status ContinentalARS548DecoderWrapper::initialize_driver(
   driver_ptr_.reset();
   driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalARS548Decoder>(config);
 
-  driver_ptr_->register_detection_list_callback(
-    std::bind(
-      &ContinentalARS548DecoderWrapper::detection_list_callback, this, std::placeholders::_1));
+  driver_ptr_->register_detection_list_callback(std::bind(
+    &ContinentalARS548DecoderWrapper::detection_list_callback, this, std::placeholders::_1));
   driver_ptr_->register_object_list_callback(
     std::bind(&ContinentalARS548DecoderWrapper::object_list_callback, this, std::placeholders::_1));
-  driver_ptr_->register_sensor_status_callback(
-    std::bind(
-      &ContinentalARS548DecoderWrapper::sensor_status_callback, this, std::placeholders::_1));
+  driver_ptr_->register_sensor_status_callback(std::bind(
+    &ContinentalARS548DecoderWrapper::sensor_status_callback, this, std::placeholders::_1));
   driver_ptr_->register_packets_callback(
     std::bind(&ContinentalARS548DecoderWrapper::packets_callback, this, std::placeholders::_1));
+
+  if (config_ptr_->sync_master) {
+    std::string human_readable_sensor_name = "ARS548@" + config_ptr_->sensor_ip;
+    sync_diag_client_.emplace(
+      config_ptr_->sync_master->first, config_ptr_->sync_master->second, human_readable_sensor_name,
+      0 /* FIXME(mojomex): either remove or find out correct domain ID */);
+
+    driver_ptr_->register_sync_status_callback(
+      [&, time_last_submitted_ns = 0L](int64_t clock_diff, bool sync_ok) mutable {
+        auto now_ns = std::chrono::steady_clock::now().time_since_epoch().count();
+        if (now_ns - time_last_submitted_ns < 1'000'000'000) return;
+
+        auto clock_id = make_sensor_clock_id(human_readable_sensor_name);
+        sync_diag_client_->submit_port_state_update(
+          clock_id, 1, sync_ok ? PortState::PS_SLAVE : PortState::PS_LISTENING);
+
+        sync_diag_client_->submit_clock_diff_measurement(clock_diff);
+      });
+  }
 
   return Status::OK;
 }
