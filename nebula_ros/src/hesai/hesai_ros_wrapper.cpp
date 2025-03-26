@@ -502,8 +502,8 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
     try {
       hw_monitor_wrapper_->sync_diag_client_->submit_clock_diff_measurement(
         *metadata.timestamp_ns - sensor_timestamp_ns);
-    } catch (...) {
-      RCLCPP_ERROR(get_logger(), "Could not send measurement");
+    } catch (const std::exception & e) {
+      RCLCPP_ERROR_STREAM(get_logger(), "Could not send measurement:" << e.what());
     }
   }
 
