@@ -68,9 +68,8 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   RCLCPP_INFO_STREAM(logger_, "Hardware ID: " + hardware_id);
 
   if (config->sync_master) {
-    std::string human_readable_sensor_name = model + '@' + config->sensor_ip;
     sync_diag_client_.emplace(
-      config->sync_master->first, config->sync_master->second, human_readable_sensor_name,
+      config->sync_master->first, config->sync_master->second, model, config->sensor_ip,
       config->ptp_domain);
   }
 
