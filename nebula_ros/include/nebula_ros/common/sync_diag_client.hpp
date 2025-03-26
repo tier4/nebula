@@ -42,6 +42,20 @@
 namespace nebula::ros
 {
 
+inline ClockId make_ptp_clock_id(const std::string & ptp_clock_id)
+{
+  ClockId id;
+  id.mutable_ptp_clock_id()->set_id(ptp_clock_id);
+  return id;
+}
+
+inline ClockId make_sensor_clock_id(const std::string & sensor_name)
+{
+  ClockId id;
+  id.mutable_frame_id()->set_frame(sensor_name);
+  return id;
+}
+
 class SyncDiagClient
 {
 public:
@@ -101,11 +115,11 @@ public:
   }
 
   [[nodiscard]] send_result_t submit_port_state_update(
-    const std::string & ptp_clock_id, uint16_t port_number, uint8_t port_state)
+    const ClockId & clock_id, uint16_t port_number, uint8_t port_state)
   {
     GraphUpdate gu;
     PortStateUpdate * u = gu.mutable_port_state_update();
-    u->mutable_port_id()->mutable_clock_id()->mutable_ptp_clock_id()->set_id(ptp_clock_id);
+    u->mutable_port_id()->mutable_clock_id()->CopyFrom(clock_id);
     u->mutable_port_id()->set_port_number(port_number);
     u->mutable_port_id()->set_ptp_domain(ptp_domain_id_);
 

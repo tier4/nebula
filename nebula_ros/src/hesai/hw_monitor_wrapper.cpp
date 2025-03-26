@@ -246,9 +246,9 @@ void HesaiHwMonitorWrapper::on_sync_diag_timer()
 
   auto port_ds = hw_interface_->get_ptp_diag_port();
   try {
+    auto clock_id = make_ptp_clock_id(port_ds.portIdentity.clock_id.to_json());
     auto result = sync_diag_client_->submit_port_state_update(
-      port_ds.portIdentity.clock_id.to_json(), port_ds.portIdentity.port_number.value(),
-      port_ds.portState);
+      clock_id, port_ds.portIdentity.port_number.value(), port_ds.portState);
     if (!result.has_value()) {
       RCLCPP_WARN_STREAM(logger_, "Could not send port state update: " << result.error());
     }
