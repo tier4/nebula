@@ -17,6 +17,7 @@
 
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/point_types.hpp>
+#include <nlohmann/json.hpp>
 
 #include <tuple>
 #include <vector>
@@ -46,7 +47,8 @@ public:
 
   /// @brief Returns the point cloud and timestamp of the last scan
   /// @return A tuple of point cloud and timestamp in nanoseconds
-  virtual std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() = 0;
+  virtual std::tuple<drivers::NebulaPointCloudPtr, double, nlohmann::ordered_json>
+  get_pointcloud() = 0;
 };
 }  // namespace nebula::drivers
 
