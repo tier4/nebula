@@ -107,18 +107,21 @@ Status ContinentalSRR520DecoderWrapper::initialize_driver(
   driver_ptr_.reset();
   driver_ptr_ = std::make_shared<drivers::continental_srr520::ContinentalSRR520Decoder>(config);
 
-  driver_ptr_->register_near_detection_list_callback(std::bind(
-    &ContinentalSRR520DecoderWrapper::near_detection_list_callback, this, std::placeholders::_1));
-  driver_ptr_->register_hrr_detection_list_callback(std::bind(
-    &ContinentalSRR520DecoderWrapper::hrr_detection_list_callback, this, std::placeholders::_1));
+  driver_ptr_->register_near_detection_list_callback(
+    std::bind(
+      &ContinentalSRR520DecoderWrapper::near_detection_list_callback, this, std::placeholders::_1));
+  driver_ptr_->register_hrr_detection_list_callback(
+    std::bind(
+      &ContinentalSRR520DecoderWrapper::hrr_detection_list_callback, this, std::placeholders::_1));
   driver_ptr_->register_object_list_callback(
     std::bind(&ContinentalSRR520DecoderWrapper::object_list_callback, this, std::placeholders::_1));
   driver_ptr_->register_status_callback(
     std::bind(&ContinentalSRR520DecoderWrapper::status_callback, this, std::placeholders::_1));
 
   if (hw_interface_ptr_) {
-    driver_ptr_->register_sync_follow_up_callback(std::bind(
-      &ContinentalSRR520DecoderWrapper::sync_follow_up_callback, this, std::placeholders::_1));
+    driver_ptr_->register_sync_follow_up_callback(
+      std::bind(
+        &ContinentalSRR520DecoderWrapper::sync_follow_up_callback, this, std::placeholders::_1));
     driver_ptr_->register_packets_callback(
       std::bind(&ContinentalSRR520DecoderWrapper::packets_callback, this, std::placeholders::_1));
   }

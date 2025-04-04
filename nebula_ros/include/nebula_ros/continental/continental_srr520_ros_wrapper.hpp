@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "nebula_ros/common/mt_queue.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
 #include "nebula_ros/continental/continental_srr520_decoder_wrapper.hpp"
 #include "nebula_ros/continental/continental_srr520_hw_interface_wrapper.hpp"
@@ -78,11 +77,6 @@ private:
 
   std::shared_ptr<const drivers::continental_srr520::ContinentalSRR520SensorConfiguration>
     config_ptr_{};
-
-  /// @brief Stores received packets that have not been processed yet by the decoder thread
-  MtQueue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
-  /// @brief Thread to isolate decoding from receiving
-  std::thread decoder_thread_;
 
   rclcpp::Subscription<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_sub_{};
 

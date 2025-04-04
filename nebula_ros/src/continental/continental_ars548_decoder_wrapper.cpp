@@ -100,12 +100,14 @@ Status ContinentalARS548DecoderWrapper::initialize_driver(
   driver_ptr_.reset();
   driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalARS548Decoder>(config);
 
-  driver_ptr_->register_detection_list_callback(std::bind(
-    &ContinentalARS548DecoderWrapper::detection_list_callback, this, std::placeholders::_1));
+  driver_ptr_->register_detection_list_callback(
+    std::bind(
+      &ContinentalARS548DecoderWrapper::detection_list_callback, this, std::placeholders::_1));
   driver_ptr_->register_object_list_callback(
     std::bind(&ContinentalARS548DecoderWrapper::object_list_callback, this, std::placeholders::_1));
-  driver_ptr_->register_sensor_status_callback(std::bind(
-    &ContinentalARS548DecoderWrapper::sensor_status_callback, this, std::placeholders::_1));
+  driver_ptr_->register_sensor_status_callback(
+    std::bind(
+      &ContinentalARS548DecoderWrapper::sensor_status_callback, this, std::placeholders::_1));
   driver_ptr_->register_packets_callback(
     std::bind(&ContinentalARS548DecoderWrapper::packets_callback, this, std::placeholders::_1));
 

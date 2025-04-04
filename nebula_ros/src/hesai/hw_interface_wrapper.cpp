@@ -16,8 +16,9 @@ namespace nebula::ros
 HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   rclcpp::Node * const parent_node,
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config, bool use_udp_only)
-: hw_interface_(std::make_shared<drivers::HesaiHwInterface>(
-    drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"))),
+: hw_interface_(
+    std::make_shared<drivers::HesaiHwInterface>(
+      drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"))),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED),
   use_udp_only_(use_udp_only)

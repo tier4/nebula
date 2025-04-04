@@ -54,9 +54,6 @@ private:
   /// @brief Callback of the timer for getting the current lidar status
   void on_velodyne_status_timer();
 
-  /// @brief Callback of the timer for getting the current lidar snapshot
-  void on_velodyne_snapshot_timer();
-
   /// @brief Callback of the timer for getting the current lidar status & updating the diagnostics
   void on_velodyne_diagnostics_timer();
 
@@ -250,10 +247,6 @@ private:
   /// @param diagnostics DiagnosticStatusWrapper
   void velodyne_check_laser_state(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
-  /// @brief Check the current snapshot for diagnostic_updater
-  /// @param diagnostics DiagnosticStatusWrapper
-  void velodyne_check_snapshot(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
-
   /// @brief Check the current states of motor & laser for diagnostic_updater
   /// @param diagnostics DiagnosticStatusWrapper
   void velodyne_check_status(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
@@ -272,7 +265,6 @@ private:
 
   rclcpp::Logger logger_;
   diagnostic_updater::Updater diagnostics_updater_;
-  nebula::Status status_;
 
   const std::shared_ptr<nebula::drivers::VelodyneHwInterface> hw_interface_;
   rclcpp::Node * const parent_node_;
@@ -282,17 +274,8 @@ private:
   uint16_t diag_span_;
   bool show_advanced_diagnostics_;
 
-  rclcpp::TimerBase::SharedPtr diagnostics_snapshot_timer_;
-  rclcpp::TimerBase::SharedPtr diagnostics_update_timer_;
-  rclcpp::TimerBase::SharedPtr diagnostics_diag_timer_;
-
-  std::shared_ptr<std::string> current_snapshot_;
-  std::shared_ptr<boost::property_tree::ptree> current_snapshot_tree_;
   std::shared_ptr<boost::property_tree::ptree> current_diag_tree_;
-  std::shared_ptr<rclcpp::Time> current_snapshot_time_;
-  uint8_t current_diag_status_;
 
-  std::mutex mtx_snapshot_;
   std::mutex mtx_status_;
   std::mutex mtx_diag_;
 
