@@ -312,6 +312,7 @@ public:
           // already been swapped and published before the timestamp reset angle is reached. Thus,
           // the `decode` pointcloud is now empty and will be decoded to. Reset its timestamp.
           decode_scan_timestamp_ns_ = new_scan_timestamp_ns;
+          decode_pc_->clear();
         } else {
           /// When not cutting at the end of the FoV (i.e. the FoV is 360 deg or a cut occurs
           /// somewhere within a non-360 deg FoV), the current scan is still being decoded to the
