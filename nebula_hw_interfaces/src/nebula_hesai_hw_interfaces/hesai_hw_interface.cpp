@@ -278,7 +278,9 @@ boost::property_tree::ptree HesaiHwInterface::parse_json(const std::string & str
     ss << str;
     boost::property_tree::read_json(ss, tree);
   } catch (boost::property_tree::json_parser_error & e) {
-    std::cerr << e.what() << std::endl;
+    std::stringstream ss;
+    ss << e.what();
+    logger_->error(ss.str());
   }
   return tree;
 }

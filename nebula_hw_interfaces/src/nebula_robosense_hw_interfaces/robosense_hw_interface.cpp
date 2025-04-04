@@ -48,8 +48,9 @@ Status RobosenseHwInterface::sensor_interface_start()
         &RobosenseHwInterface::receive_sensor_packet_callback, this, std::placeholders::_1));
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
-    std::cerr << status << sensor_configuration_->sensor_ip << ","
-              << sensor_configuration_->data_port << std::endl;
+    std::stringstream ss;
+    ss << status << sensor_configuration_->sensor_ip << "," << sensor_configuration_->data_port;
+    print_error(ss.str());
     return status;
   }
   return Status::OK;
@@ -58,7 +59,6 @@ Status RobosenseHwInterface::sensor_interface_start()
 Status RobosenseHwInterface::info_interface_start()
 {
   try {
-    std::cout << "Starting UDP server for info packets on: " << *sensor_configuration_ << std::endl;
     print_info(
       "Starting UDP server for info packets on: " + sensor_configuration_->sensor_ip + ": " +
       std::to_string(sensor_configuration_->gnss_port));
@@ -71,8 +71,9 @@ Status RobosenseHwInterface::info_interface_start()
       std::bind(&RobosenseHwInterface::receive_info_packet_callback, this, std::placeholders::_1));
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
-    std::cerr << status << sensor_configuration_->sensor_ip << ","
-              << sensor_configuration_->gnss_port << std::endl;
+    std::stringstream ss;
+    ss << status << sensor_configuration_->sensor_ip << "," << sensor_configuration_->gnss_port;
+    print_error(ss.str());
     return status;
   }
 
@@ -112,7 +113,7 @@ void RobosenseHwInterface::print_debug(std::string debug)
   if (parent_node_logger_) {
     RCLCPP_DEBUG_STREAM((*parent_node_logger_), debug);
   } else {
-    std::cout << debug << std::endl;
+    std::cout << debug << std::endl << std::flush;
   }
 }
 
@@ -121,7 +122,16 @@ void RobosenseHwInterface::print_info(std::string info)
   if (parent_node_logger_) {
     RCLCPP_INFO_STREAM((*parent_node_logger_), info);
   } else {
-    std::cout << info << std::endl;
+    std::cout << info << std::endl << std::flush;
+  }
+}
+
+void RobosenseHwInterface::print_error(std::string info)
+{
+  if (parent_node_logger_) {
+    RCLCPP_ERROR_STREAM((*parent_node_logger_), info);
+  } else {
+    std::cerr << info << std::endl << std::flush;
   }
 }
 

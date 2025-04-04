@@ -1183,7 +1183,7 @@ void ContinentalSRR520Decoder::print_info(std::string info)
   if (parent_node_logger_ptr_) {
     RCLCPP_INFO_STREAM((*parent_node_logger_ptr_), info);
   } else {
-    std::cout << info << std::endl;
+    std::cout << info << std::endl << std::flush;
   }
 }
 
@@ -1192,7 +1192,7 @@ void ContinentalSRR520Decoder::print_error(std::string error)
   if (parent_node_logger_ptr_) {
     RCLCPP_ERROR_STREAM((*parent_node_logger_ptr_), error);
   } else {
-    std::cerr << error << std::endl;
+    std::cerr << error << std::endl << std::flush;
   }
 }
 
@@ -1201,7 +1201,7 @@ void ContinentalSRR520Decoder::print_debug(std::string debug)
   if (parent_node_logger_ptr_) {
     RCLCPP_DEBUG_STREAM((*parent_node_logger_ptr_), debug);
   } else {
-    std::cout << debug << std::endl;
+    std::cout << debug << std::endl << std::flush;
   }
 }
 

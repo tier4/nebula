@@ -64,7 +64,9 @@ Status ContinentalARS548HwInterface::sensor_interface_start()
     }
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
-    std::cerr << status << config_ptr_->sensor_ip << "," << config_ptr_->data_port << std::endl;
+    std::stringstream ss;
+    ss << status << config_ptr_->sensor_ip << "," << config_ptr_->data_port;
+    print_error(ss.str());
     return status;
   }
   return Status::OK;
@@ -523,7 +525,7 @@ void ContinentalARS548HwInterface::print_info(std::string info)
   if (parent_node_logger_ptr_) {
     RCLCPP_INFO_STREAM((*parent_node_logger_ptr_), info);
   } else {
-    std::cout << info << std::endl;
+    std::cout << info << std::endl << std::flush;
   }
 }
 
@@ -532,7 +534,7 @@ void ContinentalARS548HwInterface::print_error(std::string error)
   if (parent_node_logger_ptr_) {
     RCLCPP_ERROR_STREAM((*parent_node_logger_ptr_), error);
   } else {
-    std::cerr << error << std::endl;
+    std::cerr << error << std::endl << std::flush;
   }
 }
 
@@ -541,7 +543,7 @@ void ContinentalARS548HwInterface::print_debug(std::string debug)
   if (parent_node_logger_ptr_) {
     RCLCPP_DEBUG_STREAM((*parent_node_logger_ptr_), debug);
   } else {
-    std::cout << debug << std::endl;
+    std::cout << debug << std::endl << std::flush;
   }
 }
 
