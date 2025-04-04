@@ -42,7 +42,7 @@ public:
       config);
 
   /// @brief Starts the hw interface and subscribes to the input topics
-  void sensor_interface_start();
+  Status sensor_interface_start();
 
   void on_config_change(
     const std::shared_ptr<const drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
