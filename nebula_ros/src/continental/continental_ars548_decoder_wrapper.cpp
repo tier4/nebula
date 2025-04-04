@@ -134,6 +134,7 @@ void ContinentalARS548DecoderWrapper::initialize_sync_diagnostics(rclcpp::Node *
       auto now_ns = std::chrono::steady_clock::now().time_since_epoch().count();
       if (now_ns - time_last_submitted_ns < 1'000'000'000) return;
 
+      time_last_submitted_ns = now_ns;
       auto clock_id = make_sensor_clock_id("ARS548", config_ptr_->sensor_ip);
       (void)sync_diag_client_->submit_port_state_update(
         clock_id, 1, sync_ok ? PortState::PS_SLAVE : PortState::PS_LISTENING);
