@@ -66,8 +66,10 @@ Status VelodyneHwInterface::sensor_interface_start()
       std::bind(&VelodyneHwInterface::receive_sensor_packet_callback, this, std::placeholders::_1));
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
-    std::cerr << status << sensor_configuration_->sensor_ip << ","
-              << sensor_configuration_->data_port << std::endl;
+    std::stringstream ss;
+    ss << status << sensor_configuration_->sensor_ip << "," << sensor_configuration_->data_port;
+
+    print_error(ss.str());
     return status;
   }
   return Status::OK;
@@ -128,7 +130,9 @@ boost::property_tree::ptree VelodyneHwInterface::parse_json(const std::string & 
     ss << str;
     boost::property_tree::read_json(ss, tree);
   } catch (boost::property_tree::json_parser_error & e) {
-    std::cerr << "Error on ParseJson: " << e.what() << std::endl;
+    std::stringstream ss;
+    ss << "Error on ParseJson: " << e.what();
+    print_error(ss.str());
   }
   return tree;
 }
@@ -457,7 +461,7 @@ void VelodyneHwInterface::print_info(std::string info)
   if (parent_node_logger_) {
     RCLCPP_INFO_STREAM((*parent_node_logger_), info);
   } else {
-    std::cout << info << std::endl;
+    std::cout << info << std::endl << std::flush;
   }
 }
 
@@ -466,7 +470,7 @@ void VelodyneHwInterface::print_error(std::string error)
   if (parent_node_logger_) {
     RCLCPP_ERROR_STREAM((*parent_node_logger_), error);
   } else {
-    std::cerr << error << std::endl;
+    std::cerr << error << std::endl << std::flush;
   }
 }
 
@@ -475,7 +479,7 @@ void VelodyneHwInterface::print_debug(std::string debug)
   if (parent_node_logger_) {
     RCLCPP_DEBUG_STREAM((*parent_node_logger_), debug);
   } else {
-    std::cout << debug << std::endl;
+    std::cout << debug << std::endl << std::flush;
   }
 }
 

@@ -56,6 +56,10 @@ private:
     info_reception_callback_; /**This function pointer is called when DIFOP packet is received*/
   std::shared_ptr<rclcpp::Logger> parent_node_logger_;
 
+  /// @brief Printing the string to RCLCPP_ERROR_STREAM
+  /// @param info Target string
+  void print_error(std::string info);
+
   /// @brief Printing the string to RCLCPP_INFO_STREAM
   /// @param info Target string
   void print_info(std::string info);

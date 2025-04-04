@@ -60,7 +60,9 @@ Status ContinentalSRR520HwInterface::sensor_interface_start()
       std::make_unique<std::thread>(&ContinentalSRR520HwInterface::receive_loop, this);
   } catch (const std::exception & ex) {
     Status status = Status::CAN_CONNECTION_ERROR;
-    std::cerr << status << config_ptr_->interface << std::endl;
+    std::stringstream ss;
+    ss << status << config_ptr_->interface;
+    print_error(ss.str());
     return status;
   }
   return Status::OK;
@@ -378,7 +380,7 @@ void ContinentalSRR520HwInterface::print_info(std::string info)
   if (parent_node_logger_ptr_) {
     RCLCPP_INFO_STREAM((*parent_node_logger_ptr_), info);
   } else {
-    std::cout << info << std::endl;
+    std::cout << info << std::endl << std::flush;
   }
 }
 
@@ -387,7 +389,7 @@ void ContinentalSRR520HwInterface::print_error(std::string error)
   if (parent_node_logger_ptr_) {
     RCLCPP_ERROR_STREAM((*parent_node_logger_ptr_), error);
   } else {
-    std::cerr << error << std::endl;
+    std::cerr << error << std::endl << std::flush;
   }
 }
 
@@ -396,7 +398,7 @@ void ContinentalSRR520HwInterface::print_debug(std::string debug)
   if (parent_node_logger_ptr_) {
     RCLCPP_DEBUG_STREAM((*parent_node_logger_ptr_), debug);
   } else {
-    std::cout << debug << std::endl;
+    std::cout << debug << std::endl << std::flush;
   }
 }
 
