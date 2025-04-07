@@ -116,6 +116,8 @@ private:
   autoware_sensing_msgs::msg::RadarObjects convert_to_autoware_radar_objects(
     const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 
+  void initialize_sync_diagnostics(rclcpp::Node * parent_node);
+
   /// @brief Convert ARS548 detections to a pointcloud
   /// @param msg The ARS548 detection list msg
   /// @return Resulting detection pointcloud
