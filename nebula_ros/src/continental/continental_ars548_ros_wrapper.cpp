@@ -108,13 +108,10 @@ nebula::Status ContinentalARS548RosWrapper::declare_and_get_sensor_config_params
     declare_parameter<double>("configuration_vehicle_wheelbase", param_read_write()));
 
   {
-    const int32_t unset = -1;
-    auto sync_master_port =
-      declare_parameter<int32_t>("sync_diagnostics.master_port", unset, param_read_only());
-    if (sync_master_port != unset) {
-      auto sync_master_ip =
-        declare_parameter<std::string>("sync_diagnostics.master_ip", param_read_only());
-      config.sync_master.emplace(sync_master_ip, static_cast<uint16_t>(sync_master_port));
+    auto sync_diagnostics_topic =
+      declare_parameter<std::string>("sync_diagnostics.topic", "", param_read_only());
+    if (!sync_diagnostics_topic.empty()) {
+      config.sync_diagnostics_topic.emplace(sync_diagnostics_topic);
     }
   }
 

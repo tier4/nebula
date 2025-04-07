@@ -17,6 +17,11 @@
 #include <nebula_common/util/errno.hpp>
 #include <nebula_common/util/expected.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_common/connections/http.hpp>
+#include <rclcpp/rclcpp.hpp>
+
+#include <std_msgs/msg/u_int8_multi_array.hpp>
+
+#include <boost/range/algorithm/copy.hpp>
 
 #include <google/protobuf/message.h>
 #include <sync_tooling_msgs/clock_alias_update.pb.h>
@@ -63,13 +68,13 @@ public:
   using send_result_t = nebula::util::expected<std::monostate, std::string>;
 
   SyncDiagClient(
-    std::string master_ip, uint16_t master_port, const std::string & sensor_name,
+    rclcpp::Node * const parent_node, const std::string & topic, const std::string & sensor_name,
     const std::string & sensor_ip, uint8_t ptp_domain_id)
-  : http_client_(std::move(master_ip), std::to_string(master_port)),
-    hostname_(get_hostname()),
+  : hostname_(get_hostname()),
     sensor_id_(make_sensor_clock_id(sensor_name, sensor_ip)),
     ptp_domain_id_(ptp_domain_id)
   {
+    publisher_ = parent_node->create_publisher<std_msgs::msg::UInt8MultiArray>(topic, 10);
   }
 
   [[nodiscard]] send_result_t submit_clock_alias(const std::string & ptp_clock_id)
@@ -150,18 +155,15 @@ private:
       return std::string("Failed to serialize protobuf message");
     }
 
-    try {
-      auto response = http_client_.post(
-        "/update_graph", serialization_buffer_,
-        drivers::connections::HttpClient::content_type_octet_stream);
-    } catch (const std::exception & e) {
-      return std::string("could not send a POST request: ") + e.what();
-    }
+    auto ros2_msg = std_msgs::msg::UInt8MultiArray();
+    boost::range::copy(serialization_buffer_, std::back_inserter(ros2_msg.data));
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("SyncDiagClient"), "Sending graph update");
+    publisher_->publish(ros2_msg);
 
     return std::monostate{};  // Return monostate to indicate success
   }
 
-  drivers::connections::HttpClient http_client_;
+  rclcpp::Publisher<std_msgs::msg::UInt8MultiArray>::SharedPtr publisher_;
 
   std::string hostname_;
   ClockId sensor_id_;

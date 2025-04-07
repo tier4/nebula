@@ -223,13 +223,10 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
   }
 
   {
-    const int32_t unset = -1;
-    auto sync_master_port =
-      declare_parameter<int32_t>("sync_diagnostics.master_port", unset, param_read_only());
-    if (sync_master_port != unset) {
-      auto sync_master_ip =
-        declare_parameter<std::string>("sync_diagnostics.master_ip", param_read_only());
-      config.sync_master.emplace(sync_master_ip, static_cast<uint16_t>(sync_master_port));
+    auto sync_diagnostics_topic =
+      declare_parameter<std::string>("sync_diagnostics.topic", "", param_read_only());
+    if (!sync_diagnostics_topic.empty()) {
+      config.sync_diagnostics_topic.emplace(sync_diagnostics_topic);
     }
   }
 
@@ -477,7 +474,6 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
   msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
   msg_ptr->data = packet;
-  uint64_t last_packet_receive_time = metadata.timestamp_ns ? *metadata.timestamp_ns : timestamp_ns;
   uint64_t sensor_timestamp_ns = timestamp_ns;
   switch (sensor_cfg_ptr_->sensor_model) {
     case drivers::SensorModel::HESAI_PANDAR128_E4X:
@@ -490,10 +486,13 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
       break;
   }
 
-  if (metadata.timestamp_ns && hw_monitor_wrapper_ && hw_monitor_wrapper_->sync_diag_client_) {
+  if (
+    metadata.timestamp_ns && hw_monitor_wrapper_ && hw_monitor_wrapper_->sync_diag_client_ &&
+    (*metadata.timestamp_ns - last_measurement_send_time_ns_ > 100'000'000)) {
     try {
       hw_monitor_wrapper_->sync_diag_client_->submit_clock_diff_measurement(
         *metadata.timestamp_ns - sensor_timestamp_ns);
+      last_measurement_send_time_ns_ = *metadata.timestamp_ns;
     } catch (const std::exception & e) {
       RCLCPP_ERROR_STREAM(get_logger(), "Could not send measurement:" << e.what());
     }

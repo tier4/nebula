@@ -54,7 +54,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   PtpSwitchType ptp_switch_type;
   uint8_t ptp_lock_threshold;
   std::optional<std::string> downsample_mask_path;
-  std::optional<std::pair<std::string, uint16_t>> sync_master;
+  std::optional<std::string> sync_diagnostics_topic;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -84,9 +84,8 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
                                   : "disabled")
      << '\n';
   os << "Synchronization Diagnostics: "
-     << (arg.sync_master ? ("enabled, master at " + arg.sync_master->first + ':' +
-                            std::to_string(arg.sync_master->second))
-                         : "disabled");
+     << (arg.sync_diagnostics_topic ? ("enabled, topic: " + arg.sync_diagnostics_topic.value())
+                                    : "disabled");
   return os;
 }
 

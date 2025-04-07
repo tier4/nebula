@@ -90,6 +90,8 @@ private:
     const std::shared_ptr<
       const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config);
 
+  void initialize_sync_diagnostics(rclcpp::Node * parent_node);
+
   /// @brief Convert ARS548 detections to a pointcloud
   /// @param msg The ARS548 detection list msg
   /// @return Resulting detection pointcloud
