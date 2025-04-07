@@ -86,9 +86,8 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
                                   : "disabled")
      << '\n';
   os << "Synchronization Diagnostics: "
-     << (arg.sync_master ? ("enabled, master at " + arg.sync_master->first + ':' +
-                            std::to_string(arg.sync_master->second))
-                         : "disabled");
+     << (arg.sync_diagnostics_topic ? ("enabled, topic: " + arg.sync_diagnostics_topic.value())
+                                    : "disabled");
   return os;
 }
 
