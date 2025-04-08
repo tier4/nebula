@@ -170,7 +170,6 @@ private:
   uint8_t ptp_domain_id_;
 
   std::string serialization_buffer_;
-  std::optional<std::future<drivers::connections::HttpClient::HttpResponse>> last_request_;
 };
 
 }  // namespace nebula::ros
