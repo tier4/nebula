@@ -23,9 +23,9 @@
 #include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include <autoware_perception_msgs/msg/object_classification.hpp>
-#include <autoware_perception_msgs/msg/radar_info.hpp>
-#include <autoware_perception_msgs/msg/radar_objects.hpp>
+#include <autoware_sensing_msgs/msg/radar_classification.hpp>
+#include <autoware_sensing_msgs/msg/radar_info.hpp>
+#include <autoware_sensing_msgs/msg/radar_objects.hpp>
 #include <continental_msgs/msg/continental_ars548_detection.hpp>
 #include <continental_msgs/msg/continental_ars548_detection_list.hpp>
 #include <continental_msgs/msg/continental_ars548_object.hpp>
@@ -110,7 +110,7 @@ private:
   /// @brief Convert ARS548 objects to a autoware's PointCloud2 msg
   /// @param msg The ARS548 objects list msg
   /// @return Resulting RadarObjects msg
-  autoware_perception_msgs::msg::RadarObjects convert_to_autoware_radar_objects(
+  autoware_sensing_msgs::msg::RadarObjects convert_to_autoware_radar_objects(
     const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 
   /// @brief Convert ARS548 detections to a pointcloud
@@ -169,14 +169,14 @@ private:
     object_list_pub_{};
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr object_pointcloud_pub_{};
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr detection_pointcloud_pub_{};
-  rclcpp::Publisher<autoware_perception_msgs::msg::RadarObjects>::SharedPtr autoware_objects_pub_{};
+  rclcpp::Publisher<autoware_sensing_msgs::msg::RadarObjects>::SharedPtr autoware_objects_pub_{};
   rclcpp::Publisher<radar_msgs::msg::RadarScan>::SharedPtr scan_raw_pub_{};
   rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr objects_raw_pub_{};
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr objects_markers_pub_{};
   rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_{};
-  rclcpp::Publisher<autoware_perception_msgs::msg::RadarInfo>::SharedPtr radar_info_pub_{};
+  rclcpp::Publisher<autoware_sensing_msgs::msg::RadarInfo>::SharedPtr radar_info_pub_{};
 
-  autoware_perception_msgs::msg::RadarInfo radar_info_msg_{};
+  autoware_sensing_msgs::msg::RadarInfo radar_info_msg_{};
   std::size_t detection_msgs_counter_{0};
 
   std::unordered_set<int> previous_ids_{};
