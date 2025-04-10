@@ -47,9 +47,10 @@ Status ContinentalARS548HwInterface::sensor_interface_start()
     sensor_udp_driver_ptr_->receiver()->setMulticast(true);
     sensor_udp_driver_ptr_->receiver()->open();
     sensor_udp_driver_ptr_->receiver()->bind();
-    sensor_udp_driver_ptr_->receiver()->asyncReceiveWithSender(std::bind(
-      &ContinentalARS548HwInterface::receive_sensor_packet_callback_with_sender, this,
-      std::placeholders::_1, std::placeholders::_2));
+    sensor_udp_driver_ptr_->receiver()->asyncReceiveWithSender(
+      std::bind(
+        &ContinentalARS548HwInterface::receive_sensor_packet_callback_with_sender, this,
+        std::placeholders::_1, std::placeholders::_2));
 
     sensor_udp_driver_ptr_->init_sender(
       config_ptr_->sensor_ip, config_ptr_->configuration_sensor_port, config_ptr_->host_ip,

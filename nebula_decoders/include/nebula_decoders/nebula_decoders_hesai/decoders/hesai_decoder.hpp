@@ -274,7 +274,7 @@ public:
       mask_filter_ = point_filters::DownsampleMaskFilter(
         sensor_configuration->downsample_mask_path.value(), SensorT::fov_mdeg.azimuth,
         SensorT::peak_resolution_mdeg.azimuth, SensorT::packet_t::n_channels,
-        logger_->child("Downsample Mask"), true);
+        logger_->child("Downsample Mask"), true, sensor_.get_dither_transform());
     }
 
     decode_pc_->reserve(SensorT::max_scan_buffer_points);
@@ -312,6 +312,7 @@ public:
           // already been swapped and published before the timestamp reset angle is reached. Thus,
           // the `decode` pointcloud is now empty and will be decoded to. Reset its timestamp.
           decode_scan_timestamp_ns_ = new_scan_timestamp_ns;
+          decode_pc_->clear();
         } else {
           /// When not cutting at the end of the FoV (i.e. the FoV is 360 deg or a cut occurs
           /// somewhere within a non-360 deg FoV), the current scan is still being decoded to the

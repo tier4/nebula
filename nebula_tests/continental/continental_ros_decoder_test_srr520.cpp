@@ -59,10 +59,12 @@ ContinentalRosDecoderTest::ContinentalRosDecoderTest(
     std::const_pointer_cast<drivers::continental_srr520::ContinentalSRR520SensorConfiguration>(
       sensor_cfg_ptr_));
 
-  driver_ptr_->register_hrr_detection_list_callback(std::bind(
-    &ContinentalRosDecoderTest::hrr_detection_list_callback, this, std::placeholders::_1));
-  driver_ptr_->register_near_detection_list_callback(std::bind(
-    &ContinentalRosDecoderTest::near_detection_list_callback, this, std::placeholders::_1));
+  driver_ptr_->register_hrr_detection_list_callback(
+    std::bind(
+      &ContinentalRosDecoderTest::hrr_detection_list_callback, this, std::placeholders::_1));
+  driver_ptr_->register_near_detection_list_callback(
+    std::bind(
+      &ContinentalRosDecoderTest::near_detection_list_callback, this, std::placeholders::_1));
   driver_ptr_->register_object_list_callback(
     std::bind(&ContinentalRosDecoderTest::object_list_callback, this, std::placeholders::_1));
   driver_ptr_->register_status_callback(

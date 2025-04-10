@@ -75,11 +75,20 @@ public:
   explicit UsageError(const std::string & msg) : std::runtime_error(msg) {}
 };
 
+inline util::expected<in_addr, UsageError> parse_ip(const std::string & ip)
+{
+  in_addr parsed_addr{};
+  bool valid = inet_aton(ip.c_str(), &parsed_addr);
+  if (!valid) return UsageError("Invalid IP address given");
+  return parsed_addr;
+}
+
 class UdpSocket
 {
   struct Endpoint
   {
     in_addr ip;
+    /// In host byte order.
     uint16_t port;
   };
 
@@ -95,7 +104,7 @@ class UdpSocket
 
     SockFd(const SockFd &) = delete;
     SockFd & operator=(const SockFd &) = delete;
-    SockFd & operator=(SockFd && other)
+    SockFd & operator=(SockFd && other) noexcept
     {
       std::swap(sock_fd_, other.sock_fd_);
       return *this;
@@ -126,7 +135,8 @@ class UdpSocket
     size_t buffer_size{1500};
     Endpoint host;
     std::optional<in_addr> multicast_ip;
-    std::optional<Endpoint> sender;
+    std::optional<Endpoint> sender_filter;
+    std::optional<Endpoint> send_to;
   };
 
   struct MsgBuffers
@@ -174,7 +184,7 @@ public:
      */
     Builder(const std::string & host_ip, uint16_t host_port)
     {
-      in_addr host_in_addr = parse_ip_or_throw(host_ip);
+      in_addr host_in_addr = parse_ip(host_ip).value_or_throw();
       if (host_in_addr.s_addr == INADDR_BROADCAST)
         throw UsageError("Do not bind to broadcast IP. Bind to 0.0.0.0 or a specific IP instead.");
 
@@ -201,7 +211,19 @@ public:
      */
     Builder && limit_to_sender(const std::string & sender_ip, uint16_t sender_port)
     {
-      config_.sender.emplace(Endpoint{parse_ip_or_throw(sender_ip), sender_port});
+      config_.sender_filter.emplace(Endpoint{parse_ip(sender_ip).value_or_throw(), sender_port});
+      return std::move(*this);
+    }
+
+    /**
+     * @brief Set the destination to send packets to.
+     *
+     * @param dest_ip The destination IP address.
+     * @param dest_port The destination port.
+     */
+    Builder && set_send_destination(const std::string & dest_ip, uint16_t dest_port)
+    {
+      config_.send_to.emplace(Endpoint{parse_ip(dest_ip).value_or_throw(), dest_port});
       return std::move(*this);
     }
 
@@ -243,7 +265,7 @@ public:
     {
       if (config_.multicast_ip)
         throw UsageError("Only one multicast group can be joined by this socket");
-      ip_mreq mreq{parse_ip_or_throw(group_ip), config_.host.ip};
+      ip_mreq mreq{parse_ip(group_ip).value_or_throw(), config_.host.ip};
 
       sock_fd_.setsockopt(IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq).value_or_throw();
       config_.multicast_ip.emplace(mreq.imr_multiaddr);
@@ -251,7 +273,7 @@ public:
     }
 
     /**
-     * @brief Set the interval at which the socket polls for new data. THis should be longer than
+     * @brief Set the interval at which the socket polls for new data. This should be longer than
      * the expected interval of packets arriving in order to not poll unnecessarily often, and
      * should be shorter than the acceptable time delay for `unsubscribe()`. The `unsubscribe()`
      * function blocks up to one full poll interval before returning.
@@ -277,7 +299,7 @@ public:
       addr.sin_port = htons(config_.host.port);
       addr.sin_addr = config_.multicast_ip ? *config_.multicast_ip : config_.host.ip;
 
-      int result = ::bind(sock_fd_.get(), (struct sockaddr *)&addr, sizeof(addr));
+      int result = ::bind(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
       if (result == -1) throw SocketError(errno);
 
       return UdpSocket{std::move(sock_fd_), config_};
@@ -327,12 +349,34 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Send a datagram to the destination set in `set_send_destination()`.
+   *
+   * @param data The data to send
+   * @throw UsageError If no destination has been set via `set_send_destination()`
+   * @throw SocketError If the send operation fails
+   */
+  void send(const std::vector<uint8_t> & data)
+  {
+    if (!config_.send_to) throw UsageError("No destination set");
+
+    sockaddr_in dest_addr{};
+    dest_addr.sin_family = AF_INET;
+    dest_addr.sin_port = htons(config_.send_to->port);
+    dest_addr.sin_addr = config_.send_to->ip;
+
+    ssize_t result = sendto(
+      sock_fd_.get(), data.data(), data.size(), 0, (sockaddr *)&dest_addr, sizeof(dest_addr));
+
+    if (result == -1) throw SocketError(errno);
+  }
+
   UdpSocket(const UdpSocket &) = delete;
   UdpSocket(UdpSocket && other)
   : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))),
-    poll_fd_(std::move(other.poll_fd_)),
-    config_(std::move(other.config_)),
-    drop_monitor_(std::move(other.drop_monitor_))
+    poll_fd_(other.poll_fd_),
+    config_(other.config_),
+    drop_monitor_(other.drop_monitor_)
   {
     if (other.callback_) subscribe(std::move(other.callback_));
   };
@@ -409,8 +453,8 @@ private:
 
   bool is_accepted_sender(const sockaddr_in & sender_addr)
   {
-    if (!config_.sender) return true;
-    return sender_addr.sin_addr.s_addr == config_.sender->ip.s_addr;
+    if (!config_.sender_filter) return true;
+    return sender_addr.sin_addr.s_addr == config_.sender_filter->ip.s_addr;
   }
 
   static MsgBuffers make_msg_header(std::vector<uint8_t> & receive_buffer)
@@ -419,7 +463,7 @@ private:
     iovec iov{};
     std::array<std::byte, 1024> control;
 
-    sockaddr_in sender_addr;
+    sockaddr_in sender_addr{};
     socklen_t sender_addr_len = sizeof(sender_addr);
 
     iov.iov_base = receive_buffer.data();
@@ -433,14 +477,6 @@ private:
     msg.msg_namelen = sender_addr_len;
 
     return MsgBuffers{msg, iov, control, sender_addr};
-  }
-
-  static in_addr parse_ip_or_throw(const std::string & ip)
-  {
-    in_addr parsed_addr;
-    bool valid = inet_aton(ip.c_str(), &parsed_addr);
-    if (!valid) throw UsageError("Invalid IP address given");
-    return parsed_addr;
   }
 
   SockFd sock_fd_;

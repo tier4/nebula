@@ -31,7 +31,7 @@ repos:
         args: [--no-error-on-unmatched-pattern]
 
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.35.1
+    rev: v1.37.0
     hooks:
       - id: yamllint
 
@@ -47,13 +47,13 @@ repos:
       - id: shellcheck
 
   - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.10.0-2
+    rev: v3.11.0-1
     hooks:
       - id: shfmt
         args: [-w, -s, -i=4]
 
   - repo: https://github.com/pycqa/isort
-    rev: 6.0.0
+    rev: 6.0.1
     hooks:
       - id: isort
 
@@ -64,7 +64,7 @@ repos:
         args: [--line-length=100]
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.1.2
+    rev: 7.2.0
     hooks:
       - id: flake8
         additional_dependencies:
@@ -80,12 +80,12 @@ repos:
           ]
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v19.1.7
+    rev: v20.1.0
     hooks:
       - id: clang-format
 
   - repo: https://github.com/cpplint/cpplint
-    rev: 2.0.0
+    rev: 2.0.1
     hooks:
       - id: cpplint
         # runtime/arrays uses the name of the variable to determine const-ness.

@@ -143,6 +143,13 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
   config.max_range = declare_parameter<double>("max_range", param_read_write());
   config.packet_mtu_size = declare_parameter<uint16_t>("packet_mtu_size", param_read_only());
 
+  config.hires_mode = false;
+  if (
+    config.sensor_model == drivers::SensorModel::HESAI_PANDAR128_E4X ||
+    config.sensor_model == drivers::SensorModel::HESAI_PANDAR128_E3X) {
+    config.hires_mode = this->declare_parameter<bool>("hires_mode", param_read_write());
+  }
+
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     RCLCPP_DEBUG_STREAM(get_logger(), config.sensor_model);
@@ -365,6 +372,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     get_param(p, "cloud_min_angle", new_cfg.cloud_min_angle) |
     get_param(p, "cloud_max_angle", new_cfg.cloud_max_angle) |
     get_param(p, "dual_return_distance_threshold", new_cfg.dual_return_distance_threshold) |
+    get_param(p, "hires_mode", new_cfg.hires_mode) |
     get_param(p, calibration_parameter_name, new_cfg.calibration_path) |
     get_param(p, "point_filters.downsample_mask.path", downsample_mask_path);
 
@@ -374,7 +382,7 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
   }
 
-  if (return_mode.empty()) {
+  if (!return_mode.empty()) {
     new_cfg.return_mode =
       nebula::drivers::return_mode_from_string_hesai(return_mode, sensor_cfg_ptr_->sensor_model);
   }
