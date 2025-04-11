@@ -26,8 +26,8 @@
 #endif
 
 #include <boost_udp_driver/udp_driver.hpp>
+#include <nebula_common/loggers/logger.hpp>
 #include <nebula_common/robosense/robosense_common.hpp>
-#include <rclcpp/rclcpp.hpp>
 
 #include <memory>
 #include <string>
@@ -54,19 +54,11 @@ private:
     scan_reception_callback_; /**This function pointer is called when the scan is complete*/
   std::function<void(std::vector<uint8_t> & buffer)>
     info_reception_callback_; /**This function pointer is called when DIFOP packet is received*/
-  std::shared_ptr<rclcpp::Logger> parent_node_logger_;
-
-  /// @brief Printing the string to RCLCPP_INFO_STREAM
-  /// @param info Target string
-  void print_info(std::string info);
-
-  /// @brief Printing the string to RCLCPP_DEBUG_STREAM
-  /// @param debug Target string
-  void print_debug(std::string debug);
+  std::shared_ptr<loggers::Logger> logger_;
 
 public:
   /// @brief Constructor
-  RobosenseHwInterface();
+  explicit RobosenseHwInterface(const std::shared_ptr<loggers::Logger> & logger);
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
@@ -99,10 +91,6 @@ public:
   /// @param scan_callback Callback function
   /// @return Resulting status
   Status register_info_callback(std::function<void(std::vector<uint8_t> &)> info_callback);
-
-  /// @brief Setting rclcpp::Logger
-  /// @param node Logger
-  void set_logger(std::shared_ptr<rclcpp::Logger> logger);
 };
 
 }  // namespace nebula::drivers

@@ -2,6 +2,8 @@
 
 #include "nebula_ros/robosense/hw_interface_wrapper.hpp"
 
+#include "nebula_ros/common/rclcpp_logger.hpp"
+
 #include <nebula_common/util/string_conversions.hpp>
 
 #include <memory>
@@ -11,12 +13,12 @@ namespace nebula::ros
 RobosenseHwInterfaceWrapper::RobosenseHwInterfaceWrapper(
   rclcpp::Node * const parent_node,
   std::shared_ptr<const nebula::drivers::RobosenseSensorConfiguration> & config)
-: hw_interface_(new nebula::drivers::RobosenseHwInterface()),
+: hw_interface_(
+    std::make_shared<drivers::RobosenseHwInterface>(
+      drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"))),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(nebula::Status::NOT_INITIALIZED)
 {
-  hw_interface_->set_logger(
-    std::make_shared<rclcpp::Logger>(parent_node->get_logger().get_child("HwInterface")));
   status_ = hw_interface_->set_sensor_configuration(config);
 
   if (Status::OK != status_) {

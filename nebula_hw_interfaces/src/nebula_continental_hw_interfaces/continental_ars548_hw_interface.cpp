@@ -25,9 +25,11 @@
 
 namespace nebula::drivers::continental_ars548
 {
-ContinentalARS548HwInterface::ContinentalARS548HwInterface()
+ContinentalARS548HwInterface::ContinentalARS548HwInterface(
+  const std::shared_ptr<loggers::Logger> & logger)
 : sensor_io_context_ptr_{new ::drivers::common::IoContext(1)},
-  sensor_udp_driver_ptr_{new ::drivers::udp_driver::UdpDriver(*sensor_io_context_ptr_)}
+  sensor_udp_driver_ptr_{new ::drivers::udp_driver::UdpDriver(*sensor_io_context_ptr_)},
+  logger_(logger)
 {
 }
 
@@ -64,7 +66,7 @@ Status ContinentalARS548HwInterface::sensor_interface_start()
     }
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
-    std::cerr << status << config_ptr_->sensor_ip << "," << config_ptr_->data_port << std::endl;
+    logger_->error("Setting sensor configuration failed");
     return status;
   }
   return Status::OK;
@@ -87,7 +89,7 @@ void ContinentalARS548HwInterface::receive_sensor_packet_callback_with_sender(
 void ContinentalARS548HwInterface::receive_sensor_packet_callback(std::vector<uint8_t> & buffer)
 {
   if (buffer.size() < sizeof(HeaderPacket)) {
-    print_error("Unrecognized packet. Too short");
+    logger_->error("Unrecognized packet. Too short");
     return;
   }
 
@@ -511,38 +513,6 @@ Status ContinentalARS548HwInterface::set_yaw_rate(float yaw_rate)
   sensor_udp_driver_ptr_->sender()->asyncSend(send_vector);
 
   return Status::OK;
-}
-
-void ContinentalARS548HwInterface::set_logger(std::shared_ptr<rclcpp::Logger> logger)
-{
-  parent_node_logger_ptr_ = logger;
-}
-
-void ContinentalARS548HwInterface::print_info(std::string info)
-{
-  if (parent_node_logger_ptr_) {
-    RCLCPP_INFO_STREAM((*parent_node_logger_ptr_), info);
-  } else {
-    std::cout << info << std::endl;
-  }
-}
-
-void ContinentalARS548HwInterface::print_error(std::string error)
-{
-  if (parent_node_logger_ptr_) {
-    RCLCPP_ERROR_STREAM((*parent_node_logger_ptr_), error);
-  } else {
-    std::cerr << error << std::endl;
-  }
-}
-
-void ContinentalARS548HwInterface::print_debug(std::string debug)
-{
-  if (parent_node_logger_ptr_) {
-    RCLCPP_DEBUG_STREAM((*parent_node_logger_ptr_), debug);
-  } else {
-    std::cout << debug << std::endl;
-  }
 }
 
 }  // namespace nebula::drivers::continental_ars548
