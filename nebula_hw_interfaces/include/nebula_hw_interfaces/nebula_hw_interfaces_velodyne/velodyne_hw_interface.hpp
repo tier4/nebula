@@ -31,15 +31,17 @@
 
 #include <boost_tcp_driver/http_client_driver.hpp>
 #include <boost_udp_driver/udp_driver.hpp>
+#include <nebula_common/loggers/logger.hpp>
 #include <nebula_common/velodyne/velodyne_common.hpp>
 #include <nebula_common/velodyne/velodyne_status.hpp>
-#include <rclcpp/rclcpp.hpp>
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include <chrono>
 #include <memory>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace nebula::drivers
@@ -136,20 +138,13 @@ private:
     std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration,
     boost::property_tree::ptree tree);
 
-  std::shared_ptr<rclcpp::Logger> parent_node_logger_;
-  /// @brief Printing the string to RCLCPP_INFO_STREAM
-  /// @param info Target string
-  void print_info(std::string info);
-  /// @brief Printing the string to RCLCPP_ERROR_STREAM
-  /// @param error Target string
-  void print_error(std::string error);
-  /// @brief Printing the string to RCLCPP_DEBUG_STREAM
-  /// @param debug Target string
-  void print_debug(std::string debug);
+  std::shared_ptr<loggers::Logger> logger_;
 
 public:
   /// @brief Constructor
-  VelodyneHwInterface();
+  explicit VelodyneHwInterface(const std::shared_ptr<loggers::Logger> & logger);
+
+  virtual ~VelodyneHwInterface() = default;
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
@@ -261,12 +256,7 @@ public:
   /// @param use_dhcp DHCP on
   /// @return Resulting status
   VelodyneStatus set_net_dhcp(bool use_dhcp);
-
-  /// @brief Setting rclcpp::Logger
-  /// @param node Logger
-  void set_logger(std::shared_ptr<rclcpp::Logger> node);
 };
-
 }  // namespace nebula::drivers
 
 #endif  // NEBULA_VELODYNE_HW_INTERFACE_H
