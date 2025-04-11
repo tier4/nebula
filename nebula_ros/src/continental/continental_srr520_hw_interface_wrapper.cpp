@@ -14,6 +14,8 @@
 
 #include "nebula_ros/continental/continental_srr520_hw_interface_wrapper.hpp"
 
+#include "nebula_ros/common/rclcpp_logger.hpp"
+
 #include <nebula_common/util/string_conversions.hpp>
 
 #include <tf2_ros/buffer.h>
@@ -31,13 +33,12 @@ ContinentalSRR520HwInterfaceWrapper::ContinentalSRR520HwInterfaceWrapper(
     config_ptr)
 : parent_node_(parent_node),
   hw_interface_(
-    std::make_shared<nebula::drivers::continental_srr520::ContinentalSRR520HwInterface>()),
+    std::make_shared<drivers::continental_srr520::ContinentalSRR520HwInterface>(
+      drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"))),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED),
   config_ptr_(config_ptr)
 {
-  hw_interface_->set_logger(
-    std::make_shared<rclcpp::Logger>(parent_node->get_logger().get_child("HwInterface")));
   status_ = hw_interface_->set_sensor_configuration(config_ptr_);
 
   if (status_ != Status::OK) {

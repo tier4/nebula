@@ -18,7 +18,7 @@
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 
 #include <nebula_common/continental/continental_srr520.hpp>
-#include <rclcpp/rclcpp.hpp>
+#include <nebula_common/loggers/logger.hpp>
 #include <ros2_socketcan/socket_can_receiver.hpp>
 #include <ros2_socketcan/socket_can_sender.hpp>
 
@@ -28,6 +28,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace nebula::drivers::continental_srr520
@@ -37,7 +38,7 @@ class ContinentalSRR520HwInterface
 {
 public:
   /// @brief Constructor
-  ContinentalSRR520HwInterface();
+  explicit ContinentalSRR520HwInterface(const std::shared_ptr<loggers::Logger> & logger);
 
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
@@ -95,10 +96,6 @@ public:
     float longitudinal_acceleration, float lateral_acceleration, float yaw_rate,
     float longitudinal_velocity, bool standstill);
 
-  /// @brief Setting rclcpp::Logger
-  /// @param node Logger
-  void set_logger(std::shared_ptr<rclcpp::Logger> node);
-
 private:
   /// @brief Send a Fd frame
   /// @param data a buffer containing the data to send
@@ -135,7 +132,7 @@ private:
   bool sync_follow_up_sent_{true};
   builtin_interfaces::msg::Time last_sync_stamp_;
 
-  std::shared_ptr<rclcpp::Logger> parent_node_logger_ptr_;
+  std::shared_ptr<loggers::Logger> logger_;
 };
 }  // namespace nebula::drivers::continental_srr520
 
