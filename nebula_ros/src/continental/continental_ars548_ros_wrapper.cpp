@@ -91,7 +91,7 @@ nebula::Status ContinentalARS548RosWrapper::declare_and_get_sensor_config_params
     static_cast<uint16_t>(declare_parameter<int>("configuration_sensor_port", param_read_only()));
   config.use_sensor_time = declare_parameter<bool>("use_sensor_time", param_read_write());
   config.radar_info_rate_subsample =
-    declare_parameter<int>("radar_info_rate_subsample", param_read_write());
+    declare_parameter<int>("radar_info_rate_subsample", param_read_only());
   config.configuration_vehicle_length = static_cast<float>(
     declare_parameter<double>("configuration_vehicle_length", param_read_write()));
   config.configuration_vehicle_width = static_cast<float>(
