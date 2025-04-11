@@ -27,7 +27,8 @@ Checks: "
   -modernize-use-trailing-return-type,
   -readability-identifier-length,
   -readability-implicit-bool-conversion,
-  -hicpp-special-member-functions"
+  -hicpp-special-member-functions,
+  -hicpp-braces-around-statements"
 
 # WarningsAsErrors have been taken from:
 # https://github.com/autowarefoundation/autoware/blob/3591106/.clang-tidy-ci
@@ -120,3 +121,9 @@ CheckOptions:
     value: lower_case
   - key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
     value: true
+    # Structs (e.g. sensor config) with functions like to_json() would otherwise be flagged as warnings
+  - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value: true
+    # Reduce boilerplate for things like guard clauses
+  - key: readability-braces-around-statements.ShortStatementLines
+    value: 2 # The definition is confusing, but everything >= 2 is flagged as a warning
