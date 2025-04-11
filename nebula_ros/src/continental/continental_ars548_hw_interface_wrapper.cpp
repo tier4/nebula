@@ -14,6 +14,8 @@
 
 #include "nebula_ros/continental/continental_ars548_hw_interface_wrapper.hpp"
 
+#include "nebula_ros/common/rclcpp_logger.hpp"
+
 #include <nebula_common/util/string_conversions.hpp>
 
 #include <tf2_ros/buffer.h>
@@ -30,7 +32,8 @@ ContinentalARS548HwInterfaceWrapper::ContinentalARS548HwInterfaceWrapper(
     config_ptr)
 : parent_node_(parent_node),
   hw_interface_(
-    std::make_shared<nebula::drivers::continental_ars548::ContinentalARS548HwInterface>()),
+    std::make_shared<drivers::continental_ars548::ContinentalARS548HwInterface>(
+      drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"))),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED),
   config_ptr_(config_ptr),
@@ -44,8 +47,6 @@ ContinentalARS548HwInterfaceWrapper::ContinentalARS548HwInterfaceWrapper(
     nebula::drivers::continental_ars548::min_odometry_hz,
     nebula::drivers::continental_ars548::max_odometry_hz, 100)
 {
-  hw_interface_->set_logger(
-    std::make_shared<rclcpp::Logger>(parent_node->get_logger().get_child("HwInterface")));
   status_ = hw_interface_->set_sensor_configuration(config_ptr);
 
   if (status_ != Status::OK) {

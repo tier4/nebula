@@ -19,7 +19,7 @@
 
 #include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_common/continental/continental_ars548.hpp>
-#include <rclcpp/rclcpp.hpp>
+#include <nebula_common/loggers/logger.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
 
@@ -34,7 +34,7 @@ class ContinentalARS548HwInterface
 {
 public:
   /// @brief Constructor
-  ContinentalARS548HwInterface();
+  explicit ContinentalARS548HwInterface(const std::shared_ptr<loggers::Logger> & logger);
 
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
@@ -130,10 +130,6 @@ public:
   /// @return Resulting status
   Status set_yaw_rate(float yaw_rate);
 
-  /// @brief Setting rclcpp::Logger
-  /// @param node Logger
-  void set_logger(std::shared_ptr<rclcpp::Logger> node);
-
 private:
   /// @brief Printing the string to RCLCPP_INFO_STREAM
   /// @param info Target string
@@ -160,8 +156,7 @@ private:
   std::unique_ptr<::drivers::udp_driver::UdpDriver> sensor_udp_driver_ptr_;
   std::shared_ptr<const ContinentalARS548SensorConfiguration> config_ptr_;
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket>)> packet_callback_;
-
-  std::shared_ptr<rclcpp::Logger> parent_node_logger_ptr_;
+  std::shared_ptr<loggers::Logger> logger_;
 };
 }  // namespace nebula::drivers::continental_ars548
 
