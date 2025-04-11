@@ -69,7 +69,7 @@ inline std::ostream & operator<<(
   os << "Host Port: " << arg.configuration_host_port << '\n';
   os << "Sensor Port: " << arg.configuration_sensor_port << '\n';
   os << "UseSensor Time: " << arg.use_sensor_time << '\n';
-  os << "RadarInfoRateSubsample: " << arg.radar_info_rate_subsample << '\n';
+  os << "RadarInfo Rate Subsample: " << arg.radar_info_rate_subsample << '\n';
   os << "Vehicle Length: " << arg.configuration_vehicle_length << '\n';
   os << "Vehicle Width: " << arg.configuration_vehicle_width << '\n';
   os << "Vehicle Height: " << arg.configuration_vehicle_height << '\n';
