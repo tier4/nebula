@@ -234,21 +234,21 @@ Status HesaiHwInterface::get_calibration_configuration(
 Status HesaiHwInterface::initialize_tcp_driver()
 {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "HesaiHwInterface::InitializeTcpDriver" << std::endl;
-  std::cout << "st: tcp_driver_->init_socket" << std::endl;
-  std::cout << "sensor_configuration_->sensor_ip=" << sensor_configuration_->sensor_ip << std::endl;
-  std::cout << "sensor_configuration_->host_ip=" << sensor_configuration_->host_ip << std::endl;
-  std::cout << "PandarTcpCommandPort=" << PandarTcpCommandPort << std::endl;
+  logger_->debug("HesaiHwInterface::InitializeTcpDriver");
+  logger_->debug("st: tcp_driver_->init_socket");
+  logger_->debug("sensor_configuration_->sensor_ip=" + sensor_configuration_->sensor_ip);
+  logger_->debug("sensor_configuration_->host_ip=" + sensor_configuration_->host_ip);
+  logger_->debug("PandarTcpCommandPort=" + std::to_string(g_pandar_tcp_command_port));
 #endif
   tcp_driver_->init_socket(
     sensor_configuration_->sensor_ip, g_pandar_tcp_command_port, sensor_configuration_->host_ip,
     g_pandar_tcp_command_port);
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "ed: tcp_driver_->init_socket" << std::endl;
+  logger_->debug("ed: tcp_driver_->init_socket");
 #endif
   if (!tcp_driver_->open()) {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << "!tcp_driver_->open()" << std::endl;
+    logger_->debug("!tcp_driver_->open()");
 #endif
     //    tcp_driver_->close();
     tcp_driver_->closeSync();
@@ -278,7 +278,7 @@ boost::property_tree::ptree HesaiHwInterface::parse_json(const std::string & str
     ss << str;
     boost::property_tree::read_json(ss, tree);
   } catch (boost::property_tree::json_parser_error & e) {
-    std::cerr << e.what() << std::endl;
+    logger_->error(e.what());
   }
   return tree;
 }
@@ -959,7 +959,7 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
 {
   using namespace std::chrono_literals;  // NOLINT(build/namespaces)
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "Start CheckAndSetConfig(HesaiConfig)!!" << std::endl;
+  logger_->debug("Start CheckAndSetConfig(HesaiConfig)!");
 #endif
   const auto hesai_config = hesai_config_ptr->get();
   auto current_return_mode = nebula::drivers::return_mode_from_int_hesai(
@@ -1155,7 +1155,7 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
   }
 
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "End CheckAndSetConfig(HesaiConfig)!!" << std::endl;
+  logger_->debug("End CheckAndSetConfig(HesaiConfig)!");
 #endif
   logger_->debug("GetAndCheckConfig(HesaiConfig) finished");
 
@@ -1167,15 +1167,15 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
   HesaiLidarRangeAll hesai_lidar_range_all)
 {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "Start CheckAndSetConfig(HesaiLidarRangeAll)!!" << std::endl;
+  logger_->debug("Start CheckAndSetConfig(HesaiLidarRangeAll)!");
 #endif
   //*
   // g_ptc_command_set_lidar_range
   bool set_flg = false;
   if (hesai_lidar_range_all.method != 0) {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    std::cout << "current hesai_lidar_range_all.method: " << hesai_lidar_range_all.method
-              << std::endl;
+    logger_->debug(
+      "current hesai_lidar_range_all.method: " + std::to_string(hesai_lidar_range_all.method));
 #endif
     set_flg = true;
   } else {
@@ -1216,7 +1216,7 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
   }
 
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "End CheckAndSetConfig(HesaiLidarRangeAll)!!" << std::endl;
+  logger_->debug("End CheckAndSetConfig(HesaiLidarRangeAll)!");
 #endif
   return Status::WAITING_FOR_SENSOR_RESPONSE;
 }
@@ -1224,7 +1224,7 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
 HesaiStatus HesaiHwInterface::check_and_set_config()
 {
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "Start CheckAndSetConfig!!" << std::endl;
+  logger_->debug("Start CheckAndSetConfig!");
 #endif
   std::thread t([this] {
     auto result = get_config();
@@ -1246,7 +1246,7 @@ HesaiStatus HesaiHwInterface::check_and_set_config()
   });
   t2.join();
 #ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  std::cout << "End CheckAndSetConfig!!" << std::endl;
+  logger_->debug("End CheckAndSetConfig!");
 #endif
   return Status::OK;
 }
