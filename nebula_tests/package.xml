@@ -12,7 +12,6 @@
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>ros_environment</buildtool_depend>
 
-  <depend>autoware_perception_msgs</depend>
   <depend>diagnostic_updater</depend>
   <depend>nebula_common</depend>
   <depend>nebula_decoders</depend>

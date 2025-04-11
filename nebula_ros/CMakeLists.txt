@@ -255,6 +255,7 @@ install(
 
 ament_export_dependencies(
     PCL
+    autoware_sensing_msgs
     continental_msgs
     continental_srvs
     diagnostic_msgs

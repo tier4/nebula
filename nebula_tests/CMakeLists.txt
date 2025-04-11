@@ -22,7 +22,6 @@ elseif(${ROS_DISTRO} STREQUAL "humble")
 endif()
 
 find_package(ament_cmake_auto REQUIRED)
-find_package(autoware_perception_msgs REQUIRED)
 find_package(nebula_common REQUIRED)
 find_package(nebula_decoders REQUIRED)
 find_package(nebula_ros REQUIRED)
@@ -42,7 +41,6 @@ if(BUILD_TESTING)
     add_definitions(-D_SRC_CALIBRATION_DIR_PATH="${PROJECT_SOURCE_DIR}/../nebula_decoders/calibration/")
 
     set(NEBULA_TEST_INCLUDE_DIRS
-        ${autoware_perception_msgs_INCLUDE_DIRS}
         ${nebula_common_INCLUDE_DIRS}
         ${nebula_decoders_INCLUDE_DIRS}
         ${nebula_ros_INCLUDE_DIRS}
@@ -52,7 +50,6 @@ if(BUILD_TESTING)
     )
 
     set(NEBULA_TEST_LIBRARIES
-        ${autoware_perception_msgs_TARGETS}
         ${nebula_common_TARGETS}
         ${nebula_ros_TARGETS}
         ${PCL_LIBRARIES}
