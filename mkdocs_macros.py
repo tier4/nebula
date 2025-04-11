@@ -18,6 +18,14 @@ def format_param_type(param_type):
         return param_type
 
 
+def ensure_word_breaks(text):
+    """For URLs/paths, insert HTML word break marks. Does not affect other or non-string inputs."""
+    if not isinstance(text, str):
+        return text
+
+    return text.replace("/", "/<wbr>")
+
+
 def format_param_range(param):
     list_of_range = []
     if "enum" in param.keys():
@@ -90,7 +98,7 @@ def extract_parameter_info(
             param["Name"] = namespace + k
             param["Type"] = format_param_type(v["type"])
             param["Description"] = v.get("description", "")
-            param["Default"] = v.get("default", "")
+            param["Default"] = ensure_word_breaks(v.get("default", ""))
             param["Range"] = format_param_range(v)
             params.append(param)
         else:  # if the object is namespace, then dive deeper in to json value
