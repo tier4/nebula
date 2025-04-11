@@ -55,60 +55,63 @@ ContinentalARS548HwInterfaceWrapper::ContinentalARS548HwInterfaceWrapper(
   status_ = Status::OK;
 }
 
-void ContinentalARS548HwInterfaceWrapper::sensor_interface_start()
+Status ContinentalARS548HwInterfaceWrapper::sensor_interface_start()
 {
-  if (Status::OK == status_) {
-    hw_interface_->sensor_interface_start();
+  if (status_ == Status::OK) {
+    status_ = hw_interface_->sensor_interface_start();
   }
 
-  if (Status::OK == status_) {
-    odometry_sub_ =
-      parent_node_->create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
-        "odometry_input", rclcpp::QoS{1},
-        std::bind(
-          &ContinentalARS548HwInterfaceWrapper::odometry_callback, this, std::placeholders::_1));
+  if (status_ != Status::OK) {
+    RCLCPP_ERROR_STREAM(logger_, "sensor_interface_start failed: " << status_);
 
-    acceleration_sub_ =
-      parent_node_->create_subscription<geometry_msgs::msg::AccelWithCovarianceStamped>(
-        "acceleration_input", rclcpp::QoS{1},
-        std::bind(
-          &ContinentalARS548HwInterfaceWrapper::acceleration_callback, this,
-          std::placeholders::_1));
+    return status_;
+  }
 
-    steering_angle_sub_ = parent_node_->create_subscription<std_msgs::msg::Float32>(
-      "steering_angle_input", rclcpp::SensorDataQoS(),
+  odometry_sub_ = parent_node_->create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
+    "odometry_input", rclcpp::QoS{1},
+    std::bind(
+      &ContinentalARS548HwInterfaceWrapper::odometry_callback, this, std::placeholders::_1));
+
+  acceleration_sub_ =
+    parent_node_->create_subscription<geometry_msgs::msg::AccelWithCovarianceStamped>(
+      "acceleration_input", rclcpp::QoS{1},
       std::bind(
-        &ContinentalARS548HwInterfaceWrapper::steering_angle_callback, this,
-        std::placeholders::_1));
+        &ContinentalARS548HwInterfaceWrapper::acceleration_callback, this, std::placeholders::_1));
 
-    set_network_configuration_service_server_ =
-      parent_node_->create_service<continental_srvs::srv::ContinentalArs548SetNetworkConfiguration>(
-        "set_network_configuration",
-        std::bind(
-          &ContinentalARS548HwInterfaceWrapper::set_network_configuration_request_callback, this,
-          std::placeholders::_1, std::placeholders::_2));
+  steering_angle_sub_ = parent_node_->create_subscription<std_msgs::msg::Float32>(
+    "steering_angle_input", rclcpp::SensorDataQoS(),
+    std::bind(
+      &ContinentalARS548HwInterfaceWrapper::steering_angle_callback, this, std::placeholders::_1));
 
-    set_sensor_mounting_service_server_ =
-      parent_node_->create_service<continental_srvs::srv::ContinentalArs548SetSensorMounting>(
-        "set_sensor_mounting",
-        std::bind(
-          &ContinentalARS548HwInterfaceWrapper::set_sensor_mounting_request_callback, this,
-          std::placeholders::_1, std::placeholders::_2));
+  set_network_configuration_service_server_ =
+    parent_node_->create_service<continental_srvs::srv::ContinentalArs548SetNetworkConfiguration>(
+      "set_network_configuration",
+      std::bind(
+        &ContinentalARS548HwInterfaceWrapper::set_network_configuration_request_callback, this,
+        std::placeholders::_1, std::placeholders::_2));
 
-    set_vehicle_parameters_service_server_ =
-      parent_node_->create_service<continental_srvs::srv::ContinentalArs548SetVehicleParameters>(
-        "set_vehicle_parameters",
-        std::bind(
-          &ContinentalARS548HwInterfaceWrapper::set_vehicle_parameters_request_callback, this,
-          std::placeholders::_1, std::placeholders::_2));
+  set_sensor_mounting_service_server_ =
+    parent_node_->create_service<continental_srvs::srv::ContinentalArs548SetSensorMounting>(
+      "set_sensor_mounting",
+      std::bind(
+        &ContinentalARS548HwInterfaceWrapper::set_sensor_mounting_request_callback, this,
+        std::placeholders::_1, std::placeholders::_2));
 
-    set_radar_parameters_service_server_ =
-      parent_node_->create_service<continental_srvs::srv::ContinentalArs548SetRadarParameters>(
-        "set_radar_parameters",
-        std::bind(
-          &ContinentalARS548HwInterfaceWrapper::set_radar_parameters_request_callback, this,
-          std::placeholders::_1, std::placeholders::_2));
-  }
+  set_vehicle_parameters_service_server_ =
+    parent_node_->create_service<continental_srvs::srv::ContinentalArs548SetVehicleParameters>(
+      "set_vehicle_parameters",
+      std::bind(
+        &ContinentalARS548HwInterfaceWrapper::set_vehicle_parameters_request_callback, this,
+        std::placeholders::_1, std::placeholders::_2));
+
+  set_radar_parameters_service_server_ =
+    parent_node_->create_service<continental_srvs::srv::ContinentalArs548SetRadarParameters>(
+      "set_radar_parameters",
+      std::bind(
+        &ContinentalARS548HwInterfaceWrapper::set_radar_parameters_request_callback, this,
+        std::placeholders::_1, std::placeholders::_2));
+
+  return status_;
 }
 
 void ContinentalARS548HwInterfaceWrapper::on_config_change(
