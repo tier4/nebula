@@ -12,6 +12,13 @@
 # hicpp-special-member-functions:
 #  Alias for cppcoreguidelines-special-member-functions, which is enabled. If both are enabled,
 #  the CheckOptions below have to be specified twice.
+#
+# hicpp-braces-around-statements:
+#  Alias for readability-braces-around-statements, which is enabled. If both are enabled,
+#  the CheckOptions below have to be specified twice.
+#
+# hicpp-signed-bitwise:
+#  This rule is buggy and flags bitwise operators on bools.
 Checks: "
   *,
   -abseil-*,
@@ -28,7 +35,8 @@ Checks: "
   -readability-identifier-length,
   -readability-implicit-bool-conversion,
   -hicpp-special-member-functions,
-  -hicpp-braces-around-statements"
+  -hicpp-braces-around-statements,
+  -hicpp-signed-bitwise"
 
 # WarningsAsErrors have been taken from:
 # https://github.com/autowarefoundation/autoware/blob/3591106/.clang-tidy-ci
