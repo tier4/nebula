@@ -19,6 +19,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <algorithm>
+#include <limits>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -370,12 +371,31 @@ void ContinentalARS548DecoderWrapper::create_radar_info()
                            std::vector<autoware_sensing_msgs::msg::RadarFieldInfo> & fields_msg) {
     autoware_sensing_msgs::msg::RadarFieldInfo field;
     field.field_name.data = field_name;
-    field.min_value_available = field_info.min_value_available;
-    field.max_value_available = field_info.max_value_available;
-    field.resolution_available = field_info.resolution_available;
-    field.min_value = field_info.min_value;
-    field.max_value = field_info.max_value;
-    field.resolution = field_info.resolution;
+
+    if (field_info.min_value) {
+      field.min_value_available = true;
+      field.min_value = field_info.min_value.value();
+    } else {
+      field.min_value_available = false;
+      field.min_value = std::numeric_limits<float>::lowest();
+    }
+
+    if (field_info.max_value) {
+      field.max_value_available = true;
+      field.max_value = field_info.max_value.value();
+    } else {
+      field.max_value_available = false;
+      field.max_value = std::numeric_limits<float>::max();
+    }
+
+    if (field_info.resolution) {
+      field.resolution_available = true;
+      field.resolution = field_info.resolution.value();
+    } else {
+      field.resolution_available = false;
+      field.resolution = 0.f;
+    }
+
     fields_msg.push_back(field);
   };
 
