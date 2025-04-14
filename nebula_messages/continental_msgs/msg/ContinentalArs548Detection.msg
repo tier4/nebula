@@ -16,8 +16,8 @@ float32 range_rate
 float32 range_rate_std
 int8 rcs
 uint16 measurement_id
-uint8 positive_predictive_value
+uint8 raw_positive_predictive_value # 0 ~ 100
 uint8 classification
-uint8 multi_target_probability
+uint8 raw_multi_target_probability # 0 ~ 100
 uint16 object_id
-uint8 ambiguity_flag
+uint8 raw_ambiguity_flag # 0 ~ 100

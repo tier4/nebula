@@ -420,11 +420,11 @@ struct DetectionPacket
   big_float32_buf_t range_rate_std{};
   int8_t rcs{};
   big_uint16_buf_t measurement_id{};
-  uint8_t positive_predictive_value{};
+  uint8_t raw_positive_predictive_value{};
   uint8_t classification{};
-  uint8_t multi_target_probability{};
+  uint8_t raw_multi_target_probability{};
   big_uint16_buf_t object_id{};
-  uint8_t ambiguity_flag{};
+  uint8_t raw_ambiguity_flag{};
   big_uint16_buf_t sort_index{};
 };
 
@@ -479,16 +479,16 @@ struct ObjectPacket
   big_float32_buf_t position_orientation{};
   big_float32_buf_t position_orientation_std{};
   uint8_t existence_invalid_flags{};
-  big_float32_buf_t existence_probability{};
+  big_float32_buf_t raw_existence_probability{};
   big_float32_buf_t existence_ppv{};
-  uint8_t classification_car{};
-  uint8_t classification_truck{};
-  uint8_t classification_motorcycle{};
-  uint8_t classification_bicycle{};
-  uint8_t classification_pedestrian{};
-  uint8_t classification_animal{};
-  uint8_t classification_hazard{};
-  uint8_t classification_unknown{};
+  uint8_t raw_classification_car{};
+  uint8_t raw_classification_truck{};
+  uint8_t raw_classification_motorcycle{};
+  uint8_t raw_classification_bicycle{};
+  uint8_t raw_classification_pedestrian{};
+  uint8_t raw_classification_animal{};
+  uint8_t raw_classification_hazard{};
+  uint8_t raw_classification_unknown{};
   uint8_t classification_overdrivable{};
   uint8_t classification_underdrivable{};
   uint8_t dynamics_abs_vel_invalid_flags{};
@@ -676,6 +676,12 @@ struct FilterStatusPacket
 };
 
 #pragma pack(pop)
+
+template <typename T>
+inline float normalize_probability(T & raw_prob)
+{
+  return static_cast<float>(raw_prob) / raw_prob_norm;
+};
 
 struct EIGEN_ALIGN16 PointARS548Detection
 {

@@ -10,16 +10,16 @@ float32 position_covariance_xy
 float32 orientation
 float32 orientation_std
 
-float32 existence_probability
+float32 raw_existence_probability # 0 ~ 100
 
-uint8 classification_car
-uint8 classification_truck
-uint8 classification_motorcycle
-uint8 classification_bicycle
-uint8 classification_pedestrian
-uint8 classification_animal
-uint8 classification_hazard
-uint8 classification_unknown
+uint8 raw_classification_car # 0 ~ 100
+uint8 raw_classification_truck # 0 ~ 100
+uint8 raw_classification_motorcycle # 0 ~ 100
+uint8 raw_classification_bicycle # 0 ~ 100
+uint8 raw_classification_pedestrian # 0 ~ 100
+uint8 raw_classification_animal # 0 ~ 100
+uint8 raw_classification_hazard # 0 ~ 100
+uint8 raw_classification_unknown # 0 ~ 100
 
 geometry_msgs/Vector3 absolute_velocity
 geometry_msgs/Vector3 absolute_velocity_std

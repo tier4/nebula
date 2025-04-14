@@ -528,7 +528,7 @@ ContinentalARS548DecoderWrapper::convert_to_autoware_radar_objects(
     autoware_object.orientation_rate = continental_object.orientation_rate_mean;
     autoware_object.orientation_rate_std = continental_object.orientation_rate_std;
     autoware_object.existence_probability =
-      continental_object.existence_probability / ars548::raw_prob_norm;
+      ars548::normalize_probability(continental_object.raw_existence_probability);
 
     // Position
     // There are 9 possible reference points. In the case of an invalid reference point, we fall
@@ -549,37 +549,43 @@ ContinentalARS548DecoderWrapper::convert_to_autoware_radar_objects(
     autoware_object.classifications.reserve(10);
 
     classification.label = RadarClassification::UNKNOWN;
-    classification.probability = continental_object.classification_unknown / ars548::raw_prob_norm;
+    classification.probability =
+      ars548::normalize_probability(continental_object.raw_classification_unknown);
     autoware_object.classifications.push_back(classification);
 
     classification.label = RadarClassification::CAR;
-    classification.probability = continental_object.classification_car / ars548::raw_prob_norm;
+    classification.probability =
+      ars548::normalize_probability(continental_object.raw_classification_car);
     autoware_object.classifications.push_back(classification);
 
     classification.label = RadarClassification::TRUCK;
-    classification.probability = continental_object.classification_truck / ars548::raw_prob_norm;
+    classification.probability =
+      ars548::normalize_probability(continental_object.raw_classification_truck);
     autoware_object.classifications.push_back(classification);
 
     classification.label = RadarClassification::MOTORCYCLE;
     classification.probability =
-      continental_object.classification_motorcycle / ars548::raw_prob_norm;
+      ars548::normalize_probability(continental_object.raw_classification_motorcycle);
     autoware_object.classifications.push_back(classification);
 
     classification.label = RadarClassification::BICYCLE;
-    classification.probability = continental_object.classification_bicycle / ars548::raw_prob_norm;
+    classification.probability =
+      ars548::normalize_probability(continental_object.raw_classification_bicycle);
     autoware_object.classifications.push_back(classification);
 
     classification.label = RadarClassification::PEDESTRIAN;
     classification.probability =
-      continental_object.classification_pedestrian / ars548::raw_prob_norm;
+      ars548::normalize_probability(continental_object.raw_classification_pedestrian);
     autoware_object.classifications.push_back(classification);
 
     classification.label = RadarClassification::ANIMAL;
-    classification.probability = continental_object.classification_animal / ars548::raw_prob_norm;
+    classification.probability =
+      ars548::normalize_probability(continental_object.raw_classification_animal);
     autoware_object.classifications.push_back(classification);
 
     classification.label = RadarClassification::HAZARD;
-    classification.probability = continental_object.classification_hazard / ars548::raw_prob_norm;
+    classification.probability =
+      ars548::normalize_probability(continental_object.raw_classification_hazard);
     autoware_object.classifications.push_back(classification);
 
     auto fill_cov_matrix =
@@ -644,11 +650,13 @@ ContinentalARS548DecoderWrapper::convert_to_pointcloud(
     point.range_rate_std = detection.range_rate_std;
     point.rcs = detection.rcs;
     point.measurement_id = detection.measurement_id;
-    point.positive_predictive_value = detection.positive_predictive_value;
+    point.positive_predictive_value =
+      ars548::normalize_probability(detection.raw_positive_predictive_value);
     point.classification = detection.classification;
-    point.multi_target_probability = detection.multi_target_probability / ars548::raw_prob_norm;
+    point.multi_target_probability =
+      ars548::normalize_probability(detection.raw_multi_target_probability);
     point.object_id = detection.object_id;
-    point.ambiguity_flag = detection.ambiguity_flag / ars548::raw_prob_norm;
+    point.ambiguity_flag = ars548::normalize_probability(detection.raw_ambiguity_flag);
 
     output_pointcloud->points.emplace_back(point);
   }
@@ -662,6 +670,8 @@ pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr
 ContinentalARS548DecoderWrapper::convert_to_pointcloud(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
+  namespace ars548 = nebula::drivers::continental_ars548;
+
   pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr output_pointcloud(
     new pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>);
   output_pointcloud->reserve(msg.objects.size());
@@ -677,11 +687,13 @@ ContinentalARS548DecoderWrapper::convert_to_pointcloud(
     point.status_measurement = object.status_measurement;
     point.status_movement = object.status_movement;
     point.position_reference = object.position_reference;
-    point.classification_car = object.classification_car;
-    point.classification_truck = object.classification_truck;
-    point.classification_motorcycle = object.classification_motorcycle;
-    point.classification_bicycle = object.classification_bicycle;
-    point.classification_pedestrian = object.classification_pedestrian;
+    point.classification_car = ars548::normalize_probability(object.raw_classification_car);
+    point.classification_truck = ars548::normalize_probability(object.raw_classification_truck);
+    point.classification_motorcycle =
+      ars548::normalize_probability(object.raw_classification_motorcycle);
+    point.classification_bicycle = ars548::normalize_probability(object.raw_classification_bicycle);
+    point.classification_pedestrian =
+      ars548::normalize_probability(object.raw_classification_pedestrian);
     point.dynamics_abs_vel_x = static_cast<float>(object.absolute_velocity.x);
     point.dynamics_abs_vel_y = static_cast<float>(object.absolute_velocity.y);
     point.dynamics_rel_vel_x = static_cast<float>(object.relative_velocity.x);
@@ -760,27 +772,27 @@ radar_msgs::msg::RadarTracks ContinentalARS548DecoderWrapper::convert_to_radar_t
     track_msg.size.y = object.shape_width_edge_mean;
     track_msg.size.z = 1.f;
 
-    uint8_t max_score = object.classification_unknown;
+    uint8_t max_score = object.raw_classification_unknown;
     track_msg.classification = unknown_id;
 
-    if (object.classification_car > max_score) {
-      max_score = object.classification_car;
+    if (object.raw_classification_car > max_score) {
+      max_score = object.raw_classification_car;
       track_msg.classification = car_id;
     }
-    if (object.classification_truck > max_score) {
-      max_score = object.classification_truck;
+    if (object.raw_classification_truck > max_score) {
+      max_score = object.raw_classification_truck;
       track_msg.classification = truck_id;
     }
-    if (object.classification_motorcycle > max_score) {
-      max_score = object.classification_motorcycle;
+    if (object.raw_classification_motorcycle > max_score) {
+      max_score = object.raw_classification_motorcycle;
       track_msg.classification = motorcycle_id;
     }
-    if (object.classification_bicycle > max_score) {
-      max_score = object.classification_bicycle;
+    if (object.raw_classification_bicycle > max_score) {
+      max_score = object.raw_classification_bicycle;
       track_msg.classification = bicycle_id;
     }
-    if (object.classification_pedestrian > max_score) {
-      max_score = object.classification_pedestrian;
+    if (object.raw_classification_pedestrian > max_score) {
+      max_score = object.raw_classification_pedestrian;
       track_msg.classification = pedestrian_id;
     }
 
