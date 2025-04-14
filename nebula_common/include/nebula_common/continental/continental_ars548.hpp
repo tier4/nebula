@@ -367,9 +367,9 @@ const FieldInfo shape_y_info{false, false, false, 0.f, 0.f, 0.f};
 const FieldInfo shape_z_info{false, false, false, 0.f, 0.f, 0.f};
 
 const FieldInfo orientation_info{true, true, false, -M_PI, M_PI, 0.f};
-const FieldInfo orientation_std_info{false, false, false, 0.f, 0.f, 0.f};
+const FieldInfo orientation_std_info{true, false, false, 0.f, 0.f, 0.f};
 const FieldInfo orientation_rate_info{false, false, false, -M_PI, M_PI, 0.f};
-const FieldInfo orientation_rate_std_info{false, false, false, 0.f, 0.f, 0.f};
+const FieldInfo orientation_rate_std_info{true, false, false, 0.f, 0.f, 0.f};
 
 const FieldInfo existence_probability_info{true, true, true, 0.f, 1.f, 0.01f};
 
