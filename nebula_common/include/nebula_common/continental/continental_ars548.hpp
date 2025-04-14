@@ -309,7 +309,7 @@ struct FieldInfo
 {
   FieldInfo(
     bool min_value_available, bool max_value_available, bool resolution_available, float min_value,
-    float max_value, float resolution)
+    float max_value, float resolution) noexcept
   : min_value_available(min_value_available),
     max_value_available(max_value_available),
     resolution_available(resolution_available),
