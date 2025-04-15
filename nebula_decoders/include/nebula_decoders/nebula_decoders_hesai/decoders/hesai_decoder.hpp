@@ -24,6 +24,7 @@
 #include <nebula_common/loggers/logger.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/point_types.hpp>
+#include <nlohmann/json.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -31,6 +32,8 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <iostream>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <tuple>
@@ -43,6 +46,104 @@ namespace nebula::drivers
 template <typename SensorT>
 class HesaiDecoder : public HesaiScanDecoder
 {
+  struct PointcloudDecodeStatistics
+  {
+    explicit PointcloudDecodeStatistics(bool has_downsample_mask_filter)
+    : downsample_mask_filtered_count(
+        has_downsample_mask_filter ? std::make_optional(0) : std::nullopt)
+    {
+    }
+
+    uint64_t distance_filtered_count = 0;
+    uint64_t fov_filtered_count = 0;
+    uint64_t invalid_point_count = 0;
+    uint64_t identical_filtered_count = 0;
+    uint64_t multiple_return_filtered_count = 0;
+    std::optional<uint64_t> downsample_mask_filtered_count = 0;
+
+    uint64_t total_kept_point_count = 0;
+    uint64_t invalid_packet_count = 0;
+
+    float cloud_distance_min_m = std::numeric_limits<float>::infinity();
+    float cloud_distance_max_m = -std::numeric_limits<float>::infinity();
+    float cloud_azimuth_min_deg = std::numeric_limits<float>::infinity();
+    float cloud_azimuth_max_deg = -std::numeric_limits<float>::infinity();
+    uint32_t packet_timestamp_min_ns = std::numeric_limits<uint32_t>::max();
+    uint32_t packet_timestamp_max_ns = std::numeric_limits<uint32_t>::min();
+
+    [[nodiscard]] nlohmann::ordered_json to_json() const
+    {
+      nlohmann::ordered_json distance_j;
+      distance_j["name"] = "distance";
+      distance_j["filtered_count"] = distance_filtered_count;
+
+      nlohmann::ordered_json fov_j;
+      fov_j["name"] = "fov";
+      fov_j["filtered_count"] = fov_filtered_count;
+
+      nlohmann::ordered_json identical_j;
+      identical_j["name"] = "identical";
+      identical_j["filtered_count"] = identical_filtered_count;
+
+      nlohmann::ordered_json multiple_j;
+      multiple_j["name"] = "multiple";
+      multiple_j["filtered_count"] = multiple_return_filtered_count;
+
+      nlohmann::ordered_json invalid_j;
+      invalid_j["name"] = "invalid";
+      invalid_j["filtered_count"] = invalid_point_count;
+
+      nlohmann::ordered_json pointcloud_bounds_azimuth_j;
+      pointcloud_bounds_azimuth_j["min"] = cloud_azimuth_min_deg;
+      pointcloud_bounds_azimuth_j["max"] = cloud_azimuth_max_deg;
+
+      nlohmann::ordered_json pointcloud_bounds_distance_j;
+      pointcloud_bounds_distance_j["min"] = cloud_distance_min_m;
+      pointcloud_bounds_distance_j["max"] = cloud_distance_max_m;
+
+      nlohmann::ordered_json pointcloud_bounds_timestamp_j;
+      pointcloud_bounds_timestamp_j["min"] = packet_timestamp_min_ns;
+      pointcloud_bounds_timestamp_j["max"] = packet_timestamp_max_ns;
+
+      nlohmann::ordered_json j;
+      j["filter_pipeline"] = nlohmann::ordered_json::array({
+        invalid_j,
+        distance_j,
+        fov_j,
+        identical_j,
+        multiple_j,
+      });
+
+      if (downsample_mask_filtered_count.has_value()) {
+        nlohmann::ordered_json downsample_j;
+        downsample_j["name"] = "downsample_mask";
+        downsample_j["filtered_count"] = downsample_mask_filtered_count.value();
+        j["filter_pipeline"].push_back(downsample_j);
+      }
+
+      j["pointcloud_bounds"] = {
+        {"azimuth_deg", pointcloud_bounds_azimuth_j},
+        {"distance_m", pointcloud_bounds_distance_j},
+        {"timestamp_ns", pointcloud_bounds_timestamp_j},
+      };
+
+      j["invalid_packet_count"] = invalid_packet_count;
+      j["total_kept_point_count"] = total_kept_point_count;
+
+      return j;
+    }
+
+    void update_pointcloud_bounds(const NebulaPoint & point)
+    {
+      cloud_azimuth_min_deg = std::min(cloud_azimuth_min_deg, rad2deg(point.azimuth));
+      cloud_azimuth_max_deg = std::max(cloud_azimuth_max_deg, rad2deg(point.azimuth));
+      packet_timestamp_min_ns = std::min(packet_timestamp_min_ns, point.time_stamp);
+      packet_timestamp_max_ns = std::max(packet_timestamp_max_ns, point.time_stamp);
+      cloud_distance_min_m = std::min(cloud_distance_min_m, point.distance);
+      cloud_distance_max_m = std::max(cloud_distance_max_m, point.distance);
+    }
+  };
+
   struct ScanCutAngles
   {
     float fov_min;
@@ -88,6 +189,8 @@ private:
     block_firing_offset_ns_;
 
   std::optional<point_filters::DownsampleMaskFilter> mask_filter_;
+
+  PointcloudDecodeStatistics pointcloud_decode_statistics_;
 
   /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
   /// @param packet The incoming PandarPacket
@@ -135,6 +238,7 @@ private:
         auto & unit = *return_units[block_offset];
 
         if (unit.distance == 0) {
+          pointcloud_decode_statistics_.invalid_point_count++;
           continue;
         }
 
@@ -144,6 +248,7 @@ private:
           distance < SensorT::min_range || SensorT::max_range < distance ||
           distance < sensor_configuration_->min_range ||
           sensor_configuration_->max_range < distance) {
+          pointcloud_decode_statistics_.distance_filtered_count++;
           continue;
         }
 
@@ -153,6 +258,7 @@ private:
 
         // Keep only last of multiple identical points
         if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
+          pointcloud_decode_statistics_.identical_filtered_count++;
           continue;
         }
 
@@ -174,6 +280,7 @@ private:
           }
 
           if (is_below_multi_return_threshold) {
+            pointcloud_decode_statistics_.multiple_return_filtered_count++;
             continue;
           }
         }
@@ -184,6 +291,7 @@ private:
 
         bool in_fov = angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.fov_max, azimuth);
         if (!in_fov) {
+          pointcloud_decode_statistics_.fov_filtered_count++;
           continue;
         }
 
@@ -221,9 +329,14 @@ private:
         point.azimuth = corrected_angle_data.azimuth_rad;
         point.elevation = corrected_angle_data.elevation_rad;
 
-        if (!mask_filter_ || !mask_filter_->excluded(point)) {
-          pc->emplace_back(point);
+        if (mask_filter_ && mask_filter_->excluded(point)) {
+          (*pointcloud_decode_statistics_.downsample_mask_filtered_count)++;
+          continue;
         }
+
+        pc->emplace_back(point);
+        pointcloud_decode_statistics_.update_pointcloud_bounds(point);
+        pointcloud_decode_statistics_.total_kept_point_count++;
       }
     }
   }
@@ -265,10 +378,13 @@ public:
     scan_cut_angles_(
       {deg2rad(sensor_configuration_->cloud_min_angle),
        deg2rad(sensor_configuration_->cloud_max_angle), deg2rad(sensor_configuration_->cut_angle)}),
-    logger_(logger)
+    logger_(logger),
+    pointcloud_decode_statistics_(false)
   {
     decode_pc_ = std::make_shared<NebulaPointCloud>();
     output_pc_ = std::make_shared<NebulaPointCloud>();
+    decode_pc_->reserve(SensorT::max_scan_buffer_points);
+    output_pc_->reserve(SensorT::max_scan_buffer_points);
 
     if (sensor_configuration->downsample_mask_path) {
       mask_filter_ = point_filters::DownsampleMaskFilter(
@@ -277,13 +393,13 @@ public:
         logger_->child("Downsample Mask"), true, sensor_.get_dither_transform());
     }
 
-    decode_pc_->reserve(SensorT::max_scan_buffer_points);
-    output_pc_->reserve(SensorT::max_scan_buffer_points);
+    pointcloud_decode_statistics_ = PointcloudDecodeStatistics(mask_filter_.has_value());
   }
 
   int unpack(const std::vector<uint8_t> & packet) override
   {
     if (!parse_packet(packet)) {
+      pointcloud_decode_statistics_.invalid_packet_count++;
       return -1;
     }
 
@@ -295,6 +411,7 @@ public:
 
     if (has_scanned_) {
       output_pc_->clear();
+      pointcloud_decode_statistics_ = PointcloudDecodeStatistics(mask_filter_.has_value());
       has_scanned_ = false;
     }
 
@@ -346,10 +463,10 @@ public:
 
   bool has_scanned() override { return has_scanned_; }
 
-  std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() override
+  std::tuple<drivers::NebulaPointCloudPtr, double, nlohmann::ordered_json> get_pointcloud() override
   {
     double scan_timestamp_s = static_cast<double>(output_scan_timestamp_ns_) * 1e-9;
-    return std::make_pair(output_pc_, scan_timestamp_s);
+    return {output_pc_, scan_timestamp_s, pointcloud_decode_statistics_.to_json()};
   }
 };
 
