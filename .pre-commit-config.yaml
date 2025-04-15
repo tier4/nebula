@@ -85,7 +85,7 @@ repos:
       - id: clang-format
 
   - repo: https://github.com/cpplint/cpplint
-    rev: 2.0.1
+    rev: 2.0.2
     hooks:
       - id: cpplint
         # runtime/arrays uses the name of the variable to determine const-ness.
