@@ -32,6 +32,7 @@
 #include <sync_tooling_msgs/port_state.pb.h>
 #include <sync_tooling_msgs/port_state_update.pb.h>
 #include <sync_tooling_msgs/ptp_parent_update.pb.h>
+#include <sync_tooling_msgs/self_reported_clock_state_update.pb.h>
 #include <sync_tooling_msgs/system_clock_id.pb.h>
 #include <unistd.h>
 
@@ -65,8 +66,6 @@ inline ClockId make_sensor_clock_id(const std::string & sensor_name, const std::
 class SyncDiagClient
 {
 public:
-  using send_result_t = nebula::util::expected<std::monostate, std::string>;
-
   SyncDiagClient(
     rclcpp::Node * const parent_node, const std::string & topic, const std::string & sensor_name,
     const std::string & sensor_ip, uint8_t ptp_domain_id)
@@ -77,26 +76,26 @@ public:
     publisher_ = parent_node->create_publisher<std_msgs::msg::UInt8MultiArray>(topic, 10);
   }
 
-  [[nodiscard]] send_result_t submit_clock_alias(const std::string & ptp_clock_id)
+  void submit_clock_alias(const std::string & ptp_clock_id)
   {
     GraphUpdate gu;
     ClockAliasUpdate * u = gu.mutable_clock_alias_update();
     u->add_aliases()->CopyFrom(sensor_id_);
     u->add_aliases()->mutable_ptp_clock_id()->set_id(ptp_clock_id);
-    return send_proto(gu);
+    send_proto(gu);
   }
 
-  [[nodiscard]] send_result_t submit_clock_diff_measurement(int64_t diff_ns)
+  void submit_clock_diff_measurement(int64_t diff_ns)
   {
     GraphUpdate gu;
     ClockDiffMeasurement * m = gu.mutable_clock_diff_measurement();
     m->set_diff_ns(diff_ns);
     m->mutable_src()->mutable_system_clock_id()->set_hostname(hostname_);
     m->mutable_dst()->CopyFrom(sensor_id_);
-    return send_proto(gu);
+    send_proto(gu);
   }
 
-  [[nodiscard]] send_result_t submit_master_update(std::optional<std::string> master_clock_id)
+  void submit_master_update(std::optional<std::string> master_clock_id)
   {
     GraphUpdate gu;
     ClockMasterUpdate * u = gu.mutable_clock_master_update();
@@ -106,11 +105,10 @@ public:
     } else {
       u->clear_master();
     }
-    return send_proto(gu);
+    send_proto(gu);
   }
 
-  [[nodiscard]] send_result_t submit_parent_port(
-    const std::string & parent_clock_id, uint16_t port_number)
+  void submit_parent_port(const std::string & parent_clock_id, uint16_t port_number)
   {
     GraphUpdate gu;
     PtpParentUpdate * u = gu.mutable_ptp_parent_update();
@@ -118,11 +116,10 @@ public:
     u->mutable_parent()->mutable_clock_id()->mutable_ptp_clock_id()->set_id(parent_clock_id);
     u->mutable_parent()->set_port_number(port_number);
     u->mutable_parent()->set_ptp_domain(ptp_domain_id_);
-    return send_proto(gu);
+    send_proto(gu);
   }
 
-  [[nodiscard]] send_result_t submit_port_state_update(
-    const ClockId & clock_id, uint16_t port_number, uint8_t port_state)
+  void submit_port_state_update(const ClockId & clock_id, uint16_t port_number, uint8_t port_state)
   {
     GraphUpdate gu;
     PortStateUpdate * u = gu.mutable_port_state_update();
@@ -131,7 +128,16 @@ public:
     u->mutable_port_id()->set_ptp_domain(ptp_domain_id_);
 
     u->set_port_state(static_cast<PortState>(port_state));
-    return send_proto(gu);
+    send_proto(gu);
+  }
+
+  void submit_self_reported_clock_state(SelfReportedClockStateUpdate::State state)
+  {
+    GraphUpdate gu;
+    SelfReportedClockStateUpdate * u = gu.mutable_self_reported_clock_state_update();
+    u->mutable_clock_id()->CopyFrom(sensor_id_);
+    u->set_state(state);
+    send_proto(gu);
   }
 
 private:
@@ -148,19 +154,20 @@ private:
     return std::string{hostname_raw.data()};
   }
 
-  [[nodiscard]] send_result_t send_proto(const GraphUpdate & msg)
+  void send_proto(const GraphUpdate & msg)
   {
     bool success = msg.SerializeToString(&serialization_buffer_);
+    assert(success);
+
     if (!success) {
-      return std::string("Failed to serialize protobuf message");
+      RCLCPP_FATAL(rclcpp::get_logger("SyncDiagClient"), "Failed to serialize protobuf message");
+      return;
     }
 
     auto ros2_msg = std_msgs::msg::UInt8MultiArray();
     boost::range::copy(serialization_buffer_, std::back_inserter(ros2_msg.data));
     RCLCPP_INFO_STREAM(rclcpp::get_logger("SyncDiagClient"), "Sending graph update");
     publisher_->publish(ros2_msg);
-
-    return std::monostate{};  // Return monostate to indicate success
   }
 
   rclcpp::Publisher<std_msgs::msg::UInt8MultiArray>::SharedPtr publisher_;

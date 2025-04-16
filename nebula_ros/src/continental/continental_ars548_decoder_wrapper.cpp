@@ -21,6 +21,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <sync_tooling_msgs/port_id.pb.h>
 #include <sync_tooling_msgs/port_state.pb.h>
+#include <sync_tooling_msgs/self_reported_clock_state_update.pb.h>
 
 #include <algorithm>
 #include <chrono>
@@ -135,9 +136,9 @@ void ContinentalARS548DecoderWrapper::initialize_sync_diagnostics(rclcpp::Node *
       if (now_ns - time_last_submitted_ns < 1'000'000'000) return;
 
       time_last_submitted_ns = now_ns;
-      auto clock_id = make_sensor_clock_id("ARS548", config_ptr_->sensor_ip);
-      (void)sync_diag_client_->submit_port_state_update(
-        clock_id, 1, sync_ok ? PortState::PS_SLAVE : PortState::PS_LISTENING);
+      (void)sync_diag_client_->submit_self_reported_clock_state(
+        sync_ok ? SelfReportedClockStateUpdate::LOCKED
+                : SelfReportedClockStateUpdate::UNSYNCHRONIZED);
 
       (void)sync_diag_client_->submit_clock_diff_measurement(clock_diff);
     });
