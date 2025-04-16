@@ -87,9 +87,10 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
   if (launch_hw_) {
-    hw_interface_wrapper_->hw_interface()->register_scan_callback(std::bind(
-      &HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1,
-      std::placeholders::_2));
+    hw_interface_wrapper_->hw_interface()->register_scan_callback(
+      std::bind(
+        &HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
     stream_start();
   } else {
     packets_sub_ = create_subscription<pandar_msgs::msg::PandarScan>(
@@ -499,7 +500,7 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
     (*metadata.timestamp_ns - last_measurement_send_time_ns_ > 100'000'000)) {
     try {
       hw_monitor_wrapper_->sync_diag_client_->submit_clock_diff_measurement(
-        *metadata.timestamp_ns - sensor_timestamp_ns);
+        static_cast<int64_t>(*metadata.timestamp_ns) - sensor_timestamp_ns);
       last_measurement_send_time_ns_ = *metadata.timestamp_ns;
     } catch (const std::exception & e) {
       RCLCPP_ERROR_STREAM(get_logger(), "Could not send measurement:" << e.what());

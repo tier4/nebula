@@ -174,6 +174,7 @@ void HesaiHwMonitorWrapper::on_hesai_status_timer()
   RCLCPP_DEBUG_STREAM(logger_, "on_hesai_status_timer" << std::endl);
   try {
     auto result = hw_interface_->get_lidar_status();
+    submit_clock_state(*result);
     std::scoped_lock lock(mtx_lidar_status_);
     current_status_time_ = std::make_unique<rclcpp::Time>(parent_node_->get_clock()->now());
     current_status_ = result;
@@ -188,6 +189,26 @@ void HesaiHwMonitorWrapper::on_hesai_status_timer()
       error.what());
   }
   RCLCPP_DEBUG_STREAM(logger_, "on_hesai_status_timer END" << std::endl);
+}
+
+void HesaiHwMonitorWrapper::submit_clock_state(const HesaiLidarStatusBase & status)
+{
+  auto j = status.to_json();
+  if (j.contains("ptp_status")) {
+    auto status = j["ptp_status"].template get<std::string>();
+    if (status == "locked") {
+      sync_diag_client_->submit_self_reported_clock_state(SelfReportedClockStateUpdate::LOCKED);
+    } else if (status == "tracking") {
+      sync_diag_client_->submit_self_reported_clock_state(SelfReportedClockStateUpdate::TRACKING);
+    } else if (status == "free run") {
+      sync_diag_client_->submit_self_reported_clock_state(
+        SelfReportedClockStateUpdate::UNSYNCHRONIZED);
+    } else if (status == "frozen") {
+      sync_diag_client_->submit_self_reported_clock_state(SelfReportedClockStateUpdate::LOST);
+    } else {
+      sync_diag_client_->submit_self_reported_clock_state(SelfReportedClockStateUpdate::INVALID);
+    }
+  }
 }
 
 void HesaiHwMonitorWrapper::on_hesai_lidar_monitor_timer_http()
@@ -242,38 +263,25 @@ void HesaiHwMonitorWrapper::on_sync_diag_timer()
 {
   if (!sync_diag_client_) return;
 
-  auto port_ds = hw_interface_->get_ptp_diag_port();
   try {
+    auto port_ds = hw_interface_->get_ptp_diag_port();
     auto clock_id = make_ptp_clock_id(port_ds.portIdentity.clock_id.to_json());
-    auto result = sync_diag_client_->submit_port_state_update(
+    sync_diag_client_->submit_port_state_update(
       clock_id, port_ds.portIdentity.port_number.value(), port_ds.portState);
-    if (!result.has_value()) {
-      RCLCPP_WARN_STREAM(logger_, "Could not send port state update: " << result.error());
-    }
 
-    result = sync_diag_client_->submit_clock_alias(
+    sync_diag_client_->submit_clock_alias(
       port_ds.portIdentity.clock_id.to_json().template get<std::string>());
-    if (!result.has_value()) {
-      RCLCPP_WARN_STREAM(logger_, "Could not send port state update: " << result.error());
-    } else {
-      RCLCPP_INFO_STREAM(logger_, "Port state update sent");
-    }
   } catch (const std::runtime_error & e) {
     RCLCPP_ERROR_STREAM(logger_, "Could not get port dataset from sensor: " << e.what());
   }
 
-  auto time_status_np = hw_interface_->get_ptp_diag_time();
   try {
+    auto time_status_np = hw_interface_->get_ptp_diag_time();
     std::optional<std::string> master_clock_id{};
     if (time_status_np.gmPresent.value()) {
       master_clock_id.emplace(time_status_np.gmIdentity.to_json().template get<std::string>());
     }
-    auto result = sync_diag_client_->submit_master_update(master_clock_id);
-    if (!result.has_value()) {
-      RCLCPP_WARN_STREAM(logger_, "Could not send clock master update: " << result.error());
-    } else {
-      RCLCPP_INFO_STREAM(logger_, "Clock master update sent");
-    }
+    sync_diag_client_->submit_master_update(master_clock_id);
   } catch (const std::runtime_error & e) {
     RCLCPP_ERROR_STREAM(logger_, "Could not get time status dataset from sensor: " << e.what());
   }

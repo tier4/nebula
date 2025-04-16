@@ -82,6 +82,8 @@ private:
 
   void hesai_check_voltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
+  void submit_clock_state(const HesaiLidarStatusBase & status);
+
   rclcpp::Logger logger_;
   diagnostic_updater::Updater diagnostics_updater_;
   nebula::Status status_;
