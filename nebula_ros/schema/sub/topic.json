@@ -45,6 +45,12 @@
       "default": "false",
       "readOnly": true,
       "description": "Use sensor time for published sensor data."
+    },
+    "radar_info_rate_subsample": {
+      "type": "integer",
+      "default": "10",
+      "readOnly": true,
+      "description": "Subsample factor to publish radar info messages with respect to the radar detections."
     }
   }
 }

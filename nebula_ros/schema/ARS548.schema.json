@@ -39,6 +39,9 @@
         "use_sensor_time": {
           "$ref": "sub/topic.json#/definitions/use_sensor_time"
         },
+        "radar_info_rate_subsample": {
+          "$ref": "sub/topic.json#/definitions/radar_info_rate_subsample"
+        },
         "configuration_vehicle_length": {
           "$ref": "sub/misc.json#/definitions/configuration_vehicle_length"
         },

@@ -21,15 +21,15 @@ objects:
     position_covariance_xy: 0.000433934
     orientation: -0.0263776
     orientation_std: 0.231449
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.281253
       y: 0.0498736
@@ -86,15 +86,15 @@ objects:
     position_covariance_xy: 0.000683580
     orientation: 0.626398
     orientation_std: 0.347189
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.0249348
       y: -0.182469
@@ -151,15 +151,15 @@ objects:
     position_covariance_xy: -0.00260317
     orientation: -0.0622597
     orientation_std: 0.218113
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.191382
       y: -0.158978
@@ -216,15 +216,15 @@ objects:
     position_covariance_xy: -0.0143436
     orientation: -1.47839
     orientation_std: 0.457635
-    existence_probability: 61.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 80
-    classification_unknown: 20
+    raw_existence_probability: 61.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 80
+    raw_classification_unknown: 20
     absolute_velocity:
       x: -0.214727
       y: 0.0865279
@@ -281,15 +281,15 @@ objects:
     position_covariance_xy: -0.00199605
     orientation: 0.0768902
     orientation_std: 0.522596
-    existence_probability: 63.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 58
-    classification_unknown: 42
+    raw_existence_probability: 63.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 58
+    raw_classification_unknown: 42
     absolute_velocity:
       x: -0.0428709
       y: 0.114782
@@ -346,15 +346,15 @@ objects:
     position_covariance_xy: -0.00392054
     orientation: -0.168424
     orientation_std: 1.12442
-    existence_probability: 99.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 90
-    classification_unknown: 10
+    raw_existence_probability: 99.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 90
+    raw_classification_unknown: 10
     absolute_velocity:
       x: 0.0397587
       y: 0.0506541
@@ -411,15 +411,15 @@ objects:
     position_covariance_xy: 0.000466252
     orientation: 0.112420
     orientation_std: 0.303887
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.127808
       y: 0.118150
@@ -476,15 +476,15 @@ objects:
     position_covariance_xy: -2.57981e-05
     orientation: 0.354399
     orientation_std: 0.284635
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.0290804
       y: 0.177214
@@ -541,15 +541,15 @@ objects:
     position_covariance_xy: -0.0109394
     orientation: -0.288580
     orientation_std: 0.244836
-    existence_probability: 50.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 58
-    classification_unknown: 42
+    raw_existence_probability: 50.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 58
+    raw_classification_unknown: 42
     absolute_velocity:
       x: -0.203389
       y: 0.279047
@@ -606,15 +606,15 @@ objects:
     position_covariance_xy: -0.000801501
     orientation: 0.0808711
     orientation_std: 3.14159
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.0162740
       y: -0.00677066
@@ -671,15 +671,15 @@ objects:
     position_covariance_xy: 7.21655e-05
     orientation: -0.481675
     orientation_std: 1.19911
-    existence_probability: 94.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 22
+    raw_existence_probability: 94.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 22
     absolute_velocity:
       x: 0.0438246
       y: -0.0277920
@@ -736,15 +736,15 @@ objects:
     position_covariance_xy: -0.00390058
     orientation: 0.645019
     orientation_std: 0.136516
-    existence_probability: 99.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 0
+    raw_existence_probability: 99.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.231797
       y: -0.523258
@@ -801,15 +801,15 @@ objects:
     position_covariance_xy: 0.00576165
     orientation: 0.511709
     orientation_std: 1.00065
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 70
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 70
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.0535885
       y: 0.0459832
@@ -866,15 +866,15 @@ objects:
     position_covariance_xy: -0.00428435
     orientation: 1.44031
     orientation_std: 0.411446
-    existence_probability: 93.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 75
-    classification_unknown: 0
+    raw_existence_probability: 93.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 75
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.0554839
       y: -0.121630
@@ -931,15 +931,15 @@ objects:
     position_covariance_xy: 0.00135767
     orientation: 0.369702
     orientation_std: 0.172958
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.291934
       y: -0.201305
@@ -996,15 +996,15 @@ objects:
     position_covariance_xy: 0.000803070
     orientation: 0.131058
     orientation_std: 2.14588
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.0219594
       y: 0.0224578
@@ -1061,15 +1061,15 @@ objects:
     position_covariance_xy: -0.00118077
     orientation: 0.447546
     orientation_std: 2.12686
-    existence_probability: 69.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 8
-    classification_unknown: 0
+    raw_existence_probability: 69.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 8
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.0848573
       y: 0.137693
@@ -1126,15 +1126,15 @@ objects:
     position_covariance_xy: -0.00349093
     orientation: 0.140662
     orientation_std: 0.0941195
-    existence_probability: 69.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 0
+    raw_existence_probability: 69.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.345125
       y: 0.752020
@@ -1191,15 +1191,15 @@ objects:
     position_covariance_xy: 0.000158241
     orientation: 0.0885069
     orientation_std: 0.224375
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.112390
       y: 0.228768
@@ -1256,15 +1256,15 @@ objects:
     position_covariance_xy: -0.00499407
     orientation: 0.236209
     orientation_std: 1.08127
-    existence_probability: 69.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 69.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.0201362
       y: 0.101298
@@ -1321,15 +1321,15 @@ objects:
     position_covariance_xy: 0.00579861
     orientation: -0.913433
     orientation_std: 1.37511
-    existence_probability: 69.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 20
+    raw_existence_probability: 69.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 20
     absolute_velocity:
       x: -0.158842
       y: 0.129240
@@ -1386,15 +1386,15 @@ objects:
     position_covariance_xy: -0.00135582
     orientation: 0.0478349
     orientation_std: 0.251724
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.0943105
       y: 0.193419
@@ -1451,15 +1451,15 @@ objects:
     position_covariance_xy: -0.0195009
     orientation: 0.00000
     orientation_std: 0.498183
-    existence_probability: 74.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 8
-    classification_unknown: 38
+    raw_existence_probability: 74.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 8
+    raw_classification_unknown: 38
     absolute_velocity:
       x: -0.0453051
       y: 0.185729
@@ -1516,15 +1516,15 @@ objects:
     position_covariance_xy: 0.000133373
     orientation: 0.161192
     orientation_std: 0.134398
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.127906
       y: 0.389968
@@ -1581,15 +1581,15 @@ objects:
     position_covariance_xy: 0.0183878
     orientation: -0.0104023
     orientation_std: 3.14159
-    existence_probability: 96.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 60
-    classification_unknown: 40
+    raw_existence_probability: 96.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 60
+    raw_classification_unknown: 40
     absolute_velocity:
       x: 0.125606
       y: -0.0622319
@@ -1646,15 +1646,15 @@ objects:
     position_covariance_xy: -0.00468330
     orientation: -1.10519
     orientation_std: 0.136743
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.0450059
       y: -0.377829
@@ -1711,15 +1711,15 @@ objects:
     position_covariance_xy: 0.0118836
     orientation: 0.969461
     orientation_std: 0.575154
-    existence_probability: 99.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 16
+    raw_existence_probability: 99.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 16
     absolute_velocity:
       x: 0.0975171
       y: 0.0818781
@@ -1776,15 +1776,15 @@ objects:
     position_covariance_xy: 0.00124946
     orientation: 0.220231
     orientation_std: 0.324586
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.134249
       y: -0.133708
@@ -1841,15 +1841,15 @@ objects:
     position_covariance_xy: -0.00114342
     orientation: 0.150714
     orientation_std: 0.0666051
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.164830
       y: 0.760716
@@ -1906,15 +1906,15 @@ objects:
     position_covariance_xy: 0.00252389
     orientation: 0.276770
     orientation_std: 0.310382
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.0129893
       y: -0.167267
@@ -1971,15 +1971,15 @@ objects:
     position_covariance_xy: -0.00224913
     orientation: 0.0774307
     orientation_std: 0.290845
-    existence_probability: 98.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 98.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.000804091
       y: 0.203290
@@ -2036,15 +2036,15 @@ objects:
     position_covariance_xy: -0.00340519
     orientation: -0.275362
     orientation_std: 0.0857875
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.107615
       y: 0.601012
@@ -2101,15 +2101,15 @@ objects:
     position_covariance_xy: -0.00205166
     orientation: 0.248431
     orientation_std: 0.0851209
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -2.25405
       y: -1.03053
@@ -2166,15 +2166,15 @@ objects:
     position_covariance_xy: 0.0126895
     orientation: 0.0410038
     orientation_std: 3.14159
-    existence_probability: 34.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 2
-    classification_unknown: 48
+    raw_existence_probability: 34.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 2
+    raw_classification_unknown: 48
     absolute_velocity:
       x: 0.0109977
       y: -0.0652869
@@ -2231,15 +2231,15 @@ objects:
     position_covariance_xy: 0.00293168
     orientation: 0.347114
     orientation_std: 0.381038
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.00949418
       y: -0.133085
@@ -2296,15 +2296,15 @@ objects:
     position_covariance_xy: -0.00273509
     orientation: -0.00746778
     orientation_std: 0.493474
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.0153468
       y: 0.131596
@@ -2361,15 +2361,15 @@ objects:
     position_covariance_xy: -3.12266e-05
     orientation: 0.290389
     orientation_std: 0.381254
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.0718545
       y: -0.136950
@@ -2426,15 +2426,15 @@ objects:
     position_covariance_xy: 0.00144230
     orientation: 0.0365639
     orientation_std: 0.135611
-    existence_probability: 98.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 10
+    raw_existence_probability: 98.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 10
     absolute_velocity:
       x: 0.0360527
       y: 0.403528
@@ -2491,15 +2491,15 @@ objects:
     position_covariance_xy: -6.78698e-05
     orientation: 0.0765282
     orientation_std: 0.113911
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 93
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 93
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.0201783
       y: 0.466035
@@ -2556,15 +2556,15 @@ objects:
     position_covariance_xy: -0.000721470
     orientation: 0.0618971
     orientation_std: 0.515015
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.0235011
       y: 0.129880
@@ -2621,15 +2621,15 @@ objects:
     position_covariance_xy: 0.0520361
     orientation: 0.927265
     orientation_std: 0.0514514
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.792093
       y: -1.67203
@@ -2686,15 +2686,15 @@ objects:
     position_covariance_xy: 0.0447042
     orientation: 0.575237
     orientation_std: 0.903935
-    existence_probability: 34.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 48
+    raw_existence_probability: 34.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 48
     absolute_velocity:
       x: -0.0477202
       y: -0.307551
@@ -2751,15 +2751,15 @@ objects:
     position_covariance_xy: 0.000221836
     orientation: 0.158546
     orientation_std: 0.197063
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.0179684
       y: 0.271318
@@ -2816,15 +2816,15 @@ objects:
     position_covariance_xy: 0.0147662
     orientation: 1.28680
     orientation_std: 0.326283
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.0793685
       y: 0.140228
@@ -2881,15 +2881,15 @@ objects:
     position_covariance_xy: 4.15599e-05
     orientation: 0.295748
     orientation_std: 0.230501
-    existence_probability: 97.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 0
+    raw_existence_probability: 97.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.124796
       y: 0.235003
@@ -2946,15 +2946,15 @@ objects:
     position_covariance_xy: -0.0712331
     orientation: -0.901585
     orientation_std: 3.00885
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 40
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 40
     absolute_velocity:
       x: -0.0245859
       y: 0.0641377
@@ -3011,15 +3011,15 @@ objects:
     position_covariance_xy: -0.00128720
     orientation: 0.187701
     orientation_std: 0.167732
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 100
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 100
+    raw_classification_unknown: 0
     absolute_velocity:
       x: 0.0428570
       y: -0.312525
@@ -3076,15 +3076,15 @@ objects:
     position_covariance_xy: 0.132308
     orientation: 1.00738
     orientation_std: 0.849589
-    existence_probability: 31.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 48
+    raw_existence_probability: 31.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 48
     absolute_velocity:
       x: 0.791450
       y: -0.00779335
@@ -3141,15 +3141,15 @@ objects:
     position_covariance_xy: -0.00245312
     orientation: 0.106663
     orientation_std: 0.381638
-    existence_probability: 35.0000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 26
+    raw_existence_probability: 35.0000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 26
     absolute_velocity:
       x: 0.124690
       y: 0.174770
@@ -3206,15 +3206,15 @@ objects:
     position_covariance_xy: -0.000842813
     orientation: -0.0556955
     orientation_std: 0.445778
-    existence_probability: 100.000
-    classification_car: 0
-    classification_truck: 0
-    classification_motorcycle: 0
-    classification_bicycle: 0
-    classification_pedestrian: 0
-    classification_animal: 0
-    classification_hazard: 0
-    classification_unknown: 0
+    raw_existence_probability: 100.000
+    raw_classification_car: 0
+    raw_classification_truck: 0
+    raw_classification_motorcycle: 0
+    raw_classification_bicycle: 0
+    raw_classification_pedestrian: 0
+    raw_classification_animal: 0
+    raw_classification_hazard: 0
+    raw_classification_unknown: 0
     absolute_velocity:
       x: -0.000240124
       y: 0.126967

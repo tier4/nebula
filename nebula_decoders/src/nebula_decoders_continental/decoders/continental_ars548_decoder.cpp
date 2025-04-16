@@ -195,9 +195,9 @@ bool ContinentalARS548Decoder::parse_detections_list_packet(
     auto & detection_msg = msg.detections[detection_index];
     auto & detection = detection_list.detections[detection_index];
 
-    assert(detection.positive_predictive_value <= 100);
+    assert(detection.raw_positive_predictive_value <= 100);
     assert(detection.classification <= 4 || detection.classification == 255);
-    assert(detection.multi_target_probability <= 100);
+    assert(detection.raw_multi_target_probability <= 100);
     assert(detection.ambiguity_flag <= 100);
 
     assert(detection.azimuth_angle.value() >= -M_PI && detection.azimuth_angle.value() <= M_PI);
@@ -221,11 +221,11 @@ bool ContinentalARS548Decoder::parse_detections_list_packet(
     detection_msg.invalid_range_rate_std = detection.invalid_flags & 0x80;
     detection_msg.rcs = detection.rcs;
     detection_msg.measurement_id = detection.measurement_id.value();
-    detection_msg.positive_predictive_value = detection.positive_predictive_value;
+    detection_msg.raw_positive_predictive_value = detection.raw_positive_predictive_value;
     detection_msg.classification = detection.classification;
-    detection_msg.multi_target_probability = detection.multi_target_probability;
+    detection_msg.raw_multi_target_probability = detection.raw_multi_target_probability;
     detection_msg.object_id = detection.object_id.value();
-    detection_msg.ambiguity_flag = detection.ambiguity_flag;
+    detection_msg.raw_ambiguity_flag = detection.raw_ambiguity_flag;
 
     detection_msg.azimuth_angle = detection.azimuth_angle.value();
     detection_msg.azimuth_angle_std = detection.azimuth_angle_std.value();
@@ -316,14 +316,14 @@ bool ContinentalARS548Decoder::parse_objects_list_packet(
       object.position_orientation.value() >= -M_PI && object.position_orientation.value() <= M_PI);
     assert(object.position_orientation_std.value() >= 0.f);
 
-    assert(object.classification_car <= 100);
-    assert(object.classification_truck <= 100);
-    assert(object.classification_motorcycle <= 100);
-    assert(object.classification_bicycle <= 100);
-    assert(object.classification_pedestrian <= 100);
-    assert(object.classification_animal <= 100);
-    assert(object.classification_hazard <= 100);
-    assert(object.classification_unknown <= 100);
+    assert(object.raw_classification_car <= 100);
+    assert(object.raw_classification_truck <= 100);
+    assert(object.raw_classification_motorcycle <= 100);
+    assert(object.raw_classification_bicycle <= 100);
+    assert(object.raw_classification_pedestrian <= 100);
+    assert(object.raw_classification_animal <= 100);
+    assert(object.raw_classification_hazard <= 100);
+    assert(object.raw_classification_unknown <= 100);
 
     assert(object.dynamics_abs_vel_x_std.value() >= 0.f);
     assert(object.dynamics_abs_vel_y_std.value() >= 0.f);
@@ -356,15 +356,15 @@ bool ContinentalARS548Decoder::parse_objects_list_packet(
     object_msg.orientation = object.position_orientation.value();
     object_msg.orientation_std = object.position_orientation_std.value();
 
-    object_msg.existence_probability = object.existence_probability.value();
-    object_msg.classification_car = object.classification_car;
-    object_msg.classification_truck = object.classification_truck;
-    object_msg.classification_motorcycle = object.classification_motorcycle;
-    object_msg.classification_bicycle = object.classification_bicycle;
-    object_msg.classification_pedestrian = object.classification_pedestrian;
-    object_msg.classification_animal = object.classification_animal;
-    object_msg.classification_hazard = object.classification_hazard;
-    object_msg.classification_unknown = object.classification_unknown;
+    object_msg.raw_existence_probability = object.raw_existence_probability.value();
+    object_msg.raw_classification_car = object.raw_classification_car;
+    object_msg.raw_classification_truck = object.raw_classification_truck;
+    object_msg.raw_classification_motorcycle = object.raw_classification_motorcycle;
+    object_msg.raw_classification_bicycle = object.raw_classification_bicycle;
+    object_msg.raw_classification_pedestrian = object.raw_classification_pedestrian;
+    object_msg.raw_classification_animal = object.raw_classification_animal;
+    object_msg.raw_classification_hazard = object.raw_classification_hazard;
+    object_msg.raw_classification_unknown = object.raw_classification_unknown;
 
     object_msg.absolute_velocity.x = static_cast<double>(object.dynamics_abs_vel_x.value());
     object_msg.absolute_velocity.y = static_cast<double>(object.dynamics_abs_vel_y.value());

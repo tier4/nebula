@@ -36,11 +36,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -10
     measurement_id: 3
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 20
+    raw_multi_target_probability: 20
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.905259
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -59,11 +59,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -16
     measurement_id: 5
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 9
+    raw_multi_target_probability: 9
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.876427
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -82,11 +82,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -4
     measurement_id: 6
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.806051
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -105,11 +105,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -13
     measurement_id: 12
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 30
+    raw_multi_target_probability: 30
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.751149
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -128,11 +128,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -13
     measurement_id: 11
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 10
+    raw_multi_target_probability: 10
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.667011
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -151,11 +151,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -11
     measurement_id: 8
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 22
+    raw_multi_target_probability: 22
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.719778
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -174,11 +174,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -1
     measurement_id: 19
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 25
+    raw_multi_target_probability: 25
     object_id: 0
-    ambiguity_flag: 50
+    raw_ambiguity_flag: 50
   - azimuth_angle: -0.652473
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -197,11 +197,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 4
     measurement_id: 17
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.578515
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -220,11 +220,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -15
     measurement_id: 14
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 0
-    ambiguity_flag: 70
+    raw_ambiguity_flag: 70
   - azimuth_angle: -0.560304
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -243,11 +243,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 7
     measurement_id: 20
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 0
-    ambiguity_flag: 70
+    raw_ambiguity_flag: 70
   - azimuth_angle: -0.564549
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -266,11 +266,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 7
     measurement_id: 23
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 10
+    raw_multi_target_probability: 10
     object_id: 0
-    ambiguity_flag: 70
+    raw_ambiguity_flag: 70
   - azimuth_angle: -0.529609
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -289,11 +289,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -12
     measurement_id: 21
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 19
+    raw_multi_target_probability: 19
     object_id: 15349
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.479294
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -312,11 +312,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -16
     measurement_id: 24
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 29
+    raw_multi_target_probability: 29
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.453836
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -335,11 +335,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -17
     measurement_id: 25
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 68
+    raw_multi_target_probability: 68
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.325422
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -358,11 +358,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 1
     measurement_id: 31
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 18
+    raw_multi_target_probability: 18
     object_id: 15349
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.378747
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -381,11 +381,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -17
     measurement_id: 30
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 29
+    raw_multi_target_probability: 29
     object_id: 0
-    ambiguity_flag: 90
+    raw_ambiguity_flag: 90
   - azimuth_angle: -0.341595
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -404,11 +404,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -18
     measurement_id: 34
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 27
+    raw_multi_target_probability: 27
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.588471
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -427,11 +427,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -4
     measurement_id: 32
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 19
+    raw_multi_target_probability: 19
     object_id: 21326
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.304035
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -450,11 +450,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -16
     measurement_id: 35
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.555694
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -473,11 +473,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -3
     measurement_id: 38
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 23
+    raw_multi_target_probability: 23
     object_id: 21326
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.532446
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -496,11 +496,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 18
     measurement_id: 36
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 21326
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.574514
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -519,11 +519,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 7
     measurement_id: 43
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 53
+    raw_multi_target_probability: 53
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.598009
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -542,11 +542,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -11
     measurement_id: 44
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 48
+    raw_multi_target_probability: 48
     object_id: 21326
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.728035
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -565,11 +565,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -6
     measurement_id: 41
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 21326
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.517451
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -588,11 +588,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -18
     measurement_id: 46
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 13
+    raw_multi_target_probability: 13
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.625697
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -611,11 +611,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 3
     measurement_id: 42
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 19
+    raw_multi_target_probability: 19
     object_id: 21326
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.667346
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -634,11 +634,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 2
     measurement_id: 40
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 6
+    raw_multi_target_probability: 6
     object_id: 21326
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.244306
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -657,11 +657,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -9
     measurement_id: 48
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 26
+    raw_multi_target_probability: 26
     object_id: 15349
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.486410
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -680,11 +680,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -13
     measurement_id: 47
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 38
+    raw_multi_target_probability: 38
     object_id: 21326
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.568922
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -703,11 +703,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -19
     measurement_id: 50
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 9
+    raw_multi_target_probability: 9
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.448714
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -726,11 +726,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -9
     measurement_id: 54
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 21326
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.234275
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -749,11 +749,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -3
     measurement_id: 55
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 9
+    raw_multi_target_probability: 9
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.203678
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -772,11 +772,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -16
     measurement_id: 56
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.408038
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -795,11 +795,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -2
     measurement_id: 58
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 15603
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.565199
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -818,11 +818,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -11
     measurement_id: 57
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 11
+    raw_multi_target_probability: 11
     object_id: 15603
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.477277
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -841,11 +841,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -18
     measurement_id: 61
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 6
+    raw_multi_target_probability: 6
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.227338
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -864,11 +864,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -13
     measurement_id: 59
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 31
+    raw_multi_target_probability: 31
     object_id: 7867
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.188587
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -887,11 +887,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -11
     measurement_id: 60
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 7867
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.628646
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -910,11 +910,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -10
     measurement_id: 64
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 11
+    raw_multi_target_probability: 11
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.168508
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -933,11 +933,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -12
     measurement_id: 63
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 25
+    raw_multi_target_probability: 25
     object_id: 7867
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.159851
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -956,11 +956,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -8
     measurement_id: 66
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 9
+    raw_multi_target_probability: 9
     object_id: 7867
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.926770
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -979,11 +979,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 2
     measurement_id: 70
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 713
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.145241
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1002,11 +1002,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -6
     measurement_id: 69
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 7867
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.872911
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1025,11 +1025,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -9
     measurement_id: 77
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 22
+    raw_multi_target_probability: 22
     object_id: 713
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.979323
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1048,11 +1048,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 4
     measurement_id: 75
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 713
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.140049
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1071,11 +1071,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -7
     measurement_id: 74
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 7867
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.907153
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1094,11 +1094,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -1
     measurement_id: 76
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 713
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.862056
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1117,11 +1117,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 3
     measurement_id: 72
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 713
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.792535
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1140,11 +1140,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -15
     measurement_id: 79
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 15
+    raw_multi_target_probability: 15
     object_id: 713
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.123849
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1163,11 +1163,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 0
     measurement_id: 80
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 7867
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.846611
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1186,11 +1186,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -12
     measurement_id: 81
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 713
-    ambiguity_flag: 70
+    raw_ambiguity_flag: 70
   - azimuth_angle: -0.103894
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1209,11 +1209,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 83
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 12954
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.817138
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1232,11 +1232,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -10
     measurement_id: 90
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 713
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.0865819
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1255,11 +1255,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -5
     measurement_id: 93
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 10
+    raw_multi_target_probability: 10
     object_id: 12954
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.626937
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1278,11 +1278,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -20
     measurement_id: 91
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 14
+    raw_multi_target_probability: 14
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0813024
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1301,11 +1301,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -2
     measurement_id: 94
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 12954
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0816866
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1324,11 +1324,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -2
     measurement_id: 99
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 12954
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.635539
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1347,11 +1347,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -19
     measurement_id: 95
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 58
+    raw_multi_target_probability: 58
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.761617
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1370,11 +1370,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -9
     measurement_id: 98
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 6679
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.438711
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1393,11 +1393,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -18
     measurement_id: 97
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 36
+    raw_multi_target_probability: 36
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.576625
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1416,11 +1416,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -12
     measurement_id: 96
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.472665
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1439,11 +1439,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -14
     measurement_id: 101
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 11
+    raw_multi_target_probability: 11
     object_id: 0
-    ambiguity_flag: 90
+    raw_ambiguity_flag: 90
   - azimuth_angle: -0.496033
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1462,11 +1462,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -9
     measurement_id: 100
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 42
+    raw_multi_target_probability: 42
     object_id: 0
-    ambiguity_flag: 90
+    raw_ambiguity_flag: 90
   - azimuth_angle: -0.0698347
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1485,11 +1485,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -1
     measurement_id: 103
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 6
+    raw_multi_target_probability: 6
     object_id: 12954
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0702918
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1508,11 +1508,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -1
     measurement_id: 104
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 9
+    raw_multi_target_probability: 9
     object_id: 12954
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.624895
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1531,11 +1531,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -15
     measurement_id: 105
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 16
+    raw_multi_target_probability: 16
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.901371
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1554,11 +1554,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -6
     measurement_id: 109
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 23
+    raw_multi_target_probability: 23
     object_id: 0
-    ambiguity_flag: 30
+    raw_ambiguity_flag: 30
   - azimuth_angle: 0.603751
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1577,11 +1577,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -18
     measurement_id: 106
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 6
+    raw_multi_target_probability: 6
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0602114
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1600,11 +1600,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -6
     measurement_id: 110
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 12954
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0612227
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1623,11 +1623,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -6
     measurement_id: 111
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 12954
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0535213
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1646,11 +1646,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -19
     measurement_id: 117
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0587232
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1669,11 +1669,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 115
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 12954
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.842577
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1692,11 +1692,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -5
     measurement_id: 116
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.486449
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1715,11 +1715,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -20
     measurement_id: 120
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 15
+    raw_multi_target_probability: 15
     object_id: 0
-    ambiguity_flag: 50
+    raw_ambiguity_flag: 50
   - azimuth_angle: -0.460981
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1738,11 +1738,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -16
     measurement_id: 119
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 18
+    raw_multi_target_probability: 18
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.838989
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1761,11 +1761,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -2
     measurement_id: 121
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.951699
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1784,11 +1784,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 3
     measurement_id: 122
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 22
+    raw_multi_target_probability: 22
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.441023
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1807,11 +1807,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -16
     measurement_id: 127
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 40
+    raw_multi_target_probability: 40
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.891816
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1830,11 +1830,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 0
     measurement_id: 125
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 9
+    raw_multi_target_probability: 9
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.0417845
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1853,11 +1853,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -5
     measurement_id: 126
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 15335
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.445642
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1876,11 +1876,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -13
     measurement_id: 128
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 10
+    raw_multi_target_probability: 10
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.575884
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1899,11 +1899,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -7
     measurement_id: 132
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 15
+    raw_multi_target_probability: 15
     object_id: 13504
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0401769
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1922,11 +1922,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -3
     measurement_id: 131
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 15335
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.357954
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1945,11 +1945,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -14
     measurement_id: 135
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 8
+    raw_multi_target_probability: 8
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.435498
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1968,11 +1968,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -14
     measurement_id: 133
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 18
+    raw_multi_target_probability: 18
     object_id: 0
-    ambiguity_flag: 90
+    raw_ambiguity_flag: 90
   - azimuth_angle: -0.0396069
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -1991,11 +1991,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -2
     measurement_id: 136
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 15335
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.569832
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2014,11 +2014,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -10
     measurement_id: 138
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 10568
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.297478
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2037,11 +2037,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 139
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 1602
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0320342
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2060,11 +2060,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -3
     measurement_id: 142
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 15335
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.281549
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2083,11 +2083,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 141
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 1602
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.506676
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2106,11 +2106,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -7
     measurement_id: 140
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.465909
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2129,11 +2129,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -3
     measurement_id: 143
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 14
+    raw_multi_target_probability: 14
     object_id: 13504
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.496526
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2152,11 +2152,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -2
     measurement_id: 144
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 6
+    raw_multi_target_probability: 6
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0254646
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2175,11 +2175,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 4
     measurement_id: 145
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 15335
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.270491
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2198,11 +2198,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 7
     measurement_id: 146
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 1602
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.490870
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2221,11 +2221,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -2
     measurement_id: 147
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.491769
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2244,11 +2244,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -2
     measurement_id: 150
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 8
+    raw_multi_target_probability: 8
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0201904
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2267,11 +2267,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 2
     measurement_id: 151
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 15335
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.554165
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2290,11 +2290,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -16
     measurement_id: 149
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 13
+    raw_multi_target_probability: 13
     object_id: 0
-    ambiguity_flag: 50
+    raw_ambiguity_flag: 50
   - azimuth_angle: -0.0190728
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2313,11 +2313,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 4
     measurement_id: 154
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 15335
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.258287
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2336,11 +2336,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 4
     measurement_id: 153
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 1602
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.484173
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2359,11 +2359,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -5
     measurement_id: 152
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 25
+    raw_multi_target_probability: 25
     object_id: 3392
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.440061
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2382,11 +2382,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -14
     measurement_id: 155
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 3392
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.644198
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2405,11 +2405,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -1
     measurement_id: 158
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 1001
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0152053
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2428,11 +2428,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 4
     measurement_id: 157
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 16221
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.285555
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2451,11 +2451,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -12
     measurement_id: 161
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 24
+    raw_multi_target_probability: 24
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.445971
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2474,11 +2474,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 5
     measurement_id: 160
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 24
+    raw_multi_target_probability: 24
     object_id: 3392
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.900121
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2497,11 +2497,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 159
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 52
+    raw_multi_target_probability: 52
     object_id: 0
-    ambiguity_flag: 90
+    raw_ambiguity_flag: 90
   - azimuth_angle: 0.425366
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2520,11 +2520,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -14
     measurement_id: 165
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 71
+    raw_multi_target_probability: 71
     object_id: 3392
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.411162
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2543,11 +2543,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -7
     measurement_id: 166
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 10
+    raw_multi_target_probability: 10
     object_id: 3392
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.543941
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2566,11 +2566,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -7
     measurement_id: 167
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 19
+    raw_multi_target_probability: 19
     object_id: 3392
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.596900
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2589,11 +2589,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -7
     measurement_id: 163
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 25
+    raw_multi_target_probability: 25
     object_id: 1001
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.578951
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2612,11 +2612,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -11
     measurement_id: 164
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 61
+    raw_multi_target_probability: 61
     object_id: 1001
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.00948288
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2635,11 +2635,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 3
     measurement_id: 162
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 16221
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.591792
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2658,11 +2658,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -9
     measurement_id: 169
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 61
+    raw_multi_target_probability: 61
     object_id: 1001
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.00667963
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2681,11 +2681,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -3
     measurement_id: 171
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 16221
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.263450
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2704,11 +2704,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -11
     measurement_id: 170
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.517829
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2727,11 +2727,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -17
     measurement_id: 173
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 23
+    raw_multi_target_probability: 23
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.529631
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2750,11 +2750,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -10
     measurement_id: 172
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 1001
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.00570814
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2773,11 +2773,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 174
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 16221
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.479731
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2796,11 +2796,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 7
     measurement_id: 175
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 0
-    ambiguity_flag: 70
+    raw_ambiguity_flag: 70
   - azimuth_angle: 0.375398
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2819,11 +2819,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 15
     measurement_id: 176
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.228594
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2842,11 +2842,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 177
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 4889
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.173981
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2865,11 +2865,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 15
     measurement_id: 178
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 16837
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.155488
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2888,11 +2888,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 12
     measurement_id: 179
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 16837
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.355664
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2911,11 +2911,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 34
     measurement_id: 180
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 9946
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.442164
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2934,11 +2934,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 11
     measurement_id: 181
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 14
+    raw_multi_target_probability: 14
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.181470
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2957,11 +2957,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 7
     measurement_id: 183
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 30
+    raw_multi_target_probability: 30
     object_id: 16837
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.319667
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -2980,11 +2980,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 15
     measurement_id: 182
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 18302
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.465677
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3003,11 +3003,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 1
     measurement_id: 184
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 8
+    raw_multi_target_probability: 8
     object_id: 9946
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.00439895
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3026,11 +3026,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 186
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 16221
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.197103
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3049,11 +3049,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -4
     measurement_id: 187
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 40
+    raw_multi_target_probability: 40
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.311905
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3072,11 +3072,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -5
     measurement_id: 190
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 48
+    raw_multi_target_probability: 48
     object_id: 18302
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.859481
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3095,11 +3095,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 1
     measurement_id: 189
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 39
+    raw_multi_target_probability: 39
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.00604102
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3118,11 +3118,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 11
     measurement_id: 191
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 9359
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.470540
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3141,11 +3141,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -5
     measurement_id: 193
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 40
+    raw_multi_target_probability: 40
     object_id: 1332
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.313011
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3164,11 +3164,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 25
     measurement_id: 196
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 18302
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.459708
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3187,11 +3187,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 5
     measurement_id: 195
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 16
+    raw_multi_target_probability: 16
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.212970
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3210,11 +3210,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -1
     measurement_id: 198
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 27
+    raw_multi_target_probability: 27
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.00942864
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3233,11 +3233,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 11
     measurement_id: 200
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 9359
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.232810
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3256,11 +3256,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -6
     measurement_id: 202
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 29
+    raw_multi_target_probability: 29
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.303503
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3279,11 +3279,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -5
     measurement_id: 204
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 15
+    raw_multi_target_probability: 15
     object_id: 18334
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.219983
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3302,11 +3302,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -4
     measurement_id: 206
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 71
+    raw_multi_target_probability: 71
     object_id: 0
-    ambiguity_flag: 90
+    raw_ambiguity_flag: 90
   - azimuth_angle: 0.284569
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3325,11 +3325,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 5
     measurement_id: 208
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 18302
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0126015
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3348,11 +3348,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 3
     measurement_id: 209
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 6
+    raw_multi_target_probability: 6
     object_id: 9359
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.331167
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3371,11 +3371,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -8
     measurement_id: 211
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 34
+    raw_multi_target_probability: 34
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.475261
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3394,11 +3394,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -3
     measurement_id: 210
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 16
+    raw_multi_target_probability: 16
     object_id: 9615
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0136901
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3417,11 +3417,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 1
     measurement_id: 215
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 33
+    raw_multi_target_probability: 33
     object_id: 9359
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.326381
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3440,11 +3440,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -5
     measurement_id: 213
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.274366
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3463,11 +3463,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 214
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 13
+    raw_multi_target_probability: 13
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.263748
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3486,11 +3486,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 19
     measurement_id: 216
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0168371
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3509,11 +3509,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -8
     measurement_id: 217
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 17
+    raw_multi_target_probability: 17
     object_id: 10561
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.262348
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3532,11 +3532,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 9
     measurement_id: 218
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 6057
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.0185324
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3555,11 +3555,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 12
     measurement_id: 220
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 10561
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.137443
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3578,11 +3578,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 222
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 17101
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0207204
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3601,11 +3601,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 9
     measurement_id: 224
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 10561
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.251427
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3624,11 +3624,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 17
     measurement_id: 225
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 6057
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0209393
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3647,11 +3647,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 5
     measurement_id: 226
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 10561
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0214076
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3670,11 +3670,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 2
     measurement_id: 227
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 10561
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0221142
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3693,11 +3693,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 1
     measurement_id: 229
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 3918
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.248309
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3716,11 +3716,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -11
     measurement_id: 233
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 17
+    raw_multi_target_probability: 17
     object_id: 6057
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.515096
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3739,11 +3739,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -9
     measurement_id: 234
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 11
+    raw_multi_target_probability: 11
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.253830
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3762,11 +3762,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -9
     measurement_id: 235
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0236283
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3785,11 +3785,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 5
     measurement_id: 236
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 3918
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0240084
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3808,11 +3808,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 237
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 3918
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.462236
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3831,11 +3831,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -5
     measurement_id: 240
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 24
+    raw_multi_target_probability: 24
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.0253167
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3854,11 +3854,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 5
     measurement_id: 239
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 3918
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0270556
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3877,11 +3877,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 3
     measurement_id: 242
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 3918
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.382681
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3900,11 +3900,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -10
     measurement_id: 243
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 13
+    raw_multi_target_probability: 13
     object_id: 328
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.394032
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3923,11 +3923,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -3
     measurement_id: 244
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 13
+    raw_multi_target_probability: 13
     object_id: 328
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0283335
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3946,11 +3946,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 246
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 12324
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0296260
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3969,11 +3969,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 247
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 12324
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0310232
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -3992,11 +3992,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 3
     measurement_id: 248
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 12324
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0310292
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4015,11 +4015,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 5
     measurement_id: 250
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 12324
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.789814
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4038,11 +4038,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -2
     measurement_id: 249
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 11
+    raw_multi_target_probability: 11
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.0304675
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4061,11 +4061,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -2
     measurement_id: 251
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 12324
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0295403
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4084,11 +4084,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 252
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 12324
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0565612
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4107,11 +4107,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 2
     measurement_id: 256
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 7280
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0588275
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4130,11 +4130,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 24
     measurement_id: 253
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 7280
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0751432
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4153,11 +4153,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 19
     measurement_id: 257
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 7280
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0703182
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4176,11 +4176,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 20
     measurement_id: 254
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 62
+    raw_multi_target_probability: 62
     object_id: 7280
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0683437
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4199,11 +4199,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 23
     measurement_id: 255
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 18
+    raw_multi_target_probability: 18
     object_id: 7280
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.139083
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4222,11 +4222,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 1
     measurement_id: 259
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 16
+    raw_multi_target_probability: 16
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.0673893
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4245,11 +4245,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 260
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 26
+    raw_multi_target_probability: 26
     object_id: 7280
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.244739
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4268,11 +4268,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 2
     measurement_id: 261
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 17
+    raw_multi_target_probability: 17
     object_id: 0
-    ambiguity_flag: 50
+    raw_ambiguity_flag: 50
   - azimuth_angle: 0.0686927
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4291,11 +4291,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 8
     measurement_id: 262
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 7280
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.225147
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4314,11 +4314,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -2
     measurement_id: 263
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0359177
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4337,11 +4337,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 14
     measurement_id: 264
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 11
+    raw_multi_target_probability: 11
     object_id: 13506
-    ambiguity_flag: 70
+    raw_ambiguity_flag: 70
   - azimuth_angle: 0.220591
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4360,11 +4360,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 17
     measurement_id: 265
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 23112
-    ambiguity_flag: 50
+    raw_ambiguity_flag: 50
   - azimuth_angle: 0.0354684
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4383,11 +4383,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 12
     measurement_id: 266
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 13506
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.216567
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4406,11 +4406,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 267
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 23112
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0365073
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4429,11 +4429,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 268
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 13506
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0368321
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4452,11 +4452,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 7
     measurement_id: 269
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 13506
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0361811
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4475,11 +4475,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 5
     measurement_id: 270
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 13506
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0364119
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4498,11 +4498,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 4
     measurement_id: 271
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 13506
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.198910
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4521,11 +4521,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -3
     measurement_id: 273
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 36
+    raw_multi_target_probability: 36
     object_id: 8776
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.210755
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4544,11 +4544,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -5
     measurement_id: 272
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 9
+    raw_multi_target_probability: 9
     object_id: 23112
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0523298
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4567,11 +4567,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 26
     measurement_id: 275
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 22
+    raw_multi_target_probability: 22
     object_id: 15044
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0680339
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4590,11 +4590,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 4
     measurement_id: 276
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 22
+    raw_multi_target_probability: 22
     object_id: 17741
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0453084
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4613,11 +4613,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 3
     measurement_id: 283
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 23420
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.227686
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4636,11 +4636,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 4
     measurement_id: 284
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 7875
-    ambiguity_flag: 90
+    raw_ambiguity_flag: 90
   - azimuth_angle: 0.227369
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4659,11 +4659,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -1
     measurement_id: 285
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 33
+    raw_multi_target_probability: 33
     object_id: 7875
-    ambiguity_flag: 90
+    raw_ambiguity_flag: 90
   - azimuth_angle: 0.227500
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4682,11 +4682,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 9
     measurement_id: 286
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 7875
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.212891
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4705,11 +4705,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 1
     measurement_id: 288
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 7875
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.412540
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4728,11 +4728,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -10
     measurement_id: 289
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 16
+    raw_multi_target_probability: 16
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.108320
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4751,11 +4751,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -3
     measurement_id: 291
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 6
+    raw_multi_target_probability: 6
     object_id: 3398
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.190886
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4774,11 +4774,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 293
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 6062
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.219818
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4797,11 +4797,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 1
     measurement_id: 313
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 6062
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.123365
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4820,11 +4820,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -6
     measurement_id: 294
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 19
+    raw_multi_target_probability: 19
     object_id: 6062
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0330138
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4843,11 +4843,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -7
     measurement_id: 295
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 13
+    raw_multi_target_probability: 13
     object_id: 5788
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0326211
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4866,11 +4866,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -7
     measurement_id: 296
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 51
+    raw_multi_target_probability: 51
     object_id: 5788
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0338834
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4889,11 +4889,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -6
     measurement_id: 297
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 5788
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.212853
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4912,11 +4912,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 2
     measurement_id: 298
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 9
+    raw_multi_target_probability: 9
     object_id: 7216
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.206509
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4935,11 +4935,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 5
     measurement_id: 300
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 11
+    raw_multi_target_probability: 11
     object_id: 7216
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.535027
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4958,11 +4958,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 301
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 26
+    raw_multi_target_probability: 26
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.121622
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -4981,11 +4981,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 12
     measurement_id: 303
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 14710
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.206654
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5004,11 +5004,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 2
     measurement_id: 302
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 7216
-    ambiguity_flag: 50
+    raw_ambiguity_flag: 50
   - azimuth_angle: -0.0270182
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5027,11 +5027,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -6
     measurement_id: 307
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 1607
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.201957
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5050,11 +5050,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 306
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 6
+    raw_multi_target_probability: 6
     object_id: 7216
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.123166
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5073,11 +5073,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 8
     measurement_id: 308
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 429
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.199668
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5096,11 +5096,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 4
     measurement_id: 310
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 8
+    raw_multi_target_probability: 8
     object_id: 430
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.240364
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5119,11 +5119,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -6
     measurement_id: 316
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 12
+    raw_multi_target_probability: 12
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.122259
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5142,11 +5142,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 8
     measurement_id: 318
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 429
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.202875
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5165,11 +5165,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 1
     measurement_id: 319
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 430
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.191692
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5188,11 +5188,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 1
     measurement_id: 320
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 22
+    raw_multi_target_probability: 22
     object_id: 430
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.107671
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5211,11 +5211,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 0
     measurement_id: 321
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 23
+    raw_multi_target_probability: 23
     object_id: 7577
-    ambiguity_flag: 50
+    raw_ambiguity_flag: 50
   - azimuth_angle: 0.124414
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5234,11 +5234,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 322
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 8
+    raw_multi_target_probability: 8
     object_id: 27905
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.116436
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5257,11 +5257,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 323
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 27905
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.116323
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5280,11 +5280,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 11
     measurement_id: 327
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 12952
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.179850
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5303,11 +5303,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -3
     measurement_id: 328
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 13
+    raw_multi_target_probability: 13
     object_id: 10556
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.186404
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5326,11 +5326,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -3
     measurement_id: 329
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 11
+    raw_multi_target_probability: 11
     object_id: 10556
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.204937
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5349,11 +5349,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 3
     measurement_id: 330
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 10
+    raw_multi_target_probability: 10
     object_id: 10556
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.200254
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5372,11 +5372,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 3
     measurement_id: 331
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 16
+    raw_multi_target_probability: 16
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.238409
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5395,11 +5395,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 0
     measurement_id: 333
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 14
+    raw_multi_target_probability: 14
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.114425
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5418,11 +5418,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 0
     measurement_id: 335
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 12
+    raw_multi_target_probability: 12
     object_id: 1603
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.177756
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5441,11 +5441,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 18
     measurement_id: 337
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 20
+    raw_multi_target_probability: 20
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.180907
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5464,11 +5464,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 21
     measurement_id: 341
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 28
+    raw_multi_target_probability: 28
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.116677
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5487,11 +5487,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -1
     measurement_id: 343
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 9
+    raw_multi_target_probability: 9
     object_id: 1603
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.494056
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5510,11 +5510,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 17
     measurement_id: 344
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 728
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.111868
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5533,11 +5533,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -2
     measurement_id: 345
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 1603
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.423998
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5556,11 +5556,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 16
     measurement_id: 346
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 1004
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.173635
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5579,11 +5579,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 349
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.0165741
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5602,11 +5602,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -2
     measurement_id: 352
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 6
+    raw_multi_target_probability: 6
     object_id: 710
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.113045
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5625,11 +5625,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 22
     measurement_id: 356
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 438
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0108888
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5648,11 +5648,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 1
     measurement_id: 359
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 710
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.524042
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5671,11 +5671,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 2
     measurement_id: 361
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.0179876
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5694,11 +5694,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -3
     measurement_id: 365
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 33
+    raw_multi_target_probability: 33
     object_id: 710
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.247088
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5717,11 +5717,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 17
     measurement_id: 366
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 2796
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.166552
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5740,11 +5740,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 18
     measurement_id: 368
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 18
+    raw_multi_target_probability: 18
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.110351
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5763,11 +5763,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 26
     measurement_id: 369
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 711
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.125327
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5786,11 +5786,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -1
     measurement_id: 372
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 79
+    raw_multi_target_probability: 79
     object_id: 734
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.129692
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5809,11 +5809,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 5
     measurement_id: 374
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 11
+    raw_multi_target_probability: 11
     object_id: 734
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.172875
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5832,11 +5832,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 375
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.109567
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5855,11 +5855,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 29
     measurement_id: 376
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 6651
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.162668
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5878,11 +5878,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 377
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 20
+    raw_multi_target_probability: 20
     object_id: 4586
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.109225
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5901,11 +5901,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 380
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 31
+    raw_multi_target_probability: 31
     object_id: 3685
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.110242
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5924,11 +5924,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 381
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 47
+    raw_multi_target_probability: 47
     object_id: 3685
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.111957
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5947,11 +5947,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 7
     measurement_id: 382
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 27
+    raw_multi_target_probability: 27
     object_id: 23427
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.108492
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5970,11 +5970,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 384
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 3685
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.162808
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -5993,11 +5993,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 383
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 25
+    raw_multi_target_probability: 25
     object_id: 4586
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.134201
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6016,11 +6016,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -1
     measurement_id: 386
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 3685
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.109663
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6039,11 +6039,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 2
     measurement_id: 387
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 12
+    raw_multi_target_probability: 12
     object_id: 3685
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.108027
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6062,11 +6062,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 2
     measurement_id: 389
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 3685
-    ambiguity_flag: 50
+    raw_ambiguity_flag: 50
   - azimuth_angle: 0.0823725
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6085,11 +6085,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 7
     measurement_id: 391
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 8
+    raw_multi_target_probability: 8
     object_id: 17725
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.109382
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6108,11 +6108,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 6
     measurement_id: 392
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 6
+    raw_multi_target_probability: 6
     object_id: 7555
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.131509
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6131,11 +6131,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -1
     measurement_id: 393
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.161570
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6154,11 +6154,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 16
     measurement_id: 396
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 6081
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.162680
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6177,11 +6177,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 21
     measurement_id: 397
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 0
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.133200
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6200,11 +6200,11 @@ detections:
     range_rate_std: 0.250000
     rcs: -1
     measurement_id: 399
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 17
+    raw_multi_target_probability: 17
     object_id: 13239
-    ambiguity_flag: 70
+    raw_ambiguity_flag: 70
   - azimuth_angle: 0.161752
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6223,11 +6223,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 11
     measurement_id: 398
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 24
+    raw_multi_target_probability: 24
     object_id: 0
-    ambiguity_flag: 70
+    raw_ambiguity_flag: 70
   - azimuth_angle: 0.108385
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6246,11 +6246,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 2
     measurement_id: 402
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 18
+    raw_multi_target_probability: 18
     object_id: 9958
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.158625
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6269,11 +6269,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 8
     measurement_id: 403
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 1606
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0481090
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6292,11 +6292,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 17
     measurement_id: 404
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 14445
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0162523
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6315,11 +6315,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 7
     measurement_id: 405
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 17
+    raw_multi_target_probability: 17
     object_id: 1299
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0444916
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6338,11 +6338,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 13
     measurement_id: 406
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 53
+    raw_multi_target_probability: 53
     object_id: 24332
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0673132
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6361,11 +6361,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 4
     measurement_id: 407
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 14
+    raw_multi_target_probability: 14
     object_id: 9365
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0728861
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6384,11 +6384,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 20
     measurement_id: 408
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 9365
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.103308
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6407,11 +6407,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 15
     measurement_id: 409
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 4287
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0736255
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6430,11 +6430,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 19
     measurement_id: 410
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 9365
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.100173
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6453,11 +6453,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 11
     measurement_id: 411
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 717
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0945462
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6476,11 +6476,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 4
     measurement_id: 412
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 12
+    raw_multi_target_probability: 12
     object_id: 717
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.0611591
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6499,11 +6499,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 19
     measurement_id: 413
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 8
+    raw_multi_target_probability: 8
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: 0.00975850
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6522,11 +6522,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 5
     measurement_id: 414
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 7273
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0860432
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6545,11 +6545,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 9
     measurement_id: 416
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 28
+    raw_multi_target_probability: 28
     object_id: 9650
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.100636
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6568,11 +6568,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 21
     measurement_id: 417
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 8
+    raw_multi_target_probability: 8
     object_id: 9650
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.101214
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6591,11 +6591,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 5
     measurement_id: 418
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 9650
-    ambiguity_flag: 70
+    raw_ambiguity_flag: 70
   - azimuth_angle: -0.0502327
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6614,11 +6614,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 20
     measurement_id: 419
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 6
+    raw_multi_target_probability: 6
     object_id: 20433
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0508036
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6637,11 +6637,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 21
     measurement_id: 421
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 7
+    raw_multi_target_probability: 7
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.112366
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6660,11 +6660,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 14
     measurement_id: 423
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 1600
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.109372
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6683,11 +6683,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 18
     measurement_id: 424
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 11
+    raw_multi_target_probability: 11
     object_id: 1600
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0964568
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6706,11 +6706,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 18
     measurement_id: 428
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 4883
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.113015
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6729,11 +6729,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 19
     measurement_id: 427
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 0
-    multi_target_probability: 5
+    raw_multi_target_probability: 5
     object_id: 0
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.0422297
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6752,11 +6752,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 429
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 4
+    raw_multi_target_probability: 4
     object_id: 5484
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0363042
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6775,11 +6775,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 14
     measurement_id: 430
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 0
+    raw_multi_target_probability: 0
     object_id: 5484
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0363192
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6798,11 +6798,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 12
     measurement_id: 432
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 18
+    raw_multi_target_probability: 18
     object_id: 5484
-    ambiguity_flag: 50
+    raw_ambiguity_flag: 50
   - azimuth_angle: -0.0324828
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6821,11 +6821,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 11
     measurement_id: 433
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 5484
-    ambiguity_flag: 50
+    raw_ambiguity_flag: 50
   - azimuth_angle: -0.0364788
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6844,11 +6844,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 434
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 27
+    raw_multi_target_probability: 27
     object_id: 5484
-    ambiguity_flag: 0
+    raw_ambiguity_flag: 0
   - azimuth_angle: -0.0313597
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6867,11 +6867,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 16
     measurement_id: 435
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 2
+    raw_multi_target_probability: 2
     object_id: 5484
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0332655
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6890,11 +6890,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 14
     measurement_id: 436
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 40
+    raw_multi_target_probability: 40
     object_id: 5484
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: -0.0320791
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6913,11 +6913,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 13
     measurement_id: 437
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 5484
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0942807
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6936,11 +6936,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 15
     measurement_id: 438
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 3
+    raw_multi_target_probability: 3
     object_id: 422
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0927978
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6959,11 +6959,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 10
     measurement_id: 439
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 16
+    raw_multi_target_probability: 16
     object_id: 423
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0924008
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -6982,11 +6982,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 16
     measurement_id: 440
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 1
+    raw_multi_target_probability: 1
     object_id: 423
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0990405
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -7005,11 +7005,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 18
     measurement_id: 441
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 4
-    multi_target_probability: 10
+    raw_multi_target_probability: 10
     object_id: 424
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0113207
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -7028,11 +7028,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 7
     measurement_id: 442
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 22
+    raw_multi_target_probability: 22
     object_id: 431
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0506422
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -7051,11 +7051,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 12
     measurement_id: 443
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 29
+    raw_multi_target_probability: 29
     object_id: 712
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0508674
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -7074,11 +7074,11 @@ detections:
     range_rate_std: 0.250000
     rcs: 14
     measurement_id: 444
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 13
+    raw_multi_target_probability: 13
     object_id: 712
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
   - azimuth_angle: 0.0476959
     azimuth_angle_std: 0.00872663
     invalid_distance: false
@@ -7097,8 +7097,8 @@ detections:
     range_rate_std: 0.250000
     rcs: 9
     measurement_id: 445
-    positive_predictive_value: 100
+    raw_positive_predictive_value: 100
     classification: 3
-    multi_target_probability: 12
+    raw_multi_target_probability: 12
     object_id: 9348
-    ambiguity_flag: 100
+    raw_ambiguity_flag: 100
