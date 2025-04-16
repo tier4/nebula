@@ -15,6 +15,7 @@
 #pragma once
 
 #include "nebula_ros/common/parameter_descriptors.hpp"
+#include "nebula_ros/common/sync_diag_client.hpp"
 #include "nebula_ros/common/watchdog_timer.hpp"
 
 #include <nebula_common/continental/continental_ars548.hpp>
@@ -35,8 +36,10 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
+#include <cstdint>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <unordered_set>
 #include <vector>
 
@@ -86,6 +89,8 @@ private:
   nebula::Status initialize_driver(
     const std::shared_ptr<
       const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config);
+
+  void initialize_sync_diagnostics(rclcpp::Node * parent_node);
 
   /// @brief Convert ARS548 detections to a pointcloud
   /// @param msg The ARS548 detection list msg
@@ -147,6 +152,7 @@ private:
   rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr objects_raw_pub_{};
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr objects_markers_pub_{};
   rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_{};
+  std::optional<SyncDiagClient> sync_diag_client_;
 
   std::unordered_set<int> previous_ids_{};
 
