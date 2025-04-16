@@ -55,6 +55,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   uint8_t ptp_lock_threshold;
   std::optional<std::string> downsample_mask_path;
   bool hires_mode;
+  std::optional<std::string> sync_diagnostics_topic;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
