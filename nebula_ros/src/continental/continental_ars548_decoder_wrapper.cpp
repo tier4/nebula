@@ -437,16 +437,12 @@ void ContinentalARS548DecoderWrapper::create_radar_info()
   make_field_info("position_z", ars548::position_z_info, radar_info_msg_.object_fields_info);
   make_field_info("velocity_x", ars548::velocity_x_info, radar_info_msg_.object_fields_info);
   make_field_info("velocity_y", ars548::velocity_y_info, radar_info_msg_.object_fields_info);
-  make_field_info("velocity_z", ars548::velocity_z_info, radar_info_msg_.object_fields_info);
   make_field_info(
     "acceleration_x", ars548::acceleration_x_info, radar_info_msg_.object_fields_info);
   make_field_info(
     "acceleration_y", ars548::acceleration_y_info, radar_info_msg_.object_fields_info);
-  make_field_info(
-    "acceleration_z", ars548::acceleration_z_info, radar_info_msg_.object_fields_info);
-  make_field_info("shape_x", ars548::shape_x_info, radar_info_msg_.object_fields_info);
-  make_field_info("shape_y", ars548::shape_y_info, radar_info_msg_.object_fields_info);
-  make_field_info("shape_z", ars548::shape_z_info, radar_info_msg_.object_fields_info);
+  make_field_info("size_x", ars548::size_x_info, radar_info_msg_.object_fields_info);
+  make_field_info("size_y", ars548::size_y_info, radar_info_msg_.object_fields_info);
   make_field_info("orientation", ars548::orientation_info, radar_info_msg_.object_fields_info);
   make_field_info(
     "orientation_std", ars548::orientation_std_info, radar_info_msg_.object_fields_info);

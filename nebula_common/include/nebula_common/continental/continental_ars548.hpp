@@ -349,15 +349,12 @@ const FieldInfo position_z_info{-1600.f, 1600.f, std::nullopt};
 
 const FieldInfo velocity_x_info{std::nullopt, std::nullopt, std::nullopt};
 const FieldInfo velocity_y_info{std::nullopt, std::nullopt, std::nullopt};
-const FieldInfo velocity_z_info{std::nullopt, std::nullopt, std::nullopt};
 
 const FieldInfo acceleration_x_info{std::nullopt, std::nullopt, std::nullopt};
 const FieldInfo acceleration_y_info{std::nullopt, std::nullopt, std::nullopt};
-const FieldInfo acceleration_z_info{std::nullopt, std::nullopt, std::nullopt};
 
-const FieldInfo shape_x_info{std::nullopt, std::nullopt, std::nullopt};
-const FieldInfo shape_y_info{std::nullopt, std::nullopt, std::nullopt};
-const FieldInfo shape_z_info{std::nullopt, std::nullopt, std::nullopt};
+const FieldInfo size_x_info{std::nullopt, std::nullopt, std::nullopt};
+const FieldInfo size_y_info{std::nullopt, std::nullopt, std::nullopt};
 
 const FieldInfo orientation_info{-M_PI, M_PI, std::nullopt};
 const FieldInfo orientation_std_info{0.f, std::nullopt, std::nullopt};
