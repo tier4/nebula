@@ -2,6 +2,7 @@
 
 #include "nebula_ros/hesai/hw_interface_wrapper.hpp"
 
+#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
 #include "nebula_ros/common/rclcpp_logger.hpp"
 
@@ -89,6 +90,11 @@ Status HesaiHwInterfaceWrapper::status()
 std::shared_ptr<drivers::HesaiHwInterface> HesaiHwInterfaceWrapper::hw_interface() const
 {
   return hw_interface_;
+}
+
+std::shared_ptr<const HesaiInventoryBase> HesaiHwInterfaceWrapper::inventory() const
+{
+  return inventory_;
 }
 
 }  // namespace nebula::ros
