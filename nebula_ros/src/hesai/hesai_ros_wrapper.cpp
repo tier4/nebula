@@ -28,9 +28,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   wrapper_status_(Status::NOT_INITIALIZED),
   sensor_cfg_ptr_(nullptr),
-  hw_interface_wrapper_(),
-  hw_monitor_wrapper_(),
-  decoder_wrapper_()
+  diagnostic_updater_(this)
 {
   setvbuf(stdout, nullptr, _IONBF, BUFSIZ);
 
@@ -96,6 +94,12 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
       get_logger(),
       "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
   }
+
+  auto hardware_id = hw_interface_wrapper_ && hw_interface_wrapper_->inventory()
+                       ? hw_interface_wrapper_->inventory()->to_hardware_id()
+                       : "none";
+
+  diagnostic_updater_.setHardwareID(hardware_id);
 
   // Register parameter callback after all params have been declared. Otherwise it would be called
   // once for each declaration
