@@ -56,8 +56,8 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
 
   if (status_ == Status::OK) {
     try {
-      auto inventory = hw_interface_->get_inventory();
-      hw_interface_->set_target_model(inventory->model_number());
+      inventory_ = hw_interface_->get_inventory();
+      hw_interface_->set_target_model(inventory_->model_number());
     } catch (...) {
       RCLCPP_ERROR_STREAM(logger_, "Failed to get model from sensor...");
     }
