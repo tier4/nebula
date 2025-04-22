@@ -28,7 +28,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   wrapper_status_(Status::NOT_INITIALIZED),
   sensor_cfg_ptr_(nullptr),
-  diagnostic_updater_(this)
+  diagnostic_updater_((declare_parameter<bool>("diagnostic_updater.use_fqn", true), this))
 {
   setvbuf(stdout, nullptr, _IONBF, BUFSIZ);
 
@@ -53,7 +53,8 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   if (launch_hw_) {
     hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_, use_udp_only);
     if (!use_udp_only) {  // hardware monitor requires TCP connection
-      hw_monitor_wrapper_.emplace(this, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
+      hw_monitor_wrapper_.emplace(
+        this, diagnostic_updater_, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
     }
   }
 
