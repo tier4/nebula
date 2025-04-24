@@ -50,6 +50,10 @@ struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
   float configuration_vehicle_width{};
   float configuration_vehicle_height{};
   float configuration_vehicle_wheelbase{};
+  float min_expected_detections_rate_hz{};
+  float max_expected_detections_rate_hz{};
+  float min_expected_object_rate_hz{};
+  float max_expected_object_rate_hz{};
 };
 
 /// @brief Convert ContinentalARS548SensorConfiguration to string (Overloading the <<

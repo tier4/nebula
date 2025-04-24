@@ -90,14 +90,22 @@ nebula::Status ContinentalARS548RosWrapper::declare_and_get_sensor_config_params
   config.configuration_sensor_port =
     static_cast<uint16_t>(declare_parameter<int>("configuration_sensor_port", param_read_only()));
   config.use_sensor_time = declare_parameter<bool>("use_sensor_time", param_read_write());
-  config.configuration_vehicle_length = static_cast<float>(
-    declare_parameter<double>("configuration_vehicle_length", param_read_write()));
-  config.configuration_vehicle_width = static_cast<float>(
-    declare_parameter<double>("configuration_vehicle_width", param_read_write()));
-  config.configuration_vehicle_height = static_cast<float>(
-    declare_parameter<double>("configuration_vehicle_height", param_read_write()));
-  config.configuration_vehicle_wheelbase = static_cast<float>(
-    declare_parameter<double>("configuration_vehicle_wheelbase", param_read_write()));
+  config.configuration_vehicle_length =
+    declare_parameter<float>("configuration_vehicle_length", param_read_write());
+  config.configuration_vehicle_width =
+    declare_parameter<float>("configuration_vehicle_width", param_read_write());
+  config.configuration_vehicle_height =
+    declare_parameter<float>("configuration_vehicle_height", param_read_write());
+  config.configuration_vehicle_wheelbase =
+    declare_parameter<float>("configuration_vehicle_wheelbase", param_read_write());
+  config.min_expected_detections_rate_hz =
+    declare_parameter<float>("min_expected_detections_rate_hz", param_read_only());
+  config.max_expected_detections_rate_hz =
+    declare_parameter<float>("max_expected_detections_rate_hz", param_read_only());
+  config.min_expected_object_rate_hz =
+    declare_parameter<float>("min_expected_object_rate_hz", param_read_only());
+  config.max_expected_object_rate_hz =
+    declare_parameter<float>("max_expected_object_rate_hz", param_read_only());
 
   if (config.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
