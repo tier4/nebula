@@ -639,7 +639,7 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
   }
 
   radar_status_.status_total_count++;
-  radar_status_.radar_invalid_count += sensor_status_packet.radar_status == 2 ? 1 : 0;
+  radar_status_.radar_invalid_count += sensor_status_packet.radar_status == state_invalid ? 1 : 0;
 
   if (sensor_status_callback_) {
     sensor_status_callback_(radar_status_);

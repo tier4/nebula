@@ -81,8 +81,12 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   objects_markers_pub_ =
     parent_node->create_publisher<visualization_msgs::msg::MarkerArray>("marker_array", 10);
 
-  diagnostics_pub_ =
-    parent_node->create_publisher<diagnostic_msgs::msg::DiagnosticArray>("diagnostics", 10);
+  continental_diagnostics_pub_ =
+    parent_node->create_publisher<diagnostic_msgs::msg::DiagnosticArray>(
+      "continental_diagnostics", 10);
+
+  autoware_diagnostics_pub_ = parent_node->create_publisher<diagnostic_msgs::msg::DiagnosticArray>(
+    "autoware_diagnostics", 10);
 
   RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
 
@@ -91,6 +95,12 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
       if (ok) return;
       RCLCPP_WARN_THROTTLE(logger_, *parent_node->get_clock(), 5000, "Missed output deadline");
     });
+
+  detections_rate_checker_ptr_ = std::make_unique<nebula::util::RateChecker>(
+    config_ptr_->min_expected_detections_rate_hz, config_ptr_->max_expected_detections_rate_hz,
+    100);
+  objects_rate_checker_ptr_ = std::make_unique<nebula::util::RateChecker>(
+    config_ptr_->min_expected_object_rate_hz, config_ptr_->max_expected_object_rate_hz, 100);
 }
 
 Status ContinentalARS548DecoderWrapper::initialize_driver(
@@ -135,6 +145,8 @@ void ContinentalARS548DecoderWrapper::process_packet(
 void ContinentalARS548DecoderWrapper::detection_list_callback(
   std::unique_ptr<continental_msgs::msg::ContinentalArs548DetectionList> msg)
 {
+  detections_rate_checker_ptr_->update(msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9);
+
   if (
     detection_pointcloud_pub_->get_subscription_count() > 0 ||
     detection_pointcloud_pub_->get_intra_process_subscription_count() > 0) {
@@ -164,6 +176,8 @@ void ContinentalARS548DecoderWrapper::detection_list_callback(
 void ContinentalARS548DecoderWrapper::object_list_callback(
   std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg)
 {
+  objects_rate_checker_ptr_->update(msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9);
+
   if (
     object_pointcloud_pub_->get_subscription_count() > 0 ||
     object_pointcloud_pub_->get_intra_process_subscription_count() > 0) {
@@ -198,6 +212,22 @@ void ContinentalARS548DecoderWrapper::object_list_callback(
 }
 
 void ContinentalARS548DecoderWrapper::sensor_status_callback(
+  const drivers::continental_ars548::ContinentalARS548Status & sensor_status)
+{
+  if (
+    continental_diagnostics_pub_->get_subscription_count() > 0 ||
+    continental_diagnostics_pub_->get_intra_process_subscription_count() > 0) {
+    parse_continental_diagnostics(sensor_status);
+  }
+
+  if (
+    autoware_diagnostics_pub_->get_subscription_count() > 0 ||
+    autoware_diagnostics_pub_->get_intra_process_subscription_count() > 0) {
+    parse_autoware_diagnostics(sensor_status);
+  }
+}
+
+void ContinentalARS548DecoderWrapper::parse_continental_diagnostics(
   const drivers::continental_ars548::ContinentalARS548Status & sensor_status)
 {
   diagnostic_msgs::msg::DiagnosticArray diagnostic_array_msg;
@@ -325,7 +355,125 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
   add_diagnostic("status_total_count", std::to_string(sensor_status.status_total_count));
   add_diagnostic("radar_invalid_count", std::to_string(sensor_status.radar_invalid_count));
 
-  diagnostics_pub_->publish(diagnostic_array_msg);
+  continental_diagnostics_pub_->publish(diagnostic_array_msg);
+}
+
+void ContinentalARS548DecoderWrapper::parse_autoware_diagnostics(
+  const drivers::continental_ars548::ContinentalARS548Status & sensor_status)
+{
+  diagnostic_msgs::msg::DiagnosticArray diagnostic_array_msg;
+  diagnostic_array_msg.header.stamp.sec = sensor_status.timestamp_seconds;
+  diagnostic_array_msg.header.stamp.nanosec = sensor_status.timestamp_nanoseconds;
+  diagnostic_array_msg.header.frame_id = config_ptr_->frame_id;
+
+  auto add_diagnostic = [](
+                          diagnostic_msgs::msg::DiagnosticStatus & status, const std::string & key,
+                          const std::string & value) {
+    diagnostic_msgs::msg::KeyValue key_value;
+    key_value.key = key;
+    key_value.value = value;
+    status.values.push_back(key_value);
+  };
+
+  // Dynamics status
+  diagnostic_msgs::msg::DiagnosticStatus dynamics_diagnostic_status;
+
+  add_diagnostic(
+    dynamics_diagnostic_status, "longitudinal_velocity_status",
+    sensor_status.longitudinal_velocity_status);
+  add_diagnostic(
+    dynamics_diagnostic_status, "longitudinal_acceleration_status",
+    sensor_status.longitudinal_acceleration_status);
+  add_diagnostic(
+    dynamics_diagnostic_status, "lateral_acceleration_status",
+    sensor_status.lateral_acceleration_status);
+  add_diagnostic(dynamics_diagnostic_status, "yaw_rate_status", sensor_status.yaw_rate_status);
+  add_diagnostic(
+    dynamics_diagnostic_status, "steering_angle_status", sensor_status.steering_angle_status);
+  add_diagnostic(
+    dynamics_diagnostic_status, "driving_direction_status", sensor_status.driving_direction_status);
+
+  dynamics_diagnostic_status.hardware_id = config_ptr_->frame_id + "_dynamics";
+  dynamics_diagnostic_status.name = config_ptr_->frame_id + "_dynamics";
+  dynamics_diagnostic_status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  dynamics_diagnostic_status.message = "ARS548 dynamics status";
+
+  for (const auto & value : dynamics_diagnostic_status.values) {
+    if (value.value != "0:VDY_OK") {
+      dynamics_diagnostic_status.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+    }
+  }
+
+  diagnostic_array_msg.status.push_back(dynamics_diagnostic_status);
+
+  // Internal status
+  diagnostic_msgs::msg::DiagnosticStatus internal_diagnostic_status;
+
+  add_diagnostic(internal_diagnostic_status, "radar_status", sensor_status.radar_status);
+  add_diagnostic(internal_diagnostic_status, "voltage_status", sensor_status.voltage_status);
+  add_diagnostic(
+    internal_diagnostic_status, "temperature_status", sensor_status.temperature_status);
+
+  internal_diagnostic_status.hardware_id = config_ptr_->frame_id + "_internal";
+  internal_diagnostic_status.name = config_ptr_->frame_id + "_internal";
+  internal_diagnostic_status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  internal_diagnostic_status.message = "ARS548 internal signals";
+
+  if (
+    sensor_status.radar_status != "1:STATE_OK" || sensor_status.voltage_status != "Ok" ||
+    sensor_status.temperature_status != "Ok") {
+    internal_diagnostic_status.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+  } else {
+    internal_diagnostic_status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  }
+
+  diagnostic_array_msg.status.push_back(internal_diagnostic_status);
+
+  // Blockage status
+  diagnostic_msgs::msg::DiagnosticStatus blockage_diagnostic_status;
+
+  add_diagnostic(blockage_diagnostic_status, "blockage_status", sensor_status.blockage_status);
+  blockage_diagnostic_status.hardware_id = config_ptr_->frame_id + "_blockage";
+  blockage_diagnostic_status.name = config_ptr_->frame_id + "_blockage";
+  blockage_diagnostic_status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  blockage_diagnostic_status.message = "ARS548 blockage status";
+  if (sensor_status.blockage_status != "4:None. 1:Self test passed") {
+    blockage_diagnostic_status.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+  } else {
+    blockage_diagnostic_status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  }
+
+  diagnostic_array_msg.status.push_back(blockage_diagnostic_status);
+
+  // Data rate
+  diagnostic_msgs::msg::DiagnosticStatus rate_diagnostic_status;
+  rate_diagnostic_status.hardware_id = config_ptr_->frame_id + "_rate";
+  rate_diagnostic_status.name = config_ptr_->frame_id + "_rate";
+  rate_diagnostic_status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+
+  if (detections_rate_checker_ptr_->is_full()) {
+    add_diagnostic(
+      rate_diagnostic_status, "detections_rate",
+      std::to_string(detections_rate_checker_ptr_->get_average()) + " Hz");
+
+    if (!detections_rate_checker_ptr_->is_valid()) {
+      rate_diagnostic_status.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+    }
+  }
+
+  if (objects_rate_checker_ptr_->is_full()) {
+    add_diagnostic(
+      rate_diagnostic_status, "objects_rate",
+      std::to_string(objects_rate_checker_ptr_->get_average()) + " Hz");
+
+    if (!objects_rate_checker_ptr_->is_valid()) {
+      rate_diagnostic_status.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+    }
+  }
+
+  diagnostic_array_msg.status.push_back(rate_diagnostic_status);
+
+  autoware_diagnostics_pub_->publish(diagnostic_array_msg);
 }
 
 void ContinentalARS548DecoderWrapper::packets_callback(

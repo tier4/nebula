@@ -20,6 +20,7 @@
 #include <nebula_common/continental/continental_ars548.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/util/expected.hpp>
+#include <nebula_common/util/rate_checker.hpp>
 #include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -74,12 +75,12 @@ public:
     std::unique_ptr<continental_msgs::msg::ContinentalArs548ObjectList> msg);
 
   /// @brief Callback to process new ContinentalARS548Status from the driver
-  /// @param msg The new ContinentalArs548ObjectList from the driver
+  /// @param msg The new ContinentalARS548Status from the driver
   void sensor_status_callback(
     const drivers::continental_ars548::ContinentalARS548Status & sensor_status);
 
-  /// @brief Callback to process new ContinentalARS548Status from the driver
-  /// @param msg The new ContinentalArs548ObjectList from the driver
+  /// @brief Callback to process new NebulaPackets from the driver
+  /// @param msg The new NebulaPackets from the driver
   void packets_callback(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg);
 
 private:
@@ -117,6 +118,17 @@ private:
   visualization_msgs::msg::MarkerArray convert_to_markers(
     const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 
+  /// @brief Parse ContinentalARS548Status from the driver as as a diagnostic message and publish it
+  /// @param msg The new ContinentalARS548Status from the driver
+  void parse_continental_diagnostics(
+    const drivers::continental_ars548::ContinentalARS548Status & sensor_status);
+
+  /// @brief Parse ContinentalARS548Status from the driver as as a autoware-compliant diagnostic
+  /// message and publish it
+  /// @param msg The new ContinentalARS548Status from the driver
+  void parse_autoware_diagnostics(
+    const drivers::continental_ars548::ContinentalARS548Status & sensor_status);
+
   /// @brief Convert seconds to chrono::nanoseconds
   /// @param seconds
   /// @return chrono::nanoseconds
@@ -146,7 +158,9 @@ private:
   rclcpp::Publisher<radar_msgs::msg::RadarScan>::SharedPtr scan_raw_pub_{};
   rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr objects_raw_pub_{};
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr objects_markers_pub_{};
-  rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_{};
+  rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr
+    continental_diagnostics_pub_{};
+  rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr autoware_diagnostics_pub_{};
 
   std::unordered_set<int> previous_ids_{};
 
@@ -163,5 +177,7 @@ private:
      {{0.0, 0.0}}}};
 
   std::shared_ptr<WatchdogTimer> watchdog_;
+  std::unique_ptr<nebula::util::RateChecker> detections_rate_checker_ptr_;
+  std::unique_ptr<nebula::util::RateChecker> objects_rate_checker_ptr_;
 };
 }  // namespace nebula::ros
