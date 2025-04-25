@@ -54,7 +54,7 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
 
   if (launch_hw_) {
     hw_interface_wrapper_->hw_interface()->register_scan_callback(
-      std::bind(&VelodyneRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1));
+      [this](const auto & packet) { receive_cloud_packet_callback(packet); });
     stream_start();
   } else {
     packets_sub_ = create_subscription<velodyne_msgs::msg::VelodyneScan>(
@@ -69,6 +69,13 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
   // once for each declaration
   parameter_event_cb_ = add_on_set_parameters_callback(
     std::bind(&VelodyneRosWrapper::on_parameter_change, this, std::placeholders::_1));
+}
+
+VelodyneRosWrapper::~VelodyneRosWrapper() noexcept
+{
+  if (!hw_interface_wrapper_) return;
+  if (!hw_interface_wrapper_->hw_interface()) return;
+  hw_interface_wrapper_->hw_interface()->sensor_interface_stop();
 }
 
 nebula::Status VelodyneRosWrapper::declare_and_get_sensor_config_params()
@@ -131,7 +138,13 @@ Status VelodyneRosWrapper::validate_and_set_config(
   if (new_config->frame_id.empty()) {
     return Status::SENSOR_CONFIG_ERROR;
   }
-
+  if (new_config->host_ip == "255.255.255.255") {
+    RCLCPP_ERROR(
+      get_logger(),
+      "Due to potential network performance issues when using IP broadcast for sensor data, Nebula "
+      "disallows use of the broadcast IP. Please specify the concrete host IP instead.");
+    return Status::SENSOR_CONFIG_ERROR;
+  }
   if (hw_interface_wrapper_) {
     hw_interface_wrapper_->on_config_change(new_config);
   }
@@ -238,7 +251,7 @@ rcl_interfaces::msg::SetParametersResult VelodyneRosWrapper::on_parameter_change
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-void VelodyneRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & packet)
+void VelodyneRosWrapper::receive_cloud_packet_callback(const std::vector<uint8_t> & packet)
 {
   if (!decoder_wrapper_ || decoder_wrapper_->status() != Status::OK) {
     return;
@@ -251,7 +264,7 @@ void VelodyneRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & pa
   auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
   msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
-  msg_ptr->data.swap(packet);
+  msg_ptr->data = packet;
 
   decoder_wrapper_->process_cloud_packet(std::move(msg_ptr));
 }

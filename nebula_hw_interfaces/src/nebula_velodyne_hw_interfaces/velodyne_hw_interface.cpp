@@ -8,15 +8,14 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace nebula::drivers
 {
 using std::string_literals::operator""s;
 
 VelodyneHwInterface::VelodyneHwInterface(const std::shared_ptr<loggers::Logger> & logger)
-: cloud_io_context_{new ::drivers::common::IoContext(1)},
-  cloud_udp_driver_{new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)},
-  boost_ctx_{new boost::asio::io_context()},
+: boost_ctx_{new boost::asio::io_context()},
   http_client_driver_{new ::drivers::tcp_driver::HttpClientDriver(boost_ctx_)},
   logger_{logger}
 {
@@ -62,31 +61,27 @@ Status VelodyneHwInterface::set_sensor_configuration(
 
 Status VelodyneHwInterface::sensor_interface_start()
 {
-  try {
-    cloud_udp_driver_->init_receiver(
-      sensor_configuration_->host_ip, sensor_configuration_->data_port);
-    cloud_udp_driver_->receiver()->open();
-    cloud_udp_driver_->receiver()->bind();
-    cloud_udp_driver_->receiver()->asyncReceive(
-      std::bind(&VelodyneHwInterface::receive_sensor_packet_callback, this, std::placeholders::_1));
-  } catch (const std::exception & ex) {
-    Status status = Status::UDP_CONNECTION_ERROR;
-    logger_->error(
-      util::to_string(status) + " " + sensor_configuration_->sensor_ip + "," +
-      std::to_string(sensor_configuration_->data_port));
-    return status;
-  }
+  auto builder = connections::UdpSocket::Builder(
+    sensor_configuration_->host_ip, sensor_configuration_->data_port);
+
+  udp_socket_.emplace(std::move(builder).bind());
+  udp_socket_->subscribe([&](
+                           const std::vector<uint8_t> & packet,
+                           const connections::UdpSocket::RxMetadata & /* metadata */) {
+    receive_sensor_packet_callback(packet);
+  });
+
   return Status::OK;
 }
 
 Status VelodyneHwInterface::register_scan_callback(
-  std::function<void(std::vector<uint8_t> & packet)> scan_callback)
+  std::function<void(const std::vector<uint8_t> & packet)> scan_callback)
 {
   cloud_packet_callback_ = std::move(scan_callback);
   return Status::OK;
 }
 
-void VelodyneHwInterface::receive_sensor_packet_callback(std::vector<uint8_t> & buffer)
+void VelodyneHwInterface::receive_sensor_packet_callback(const std::vector<uint8_t> & buffer)
 {
   if (!cloud_packet_callback_) {
     return;
@@ -96,7 +91,10 @@ void VelodyneHwInterface::receive_sensor_packet_callback(std::vector<uint8_t> & 
 }
 Status VelodyneHwInterface::sensor_interface_stop()
 {
-  return Status::ERROR_1;
+  if (udp_socket_) {
+    udp_socket_->unsubscribe();
+  }
+  return Status::OK;
 }
 
 Status VelodyneHwInterface::get_sensor_configuration(SensorConfigurationBase & sensor_configuration)
