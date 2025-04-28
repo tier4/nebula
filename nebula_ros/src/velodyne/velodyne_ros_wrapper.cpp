@@ -71,13 +71,6 @@ VelodyneRosWrapper::VelodyneRosWrapper(const rclcpp::NodeOptions & options)
     std::bind(&VelodyneRosWrapper::on_parameter_change, this, std::placeholders::_1));
 }
 
-VelodyneRosWrapper::~VelodyneRosWrapper() noexcept
-{
-  if (!hw_interface_wrapper_) return;
-  if (!hw_interface_wrapper_->hw_interface()) return;
-  hw_interface_wrapper_->hw_interface()->sensor_interface_stop();
-}
-
 nebula::Status VelodyneRosWrapper::declare_and_get_sensor_config_params()
 {
   nebula::drivers::VelodyneSensorConfiguration config;

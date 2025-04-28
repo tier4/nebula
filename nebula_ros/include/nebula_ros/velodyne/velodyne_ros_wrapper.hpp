@@ -51,7 +51,6 @@ class VelodyneRosWrapper final : public rclcpp::Node
 {
 public:
   explicit VelodyneRosWrapper(const rclcpp::NodeOptions & options);
-  ~VelodyneRosWrapper() noexcept;
 
   /// @brief Get current status of this driver
   /// @return Current status

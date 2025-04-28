@@ -53,10 +53,11 @@ namespace nebula::drivers
 class VelodyneHwInterface
 {
 private:
-  std::optional<connections::UdpSocket> udp_socket_;
   std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration_;
-  std::function<void(const std::vector<uint8_t> &)>
-    cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
+  /**This function pointer is called when the scan is complete*/
+  std::function<void(const std::vector<uint8_t> &)> cloud_packet_callback_;
+  // Calls the above `cloud_packet_callback_` and thus has to be destroyed before it.
+  std::optional<connections::UdpSocket> udp_socket_;
 
   std::shared_ptr<boost::asio::io_context> boost_ctx_;
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> http_client_driver_;
