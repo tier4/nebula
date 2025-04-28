@@ -12,6 +12,7 @@
     configuration_host_port: 42401
     configuration_sensor_port: 42101
     use_sensor_time: false
+    radar_info_rate_subsample: 10
     configuration_vehicle_length: 4.89
     configuration_vehicle_width: 1.896
     configuration_vehicle_height: 2.5

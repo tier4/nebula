@@ -23,6 +23,7 @@
 #include <pcl/point_types.h>
 
 #include <iostream>
+#include <optional>
 #include <string>
 
 namespace nebula
@@ -46,6 +47,7 @@ struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
   uint16_t configuration_host_port{};
   uint16_t configuration_sensor_port{};
   bool use_sensor_time{};
+  int radar_info_rate_subsample{};
   float configuration_vehicle_length{};
   float configuration_vehicle_width{};
   float configuration_vehicle_height{};
@@ -68,6 +70,7 @@ inline std::ostream & operator<<(
   os << "Host Port: " << arg.configuration_host_port << '\n';
   os << "Sensor Port: " << arg.configuration_sensor_port << '\n';
   os << "UseSensor Time: " << arg.use_sensor_time << '\n';
+  os << "RadarInfo Rate Subsample: " << arg.radar_info_rate_subsample << '\n';
   os << "Vehicle Length: " << arg.configuration_vehicle_length << '\n';
   os << "Vehicle Width: " << arg.configuration_vehicle_width << '\n';
   os << "Vehicle Height: " << arg.configuration_vehicle_height << '\n';
@@ -246,12 +249,23 @@ constexpr int object_filter_properties_num = 24;
 constexpr int max_detections = 800;
 constexpr int max_objects = 50;
 
+constexpr int measurement_status_measured = 0;
+constexpr int measurement_status_predicted = 1;
+constexpr int measurement_status_new = 2;
+constexpr int measurement_status_invalid = 255;
+
+constexpr int movement_status_dynamic = 0;
+constexpr int movement_status_static = 1;
+constexpr int movement_status_invalid = 255;
+
 constexpr int sync_ok = 1;
 constexpr int never_sync = 2;
 constexpr int sync_lost = 3;
 
 constexpr int plug_right = 0;
 constexpr int plug_left = 1;
+
+constexpr float raw_prob_norm = 100.f;
 
 constexpr int maximum_distance_min_value = 93;
 constexpr int maximum_distance_max_value = 1514;
@@ -291,6 +305,63 @@ constexpr int blockage_test_ongoing = 2;
 
 constexpr int min_odometry_hz = 10;
 constexpr int max_odometry_hz = 50;
+
+struct FieldInfo
+{
+  FieldInfo(
+    std::optional<float> min_value, std::optional<float> max_value,
+    std::optional<float> resolution) noexcept
+  : min_value(min_value), max_value(max_value), resolution(resolution)
+  {
+  }
+  std::optional<float> min_value;
+  std::optional<float> max_value;
+  std::optional<float> resolution;
+};
+
+// Detection field infos
+const FieldInfo azimuth_info{-M_PI, M_PI, std::nullopt};
+const FieldInfo azimuth_std_info{0.f, 1.f, std::nullopt};
+const FieldInfo elevation_info{-M_PI, M_PI, std::nullopt};
+const FieldInfo elevation_std_info{0.f, 1.f, std::nullopt};
+
+const FieldInfo range_info{0.f, 301.f, std::nullopt};
+const FieldInfo range_std_info{0.f, 1.f, std::nullopt};
+const FieldInfo range_rate_info{-100.f, 100.f, 0.f};
+const FieldInfo range_rate_std_info{0.f, 1.f, std::nullopt};
+
+const FieldInfo rcs_info{-128.f, 127.f, 1.f};
+const FieldInfo measurement_id_info{0.f, 65535.f, 1.f};
+const FieldInfo positive_predictive_value_info{0.f, 100.f, 1.f};
+const FieldInfo classification_info{0.f, 255.f, 1.f};
+const FieldInfo multi_target_probability_info{0.f, 1.f, 0.01f};
+const FieldInfo object_id_info{0.f, 65535.f, 1.f};
+const FieldInfo ambiguity_flag_info{0.f, 1.f, 0.01f};
+
+// Object field infos
+const FieldInfo age_info{0.f, 65535.f, 1.f};
+const FieldInfo measurement_status_info{0.f, 255.f, 1.f};
+const FieldInfo movement_status_info{0.f, 255.f, 1.f};
+
+const FieldInfo position_x_info{-1600.f, 1600.f, std::nullopt};
+const FieldInfo position_y_info{-1600.f, 1600.f, std::nullopt};
+const FieldInfo position_z_info{-1600.f, 1600.f, std::nullopt};
+
+const FieldInfo velocity_x_info{std::nullopt, std::nullopt, std::nullopt};
+const FieldInfo velocity_y_info{std::nullopt, std::nullopt, std::nullopt};
+
+const FieldInfo acceleration_x_info{std::nullopt, std::nullopt, std::nullopt};
+const FieldInfo acceleration_y_info{std::nullopt, std::nullopt, std::nullopt};
+
+const FieldInfo size_x_info{std::nullopt, std::nullopt, std::nullopt};
+const FieldInfo size_y_info{std::nullopt, std::nullopt, std::nullopt};
+
+const FieldInfo orientation_info{-M_PI, M_PI, std::nullopt};
+const FieldInfo orientation_std_info{0.f, std::nullopt, std::nullopt};
+const FieldInfo orientation_rate_info{std::nullopt, std::nullopt, std::nullopt};
+const FieldInfo orientation_rate_std_info{0.f, std::nullopt, std::nullopt};
+
+const FieldInfo existence_probability_info{0.f, 1.f, 0.01f};
 
 #pragma pack(push, 1)
 
@@ -339,11 +410,11 @@ struct DetectionPacket
   big_float32_buf_t range_rate_std{};
   int8_t rcs{};
   big_uint16_buf_t measurement_id{};
-  uint8_t positive_predictive_value{};
+  uint8_t raw_positive_predictive_value{};
   uint8_t classification{};
-  uint8_t multi_target_probability{};
+  uint8_t raw_multi_target_probability{};
   big_uint16_buf_t object_id{};
-  uint8_t ambiguity_flag{};
+  uint8_t raw_ambiguity_flag{};
   big_uint16_buf_t sort_index{};
 };
 
@@ -398,16 +469,16 @@ struct ObjectPacket
   big_float32_buf_t position_orientation{};
   big_float32_buf_t position_orientation_std{};
   uint8_t existence_invalid_flags{};
-  big_float32_buf_t existence_probability{};
+  big_float32_buf_t raw_existence_probability{};
   big_float32_buf_t existence_ppv{};
-  uint8_t classification_car{};
-  uint8_t classification_truck{};
-  uint8_t classification_motorcycle{};
-  uint8_t classification_bicycle{};
-  uint8_t classification_pedestrian{};
-  uint8_t classification_animal{};
-  uint8_t classification_hazard{};
-  uint8_t classification_unknown{};
+  uint8_t raw_classification_car{};
+  uint8_t raw_classification_truck{};
+  uint8_t raw_classification_motorcycle{};
+  uint8_t raw_classification_bicycle{};
+  uint8_t raw_classification_pedestrian{};
+  uint8_t raw_classification_animal{};
+  uint8_t raw_classification_hazard{};
+  uint8_t raw_classification_unknown{};
   uint8_t classification_overdrivable{};
   uint8_t classification_underdrivable{};
   uint8_t dynamics_abs_vel_invalid_flags{};
@@ -595,6 +666,12 @@ struct FilterStatusPacket
 };
 
 #pragma pack(pop)
+
+template <typename T>
+inline float normalize_probability(T & raw_prob)
+{
+  return static_cast<float>(raw_prob) / raw_prob_norm;
+};
 
 struct EIGEN_ALIGN16 PointARS548Detection
 {
