@@ -1,6 +1,6 @@
 /**:
   ros__parameters:
-    host_ip: 255.255.255.255
+    host_ip: 192.168.1.10
     sensor_ip: 192.168.1.201
     data_port: 2368
     gnss_port: 2369
