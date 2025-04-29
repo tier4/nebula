@@ -89,7 +89,7 @@ private:
 
   std::optional<point_filters::DownsampleMaskFilter> mask_filter_;
 
-  /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
+  /// @brief Validates and parse PandarPacket. Checks size and, if present, CRC checksums.
   /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
   bool parse_packet(const std::vector<uint8_t> & packet)
@@ -100,14 +100,13 @@ private:
                                                  << sizeof(typename SensorT::packet_t));
       return false;
     }
-    if (std::memcpy(&packet_, packet.data(), sizeof(typename SensorT::packet_t))) {
-      // FIXME(mojomex) do validation?
-      // RCLCPP_DEBUG(logger_, "Packet parsed successfully");
-      return true;
+
+    if (!std::memcpy(&packet_, packet.data(), sizeof(typename SensorT::packet_t))) {
+      logger_->error("Packet memcopy failed");
+      return false;
     }
 
-    logger_->error("Packet memcopy failed");
-    return false;
+    return true;
   }
 
   /// @brief Converts a group of returns (i.e. 1 for single return, 2 for dual return, etc.) to
@@ -284,6 +283,11 @@ public:
   int unpack(const std::vector<uint8_t> & packet) override
   {
     if (!parse_packet(packet)) {
+      return -1;
+    }
+
+    // Note that not all packet formats have CRC. In those cases, these checks always succeed.
+    if (!hesai_packet::is_crc_valid(packet_.body) || !hesai_packet::is_crc_valid(packet_.tail)) {
       return -1;
     }
 
