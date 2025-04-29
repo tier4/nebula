@@ -82,10 +82,11 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
      << " (" << len << ") ";
   std::string log_tag = ss.str();
 
-  logger_->debug(log_tag + "Entering lock");
+  logger_->debug(log_tag + "Creating promise");
 
-  std::timed_mutex tm;
-  tm.lock();
+  // Use promise/future instead of timed mutex
+  auto promise = std::make_shared<std::promise<void>>();
+  auto future = promise->get_future();
 
   logger_->debug(log_tag + "Sending payload");
   tcp_socket_->async_ptc_request(
@@ -123,24 +124,33 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::SendReceive(
       recv_buf->insert(recv_buf->end(), std::next(payload_bytes.begin(), 8), payload_bytes.end());
       *response_complete = true;
     },
-    [this, log_tag, &tm]() {
-      logger_->debug(log_tag + "Unlocking mutex");
-      tm.unlock();
-      logger_->debug(log_tag + "Unlocked mutex");
+    [this, log_tag, promise]() {
+      logger_->debug(log_tag + "Setting promise value");
+      promise->set_value();
+      logger_->debug(log_tag + "Promise value set");
     });
-  if (!tm.try_lock_for(std::chrono::seconds(1))) {
+
+  // Wait for the future with timeout
+  auto status = future.wait_for(std::chrono::seconds(1));
+  if (status == std::future_status::timeout) {
     logger_->error(log_tag + "Request did not finish within 1s");
     error_code->error_flags |= TCP_ERROR_TIMEOUT;
+    // We did not get a response within one second, and there could have been a multitude of reasons
+    // for that, such as temporary sensor-side loss of power. To guarantee a valid state for the
+    // next request, we close the socket, and it automatically reopens on the next request.
+    tcp_socket_->close();
     return *error_code;
   }
 
   if (!response_complete) {
     logger_->error(log_tag + "Did not receive response");
     error_code->error_flags |= TCP_ERROR_INCOMPLETE_RESPONSE;
+    tcp_socket_->close();
     return *error_code;
   }
 
   if (!error_code->ok()) {
+    tcp_socket_->close();
     return *error_code;
   }
 

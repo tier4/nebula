@@ -71,10 +71,23 @@ private:
 
   struct MsgBuffers
   {
-    msghdr msg{};
+    explicit MsgBuffers(std::vector<uint8_t> & receive_buffer)
+    {
+      iov.iov_base = receive_buffer.data();
+      iov.iov_len = receive_buffer.size();
+
+      msg.msg_iov = &iov;
+      msg.msg_iovlen = 1;
+      msg.msg_control = control.data();
+      msg.msg_controllen = control.size();
+      msg.msg_name = &sender_addr;
+      msg.msg_namelen = sizeof(sender_addr);
+    }
+
     iovec iov{};
-    std::array<std::byte, 1024> control;
-    sockaddr_in sender_addr;
+    std::array<std::byte, 1024> control{};
+    sockaddr_in sender_addr{};
+    msghdr msg{};
   };
 
   class DropMonitor
@@ -285,7 +298,7 @@ private:
         if (!data_available.value()) continue;
 
         buffer.resize(buffer_size_);
-        auto msg_header = make_msg_header(buffer);
+        MsgBuffers msg_header{buffer};
 
         ssize_t recv_result = recvmsg(sock_fd_, &msg_header.msg, MSG_TRUNC);
         if (recv_result < 0) throw SocketError(errno);
@@ -341,28 +354,6 @@ private:
     std::array<char, INET_ADDRSTRLEN> sender_name;
     inet_ntop(AF_INET, &sender_addr.sin_addr, sender_name.data(), INET_ADDRSTRLEN);
     return std::strncmp(sender_->ip.c_str(), sender_name.data(), INET_ADDRSTRLEN) == 0;
-  }
-
-  MsgBuffers make_msg_header(std::vector<uint8_t> & receive_buffer) const
-  {
-    msghdr msg{};
-    iovec iov{};
-    std::array<std::byte, 1024> control;
-
-    sockaddr_in sender_addr;
-    socklen_t sender_addr_len = sizeof(sender_addr);
-
-    iov.iov_base = receive_buffer.data();
-    iov.iov_len = receive_buffer.size();
-
-    msg.msg_iov = &iov;
-    msg.msg_iovlen = 1;
-    msg.msg_control = control.data();
-    msg.msg_controllen = control.size();
-    msg.msg_name = &sender_addr;
-    msg.msg_namelen = sender_addr_len;
-
-    return MsgBuffers{msg, iov, control, sender_addr};
   }
 
   std::atomic<State> state_{State::UNINITIALIZED};

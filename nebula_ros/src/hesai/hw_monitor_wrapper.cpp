@@ -173,6 +173,10 @@ void HesaiHwMonitorWrapper::OnHesaiStatusTimer()
     RCLCPP_ERROR_STREAM(
       rclcpp::get_logger("HesaiHwMonitorWrapper::OnHesaiStatusTimer(boost::system::system_error)"),
       error.what());
+  } catch (const std::runtime_error & error) {
+    RCLCPP_ERROR_STREAM(
+      rclcpp::get_logger("HesaiHwMonitorWrapper::OnHesaiStatusTimer(std::runtime_error)"),
+      error.what());
   }
   RCLCPP_DEBUG_STREAM(logger_, "OnHesaiStatusTimer END" << std::endl);
 }
@@ -198,6 +202,10 @@ void HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimerHttp()
         "HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimerHttp(boost::system::system_"
         "error)"),
       error.what());
+  } catch (const std::runtime_error & error) {
+    RCLCPP_ERROR_STREAM(
+      rclcpp::get_logger("HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimerHttp(std::runtime_error)"),
+      error.what());
   }
   RCLCPP_DEBUG_STREAM(logger_, "OnHesaiLidarMonitorTimerHttp END");
 }
@@ -218,6 +226,10 @@ void HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimer()
     RCLCPP_ERROR_STREAM(
       rclcpp::get_logger("HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimer(boost::system::system_"
                          "error)"),
+      error.what());
+  } catch (const std::runtime_error & error) {
+    RCLCPP_ERROR_STREAM(
+      rclcpp::get_logger("HesaiHwMonitorWrapper::OnHesaiLidarMonitorTimer(std::runtime_error)"),
       error.what());
   }
   RCLCPP_DEBUG_STREAM(logger_, "OnHesaiLidarMonitorTimer END");
