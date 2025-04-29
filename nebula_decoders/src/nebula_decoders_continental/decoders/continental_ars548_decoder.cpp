@@ -198,7 +198,7 @@ bool ContinentalARS548Decoder::parse_detections_list_packet(
     assert(detection.raw_positive_predictive_value <= 100);
     assert(detection.classification <= 4 || detection.classification == 255);
     assert(detection.raw_multi_target_probability <= 100);
-    assert(detection.ambiguity_flag <= 100);
+    assert(detection.raw_ambiguity_flag <= 100);
 
     assert(detection.azimuth_angle.value() >= -M_PI && detection.azimuth_angle.value() <= M_PI);
     assert(
