@@ -42,7 +42,7 @@ class ContinentalSRR520Decoder : public ContinentalPacketsDecoder
   template <typename Iterator>
   uint16_t crc16_packet(Iterator begin, Iterator end)
   {
-    return crc<crc16_ccit_false_t>(begin, end);
+    return crc<crc16_ccit_false_t>(&*begin, &*end);
   }
 
   template <typename Iterator>

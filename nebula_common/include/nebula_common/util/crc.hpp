@@ -41,19 +41,37 @@ using crc8h2f_t = boost::crc_optimal<8, 0x2F, 0xFF, 0xFF, false, false>;
 using crc32_mpeg2_t = boost::crc_optimal<32, 0x04C11DB7, 0xFFFFFFFF, 0x0, false, false>;
 
 /**
- * @brief Given a range of bytes, calculates the CRC over those bytes.
+ * @brief Given a memory range, calculates the CRC over its bytes.
+ *
+ * Both `begin` and `end` can be pointers to arbitrary types. They will be cast to `void *`.
+ *
+ * A common example looks like:
+ *
+ * ```c++
+ * struct MyStruct {
+ *   int a;
+ *   float b;
+ *   uint32_t crc;
+ *
+ *   bool is_crc_valid() const {
+ *     return crc<crc32_mpeg_t>(&a, &crc) == crc;
+ *   }
+ * };
+ * ```
  *
  * @tparam crc_type The type of CRC algorithm to use. Has to be a `boost::crc_optimal` type.
- * @tparam Iterator An iterator over bytes or byte-like values
- * @param begin The beginning of the byte range
- * @param end One past the end of the byte range
+ * @param begin The beginning of the memory range
+ * @param end One (byte) past the end of the memory range
  * @return crc_type::value_type The computed CRC
  */
-template <typename crc_type, typename Iterator>
-typename crc_type::value_type crc(Iterator begin, Iterator end)
+template <typename crc_type, typename T, typename U>
+typename crc_type::value_type crc(const T * begin, const U * end)
 {
+  const auto * begin_ptr = static_cast<const void *>(begin);
+  const auto * end_ptr = static_cast<const void *>(end);
+
   crc_type crc_calculator;
-  crc_calculator.process_block(&*begin, &*end);
+  crc_calculator.process_block(begin_ptr, end_ptr);
   return crc_calculator.checksum();
 }
 
