@@ -16,7 +16,7 @@
 #include "nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_srr520_hw_interface.hpp"
 
 #include <nebula_common/continental/continental_srr520.hpp>
-#include <nebula_common/continental/crc.hpp>
+#include <nebula_common/util/crc.hpp>
 #include <rclcpp/time.hpp>
 
 #include <iostream>
@@ -179,7 +179,7 @@ void ContinentalSRR520HwInterface::sensor_sync_follow_up(builtin_interfaces::msg
 
   std::array<uint8_t, 7> follow_up_crc_array{data[2], data[3], data[4], data[5],
                                              data[6], data[7], 0x00};
-  uint8_t follow_up_crc = crc8h2f(follow_up_crc_array.begin(), follow_up_crc_array.end());
+  uint8_t follow_up_crc = crc<crc8h2f_t>(follow_up_crc_array.begin(), follow_up_crc_array.end());
   data[1] = follow_up_crc;
 
   send_frame(data, sync_follow_up_can_message_id);
@@ -220,7 +220,7 @@ void ContinentalSRR520HwInterface::sensor_sync()
   data[7] = (stamp.sec & 0x000000FF) >> 0;
 
   std::array<uint8_t, 7> sync_crc_array{data[2], data[3], data[4], data[5], data[6], data[7], 0x00};
-  uint8_t sync_crc = crc8h2f(sync_crc_array.begin(), sync_crc_array.end());
+  uint8_t sync_crc = crc<crc8h2f_t>(sync_crc_array.begin(), sync_crc_array.end());
   data[1] = sync_crc;
 
   send_frame(data, sync_follow_up_can_message_id);
@@ -241,7 +241,7 @@ void ContinentalSRR520HwInterface::sensor_sync()
 
   std::array<uint8_t, 7> follow_up_crc_array{data[2], data[3], data[4], data[5],
                                              data[6], data[7], 0x00};
-  uint8_t follow_up_crc = crc8h2f(follow_up_crc_array.begin(), follow_up_crc_array.end());
+  uint8_t follow_up_crc = crc<crc8h2f_t>(follow_up_crc_array.begin(), follow_up_crc_array.end());
   data[1] = follow_up_crc;
 
   send_frame(data, sync_follow_up_can_message_id);

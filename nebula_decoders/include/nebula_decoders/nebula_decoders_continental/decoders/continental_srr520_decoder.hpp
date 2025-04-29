@@ -17,6 +17,7 @@
 #include "nebula_decoders/nebula_decoders_continental/decoders/continental_packets_decoder.hpp"
 
 #include <nebula_common/continental/continental_srr520.hpp>
+#include <nebula_common/util/crc.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <continental_msgs/msg/continental_srr520_detection_list.hpp>
@@ -25,7 +26,10 @@
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
 
+#include <algorithm>
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -35,6 +39,22 @@ namespace nebula::drivers::continental_srr520
 /// @brief Continental Radar decoder (SRR520)
 class ContinentalSRR520Decoder : public ContinentalPacketsDecoder
 {
+  template <typename Iterator>
+  uint16_t crc16_packet(Iterator begin, Iterator end)
+  {
+    return crc<crc16_ccit_false_t>(begin, end);
+  }
+
+  template <typename Iterator>
+  uint16_t crc16_packets(Iterator begin, Iterator end, size_t packet_offset)
+  {
+    crc16_ccit_false_t crc_computer;
+    for (Iterator it = begin; it != end; ++it) {
+      crc_computer.process_block(&*(it->data.begin()) + packet_offset, &*(it->data.end()));
+    }
+    return crc_computer.checksum();
+  }
+
 public:
   /// @brief Constructor
   /// @param sensor_configuration SensorConfiguration for this decoder
