@@ -141,10 +141,23 @@ class UdpSocket
 
   struct MsgBuffers
   {
-    msghdr msg{};
+    explicit MsgBuffers(std::vector<uint8_t> & receive_buffer)
+    {
+      iov.iov_base = receive_buffer.data();
+      iov.iov_len = receive_buffer.size();
+
+      msg.msg_iov = &iov;
+      msg.msg_iovlen = 1;
+      msg.msg_control = control.data();
+      msg.msg_controllen = control.size();
+      msg.msg_name = &sender_addr;
+      msg.msg_namelen = sizeof(sender_addr);
+    }
+
     iovec iov{};
-    std::array<std::byte, 1024> control;
-    sockaddr_in sender_addr;
+    std::array<std::byte, 1024> control{};
+    sockaddr_in sender_addr{};
+    msghdr msg{};
   };
 
   class DropMonitor
@@ -400,7 +413,7 @@ private:
         if (!data_available.value()) continue;
 
         buffer.resize(config_.buffer_size);
-        auto msg_header = make_msg_header(buffer);
+        MsgBuffers msg_header{buffer};
 
         // As per `man recvmsg`, zero-length datagrams are permitted and valid. Since the socket is
         // blocking, a recv_result of 0 means we received a valid 0-length datagram.
@@ -455,28 +468,6 @@ private:
   {
     if (!config_.sender_filter) return true;
     return sender_addr.sin_addr.s_addr == config_.sender_filter->ip.s_addr;
-  }
-
-  static MsgBuffers make_msg_header(std::vector<uint8_t> & receive_buffer)
-  {
-    msghdr msg{};
-    iovec iov{};
-    std::array<std::byte, 1024> control;
-
-    sockaddr_in sender_addr{};
-    socklen_t sender_addr_len = sizeof(sender_addr);
-
-    iov.iov_base = receive_buffer.data();
-    iov.iov_len = receive_buffer.size();
-
-    msg.msg_iov = &iov;
-    msg.msg_iovlen = 1;
-    msg.msg_control = control.data();
-    msg.msg_controllen = control.size();
-    msg.msg_name = &sender_addr;
-    msg.msg_namelen = sender_addr_len;
-
-    return MsgBuffers{msg, iov, control, sender_addr};
   }
 
   SockFd sock_fd_;
