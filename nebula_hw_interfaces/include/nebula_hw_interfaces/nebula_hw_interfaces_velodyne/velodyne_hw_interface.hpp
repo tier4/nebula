@@ -19,6 +19,8 @@
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
 #include <boost/version.hpp>
+
+#include <optional>
 #if (BOOST_VERSION / 100 >= 1073 && BOOST_VERSION / 100 <= 1076)  // Boost 1.73 - 1.76
 #define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #endif
@@ -34,6 +36,7 @@
 #include <nebula_common/loggers/logger.hpp>
 #include <nebula_common/velodyne/velodyne_common.hpp>
 #include <nebula_common/velodyne/velodyne_status.hpp>
+#include <nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp>
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -50,11 +53,11 @@ namespace nebula::drivers
 class VelodyneHwInterface
 {
 private:
-  std::unique_ptr<::drivers::common::IoContext> cloud_io_context_;
-  std::unique_ptr<::drivers::udp_driver::UdpDriver> cloud_udp_driver_;
   std::shared_ptr<const VelodyneSensorConfiguration> sensor_configuration_;
-  std::function<void(std::vector<uint8_t> &)>
-    cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
+  /**This function pointer is called when the scan is complete*/
+  std::function<void(const std::vector<uint8_t> &)> cloud_packet_callback_;
+  // Calls the above `cloud_packet_callback_` and thus has to be destroyed before it.
+  std::optional<connections::UdpSocket> udp_socket_;
 
   std::shared_ptr<boost::asio::io_context> boost_ctx_;
   std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> http_client_driver_;
@@ -148,7 +151,7 @@ public:
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void receive_sensor_packet_callback(std::vector<uint8_t> & buffer);
+  void receive_sensor_packet_callback(const std::vector<uint8_t> & buffer);
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
   Status sensor_interface_start();
@@ -177,7 +180,8 @@ public:
   /// @brief Registering callback for PandarScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status register_scan_callback(std::function<void(std::vector<uint8_t> & packet)> scan_callback);
+  Status register_scan_callback(
+    std::function<void(const std::vector<uint8_t> & packet)> scan_callback);
 
   /// @brief Parsing JSON string to property_tree
   /// @param str JSON string

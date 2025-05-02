@@ -51,7 +51,6 @@ class VelodyneRosWrapper final : public rclcpp::Node
 {
 public:
   explicit VelodyneRosWrapper(const rclcpp::NodeOptions & options);
-  ~VelodyneRosWrapper() noexcept {};
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -62,7 +61,7 @@ public:
   Status stream_start();
 
 private:
-  void receive_cloud_packet_callback(std::vector<uint8_t> & packet);
+  void receive_cloud_packet_callback(const std::vector<uint8_t> & packet);
 
   void receive_scan_message_callback(std::unique_ptr<velodyne_msgs::msg::VelodyneScan> scan_msg);
 
