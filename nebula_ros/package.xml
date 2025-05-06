@@ -21,6 +21,7 @@
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
   <depend>geometry_msgs</depend>
+  <depend>message_filters</depend>
   <depend>nebula_common</depend>
   <depend>nebula_decoders</depend>
   <depend>nebula_hw_interfaces</depend>
