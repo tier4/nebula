@@ -28,17 +28,24 @@ namespace nebula::drivers
 
 enum class FunctionalSafetySeverity : uint8_t { Ok, Warning, Error };
 
+template <typename PacketT>
+class FunctionalSafetyDecoderBase
+{
+public:
+  virtual void update(const PacketT & /* packet */) {}
+};
+
 /**
  * @brief Interprets the functional safety part of Hesai pointcloud packets for supported
  * sensor models.
  *
- *
- *
- * @tparam FunctionalSafetyT The type of the functional safety block of a supported sensor.
+ * @tparam PacketT A packet definition that has a supported functional safety section.
  */
-template <typename FunctionalSafetyT>
-class FunctionalSafetyDecoder : public FunctionalSafetyDecoderBase
+template <typename PacketT>
+class FunctionalSafetyDecoder : public FunctionalSafetyDecoderBase<PacketT>
 {
+  using functional_safety_t = decltype(PacketT::fs);
+
 public:
   using error_codes_t = boost::container::static_vector<uint16_t, 16>;
 
@@ -57,8 +64,11 @@ public:
   {
   }
 
-  void update(uint64_t timestamp_ns, const FunctionalSafetyT & fs)
+  void update(const PacketT & packet) override
   {
+    uint64_t timestamp_ns = hesai_packet::get_timestamp_ns(packet);
+    const functional_safety_t & fs = packet.fs;
+
     // Prove to dependent modules that we are receiving data frequently.
     // This has nothing to do with the validity of the data we are receiving.
     if (on_alive_) on_alive_();
@@ -98,7 +108,7 @@ public:
   }
 
 private:
-  bool has_changed(const FunctionalSafetyT & current_value)
+  bool has_changed(const functional_safety_t & current_value)
   {
     // From Hesai's safety manuals:
     // The rolling counter has to change every N ms (where N is sensor-specific). If it does
@@ -115,12 +125,12 @@ private:
 
   [[nodiscard]] bool is_overdue(uint64_t timestamp_ns) const
   {
-    using FunctionalSafetyT::update_cycle_ns;
+    using functional_safety_t::update_cycle_ns;
     return (timestamp_ns - last_changed_timestamp_ns_) > update_cycle_ns;
   }
 
   std::optional<error_codes_t> try_accumulate_error_codes(
-    uint64_t timestamp_ns, const FunctionalSafetyT & fs)
+    uint64_t timestamp_ns, const functional_safety_t & fs)
   {
     uint8_t n_codes = fs.total_fault_code_num();
 
@@ -133,7 +143,7 @@ private:
     uint8_t i_code = fs.fault_code_id();
     uint16_t code = fs.fault_code;
 
-    using FunctionalSafetyT::update_cycle_ns;
+    using functional_safety_t::update_cycle_ns;
     // In non-360 deg FoVs, there might be a phase where no packets are sent. Once the packet
     // stream resumes, the old fault queue is gone and a new one (which might be identical or
     // entirely different) is active. This invalidates our buffer.
@@ -162,8 +172,8 @@ private:
     return std::nullopt;
   }
 
-  uint64_t last_changed_timestamp_ns_;
-  FunctionalSafetyT last_value_;
+  uint64_t last_changed_timestamp_ns_{};
+  functional_safety_t last_value_;
 
   error_codes_t current_error_codes_;
 
