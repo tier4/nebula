@@ -14,11 +14,14 @@
 
 #pragma once
 
+#include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
+#include <nebula_common/util/bitfield.hpp>
 #include <nebula_common/util/crc.hpp>
 
+#include <cstdint>
 #include <iostream>
 #include <ostream>
 #include <vector>
@@ -82,9 +85,36 @@ struct ChannelHealth128E3X
 
 struct FunctionalSafety128E3X
 {
+  static constexpr uint64_t update_cycle_ns = 5'000'000;
+
+  enum class LidarState : uint8_t {
+    Initialization = 0,
+    Normal = 1,
+    Warning = 2,
+    PrePerformanceDegradation = 3,
+    PerformanceDegradation = 4,
+    PreShutdown = 5,
+    ShutdownOrOutputUntrusted = 6,
+    Standby = 7,
+  };
+
+  enum class FaultCodeType : uint8_t {
+    None = 0,
+    CurrentFault = 1,
+    PastFault = 2  /// Currently unsupported by the sensor
+  };
+
   uint8_t fs_version;
-  uint8_t lidar_state;
-  uint8_t fault_code_id;
+
+  uint8_t bitfield1;
+  BITFIELD_ACCESSOR(LidarState, lidar_state, 5, 7, bitfield1)
+  BITFIELD_ACCESSOR(FaultCodeType, fault_code_type, 3, 4, bitfield1)
+  BITFIELD_ACCESSOR(uint8_t, rolling_counter, 0, 2, bitfield1)
+
+  uint8_t bitfield2;
+  BITFIELD_ACCESSOR(uint8_t, total_fault_code_num, 4, 7, bitfield2)
+  BITFIELD_ACCESSOR(uint8_t, fault_code_id, 0, 3, bitfield2)
+
   uint16_t fault_code;
   ChannelHealth128E3X channel_health;
   uint32_t crc_fs;
@@ -92,7 +122,25 @@ struct FunctionalSafety128E3X
   [[nodiscard]] bool is_crc_valid() const
   {
     // fs_version is not included in the CRC check
-    return crc<crc32_mpeg2_t>(&lidar_state, &crc_fs) == crc_fs;
+    return crc<crc32_mpeg2_t>(&bitfield1, &crc_fs) == crc_fs;
+  }
+
+  [[nodiscard]] FunctionalSafetySeverity severity() const
+  {
+    switch (lidar_state()) {
+      case LidarState::Initialization:
+      case LidarState::Normal:
+      case LidarState::Warning:
+        return FunctionalSafetySeverity::Ok;
+      case LidarState::PrePerformanceDegradation:
+      case LidarState::PerformanceDegradation:
+      case LidarState::PreShutdown:
+        return FunctionalSafetySeverity::Warning;
+      case LidarState::ShutdownOrOutputUntrusted:
+      case LidarState::Standby:
+      default:
+        return FunctionalSafetySeverity::Error;
+    }
   }
 };
 
