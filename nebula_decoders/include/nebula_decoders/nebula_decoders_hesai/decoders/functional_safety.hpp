@@ -37,7 +37,7 @@ enum class FunctionalSafetySeverity : uint8_t { Ok, Warning, Error };
  * @tparam FunctionalSafetyT The type of the functional safety block of a supported sensor.
  */
 template <typename FunctionalSafetyT>
-class FunctionalSafetyDecoder
+class FunctionalSafetyDecoder : public FunctionalSafetyDecoderBase
 {
 public:
   using error_codes_t = boost::container::static_vector<uint16_t, 16>;
@@ -61,7 +61,7 @@ public:
   {
     // Prove to dependent modules that we are receiving data frequently.
     // This has nothing to do with the validity of the data we are receiving.
-    on_alive_();
+    if (on_alive_) on_alive_();
 
     // A corrupted packet is not an error and shall simply be ignored.
     if (!hesai_packet::is_crc_valid(fs)) return;
@@ -73,7 +73,7 @@ public:
     // Data not changing at that fixed rate signals the sensor's fault reporting system being
     // stuck.
     if (!changed && is_overdue(timestamp_ns)) {
-      on_stuck_();
+      if (on_stuck_) on_stuck_();
       return;
     }
 
@@ -82,14 +82,14 @@ public:
 
     // From here on, it is guaranteed that data has changed.
     FunctionalSafetySeverity severity = fs.severity();
-    on_severity_(severity);
+    if (on_severity_) on_severity_(severity);
 
     // Error codes are queued on the sensor side, and with each cycle, the next queued code is
     // sent. Call back only when all codes of a queue have been received, otherwise continue
     // accumulating.
     std::optional<error_codes_t> accumulated_codes = try_accumulate_error_codes(timestamp_ns, fs);
     if (accumulated_codes) {
-      on_error_codes_(std::move(*accumulated_codes));
+      if (on_error_codes_) on_error_codes_(std::move(*accumulated_codes));
     }
 
     // Store the changed, received values for the next iteration
