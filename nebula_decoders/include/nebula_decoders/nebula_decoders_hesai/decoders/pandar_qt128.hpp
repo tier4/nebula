@@ -14,9 +14,11 @@
 
 #pragma once
 
+#include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
+#include <nebula_common/util/bitfield.hpp>
 #include <nebula_common/util/crc.hpp>
 
 namespace nebula::drivers
@@ -45,9 +47,33 @@ struct TailQT128C2X
 
 struct FunctionalSafetyQT128C2X
 {
+  static constexpr uint64_t update_cycle_ns = 5'000'000;
+
+  enum class LidarState : uint8_t {
+    Initialization = 0,
+    Normal = 1,
+    Warning = 2,
+    PerformanceDegradation = 3,
+    OutputUntrusted = 4,
+  };
+
+  enum class FaultCodeType : uint8_t {
+    NoFault = 0,
+    CurrentFault = 1,
+    PastFault = 2,
+  };
+
   uint8_t fs_version;
-  uint8_t lidar_state;
-  uint8_t fault_code_id;
+
+  uint8_t bitfield1;
+  BITFIELD_ACCESSOR(LidarState, lidar_state, 5, 7, bitfield1)
+  BITFIELD_ACCESSOR(FaultCodeType, fault_code_type, 3, 4, bitfield1)
+  BITFIELD_ACCESSOR(uint8_t, rolling_counter, 0, 2, bitfield1)
+
+  uint8_t bitfield2;
+  BITFIELD_ACCESSOR(uint8_t, total_fault_code_num, 4, 7, bitfield2)
+  BITFIELD_ACCESSOR(uint8_t, fault_code_id, 0, 3, bitfield2)
+
   uint16_t fault_code;
   uint8_t reserved1[8];
   uint32_t crc_fs;
@@ -55,9 +81,26 @@ struct FunctionalSafetyQT128C2X
   [[nodiscard]] bool valid() const
   {
     // fs_version is not included in the CRC check
-    return crc<crc32_mpeg2_t>(&lidar_state, &crc_fs) == crc_fs;
+    return crc<crc32_mpeg2_t>(&fs_version + 1, &crc_fs) == crc_fs;
+  }
+
+  [[nodiscard]] FunctionalSafetySeverity severity() const
+  {
+    switch (lidar_state()) {
+      case LidarState::Initialization:
+      case LidarState::Normal:
+      case LidarState::Warning:
+        return FunctionalSafetySeverity::Ok;
+      case LidarState::PerformanceDegradation:
+        return FunctionalSafetySeverity::Warning;
+      case LidarState::OutputUntrusted:
+      default:
+        return FunctionalSafetySeverity::Error;
+    }
   }
 };
+
+static_assert(sizeof(FunctionalSafetyQT128C2X) == 17);
 
 struct PacketQT128C2X : public PacketBase<2, 128, 2, 100>
 {
