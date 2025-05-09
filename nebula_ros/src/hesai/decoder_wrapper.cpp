@@ -2,6 +2,7 @@
 
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 
+#include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 #include "nebula_ros/common/rclcpp_logger.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
@@ -118,22 +119,22 @@ void HesaiDecoderWrapper::process_cloud_packet(
     current_scan_msg_->packets.emplace_back(std::move(pandar_packet_msg));
   }
 
-  std::tuple<nebula::drivers::NebulaPointCloudPtr, double> pointcloud_ts{};
-  nebula::drivers::NebulaPointCloudPtr pointcloud = nullptr;
+  drivers::HesaiDriver::parse_result_t parse_result{};
   {
     std::lock_guard lock(mtx_driver_ptr_);
-    pointcloud_ts = driver_ptr_->parse_cloud_packet(packet_msg->data);
-    pointcloud = std::get<0>(pointcloud_ts);
+    parse_result = driver_ptr_->parse_cloud_packet(packet_msg->data);
   }
 
   // A pointcloud is only emitted when a scan completes (e.g. 3599 packets do not emit, the 3600th
   // emits one)
-  if (pointcloud == nullptr) {
+  if (!parse_result) {
     // Since this ends the function early, the `cloud_watchdog_` will not be updated.
     // Thus, if pointclouds are not emitted for too long (e.g. when decoder settings are wrong or no
     // packets come in), the watchdog will log a warning automatically
     return;
   }
+
+  const auto & [pointcloud, timestamp_s, decode_stats] = parse_result.value();
 
   cloud_watchdog_->update();
 
@@ -149,7 +150,7 @@ void HesaiDecoderWrapper::process_cloud_packet(
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+      rclcpp::Time(seconds_to_chrono_nano_seconds(timestamp_s).count());
     publish_cloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
   }
   if (
@@ -160,18 +161,18 @@ void HesaiDecoderWrapper::process_cloud_packet(
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_cloud_xyzi, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+      rclcpp::Time(seconds_to_chrono_nano_seconds(timestamp_s).count());
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
   }
   if (
     aw_points_ex_pub_->get_subscription_count() > 0 ||
     aw_points_ex_pub_->get_intra_process_subscription_count() > 0) {
-    const auto autoware_ex_cloud = nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(
-      pointcloud, std::get<1>(pointcloud_ts));
+    const auto autoware_ex_cloud =
+      nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(pointcloud, timestamp_s);
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
     ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+      rclcpp::Time(seconds_to_chrono_nano_seconds(timestamp_s).count());
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
   }
 }

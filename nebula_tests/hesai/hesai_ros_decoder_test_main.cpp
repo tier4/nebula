@@ -55,7 +55,7 @@ TEST_P(DecoderTest, TestPcd)
   int check_cnt = 0;
 
   auto scan_callback = [&](
-                         uint64_t msg_timestamp, uint64_t /*scan_timestamp*/,
+                         uint64_t msg_timestamp, double /*scan_timestamp*/,
                          nebula::drivers::NebulaPointCloudPtr pointcloud) {
     if (!pointcloud) return;
 
@@ -89,7 +89,7 @@ TEST_P(DecoderTest, TestTimezone)
   std::vector<uint64_t> decoded_timestamps;
 
   auto scan_callback = [&](
-                         uint64_t /*msg_timestamp*/, uint64_t scan_timestamp,
+                         uint64_t /*msg_timestamp*/, double scan_timestamp,
                          nebula::drivers::NebulaPointCloudPtr pointcloud) {
     if (!pointcloud) return;
     decoded_timestamps.push_back(scan_timestamp);
