@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_DRIVER_BASE_H
-#define NEBULA_DRIVER_BASE_H
+#ifndef NEBULA_DECODERS__NEBULA_DECODERS_COMMON__NEBULA_DRIVER_BASE_HPP_
+#define NEBULA_DECODERS__NEBULA_DECODERS_COMMON__NEBULA_DRIVER_BASE_HPP_
 
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
@@ -44,4 +44,4 @@ public:
 };
 
 }  // namespace nebula::drivers
-#endif  // NEBULA_DRIVER_BASE_H
+#endif  // NEBULA_DECODERS__NEBULA_DECODERS_COMMON__NEBULA_DRIVER_BASE_HPP_
