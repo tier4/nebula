@@ -46,11 +46,11 @@ public:
    * @param timeout The time after the last call to `tick()` where liveliness is
    */
   LivenessMonitor(
-    rclcpp::Node & node, diagnostic_updater::Updater & diagnostic_updater, std::string name,
+    rclcpp::Node & node, diagnostic_updater::Updater & diagnostic_updater, const std::string & name,
     const std::chrono::nanoseconds & timeout)
   : timer_(node.create_wall_timer(timeout, [this] { on_timeout(); }))
   {
-    diagnostic_updater.add("", [this](diagnostic_updater::DiagnosticStatusWrapper & status) {
+    diagnostic_updater.add(name, [this](diagnostic_updater::DiagnosticStatusWrapper & status) {
       report_liveness(status);
     });
   }
