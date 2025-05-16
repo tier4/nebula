@@ -1,14 +1,14 @@
 /**:
   ros__parameters:
-    host_ip: 192.168.1.10
-    sensor_ip: 192.168.1.201
+    host_ip: 127.0.0.1
+    sensor_ip: 127.0.0.1
     multicast_ip: ""
-    data_port: 2368
+    data_port: 2322
     gnss_port: 10110
     packet_mtu_size: 1500
     launch_hw: true
     setup_sensor: true
-    udp_only: false
+    udp_only: true
     frame_id: hesai
     diag_span: 1000
     min_range: 0.3
@@ -29,3 +29,6 @@
     retry_hw: true
     dual_return_distance_threshold: 0.1
     hires_mode: true
+    diagnostics:
+      pointcloud_publish_rate:
+        relative_tolerance: 0.1
