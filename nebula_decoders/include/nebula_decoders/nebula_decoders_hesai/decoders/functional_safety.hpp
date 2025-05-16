@@ -32,7 +32,13 @@ template <typename PacketT>
 class FunctionalSafetyDecoderBase
 {
 public:
-  virtual void update(const PacketT & /* packet */) {}
+  virtual void update(const PacketT & /* packet */) = 0;
+};
+
+template <typename PacketT>
+class NullFunctionalSafetyDecoder : public FunctionalSafetyDecoderBase<PacketT>
+{
+  void update(const PacketT & /* packet */) override {}
 };
 
 /**
