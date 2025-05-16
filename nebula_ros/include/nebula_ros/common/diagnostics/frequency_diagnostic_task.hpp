@@ -60,15 +60,15 @@ struct FrequencyDiagnosticTask : public diagnostic_updater::DiagnosticTask
 
     double last_frequency_hz = 1.0 / last_tick_diff_.seconds();
 
-    stat.add("Frequency [Hz]", last_frequency_hz);
-    stat.add("Min acceptable frequency [Hz]", min_freq_hz());
-    stat.add("Max acceptable frequency [Hz]", max_freq_hz());
+    stat.add("Frequency [Hz]", std::to_string(last_frequency_hz));
+    stat.add("Min acceptable frequency [Hz]", std::to_string(min_freq_hz()));
+    stat.add("Max acceptable frequency [Hz]", std::to_string(max_freq_hz()));
 
-    stat.add("Time diff [s]", last_tick_diff_.seconds());
-    stat.add("Min acceptable diff [s]", min_acceptable_diff_s);
-    stat.add("Max acceptable diff [s]", max_acceptable_diff_s);
+    stat.add("Time diff [s]", std::to_string(last_tick_diff_.seconds()));
+    stat.add("Min acceptable diff [s]", std::to_string(min_acceptable_diff_s));
+    stat.add("Max acceptable diff [s]", std::to_string(max_acceptable_diff_s));
 
-    stat.add("Last tick", last_tick_.seconds());
+    stat.add("Last tick", std::to_string(last_tick_.seconds()));
 
     if (now - last_tick_ > rclcpp::Duration::from_seconds(max_acceptable_diff_s)) {
       stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Frequency too low");
