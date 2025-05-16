@@ -31,7 +31,7 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   sensor_cfg_(config),
   calibration_cfg_ptr_(calibration),
   publish_diagnostic_(
-    "pointcloud", diagnostic_updater, parent_node->get_clock(),
+    "pointcloud publish rate", diagnostic_updater, parent_node->get_clock(),
     {drivers::rpm2hz(config->rotation_speed), 0.1})
 {
   if (!sensor_cfg_) {
