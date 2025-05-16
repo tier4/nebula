@@ -17,6 +17,7 @@
 #include "nebula_decoders/nebula_decoders_common/angles.hpp"
 #include "nebula_decoders/nebula_decoders_common/point_filters/downsample_mask.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
@@ -59,6 +60,9 @@ private:
 
   /// @brief Decodes azimuth/elevation angles given calibration/correction data
   typename SensorT::angle_corrector_t angle_corrector_;
+
+  /// @brief Decodes functional safety data for supported sensors
+  std::optional<FunctionalSafetyDecoderBase<typename SensorT::packet_t>> functional_safety_decoder_;
 
   /// @brief The point cloud new points get added to
   NebulaPointCloudPtr decode_pc_;
@@ -284,6 +288,12 @@ public:
   {
     if (!parse_packet(packet)) {
       return -1;
+    }
+
+    // Even if the checksums of other parts of the packet are invalid, functional safety info
+    // is still checked.
+    if (functional_safety_decoder_) {
+      functional_safety_decoder_->update(packet_);
     }
 
     // Note that not all packet formats have CRC. In those cases, these checks always succeed.
