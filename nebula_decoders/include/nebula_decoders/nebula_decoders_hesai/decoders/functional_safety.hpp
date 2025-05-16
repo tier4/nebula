@@ -125,8 +125,7 @@ private:
 
   [[nodiscard]] bool is_overdue(uint64_t timestamp_ns) const
   {
-    using functional_safety_t::update_cycle_ns;
-    return (timestamp_ns - last_changed_timestamp_ns_) > update_cycle_ns;
+    return (timestamp_ns - last_changed_timestamp_ns_) > functional_safety_t::update_cycle_ns;
   }
 
   std::optional<error_codes_t> try_accumulate_error_codes(
@@ -143,11 +142,11 @@ private:
     uint8_t i_code = fs.fault_code_id();
     uint16_t code = fs.fault_code;
 
-    using functional_safety_t::update_cycle_ns;
     // In non-360 deg FoVs, there might be a phase where no packets are sent. Once the packet
     // stream resumes, the old fault queue is gone and a new one (which might be identical or
     // entirely different) is active. This invalidates our buffer.
-    bool has_time_jumped = (timestamp_ns - last_changed_timestamp_ns_) >= 2 * update_cycle_ns;
+    bool has_time_jumped =
+      (timestamp_ns - last_changed_timestamp_ns_) >= 2 * functional_safety_t::update_cycle_ns;
     // If there is an unexpected skip between fault code indices, invalidate the buffer.
     bool is_expected_index = i_code == current_error_codes_.size() + 1;
     bool is_accumulator_valid = !has_time_jumped && is_expected_index;
