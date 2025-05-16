@@ -32,7 +32,9 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   calibration_cfg_ptr_(calibration),
   publish_diagnostic_(
     "pointcloud publish rate", diagnostic_updater, parent_node->get_clock(),
-    {drivers::rpm2hz(config->rotation_speed), 0.1})
+    {drivers::rpm2hz(config->rotation_speed),
+     parent_node->declare_parameter<double>(
+       "diagnostics.pointcloud_publish_rate.relative_tolerance")})
 {
   if (!sensor_cfg_) {
     throw std::runtime_error("HesaiDecoderWrapper cannot be instantiated without a valid config!");
