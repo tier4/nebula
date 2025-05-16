@@ -113,7 +113,7 @@ Status ContinentalARS548HwInterface::set_sensor_mounting(
     lateral_autosar > 100.f || vertical_autosar < 0.01f || vertical_autosar > 10.f ||
     yaw_autosar < -M_PI || yaw_autosar > M_PI || pitch_autosar < -M_PI_2 ||
     pitch_autosar > M_PI_2) {
-    print_error("Invalid SetSensorMounting values");
+    logger_->error("Invalid SetSensorMounting values");
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -132,12 +132,12 @@ Status ContinentalARS548HwInterface::set_sensor_mounting(
   std::vector<uint8_t> send_vector(sizeof(ConfigurationPacket));
   std::memcpy(send_vector.data(), &configuration_packet, sizeof(ConfigurationPacket));
 
-  print_info("longitudinal_autosar = " + std::to_string(longitudinal_autosar));
-  print_info("lateral_autosar = " + std::to_string(lateral_autosar));
-  print_info("vertical_autosar = " + std::to_string(vertical_autosar));
-  print_info("yaw_autosar = " + std::to_string(yaw_autosar));
-  print_info("pitch_autosar = " + std::to_string(pitch_autosar));
-  print_info("plug_orientation = " + std::to_string(plug_orientation));
+  logger_->info("longitudinal_autosar = " + std::to_string(longitudinal_autosar));
+  logger_->info("lateral_autosar = " + std::to_string(lateral_autosar));
+  logger_->info("vertical_autosar = " + std::to_string(vertical_autosar));
+  logger_->info("yaw_autosar = " + std::to_string(yaw_autosar));
+  logger_->info("pitch_autosar = " + std::to_string(pitch_autosar));
+  logger_->info("plug_orientation = " + std::to_string(plug_orientation));
 
   return safe_send(send_vector);
 }
@@ -149,7 +149,7 @@ Status ContinentalARS548HwInterface::set_vehicle_parameters(
     length_autosar < 0.01f || length_autosar > 100.f || width_autosar < 0.01f ||
     width_autosar > 100.f || height_autosar < 0.01f || height_autosar > 100.f ||
     wheel_base_autosar < 0.01f || wheel_base_autosar > 100.f) {
-    print_error("Invalid SetVehicleParameters values");
+    logger_->error("Invalid SetVehicleParameters values");
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -167,10 +167,10 @@ Status ContinentalARS548HwInterface::set_vehicle_parameters(
   std::vector<uint8_t> send_vector(sizeof(ConfigurationPacket));
   std::memcpy(send_vector.data(), &configuration_packet, sizeof(ConfigurationPacket));
 
-  print_info("length_autosar = " + std::to_string(length_autosar));
-  print_info("width_autosar = " + std::to_string(width_autosar));
-  print_info("height_autosar = " + std::to_string(height_autosar));
-  print_info("wheel_base_autosar = " + std::to_string(wheel_base_autosar));
+  logger_->info("length_autosar = " + std::to_string(length_autosar));
+  logger_->info("width_autosar = " + std::to_string(width_autosar));
+  logger_->info("height_autosar = " + std::to_string(height_autosar));
+  logger_->info("wheel_base_autosar = " + std::to_string(wheel_base_autosar));
 
   return safe_send(send_vector);
 }
@@ -182,19 +182,19 @@ Status ContinentalARS548HwInterface::set_radar_parameters(
   if (
     maximum_distance < maximum_distance_min_value ||
     maximum_distance > maximum_distance_max_value) {
-    print_error("Invalid maximum_distance value");
+    logger_->error("Invalid maximum_distance value");
     return Status::SENSOR_CONFIG_ERROR;
   }
 
   if (cycle_time_ms < min_cycle_time_ms || cycle_time_ms > max_cycle_time_ms) {
-    print_error("Invalid cycle_time_ms value");
+    logger_->error("Invalid cycle_time_ms value");
     return Status::SENSOR_CONFIG_ERROR;
   }
 
   if (
     time_slot_ms < min_time_slot_ms || time_slot_ms > cycle_time_ms - 1 ||
     time_slot_ms > max_time_slot_ms) {
-    print_error("Invalid time_slot_ms value");
+    logger_->error("Invalid time_slot_ms value");
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -214,12 +214,12 @@ Status ContinentalARS548HwInterface::set_radar_parameters(
   std::vector<uint8_t> send_vector(sizeof(ConfigurationPacket));
   std::memcpy(send_vector.data(), &configuration_packet, sizeof(ConfigurationPacket));
 
-  print_info("maximum_distance = " + std::to_string(maximum_distance));
-  print_info("frequency_slot = " + std::to_string(frequency_slot) + " ms");
-  print_info("cycle_time = " + std::to_string(cycle_time_ms) + " ms");
-  print_info("time_slot = " + std::to_string(time_slot_ms) + " ms");
-  print_info("hcc = " + std::to_string(hcc));
-  print_info("power_save_standstill = " + std::to_string(power_save_standstill));
+  logger_->info("maximum_distance = " + std::to_string(maximum_distance));
+  logger_->info("frequency_slot = " + std::to_string(frequency_slot) + " ms");
+  logger_->info("cycle_time = " + std::to_string(cycle_time_ms) + " ms");
+  logger_->info("time_slot = " + std::to_string(time_slot_ms) + " ms");
+  logger_->info("hcc = " + std::to_string(hcc));
+  logger_->info("power_save_standstill = " + std::to_string(power_save_standstill));
 
   return safe_send(send_vector);
 }
@@ -232,11 +232,11 @@ Status ContinentalARS548HwInterface::set_sensor_ip_address(const std::string & s
     auto sensor_ip = boost::asio::ip::address::from_string(sensor_ip_address);
     ip_bytes = sensor_ip.to_v4().to_bytes();
   } catch (const std::exception & ex) {
-    print_error("Setting invalid IP=" + sensor_ip_address);
+    logger_->error("Setting invalid IP=" + sensor_ip_address);
     return Status::SENSOR_CONFIG_ERROR;
   }
 
-  print_info("New sensor IP = " + sensor_ip_address);
+  logger_->info("New sensor IP = " + sensor_ip_address);
 
   ConfigurationPacket configuration{};
   static_assert(sizeof(ConfigurationPacket) == configuration_udp_length);
@@ -267,7 +267,7 @@ Status ContinentalARS548HwInterface::set_acceleration_lateral_cog(float lateral_
   const int acceleration_lateral_cog_udp_length = 40;
 
   if (lateral_acceleration < -65.f || lateral_acceleration > 65.f) {
-    print_error("Invalid lateral_acceleration value");
+    logger_->error("Invalid lateral_acceleration value");
     return Status::ERROR_1;
   }
 
@@ -295,7 +295,7 @@ Status ContinentalARS548HwInterface::set_acceleration_longitudinal_cog(
   const int acceleration_longitudinal_cog_udp_length = 40;
 
   if (longitudinal_acceleration < -65.f || longitudinal_acceleration > 65.f) {
-    print_error("Invalid longitudinal_acceleration value");
+    logger_->error("Invalid longitudinal_acceleration value");
     return Status::ERROR_1;
   }
 
@@ -322,7 +322,7 @@ Status ContinentalARS548HwInterface::set_characteristic_speed(float characterist
   const int characteristic_speed_udp_length = 19;
 
   if (characteristic_speed < 0.f || characteristic_speed > 255.f) {
-    print_error("Invalid characteristic_speed value");
+    logger_->error("Invalid characteristic_speed value");
     return Status::ERROR_1;
   }
 
@@ -377,7 +377,7 @@ Status ContinentalARS548HwInterface::set_steering_angle_front_axle(float angle_r
   const int steering_angle_udp_length = 40;
 
   if (angle_rad < -90.f || angle_rad > 90.f) {
-    print_error("Invalid angle_rad value");
+    logger_->error("Invalid angle_rad value");
     return Status::ERROR_1;
   }
 
@@ -398,7 +398,7 @@ Status ContinentalARS548HwInterface::set_steering_angle_front_axle(float angle_r
 Status ContinentalARS548HwInterface::set_velocity_vehicle(float velocity_kmh)
 {
   if (velocity_kmh < 0.f || velocity_kmh > 350.f) {
-    print_error("Invalid velocity value");
+    logger_->error("Invalid velocity value");
     return Status::ERROR_1;
   }
 
@@ -423,7 +423,7 @@ Status ContinentalARS548HwInterface::set_velocity_vehicle(float velocity_kmh)
 Status ContinentalARS548HwInterface::set_yaw_rate(float yaw_rate)
 {
   if (yaw_rate < -163.83 || yaw_rate > 163.83) {
-    print_error("Invalid yaw rate value");
+    logger_->error("Invalid yaw rate value");
     return Status::ERROR_1;
   }
 
