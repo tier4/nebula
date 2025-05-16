@@ -22,6 +22,7 @@
 #include "nebula_ros/hesai/hw_monitor_wrapper.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
+#include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
@@ -108,6 +109,11 @@ private:
   std::optional<HesaiHwInterfaceWrapper> hw_interface_wrapper_;
   std::optional<HesaiHwMonitorWrapper> hw_monitor_wrapper_;
   std::optional<HesaiDecoderWrapper> decoder_wrapper_;
+
+  /// @brief Diagnostics that are not time or safety-critical
+  diagnostic_updater::Updater diagnostic_updater_general_;
+  /// @brief Diagnostics that are related to functional safety
+  diagnostic_updater::Updater diagnostic_updater_functional_safety_;
 
   std::mutex mtx_config_;
 

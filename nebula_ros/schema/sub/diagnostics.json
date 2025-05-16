@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Diagnostics parameters.",
+  "type": "object",
+  "definitions": {
+    "frequency_diagnostic_task": {
+      "type": "object",
+      "properties": {
+        "relative_tolerance": {
+          "type": "number",
+          "description": "Tolerance around the expected frequency. 0.1 means 10% tolerance in either direction."
+        }
+      }
+    }
+  }
+}

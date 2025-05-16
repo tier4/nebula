@@ -24,12 +24,17 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   rclcpp::Node * const parent_node,
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
   const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration,
-  bool publish_packets)
+  diagnostic_updater::Updater & diagnostic_updater, bool publish_packets)
 : status_(nebula::Status::NOT_INITIALIZED),
   logger_(parent_node->get_logger().get_child("HesaiDecoder")),
   parent_node_(*parent_node),
   sensor_cfg_(config),
-  calibration_cfg_ptr_(calibration)
+  calibration_cfg_ptr_(calibration),
+  publish_diagnostic_(
+    "pointcloud publish rate", diagnostic_updater, parent_node->get_clock(),
+    {drivers::rpm2hz(config->rotation_speed),
+     parent_node->declare_parameter<double>(
+       "diagnostics.pointcloud_publish_rate.relative_tolerance")})
 {
   if (!sensor_cfg_) {
     throw std::runtime_error("HesaiDecoderWrapper cannot be instantiated without a valid config!");
@@ -143,13 +148,15 @@ void HesaiDecoderWrapper::process_cloud_packet(
     current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
   }
 
+  rclcpp::Time cloud_stamp =
+    rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+
   if (
     nebula_points_pub_->get_subscription_count() > 0 ||
     nebula_points_pub_->get_intra_process_subscription_count() > 0) {
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
-    ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+    ros_pc_msg_ptr->header.stamp = cloud_stamp;
     publish_cloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
   }
   if (
@@ -159,8 +166,7 @@ void HesaiDecoderWrapper::process_cloud_packet(
       nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(pointcloud);
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_cloud_xyzi, *ros_pc_msg_ptr);
-    ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+    ros_pc_msg_ptr->header.stamp = cloud_stamp;
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
   }
   if (
@@ -170,10 +176,11 @@ void HesaiDecoderWrapper::process_cloud_packet(
       pointcloud, std::get<1>(pointcloud_ts));
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
-    ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+    ros_pc_msg_ptr->header.stamp = cloud_stamp;
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
   }
+
+  publish_diagnostic_.tick();
 }
 
 void HesaiDecoderWrapper::publish_cloud(
