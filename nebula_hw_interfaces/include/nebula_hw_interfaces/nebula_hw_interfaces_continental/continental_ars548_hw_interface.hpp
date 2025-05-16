@@ -131,18 +131,6 @@ public:
   Status set_yaw_rate(float yaw_rate);
 
 private:
-  /// @brief Printing the string to RCLCPP_INFO_STREAM
-  /// @param info Target string
-  void print_info(std::string info);
-
-  /// @brief Printing the string to RCLCPP_ERROR_STREAM
-  /// @param error Target string
-  void print_error(std::string error);
-
-  /// @brief Printing the string to RCLCPP_DEBUG_STREAM
-  /// @param debug Target string
-  void print_debug(std::string debug);
-
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
   void receive_sensor_packet_callback_with_sender(
