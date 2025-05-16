@@ -293,7 +293,9 @@ public:
 
     // Even if the checksums of other parts of the packet are invalid, functional safety info
     // is still checked. This is a null-op for sensors that do not support functional safety.
-    functional_safety_decoder_->update(packet_);
+    if (functional_safety_decoder_) {
+      functional_safety_decoder_->update(packet_);
+    }
 
     // Note that not all packet formats have CRC. In those cases, these checks always succeed.
     if (!hesai_packet::is_crc_valid(packet_.body) || !hesai_packet::is_crc_valid(packet_.tail)) {
