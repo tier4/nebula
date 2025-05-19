@@ -16,12 +16,13 @@
 
 #include <diagnostic_updater/diagnostic_status_wrapper.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <rclcpp/clock.hpp>
 #include <rclcpp/duration.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/time.hpp>
 
-#include <diagnostic_msgs/msg/detail/diagnostic_status__struct.hpp>
+#include <diagnostic_msgs/msg/diagnostic_status.hpp>
 
 #include <chrono>
 #include <cstdint>
@@ -37,7 +38,7 @@ namespace nebula::ros
  * This can be used for getting notified when a certain routine gets stuck, e.g. when packets stop
  * arriving or when pointclouds stop being published.
  */
-class LivenessMonitor
+class LivenessMonitor : public diagnostic_updater::DiagnosticTask
 {
 public:
   /**
@@ -46,18 +47,14 @@ public:
    * The monitored routine has to call `tick()` on every iteration to prove its liveness. If there
    * is no call for a length of `timeout`, the routine is declared dead.
    *
-   * @param node The node used for creating the internal timer
-   # @param diagnostic_updater The diagnostic updater to register a task with
-   * @param timeout The time after the last call to `tick()` where liveliness is
+   * @param name The name of the task
+   * @param clock The clock to use for timing
+   * @param timeout The time after the last call to `tick()` where the routine is declared dead
    */
   LivenessMonitor(
-    rclcpp::Node::SharedPtr node, diagnostic_updater::Updater & diagnostic_updater,
-    const std::string & name, const rclcpp::Duration & timeout)
-  : timeout_(timeout), node_(std::move(node))
+    const std::string & name, rclcpp::Clock::SharedPtr clock, const rclcpp::Duration & timeout)
+  : DiagnosticTask(name), timeout_(timeout), clock_(std::move(clock))
   {
-    diagnostic_updater.add(name, [this](diagnostic_updater::DiagnosticStatusWrapper & status) {
-      report_liveness(status);
-    });
   }
 
   /**
@@ -66,14 +63,14 @@ public:
    * A call to `tick()` resets the internal timer. If the timer is not reset at least once before it
    * expires (within `timeout`), the monitored routine is pronounced dead.
    */
-  void tick() { last_tick_ = node_->get_clock()->now(); }
+  void tick() { last_tick_ = clock_->now(); }
 
 private:
-  void report_liveness(diagnostic_updater::DiagnosticStatusWrapper & status) const
+  void run(diagnostic_updater::DiagnosticStatusWrapper & status) override
   {
     using diagnostic_msgs::msg::DiagnosticStatus;
 
-    rclcpp::Time now = node_->get_clock()->now();
+    rclcpp::Time now = clock_->now();
     rclcpp::Duration lateness = now - last_tick_;
     bool is_live = lateness < timeout_;
 
@@ -95,7 +92,7 @@ private:
 
   rclcpp::Time last_tick_;
   rclcpp::Duration timeout_;
-  rclcpp::Node::SharedPtr node_;
+  rclcpp::Clock::SharedPtr clock_;
 };
 
 }  // namespace nebula::ros
