@@ -88,9 +88,9 @@ private:
     }
 
     status.summary(severity, message);
-    status.add("is_alive", value);
-    status.add("last_tick", last_tick_.seconds());
-    status.add("lateness", lateness.seconds());
+    status.add("Is alive", value);
+    status.add("Last tick", std::to_string(last_tick_.seconds()));
+    status.add("Lateness", std::to_string(lateness.seconds()));
   }
 
   rclcpp::Time last_tick_;
