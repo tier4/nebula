@@ -57,6 +57,8 @@ public:
 
   explicit SocketError(const std::string_view & msg) : what_(msg) {}
 
+  const char * what() const noexcept override { return what_.c_str(); }
+
 private:
   std::string what_;
 };
