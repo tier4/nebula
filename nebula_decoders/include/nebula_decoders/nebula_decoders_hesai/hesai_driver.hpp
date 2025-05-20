@@ -21,6 +21,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
 #include <nebula_common/loggers/logger.hpp>
+#include <nlohmann/json.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
 
@@ -33,6 +34,10 @@ namespace nebula::drivers
 /// @brief Hesai driver
 class HesaiDriver
 {
+public:
+  using parse_result_t =
+    std::optional<std::tuple<drivers::NebulaPointCloudPtr, double, nlohmann::ordered_json>>;
+
 private:
   /// @brief Current driver status
   Status driver_status_;
@@ -71,8 +76,7 @@ public:
   /// @brief Convert raw packet to pointcloud
   /// @param packet Packet to convert
   /// @return Tuple of pointcloud and timestamp
-  std::tuple<drivers::NebulaPointCloudPtr, double> parse_cloud_packet(
-    const std::vector<uint8_t> & packet);
+  parse_result_t parse_cloud_packet(const std::vector<uint8_t> & packet);
 };
 
 }  // namespace nebula::drivers
