@@ -497,8 +497,10 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
 
   if (
     metadata.timestamp_ns && hw_monitor_wrapper_ && hw_monitor_wrapper_->sync_diag_client_ &&
-    (*metadata.timestamp_ns - last_measurement_send_time_ns_ > 100'000'000)) {
+    (*metadata.timestamp_ns - last_measurement_send_time_ns_ >= 100'000'000)) {
     try {
+      RCLCPP_INFO_ONCE(get_logger(), "tag;t_receive;t_sensor");
+      RCLCPP_INFO_STREAM(get_logger(), "packet_timing;" << *metadata.timestamp_ns << ";" << sensor_timestamp_ns);
       hw_monitor_wrapper_->sync_diag_client_->submit_clock_diff_measurement(
         static_cast<int64_t>(*metadata.timestamp_ns) - sensor_timestamp_ns);
       last_measurement_send_time_ns_ = *metadata.timestamp_ns;
