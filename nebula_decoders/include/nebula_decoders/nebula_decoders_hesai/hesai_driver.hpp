@@ -20,6 +20,7 @@
 #include "nebula_common/point_types.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/packet_loss_detector.hpp"
 
 #include <nebula_common/loggers/logger.hpp>
 
@@ -55,6 +56,10 @@ private:
     FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
     FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
     FunctionalSafetyDecoderBase::status_cb_t status_cb);
+
+  template <typename SensorT>
+  std::shared_ptr<PacketLossDetectorTypedBase<typename SensorT::packet_t>>
+  initialize_packet_loss_detector(PacketLossDetectorBase::lost_cb_t lost_cb);
 
 public:
   HesaiDriver() = delete;

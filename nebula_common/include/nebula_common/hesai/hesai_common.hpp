@@ -574,6 +574,25 @@ inline bool supports_functional_safety(const SensorModel & sensor_model)
   }
 }
 
+/// @brief Whether the given sensor model supports packet loss detection
+/// @param sensor_model Sensor model
+/// @return True if the sensor model supports packet loss detection, false otherwise
+inline bool supports_packet_loss_detection(const SensorModel & sensor_model)
+{
+  switch (sensor_model) {
+    case SensorModel::HESAI_PANDAR64:
+    case SensorModel::HESAI_PANDAR40P:
+    case SensorModel::HESAI_PANDAR40M:
+    case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::HESAI_PANDARAT128:
+    case SensorModel::HESAI_PANDAR128_E3X:
+    case SensorModel::HESAI_PANDAR128_E4X:
+      return true;
+    default:
+      return false;
+  }
+}
+
 }  // namespace drivers
 }  // namespace nebula
 
