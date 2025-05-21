@@ -121,8 +121,11 @@ struct FunctionalSafety128E3X
 
   [[nodiscard]] bool is_crc_valid() const
   {
+    // FIXME(mojomex): OT128's CRC is broken, at least in B and C samples. Disable for now.
+    return true;
+
     // fs_version is not included in the CRC check
-    return crc<crc32_mpeg2_t>(&bitfield1, &crc_fs) == crc_fs;
+    // return crc<crc32_mpeg2_t>(&bitfield1, &crc_fs) == crc_fs;
   }
 
   [[nodiscard]] FunctionalSafetySeverity severity() const
