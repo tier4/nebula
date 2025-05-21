@@ -69,11 +69,11 @@ public:
   SyncDiagClient(
     rclcpp::Node * const parent_node, const std::string & topic, const std::string & sensor_name,
     const std::string & sensor_ip, uint8_t ptp_domain_id)
-  : hostname_(get_hostname()),
+  : publisher_(parent_node->create_publisher<std_msgs::msg::UInt8MultiArray>(topic, 10)),
+    hostname_(get_hostname()),
     sensor_id_(make_sensor_clock_id(sensor_name, sensor_ip)),
     ptp_domain_id_(ptp_domain_id)
   {
-    publisher_ = parent_node->create_publisher<std_msgs::msg::UInt8MultiArray>(topic, 10);
   }
 
   void submit_clock_alias(const std::string & ptp_clock_id)
