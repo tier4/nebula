@@ -18,6 +18,7 @@
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_common/point_types.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
 #include <nebula_common/loggers/logger.hpp>
@@ -44,7 +45,16 @@ private:
   std::shared_ptr<HesaiScanDecoder> initialize_decoder(
     const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
-      calibration_configuration);
+      calibration_configuration,
+    std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
+      functional_safety_decoder = nullptr);
+
+  template <typename SensorT>
+  std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
+  initialize_functional_safety_decoder(
+    FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
+    FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
+    FunctionalSafetyDecoderBase::status_cb_t status_cb);
 
 public:
   HesaiDriver() = delete;
@@ -52,11 +62,14 @@ public:
   /// @param sensor_configuration SensorConfiguration for this driver
   /// @param calibration_configuration CalibrationConfiguration for this driver (either
   /// HesaiCalibrationConfiguration for sensors other than AT128 or HesaiCorrection for AT128)
-  explicit HesaiDriver(
+  HesaiDriver(
     const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
       calibration_configuration,
-    const std::shared_ptr<loggers::Logger> & logger);
+    const std::shared_ptr<loggers::Logger> & logger,
+    FunctionalSafetyDecoderBase::alive_cb_t alive_cb = nullptr,
+    FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb = nullptr,
+    FunctionalSafetyDecoderBase::status_cb_t status_cb = nullptr);
 
   /// @brief Get current status of this driver
   /// @return Current status

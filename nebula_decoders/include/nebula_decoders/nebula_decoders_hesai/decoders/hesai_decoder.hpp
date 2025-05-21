@@ -62,7 +62,7 @@ private:
   typename SensorT::angle_corrector_t angle_corrector_;
 
   /// @brief Decodes functional safety data for supported sensors
-  std::shared_ptr<FunctionalSafetyDecoderBase<typename SensorT::packet_t>>
+  std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
     functional_safety_decoder_;
 
   /// @brief The point cloud new points get added to
@@ -261,11 +261,14 @@ public:
     const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> &
       correction_data,
-    const std::shared_ptr<loggers::Logger> & logger)
+    const std::shared_ptr<loggers::Logger> & logger,
+    const std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>> &
+      functional_safety_decoder)
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(
       correction_data, sensor_configuration_->cloud_min_angle,
       sensor_configuration_->cloud_max_angle, sensor_configuration_->cut_angle),
+    functional_safety_decoder_(functional_safety_decoder),
     scan_cut_angles_(
       {deg2rad(sensor_configuration_->cloud_min_angle),
        deg2rad(sensor_configuration_->cloud_max_angle), deg2rad(sensor_configuration_->cut_angle)}),
