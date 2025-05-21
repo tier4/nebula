@@ -18,6 +18,7 @@
 #include "nebula_ros/common/diagnostics/rate_bound_status.hpp"
 #include "nebula_ros/common/watchdog_timer.hpp"
 #include "nebula_ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
+#include "nebula_ros/hesai/diagnostics/packet_loss_diagnostic.hpp"
 
 #include <diagnostic_updater/publisher.hpp>
 #include <diagnostic_updater/update_functions.hpp>
@@ -99,6 +100,8 @@ private:
 
   void initialize_functional_safety(diagnostic_updater::Updater & diagnostic_updater);
 
+  void initialize_packet_loss_diagnostic(diagnostic_updater::Updater & diagnostic_updater);
+
   nebula::Status status_;
   rclcpp::Logger logger_;
   rclcpp::Node & parent_node_;
@@ -118,6 +121,7 @@ private:
 
   custom_diagnostic_tasks::RateBoundStatus publish_diagnostic_;
   std::optional<FunctionalSafetyDiagnosticTask> functional_safety_diagnostic_;
+  std::optional<PacketLossDiagnosticTask> packet_loss_diagnostic_;
 
   std::shared_ptr<WatchdogTimer> cloud_watchdog_;
 };

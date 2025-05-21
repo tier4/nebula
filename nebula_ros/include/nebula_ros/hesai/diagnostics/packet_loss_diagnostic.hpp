@@ -29,6 +29,7 @@ public:
   explicit PacketLossDiagnosticTask(uint64_t error_threshold, rclcpp::Clock::SharedPtr clock)
   : DiagnosticTask("Packet loss status"),
     clock_(std::move(clock)),
+    last_run_time_(clock_->now()),
     error_threshold_(error_threshold)
   {
   }
@@ -51,6 +52,8 @@ public:
     } else {
       status.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "Severe packet loss");
     }
+
+    n_lost_packets_ = 0;
   }
 
 private:

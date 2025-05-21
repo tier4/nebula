@@ -19,6 +19,7 @@
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_common/point_types.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/packet_loss_detector.hpp"
 
@@ -28,6 +29,8 @@
 
 #include <memory>
 #include <tuple>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace nebula::drivers
@@ -47,19 +50,58 @@ private:
     const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
       calibration_configuration,
-    std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
-      functional_safety_decoder = nullptr);
+    FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
+    FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
+    FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb);
 
   template <typename SensorT>
-  std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
+  std::enable_if_t<
+    hesai_packet::HasFunctionalSafety<typename SensorT::packet_t>::value,
+    std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>>
   initialize_functional_safety_decoder(
     FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
     FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
-    FunctionalSafetyDecoderBase::status_cb_t status_cb);
+    FunctionalSafetyDecoderBase::status_cb_t status_cb)
+  {
+    auto functional_safety_decoder =
+      std::make_shared<FunctionalSafetyDecoder<typename SensorT::packet_t>>();
+    functional_safety_decoder->set_alive_callback(std::move(alive_cb));
+    functional_safety_decoder->set_stuck_callback(std::move(stuck_cb));
+    functional_safety_decoder->set_status_callback(std::move(status_cb));
+    return functional_safety_decoder;
+  }
 
   template <typename SensorT>
-  std::shared_ptr<PacketLossDetectorTypedBase<typename SensorT::packet_t>>
-  initialize_packet_loss_detector(PacketLossDetectorBase::lost_cb_t lost_cb);
+  std::enable_if_t<
+    !hesai_packet::HasFunctionalSafety<typename SensorT::packet_t>::value,
+    std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>>
+  initialize_functional_safety_decoder(
+    FunctionalSafetyDecoderBase::alive_cb_t /* alive_cb */,
+    FunctionalSafetyDecoderBase::stuck_cb_t /* stuck_cb */,
+    FunctionalSafetyDecoderBase::status_cb_t /* status_cb */)
+  {
+    return nullptr;
+  }
+
+  template <typename SensorT>
+  std::enable_if_t<
+    hesai_packet::HasPacketLossDetection<typename SensorT::packet_t>::value,
+    std::shared_ptr<PacketLossDetectorTypedBase<typename SensorT::packet_t>>>
+  initialize_packet_loss_detector(PacketLossDetectorBase::lost_cb_t lost_cb)
+  {
+    auto packet_loss_detector = std::make_shared<PacketLossDetector<typename SensorT::packet_t>>();
+    packet_loss_detector->set_lost_callback(std::move(lost_cb));
+    return packet_loss_detector;
+  }
+
+  template <typename SensorT>
+  std::enable_if_t<
+    !hesai_packet::HasPacketLossDetection<typename SensorT::packet_t>::value,
+    std::shared_ptr<PacketLossDetectorTypedBase<typename SensorT::packet_t>>>
+  initialize_packet_loss_detector(PacketLossDetectorBase::lost_cb_t /* lost_cb */)
+  {
+    return nullptr;
+  }
 
 public:
   HesaiDriver() = delete;
@@ -74,7 +116,8 @@ public:
     const std::shared_ptr<loggers::Logger> & logger,
     FunctionalSafetyDecoderBase::alive_cb_t alive_cb = nullptr,
     FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb = nullptr,
-    FunctionalSafetyDecoderBase::status_cb_t status_cb = nullptr);
+    FunctionalSafetyDecoderBase::status_cb_t status_cb = nullptr,
+    PacketLossDetectorBase::lost_cb_t lost_cb = nullptr);
 
   /// @brief Get current status of this driver
   /// @return Current status

@@ -40,28 +40,29 @@ public:
 };
 
 template <typename PacketT>
-class PacketLossDetector : public PacketLossDetectorBase
+class PacketLossDetector : public PacketLossDetectorTypedBase<PacketT>
 {
-  using udp_sequence_t = decltype(PacketT::tail::udp_sequence);
+  using udp_sequence_t = decltype(std::declval<PacketT>().tail.udp_sequence);
 
 public:
-  using lost_cb_t = std::function<void(uint64_t n_lost)>;
+  using lost_cb_t = PacketLossDetectorBase::lost_cb_t;
 
-  explicit PacketLossDetector(lost_cb_t on_lost) : on_lost_(std::move(on_lost)) {}
+  void set_lost_callback(lost_cb_t on_lost) override { on_lost_ = std::move(on_lost); }
 
   void update(const PacketT & packet)
   {
     if (!previous_udp_sequence_) {
-      previous_udp_sequence_ = packet.tail.udp_sequence;
+      previous_udp_sequence_.emplace(packet.tail.udp_sequence);
       return;
     }
 
     udp_sequence_t next_expected_sequence = *previous_udp_sequence_ + 1;
     if (packet.tail.udp_sequence != next_expected_sequence) {
-      if (on_lost_) on_lost_(next_expected_sequence - packet.tail.udp_sequence);
+      uint64_t n_lost = packet.tail.udp_sequence - next_expected_sequence;
+      if (on_lost_) on_lost_(n_lost);
     }
 
-    previous_udp_sequence_ = packet.tail.udp_sequence;
+    previous_udp_sequence_.emplace(packet.tail.udp_sequence);
   }
 
 private:

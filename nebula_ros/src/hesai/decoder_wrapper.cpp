@@ -48,21 +48,30 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   RCLCPP_INFO(logger_, "Starting Decoder");
 
   initialize_functional_safety(diagnostic_updater);
+  drivers::FunctionalSafetyDecoderBase::alive_cb_t alive_cb;
+  drivers::FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb;
+  drivers::FunctionalSafetyDecoderBase::status_cb_t status_cb;
 
   if (functional_safety_diagnostic_) {
-    driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
-      config, calibration_cfg_ptr_, std::make_shared<drivers::loggers::RclcppLogger>(logger_),
-      [this]() { functional_safety_diagnostic_->on_alive(); },
-      [this]() { functional_safety_diagnostic_->on_stuck(); },
-      [this](
-        drivers::FunctionalSafetySeverity severity,
-        const drivers::FunctionalSafetyErrorCodes & codes) {
-        functional_safety_diagnostic_->on_status(severity, codes);
-      });
-  } else {
-    driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
-      config, calibration_cfg_ptr_, std::make_shared<drivers::loggers::RclcppLogger>(logger_));
+    alive_cb = [this]() { functional_safety_diagnostic_->on_alive(); };
+    stuck_cb = [this]() { functional_safety_diagnostic_->on_stuck(); };
+    status_cb = [this](
+                  drivers::FunctionalSafetySeverity severity,
+                  const drivers::FunctionalSafetyErrorCodes & codes) {
+      functional_safety_diagnostic_->on_status(severity, codes);
+    };
   }
+
+  initialize_packet_loss_diagnostic(diagnostic_updater);
+  drivers::PacketLossDetectorBase::lost_cb_t lost_cb;
+
+  if (packet_loss_diagnostic_) {
+    lost_cb = [this](uint64_t n_lost) { packet_loss_diagnostic_->on_lost(n_lost); };
+  }
+
+  driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
+    config, calibration_cfg_ptr_, std::make_shared<drivers::loggers::RclcppLogger>(logger_),
+    alive_cb, stuck_cb, status_cb, lost_cb);
 
   status_ = driver_ptr_->get_status();
 
@@ -218,6 +227,19 @@ void HesaiDecoderWrapper::initialize_functional_safety(
 
   functional_safety_diagnostic_.emplace(&parent_node_);
   diagnostic_updater.add(functional_safety_diagnostic_.value());
+}
+
+void HesaiDecoderWrapper::initialize_packet_loss_diagnostic(
+  diagnostic_updater::Updater & diagnostic_updater)
+{
+  if (!drivers::supports_packet_loss_detection(sensor_cfg_->sensor_model)) {
+    return;
+  }
+
+  uint64_t error_threshold =
+    parent_node_.declare_parameter<uint16_t>("diagnostics.packet_loss.error_threshold");
+  packet_loss_diagnostic_.emplace(error_threshold, parent_node_.get_clock());
+  diagnostic_updater.add(packet_loss_diagnostic_.value());
 }
 
 nebula::Status HesaiDecoderWrapper::status()
