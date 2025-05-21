@@ -2,7 +2,9 @@
 
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 
+#include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_ros/common/rclcpp_logger.hpp"
+#include "nebula_ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/util/string_conversions.hpp>
@@ -24,12 +26,17 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   rclcpp::Node * const parent_node,
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
   const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration,
-  bool publish_packets)
+  diagnostic_updater::Updater & diagnostic_updater, bool publish_packets)
 : status_(nebula::Status::NOT_INITIALIZED),
   logger_(parent_node->get_logger().get_child("HesaiDecoder")),
   parent_node_(*parent_node),
   sensor_cfg_(config),
-  calibration_cfg_ptr_(calibration)
+  calibration_cfg_ptr_(calibration),
+  publish_diagnostic_(
+    "pointcloud publish rate", diagnostic_updater, parent_node->get_clock(),
+    {drivers::rpm2hz(config->rotation_speed),
+     parent_node->declare_parameter<double>(
+       "diagnostics.pointcloud_publish_rate.relative_tolerance")})
 {
   if (!sensor_cfg_) {
     throw std::runtime_error("HesaiDecoderWrapper cannot be instantiated without a valid config!");
@@ -44,8 +51,32 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
 
   RCLCPP_INFO(logger_, "Starting Decoder");
 
+  initialize_functional_safety(diagnostic_updater);
+  drivers::FunctionalSafetyDecoderBase::alive_cb_t alive_cb;
+  drivers::FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb;
+  drivers::FunctionalSafetyDecoderBase::status_cb_t status_cb;
+
+  if (functional_safety_diagnostic_) {
+    alive_cb = [this]() { functional_safety_diagnostic_->on_alive(); };
+    stuck_cb = [this]() { functional_safety_diagnostic_->on_stuck(); };
+    status_cb = [this](
+                  drivers::FunctionalSafetySeverity severity,
+                  const drivers::FunctionalSafetyErrorCodes & codes) {
+      functional_safety_diagnostic_->on_status(severity, codes);
+    };
+  }
+
+  initialize_packet_loss_diagnostic(diagnostic_updater);
+  drivers::PacketLossDetectorBase::lost_cb_t lost_cb;
+
+  if (packet_loss_diagnostic_) {
+    lost_cb = [this](uint64_t n_lost) { packet_loss_diagnostic_->on_lost(n_lost); };
+  }
+
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
-    config, calibration_cfg_ptr_, std::make_shared<drivers::loggers::RclcppLogger>(logger_));
+    config, calibration_cfg_ptr_, std::make_shared<drivers::loggers::RclcppLogger>(logger_),
+    alive_cb, stuck_cb, status_cb, lost_cb);
+
   status_ = driver_ptr_->get_status();
 
   if (Status::OK != status_) {
@@ -143,13 +174,15 @@ void HesaiDecoderWrapper::process_cloud_packet(
     current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
   }
 
+  rclcpp::Time cloud_stamp =
+    rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+
   if (
     nebula_points_pub_->get_subscription_count() > 0 ||
     nebula_points_pub_->get_intra_process_subscription_count() > 0) {
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
-    ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+    ros_pc_msg_ptr->header.stamp = cloud_stamp;
     publish_cloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
   }
   if (
@@ -159,8 +192,7 @@ void HesaiDecoderWrapper::process_cloud_packet(
       nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(pointcloud);
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_cloud_xyzi, *ros_pc_msg_ptr);
-    ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+    ros_pc_msg_ptr->header.stamp = cloud_stamp;
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
   }
   if (
@@ -170,10 +202,11 @@ void HesaiDecoderWrapper::process_cloud_packet(
       pointcloud, std::get<1>(pointcloud_ts));
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
-    ros_pc_msg_ptr->header.stamp =
-      rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
+    ros_pc_msg_ptr->header.stamp = cloud_stamp;
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
   }
+
+  publish_diagnostic_.tick();
 }
 
 void HesaiDecoderWrapper::publish_cloud(
@@ -185,6 +218,30 @@ void HesaiDecoderWrapper::publish_cloud(
   }
   pointcloud->header.frame_id = sensor_cfg_->frame_id;
   publisher->publish(std::move(pointcloud));
+}
+
+void HesaiDecoderWrapper::initialize_functional_safety(
+  diagnostic_updater::Updater & diagnostic_updater)
+{
+  if (!drivers::supports_functional_safety(sensor_cfg_->sensor_model)) {
+    return;
+  }
+
+  functional_safety_diagnostic_.emplace(parent_node_.get_clock());
+  diagnostic_updater.add(functional_safety_diagnostic_.value());
+}
+
+void HesaiDecoderWrapper::initialize_packet_loss_diagnostic(
+  diagnostic_updater::Updater & diagnostic_updater)
+{
+  if (!drivers::supports_packet_loss_detection(sensor_cfg_->sensor_model)) {
+    return;
+  }
+
+  uint64_t error_threshold =
+    parent_node_.declare_parameter<uint16_t>("diagnostics.packet_loss.error_threshold");
+  packet_loss_diagnostic_.emplace(error_threshold, parent_node_.get_clock());
+  diagnostic_updater.add(packet_loss_diagnostic_.value());
 }
 
 nebula::Status HesaiDecoderWrapper::status()

@@ -16,8 +16,13 @@
 
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
+#include "nebula_ros/common/diagnostics/frequency_diagnostic_task.hpp"
 #include "nebula_ros/common/watchdog_timer.hpp"
+#include "nebula_ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
+#include "nebula_ros/hesai/diagnostics/packet_loss_diagnostic.hpp"
 
+#include <diagnostic_updater/publisher.hpp>
+#include <diagnostic_updater/update_functions.hpp>
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -27,6 +32,7 @@
 
 #include <memory>
 #include <mutex>
+#include <optional>
 
 namespace nebula::ros
 {
@@ -37,7 +43,7 @@ public:
     rclcpp::Node * const parent_node,
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
     const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> & calibration,
-    bool publish_packets);
+    diagnostic_updater::Updater & diagnostic_updater, bool publish_packets);
 
   void process_cloud_packet(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
@@ -64,6 +70,10 @@ private:
       std::chrono::duration<double>(seconds));
   }
 
+  void initialize_functional_safety(diagnostic_updater::Updater & diagnostic_updater);
+
+  void initialize_packet_loss_diagnostic(diagnostic_updater::Updater & diagnostic_updater);
+
   nebula::Status status_;
   rclcpp::Logger logger_;
   rclcpp::Node & parent_node_;
@@ -80,6 +90,10 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_{};
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_{};
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_{};
+
+  FrequencyDiagnosticTask publish_diagnostic_;
+  std::optional<FunctionalSafetyDiagnosticTask> functional_safety_diagnostic_;
+  std::optional<PacketLossDiagnosticTask> packet_loss_diagnostic_;
 
   std::shared_ptr<WatchdogTimer> cloud_watchdog_;
 };

@@ -28,3 +28,8 @@
     ptp_lock_threshold: 100
     retry_hw: true
     dual_return_distance_threshold: 0.1
+    diagnostics:
+      pointcloud_publish_rate:
+        relative_tolerance: 0.1
+      packet_loss:
+        error_threshold: 10

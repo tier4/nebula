@@ -3,7 +3,7 @@
     host_ip: 192.168.1.10
     sensor_ip: 192.168.1.201
     multicast_ip: ""
-    data_port: 2368
+    data_port: 2367
     gnss_port: 10110
     packet_mtu_size: 1500
     launch_hw: true
@@ -29,3 +29,10 @@
     retry_hw: true
     dual_return_distance_threshold: 0.1
     hires_mode: true
+    sync_diagnostics:
+      topic: /graph_updates
+    diagnostics:
+      pointcloud_publish_rate:
+        relative_tolerance: 0.1
+      packet_loss:
+        error_threshold: 10
