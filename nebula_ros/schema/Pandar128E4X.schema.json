@@ -113,6 +113,9 @@
         },
         "hires_mode": {
           "$ref": "sub/lidar_hesai.json#/definitions/hires_mode"
+        },
+        "sync_diagnostics": {
+          "$ref": "sub/misc.json#/definitions/sync_diagnostics"
         }
       },
       "required": [
