@@ -98,6 +98,20 @@ struct FunctionalSafetyQT128C2X
         return FunctionalSafetySeverity::Error;
     }
   }
+
+  friend bool operator==(const FunctionalSafetyQT128C2X & lhs, const FunctionalSafetyQT128C2X & rhs)
+  {
+    return lhs.lidar_state() == rhs.lidar_state() &&
+           lhs.fault_code_type() == rhs.fault_code_type() &&
+           lhs.rolling_counter() == rhs.rolling_counter() &&
+           lhs.total_fault_code_num() == rhs.total_fault_code_num() &&
+           lhs.fault_code == rhs.fault_code;
+  }
+
+  friend bool operator!=(const FunctionalSafetyQT128C2X & lhs, const FunctionalSafetyQT128C2X & rhs)
+  {
+    return !(lhs == rhs);
+  }
 };
 
 static_assert(sizeof(FunctionalSafetyQT128C2X) == 17);

@@ -145,6 +145,20 @@ struct FunctionalSafety128E3X
         return FunctionalSafetySeverity::Error;
     }
   }
+
+  friend bool operator==(const FunctionalSafety128E3X & lhs, const FunctionalSafety128E3X & rhs)
+  {
+    return lhs.lidar_state() == rhs.lidar_state() &&
+           lhs.fault_code_type() == rhs.fault_code_type() &&
+           lhs.rolling_counter() == rhs.rolling_counter() &&
+           lhs.total_fault_code_num() == rhs.total_fault_code_num() &&
+           lhs.fault_code == rhs.fault_code;
+  }
+
+  friend bool operator!=(const FunctionalSafety128E3X & lhs, const FunctionalSafety128E3X & rhs)
+  {
+    return !(lhs == rhs);
+  }
 };
 
 struct Packet128E3X : public PacketBase<2, 128, 2, 100>
