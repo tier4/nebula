@@ -117,6 +117,15 @@ HesaiDriver::initialize_functional_safety_decoder(
   return functional_safety_decoder;
 }
 
+template <typename SensorT>
+std::shared_ptr<PacketLossDetectorTypedBase<typename SensorT::packet_t>>
+HesaiDriver::initialize_packet_loss_detector(PacketLossDetectorBase::lost_cb_t lost_cb)
+{
+  auto packet_loss_detector = std::make_shared<PacketLossDetector<typename SensorT::packet_t>>();
+  packet_loss_detector->set_lost_callback(std::move(lost_cb));
+  return packet_loss_detector;
+}
+
 std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::parse_cloud_packet(
   const std::vector<uint8_t> & packet)
 {
