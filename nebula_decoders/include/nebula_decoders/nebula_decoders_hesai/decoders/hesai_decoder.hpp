@@ -20,6 +20,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/packet_loss_detector.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/loggers/logger.hpp>
@@ -64,6 +65,8 @@ private:
   /// @brief Decodes functional safety data for supported sensors
   std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
     functional_safety_decoder_;
+
+  std::shared_ptr<PacketLossDetectorTypedBase<typename SensorT::packet_t>> packet_loss_detector_;
 
   /// @brief The point cloud new points get added to
   NebulaPointCloudPtr decode_pc_;
@@ -292,6 +295,10 @@ public:
   {
     if (!parse_packet(packet)) {
       return -1;
+    }
+
+    if (packet_loss_detector_) {
+      packet_loss_detector_->update(packet_);
     }
 
     // Even if the checksums of other parts of the packet are invalid, functional safety info
