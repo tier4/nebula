@@ -53,7 +53,7 @@ public:
    */
   LivenessMonitor(
     const std::string & name, rclcpp::Clock::SharedPtr clock, const rclcpp::Duration & timeout)
-  : DiagnosticTask(name), timeout_(timeout), clock_(std::move(clock))
+  : DiagnosticTask(name), clock_(std::move(clock)), timeout_(timeout), last_tick_(clock_->now())
   {
   }
 
@@ -86,13 +86,13 @@ private:
 
     status.summary(severity, message);
     status.add("Is alive", value);
-    status.add("Last tick", std::to_string(last_tick_.seconds()));
-    status.add("Lateness", std::to_string(lateness.seconds()));
+    status.add("Last tick [s]", std::to_string(last_tick_.seconds()));
+    status.add("Lateness [ms]", std::to_string(lateness.seconds() * 1000));
   }
 
-  rclcpp::Time last_tick_;
-  rclcpp::Duration timeout_;
   rclcpp::Clock::SharedPtr clock_;
+  rclcpp::Duration timeout_;
+  rclcpp::Time last_tick_;
 };
 
 }  // namespace nebula::ros

@@ -27,18 +27,29 @@ namespace nebula::drivers
 {
 
 enum class FunctionalSafetySeverity : uint8_t { Ok, Warning, Error };
+using FunctionalSafetyErrorCodes = boost::container::static_vector<uint16_t, 16>;
 
-template <typename PacketT>
 class FunctionalSafetyDecoderBase
 {
 public:
-  virtual void update(const PacketT & /* packet */) = 0;
+  using alive_cb_t = std::function<void()>;
+  using stuck_cb_t = std::function<void()>;
+  using status_cb_t = std::function<void(FunctionalSafetySeverity, FunctionalSafetyErrorCodes)>;
+
+  virtual ~FunctionalSafetyDecoderBase() = default;
 };
 
 template <typename PacketT>
-class NullFunctionalSafetyDecoder : public FunctionalSafetyDecoderBase<PacketT>
+class FunctionalSafetyDecoderTypedBase : public FunctionalSafetyDecoderBase
 {
-  void update(const PacketT & /* packet */) override {}
+public:
+  virtual ~FunctionalSafetyDecoderTypedBase() = default;
+
+  virtual void update(const PacketT & /* packet */) {}
+
+  virtual void set_alive_callback(alive_cb_t /* on_alive */) {}
+  virtual void set_stuck_callback(stuck_cb_t /* on_stuck */) {}
+  virtual void set_status_callback(status_cb_t /* on_status */) {}
 };
 
 /**
@@ -48,28 +59,15 @@ class NullFunctionalSafetyDecoder : public FunctionalSafetyDecoderBase<PacketT>
  * @tparam PacketT A packet definition that has a supported functional safety section.
  */
 template <typename PacketT>
-class FunctionalSafetyDecoder : public FunctionalSafetyDecoderBase<PacketT>
+class FunctionalSafetyDecoder : public FunctionalSafetyDecoderTypedBase<PacketT>
 {
   using functional_safety_t = decltype(PacketT::fs);
 
+  using alive_cb_t = typename FunctionalSafetyDecoderBase::alive_cb_t;
+  using stuck_cb_t = typename FunctionalSafetyDecoderBase::stuck_cb_t;
+  using status_cb_t = typename FunctionalSafetyDecoderBase::status_cb_t;
+
 public:
-  using error_codes_t = boost::container::static_vector<uint16_t, 16>;
-
-  using alive_cb_t = std::function<void()>;
-  using stuck_cb_t = std::function<void()>;
-  using severity_cb_t = std::function<void(FunctionalSafetySeverity)>;
-  using error_codes_cb_t = std::function<void(error_codes_t)>;
-
-  FunctionalSafetyDecoder(
-    alive_cb_t on_alive, stuck_cb_t on_stuck, severity_cb_t on_severity,
-    error_codes_cb_t on_error_codes)
-  : on_alive_(std::move(on_alive)),
-    on_stuck_(std::move(on_stuck)),
-    on_severity_(std::move(on_severity)),
-    on_error_codes_(std::move(on_error_codes))
-  {
-  }
-
   void update(const PacketT & packet) override
   {
     uint64_t timestamp_ns = hesai_packet::get_timestamp_ns(packet);
@@ -80,7 +78,8 @@ public:
     if (on_alive_) on_alive_();
 
     // A corrupted packet is not an error and shall simply be ignored.
-    if (!hesai_packet::is_crc_valid(fs)) return;
+    if (!hesai_packet::is_crc_valid(fs))
+      throw std::runtime_error("Corrupted functional safety packet");
 
     // The sensor sends functional safety data with every packet,
     // but it only changes at a fixed rate e.g. every 5 ms.
@@ -98,20 +97,26 @@ public:
 
     // From here on, it is guaranteed that data has changed.
     FunctionalSafetySeverity severity = fs.severity();
-    if (on_severity_) on_severity_(severity);
 
     // Error codes are queued on the sensor side, and with each cycle, the next queued code is
     // sent. Call back only when all codes of a queue have been received, otherwise continue
     // accumulating.
-    std::optional<error_codes_t> accumulated_codes = try_accumulate_error_codes(timestamp_ns, fs);
+    std::optional<FunctionalSafetyErrorCodes> accumulated_codes =
+      try_accumulate_error_codes(timestamp_ns, fs);
     if (accumulated_codes) {
-      if (on_error_codes_) on_error_codes_(std::move(*accumulated_codes));
+      if (on_status_) on_status_(severity, std::move(*accumulated_codes));
     }
 
     // Store the changed, received values for the next iteration
     last_changed_timestamp_ns_ = timestamp_ns;
     last_value_ = fs;
   }
+
+  void set_alive_callback(alive_cb_t on_alive) override { on_alive_ = std::move(on_alive); }
+
+  void set_stuck_callback(stuck_cb_t on_stuck) override { on_stuck_ = std::move(on_stuck); }
+
+  void set_status_callback(status_cb_t on_status) override { on_status_ = std::move(on_status); }
 
 private:
   bool has_changed(const functional_safety_t & current_value)
@@ -131,17 +136,17 @@ private:
 
   [[nodiscard]] bool is_overdue(uint64_t timestamp_ns) const
   {
-    return (timestamp_ns - last_changed_timestamp_ns_) > functional_safety_t::update_cycle_ns;
+    return (timestamp_ns - last_changed_timestamp_ns_) >= functional_safety_t::update_cycle_ns * 2;
   }
 
-  std::optional<error_codes_t> try_accumulate_error_codes(
+  std::optional<FunctionalSafetyErrorCodes> try_accumulate_error_codes(
     uint64_t timestamp_ns, const functional_safety_t & fs)
   {
     uint8_t n_codes = fs.total_fault_code_num();
 
     // There is no reported error, report an empty error list
     if (n_codes == 0) {
-      return {error_codes_t{}};
+      return {FunctionalSafetyErrorCodes{}};
       current_error_codes_ = {};
     }
 
@@ -169,7 +174,7 @@ private:
 
     bool has_accumulated = current_error_codes_.size() == n_codes;
     if (has_accumulated) {
-      std::optional<error_codes_t> result = {std::move(current_error_codes_)};
+      std::optional<FunctionalSafetyErrorCodes> result = {std::move(current_error_codes_)};
       current_error_codes_ = {};
       return result;
     }
@@ -180,12 +185,11 @@ private:
   uint64_t last_changed_timestamp_ns_{};
   functional_safety_t last_value_;
 
-  error_codes_t current_error_codes_;
+  FunctionalSafetyErrorCodes current_error_codes_;
 
   alive_cb_t on_alive_;
   stuck_cb_t on_stuck_;
-  severity_cb_t on_severity_;
-  error_codes_cb_t on_error_codes_;
+  status_cb_t on_status_;
 };
 
 }  // namespace nebula::drivers
