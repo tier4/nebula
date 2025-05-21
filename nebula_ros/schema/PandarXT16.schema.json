@@ -103,7 +103,10 @@
           "$ref": "sub/misc.json#/definitions/dual_return_distance_threshold"
         },
         "diagnostics": {
-          "$ref": "sub/lidar_hesai.json#/definitions/diagnostics"
+          "$ref": "sub/lidar_hesai.json#/definitions/diagnostics",
+          "required": [
+            "pointcloud_publish_rate"
+          ]
         }
       },
       "required": [
