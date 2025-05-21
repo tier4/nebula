@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -29,6 +30,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 namespace nebula
 {
@@ -53,6 +55,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   uint8_t ptp_lock_threshold;
   std::optional<std::string> downsample_mask_path;
   bool hires_mode;
+  std::optional<std::string> sync_diagnostics_topic;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -81,7 +84,11 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "High Resolution Mode: " << (arg.hires_mode ? "enabled" : "disabled") << '\n';
   os << "Downsample Filter: "
      << (arg.downsample_mask_path ? "enabled, path: " + arg.downsample_mask_path.value()
-                                  : "disabled");
+                                  : "disabled")
+     << '\n';
+  os << "Synchronization Diagnostics: "
+     << (arg.sync_diagnostics_topic ? ("enabled, topic: " + arg.sync_diagnostics_topic.value())
+                                    : "disabled");
   return os;
 }
 

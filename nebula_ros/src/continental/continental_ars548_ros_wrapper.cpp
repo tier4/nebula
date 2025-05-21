@@ -101,6 +101,14 @@ nebula::Status ContinentalARS548RosWrapper::declare_and_get_sensor_config_params
   config.configuration_vehicle_wheelbase = static_cast<float>(
     declare_parameter<double>("configuration_vehicle_wheelbase", param_read_write()));
 
+  {
+    auto sync_diagnostics_topic =
+      declare_parameter<std::string>("sync_diagnostics.topic", "", param_read_only());
+    if (!sync_diagnostics_topic.empty()) {
+      config.sync_diagnostics_topic.emplace(sync_diagnostics_topic);
+    }
+  }
+
   if (config.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }

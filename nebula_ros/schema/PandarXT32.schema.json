@@ -104,6 +104,9 @@
         },
         "point_filters": {
           "$ref": "sub/misc.json#/definitions/point_filters"
+        },
+        "sync_diagnostics": {
+          "$ref": "sub/misc.json#/definitions/sync_diagnostics"
         }
       },
       "required": [
