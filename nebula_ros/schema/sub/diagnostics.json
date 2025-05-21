@@ -11,6 +11,15 @@
           "description": "Tolerance around the expected frequency. 0.1 means 10% tolerance in either direction."
         }
       }
+    },
+    "packet_loss_diagnostic_task": {
+      "type": "object",
+      "properties": {
+        "error_threshold": {
+          "type": "number",
+          "description": "Threshold for the number of lost packets. If the number of lost packets exceeds this threshold, the diagnostic will be set to ERROR. For non-zero packet loss below this threshold, the diagnostic will be set to WARN."
+        }
+      }
     }
   }
 }

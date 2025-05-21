@@ -123,7 +123,11 @@
           "$ref": "sub/misc.json#/definitions/point_filters"
         },
         "diagnostics": {
-          "$ref": "sub/diagnostics.json#/definitions/diagnostics"
+          "$ref": "sub/diagnostics.json#/definitions/diagnostics",
+          "required": [
+            "pointcloud_publish_rate",
+            "packet_loss"
+          ]
         }
       },
       "required": [
