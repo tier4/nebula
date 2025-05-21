@@ -18,11 +18,29 @@
 #include <functional>
 #include <optional>
 #include <utility>
+
 namespace nebula::drivers
 {
 
+class PacketLossDetectorBase
+{
+public:
+  using lost_cb_t = std::function<void(uint64_t n_lost)>;
+
+  virtual ~PacketLossDetectorBase() = default;
+
+  virtual void set_lost_callback(lost_cb_t /* on_lost */) {}
+};
+
 template <typename PacketT>
-class PacketLossDetector
+class PacketLossDetectorTypedBase : public PacketLossDetectorBase
+{
+public:
+  virtual void update(const PacketT & /* packet */) {}
+};
+
+template <typename PacketT>
+class PacketLossDetector : public PacketLossDetectorBase
 {
   using udp_sequence_t = decltype(PacketT::tail::udp_sequence);
 
@@ -31,19 +49,19 @@ public:
 
   explicit PacketLossDetector(lost_cb_t on_lost) : on_lost_(std::move(on_lost)) {}
 
-  void update(udp_sequence_t current_sequence)
+  void update(const PacketT & packet)
   {
     if (!previous_udp_sequence_) {
-      previous_udp_sequence_ = current_sequence;
+      previous_udp_sequence_ = packet.tail.udp_sequence;
       return;
     }
 
     udp_sequence_t next_expected_sequence = *previous_udp_sequence_ + 1;
-    if (current_sequence != next_expected_sequence) {
-      if (on_lost_) on_lost_(next_expected_sequence - current_sequence);
+    if (packet.tail.udp_sequence != next_expected_sequence) {
+      if (on_lost_) on_lost_(next_expected_sequence - packet.tail.udp_sequence);
     }
 
-    previous_udp_sequence_ = current_sequence;
+    previous_udp_sequence_ = packet.tail.udp_sequence;
   }
 
 private:
