@@ -193,6 +193,8 @@ void HesaiHwMonitorWrapper::on_hesai_status_timer()
 
 void HesaiHwMonitorWrapper::submit_clock_state(const HesaiLidarStatusBase & status)
 {
+  if (!sync_diag_client_) return;
+
   auto j = status.to_json();
   if (j.contains("ptp_status")) {
     auto status = j["ptp_status"].template get<std::string>();
