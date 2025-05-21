@@ -266,12 +266,15 @@ public:
       correction_data,
     const std::shared_ptr<loggers::Logger> & logger,
     const std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>> &
-      functional_safety_decoder)
+      functional_safety_decoder,
+    const std::shared_ptr<PacketLossDetectorTypedBase<typename SensorT::packet_t>> &
+      packet_loss_detector)
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(
       correction_data, sensor_configuration_->cloud_min_angle,
       sensor_configuration_->cloud_max_angle, sensor_configuration_->cut_angle),
     functional_safety_decoder_(functional_safety_decoder),
+    packet_loss_detector_(packet_loss_detector),
     scan_cut_angles_(
       {deg2rad(sensor_configuration_->cloud_min_angle),
        deg2rad(sensor_configuration_->cloud_max_angle), deg2rad(sensor_configuration_->cut_angle)}),
