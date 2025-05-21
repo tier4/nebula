@@ -14,9 +14,16 @@
 
 #pragma once
 
+#include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
+#include <nebula_common/util/bitfield.hpp>
+#include <nebula_common/util/crc.hpp>
+
+#include <cstdint>
+#include <iostream>
+#include <ostream>
 #include <vector>
 
 namespace nebula::drivers
@@ -40,20 +47,20 @@ struct Tail128E3X
 
   /* Ignored optional fields */
 
-  // uint32_t udp_sequence;
+  uint32_t udp_sequence;
 
-  // uint16_t imu_temperature;
-  // uint16_t imu_acceleration_unit;
-  // uint16_t imu_angular_velocity_unit;
-  // uint32_t imu_timestamp;
-  // uint16_t imu_x_axis_acceleration;
-  // uint16_t imu_y_axis_acceleration;
-  // uint16_t imu_z_axis_acceleration;
-  // uint16_t imu_x_axis_angular_velocity;
-  // uint16_t imu_y_axis_angular_velocity;
-  // uint16_t imu_z_axis_angular_velocity;
+  uint16_t imu_temperature;
+  uint16_t imu_acceleration_unit;
+  uint16_t imu_angular_velocity_unit;
+  uint32_t imu_timestamp;
+  uint16_t imu_x_axis_acceleration;
+  uint16_t imu_y_axis_acceleration;
+  uint16_t imu_z_axis_acceleration;
+  uint16_t imu_x_axis_angular_velocity;
+  uint16_t imu_y_axis_angular_velocity;
+  uint16_t imu_z_axis_angular_velocity;
 
-  // uint32_t crc_tail;
+  uint32_t crc_tail;
 
   /// @brief Get the azimuth state of the given block in the packet
   /// @param block_id The block ID (i.e. its index in the packet). Valid IDs are 0 and 1.
@@ -62,15 +69,104 @@ struct Tail128E3X
   {
     return (azimuth_state >> (14 - block_id * 2)) & 0b11;
   }
+
+  [[nodiscard]] bool is_crc_valid() const
+  {
+    return crc<crc32_mpeg2_t>(&reserved1, &crc_tail) == crc_tail;
+  }
+};
+
+struct ChannelHealth128E3X
+{
+  uint16_t fault_info_num;
+  uint32_t channel_health_status;
+  uint8_t reserved[2];
+};
+
+struct FunctionalSafety128E3X
+{
+  static constexpr uint64_t update_cycle_ns = 5'000'000;
+
+  enum class LidarState : uint8_t {
+    Initialization = 0,
+    Normal = 1,
+    Warning = 2,
+    PrePerformanceDegradation = 3,
+    PerformanceDegradation = 4,
+    PreShutdown = 5,
+    ShutdownOrOutputUntrusted = 6,
+    Standby = 7,
+  };
+
+  enum class FaultCodeType : uint8_t {
+    None = 0,
+    CurrentFault = 1,
+    PastFault = 2  /// Currently unsupported by the sensor
+  };
+
+  uint8_t fs_version;
+
+  uint8_t bitfield1;
+  BITFIELD_ACCESSOR(LidarState, lidar_state, 5, 7, bitfield1)
+  BITFIELD_ACCESSOR(FaultCodeType, fault_code_type, 3, 4, bitfield1)
+  BITFIELD_ACCESSOR(uint8_t, rolling_counter, 0, 2, bitfield1)
+
+  uint8_t bitfield2;
+  BITFIELD_ACCESSOR(uint8_t, total_fault_code_num, 4, 7, bitfield2)
+  BITFIELD_ACCESSOR(uint8_t, fault_code_id, 0, 3, bitfield2)
+
+  uint16_t fault_code;
+  ChannelHealth128E3X channel_health;
+  uint32_t crc_fs;
+
+  [[nodiscard]] bool is_crc_valid() const
+  {
+    // FIXME(mojomex): OT128's CRC is broken, at least in B and C samples. Disable for now.
+    return true;
+
+    // fs_version is not included in the CRC check
+    // return crc<crc32_mpeg2_t>(&bitfield1, &crc_fs) == crc_fs;
+  }
+
+  [[nodiscard]] FunctionalSafetySeverity severity() const
+  {
+    switch (lidar_state()) {
+      case LidarState::Initialization:
+      case LidarState::Normal:
+      case LidarState::Warning:
+        return FunctionalSafetySeverity::Ok;
+      case LidarState::PrePerformanceDegradation:
+      case LidarState::PerformanceDegradation:
+      case LidarState::PreShutdown:
+        return FunctionalSafetySeverity::Warning;
+      case LidarState::ShutdownOrOutputUntrusted:
+      case LidarState::Standby:
+      default:
+        return FunctionalSafetySeverity::Error;
+    }
+  }
+
+  friend bool operator==(const FunctionalSafety128E3X & lhs, const FunctionalSafety128E3X & rhs)
+  {
+    return lhs.lidar_state() == rhs.lidar_state() &&
+           lhs.fault_code_type() == rhs.fault_code_type() &&
+           lhs.rolling_counter() == rhs.rolling_counter() &&
+           lhs.total_fault_code_num() == rhs.total_fault_code_num() &&
+           lhs.fault_code == rhs.fault_code;
+  }
+
+  friend bool operator!=(const FunctionalSafety128E3X & lhs, const FunctionalSafety128E3X & rhs)
+  {
+    return !(lhs == rhs);
+  }
 };
 
 struct Packet128E3X : public PacketBase<2, 128, 2, 100>
 {
-  using body_t = Body<Block<Unit3B, Packet128E3X::n_channels>, Packet128E3X::n_blocks>;
+  using body_t = BodyWithCrc<Block<Unit3B, Packet128E3X::n_channels>, Packet128E3X::n_blocks>;
   Header12B header;
   body_t body;
-  uint32_t crc_body;
-  FunctionalSafety fs;
+  FunctionalSafety128E3X fs;
   Tail128E3X tail;
 
   /* Ignored optional fields */

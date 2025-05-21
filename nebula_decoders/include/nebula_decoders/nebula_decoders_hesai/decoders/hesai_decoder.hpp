@@ -17,6 +17,7 @@
 #include "nebula_decoders/nebula_decoders_common/angles.hpp"
 #include "nebula_decoders/nebula_decoders_common/point_filters/downsample_mask.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
@@ -60,6 +61,10 @@ private:
   /// @brief Decodes azimuth/elevation angles given calibration/correction data
   typename SensorT::angle_corrector_t angle_corrector_;
 
+  /// @brief Decodes functional safety data for supported sensors
+  std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
+    functional_safety_decoder_;
+
   /// @brief The point cloud new points get added to
   NebulaPointCloudPtr decode_pc_;
   /// @brief The point cloud that is returned when a scan is complete
@@ -89,7 +94,7 @@ private:
 
   std::optional<point_filters::DownsampleMaskFilter> mask_filter_;
 
-  /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
+  /// @brief Validates and parse PandarPacket. Checks size and, if present, CRC checksums.
   /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
   bool parse_packet(const std::vector<uint8_t> & packet)
@@ -100,14 +105,13 @@ private:
                                                  << sizeof(typename SensorT::packet_t));
       return false;
     }
-    if (std::memcpy(&packet_, packet.data(), sizeof(typename SensorT::packet_t))) {
-      // FIXME(mojomex) do validation?
-      // RCLCPP_DEBUG(logger_, "Packet parsed successfully");
-      return true;
+
+    if (!std::memcpy(&packet_, packet.data(), sizeof(typename SensorT::packet_t))) {
+      logger_->error("Packet memcopy failed");
+      return false;
     }
 
-    logger_->error("Packet memcopy failed");
-    return false;
+    return true;
   }
 
   /// @brief Converts a group of returns (i.e. 1 for single return, 2 for dual return, etc.) to
@@ -257,11 +261,14 @@ public:
     const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> &
       correction_data,
-    const std::shared_ptr<loggers::Logger> & logger)
+    const std::shared_ptr<loggers::Logger> & logger,
+    const std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>> &
+      functional_safety_decoder)
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(
       correction_data, sensor_configuration_->cloud_min_angle,
       sensor_configuration_->cloud_max_angle, sensor_configuration_->cut_angle),
+    functional_safety_decoder_(functional_safety_decoder),
     scan_cut_angles_(
       {deg2rad(sensor_configuration_->cloud_min_angle),
        deg2rad(sensor_configuration_->cloud_max_angle), deg2rad(sensor_configuration_->cut_angle)}),
@@ -284,6 +291,17 @@ public:
   int unpack(const std::vector<uint8_t> & packet) override
   {
     if (!parse_packet(packet)) {
+      return -1;
+    }
+
+    // Even if the checksums of other parts of the packet are invalid, functional safety info
+    // is still checked. This is a null-op for sensors that do not support functional safety.
+    if (functional_safety_decoder_) {
+      functional_safety_decoder_->update(packet_);
+    }
+
+    // Note that not all packet formats have CRC. In those cases, these checks always succeed.
+    if (!hesai_packet::is_crc_valid(packet_.body) || !hesai_packet::is_crc_valid(packet_.tail)) {
       return -1;
     }
 
