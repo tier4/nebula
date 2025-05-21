@@ -87,9 +87,10 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
   if (launch_hw_) {
-    hw_interface_wrapper_->hw_interface()->register_scan_callback(std::bind(
-      &HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1,
-      std::placeholders::_2));
+    hw_interface_wrapper_->hw_interface()->register_scan_callback(
+      std::bind(
+        &HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
     stream_start();
   } else {
     packets_sub_ = create_subscription<pandar_msgs::msg::PandarScan>(

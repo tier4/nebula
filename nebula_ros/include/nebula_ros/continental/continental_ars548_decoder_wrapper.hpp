@@ -183,7 +183,7 @@ private:
 
   autoware_sensing_msgs::msg::RadarInfo radar_info_msg_{};
   std::size_t detection_msgs_counter_{0};
-  
+
   std::optional<SyncDiagClient> sync_diag_client_;
 
   std::unordered_set<int> previous_ids_{};
