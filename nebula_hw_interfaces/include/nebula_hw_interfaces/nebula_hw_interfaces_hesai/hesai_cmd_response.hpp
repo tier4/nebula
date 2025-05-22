@@ -206,14 +206,6 @@ struct HesaiInventoryBase
 
   [[nodiscard]] virtual const Internal & get() const = 0;
 
-  [[nodiscard]] std::string to_hardware_id() const
-  {
-    auto j = to_json();
-    std::string model = j.at("model");
-    std::string serial = j.at("sn");
-    return model + ": " + serial;
-  }
-
 protected:
   [[nodiscard]] virtual ordered_json sensor_specifics_to_json() const = 0;
 

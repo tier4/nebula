@@ -96,9 +96,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
       "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
   }
 
-  auto hardware_id = hw_interface_wrapper_ && hw_interface_wrapper_->inventory()
-                       ? hw_interface_wrapper_->inventory()->to_hardware_id()
-                       : "none";
+  auto hardware_id = sensor_cfg_ptr_->frame_id;
 
   diagnostic_updater_.setHardwareID(hardware_id);
 
