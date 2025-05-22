@@ -38,7 +38,7 @@ class HesaiHwMonitorWrapper
 {
 public:
   HesaiHwMonitorWrapper(
-    rclcpp::Node * const parent_node,
+    rclcpp::Node * const parent_node, diagnostic_updater::Updater & diagnostic_updater,
     const std::shared_ptr<nebula::drivers::HesaiHwInterface> & hw_interface,
     std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config);
 
@@ -54,7 +54,8 @@ private:
     diagnostic_updater::DiagnosticStatusWrapper & diagnostics, const std::string & key,
     const json & value);
 
-  void initialize_hesai_diagnostics(bool monitor_enabled);
+  void initialize_hesai_diagnostics(
+    diagnostic_updater::Updater & diagnostic_updater, bool monitor_enabled);
 
   std::string get_ptree_value(boost::property_tree::ptree * pt, const std::string & key);
 
@@ -79,14 +80,12 @@ private:
   void hesai_check_voltage(diagnostic_updater::DiagnosticStatusWrapper & diagnostics);
 
   rclcpp::Logger logger_;
-  diagnostic_updater::Updater diagnostics_updater_;
   nebula::Status status_;
 
   const std::shared_ptr<nebula::drivers::HesaiHwInterface> hw_interface_;
   rclcpp::Node * const parent_node_;
 
   uint16_t diag_span_;
-  rclcpp::TimerBase::SharedPtr diagnostics_update_timer_{};
   rclcpp::TimerBase::SharedPtr fetch_diagnostics_timer_{};
 
   std::shared_ptr<HesaiLidarStatusBase> current_status_{};

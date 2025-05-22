@@ -2,6 +2,7 @@
 
 #include "nebula_ros/hesai/hw_interface_wrapper.hpp"
 
+#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
 #include "nebula_ros/common/rclcpp_logger.hpp"
 
@@ -55,8 +56,8 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
 
   if (status_ == Status::OK) {
     try {
-      auto inventory = hw_interface_->get_inventory();
-      hw_interface_->set_target_model(inventory->model_number());
+      inventory_ = hw_interface_->get_inventory();
+      hw_interface_->set_target_model(inventory_->model_number());
     } catch (...) {
       RCLCPP_ERROR_STREAM(logger_, "Failed to get model from sensor...");
     }
@@ -89,6 +90,11 @@ Status HesaiHwInterfaceWrapper::status()
 std::shared_ptr<drivers::HesaiHwInterface> HesaiHwInterfaceWrapper::hw_interface() const
 {
   return hw_interface_;
+}
+
+std::shared_ptr<const HesaiInventoryBase> HesaiHwInterfaceWrapper::inventory() const
+{
+  return inventory_;
 }
 
 }  // namespace nebula::ros

@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
+
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -35,10 +37,14 @@ public:
 
   nebula::Status status();
 
-  std::shared_ptr<drivers::HesaiHwInterface> hw_interface() const;
+  [[nodiscard]] std::shared_ptr<drivers::HesaiHwInterface> hw_interface() const;
+
+  [[nodiscard]] std::shared_ptr<const HesaiInventoryBase> inventory() const;
 
 private:
   std::shared_ptr<drivers::HesaiHwInterface> hw_interface_;
+  std::shared_ptr<const HesaiInventoryBase> inventory_;
+
   rclcpp::Logger logger_;
   nebula::Status status_;
   bool setup_sensor_;
