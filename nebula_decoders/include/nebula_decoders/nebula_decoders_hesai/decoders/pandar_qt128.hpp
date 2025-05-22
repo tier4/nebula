@@ -17,6 +17,8 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
+#include <nebula_common/util/crc.hpp>
+
 namespace nebula::drivers
 {
 
@@ -35,20 +37,34 @@ struct TailQT128C2X
   DateTime<1900> date_time;
   uint32_t timestamp;
   uint8_t factory_information;
+  uint32_t udp_sequence;
+  uint32_t crc_tail;
 
-  /* Ignored optional fields */
+  [[nodiscard]] bool valid() const { return crc<crc32_mpeg2_t>(&reserved1, &crc_tail) == crc_tail; }
+};
 
-  // uint32_t udp_sequence;
-  // uint32_t crc_tail;
+struct FunctionalSafetyQT128C2X
+{
+  uint8_t fs_version;
+  uint8_t lidar_state;
+  uint8_t fault_code_id;
+  uint16_t fault_code;
+  uint8_t reserved1[8];
+  uint32_t crc_fs;
+
+  [[nodiscard]] bool valid() const
+  {
+    // fs_version is not included in the CRC check
+    return crc<crc32_mpeg2_t>(&lidar_state, &crc_fs) == crc_fs;
+  }
 };
 
 struct PacketQT128C2X : public PacketBase<2, 128, 2, 100>
 {
-  using body_t = Body<Block<Unit4B, PacketQT128C2X::n_channels>, PacketQT128C2X::n_blocks>;
+  using body_t = BodyWithCrc<Block<Unit4B, PacketQT128C2X::n_channels>, PacketQT128C2X::n_blocks>;
   Header12B header;
   body_t body;
-  uint32_t crc_body;
-  FunctionalSafety fs;
+  FunctionalSafetyQT128C2X fs;
   TailQT128C2X tail;
 
   /* Ignored optional fields */
