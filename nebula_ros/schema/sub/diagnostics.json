@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Diagnostics parameters.",
+  "type": "object",
+  "definitions": {
+    "rate_bound_status": {
+      "type": "object",
+      "properties": {
+        "relative_frequency_ok": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "number",
+              "description": "Minimum relative frequency. 0.1 means 10% tolerance in either direction.",
+              "default": 0.05
+            },
+            "max": {
+              "type": "number",
+              "description": "Maximum relative frequency. 0.1 means 10% tolerance in either direction.",
+              "default": 0.05
+            }
+          }
+        },
+        "relative_frequency_warn": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "number",
+              "description": "Minimum relative frequency. 0.1 means 10% tolerance in either direction.",
+              "default": 0.1
+            },
+            "max": {
+              "type": "number",
+              "description": "Maximum relative frequency. 0.1 means 10% tolerance in either direction.",
+              "default": 0.1
+            }
+          }
+        }
+      }
+    }
+  }
+}
