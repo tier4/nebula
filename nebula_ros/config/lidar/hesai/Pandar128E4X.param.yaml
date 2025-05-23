@@ -29,3 +29,11 @@
     retry_hw: true
     dual_return_distance_threshold: 0.1
     hires_mode: true
+    diagnostics:
+      rate_bound_status:
+        relative_frequency_ok:
+          min: 0.95
+          max: 1.05
+        relative_frequency_warn:
+          min: 0.9
+          max: 1.1
