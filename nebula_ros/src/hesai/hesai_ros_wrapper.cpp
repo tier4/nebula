@@ -28,7 +28,8 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("hesai_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
   wrapper_status_(Status::NOT_INITIALIZED),
   sensor_cfg_ptr_(nullptr),
-  diagnostic_updater_((declare_parameter<bool>("diagnostic_updater.use_fqn", true), this))
+  diagnostic_updater_general_((declare_parameter<bool>("diagnostic_updater.use_fqn", true), this)),
+  diagnostic_updater_functional_safety_(this)
 {
   setvbuf(stdout, nullptr, _IONBF, BUFSIZ);
 
@@ -39,6 +40,12 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   }
 
   RCLCPP_INFO_STREAM(get_logger(), "Sensor Configuration: " << *sensor_cfg_ptr_);
+
+  diagnostic_updater_functional_safety_.setPeriod(
+    std::chrono::duration<double>(1.0 / drivers::rpm2hz(sensor_cfg_ptr_->rotation_speed)));
+
+  diagnostic_updater_general_.setHardwareID(sensor_cfg_ptr_->frame_id);
+  diagnostic_updater_functional_safety_.setHardwareID(sensor_cfg_ptr_->frame_id);
 
   launch_hw_ = declare_parameter<bool>("launch_hw", param_read_only());
   bool use_udp_only = declare_parameter<bool>("udp_only", param_read_only());
@@ -54,7 +61,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_, use_udp_only);
     if (!use_udp_only) {  // hardware monitor requires TCP connection
       hw_monitor_wrapper_.emplace(
-        this, diagnostic_updater_, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
+        this, diagnostic_updater_general_, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
     }
   }
 
@@ -79,7 +86,9 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     }
   }
 
-  decoder_wrapper_.emplace(this, sensor_cfg_ptr_, calibration_result.value(), launch_hw_);
+  decoder_wrapper_.emplace(
+    this, sensor_cfg_ptr_, calibration_result.value(), diagnostic_updater_functional_safety_,
+    launch_hw_);
 
   RCLCPP_DEBUG(get_logger(), "Starting stream");
 
@@ -95,10 +104,6 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
       get_logger(),
       "Hardware connection disabled, listening for packets on " << packets_sub_->get_topic_name());
   }
-
-  auto hardware_id = sensor_cfg_ptr_->frame_id;
-
-  diagnostic_updater_.setHardwareID(hardware_id);
 
   // Register parameter callback after all params have been declared. Otherwise it would be called
   // once for each declaration
