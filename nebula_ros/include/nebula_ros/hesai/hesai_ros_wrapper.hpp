@@ -110,7 +110,10 @@ private:
   std::optional<HesaiHwMonitorWrapper> hw_monitor_wrapper_;
   std::optional<HesaiDecoderWrapper> decoder_wrapper_;
 
-  diagnostic_updater::Updater diagnostic_updater_;
+  /// @brief Diagnostics that are not time or safety-critical
+  diagnostic_updater::Updater diagnostic_updater_general_;
+  /// @brief Diagnostics that are related to functional safety
+  diagnostic_updater::Updater diagnostic_updater_functional_safety_;
 
   std::mutex mtx_config_;
 
