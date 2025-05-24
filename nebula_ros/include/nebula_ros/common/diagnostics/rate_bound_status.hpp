@@ -14,8 +14,8 @@
 
 // Copied from https://github.com/tier4/ros2_v4l2_camera/pull/29
 
-#ifndef RATE_BOUND_STATUS_HPP_
-#define RATE_BOUND_STATUS_HPP_
+#ifndef NEBULA_ROS__COMMON__DIAGNOSTICS__RATE_BOUND_STATUS_HPP_
+#define NEBULA_ROS__COMMON__DIAGNOSTICS__RATE_BOUND_STATUS_HPP_
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 
@@ -288,4 +288,4 @@ protected:
 
 }  // namespace custom_diagnostic_tasks
 
-#endif  // RATE_BOUND_STATUS_HPP_
+#endif  // NEBULA_ROS__COMMON__DIAGNOSTICS__RATE_BOUND_STATUS_HPP_
