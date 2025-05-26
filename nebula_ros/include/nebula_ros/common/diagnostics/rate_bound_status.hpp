@@ -13,6 +13,7 @@
 // limitations under the License.
 
 // Copied from https://github.com/tier4/ros2_v4l2_camera/pull/29
+// Patched with https://github.com/tier4/ros2_v4l2_camera/pull/30
 
 #ifndef RATE_BOUND_STATUS_HPP_
 #define RATE_BOUND_STATUS_HPP_
@@ -21,9 +22,11 @@
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 
-#include <chrono>
+#include <rcl/time.h>
+
 #include <iomanip>
 #include <limits>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <sstream>
@@ -116,9 +119,9 @@ public:
    * This name will not be exposed in the actual published topics.
    */
   RateBoundStatus(
-    const RateBoundStatusParam & ok_params, const RateBoundStatusParam & warn_params,
-    const size_t num_frame_transition = 1, const bool immediate_error_report = true,
-    const std::string & name = "rate bound check")
+    const rclcpp::Node * parent_node, const RateBoundStatusParam & ok_params,
+    const RateBoundStatusParam & warn_params, const size_t num_frame_transition = 1,
+    const bool immediate_error_report = true, const std::string & name = "rate bound check")
   : DiagnosticTask(name),
     ok_params_(ok_params),
     warn_params_(warn_params),
@@ -140,6 +143,17 @@ public:
         "Invalid range parameters were detected. warn_params should specify a range "
         "that includes a range of ok_params.");
     }
+
+    // select clock according to the use_sim_time paramter set to the parent
+    bool use_sim_time = false;
+    if (parent_node->has_parameter("use_sim_time")) {
+      use_sim_time = parent_node->get_parameter("use_sim_time").as_bool();
+    }
+    if (use_sim_time) {
+      clock_ = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+    } else {
+      clock_ = std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
+    }
   }
 
   /**
@@ -149,8 +163,7 @@ public:
   void tick()
   {
     std::unique_lock<std::mutex> lock(lock_);
-    double stamp =
-      std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    double stamp = get_now();
 
     if (!previous_frame_timestamp_) {
       zero_seen_ = true;
@@ -187,6 +200,24 @@ public:
       }
     }
 
+    // check the latest update is valid one
+    size_t num_frame_skipped = 0;
+    bool is_valid_observation = true;
+    if (previous_frame_timestamp_) {
+      double stamp = get_now();
+      double delta = stamp - previous_frame_timestamp_.value();
+      double freq_from_prev_tick = 1. / delta;
+      // If the latest update too older than warn_params_ criteria, frame_result fires error
+      if (freq_from_prev_tick < warn_params_.min_frequency) {
+        frame_result.emplace<Error>();
+        is_valid_observation = false;
+        frequency_ = freq_from_prev_tick;
+        auto max_frame_period_s = 1. / warn_params_.min_frequency;
+        // Minimum frames to assume skipped if 'tick' calls occur at 'warn_params_.min_frequency'.
+        num_frame_skipped = static_cast<size_t>(delta / max_frame_period_s);
+      }
+    }
+
     // If the classify result is same as previous one, count the number of observation
     // Otherwise, update candidate
     if (candidate_state_.index() == frame_result.index()) {  // if result has the same status as
@@ -201,7 +232,8 @@ public:
     // - Or the same state is observed multiple times
     if (
       (immediate_error_report_ && std::holds_alternative<Error>(candidate_state_)) ||
-      (get_num_observations(candidate_state_) >= num_frame_transition_)) {
+      (is_valid_observation && get_num_observations(candidate_state_) >= num_frame_transition_) ||
+      (!is_valid_observation && num_frame_skipped >= num_frame_transition_)) {
       current_state_ = candidate_state_;
       std::visit([](auto & s) { s.num_observations = 1; }, candidate_state_);
     }
@@ -237,6 +269,10 @@ public:
     stat.add("Observed frames", ss.str());
 
     ss.str("");  // reset contents
+    ss << num_frame_skipped;
+    stat.add("Assumed skipped frames", ss.str());
+
+    ss.str("");  // reset contents
     ss << num_frame_transition_;
     stat.add("Observed frames transition threshold", ss.str());
   }
@@ -253,6 +289,10 @@ protected:
 
   StateHolder candidate_state_;
   StateHolder current_state_;
+
+  std::shared_ptr<rclcpp::Clock> clock_;
+
+  double get_now() { return clock_->now().seconds(); }
 
   static unsigned char get_level(const StateHolder & state)
   {
