@@ -61,7 +61,7 @@
           ]
         },
         "diagnostics": {
-          "$ref": "sub/diagnostics.json#/definitions/diagnostics"
+          "$ref": "sub/diagnostics.json#/definitions/rate_bound_status"
         }
       },
       "required": [
