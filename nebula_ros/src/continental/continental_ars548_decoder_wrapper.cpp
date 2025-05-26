@@ -28,13 +28,26 @@
 
 namespace nebula::ros
 {
+using std::chrono_literals::operator""ms;
+static constexpr uint32_t default_cycle_time_ms = 100;
+
 ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   rclcpp::Node * const parent_node,
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
     config_ptr,
   bool launch_hw)
-: status_(nebula::Status::NOT_INITIALIZED),
+: objects_rate_bound_status_(
+    make_rate_bound_status(parent_node, default_cycle_time_ms, "Objects rate bound status")),
+  detections_rate_bound_status_(
+    make_rate_bound_status(parent_node, default_cycle_time_ms, "Detections rate bound status")),
+  liveness_monitor_(
+    "Liveness", parent_node->get_clock(), std::chrono::milliseconds(default_cycle_time_ms)),
+  objects_diagnostics_updater_(parent_node),
+  detections_diagnostics_updater_(parent_node),
+  liveness_diagnostics_updater_(parent_node),
+  status_(nebula::Status::NOT_INITIALIZED),
   logger_(parent_node->get_logger().get_child("ContinentalARS548Decoder")),
+  parent_node_(parent_node),
   config_ptr_(config_ptr)
 {
   using std::chrono_literals::operator""us;
@@ -90,6 +103,20 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
 
   RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
 
+  // Set up diagnostics
+  objects_diagnostics_updater_.add(objects_rate_bound_status_);
+  detections_diagnostics_updater_.add(detections_rate_bound_status_);
+  liveness_diagnostics_updater_.add(liveness_monitor_);
+  objects_diagnostics_updater_.setHardwareID(config_ptr_->frame_id);
+  detections_diagnostics_updater_.setHardwareID(config_ptr_->frame_id);
+  liveness_diagnostics_updater_.setHardwareID(config_ptr_->frame_id);
+  objects_diagnostics_updater_.setPeriod(default_cycle_time_ms * 1.0e-3);
+  detections_diagnostics_updater_.setPeriod(default_cycle_time_ms * 1.0e-3);
+  liveness_diagnostics_updater_.setPeriod(default_cycle_time_ms * 1.0e-3);
+  objects_diagnostics_updater_.force_update();
+  detections_diagnostics_updater_.force_update();
+  liveness_diagnostics_updater_.force_update();
+
   watchdog_ =
     std::make_shared<WatchdogTimer>(*parent_node, 100'000us, [this, parent_node](bool ok) {
       if (ok) return;
@@ -135,6 +162,7 @@ void ContinentalARS548DecoderWrapper::process_packet(
 {
   driver_ptr_->process_packet(std::move(packet_msg));
 
+  liveness_monitor_.tick();
   watchdog_->update();
 }
 
@@ -164,6 +192,7 @@ void ContinentalARS548DecoderWrapper::detection_list_callback(
     detection_list_pub_->get_subscription_count() > 0 ||
     detection_list_pub_->get_intra_process_subscription_count() > 0) {
     detection_list_pub_->publish(std::move(msg));
+    detections_rate_bound_status_.tick();
   }
 
   if (
@@ -217,137 +246,92 @@ void ContinentalARS548DecoderWrapper::object_list_callback(
     object_list_pub_->get_subscription_count() > 0 ||
     object_list_pub_->get_intra_process_subscription_count() > 0) {
     object_list_pub_->publish(std::move(msg));
+    objects_rate_bound_status_.tick();
   }
 }
 
 void ContinentalARS548DecoderWrapper::sensor_status_callback(
   const drivers::continental_ars548::ContinentalARS548Status & sensor_status)
 {
-  diagnostic_msgs::msg::DiagnosticArray diagnostic_array_msg;
-  diagnostic_array_msg.header.stamp.sec = sensor_status.timestamp_seconds;
-  diagnostic_array_msg.header.stamp.nanosec = sensor_status.timestamp_nanoseconds;
-  diagnostic_array_msg.header.frame_id = config_ptr_->frame_id;
-
-  diagnostic_array_msg.status.resize(1);
-  auto & status = diagnostic_array_msg.status[0];
-  status.values.reserve(36);
-  status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  status.hardware_id = config_ptr_->frame_id;
-  status.name = config_ptr_->frame_id;
-  status.message = "Diagnostic messages from ARS548";
-
-  // cSpell:ignore knzo25
-  // NOTE(knzo25): In the radar firmware used when developing this driver,
-  // corner radars were not supported. When a new firmware addresses this,
-  // the driver will be updated.
-  if (nebula::drivers::continental_ars548::is_corner_radar(sensor_status.yaw)) {
-    rclcpp::Clock clock{RCL_ROS_TIME};
-    RCLCPP_WARN_THROTTLE(
-      logger_, clock, 5000,
-      "This radar has been configured as a corner radar, which is not supported by the sensor. The "
-      "driver will not output any objects");
-
-    status.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
-    status.message +=
-      ". Unsupported mounting configuration (corner radar). Only detections should be used under "
-      "these conditions.";
+  // Update rate bounds
+  if (sensor_status.cycle_time != latest_config_cycle_time_ms_) {
+    latest_config_cycle_time_ms_ = sensor_status.cycle_time;
+    const auto [ok_params, warn_params] =
+      make_rate_bounds(parent_node_, latest_config_cycle_time_ms_);
+    objects_rate_bound_status_.update_bounds(ok_params, warn_params);
+    detections_rate_bound_status_.update_bounds(ok_params, warn_params);
+    objects_diagnostics_updater_.setPeriod(latest_config_cycle_time_ms_ * 1.0e-3);
+    detections_diagnostics_updater_.setPeriod(latest_config_cycle_time_ms_ * 1.0e-3);
+    objects_diagnostics_updater_.force_update();
+    detections_diagnostics_updater_.force_update();
   }
 
-  auto add_diagnostic = [&status](const std::string & key, const std::string & value) {
+  // Init diagnostic array msg
+  diagnostic_msgs::msg::DiagnosticArray diagnostic_array_msg;
+  diagnostic_array_msg.header.stamp.sec = static_cast<int32_t>(sensor_status.timestamp_seconds);
+  diagnostic_array_msg.header.stamp.nanosec = sensor_status.timestamp_nanoseconds;
+
+  auto add_diagnostic = [](
+                          diagnostic_msgs::msg::DiagnosticStatus & status, const std::string & key,
+                          const std::string & value) {
     diagnostic_msgs::msg::KeyValue key_value;
     key_value.key = key;
     key_value.value = value;
     status.values.push_back(key_value);
   };
 
-  add_diagnostic("timestamp_nanoseconds", std::to_string(sensor_status.timestamp_nanoseconds));
-  add_diagnostic("timestamp_seconds", std::to_string(sensor_status.timestamp_seconds));
-  add_diagnostic("timestamp_sync_status", sensor_status.timestamp_sync_status);
-  add_diagnostic("sw_version_major", std::to_string(sensor_status.sw_version_major));
-  add_diagnostic("sw_version_minor", std::to_string(sensor_status.sw_version_minor));
-  add_diagnostic("sw_version_patch", std::to_string(sensor_status.sw_version_patch));
-  add_diagnostic("longitudinal", std::to_string(sensor_status.longitudinal));
-  add_diagnostic("lateral", std::to_string(sensor_status.lateral));
-  add_diagnostic("vertical", std::to_string(sensor_status.vertical));
-  add_diagnostic("yaw", std::to_string(sensor_status.yaw));
-  add_diagnostic("pitch", std::to_string(sensor_status.pitch));
-  add_diagnostic("plug_orientation", sensor_status.plug_orientation);
-  add_diagnostic("length", std::to_string(sensor_status.length));
-  add_diagnostic("width", std::to_string(sensor_status.width));
-  add_diagnostic("height", std::to_string(sensor_status.height));
-  add_diagnostic("wheel_base", std::to_string(sensor_status.wheel_base));
-  add_diagnostic("max_distance", std::to_string(sensor_status.max_distance));
-  add_diagnostic("frequency_slot", sensor_status.frequency_slot);
-  add_diagnostic("cycle_time", std::to_string(sensor_status.cycle_time));
-  add_diagnostic("time_slot", std::to_string(sensor_status.time_slot));
-  add_diagnostic("hcc", sensor_status.hcc);
-  add_diagnostic("power_save_standstill", sensor_status.power_save_standstill);
-  add_diagnostic("sensor_ip_address0", sensor_status.sensor_ip_address0);
-  add_diagnostic("sensor_ip_address1", sensor_status.sensor_ip_address1);
-  add_diagnostic("configuration_counter", std::to_string(sensor_status.configuration_counter));
-  add_diagnostic("longitudinal_velocity_status", sensor_status.longitudinal_velocity_status);
+  // Dynamics status
+  diagnostic_msgs::msg::DiagnosticStatus dynamics_diagnostic_status;
+
   add_diagnostic(
-    "longitudinal_acceleration_status", sensor_status.longitudinal_acceleration_status);
-  add_diagnostic("lateral_acceleration_status", sensor_status.lateral_acceleration_status);
-  add_diagnostic("yaw_rate_status", sensor_status.yaw_rate_status);
-  add_diagnostic("steering_angle_status", sensor_status.steering_angle_status);
-  add_diagnostic("driving_direction_status", sensor_status.driving_direction_status);
-  add_diagnostic("characteristic_speed_status", sensor_status.characteristic_speed_status);
-  add_diagnostic("radar_status", sensor_status.radar_status);
-  add_diagnostic("voltage_status", sensor_status.voltage_status);
-  add_diagnostic("temperature_status", sensor_status.temperature_status);
-  add_diagnostic("blockage_status", sensor_status.blockage_status);
-
-  double detection_total_time_sec =
-    (sensor_status.detection_last_stamp - sensor_status.detection_first_stamp) * 1e-9;
-  uint64_t expected_total_detection =
-    static_cast<uint64_t>(detection_total_time_sec / (sensor_status.cycle_time * 1e-3));
-  uint64_t detection_count_diff =
-    expected_total_detection > sensor_status.detection_total_count
-      ? expected_total_detection - sensor_status.detection_total_count
-      : sensor_status.detection_total_count - expected_total_detection;
-  double detection_dropped_rate =
-    100.0 * std::abs<double>(detection_count_diff) / expected_total_detection;
-  double detection_dropped_rate_dt =
-    100.0 * sensor_status.detection_dropped_dt_count / sensor_status.detection_total_count;
-  double detection_empty_rate =
-    100.0 * sensor_status.detection_empty_count / sensor_status.detection_total_count;
-
-  add_diagnostic("detection_total_time", std::to_string(detection_total_time_sec));
-  add_diagnostic("detection_dropped_rate", std::to_string(detection_dropped_rate));
-  add_diagnostic("detection_dropped_rate_dt", std::to_string(detection_dropped_rate_dt));
-  add_diagnostic("detection_empty_rate", std::to_string(detection_empty_rate));
+    dynamics_diagnostic_status, "Longitudinal velocity status",
+    sensor_status.longitudinal_velocity_status);
   add_diagnostic(
-    "detection_dropped_dt_count", std::to_string(sensor_status.detection_dropped_dt_count));
-  add_diagnostic("detection_empty_count", std::to_string(sensor_status.detection_empty_count));
-
-  double object_total_time_sec =
-    (sensor_status.object_last_stamp - sensor_status.object_first_stamp) * 1e-9;
-  uint64_t expected_total_object =
-    static_cast<uint64_t>(object_total_time_sec / (sensor_status.cycle_time * 1e-3));
-  uint64_t object_count_diff = expected_total_object > sensor_status.object_total_count
-                                 ? expected_total_object - sensor_status.object_total_count
-                                 : sensor_status.object_total_count - expected_total_object;
-  double object_dropped_rate = 100.0 * std::abs<double>(object_count_diff) / expected_total_object;
-  double object_dropped_rate_dt =
-    100.0 * sensor_status.object_dropped_dt_count / sensor_status.object_total_count;
-  double object_empty_rate =
-    100.0 * sensor_status.object_empty_count / sensor_status.object_total_count;
-
-  add_diagnostic("sensor_status.expected_total_object", std::to_string(expected_total_object));
+    dynamics_diagnostic_status, "Longitudinal acceleration status",
+    sensor_status.longitudinal_acceleration_status);
   add_diagnostic(
-    "sensor_status.detection_total_count", std::to_string(sensor_status.detection_total_count));
+    dynamics_diagnostic_status, "Lateral acceleration status",
+    sensor_status.lateral_acceleration_status);
+  add_diagnostic(dynamics_diagnostic_status, "Yaw rate status", sensor_status.yaw_rate_status);
+  add_diagnostic(
+    dynamics_diagnostic_status, "Steering angle status", sensor_status.steering_angle_status);
+  add_diagnostic(
+    dynamics_diagnostic_status, "Driving direction status", sensor_status.driving_direction_status);
 
-  add_diagnostic("object_total_time", std::to_string(object_total_time_sec));
-  add_diagnostic("object_dropped_rate", std::to_string(object_dropped_rate));
-  add_diagnostic("object_dropped_rate_dt", std::to_string(object_dropped_rate_dt));
-  add_diagnostic("object_empty_rate", std::to_string(object_empty_rate));
-  add_diagnostic("object_dropped_dt_count", std::to_string(sensor_status.object_dropped_dt_count));
-  add_diagnostic("object_empty_count", std::to_string(sensor_status.object_empty_count));
+  dynamics_diagnostic_status.hardware_id = config_ptr_->frame_id;
+  dynamics_diagnostic_status.name = std::string(parent_node_->get_name()) + ": Dynamics";
+  dynamics_diagnostic_status.level = sensor_status.dynamics_diagnostics_status;
+  dynamics_diagnostic_status.message = "ARS548 dynamics status";
 
-  add_diagnostic("status_total_count", std::to_string(sensor_status.status_total_count));
-  add_diagnostic("radar_invalid_count", std::to_string(sensor_status.radar_invalid_count));
+  diagnostic_array_msg.status = {dynamics_diagnostic_status};
+  diagnostics_pub_->publish(diagnostic_array_msg);
 
+  // Internal status
+  diagnostic_msgs::msg::DiagnosticStatus internal_diagnostic_status;
+
+  add_diagnostic(internal_diagnostic_status, "Radar status", sensor_status.radar_status);
+  add_diagnostic(internal_diagnostic_status, "Voltage status", sensor_status.voltage_status);
+  add_diagnostic(
+    internal_diagnostic_status, "Temperature status", sensor_status.temperature_status);
+
+  internal_diagnostic_status.hardware_id = config_ptr_->frame_id;
+  internal_diagnostic_status.name = std::string(parent_node_->get_name()) + ": Internal";
+  internal_diagnostic_status.level = sensor_status.internal_diagnostics_status;
+  internal_diagnostic_status.message = "ARS548 internal signals";
+
+  diagnostic_array_msg.status = {internal_diagnostic_status};
+  diagnostics_pub_->publish(diagnostic_array_msg);
+
+  // Blockage status
+  diagnostic_msgs::msg::DiagnosticStatus blockage_diagnostic_status;
+
+  add_diagnostic(blockage_diagnostic_status, "Blockage status", sensor_status.blockage_status);
+  blockage_diagnostic_status.hardware_id = config_ptr_->frame_id;
+  blockage_diagnostic_status.name = std::string(parent_node_->get_name()) + ": Blockage";
+  blockage_diagnostic_status.level = sensor_status.blockage_diagnostics_status;
+  blockage_diagnostic_status.message = "ARS548 blockage status";
+
+  diagnostic_array_msg.status = {blockage_diagnostic_status};
   diagnostics_pub_->publish(diagnostic_array_msg);
 }
 

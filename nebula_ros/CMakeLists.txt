@@ -149,6 +149,7 @@ target_include_directories(continental_ars548_ros_wrapper PUBLIC
     ${continental_msgs_INCLUDE_DIRS}
     ${continental_srvs_INCLUDE_DIRS}
     ${diagnostic_msgs_INCLUDE_DIRS}
+    ${diagnostic_updater_INCLUDE_DIRS}
     ${geometry_msgs_INCLUDE_DIRS}
     ${nebula_msgs_INCLUDE_DIRS}
     ${nebula_decoders_INCLUDE_DIRS}
@@ -164,6 +165,7 @@ target_link_libraries(continental_ars548_ros_wrapper PUBLIC
     ${continental_msgs_TARGETS}
     ${continental_srvs_TARGETS}
     ${diagnostic_msgs_TARGETS}
+    ${diagnostic_updater_TARGETS}
     ${geometry_msgs_TARGETS}
     ${nebula_msgs_TARGETS}
     ${radar_msgs_TARGETS}

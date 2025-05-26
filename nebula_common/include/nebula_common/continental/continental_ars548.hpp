@@ -135,6 +135,10 @@ struct ContinentalARS548Status
   uint64_t status_total_count{};
   uint64_t radar_invalid_count{};
 
+  u_char dynamics_diagnostics_status{};
+  u_char internal_diagnostics_status{};
+  u_char blockage_diagnostics_status{};
+
   ContinentalARS548Status() {}
 
   /// @brief Stream ContinentalRadarStatus method

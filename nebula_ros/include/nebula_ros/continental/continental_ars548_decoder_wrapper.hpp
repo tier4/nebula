@@ -14,9 +14,12 @@
 
 #pragma once
 
+#include "nebula_ros/common/diagnostics/liveness_monitor.hpp"
+#include "nebula_ros/common/diagnostics/rate_bound_status.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
 #include "nebula_ros/common/watchdog_timer.hpp"
 
+#include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/continental/continental_ars548.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/util/expected.hpp>
@@ -41,6 +44,8 @@
 
 #include <memory>
 #include <mutex>
+#include <string>
+#include <tuple>
 #include <unordered_set>
 #include <vector>
 
@@ -152,8 +157,62 @@ private:
       std::chrono::duration<double>(seconds));
   }
 
+  /// @brief Make a RateBoundStatusParam object from the node parameters
+  /// @param node The node to read the parameters from
+  /// @param cycle_time_ms The cycle time of the sensor
+  /// @return RateBoundStatusParam for OK and WARN diagnostics
+  static std::tuple<
+    custom_diagnostic_tasks::RateBoundStatusParam, custom_diagnostic_tasks::RateBoundStatusParam>
+  make_rate_bounds(rclcpp::Node * const node, const uint32_t cycle_time_ms)
+  {
+    const double nominal_rate_hz = 1.0 / cycle_time_ms * 1000.0;
+
+    auto read_fp_param = [&node](const std::string & param_name) {
+      if (node->has_parameter(param_name)) {
+        return node->get_parameter(param_name).as_double();
+      }
+      return node->declare_parameter<double>(param_name, param_read_only());
+    };
+
+    double min_ok_hz =
+      nominal_rate_hz * read_fp_param("diagnostics.rate_bound_status.relative_frequency_ok.min");
+    double max_ok_hz =
+      nominal_rate_hz * read_fp_param("diagnostics.rate_bound_status.relative_frequency_ok.max");
+    double min_warn_hz =
+      nominal_rate_hz * read_fp_param("diagnostics.rate_bound_status.relative_frequency_warn.min");
+    double max_warn_hz =
+      nominal_rate_hz * read_fp_param("diagnostics.rate_bound_status.relative_frequency_warn.max");
+
+    custom_diagnostic_tasks::RateBoundStatusParam ok_params(min_ok_hz, max_ok_hz);
+    custom_diagnostic_tasks::RateBoundStatusParam warn_params(min_warn_hz, max_warn_hz);
+
+    return std::make_tuple(ok_params, warn_params);
+  }
+
+  /// @brief Make a RateBoundStatus object from the node parameters
+  /// @param node The node to read the parameters from
+  /// @return RateBoundStatus for OK and WARN diagnostics
+  static custom_diagnostic_tasks::RateBoundStatus make_rate_bound_status(
+    rclcpp::Node * const node, const uint32_t cycle_time_ms, const std::string & name)
+  {
+    static constexpr size_t num_frame_transition = 3;
+    static constexpr bool immediate_error_report = true;
+
+    auto [ok_params, warn_params] = make_rate_bounds(node, cycle_time_ms);
+
+    return {node, ok_params, warn_params, num_frame_transition, immediate_error_report, name};
+  }
+
+  custom_diagnostic_tasks::RateBoundStatus objects_rate_bound_status_;
+  custom_diagnostic_tasks::RateBoundStatus detections_rate_bound_status_;
+  nebula::ros::LivenessMonitor liveness_monitor_;
+  diagnostic_updater::Updater objects_diagnostics_updater_;
+  diagnostic_updater::Updater detections_diagnostics_updater_;
+  diagnostic_updater::Updater liveness_diagnostics_updater_;
+
   nebula::Status status_;
   rclcpp::Logger logger_;
+  rclcpp::Node * const parent_node_;
 
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration>
     config_ptr_{};
@@ -180,6 +239,8 @@ private:
   std::size_t detection_msgs_counter_{0};
 
   std::unordered_set<int> previous_ids_{};
+
+  uint32_t latest_config_cycle_time_ms_{};
 
   constexpr static int reference_points_num = 9;
   constexpr static std::array<std::array<double, 2>, reference_points_num> reference_to_center_ = {

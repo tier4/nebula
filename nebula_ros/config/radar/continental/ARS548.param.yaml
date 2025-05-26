@@ -17,3 +17,11 @@
     configuration_vehicle_width: 1.896
     configuration_vehicle_height: 2.5
     configuration_vehicle_wheelbase: 2.79
+    diagnostics:
+      rate_bound_status:
+        relative_frequency_ok:
+          min: 0.95
+          max: 1.05
+        relative_frequency_warn:
+          min: 0.9
+          max: 1.1

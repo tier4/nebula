@@ -106,6 +106,7 @@ public:
   /**
    * \brief Constructs RateBoundstatus, which inherits diagnostic_updater::DiagnosticTask.
    *
+   * \param parent_node The node from which clock type and parameters are read.
    * \param ok_params The pair of min/max frequency for the topic rate to be recognized as "OK".
    * \param warn_params The pair of min/max frequency for the topic rate to be recognized as "WARN".
    * These values should have a wider range than `ok_params`.
@@ -175,6 +176,20 @@ public:
                      : 1. / delta;
     }
     previous_frame_timestamp_ = stamp;
+  }
+
+  /**
+   * \brief Update the bounds for the rate bound status.
+   *
+   * \param ok_params The pair of min/max frequency for the topic rate to be recognized as "OK".
+   * \param warn_params The pair of min/max frequency for the topic rate to be recognized as "WARN".
+   * These values should have a wider range than `ok_params`.
+   */
+  void update_bounds(
+    const RateBoundStatusParam & ok_params, const RateBoundStatusParam & warn_params)
+  {
+    ok_params_ = ok_params;
+    warn_params_ = warn_params;
   }
 
   /**

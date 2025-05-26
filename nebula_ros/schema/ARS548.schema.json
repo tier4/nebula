@@ -59,6 +59,9 @@
           "enum": [
             "ARS548"
           ]
+        },
+        "diagnostics": {
+          "$ref": "sub/diagnostics.json#/definitions/diagnostics"
         }
       },
       "required": [
@@ -73,7 +76,8 @@
         "configuration_vehicle_width",
         "configuration_vehicle_height",
         "configuration_vehicle_wheelbase",
-        "sensor_model"
+        "sensor_model",
+        "diagnostics"
       ]
     }
   },
