@@ -8,6 +8,7 @@
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/util/string_conversions.hpp>
 #include <nebula_decoders/nebula_decoders_common/angles.hpp>
+#include <rclcpp/logging.hpp>
 
 #include <algorithm>
 #include <cstdint>
@@ -306,6 +307,7 @@ Status HesaiRosWrapper::validate_and_set_config(
     decoder_wrapper_->on_config_change(new_config);
   }
 
+  RCLCPP_DEBUG(get_logger(), "hi");
   sensor_cfg_ptr_ = new_config;
   return Status::OK;
 }
