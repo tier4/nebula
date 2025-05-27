@@ -5,34 +5,36 @@
   "definitions": {
     "rate_bound_status": {
       "type": "object",
+      "description": "Frequency bounds within which an OK is issued.",
       "properties": {
-        "relative_frequency_ok": {
+        "frequency_ok": {
           "type": "object",
           "properties": {
-            "min": {
+            "min_hz": {
               "type": "number",
-              "description": "Minimum relative frequency. 0.1 means 10% tolerance in either direction.",
-              "default": 0.05
+              "description": "Minimum frequency in Hertz.",
+              "default": 9.5
             },
-            "max": {
+            "max_hz": {
               "type": "number",
-              "description": "Maximum relative frequency. 0.1 means 10% tolerance in either direction.",
-              "default": 0.05
+              "description": "Maximum frequency in Hertz.",
+              "default": 10.5
             }
           }
         },
-        "relative_frequency_warn": {
+        "frequency_warn": {
           "type": "object",
+          "description": "Frequency bounds within which a warning is issued, if the frequency is not within `frequency_ok`. Beyond these bounds, an error is issued.",
           "properties": {
-            "min": {
+            "min_hz": {
               "type": "number",
-              "description": "Minimum relative frequency. 0.1 means 10% tolerance in either direction.",
-              "default": 0.1
+              "description": "Minimum frequency in Hertz.",
+              "default": "9.0"
             },
-            "max": {
+            "max_hz": {
               "type": "number",
-              "description": "Maximum relative frequency. 0.1 means 10% tolerance in either direction.",
-              "default": 0.1
+              "description": "Maximum frequency in Hertz.",
+              "default": "11.0"
             }
           }
         }
