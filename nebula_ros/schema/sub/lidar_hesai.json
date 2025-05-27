@@ -102,7 +102,7 @@
       "type": "object",
       "properties": {
         "pointcloud_publish_rate": {
-          "$ref": "diagnostics.json#/definitions/frequency_diagnostic_task"
+          "$ref": "diagnostics.json#/definitions/rate_bound_status"
         }
       }
     }

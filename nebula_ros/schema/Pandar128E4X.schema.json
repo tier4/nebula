@@ -115,7 +115,7 @@
           "$ref": "sub/lidar_hesai.json#/definitions/hires_mode"
         },
         "diagnostics": {
-          "$ref": "sub/diagnostics.json#/definitions/diagnostics"
+          "$ref": "sub/lidar_hesai.json#/definitions/diagnostics"
         }
       },
       "required": [

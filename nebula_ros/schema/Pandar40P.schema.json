@@ -103,7 +103,7 @@
           "$ref": "sub/misc.json#/definitions/point_filters"
         },
         "diagnostics": {
-          "$ref": "sub/diagnostics.json#/definitions/diagnostics"
+          "$ref": "sub/lidar_hesai.json#/definitions/diagnostics"
         }
       },
       "required": [
