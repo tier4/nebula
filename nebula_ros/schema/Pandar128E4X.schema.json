@@ -113,6 +113,9 @@
         },
         "hires_mode": {
           "$ref": "sub/lidar_hesai.json#/definitions/hires_mode"
+        },
+        "diagnostics": {
+          "$ref": "sub/lidar_hesai.json#/definitions/diagnostics"
         }
       },
       "required": [
@@ -141,7 +144,8 @@
         "ptp_switch_type",
         "ptp_lock_threshold",
         "retry_hw",
-        "dual_return_distance_threshold"
+        "dual_return_distance_threshold",
+        "diagnostics"
       ],
       "additionalProperties": false
     }

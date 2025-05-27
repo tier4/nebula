@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Diagnostics parameters.",
+  "type": "object",
+  "definitions": {
+    "rate_bound_status": {
+      "type": "object",
+      "description": "Frequency bounds within which an OK is issued.",
+      "properties": {
+        "frequency_ok": {
+          "type": "object",
+          "properties": {
+            "min_hz": {
+              "type": "number",
+              "description": "Minimum frequency in Hertz.",
+              "default": 9.5
+            },
+            "max_hz": {
+              "type": "number",
+              "description": "Maximum frequency in Hertz.",
+              "default": 10.5
+            }
+          }
+        },
+        "frequency_warn": {
+          "type": "object",
+          "description": "Frequency bounds within which a warning is issued, if the frequency is not within `frequency_ok`. Beyond these bounds, an error is issued.",
+          "properties": {
+            "min_hz": {
+              "type": "number",
+              "description": "Minimum frequency in Hertz.",
+              "default": "9.0"
+            },
+            "max_hz": {
+              "type": "number",
+              "description": "Maximum frequency in Hertz.",
+              "default": "11.0"
+            }
+          }
+        }
+      }
+    }
+  }
+}

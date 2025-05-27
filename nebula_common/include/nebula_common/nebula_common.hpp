@@ -790,6 +790,15 @@ static inline float rad2deg(double radians)
 {
   return radians * 180.0 / M_PI;
 }
+
+/// @brief Converts RPM to Hertz
+/// @param rpm
+/// @return Hertz
+static inline double rpm2hz(double rpm)
+{
+  return rpm / 60.0;
+}
+
 }  // namespace nebula::drivers
 
 #endif  // NEBULA_CONFIGURATION_BASE_H

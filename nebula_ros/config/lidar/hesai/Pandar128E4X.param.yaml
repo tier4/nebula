@@ -29,3 +29,11 @@
     retry_hw: true
     dual_return_distance_threshold: 0.1
     hires_mode: true
+    diagnostics:
+      pointcloud_publish_rate:
+        frequency_ok:
+          min_hz: 9.5
+          max_hz: 10.5
+        frequency_warn:
+          min_hz: 9.0
+          max_hz: 11.0
