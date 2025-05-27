@@ -33,7 +33,7 @@
       pointcloud_publish_rate:
         frequency_ok:
           min_hz: 9.5
-          max_hz: 9.8
+          max_hz: 10.5
         frequency_warn:
-          min_hz: 9.6
+          min_hz: 9.0
           max_hz: 11.0
