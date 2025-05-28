@@ -24,10 +24,8 @@
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 
-#include <chrono>
 #include <cstdint>
 #include <string>
-#include <utility>
 
 namespace nebula::ros
 {
@@ -48,13 +46,25 @@ public:
    * is no call for a length of `timeout`, the routine is declared dead.
    *
    * @param name The name of the task
-   * @param clock The clock to use for timing
+   * @param parent_node The node from which clock type and parameters are read.
    * @param timeout The time after the last call to `tick()` where the routine is declared dead
    */
   LivenessMonitor(
-    const std::string & name, rclcpp::Clock::SharedPtr clock, const rclcpp::Duration & timeout)
-  : DiagnosticTask(name), clock_(std::move(clock)), timeout_(timeout), last_tick_(clock_->now())
+    const std::string & name, const rclcpp::Node * parent_node, const rclcpp::Duration & timeout)
+  : DiagnosticTask(name), timeout_(timeout)
   {
+    // select clock according to the use_sim_time paramter set to the parent
+    bool use_sim_time = false;
+    if (parent_node->has_parameter("use_sim_time")) {
+      use_sim_time = parent_node->get_parameter("use_sim_time").as_bool();
+    }
+    if (use_sim_time) {
+      clock_ = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+    } else {
+      clock_ = std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
+    }
+
+    last_tick_ = clock_->now();
   }
 
   /**

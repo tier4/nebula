@@ -38,7 +38,7 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
 : objects_rate_bound_status_(make_rate_bound_status(parent_node, "Objects rate bound status")),
   detections_rate_bound_status_(
     make_rate_bound_status(parent_node, "Detections rate bound status")),
-  liveness_monitor_("Liveness", parent_node->get_clock(), 100ms),
+  liveness_monitor_("Liveness", parent_node, 100ms),
   objects_diagnostics_updater_(parent_node),
   detections_diagnostics_updater_(parent_node),
   liveness_diagnostics_updater_(parent_node),
