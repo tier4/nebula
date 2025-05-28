@@ -100,6 +100,8 @@ nebula::Status ContinentalARS548RosWrapper::declare_and_get_sensor_config_params
     declare_parameter<double>("configuration_vehicle_height", param_read_write()));
   config.configuration_vehicle_wheelbase = static_cast<float>(
     declare_parameter<double>("configuration_vehicle_wheelbase", param_read_write()));
+  declare_parameter<bool>(
+    "diagnostic_updater.use_fqn", true, param_read_only());  // read by diagnostic_updater
 
   if (config.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;

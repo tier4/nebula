@@ -294,7 +294,8 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
     dynamics_diagnostic_status, "Driving direction status", sensor_status.driving_direction_status);
 
   dynamics_diagnostic_status.hardware_id = config_ptr_->frame_id;
-  dynamics_diagnostic_status.name = std::string(parent_node_->get_name()) + ": Dynamics";
+  dynamics_diagnostic_status.name =
+    std::string(parent_node_->get_fully_qualified_name()) + ": Dynamics";
   dynamics_diagnostic_status.level = sensor_status.dynamics_diagnostics_status;
   dynamics_diagnostic_status.message = "ARS548 dynamics status";
 
@@ -310,7 +311,8 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
     internal_diagnostic_status, "Temperature status", sensor_status.temperature_status);
 
   internal_diagnostic_status.hardware_id = config_ptr_->frame_id;
-  internal_diagnostic_status.name = std::string(parent_node_->get_name()) + ": Internal";
+  internal_diagnostic_status.name =
+    std::string(parent_node_->get_fully_qualified_name()) + ": Internal";
   internal_diagnostic_status.level = sensor_status.internal_diagnostics_status;
   internal_diagnostic_status.message = "ARS548 internal signals";
 
@@ -322,7 +324,8 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
 
   add_diagnostic(blockage_diagnostic_status, "Blockage status", sensor_status.blockage_status);
   blockage_diagnostic_status.hardware_id = config_ptr_->frame_id;
-  blockage_diagnostic_status.name = std::string(parent_node_->get_name()) + ": Blockage";
+  blockage_diagnostic_status.name =
+    std::string(parent_node_->get_fully_qualified_name()) + ": Blockage";
   blockage_diagnostic_status.level = sensor_status.blockage_diagnostics_status;
   blockage_diagnostic_status.message = "ARS548 blockage status";
 
