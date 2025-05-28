@@ -78,8 +78,7 @@ public:
     if (on_alive_) on_alive_();
 
     // A corrupted packet is not an error and shall simply be ignored.
-    if (!hesai_packet::is_crc_valid(fs))
-      throw std::runtime_error("Corrupted functional safety packet");
+    if (!hesai_packet::is_crc_valid(fs)) return;
 
     // The sensor sends functional safety data with every packet,
     // but it only changes at a fixed rate e.g. every 5 ms.
@@ -146,8 +145,8 @@ private:
 
     // There is no reported error, report an empty error list
     if (n_codes == 0) {
-      return {FunctionalSafetyErrorCodes{}};
       current_error_codes_ = {};
+      return {FunctionalSafetyErrorCodes{}};
     }
 
     uint8_t i_code = fs.fault_code_id();
