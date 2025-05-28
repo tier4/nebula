@@ -29,8 +29,6 @@
     retry_hw: true
     dual_return_distance_threshold: 0.1
     hires_mode: true
-    sync_diagnostics:
-      topic: /graph_updates
     diagnostics:
       pointcloud_publish_rate:
         frequency_ok:
