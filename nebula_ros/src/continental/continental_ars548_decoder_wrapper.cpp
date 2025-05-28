@@ -29,19 +29,16 @@
 namespace nebula::ros
 {
 using std::chrono_literals::operator""ms;
-static constexpr uint32_t default_cycle_time_ms = 100;
 
 ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   rclcpp::Node * const parent_node,
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
     config_ptr,
   bool launch_hw)
-: objects_rate_bound_status_(
-    make_rate_bound_status(parent_node, default_cycle_time_ms, "Objects rate bound status")),
+: objects_rate_bound_status_(make_rate_bound_status(parent_node, "Objects rate bound status")),
   detections_rate_bound_status_(
-    make_rate_bound_status(parent_node, default_cycle_time_ms, "Detections rate bound status")),
-  liveness_monitor_(
-    "Liveness", parent_node->get_clock(), std::chrono::milliseconds(default_cycle_time_ms)),
+    make_rate_bound_status(parent_node, "Detections rate bound status")),
+  liveness_monitor_("Liveness", parent_node->get_clock(), 100ms),
   objects_diagnostics_updater_(parent_node),
   detections_diagnostics_updater_(parent_node),
   liveness_diagnostics_updater_(parent_node),
@@ -110,9 +107,9 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   objects_diagnostics_updater_.setHardwareID(config_ptr_->frame_id);
   detections_diagnostics_updater_.setHardwareID(config_ptr_->frame_id);
   liveness_diagnostics_updater_.setHardwareID(config_ptr_->frame_id);
-  objects_diagnostics_updater_.setPeriod(default_cycle_time_ms * 1.0e-3);
-  detections_diagnostics_updater_.setPeriod(default_cycle_time_ms * 1.0e-3);
-  liveness_diagnostics_updater_.setPeriod(default_cycle_time_ms * 1.0e-3);
+  objects_diagnostics_updater_.setPeriod(100ms);
+  detections_diagnostics_updater_.setPeriod(100ms);
+  liveness_diagnostics_updater_.setPeriod(100ms);
   objects_diagnostics_updater_.force_update();
   detections_diagnostics_updater_.force_update();
   liveness_diagnostics_updater_.force_update();
@@ -256,14 +253,12 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
   // Update rate bounds
   if (sensor_status.cycle_time != latest_config_cycle_time_ms_) {
     latest_config_cycle_time_ms_ = sensor_status.cycle_time;
-    const auto [ok_params, warn_params] =
-      make_rate_bounds(parent_node_, latest_config_cycle_time_ms_);
-    objects_rate_bound_status_.update_bounds(ok_params, warn_params);
-    detections_rate_bound_status_.update_bounds(ok_params, warn_params);
     objects_diagnostics_updater_.setPeriod(latest_config_cycle_time_ms_ * 1.0e-3);
     detections_diagnostics_updater_.setPeriod(latest_config_cycle_time_ms_ * 1.0e-3);
+    liveness_diagnostics_updater_.setPeriod(latest_config_cycle_time_ms_ * 1.0e-3);
     objects_diagnostics_updater_.force_update();
     detections_diagnostics_updater_.force_update();
+    liveness_diagnostics_updater_.force_update();
   }
 
   // Init diagnostic array msg

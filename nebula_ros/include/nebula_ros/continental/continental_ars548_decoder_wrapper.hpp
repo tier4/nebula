@@ -157,15 +157,15 @@ private:
       std::chrono::duration<double>(seconds));
   }
 
-  /// @brief Make a RateBoundStatusParam object from the node parameters
+  /// @brief Make a RateBoundStatus object from the node parameters
   /// @param node The node to read the parameters from
-  /// @param cycle_time_ms The cycle time of the sensor
-  /// @return RateBoundStatusParam for OK and WARN diagnostics
-  static std::tuple<
-    custom_diagnostic_tasks::RateBoundStatusParam, custom_diagnostic_tasks::RateBoundStatusParam>
-  make_rate_bounds(rclcpp::Node * const node, const uint32_t cycle_time_ms)
+  /// @param name The name of the rate bound status
+  /// @return RateBoundStatus for OK and WARN diagnostics
+  static custom_diagnostic_tasks::RateBoundStatus make_rate_bound_status(
+    rclcpp::Node * const node, const std::string & name)
   {
-    const double nominal_rate_hz = 1.0 / cycle_time_ms * 1000.0;
+    static constexpr size_t num_frame_transition = 3;
+    static constexpr bool immediate_error_report = true;
 
     auto read_fp_param = [&node](const std::string & param_name) {
       if (node->has_parameter(param_name)) {
@@ -174,31 +174,13 @@ private:
       return node->declare_parameter<double>(param_name, param_read_only());
     };
 
-    double min_ok_hz =
-      nominal_rate_hz * read_fp_param("diagnostics.rate_bound_status.relative_frequency_ok.min");
-    double max_ok_hz =
-      nominal_rate_hz * read_fp_param("diagnostics.rate_bound_status.relative_frequency_ok.max");
-    double min_warn_hz =
-      nominal_rate_hz * read_fp_param("diagnostics.rate_bound_status.relative_frequency_warn.min");
-    double max_warn_hz =
-      nominal_rate_hz * read_fp_param("diagnostics.rate_bound_status.relative_frequency_warn.max");
+    double min_ok_hz = read_fp_param("diagnostics.rate_bound_status.frequency_ok.min_hz");
+    double max_ok_hz = read_fp_param("diagnostics.rate_bound_status.frequency_ok.max_hz");
+    double min_warn_hz = read_fp_param("diagnostics.rate_bound_status.frequency_warn.min_hz");
+    double max_warn_hz = read_fp_param("diagnostics.rate_bound_status.frequency_warn.max_hz");
 
     custom_diagnostic_tasks::RateBoundStatusParam ok_params(min_ok_hz, max_ok_hz);
     custom_diagnostic_tasks::RateBoundStatusParam warn_params(min_warn_hz, max_warn_hz);
-
-    return std::make_tuple(ok_params, warn_params);
-  }
-
-  /// @brief Make a RateBoundStatus object from the node parameters
-  /// @param node The node to read the parameters from
-  /// @return RateBoundStatus for OK and WARN diagnostics
-  static custom_diagnostic_tasks::RateBoundStatus make_rate_bound_status(
-    rclcpp::Node * const node, const uint32_t cycle_time_ms, const std::string & name)
-  {
-    static constexpr size_t num_frame_transition = 3;
-    static constexpr bool immediate_error_report = true;
-
-    auto [ok_params, warn_params] = make_rate_bounds(node, cycle_time_ms);
 
     return {node, ok_params, warn_params, num_frame_transition, immediate_error_report, name};
   }

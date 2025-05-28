@@ -19,9 +19,9 @@
     configuration_vehicle_wheelbase: 2.79
     diagnostics:
       rate_bound_status:
-        relative_frequency_ok:
-          min: 0.95
-          max: 1.05
-        relative_frequency_warn:
-          min: 0.9
-          max: 1.1
+        frequency_ok:
+          min_hz: 9.5
+          max_hz: 10.5
+        frequency_warn:
+          min_hz: 9.0
+          max_hz: 11.0
