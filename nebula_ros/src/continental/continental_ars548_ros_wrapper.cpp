@@ -100,6 +100,14 @@ nebula::Status ContinentalARS548RosWrapper::declare_and_get_sensor_config_params
     declare_parameter<double>("configuration_vehicle_height", param_read_write()));
   config.configuration_vehicle_wheelbase = static_cast<float>(
     declare_parameter<double>("configuration_vehicle_wheelbase", param_read_write()));
+  config.blockage_status_level_ok = static_cast<uint8_t>(
+    declare_parameter<int>("diagnostics.blockage.status_level.ok", param_read_write()));
+  config.blockage_status_level_warn = static_cast<uint8_t>(
+    declare_parameter<int>("diagnostics.blockage.status_level.warn", param_read_write()));
+  config.blockage_test_level_ok = static_cast<uint8_t>(
+    declare_parameter<int>("diagnostics.blockage.test_level.ok", param_read_write()));
+  config.blockage_test_level_warn = static_cast<uint8_t>(
+    declare_parameter<int>("diagnostics.blockage.test_level.warn", param_read_write()));
   declare_parameter<bool>(
     "diagnostic_updater.use_fqn", true, param_read_only());  // read by diagnostic_updater
 
@@ -121,6 +129,13 @@ Status ContinentalARS548RosWrapper::validate_and_set_config(
   }
 
   if (new_config_ptr->frame_id.empty()) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  if (new_config_ptr->blockage_status_level_ok < new_config_ptr->blockage_status_level_warn) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+  if (new_config_ptr->blockage_test_level_ok < new_config_ptr->blockage_test_level_warn) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 

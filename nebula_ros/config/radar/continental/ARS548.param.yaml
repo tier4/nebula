@@ -18,10 +18,17 @@
     configuration_vehicle_height: 2.5
     configuration_vehicle_wheelbase: 2.79
     diagnostics:
+      blockage:
+        status_level:
+          ok: 2
+          warn: 1
+        test_level:
+          ok: 1
+          warn: 1
       rate_bound_status:
         frequency_ok:
-          min_hz: 9.5
-          max_hz: 10.5
+          min_hz: 19.0
+          max_hz: 21.0
         frequency_warn:
-          min_hz: 9.0
-          max_hz: 11.0
+          min_hz: 18.0
+          max_hz: 22.0

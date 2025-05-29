@@ -646,15 +646,35 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
 
   radar_status_.blockage_diagnostics_status = diagnostic_msgs::msg::DiagnosticStatus::OK;
 
-  switch (blockage_status0) {
-    case blockage_status_blind:
+  auto apply_blockage_status_level = [this, &update_diag](
+                                       const uint8_t & blockage_status, const uint8_t & level_ok,
+                                       const uint8_t & level_warn) {
+    if (blockage_status < level_ok) {
+      if (level_ok == level_warn) {
+        update_diag(
+          radar_status_.blockage_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
+      } else {
+        update_diag(
+          radar_status_.blockage_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::WARN);
+      }
+    }
+    if (blockage_status < level_warn) {
       update_diag(
         radar_status_.blockage_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
+    }
+  };
+
+  apply_blockage_status_level(
+    blockage_status0, config_ptr_->blockage_status_level_ok,
+    config_ptr_->blockage_status_level_warn);
+  apply_blockage_status_level(
+    blockage_status1, config_ptr_->blockage_test_level_ok, config_ptr_->blockage_test_level_warn);
+
+  switch (blockage_status0) {
+    case blockage_status_blind:
       radar_status_.blockage_status = "0:Blind";
       break;
     case blockage_status_high:
-      update_diag(
-        radar_status_.blockage_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::WARN);
       radar_status_.blockage_status = "1:High";
       break;
     case blockage_status_mid:
@@ -675,8 +695,6 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
 
   switch (blockage_status1) {
     case blockage_test_failed:
-      update_diag(
-        radar_status_.blockage_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
       radar_status_.blockage_status += ". 0:Self test failed";
       break;
     case blockage_test_passed:

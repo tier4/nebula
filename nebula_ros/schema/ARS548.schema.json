@@ -61,7 +61,62 @@
           ]
         },
         "diagnostics": {
-          "$ref": "sub/diagnostics.json#/definitions/rate_bound_status"
+          "properties": {
+            "rate_bound_status": {
+              "$ref": "sub/diagnostics.json#/definitions/rate_bound_status"
+            },
+            "blockage": {
+              "type": "object",
+              "properties": {
+                "status_level": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "integer",
+                      "default": "2",
+                      "minimum": 0,
+                      "maximum": 4,
+                      "description": "Maximum blockage status level considered as OK (0: Blind, 1: High, 2: Mid, 3: Low, 4: None)"
+                    },
+                    "warn": {
+                      "type": "integer",
+                      "default": "1",
+                      "minimum": 0,
+                      "maximum": 4,
+                      "description": "Maximum blockage status level considered as Warning (0: Blind, 1: High, 2: Mid, 3: Low, 4: None). Can not be greater than `ok`. If `ok` is equal to `warn`, the status will be set to `ERROR` if the blockage status is greater than `ok`."
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "warn"
+                  ]
+                },
+                "test_level": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "integer",
+                      "default": "1",
+                      "minimum": 0,
+                      "maximum": 2,
+                      "description": "Maximum blockage test level considered as OK (0: Self test failed, 1: Self test passed, 2: Self test ongoing)"
+                    },
+                    "warn": {
+                      "type": "integer",
+                      "default": "1",
+                      "minimum": 0,
+                      "maximum": 2,
+                      "description": "Maximum blockage test level considered as Warning (0: Self test failed, 1: Self test passed, 2: Self test ongoing). Can not be greater than `ok`. If `ok` is equal to `warn`, the status will be set to `ERROR` if the blockage test is greater than `ok`."
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "warn"
+                  ]
+                }
+              }
+            }
+          }
         }
       },
       "required": [

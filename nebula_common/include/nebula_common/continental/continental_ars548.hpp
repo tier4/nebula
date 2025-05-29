@@ -52,6 +52,10 @@ struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
   float configuration_vehicle_width{};
   float configuration_vehicle_height{};
   float configuration_vehicle_wheelbase{};
+  uint8_t blockage_status_level_ok{};
+  uint8_t blockage_status_level_warn{};
+  uint8_t blockage_test_level_ok{};
+  uint8_t blockage_test_level_warn{};
 };
 
 /// @brief Convert ContinentalARS548SensorConfiguration to string (Overloading the <<
