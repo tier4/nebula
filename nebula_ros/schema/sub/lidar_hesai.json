@@ -98,6 +98,11 @@
       "description": "Whether to turn on or off the sensor's high resolution mode",
       "default": false
     },
+    "blockage_mask_output": {
+      "type": "boolean",
+      "description": "Whether to enable blockage detection and output a blockage mask per scan",
+      "default": false
+    },
     "diagnostics": {
       "type": "object",
       "properties": {
