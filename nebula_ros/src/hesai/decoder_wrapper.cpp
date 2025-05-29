@@ -2,7 +2,9 @@
 
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 
+#include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_ros/common/rclcpp_logger.hpp"
+#include "nebula_ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/util/string_conversions.hpp>
@@ -45,8 +47,23 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
 
   RCLCPP_INFO(logger_, "Starting Decoder");
 
-  driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
-    config, calibration_cfg_ptr_, std::make_shared<drivers::loggers::RclcppLogger>(logger_));
+  initialize_functional_safety(diagnostic_updater);
+
+  if (functional_safety_diagnostic_) {
+    driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
+      config, calibration_cfg_ptr_, std::make_shared<drivers::loggers::RclcppLogger>(logger_),
+      [this]() { functional_safety_diagnostic_->on_alive(); },
+      [this]() { functional_safety_diagnostic_->on_stuck(); },
+      [this](
+        drivers::FunctionalSafetySeverity severity,
+        const drivers::FunctionalSafetyErrorCodes & codes) {
+        functional_safety_diagnostic_->on_status(severity, codes);
+      });
+  } else {
+    driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
+      config, calibration_cfg_ptr_, std::make_shared<drivers::loggers::RclcppLogger>(logger_));
+  }
+
   status_ = driver_ptr_->get_status();
 
   if (Status::OK != status_) {
@@ -190,6 +207,17 @@ void HesaiDecoderWrapper::publish_cloud(
   }
   pointcloud->header.frame_id = sensor_cfg_->frame_id;
   publisher->publish(std::move(pointcloud));
+}
+
+void HesaiDecoderWrapper::initialize_functional_safety(
+  diagnostic_updater::Updater & diagnostic_updater)
+{
+  if (!drivers::supports_functional_safety(sensor_cfg_->sensor_model)) {
+    return;
+  }
+
+  functional_safety_diagnostic_.emplace(parent_node_.get_clock());
+  diagnostic_updater.add(functional_safety_diagnostic_.value());
 }
 
 nebula::Status HesaiDecoderWrapper::status()

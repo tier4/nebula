@@ -559,6 +559,21 @@ inline int int_from_return_mode_hesai(
   return -1;
 }
 
+/// @brief Whether the given sensor model supports functional safety
+/// @param sensor_model Sensor model
+/// @return True if the sensor model supports functional safety, false otherwise
+inline bool supports_functional_safety(const SensorModel & sensor_model)
+{
+  switch (sensor_model) {
+    case SensorModel::HESAI_PANDAR128_E3X:
+    case SensorModel::HESAI_PANDAR128_E4X:
+    case SensorModel::HESAI_PANDARQT128:
+      return true;
+    default:
+      return false;
+  }
+}
+
 }  // namespace drivers
 }  // namespace nebula
 

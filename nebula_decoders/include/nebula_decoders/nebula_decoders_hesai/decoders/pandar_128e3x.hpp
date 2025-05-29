@@ -14,11 +14,14 @@
 
 #pragma once
 
+#include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
+#include <nebula_common/util/bitfield.hpp>
 #include <nebula_common/util/crc.hpp>
 
+#include <cstdint>
 #include <iostream>
 #include <ostream>
 #include <vector>
@@ -82,17 +85,79 @@ struct ChannelHealth128E3X
 
 struct FunctionalSafety128E3X
 {
+  static constexpr uint64_t update_cycle_ns = 5'000'000;
+
+  enum class LidarState : uint8_t {
+    INITIALIZATION = 0,
+    NORMAL = 1,
+    WARNING = 2,
+    PRE_PERFORMANCE_DEGRADATION = 3,
+    PERFORMANCE_DEGRADATION = 4,
+    PRE_SHUTDOWN = 5,
+    SHUTDOWN_OR_OUTPUT_UNTRUSTED = 6,
+    STANDBY = 7,
+  };
+
+  enum class FaultCodeType : uint8_t {
+    NONE = 0,
+    CURRENT_FAULT = 1,
+    PAST_FAULT = 2  /// Currently unsupported by the sensor
+  };
+
   uint8_t fs_version;
-  uint8_t lidar_state;
-  uint8_t fault_code_id;
+
+  uint8_t bitfield1;
+  BITFIELD_ACCESSOR(LidarState, lidar_state, 5, 7, bitfield1)
+  BITFIELD_ACCESSOR(FaultCodeType, fault_code_type, 3, 4, bitfield1)
+  BITFIELD_ACCESSOR(uint8_t, rolling_counter, 0, 2, bitfield1)
+
+  uint8_t bitfield2;
+  BITFIELD_ACCESSOR(uint8_t, total_fault_code_num, 4, 7, bitfield2)
+  BITFIELD_ACCESSOR(uint8_t, fault_code_id, 0, 3, bitfield2)
+
   uint16_t fault_code;
   ChannelHealth128E3X channel_health;
   uint32_t crc_fs;
 
   [[nodiscard]] bool is_crc_valid() const
   {
+    // FIXME(mojomex): OT128's CRC is broken, at least in B and C samples. Disable for now.
+    return true;
+
     // fs_version is not included in the CRC check
-    return crc<crc32_mpeg2_t>(&lidar_state, &crc_fs) == crc_fs;
+    // return crc<crc32_mpeg2_t>(&bitfield1, &crc_fs) == crc_fs;
+  }
+
+  [[nodiscard]] FunctionalSafetySeverity severity() const
+  {
+    switch (lidar_state()) {
+      case LidarState::INITIALIZATION:
+      case LidarState::NORMAL:
+      case LidarState::WARNING:
+        return FunctionalSafetySeverity::OK;
+      case LidarState::PRE_PERFORMANCE_DEGRADATION:
+      case LidarState::PERFORMANCE_DEGRADATION:
+      case LidarState::PRE_SHUTDOWN:
+        return FunctionalSafetySeverity::WARNING;
+      case LidarState::SHUTDOWN_OR_OUTPUT_UNTRUSTED:
+      case LidarState::STANDBY:
+      default:
+        return FunctionalSafetySeverity::ERROR;
+    }
+  }
+
+  friend bool operator==(const FunctionalSafety128E3X & lhs, const FunctionalSafety128E3X & rhs)
+  {
+    return lhs.lidar_state() == rhs.lidar_state() &&
+           lhs.fault_code_type() == rhs.fault_code_type() &&
+           lhs.rolling_counter() == rhs.rolling_counter() &&
+           lhs.total_fault_code_num() == rhs.total_fault_code_num() &&
+           lhs.fault_code == rhs.fault_code;
+  }
+
+  friend bool operator!=(const FunctionalSafety128E3X & lhs, const FunctionalSafety128E3X & rhs)
+  {
+    return !(lhs == rhs);
   }
 };
 
