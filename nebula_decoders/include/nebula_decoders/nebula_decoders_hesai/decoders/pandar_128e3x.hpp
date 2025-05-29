@@ -88,20 +88,20 @@ struct FunctionalSafety128E3X
   static constexpr uint64_t update_cycle_ns = 5'000'000;
 
   enum class LidarState : uint8_t {
-    Initialization = 0,
-    Normal = 1,
-    Warning = 2,
-    PrePerformanceDegradation = 3,
-    PerformanceDegradation = 4,
-    PreShutdown = 5,
-    ShutdownOrOutputUntrusted = 6,
-    Standby = 7,
+    INITIALIZATION = 0,
+    NORMAL = 1,
+    WARNING = 2,
+    PRE_PERFORMANCE_DEGRADATION = 3,
+    PERFORMANCE_DEGRADATION = 4,
+    PRE_SHUTDOWN = 5,
+    SHUTDOWN_OR_OUTPUT_UNTRUSTED = 6,
+    STANDBY = 7,
   };
 
   enum class FaultCodeType : uint8_t {
-    None = 0,
-    CurrentFault = 1,
-    PastFault = 2  /// Currently unsupported by the sensor
+    NONE = 0,
+    CURRENT_FAULT = 1,
+    PAST_FAULT = 2  /// Currently unsupported by the sensor
   };
 
   uint8_t fs_version;
@@ -131,18 +131,18 @@ struct FunctionalSafety128E3X
   [[nodiscard]] FunctionalSafetySeverity severity() const
   {
     switch (lidar_state()) {
-      case LidarState::Initialization:
-      case LidarState::Normal:
-      case LidarState::Warning:
-        return FunctionalSafetySeverity::Ok;
-      case LidarState::PrePerformanceDegradation:
-      case LidarState::PerformanceDegradation:
-      case LidarState::PreShutdown:
-        return FunctionalSafetySeverity::Warning;
-      case LidarState::ShutdownOrOutputUntrusted:
-      case LidarState::Standby:
+      case LidarState::INITIALIZATION:
+      case LidarState::NORMAL:
+      case LidarState::WARNING:
+        return FunctionalSafetySeverity::OK;
+      case LidarState::PRE_PERFORMANCE_DEGRADATION:
+      case LidarState::PERFORMANCE_DEGRADATION:
+      case LidarState::PRE_SHUTDOWN:
+        return FunctionalSafetySeverity::WARNING;
+      case LidarState::SHUTDOWN_OR_OUTPUT_UNTRUSTED:
+      case LidarState::STANDBY:
       default:
-        return FunctionalSafetySeverity::Error;
+        return FunctionalSafetySeverity::ERROR;
     }
   }
 

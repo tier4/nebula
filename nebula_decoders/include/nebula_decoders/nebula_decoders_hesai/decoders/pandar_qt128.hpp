@@ -50,17 +50,17 @@ struct FunctionalSafetyQT128C2X
   static constexpr uint64_t update_cycle_ns = 5'000'000;
 
   enum class LidarState : uint8_t {
-    Initialization = 0,
-    Normal = 1,
-    Warning = 2,
-    PerformanceDegradation = 3,
-    OutputUntrusted = 4,
+    INITIALIZATION = 0,
+    NORMAL = 1,
+    WARNING = 2,
+    PERFORMANCE_DEGRADATION = 3,
+    OUTPUT_UNTRUSTED = 4,
   };
 
   enum class FaultCodeType : uint8_t {
-    NoFault = 0,
-    CurrentFault = 1,
-    PastFault = 2,
+    NO_FAULT = 0,
+    CURRENT_FAULT = 1,
+    PAST_FAULT = 2,
   };
 
   uint8_t fs_version;
@@ -87,15 +87,15 @@ struct FunctionalSafetyQT128C2X
   [[nodiscard]] FunctionalSafetySeverity severity() const
   {
     switch (lidar_state()) {
-      case LidarState::Initialization:
-      case LidarState::Normal:
-      case LidarState::Warning:
-        return FunctionalSafetySeverity::Ok;
-      case LidarState::PerformanceDegradation:
-        return FunctionalSafetySeverity::Warning;
-      case LidarState::OutputUntrusted:
+      case LidarState::INITIALIZATION:
+      case LidarState::NORMAL:
+      case LidarState::WARNING:
+        return FunctionalSafetySeverity::OK;
+      case LidarState::PERFORMANCE_DEGRADATION:
+        return FunctionalSafetySeverity::WARNING;
+      case LidarState::OUTPUT_UNTRUSTED:
       default:
-        return FunctionalSafetySeverity::Error;
+        return FunctionalSafetySeverity::ERROR;
     }
   }
 

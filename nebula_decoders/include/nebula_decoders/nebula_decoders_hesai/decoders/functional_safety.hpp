@@ -26,7 +26,7 @@
 namespace nebula::drivers
 {
 
-enum class FunctionalSafetySeverity : uint8_t { Ok, Warning, Error };
+enum class FunctionalSafetySeverity : uint8_t { OK, WARNING, ERROR };
 using FunctionalSafetyErrorCodes = boost::container::static_vector<uint16_t, 16>;
 
 class FunctionalSafetyDecoderBase

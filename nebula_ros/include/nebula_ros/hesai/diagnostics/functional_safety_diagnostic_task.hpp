@@ -36,12 +36,12 @@ namespace detail
 inline uint8_t severity_to_diagnostic_status_level(drivers::FunctionalSafetySeverity severity)
 {
   switch (severity) {
-    case drivers::FunctionalSafetySeverity::Ok:
+    case drivers::FunctionalSafetySeverity::OK:
       return diagnostic_msgs::msg::DiagnosticStatus::OK;
-    case drivers::FunctionalSafetySeverity::Warning:
+    case drivers::FunctionalSafetySeverity::WARNING:
       return diagnostic_msgs::msg::DiagnosticStatus::WARN;
     default:
-    case drivers::FunctionalSafetySeverity::Error:
+    case drivers::FunctionalSafetySeverity::ERROR:
       return diagnostic_msgs::msg::DiagnosticStatus::ERROR;
   }
 }
@@ -63,11 +63,11 @@ inline std::string status_to_string(drivers::FunctionalSafetySeverity severity, 
 {
   if (n_errors == 0) {
     switch (severity) {
-      case drivers::FunctionalSafetySeverity::Ok:
+      case drivers::FunctionalSafetySeverity::OK:
         return "Operating nominally";
-      case drivers::FunctionalSafetySeverity::Warning:
+      case drivers::FunctionalSafetySeverity::WARNING:
         return "Unknown warning";
-      case drivers::FunctionalSafetySeverity::Error:
+      case drivers::FunctionalSafetySeverity::ERROR:
         return "Unknown error";
     }
   }
@@ -75,12 +75,12 @@ inline std::string status_to_string(drivers::FunctionalSafetySeverity severity, 
   std::string n_errors_str = std::to_string(n_errors);
 
   switch (severity) {
-    case drivers::FunctionalSafetySeverity::Ok:
+    case drivers::FunctionalSafetySeverity::OK:
       return "Sensor reports OK, but sent " + n_errors_str + " error codes.";
-    case drivers::FunctionalSafetySeverity::Warning:
+    case drivers::FunctionalSafetySeverity::WARNING:
       return "Sensor reports " + n_errors_str + " warnings";
     default:
-    case drivers::FunctionalSafetySeverity::Error:
+    case drivers::FunctionalSafetySeverity::ERROR:
       return "Sensor reports " + n_errors_str + " errors";
   }
 }
