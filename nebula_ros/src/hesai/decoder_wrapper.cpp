@@ -216,7 +216,7 @@ void HesaiDecoderWrapper::initialize_functional_safety(
     return;
   }
 
-  functional_safety_diagnostic_.emplace(parent_node_.get_clock());
+  functional_safety_diagnostic_.emplace(&parent_node_);
   diagnostic_updater.add(functional_safety_diagnostic_.value());
 }
 
