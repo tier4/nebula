@@ -18,7 +18,6 @@
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/point_types.hpp>
 
-#include <tuple>
 #include <vector>
 
 namespace nebula::drivers
@@ -27,6 +26,9 @@ namespace nebula::drivers
 class HesaiScanDecoder
 {
 public:
+  using pointcloud_callback_t =
+    std::function<void(const NebulaPointCloudPtr & pointcloud, double timestamp_s)>;
+
   HesaiScanDecoder(HesaiScanDecoder && c) = delete;
   HesaiScanDecoder & operator=(HesaiScanDecoder && c) = delete;
   HesaiScanDecoder(const HesaiScanDecoder & c) = delete;
@@ -40,13 +42,7 @@ public:
   /// @return The last azimuth processed
   virtual int unpack(const std::vector<uint8_t> & packet) = 0;
 
-  /// @brief Indicates whether one full scan is ready
-  /// @return Whether a scan is ready
-  virtual bool has_scanned() = 0;
-
-  /// @brief Returns the point cloud and timestamp of the last scan
-  /// @return A tuple of point cloud and timestamp in nanoseconds
-  virtual std::tuple<drivers::NebulaPointCloudPtr, double> get_pointcloud() = 0;
+  virtual void set_pointcloud_callback(pointcloud_callback_t callback) = 0;
 };
 }  // namespace nebula::drivers
 

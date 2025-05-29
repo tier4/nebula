@@ -46,6 +46,8 @@ public:
 
   void process_cloud_packet(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
+  void on_pointcloud_decoded(const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s);
+
   void on_config_change(
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config);
 
@@ -98,6 +100,10 @@ private:
   }
 
   void initialize_functional_safety(diagnostic_updater::Updater & diagnostic_updater);
+
+  std::shared_ptr<drivers::HesaiDriver> initialize_driver(
+    const std::shared_ptr<const drivers::HesaiSensorConfiguration> & config,
+    const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration);
 
   nebula::Status status_;
   rclcpp::Logger logger_;

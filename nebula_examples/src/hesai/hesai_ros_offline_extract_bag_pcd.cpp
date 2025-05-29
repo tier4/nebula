@@ -76,7 +76,8 @@ Status HesaiRosOfflineExtractBag::initialize_driver(
 {
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
     std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
-    calibration_configuration, std::make_shared<drivers::loggers::RclcppLogger>(get_logger()));
+    calibration_configuration, std::make_shared<drivers::loggers::RclcppLogger>(get_logger()),
+    nullptr);
   return driver_ptr_->get_status();
 }
 
@@ -224,6 +225,7 @@ Status HesaiRosOfflineExtractBag::read_bag()
   int cnt = 0;
   int out_cnt = 0;
   bool output_limit_reached = false;
+
   while (reader.has_next()) {
     auto bag_message = reader.read_next();
 
@@ -267,66 +269,69 @@ Status HesaiRosOfflineExtractBag::read_bag()
       bag_writer->write(bag_message);
     }
 
+    drivers::HesaiScanDecoder::pointcloud_callback_t pointcloud_cb =
+      [&](const drivers::NebulaPointCloudPtr & pointcloud, double /* timestamp_s */) {
+        auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
+
+        cnt++;
+        if (skip_num_ < cnt) {
+          out_cnt++;
+
+          if (output_pcd_) {
+            if (only_xyz_) {
+              pcl::PointCloud<pcl::PointXYZ> cloud_xyz;
+              pcl::copyPointCloud(*pointcloud, cloud_xyz);
+              pcd_writer.writeBinary((o_dir / fn).string(), cloud_xyz);
+            } else {
+              pcd_writer.writeBinary((o_dir / fn).string(), *pointcloud);
+            }
+          }
+
+          if (output_rosbag_) {
+            // Create ROS Pointcloud from PCL pointcloud
+            sensor_msgs::msg::PointCloud2 cloud_msg;
+            pcl::toROSMsg(*pointcloud, cloud_msg);
+            cloud_msg.header = extracted_msg.header;
+            cloud_msg.header.frame_id = frame_id_;
+
+            // Create a serialized message for the pointcloud
+            rclcpp::SerializedMessage cloud_serialized_msg;
+            rclcpp::Serialization<sensor_msgs::msg::PointCloud2> cloud_serialization;
+            cloud_serialization.serialize_message(&cloud_msg, &cloud_serialized_msg);
+
+            // Create a bag message for the pointcloud
+            auto cloud_bag_msg = std::make_shared<rosbag2_storage::SerializedBagMessage>();
+            cloud_bag_msg->topic_name = output_pointcloud_topic_;
+            cloud_bag_msg->time_stamp = bag_message->time_stamp;
+
+            // Create a new shared_ptr for the serialized data
+            cloud_bag_msg->serialized_data = std::make_shared<rcutils_uint8_array_t>(
+              cloud_serialized_msg.get_rcl_serialized_message());
+
+            // Write both messages to the bag
+            bag_writer->write(cloud_bag_msg);
+          }
+        }
+
+        if (out_num_ != 0 && out_num_ <= out_cnt) {
+          output_limit_reached = true;
+        }
+      };
+
+    driver_ptr_->set_pointcloud_callback(pointcloud_cb);
+
     nebula_msgs::msg::NebulaPackets nebula_msg;
     nebula_msg.header = extracted_msg.header;
     for (auto & pkt : extracted_msg.packets) {
       std::vector<uint8_t> pkt_data(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size));
-      auto pointcloud_ts = driver_ptr_->parse_cloud_packet(pkt_data);
-      auto pointcloud = std::get<0>(pointcloud_ts);
+      driver_ptr_->parse_cloud_packet(pkt_data);
 
       nebula_msgs::msg::NebulaPacket nebula_pkt;
       nebula_pkt.stamp = pkt.stamp;
       nebula_pkt.data.swap(pkt_data);  // move storage from `pkt_data` to `data`
       nebula_msg.packets.push_back(nebula_pkt);
 
-      if (!pointcloud) {
-        continue;
-      }
-
-      auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
-
-      cnt++;
-      if (skip_num_ < cnt) {
-        out_cnt++;
-
-        if (output_pcd_) {
-          if (only_xyz_) {
-            pcl::PointCloud<pcl::PointXYZ> cloud_xyz;
-            pcl::copyPointCloud(*pointcloud, cloud_xyz);
-            pcd_writer.writeBinary((o_dir / fn).string(), cloud_xyz);
-          } else {
-            pcd_writer.writeBinary((o_dir / fn).string(), *pointcloud);
-          }
-        }
-
-        if (output_rosbag_) {
-          // Create ROS Pointcloud from PCL pointcloud
-          sensor_msgs::msg::PointCloud2 cloud_msg;
-          pcl::toROSMsg(*pointcloud, cloud_msg);
-          cloud_msg.header = extracted_msg.header;
-          cloud_msg.header.frame_id = frame_id_;
-
-          // Create a serialized message for the pointcloud
-          rclcpp::SerializedMessage cloud_serialized_msg;
-          rclcpp::Serialization<sensor_msgs::msg::PointCloud2> cloud_serialization;
-          cloud_serialization.serialize_message(&cloud_msg, &cloud_serialized_msg);
-
-          // Create a bag message for the pointcloud
-          auto cloud_bag_msg = std::make_shared<rosbag2_storage::SerializedBagMessage>();
-          cloud_bag_msg->topic_name = output_pointcloud_topic_;
-          cloud_bag_msg->time_stamp = bag_message->time_stamp;
-
-          // Create a new shared_ptr for the serialized data
-          cloud_bag_msg->serialized_data = std::make_shared<rcutils_uint8_array_t>(
-            cloud_serialized_msg.get_rcl_serialized_message());
-
-          // Write both messages to the bag
-          bag_writer->write(cloud_bag_msg);
-        }
-      }
-
-      if (out_num_ != 0 && out_num_ <= out_cnt) {
-        output_limit_reached = true;
+      if (output_limit_reached) {
         break;
       }
     }
