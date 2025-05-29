@@ -285,4 +285,16 @@ std::enable_if_t<!HasCrcCheck<PayloadT>::value, bool> is_crc_valid(const Payload
   return true;
 }
 
+// Helper trait to determine if a given struct has a functional safety part
+template <typename PacketT, typename = void>
+struct HasFunctionalSafety : std::false_type
+{
+};
+
+template <typename PacketT>
+struct HasFunctionalSafety<PacketT, std::void_t<decltype(std::declval<PacketT>().fs)>>
+: std::true_type
+{
+};
+
 }  // namespace nebula::drivers::hesai_packet
