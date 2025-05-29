@@ -189,7 +189,6 @@ void ContinentalARS548DecoderWrapper::detection_list_callback(
     detection_list_pub_->get_subscription_count() > 0 ||
     detection_list_pub_->get_intra_process_subscription_count() > 0) {
     detection_list_pub_->publish(std::move(msg));
-    detections_rate_bound_status_.tick();
   }
 
   if (
@@ -201,6 +200,7 @@ void ContinentalARS548DecoderWrapper::detection_list_callback(
   }
 
   detection_msgs_counter_++;
+  detections_rate_bound_status_.tick();
 }
 
 void ContinentalARS548DecoderWrapper::object_list_callback(
@@ -243,8 +243,8 @@ void ContinentalARS548DecoderWrapper::object_list_callback(
     object_list_pub_->get_subscription_count() > 0 ||
     object_list_pub_->get_intra_process_subscription_count() > 0) {
     object_list_pub_->publish(std::move(msg));
-    objects_rate_bound_status_.tick();
   }
+  objects_rate_bound_status_.tick();
 }
 
 void ContinentalARS548DecoderWrapper::sensor_status_callback(
