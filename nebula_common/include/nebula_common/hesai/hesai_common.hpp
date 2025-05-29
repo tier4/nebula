@@ -53,6 +53,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   uint8_t ptp_lock_threshold;
   std::optional<std::string> downsample_mask_path;
   bool hires_mode;
+  std::optional<uint32_t> blockage_mask_horizontal_bin_size_mdeg;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -81,7 +82,13 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "High Resolution Mode: " << (arg.hires_mode ? "enabled" : "disabled") << '\n';
   os << "Downsample Filter: "
      << (arg.downsample_mask_path ? "enabled, path: " + arg.downsample_mask_path.value()
-                                  : "disabled");
+                                  : "disabled")
+     << '\n';
+  os << "Blockage Mask Output: "
+     << (arg.blockage_mask_horizontal_bin_size_mdeg
+           ? "enabled, horizontal bin size: " +
+               std::to_string(arg.blockage_mask_horizontal_bin_size_mdeg.value()) + " mdeg"
+           : "disabled");
   return os;
 }
 

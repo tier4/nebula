@@ -99,9 +99,17 @@
       "default": false
     },
     "blockage_mask_output": {
-      "type": "boolean",
-      "description": "Whether to enable blockage detection and output a blockage mask per scan",
-      "default": false
+      "type": "object",
+      "description": "Enables blockage detection and outputs a blockage mask per scan",
+      "properties": {
+        "horizontal_bin_size_mdeg": {
+          "type": "number",
+          "default": 1000,
+          "minimum": 1,
+          "maximum": 360000,
+          "description": "The size of the horizontal bins in milli-degrees"
+        }
+      }
     },
     "diagnostics": {
       "type": "object",

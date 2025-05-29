@@ -60,7 +60,7 @@ public:
     bin_size_rad_{deg2rad(bin_size_mdeg / 1000.)},
     n_channels_{n_channels}
   {
-    mask_.resize(n_channels_ * get_n_bins());
+    mask_.resize(n_channels_ * get_width());
   }
 
   void update(double azimuth_rad, uint16_t channel, BlockageState blockage)
@@ -81,12 +81,14 @@ public:
 
   [[nodiscard]] const std::vector<uint8_t> & get_mask() const { return mask_; }
 
-private:
-  [[nodiscard]] size_t get_n_bins() const
+  [[nodiscard]] size_t get_width() const
   {
     return static_cast<size_t>(std::ceil(azimuth_range_rad_.extent() / bin_size_rad_));
   }
 
+  [[nodiscard]] size_t get_height() const { return n_channels_; }
+
+private:
   [[nodiscard]] util::expected<size_t, std::monostate> get_bin_index(double azimuth_rad) const
   {
     double azimuth_from_start = azimuth_rad - azimuth_range_rad_.start;
@@ -94,7 +96,7 @@ private:
 
     auto index = static_cast<size_t>(std::floor(azimuth_from_start / bin_size_rad_));
 
-    if (index >= get_n_bins()) {
+    if (index >= get_width()) {
       return std::monostate{};
     }
 
@@ -119,7 +121,7 @@ private:
       return std::monostate{};
     }
 
-    return (channel_index.value() * get_n_bins()) + bin_index.value();
+    return (channel_index.value() * get_width()) + bin_index.value();
   }
 
   void reset() { boost::range::fill(mask_, 0); }
@@ -136,7 +138,7 @@ private:
 class BlockageMaskPlugin
 {
 public:
-  using callback_t = std::function<void(const std::vector<uint8_t> & blockage_mask)>;
+  using callback_t = std::function<void(const BlockageMask & blockage_mask, double timestamp_s)>;
 
   explicit BlockageMaskPlugin(uint32_t bin_width_mdeg) : bin_width_mdeg_(bin_width_mdeg) {}
 
@@ -147,10 +149,10 @@ public:
    *
    * @param mask The mask to pass to the callback and reset
    */
-  void callback_and_reset(BlockageMask & mask)
+  void callback_and_reset(BlockageMask & mask, double timestamp_s)
   {
     if (callback_) {
-      callback_(mask.get_mask());
+      callback_(mask, timestamp_s);
     }
 
     mask.reset();

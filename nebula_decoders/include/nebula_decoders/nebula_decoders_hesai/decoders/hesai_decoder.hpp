@@ -92,7 +92,7 @@ private:
 
   std::optional<point_filters::DownsampleMaskFilter> mask_filter_;
 
-  std::optional<point_filters::BlockageMaskPlugin> blockage_mask_plugin_;
+  std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin_;
 
   /// @brief Decoded data of the frame currently being decoded to
   DecodeFrame decode_frame_;
@@ -131,6 +131,9 @@ private:
 
     std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units;
 
+    // If the blockage mask plugin is not present, we can return early if distance checks fail
+    const bool filters_can_return_early = !blockage_mask_plugin_;
+
     for (size_t channel_id = 0; channel_id < SensorT::packet_t::n_channels; ++channel_id) {
       // Find the units corresponding to the same return group as the current one.
       // These are used to find duplicates in multi-return mode.
@@ -143,8 +146,10 @@ private:
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
         auto & unit = *return_units[block_offset];
 
+        bool point_is_valid = true;
+
         if (unit.distance == 0) {
-          continue;
+          point_is_valid = false;
         }
 
         float distance = get_distance(unit);
@@ -153,7 +158,7 @@ private:
           distance < SensorT::min_range || SensorT::max_range < distance ||
           distance < sensor_configuration_->min_range ||
           sensor_configuration_->max_range < distance) {
-          continue;
+          point_is_valid = false;
         }
 
         auto return_type = sensor_.get_return_type(
@@ -162,7 +167,7 @@ private:
 
         // Keep only last of multiple identical points
         if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
-          continue;
+          point_is_valid = false;
         }
 
         // Keep only last (if any) of multiple points that are too close
@@ -183,8 +188,12 @@ private:
           }
 
           if (is_below_multi_return_threshold) {
-            continue;
+            point_is_valid = false;
           }
+        }
+
+        if (filters_can_return_early && !point_is_valid) {
+          continue;
         }
 
         CorrectedAngleData corrected_angle_data =
@@ -207,6 +216,15 @@ private:
         }
 
         auto & frame = in_current_scan ? decode_frame_ : output_frame_;
+
+        if (frame.blockage_mask) {
+          frame.blockage_mask->update(
+            azimuth, channel_id, sensor_.get_blockage_type(unit.distance));
+        }
+
+        if (!point_is_valid) {
+          continue;
+        }
 
         NebulaPoint point;
         point.distance = distance;
@@ -278,13 +296,15 @@ private:
     // the last `output` pointcloud as the `decode pointcloud.
     std::swap(decode_frame_, output_frame_);
 
+    double scan_timestamp_s = static_cast<double>(output_frame_.scan_timestamp_ns) * 1e-9;
+
     if (pointcloud_callback_) {
-      double scan_timestamp_s = static_cast<double>(output_frame_.scan_timestamp_ns) * 1e-9;
       pointcloud_callback_(output_frame_.pointcloud, scan_timestamp_s);
     }
 
     if (blockage_mask_plugin_ && output_frame_.blockage_mask) {
-      blockage_mask_plugin_->callback_and_reset(output_frame_.blockage_mask.value());
+      blockage_mask_plugin_->callback_and_reset(
+        output_frame_.blockage_mask.value(), scan_timestamp_s);
     }
 
     output_frame_.pointcloud->clear();
@@ -301,7 +321,7 @@ public:
     const std::shared_ptr<loggers::Logger> & logger,
     const std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>> &
       functional_safety_decoder,
-    std::optional<point_filters::BlockageMaskPlugin> blockage_mask_plugin)
+    std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin)
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(
       correction_data, sensor_configuration_->cloud_min_angle,

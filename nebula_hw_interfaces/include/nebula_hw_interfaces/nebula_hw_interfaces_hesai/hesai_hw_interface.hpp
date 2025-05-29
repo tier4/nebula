@@ -83,6 +83,8 @@ const uint8_t g_ptp_command_get_ptp_lock_offset = 0x3a;
 const uint8_t g_ptc_command_reset = 0x25;
 const uint8_t g_ptc_command_set_rotate_direction = 0x2a;
 const uint8_t g_ptc_command_lidar_monitor = 0x27;
+const uint8_t g_ptc_command_set_up_close_blockage_detection = 0x58;
+const uint8_t g_ptc_command_get_up_close_blockage_detection = 0x59;
 
 const uint8_t g_ptc_error_code_no_error = 0x00;
 const uint8_t g_ptc_error_code_invalid_input_param = 0x01;
@@ -320,6 +322,13 @@ public:
   /// @brief Getting values with PTC_COMMAND_GET_HIGH_RESOLUTION_MODE
   /// @return Resulting status
   bool get_high_resolution_mode();
+  /// @brief Setting values with PTC_COMMAND_SET_UP_CLOSE_BLOCKAGE_DETECTION
+  /// @param enable Enable up close blockage detection
+  /// @return Resulting status
+  Status set_up_close_blockage_detection(bool enable);
+  /// @brief Getting values with PTC_COMMAND_GET_UP_CLOSE_BLOCKAGE_DETECTION
+  /// @return Resulting status
+  bool get_up_close_blockage_detection();
 
   /**
    * @brief Given the HW interface's sensor configuration and a given calibration, set the sensor

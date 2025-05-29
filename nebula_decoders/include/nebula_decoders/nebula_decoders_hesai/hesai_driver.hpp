@@ -18,6 +18,7 @@
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_common/point_types.hpp"
+#include "nebula_decoders/nebula_decoders_common/point_filters/blockage_mask.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
@@ -47,7 +48,8 @@ private:
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
       calibration_configuration,
     std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
-      functional_safety_decoder = nullptr);
+      functional_safety_decoder = nullptr,
+    std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin = nullptr);
 
   template <typename SensorT>
   std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
@@ -70,7 +72,8 @@ public:
     HesaiScanDecoder::pointcloud_callback_t pointcloud_cb,
     FunctionalSafetyDecoderBase::alive_cb_t alive_cb = nullptr,
     FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb = nullptr,
-    FunctionalSafetyDecoderBase::status_cb_t status_cb = nullptr);
+    FunctionalSafetyDecoderBase::status_cb_t status_cb = nullptr,
+    std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin = nullptr);
 
   /// @brief Get current status of this driver
   /// @return Current status
