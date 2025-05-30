@@ -16,6 +16,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <memory>
@@ -68,7 +69,8 @@ Status HesaiRosDecoderTest::InitializeDriver(
 {
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
     std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
-    calibration_configuration, std::make_shared<drivers::loggers::RclcppLogger>(get_logger()));
+    calibration_configuration, std::make_shared<drivers::loggers::RclcppLogger>(get_logger()),
+    nullptr);
   return driver_ptr_->get_status();
 }
 
@@ -187,17 +189,17 @@ void HesaiRosDecoderTest::read_bag(
 
       auto extracted_msg_ptr = std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg);
 
-      for (auto & pkt : extracted_msg_ptr->packets) {
-        auto pointcloud_ts = driver_ptr_->parse_cloud_packet(
-          std::vector<uint8_t>(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size)));
-        auto pointcloud = std::get<0>(pointcloud_ts);
-        auto scan_timestamp = std::get<1>(pointcloud_ts);
+      drivers::HesaiScanDecoder::pointcloud_callback_t pointcloud_cb =
+        [&](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
+          auto timestamp_ns = static_cast<uint64_t>(timestamp_s * 1e9);
+          scan_callback(bag_message->time_stamp, timestamp_ns, pointcloud);
+        };
 
-        if (!pointcloud) {
-          continue;
-        }
+      driver_ptr_->set_pointcloud_callback(pointcloud_cb);
 
-        scan_callback(bag_message->time_stamp, scan_timestamp, pointcloud);
+      for (const auto & pkt : extracted_msg_ptr->packets) {
+        std::vector<uint8_t> packet_data(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size));
+        driver_ptr_->parse_cloud_packet(packet_data);
       }
     }
   }

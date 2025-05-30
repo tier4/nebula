@@ -2,6 +2,7 @@
 
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 
+#include "nebula_decoders/nebula_decoders_common/point_filters/blockage_mask.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
@@ -27,9 +28,12 @@ namespace nebula::drivers
 HesaiDriver::HesaiDriver(
   const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
   const std::shared_ptr<const HesaiCalibrationConfigurationBase> & calibration_data,
-  const std::shared_ptr<loggers::Logger> & logger, FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
+  const std::shared_ptr<loggers::Logger> & logger,
+  HesaiScanDecoder::pointcloud_callback_t pointcloud_cb,
+  FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
   FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
-  FunctionalSafetyDecoderBase::status_cb_t status_cb)
+  FunctionalSafetyDecoderBase::status_cb_t status_cb,
+  std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin)
 : logger_(logger)
 {
   // initialize proper parser from cloud config's model and echo mode
@@ -76,7 +80,8 @@ HesaiDriver::HesaiDriver(
       auto functional_safety_decoder = initialize_functional_safety_decoder<Pandar128E4X>(
         std::move(alive_cb), std::move(stuck_cb), std::move(status_cb));
       scan_decoder_ = initialize_decoder<Pandar128E4X>(
-        sensor_configuration, calibration_data, functional_safety_decoder);
+        sensor_configuration, calibration_data, functional_safety_decoder,
+        std::move(blockage_mask_plugin));
       break;
     }
     case SensorModel::UNKNOWN:
@@ -86,6 +91,8 @@ HesaiDriver::HesaiDriver(
       driver_status_ = nebula::Status::NOT_INITIALIZED;
       throw std::runtime_error("Driver not Implemented for selected sensor.");
   }
+
+  scan_decoder_->set_pointcloud_callback(std::move(pointcloud_cb));
 }
 
 template <typename SensorT>
@@ -94,12 +101,13 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
   const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
     calibration_configuration,
   std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
-    functional_safety_decoder)
+    functional_safety_decoder,
+  std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin)
 {
   using CalibT = typename SensorT::angle_corrector_t::correction_data_t;
   return std::make_shared<HesaiDecoder<SensorT>>(
     sensor_configuration, std::dynamic_pointer_cast<const CalibT>(calibration_configuration),
-    logger_->child("Decoder"), functional_safety_decoder);
+    logger_->child("Decoder"), functional_safety_decoder, blockage_mask_plugin);
 }
 
 template <typename SensorT>
@@ -117,22 +125,14 @@ HesaiDriver::initialize_functional_safety_decoder(
   return functional_safety_decoder;
 }
 
-std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::parse_cloud_packet(
-  const std::vector<uint8_t> & packet)
+void HesaiDriver::parse_cloud_packet(const std::vector<uint8_t> & packet)
 {
-  std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
-
   if (driver_status_ != nebula::Status::OK) {
     logger_->error("Driver not OK.");
-    return pointcloud;
+    return;
   }
 
   scan_decoder_->unpack(packet);
-  if (scan_decoder_->has_scanned()) {
-    pointcloud = scan_decoder_->get_pointcloud();
-  }
-
-  return pointcloud;
 }
 
 Status HesaiDriver::set_calibration_configuration(
@@ -141,6 +141,11 @@ Status HesaiDriver::set_calibration_configuration(
   throw std::runtime_error(
     "set_calibration_configuration. Not yet implemented (" +
     calibration_configuration.calibration_file + ")");
+}
+
+void HesaiDriver::set_pointcloud_callback(HesaiScanDecoder::pointcloud_callback_t pointcloud_cb)
+{
+  scan_decoder_->set_pointcloud_callback(std::move(pointcloud_cb));
 }
 
 Status HesaiDriver::get_status()

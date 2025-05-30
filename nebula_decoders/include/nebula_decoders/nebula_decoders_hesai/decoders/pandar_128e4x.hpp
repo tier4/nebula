@@ -42,6 +42,11 @@ using Packet128E4X = Packet128E3X;
 class Pandar128E4X : public HesaiSensor<hesai_packet::Packet128E4X>
 {
 private:
+  static constexpr uint16_t blockage_detection_valid_no_emission = 0;
+  static constexpr uint16_t blockage_detection_invalid_too_close = 1;
+  static constexpr uint16_t blockage_detection_invalid_too_close_far_field = 2;
+  static constexpr uint16_t blockage_detection_invalid_no_return = 3;
+
   enum OperationalState { HIGH_RESOLUTION = 0, STANDARD = 1 };
 
   static constexpr int firing_time_offset_static_ns[128] = {
@@ -166,6 +171,20 @@ public:
 
       return x_quant + y_quant + y_offset;
     };
+  }
+
+  [[nodiscard]] point_filters::BlockageState get_blockage_type(uint16_t raw_distance) const override
+  {
+    switch (raw_distance) {
+      case blockage_detection_valid_no_emission:
+      case blockage_detection_invalid_too_close_far_field:
+      case blockage_detection_invalid_no_return:
+        return point_filters::BlockageState::UNSURE;
+      case blockage_detection_invalid_too_close:
+        return point_filters::BlockageState::BLOCKAGE;
+      default:
+        return point_filters::BlockageState::NO_BLOCKAGE;
+    }
   }
 };
 

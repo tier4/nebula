@@ -18,6 +18,7 @@
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_common/point_types.hpp"
+#include "nebula_decoders/nebula_decoders_common/point_filters/blockage_mask.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 
@@ -47,7 +48,8 @@ private:
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
       calibration_configuration,
     std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
-      functional_safety_decoder = nullptr);
+      functional_safety_decoder = nullptr,
+    std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin = nullptr);
 
   template <typename SensorT>
   std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
@@ -67,9 +69,11 @@ public:
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
       calibration_configuration,
     const std::shared_ptr<loggers::Logger> & logger,
+    HesaiScanDecoder::pointcloud_callback_t pointcloud_cb,
     FunctionalSafetyDecoderBase::alive_cb_t alive_cb = nullptr,
     FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb = nullptr,
-    FunctionalSafetyDecoderBase::status_cb_t status_cb = nullptr);
+    FunctionalSafetyDecoderBase::status_cb_t status_cb = nullptr,
+    std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin = nullptr);
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -81,11 +85,11 @@ public:
   Status set_calibration_configuration(
     const HesaiCalibrationConfigurationBase & calibration_configuration);
 
-  /// @brief Convert raw packet to pointcloud
-  /// @param packet Packet to convert
-  /// @return Tuple of pointcloud and timestamp
-  std::tuple<drivers::NebulaPointCloudPtr, double> parse_cloud_packet(
-    const std::vector<uint8_t> & packet);
+  void set_pointcloud_callback(HesaiScanDecoder::pointcloud_callback_t pointcloud_cb);
+
+  /// @brief Decode a pointcloud packet. If a pointcloud is produced, `pointcloud_cb` is called.
+  /// @param packet Packet to decode
+  void parse_cloud_packet(const std::vector<uint8_t> & packet);
 };
 
 }  // namespace nebula::drivers

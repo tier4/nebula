@@ -72,7 +72,8 @@ Status HesaiRosOfflineExtractSample::initialize_driver(
   // driver should be initialized here with proper decoder
   driver_ptr_ = std::make_shared<drivers::HesaiDriver>(
     std::static_pointer_cast<drivers::HesaiSensorConfiguration>(sensor_configuration),
-    calibration_configuration, std::make_shared<drivers::loggers::RclcppLogger>(get_logger()));
+    calibration_configuration, std::make_shared<drivers::loggers::RclcppLogger>(get_logger()),
+    nullptr);
   return driver_ptr_->get_status();
 }
 
@@ -207,17 +208,17 @@ Status HesaiRosOfflineExtractSample::read_bag()
     std::cout << "Found data in topic " << bag_message->topic_name << ": "
               << bag_message->time_stamp << std::endl;
 
+    drivers::HesaiScanDecoder::pointcloud_callback_t pointcloud_cb =
+      [&](const drivers::NebulaPointCloudPtr & pointcloud, double /* timestamp_s */) {
+        auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
+        writer.writeBinary((o_dir / fn).string(), *pointcloud);
+      };
+
+    driver_ptr_->set_pointcloud_callback(pointcloud_cb);
+
     for (auto & pkt : extracted_msg.packets) {
-      auto pointcloud_ts = driver_ptr_->parse_cloud_packet(
-        std::vector<uint8_t>(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size)));
-      auto pointcloud = std::get<0>(pointcloud_ts);
-
-      if (!pointcloud) {
-        continue;
-      }
-
-      auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
-      writer.writeBinary((o_dir / fn).string(), *pointcloud);
+      std::vector<uint8_t> packet_data(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size));
+      driver_ptr_->parse_cloud_packet(packet_data);
     }
   }
 

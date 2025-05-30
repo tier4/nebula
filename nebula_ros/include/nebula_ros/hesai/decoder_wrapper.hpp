@@ -32,6 +32,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <utility>
 
 namespace nebula::ros
 {
@@ -45,6 +46,8 @@ public:
     diagnostic_updater::Updater & diagnostic_updater, bool publish_packets);
 
   void process_cloud_packet(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
+
+  void on_pointcloud_decoded(const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s);
 
   void on_config_change(
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config);
@@ -99,22 +102,33 @@ private:
 
   void initialize_functional_safety(diagnostic_updater::Updater & diagnostic_updater);
 
+  std::pair<
+    std::shared_ptr<drivers::point_filters::BlockageMaskPlugin>,
+    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr>
+  initialize_blockage_mask_plugin();
+
+  std::shared_ptr<drivers::HesaiDriver> initialize_driver(
+    const std::shared_ptr<const drivers::HesaiSensorConfiguration> & config,
+    const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration);
+
   nebula::Status status_;
   rclcpp::Logger logger_;
   rclcpp::Node & parent_node_;
 
   std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> sensor_cfg_;
-  std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> calibration_cfg_ptr_{};
+  std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> calibration_cfg_ptr_;
 
-  std::shared_ptr<drivers::HesaiDriver> driver_ptr_{};
+  std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
   std::mutex mtx_driver_ptr_;
 
-  rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr packets_pub_{};
-  pandar_msgs::msg::PandarScan::UniquePtr current_scan_msg_{};
+  rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr packets_pub_;
+  pandar_msgs::msg::PandarScan::UniquePtr current_scan_msg_;
 
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_{};
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_{};
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_{};
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_;
+
+  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr blockage_mask_pub_;
 
   custom_diagnostic_tasks::RateBoundStatus publish_diagnostic_;
   std::optional<FunctionalSafetyDiagnosticTask> functional_safety_diagnostic_;

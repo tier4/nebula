@@ -234,6 +234,16 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
     }
   }
 
+  {
+    auto blockage_mask_horizontal_bin_size_mdeg = declare_parameter<int64_t>(
+      "blockage_mask_output.horizontal_bin_size_mdeg", 0, param_read_write());
+    if (blockage_mask_horizontal_bin_size_mdeg <= 0) {
+      config.blockage_mask_horizontal_bin_size_mdeg = std::nullopt;
+    } else {
+      config.blockage_mask_horizontal_bin_size_mdeg = blockage_mask_horizontal_bin_size_mdeg;
+    }
+  }
+
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(config);
   return validate_and_set_config(new_cfg_ptr);
 }
