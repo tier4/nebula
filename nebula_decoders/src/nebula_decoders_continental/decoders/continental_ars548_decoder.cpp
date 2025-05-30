@@ -15,7 +15,11 @@
 #include "nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp"
 
 #include <nebula_common/continental/continental_ars548.hpp>
+#include <rclcpp/rclcpp.hpp>
 
+#include <diagnostic_msgs/msg/diagnostic_status.hpp>
+
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <string>
@@ -521,40 +525,62 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
 
   radar_status_.configuration_counter = sensor_status_packet.configuration_counter;
 
-  auto vdy_value_to_string = [](uint8_t value) -> std::string {
+  auto update_diag = [](u_char & diagnostics_status, const u_char & status) {
+    diagnostics_status = std::max(diagnostics_status, status);
+  };
+
+  radar_status_.dynamics_diagnostics_status = diagnostic_msgs::msg::DiagnosticStatus::OK;
+
+  auto vdy_value_to_string = [this, &update_diag](
+                               uint8_t value, const bool update_diag_status) -> std::string {
     switch (value) {
       case vdy_ok:
         return "0:VDY_OK";
       case vdy_notok:
+        if (update_diag_status) {
+          update_diag(
+            radar_status_.dynamics_diagnostics_status,
+            diagnostic_msgs::msg::DiagnosticStatus::WARN);
+        }
         return "1:VDY_NOTOK";
       default:
+        if (update_diag_status) {
+          update_diag(
+            radar_status_.dynamics_diagnostics_status,
+            diagnostic_msgs::msg::DiagnosticStatus::WARN);
+        }
         return std::to_string(value) + ":Invalid";
     }
   };
 
   radar_status_.longitudinal_velocity_status =
-    vdy_value_to_string(sensor_status_packet.longitudinal_velocity_status);
+    vdy_value_to_string(sensor_status_packet.longitudinal_velocity_status, true);
   radar_status_.longitudinal_acceleration_status =
-    vdy_value_to_string(sensor_status_packet.longitudinal_acceleration_status);
+    vdy_value_to_string(sensor_status_packet.longitudinal_acceleration_status, true);
   radar_status_.lateral_acceleration_status =
-    vdy_value_to_string(sensor_status_packet.lateral_acceleration_status);
+    vdy_value_to_string(sensor_status_packet.lateral_acceleration_status, true);
 
-  radar_status_.yaw_rate_status = vdy_value_to_string(sensor_status_packet.yaw_rate_status);
+  radar_status_.yaw_rate_status = vdy_value_to_string(sensor_status_packet.yaw_rate_status, true);
   radar_status_.steering_angle_status =
-    vdy_value_to_string(sensor_status_packet.steering_angle_status);
+    vdy_value_to_string(sensor_status_packet.steering_angle_status, true);
   radar_status_.driving_direction_status =
-    vdy_value_to_string(sensor_status_packet.driving_direction_status);
+    vdy_value_to_string(sensor_status_packet.driving_direction_status, true);
   radar_status_.characteristic_speed_status =
-    vdy_value_to_string(sensor_status_packet.characteristic_speed_status);
+    vdy_value_to_string(sensor_status_packet.characteristic_speed_status, false);
 
+  radar_status_.internal_diagnostics_status = diagnostic_msgs::msg::DiagnosticStatus::OK;
   switch (sensor_status_packet.radar_status) {
     case state_init:
+      update_diag(
+        radar_status_.internal_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
       radar_status_.radar_status = "0:STATE_INIT";
       break;
     case state_ok:
       radar_status_.radar_status = "1:STATE_OK";
       break;
     case state_invalid:
+      update_diag(
+        radar_status_.internal_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
       radar_status_.radar_status = "2:STATE_INVALID";
       break;
     default:
@@ -568,15 +594,23 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
     voltage_status_vector.push_back("Ok");
   }
   if (sensor_status_packet.voltage_status & 0x01) {
+    update_diag(
+      radar_status_.internal_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
     voltage_status_vector.push_back("Current undervoltage");
   }
   if (sensor_status_packet.voltage_status & 0x02) {
+    update_diag(
+      radar_status_.internal_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::WARN);
     voltage_status_vector.push_back("Past undervoltage");
   }
   if (sensor_status_packet.voltage_status & 0x04) {
+    update_diag(
+      radar_status_.internal_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
     voltage_status_vector.push_back("Current overvoltage");
   }
   if (sensor_status_packet.voltage_status & 0x08) {
+    update_diag(
+      radar_status_.internal_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::WARN);
     voltage_status_vector.push_back("Past overvoltage");
   }
 
@@ -584,15 +618,23 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
     temperature_status_vector.push_back("Ok");
   }
   if (sensor_status_packet.temperature_status & 0x01) {
+    update_diag(
+      radar_status_.internal_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
     temperature_status_vector.push_back("Current undertemperature");
   }
   if (sensor_status_packet.temperature_status & 0x02) {
+    update_diag(
+      radar_status_.internal_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::WARN);
     temperature_status_vector.push_back("Past undertemperature");
   }
   if (sensor_status_packet.temperature_status & 0x04) {
+    update_diag(
+      radar_status_.internal_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
     temperature_status_vector.push_back("Current overtemperature");
   }
   if (sensor_status_packet.temperature_status & 0x08) {
+    update_diag(
+      radar_status_.internal_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::WARN);
     temperature_status_vector.push_back("Past overtemperature");
   }
 
@@ -601,6 +643,32 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
 
   const uint8_t & blockage_status0 = sensor_status_packet.blockage_status & 0x0f;
   const uint8_t & blockage_status1 = (sensor_status_packet.blockage_status & 0xf0) >> 4;
+
+  radar_status_.blockage_diagnostics_status = diagnostic_msgs::msg::DiagnosticStatus::OK;
+
+  auto apply_blockage_status_level = [this, &update_diag](
+                                       const uint8_t & blockage_status, const uint8_t & level_ok,
+                                       const uint8_t & level_warn) {
+    if (blockage_status < level_ok) {
+      if (level_ok == level_warn) {
+        update_diag(
+          radar_status_.blockage_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
+      } else {
+        update_diag(
+          radar_status_.blockage_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::WARN);
+      }
+    }
+    if (blockage_status < level_warn) {
+      update_diag(
+        radar_status_.blockage_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
+    }
+  };
+
+  apply_blockage_status_level(
+    blockage_status0, config_ptr_->blockage_status_level_ok,
+    config_ptr_->blockage_status_level_warn);
+  apply_blockage_status_level(
+    blockage_status1, config_ptr_->blockage_test_level_ok, config_ptr_->blockage_test_level_warn);
 
   switch (blockage_status0) {
     case blockage_status_blind:
@@ -619,6 +687,8 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
       radar_status_.blockage_status = "4:None";
       break;
     default:
+      update_diag(
+        radar_status_.blockage_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
       radar_status_.blockage_status = std::to_string(blockage_status0) + ":Invalid";
       break;
   }
@@ -634,6 +704,8 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
       radar_status_.blockage_status += ". 2:Self test ongoing";
       break;
     default:
+      update_diag(
+        radar_status_.blockage_diagnostics_status, diagnostic_msgs::msg::DiagnosticStatus::ERROR);
       radar_status_.blockage_status += std::to_string(blockage_status1) + ":Invalid";
       break;
   }

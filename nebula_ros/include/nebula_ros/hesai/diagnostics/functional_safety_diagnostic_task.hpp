@@ -92,9 +92,9 @@ using std::chrono_literals::operator""ms;
 class FunctionalSafetyDiagnosticTask : public diagnostic_updater::CompositeDiagnosticTask
 {
 public:
-  explicit FunctionalSafetyDiagnosticTask(rclcpp::Clock::SharedPtr clock)
+  explicit FunctionalSafetyDiagnosticTask(rclcpp::Node * const parent_node)
   : CompositeDiagnosticTask("Functional safety status"),
-    liveness_monitor_("Liveness", std::move(clock), 100ms),
+    liveness_monitor_("Liveness", parent_node, 100ms),
     severity_latch_("Status")
   {
     addTask(&liveness_monitor_);

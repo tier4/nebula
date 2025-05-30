@@ -106,6 +106,7 @@ public:
   /**
    * \brief Constructs RateBoundstatus, which inherits diagnostic_updater::DiagnosticTask.
    *
+   * \param parent_node The node from which clock type and parameters are read.
    * \param ok_params The pair of min/max frequency for the topic rate to be recognized as "OK".
    * \param warn_params The pair of min/max frequency for the topic rate to be recognized as "WARN".
    * These values should have a wider range than `ok_params`.
