@@ -43,6 +43,7 @@ public:
     last_run_time_ = now;
 
     status.add("Lost packets", n_lost_packets_);
+    status.add("Error threshold", error_threshold_);
     status.add("Time since last update [s]", std::to_string(dt.seconds()));
 
     if (n_lost_packets_ == 0) {
