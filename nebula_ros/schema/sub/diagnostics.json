@@ -39,6 +39,15 @@
           }
         }
       }
+    },
+    "packet_loss_diagnostic_task": {
+      "type": "object",
+      "properties": {
+        "error_threshold": {
+          "type": "number",
+          "description": "Threshold for the number of lost packets. If the number of lost packets exceeds this threshold, the diagnostic will be set to ERROR. For non-zero packet loss below this threshold, the diagnostic will be set to WARN."
+        }
+      }
     }
   }
 }

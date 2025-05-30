@@ -37,3 +37,5 @@
         frequency_warn:
           min_hz: 9.0
           max_hz: 11.0
+      packet_loss:
+        error_threshold: 10

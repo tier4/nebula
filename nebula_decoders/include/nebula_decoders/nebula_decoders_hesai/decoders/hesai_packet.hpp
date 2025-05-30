@@ -297,4 +297,16 @@ struct HasFunctionalSafety<PacketT, std::void_t<decltype(std::declval<PacketT>()
 {
 };
 
+// Helper trait to determine if a given struct has a packet loss detection part
+template <typename PacketT, typename = void>
+struct HasPacketLossDetection : std::false_type
+{
+};
+
+template <typename PacketT>
+struct HasPacketLossDetection<
+  PacketT, std::void_t<decltype(std::declval<PacketT>().tail.udp_sequence)>> : std::true_type
+{
+};
+
 }  // namespace nebula::drivers::hesai_packet
