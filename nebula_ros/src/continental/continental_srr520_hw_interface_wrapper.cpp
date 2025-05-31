@@ -32,9 +32,8 @@ ContinentalSRR520HwInterfaceWrapper::ContinentalSRR520HwInterfaceWrapper(
   std::shared_ptr<const nebula::drivers::continental_srr520::ContinentalSRR520SensorConfiguration> &
     config_ptr)
 : parent_node_(parent_node),
-  hw_interface_(
-    std::make_shared<drivers::continental_srr520::ContinentalSRR520HwInterface>(
-      drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"))),
+  hw_interface_(std::make_shared<drivers::continental_srr520::ContinentalSRR520HwInterface>(
+    drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"))),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED),
   config_ptr_(config_ptr)
