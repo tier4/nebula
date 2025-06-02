@@ -593,6 +593,26 @@ inline bool supports_packet_loss_detection(const SensorModel & sensor_model)
   }
 }
 
+/// @brief Whether the given sensor model supports blockage mask output
+///
+/// Blockage mask output is only supported for OT128.
+///
+/// The QT128 datasheet mentions support for blockage detection, but its output does not distinguish
+/// between sky (no return) and blockage (too-close return). Thus, the output is not usable in the
+/// same way as OT128's.
+///
+/// @param sensor_model Sensor model
+/// @return True if the sensor model supports blockage mask output, false otherwise
+inline bool supports_blockage_mask(const SensorModel & sensor_model)
+{
+  switch (sensor_model) {
+    case SensorModel::HESAI_PANDAR128_E4X:
+      return true;
+    default:
+      return false;
+  }
+}
+
 }  // namespace drivers
 }  // namespace nebula
 
