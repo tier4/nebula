@@ -234,6 +234,16 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
     }
   }
 
+  {
+    auto blockage_mask_horizontal_bin_size_mdeg = declare_parameter<int64_t>(
+      "blockage_mask_output.horizontal_bin_size_mdeg", 0, param_read_write());
+    if (blockage_mask_horizontal_bin_size_mdeg <= 0) {
+      config.blockage_mask_horizontal_bin_size_mdeg = std::nullopt;
+    } else {
+      config.blockage_mask_horizontal_bin_size_mdeg = blockage_mask_horizontal_bin_size_mdeg;
+    }
+  }
+
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(config);
   return validate_and_set_config(new_cfg_ptr);
 }
@@ -372,6 +382,8 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     get_calibration_parameter_name(sensor_cfg_ptr_->sensor_model);
   std::string downsample_mask_path = new_cfg.downsample_mask_path.value_or("");
 
+  int64_t blockage_mask_horizontal_bin_size_mdeg = 0;
+
   bool got_any =
     get_param(p, "return_mode", return_mode) | get_param(p, "frame_id", new_cfg.frame_id) |
     get_param(p, "sync_angle", new_cfg.sync_angle) | get_param(p, "cut_angle", new_cfg.cut_angle) |
@@ -382,7 +394,9 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     get_param(p, "dual_return_distance_threshold", new_cfg.dual_return_distance_threshold) |
     get_param(p, "hires_mode", new_cfg.hires_mode) |
     get_param(p, calibration_parameter_name, new_cfg.calibration_path) |
-    get_param(p, "point_filters.downsample_mask.path", downsample_mask_path);
+    get_param(p, "point_filters.downsample_mask.path", downsample_mask_path) |
+    get_param(
+      p, "blockage_mask_output.horizontal_bin_size_mdeg", blockage_mask_horizontal_bin_size_mdeg);
 
   // Currently, all of the sub-wrappers read-only parameters, so they do not be queried for updates
 
@@ -399,6 +413,12 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     new_cfg.downsample_mask_path = downsample_mask_path;
   } else {
     new_cfg.downsample_mask_path = std::nullopt;
+  }
+
+  if (blockage_mask_horizontal_bin_size_mdeg <= 0) {
+    new_cfg.blockage_mask_horizontal_bin_size_mdeg = std::nullopt;
+  } else {
+    new_cfg.blockage_mask_horizontal_bin_size_mdeg = blockage_mask_horizontal_bin_size_mdeg;
   }
 
   // ////////////////////////////////////////
