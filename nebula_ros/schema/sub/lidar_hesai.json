@@ -107,7 +107,7 @@
           "default": 1000,
           "minimum": 1,
           "maximum": 360000,
-          "description": "The size of the horizontal bins in milli-degrees"
+          "description": "The size of the horizontal bins in millidegrees"
         }
       }
     },
