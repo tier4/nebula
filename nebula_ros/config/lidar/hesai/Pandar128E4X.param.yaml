@@ -29,6 +29,8 @@
     retry_hw: true
     dual_return_distance_threshold: 0.1
     hires_mode: true
+    blockage_mask_output:
+      horizontal_bin_size_mdeg: 1000
     diagnostics:
       pointcloud_publish_rate:
         frequency_ok:
