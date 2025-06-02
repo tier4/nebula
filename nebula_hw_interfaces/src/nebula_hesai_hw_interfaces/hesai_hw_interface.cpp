@@ -624,6 +624,30 @@ bool HesaiHwInterface::get_high_resolution_mode()
   return response[0] > 0x00;
 }
 
+Status HesaiHwInterface::set_up_close_blockage_detection(bool enable)
+{
+  std::vector<unsigned char> request_payload;
+  request_payload.emplace_back(enable ? 0x01 : 0x00);
+
+  auto response_or_err =
+    send_receive(g_ptc_command_set_up_close_blockage_detection, request_payload);
+  response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  return Status::OK;
+}
+
+bool HesaiHwInterface::get_up_close_blockage_detection()
+{
+  auto response_or_err = send_receive(g_ptc_command_get_up_close_blockage_detection);
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+
+  if (response.size() != 1) {
+    throw std::runtime_error("Unexpected payload size");
+  }
+
+  return response[0] > 0x00;
+}
+
 Status HesaiHwInterface::check_and_set_lidar_range(
   const HesaiCalibrationConfigurationBase & calibration)
 {
@@ -1151,6 +1175,21 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
 
       logger_->info("Setting hires_mode via TCP.");
       set_high_resolution_mode(sensor_configuration->hires_mode);
+    }
+
+    if (sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
+      auto blockage_detection_currently_enabled = get_up_close_blockage_detection();
+      bool blockage_detection_desired =
+        sensor_configuration->blockage_mask_horizontal_bin_size_mdeg.has_value();
+      if (blockage_detection_currently_enabled != blockage_detection_desired) {
+        logger_->info(
+          "current lidar up_close_blockage_detection: " +
+          std::to_string(blockage_detection_currently_enabled));
+        logger_->info(
+          "current configuration up_close_blockage_detection: " +
+          std::to_string(blockage_detection_desired));
+        set_up_close_blockage_detection(blockage_detection_desired);
+      }
     }
   }
 
