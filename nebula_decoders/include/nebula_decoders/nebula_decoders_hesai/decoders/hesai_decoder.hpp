@@ -262,14 +262,9 @@ private:
     return frame;
   }
 
-  /// @brief Called when a scan is complete, swaps the decode and output frames, publishes and then
-  /// resets the
+  /// @brief Called when a scan is complete, published and then clears the output frame.
   void on_scan_complete()
   {
-    // The current `decode` pointcloud is ready for publishing, swap buffers to continue with
-    // the last `output` pointcloud as the `decode pointcloud.
-    std::swap(decode_frame_, output_frame_);
-
     double scan_timestamp_s = static_cast<double>(output_frame_.scan_timestamp_ns) * 1e-9;
 
     if (pointcloud_callback_) {
@@ -346,6 +341,8 @@ public:
         sensor_.get_earliest_point_time_offset_for_block(0, packet_);
     }
 
+    bool did_scan_complete = false;
+
     const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
     for (size_t block_id = 0; block_id < SensorT::packet_t::n_blocks; block_id += n_returns) {
       auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
@@ -379,10 +376,17 @@ public:
       convert_returns(block_id, n_returns);
 
       if (angle_corrector_.passed_emit_angle(last_azimuth_, block_azimuth)) {
-        on_scan_complete();
+        // The current `decode` pointcloud is ready for publishing, swap buffers to continue with
+        // the `output` pointcloud as the `decode` pointcloud.
+        std::swap(decode_frame_, output_frame_);
+        did_scan_complete = true;
       }
 
       last_azimuth_ = block_azimuth;
+    }
+
+    if (did_scan_complete) {
+      on_scan_complete();
     }
 
     return last_azimuth_;
