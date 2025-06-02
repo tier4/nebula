@@ -33,6 +33,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <utility>
 
 namespace nebula::ros
 {
@@ -104,6 +105,11 @@ private:
 
   void initialize_packet_loss_diagnostic(diagnostic_updater::Updater & diagnostic_updater);
 
+  std::pair<
+    std::shared_ptr<drivers::point_filters::BlockageMaskPlugin>,
+    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr>
+  initialize_blockage_mask_plugin();
+
   std::shared_ptr<drivers::HesaiDriver> initialize_driver(
     const std::shared_ptr<const drivers::HesaiSensorConfiguration> & config,
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration);
@@ -124,6 +130,8 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_;
+
+  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr blockage_mask_pub_;
 
   custom_diagnostic_tasks::RateBoundStatus publish_diagnostic_;
   std::optional<FunctionalSafetyDiagnosticTask> functional_safety_diagnostic_;
