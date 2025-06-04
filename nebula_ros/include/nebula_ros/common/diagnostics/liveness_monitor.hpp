@@ -21,11 +21,13 @@
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/time.hpp>
+#include <rcpputils/thread_safety_annotations.hpp>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
 
 namespace nebula::ros
@@ -74,17 +76,22 @@ public:
    * A call to `tick()` resets the internal timer. If the timer is not reset at least once before it
    * expires (within `timeout`), the monitored routine is pronounced dead.
    */
-  void tick() { last_tick_ = clock_->now(); }
+  void tick()
+  {
+    std::lock_guard lock(mutex_);
+    last_tick_ = clock_->now();
+  }
 
 private:
   void run(diagnostic_updater::DiagnosticStatusWrapper & status) override
   {
-    using diagnostic_msgs::msg::DiagnosticStatus;
+    std::lock_guard lock(mutex_);
 
     rclcpp::Time now = clock_->now();
     rclcpp::Duration lateness = now - last_tick_;
     bool is_live = lateness < timeout_;
 
+    using diagnostic_msgs::msg::DiagnosticStatus;
     uint8_t severity = DiagnosticStatus::OK;
     std::string message = "Alive";
     std::string value = "true";
@@ -103,7 +110,9 @@ private:
 
   rclcpp::Clock::SharedPtr clock_;
   rclcpp::Duration timeout_;
-  rclcpp::Time last_tick_;
+
+  std::mutex mutex_;
+  rclcpp::Time last_tick_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 };
 
 }  // namespace nebula::ros

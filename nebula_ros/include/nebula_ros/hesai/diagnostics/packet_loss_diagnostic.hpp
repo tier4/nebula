@@ -16,17 +16,20 @@
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp>
+#include <rcpputils/thread_safety_annotations.hpp>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 
+#include <mutex>
 #include <utility>
+
 namespace nebula::ros
 {
 
 class PacketLossDiagnosticTask : public diagnostic_updater::DiagnosticTask
 {
 public:
-  explicit PacketLossDiagnosticTask(uint64_t error_threshold, rclcpp::Clock::SharedPtr clock)
+  PacketLossDiagnosticTask(uint64_t error_threshold, rclcpp::Clock::SharedPtr clock)
   : DiagnosticTask("Packet loss status"),
     clock_(std::move(clock)),
     last_run_time_(clock_->now()),
@@ -34,10 +37,16 @@ public:
   {
   }
 
-  void on_lost(uint64_t n_lost) { n_lost_packets_ += n_lost; }
+  void on_lost(uint64_t n_lost)
+  {
+    std::lock_guard lock(mutex_);
+    n_lost_packets_ += n_lost;
+  }
 
   void run(diagnostic_updater::DiagnosticStatusWrapper & status) override
   {
+    std::lock_guard lock(mutex_);
+
     const auto now = clock_->now();
     const auto dt = now - last_run_time_;
     last_run_time_ = now;
@@ -59,9 +68,12 @@ public:
 
 private:
   rclcpp::Clock::SharedPtr clock_;
-  uint64_t n_lost_packets_{};
   rclcpp::Time last_run_time_;
   uint64_t error_threshold_;
+
+  std::mutex mutex_;
+  uint64_t n_lost_packets_ {}
+  RCPPUTILS_TSA_GUARDED_BY(mutex_);
 };
 
 }  // namespace nebula::ros
