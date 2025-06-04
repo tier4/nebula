@@ -42,10 +42,16 @@ using Packet128E4X = Packet128E3X;
 class Pandar128E4X : public HesaiSensor<hesai_packet::Packet128E4X>
 {
 private:
-  static constexpr uint16_t blockage_detection_valid_no_emission = 0;
-  static constexpr uint16_t blockage_detection_invalid_too_close = 1;
-  static constexpr uint16_t blockage_detection_invalid_too_close_far_field = 2;
-  static constexpr uint16_t blockage_detection_invalid_no_return = 3;
+  enum BlockageType : uint16_t {
+    /// There was no laser emission, this return is a placeholder
+    VALID_NO_EMISSION = 0,
+    /// The return is too close (within 0.3m of the sensor)
+    INVALID_TOO_CLOSE = 1,
+    /// The return is too close for a far-field channel (within 1.4m of the sensor)
+    INVALID_TOO_CLOSE_FAR_FIELD = 2,
+    /// The return is too far, has been absorbed completely, or is filtered out due to noise etc.
+    INVALID_NO_RETURN = 3,
+  };
 
   enum OperationalState { HIGH_RESOLUTION = 0, STANDARD = 1 };
 
@@ -176,11 +182,11 @@ public:
   [[nodiscard]] point_filters::BlockageState get_blockage_type(uint16_t raw_distance) const override
   {
     switch (raw_distance) {
-      case blockage_detection_valid_no_emission:
-      case blockage_detection_invalid_too_close_far_field:
-      case blockage_detection_invalid_no_return:
+      case BlockageType::VALID_NO_EMISSION:
+      case BlockageType::INVALID_TOO_CLOSE_FAR_FIELD:
+      case BlockageType::INVALID_NO_RETURN:
         return point_filters::BlockageState::UNSURE;
-      case blockage_detection_invalid_too_close:
+      case BlockageType::INVALID_TOO_CLOSE:
         return point_filters::BlockageState::BLOCKAGE;
       default:
         return point_filters::BlockageState::NO_BLOCKAGE;
