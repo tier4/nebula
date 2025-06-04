@@ -114,6 +114,9 @@
         "hires_mode": {
           "$ref": "sub/lidar_hesai.json#/definitions/hires_mode"
         },
+        "blockage_mask_output": {
+          "$ref": "sub/lidar_hesai.json#/definitions/blockage_mask_output"
+        },
         "diagnostics": {
           "$ref": "sub/lidar_hesai.json#/definitions/diagnostics",
           "required": [

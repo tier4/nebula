@@ -11,6 +11,8 @@
 #include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 
+#include <sensor_msgs/image_encodings.hpp>
+
 #include <algorithm>
 #include <memory>
 #include <tuple>
@@ -203,6 +205,38 @@ void HesaiDecoderWrapper::initialize_packet_loss_diagnostic(
   diagnostic_updater.add(packet_loss_diagnostic_.value());
 }
 
+std::pair<
+  std::shared_ptr<drivers::point_filters::BlockageMaskPlugin>,
+  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr>
+HesaiDecoderWrapper::initialize_blockage_mask_plugin()
+{
+  if (!sensor_cfg_->blockage_mask_horizontal_bin_size_mdeg) {
+    return {nullptr, nullptr};
+  }
+
+  auto blockage_mask_plugin = std::make_shared<drivers::point_filters::BlockageMaskPlugin>(
+    sensor_cfg_->blockage_mask_horizontal_bin_size_mdeg.value());
+  auto blockage_mask_pub = parent_node_.create_publisher<sensor_msgs::msg::Image>(
+    "blockage_mask", rclcpp::SensorDataQoS());
+
+  blockage_mask_plugin->set_callback(
+    [this, blockage_mask_pub](
+      const drivers::point_filters::BlockageMask & blockage_mask, double timestamp_s) {
+      auto msg = sensor_msgs::msg::Image();
+      msg.header.stamp = rclcpp::Time(seconds_to_chrono_nano_seconds(timestamp_s).count());
+      msg.header.frame_id = sensor_cfg_->frame_id;
+      msg.encoding = sensor_msgs::image_encodings::MONO8;
+      msg.width = blockage_mask.get_width();
+      msg.height = blockage_mask.get_height();
+      msg.is_bigendian = false;
+      msg.step = blockage_mask.get_width() * sizeof(uint8_t);
+      msg.data = blockage_mask.get_mask();
+      blockage_mask_pub->publish(msg);
+    });
+
+  return {blockage_mask_plugin, blockage_mask_pub};
+}
+
 std::shared_ptr<drivers::HesaiDriver> HesaiDecoderWrapper::initialize_driver(
   const std::shared_ptr<const drivers::HesaiSensorConfiguration> & config,
   const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration)
@@ -210,6 +244,9 @@ std::shared_ptr<drivers::HesaiDriver> HesaiDecoderWrapper::initialize_driver(
   auto pointcloud_cb = [this](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
     on_pointcloud_decoded(pointcloud, timestamp_s);
   };
+
+  auto [blockage_mask_plugin, blockage_mask_pub] = initialize_blockage_mask_plugin();
+  blockage_mask_pub_ = blockage_mask_pub;
 
   drivers::FunctionalSafetyDecoderBase::alive_cb_t alive_cb;
   drivers::FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb;
@@ -234,7 +271,7 @@ std::shared_ptr<drivers::HesaiDriver> HesaiDecoderWrapper::initialize_driver(
   return std::make_shared<drivers::HesaiDriver>(
     config, calibration, std::make_shared<drivers::loggers::RclcppLogger>(logger_),
     std::move(pointcloud_cb), std::move(alive_cb), std::move(stuck_cb), std::move(status_cb),
-    std::move(lost_cb));
+    std::move(lost_cb), std::move(blockage_mask_plugin));
 }
 
 nebula::Status HesaiDecoderWrapper::status()

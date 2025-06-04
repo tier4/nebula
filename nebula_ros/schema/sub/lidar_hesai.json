@@ -98,6 +98,19 @@
       "description": "Whether to turn on or off the sensor's high resolution mode",
       "default": false
     },
+    "blockage_mask_output": {
+      "type": "object",
+      "description": "Enables blockage detection and outputs a blockage mask per scan",
+      "properties": {
+        "horizontal_bin_size_mdeg": {
+          "type": "number",
+          "default": 1000,
+          "minimum": 1,
+          "maximum": 360000,
+          "description": "The size of the horizontal bins in millidegrees"
+        }
+      }
+    },
     "diagnostics": {
       "type": "object",
       "properties": {
