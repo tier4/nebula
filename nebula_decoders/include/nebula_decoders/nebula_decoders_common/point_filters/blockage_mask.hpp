@@ -1,4 +1,4 @@
-// Copyright 2024 TIER IV, Inc.
+// Copyright 2025 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include <nebula_common/point_types.hpp>
 #include <nebula_common/util/expected.hpp>
 #include <nebula_common/util/string_conversions.hpp>
+#include <rcpputils/thread_safety_annotations.hpp>
 
 #include <boost/range/algorithm/fill.hpp>
 
@@ -29,6 +30,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <mutex>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -142,7 +144,11 @@ public:
 
   explicit BlockageMaskPlugin(uint32_t bin_width_mdeg) : bin_width_mdeg_(bin_width_mdeg) {}
 
-  void set_callback(callback_t callback) { callback_ = std::move(callback); }
+  void set_callback(callback_t callback)
+  {
+    std::lock_guard lock(callback_mutex_);
+    callback_ = std::move(callback);
+  }
 
   /**
    * @brief Trigger the callback with the completed mask, and reset the mask
@@ -151,6 +157,8 @@ public:
    */
   void callback_and_reset(BlockageMask & mask, double timestamp_s)
   {
+    std::lock_guard lock(callback_mutex_);
+
     if (callback_) {
       callback_(mask, timestamp_s);
     }
@@ -162,7 +170,9 @@ public:
 
 private:
   uint32_t bin_width_mdeg_;
-  callback_t callback_;
+
+  std::mutex callback_mutex_;
+  callback_t callback_ RCPPUTILS_TSA_GUARDED_BY(callback_mutex_);
 };
 
 }  // namespace nebula::drivers::point_filters
