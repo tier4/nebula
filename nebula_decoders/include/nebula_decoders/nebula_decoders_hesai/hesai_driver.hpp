@@ -114,6 +114,7 @@ public:
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
       calibration_configuration,
     const std::shared_ptr<loggers::Logger> & logger,
+    HesaiScanDecoder::pointcloud_callback_t pointcloud_cb,
     FunctionalSafetyDecoderBase::alive_cb_t alive_cb = nullptr,
     FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb = nullptr,
     FunctionalSafetyDecoderBase::status_cb_t status_cb = nullptr,
@@ -129,11 +130,11 @@ public:
   Status set_calibration_configuration(
     const HesaiCalibrationConfigurationBase & calibration_configuration);
 
-  /// @brief Convert raw packet to pointcloud
-  /// @param packet Packet to convert
-  /// @return Tuple of pointcloud and timestamp
-  std::tuple<drivers::NebulaPointCloudPtr, double> parse_cloud_packet(
-    const std::vector<uint8_t> & packet);
+  void set_pointcloud_callback(HesaiScanDecoder::pointcloud_callback_t pointcloud_cb);
+
+  /// @brief Decode a pointcloud packet. If a pointcloud is produced, `pointcloud_cb` is called.
+  /// @param packet Packet to decode
+  void parse_cloud_packet(const std::vector<uint8_t> & packet);
 };
 
 }  // namespace nebula::drivers

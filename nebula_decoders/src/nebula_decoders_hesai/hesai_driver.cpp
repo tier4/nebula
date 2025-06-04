@@ -27,7 +27,9 @@ namespace nebula::drivers
 HesaiDriver::HesaiDriver(
   const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
   const std::shared_ptr<const HesaiCalibrationConfigurationBase> & calibration_data,
-  const std::shared_ptr<loggers::Logger> & logger, FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
+  const std::shared_ptr<loggers::Logger> & logger,
+  HesaiScanDecoder::pointcloud_callback_t pointcloud_cb,
+  FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
   FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
   FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb)
 : logger_(logger)
@@ -87,6 +89,8 @@ HesaiDriver::HesaiDriver(
       driver_status_ = nebula::Status::NOT_INITIALIZED;
       throw std::runtime_error("Driver not Implemented for selected sensor.");
   }
+
+  scan_decoder_->set_pointcloud_callback(std::move(pointcloud_cb));
 }
 
 template <typename SensorT>
@@ -108,22 +112,14 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
     logger_->child("Decoder"), functional_safety_decoder, packet_loss_detector);
 }
 
-std::tuple<drivers::NebulaPointCloudPtr, double> HesaiDriver::parse_cloud_packet(
-  const std::vector<uint8_t> & packet)
+void HesaiDriver::parse_cloud_packet(const std::vector<uint8_t> & packet)
 {
-  std::tuple<drivers::NebulaPointCloudPtr, double> pointcloud;
-
   if (driver_status_ != nebula::Status::OK) {
     logger_->error("Driver not OK.");
-    return pointcloud;
+    return;
   }
 
   scan_decoder_->unpack(packet);
-  if (scan_decoder_->has_scanned()) {
-    pointcloud = scan_decoder_->get_pointcloud();
-  }
-
-  return pointcloud;
 }
 
 Status HesaiDriver::set_calibration_configuration(
@@ -132,6 +128,11 @@ Status HesaiDriver::set_calibration_configuration(
   throw std::runtime_error(
     "set_calibration_configuration. Not yet implemented (" +
     calibration_configuration.calibration_file + ")");
+}
+
+void HesaiDriver::set_pointcloud_callback(HesaiScanDecoder::pointcloud_callback_t pointcloud_cb)
+{
+  scan_decoder_->set_pointcloud_callback(std::move(pointcloud_cb));
 }
 
 Status HesaiDriver::get_status()
