@@ -15,10 +15,12 @@
 #pragma once
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <rcpputils/thread_safety_annotations.hpp>
 
-#include <diagnostic_msgs/msg/detail/diagnostic_status__struct.hpp>
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 
+#include <mutex>
+#include <optional>
 #include <string>
 
 namespace nebula::ros
@@ -31,6 +33,8 @@ public:
 
   void run(diagnostic_updater::DiagnosticStatusWrapper & status) override
   {
+    std::lock_guard lock(mutex_);
+
     if (!current_status_) {
       status.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "No status available");
       return;
@@ -44,6 +48,8 @@ public:
 
   void submit(diagnostic_msgs::msg::DiagnosticStatus status)
   {
+    std::lock_guard lock(mutex_);
+
     if (!current_status_) {
       current_status_ = status;
       return;
@@ -57,7 +63,9 @@ public:
   }
 
 private:
-  std::optional<diagnostic_msgs::msg::DiagnosticStatus> current_status_;
+  std::mutex mutex_;
+  std::optional<diagnostic_msgs::msg::DiagnosticStatus> current_status_
+    RCPPUTILS_TSA_GUARDED_BY(mutex_);
 };
 
 }  // namespace nebula::ros
