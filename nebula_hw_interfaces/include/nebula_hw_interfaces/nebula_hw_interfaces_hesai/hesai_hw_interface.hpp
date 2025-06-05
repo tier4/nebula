@@ -102,9 +102,9 @@ const uint16_t g_mtu_size = 1500;
 
 /// @brief The kernel buffer size in bytes to use for receiving UDP packets. If the buffer is too
 /// small to bridge scheduling and processing delays, packets will be dropped. This corresponds to
-/// the net.core.rmem_default setting in Linux. The current value is hardcoded to accommodate one
+/// the net.core.rmem_default setting in Linux. The current value is hardcoded to accommodate two
 /// pointcloud worth of OT128 packets (currently the highest data rate sensor supported).
-const size_t g_udp_socket_buffer_size = g_mtu_size * 3600;
+const size_t g_udp_socket_buffer_size = g_mtu_size * 3600 * 2;
 
 // Time interval between Announce messages, in units of log seconds (default: 1)
 const int g_ptp_log_announce_interval = 1;
