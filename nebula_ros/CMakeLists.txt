@@ -30,6 +30,7 @@ find_package(tf2_ros REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(sync_tooling_msgs REQUIRED)
+find_package(message_filters REQUIRED)
 
 include_directories(
     include
@@ -208,6 +209,7 @@ target_include_directories(continental_srr520_ros_wrapper PUBLIC
     ${rclcpp_components_INCLUDE_DIRS}
     ${tf2_ros_INCLUDE_DIRS}
     ${visualization_msgs_INCLUDE_DIRS}
+    ${message_filters_INCLUDE_DIRS}
 )
 
 target_link_libraries(continental_srr520_ros_wrapper PUBLIC
@@ -219,6 +221,7 @@ target_link_libraries(continental_srr520_ros_wrapper PUBLIC
     ${radar_msgs_TARGETS}
     ${tf2_ros_TARGETS}
     ${visualization_msgs_TARGETS}
+    ${message_filters_TARGETS}
     nebula_decoders::nebula_decoders_continental
     nebula_hw_interfaces::nebula_hw_interfaces_continental
 )
@@ -285,6 +288,7 @@ ament_export_dependencies(
     visualization_msgs
     yaml-cpp
     sync_tooling_msgs
+    message_filters
 )
 
 ament_package()
