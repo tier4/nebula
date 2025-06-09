@@ -237,13 +237,13 @@ public:
   HesaiPtpDiagStatus get_ptp_diag_status();
   /// @brief Getting data with PTC_COMMAND_PTP_DIAGNOSTICS (PTP TLV PORT_DATA_SET)
   /// @return Resulting status
-  HesaiPtpDiagPort get_ptp_diag_port();
+  PtpTlvPortDataSet get_ptp_diag_port();
   /// @brief Getting data with PTC_COMMAND_PTP_DIAGNOSTICS (PTP TLV TIME_STATUS_NP)
   /// @return Resulting status
-  HesaiPtpDiagTime get_ptp_diag_time();
+  PtpTlvTimeStatusNp get_ptp_diag_time();
   /// @brief Getting data with PTC_COMMAND_PTP_DIAGNOSTICS (PTP TLV GRANDMASTER_SETTINGS_NP)
   /// @return Resulting status
-  HesaiPtpDiagGrandmaster get_ptp_diag_grandmaster();
+  HesaiPtpTlvGrandmasterSettingsNp get_ptp_diag_grandmaster();
   /// @brief Getting data with PTC_COMMAND_GET_INVENTORY_INFO
   /// @return Resulting status
   std::shared_ptr<HesaiInventoryBase> get_inventory();

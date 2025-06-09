@@ -27,6 +27,7 @@
 #include <array>
 #include <cstdint>
 #include <iomanip>
+#include <ios>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -61,101 +62,133 @@ struct HesaiPtpDiagStatus
   }
 };
 
-/// @brief PTP TLV PORT_DATA_SET struct of PTC_COMMAND_PTP_DIAGNOSTICS
-struct HesaiPtpDiagPort
+struct PtpTlvClockIdentity
 {
-  char portIdentity[10];
-  big_int32_buf_t portState;
-  big_int32_buf_t logMinDelayReqInterval;
-  big_int64_buf_t peerMeanPathDelay;
-  big_int32_buf_t logAnnounceInterval;
-  big_int32_buf_t announceReceiptTimeout;
-  big_int32_buf_t logSyncInterval;
-  big_int32_buf_t delayMechanism;
-  big_int32_buf_t logMinPdelayReqInterval;
-  big_int32_buf_t versionNumber;
+  uint8_t id[8];
 
-  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpDiagPort const & arg)
+  [[nodiscard]] nlohmann::ordered_json to_json() const
   {
-    os << "portIdentity: " << to_string(arg.portIdentity);
-    os << ", ";
-    os << "portState: " << arg.portState;
-    os << ", ";
-    os << "logMinDelayReqInterval: " << arg.logMinDelayReqInterval;
-    os << ", ";
-    os << "peerMeanPathDelay: " << arg.peerMeanPathDelay;
-    os << ", ";
-    os << "logAnnounceInterval: " << arg.logAnnounceInterval;
-    os << ", ";
-    os << "announceReceiptTimeout: " << arg.announceReceiptTimeout;
-    os << ", ";
-    os << "logSyncInterval: " << arg.logSyncInterval;
-    os << ", ";
-    os << "delayMechanism: " << arg.delayMechanism;
-    os << ", ";
-    os << "logMinPdelayReqInterval: " << arg.logMinPdelayReqInterval;
-    os << ", ";
-    os << "versionNumber: " << arg.versionNumber;
+    std::stringstream ss;
 
-    return os;
+    auto put_byte = [&](uint8_t b) { ss << std::hex << std::setw(2) << std::setfill('0') << +b; };
+
+    put_byte(id[0]);
+    put_byte(id[1]);
+    put_byte(id[2]);
+    ss << '.';
+    put_byte(id[3]);
+    put_byte(id[4]);
+    ss << '.';
+    put_byte(id[5]);
+    put_byte(id[6]);
+    put_byte(id[7]);
+
+    return ss.str();
+  }
+};
+
+struct PtpTlvPortIdentity
+{
+  PtpTlvClockIdentity clock_id;
+  big_uint16_buf_t port_number;
+
+  [[nodiscard]] nlohmann::ordered_json to_json() const
+  {
+    return {{"clock_id", clock_id.to_json()}, {"port_number", port_number.value()}};
+  }
+};
+
+/// @brief PTP TLV PORT_DATA_SET struct of PTC_COMMAND_PTP_DIAGNOSTICS
+struct PtpTlvPortDataSet
+{
+  PtpTlvPortIdentity portIdentity;
+  uint8_t portState;
+  int8_t logMinDelayReqInterval;
+  big_int64_buf_t peerMeanPathDelay;
+  int8_t logAnnounceInterval;
+  uint8_t announceReceiptTimeout;
+  int8_t logSyncInterval;
+  uint8_t delayMechanism;
+  int8_t logMinPdelayReqInterval;
+  uint8_t versionNumber;
+
+  [[nodiscard]] nlohmann::ordered_json to_json() const
+  {
+    return {
+      {"portIdentity", portIdentity.to_json()},
+      {"portState", portState},
+      {"logMinDelayReqInterval", logMinDelayReqInterval},
+      {"peerMeanPathDelay", peerMeanPathDelay.value()},
+      {"logAnnounceInterval", logAnnounceInterval},
+      {"announceReceiptTimeout", announceReceiptTimeout},
+      {"logSyncInterval", logSyncInterval},
+      {"delayMechanism", delayMechanism},
+      {"logMinPdelayReqInterval", logMinPdelayReqInterval},
+      {"versionNumber", versionNumber},
+    };
+  }
+};
+
+struct PtpTlvGmPhaseChange
+{
+  big_uint16_buf_t msb;
+  big_uint64_buf_t lsb;
+  big_uint16_buf_t frac;
+
+  [[nodiscard]] nlohmann::ordered_json to_json() const
+  {
+    std::stringstream ss;
+    ss << "0x";
+    ss << std::hex << std::setw(4) << std::setfill('0') << msb.value();
+    ss << std::hex << std::setw(16) << std::setfill('0') << lsb.value();
+    ss << '.';
+    ss << std::hex << std::setw(4) << std::setfill('0') << frac.value();
+    return ss.str();
   }
 };
 
 /// @brief LinuxPTP TLV TIME_STATUS_NP struct of PTC_COMMAND_PTP_DIAGNOSTICS
-struct HesaiPtpDiagTime
+struct PtpTlvTimeStatusNp
 {
   big_int64_buf_t master_offset;
   big_int64_buf_t ingress_time;
   big_int32_buf_t cumulativeScaledRateOffset;
   big_int32_buf_t scaledLastGmPhaseChange;
-  big_int16_buf_t gmTimeBaseIndicator;
-  uint8_t lastGmPhaseChange[12];
+  big_uint16_buf_t gmTimeBaseIndicator;
+  PtpTlvGmPhaseChange lastGmPhaseChange;
   big_int32_buf_t gmPresent;
-  big_int64_buf_t gmIdentity;
+  PtpTlvClockIdentity gmIdentity;
 
-  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpDiagTime const & arg)
+  [[nodiscard]] nlohmann::ordered_json to_json() const
   {
-    os << "master_offset: " << arg.master_offset;
-    os << ", ";
-    os << "ingress_time: " << arg.ingress_time;
-    os << ", ";
-    os << "cumulativeScaledRateOffset: " << arg.cumulativeScaledRateOffset;
-    os << ", ";
-    os << "scaledLastGmPhaseChange: " << arg.scaledLastGmPhaseChange;
-    os << ", ";
-    os << "gmTimeBaseIndicator: " << arg.gmTimeBaseIndicator;
-    os << ", ";
-    // FIXME: lastGmPhaseChange is a binary number, displaying it as string is incorrect
-    os << "lastGmPhaseChange: "
-       << std::string(std::begin(arg.lastGmPhaseChange), std::end(arg.lastGmPhaseChange));
-    os << ", ";
-    os << "gmPresent: " << arg.gmPresent;
-    os << ", ";
-    os << "gmIdentity: " << arg.gmIdentity;
-
-    return os;
+    return {
+      {"master_offset", master_offset.value()},
+      {"ingress_time", ingress_time.value()},
+      {"cumulativeScaledRateOffset", cumulativeScaledRateOffset.value()},
+      {"scaledLastGmPhaseChange", scaledLastGmPhaseChange.value()},
+      {"gmTimeBaseIndicator", gmTimeBaseIndicator.value()},
+      {"lastGmPhaseChange", lastGmPhaseChange.to_json()},
+      {"gmPresent", gmPresent.value()},
+      {"gmIdentity", gmIdentity.to_json()},
+    };
   }
 };
 
 /// @brief LinuxPTP TLV GRANDMASTER_SETTINGS_NP struct of PTC_COMMAND_PTP_DIAGNOSTICS
-struct HesaiPtpDiagGrandmaster
+struct HesaiPtpTlvGrandmasterSettingsNp
 {
   big_int32_buf_t clockQuality;
   big_int16_buf_t utc_offset;
   int8_t time_flags;
   int8_t time_source;
 
-  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpDiagGrandmaster const & arg)
+  [[nodiscard]] nlohmann::ordered_json to_json() const
   {
-    os << "clockQuality: " << arg.clockQuality;
-    os << ", ";
-    os << "utc_offset: " << arg.utc_offset;
-    os << ", ";
-    os << "time_flags: " << +arg.time_flags;
-    os << ", ";
-    os << "time_source: " << +arg.time_source;
-
-    return os;
+    return {
+      {"clockQuality", clockQuality.value()},
+      {"utc_offset", utc_offset.value()},
+      {"time_flags", +time_flags},
+      {"time_source", +time_source}};
   }
 };
 
