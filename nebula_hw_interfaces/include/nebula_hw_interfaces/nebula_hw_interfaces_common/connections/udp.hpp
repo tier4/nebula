@@ -19,6 +19,7 @@
 #define _GNU_SOURCE
 #endif
 
+#include <nebula_common/util/errno.hpp>
 #include <nebula_common/util/expected.hpp>
 
 #include <arpa/inet.h>
@@ -51,15 +52,8 @@ namespace nebula::drivers::connections
 
 class SocketError : public std::exception
 {
-  static constexpr size_t gnu_max_strerror_length = 1024;
-
 public:
-  explicit SocketError(int err_no)
-  {
-    std::array<char, gnu_max_strerror_length> msg_buf;
-    std::string_view msg = strerror_r(err_no, msg_buf.data(), msg_buf.size());
-    what_ = std::string{msg};
-  }
+  explicit SocketError(int err_no) : what_{util::errno_to_string(err_no)} {}
 
   explicit SocketError(const std::string_view & msg) : what_(msg) {}
 
