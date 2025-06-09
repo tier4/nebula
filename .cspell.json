@@ -55,6 +55,7 @@
     "structs",
     "TOLOWER",
     "UDP_SEQ",
+    "UNSYNCHRONIZED",
     "usec",
     "vccint",
     "Vccint",
