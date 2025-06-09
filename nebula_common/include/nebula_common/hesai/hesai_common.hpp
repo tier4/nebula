@@ -53,6 +53,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   uint8_t ptp_lock_threshold;
   std::optional<std::string> downsample_mask_path;
   bool hires_mode;
+  std::optional<uint32_t> blockage_mask_horizontal_bin_size_mdeg;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -81,7 +82,13 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "High Resolution Mode: " << (arg.hires_mode ? "enabled" : "disabled") << '\n';
   os << "Downsample Filter: "
      << (arg.downsample_mask_path ? "enabled, path: " + arg.downsample_mask_path.value()
-                                  : "disabled");
+                                  : "disabled")
+     << '\n';
+  os << "Blockage Mask Output: "
+     << (arg.blockage_mask_horizontal_bin_size_mdeg
+           ? "enabled, horizontal bin size: " +
+               std::to_string(arg.blockage_mask_horizontal_bin_size_mdeg.value()) + " mdeg"
+           : "disabled");
   return os;
 }
 
@@ -586,6 +593,26 @@ inline bool supports_packet_loss_detection(const SensorModel & sensor_model)
     case SensorModel::HESAI_PANDARQT128:
     case SensorModel::HESAI_PANDARAT128:
     case SensorModel::HESAI_PANDAR128_E3X:
+    case SensorModel::HESAI_PANDAR128_E4X:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/// @brief Whether the given sensor model supports blockage mask output
+///
+/// Blockage mask output is only supported for OT128.
+///
+/// The QT128 datasheet mentions support for blockage detection, but its output does not distinguish
+/// between sky (no return) and blockage (too-close return). Thus, the output is not usable in the
+/// same way as OT128's.
+///
+/// @param sensor_model Sensor model
+/// @return True if the sensor model supports blockage mask output, false otherwise
+inline bool supports_blockage_mask(const SensorModel & sensor_model)
+{
+  switch (sensor_model) {
     case SensorModel::HESAI_PANDAR128_E4X:
       return true;
     default:

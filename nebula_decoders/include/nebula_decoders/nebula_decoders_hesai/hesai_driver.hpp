@@ -18,6 +18,7 @@
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_common/point_types.hpp"
+#include "nebula_decoders/nebula_decoders_common/point_filters/blockage_mask.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
@@ -52,7 +53,8 @@ private:
       calibration_configuration,
     FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
     FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
-    FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb);
+    FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb,
+    std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin = nullptr);
 
   template <typename SensorT>
   std::enable_if_t<
@@ -118,7 +120,8 @@ public:
     FunctionalSafetyDecoderBase::alive_cb_t alive_cb = nullptr,
     FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb = nullptr,
     FunctionalSafetyDecoderBase::status_cb_t status_cb = nullptr,
-    PacketLossDetectorBase::lost_cb_t lost_cb = nullptr);
+    PacketLossDetectorBase::lost_cb_t lost_cb = nullptr,
+    std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin = nullptr);
 
   /// @brief Get current status of this driver
   /// @return Current status

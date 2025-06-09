@@ -2,6 +2,7 @@
 
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 
+#include "nebula_decoders/nebula_decoders_common/point_filters/blockage_mask.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
@@ -31,7 +32,8 @@ HesaiDriver::HesaiDriver(
   HesaiScanDecoder::pointcloud_callback_t pointcloud_cb,
   FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
   FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
-  FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb)
+  FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb,
+  std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin)
 : logger_(logger)
 {
   // initialize proper parser from cloud config's model and echo mode
@@ -79,7 +81,8 @@ HesaiDriver::HesaiDriver(
     }
     case SensorModel::HESAI_PANDAR128_E4X: {
       scan_decoder_ = initialize_decoder<Pandar128E4X>(
-        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);
+        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb,
+        std::move(blockage_mask_plugin));
       break;
     }
     case SensorModel::UNKNOWN:
@@ -100,7 +103,8 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
     calibration_configuration,
   FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
   FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
-  FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb)
+  FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb,
+  std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin)
 {
   auto functional_safety_decoder =
     initialize_functional_safety_decoder<SensorT>(alive_cb, stuck_cb, status_cb);
@@ -109,7 +113,8 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
   using CalibT = typename SensorT::angle_corrector_t::correction_data_t;
   return std::make_shared<HesaiDecoder<SensorT>>(
     sensor_configuration, std::dynamic_pointer_cast<const CalibT>(calibration_configuration),
-    logger_->child("Decoder"), functional_safety_decoder, packet_loss_detector);
+    logger_->child("Decoder"), functional_safety_decoder, packet_loss_detector,
+    std::move(blockage_mask_plugin));
 }
 
 void HesaiDriver::parse_cloud_packet(const std::vector<uint8_t> & packet)
