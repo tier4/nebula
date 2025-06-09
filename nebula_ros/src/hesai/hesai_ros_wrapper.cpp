@@ -244,6 +244,14 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
     }
   }
 
+  {
+    auto sync_diagnostics_topic =
+      declare_parameter<std::string>("sync_diagnostics.topic", "", param_read_only());
+    if (!sync_diagnostics_topic.empty()) {
+      config.sync_diagnostics_topic.emplace(sync_diagnostics_topic);
+    }
+  }
+
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(config);
   return validate_and_set_config(new_cfg_ptr);
 }
