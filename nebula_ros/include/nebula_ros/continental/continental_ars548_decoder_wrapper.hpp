@@ -17,6 +17,7 @@
 #include "nebula_ros/common/diagnostics/liveness_monitor.hpp"
 #include "nebula_ros/common/diagnostics/rate_bound_status.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
+#include "nebula_ros/common/sync_diag_client.hpp"
 #include "nebula_ros/common/watchdog_timer.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
@@ -42,8 +43,10 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
+#include <cstdint>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <unordered_set>
@@ -117,6 +120,8 @@ private:
   /// @return Resulting RadarObjects msg
   autoware_sensing_msgs::msg::RadarObjects convert_to_autoware_radar_objects(
     const continental_msgs::msg::ContinentalArs548ObjectList & msg);
+
+  void initialize_sync_diagnostics(rclcpp::Node * parent_node);
 
   /// @brief Convert ARS548 detections to a pointcloud
   /// @param msg The ARS548 detection list msg
@@ -219,6 +224,8 @@ private:
 
   autoware_sensing_msgs::msg::RadarInfo radar_info_msg_{};
   std::size_t detection_msgs_counter_{0};
+
+  std::optional<SyncDiagClient> sync_diag_client_;
 
   std::unordered_set<int> previous_ids_{};
 
