@@ -121,6 +121,8 @@ private:
   std::mutex mtx_config_;
 
   OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_;
+
+  uint64_t last_measurement_send_time_ns_ = 0;
 };
 
 }  // namespace nebula::ros
