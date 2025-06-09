@@ -8,6 +8,8 @@
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/util/string_conversions.hpp>
 #include <nebula_decoders/nebula_decoders_common/angles.hpp>
+#include <nebula_decoders/nebula_decoders_hesai/decoders/pandar_128e4x.hpp>
+#include <nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt128.hpp>
 
 #include <algorithm>
 #include <cstdint>
@@ -94,7 +96,9 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 
   if (launch_hw_) {
     hw_interface_wrapper_->hw_interface()->register_scan_callback(
-      std::bind(&HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1));
+      std::bind(
+        &HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
     stream_start();
   } else {
     packets_sub_ = create_subscription<pandar_msgs::msg::PandarScan>(
@@ -241,6 +245,14 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
       config.blockage_mask_horizontal_bin_size_mdeg = std::nullopt;
     } else {
       config.blockage_mask_horizontal_bin_size_mdeg = blockage_mask_horizontal_bin_size_mdeg;
+    }
+  }
+
+  {
+    auto sync_diagnostics_topic =
+      declare_parameter<std::string>("sync_diagnostics.topic", "", param_read_only());
+    if (!sync_diagnostics_topic.empty()) {
+      config.sync_diagnostics_topic.emplace(sync_diagnostics_topic);
     }
   }
 
@@ -484,7 +496,8 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-void HesaiRosWrapper::receive_cloud_packet_callback(const std::vector<uint8_t> & packet)
+void HesaiRosWrapper::receive_cloud_packet_callback(
+  const std::vector<uint8_t> & packet, const drivers::connections::UdpSocket::RxMetadata & metadata)
 {
   if (!decoder_wrapper_ || decoder_wrapper_->status() != Status::OK) {
     return;
@@ -498,6 +511,32 @@ void HesaiRosWrapper::receive_cloud_packet_callback(const std::vector<uint8_t> &
   msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
   msg_ptr->data = packet;
+  uint64_t sensor_timestamp_ns = timestamp_ns;
+  switch (sensor_cfg_ptr_->sensor_model) {
+    case drivers::SensorModel::HESAI_PANDAR128_E4X:
+      sensor_timestamp_ns = drivers::hesai_packet::get_timestamp_ns(
+        *reinterpret_cast<drivers::hesai_packet::Packet128E4X *>(msg_ptr->data.data()));
+      break;
+    case drivers::SensorModel::HESAI_PANDARQT128:
+      sensor_timestamp_ns = drivers::hesai_packet::get_timestamp_ns(
+        *reinterpret_cast<drivers::hesai_packet::PacketQT128C2X *>(msg_ptr->data.data()));
+      break;
+    default:
+      break;
+  }
+
+  if (
+    metadata.timestamp_ns && hw_monitor_wrapper_ && hw_monitor_wrapper_->sync_diag_client_ &&
+    (*metadata.timestamp_ns - last_measurement_send_time_ns_ >= 100'000'000)) {
+    try {
+      int64_t diff_ns =
+        static_cast<int64_t>(*metadata.timestamp_ns) - static_cast<int64_t>(sensor_timestamp_ns);
+      hw_monitor_wrapper_->sync_diag_client_->submit_clock_diff_measurement(diff_ns);
+      last_measurement_send_time_ns_ = *metadata.timestamp_ns;
+    } catch (const std::exception & e) {
+      RCLCPP_ERROR_STREAM(get_logger(), "Could not send measurement:" << e.what());
+    }
+  }
 
   decoder_wrapper_->process_cloud_packet(std::move(msg_ptr));
 }

@@ -110,6 +110,9 @@
           "required": [
             "pointcloud_publish_rate"
           ]
+        },
+        "sync_diagnostics": {
+          "$ref": "sub/misc.json#/definitions/sync_diagnostics"
         }
       },
       "required": [

@@ -24,9 +24,8 @@
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
 
-#include <array>
+#include <cstdint>
 #include <memory>
-#include <vector>
 
 namespace nebula::drivers::continental_ars548
 {
@@ -74,6 +73,9 @@ public:
   Status register_packets_callback(
     std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets>)> packets_callback);
 
+  Status register_sync_status_callback(
+    std::function<void(int64_t clock_diff, bool sync_ok)> sync_status_callback);
+
 private:
   /// @brief Function for parsing detection lists
   /// @param data
@@ -97,6 +99,7 @@ private:
   std::function<void(const ContinentalARS548Status & status)> sensor_status_callback_{};
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPackets> msg)>
     nebula_packets_callback_{};
+  std::function<void(int64_t clock_diff, bool sync_ok)> sync_status_callback_;
 
   ContinentalARS548Status radar_status_{};
 

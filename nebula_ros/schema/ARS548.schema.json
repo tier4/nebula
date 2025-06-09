@@ -117,6 +117,9 @@
               }
             }
           }
+        },
+        "sync_diagnostics": {
+          "$ref": "sub/misc.json#/definitions/sync_diagnostics"
         }
       },
       "required": [

@@ -29,6 +29,8 @@ find_package(robosense_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(sync_tooling_msgs REQUIRED)
+find_package(message_filters REQUIRED)
 
 include_directories(
     include
@@ -54,17 +56,22 @@ add_library(hesai_ros_wrapper SHARED
     src/common/parameter_descriptors.cpp
 )
 
+message(sync_tooling_msgs_INCLUDE_DIRS=${sync_tooling_msgs_INCLUDE_DIRS})
+message(sync_tooling_msgs_TARGETS=${sync_tooling_msgs_TARGETS})
+
 target_include_directories(hesai_ros_wrapper PUBLIC
     ${diagnostic_updater_INCLUDE_DIRS}
     ${nebula_decoders_INCLUDE_DIRS}
     ${nebula_hw_interfaces_INCLUDE_DIRS}
     ${pandar_msgs_INCLUDE_DIRS}
+    ${sync_tooling_msgs_INCLUDE_DIRS}
 )
 
 target_link_libraries(hesai_ros_wrapper PUBLIC
     ${diagnostic_msgs_TARGETS}
     ${diagnostic_updater_TARGETS}
     ${pandar_msgs_TARGETS}
+    ${sync_tooling_msgs_TARGETS}
     nebula_decoders::nebula_decoders_hesai
     nebula_hw_interfaces::nebula_hw_interfaces_hesai
 )
@@ -158,6 +165,7 @@ target_include_directories(continental_ars548_ros_wrapper PUBLIC
     ${rclcpp_components_INCLUDE_DIRS}
     ${tf2_ros_INCLUDE_DIRS}
     ${visualization_msgs_INCLUDE_DIRS}
+    ${sync_tooling_msgs_INCLUDE_DIRS}
 )
 
 target_link_libraries(continental_ars548_ros_wrapper PUBLIC
@@ -171,6 +179,7 @@ target_link_libraries(continental_ars548_ros_wrapper PUBLIC
     ${radar_msgs_TARGETS}
     ${tf2_ros_TARGETS}
     ${visualization_msgs_TARGETS}
+    ${sync_tooling_msgs_TARGETS}
     nebula_decoders::nebula_decoders_continental
     nebula_hw_interfaces::nebula_hw_interfaces_continental
 )
@@ -200,6 +209,7 @@ target_include_directories(continental_srr520_ros_wrapper PUBLIC
     ${rclcpp_components_INCLUDE_DIRS}
     ${tf2_ros_INCLUDE_DIRS}
     ${visualization_msgs_INCLUDE_DIRS}
+    ${message_filters_INCLUDE_DIRS}
 )
 
 target_link_libraries(continental_srr520_ros_wrapper PUBLIC
@@ -211,6 +221,7 @@ target_link_libraries(continental_srr520_ros_wrapper PUBLIC
     ${radar_msgs_TARGETS}
     ${tf2_ros_TARGETS}
     ${visualization_msgs_TARGETS}
+    ${message_filters_TARGETS}
     nebula_decoders::nebula_decoders_continental
     nebula_hw_interfaces::nebula_hw_interfaces_continental
 )
@@ -276,6 +287,8 @@ ament_export_dependencies(
     velodyne_msgs
     visualization_msgs
     yaml-cpp
+    sync_tooling_msgs
+    message_filters
 )
 
 ament_package()
