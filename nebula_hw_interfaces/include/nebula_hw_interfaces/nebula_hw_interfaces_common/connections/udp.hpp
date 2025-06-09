@@ -324,7 +324,8 @@ public:
     bool truncated;
   };
 
-  using callback_t = std::function<void(const std::vector<uint8_t> &, const RxMetadata &)>;
+  using callback_t =
+    std::function<void(const std::vector<uint8_t> & data, const RxMetadata & metadata)>;
 
   /**
    * @brief Register a callback for processing received packets and start the receiver thread. The
