@@ -94,7 +94,9 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
 
   if (launch_hw_) {
     hw_interface_wrapper_->hw_interface()->register_scan_callback(
-      std::bind(&HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1));
+      std::bind(
+        &HesaiRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
     stream_start();
   } else {
     packets_sub_ = create_subscription<pandar_msgs::msg::PandarScan>(
@@ -492,7 +494,8 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-void HesaiRosWrapper::receive_cloud_packet_callback(const std::vector<uint8_t> & packet)
+void HesaiRosWrapper::receive_cloud_packet_callback(
+  const std::vector<uint8_t> & packet, const drivers::connections::UdpSocket::RxMetadata & metadata)
 {
   if (!decoder_wrapper_ || decoder_wrapper_->status() != Status::OK) {
     return;

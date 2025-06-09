@@ -17,6 +17,7 @@
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
+#include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 #include "nebula_ros/hesai/hw_interface_wrapper.hpp"
 #include "nebula_ros/hesai/hw_monitor_wrapper.hpp"
@@ -66,7 +67,9 @@ public:
   Status stream_start();
 
 private:
-  void receive_cloud_packet_callback(const std::vector<uint8_t> & packet);
+  void receive_cloud_packet_callback(
+    const std::vector<uint8_t> & packet,
+    const drivers::connections::UdpSocket::RxMetadata & metadata);
 
   void receive_scan_message_callback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg);
 

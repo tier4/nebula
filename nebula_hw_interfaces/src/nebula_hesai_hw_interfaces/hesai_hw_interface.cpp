@@ -186,25 +186,24 @@ Status HesaiHwInterface::sensor_interface_start()
 
   udp_socket_.emplace(std::move(builder).bind());
 
-  udp_socket_->subscribe([&](
-                           const std::vector<uint8_t> & packet,
-                           const connections::UdpSocket::RxMetadata & /* metadata */) {
-    receive_sensor_packet_callback(packet);
-  });
+  udp_socket_->subscribe(
+    [&](const std::vector<uint8_t> & packet, const connections::UdpSocket::RxMetadata & metadata) {
+      receive_sensor_packet_callback(packet, metadata);
+    });
 
   return Status::OK;
 }
 
-Status HesaiHwInterface::register_scan_callback(
-  std::function<void(const std::vector<uint8_t> &)> scan_callback)
+Status HesaiHwInterface::register_scan_callback(connections::UdpSocket::callback_t scan_callback)
 {
   cloud_packet_callback_ = std::move(scan_callback);
   return Status::OK;
 }
 
-void HesaiHwInterface::receive_sensor_packet_callback(const std::vector<uint8_t> & buffer)
+void HesaiHwInterface::receive_sensor_packet_callback(
+  const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata)
 {
-  cloud_packet_callback_(buffer);
+  cloud_packet_callback_(buffer, metadata);
 }
 
 Status HesaiHwInterface::sensor_interface_stop()

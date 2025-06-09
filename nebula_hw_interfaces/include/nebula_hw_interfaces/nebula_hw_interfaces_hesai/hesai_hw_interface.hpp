@@ -137,8 +137,7 @@ private:
   std::shared_ptr<boost::asio::io_context> m_owned_ctx_;
   std::shared_ptr<::drivers::tcp_driver::TcpDriver> tcp_driver_;
   std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration_;
-  std::function<void(const std::vector<uint8_t> & buffer)>
-    cloud_packet_callback_; /**This function pointer is called when the scan is complete*/
+  connections::UdpSocket::callback_t cloud_packet_callback_;
 
   std::mutex mtx_inflight_tcp_request_;
 
@@ -202,7 +201,8 @@ public:
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void receive_sensor_packet_callback(const std::vector<uint8_t> & buffer);
+  void receive_sensor_packet_callback(
+    const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata);
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
   Status sensor_interface_start();
@@ -225,7 +225,7 @@ public:
   /// @brief Registering callback for PandarScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status register_scan_callback(std::function<void(const std::vector<uint8_t> &)> scan_callback);
+  Status register_scan_callback(connections::UdpSocket::callback_t scan_callback);
   /// @brief Getting data with PTC_COMMAND_GET_LIDAR_CALIBRATION
   /// @return Resulting status
   std::string get_lidar_calibration_string();
