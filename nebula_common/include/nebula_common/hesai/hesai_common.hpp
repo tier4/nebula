@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -29,6 +30,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 namespace nebula
 {
@@ -54,6 +56,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   std::optional<std::string> downsample_mask_path;
   bool hires_mode;
   std::optional<uint32_t> blockage_mask_horizontal_bin_size_mdeg;
+  std::optional<std::string> sync_diagnostics_topic;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -88,7 +91,11 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
      << (arg.blockage_mask_horizontal_bin_size_mdeg
            ? "enabled, horizontal bin size: " +
                std::to_string(arg.blockage_mask_horizontal_bin_size_mdeg.value()) + " mdeg"
-           : "disabled");
+           : "disabled")
+     << '\n';
+  os << "Synchronization Diagnostics: "
+     << (arg.sync_diagnostics_topic ? ("enabled, topic: " + arg.sync_diagnostics_topic.value())
+                                    : "disabled");
   return os;
 }
 
