@@ -148,11 +148,13 @@ Status ContinentalARS548DecoderWrapper::initialize_driver(
 
 void ContinentalARS548DecoderWrapper::initialize_sync_diagnostics(rclcpp::Node * const parent_node)
 {
-  if (config_ptr_->sync_diagnostics_topic) {
-    sync_diag_client_.emplace(
-      parent_node, *config_ptr_->sync_diagnostics_topic, config_ptr_->frame_id,
-      0 /* FIXME(mojomex): either remove or find out correct domain ID */);
+  if (!config_ptr_->sync_diagnostics_topic) {
+    return;
   }
+
+  sync_diag_client_.emplace(
+    parent_node, *config_ptr_->sync_diagnostics_topic, config_ptr_->frame_id,
+    0 /* FIXME(mojomex): either remove or find out correct domain ID */);
 
   driver_ptr_->register_sync_status_callback(
     [&, time_last_submitted_ns = 0L](int64_t clock_diff, bool sync_ok) mutable {
