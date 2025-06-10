@@ -4,14 +4,18 @@
 
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
+#include "nebula_ros/common/sync_diag_client.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nlohmann/json.hpp>
+#include <rclcpp/logging.hpp>
 
 #include <diagnostic_msgs/msg/detail/diagnostic_status__struct.hpp>
 
 #include <memory>
+#include <optional>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -52,6 +56,11 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
                          config->sensor_model != drivers::SensorModel::HESAI_PANDAR64;
 
   initialize_hesai_diagnostics(diagnostic_updater, monitor_enabled);
+
+  if (config->sync_diagnostics_topic) {
+    sync_diag_client_.emplace(
+      parent_node_, *config->sync_diagnostics_topic, config->frame_id, config->ptp_domain);
+  }
 }
 
 void HesaiHwMonitorWrapper::initialize_hesai_diagnostics(
@@ -76,12 +85,13 @@ void HesaiHwMonitorWrapper::initialize_hesai_diagnostics(
   auto fetch_diag_from_sensor = [this, monitor_enabled]() {
     on_hesai_status_timer();
 
-    if (!monitor_enabled) return;
+    if (monitor_enabled) {
+      hw_interface_->use_http_get_lidar_monitor() ? on_hesai_lidar_monitor_timer_http()
+                                                  : on_hesai_lidar_monitor_timer();
+    }
 
-    if (hw_interface_->use_http_get_lidar_monitor()) {
-      on_hesai_lidar_monitor_timer_http();
-    } else {
-      on_hesai_lidar_monitor_timer();
+    if (sync_diag_client_) {
+      on_sync_diag_timer();
     }
   };
 
@@ -120,6 +130,7 @@ void HesaiHwMonitorWrapper::on_hesai_status_timer()
   RCLCPP_DEBUG_STREAM(logger_, "on_hesai_status_timer" << std::endl);
   try {
     auto result = hw_interface_->get_lidar_status();
+    submit_clock_state(*result);
     std::scoped_lock lock(mtx_lidar_status_);
     current_status_time_ = std::make_unique<rclcpp::Time>(parent_node_->get_clock()->now());
     current_status_ = result;
@@ -134,6 +145,28 @@ void HesaiHwMonitorWrapper::on_hesai_status_timer()
       error.what());
   }
   RCLCPP_DEBUG_STREAM(logger_, "on_hesai_status_timer END" << std::endl);
+}
+
+void HesaiHwMonitorWrapper::submit_clock_state(const HesaiLidarStatusBase & status)
+{
+  if (!sync_diag_client_) return;
+
+  auto j = status.to_json();
+  if (j.contains("ptp_status")) {
+    auto status = j["ptp_status"].template get<std::string>();
+    if (status == "locked") {
+      sync_diag_client_->submit_self_reported_clock_state(SelfReportedClockStateUpdate::LOCKED);
+    } else if (status == "tracking") {
+      sync_diag_client_->submit_self_reported_clock_state(SelfReportedClockStateUpdate::TRACKING);
+    } else if (status == "free run") {
+      sync_diag_client_->submit_self_reported_clock_state(
+        SelfReportedClockStateUpdate::UNSYNCHRONIZED);
+    } else if (status == "frozen") {
+      sync_diag_client_->submit_self_reported_clock_state(SelfReportedClockStateUpdate::LOST);
+    } else {
+      sync_diag_client_->submit_self_reported_clock_state(SelfReportedClockStateUpdate::INVALID);
+    }
+  }
 }
 
 void HesaiHwMonitorWrapper::on_hesai_lidar_monitor_timer_http()
@@ -182,6 +215,34 @@ void HesaiHwMonitorWrapper::on_hesai_lidar_monitor_timer()
       error.what());
   }
   RCLCPP_DEBUG_STREAM(logger_, "on_hesai_lidar_monitor_timer END");
+}
+
+void HesaiHwMonitorWrapper::on_sync_diag_timer()
+{
+  if (!sync_diag_client_) return;
+
+  try {
+    auto port_ds = hw_interface_->get_ptp_diag_port();
+    auto clock_id = make_ptp_clock_id(port_ds.portIdentity.clock_id.to_json());
+    sync_diag_client_->submit_port_state_update(
+      clock_id, port_ds.portIdentity.port_number.value(), port_ds.portState);
+
+    sync_diag_client_->submit_clock_alias(
+      port_ds.portIdentity.clock_id.to_json().template get<std::string>());
+  } catch (const std::runtime_error & e) {
+    RCLCPP_ERROR_STREAM(logger_, "Could not get port dataset from sensor: " << e.what());
+  }
+
+  try {
+    auto time_status_np = hw_interface_->get_ptp_diag_time();
+    std::optional<std::string> master_clock_id{};
+    if (time_status_np.gmPresent.value()) {
+      master_clock_id.emplace(time_status_np.gmIdentity.to_json().template get<std::string>());
+    }
+    sync_diag_client_->submit_master_update(master_clock_id);
+  } catch (const std::runtime_error & e) {
+    RCLCPP_ERROR_STREAM(logger_, "Could not get time status dataset from sensor: " << e.what());
+  }
 }
 
 void HesaiHwMonitorWrapper::hesai_check_status(
