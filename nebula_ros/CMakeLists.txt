@@ -31,6 +31,11 @@ find_package(visualization_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(sync_tooling_msgs REQUIRED)
 find_package(message_filters REQUIRED)
+find_package(agnocastlib)
+
+if(USE_AGNOCAST AND NOT agnocastlib_FOUND)
+    message(FATAL_ERROR "agnocastlib is required when USE_AGNOCAST is enabled")
+endif()
 
 include_directories(
     include
@@ -46,6 +51,12 @@ link_libraries(
     ${YAML_CPP_LIBRARIES}
     ${PCL_LIBRARIES}
 )
+
+if(USE_AGNOCAST)
+    include_directories(SYSTEM ${agnocastlib_INCLUDE_DIRS})
+    link_libraries(${agnocastlib_LIBRARIES})
+    add_definitions(-DUSE_AGNOCAST_ENABLED)
+endif()
 
 ## Hesai
 add_library(hesai_ros_wrapper SHARED
