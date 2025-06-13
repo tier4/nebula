@@ -31,6 +31,11 @@ find_package(visualization_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(sync_tooling_msgs REQUIRED)
 find_package(message_filters REQUIRED)
+find_package(agnocastlib)
+
+if(USE_AGNOCAST AND NOT agnocastlib_FOUND)
+    message(FATAL_ERROR "agnocastlib is required when USE_AGNOCAST is enabled")
+endif()
 
 include_directories(
     include
@@ -76,6 +81,11 @@ target_link_libraries(hesai_ros_wrapper PUBLIC
     nebula_hw_interfaces::nebula_hw_interfaces_hesai
 )
 
+if(USE_AGNOCAST)
+    target_include_directories(hesai_ros_wrapper PUBLIC ${agnocastlib_INCLUDE_DIRS})
+    target_link_libraries(hesai_ros_wrapper PUBLIC ${agnocastlib_LIBRARIES})
+    add_definitions(-DUSE_AGNOCAST_ENABLED)
+endif()
 
 rclcpp_components_register_node(hesai_ros_wrapper
         PLUGIN "HesaiRosWrapper"
@@ -290,6 +300,10 @@ ament_export_dependencies(
     sync_tooling_msgs
     message_filters
 )
+
+if(USE_AGNOCAST)
+    ament_export_dependencies(agnocastlib)
+endif()
 
 ament_package()
 

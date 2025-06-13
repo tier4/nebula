@@ -18,3 +18,7 @@ repositories:
     type: git
     url: https://github.com/tier4/sync_tooling_msgs.git
     version: main
+  agnocast:
+    type: git
+    url: https://github.com/tier4/agnocast
+    version: 2.1.1
