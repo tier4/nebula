@@ -14,11 +14,17 @@
 
 #include "nebula_ros/continental/continental_ars548_decoder_wrapper.hpp"
 
+#include "nebula_ros/common/sync_diag_client.hpp"
+
 #include <nebula_common/util/string_conversions.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
+#include <sync_tooling_msgs/port_id.pb.h>
+#include <sync_tooling_msgs/port_state.pb.h>
+#include <sync_tooling_msgs/self_reported_clock_state_update.pb.h>
 
 #include <algorithm>
+#include <chrono>
 #include <limits>
 #include <memory>
 #include <string>
@@ -61,6 +67,8 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   if (Status::OK != status_) {
     throw std::runtime_error("Error instantiating decoder: " + util::to_string(status_));
   }
+
+  initialize_sync_diagnostics(parent_node);
 
   // Publish packets only if HW interface is connected
   if (launch_hw) {
@@ -142,6 +150,30 @@ Status ContinentalARS548DecoderWrapper::initialize_driver(
     std::bind(&ContinentalARS548DecoderWrapper::packets_callback, this, std::placeholders::_1));
 
   return Status::OK;
+}
+
+void ContinentalARS548DecoderWrapper::initialize_sync_diagnostics(rclcpp::Node * const parent_node)
+{
+  if (!config_ptr_->sync_diagnostics_topic) {
+    return;
+  }
+
+  sync_diag_client_.emplace(
+    parent_node, *config_ptr_->sync_diagnostics_topic, config_ptr_->frame_id,
+    0 /* FIXME(mojomex): either remove or find out correct domain ID */);
+
+  driver_ptr_->register_sync_status_callback(
+    [&, time_last_submitted_ns = 0L](int64_t clock_diff, bool sync_ok) mutable {
+      auto now_ns = std::chrono::steady_clock::now().time_since_epoch().count();
+      if (now_ns - time_last_submitted_ns < 1'000'000'000) return;
+
+      time_last_submitted_ns = now_ns;
+      (void)sync_diag_client_->submit_self_reported_clock_state(
+        sync_ok ? SelfReportedClockStateUpdate::LOCKED
+                : SelfReportedClockStateUpdate::UNSYNCHRONIZED);
+
+      (void)sync_diag_client_->submit_clock_diff_measurement(clock_diff);
+    });
 }
 
 void ContinentalARS548DecoderWrapper::on_config_change(

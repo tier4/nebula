@@ -15,6 +15,7 @@
   <build_depend>libpcl-all-dev</build_depend>
   <build_export_depend>libpcl-all-dev</build_export_depend>
 
+  <depend>agnocastlib</depend>
   <depend>autoware_sensing_msgs</depend>
   <depend>continental_msgs</depend>
   <depend>continental_srvs</depend>
@@ -31,6 +32,7 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>robosense_msgs</depend>
+  <depend>sync_tooling_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>velodyne_msgs</depend>
   <depend>visualization_msgs</depend>

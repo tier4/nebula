@@ -72,6 +72,7 @@ struct expected
 
   /// @brief If the instance has a value, return the value, else throw std::runtime_error(error_msg)
   /// @param error_msg The message to be included in the thrown exception
+  /// @throw std::runtime_error if the instance contains no value
   /// @return The value
   T value_or_throw(const std::string & error_msg)
   {
@@ -80,6 +81,8 @@ struct expected
   }
 
   /// @brief If the instance has a value, return the value, else throw the stored error instance.
+  /// @throw The stored error instance if the instance contains no value
+  /// @return The value if the instance contains a value
   T value_or_throw()
   {
     if (has_value()) return value();
