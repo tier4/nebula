@@ -57,7 +57,8 @@
 #define NEBULA_SUBSCRIPTION_OPTIONS rclcpp::SubscriptionOptions
 #define NEBULA_PUBLISHER_OPTIONS rclcpp::PublisherOptions
 
-#define NEBULA_HAS_ANY_SUBSCRIPTIONS(publisher) (publisher->get_subscription_count() > 0 || publisher->get_intra_process_subscription_count() > 0)
+#define NEBULA_HAS_ANY_SUBSCRIPTIONS(publisher) \
+  (publisher->get_subscription_count() > 0 || publisher->get_intra_process_subscription_count() > 0)
 
 #define ALLOCATE_OUTPUT_MESSAGE_UNIQUE(publisher) \
   std::make_unique<typename std::remove_reference<decltype(*publisher)>::type::ROSMessageType>()
