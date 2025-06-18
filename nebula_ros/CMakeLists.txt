@@ -51,12 +51,6 @@ link_libraries(
     ${PCL_LIBRARIES}
 )
 
-if(USE_AGNOCAST)
-    include_directories(SYSTEM ${agnocastlib_INCLUDE_DIRS})
-    link_libraries(${agnocastlib_LIBRARIES})
-    add_definitions(-DUSE_AGNOCAST_ENABLED)
-endif()
-
 ## Hesai
 add_library(hesai_ros_wrapper SHARED
     src/hesai/hesai_ros_wrapper.cpp
@@ -71,18 +65,21 @@ target_include_directories(hesai_ros_wrapper PUBLIC
     ${nebula_decoders_INCLUDE_DIRS}
     ${nebula_hw_interfaces_INCLUDE_DIRS}
     ${pandar_msgs_INCLUDE_DIRS}
-    ${agnocastlib_INCLUDE_DIRS}
 )
 
 target_link_libraries(hesai_ros_wrapper PUBLIC
     ${diagnostic_msgs_TARGETS}
     ${diagnostic_updater_TARGETS}
     ${pandar_msgs_TARGETS}
-    ${agnocastlib_TARGETS}
     nebula_decoders::nebula_decoders_hesai
     nebula_hw_interfaces::nebula_hw_interfaces_hesai
 )
 
+if(USE_AGNOCAST)
+    target_include_directories(hesai_ros_wrapper SYSTEM ${agnocastlib_INCLUDE_DIRS})
+    target_link_libraries(hesai_ros_wrapper PUBLIC ${agnocastlib_LIBRARIES})
+    add_definitions(-DUSE_AGNOCAST_ENABLED)
+endif()
 
 rclcpp_components_register_node(hesai_ros_wrapper
         PLUGIN "HesaiRosWrapper"
@@ -294,6 +291,10 @@ ament_export_dependencies(
     yaml-cpp
     message_filters
 )
+
+if(USE_AGNOCAST)
+    ament_export_dependencies(agnocastlib)
+endif()
 
 ament_package()
 
