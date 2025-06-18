@@ -49,7 +49,8 @@ Status ContinentalARS548HwInterface::sensor_interface_start()
       UdpSocket::Builder(config_ptr_->host_ip, config_ptr_->data_port)
         .join_multicast_group(config_ptr_->multicast_ip)
         .set_send_destination(config_ptr_->sensor_ip, config_ptr_->configuration_sensor_port)
-        .limit_to_sender(config_ptr_->sensor_ip, config_ptr_->configuration_sensor_port)
+        .limit_to_sender(config_ptr_->sensor_ip, config_ptr_->data_port)
+        .set_mtu(2 << 16)
         .bind();
 
     udp_socket_.emplace(std::move(udp_socket));
