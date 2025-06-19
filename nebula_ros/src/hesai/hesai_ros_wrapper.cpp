@@ -521,6 +521,8 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
       sensor_timestamp_ns = drivers::hesai_packet::get_timestamp_ns(
         *reinterpret_cast<drivers::hesai_packet::PacketQT128C2X *>(msg_ptr->data.data()));
       break;
+    default:
+      break;
   }
 
   if (
