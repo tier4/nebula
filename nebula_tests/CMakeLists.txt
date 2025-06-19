@@ -51,7 +51,6 @@ if(BUILD_TESTING)
 
     set(NEBULA_TEST_LIBRARIES
         ${nebula_common_TARGETS}
-        ${nebula_ros_TARGETS}
         ${PCL_LIBRARIES}
         ${rosbag2_cpp_TARGETS}
         ${diagnostic_updater_TARGETS}
