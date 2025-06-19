@@ -161,7 +161,6 @@ private:
 
     auto ros2_msg = std_msgs::msg::UInt8MultiArray();
     boost::range::copy(serialization_buffer_, std::back_inserter(ros2_msg.data));
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("SyncDiagClient"), "Sending graph update");
     publisher_->publish(ros2_msg);
   }
 
