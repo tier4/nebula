@@ -42,6 +42,8 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include <memory>
+
 #define NEBULA_MESSAGE_UNIQUE_PTR(MessageT) std::unique_ptr<MessageT>
 #define NEBULA_MESSAGE_SHARED_PTR(MessageT) std::shared_ptr<MessageT>
 #define NEBULA_SUBSCRIPTION_PTR(MessageT) typename rclcpp::Subscription<MessageT>::SharedPtr
