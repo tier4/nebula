@@ -76,7 +76,7 @@ target_link_libraries(hesai_ros_wrapper PUBLIC
 )
 
 if(USE_AGNOCAST)
-    target_include_directories(hesai_ros_wrapper SYSTEM ${agnocastlib_INCLUDE_DIRS})
+    target_include_directories(hesai_ros_wrapper PUBLIC ${agnocastlib_INCLUDE_DIRS})
     target_link_libraries(hesai_ros_wrapper PUBLIC ${agnocastlib_LIBRARIES})
     add_definitions(-DUSE_AGNOCAST_ENABLED)
 endif()
