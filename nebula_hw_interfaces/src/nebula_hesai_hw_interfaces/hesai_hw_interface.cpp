@@ -186,8 +186,7 @@ Status HesaiHwInterface::SensorInterfaceStart()
 
   udp_socket_.bind().subscribe([&](
                                  const std::vector<uint8_t> & packet,
-                                 const connections::UdpSocket::ReceiveMetadata & metadata) {
-    if (metadata.drops_since_last_receive) std::cout << metadata.drops_since_last_receive << '\n';
+                                 const connections::UdpSocket::ReceiveMetadata & /* metadata */) {
     ReceiveSensorPacketCallback(packet);
   });
 
