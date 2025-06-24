@@ -125,8 +125,8 @@ private:
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
   std::mutex mtx_driver_ptr_;
 
-  NEBULA_PUBLISHER_PTR(pandar_msgs::msg::PandarScan) packets_pub_;
-  NEBULA_MESSAGE_UNIQUE_PTR(pandar_msgs::msg::PandarScan) current_scan_msg_;
+  rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr packets_pub_;
+  pandar_msgs::msg::PandarScan::UniquePtr current_scan_msg_;
 
   NEBULA_PUBLISHER_PTR(sensor_msgs::msg::PointCloud2) nebula_points_pub_;
   NEBULA_PUBLISHER_PTR(sensor_msgs::msg::PointCloud2) aw_points_ex_pub_;

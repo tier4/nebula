@@ -62,9 +62,9 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
 
   // Publish packets only if enabled by the ROS wrapper
   if (publish_packets) {
-    packets_pub_ = NEBULA_CREATE_PUBLISHER2(
-      pandar_msgs::msg::PandarScan, &parent_node_, "pandar_packets", rclcpp::SensorDataQoS());
-    current_scan_msg_ = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(packets_pub_);
+    current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
+    packets_pub_ = parent_node->create_publisher<pandar_msgs::msg::PandarScan>(
+      "pandar_packets", rclcpp::SensorDataQoS());
   }
 
   auto qos_profile = rmw_qos_profile_sensor_data;
@@ -110,7 +110,9 @@ void HesaiDecoderWrapper::process_cloud_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   // Accumulate packets for recording only if someone is subscribed to the topic (for performance)
-  if (packets_pub_ && NEBULA_HAS_ANY_SUBSCRIPTIONS(packets_pub_)) {
+  if (
+    packets_pub_ && (packets_pub_->get_subscription_count() > 0 ||
+                     packets_pub_->get_intra_process_subscription_count() > 0)) {
     if (current_scan_msg_->packets.size() == 0) {
       current_scan_msg_->header.stamp = packet_msg->stamp;
     }
@@ -132,7 +134,7 @@ void HesaiDecoderWrapper::on_pointcloud_decoded(
   // Publish scan message only if it has been written to
   if (current_scan_msg_ && !current_scan_msg_->packets.empty()) {
     packets_pub_->publish(std::move(current_scan_msg_));
-    current_scan_msg_ = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(packets_pub_);
+    current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
   }
 
   rclcpp::Time cloud_stamp = rclcpp::Time(seconds_to_chrono_nano_seconds(timestamp_s).count());
