@@ -35,7 +35,7 @@ namespace continental_ars548
 
 inline bool is_corner_radar(float yaw)
 {
-  return std::abs(yaw) > deg2rad(5.0) && std::abs(yaw) < deg2rad(90.0);
+  return std::abs(yaw) > deg2rad(5.0) && std::abs(yaw) < deg2rad(175.0);
 }
 
 /// @brief struct for ARS548 sensor configuration
