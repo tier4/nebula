@@ -19,7 +19,6 @@
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
 #include "nebula_ros/common/sync_tooling/sync_tooling_worker.hpp"
-#include "nebula_ros/common/sync_tooling/time_difference_plugin.hpp"
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 #include "nebula_ros/hesai/hw_interface_wrapper.hpp"
 #include "nebula_ros/hesai/hw_monitor_wrapper.hpp"
@@ -51,6 +50,12 @@ class HesaiRosWrapper final : public rclcpp::Node
   using get_calibration_result_t = nebula::util::expected<
     std::shared_ptr<drivers::HesaiCalibrationConfigurationBase>, nebula::Status>;
 
+  struct SyncToolingPlugin
+  {
+    std::shared_ptr<SyncToolingWorker> worker;
+    util::RateLimiter rate_limiter;
+  };
+
 public:
   explicit HesaiRosWrapper(const rclcpp::NodeOptions & options);
 
@@ -81,6 +86,8 @@ private:
   void receive_scan_message_callback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg);
 
   Status declare_and_get_sensor_config_params();
+
+  void initialize_sync_tooling(const drivers::HesaiSensorConfiguration & config);
 
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
@@ -116,14 +123,11 @@ private:
 
   bool launch_hw_;
 
-  std::shared_ptr<SyncToolingWorker> sync_tooling_worker_;
+  std::optional<SyncToolingPlugin> sync_tooling_plugin_;
 
   std::optional<HesaiHwInterfaceWrapper> hw_interface_wrapper_;
   std::optional<HesaiHwMonitorWrapper> hw_monitor_wrapper_;
   std::optional<HesaiDecoderWrapper> decoder_wrapper_;
-
-  /// @brief Timing difference processor for sync diagnostics
-  std::optional<TimeDifferencePlugin> timing_difference_processor_;
 
   /// @brief Diagnostics that are not time or safety-critical
   diagnostic_updater::Updater diagnostic_updater_general_;

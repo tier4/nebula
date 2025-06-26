@@ -71,7 +71,8 @@ Status ContinentalARS548Decoder::register_packets_callback(
 }
 
 Status ContinentalARS548Decoder::register_sync_status_callback(
-  std::function<void(int64_t clock_diff, bool sync_ok)> sync_status_callback)
+  std::function<void(uint64_t receive_time_ns, uint64_t packet_time_ns, bool sync_ok)>
+    sync_status_callback)
 {
   sync_status_callback_ = std::move(sync_status_callback);
   return Status::OK;
@@ -444,12 +445,11 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
   }
 
   if (sync_status_callback_) {
-    int64_t receive_stamp = packet_msg.stamp.sec * 1'000'000'000LL + packet_msg.stamp.nanosec;
-    int64_t radar_stamp =
+    uint64_t receive_stamp = packet_msg.stamp.sec * 1'000'000'000LL + packet_msg.stamp.nanosec;
+    uint64_t radar_stamp =
       radar_status_.timestamp_seconds * 1'000'000'000LL + radar_status_.timestamp_nanoseconds;
-    int64_t clock_diff_ns = receive_stamp - radar_stamp;
     bool sync_is_ok = sensor_status_packet.stamp.timestamp_sync_status == sync_ok;
-    sync_status_callback_(clock_diff_ns, sync_is_ok);
+    sync_status_callback_(receive_stamp, radar_stamp, sync_is_ok);
   }
 
   radar_status_.sw_version_major = sensor_status_packet.sw_version_major;
