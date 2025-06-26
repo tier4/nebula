@@ -55,6 +55,12 @@
 
 namespace nebula::ros
 {
+struct SyncToolingPlugin
+{
+  std::shared_ptr<SyncToolingWorker> worker;
+  util::RateLimiter rate_limiter;
+};
+
 class ContinentalARS548DecoderWrapper
 {
 public:
@@ -230,7 +236,7 @@ private:
   autoware_sensing_msgs::msg::RadarInfo radar_info_msg_{};
   std::size_t detection_msgs_counter_{0};
 
-  std::optional<SyncDiagClient> sync_diag_client_;
+  std::optional<SyncToolingPlugin> sync_tooling_plugin_;
 
   std::unordered_set<int> previous_ids_{};
 

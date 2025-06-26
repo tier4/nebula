@@ -16,6 +16,7 @@
 
 #include <nebula_common/util/errno.hpp>
 #include <nebula_common/util/expected.hpp>
+#include <nebula_common/util/rate_limiter.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 

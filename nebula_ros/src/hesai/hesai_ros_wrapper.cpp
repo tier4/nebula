@@ -6,6 +6,7 @@
 
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
+#include <nebula_common/util/rate_limiter.hpp>
 #include <nebula_common/util/string_conversions.hpp>
 #include <nebula_decoders/nebula_decoders_common/angles.hpp>
 
@@ -57,23 +58,15 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
       "disabled.");
   }
 
-  if (sensor_cfg_ptr_->sync_diagnostics_topic) {
-    sync_tooling_worker_ = std::make_shared<SyncToolingWorker>(
-      this, *sensor_cfg_ptr_->sync_diagnostics_topic, sensor_cfg_ptr_->frame_id,
-      sensor_cfg_ptr_->ptp_domain);
-  }
-
-  if (sync_tooling_worker_) {
-    timing_difference_processor_.emplace(
-      sync_tooling_worker_, get_logger().get_child("timing_difference_processor"));
-  }
+  initialize_sync_tooling(*sensor_cfg_ptr_);
 
   if (launch_hw_) {
     hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_, use_udp_only);
     if (!use_udp_only) {  // hardware monitor requires TCP connection
+      auto sync_tooling_worker = sync_tooling_plugin_ ? sync_tooling_plugin_->worker : nullptr;
       hw_monitor_wrapper_.emplace(
         this, diagnostic_updater_general_, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_,
-        sync_tooling_worker_);
+        sync_tooling_worker);
     }
   }
 
@@ -123,6 +116,18 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   // once for each declaration
   parameter_event_cb_ = add_on_set_parameters_callback(
     std::bind(&HesaiRosWrapper::on_parameter_change, this, std::placeholders::_1));
+}
+
+void HesaiRosWrapper::initialize_sync_tooling(const drivers::HesaiSensorConfiguration & config)
+{
+  if (!config.sync_diagnostics_topic) {
+    return;
+  }
+
+  auto sync_tooling_worker = std::make_shared<SyncToolingWorker>(
+    this, *config.sync_diagnostics_topic, config.frame_id, config.ptp_domain);
+
+  sync_tooling_plugin_.emplace(SyncToolingPlugin{sync_tooling_worker, util::RateLimiter(100ms)});
 }
 
 nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
@@ -524,9 +529,13 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
 
   auto decode_result = decoder_wrapper_->process_cloud_packet(std::move(msg_ptr));
 
-  if (decode_result.has_value() && timing_difference_processor_ && metadata.timestamp_ns) {
-    timing_difference_processor_->submit_time_difference(
-      *metadata.timestamp_ns, decode_result.value().packet_timestamp_ns);
+  if (decode_result.has_value() && sync_tooling_plugin_ && metadata.timestamp_ns) {
+    sync_tooling_plugin_->rate_limiter.with_rate_limit(
+      *metadata.timestamp_ns, [this, &decode_result, &metadata]() {
+        int64_t clock_diff = static_cast<int64_t>(*metadata.timestamp_ns) -
+                             static_cast<int64_t>(decode_result.value().packet_timestamp_ns);
+        sync_tooling_plugin_->worker->submit_clock_diff_measurement(clock_diff);
+      });
   }
 }
 

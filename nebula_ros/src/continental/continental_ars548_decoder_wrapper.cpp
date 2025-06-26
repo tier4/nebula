@@ -14,14 +14,11 @@
 
 #include "nebula_ros/continental/continental_ars548_decoder_wrapper.hpp"
 
-#include "nebula_ros/common/sync_diag_client.hpp"
+#include "nebula_ros/common/sync_tooling/sync_tooling_worker.hpp"
 
 #include <nebula_common/util/string_conversions.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
-#include <sync_tooling_msgs/port_id.pb.h>
-#include <sync_tooling_msgs/port_state.pb.h>
-#include <sync_tooling_msgs/self_reported_clock_state_update.pb.h>
 
 #include <algorithm>
 #include <chrono>
@@ -152,21 +149,26 @@ void ContinentalARS548DecoderWrapper::initialize_sync_diagnostics(rclcpp::Node *
     return;
   }
 
-  sync_diag_client_.emplace(
-    parent_node, *config_ptr_->sync_diagnostics_topic, config_ptr_->frame_id,
-    0 /* FIXME(mojomex): either remove or find out correct domain ID */);
+  sync_tooling_plugin_.emplace(
+    SyncToolingPlugin{
+      std::make_shared<SyncToolingWorker>(
+        parent_node, *config_ptr_->sync_diagnostics_topic, config_ptr_->frame_id,
+        0 /* FIXME(mojomex): either remove or find out correct domain ID */),
+      util::RateLimiter(100ms)});
 
   driver_ptr_->register_sync_status_callback(
-    [&, time_last_submitted_ns = 0L](int64_t clock_diff, bool sync_ok) mutable {
-      auto now_ns = std::chrono::steady_clock::now().time_since_epoch().count();
-      if (now_ns - time_last_submitted_ns < 1'000'000'000) return;
+    [this](uint64_t receive_time_ns, uint64_t packet_time_ns, bool sync_ok) {
+      sync_tooling_plugin_->rate_limiter.with_rate_limit(
+        receive_time_ns, [this, receive_time_ns, packet_time_ns, sync_ok]() {
+          int64_t clock_diff =
+            static_cast<int64_t>(receive_time_ns) - static_cast<int64_t>(packet_time_ns);
 
-      time_last_submitted_ns = now_ns;
-      (void)sync_diag_client_->submit_self_reported_clock_state(
-        sync_ok ? SelfReportedClockStateUpdate::LOCKED
-                : SelfReportedClockStateUpdate::UNSYNCHRONIZED);
+          sync_tooling_plugin_->worker->submit_self_reported_clock_state(
+            sync_ok ? SelfReportedClockStateUpdate::LOCKED
+                    : SelfReportedClockStateUpdate::UNSYNCHRONIZED);
 
-      (void)sync_diag_client_->submit_clock_diff_measurement(clock_diff);
+          sync_tooling_plugin_->worker->submit_clock_diff_measurement(clock_diff);
+        });
     });
 }
 
