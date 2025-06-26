@@ -47,6 +47,9 @@ rosdep install --from-paths . --ignore-src -y -r
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 ```
 
+To build with support for [Agnocast](https://github.com/tier4/agnocast), TIER IV's zero-copy
+middleware, refer to the Agnocast section below.
+
 _(optional)_ To build and serve the documentation, run the following commands in your workspace:
 
 ```shell
@@ -66,3 +69,54 @@ For example, for a Hesai Pandar40P sensor:
 ```bash
 ros2 launch nebula_ros hesai_launch_all_hw.xml sensor_model:=Pandar40P
 ```
+
+## Agnocast
+
+Nebula supports the [Agnocast](https://github.com/tier4/agnocast) zero-copy middleware for
+pointcloud and blockage mask outputs.
+
+> **Note**
+>
+> Agnocast support is currently limited to Hesai sensors.
+
+To build with support for Agnocast, add `-DUSE_AGNOCAST=ON` to the `--cmake-args` to the above
+`colcon build` command.
+
+The following apt dependencies are required at run time:
+
+```bash
+sudo add-apt-repository ppa:t4-system-software/agnocast
+sudo apt-get update
+sudo apt-get install agnocast-heaphook-v2.1.1 agnocast-kmod-v2.1.1
+```
+
+Nebula binaries that have been compiled with Agnocast support require the following environment
+variables to be set at runtime:
+
+```bash
+export LD_PRELOAD=/opt/ros/humble/lib/libagnocast_heaphook.so
+
+# This depends on the sensor model used and the number of Nebula topics subscribed.
+# A few maximum-size pointclouds worth of memory shall be enough. The below threshold is a
+# reasonable default.
+export AGNOCAST_MEMPOOL_SIZE=134217728 # 128MB
+```
+
+In addition, the Agnocast kernel module must be loaded at runtime:
+
+```bash
+sudo modprobe agnocast
+```
+
+To confirm that Agnocast support is enabled, run:
+
+```bash
+$ ros2 topic list_agnocast
+[...]
+/pandar_packets
+/pandar_points (Agnocast enabled)
+[...]
+```
+
+Please note that the `packets` topics do not support Agnocast, as they are purely used for
+data recording and tools like `ros2 bag` do not have Agnocast support yet.

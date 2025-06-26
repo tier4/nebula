@@ -15,6 +15,7 @@
 #pragma once
 
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
+#include "nebula_ros/common/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 #include "nebula_ros/common/diagnostics/rate_bound_status.hpp"
 #include "nebula_ros/common/watchdog_timer.hpp"
 #include "nebula_ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
@@ -61,8 +62,8 @@ public:
 
 private:
   void publish_cloud(
-    std::unique_ptr<sensor_msgs::msg::PointCloud2> pointcloud,
-    const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr & publisher);
+    NEBULA_MESSAGE_UNIQUE_PTR(sensor_msgs::msg::PointCloud2) && pointcloud,
+    const NEBULA_PUBLISHER_PTR(sensor_msgs::msg::PointCloud2) & publisher);
 
   /// @brief Convert seconds to chrono::nanoseconds
   /// @param seconds
@@ -107,7 +108,7 @@ private:
 
   std::pair<
     std::shared_ptr<drivers::point_filters::BlockageMaskPlugin>,
-    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr>
+    NEBULA_PUBLISHER_PTR(sensor_msgs::msg::Image)>
   initialize_blockage_mask_plugin();
 
   std::shared_ptr<drivers::HesaiDriver> initialize_driver(
@@ -127,11 +128,11 @@ private:
   rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr packets_pub_;
   pandar_msgs::msg::PandarScan::UniquePtr current_scan_msg_;
 
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_;
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_;
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_base_pub_;
+  NEBULA_PUBLISHER_PTR(sensor_msgs::msg::PointCloud2) nebula_points_pub_;
+  NEBULA_PUBLISHER_PTR(sensor_msgs::msg::PointCloud2) aw_points_ex_pub_;
+  NEBULA_PUBLISHER_PTR(sensor_msgs::msg::PointCloud2) aw_points_base_pub_;
 
-  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr blockage_mask_pub_;
+  NEBULA_PUBLISHER_PTR(sensor_msgs::msg::Image) blockage_mask_pub_;
 
   custom_diagnostic_tasks::RateBoundStatus publish_diagnostic_;
   std::optional<FunctionalSafetyDiagnosticTask> functional_safety_diagnostic_;
