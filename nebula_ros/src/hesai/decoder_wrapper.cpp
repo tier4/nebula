@@ -26,7 +26,7 @@ namespace nebula::ros
 using namespace std::chrono_literals;  // NOLINT(build/namespaces)
 
 HesaiDecoderWrapper::HesaiDecoderWrapper(
-  rclcpp::Node * const parent_node,
+  rclcpp::Node * parent_node,
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
   const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> & calibration,
   diagnostic_updater::Updater & diagnostic_updater, bool publish_packets)
@@ -99,7 +99,8 @@ void HesaiDecoderWrapper::on_calibration_change(
   calibration_cfg_ptr_ = new_calibration;
 }
 
-void HesaiDecoderWrapper::process_cloud_packet(
+nebula::util::expected<drivers::PacketMetadata, drivers::DecodeError>
+HesaiDecoderWrapper::process_cloud_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   // Accumulate packets for recording only if someone is subscribed to the topic (for performance)
@@ -118,7 +119,7 @@ void HesaiDecoderWrapper::process_cloud_packet(
   }
 
   std::lock_guard lock(mtx_driver_ptr_);
-  driver_ptr_->parse_cloud_packet(packet_msg->data);
+  return driver_ptr_->parse_cloud_packet(packet_msg->data);
 }
 
 void HesaiDecoderWrapper::on_pointcloud_decoded(

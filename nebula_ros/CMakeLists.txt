@@ -59,6 +59,7 @@ add_library(hesai_ros_wrapper SHARED
     src/hesai/hw_interface_wrapper.cpp
     src/hesai/hw_monitor_wrapper.cpp
     src/common/parameter_descriptors.cpp
+    src/common/timing_difference_processor.cpp
 )
 
 message(sync_tooling_msgs_INCLUDE_DIRS=${sync_tooling_msgs_INCLUDE_DIRS})

@@ -59,11 +59,23 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
       "disabled.");
   }
 
+  if (sensor_cfg_ptr_->sync_diagnostics_topic) {
+    sync_diag_client_ = std::make_shared<SyncDiagClient>(
+      this, *sensor_cfg_ptr_->sync_diagnostics_topic, sensor_cfg_ptr_->frame_id,
+      sensor_cfg_ptr_->ptp_domain);
+  }
+
+  if (sync_diag_client_) {
+    timing_difference_processor_.emplace(
+      sync_diag_client_, get_logger().get_child("timing_difference_processor"));
+  }
+
   if (launch_hw_) {
     hw_interface_wrapper_.emplace(this, sensor_cfg_ptr_, use_udp_only);
     if (!use_udp_only) {  // hardware monitor requires TCP connection
       hw_monitor_wrapper_.emplace(
-        this, diagnostic_updater_general_, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_);
+        this, diagnostic_updater_general_, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_,
+        sync_diag_client_);
     }
   }
 
@@ -511,34 +523,13 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
   msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
   msg_ptr->data = packet;
-  uint64_t sensor_timestamp_ns = timestamp_ns;
-  switch (sensor_cfg_ptr_->sensor_model) {
-    case drivers::SensorModel::HESAI_PANDAR128_E4X:
-      sensor_timestamp_ns = drivers::hesai_packet::get_timestamp_ns(
-        *reinterpret_cast<drivers::hesai_packet::Packet128E4X *>(msg_ptr->data.data()));
-      break;
-    case drivers::SensorModel::HESAI_PANDARQT128:
-      sensor_timestamp_ns = drivers::hesai_packet::get_timestamp_ns(
-        *reinterpret_cast<drivers::hesai_packet::PacketQT128C2X *>(msg_ptr->data.data()));
-      break;
-    default:
-      break;
-  }
 
-  if (
-    metadata.timestamp_ns && hw_monitor_wrapper_ && hw_monitor_wrapper_->sync_diag_client_ &&
-    (*metadata.timestamp_ns - last_measurement_send_time_ns_ >= 100'000'000)) {
-    try {
-      int64_t diff_ns =
-        static_cast<int64_t>(*metadata.timestamp_ns) - static_cast<int64_t>(sensor_timestamp_ns);
-      hw_monitor_wrapper_->sync_diag_client_->submit_clock_diff_measurement(diff_ns);
-      last_measurement_send_time_ns_ = *metadata.timestamp_ns;
-    } catch (const std::exception & e) {
-      RCLCPP_ERROR_STREAM(get_logger(), "Could not send measurement:" << e.what());
-    }
-  }
+  auto decode_result = decoder_wrapper_->process_cloud_packet(std::move(msg_ptr));
 
-  decoder_wrapper_->process_cloud_packet(std::move(msg_ptr));
+  if (decode_result.has_value() && timing_difference_processor_ && metadata.timestamp_ns) {
+    timing_difference_processor_->process_timing_difference(
+      *metadata.timestamp_ns, decode_result.value().packet_timestamp_ns);
+  }
 }
 
 std::string HesaiRosWrapper::get_calibration_parameter_name(drivers::SensorModel model) const
