@@ -17,7 +17,7 @@
 #include "nebula_ros/common/diagnostics/liveness_monitor.hpp"
 #include "nebula_ros/common/diagnostics/rate_bound_status.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
-#include "nebula_ros/common/sync_diag_client.hpp"
+#include "nebula_ros/common/sync_tooling/sync_tooling_worker.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/continental/continental_ars548.hpp>

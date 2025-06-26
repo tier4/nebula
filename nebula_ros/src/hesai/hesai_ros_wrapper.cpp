@@ -8,8 +8,6 @@
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/util/string_conversions.hpp>
 #include <nebula_decoders/nebula_decoders_common/angles.hpp>
-#include <nebula_decoders/nebula_decoders_hesai/decoders/pandar_128e4x.hpp>
-#include <nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt128.hpp>
 
 #include <algorithm>
 #include <cstdint>
@@ -60,14 +58,14 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   }
 
   if (sensor_cfg_ptr_->sync_diagnostics_topic) {
-    sync_diag_client_ = std::make_shared<SyncDiagClient>(
+    sync_tooling_worker_ = std::make_shared<SyncToolingWorker>(
       this, *sensor_cfg_ptr_->sync_diagnostics_topic, sensor_cfg_ptr_->frame_id,
       sensor_cfg_ptr_->ptp_domain);
   }
 
-  if (sync_diag_client_) {
+  if (sync_tooling_worker_) {
     timing_difference_processor_.emplace(
-      sync_diag_client_, get_logger().get_child("timing_difference_processor"));
+      sync_tooling_worker_, get_logger().get_child("timing_difference_processor"));
   }
 
   if (launch_hw_) {
@@ -75,7 +73,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     if (!use_udp_only) {  // hardware monitor requires TCP connection
       hw_monitor_wrapper_.emplace(
         this, diagnostic_updater_general_, hw_interface_wrapper_->hw_interface(), sensor_cfg_ptr_,
-        sync_diag_client_);
+        sync_tooling_worker_);
     }
   }
 
@@ -527,7 +525,7 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
   auto decode_result = decoder_wrapper_->process_cloud_packet(std::move(msg_ptr));
 
   if (decode_result.has_value() && timing_difference_processor_ && metadata.timestamp_ns) {
-    timing_difference_processor_->process_timing_difference(
+    timing_difference_processor_->submit_time_difference(
       *metadata.timestamp_ns, decode_result.value().packet_timestamp_ns);
   }
 }

@@ -16,6 +16,7 @@
 
 #include <nebula_common/util/errno.hpp>
 #include <nebula_common/util/expected.hpp>
+#include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <std_msgs/msg/u_int8_multi_array.hpp>
@@ -58,10 +59,10 @@ inline ClockId make_sensor_clock_id(const std::string & frame_id)
   return id;
 }
 
-class SyncDiagClient
+class SyncToolingWorker
 {
 public:
-  SyncDiagClient(
+  SyncToolingWorker(
     rclcpp::Node * const parent_node, const std::string & topic, const std::string & frame_id,
     uint8_t ptp_domain_id)
   : publisher_(parent_node->create_publisher<std_msgs::msg::UInt8MultiArray>(topic, 10)),
@@ -155,7 +156,7 @@ private:
     assert(success);
 
     if (!success) {
-      RCLCPP_FATAL(rclcpp::get_logger("SyncDiagClient"), "Failed to serialize protobuf message");
+      RCLCPP_ERROR(rclcpp::get_logger("SyncToolingWorker"), "Failed to serialize protobuf message");
       return;
     }
 

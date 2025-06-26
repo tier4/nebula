@@ -18,7 +18,8 @@
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
-#include "nebula_ros/common/timing_difference_processor.hpp"
+#include "nebula_ros/common/sync_tooling/sync_tooling_worker.hpp"
+#include "nebula_ros/common/sync_tooling/time_difference_plugin.hpp"
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 #include "nebula_ros/hesai/hw_interface_wrapper.hpp"
 #include "nebula_ros/hesai/hw_monitor_wrapper.hpp"
@@ -39,7 +40,6 @@
 #include <mutex>
 #include <optional>
 #include <string>
-#include <thread>
 #include <vector>
 
 namespace nebula::ros
@@ -53,6 +53,12 @@ class HesaiRosWrapper final : public rclcpp::Node
 
 public:
   explicit HesaiRosWrapper(const rclcpp::NodeOptions & options);
+
+  HesaiRosWrapper(const HesaiRosWrapper &) = delete;
+  HesaiRosWrapper & operator=(const HesaiRosWrapper &) = delete;
+  HesaiRosWrapper(HesaiRosWrapper &&) = delete;
+  HesaiRosWrapper & operator=(HesaiRosWrapper &&) = delete;
+
   ~HesaiRosWrapper() noexcept override
   {
     if (!hw_interface_wrapper_) return;
@@ -110,14 +116,14 @@ private:
 
   bool launch_hw_;
 
-  std::shared_ptr<SyncDiagClient> sync_diag_client_;
+  std::shared_ptr<SyncToolingWorker> sync_tooling_worker_;
 
   std::optional<HesaiHwInterfaceWrapper> hw_interface_wrapper_;
   std::optional<HesaiHwMonitorWrapper> hw_monitor_wrapper_;
   std::optional<HesaiDecoderWrapper> decoder_wrapper_;
 
   /// @brief Timing difference processor for sync diagnostics
-  std::optional<TimingDifferenceProcessor> timing_difference_processor_;
+  std::optional<TimeDifferencePlugin> timing_difference_processor_;
 
   /// @brief Diagnostics that are not time or safety-critical
   diagnostic_updater::Updater diagnostic_updater_general_;
