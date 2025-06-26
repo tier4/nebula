@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_ros/common/sync_diag_client.hpp"
+#include "nebula_ros/common/sync_tooling/sync_tooling_worker.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/hesai/hesai_common.hpp>
@@ -43,7 +43,7 @@ public:
     rclcpp::Node * const parent_node, diagnostic_updater::Updater & diagnostic_updater,
     const std::shared_ptr<nebula::drivers::HesaiHwInterface> & hw_interface,
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
-    const std::shared_ptr<SyncDiagClient> & sync_diag_client);
+    const std::shared_ptr<SyncToolingWorker> & sync_tooling_worker);
 
   void on_config_change(
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & /* new_config */)
@@ -110,7 +110,7 @@ private:
   std::mutex mtx_lidar_status_;
   std::mutex mtx_lidar_monitor_;
 
-  std::shared_ptr<SyncDiagClient> sync_diag_client_;
+  std::shared_ptr<SyncToolingWorker> sync_tooling_worker_;
 
   const std::string MSG_NOT_SUPPORTED_ = "Not supported";
   const std::string MSG_ERROR_ = "Error";
