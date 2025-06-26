@@ -42,7 +42,8 @@ public:
   HesaiHwMonitorWrapper(
     rclcpp::Node * const parent_node, diagnostic_updater::Updater & diagnostic_updater,
     const std::shared_ptr<nebula::drivers::HesaiHwInterface> & hw_interface,
-    std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config);
+    const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
+    const std::shared_ptr<SyncDiagClient> & sync_diag_client);
 
   void on_config_change(
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & /* new_config */)
@@ -103,16 +104,14 @@ private:
   std::unique_ptr<rclcpp::Time> current_config_time_{};
   std::unique_ptr<rclcpp::Time> current_lidar_monitor_time_{};
 
-  uint8_t current_diag_status_;
-  uint8_t current_monitor_status_;
+  uint8_t current_diag_status_{diagnostic_msgs::msg::DiagnosticStatus::STALE};
+  uint8_t current_monitor_status_{diagnostic_msgs::msg::DiagnosticStatus::STALE};
 
   std::mutex mtx_lidar_status_;
   std::mutex mtx_lidar_monitor_;
 
-public:
-  std::optional<SyncDiagClient> sync_diag_client_;
+  std::shared_ptr<SyncDiagClient> sync_diag_client_;
 
-private:
   const std::string MSG_NOT_SUPPORTED_ = "Not supported";
   const std::string MSG_ERROR_ = "Error";
   const std::string MSG_SEP_ = ": ";

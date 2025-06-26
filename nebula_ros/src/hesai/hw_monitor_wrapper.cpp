@@ -43,11 +43,13 @@ void HesaiHwMonitorWrapper::add_json_item_to_diagnostics(
 HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
   rclcpp::Node * const parent_node, diagnostic_updater::Updater & diagnostic_updater,
   const std::shared_ptr<nebula::drivers::HesaiHwInterface> & hw_interface,
-  std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config)
+  const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
+  const std::shared_ptr<SyncDiagClient> & sync_diag_client)
 : logger_(parent_node->get_logger().get_child("HwMonitor")),
   status_(Status::OK),
   hw_interface_(hw_interface),
-  parent_node_(parent_node)
+  parent_node_(parent_node),
+  sync_diag_client_(sync_diag_client)
 {
   diag_span_ = parent_node->declare_parameter<uint16_t>("diag_span", param_read_only());
 
@@ -56,11 +58,6 @@ HesaiHwMonitorWrapper::HesaiHwMonitorWrapper(
                          config->sensor_model != drivers::SensorModel::HESAI_PANDAR64;
 
   initialize_hesai_diagnostics(diagnostic_updater, monitor_enabled);
-
-  if (config->sync_diagnostics_topic) {
-    sync_diag_client_.emplace(
-      parent_node_, *config->sync_diagnostics_topic, config->frame_id, config->ptp_domain);
-  }
 }
 
 void HesaiHwMonitorWrapper::initialize_hesai_diagnostics(

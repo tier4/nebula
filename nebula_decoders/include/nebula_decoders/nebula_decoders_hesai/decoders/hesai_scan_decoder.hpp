@@ -17,11 +17,29 @@
 
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/point_types.hpp>
+#include <nebula_common/util/expected.hpp>
 
 #include <vector>
 
 namespace nebula::drivers
 {
+/// @brief Errors that can occur during packet decoding
+enum class DecodeError : uint8_t {
+  PACKET_PARSE_FAILED,  ///< Failed to parse packet structure
+  CRC_CHECK_FAILED,     ///< CRC validation failed
+  DRIVER_NOT_OK,        ///< Driver status is not OK
+  INVALID_PACKET_SIZE,  ///< Packet size is invalid
+};
+
+/// @brief Metadata for a decoded packet
+struct PacketMetadata
+{
+  /// @brief Timestamp included in the packet payload in nanoseconds
+  uint64_t packet_timestamp_ns;
+  /// @brief Last azimuth processed by the decoder
+  uint32_t last_azimuth;
+};
+
 /// @brief Base class for Hesai LiDAR decoder
 class HesaiScanDecoder
 {
@@ -39,8 +57,9 @@ public:
 
   /// @brief Parses PandarPacket and add its points to the point cloud
   /// @param packet The incoming PandarPacket
-  /// @return The last azimuth processed
-  virtual int unpack(const std::vector<uint8_t> & packet) = 0;
+  /// @return Metadata on success, or decode error on failure
+  virtual nebula::util::expected<PacketMetadata, DecodeError> unpack(
+    const std::vector<uint8_t> & packet) = 0;
 
   virtual void set_pointcloud_callback(pointcloud_callback_t callback) = 0;
 };
