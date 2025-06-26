@@ -349,10 +349,11 @@ public:
     pointcloud_callback_ = std::move(callback);
   }
 
-  int unpack(const std::vector<uint8_t> & packet) override
+  nebula::util::expected<PacketMetadata, DecodeError> unpack(
+    const std::vector<uint8_t> & packet) override
   {
     if (!parse_packet(packet)) {
-      return -1;
+      return {DecodeError::PACKET_PARSE_FAILED};
     }
 
     if (packet_loss_detector_) {
@@ -367,7 +368,7 @@ public:
 
     // Note that not all packet formats have CRC. In those cases, these checks always succeed.
     if (!hesai_packet::is_crc_valid(packet_.body) || !hesai_packet::is_crc_valid(packet_.tail)) {
-      return -1;
+      return {DecodeError::CRC_CHECK_FAILED};
     }
 
     // This is the first scan, set scan timestamp to whatever packet arrived first
@@ -425,7 +426,10 @@ public:
       on_scan_complete();
     }
 
-    return last_azimuth_;
+    PacketMetadata metadata;
+    metadata.packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
+    metadata.last_azimuth = last_azimuth_;
+    return {metadata};
   }
 };
 

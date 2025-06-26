@@ -56,6 +56,7 @@ struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
   uint8_t blockage_status_level_warn{};
   uint8_t blockage_test_level_ok{};
   uint8_t blockage_test_level_warn{};
+  std::optional<std::string> sync_diagnostics_topic;
 };
 
 /// @brief Convert ContinentalARS548SensorConfiguration to string (Overloading the <<
@@ -78,7 +79,10 @@ inline std::ostream & operator<<(
   os << "Vehicle Length: " << arg.configuration_vehicle_length << '\n';
   os << "Vehicle Width: " << arg.configuration_vehicle_width << '\n';
   os << "Vehicle Height: " << arg.configuration_vehicle_height << '\n';
-  os << "Vehicle Wheelbase: " << arg.configuration_vehicle_wheelbase;
+  os << "Vehicle Wheelbase: " << arg.configuration_vehicle_wheelbase << '\n';
+  os << "Synchronization Diagnostics: "
+     << (arg.sync_diagnostics_topic ? ("enabled, topic: " + arg.sync_diagnostics_topic.value())
+                                    : "disabled");
   return os;
 }
 

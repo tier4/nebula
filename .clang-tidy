@@ -1,5 +1,8 @@
 # All disabled checks have to come with an explanatory comment that states why they were disabled!
 #
+# bugprone-easily-swappable-parameters:
+#  Not always easily fixable, modern IDEs with parameter chips/hints help avoid this problem
+#
 # modernize-use-trailing-return-type:
 #  Purely stylistic, makes function signature longer
 #
@@ -31,6 +34,7 @@ Checks: "
   -mpi-*,
   -objc-*,
   -zircon-*,
+  -bugprone-easily-swappable-parameters,
   -modernize-use-trailing-return-type,
   -readability-identifier-length,
   -readability-implicit-bool-conversion,
@@ -135,3 +139,7 @@ CheckOptions:
     # Reduce boilerplate for things like guard clauses
   - key: readability-braces-around-statements.ShortStatementLines
     value: 2 # The definition is confusing, but everything >= 2 is flagged as a warning
+    # Macros like RCLCPP_INFO contribute large amounts to cognitive complexity, even if the
+    # containing function is simple.
+  - key: readability-function-cognitive-complexity.IgnoreMacros
+    value: true

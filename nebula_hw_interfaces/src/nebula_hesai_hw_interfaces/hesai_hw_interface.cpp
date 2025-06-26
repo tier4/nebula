@@ -186,25 +186,24 @@ Status HesaiHwInterface::sensor_interface_start()
 
   udp_socket_.emplace(std::move(builder).bind());
 
-  udp_socket_->subscribe([&](
-                           const std::vector<uint8_t> & packet,
-                           const connections::UdpSocket::RxMetadata & /* metadata */) {
-    receive_sensor_packet_callback(packet);
-  });
+  udp_socket_->subscribe(
+    [&](const std::vector<uint8_t> & packet, const connections::UdpSocket::RxMetadata & metadata) {
+      receive_sensor_packet_callback(packet, metadata);
+    });
 
   return Status::OK;
 }
 
-Status HesaiHwInterface::register_scan_callback(
-  std::function<void(const std::vector<uint8_t> &)> scan_callback)
+Status HesaiHwInterface::register_scan_callback(connections::UdpSocket::callback_t scan_callback)
 {
   cloud_packet_callback_ = std::move(scan_callback);
   return Status::OK;
 }
 
-void HesaiHwInterface::receive_sensor_packet_callback(const std::vector<uint8_t> & buffer)
+void HesaiHwInterface::receive_sensor_packet_callback(
+  const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata)
 {
-  cloud_packet_callback_(buffer);
+  cloud_packet_callback_(buffer, metadata);
 }
 
 Status HesaiHwInterface::sensor_interface_stop()
@@ -307,33 +306,33 @@ HesaiPtpDiagStatus HesaiHwInterface::get_ptp_diag_status()
   return diag_status;
 }
 
-HesaiPtpDiagPort HesaiHwInterface::get_ptp_diag_port()
+PtpTlvPortDataSet HesaiHwInterface::get_ptp_diag_port()
 {
   auto response_or_err =
     send_receive(g_ptc_command_ptp_diagnostics, {g_ptc_command_ptp_port_data_set});
   auto response =
     response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
-  auto diag_port = check_size_and_parse<HesaiPtpDiagPort>(response);
+  auto diag_port = check_size_and_parse<PtpTlvPortDataSet>(response);
   return diag_port;
 }
 
-HesaiPtpDiagTime HesaiHwInterface::get_ptp_diag_time()
+PtpTlvTimeStatusNp HesaiHwInterface::get_ptp_diag_time()
 {
   auto response_or_err =
     send_receive(g_ptc_command_ptp_diagnostics, {g_ptc_command_ptp_time_status_np});
   auto response =
     response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
-  auto diag_time = check_size_and_parse<HesaiPtpDiagTime>(response);
+  auto diag_time = check_size_and_parse<PtpTlvTimeStatusNp>(response);
   return diag_time;
 }
 
-HesaiPtpDiagGrandmaster HesaiHwInterface::get_ptp_diag_grandmaster()
+HesaiPtpTlvGrandmasterSettingsNp HesaiHwInterface::get_ptp_diag_grandmaster()
 {
   auto response_or_err =
     send_receive(g_ptc_command_ptp_diagnostics, {g_ptc_command_ptp_grandmaster_settings_np});
   auto response =
     response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
-  auto diag_grandmaster = check_size_and_parse<HesaiPtpDiagGrandmaster>(response);
+  auto diag_grandmaster = check_size_and_parse<HesaiPtpTlvGrandmasterSettingsNp>(response);
   return diag_grandmaster;
 }
 

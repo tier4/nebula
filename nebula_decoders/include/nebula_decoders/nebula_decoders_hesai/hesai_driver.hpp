@@ -137,7 +137,9 @@ public:
 
   /// @brief Decode a pointcloud packet. If a pointcloud is produced, `pointcloud_cb` is called.
   /// @param packet Packet to decode
-  void parse_cloud_packet(const std::vector<uint8_t> & packet);
+  /// @return Expected containing metadata on success, or decode error on failure
+  nebula::util::expected<PacketMetadata, DecodeError> parse_cloud_packet(
+    const std::vector<uint8_t> & packet);
 };
 
 }  // namespace nebula::drivers

@@ -111,6 +111,14 @@ nebula::Status ContinentalARS548RosWrapper::declare_and_get_sensor_config_params
   declare_parameter<bool>(
     "diagnostic_updater.use_fqn", true, param_read_only());  // read by diagnostic_updater
 
+  {
+    auto sync_diagnostics_topic =
+      declare_parameter<std::string>("sync_diagnostics.topic", "", param_read_only());
+    if (!sync_diagnostics_topic.empty()) {
+      config.sync_diagnostics_topic.emplace(sync_diagnostics_topic);
+    }
+  }
+
   if (config.sensor_model == nebula::drivers::SensorModel::UNKNOWN) {
     return Status::INVALID_SENSOR_MODEL;
   }
