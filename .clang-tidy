@@ -139,3 +139,7 @@ CheckOptions:
     # Reduce boilerplate for things like guard clauses
   - key: readability-braces-around-statements.ShortStatementLines
     value: 2 # The definition is confusing, but everything >= 2 is flagged as a warning
+    # Macros like RCLCPP_INFO contribute large amounts to cognitive complexity, even if the
+    # containing function is simple.
+  - key: readability-function-cognitive-complexity.IgnoreMacros
+    value: true
