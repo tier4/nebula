@@ -44,6 +44,7 @@
 
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <tuple>
 #include <unordered_set>
@@ -201,6 +202,7 @@ private:
 
   std::shared_ptr<drivers::continental_ars548::ContinentalARS548Decoder> driver_ptr_{};
   std::mutex mtx_driver_ptr_;
+  std::shared_mutex mtx_config_ptr_;
 
   rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_{};
 

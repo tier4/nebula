@@ -151,12 +151,14 @@ void ContinentalARS548DecoderWrapper::on_config_change(
 {
   std::lock_guard lock(mtx_driver_ptr_);
   initialize_driver(new_config_ptr);
+  std::unique_lock lock_cfg(mtx_config_ptr_);
   config_ptr_ = new_config_ptr;
 }
 
 void ContinentalARS548DecoderWrapper::process_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
+  std::lock_guard lock(mtx_driver_ptr_);
   driver_ptr_->process_packet(std::move(packet_msg));
 
   liveness_monitor_.tick();
@@ -191,6 +193,7 @@ void ContinentalARS548DecoderWrapper::detection_list_callback(
     detection_list_pub_->publish(std::move(msg));
   }
 
+  std::shared_lock lock_cfg(mtx_config_ptr_);
   if (
     detection_msgs_counter_ % config_ptr_->radar_info_rate_subsample == 0 &&
     (radar_info_pub_->get_subscription_count() > 0 ||
@@ -293,6 +296,7 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
   add_diagnostic(
     dynamics_diagnostic_status, "Driving direction status", sensor_status.driving_direction_status);
 
+  std::shared_lock lock_cfg(mtx_config_ptr_);
   dynamics_diagnostic_status.hardware_id = config_ptr_->frame_id;
   dynamics_diagnostic_status.name =
     std::string(parent_node_->get_fully_qualified_name()) + ": Dynamics";
@@ -346,6 +350,7 @@ void ContinentalARS548DecoderWrapper::packets_callback(
 void ContinentalARS548DecoderWrapper::create_radar_info()
 {
   namespace ars548 = nebula::drivers::continental_ars548;
+  std::shared_lock lock_cfg(mtx_config_ptr_);
   radar_info_msg_.header.frame_id = config_ptr_->frame_id;
 
   auto make_field_info = [](
@@ -889,6 +894,7 @@ visualization_msgs::msg::MarkerArray ContinentalARS548DecoderWrapper::convert_to
   }};
 
   std::unordered_set<int> current_ids;
+  std::shared_lock lock_cfg(mtx_config_ptr_);
 
   radar_msgs::msg::RadarTrack track_msg;
   for (const auto & object : msg.objects) {
