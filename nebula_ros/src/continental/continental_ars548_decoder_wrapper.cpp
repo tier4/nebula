@@ -114,12 +114,6 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   detections_diagnostics_updater_.force_update();
   liveness_diagnostics_updater_.force_update();
 
-  watchdog_ =
-    std::make_shared<WatchdogTimer>(*parent_node, 100'000us, [this, parent_node](bool ok) {
-      if (ok) return;
-      RCLCPP_WARN_THROTTLE(logger_, *parent_node->get_clock(), 5000, "Missed output deadline");
-    });
-
   create_radar_info();
 }
 
@@ -161,7 +155,6 @@ void ContinentalARS548DecoderWrapper::process_packet(
   driver_ptr_->process_packet(std::move(packet_msg));
 
   liveness_monitor_.tick();
-  watchdog_->update();
 }
 
 void ContinentalARS548DecoderWrapper::detection_list_callback(
