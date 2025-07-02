@@ -96,7 +96,8 @@ public:
 private:
   nebula::Status initialize_driver(
     const std::shared_ptr<
-      const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config);
+      const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config)
+    RCPPUTILS_TSA_REQUIRES(mtx_config_ptr_);
 
   // @brief Create a RadarInfo message for the ARS548 radar
   // @return RadarInfo message
