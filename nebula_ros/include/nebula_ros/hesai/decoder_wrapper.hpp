@@ -17,7 +17,6 @@
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 #include "nebula_ros/common/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 #include "nebula_ros/common/diagnostics/rate_bound_status.hpp"
-#include "nebula_ros/common/watchdog_timer.hpp"
 #include "nebula_ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 #include "nebula_ros/hesai/diagnostics/packet_loss_diagnostic.hpp"
 
@@ -137,7 +136,5 @@ private:
   custom_diagnostic_tasks::RateBoundStatus publish_diagnostic_;
   std::optional<FunctionalSafetyDiagnosticTask> functional_safety_diagnostic_;
   std::optional<PacketLossDiagnosticTask> packet_loss_diagnostic_;
-
-  std::shared_ptr<WatchdogTimer> cloud_watchdog_;
 };
 }  // namespace nebula::ros
