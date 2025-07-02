@@ -153,7 +153,8 @@ private:
 
   void send_proto(const GraphUpdate & msg)
   {
-    bool success = msg.SerializeToString(&serialization_buffer_);
+    std::string serialization_buffer;
+    bool success = msg.SerializeToString(&serialization_buffer);
     assert(success);
 
     if (!success) {
@@ -162,7 +163,7 @@ private:
     }
 
     auto ros2_msg = std_msgs::msg::UInt8MultiArray();
-    boost::range::copy(serialization_buffer_, std::back_inserter(ros2_msg.data));
+    boost::range::copy(serialization_buffer, std::back_inserter(ros2_msg.data));
     publisher_->publish(ros2_msg);
   }
 
@@ -171,8 +172,6 @@ private:
   std::string hostname_;
   ClockId sensor_id_;
   uint8_t ptp_domain_id_;
-
-  std::string serialization_buffer_;
 };
 
 }  // namespace nebula::ros
