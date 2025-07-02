@@ -24,6 +24,8 @@
 #include <chrono>
 #include <limits>
 #include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -145,6 +147,7 @@ Status ContinentalARS548DecoderWrapper::initialize_driver(
 
 void ContinentalARS548DecoderWrapper::initialize_sync_diagnostics(rclcpp::Node * const parent_node)
 {
+  std::scoped_lock lock(mtx_config_ptr_, mtx_driver_ptr_);
   if (!config_ptr_->sync_diagnostics_topic) {
     return;
   }
