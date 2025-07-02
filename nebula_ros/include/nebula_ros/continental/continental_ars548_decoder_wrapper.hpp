@@ -25,6 +25,7 @@
 #include <nebula_common/util/expected.hpp>
 #include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <rcpputils/thread_safety_annotations.hpp>
 
 #include <autoware_sensing_msgs/msg/radar_classification.hpp>
 #include <autoware_sensing_msgs/msg/radar_info.hpp>
@@ -44,6 +45,7 @@
 
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <tuple>
 #include <unordered_set>
@@ -94,7 +96,8 @@ public:
 private:
   nebula::Status initialize_driver(
     const std::shared_ptr<
-      const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config);
+      const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> & config)
+    RCPPUTILS_TSA_REQUIRES(mtx_config_ptr_);
 
   // @brief Create a RadarInfo message for the ARS548 radar
   // @return RadarInfo message
@@ -197,10 +200,13 @@ private:
   rclcpp::Node * const parent_node_;
 
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration>
-    config_ptr_{};
+    config_ptr_ RCPPUTILS_TSA_GUARDED_BY(mtx_config_ptr_);
 
-  std::shared_ptr<drivers::continental_ars548::ContinentalARS548Decoder> driver_ptr_{};
+  std::shared_ptr<drivers::continental_ars548::ContinentalARS548Decoder> driver_ptr_
+    RCPPUTILS_TSA_GUARDED_BY(mtx_driver_ptr_);
+
   std::mutex mtx_driver_ptr_;
+  std::shared_mutex mtx_config_ptr_;
 
   rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_{};
 
