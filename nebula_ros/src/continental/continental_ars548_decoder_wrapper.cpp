@@ -149,9 +149,8 @@ void ContinentalARS548DecoderWrapper::on_config_change(
     const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
     new_config_ptr)
 {
-  std::lock_guard lock(mtx_driver_ptr_);
+  std::scoped_lock lock(mtx_config_ptr_, mtx_driver_ptr_);
   initialize_driver(new_config_ptr);
-  std::unique_lock lock_cfg(mtx_config_ptr_);
   config_ptr_ = new_config_ptr;
 }
 
