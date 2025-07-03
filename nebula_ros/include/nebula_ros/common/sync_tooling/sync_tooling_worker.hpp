@@ -153,8 +153,12 @@ private:
 
   void send_proto(const GraphUpdate & msg)
   {
-    std::string serialization_buffer;
-    bool success = msg.SerializeToString(&serialization_buffer);
+    auto ros2_msg = std_msgs::msg::UInt8MultiArray();
+
+    size_t serialized_size = msg.ByteSizeLong();
+    ros2_msg.data.resize(serialized_size);
+    bool success =
+      msg.SerializeToArray(ros2_msg.data.data(), static_cast<int>(ros2_msg.data.size()));
     assert(success);
 
     if (!success) {
@@ -162,8 +166,6 @@ private:
       return;
     }
 
-    auto ros2_msg = std_msgs::msg::UInt8MultiArray();
-    boost::range::copy(serialization_buffer, std::back_inserter(ros2_msg.data));
     publisher_->publish(ros2_msg);
   }
 
