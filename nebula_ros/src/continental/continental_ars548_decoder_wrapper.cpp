@@ -152,11 +152,12 @@ void ContinentalARS548DecoderWrapper::initialize_sync_diagnostics(rclcpp::Node *
     return;
   }
 
+  // ARS548 does not document any domain ID settings, so the default domain 0 is hardcoded.
+  // ARS548 is known working with domain 0.
   sync_tooling_plugin_.emplace(
     SyncToolingPlugin{
       std::make_shared<SyncToolingWorker>(
-        parent_node, *config_ptr_->sync_diagnostics_topic, config_ptr_->frame_id,
-        0 /* FIXME(mojomex): either remove or find out correct domain ID */),
+        parent_node, *config_ptr_->sync_diagnostics_topic, config_ptr_->frame_id, 0),
       util::RateLimiter(100ms)});
 
   driver_ptr_->register_sync_status_callback(
