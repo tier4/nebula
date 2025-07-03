@@ -123,6 +123,9 @@
             "pointcloud_publish_rate",
             "packet_loss"
           ]
+        },
+        "sync_diagnostics": {
+          "$ref": "sub/misc.json#/definitions/sync_diagnostics"
         }
       },
       "required": [

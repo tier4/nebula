@@ -117,14 +117,15 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
     std::move(blockage_mask_plugin));
 }
 
-void HesaiDriver::parse_cloud_packet(const std::vector<uint8_t> & packet)
+nebula::util::expected<PacketMetadata, DecodeError> HesaiDriver::parse_cloud_packet(
+  const std::vector<uint8_t> & packet)
 {
   if (driver_status_ != nebula::Status::OK) {
     logger_->error("Driver not OK.");
-    return;
+    return {DecodeError::DRIVER_NOT_OK};
   }
 
-  scan_decoder_->unpack(packet);
+  return scan_decoder_->unpack(packet);
 }
 
 Status HesaiDriver::set_calibration_configuration(

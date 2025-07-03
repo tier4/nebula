@@ -14,13 +14,18 @@
 
 #include "nebula_ros/continental/continental_ars548_decoder_wrapper.hpp"
 
+#include "nebula_ros/common/sync_tooling/sync_tooling_worker.hpp"
+
 #include <nebula_common/util/string_conversions.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <algorithm>
+#include <chrono>
 #include <limits>
 #include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -61,6 +66,8 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   if (Status::OK != status_) {
     throw std::runtime_error("Error instantiating decoder: " + util::to_string(status_));
   }
+
+  initialize_sync_diagnostics(parent_node);
 
   // Publish packets only if HW interface is connected
   if (launch_hw) {
@@ -136,6 +143,37 @@ Status ContinentalARS548DecoderWrapper::initialize_driver(
     std::bind(&ContinentalARS548DecoderWrapper::packets_callback, this, std::placeholders::_1));
 
   return Status::OK;
+}
+
+void ContinentalARS548DecoderWrapper::initialize_sync_diagnostics(rclcpp::Node * const parent_node)
+{
+  std::scoped_lock lock(mtx_config_ptr_, mtx_driver_ptr_);
+  if (!config_ptr_->sync_diagnostics_topic) {
+    return;
+  }
+
+  // ARS548 does not document any domain ID settings, so the default domain 0 is hardcoded.
+  // ARS548 is known working with domain 0.
+  sync_tooling_plugin_.emplace(
+    SyncToolingPlugin{
+      std::make_shared<SyncToolingWorker>(
+        parent_node, *config_ptr_->sync_diagnostics_topic, config_ptr_->frame_id, 0),
+      util::RateLimiter(100ms)});
+
+  driver_ptr_->register_sync_status_callback(
+    [this](uint64_t receive_time_ns, uint64_t packet_time_ns, bool sync_ok) {
+      sync_tooling_plugin_->rate_limiter.with_rate_limit(
+        receive_time_ns, [this, receive_time_ns, packet_time_ns, sync_ok]() {
+          int64_t clock_diff =
+            static_cast<int64_t>(receive_time_ns) - static_cast<int64_t>(packet_time_ns);
+
+          sync_tooling_plugin_->worker->submit_self_reported_clock_state(
+            sync_ok ? SelfReportedClockStateUpdate::LOCKED
+                    : SelfReportedClockStateUpdate::UNSYNCHRONIZED);
+
+          sync_tooling_plugin_->worker->submit_clock_diff_measurement(clock_diff);
+        });
+    });
 }
 
 void ContinentalARS548DecoderWrapper::on_config_change(

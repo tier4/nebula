@@ -17,6 +17,8 @@
 #include "nebula_common/hesai/hesai_common.hpp"
 #include "nebula_common/nebula_common.hpp"
 #include "nebula_common/nebula_status.hpp"
+#include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
+#include "nebula_ros/common/sync_tooling/sync_tooling_worker.hpp"
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 #include "nebula_ros/hesai/hw_interface_wrapper.hpp"
 #include "nebula_ros/hesai/hw_monitor_wrapper.hpp"
@@ -37,7 +39,6 @@
 #include <mutex>
 #include <optional>
 #include <string>
-#include <thread>
 #include <vector>
 
 namespace nebula::ros
@@ -49,8 +50,20 @@ class HesaiRosWrapper final : public rclcpp::Node
   using get_calibration_result_t = nebula::util::expected<
     std::shared_ptr<drivers::HesaiCalibrationConfigurationBase>, nebula::Status>;
 
+  struct SyncToolingPlugin
+  {
+    std::shared_ptr<SyncToolingWorker> worker;
+    util::RateLimiter rate_limiter;
+  };
+
 public:
   explicit HesaiRosWrapper(const rclcpp::NodeOptions & options);
+
+  HesaiRosWrapper(const HesaiRosWrapper &) = delete;
+  HesaiRosWrapper & operator=(const HesaiRosWrapper &) = delete;
+  HesaiRosWrapper(HesaiRosWrapper &&) = delete;
+  HesaiRosWrapper & operator=(HesaiRosWrapper &&) = delete;
+
   ~HesaiRosWrapper() noexcept override
   {
     if (!hw_interface_wrapper_) return;
@@ -66,11 +79,15 @@ public:
   Status stream_start();
 
 private:
-  void receive_cloud_packet_callback(const std::vector<uint8_t> & packet);
+  void receive_cloud_packet_callback(
+    const std::vector<uint8_t> & packet,
+    const drivers::connections::UdpSocket::RxMetadata & metadata);
 
   void receive_scan_message_callback(std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg);
 
   Status declare_and_get_sensor_config_params();
+
+  void initialize_sync_tooling(const drivers::HesaiSensorConfiguration & config);
 
   /// @brief rclcpp parameter callback
   /// @param parameters Received parameters
@@ -105,6 +122,8 @@ private:
   rclcpp::Subscription<pandar_msgs::msg::PandarScan>::SharedPtr packets_sub_{};
 
   bool launch_hw_;
+
+  std::optional<SyncToolingPlugin> sync_tooling_plugin_;
 
   std::optional<HesaiHwInterfaceWrapper> hw_interface_wrapper_;
   std::optional<HesaiHwMonitorWrapper> hw_monitor_wrapper_;

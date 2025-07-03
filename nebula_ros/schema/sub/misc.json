@@ -108,6 +108,17 @@
         }
       },
       "additionalProperties": false
+    },
+    "sync_diagnostics": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "topic"
+      ]
     }
   }
 }

@@ -41,12 +41,16 @@ class HesaiDecoderWrapper
 {
 public:
   HesaiDecoderWrapper(
-    rclcpp::Node * const parent_node,
+    rclcpp::Node * parent_node,
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
     const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> & calibration,
     diagnostic_updater::Updater & diagnostic_updater, bool publish_packets);
 
-  void process_cloud_packet(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
+  /// @brief Process a cloud packet and return metadata
+  /// @param packet_msg The packet to process
+  /// @return Expected containing metadata on success, or decode error on failure
+  nebula::util::expected<drivers::PacketMetadata, drivers::DecodeError> process_cloud_packet(
+    std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
   void on_pointcloud_decoded(const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s);
 
