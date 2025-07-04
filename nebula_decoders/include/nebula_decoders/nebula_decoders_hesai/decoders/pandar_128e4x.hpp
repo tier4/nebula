@@ -18,6 +18,8 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_128e3x.hpp"
 
+#include <boost/range/algorithm/count.hpp>
+
 #include <iostream>
 #include <vector>
 
@@ -90,6 +92,18 @@ private:
     -1,    8912,  -1,    2378,  -1,    21980, 15446, -1,    8912,  -1,    -1,    2378,  -1,
     21980, 15446, 8912,  2378,  -1,    -1,    -1,    -1,    15446, 21980, 2378,  8912,  -1,
     -1,    -1,    -1,    21980, 15446, 8912,  2378,  -1,    -1,    -1,    -1};
+
+  static constexpr std::array<bool, 128> near_field_enabled = {
+    true,  true,  true,  true,  false, true,  false, true,  false, false, false, true,  false,
+    false, false, true,  false, false, false, true,  false, false, false, true,  false, false,
+    false, false, false, false, false, true,  false, false, false, false, false, false, true,
+    false, false, false, false, false, false, true,  false, false, false, false, false, false,
+    true,  false, false, false, false, false, false, true,  false, false, false, false, false,
+    false, true,  false, false, false, false, false, false, true,  false, false, false, false,
+    false, true,  false, false, false, false, false, false, false, false, true,  false, false,
+    false, true,  false, false, false, true,  false, false, false, true,  false, false, false,
+    true,  false, false, false, true,  false, false, false, true,  false, false, false, true,
+    false, false, false, true,  false, true,  false, true,  true,  true,  true};
 
 public:
   static constexpr float min_range = 0.1;
@@ -191,6 +205,19 @@ public:
       default:
         return point_filters::BlockageState::NO_BLOCKAGE;
     }
+  }
+
+  /// @brief Check if a channel is near-field enabled
+  /// @param channel_id The channel ID (0-based)
+  /// @return true if the channel is near-field enabled (has 0.3m minimum range)
+  [[nodiscard]] static bool is_near_field(uint16_t channel_id)
+  {
+    return (channel_id < near_field_enabled.size()) && near_field_enabled.at(channel_id);
+  }
+
+  [[nodiscard]] static size_t n_near_field_channels()
+  {
+    return boost::range::count(near_field_enabled, true);
   }
 };
 
