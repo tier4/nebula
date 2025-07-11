@@ -17,6 +17,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 #include "nebula_ros/common/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 #include "nebula_ros/common/diagnostics/rate_bound_status.hpp"
+#include "nebula_ros/common/single_consumer_processor.hpp"
 #include "nebula_ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 #include "nebula_ros/hesai/diagnostics/packet_loss_diagnostic.hpp"
 
@@ -128,8 +129,10 @@ private:
   std::shared_ptr<drivers::HesaiDriver> driver_ptr_;
   std::mutex mtx_driver_ptr_;
 
-  rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr packets_pub_;
   pandar_msgs::msg::PandarScan::UniquePtr current_scan_msg_;
+  rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr packets_pub_;
+  std::optional<SingleConsumerProcessor<pandar_msgs::msg::PandarScan::UniquePtr>>
+    packets_pub_thread_;
 
   NEBULA_PUBLISHER_PTR(sensor_msgs::msg::PointCloud2) nebula_points_pub_;
   NEBULA_PUBLISHER_PTR(sensor_msgs::msg::PointCloud2) aw_points_ex_pub_;
