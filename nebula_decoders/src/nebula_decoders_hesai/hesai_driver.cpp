@@ -28,12 +28,11 @@ namespace nebula::drivers
 HesaiDriver::HesaiDriver(
   const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
   const std::shared_ptr<const HesaiCalibrationConfigurationBase> & calibration_data,
-  const std::shared_ptr<loggers::Logger> & logger,
-  HesaiScanDecoder::pointcloud_callback_t pointcloud_cb,
+  const std::shared_ptr<loggers::Logger> & logger, HesaiScanDecoder::frame_callback_t frame_cb,
   FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
   FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
   FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb,
-  std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin)
+  std::shared_ptr<point_filters::BlockageMaskParams> blockage_mask_plugin)
 : logger_(logger)
 {
   // initialize proper parser from cloud config's model and echo mode
@@ -93,7 +92,7 @@ HesaiDriver::HesaiDriver(
       throw std::runtime_error("Driver not Implemented for selected sensor.");
   }
 
-  scan_decoder_->set_pointcloud_callback(std::move(pointcloud_cb));
+  scan_decoder_->set_frame_callback(std::move(frame_cb));
 }
 
 template <typename SensorT>
@@ -104,7 +103,7 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
   FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
   FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
   FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb,
-  std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin)
+  std::shared_ptr<point_filters::BlockageMaskParams> blockage_mask_plugin)
 {
   auto functional_safety_decoder =
     initialize_functional_safety_decoder<SensorT>(alive_cb, stuck_cb, status_cb);
@@ -136,9 +135,9 @@ Status HesaiDriver::set_calibration_configuration(
     calibration_configuration.calibration_file + ")");
 }
 
-void HesaiDriver::set_pointcloud_callback(HesaiScanDecoder::pointcloud_callback_t pointcloud_cb)
+void HesaiDriver::set_frame_callback(HesaiScanDecoder::frame_callback_t frame_cb)
 {
-  scan_decoder_->set_pointcloud_callback(std::move(pointcloud_cb));
+  scan_decoder_->set_frame_callback(std::move(frame_cb));
 }
 
 Status HesaiDriver::get_status()
