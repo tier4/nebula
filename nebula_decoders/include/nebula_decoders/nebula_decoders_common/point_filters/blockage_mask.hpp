@@ -30,8 +30,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <mutex>
-#include <utility>
 #include <variant>
 #include <vector>
 
@@ -47,8 +45,6 @@ enum class BlockageState : uint8_t {
   /// Neither blockage nor no-blockage can be proven.
   UNSURE = 2,
 };
-
-class BlockageMaskPlugin;
 
 class BlockageMask
 {
@@ -90,6 +86,8 @@ public:
 
   [[nodiscard]] size_t get_height() const { return n_channels_; }
 
+  void clear() { boost::range::fill(mask_, 0); }
+
 private:
   [[nodiscard]] util::expected<size_t, std::monostate> get_bin_index(double azimuth_rad) const
   {
@@ -126,53 +124,17 @@ private:
     return (channel_index.value() * get_width()) + bin_index.value();
   }
 
-  void reset() { boost::range::fill(mask_, 0); }
-
   AngleRange<double, Radians> azimuth_range_rad_;
   double bin_size_rad_;
   uint16_t n_channels_;
 
   std::vector<uint8_t> mask_;
-
-  friend class BlockageMaskPlugin;
 };
 
-class BlockageMaskPlugin
+struct BlockageMaskParams
 {
-public:
-  using callback_t = std::function<void(const BlockageMask & blockage_mask, double timestamp_s)>;
-
-  explicit BlockageMaskPlugin(uint32_t bin_width_mdeg) : bin_width_mdeg_(bin_width_mdeg) {}
-
-  void set_callback(callback_t callback)
-  {
-    std::lock_guard lock(callback_mutex_);
-    callback_ = std::move(callback);
-  }
-
-  /**
-   * @brief Trigger the callback with the completed mask, and reset the mask
-   *
-   * @param mask The mask to pass to the callback and reset
-   */
-  void callback_and_reset(BlockageMask & mask, double timestamp_s)
-  {
-    std::lock_guard lock(callback_mutex_);
-
-    if (callback_) {
-      callback_(mask, timestamp_s);
-    }
-
-    mask.reset();
-  }
-
-  [[nodiscard]] uint32_t get_bin_width_mdeg() const { return bin_width_mdeg_; }
-
-private:
-  uint32_t bin_width_mdeg_;
-
-  std::mutex callback_mutex_;
-  callback_t callback_ RCPPUTILS_TSA_GUARDED_BY(callback_mutex_);
+  explicit BlockageMaskParams(uint32_t bin_width_mdeg) : bin_width_mdeg(bin_width_mdeg) {}
+  uint32_t bin_width_mdeg;
 };
 
 }  // namespace nebula::drivers::point_filters

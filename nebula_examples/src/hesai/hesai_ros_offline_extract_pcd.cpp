@@ -15,6 +15,7 @@
 #include "hesai/hesai_ros_offline_extract_pcd.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp>
 #include <nebula_ros/common/rclcpp_logger.hpp>
 #include <rclcpp/serialization.hpp>
 #include <rosbag2_cpp/converter_options.hpp>
@@ -208,13 +209,13 @@ Status HesaiRosOfflineExtractSample::read_bag()
     std::cout << "Found data in topic " << bag_message->topic_name << ": "
               << bag_message->time_stamp << std::endl;
 
-    drivers::HesaiScanDecoder::pointcloud_callback_t pointcloud_cb =
-      [&](const drivers::NebulaPointCloudPtr & pointcloud, double /* timestamp_s */) {
-        auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
-        writer.writeBinary((o_dir / fn).string(), *pointcloud);
-      };
+    drivers::HesaiScanDecoder::frame_callback_t frame_cb = [&](const drivers::DecodeFrame & frame) {
+      const auto & pointcloud = *frame.pointcloud;
+      auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
+      writer.writeBinary((o_dir / fn).string(), pointcloud);
+    };
 
-    driver_ptr_->set_pointcloud_callback(pointcloud_cb);
+    driver_ptr_->set_frame_callback(frame_cb);
 
     for (auto & pkt : extracted_msg.packets) {
       std::vector<uint8_t> packet_data(pkt.data.begin(), std::next(pkt.data.begin(), pkt.size));

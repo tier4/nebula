@@ -15,6 +15,8 @@
 #ifndef NEBULA_WS_HESAI_SCAN_DECODER_HPP
 #define NEBULA_WS_HESAI_SCAN_DECODER_HPP
 
+#include "nebula_decoders/nebula_decoders_common/point_filters/blockage_mask.hpp"
+
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/point_types.hpp>
 #include <nebula_common/util/expected.hpp>
@@ -40,12 +42,18 @@ struct PacketMetadata
   uint32_t last_azimuth;
 };
 
+struct DecodeFrame
+{
+  uint64_t timestamp_ns{0};
+  NebulaPointCloudPtr pointcloud;
+  std::optional<point_filters::BlockageMask> blockage_mask;
+};
+
 /// @brief Base class for Hesai LiDAR decoder
 class HesaiScanDecoder
 {
 public:
-  using pointcloud_callback_t =
-    std::function<void(const NebulaPointCloudPtr & pointcloud, double timestamp_s)>;
+  using frame_callback_t = std::function<void(const DecodeFrame & pointcloud)>;
 
   HesaiScanDecoder(HesaiScanDecoder && c) = delete;
   HesaiScanDecoder & operator=(HesaiScanDecoder && c) = delete;
@@ -61,7 +69,7 @@ public:
   virtual nebula::util::expected<PacketMetadata, DecodeError> unpack(
     const std::vector<uint8_t> & packet) = 0;
 
-  virtual void set_pointcloud_callback(pointcloud_callback_t callback) = 0;
+  virtual void set_frame_callback(frame_callback_t callback) = 0;
 };
 }  // namespace nebula::drivers
 

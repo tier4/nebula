@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 #include "nebula_ros/common/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 #include "nebula_ros/common/diagnostics/rate_bound_status.hpp"
@@ -52,7 +53,7 @@ public:
   nebula::util::expected<drivers::PacketMetadata, drivers::DecodeError> process_cloud_packet(
     std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
 
-  void on_pointcloud_decoded(const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s);
+  void on_frame_decoded(const drivers::DecodeFrame & frame);
 
   void on_config_change(
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config);
@@ -71,7 +72,7 @@ private:
   /// @brief Convert seconds to chrono::nanoseconds
   /// @param seconds
   /// @return chrono::nanoseconds
-  static inline std::chrono::nanoseconds seconds_to_chrono_nano_seconds(const double seconds)
+  static std::chrono::nanoseconds seconds_to_chrono_nano_seconds(const double seconds)
   {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::duration<double>(seconds));
@@ -110,7 +111,7 @@ private:
   void initialize_packet_loss_diagnostic(diagnostic_updater::Updater & diagnostic_updater);
 
   std::pair<
-    std::shared_ptr<drivers::point_filters::BlockageMaskPlugin>,
+    std::shared_ptr<drivers::point_filters::BlockageMaskParams>,
     NEBULA_PUBLISHER_PTR(sensor_msgs::msg::Image)>
   initialize_blockage_mask_plugin();
 

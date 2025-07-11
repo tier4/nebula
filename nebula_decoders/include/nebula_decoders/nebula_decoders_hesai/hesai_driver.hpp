@@ -54,7 +54,7 @@ private:
     FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
     FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
     FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb,
-    std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin = nullptr);
+    std::shared_ptr<point_filters::BlockageMaskParams> blockage_mask_params = nullptr);
 
   template <typename SensorT>
   std::enable_if_t<
@@ -115,13 +115,12 @@ public:
     const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
       calibration_configuration,
-    const std::shared_ptr<loggers::Logger> & logger,
-    HesaiScanDecoder::pointcloud_callback_t pointcloud_cb,
+    const std::shared_ptr<loggers::Logger> & logger, HesaiScanDecoder::frame_callback_t frame_cb,
     FunctionalSafetyDecoderBase::alive_cb_t alive_cb = nullptr,
     FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb = nullptr,
     FunctionalSafetyDecoderBase::status_cb_t status_cb = nullptr,
     PacketLossDetectorBase::lost_cb_t lost_cb = nullptr,
-    std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin = nullptr);
+    std::shared_ptr<point_filters::BlockageMaskParams> blockage_mask_params = nullptr);
 
   /// @brief Get current status of this driver
   /// @return Current status
@@ -133,7 +132,7 @@ public:
   Status set_calibration_configuration(
     const HesaiCalibrationConfigurationBase & calibration_configuration);
 
-  void set_pointcloud_callback(HesaiScanDecoder::pointcloud_callback_t pointcloud_cb);
+  void set_frame_callback(HesaiScanDecoder::frame_callback_t frame_cb);
 
   /// @brief Decode a pointcloud packet. If a pointcloud is produced, `pointcloud_cb` is called.
   /// @param packet Packet to decode
