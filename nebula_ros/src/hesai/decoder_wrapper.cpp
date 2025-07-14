@@ -110,7 +110,10 @@ nebula::util::expected<drivers::PacketMetadata, drivers::DecodeError>
 HesaiDecoderWrapper::process_cloud_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
-  // Accumulate packets for recording only if someone is subscribed to the topic (for performance)
+  // Ideally, we would only accumulate packets if someone is subscribed to the packets topic.
+  // However, checking for subscriptions in the decode thread (here) causes contention with the
+  // publish thread, negating the benefits of multi-threading.
+  // Not checking is an okay trade-off for the time being.
   if (packets_pub_) {
     if (current_scan_msg_->packets.size() == 0) {
       current_scan_msg_->header.stamp = packet_msg->stamp;
