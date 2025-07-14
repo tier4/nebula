@@ -105,7 +105,7 @@ public:
   void stop()
   {
     {
-      std::lock_guard<std::mutex> lock(queue_mutex_);
+      std::lock_guard lock(queue_mutex_);
       should_stop_ = true;
     }
 
@@ -115,6 +115,14 @@ public:
     if (consumer_thread_.joinable()) {
       consumer_thread_.join();
     }
+  }
+
+  /// @brief Check if the processor is in stopping state
+  /// @return True if stop() has been called, false otherwise
+  bool is_stopping() const
+  {
+    std::lock_guard lock(queue_mutex_);
+    return should_stop_;
   }
 
 private:
@@ -152,7 +160,7 @@ private:
   callback_t callback_;
   std::thread consumer_thread_;
 
-  std::mutex queue_mutex_;
+  mutable std::mutex queue_mutex_;
   std::condition_variable cv_can_pop_;
   std::condition_variable cv_can_push_;
 
