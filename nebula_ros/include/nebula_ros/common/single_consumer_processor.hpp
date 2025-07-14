@@ -82,11 +82,7 @@ public:
   /// @return True if the item was added, false if the queue is full
   bool try_push(T && item)
   {
-    std::unique_lock<std::mutex> lock(queue_mutex_, std::try_to_lock);
-
-    if (!lock.owns_lock()) {
-      return false;
-    }
+    std::unique_lock lock(queue_mutex_);
 
     if (should_stop_) {
       return false;
