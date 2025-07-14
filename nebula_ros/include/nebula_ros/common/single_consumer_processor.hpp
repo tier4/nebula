@@ -52,11 +52,7 @@ public:
   }
 
   /// @brief Destructor - stops the processing thread
-  ~SingleConsumerProcessor()
-  {
-    stop();
-    consumer_thread_.join();
-  }
+  ~SingleConsumerProcessor() { stop(); }
 
   // Delete copy and move constructors/operators to prevent accidental copying
   SingleConsumerProcessor(const SingleConsumerProcessor &) = delete;
@@ -114,7 +110,8 @@ public:
       should_stop_ = true;
     }
 
-    cv_can_pop_.notify_one();
+    cv_can_pop_.notify_all();
+    cv_can_push_.notify_all();
 
     if (consumer_thread_.joinable()) {
       consumer_thread_.join();
