@@ -117,9 +117,10 @@ public:
 private:
   void consumer_loop()
   {
-    while (true) {
-      std::unique_lock<std::mutex> lock(queue_mutex_);
+    std::unique_lock lock(queue_mutex_, std::defer_lock);
 
+    while (true) {
+      lock.lock();
       // Wait for an item to be available or for stop signal
       cv_can_pop_.wait(lock, [this] { return !queue_.empty() || should_stop_; });
 
@@ -131,6 +132,16 @@ private:
       queue_.pop();
       lock.unlock();
       cv_can_push_.notify_one();
+      callback_(std::move(item));
+    }
+
+    assert(lock.owns_lock());
+
+    // Process the remaining items when stopping.
+    // No need to unlock as the consumer
+    while (!queue_.empty()) {
+      T item = std::move(queue_.front());
+      queue_.pop();
       callback_(std::move(item));
     }
   }
