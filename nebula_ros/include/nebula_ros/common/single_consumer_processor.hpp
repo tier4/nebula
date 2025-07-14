@@ -14,6 +14,9 @@
 
 #pragma once
 
+#include <rcpputils/thread_safety_annotations.hpp>
+
+#include <cassert>
 #include <condition_variable>
 #include <functional>
 #include <mutex>
@@ -153,9 +156,10 @@ private:
   std::condition_variable cv_can_pop_;
   std::condition_variable cv_can_push_;
 
-  std::queue<T> queue_{};
   size_t max_queue_size_;
-  bool should_stop_{false};
+  std::queue<T> queue_ {}
+  RCPPUTILS_TSA_GUARDED_BY(queue_mutex_);
+  bool should_stop_{false} RCPPUTILS_TSA_GUARDED_BY(queue_mutex_);
 };
 
 }  // namespace nebula::ros
