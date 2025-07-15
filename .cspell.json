@@ -48,6 +48,7 @@
     "piyushk",
     "QT",
     "rclcpp",
+    "RCPPUTILS",
     "schedutil",
     "srvs",
     "STD_COUT",

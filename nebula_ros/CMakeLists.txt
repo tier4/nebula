@@ -251,8 +251,21 @@ install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     find_package(ros_testing REQUIRED)
+    find_package(ament_cmake_gtest REQUIRED)
+    find_package(rcpputils REQUIRED)
 
     ament_lint_auto_find_test_dependencies()
+
+    # Unit tests
+    ament_add_gtest(test_single_consumer_processor
+        test/test_single_consumer_processor.cpp
+    )
+    target_include_directories(test_single_consumer_processor
+        PRIVATE
+        include
+        SYSTEM
+        ${rcpputils_INCLUDE_DIRS}
+    )
 
     foreach(MODEL Pandar40P Pandar64 PandarQT64 PandarQT128 Pandar128E4X PandarAT128 PandarXT16 PandarXT32 PandarXT32M ARS548 SRR520 VLP16 VLP32 VLS128 Helios Bpearl)
         string(TOLOWER ${MODEL}_smoke_test test_name)
