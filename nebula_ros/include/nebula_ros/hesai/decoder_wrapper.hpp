@@ -16,6 +16,7 @@
 
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 #include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
+#include "nebula_ros/common/single_consumer_processor.hpp"
 #include "nebula_ros/common/watchdog_timer.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
@@ -76,6 +77,8 @@ private:
 
   rclcpp::Publisher<pandar_msgs::msg::PandarScan>::SharedPtr packets_pub_{};
   pandar_msgs::msg::PandarScan::UniquePtr current_scan_msg_{};
+  std::optional<SingleConsumerProcessor<pandar_msgs::msg::PandarScan::UniquePtr> >
+    packets_pub_thread_;
 
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr nebula_points_pub_{};
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr aw_points_ex_pub_{};
