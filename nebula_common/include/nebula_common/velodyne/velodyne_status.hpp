@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef VELODYNE_STATUS_HPP
-#define VELODYNE_STATUS_HPP
+#ifndef NEBULA_COMMON__VELODYNE__VELODYNE_STATUS_HPP_
+#define NEBULA_COMMON__VELODYNE__VELODYNE_STATUS_HPP_
 
 #include "nebula_common/nebula_status.hpp"
 
@@ -126,4 +126,4 @@ public:
   }
 };
 }  // namespace nebula
-#endif  // VELODYNE_STATUS_HPP
+#endif  // NEBULA_COMMON__VELODYNE__VELODYNE_STATUS_HPP_
