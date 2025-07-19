@@ -131,14 +131,12 @@ Status ContinentalARS548DecoderWrapper::initialize_driver(
   driver_ptr_.reset();
   driver_ptr_ = std::make_shared<drivers::continental_ars548::ContinentalARS548Decoder>(config);
 
-  driver_ptr_->register_detection_list_callback(
-    std::bind(
-      &ContinentalARS548DecoderWrapper::detection_list_callback, this, std::placeholders::_1));
+  driver_ptr_->register_detection_list_callback(std::bind(
+    &ContinentalARS548DecoderWrapper::detection_list_callback, this, std::placeholders::_1));
   driver_ptr_->register_object_list_callback(
     std::bind(&ContinentalARS548DecoderWrapper::object_list_callback, this, std::placeholders::_1));
-  driver_ptr_->register_sensor_status_callback(
-    std::bind(
-      &ContinentalARS548DecoderWrapper::sensor_status_callback, this, std::placeholders::_1));
+  driver_ptr_->register_sensor_status_callback(std::bind(
+    &ContinentalARS548DecoderWrapper::sensor_status_callback, this, std::placeholders::_1));
   driver_ptr_->register_packets_callback(
     std::bind(&ContinentalARS548DecoderWrapper::packets_callback, this, std::placeholders::_1));
 
@@ -154,11 +152,10 @@ void ContinentalARS548DecoderWrapper::initialize_sync_diagnostics(rclcpp::Node *
 
   // ARS548 does not document any domain ID settings, so the default domain 0 is hardcoded.
   // ARS548 is known working with domain 0.
-  sync_tooling_plugin_.emplace(
-    SyncToolingPlugin{
-      std::make_shared<SyncToolingWorker>(
-        parent_node, *config_ptr_->sync_diagnostics_topic, config_ptr_->frame_id, 0),
-      util::RateLimiter(100ms)});
+  sync_tooling_plugin_.emplace(SyncToolingPlugin{
+    std::make_shared<SyncToolingWorker>(
+      parent_node, *config_ptr_->sync_diagnostics_topic, config_ptr_->frame_id, 0),
+    util::RateLimiter(100ms)});
 
   driver_ptr_->register_sync_status_callback(
     [this](uint64_t receive_time_ns, uint64_t packet_time_ns, bool sync_ok) {
