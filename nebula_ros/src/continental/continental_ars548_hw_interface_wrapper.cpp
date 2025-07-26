@@ -31,9 +31,8 @@ ContinentalARS548HwInterfaceWrapper::ContinentalARS548HwInterfaceWrapper(
   std::shared_ptr<const nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration> &
     config_ptr)
 : parent_node_(parent_node),
-  hw_interface_(
-    std::make_shared<drivers::continental_ars548::ContinentalARS548HwInterface>(
-      drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"))),
+  hw_interface_(std::make_shared<drivers::continental_ars548::ContinentalARS548HwInterface>(
+    drivers::loggers::RclcppLogger(parent_node->get_logger()).child("HwInterface"))),
   logger_(parent_node->get_logger().get_child("HwInterfaceWrapper")),
   status_(Status::NOT_INITIALIZED),
   config_ptr_(config_ptr),
