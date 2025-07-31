@@ -365,6 +365,29 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
 
   diagnostic_array_msg.status = {blockage_diagnostic_status};
   diagnostics_pub_->publish(diagnostic_array_msg);
+
+  // Configuration status
+  diagnostic_msgs::msg::DiagnosticStatus configuration_status;
+
+  add_diagnostic(configuration_status, "Plug orientation", sensor_status.plug_orientation);
+  add_diagnostic(configuration_status, "Length", std::to_string(sensor_status.length));
+  add_diagnostic(configuration_status, "Width", std::to_string(sensor_status.width));
+  add_diagnostic(configuration_status, "Height", std::to_string(sensor_status.height));
+  add_diagnostic(configuration_status, "Wheelbase", std::to_string(sensor_status.wheel_base));
+  add_diagnostic(configuration_status, "Max distance", std::to_string(sensor_status.max_distance));
+  add_diagnostic(configuration_status, "Frequency slot", sensor_status.frequency_slot);
+  add_diagnostic(configuration_status, "Cycle time", std::to_string(sensor_status.cycle_time));
+  add_diagnostic(configuration_status, "Time slot", std::to_string(sensor_status.time_slot));
+  add_diagnostic(configuration_status, "HCC", sensor_status.hcc);
+  add_diagnostic(configuration_status, "Power save standstill", sensor_status.power_save_standstill);
+  configuration_status.hardware_id = config_ptr_->frame_id;
+  configuration_status.name =
+    std::string(parent_node_->get_fully_qualified_name()) + ": Configuration";
+  configuration_status.level =
+    diagnostic_msgs::msg::DiagnosticStatus::OK;  // Configuration is always OK
+
+  diagnostic_array_msg.status = {configuration_status};
+  diagnostics_pub_->publish(diagnostic_array_msg);
 }
 
 void ContinentalARS548DecoderWrapper::packets_callback(
