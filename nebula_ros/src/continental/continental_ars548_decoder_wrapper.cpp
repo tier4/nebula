@@ -384,8 +384,8 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
   configuration_status.hardware_id = config_ptr_->frame_id;
   configuration_status.name =
     std::string(parent_node_->get_fully_qualified_name()) + ": Configuration";
-  configuration_status.level =
-    diagnostic_msgs::msg::DiagnosticStatus::OK;  // Configuration is always OK
+  configuration_status.message = "ARS548 configuration status";
+  configuration_status.level = sensor_status.configuration_diagnostics_status;
 
   diagnostic_array_msg.status = {configuration_status};
   diagnostics_pub_->publish(diagnostic_array_msg);

@@ -146,6 +146,7 @@ struct ContinentalARS548Status
   u_char dynamics_diagnostics_status{};
   u_char internal_diagnostics_status{};
   u_char blockage_diagnostics_status{};
+  u_char configuration_diagnostics_status{};
 
   ContinentalARS548Status() {}
 
