@@ -726,6 +726,14 @@ bool ContinentalARS548Decoder::parse_sensor_status_packet(
       break;
   }
 
+  radar_status_.configuration_diagnostics_status = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  if (
+    radar_status_.length <= 0.0 || radar_status_.width <= 0.0 || radar_status_.height <= 0.0 ||
+    radar_status_.wheel_base <= 0.0 || radar_status_.max_distance == 0 ||
+    radar_status_.cycle_time == 0 || radar_status_.time_slot == 0) {
+    radar_status_.configuration_diagnostics_status = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+  }
+
   radar_status_.status_total_count++;
   radar_status_.radar_invalid_count += sensor_status_packet.radar_status == 2 ? 1 : 0;
 
