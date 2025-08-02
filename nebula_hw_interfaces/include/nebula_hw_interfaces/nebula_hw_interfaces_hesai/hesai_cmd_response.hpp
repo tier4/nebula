@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HESAI_CMD_RESPONSE_HPP
-#define HESAI_CMD_RESPONSE_HPP
+#ifndef NEBULA_HW_INTERFACES__NEBULA_HW_INTERFACES_HESAI__HESAI_CMD_RESPONSE_HPP_
+#define NEBULA_HW_INTERFACES__NEBULA_HW_INTERFACES_HESAI__HESAI_CMD_RESPONSE_HPP_
 
 #include <nebula_common/util/string_conversions.hpp>
 #include <nlohmann/json.hpp>
@@ -931,4 +931,4 @@ inline std::ostream & operator<<(std::ostream & os, const HesaiLidarMonitor & ar
 #pragma pack(pop)
 
 }  // namespace nebula
-#endif  // HESAI_CMD_RESPONSE_HPP
+#endif  // NEBULA_HW_INTERFACES__NEBULA_HW_INTERFACES_HESAI__HESAI_CMD_RESPONSE_HPP_
