@@ -134,7 +134,10 @@ private:
 
   [[nodiscard]] bool is_overdue(uint64_t timestamp_ns) const
   {
-    return (timestamp_ns - last_changed_timestamp_ns_) >= functional_safety_t::update_cycle_ns * 2;
+    // While the data shall change every N ms, in non-360 deg FoVs, there is a phase where no
+    // packets are sent by the sensor. To comply with any FoV, we have to allow for 100 ms (assuming
+    // a 10 Hz scan rate) before  reporting the system as stuck.
+    return (timestamp_ns - last_changed_timestamp_ns_) >= 100'000'000;
   }
 
   std::optional<FunctionalSafetyErrorCodes> try_accumulate_error_codes(
