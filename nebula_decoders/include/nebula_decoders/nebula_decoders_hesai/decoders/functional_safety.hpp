@@ -33,7 +33,7 @@ class FunctionalSafetyDecoderBase
 {
 public:
   using alive_cb_t = std::function<void()>;
-  using stuck_cb_t = std::function<void()>;
+  using stuck_cb_t = std::function<void(bool is_stuck)>;
   using status_cb_t = std::function<void(FunctionalSafetySeverity, FunctionalSafetyErrorCodes)>;
 
   virtual ~FunctionalSafetyDecoderBase() = default;
@@ -85,11 +85,10 @@ public:
     // but it only changes at a fixed rate e.g. every 5 ms.
     bool changed = has_changed(fs);
 
-    // Data not changing at that fixed rate signals the sensor's fault reporting system being
-    // stuck.
-    if (!changed && is_overdue(timestamp_ns)) {
-      if (on_stuck_) on_stuck_();
-      return;
+    // Data not changing at that fixed rate signals the sensor's fault reporting system being stuck.
+    bool is_stuck = !changed && is_overdue(timestamp_ns);
+    if (on_stuck_) {
+      on_stuck_(is_stuck);
     }
 
     // If there is no update, the data is ignored.

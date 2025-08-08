@@ -255,7 +255,7 @@ std::shared_ptr<drivers::HesaiDriver> HesaiDecoderWrapper::initialize_driver(
 
   if (functional_safety_diagnostic_) {
     alive_cb = [this]() { functional_safety_diagnostic_->on_alive(); };
-    stuck_cb = [this]() { functional_safety_diagnostic_->on_stuck(); };
+    stuck_cb = [this](bool is_stuck) { functional_safety_diagnostic_->on_stuck(is_stuck); };
     status_cb = [this](
                   drivers::FunctionalSafetySeverity severity,
                   const drivers::FunctionalSafetyErrorCodes & codes) {
