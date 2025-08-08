@@ -25,7 +25,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include <string>
-#include <utility>
 
 namespace nebula::ros
 {
@@ -48,6 +47,10 @@ inline uint8_t severity_to_diagnostic_status_level(drivers::FunctionalSafetySeve
 
 inline std::string error_codes_to_string(const drivers::FunctionalSafetyErrorCodes & error_codes)
 {
+  if (error_codes.empty()) {
+    return "No error codes";
+  }
+
   std::stringstream ss;
   for (auto it = error_codes.begin(); it != error_codes.end(); ++it) {
     if (it != error_codes.begin()) {
