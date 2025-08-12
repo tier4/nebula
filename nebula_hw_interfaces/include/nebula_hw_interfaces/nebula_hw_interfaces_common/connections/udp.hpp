@@ -317,10 +317,18 @@ public:
     SocketConfig config_;
   };
 
+  struct PerfCounters
+  {
+    uint64_t receive_duration_ns_{0};
+    uint64_t woken_without_data_{0};
+    uint64_t woken_by_wrong_receiver_{0};
+  };
+
   struct RxMetadata
   {
     std::optional<uint64_t> timestamp_ns;
     uint64_t drops_since_last_receive{0};
+    PerfCounters packet_perf_counters_{};
     bool truncated;
   };
 
@@ -404,8 +412,15 @@ private:
       std::vector<uint8_t> buffer;
       while (running_) {
         auto data_available = is_data_available();
+
+        auto t_start = std::chrono::steady_clock::now();
         if (!data_available.has_value()) throw SocketError(data_available.error());
-        if (!data_available.value()) continue;
+        if (!data_available.value()) {
+          perf_counters_.woken_without_data_++;
+          perf_counters_.receive_duration_ns_ +=
+            (std::chrono::steady_clock::now() - t_start).count();
+          continue;
+        }
 
         buffer.resize(config_.buffer_size);
         MsgBuffers msg_header{buffer};
@@ -416,13 +431,24 @@ private:
         if (recv_result < 0) throw SocketError(errno);
         size_t untruncated_packet_length = recv_result;
 
-        if (!is_accepted_sender(msg_header.sender_addr)) continue;
+        if (!is_accepted_sender(msg_header.sender_addr)) {
+          perf_counters_.woken_by_wrong_receiver_++;
+          perf_counters_.receive_duration_ns_ +=
+            (std::chrono::steady_clock::now() - t_start).count();
+          continue;
+        }
 
         RxMetadata metadata;
         get_receive_metadata(msg_header.msg, metadata);
         metadata.truncated = untruncated_packet_length > config_.buffer_size;
 
         buffer.resize(std::min(config_.buffer_size, untruncated_packet_length));
+
+        perf_counters_.receive_duration_ns_ += (std::chrono::steady_clock::now() - t_start).count();
+
+        metadata.packet_perf_counters_ = perf_counters_;
+        perf_counters_ = {};
+
         callback_(buffer, metadata);
       }
     });
@@ -473,6 +499,8 @@ private:
   std::atomic_bool running_{false};
   std::thread receive_thread_;
   callback_t callback_;
+
+  PerfCounters perf_counters_{};
 
   DropMonitor drop_monitor_;
 };
