@@ -14,8 +14,6 @@
 
 #pragma once
 
-#include <nebula_common/util/crc.hpp>
-
 #include <cstddef>
 #include <cstdint>
 #include <ctime>
@@ -177,11 +175,6 @@ struct BodyWithCrc : public Body<BlockT, BlockN>
 {
   using Body<BlockT, BlockN>::blocks;
   uint32_t crc_body;
-
-  [[nodiscard]] bool is_crc_valid() const
-  {
-    return crc<crc32_mpeg2_t>(&blocks, &crc_body) == crc_body;
-  }
 };
 
 /// @brief Base struct for all Hesai packets. This struct is not allowed to have any non-static
@@ -246,43 +239,6 @@ double get_dis_unit(const PacketT & packet)
 {
   // Packets define distance unit in millimeters, convert to meters here
   return packet.header.dis_unit / 1000.;
-}
-
-// Helper trait to determine if a given struct has a CRC check
-template <typename T, typename = void>
-struct HasCrcCheck : std::false_type
-{
-};
-
-template <typename T>
-struct HasCrcCheck<T, std::void_t<decltype(std::declval<T>().is_crc_valid())>> : std::true_type
-{
-};
-
-/**
- * @brief Invoke `payload.is_crc_valid()` and return its result.
- *
- * @tparam PayloadT Any type that has a `bool is_crc_valid()` member function
- * @param payload The instance to check the CRC of
- * @return std::enable_if_t<HasCrcCheck<PayloadT>::value, bool> `true` if the CRC is valid,
- *   `false` otherwise
- */
-template <typename PayloadT>
-std::enable_if_t<HasCrcCheck<PayloadT>::value, bool> is_crc_valid(const PayloadT & payload)
-{
-  return payload.is_crc_valid();
-}
-
-/**
- * @brief Provide a dummy CRC check for types that do not provide a `is_crc_valid()` function.
- *
- * @tparam PayloadT A type that has no member function `is_crc_valid()`
- * @return std::enable_if_t<!HasCrcCheck<PayloadT>::value, bool> Always returns true
- */
-template <typename PayloadT>
-std::enable_if_t<!HasCrcCheck<PayloadT>::value, bool> is_crc_valid(const PayloadT & /* payload */)
-{
-  return true;
 }
 
 // Helper trait to determine if a given struct has a functional safety part

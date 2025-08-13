@@ -366,10 +366,9 @@ public:
       functional_safety_decoder_->update(packet_);
     }
 
-    // Note that not all packet formats have CRC. In those cases, these checks always succeed.
-    if (!hesai_packet::is_crc_valid(packet_.body) || !hesai_packet::is_crc_valid(packet_.tail)) {
-      return {DecodeError::CRC_CHECK_FAILED};
-    }
+    // FYI: This is where the CRC would be checked. Since this caused performance issues in the
+    // past, and since the frame check sequence of the packet is already checked by the NIC, we skip
+    // it here.
 
     // This is the first scan, set scan timestamp to whatever packet arrived first
     if (decode_frame_.scan_timestamp_ns == 0) {

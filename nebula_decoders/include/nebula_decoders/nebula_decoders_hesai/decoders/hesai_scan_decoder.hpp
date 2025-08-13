@@ -26,7 +26,6 @@ namespace nebula::drivers
 /// @brief Errors that can occur during packet decoding
 enum class DecodeError : uint8_t {
   PACKET_PARSE_FAILED,  ///< Failed to parse packet structure
-  CRC_CHECK_FAILED,     ///< CRC validation failed
   DRIVER_NOT_OK,        ///< Driver status is not OK
   INVALID_PACKET_SIZE,  ///< Packet size is invalid
 };

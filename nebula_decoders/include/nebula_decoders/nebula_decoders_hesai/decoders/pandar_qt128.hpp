@@ -19,7 +19,6 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
 #include <nebula_common/util/bitfield.hpp>
-#include <nebula_common/util/crc.hpp>
 
 namespace nebula::drivers
 {
@@ -41,8 +40,6 @@ struct TailQT128C2X
   uint8_t factory_information;
   uint32_t udp_sequence;
   uint32_t crc_tail;
-
-  [[nodiscard]] bool valid() const { return crc<crc32_mpeg2_t>(&reserved1, &crc_tail) == crc_tail; }
 };
 
 struct FunctionalSafetyQT128C2X
@@ -77,12 +74,6 @@ struct FunctionalSafetyQT128C2X
   uint16_t fault_code;
   uint8_t reserved1[8];
   uint32_t crc_fs;
-
-  [[nodiscard]] bool valid() const
-  {
-    // fs_version is not included in the CRC check
-    return crc<crc32_mpeg2_t>(&fs_version + 1, &crc_fs) == crc_fs;
-  }
 
   [[nodiscard]] FunctionalSafetySeverity severity() const
   {
