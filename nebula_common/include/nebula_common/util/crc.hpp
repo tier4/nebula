@@ -16,8 +16,6 @@
 
 #include <boost/crc.hpp>
 
-#include <cstdint>
-
 namespace nebula::drivers
 {
 
@@ -33,13 +31,6 @@ using crc16_ccit_false_t = boost::crc_ccitt_false_t;
 /// |         8 |       0x2F |          0xFF |      0xFF |      false |             false |
 using crc8h2f_t = boost::crc_optimal<8, 0x2F, 0xFF, 0xFF, false, false>;
 
-/// @brief CRC-32/MPEG-2 algorithm
-///
-/// | Bit Width | Polynomial | Initial Value |  Final XOR | Reflect In | Reflect Remainder |
-/// |----------:|-----------:|--------------:|-----------:|-----------:|------------------:|
-/// |        32 | 0x04C11DB7 |   0xFFFFFFFF  | 0x00000000 |      false |             false |
-using crc32_mpeg2_t = boost::crc_optimal<32, 0x04C11DB7, 0xFFFFFFFF, 0x0, false, false>;
-
 /**
  * @brief Given a memory range, calculates the CRC over its bytes.
  *
@@ -54,7 +45,7 @@ using crc32_mpeg2_t = boost::crc_optimal<32, 0x04C11DB7, 0xFFFFFFFF, 0x0, false,
  *   uint32_t crc;
  *
  *   bool is_crc_valid() const {
- *     return crc<crc32_mpeg_t>(&a, &crc) == crc;
+ *     return crc<crc8h2f_t>(&a, &crc) == crc;
  *   }
  * };
  * ```

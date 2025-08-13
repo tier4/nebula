@@ -19,7 +19,6 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
 #include <nebula_common/util/bitfield.hpp>
-#include <nebula_common/util/crc.hpp>
 
 #include <cstdint>
 #include <iostream>
@@ -69,11 +68,6 @@ struct Tail128E3X
   {
     return (azimuth_state >> (14 - block_id * 2)) & 0b11;
   }
-
-  [[nodiscard]] bool is_crc_valid() const
-  {
-    return crc<crc32_mpeg2_t>(&reserved1, &crc_tail) == crc_tail;
-  }
 };
 
 struct ChannelHealth128E3X
@@ -118,15 +112,6 @@ struct FunctionalSafety128E3X
   uint16_t fault_code;
   ChannelHealth128E3X channel_health;
   uint32_t crc_fs;
-
-  [[nodiscard]] bool is_crc_valid() const
-  {
-    // FIXME(mojomex): OT128's CRC is broken, at least in B and C samples. Disable for now.
-    return true;
-
-    // fs_version is not included in the CRC check
-    // return crc<crc32_mpeg2_t>(&bitfield1, &crc_fs) == crc_fs;
-  }
 
   [[nodiscard]] FunctionalSafetySeverity severity() const
   {

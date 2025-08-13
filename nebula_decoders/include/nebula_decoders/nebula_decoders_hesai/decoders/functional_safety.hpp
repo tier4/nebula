@@ -77,8 +77,9 @@ public:
     // This has nothing to do with the validity of the data we are receiving.
     if (on_alive_) on_alive_();
 
-    // A corrupted packet is not an error and shall simply be ignored.
-    if (!hesai_packet::is_crc_valid(fs)) return;
+    // FYI: This is where the CRC would be checked. Since this caused performance issues in the
+    // past, and since the frame check sequence of the packet is already checked by the NIC, we skip
+    // it here.
 
     // The sensor sends functional safety data with every packet,
     // but it only changes at a fixed rate e.g. every 5 ms.
