@@ -17,6 +17,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32m.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <tuple>
 #include <type_traits>
@@ -106,8 +107,9 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
   FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb,
   std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin)
 {
+  uint16_t sensor_rpm = sensor_configuration->rotation_speed;
   auto functional_safety_decoder =
-    initialize_functional_safety_decoder<SensorT>(alive_cb, stuck_cb, status_cb);
+    initialize_functional_safety_decoder<SensorT>(alive_cb, stuck_cb, status_cb, sensor_rpm);
   auto packet_loss_detector = initialize_packet_loss_detector<SensorT>(lost_cb);
 
   using CalibT = typename SensorT::angle_corrector_t::correction_data_t;
