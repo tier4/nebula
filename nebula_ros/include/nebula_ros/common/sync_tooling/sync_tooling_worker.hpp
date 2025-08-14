@@ -82,6 +82,15 @@ public:
     send_proto(gu);
   }
 
+  void submit_sensor_clock_time_snapshot(uint64_t timestamp_ns)
+  {
+    GraphUpdate gu;
+    ClockTimeSnapshot * u = gu.mutable_clock_time_snapshot();
+    u->mutable_clock()->CopyFrom(sensor_id_);
+    u->set_time_ns(timestamp_ns);
+    send_proto(gu);
+  }
+
   void submit_clock_diff_measurement(int64_t diff_ns)
   {
     GraphUpdate gu;
