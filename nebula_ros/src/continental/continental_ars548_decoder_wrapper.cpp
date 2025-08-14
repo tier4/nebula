@@ -172,6 +172,7 @@ void ContinentalARS548DecoderWrapper::initialize_sync_diagnostics(rclcpp::Node *
                     : SelfReportedClockStateUpdate::UNSYNCHRONIZED);
 
           sync_tooling_plugin_->worker->submit_clock_diff_measurement(clock_diff);
+          sync_tooling_plugin_->worker->submit_sensor_clock_time_snapshot(packet_time_ns);
         });
     });
 }

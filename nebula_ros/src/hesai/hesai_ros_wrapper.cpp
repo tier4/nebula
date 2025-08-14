@@ -532,9 +532,11 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
   if (decode_result.has_value() && sync_tooling_plugin_ && metadata.timestamp_ns) {
     sync_tooling_plugin_->rate_limiter.with_rate_limit(
       *metadata.timestamp_ns, [this, &decode_result, &metadata]() {
-        int64_t clock_diff = static_cast<int64_t>(*metadata.timestamp_ns) -
-                             static_cast<int64_t>(decode_result.value().packet_timestamp_ns);
+        uint64_t packet_time_ns = decode_result.value().packet_timestamp_ns;
+        int64_t clock_diff =
+          static_cast<int64_t>(*metadata.timestamp_ns) - static_cast<int64_t>(packet_time_ns);
         sync_tooling_plugin_->worker->submit_clock_diff_measurement(clock_diff);
+        sync_tooling_plugin_->worker->submit_sensor_clock_time_snapshot(packet_time_ns);
       });
   }
 }
