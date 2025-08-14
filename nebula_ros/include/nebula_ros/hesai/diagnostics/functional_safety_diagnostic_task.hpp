@@ -25,7 +25,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include <string>
-#include <utility>
 
 namespace nebula::ros
 {
@@ -48,6 +47,10 @@ inline uint8_t severity_to_diagnostic_status_level(drivers::FunctionalSafetySeve
 
 inline std::string error_codes_to_string(const drivers::FunctionalSafetyErrorCodes & error_codes)
 {
+  if (error_codes.empty()) {
+    return "No error codes";
+  }
+
   std::stringstream ss;
   for (auto it = error_codes.begin(); it != error_codes.end(); ++it) {
     if (it != error_codes.begin()) {
@@ -95,10 +98,12 @@ public:
   explicit FunctionalSafetyDiagnosticTask(rclcpp::Node * const parent_node)
   : CompositeDiagnosticTask("Functional safety status"),
     liveness_monitor_("Liveness", parent_node, 100ms),
-    severity_latch_("Status")
+    status_latch_("Status"),
+    stuck_latch_("Sensor functional safety system operation status")
   {
     addTask(&liveness_monitor_);
-    addTask(&severity_latch_);
+    addTask(&status_latch_);
+    addTask(&stuck_latch_);
   }
 
   void on_status(
@@ -114,22 +119,30 @@ public:
     kv.value = detail::error_codes_to_string(error_codes);
     status.values.push_back(kv);
 
-    severity_latch_.submit(status);
+    status_latch_.submit(status);
   }
 
   void on_alive() { liveness_monitor_.tick(); }
 
-  void on_stuck()
+  void on_stuck(bool is_stuck)
   {
     diagnostic_msgs::msg::DiagnosticStatus status;
-    status.level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-    status.message = "Sensor diagnostics system is stuck";
-    severity_latch_.submit(status);
+
+    if (is_stuck) {
+      status.level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+      status.message = "Sensor functional safety system is stuck";
+    } else {
+      status.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+      status.message = "Sensor functional safety system is running";
+    }
+
+    stuck_latch_.submit(status);
   }
 
 private:
   LivenessMonitor liveness_monitor_;
-  SeverityLatch severity_latch_;
+  SeverityLatch status_latch_;
+  SeverityLatch stuck_latch_;
 };
 
 }  // namespace nebula::ros
