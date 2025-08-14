@@ -28,6 +28,7 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <cstdint>
 #include <memory>
 #include <tuple>
 #include <type_traits>
@@ -63,10 +64,10 @@ private:
   initialize_functional_safety_decoder(
     FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
     FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
-    FunctionalSafetyDecoderBase::status_cb_t status_cb)
+    FunctionalSafetyDecoderBase::status_cb_t status_cb, uint16_t sensor_rpm)
   {
     auto functional_safety_decoder =
-      std::make_shared<FunctionalSafetyDecoder<typename SensorT::packet_t>>();
+      std::make_shared<FunctionalSafetyDecoder<typename SensorT::packet_t>>(sensor_rpm);
     functional_safety_decoder->set_alive_callback(std::move(alive_cb));
     functional_safety_decoder->set_stuck_callback(std::move(stuck_cb));
     functional_safety_decoder->set_status_callback(std::move(status_cb));
@@ -80,7 +81,7 @@ private:
   initialize_functional_safety_decoder(
     FunctionalSafetyDecoderBase::alive_cb_t /* alive_cb */,
     FunctionalSafetyDecoderBase::stuck_cb_t /* stuck_cb */,
-    FunctionalSafetyDecoderBase::status_cb_t /* status_cb */)
+    FunctionalSafetyDecoderBase::status_cb_t /* status_cb */, uint16_t /* sensor_rpm */)
   {
     return nullptr;
   }

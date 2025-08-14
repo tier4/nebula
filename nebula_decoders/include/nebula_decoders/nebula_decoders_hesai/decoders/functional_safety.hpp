@@ -68,6 +68,11 @@ class FunctionalSafetyDecoder : public FunctionalSafetyDecoderTypedBase<PacketT>
   using status_cb_t = typename FunctionalSafetyDecoderBase::status_cb_t;
 
 public:
+  explicit FunctionalSafetyDecoder(uint16_t sensor_rpm)
+  : scan_period_ns_(rpm_to_scan_period_ns(sensor_rpm))
+  {
+  }
+
   void update(const PacketT & packet) override
   {
     uint64_t timestamp_ns = hesai_packet::get_timestamp_ns(packet);
@@ -118,6 +123,8 @@ public:
   void set_status_callback(status_cb_t on_status) override { on_status_ = std::move(on_status); }
 
 private:
+  static uint64_t rpm_to_scan_period_ns(uint16_t rpm) { return 60ULL * 1'000'000'000ULL / rpm; }
+
   bool has_changed(const functional_safety_t & current_value)
   {
     // From Hesai's safety manuals:
@@ -136,9 +143,9 @@ private:
   [[nodiscard]] bool is_overdue(uint64_t timestamp_ns) const
   {
     // While the data shall change every N ms, in non-360 deg FoVs, there is a phase where no
-    // packets are sent by the sensor. To comply with any FoV, we have to allow for 100 ms (assuming
-    // a 10 Hz scan rate) before  reporting the system as stuck.
-    return (timestamp_ns - last_changed_timestamp_ns_) >= 100'000'000;
+    // packets are sent by the sensor. To comply with any FoV, we have to allow for one scan
+    // period to pass before reporting the system as stuck.
+    return (timestamp_ns - last_changed_timestamp_ns_) >= scan_period_ns_;
   }
 
   std::optional<FunctionalSafetyErrorCodes> try_accumulate_error_codes(
@@ -183,6 +190,9 @@ private:
 
     return std::nullopt;
   }
+
+  //! The duration of one scan in nanoseconds.
+  uint64_t scan_period_ns_;
 
   uint64_t last_changed_timestamp_ns_{};
   functional_safety_t last_value_;
