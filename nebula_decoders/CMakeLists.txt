@@ -54,6 +54,7 @@ add_library(nebula_decoders_hesai SHARED
 target_link_libraries(nebula_decoders_hesai PUBLIC
     ${pandar_msgs_TARGETS}
     ${PNG_LIBRARIES}
+    pcl_conversions::pcl_conversions
 )
 
 target_include_directories(nebula_decoders_hesai PUBLIC
@@ -71,6 +72,7 @@ add_library(nebula_decoders_velodyne SHARED
 target_link_libraries(nebula_decoders_velodyne PUBLIC
     ${angles_msgs_TARGETS}
     ${velodyne_msgs_TARGETS}
+    pcl_conversions::pcl_conversions
 )
 target_include_directories(nebula_decoders_velodyne PUBLIC
     ${angles_INCLUDE_DIRS}
@@ -83,6 +85,7 @@ add_library(nebula_decoders_robosense SHARED
 )
 target_link_libraries(nebula_decoders_robosense PUBLIC
     ${robosense_msgs_TARGETS}
+    pcl_conversions::pcl_conversions
 )
 target_include_directories(nebula_decoders_robosense PUBLIC
     ${robosense_msgs_INCLUDE_DIRS}
@@ -93,6 +96,7 @@ add_library(nebula_decoders_robosense_info SHARED
 )
 target_link_libraries(nebula_decoders_robosense_info PUBLIC
     ${robosense_msgs_TARGETS}
+    pcl_conversions::pcl_conversions
 )
 target_include_directories(nebula_decoders_robosense_info PUBLIC
     ${robosense_msgs_INCLUDE_DIRS}
