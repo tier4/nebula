@@ -27,13 +27,23 @@ find_package(velodyne_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(PNG REQUIRED)
 
+# Check if pcl_conversions provides modern CMake targets (ROS 2 Jazzy and later)
+# or if we need to use legacy variables (ROS 2 Humble and earlier)
+if(TARGET pcl_conversions::pcl_conversions)
+    set(PCL_CONVERSIONS_TARGET pcl_conversions::pcl_conversions)
+    set(PCL_CONVERSIONS_INCLUDE_DIRS "")
+else()
+    set(PCL_CONVERSIONS_TARGET "")
+    set(PCL_CONVERSIONS_INCLUDE_DIRS ${pcl_conversions_INCLUDE_DIRS})
+endif()
+
 include_directories(PUBLIC
     include
     SYSTEM
     ${nebula_common_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
-    ${pcl_conversions_INCLUDE_DIRS}
+    ${PCL_CONVERSIONS_INCLUDE_DIRS}
     ${rclcpp_INCLUDE_DIRS}
     ${sensor_msgs_INCLUDE_DIRS}
 )
@@ -41,7 +51,7 @@ include_directories(PUBLIC
 link_libraries(
     ${nebula_common_TARGETS}
     ${PCL_LIBRARIES}
-    ${pcl_conversions_LIBRARIES}
+    ${PCL_CONVERSIONS_TARGET}
     ${rclcpp_TARGETS}
     ${sensor_msgs_TARGETS}
 )
