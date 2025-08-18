@@ -129,7 +129,7 @@ jobs:
         id: cache-analysis
         uses: actions/cache@v4
         with:
-          path: /tmp/infer-out-${{ matrix.ref }}
+          path: infer-out/
           key: infer-${{ matrix.ref }}-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             infer-${{ matrix.ref }}-${{ runner.os }}-
@@ -144,21 +144,15 @@ jobs:
         uses: autowarefoundation/autoware-github-actions/get-self-packages@v1
 
       - name: Build
-        id: build
+        id: build-with-infer
         if: ${{ steps.cache-analysis.outputs.cache-hit != 'true' }}
         uses: autowarefoundation/autoware-github-actions/colcon-build@v1
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
           build-depends-repos: ${{ matrix.build-depends-repos }}
-
-      - name: Analyze using Facebook Infer
-        id: fb-analyze
-        if: ${{ steps.cache-analysis.outputs.cache-hit != 'true' }}
-        run: |
-          infer capture --compilation-database build/compile_commands.json
-          # Produces an `infer-out/` directory in the current working directory
-          infer analyze
+          cmake-build-type: Debug  # Faster compilation than Release
+          build-pre-command: infer run --  # Produces an `infer-out/` directory in the current working directory
 
       - name: Upload FB Infer Reports
         id: upload-infer-reports
