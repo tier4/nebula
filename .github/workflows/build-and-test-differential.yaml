@@ -77,7 +77,7 @@ jobs:
           verbose: true
           flags: differential
 
-  fb-infer-differential:
+  fb-infer-analyze:
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
     strategy:
@@ -85,185 +85,113 @@ jobs:
       matrix:
         rosdistro:
           - humble
+        ref:
+          - ${{ github.head_ref }}
+          - ${{ github.base_ref }}
         include:
           - rosdistro: humble
             container: ros:humble
             build-depends-repos: build_depends.repos
     env:
-      CCACHE_DIR: /root/.ccache
-      INFER_REPORT_PARENT_DIR: /tmp
       CC: /usr/lib/ccache/clang-15
       CXX: /usr/lib/ccache/clang++-15
+      CCACHE_DIR: /root/.ccache
     steps:
-      ########################################
-      # Dependencies and setup
-      ########################################
-
-      - name: Install Clang-15 and ccache
-        run: |
-          sudo apt-get -yqq update
-          sudo apt-get -yqq install --install-recommends clang-15 clang-tidy-15 clangd-15
-          sudo apt-get -yqq install clang-15-doc wasi-libc llvm-15-doc
-          sudo apt-get -yqq install libomp-15-dev libomp-15-doc # For OpenMP support in Clang
-          sudo apt-get -yqq install libstdc++-12-dev
-          sudo apt-get -yqq install ccache
-
-      - name: Create ccache directory
-        run: |
-          mkdir -p ${CCACHE_DIR}
-          du -sh ${CCACHE_DIR} && ccache -s
-        shell: bash
-
-      - name: Attempt to restore ccache
-        uses: actions/cache/restore@v4
+      - name: Check out GitHub workflow definitions
+        uses: actions/checkout@v3
         with:
+          fetch-depth: 0
+          # This repo checkout is only for .github workflow definitions. Use the feature branch's version as it might contain updated functionality.
+          ref: ${{ github.head_ref }}
+          sparse-checkout: |
+            .github/
+      - name: Checkout code
+        id: checkout-ref
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ matrix.ref }}
+          clean: false
+          sparse-checkout: |
+            /*
+            !.github/
+
+      - run: .github/workflows/scripts/update-apt-if-needed.sh
+      - run: .github/workflows/scripts/setup-ccache.sh
+      - run: .github/workflows/scripts/setup-clang.sh
+      - run: .github/workflows/scripts/setup-infer.sh
+
+      - name: Cache analysis results
+        id: cache-analysis
+        uses: actions/cache@v4
+        with:
+          path: /tmp/infer-out-${{ matrix.ref }}
+          key: infer-${{ matrix.ref }}-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            infer-${{ matrix.ref }}-${{ runner.os }}-
+
+      - name: Remove exec_depend
+        if: ${{ steps.cache-analysis.outputs.cache-hit != 'true' }}
+        uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1
+
+      - name: Get self packages
+        id: get-self-packages
+        if: ${{ steps.cache-analysis.outputs.cache-hit != 'true' }}
+        uses: autowarefoundation/autoware-github-actions/get-self-packages@v1
+
+      - name: Build
+        id: build
+        if: ${{ steps.cache-analysis.outputs.cache-hit != 'true' }}
+        uses: autowarefoundation/autoware-github-actions/colcon-build@v1
+        with:
+          rosdistro: ${{ matrix.rosdistro }}
+          target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
+          build-depends-repos: ${{ matrix.build-depends-repos }}
+
+      - name: Analyze using Facebook Infer
+        id: fb-analyze
+        if: ${{ steps.cache-analysis.outputs.cache-hit != 'true' }}
+        run: |
+          infer capture --compilation-database build/compile_commands.json
+          # Produces an `infer-out/` directory in the current working directory
+          infer analyze
+
+      - name: Upload FB Infer Reports
+        id: upload-infer-reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: infer-report-${{ matrix.ref }}
           path: |
-            ${CCACHE_DIR}
-          key: ccache-${{ runner.arch }}-${{ matrix.rosdistro }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            ccache-${{ runner.arch }}-${{ matrix.rosdistro }}-
+            infer-out/report.json
+          if-no-files-found: error
 
-      - name: Install FB Infer
-        id: fb-infer-install
-        env:
-          VERSION: 1.2.0
-        run: |
-          export BASENAME="infer-linux-x86_64-v${VERSION}"
-          export FILENAME="${BASENAME}.tar.xz"
-          sudo apt-get -yqq install curl tar
-          curl -sSLO "https://github.com/facebook/infer/releases/download/v${VERSION}/${FILENAME}"
-          tar -xf "$FILENAME"
-          rm "$FILENAME"
-          sudo mv "$BASENAME" /usr/local/infer
-          echo "PATH=/usr/local/infer/bin:$PATH" >> $GITHUB_ENV
+  fb-infer-report:
+    runs-on: ubuntu-latest
+    needs: [fb-infer-analyze]
 
-      ########################################
-      # Main branch analysis
-      ########################################
+    steps:
+      - run: .github/workflows/scripts/update-apt-if-needed.sh
+      - run: .github/workflows/scripts/setup-infer.sh
 
-      - name: Restore main branch infer cache
-        id: cache-infer-restore
-        uses: actions/cache/restore@v4
+      - name: Download FB Infer report (PR head ref)
+        id: download-infer-reports
+        uses: actions/download-artifact@v4
         with:
-          path: ${{ env.INFER_REPORT_PARENT_DIR }}/infer-out-main
-          key: infer-main-${{ github.base_ref }}-${{ github.event.pull_request.base.sha }}
-          restore-keys: |
-            infer-main-${{ github.base_ref }}-
+          name: infer-report-${{ github.head_ref }}
+          path: infer-report-head
 
-      - name: Checkout main branch
-        id: checkout-main
-        if: ${{ steps.cache-infer-restore.outputs.cache-hit != 'true' }}
-        uses: actions/checkout@v3
+      - name: Download FB Infer report (PR base ref)
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
-          ref: ${{ github.base_ref }}
-
-      - name: Remove exec_depend
-        if: ${{ steps.cache-infer-restore.outputs.cache-hit != 'true' }}
-        uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1
-
-      - name: Show ccache stats before build and reset stats
-        run: |
-          du -sh ${CCACHE_DIR} && ccache -s
-          ccache --zero-stats
-        shell: bash
-
-      - name: Build main branch
-        id: build-main
-        if: ${{ steps.cache-infer-restore.outputs.cache-hit != 'true' }}
-        uses: autowarefoundation/autoware-github-actions/colcon-build@v1
-        with:
-          rosdistro: ${{ matrix.rosdistro }}
-          target-packages: ${{ steps.get-modified-packages-feature.outputs.modified-packages }}
-          build-depends-repos: ${{ matrix.build-depends-repos }}
-
-      - name: Show ccache stats after build
-        run: |
-          du -sh ${CCACHE_DIR} && ccache -s
-        shell: bash
-
-      - name: Cache ccache
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.arch }}-${{ matrix.rosdistro }}-${{ github.run_id }}-${{ github.run_attempt }}
-
-      - name: Analyze main branch
-        id: analyze-main
-        if: ${{ steps.cache-infer-restore.outputs.cache-hit != 'true' }}
-        run: |
-          # Run infer on feature branch
-          infer capture --compilation-database build/compile_commands.json
-          infer analyze
-
-          # Store main branch report
-          mv infer-out ${INFER_REPORT_PARENT_DIR}/infer-out-main
-
-      - name: Cache main branch infer results
-        if: ${{ steps.cache-infer-restore.outputs.cache-hit != 'true' && steps.analyze-main.outcome == 'success' }}
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ env.INFER_REPORT_PARENT_DIR }}/infer-out-main
-          key: infer-main-${{ github.base_ref }}-${{ github.event.pull_request.base.sha }}
-
-      ########################################
-      # Feature branch analysis
-      ########################################
-
-      - name: Check out repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Remove exec_depend
-        uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1
-
-      - name: Get modified packages
-        id: get-modified-packages-feature
-        uses: autowarefoundation/autoware-github-actions/get-modified-packages@v1
-
-      - name: Show ccache stats before build and reset stats
-        run: |
-          du -sh ${CCACHE_DIR} && ccache -s
-          ccache --zero-stats
-        shell: bash
-
-      - name: Build feature branch
-        id: build-feature
-        if: ${{ steps.get-modified-packages-feature.outputs.modified-packages != '' }}
-        uses: autowarefoundation/autoware-github-actions/colcon-build@v1
-        with:
-          rosdistro: ${{ matrix.rosdistro }}
-          target-packages: ${{ steps.get-modified-packages-feature.outputs.modified-packages }}
-          build-depends-repos: ${{ matrix.build-depends-repos }}
-
-      - name: Show ccache stats after build
-        run: |
-          du -sh ${CCACHE_DIR} && ccache -s
-        shell: bash
-
-      - name: Analyze feature branch
-        id: analyze-feature
-        if: ${{ steps.get-modified-packages-feature.outputs.modified-packages != '' }}
-        run: |
-          # Run infer on feature branch
-          infer capture --compilation-database build/compile_commands.json
-          infer analyze
-
-          # Store feature branch report
-          mv infer-out ${INFER_REPORT_PARENT_DIR}/infer-out-feature
-
-      ########################################
-      # Differential analysis
-      ########################################
+          name: infer-report-${{ github.base_ref }}
+          path: infer-report-base
 
       - name: Compare reports
-        if: ${{ steps.analyze-feature.outcome == 'success' }}
         run: |
+          # Produces an `infer-out/` directory in the current working directory
           infer reportdiff \
-            --report-current ${INFER_REPORT_PARENT_DIR}/infer-out-feature/report.json \
-            --report-previous ${INFER_REPORT_PARENT_DIR}/infer-out-main/report.json
-          mv infer-out ${INFER_REPORT_PARENT_DIR}/infer-out-differential
+            --report-current infer-report-head/report.json \
+            --report-previous infer-report-base/report.json
 
       - name: Upload FB Infer Reports
         id: upload-infer-reports
@@ -271,13 +199,12 @@ jobs:
         with:
           name: infer-reports-${{ github.sha }}
           path: |
-            ${{ env.INFER_REPORT_PARENT_DIR }}/infer-out-feature/report.json
-            ${{ env.INFER_REPORT_PARENT_DIR }}/infer-out-differential/*
+            infer-report-head/report.json
+            infer-out/*
           if-no-files-found: error
 
       - name: Generate Infer summary
         id: generate-infer-summary
-        if: ${{ steps.analyze-feature.outcome == 'success' }}
         run: |
           python3 .github/workflows/scripts/summarize-infer-diff.py \
             ${INFER_REPORT_PARENT_DIR}/infer-out-differential/differential \
@@ -300,5 +227,5 @@ jobs:
         with:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
-          body-file: ${{ env.INFER_REPORT_PARENT_DIR }}/infer-summary.md
+          body-file: infer-out/infer-summary.md
           edit-mode: replace
