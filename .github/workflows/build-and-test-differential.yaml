@@ -97,14 +97,6 @@ jobs:
       CXX: /usr/lib/ccache/clang++-15
       CCACHE_DIR: /root/.ccache
     steps:
-      - name: Check out GitHub workflow definitions
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          # This repo checkout is only for .github workflow definitions. Use the feature branch's version as it might contain updated functionality.
-          ref: ${{ github.head_ref }}
-          sparse-checkout: |
-            .github/
       - name: Checkout code
         id: checkout-ref
         uses: actions/checkout@v3
@@ -112,9 +104,20 @@ jobs:
           fetch-depth: 0
           ref: ${{ matrix.ref }}
           clean: false
+          sparse-checkout-cone-mode: false
           sparse-checkout: |
             /*
             !.github/
+
+      - name: Check out GitHub workflow definitions
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          # This repo checkout is only for .github workflow definitions. Use the feature branch's version as it might contain updated functionality.
+          ref: ${{ github.head_ref }}
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            .github/
 
       - run: ./.github/workflows/scripts/ensure-apt-up-to-date.sh
       - run: ./.github/workflows/scripts/setup-ccache.sh
