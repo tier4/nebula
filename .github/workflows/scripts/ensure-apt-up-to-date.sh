@@ -8,7 +8,7 @@ PKGCACHE_FILE=/var/cache/apt/pkgcache.bin
 # Maximum accepted age for the cache in seconds
 MAX_CACHE_AGE_S=900 # 15 minutes
 
-t_last_update_s=$(stat -c %Y "$PKGCACHE_FILE")
+t_last_update_s=$(stat -c %Y "$PKGCACHE_FILE" 2>/dev/null || echo 0)
 
 # Get the current time
 t_now_s=$(date +%s)
