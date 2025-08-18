@@ -10,7 +10,7 @@ jobs:
   build-and-test:
     if: ${{ github.event_name != 'push' || github.ref_name == github.event.repository.default_branch }}
     runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
+    container: ros:${{ matrix.rosdistro }}
     strategy:
       fail-fast: false
       matrix:
@@ -18,10 +18,6 @@ jobs:
           - humble
           - jazzy
           - kilted
-        container:
-          - ros:humble
-          - ros:jazzy
-          - ros:kilted
         include:
           - build-depends-repos: build_depends.repos
     env:
