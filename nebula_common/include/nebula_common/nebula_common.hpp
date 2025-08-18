@@ -29,6 +29,8 @@ namespace nebula::drivers
 /// @brief Coordinate mode for Velodyne's setting (need to check)
 enum class CoordinateMode { UNKNOWN = 0, CARTESIAN, SPHERICAL, CYLINDRICAL };
 
+// TEMP: build trigger
+
 /// @brief Return type of each scan
 enum class ReturnType : uint8_t {
   UNKNOWN = 0,
