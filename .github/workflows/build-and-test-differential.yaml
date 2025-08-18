@@ -34,30 +34,15 @@ jobs:
         id: get-modified-packages
         uses: autowarefoundation/autoware-github-actions/get-modified-packages@v1
 
-      - name: Install ccache
-        run: sudo apt-get -yqq update && sudo apt-get -yqq install ccache
-        shell: bash
+      - run: .github/workflows/scripts/update-apt-if-needed.sh
+      - run: .github/workflows/scripts/setup-ccache.sh
 
-      - name: Create ccache directory
-        run: |
-          mkdir -p ${CCACHE_DIR}
-          du -sh ${CCACHE_DIR} && ccache -s
-        shell: bash
-
-      - name: Attempt to restore ccache
-        uses: actions/cache/restore@v4
+      - uses: actions/cache@v4
         with:
-          path: |
-            ${CCACHE_DIR}
-          key: ccache-${{ runner.arch }}-${{ matrix.rosdistro }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            ccache-${{ runner.arch }}-${{ matrix.rosdistro }}-
-
-      - name: Show ccache stats before build and reset stats
-        run: |
-          du -sh ${CCACHE_DIR} && ccache -s
-          ccache --zero-stats
-        shell: bash
+            ccache-${{ runner.os }}-
 
       - name: Build
         id: build
