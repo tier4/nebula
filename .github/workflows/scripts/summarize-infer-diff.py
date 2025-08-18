@@ -48,13 +48,13 @@ def summarize_diff(
     introduced_counts: Dict[str, int],
 ) -> str:
     if sum(introduced_counts.values()) == 0 and sum(fixed_counts.values()) > 0:
-        return f"Fixed {sum(fixed_counts.values())} bugs without introducing new ones! 🎉"
+        return f"🎉 Fixed {sum(fixed_counts.values())} bugs!"
     elif sum(introduced_counts.values()) == 0:
-        return "No new bugs introduced ✅"
+        return "✅ No new bugs introduced"
     elif sum(fixed_counts.values()) > 0:
-        return f"Fixed {sum(fixed_counts.values())} bugs but introduced {sum(introduced_counts.values())} new ones ⚠️"
+        return f"❌ Fixed {sum(fixed_counts.values())} bugs but introduced {sum(introduced_counts.values())} new ones"
     else:
-        return f"Introduced {sum(introduced_counts.values())} new bugs without fixing any existing ones ❌"
+        return f"❌ Introduced {sum(introduced_counts.values())} new bugs"
 
 
 def main():
