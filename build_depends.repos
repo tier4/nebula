@@ -25,4 +25,5 @@ repositories:
   agnocast:
     type: git
     url: https://github.com/tier4/agnocast
-    version: 2.1.1
+    # Includes https://github.com/tier4/agnocast/pull/677 to enable Clang builds
+    version: 6154d84129bf022f903f45b5342e137697ecf9a6
