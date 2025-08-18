@@ -144,7 +144,7 @@ jobs:
         uses: autowarefoundation/autoware-github-actions/get-self-packages@v1
 
       - name: Build
-        id: build-with-infer
+        id: build
         if: ${{ steps.cache-analysis.outputs.cache-hit != 'true' }}
         uses: autowarefoundation/autoware-github-actions/colcon-build@v1
         with:
@@ -152,7 +152,14 @@ jobs:
           target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
           build-depends-repos: ${{ matrix.build-depends-repos }}
           cmake-build-type: Debug  # Faster compilation than Release
-          build-pre-command: infer run --  # Produces an `infer-out/` directory in the current working directory
+
+      - name: Analyze using Facebook Infer
+        id: fb-analyze
+        if: ${{ steps.cache-analysis.outputs.cache-hit != 'true' }}
+        run: |
+          infer capture --compilation-database build/compile_commands.json
+          # Produces an `infer-out/` directory in the current working directory
+          infer analyze
 
       - name: Upload FB Infer Reports
         id: upload-infer-reports
