@@ -34,8 +34,8 @@ jobs:
         id: get-modified-packages
         uses: autowarefoundation/autoware-github-actions/get-modified-packages@v1
 
-      - run: .github/workflows/scripts/update-apt-if-needed.sh
-      - run: .github/workflows/scripts/setup-ccache.sh
+      - run: ./.github/workflows/scripts/update-apt-if-needed.sh
+      - run: ./.github/workflows/scripts/setup-ccache.sh
 
       - uses: actions/cache@v4
         with:
@@ -116,10 +116,10 @@ jobs:
             /*
             !.github/
 
-      - run: .github/workflows/scripts/update-apt-if-needed.sh
-      - run: .github/workflows/scripts/setup-ccache.sh
-      - run: .github/workflows/scripts/setup-clang.sh
-      - run: .github/workflows/scripts/setup-infer.sh
+      - run: ./.github/workflows/scripts/update-apt-if-needed.sh
+      - run: ./.github/workflows/scripts/setup-ccache.sh
+      - run: ./.github/workflows/scripts/setup-clang.sh
+      - run: ./.github/workflows/scripts/setup-infer.sh
 
       - name: Cache analysis results
         id: cache-analysis
@@ -170,8 +170,8 @@ jobs:
     needs: [fb-infer-analyze]
 
     steps:
-      - run: .github/workflows/scripts/update-apt-if-needed.sh
-      - run: .github/workflows/scripts/setup-infer.sh
+      - run: ./.github/workflows/scripts/update-apt-if-needed.sh
+      - run: ./.github/workflows/scripts/setup-infer.sh
 
       - name: Download FB Infer report (PR head ref)
         id: download-infer-reports
