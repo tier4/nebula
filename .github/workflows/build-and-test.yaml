@@ -16,10 +16,14 @@ jobs:
       matrix:
         rosdistro:
           - humble
+          - jazzy
+          - kilted
+        container:
+          - ros:humble
+          - ros:jazzy
+          - ros:kilted
         include:
-          - rosdistro: humble
-            container: ros:humble
-            build-depends-repos: build_depends.repos
+          - build-depends-repos: build_depends.repos
     env:
       CCACHE_DIR: /root/.ccache
       CCACHE_SIZE: 1G  # The GitHub cache action allows for 10G but the runners' disk space is limited

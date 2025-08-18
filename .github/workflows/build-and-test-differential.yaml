@@ -12,10 +12,14 @@ jobs:
       matrix:
         rosdistro:
           - humble
+          - jazzy
+          - kilted
+        container:
+          - ros:humble
+          - ros:jazzy
+          - ros:kilted
         include:
-          - rosdistro: humble
-            container: ros:humble
-            build-depends-repos: build_depends.repos
+          - build-depends-repos: build_depends.repos
     env:
       CCACHE_DIR: /root/.ccache
       CC: /usr/lib/ccache/gcc
