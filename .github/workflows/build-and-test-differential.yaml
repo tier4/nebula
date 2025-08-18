@@ -111,20 +111,8 @@ jobs:
       CXX: /usr/lib/ccache/clang++-15
     steps:
       ########################################
-      # Feature branch analysis
+      # Dependencies and setup
       ########################################
-
-      - name: Check out repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Remove exec_depend
-        uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1
-
-      - name: Get modified packages
-        id: get-modified-packages-feature
-        uses: autowarefoundation/autoware-github-actions/get-modified-packages@v1
 
       - name: Install Clang-15 and ccache
         run: |
@@ -152,7 +140,6 @@ jobs:
 
       - name: Install FB Infer
         id: fb-infer-install
-        if: ${{ steps.get-modified-packages-feature.outputs.modified-packages != '' }}
         env:
           VERSION: 1.2.0
         run: |
@@ -164,37 +151,6 @@ jobs:
           rm "$FILENAME"
           sudo mv "$BASENAME" /usr/local/infer
           echo "PATH=/usr/local/infer/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Show ccache stats before build and reset stats
-        run: |
-          du -sh ${CCACHE_DIR} && ccache -s
-          ccache --zero-stats
-        shell: bash
-
-      - name: Build feature branch
-        id: build-feature
-        if: ${{ steps.get-modified-packages-feature.outputs.modified-packages != '' }}
-        uses: autowarefoundation/autoware-github-actions/colcon-build@v1
-        with:
-          rosdistro: ${{ matrix.rosdistro }}
-          target-packages: ${{ steps.get-modified-packages-feature.outputs.modified-packages }}
-          build-depends-repos: ${{ matrix.build-depends-repos }}
-
-      - name: Show ccache stats after build
-        run: |
-          du -sh ${CCACHE_DIR} && ccache -s
-        shell: bash
-
-      - name: Analyze feature branch
-        id: analyze-feature
-        if: ${{ steps.get-modified-packages-feature.outputs.modified-packages != '' }}
-        run: |
-          # Run infer on feature branch
-          infer capture --compilation-database build/compile_commands.json
-          infer analyze
-
-          # Store feature branch report
-          mv infer-out ${INFER_REPORT_PARENT_DIR}/infer-out-feature
 
       ########################################
       # Main branch analysis
@@ -264,6 +220,53 @@ jobs:
         with:
           path: ${{ env.INFER_REPORT_PARENT_DIR }}/infer-out-main
           key: infer-main-${{ github.base_ref }}-${{ github.event.pull_request.base.sha }}
+
+      ########################################
+      # Feature branch analysis
+      ########################################
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Remove exec_depend
+        uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1
+
+      - name: Get modified packages
+        id: get-modified-packages-feature
+        uses: autowarefoundation/autoware-github-actions/get-modified-packages@v1
+
+      - name: Show ccache stats before build and reset stats
+        run: |
+          du -sh ${CCACHE_DIR} && ccache -s
+          ccache --zero-stats
+        shell: bash
+
+      - name: Build feature branch
+        id: build-feature
+        if: ${{ steps.get-modified-packages-feature.outputs.modified-packages != '' }}
+        uses: autowarefoundation/autoware-github-actions/colcon-build@v1
+        with:
+          rosdistro: ${{ matrix.rosdistro }}
+          target-packages: ${{ steps.get-modified-packages-feature.outputs.modified-packages }}
+          build-depends-repos: ${{ matrix.build-depends-repos }}
+
+      - name: Show ccache stats after build
+        run: |
+          du -sh ${CCACHE_DIR} && ccache -s
+        shell: bash
+
+      - name: Analyze feature branch
+        id: analyze-feature
+        if: ${{ steps.get-modified-packages-feature.outputs.modified-packages != '' }}
+        run: |
+          # Run infer on feature branch
+          infer capture --compilation-database build/compile_commands.json
+          infer analyze
+
+          # Store feature branch report
+          mv infer-out ${INFER_REPORT_PARENT_DIR}/infer-out-feature
 
       ########################################
       # Differential analysis
