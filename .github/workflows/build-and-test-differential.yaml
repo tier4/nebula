@@ -96,6 +96,7 @@ jobs:
       CC: /usr/lib/ccache/clang-15
       CXX: /usr/lib/ccache/clang++-15
       CCACHE_DIR: /root/.ccache
+      FB_INFER_VERSION: 1.2.0
     steps:
       - name: Checkout code
         id: checkout-ref
@@ -171,7 +172,8 @@ jobs:
   fb-infer-report:
     runs-on: ubuntu-latest
     needs: [fb-infer-analyze]
-
+    env:
+      FB_INFER_VERSION: 1.2.0
     steps:
       - run: ./.github/workflows/scripts/ensure-apt-up-to-date.sh
       - run: ./.github/workflows/scripts/setup-infer.sh
@@ -210,9 +212,9 @@ jobs:
         id: generate-infer-summary
         run: |
           python3 .github/workflows/scripts/summarize-infer-diff.py \
-            ${INFER_REPORT_PARENT_DIR}/infer-out-differential/differential \
+            infer-out/differential \
             ${{ steps.upload-infer-reports.outputs.artifact-url }} \
-            ${INFER_REPORT_PARENT_DIR}/infer-summary.md
+            infer-summary.md
 
       - name: Find Comment
         if: ${{ steps.generate-infer-summary.outcome == 'success' }}
@@ -230,5 +232,5 @@ jobs:
         with:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
-          body-file: infer-out/infer-summary.md
+          body-file: infer-summary.md
           edit-mode: replace
