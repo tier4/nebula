@@ -135,9 +135,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: infer-out/
-          key: infer-${{ matrix.ref }}-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            infer-${{ matrix.ref }}-${{ runner.os }}-
+          key: infer-${{ matrix.ref }}-${{ runner.os }}
 
       - uses: actions/cache@v4
         if: steps.cache-analysis.outputs.cache-hit != 'true'
