@@ -217,13 +217,13 @@ jobs:
         id: download-infer-reports
         uses: actions/download-artifact@v4
         with:
-          name: infer-report-${{ github.head_ref }}
+          name: infer-report-${{ github.event.pull_request.head.sha }}
           path: infer-report-head
 
       - name: Download FB Infer report (PR base ref)
         uses: actions/download-artifact@v4
         with:
-          name: infer-report-${{ github.base_ref }}
+          name: infer-report-${{ github.event.pull_request.base.sha }}
           path: infer-report-base
 
       - name: Compare reports
