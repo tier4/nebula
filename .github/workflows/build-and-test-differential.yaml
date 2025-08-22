@@ -6,16 +6,16 @@ on:
 jobs:
   build-and-test-differential:
     runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
+    container: ros:${{ matrix.rosdistro }}
     strategy:
       fail-fast: false
       matrix:
         rosdistro:
           - humble
+          - jazzy
+          - kilted
         include:
-          - rosdistro: humble
-            container: ros:humble
-            build-depends-repos: build_depends.repos
+          - build-depends-repos: build_depends.repos
     env:
       CCACHE_DIR: /root/.ccache
       CC: /usr/lib/ccache/gcc
