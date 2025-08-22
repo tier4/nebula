@@ -79,8 +79,8 @@ pointcloud and blockage mask outputs.
 >
 > Agnocast support is currently limited to Hesai sensors.
 
-To build with support for Agnocast, add `-DUSE_AGNOCAST=ON` to the `--cmake-args` to the above
-`colcon build` command.
+To build with support for Agnocast, execute the above `colcon build` command with the environment
+variable `ENABLE_AGNOCAST=1` set.
 
 The following apt dependencies are required at run time:
 
