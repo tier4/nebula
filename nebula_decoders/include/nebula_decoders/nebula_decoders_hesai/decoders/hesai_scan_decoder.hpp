@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_WS_HESAI_SCAN_DECODER_HPP
-#define NEBULA_WS_HESAI_SCAN_DECODER_HPP
+#ifndef NEBULA_DECODERS__NEBULA_DECODERS_HESAI__DECODERS__HESAI_SCAN_DECODER_HPP_
+#define NEBULA_DECODERS__NEBULA_DECODERS_HESAI__DECODERS__HESAI_SCAN_DECODER_HPP_
 
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/point_types.hpp>
@@ -64,4 +64,4 @@ public:
 };
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_WS_HESAI_SCAN_DECODER_HPP
+#endif  // NEBULA_DECODERS__NEBULA_DECODERS_HESAI__DECODERS__HESAI_SCAN_DECODER_HPP_
