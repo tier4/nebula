@@ -202,6 +202,12 @@ struct HesaiCalibrationConfiguration : public HesaiCalibrationConfigurationBase
       max = std::max(max, item.second);
     }
 
+    // NOTE: Slightly widen the FOV padding because some LiDARs do not transmit blocks near the end
+    // of the FOV. If these blocks are missing, the point cloud may not be published at the desired
+    // timing.
+    min -= 1.0f;
+    max += 1.0f;
+
     return {-max, -min};
   }
 };
