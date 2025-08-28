@@ -10,16 +10,16 @@ jobs:
   build-and-test:
     if: ${{ github.event_name != 'push' || github.ref_name == github.event.repository.default_branch }}
     runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
+    container: ros:${{ matrix.rosdistro }}
     strategy:
       fail-fast: false
       matrix:
         rosdistro:
           - humble
+          - jazzy
+          - kilted
         include:
-          - rosdistro: humble
-            container: ros:humble
-            build-depends-repos: build_depends.repos
+          - build-depends-repos: build_depends.repos
     env:
       CCACHE_DIR: /root/.ccache
       CCACHE_SIZE: 1G  # The GitHub cache action allows for 10G but the runners' disk space is limited
