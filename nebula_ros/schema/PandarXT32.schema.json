@@ -59,9 +59,7 @@
         },
         "sensor_model": {
           "$ref": "sub/lidar_hesai.json#/definitions/sensor_model",
-          "enum": [
-            "PandarXT32"
-          ]
+          "enum": ["PandarXT32"]
         },
         "calibration_file": {
           "$ref": "sub/lidar_hesai.json#/definitions/calibration_file"
@@ -107,9 +105,7 @@
         },
         "diagnostics": {
           "$ref": "sub/lidar_hesai.json#/definitions/diagnostics",
-          "required": [
-            "pointcloud_publish_rate"
-          ]
+          "required": ["pointcloud_publish_rate"]
         },
         "sync_diagnostics": {
           "$ref": "sub/misc.json#/definitions/sync_diagnostics"
@@ -156,13 +152,9 @@
         },
         "additionalProperties": false
       },
-      "required": [
-        "ros__parameters"
-      ]
+      "required": ["ros__parameters"]
     }
   },
-  "required": [
-    "/**"
-  ],
+  "required": ["/**"],
   "additionalProperties": false
 }
