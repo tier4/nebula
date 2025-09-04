@@ -529,6 +529,8 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
     metadata.packet_perf_counters.n_woken_without_data;
   current_scan_perf_counters_.n_wakeups_by_wrong_sender +=
     metadata.packet_perf_counters.n_woken_by_wrong_sender;
+  current_scan_perf_counters_.n_packets_dropped_in_kernel_rxq +=
+    metadata.n_packets_dropped_since_last_receive;
 
   auto t_start = std::chrono::steady_clock::now();
 
@@ -580,6 +582,13 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
       wakeups_from_wrong_sender_msg.stamp = timestamp;
       wakeups_from_wrong_sender_msg.data = current_scan_perf_counters_.n_wakeups_by_wrong_sender;
       debug_publisher_.publish("debug/n_wakeups_from_wrong_sender", wakeups_from_wrong_sender_msg);
+
+      autoware_internal_debug_msgs::msg::Int64Stamped packets_dropped_in_kernel_rxq_msg;
+      packets_dropped_in_kernel_rxq_msg.stamp = timestamp;
+      packets_dropped_in_kernel_rxq_msg.data =
+        current_scan_perf_counters_.n_packets_dropped_in_kernel_rxq;
+      debug_publisher_.publish(
+        "debug/n_packets_dropped_in_kernel_rxq", packets_dropped_in_kernel_rxq_msg);
 
       current_scan_perf_counters_ = {};
     }

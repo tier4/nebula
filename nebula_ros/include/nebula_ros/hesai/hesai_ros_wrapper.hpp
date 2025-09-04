@@ -146,6 +146,7 @@ private:
     uint64_t receive_time_current_scan_ns{0};
     uint64_t n_wakeups_without_data{0};
     uint64_t n_wakeups_by_wrong_sender{0};
+    uint64_t n_packets_dropped_in_kernel_rxq{0};
     uint32_t last_azimuth{0};
   } current_scan_perf_counters_;
 };
