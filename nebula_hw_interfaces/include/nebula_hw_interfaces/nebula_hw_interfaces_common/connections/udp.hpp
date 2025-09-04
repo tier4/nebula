@@ -317,10 +317,18 @@ public:
     SocketConfig config_;
   };
 
+  struct PerfCounters
+  {
+    uint64_t receive_duration_ns{0};
+    uint64_t n_woken_without_data{0};
+    uint64_t n_woken_by_wrong_sender{0};
+  };
+
   struct RxMetadata
   {
     std::optional<uint64_t> timestamp_ns;
-    uint64_t drops_since_last_receive{0};
+    uint64_t n_packets_dropped_since_last_receive{0};
+    PerfCounters packet_perf_counters{};
     bool truncated;
   };
 
@@ -383,8 +391,7 @@ public:
   UdpSocket(UdpSocket && other)
   : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))),
     poll_fd_(other.poll_fd_),
-    config_(other.config_),
-    drop_monitor_(other.drop_monitor_)
+    config_(other.config_)
   {
     if (other.callback_) subscribe(std::move(other.callback_));
   };
@@ -402,10 +409,20 @@ private:
     running_ = true;
     receive_thread_ = std::thread([this]() {
       std::vector<uint8_t> buffer;
+      DropMonitor drop_monitor{};
+      PerfCounters current_packet_perf_counters{};
+
       while (running_) {
         auto data_available = is_data_available();
+
+        auto t_start = std::chrono::steady_clock::now();
         if (!data_available.has_value()) throw SocketError(data_available.error());
-        if (!data_available.value()) continue;
+        if (!data_available.value()) {
+          current_packet_perf_counters.n_woken_without_data++;
+          current_packet_perf_counters.receive_duration_ns +=
+            (std::chrono::steady_clock::now() - t_start).count();
+          continue;
+        }
 
         buffer.resize(config_.buffer_size);
         MsgBuffers msg_header{buffer};
@@ -416,19 +433,31 @@ private:
         if (recv_result < 0) throw SocketError(errno);
         size_t untruncated_packet_length = recv_result;
 
-        if (!is_accepted_sender(msg_header.sender_addr)) continue;
+        if (!is_accepted_sender(msg_header.sender_addr)) {
+          current_packet_perf_counters.n_woken_by_wrong_sender++;
+          current_packet_perf_counters.receive_duration_ns +=
+            (std::chrono::steady_clock::now() - t_start).count();
+          continue;
+        }
 
         RxMetadata metadata;
-        get_receive_metadata(msg_header.msg, metadata);
+        get_receive_metadata(msg_header.msg, metadata, drop_monitor);
         metadata.truncated = untruncated_packet_length > config_.buffer_size;
 
         buffer.resize(std::min(config_.buffer_size, untruncated_packet_length));
+
+        current_packet_perf_counters.receive_duration_ns +=
+          (std::chrono::steady_clock::now() - t_start).count();
+
+        metadata.packet_perf_counters = current_packet_perf_counters;
+        current_packet_perf_counters = {};
+
         callback_(buffer, metadata);
       }
     });
   }
 
-  void get_receive_metadata(msghdr & msg, RxMetadata & inout_metadata)
+  void get_receive_metadata(msghdr & msg, RxMetadata & metadata, DropMonitor & drop_monitor)
   {
     for (cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
       if (cmsg->cmsg_level != SOL_SOCKET) continue;
@@ -437,13 +466,13 @@ private:
         case SO_TIMESTAMP: {
           auto tv = (timeval const *)CMSG_DATA(cmsg);
           uint64_t timestamp_ns = tv->tv_sec * 1'000'000'000 + tv->tv_usec * 1000;
-          inout_metadata.timestamp_ns.emplace(timestamp_ns);
+          metadata.timestamp_ns.emplace(timestamp_ns);
           break;
         }
         case SO_RXQ_OVFL: {
           auto drops = (uint32_t const *)CMSG_DATA(cmsg);
-          inout_metadata.drops_since_last_receive =
-            drop_monitor_.get_drops_since_last_receive(*drops);
+          metadata.n_packets_dropped_since_last_receive =
+            drop_monitor.get_drops_since_last_receive(*drops);
           break;
         }
         default:
@@ -473,8 +502,6 @@ private:
   std::atomic_bool running_{false};
   std::thread receive_thread_;
   callback_t callback_;
-
-  DropMonitor drop_monitor_;
 };
 
 }  // namespace nebula::drivers::connections

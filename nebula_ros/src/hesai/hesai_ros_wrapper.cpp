@@ -10,7 +10,11 @@
 #include <nebula_common/util/string_conversions.hpp>
 #include <nebula_decoders/nebula_decoders_common/angles.hpp>
 
+#include <autoware_internal_debug_msgs/msg/float64_stamped.hpp>
+#include <autoware_internal_debug_msgs/msg/int64_stamped.hpp>
+
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
@@ -30,7 +34,8 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   wrapper_status_(Status::NOT_INITIALIZED),
   sensor_cfg_ptr_(nullptr),
   diagnostic_updater_general_((declare_parameter<bool>("diagnostic_updater.use_fqn", true), this)),
-  diagnostic_updater_functional_safety_(this)
+  diagnostic_updater_functional_safety_(this),
+  debug_publisher_(this, "nebula")
 {
   setvbuf(stdout, nullptr, _IONBF, BUFSIZ);
 
@@ -518,6 +523,17 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
     return;
   }
 
+  current_scan_perf_counters_.receive_time_current_scan_ns +=
+    metadata.packet_perf_counters.receive_duration_ns;
+  current_scan_perf_counters_.n_wakeups_without_data +=
+    metadata.packet_perf_counters.n_woken_without_data;
+  current_scan_perf_counters_.n_wakeups_by_wrong_sender +=
+    metadata.packet_perf_counters.n_woken_by_wrong_sender;
+  current_scan_perf_counters_.n_packets_dropped_in_kernel_rxq +=
+    metadata.n_packets_dropped_since_last_receive;
+
+  auto t_start = std::chrono::steady_clock::now();
+
   const auto now = std::chrono::high_resolution_clock::now();
   const auto timestamp_ns =
     std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
@@ -536,6 +552,47 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
                              static_cast<int64_t>(decode_result.value().packet_timestamp_ns);
         sync_tooling_plugin_->worker->submit_clock_diff_measurement(clock_diff);
       });
+  }
+
+  current_scan_perf_counters_.decode_time_current_scan_ns +=
+    (std::chrono::steady_clock::now() - t_start).count();
+
+  if (decode_result.has_value()) {
+    if (decode_result.value().last_azimuth < current_scan_perf_counters_.last_azimuth) {
+      rclcpp::Time timestamp{static_cast<int64_t>(decode_result.value().packet_timestamp_ns)};
+
+      autoware_internal_debug_msgs::msg::Float64Stamped receive_time_msg;
+      receive_time_msg.stamp = timestamp;
+      receive_time_msg.data =
+        (current_scan_perf_counters_.receive_time_current_scan_ns) / 1'000'000.0;
+      debug_publisher_.publish("debug/receive_duration_ms", receive_time_msg);
+
+      autoware_internal_debug_msgs::msg::Float64Stamped decode_time_msg;
+      decode_time_msg.stamp = timestamp;
+      decode_time_msg.data =
+        (current_scan_perf_counters_.decode_time_current_scan_ns) / 1'000'000.0;
+      debug_publisher_.publish("debug/decode_duration_ms", decode_time_msg);
+
+      autoware_internal_debug_msgs::msg::Int64Stamped wakeups_without_data_msg;
+      wakeups_without_data_msg.stamp = timestamp;
+      wakeups_without_data_msg.data = current_scan_perf_counters_.n_wakeups_without_data;
+      debug_publisher_.publish("debug/n_wakeups_without_data", wakeups_without_data_msg);
+
+      autoware_internal_debug_msgs::msg::Int64Stamped wakeups_from_wrong_sender_msg;
+      wakeups_from_wrong_sender_msg.stamp = timestamp;
+      wakeups_from_wrong_sender_msg.data = current_scan_perf_counters_.n_wakeups_by_wrong_sender;
+      debug_publisher_.publish("debug/n_wakeups_from_wrong_sender", wakeups_from_wrong_sender_msg);
+
+      autoware_internal_debug_msgs::msg::Int64Stamped packets_dropped_in_kernel_rxq_msg;
+      packets_dropped_in_kernel_rxq_msg.stamp = timestamp;
+      packets_dropped_in_kernel_rxq_msg.data =
+        current_scan_perf_counters_.n_packets_dropped_in_kernel_rxq;
+      debug_publisher_.publish(
+        "debug/n_packets_dropped_in_kernel_rxq", packets_dropped_in_kernel_rxq_msg);
+
+      current_scan_perf_counters_ = {};
+    }
+    current_scan_perf_counters_.last_azimuth = decode_result.value().last_azimuth;
   }
 }
 
