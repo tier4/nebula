@@ -327,7 +327,7 @@ public:
   struct RxMetadata
   {
     std::optional<uint64_t> timestamp_ns;
-    uint64_t drops_since_last_receive{0};
+    uint64_t n_packets_dropped_since_last_receive{0};
     PerfCounters packet_perf_counters{};
     bool truncated;
   };
@@ -471,7 +471,8 @@ private:
         }
         case SO_RXQ_OVFL: {
           auto drops = (uint32_t const *)CMSG_DATA(cmsg);
-          metadata.drops_since_last_receive = drop_monitor.get_drops_since_last_receive(*drops);
+          metadata.n_packets_dropped_since_last_receive =
+            drop_monitor.get_drops_since_last_receive(*drops);
           break;
         }
         default:
