@@ -233,7 +233,7 @@ jobs:
 
       - name: Annotate files with FB Infer results
         run: |
-          python3 ./.github/workflows/scripts/annotate-infer-results.py \
+          python3 ./.github/workflows/scripts/annotate-with-infer-diff.py \
             infer-out/differential/introduced.json
 
       - name: Upload FB Infer Reports
