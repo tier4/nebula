@@ -316,6 +316,8 @@ ament_export_dependencies(
     yaml-cpp
     message_filters
     sync_tooling_msgs
+    autoware_utils_debug
+    autoware_internal_debug_msgs
 )
 
 if("$ENV{ENABLE_AGNOCAST}")
