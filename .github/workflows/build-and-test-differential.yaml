@@ -82,7 +82,7 @@ jobs:
           verbose: true
           flags: differential
 
-  fb-infer-analyze:
+  fb-infer-differential:
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
     strategy:
@@ -98,12 +98,26 @@ jobs:
             container: ros:humble
             build-depends-repos: build_depends.repos
     env:
+      # Compilation with Clang is required for FB Infer
       CC: /usr/lib/ccache/clang-15
       CXX: /usr/lib/ccache/clang++-15
       CCACHE_DIR: /root/.ccache
       FB_INFER_VERSION: 1.2.0
     steps:
-      - name: Checkout code
+      - name: Check out PR repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          # This repo checkout is only for .github workflow definitions. Use the feature branch's version as it might contain updated functionality.
+          ref: ${{ github.head_ref }}
+
+      - name: Get modified packages
+        id: get-modified-packages
+        uses: autowarefoundation/autoware-github-actions/get-modified-packages@v1
+        with:
+          base-ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: Checkout matrix ref code
         id: checkout-ref
         uses: actions/checkout@v3
         with:
@@ -111,19 +125,11 @@ jobs:
           ref: ${{ matrix.ref }}
           clean: false
           sparse-checkout-cone-mode: false
+          # The PR might have updated the workflow definitions, so we want to keep them, even when
+          # checking out a different ref.
           sparse-checkout: |
             /*
             !.github/
-
-      - name: Check out GitHub workflow definitions
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          # This repo checkout is only for .github workflow definitions. Use the feature branch's version as it might contain updated functionality.
-          ref: ${{ github.head_ref }}
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            .github/
 
       - run: ./.github/workflows/scripts/ensure-apt-up-to-date.sh
       - run: ./.github/workflows/scripts/setup-ccache.sh
@@ -155,18 +161,13 @@ jobs:
         if: steps.cache-analysis.outputs.cache-hit != 'true'
         uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1
 
-      - name: Get self packages
-        id: get-self-packages
-        if: steps.cache-analysis.outputs.cache-hit != 'true'
-        uses: autowarefoundation/autoware-github-actions/get-self-packages@v1
-
       - name: Build
         id: build
         if: steps.cache-analysis.outputs.cache-hit != 'true'
         uses: autowarefoundation/autoware-github-actions/colcon-build@v1
         with:
           rosdistro: ${{ matrix.rosdistro }}
-          target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
+          target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
           build-depends-repos: ${{ matrix.build-depends-repos }}
           cmake-build-type: Debug  # Faster compilation than Release
 
@@ -195,7 +196,7 @@ jobs:
 
   fb-infer-report:
     runs-on: ubuntu-latest
-    needs: [fb-infer-analyze]
+    needs: [fb-infer-differential]
     env:
       FB_INFER_VERSION: 1.2.0
     steps:
