@@ -108,8 +108,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          # This repo checkout is only for .github workflow definitions. Use the feature branch's version as it might contain updated functionality.
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Get modified packages
         id: get-modified-packages
