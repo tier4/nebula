@@ -231,6 +231,11 @@ jobs:
             --report-current infer-report-head/report.json \
             --report-previous infer-report-base/report.json
 
+      - name: Annotate files with FB Infer results
+        run: |
+          python3 ./.github/workflows/scripts/annotate-infer-results.py \
+            infer-out/differential/introduced.json
+
       - name: Upload FB Infer Reports
         id: upload-infer-reports
         uses: actions/upload-artifact@v4
