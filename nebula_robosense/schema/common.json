@@ -1,17 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "common.json",
   "title": "Lidar Robosense parameters.",
   "type": "object",
   "definitions": {
     "sensor_model": {
-      "$ref": "hardware.json#/definitions/sensor_model",
+      "$ref": "../../nebula_common/schema/hardware.json#/definitions/sensor_model",
       "enum": [
         "Helios",
         "Bpearl"
       ]
     },
     "return_mode": {
-      "$ref": "misc.json#/definitions/return_mode",
+      "$ref": "../../nebula_common/schema/misc.json#/definitions/return_mode",
       "enum": [
         "Dual",
         "Strongest",

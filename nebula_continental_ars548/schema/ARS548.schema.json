@@ -7,55 +7,55 @@
       "type": "object",
       "properties": {
         "host_ip": {
-          "$ref": "sub/communication.json#/definitions/host_ip"
+          "$ref": "../../nebula_common/schema/communication.json#/definitions/host_ip"
         },
         "sensor_ip": {
-          "$ref": "sub/communication.json#/definitions/sensor_ip"
+          "$ref": "../../nebula_common/schema/communication.json#/definitions/sensor_ip"
         },
         "multicast_ip": {
-          "$ref": "sub/communication.json#/definitions/multicast_ip"
+          "$ref": "../../nebula_common/schema/communication.json#/definitions/multicast_ip"
         },
         "data_port": {
-          "$ref": "sub/communication.json#/definitions/data_port"
+          "$ref": "../../nebula_common/schema/communication.json#/definitions/data_port"
         },
         "configuration_host_port": {
-          "$ref": "sub/communication.json#/definitions/configuration_host_port"
+          "$ref": "../../nebula_common/schema/communication.json#/definitions/configuration_host_port"
         },
         "configuration_sensor_port": {
-          "$ref": "sub/communication.json#/definitions/configuration_sensor_port"
+          "$ref": "../../nebula_common/schema/communication.json#/definitions/configuration_sensor_port"
         },
         "launch_hw": {
-          "$ref": "sub/hardware.json#/definitions/launch_hw"
+          "$ref": "../../nebula_common/schema/hardware.json#/definitions/launch_hw"
         },
         "frame_id": {
-          "$ref": "sub/topic.json#/definitions/frame_id"
+          "$ref": "../../nebula_common/schema/topic.json#/definitions/frame_id"
         },
         "base_frame": {
-          "$ref": "sub/topic.json#/definitions/base_frame"
+          "$ref": "../../nebula_common/schema/topic.json#/definitions/base_frame"
         },
         "object_frame": {
-          "$ref": "sub/topic.json#/definitions/object_frame"
+          "$ref": "../../nebula_common/schema/topic.json#/definitions/object_frame"
         },
         "use_sensor_time": {
-          "$ref": "sub/topic.json#/definitions/use_sensor_time"
+          "$ref": "../../nebula_common/schema/topic.json#/definitions/use_sensor_time"
         },
         "radar_info_rate_subsample": {
-          "$ref": "sub/topic.json#/definitions/radar_info_rate_subsample"
+          "$ref": "../../nebula_common/schema/topic.json#/definitions/radar_info_rate_subsample"
         },
         "configuration_vehicle_length": {
-          "$ref": "sub/misc.json#/definitions/configuration_vehicle_length"
+          "$ref": "../../nebula_common/schema/misc.json#/definitions/configuration_vehicle_length"
         },
         "configuration_vehicle_width": {
-          "$ref": "sub/misc.json#/definitions/configuration_vehicle_width"
+          "$ref": "../../nebula_common/schema/misc.json#/definitions/configuration_vehicle_width"
         },
         "configuration_vehicle_height": {
-          "$ref": "sub/misc.json#/definitions/configuration_vehicle_height"
+          "$ref": "../../nebula_common/schema/misc.json#/definitions/configuration_vehicle_height"
         },
         "configuration_vehicle_wheelbase": {
-          "$ref": "sub/misc.json#/definitions/configuration_vehicle_wheelbase"
+          "$ref": "../../nebula_common/schema/misc.json#/definitions/configuration_vehicle_wheelbase"
         },
         "sensor_model": {
-          "$ref": "sub/radar_continental.json#/definitions/sensor_model",
+          "$ref": "../../nebula_common/schema/hardware.json#/definitions/sensor_model",
           "enum": [
             "ARS548"
           ]
@@ -63,7 +63,7 @@
         "diagnostics": {
           "properties": {
             "rate_bound_status": {
-              "$ref": "sub/diagnostics.json#/definitions/rate_bound_status"
+              "$ref": "../../nebula_common/schema/diagnostics.json#/definitions/rate_bound_status"
             },
             "blockage": {
               "type": "object",
@@ -119,7 +119,7 @@
           }
         },
         "sync_diagnostics": {
-          "$ref": "sub/misc.json#/definitions/sync_diagnostics"
+          "$ref": "../../nebula_common/schema/misc.json#/definitions/sync_diagnostics"
         }
       },
       "required": [

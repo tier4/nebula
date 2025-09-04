@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "misc.json",
   "title": "Sensors common parameters.",
   "type": "object",
   "definitions": {

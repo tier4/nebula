@@ -1,10 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "common.json",
   "title": "Lidar Hesai parameters.",
   "type": "object",
   "definitions": {
     "sensor_model": {
-      "$ref": "hardware.json#/definitions/sensor_model",
+      "$ref": "../../nebula_common/schema/hardware.json#/definitions/sensor_model",
       "enum": [
         "Pandar64",
         "Pandar40P",
@@ -18,20 +19,20 @@
       ]
     },
     "calibration_file": {
-      "$ref": "misc.json#/definitions/calibration_file",
+      "$ref": "../../nebula_common/schema/misc.json#/definitions/calibration_file",
       "default": "$(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).csv"
     },
     "multicast_ip": {
-      "$ref": "communication.json#/definitions/multicast_ip",
+      "$ref": "../../nebula_common/schema/communication.json#/definitions/multicast_ip",
       "default": "\"\""
     },
     "gnss_port": {
-      "$ref": "communication.json#/definitions/gnss_port",
+      "$ref": "../../nebula_common/schema/communication.json#/definitions/gnss_port",
       "default": "10110",
       "minimum": 0
     },
     "rotation_speed": {
-      "$ref": "hardware.json#/definitions/rotation_speed",
+      "$ref": "../../nebula_common/schema/hardware.json#/definitions/rotation_speed",
       "default": "600",
       "minimum": 300,
       "maximum": 1200,
@@ -115,10 +116,10 @@
       "type": "object",
       "properties": {
         "pointcloud_publish_rate": {
-          "$ref": "diagnostics.json#/definitions/rate_bound_status"
+          "$ref": "../../nebula_common/schema/diagnostics.json#/definitions/rate_bound_status"
         },
         "packet_loss": {
-          "$ref": "diagnostics.json#/definitions/packet_loss_diagnostic_task"
+          "$ref": "../../nebula_common/schema/diagnostics.json#/definitions/packet_loss_diagnostic_task"
         }
       }
     }

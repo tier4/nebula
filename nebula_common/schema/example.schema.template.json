@@ -13,24 +13,24 @@
           "description": "Exclusive parameter only for this sensor model."
         },
         "example_parameter_2": {
-          "$ref": "sub/communication.json#/definitions/example_parameter_2",
+          "$ref": "communication.json#/definitions/example_parameter_2",
           "maximum": 100,
           "$comment": "Shared parameter, but needs some changes only for this sensor model."
         },
         "example_parameter_3": {
-          "$ref": "sub/communication.json#/definitions/example_parameter_3"
+          "$ref": "communication.json#/definitions/example_parameter_3"
         },
         "example_parameter_4": {
-          "$ref": "sub/hardware.json#/definitions/example_parameter_4"
+          "$ref": "hardware.json#/definitions/example_parameter_4"
         },
         "example_parameter_5": {
-          "$ref": "sub/topic.json#/definitions/example_parameter_5"
+          "$ref": "topic.json#/definitions/example_parameter_5"
         },
         "example_parameter_6": {
-          "$ref": "sub/misc.json#/definitions/example_parameter_6"
+          "$ref": "misc.json#/definitions/example_parameter_6"
         },
         "example_parameter_7": {
-          "$ref": "sub/<sensor_type>_<vendor>.json#/definitions/example_parameter_7"
+          "$ref": "<sensor_type>_<vendor>.json#/definitions/example_parameter_7"
         }
       },
       "required": [
