@@ -142,12 +142,12 @@ private:
   autoware_utils_debug::DebugPublisher debug_publisher_;
   struct PerfCounters
   {
-    uint64_t decode_time_current_scan_ns_{0};
-    uint64_t receive_time_current_scan_ns_{0};
-    uint64_t wakeups_without_data_{0};
-    uint64_t wakeups_by_wrong_sender_{0};
-    uint32_t last_azimuth_{0};
-  } perf_counters_;
+    uint64_t decode_time_current_scan_ns{0};
+    uint64_t receive_time_current_scan_ns{0};
+    uint64_t n_wakeups_without_data{0};
+    uint64_t n_wakeups_by_wrong_sender{0};
+    uint32_t last_azimuth{0};
+  } current_scan_perf_counters_;
 };
 
 }  // namespace nebula::ros
