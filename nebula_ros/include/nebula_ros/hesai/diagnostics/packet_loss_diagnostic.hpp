@@ -37,11 +37,7 @@ public:
   {
   }
 
-  void on_lost(uint64_t n_lost)
-  {
-    std::lock_guard lock(mutex_);
-    n_lost_packets_ += n_lost;
-  }
+  void on_lost(uint64_t n_lost) { n_lost_packets_ += n_lost; }
 
   void run(diagnostic_updater::DiagnosticStatusWrapper & status) override
   {
