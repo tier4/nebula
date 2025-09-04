@@ -114,19 +114,21 @@ jobs:
         id: get-modified-packages
         uses: autowarefoundation/autoware-github-actions/get-modified-packages@v1
 
+      - name: Back up .github folder
+        run: |
+          cp -r .github /tmp/.github-backup
+
       - name: Checkout matrix ref code
         id: checkout-ref
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: ${{ matrix.ref }}
-          clean: false
-          sparse-checkout-cone-mode: false
-          # The PR might have updated the workflow definitions, so we want to keep them, even when
-          # checking out a different ref.
-          sparse-checkout: |
-            /*
-            !.github/
+
+      - name: Restore .github folder
+        run: |
+          rm -rf .github
+          mv /tmp/.github-backup .github
 
       - run: ./.github/workflows/scripts/ensure-apt-up-to-date.sh
       - run: ./.github/workflows/scripts/setup-ccache.sh
