@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include "nebula/decoders/nebula_decoders_hesai/hesai_driver.hpp"
 #include "nebula/common/ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 #include "nebula/common/ros/diagnostics/rate_bound_status.hpp"
 #include "nebula/common/ros/single_consumer_processor.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/hesai_driver.hpp"
 #include "nebula/ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 #include "nebula/ros/hesai/diagnostics/packet_loss_diagnostic.hpp"
 

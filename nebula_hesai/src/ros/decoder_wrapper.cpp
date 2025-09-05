@@ -2,9 +2,9 @@
 
 #include "nebula/ros/hesai/decoder_wrapper.hpp"
 
-#include "nebula/decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula/common/ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 #include "nebula/common/ros/rclcpp_logger.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula/ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 
 #include <nebula/common/common/hesai/hesai_common.hpp>
