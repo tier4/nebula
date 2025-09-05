@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 
 #include <boost/container/static_vector.hpp>
 

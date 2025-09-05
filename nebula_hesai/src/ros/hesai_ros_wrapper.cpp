@@ -1,13 +1,13 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_ros/hesai/hesai_ros_wrapper.hpp"
+#include "nebula/ros/hesai/hesai_ros_wrapper.hpp"
 
-#include "nebula_ros/common/parameter_descriptors.hpp"
+#include "nebula/common/ros/parameter_descriptors.hpp"
 
-#include <nebula_common/hesai/hesai_common.hpp>
-#include <nebula_common/nebula_common.hpp>
-#include <nebula_common/util/rate_limiter.hpp>
-#include <nebula_common/util/string_conversions.hpp>
+#include <nebula/common/common/hesai/hesai_common.hpp>
+#include <nebula/common/common/nebula_common.hpp>
+#include <nebula/common/common/util/rate_limiter.hpp>
+#include <nebula/common/common/util/string_conversions.hpp>
 #include <nebula_decoders/nebula_decoders_common/angles.hpp>
 
 #include <autoware_internal_debug_msgs/msg/float64_stamped.hpp>

@@ -1,6 +1,6 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include <nebula_common/nebula_common.hpp>
+#include <nebula/common/common/nebula_common.hpp>
 
 namespace nebula::drivers
 {

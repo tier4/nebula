@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_decoders/nebula_decoders_velodyne/decoders/velodyne_scan_decoder.hpp"
+#include "nebula/decoders/nebula_decoders_velodyne/decoders/velodyne_scan_decoder.hpp"
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
 #include <velodyne_msgs/msg/velodyne_scan.hpp>

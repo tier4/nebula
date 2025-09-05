@@ -1,12 +1,12 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_ros/hesai/hw_interface_wrapper.hpp"
+#include "nebula/ros/hesai/hw_interface_wrapper.hpp"
 
-#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
-#include "nebula_ros/common/parameter_descriptors.hpp"
-#include "nebula_ros/common/rclcpp_logger.hpp"
+#include "nebula/hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
+#include "nebula/common/ros/parameter_descriptors.hpp"
+#include "nebula/common/ros/rclcpp_logger.hpp"
 
-#include <nebula_common/util/string_conversions.hpp>
+#include <nebula/common/common/util/string_conversions.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
 
 #include <memory>

@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_decoders/nebula_decoders_common/angles.hpp"
-#include "nebula_decoders/nebula_decoders_common/point_filters/downsample_mask.hpp"
+#include "nebula/common/decoder/angles.hpp"
+#include "nebula/common/decoder/point_filters/downsample_mask.hpp"
 
-#include <nebula_common/loggers/console_logger.hpp>
-#include <nebula_common/nebula_common.hpp>
-#include <nebula_common/point_types.hpp>
+#include "nebula/common/common/loggers/console_logger.hpp"
+#include "nebula/common/common/nebula_common.hpp"
+#include "nebula/common/common/point_types.hpp"
 #include <png++/gray_pixel.hpp>
 #include <png++/image.hpp>
 

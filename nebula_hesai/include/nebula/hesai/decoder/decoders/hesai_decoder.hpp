@@ -14,19 +14,19 @@
 
 #pragma once
 
-#include "nebula_decoders/nebula_decoders_common/angles.hpp"
-#include "nebula_decoders/nebula_decoders_common/point_filters/blockage_mask.hpp"
-#include "nebula_decoders/nebula_decoders_common/point_filters/downsample_mask.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/packet_loss_detector.hpp"
+#include "nebula/decoders/nebula_decoders_common/angles.hpp"
+#include "nebula/decoders/nebula_decoders_common/point_filters/blockage_mask.hpp"
+#include "nebula/decoders/nebula_decoders_common/point_filters/downsample_mask.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/packet_loss_detector.hpp"
 
-#include <nebula_common/hesai/hesai_common.hpp>
-#include <nebula_common/loggers/logger.hpp>
-#include <nebula_common/nebula_common.hpp>
-#include <nebula_common/point_types.hpp>
+#include <nebula/common/common/hesai/hesai_common.hpp>
+#include <nebula/common/common/loggers/logger.hpp>
+#include <nebula/common/common/nebula_common.hpp>
+#include <nebula/common/common/point_types.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 

@@ -15,9 +15,9 @@
 #ifndef NEBULA_HESAI_COMMON_H
 #define NEBULA_HESAI_COMMON_H
 
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_common/util/string_conversions.hpp"
+#include "nebula/common/nebula_common.hpp"
+#include "nebula/common/nebula_status.hpp"
+#include "nebula/common/util/string_conversions.hpp"
 
 #include <algorithm>
 #include <cmath>

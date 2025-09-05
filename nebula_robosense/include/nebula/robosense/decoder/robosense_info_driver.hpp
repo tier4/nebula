@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_common/robosense/robosense_common.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_info_decoder_base.hpp"
+#include "nebula/common/nebula_common.hpp"
+#include "nebula/common/nebula_status.hpp"
+#include "nebula/common/robosense/robosense_common.hpp"
+#include "nebula/decoders/nebula_decoders_robosense/decoders/robosense_info_decoder_base.hpp"
 
 #include <pcl_conversions/pcl_conversions.h>
 

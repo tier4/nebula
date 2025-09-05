@@ -14,13 +14,13 @@
 
 #pragma once
 
-#include "nebula_decoders/nebula_decoders_common/point_filters/blockage_mask.hpp"
-#include "nebula_decoders/nebula_decoders_common/point_filters/downsample_mask.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector_calibration_based.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector_correction_based.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
+#include "nebula/decoders/nebula_decoders_common/point_filters/blockage_mask.hpp"
+#include "nebula/decoders/nebula_decoders_common/point_filters/downsample_mask.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/angle_corrector_calibration_based.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/angle_corrector_correction_based.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 
-#include <nebula_common/nebula_common.hpp>
+#include <nebula/common/common/nebula_common.hpp>
 
 #include <algorithm>
 #include <type_traits>

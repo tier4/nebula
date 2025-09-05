@@ -2,8 +2,8 @@
 
 #include "hesai_ros_decoder_test.hpp"
 
-#include <nebula_common/hesai/hesai_common.hpp>
-#include <nebula_common/nebula_common.hpp>
+#include <nebula/common/common/hesai/hesai_common.hpp>
+#include <nebula/common/common/nebula_common.hpp>
 #include <nebula_ros/common/rclcpp_logger.hpp>
 #include <rclcpp/serialization.hpp>
 #include <rclcpp/serialized_message.hpp>

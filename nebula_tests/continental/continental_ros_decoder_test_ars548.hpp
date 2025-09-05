@@ -16,8 +16,8 @@
 #define NEBULA_ContinentalRosDecoderTestArs548_H
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_common/nebula_common.hpp>
-#include <nebula_common/nebula_status.hpp>
+#include <nebula/common/common/nebula_common.hpp>
+#include <nebula/common/common/nebula_status.hpp>
 #include <nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
 #include <rclcpp/rclcpp.hpp>
 

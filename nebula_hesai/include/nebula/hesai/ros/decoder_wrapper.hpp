@@ -14,17 +14,17 @@
 
 #pragma once
 
-#include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
-#include "nebula_ros/common/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
-#include "nebula_ros/common/diagnostics/rate_bound_status.hpp"
-#include "nebula_ros/common/single_consumer_processor.hpp"
-#include "nebula_ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
-#include "nebula_ros/hesai/diagnostics/packet_loss_diagnostic.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/hesai_driver.hpp"
+#include "nebula/common/ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
+#include "nebula/common/ros/diagnostics/rate_bound_status.hpp"
+#include "nebula/common/ros/single_consumer_processor.hpp"
+#include "nebula/ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
+#include "nebula/ros/hesai/diagnostics/packet_loss_diagnostic.hpp"
 
 #include <diagnostic_updater/publisher.hpp>
 #include <diagnostic_updater/update_functions.hpp>
-#include <nebula_common/hesai/hesai_common.hpp>
-#include <nebula_common/nebula_common.hpp>
+#include <nebula/common/common/hesai/hesai_common.hpp>
+#include <nebula/common/common/nebula_common.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 

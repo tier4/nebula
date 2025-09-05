@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
-#include <nebula_common/util/bitfield.hpp>
+#include <nebula/common/common/util/bitfield.hpp>
 
 #include <cstdint>
 #include <iostream>

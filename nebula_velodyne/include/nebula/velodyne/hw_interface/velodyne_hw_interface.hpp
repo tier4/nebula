@@ -28,14 +28,14 @@
 #define BOOST_ALLOW_DEPRECATED_HEADERS
 #endif
 
-#include "nebula_common/util/expected.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
+#include "nebula/common/util/expected.hpp"
+#include "nebula/hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 
 #include <boost_tcp_driver/http_client_driver.hpp>
 #include <boost_udp_driver/udp_driver.hpp>
-#include <nebula_common/loggers/logger.hpp>
-#include <nebula_common/velodyne/velodyne_common.hpp>
-#include <nebula_common/velodyne/velodyne_status.hpp>
+#include <nebula/common/common/loggers/logger.hpp>
+#include <nebula/common/common/velodyne/velodyne_common.hpp>
+#include <nebula/common/common/velodyne/velodyne_status.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp>
 
 #include <boost/property_tree/json_parser.hpp>

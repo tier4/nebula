@@ -15,10 +15,10 @@
 #ifndef NEBULA_CONTINENTAL_SRR520_HW_INTERFACE_H
 #define NEBULA_CONTINENTAL_SRR520_HW_INTERFACE_H
 
-#include "nebula_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
+#include "nebula/hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 
-#include <nebula_common/continental/continental_srr520.hpp>
-#include <nebula_common/loggers/logger.hpp>
+#include <nebula/common/common/continental/continental_srr520.hpp>
+#include <nebula/common/common/loggers/logger.hpp>
 #include <ros2_socketcan/socket_can_receiver.hpp>
 #include <ros2_socketcan/socket_can_sender.hpp>
 

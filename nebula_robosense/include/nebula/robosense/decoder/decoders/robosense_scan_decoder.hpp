@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_common/point_types.hpp"
+#include "nebula/common/point_types.hpp"
 
 #include <tuple>
 #include <vector>

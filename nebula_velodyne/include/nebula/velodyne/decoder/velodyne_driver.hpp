@@ -15,12 +15,12 @@
 #ifndef NEBULA_VELODYNE_DRIVER_H
 #define NEBULA_VELODYNE_DRIVER_H
 
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_common/point_types.hpp"
-#include "nebula_common/velodyne/velodyne_common.hpp"
-#include "nebula_decoders/nebula_decoders_common/nebula_driver_base.hpp"
-#include "nebula_decoders/nebula_decoders_velodyne/decoders/velodyne_scan_decoder.hpp"
+#include "nebula/common/nebula_common.hpp"
+#include "nebula/common/nebula_status.hpp"
+#include "nebula/common/point_types.hpp"
+#include "nebula/common/velodyne/velodyne_common.hpp"
+#include "nebula/decoders/nebula_decoders_common/nebula_driver_base.hpp"
+#include "nebula/decoders/nebula_decoders_velodyne/decoders/velodyne_scan_decoder.hpp"
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
 #include <velodyne_msgs/msg/velodyne_scan.hpp>

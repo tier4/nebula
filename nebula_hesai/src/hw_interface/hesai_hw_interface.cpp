@@ -1,14 +1,14 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
+#include "nebula/hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp"
 
-#include "nebula_common/hesai/hesai_common.hpp"
-#include "nebula_common/hesai/hesai_status.hpp"
-#include "nebula_common/loggers/logger.hpp"
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
+#include "nebula/common/hesai/hesai_common.hpp"
+#include "nebula/common/hesai/hesai_status.hpp"
+#include "nebula/common/loggers/logger.hpp"
+#include "nebula/common/nebula_common.hpp"
+#include "nebula/common/nebula_status.hpp"
+#include "nebula/hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
+#include "nebula/hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 
 #include <nlohmann/json.hpp>
 #include <rclcpp/logging.hpp>

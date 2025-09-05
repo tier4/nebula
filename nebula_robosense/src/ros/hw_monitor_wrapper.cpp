@@ -1,8 +1,8 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_ros/robosense/hw_monitor_wrapper.hpp"
+#include "nebula/ros/robosense/hw_monitor_wrapper.hpp"
 
-#include "nebula_ros/common/parameter_descriptors.hpp"
+#include "nebula/common/ros/parameter_descriptors.hpp"
 
 #include <map>
 #include <memory>

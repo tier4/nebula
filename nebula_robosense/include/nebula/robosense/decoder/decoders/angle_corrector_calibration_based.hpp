@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "nebula_common/robosense/robosense_common.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/angle_corrector.hpp"
+#include "nebula/common/robosense/robosense_common.hpp"
+#include "nebula/decoders/nebula_decoders_robosense/decoders/angle_corrector.hpp"
 
 #include <cstdint>
 #include <memory>

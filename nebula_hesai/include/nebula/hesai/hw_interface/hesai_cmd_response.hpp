@@ -15,7 +15,7 @@
 #ifndef HESAI_CMD_RESPONSE_HPP
 #define HESAI_CMD_RESPONSE_HPP
 
-#include <nebula_common/util/string_conversions.hpp>
+#include <nebula/common/common/util/string_conversions.hpp>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 

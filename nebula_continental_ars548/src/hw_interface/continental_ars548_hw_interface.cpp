@@ -13,11 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp"
+#include "nebula/hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp"
 
-#include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
+#include "nebula/hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
 
-#include <nebula_common/continental/continental_ars548.hpp>
+#include <nebula/common/common/continental/continental_ars548.hpp>
 
 #include <algorithm>
 #include <iostream>

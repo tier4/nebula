@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_ros/common/single_consumer_processor.hpp"
+#include "nebula/common/ros/single_consumer_processor.hpp"
 
 #include <rcpputils/thread_safety_annotations.hpp>
 

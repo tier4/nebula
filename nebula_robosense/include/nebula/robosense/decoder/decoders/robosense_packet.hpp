@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include <nebula_common/robosense/robosense_common.hpp>
+#include <nebula/common/common/robosense/robosense_common.hpp>
 
 #include <boost/endian/buffers.hpp>
 

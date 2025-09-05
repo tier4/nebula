@@ -15,12 +15,12 @@
 #ifndef NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
 #define NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
 
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
+#include "nebula/common/nebula_status.hpp"
+#include "nebula/hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
 
 #include <boost_udp_driver/udp_driver.hpp>
-#include <nebula_common/continental/continental_ars548.hpp>
-#include <nebula_common/loggers/logger.hpp>
+#include <nebula/common/common/continental/continental_ars548.hpp>
+#include <nebula/common/common/loggers/logger.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
 

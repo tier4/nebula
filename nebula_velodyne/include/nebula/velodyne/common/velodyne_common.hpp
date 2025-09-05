@@ -15,9 +15,9 @@
 #ifndef NEBULA_VELODYNE_COMMON_H
 #define NEBULA_VELODYNE_COMMON_H
 
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
-#include "nebula_common/velodyne/velodyne_calibration_decoder.hpp"
+#include "nebula/common/nebula_common.hpp"
+#include "nebula/common/nebula_status.hpp"
+#include "nebula/common/velodyne/velodyne_calibration_decoder.hpp"
 
 #include <string>
 namespace nebula

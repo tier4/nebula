@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_common/robosense/robosense_common.hpp"
+#include "nebula/common/robosense/robosense_common.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 

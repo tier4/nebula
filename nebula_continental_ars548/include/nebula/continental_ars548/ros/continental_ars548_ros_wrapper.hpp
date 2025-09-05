@@ -14,13 +14,13 @@
 
 #pragma once
 
-#include "nebula_ros/common/parameter_descriptors.hpp"
-#include "nebula_ros/continental/continental_ars548_decoder_wrapper.hpp"
-#include "nebula_ros/continental/continental_ars548_hw_interface_wrapper.hpp"
+#include "nebula/common/ros/parameter_descriptors.hpp"
+#include "nebula/ros/continental/continental_ars548_decoder_wrapper.hpp"
+#include "nebula/ros/continental/continental_ars548_hw_interface_wrapper.hpp"
 
-#include <nebula_common/continental/continental_ars548.hpp>
-#include <nebula_common/nebula_common.hpp>
-#include <nebula_common/nebula_status.hpp>
+#include <nebula/common/common/continental/continental_ars548.hpp>
+#include <nebula/common/common/nebula_common.hpp>
+#include <nebula/common/common/nebula_status.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>

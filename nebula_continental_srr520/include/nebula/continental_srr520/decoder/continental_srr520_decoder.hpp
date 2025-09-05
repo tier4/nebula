@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include "nebula_decoders/nebula_decoders_continental/decoders/continental_packets_decoder.hpp"
+#include "nebula/decoders/nebula_decoders_continental/decoders/continental_packets_decoder.hpp"
 
-#include <nebula_common/continental/continental_srr520.hpp>
-#include <nebula_common/util/crc.hpp>
+#include <nebula/common/common/continental/continental_srr520.hpp>
+#include <nebula/common/common/util/crc.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <continental_msgs/msg/continental_srr520_detection_list.hpp>

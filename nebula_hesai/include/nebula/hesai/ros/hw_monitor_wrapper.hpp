@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include "nebula_ros/common/sync_tooling/sync_tooling_worker.hpp"
+#include "nebula/common/ros/sync_tooling/sync_tooling_worker.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula/common/common/hesai/hesai_common.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
 #include <nlohmann/json.hpp>

@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_sensor.hpp"
+#include "nebula/decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
+#include "nebula/decoders/nebula_decoders_robosense/decoders/robosense_sensor.hpp"
 
 #include "boost/endian/buffers.hpp"
 

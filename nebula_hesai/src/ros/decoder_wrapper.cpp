@@ -1,14 +1,14 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_ros/hesai/decoder_wrapper.hpp"
+#include "nebula/ros/hesai/decoder_wrapper.hpp"
 
-#include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
-#include "nebula_ros/common/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
-#include "nebula_ros/common/rclcpp_logger.hpp"
-#include "nebula_ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
+#include "nebula/common/ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
+#include "nebula/common/ros/rclcpp_logger.hpp"
+#include "nebula/ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 
-#include <nebula_common/hesai/hesai_common.hpp>
-#include <nebula_common/util/string_conversions.hpp>
+#include <nebula/common/common/hesai/hesai_common.hpp>
+#include <nebula/common/common/util/string_conversions.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 

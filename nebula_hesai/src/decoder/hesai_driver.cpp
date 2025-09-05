@@ -1,21 +1,21 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/hesai_driver.hpp"
 
-#include "nebula_decoders/nebula_decoders_common/point_filters/blockage_mask.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_decoder.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_128e3x.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_128e4x.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_40.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_64.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_at128.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt128.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_qt64.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt16.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32m.hpp"
+#include "nebula/decoders/nebula_decoders_common/point_filters/blockage_mask.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/hesai_decoder.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/pandar_128e3x.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/pandar_128e4x.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/pandar_40.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/pandar_64.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/pandar_at128.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/pandar_qt128.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/pandar_qt64.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/pandar_xt16.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/pandar_xt32.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/pandar_xt32m.hpp"
 
 #include <cstdint>
 #include <memory>

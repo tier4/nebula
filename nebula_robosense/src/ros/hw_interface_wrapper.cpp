@@ -1,10 +1,10 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_ros/robosense/hw_interface_wrapper.hpp"
+#include "nebula/ros/robosense/hw_interface_wrapper.hpp"
 
-#include "nebula_ros/common/rclcpp_logger.hpp"
+#include "nebula/common/ros/rclcpp_logger.hpp"
 
-#include <nebula_common/util/string_conversions.hpp>
+#include <nebula/common/common/util/string_conversions.hpp>
 
 #include <memory>
 

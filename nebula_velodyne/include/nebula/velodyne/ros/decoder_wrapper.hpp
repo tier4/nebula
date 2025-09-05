@@ -14,12 +14,12 @@
 
 #pragma once
 
-#include "nebula_ros/common/parameter_descriptors.hpp"
-#include "nebula_ros/common/watchdog_timer.hpp"
+#include "nebula/common/ros/parameter_descriptors.hpp"
+#include "nebula/common/ros/watchdog_timer.hpp"
 
-#include <nebula_common/nebula_common.hpp>
-#include <nebula_common/util/expected.hpp>
-#include <nebula_common/velodyne/velodyne_common.hpp>
+#include <nebula/common/common/nebula_common.hpp>
+#include <nebula/common/common/util/expected.hpp>
+#include <nebula/common/common/velodyne/velodyne_common.hpp>
 #include <nebula_decoders/nebula_decoders_velodyne/velodyne_driver.hpp>
 #include <nebula_hw_interfaces/nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>

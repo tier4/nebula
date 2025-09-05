@@ -15,8 +15,8 @@
 #ifndef NEBULA_WS_CONTINENTAL_PACKETS_DECODER_HPP
 #define NEBULA_WS_CONTINENTAL_PACKETS_DECODER_HPP
 
-#include <nebula_common/nebula_status.hpp>
-#include <nebula_common/point_types.hpp>
+#include <nebula/common/common/nebula_status.hpp>
+#include <nebula/common/common/point_types.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
 

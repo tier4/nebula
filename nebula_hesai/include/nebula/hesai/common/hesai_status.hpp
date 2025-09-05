@@ -15,7 +15,7 @@
 #ifndef HESAI_STATUS_HPP
 #define HESAI_STATUS_HPP
 
-#include "nebula_common/nebula_status.hpp"
+#include "nebula/common/nebula_status.hpp"
 
 #include <ostream>
 

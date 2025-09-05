@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/angle_corrector_calibration_based.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
+#include "nebula/common/nebula_common.hpp"
+#include "nebula/decoders/nebula_decoders_robosense/decoders/angle_corrector_calibration_based.hpp"
+#include "nebula/decoders/nebula_decoders_robosense/decoders/robosense_packet.hpp"
 
 #include <cstdint>
 #include <limits>

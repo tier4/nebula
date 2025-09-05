@@ -15,8 +15,8 @@
 #ifndef NEBULA_HW_INTERFACE_BASE_H
 #define NEBULA_HW_INTERFACE_BASE_H
 
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
+#include "nebula/common/common/nebula_common.hpp"
+#include "nebula/common/common/nebula_status.hpp"
 
 #include <memory>
 #include <vector>

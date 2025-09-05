@@ -15,7 +15,7 @@
 #ifndef NEBULA_COMMON_H
 #define NEBULA_COMMON_H
 
-#include <nebula_common/point_types.hpp>
+#include <nebula/common/common/point_types.hpp>
 
 #include <boost/tokenizer.hpp>
 

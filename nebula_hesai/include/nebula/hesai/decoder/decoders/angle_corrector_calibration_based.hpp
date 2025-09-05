@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include "nebula_common/hesai/hesai_common.hpp"
-#include "nebula_decoders/nebula_decoders_common/angles.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
+#include "nebula/common/hesai/hesai_common.hpp"
+#include "nebula/decoders/nebula_decoders_common/angles.hpp"
+#include "nebula/decoders/nebula_decoders_hesai/decoders/angle_corrector.hpp"
 
-#include <nebula_common/nebula_common.hpp>
+#include <nebula/common/common/nebula_common.hpp>
 
 #include <algorithm>
 #include <cmath>

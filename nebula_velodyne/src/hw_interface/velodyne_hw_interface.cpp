@@ -1,8 +1,8 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_hw_interfaces/nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp"
+#include "nebula/hw_interfaces/nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp"
 
-#include "nebula_common/util/string_conversions.hpp"
+#include "nebula/common/util/string_conversions.hpp"
 
 #include <iostream>
 #include <memory>

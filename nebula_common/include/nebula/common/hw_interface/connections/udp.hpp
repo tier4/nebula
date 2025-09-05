@@ -19,8 +19,8 @@
 #define _GNU_SOURCE
 #endif
 
-#include <nebula_common/util/errno.hpp>
-#include <nebula_common/util/expected.hpp>
+#include <nebula/common/common/util/errno.hpp>
+#include <nebula/common/common/util/expected.hpp>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>

@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "nebula_common/nebula_common.hpp"
-#include "nebula_common/nebula_status.hpp"
+#include "nebula/common/nebula_common.hpp"
+#include "nebula/common/nebula_status.hpp"
 
 #include <cmath>
 #include <fstream>

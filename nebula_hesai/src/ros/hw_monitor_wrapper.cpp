@@ -1,13 +1,13 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_ros/hesai/hw_monitor_wrapper.hpp"
+#include "nebula/ros/hesai/hw_monitor_wrapper.hpp"
 
-#include "nebula_hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
-#include "nebula_ros/common/parameter_descriptors.hpp"
-#include "nebula_ros/common/sync_tooling/sync_tooling_worker.hpp"
+#include "nebula/hw_interfaces/nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
+#include "nebula/common/ros/parameter_descriptors.hpp"
+#include "nebula/common/ros/sync_tooling/sync_tooling_worker.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_common/nebula_common.hpp>
+#include <nebula/common/common/nebula_common.hpp>
 #include <nlohmann/json.hpp>
 #include <rclcpp/logging.hpp>
 

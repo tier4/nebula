@@ -1,8 +1,8 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "common/test_udp/utils.hpp"
-#include "nebula_common/util/expected.hpp"
-#include "nebula_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
+#include "./test_udp/utils.hpp"
+#include "nebula/common/util/expected.hpp"
+#include "nebula/common/hw_interface/connections/udp.hpp"
 
 #include <gtest/gtest.h>
 #include <gtest/internal/gtest-internal.h>

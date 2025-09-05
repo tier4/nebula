@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_ros/continental/continental_ars548_ros_wrapper.hpp"
+#include "nebula/ros/continental/continental_ars548_ros_wrapper.hpp"
 
-#include <nebula_common/util/string_conversions.hpp>
+#include <nebula/common/common/util/string_conversions.hpp>
 
 #include <cstdio>
 #include <memory>

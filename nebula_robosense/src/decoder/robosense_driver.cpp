@@ -1,11 +1,11 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_decoders/nebula_decoders_robosense/robosense_driver.hpp"
+#include "nebula/decoders/nebula_decoders_robosense/robosense_driver.hpp"
 
-#include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v3.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/bpearl_v4.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/helios.hpp"
-#include "nebula_decoders/nebula_decoders_robosense/decoders/robosense_decoder.hpp"
+#include "nebula/decoders/nebula_decoders_robosense/decoders/bpearl_v3.hpp"
+#include "nebula/decoders/nebula_decoders_robosense/decoders/bpearl_v4.hpp"
+#include "nebula/decoders/nebula_decoders_robosense/decoders/helios.hpp"
+#include "nebula/decoders/nebula_decoders_robosense/decoders/robosense_decoder.hpp"
 
 #include <memory>
 #include <tuple>

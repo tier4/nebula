@@ -1,8 +1,8 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_ros/velodyne/velodyne_ros_wrapper.hpp"
+#include "nebula/ros/velodyne/velodyne_ros_wrapper.hpp"
 
-#include <nebula_common/util/string_conversions.hpp>
+#include <nebula/common/common/util/string_conversions.hpp>
 
 #include <algorithm>
 #include <cstdio>

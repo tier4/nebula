@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_common/util/ring_buffer.hpp"
+#include "nebula/common/util/ring_buffer.hpp"
 
 #include <optional>
 
