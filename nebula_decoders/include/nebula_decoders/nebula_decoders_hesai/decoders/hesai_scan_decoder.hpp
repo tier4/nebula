@@ -19,6 +19,7 @@
 #include <nebula_common/point_types.hpp>
 #include <nebula_common/util/expected.hpp>
 
+#include <cstdint>
 #include <vector>
 
 namespace nebula::drivers
@@ -34,9 +35,24 @@ enum class DecodeError : uint8_t {
 struct PacketMetadata
 {
   /// @brief Timestamp included in the packet payload in nanoseconds
-  uint64_t packet_timestamp_ns;
-  /// @brief Last azimuth processed by the decoder
-  uint32_t last_azimuth;
+  uint64_t packet_timestamp_ns{};
+  /// @brief Whether a scan completed with this packet
+  bool did_scan_complete{false};
+};
+
+/// @brief Performance information about decoding and callback timings
+struct PerformanceCounters
+{
+  uint64_t decode_time_ns{0};
+  uint64_t callback_time_ns{0};
+};
+
+struct PacketDecodeResult
+{
+  /// @brief Performance information about decode and callback timings
+  PerformanceCounters performance_counters;
+  /// @brief Metadata or error information about the decoded packet
+  util::expected<PacketMetadata, DecodeError> metadata_or_error;
 };
 
 /// @brief Base class for Hesai LiDAR decoder
@@ -56,9 +72,9 @@ public:
 
   /// @brief Parses PandarPacket and add its points to the point cloud
   /// @param packet The incoming PandarPacket
-  /// @return Metadata on success, or decode error on failure
-  virtual nebula::util::expected<PacketMetadata, DecodeError> unpack(
-    const std::vector<uint8_t> & packet) = 0;
+  /// @return Metadata on success, or decode error on failure. Performance counters are always
+  /// returned.
+  virtual PacketDecodeResult unpack(const std::vector<uint8_t> & packet) = 0;
 
   virtual void set_pointcloud_callback(pointcloud_callback_t callback) = 0;
 };

@@ -12,11 +12,12 @@
 #include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 
+#include <autoware_internal_debug_msgs/msg/float64_stamped.hpp>
+#include <autoware_internal_debug_msgs/msg/int64_stamped.hpp>
 #include <sensor_msgs/image_encodings.hpp>
 
 #include <algorithm>
 #include <memory>
-#include <tuple>
 #include <utility>
 
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
@@ -35,7 +36,8 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   parent_node_(*parent_node),
   sensor_cfg_(config),
   calibration_cfg_ptr_(calibration),
-  publish_diagnostic_(make_rate_bound_status(sensor_cfg_->rotation_speed, *parent_node))
+  publish_diagnostic_(make_rate_bound_status(sensor_cfg_->rotation_speed, *parent_node)),
+  debug_publisher_(parent_node, "nebula")
 {
   if (!sensor_cfg_) {
     throw std::runtime_error("HesaiDecoderWrapper cannot be instantiated without a valid config!");
@@ -106,10 +108,11 @@ void HesaiDecoderWrapper::on_calibration_change(
   calibration_cfg_ptr_ = new_calibration;
 }
 
-nebula::util::expected<drivers::PacketMetadata, drivers::DecodeError>
-HesaiDecoderWrapper::process_cloud_packet(
-  std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
+drivers::PacketDecodeResult HesaiDecoderWrapper::process_cloud_packet(
+  std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg, uint64_t receive_time_ns)
 {
+  current_scan_perf_counters_.receive_time_current_scan_ns += receive_time_ns;
+
   // Ideally, we would only accumulate packets if someone is subscribed to the packets topic.
   // However, checking for subscriptions in the decode thread (here) causes contention with the
   // publish thread, negating the benefits of multi-threading.
@@ -127,7 +130,40 @@ HesaiDecoderWrapper::process_cloud_packet(
   }
 
   std::lock_guard lock(mtx_driver_ptr_);
-  return driver_ptr_->parse_cloud_packet(packet_msg->data);
+  auto decode_result = driver_ptr_->parse_cloud_packet(packet_msg->data);
+
+  current_scan_perf_counters_.decode_time_current_scan_ns +=
+    decode_result.performance_counters.decode_time_ns;
+  current_scan_perf_counters_.publish_time_current_scan_ns +=
+    decode_result.performance_counters.callback_time_ns;
+
+  if (
+    decode_result.metadata_or_error.has_value() &&
+    decode_result.metadata_or_error.value().did_scan_complete) {
+    const auto & metadata = decode_result.metadata_or_error.value();
+    rclcpp::Time timestamp{static_cast<int64_t>(metadata.packet_timestamp_ns)};
+
+    autoware_internal_debug_msgs::msg::Float64Stamped receive_time_msg;
+    receive_time_msg.stamp = timestamp;
+    receive_time_msg.data =
+      (current_scan_perf_counters_.receive_time_current_scan_ns) / 1'000'000.0;
+    debug_publisher_.publish("debug/receive_duration_ms", receive_time_msg);
+
+    autoware_internal_debug_msgs::msg::Float64Stamped decode_time_msg;
+    decode_time_msg.stamp = timestamp;
+    decode_time_msg.data = (current_scan_perf_counters_.decode_time_current_scan_ns) / 1'000'000.0;
+    debug_publisher_.publish("debug/decode_duration_ms", decode_time_msg);
+
+    autoware_internal_debug_msgs::msg::Float64Stamped publish_time_msg;
+    publish_time_msg.stamp = timestamp;
+    publish_time_msg.data =
+      (current_scan_perf_counters_.publish_time_current_scan_ns) / 1'000'000.0;
+    debug_publisher_.publish("debug/publish_duration_ms", publish_time_msg);
+
+    current_scan_perf_counters_ = {};
+  }
+
+  return decode_result;
 }
 
 void HesaiDecoderWrapper::on_pointcloud_decoded(

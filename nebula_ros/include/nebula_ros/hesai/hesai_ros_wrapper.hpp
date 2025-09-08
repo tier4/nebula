@@ -24,7 +24,6 @@
 #include "nebula_ros/hesai/hw_monitor_wrapper.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
-#include <autoware_utils_debug/debug_publisher.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
@@ -138,17 +137,6 @@ private:
   std::mutex mtx_config_;
 
   OnSetParametersCallbackHandle::SharedPtr parameter_event_cb_;
-
-  autoware_utils_debug::DebugPublisher debug_publisher_;
-  struct PerfCounters
-  {
-    uint64_t decode_time_current_scan_ns{0};
-    uint64_t receive_time_current_scan_ns{0};
-    uint64_t n_wakeups_without_data{0};
-    uint64_t n_wakeups_by_wrong_sender{0};
-    uint64_t n_packets_dropped_in_kernel_rxq{0};
-    uint32_t last_azimuth{0};
-  } current_scan_perf_counters_;
 };
 
 }  // namespace nebula::ros
