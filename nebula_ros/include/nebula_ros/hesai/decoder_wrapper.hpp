@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp"
 #include "nebula_ros/common/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 #include "nebula_ros/common/diagnostics/rate_bound_status.hpp"
@@ -21,6 +22,7 @@
 #include "nebula_ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 #include "nebula_ros/hesai/diagnostics/packet_loss_diagnostic.hpp"
 
+#include <autoware_utils_debug/debug_publisher.hpp>
 #include <diagnostic_updater/publisher.hpp>
 #include <diagnostic_updater/update_functions.hpp>
 #include <nebula_common/hesai/hesai_common.hpp>
@@ -49,9 +51,10 @@ public:
 
   /// @brief Process a cloud packet and return metadata
   /// @param packet_msg The packet to process
+  /// @param receive_metadata Performance metadata from packet reception
   /// @return Expected containing metadata on success, or decode error on failure
-  nebula::util::expected<drivers::PacketMetadata, drivers::DecodeError> process_cloud_packet(
-    std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg);
+  drivers::PacketDecodeResult process_cloud_packet(
+    std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg, uint64_t receive_time_ns);
 
   void on_pointcloud_decoded(const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s);
 
@@ -143,5 +146,14 @@ private:
   custom_diagnostic_tasks::RateBoundStatus publish_diagnostic_;
   std::optional<FunctionalSafetyDiagnosticTask> functional_safety_diagnostic_;
   std::optional<PacketLossDiagnosticTask> packet_loss_diagnostic_;
+
+  autoware_utils_debug::DebugPublisher debug_publisher_;
+
+  struct PerformanceCounters
+  {
+    uint64_t decode_time_current_scan_ns{0};
+    uint64_t receive_time_current_scan_ns{0};
+    uint64_t publish_time_current_scan_ns{0};
+  } current_scan_perf_counters_;
 };
 }  // namespace nebula::ros

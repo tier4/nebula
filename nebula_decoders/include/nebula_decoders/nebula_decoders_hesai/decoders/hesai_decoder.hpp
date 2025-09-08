@@ -27,6 +27,7 @@
 #include <nebula_common/loggers/logger.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/point_types.hpp>
+#include <nebula_common/util/stopwatch.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -349,11 +350,12 @@ public:
     pointcloud_callback_ = std::move(callback);
   }
 
-  nebula::util::expected<PacketMetadata, DecodeError> unpack(
-    const std::vector<uint8_t> & packet) override
+  PacketDecodeResult unpack(const std::vector<uint8_t> & packet) override
   {
+    util::Stopwatch decode_watch;
+
     if (!parse_packet(packet)) {
-      return {DecodeError::PACKET_PARSE_FAILED};
+      return {PerformanceCounters{decode_watch.elapsed_ns(), 0}, DecodeError::PACKET_PARSE_FAILED};
     }
 
     if (packet_loss_detector_) {
@@ -421,14 +423,19 @@ public:
       last_azimuth_ = block_azimuth;
     }
 
+    uint64_t decode_duration_ns = decode_watch.elapsed_ns();
+    uint64_t callbacks_duration_ns = 0;
+
     if (did_scan_complete) {
+      util::Stopwatch callback_watch;
       on_scan_complete();
+      callbacks_duration_ns = callback_watch.elapsed_ns();
     }
 
     PacketMetadata metadata;
     metadata.packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
-    metadata.last_azimuth = last_azimuth_;
-    return {metadata};
+    metadata.did_scan_complete = did_scan_complete;
+    return {PerformanceCounters{decode_duration_ns, callbacks_duration_ns}, metadata};
   }
 };
 

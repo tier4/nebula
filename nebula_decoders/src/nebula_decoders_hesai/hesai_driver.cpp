@@ -5,7 +5,6 @@
 #include "nebula_decoders/nebula_decoders_common/point_filters/blockage_mask.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_decoder.hpp"
-#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_128e3x.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_128e4x.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_40.hpp"
@@ -19,8 +18,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -119,12 +116,11 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
     std::move(blockage_mask_plugin));
 }
 
-nebula::util::expected<PacketMetadata, DecodeError> HesaiDriver::parse_cloud_packet(
-  const std::vector<uint8_t> & packet)
+PacketDecodeResult HesaiDriver::parse_cloud_packet(const std::vector<uint8_t> & packet)
 {
   if (driver_status_ != nebula::Status::OK) {
     logger_->error("Driver not OK.");
-    return {DecodeError::DRIVER_NOT_OK};
+    return {{}, DecodeError::DRIVER_NOT_OK};
   }
 
   return scan_decoder_->unpack(packet);

@@ -7,10 +7,12 @@
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/util/rate_limiter.hpp>
+#include <nebula_common/util/stopwatch.hpp>
 #include <nebula_common/util/string_conversions.hpp>
 #include <nebula_decoders/nebula_decoders_common/angles.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
@@ -355,6 +357,7 @@ Status HesaiRosWrapper::validate_and_set_config(
 void HesaiRosWrapper::receive_scan_message_callback(
   std::unique_ptr<pandar_msgs::msg::PandarScan> scan_msg)
 {
+  util::Stopwatch receive_watch;
   if (hw_interface_wrapper_) {
     RCLCPP_ERROR_THROTTLE(
       get_logger(), *get_clock(), 1000,
@@ -367,7 +370,10 @@ void HesaiRosWrapper::receive_scan_message_callback(
     nebula_pkt_ptr->stamp = pkt.stamp;
     std::copy(pkt.data.begin(), pkt.data.end(), std::back_inserter(nebula_pkt_ptr->data));
 
-    decoder_wrapper_->process_cloud_packet(std::move(nebula_pkt_ptr));
+    decoder_wrapper_->process_cloud_packet(std::move(nebula_pkt_ptr), receive_watch.elapsed_ns());
+    // This reset is placed at the end of the loop, so that in the first iteration, the possible
+    // logging overhead from the statements before the loop is included in the measurement.
+    receive_watch.reset();
   }
 }
 
@@ -512,7 +518,8 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
 }
 
 void HesaiRosWrapper::receive_cloud_packet_callback(
-  const std::vector<uint8_t> & packet, const drivers::connections::UdpSocket::RxMetadata & metadata)
+  const std::vector<uint8_t> & packet,
+  const drivers::connections::UdpSocket::RxMetadata & receive_metadata)
 {
   if (!decoder_wrapper_ || decoder_wrapper_->status() != Status::OK) {
     return;
@@ -527,13 +534,18 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
   msg_ptr->data = packet;
 
-  auto decode_result = decoder_wrapper_->process_cloud_packet(std::move(msg_ptr));
+  auto decode_result = decoder_wrapper_->process_cloud_packet(
+    std::move(msg_ptr), receive_metadata.packet_perf_counters.receive_duration_ns);
 
-  if (decode_result.has_value() && sync_tooling_plugin_ && metadata.timestamp_ns) {
+  if (
+    decode_result.metadata_or_error.has_value() && sync_tooling_plugin_ &&
+    receive_metadata.timestamp_ns) {
+    const auto & decode_metadata = decode_result.metadata_or_error.value();
+
     sync_tooling_plugin_->rate_limiter.with_rate_limit(
-      *metadata.timestamp_ns, [this, &decode_result, &metadata]() {
-        int64_t clock_diff = static_cast<int64_t>(*metadata.timestamp_ns) -
-                             static_cast<int64_t>(decode_result.value().packet_timestamp_ns);
+      *receive_metadata.timestamp_ns, [this, &decode_metadata, &receive_metadata]() {
+        int64_t clock_diff = static_cast<int64_t>(*receive_metadata.timestamp_ns) -
+                             static_cast<int64_t>(decode_metadata.packet_timestamp_ns);
         sync_tooling_plugin_->worker->submit_clock_diff_measurement(clock_diff);
       });
   }

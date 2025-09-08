@@ -147,7 +147,7 @@ TEST(TestUdp, TestReceiving)
   auto const & [recv_payload, metadata] = result_opt.value();
   ASSERT_EQ(recv_payload, payload);
   ASSERT_FALSE(metadata.truncated);
-  ASSERT_EQ(metadata.drops_since_last_receive, 0);
+  ASSERT_EQ(metadata.n_packets_dropped_since_last_receive, 0);
 
   // TODO(mojomex): currently cannot test timestamping on loopback interface (no timestamp produced)
 }
@@ -169,7 +169,7 @@ TEST(TestUdp, TestReceivingOversized)
   ASSERT_EQ(recv_payload.size(), mtu);
   ASSERT_TRUE(std::equal(recv_payload.begin(), recv_payload.end(), payload.begin()));
   ASSERT_TRUE(metadata.truncated);
-  ASSERT_EQ(metadata.drops_since_last_receive, 0);
+  ASSERT_EQ(metadata.n_packets_dropped_since_last_receive, 0);
 }
 
 TEST(TestUdp, TestFilteringSender)

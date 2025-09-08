@@ -16,7 +16,9 @@
   <build_export_depend>libpcl-all-dev</build_export_depend>
 
   <depend>agnocastlib</depend>
+  <depend>autoware_internal_debug_msgs</depend>
   <depend>autoware_sensing_msgs</depend>
+  <depend>autoware_utils_debug</depend>
   <depend>continental_msgs</depend>
   <depend>continental_srvs</depend>
   <depend>diagnostic_msgs</depend>
