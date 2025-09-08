@@ -82,29 +82,40 @@ bool ContinentalARS548Decoder::process_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   const auto & data = packet_msg->data;
+  auto send_and_return = [&](bool success) {
+    if (nebula_packets_callback_) {
+      auto packets_msg = std::make_unique<nebula_msgs::msg::NebulaPackets>();
+      packets_msg->packets.emplace_back(std::move(*packet_msg));
+      packets_msg->header.stamp = packet_msg->stamp;
+      packets_msg->header.frame_id = config_ptr_->frame_id;
+      nebula_packets_callback_(std::move(packets_msg));
+      return success;
+    }
+    return false;
+  };
 
   if (data.size() < sizeof(HeaderPacket)) {
-    return false;
+    return send_and_return(false);
   }
 
   HeaderPacket header{};
   std::memcpy(&header, data.data(), sizeof(HeaderPacket));
 
   if (header.service_id.value() != 0) {
-    return false;
+    return send_and_return(false);
   }
 
   if (header.method_id.value() == detection_list_method_id) {
     if (
       data.size() != detection_list_udp_payload ||
       header.length.value() != detection_list_pdu_length) {
-      return false;
+      return send_and_return(false);
     }
 
     parse_detections_list_packet(*packet_msg);
   } else if (header.method_id.value() == object_list_method_id) {
     if (data.size() != object_list_udp_payload || header.length.value() != object_list_pdu_length) {
-      return false;
+      return send_and_return(false);
     }
 
     parse_objects_list_packet(*packet_msg);
@@ -112,22 +123,13 @@ bool ContinentalARS548Decoder::process_packet(
     if (
       data.size() != sensor_status_udp_payload ||
       header.length.value() != sensor_status_pdu_length) {
-      return false;
+      return send_and_return(false);
     }
 
     parse_sensor_status_packet(*packet_msg);
   }
 
-  // Some messages are not parsed but are still sent to the user (e.g., filters)
-  if (nebula_packets_callback_) {
-    auto packets_msg = std::make_unique<nebula_msgs::msg::NebulaPackets>();
-    packets_msg->packets.emplace_back(std::move(*packet_msg));
-    packets_msg->header.stamp = packet_msg->stamp;
-    packets_msg->header.frame_id = config_ptr_->frame_id;
-    nebula_packets_callback_(std::move(packets_msg));
-  }
-
-  return true;
+  return send_and_return(true);
 }
 
 bool ContinentalARS548Decoder::parse_detections_list_packet(
