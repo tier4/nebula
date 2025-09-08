@@ -57,6 +57,13 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
     current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
     packets_pub_ = parent_node->create_publisher<pandar_msgs::msg::PandarScan>(
       "pandar_packets", rclcpp::SensorDataQoS());
+    packets_pub_thread_.emplace(
+      [this](pandar_msgs::msg::PandarScan::UniquePtr && msg) {
+        if (packets_pub_) {
+          packets_pub_->publish(std::move(msg));
+        }
+      },
+      10);
   }
 
   auto qos_profile = rmw_qos_profile_sensor_data;
@@ -103,10 +110,11 @@ void HesaiDecoderWrapper::on_calibration_change(
 void HesaiDecoderWrapper::process_cloud_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
-  // Accumulate packets for recording only if someone is subscribed to the topic (for performance)
-  if (
-    packets_pub_ && (packets_pub_->get_subscription_count() > 0 ||
-                     packets_pub_->get_intra_process_subscription_count() > 0)) {
+  // Ideally, we would only accumulate packets if someone is subscribed to the packets topic.
+  // However, checking for subscriptions in the decode thread (here) causes contention with the
+  // publish thread, negating the benefits of multi-threading.
+  // Not checking is an okay trade-off for the time being.
+  if (packets_pub_) {
     if (current_scan_msg_->packets.size() == 0) {
       current_scan_msg_->header.stamp = packet_msg->stamp;
     }
@@ -138,8 +146,12 @@ void HesaiDecoderWrapper::process_cloud_packet(
   cloud_watchdog_->update();
 
   // Publish scan message only if it has been written to
-  if (current_scan_msg_ && !current_scan_msg_->packets.empty()) {
-    packets_pub_->publish(std::move(current_scan_msg_));
+  if (current_scan_msg_ && !current_scan_msg_->packets.empty() && packets_pub_thread_) {
+    bool success = packets_pub_thread_->try_push(std::move(current_scan_msg_));
+    if (!success) {
+      RCLCPP_WARN_STREAM(logger_, "Packet publish queue is full, dropping scan.");
+    }
+
     current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
   }
 
