@@ -82,13 +82,14 @@ bool ContinentalARS548Decoder::process_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   const auto & data = packet_msg->data;
-  auto send_and_return = [&nebula_packets_callback_, config_ptr_->frame_id, ...](bool success) {
-    if (nebula_packets_callback_) {
+  auto send_and_return = [nebula_packets_callback = nebula_packets_callback_,
+                          frame_id = config_ptr_->frame_id, &packet_msg](bool success) {
+    if (nebula_packets_callback) {
       auto packets_msg = std::make_unique<nebula_msgs::msg::NebulaPackets>();
       packets_msg->packets.emplace_back(std::move(*packet_msg));
       packets_msg->header.stamp = packet_msg->stamp;
-      packets_msg->header.frame_id = config_ptr_->frame_id;
-      nebula_packets_callback_(std::move(packets_msg));
+      packets_msg->header.frame_id = frame_id;
+      nebula_packets_callback(std::move(packets_msg));
       return success;
     }
     return success;
