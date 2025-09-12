@@ -90,7 +90,6 @@ bool ContinentalARS548Decoder::process_packet(
       packets_msg->header.stamp = packet_msg->stamp;
       packets_msg->header.frame_id = frame_id;
       nebula_packets_callback(std::move(packets_msg));
-      return success;
     }
     return success;
   };
