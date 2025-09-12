@@ -91,7 +91,7 @@ bool ContinentalARS548Decoder::process_packet(
       nebula_packets_callback_(std::move(packets_msg));
       return success;
     }
-    return false;
+    return success;
   };
 
   if (data.size() < sizeof(HeaderPacket)) {
