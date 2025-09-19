@@ -74,7 +74,7 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
   // Publish packets only if HW interface is connected
   if (launch_hw) {
     packets_pub_ = parent_node->create_publisher<nebula_msgs::msg::NebulaPackets>(
-      "nebula_packets", rclcpp::SensorDataQoS());
+      "nebula_packets", rclcpp::SensorDataQoS().reliable());
   }
 
   detection_list_pub_ =
