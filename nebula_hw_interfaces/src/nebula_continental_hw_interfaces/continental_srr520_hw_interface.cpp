@@ -52,12 +52,12 @@ Status ContinentalSRR520HwInterface::sensor_interface_start()
   try {
     can_sender_ptr_ =
       std::make_unique<::drivers::socketcan::SocketCanSender>(config_ptr_->interface, true);
-    
+
     // Create classic CAN receiver (enable_fd = false)
     can_receiver_ptr_ =
       std::make_unique<::drivers::socketcan::SocketCanReceiver>(config_ptr_->interface, false);
-    
-    // Create CAN FD receiver (enable_fd = true)  
+
+    // Create CAN FD receiver (enable_fd = true)
     can_fd_receiver_ptr_ =
       std::make_unique<::drivers::socketcan::SocketCanReceiver>(config_ptr_->interface, true);
 
@@ -68,15 +68,15 @@ Status ContinentalSRR520HwInterface::sensor_interface_start()
     logger_->info(std::string("applied filters: ") + config_ptr_->filters);
 
     sensor_interface_active_ = true;
-    
+
     // Start classic CAN receiver thread
     receiver_thread_ptr_ =
       std::make_unique<std::thread>(&ContinentalSRR520HwInterface::receive_loop, this);
-    
-    // Start CAN FD receiver thread  
+
+    // Start CAN FD receiver thread
     receiver_fd_thread_ptr_ =
       std::make_unique<std::thread>(&ContinentalSRR520HwInterface::receive_fd_loop, this);
-    
+
     // Start callback processing thread
     callback_thread_ptr_ =
       std::make_unique<std::thread>(&ContinentalSRR520HwInterface::callback_processing_loop, this);
@@ -230,7 +230,7 @@ void ContinentalSRR520HwInterface::callback_processing_loop()
 {
   while (true) {
     std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_ptr;
-    
+
     // Wait for packets in the queue or check if we should exit
     {
       std::unique_lock<std::mutex> queue_lock(packet_queue_mutex_);
@@ -238,7 +238,7 @@ void ContinentalSRR520HwInterface::callback_processing_loop()
         std::lock_guard receiver_lock(receiver_mutex_);
         return !packet_queue_.empty() || !sensor_interface_active_;
       });
-      
+
       // Check if we should exit
       {
         std::lock_guard receiver_lock(receiver_mutex_);
@@ -246,14 +246,14 @@ void ContinentalSRR520HwInterface::callback_processing_loop()
           break;
         }
       }
-      
+
       // Get packet from queue if available
       if (!packet_queue_.empty()) {
         packet_ptr = std::move(packet_queue_.front());
         packet_queue_.pop();
       }
     }
-    
+
     // Process the packet outside the lock
     if (packet_ptr && nebula_packet_callback_) {
       nebula_packet_callback_(std::move(packet_ptr));
@@ -375,22 +375,22 @@ Status ContinentalSRR520HwInterface::sensor_interface_stop()
     std::lock_guard l(receiver_mutex_);
     sensor_interface_active_ = false;
   }
-  
+
   // Notify the callback processing thread to wake up and check the stop condition
   packet_queue_cv_.notify_all();
 
   if (receiver_thread_ptr_ && receiver_thread_ptr_->joinable()) {
     receiver_thread_ptr_->join();
   }
-  
+
   if (receiver_fd_thread_ptr_ && receiver_fd_thread_ptr_->joinable()) {
     receiver_fd_thread_ptr_->join();
   }
-  
+
   if (callback_thread_ptr_ && callback_thread_ptr_->joinable()) {
     callback_thread_ptr_->join();
   }
-  
+
   return Status::ERROR_1;
 }
 
