@@ -35,6 +35,11 @@ namespace drivers
 namespace continental_ars548
 {
 
+inline bool is_corner_radar(float yaw)
+{
+  return std::abs(yaw) > deg2rad(5.0) && std::abs(yaw) < deg2rad(175.0);
+}
+
 /// @brief struct for ARS548 sensor configuration
 struct ContinentalARS548SensorConfiguration : EthernetSensorConfigurationBase
 {
@@ -258,6 +263,8 @@ constexpr int detection_filter_properties_num = 7;
 constexpr int object_filter_properties_num = 24;
 constexpr std::array<size_t, 1> max_detections = {800};
 constexpr std::array<size_t, 2> max_objects = {50, 200};
+
+constexpr int sw_version_minor_corner_radar = 40;
 
 constexpr int measurement_status_measured = 0;
 constexpr int measurement_status_predicted = 1;

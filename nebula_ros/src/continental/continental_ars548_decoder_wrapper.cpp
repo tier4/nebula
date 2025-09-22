@@ -381,6 +381,11 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
   add_diagnostic(configuration_status, "HCC", sensor_status.hcc);
   add_diagnostic(
     configuration_status, "Power save standstill", sensor_status.power_save_standstill);
+  add_diagnostic(
+    configuration_status, "Firmware version",
+    std::to_string(sensor_status.sw_version_major) + "." +
+      std::to_string(sensor_status.sw_version_minor) + "." +
+      std::to_string(sensor_status.sw_version_patch));
   configuration_status.hardware_id = config_ptr_->frame_id;
   configuration_status.name =
     std::string(parent_node_->get_fully_qualified_name()) + ": Configuration";

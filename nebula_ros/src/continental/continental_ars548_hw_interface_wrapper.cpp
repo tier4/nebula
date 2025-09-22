@@ -16,6 +16,7 @@
 
 #include "nebula_ros/common/rclcpp_logger.hpp"
 
+#include <nebula_common/continental/continental_ars548.hpp>
 #include <nebula_common/util/string_conversions.hpp>
 #include <tf2_ros/buffer.hpp>
 #include <tf2_ros/transform_listener.hpp>
@@ -284,6 +285,13 @@ void ContinentalARS548HwInterfaceWrapper::set_sensor_mounting_request_callback(
     vertical = base_to_sensor_tf.transform.translation.z;
     yaw = rpy.z;
     pitch = rpy.y;
+  }
+
+  if (nebula::drivers::continental_ars548::is_corner_radar(yaw)) {
+    RCLCPP_INFO(
+      logger_,
+      "You are attempting to configure the device as a corner radar, which might be not "
+      "supported.");
   }
 
   auto result = hw_interface_->set_sensor_mounting(

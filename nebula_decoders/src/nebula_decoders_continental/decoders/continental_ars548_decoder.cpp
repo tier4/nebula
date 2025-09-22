@@ -272,6 +272,19 @@ bool ContinentalARS548Decoder::parse_detections_list_packet(
 bool ContinentalARS548Decoder::parse_objects_list_packet(
   const nebula_msgs::msg::NebulaPacket & packet_msg, ObjectListVariant & object_list_variant)
 {
+  if (nebula::drivers::continental_ars548::is_corner_radar(radar_status_.yaw)) {
+    if (radar_status_.sw_version_minor != sw_version_minor_corner_radar) {
+      RCLCPP_WARN_ONCE(
+        rclcpp::get_logger("ContinentalARS548Decoder"),
+        "Tried to parse an object list packet from a corner radar, but the required software "
+        "version is X.%d.Z. The connected radar firmware version is %d.%d.%d. The object list will "
+        "be skipped.",
+        sw_version_minor_corner_radar, radar_status_.sw_version_major,
+        radar_status_.sw_version_minor, radar_status_.sw_version_patch);
+      return true;
+    }
+  }
+
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548ObjectList>();
   auto & msg = *msg_ptr;
 
