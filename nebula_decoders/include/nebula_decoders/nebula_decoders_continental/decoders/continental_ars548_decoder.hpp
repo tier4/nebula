@@ -80,13 +80,17 @@ public:
 private:
   /// @brief Function for parsing detection lists
   /// @param data
+  /// @param detection_list
   /// @return Resulting flag
-  bool parse_detections_list_packet(const nebula_msgs::msg::NebulaPacket & packet_msg);
+  bool parse_detections_list_packet(
+    const nebula_msgs::msg::NebulaPacket & packet_msg, DetectionListVariant & detection_list);
 
   /// @brief Function for parsing object lists
   /// @param data
+  /// @param object_list
   /// @return Resulting flag
-  bool parse_objects_list_packet(const nebula_msgs::msg::NebulaPacket & packet_msg);
+  bool parse_objects_list_packet(
+    const nebula_msgs::msg::NebulaPacket & packet_msg, ObjectListVariant & object_list);
 
   /// @brief Function for parsing sensor status messages
   /// @param data
