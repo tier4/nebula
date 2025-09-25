@@ -692,11 +692,11 @@ Status HesaiHwInterface::set_ptp_config(
   }
 
   std::vector<unsigned char> request_payload;
-  
+
   // Handle different sensor models with different PTP config formats
   switch (sensor_configuration_->sensor_model) {
     case SensorModel::HESAI_PANDARAT128: {
-      if( profile != static_cast<int>(PtpProfile::IEEE_802_1AS_AUTO)) {
+      if (profile != static_cast<int>(PtpProfile::IEEE_802_1AS_AUTO)) {
         return Status::SENSOR_CONFIG_ERROR;
       }
       // AT128 uses status, profile, domain, network, tsn_switch format
@@ -720,7 +720,8 @@ Status HesaiHwInterface::set_ptp_config(
       break;
     }
     default: {
-      // Other sensors use status, profile, domain, network, logAnnounceInterval, logSyncInterval, logMinDelayReqInterval
+      // Other sensors use status, profile, domain, network, logAnnounceInterval, logSyncInterval,
+      // logMinDelayReqInterval
       request_payload.emplace_back(profile & 0xff);
       request_payload.emplace_back(domain & 0xff);
       request_payload.emplace_back(network & 0xff);
@@ -1165,8 +1166,8 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
       if (sensor_ptp_lock_threshold != sensor_configuration_->ptp_lock_threshold) {
         NEBULA_LOG_STREAM(
           logger_->info, "changing sensor PTP lock offset from "
-                            << static_cast<int>(sensor_ptp_lock_threshold) << " to "
-                            << static_cast<int>(sensor_configuration_->ptp_lock_threshold));
+                           << static_cast<int>(sensor_ptp_lock_threshold) << " to "
+                           << static_cast<int>(sensor_configuration_->ptp_lock_threshold));
         set_ptp_lock_offset(sensor_configuration_->ptp_lock_threshold);
       }
       break;
