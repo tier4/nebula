@@ -360,7 +360,7 @@ public:
     int logSyncInterval = 1, int logMinDelayReqInterval = 0);
   /// @brief Getting data with PTC_COMMAND_GET_PTP_CONFIG
   /// @return Resulting status
-  HesaiPtpConfig get_ptp_config();
+  std::unique_ptr<PtpConfigBase> get_ptp_config();
 
   Status set_ptp_lock_offset(uint8_t lock_offset);
 
