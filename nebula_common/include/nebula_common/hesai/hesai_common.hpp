@@ -579,6 +579,19 @@ inline int int_from_return_mode_hesai(
   return -1;
 }
 
+/// @brief Whether the given sensor model supports IMU
+/// @param sensor_model Sensor model
+/// @return True if the sensor model supports IMU, false otherwise
+inline bool supports_imu(const SensorModel & sensor_model)
+{
+  switch (sensor_model) {
+    case SensorModel::HESAI_PANDAR128_E4X:
+      return true;
+    default:
+      return false;
+  }
+}
+
 /// @brief Whether the given sensor model supports functional safety
 /// @param sensor_model Sensor model
 /// @return True if the sensor model supports functional safety, false otherwise

@@ -265,4 +265,25 @@ struct HasPacketLossDetection<
 {
 };
 
+// Helper trait to determine if a given packet tail contains IMU fields
+template <typename PacketT, typename = void>
+struct HasImu : std::false_type
+{
+};
+
+template <typename PacketT>
+struct HasImu<
+  PacketT, std::void_t<
+             decltype(std::declval<PacketT>().tail.imu_timestamp),
+             decltype(std::declval<PacketT>().tail.imu_acceleration_unit),
+             decltype(std::declval<PacketT>().tail.imu_angular_velocity_unit),
+             decltype(std::declval<PacketT>().tail.imu_x_axis_acceleration),
+             decltype(std::declval<PacketT>().tail.imu_y_axis_acceleration),
+             decltype(std::declval<PacketT>().tail.imu_z_axis_acceleration),
+             decltype(std::declval<PacketT>().tail.imu_x_axis_angular_velocity),
+             decltype(std::declval<PacketT>().tail.imu_y_axis_angular_velocity),
+             decltype(std::declval<PacketT>().tail.imu_z_axis_angular_velocity)>> : std::true_type
+{
+};
+
 }  // namespace nebula::drivers::hesai_packet

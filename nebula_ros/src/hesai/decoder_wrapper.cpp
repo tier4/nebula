@@ -3,6 +3,7 @@
 #include "nebula_ros/hesai/decoder_wrapper.hpp"
 
 #include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 #include "nebula_ros/common/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 #include "nebula_ros/common/rclcpp_logger.hpp"
 #include "nebula_ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
@@ -86,6 +87,12 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
     sensor_msgs::msg::PointCloud2, &parent_node_, "aw_points", pointcloud_qos);
   aw_points_ex_pub_ = NEBULA_CREATE_PUBLISHER2(
     sensor_msgs::msg::PointCloud2, &parent_node_, "aw_points_ex", pointcloud_qos);
+
+  // IMU publisher (optional)
+  if (drivers::supports_imu(sensor_cfg_->sensor_model)) {
+    imu_pub_ = NEBULA_CREATE_PUBLISHER2(
+      sensor_msgs::msg::Imu, &parent_node_, "imu", rclcpp::SensorDataQoS());
+  }
 
   RCLCPP_INFO_STREAM(logger_, ". Wrapper=" << status_);
 
@@ -305,10 +312,31 @@ std::shared_ptr<drivers::HesaiDriver> HesaiDecoderWrapper::initialize_driver(
     lost_cb = [this](uint64_t n_lost) { packet_loss_diagnostic_->on_lost(n_lost); };
   }
 
+  drivers::HesaiScanDecoder::imu_callback_t imu_cb;
+
+  if (drivers::supports_imu(sensor_cfg_->sensor_model)) {
+    imu_cb = [this](const auto & imu) {
+      if (NEBULA_HAS_ANY_SUBSCRIPTIONS(imu_pub_) == 0) {
+        return;
+      }
+
+      auto msg = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(imu_pub_);
+      msg->header.stamp = rclcpp::Time(imu.absolute_timestamp_ns);
+      msg->header.frame_id = sensor_cfg_->frame_id;
+      msg->linear_acceleration.x = imu.accel_mps2_x;
+      msg->linear_acceleration.y = imu.accel_mps2_y;
+      msg->linear_acceleration.z = imu.accel_mps2_z;
+      msg->angular_velocity.x = imu.ang_vel_rps_x;
+      msg->angular_velocity.y = imu.ang_vel_rps_y;
+      msg->angular_velocity.z = imu.ang_vel_rps_z;
+      imu_pub_->publish(std::move(msg));
+    };
+  }
+
   return std::make_shared<drivers::HesaiDriver>(
     config, calibration, std::make_shared<drivers::loggers::RclcppLogger>(logger_),
-    std::move(pointcloud_cb), std::move(alive_cb), std::move(stuck_cb), std::move(status_cb),
-    std::move(lost_cb), std::move(blockage_mask_plugin));
+    std::move(pointcloud_cb), std::move(imu_cb), std::move(alive_cb), std::move(stuck_cb),
+    std::move(status_cb), std::move(lost_cb), std::move(blockage_mask_plugin));
 }
 
 nebula::Status HesaiDecoderWrapper::status()

@@ -32,6 +32,7 @@
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <pandar_msgs/msg/pandar_scan.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 
 #include <memory>
 #include <mutex>
@@ -140,6 +141,8 @@ private:
   NEBULA_PUBLISHER_PTR(sensor_msgs::msg::PointCloud2) nebula_points_pub_;
   NEBULA_PUBLISHER_PTR(sensor_msgs::msg::PointCloud2) aw_points_ex_pub_;
   NEBULA_PUBLISHER_PTR(sensor_msgs::msg::PointCloud2) aw_points_base_pub_;
+
+  NEBULA_PUBLISHER_PTR(sensor_msgs::msg::Imu) imu_pub_;
 
   NEBULA_PUBLISHER_PTR(sensor_msgs::msg::Image) blockage_mask_pub_;
 

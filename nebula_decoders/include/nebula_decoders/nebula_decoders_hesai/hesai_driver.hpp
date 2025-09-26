@@ -52,7 +52,7 @@ private:
     const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
     const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
       calibration_configuration,
-    FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
+    HesaiScanDecoder::imu_callback_t imu_cb, FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
     FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
     FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb,
     std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin = nullptr);
@@ -118,6 +118,7 @@ public:
       calibration_configuration,
     const std::shared_ptr<loggers::Logger> & logger,
     HesaiScanDecoder::pointcloud_callback_t pointcloud_cb,
+    HesaiScanDecoder::imu_callback_t imu_cb = nullptr,
     FunctionalSafetyDecoderBase::alive_cb_t alive_cb = nullptr,
     FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb = nullptr,
     FunctionalSafetyDecoderBase::status_cb_t status_cb = nullptr,
