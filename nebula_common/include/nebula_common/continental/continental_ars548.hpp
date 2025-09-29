@@ -22,11 +22,10 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include <array>
 #include <iostream>
 #include <optional>
 #include <string>
-#include <variant>
+#include <vector>
 
 namespace nebula
 {
@@ -249,20 +248,23 @@ constexpr int object_list_method_id = 329;
 constexpr int sensor_status_method_id = 380;
 constexpr int filter_status_method_id = 396;
 
-constexpr std::array<size_t, 1> detection_list_udp_payloads = {35336};
-constexpr std::array<size_t, 2> object_list_udp_payloads = {9401, 37452};
+constexpr int detection_list_udp_payload = 35336;
+constexpr int object_list_udp_payload_common = 9401;
+constexpr int object_list_udp_payload_fw40 = 37452;
 constexpr int sensor_status_udp_payload = 84;
 constexpr int filter_status_udp_payload = 330;
 
-constexpr std::array<size_t, 1> detection_list_pdu_lengths = {35328};
-constexpr std::array<size_t, 2> object_list_pdu_lengths = {9393, 37444};
+constexpr int detection_list_pdu_length = 35328;
+constexpr int object_list_pdu_length_common = 9393;
+constexpr int object_list_pdu_length_fw40 = 37444;
 constexpr int sensor_status_pdu_length = 76;
 constexpr int filter_status_pdu_length = 322;
 
 constexpr int detection_filter_properties_num = 7;
 constexpr int object_filter_properties_num = 24;
-constexpr std::array<size_t, 1> max_detections = {800};
-constexpr std::array<size_t, 2> max_objects = {50, 200};
+constexpr int max_detections = 800;
+constexpr int max_objects_common = 50;
+constexpr int max_objects_fw40 = 200;
 
 constexpr int sw_version_minor_corner_radar = 40;
 
@@ -435,7 +437,6 @@ struct DetectionPacket
   big_uint16_buf_t sort_index{};
 };
 
-template <size_t N>
 struct DetectionListPacket
 {
   HeaderPacket header{};
@@ -458,7 +459,7 @@ struct DetectionListPacket
   big_float32_buf_t origin_yaw{};
   big_float32_buf_t origin_yaw_std{};
   uint8_t list_invalid_flags{};
-  DetectionPacket detections[N];
+  DetectionPacket detections[max_detections];
   big_float32_buf_t list_rad_vel_domain_min{};
   big_float32_buf_t list_rad_vel_domain_max{};
   big_uint32_buf_t number_of_detections{};
@@ -536,7 +537,6 @@ struct ObjectPacket
   big_float32_buf_t shape_width_edge_std{};
 };
 
-template <size_t N>
 struct ObjectListPacket
 {
   HeaderPacket header{};
@@ -546,7 +546,7 @@ struct ObjectListPacket
   big_uint32_buf_t event_data_qualifier{};
   uint8_t extended_qualifier{};
   uint8_t number_of_objects{};
-  ObjectPacket objects[N];
+  std::vector<ObjectPacket> objects;
 };
 
 struct StatusConfigurationPacket
@@ -737,63 +737,6 @@ struct EIGEN_ALIGN16 PointARS548Object
   float dynamics_orientation_rate_mean;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
-
-using ObjectListVariant =
-  std::variant<ObjectListPacket<max_objects.at(0)>, ObjectListPacket<max_objects.at(1)>>;
-
-inline std::optional<ObjectListVariant> make_object_list_packet(
-  const size_t udp_payload, const size_t pdu_length)
-{
-  static_assert(
-    object_list_pdu_lengths.size() == max_objects.size(),
-    "object_list_pdu_lengths and max_objects must have the same size");
-  static_assert(
-    object_list_udp_payloads.size() == max_objects.size(),
-    "object_list_udp_payloads and max_objects must have the same size");
-
-  for (size_t i = 0; i < max_objects.size(); ++i) {
-    if (
-      udp_payload == object_list_udp_payloads.at(i) &&
-      pdu_length == object_list_pdu_lengths.at(i)) {
-      switch (i) {
-        case 0:
-          return ObjectListPacket<max_objects.at(0)>{};
-        case 1:
-          return ObjectListPacket<max_objects.at(1)>{};
-        default:
-          return std::nullopt;
-      }
-    }
-  }
-  return std::nullopt;
-}
-
-using DetectionListVariant = std::variant<DetectionListPacket<max_detections.at(0)>>;
-
-inline std::optional<DetectionListVariant> make_detection_list_packet(
-  const size_t udp_payload, const size_t pdu_length)
-{
-  static_assert(
-    detection_list_pdu_lengths.size() == max_detections.size(),
-    "detection_list_pdu_lengths and max_detections must have the same size");
-  static_assert(
-    detection_list_udp_payloads.size() == max_detections.size(),
-    "detection_list_udp_payloads and max_detections must have the same size");
-
-  for (size_t i = 0; i < max_detections.size(); ++i) {
-    if (
-      udp_payload == detection_list_udp_payloads.at(i) &&
-      pdu_length == detection_list_pdu_lengths.at(i)) {
-      switch (i) {
-        case 0:
-          return DetectionListPacket<max_detections.at(0)>{};
-        default:
-          return std::nullopt;
-      }
-    }
-  }
-  return std::nullopt;
-}
 
 }  // namespace continental_ars548
 }  // namespace drivers

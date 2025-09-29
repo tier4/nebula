@@ -106,21 +106,25 @@ bool ContinentalARS548Decoder::process_packet(
   }
 
   if (header.method_id.value() == detection_list_method_id) {
-    auto detection_list = make_detection_list_packet(data.size(), header.length.value());
-
-    if (!detection_list) {
+    if (
+      data.size() != detection_list_udp_payload ||
+      header.length.value() != detection_list_pdu_length) {
       return send_and_return(false);
     }
 
-    parse_detections_list_packet(*packet_msg, *detection_list);
+    parse_detections_list_packet(*packet_msg);
   } else if (header.method_id.value() == object_list_method_id) {
-    auto object_list = make_object_list_packet(data.size(), header.length.value());
-
-    if (!object_list) {
+    if (
+      data.size() == object_list_udp_payload_common ||
+      header.length.value() == object_list_pdu_length_common) {
+      parse_objects_list_packet(*packet_msg, max_objects_common);
+    } else if (
+      data.size() == object_list_udp_payload_fw40 &&
+      header.length.value() == object_list_pdu_length_fw40) {
+      parse_objects_list_packet(*packet_msg, max_objects_fw40);
+    } else {
       return send_and_return(false);
     }
-
-    parse_objects_list_packet(*packet_msg, *object_list);
   } else if (header.method_id.value() == sensor_status_method_id) {
     if (
       data.size() != sensor_status_udp_payload ||
@@ -135,132 +139,124 @@ bool ContinentalARS548Decoder::process_packet(
 }
 
 bool ContinentalARS548Decoder::parse_detections_list_packet(
-  const nebula_msgs::msg::NebulaPacket & packet_msg, DetectionListVariant & detection_list_variant)
+  const nebula_msgs::msg::NebulaPacket & packet_msg)
 {
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548DetectionList>();
   auto & msg = *msg_ptr;
 
-  std::visit(
-    [&packet_msg, &msg, this](auto & detection_list) {
-      assert(sizeof(std::decay_t<decltype(detection_list)>) == packet_msg.data.size());
-      std::memcpy(
-        &detection_list, packet_msg.data.data(), sizeof(std::decay_t<decltype(detection_list)>));
+  DetectionListPacket detection_list;
+  assert(sizeof(DetectionListPacket) == packet_msg.data.size());
 
-      msg.header.frame_id = config_ptr_->frame_id;
+  std::memcpy(&detection_list, packet_msg.data.data(), sizeof(DetectionListPacket));
 
-      if (config_ptr_->use_sensor_time) {
-        msg.header.stamp.nanosec = detection_list.stamp.timestamp_nanoseconds.value();
-        msg.header.stamp.sec = detection_list.stamp.timestamp_seconds.value();
-      } else {
-        msg.header.stamp = packet_msg.stamp;
-      }
+  msg.header.frame_id = config_ptr_->frame_id;
 
-      msg.stamp_sync_status = detection_list.stamp.timestamp_sync_status;
-      assert(msg.stamp_sync_status >= 1 && msg.stamp_sync_status <= 3);
+  if (config_ptr_->use_sensor_time) {
+    msg.header.stamp.nanosec = detection_list.stamp.timestamp_nanoseconds.value();
+    msg.header.stamp.sec = detection_list.stamp.timestamp_seconds.value();
+  } else {
+    msg.header.stamp = packet_msg.stamp;
+  }
 
-      msg.origin_pos.x = detection_list.origin_x_pos.value();
-      msg.origin_pos.y = detection_list.origin_y_pos.value();
-      msg.origin_pos.z = detection_list.origin_z_pos.value();
+  msg.stamp_sync_status = detection_list.stamp.timestamp_sync_status;
+  assert(msg.stamp_sync_status >= 1 && msg.stamp_sync_status <= 3);
 
-      msg.origin_pitch = detection_list.origin_pitch.value();
-      msg.origin_pitch_std = detection_list.origin_pitch_std.value();
-      msg.origin_yaw = detection_list.origin_yaw.value();
-      msg.origin_yaw_std = detection_list.origin_yaw_std.value();
+  msg.origin_pos.x = detection_list.origin_x_pos.value();
+  msg.origin_pos.y = detection_list.origin_y_pos.value();
+  msg.origin_pos.z = detection_list.origin_z_pos.value();
 
-      msg.ambiguity_free_velocity_min = detection_list.list_rad_vel_domain_min.value();
-      msg.ambiguity_free_velocity_max = detection_list.list_rad_vel_domain_max.value();
+  msg.origin_pitch = detection_list.origin_pitch.value();
+  msg.origin_pitch_std = detection_list.origin_pitch_std.value();
+  msg.origin_yaw = detection_list.origin_yaw.value();
+  msg.origin_yaw_std = detection_list.origin_yaw_std.value();
 
-      msg.alignment_azimuth_correction = detection_list.alignment_azimuth_correction.value();
-      msg.alignment_elevation_correction = detection_list.alignment_elevation_correction.value();
+  msg.ambiguity_free_velocity_min = detection_list.list_rad_vel_domain_min.value();
+  msg.ambiguity_free_velocity_max = detection_list.list_rad_vel_domain_max.value();
 
-      msg.alignment_status = detection_list.alignment_status;
+  msg.alignment_azimuth_correction = detection_list.alignment_azimuth_correction.value();
+  msg.alignment_elevation_correction = detection_list.alignment_elevation_correction.value();
 
-      const uint32_t number_of_detections = detection_list.number_of_detections.value();
-      msg.detections.resize(number_of_detections);
+  msg.alignment_status = detection_list.alignment_status;
 
-      // Estimate dropped detections only when the radar is synchronized
-      if (radar_status_.timestamp_sync_status == "1:SYNC_OK") {
-        if (radar_status_.detection_first_stamp == 0) {
-          radar_status_.detection_first_stamp =
-            static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
-            static_cast<uint64_t>(msg.header.stamp.nanosec);
-          radar_status_.detection_last_stamp = radar_status_.detection_first_stamp;
-        } else {
-          uint64_t stamp = static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
-                           static_cast<uint64_t>(msg.header.stamp.nanosec);
-          radar_status_.detection_total_count++;
-          radar_status_.detection_empty_count += number_of_detections == 0 ? 1 : 0;
-          radar_status_.detection_dropped_dt_count +=
-            (stamp - radar_status_.detection_last_stamp > 1.75 * radar_status_.cycle_time * 10e6)
-              ? 1
-              : 0;
-          radar_status_.detection_last_stamp = stamp;
-        }
-      }
+  const uint32_t number_of_detections = detection_list.number_of_detections.value();
+  msg.detections.resize(number_of_detections);
 
-      assert(msg.origin_pos.x >= -10.f && msg.origin_pos.x <= 10.f);
-      assert(msg.origin_pos.y >= -10.f && msg.origin_pos.y <= 10.f);
-      assert(msg.origin_pos.z >= -10.f && msg.origin_pos.z <= 10.f);
-      assert(msg.origin_pitch >= -M_PI && msg.origin_pitch <= M_PI);
-      assert(msg.origin_yaw >= -M_PI && msg.origin_yaw <= M_PI);
-      assert(msg.ambiguity_free_velocity_min >= -100.f && msg.ambiguity_free_velocity_min <= 100.f);
-      assert(msg.ambiguity_free_velocity_max >= -100.f && msg.ambiguity_free_velocity_max <= 100.f);
-      assert(number_of_detections <= 800);
-      assert(msg.alignment_azimuth_correction >= -M_PI && msg.alignment_azimuth_correction <= M_PI);
-      assert(
-        msg.alignment_elevation_correction >= -M_PI && msg.alignment_elevation_correction <= M_PI);
+  // Estimate dropped detections only when the radar is synchronized
+  if (radar_status_.timestamp_sync_status == "1:SYNC_OK") {
+    if (radar_status_.detection_first_stamp == 0) {
+      radar_status_.detection_first_stamp =
+        static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
+        static_cast<uint64_t>(msg.header.stamp.nanosec);
+      radar_status_.detection_last_stamp = radar_status_.detection_first_stamp;
+    } else {
+      uint64_t stamp = static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
+                       static_cast<uint64_t>(msg.header.stamp.nanosec);
+      radar_status_.detection_total_count++;
+      radar_status_.detection_empty_count += number_of_detections == 0 ? 1 : 0;
+      radar_status_.detection_dropped_dt_count +=
+        (stamp - radar_status_.detection_last_stamp > 1.75 * radar_status_.cycle_time * 10e6) ? 1
+                                                                                              : 0;
+      radar_status_.detection_last_stamp = stamp;
+    }
+  }
 
-      for (std::size_t detection_index = 0; detection_index < number_of_detections;
-           detection_index++) {
-        auto & detection_msg = msg.detections[detection_index];
-        auto & detection = detection_list.detections[detection_index];
+  assert(msg.origin_pos.x >= -10.f && msg.origin_pos.x <= 10.f);
+  assert(msg.origin_pos.y >= -10.f && msg.origin_pos.y <= 10.f);
+  assert(msg.origin_pos.z >= -10.f && msg.origin_pos.z <= 10.f);
+  assert(msg.origin_pitch >= -M_PI && msg.origin_pitch <= M_PI);
+  assert(msg.origin_yaw >= -M_PI && msg.origin_yaw <= M_PI);
+  assert(msg.ambiguity_free_velocity_min >= -100.f && msg.ambiguity_free_velocity_min <= 100.f);
+  assert(msg.ambiguity_free_velocity_max >= -100.f && msg.ambiguity_free_velocity_max <= 100.f);
+  assert(number_of_detections <= 800);
+  assert(msg.alignment_azimuth_correction >= -M_PI && msg.alignment_azimuth_correction <= M_PI);
+  assert(msg.alignment_elevation_correction >= -M_PI && msg.alignment_elevation_correction <= M_PI);
 
-        assert(detection.raw_positive_predictive_value <= 100);
-        assert(detection.classification <= 4 || detection.classification == 255);
-        assert(detection.raw_multi_target_probability <= 100);
-        assert(detection.raw_ambiguity_flag <= 100);
+  for (std::size_t detection_index = 0; detection_index < number_of_detections; detection_index++) {
+    auto & detection_msg = msg.detections[detection_index];
+    auto & detection = detection_list.detections[detection_index];
 
-        assert(detection.azimuth_angle.value() >= -M_PI && detection.azimuth_angle.value() <= M_PI);
-        assert(
-          detection.azimuth_angle_std.value() >= 0.f && detection.azimuth_angle_std.value() <= 1.f);
-        assert(
-          detection.elevation_angle.value() >= -M_PI && detection.elevation_angle.value() <= M_PI);
-        assert(
-          detection.elevation_angle_std.value() >= 0.f &&
-          detection.elevation_angle_std.value() <= 1.f);
+    assert(detection.raw_positive_predictive_value <= 100);
+    assert(detection.classification <= 4 || detection.classification == 255);
+    assert(detection.raw_multi_target_probability <= 100);
+    assert(detection.raw_ambiguity_flag <= 100);
 
-        assert(detection.range.value() >= 0.f && detection.range.value() <= 1500.f);
-        assert(detection.range_std.value() >= 0.f && detection.range_std.value() <= 1.f);
-        assert(detection.range_rate_std.value() >= 0.f && detection.range_rate_std.value() <= 1.f);
+    assert(detection.azimuth_angle.value() >= -M_PI && detection.azimuth_angle.value() <= M_PI);
+    assert(
+      detection.azimuth_angle_std.value() >= 0.f && detection.azimuth_angle_std.value() <= 1.f);
+    assert(detection.elevation_angle.value() >= -M_PI && detection.elevation_angle.value() <= M_PI);
+    assert(
+      detection.elevation_angle_std.value() >= 0.f && detection.elevation_angle_std.value() <= 1.f);
 
-        detection_msg.invalid_distance = detection.invalid_flags & 0x01;
-        detection_msg.invalid_distance_std = detection.invalid_flags & 0x02;
-        detection_msg.invalid_azimuth = detection.invalid_flags & 0x04;
-        detection_msg.invalid_azimuth_std = detection.invalid_flags & 0x08;
-        detection_msg.invalid_elevation = detection.invalid_flags & 0x10;
-        detection_msg.invalid_elevation_std = detection.invalid_flags & 0x20;
-        detection_msg.invalid_range_rate = detection.invalid_flags & 0x40;
-        detection_msg.invalid_range_rate_std = detection.invalid_flags & 0x80;
-        detection_msg.rcs = detection.rcs;
-        detection_msg.measurement_id = detection.measurement_id.value();
-        detection_msg.raw_positive_predictive_value = detection.raw_positive_predictive_value;
-        detection_msg.classification = detection.classification;
-        detection_msg.raw_multi_target_probability = detection.raw_multi_target_probability;
-        detection_msg.object_id = detection.object_id.value();
-        detection_msg.raw_ambiguity_flag = detection.raw_ambiguity_flag;
+    assert(detection.range.value() >= 0.f && detection.range.value() <= 1500.f);
+    assert(detection.range_std.value() >= 0.f && detection.range_std.value() <= 1.f);
+    assert(detection.range_rate_std.value() >= 0.f && detection.range_rate_std.value() <= 1.f);
 
-        detection_msg.azimuth_angle = detection.azimuth_angle.value();
-        detection_msg.azimuth_angle_std = detection.azimuth_angle_std.value();
-        detection_msg.elevation_angle = detection.elevation_angle.value();
-        detection_msg.elevation_angle_std = detection.elevation_angle_std.value();
+    detection_msg.invalid_distance = detection.invalid_flags & 0x01;
+    detection_msg.invalid_distance_std = detection.invalid_flags & 0x02;
+    detection_msg.invalid_azimuth = detection.invalid_flags & 0x04;
+    detection_msg.invalid_azimuth_std = detection.invalid_flags & 0x08;
+    detection_msg.invalid_elevation = detection.invalid_flags & 0x10;
+    detection_msg.invalid_elevation_std = detection.invalid_flags & 0x20;
+    detection_msg.invalid_range_rate = detection.invalid_flags & 0x40;
+    detection_msg.invalid_range_rate_std = detection.invalid_flags & 0x80;
+    detection_msg.rcs = detection.rcs;
+    detection_msg.measurement_id = detection.measurement_id.value();
+    detection_msg.raw_positive_predictive_value = detection.raw_positive_predictive_value;
+    detection_msg.classification = detection.classification;
+    detection_msg.raw_multi_target_probability = detection.raw_multi_target_probability;
+    detection_msg.object_id = detection.object_id.value();
+    detection_msg.raw_ambiguity_flag = detection.raw_ambiguity_flag;
 
-        detection_msg.range = detection.range.value();
-        detection_msg.range_std = detection.range_std.value();
-        detection_msg.range_rate = detection.range_rate.value();
-        detection_msg.range_rate_std = detection.range_rate_std.value();
-      }
-    },
-    detection_list_variant);
+    detection_msg.azimuth_angle = detection.azimuth_angle.value();
+    detection_msg.azimuth_angle_std = detection.azimuth_angle_std.value();
+    detection_msg.elevation_angle = detection.elevation_angle.value();
+    detection_msg.elevation_angle_std = detection.elevation_angle_std.value();
+
+    detection_msg.range = detection.range.value();
+    detection_msg.range_std = detection.range_std.value();
+    detection_msg.range_rate = detection.range_rate.value();
+    detection_msg.range_rate_std = detection.range_rate_std.value();
+  }
 
   if (detection_list_callback_) {
     detection_list_callback_(std::move(msg_ptr));
@@ -270,7 +266,7 @@ bool ContinentalARS548Decoder::parse_detections_list_packet(
 }
 
 bool ContinentalARS548Decoder::parse_objects_list_packet(
-  const nebula_msgs::msg::NebulaPacket & packet_msg, ObjectListVariant & object_list_variant)
+  const nebula_msgs::msg::NebulaPacket & packet_msg, const int & max_objects)
 {
   if (nebula::drivers::continental_ars548::is_corner_radar(radar_status_.yaw)) {
     if (radar_status_.sw_version_minor != sw_version_minor_corner_radar) {
@@ -288,158 +284,155 @@ bool ContinentalARS548Decoder::parse_objects_list_packet(
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548ObjectList>();
   auto & msg = *msg_ptr;
 
-  std::visit(
-    [&packet_msg, &msg, this](auto & object_list) {
-      assert(sizeof(std::decay_t<decltype(object_list)>) == packet_msg.data.size());
-      std::memcpy(
-        &object_list, packet_msg.data.data(), sizeof(std::decay_t<decltype(object_list)>));
+  ObjectListPacket object_list;
 
-      msg.header.frame_id = config_ptr_->object_frame;
+  // Header part
+  const size_t header_part_size = offsetof(ObjectListPacket, objects);
+  std::memcpy(reinterpret_cast<void *>(&object_list), packet_msg.data.data(), header_part_size);
 
-      if (config_ptr_->use_sensor_time) {
-        msg.header.stamp.nanosec = object_list.stamp.timestamp_nanoseconds.value();
-        msg.header.stamp.sec = object_list.stamp.timestamp_seconds.value();
-      } else {
-        msg.header.stamp = packet_msg.stamp;
-      }
+  // Objects list part
+  if (max_objects > 0) {
+    object_list.objects.resize(max_objects);
+    std::memcpy(
+      object_list.objects.data(), packet_msg.data.data() + header_part_size,
+      max_objects * sizeof(ObjectPacket));
+  }
 
-      msg.stamp_sync_status = object_list.stamp.timestamp_sync_status;
-      assert(msg.stamp_sync_status >= 1 && msg.stamp_sync_status <= 3);
+  msg.header.frame_id = config_ptr_->object_frame;
 
-      const uint8_t number_of_objects = object_list.number_of_objects;
+  if (config_ptr_->use_sensor_time) {
+    msg.header.stamp.nanosec = object_list.stamp.timestamp_nanoseconds.value();
+    msg.header.stamp.sec = object_list.stamp.timestamp_seconds.value();
+  } else {
+    msg.header.stamp = packet_msg.stamp;
+  }
 
-      msg.objects.resize(number_of_objects);
+  msg.stamp_sync_status = object_list.stamp.timestamp_sync_status;
+  assert(msg.stamp_sync_status >= 1 && msg.stamp_sync_status <= 3);
 
-      // Estimate dropped objects only when the radar is synchronized
-      if (radar_status_.timestamp_sync_status == "1:SYNC_OK") {
-        if (radar_status_.object_first_stamp == 0) {
-          radar_status_.object_first_stamp =
-            static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
-            static_cast<uint64_t>(msg.header.stamp.nanosec);
-          radar_status_.object_last_stamp = radar_status_.object_first_stamp;
-        } else {
-          uint64_t stamp = static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
-                           static_cast<uint64_t>(msg.header.stamp.nanosec);
-          radar_status_.object_total_count++;
-          radar_status_.object_empty_count += number_of_objects == 0 ? 1 : 0;
-          radar_status_.object_dropped_dt_count +=
-            (stamp - radar_status_.object_last_stamp > 1.75 * radar_status_.cycle_time * 10e6) ? 1
-                                                                                               : 0;
-          radar_status_.object_last_stamp = stamp;
-        }
-      }
+  const uint8_t number_of_objects = object_list.number_of_objects;
 
-      for (std::size_t object_index = 0; object_index < number_of_objects; object_index++) {
-        auto & object_msg = msg.objects[object_index];
-        const ObjectPacket & object = object_list.objects[object_index];
+  msg.objects.resize(number_of_objects);
 
-        assert(object.status_measurement <= 2 || object.status_measurement == 255);
-        assert(object.status_movement <= 1 || object.status_movement == 255);
-        assert(object.position_reference <= 7 || object.position_reference == 255);
+  // Estimate dropped objects only when the radar is synchronized
+  if (radar_status_.timestamp_sync_status == "1:SYNC_OK") {
+    if (radar_status_.object_first_stamp == 0) {
+      radar_status_.object_first_stamp =
+        static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
+        static_cast<uint64_t>(msg.header.stamp.nanosec);
+      radar_status_.object_last_stamp = radar_status_.object_first_stamp;
+    } else {
+      uint64_t stamp = static_cast<uint64_t>(msg.header.stamp.sec) * 1'000'000'000 +
+                       static_cast<uint64_t>(msg.header.stamp.nanosec);
+      radar_status_.object_total_count++;
+      radar_status_.object_empty_count += number_of_objects == 0 ? 1 : 0;
+      radar_status_.object_dropped_dt_count +=
+        (stamp - radar_status_.object_last_stamp > 1.75 * radar_status_.cycle_time * 10e6) ? 1 : 0;
+      radar_status_.object_last_stamp = stamp;
+    }
+  }
 
-        assert(object.position_x.value() >= -1600.f && object.position_x.value() <= 1600.f);
-        assert(object.position_x_std.value() >= 0.f);
-        assert(object.position_y.value() >= -1600.f && object.position_y.value() <= 1600.f);
-        assert(object.position_y_std.value() >= 0.f);
-        assert(object.position_z.value() >= -1600.f && object.position_z.value() <= 1600.f);
-        assert(object.position_z_std.value() >= 0.f);
-        assert(
-          object.position_orientation.value() >= -M_PI &&
-          object.position_orientation.value() <= M_PI);
-        assert(object.position_orientation_std.value() >= 0.f);
+  for (std::size_t object_index = 0; object_index < number_of_objects; object_index++) {
+    auto & object_msg = msg.objects[object_index];
+    const ObjectPacket & object = object_list.objects[object_index];
 
-        assert(object.raw_classification_car <= 100);
-        assert(object.raw_classification_truck <= 100);
-        assert(object.raw_classification_motorcycle <= 100);
-        assert(object.raw_classification_bicycle <= 100);
-        assert(object.raw_classification_pedestrian <= 100);
-        assert(object.raw_classification_animal <= 100);
-        assert(object.raw_classification_hazard <= 100);
-        assert(object.raw_classification_unknown <= 100);
+    assert(object.status_measurement <= 2 || object.status_measurement == 255);
+    assert(object.status_movement <= 1 || object.status_movement == 255);
+    assert(object.position_reference <= 7 || object.position_reference == 255);
 
-        assert(object.dynamics_abs_vel_x_std.value() >= 0.f);
-        assert(object.dynamics_abs_vel_y_std.value() >= 0.f);
+    assert(object.position_x.value() >= -1600.f && object.position_x.value() <= 1600.f);
+    assert(object.position_x_std.value() >= 0.f);
+    assert(object.position_y.value() >= -1600.f && object.position_y.value() <= 1600.f);
+    assert(object.position_y_std.value() >= 0.f);
+    assert(object.position_z.value() >= -1600.f && object.position_z.value() <= 1600.f);
+    assert(object.position_z_std.value() >= 0.f);
+    assert(
+      object.position_orientation.value() >= -M_PI && object.position_orientation.value() <= M_PI);
+    assert(object.position_orientation_std.value() >= 0.f);
 
-        assert(object.dynamics_rel_vel_x_std.value() >= 0.f);
-        assert(object.dynamics_rel_vel_y_std.value() >= 0.f);
+    assert(object.raw_classification_car <= 100);
+    assert(object.raw_classification_truck <= 100);
+    assert(object.raw_classification_motorcycle <= 100);
+    assert(object.raw_classification_bicycle <= 100);
+    assert(object.raw_classification_pedestrian <= 100);
+    assert(object.raw_classification_animal <= 100);
+    assert(object.raw_classification_hazard <= 100);
+    assert(object.raw_classification_unknown <= 100);
 
-        assert(object.dynamics_abs_accel_x_std.value() >= 0.f);
-        assert(object.dynamics_abs_accel_y_std.value() >= 0.f);
+    assert(object.dynamics_abs_vel_x_std.value() >= 0.f);
+    assert(object.dynamics_abs_vel_y_std.value() >= 0.f);
 
-        assert(object.dynamics_rel_accel_x_std.value() >= 0.f);
-        assert(object.dynamics_rel_accel_y_std.value() >= 0.f);
+    assert(object.dynamics_rel_vel_x_std.value() >= 0.f);
+    assert(object.dynamics_rel_vel_y_std.value() >= 0.f);
 
-        object_msg.object_id = object.id.value();
-        object_msg.age = object.age.value();
-        object_msg.status_measurement = object.status_measurement;
-        object_msg.status_movement = object.status_movement;
-        object_msg.position_reference = object.position_reference;
+    assert(object.dynamics_abs_accel_x_std.value() >= 0.f);
+    assert(object.dynamics_abs_accel_y_std.value() >= 0.f);
 
-        object_msg.position.x = static_cast<double>(object.position_x.value());
-        object_msg.position.y = static_cast<double>(object.position_y.value());
-        object_msg.position.z = static_cast<double>(object.position_z.value());
+    assert(object.dynamics_rel_accel_x_std.value() >= 0.f);
+    assert(object.dynamics_rel_accel_y_std.value() >= 0.f);
 
-        object_msg.position_std.x = static_cast<double>(object.position_x_std.value());
-        object_msg.position_std.y = static_cast<double>(object.position_y_std.value());
-        object_msg.position_std.z = static_cast<double>(object.position_z_std.value());
+    object_msg.object_id = object.id.value();
+    object_msg.age = object.age.value();
+    object_msg.status_measurement = object.status_measurement;
+    object_msg.status_movement = object.status_movement;
+    object_msg.position_reference = object.position_reference;
 
-        object_msg.position_covariance_xy = object.position_covariance_xy.value();
+    object_msg.position.x = static_cast<double>(object.position_x.value());
+    object_msg.position.y = static_cast<double>(object.position_y.value());
+    object_msg.position.z = static_cast<double>(object.position_z.value());
 
-        object_msg.orientation = object.position_orientation.value();
-        object_msg.orientation_std = object.position_orientation_std.value();
+    object_msg.position_std.x = static_cast<double>(object.position_x_std.value());
+    object_msg.position_std.y = static_cast<double>(object.position_y_std.value());
+    object_msg.position_std.z = static_cast<double>(object.position_z_std.value());
 
-        object_msg.raw_existence_probability = object.raw_existence_probability.value();
-        object_msg.raw_classification_car = object.raw_classification_car;
-        object_msg.raw_classification_truck = object.raw_classification_truck;
-        object_msg.raw_classification_motorcycle = object.raw_classification_motorcycle;
-        object_msg.raw_classification_bicycle = object.raw_classification_bicycle;
-        object_msg.raw_classification_pedestrian = object.raw_classification_pedestrian;
-        object_msg.raw_classification_animal = object.raw_classification_animal;
-        object_msg.raw_classification_hazard = object.raw_classification_hazard;
-        object_msg.raw_classification_unknown = object.raw_classification_unknown;
+    object_msg.position_covariance_xy = object.position_covariance_xy.value();
 
-        object_msg.absolute_velocity.x = static_cast<double>(object.dynamics_abs_vel_x.value());
-        object_msg.absolute_velocity.y = static_cast<double>(object.dynamics_abs_vel_y.value());
-        object_msg.absolute_velocity_std.x =
-          static_cast<double>(object.dynamics_abs_vel_x_std.value());
-        object_msg.absolute_velocity_std.y =
-          static_cast<double>(object.dynamics_abs_vel_y_std.value());
-        object_msg.absolute_velocity_covariance_xy = object.dynamics_abs_vel_covariance_xy.value();
+    object_msg.orientation = object.position_orientation.value();
+    object_msg.orientation_std = object.position_orientation_std.value();
 
-        object_msg.relative_velocity.x = static_cast<double>(object.dynamics_rel_vel_x.value());
-        object_msg.relative_velocity.y = static_cast<double>(object.dynamics_rel_vel_y.value());
-        object_msg.relative_velocity_std.x =
-          static_cast<double>(object.dynamics_rel_vel_x_std.value());
-        object_msg.relative_velocity_std.y =
-          static_cast<double>(object.dynamics_rel_vel_y_std.value());
-        object_msg.relative_velocity_covariance_xy = object.dynamics_rel_vel_covariance_xy.value();
+    object_msg.raw_existence_probability = object.raw_existence_probability.value();
+    object_msg.raw_classification_car = object.raw_classification_car;
+    object_msg.raw_classification_truck = object.raw_classification_truck;
+    object_msg.raw_classification_motorcycle = object.raw_classification_motorcycle;
+    object_msg.raw_classification_bicycle = object.raw_classification_bicycle;
+    object_msg.raw_classification_pedestrian = object.raw_classification_pedestrian;
+    object_msg.raw_classification_animal = object.raw_classification_animal;
+    object_msg.raw_classification_hazard = object.raw_classification_hazard;
+    object_msg.raw_classification_unknown = object.raw_classification_unknown;
 
-        object_msg.absolute_acceleration.x =
-          static_cast<double>(object.dynamics_abs_accel_x.value());
-        object_msg.absolute_acceleration.y =
-          static_cast<double>(object.dynamics_abs_accel_y.value());
-        object_msg.absolute_acceleration_std.x =
-          static_cast<double>(object.dynamics_abs_accel_x_std.value());
-        object_msg.absolute_acceleration_std.y =
-          static_cast<double>(object.dynamics_abs_accel_y_std.value());
-        object_msg.absolute_acceleration_covariance_xy =
-          object.dynamics_abs_accel_covariance_xy.value();
+    object_msg.absolute_velocity.x = static_cast<double>(object.dynamics_abs_vel_x.value());
+    object_msg.absolute_velocity.y = static_cast<double>(object.dynamics_abs_vel_y.value());
+    object_msg.absolute_velocity_std.x = static_cast<double>(object.dynamics_abs_vel_x_std.value());
+    object_msg.absolute_velocity_std.y = static_cast<double>(object.dynamics_abs_vel_y_std.value());
+    object_msg.absolute_velocity_covariance_xy = object.dynamics_abs_vel_covariance_xy.value();
 
-        object_msg.relative_velocity.x = object.dynamics_rel_accel_x.value();
-        object_msg.relative_velocity.y = object.dynamics_rel_accel_y.value();
-        object_msg.relative_velocity_std.x = object.dynamics_rel_accel_x_std.value();
-        object_msg.relative_velocity_std.y = object.dynamics_rel_accel_y_std.value();
-        object_msg.relative_velocity_covariance_xy =
-          object.dynamics_rel_accel_covariance_xy.value();
+    object_msg.relative_velocity.x = static_cast<double>(object.dynamics_rel_vel_x.value());
+    object_msg.relative_velocity.y = static_cast<double>(object.dynamics_rel_vel_y.value());
+    object_msg.relative_velocity_std.x = static_cast<double>(object.dynamics_rel_vel_x_std.value());
+    object_msg.relative_velocity_std.y = static_cast<double>(object.dynamics_rel_vel_y_std.value());
+    object_msg.relative_velocity_covariance_xy = object.dynamics_rel_vel_covariance_xy.value();
 
-        object_msg.orientation_rate_mean = object.dynamics_orientation_rate_mean.value();
-        object_msg.orientation_rate_std = object.dynamics_orientation_rate_std.value();
+    object_msg.absolute_acceleration.x = static_cast<double>(object.dynamics_abs_accel_x.value());
+    object_msg.absolute_acceleration.y = static_cast<double>(object.dynamics_abs_accel_y.value());
+    object_msg.absolute_acceleration_std.x =
+      static_cast<double>(object.dynamics_abs_accel_x_std.value());
+    object_msg.absolute_acceleration_std.y =
+      static_cast<double>(object.dynamics_abs_accel_y_std.value());
+    object_msg.absolute_acceleration_covariance_xy =
+      object.dynamics_abs_accel_covariance_xy.value();
 
-        object_msg.shape_length_edge_mean = object.shape_length_edge_mean.value();
-        object_msg.shape_width_edge_mean = object.shape_width_edge_mean.value();
-      }
-    },
-    object_list_variant);
+    object_msg.relative_velocity.x = object.dynamics_rel_accel_x.value();
+    object_msg.relative_velocity.y = object.dynamics_rel_accel_y.value();
+    object_msg.relative_velocity_std.x = object.dynamics_rel_accel_x_std.value();
+    object_msg.relative_velocity_std.y = object.dynamics_rel_accel_y_std.value();
+    object_msg.relative_velocity_covariance_xy = object.dynamics_rel_accel_covariance_xy.value();
+
+    object_msg.orientation_rate_mean = object.dynamics_orientation_rate_mean.value();
+    object_msg.orientation_rate_std = object.dynamics_orientation_rate_std.value();
+
+    object_msg.shape_length_edge_mean = object.shape_length_edge_mean.value();
+    object_msg.shape_width_edge_mean = object.shape_width_edge_mean.value();
+  }
 
   if (object_list_callback_) {
     object_list_callback_(std::move(msg_ptr));
