@@ -283,15 +283,11 @@ void ContinentalARS548HwInterfaceWrapper::set_sensor_mounting_request_callback(
     pitch = rpy.y;
   }
 
-  // cSpell:ignore knzo25
-  // NOTE(knzo25): In the radar firmware used when developing this driver,
-  // corner radars were not supported. When a new firmware addresses this,
-  // the driver will be updated.
   if (nebula::drivers::continental_ars548::is_corner_radar(yaw)) {
-    RCLCPP_WARN(
+    RCLCPP_INFO(
       logger_,
-      "You are attempting to configure the device as a corner radar, which is not supported so "
-      "far.");
+      "You are attempting to configure the device as a corner radar, which might be not "
+      "supported.");
   }
 
   auto result = hw_interface_->set_sensor_mounting(

@@ -82,8 +82,10 @@ private:
 
   /// @brief Function for parsing object lists
   /// @param data
+  /// @param max_objects
   /// @return Resulting flag
-  bool parse_objects_list_packet(const nebula_msgs::msg::NebulaPacket & packet_msg);
+  bool parse_objects_list_packet(
+    const nebula_msgs::msg::NebulaPacket & packet_msg, const int & max_objects);
 
   /// @brief Function for parsing sensor status messages
   /// @param data

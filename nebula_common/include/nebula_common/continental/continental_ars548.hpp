@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 namespace nebula
 {
@@ -232,19 +233,24 @@ constexpr int sensor_status_method_id = 380;
 constexpr int filter_status_method_id = 396;
 
 constexpr int detection_list_udp_payload = 35336;
-constexpr int object_list_udp_payload = 9401;
+constexpr int object_list_udp_payload_common = 9401;
+constexpr int object_list_udp_payload_fw40 = 37452;
 constexpr int sensor_status_udp_payload = 84;
 constexpr int filter_status_udp_payload = 330;
 
 constexpr int detection_list_pdu_length = 35328;
-constexpr int object_list_pdu_length = 9393;
+constexpr int object_list_pdu_length_common = 9393;
+constexpr int object_list_pdu_length_fw40 = 37444;
 constexpr int sensor_status_pdu_length = 76;
 constexpr int filter_status_pdu_length = 322;
 
 constexpr int detection_filter_properties_num = 7;
 constexpr int object_filter_properties_num = 24;
 constexpr int max_detections = 800;
-constexpr int max_objects = 50;
+constexpr int max_objects_common = 50;
+constexpr int max_objects_fw40 = 200;
+
+constexpr int sw_version_minor_corner_radar = 40;
 
 constexpr int sync_ok = 1;
 constexpr int never_sync = 2;
@@ -456,7 +462,7 @@ struct ObjectListPacket
   big_uint32_buf_t event_data_qualifier{};
   uint8_t extended_qualifier{};
   uint8_t number_of_objects{};
-  ObjectPacket objects[max_objects];
+  std::vector<ObjectPacket> objects;
 };
 
 struct StatusConfigurationPacket

@@ -15,6 +15,7 @@
 #include "nebula_decoders/nebula_decoders_continental/decoders/continental_ars548_decoder.hpp"
 
 #include <nebula_common/continental/continental_ars548.hpp>
+#include <rclcpp/logging.hpp>
 
 #include <cmath>
 #include <memory>
@@ -70,52 +71,60 @@ bool ContinentalARS548Decoder::process_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg)
 {
   const auto & data = packet_msg->data;
+  auto send_and_return = [nebula_packets_callback = nebula_packets_callback_,
+                          frame_id = config_ptr_->frame_id, &packet_msg](bool success) {
+    if (nebula_packets_callback) {
+      auto packets_msg = std::make_unique<nebula_msgs::msg::NebulaPackets>();
+      packets_msg->packets.emplace_back(std::move(*packet_msg));
+      packets_msg->header.stamp = packet_msg->stamp;
+      packets_msg->header.frame_id = frame_id;
+      nebula_packets_callback(std::move(packets_msg));
+    }
+    return success;
+  };
 
   if (data.size() < sizeof(HeaderPacket)) {
-    return false;
+    return send_and_return(false);
   }
 
   HeaderPacket header{};
   std::memcpy(&header, data.data(), sizeof(HeaderPacket));
 
   if (header.service_id.value() != 0) {
-    return false;
+    return send_and_return(false);
   }
 
   if (header.method_id.value() == detection_list_method_id) {
     if (
       data.size() != detection_list_udp_payload ||
       header.length.value() != detection_list_pdu_length) {
-      return false;
+      return send_and_return(false);
     }
 
     parse_detections_list_packet(*packet_msg);
   } else if (header.method_id.value() == object_list_method_id) {
-    if (data.size() != object_list_udp_payload || header.length.value() != object_list_pdu_length) {
-      return false;
+    if (
+      data.size() == object_list_udp_payload_common ||
+      header.length.value() == object_list_pdu_length_common) {
+      parse_objects_list_packet(*packet_msg, max_objects_common);
+    } else if (
+      data.size() == object_list_udp_payload_fw40 &&
+      header.length.value() == object_list_pdu_length_fw40) {
+      parse_objects_list_packet(*packet_msg, max_objects_fw40);
+    } else {
+      return send_and_return(false);
     }
-
-    parse_objects_list_packet(*packet_msg);
   } else if (header.method_id.value() == sensor_status_method_id) {
     if (
       data.size() != sensor_status_udp_payload ||
       header.length.value() != sensor_status_pdu_length) {
-      return false;
+      return send_and_return(false);
     }
 
     parse_sensor_status_packet(*packet_msg);
   }
 
-  // Some messages are not parsed but are still sent to the user (e.g., filters)
-  if (nebula_packets_callback_) {
-    auto packets_msg = std::make_unique<nebula_msgs::msg::NebulaPackets>();
-    packets_msg->packets.emplace_back(std::move(*packet_msg));
-    packets_msg->header.stamp = packet_msg->stamp;
-    packets_msg->header.frame_id = config_ptr_->frame_id;
-    nebula_packets_callback_(std::move(packets_msg));
-  }
-
-  return true;
+  return send_and_return(true);
 }
 
 bool ContinentalARS548Decoder::parse_detections_list_packet(
@@ -246,23 +255,37 @@ bool ContinentalARS548Decoder::parse_detections_list_packet(
 }
 
 bool ContinentalARS548Decoder::parse_objects_list_packet(
-  const nebula_msgs::msg::NebulaPacket & packet_msg)
+  const nebula_msgs::msg::NebulaPacket & packet_msg, const int & max_objects)
 {
-  // cSpell:ignore knzo25
-  // NOTE(knzo25): In the radar firmware used when developing this driver,
-  // corner radars were not supported. When a new firmware addresses this,
-  // the driver will be updated.
   if (nebula::drivers::continental_ars548::is_corner_radar(radar_status_.yaw)) {
-    return true;
+    if (radar_status_.sw_version_minor != sw_version_minor_corner_radar) {
+      RCLCPP_WARN_ONCE(
+        rclcpp::get_logger("ContinentalARS548Decoder"),
+        "Tried to parse an object list packet from a corner radar, but the required software "
+        "version is X.%d.Z. The connected radar firmware version is %d.%d.%d. The object list will "
+        "be skipped.",
+        sw_version_minor_corner_radar, radar_status_.sw_version_major,
+        radar_status_.sw_version_minor, radar_status_.sw_version_patch);
+      return true;
+    }
   }
 
   auto msg_ptr = std::make_unique<continental_msgs::msg::ContinentalArs548ObjectList>();
   auto & msg = *msg_ptr;
 
   ObjectListPacket object_list;
-  assert(sizeof(ObjectListPacket) == packet_msg.data.size());
 
-  std::memcpy(&object_list, packet_msg.data.data(), sizeof(object_list));
+  // Header part
+  const size_t header_part_size = offsetof(ObjectListPacket, objects);
+  std::memcpy(reinterpret_cast<void *>(&object_list), packet_msg.data.data(), header_part_size);
+
+  // Objects list part
+  if (max_objects > 0) {
+    object_list.objects.resize(max_objects);
+    std::memcpy(
+      object_list.objects.data(), packet_msg.data.data() + header_part_size,
+      max_objects * sizeof(ObjectPacket));
+  }
 
   msg.header.frame_id = config_ptr_->object_frame;
 
