@@ -57,6 +57,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   bool hires_mode;
   std::optional<uint32_t> blockage_mask_horizontal_bin_size_mdeg;
   std::optional<std::string> sync_diagnostics_topic;
+  bool imu_enabled;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -96,6 +97,8 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "Synchronization Diagnostics: "
      << (arg.sync_diagnostics_topic ? ("enabled, topic: " + arg.sync_diagnostics_topic.value())
                                     : "disabled");
+  os << '\n';
+  os << "IMU: " << (arg.imu_enabled ? "enabled" : "disabled");
   return os;
 }
 

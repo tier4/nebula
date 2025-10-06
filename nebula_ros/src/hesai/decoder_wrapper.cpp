@@ -89,7 +89,7 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
     sensor_msgs::msg::PointCloud2, &parent_node_, "aw_points_ex", pointcloud_qos);
 
   // IMU publisher (optional)
-  if (drivers::supports_imu(sensor_cfg_->sensor_model)) {
+  if (sensor_cfg_->imu_enabled && drivers::supports_imu(sensor_cfg_->sensor_model)) {
     imu_pub_ = NEBULA_CREATE_PUBLISHER2(
       sensor_msgs::msg::Imu, &parent_node_, "imu", rclcpp::SensorDataQoS());
   }
@@ -314,7 +314,7 @@ std::shared_ptr<drivers::HesaiDriver> HesaiDecoderWrapper::initialize_driver(
 
   drivers::HesaiScanDecoder::imu_callback_t imu_cb;
 
-  if (drivers::supports_imu(sensor_cfg_->sensor_model)) {
+  if (sensor_cfg_->imu_enabled && drivers::supports_imu(sensor_cfg_->sensor_model)) {
     imu_cb = [this](const auto & imu) {
       if (NEBULA_HAS_ANY_SUBSCRIPTIONS(imu_pub_) == 0) {
         return;

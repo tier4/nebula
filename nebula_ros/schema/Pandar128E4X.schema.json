@@ -117,6 +117,17 @@
         "blockage_mask_output": {
           "$ref": "sub/lidar_hesai.json#/definitions/blockage_mask_output"
         },
+        "imu": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable IMU output"
+            }
+          },
+          "additionalProperties": false
+        },
         "diagnostics": {
           "$ref": "sub/lidar_hesai.json#/definitions/diagnostics",
           "required": [
