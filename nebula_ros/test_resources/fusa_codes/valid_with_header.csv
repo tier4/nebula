@@ -1,0 +1,6 @@
+Fault Code;Fault;Lidar State
+0x1111;Aaa;Warning
+0x2222;Bbb;Performance Degradation
+0x3333;Ccc;Pre-Shutdown
+0x4444;Ddd;Shutdown
+0x5555;Eee;Output Untrusted
