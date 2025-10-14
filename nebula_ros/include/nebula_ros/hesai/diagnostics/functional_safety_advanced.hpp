@@ -154,6 +154,12 @@ inline std::vector<ErrorDefinition> read_error_definitions_from_csv(const std::s
     }
 
     // Everything beyond this point is a duplicate code.
+
+    // If it is a 1:1 duplicate, ignore it.
+    if (it->second == current) {
+      continue;
+    }
+
     // Combine descriptions of duplicate definitions, and take the worst severity.
     it->second.description = it->second.description + " OR " + current.description;
     it->second.severity = std::max(it->second.severity, current.severity);
