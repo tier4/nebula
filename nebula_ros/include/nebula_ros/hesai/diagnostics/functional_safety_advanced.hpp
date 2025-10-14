@@ -84,7 +84,6 @@ inline drivers::FunctionalSafetySeverity string_to_severity(const std::string & 
 inline std::vector<ErrorDefinition> read_error_definitions_from_csv(const std::string & file_path)
 {
   constexpr int hex_base = 16;
-  std::vector<ErrorDefinition> error_definitions;
   std::ifstream file(file_path);
 
   if (!file.is_open()) {
@@ -98,9 +97,8 @@ inline std::vector<ErrorDefinition> read_error_definitions_from_csv(const std::s
   };
 
   bool got_header = false;
-  // Track first seen definition per code to detect duplicates and conflicts while
-  // preserving file order in error_definitions
-  std::unordered_map<uint16_t, ErrorDefinition> first_definition_by_code;
+  // Track definitions by code to detect and reconcile duplicates
+  std::unordered_map<uint16_t, ErrorDefinition> parsed_definitions_by_code;
   while (std::getline(file, line)) {
     if (line.empty()) {
       continue;
@@ -149,19 +147,23 @@ inline std::vector<ErrorDefinition> read_error_definitions_from_csv(const std::s
 
     const ErrorDefinition current{code, description, severity};
 
-    const auto it = first_definition_by_code.find(code);
-    if (it == first_definition_by_code.end()) {
-      first_definition_by_code.emplace(code, current);
-      error_definitions.emplace_back(current);
-    } else {
-      // Duplicate code found. If identical definition, ignore; otherwise it's a conflict
-      if (!(it->second == current)) {
-        throw make_exception("conflicting duplicate definition for fault code");
-      }
-      // Identical duplicate -> ignore (do not append again)
+    const auto it = parsed_definitions_by_code.find(code);
+    if (it == parsed_definitions_by_code.end()) {
+      parsed_definitions_by_code.emplace(code, current);
+      continue;
     }
+
+    // Everything beyond this point is a duplicate code.
+    // Combine descriptions of duplicate definitions, and take the worst severity.
+    it->second.description = it->second.description + " OR " + current.description;
+    it->second.severity = std::max(it->second.severity, current.severity);
   }
 
+  std::vector<ErrorDefinition> error_definitions;
+  error_definitions.reserve(parsed_definitions_by_code.size());
+  for (const auto & [code, definition] : parsed_definitions_by_code) {
+    error_definitions.push_back(definition);
+  }
   return error_definitions;
 }
 
