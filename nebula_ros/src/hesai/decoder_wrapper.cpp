@@ -234,14 +234,10 @@ void HesaiDecoderWrapper::initialize_functional_safety(
     return;
   }
 
-  try {
-    auto error_definitions = read_error_definitions_from_csv(fs_config->error_definitions_path);
-    functional_safety_diagnostic_.emplace(
-      &parent_node_, std::make_unique<FunctionalSafetyAdvanced>(
-                       error_definitions, fs_config->ignored_error_codes));
-  } catch (const std::runtime_error & e) {
-    RCLCPP_ERROR_STREAM(logger_, "Failed to load error definitions: " << e.what());
-  }
+  auto error_definitions = read_error_definitions_from_csv(fs_config->error_definitions_path);
+  functional_safety_diagnostic_.emplace(
+    &parent_node_,
+    std::make_unique<FunctionalSafetyAdvanced>(error_definitions, fs_config->ignored_error_codes));
 
   diagnostic_updater.add(functional_safety_diagnostic_.value());
 }
