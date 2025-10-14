@@ -65,19 +65,16 @@ inline drivers::FunctionalSafetySeverity string_to_severity(const std::string & 
 {
   std::string lower_str = boost::algorithm::to_lower_copy(severity_str);
 
-  if (lower_str == "warning") {
+  if (lower_str == "ok") {
     return drivers::FunctionalSafetySeverity::OK;
   }
 
-  if (
-    lower_str.find("untrusted") != std::string::npos ||
-    lower_str.find("shutdown") != std::string::npos ||
-    lower_str.find("pre-shutdown") != std::string::npos) {
-    return drivers::FunctionalSafetySeverity::ERROR;
+  if (lower_str == "warning") {
+    return drivers::FunctionalSafetySeverity::WARNING;
   }
 
-  if (lower_str.find("performance degradation") != std::string::npos) {
-    return drivers::FunctionalSafetySeverity::WARNING;
+  if (lower_str == "error") {
+    return drivers::FunctionalSafetySeverity::ERROR;
   }
 
   throw std::runtime_error("Unknown severity level: " + severity_str);
@@ -119,13 +116,13 @@ inline std::vector<ErrorDefinition> read_error_definitions_from_csv(const std::s
     }
 
     // Validate that we have exactly 3 fields
-    if (fields.size() != 3) {
-      throw make_exception("expected exactly 3 fields (code;description;severity)");
+    if (fields.size() < 3) {
+      throw make_exception("expected at least 3 fields (code;description;severity)");
     }
 
     if (
       !got_header &&
-      (fields[0] == "Fault Code" && fields[1] == "Fault" && fields[2] == "Lidar State")) {
+      (fields[0] == "Fault Code" && fields[1] == "Fault" && fields[2] == "Severity")) {
       got_header = true;
       continue;
     }
