@@ -121,7 +121,8 @@
           "$ref": "sub/lidar_hesai.json#/definitions/diagnostics",
           "required": [
             "pointcloud_publish_rate",
-            "packet_loss"
+            "packet_loss",
+            "functional_safety"
           ]
         },
         "sync_diagnostics": {

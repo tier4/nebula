@@ -119,6 +119,53 @@
         },
         "packet_loss": {
           "$ref": "diagnostics.json#/definitions/packet_loss_diagnostic_task"
+        },
+        "functional_safety": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "basic",
+                "advanced"
+              ],
+              "default": "basic",
+              "description": "Functional safety diagnostic mode"
+            },
+            "error_definitions_path": {
+              "type": "string",
+              "description": "Path to CSV file containing error definitions (required for advanced mode)"
+            },
+            "ignored_error_codes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              },
+              "default": [],
+              "description": "List of error codes to ignore in hexadecimal format"
+            }
+          },
+          "required": [
+            "mode"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "mode": {
+                    "const": "advanced"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "error_definitions_path"
+                ]
+              }
+            }
+          ]
         }
       }
     }
