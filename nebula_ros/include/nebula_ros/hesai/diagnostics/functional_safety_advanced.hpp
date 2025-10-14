@@ -51,6 +51,13 @@ struct ErrorDefinition
   {
     return code == other.code && description == other.description && severity == other.severity;
   }
+
+  friend std::ostream & operator<<(std::ostream & os, const ErrorDefinition & error_definition)
+  {
+    os << "0x" << std::hex << std::setw(4) << std::setfill('0') << error_definition.code << " ("
+       << error_definition.severity << ")";
+    return os;
+  }
 };
 
 /// Convert severity string to enum value
