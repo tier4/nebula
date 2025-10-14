@@ -76,7 +76,7 @@ std::vector<CsvTestCase> csv_test_cases()
      {
        {0x1111, "Aaa", Severity::OK},
        {0x2222, "Bbb", Severity::WARNING},
-       {0x3333, "Ccc", Severity::ERROR},
+       {0x3333, "Ccc", Severity::WARNING},
        {0x4444, "Ddd", Severity::ERROR},
        {0x5555, "Eee", Severity::ERROR},
      }},
