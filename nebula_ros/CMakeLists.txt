@@ -260,6 +260,8 @@ if(BUILD_TESTING)
 
     ament_lint_auto_find_test_dependencies()
 
+    add_definitions(-D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
+
     # Unit tests
     ament_add_gtest(test_single_consumer_processor
         test/test_single_consumer_processor.cpp
@@ -269,6 +271,17 @@ if(BUILD_TESTING)
         include
         SYSTEM
         ${rcpputils_INCLUDE_DIRS}
+    )
+
+    ament_add_gtest(test_hesai_functional_safety
+        test/test_hesai_functional_safety.cpp
+    )
+    target_include_directories(test_hesai_functional_safety
+        PRIVATE
+        include
+    )
+    target_link_libraries(test_hesai_functional_safety
+        hesai_ros_wrapper
     )
 
     foreach(MODEL Pandar40P Pandar64 PandarQT64 PandarQT128 Pandar128E4X PandarAT128 PandarXT16 PandarXT32 PandarXT32M ARS548 SRR520 VLP16 VLP32 VLS128 Helios Bpearl)
