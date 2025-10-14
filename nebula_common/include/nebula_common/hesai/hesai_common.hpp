@@ -121,10 +121,10 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
      << '\n';
   os << "Synchronization Diagnostics: "
      << (arg.sync_diagnostics_topic ? ("enabled, topic: " + arg.sync_diagnostics_topic.value())
-                                    : "disabled")
-     << '\n';
+                                    : "disabled");
 
   if (supports_functional_safety(arg.sensor_model)) {
+    os << '\n';
     os << "Functional Safety: ";
     if (arg.functional_safety) {
       os << *arg.functional_safety;
