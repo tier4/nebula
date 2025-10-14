@@ -15,6 +15,8 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_ros/hesai/diagnostics/functional_safety_advanced.hpp"
 
+#include <boost/range/algorithm/sort.hpp>
+
 #include <gtest/gtest-param-test.h>
 #include <gtest/gtest.h>
 
@@ -56,7 +58,6 @@ std::vector<CsvTestCase> csv_test_cases()
   };
   return {
     {to_path("invalid_bigger_than_uint16"), false, {}},
-    {to_path("invalid_duplicates"), false, {}},
     {to_path("invalid_lidar_state"), false, {}},
     {to_path("invalid_no_0x"), false, {}},
     {to_path("invalid_not_enough_fields"), false, {}},
@@ -64,6 +65,11 @@ std::vector<CsvTestCase> csv_test_cases()
      true,
      {
        {0x1111, "Aaa", Severity::OK},
+     }},
+    {to_path("valid_with_multi_severity_duplicates"),
+     true,
+     {
+       {0x1111, "Aaa OR Bbb", Severity::ERROR},
      }},
     {to_path("valid_with_empty_lines"),
      true,
@@ -143,9 +149,14 @@ TEST_P(CsvReaderTest, ReadCsv)
   }
 
   EXPECT_NO_THROW(nebula::ros::read_error_definitions_from_csv(test_case.path));
-  EXPECT_EQ(
-    nebula::ros::read_error_definitions_from_csv(test_case.path),
-    test_case.expected_error_definitions);
+
+  auto parsed = nebula::ros::read_error_definitions_from_csv(test_case.path);
+  boost::range::sort(parsed, [](const auto & a, const auto & b) { return a.code < b.code; });
+
+  auto expected = test_case.expected_error_definitions;
+  boost::range::sort(expected, [](const auto & a, const auto & b) { return a.code < b.code; });
+
+  EXPECT_EQ(parsed, expected);
 }
 
 INSTANTIATE_TEST_SUITE_P(
