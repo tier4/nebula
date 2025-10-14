@@ -33,7 +33,7 @@
 #include <vector>
 
 #ifndef _TEST_RESOURCES_PATH
-#define _TEST_RESOURCES_PATH "INVALID"
+static_assert(false, " _TEST_RESOURCES_PATH is not defined");
 #endif
 
 static std::filesystem::path downsample_mask_path()
