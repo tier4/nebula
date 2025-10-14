@@ -286,7 +286,7 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
       rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
       descriptor.integer_range = int_range(0, 65535, 1);
       auto ignored_error_codes = declare_parameter<std::vector<int64_t>>(
-        "diagnostics.functional_safety.ignored_error_codes", descriptor);
+        "diagnostics.functional_safety.ignored_error_codes", {}, descriptor);
 
       auto ignored_error_codes_uint16 = std::vector<uint16_t>();
       for (const auto & error_code : ignored_error_codes) {
