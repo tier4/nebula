@@ -168,6 +168,10 @@ Status HesaiHwInterface::set_sensor_configuration(
 
 Status HesaiHwInterface::sensor_interface_start()
 {
+  if (!sensor_configuration_) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
   auto builder = connections::UdpSocket::Builder(
     sensor_configuration_->host_ip, sensor_configuration_->data_port);
   if (!sensor_configuration_->multicast_ip.empty()) {
@@ -177,10 +181,11 @@ Status HesaiHwInterface::sensor_interface_start()
   builder.set_mtu(g_mtu_size);
 
   try {
-    builder.set_socket_buffer_size(g_udp_socket_buffer_size);
+    builder.set_socket_buffer_size(sensor_configuration_->udp_socket_receive_buffer_size_bytes);
   } catch (const connections::SocketError & e) {
     throw std::runtime_error(
-      "Could not set socket receive buffer size to " + std::to_string(g_udp_socket_buffer_size) +
+      "Could not set socket receive buffer size to " +
+      std::to_string(sensor_configuration_->udp_socket_receive_buffer_size_bytes) +
       ". Try increasing net.core.rmem_max.");
   }
 

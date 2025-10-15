@@ -41,6 +41,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
 {
   std::string multicast_ip;
   uint16_t gnss_port{};
+  size_t udp_socket_receive_buffer_size_bytes{};
   uint16_t sync_angle{};
   double cut_angle{};
   double dual_return_distance_threshold{};
