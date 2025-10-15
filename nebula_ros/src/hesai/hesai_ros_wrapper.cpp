@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
+#include <limits>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
@@ -147,6 +148,14 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
   config.multicast_ip = declare_parameter<std::string>("multicast_ip", param_read_only());
   config.data_port = declare_parameter<uint16_t>("data_port", param_read_only());
   config.gnss_port = declare_parameter<uint16_t>("gnss_port", param_read_only());
+  {
+    rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
+    descriptor.description = "Kernel UDP receive buffer size (SO_RCVBUF) in bytes for data socket.";
+    // As per `man 7 setsockopt`, the minimum value is 256 bytes.
+    descriptor.integer_range = int_range(256, std::numeric_limits<int32_t>::max(), 1);
+    config.udp_socket_receive_buffer_size_bytes = static_cast<size_t>(
+      declare_parameter<int64_t>("udp_socket_receive_buffer_size_bytes", descriptor));
+  }
   config.frame_id = declare_parameter<std::string>("frame_id", param_read_write());
 
   {

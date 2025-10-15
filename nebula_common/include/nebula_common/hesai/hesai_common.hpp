@@ -41,6 +41,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
 {
   std::string multicast_ip;
   uint16_t gnss_port{};
+  size_t udp_socket_receive_buffer_size_bytes{};
   uint16_t sync_angle{};
   double cut_angle{};
   double dual_return_distance_threshold{};
@@ -69,6 +70,8 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "Multicast: "
      << (arg.multicast_ip.empty() ? "disabled" : "enabled, group: " + arg.multicast_ip) << '\n';
   os << "GNSS Port: " << arg.gnss_port << '\n';
+  os << "UDP Socket Receive Buffer Size: " << arg.udp_socket_receive_buffer_size_bytes << " B"
+     << '\n';
   os << "Rotation Speed: " << arg.rotation_speed << '\n';
   os << "Sync Angle: " << arg.sync_angle << '\n';
   os << "Cut Angle: " << arg.cut_angle << '\n';

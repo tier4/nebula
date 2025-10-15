@@ -21,6 +21,9 @@
         "gnss_port": {
           "$ref": "sub/lidar_hesai.json#/definitions/gnss_port"
         },
+        "udp_socket_receive_buffer_size_bytes": {
+          "$ref": "sub/lidar_hesai.json#/definitions/udp_socket_receive_buffer_size_bytes"
+        },
         "packet_mtu_size": {
           "$ref": "sub/communication.json#/definitions/packet_mtu_size"
         },
@@ -121,6 +124,7 @@
         "multicast_ip",
         "data_port",
         "gnss_port",
+        "udp_socket_receive_buffer_size_bytes",
         "packet_mtu_size",
         "launch_hw",
         "setup_sensor",

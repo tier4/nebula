@@ -30,6 +30,12 @@
       "default": "10110",
       "minimum": 0
     },
+    "udp_socket_receive_buffer_size_bytes": {
+      "type": "integer",
+      "default": "5400000",
+      "minimum": 256,
+      "description": "Kernel UDP receive buffer size (SO_RCVBUF) in bytes for data socket, see `man 7 setsockopt` for details. Increase if packets are dropped due to full UDP queue. Increasing this also increases the worst case latency."
+    },
     "rotation_speed": {
       "$ref": "hardware.json#/definitions/rotation_speed",
       "default": "600",
