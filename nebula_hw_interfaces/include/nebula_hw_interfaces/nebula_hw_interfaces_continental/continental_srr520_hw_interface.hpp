@@ -25,8 +25,10 @@
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
 
+#include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <queue>
 #include <string>
 #include <thread>
 #include <vector>
@@ -114,16 +116,30 @@ private:
   /// @param debug Target string
   void print_debug(std::string debug);
 
-  /// @brief Main loop of the CAN receiver thread
+  /// @brief Main loop of the classic CAN receiver thread
   void receive_loop();
 
+  /// @brief Main loop of the CAN FD receiver thread
+  void receive_fd_loop();
+
+  /// @brief Main loop of the packet callback processing thread
+  void callback_processing_loop();
+
   std::unique_ptr<::drivers::socketcan::SocketCanReceiver> can_receiver_ptr_;
+  std::unique_ptr<::drivers::socketcan::SocketCanReceiver> can_fd_receiver_ptr_;
   std::unique_ptr<::drivers::socketcan::SocketCanSender> can_sender_ptr_;
   std::unique_ptr<std::thread> receiver_thread_ptr_;
+  std::unique_ptr<std::thread> receiver_fd_thread_ptr_;
+  std::unique_ptr<std::thread> callback_thread_ptr_;
 
   std::shared_ptr<const ContinentalSRR520SensorConfiguration> config_ptr_;
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket> buffer)>
     nebula_packet_callback_;
+
+  // Thread-safe packet queue
+  std::queue<std::unique_ptr<nebula_msgs::msg::NebulaPacket>> packet_queue_;
+  std::mutex packet_queue_mutex_;
+  std::condition_variable packet_queue_cv_;
 
   std::mutex receiver_mutex_;
   bool sensor_interface_active_{};
