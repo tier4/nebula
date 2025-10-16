@@ -14,30 +14,27 @@
 
 #pragma once
 
-#include <string>
-#include <utility>
-
 #include <agnocast/agnocast.hpp>
-
 #include <rclcpp/rclcpp.hpp>
 
 #include <cstdlib>
 #include <memory>
+#include <string>
 #include <type_traits>
+#include <utility>
 
 #define NEBULA_MESSAGE_UNIQUE_PTR(MessageT) \
-  nebula::agnocast_wrapper::message_ptr<    \
-    MessageT, nebula::agnocast_wrapper::OwnershipType::Unique>
+  nebula::agnocast_wrapper::message_ptr<MessageT, nebula::agnocast_wrapper::OwnershipType::Unique>
 #define NEBULA_MESSAGE_SHARED_PTR(MessageT) \
-  nebula::agnocast_wrapper::message_ptr<    \
-    MessageT, nebula::agnocast_wrapper::OwnershipType::Shared>
+  nebula::agnocast_wrapper::message_ptr<MessageT, nebula::agnocast_wrapper::OwnershipType::Shared>
 #define NEBULA_SUBSCRIPTION_PTR(MessageT) \
   typename nebula::agnocast_wrapper::Subscription<MessageT>::SharedPtr
 #define NEBULA_PUBLISHER_PTR(MessageT) \
   typename nebula::agnocast_wrapper::Publisher<MessageT>::SharedPtr
 
 #define NEBULA_CREATE_SUBSCRIPTION(message_type, node_ptr, topic, qos, callback, options) \
-  nebula::agnocast_wrapper::create_subscription<message_type>(node_ptr, topic, qos, callback, options)
+  nebula::agnocast_wrapper::create_subscription<message_type>(                            \
+    node_ptr, topic, qos, callback, options)
 #define NEBULA_CREATE_PUBLISHER2(message_type, node_ptr, arg1, arg2) \
   nebula::agnocast_wrapper::create_publisher<message_type>(node_ptr, arg1, arg2)
 #define NEBULA_CREATE_PUBLISHER3(message_type, node_ptr, arg1, arg2, arg3) \
