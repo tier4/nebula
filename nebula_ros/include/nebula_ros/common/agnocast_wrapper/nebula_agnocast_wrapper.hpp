@@ -17,6 +17,8 @@
 #include <string>
 #include <utility>
 
+#ifdef USE_AGNOCAST_ENABLED
+
 #include <agnocast/agnocast.hpp>
 
 #include <rclcpp/rclcpp.hpp>
@@ -408,3 +410,34 @@ typename Publisher<MessageT>::SharedPtr create_publisher(
 }
 
 }  // namespace nebula::agnocast_wrapper
+
+#else
+
+#include <rclcpp/rclcpp.hpp>
+
+#include <memory>
+
+#define NEBULA_MESSAGE_UNIQUE_PTR(MessageT) std::unique_ptr<MessageT>
+#define NEBULA_MESSAGE_SHARED_PTR(MessageT) std::shared_ptr<MessageT>
+#define NEBULA_SUBSCRIPTION_PTR(MessageT) typename rclcpp::Subscription<MessageT>::SharedPtr
+#define NEBULA_PUBLISHER_PTR(MessageT) typename rclcpp::Publisher<MessageT>::SharedPtr
+
+#define NEBULA_CREATE_SUBSCRIPTION(message_type, node_ptr, topic, qos, callback, options) \
+  (node_ptr)->create_subscription<message_type>(topic, qos, callback, options)
+#define NEBULA_CREATE_PUBLISHER2(message_type, node_ptr, arg1, arg2) \
+  (node_ptr)->create_publisher<message_type>(arg1, arg2)
+#define NEBULA_CREATE_PUBLISHER3(message_type, node_ptr, arg1, arg2, arg3) \
+  (node_ptr)->create_publisher<message_type>(arg1, arg2, arg3)
+
+#define NEBULA_SUBSCRIPTION_OPTIONS rclcpp::SubscriptionOptions
+#define NEBULA_PUBLISHER_OPTIONS rclcpp::PublisherOptions
+
+#define NEBULA_HAS_ANY_SUBSCRIPTIONS(publisher) \
+  (publisher->get_subscription_count() > 0 || publisher->get_intra_process_subscription_count() > 0)
+
+#define ALLOCATE_OUTPUT_MESSAGE_UNIQUE(publisher) \
+  std::make_unique<typename std::remove_reference<decltype(*publisher)>::type::ROSMessageType>()
+#define ALLOCATE_OUTPUT_MESSAGE_SHARED(publisher) \
+  std::make_shared<typename std::remove_reference<decltype(*publisher)>::type::ROSMessageType>()
+
+#endif
