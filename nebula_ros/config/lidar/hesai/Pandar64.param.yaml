@@ -5,6 +5,7 @@
     multicast_ip: ""
     data_port: 2368
     gnss_port: 10110
+    udp_socket_receive_buffer_size_bytes: 5400000
     packet_mtu_size: 1500
     launch_hw: true
     setup_sensor: true
