@@ -14,16 +14,17 @@
 
 #pragma once
 
+#include <memory>
+#include <string>
+#include <utility>
+
 #ifdef USE_AGNOCAST_ENABLED
 
 #include <agnocast/agnocast.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <cstdlib>
-#include <memory>
-#include <string>
 #include <type_traits>
-#include <utility>
 
 #define NEBULA_MESSAGE_UNIQUE_PTR(MessageT) \
   nebula::agnocast_wrapper::message_ptr<MessageT, nebula::agnocast_wrapper::OwnershipType::Unique>
@@ -411,8 +412,6 @@ typename Publisher<MessageT>::SharedPtr create_publisher(
 #else
 
 #include <rclcpp/rclcpp.hpp>
-
-#include <memory>
 
 #define NEBULA_MESSAGE_UNIQUE_PTR(MessageT) std::unique_ptr<MessageT>
 #define NEBULA_MESSAGE_SHARED_PTR(MessageT) std::shared_ptr<MessageT>
