@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "nebula_ros/common/diagnostics/hysteresis_state_machine.hpp"
 #include "nebula_ros/common/diagnostics/liveness_monitor.hpp"
 #include "nebula_ros/common/diagnostics/rate_bound_status.hpp"
 #include "nebula_ros/common/parameter_descriptors.hpp"
@@ -177,8 +178,15 @@ private:
   static custom_diagnostic_tasks::RateBoundStatus make_rate_bound_status(
     rclcpp::Node * const node, const std::string & name)
   {
-    static constexpr size_t num_frame_transition = 3;
-    static constexpr bool immediate_error_report = true;
+    static constexpr bool immediate_error_report = false;
+    static constexpr bool immediate_relax_state = true;
+
+    auto read_int_param = [&node](const std::string & param_name) {
+      if (node->has_parameter(param_name)) {
+        return node->get_parameter(param_name).as_int();
+      }
+      return node->declare_parameter<int64_t>(param_name, param_read_only());
+    };
 
     auto read_fp_param = [&node](const std::string & param_name) {
       if (node->has_parameter(param_name)) {
@@ -188,18 +196,50 @@ private:
     };
 
     double min_ok_hz = read_fp_param("diagnostics.rate_bound_status.frequency_ok.min_hz");
-    double max_ok_hz = read_fp_param("diagnostics.rate_bound_status.frequency_ok.max_hz");
     double min_warn_hz = read_fp_param("diagnostics.rate_bound_status.frequency_warn.min_hz");
-    double max_warn_hz = read_fp_param("diagnostics.rate_bound_status.frequency_warn.max_hz");
+    auto num_frame_transition =
+      static_cast<size_t>(read_int_param("diagnostics.rate_bound_status.num_frame_transition"));
 
-    custom_diagnostic_tasks::RateBoundStatusParam ok_params(min_ok_hz, max_ok_hz);
-    custom_diagnostic_tasks::RateBoundStatusParam warn_params(min_warn_hz, max_warn_hz);
+    custom_diagnostic_tasks::RateBoundStatusParam ok_params(min_ok_hz);
+    custom_diagnostic_tasks::RateBoundStatusParam warn_params(min_warn_hz);
 
-    return {node, ok_params, warn_params, num_frame_transition, immediate_error_report, name};
+    return {node,
+            ok_params,
+            warn_params,
+            num_frame_transition,
+            immediate_error_report,
+            immediate_relax_state,
+            name};
+  }
+
+  /// @brief Make a HysteresisStateMachine object from the node parameters
+  /// @param node The node to read the parameters from
+  /// @param diagnostics_ns The diagnostics namespace for parameter
+  /// @return HysteresisStateMachine for internal diagnostics
+  static custom_diagnostic_tasks::HysteresisStateMachine make_hysteresis_status(
+    rclcpp::Node * const node, const std::string & diagnostics_ns)
+  {
+    static constexpr bool immediate_error_report = false;
+    static constexpr bool immediate_relax_state = true;
+
+    auto read_int_param = [&node](const std::string & param_name) {
+      if (node->has_parameter(param_name)) {
+        return node->get_parameter(param_name).as_int();
+      }
+      return node->declare_parameter<int64_t>(param_name, param_read_only());
+    };
+
+    auto num_frame_transition = static_cast<size_t>(
+      read_int_param("diagnostics." + diagnostics_ns + ".num_frame_transition"));
+
+    return custom_diagnostic_tasks::HysteresisStateMachine(
+      num_frame_transition, immediate_error_report, immediate_relax_state);
   }
 
   custom_diagnostic_tasks::RateBoundStatus objects_rate_bound_status_;
   custom_diagnostic_tasks::RateBoundStatus detections_rate_bound_status_;
+  custom_diagnostic_tasks::HysteresisStateMachine blockage_status_;
+  custom_diagnostic_tasks::HysteresisStateMachine internal_status_;
   nebula::ros::LivenessMonitor liveness_monitor_;
   diagnostic_updater::Updater objects_diagnostics_updater_;
   diagnostic_updater::Updater detections_diagnostics_updater_;

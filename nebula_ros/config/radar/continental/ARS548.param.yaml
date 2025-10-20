@@ -25,10 +25,12 @@
         test_level:
           ok: 1
           warn: 1
+        num_frame_transition: 5
+      internal:
+        num_frame_transition: 10
       rate_bound_status:
         frequency_ok:
           min_hz: 9.0
-          max_hz: 11.0
         frequency_warn:
           min_hz: 8.0
-          max_hz: 12.0
+        num_frame_transition: 3

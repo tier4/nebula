@@ -37,6 +37,12 @@
               "default": "11.0"
             }
           }
+        },
+        "num_frame_transition": {
+          "type": "integer",
+          "description": "Number of frames to wait before transitioning diagnostic status.",
+          "default": 3,
+          "minimum": 1
         }
       }
     },
