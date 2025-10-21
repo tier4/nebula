@@ -59,7 +59,7 @@ struct Error : public StateBase
 
 using StateHolder = std::variant<Stale, Ok, Warn, Error>;
 
-static StateHolder generate_state(const DiagnosticStatus_t & state)
+static inline StateHolder generate_state(const DiagnosticStatus_t & state)
 {
   switch (state) {
     case diagnostic_msgs::msg::DiagnosticStatus::STALE:
@@ -171,9 +171,16 @@ to WARN until successive `num_frame_transition` WARNs are observed.
 
   size_t get_num_frame_transition() { return num_frame_transition_; }
 
-  DiagnosticStatus_t get_state_level() { return get_level(current_state_); }
+  DiagnosticStatus_t get_current_state_level() { return get_level(current_state_); }
 
-  void set_state_level(const DiagnosticStatus_t & state) { current_state_ = generate_state(state); }
+  void set_current_state_level(const DiagnosticStatus_t & state)
+  {
+    current_state_ = generate_state(state);
+  }
+
+  bool get_immediate_error_report_param() { return immediate_error_report_; }
+
+  bool get_immediate_relax_state_param() { return immediate_relax_state_; }
 
 protected:
   size_t num_frame_transition_;

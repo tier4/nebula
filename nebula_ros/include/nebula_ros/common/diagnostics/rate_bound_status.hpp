@@ -199,10 +199,11 @@ public:
     // Update state using hysteresis
     hysteresis_state_machine_.update_state(frame_result);
     if (!is_valid_observation && num_frame_skipped >= num_frame_transition_) {
-      hysteresis_state_machine_.set_state_level(diagnostic_msgs::msg::DiagnosticStatus::ERROR);
+      hysteresis_state_machine_.set_current_state_level(
+        diagnostic_msgs::msg::DiagnosticStatus::ERROR);
     }
 
-    auto current_state = hysteresis_state_machine_.get_state_level();
+    auto current_state = hysteresis_state_machine_.get_current_state_level();
     stat.summary(current_state, generate_msg(current_state));
 
     std::stringstream ss;
@@ -226,7 +227,7 @@ public:
     stat.add("Assumed skipped frames", ss.str());
 
     ss.str("");  // reset contents
-    ss << num_frame_transition_;
+    ss << hysteresis_state_machine_.get_num_frame_transition();
     stat.add("Observed frames transition threshold", ss.str());
 
     ss.str("");  // reset contents
@@ -248,6 +249,14 @@ public:
       ss << std::fixed << std::setprecision(2) << warn_params_.max_frequency.value();
       stat.add("Maximum WARN rate threshold", ss.str());
     }
+
+    ss.str("");  // reset contents
+    ss << (hysteresis_state_machine_.get_immediate_error_report_param() ? "true" : "false");
+    stat.add("Immediate error report", ss.str());
+
+    ss.str("");  // reset contents
+    ss << (hysteresis_state_machine_.get_immediate_relax_state_param() ? "true" : "false");
+    stat.add("Immediate relax state", ss.str());
   }
 
 protected:

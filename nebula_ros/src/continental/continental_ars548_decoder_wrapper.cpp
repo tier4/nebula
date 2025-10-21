@@ -348,7 +348,7 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
     internal_diagnostic_status, "Temperature status", sensor_status.temperature_status);
   add_diagnostic(
     internal_diagnostic_status, "Effective internal status",
-    custom_diagnostic_tasks::get_level_string(internal_status_.get_state_level()));
+    custom_diagnostic_tasks::get_level_string(internal_status_.get_current_state_level()));
   add_diagnostic(
     internal_diagnostic_status, "Candidate internal status",
     custom_diagnostic_tasks::get_level_string(internal_status_.get_candidate_level()));
@@ -362,7 +362,7 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
   internal_diagnostic_status.hardware_id = config_ptr_->frame_id;
   internal_diagnostic_status.name =
     std::string(parent_node_->get_fully_qualified_name()) + ": Internal";
-  internal_diagnostic_status.level = internal_status_.get_state_level();
+  internal_diagnostic_status.level = internal_status_.get_current_state_level();
   internal_diagnostic_status.message = "ARS548 internal signals";
 
   diagnostic_array_msg.status = {internal_diagnostic_status};
@@ -375,7 +375,7 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
   add_diagnostic(blockage_diagnostic_status, "Blockage status", sensor_status.blockage_status);
   add_diagnostic(
     blockage_diagnostic_status, "Effective blockage status",
-    custom_diagnostic_tasks::get_level_string(blockage_status_.get_state_level()));
+    custom_diagnostic_tasks::get_level_string(blockage_status_.get_current_state_level()));
   add_diagnostic(
     blockage_diagnostic_status, "Candidate blockage status",
     custom_diagnostic_tasks::get_level_string(blockage_status_.get_candidate_level()));
@@ -389,7 +389,7 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
   blockage_diagnostic_status.hardware_id = config_ptr_->frame_id;
   blockage_diagnostic_status.name =
     std::string(parent_node_->get_fully_qualified_name()) + ": Blockage";
-  blockage_diagnostic_status.level = blockage_status_.get_state_level();
+  blockage_diagnostic_status.level = blockage_status_.get_current_state_level();
   blockage_diagnostic_status.message = "ARS548 blockage status";
 
   diagnostic_array_msg.status = {blockage_diagnostic_status};
