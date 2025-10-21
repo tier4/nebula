@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Copied from https://github.com/tier4/ros2_v4l2_camera/pull/37
+
 #ifndef HYSTERESIS_STATE_MACHINE_HPP_
 #define HYSTERESIS_STATE_MACHINE_HPP_
 
