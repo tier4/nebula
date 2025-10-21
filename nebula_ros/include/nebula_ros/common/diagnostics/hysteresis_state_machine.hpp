@@ -179,7 +179,6 @@ protected:
   bool immediate_relax_state_;
   StateHolder candidate_state_;
   StateHolder current_state_;
-
 };  // class HysteresisStateMachine
 
 }  // namespace custom_diagnostic_tasks
