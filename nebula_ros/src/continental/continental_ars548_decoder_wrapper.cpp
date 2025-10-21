@@ -14,6 +14,7 @@
 
 #include "nebula_ros/continental/continental_ars548_decoder_wrapper.hpp"
 
+#include "nebula_common/continental/continental_ars548.hpp"
 #include "nebula_ros/common/sync_tooling/sync_tooling_worker.hpp"
 
 #include <nebula_common/util/string_conversions.hpp>
@@ -398,23 +399,40 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
   // Configuration status
   diagnostic_msgs::msg::DiagnosticStatus configuration_status;
 
+  add_diagnostic(
+    configuration_status, "Sensor timestamp",
+    util::format_timestamp(sensor_status.timestamp_seconds, sensor_status.timestamp_nanoseconds));
+  add_diagnostic(
+    configuration_status, "Sensor timestamp sync status", sensor_status.timestamp_sync_status);
+  add_diagnostic(
+    configuration_status, "Firmware version",
+    drivers::continental_ars548::extract_firmware_version(
+      sensor_status.sw_version_major, sensor_status.sw_version_minor,
+      sensor_status.sw_version_patch));
+  add_diagnostic(
+    configuration_status, "Longitudinal sensor position",
+    std::to_string(sensor_status.longitudinal));
+  add_diagnostic(
+    configuration_status, "Lateral sensor position", std::to_string(sensor_status.lateral));
+  add_diagnostic(
+    configuration_status, "Vertical sensor position", std::to_string(sensor_status.vertical));
+  add_diagnostic(configuration_status, "Yaw sensor angle", std::to_string(sensor_status.yaw));
+  add_diagnostic(configuration_status, "Pitch sensor angle", std::to_string(sensor_status.pitch));
   add_diagnostic(configuration_status, "Plug orientation", sensor_status.plug_orientation);
-  add_diagnostic(configuration_status, "Length", std::to_string(sensor_status.length));
-  add_diagnostic(configuration_status, "Width", std::to_string(sensor_status.width));
-  add_diagnostic(configuration_status, "Height", std::to_string(sensor_status.height));
-  add_diagnostic(configuration_status, "Wheelbase", std::to_string(sensor_status.wheel_base));
-  add_diagnostic(configuration_status, "Max distance", std::to_string(sensor_status.max_distance));
+  add_diagnostic(configuration_status, "Vehicle length", std::to_string(sensor_status.length));
+  add_diagnostic(configuration_status, "Vehicle width", std::to_string(sensor_status.width));
+  add_diagnostic(configuration_status, "Vehicle height", std::to_string(sensor_status.height));
+  add_diagnostic(
+    configuration_status, "Vehicle wheelbase", std::to_string(sensor_status.wheel_base));
+  add_diagnostic(
+    configuration_status, "Maximum detection distance", std::to_string(sensor_status.max_distance));
   add_diagnostic(configuration_status, "Frequency slot", sensor_status.frequency_slot);
   add_diagnostic(configuration_status, "Cycle time", std::to_string(sensor_status.cycle_time));
   add_diagnostic(configuration_status, "Time slot", std::to_string(sensor_status.time_slot));
   add_diagnostic(configuration_status, "HCC", sensor_status.hcc);
   add_diagnostic(
     configuration_status, "Power save standstill", sensor_status.power_save_standstill);
-  add_diagnostic(
-    configuration_status, "Firmware version",
-    std::to_string(sensor_status.sw_version_major) + "." +
-      std::to_string(sensor_status.sw_version_minor) + "." +
-      std::to_string(sensor_status.sw_version_patch));
+  add_diagnostic(configuration_status, "Sensor IP address", sensor_status.sensor_ip_address0);
   configuration_status.hardware_id = config_ptr_->frame_id;
   configuration_status.name =
     std::string(parent_node_->get_fully_qualified_name()) + ": Configuration";

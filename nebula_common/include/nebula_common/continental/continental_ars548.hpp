@@ -22,8 +22,10 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include <iomanip>
 #include <iostream>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -37,6 +39,18 @@ namespace continental_ars548
 inline bool is_corner_radar(float yaw)
 {
   return std::abs(yaw) > deg2rad(5.0) && std::abs(yaw) < deg2rad(175.0);
+}
+
+inline std::string extract_firmware_version(uint8_t major, uint8_t minor, uint8_t patch)
+{
+  // Continental changed the versioning scheme at some point
+  std::ostringstream oss;
+  if (minor == 0x48) {
+    oss << std::hex << static_cast<int>(major) << "." << static_cast<int>(minor) << "."
+        << static_cast<int>(patch);
+    return oss.str();
+  }
+  return std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(patch);
 }
 
 /// @brief struct for ARS548 sensor configuration
