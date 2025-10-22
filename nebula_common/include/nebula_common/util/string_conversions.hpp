@@ -16,6 +16,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <iomanip>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -57,6 +58,13 @@ inline std::string to_string(const nlohmann::ordered_json & j)
 inline std::string to_string(const nlohmann::json & j)
 {
   return to_string(nlohmann::ordered_json(j));
+}
+
+inline std::string format_timestamp(uint32_t seconds, uint32_t nanoseconds)
+{
+  std::ostringstream oss;
+  oss << seconds << "." << std::setw(9) << std::setfill('0') << nanoseconds;
+  return oss.str();
 }
 
 }  // namespace nebula::util
