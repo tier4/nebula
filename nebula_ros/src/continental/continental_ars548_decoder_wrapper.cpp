@@ -43,6 +43,8 @@ ContinentalARS548DecoderWrapper::ContinentalARS548DecoderWrapper(
 : objects_rate_bound_status_(make_rate_bound_status(parent_node, "Objects rate bound status")),
   detections_rate_bound_status_(
     make_rate_bound_status(parent_node, "Detections rate bound status")),
+  blockage_status_(make_hysteresis_status(parent_node, "blockage")),
+  internal_status_(make_hysteresis_status(parent_node, "internal")),
   liveness_monitor_("Liveness", parent_node, 100ms),
   objects_diagnostics_updater_(parent_node),
   detections_diagnostics_updater_(parent_node),
@@ -339,15 +341,28 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
   // Internal status
   diagnostic_msgs::msg::DiagnosticStatus internal_diagnostic_status;
 
+  internal_status_.update_state(sensor_status.internal_diagnostics_status);
   add_diagnostic(internal_diagnostic_status, "Radar status", sensor_status.radar_status);
   add_diagnostic(internal_diagnostic_status, "Voltage status", sensor_status.voltage_status);
   add_diagnostic(
     internal_diagnostic_status, "Temperature status", sensor_status.temperature_status);
+  add_diagnostic(
+    internal_diagnostic_status, "Effective internal status",
+    custom_diagnostic_tasks::get_level_string(internal_status_.get_current_state_level()));
+  add_diagnostic(
+    internal_diagnostic_status, "Candidate internal status",
+    custom_diagnostic_tasks::get_level_string(internal_status_.get_candidate_level()));
+  add_diagnostic(
+    internal_diagnostic_status, "Candidate status observed frames",
+    std::to_string(internal_status_.get_candidate_num_observation()));
+  add_diagnostic(
+    internal_diagnostic_status, "Observed frames transition threshold",
+    std::to_string(internal_status_.get_num_frame_transition()));
 
   internal_diagnostic_status.hardware_id = config_ptr_->frame_id;
   internal_diagnostic_status.name =
     std::string(parent_node_->get_fully_qualified_name()) + ": Internal";
-  internal_diagnostic_status.level = sensor_status.internal_diagnostics_status;
+  internal_diagnostic_status.level = internal_status_.get_current_state_level();
   internal_diagnostic_status.message = "ARS548 internal signals";
 
   diagnostic_array_msg.status = {internal_diagnostic_status};
@@ -356,11 +371,25 @@ void ContinentalARS548DecoderWrapper::sensor_status_callback(
   // Blockage status
   diagnostic_msgs::msg::DiagnosticStatus blockage_diagnostic_status;
 
+  blockage_status_.update_state(sensor_status.blockage_diagnostics_status);
   add_diagnostic(blockage_diagnostic_status, "Blockage status", sensor_status.blockage_status);
+  add_diagnostic(
+    blockage_diagnostic_status, "Effective blockage status",
+    custom_diagnostic_tasks::get_level_string(blockage_status_.get_current_state_level()));
+  add_diagnostic(
+    blockage_diagnostic_status, "Candidate blockage status",
+    custom_diagnostic_tasks::get_level_string(blockage_status_.get_candidate_level()));
+  add_diagnostic(
+    blockage_diagnostic_status, "Candidate status observed frames",
+    std::to_string(blockage_status_.get_candidate_num_observation()));
+  add_diagnostic(
+    blockage_diagnostic_status, "Observed frames transition threshold",
+    std::to_string(blockage_status_.get_num_frame_transition()));
+
   blockage_diagnostic_status.hardware_id = config_ptr_->frame_id;
   blockage_diagnostic_status.name =
     std::string(parent_node_->get_fully_qualified_name()) + ": Blockage";
-  blockage_diagnostic_status.level = sensor_status.blockage_diagnostics_status;
+  blockage_diagnostic_status.level = blockage_status_.get_current_state_level();
   blockage_diagnostic_status.message = "ARS548 blockage status";
 
   diagnostic_array_msg.status = {blockage_diagnostic_status};

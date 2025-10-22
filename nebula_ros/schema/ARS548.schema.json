@@ -113,6 +113,23 @@
                     "ok",
                     "warn"
                   ]
+                },
+                "num_frame_transition": {
+                  "type": "integer",
+                  "description": "Number of frames to wait before transitioning diagnostic status for blockage.",
+                  "default": 5,
+                  "minimum": 1
+                }
+              }
+            },
+            "internal": {
+              "type": "object",
+              "properties": {
+                "num_frame_transition": {
+                  "type": "integer",
+                  "description": "Number of frames to wait before transitioning diagnostic status for internal errors.",
+                  "default": 10,
+                  "minimum": 1
                 }
               }
             }
