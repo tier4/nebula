@@ -109,7 +109,9 @@ private:
     return {&node, ok_params, warn_params};
   }
 
-  void initialize_functional_safety(diagnostic_updater::Updater & diagnostic_updater);
+  void initialize_functional_safety(
+    diagnostic_updater::Updater & diagnostic_updater,
+    const std::optional<drivers::AdvancedFunctionalSafetyConfiguration> & fs_config);
 
   void initialize_packet_loss_diagnostic(diagnostic_updater::Updater & diagnostic_updater);
 

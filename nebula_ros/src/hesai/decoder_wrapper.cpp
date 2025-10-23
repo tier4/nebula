@@ -5,6 +5,8 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_ros/common/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
 #include "nebula_ros/common/rclcpp_logger.hpp"
+#include "nebula_ros/hesai/diagnostics/functional_safety_advanced.hpp"
+#include "nebula_ros/hesai/diagnostics/functional_safety_basic.hpp"
 #include "nebula_ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
@@ -52,7 +54,7 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
 
   RCLCPP_INFO(logger_, "Starting Decoder");
 
-  initialize_functional_safety(diagnostic_updater);
+  initialize_functional_safety(diagnostic_updater, sensor_cfg_->functional_safety);
   initialize_packet_loss_diagnostic(diagnostic_updater);
 
   driver_ptr_ = initialize_driver(sensor_cfg_, calibration_cfg_ptr_);
@@ -219,13 +221,24 @@ void HesaiDecoderWrapper::publish_cloud(
 }
 
 void HesaiDecoderWrapper::initialize_functional_safety(
-  diagnostic_updater::Updater & diagnostic_updater)
+  diagnostic_updater::Updater & diagnostic_updater,
+  const std::optional<drivers::AdvancedFunctionalSafetyConfiguration> & fs_config)
 {
   if (!drivers::supports_functional_safety(sensor_cfg_->sensor_model)) {
     return;
   }
 
-  functional_safety_diagnostic_.emplace(&parent_node_);
+  if (!fs_config) {
+    functional_safety_diagnostic_.emplace(&parent_node_, std::make_unique<FunctionalSafetyBasic>());
+    diagnostic_updater.add(functional_safety_diagnostic_.value());
+    return;
+  }
+
+  auto error_definitions = read_error_definitions_from_csv(fs_config->error_definitions_path);
+  functional_safety_diagnostic_.emplace(
+    &parent_node_,
+    std::make_unique<FunctionalSafetyAdvanced>(error_definitions, fs_config->ignored_error_codes));
+
   diagnostic_updater.add(functional_safety_diagnostic_.value());
 }
 

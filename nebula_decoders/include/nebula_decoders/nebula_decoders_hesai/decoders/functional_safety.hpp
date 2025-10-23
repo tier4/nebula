@@ -21,12 +21,32 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <ostream>
 #include <utility>
-
 namespace nebula::drivers
 {
 
 enum class FunctionalSafetySeverity : uint8_t { OK, WARNING, ERROR };
+
+inline std::ostream & operator<<(std::ostream & os, FunctionalSafetySeverity severity)
+{
+  switch (severity) {
+    case FunctionalSafetySeverity::OK:
+      os << "OK";
+      break;
+    case FunctionalSafetySeverity::WARNING:
+      os << "WARNING";
+      break;
+    case FunctionalSafetySeverity::ERROR:
+      os << "ERROR";
+      break;
+    default:
+      os << "UNKNOWN";
+      break;
+  }
+  return os;
+}
+
 using FunctionalSafetyErrorCodes = boost::container::static_vector<uint16_t, 16>;
 
 class FunctionalSafetyDecoderBase
