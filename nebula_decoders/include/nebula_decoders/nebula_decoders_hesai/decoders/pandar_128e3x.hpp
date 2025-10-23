@@ -52,12 +52,12 @@ struct Tail128E3X
   uint16_t imu_acceleration_unit;
   uint16_t imu_angular_velocity_unit;
   uint32_t imu_timestamp;
-  uint16_t imu_x_axis_acceleration;
-  uint16_t imu_y_axis_acceleration;
-  uint16_t imu_z_axis_acceleration;
-  uint16_t imu_x_axis_angular_velocity;
-  uint16_t imu_y_axis_angular_velocity;
-  uint16_t imu_z_axis_angular_velocity;
+  int16_t imu_x_axis_acceleration;
+  int16_t imu_y_axis_acceleration;
+  int16_t imu_z_axis_acceleration;
+  int16_t imu_x_axis_angular_velocity;
+  int16_t imu_y_axis_angular_velocity;
+  int16_t imu_z_axis_angular_velocity;
 
   uint32_t crc_tail;
 

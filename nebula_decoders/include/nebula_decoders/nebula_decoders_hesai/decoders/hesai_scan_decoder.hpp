@@ -16,6 +16,7 @@
 #define NEBULA_WS_HESAI_SCAN_DECODER_HPP
 
 #include <nebula_common/hesai/hesai_common.hpp>
+#include <nebula_common/imu_types.hpp>
 #include <nebula_common/point_types.hpp>
 #include <nebula_common/util/expected.hpp>
 
@@ -62,6 +63,8 @@ public:
   using pointcloud_callback_t =
     std::function<void(const NebulaPointCloudPtr & pointcloud, double timestamp_s)>;
 
+  using imu_callback_t = std::function<void(const ImuReading & imu)>;
+
   HesaiScanDecoder(HesaiScanDecoder && c) = delete;
   HesaiScanDecoder & operator=(HesaiScanDecoder && c) = delete;
   HesaiScanDecoder(const HesaiScanDecoder & c) = delete;
@@ -77,6 +80,8 @@ public:
   virtual PacketDecodeResult unpack(const std::vector<uint8_t> & packet) = 0;
 
   virtual void set_pointcloud_callback(pointcloud_callback_t callback) = 0;
+
+  virtual void set_imu_callback(imu_callback_t /* callback */) {}
 };
 }  // namespace nebula::drivers
 

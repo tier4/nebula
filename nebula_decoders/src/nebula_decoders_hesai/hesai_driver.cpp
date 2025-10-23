@@ -27,7 +27,7 @@ HesaiDriver::HesaiDriver(
   const std::shared_ptr<const HesaiSensorConfiguration> & sensor_configuration,
   const std::shared_ptr<const HesaiCalibrationConfigurationBase> & calibration_data,
   const std::shared_ptr<loggers::Logger> & logger,
-  HesaiScanDecoder::pointcloud_callback_t pointcloud_cb,
+  HesaiScanDecoder::pointcloud_callback_t pointcloud_cb, HesaiScanDecoder::imu_callback_t imu_cb,
   FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
   FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
   FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb,
@@ -40,46 +40,46 @@ HesaiDriver::HesaiDriver(
   switch (sensor_configuration->sensor_model) {
     case SensorModel::HESAI_PANDAR64:
       scan_decoder_ = initialize_decoder<Pandar64>(
-        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);
+        sensor_configuration, calibration_data, imu_cb, alive_cb, stuck_cb, status_cb, lost_cb);
       break;
     case SensorModel::HESAI_PANDAR40P:
     case SensorModel::HESAI_PANDAR40M:
       scan_decoder_ = initialize_decoder<Pandar40>(
-        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);
+        sensor_configuration, calibration_data, imu_cb, alive_cb, stuck_cb, status_cb, lost_cb);
       break;
     case SensorModel::HESAI_PANDARQT64:
       scan_decoder_ = initialize_decoder<PandarQT64>(
-        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);
+        sensor_configuration, calibration_data, imu_cb, alive_cb, stuck_cb, status_cb, lost_cb);
       break;
     case SensorModel::HESAI_PANDARQT128: {
       scan_decoder_ = initialize_decoder<PandarQT128>(
-        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);
+        sensor_configuration, calibration_data, imu_cb, alive_cb, stuck_cb, status_cb, lost_cb);
       break;
     }
     case SensorModel::HESAI_PANDARXT16:
       scan_decoder_ = initialize_decoder<PandarXT16>(
-        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);
+        sensor_configuration, calibration_data, imu_cb, alive_cb, stuck_cb, status_cb, lost_cb);
       break;
     case SensorModel::HESAI_PANDARXT32:
       scan_decoder_ = initialize_decoder<PandarXT32>(
-        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);
+        sensor_configuration, calibration_data, imu_cb, alive_cb, stuck_cb, status_cb, lost_cb);
       break;
     case SensorModel::HESAI_PANDARXT32M:
       scan_decoder_ = initialize_decoder<PandarXT32M>(
-        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);
+        sensor_configuration, calibration_data, imu_cb, alive_cb, stuck_cb, status_cb, lost_cb);
       break;
     case SensorModel::HESAI_PANDARAT128:
       scan_decoder_ = initialize_decoder<PandarAT128>(
-        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);
+        sensor_configuration, calibration_data, imu_cb, alive_cb, stuck_cb, status_cb, lost_cb);
       break;
     case SensorModel::HESAI_PANDAR128_E3X: {
       scan_decoder_ = initialize_decoder<Pandar128E3X>(
-        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb);
+        sensor_configuration, calibration_data, imu_cb, alive_cb, stuck_cb, status_cb, lost_cb);
       break;
     }
     case SensorModel::HESAI_PANDAR128_E4X: {
       scan_decoder_ = initialize_decoder<Pandar128E4X>(
-        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb,
+        sensor_configuration, calibration_data, imu_cb, alive_cb, stuck_cb, status_cb, lost_cb,
         std::move(blockage_mask_plugin));
       break;
     }
@@ -92,6 +92,9 @@ HesaiDriver::HesaiDriver(
   }
 
   scan_decoder_->set_pointcloud_callback(std::move(pointcloud_cb));
+  if (imu_cb) {
+    scan_decoder_->set_imu_callback(std::move(imu_cb));
+  }
 }
 
 template <typename SensorT>
@@ -99,7 +102,7 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
   const std::shared_ptr<const drivers::HesaiSensorConfiguration> & sensor_configuration,
   const std::shared_ptr<const drivers::HesaiCalibrationConfigurationBase> &
     calibration_configuration,
-  FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
+  HesaiScanDecoder::imu_callback_t imu_cb, FunctionalSafetyDecoderBase::alive_cb_t alive_cb,
   FunctionalSafetyDecoderBase::stuck_cb_t stuck_cb,
   FunctionalSafetyDecoderBase::status_cb_t status_cb, PacketLossDetectorBase::lost_cb_t lost_cb,
   std::shared_ptr<point_filters::BlockageMaskPlugin> blockage_mask_plugin)
@@ -109,11 +112,19 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
     initialize_functional_safety_decoder<SensorT>(alive_cb, stuck_cb, status_cb, sensor_rpm);
   auto packet_loss_detector = initialize_packet_loss_detector<SensorT>(lost_cb);
 
+  std::shared_ptr<ImuDecoderTypedBase<typename SensorT::packet_t>> imu_decoder;
+  if constexpr (hesai_packet::HasImu<typename SensorT::packet_t>::value) {
+    auto decoder = std::make_shared<ImuDecoder<typename SensorT::packet_t>>();
+    if (imu_cb) decoder->set_callback(std::move(imu_cb));
+    imu_decoder = decoder;
+  }
+
   using CalibT = typename SensorT::angle_corrector_t::correction_data_t;
-  return std::make_shared<HesaiDecoder<SensorT>>(
+  auto decoder = std::make_shared<HesaiDecoder<SensorT>>(
     sensor_configuration, std::dynamic_pointer_cast<const CalibT>(calibration_configuration),
-    logger_->child("Decoder"), functional_safety_decoder, packet_loss_detector,
+    logger_->child("Decoder"), imu_decoder, functional_safety_decoder, packet_loss_detector,
     std::move(blockage_mask_plugin));
+  return decoder;
 }
 
 PacketDecodeResult HesaiDriver::parse_cloud_packet(const std::vector<uint8_t> & packet)

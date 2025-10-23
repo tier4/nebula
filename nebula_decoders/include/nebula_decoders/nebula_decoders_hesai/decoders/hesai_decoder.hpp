@@ -21,6 +21,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
+#include "nebula_decoders/nebula_decoders_hesai/decoders/imu.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/packet_loss_detector.hpp"
 
 #include <nebula_common/hesai/hesai_common.hpp>
@@ -72,6 +73,9 @@ private:
 
   /// @brief Decodes azimuth/elevation angles given calibration/correction data
   typename SensorT::angle_corrector_t angle_corrector_;
+
+  /// @brief Decodes IMU data for supported sensors
+  std::shared_ptr<ImuDecoderTypedBase<typename SensorT::packet_t>> imu_decoder_{};
 
   /// @brief Decodes functional safety data for supported sensors
   std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
@@ -318,6 +322,7 @@ public:
     const std::shared_ptr<const typename SensorT::angle_corrector_t::correction_data_t> &
       correction_data,
     const std::shared_ptr<loggers::Logger> & logger,
+    const std::shared_ptr<ImuDecoderTypedBase<typename SensorT::packet_t>> & imu_decoder,
     const std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>> &
       functional_safety_decoder,
     const std::shared_ptr<PacketLossDetectorTypedBase<typename SensorT::packet_t>> &
@@ -327,6 +332,7 @@ public:
     angle_corrector_(
       correction_data, sensor_configuration_->cloud_min_angle,
       sensor_configuration_->cloud_max_angle, sensor_configuration_->cut_angle),
+    imu_decoder_(imu_decoder),
     functional_safety_decoder_(functional_safety_decoder),
     packet_loss_detector_(packet_loss_detector),
     scan_cut_angles_(
@@ -366,6 +372,11 @@ public:
     // is still checked. This is a null-op for sensors that do not support functional safety.
     if (functional_safety_decoder_) {
       functional_safety_decoder_->update(packet_);
+    }
+
+    // Decode IMU via plugin if present
+    if (imu_decoder_) {
+      imu_decoder_->update(packet_);
     }
 
     // FYI: This is where the CRC would be checked. Since this caused performance issues in the
