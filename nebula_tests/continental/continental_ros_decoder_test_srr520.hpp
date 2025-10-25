@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_ContinentalRosDecoderTestsrr520_H
-#define NEBULA_ContinentalRosDecoderTestsrr520_H
+#ifndef NEBULA_TESTS__CONTINENTAL__CONTINENTAL_ROS_DECODER_TEST_SRR520_HPP_
+#define NEBULA_TESTS__CONTINENTAL__CONTINENTAL_ROS_DECODER_TEST_SRR520_HPP_
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_common/nebula_common.hpp>
@@ -91,4 +91,4 @@ private:
 
 }  // namespace nebula::ros
 
-#endif  // NEBULA_ContinentalRosDecoderTestsrr520_H
+#endif  // NEBULA_TESTS__CONTINENTAL__CONTINENTAL_ROS_DECODER_TEST_SRR520_HPP_
