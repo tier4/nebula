@@ -16,8 +16,8 @@
 // Patched with https://github.com/tier4/ros2_v4l2_camera/pull/30
 // Patched with https://github.com/tier4/ros2_v4l2_camera/pull/37
 
-#ifndef RATE_BOUND_STATUS_HPP_
-#define RATE_BOUND_STATUS_HPP_
+#ifndef NEBULA_ROS__COMMON__DIAGNOSTICS__RATE_BOUND_STATUS_HPP_
+#define NEBULA_ROS__COMMON__DIAGNOSTICS__RATE_BOUND_STATUS_HPP_
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_ros/common/diagnostics/hysteresis_state_machine.hpp>
@@ -300,4 +300,4 @@ protected:
 
 }  // namespace custom_diagnostic_tasks
 
-#endif  // RATE_BOUND_STATUS_HPP_
+#endif  // NEBULA_ROS__COMMON__DIAGNOSTICS__RATE_BOUND_STATUS_HPP_
