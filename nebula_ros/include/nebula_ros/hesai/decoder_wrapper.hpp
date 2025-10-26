@@ -29,10 +29,12 @@
 #include <nebula_common/nebula_common.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp/rclcpp/parameter_value.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <pandar_msgs/msg/pandar_scan.hpp>
 
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -88,20 +90,34 @@ private:
 
     double min_ok_hz =
       node.declare_parameter<double>("diagnostics.pointcloud_publish_rate.frequency_ok.min_hz");
-    double max_ok_hz =
-      node.declare_parameter<double>("diagnostics.pointcloud_publish_rate.frequency_ok.max_hz");
     double min_warn_hz =
       node.declare_parameter<double>("diagnostics.pointcloud_publish_rate.frequency_warn.min_hz");
-    double max_warn_hz =
-      node.declare_parameter<double>("diagnostics.pointcloud_publish_rate.frequency_warn.max_hz");
+
+    auto get_optional_double_parameter =
+      [&node](const std::string & param_name) -> std::optional<double> {
+      node.declare_parameter(param_name, rclcpp::ParameterType::PARAMETER_DOUBLE);
+      rclcpp::Parameter param;
+      if (node.get_parameter(param_name, param)) {
+        return std::optional<double>(param.as_double());
+      } else {
+        return std::optional<double>{};
+      }
+    };
+
+    std::optional<double> max_ok_hz =
+      get_optional_double_parameter("diagnostics.pointcloud_publish_rate.frequency_ok.max_hz");
+    std::optional<double> max_warn_hz =
+      get_optional_double_parameter("diagnostics.pointcloud_publish_rate.frequency_warn.max_hz");
 
     // Warn if misconfigured. Since this is not a critical error, continue operation.
-    if (nominal_rate_hz < min_ok_hz || nominal_rate_hz > max_ok_hz) {
+    if (
+      nominal_rate_hz < min_ok_hz ||
+      (max_ok_hz.has_value() && nominal_rate_hz > max_ok_hz.value())) {
       RCLCPP_WARN(
         node.get_logger(),
         "The configured sensor framerate (%d RPM = %.2f Hz) is outside the configured framerate "
         "bounds: %.2f - %.2f. Please check the sensor configuration.",
-        rpm, nominal_rate_hz, min_ok_hz, max_ok_hz);
+        rpm, nominal_rate_hz, min_ok_hz, max_ok_hz.value_or(std::numeric_limits<double>::max()));
     }
 
     custom_diagnostic_tasks::RateBoundStatusParam ok_params(min_ok_hz, max_ok_hz);
