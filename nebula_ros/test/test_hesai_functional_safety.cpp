@@ -148,12 +148,12 @@ TEST_P(CsvReaderTest, ReadCsv)
     return;
   }
 
-  EXPECT_NO_THROW(nebula::ros::read_error_definitions_from_csv(test_case.path));
-
-  auto parsed = nebula::ros::read_error_definitions_from_csv(test_case.path);
-  boost::range::sort(parsed, [](const auto & a, const auto & b) { return a.code < b.code; });
+  std::vector<nebula::ros::ErrorDefinition> parsed;
+  EXPECT_NO_THROW(parsed = nebula::ros::read_error_definitions_from_csv(test_case.path));
 
   auto expected = test_case.expected_error_definitions;
+
+  boost::range::sort(parsed, [](const auto & a, const auto & b) { return a.code < b.code; });
   boost::range::sort(expected, [](const auto & a, const auto & b) { return a.code < b.code; });
 
   EXPECT_EQ(parsed, expected);

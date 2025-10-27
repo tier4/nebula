@@ -33,6 +33,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -179,8 +180,11 @@ public:
   FunctionalSafetyAdvanced(
     const std::vector<ErrorDefinition> & error_definitions,
     const std::vector<uint16_t> & exempted_codes)
-  : error_definitions_(error_definitions), exempted_codes_(exempted_codes)
+  : exempted_codes_(exempted_codes.begin(), exempted_codes.end())
   {
+    for (const auto & error_definition : error_definitions) {
+      error_definitions_.emplace(error_definition.code, error_definition);
+    }
   }
 
   void populate_status(
@@ -197,7 +201,6 @@ public:
       // If there are no error codes, report the severity reported by the sensor
       inout_status.level = detail::severity_to_diagnostic_status_level(severity);
       inout_status.message = detail::status_to_string(severity, 0);
-      inout_status.values.push_back(kv);
       return;
     }
 
@@ -238,7 +241,7 @@ private:
   static std::tuple<drivers::FunctionalSafetyErrorCodes, drivers::FunctionalSafetyErrorCodes>
   split_error_codes(
     const drivers::FunctionalSafetyErrorCodes & error_codes,
-    const std::vector<uint16_t> & exempted_codes)
+    const std::unordered_set<uint16_t> & exempted_codes)
   {
     drivers::FunctionalSafetyErrorCodes non_exempted_error_codes;
     drivers::FunctionalSafetyErrorCodes exempted_error_codes;
@@ -254,16 +257,13 @@ private:
 
   [[nodiscard]] std::optional<ErrorDefinition> get_error_definition(uint16_t error_code) const
   {
-    auto it = boost::range::find_if(
-      error_definitions_, [error_code](const ErrorDefinition & error_definition) {
-        return error_definition.code == error_code;
-      });
+    auto it = error_definitions_.find(error_code);
 
-    if (it != error_definitions_.end()) {
-      return *it;
+    if (it == error_definitions_.end()) {
+      return std::nullopt;
     }
 
-    return std::nullopt;
+    return it->second;
   }
 
   static diagnostic_msgs::msg::KeyValue to_key_value(const ErrorDefinition & error_definition)
@@ -292,8 +292,8 @@ private:
     return kv;
   }
 
-  std::vector<ErrorDefinition> error_definitions_;
-  std::vector<uint16_t> exempted_codes_;
+  std::unordered_map<uint16_t, ErrorDefinition> error_definitions_;
+  std::unordered_set<uint16_t> exempted_codes_;
 };
 
 }  // namespace nebula::ros
