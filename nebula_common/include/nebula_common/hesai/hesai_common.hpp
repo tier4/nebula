@@ -46,6 +46,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   double cut_angle{};
   double dual_return_distance_threshold{};
   std::string calibration_path;
+  bool calibration_download_enabled;
   uint16_t rotation_speed;
   uint16_t cloud_min_angle;
   uint16_t cloud_max_angle;
@@ -79,6 +80,8 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "FoV End: " << arg.cloud_max_angle << '\n';
   os << "Dual Return Distance Threshold: " << arg.dual_return_distance_threshold << '\n';
   os << "Calibration Path: " << arg.calibration_path << '\n';
+  os << "Calibration Download: " << (arg.calibration_download_enabled ? "enabled" : "disabled")
+     << '\n';
   os << "PTP Profile: " << arg.ptp_profile << '\n';
   os << "PTP Domain: " << std::to_string(arg.ptp_domain) << '\n';
   os << "PTP Transport Type: " << arg.ptp_transport_type << '\n';
