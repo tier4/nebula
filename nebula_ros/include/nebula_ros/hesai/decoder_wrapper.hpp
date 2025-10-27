@@ -33,6 +33,7 @@
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <pandar_msgs/msg/pandar_scan.hpp>
 
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -88,12 +89,14 @@ private:
 
     double min_ok_hz =
       node.declare_parameter<double>("diagnostics.pointcloud_publish_rate.frequency_ok.min_hz");
-    double max_ok_hz =
-      node.declare_parameter<double>("diagnostics.pointcloud_publish_rate.frequency_ok.max_hz");
+    double max_ok_hz = node.declare_parameter<double>(
+      "diagnostics.pointcloud_publish_rate.frequency_ok.max_hz",
+      std::numeric_limits<double>::infinity());
     double min_warn_hz =
       node.declare_parameter<double>("diagnostics.pointcloud_publish_rate.frequency_warn.min_hz");
-    double max_warn_hz =
-      node.declare_parameter<double>("diagnostics.pointcloud_publish_rate.frequency_warn.max_hz");
+    double max_warn_hz = node.declare_parameter<double>(
+      "diagnostics.pointcloud_publish_rate.frequency_warn.max_hz",
+      std::numeric_limits<double>::infinity());
 
     // Warn if misconfigured. Since this is not a critical error, continue operation.
     if (nominal_rate_hz < min_ok_hz || nominal_rate_hz > max_ok_hz) {
