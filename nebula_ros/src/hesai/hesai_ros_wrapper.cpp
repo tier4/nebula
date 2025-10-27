@@ -189,6 +189,11 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
     config.hires_mode = this->declare_parameter<bool>("hires_mode", param_read_write());
   }
 
+  // IMU settings (enabled flag)
+  if (drivers::supports_imu(config.sensor_model)) {
+    config.imu_enabled = this->declare_parameter<bool>("imu.enabled", false, param_read_only());
+  }
+
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     RCLCPP_DEBUG_STREAM(get_logger(), config.sensor_model);

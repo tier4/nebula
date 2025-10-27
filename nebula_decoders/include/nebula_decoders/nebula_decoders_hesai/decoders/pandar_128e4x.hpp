@@ -18,6 +18,9 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_128e3x.hpp"
 
+#include <Eigen/src/Core/Matrix.h>
+#include <Eigen/src/Geometry/Transform.h>
+
 #include <iostream>
 #include <vector>
 

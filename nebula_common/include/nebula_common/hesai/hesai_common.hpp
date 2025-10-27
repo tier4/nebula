@@ -59,6 +59,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   bool hires_mode;
   std::optional<uint32_t> blockage_mask_horizontal_bin_size_mdeg;
   std::optional<std::string> sync_diagnostics_topic;
+  bool imu_enabled;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -102,6 +103,8 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "Synchronization Diagnostics: "
      << (arg.sync_diagnostics_topic ? ("enabled, topic: " + arg.sync_diagnostics_topic.value())
                                     : "disabled");
+  os << '\n';
+  os << "IMU: " << (arg.imu_enabled ? "enabled" : "disabled");
   return os;
 }
 
@@ -583,6 +586,19 @@ inline int int_from_return_mode_hesai(
   }
 
   return -1;
+}
+
+/// @brief Whether the given sensor model supports IMU
+/// @param sensor_model Sensor model
+/// @return True if the sensor model supports IMU, false otherwise
+inline bool supports_imu(const SensorModel & sensor_model)
+{
+  switch (sensor_model) {
+    case SensorModel::HESAI_PANDAR128_E4X:
+      return true;
+    default:
+      return false;
+  }
 }
 
 /// @brief Whether the given sensor model supports functional safety

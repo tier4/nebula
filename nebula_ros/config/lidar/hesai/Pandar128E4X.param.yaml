@@ -31,6 +31,8 @@
     retry_hw: true
     dual_return_distance_threshold: 0.1
     hires_mode: true
+    imu:
+      enabled: true
     diagnostics:
       pointcloud_publish_rate:
         frequency_ok:
