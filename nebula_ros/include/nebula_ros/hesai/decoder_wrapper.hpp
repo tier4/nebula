@@ -98,6 +98,9 @@ private:
       "diagnostics.pointcloud_publish_rate.frequency_warn.max_hz",
       std::numeric_limits<double>::infinity());
 
+    size_t num_frame_transition =
+      node.declare_parameter<int>("diagnostics.pointcloud_publish_rate.num_frame_transition", 1);
+
     // Warn if misconfigured. Since this is not a critical error, continue operation.
     if (nominal_rate_hz < min_ok_hz || nominal_rate_hz > max_ok_hz) {
       RCLCPP_WARN(
@@ -109,7 +112,7 @@ private:
 
     custom_diagnostic_tasks::RateBoundStatusParam ok_params(min_ok_hz, max_ok_hz);
     custom_diagnostic_tasks::RateBoundStatusParam warn_params(min_warn_hz, max_warn_hz);
-    return {&node, ok_params, warn_params};
+    return {&node, ok_params, warn_params, num_frame_transition};
   }
 
   void initialize_functional_safety(diagnostic_updater::Updater & diagnostic_updater);
