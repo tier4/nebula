@@ -19,6 +19,7 @@
     cut_angle: 0.0
     sensor_model: PandarXT16
     calibration_file: $(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).csv
+    calibration_download_enabled: true
     rotation_speed: 600
     return_mode: Dual
     ptp_profile: 1588v2

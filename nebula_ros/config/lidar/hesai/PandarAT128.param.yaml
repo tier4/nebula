@@ -20,6 +20,7 @@
     cut_angle: 150.0
     sensor_model: PandarAT128
     calibration_file: $(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).csv
+    calibration_download_enabled: true
     rotation_speed: 200
     return_mode: Dual
     ptp_profile: 1588v2

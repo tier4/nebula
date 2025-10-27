@@ -59,10 +59,11 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     }
   }
 
-  bool force_load_caibration_from_file =
-    use_udp_only;  // Downloading from device requires TCP connection
+  // Downloading from device requires TCP connection and is thus implicitly disabled for udp-only
+  bool force_load_calibration_from_file =
+    use_udp_only || !sensor_cfg_ptr_->calibration_download_enabled;
   auto calibration_result =
-    get_calibration_data(sensor_cfg_ptr_->calibration_path, force_load_caibration_from_file);
+    get_calibration_data(sensor_cfg_ptr_->calibration_path, force_load_calibration_from_file);
   if (!calibration_result.has_value()) {
     throw std::runtime_error(
       "No valid calibration found: " + util::to_string(calibration_result.error()));
@@ -183,6 +184,8 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
   std::string calibration_parameter_name = get_calibration_parameter_name(config.sensor_model);
   config.calibration_path =
     declare_parameter<std::string>(calibration_parameter_name, param_read_write());
+  config.calibration_download_enabled =
+    declare_parameter<bool>("calibration_download_enabled", param_read_only());
 
   auto ptp_profile = declare_parameter<std::string>("ptp_profile", param_read_only());
   config.ptp_profile = drivers::ptp_profile_from_string(ptp_profile);
