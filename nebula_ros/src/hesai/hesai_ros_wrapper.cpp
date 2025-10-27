@@ -73,8 +73,8 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
     }
   }
 
-  bool force_load_caibration_from_file =
-    use_udp_only;  // Downloading from device requires TCP connection
+  // Downloading from device requires TCP connection
+  bool force_load_caibration_from_file = use_udp_only;
   auto calibration_result =
     get_calibration_data(sensor_cfg_ptr_->calibration_path, force_load_caibration_from_file);
   if (!calibration_result.has_value()) {
