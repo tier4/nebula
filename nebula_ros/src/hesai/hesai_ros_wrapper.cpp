@@ -285,6 +285,34 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
     }
   }
 
+  if (supports_functional_safety(config.sensor_model)) {
+    std::string mode = declare_parameter<std::string>(
+      "diagnostics.functional_safety.mode", "basic", param_read_only());
+    if (mode == "basic") {
+      config.functional_safety = std::nullopt;
+    } else if (mode == "advanced") {
+      config.functional_safety = drivers::AdvancedFunctionalSafetyConfiguration();
+      config.functional_safety->error_definitions_path = declare_parameter<std::string>(
+        "diagnostics.functional_safety.error_definitions_path", param_read_only());
+
+      rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_only();
+      descriptor.integer_range = int_range(0, 65535, 1);
+      auto ignored_error_codes = declare_parameter<std::vector<int64_t>>(
+        "diagnostics.functional_safety.ignored_error_codes", {}, descriptor);
+
+      auto ignored_error_codes_uint16 = std::vector<uint16_t>();
+      for (const auto & error_code : ignored_error_codes) {
+        ignored_error_codes_uint16.push_back(static_cast<uint16_t>(error_code));
+      }
+      config.functional_safety->ignored_error_codes = ignored_error_codes_uint16;
+    } else {
+      RCLCPP_ERROR_STREAM(
+        get_logger(),
+        "Invalid functional safety mode: " << mode << ". Valid modes are 'basic' and 'advanced'.");
+      return Status::SENSOR_CONFIG_ERROR;
+    }
+  }
+
   auto new_cfg_ptr = std::make_shared<const nebula::drivers::HesaiSensorConfiguration>(config);
   return validate_and_set_config(new_cfg_ptr);
 }
@@ -349,6 +377,15 @@ Status HesaiRosWrapper::validate_and_set_config(
     !std::filesystem::exists(new_config->downsample_mask_path.value())) {
     RCLCPP_ERROR_STREAM(
       get_logger(), "Downsample mask not found: " << new_config->downsample_mask_path.value());
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
+  if (
+    new_config->functional_safety &&
+    !std::filesystem::exists(new_config->functional_safety->error_definitions_path)) {
+    RCLCPP_ERROR_STREAM(
+      get_logger(), "Functional safety error definitions not found: "
+                      << new_config->functional_safety->error_definitions_path);
     return Status::SENSOR_CONFIG_ERROR;
   }
 

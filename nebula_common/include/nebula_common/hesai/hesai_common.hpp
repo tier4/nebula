@@ -36,6 +36,31 @@ namespace nebula
 {
 namespace drivers
 {
+
+bool supports_functional_safety(const SensorModel & sensor_model);
+
+struct AdvancedFunctionalSafetyConfiguration
+{
+  std::string error_definitions_path;
+  std::vector<uint16_t> ignored_error_codes;
+
+  friend std::ostream & operator<<(
+    std::ostream & os, const AdvancedFunctionalSafetyConfiguration & arg)
+  {
+    os << "advanced\n  error definitions: " << arg.error_definitions_path;
+    os << "\n  ignored codes: ";
+    if (!arg.ignored_error_codes.empty()) {
+      for (size_t i = 0; i < arg.ignored_error_codes.size(); ++i) {
+        if (i > 0) os << ", ";
+        os << "0x" << std::hex << arg.ignored_error_codes[i];
+      }
+    } else {
+      os << "none";
+    }
+    return os;
+  }
+};
+
 /// @brief struct for Hesai sensor configuration
 struct HesaiSensorConfiguration : public LidarConfigurationBase
 {
@@ -59,6 +84,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   bool hires_mode;
   std::optional<uint32_t> blockage_mask_horizontal_bin_size_mdeg;
   std::optional<std::string> sync_diagnostics_topic;
+  std::optional<AdvancedFunctionalSafetyConfiguration> functional_safety;
 };
 /// @brief Convert HesaiSensorConfiguration to string (Overloading the << operator)
 /// @param os
@@ -102,6 +128,16 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
   os << "Synchronization Diagnostics: "
      << (arg.sync_diagnostics_topic ? ("enabled, topic: " + arg.sync_diagnostics_topic.value())
                                     : "disabled");
+
+  if (supports_functional_safety(arg.sensor_model)) {
+    os << '\n';
+    os << "Functional Safety: ";
+    if (arg.functional_safety) {
+      os << *arg.functional_safety;
+    } else {
+      os << "basic";
+    }
+  }
   return os;
 }
 

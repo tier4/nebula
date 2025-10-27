@@ -24,7 +24,9 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <memory>
 #include <string>
+#include <utility>
 
 namespace nebula::ros
 {
@@ -92,14 +94,27 @@ inline std::string status_to_string(drivers::FunctionalSafetySeverity severity, 
 
 using std::chrono_literals::operator""ms;
 
+class FunctionalSafetyStatusProcessor
+{
+public:
+  virtual ~FunctionalSafetyStatusProcessor() = default;
+  virtual void populate_status(
+    drivers::FunctionalSafetySeverity severity,
+    const drivers::FunctionalSafetyErrorCodes & error_codes,
+    diagnostic_msgs::msg::DiagnosticStatus & inout_status) = 0;
+};
+
 class FunctionalSafetyDiagnosticTask : public diagnostic_updater::CompositeDiagnosticTask
 {
 public:
-  explicit FunctionalSafetyDiagnosticTask(rclcpp::Node * const parent_node)
+  explicit FunctionalSafetyDiagnosticTask(
+    rclcpp::Node * const parent_node,
+    std::unique_ptr<FunctionalSafetyStatusProcessor> status_processor)
   : CompositeDiagnosticTask("Functional safety status"),
     liveness_monitor_("Liveness", parent_node, 100ms),
     status_latch_("Status"),
-    stuck_latch_("Sensor functional safety system operation status")
+    stuck_latch_("Sensor functional safety system operation status"),
+    status_processor_(std::move(status_processor))
   {
     addTask(&liveness_monitor_);
     addTask(&status_latch_);
@@ -111,14 +126,7 @@ public:
     const drivers::FunctionalSafetyErrorCodes & error_codes)
   {
     diagnostic_msgs::msg::DiagnosticStatus status;
-    status.level = detail::severity_to_diagnostic_status_level(severity);
-    status.message = detail::status_to_string(severity, error_codes.size());
-
-    diagnostic_msgs::msg::KeyValue kv;
-    kv.key = "Diagnostic codes";
-    kv.value = detail::error_codes_to_string(error_codes);
-    status.values.push_back(kv);
-
+    status_processor_->populate_status(severity, error_codes, status);
     status_latch_.submit(status);
   }
 
@@ -143,6 +151,7 @@ private:
   LivenessMonitor liveness_monitor_;
   SeverityLatch status_latch_;
   SeverityLatch stuck_latch_;
+  std::unique_ptr<FunctionalSafetyStatusProcessor> status_processor_;
 };
 
 }  // namespace nebula::ros
