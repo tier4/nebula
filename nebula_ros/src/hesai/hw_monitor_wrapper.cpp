@@ -382,8 +382,7 @@ void HesaiHwMonitorWrapper::hesai_check_voltage_http(
 {
   std::scoped_lock lock(mtx_lidar_monitor_);
 
-  if (
-    !current_lidar_monitor_tree_ || !current_lidar_monitor_time_) {
+  if (!current_lidar_monitor_tree_ || !current_lidar_monitor_time_) {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::STALE, "");
     return;
   }
