@@ -20,7 +20,10 @@
               "description": "Maximum frequency in Hertz.",
               "default": 10.5
             }
-          }
+          },
+          "required": [
+            "min_hz"
+          ]
         },
         "frequency_warn": {
           "type": "object",
@@ -36,7 +39,10 @@
               "description": "Maximum frequency in Hertz.",
               "default": "11.0"
             }
-          }
+          },
+          "required": [
+            "min_hz"
+          ]
         },
         "num_frame_transition": {
           "type": "integer",
@@ -44,7 +50,11 @@
           "default": 3,
           "minimum": 1
         }
-      }
+      },
+      "required": [
+        "frequency_ok",
+        "frequency_warn"
+      ]
     },
     "packet_loss_diagnostic_task": {
       "type": "object",
