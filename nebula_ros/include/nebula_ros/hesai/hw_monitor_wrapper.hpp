@@ -28,7 +28,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <memory>
-#include <optional>
 #include <string>
 
 namespace nebula::ros
@@ -50,7 +49,8 @@ public:
   {
   }
 
-  nebula::Status status();
+  // This is currently static as it returns a dummy status for legacy reasons
+  static nebula::Status status();
 
 private:
   static void add_json_item_to_diagnostics(
@@ -60,9 +60,9 @@ private:
   void initialize_hesai_diagnostics(
     diagnostic_updater::Updater & diagnostic_updater, bool monitor_enabled);
 
-  std::string get_ptree_value(boost::property_tree::ptree * pt, const std::string & key);
+  static std::string get_ptree_value(boost::property_tree::ptree * pt, const std::string & key);
 
-  std::string get_fixed_precision_string(double val, int pre);
+  static std::string get_fixed_precision_string(double val, int pre);
 
   void on_hesai_status_timer();
 
@@ -93,16 +93,16 @@ private:
   rclcpp::Node * const parent_node_;
 
   uint16_t diag_span_;
-  rclcpp::TimerBase::SharedPtr fetch_diagnostics_timer_{};
+  rclcpp::TimerBase::SharedPtr fetch_diagnostics_timer_;
 
-  std::shared_ptr<HesaiLidarStatusBase> current_status_{};
-  std::shared_ptr<HesaiLidarMonitor> current_monitor_{};
-  std::shared_ptr<HesaiConfigBase> current_config_{};
-  std::shared_ptr<boost::property_tree::ptree> current_lidar_monitor_tree_{};
+  std::shared_ptr<HesaiLidarStatusBase> current_status_;
+  std::shared_ptr<HesaiLidarMonitor> current_monitor_;
+  std::shared_ptr<HesaiConfigBase> current_config_;
+  std::shared_ptr<boost::property_tree::ptree> current_lidar_monitor_tree_;
 
-  std::unique_ptr<rclcpp::Time> current_status_time_{};
-  std::unique_ptr<rclcpp::Time> current_config_time_{};
-  std::unique_ptr<rclcpp::Time> current_lidar_monitor_time_{};
+  std::unique_ptr<rclcpp::Time> current_status_time_;
+  std::unique_ptr<rclcpp::Time> current_config_time_;
+  std::unique_ptr<rclcpp::Time> current_lidar_monitor_time_;
 
   uint8_t current_diag_status_{diagnostic_msgs::msg::DiagnosticStatus::STALE};
   uint8_t current_monitor_status_{diagnostic_msgs::msg::DiagnosticStatus::STALE};
@@ -112,8 +112,8 @@ private:
 
   std::shared_ptr<SyncToolingWorker> sync_tooling_worker_;
 
-  const std::string MSG_NOT_SUPPORTED_ = "Not supported";
-  const std::string MSG_ERROR_ = "Error";
-  const std::string MSG_SEP_ = ": ";
+  static constexpr auto msg_not_supported = "Not supported";
+  static constexpr auto msg_error = "Error";
+  static constexpr auto msg_separator = ": ";
 };
 }  // namespace nebula::ros

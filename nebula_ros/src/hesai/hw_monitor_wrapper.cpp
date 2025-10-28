@@ -111,9 +111,9 @@ std::string HesaiHwMonitorWrapper::get_ptree_value(
   boost::optional<std::string> value = pt->get_optional<std::string>(key);
   if (value) {
     return value.get();
-  } else {
-    return MSG_NOT_SUPPORTED_;
   }
+
+  return msg_not_supported;
 }
 std::string HesaiHwMonitorWrapper::get_fixed_precision_string(double val, int pre)
 {
@@ -339,7 +339,7 @@ void HesaiHwMonitorWrapper::hesai_check_voltage_http(
   if (current_lidar_monitor_tree_) {
     uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
     std::vector<std::string> msg;
-    std::string key = "";
+    std::string key;
 
     std::string mes;
     key = "lidarInCur";
@@ -347,7 +347,7 @@ void HesaiHwMonitorWrapper::hesai_check_voltage_http(
       mes = get_ptree_value(current_lidar_monitor_tree_.get(), "Body." + key);
     } catch (boost::bad_lexical_cast & ex) {
       level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-      mes = MSG_ERROR_ + std::string(ex.what());
+      mes = std::string(msg_error) + msg_separator + std::string(ex.what());
     }
     add_json_item_to_diagnostics(diagnostics, key, mes);
     key = "lidarInVol";
@@ -355,7 +355,7 @@ void HesaiHwMonitorWrapper::hesai_check_voltage_http(
       mes = get_ptree_value(current_lidar_monitor_tree_.get(), "Body." + key);
     } catch (boost::bad_lexical_cast & ex) {
       level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-      mes = MSG_ERROR_ + std::string(ex.what());
+      mes = std::string(msg_error) + msg_separator + std::string(ex.what());
     }
     add_json_item_to_diagnostics(diagnostics, key, mes);
 
