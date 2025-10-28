@@ -621,6 +621,21 @@ inline int int_from_return_mode_hesai(
   return -1;
 }
 
+/// @brief Whether the given sensor model supports lidar monitor requests
+/// @param sensor_model Sensor model
+/// @return True if the sensor model supports lidar monitor, false otherwise
+inline bool supports_lidar_monitor(const SensorModel & sensor_model)
+{
+  switch (sensor_model) {
+    case drivers::SensorModel::HESAI_PANDARAT128:
+    case drivers::SensorModel::HESAI_PANDAR40P:
+    case drivers::SensorModel::HESAI_PANDAR64:
+      return false;
+    default:
+      return true;
+  }
+}
+
 /// @brief Whether the given sensor model supports functional safety
 /// @param sensor_model Sensor model
 /// @return True if the sensor model supports functional safety, false otherwise
