@@ -258,7 +258,7 @@ void HesaiHwMonitorWrapper::hesai_check_status(
 {
   std::scoped_lock lock(mtx_lidar_status_);
 
-  if (!current_status_ || !current_status_time_ || is_stale(*current_status_time_)) {
+  if (!current_status_ || !current_status_time_) {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::STALE, "");
     return;
   }
@@ -274,7 +274,14 @@ void HesaiHwMonitorWrapper::hesai_check_status(
     add_json_item_to_diagnostics(diagnostics, key, value);
   }
 
-  diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "");
+  uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+  std::string msg;
+  if (is_stale(*current_status_time_)) {
+    level = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+    msg = "[STALE]";
+  }
+
+  diagnostics.summary(level, msg);
 }
 
 void HesaiHwMonitorWrapper::hesai_check_ptp(
@@ -282,7 +289,7 @@ void HesaiHwMonitorWrapper::hesai_check_ptp(
 {
   std::scoped_lock lock(mtx_lidar_status_);
 
-  if (!current_status_ || !current_status_time_ || is_stale(*current_status_time_)) {
+  if (!current_status_ || !current_status_time_) {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::STALE, "");
     return;
   }
@@ -309,6 +316,12 @@ void HesaiHwMonitorWrapper::hesai_check_ptp(
 
     add_json_item_to_diagnostics(diagnostics, key, value);
   }
+
+  if (is_stale(*current_status_time_)) {
+    level = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+    msg = "[STALE] " + msg;
+  }
+
   diagnostics.summary(level, msg);
 }
 
@@ -317,13 +330,12 @@ void HesaiHwMonitorWrapper::hesai_check_temperature(
 {
   std::scoped_lock lock(mtx_lidar_status_);
 
-  if (!current_status_ || !current_status_time_ || is_stale(*current_status_time_)) {
+  if (!current_status_ || !current_status_time_) {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::STALE, "");
     return;
   }
 
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::vector<std::string> msg;
   json data = current_status_->to_json();
   if (data.contains("temperature")) {
     for (const auto & [key, value] : data["temperature"].items()) {
@@ -331,7 +343,13 @@ void HesaiHwMonitorWrapper::hesai_check_temperature(
     }
   }
 
-  diagnostics.summary(level, boost::algorithm::join(msg, ", "));
+  std::string msg;
+  if (is_stale(*current_status_time_)) {
+    level = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+    msg = "[STALE]";
+  }
+
+  diagnostics.summary(level, msg);
 }
 
 void HesaiHwMonitorWrapper::hesai_check_rpm(
@@ -339,19 +357,24 @@ void HesaiHwMonitorWrapper::hesai_check_rpm(
 {
   std::scoped_lock lock(mtx_lidar_status_);
 
-  if (!current_status_ || !current_status_time_ || is_stale(*current_status_time_)) {
+  if (!current_status_ || !current_status_time_) {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::STALE, "");
     return;
   }
 
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::vector<std::string> msg;
   json data = current_status_->to_json();
   if (data.contains("motor_speed")) {
     add_json_item_to_diagnostics(diagnostics, "motor_speed", data["motor_speed"]);
   }
 
-  diagnostics.summary(level, boost::algorithm::join(msg, ", "));
+  std::string msg;
+  if (is_stale(*current_status_time_)) {
+    level = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+    msg = "[STALE]";
+  }
+
+  diagnostics.summary(level, msg);
 }
 
 void HesaiHwMonitorWrapper::hesai_check_voltage_http(
@@ -360,14 +383,12 @@ void HesaiHwMonitorWrapper::hesai_check_voltage_http(
   std::scoped_lock lock(mtx_lidar_monitor_);
 
   if (
-    !current_lidar_monitor_tree_ || !current_lidar_monitor_time_ ||
-    is_stale(*current_lidar_monitor_time_)) {
+    !current_lidar_monitor_tree_ || !current_lidar_monitor_time_) {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::STALE, "");
     return;
   }
 
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::vector<std::string> msg;
   std::string key;
 
   std::string mes;
@@ -388,7 +409,13 @@ void HesaiHwMonitorWrapper::hesai_check_voltage_http(
   }
   add_json_item_to_diagnostics(diagnostics, key, mes);
 
-  diagnostics.summary(level, boost::algorithm::join(msg, ", "));
+  std::string msg;
+  if (is_stale(*current_lidar_monitor_time_)) {
+    level = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+    msg = "[STALE]";
+  }
+
+  diagnostics.summary(level, msg);
 }
 
 void HesaiHwMonitorWrapper::hesai_check_voltage(
@@ -396,19 +423,24 @@ void HesaiHwMonitorWrapper::hesai_check_voltage(
 {
   std::scoped_lock lock(mtx_lidar_monitor_);
 
-  if (!current_monitor_ || !current_lidar_monitor_time_ || is_stale(*current_lidar_monitor_time_)) {
+  if (!current_monitor_ || !current_lidar_monitor_time_) {
     diagnostics.summary(diagnostic_msgs::msg::DiagnosticStatus::STALE, "");
     return;
   }
 
   uint8_t level = diagnostic_msgs::msg::DiagnosticStatus::OK;
-  std::vector<std::string> msg;
   json data = current_monitor_->to_json();
   for (const auto & [key, value] : data.items()) {
     add_json_item_to_diagnostics(diagnostics, key, value);
   }
 
-  diagnostics.summary(level, boost::algorithm::join(msg, ", "));
+  std::string msg;
+  if (is_stale(*current_lidar_monitor_time_)) {
+    level = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+    msg = "[STALE]";
+  }
+
+  diagnostics.summary(level, msg);
 }
 
 [[nodiscard]] bool HesaiHwMonitorWrapper::is_stale(const rclcpp::Time & last_update) const
