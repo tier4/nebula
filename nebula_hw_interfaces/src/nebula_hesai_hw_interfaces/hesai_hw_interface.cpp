@@ -1352,44 +1352,22 @@ bool HesaiHwInterface::use_http_set_spin_rate(int model)
 {
   switch (model) {
     case 0:
-      return true;
-      break;
     case 2:
-      return true;
-      break;
-    case 3:
-      return false;
-      break;
     case 15:
-      return true;
-      break;
     case 17:
-      return true;
-      break;
-    case 25:
-      return false;
-      break;
-    case 26:
-      return false;
-      break;
-    case 32:
-      return false;
-      break;
-    case 38:
-      return false;
-      break;
-    case 42:
-      return false;
-      break;
-    case 48:
-      return false;
-      break;
     default:
       return true;
-      break;
+    case 3:
+    case 25:
+    case 26:
+    case 32:
+    case 38:
+    case 42:
+    case 48:
+      return false;
   }
 }
-bool HesaiHwInterface::use_http_set_spin_rate()
+[[nodiscard]] bool HesaiHwInterface::use_http_set_spin_rate() const
 {
   return use_http_set_spin_rate(target_model_no_);
 }
@@ -1397,44 +1375,22 @@ bool HesaiHwInterface::use_http_get_lidar_monitor(int model)
 {
   switch (model) {
     case 0:
-      return true;
-      break;
     case 2:
-      return true;
-      break;
-    case 3:
-      return false;
-      break;
     case 15:
-      return true;
-      break;
     case 17:
-      return true;
-      break;
-    case 25:
-      return false;
-      break;
-    case 26:
-      return false;
-      break;
     case 32:
-      return true;
-      break;
-    case 38:
-      return false;
-      break;
-    case 42:
-      return false;
-      break;
-    case 48:
-      return false;
-      break;
     default:
       return true;
-      break;
+    case 3:
+    case 25:
+    case 26:
+    case 38:
+    case 42:
+    case 48:
+      return false;
   }
 }
-bool HesaiHwInterface::use_http_get_lidar_monitor()
+[[nodiscard]] bool HesaiHwInterface::use_http_get_lidar_monitor() const
 {
   return use_http_get_lidar_monitor(target_model_no_);
 }

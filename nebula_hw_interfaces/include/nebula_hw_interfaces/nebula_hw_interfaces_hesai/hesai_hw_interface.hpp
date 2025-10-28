@@ -158,7 +158,7 @@ private:
   /// @param error_code The error code, containing the sensor's error code (if any), along with
   /// flags such as TCP_ERROR_UNRELATED_RESPONSE etc.
   /// @return A string description of all errors in this code
-  std::string pretty_print_ptc_error(ptc_error_t error_code);
+  static std::string pretty_print_ptc_error(ptc_error_t error_code);
 
   /// @brief Checks if the data size matches that of the struct to be parsed, and parses the struct.
   /// If data is too small, a std::runtime_error is thrown. If data is too large, a warning is
@@ -431,7 +431,7 @@ public:
   /// @brief Convert to model in Hesai protocol from nebula::drivers::SensorModel
   /// @param model
   /// @return
-  int nebula_model_to_hesai_model_no(nebula::drivers::SensorModel model);
+  static int nebula_model_to_hesai_model_no(nebula::drivers::SensorModel model);
 
   /// @brief Set target model number (for proper use of HTTP and TCP according to the support of the
   /// target model)
@@ -446,17 +446,17 @@ public:
   /// @brief Whether to use HTTP for setting SpinRate
   /// @param model Model number
   /// @return Use HTTP
-  bool use_http_set_spin_rate(int model);
+  static bool use_http_set_spin_rate(int model);
   /// @brief Whether to use HTTP for setting SpinRate
   /// @return Use HTTP
-  bool use_http_set_spin_rate();
+  [[nodiscard]] bool use_http_set_spin_rate() const;
   /// @brief Whether to use HTTP for getting LidarMonitor
   /// @param model Model number
   /// @return Use HTTP
-  bool use_http_get_lidar_monitor(int model);
+  static bool use_http_get_lidar_monitor(int model);
   /// @brief Whether to use HTTP for getting LidarMonitor
   /// @return Use HTTP
-  bool use_http_get_lidar_monitor();
+  [[nodiscard]] bool use_http_get_lidar_monitor() const;
 };
 }  // namespace nebula::drivers
 
