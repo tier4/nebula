@@ -113,6 +113,7 @@ void HesaiDecoderWrapper::on_calibration_change(
 drivers::PacketDecodeResult HesaiDecoderWrapper::process_cloud_packet(
   std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg, uint64_t receive_time_ns)
 {
+  std::lock_guard lock(mtx_driver_ptr_);
   current_scan_perf_counters_.receive_time_current_scan_ns += receive_time_ns;
 
   // Ideally, we would only accumulate packets if someone is subscribed to the packets topic.
@@ -131,7 +132,6 @@ drivers::PacketDecodeResult HesaiDecoderWrapper::process_cloud_packet(
     current_scan_msg_->packets.emplace_back(pandar_packet_msg);
   }
 
-  std::lock_guard lock(mtx_driver_ptr_);
   auto decode_result = driver_ptr_->parse_cloud_packet(packet_msg->data);
 
   current_scan_perf_counters_.decode_time_current_scan_ns +=
@@ -216,7 +216,11 @@ void HesaiDecoderWrapper::publish_cloud(
   if (pointcloud->header.stamp.sec < 0) {
     RCLCPP_WARN_STREAM(logger_, "Timestamp error, verify clock source.");
   }
-  pointcloud->header.frame_id = sensor_cfg_->frame_id;
+
+  {
+    std::lock_guard lock(mtx_driver_ptr_);
+    pointcloud->header.frame_id = sensor_cfg_->frame_id;
+  }
   publisher->publish(std::move(pointcloud));
 }
 

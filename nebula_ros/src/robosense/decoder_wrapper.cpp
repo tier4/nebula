@@ -157,7 +157,11 @@ void RobosenseDecoderWrapper::publish_cloud(
     RCLCPP_WARN_STREAM(logger_, "Timestamp error, verify clock source.");
     return;
   }
-  pointcloud->header.frame_id = sensor_cfg_->frame_id;
+
+  {
+    std::lock_guard lock(mtx_driver_ptr_);
+    pointcloud->header.frame_id = sensor_cfg_->frame_id;
+  }
   publisher->publish(std::move(pointcloud));
 }
 

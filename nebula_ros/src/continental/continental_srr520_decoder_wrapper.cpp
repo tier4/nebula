@@ -418,6 +418,12 @@ radar_msgs::msg::RadarTracks ContinentalSRR520DecoderWrapper::convert_to_radar_t
 visualization_msgs::msg::MarkerArray ContinentalSRR520DecoderWrapper::convert_to_markers(
   const continental_msgs::msg::ContinentalSrr520ObjectList & msg)
 {
+  std::string base_frame;
+  {
+    std::lock_guard lock(mtx_driver_ptr_);
+    base_frame = sensor_cfg_->base_frame;
+  }
+
   visualization_msgs::msg::MarkerArray marker_array;
   marker_array.markers.reserve(4 * msg.objects.size());
 
@@ -481,7 +487,7 @@ visualization_msgs::msg::MarkerArray ContinentalSRR520DecoderWrapper::convert_to
     current_ids.emplace(object.object_id);
 
     visualization_msgs::msg::Marker box_marker;
-    box_marker.header.frame_id = sensor_cfg_->base_frame;
+    box_marker.header.frame_id = base_frame;
     box_marker.header.stamp = msg.header.stamp;
     box_marker.ns = "boxes";
     box_marker.id = object.object_id;
@@ -556,7 +562,7 @@ visualization_msgs::msg::MarkerArray ContinentalSRR520DecoderWrapper::convert_to
     }
 
     visualization_msgs::msg::Marker delete_marker;
-    delete_marker.header.frame_id = sensor_cfg_->base_frame;
+    delete_marker.header.frame_id = base_frame;
     delete_marker.header.stamp = msg.header.stamp;
     delete_marker.ns = "boxes";
     delete_marker.id = previous_id;
