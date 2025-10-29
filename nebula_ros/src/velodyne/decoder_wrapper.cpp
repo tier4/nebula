@@ -130,8 +130,11 @@ rcl_interfaces::msg::SetParametersResult VelodyneDecoderWrapper::on_parameter_ch
   }
 
   on_calibration_change(get_calibration_result.value());
-  RCLCPP_INFO_STREAM(
-    logger_, "Changed calibration to '" << calibration_cfg_ptr_->calibration_file << "'");
+  {
+    std::lock_guard lock(mtx_driver_ptr_);
+    RCLCPP_INFO_STREAM(
+      logger_, "Changed calibration to '" << calibration_cfg_ptr_->calibration_file << "'");
+  }
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
@@ -238,7 +241,11 @@ void VelodyneDecoderWrapper::publish_cloud(
   if (pointcloud->header.stamp.sec < 0) {
     RCLCPP_WARN_STREAM(logger_, "Timestamp error, verify clock source.");
   }
-  pointcloud->header.frame_id = sensor_cfg_->frame_id;
+  
+  {
+    std::lock_guard lock(mtx_driver_ptr_);
+    pointcloud->header.frame_id = sensor_cfg_->frame_id;
+  }
   publisher->publish(std::move(pointcloud));
 }
 
