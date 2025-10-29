@@ -87,7 +87,7 @@ The following apt dependencies are required at run time:
 ```bash
 sudo add-apt-repository ppa:t4-system-software/agnocast
 sudo apt-get update
-sudo apt-get install agnocast-heaphook-v2.1.1 agnocast-kmod-v2.1.1
+sudo apt-get install agnocast-heaphook-v2.1.2 agnocast-kmod-v2.1.2
 ```
 
 Nebula binaries that have been compiled with Agnocast support require the following environment
