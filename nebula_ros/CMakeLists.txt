@@ -87,7 +87,7 @@ target_link_libraries(hesai_ros_wrapper PUBLIC
 if("$ENV{ENABLE_AGNOCAST}")
     message("Agnocast support is enabled")
     target_include_directories(hesai_ros_wrapper PUBLIC ${agnocastlib_INCLUDE_DIRS})
-    target_link_libraries(hesai_ros_wrapper PUBLIC ${agnocastlib_LIBRARIES})
+    target_link_libraries(hesai_ros_wrapper PUBLIC ${agnocastlib_TARGETS})
     add_definitions(-DUSE_AGNOCAST_ENABLED)
 endif()
 
