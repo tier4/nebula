@@ -865,37 +865,94 @@ struct HesaiLidarRangeAll
   }
 };
 
-/// @brief struct of PTC_COMMAND_GET_PTP_CONFIG
-struct HesaiPtpConfig
+/// @brief Base struct for PTC_COMMAND_GET_PTP_CONFIG
+struct PtpConfigBase
 {
-  int8_t status;
-  int8_t profile;
-  int8_t domain;
-  int8_t network;
-  int8_t logAnnounceInterval;
-  int8_t logSyncInterval;
-  int8_t logMinDelayReqInterval;
-  // FIXME: this format is not correct for OT128, or for AT128 on 802.1AS
-
-  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpConfig const & arg)
+  struct Internal
   {
-    os << "status: " << static_cast<int>(arg.status);
-    os << ", ";
-    os << "profile: " << static_cast<int>(arg.profile);
-    os << ", ";
-    os << "domain: " << static_cast<int>(arg.domain);
-    os << ", ";
-    os << "network: " << static_cast<int>(arg.network);
-    if (arg.status == 0) {
-      os << ", ";
-      os << "logAnnounceInterval: " << static_cast<int>(arg.logAnnounceInterval);
-      os << ", ";
-      os << "logSyncInterval: " << static_cast<int>(arg.logSyncInterval);
-      os << ", ";
-      os << "logMinDelayReqInterval: " << static_cast<int>(arg.logMinDelayReqInterval);
-    }
-    return os;
+    int8_t status;
+    int8_t profile;
+    int8_t domain;
+    int8_t network;
+  };
+
+  virtual ~PtpConfigBase() = default;
+
+  [[nodiscard]] ordered_json to_json() const
+  {
+    ordered_json j;
+    j["status"] = static_cast<int>(get().status);
+    j["profile"] = static_cast<int>(get().profile);
+    j["domain"] = static_cast<int>(get().domain);
+    j["network"] = static_cast<int>(get().network);
+    j.update(sensor_specifics_to_json());
+    return j;
   }
+
+  [[nodiscard]] virtual const Internal & get() const = 0;
+
+protected:
+  [[nodiscard]] virtual ordered_json sensor_specifics_to_json() const = 0;
+
+  friend std::ostream & operator<<(std::ostream & os, const PtpConfigBase & arg)
+  {
+    ordered_json j = arg.to_json();
+    std::vector<std::string> kv_pairs;
+    for (const auto & [key, value] : j.items()) {
+      kv_pairs.emplace_back(key + ": " + to_string(value));
+    }
+    return os << boost::algorithm::join(kv_pairs, ", ");
+  }
+};
+
+/// @brief PTP Config for AT128 sensors
+struct HesaiPtpConfig_AT128 : public PtpConfigBase
+{
+  struct Internal : public PtpConfigBase::Internal
+  {
+    int8_t tsn_switch;
+  };
+
+  explicit HesaiPtpConfig_AT128(Internal value) : value(value) {}
+
+  [[nodiscard]] const PtpConfigBase::Internal & get() const override { return value; }
+
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
+  {
+    ordered_json j;
+    j["tsn_switch"] = static_cast<int>(value.tsn_switch);
+    return j;
+  }
+
+private:
+  Internal value;
+};
+
+/// @brief PTP Config for XT16, XT32, and 40P sensors
+struct HesaiPtpConfig_XT16_32_40P_OT128 : public PtpConfigBase
+{
+  struct Internal : public PtpConfigBase::Internal
+  {
+    int8_t logAnnounceInterval;
+    int8_t logSyncInterval;
+    int8_t logMinDelayReqInterval;
+  };
+
+  explicit HesaiPtpConfig_XT16_32_40P_OT128(Internal value) : value(value) {}
+
+  [[nodiscard]] const PtpConfigBase::Internal & get() const override { return value; }
+
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
+  {
+    ordered_json j;
+    j["logAnnounceInterval"] = static_cast<int>(value.logAnnounceInterval);
+    j["logSyncInterval"] = static_cast<int>(value.logSyncInterval);
+    j["logMinDelayReqInterval"] = static_cast<int>(value.logMinDelayReqInterval);
+    return j;
+  }
+
+private:
+  Internal value;
 };
 
 /// @brief struct of PTC_COMMAND_LIDAR_MONITOR
