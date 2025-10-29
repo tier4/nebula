@@ -2,6 +2,7 @@ name: build-and-test-differential
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
 
 jobs:
   build-and-test-differential:
