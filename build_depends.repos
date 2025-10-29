@@ -9,11 +9,6 @@ repositories:
     type: git
     url: https://github.com/autowarefoundation/ros2_socketcan
     version: main
-  # Autoware messages for the universal radar messages
-  autoware_msgs:
-    type: git
-    url: https://github.com/autowarefoundation/autoware_msgs
-    version: main
   sync_tooling_msgs:
     type: git
     url: https://github.com/tier4/sync_tooling_msgs.git
