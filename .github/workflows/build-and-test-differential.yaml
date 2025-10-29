@@ -83,6 +83,7 @@ jobs:
           flags: differential
 
   fb-infer-differential:
+    if: contains(github.event.pull_request.labels.*.name, 'run:fb-infer')
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
     strategy:
@@ -194,6 +195,7 @@ jobs:
           if-no-files-found: error
 
   fb-infer-report:
+    if: contains(github.event.pull_request.labels.*.name, 'run:fb-infer')
     runs-on: ubuntu-latest
     needs: [fb-infer-differential]
     env:
