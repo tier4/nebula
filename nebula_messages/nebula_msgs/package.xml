@@ -7,7 +7,7 @@
   <maintainer email="kenzo.lobos@tier4.jp">Kenzo Lobos-Tsunekawa</maintainer>
 
   <license>Apache 2</license>
-  <author>Tier IV</author>
+  <author>TIER IV</author>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
