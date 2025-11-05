@@ -41,7 +41,8 @@ add_library(nebula_ros_base_common SHARED
 )
 
 target_include_directories(nebula_ros_base_common PUBLIC
-    include
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
     ${rclcpp_INCLUDE_DIRS}
 )
 
@@ -72,6 +73,7 @@ if(BUILD_TESTING)
 endif()
 
 ament_export_include_directories("include/${PROJECT_NAME}")
+ament_export_targets(export_nebula_ros_base_common)
 
 install(
   DIRECTORY launch schema
