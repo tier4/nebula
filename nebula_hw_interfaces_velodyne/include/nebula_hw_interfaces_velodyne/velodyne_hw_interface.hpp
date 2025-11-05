@@ -29,14 +29,14 @@
 #endif
 
 #include "nebula_common_base/util/expected.hpp"
-#include "nebula_hw_interfaces_base/nebula_hw_interface_base.hpp"
+#include "nebula_hw_interfaces_base/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 
 #include <boost_tcp_driver/http_client_driver.hpp>
 #include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_common_base/loggers/logger.hpp>
 #include <nebula_common_velodyne/velodyne/velodyne_common.hpp>
 #include <nebula_common_velodyne/velodyne/velodyne_status.hpp>
-#include <nebula_hw_interfaces_base/connections/udp.hpp>
+#include <nebula_hw_interfaces_base/nebula_hw_interfaces_common/connections/udp.hpp>
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>

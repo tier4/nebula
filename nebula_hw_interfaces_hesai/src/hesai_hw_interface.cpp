@@ -7,7 +7,7 @@
 #include "nebula_common_base/loggers/logger.hpp"
 #include "nebula_common_base/nebula_common.hpp"
 #include "nebula_common_base/nebula_status.hpp"
-#include "nebula_hw_interfaces_base/connections/udp.hpp"
+#include "nebula_hw_interfaces_base/nebula_hw_interfaces_common/connections/udp.hpp"
 #include "nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
 
 #include <nlohmann/json.hpp>
