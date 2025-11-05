@@ -28,7 +28,7 @@
 
     <group if="$(eval &quot;'$(var sensor_model)' == 'SRR520' &quot;)" >
 
-        <node pkg="nebula_ros" exec="continental_srr520_ros_wrapper_node" name="nebula_continental_srr520" output="screen">
+        <node pkg="nebula_ros_continental" exec="continental_srr520_ros_wrapper_node" name="nebula_continental_srr520" output="screen">
 	        <param from="$(var config_file)" allow_substs="true"/>
             <param name="launch_hw" value="$(var launch_hw)"/>
             <remap from="/diagnostics" to="diagnostics"/>
