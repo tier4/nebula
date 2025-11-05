@@ -68,10 +68,6 @@ add_library(hesai_ros_wrapper SHARED
     src/hesai/hw_monitor_wrapper.cpp
 )
 
-target_link_libraries(hesai_ros_wrapper PUBLIC
-    nebula_ros_base::nebula_ros_base_common
-)
-
 target_include_directories(hesai_ros_wrapper PUBLIC
     ${diagnostic_updater_INCLUDE_DIRS}
     ${nebula_decoders_base_INCLUDE_DIRS}
@@ -94,6 +90,7 @@ target_link_libraries(hesai_ros_wrapper PUBLIC
     ${autoware_internal_debug_msgs_TARGETS}
     nebula_decoders_hesai::nebula_decoders_hesai
     nebula_hw_interfaces_hesai::nebula_hw_interfaces_hesai
+    nebula_ros_base::nebula_ros_base_common
 )
 
 if("$ENV{ENABLE_AGNOCAST}")
