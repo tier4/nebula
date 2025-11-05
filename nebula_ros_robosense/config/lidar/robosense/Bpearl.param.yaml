@@ -1,0 +1,17 @@
+/**:
+  ros__parameters:
+    host_ip: 255.255.255.255
+    sensor_ip: 192.168.1.201
+    data_port: 2368
+    gnss_port: 2369
+    packet_mtu_size: 1500
+    launch_hw: true
+    setup_sensor: true
+    frame_id: robosense
+    diag_span: 1000
+    cloud_min_angle: 0
+    cloud_max_angle: 360
+    scan_phase: 0.0
+    dual_return_distance_threshold: 0.1
+    sensor_model: Bpearl
+    return_mode: Dual

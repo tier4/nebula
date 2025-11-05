@@ -1,0 +1,22 @@
+/**:
+  ros__parameters:
+    host_ip: 192.168.1.10
+    sensor_ip: 192.168.1.201
+    data_port: 2368
+    gnss_port: 2369
+    packet_mtu_size: 1500
+    launch_hw: true
+    setup_sensor: true
+    udp_only: false
+    frame_id: velodyne
+    advanced_diagnostics: false
+    diag_span: 1000
+    calibration_file: $(find-pkg-share nebula_decoders)/calibration/velodyne/VLS128.yaml
+    min_range: 0.3
+    max_range: 300.0
+    cloud_min_angle: 0
+    cloud_max_angle: 360
+    scan_phase: 0.0
+    sensor_model: VLS128
+    rotation_speed: 600
+    return_mode: Dual

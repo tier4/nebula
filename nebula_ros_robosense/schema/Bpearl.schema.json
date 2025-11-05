@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LiDAR Robosense Bpearl parameters.",
+  "type": "object",
+  "definitions": {
+    "Bpearl": {
+      "type": "object",
+      "properties": {
+        "host_ip": {
+          "$ref": "sub/communication.json#/definitions/host_ip"
+        },
+        "sensor_ip": {
+          "$ref": "sub/communication.json#/definitions/sensor_ip"
+        },
+        "data_port": {
+          "$ref": "sub/communication.json#/definitions/data_port"
+        },
+        "gnss_port": {
+          "$ref": "sub/communication.json#/definitions/gnss_port"
+        },
+        "packet_mtu_size": {
+          "$ref": "sub/communication.json#/definitions/packet_mtu_size"
+        },
+        "launch_hw": {
+          "$ref": "sub/hardware.json#/definitions/launch_hw"
+        },
+        "setup_sensor": {
+          "$ref": "sub/hardware.json#/definitions/setup_sensor"
+        },
+        "frame_id": {
+          "$ref": "sub/topic.json#/definitions/frame_id"
+        },
+        "diag_span": {
+          "$ref": "sub/topic.json#/definitions/diag_span"
+        },
+        "cloud_min_angle": {
+          "$ref": "sub/misc.json#/definitions/cloud_min_angle"
+        },
+        "cloud_max_angle": {
+          "$ref": "sub/misc.json#/definitions/cloud_max_angle"
+        },
+        "scan_phase": {
+          "$ref": "sub/misc.json#/definitions/scan_phase"
+        },
+        "dual_return_distance_threshold": {
+          "$ref": "sub/misc.json#/definitions/dual_return_distance_threshold"
+        },
+        "sensor_model": {
+          "$ref": "sub/lidar_robosense.json#/definitions/sensor_model",
+          "enum": [
+            "Bpearl"
+          ]
+        },
+        "return_mode": {
+          "$ref": "sub/lidar_robosense.json#/definitions/return_mode"
+        }
+      },
+      "required": [
+        "host_ip",
+        "sensor_ip",
+        "data_port",
+        "gnss_port",
+        "packet_mtu_size",
+        "launch_hw",
+        "setup_sensor",
+        "frame_id",
+        "diag_span",
+        "cloud_min_angle",
+        "cloud_max_angle",
+        "scan_phase",
+        "dual_return_distance_threshold",
+        "sensor_model",
+        "return_mode"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/Bpearl"
+        }
+      },
+      "required": [
+        "ros__parameters"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "/**"
+  ],
+  "additionalProperties": false
+}
