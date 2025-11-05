@@ -135,6 +135,13 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
+if(BUILD_TESTING)
+    install(
+        DIRECTORY test_resources
+        DESTINATION share/${PROJECT_NAME}
+    )
+endif()
+
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_hesai_ros_wrapper)
 
