@@ -8,7 +8,7 @@
         <choice value="true" />
         <choice value="false" />
     </arg>
-    <arg name="config_file" default="$(find-pkg-share nebula_ros_continental)/config/radar/continental/$(var sensor_model).param.yaml"/>
+    <arg name="config_file" default="$(find-pkg-share nebula_ros_continental)/config/$(var sensor_model).param.yaml"/>
 
     <arg name="odometry_topic" default="odometry_input"/>
     <arg name="acceleration_topic" default="acceleration_input"/>

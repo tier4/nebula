@@ -7,7 +7,7 @@
 
     <!-- sensor related configuration -->
     <arg name="sensor_model"  description="Pandar64|Pandar40P|PandarXT16|PandarXT32|PandarXT32M|PandarAT128|PandarQT64|Pandar128E4X"/>
-    <arg name="lidar_parameter_file" default="$(find-pkg-share nebula_ros)/config/lidar/hesai/$(var sensor_model).param.yaml" description="Path: LiDAR configuration yaml"/>
+    <arg name="lidar_parameter_file" default="$(find-pkg-share nebula_ros_hesai)/config/$(var sensor_model).param.yaml" description="Path: LiDAR configuration yaml"/>
 
     <!-- output sample number configuration -->
     <arg name="out_num" default="0" description="The maximum number of pointclouds to output. 0 to output all pointclouds"/>
