@@ -14,8 +14,8 @@
 
 #include "hesai/hesai_ros_offline_extract_bag_pcd.hpp"
 
-#include <nebula_common/hesai/hesai_common.hpp>
-#include <nebula_ros/common/rclcpp_logger.hpp>
+#include <nebula_common_hesai/hesai/hesai_common.hpp>
+#include <nebula_ros_base/rclcpp_logger.hpp>
 #include <rclcpp/serialization.hpp>
 #include <rclcpp/serialized_message.hpp>
 #include <rcpputils/filesystem_helper.hpp>

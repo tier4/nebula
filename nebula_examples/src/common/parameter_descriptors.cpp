@@ -1,6 +1,6 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_ros/common/parameter_descriptors.hpp"
+#include "nebula_ros_base/parameter_descriptors.hpp"
 
 namespace nebula::ros
 {

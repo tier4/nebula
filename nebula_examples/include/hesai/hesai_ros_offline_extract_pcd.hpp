@@ -16,11 +16,11 @@
 #define NEBULA_HesaiRosOfflineExtractSample_H
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_common/hesai/hesai_common.hpp>
-#include <nebula_common/nebula_common.hpp>
-#include <nebula_common/nebula_status.hpp>
-#include <nebula_decoders/nebula_decoders_hesai/hesai_driver.hpp>
-#include <nebula_ros/common/parameter_descriptors.hpp>
+#include <nebula_common_hesai/hesai/hesai_common.hpp>
+#include <nebula_common_base/nebula_common.hpp>
+#include <nebula_common_base/nebula_status.hpp>
+#include <nebula_decoders_hesai/hesai_driver.hpp>
+#include <nebula_ros_base/parameter_descriptors.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <pandar_msgs/msg/pandar_packet.hpp>

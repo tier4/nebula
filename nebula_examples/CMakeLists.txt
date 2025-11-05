@@ -11,9 +11,12 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake_auto REQUIRED)
-find_package(nebula_common REQUIRED)
-find_package(nebula_decoders REQUIRED)
-find_package(nebula_ros REQUIRED)
+find_package(nebula_common_base REQUIRED)
+find_package(nebula_common_hesai REQUIRED)
+find_package(nebula_common_velodyne REQUIRED)
+find_package(nebula_decoders_hesai REQUIRED)
+find_package(nebula_decoders_velodyne REQUIRED)
+find_package(nebula_ros_base REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common io)
 find_package(rosbag2_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
@@ -21,17 +24,22 @@ find_package(yaml-cpp REQUIRED)
 include_directories(
     include
     SYSTEM
-    ${nebula_common_INCLUDE_DIRS}
-    ${nebula_decoders_INCLUDE_DIRS}
-    ${nebula_ros_INCLUDE_DIRS}
+    ${nebula_common_base_INCLUDE_DIRS}
+    ${nebula_common_hesai_INCLUDE_DIRS}
+    ${nebula_common_velodyne_INCLUDE_DIRS}
+    ${nebula_decoders_hesai_INCLUDE_DIRS}
+    ${nebula_decoders_velodyne_INCLUDE_DIRS}
+    ${nebula_ros_base_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
     ${rosbag2_cpp_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIRS}
 )
 
 link_libraries(
-    ${nebula_common_TARGETS}
-    ${nebula_ros_TARGETS}
+    ${nebula_common_base_TARGETS}
+    ${nebula_common_hesai_TARGETS}
+    ${nebula_common_velodyne_TARGETS}
+    ${nebula_ros_base_TARGETS}
     ${rosbag2_cpp_TARGETS}
     ${PCL_LIBRARIES}
 )
@@ -43,7 +51,7 @@ add_library(hesai_ros_offline_extract_pcd SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/src/common/parameter_descriptors.cpp
 )
 target_link_libraries(hesai_ros_offline_extract_pcd PUBLIC
-    nebula_decoders::nebula_decoders_hesai
+    nebula_decoders_hesai::nebula_decoders_hesai
 )
 
 add_executable(hesai_ros_offline_extract_pcd_node
@@ -60,7 +68,7 @@ add_library(hesai_ros_offline_extract_bag_pcd SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/src/common/parameter_descriptors.cpp
 )
 target_link_libraries(hesai_ros_offline_extract_bag_pcd PUBLIC
-    nebula_decoders::nebula_decoders_hesai
+    nebula_decoders_hesai::nebula_decoders_hesai
 )
 
 add_executable(hesai_ros_offline_extract_bag_pcd_node
@@ -77,7 +85,7 @@ add_library(velodyne_ros_offline_extract_bag_pcd SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne/velodyne_ros_offline_extract_bag_pcd.cpp
 )
 target_link_libraries(velodyne_ros_offline_extract_bag_pcd PUBLIC
-    nebula_decoders::nebula_decoders_velodyne
+    nebula_decoders_velodyne::nebula_decoders_velodyne
 )
 
 add_executable(velodyne_ros_offline_extract_bag_pcd_node

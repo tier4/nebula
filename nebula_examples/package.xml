@@ -14,9 +14,12 @@
   <build_depend>libpcl-all-dev</build_depend>
   <build_export_depend>libpcl-all-dev</build_export_depend>
 
-  <depend>nebula_common</depend>
-  <depend>nebula_decoders</depend>
-  <depend>nebula_ros</depend>
+  <depend>nebula_common_base</depend>
+  <depend>nebula_common_hesai</depend>
+  <depend>nebula_common_velodyne</depend>
+  <depend>nebula_decoders_hesai</depend>
+  <depend>nebula_decoders_velodyne</depend>
+  <depend>nebula_ros_base</depend>
   <depend>rosbag2_cpp</depend>
   <depend>yaml-cpp</depend>
 
