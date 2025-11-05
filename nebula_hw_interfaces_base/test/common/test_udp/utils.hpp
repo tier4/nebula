@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_hw_interfaces_base/connections/udp.hpp"
+#include "nebula_hw_interfaces_base/nebula_hw_interfaces_common/connections/udp.hpp"
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
