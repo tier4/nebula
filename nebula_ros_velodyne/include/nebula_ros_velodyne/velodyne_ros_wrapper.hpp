@@ -14,17 +14,17 @@
 
 #pragma once
 
-#include "nebula_ros/common/parameter_descriptors.hpp"
-#include "nebula_ros/velodyne/decoder_wrapper.hpp"
-#include "nebula_ros/velodyne/hw_interface_wrapper.hpp"
-#include "nebula_ros/velodyne/hw_monitor_wrapper.hpp"
+#include "nebula_ros_base/parameter_descriptors.hpp"
+#include "nebula_ros_velodyne/decoder_wrapper.hpp"
+#include "nebula_ros_velodyne/hw_interface_wrapper.hpp"
+#include "nebula_ros_velodyne/hw_monitor_wrapper.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <boost_tcp_driver/tcp_driver.hpp>
-#include <nebula_common/nebula_common.hpp>
-#include <nebula_common/nebula_status.hpp>
-#include <nebula_common/velodyne/velodyne_common.hpp>
-#include <nebula_hw_interfaces/nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp>
+#include <nebula_common_base/nebula_common.hpp>
+#include <nebula_common_base/nebula_status.hpp>
+#include <nebula_common_velodyne/velodyne/velodyne_common.hpp>
+#include <nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 

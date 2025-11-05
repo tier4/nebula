@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_ros/continental/continental_srr520_hw_interface_wrapper.hpp"
+#include "nebula_ros_continental/continental_srr520_hw_interface_wrapper.hpp"
 
-#include "nebula_ros/common/rclcpp_logger.hpp"
+#include "nebula_ros_base/rclcpp_logger.hpp"
 
-#include <nebula_common/util/string_conversions.hpp>
+#include <nebula_common_base/util/string_conversions.hpp>
 #include <tf2_ros/buffer.hpp>
 #include <tf2_ros/transform_listener.hpp>
 

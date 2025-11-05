@@ -1,10 +1,10 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_ros/robosense/robosense_ros_wrapper.hpp"
+#include "nebula_ros_robosense/robosense_ros_wrapper.hpp"
 
-#include "nebula_ros/common/parameter_descriptors.hpp"
+#include "nebula_ros_base/parameter_descriptors.hpp"
 
-#include <nebula_common/util/string_conversions.hpp>
+#include <nebula_common_base/util/string_conversions.hpp>
 #include <rclcpp/qos.hpp>
 
 #include <robosense_msgs/msg/detail/robosense_info_packet__struct.hpp>

@@ -1,10 +1,10 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_ros/velodyne/hw_interface_wrapper.hpp"
+#include "nebula_ros_velodyne/hw_interface_wrapper.hpp"
 
-#include "nebula_ros/common/rclcpp_logger.hpp"
+#include "nebula_ros_base/rclcpp_logger.hpp"
 
-#include <nebula_common/util/string_conversions.hpp>
+#include <nebula_common_base/util/string_conversions.hpp>
 
 #include <memory>
 

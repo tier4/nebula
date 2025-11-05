@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_ros/continental/continental_ars548_decoder_wrapper.hpp"
+#include "nebula_ros_continental/continental_ars548_decoder_wrapper.hpp"
 
-#include "nebula_common/continental/continental_ars548.hpp"
-#include "nebula_ros/common/sync_tooling/sync_tooling_worker.hpp"
+#include "nebula_common_continental/continental/continental_ars548.hpp"
+#include "nebula_ros_base/sync_tooling/sync_tooling_worker.hpp"
 
-#include <nebula_common/util/string_conversions.hpp>
+#include <nebula_common_base/util/string_conversions.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
 

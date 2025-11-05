@@ -1,6 +1,6 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_ros/velodyne/hw_monitor_wrapper.hpp"
+#include "nebula_ros_velodyne/hw_monitor_wrapper.hpp"
 
 #include <algorithm>
 #include <iostream>

@@ -1,6 +1,6 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_ros/robosense/decoder_wrapper.hpp"
+#include "nebula_ros_robosense/decoder_wrapper.hpp"
 
 #include <algorithm>
 #include <cstdio>

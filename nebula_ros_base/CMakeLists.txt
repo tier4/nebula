@@ -84,6 +84,7 @@ ament_export_dependencies(
     diagnostic_updater
     nebula_common_base
     nebula_msgs
+    rclcpp
     rclcpp_components
     yaml-cpp
 )

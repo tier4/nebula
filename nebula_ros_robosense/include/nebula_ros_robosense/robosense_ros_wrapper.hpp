@@ -14,17 +14,17 @@
 
 #pragma once
 
-#include "nebula_ros/robosense/decoder_wrapper.hpp"
-#include "nebula_ros/robosense/hw_interface_wrapper.hpp"
-#include "nebula_ros/robosense/hw_monitor_wrapper.hpp"
+#include "nebula_ros_robosense/decoder_wrapper.hpp"
+#include "nebula_ros_robosense/hw_interface_wrapper.hpp"
+#include "nebula_ros_robosense/hw_monitor_wrapper.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <boost_tcp_driver/tcp_driver.hpp>
-#include <nebula_common/nebula_common.hpp>
-#include <nebula_common/nebula_status.hpp>
-#include <nebula_common/robosense/robosense_common.hpp>
-#include <nebula_decoders/nebula_decoders_robosense/robosense_info_driver.hpp>
-#include <nebula_hw_interfaces/nebula_hw_interfaces_robosense/robosense_hw_interface.hpp>
+#include <nebula_common_base/nebula_common.hpp>
+#include <nebula_common_base/nebula_status.hpp>
+#include <nebula_common_robosense/robosense/robosense_common.hpp>
+#include <nebula_decoders_robosense/robosense_info_driver.hpp>
+#include <nebula_hw_interfaces_robosense/robosense_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 

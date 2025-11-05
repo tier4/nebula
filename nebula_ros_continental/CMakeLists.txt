@@ -116,6 +116,10 @@ add_library(continental_srr520_ros_wrapper SHARED
     src/continental/continental_srr520_hw_interface_wrapper.cpp
 )
 
+target_link_libraries(continental_srr520_ros_wrapper PUBLIC
+    nebula_ros_base::nebula_ros_base_common
+)
+
 target_include_directories(continental_srr520_ros_wrapper PUBLIC
     ${continental_msgs_INCLUDE_DIRS}
     ${continental_srvs_INCLUDE_DIRS}
