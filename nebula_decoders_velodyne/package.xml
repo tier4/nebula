@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>nebula_decoders_velodyne</name>
+  <version>0.2.10</version>
+  <description>Nebula Velodyne Decoders Library</description>
+  <maintainer email="contact@map4.jp">MAP IV</maintainer>
+
+  <license>Apache 2</license>
+  <author>Tier IV</author>
+
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  <buildtool_depend>ros_environment</buildtool_depend>
+  <build_depend>libpcl-all-dev</build_depend>
+  <build_export_depend>libpcl-all-dev</build_export_depend>
+
+  <depend>angles</depend>
+  <depend>nebula_common_base</depend>
+  <depend>nebula_common_velodyne</depend>
+  <depend>nebula_decoders_base</depend>
+  <depend>nebula_msgs</depend>
+  <depend>pcl_conversions</depend>
+  <depend>sensor_msgs</depend>
+  <depend>velodyne_msgs</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
