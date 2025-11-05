@@ -52,5 +52,6 @@
       "readOnly": true,
       "description": "Subsample factor to publish radar info messages with respect to the radar detections."
     }
-  }
+  },
+  "$id": "nebula_ros_base/schema/topic.json"
 }

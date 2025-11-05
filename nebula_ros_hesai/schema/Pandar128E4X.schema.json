@@ -7,16 +7,16 @@
       "type": "object",
       "properties": {
         "host_ip": {
-          "$ref": "communication.json#/definitions/host_ip"
+          "$ref": "../../nebula_ros_base/schema/communication.json#/definitions/host_ip"
         },
         "sensor_ip": {
-          "$ref": "communication.json#/definitions/sensor_ip"
+          "$ref": "../../nebula_ros_base/schema/communication.json#/definitions/sensor_ip"
         },
         "multicast_ip": {
           "$ref": "lidar_hesai.json#/definitions/multicast_ip"
         },
         "data_port": {
-          "$ref": "communication.json#/definitions/data_port"
+          "$ref": "../../nebula_ros_base/schema/communication.json#/definitions/data_port"
         },
         "gnss_port": {
           "$ref": "lidar_hesai.json#/definitions/gnss_port"
@@ -25,34 +25,34 @@
           "$ref": "lidar_hesai.json#/definitions/udp_socket_receive_buffer_size_bytes"
         },
         "packet_mtu_size": {
-          "$ref": "communication.json#/definitions/packet_mtu_size"
+          "$ref": "../../nebula_ros_base/schema/communication.json#/definitions/packet_mtu_size"
         },
         "launch_hw": {
-          "$ref": "hardware.json#/definitions/launch_hw"
+          "$ref": "../../nebula_ros_base/schema/hardware.json#/definitions/launch_hw"
         },
         "setup_sensor": {
-          "$ref": "hardware.json#/definitions/setup_sensor"
+          "$ref": "../../nebula_ros_base/schema/hardware.json#/definitions/setup_sensor"
         },
         "udp_only": {
-          "$ref": "hardware.json#/definitions/udp_only"
+          "$ref": "../../nebula_ros_base/schema/hardware.json#/definitions/udp_only"
         },
         "frame_id": {
-          "$ref": "topic.json#/definitions/frame_id"
+          "$ref": "../../nebula_ros_base/schema/topic.json#/definitions/frame_id"
         },
         "diag_span": {
-          "$ref": "topic.json#/definitions/diag_span"
+          "$ref": "../../nebula_ros_base/schema/topic.json#/definitions/diag_span"
         },
         "min_range": {
-          "$ref": "misc.json#/definitions/min_range"
+          "$ref": "../../nebula_ros_base/schema/misc.json#/definitions/min_range"
         },
         "max_range": {
-          "$ref": "misc.json#/definitions/max_range"
+          "$ref": "../../nebula_ros_base/schema/misc.json#/definitions/max_range"
         },
         "cloud_min_angle": {
-          "$ref": "misc.json#/definitions/cloud_min_angle"
+          "$ref": "../../nebula_ros_base/schema/misc.json#/definitions/cloud_min_angle"
         },
         "cloud_max_angle": {
-          "$ref": "misc.json#/definitions/cloud_max_angle"
+          "$ref": "../../nebula_ros_base/schema/misc.json#/definitions/cloud_max_angle"
         },
         "sync_angle": {
           "$ref": "lidar_hesai.json#/definitions/sync_angle"
@@ -76,7 +76,7 @@
           "$ref": "lidar_hesai.json#/definitions/rotation_speed"
         },
         "return_mode": {
-          "$ref": "misc.json#/definitions/return_mode",
+          "$ref": "../../nebula_ros_base/schema/misc.json#/definitions/return_mode",
           "enum": [
             "Last",
             "Strongest",
@@ -109,13 +109,13 @@
           "$ref": "lidar_hesai.json#/definitions/ptp_lock_threshold"
         },
         "retry_hw": {
-          "$ref": "hardware.json#/definitions/retry_hw"
+          "$ref": "../../nebula_ros_base/schema/hardware.json#/definitions/retry_hw"
         },
         "dual_return_distance_threshold": {
-          "$ref": "misc.json#/definitions/dual_return_distance_threshold"
+          "$ref": "../../nebula_ros_base/schema/misc.json#/definitions/dual_return_distance_threshold"
         },
         "point_filters": {
-          "$ref": "misc.json#/definitions/point_filters"
+          "$ref": "../../nebula_ros_base/schema/misc.json#/definitions/point_filters"
         },
         "hires_mode": {
           "$ref": "lidar_hesai.json#/definitions/hires_mode"
@@ -131,7 +131,7 @@
           ]
         },
         "sync_diagnostics": {
-          "$ref": "misc.json#/definitions/sync_diagnostics"
+          "$ref": "../../nebula_ros_base/schema/misc.json#/definitions/sync_diagnostics"
         }
       },
       "required": [

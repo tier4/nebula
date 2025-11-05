@@ -4,7 +4,7 @@
   "type": "object",
   "definitions": {
     "sensor_model": {
-      "$ref": "hardware.json#/definitions/sensor_model",
+      "$ref": "../../nebula_ros_base/schema/hardware.json#/definitions/sensor_model",
       "enum": [
         "Pandar64",
         "Pandar40P",
@@ -18,7 +18,7 @@
       ]
     },
     "calibration_file": {
-      "$ref": "misc.json#/definitions/calibration_file",
+      "$ref": "../../nebula_ros_base/schema/misc.json#/definitions/calibration_file",
       "default": "$(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).csv"
     },
     "calibration_download_enabled": {
@@ -27,11 +27,11 @@
       "default": true
     },
     "multicast_ip": {
-      "$ref": "communication.json#/definitions/multicast_ip",
+      "$ref": "../../nebula_ros_base/schema/communication.json#/definitions/multicast_ip",
       "default": "\"\""
     },
     "gnss_port": {
-      "$ref": "communication.json#/definitions/gnss_port",
+      "$ref": "../../nebula_ros_base/schema/communication.json#/definitions/gnss_port",
       "default": "10110",
       "minimum": 0
     },
@@ -42,7 +42,7 @@
       "description": "Kernel UDP receive buffer size (SO_RCVBUF) in bytes for data socket, see `man 7 setsockopt` for details. Increase if packets are dropped due to full UDP queue. Increasing this also increases the worst case latency."
     },
     "rotation_speed": {
-      "$ref": "hardware.json#/definitions/rotation_speed",
+      "$ref": "../../nebula_ros_base/schema/hardware.json#/definitions/rotation_speed",
       "default": "600",
       "minimum": 300,
       "maximum": 1200,
@@ -126,10 +126,10 @@
       "type": "object",
       "properties": {
         "pointcloud_publish_rate": {
-          "$ref": "diagnostics.json#/definitions/rate_bound_status"
+          "$ref": "../../nebula_ros_base/schema/diagnostics.json#/definitions/rate_bound_status"
         },
         "packet_loss": {
-          "$ref": "diagnostics.json#/definitions/packet_loss_diagnostic_task"
+          "$ref": "../../nebula_ros_base/schema/diagnostics.json#/definitions/packet_loss_diagnostic_task"
         },
         "functional_safety": {
           "type": "object",
@@ -180,5 +180,6 @@
         }
       }
     }
-  }
+  },
+  "$id": "nebula_ros_hesai/schema/lidar_hesai.json"
 }

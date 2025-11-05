@@ -35,5 +35,6 @@
       "readOnly": true,
       "description": "Use UDP protocol only (settings synchronization and diagnostics publishing are disabled)."
     }
-  }
+  },
+  "$id": "nebula_ros_base/schema/hardware.json"
 }

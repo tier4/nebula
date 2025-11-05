@@ -81,5 +81,6 @@
       "minimum": 0.0,
       "description": "Timeout for sending data to the CAN bus."
     }
-  }
+  },
+  "$id": "nebula_ros_base/schema/communication.json"
 }

@@ -65,5 +65,6 @@
         }
       }
     }
-  }
+  },
+  "$id": "nebula_ros_base/schema/diagnostics.json"
 }

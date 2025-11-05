@@ -4,11 +4,12 @@
   "type": "object",
   "definitions": {
     "sensor_model": {
-      "$ref": "hardware.json#/definitions/sensor_model",
+      "$ref": "../../nebula_ros_base/schema/hardware.json#/definitions/sensor_model",
       "enum": [
         "ARS548",
         "SRR520"
       ]
     }
-  }
+  },
+  "$id": "nebula_ros_continental/schema/radar_continental.json"
 }

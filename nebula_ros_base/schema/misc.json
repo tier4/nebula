@@ -120,5 +120,6 @@
         "topic"
       ]
     }
-  }
+  },
+  "$id": "nebula_ros_base/schema/misc.json"
 }
