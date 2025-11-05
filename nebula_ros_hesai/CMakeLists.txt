@@ -111,8 +111,11 @@ install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     find_package(ament_cmake_gtest REQUIRED)
+    find_package(nebula_decoders_hesai REQUIRED)
 
     ament_lint_auto_find_test_dependencies()
+
+    add_definitions(-D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
 
     ament_add_gtest(test_hesai_functional_safety
         test/test_hesai_functional_safety.cpp
@@ -120,6 +123,7 @@ if(BUILD_TESTING)
     target_include_directories(test_hesai_functional_safety
         PRIVATE
         include
+        ${nebula_decoders_hesai_INCLUDE_DIRS}
     )
     target_link_libraries(test_hesai_functional_safety
         hesai_ros_wrapper
