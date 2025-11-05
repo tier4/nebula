@@ -56,6 +56,7 @@ if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     find_package(ament_cmake_gtest REQUIRED)
     find_package(rcpputils REQUIRED)
+    find_package(nebula_ros_hesai REQUIRED)
 
     ament_lint_auto_find_test_dependencies()
 
@@ -68,6 +69,19 @@ if(BUILD_TESTING)
         include
         SYSTEM
         ${rcpputils_INCLUDE_DIRS}
+    )
+
+    ament_add_gtest(test_hesai_functional_safety
+        test/test_hesai_functional_safety.cpp
+    )
+    target_include_directories(test_hesai_functional_safety
+        PRIVATE
+        include
+        ${nebula_ros_hesai_INCLUDE_DIRS}
+        ${nebula_decoders_hesai_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_hesai_functional_safety
+        hesai_ros_wrapper
     )
 endif()
 

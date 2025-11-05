@@ -52,17 +52,23 @@ def launch_setup(context: launch.LaunchContext, *args, **kwargs):
     }
 
     if sensor_model in SENSOR_MODELS_VELODYNE:
+        vendor_package = "nebula_ros_velodyne"
         vendor_launch_file = "velodyne_launch_all_hw.xml"
     elif sensor_model in SENSOR_MODELS_HESAI:
+        vendor_package = "nebula_ros_hesai"
         vendor_launch_file = "hesai_launch_all_hw.xml"
     elif sensor_model in SENSOR_MODELS_ROBOSENSE:
+        vendor_package = "nebula_ros_robosense"
         vendor_launch_file = "robosense_launch_all_hw.xml"
     elif sensor_model in SENSOR_MODELS_CONTINENTAL:
+        vendor_package = "nebula_ros_continental"
         vendor_launch_file = "continental_launch_all_hw.xml"
     else:
         raise KeyError(f"Sensor model {sensor_model} does not have an associated launch file")
 
-    vendor_launch_file = os.path.join(ThisLaunchFileDir().perform(context), vendor_launch_file)
+    vendor_launch_file = os.path.join(
+        get_package_share_directory(vendor_package), "launch", vendor_launch_file
+    )
     if not os.path.isfile(vendor_launch_file):
         raise FileNotFoundError(f"Could not find launch file {vendor_launch_file}")
 

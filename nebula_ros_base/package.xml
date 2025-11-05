@@ -25,6 +25,8 @@
 
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>
+  <test_depend>nebula_decoders_hesai</test_depend>
+  <test_depend>nebula_ros_hesai</test_depend>
   <test_depend>ros_testing</test_depend>
 
   <export>
