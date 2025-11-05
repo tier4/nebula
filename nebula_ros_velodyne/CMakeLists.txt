@@ -94,6 +94,17 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
+# Install common schema files from nebula_ros_base
+install(
+  FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/communication.json
+    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/diagnostics.json
+    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/hardware.json
+    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/misc.json
+    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/topic.json
+  DESTINATION share/${PROJECT_NAME}/schema
+)
+
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_velodyne_ros_wrapper)
 

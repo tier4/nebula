@@ -7,37 +7,37 @@
       "type": "object",
       "properties": {
         "interface": {
-          "$ref": "sub/communication.json#/definitions/interface"
+          "$ref": "communication.json#/definitions/interface"
         },
         "receiver_timeout_sec": {
-          "$ref": "sub/communication.json#/definitions/receiver_timeout_sec"
+          "$ref": "communication.json#/definitions/receiver_timeout_sec"
         },
         "sender_timeout_sec": {
-          "$ref": "sub/communication.json#/definitions/sender_timeout_sec"
+          "$ref": "communication.json#/definitions/sender_timeout_sec"
         },
         "filters": {
-          "$ref": "sub/communication.json#/definitions/filters"
+          "$ref": "communication.json#/definitions/filters"
         },
         "launch_hw": {
-          "$ref": "sub/hardware.json#/definitions/launch_hw"
+          "$ref": "hardware.json#/definitions/launch_hw"
         },
         "frame_id": {
-          "$ref": "sub/topic.json#/definitions/frame_id"
+          "$ref": "topic.json#/definitions/frame_id"
         },
         "base_frame": {
-          "$ref": "sub/topic.json#/definitions/base_frame"
+          "$ref": "topic.json#/definitions/base_frame"
         },
         "object_frame": {
-          "$ref": "sub/topic.json#/definitions/object_frame"
+          "$ref": "topic.json#/definitions/object_frame"
         },
         "use_bus_time": {
-          "$ref": "sub/topic.json#/definitions/use_bus_time"
+          "$ref": "topic.json#/definitions/use_bus_time"
         },
         "configuration_vehicle_wheelbase": {
-          "$ref": "sub/misc.json#/definitions/configuration_vehicle_wheelbase"
+          "$ref": "misc.json#/definitions/configuration_vehicle_wheelbase"
         },
         "sensor_model": {
-          "$ref": "sub/radar_continental.json#/definitions/sensor_model",
+          "$ref": "radar_continental.json#/definitions/sensor_model",
           "enum": [
             "SRR520"
           ]

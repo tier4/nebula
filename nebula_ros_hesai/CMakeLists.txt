@@ -135,6 +135,17 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
+# Install common schema files from nebula_ros_base
+install(
+  FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/communication.json
+    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/diagnostics.json
+    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/hardware.json
+    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/misc.json
+    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/topic.json
+  DESTINATION share/${PROJECT_NAME}/schema
+)
+
 if(BUILD_TESTING)
     install(
         DIRECTORY test_resources
