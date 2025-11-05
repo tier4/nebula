@@ -59,6 +59,10 @@ add_library(robosense_ros_wrapper SHARED
     src/robosense/hw_monitor_wrapper.cpp
 )
 
+target_link_libraries(robosense_ros_wrapper PUBLIC
+    nebula_ros_base::nebula_ros_base_common
+)
+
 target_include_directories(robosense_ros_wrapper PUBLIC
     ${diagnostic_updater_INCLUDE_DIRS}
     ${nebula_decoders_base_INCLUDE_DIRS}

@@ -16,6 +16,7 @@ find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
 find_package(nebula_common_base REQUIRED)
 find_package(nebula_msgs REQUIRED)
+find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
@@ -34,6 +35,21 @@ link_libraries(
     ${PCL_LIBRARIES}
 )
 
+# Common library for parameter descriptors
+add_library(nebula_ros_base_common SHARED
+    src/common/parameter_descriptors.cpp
+)
+
+target_include_directories(nebula_ros_base_common PUBLIC
+    include
+    ${rclcpp_INCLUDE_DIRS}
+)
+
+target_link_libraries(nebula_ros_base_common PUBLIC
+    ${rclcpp_TARGETS}
+)
+
+install(TARGETS nebula_ros_base_common EXPORT export_nebula_ros_base_common LIBRARY DESTINATION lib)
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
