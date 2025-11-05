@@ -1,6 +1,0 @@
-Fault Code;Fault;Severity;Other
-0x1111;Aaa;OK;a
-0x2222;Bbb;WARNING;b
-0x3333;Ccc;WARNING
-0x4444;Ddd;ERROR
-0x5555;Eee;ERROR;e

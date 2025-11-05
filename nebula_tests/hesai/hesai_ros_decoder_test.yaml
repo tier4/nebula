@@ -15,8 +15,8 @@
     min_range: 0.3 # Minimum range.
     max_range: 300. # Maximum range.
     diag_span: 1000 # milliseconds
-    calibration_file: ./install/nebula_decoders/share/nebula_decoders/calibration/hesai/PandarAT128.csv
-    correction_file: ./install/nebula_decoders/share/nebula_decoders/calibration/hesai/PandarAT128.dat
+    calibration_file: ./install/nebula_decoders_hesai/share/nebula_decoders_hesai/calibration/hesai/PandarAT128.csv
+    correction_file: ./install/nebula_decoders_hesai/share/nebula_decoders_hesai/calibration/hesai/PandarAT128.dat
 
     storage_id: sqlite3
     format: cdr
