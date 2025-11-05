@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Hardware parameters.",
+  "type": "object",
+  "definitions": {
+    "launch_hw": {
+      "type": "boolean",
+      "default": "true",
+      "readOnly": true,
+      "description": "Whether network sockets should be opened or not. If disabled, replay from NebulaPackets messages is enabled automatically."
+    },
+    "rotation_speed": {
+      "type": "integer",
+      "description": "Motor RPM, the sensor's internal spin rate."
+    },
+    "sensor_model": {
+      "type": "string",
+      "readOnly": true,
+      "description": "Sensor model."
+    },
+    "setup_sensor": {
+      "type": "boolean",
+      "default": "true",
+      "readOnly": true,
+      "description": "Enable sensor setup on hardware driver."
+    },
+    "retry_hw": {
+      "type": "boolean",
+      "default": "true",
+      "description": "Whether TCP connections are retried on failure or the driver should instead exit."
+    },
+    "udp_only": {
+      "type": "boolean",
+      "default": "false",
+      "readOnly": true,
+      "description": "Use UDP protocol only (settings synchronization and diagnostics publishing are disabled)."
+    }
+  }
+}

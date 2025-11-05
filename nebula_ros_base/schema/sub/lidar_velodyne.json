@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lidar Velodyne parameters.",
+  "type": "object",
+  "definitions": {
+    "sensor_model": {
+      "$ref": "hardware.json#/definitions/sensor_model",
+      "enum": [
+        "VLP16",
+        "VLP32",
+        "VLS128"
+      ]
+    },
+    "calibration_file": {
+      "$ref": "misc.json#/definitions/calibration_file",
+      "default": "$(find-pkg-share nebula_decoders)/calibration/velodyne/$(var sensor_model).yaml"
+    },
+    "return_mode": {
+      "$ref": "misc.json#/definitions/return_mode",
+      "enum": [
+        "SingleStrongest",
+        "SingleLast",
+        "Dual",
+        "SingleFirst"
+      ]
+    },
+    "rotation_speed": {
+      "$ref": "hardware.json#/definitions/rotation_speed",
+      "default": "600",
+      "minimum": 300,
+      "maximum": 1200,
+      "multipleOf": 60
+    }
+  }
+}

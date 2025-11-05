@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Radar Continental parameters.",
+  "type": "object",
+  "definitions": {
+    "sensor_model": {
+      "$ref": "hardware.json#/definitions/sensor_model",
+      "enum": [
+        "ARS548",
+        "SRR520"
+      ]
+    }
+  }
+}

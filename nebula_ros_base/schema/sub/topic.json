@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Topic parameters.",
+  "type": "object",
+  "definitions": {
+    "advanced_diagnostics": {
+      "type": "boolean",
+      "default": "false",
+      "readOnly": true,
+      "description": "Enable advanced diagnostics."
+    },
+    "base_frame": {
+      "type": "string",
+      "default": "base_link",
+      "readOnly": true,
+      "description": "Frame with true sensor pose. The final sensor data is transformed by base_frame -> frame_id."
+    },
+    "diag_span": {
+      "type": "integer",
+      "default": "1000",
+      "minimum": 1,
+      "readOnly": true,
+      "description": "Diagnostics rate."
+    },
+    "frame_id": {
+      "type": "string",
+      "default": "data_link",
+      "readOnly": true,
+      "description": "Sensor data frame_id."
+    },
+    "object_frame": {
+      "type": "string",
+      "default": "base_link",
+      "readOnly": true,
+      "description": "Tracked objects frame."
+    },
+    "use_bus_time": {
+      "type": "boolean",
+      "default": "false",
+      "readOnly": true,
+      "description": "Use CAN bus time for published sensor data."
+    },
+    "use_sensor_time": {
+      "type": "boolean",
+      "default": "false",
+      "readOnly": true,
+      "description": "Use sensor time for published sensor data."
+    },
+    "radar_info_rate_subsample": {
+      "type": "integer",
+      "default": "10",
+      "readOnly": true,
+      "description": "Subsample factor to publish radar info messages with respect to the radar detections."
+    }
+  }
+}
