@@ -11,7 +11,7 @@
     frame_id: velodyne
     advanced_diagnostics: false
     diag_span: 1000
-    calibration_file: $(find-pkg-share nebula_decoders)/calibration/velodyne/VLP32.yaml
+    calibration_file: $(find-pkg-share nebula_decoders_velodyne)/calibration/VLP32.yaml
     min_range: 0.3
     max_range: 300.0
     cloud_min_angle: 0
