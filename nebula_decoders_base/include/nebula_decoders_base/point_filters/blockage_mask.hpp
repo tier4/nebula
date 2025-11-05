@@ -14,13 +14,13 @@
 
 #pragma once
 
-#include "nebula_decoders/nebula_decoders_common/angles.hpp"
+#include "nebula_decoders_base/angles.hpp"
 
-#include <nebula_common/loggers/logger.hpp>
-#include <nebula_common/nebula_common.hpp>
-#include <nebula_common/point_types.hpp>
-#include <nebula_common/util/expected.hpp>
-#include <nebula_common/util/string_conversions.hpp>
+#include <nebula_common_base/loggers/logger.hpp>
+#include <nebula_common_base/nebula_common.hpp>
+#include <nebula_common_base/point_types.hpp>
+#include <nebula_common_base/util/expected.hpp>
+#include <nebula_common_base/util/string_conversions.hpp>
 #include <rcpputils/thread_safety_annotations.hpp>
 
 #include <boost/range/algorithm/fill.hpp>
