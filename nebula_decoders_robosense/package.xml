@@ -19,6 +19,7 @@
   <depend>nebula_decoders_base</depend>
   <depend>nebula_msgs</depend>
   <depend>pcl_conversions</depend>
+  <depend>rclcpp</depend>
   <depend>robosense_msgs</depend>
   <depend>sensor_msgs</depend>
 

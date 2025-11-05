@@ -20,6 +20,7 @@ find_package(nebula_common_continental REQUIRED)
 find_package(nebula_decoders_base REQUIRED)
 find_package(nebula_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
+find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 # Check if pcl_conversions provides modern CMake targets (ROS 2 Jazzy and later)
@@ -41,6 +42,7 @@ include_directories(PUBLIC
     ${YAML_CPP_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
     ${PCL_CONVERSIONS_INCLUDE_DIRS}
+    ${rclcpp_INCLUDE_DIRS}
     ${sensor_msgs_INCLUDE_DIRS}
 )
 
@@ -50,6 +52,7 @@ link_libraries(
     ${nebula_decoders_base_TARGETS}
     ${PCL_LIBRARIES}
     ${PCL_CONVERSIONS_TARGET}
+    ${rclcpp_TARGETS}
     ${sensor_msgs_TARGETS}
 )
 
