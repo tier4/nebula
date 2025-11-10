@@ -15,10 +15,6 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
 endif ()
 
-if(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
-    add_definitions(-DHAVE_NEW_YAMLCPP)
-endif(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
-
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     find_package(ament_cmake_gtest REQUIRED)
