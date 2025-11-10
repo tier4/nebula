@@ -1,1 +1,1 @@
-{{ json_to_markdown("nebula_ros/schema/Bpearl.schema.json") }}
+{{ json_to_markdown("nebula_ros_robosense/schema/Bpearl.schema.json") }}
