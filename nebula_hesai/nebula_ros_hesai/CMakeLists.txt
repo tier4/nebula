@@ -111,12 +111,16 @@ install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     find_package(ament_cmake_gtest REQUIRED)
-    find_package(nebula_decoders_hesai REQUIRED)
+    find_package(rosbag2_cpp REQUIRED)
+    find_package(PCL REQUIRED COMPONENTS common io)
 
     ament_lint_auto_find_test_dependencies()
 
     add_definitions(-D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
+    add_definitions(-D_SRC_RESOURCES_DIR_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
+    add_definitions(-D_SRC_CALIBRATION_DIR_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../nebula_decoders_hesai/calibration/")
 
+    # Functional safety test
     ament_add_gtest(test_hesai_functional_safety
         test/test_hesai_functional_safety.cpp
     )
@@ -128,22 +132,144 @@ if(BUILD_TESTING)
     target_link_libraries(test_hesai_functional_safety
         hesai_ros_wrapper
     )
+
+    # Decoder tests
+    add_library(hesai_ros_decoder_test SHARED
+        tests/hesai_ros_decoder_test.cpp
+    )
+    target_include_directories(hesai_ros_decoder_test PUBLIC
+        ${nebula_common_base_INCLUDE_DIRS}
+        ${nebula_common_hesai_INCLUDE_DIRS}
+        ${nebula_decoders_base_INCLUDE_DIRS}
+        ${nebula_decoders_hesai_INCLUDE_DIRS}
+        ${nebula_ros_base_INCLUDE_DIRS}
+        ${PCL_INCLUDE_DIRS}
+        ${rosbag2_cpp_INCLUDE_DIRS}
+        ${diagnostic_updater_INCLUDE_DIRS}
+    )
+    target_link_libraries(hesai_ros_decoder_test PUBLIC
+        ${nebula_common_base_TARGETS}
+        ${nebula_common_hesai_TARGETS}
+        ${PCL_LIBRARIES}
+        ${rosbag2_cpp_TARGETS}
+        ${diagnostic_updater_TARGETS}
+        nebula_decoders_hesai::nebula_decoders_hesai
+    )
+
+    ament_add_gtest(hesai_ros_decoder_test_main
+        tests/hesai_ros_decoder_test_main.cpp
+    )
+    target_include_directories(hesai_ros_decoder_test_main PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai
+        include
+        tests
+        ${nebula_common_base_INCLUDE_DIRS}
+        ${nebula_common_hesai_INCLUDE_DIRS}
+        ${nebula_decoders_base_INCLUDE_DIRS}
+        ${nebula_decoders_hesai_INCLUDE_DIRS}
+        ${nebula_ros_base_INCLUDE_DIRS}
+        ${PCL_INCLUDE_DIRS}
+        ${rosbag2_cpp_INCLUDE_DIRS}
+        ${diagnostic_updater_INCLUDE_DIRS}
+    )
+    target_link_libraries(hesai_ros_decoder_test_main
+        hesai_ros_decoder_test
+    )
+
+    ament_add_gtest(hesai_ros_scan_cutting_test_main
+        tests/hesai_ros_scan_cutting_test_main.cpp
+    )
+    target_include_directories(hesai_ros_scan_cutting_test_main PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai
+        include
+        tests
+        ${nebula_common_base_INCLUDE_DIRS}
+        ${nebula_common_hesai_INCLUDE_DIRS}
+        ${nebula_decoders_base_INCLUDE_DIRS}
+        ${nebula_decoders_hesai_INCLUDE_DIRS}
+        ${nebula_ros_base_INCLUDE_DIRS}
+        ${PCL_INCLUDE_DIRS}
+        ${rosbag2_cpp_INCLUDE_DIRS}
+        ${diagnostic_updater_INCLUDE_DIRS}
+    )
+    target_link_libraries(hesai_ros_scan_cutting_test_main
+        hesai_ros_decoder_test
+    )
+endif()
+
+if(BUILD_EXAMPLES)
+    find_package(PCL REQUIRED COMPONENTS common io)
+    find_package(rosbag2_cpp REQUIRED)
+
+    # Offline PCD extraction library
+    add_library(hesai_ros_offline_extract_pcd SHARED
+        examples/hesai_ros_offline_extract_pcd.cpp
+    )
+    target_include_directories(hesai_ros_offline_extract_pcd PUBLIC
+        examples
+        ${nebula_common_base_INCLUDE_DIRS}
+        ${nebula_common_hesai_INCLUDE_DIRS}
+        ${nebula_decoders_base_INCLUDE_DIRS}
+        ${nebula_decoders_hesai_INCLUDE_DIRS}
+        ${nebula_ros_base_INCLUDE_DIRS}
+        ${PCL_INCLUDE_DIRS}
+        ${rosbag2_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(hesai_ros_offline_extract_pcd PUBLIC
+        ${nebula_common_base_TARGETS}
+        ${nebula_common_hesai_TARGETS}
+        ${PCL_LIBRARIES}
+        ${rosbag2_cpp_TARGETS}
+        nebula_decoders_hesai::nebula_decoders_hesai
+        nebula_ros_base::nebula_ros_base_common
+    )
+
+    add_executable(hesai_ros_offline_extract_pcd_node
+        examples/hesai_ros_offline_extract_pcd_main.cpp
+    )
+    target_link_libraries(hesai_ros_offline_extract_pcd_node PUBLIC
+        hesai_ros_offline_extract_pcd
+    )
+
+    # Bag PCD extraction library
+    add_library(hesai_ros_offline_extract_bag_pcd SHARED
+        examples/hesai_ros_offline_extract_bag_pcd.cpp
+    )
+    target_include_directories(hesai_ros_offline_extract_bag_pcd PUBLIC
+        examples
+        ${nebula_common_base_INCLUDE_DIRS}
+        ${nebula_common_hesai_INCLUDE_DIRS}
+        ${nebula_decoders_base_INCLUDE_DIRS}
+        ${nebula_decoders_hesai_INCLUDE_DIRS}
+        ${nebula_ros_base_INCLUDE_DIRS}
+        ${PCL_INCLUDE_DIRS}
+        ${rosbag2_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(hesai_ros_offline_extract_bag_pcd PUBLIC
+        ${nebula_common_base_TARGETS}
+        ${nebula_common_hesai_TARGETS}
+        ${PCL_LIBRARIES}
+        ${rosbag2_cpp_TARGETS}
+        nebula_decoders_hesai::nebula_decoders_hesai
+        nebula_ros_base::nebula_ros_base_common
+    )
+
+    add_executable(hesai_ros_offline_extract_bag_pcd_node
+        examples/hesai_ros_offline_extract_bag_pcd_main.cpp
+    )
+    target_link_libraries(hesai_ros_offline_extract_bag_pcd_node PUBLIC
+        hesai_ros_offline_extract_bag_pcd
+    )
+
+    install(TARGETS hesai_ros_offline_extract_pcd_node
+                    hesai_ros_offline_extract_bag_pcd_node
+            DESTINATION lib/${PROJECT_NAME}
+    )
 endif()
 
 install(
   DIRECTORY config launch schema
   DESTINATION share/${PROJECT_NAME}
-)
-
-# Install common schema files from nebula_ros_base
-install(
-  FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/communication.json
-    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/diagnostics.json
-    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/hardware.json
-    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/misc.json
-    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/topic.json
-  DESTINATION share/${PROJECT_NAME}/schema
 )
 
 if(BUILD_TESTING)

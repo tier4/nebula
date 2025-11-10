@@ -1,6 +1,6 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "velodyne_ros_decoder_test_vlp16.hpp"
+#include "velodyne_ros_decoder_test_vlp32.hpp"
 
 #include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
@@ -68,17 +68,16 @@ Status VelodyneRosDecoderTest::get_parameters(
 {
   std::filesystem::path calib_dir =
     _SRC_CALIBRATION_DIR_PATH;  // variable defined in CMakeLists.txt;
-  calib_dir /= "velodyne";
   std::filesystem::path bag_root_dir =
     _SRC_RESOURCES_DIR_PATH;  // variable defined in CMakeLists.txt;
-  bag_root_dir /= "velodyne";
+  bag_root_dir /= "decoder_ground_truth";
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 4;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_model", "VLP16");
+    this->declare_parameter<std::string>("sensor_model", "VLP32");
     sensor_configuration.sensor_model =
       nebula::drivers::sensor_model_from_string(this->get_parameter("sensor_model").as_string());
   }
@@ -88,7 +87,7 @@ Status VelodyneRosDecoderTest::get_parameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("return_mode", "Dual", descriptor);
+    this->declare_parameter<std::string>("return_mode", "SingleStrongest", descriptor);
     sensor_configuration.return_mode =
       nebula::drivers::return_mode_from_string(this->get_parameter("return_mode").as_string());
   }
@@ -98,7 +97,7 @@ Status VelodyneRosDecoderTest::get_parameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("frame_id", "velodyne", descriptor);
+    this->declare_parameter<std::string>("frame_id", "velodyne_front", descriptor);
     sensor_configuration.frame_id = this->get_parameter("frame_id").as_string();
   }
   {
@@ -110,7 +109,7 @@ Status VelodyneRosDecoderTest::get_parameters(
     rcl_interfaces::msg::FloatingPointRange range;
     range.set__from_value(0).set__to_value(360).set__step(0.01);
     descriptor.floating_point_range = {range};
-    this->declare_parameter<double>("scan_phase", 0., descriptor);
+    this->declare_parameter<double>("scan_phase", 180.0, descriptor);
     sensor_configuration.scan_phase = this->get_parameter("scan_phase").as_double();
   }
   {
@@ -120,7 +119,7 @@ Status VelodyneRosDecoderTest::get_parameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>(
-      "calibration_file", (calib_dir / "VLP16.yaml").string(), descriptor);
+      "calibration_file", (calib_dir / "VLP32.yaml").string(), descriptor);
     calibration_configuration.calibration_file =
       this->get_parameter("calibration_file").as_string();
   }
@@ -130,7 +129,7 @@ Status VelodyneRosDecoderTest::get_parameters(
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("min_range", 0.3, descriptor);
+    this->declare_parameter<double>("min_range", 0.4, descriptor);
     sensor_configuration.min_range = this->get_parameter("min_range").as_double();
   }
   {
@@ -139,7 +138,7 @@ Status VelodyneRosDecoderTest::get_parameters(
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("max_range", 300., descriptor);
+    this->declare_parameter<double>("max_range", 50.0, descriptor);
     sensor_configuration.max_range = this->get_parameter("max_range").as_double();
   }
   double view_direction = sensor_configuration.scan_phase * M_PI / 180;
@@ -150,7 +149,7 @@ Status VelodyneRosDecoderTest::get_parameters(
     descriptor.read_only = false;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<double>("view_width", 300., descriptor);
+    this->declare_parameter<double>("view_width", 180.0, descriptor);
     view_width = this->get_parameter("view_width").as_double() * M_PI / 180;
   }
 
@@ -164,7 +163,7 @@ Status VelodyneRosDecoderTest::get_parameters(
       rcl_interfaces::msg::IntegerRange range;
       range.set__from_value(0).set__to_value(359).set__step(1);
       descriptor.integer_range = {range};
-      this->declare_parameter<uint16_t>("cloud_min_angle", 0, descriptor);
+      this->declare_parameter<uint16_t>("cloud_min_angle", 270, descriptor);
       sensor_configuration.cloud_min_angle = this->get_parameter("cloud_min_angle").as_int();
     }
     {
@@ -176,7 +175,7 @@ Status VelodyneRosDecoderTest::get_parameters(
       rcl_interfaces::msg::IntegerRange range;
       range.set__from_value(0).set__to_value(359).set__step(1);
       descriptor.integer_range = {range};
-      this->declare_parameter<uint16_t>("cloud_max_angle", 359, descriptor);
+      this->declare_parameter<uint16_t>("cloud_max_angle", 90, descriptor);
       sensor_configuration.cloud_max_angle = this->get_parameter("cloud_max_angle").as_int();
     }
   } else {
@@ -199,7 +198,7 @@ Status VelodyneRosDecoderTest::get_parameters(
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>(
-      "bag_path", (bag_root_dir / "vlp16" / "1673400471837873222").string(), descriptor);
+      "bag_path", (bag_root_dir / "vlp32" / "1713492677464078412").string(), descriptor);
     bag_path_ = this->get_parameter("bag_path").as_string();
     std::cout << bag_path_ << std::endl;
   }
@@ -227,7 +226,8 @@ Status VelodyneRosDecoderTest::get_parameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("target_topic", "/velodyne_packets", descriptor);
+    this->declare_parameter<std::string>(
+      "target_topic", "/sensing/lidar/front/velodyne_packets", descriptor);
     target_topic_ = this->get_parameter("target_topic").as_string();
   }
 
@@ -353,6 +353,7 @@ void VelodyneRosDecoderTest::read_bag()
 
           auto target_pcd_path = (pcd_dir / fn);
           std::cout << target_pcd_path << std::endl;
+
           if (target_pcd_path.exists()) {
             std::cout << "exists: " << target_pcd_path << std::endl;
             auto rt = pcd_reader.read(target_pcd_path.string(), *ref_pointcloud);

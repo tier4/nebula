@@ -10,7 +10,7 @@ import pytest
 @pytest.mark.rostest
 def generate_test_description():
     test_node = launch_ros.actions.Node(
-        package="nebula_tests",
+        package="nebula_ros_hesai",
         executable="hesai_ros_decoder_test_node_standalone",
         parameters=["test/hesai_ros_decoder_test.yaml"],
     )

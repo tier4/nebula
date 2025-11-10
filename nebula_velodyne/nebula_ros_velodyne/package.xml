@@ -33,6 +33,8 @@
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ros_testing</test_depend>
+  <test_depend>rosbag2_cpp</test_depend>
+  <test_depend>libpcl-all-dev</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

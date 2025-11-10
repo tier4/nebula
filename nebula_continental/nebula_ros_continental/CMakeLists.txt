@@ -161,20 +161,115 @@ install(TARGETS continental_ars548_ros_wrapper EXPORT export_continental_ars548_
 install(TARGETS continental_srr520_ros_wrapper EXPORT export_continental_srr520_ros_wrapper LIBRARY DESTINATION lib)
 install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
 
+if(BUILD_TESTING)
+    find_package(ament_lint_auto REQUIRED)
+    find_package(ament_cmake_gtest REQUIRED)
+    find_package(rosbag2_cpp REQUIRED)
+    find_package(PCL REQUIRED COMPONENTS common)
+
+    ament_lint_auto_find_test_dependencies()
+
+    add_definitions(-D_SRC_RESOURCES_DIR_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
+
+    # ARS548 tests
+    add_library(continental_ros_decoder_test_ars548 SHARED
+        tests/continental_ros_decoder_test_ars548.cpp
+        tests/parameter_descriptors.cpp
+    )
+    target_include_directories(continental_ros_decoder_test_ars548 PUBLIC
+        tests
+        ${nebula_common_base_INCLUDE_DIRS}
+        ${nebula_common_continental_INCLUDE_DIRS}
+        ${nebula_decoders_base_INCLUDE_DIRS}
+        ${nebula_decoders_continental_INCLUDE_DIRS}
+        ${nebula_ros_base_INCLUDE_DIRS}
+        ${PCL_INCLUDE_DIRS}
+        ${rosbag2_cpp_INCLUDE_DIRS}
+        ${diagnostic_updater_INCLUDE_DIRS}
+    )
+    target_link_libraries(continental_ros_decoder_test_ars548 PUBLIC
+        ${nebula_common_base_TARGETS}
+        ${nebula_common_continental_TARGETS}
+        ${PCL_LIBRARIES}
+        ${rosbag2_cpp_TARGETS}
+        ${diagnostic_updater_TARGETS}
+        nebula_decoders_continental::nebula_decoders_continental
+    )
+
+    ament_add_gtest(continental_ros_decoder_test_main_ars548
+        tests/continental_ros_decoder_test_main_ars548.cpp
+    )
+    target_include_directories(continental_ros_decoder_test_main_ars548 PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/continental
+        include
+        tests
+        ${nebula_common_base_INCLUDE_DIRS}
+        ${nebula_common_continental_INCLUDE_DIRS}
+        ${nebula_decoders_base_INCLUDE_DIRS}
+        ${nebula_decoders_continental_INCLUDE_DIRS}
+        ${nebula_ros_base_INCLUDE_DIRS}
+        ${PCL_INCLUDE_DIRS}
+        ${rosbag2_cpp_INCLUDE_DIRS}
+        ${diagnostic_updater_INCLUDE_DIRS}
+    )
+    target_link_libraries(continental_ros_decoder_test_main_ars548
+        continental_ros_decoder_test_ars548
+    )
+
+    # SRR520 tests
+    add_library(continental_ros_decoder_test_srr520 SHARED
+        tests/continental_ros_decoder_test_srr520.cpp
+        tests/parameter_descriptors.cpp
+    )
+    target_include_directories(continental_ros_decoder_test_srr520 PUBLIC
+        tests
+        ${nebula_common_base_INCLUDE_DIRS}
+        ${nebula_common_continental_INCLUDE_DIRS}
+        ${nebula_decoders_base_INCLUDE_DIRS}
+        ${nebula_decoders_continental_INCLUDE_DIRS}
+        ${nebula_ros_base_INCLUDE_DIRS}
+        ${PCL_INCLUDE_DIRS}
+        ${rosbag2_cpp_INCLUDE_DIRS}
+        ${diagnostic_updater_INCLUDE_DIRS}
+    )
+    target_link_libraries(continental_ros_decoder_test_srr520 PUBLIC
+        ${nebula_common_base_TARGETS}
+        ${nebula_common_continental_TARGETS}
+        ${PCL_LIBRARIES}
+        ${rosbag2_cpp_TARGETS}
+        ${diagnostic_updater_TARGETS}
+        nebula_decoders_continental::nebula_decoders_continental
+    )
+
+    ament_add_gtest(continental_ros_decoder_test_main_srr520
+        tests/continental_ros_decoder_test_main_srr520.cpp
+    )
+    target_include_directories(continental_ros_decoder_test_main_srr520 PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/continental
+        include
+        tests
+        ${nebula_common_base_INCLUDE_DIRS}
+        ${nebula_common_continental_INCLUDE_DIRS}
+        ${nebula_decoders_base_INCLUDE_DIRS}
+        ${nebula_decoders_continental_INCLUDE_DIRS}
+        ${nebula_ros_base_INCLUDE_DIRS}
+        ${PCL_INCLUDE_DIRS}
+        ${rosbag2_cpp_INCLUDE_DIRS}
+        ${diagnostic_updater_INCLUDE_DIRS}
+    )
+    target_link_libraries(continental_ros_decoder_test_main_srr520
+        continental_ros_decoder_test_srr520
+    )
+
+    install(
+        DIRECTORY test_resources
+        DESTINATION share/${PROJECT_NAME}
+    )
+endif()
+
 install(
   DIRECTORY config launch schema
   DESTINATION share/${PROJECT_NAME}
-)
-
-# Install common schema files from nebula_ros_base
-install(
-  FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/communication.json
-    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/diagnostics.json
-    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/hardware.json
-    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/misc.json
-    ${CMAKE_CURRENT_SOURCE_DIR}/../nebula_ros_base/schema/topic.json
-  DESTINATION share/${PROJECT_NAME}/schema
 )
 
 ament_export_include_directories("include/${PROJECT_NAME}")

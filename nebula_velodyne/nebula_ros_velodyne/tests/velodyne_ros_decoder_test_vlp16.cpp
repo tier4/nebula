@@ -1,23 +1,18 @@
-// Copyright 2023 Map IV, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Copyright 2024 TIER IV, Inc.
 
-#include "velodyne/velodyne_ros_offline_extract_bag_pcd.hpp"
+#include "velodyne_ros_decoder_test_vlp16.hpp"
 
-#include <rosbag2_cpp/reader.hpp>
-#include <rosbag2_cpp/writers/sequential_writer.hpp>
+#include "rclcpp/serialization.hpp"
+#include "rclcpp/serialized_message.hpp"
+#include "rcpputils/filesystem_helper.hpp"
+#include "rosbag2_cpp/reader.hpp"
+#include "rosbag2_cpp/readers/sequential_reader.hpp"
+#include "rosbag2_storage/storage_options.hpp"
+
+#include <gtest/gtest.h>
 
 #include <cmath>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <regex>
@@ -26,7 +21,7 @@
 
 namespace nebula::ros
 {
-VelodyneRosOfflineExtractBag::VelodyneRosOfflineExtractBag(
+VelodyneRosDecoderTest::VelodyneRosDecoderTest(
   const rclcpp::NodeOptions & options, const std::string & node_name)
 : rclcpp::Node(node_name, options)
 {
@@ -52,7 +47,7 @@ VelodyneRosOfflineExtractBag::VelodyneRosOfflineExtractBag(
   RCLCPP_INFO_STREAM(this->get_logger(), this->get_name() << "Wrapper=" << wrapper_status_);
 }
 
-Status VelodyneRosOfflineExtractBag::initialize_driver(
+Status VelodyneRosDecoderTest::initialize_driver(
   std::shared_ptr<const drivers::VelodyneSensorConfiguration> sensor_configuration,
   std::shared_ptr<const drivers::VelodyneCalibrationConfiguration> calibration_configuration)
 {
@@ -62,39 +57,44 @@ Status VelodyneRosOfflineExtractBag::initialize_driver(
   return driver_ptr_->get_status();
 }
 
-Status VelodyneRosOfflineExtractBag::get_status()
+Status VelodyneRosDecoderTest::get_status()
 {
   return wrapper_status_;
 }
 
-Status VelodyneRosOfflineExtractBag::get_parameters(
+Status VelodyneRosDecoderTest::get_parameters(
   drivers::VelodyneSensorConfiguration & sensor_configuration,
   drivers::VelodyneCalibrationConfiguration & calibration_configuration)
 {
+  std::filesystem::path calib_dir =
+    _SRC_CALIBRATION_DIR_PATH;  // variable defined in CMakeLists.txt;
+  std::filesystem::path bag_root_dir =
+    _SRC_RESOURCES_DIR_PATH;  // variable defined in CMakeLists.txt;
+  bag_root_dir /= "decoder_ground_truth";
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 4;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("sensor_model", "");
+    this->declare_parameter<std::string>("sensor_model", "VLP16");
     sensor_configuration.sensor_model =
       nebula::drivers::sensor_model_from_string(this->get_parameter("sensor_model").as_string());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 4;
-    descriptor.read_only = false;
+    descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("return_mode", "", descriptor);
+    this->declare_parameter<std::string>("return_mode", "Dual", descriptor);
     sensor_configuration.return_mode =
       nebula::drivers::return_mode_from_string(this->get_parameter("return_mode").as_string());
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 4;
-    descriptor.read_only = false;
+    descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("frame_id", "velodyne", descriptor);
@@ -103,7 +103,7 @@ Status VelodyneRosOfflineExtractBag::get_parameters(
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 3;
-    descriptor.read_only = false;
+    descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "Angle where scans begin (degrees, [0.,360.]";
     rcl_interfaces::msg::FloatingPointRange range;
@@ -118,7 +118,8 @@ Status VelodyneRosOfflineExtractBag::get_parameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("calibration_file", "", descriptor);
+    this->declare_parameter<std::string>(
+      "calibration_file", (calib_dir / "VLP16.yaml").string(), descriptor);
     calibration_configuration.calibration_file =
       this->get_parameter("calibration_file").as_string();
   }
@@ -196,8 +197,10 @@ Status VelodyneRosOfflineExtractBag::get_parameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("bag_path", "", descriptor);
+    this->declare_parameter<std::string>(
+      "bag_path", (bag_root_dir / "vlp16" / "1673400471837873222").string(), descriptor);
     bag_path_ = this->get_parameter("bag_path").as_string();
+    std::cout << bag_path_ << std::endl;
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -214,52 +217,16 @@ Status VelodyneRosOfflineExtractBag::get_parameters(
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("out_path", "", descriptor);
-    out_path_ = this->get_parameter("out_path").as_string();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 4;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
     this->declare_parameter<std::string>("format", "cdr", descriptor);
     format_ = this->get_parameter("format").as_string();
   }
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 2;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("out_num", 3, descriptor);
-    out_num_ = this->get_parameter("out_num").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 2;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<uint16_t>("skip_num", 3, descriptor);
-    skip_num_ = this->get_parameter("skip_num").as_int();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = 1;
-    descriptor.read_only = true;
-    descriptor.dynamic_typing = false;
-    descriptor.additional_constraints = "";
-    this->declare_parameter<bool>("only_xyz", false, descriptor);
-    only_xyz_ = this->get_parameter("only_xyz").as_bool();
-  }
-  {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 4;
     descriptor.read_only = true;
     descriptor.dynamic_typing = false;
     descriptor.additional_constraints = "";
-    this->declare_parameter<std::string>("target_topic", "", descriptor);
+    this->declare_parameter<std::string>("target_topic", "/velodyne_packets", descriptor);
     target_topic_ = this->get_parameter("target_topic").as_string();
   }
 
@@ -272,7 +239,6 @@ Status VelodyneRosOfflineExtractBag::get_parameters(
   if (sensor_configuration.frame_id.empty() || sensor_configuration.scan_phase > 360) {
     return Status::SENSOR_CONFIG_ERROR;
   }
-
   if (calibration_configuration.calibration_file.empty()) {
     return Status::INVALID_CALIBRATION_FILE;
   } else {
@@ -286,74 +252,96 @@ Status VelodyneRosOfflineExtractBag::get_parameters(
     }
   }
 
-  RCLCPP_INFO_STREAM(
-    this->get_logger(), "Sensor model: " << sensor_configuration.sensor_model
-                                         << ", Return mode: " << sensor_configuration.return_mode
-                                         << ", Scan Phase: " << sensor_configuration.scan_phase);
+  RCLCPP_INFO_STREAM(this->get_logger(), "Sensor Configuration: " << sensor_configuration);
   return Status::OK;
 }
 
-Status VelodyneRosOfflineExtractBag::read_bag()
+void print_pcd(nebula::drivers::NebulaPointCloudPtr pp)
+{
+  for (auto p : pp->points) {
+    std::cout << "(" << p.x << ", " << p.y << "," << p.z << "): " << p.intensity << ", "
+              << p.channel << ", " << p.azimuth << ", " << p.return_type << ", " << p.time_stamp
+              << std::endl;
+  }
+}
+
+void check_pcds(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::NebulaPointCloudPtr pp2)
+{
+  EXPECT_EQ(pp1->points.size(), pp2->points.size());
+  for (uint32_t i = 0; i < pp1->points.size(); i++) {
+    auto p1 = pp1->points[i];
+    auto p2 = pp2->points[i];
+    EXPECT_FLOAT_EQ(p1.x, p2.x);
+    EXPECT_FLOAT_EQ(p1.y, p2.y);
+    EXPECT_FLOAT_EQ(p1.z, p2.z);
+    EXPECT_FLOAT_EQ(p1.intensity, p2.intensity);
+    EXPECT_EQ(p1.channel, p2.channel);
+    EXPECT_FLOAT_EQ(p1.azimuth, p2.azimuth);
+    EXPECT_EQ(p1.return_type, p2.return_type);
+    EXPECT_DOUBLE_EQ(p1.time_stamp, p2.time_stamp);
+  }
+}
+
+void check_pcds(nebula::drivers::NebulaPointCloudPtr pp1, pcl::PointCloud<pcl::PointXYZ>::Ptr pp2)
+{
+  EXPECT_EQ(pp1->points.size(), pp2->points.size());
+  for (uint32_t i = 0; i < pp1->points.size(); i++) {
+    auto p1 = pp1->points[i];
+    auto p2 = pp2->points[i];
+    EXPECT_FLOAT_EQ(p1.x, p2.x);
+    EXPECT_FLOAT_EQ(p1.y, p2.y);
+    EXPECT_FLOAT_EQ(p1.z, p2.z);
+  }
+}
+
+void VelodyneRosDecoderTest::read_bag()
 {
   rosbag2_storage::StorageOptions storage_options;
   rosbag2_cpp::ConverterOptions converter_options;
 
   std::cout << bag_path_ << std::endl;
   std::cout << storage_id_ << std::endl;
-  std::cout << out_path_ << std::endl;
   std::cout << format_ << std::endl;
   std::cout << target_topic_ << std::endl;
-  std::cout << out_num_ << std::endl;
-  std::cout << skip_num_ << std::endl;
-  std::cout << only_xyz_ << std::endl;
 
-  rcpputils::fs::path o_dir(out_path_);
   auto target_topic_name = target_topic_;
   if (target_topic_name.substr(0, 1) == "/") {
     target_topic_name = target_topic_name.substr(1);
   }
   target_topic_name = std::regex_replace(target_topic_name, std::regex("/"), "_");
-  o_dir = o_dir / rcpputils::fs::path(target_topic_name);
-  if (rcpputils::fs::create_directories(o_dir)) {
-    std::cout << "created: " << o_dir << std::endl;
-  }
-  //  return Status::OK;
 
-  pcl::PCDWriter pcd_writer;
+  pcl::PCDReader pcd_reader;
 
-  std::unique_ptr<rosbag2_cpp::writers::SequentialWriter> bag_writer;
-  bool needs_open = true;
+  rcpputils::fs::path bag_dir(bag_path_);
+  rcpputils::fs::path pcd_dir = bag_dir.parent_path();
+  int check_cnt = 0;
+
   storage_options.uri = bag_path_;
   storage_options.storage_id = storage_id_;
-  converter_options.output_serialization_format = format_;  // "cdr";
+  converter_options.output_serialization_format = format_;
+  rclcpp::Serialization<velodyne_msgs::msg::VelodyneScan> serialization;
+  nebula::drivers::NebulaPointCloudPtr pointcloud(new nebula::drivers::NebulaPointCloud);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr ref_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
   {
-    rosbag2_cpp::Reader reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
-    reader.open(storage_options, converter_options);
-    int cnt = 0;
-    int out_cnt = 0;
-    while (reader.has_next()) {
-      auto bag_message = reader.read_next();
+    rosbag2_cpp::Reader bag_reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
+    bag_reader.open(storage_options, converter_options);
+    while (bag_reader.has_next()) {
+      auto bag_message = bag_reader.read_next();
 
       std::cout << "Found topic name " << bag_message->topic_name << std::endl;
 
       if (bag_message->topic_name == target_topic_) {
-        std::cout << (cnt + 1) << ", " << (out_cnt + 1) << "/" << out_num_ << std::endl;
         velodyne_msgs::msg::VelodyneScan extracted_msg;
-        rclcpp::Serialization<velodyne_msgs::msg::VelodyneScan> serialization;
         rclcpp::SerializedMessage extracted_serialized_msg(*bag_message->serialized_data);
         serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
 
         std::cout << "Found data in topic " << bag_message->topic_name << ": "
                   << bag_message->time_stamp << std::endl;
 
-        //        nebula::drivers::NebulaPointCloudPtr pointcloud =
-        //        driver_ptr_->ConvertScanToPointcloud(
-        //          std::make_shared<velodyne_msgs::msg::VelodyneScan>(extracted_msg));
-
+        auto extracted_msg_ptr = std::make_shared<velodyne_msgs::msg::VelodyneScan>(extracted_msg);
         for (auto & pkt : extracted_msg.packets) {
           auto pointcloud_ts = driver_ptr_->parse_cloud_packet(
-            std::vector<uint8_t>(pkt.data.begin(), std::next(pkt.data.begin(), pkt.data.size())),
-            pkt.stamp.sec);
+            std::vector<uint8_t>(pkt.data.begin(), pkt.data.end()), pkt.stamp.sec);
           auto pointcloud = std::get<0>(pointcloud_ts);
 
           if (!pointcloud) {
@@ -362,39 +350,23 @@ Status VelodyneRosOfflineExtractBag::read_bag()
 
           auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
 
-          if (needs_open) {
-            const rosbag2_storage::StorageOptions storage_options_w(
-              {(o_dir / std::to_string(bag_message->time_stamp)).string(), "sqlite3"});
-            const rosbag2_cpp::ConverterOptions converter_options_w(
-              {rmw_get_serialization_format(), rmw_get_serialization_format()});
-            bag_writer = std::make_unique<rosbag2_cpp::writers::SequentialWriter>();
-            bag_writer->open(storage_options_w, converter_options_w);
-            bag_writer->create_topic(
-              {bag_message->topic_name, "velodyne_msgs/msg/VelodyneScan",
-               rmw_get_serialization_format(), ""});
-            needs_open = false;
+          auto target_pcd_path = (pcd_dir / fn);
+          std::cout << target_pcd_path << std::endl;
+          if (target_pcd_path.exists()) {
+            std::cout << "exists: " << target_pcd_path << std::endl;
+            auto rt = pcd_reader.read(target_pcd_path.string(), *ref_pointcloud);
+            std::cout << rt << " loaded: " << target_pcd_path << std::endl;
+            check_pcds(pointcloud, ref_pointcloud);
+            check_cnt++;
+            ref_pointcloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
           }
-          bag_writer->write(bag_message);
-          cnt++;
-          if (skip_num_ < cnt) {
-            out_cnt++;
-            if (only_xyz_) {
-              pcl::PointCloud<pcl::PointXYZ> cloud_xyz;
-              pcl::copyPointCloud(*pointcloud, cloud_xyz);
-              pcd_writer.writeBinary((o_dir / fn).string(), cloud_xyz);
-            } else {
-              pcd_writer.writeBinary((o_dir / fn).string(), *pointcloud);
-            }
-          }
-          if (out_num_ <= out_cnt) {
-            break;
-          }
+          pointcloud.reset(new nebula::drivers::NebulaPointCloud);
         }
       }
     }
+    EXPECT_GT(check_cnt, 0);
     // close on scope exit
   }
-  return Status::OK;
 }
 
 }  // namespace nebula::ros

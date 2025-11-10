@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "hesai/hesai_ros_offline_extract_bag_pcd.hpp"
+#include "hesai_ros_offline_extract_bag_pcd.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 

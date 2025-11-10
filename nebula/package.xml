@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>nebula</name>
+  <version>0.2.10</version>
+  <description>Nebula meta package including all officially supported sensor vendors</description>
+  <maintainer email="contact@map4.jp">MAP IV</maintainer>
+  <maintainer email="contact@tier4.jp">MAP IV</maintainer>
+  <license>Apache License 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>nebula_ros_hesai</exec_depend>
+  <exec_depend>nebula_ros_velodyne</exec_depend>
+  <exec_depend>nebula_ros_continental</exec_depend>
+  <exec_depend>nebula_ros_robosense</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -71,10 +71,9 @@ Status VelodyneRosDecoderTest::get_parameters(
 {
   std::filesystem::path calib_dir =
     _SRC_CALIBRATION_DIR_PATH;  // variable defined in CMakeLists.txt;
-  calib_dir /= "velodyne";
   std::filesystem::path bag_root_dir =
     _SRC_RESOURCES_DIR_PATH;  // variable defined in CMakeLists.txt;
-  bag_root_dir /= "velodyne";
+  bag_root_dir /= "decoder_ground_truth";
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = 4;

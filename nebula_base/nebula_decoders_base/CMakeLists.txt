@@ -80,11 +80,6 @@ ament_export_dependencies(
     yaml-cpp
 )
 
-install(
-  DIRECTORY calibration
-  DESTINATION share/${PROJECT_NAME}
-)
-
 ament_package()
 
 # Set ROS_DISTRO macros

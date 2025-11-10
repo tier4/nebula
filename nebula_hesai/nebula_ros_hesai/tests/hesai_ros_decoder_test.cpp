@@ -85,9 +85,8 @@ Status HesaiRosDecoderTest::GetParameters(
   drivers::HesaiCorrection & correction_configuration)
 {
   std::filesystem::path calibration_dir = _SRC_CALIBRATION_DIR_PATH;
-  calibration_dir /= "hesai";
   std::filesystem::path bag_root_dir = _SRC_RESOURCES_DIR_PATH;
-  bag_root_dir /= "hesai";
+  bag_root_dir /= "decoder_ground_truth";
 
   sensor_configuration.rotation_speed = 600;
   sensor_configuration.sensor_model =
