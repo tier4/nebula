@@ -7,7 +7,7 @@
   <maintainer email="contact@perceptionengine.jp">Perception Engine</maintainer>
 
   <license>Apache 2</license>
-  <author>Tier IV</author>
+  <author>TIER IV</author>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>ros_environment</buildtool_depend>
