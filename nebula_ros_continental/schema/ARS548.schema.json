@@ -61,6 +61,7 @@
           ]
         },
         "diagnostics": {
+          "type": "object",
           "properties": {
             "rate_bound_status": {
               "$ref": "../../nebula_ros_base/schema/diagnostics.json#/definitions/rate_bound_status"
