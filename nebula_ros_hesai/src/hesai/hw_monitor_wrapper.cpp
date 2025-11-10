@@ -7,8 +7,8 @@
 #include "nebula_ros_base/sync_tooling/sync_tooling_worker.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_common_hesai/hesai/hesai_common.hpp>
 #include <nebula_common_base/nebula_common.hpp>
+#include <nebula_common_hesai/hesai/hesai_common.hpp>
 #include <nlohmann/json.hpp>
 #include <rclcpp/duration.hpp>
 #include <rclcpp/logging.hpp>

@@ -19,8 +19,8 @@
 #include "nebula_hw_interfaces_base/nebula_hw_interfaces_common/connections/udp.hpp"
 
 #include <boost_udp_driver/udp_driver.hpp>
-#include <nebula_common_continental/continental/continental_ars548.hpp>
 #include <nebula_common_base/loggers/logger.hpp>
+#include <nebula_common_continental/continental/continental_ars548.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
 

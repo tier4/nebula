@@ -23,11 +23,11 @@
 #include "nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 #include "nebula_decoders_hesai/decoders/packet_loss_detector.hpp"
 
-#include <nebula_common_hesai/hesai/hesai_common.hpp>
 #include <nebula_common_base/loggers/logger.hpp>
 #include <nebula_common_base/nebula_common.hpp>
 #include <nebula_common_base/point_types.hpp>
 #include <nebula_common_base/util/stopwatch.hpp>
+#include <nebula_common_hesai/hesai/hesai_common.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 

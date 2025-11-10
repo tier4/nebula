@@ -4,11 +4,11 @@
 
 #include "nebula_ros_base/parameter_descriptors.hpp"
 
-#include <nebula_common_hesai/hesai/hesai_common.hpp>
 #include <nebula_common_base/nebula_common.hpp>
 #include <nebula_common_base/util/rate_limiter.hpp>
 #include <nebula_common_base/util/stopwatch.hpp>
 #include <nebula_common_base/util/string_conversions.hpp>
+#include <nebula_common_hesai/hesai/hesai_common.hpp>
 #include <nebula_decoders_base/angles.hpp>
 
 #include <algorithm>

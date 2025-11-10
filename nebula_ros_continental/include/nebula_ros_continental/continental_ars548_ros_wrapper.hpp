@@ -18,9 +18,9 @@
 #include "nebula_ros_continental/continental_ars548_decoder_wrapper.hpp"
 #include "nebula_ros_continental/continental_ars548_hw_interface_wrapper.hpp"
 
-#include <nebula_common_continental/continental/continental_ars548.hpp>
 #include <nebula_common_base/nebula_common.hpp>
 #include <nebula_common_base/nebula_status.hpp>
+#include <nebula_common_continental/continental/continental_ars548.hpp>
 #include <nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>

@@ -14,9 +14,9 @@
 
 #pragma once
 
-#include "nebula_common_hesai/hesai/hesai_common.hpp"
 #include "nebula_common_base/nebula_common.hpp"
 #include "nebula_common_base/nebula_status.hpp"
+#include "nebula_common_hesai/hesai/hesai_common.hpp"
 #include "nebula_hw_interfaces_base/nebula_hw_interfaces_common/connections/udp.hpp"
 #include "nebula_ros_base/sync_tooling/sync_tooling_worker.hpp"
 #include "nebula_ros_hesai/decoder_wrapper.hpp"

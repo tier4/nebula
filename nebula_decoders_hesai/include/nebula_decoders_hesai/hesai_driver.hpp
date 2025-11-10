@@ -15,9 +15,9 @@
 #ifndef NEBULA_HESAI_DRIVER_H
 #define NEBULA_HESAI_DRIVER_H
 
-#include "nebula_common_hesai/hesai/hesai_common.hpp"
 #include "nebula_common_base/nebula_status.hpp"
 #include "nebula_common_base/point_types.hpp"
+#include "nebula_common_hesai/hesai/hesai_common.hpp"
 #include "nebula_decoders_base/point_filters/blockage_mask.hpp"
 #include "nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_decoders_hesai/decoders/hesai_packet.hpp"

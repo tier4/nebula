@@ -16,8 +16,8 @@
 
 #include "nebula_decoders_continental/decoders/continental_packets_decoder.hpp"
 
-#include <nebula_common_continental/continental/continental_srr520.hpp>
 #include <nebula_common_base/util/crc.hpp>
+#include <nebula_common_continental/continental/continental_srr520.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <continental_msgs/msg/continental_srr520_detection_list.hpp>

@@ -9,8 +9,8 @@
 #include "nebula_ros_hesai/diagnostics/functional_safety_basic.hpp"
 #include "nebula_ros_hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 
-#include <nebula_common_hesai/hesai/hesai_common.hpp>
 #include <nebula_common_base/util/string_conversions.hpp>
+#include <nebula_common_hesai/hesai/hesai_common.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 

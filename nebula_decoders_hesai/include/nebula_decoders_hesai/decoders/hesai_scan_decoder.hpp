@@ -15,9 +15,9 @@
 #ifndef NEBULA_WS_HESAI_SCAN_DECODER_HPP
 #define NEBULA_WS_HESAI_SCAN_DECODER_HPP
 
-#include <nebula_common_hesai/hesai/hesai_common.hpp>
 #include <nebula_common_base/point_types.hpp>
 #include <nebula_common_base/util/expected.hpp>
+#include <nebula_common_hesai/hesai/hesai_common.hpp>
 
 #include <cstdint>
 #include <vector>

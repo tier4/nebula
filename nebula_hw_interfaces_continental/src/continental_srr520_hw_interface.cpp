@@ -15,8 +15,8 @@
 
 #include "nebula_hw_interfaces_continental/continental_srr520_hw_interface.hpp"
 
-#include <nebula_common_continental/continental/continental_srr520.hpp>
 #include <nebula_common_base/util/crc.hpp>
+#include <nebula_common_continental/continental/continental_srr520.hpp>
 #include <rclcpp/time.hpp>
 
 #include <iostream>

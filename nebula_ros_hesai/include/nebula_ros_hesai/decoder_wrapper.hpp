@@ -25,8 +25,8 @@
 #include <autoware_utils_debug/debug_publisher.hpp>
 #include <diagnostic_updater/publisher.hpp>
 #include <diagnostic_updater/update_functions.hpp>
-#include <nebula_common_hesai/hesai/hesai_common.hpp>
 #include <nebula_common_base/nebula_common.hpp>
+#include <nebula_common_hesai/hesai/hesai_common.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 

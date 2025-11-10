@@ -15,9 +15,9 @@
 #pragma once
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_common_hesai/hesai/hesai_common.hpp>
 #include <nebula_common_base/nebula_common.hpp>
 #include <nebula_common_base/nebula_status.hpp>
+#include <nebula_common_hesai/hesai/hesai_common.hpp>
 #include <nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp>
 #include <nebula_decoders_hesai/hesai_driver.hpp>
 #include <rclcpp/rclcpp.hpp>
