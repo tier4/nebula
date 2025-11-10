@@ -4,7 +4,7 @@
   "type": "object",
   "definitions": {
     "sensor_model": {
-      "$ref": "../../nebula_ros_base/schema/hardware.json#/definitions/sensor_model",
+      "$ref": "../../../nebula_base/nebula_ros_base/schema/hardware.json#/definitions/sensor_model",
       "enum": [
         "ARS548",
         "SRR520"

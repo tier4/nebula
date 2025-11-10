@@ -4,14 +4,14 @@
   "type": "object",
   "definitions": {
     "sensor_model": {
-      "$ref": "../../nebula_ros_base/schema/hardware.json#/definitions/sensor_model",
+      "$ref": "../../../nebula_base/nebula_ros_base/schema/hardware.json#/definitions/sensor_model",
       "enum": [
         "Helios",
         "Bpearl"
       ]
     },
     "return_mode": {
-      "$ref": "../../nebula_ros_base/schema/misc.json#/definitions/return_mode",
+      "$ref": "../../../nebula_base/nebula_ros_base/schema/misc.json#/definitions/return_mode",
       "enum": [
         "Dual",
         "Strongest",
