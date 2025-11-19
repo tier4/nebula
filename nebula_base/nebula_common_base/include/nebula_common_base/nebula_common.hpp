@@ -205,7 +205,12 @@ enum class SensorModel : uint8_t {
   CONTINENTAL_SRR520
 };
 
-enum class PtpProfile : uint8_t { IEEE_1588v2 = 0, IEEE_802_1AS, IEEE_802_1AS_AUTO, UNKNOWN_PROFILE };
+enum class PtpProfile : uint8_t {
+  IEEE_1588v2 = 0,
+  IEEE_802_1AS,
+  IEEE_802_1AS_AUTO,
+  UNKNOWN_PROFILE
+};
 
 enum class PtpTransportType : uint8_t { UDP_IP = 0, L2, UNKNOWN_TRANSPORT };
 
