@@ -61,6 +61,118 @@ struct AdvancedFunctionalSafetyConfiguration
   }
 };
 
+/// @brief Converts String to PTP Profile
+/// @param ptp_profile Profile as String
+/// @return Corresponding PtpProfile
+inline PtpProfile ptp_profile_from_string(const std::string & ptp_profile)
+{
+  // Hesai
+  auto tmp_str = ptp_profile;
+  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(), [](unsigned char c) {
+    return std::tolower(c);
+  });
+  if (tmp_str == "1588v2") return PtpProfile::IEEE_1588v2;
+  if (tmp_str == "802.1as") return PtpProfile::IEEE_802_1AS;
+  if (tmp_str == "automotive") return PtpProfile::IEEE_802_1AS_AUTO;
+
+  return PtpProfile::UNKNOWN_PROFILE;
+}
+
+/// @brief Convert PtpProfile enum to string (Overloading the << operator)
+/// @param os
+/// @param arg
+/// @return stream
+inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpProfile const & arg)
+{
+  switch (arg) {
+    case PtpProfile::IEEE_1588v2:
+      os << "IEEE_1588v2";
+      break;
+    case PtpProfile::IEEE_802_1AS:
+      os << "IEEE_802.1AS";
+      break;
+    case PtpProfile::IEEE_802_1AS_AUTO:
+      os << "IEEE_802.1AS Automotive";
+      break;
+    case PtpProfile::UNKNOWN_PROFILE:
+      os << "UNKNOWN";
+      break;
+  }
+  return os;
+}
+
+/// @brief Converts String to PTP TransportType
+/// @param transport_type Transport as String
+/// @return Corresponding PtpTransportType
+inline PtpTransportType ptp_transport_type_from_string(const std::string & transport_type)
+{
+  // Hesai
+  auto tmp_str = transport_type;
+  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(), [](unsigned char c) {
+    return std::tolower(c);
+  });
+  if (tmp_str == "udp") return PtpTransportType::UDP_IP;
+  if (tmp_str == "l2") return PtpTransportType::L2;
+
+  return PtpTransportType::UNKNOWN_TRANSPORT;
+}
+
+/// @brief Convert PtpTransportType enum to string (Overloading the << operator)
+/// @param os
+/// @param arg
+/// @return stream
+inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpTransportType const & arg)
+{
+  switch (arg) {
+    case PtpTransportType::UDP_IP:
+      os << "UDP/IP";
+      break;
+    case PtpTransportType::L2:
+      os << "L2";
+      break;
+    case PtpTransportType::UNKNOWN_TRANSPORT:
+      os << "UNKNOWN";
+      break;
+  }
+  return os;
+}
+
+/// @brief Converts String to PTP SwitchType
+/// @param switch_type Switch as String
+/// @return Corresponding PtpSwitchType
+inline PtpSwitchType ptp_switch_type_from_string(const std::string & switch_type)
+{
+  // Hesai
+  auto tmp_str = switch_type;
+  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(), [](unsigned char c) {
+    return std::tolower(c);
+  });
+  if (tmp_str == "tsn") return PtpSwitchType::TSN;
+  if (tmp_str == "non_tsn") return PtpSwitchType::NON_TSN;
+
+  return PtpSwitchType::UNKNOWN_SWITCH;
+}
+
+/// @brief Convert PtpSwitchType enum to string (Overloading the << operator)
+/// @param os
+/// @param arg
+/// @return stream
+inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpSwitchType const & arg)
+{
+  switch (arg) {
+    case PtpSwitchType::TSN:
+      os << "TSN";
+      break;
+    case PtpSwitchType::NON_TSN:
+      os << "NON_TSN";
+      break;
+    case PtpSwitchType::UNKNOWN_SWITCH:
+      os << "UNKNOWN";
+      break;
+  }
+  return os;
+}
+
 /// @brief struct for Hesai sensor configuration
 struct HesaiSensorConfiguration : public LidarConfigurationBase
 {
@@ -93,7 +205,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
 inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration const & arg)
 {
   os << "Hesai Sensor Configuration:" << '\n';
-  os << (LidarConfigurationBase)(arg) << '\n';
+  os << static_cast<const LidarConfigurationBase &>(arg) << '\n';
   os << "Multicast: "
      << (arg.multicast_ip.empty() ? "disabled" : "enabled, group: " + arg.multicast_ip) << '\n';
   os << "GNSS Port: " << arg.gnss_port << '\n';

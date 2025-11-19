@@ -22,13 +22,9 @@
 #include <algorithm>
 #include <ostream>
 #include <string>
-#include <vector>
 
 namespace nebula::drivers
 {
-/// @brief Coordinate mode for Velodyne's setting (need to check)
-enum class CoordinateMode { UNKNOWN = 0, CARTESIAN, SPHERICAL, CYLINDRICAL };
-
 /// @brief Return type of each scan
 enum class ReturnType : uint8_t {
   UNKNOWN = 0,
@@ -66,142 +62,6 @@ enum class ReturnMode : uint8_t {
   DUAL_FIRST_STRONGEST,
   DUAL
 };
-
-/// @brief Convert ReturnMode enum to ReturnType enum for Pandar AT, XTM (temporary, not used)
-/// @param mode
-/// @return Corresponding mode
-inline ReturnType return_mode_to_return_type(const ReturnMode & mode)
-{
-  switch (mode) {
-    case ReturnMode::SINGLE_STRONGEST:
-      return ReturnType::STRONGEST;
-      break;
-    case ReturnMode::SINGLE_LAST:
-      return ReturnType::LAST;
-      break;
-    case ReturnMode::DUAL_FIRST:
-      return ReturnType::FIRST;
-      break;
-    case ReturnMode::DUAL_LAST:
-      return ReturnType::LAST;
-      break;
-    case ReturnMode::DUAL_ONLY:
-      return ReturnType::LAST;
-      break;
-    case ReturnMode::SINGLE_FIRST:
-      return ReturnType::FIRST;
-      break;
-    case ReturnMode::DUAL_STRONGEST_FIRST:
-      return ReturnType::FIRST;
-      break;
-    case ReturnMode::DUAL_STRONGEST_LAST:
-      return ReturnType::LAST;
-      break;
-    case ReturnMode::DUAL_WEAK_FIRST:
-      return ReturnType::FIRST_WEAK;
-      break;
-    case ReturnMode::DUAL_WEAK_LAST:
-      return ReturnType::LAST_WEAK;
-      break;
-    case ReturnMode::TRIPLE:
-      return ReturnType::STRONGEST;
-      break;
-    // for Hesai
-    case ReturnMode::LAST:
-      return ReturnType::LAST;
-      break;
-    case ReturnMode::STRONGEST:
-      return ReturnType::STRONGEST;
-      break;
-    case ReturnMode::DUAL_LAST_STRONGEST:
-      return ReturnType::LAST;
-      break;
-    case ReturnMode::FIRST:
-      return ReturnType::FIRST;
-      break;
-    case ReturnMode::DUAL_LAST_FIRST:
-      return ReturnType::LAST;
-      break;
-    case ReturnMode::DUAL_FIRST_STRONGEST:
-      return ReturnType::FIRST;
-      break;
-    case ReturnMode::DUAL:
-      return ReturnType::LAST;
-      break;
-    default:
-    case ReturnMode::UNKNOWN:
-      return ReturnType::UNKNOWN;
-      break;
-  }
-}
-
-/// @brief Convert ReturnMode enum to integer
-/// @param mode
-/// @return Corresponding number
-inline uint8_t return_mode_to_int(const ReturnMode & mode)
-{
-  switch (mode) {
-    case ReturnMode::SINGLE_STRONGEST:
-      return 1;
-      break;
-    case ReturnMode::SINGLE_LAST:
-      return 2;
-      break;
-    case ReturnMode::DUAL_FIRST:
-      return 3;
-      break;
-    case ReturnMode::DUAL_LAST:
-      return 4;
-      break;
-    case ReturnMode::DUAL_ONLY:
-      return 5;
-      break;
-    case ReturnMode::SINGLE_FIRST:
-      return 6;
-      break;
-    case ReturnMode::DUAL_STRONGEST_FIRST:
-      return 7;
-      break;
-    case ReturnMode::DUAL_STRONGEST_LAST:
-      return 8;
-      break;
-    case ReturnMode::DUAL_WEAK_FIRST:
-      return 9;
-      break;
-    case ReturnMode::DUAL_WEAK_LAST:
-      return 10;
-      break;
-    case ReturnMode::TRIPLE:
-      return 11;
-      break;
-    // for Hesai
-    case ReturnMode::LAST:
-      return 12;
-      break;
-    case ReturnMode::STRONGEST:
-      return 13;
-      break;
-    case ReturnMode::DUAL_LAST_STRONGEST:
-      return 14;
-      break;
-    case ReturnMode::FIRST:
-      return 15;
-      break;
-    case ReturnMode::DUAL_LAST_FIRST:
-      return 16;
-      break;
-    case ReturnMode::DUAL_FIRST_STRONGEST:
-      return 17;
-      break;
-    case ReturnMode::DUAL:
-      return 18;
-      break;
-    default:
-    case ReturnMode::UNKNOWN:
-      return 0;
-      break;
-  }
-}
 
 /// @brief Convert ReturnType enum to string (Overloading the << operator)
 /// @param os
@@ -319,7 +179,7 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnMode 
 // SENSOR_CONFIGURATION
 
 /// @brief Type of sensor
-enum class SensorModel {
+enum class SensorModel : uint8_t {
   UNKNOWN = 0,
   HESAI_PANDAR64,
   HESAI_PANDAR40P,
@@ -345,32 +205,11 @@ enum class SensorModel {
   CONTINENTAL_SRR520
 };
 
-/// @brief not used?
-enum class datatype {
-  INT8 = 1,
-  UINT8 = 2,
-  INT16 = 3,
-  UINT16 = 4,
-  INT32 = 5,
-  UINT32 = 6,
-  FLOAT32 = 7,
-  FLOAT64 = 8
-};
+enum class PtpProfile : uint8_t { IEEE_1588v2 = 0, IEEE_802_1AS, IEEE_802_1AS_AUTO, UNKNOWN_PROFILE };
 
-enum class PtpProfile { IEEE_1588v2 = 0, IEEE_802_1AS, IEEE_802_1AS_AUTO, UNKNOWN_PROFILE };
+enum class PtpTransportType : uint8_t { UDP_IP = 0, L2, UNKNOWN_TRANSPORT };
 
-enum class PtpTransportType { UDP_IP = 0, L2, UNKNOWN_TRANSPORT };
-
-enum class PtpSwitchType { NON_TSN = 0, TSN, UNKNOWN_SWITCH };
-
-/// @brief not used?
-struct PointField
-{
-  std::string name;
-  uint32_t offset;
-  uint8_t datatype;
-  uint32_t count;
-};
+enum class PtpSwitchType : uint8_t { NON_TSN = 0, TSN, UNKNOWN_SWITCH };
 
 /// @brief Convert SensorModel enum to string (Overloading the << operator)
 /// @param os
@@ -460,36 +299,32 @@ struct SensorConfigurationBase
 };
 
 /// @brief Base struct for Ethernet-based Sensor configuration
-struct EthernetSensorConfigurationBase : SensorConfigurationBase
+struct EthernetSensorConfigurationBase : public SensorConfigurationBase
 {
-  std::string host_ip;
-  std::string sensor_ip;
-  uint16_t data_port;
+  std::string host_ip{};
+  std::string sensor_ip{};
+  uint16_t data_port{};
 };
 
 /// @brief Base struct for CAN-based Sensor configuration
-struct CANSensorConfigurationBase : SensorConfigurationBase
+struct CANSensorConfigurationBase : public SensorConfigurationBase
 {
   std::string interface;
   float receiver_timeout_sec{};
   float sender_timeout_sec{};
   /// @brief Socketcan filters, see the documentation of SocketCanReceiver::CanFilterList for
   /// details
-  std::string filters{};
+  std::string filters;
   bool use_bus_time{};
 };
 
 /// @brief Base struct for Lidar configuration
-struct LidarConfigurationBase : EthernetSensorConfigurationBase
+struct LidarConfigurationBase : public EthernetSensorConfigurationBase
 {
   ReturnMode return_mode;
-  uint16_t frequency_ms;
   uint16_t packet_mtu_size;
-  CoordinateMode coordinate_mode;
   double min_range;
   double max_range;
-  bool remove_nans;  /// todo: consider changing to only_finite
-  std::vector<PointField> fields;
   bool use_sensor_time{false};
 };
 
@@ -510,7 +345,7 @@ inline std::ostream & operator<<(std::ostream & os, SensorConfigurationBase cons
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, EthernetSensorConfigurationBase const & arg)
 {
-  os << (SensorConfigurationBase)(arg) << '\n';
+  os << static_cast<const SensorConfigurationBase &>(arg) << '\n';
   os << "Host IP: " << arg.host_ip << '\n';
   os << "Sensor IP: " << arg.sensor_ip << '\n';
   os << "Data Port: " << arg.data_port;
@@ -523,7 +358,7 @@ inline std::ostream & operator<<(std::ostream & os, EthernetSensorConfigurationB
 /// @return stream
 inline std::ostream & operator<<(std::ostream & os, CANSensorConfigurationBase const & arg)
 {
-  os << (SensorConfigurationBase)(arg) << '\n';
+  os << static_cast<const SensorConfigurationBase &>(arg) << '\n';
   os << "Interface: " << arg.interface << '\n';
   os << "Receiver Timeout (s): " << arg.receiver_timeout_sec << '\n';
   os << "Sender Timeout (s): " << arg.sender_timeout_sec << '\n';
@@ -539,9 +374,8 @@ inline std::ostream & operator<<(std::ostream & os, CANSensorConfigurationBase c
 inline std::ostream & operator<<(
   std::ostream & os, nebula::drivers::LidarConfigurationBase const & arg)
 {
-  os << (EthernetSensorConfigurationBase)(arg) << '\n';
+  os << static_cast<const EthernetSensorConfigurationBase &>(arg) << '\n';
   os << "Return Mode: " << arg.return_mode << '\n';
-  os << "Frequency: " << arg.frequency_ms << '\n';
   os << "MTU: " << arg.packet_mtu_size << '\n';
   os << "Use Sensor Time: " << arg.use_sensor_time;
   return os;
@@ -652,118 +486,6 @@ inline ReturnMode return_mode_from_string(const std::string & return_mode)
   if (return_mode == "Dual") return ReturnMode::DUAL_ONLY;
 
   return ReturnMode::UNKNOWN;
-}
-
-/// @brief Converts String to PTP Profile
-/// @param ptp_profile Profile as String
-/// @return Corresponding PtpProfile
-inline PtpProfile ptp_profile_from_string(const std::string & ptp_profile)
-{
-  // Hesai
-  auto tmp_str = ptp_profile;
-  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(), [](unsigned char c) {
-    return std::tolower(c);
-  });
-  if (tmp_str == "1588v2") return PtpProfile::IEEE_1588v2;
-  if (tmp_str == "802.1as") return PtpProfile::IEEE_802_1AS;
-  if (tmp_str == "automotive") return PtpProfile::IEEE_802_1AS_AUTO;
-
-  return PtpProfile::UNKNOWN_PROFILE;
-}
-
-/// @brief Convert PtpProfile enum to string (Overloading the << operator)
-/// @param os
-/// @param arg
-/// @return stream
-inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpProfile const & arg)
-{
-  switch (arg) {
-    case PtpProfile::IEEE_1588v2:
-      os << "IEEE_1588v2";
-      break;
-    case PtpProfile::IEEE_802_1AS:
-      os << "IEEE_802.1AS";
-      break;
-    case PtpProfile::IEEE_802_1AS_AUTO:
-      os << "IEEE_802.1AS Automotive";
-      break;
-    case PtpProfile::UNKNOWN_PROFILE:
-      os << "UNKNOWN";
-      break;
-  }
-  return os;
-}
-
-/// @brief Converts String to PTP TransportType
-/// @param transport_type Transport as String
-/// @return Corresponding PtpTransportType
-inline PtpTransportType ptp_transport_type_from_string(const std::string & transport_type)
-{
-  // Hesai
-  auto tmp_str = transport_type;
-  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(), [](unsigned char c) {
-    return std::tolower(c);
-  });
-  if (tmp_str == "udp") return PtpTransportType::UDP_IP;
-  if (tmp_str == "l2") return PtpTransportType::L2;
-
-  return PtpTransportType::UNKNOWN_TRANSPORT;
-}
-
-/// @brief Convert PtpTransportType enum to string (Overloading the << operator)
-/// @param os
-/// @param arg
-/// @return stream
-inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpTransportType const & arg)
-{
-  switch (arg) {
-    case PtpTransportType::UDP_IP:
-      os << "UDP/IP";
-      break;
-    case PtpTransportType::L2:
-      os << "L2";
-      break;
-    case PtpTransportType::UNKNOWN_TRANSPORT:
-      os << "UNKNOWN";
-      break;
-  }
-  return os;
-}
-
-/// @brief Converts String to PTP SwitchType
-/// @param switch_type Switch as String
-/// @return Corresponding PtpSwitchType
-inline PtpSwitchType ptp_switch_type_from_string(const std::string & switch_type)
-{
-  // Hesai
-  auto tmp_str = switch_type;
-  std::transform(tmp_str.begin(), tmp_str.end(), tmp_str.begin(), [](unsigned char c) {
-    return std::tolower(c);
-  });
-  if (tmp_str == "tsn") return PtpSwitchType::TSN;
-  if (tmp_str == "non_tsn") return PtpSwitchType::NON_TSN;
-
-  return PtpSwitchType::UNKNOWN_SWITCH;
-}
-
-/// @brief Convert PtpSwitchType enum to string (Overloading the << operator)
-/// @param os
-/// @param arg
-/// @return stream
-inline std::ostream & operator<<(std::ostream & os, nebula::drivers::PtpSwitchType const & arg)
-{
-  switch (arg) {
-    case PtpSwitchType::TSN:
-      os << "TSN";
-      break;
-    case PtpSwitchType::NON_TSN:
-      os << "NON_TSN";
-      break;
-    case PtpSwitchType::UNKNOWN_SWITCH:
-      os << "UNKNOWN";
-      break;
-  }
-  return os;
 }
 
 [[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr convert_point_xyziradt_to_point_xyzir(
