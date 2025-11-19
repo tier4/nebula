@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(nebula_decoders_base)
 
 # Default to C++17
@@ -15,42 +15,27 @@ find_package(PCL REQUIRED COMPONENTS common)
 find_package(angles REQUIRED)
 find_package(nebula_common_base REQUIRED)
 find_package(nebula_msgs REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(PNG REQUIRED)
 
-# Check if pcl_conversions provides modern CMake targets (ROS 2 Jazzy and later)
-# or if we need to use legacy variables (ROS 2 Humble and earlier)
-if(TARGET pcl_conversions::pcl_conversions)
-    set(PCL_CONVERSIONS_TARGET pcl_conversions::pcl_conversions)
-    set(PCL_CONVERSIONS_INCLUDE_DIRS "")
-else()
-    set(PCL_CONVERSIONS_TARGET "")
-    set(PCL_CONVERSIONS_INCLUDE_DIRS ${pcl_conversions_INCLUDE_DIRS})
-endif()
+add_library(nebula_decoders_base INTERFACE)
 
-include_directories(PUBLIC
-    include
-    SYSTEM
-    ${nebula_common_base_INCLUDE_DIRS}
-    ${YAML_CPP_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
-    ${PCL_CONVERSIONS_INCLUDE_DIRS}
-    ${rclcpp_INCLUDE_DIRS}
-    ${sensor_msgs_INCLUDE_DIRS}
+target_include_directories(nebula_decoders_base INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
 
-link_libraries(
-    ${nebula_common_base_TARGETS}
-    ${PCL_LIBRARIES}
-    ${PCL_CONVERSIONS_TARGET}
-    ${rclcpp_TARGETS}
-    ${sensor_msgs_TARGETS}
+ament_target_dependencies(nebula_decoders_base INTERFACE
+    nebula_common_base
+    sensor_msgs
 )
 
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(TARGETS nebula_decoders_base EXPORT export_nebula_decoders_base)
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
@@ -61,14 +46,16 @@ if(BUILD_TESTING)
     add_definitions(-D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
 
     ament_add_gtest(test_downsample_mask tests/point_filters/test_downsample_mask.cpp)
-    target_link_libraries(test_downsample_mask
-        ${PNG_LIBRARIES})
-    target_include_directories(test_downsample_mask PUBLIC
+    target_include_directories(test_downsample_mask PRIVATE
         include
-        ${PNG_INCLUDE_DIRS})
+    )
+    target_link_libraries(test_downsample_mask
+        PNG::PNG
+        nebula_decoders_base
+    )
 endif()
 
-ament_export_include_directories("include/${PROJECT_NAME}")
+ament_export_targets(export_nebula_decoders_base)
 ament_export_dependencies(
     PCL
     pcl_conversions

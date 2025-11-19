@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(nebula_hw_interfaces_velodyne)
 
 # Default to C++17
@@ -17,39 +17,29 @@ find_package(nebula_common_base REQUIRED)
 find_package(nebula_common_velodyne REQUIRED)
 find_package(nebula_hw_interfaces_base REQUIRED)
 find_package(nebula_msgs REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(velodyne_msgs REQUIRED)
-
-include_directories(
-    ${nebula_common_base_INCLUDE_DIRS}
-    ${nebula_common_velodyne_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_base_INCLUDE_DIRS}
-    include
-    SYSTEM
-)
-
-link_libraries(
-    ${nebula_common_base_TARGETS}
-    ${nebula_common_velodyne_TARGETS}
-    ${nebula_hw_interfaces_base_TARGETS}
-)
 
 add_library(nebula_hw_interfaces_velodyne SHARED
     src/velodyne_hw_interface.cpp
 )
-target_link_libraries(nebula_hw_interfaces_velodyne PUBLIC
-    ${boost_tcp_driver_LIBRARIES}
-    ${boost_udp_driver_LIBRARIES}
-    ${velodyne_msgs_TARGETS}
-)
 
 target_include_directories(nebula_hw_interfaces_velodyne PUBLIC
-    ${boost_udp_driver_INCLUDE_DIRS}
-    ${boost_tcp_driver_INCLUDE_DIRS}
-    ${velodyne_msgs_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+ament_target_dependencies(nebula_hw_interfaces_velodyne PUBLIC
+    boost_tcp_driver
+    boost_udp_driver
+    velodyne_msgs
+    nebula_common_base
+    nebula_common_velodyne
+    nebula_hw_interfaces_base
 )
 
 install(TARGETS nebula_hw_interfaces_velodyne EXPORT export_nebula_hw_interfaces_velodyne)
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_hw_interfaces_velodyne)

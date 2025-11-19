@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(nebula_ros_robosense)
 
 # Default to C++17
@@ -22,34 +22,10 @@ find_package(nebula_hw_interfaces_base REQUIRED)
 find_package(nebula_hw_interfaces_robosense REQUIRED)
 find_package(nebula_msgs REQUIRED)
 find_package(nebula_ros_base REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(robosense_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
-
-include_directories(
-    include
-    SYSTEM
-    ${nebula_common_base_INCLUDE_DIRS}
-    ${nebula_common_robosense_INCLUDE_DIRS}
-    ${nebula_decoders_base_INCLUDE_DIRS}
-    ${nebula_decoders_robosense_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_base_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_robosense_INCLUDE_DIRS}
-    ${nebula_ros_base_INCLUDE_DIRS}
-    ${YAML_CPP_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
-    ${rclcpp_components_INCLUDE_DIRS}
-)
-
-link_libraries(
-    ${nebula_common_base_TARGETS}
-    ${nebula_common_robosense_TARGETS}
-    ${nebula_decoders_base_TARGETS}
-    ${nebula_hw_interfaces_base_TARGETS}
-    ${nebula_ros_base_TARGETS}
-    ${YAML_CPP_LIBRARIES}
-    ${PCL_LIBRARIES}
-)
 
 ## Robosense
 add_library(robosense_ros_wrapper SHARED
@@ -59,27 +35,24 @@ add_library(robosense_ros_wrapper SHARED
     src/robosense/hw_monitor_wrapper.cpp
 )
 
-target_link_libraries(robosense_ros_wrapper PUBLIC
-    nebula_ros_base::nebula_ros_base_common
-)
-
 target_include_directories(robosense_ros_wrapper PUBLIC
-    ${diagnostic_updater_INCLUDE_DIRS}
-    ${nebula_decoders_base_INCLUDE_DIRS}
-    ${nebula_decoders_robosense_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_base_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_robosense_INCLUDE_DIRS}
-    ${nebula_ros_base_INCLUDE_DIRS}
-    ${robosense_msgs_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
 
 target_link_libraries(robosense_ros_wrapper PUBLIC
-    ${diagnostic_updater_TARGETS}
-    ${diagnostic_msgs_TARGETS}
-    ${robosense_msgs_TARGETS}
+    diagnostic_updater::diagnostic_updater
     nebula_decoders_robosense::nebula_decoders_robosense
     nebula_decoders_robosense::nebula_decoders_robosense_info
     nebula_hw_interfaces_robosense::nebula_hw_interfaces_robosense
+    nebula_ros_base::nebula_ros_base_common
+    pcl_common)
+
+ament_target_dependencies(robosense_ros_wrapper PUBLIC
+    diagnostic_msgs
+    robosense_msgs
+    nebula_msgs
+    rclcpp_components
 )
 
 rclcpp_components_register_node(robosense_ros_wrapper
@@ -88,7 +61,7 @@ rclcpp_components_register_node(robosense_ros_wrapper
 )
 
 install(TARGETS robosense_ros_wrapper EXPORT export_robosense_ros_wrapper LIBRARY DESTINATION lib)
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 install(
   DIRECTORY config launch schema

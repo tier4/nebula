@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(nebula_ros_base)
 
 # Default to C++17
@@ -16,24 +16,10 @@ find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
 find_package(nebula_common_base REQUIRED)
 find_package(nebula_msgs REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(yaml-cpp REQUIRED)
-
-include_directories(
-    include
-    SYSTEM
-    ${nebula_common_base_INCLUDE_DIRS}
-    ${YAML_CPP_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
-    ${rclcpp_components_INCLUDE_DIRS}
-)
-
-link_libraries(
-    ${nebula_common_base_TARGETS}
-    ${YAML_CPP_LIBRARIES}
-    ${PCL_LIBRARIES}
-)
 
 # Common library for parameter descriptors
 add_library(nebula_ros_base_common SHARED
@@ -43,15 +29,17 @@ add_library(nebula_ros_base_common SHARED
 target_include_directories(nebula_ros_base_common PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
-    ${rclcpp_INCLUDE_DIRS}
 )
 
 target_link_libraries(nebula_ros_base_common PUBLIC
-    ${rclcpp_TARGETS}
+    rclcpp::rclcpp
+    pcl_common
+    yaml-cpp
+    nebula_common_base::nebula_common_base
 )
 
 install(TARGETS nebula_ros_base_common EXPORT export_nebula_ros_base_common LIBRARY DESTINATION lib)
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
@@ -64,11 +52,11 @@ if(BUILD_TESTING)
     ament_add_gtest(test_single_consumer_processor
         test/test_single_consumer_processor.cpp
     )
-    target_include_directories(test_single_consumer_processor
-        PRIVATE
+    target_include_directories(test_single_consumer_processor PRIVATE
         include
-        SYSTEM
-        ${rcpputils_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_single_consumer_processor
+        rcpputils::rcpputils
     )
 endif()
 

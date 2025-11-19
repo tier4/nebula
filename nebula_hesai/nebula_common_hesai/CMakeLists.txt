@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(nebula_common_hesai)
 
 find_package(ament_cmake_auto REQUIRED)
 find_package(nebula_common_base REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 # Default to C++17
 if (NOT CMAKE_CXX_STANDARD)
@@ -13,19 +14,20 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
 endif ()
 
-include_directories(
-    include
-    SYSTEM
-    ${nebula_common_base_INCLUDE_DIRS}
+add_library(nebula_common_hesai INTERFACE)
+
+target_include_directories(nebula_common_hesai INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(nebula_common_hesai INTERFACE
+    nebula_common_base::nebula_common_base
 )
 
-link_libraries(
-    ${nebula_common_base_TARGETS}
-)
+install(TARGETS nebula_common_hesai EXPORT export_nebula_common_hesai)
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
-
-ament_export_include_directories("include/${PROJECT_NAME}")
+ament_export_targets(export_nebula_common_hesai)
 ament_export_dependencies(nebula_common_base)
 
 ament_package()

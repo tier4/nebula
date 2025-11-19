@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(nebula_common_base)
 
 find_package(ament_cmake_auto REQUIRED)
@@ -15,6 +15,21 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
 endif ()
 
+add_library(nebula_common_base SHARED
+    src/nebula_common.cpp
+)
+
+target_include_directories(nebula_common_base PUBLIC 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(nebula_common_base PUBLIC
+    pcl_common
+    yaml-cpp
+    nlohmann_json::nlohmann_json
+)
+
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     find_package(ament_cmake_gtest REQUIRED)
@@ -28,26 +43,8 @@ if(BUILD_TESTING)
     )
 endif()
 
-include_directories(
-    include
-    SYSTEM
-    ${YAML_CPP_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
-    ${NLOHMANN_JSON_INCLUDE_DIRS}
-)
-
-link_libraries(
-    ${PCL_LIBRARIES}
-    ${YAML_CPP_LIBRARIES}
-    ${NLOHMANN_JSON_LIBRARIES}
-)
-
-add_library(nebula_common_base SHARED
-    src/nebula_common.cpp
-)
-
 install(TARGETS nebula_common_base EXPORT export_nebula_common_base)
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_common_base)

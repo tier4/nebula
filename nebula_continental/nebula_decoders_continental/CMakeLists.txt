@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(nebula_decoders_continental)
 
 # Default to C++17
@@ -19,65 +19,34 @@ find_package(nebula_common_base REQUIRED)
 find_package(nebula_common_continental REQUIRED)
 find_package(nebula_decoders_base REQUIRED)
 find_package(nebula_msgs REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
-
-# Check if pcl_conversions provides modern CMake targets (ROS 2 Jazzy and later)
-# or if we need to use legacy variables (ROS 2 Humble and earlier)
-if(TARGET pcl_conversions::pcl_conversions)
-    set(PCL_CONVERSIONS_TARGET pcl_conversions::pcl_conversions)
-    set(PCL_CONVERSIONS_INCLUDE_DIRS "")
-else()
-    set(PCL_CONVERSIONS_TARGET "")
-    set(PCL_CONVERSIONS_INCLUDE_DIRS ${pcl_conversions_INCLUDE_DIRS})
-endif()
-
-include_directories(PUBLIC
-    include
-    SYSTEM
-    ${nebula_common_base_INCLUDE_DIRS}
-    ${nebula_common_continental_INCLUDE_DIRS}
-    ${nebula_decoders_base_INCLUDE_DIRS}
-    ${YAML_CPP_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
-    ${PCL_CONVERSIONS_INCLUDE_DIRS}
-    ${rclcpp_INCLUDE_DIRS}
-    ${sensor_msgs_INCLUDE_DIRS}
-)
-
-link_libraries(
-    ${nebula_common_base_TARGETS}
-    ${nebula_common_continental_TARGETS}
-    ${nebula_decoders_base_TARGETS}
-    ${PCL_LIBRARIES}
-    ${PCL_CONVERSIONS_TARGET}
-    ${rclcpp_TARGETS}
-    ${sensor_msgs_TARGETS}
-)
 
 # Continental Decoder
 add_library(nebula_decoders_continental SHARED
     src/decoders/continental_ars548_decoder.cpp
     src/decoders/continental_srr520_decoder.cpp
 )
-target_link_libraries(nebula_decoders_continental PUBLIC
-    ${continental_msgs_TARGETS}
-    ${diagnostic_msgs_TARGETS}
-    ${boost_udp_driver_TARGETS}
-    ${nebula_common_base_TARGETS}
-    ${nebula_msgs_TARGETS}
-)
+
 target_include_directories(nebula_decoders_continental PUBLIC
-    ${continental_msgs_INCLUDE_DIRS}
-    ${diagnostic_msgs_INCLUDE_DIRS}
-    ${boost_udp_driver_INCLUDE_DIRS}
-    ${nebula_common_base_INCLUDE_DIRS}
-    ${nebula_msgs_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
 
+target_link_libraries(nebula_decoders_continental PUBLIC
+    nebula_common_base::nebula_common_base
+    nebula_common_continental::nebula_common_continental
+    nebula_decoders_base::nebula_decoders_base
+    pcl_common
+    rclcpp::rclcpp
+)
+
+ament_target_dependencies(nebula_decoders_continental PUBLIC continental_msgs diagnostic_msgs boost_udp_driver nebula_msgs sensor_msgs pcl_conversions)
+
 install(TARGETS nebula_decoders_continental EXPORT export_nebula_decoders_continental)
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_decoders_continental)

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(nebula_hw_interfaces_continental)
 
 # Default to C++17
@@ -16,40 +16,30 @@ find_package(nebula_common_base REQUIRED)
 find_package(nebula_common_continental REQUIRED)
 find_package(nebula_hw_interfaces_base REQUIRED)
 find_package(nebula_msgs REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(ros2_socketcan REQUIRED)
-
-include_directories(
-    ${nebula_common_base_INCLUDE_DIRS}
-    ${nebula_common_continental_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_base_INCLUDE_DIRS}
-    include
-    SYSTEM
-)
-
-link_libraries(
-    ${nebula_common_base_TARGETS}
-    ${nebula_common_continental_TARGETS}
-    ${nebula_hw_interfaces_base_TARGETS}
-)
 
 add_library(nebula_hw_interfaces_continental SHARED
     src/continental_ars548_hw_interface.cpp
     src/continental_srr520_hw_interface.cpp
 )
-target_link_libraries(nebula_hw_interfaces_continental PUBLIC
-    ${boost_udp_driver_LIBRARIES}
-    ${nebula_msgs_TARGETS}
-    ${ros2_socketcan_LIBRARIES}
-)
 
 target_include_directories(nebula_hw_interfaces_continental PUBLIC
-    ${boost_udp_driver_INCLUDE_DIRS}
-    ${nebula_msgs_INCLUDE_DIRS}
-    ${ros2_socketcan_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+ament_target_dependencies(nebula_hw_interfaces_continental PUBLIC
+    boost_udp_driver
+    nebula_msgs
+    ros2_socketcan
+    nebula_common_base
+    nebula_common_continental
+    nebula_hw_interfaces_base
 )
 
 install(TARGETS nebula_hw_interfaces_continental EXPORT export_nebula_hw_interfaces_continental)
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_hw_interfaces_continental)

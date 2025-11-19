@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(nebula_common_velodyne)
 
 find_package(ament_cmake_auto REQUIRED)
@@ -18,24 +18,21 @@ if(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
     add_definitions(-DHAVE_NEW_YAMLCPP)
 endif(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
 
-include_directories(
-    include
-    SYSTEM
-    ${nebula_common_base_INCLUDE_DIRS}
-    ${YAML_CPP_INCLUDE_DIRS}
-)
-
-link_libraries(
-    ${nebula_common_base_TARGETS}
-    ${YAML_CPP_LIBRARIES}
-)
-
 add_library(nebula_common_velodyne SHARED
     src/velodyne_calibration_decoder.cpp
 )
 
+target_include_directories(nebula_common_velodyne PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(nebula_common_velodyne PUBLIC
+    yaml-cpp
+)
+
 install(TARGETS nebula_common_velodyne EXPORT export_nebula_common_velodyne)
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_common_velodyne)

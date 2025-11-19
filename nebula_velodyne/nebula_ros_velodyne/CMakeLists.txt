@@ -1,17 +1,17 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(nebula_ros_velodyne)
 
 # Default to C++17
-if (NOT CMAKE_CXX_STANDARD)
+if(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 17)
-endif ()
+endif()
 
-if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
-endif ()
+endif()
 
 find_package(ament_cmake_auto REQUIRED)
-find_package(PCL REQUIRED components common)
+find_package(PCL REQUIRED components common io)
 find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
 find_package(nebula_common_base REQUIRED)
@@ -22,36 +22,12 @@ find_package(nebula_hw_interfaces_base REQUIRED)
 find_package(nebula_hw_interfaces_velodyne REQUIRED)
 find_package(nebula_msgs REQUIRED)
 find_package(nebula_ros_base REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(velodyne_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
-include_directories(
-    include
-    SYSTEM
-    ${nebula_common_base_INCLUDE_DIRS}
-    ${nebula_common_velodyne_INCLUDE_DIRS}
-    ${nebula_decoders_base_INCLUDE_DIRS}
-    ${nebula_decoders_velodyne_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_base_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_velodyne_INCLUDE_DIRS}
-    ${nebula_ros_base_INCLUDE_DIRS}
-    ${YAML_CPP_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
-    ${rclcpp_components_INCLUDE_DIRS}
-)
-
-link_libraries(
-    ${nebula_common_base_TARGETS}
-    ${nebula_common_velodyne_TARGETS}
-    ${nebula_decoders_base_TARGETS}
-    ${nebula_hw_interfaces_base_TARGETS}
-    ${nebula_ros_base_TARGETS}
-    ${YAML_CPP_LIBRARIES}
-    ${PCL_LIBRARIES}
-)
-
-## Velodyne
+# # Velodyne
 add_library(velodyne_ros_wrapper SHARED
     src/velodyne/velodyne_ros_wrapper.cpp
     src/velodyne/decoder_wrapper.cpp
@@ -59,35 +35,33 @@ add_library(velodyne_ros_wrapper SHARED
     src/velodyne/hw_monitor_wrapper.cpp
 )
 
-target_link_libraries(velodyne_ros_wrapper PUBLIC
-    nebula_ros_base::nebula_ros_base_common
-)
-
 target_include_directories(velodyne_ros_wrapper PUBLIC
-    ${diagnostic_updater_INCLUDE_DIRS}
-    ${nebula_decoders_base_INCLUDE_DIRS}
-    ${nebula_decoders_velodyne_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_base_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_velodyne_INCLUDE_DIRS}
-    ${nebula_ros_base_INCLUDE_DIRS}
-    ${velodyne_msgs_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
 
 target_link_libraries(velodyne_ros_wrapper PUBLIC
-    ${diagnostic_updater_TARGETS}
-    ${diagnostic_msgs_TARGETS}
-    ${velodyne_msgs_TARGETS}
+    diagnostic_updater::diagnostic_updater
     nebula_decoders_velodyne::nebula_decoders_velodyne
     nebula_hw_interfaces_velodyne::nebula_hw_interfaces_velodyne
+    nebula_ros_base::nebula_ros_base_common
+    pcl_common
+)
+
+ament_target_dependencies(velodyne_ros_wrapper PUBLIC
+    diagnostic_msgs
+    velodyne_msgs
+    nebula_msgs
+    rclcpp_components
 )
 
 rclcpp_components_register_node(velodyne_ros_wrapper
-        PLUGIN "VelodyneRosWrapper"
-        EXECUTABLE velodyne_ros_wrapper_node
+    PLUGIN "VelodyneRosWrapper"
+    EXECUTABLE velodyne_ros_wrapper_node
 )
 
 install(TARGETS velodyne_ros_wrapper EXPORT export_velodyne_ros_wrapper LIBRARY DESTINATION lib)
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
@@ -104,130 +78,96 @@ if(BUILD_TESTING)
     add_library(velodyne_ros_decoder_test_vlp16 SHARED
         tests/velodyne_ros_decoder_test_vlp16.cpp
     )
-    target_include_directories(velodyne_ros_decoder_test_vlp16 PUBLIC
-        ${nebula_common_base_INCLUDE_DIRS}
-        ${nebula_common_velodyne_INCLUDE_DIRS}
-        ${nebula_decoders_base_INCLUDE_DIRS}
-        ${nebula_decoders_velodyne_INCLUDE_DIRS}
-        ${nebula_ros_base_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${rosbag2_cpp_INCLUDE_DIRS}
-        ${diagnostic_updater_INCLUDE_DIRS}
+    target_include_directories(velodyne_ros_decoder_test_vlp16 PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
-    target_link_libraries(velodyne_ros_decoder_test_vlp16 PUBLIC
-        ${nebula_common_base_TARGETS}
-        ${nebula_common_velodyne_TARGETS}
-        ${PCL_LIBRARIES}
-        ${rosbag2_cpp_TARGETS}
-        ${diagnostic_updater_TARGETS}
+    target_link_libraries(velodyne_ros_decoder_test_vlp16 PRIVATE
+        nebula_common_base::nebula_common_base
+        pcl_common
+        pcl_io
+        rosbag2_cpp::rosbag2_cpp
+        diagnostic_updater::diagnostic_updater
         nebula_decoders_velodyne::nebula_decoders_velodyne
     )
 
     ament_add_gtest(velodyne_ros_decoder_test_main_vlp16
         tests/velodyne_ros_decoder_test_main_vlp16.cpp
     )
-    target_include_directories(velodyne_ros_decoder_test_main_vlp16 PUBLIC
+    target_include_directories(velodyne_ros_decoder_test_main_vlp16 PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne
         include
         tests
-        ${nebula_common_base_INCLUDE_DIRS}
-        ${nebula_common_velodyne_INCLUDE_DIRS}
-        ${nebula_decoders_base_INCLUDE_DIRS}
-        ${nebula_decoders_velodyne_INCLUDE_DIRS}
-        ${nebula_ros_base_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${rosbag2_cpp_INCLUDE_DIRS}
-        ${diagnostic_updater_INCLUDE_DIRS}
     )
     target_link_libraries(velodyne_ros_decoder_test_main_vlp16
         velodyne_ros_decoder_test_vlp16
+        nebula_common_base::nebula_common_base
+        nebula_common_velodyne::nebula_common_velodyne
+        nebula_decoders_velodyne::nebula_decoders_velodyne
+        diagnostic_updater::diagnostic_updater
     )
 
     # VLS128 tests
     add_library(velodyne_ros_decoder_test_vls128 SHARED
         tests/velodyne_ros_decoder_test_vls128.cpp
     )
-    target_include_directories(velodyne_ros_decoder_test_vls128 PUBLIC
-        ${nebula_common_base_INCLUDE_DIRS}
-        ${nebula_common_velodyne_INCLUDE_DIRS}
-        ${nebula_decoders_base_INCLUDE_DIRS}
-        ${nebula_decoders_velodyne_INCLUDE_DIRS}
-        ${nebula_ros_base_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${rosbag2_cpp_INCLUDE_DIRS}
-        ${diagnostic_updater_INCLUDE_DIRS}
+    target_include_directories(velodyne_ros_decoder_test_vls128 PRIVATE
+        include
     )
-    target_link_libraries(velodyne_ros_decoder_test_vls128 PUBLIC
-        ${nebula_common_base_TARGETS}
-        ${nebula_common_velodyne_TARGETS}
-        ${PCL_LIBRARIES}
-        ${rosbag2_cpp_TARGETS}
-        ${diagnostic_updater_TARGETS}
+    target_link_libraries(velodyne_ros_decoder_test_vls128 PRIVATE
+        nebula_common_base::nebula_common_base
+        pcl_common
+        pcl_io
+        rosbag2_cpp::rosbag2_cpp
+        diagnostic_updater::diagnostic_updater
         nebula_decoders_velodyne::nebula_decoders_velodyne
     )
 
     ament_add_gtest(velodyne_ros_decoder_test_main_vls128
         tests/velodyne_ros_decoder_test_main_vls128.cpp
     )
-    target_include_directories(velodyne_ros_decoder_test_main_vls128 PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne
+    target_include_directories(velodyne_ros_decoder_test_main_vls128 PRIVATE
+        src/velodyne
         include
         tests
-        ${nebula_common_base_INCLUDE_DIRS}
-        ${nebula_common_velodyne_INCLUDE_DIRS}
-        ${nebula_decoders_base_INCLUDE_DIRS}
-        ${nebula_decoders_velodyne_INCLUDE_DIRS}
-        ${nebula_ros_base_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${rosbag2_cpp_INCLUDE_DIRS}
-        ${diagnostic_updater_INCLUDE_DIRS}
     )
     target_link_libraries(velodyne_ros_decoder_test_main_vls128
         velodyne_ros_decoder_test_vls128
+        nebula_common_base::nebula_common_base
+        nebula_common_velodyne::nebula_common_velodyne
+        nebula_decoders_velodyne::nebula_decoders_velodyne
+        diagnostic_updater::diagnostic_updater
     )
 
     # VLP32 tests
     add_library(velodyne_ros_decoder_test_vlp32 SHARED
         tests/velodyne_ros_decoder_test_vlp32.cpp
     )
-    target_include_directories(velodyne_ros_decoder_test_vlp32 PUBLIC
-        ${nebula_common_base_INCLUDE_DIRS}
-        ${nebula_common_velodyne_INCLUDE_DIRS}
-        ${nebula_decoders_base_INCLUDE_DIRS}
-        ${nebula_decoders_velodyne_INCLUDE_DIRS}
-        ${nebula_ros_base_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${rosbag2_cpp_INCLUDE_DIRS}
-        ${diagnostic_updater_INCLUDE_DIRS}
+    target_include_directories(velodyne_ros_decoder_test_vlp32 PRIVATE
+        include
     )
-    target_link_libraries(velodyne_ros_decoder_test_vlp32 PUBLIC
-        ${nebula_common_base_TARGETS}
-        ${nebula_common_velodyne_TARGETS}
-        ${PCL_LIBRARIES}
-        ${rosbag2_cpp_TARGETS}
-        ${diagnostic_updater_TARGETS}
+    target_link_libraries(velodyne_ros_decoder_test_vlp32 PRIVATE
+        nebula_common_base::nebula_common_base
+        pcl_common
+        pcl_io
+        rosbag2_cpp::rosbag2_cpp
+        diagnostic_updater::diagnostic_updater
         nebula_decoders_velodyne::nebula_decoders_velodyne
     )
 
     ament_add_gtest(velodyne_ros_decoder_test_main_vlp32
         tests/velodyne_ros_decoder_test_main_vlp32.cpp
     )
-    target_include_directories(velodyne_ros_decoder_test_main_vlp32 PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/velodyne
+    target_include_directories(velodyne_ros_decoder_test_main_vlp32 PRIVATE
+        src/velodyne
         include
         tests
-        ${nebula_common_base_INCLUDE_DIRS}
-        ${nebula_common_velodyne_INCLUDE_DIRS}
-        ${nebula_decoders_base_INCLUDE_DIRS}
-        ${nebula_decoders_velodyne_INCLUDE_DIRS}
-        ${nebula_ros_base_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${rosbag2_cpp_INCLUDE_DIRS}
-        ${diagnostic_updater_INCLUDE_DIRS}
     )
     target_link_libraries(velodyne_ros_decoder_test_main_vlp32
-        ${PCL_LIBRARIES}
         velodyne_ros_decoder_test_vlp32
+        nebula_common_base::nebula_common_base
+        nebula_common_velodyne::nebula_common_velodyne
+        nebula_decoders_velodyne::nebula_decoders_velodyne
+        diagnostic_updater::diagnostic_updater
     )
 endif()
 
@@ -238,21 +178,15 @@ if(BUILD_EXAMPLES)
     add_library(velodyne_ros_offline_extract_bag_pcd SHARED
         examples/velodyne_ros_offline_extract_bag_pcd.cpp
     )
-    target_include_directories(velodyne_ros_offline_extract_bag_pcd PUBLIC
+    target_include_directories(velodyne_ros_offline_extract_bag_pcd PRIVATE
         examples
-        ${nebula_common_base_INCLUDE_DIRS}
-        ${nebula_common_velodyne_INCLUDE_DIRS}
-        ${nebula_decoders_base_INCLUDE_DIRS}
-        ${nebula_decoders_velodyne_INCLUDE_DIRS}
-        ${nebula_ros_base_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${rosbag2_cpp_INCLUDE_DIRS}
+        include
     )
-    target_link_libraries(velodyne_ros_offline_extract_bag_pcd PUBLIC
-        ${nebula_common_base_TARGETS}
-        ${nebula_common_velodyne_TARGETS}
-        ${PCL_LIBRARIES}
-        ${rosbag2_cpp_TARGETS}
+    target_link_libraries(velodyne_ros_offline_extract_bag_pcd PRIVATE
+        nebula_common_base::nebula_common_base
+        pcl_common
+        pcl_io
+        rosbag2_cpp::rosbag2_cpp
         nebula_decoders_velodyne::nebula_decoders_velodyne
         nebula_ros_base::nebula_ros_base_common
     )
@@ -260,12 +194,12 @@ if(BUILD_EXAMPLES)
     add_executable(velodyne_ros_offline_extract_bag_pcd_node
         examples/velodyne_ros_offline_extract_bag_pcd_main.cpp
     )
-    target_link_libraries(velodyne_ros_offline_extract_bag_pcd_node PUBLIC
+    target_link_libraries(velodyne_ros_offline_extract_bag_pcd_node PRIVATE
         velodyne_ros_offline_extract_bag_pcd
     )
 
     install(TARGETS velodyne_ros_offline_extract_bag_pcd_node
-            DESTINATION lib/${PROJECT_NAME}
+        DESTINATION lib/${PROJECT_NAME}
     )
 
     install(
@@ -275,8 +209,8 @@ if(BUILD_EXAMPLES)
 endif()
 
 install(
-  DIRECTORY config launch schema
-  DESTINATION share/${PROJECT_NAME}
+    DIRECTORY config launch schema
+    DESTINATION share/${PROJECT_NAME}
 )
 
 ament_export_include_directories("include/${PROJECT_NAME}")
@@ -303,6 +237,7 @@ ament_package()
 
 # Set ROS_DISTRO macros
 set(ROS_DISTRO $ENV{ROS_DISTRO})
+
 if(${ROS_DISTRO} STREQUAL "rolling")
     add_compile_definitions(ROS_DISTRO_ROLLING)
 elseif(${ROS_DISTRO} STREQUAL "foxy")

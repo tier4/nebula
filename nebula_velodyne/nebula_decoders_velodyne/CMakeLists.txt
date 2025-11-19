@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(nebula_decoders_velodyne)
 
 # Default to C++17
@@ -17,43 +17,11 @@ find_package(nebula_common_base REQUIRED)
 find_package(nebula_common_velodyne REQUIRED)
 find_package(nebula_decoders_base REQUIRED)
 find_package(nebula_msgs REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(velodyne_msgs REQUIRED)
-
-# Check if pcl_conversions provides modern CMake targets (ROS 2 Jazzy and later)
-# or if we need to use legacy variables (ROS 2 Humble and earlier)
-if(TARGET pcl_conversions::pcl_conversions)
-    set(PCL_CONVERSIONS_TARGET pcl_conversions::pcl_conversions)
-    set(PCL_CONVERSIONS_INCLUDE_DIRS "")
-else()
-    set(PCL_CONVERSIONS_TARGET "")
-    set(PCL_CONVERSIONS_INCLUDE_DIRS ${pcl_conversions_INCLUDE_DIRS})
-endif()
-
-include_directories(PUBLIC
-    include
-    SYSTEM
-    ${nebula_common_base_INCLUDE_DIRS}
-    ${nebula_common_velodyne_INCLUDE_DIRS}
-    ${nebula_decoders_base_INCLUDE_DIRS}
-    ${YAML_CPP_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
-    ${PCL_CONVERSIONS_INCLUDE_DIRS}
-    ${rclcpp_INCLUDE_DIRS}
-    ${sensor_msgs_INCLUDE_DIRS}
-)
-
-link_libraries(
-    ${nebula_common_base_TARGETS}
-    ${nebula_common_velodyne_TARGETS}
-    ${nebula_decoders_base_TARGETS}
-    ${PCL_LIBRARIES}
-    ${PCL_CONVERSIONS_TARGET}
-    ${rclcpp_TARGETS}
-    ${sensor_msgs_TARGETS}
-)
 
 # Velodyne Decoder
 add_library(nebula_decoders_velodyne SHARED
@@ -62,17 +30,29 @@ add_library(nebula_decoders_velodyne SHARED
     src/decoders/vlp16_decoder.cpp
     src/decoders/vlp32_decoder.cpp
 )
-target_link_libraries(nebula_decoders_velodyne PUBLIC
-    ${angles_TARGETS}
-    ${velodyne_msgs_TARGETS}
-)
+
 target_include_directories(nebula_decoders_velodyne PUBLIC
-    ${angles_INCLUDE_DIRS}
-    ${velodyne_msgs_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+ament_target_dependencies(nebula_decoders_velodyne PUBLIC
+    angles
+    nebula_common_base
+    nebula_common_velodyne
+    nebula_decoders_base
+    pcl_conversions
+    rclcpp
+    velodyne_msgs
+    sensor_msgs
+)
+
+target_link_libraries(nebula_decoders_velodyne PUBLIC
+    pcl_common
 )
 
 install(TARGETS nebula_decoders_velodyne EXPORT export_nebula_decoders_velodyne)
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 install(
   DIRECTORY calibration

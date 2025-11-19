@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(nebula_ros_hesai)
 
 # Default to C++17
@@ -11,7 +11,11 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif ()
 
 find_package(ament_cmake_auto REQUIRED)
-find_package(PCL REQUIRED components common)
+if(BUILD_TESTING OR BUILD_EXAMPLES)
+    find_package(PCL REQUIRED components common io)
+else()
+    find_package(PCL REQUIRED components common)
+endif()
 find_package(autoware_sensing_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
@@ -23,6 +27,7 @@ find_package(nebula_hw_interfaces_base REQUIRED)
 find_package(nebula_hw_interfaces_hesai REQUIRED)
 find_package(nebula_msgs REQUIRED)
 find_package(nebula_ros_base REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(pandar_msgs REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(sync_tooling_msgs REQUIRED)
@@ -35,31 +40,6 @@ if("$ENV{ENABLE_AGNOCAST}" AND NOT agnocastlib_FOUND)
     message(FATAL_ERROR "agnocastlib is required when Agnocast is enabled")
 endif()
 
-include_directories(
-    include
-    SYSTEM
-    ${nebula_common_base_INCLUDE_DIRS}
-    ${nebula_common_hesai_INCLUDE_DIRS}
-    ${nebula_decoders_base_INCLUDE_DIRS}
-    ${nebula_decoders_hesai_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_base_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_hesai_INCLUDE_DIRS}
-    ${nebula_ros_base_INCLUDE_DIRS}
-    ${YAML_CPP_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
-    ${rclcpp_components_INCLUDE_DIRS}
-)
-
-link_libraries(
-    ${nebula_common_base_TARGETS}
-    ${nebula_common_hesai_TARGETS}
-    ${nebula_decoders_base_TARGETS}
-    ${nebula_hw_interfaces_base_TARGETS}
-    ${nebula_ros_base_TARGETS}
-    ${YAML_CPP_LIBRARIES}
-    ${PCL_LIBRARIES}
-)
-
 ## Hesai
 add_library(hesai_ros_wrapper SHARED
     src/hesai/hesai_ros_wrapper.cpp
@@ -69,34 +49,22 @@ add_library(hesai_ros_wrapper SHARED
 )
 
 target_include_directories(hesai_ros_wrapper PUBLIC
-    ${diagnostic_updater_INCLUDE_DIRS}
-    ${nebula_decoders_base_INCLUDE_DIRS}
-    ${nebula_decoders_hesai_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_base_INCLUDE_DIRS}
-    ${nebula_hw_interfaces_hesai_INCLUDE_DIRS}
-    ${nebula_ros_base_INCLUDE_DIRS}
-    ${pandar_msgs_INCLUDE_DIRS}
-    ${sync_tooling_msgs_INCLUDE_DIRS}
-    ${autoware_utils_debug_INCLUDE_DIRS}
-    ${autoware_internal_debug_msgs_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
 
 target_link_libraries(hesai_ros_wrapper PUBLIC
-    ${diagnostic_msgs_TARGETS}
-    ${diagnostic_updater_TARGETS}
-    ${pandar_msgs_TARGETS}
-    ${sync_tooling_msgs_TARGETS}
-    ${autoware_utils_debug_TARGETS}
-    ${autoware_internal_debug_msgs_TARGETS}
+    diagnostic_updater::diagnostic_updater
     nebula_decoders_hesai::nebula_decoders_hesai
     nebula_hw_interfaces_hesai::nebula_hw_interfaces_hesai
     nebula_ros_base::nebula_ros_base_common
+    pcl_common
 )
+ament_target_dependencies(hesai_ros_wrapper PUBLIC autoware_internal_debug_msgs autoware_sensing_msgs autoware_utils_debug diagnostic_msgs nebula_msgs pandar_msgs sync_tooling_msgs)
 
 if("$ENV{ENABLE_AGNOCAST}")
     message("Agnocast support is enabled")
-    target_include_directories(hesai_ros_wrapper PUBLIC ${agnocastlib_INCLUDE_DIRS})
-    target_link_libraries(hesai_ros_wrapper PUBLIC ${agnocastlib_LIBRARIES})
+    target_link_libraries(hesai_ros_wrapper PUBLIC agnocastlib::agnocastlib)
     add_definitions(-DUSE_AGNOCAST_ENABLED)
 endif()
 
@@ -106,13 +74,12 @@ rclcpp_components_register_node(hesai_ros_wrapper
 )
 
 install(TARGETS hesai_ros_wrapper EXPORT export_hesai_ros_wrapper LIBRARY DESTINATION lib)
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     find_package(ament_cmake_gtest REQUIRED)
     find_package(rosbag2_cpp REQUIRED)
-    find_package(PCL REQUIRED COMPONENTS common io)
 
     ament_lint_auto_find_test_dependencies()
 
@@ -124,10 +91,8 @@ if(BUILD_TESTING)
     ament_add_gtest(test_hesai_functional_safety
         test/test_hesai_functional_safety.cpp
     )
-    target_include_directories(test_hesai_functional_safety
-        PRIVATE
+    target_include_directories(test_hesai_functional_safety PRIVATE
         include
-        ${nebula_decoders_hesai_INCLUDE_DIRS}
     )
     target_link_libraries(test_hesai_functional_safety
         hesai_ros_wrapper
@@ -137,63 +102,45 @@ if(BUILD_TESTING)
     add_library(hesai_ros_decoder_test SHARED
         tests/hesai_ros_decoder_test.cpp
     )
-    target_include_directories(hesai_ros_decoder_test PUBLIC
-        ${nebula_common_base_INCLUDE_DIRS}
-        ${nebula_common_hesai_INCLUDE_DIRS}
-        ${nebula_decoders_base_INCLUDE_DIRS}
-        ${nebula_decoders_hesai_INCLUDE_DIRS}
-        ${nebula_ros_base_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${rosbag2_cpp_INCLUDE_DIRS}
-        ${diagnostic_updater_INCLUDE_DIRS}
-    )
-    target_link_libraries(hesai_ros_decoder_test PUBLIC
-        ${nebula_common_base_TARGETS}
-        ${nebula_common_hesai_TARGETS}
-        ${PCL_LIBRARIES}
-        ${rosbag2_cpp_TARGETS}
-        ${diagnostic_updater_TARGETS}
+    target_link_libraries(hesai_ros_decoder_test PRIVATE
+        nebula_common_base::nebula_common_base
+        nebula_ros_base::nebula_ros_base_common
+        pcl_common
+        pcl_io
+        rosbag2_cpp::rosbag2_cpp
+        diagnostic_updater::diagnostic_updater
         nebula_decoders_hesai::nebula_decoders_hesai
     )
+    ament_target_dependencies(hesai_ros_decoder_test PUBLIC pandar_msgs)
 
     ament_add_gtest(hesai_ros_decoder_test_main
         tests/hesai_ros_decoder_test_main.cpp
     )
-    target_include_directories(hesai_ros_decoder_test_main PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai
-        include
+    target_include_directories(hesai_ros_decoder_test_main PRIVATE
         tests
-        ${nebula_common_base_INCLUDE_DIRS}
-        ${nebula_common_hesai_INCLUDE_DIRS}
-        ${nebula_decoders_base_INCLUDE_DIRS}
-        ${nebula_decoders_hesai_INCLUDE_DIRS}
-        ${nebula_ros_base_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${rosbag2_cpp_INCLUDE_DIRS}
-        ${diagnostic_updater_INCLUDE_DIRS}
     )
     target_link_libraries(hesai_ros_decoder_test_main
         hesai_ros_decoder_test
+        nebula_common_base::nebula_common_base
+        nebula_common_hesai::nebula_common_hesai
+        nebula_decoders_hesai::nebula_decoders_hesai
+        diagnostic_updater::diagnostic_updater
+        pcl_io
     )
 
     ament_add_gtest(hesai_ros_scan_cutting_test_main
         tests/hesai_ros_scan_cutting_test_main.cpp
     )
-    target_include_directories(hesai_ros_scan_cutting_test_main PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/hesai
-        include
+    target_include_directories(hesai_ros_scan_cutting_test_main PRIVATE
         tests
-        ${nebula_common_base_INCLUDE_DIRS}
-        ${nebula_common_hesai_INCLUDE_DIRS}
-        ${nebula_decoders_base_INCLUDE_DIRS}
-        ${nebula_decoders_hesai_INCLUDE_DIRS}
-        ${nebula_ros_base_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${rosbag2_cpp_INCLUDE_DIRS}
-        ${diagnostic_updater_INCLUDE_DIRS}
     )
     target_link_libraries(hesai_ros_scan_cutting_test_main
         hesai_ros_decoder_test
+        nebula_common_base::nebula_common_base
+        nebula_common_hesai::nebula_common_hesai
+        nebula_decoders_hesai::nebula_decoders_hesai
+        diagnostic_updater::diagnostic_updater
+        pcl_io
     )
 endif()
 
@@ -205,21 +152,15 @@ if(BUILD_EXAMPLES)
     add_library(hesai_ros_offline_extract_pcd SHARED
         examples/hesai_ros_offline_extract_pcd.cpp
     )
-    target_include_directories(hesai_ros_offline_extract_pcd PUBLIC
+    target_include_directories(hesai_ros_offline_extract_pcd PRIVATE
         examples
-        ${nebula_common_base_INCLUDE_DIRS}
-        ${nebula_common_hesai_INCLUDE_DIRS}
-        ${nebula_decoders_base_INCLUDE_DIRS}
-        ${nebula_decoders_hesai_INCLUDE_DIRS}
-        ${nebula_ros_base_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${rosbag2_cpp_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
-    target_link_libraries(hesai_ros_offline_extract_pcd PUBLIC
-        ${nebula_common_base_TARGETS}
-        ${nebula_common_hesai_TARGETS}
-        ${PCL_LIBRARIES}
-        ${rosbag2_cpp_TARGETS}
+    target_link_libraries(hesai_ros_offline_extract_pcd PRIVATE
+        nebula_common_base::nebula_common_base
+        pcl_common
+        pcl_io
+        rosbag2_cpp::rosbag2_cpp
         nebula_decoders_hesai::nebula_decoders_hesai
         nebula_ros_base::nebula_ros_base_common
     )
@@ -227,7 +168,7 @@ if(BUILD_EXAMPLES)
     add_executable(hesai_ros_offline_extract_pcd_node
         examples/hesai_ros_offline_extract_pcd_main.cpp
     )
-    target_link_libraries(hesai_ros_offline_extract_pcd_node PUBLIC
+    target_link_libraries(hesai_ros_offline_extract_pcd_node PRIVATE
         hesai_ros_offline_extract_pcd
     )
 
@@ -235,21 +176,15 @@ if(BUILD_EXAMPLES)
     add_library(hesai_ros_offline_extract_bag_pcd SHARED
         examples/hesai_ros_offline_extract_bag_pcd.cpp
     )
-    target_include_directories(hesai_ros_offline_extract_bag_pcd PUBLIC
+    target_include_directories(hesai_ros_offline_extract_bag_pcd PRIVATE
         examples
-        ${nebula_common_base_INCLUDE_DIRS}
-        ${nebula_common_hesai_INCLUDE_DIRS}
-        ${nebula_decoders_base_INCLUDE_DIRS}
-        ${nebula_decoders_hesai_INCLUDE_DIRS}
-        ${nebula_ros_base_INCLUDE_DIRS}
-        ${PCL_INCLUDE_DIRS}
-        ${rosbag2_cpp_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
-    target_link_libraries(hesai_ros_offline_extract_bag_pcd PUBLIC
-        ${nebula_common_base_TARGETS}
-        ${nebula_common_hesai_TARGETS}
-        ${PCL_LIBRARIES}
-        ${rosbag2_cpp_TARGETS}
+    target_link_libraries(hesai_ros_offline_extract_bag_pcd PRIVATE
+        nebula_common_base::nebula_common_base
+        pcl_common
+        pcl_io
+        rosbag2_cpp::rosbag2_cpp
         nebula_decoders_hesai::nebula_decoders_hesai
         nebula_ros_base::nebula_ros_base_common
     )
@@ -257,7 +192,7 @@ if(BUILD_EXAMPLES)
     add_executable(hesai_ros_offline_extract_bag_pcd_node
         examples/hesai_ros_offline_extract_bag_pcd_main.cpp
     )
-    target_link_libraries(hesai_ros_offline_extract_bag_pcd_node PUBLIC
+    target_link_libraries(hesai_ros_offline_extract_bag_pcd_node PRIVATE
         hesai_ros_offline_extract_bag_pcd
     )
 
