@@ -25,6 +25,8 @@ find_package(nebula_ros_base REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(robosense_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 ## Robosense
@@ -53,6 +55,8 @@ ament_target_dependencies(robosense_ros_wrapper PUBLIC
     robosense_msgs
     nebula_msgs
     rclcpp_components
+    sensor_msgs
+    pcl_conversions
 )
 
 rclcpp_components_register_node(robosense_ros_wrapper
@@ -85,6 +89,8 @@ ament_export_dependencies(
     nebula_ros_base
     rclcpp_components
     robosense_msgs
+    sensor_msgs
+    pcl_conversions
     yaml-cpp
 )
 

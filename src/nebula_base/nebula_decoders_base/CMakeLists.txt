@@ -11,15 +11,8 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif ()
 
 find_package(ament_cmake_auto REQUIRED)
-find_package(PCL REQUIRED COMPONENTS common)
-find_package(angles REQUIRED)
 find_package(nebula_common_base REQUIRED)
-find_package(nebula_msgs REQUIRED)
-find_package(nlohmann_json REQUIRED)
-find_package(pcl_conversions REQUIRED)
-find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(yaml-cpp REQUIRED)
 find_package(PNG REQUIRED)
 
 add_library(nebula_decoders_base INTERFACE)
@@ -57,14 +50,8 @@ endif()
 
 ament_export_targets(export_nebula_decoders_base)
 ament_export_dependencies(
-    PCL
-    pcl_conversions
-    angles
     nebula_common_base
-    nebula_msgs
-    rclcpp
     sensor_msgs
-    yaml-cpp
 )
 
 ament_package()

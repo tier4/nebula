@@ -3,7 +3,6 @@ project(nebula_common_base)
 
 find_package(ament_cmake_auto REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
-find_package(yaml-cpp REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
 # Default to C++17
@@ -26,7 +25,6 @@ target_include_directories(nebula_common_base PUBLIC
 
 target_link_libraries(nebula_common_base PUBLIC
     pcl_common
-    yaml-cpp
     nlohmann_json::nlohmann_json
 )
 
@@ -51,7 +49,7 @@ ament_export_targets(export_nebula_common_base)
 
 ament_export_dependencies(
     PCL
-    yaml-cpp
+    nlohmann_json
 )
 
 ament_package()

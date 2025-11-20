@@ -12,12 +12,9 @@
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
   <depend>boost_tcp_driver</depend>
-  <depend>boost_udp_driver</depend>
   <depend>nebula_common_base</depend>
   <depend>nebula_common_hesai</depend>
   <depend>nebula_hw_interfaces_base</depend>
-  <depend>nebula_msgs</depend>
-  <depend>pandar_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

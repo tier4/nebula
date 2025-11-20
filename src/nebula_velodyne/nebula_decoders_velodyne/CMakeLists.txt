@@ -16,11 +16,9 @@ find_package(angles REQUIRED)
 find_package(nebula_common_base REQUIRED)
 find_package(nebula_common_velodyne REQUIRED)
 find_package(nebula_decoders_base REQUIRED)
-find_package(nebula_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(sensor_msgs REQUIRED)
 find_package(velodyne_msgs REQUIRED)
 
 # Velodyne Decoder
@@ -44,7 +42,6 @@ ament_target_dependencies(nebula_decoders_velodyne PUBLIC
     pcl_conversions
     rclcpp
     velodyne_msgs
-    sensor_msgs
 )
 
 target_link_libraries(nebula_decoders_velodyne PUBLIC
@@ -69,8 +66,6 @@ ament_export_dependencies(
     nebula_common_base
     nebula_common_velodyne
     nebula_decoders_base
-    nebula_msgs
-    sensor_msgs
     velodyne_msgs
 )
 

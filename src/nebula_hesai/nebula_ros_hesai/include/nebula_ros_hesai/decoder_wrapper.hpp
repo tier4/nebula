@@ -32,6 +32,8 @@
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <pandar_msgs/msg/pandar_scan.hpp>
+#include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include <limits>
 #include <memory>
@@ -41,9 +43,9 @@
 
 namespace nebula::ros
 {
-class HesaiDecoderWrapper
-{
-public:
+  class HesaiDecoderWrapper
+  {
+  public:
   HesaiDecoderWrapper(
     rclcpp::Node * parent_node,
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,

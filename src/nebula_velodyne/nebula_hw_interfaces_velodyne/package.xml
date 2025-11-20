@@ -16,8 +16,6 @@
   <depend>nebula_common_base</depend>
   <depend>nebula_common_velodyne</depend>
   <depend>nebula_hw_interfaces_base</depend>
-  <depend>nebula_msgs</depend>
-  <depend>velodyne_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

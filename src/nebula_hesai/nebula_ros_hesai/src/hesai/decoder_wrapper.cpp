@@ -11,6 +11,7 @@
 
 #include <nebula_common_base/util/string_conversions.hpp>
 #include <nebula_common_hesai/hesai/hesai_common.hpp>
+#include <pcl_conversions/pcl_conversions.h>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 

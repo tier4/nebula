@@ -11,19 +11,12 @@
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>ros_environment</buildtool_depend>
-  <build_depend>libpcl-all-dev</build_depend>
-  <build_export_depend>libpcl-all-dev</build_export_depend>
-
-  <depend>boost_udp_driver</depend>
   <depend>continental_msgs</depend>
   <depend>diagnostic_msgs</depend>
   <depend>nebula_common_base</depend>
   <depend>nebula_common_continental</depend>
-  <depend>nebula_decoders_base</depend>
   <depend>nebula_msgs</depend>
-  <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>
-  <depend>sensor_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

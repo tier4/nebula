@@ -24,15 +24,15 @@
   <depend>message_filters</depend>
   <depend>nebula_common_base</depend>
   <depend>nebula_common_continental</depend>
-  <depend>nebula_decoders_base</depend>
   <depend>nebula_decoders_continental</depend>
-  <depend>nebula_hw_interfaces_base</depend>
   <depend>nebula_hw_interfaces_continental</depend>
   <depend>nebula_msgs</depend>
   <depend>nebula_ros_base</depend>
+  <depend>pcl_conversions</depend>
   <depend>radar_msgs</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>sensor_msgs</depend>
   <depend>sync_tooling_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>visualization_msgs</depend>

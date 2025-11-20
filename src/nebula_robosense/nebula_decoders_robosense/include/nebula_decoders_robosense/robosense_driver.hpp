@@ -21,8 +21,6 @@
 #include "nebula_decoders_base/nebula_driver_base.hpp"
 #include "nebula_decoders_robosense/decoders/robosense_scan_decoder.hpp"
 
-#include <pcl_conversions/pcl_conversions.h>
-
 #include <memory>
 #include <tuple>
 #include <vector>

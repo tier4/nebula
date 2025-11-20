@@ -21,15 +21,15 @@ find_package(geometry_msgs REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(nebula_common_base REQUIRED)
 find_package(nebula_common_continental REQUIRED)
-find_package(nebula_decoders_base REQUIRED)
 find_package(nebula_decoders_continental REQUIRED)
-find_package(nebula_hw_interfaces_base REQUIRED)
 find_package(nebula_hw_interfaces_continental REQUIRED)
 find_package(nebula_msgs REQUIRED)
 find_package(nebula_ros_base REQUIRED)
 find_package(radar_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
 find_package(sync_tooling_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(visualization_msgs REQUIRED)
@@ -62,8 +62,10 @@ ament_target_dependencies(continental_ars548_ros_wrapper PUBLIC
     continental_srvs
     diagnostic_msgs
     geometry_msgs
+    pcl_conversions
     nebula_msgs
     radar_msgs
+    sensor_msgs
     visualization_msgs
     sync_tooling_msgs
     rclcpp_components
@@ -100,7 +102,9 @@ ament_target_dependencies(continental_srr520_ros_wrapper PUBLIC
     diagnostic_msgs
     geometry_msgs
     nebula_msgs
+    pcl_conversions
     radar_msgs
+    sensor_msgs
     visualization_msgs
     rclcpp_components
 )
@@ -212,14 +216,14 @@ ament_export_dependencies(
     message_filters
     nebula_common_base
     nebula_common_continental
-    nebula_decoders_base
     nebula_decoders_continental
-    nebula_hw_interfaces_base
     nebula_hw_interfaces_continental
     nebula_msgs
     nebula_ros_base
+    pcl_conversions
     radar_msgs
     rclcpp_components
+    sensor_msgs
     sync_tooling_msgs
     tf2_ros
     visualization_msgs

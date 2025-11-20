@@ -2,6 +2,8 @@
 
 #include "nebula_ros_robosense/decoder_wrapper.hpp"
 
+#include <pcl_conversions/pcl_conversions.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <memory>

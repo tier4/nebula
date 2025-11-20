@@ -18,10 +18,8 @@
   <depend>nebula_common_base</depend>
   <depend>nebula_common_velodyne</depend>
   <depend>nebula_decoders_base</depend>
-  <depend>nebula_msgs</depend>
   <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>
-  <depend>sensor_msgs</depend>
   <depend>velodyne_msgs</depend>
 
   <export>

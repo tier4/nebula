@@ -16,9 +16,7 @@ find_package(boost_udp_driver)
 find_package(nebula_common_base REQUIRED)
 find_package(nebula_common_velodyne REQUIRED)
 find_package(nebula_hw_interfaces_base REQUIRED)
-find_package(nebula_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(velodyne_msgs REQUIRED)
 
 add_library(nebula_hw_interfaces_velodyne SHARED
     src/velodyne_hw_interface.cpp
@@ -32,7 +30,6 @@ target_include_directories(nebula_hw_interfaces_velodyne PUBLIC
 ament_target_dependencies(nebula_hw_interfaces_velodyne PUBLIC
     boost_tcp_driver
     boost_udp_driver
-    velodyne_msgs
     nebula_common_base
     nebula_common_velodyne
     nebula_hw_interfaces_base
@@ -49,8 +46,6 @@ ament_export_dependencies(
     nebula_common_base
     nebula_common_velodyne
     nebula_hw_interfaces_base
-    nebula_msgs
-    velodyne_msgs
 )
 
 ament_package()

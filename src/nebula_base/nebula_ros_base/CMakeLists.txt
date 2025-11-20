@@ -11,15 +11,11 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif ()
 
 find_package(ament_cmake_auto REQUIRED)
-find_package(PCL REQUIRED components common)
 find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
 find_package(nebula_common_base REQUIRED)
-find_package(nebula_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
-find_package(yaml-cpp REQUIRED)
 
 # Common library for parameter descriptors
 add_library(nebula_ros_base_common SHARED
@@ -33,8 +29,6 @@ target_include_directories(nebula_ros_base_common PUBLIC
 
 target_link_libraries(nebula_ros_base_common PUBLIC
     rclcpp::rclcpp
-    pcl_common
-    yaml-cpp
     nebula_common_base::nebula_common_base
 )
 
@@ -69,14 +63,10 @@ install(
 )
 
 ament_export_dependencies(
-    PCL
     diagnostic_msgs
     diagnostic_updater
     nebula_common_base
-    nebula_msgs
     rclcpp
-    rclcpp_components
-    yaml-cpp
 )
 
 ament_package()

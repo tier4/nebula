@@ -11,18 +11,13 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif ()
 
 find_package(ament_cmake_auto REQUIRED)
-find_package(PCL REQUIRED COMPONENTS common)
-find_package(boost_udp_driver REQUIRED)
 find_package(continental_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(nebula_common_base REQUIRED)
 find_package(nebula_common_continental REQUIRED)
-find_package(nebula_decoders_base REQUIRED)
 find_package(nebula_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(sensor_msgs REQUIRED)
 
 # Continental Decoder
 add_library(nebula_decoders_continental SHARED
@@ -38,12 +33,16 @@ target_include_directories(nebula_decoders_continental PUBLIC
 target_link_libraries(nebula_decoders_continental PUBLIC
     nebula_common_base::nebula_common_base
     nebula_common_continental::nebula_common_continental
-    nebula_decoders_base::nebula_decoders_base
-    pcl_common
     rclcpp::rclcpp
 )
 
-ament_target_dependencies(nebula_decoders_continental PUBLIC continental_msgs diagnostic_msgs boost_udp_driver nebula_msgs sensor_msgs pcl_conversions)
+ament_target_dependencies(
+    nebula_decoders_continental
+    PUBLIC
+    continental_msgs
+    diagnostic_msgs
+    nebula_msgs
+)
 
 install(TARGETS nebula_decoders_continental EXPORT export_nebula_decoders_continental)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
@@ -52,16 +51,12 @@ ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_decoders_continental)
 
 ament_export_dependencies(
-    PCL
-    pcl_conversions
-    boost_udp_driver
     continental_msgs
     diagnostic_msgs
     nebula_common_base
     nebula_common_continental
-    nebula_decoders_base
     nebula_msgs
-    sensor_msgs
+    rclcpp
 )
 
 ament_package()

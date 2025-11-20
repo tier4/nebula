@@ -11,17 +11,10 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif ()
 
 find_package(ament_cmake_auto REQUIRED)
-find_package(PCL REQUIRED COMPONENTS common)
 find_package(nebula_common_base REQUIRED)
 find_package(nebula_common_hesai REQUIRED)
 find_package(nebula_decoders_base REQUIRED)
-find_package(nebula_msgs REQUIRED)
-find_package(nlohmann_json REQUIRED)
-find_package(pandar_msgs REQUIRED)
-find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(PNG REQUIRED)
 
 # Hesai Decoder
 add_library(nebula_decoders_hesai SHARED
@@ -37,11 +30,8 @@ target_link_libraries(nebula_decoders_hesai PUBLIC
     nebula_common_base::nebula_common_base
     nebula_common_hesai::nebula_common_hesai
     nebula_decoders_base::nebula_decoders_base
-    PNG::PNG
-    pcl_common
     rclcpp::rclcpp
 )
-ament_target_dependencies(nebula_decoders_hesai PUBLIC pcl_conversions)
 
 install(TARGETS nebula_decoders_hesai EXPORT export_nebula_decoders_hesai)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
@@ -55,15 +45,10 @@ ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_decoders_hesai)
 
 ament_export_dependencies(
-    PCL
-    pcl_conversions
     nebula_common_base
     nebula_common_hesai
     nebula_decoders_base
-    nebula_msgs
-    pandar_msgs
-    sensor_msgs
-    PNG
+    rclcpp
 )
 
 ament_package()

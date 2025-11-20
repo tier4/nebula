@@ -11,8 +11,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake_auto REQUIRED)
-find_package(boost_tcp_driver)
-find_package(boost_udp_driver)
 find_package(nebula_common_base REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
@@ -50,11 +48,6 @@ if(BUILD_TESTING)
 endif()
 
 ament_export_targets(export_nebula_hw_interfaces_base)
-ament_export_dependencies(
-    boost_tcp_driver
-    boost_udp_driver
-    nebula_common_base
-    nebula_msgs
-)
+ament_export_dependencies(nebula_common_base)
 
 ament_package()

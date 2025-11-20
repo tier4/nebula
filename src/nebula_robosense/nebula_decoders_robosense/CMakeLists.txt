@@ -11,16 +11,11 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif ()
 
 find_package(ament_cmake_auto REQUIRED)
-find_package(PCL REQUIRED COMPONENTS common)
 find_package(nebula_common_base REQUIRED)
 find_package(nebula_common_robosense REQUIRED)
 find_package(nebula_decoders_base REQUIRED)
-find_package(nebula_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(robosense_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
 
 # Robosense Decoder
 add_library(nebula_decoders_robosense SHARED
@@ -36,10 +31,8 @@ target_link_libraries(nebula_decoders_robosense PUBLIC
     nebula_common_base::nebula_common_base
     nebula_common_robosense::nebula_common_robosense
     nebula_decoders_base::nebula_decoders_base
-    pcl_common
     rclcpp::rclcpp
 )
-ament_target_dependencies(nebula_decoders_robosense PUBLIC pcl_conversions)
 
 # Robosense Info Decoder
 add_library(nebula_decoders_robosense_info SHARED
@@ -55,10 +48,8 @@ target_link_libraries(nebula_decoders_robosense_info PUBLIC
     nebula_common_base::nebula_common_base
     nebula_common_robosense::nebula_common_robosense
     nebula_decoders_base::nebula_decoders_base
-    pcl_common
     rclcpp::rclcpp
 )
-ament_target_dependencies(nebula_decoders_robosense_info PUBLIC pcl_conversions)
 
 install(TARGETS nebula_decoders_robosense EXPORT export_nebula_decoders_robosense)
 install(TARGETS nebula_decoders_robosense_info EXPORT export_nebula_decoders_robosense_info)
@@ -69,14 +60,10 @@ ament_export_targets(export_nebula_decoders_robosense)
 ament_export_targets(export_nebula_decoders_robosense_info)
 
 ament_export_dependencies(
-    PCL
-    pcl_conversions
     nebula_common_base
     nebula_common_robosense
     nebula_decoders_base
-    nebula_msgs
-    robosense_msgs
-    sensor_msgs
+    rclcpp
 )
 
 ament_package()

@@ -26,8 +26,6 @@
 
 #include <nebula_common_base/loggers/logger.hpp>
 
-#include <pcl_conversions/pcl_conversions.h>
-
 #include <cstdint>
 #include <memory>
 #include <tuple>

@@ -19,8 +19,6 @@
 #include "nebula_common_robosense/robosense/robosense_common.hpp"
 #include "nebula_decoders_robosense/decoders/robosense_info_decoder_base.hpp"
 
-#include <pcl_conversions/pcl_conversions.h>
-
 #include <iostream>
 #include <map>
 #include <memory>

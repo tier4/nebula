@@ -16,7 +16,6 @@ if(BUILD_TESTING OR BUILD_EXAMPLES)
 else()
     find_package(PCL REQUIRED components common)
 endif()
-find_package(autoware_sensing_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
 find_package(nebula_common_base REQUIRED)
@@ -30,8 +29,9 @@ find_package(nebula_ros_base REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(pandar_msgs REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
 find_package(sync_tooling_msgs REQUIRED)
-find_package(yaml-cpp REQUIRED)
 find_package(autoware_utils_debug REQUIRED)
 find_package(autoware_internal_debug_msgs REQUIRED)
 find_package(agnocastlib)
@@ -60,7 +60,18 @@ target_link_libraries(hesai_ros_wrapper PUBLIC
     nebula_ros_base::nebula_ros_base_common
     pcl_common
 )
-ament_target_dependencies(hesai_ros_wrapper PUBLIC autoware_internal_debug_msgs autoware_sensing_msgs autoware_utils_debug diagnostic_msgs nebula_msgs pandar_msgs sync_tooling_msgs)
+ament_target_dependencies(
+    hesai_ros_wrapper
+    PUBLIC
+    autoware_internal_debug_msgs
+    autoware_utils_debug
+    diagnostic_msgs
+    nebula_msgs
+    pandar_msgs
+    sensor_msgs
+    pcl_conversions
+    sync_tooling_msgs
+)
 
 if("$ENV{ENABLE_AGNOCAST}")
     message("Agnocast support is enabled")
@@ -217,25 +228,26 @@ endif()
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_hesai_ros_wrapper)
 
-ament_export_dependencies(
-    PCL
-    diagnostic_msgs
-    diagnostic_updater
-    nebula_common_base
-    nebula_common_hesai
-    nebula_decoders_base
-    nebula_decoders_hesai
-    nebula_hw_interfaces_base
-    nebula_hw_interfaces_hesai
-    nebula_msgs
-    nebula_ros_base
-    pandar_msgs
-    rclcpp_components
-    sync_tooling_msgs
-    yaml-cpp
-    autoware_utils_debug
-    autoware_internal_debug_msgs
-)
+  ament_export_dependencies(
+      PCL
+      diagnostic_msgs
+      diagnostic_updater
+      nebula_common_base
+      nebula_common_hesai
+      nebula_decoders_base
+      nebula_decoders_hesai
+      nebula_hw_interfaces_base
+      nebula_hw_interfaces_hesai
+      nebula_msgs
+      nebula_ros_base
+      pandar_msgs
+      rclcpp_components
+      sensor_msgs
+      sync_tooling_msgs
+      pcl_conversions
+      autoware_utils_debug
+      autoware_internal_debug_msgs
+  )
 
 if("$ENV{ENABLE_AGNOCAST}")
     ament_export_dependencies(agnocastlib)
