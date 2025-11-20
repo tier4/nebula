@@ -43,9 +43,9 @@
 
 namespace nebula::ros
 {
-  class HesaiDecoderWrapper
-  {
-  public:
+class HesaiDecoderWrapper
+{
+public:
   HesaiDecoderWrapper(
     rclcpp::Node * parent_node,
     const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & config,
