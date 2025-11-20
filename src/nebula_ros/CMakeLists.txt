@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(nebula)
+project(nebula_ros)
 set(ignoreMe "${CMAKE_EXPORT_COMPILE_COMMANDS}")
 
 find_package(ament_cmake REQUIRED)
