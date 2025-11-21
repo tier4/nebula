@@ -21,7 +21,9 @@ target_include_directories(nebula_decoders_base INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-
+target_link_libraries(nebula_decoders_base INTERFACE
+    PNG::PNG
+)
 ament_target_dependencies(nebula_decoders_base INTERFACE
     nebula_common_base
     sensor_msgs
@@ -43,7 +45,6 @@ if(BUILD_TESTING)
         include
     )
     target_link_libraries(test_downsample_mask
-        PNG::PNG
         nebula_decoders_base
     )
 endif()
@@ -52,6 +53,7 @@ ament_export_targets(export_nebula_decoders_base)
 ament_export_dependencies(
     nebula_common_base
     sensor_msgs
+    PNG
 )
 
 ament_package()
