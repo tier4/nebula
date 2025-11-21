@@ -488,7 +488,9 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
       p, "blockage_mask_output.horizontal_bin_size_mdeg", blockage_mask_horizontal_bin_size_mdeg);
 
   if (drivers::supports_retro_multi_reflection_filtering(sensor_cfg_ptr_->sensor_model)) {
-    got_any = get_param(p, "retro_multi_reflection_filtering", new_cfg.retro_multi_reflection_filtering) | got_any;
+    got_any =
+      get_param(p, "retro_multi_reflection_filtering", new_cfg.retro_multi_reflection_filtering) |
+      got_any;
   } else {
     new_cfg.retro_multi_reflection_filtering = std::nullopt;
   }

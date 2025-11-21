@@ -1224,7 +1224,9 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
   if (supports_retro_multi_reflection_filtering(sensor_configuration->sensor_model)) {
     if (sensor_configuration->retro_multi_reflection_filtering.has_value()) {
       auto retro_filtering_currently_enabled = get_retro_multi_reflection_filtering();
-      if (retro_filtering_currently_enabled != sensor_configuration->retro_multi_reflection_filtering.value()) {
+      if (
+        retro_filtering_currently_enabled !=
+        sensor_configuration->retro_multi_reflection_filtering.value()) {
         logger_->info(
           "current lidar retro_multi_reflection_filtering: " +
           std::to_string(retro_filtering_currently_enabled));
@@ -1232,7 +1234,8 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
           "current configuration retro_multi_reflection_filtering: " +
           std::to_string(sensor_configuration->retro_multi_reflection_filtering.value()));
         logger_->info("Setting retro_multi_reflection_filtering via TCP.");
-        set_retro_multi_reflection_filtering(sensor_configuration->retro_multi_reflection_filtering.value());
+        set_retro_multi_reflection_filtering(
+          sensor_configuration->retro_multi_reflection_filtering.value());
       }
     }
   }
