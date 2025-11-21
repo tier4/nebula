@@ -109,6 +109,11 @@
       "description": "Whether to turn on or off the sensor's high resolution mode",
       "default": false
     },
+    "retro_multi_reflection_filtering": {
+      "type": "boolean",
+      "description": "Whether to turn on or off retro multi-reflection filtering (QT128 only)",
+      "default": false
+    },
     "blockage_mask_output": {
       "type": "object",
       "description": "Enables blockage detection and outputs a blockage mask per scan",

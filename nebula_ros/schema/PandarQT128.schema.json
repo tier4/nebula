@@ -108,6 +108,9 @@
         "dual_return_distance_threshold": {
           "$ref": "sub/misc.json#/definitions/dual_return_distance_threshold"
         },
+        "retro_multi_reflection_filtering": {
+          "$ref": "sub/lidar_hesai.json#/definitions/retro_multi_reflection_filtering"
+        },
         "point_filters": {
           "$ref": "sub/misc.json#/definitions/point_filters"
         },

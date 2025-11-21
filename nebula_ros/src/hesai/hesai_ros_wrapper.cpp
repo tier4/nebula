@@ -189,6 +189,13 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
     config.hires_mode = this->declare_parameter<bool>("hires_mode", param_read_write());
   }
 
+  if (drivers::supports_retro_multi_reflection_filtering(config.sensor_model)) {
+    config.retro_multi_reflection_filtering =
+      this->declare_parameter<bool>("retro_multi_reflection_filtering", param_read_write());
+  } else {
+    config.retro_multi_reflection_filtering = std::nullopt;
+  }
+
   {
     rcl_interfaces::msg::ParameterDescriptor descriptor = param_read_write();
     RCLCPP_DEBUG_STREAM(get_logger(), config.sensor_model);
@@ -479,6 +486,12 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     get_param(p, "point_filters.downsample_mask.path", downsample_mask_path) |
     get_param(
       p, "blockage_mask_output.horizontal_bin_size_mdeg", blockage_mask_horizontal_bin_size_mdeg);
+
+  if (drivers::supports_retro_multi_reflection_filtering(sensor_cfg_ptr_->sensor_model)) {
+    got_any = get_param(p, "retro_multi_reflection_filtering", new_cfg.retro_multi_reflection_filtering) | got_any;
+  } else {
+    new_cfg.retro_multi_reflection_filtering = std::nullopt;
+  }
 
   // Currently, all of the sub-wrappers read-only parameters, so they do not be queried for updates
 
