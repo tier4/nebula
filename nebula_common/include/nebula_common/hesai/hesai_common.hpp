@@ -129,8 +129,7 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
      << '\n';
   if (supports_retro_multi_reflection_filtering(arg.sensor_model)) {
     os << "Retro Multi-Reflection Filtering: "
-       << (arg.retro_multi_reflection_filtering ? "enabled" : "disabled")
-       << '\n';
+       << (arg.retro_multi_reflection_filtering ? "enabled" : "disabled") << '\n';
   }
   os << "Synchronization Diagnostics: "
      << (arg.sync_diagnostics_topic ? ("enabled, topic: " + arg.sync_diagnostics_topic.value())
