@@ -75,7 +75,7 @@ ament_target_dependencies(
 
 if("$ENV{ENABLE_AGNOCAST}")
     message("Agnocast support is enabled")
-    target_link_libraries(hesai_ros_wrapper PUBLIC agnocastlib::agnocastlib)
+    ament_target_dependencies(hesai_ros_wrapper PUBLIC agnocastlib)
     add_definitions(-DUSE_AGNOCAST_ENABLED)
 endif()
 
