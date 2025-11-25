@@ -85,6 +85,8 @@ const uint8_t g_ptc_command_set_rotate_direction = 0x2a;
 const uint8_t g_ptc_command_lidar_monitor = 0x27;
 const uint8_t g_ptc_command_set_up_close_blockage_detection = 0x58;
 const uint8_t g_ptc_command_get_up_close_blockage_detection = 0x59;
+const uint8_t g_ptc_command_set_retro_multi_reflection_filtering = 0x47;
+const uint8_t g_ptc_command_get_retro_multi_reflection_filtering = 0x48;
 
 const uint8_t g_ptc_error_code_no_error = 0x00;
 const uint8_t g_ptc_error_code_invalid_input_param = 0x01;
@@ -323,6 +325,13 @@ public:
   /// @brief Getting values with PTC_COMMAND_GET_UP_CLOSE_BLOCKAGE_DETECTION
   /// @return Resulting status
   bool get_up_close_blockage_detection();
+  /// @brief Setting values with PTC_COMMAND_SET_RETRO_MULTI_REFLECTION_FILTERING
+  /// @param enable Enable retro multi-reflection filtering
+  /// @return Resulting status
+  Status set_retro_multi_reflection_filtering(bool enable);
+  /// @brief Getting values with PTC_COMMAND_GET_RETRO_MULTI_REFLECTION_FILTERING
+  /// @return Resulting status
+  bool get_retro_multi_reflection_filtering();
 
   /**
    * @brief Given the HW interface's sensor configuration and a given calibration, set the sensor

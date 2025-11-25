@@ -652,6 +652,30 @@ bool HesaiHwInterface::get_up_close_blockage_detection()
   return response[0] > 0x00;
 }
 
+Status HesaiHwInterface::set_retro_multi_reflection_filtering(bool enable)
+{
+  std::vector<unsigned char> request_payload;
+  request_payload.emplace_back(enable ? 0x01 : 0x00);
+
+  auto response_or_err =
+    send_receive(g_ptc_command_set_retro_multi_reflection_filtering, request_payload);
+  response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+  return Status::OK;
+}
+
+bool HesaiHwInterface::get_retro_multi_reflection_filtering()
+{
+  auto response_or_err = send_receive(g_ptc_command_get_retro_multi_reflection_filtering);
+  auto response =
+    response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
+
+  if (response.size() != 1) {
+    throw std::runtime_error("Unexpected payload size");
+  }
+
+  return response[0] > 0x00;
+}
+
 Status HesaiHwInterface::check_and_set_lidar_range(
   const HesaiCalibrationConfigurationBase & calibration)
 {
@@ -1194,6 +1218,21 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
           std::to_string(blockage_detection_desired));
         set_up_close_blockage_detection(blockage_detection_desired);
       }
+    }
+  }
+
+  if (supports_retro_multi_reflection_filtering(sensor_configuration->sensor_model)) {
+    auto retro_filtering_currently_enabled = get_retro_multi_reflection_filtering();
+    if (
+      retro_filtering_currently_enabled != sensor_configuration->retro_multi_reflection_filtering) {
+      logger_->info(
+        "current lidar retro_multi_reflection_filtering: " +
+        std::to_string(retro_filtering_currently_enabled));
+      logger_->info(
+        "current configuration retro_multi_reflection_filtering: " +
+        std::to_string(sensor_configuration->retro_multi_reflection_filtering));
+      logger_->info("Setting retro_multi_reflection_filtering via TCP.");
+      set_retro_multi_reflection_filtering(sensor_configuration->retro_multi_reflection_filtering);
     }
   }
 

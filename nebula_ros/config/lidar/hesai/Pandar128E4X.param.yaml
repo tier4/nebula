@@ -30,6 +30,7 @@
     ptp_lock_threshold: 100
     retry_hw: true
     dual_return_distance_threshold: 0.1
+    retro_multi_reflection_filtering: false
     hires_mode: true
     diagnostics:
       pointcloud_publish_rate:

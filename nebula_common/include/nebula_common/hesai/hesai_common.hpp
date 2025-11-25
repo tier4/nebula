@@ -38,6 +38,7 @@ namespace drivers
 {
 
 bool supports_functional_safety(const SensorModel & sensor_model);
+bool supports_retro_multi_reflection_filtering(const SensorModel & sensor_model);
 
 struct AdvancedFunctionalSafetyConfiguration
 {
@@ -83,6 +84,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   std::optional<std::string> downsample_mask_path;
   bool hires_mode;
   std::optional<uint32_t> blockage_mask_horizontal_bin_size_mdeg;
+  bool retro_multi_reflection_filtering;
   std::optional<std::string> sync_diagnostics_topic;
   std::optional<AdvancedFunctionalSafetyConfiguration> functional_safety;
 };
@@ -125,6 +127,10 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
                std::to_string(arg.blockage_mask_horizontal_bin_size_mdeg.value()) + " mdeg"
            : "disabled")
      << '\n';
+  if (supports_retro_multi_reflection_filtering(arg.sensor_model)) {
+    os << "Retro Multi-Reflection Filtering: "
+       << (arg.retro_multi_reflection_filtering ? "enabled" : "disabled") << '\n';
+  }
   os << "Synchronization Diagnostics: "
      << (arg.sync_diagnostics_topic ? ("enabled, topic: " + arg.sync_diagnostics_topic.value())
                                     : "disabled");
@@ -683,6 +689,21 @@ inline bool supports_packet_loss_detection(const SensorModel & sensor_model)
 inline bool supports_blockage_mask(const SensorModel & sensor_model)
 {
   switch (sensor_model) {
+    case SensorModel::HESAI_PANDAR128_E4X:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/// @brief Whether the given sensor model supports retro multi-reflection filtering
+///
+/// @param sensor_model Sensor model
+/// @return True if the sensor model supports retro multi-reflection filtering, false otherwise
+inline bool supports_retro_multi_reflection_filtering(const SensorModel & sensor_model)
+{
+  switch (sensor_model) {
+    case SensorModel::HESAI_PANDARQT128:
     case SensorModel::HESAI_PANDAR128_E4X:
       return true;
     default:
