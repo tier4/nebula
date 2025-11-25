@@ -701,14 +701,13 @@ inline bool supports_blockage_mask(const SensorModel & sensor_model)
 
 /// @brief Whether the given sensor model supports retro multi-reflection filtering
 ///
-/// Retro multi-reflection filtering is currently only supported for QT128.
-///
 /// @param sensor_model Sensor model
 /// @return True if the sensor model supports retro multi-reflection filtering, false otherwise
 inline bool supports_retro_multi_reflection_filtering(const SensorModel & sensor_model)
 {
   switch (sensor_model) {
     case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::HESAI_PANDAR128_E4X:
       return true;
     default:
       return false;
