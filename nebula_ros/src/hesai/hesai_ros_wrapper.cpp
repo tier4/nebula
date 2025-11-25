@@ -192,8 +192,6 @@ nebula::Status HesaiRosWrapper::declare_and_get_sensor_config_params()
   if (drivers::supports_retro_multi_reflection_filtering(config.sensor_model)) {
     config.retro_multi_reflection_filtering =
       this->declare_parameter<bool>("retro_multi_reflection_filtering", param_read_write());
-  } else {
-    config.retro_multi_reflection_filtering = std::nullopt;
   }
 
   {

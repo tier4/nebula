@@ -84,7 +84,7 @@ struct HesaiSensorConfiguration : public LidarConfigurationBase
   std::optional<std::string> downsample_mask_path;
   bool hires_mode;
   std::optional<uint32_t> blockage_mask_horizontal_bin_size_mdeg;
-  std::optional<bool> retro_multi_reflection_filtering;
+  bool retro_multi_reflection_filtering;
   std::optional<std::string> sync_diagnostics_topic;
   std::optional<AdvancedFunctionalSafetyConfiguration> functional_safety;
 };
@@ -129,9 +129,7 @@ inline std::ostream & operator<<(std::ostream & os, HesaiSensorConfiguration con
      << '\n';
   if (supports_retro_multi_reflection_filtering(arg.sensor_model)) {
     os << "Retro Multi-Reflection Filtering: "
-       << (arg.retro_multi_reflection_filtering
-             ? (arg.retro_multi_reflection_filtering.value() ? "enabled" : "disabled")
-             : "not configured")
+       << (arg.retro_multi_reflection_filtering ? "enabled" : "disabled")
        << '\n';
   }
   os << "Synchronization Diagnostics: "
