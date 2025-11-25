@@ -489,8 +489,6 @@ rcl_interfaces::msg::SetParametersResult HesaiRosWrapper::on_parameter_change(
     got_any =
       get_param(p, "retro_multi_reflection_filtering", new_cfg.retro_multi_reflection_filtering) |
       got_any;
-  } else {
-    new_cfg.retro_multi_reflection_filtering = std::nullopt;
   }
 
   // Currently, all of the sub-wrappers read-only parameters, so they do not be queried for updates
