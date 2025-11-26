@@ -26,7 +26,7 @@
 #include <diagnostic_updater/publisher.hpp>
 #include <diagnostic_updater/update_functions.hpp>
 #include <nebula_core_common/nebula_common.hpp>
-#include <nebula_hesai_common/hesai/hesai_common.hpp>
+#include <nebula_hesai_common/hesai_common.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 

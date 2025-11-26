@@ -17,7 +17,7 @@
 
 #include <nebula_core_common/point_types.hpp>
 #include <nebula_core_common/util/expected.hpp>
-#include <nebula_hesai_common/hesai/hesai_common.hpp>
+#include <nebula_hesai_common/hesai_common.hpp>
 
 #include <cstdint>
 #include <vector>

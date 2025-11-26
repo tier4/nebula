@@ -6,8 +6,8 @@
 #include "nebula_core_common/nebula_common.hpp"
 #include "nebula_core_common/nebula_status.hpp"
 #include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
-#include "nebula_hesai_common/hesai/hesai_common.hpp"
-#include "nebula_hesai_common/hesai/hesai_status.hpp"
+#include "nebula_hesai_common/hesai_common.hpp"
+#include "nebula_hesai_common/hesai_status.hpp"
 #include "nebula_hesai_hw_interfaces/hesai_cmd_response.hpp"
 
 #include <nlohmann/json.hpp>

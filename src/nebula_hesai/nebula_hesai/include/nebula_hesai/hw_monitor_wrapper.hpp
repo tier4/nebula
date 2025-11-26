@@ -18,7 +18,7 @@
 #include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_hesai_common/hesai/hesai_common.hpp>
+#include <nebula_hesai_common/hesai_common.hpp>
 #include <nebula_hesai_hw_interfaces/hesai_cmd_response.hpp>
 #include <nebula_hesai_hw_interfaces/hesai_hw_interface.hpp>
 #include <nlohmann/json.hpp>

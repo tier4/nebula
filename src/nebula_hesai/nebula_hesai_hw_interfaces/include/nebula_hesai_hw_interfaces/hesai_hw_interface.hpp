@@ -36,8 +36,8 @@
 #include <boost_tcp_driver/tcp_driver.hpp>
 #include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_core_common/util/expected.hpp>
-#include <nebula_hesai_common/hesai/hesai_common.hpp>
-#include <nebula_hesai_common/hesai/hesai_status.hpp>
+#include <nebula_hesai_common/hesai_common.hpp>
+#include <nebula_hesai_common/hesai_status.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/json_parser.hpp>

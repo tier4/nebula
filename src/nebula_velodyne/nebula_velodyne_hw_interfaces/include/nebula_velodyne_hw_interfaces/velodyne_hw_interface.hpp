@@ -35,8 +35,8 @@
 #include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp>
-#include <nebula_velodyne_common/velodyne/velodyne_common.hpp>
-#include <nebula_velodyne_common/velodyne/velodyne_status.hpp>
+#include <nebula_velodyne_common/velodyne_common.hpp>
+#include <nebula_velodyne_common/velodyne_status.hpp>
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>

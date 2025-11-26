@@ -17,7 +17,7 @@
 
 #include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 
-#include <nebula_continental_common/continental/continental_srr520.hpp>
+#include <nebula_continental_common/continental_srr520.hpp>
 #include <nebula_core_common/loggers/logger.hpp>
 #include <ros2_socketcan/socket_can_receiver.hpp>
 #include <ros2_socketcan/socket_can_sender.hpp>

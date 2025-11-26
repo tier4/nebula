@@ -16,7 +16,7 @@
 
 #include "nebula_core_ros/parameter_descriptors.hpp"
 
-#include <nebula_continental_common/continental/continental_ars548.hpp>
+#include <nebula_continental_common/continental_ars548.hpp>
 #include <nebula_continental_hw_interfaces/continental_ars548_hw_interface.hpp>
 #include <nebula_core_common/util/rate_checker.hpp>
 #include <rclcpp/rclcpp.hpp>

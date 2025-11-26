@@ -14,7 +14,7 @@
 
 #include "nebula_continental_decoders/decoders/continental_srr520_decoder.hpp"
 
-#include <nebula_continental_common/continental/continental_srr520.hpp>
+#include <nebula_continental_common/continental_srr520.hpp>
 #include <nebula_core_common/util/crc.hpp>
 
 #include <boost/algorithm/string/join.hpp>

@@ -19,7 +19,7 @@
 #include <message_filters/subscriber.hpp>
 #include <message_filters/sync_policies/exact_time.hpp>
 #include <message_filters/synchronizer.hpp>
-#include <nebula_continental_common/continental/continental_srr520.hpp>
+#include <nebula_continental_common/continental_srr520.hpp>
 #include <nebula_continental_hw_interfaces/continental_srr520_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 

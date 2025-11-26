@@ -6,7 +6,7 @@
  * License: Modified BSD License
  */
 
-#include <nebula_velodyne_common/velodyne/velodyne_calibration_decoder.hpp>
+#include <nebula_velodyne_common/velodyne_calibration_decoder.hpp>
 
 #include <fstream>
 #include <iostream>

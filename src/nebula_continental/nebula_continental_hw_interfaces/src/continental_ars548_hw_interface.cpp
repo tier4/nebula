@@ -17,7 +17,7 @@
 
 #include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
 
-#include <nebula_continental_common/continental/continental_ars548.hpp>
+#include <nebula_continental_common/continental_ars548.hpp>
 
 #include <algorithm>
 #include <iostream>
