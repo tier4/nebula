@@ -57,7 +57,7 @@ target_link_libraries(hesai_ros_wrapper PUBLIC
     diagnostic_updater::diagnostic_updater
     nebula_decoders_hesai::nebula_decoders_hesai
     nebula_hw_interfaces_hesai::nebula_hw_interfaces_hesai
-    nebula_ros_base::nebula_ros_base_common
+    nebula_ros_base::nebula_ros_base
     pcl_common
 )
 ament_target_dependencies(
@@ -115,7 +115,7 @@ if(BUILD_TESTING)
     )
     target_link_libraries(hesai_ros_decoder_test PRIVATE
         nebula_common_base::nebula_common_base
-        nebula_ros_base::nebula_ros_base_common
+        nebula_ros_base::nebula_ros_base
         pcl_common
         pcl_io
         rosbag2_cpp::rosbag2_cpp
@@ -173,7 +173,7 @@ if(BUILD_EXAMPLES)
         pcl_io
         rosbag2_cpp::rosbag2_cpp
         nebula_decoders_hesai::nebula_decoders_hesai
-        nebula_ros_base::nebula_ros_base_common
+        nebula_ros_base::nebula_ros_base
     )
 
     add_executable(hesai_ros_offline_extract_pcd_node
@@ -197,7 +197,7 @@ if(BUILD_EXAMPLES)
         pcl_io
         rosbag2_cpp::rosbag2_cpp
         nebula_decoders_hesai::nebula_decoders_hesai
-        nebula_ros_base::nebula_ros_base_common
+        nebula_ros_base::nebula_ros_base
     )
 
     add_executable(hesai_ros_offline_extract_bag_pcd_node

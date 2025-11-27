@@ -44,7 +44,7 @@ target_link_libraries(velodyne_ros_wrapper PUBLIC
     diagnostic_updater::diagnostic_updater
     nebula_decoders_velodyne::nebula_decoders_velodyne
     nebula_hw_interfaces_velodyne::nebula_hw_interfaces_velodyne
-    nebula_ros_base::nebula_ros_base_common
+    nebula_ros_base::nebula_ros_base
     pcl_common
 )
 
@@ -188,7 +188,7 @@ if(BUILD_EXAMPLES)
         pcl_io
         rosbag2_cpp::rosbag2_cpp
         nebula_decoders_velodyne::nebula_decoders_velodyne
-        nebula_ros_base::nebula_ros_base_common
+        nebula_ros_base::nebula_ros_base
     )
 
     add_executable(velodyne_ros_offline_extract_bag_pcd_node

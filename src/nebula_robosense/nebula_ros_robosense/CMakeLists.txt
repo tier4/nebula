@@ -47,7 +47,7 @@ target_link_libraries(robosense_ros_wrapper PUBLIC
     nebula_decoders_robosense::nebula_decoders_robosense
     nebula_decoders_robosense::nebula_decoders_robosense_info
     nebula_hw_interfaces_robosense::nebula_hw_interfaces_robosense
-    nebula_ros_base::nebula_ros_base_common
+    nebula_ros_base::nebula_ros_base
     pcl_common)
 
 ament_target_dependencies(robosense_ros_wrapper PUBLIC

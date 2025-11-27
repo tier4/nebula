@@ -18,21 +18,21 @@ find_package(nlohmann_json REQUIRED)
 find_package(rclcpp REQUIRED)
 
 # Common library for parameter descriptors
-add_library(nebula_ros_base_common SHARED
+add_library(nebula_ros_base SHARED
     src/common/parameter_descriptors.cpp
 )
 
-target_include_directories(nebula_ros_base_common PUBLIC
+target_include_directories(nebula_ros_base PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(nebula_ros_base_common PUBLIC
+target_link_libraries(nebula_ros_base PUBLIC
     rclcpp::rclcpp
     nebula_common_base::nebula_common_base
 )
 
-install(TARGETS nebula_ros_base_common EXPORT export_nebula_ros_base_common LIBRARY DESTINATION lib)
+install(TARGETS nebula_ros_base EXPORT export_nebula_ros_base LIBRARY DESTINATION lib)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
@@ -55,7 +55,7 @@ if(BUILD_TESTING)
 endif()
 
 ament_export_include_directories("include/${PROJECT_NAME}")
-ament_export_targets(export_nebula_ros_base_common)
+ament_export_targets(export_nebula_ros_base)
 
 install(
   DIRECTORY schema

@@ -54,7 +54,7 @@ target_link_libraries(continental_ars548_ros_wrapper PUBLIC
     tf2_ros::tf2_ros
     nebula_decoders_continental::nebula_decoders_continental
     nebula_hw_interfaces_continental::nebula_hw_interfaces_continental
-    nebula_ros_base::nebula_ros_base_common
+    nebula_ros_base::nebula_ros_base
     pcl_common)
 ament_target_dependencies(continental_ars548_ros_wrapper PUBLIC
     autoware_sensing_msgs
@@ -93,7 +93,7 @@ target_link_libraries(continental_srr520_ros_wrapper PUBLIC
     message_filters::message_filters
     nebula_decoders_continental::nebula_decoders_continental
     nebula_hw_interfaces_continental::nebula_hw_interfaces_continental
-    nebula_ros_base::nebula_ros_base_common
+    nebula_ros_base::nebula_ros_base
     pcl_common)
 
 ament_target_dependencies(continental_srr520_ros_wrapper PUBLIC
