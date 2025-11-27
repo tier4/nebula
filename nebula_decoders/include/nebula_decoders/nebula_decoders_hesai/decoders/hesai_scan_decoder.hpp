@@ -15,6 +15,7 @@
 #ifndef NEBULA_WS_HESAI_SCAN_DECODER_HPP
 #define NEBULA_WS_HESAI_SCAN_DECODER_HPP
 
+#include <gsl/span>
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/point_types.hpp>
 #include <nebula_common/util/expected.hpp>
@@ -74,7 +75,7 @@ public:
   /// @param packet The incoming PandarPacket
   /// @return Metadata on success, or decode error on failure. Performance counters are always
   /// returned.
-  virtual PacketDecodeResult unpack(const std::vector<uint8_t> & packet) = 0;
+  virtual PacketDecodeResult unpack(gsl::span<const uint8_t> packet) = 0;
 
   virtual void set_pointcloud_callback(pointcloud_callback_t callback) = 0;
 };

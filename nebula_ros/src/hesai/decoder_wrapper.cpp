@@ -9,6 +9,8 @@
 #include "nebula_ros/hesai/diagnostics/functional_safety_basic.hpp"
 #include "nebula_ros/hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 
+#include <builtin_interfaces/msg/time.hpp>
+#include <gsl/span>
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/util/string_conversions.hpp>
 #include <rclcpp/logging.hpp>
@@ -111,9 +113,13 @@ void HesaiDecoderWrapper::on_calibration_change(
 }
 
 drivers::PacketDecodeResult HesaiDecoderWrapper::process_cloud_packet(
-  std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg, uint64_t receive_time_ns)
+  gsl::span<const uint8_t> packet_data, uint64_t packet_stamp_ns, uint64_t receive_time_ns)
 {
   current_scan_perf_counters_.receive_time_current_scan_ns += receive_time_ns;
+
+  builtin_interfaces::msg::Time packet_stamp;
+  packet_stamp.sec = static_cast<int32_t>(packet_stamp_ns / 1'000'000'000);
+  packet_stamp.nanosec = static_cast<uint32_t>(packet_stamp_ns % 1'000'000'000);
 
   // Ideally, we would only accumulate packets if someone is subscribed to the packets topic.
   // However, checking for subscriptions in the decode thread (here) causes contention with the
@@ -121,18 +127,18 @@ drivers::PacketDecodeResult HesaiDecoderWrapper::process_cloud_packet(
   // Not checking is an okay trade-off for the time being.
   if (packets_pub_) {
     if (current_scan_msg_->packets.size() == 0) {
-      current_scan_msg_->header.stamp = packet_msg->stamp;
+      current_scan_msg_->header.stamp = packet_stamp;
     }
 
     pandar_msgs::msg::PandarPacket pandar_packet_msg{};
-    pandar_packet_msg.stamp = packet_msg->stamp;
-    pandar_packet_msg.size = packet_msg->data.size();
-    std::copy(packet_msg->data.begin(), packet_msg->data.end(), pandar_packet_msg.data.begin());
+    pandar_packet_msg.stamp = packet_stamp;
+    pandar_packet_msg.size = packet_data.size();
+    std::copy(packet_data.begin(), packet_data.end(), pandar_packet_msg.data.begin());
     current_scan_msg_->packets.emplace_back(pandar_packet_msg);
   }
 
   std::lock_guard lock(mtx_driver_ptr_);
-  auto decode_result = driver_ptr_->parse_cloud_packet(packet_msg->data);
+  auto decode_result = driver_ptr_->parse_cloud_packet(packet_data);
 
   current_scan_perf_counters_.decode_time_current_scan_ns +=
     decode_result.performance_counters.decode_time_ns;

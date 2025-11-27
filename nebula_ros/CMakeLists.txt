@@ -34,6 +34,7 @@ find_package(message_filters REQUIRED)
 find_package(autoware_utils_debug REQUIRED)
 find_package(autoware_internal_debug_msgs REQUIRED)
 find_package(agnocastlib)
+find_package(Microsoft.GSL REQUIRED)
 
 if("$ENV{ENABLE_AGNOCAST}" AND NOT agnocastlib_FOUND)
     message(FATAL_ERROR "agnocastlib is required when Agnocast is enabled")
@@ -82,6 +83,7 @@ target_link_libraries(hesai_ros_wrapper PUBLIC
     ${autoware_internal_debug_msgs_TARGETS}
     nebula_decoders::nebula_decoders_hesai
     nebula_hw_interfaces::nebula_hw_interfaces_hesai
+    Microsoft.GSL::GSL
 )
 
 if("$ENV{ENABLE_AGNOCAST}")
@@ -331,6 +333,7 @@ ament_export_dependencies(
     sync_tooling_msgs
     autoware_utils_debug
     autoware_internal_debug_msgs
+    Microsoft.GSL
 )
 
 if("$ENV{ENABLE_AGNOCAST}")
