@@ -117,15 +117,12 @@ drivers::PacketDecodeResult HesaiDecoderWrapper::process_cloud_packet(
 {
   current_scan_perf_counters_.receive_time_current_scan_ns += receive_time_ns;
 
-  builtin_interfaces::msg::Time packet_stamp;
-  packet_stamp.sec = static_cast<int32_t>(packet_stamp_ns / 1'000'000'000);
-  packet_stamp.nanosec = static_cast<uint32_t>(packet_stamp_ns % 1'000'000'000);
-
   // Ideally, we would only accumulate packets if someone is subscribed to the packets topic.
   // However, checking for subscriptions in the decode thread (here) causes contention with the
   // publish thread, negating the benefits of multi-threading.
   // Not checking is an okay trade-off for the time being.
   if (packets_pub_) {
+    rclcpp::Time packet_stamp(static_cast<int64_t>(packet_stamp_ns));
     if (current_scan_msg_->packets.size() == 0) {
       current_scan_msg_->header.stamp = packet_stamp;
     }
