@@ -16,6 +16,8 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/pandar_xt32m.hpp"
 
+#include <gsl/span>
+
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -116,7 +118,7 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
     std::move(blockage_mask_plugin));
 }
 
-PacketDecodeResult HesaiDriver::parse_cloud_packet(const std::vector<uint8_t> & packet)
+PacketDecodeResult HesaiDriver::parse_cloud_packet(gsl::span<const uint8_t> packet)
 {
   if (driver_status_ != nebula::Status::OK) {
     logger_->error("Driver not OK.");

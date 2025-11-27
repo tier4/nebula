@@ -24,6 +24,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/packet_loss_detector.hpp"
 
+#include <gsl/span>
 #include <nebula_common/loggers/logger.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
@@ -140,7 +141,7 @@ public:
   /// @param packet Packet to decode
   /// @return Metadata on success, or decode error on failure. Performance counters are always
   /// returned.
-  PacketDecodeResult parse_cloud_packet(const std::vector<uint8_t> & packet);
+  PacketDecodeResult parse_cloud_packet(gsl::span<const uint8_t> packet);
 };
 
 }  // namespace nebula::drivers

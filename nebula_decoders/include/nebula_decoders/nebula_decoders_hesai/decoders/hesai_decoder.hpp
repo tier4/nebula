@@ -23,6 +23,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_scan_decoder.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/packet_loss_detector.hpp"
 
+#include <gsl/span>
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/loggers/logger.hpp>
 #include <nebula_common/nebula_common.hpp>
@@ -106,7 +107,7 @@ private:
   /// @brief Validates and parse PandarPacket. Checks size and, if present, CRC checksums.
   /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
-  bool parse_packet(const std::vector<uint8_t> & packet)
+  bool parse_packet(gsl::span<const uint8_t> packet)
   {
     if (packet.size() < sizeof(typename SensorT::packet_t)) {
       NEBULA_LOG_STREAM(
@@ -350,7 +351,7 @@ public:
     pointcloud_callback_ = std::move(callback);
   }
 
-  PacketDecodeResult unpack(const std::vector<uint8_t> & packet) override
+  PacketDecodeResult unpack(gsl::span<const uint8_t> packet) override
   {
     util::Stopwatch decode_watch;
 

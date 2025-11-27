@@ -4,6 +4,7 @@
 
 #include "nebula_ros/common/parameter_descriptors.hpp"
 
+#include <gsl/span>
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <nebula_common/util/rate_limiter.hpp>
@@ -414,12 +415,13 @@ void HesaiRosWrapper::receive_scan_message_callback(
     return;
   }
 
-  for (auto & pkt : scan_msg->packets) {
-    auto nebula_pkt_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
-    nebula_pkt_ptr->stamp = pkt.stamp;
-    std::copy(pkt.data.begin(), pkt.data.end(), std::back_inserter(nebula_pkt_ptr->data));
+  for (const auto & pkt : scan_msg->packets) {
+    uint64_t packet_stamp_ns = static_cast<uint64_t>(pkt.stamp.sec) * 1'000'000'000ULL +
+                               static_cast<uint64_t>(pkt.stamp.nanosec);
+    gsl::span<const uint8_t> packet_data(pkt.data.data(), pkt.size);
 
-    decoder_wrapper_->process_cloud_packet(std::move(nebula_pkt_ptr), receive_watch.elapsed_ns());
+    decoder_wrapper_->process_cloud_packet(
+      packet_data, packet_stamp_ns, receive_watch.elapsed_ns());
     // This reset is placed at the end of the loop, so that in the first iteration, the possible
     // logging overhead from the statements before the loop is included in the measurement.
     receive_watch.reset();
@@ -578,13 +580,10 @@ void HesaiRosWrapper::receive_cloud_packet_callback(
   const auto timestamp_ns =
     std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
 
-  auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
-  msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
-  msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
-  msg_ptr->data = packet;
+  gsl::span<const uint8_t> packet_data(packet);
 
   auto decode_result = decoder_wrapper_->process_cloud_packet(
-    std::move(msg_ptr), receive_metadata.packet_perf_counters.receive_duration_ns);
+    packet_data, timestamp_ns, receive_metadata.packet_perf_counters.receive_duration_ns);
 
   if (
     decode_result.metadata_or_error.has_value() && sync_tooling_plugin_ &&

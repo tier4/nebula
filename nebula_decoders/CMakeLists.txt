@@ -26,6 +26,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(velodyne_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(PNG REQUIRED)
+find_package(Microsoft.GSL REQUIRED)
 
 # Check if pcl_conversions provides modern CMake targets (ROS 2 Jazzy and later)
 # or if we need to use legacy variables (ROS 2 Humble and earlier)
@@ -64,6 +65,7 @@ add_library(nebula_decoders_hesai SHARED
 target_link_libraries(nebula_decoders_hesai PUBLIC
     ${pandar_msgs_TARGETS}
     ${PNG_LIBRARIES}
+    Microsoft.GSL::GSL
 )
 
 target_include_directories(nebula_decoders_hesai PUBLIC
@@ -177,6 +179,7 @@ ament_export_dependencies(
     sensor_msgs
     velodyne_msgs
     yaml-cpp
+    Microsoft.GSL
 )
 
 ament_package()

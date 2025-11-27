@@ -25,12 +25,12 @@
 #include <autoware_utils_debug/debug_publisher.hpp>
 #include <diagnostic_updater/publisher.hpp>
 #include <diagnostic_updater/update_functions.hpp>
+#include <gsl/span>
 #include <nebula_common/hesai/hesai_common.hpp>
 #include <nebula_common/nebula_common.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include <nebula_msgs/msg/nebula_packet.hpp>
 #include <pandar_msgs/msg/pandar_scan.hpp>
 
 #include <limits>
@@ -51,11 +51,12 @@ public:
     diagnostic_updater::Updater & diagnostic_updater, bool publish_packets);
 
   /// @brief Process a cloud packet and return metadata
-  /// @param packet_msg The packet to process
-  /// @param receive_metadata Performance metadata from packet reception
+  /// @param packet_data The raw packet data
+  /// @param packet_stamp_ns Timestamp of the packet in nanoseconds
+  /// @param receive_time_ns Performance metadata from packet reception
   /// @return Expected containing metadata on success, or decode error on failure
   drivers::PacketDecodeResult process_cloud_packet(
-    std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg, uint64_t receive_time_ns);
+    gsl::span<const uint8_t> packet_data, uint64_t packet_stamp_ns, uint64_t receive_time_ns);
 
   void on_pointcloud_decoded(const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s);
 
