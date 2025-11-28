@@ -160,8 +160,8 @@ public:
   static constexpr FieldOfView<int32_t, MilliDegrees> fov_mdeg{{0, 360'000}, {-52'630, 52'630}};
   static constexpr AnglePair<int32_t, MilliDegrees> peak_resolution_mdeg{400, 100};
 
-  int get_packet_relative_point_time_offset(
-    uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
+  [[nodiscard]] int get_packet_relative_point_time_offset(
+    uint32_t block_id, uint32_t channel_id, const packet_t & packet) const override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
     int block_offset_ns = 9000 + 111110 * (2 - block_id - 1) / n_returns;

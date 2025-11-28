@@ -17,7 +17,7 @@
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_packet.hpp"
 #include "nebula_decoders/nebula_decoders_hesai/decoders/hesai_sensor.hpp"
 
-#include <vector>
+#include <array>
 
 namespace nebula::drivers
 {
@@ -59,8 +59,8 @@ public:
   static constexpr FieldOfView<int32_t, MilliDegrees> fov_mdeg{{0, 360'000}, {-16'000, 15'000}};
   static constexpr AnglePair<int32_t, MilliDegrees> peak_resolution_mdeg{180, 1'000};
 
-  int get_packet_relative_point_time_offset(
-    uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
+  [[nodiscard]] int get_packet_relative_point_time_offset(
+    uint32_t block_id, uint32_t channel_id, const packet_t & packet) const override
   {
     auto n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
     int block_offset_ns = 5632 - 50000 * ((8 - block_id - 1) / n_returns);
@@ -68,25 +68,24 @@ public:
     return block_offset_ns + channel_offset_ns;
   }
 
-  ReturnType get_return_type(
-    hesai_packet::return_mode::ReturnMode return_mode, unsigned int return_idx,
-    const std::vector<const typename packet_t::body_t::block_t::unit_t *> & return_units) override
+  [[nodiscard]] std::array<ReturnType, 2> get_return_type_dual(
+    hesai_packet::return_mode::ReturnMode return_mode, std::array<uint8_t, 2> intensities,
+    std::array<uint16_t, 2> distances) const override
   {
-    auto return_type =
-      HesaiSensor<packet_t>::get_return_type(return_mode, return_idx, return_units);
-    if (return_type == ReturnType::IDENTICAL) {
-      return return_type;
-    }
+    auto return_types =
+      HesaiSensor<packet_t>::get_return_type_dual(return_mode, intensities, distances);
 
     // This sensor orders returns in the opposite order, so the return_type needs to be flipped too
     if (return_mode == hesai_packet::return_mode::DUAL_FIRST_LAST) {
-      if (return_type == ReturnType::FIRST)
-        return_type = ReturnType::LAST;
-      else if (return_type == ReturnType::LAST)
-        return_type = ReturnType::FIRST;
+      if (return_types[0] == ReturnType::FIRST && return_types[1] == ReturnType::LAST) {
+        return {ReturnType::LAST, ReturnType::FIRST};
+      }
+      if (return_types[0] == ReturnType::LAST && return_types[1] == ReturnType::FIRST) {
+        return {ReturnType::FIRST, ReturnType::LAST};
+      }
     }
 
-    return return_type;
+    return return_types;
   }
 };
 

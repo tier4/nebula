@@ -23,6 +23,7 @@
 #include <nebula_common/nebula_common.hpp>
 
 #include <algorithm>
+#include <cstdint>
 #include <type_traits>
 #include <vector>
 
@@ -45,22 +46,18 @@ private:
   /// blocks)
   /// @return true if the reflectivity of the unit is strictly greater than that of all other units
   /// in return_units, false otherwise
-  static bool is_strongest_return(
-    uint32_t return_idx,
-    const std::vector<const typename PacketT::body_t::block_t::unit_t *> & return_units)
+  template <size_t n_returns>
+  static std::array<bool, n_returns> is_strongest_return(
+    const std::array<uint8_t, n_returns> & intensities)
   {
-    for (unsigned int i = 0; i < return_units.size(); ++i) {
-      if (i == return_idx) {
-        continue;
-      }
-
-      if (return_units[return_idx]->reflectivity < return_units[i]->reflectivity) {
-        return false;
-      }
+    static_assert(n_returns > 0, "n_returns must be greater than 0");
+    uint8_t strongest = *std::max_element(intensities.begin(), intensities.end());
+    std::array<bool, n_returns> is_strongest;
+    for (size_t i = 0; i < n_returns; ++i) {
+      is_strongest[i] = intensities[i] == strongest;
     }
-
-    return true;
-  };
+    return is_strongest;
+  }
 
   /// @brief Whether the unit given by return_idx is a duplicate of any other unit in return_units
   /// @param return_idx The unit's index in the return_units vector
@@ -68,24 +65,17 @@ private:
   /// length 2 for dual-return with both units having the same channel but coming from different
   /// blocks)
   /// @return true if the unit is identical to any other one in return_units, false otherwise
-  static bool is_duplicate_return(
-    uint32_t return_idx,
-    const std::vector<const typename PacketT::body_t::block_t::unit_t *> & return_units)
+  template <size_t n_returns>
+  static std::array<bool, n_returns> is_duplicate_return(
+    const std::array<uint16_t, n_returns> & distances,
+    const std::array<uint8_t, n_returns> & intensities)
   {
-    for (unsigned int i = 0; i < return_units.size(); ++i) {
-      if (i == return_idx) {
-        continue;
-      }
-
-      if (
-        return_units[return_idx]->distance == return_units[i]->distance &&
-        return_units[return_idx]->reflectivity == return_units[i]->reflectivity) {
-        return true;
-      }
+    std::array<bool, n_returns> is_duplicate{false};
+    for (size_t i = 1; i < n_returns; ++i) {
+      is_duplicate[i] = distances[i] == distances[0] && intensities[i] == intensities[0];
     }
-
-    return false;
-  };
+    return is_duplicate;
+  }
 
 public:
   using packet_t = PacketT;
@@ -104,7 +94,7 @@ public:
   /// @param packet The packet
   /// @return The relative time offset in nanoseconds
   virtual int get_packet_relative_point_time_offset(
-    uint32_t block_id, uint32_t channel_id, const PacketT & packet) = 0;
+    uint32_t block_id, uint32_t channel_id, const PacketT & packet) const = 0;
 
   /// @brief For a given start block index, find the earliest (lowest) relative time offset of any
   /// point in the packet in or after the start block
@@ -112,7 +102,8 @@ public:
   /// @param packet The packet
   /// @return The lowest point time offset (relative to the packet timestamp) of any point in or
   /// after the start block, in nanoseconds
-  int get_earliest_point_time_offset_for_block(uint32_t start_block_id, const PacketT & packet)
+  [[nodiscard]] int get_earliest_point_time_offset_for_block(
+    uint32_t start_block_id, const PacketT & packet) const
   {
     unsigned int n_returns = hesai_packet::get_n_returns(packet.tail.return_mode);
     int min_offset_ns = 0x7FFFFFFF;  // MAXINT (max. positive value)
@@ -141,14 +132,9 @@ public:
   /// @param return_units The units corresponding to all the returns in the group. These are usually
   /// from the same column across adjascent blocks.
   /// @return The return type of the point
-  virtual ReturnType get_return_type(
-    hesai_packet::return_mode::ReturnMode return_mode, unsigned int return_idx,
-    const std::vector<const typename PacketT::body_t::block_t::unit_t *> & return_units)
+  [[nodiscard]] virtual ReturnType get_return_type_single(
+    hesai_packet::return_mode::ReturnMode return_mode) const
   {
-    if (is_duplicate_return(return_idx, return_units)) {
-      return ReturnType::IDENTICAL;
-    }
-
     switch (return_mode) {
       case hesai_packet::return_mode::SINGLE_FIRST:
         return ReturnType::FIRST;
@@ -158,37 +144,53 @@ public:
         return ReturnType::STRONGEST;
       case hesai_packet::return_mode::SINGLE_LAST:
         return ReturnType::LAST;
-      case hesai_packet::return_mode::DUAL_LAST_STRONGEST:
-        if (is_strongest_return(return_idx, return_units)) {
-          return return_idx == 0 ? ReturnType::LAST_STRONGEST : ReturnType::STRONGEST;
-        } else {
-          return return_idx == 0 ? ReturnType::LAST : ReturnType::SECONDSTRONGEST;
-        }
-      case hesai_packet::return_mode::DUAL_FIRST_SECOND:
-        return return_idx == 0 ? ReturnType::FIRST : ReturnType::SECOND;
-      case hesai_packet::return_mode::DUAL_FIRST_LAST:
-        return return_idx == 0 ? ReturnType::FIRST : ReturnType::LAST;
-      case hesai_packet::return_mode::DUAL_FIRST_STRONGEST:
-        if (is_strongest_return(return_idx, return_units)) {
-          return return_idx == 0 ? ReturnType::FIRST_STRONGEST : ReturnType::STRONGEST;
-        } else {
-          return return_idx == 0 ? ReturnType::FIRST : ReturnType::SECONDSTRONGEST;
-        }
-      case hesai_packet::return_mode::DUAL_STRONGEST_SECONDSTRONGEST:
-        return return_idx == 0 ? ReturnType::STRONGEST : ReturnType::SECONDSTRONGEST;
-      case hesai_packet::return_mode::TRIPLE_FIRST_LAST_STRONGEST:
-        switch (return_idx) {
-          case 0:
-            return ReturnType::FIRST;
-          case 1:
-            return ReturnType::LAST;
-          case 2:
-            return ReturnType::STRONGEST;
-          default:
-            return ReturnType::UNKNOWN;
-        }
       default:
         return ReturnType::UNKNOWN;
+    }
+  }
+
+  [[nodiscard]] virtual std::array<ReturnType, 2> get_return_type_dual(
+    hesai_packet::return_mode::ReturnMode return_mode, std::array<uint8_t, 2> intensities,
+    std::array<uint16_t, 2> distances) const
+  {
+    auto is_duplicate = is_duplicate_return(distances, intensities);
+    if (is_duplicate[0] && is_duplicate[1]) {
+      return {ReturnType::IDENTICAL, ReturnType::IDENTICAL};
+    }
+
+    switch (return_mode) {
+      case hesai_packet::return_mode::DUAL_LAST_STRONGEST: {
+        auto is_strongest = is_strongest_return(intensities);
+        return {
+          is_strongest[0] ? ReturnType::LAST_STRONGEST : ReturnType::LAST,
+          is_strongest[1] ? ReturnType::STRONGEST : ReturnType::SECONDSTRONGEST};
+      }
+      case hesai_packet::return_mode::DUAL_FIRST_SECOND:
+        return {ReturnType::FIRST, ReturnType::SECOND};
+      case hesai_packet::return_mode::DUAL_FIRST_LAST:
+        return {ReturnType::FIRST, ReturnType::LAST};
+      case hesai_packet::return_mode::DUAL_FIRST_STRONGEST: {
+        auto is_strongest = is_strongest_return(intensities);
+        return {
+          is_strongest[0] ? ReturnType::FIRST_STRONGEST : ReturnType::FIRST,
+          is_strongest[1] ? ReturnType::STRONGEST : ReturnType::SECONDSTRONGEST};
+      }
+      case hesai_packet::return_mode::DUAL_STRONGEST_SECONDSTRONGEST:
+        return {ReturnType::STRONGEST, ReturnType::SECONDSTRONGEST};
+      default:
+        return {ReturnType::UNKNOWN, ReturnType::UNKNOWN};
+    }
+  }
+
+  [[nodiscard]] virtual std::array<ReturnType, 3> get_return_type_triple(
+    hesai_packet::return_mode::ReturnMode return_mode, std::array<uint8_t, 3> /* intensities */,
+    std::array<uint16_t, 3> /* distances */) const
+  {
+    switch (return_mode) {
+      case hesai_packet::return_mode::TRIPLE_FIRST_LAST_STRONGEST:
+        return {ReturnType::FIRST, ReturnType::LAST, ReturnType::STRONGEST};
+      default:
+        return {ReturnType::UNKNOWN, ReturnType::UNKNOWN, ReturnType::UNKNOWN};
     }
   }
 
