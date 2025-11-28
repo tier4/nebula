@@ -10,6 +10,13 @@ Nebula is a sensor driver platform that is designed to provide a unified framewo
 While it primarily targets Ethernet-based LiDAR sensors, it aims to be easily extendable to support new sensors and interfaces.
 Nebula works with ROS 2 and is the recommended sensor driver for the [Autoware](https://autoware.org/) project.
 
+## Table of Contents
+
+- [Documentation](#documentation)
+- [Quick start](#quick-start)
+- [Agnocast](#agnocast)
+- [Migration to Nebula 0.3.0](#migration-to-nebula-030)
+
 ## Documentation
 
 We recommend you get started with the [Nebula Documention](https://tier4.github.io/nebula/).
@@ -120,3 +127,22 @@ $ ros2 topic list_agnocast
 
 Please note that the `packets` topics do not support Agnocast, as they are purely used for
 data recording and tools like `ros2 bag` do not have Agnocast support yet.
+
+## Migration to Nebula 0.3.0
+
+Version 0.3.0 separates vendor-specific functionality into individual packages. This allows users
+to only build the functionality they need.
+
+Since packages have been split and renamed, some changes are required to existing launch files.
+
+### What changed
+
+- `nebula_sensor_driver` meta package has been removed. Depend on the `nebula_ros` package, or
+  on a `nebula_ros_<vendor>` package instead. `nebula_ros` includes all vendor packages.
+- Calibration files have moved from `nebula_decoders` to `nebula_decoders_<vendor>`.
+- Vendor-specific launch files have moved from `nebula_ros` to `nebula_ros_<vendor>`.
+- `nebula_tests` and `nebula_examples` have been absorbed into the `nebula_ros_<vendor>` packages.
+
+### What stayed the same
+
+- `nebula_launch.py` is still in `nebula_ros` and can be used in exactly the same way as before.
