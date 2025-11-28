@@ -19,7 +19,7 @@ find_package(rclcpp REQUIRED)
 
 # Common library for parameter descriptors
 add_library(nebula_ros_base SHARED
-    src/common/parameter_descriptors.cpp
+    src/parameter_descriptors.cpp
 )
 
 target_include_directories(nebula_ros_base PUBLIC

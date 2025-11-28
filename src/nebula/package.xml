@@ -9,10 +9,10 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>nebula_ros_continental</depend>
-  <depend>nebula_ros_hesai</depend>
-  <depend>nebula_ros_robosense</depend>
-  <depend>nebula_ros_velodyne</depend>
+  <depend>nebula_continental</depend>
+  <depend>nebula_hesai</depend>
+  <depend>nebula_robosense</depend>
+  <depend>nebula_velodyne</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

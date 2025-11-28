@@ -1,6 +1,6 @@
 ## Overview
 
-{{ json_to_markdown("nebula_ros_hesai/schema/lidar_hesai.json", ["definitions"], True) }}
+{{ json_to_markdown("nebula_hesai/schema/lidar_hesai.json", ["definitions"], True) }}
 
 ## PTP Settings
 
