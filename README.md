@@ -68,13 +68,13 @@ mkdocs serve
 To launch Nebula as a ROS 2 node with default parameters for your sensor model:
 
 ```bash
-ros2 launch nebula_ros *sensor_vendor_name*_launch_all_hw.xml sensor_model:=*sensor_model_name*
+ros2 launch nebula nebula_launch.py sensor_model:=*sensor_model_name*
 ```
 
 For example, for a Hesai Pandar40P sensor:
 
 ```bash
-ros2 launch nebula_ros hesai_launch_all_hw.xml sensor_model:=Pandar40P
+ros2 launch nebula nebula_launch.py sensor_model:=Pandar40P
 ```
 
 ## Agnocast
@@ -133,16 +133,20 @@ data recording and tools like `ros2 bag` do not have Agnocast support yet.
 Version 0.3.0 separates vendor-specific functionality into individual packages. This allows users
 to only build the functionality they need.
 
-Since packages have been split and renamed, some changes are required to existing launch files.
+Since packages have been split and renamed, some changes are required to existing launch files:
 
-### What changed
-
-- `nebula_sensor_driver` meta package has been removed. Depend on the `nebula_ros` package, or
-  on a `nebula_ros_<vendor>` package instead. `nebula_ros` includes all vendor packages.
+- the `nebula_ros` package has been renamed to `nebula`.
+- the `nebula_sensor_driver` meta package has been removed. Depend on the `nebula` package, or
+  on a `nebula_ros_<vendor>` package instead. `nebula` includes all vendor packages.
 - Calibration files have moved from `nebula_decoders` to `nebula_decoders_<vendor>`.
 - Vendor-specific launch files have moved from `nebula_ros` to `nebula_ros_<vendor>`.
 - `nebula_tests` and `nebula_examples` have been absorbed into the `nebula_ros_<vendor>` packages.
 
-### What stayed the same
+Below are the changes you most likely need to make:
 
-- `nebula_launch.py` is still in `nebula_ros` and can be used in exactly the same way as before.
+- `ros2 launch nebula_ros nebula_launch.py ...` ➡️ `ros2 launch nebula nebula_launch.py ...`
+- `ros2 launch nebula_ros <vendor>_launch_all_hw.xml ...` ➡️ `ros2 launch nebula_ros_<vendor> <vendor>_launch_all_hw.xml ...`
+- `$(find-pkg-share nebula_decoders)/calibration/<vendor>/...` ➡️ `$(find-pkg-share nebula_decoders_<vendor>)/calibration/...`
+- `$(find-pkg-share nebula_ros)/config/lidar/<vendor>/...` ➡️ `$(find-pkg-share nebula_ros_<vendor>)/config/...`
+- `<depend>nebula_ros</depend>` ➡️ `<depend>nebula</depend>` or `<depend>nebula_ros_<vendor></depend>`
+- `<depend>nebula_sensor_driver</depend>` ➡️ `<depend>nebula</depend>` or `<depend>nebula_ros_<vendor></depend>`
