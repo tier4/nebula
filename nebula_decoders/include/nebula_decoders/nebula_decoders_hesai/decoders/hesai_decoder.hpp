@@ -351,19 +351,21 @@ public:
   {
     util::Stopwatch decode_watch;
 
-    auto packet_struct = parse_packet(packet);
-    if (!packet_struct) {
+    const auto * parsed_packet_ptr = parse_packet(packet);
+    if (!parsed_packet_ptr) {
       return {PerformanceCounters{decode_watch.elapsed_ns(), 0}, DecodeError::PACKET_PARSE_FAILED};
     }
 
+    const auto & parsed_packet = *parsed_packet_ptr;
+
     if (packet_loss_detector_) {
-      packet_loss_detector_->update(*packet_struct);
+      packet_loss_detector_->update(parsed_packet);
     }
 
     // Even if the checksums of other parts of the packet are invalid, functional safety info
     // is still checked. This is a null-op for sensors that do not support functional safety.
     if (functional_safety_decoder_) {
-      functional_safety_decoder_->update(*packet_struct);
+      functional_safety_decoder_->update(parsed_packet);
     }
 
     // FYI: This is where the CRC would be checked. Since this caused performance issues in the
@@ -373,20 +375,20 @@ public:
     // This is the first scan, set scan timestamp to whatever packet arrived first
     if (decode_frame_.scan_timestamp_ns == 0) {
       decode_frame_.scan_timestamp_ns =
-        hesai_packet::get_timestamp_ns(*packet_struct) +
-        sensor_.get_earliest_point_time_offset_for_block(0, *packet_struct);
+        hesai_packet::get_timestamp_ns(parsed_packet) +
+        sensor_.get_earliest_point_time_offset_for_block(0, parsed_packet);
     }
 
     bool did_scan_complete = false;
 
-    const size_t n_returns = hesai_packet::get_n_returns(packet_struct->tail.return_mode);
+    const size_t n_returns = hesai_packet::get_n_returns(parsed_packet.tail.return_mode);
     for (size_t block_id = 0; block_id < SensorT::packet_t::n_blocks; block_id += n_returns) {
-      auto block_azimuth = packet_struct->body.blocks[block_id].get_azimuth();
+      auto block_azimuth = parsed_packet.body.blocks[block_id].get_azimuth();
 
       if (angle_corrector_.passed_timestamp_reset_angle(last_azimuth_, block_azimuth)) {
         uint64_t new_scan_timestamp_ns =
-          hesai_packet::get_timestamp_ns(*packet_struct) +
-          sensor_.get_earliest_point_time_offset_for_block(block_id, *packet_struct);
+          hesai_packet::get_timestamp_ns(parsed_packet) +
+          sensor_.get_earliest_point_time_offset_for_block(block_id, parsed_packet);
 
         if (sensor_configuration_->cut_angle == sensor_configuration_->cloud_max_angle) {
           // In the non-360 deg case, if the cut angle and FoV end coincide, the old pointcloud has
@@ -409,7 +411,7 @@ public:
         continue;
       }
 
-      convert_returns(*packet_struct, block_id, n_returns);
+      convert_returns(parsed_packet, block_id, n_returns);
 
       if (angle_corrector_.passed_emit_angle(last_azimuth_, block_azimuth)) {
         // The current `decode` pointcloud is ready for publishing, swap buffers to continue with
@@ -431,7 +433,7 @@ public:
     }
 
     PacketMetadata metadata;
-    metadata.packet_timestamp_ns = hesai_packet::get_timestamp_ns(*packet_struct);
+    metadata.packet_timestamp_ns = hesai_packet::get_timestamp_ns(parsed_packet);
     metadata.did_scan_complete = did_scan_complete;
     return {PerformanceCounters{decode_duration_ns, callbacks_duration_ns}, metadata};
   }
