@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>nebula_ros</name>
-  <version>0.2.10</version>
+  <version>0.3.0</version>
   <description>Nebula meta package including all officially supported sensor vendors</description>
   <maintainer email="contact@map4.jp">MAP IV</maintainer>
   <maintainer email="contact@tier4.jp">MAP IV</maintainer>
