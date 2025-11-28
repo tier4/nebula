@@ -14,14 +14,14 @@ find_package(ament_cmake_auto REQUIRED)
 find_package(PCL REQUIRED components common io)
 find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
-find_package(nebula_common_base REQUIRED)
-find_package(nebula_common_velodyne REQUIRED)
-find_package(nebula_decoders_base REQUIRED)
-find_package(nebula_decoders_velodyne REQUIRED)
-find_package(nebula_hw_interfaces_base REQUIRED)
-find_package(nebula_hw_interfaces_velodyne REQUIRED)
+find_package(nebula_core_common REQUIRED)
+find_package(nebula_velodyne_common REQUIRED)
+find_package(nebula_core_decoders REQUIRED)
+find_package(nebula_velodyne_decoders REQUIRED)
+find_package(nebula_core_hw_interfaces REQUIRED)
+find_package(nebula_velodyne_hw_interfaces REQUIRED)
 find_package(nebula_msgs REQUIRED)
-find_package(nebula_ros_base REQUIRED)
+find_package(nebula_core_ros REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(velodyne_msgs REQUIRED)
@@ -42,9 +42,9 @@ target_include_directories(velodyne_ros_wrapper PUBLIC
 
 target_link_libraries(velodyne_ros_wrapper PUBLIC
     diagnostic_updater::diagnostic_updater
-    nebula_decoders_velodyne::nebula_decoders_velodyne
-    nebula_hw_interfaces_velodyne::nebula_hw_interfaces_velodyne
-    nebula_ros_base::nebula_ros_base
+    nebula_velodyne_decoders::nebula_velodyne_decoders
+    nebula_velodyne_hw_interfaces::nebula_velodyne_hw_interfaces
+    nebula_core_ros::nebula_core_ros
     pcl_common
 )
 
@@ -72,7 +72,7 @@ if(BUILD_TESTING)
     ament_lint_auto_find_test_dependencies()
 
     add_definitions(-D_SRC_RESOURCES_DIR_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
-    add_definitions(-D_SRC_CALIBRATION_DIR_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../nebula_decoders_velodyne/calibration/")
+    add_definitions(-D_SRC_CALIBRATION_DIR_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../nebula_velodyne_decoders/calibration/")
 
     # VLP16 tests
     add_library(velodyne_ros_decoder_test_vlp16 SHARED
@@ -82,12 +82,12 @@ if(BUILD_TESTING)
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
     target_link_libraries(velodyne_ros_decoder_test_vlp16 PRIVATE
-        nebula_common_base::nebula_common_base
+        nebula_core_common::nebula_core_common
         pcl_common
         pcl_io
         rosbag2_cpp::rosbag2_cpp
         diagnostic_updater::diagnostic_updater
-        nebula_decoders_velodyne::nebula_decoders_velodyne
+        nebula_velodyne_decoders::nebula_velodyne_decoders
     )
 
     ament_add_gtest(velodyne_ros_decoder_test_main_vlp16
@@ -100,9 +100,9 @@ if(BUILD_TESTING)
     )
     target_link_libraries(velodyne_ros_decoder_test_main_vlp16
         velodyne_ros_decoder_test_vlp16
-        nebula_common_base::nebula_common_base
-        nebula_common_velodyne::nebula_common_velodyne
-        nebula_decoders_velodyne::nebula_decoders_velodyne
+        nebula_core_common::nebula_core_common
+        nebula_velodyne_common::nebula_velodyne_common
+        nebula_velodyne_decoders::nebula_velodyne_decoders
         diagnostic_updater::diagnostic_updater
     )
 
@@ -114,12 +114,12 @@ if(BUILD_TESTING)
         include
     )
     target_link_libraries(velodyne_ros_decoder_test_vls128 PRIVATE
-        nebula_common_base::nebula_common_base
+        nebula_core_common::nebula_core_common
         pcl_common
         pcl_io
         rosbag2_cpp::rosbag2_cpp
         diagnostic_updater::diagnostic_updater
-        nebula_decoders_velodyne::nebula_decoders_velodyne
+        nebula_velodyne_decoders::nebula_velodyne_decoders
     )
 
     ament_add_gtest(velodyne_ros_decoder_test_main_vls128
@@ -132,9 +132,9 @@ if(BUILD_TESTING)
     )
     target_link_libraries(velodyne_ros_decoder_test_main_vls128
         velodyne_ros_decoder_test_vls128
-        nebula_common_base::nebula_common_base
-        nebula_common_velodyne::nebula_common_velodyne
-        nebula_decoders_velodyne::nebula_decoders_velodyne
+        nebula_core_common::nebula_core_common
+        nebula_velodyne_common::nebula_velodyne_common
+        nebula_velodyne_decoders::nebula_velodyne_decoders
         diagnostic_updater::diagnostic_updater
     )
 
@@ -146,12 +146,12 @@ if(BUILD_TESTING)
         include
     )
     target_link_libraries(velodyne_ros_decoder_test_vlp32 PRIVATE
-        nebula_common_base::nebula_common_base
+        nebula_core_common::nebula_core_common
         pcl_common
         pcl_io
         rosbag2_cpp::rosbag2_cpp
         diagnostic_updater::diagnostic_updater
-        nebula_decoders_velodyne::nebula_decoders_velodyne
+        nebula_velodyne_decoders::nebula_velodyne_decoders
     )
 
     ament_add_gtest(velodyne_ros_decoder_test_main_vlp32
@@ -164,9 +164,9 @@ if(BUILD_TESTING)
     )
     target_link_libraries(velodyne_ros_decoder_test_main_vlp32
         velodyne_ros_decoder_test_vlp32
-        nebula_common_base::nebula_common_base
-        nebula_common_velodyne::nebula_common_velodyne
-        nebula_decoders_velodyne::nebula_decoders_velodyne
+        nebula_core_common::nebula_core_common
+        nebula_velodyne_common::nebula_velodyne_common
+        nebula_velodyne_decoders::nebula_velodyne_decoders
         diagnostic_updater::diagnostic_updater
     )
 endif()
@@ -183,12 +183,12 @@ if(BUILD_EXAMPLES)
         include
     )
     target_link_libraries(velodyne_ros_offline_extract_bag_pcd PRIVATE
-        nebula_common_base::nebula_common_base
+        nebula_core_common::nebula_core_common
         pcl_common
         pcl_io
         rosbag2_cpp::rosbag2_cpp
-        nebula_decoders_velodyne::nebula_decoders_velodyne
-        nebula_ros_base::nebula_ros_base
+        nebula_velodyne_decoders::nebula_velodyne_decoders
+        nebula_core_ros::nebula_core_ros
     )
 
     add_executable(velodyne_ros_offline_extract_bag_pcd_node
@@ -220,14 +220,14 @@ ament_export_dependencies(
     PCL
     diagnostic_msgs
     diagnostic_updater
-    nebula_common_base
-    nebula_common_velodyne
-    nebula_decoders_base
-    nebula_decoders_velodyne
-    nebula_hw_interfaces_base
-    nebula_hw_interfaces_velodyne
+    nebula_core_common
+    nebula_velodyne_common
+    nebula_core_decoders
+    nebula_velodyne_decoders
+    nebula_core_hw_interfaces
+    nebula_velodyne_hw_interfaces
     nebula_msgs
-    nebula_ros_base
+    nebula_core_ros
     rclcpp_components
     velodyne_msgs
     yaml-cpp

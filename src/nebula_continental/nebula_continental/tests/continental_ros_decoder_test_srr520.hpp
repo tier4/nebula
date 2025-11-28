@@ -16,9 +16,9 @@
 #define NEBULA_ContinentalRosDecoderTestsrr520_H
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_common_base/nebula_common.hpp>
-#include <nebula_common_base/nebula_status.hpp>
-#include <nebula_decoders_continental/decoders/continental_srr520_decoder.hpp>
+#include <nebula_continental_decoders/decoders/continental_srr520_decoder.hpp>
+#include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_common/nebula_status.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <continental_msgs/msg/continental_srr520_detection_list.hpp>

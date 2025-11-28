@@ -2,7 +2,7 @@
 
 #include "nebula_robosense/hw_monitor_wrapper.hpp"
 
-#include "nebula_ros_base/parameter_descriptors.hpp"
+#include "nebula_core_ros/parameter_descriptors.hpp"
 
 #include <map>
 #include <memory>

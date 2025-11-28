@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include "nebula_ros_base/diagnostics/liveness_monitor.hpp"
-#include "nebula_ros_base/diagnostics/severity_latch.hpp"
+#include "nebula_core_ros/diagnostics/liveness_monitor.hpp"
+#include "nebula_core_ros/diagnostics/severity_latch.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_decoders_hesai/decoders/functional_safety.hpp>
+#include <nebula_hesai_decoders/decoders/functional_safety.hpp>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 

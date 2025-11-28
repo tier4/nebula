@@ -4,9 +4,9 @@
 
 #include "hesai_ros_decoder_test.hpp"
 
-#include <nebula_common_base/nebula_common.hpp>
-#include <nebula_common_base/point_types.hpp>
-#include <nebula_decoders_base/angles.hpp>
+#include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_common/point_types.hpp>
+#include <nebula_core_decoders/angles.hpp>
 #include <pcl/impl/point_types.hpp>
 #include <rclcpp/executors/single_threaded_executor.hpp>
 #include <rclcpp/rclcpp.hpp>

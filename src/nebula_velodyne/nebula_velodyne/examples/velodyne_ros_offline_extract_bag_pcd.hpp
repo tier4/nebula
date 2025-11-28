@@ -15,9 +15,9 @@
 #ifndef NEBULA_VelodyneRosOfflineExtractBag_H
 #define NEBULA_VelodyneRosOfflineExtractBag_H
 
-#include "nebula_common_base/nebula_status.hpp"
-#include "nebula_common_velodyne/velodyne/velodyne_common.hpp"
-#include "nebula_decoders_velodyne/velodyne_driver.hpp"
+#include "nebula_core_common/nebula_status.hpp"
+#include "nebula_velodyne_common/velodyne/velodyne_common.hpp"
+#include "nebula_velodyne_decoders/velodyne_driver.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <rclcpp/rclcpp.hpp>

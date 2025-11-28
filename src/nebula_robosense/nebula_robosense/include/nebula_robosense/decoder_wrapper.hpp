@@ -14,13 +14,13 @@
 
 #pragma once
 
-#include "nebula_ros_base/watchdog_timer.hpp"
+#include "nebula_core_ros/watchdog_timer.hpp"
 
-#include <nebula_common_base/nebula_common.hpp>
-#include <nebula_common_base/nebula_status.hpp>
-#include <nebula_common_robosense/robosense/robosense_common.hpp>
-#include <nebula_decoders_robosense/robosense_driver.hpp>
-#include <nebula_hw_interfaces_robosense/robosense_hw_interface.hpp>
+#include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_common/nebula_status.hpp>
+#include <nebula_robosense_common/robosense/robosense_common.hpp>
+#include <nebula_robosense_decoders/robosense_driver.hpp>
+#include <nebula_robosense_hw_interfaces/robosense_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>

@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include "nebula_ros_base/parameter_descriptors.hpp"
+#include "nebula_core_ros/parameter_descriptors.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_common_velodyne/velodyne/velodyne_common.hpp>
-#include <nebula_hw_interfaces_velodyne/velodyne_hw_interface.hpp>
+#include <nebula_velodyne_common/velodyne/velodyne_common.hpp>
+#include <nebula_velodyne_hw_interfaces/velodyne_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <boost/algorithm/string/join.hpp>

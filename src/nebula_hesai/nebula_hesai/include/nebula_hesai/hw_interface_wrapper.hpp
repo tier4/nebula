@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include "nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
+#include "nebula_hesai_hw_interfaces/hesai_cmd_response.hpp"
 
-#include <nebula_common_hesai/hesai/hesai_common.hpp>
-#include <nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
+#include <nebula_hesai_common/hesai/hesai_common.hpp>
+#include <nebula_hesai_hw_interfaces/hesai_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <memory>

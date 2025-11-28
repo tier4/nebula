@@ -16,12 +16,12 @@
 
 #include "nebula_continental/continental_ars548_decoder_wrapper.hpp"
 #include "nebula_continental/continental_ars548_hw_interface_wrapper.hpp"
-#include "nebula_ros_base/parameter_descriptors.hpp"
+#include "nebula_core_ros/parameter_descriptors.hpp"
 
-#include <nebula_common_base/nebula_common.hpp>
-#include <nebula_common_base/nebula_status.hpp>
-#include <nebula_common_continental/continental/continental_ars548.hpp>
-#include <nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp>
+#include <nebula_continental_common/continental/continental_ars548.hpp>
+#include <nebula_continental_hw_interfaces/continental_ars548_hw_interface.hpp>
+#include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_common/nebula_status.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 

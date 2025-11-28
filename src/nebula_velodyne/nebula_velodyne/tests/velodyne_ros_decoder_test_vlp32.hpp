@@ -16,10 +16,10 @@
 #define NEBULA_VelodyneRosDecoderTestVlp16_H
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_common_base/nebula_common.hpp>
-#include <nebula_common_base/nebula_status.hpp>
-#include <nebula_common_velodyne/velodyne/velodyne_common.hpp>
-#include <nebula_decoders_velodyne/velodyne_driver.hpp>
+#include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_common/nebula_status.hpp>
+#include <nebula_velodyne_common/velodyne/velodyne_common.hpp>
+#include <nebula_velodyne_decoders/velodyne_driver.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>

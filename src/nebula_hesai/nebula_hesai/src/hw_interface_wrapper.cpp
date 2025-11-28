@@ -2,12 +2,12 @@
 
 #include "nebula_hesai/hw_interface_wrapper.hpp"
 
-#include "nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
-#include "nebula_ros_base/parameter_descriptors.hpp"
-#include "nebula_ros_base/rclcpp_logger.hpp"
+#include "nebula_core_ros/parameter_descriptors.hpp"
+#include "nebula_core_ros/rclcpp_logger.hpp"
+#include "nebula_hesai_hw_interfaces/hesai_cmd_response.hpp"
 
-#include <nebula_common_base/util/string_conversions.hpp>
-#include <nebula_hw_interfaces_hesai/hesai_hw_interface.hpp>
+#include <nebula_core_common/util/string_conversions.hpp>
+#include <nebula_hesai_hw_interfaces/hesai_hw_interface.hpp>
 
 #include <memory>
 

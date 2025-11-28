@@ -14,10 +14,10 @@
 
 #include "nebula_continental/continental_ars548_decoder_wrapper.hpp"
 
-#include "nebula_common_continental/continental/continental_ars548.hpp"
-#include "nebula_ros_base/sync_tooling/sync_tooling_worker.hpp"
+#include "nebula_continental_common/continental/continental_ars548.hpp"
+#include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
 
-#include <nebula_common_base/util/string_conversions.hpp>
+#include <nebula_core_common/util/string_conversions.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
 

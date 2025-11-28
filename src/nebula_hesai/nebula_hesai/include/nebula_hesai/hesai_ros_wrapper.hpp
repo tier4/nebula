@@ -14,14 +14,14 @@
 
 #pragma once
 
-#include "nebula_common_base/nebula_common.hpp"
-#include "nebula_common_base/nebula_status.hpp"
-#include "nebula_common_hesai/hesai/hesai_common.hpp"
+#include "nebula_core_common/nebula_common.hpp"
+#include "nebula_core_common/nebula_status.hpp"
+#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
+#include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
 #include "nebula_hesai/decoder_wrapper.hpp"
 #include "nebula_hesai/hw_interface_wrapper.hpp"
 #include "nebula_hesai/hw_monitor_wrapper.hpp"
-#include "nebula_hw_interfaces_base/nebula_hw_interfaces_common/connections/udp.hpp"
-#include "nebula_ros_base/sync_tooling/sync_tooling_worker.hpp"
+#include "nebula_hesai_common/hesai/hesai_common.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>

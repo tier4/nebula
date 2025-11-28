@@ -14,17 +14,17 @@
 
 #pragma once
 
-#include "nebula_ros_base/diagnostics/hysteresis_state_machine.hpp"
-#include "nebula_ros_base/diagnostics/liveness_monitor.hpp"
-#include "nebula_ros_base/diagnostics/rate_bound_status.hpp"
-#include "nebula_ros_base/parameter_descriptors.hpp"
-#include "nebula_ros_base/sync_tooling/sync_tooling_worker.hpp"
+#include "nebula_core_ros/diagnostics/hysteresis_state_machine.hpp"
+#include "nebula_core_ros/diagnostics/liveness_monitor.hpp"
+#include "nebula_core_ros/diagnostics/rate_bound_status.hpp"
+#include "nebula_core_ros/parameter_descriptors.hpp"
+#include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_common_base/nebula_common.hpp>
-#include <nebula_common_base/util/expected.hpp>
-#include <nebula_common_continental/continental/continental_ars548.hpp>
-#include <nebula_decoders_continental/decoders/continental_ars548_decoder.hpp>
+#include <nebula_continental_common/continental/continental_ars548.hpp>
+#include <nebula_continental_decoders/decoders/continental_ars548_decoder.hpp>
+#include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_common/util/expected.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rcpputils/thread_safety_annotations.hpp>
 

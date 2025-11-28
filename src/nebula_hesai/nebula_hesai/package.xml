@@ -20,14 +20,14 @@
   <depend>autoware_utils_debug</depend>
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
-  <depend>nebula_common_base</depend>
-  <depend>nebula_common_hesai</depend>
-  <depend>nebula_decoders_base</depend>
-  <depend>nebula_decoders_hesai</depend>
-  <depend>nebula_hw_interfaces_base</depend>
-  <depend>nebula_hw_interfaces_hesai</depend>
+  <depend>nebula_core_common</depend>
+  <depend>nebula_core_decoders</depend>
+  <depend>nebula_core_hw_interfaces</depend>
+  <depend>nebula_core_ros</depend>
+  <depend>nebula_hesai_common</depend>
+  <depend>nebula_hesai_decoders</depend>
+  <depend>nebula_hesai_hw_interfaces</depend>
   <depend>nebula_msgs</depend>
-  <depend>nebula_ros_base</depend>
   <depend>pandar_msgs</depend>
   <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>

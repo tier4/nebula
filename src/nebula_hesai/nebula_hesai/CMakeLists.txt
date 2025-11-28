@@ -18,14 +18,14 @@ else()
 endif()
 find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
-find_package(nebula_common_base REQUIRED)
-find_package(nebula_common_hesai REQUIRED)
-find_package(nebula_decoders_base REQUIRED)
-find_package(nebula_decoders_hesai REQUIRED)
-find_package(nebula_hw_interfaces_base REQUIRED)
-find_package(nebula_hw_interfaces_hesai REQUIRED)
+find_package(nebula_core_common REQUIRED)
+find_package(nebula_hesai_common REQUIRED)
+find_package(nebula_core_decoders REQUIRED)
+find_package(nebula_hesai_decoders REQUIRED)
+find_package(nebula_core_hw_interfaces REQUIRED)
+find_package(nebula_hesai_hw_interfaces REQUIRED)
 find_package(nebula_msgs REQUIRED)
-find_package(nebula_ros_base REQUIRED)
+find_package(nebula_core_ros REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(pandar_msgs REQUIRED)
 find_package(rclcpp_components REQUIRED)
@@ -55,9 +55,9 @@ target_include_directories(hesai_ros_wrapper PUBLIC
 
 target_link_libraries(hesai_ros_wrapper PUBLIC
     diagnostic_updater::diagnostic_updater
-    nebula_decoders_hesai::nebula_decoders_hesai
-    nebula_hw_interfaces_hesai::nebula_hw_interfaces_hesai
-    nebula_ros_base::nebula_ros_base
+    nebula_hesai_decoders::nebula_hesai_decoders
+    nebula_hesai_hw_interfaces::nebula_hesai_hw_interfaces
+    nebula_core_ros::nebula_core_ros
     pcl_common
 )
 ament_target_dependencies(
@@ -96,7 +96,7 @@ if(BUILD_TESTING)
 
     add_definitions(-D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
     add_definitions(-D_SRC_RESOURCES_DIR_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
-    add_definitions(-D_SRC_CALIBRATION_DIR_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../nebula_decoders_hesai/calibration/")
+    add_definitions(-D_SRC_CALIBRATION_DIR_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../nebula_hesai_decoders/calibration/")
 
     # Functional safety test
     ament_add_gtest(test_hesai_functional_safety
@@ -114,13 +114,13 @@ if(BUILD_TESTING)
         tests/hesai_ros_decoder_test.cpp
     )
     target_link_libraries(hesai_ros_decoder_test PRIVATE
-        nebula_common_base::nebula_common_base
-        nebula_ros_base::nebula_ros_base
+        nebula_core_common::nebula_core_common
+        nebula_core_ros::nebula_core_ros
         pcl_common
         pcl_io
         rosbag2_cpp::rosbag2_cpp
         diagnostic_updater::diagnostic_updater
-        nebula_decoders_hesai::nebula_decoders_hesai
+        nebula_hesai_decoders::nebula_hesai_decoders
     )
     ament_target_dependencies(hesai_ros_decoder_test PUBLIC pandar_msgs)
 
@@ -132,9 +132,9 @@ if(BUILD_TESTING)
     )
     target_link_libraries(hesai_ros_decoder_test_main
         hesai_ros_decoder_test
-        nebula_common_base::nebula_common_base
-        nebula_common_hesai::nebula_common_hesai
-        nebula_decoders_hesai::nebula_decoders_hesai
+        nebula_core_common::nebula_core_common
+        nebula_hesai_common::nebula_hesai_common
+        nebula_hesai_decoders::nebula_hesai_decoders
         diagnostic_updater::diagnostic_updater
         pcl_io
     )
@@ -147,9 +147,9 @@ if(BUILD_TESTING)
     )
     target_link_libraries(hesai_ros_scan_cutting_test_main
         hesai_ros_decoder_test
-        nebula_common_base::nebula_common_base
-        nebula_common_hesai::nebula_common_hesai
-        nebula_decoders_hesai::nebula_decoders_hesai
+        nebula_core_common::nebula_core_common
+        nebula_hesai_common::nebula_hesai_common
+        nebula_hesai_decoders::nebula_hesai_decoders
         diagnostic_updater::diagnostic_updater
         pcl_io
     )
@@ -168,12 +168,12 @@ if(BUILD_EXAMPLES)
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
     target_link_libraries(hesai_ros_offline_extract_pcd PRIVATE
-        nebula_common_base::nebula_common_base
+        nebula_core_common::nebula_core_common
         pcl_common
         pcl_io
         rosbag2_cpp::rosbag2_cpp
-        nebula_decoders_hesai::nebula_decoders_hesai
-        nebula_ros_base::nebula_ros_base
+        nebula_hesai_decoders::nebula_hesai_decoders
+        nebula_core_ros::nebula_core_ros
     )
 
     add_executable(hesai_ros_offline_extract_pcd_node
@@ -192,12 +192,12 @@ if(BUILD_EXAMPLES)
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
     target_link_libraries(hesai_ros_offline_extract_bag_pcd PRIVATE
-        nebula_common_base::nebula_common_base
+        nebula_core_common::nebula_core_common
         pcl_common
         pcl_io
         rosbag2_cpp::rosbag2_cpp
-        nebula_decoders_hesai::nebula_decoders_hesai
-        nebula_ros_base::nebula_ros_base
+        nebula_hesai_decoders::nebula_hesai_decoders
+        nebula_core_ros::nebula_core_ros
     )
 
     add_executable(hesai_ros_offline_extract_bag_pcd_node
@@ -232,14 +232,14 @@ ament_export_targets(export_hesai_ros_wrapper)
       PCL
       diagnostic_msgs
       diagnostic_updater
-      nebula_common_base
-      nebula_common_hesai
-      nebula_decoders_base
-      nebula_decoders_hesai
-      nebula_hw_interfaces_base
-      nebula_hw_interfaces_hesai
+      nebula_core_common
+      nebula_hesai_common
+      nebula_core_decoders
+      nebula_hesai_decoders
+      nebula_core_hw_interfaces
+      nebula_hesai_hw_interfaces
       nebula_msgs
-      nebula_ros_base
+      nebula_core_ros
       pandar_msgs
       rclcpp_components
       sensor_msgs

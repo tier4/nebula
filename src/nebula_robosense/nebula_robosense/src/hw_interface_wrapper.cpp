@@ -2,9 +2,9 @@
 
 #include "nebula_robosense/hw_interface_wrapper.hpp"
 
-#include "nebula_ros_base/rclcpp_logger.hpp"
+#include "nebula_core_ros/rclcpp_logger.hpp"
 
-#include <nebula_common_base/util/string_conversions.hpp>
+#include <nebula_core_common/util/string_conversions.hpp>
 
 #include <memory>
 

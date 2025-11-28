@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include "nebula_ros_base/parameter_descriptors.hpp"
+#include "nebula_core_ros/parameter_descriptors.hpp"
 
-#include <nebula_common_base/util/rate_checker.hpp>
-#include <nebula_common_continental/continental/continental_ars548.hpp>
-#include <nebula_hw_interfaces_continental/continental_ars548_hw_interface.hpp>
+#include <nebula_continental_common/continental/continental_ars548.hpp>
+#include <nebula_continental_hw_interfaces/continental_ars548_hw_interface.hpp>
+#include <nebula_core_common/util/rate_checker.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <continental_srvs/srv/continental_ars548_set_network_configuration.hpp>

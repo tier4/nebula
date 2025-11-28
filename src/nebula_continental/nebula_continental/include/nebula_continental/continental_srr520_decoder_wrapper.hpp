@@ -14,14 +14,14 @@
 
 #pragma once
 
-#include "nebula_ros_base/parameter_descriptors.hpp"
-#include "nebula_ros_base/watchdog_timer.hpp"
+#include "nebula_core_ros/parameter_descriptors.hpp"
+#include "nebula_core_ros/watchdog_timer.hpp"
 
-#include <nebula_common_base/nebula_common.hpp>
-#include <nebula_common_base/util/expected.hpp>
-#include <nebula_common_continental/continental/continental_srr520.hpp>
-#include <nebula_decoders_continental/decoders/continental_srr520_decoder.hpp>
-#include <nebula_hw_interfaces_continental/continental_srr520_hw_interface.hpp>
+#include <nebula_continental_common/continental/continental_srr520.hpp>
+#include <nebula_continental_decoders/decoders/continental_srr520_decoder.hpp>
+#include <nebula_continental_hw_interfaces/continental_srr520_hw_interface.hpp>
+#include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_common/util/expected.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <continental_msgs/msg/continental_srr520_detection.hpp>

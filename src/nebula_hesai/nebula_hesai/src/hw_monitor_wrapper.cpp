@@ -2,13 +2,13 @@
 
 #include "nebula_hesai/hw_monitor_wrapper.hpp"
 
-#include "nebula_hw_interfaces_hesai/hesai_cmd_response.hpp"
-#include "nebula_ros_base/parameter_descriptors.hpp"
-#include "nebula_ros_base/sync_tooling/sync_tooling_worker.hpp"
+#include "nebula_core_ros/parameter_descriptors.hpp"
+#include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
+#include "nebula_hesai_hw_interfaces/hesai_cmd_response.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_common_base/nebula_common.hpp>
-#include <nebula_common_hesai/hesai/hesai_common.hpp>
+#include <nebula_core_common/nebula_common.hpp>
+#include <nebula_hesai_common/hesai/hesai_common.hpp>
 #include <nlohmann/json.hpp>
 #include <rclcpp/duration.hpp>
 #include <rclcpp/logging.hpp>

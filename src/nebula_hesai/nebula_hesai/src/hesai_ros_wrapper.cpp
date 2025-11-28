@@ -2,14 +2,14 @@
 
 #include "nebula_hesai/hesai_ros_wrapper.hpp"
 
-#include "nebula_ros_base/parameter_descriptors.hpp"
+#include "nebula_core_ros/parameter_descriptors.hpp"
 
-#include <nebula_common_base/nebula_common.hpp>
-#include <nebula_common_base/util/rate_limiter.hpp>
-#include <nebula_common_base/util/stopwatch.hpp>
-#include <nebula_common_base/util/string_conversions.hpp>
-#include <nebula_common_hesai/hesai/hesai_common.hpp>
-#include <nebula_decoders_base/angles.hpp>
+#include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_common/util/rate_limiter.hpp>
+#include <nebula_core_common/util/stopwatch.hpp>
+#include <nebula_core_common/util/string_conversions.hpp>
+#include <nebula_core_decoders/angles.hpp>
+#include <nebula_hesai_common/hesai/hesai_common.hpp>
 
 #include <algorithm>
 #include <chrono>

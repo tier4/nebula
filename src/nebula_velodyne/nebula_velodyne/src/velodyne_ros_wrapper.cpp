@@ -2,7 +2,7 @@
 
 #include "nebula_velodyne/velodyne_ros_wrapper.hpp"
 
-#include <nebula_common_base/util/string_conversions.hpp>
+#include <nebula_core_common/util/string_conversions.hpp>
 
 #include <algorithm>
 #include <cstdio>

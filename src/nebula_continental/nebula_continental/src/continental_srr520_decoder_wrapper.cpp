@@ -14,7 +14,7 @@
 
 #include "nebula_continental/continental_srr520_decoder_wrapper.hpp"
 
-#include <nebula_common_base/util/string_conversions.hpp>
+#include <nebula_core_common/util/string_conversions.hpp>
 
 #include <pcl_conversions/pcl_conversions.h>
 

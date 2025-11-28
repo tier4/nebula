@@ -19,12 +19,12 @@ find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(message_filters REQUIRED)
-find_package(nebula_common_base REQUIRED)
-find_package(nebula_common_continental REQUIRED)
-find_package(nebula_decoders_continental REQUIRED)
-find_package(nebula_hw_interfaces_continental REQUIRED)
+find_package(nebula_core_common REQUIRED)
+find_package(nebula_continental_common REQUIRED)
+find_package(nebula_continental_decoders REQUIRED)
+find_package(nebula_continental_hw_interfaces REQUIRED)
 find_package(nebula_msgs REQUIRED)
-find_package(nebula_ros_base REQUIRED)
+find_package(nebula_core_ros REQUIRED)
 find_package(radar_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(rclcpp_components REQUIRED)
@@ -52,9 +52,9 @@ target_include_directories(continental_ars548_ros_wrapper PUBLIC
 target_link_libraries(continental_ars548_ros_wrapper PUBLIC
     diagnostic_updater::diagnostic_updater
     tf2_ros::tf2_ros
-    nebula_decoders_continental::nebula_decoders_continental
-    nebula_hw_interfaces_continental::nebula_hw_interfaces_continental
-    nebula_ros_base::nebula_ros_base
+    nebula_continental_decoders::nebula_continental_decoders
+    nebula_continental_hw_interfaces::nebula_continental_hw_interfaces
+    nebula_core_ros::nebula_core_ros
     pcl_common)
 ament_target_dependencies(continental_ars548_ros_wrapper PUBLIC
     autoware_sensing_msgs
@@ -91,9 +91,9 @@ target_include_directories(continental_srr520_ros_wrapper PUBLIC
 target_link_libraries(continental_srr520_ros_wrapper PUBLIC
     tf2_ros::tf2_ros
     message_filters::message_filters
-    nebula_decoders_continental::nebula_decoders_continental
-    nebula_hw_interfaces_continental::nebula_hw_interfaces_continental
-    nebula_ros_base::nebula_ros_base
+    nebula_continental_decoders::nebula_continental_decoders
+    nebula_continental_hw_interfaces::nebula_continental_hw_interfaces
+    nebula_core_ros::nebula_core_ros
     pcl_common)
 
 ament_target_dependencies(continental_srr520_ros_wrapper PUBLIC
@@ -138,11 +138,11 @@ if(BUILD_TESTING)
         include
     )
     target_link_libraries(continental_ros_decoder_test_ars548 PRIVATE
-        nebula_common_base::nebula_common_base
+        nebula_core_common::nebula_core_common
         pcl_common
         rosbag2_cpp::rosbag2_cpp
         diagnostic_updater::diagnostic_updater
-        nebula_decoders_continental::nebula_decoders_continental
+        nebula_continental_decoders::nebula_continental_decoders
     )
 
     ament_add_gtest(continental_ros_decoder_test_main_ars548
@@ -153,8 +153,8 @@ if(BUILD_TESTING)
     )
     target_link_libraries(continental_ros_decoder_test_main_ars548
         continental_ros_decoder_test_ars548
-        nebula_common_base::nebula_common_base
-        nebula_decoders_continental::nebula_decoders_continental
+        nebula_core_common::nebula_core_common
+        nebula_continental_decoders::nebula_continental_decoders
         diagnostic_updater::diagnostic_updater
     )
 
@@ -168,11 +168,11 @@ if(BUILD_TESTING)
         include
     )
     target_link_libraries(continental_ros_decoder_test_srr520
-        nebula_common_base::nebula_common_base
+        nebula_core_common::nebula_core_common
         pcl_common
         rosbag2_cpp::rosbag2_cpp
         diagnostic_updater::diagnostic_updater
-        nebula_decoders_continental::nebula_decoders_continental
+        nebula_continental_decoders::nebula_continental_decoders
     )
 
     ament_add_gtest(continental_ros_decoder_test_main_srr520
@@ -183,8 +183,8 @@ if(BUILD_TESTING)
     )
     target_link_libraries(continental_ros_decoder_test_main_srr520
         continental_ros_decoder_test_srr520
-        nebula_common_base::nebula_common_base
-        nebula_decoders_continental::nebula_decoders_continental
+        nebula_core_common::nebula_core_common
+        nebula_continental_decoders::nebula_continental_decoders
         diagnostic_updater::diagnostic_updater
     )
 
@@ -214,12 +214,12 @@ ament_export_dependencies(
     diagnostic_updater
     geometry_msgs
     message_filters
-    nebula_common_base
-    nebula_common_continental
-    nebula_decoders_continental
-    nebula_hw_interfaces_continental
+    nebula_core_common
+    nebula_continental_common
+    nebula_continental_decoders
+    nebula_continental_hw_interfaces
     nebula_msgs
-    nebula_ros_base
+    nebula_core_ros
     pcl_conversions
     radar_msgs
     rclcpp_components

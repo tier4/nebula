@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_hesai/diagnostics/functional_safety_advanced.hpp"
+#include "nebula_hesai_decoders/decoders/functional_safety.hpp"
 
 #include <boost/range/algorithm/sort.hpp>
 

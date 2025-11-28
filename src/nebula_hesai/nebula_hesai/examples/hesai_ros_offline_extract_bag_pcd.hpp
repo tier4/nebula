@@ -16,11 +16,11 @@
 #define NEBULA_HesaiRosOfflineExtractBag_H
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_common_base/nebula_common.hpp>
-#include <nebula_common_base/nebula_status.hpp>
-#include <nebula_common_hesai/hesai/hesai_common.hpp>
-#include <nebula_decoders_hesai/hesai_driver.hpp>
-#include <nebula_ros_base/parameter_descriptors.hpp>
+#include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_common/nebula_status.hpp>
+#include <nebula_core_ros/parameter_descriptors.hpp>
+#include <nebula_hesai_common/hesai/hesai_common.hpp>
+#include <nebula_hesai_decoders/hesai_driver.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>

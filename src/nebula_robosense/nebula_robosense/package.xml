@@ -17,14 +17,14 @@
 
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
-  <depend>nebula_common_base</depend>
-  <depend>nebula_common_robosense</depend>
-  <depend>nebula_decoders_base</depend>
-  <depend>nebula_decoders_robosense</depend>
-  <depend>nebula_hw_interfaces_base</depend>
-  <depend>nebula_hw_interfaces_robosense</depend>
+  <depend>nebula_core_common</depend>
+  <depend>nebula_core_decoders</depend>
+  <depend>nebula_core_hw_interfaces</depend>
+  <depend>nebula_core_ros</depend>
   <depend>nebula_msgs</depend>
-  <depend>nebula_ros_base</depend>
+  <depend>nebula_robosense_common</depend>
+  <depend>nebula_robosense_decoders</depend>
+  <depend>nebula_robosense_hw_interfaces</depend>
   <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>

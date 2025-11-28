@@ -12,7 +12,7 @@
     udp_only: false
     frame_id: hesai
     diag_span: 1000
-    correction_file: $(find-pkg-share nebula_decoders_hesai)/calibration/$(var sensor_model).dat
+    correction_file: $(find-pkg-share nebula_hesai_decoders)/calibration/$(var sensor_model).dat
     min_range: 0.3
     max_range: 300.0
     cloud_min_angle: 30
@@ -20,7 +20,7 @@
     sync_angle: 30
     cut_angle: 150.0
     sensor_model: PandarAT128
-    calibration_file: $(find-pkg-share nebula_decoders_hesai)/calibration/$(var sensor_model).csv
+    calibration_file: $(find-pkg-share nebula_hesai_decoders)/calibration/$(var sensor_model).csv
     calibration_download_enabled: true
     rotation_speed: 200
     return_mode: Dual

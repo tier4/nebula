@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "nebula_decoders_hesai/decoders/functional_safety.hpp"
 #include "nebula_hesai/diagnostics/functional_safety_diagnostic_task.hpp"
+#include "nebula_hesai_decoders/decoders/functional_safety.hpp"
 
 #include <diagnostic_msgs/msg/detail/key_value__struct.hpp>
 

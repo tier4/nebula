@@ -14,14 +14,14 @@ find_package(ament_cmake_auto REQUIRED)
 find_package(PCL REQUIRED components common)
 find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
-find_package(nebula_common_base REQUIRED)
-find_package(nebula_common_robosense REQUIRED)
-find_package(nebula_decoders_base REQUIRED)
-find_package(nebula_decoders_robosense REQUIRED)
-find_package(nebula_hw_interfaces_base REQUIRED)
-find_package(nebula_hw_interfaces_robosense REQUIRED)
+find_package(nebula_core_common REQUIRED)
+find_package(nebula_robosense_common REQUIRED)
+find_package(nebula_core_decoders REQUIRED)
+find_package(nebula_robosense_decoders REQUIRED)
+find_package(nebula_core_hw_interfaces REQUIRED)
+find_package(nebula_robosense_hw_interfaces REQUIRED)
 find_package(nebula_msgs REQUIRED)
-find_package(nebula_ros_base REQUIRED)
+find_package(nebula_core_ros REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(robosense_msgs REQUIRED)
@@ -44,10 +44,10 @@ target_include_directories(robosense_ros_wrapper PUBLIC
 
 target_link_libraries(robosense_ros_wrapper PUBLIC
     diagnostic_updater::diagnostic_updater
-    nebula_decoders_robosense::nebula_decoders_robosense
-    nebula_decoders_robosense::nebula_decoders_robosense_info
-    nebula_hw_interfaces_robosense::nebula_hw_interfaces_robosense
-    nebula_ros_base::nebula_ros_base
+    nebula_robosense_decoders::nebula_robosense_decoders
+    nebula_robosense_decoders::nebula_robosense_decoders_info
+    nebula_robosense_hw_interfaces::nebula_robosense_hw_interfaces
+    nebula_core_ros::nebula_core_ros
     pcl_common)
 
 ament_target_dependencies(robosense_ros_wrapper PUBLIC
@@ -79,14 +79,14 @@ ament_export_dependencies(
     PCL
     diagnostic_msgs
     diagnostic_updater
-    nebula_common_base
-    nebula_common_robosense
-    nebula_decoders_base
-    nebula_decoders_robosense
-    nebula_hw_interfaces_base
-    nebula_hw_interfaces_robosense
+    nebula_core_common
+    nebula_robosense_common
+    nebula_core_decoders
+    nebula_robosense_decoders
+    nebula_core_hw_interfaces
+    nebula_robosense_hw_interfaces
     nebula_msgs
-    nebula_ros_base
+    nebula_core_ros
     rclcpp_components
     robosense_msgs
     sensor_msgs

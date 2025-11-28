@@ -15,7 +15,7 @@
 #pragma once
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_decoders_hesai/decoders/functional_safety.hpp>
+#include <nebula_hesai_decoders/decoders/functional_safety.hpp>
 #include <rcpputils/thread_safety_annotations.hpp>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>

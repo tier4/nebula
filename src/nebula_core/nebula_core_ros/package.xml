@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>nebula_core_ros</name>
+  <version>0.3.0</version>
+  <description>Nebula ROS Base Libraries</description>
+  <maintainer email="contact@map4.jp">MAP IV</maintainer>
+
+  <license>Apache 2</license>
+  <author>TIER IV</author>
+
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  <buildtool_depend>ros_environment</buildtool_depend>
+  <buildtool_depend>ros_testing</buildtool_depend>
+  <depend>diagnostic_msgs</depend>
+  <depend>diagnostic_updater</depend>
+  <depend>nebula_core_common</depend>
+  <depend>rclcpp</depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ros_testing</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

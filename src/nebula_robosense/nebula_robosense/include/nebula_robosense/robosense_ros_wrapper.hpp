@@ -20,11 +20,11 @@
 
 #include <ament_index_cpp/get_package_prefix.hpp>
 #include <boost_tcp_driver/tcp_driver.hpp>
-#include <nebula_common_base/nebula_common.hpp>
-#include <nebula_common_base/nebula_status.hpp>
-#include <nebula_common_robosense/robosense/robosense_common.hpp>
-#include <nebula_decoders_robosense/robosense_info_driver.hpp>
-#include <nebula_hw_interfaces_robosense/robosense_hw_interface.hpp>
+#include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_common/nebula_status.hpp>
+#include <nebula_robosense_common/robosense/robosense_common.hpp>
+#include <nebula_robosense_decoders/robosense_info_driver.hpp>
+#include <nebula_robosense_hw_interfaces/robosense_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 

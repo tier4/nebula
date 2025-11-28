@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>nebula_velodyne_hw_interfaces</name>
+  <version>0.3.0</version>
+  <description>Nebula HW Interfaces Velodyne</description>
+  <maintainer email="contact@map4.jp">MAP IV</maintainer>
+
+  <license>Apache 2</license>
+  <author>TIER IV</author>
+
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+
+  <depend>boost_tcp_driver</depend>
+  <depend>boost_udp_driver</depend>
+  <depend>nebula_core_common</depend>
+  <depend>nebula_core_hw_interfaces</depend>
+  <depend>nebula_velodyne_common</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
