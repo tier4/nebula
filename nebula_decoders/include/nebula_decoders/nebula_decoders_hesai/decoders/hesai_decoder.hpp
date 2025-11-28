@@ -79,9 +79,6 @@ private:
 
   std::shared_ptr<PacketLossDetectorTypedBase<typename SensorT::packet_t>> packet_loss_detector_;
 
-  /// @brief The last decoded packet
-  typename SensorT::packet_t packet_;
-
   ScanCutAngles scan_cut_angles_;
   uint32_t last_azimuth_ = 0;
 
@@ -106,21 +103,16 @@ private:
   /// @brief Validates and parse PandarPacket. Checks size and, if present, CRC checksums.
   /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
-  bool parse_packet(const std::vector<uint8_t> & packet)
+  const typename SensorT::packet_t * parse_packet(const std::vector<uint8_t> & packet) const
   {
     if (packet.size() < sizeof(typename SensorT::packet_t)) {
       NEBULA_LOG_STREAM(
         logger_->error, "Packet size mismatch: " << packet.size() << " | Expected at least: "
                                                  << sizeof(typename SensorT::packet_t));
-      return false;
+      return nullptr;
     }
 
-    if (!std::memcpy(&packet_, packet.data(), sizeof(typename SensorT::packet_t))) {
-      logger_->error("Packet memcopy failed");
-      return false;
-    }
-
-    return true;
+    return reinterpret_cast<const typename SensorT::packet_t *>(packet.data());
   }
 
   /// @brief Converts a group of returns (i.e. 1 for single return, 2 for dual return, etc.) to
@@ -128,10 +120,11 @@ private:
   /// @param start_block_id The first block in the group of returns
   /// @param n_blocks The number of returns in the group (has to align with the `n_returns` field in
   /// the packet footer)
-  void convert_returns(size_t start_block_id, size_t n_blocks)
+  void convert_returns(
+    const typename SensorT::packet_t & packet, size_t start_block_id, size_t n_blocks)
   {
-    uint64_t packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
-    uint32_t raw_azimuth = packet_.body.blocks[start_block_id].get_azimuth();
+    uint64_t packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet);
+    uint32_t raw_azimuth = packet.body.blocks[start_block_id].get_azimuth();
 
     std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units;
 
@@ -144,7 +137,7 @@ private:
       return_units.clear();
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
         return_units.push_back(
-          &packet_.body.blocks[block_offset + start_block_id].units[channel_id]);
+          &packet.body.blocks[block_offset + start_block_id].units[channel_id]);
       }
 
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
@@ -156,7 +149,7 @@ private:
           point_is_valid = false;
         }
 
-        float distance = get_distance(unit);
+        float distance = get_distance(packet, unit);
 
         if (
           distance < SensorT::min_range || SensorT::max_range < distance ||
@@ -166,8 +159,8 @@ private:
         }
 
         auto return_type = sensor_.get_return_type(
-          static_cast<hesai_packet::return_mode::ReturnMode>(packet_.tail.return_mode),
-          block_offset, return_units);
+          static_cast<hesai_packet::return_mode::ReturnMode>(packet.tail.return_mode), block_offset,
+          return_units);
 
         // Keep only last of multiple identical points
         if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
@@ -184,7 +177,7 @@ private:
             }
 
             if (
-              fabsf(get_distance(*return_units[return_idx]) - distance) <
+              fabsf(get_distance(packet, *return_units[return_idx]) - distance) <
               sensor_configuration_->dual_return_distance_threshold) {
               is_below_multi_return_threshold = true;
               break;
@@ -234,7 +227,8 @@ private:
         point.distance = distance;
         point.intensity = unit.reflectivity;
         point.time_stamp = get_point_time_relative(
-          frame.scan_timestamp_ns, packet_timestamp_ns, block_offset + start_block_id, channel_id);
+          packet, frame.scan_timestamp_ns, packet_timestamp_ns, block_offset + start_block_id,
+          channel_id);
 
         point.return_type = static_cast<uint8_t>(return_type);
         point.channel = channel_id;
@@ -258,9 +252,11 @@ private:
   }
 
   /// @brief Get the distance of the given unit in meters
-  float get_distance(const typename SensorT::packet_t::body_t::block_t::unit_t & unit)
+  float get_distance(
+    const typename SensorT::packet_t & packet,
+    const typename SensorT::packet_t::body_t::block_t::unit_t & unit)
   {
-    return unit.distance * hesai_packet::get_dis_unit(packet_);
+    return unit.distance * hesai_packet::get_dis_unit(packet);
   }
 
   /// @brief Get timestamp of point in nanoseconds, relative to scan timestamp. Includes firing time
@@ -270,10 +266,11 @@ private:
   /// @param block_id The block index of the point
   /// @param channel_id The channel index of the point
   uint32_t get_point_time_relative(
-    uint64_t scan_timestamp_ns, uint64_t packet_timestamp_ns, size_t block_id, size_t channel_id)
+    const typename SensorT::packet_t & packet, uint64_t scan_timestamp_ns,
+    uint64_t packet_timestamp_ns, size_t block_id, size_t channel_id)
   {
     auto point_to_packet_offset_ns =
-      sensor_.get_packet_relative_point_time_offset(block_id, channel_id, packet_);
+      sensor_.get_packet_relative_point_time_offset(block_id, channel_id, packet);
     auto packet_to_scan_offset_ns = static_cast<uint32_t>(packet_timestamp_ns - scan_timestamp_ns);
     return packet_to_scan_offset_ns + point_to_packet_offset_ns;
   }
@@ -354,18 +351,19 @@ public:
   {
     util::Stopwatch decode_watch;
 
-    if (!parse_packet(packet)) {
+    auto packet_struct = parse_packet(packet);
+    if (!packet_struct) {
       return {PerformanceCounters{decode_watch.elapsed_ns(), 0}, DecodeError::PACKET_PARSE_FAILED};
     }
 
     if (packet_loss_detector_) {
-      packet_loss_detector_->update(packet_);
+      packet_loss_detector_->update(*packet_struct);
     }
 
     // Even if the checksums of other parts of the packet are invalid, functional safety info
     // is still checked. This is a null-op for sensors that do not support functional safety.
     if (functional_safety_decoder_) {
-      functional_safety_decoder_->update(packet_);
+      functional_safety_decoder_->update(*packet_struct);
     }
 
     // FYI: This is where the CRC would be checked. Since this caused performance issues in the
@@ -375,20 +373,20 @@ public:
     // This is the first scan, set scan timestamp to whatever packet arrived first
     if (decode_frame_.scan_timestamp_ns == 0) {
       decode_frame_.scan_timestamp_ns =
-        hesai_packet::get_timestamp_ns(packet_) +
-        sensor_.get_earliest_point_time_offset_for_block(0, packet_);
+        hesai_packet::get_timestamp_ns(*packet_struct) +
+        sensor_.get_earliest_point_time_offset_for_block(0, *packet_struct);
     }
 
     bool did_scan_complete = false;
 
-    const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
+    const size_t n_returns = hesai_packet::get_n_returns(packet_struct->tail.return_mode);
     for (size_t block_id = 0; block_id < SensorT::packet_t::n_blocks; block_id += n_returns) {
-      auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
+      auto block_azimuth = packet_struct->body.blocks[block_id].get_azimuth();
 
       if (angle_corrector_.passed_timestamp_reset_angle(last_azimuth_, block_azimuth)) {
         uint64_t new_scan_timestamp_ns =
-          hesai_packet::get_timestamp_ns(packet_) +
-          sensor_.get_earliest_point_time_offset_for_block(block_id, packet_);
+          hesai_packet::get_timestamp_ns(*packet_struct) +
+          sensor_.get_earliest_point_time_offset_for_block(block_id, *packet_struct);
 
         if (sensor_configuration_->cut_angle == sensor_configuration_->cloud_max_angle) {
           // In the non-360 deg case, if the cut angle and FoV end coincide, the old pointcloud has
@@ -411,7 +409,7 @@ public:
         continue;
       }
 
-      convert_returns(block_id, n_returns);
+      convert_returns(*packet_struct, block_id, n_returns);
 
       if (angle_corrector_.passed_emit_angle(last_azimuth_, block_azimuth)) {
         // The current `decode` pointcloud is ready for publishing, swap buffers to continue with
@@ -433,7 +431,7 @@ public:
     }
 
     PacketMetadata metadata;
-    metadata.packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
+    metadata.packet_timestamp_ns = hesai_packet::get_timestamp_ns(*packet_struct);
     metadata.did_scan_complete = did_scan_complete;
     return {PerformanceCounters{decode_duration_ns, callbacks_duration_ns}, metadata};
   }
