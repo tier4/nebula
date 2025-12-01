@@ -62,7 +62,8 @@ public:
     bin_size_rad_{deg2rad(bin_size_mdeg / 1000.)},
     n_channels_{n_channels}
   {
-    mask_.resize(n_channels_ * get_width());
+    size_t width = std::ceil(azimuth_range_mdeg.extent() / bin_size_mdeg);
+    mask_.resize(n_channels_ * width);
   }
 
   void update(double azimuth_rad, uint16_t channel, BlockageState blockage)
@@ -83,10 +84,7 @@ public:
 
   [[nodiscard]] const std::vector<uint8_t> & get_mask() const { return mask_; }
 
-  [[nodiscard]] size_t get_width() const
-  {
-    return static_cast<size_t>(std::ceil(azimuth_range_rad_.extent() / bin_size_rad_));
-  }
+  [[nodiscard]] size_t get_width() const { return mask_.size() / n_channels_; }
 
   [[nodiscard]] size_t get_height() const { return n_channels_; }
 

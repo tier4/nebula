@@ -37,14 +37,23 @@ if(BUILD_TESTING)
     ament_lint_auto_find_test_dependencies()
 
     find_package(ament_cmake_gtest REQUIRED)
+    find_package(rcpputils REQUIRED)
 
     add_definitions(-D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
 
     ament_add_gtest(test_downsample_mask tests/point_filters/test_downsample_mask.cpp)
-    target_include_directories(test_downsample_mask PRIVATE
-        include
-    )
     target_link_libraries(test_downsample_mask
+        nebula_core_decoders
+    )
+
+    ament_add_gtest(test_angles tests/test_angles.cpp)
+    target_link_libraries(test_angles
+        nebula_core_decoders
+    )
+
+    ament_add_gtest(test_blockage_mask tests/point_filters/test_blockage_mask.cpp)
+    target_link_libraries(test_blockage_mask
+        rcpputils::rcpputils
         nebula_core_decoders
     )
 endif()

@@ -34,9 +34,51 @@ if(BUILD_TESTING)
     ament_lint_auto_find_test_dependencies()
 
     ament_add_gtest(test_rate_checker
-        test/test_rate_checker.cpp
+        tests/test_rate_checker.cpp
     )
     target_link_libraries(test_rate_checker
+        nebula_core_common
+    )
+
+    ament_add_gtest(test_ring_buffer
+        tests/test_ring_buffer.cpp
+    )
+    target_link_libraries(test_ring_buffer
+        nebula_core_common
+    )
+
+    ament_add_gtest(test_bitfield
+        tests/test_bitfield.cpp
+    )
+    target_link_libraries(test_bitfield
+        nebula_core_common
+    )
+
+    ament_add_gtest(test_expected
+        tests/test_expected.cpp
+    )
+    target_link_libraries(test_expected
+        nebula_core_common
+    )
+
+    ament_add_gtest(test_rate_limiter
+        tests/test_rate_limiter.cpp
+    )
+    target_link_libraries(test_rate_limiter
+        nebula_core_common
+    )
+
+    ament_add_gtest(test_string_conversions
+        tests/test_string_conversions.cpp
+    )
+    target_link_libraries(test_string_conversions
+        nebula_core_common
+    )
+
+    ament_add_gtest(test_nebula_common
+        tests/test_nebula_common.cpp
+    )
+    target_link_libraries(test_nebula_common
         nebula_core_common
     )
 endif()
