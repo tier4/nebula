@@ -1,1 +1,1 @@
-{{ json_to_markdown("nebula_ros/schema/VLP16.schema.json") }}
+{{ json_to_markdown("src/nebula_velodyne/nebula_velodyne/schema/VLP16.schema.json") }}

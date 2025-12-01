@@ -10,6 +10,17 @@ Nebula is a sensor driver platform that is designed to provide a unified framewo
 While it primarily targets Ethernet-based LiDAR sensors, it aims to be easily extendable to support new sensors and interfaces.
 Nebula works with ROS 2 and is the recommended sensor driver for the [Autoware](https://autoware.org/) project.
 
+## Table of Contents
+
+- [Nebula](#nebula)
+  - [Welcome to Nebula, the universal sensor driver](#welcome-to-nebula-the-universal-sensor-driver)
+  - [Table of Contents](#table-of-contents)
+  - [Documentation](#documentation)
+  - [Quick start](#quick-start)
+  - [Agnocast](#agnocast)
+  - [Building only specific vendors](#building-only-specific-vendors)
+  - [Migration to Nebula 0.3.0](#migration-to-nebula-030)
+
 ## Documentation
 
 We recommend you get started with the [Nebula Documention](https://tier4.github.io/nebula/).
@@ -61,13 +72,13 @@ mkdocs serve
 To launch Nebula as a ROS 2 node with default parameters for your sensor model:
 
 ```bash
-ros2 launch nebula_ros *sensor_vendor_name*_launch_all_hw.xml sensor_model:=*sensor_model_name*
+ros2 launch nebula nebula_launch.py sensor_model:=*sensor_model_name*
 ```
 
 For example, for a Hesai Pandar40P sensor:
 
 ```bash
-ros2 launch nebula_ros hesai_launch_all_hw.xml sensor_model:=Pandar40P
+ros2 launch nebula nebula_launch.py sensor_model:=Pandar40P
 ```
 
 ## Agnocast
@@ -120,3 +131,46 @@ $ ros2 topic list_agnocast
 
 Please note that the `packets` topics do not support Agnocast, as they are purely used for
 data recording and tools like `ros2 bag` do not have Agnocast support yet.
+
+## Building only specific vendors
+
+By default, building the `nebula` package will build all supported vendors. To build only
+specific vendors, use the `--packages-up-to` flag:
+
+```bash
+# Build only Hesai support
+colcon build --packages-up-to nebula_hesai
+
+# Build multiple vendors
+colcon build --packages-up-to nebula_hesai nebula_velodyne
+```
+
+Available vendor packages are:
+
+- `nebula_hesai` - Hesai LiDARs (Pandar series, AT128, OT128, etc.)
+- `nebula_velodyne` - Velodyne LiDARs (VLP-16, VLP-32, VLS-128)
+- `nebula_robosense` - Robosense LiDARs (Bpearl, Helios)
+- `nebula_continental` - Continental radars (ARS548, SRR520)
+
+## Migration to Nebula 0.3.0
+
+Version 0.3.0 separates vendor-specific functionality into individual packages. This allows users
+to only build the functionality they need.
+
+Since packages have been split and renamed, some changes are required to existing launch files:
+
+- the `nebula_ros` package has been renamed to `nebula`.
+- the `nebula_sensor_driver` meta package has been removed. Depend on the `nebula` package, or
+  on a `nebula_<vendor>` package instead. `nebula` includes all vendor packages.
+- Calibration files have moved from `nebula_decoders` to `nebula_<vendor>_decoders`.
+- Vendor-specific launch files have moved from `nebula_ros` to `nebula_<vendor>`.
+- `nebula_tests` and `nebula_examples` have been absorbed into the `nebula_<vendor>` packages.
+
+Below are the changes you most likely need to make:
+
+- `ros2 launch nebula_ros nebula_launch.py ...` ➡️ `ros2 launch nebula nebula_launch.py ...`
+- `ros2 launch nebula_ros <vendor>_launch_all_hw.xml ...` ➡️ `ros2 launch nebula_<vendor> <vendor>_launch_all_hw.xml ...`
+- `$(find-pkg-share nebula_decoders)/calibration/<vendor>/...` ➡️ `$(find-pkg-share nebula_<vendor>_decoders)/calibration/...`
+- `$(find-pkg-share nebula_ros)/config/lidar/<vendor>/...` ➡️ `$(find-pkg-share nebula_<vendor>)/config/...`
+- `<depend>nebula_ros</depend>` ➡️ `<depend>nebula</depend>` or `<depend>nebula_<vendor></depend>`
+- `<depend>nebula_sensor_driver</depend>` ➡️ `<depend>nebula</depend>` or `<depend>nebula_<vendor></depend>`

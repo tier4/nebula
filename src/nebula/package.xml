@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>nebula</name>
+  <version>0.3.0</version>
+  <description>Nebula: multi-vendor LiDAR and radar driver</description>
+  <maintainer email="contact@map4.jp">MAP IV</maintainer>
+  <maintainer email="contact@tier4.jp">MAP IV</maintainer>
+  <license>Apache License 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>nebula_continental</depend>
+  <depend>nebula_hesai</depend>
+  <depend>nebula_robosense</depend>
+  <depend>nebula_velodyne</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
