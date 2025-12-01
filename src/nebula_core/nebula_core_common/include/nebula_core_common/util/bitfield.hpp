@@ -14,7 +14,9 @@
 
 #pragma once
 
-#include <cstdint>
+#include <cstddef>
+#include <limits>
+
 namespace nebula::util
 {
 
@@ -38,12 +40,14 @@ namespace nebula::util
  * @param storage The variable acting as the storage for the bitfield
  * @return constexpr OutT The extracted value
  */
-template <typename OutT, uint8_t LowBit, uint8_t HighBit, typename InT>
+template <typename OutT, size_t LowBit, size_t HighBit, typename InT>
 constexpr OutT get_bitfield(const InT & storage)
 {
-  constexpr uint8_t n_bits = HighBit - LowBit + 1;
+  constexpr size_t n_bits = HighBit - LowBit + 1;
   constexpr InT all_ones = ~static_cast<InT>(0);
-  constexpr InT mask = ~(all_ones << n_bits);
+  constexpr InT mask = (n_bits < std::numeric_limits<InT>::digits)
+                         ? static_cast<InT>(~static_cast<InT>(all_ones << n_bits))
+                         : all_ones;
 
   InT raw_value = (storage >> LowBit) & mask;
   return static_cast<OutT>(raw_value);

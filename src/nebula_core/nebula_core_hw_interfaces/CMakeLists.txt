@@ -35,12 +35,12 @@ if(BUILD_TESTING)
     find_package(ament_cmake_gtest REQUIRED)
 
     ament_add_gtest(test_udp
-        test/common/test_udp.cpp
+        tests/common/test_udp.cpp
     )
 
     target_include_directories(test_udp PRIVATE
         include
-        test
+        tests
     )
     target_link_libraries(test_udp
         nebula_core_common::nebula_core_common

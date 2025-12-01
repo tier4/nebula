@@ -41,6 +41,26 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
+if(BUILD_TESTING)
+    find_package(ament_lint_auto REQUIRED)
+    find_package(ament_cmake_gtest REQUIRED)
+    ament_lint_auto_find_test_dependencies()
+
+    ament_add_gtest(test_hesai_packet
+        tests/test_hesai_packet.cpp
+    )
+    target_link_libraries(test_hesai_packet
+        nebula_hesai_decoders
+    )
+
+    ament_add_gtest(test_packet_loss_detector
+        tests/test_packet_loss_detector.cpp
+    )
+    target_link_libraries(test_packet_loss_detector
+        nebula_hesai_decoders
+    )
+endif()
+
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_hesai_decoders)
 

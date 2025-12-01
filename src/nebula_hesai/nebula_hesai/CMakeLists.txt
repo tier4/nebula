@@ -100,7 +100,7 @@ if(BUILD_TESTING)
 
     # Functional safety test
     ament_add_gtest(test_hesai_functional_safety
-        test/test_hesai_functional_safety.cpp
+        tests/test_hesai_functional_safety.cpp
     )
     target_include_directories(test_hesai_functional_safety PRIVATE
         include

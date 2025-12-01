@@ -34,6 +34,21 @@ target_link_libraries(nebula_velodyne_common PUBLIC
 install(TARGETS nebula_velodyne_common EXPORT export_nebula_velodyne_common)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
+if(BUILD_TESTING)
+    find_package(ament_lint_auto REQUIRED)
+    find_package(ament_cmake_gtest REQUIRED)
+    ament_lint_auto_find_test_dependencies()
+
+    add_definitions(-D_CALIBRATION_DIR_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../nebula_velodyne_decoders/calibration/")
+
+    ament_add_gtest(test_velodyne_calibration
+        tests/test_velodyne_calibration.cpp
+    )
+    target_link_libraries(test_velodyne_calibration
+        nebula_velodyne_common
+    )
+endif()
+
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_velodyne_common)
 ament_export_dependencies(nebula_core_common yaml-cpp)
