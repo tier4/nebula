@@ -49,7 +49,7 @@ Available vendor packages are:
 To run Nebula unit tests:
 
 ```bash
-colcon test --base-paths src
+colcon test
 ```
 
 Show results:
