@@ -7,34 +7,34 @@
       "type": "object",
       "properties": {
         "interface": {
-          "$ref": "../../../nebula_base/nebula_ros_base/schema/communication.json#/definitions/interface"
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/interface"
         },
         "receiver_timeout_sec": {
-          "$ref": "../../../nebula_base/nebula_ros_base/schema/communication.json#/definitions/receiver_timeout_sec"
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/receiver_timeout_sec"
         },
         "sender_timeout_sec": {
-          "$ref": "../../../nebula_base/nebula_ros_base/schema/communication.json#/definitions/sender_timeout_sec"
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/sender_timeout_sec"
         },
         "filters": {
-          "$ref": "../../../nebula_base/nebula_ros_base/schema/communication.json#/definitions/filters"
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/filters"
         },
         "launch_hw": {
-          "$ref": "../../../nebula_base/nebula_ros_base/schema/hardware.json#/definitions/launch_hw"
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/hardware.json#/definitions/launch_hw"
         },
         "frame_id": {
-          "$ref": "../../../nebula_base/nebula_ros_base/schema/topic.json#/definitions/frame_id"
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/frame_id"
         },
         "base_frame": {
-          "$ref": "../../../nebula_base/nebula_ros_base/schema/topic.json#/definitions/base_frame"
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/base_frame"
         },
         "object_frame": {
-          "$ref": "../../../nebula_base/nebula_ros_base/schema/topic.json#/definitions/object_frame"
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/object_frame"
         },
         "use_bus_time": {
-          "$ref": "../../../nebula_base/nebula_ros_base/schema/topic.json#/definitions/use_bus_time"
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/use_bus_time"
         },
         "configuration_vehicle_wheelbase": {
-          "$ref": "../../../nebula_base/nebula_ros_base/schema/misc.json#/definitions/configuration_vehicle_wheelbase"
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/configuration_vehicle_wheelbase"
         },
         "sensor_model": {
           "$ref": "radar_continental.json#/definitions/sensor_model",

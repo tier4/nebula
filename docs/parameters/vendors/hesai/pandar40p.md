@@ -1,1 +1,1 @@
-{{ json_to_markdown("nebula_hesai/schema/Pandar40P.schema.json") }}
+{{ json_to_markdown("src/nebula_hesai/nebula_hesai/schema/Pandar40P.schema.json") }}
