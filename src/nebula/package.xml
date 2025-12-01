@@ -14,6 +14,11 @@
   <depend>nebula_robosense</depend>
   <depend>nebula_velodyne</depend>
 
+  <test_depend>nebula_continental</test_depend>
+  <test_depend>nebula_hesai</test_depend>
+  <test_depend>nebula_robosense</test_depend>
+  <test_depend>nebula_velodyne</test_depend>
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>
