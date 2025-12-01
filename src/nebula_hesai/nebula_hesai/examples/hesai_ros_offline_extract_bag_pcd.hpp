@@ -19,7 +19,7 @@
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/nebula_status.hpp>
 #include <nebula_core_ros/parameter_descriptors.hpp>
-#include <nebula_hesai_common/hesai/hesai_common.hpp>
+#include <nebula_hesai_common/hesai_common.hpp>
 #include <nebula_hesai_decoders/hesai_driver.hpp>
 #include <rclcpp/rclcpp.hpp>
 

@@ -16,7 +16,7 @@
 
 #include "nebula_core_ros/parameter_descriptors.hpp"
 
-#include <nebula_velodyne_common/velodyne/velodyne_common.hpp>
+#include <nebula_velodyne_common/velodyne_common.hpp>
 #include <nebula_velodyne_hw_interfaces/velodyne_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 

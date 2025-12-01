@@ -21,7 +21,7 @@
 #include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
-#include <nebula_continental_common/continental/continental_ars548.hpp>
+#include <nebula_continental_common/continental_ars548.hpp>
 #include <nebula_continental_decoders/decoders/continental_ars548_decoder.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/util/expected.hpp>

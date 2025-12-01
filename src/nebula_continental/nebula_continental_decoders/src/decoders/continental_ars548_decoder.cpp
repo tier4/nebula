@@ -14,7 +14,7 @@
 
 #include "nebula_continental_decoders/decoders/continental_ars548_decoder.hpp"
 
-#include <nebula_continental_common/continental/continental_ars548.hpp>
+#include <nebula_continental_common/continental_ars548.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>

@@ -4,7 +4,7 @@
 
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_ros/rclcpp_logger.hpp>
-#include <nebula_hesai_common/hesai/hesai_common.hpp>
+#include <nebula_hesai_common/hesai_common.hpp>
 #include <rclcpp/serialization.hpp>
 #include <rclcpp/serialized_message.hpp>
 #include <rcpputils/filesystem_helper.hpp>

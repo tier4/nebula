@@ -16,8 +16,8 @@
 #define NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
 
 #include <nebula_core_common/point_types.hpp>
-#include <nebula_velodyne_common/velodyne/velodyne_calibration_decoder.hpp>
-#include <nebula_velodyne_common/velodyne/velodyne_common.hpp>
+#include <nebula_velodyne_common/velodyne_calibration_decoder.hpp>
+#include <nebula_velodyne_common/velodyne_common.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>

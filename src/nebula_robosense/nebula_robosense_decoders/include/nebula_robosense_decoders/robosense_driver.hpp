@@ -18,7 +18,7 @@
 #include "nebula_core_common/nebula_status.hpp"
 #include "nebula_core_common/point_types.hpp"
 #include "nebula_core_decoders/nebula_driver_base.hpp"
-#include "nebula_robosense_common/robosense/robosense_common.hpp"
+#include "nebula_robosense_common/robosense_common.hpp"
 #include "nebula_robosense_decoders/decoders/robosense_scan_decoder.hpp"
 
 #include <memory>

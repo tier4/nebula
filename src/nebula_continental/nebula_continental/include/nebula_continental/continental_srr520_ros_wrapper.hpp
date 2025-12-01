@@ -18,7 +18,7 @@
 #include "nebula_continental/continental_srr520_hw_interface_wrapper.hpp"
 #include "nebula_core_ros/parameter_descriptors.hpp"
 
-#include <nebula_continental_common/continental/continental_srr520.hpp>
+#include <nebula_continental_common/continental_srr520.hpp>
 #include <nebula_continental_hw_interfaces/continental_srr520_hw_interface.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/nebula_status.hpp>

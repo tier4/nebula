@@ -19,7 +19,7 @@
 #include "nebula_core_common/nebula_status.hpp"
 #include "nebula_core_common/point_types.hpp"
 #include "nebula_core_decoders/nebula_driver_base.hpp"
-#include "nebula_velodyne_common/velodyne/velodyne_common.hpp"
+#include "nebula_velodyne_common/velodyne_common.hpp"
 #include "nebula_velodyne_decoders/decoders/velodyne_scan_decoder.hpp"
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>

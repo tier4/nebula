@@ -10,7 +10,7 @@
 #include "nebula_hesai_decoders/decoders/functional_safety.hpp"
 
 #include <nebula_core_common/util/string_conversions.hpp>
-#include <nebula_hesai_common/hesai/hesai_common.hpp>
+#include <nebula_hesai_common/hesai_common.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/time.hpp>
 

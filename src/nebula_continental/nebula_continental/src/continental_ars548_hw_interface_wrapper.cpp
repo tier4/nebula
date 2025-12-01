@@ -16,7 +16,7 @@
 
 #include "nebula_core_ros/rclcpp_logger.hpp"
 
-#include <nebula_continental_common/continental/continental_ars548.hpp>
+#include <nebula_continental_common/continental_ars548.hpp>
 #include <nebula_core_common/util/string_conversions.hpp>
 #include <tf2_ros/buffer.hpp>
 #include <tf2_ros/transform_listener.hpp>

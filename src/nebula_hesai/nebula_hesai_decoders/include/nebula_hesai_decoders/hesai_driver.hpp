@@ -18,7 +18,7 @@
 #include "nebula_core_common/nebula_status.hpp"
 #include "nebula_core_common/point_types.hpp"
 #include "nebula_core_decoders/point_filters/blockage_mask.hpp"
-#include "nebula_hesai_common/hesai/hesai_common.hpp"
+#include "nebula_hesai_common/hesai_common.hpp"
 #include "nebula_hesai_decoders/decoders/functional_safety.hpp"
 #include "nebula_hesai_decoders/decoders/hesai_packet.hpp"
 #include "nebula_hesai_decoders/decoders/hesai_scan_decoder.hpp"

@@ -17,7 +17,7 @@
 
 #include "nebula_core_common/nebula_common.hpp"
 #include "nebula_core_common/nebula_status.hpp"
-#include "nebula_velodyne_common/velodyne/velodyne_calibration_decoder.hpp"
+#include "nebula_velodyne_common/velodyne_calibration_decoder.hpp"
 
 #include <string>
 namespace nebula

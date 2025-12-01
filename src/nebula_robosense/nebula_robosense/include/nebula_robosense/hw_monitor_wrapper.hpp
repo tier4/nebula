@@ -17,7 +17,7 @@
 #include <boost_tcp_driver/tcp_driver.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_core_common/nebula_common.hpp>
-#include <nebula_robosense_common/robosense/robosense_common.hpp>
+#include <nebula_robosense_common/robosense_common.hpp>
 #include <nebula_robosense_hw_interfaces/robosense_hw_interface.hpp>
 #include <rclcpp/rclcpp.hpp>
 

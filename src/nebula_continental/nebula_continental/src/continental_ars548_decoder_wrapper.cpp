@@ -14,7 +14,7 @@
 
 #include "nebula_continental/continental_ars548_decoder_wrapper.hpp"
 
-#include "nebula_continental_common/continental/continental_ars548.hpp"
+#include "nebula_continental_common/continental_ars548.hpp"
 #include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
 
 #include <nebula_core_common/util/string_conversions.hpp>

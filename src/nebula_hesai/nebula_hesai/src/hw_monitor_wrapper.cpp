@@ -8,7 +8,7 @@
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_core_common/nebula_common.hpp>
-#include <nebula_hesai_common/hesai/hesai_common.hpp>
+#include <nebula_hesai_common/hesai_common.hpp>
 #include <nlohmann/json.hpp>
 #include <rclcpp/duration.hpp>
 #include <rclcpp/logging.hpp>

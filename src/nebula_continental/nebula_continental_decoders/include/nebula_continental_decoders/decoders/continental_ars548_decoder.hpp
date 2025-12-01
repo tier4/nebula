@@ -16,7 +16,7 @@
 
 #include "nebula_continental_decoders/decoders/continental_packets_decoder.hpp"
 
-#include <nebula_continental_common/continental/continental_ars548.hpp>
+#include <nebula_continental_common/continental_ars548.hpp>
 
 #include <continental_msgs/msg/continental_ars548_detection_list.hpp>
 #include <continental_msgs/msg/continental_ars548_object_list.hpp>

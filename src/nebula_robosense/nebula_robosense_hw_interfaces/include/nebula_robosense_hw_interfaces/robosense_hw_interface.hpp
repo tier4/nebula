@@ -27,7 +27,7 @@
 
 #include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_core_common/loggers/logger.hpp>
-#include <nebula_robosense_common/robosense/robosense_common.hpp>
+#include <nebula_robosense_common/robosense_common.hpp>
 
 #include <memory>
 #include <string>
