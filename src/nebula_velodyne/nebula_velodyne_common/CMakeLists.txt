@@ -8,18 +8,14 @@ if(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
   add_definitions(-DHAVE_NEW_YAMLCPP)
 endif(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
 
-add_library(nebula_velodyne_common SHARED
-    src/velodyne_calibration_decoder.cpp
-)
+add_library(nebula_velodyne_common SHARED src/velodyne_calibration_decoder.cpp)
 
-target_include_directories(nebula_velodyne_common PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
+target_include_directories(
+  nebula_velodyne_common
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+         $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(nebula_velodyne_common PUBLIC
-    yaml-cpp
-)
+target_link_libraries(nebula_velodyne_common PUBLIC yaml-cpp)
 
 install(TARGETS nebula_velodyne_common EXPORT export_nebula_velodyne_common)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})

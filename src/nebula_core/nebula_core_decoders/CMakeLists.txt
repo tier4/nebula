@@ -6,17 +6,13 @@ autoware_package()
 
 add_library(nebula_core_decoders INTERFACE)
 
-target_include_directories(nebula_core_decoders INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(nebula_core_decoders INTERFACE
-    PNG::PNG
-)
-ament_target_dependencies(nebula_core_decoders INTERFACE
-    nebula_core_common
-    sensor_msgs
-)
+target_include_directories(
+  nebula_core_decoders
+  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:include>)
+target_link_libraries(nebula_core_decoders INTERFACE PNG::PNG)
+ament_target_dependencies(nebula_core_decoders INTERFACE nebula_core_common
+                          sensor_msgs)
 
 install(TARGETS nebula_core_decoders EXPORT export_nebula_core_decoders)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
@@ -27,22 +23,16 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gtest REQUIRED)
 
-  add_definitions(-D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
+  add_definitions(
+    -D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
 
-  ament_add_gtest(test_downsample_mask tests/point_filters/test_downsample_mask.cpp)
-  target_include_directories(test_downsample_mask PRIVATE
-        include
-    )
-  target_link_libraries(test_downsample_mask
-        nebula_core_decoders
-    )
+  ament_add_gtest(test_downsample_mask
+                  tests/point_filters/test_downsample_mask.cpp)
+  target_include_directories(test_downsample_mask PRIVATE include)
+  target_link_libraries(test_downsample_mask nebula_core_decoders)
 endif()
 
 ament_export_targets(export_nebula_core_decoders)
-ament_export_dependencies(
-    nebula_core_common
-    sensor_msgs
-    PNG
-)
+ament_export_dependencies(nebula_core_common sensor_msgs PNG)
 
 ament_package()

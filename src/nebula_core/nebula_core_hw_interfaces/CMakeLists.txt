@@ -6,16 +6,16 @@ autoware_package()
 
 add_library(nebula_core_hw_interfaces INTERFACE)
 
-target_include_directories(nebula_core_hw_interfaces INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
+target_include_directories(
+  nebula_core_hw_interfaces
+  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(nebula_core_hw_interfaces INTERFACE
-    nebula_core_common::nebula_core_common
-)
+target_link_libraries(nebula_core_hw_interfaces
+                      INTERFACE nebula_core_common::nebula_core_common)
 
-install(TARGETS nebula_core_hw_interfaces EXPORT export_nebula_core_hw_interfaces)
+install(TARGETS nebula_core_hw_interfaces
+        EXPORT export_nebula_core_hw_interfaces)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
@@ -24,17 +24,10 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gtest REQUIRED)
 
-  ament_add_gtest(test_udp
-        test/common/test_udp.cpp
-    )
+  ament_add_gtest(test_udp test/common/test_udp.cpp)
 
-  target_include_directories(test_udp PRIVATE
-        include
-        test
-    )
-  target_link_libraries(test_udp
-        nebula_core_common::nebula_core_common
-    )
+  target_include_directories(test_udp PRIVATE include test)
+  target_link_libraries(test_udp nebula_core_common::nebula_core_common)
 endif()
 
 ament_export_targets(export_nebula_core_hw_interfaces)

@@ -6,13 +6,12 @@ autoware_package()
 
 add_library(nebula_robosense_common INTERFACE)
 
-target_include_directories(nebula_robosense_common INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(nebula_robosense_common INTERFACE
-    nebula_core_common::nebula_core_common
-)
+target_include_directories(
+  nebula_robosense_common
+  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:include>)
+target_link_libraries(nebula_robosense_common
+                      INTERFACE nebula_core_common::nebula_core_common)
 
 install(TARGETS nebula_robosense_common EXPORT export_nebula_robosense_common)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
