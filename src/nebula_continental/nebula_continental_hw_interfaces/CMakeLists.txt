@@ -1,23 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(nebula_continental_hw_interfaces)
 
-# Default to C++17
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
-endif()
-
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
-endif()
-
-find_package(ament_cmake_auto REQUIRED)
-find_package(boost_udp_driver)
-find_package(nebula_core_common REQUIRED)
-find_package(nebula_continental_common REQUIRED)
-find_package(nebula_core_hw_interfaces REQUIRED)
-find_package(nebula_msgs REQUIRED)
-find_package(nlohmann_json REQUIRED)
-find_package(ros2_socketcan REQUIRED)
+find_package(autoware_cmake REQUIRED)
+autoware_package()
 
 add_library(nebula_continental_hw_interfaces SHARED
     src/continental_ars548_hw_interface.cpp

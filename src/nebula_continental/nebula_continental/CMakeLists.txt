@@ -1,39 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(nebula_continental)
 
-# Default to C++17
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
-endif()
-
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
-endif()
-
-find_package(ament_cmake_auto REQUIRED)
-find_package(PCL REQUIRED components common)
-find_package(autoware_sensing_msgs REQUIRED)
-find_package(continental_msgs REQUIRED)
-find_package(continental_srvs REQUIRED)
-find_package(diagnostic_msgs REQUIRED)
-find_package(diagnostic_updater REQUIRED)
-find_package(geometry_msgs REQUIRED)
-find_package(message_filters REQUIRED)
-find_package(nebula_core_common REQUIRED)
-find_package(nebula_continental_common REQUIRED)
-find_package(nebula_continental_decoders REQUIRED)
-find_package(nebula_continental_hw_interfaces REQUIRED)
-find_package(nebula_msgs REQUIRED)
-find_package(nebula_core_ros REQUIRED)
-find_package(radar_msgs REQUIRED)
-find_package(nlohmann_json REQUIRED)
-find_package(rclcpp_components REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(pcl_conversions REQUIRED)
-find_package(sync_tooling_msgs REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(visualization_msgs REQUIRED)
-find_package(yaml-cpp REQUIRED)
+find_package(autoware_cmake REQUIRED)
+autoware_package()
 
 # # Continental
 
@@ -119,25 +88,25 @@ install(TARGETS continental_srr520_ros_wrapper EXPORT export_continental_srr520_
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
-    find_package(ament_lint_auto REQUIRED)
-    find_package(ament_cmake_gtest REQUIRED)
-    find_package(rosbag2_cpp REQUIRED)
-    find_package(PCL REQUIRED COMPONENTS common)
+  find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
+  find_package(rosbag2_cpp REQUIRED)
+  find_package(PCL REQUIRED COMPONENTS common)
 
-    ament_lint_auto_find_test_dependencies()
+  ament_lint_auto_find_test_dependencies()
 
-    add_definitions(-D_SRC_RESOURCES_DIR_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
+  add_definitions(-D_SRC_RESOURCES_DIR_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
 
-    # ARS548 tests
-    add_library(continental_ros_decoder_test_ars548 SHARED
+  # ARS548 tests
+  add_library(continental_ros_decoder_test_ars548 SHARED
         tests/continental_ros_decoder_test_ars548.cpp
         tests/parameter_descriptors.cpp
     )
-    target_include_directories(continental_ros_decoder_test_ars548 PRIVATE
+  target_include_directories(continental_ros_decoder_test_ars548 PRIVATE
         tests
         include
     )
-    target_link_libraries(continental_ros_decoder_test_ars548 PRIVATE
+  target_link_libraries(continental_ros_decoder_test_ars548 PRIVATE
         nebula_core_common::nebula_core_common
         pcl_common
         rosbag2_cpp::rosbag2_cpp
@@ -145,29 +114,29 @@ if(BUILD_TESTING)
         nebula_continental_decoders::nebula_continental_decoders
     )
 
-    ament_add_gtest(continental_ros_decoder_test_main_ars548
+  ament_add_gtest(continental_ros_decoder_test_main_ars548
         tests/continental_ros_decoder_test_main_ars548.cpp
     )
-    target_include_directories(continental_ros_decoder_test_main_ars548 PRIVATE
+  target_include_directories(continental_ros_decoder_test_main_ars548 PRIVATE
         tests
     )
-    target_link_libraries(continental_ros_decoder_test_main_ars548
+  target_link_libraries(continental_ros_decoder_test_main_ars548
         continental_ros_decoder_test_ars548
         nebula_core_common::nebula_core_common
         nebula_continental_decoders::nebula_continental_decoders
         diagnostic_updater::diagnostic_updater
     )
 
-    # SRR520 tests
-    add_library(continental_ros_decoder_test_srr520 SHARED
+  # SRR520 tests
+  add_library(continental_ros_decoder_test_srr520 SHARED
         tests/continental_ros_decoder_test_srr520.cpp
         tests/parameter_descriptors.cpp
     )
-    target_include_directories(continental_ros_decoder_test_srr520 PRIVATE
+  target_include_directories(continental_ros_decoder_test_srr520 PRIVATE
         tests
         include
     )
-    target_link_libraries(continental_ros_decoder_test_srr520
+  target_link_libraries(continental_ros_decoder_test_srr520
         nebula_core_common::nebula_core_common
         pcl_common
         rosbag2_cpp::rosbag2_cpp
@@ -175,20 +144,20 @@ if(BUILD_TESTING)
         nebula_continental_decoders::nebula_continental_decoders
     )
 
-    ament_add_gtest(continental_ros_decoder_test_main_srr520
+  ament_add_gtest(continental_ros_decoder_test_main_srr520
         tests/continental_ros_decoder_test_main_srr520.cpp
     )
-    target_include_directories(continental_ros_decoder_test_main_srr520 PRIVATE
+  target_include_directories(continental_ros_decoder_test_main_srr520 PRIVATE
         tests
     )
-    target_link_libraries(continental_ros_decoder_test_main_srr520
+  target_link_libraries(continental_ros_decoder_test_main_srr520
         continental_ros_decoder_test_srr520
         nebula_core_common::nebula_core_common
         nebula_continental_decoders::nebula_continental_decoders
         diagnostic_updater::diagnostic_updater
     )
 
-    install(
+  install(
         DIRECTORY test_resources
         DESTINATION share/${PROJECT_NAME}
     )
@@ -231,16 +200,3 @@ ament_export_dependencies(
 )
 
 ament_package()
-
-# Set ROS_DISTRO macros
-set(ROS_DISTRO $ENV{ROS_DISTRO})
-
-if(${ROS_DISTRO} STREQUAL "rolling")
-    add_compile_definitions(ROS_DISTRO_ROLLING)
-elseif(${ROS_DISTRO} STREQUAL "foxy")
-    add_compile_definitions(ROS_DISTRO_FOXY)
-elseif(${ROS_DISTRO} STREQUAL "galactic")
-    add_compile_definitions(ROS_DISTRO_GALACTIC)
-elseif(${ROS_DISTRO} STREQUAL "humble")
-    add_compile_definitions(ROS_DISTRO_HUMBLE)
-endif()
