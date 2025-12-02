@@ -1,22 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(nebula_velodyne_hw_interfaces)
 
-# Default to C++17
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
-endif()
-
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
-endif()
-
-find_package(ament_cmake_auto REQUIRED)
-find_package(boost_tcp_driver)
-find_package(boost_udp_driver)
-find_package(nebula_core_common REQUIRED)
-find_package(nebula_velodyne_common REQUIRED)
-find_package(nebula_core_hw_interfaces REQUIRED)
-find_package(nlohmann_json REQUIRED)
+find_package(autoware_cmake REQUIRED)
+autoware_package()
 
 add_library(nebula_velodyne_hw_interfaces SHARED
     src/velodyne_hw_interface.cpp
