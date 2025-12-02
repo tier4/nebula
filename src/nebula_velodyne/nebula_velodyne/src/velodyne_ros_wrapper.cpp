@@ -11,7 +11,9 @@
 #include <utility>
 #include <vector>
 
+#if defined(__clang__)
 #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
+#endif
 
 namespace nebula::ros
 {

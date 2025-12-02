@@ -9,7 +9,7 @@
   <license>Apache 2</license>
   <author>TIER IV</author>
 
-  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  <buildtool_depend>autoware_cmake</buildtool_depend>
 
   <depend>nebula_core_common</depend>
 

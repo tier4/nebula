@@ -1,71 +1,38 @@
 cmake_minimum_required(VERSION 3.20)
 project(nebula_core_decoders)
 
-# Default to C++17
-if (NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
-endif ()
-
-if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-Wall -Wextra -Wpedantic -Wunused-function)
-endif ()
-
-find_package(ament_cmake_auto REQUIRED)
-find_package(nebula_core_common REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(PNG REQUIRED)
+find_package(autoware_cmake REQUIRED)
+autoware_package()
 
 add_library(nebula_core_decoders INTERFACE)
 
-target_include_directories(nebula_core_decoders INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(nebula_core_decoders INTERFACE
-    PNG::PNG
-)
-ament_target_dependencies(nebula_core_decoders INTERFACE
-    nebula_core_common
-    sensor_msgs
-)
+target_include_directories(
+  nebula_core_decoders
+  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:include>)
+target_link_libraries(nebula_core_decoders INTERFACE PNG::PNG)
+ament_target_dependencies(nebula_core_decoders INTERFACE nebula_core_common
+                          sensor_msgs)
 
 install(TARGETS nebula_core_decoders EXPORT export_nebula_core_decoders)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 if(BUILD_TESTING)
-    find_package(ament_lint_auto REQUIRED)
-    ament_lint_auto_find_test_dependencies()
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
 
-    find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
 
-    add_definitions(-D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
+  add_definitions(
+    -D_TEST_RESOURCES_PATH="${PROJECT_SOURCE_DIR}/test_resources/")
 
-    ament_add_gtest(test_downsample_mask tests/point_filters/test_downsample_mask.cpp)
-    target_include_directories(test_downsample_mask PRIVATE
-        include
-    )
-    target_link_libraries(test_downsample_mask
-        nebula_core_decoders
-    )
+  ament_add_gtest(test_downsample_mask
+                  tests/point_filters/test_downsample_mask.cpp)
+  target_include_directories(test_downsample_mask PRIVATE include)
+  target_link_libraries(test_downsample_mask nebula_core_decoders)
 endif()
 
 ament_export_targets(export_nebula_core_decoders)
-ament_export_dependencies(
-    nebula_core_common
-    sensor_msgs
-    PNG
-)
+ament_export_dependencies(nebula_core_common sensor_msgs PNG)
 
 ament_package()
-
-# Set ROS_DISTRO macros
-set(ROS_DISTRO $ENV{ROS_DISTRO})
-if(${ROS_DISTRO} STREQUAL "rolling")
-    add_compile_definitions(ROS_DISTRO_ROLLING)
-elseif(${ROS_DISTRO} STREQUAL "foxy")
-    add_compile_definitions(ROS_DISTRO_FOXY)
-elseif(${ROS_DISTRO} STREQUAL "galactic")
-    add_compile_definitions(ROS_DISTRO_GALACTIC)
-elseif(${ROS_DISTRO} STREQUAL "humble")
-    add_compile_definitions(ROS_DISTRO_HUMBLE)
-endif()
