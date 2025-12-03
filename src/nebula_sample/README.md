@@ -29,28 +29,13 @@ ros2 launch nebula_sample nebula_sample.launch.xml
 
 ## Using as a Template
 
-To create support for a new sensor:
+For detailed instructions on how to use this package as a template for adding a new sensor, please refer to the [Integration Guide](INTEGRATION_GUIDE.md).
 
-1. Copy this package structure:
+The guide covers:
 
-   ```bash
-   cp -r src/nebula_sample src/nebula_<your_vendor>
-   ```
-
-2. Rename all occurrences:
-
-   - Files: `sample_*` → `<your_vendor>_*`
-   - Classes: `Sample*` → `<YourVendor>*`
-   - Packages: `nebula_sample*` → `nebula_<your_vendor>*`
-
-3. Implement sensor-specific logic:
-
-   - **Common**: Add sensor configuration parameters
-   - **Decoders**: Implement packet parsing and point cloud generation
-   - **HW Interfaces**: Implement UDP/TCP communication with sensor
-   - **ROS Wrapper**: Add ROS parameters and topics
-
-4. Update dependencies in `package.xml` and `CMakeLists.txt`
+1. Cloning and renaming the package
+2. Implementing sensor-specific logic
+3. Verifying the new implementation
 
 ## Key Components
 
