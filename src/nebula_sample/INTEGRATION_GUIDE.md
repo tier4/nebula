@@ -38,7 +38,6 @@ The Nebula architecture is modular. You will need to implement specific classes 
 **Purpose**: Defines data structures for configuration and calibration.
 
 - **`MyVendorSensorConfiguration`**:
-
   - Add fields for sensor-specific settings (e.g., return mode, frequency, IP address).
   - This struct is passed to both the driver and hardware interface.
 
@@ -51,12 +50,10 @@ The Nebula architecture is modular. You will need to implement specific classes 
 **Purpose**: Handles packet parsing and point cloud generation.
 
 - **`MyVendorScanDecoder`** (Interface):
-
   - Inherits from `ScanDecoder`.
   - Defines the contract for parsing packets.
 
 - **`MyVendorDecoder`** (Implementation):
-
   - **`unpack(packet)`**: The core method. It takes raw bytes (UDP packet) and returns a `PacketDecodeResult` containing the decoded points or an error.
   - **`get_pointcloud()`**: (Optional) If you buffer points, this returns the constructed point cloud.
   - **Key Task**: Parse the raw byte stream according to your sensor's user manual.
