@@ -62,9 +62,7 @@
         },
         "sensor_model": {
           "$ref": "lidar_hesai.json#/definitions/sensor_model",
-          "enum": [
-            "PandarQT128"
-          ]
+          "enum": ["PandarQT128"]
         },
         "calibration_file": {
           "$ref": "lidar_hesai.json#/definitions/calibration_file"
@@ -113,10 +111,7 @@
         },
         "diagnostics": {
           "$ref": "lidar_hesai.json#/definitions/diagnostics",
-          "required": [
-            "pointcloud_publish_rate",
-            "packet_loss"
-          ]
+          "required": ["pointcloud_publish_rate", "packet_loss"]
         },
         "sync_diagnostics": {
           "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/sync_diagnostics"
@@ -165,13 +160,9 @@
         },
         "additionalProperties": false
       },
-      "required": [
-        "ros__parameters"
-      ]
+      "required": ["ros__parameters"]
     }
   },
-  "required": [
-    "/**"
-  ],
+  "required": ["/**"],
   "additionalProperties": false
 }

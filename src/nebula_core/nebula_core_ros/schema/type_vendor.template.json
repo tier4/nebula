@@ -5,10 +5,7 @@
   "definitions": {
     "sensor_model": {
       "$ref": "hardware.json#/definitions/sensor_model",
-      "enum": [
-        "<sensor_model_1>",
-        "<sensor_model_2>"
-      ]
+      "enum": ["<sensor_model_1>", "<sensor_model_2>"]
     },
     "example_parameter_1": {
       "type": "integer",

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_VelodyneRosOfflineExtractBag_H
-#define NEBULA_VelodyneRosOfflineExtractBag_H
+#ifndef NEBULA_VELODYNE__NEBULA_VELODYNE__EXAMPLES__VELODYNE_ROS_OFFLINE_EXTRACT_BAG_PCD_HPP_
+#define NEBULA_VELODYNE__NEBULA_VELODYNE__EXAMPLES__VELODYNE_ROS_OFFLINE_EXTRACT_BAG_PCD_HPP_
 
 #include "nebula_core_common/nebula_status.hpp"
 #include "nebula_velodyne_common/velodyne_common.hpp"
@@ -88,4 +88,4 @@ private:
 
 }  // namespace nebula::ros
 
-#endif  // NEBULA_VelodyneRosOfflineExtractBag_H
+#endif  // NEBULA_VELODYNE__NEBULA_VELODYNE__EXAMPLES__VELODYNE_ROS_OFFLINE_EXTRACT_BAG_PCD_HPP_

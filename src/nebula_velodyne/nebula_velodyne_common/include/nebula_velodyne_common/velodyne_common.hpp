@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_VELODYNE_COMMON_H
-#define NEBULA_VELODYNE_COMMON_H
+#ifndef NEBULA_VELODYNE_COMMON__VELODYNE_COMMON_HPP_
+#define NEBULA_VELODYNE_COMMON__VELODYNE_COMMON_HPP_
 
 #include "nebula_core_common/nebula_common.hpp"
 #include "nebula_core_common/nebula_status.hpp"
@@ -84,4 +84,4 @@ inline ReturnMode return_mode_from_string_velodyne(const std::string & return_mo
 }  // namespace drivers
 }  // namespace nebula
 
-#endif  // NEBULA_VELODYNE_COMMON_H
+#endif  // NEBULA_VELODYNE_COMMON__VELODYNE_COMMON_HPP_
