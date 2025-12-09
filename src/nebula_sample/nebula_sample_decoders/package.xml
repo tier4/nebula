@@ -2,9 +2,10 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>nebula_sample_decoders</name>
-  <version>0.0.1</version>
+  <version>0.3.0</version>
   <description>Nebula Sample Decoders Library</description>
-  <maintainer email="contact@map4.jp">MAP IV</maintainer>
+  <maintainer email="david.wong@tier4.jp">David Wong</maintainer>
+  <maintainer email="max.schmeller@tier4.jp">Max Schmeller</maintainer>
 
   <license>Apache 2</license>
   <author>TIER IV</author>

@@ -29,10 +29,10 @@ graph TB
     classDef vendor fill:#e0f2f1,stroke:#00695c,stroke-width:2px,rx:5,ry:5,color:#004d40;
 
     %% --- GRAPH STRUCTURE ---
-    subgraph Nebula["<b>Nebula Framework</b>"]
+    subgraph Nebula["<b>Nebula framework</b>"]
         direction TB
 
-        subgraph Common["<b>Common Packages</b>"]
+        subgraph Common["<b>Common packages</b>"]
             direction LR
             C1["<b>nebula_core_common</b><br/>Base types, status codes"]:::common
             C2["<b>nebula_core_decoders</b><br/>Decoder interfaces"]:::common
@@ -40,7 +40,7 @@ graph TB
             C4["<b>nebula_core_ros</b><br/>ROS 2 utils"]:::common
         end
 
-        subgraph Vendors["<b>Vendor Packages</b>"]
+        subgraph Vendors["<b>Vendor packages</b>"]
             direction LR
             Hesai["<b>nebula_hesai</b><br/>hesai_common<br/>hesai_decoders<br/>hesai_hw_interfaces<br/>ROS wrapper"]:::vendor
 
@@ -57,7 +57,7 @@ graph TB
     style Vendors fill:#f0fdfa,stroke:#009688,stroke-dasharray: 5 5
 ```
 
-**Key Principles**:
+**Key principles**:
 
 - **Common packages** provide reusable functionality (UDP sockets, point types, etc.)
 - **Vendor packages** implement vendor-specific logic (packet parsing, calibration)
@@ -78,13 +78,13 @@ graph TD
 
     %% --- NODES ---
     %% Apply classes using the triple colon syntax (:::className)
-    Wrapper[<b>ROS 2 Wrapper Layer</b><br/>Parameter handling, ROS message conversion, publishing]:::wrapper
+    Wrapper[<b>ROS 2 wrapper layer</b><br/>Parameter handling, ROS message conversion, publishing]:::wrapper
 
-    Driver[<b>Driver Layer</b><br/>High-level API, manages decoder and HW interface]:::logic
+    Driver[<b>Driver layer</b><br/>High-level API, manages decoder and HW interface]:::logic
 
-    Decoder[<b>Decoder Layer</b><br/>Packet parsing<br/>point cloud generation]:::worker
+    Decoder[<b>Decoder layer</b><br/>Packet parsing<br/>point cloud generation]:::worker
 
-    HW[<b>HW Interface</b><br/>UDP/TCP communication<br/>socket management]:::worker
+    HW[<b>HW interface</b><br/>UDP/TCP communication<br/>socket management]:::worker
 
     %% --- RELATIONSHIPS ---
     Wrapper --> Driver
@@ -94,10 +94,10 @@ graph TD
 
 ### Data flow
 
-1. **Hardware Interface** receives raw UDP packets from the sensor and defines TCP protocols for communication and configuration
+1. **Hardware interface** receives raw UDP packets from the sensor and defines TCP protocols for communication and configuration
 2. **Driver** receives packets and delegates to **Decoder**
 3. **Decoder** parses packets, accumulates points, detects scan completion, and calls callback with complete point cloud
-4. **ROS Wrapper** converts to ROS message and publishes
+4. **ROS wrapper** converts to ROS message and publishes
 
 ---
 
@@ -272,7 +272,7 @@ Rename all occurrences of "sample"/"Sample" to your vendor name:
 - **Files**: `sample_*.{cpp,hpp}` → `myvendor_*.{cpp,hpp}`
 - **Classes**: `SampleDriver` → `MyVendorDriver`
 - **Namespaces**: Update in all files
-- **CMake/Package**: Update `CMakeLists.txt` and `package.xml`
+- **CMake/package**: Update `CMakeLists.txt` and `package.xml`
 
 **Tip**: Use find-and-replace tools:
 
@@ -283,7 +283,7 @@ find nebula_myvendor -type f -exec sed -i 's/Sample/MyVendor/g' {} +
 
 ### Step 3: Implement components
 
-See [Implementation Details](#implementation-details) below.
+See [Implementation details](#implementation-details) below.
 
 ### Step 4: Verify
 
@@ -317,7 +317,7 @@ struct MyVendorSensorConfiguration : public LidarConfigurationBase {
 };
 ```
 
-#### 2. Calibration configuration (Optional)
+#### 2. Calibration configuration (optional)
 
 Only implement if your sensor needs calibration data:
 
@@ -537,15 +537,15 @@ Your sensor integration must implement these behaviors correctly.
 
 **Order of operations**:
 
-1. **Parameter Loading**: Declare and read all ROS parameters
-2. **Configuration Validation**: Validate IP addresses, ports, ranges
-3. **Driver Initialization**: Create driver with validated config
-4. **Callback Registration**: Register pointcloud callback
-5. **HW Interface Initialization**: Create and configure HW interface
-6. **Publisher Creation**: Create ROS publishers
-7. **Stream Start**: Call `sensor_interface_start()` to begin receiving data
+1. **Parameter loading**: Declare and read all ROS parameters
+2. **Configuration validation**: Validate IP addresses, ports, ranges
+3. **Driver initialization**: Create driver with validated config
+4. **Callback registration**: Register pointcloud callback
+5. **HW interface initialization**: Create and configure HW interface
+6. **Publisher creation**: Create ROS publishers
+7. **Stream start**: Call `sensor_interface_start()` to begin receiving data
 
-**Error Handling**:
+**Error handling**:
 
 - If any step fails, log error and throw exception
 - Do not proceed to next step if previous failed
@@ -575,11 +575,11 @@ stream_start();
 
 **When parameters change at runtime**:
 
-1. **Validate New Parameters**: Check if new values are valid
-2. **Stop Stream**: Call `sensor_interface_stop()`
-3. **Update Configuration**: Apply new parameter values
-4. **Reinitialize Driver**: Create new driver with updated config
-5. **Restart Stream**: Call `sensor_interface_start()`
+1. **Validate new parameters**: Check if new values are valid
+2. **Stop stream**: Call `sensor_interface_stop()`
+3. **Update configuration**: Apply new parameter values
+4. **Reinitialize driver**: Create new driver with updated config
+5. **Restart stream**: Call `sensor_interface_start()`
 
 **Example**:
 
@@ -615,8 +615,8 @@ rcl_interfaces::msg::SetParametersResult on_parameter_change(
 
 **Detect and handle sensor disconnection**:
 
-1. **Timeout Detection**: Monitor time since last packet
-2. **Diagnostic Update**: Set diagnostic status to ERROR
+1. **Timeout detection**: Monitor time since last packet
+2. **Diagnostic update**: Set diagnostic status to ERROR
 3. **Logging**: Log connection loss with timestamp
 4. **Recovery**: Optionally attempt reconnection
 
@@ -653,10 +653,10 @@ void check_connection() {
 
 **Order of operations**:
 
-1. **Stop Stream**: Call `sensor_interface_stop()`
-2. **Close Sockets**: Ensure all network resources are closed
-3. **Clear Buffers**: Release point cloud buffers
-4. **Reset Pointers**: Reset shared_ptr members
+1. **Stop stream**: Call `sensor_interface_stop()`
+2. **Close sockets**: Ensure all network resources are closed
+3. **Clear buffers**: Release point cloud buffers
+4. **Reset pointers**: Reset shared_ptr members
 
 **Example**:
 
@@ -675,10 +675,10 @@ void check_connection() {
 
 **Required diagnostic information**:
 
-- **Packet Rate**: Packets received per second
-- **Scan Rate**: Complete scans per second (should match rotation speed)
-- **Connection Status**: OK / WARN / ERROR
-- **Decode Errors**: Count of failed packet parses
+- **Packet rate**: Packets received per second
+- **Scan rate**: Complete scans per second (should match rotation speed)
+- **Connection status**: OK / WARN / ERROR
+- **Decode errors**: Count of failed packet parses
 
 **Example**:
 
@@ -786,10 +786,10 @@ ros2 bag play your_sensor_data.bag
 
 ## Additional resources
 
-- **Hesai Implementation**: `src/nebula_hesai` - Full reference implementation
-- **Velodyne Implementation**: `src/nebula_velodyne` - Alternative reference
-- **Core Components**: `src/nebula_core` - Reusable utilities
-- **Point Types**: See `docs/point_types.md`
+- **Hesai implementation**: `src/nebula_hesai` - Full reference implementation
+- **Velodyne implementation**: `src/nebula_velodyne` - Alternative reference
+- **Core components**: `src/nebula_core` - Reusable utilities
+- **Point types**: See `docs/point_types.md`
 - **Parameters**: See `docs/parameters.md`
 
 ## Getting help
