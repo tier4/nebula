@@ -25,22 +25,29 @@ namespace nebula::drivers
 SampleDriver::SampleDriver(
   const std::shared_ptr<const SampleSensorConfiguration> & sensor_configuration)
 {
+  // Initialize driver status
   driver_status_ = Status::OK;
+
+  // Create decoder instance with sensor configuration
   scan_decoder_ = std::make_shared<SampleDecoder>(sensor_configuration);
 }
 
 Status SampleDriver::get_status()
 {
+  // Return current driver status
   return driver_status_;
 }
 
 PacketDecodeResult SampleDriver::parse_cloud_packet(const std::vector<uint8_t> & packet)
 {
+  // Delegate packet parsing to the decoder
+  // The decoder will accumulate points and call the pointcloud callback when ready
   return scan_decoder_->unpack(packet);
 }
 
 void SampleDriver::set_pointcloud_callback(SampleScanDecoder::pointcloud_callback_t pointcloud_cb)
 {
+  // Forward the callback to the decoder
   scan_decoder_->set_pointcloud_callback(pointcloud_cb);
 }
 

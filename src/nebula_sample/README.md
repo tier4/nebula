@@ -60,4 +60,4 @@ The guide covers:
 
 ## Reference Implementation
 
-This package is based on the Hesai implementation structure but with all vendor-specific code removed. For a complete example, refer to `nebula_hesai`.
+This package provides a template structure for adding new sensor support. For complete examples, refer to existing sensor packages like `nebula_hesai` or `nebula_velodyne`.

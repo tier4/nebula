@@ -21,27 +21,53 @@ namespace nebula::drivers
 
 SampleHwInterface::SampleHwInterface()
 {
+  // Constructor - initialize any member variables if needed
 }
 
 Status SampleHwInterface::sensor_interface_start()
 {
+  // Implementation Items: Implement sensor interface startup
+  // 1. Create UDP socket using connections::UdpSocket
+  // 2. Bind to the port specified in sensor_configuration_
+  // 3. Start async receive loop
+  // 4. When packets arrive, call cloud_packet_callback_ with the packet data
+  // 5. Optionally: send HTTP/TCP command to sensor to start scanning
+
+  // Example (pseudo-code):
+  // udp_socket_ = std::make_shared<connections::UdpSocket>();
+  // udp_socket_->open();
+  // udp_socket_->bind(sensor_configuration_->host_ip, sensor_configuration_->data_port);
+  // udp_socket_->asyncReceive(cloud_packet_callback_);
+
   return Status::OK;
 }
 
 Status SampleHwInterface::sensor_interface_stop()
 {
+  // Implementation Items: Implement sensor interface shutdown
+  // 1. Stop the receive loop
+  // 2. Close UDP socket(s)
+  // 3. Optionally: send command to sensor to stop scanning
+
+  // Example (pseudo-code):
+  // if (udp_socket_) {
+  //   udp_socket_->close();
+  // }
+
   return Status::OK;
 }
 
 Status SampleHwInterface::set_sensor_configuration(
   std::shared_ptr<const SampleSensorConfiguration> sensor_configuration)
 {
+  // Store the sensor configuration for later use
   sensor_configuration_ = sensor_configuration;
   return Status::OK;
 }
 
 Status SampleHwInterface::register_scan_callback(connections::UdpSocket::callback_t scan_callback)
 {
+  // Store the callback to be called when packets arrive
   cloud_packet_callback_ = scan_callback;
   return Status::OK;
 }
