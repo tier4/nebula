@@ -32,6 +32,10 @@ theme:
         name: Switch to light mode
 use_directory_urls: true
 
+### Extra JavaScript for Mermaid ###
+extra_javascript:
+  - https://unpkg.com/mermaid/dist/mermaid.min.js
+
 ### Navigation ###
 nav:
   - Home: index.md
@@ -66,7 +70,9 @@ nav:
           - SRR520: parameters/vendors/continental/srr520.md
   - Point cloud types: point_types.md
   - Design: design.md
-  - Tutorials: tutorials.md
+  - Tutorials:
+      - tutorials.md
+      - Integration Guide: integration_guide.md
   - Contributing: contribute.md
   - API reference:
       - api_reference.md
@@ -275,4 +281,8 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.highlight
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_div_format

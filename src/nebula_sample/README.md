@@ -61,3 +61,5 @@ The guide covers:
 ## Reference Implementation
 
 This package provides a template structure for adding new sensor support. For complete examples, refer to existing sensor packages like `nebula_hesai` or `nebula_velodyne`.
+
+**For detailed integration instructions, see the [Integration Guide](../../docs/integration_guide.md) in the documentation.**
