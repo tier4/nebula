@@ -44,7 +44,7 @@ The Nebula architecture is modular. You will need to implement specific classes 
 
 - **`MyVendorCalibrationConfiguration`**:
   - Define how calibration data (e.g., angle corrections) is stored.
-  - Implement `load_from_file()` to parse your vendor's calibration file format (csv, dat, xml, etc.).
+  - Implement `load_from_file()` to parse your vendor's calibration file format (csv, dat, xml, etc.) if required.
 
 ### B. Decoders Package (`nebula_myvendor_decoders`)
 
@@ -75,7 +75,7 @@ The Nebula architecture is modular. You will need to implement specific classes 
   - **`sensor_interface_start()`**: Setup UDP sockets and start receiving data.
   - **`sensor_interface_stop()`**: Close sockets.
   - **`register_scan_callback()`**: Register the function to call when a packet is received (usually `MyVendorDriver::parse_cloud_packet`).
-  - **Key Task**: Implement the UDP receiver loop. You can use `boost::asio` or standard sockets.
+  - **UDP Receiver Example**: Refer to `src/nebula_core/include/nebula_core/hw/hw_interface_base.hpp` for the base interface definition. Concrete implementations are found in sensor-specific packages.
 
 ### D. ROS Wrapper Package (`nebula_myvendor`)
 
