@@ -1,4 +1,4 @@
-# Nebula Sample Sensor Package
+# Nebula sample sensor package
 
 A template sensor package for the Nebula LiDAR driver framework. This package provides a minimal, working example that developers can copy and modify to add support for new sensors.
 
@@ -6,7 +6,7 @@ A template sensor package for the Nebula LiDAR driver framework. This package pr
 
 This package serves as a starting point for adding new sensor support to Nebula. It includes all necessary components with empty/stub implementations that compile and run without errors.
 
-## Package Structure
+## Package structure
 
 The sample sensor consists of four packages:
 
@@ -27,9 +27,9 @@ colcon build --packages-up-to nebula_sample
 ros2 launch nebula_sample nebula_sample.launch.xml
 ```
 
-## Using as a Template
+## Using as a template
 
-For detailed instructions on how to use this package as a template for adding a new sensor, please refer to the [Integration Guide](INTEGRATION_GUIDE.md).
+For detailed instructions on how to use this package as a template for adding a new sensor, please refer to the [Integration guide](../../docs/integration_guide.md).
 
 The guide covers:
 
@@ -37,7 +37,7 @@ The guide covers:
 2. Implementing sensor-specific logic
 3. Verifying the new implementation
 
-## Key Components
+## Key components
 
 ### Configuration (`*_common`)
 
@@ -49,17 +49,17 @@ The guide covers:
 - `SampleDecoder` - Packet decoder implementation
 - `SampleDriver` - Main driver class
 
-### Hardware Interface (`*_hw_interfaces`)
+### Hardware interface (`*_hw_interfaces`)
 
 - `SampleHwInterface` - Sensor communication interface
 
-### ROS Wrapper
+### ROS wrapper
 
 - `SampleRosWrapper` - ROS 2 node wrapping the driver
 - Point cloud publisher on `/points_raw`
 
-## Reference Implementation
+## Reference implementation
 
 This package provides a template structure for adding new sensor support. For complete examples, refer to existing sensor packages like `nebula_hesai` or `nebula_velodyne`.
 
-**For detailed integration instructions, see the [Integration Guide](../../docs/integration_guide.md) in the documentation.**
+**For detailed integration instructions, see the [Integration guide](../../docs/integration_guide.md) in the documentation.**

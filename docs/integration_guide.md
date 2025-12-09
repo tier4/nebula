@@ -1,21 +1,21 @@
-# New Sensor Integration Guide
+# New sensor integration guide
 
 This guide provides instructions for adding support for a new LiDAR sensor to Nebula using the `nebula_sample` package as a template.
 
-## Table of Contents
+## Table of contents
 
-1. [Architecture Overview](#architecture-overview)
-2. [Provided Components](#provided-components)
-3. [Integration Workflow](#integration-workflow)
-4. [Implementation Details](#implementation-details)
-5. [Required Behaviors](#required-behaviors)
+1. [Architecture overview](#architecture-overview)
+2. [Provided components](#provided-components)
+3. [Integration workflow](#integration-workflow)
+4. [Implementation details](#implementation-details)
+5. [Required behaviors](#required-behaviors)
 6. [Verification](#verification)
 
 ---
 
-## Architecture Overview
+## Architecture overview
 
-### Overall Package Structure
+### Overall package structure
 
 Nebula is organized into common (reusable) packages and vendor-specific packages:
 
@@ -64,7 +64,7 @@ graph TB
 - All vendor packages follow the **same 4-layer structure** for consistency
 - Vendor packages **depend on** common packages but not on each other
 
-### Layered Architecture (Per Vendor)
+### Layered architecture (per vendor)
 
 Each vendor package uses a layered architecture to separate functional blocks and promote code reuse:
 
@@ -92,7 +92,7 @@ graph TD
     Driver --> HW
 ```
 
-### Data Flow
+### Data flow
 
 1. **Hardware Interface** receives raw UDP packets from the sensor and defines TCP protocols for communication and configuration
 2. **Driver** receives packets and delegates to **Decoder**
@@ -101,11 +101,11 @@ graph TD
 
 ---
 
-## Provided Components
+## Provided components
 
 Nebula provides reusable components to simplify sensor integration. You should use these instead of implementing from scratch.
 
-### 1. UDP Socket Handling
+### 1. UDP socket handling
 
 **Location**: `nebula_core_hw_interfaces/include/nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp`
 
@@ -130,7 +130,7 @@ udp_socket_.bind();
 udp_socket_.asyncReceive(callback);
 ```
 
-### 2. Status Codes
+### 2. Status codes
 
 **Location**: `nebula_core_common/include/nebula_core_common/nebula_status.hpp`
 
@@ -152,7 +152,7 @@ nebula::Status validate_config() {
 }
 ```
 
-### 3. Point Cloud Types
+### 3. Point cloud types
 
 **Location**: `nebula_core_common/include/nebula_core_common/point_types.hpp`
 
@@ -175,7 +175,7 @@ point.z = distance * sin_elevation;
 cloud->push_back(point);
 ```
 
-### 4. Angle Utilities
+### 4. Angle utilities
 
 **Location**: `nebula_core_decoders/include/nebula_core_decoders/angles.hpp`
 
@@ -194,7 +194,7 @@ float azimuth_rad = deg2rad(azimuth_deg);
 bool in_fov = angle_is_between(fov_min, fov_max, azimuth_rad);
 ```
 
-### 5. Configuration Base Classes
+### 5. Configuration base classes
 
 **Location**: `nebula_core_common/include/nebula_core_common/nebula_common.hpp`
 
@@ -213,7 +213,7 @@ struct MySensorConfiguration : public LidarConfigurationBase {
 };
 ```
 
-### 6. Logger Integration
+### 6. Logger integration
 
 **Location**: `nebula_core_common/include/nebula_core_common/loggers/logger.hpp`
 
@@ -232,7 +232,7 @@ std::shared_ptr<loggers::Logger> logger_;
 NEBULA_LOG_STREAM(logger_->error, "Failed to parse packet");
 ```
 
-### 7. Diagnostic Integration
+### 7. Diagnostic integration
 
 **Location**: ROS 2 `diagnostic_updater` package (used in ROS wrapper)
 
@@ -253,9 +253,9 @@ diagnostic_updater::Updater diagnostic_updater_;
 
 ---
 
-## Integration Workflow
+## Integration workflow
 
-### Step 1: Clone the Template
+### Step 1: Clone and rename template
 
 Copy the `nebula_sample` directory:
 
@@ -264,7 +264,7 @@ cd src
 cp -r nebula_sample nebula_myvendor
 ```
 
-### Step 2: Rename Components
+### Step 2: Rename components
 
 Rename all occurrences of "sample"/"Sample" to your vendor name:
 
@@ -281,7 +281,7 @@ find nebula_myvendor -type f -exec sed -i 's/sample/myvendor/g' {} +
 find nebula_myvendor -type f -exec sed -i 's/Sample/MyVendor/g' {} +
 ```
 
-### Step 3: Implement Components
+### Step 3: Implement components
 
 See [Implementation Details](#implementation-details) below.
 
@@ -291,13 +291,13 @@ See [Verification](#verification) below.
 
 ---
 
-## Implementation Details
+## Implementation details
 
-### A. Common Package (`nebula_myvendor_common`)
+### A. Common package (`nebula_myvendor_common`)
 
 **Purpose**: Define configuration and calibration structures.
 
-#### 1. Sensor Configuration
+#### 1. Sensor configuration
 
 Edit `include/nebula_myvendor_common/myvendor_common.hpp`:
 
@@ -317,7 +317,7 @@ struct MyVendorSensorConfiguration : public LidarConfigurationBase {
 };
 ```
 
-#### 2. Calibration Configuration (Optional)
+#### 2. Calibration configuration (Optional)
 
 Only implement if your sensor needs calibration data:
 
@@ -334,15 +334,15 @@ struct MyVendorCalibrationConfiguration : public CalibrationConfigurationBase {
 };
 ```
 
-### B. Decoders Package (`nebula_myvendor_decoders`)
+### B. Decoders package (`nebula_myvendor_decoders`)
 
 **Purpose**: Parse packets and generate point clouds.
 
-#### 1. Decoder Interface
+#### 1. Decoder interface
 
 The interface is already defined in `myvendor_scan_decoder.hpp`. You don't need to modify it.
 
-#### 2. Decoder Implementation
+#### 2. Decoder implementation
 
 Edit `include/nebula_myvendor_decoders/decoders/myvendor_decoder.hpp`:
 
@@ -405,7 +405,7 @@ private:
 };
 ```
 
-#### 3. Driver Implementation
+#### 3. Driver implementation
 
 The driver is a thin wrapper. Edit `src/myvendor_driver.cpp`:
 
@@ -423,7 +423,7 @@ PacketDecodeResult MyVendorDriver::parse_cloud_packet(
 }
 ```
 
-### C. Hardware Interfaces Package (`nebula_myvendor_hw_interfaces`)
+### C. HW interfaces package (`nebula_myvendor_hw_interfaces`)
 
 **Purpose**: Manage UDP communication with the sensor.
 
@@ -465,7 +465,7 @@ Status MyVendorHwInterface::sensor_interface_stop() {
 }
 ```
 
-### D. ROS Wrapper Package (`nebula_myvendor`)
+### D. ROS wrapper package (`nebula_myvendor`)
 
 **Purpose**: Bridge C++ driver with ROS 2.
 
@@ -529,11 +529,11 @@ Status MyVendorRosWrapper::stream_start() {
 
 ---
 
-## Required Behaviors
+## Required behaviors
 
 Your sensor integration must implement these behaviors correctly.
 
-### 1. Startup Sequence
+### 1. Startup sequence
 
 **Order of operations**:
 
@@ -611,7 +611,7 @@ rcl_interfaces::msg::SetParametersResult on_parameter_change(
 }
 ```
 
-### 3. Connection Loss Handling
+### 3. Connection loss handling
 
 **Detect and handle sensor disconnection**:
 
@@ -649,7 +649,7 @@ void check_connection() {
 }
 ```
 
-### 4. Shutdown Sequence
+### 4. Shutdown sequence
 
 **Order of operations**:
 
@@ -671,7 +671,7 @@ void check_connection() {
 }
 ```
 
-### 5. Diagnostic Reporting
+### 5. Diagnostic reporting
 
 **Required diagnostic information**:
 
@@ -722,7 +722,7 @@ source install/setup.bash
 ros2 launch nebula_myvendor nebula_myvendor.launch.xml
 ```
 
-### 3. Verify Topics
+### 3. Verify topics
 
 ```bash
 # List topics
@@ -744,13 +744,13 @@ rviz2
 # Set Fixed Frame to your frame_id
 ```
 
-### 5. Check Diagnostics
+### 5. Check diagnostics
 
 ```bash
 ros2 topic echo /diagnostics
 ```
 
-### 6. Test with PCAP (Offline)
+### 6. Test with PCAP (offline)
 
 ```bash
 # Set launch_hw:=false to use PCAP playback
@@ -762,7 +762,7 @@ ros2 bag play your_sensor_data.bag
 
 ---
 
-## Integration Checklist
+## Integration checklist
 
 - [ ] Cloned and renamed all files and directories
 - [ ] Updated `CMakeLists.txt` in all packages
@@ -784,7 +784,7 @@ ros2 bag play your_sensor_data.bag
 
 ---
 
-## Additional Resources
+## Additional resources
 
 - **Hesai Implementation**: `src/nebula_hesai` - Full reference implementation
 - **Velodyne Implementation**: `src/nebula_velodyne` - Alternative reference
@@ -792,9 +792,9 @@ ros2 bag play your_sensor_data.bag
 - **Point Types**: See `docs/point_types.md`
 - **Parameters**: See `docs/parameters.md`
 
-## Getting Help
+## Getting help
 
 - Check existing sensor implementations for examples
 - Review inline code documentation (Doxygen comments)
 - Consult the API reference documentation
-- Ask questions in [GitHub Issues](https://github.com/YOUR_ORG/YOUR_REPO/issues)
+- Ask questions in [GitHub Issues](https://github.com/tier4/nebula/issues)
