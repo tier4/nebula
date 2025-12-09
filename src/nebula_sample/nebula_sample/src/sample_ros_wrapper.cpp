@@ -32,10 +32,9 @@ SampleRosWrapper::SampleRosWrapper(const rclcpp::NodeOptions & options)
 
   // Initialize config
   sensor_cfg_ptr_ = std::make_shared<drivers::SampleSensorConfiguration>();
-  calibration_cfg_ptr_ = std::make_shared<drivers::SampleCalibrationConfiguration>();
 
   // Initialize Driver
-  driver_ptr_ = std::make_shared<drivers::SampleDriver>(sensor_cfg_ptr_, calibration_cfg_ptr_);
+  driver_ptr_ = std::make_shared<drivers::SampleDriver>(sensor_cfg_ptr_);
 
   driver_ptr_->set_pointcloud_callback(
     [this](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {

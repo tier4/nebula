@@ -46,7 +46,6 @@ private:
     const drivers::connections::UdpSocket::RxMetadata & metadata);
 
   std::shared_ptr<drivers::SampleSensorConfiguration> sensor_cfg_ptr_;
-  std::shared_ptr<drivers::SampleCalibrationConfiguration> calibration_cfg_ptr_;
 
   std::shared_ptr<drivers::SampleDriver> driver_ptr_;
   std::shared_ptr<drivers::SampleHwInterface> hw_interface_ptr_;

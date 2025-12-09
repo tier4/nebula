@@ -23,11 +23,10 @@ namespace nebula::drivers
 {
 
 SampleDriver::SampleDriver(
-  const std::shared_ptr<const SampleSensorConfiguration> & sensor_configuration,
-  const std::shared_ptr<const SampleCalibrationConfiguration> & calibration_configuration)
+  const std::shared_ptr<const SampleSensorConfiguration> & sensor_configuration)
 {
   driver_status_ = Status::OK;
-  scan_decoder_ = std::make_shared<SampleDecoder>(sensor_configuration, calibration_configuration);
+  scan_decoder_ = std::make_shared<SampleDecoder>(sensor_configuration);
 }
 
 Status SampleDriver::get_status()

@@ -28,9 +28,8 @@ namespace nebula::drivers
 class SampleDriver
 {
 public:
-  SampleDriver(
-    const std::shared_ptr<const SampleSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<const SampleCalibrationConfiguration> & calibration_configuration);
+  explicit SampleDriver(
+    const std::shared_ptr<const SampleSensorConfiguration> & sensor_configuration);
 
   Status get_status();
 

@@ -27,13 +27,11 @@ namespace nebula::drivers
 class SampleDecoder : public SampleScanDecoder
 {
 public:
-  SampleDecoder(
-    const std::shared_ptr<const SampleSensorConfiguration> & sensor_configuration,
-    const std::shared_ptr<const SampleCalibrationConfiguration> & calibration_configuration)
+  explicit SampleDecoder(
+    const std::shared_ptr<const SampleSensorConfiguration> & sensor_configuration)
   {
     // Initialize
     (void)sensor_configuration;
-    (void)calibration_configuration;
   }
 
   PacketDecodeResult unpack(const std::vector<uint8_t> & packet) override

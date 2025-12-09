@@ -42,18 +42,18 @@ The Nebula architecture is modular. You will need to implement specific classes 
   - Add fields for sensor-specific settings (e.g., return mode, frequency, IP address).
   - This struct is passed to both the driver and hardware interface.
 
-- **`MyVendorCalibrationConfiguration`**:
-  - Define how calibration data (e.g., angle corrections) is stored.
-  - Implement `load_from_file()` to parse your vendor's calibration file format (csv, dat, xml, etc.) if required.
+- **`MyVendorCalibrationConfiguration`** (Optional):
+  - Only needed if your sensor requires calibration data (e.g., angle corrections).
+  - Define how calibration data is stored.
+  - Implement `load_from_file()` to parse your vendor's calibration file format (csv, dat, xml, etc.).
+  - If using calibration, you'll need to add it as a parameter to your driver and decoder constructors.
 
 ### B. Decoders Package (`nebula_myvendor_decoders`)
 
 **Purpose**: Handles packet parsing and point cloud generation.
 
-- **`MyVendorScanDecoder`** (Interface):
-
-  - Inherits from `ScanDecoder`.
-  - Defines the contract for parsing packets.
+- Inherits from `ScanDecoder`.
+- Defines the contract for parsing packets.
 
 - **`MyVendorDecoder`** (Implementation):
 

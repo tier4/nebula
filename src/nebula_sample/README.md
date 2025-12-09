@@ -42,7 +42,6 @@ The guide covers:
 ### Configuration (`*_common`)
 
 - `SampleSensorConfiguration` - Sensor-specific settings
-- `SampleCalibrationConfiguration` - Calibration data structure
 
 ### Decoder (`*_decoders`)
 
