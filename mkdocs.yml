@@ -72,7 +72,7 @@ nav:
   - Design: design.md
   - Tutorials:
       - tutorials.md
-      - Integration Guide: integration_guide.md
+      - Integration guide: integration_guide.md
   - Contributing: contribute.md
   - API reference:
       - api_reference.md
