@@ -150,6 +150,9 @@ void HesaiHwMonitorWrapper::fetch_status()
       rclcpp::get_logger(
         "HesaiHwMonitorWrapper::on_hesai_status_timer(boost::system::system_error)"),
       error.what());
+  } catch (const std::runtime_error & error) {
+    RCLCPP_ERROR_STREAM(
+      logger_, "Failed to get lidar status (timeout or communication error): " << error.what());
   }
   RCLCPP_DEBUG(logger_, "on_hesai_status_timer END");
 }
@@ -199,6 +202,9 @@ void HesaiHwMonitorWrapper::fetch_monitor_http()
         "HesaiHwMonitorWrapper::on_hesai_lidar_monitor_timer_http(boost::system::system_"
         "error)"),
       error.what());
+  } catch (const std::runtime_error & error) {
+    RCLCPP_ERROR_STREAM(
+      logger_, "Failed to get lidar monitor via HTTP (timeout or communication error): " << error.what());
   }
   RCLCPP_DEBUG(logger_, "on_hesai_lidar_monitor_timer_http END");
 }
@@ -221,6 +227,9 @@ void HesaiHwMonitorWrapper::fetch_monitor_tcp()
         "HesaiHwMonitorWrapper::on_hesai_lidar_monitor_timer(boost::system::system_"
         "error)"),
       error.what());
+  } catch (const std::runtime_error & error) {
+    RCLCPP_ERROR_STREAM(
+      logger_, "Failed to get lidar monitor (timeout or communication error): " << error.what());
   }
   RCLCPP_DEBUG(logger_, "on_hesai_lidar_monitor_timer END");
 }
