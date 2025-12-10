@@ -3,8 +3,8 @@
   <name>nebula</name>
   <version>0.3.0</version>
   <description>Nebula: multi-vendor LiDAR and radar driver</description>
-  <maintainer email="contact@map4.jp">MAP IV</maintainer>
-  <maintainer email="contact@tier4.jp">MAP IV</maintainer>
+  <maintainer email="david.wong@tier4.jp">David Wong</maintainer>
+  <maintainer email="max.schmeller@tier4.jp">Max Schmeller</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

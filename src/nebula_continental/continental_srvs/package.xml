@@ -4,7 +4,9 @@
   <name>continental_srvs</name>
   <version>0.3.0</version>
   <description>Services for Continental sensors</description>
-  <maintainer email="kenzo.lobos@tier4.jp">Kenzo Lobos-Tsunekawa</maintainer>
+  <maintainer email="david.wong@tier4.jp">David Wong</maintainer>
+  <maintainer email="max.schmeller@tier4.jp">Max Schmeller</maintainer>
+  <maintainer email="amadeusz.szymko.2@tier4.jp">Amadeusz Szymko</maintainer>
 
   <license>Apache 2</license>
   <author>TIER IV</author>
