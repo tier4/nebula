@@ -204,7 +204,8 @@ void HesaiHwMonitorWrapper::fetch_monitor_http()
       error.what());
   } catch (const std::runtime_error & error) {
     RCLCPP_ERROR_STREAM(
-      logger_, "Failed to get lidar monitor via HTTP (timeout or communication error): " << error.what());
+      logger_,
+      "Failed to get lidar monitor via HTTP (timeout or communication error): " << error.what());
   }
   RCLCPP_DEBUG(logger_, "on_hesai_lidar_monitor_timer_http END");
 }
