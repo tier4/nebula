@@ -47,13 +47,6 @@ template <typename SensorT>
 class HesaiDecoder : public HesaiScanDecoder
 {
 private:
-  struct ScanCutAngles
-  {
-    float fov_min;
-    float fov_max;
-    float scan_emit_angle;
-  };
-
   struct DecodeFrame
   {
     NebulaPointCloudPtr pointcloud;
@@ -82,7 +75,6 @@ private:
   /// @brief The last decoded packet
   typename SensorT::packet_t packet_;
 
-  ScanCutAngles scan_cut_angles_;
   uint32_t last_azimuth_ = 0;
 
   std::shared_ptr<loggers::Logger> logger_;
@@ -204,7 +196,9 @@ private:
           angle_corrector_.get_corrected_angle_data(raw_azimuth, channel_id);
         float azimuth = corrected_angle_data.azimuth_rad;
 
-        bool in_fov = angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.fov_max, azimuth);
+        bool in_fov = angle_is_between(
+          angle_corrector_.fov_min_spatial(), angle_corrector_.fov_max_spatial(),
+          corrected_angle_data.azimuth_exact);
         if (!in_fov) {
           continue;
         }
@@ -212,10 +206,11 @@ private:
         bool in_current_scan = true;
 
         if (
-          angle_corrector_.is_inside_overlap(last_azimuth_, raw_azimuth) &&
-          angle_is_between(
-            scan_cut_angles_.scan_emit_angle, scan_cut_angles_.scan_emit_angle + deg2rad(20),
-            azimuth)) {
+          angle_corrector_.is_inside_overlap(raw_azimuth) &&
+          angle_is_between<uint32_t>(
+            angle_corrector_.cut_angle_spatial(),
+            angle_corrector_.cut_angle_spatial() + 20 * SensorT::packet_t::degree_subdivisions,
+            corrected_angle_data.azimuth_exact)) {
           in_current_scan = false;
         }
 
@@ -329,9 +324,6 @@ public:
       sensor_configuration_->cloud_max_angle, sensor_configuration_->cut_angle),
     functional_safety_decoder_(functional_safety_decoder),
     packet_loss_detector_(packet_loss_detector),
-    scan_cut_angles_(
-      {deg2rad(sensor_configuration_->cloud_min_angle),
-       deg2rad(sensor_configuration_->cloud_max_angle), deg2rad(sensor_configuration_->cut_angle)}),
     logger_(logger),
     blockage_mask_plugin_(std::move(blockage_mask_plugin)),
     decode_frame_(initialize_frame()),
@@ -406,7 +398,7 @@ public:
         }
       }
 
-      if (!angle_corrector_.is_inside_fov(last_azimuth_, block_azimuth)) {
+      if (!angle_corrector_.is_inside_fov(block_azimuth)) {
         last_azimuth_ = block_azimuth;
         continue;
       }

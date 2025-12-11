@@ -42,7 +42,7 @@ class AngleCorrectorCorrectionBased : public AngleCorrector<HesaiCorrection>
 {
 private:
   static constexpr size_t max_azimuth = 360 * AngleUnit;
-  const std::shared_ptr<const HesaiCorrection> correction_;
+  std::shared_ptr<const HesaiCorrection> correction_;
   rclcpp::Logger logger_;
 
   std::array<float, max_azimuth> cos_{};
@@ -51,39 +51,44 @@ private:
   struct FrameAngleInfo
   {
     static constexpr uint32_t unset = UINT32_MAX;
-    uint32_t fov_start = unset;
-    uint32_t fov_end = unset;
-    uint32_t timestamp_reset = unset;
-    uint32_t scan_emit = unset;
+    uint32_t encoder_fov_start = unset;
+    uint32_t encoder_fov_end = unset;
+    uint32_t encoder_timestamp_reset = unset;
+    uint32_t encoder_scan_emit = unset;
   };
 
   std::vector<FrameAngleInfo> frame_angle_info_;
 
+  uint32_t spatial_fov_start_angle_;
+  uint32_t spatial_fov_end_angle_;
+  uint32_t spatial_cut_angle_;
+
   /// @brief For a given azimuth value, find its corresponding output field
   /// @param azimuth The azimuth to get the field for
   /// @return The correct output field, as specified in @ref HesaiCorrection
-  int find_field(uint32_t azimuth)
+  [[nodiscard]] size_t find_field(uint32_t azimuth) const
   {
     // Assumes that:
     // * none of the startFrames are defined as > 360 deg (< 0 not possible since they are unsigned)
     // * the fields are arranged in ascending order (e.g. field 1: 20-140deg, field 2: 140-260deg
     // etc.) These assumptions hold for AT128E2X.
-    int field = correction_->frameNumber - 1;
+    size_t field = correction_->frameNumber - 1;
     for (size_t i = 0; i < correction_->frameNumber; ++i) {
       if (azimuth < correction_->startFrame[i]) return field;
       field = i;
     }
 
-    // This is never reached if correction_ is correct
-    return field;
+    assert(false && "This is never reached if correction_ is correct");
+    throw std::runtime_error("Hit an impossible case in find_field");
   }
 
   /// @brief For raw encoder angle `azi`, return whether all (any if `any == true`) channels'
   /// corrected azimuths are greater (or equal if `eq_ok == true`) than `threshold`.
-  bool are_corrected_angles_above_threshold(uint32_t azi, double threshold, bool any, bool eq_ok)
+  [[nodiscard]] bool are_corrected_angles_above_threshold(
+    uint32_t azi, uint32_t threshold, bool any, bool eq_ok) const
   {
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-      auto azi_corr = get_corrected_angle_data(azi, channel_id).azimuth_rad;
+      auto azi_corr = get_corrected_angle_data(azi, channel_id).azimuth_exact;
       if (!any && (azi_corr < threshold || (!eq_ok && azi_corr == threshold))) return false;
       if (any && (azi_corr > threshold || (eq_ok && azi_corr == threshold))) return true;
     }
@@ -94,13 +99,14 @@ private:
   /// @brief Find and return the first raw encoder angle between the raw `start` and `end` endcoder
   /// angles for which all (any if `any == true`) channels' corrected azimuth is greater than (or
   /// equal to if `eq_ok == true`) `threshold`. Return `FrameAngleInfo::unset` if no angle is found.
-  uint32_t bin_search(uint32_t start, uint32_t end, double threshold, bool any, bool eq_ok)
+  [[nodiscard]] uint32_t bin_search(
+    uint32_t start, uint32_t end, uint32_t threshold, bool any, bool eq_ok) const
   {
     if (start > end) return FrameAngleInfo::unset;
 
     if (end - start <= 1) {
       bool result_start = are_corrected_angles_above_threshold(
-        normalize_angle<uint32_t>(start, max_azimuth), threshold, any, eq_ok);
+        normalize_angle(start, max_azimuth), threshold, any, eq_ok);
       if (result_start) return start;
       return end;
     }
@@ -108,16 +114,30 @@ private:
     uint32_t next = (start + end) / 2;
 
     bool result_next = are_corrected_angles_above_threshold(
-      normalize_angle<uint32_t>(next, max_azimuth), threshold, any, eq_ok);
+      normalize_angle(next, max_azimuth), threshold, any, eq_ok);
     if (result_next) return bin_search(start, next, threshold, any, eq_ok);
     return bin_search(next + 1, end, threshold, any, eq_ok);
+  }
+
+  [[nodiscard]] int32_t to_exact_angle(double angle_deg) const
+  {
+    return std::round(angle_deg * AngleUnit);
+  }
+
+  [[nodiscard]] float to_radians(int32_t angle_exact) const
+  {
+    return deg2rad(angle_exact / static_cast<double>(AngleUnit));
   }
 
 public:
   explicit AngleCorrectorCorrectionBased(
     const std::shared_ptr<const HesaiCorrection> & sensor_correction, double fov_start_azimuth_deg,
     double fov_end_azimuth_deg, double scan_cut_azimuth_deg)
-  : correction_(sensor_correction), logger_(rclcpp::get_logger("AngleCorrectorCorrectionBased"))
+  : correction_(sensor_correction),
+    logger_(rclcpp::get_logger("AngleCorrectorCorrectionBased")),
+    spatial_fov_start_angle_(normalize_angle(to_exact_angle(fov_start_azimuth_deg), max_azimuth)),
+    spatial_fov_end_angle_(normalize_angle(to_exact_angle(fov_end_azimuth_deg), max_azimuth)),
+    spatial_cut_angle_(normalize_angle(to_exact_angle(scan_cut_azimuth_deg), max_azimuth))
   {
     if (sensor_correction == nullptr) {
       throw std::runtime_error(
@@ -140,10 +160,6 @@ public:
     // Scan start/end correction lookups
     // ////////////////////////////////////////
 
-    auto fov_start_rad = deg2rad(fov_start_azimuth_deg);
-    auto fov_end_rad = deg2rad(fov_end_azimuth_deg);
-    auto scan_cut_rad = deg2rad(scan_cut_azimuth_deg);
-
     // For each field (= mirror), find the raw block azimuths corresponding FoV start and end
     for (size_t field_id = 0; field_id < correction_->frameNumber; ++field_id) {
       auto frame_start = correction_->startFrame[field_id];
@@ -152,100 +168,116 @@ public:
 
       FrameAngleInfo & angle_info = frame_angle_info_.emplace_back();
 
-      angle_info.fov_start = bin_search(frame_start, frame_end, fov_start_rad, true, true);
-      angle_info.fov_end = bin_search(angle_info.fov_start, frame_end, fov_end_rad, false, true);
-      angle_info.scan_emit =
-        bin_search(angle_info.fov_start, angle_info.fov_end, scan_cut_rad, false, true);
-      angle_info.timestamp_reset =
-        bin_search(angle_info.fov_start, angle_info.fov_end, scan_cut_rad, true, true);
+      angle_info.encoder_fov_start =
+        bin_search(frame_start, frame_end, spatial_fov_start_angle_, true, true);
+      angle_info.encoder_fov_end =
+        bin_search(angle_info.encoder_fov_start, frame_end, spatial_fov_end_angle_, false, true);
+      angle_info.encoder_scan_emit = bin_search(
+        angle_info.encoder_fov_start, angle_info.encoder_fov_end, spatial_cut_angle_, false, true);
+      angle_info.encoder_timestamp_reset = bin_search(
+        angle_info.encoder_fov_start, angle_info.encoder_fov_end, spatial_cut_angle_, true, true);
 
       if (
-        angle_info.fov_start == FrameAngleInfo::unset ||
-        angle_info.fov_end == FrameAngleInfo::unset ||
-        angle_info.scan_emit == FrameAngleInfo::unset ||
-        angle_info.timestamp_reset == FrameAngleInfo::unset) {
+        angle_info.encoder_fov_start == FrameAngleInfo::unset ||
+        angle_info.encoder_fov_end == FrameAngleInfo::unset ||
+        angle_info.encoder_scan_emit == FrameAngleInfo::unset ||
+        angle_info.encoder_timestamp_reset == FrameAngleInfo::unset) {
         throw std::runtime_error("Not all necessary angles found!");
       }
 
-      if (fov_start_rad == scan_cut_rad) {
-        angle_info.timestamp_reset = angle_info.fov_start;
-        angle_info.scan_emit = angle_info.fov_start;
-      } else if (fov_end_rad == scan_cut_rad) {
-        angle_info.timestamp_reset = angle_info.fov_start;
-        angle_info.scan_emit = angle_info.fov_end;
+      if (spatial_fov_start_angle_ == spatial_cut_angle_) {
+        angle_info.encoder_timestamp_reset = angle_info.encoder_fov_start;
+        angle_info.encoder_scan_emit = angle_info.encoder_fov_start;
+      } else if (spatial_fov_end_angle_ == spatial_cut_angle_) {
+        angle_info.encoder_timestamp_reset = angle_info.encoder_fov_start;
+        angle_info.encoder_scan_emit = angle_info.encoder_fov_end;
       }
     }
   }
 
-  CorrectedAngleData get_corrected_angle_data(uint32_t block_azimuth, uint32_t channel_id) override
+  [[nodiscard]] CorrectedAngleData get_corrected_angle_data(
+    uint32_t block_azimuth, uint32_t channel_id) const override
   {
-    int field = find_field(block_azimuth);
+    size_t field = find_field(block_azimuth);
 
-    int32_t elevation = correction_->elevation[channel_id] +
-                        correction_->get_elevation_adjust_v3(channel_id, block_azimuth) *
-                          static_cast<int32_t>(AngleUnit / 100);
+    int32_t elevation_exact = correction_->elevation[channel_id] +
+                              correction_->get_elevation_adjust_v3(channel_id, block_azimuth) *
+                                static_cast<int32_t>(AngleUnit / 100);
 
     // Allow negative angles in the radian value. This makes visualization of this field nicer and
     // should have no other mathematical implications in downstream modules.
-    float elevation_rad = 2.f * elevation * M_PI / max_azimuth;
+    float elevation_rad = 2.f * elevation_exact * M_PI / max_azimuth;
     // Then, normalize the integer value to the positive [0, MAX_AZIMUTH] range for array indexing
-    elevation = (max_azimuth + elevation) % max_azimuth;
+    elevation_exact = normalize_angle(elevation_exact, max_azimuth);
 
-    int32_t azimuth = (block_azimuth + max_azimuth - correction_->startFrame[field]) * 2 -
-                      correction_->azimuth[channel_id] +
-                      correction_->get_azimuth_adjust_v3(channel_id, block_azimuth) *
-                        static_cast<int32_t>(AngleUnit / 100);
-    azimuth = (max_azimuth + azimuth) % max_azimuth;
+    int32_t azimuth_exact = (block_azimuth + max_azimuth - correction_->startFrame[field]) * 2 -
+                            correction_->azimuth[channel_id] +
+                            correction_->get_azimuth_adjust_v3(channel_id, block_azimuth) *
+                              static_cast<int32_t>(AngleUnit / 100);
+    azimuth_exact = normalize_angle(azimuth_exact, max_azimuth);
 
-    float azimuth_rad = 2.f * azimuth * M_PI / max_azimuth;
+    float azimuth_rad = to_radians(azimuth_exact);
 
-    return {azimuth_rad,   elevation_rad,   sin_[azimuth],
-            cos_[azimuth], sin_[elevation], cos_[elevation]};
+    return {
+      static_cast<uint32_t>(azimuth_exact),
+      azimuth_rad,
+      elevation_rad,
+      sin_[azimuth_exact],
+      cos_[azimuth_exact],
+      sin_[elevation_exact],
+      cos_[elevation_exact]};
   }
 
-  bool passed_emit_angle(uint32_t last_azimuth, uint32_t current_azimuth) override
+  [[nodiscard]] bool passed_emit_angle(
+    uint32_t last_azimuth, uint32_t current_azimuth) const override
   {
     for (const auto & frame_angles : frame_angle_info_) {
-      if (angle_is_between(last_azimuth, current_azimuth, frame_angles.scan_emit, false))
+      if (angle_is_between(last_azimuth, current_azimuth, frame_angles.encoder_scan_emit, false))
         return true;
     }
 
     return false;
   }
 
-  bool passed_timestamp_reset_angle(uint32_t last_azimuth, uint32_t current_azimuth) override
+  [[nodiscard]] bool passed_timestamp_reset_angle(
+    uint32_t last_azimuth, uint32_t current_azimuth) const override
   {
     for (const auto & frame_angles : frame_angle_info_) {
-      if (angle_is_between(last_azimuth, current_azimuth, frame_angles.timestamp_reset, false))
+      if (angle_is_between(
+            last_azimuth, current_azimuth, frame_angles.encoder_timestamp_reset, false))
         return true;
     }
 
     return false;
   }
 
-  bool is_inside_fov(uint32_t last_azimuth, uint32_t current_azimuth) override
+  [[nodiscard]] bool is_inside_fov(uint32_t current_azimuth) const override
   {
     for (const auto & frame_angles : frame_angle_info_) {
-      if (
-        angle_is_between(frame_angles.fov_start, frame_angles.fov_end, current_azimuth, false) ||
-        angle_is_between(frame_angles.fov_start, frame_angles.fov_end, last_azimuth, false))
+      if (angle_is_between(
+            frame_angles.encoder_fov_start, frame_angles.encoder_fov_end, current_azimuth, false))
         return true;
     }
 
     return false;
   }
 
-  bool is_inside_overlap(uint32_t last_azimuth, uint32_t current_azimuth) override
+  [[nodiscard]] bool is_inside_overlap(uint32_t current_azimuth) const override
   {
     for (const auto & frame_angles : frame_angle_info_) {
-      if (
-        angle_is_between(frame_angles.timestamp_reset, frame_angles.scan_emit, current_azimuth) ||
-        angle_is_between(frame_angles.timestamp_reset, frame_angles.scan_emit, last_azimuth))
+      if (angle_is_between(
+            frame_angles.encoder_timestamp_reset, frame_angles.encoder_scan_emit, current_azimuth))
         return true;
     }
 
     return false;
   }
+
+  [[nodiscard]] uint32_t fov_min_spatial() const override { return spatial_fov_start_angle_; }
+
+  [[nodiscard]] uint32_t fov_max_spatial() const override { return spatial_fov_end_angle_; }
+
+  [[nodiscard]] uint32_t cut_angle_spatial() const override { return spatial_cut_angle_; }
 };
 
 }  // namespace nebula::drivers
