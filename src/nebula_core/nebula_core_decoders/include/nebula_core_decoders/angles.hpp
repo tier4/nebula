@@ -90,11 +90,12 @@ bool angle_is_between(
  * `max_angle` is 360 for degrees, 2 * M_PI for radians, and the corresponding scaled value for
  * scaled units such as centi-degrees (36000).
  */
-template <typename T>
-T normalize_angle(T angle, T max_angle)
+template <typename T, typename U = T>
+T normalize_angle(T angle, U max_angle)
 {
-  T factor = std::floor((1.0 * angle) / max_angle);
-  return angle - (factor * max_angle);
+  T max_angle_casted = static_cast<T>(max_angle);
+  T factor = std::floor((1.0 * angle) / max_angle_casted);
+  return angle - (factor * max_angle_casted);
 }
 
 }  // namespace nebula::drivers
