@@ -6,7 +6,9 @@
   <description>Robosense message types for Nebula</description>
   <maintainer email="david.wong@tier4.jp">David Wong</maintainer>
   <maintainer email="max.schmeller@tier4.jp">Max Schmeller</maintainer>
-  <license>TODO: License declaration</license>
+
+  <author email="memin@leodrive.ai">Mehmet Emin Basoglu</author>
+  <license>Apache License 2.0</license>
 
   <buildtool_depend>autoware_cmake</buildtool_depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
