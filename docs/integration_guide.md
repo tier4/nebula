@@ -51,10 +51,10 @@ graph TB
     end
 
     %% --- SUBGRAPH STYLING ---
-    %% Style the containers to have dashed borders and light backgrounds
-    style Nebula fill:#ffffff,stroke:#333,stroke-width:3px
-    style Common fill:#f5faff,stroke:#2196f3,stroke-dasharray: 5 5
-    style Vendors fill:#f0fdfa,stroke:#009688,stroke-dasharray: 5 5
+    %% Style the containers to have dashed borders and transparent backgrounds
+    style Nebula fill:none,stroke:#666,stroke-width:3px
+    style Common fill:none,stroke:#2196f3,stroke-dasharray: 5 5
+    style Vendors fill:none,stroke:#009688,stroke-dasharray: 5 5
 ```
 
 **Key principles**:
@@ -90,6 +90,10 @@ graph TD
     Wrapper --> Driver
     Driver --> Decoder
     Driver --> HW
+
+    %% --- LINK STYLING ---
+    %% Make arrows visible in dark mode (light grey-blue)
+    linkStyle default stroke:#b0bec5,stroke-width:2px,fill:none
 ```
 
 ### Data flow
