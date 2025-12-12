@@ -36,6 +36,8 @@ use_directory_urls: true
 extra_javascript:
   - https://unpkg.com/mermaid/dist/mermaid.min.js
 
+
+
 ### Navigation ###
 nav:
   - Home: index.md
@@ -208,4 +210,4 @@ markdown_extensions:
       custom_fences:
         - name: mermaid
           class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_div_format
+          format: !!python/name:pymdownx.superfences.fence_code_format

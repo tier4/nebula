@@ -21,12 +21,6 @@ Nebula is organized into common (reusable) packages and vendor-specific packages
 
 ```mermaid
 graph TB
-    %% --- STYLE DEFINITIONS ---
-    %% Blue theme for Common
-    classDef common fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,rx:5,ry:5,color:#0d47a1;
-
-    %% Teal/Green theme for Vendors
-    classDef vendor fill:#e0f2f1,stroke:#00695c,stroke-width:2px,rx:5,ry:5,color:#004d40;
 
     %% --- GRAPH STRUCTURE ---
     subgraph Nebula["<b>Nebula framework</b>"]
@@ -34,27 +28,23 @@ graph TB
 
         subgraph Common["<b>Common packages</b>"]
             direction LR
-            C1["<b>nebula_core_common</b><br/>Base types, status codes"]:::common
-            C2["<b>nebula_core_decoders</b><br/>Decoder interfaces"]:::common
-            C3["<b>nebula_core_hw_interfaces</b><br/>UDP/TCP sockets"]:::common
-            C4["<b>nebula_core_ros</b><br/>ROS 2 utils"]:::common
+            C1["<b>nebula_core_common</b><br/>Base types, status codes"]
+            C2["<b>nebula_core_decoders</b><br/>Decoder interfaces"]
+            C3["<b>nebula_core_hw_interfaces</b><br/>UDP/TCP sockets"]
+            C4["<b>nebula_core_ros</b><br/>ROS 2 utils"]
         end
 
         subgraph Vendors["<b>Vendor packages</b>"]
             direction LR
-            Hesai["<b>nebula_hesai</b><br/>hesai_common<br/>hesai_decoders<br/>hesai_hw_interfaces<br/>ROS wrapper"]:::vendor
+            Hesai["<b>nebula_hesai</b><br/>hesai_common<br/>hesai_decoders<br/>hesai_hw_interfaces<br/>ROS wrapper"]
 
-            Velodyne["<b>nebula_velodyne</b><br/>velodyne_common<br/>velodyne_decoders<br/>velodyne_hw_interfaces<br/>ROS wrapper"]:::vendor
+            Velodyne["<b>nebula_velodyne</b><br/>velodyne_common<br/>velodyne_decoders<br/>velodyne_hw_interfaces<br/>ROS wrapper"]
 
-            Sample["<b>nebula_sample</b><br/>sample_common<br/>sample_decoders<br/>sample_hw_interfaces<br/>ROS wrapper"]:::vendor
+            Sample["<b>nebula_sample</b><br/>sample_common<br/>sample_decoders<br/>sample_hw_interfaces<br/>ROS wrapper"]
         end
     end
 
-    %% --- SUBGRAPH STYLING ---
-    %% Style the containers to have dashed borders and transparent backgrounds
-    style Nebula fill:none,stroke:#666,stroke-width:3px
-    style Common fill:none,stroke:#2196f3,stroke-dasharray: 5 5
-    style Vendors fill:none,stroke:#009688,stroke-dasharray: 5 5
+
 ```
 
 **Key principles**:
@@ -70,30 +60,23 @@ Each vendor package uses a layered architecture to separate functional blocks an
 
 ```mermaid
 graph TD
-    %% --- STYLE DEFINITIONS ---
-    %% Using a hierarchical palette to show data flow depth
-    classDef wrapper fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,rx:5,ry:5,color:#0d47a1;
-    classDef logic fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,rx:5,ry:5,color:#4a148c;
-    classDef worker fill:#e0f2f1,stroke:#00695c,stroke-width:2px,rx:5,ry:5,color:#004d40;
 
     %% --- NODES ---
     %% Apply classes using the triple colon syntax (:::className)
-    Wrapper[<b>ROS 2 wrapper layer</b><br/>Parameter handling, ROS message conversion, publishing]:::wrapper
+    Wrapper[<b>ROS 2 wrapper layer</b><br/>Parameter handling, ROS message conversion, publishing]
 
-    Driver[<b>Driver layer</b><br/>High-level API, manages decoder and HW interface]:::logic
+    Driver[<b>Driver layer</b><br/>High-level API, manages decoder and HW interface]
 
-    Decoder[<b>Decoder layer</b><br/>Packet parsing<br/>point cloud generation]:::worker
+    Decoder[<b>Decoder layer</b><br/>Packet parsing<br/>point cloud generation]
 
-    HW[<b>HW interface</b><br/>UDP/TCP communication<br/>socket management]:::worker
+    HW[<b>HW interface</b><br/>UDP/TCP communication<br/>socket management]
 
     %% --- RELATIONSHIPS ---
     Wrapper --> Driver
     Driver --> Decoder
     Driver --> HW
 
-    %% --- LINK STYLING ---
-    %% Make arrows visible in dark mode (light grey-blue)
-    linkStyle default stroke:#b0bec5,stroke-width:2px,fill:none
+
 ```
 
 ### Data flow
