@@ -36,8 +36,6 @@ use_directory_urls: true
 extra_javascript:
   - https://unpkg.com/mermaid/dist/mermaid.min.js
 
-
-
 ### Navigation ###
 nav:
   - Home: index.md
