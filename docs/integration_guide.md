@@ -400,7 +400,7 @@ The driver is a thin wrapper. Edit `src/myvendor_driver.cpp`:
 MyVendorDriver::MyVendorDriver(
   const std::shared_ptr<const MyVendorSensorConfiguration> & config)
 : config_(config) {
-  scan_decoder_ = std::make_shared<MyVendorDecoder>(config);
+  scan_decoder_ = std::make_unique<MyVendorDecoder>(config);
   driver_status_ = Status::OK;
 }
 
@@ -478,7 +478,7 @@ MyVendorRosWrapper::MyVendorRosWrapper(const rclcpp::NodeOptions & options)
   launch_hw_ = get_parameter("launch_hw").as_bool();
 
   // 3. Initialize driver
-  driver_ptr_ = std::make_shared<MyVendorDriver>(sensor_cfg_ptr_);
+  driver_ptr_ = std::make_unique<MyVendorDriver>(sensor_cfg_ptr_);
 
   // 4. Register pointcloud callback
   driver_ptr_->set_pointcloud_callback(
@@ -492,7 +492,7 @@ MyVendorRosWrapper::MyVendorRosWrapper(const rclcpp::NodeOptions & options)
 
   // 5. Initialize HW interface
   if (launch_hw_) {
-    hw_interface_ptr_ = std::make_shared<MyVendorHwInterface>();
+    hw_interface_ptr_ = std::make_unique<MyVendorHwInterface>();
     hw_interface_ptr_->set_sensor_configuration(sensor_cfg_ptr_);
     hw_interface_ptr_->register_scan_callback(
       [this](const std::vector<uint8_t> & packet, const auto & metadata) {

@@ -32,10 +32,6 @@ theme:
         name: Switch to light mode
 use_directory_urls: true
 
-### Extra JavaScript for Mermaid ###
-extra_javascript:
-  - https://unpkg.com/mermaid/dist/mermaid.min.js
-
 ### Navigation ###
 nav:
   - Home: index.md
