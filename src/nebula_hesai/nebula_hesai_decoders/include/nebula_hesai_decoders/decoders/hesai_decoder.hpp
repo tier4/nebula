@@ -95,6 +95,8 @@ private:
   /// @brief Decoded data of the frame currently being output
   DecodeFrame output_frame_;
 
+  bool is_inside_overlap_ = false;
+
   /// @brief Validates and parse PandarPacket. Checks size and, if present, CRC checksums.
   /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
@@ -206,7 +208,7 @@ private:
         bool in_current_scan = true;
 
         if (
-          angle_corrector_.is_inside_overlap(raw_azimuth) &&
+          is_inside_overlap_ &&
           angle_is_between<uint32_t>(
             angle_corrector_.cut_angle_spatial(),
             angle_corrector_.cut_angle_spatial() + 20 * SensorT::packet_t::degree_subdivisions,
@@ -378,6 +380,8 @@ public:
       auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
 
       if (angle_corrector_.passed_timestamp_reset_angle(last_azimuth_, block_azimuth)) {
+        is_inside_overlap_ = true;
+
         uint64_t new_scan_timestamp_ns =
           hesai_packet::get_timestamp_ns(packet_) +
           sensor_.get_earliest_point_time_offset_for_block(block_id, packet_);
@@ -398,14 +402,13 @@ public:
         }
       }
 
-      if (!angle_corrector_.is_inside_fov(block_azimuth)) {
-        last_azimuth_ = block_azimuth;
-        continue;
+      if (angle_corrector_.is_inside_fov(block_azimuth)) {
+        convert_returns(block_id, n_returns);
       }
 
-      convert_returns(block_id, n_returns);
-
       if (angle_corrector_.passed_emit_angle(last_azimuth_, block_azimuth)) {
+        is_inside_overlap_ = false;
+
         // The current `decode` pointcloud is ready for publishing, swap buffers to continue with
         // the `output` pointcloud as the `decode` pointcloud.
         std::swap(decode_frame_, output_frame_);

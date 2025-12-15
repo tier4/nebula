@@ -78,8 +78,7 @@ private:
       field = i;
     }
 
-    assert(false && "This is never reached if correction_ is correct");
-    throw std::runtime_error("Hit an impossible case in find_field");
+    return field;
   }
 
   /// @brief For raw encoder angle `azi`, return whether all (any if `any == true`) channels'

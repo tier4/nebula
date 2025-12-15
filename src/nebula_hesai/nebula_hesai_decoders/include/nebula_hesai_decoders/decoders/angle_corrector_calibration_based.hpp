@@ -126,9 +126,9 @@ public:
     // Otherwise, reset timestamp on publish
     is_360_ = normalize_angle(spatial_fov_start_angle_, max_azimuth) ==
               normalize_angle(spatial_fov_end_angle_, max_azimuth);
-    bool reset_timestamp_on_publish = is_360_ || (spatial_fov_end_angle_ != spatial_cut_angle_);
+    bool timestamp_reset_is_before_emit = is_360_ || (spatial_fov_end_angle_ != spatial_cut_angle_);
 
-    if (reset_timestamp_on_publish) {
+    if (timestamp_reset_is_before_emit) {
       int32_t encoder_timestamp_reset_angle = spatial_cut_angle_ - correction_max;
       encoder_timestamp_reset_angle_ = normalize_angle(encoder_timestamp_reset_angle, max_azimuth);
     } else {
