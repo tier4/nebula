@@ -69,10 +69,10 @@ private:
   int32_t fov_start_out_;
   int32_t fov_end_out_;
 
-  mutable std::ofstream debug_file_;
-
   publish_callback_t publish_callback_;
   set_timestamp_callback_t set_timestamp_callback_;
+
+  mutable std::ofstream debug_file_;
 
   std::optional<State> state_;
 
