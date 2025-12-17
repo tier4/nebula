@@ -5,7 +5,9 @@
   <description>Nebula: multi-vendor LiDAR and radar driver</description>
   <maintainer email="david.wong@tier4.jp">David Wong</maintainer>
   <maintainer email="max.schmeller@tier4.jp">Max Schmeller</maintainer>
+
   <license>Apache License 2.0</license>
+  <author>TIER IV</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

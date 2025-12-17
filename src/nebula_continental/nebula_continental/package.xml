@@ -10,6 +10,7 @@
 
   <license>Apache 2</license>
   <author>TIER IV</author>
+  <author email="kenzo.lobos@tier4.jp">Kenzo Lobos-Tsunekawa</author>
 
   <buildtool_depend>autoware_cmake</buildtool_depend>
   <buildtool_depend>ros_environment</buildtool_depend>
