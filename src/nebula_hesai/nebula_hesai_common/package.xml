@@ -4,7 +4,8 @@
   <name>nebula_hesai_common</name>
   <version>0.3.0</version>
   <description>Nebula Common Hesai Libraries and headers</description>
-  <maintainer email="contact@map4.jp">MAP IV</maintainer>
+  <maintainer email="david.wong@tier4.jp">David Wong</maintainer>
+  <maintainer email="max.schmeller@tier4.jp">Max Schmeller</maintainer>
 
   <license>Apache 2</license>
   <author>TIER IV</author>
