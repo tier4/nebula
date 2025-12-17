@@ -45,7 +45,7 @@ struct CorrectedAngleData
 /// - encoder angle: raw angle as sent by the sensor
 /// - spatial angle: user-facing, geometrically meaningful angle as output in pointclouds, used for
 ///   scan cutting and FoV settings
-template <typename CorrectionDataT>
+template <typename CorrectionDataT, size_t ChannelN>
 class AngleCorrector
 {
 public:
@@ -60,16 +60,8 @@ public:
   [[nodiscard]] virtual CorrectedAngleData get_corrected_angle_data(
     uint32_t encoder_azimuth, uint32_t channel_id) const = 0;
 
-  [[nodiscard]] virtual bool passed_emit_angle(
-    uint32_t last_encoder_azimuth, uint32_t current_encoder_azimuth) const = 0;
-  [[nodiscard]] virtual bool passed_timestamp_reset_angle(
-    uint32_t last_encoder_azimuth, uint32_t current_encoder_azimuth) const = 0;
-  [[nodiscard]] virtual bool is_inside_fov(uint32_t encoder_azimuth) const = 0;
-  [[nodiscard]] virtual bool is_inside_overlap(uint32_t encoder_azimuth) const = 0;
-
-  [[nodiscard]] virtual uint32_t fov_min_spatial() const = 0;
-  [[nodiscard]] virtual uint32_t fov_max_spatial() const = 0;
-  [[nodiscard]] virtual uint32_t cut_angle_spatial() const = 0;
+  [[nodiscard]] virtual std::array<int32_t, ChannelN> get_corrected_azimuths(
+    uint32_t block_azimuth) const = 0;
 };
 
 }  // namespace nebula::drivers
