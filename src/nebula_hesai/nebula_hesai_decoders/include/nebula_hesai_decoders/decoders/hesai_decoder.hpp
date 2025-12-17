@@ -277,6 +277,11 @@ private:
       pointcloud_callback_(completed_frame.pointcloud, scan_timestamp_s);
     }
 
+    if (blockage_mask_plugin_ && completed_frame.blockage_mask) {
+      blockage_mask_plugin_->callback_and_reset(
+        completed_frame.blockage_mask.value(), scan_timestamp_s);
+    }
+
     completed_frame.pointcloud->clear();
   }
 
