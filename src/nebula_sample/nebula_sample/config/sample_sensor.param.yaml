@@ -1,0 +1,27 @@
+# Sample Sensor ROS 2 Parameters
+# This file contains example parameters for the Sample LiDAR sensor.
+# Copy and modify this file for your specific sensor model.
+
+/**:
+  ros__parameters:
+    # Sensor configuration
+    sensor_model: SampleSensor
+    return_mode: Dual
+    frame_id: sample_lidar
+
+    # Network configuration
+    sensor_ip: 192.168.1.201
+    host_ip: 192.168.1.100
+    data_port: 2368
+
+    # Scan configuration
+    scan_phase: 0
+    rotation_speed: 600  # RPM
+    cloud_min_angle: 0   # degrees
+    cloud_max_angle: 360 # degrees
+
+    # Optional: Calibration file path
+    # calibration_file: "$(find-pkg-share nebula_sample)/config/calibration.dat"
+
+    # Hardware interface
+    launch_hw: true
