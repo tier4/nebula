@@ -169,6 +169,7 @@ INSTANTIATE_TEST_SUITE_P(
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
+  rcutils_logging_set_default_logger_level(RCUTILS_LOG_SEVERITY_WARN);
   ::testing::InitGoogleTest(&argc, argv);
 
   int result = RUN_ALL_TESTS();

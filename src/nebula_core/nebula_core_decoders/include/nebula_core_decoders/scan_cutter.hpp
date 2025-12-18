@@ -50,6 +50,8 @@ private:
     std::array<int32_t, NChannels> channel_last_azimuths;
     std::array<bool, NChannels> channels_in_fov;
     std::array<buffer_index_t, NChannels> channel_buffer_indices;
+    // Track whether each buffer's timestamp has been set since its last publish
+    std::array<bool, n_buffers> timestamp_set_since_publish;
   };
 
   template <typename T>
@@ -140,15 +142,16 @@ private:
     int32_t block_azimuth_enc, const std::array<int32_t, NChannels> & channel_azimuths_out)
   {
     state_ = State{
-      block_azimuth_enc, 0, channel_azimuths_out, {false}, {0},
+      block_azimuth_enc, 0, channel_azimuths_out, {false}, {0}, {false, false},
     };
 
-    bool block_intersects_cut = does_block_intersect_cut(channel_azimuths_out);
+    bool block_intersects_cut = does_block_intersect_cut(block_azimuth_enc, channel_azimuths_out);
 
     if (!block_intersects_cut) {
       // All points are in the same scan, assign to buffer 0.
       state_->channel_buffer_indices.fill(0);
       set_timestamp_callback_(0);
+      state_->timestamp_set_since_publish[0] = true;
       return;
     }
 
@@ -165,6 +168,8 @@ private:
 
     set_timestamp_callback_(0);
     set_timestamp_callback_(1);
+    state_->timestamp_set_since_publish[0] = true;
+    state_->timestamp_set_since_publish[1] = true;
   }
 
   [[nodiscard]] bool has_channel_crossed_cut(int32_t last_azimuth_out, int32_t azimuth_out) const
@@ -229,6 +234,11 @@ public:
 
   [[nodiscard]] bool is_point_inside_fov(int32_t azimuth_out) const
   {
+    // 360deg FoV
+    if (fov_start_out_ == fov_end_out_) {
+      return true;
+    }
+
     // Both start and end are inclusive.
     // start <= azi <= end
     azimuth_out = normalize_angle(azimuth_out, max_angle);
@@ -246,8 +256,17 @@ public:
   }
 
   [[nodiscard]] bool does_block_intersect_cut(
-    const std::array<int32_t, NChannels> & channel_azimuths_out) const
+    int32_t block_azimuth_enc, const std::array<int32_t, NChannels> & channel_azimuths_out) const
   {
+    block_azimuth_enc = normalize_angle(block_azimuth_enc, max_angle);
+    // This is an over-approximation of the true cut region.
+    int32_t cut_region_start = normalize_angle(cut_angle_out_ - (max_angle / 4), max_angle);
+    int32_t cut_region_end = normalize_angle(cut_angle_out_ + (max_angle / 4), max_angle);
+
+    if (!angle_is_between(cut_region_start, cut_region_end, block_azimuth_enc)) {
+      return false;
+    }
+
     // Note: Cut itself is considered part of the previous scan.
     // azi + cmin <= cut < azi + cmax
     size_t n_points_beyond_cut = std::count_if(
@@ -333,6 +352,8 @@ public:
     // In other words, we were in the cut region before, but are not anymore.
     if (should_publish) {
       publish_callback_(state_->current_buffer_index);
+      // Mark the published buffer's timestamp as needing to be set for its next use
+      state_->timestamp_set_since_publish[state_->current_buffer_index] = false;
       state_->current_buffer_index = buffer_index_add(state_->current_buffer_index, 1);
     }
 
@@ -353,11 +374,22 @@ public:
 
     bool entered_fov =
       (was_out_of_fov_before && (is_fully_in_fov_after || is_partially_in_fov_after));
-    bool should_reset_timestamp = (reset_timestamp_on_fov_start && entered_fov) ||
-                                  (!reset_timestamp_on_fov_start && (is_case_1 || is_case_3));
+    // Check if the block azimuth crossed the cut angle (using raw encoder azimuth)
+    // This is more precise than Case 1 detection which depends on channel offsets
+    // Only used for 360° FoV cases
+    bool block_crossed_cut = angle_is_between(
+      normalize_angle(state_->last_azimuth_enc, max_angle),
+      normalize_angle(block_azimuth_enc, max_angle), cut_angle_out_, true, false);
 
-    // Set timestamp of next buffer if channels were in the same scan before, but are not anymore.
-    // In other words, we were not in the cut region before, but are now.
+    // Reset timestamp when:
+    // - For limited FoV with cut at FoV end: when entering FoV
+    // - For 360 FoV: when block azimuth crosses cut OR Case 1/3 (whichever comes first)
+    bool should_reset_timestamp = (reset_timestamp_on_fov_start && entered_fov) ||
+                                  (!reset_timestamp_on_fov_start &&
+                                   ((has_360_fov && block_crossed_cut) || is_case_1 || is_case_3));
+
+    // Set timestamp of next buffer if we should reset it.
+    // Only set if the timestamp hasn't been set since the last publish of that buffer.
     if (should_reset_timestamp) {
       int32_t buffer_index_to_set{};
       if (reset_timestamp_on_fov_start) {
@@ -366,7 +398,10 @@ public:
         buffer_index_to_set = buffer_index_add(state_->current_buffer_index, 1);
       }
 
-      set_timestamp_callback_(buffer_index_to_set);
+      if (!state_->timestamp_set_since_publish[buffer_index_to_set]) {
+        set_timestamp_callback_(buffer_index_to_set);
+        state_->timestamp_set_since_publish[buffer_index_to_set] = true;
+      }
     }
 
     debug_print(

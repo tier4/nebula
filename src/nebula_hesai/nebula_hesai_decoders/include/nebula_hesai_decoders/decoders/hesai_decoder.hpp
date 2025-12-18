@@ -271,7 +271,7 @@ private:
     constexpr uint64_t nanoseconds_per_second = 1'000'000'000ULL;
     double scan_timestamp_s =
       static_cast<double>(completed_frame.scan_timestamp_ns / nanoseconds_per_second) +
-      static_cast<double>(completed_frame.scan_timestamp_ns % nanoseconds_per_second) / 1e9;
+      (static_cast<double>(completed_frame.scan_timestamp_ns % nanoseconds_per_second) / 1e9);
 
     if (pointcloud_callback_) {
       pointcloud_callback_(completed_frame.pointcloud, scan_timestamp_s);

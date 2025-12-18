@@ -99,8 +99,7 @@ private:
     return azimuth_exact;
   }
 
-  [[nodiscard]] int32_t get_corrected_elevation(
-    size_t field, uint32_t block_azimuth, size_t channel_id) const
+  [[nodiscard]] int32_t get_corrected_elevation(uint32_t block_azimuth, size_t channel_id) const
   {
     assert(field < correction_->frameNumber);
     assert(channel_id < ChannelN);
@@ -137,9 +136,7 @@ public:
   [[nodiscard]] CorrectedAngleData get_corrected_angle_data(
     uint32_t block_azimuth, uint32_t channel_id) const override
   {
-    size_t field = find_field(block_azimuth);
-
-    int32_t elevation_exact = get_corrected_elevation(field, block_azimuth, channel_id);
+    int32_t elevation_exact = get_corrected_elevation(block_azimuth, channel_id);
 
     // Allow negative angles in the radian value. This makes visualization of this field nicer and
     // should have no other mathematical implications in downstream modules.
@@ -147,6 +144,7 @@ public:
     // Then, normalize the integer value to the positive [0, MAX_AZIMUTH] range for array indexing
     elevation_exact = normalize_angle(elevation_exact, max_azimuth);
 
+    size_t field = find_field(block_azimuth);
     int32_t azimuth_exact = get_corrected_azimuth(field, block_azimuth, channel_id);
     float azimuth_rad = to_radians(azimuth_exact);
 
