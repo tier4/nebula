@@ -230,6 +230,22 @@ public:
     set_timestamp_callback_(std::move(set_timestamp_callback)),
     debug_file_("scan_cutter_debug.csv")
   {
+    if (!publish_callback_) {
+      throw std::invalid_argument("publish_callback cannot be nullptr");
+    }
+    if (!set_timestamp_callback_) {
+      throw std::invalid_argument("set_timestamp_callback cannot be nullptr");
+    }
+
+    bool has_non_360_fov = fov_start_out_ != fov_end_out_;
+
+    if (has_non_360_fov && !angle_is_between(fov_start_out_, fov_end_out_, cut_angle_out_)) {
+      throw std::invalid_argument("Cut angle must be within FoV");
+    }
+
+    if (has_non_360_fov && cut_angle_out_ == fov_start_out_) {
+      throw std::invalid_argument("Cut angle cannot coincide with FoV start");
+    }
   }
 
   [[nodiscard]] bool is_point_inside_fov(int32_t azimuth_out) const
