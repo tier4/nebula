@@ -32,10 +32,10 @@
 #endif
 #include "nebula_hesai_hw_interfaces/hesai_cmd_response.hpp"
 
-#include <boost_tcp_driver/http_client_driver.hpp>
-#include <boost_tcp_driver/tcp_driver.hpp>
 #include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/http_client.hpp>
+#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/tcp.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
 #include <nebula_hesai_common/hesai_status.hpp>
 
@@ -128,28 +128,14 @@ private:
 
   std::shared_ptr<loggers::Logger> logger_;
   std::optional<connections::UdpSocket> udp_socket_;
-  std::shared_ptr<boost::asio::io_context> m_owned_ctx_;
-  std::shared_ptr<::drivers::tcp_driver::TcpDriver> tcp_driver_;
+  std::unique_ptr<connections::TcpSocket> tcp_socket_;
+  std::unique_ptr<connections::HttpClient> http_client_;
   std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration_;
   connections::UdpSocket::callback_t cloud_packet_callback_;
 
   std::mutex mtx_inflight_tcp_request_;
 
   int target_model_no_;
-
-  /// @brief Get a one-off HTTP client to communicate with the hardware
-  /// @param ctx IO Context
-  /// @param hcd Got http client driver
-  /// @return Resulting status
-  HesaiStatus get_http_client_driver_once(
-    std::shared_ptr<boost::asio::io_context> ctx,
-    std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd);
-  /// @brief Get a one-off HTTP client to communicate with the hardware (without specifying
-  /// io_context)
-  /// @param hcd Got http client driver
-  /// @return Resulting status
-  HesaiStatus get_http_client_driver_once(
-    std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd);
   /// @brief A callback that receives a string (just prints)
   /// @param str Received string
   void str_cb(const std::string & str);
@@ -371,39 +357,16 @@ public:
   /// @return Resulting status
   HesaiLidarMonitor get_lidar_monitor();
 
-  /// @brief Call run() of IO Context
-  void io_context_run();
-  /// @brief GetIO Context
-  /// @return IO Context
-  std::shared_ptr<boost::asio::io_context> get_io_context();
-
-  /// @brief Setting spin_speed via HTTP API
-  /// @param ctx IO Context used
-  /// @param rpm spin_speed (300, 600, 1200)
-  /// @return Resulting status
-  HesaiStatus set_spin_speed_async_http(std::shared_ptr<boost::asio::io_context> ctx, uint16_t rpm);
   /// @brief Setting spin_speed via HTTP API
   /// @param rpm spin_speed (300, 600, 1200)
   /// @return Resulting status
   HesaiStatus set_spin_speed_async_http(uint16_t rpm);
 
   HesaiStatus set_ptp_config_sync_http(
-    std::shared_ptr<boost::asio::io_context> ctx, int profile, int domain, int network,
-    int logAnnounceInterval, int logSyncInterval, int logMinDelayReqInterval);
-  HesaiStatus set_ptp_config_sync_http(
     int profile, int domain, int network, int logAnnounceInterval, int logSyncInterval,
     int logMinDelayReqInterval);
-  HesaiStatus set_sync_angle_sync_http(
-    std::shared_ptr<boost::asio::io_context> ctx, int enable, int angle);
   HesaiStatus set_sync_angle_sync_http(int enable, int angle);
 
-  /// @brief Getting lidar_monitor via HTTP API
-  /// @param ctx IO Context
-  /// @param str_callback Callback function for received string
-  /// @return Resulting status
-  HesaiStatus get_lidar_monitor_async_http(
-    std::shared_ptr<boost::asio::io_context> ctx,
-    std::function<void(const std::string & str)> str_callback);
   /// @brief Getting lidar_monitor via HTTP API
   /// @param str_callback Callback function for received string
   /// @return Resulting status

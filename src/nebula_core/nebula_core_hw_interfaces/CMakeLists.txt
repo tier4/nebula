@@ -35,6 +35,10 @@ if(BUILD_TESTING)
   ament_add_gtest(test_can test/common/test_can.cpp)
   target_include_directories(test_can PRIVATE include test)
   target_link_libraries(test_can nebula_core_common::nebula_core_common)
+
+  ament_add_gtest(test_http_client test/common/test_http_client.cpp)
+  target_include_directories(test_http_client PRIVATE include test)
+  target_link_libraries(test_http_client nebula_core_common::nebula_core_common)
 endif()
 
 ament_export_targets(export_nebula_core_hw_interfaces)

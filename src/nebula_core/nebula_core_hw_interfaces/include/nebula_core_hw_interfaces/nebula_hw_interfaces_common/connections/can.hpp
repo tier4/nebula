@@ -91,7 +91,7 @@ class CanSocket
     ~SockFd()
     {
       if (sock_fd_ == uninitialized) return;
-      close(sock_fd_);
+      ::close(sock_fd_);
     }
 
     [[nodiscard]] int get() const { return sock_fd_; }
@@ -170,6 +170,11 @@ public:
     SocketConfig config_;
   };
 
+  struct RxMetadata
+  {
+    std::uint64_t timestamp_ns{0};
+  };
+
   using callback_t = std::function<void(const can_frame & frame)>;
 
   /**
@@ -199,16 +204,95 @@ public:
     return *this;
   }
 
-  /**
-   * @brief Send a CAN frame.
-   *
-   * @param frame The CAN frame to send.
-   */
+  void close()
+  {
+    unsubscribe();
+    sock_fd_ = SockFd{};
+  }
+
   void send(const can_frame & frame)
   {
     ssize_t result = ::write(sock_fd_.get(), &frame, sizeof(frame));
     if (result == -1) throw CanSocketError(errno);
     if (result != sizeof(frame)) throw CanSocketError("Incomplete CAN frame write");
+  }
+
+  void send_fd(const canfd_frame & frame)
+  {
+    ssize_t result = ::write(sock_fd_.get(), &frame, sizeof(frame));
+    if (result == -1) throw CanSocketError(errno);
+    if (result != sizeof(frame)) throw CanSocketError("Incomplete CAN FD frame write");
+  }
+
+  void set_fd_mode(bool enable)
+  {
+    int fd_mode = enable ? 1 : 0;
+    auto result = sock_fd_.setsockopt(SOL_CAN_RAW, CAN_RAW_FD_FRAMES, fd_mode);
+    if (!result.has_value()) throw CanSocketError(result.error());
+  }
+
+  void set_filters(const std::vector<can_filter> & filters)
+  {
+    int result = ::setsockopt(
+      sock_fd_.get(), SOL_CAN_RAW, CAN_RAW_FILTER, filters.data(),
+      filters.size() * sizeof(can_filter));
+    if (result == -1) throw CanSocketError(errno);
+  }
+
+  bool receive_fd(canfd_frame & frame, std::chrono::nanoseconds timeout)
+  {
+    RxMetadata metadata;
+    return receive_fd(frame, timeout, metadata);
+  }
+
+  bool receive_fd(canfd_frame & frame, std::chrono::nanoseconds timeout, RxMetadata & metadata)
+  {
+    pollfd pfd{sock_fd_.get(), POLLIN, 0};
+    int timeout_ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count();
+    int status = poll(&pfd, 1, timeout_ms);
+    if (status == -1) throw CanSocketError(errno);
+    if (status == 0) return false;
+
+    // To get timestamps, we should use recvmsg, but for now let's just use system time
+    // if we want to keep it simple, or implement recvmsg here.
+    // For CAN, SO_TIMESTAMP also works.
+
+    struct iovec iov;
+    struct msghdr msg;
+    char ctrl[CMSG_SPACE(sizeof(struct timeval))];
+    struct sockaddr_can addr;
+
+    iov.iov_base = &frame;
+    iov.iov_len = sizeof(frame);
+
+    msg.msg_name = &addr;
+    msg.msg_namelen = sizeof(addr);
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+    msg.msg_control = ctrl;
+    msg.msg_controllen = sizeof(ctrl);
+    msg.msg_flags = 0;
+
+    ssize_t recv_result = recvmsg(sock_fd_.get(), &msg, 0);
+    if (recv_result < 0) throw CanSocketError(errno);
+
+    metadata.timestamp_ns = 0;
+    for (struct cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
+         cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+      if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMP) {
+        struct timeval * tv = (struct timeval *)CMSG_DATA(cmsg);
+        metadata.timestamp_ns =
+          (uint64_t)tv->tv_sec * 1000000000ULL + (uint64_t)tv->tv_usec * 1000ULL;
+      }
+    }
+
+    if (metadata.timestamp_ns == 0) {
+      metadata.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                std::chrono::system_clock::now().time_since_epoch())
+                                .count();
+    }
+
+    return recv_result == sizeof(frame);
   }
 
   CanSocket(const CanSocket &) = delete;

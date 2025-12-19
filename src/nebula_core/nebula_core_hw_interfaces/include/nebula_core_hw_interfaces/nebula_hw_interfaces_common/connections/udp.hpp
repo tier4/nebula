@@ -107,7 +107,7 @@ class UdpSocket
     ~SockFd()
     {
       if (sock_fd_ == uninitialized) return;
-      close(sock_fd_);
+      ::close(sock_fd_);
     }
 
     [[nodiscard]] int get() const { return sock_fd_; }
@@ -363,6 +363,12 @@ public:
       receive_thread_.join();
     }
     return *this;
+  }
+
+  void close()
+  {
+    unsubscribe();
+    sock_fd_ = SockFd{};
   }
 
   /**

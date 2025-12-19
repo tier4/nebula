@@ -1,6 +1,6 @@
 // Copyright 2024 TIER IV, Inc.
 
-#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/tcp.hpp"
+#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/http_client.hpp"
 
 #include <arpa/inet.h>
 #include <gtest/gtest.h>
@@ -21,12 +21,12 @@ namespace nebula::drivers::connections
 using std::chrono_literals::operator""ms;
 
 static const char * const g_localhost_ip = "127.0.0.1";
-static const uint16_t g_server_port = 8080;
+static const uint16_t g_server_port = 8081;
 
-class TcpServer
+class HttpServer
 {
 public:
-  explicit TcpServer(uint16_t port)
+  explicit HttpServer(uint16_t port)
   {
     fd_ = socket(AF_INET, SOCK_STREAM, 0);
     if (fd_ == -1) throw std::runtime_error("Failed to create server socket");
@@ -55,23 +55,32 @@ public:
         int new_socket = accept(fd_, (struct sockaddr *)&client_addr, (socklen_t *)&addrlen);
         if (new_socket < 0) {
           if (running_)
-            continue;  // Accept failed, maybe timeout or closed
+            continue;
           else
             break;
         }
 
-        // Simple echo server
         char buffer[1024] = {0};
         ssize_t valread = read(new_socket, buffer, 1024);
         if (valread > 0) {
-          send(new_socket, buffer, valread, 0);
+          std::string request(buffer, valread);
+          std::string response;
+          if (request.find("GET") == 0) {
+            response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!";
+          } else if (request.find("POST") == 0) {
+            auto body_pos = request.find("\r\n\r\n");
+            std::string body = (body_pos != std::string::npos) ? request.substr(body_pos + 4) : "";
+            response = "HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(body.length()) +
+                       "\r\n\r\n" + body;
+          }
+          send(new_socket, response.c_str(), response.length(), 0);
         }
         ::close(new_socket);
       }
     });
   }
 
-  ~TcpServer()
+  ~HttpServer()
   {
     running_ = false;
     shutdown(fd_, SHUT_RDWR);
@@ -85,36 +94,21 @@ private:
   std::thread thread_;
 };
 
-TEST(TestTcp, TestBasicLifecycle)
+TEST(TestHttpClient, TestGet)
 {
-  TcpServer server(g_server_port);
-  ASSERT_NO_THROW(
-    TcpSocket::Builder(g_localhost_ip, g_server_port)
-      .connect()
-      .subscribe([](const auto &) {})
-      .unsubscribe());
+  HttpServer server(g_server_port);
+  HttpClient client(g_localhost_ip, g_server_port);
+  auto response = client.get("/test");
+  ASSERT_EQ(response, "Hello, World!");
 }
 
-TEST(TestTcp, TestSendReceive)
+TEST(TestHttpClient, TestPost)
 {
-  TcpServer server(g_server_port);
-  std::vector<uint8_t> payload{1, 2, 3, 4};
-  std::atomic_bool received{false};
-
-  auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
-  sock.subscribe([&](const std::vector<uint8_t> & data) {
-    if (data == payload) received = true;
-  });
-
-  sock.send(payload);
-
-  // Wait for echo
-  for (int i = 0; i < 20; ++i) {
-    if (received) break;
-    std::this_thread::sleep_for(50ms);
-  }
-
-  ASSERT_TRUE(received);
+  HttpServer server(g_server_port);
+  HttpClient client(g_localhost_ip, g_server_port);
+  std::string body = "test_body";
+  auto response = client.post("/test", body);
+  ASSERT_EQ(response, body);
 }
 
 }  // namespace nebula::drivers::connections

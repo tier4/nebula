@@ -18,7 +18,6 @@
 #include "nebula_core_common/nebula_status.hpp"
 #include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
 
-#include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_continental_common/continental_ars548.hpp>
 #include <nebula_core_common/loggers/logger.hpp>
 
@@ -135,7 +134,7 @@ private:
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
   /// @param metadata Metadata of the received packet
-  void receive_sensor_packet_callback(
+  void receive_callback(
     const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata);
 
   /// @brief Try to send a buffer via UDP and return an error on failure. Never throws.
@@ -143,7 +142,7 @@ private:
   /// @return Resulting status
   [[nodiscard]] Status safe_send(const std::vector<uint8_t> & buffer);
 
-  std::optional<connections::UdpSocket> udp_socket_;
+  std::unique_ptr<connections::UdpSocket> udp_driver_;
   std::shared_ptr<const ContinentalARS548SensorConfiguration> config_ptr_;
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket>)> packet_callback_;
   std::shared_ptr<loggers::Logger> logger_;

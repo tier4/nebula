@@ -109,7 +109,7 @@ class TcpSocket
     ~SockFd()
     {
       if (sock_fd_ == uninitialized) return;
-      close(sock_fd_);
+      ::close(sock_fd_);
     }
 
     [[nodiscard]] int get() const { return sock_fd_; }
@@ -137,6 +137,44 @@ class TcpSocket
   }
 
 public:
+  TcpSocket() : sock_fd_(), poll_fd_{-1, POLLIN, 0} {}
+
+  void open(const std::string & ip, uint16_t port)
+  {
+    if (sock_fd_.get() != -1) {
+      sock_fd_ = SockFd();
+    }
+
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd == -1) throw TcpSocketError(errno);
+    sock_fd_ = SockFd(fd);
+
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    in_addr target_in_addr = parse_tcp_ip(ip).value_or_throw();
+    addr.sin_addr = target_in_addr;
+
+    int result = ::connect(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
+    if (result == -1) throw TcpSocketError(errno);
+
+    config_.target = {target_in_addr, port};
+    poll_fd_.fd = sock_fd_.get();
+  }
+
+  bool isOpen() const { return sock_fd_.get() != -1; }
+
+  void close() { sock_fd_ = SockFd(); }
+
+  std::vector<uint8_t> receive(size_t n)
+  {
+    std::vector<uint8_t> buffer(n);
+    ssize_t result = ::recv(sock_fd_.get(), buffer.data(), n, 0);
+    if (result < 0) throw TcpSocketError(errno);
+    if (result == 0) return {};
+    buffer.resize(result);
+    return buffer;
+  }
   class Builder
   {
   public:

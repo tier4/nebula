@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(nebula_continental_hw_interfaces)
 
 find_package(autoware_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
 autoware_package()
 
 add_library(
@@ -17,9 +18,10 @@ target_include_directories(
 ament_target_dependencies(
   nebula_continental_hw_interfaces
   PUBLIC
-  boost_udp_driver
+
   nebula_msgs
-  ros2_socketcan
+  rclcpp
+
   nebula_core_common
   nebula_continental_common
   nebula_core_hw_interfaces)
@@ -31,7 +33,6 @@ install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_continental_hw_interfaces)
 ament_export_dependencies(
-  boost_udp_driver nebula_core_common nebula_continental_common
-  nebula_core_hw_interfaces nebula_msgs ros2_socketcan)
+  nebula_core_hw_interfaces nebula_msgs)
 
 ament_package()

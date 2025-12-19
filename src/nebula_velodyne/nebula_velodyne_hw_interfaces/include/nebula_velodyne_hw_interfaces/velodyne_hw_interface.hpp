@@ -31,9 +31,8 @@
 #include "nebula_core_common/util/expected.hpp"
 #include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 
-#include <boost_tcp_driver/http_client_driver.hpp>
-#include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_core_common/loggers/logger.hpp>
+#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/http_client.hpp>
 #include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp>
 #include <nebula_velodyne_common/velodyne_common.hpp>
 #include <nebula_velodyne_common/velodyne_status.hpp>
@@ -43,6 +42,7 @@
 
 #include <chrono>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -59,8 +59,7 @@ private:
   // Calls the above `cloud_packet_callback_` and thus has to be destroyed before it.
   std::optional<connections::UdpSocket> udp_socket_;
 
-  std::shared_ptr<boost::asio::io_context> boost_ctx_;
-  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> http_client_driver_;
+  std::unique_ptr<connections::HttpClient> http_client_;
 
   std::mutex mtx_inflight_request_;
 
@@ -77,19 +76,19 @@ private:
 
   template <typename CallbackType>
   nebula::util::expected<std::string, VelodyneStatus> do_http_request_with_retries(
-    CallbackType do_request, std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & client)
+    CallbackType do_request)
   {
     constexpr int max_retries = 3;
     constexpr int retry_delay_ms = 100;
 
     for (int retry = 0; retry < max_retries; ++retry) {
       try {
-        if (!client->client()->isOpen()) {
-          client->client()->open();
-        }
+        // if (!client->client()->isOpen()) {
+        //   client->client()->open();
+        // }
 
         std::string response = do_request();
-        client->client()->close();
+        // client->client()->close();
         return nebula::util::expected<std::string, VelodyneStatus>(response);
       } catch (const std::exception & ex) {
         if (retry == max_retries - 1) {
@@ -97,14 +96,14 @@ private:
             VelodyneStatus::HTTP_CONNECTION_ERROR);
         }
 
-        if (client->client()->isOpen()) {
-          try {
-            client->client()->close();
-          } catch (const std::exception & ex) {
-            return nebula::util::expected<std::string, VelodyneStatus>(
-              VelodyneStatus::HTTP_CONNECTION_ERROR);
-          }
-        }
+        // if (client->client()->isOpen()) {
+        //   try {
+        //     client->client()->close();
+        //   } catch (const std::exception & ex) {
+        //     return nebula::util::expected<std::string, VelodyneStatus>(
+        //       VelodyneStatus::HTTP_CONNECTION_ERROR);
+        //   }
+        // }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(retry_delay_ms));
       }
@@ -123,15 +122,7 @@ private:
   /// @param ctx IO Context
   /// @param hcd Got http client driver
   /// @return Resulting status
-  VelodyneStatus get_http_client_driver_once(
-    std::shared_ptr<boost::asio::io_context> ctx,
-    std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd);
-  /// @brief Get a one-off HTTP client to communicate with the hardware (without specifying
-  /// io_context)
-  /// @param hcd Got http client driver
-  /// @return Resulting status
-  VelodyneStatus get_http_client_driver_once(
-    std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd);
+  VelodyneStatus get_http_client_driver_once(std::unique_ptr<connections::HttpClient> & hcd);
 
   /// @brief Checking the current settings and changing the difference point
   /// @param sensor_configuration Current SensorConfiguration

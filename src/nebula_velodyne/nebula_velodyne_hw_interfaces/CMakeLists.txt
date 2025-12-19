@@ -14,8 +14,7 @@ target_include_directories(
 ament_target_dependencies(
   nebula_velodyne_hw_interfaces
   PUBLIC
-  boost_tcp_driver
-  boost_udp_driver
+
   nebula_core_common
   nebula_velodyne_common
   nebula_core_hw_interfaces)
@@ -26,7 +25,7 @@ install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_velodyne_hw_interfaces)
-ament_export_dependencies(boost_tcp_driver boost_udp_driver nebula_core_common
+ament_export_dependencies(nebula_core_common
                           nebula_velodyne_common nebula_core_hw_interfaces)
 
 ament_package()

@@ -19,7 +19,6 @@
 #include "nebula_robosense/hw_monitor_wrapper.hpp"
 
 #include <ament_index_cpp/get_package_prefix.hpp>
-#include <boost_tcp_driver/tcp_driver.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/nebula_status.hpp>
 #include <nebula_robosense_common/robosense_common.hpp>
@@ -62,9 +61,9 @@ public:
   Status stream_start();
 
 private:
-  void receive_cloud_packet_callback(std::vector<uint8_t> & packet);
+  void receive_cloud_packet_callback(const std::vector<uint8_t> & packet);
 
-  void receive_info_packet_callback(std::vector<uint8_t> & packet);
+  void receive_info_packet_callback(const std::vector<uint8_t> & packet);
 
   void receive_scan_message_callback(std::unique_ptr<robosense_msgs::msg::RobosenseScan> scan_msg);
 

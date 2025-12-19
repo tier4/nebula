@@ -64,8 +64,7 @@ RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
       std::bind(&RobosenseRosWrapper::receive_scan_message_callback, this, std::placeholders::_1));
     info_packets_sub_ = create_subscription<robosense_msgs::msg::RobosenseInfoPacket>(
       "robosense_info_packets", 10, [this](const robosense_msgs::msg::RobosenseInfoPacket & msg) {
-        std::vector<uint8_t> raw_packet;
-        std::copy(msg.packet.data.cbegin(), msg.packet.data.cend(), std::back_inserter(raw_packet));
+        std::vector<uint8_t> raw_packet(msg.packet.data.begin(), msg.packet.data.end());
         receive_info_packet_callback(raw_packet);
       });
     RCLCPP_INFO_STREAM(
@@ -165,7 +164,7 @@ void RobosenseRosWrapper::receive_scan_message_callback(
   }
 }
 
-void RobosenseRosWrapper::receive_info_packet_callback(std::vector<uint8_t> & packet)
+void RobosenseRosWrapper::receive_info_packet_callback(const std::vector<uint8_t> & packet)
 {
   if (!sensor_cfg_ptr_ || !info_driver_) {
     throw std::runtime_error(
@@ -295,7 +294,7 @@ rcl_interfaces::msg::SetParametersResult RobosenseRosWrapper::on_parameter_chang
   return rcl_interfaces::build<SetParametersResult>().successful(true).reason("");
 }
 
-void RobosenseRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & packet)
+void RobosenseRosWrapper::receive_cloud_packet_callback(const std::vector<uint8_t> & packet)
 {
   if (!decoder_wrapper_ || decoder_wrapper_->status() != Status::OK) {
     return;
@@ -308,7 +307,7 @@ void RobosenseRosWrapper::receive_cloud_packet_callback(std::vector<uint8_t> & p
   auto msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
   msg_ptr->stamp.sec = static_cast<int>(timestamp_ns / 1'000'000'000);
   msg_ptr->stamp.nanosec = static_cast<int>(timestamp_ns % 1'000'000'000);
-  msg_ptr->data.swap(packet);
+  msg_ptr->data = packet;
 
   decoder_wrapper_->process_cloud_packet(std::move(msg_ptr));
 }

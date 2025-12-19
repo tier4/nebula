@@ -19,7 +19,11 @@
 
 #include <nebula_continental_common/continental_ars548.hpp>
 
+#include <arpa/inet.h>
+
 #include <algorithm>
+#include <chrono>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -44,19 +48,19 @@ Status ContinentalARS548HwInterface::set_sensor_configuration(
 Status ContinentalARS548HwInterface::sensor_interface_start()
 {
   try {
-    using UdpSocket = connections::UdpSocket;
-    auto udp_socket =
-      UdpSocket::Builder(config_ptr_->host_ip, config_ptr_->data_port)
+    udp_driver_ = std::make_unique<connections::UdpSocket>(
+      connections::UdpSocket::Builder(config_ptr_->host_ip, config_ptr_->data_port)
         .join_multicast_group(config_ptr_->multicast_ip)
         .set_send_destination(config_ptr_->sensor_ip, config_ptr_->configuration_sensor_port)
         .limit_to_sender(config_ptr_->sensor_ip, config_ptr_->data_port)
         .set_mtu(2 << 16)
-        .bind();
+        .bind());
 
-    udp_socket_.emplace(std::move(udp_socket));
-    udp_socket_->subscribe([this](const auto & payload, const auto & metadata) {
-      receive_sensor_packet_callback(payload, metadata);
-    });
+    udp_driver_->subscribe(
+      [this](
+        const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata) {
+        this->receive_callback(buffer, metadata);
+      });
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
     logger_->error(
@@ -74,7 +78,7 @@ Status ContinentalARS548HwInterface::register_packet_callback(
   return Status::OK;
 }
 
-void ContinentalARS548HwInterface::receive_sensor_packet_callback(
+void ContinentalARS548HwInterface::receive_callback(
   const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata)
 {
   if (buffer.size() < sizeof(HeaderPacket)) {
@@ -100,8 +104,8 @@ void ContinentalARS548HwInterface::receive_sensor_packet_callback(
 
 Status ContinentalARS548HwInterface::sensor_interface_stop()
 {
-  if (udp_socket_) {
-    udp_socket_->unsubscribe();
+  if (udp_driver_) {
+    udp_driver_->close();
   }
   return Status::OK;
 }
@@ -230,10 +234,7 @@ Status ContinentalARS548HwInterface::set_sensor_ip_address(const std::string & s
 {
   std::array<uint8_t, 4> ip_bytes;
 
-  try {
-    auto sensor_ip = boost::asio::ip::address::from_string(sensor_ip_address);
-    ip_bytes = sensor_ip.to_v4().to_bytes();
-  } catch (const std::exception & ex) {
+  if (inet_pton(AF_INET, sensor_ip_address.c_str(), ip_bytes.data()) != 1) {
     logger_->error("Setting invalid IP=" + sensor_ip_address);
     return Status::SENSOR_CONFIG_ERROR;
   }
@@ -283,7 +284,7 @@ Status ContinentalARS548HwInterface::set_acceleration_lateral_cog(float lateral_
   std::vector<uint8_t> send_vector(sizeof(AccelerationLateralCoGPacket));
   std::memcpy(send_vector.data(), &acceleration_lateral_cog, sizeof(AccelerationLateralCoGPacket));
 
-  udp_socket_->send(send_vector);
+  udp_driver_->send(send_vector);
 
   return Status::OK;
 }
@@ -449,13 +450,13 @@ Status ContinentalARS548HwInterface::set_yaw_rate(float yaw_rate)
 
 Status ContinentalARS548HwInterface::safe_send(const std::vector<uint8_t> & buffer)
 {
-  if (!udp_socket_) {
+  if (!udp_driver_) {
     logger_->error("UDP socket not initialized");
     return Status::UDP_CONNECTION_ERROR;
   }
 
   try {
-    udp_socket_->send(buffer);
+    udp_driver_->send(buffer);
   } catch (const connections::SocketError & e) {
     logger_->error("Failed to send packet: " + std::string(e.what()));
     return Status::UDP_CONNECTION_ERROR;

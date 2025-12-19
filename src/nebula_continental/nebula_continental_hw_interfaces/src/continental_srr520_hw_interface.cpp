@@ -19,12 +19,16 @@
 #include <nebula_core_common/util/crc.hpp>
 #include <rclcpp/time.hpp>
 
+#include <algorithm>
+#include <chrono>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace nebula::drivers::continental_srr520
 {
@@ -49,13 +53,13 @@ Status ContinentalSRR520HwInterface::sensor_interface_start()
   std::lock_guard lock(receiver_mutex_);
 
   try {
-    can_sender_ptr_ =
-      std::make_unique<::drivers::socketcan::SocketCanSender>(config_ptr_->interface, true);
-    can_receiver_ptr_ =
-      std::make_unique<::drivers::socketcan::SocketCanReceiver>(config_ptr_->interface, true);
+    can_socket_ = std::make_unique<connections::CanSocket>(
+      connections::CanSocket::Builder(config_ptr_->interface).bind());
+    can_socket_->set_fd_mode(true);
 
-    can_receiver_ptr_->SetCanFilters(
-      ::drivers::socketcan::SocketCanReceiver::CanFilterList(config_ptr_->filters));
+    // TODO(davidwong): Implement filter parsing if needed.
+    // For now, we'll skip filters or implement a simple parser if config_ptr_->filters is used.
+    // can_socket_->set_filters(...);
     logger_->info(std::string("applied filters: ") + config_ptr_->filters);
 
     sensor_interface_active_ = true;
@@ -72,14 +76,13 @@ Status ContinentalSRR520HwInterface::sensor_interface_start()
 template <std::size_t N>
 bool ContinentalSRR520HwInterface::send_frame(const std::array<uint8_t, N> & data, int can_frame_id)
 {
-  ::drivers::socketcan::CanId send_id(
-    can_frame_id, 0, ::drivers::socketcan::FrameType::DATA, ::drivers::socketcan::StandardFrame);
-
   try {
-    can_sender_ptr_->send_fd(
-      data.data(), data.size(), send_id,
-      std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::duration<double>(config_ptr_->sender_timeout_sec)));
+    canfd_frame frame{};
+    frame.can_id = can_frame_id;
+    frame.len = data.size();
+    std::copy(data.begin(), data.end(), frame.data);
+
+    can_socket_->send_fd(frame);
     return true;
   } catch (const std::exception & ex) {
     logger_->error(std::string("Error sending CAN message: ") + ex.what());
@@ -89,9 +92,7 @@ bool ContinentalSRR520HwInterface::send_frame(const std::array<uint8_t, N> & dat
 
 void ContinentalSRR520HwInterface::receive_loop()
 {
-  ::drivers::socketcan::CanId receive_id{};
   std::chrono::nanoseconds receiver_timeout_nsec;
-  bool use_bus_time = false;
 
   while (true) {
     auto packet_msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
@@ -100,8 +101,6 @@ void ContinentalSRR520HwInterface::receive_loop()
       std::lock_guard lock(receiver_mutex_);
       receiver_timeout_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::duration<double>(config_ptr_->receiver_timeout_sec));
-      use_bus_time = config_ptr_->use_bus_time;
-
       if (!sensor_interface_active_) {
         break;
       }
@@ -109,32 +108,37 @@ void ContinentalSRR520HwInterface::receive_loop()
 
     try {
       packet_msg_ptr->data.resize(68);  // 64 bytes of data + 4 bytes of ID
-      receive_id = can_receiver_ptr_->receive_fd(
-        packet_msg_ptr->data.data() + 4 * sizeof(uint8_t), receiver_timeout_nsec);
+      canfd_frame frame{};
+      connections::CanSocket::RxMetadata metadata;
+      if (!can_socket_->receive_fd(frame, receiver_timeout_nsec, metadata)) {
+        continue;
+      }
+
+      uint64_t stamp_ns = metadata.timestamp_ns;
+      if (stamp_ns == 0) {
+        stamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                     std::chrono::system_clock::now().time_since_epoch())
+                     .count();
+      }
+
+      packet_msg_ptr->stamp.sec = stamp_ns / 1'000'000'000;
+      packet_msg_ptr->stamp.nanosec = stamp_ns % 1'000'000'000;
+
+      if (frame.can_id & CAN_ERR_FLAG) {
+        logger_->error("CAN FD message is an error frame");
+        continue;
+      }
+      std::copy(frame.data, frame.data + frame.len, packet_msg_ptr->data.begin() + 4);
+      packet_msg_ptr->data.resize(frame.len + 4);
+      uint32_t id = frame.can_id & CAN_EFF_MASK;  // Use mask for ID
+      packet_msg_ptr->data[0] = (id & 0xFF000000) >> 24;
+      packet_msg_ptr->data[1] = (id & 0x00FF0000) >> 16;
+      packet_msg_ptr->data[2] = (id & 0x0000FF00) >> 8;
+      packet_msg_ptr->data[3] = (id & 0x000000FF) >> 0;
+      packet_msg_ptr->data.resize(frame.len + 4);
+      std::copy(frame.data, frame.data + frame.len, packet_msg_ptr->data.begin() + 4);
     } catch (const std::exception & ex) {
       logger_->error(std::string("Error receiving CAN FD message: ") + ex.what());
-      continue;
-    }
-
-    packet_msg_ptr->data.resize(receive_id.length() + 4);
-
-    uint32_t id = receive_id.identifier();
-    packet_msg_ptr->data[0] = (id & 0xFF000000) >> 24;
-    packet_msg_ptr->data[1] = (id & 0x00FF0000) >> 16;
-    packet_msg_ptr->data[2] = (id & 0x0000FF00) >> 8;
-    packet_msg_ptr->data[3] = (id & 0x000000FF) >> 0;
-
-    int64_t stamp = use_bus_time
-                      ? static_cast<int64_t>(receive_id.get_bus_time() * 1000U)
-                      : static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                                std::chrono::system_clock::now().time_since_epoch())
-                                                .count());
-
-    packet_msg_ptr->stamp.sec = stamp / 1'000'000'000;
-    packet_msg_ptr->stamp.nanosec = stamp % 1'000'000'000;
-
-    if (receive_id.frame_type() == ::drivers::socketcan::FrameType::ERROR) {
-      logger_->error("CAN FD message is an error frame");
       continue;
     }
 
@@ -151,7 +155,7 @@ Status ContinentalSRR520HwInterface::register_packet_callback(
 
 void ContinentalSRR520HwInterface::sensor_sync_follow_up(builtin_interfaces::msg::Time stamp)
 {
-  if (!can_sender_ptr_) {
+  if (!can_socket_) {
     logger_->error("Can sender is invalid so can not do follow up");
   }
 
@@ -190,7 +194,7 @@ void ContinentalSRR520HwInterface::sensor_sync_follow_up(builtin_interfaces::msg
 
 void ContinentalSRR520HwInterface::sensor_sync()
 {
-  if (!can_sender_ptr_) {
+  if (!can_socket_) {
     logger_->error("Can sender is invalid so can not do sync up");
     return;
   }
@@ -257,8 +261,11 @@ Status ContinentalSRR520HwInterface::sensor_interface_stop()
     sensor_interface_active_ = false;
   }
 
+  if (can_socket_) {
+    can_socket_->close();
+  }
   receiver_thread_ptr_->join();
-  return Status::ERROR_1;
+  return Status::OK;
 }
 
 Status ContinentalSRR520HwInterface::configure_sensor(

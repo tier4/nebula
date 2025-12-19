@@ -11,8 +11,6 @@
 
   <buildtool_depend>autoware_cmake</buildtool_depend>
 
-  <depend>boost_tcp_driver</depend>
-  <depend>boost_udp_driver</depend>
   <depend>nebula_core_common</depend>
   <depend>nebula_core_hw_interfaces</depend>
   <depend>nebula_msgs</depend>
