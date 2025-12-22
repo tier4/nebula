@@ -4,10 +4,13 @@
   <name>nebula_continental_hw_interfaces</name>
   <version>0.3.0</version>
   <description>Nebula HW Interfaces Continental</description>
-  <maintainer email="contact@map4.jp">MAP IV</maintainer>
+  <maintainer email="david.wong@tier4.jp">David Wong</maintainer>
+  <maintainer email="max.schmeller@tier4.jp">Max Schmeller</maintainer>
+  <maintainer email="amadeusz.szymko.2@tier4.jp">Amadeusz Szymko</maintainer>
 
   <license>Apache 2</license>
   <author>TIER IV</author>
+  <author email="kenzo.lobos@tier4.jp">Kenzo Lobos-Tsunekawa</author>
 
   <buildtool_depend>autoware_cmake</buildtool_depend>
 
