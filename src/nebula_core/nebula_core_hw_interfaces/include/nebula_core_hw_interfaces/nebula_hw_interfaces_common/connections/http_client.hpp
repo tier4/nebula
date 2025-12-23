@@ -32,13 +32,35 @@ public:
     std::mutex mtx;
     std::condition_variable cv;
     bool done = false;
+    size_t content_length = 0;
+    bool header_parsed = false;
 
     socket.subscribe([&](const std::vector<uint8_t> & data) {
       std::lock_guard<std::mutex> lock(mtx);
       response_str.append(reinterpret_cast<const char *>(data.data()), data.size());
-      if (response_str.find("\r\n\r\n") != std::string::npos) {
-        done = true;
-        cv.notify_one();
+
+      if (!header_parsed) {
+        auto header_end = response_str.find("\r\n\r\n");
+        if (header_end != std::string::npos) {
+          header_parsed = true;
+          auto cl_pos = response_str.find("Content-Length: ");
+          if (cl_pos != std::string::npos) {
+            auto cl_end = response_str.find("\r\n", cl_pos);
+            try {
+              content_length = std::stoul(response_str.substr(cl_pos + 16, cl_end - (cl_pos + 16)));
+            } catch (...) {
+              content_length = 0;
+            }
+          }
+        }
+      }
+
+      if (header_parsed) {
+        auto header_end = response_str.find("\r\n\r\n");
+        if (response_str.length() >= header_end + 4 + content_length) {
+          done = true;
+          cv.notify_one();
+        }
       }
     });
 
@@ -47,13 +69,13 @@ public:
     socket.send(req_bytes);
 
     std::unique_lock<std::mutex> lock(mtx);
-    cv.wait_for(lock, std::chrono::milliseconds(timeout_ms), [&] { return done; });
-
-    // Parse body
-    auto body_pos = response_str.find("\r\n\r\n");
-    if (body_pos != std::string::npos) {
-      return response_str.substr(body_pos + 4);
+    if (cv.wait_for(lock, std::chrono::milliseconds(timeout_ms), [&] { return done; })) {
+      auto body_pos = response_str.find("\r\n\r\n");
+      if (body_pos != std::string::npos) {
+        return response_str.substr(body_pos + 4);
+      }
     }
+    
     return "";
   }
 
@@ -72,13 +94,35 @@ public:
     std::mutex mtx;
     std::condition_variable cv;
     bool done = false;
+    size_t content_length = 0;
+    bool header_parsed = false;
 
     socket.subscribe([&](const std::vector<uint8_t> & data) {
       std::lock_guard<std::mutex> lock(mtx);
       response_str.append(reinterpret_cast<const char *>(data.data()), data.size());
-      if (response_str.find("\r\n\r\n") != std::string::npos) {
-        done = true;
-        cv.notify_one();
+
+      if (!header_parsed) {
+        auto header_end = response_str.find("\r\n\r\n");
+        if (header_end != std::string::npos) {
+          header_parsed = true;
+          auto cl_pos = response_str.find("Content-Length: ");
+          if (cl_pos != std::string::npos) {
+            auto cl_end = response_str.find("\r\n", cl_pos);
+            try {
+              content_length = std::stoul(response_str.substr(cl_pos + 16, cl_end - (cl_pos + 16)));
+            } catch (...) {
+              content_length = 0;
+            }
+          }
+        }
+      }
+
+      if (header_parsed) {
+        auto header_end = response_str.find("\r\n\r\n");
+        if (response_str.length() >= header_end + 4 + content_length) {
+          done = true;
+          cv.notify_one();
+        }
       }
     });
 
@@ -87,12 +131,13 @@ public:
     socket.send(req_bytes);
 
     std::unique_lock<std::mutex> lock(mtx);
-    cv.wait_for(lock, std::chrono::milliseconds(timeout_ms), [&] { return done; });
-
-    auto body_pos = response_str.find("\r\n\r\n");
-    if (body_pos != std::string::npos) {
-      return response_str.substr(body_pos + 4);
+    if (cv.wait_for(lock, std::chrono::milliseconds(timeout_ms), [&] { return done; })) {
+      auto body_pos = response_str.find("\r\n\r\n");
+      if (body_pos != std::string::npos) {
+        return response_str.substr(body_pos + 4);
+      }
     }
+    
     return "";
   }
 
