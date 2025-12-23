@@ -276,7 +276,10 @@ public:
                                 .count();
     }
 
-    return recv_result == sizeof(frame);
+    if (static_cast<size_t>(recv_result) < sizeof(frame)) {
+      throw SocketError("Incomplete CAN FD frame received");
+    }
+    return true;
   }
 
   CanSocket(const CanSocket &) = delete;
