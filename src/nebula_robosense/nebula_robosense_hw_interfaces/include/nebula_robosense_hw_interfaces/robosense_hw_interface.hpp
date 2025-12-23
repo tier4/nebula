@@ -19,7 +19,6 @@
 #include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_robosense_common/robosense_common.hpp>
 
-#include <array>
 #include <functional>
 #include <memory>
 #include <string>
