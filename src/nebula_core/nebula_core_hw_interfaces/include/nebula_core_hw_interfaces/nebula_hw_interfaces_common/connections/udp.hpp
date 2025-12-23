@@ -21,6 +21,7 @@
 
 #include <nebula_core_common/util/errno.hpp>
 #include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/socket_utils.hpp>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -50,32 +51,6 @@
 namespace nebula::drivers::connections
 {
 
-class SocketError : public std::exception
-{
-public:
-  explicit SocketError(int err_no) : what_{util::errno_to_string(err_no)} {}
-
-  explicit SocketError(const std::string_view & msg) : what_(msg) {}
-
-  const char * what() const noexcept override { return what_.c_str(); }
-
-private:
-  std::string what_;
-};
-
-class UsageError : public std::runtime_error
-{
-public:
-  explicit UsageError(const std::string & msg) : std::runtime_error(msg) {}
-};
-
-inline util::expected<in_addr, UsageError> parse_ip(const std::string & ip)
-{
-  in_addr parsed_addr{};
-  bool valid = inet_aton(ip.c_str(), &parsed_addr);
-  if (!valid) return UsageError("Invalid IP address given");
-  return parsed_addr;
-}
 
 class UdpSocket
 {

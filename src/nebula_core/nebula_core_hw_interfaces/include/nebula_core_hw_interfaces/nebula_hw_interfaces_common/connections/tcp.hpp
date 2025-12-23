@@ -21,6 +21,7 @@
 
 #include <nebula_core_common/util/errno.hpp>
 #include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/socket_utils.hpp>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -52,32 +53,6 @@ namespace nebula::drivers::connections
 // causing potential conflicts, I will redefine them (or assume they might be moved later).
 // However, to keep it self-contained as requested "minimal dependencies", I'll include them.
 
-class TcpSocketError : public std::exception
-{
-public:
-  explicit TcpSocketError(int err_no) : what_{util::errno_to_string(err_no)} {}
-
-  explicit TcpSocketError(const std::string_view & msg) : what_(msg) {}
-
-  const char * what() const noexcept override { return what_.c_str(); }
-
-private:
-  std::string what_;
-};
-
-class TcpUsageError : public std::runtime_error
-{
-public:
-  explicit TcpUsageError(const std::string & msg) : std::runtime_error(msg) {}
-};
-
-inline util::expected<in_addr, TcpUsageError> parse_tcp_ip(const std::string & ip)
-{
-  in_addr parsed_addr{};
-  bool valid = inet_aton(ip.c_str(), &parsed_addr);
-  if (!valid) return TcpUsageError("Invalid IP address given");
-  return parsed_addr;
-}
 
 class TcpSocket
 {
@@ -115,11 +90,11 @@ class TcpSocket
     [[nodiscard]] int get() const { return sock_fd_; }
 
     template <typename T>
-    [[nodiscard]] util::expected<std::monostate, TcpSocketError> setsockopt(
+    [[nodiscard]] util::expected<std::monostate, SocketError> setsockopt(
       int level, int optname, const T & optval)
     {
       int result = ::setsockopt(sock_fd_, level, optname, &optval, sizeof(T));
-      if (result == -1) return TcpSocketError(errno);
+      if (result == -1) return SocketError(errno);
       return std::monostate{};
     }
   };
@@ -146,17 +121,17 @@ public:
     }
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd == -1) throw TcpSocketError(errno);
+    if (fd == -1) throw SocketError(errno);
     sock_fd_ = SockFd(fd);
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
-    in_addr target_in_addr = parse_tcp_ip(ip).value_or_throw();
+    in_addr target_in_addr = parse_ip(ip).value_or_throw();
     addr.sin_addr = target_in_addr;
 
     int result = ::connect(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
-    if (result == -1) throw TcpSocketError(errno);
+    if (result == -1) throw SocketError(errno);
 
     config_.target = {target_in_addr, port};
     poll_fd_.fd = sock_fd_.get();
@@ -170,7 +145,7 @@ public:
   {
     std::vector<uint8_t> buffer(n);
     ssize_t result = ::recv(sock_fd_.get(), buffer.data(), n, 0);
-    if (result < 0) throw TcpSocketError(errno);
+    if (result < 0) throw SocketError(errno);
     if (result == 0) return {};
     buffer.resize(result);
     return buffer;
@@ -186,11 +161,11 @@ public:
      */
     Builder(const std::string & target_ip, uint16_t target_port)
     {
-      in_addr target_in_addr = parse_tcp_ip(target_ip).value_or_throw();
+      in_addr target_in_addr = parse_ip(target_ip).value_or_throw();
       config_.target = {target_in_addr, target_port};
 
       int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-      if (sock_fd == -1) throw TcpSocketError(errno);
+      if (sock_fd == -1) throw SocketError(errno);
       sock_fd_ = SockFd{sock_fd};
     }
 
@@ -202,7 +177,7 @@ public:
     Builder && set_socket_buffer_size(size_t bytes)
     {
       if (bytes > static_cast<size_t>(INT32_MAX))
-        throw TcpUsageError("The maximum value supported (0x7FFFFFF) has been exceeded");
+        throw UsageError("The maximum value supported (0x7FFFFFF) has been exceeded");
 
       auto buf_size = static_cast<int>(bytes);
       sock_fd_.setsockopt(SOL_SOCKET, SO_RCVBUF, buf_size).value_or_throw();
@@ -231,7 +206,7 @@ public:
       addr.sin_addr = config_.target.ip;
 
       int result = ::connect(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
-      if (result == -1) throw TcpSocketError(errno);
+      if (result == -1) throw SocketError(errno);
 
       return TcpSocket{std::move(sock_fd_), config_};
     }
@@ -278,7 +253,7 @@ public:
   void send(const std::vector<uint8_t> & data)
   {
     ssize_t result = ::send(sock_fd_.get(), data.data(), data.size(), 0);
-    if (result == -1) throw TcpSocketError(errno);
+    if (result == -1) throw SocketError(errno);
   }
 
   TcpSocket(const TcpSocket &) = delete;
@@ -307,11 +282,11 @@ private:
 
       while (running_) {
         auto data_available = is_data_available();
-        if (!data_available.has_value()) throw TcpSocketError(data_available.error());
+        if (!data_available.has_value()) throw SocketError(data_available.error());
         if (!data_available.value()) continue;
 
         ssize_t recv_result = ::recv(sock_fd_.get(), buffer.data(), buffer.size(), 0);
-        if (recv_result < 0) throw TcpSocketError(errno);
+        if (recv_result < 0) throw SocketError(errno);
         if (recv_result == 0) {
           // Connection closed by peer
           running_ = false;

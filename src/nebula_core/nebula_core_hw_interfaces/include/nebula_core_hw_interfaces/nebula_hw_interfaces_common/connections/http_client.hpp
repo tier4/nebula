@@ -5,8 +5,10 @@
 
 #include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/tcp.hpp"
 
+#include <condition_variable>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -18,7 +20,7 @@ class HttpClient
 public:
   HttpClient(const std::string & host_ip, uint16_t port) : host_ip_(host_ip), port_(port) {}
 
-  std::string get(const std::string & endpoint)
+  std::string get(const std::string & endpoint, int timeout_ms = 1000)
   {
     TcpSocket socket = TcpSocket::Builder(host_ip_, port_).connect();
     std::stringstream request;
@@ -27,33 +29,25 @@ public:
     request << "Connection: close\r\n\r\n";
 
     std::string response_str;
+    std::mutex mtx;
+    std::condition_variable cv;
+    bool done = false;
 
     socket.subscribe([&](const std::vector<uint8_t> & data) {
+      std::lock_guard<std::mutex> lock(mtx);
       response_str.append(reinterpret_cast<const char *>(data.data()), data.size());
+      if (response_str.find("\r\n\r\n") != std::string::npos) {
+        done = true;
+        cv.notify_one();
+      }
     });
 
     std::string req_str = request.str();
     std::vector<uint8_t> req_bytes(req_str.begin(), req_str.end());
     socket.send(req_bytes);
 
-    // Wait for response (simple blocking implementation for now, as per requirements)
-    // In a real async system we might want something better, but this mimics the sync behavior
-    // of the previous driver for now.
-    // We wait until the connection is closed by the server or timeout.
-    // Since TcpSocket receive is in a thread, we need to wait.
-    // However, TcpSocket doesn't expose "closed" state easily in the callback.
-    // But standard HTTP/1.0 or Connection: close means server closes.
-    // TcpSocket's receive loop exits on 0 bytes read (close).
-    // We can check if socket is still open? TcpSocket doesn't have isOpen().
-    // We'll just wait a bit. Ideally TcpSocket should notify on close.
-    // For now, let's just wait for some data.
-
-    // Actually, the previous implementation was synchronous.
-    // We can just sleep a bit or wait for data.
-    // A better way with TcpSocket would be to have a future/promise, but TcpSocket is callback
-    // based.
-    // Let's assume the server responds quickly.
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::unique_lock<std::mutex> lock(mtx);
+    cv.wait_for(lock, std::chrono::milliseconds(timeout_ms), [&] { return done; });
 
     // Parse body
     auto body_pos = response_str.find("\r\n\r\n");
@@ -63,7 +57,7 @@ public:
     return "";
   }
 
-  std::string post(const std::string & endpoint, const std::string & body)
+  std::string post(const std::string & endpoint, const std::string & body, int timeout_ms = 1000)
   {
     TcpSocket socket = TcpSocket::Builder(host_ip_, port_).connect();
     std::stringstream request;
@@ -75,16 +69,25 @@ public:
     request << body;
 
     std::string response_str;
+    std::mutex mtx;
+    std::condition_variable cv;
+    bool done = false;
 
     socket.subscribe([&](const std::vector<uint8_t> & data) {
+      std::lock_guard<std::mutex> lock(mtx);
       response_str.append(reinterpret_cast<const char *>(data.data()), data.size());
+      if (response_str.find("\r\n\r\n") != std::string::npos) {
+        done = true;
+        cv.notify_one();
+      }
     });
 
     std::string req_str = request.str();
     std::vector<uint8_t> req_bytes(req_str.begin(), req_str.end());
     socket.send(req_bytes);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::unique_lock<std::mutex> lock(mtx);
+    cv.wait_for(lock, std::chrono::milliseconds(timeout_ms), [&] { return done; });
 
     auto body_pos = response_str.find("\r\n\r\n");
     if (body_pos != std::string::npos) {
