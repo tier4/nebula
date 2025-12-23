@@ -51,7 +51,6 @@
 namespace nebula::drivers::connections
 {
 
-
 class UdpSocket
 {
   struct Endpoint

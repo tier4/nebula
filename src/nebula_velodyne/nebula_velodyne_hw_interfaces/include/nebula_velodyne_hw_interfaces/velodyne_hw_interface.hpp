@@ -83,8 +83,6 @@ private:
 
     for (int retry = 0; retry < max_retries; ++retry) {
       try {
-
-
         std::string response = do_request();
         return nebula::util::expected<std::string, VelodyneStatus>(response);
       } catch (const std::exception & ex) {
@@ -92,8 +90,6 @@ private:
           return nebula::util::expected<std::string, VelodyneStatus>(
             VelodyneStatus::HTTP_CONNECTION_ERROR);
         }
-
-
 
         std::this_thread::sleep_for(std::chrono::milliseconds(retry_delay_ms));
       }

@@ -50,8 +50,6 @@
 namespace nebula::drivers::connections
 {
 
-
-
 class CanSocket
 {
   class SockFd

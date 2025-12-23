@@ -82,7 +82,7 @@ public:
         return response_str.substr(body_pos + 4);
       }
     }
-    
+
     return "";
   }
 
@@ -144,7 +144,7 @@ public:
         return response_str.substr(body_pos + 4);
       }
     }
-    
+
     return "";
   }
 
