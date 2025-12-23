@@ -786,20 +786,18 @@ HesaiStatus HesaiHwInterface::set_ptp_config_sync_http(
   int /*profile*/, int /*domain*/, int /*network*/, int /*logAnnounceInterval*/,
   int /*logSyncInterval*/, int /*logMinDelayReqInterval*/)
 {
-  // Not implemented in original code either?
-  // Original code had it but it was empty or just calling callback?
-  // I'll leave it as is or implement if I know the endpoint.
-  // The original code was using HttpClientDriver.
-  // I'll return OK for now as I don't see implementation in the viewed file.
-  // Wait, I should check if I missed it.
-  // The viewed file ended at line 800. I missed the end of the file!
-  // I should view the rest of the file.
-  return HesaiStatus::OK;
+  // TODO(drwnz): HTTP-based PTP configuration is not currently implemented.
+  // The HTTP endpoint for this functionality is not documented in the sensor API.
+  // Use the TCP-based set_ptp_config() method instead.
+  return HesaiStatus::NOT_IMPLEMENTED;
 }
 
 HesaiStatus HesaiHwInterface::set_sync_angle_sync_http(int /*enable*/, int /*angle*/)
 {
-  return HesaiStatus::OK;
+  // TODO(drwnz): HTTP-based sync angle configuration is not currently implemented.
+  // The HTTP endpoint for this functionality is not documented in the sensor API.
+  // Use the TCP-based set_sync_angle() method instead.
+  return HesaiStatus::NOT_IMPLEMENTED;
 }
 
 HesaiStatus HesaiHwInterface::get_lidar_monitor_async_http(
@@ -814,6 +812,319 @@ HesaiStatus HesaiHwInterface::get_lidar_monitor_async_http(
   }
   str_callback(result);
   return HesaiStatus::OK;
+}
+
+HesaiStatus HesaiHwInterface::check_and_set_config(
+  std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration,
+  std::shared_ptr<HesaiConfigBase> hesai_config_ptr)
+{
+  using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
+  logger_->debug("Start CheckAndSetConfig(HesaiConfig)!");
+#endif
+  const auto hesai_config = hesai_config_ptr->get();
+  auto current_return_mode = nebula::drivers::return_mode_from_int_hesai(
+    hesai_config.return_mode, sensor_configuration->sensor_model);
+  // Avoids spamming the sensor, which leads to failure when configuring it.
+  auto wait_time = 100ms;
+  if (sensor_configuration->return_mode != current_return_mode) {
+    std::stringstream ss;
+    ss << current_return_mode;
+    logger_->info("Current LiDAR return_mode: " + ss.str());
+    std::stringstream ss2;
+    ss2 << sensor_configuration->return_mode;
+    logger_->info("Current Configuration return_mode: " + ss2.str());
+    std::thread t([this, sensor_configuration] {
+      auto return_mode_int = nebula::drivers::int_from_return_mode_hesai(
+        sensor_configuration->return_mode, sensor_configuration->sensor_model);
+      if (return_mode_int < 0) {
+        logger_->error(
+          "Invalid Return Mode for this sensor. Please check your settings. Falling back to Dual "
+          "mode.");
+        return_mode_int = 2;
+      }
+      set_return_mode(return_mode_int);
+    });
+    t.join();
+    std::this_thread::sleep_for(wait_time);
+  }
+
+  auto current_rotation_speed = hesai_config.spin_rate;
+  if (sensor_configuration->rotation_speed != current_rotation_speed.value()) {
+    logger_->info(
+      "current lidar rotation_speed: " +
+      std::to_string(static_cast<int>(current_rotation_speed.value())));
+    logger_->info(
+      "current configuration rotation_speed: " +
+      std::to_string(sensor_configuration->rotation_speed));
+    if (use_http_set_spin_rate()) {
+      set_spin_speed_async_http(sensor_configuration->rotation_speed);
+    } else {
+      logger_->info(
+        "Setting up spin rate via TCP." + std::to_string(sensor_configuration->rotation_speed));
+      std::thread t(
+        [this, sensor_configuration] { set_spin_rate(sensor_configuration->rotation_speed); });
+      t.join();
+    }
+    std::this_thread::sleep_for(wait_time);
+  }
+
+  bool set_flg = false;
+  std::stringstream ss;
+  ss << static_cast<int>(hesai_config.dest_ipaddr[0]) << "."
+     << static_cast<int>(hesai_config.dest_ipaddr[1]) << "."
+     << static_cast<int>(hesai_config.dest_ipaddr[2]) << "."
+     << static_cast<int>(hesai_config.dest_ipaddr[3]);
+  auto current_host_addr = ss.str();
+  auto desired_host_addr = sensor_configuration->multicast_ip.empty()
+                             ? sensor_configuration->host_ip
+                             : sensor_configuration->multicast_ip;
+  if (desired_host_addr != current_host_addr) {
+    set_flg = true;
+    logger_->info("current lidar dest_ipaddr: " + current_host_addr);
+    logger_->info("current configuration host_ip: " + desired_host_addr);
+  }
+
+  auto current_host_dport = hesai_config.dest_LiDAR_udp_port;
+  if (sensor_configuration->data_port != current_host_dport.value()) {
+    set_flg = true;
+    logger_->info(
+      "current lidar dest_LiDAR_udp_port: " +
+      std::to_string(static_cast<int>(current_host_dport.value())));
+    logger_->info(
+      "current configuration data_port: " + std::to_string(sensor_configuration->data_port));
+  }
+
+  auto current_host_tport = hesai_config.dest_gps_udp_port;
+  if (sensor_configuration->gnss_port != current_host_tport.value()) {
+    set_flg = true;
+    logger_->info(
+      "current lidar dest_gps_udp_port: " +
+      std::to_string(static_cast<int>(current_host_tport.value())));
+    logger_->info(
+      "current configuration gnss_port: " + std::to_string(sensor_configuration->gnss_port));
+  }
+
+  if (set_flg) {
+    std::vector<std::string> list_string;
+    boost::split(list_string, desired_host_addr, boost::is_any_of("."));
+    std::thread t([this, sensor_configuration, list_string] {
+      set_destination_ip(
+        std::stoi(list_string[0]), std::stoi(list_string[1]), std::stoi(list_string[2]),
+        std::stoi(list_string[3]), sensor_configuration->data_port,
+        sensor_configuration->gnss_port);
+    });
+    t.join();
+    std::this_thread::sleep_for(wait_time);
+  }
+
+  if (sensor_configuration->sensor_model != SensorModel::HESAI_PANDARAT128) {
+    set_flg = true;
+    auto sensor_sync_angle = static_cast<int>(hesai_config.sync_angle.value() / 100);
+    auto config_sync_angle = sensor_configuration->sync_angle;
+    int sync_flg = 1;
+    if (config_sync_angle != sensor_sync_angle) {
+      set_flg = true;
+    }
+    if (sync_flg && set_flg) {
+      logger_->info("current lidar sync: " + std::to_string(hesai_config.sync));
+      logger_->info("current lidar sync_angle: " + std::to_string(sensor_sync_angle));
+      logger_->info("current configuration sync_angle: " + std::to_string(config_sync_angle));
+      std::thread t(
+        [this, sync_flg, config_sync_angle] { set_sync_angle(sync_flg, config_sync_angle); });
+      t.join();
+      std::this_thread::sleep_for(wait_time);
+    }
+
+    std::thread t([this, sensor_configuration] {
+      if (
+        sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR40P ||
+        sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR64 ||
+        sensor_configuration->sensor_model == SensorModel::HESAI_PANDARQT64 ||
+        sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT16 ||
+        sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32 ||
+        sensor_configuration->sensor_model == SensorModel::HESAI_PANDARXT32M) {
+        logger_->info("Trying to set Clock source to PTP");
+        set_clock_source(g_hesai_lidar_ptp_clock_source);
+      }
+      std::ostringstream tmp_ostringstream;
+      tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
+                        << ", Domain: " << std::to_string(sensor_configuration->ptp_domain)
+                        << ", Transport: " << sensor_configuration->ptp_transport_type
+                        << ", Switch Type: " << sensor_configuration->ptp_switch_type << " via TCP";
+      logger_->info(tmp_ostringstream.str());
+      set_ptp_config(
+        static_cast<int>(sensor_configuration->ptp_profile), sensor_configuration->ptp_domain,
+        static_cast<int>(sensor_configuration->ptp_transport_type),
+        static_cast<int>(sensor_configuration->ptp_switch_type), g_ptp_log_announce_interval,
+        g_ptp_sync_interval, g_ptp_log_min_delay_interval);
+      logger_->debug("Setting properties done");
+    });
+    logger_->debug("Waiting for thread to finish");
+
+    t.join();
+    logger_->debug("Thread finished");
+
+    switch (sensor_configuration_->sensor_model) {
+      case SensorModel::HESAI_PANDAR128_E4X:
+      case SensorModel::HESAI_PANDARQT128:
+      case SensorModel::HESAI_PANDARXT16:
+      case SensorModel::HESAI_PANDARXT32:
+      case SensorModel::HESAI_PANDARXT32M: {
+        uint8_t sensor_ptp_lock_threshold = get_ptp_lock_offset();
+        if (sensor_ptp_lock_threshold != sensor_configuration_->ptp_lock_threshold) {
+          NEBULA_LOG_STREAM(
+            logger_->info, "changing sensor PTP lock offset from "
+                             << static_cast<int>(sensor_ptp_lock_threshold) << " to "
+                             << static_cast<int>(sensor_configuration_->ptp_lock_threshold));
+          set_ptp_lock_offset(sensor_configuration_->ptp_lock_threshold);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+
+    std::this_thread::sleep_for(wait_time);
+  } else {  // AT128 only supports PTP setup via HTTP
+    logger_->info("Trying to set SyncAngle via HTTP");
+    set_sync_angle_sync_http(1, sensor_configuration->sync_angle);
+    std::ostringstream tmp_ostringstream;
+    tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
+                      << ", Domain: " << sensor_configuration->ptp_domain
+                      << ", Transport: " << sensor_configuration->ptp_transport_type << " via HTTP";
+    logger_->info(tmp_ostringstream.str());
+    set_ptp_config_sync_http(
+      static_cast<int>(sensor_configuration->ptp_profile), sensor_configuration->ptp_domain,
+      static_cast<int>(sensor_configuration->ptp_transport_type), g_ptp_log_announce_interval,
+      g_ptp_sync_interval, g_ptp_log_min_delay_interval);
+  }
+
+  if (
+    sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR128_E3X ||
+    sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
+    auto hires_currently_enabled = get_high_resolution_mode();
+
+    if (hires_currently_enabled != sensor_configuration->hires_mode) {
+      logger_->info("current lidar hires_mode: " + std::to_string(hires_currently_enabled));
+      logger_->info(
+        "current configuration hires_mode: " + std::to_string(sensor_configuration->hires_mode));
+
+      logger_->info("Setting hires_mode via TCP.");
+      set_high_resolution_mode(sensor_configuration->hires_mode);
+    }
+
+    if (sensor_configuration->sensor_model == SensorModel::HESAI_PANDAR128_E4X) {
+      auto blockage_detection_currently_enabled = get_up_close_blockage_detection();
+      bool blockage_detection_desired =
+        sensor_configuration->blockage_mask_horizontal_bin_size_mdeg.has_value();
+      if (blockage_detection_currently_enabled != blockage_detection_desired) {
+        logger_->info(
+          "current lidar up_close_blockage_detection: " +
+          std::to_string(blockage_detection_currently_enabled));
+        logger_->info(
+          "current configuration up_close_blockage_detection: " +
+          std::to_string(blockage_detection_desired));
+        set_up_close_blockage_detection(blockage_detection_desired);
+      }
+    }
+  }
+
+#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
+  logger_->debug("End CheckAndSetConfig(HesaiConfig)!");
+#endif
+  logger_->debug("GetAndCheckConfig(HesaiConfig) finished");
+
+  return Status::OK;
+}
+
+HesaiStatus HesaiHwInterface::check_and_set_config(
+  std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration,
+  HesaiLidarRangeAll hesai_lidar_range_all)
+{
+#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
+  logger_->debug("Start CheckAndSetConfig(HesaiLidarRangeAll)!");
+#endif
+  //*
+  // g_ptc_command_set_lidar_range
+  bool set_flg = false;
+  if (hesai_lidar_range_all.method != 0) {
+#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
+    logger_->debug(
+      "current hesai_lidar_range_all.method: " + std::to_string(hesai_lidar_range_all.method));
+#endif
+    set_flg = true;
+  } else {
+    auto current_cloud_min_angle_ddeg = hesai_lidar_range_all.start;
+    if (
+      static_cast<int>(sensor_configuration->cloud_min_angle * 10) !=
+      current_cloud_min_angle_ddeg.value()) {
+      set_flg = true;
+      logger_->info(
+        "current lidar range.start: " +
+        std::to_string(static_cast<int>(current_cloud_min_angle_ddeg.value())));
+      logger_->info(
+        "current configuration cloud_min_angle: " +
+        std::to_string(sensor_configuration->cloud_min_angle));
+    }
+
+    auto current_cloud_max_angle_ddeg = hesai_lidar_range_all.end;
+    if (
+      static_cast<int>(sensor_configuration->cloud_max_angle * 10) !=
+      current_cloud_max_angle_ddeg.value()) {
+      set_flg = true;
+      logger_->info(
+        "current lidar range.end: " +
+        std::to_string(static_cast<int>(current_cloud_max_angle_ddeg.value())));
+      logger_->info(
+        "current configuration cloud_max_angle: " +
+        std::to_string(sensor_configuration->cloud_max_angle));
+    }
+  }
+
+  if (set_flg) {
+    std::thread t([this, sensor_configuration] {
+      set_lidar_range(
+        static_cast<int>(sensor_configuration->cloud_min_angle * 10),
+        static_cast<int>(sensor_configuration->cloud_max_angle * 10));
+    });
+    t.join();
+  }
+
+#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
+  logger_->debug("End CheckAndSetConfig(HesaiLidarRangeAll)!");
+#endif
+  return Status::WAITING_FOR_SENSOR_RESPONSE;
+}
+
+HesaiStatus HesaiHwInterface::check_and_set_config()
+{
+#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
+  logger_->debug("Start CheckAndSetConfig!");
+#endif
+  std::thread t([this] {
+    auto result = get_config();
+    check_and_set_config(
+      std::static_pointer_cast<const HesaiSensorConfiguration>(sensor_configuration_), result);
+  });
+  t.join();
+
+  if (
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
+    return Status::OK;
+  }
+
+  std::thread t2([this] {
+    auto result = get_lidar_range();
+    check_and_set_config(
+      std::static_pointer_cast<const HesaiSensorConfiguration>(sensor_configuration_), result);
+  });
+  t2.join();
+#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
+  logger_->debug("End CheckAndSetConfig!");
+#endif
+  return Status::OK;
 }
 
 void HesaiHwInterface::str_cb(const std::string & str)
@@ -853,25 +1164,49 @@ std::pair<HesaiStatus, std::string> HesaiHwInterface::unwrap_http_response(
   return {HesaiStatus::OK, response};
 }
 
+/*
+0: Pandar40P
+2: Pandar64
+3: Pandar 128
+15: PandarQT
+17: Pandar40M
+20: PandarMind64 (Pandar64)
+25: Pandar XT32
+26: Pandar XT16
+32: QT128C2X
+38: ?
+40: AT128?
+42: OT128
+48: ?
+*/
 int HesaiHwInterface::nebula_model_to_hesai_model_no(nebula::drivers::SensorModel model)
 {
   switch (model) {
     case SensorModel::HESAI_PANDAR40P:
-      return 40;
-    case SensorModel::HESAI_PANDAR64:
-      return 64;
-    case SensorModel::HESAI_PANDAR128_E4X:
-      return 128;  // Check this mapping
-    case SensorModel::HESAI_PANDARQT128:
-      return 128;  // Check this mapping
-    case SensorModel::HESAI_PANDARXT32:
-      return 32;
-    case SensorModel::HESAI_PANDARXT16:
-      return 16;
-    case SensorModel::HESAI_PANDARAT128:
-      return 128;  // Check this mapping
-    default:
       return 0;
+    case SensorModel::HESAI_PANDAR64:
+      return 2;
+    case SensorModel::HESAI_PANDARQT64:  // check required
+      return 15;
+    case SensorModel::HESAI_PANDAR40M:
+      return 17;
+    case SensorModel::HESAI_PANDARXT32:
+      return 25;
+    case SensorModel::HESAI_PANDARXT16:
+      return 26;
+    case SensorModel::HESAI_PANDARQT128:
+      return 32;
+    case SensorModel::HESAI_PANDARXT32M:
+      return 38;
+    case SensorModel::HESAI_PANDAR128_E3X:  // check required
+      return 40;
+    case SensorModel::HESAI_PANDAR128_E4X:  // OT128
+      return 42;
+    case SensorModel::HESAI_PANDARAT128:
+      return 48;
+    // All other vendors and unknown sensors
+    default:
+      return -1;
   }
 }
 
@@ -885,22 +1220,52 @@ void HesaiHwInterface::set_target_model(nebula::drivers::SensorModel model)
   target_model_no_ = nebula_model_to_hesai_model_no(model);
 }
 
-bool HesaiHwInterface::use_http_set_spin_rate(int /*model*/)
+bool HesaiHwInterface::use_http_set_spin_rate(int model)
 {
-  return false;  // Implement based on logic
+  switch (model) {
+    case 0:
+    case 2:
+    case 15:
+    case 17:
+    default:
+      return true;
+    case 3:
+    case 25:
+    case 26:
+    case 32:
+    case 38:
+    case 42:
+    case 48:
+      return false;
+  }
 }
 
-bool HesaiHwInterface::use_http_set_spin_rate() const
+[[nodiscard]] bool HesaiHwInterface::use_http_set_spin_rate() const
 {
   return use_http_set_spin_rate(target_model_no_);
 }
 
-bool HesaiHwInterface::use_http_get_lidar_monitor(int /*model*/)
+bool HesaiHwInterface::use_http_get_lidar_monitor(int model)
 {
-  return false;  // Implement based on logic
+  switch (model) {
+    case 0:
+    case 2:
+    case 15:
+    case 17:
+    case 32:
+    default:
+      return true;
+    case 3:
+    case 25:
+    case 26:
+    case 38:
+    case 42:
+    case 48:
+      return false;
+  }
 }
 
-bool HesaiHwInterface::use_http_get_lidar_monitor() const
+[[nodiscard]] bool HesaiHwInterface::use_http_get_lidar_monitor() const
 {
   return use_http_get_lidar_monitor(target_model_no_);
 }
