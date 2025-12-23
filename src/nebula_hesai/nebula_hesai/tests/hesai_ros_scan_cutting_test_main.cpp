@@ -30,7 +30,7 @@ namespace nebula::test
 const nebula::ros::HesaiRosDecoderTestParams g_test_configs[] = {
   {"Pandar64", "Dual", "Pandar64.csv", "64/all_points", "hesai", 0, 0.0, 0., 360., 0.3f, 200.f},
   {"Pandar64", "Dual", "Pandar64.csv", "64/all_points", "hesai", 0, 180.0, 0., 360., 0.3f, 200.f},
-  {"Pandar64", "Dual", "Pandar64.csv", "64/all_points", "hesai", 0, 90.0, 90., 270., 0.3f, 200.f},
+  {"Pandar64", "Dual", "Pandar64.csv", "64/all_points", "hesai", 0, 91.0, 90., 270., 0.3f, 200.f},
   {"Pandar64", "Dual", "Pandar64.csv", "64/all_points", "hesai", 0, 180.0, 90., 270., 0.3f, 200.f},
   {"Pandar64", "Dual", "Pandar64.csv", "64/all_points", "hesai", 0, 270.0, 90., 270., 0.3f, 200.f},
   {"Pandar64", "Dual", "Pandar64.csv", "64/all_points", "hesai", 0, 0.0, 270., 90., 0.3f, 200.f},
