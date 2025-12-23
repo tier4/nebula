@@ -213,6 +213,13 @@ public:
     if (!result.has_value()) throw SocketError(result.error());
   }
 
+  void set_timestamping(bool enable)
+  {
+    int timestamping = enable ? 1 : 0;
+    auto result = sock_fd_.setsockopt(SOL_SOCKET, SO_TIMESTAMP, timestamping);
+    if (!result.has_value()) throw SocketError(result.error());
+  }
+
   void set_filters(const std::vector<can_filter> & filters)
   {
     int result = ::setsockopt(

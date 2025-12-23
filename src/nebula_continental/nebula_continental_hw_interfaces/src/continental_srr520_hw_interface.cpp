@@ -56,10 +56,9 @@ Status ContinentalSRR520HwInterface::sensor_interface_start()
     can_socket_ = std::make_unique<connections::CanSocket>(
       connections::CanSocket::Builder(config_ptr_->interface).bind());
     can_socket_->set_fd_mode(true);
+    can_socket_->set_timestamping(true);
+    can_socket_->set_filters(parse_can_filters(config_ptr_->filters));
 
-    // TODO(davidwong): Implement filter parsing if needed.
-    // For now, we'll skip filters or implement a simple parser if config_ptr_->filters is used.
-    // can_socket_->set_filters(...);
     logger_->info(std::string("applied filters: ") + config_ptr_->filters);
 
     sensor_interface_active_ = true;
@@ -93,6 +92,7 @@ bool ContinentalSRR520HwInterface::send_frame(const std::array<uint8_t, N> & dat
 void ContinentalSRR520HwInterface::receive_loop()
 {
   std::chrono::nanoseconds receiver_timeout_nsec;
+  bool use_bus_time = false;
 
   while (true) {
     auto packet_msg_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
@@ -101,6 +101,7 @@ void ContinentalSRR520HwInterface::receive_loop()
       std::lock_guard lock(receiver_mutex_);
       receiver_timeout_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::duration<double>(config_ptr_->receiver_timeout_sec));
+      use_bus_time = config_ptr_->use_bus_time;
       if (!sensor_interface_active_) {
         break;
       }
@@ -115,7 +116,7 @@ void ContinentalSRR520HwInterface::receive_loop()
       }
 
       uint64_t stamp_ns = metadata.timestamp_ns;
-      if (stamp_ns == 0) {
+      if (!use_bus_time || stamp_ns == 0) {
         stamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
                      std::chrono::system_clock::now().time_since_epoch())
                      .count();
@@ -128,14 +129,15 @@ void ContinentalSRR520HwInterface::receive_loop()
         logger_->error("CAN FD message is an error frame");
         continue;
       }
-      std::copy(frame.data, frame.data + frame.len, packet_msg_ptr->data.begin() + 4);
+
       packet_msg_ptr->data.resize(frame.len + 4);
+
       uint32_t id = frame.can_id & CAN_EFF_MASK;  // Use mask for ID
       packet_msg_ptr->data[0] = (id & 0xFF000000) >> 24;
       packet_msg_ptr->data[1] = (id & 0x00FF0000) >> 16;
       packet_msg_ptr->data[2] = (id & 0x0000FF00) >> 8;
       packet_msg_ptr->data[3] = (id & 0x000000FF) >> 0;
-      packet_msg_ptr->data.resize(frame.len + 4);
+
       std::copy(frame.data, frame.data + frame.len, packet_msg_ptr->data.begin() + 4);
     } catch (const std::exception & ex) {
       logger_->error(std::string("Error receiving CAN FD message: ") + ex.what());
@@ -376,6 +378,49 @@ Status ContinentalSRR520HwInterface::set_vehicle_dynamics(
   } else {
     return Status::CAN_CONNECTION_ERROR;
   }
+}
+
+std::vector<can_filter> ContinentalSRR520HwInterface::parse_can_filters(
+  const std::string & filters_str)
+{
+  std::vector<can_filter> filters;
+  if (filters_str.empty()) {
+    return filters;
+  }
+
+  using tokenizer = boost::tokenizer<boost::char_separator<char>>;
+  boost::char_separator<char> sep_comma(",");
+  tokenizer tokens_comma(filters_str, sep_comma);
+
+  for (const auto & part : tokens_comma) {
+    boost::char_separator<char> sep_colon(":");
+    tokenizer tokens_colon(part, sep_colon);
+
+    auto it = tokens_colon.begin();
+    if (it == tokens_colon.end()) {
+      continue;
+    }
+
+    try {
+      can_filter filter{};
+      filter.can_id = std::stoul(*it, nullptr, 0);
+      if (++it != tokens_colon.end()) {
+        filter.can_mask = std::stoul(*it, nullptr, 0);
+      } else {
+        if (filter.can_id > CAN_SFF_MASK) {
+          filter.can_id |= CAN_EFF_FLAG;
+          filter.can_mask = CAN_EFF_MASK | CAN_EFF_FLAG | CAN_RTR_FLAG;
+        } else {
+          filter.can_mask = CAN_SFF_MASK | CAN_EFF_FLAG | CAN_RTR_FLAG;
+        }
+      }
+      filters.push_back(filter);
+    } catch (const std::exception & ex) {
+      logger_->error("Failed to parse CAN filter: " + part + " (" + ex.what() + ")");
+    }
+  }
+
+  return filters;
 }
 
 }  // namespace nebula::drivers::continental_srr520
