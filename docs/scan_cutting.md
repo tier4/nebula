@@ -7,10 +7,10 @@ Cases that are violating the above assumptions are marked with ⛔ in the below 
 
 ## Action definitions
 
-| Action | Description     | Modified State           |
-| ------ | --------------- | ------------------------ |
-| `T1`   | Reset timestamp | None                     |
-| `E0`   | Emit scan       | $buf \leftarrow 1 - buf$ |
+| Action | Description                                    | Modified State               |
+| ------ | ---------------------------------------------- | ---------------------------- |
+| `Ti`   | Reset timestamp of buffer $i$                  | None                         |
+| `Ei`   | Emit scan buffer $i$, and change active buffer | $buf \leftarrow buf_{1 - i}$ |
 
 ## Cutting in FoV
 
