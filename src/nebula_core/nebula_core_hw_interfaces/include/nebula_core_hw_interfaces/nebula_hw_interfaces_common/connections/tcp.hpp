@@ -50,49 +50,6 @@ namespace nebula::drivers::connections
 
 class TcpSocket
 {
-  struct Endpoint
-  {
-    in_addr ip;
-    /// In host byte order.
-    uint16_t port;
-  };
-
-  class SockFd
-  {
-    static const int uninitialized = -1;
-    int sock_fd_;
-
-  public:
-    SockFd() : sock_fd_{uninitialized} {}
-    explicit SockFd(int sock_fd) : sock_fd_{sock_fd} {}
-    SockFd(SockFd && other) noexcept : sock_fd_{other.sock_fd_} { other.sock_fd_ = uninitialized; }
-
-    SockFd(const SockFd &) = delete;
-    SockFd & operator=(const SockFd &) = delete;
-    SockFd & operator=(SockFd && other) noexcept
-    {
-      std::swap(sock_fd_, other.sock_fd_);
-      return *this;
-    };
-
-    ~SockFd()
-    {
-      if (sock_fd_ == uninitialized) return;
-      ::close(sock_fd_);
-    }
-
-    [[nodiscard]] int get() const { return sock_fd_; }
-
-    template <typename T>
-    [[nodiscard]] util::expected<std::monostate, SocketError> setsockopt(
-      int level, int optname, const T & optval)
-    {
-      int result = ::setsockopt(sock_fd_, level, optname, &optval, sizeof(T));
-      if (result == -1) return SocketError(errno);
-      return std::monostate{};
-    }
-  };
-
   struct SocketConfig
   {
     int32_t polling_interval_ms{10};
@@ -131,6 +88,8 @@ public:
     poll_fd_.fd = sock_fd_.get();
   }
 
+  void open(const Endpoint & target) { open(to_string(target.ip), target.port); }
+
   bool isOpen() const { return sock_fd_.get() != -1; }
 
   void close() { sock_fd_ = SockFd(); }
@@ -157,6 +116,15 @@ public:
     {
       in_addr target_in_addr = parse_ip(target_ip).value_or_throw();
       config_.target = {target_in_addr, target_port};
+
+      int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+      if (sock_fd == -1) throw SocketError(errno);
+      sock_fd_ = SockFd{sock_fd};
+    }
+
+    explicit Builder(const Endpoint & target)
+    {
+      config_.target = target;
 
       int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
       if (sock_fd == -1) throw SocketError(errno);
@@ -295,9 +263,7 @@ private:
 
   util::expected<bool, int> is_data_available()
   {
-    int status = poll(&poll_fd_, 1, config_.polling_interval_ms);
-    if (status == -1) return errno;
-    return (poll_fd_.revents & POLLIN) && (status > 0);
+    return is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
   }
 
   SockFd sock_fd_;
