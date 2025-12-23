@@ -56,6 +56,11 @@ class HesaiRosWrapper final : public rclcpp::Node
     util::RateLimiter rate_limiter;
   };
 
+  struct ReplayState
+  {
+    rclcpp::Time last_scan_timestamp_;
+  };
+
 public:
   explicit HesaiRosWrapper(const rclcpp::NodeOptions & options);
 
@@ -122,6 +127,9 @@ private:
   rclcpp::Subscription<pandar_msgs::msg::PandarScan>::SharedPtr packets_sub_{};
 
   bool launch_hw_;
+  /// @brief Only exists if launch_hw_ is false. Tracks replay state, e.g. to reset state when a
+  /// rosbag is restarted.
+  std::optional<ReplayState> replay_state_;
 
   std::optional<SyncToolingPlugin> sync_tooling_plugin_;
 

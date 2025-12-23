@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <mutex>
 #include <utility>
 
 #if defined(__clang__)
@@ -101,17 +102,29 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
 void HesaiDecoderWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config)
 {
-  std::lock_guard lock(mtx_driver_ptr_);
-  driver_ptr_ = initialize_driver(new_config, calibration_cfg_ptr_);
-  sensor_cfg_ = new_config;
+  {
+    std::lock_guard lock(mtx_driver_ptr_);
+    sensor_cfg_ = new_config;
+  }
+  reset_decoder();
 }
 
 void HesaiDecoderWrapper::on_calibration_change(
   const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> & new_calibration)
 {
+  {
+    std::lock_guard lock(mtx_driver_ptr_);
+    calibration_cfg_ptr_ = new_calibration;
+  }
+  reset_decoder();
+}
+
+void HesaiDecoderWrapper::reset_decoder()
+{
   std::lock_guard lock(mtx_driver_ptr_);
-  driver_ptr_ = initialize_driver(sensor_cfg_, new_calibration);
-  calibration_cfg_ptr_ = new_calibration;
+  current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
+  driver_ptr_ = initialize_driver(sensor_cfg_, calibration_cfg_ptr_);
+  current_scan_perf_counters_ = {};
 }
 
 drivers::PacketDecodeResult HesaiDecoderWrapper::process_cloud_packet(
