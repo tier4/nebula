@@ -21,6 +21,7 @@
 
 #include <nebula_core_common/util/errno.hpp>
 #include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/socket_utils.hpp>
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
@@ -49,24 +50,7 @@
 namespace nebula::drivers::connections
 {
 
-class CanSocketError : public std::exception
-{
-public:
-  explicit CanSocketError(int err_no) : what_{util::errno_to_string(err_no)} {}
 
-  explicit CanSocketError(const std::string_view & msg) : what_(msg) {}
-
-  const char * what() const noexcept override { return what_.c_str(); }
-
-private:
-  std::string what_;
-};
-
-class CanUsageError : public std::runtime_error
-{
-public:
-  explicit CanUsageError(const std::string & msg) : std::runtime_error(msg) {}
-};
 
 class CanSocket
 {
@@ -97,11 +81,11 @@ class CanSocket
     [[nodiscard]] int get() const { return sock_fd_; }
 
     template <typename T>
-    [[nodiscard]] util::expected<std::monostate, CanSocketError> setsockopt(
+    [[nodiscard]] util::expected<std::monostate, SocketError> setsockopt(
       int level, int optname, const T & optval)
     {
       int result = ::setsockopt(sock_fd_, level, optname, &optval, sizeof(T));
-      if (result == -1) return CanSocketError(errno);
+      if (result == -1) return SocketError(errno);
       return std::monostate{};
     }
   };
@@ -131,7 +115,7 @@ public:
       config_.interface_name = interface_name;
 
       int sock_fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-      if (sock_fd == -1) throw CanSocketError(errno);
+      if (sock_fd == -1) throw SocketError(errno);
       sock_fd_ = SockFd{sock_fd};
     }
 
@@ -153,14 +137,14 @@ public:
     {
       ifreq ifr{};
       std::strncpy(ifr.ifr_name, config_.interface_name.c_str(), IFNAMSIZ - 1);
-      if (ioctl(sock_fd_.get(), SIOCGIFINDEX, &ifr) == -1) throw CanSocketError(errno);
+      if (ioctl(sock_fd_.get(), SIOCGIFINDEX, &ifr) == -1) throw SocketError(errno);
 
       sockaddr_can addr{};
       addr.can_family = AF_CAN;
       addr.can_ifindex = ifr.ifr_ifindex;
 
       int result = ::bind(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
-      if (result == -1) throw CanSocketError(errno);
+      if (result == -1) throw SocketError(errno);
 
       return CanSocket{std::move(sock_fd_), config_};
     }
@@ -213,22 +197,22 @@ public:
   void send(const can_frame & frame)
   {
     ssize_t result = ::write(sock_fd_.get(), &frame, sizeof(frame));
-    if (result == -1) throw CanSocketError(errno);
-    if (result != sizeof(frame)) throw CanSocketError("Incomplete CAN frame write");
+    if (result == -1) throw SocketError(errno);
+    if (result != sizeof(frame)) throw SocketError("Incomplete CAN frame write");
   }
 
   void send_fd(const canfd_frame & frame)
   {
     ssize_t result = ::write(sock_fd_.get(), &frame, sizeof(frame));
-    if (result == -1) throw CanSocketError(errno);
-    if (result != sizeof(frame)) throw CanSocketError("Incomplete CAN FD frame write");
+    if (result == -1) throw SocketError(errno);
+    if (result != sizeof(frame)) throw SocketError("Incomplete CAN FD frame write");
   }
 
   void set_fd_mode(bool enable)
   {
     int fd_mode = enable ? 1 : 0;
     auto result = sock_fd_.setsockopt(SOL_CAN_RAW, CAN_RAW_FD_FRAMES, fd_mode);
-    if (!result.has_value()) throw CanSocketError(result.error());
+    if (!result.has_value()) throw SocketError(result.error());
   }
 
   void set_filters(const std::vector<can_filter> & filters)
@@ -236,7 +220,7 @@ public:
     int result = ::setsockopt(
       sock_fd_.get(), SOL_CAN_RAW, CAN_RAW_FILTER, filters.data(),
       filters.size() * sizeof(can_filter));
-    if (result == -1) throw CanSocketError(errno);
+    if (result == -1) throw SocketError(errno);
   }
 
   bool receive_fd(canfd_frame & frame, std::chrono::nanoseconds timeout)
@@ -250,7 +234,7 @@ public:
     pollfd pfd{sock_fd_.get(), POLLIN, 0};
     int timeout_ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count();
     int status = poll(&pfd, 1, timeout_ms);
-    if (status == -1) throw CanSocketError(errno);
+    if (status == -1) throw SocketError(errno);
     if (status == 0) return false;
 
     // To get timestamps, we should use recvmsg, but for now let's just use system time
@@ -274,7 +258,7 @@ public:
     msg.msg_flags = 0;
 
     ssize_t recv_result = recvmsg(sock_fd_.get(), &msg, 0);
-    if (recv_result < 0) throw CanSocketError(errno);
+    if (recv_result < 0) throw SocketError(errno);
 
     metadata.timestamp_ns = 0;
     for (struct cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
@@ -318,12 +302,12 @@ private:
     receive_thread_ = std::thread([this]() {
       while (running_) {
         auto data_available = is_data_available();
-        if (!data_available.has_value()) throw CanSocketError(data_available.error());
+        if (!data_available.has_value()) throw SocketError(data_available.error());
         if (!data_available.value()) continue;
 
         can_frame frame{};
         ssize_t recv_result = ::read(sock_fd_.get(), &frame, sizeof(frame));
-        if (recv_result < 0) throw CanSocketError(errno);
+        if (recv_result < 0) throw SocketError(errno);
         if (recv_result < static_cast<ssize_t>(sizeof(frame)))
           continue;  // Ignore incomplete frames
 
