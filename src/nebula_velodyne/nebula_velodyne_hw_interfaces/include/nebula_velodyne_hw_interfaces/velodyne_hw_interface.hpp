@@ -83,12 +83,9 @@ private:
 
     for (int retry = 0; retry < max_retries; ++retry) {
       try {
-        // if (!client->client()->isOpen()) {
-        //   client->client()->open();
-        // }
+
 
         std::string response = do_request();
-        // client->client()->close();
         return nebula::util::expected<std::string, VelodyneStatus>(response);
       } catch (const std::exception & ex) {
         if (retry == max_retries - 1) {
@@ -96,14 +93,7 @@ private:
             VelodyneStatus::HTTP_CONNECTION_ERROR);
         }
 
-        // if (client->client()->isOpen()) {
-        //   try {
-        //     client->client()->close();
-        //   } catch (const std::exception & ex) {
-        //     return nebula::util::expected<std::string, VelodyneStatus>(
-        //       VelodyneStatus::HTTP_CONNECTION_ERROR);
-        //   }
-        // }
+
 
         std::this_thread::sleep_for(std::chrono::milliseconds(retry_delay_ms));
       }
