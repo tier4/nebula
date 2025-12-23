@@ -15,6 +15,13 @@
 
 namespace nebula::drivers::connections
 {
+/**
+ * @brief A simple HTTP/1.1 client for GET and POST requests.
+ *
+ * @note This client only supports responses with a Content-Length header.
+ *       Responses using Transfer-Encoding: chunked are not supported and
+ *       will result in an empty or partial response body.
+ */
 class HttpClient
 {
 public:
