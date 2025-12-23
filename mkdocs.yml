@@ -19,6 +19,7 @@ theme:
     - navigation.top
     - search.suggest
     - search.highlight
+    - content.math.jax
   palette:
     - scheme: default
       primary: white
@@ -183,6 +184,7 @@ nav:
 
 ### Extra Settings ###
 plugins:
+  - drawio
   - macros:
       module_name: mkdocs_macros
       render_by_default: false
@@ -276,3 +278,10 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.highlight
   - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - js/mathjax.js
+  - js/drawio-reload.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
