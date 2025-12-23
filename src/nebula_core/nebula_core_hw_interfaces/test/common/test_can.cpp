@@ -22,7 +22,7 @@ TEST(TestCan, TestLifecycle)
     auto sock = CanSocket::Builder(g_can_interface).bind();
     sock.subscribe([](const auto &) {});
     sock.unsubscribe();
-  } catch (const CanSocketError &) {
+  } catch (const SocketError &) {
     GTEST_SKIP() << "Could not bind to " << g_can_interface << ", skipping CAN tests";
   }
 }
@@ -58,7 +58,7 @@ TEST(TestCan, TestSendReceive)
     }
 
     ASSERT_TRUE(received);
-  } catch (const CanSocketError &) {
+  } catch (const SocketError &) {
     GTEST_SKIP() << "Could not bind to " << g_can_interface << ", skipping CAN tests";
   }
 }
