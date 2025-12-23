@@ -15,6 +15,9 @@
 #pragma once
 
 #include "nebula_core_decoders/angles.hpp"
+#include "nebula_core_decoders/scan_cutter/fsm_cut_at_fov_end.hpp"
+#include "nebula_core_decoders/scan_cutter/fsm_cut_in_fov.hpp"
+#include "nebula_core_decoders/scan_cutter/types.hpp"
 
 #include <algorithm>
 #include <array>
@@ -24,9 +27,7 @@
 #include <cstdint>
 #include <fstream>
 #include <functional>
-#include <iostream>
 #include <optional>
-#include <ostream>
 #include <variant>
 
 namespace nebula::drivers
@@ -38,34 +39,31 @@ class ScanCutter
 public:
   static constexpr int32_t max_angle = 360 * AngleUnit;
   static constexpr uint8_t n_buffers = 2;
-  using buffer_index_t = uint8_t;
+  using buffer_index_t = scan_cutter::buffer_index_t;
+
   using publish_callback_t = std::function<void(buffer_index_t)>;
   using set_timestamp_callback_t = std::function<void(buffer_index_t)>;
 
 private:
+  template <typename T>
+  using AllSame = scan_cutter::AllSame<T>;
+  using Different = scan_cutter::Different;
+
+  using ChannelBufferState = scan_cutter::ChannelBufferState;
+  using ChannelFovState = scan_cutter::ChannelFovState;
+  using TransitionActions = scan_cutter::TransitionActions;
+
   struct State
   {
-    int32_t last_azimuth_enc;
+    /// The buffer being scheduled for emission after the next cut.
     buffer_index_t current_buffer_index;
+    /// The last processed azimuth for each channel.
     std::array<int32_t, NChannels> channel_last_azimuths;
+    /// Whether each channel is in the FoV.
     std::array<bool, NChannels> channels_in_fov;
+    /// The buffer index for each channel.
     std::array<buffer_index_t, NChannels> channel_buffer_indices;
-    // Track whether each buffer's timestamp has been set since its last publish
-    std::array<bool, n_buffers> timestamp_set_since_publish;
   };
-
-  template <typename T>
-  struct AllSame
-  {
-    T value;
-  };
-
-  struct Different
-  {
-  };
-
-  using ChannelBufferState = std::variant<AllSame<buffer_index_t>, Different>;
-  using ChannelFovState = std::variant<AllSame<bool>, Different>;
 
   int32_t cut_angle_out_;
   int32_t fov_start_out_;
@@ -80,78 +78,27 @@ private:
 
   [[nodiscard]] static buffer_index_t buffer_index_add(buffer_index_t buffer_index, int32_t offset)
   {
-    return (static_cast<int32_t>(buffer_index) + offset) % n_buffers;
+    return static_cast<buffer_index_t>((buffer_index + offset) % n_buffers);
   }
 
-  void debug_print(
-    size_t step_count, bool is_case_1, bool is_case_2, bool is_case_3, bool should_publish,
-    bool has_360_fov, bool cuts_at_fov_end, bool reset_timestamp_on_fov_start,
-    bool was_out_of_fov_before, bool is_fully_in_fov_after, bool is_partially_in_fov_after,
-    bool entered_fov, bool should_reset_timestamp) const
+  void initialize_state(const std::array<int32_t, NChannels> & channel_azimuths_out)
   {
-    // return;
-    static size_t print_count = 0;
+    state_ = State{};
+    state_->current_buffer_index = 0;
+    state_->channel_last_azimuths = channel_azimuths_out;
+    state_->channels_in_fov.fill(false);
+    state_->channel_buffer_indices.fill(0);
 
-    if (print_count == 0) {
-      debug_file_ << "print_count,step_count,is_case_1,is_case_2,is_case_3,should_publish,"
-                     "has_360_fov,cuts_at_fov_end,reset_timestamp_on_fov_start,"
-                     "was_out_of_fov_before,is_fully_in_fov_after,is_partially_in_fov_after,"
-                     "entered_fov,should_reset_timestamp,"
-                     "cut_angle_out_,fov_start_out_,fov_end_out_,current_buffer_index,";
-      for (size_t channel_id = 0; channel_id < NChannels; ++channel_id) {
-        debug_file_ << "channel_buffer_indices[" << channel_id << "],";
-      }
-      debug_file_ << "last_azimuth_enc,";
-      for (size_t channel_id = 0; channel_id < NChannels; ++channel_id) {
-        debug_file_ << "channel_last_azimuths[" << channel_id << "],";
-      }
-      debug_file_ << "\n" << std::flush;
-    }
-
-    print_count++;
-
-    debug_file_ << print_count << "," << step_count << "," << (is_case_1 ? "1" : "0") << ","
-                << (is_case_2 ? "1" : "0") << "," << (is_case_3 ? "1" : "0") << ","
-                << (should_publish ? "1" : "0") << "," << (has_360_fov ? "1" : "0") << ","
-                << (cuts_at_fov_end ? "1" : "0") << ","
-                << (reset_timestamp_on_fov_start ? "1" : "0") << ","
-                << (was_out_of_fov_before ? "1" : "0") << "," << (is_fully_in_fov_after ? "1" : "0")
-                << "," << (is_partially_in_fov_after ? "1" : "0") << ","
-                << (entered_fov ? "1" : "0") << "," << (should_reset_timestamp ? "1" : "0") << ",";
-
-    debug_file_ << cut_angle_out_ << ",";
-    debug_file_ << fov_start_out_ << ",";
-    debug_file_ << fov_end_out_ << ",";
-
-    debug_file_ << (state_->current_buffer_index ? "1" : "0") << ",";
-
-    for (size_t channel_id = 0; channel_id < NChannels; ++channel_id) {
-      buffer_index_t buffer_index = state_->channel_buffer_indices[channel_id];
-      debug_file_ << (buffer_index ? "1" : "0") << ",";
-    }
-
-    debug_file_ << state_->last_azimuth_enc << ",";
-    for (size_t channel_id = 0; channel_id < NChannels; ++channel_id) {
-      debug_file_ << state_->channel_last_azimuths[channel_id] << ",";
-    }
-
-    debug_file_ << std::endl;
-  }
-
-  void initialize_state(
-    int32_t block_azimuth_enc, const std::array<int32_t, NChannels> & channel_azimuths_out)
-  {
-    state_ = State{
-      block_azimuth_enc, 0, channel_azimuths_out, {false}, {0}, {false, false},
-    };
-
-    bool block_intersects_cut = does_block_intersect_cut(block_azimuth_enc, channel_azimuths_out);
+    bool block_intersects_cut = does_block_intersect_cut(channel_azimuths_out);
 
     if (!block_intersects_cut) {
       // All points are in the same scan, assign to buffer 0.
       state_->channel_buffer_indices.fill(0);
-      set_timestamp_callback_(0);
-      state_->timestamp_set_since_publish[0] = true;
+
+      bool overlaps_fov = does_block_intersect_fov(channel_azimuths_out);
+      if (overlaps_fov) {
+        set_timestamp_callback_(0);
+      }
       return;
     }
 
@@ -166,10 +113,26 @@ private:
       state_->channels_in_fov[channel_id] = is_point_inside_fov(channel_azimuth_out);
     }
 
-    set_timestamp_callback_(0);
-    set_timestamp_callback_(1);
-    state_->timestamp_set_since_publish[0] = true;
-    state_->timestamp_set_since_publish[1] = true;
+    bool overlaps_fov_0 = false;
+    bool overlaps_fov_1 = false;
+    for (size_t channel_id = 0; channel_id < NChannels; ++channel_id) {
+      if (!state_->channels_in_fov[channel_id]) {
+        continue;
+      }
+
+      if (state_->channel_buffer_indices[channel_id] == 0) {
+        overlaps_fov_0 = true;
+      } else {
+        overlaps_fov_1 = true;
+      }
+    }
+
+    if (overlaps_fov_0) {
+      set_timestamp_callback_(0);
+    }
+    if (overlaps_fov_1) {
+      set_timestamp_callback_(1);
+    }
   }
 
   [[nodiscard]] bool has_channel_crossed_cut(int32_t last_azimuth_out, int32_t azimuth_out) const
@@ -217,6 +180,32 @@ private:
     }
 
     return Different{};
+  }
+
+  [[nodiscard]] bool has_jumped_cut(
+    const ChannelBufferState & buffer_state_before,
+    const ChannelBufferState & buffer_state_after) const
+  {
+    // The cut has been jumped if:
+    // 1. All channels were in the same buffer before (AllSame)
+    // 2. All channels are in the same buffer after (AllSame)
+    // 3. The buffer indices are different (jumped from one buffer to another)
+    //
+    // If these conditions are met, all channels must have crossed the cut angle simultaneously,
+    // which means the azimuth step was large enough to skip the cut for all channels.
+
+    if (!std::holds_alternative<AllSame<buffer_index_t>>(buffer_state_before)) {
+      return false;
+    }
+
+    if (!std::holds_alternative<AllSame<buffer_index_t>>(buffer_state_after)) {
+      return false;
+    }
+
+    buffer_index_t buffer_before = std::get<AllSame<buffer_index_t>>(buffer_state_before).value;
+    buffer_index_t buffer_after = std::get<AllSame<buffer_index_t>>(buffer_state_after).value;
+
+    return buffer_before != buffer_after;
   }
 
 public:
@@ -272,14 +261,16 @@ public:
   }
 
   [[nodiscard]] bool does_block_intersect_cut(
-    int32_t block_azimuth_enc, const std::array<int32_t, NChannels> & channel_azimuths_out) const
+    const std::array<int32_t, NChannels> & channel_azimuths_out) const
   {
-    block_azimuth_enc = normalize_angle(block_azimuth_enc, max_angle);
-    // This is an over-approximation of the true cut region.
+    // First, check if all channels are in the same hemisphere as the cut.
     int32_t cut_region_start = normalize_angle(cut_angle_out_ - (max_angle / 4), max_angle);
     int32_t cut_region_end = normalize_angle(cut_angle_out_ + (max_angle / 4), max_angle);
 
-    if (!angle_is_between(cut_region_start, cut_region_end, block_azimuth_enc)) {
+    if (!std::all_of(
+          channel_azimuths_out.begin(), channel_azimuths_out.end(), [=](int32_t azimuth_out) {
+            return angle_is_between(cut_region_start, cut_region_end, azimuth_out);
+          })) {
       return false;
     }
 
@@ -297,19 +288,23 @@ public:
   }
 
   const std::array<buffer_index_t, NChannels> & step(
-    int32_t block_azimuth_enc, const std::array<int32_t, NChannels> & channel_azimuths_out)
+    [[maybe_unused]] int32_t block_azimuth_out,
+    const std::array<int32_t, NChannels> & channel_azimuths_out)
   {
-    static size_t step_count = 0;
-    step_count++;
-
     if (!state_) {
-      initialize_state(block_azimuth_enc, channel_azimuths_out);
+      initialize_state(channel_azimuths_out);
+      return state_->channel_buffer_indices;
     }
 
+    // Determine operating mode
+    bool has_360_fov = fov_start_out_ == fov_end_out_;
+    bool cuts_at_fov_end = cut_angle_out_ == fov_end_out_ && !has_360_fov;
+
+    // Capture state before update
     ChannelBufferState buffer_state_before = get_channel_buffer_state();
     ChannelFovState fov_state_before = get_channel_fov_state();
 
-    // Update channel buffer indices
+    // Update channel buffer indices and FoV status
     for (size_t channel_id = 0; channel_id < NChannels; ++channel_id) {
       int32_t channel_azimuth_out = channel_azimuths_out[channel_id];
       bool channel_in_fov = is_point_inside_fov(channel_azimuth_out);
@@ -323,109 +318,35 @@ public:
       state_->channel_last_azimuths[channel_id] = channel_azimuth_out;
     }
 
+    // Capture state after update
     ChannelBufferState buffer_state_after = get_channel_buffer_state();
     ChannelFovState fov_state_after = get_channel_fov_state();
 
-    // There are three distinct semantic cases to consider for cut transitions:
-    // 1. Channels were all in the current scan, and some of them entered the next scan.
-    //    | ch# | before | after |
-    //    |  0  |   0    |   0   |
-    //    |  1  |   0    |   1   |
-    //    Action: set timestamp of the next buffer
-    //
-    // 2. Some channels were still in the current scan, and now all are in the next scan.
-    //    | ch# | before | after |
-    //    |  0  |   0    |   1   |
-    //    |  1  |   1    |   1   |
-    //    Action: publish the current buffer
-    //
-    // 3. Channels were all in the current scan, and all entered the next scan.
-    //    | ch# | before | after |
-    //    |  0  |   0    |   1   |
-    //    |  1  |   0    |   1   |
-    //    Action: publish the current buffer and set timestamp of the next buffer
-    //
-    // All other cases require no action:
-    // - all channels were and are in the same scan
-    // - channels are were not and are not all in the same scan
+    // Step the appropriate state machine based on operating mode
+    TransitionActions actions{};
 
-    bool is_case_1 =
-      (std::holds_alternative<AllSame<buffer_index_t>>(buffer_state_before) &&
-       std::holds_alternative<Different>(buffer_state_after));
+    if (cuts_at_fov_end) {
+      // Use the complex 8-state FSM for cut at FoV end
+      actions = FsmCutAtFovEnd::step(
+        buffer_state_before, buffer_state_after, fov_state_before, fov_state_after,
+        state_->current_buffer_index);
+    } else {
+      // Use the simple 4-state FSM for cut in FoV (including 360° FoV)
+      actions =
+        FsmCutInFov::step(buffer_state_before, buffer_state_after, state_->current_buffer_index);
+    }
 
-    bool is_case_2 =
-      (std::holds_alternative<Different>(buffer_state_before) &&
-       std::holds_alternative<AllSame<buffer_index_t>>(buffer_state_after));
+    if (actions.reset_timestamp_buffer) {
+      buffer_index_t buf = *actions.reset_timestamp_buffer;
+      set_timestamp_callback_(buf);
+    }
 
-    bool is_case_3 = (std::holds_alternative<AllSame<buffer_index_t>>(buffer_state_before) &&
-                      std::holds_alternative<AllSame<buffer_index_t>>(buffer_state_after)) &&
-                     std::get<AllSame<buffer_index_t>>(buffer_state_before).value !=
-                       std::get<AllSame<buffer_index_t>>(buffer_state_after).value;
-
-    bool should_publish = is_case_2 || is_case_3;
-
-    // Publish buffer if channels were not all in the same scan, but are now.
-    // In other words, we were in the cut region before, but are not anymore.
-    if (should_publish) {
-      publish_callback_(state_->current_buffer_index);
-      // Mark the published buffer's timestamp as needing to be set for its next use
-      state_->timestamp_set_since_publish[state_->current_buffer_index] = false;
+    if (actions.emit_scan_buffer) {
+      buffer_index_t buf = *actions.emit_scan_buffer;
+      publish_callback_(buf);
+      // Reset the timestamp tracking for the published buffer so it can be set again
       state_->current_buffer_index = buffer_index_add(state_->current_buffer_index, 1);
     }
-
-    bool has_360_fov = fov_start_out_ == fov_end_out_;
-    bool cuts_at_fov_end = cut_angle_out_ == fov_end_out_;
-
-    bool reset_timestamp_on_fov_start = !has_360_fov && cuts_at_fov_end;
-
-    bool was_out_of_fov_before =
-      (std::holds_alternative<AllSame<bool>>(fov_state_before) &&
-       !static_cast<bool>(std::get<AllSame<bool>>(fov_state_before).value));
-
-    bool is_fully_in_fov_after =
-      (std::holds_alternative<AllSame<bool>>(fov_state_after) &&
-       static_cast<bool>(std::get<AllSame<bool>>(fov_state_after).value));
-
-    bool is_partially_in_fov_after = (std::holds_alternative<Different>(fov_state_after));
-
-    bool entered_fov =
-      (was_out_of_fov_before && (is_fully_in_fov_after || is_partially_in_fov_after));
-    // Check if the block azimuth crossed the cut angle (using raw encoder azimuth)
-    // This is more precise than Case 1 detection which depends on channel offsets
-    // Only used for 360° FoV cases
-    bool block_crossed_cut = angle_is_between(
-      normalize_angle(state_->last_azimuth_enc, max_angle),
-      normalize_angle(block_azimuth_enc, max_angle), cut_angle_out_, true, false);
-
-    // Reset timestamp when:
-    // - For limited FoV with cut at FoV end: when entering FoV
-    // - For 360 FoV: when block azimuth crosses cut OR Case 1/3 (whichever comes first)
-    bool should_reset_timestamp = (reset_timestamp_on_fov_start && entered_fov) ||
-                                  (!reset_timestamp_on_fov_start &&
-                                   ((has_360_fov && block_crossed_cut) || is_case_1 || is_case_3));
-
-    // Set timestamp of next buffer if we should reset it.
-    // Only set if the timestamp hasn't been set since the last publish of that buffer.
-    if (should_reset_timestamp) {
-      int32_t buffer_index_to_set{};
-      if (reset_timestamp_on_fov_start) {
-        buffer_index_to_set = state_->current_buffer_index;
-      } else {
-        buffer_index_to_set = buffer_index_add(state_->current_buffer_index, 1);
-      }
-
-      if (!state_->timestamp_set_since_publish[buffer_index_to_set]) {
-        set_timestamp_callback_(buffer_index_to_set);
-        state_->timestamp_set_since_publish[buffer_index_to_set] = true;
-      }
-    }
-
-    debug_print(
-      step_count, is_case_1, is_case_2, is_case_3, should_publish, has_360_fov, cuts_at_fov_end,
-      reset_timestamp_on_fov_start, was_out_of_fov_before, is_fully_in_fov_after,
-      is_partially_in_fov_after, entered_fov, should_reset_timestamp);
-
-    state_->last_azimuth_enc = block_azimuth_enc;
 
     return state_->channel_buffer_indices;
   }

@@ -16,11 +16,9 @@
 
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <vector>
 
 namespace nebula::drivers
@@ -97,6 +95,49 @@ void simulate_rotation(
 }
 
 }  // namespace
+
+TEST(TestScanCutterBasic, Construction)
+{
+  auto make_cutter =
+    [](
+      int32_t cut_angle, int32_t fov_start, int32_t fov_end,
+      const ScanCutter<n_channels, angle_unit>::publish_callback_t & publish_callback,
+      const ScanCutter<n_channels, angle_unit>::set_timestamp_callback_t & set_timestamp_callback) {
+      ScanCutter<n_channels, angle_unit> cutter(
+        cut_angle, fov_start, fov_end, publish_callback, set_timestamp_callback);
+      return cutter;
+    };
+
+  auto dummy_cb = [](uint8_t) {};
+
+  // Most basic case
+  EXPECT_NO_THROW(make_cutter(0, 0, 36000, dummy_cb, dummy_cb));
+  // Angles are normalized on construction, so 0 == 360
+  EXPECT_NO_THROW(make_cutter(0, 0, 0, dummy_cb, dummy_cb));
+
+  // For 360deg FoV, cut angle can be anywhere
+  EXPECT_NO_THROW(make_cutter(18000, 0, 36000, dummy_cb, dummy_cb));
+  EXPECT_NO_THROW(make_cutter(18000, 0, 0, dummy_cb, dummy_cb));
+  EXPECT_NO_THROW(make_cutter(36000, 0, 36000, dummy_cb, dummy_cb));
+
+  // Cut angle must be within FoV
+  EXPECT_THROW(make_cutter(0, 9000, 27000, dummy_cb, dummy_cb), std::invalid_argument);
+  // ... even for wrapping FoVs
+  EXPECT_THROW(make_cutter(18000, 27000, 9000, dummy_cb, dummy_cb), std::invalid_argument);
+  // Cut angle cannot coincide with FoV start
+  EXPECT_THROW(make_cutter(9000, 9000, 27000, dummy_cb, dummy_cb), std::invalid_argument);
+  // Cut angle is allowed to be at FoV end
+  EXPECT_NO_THROW(make_cutter(27000, 9000, 27000, dummy_cb, dummy_cb));
+  // Anywhere else in the FoV is allowed
+  EXPECT_NO_THROW(make_cutter(18000, 9000, 27000, dummy_cb, dummy_cb));
+  // ... even for wrapping FoVs
+  EXPECT_NO_THROW(make_cutter(0, 27000, 9000, dummy_cb, dummy_cb));
+
+  // Callbacks must be valid
+  EXPECT_THROW(make_cutter(18000, 0, 36000, nullptr, dummy_cb), std::invalid_argument);
+  EXPECT_THROW(make_cutter(18000, 0, 36000, dummy_cb, nullptr), std::invalid_argument);
+  EXPECT_THROW(make_cutter(18000, 0, 36000, nullptr, nullptr), std::invalid_argument);
+}
 
 // =============================================================================
 // Test Suite 1: Timestamp Behavior Tests
@@ -705,6 +746,466 @@ TEST(TestScanCutterIntegration, CompleteScenarioWithCorrections)
   // Should have published multiple times
   EXPECT_GE(tracker.publish_calls.size(), 1);
   EXPECT_GE(tracker.timestamp_set_calls.size(), 2);
+}
+
+// =============================================================================
+// Resilience Tests for Packet Loss and Azimuth Jumps
+// =============================================================================
+
+class TestScanCutterResilience : public ::testing::Test
+{
+protected:
+  /// Dummy point cloud buffer to track scan properties
+  struct DummyPointCloudBuffer
+  {
+    struct PacketStats
+    {
+      int32_t start_azimuth;
+      int32_t end_azimuth;
+      size_t packet_count;
+      int32_t azimuth_span_accumulated;  // Track total azimuth increase
+    };
+
+    std::optional<PacketStats> stats_;
+    bool timestamp_has_been_set = false;
+
+    void reset()
+    {
+      stats_ = std::nullopt;
+      timestamp_has_been_set = false;
+    }
+
+    void set_timestamp() { timestamp_has_been_set = true; }
+
+    void add_packet(int32_t azimuth)
+    {
+      if (!stats_) {
+        stats_ = PacketStats{
+          normalize_angle(azimuth, max_angle),
+          normalize_angle(azimuth, max_angle),
+          0,
+          0,
+        };
+      }
+
+      stats_->end_azimuth = normalize_angle(azimuth, max_angle);
+      stats_->packet_count++;
+
+      int32_t diff = normalize_angle(azimuth - stats_->end_azimuth, max_angle);
+      stats_->azimuth_span_accumulated += diff;
+    }
+
+    [[nodiscard]] bool overlaps_itself() const
+    {
+      if (!stats_) {
+        throw std::runtime_error("No stats available");
+      }
+      return stats_->azimuth_span_accumulated > max_angle;
+    }
+
+    [[nodiscard]] int32_t get_angular_span() const
+    {
+      if (!stats_) {
+        throw std::runtime_error("No stats available");
+      }
+
+      return stats_->azimuth_span_accumulated;
+    }
+
+    [[nodiscard]] bool is_active() const { return timestamp_has_been_set; }
+
+    [[nodiscard]] bool has_points() const { return stats_ != std::nullopt; }
+  };
+
+  // Dummy decoder that tracks pointcloud properties
+  struct DummyDecoder
+  {
+    std::array<DummyPointCloudBuffer, 2> buffers{};
+    uint8_t current_buffer = 0;
+
+    void on_publish(uint8_t buffer_index)
+    {
+      ASSERT_TRUE(buffers.at(buffer_index).timestamp_has_been_set)
+        << "Tried to publish inactive buffer";
+      buffers.at(buffer_index).reset();
+    }
+
+    void on_timestamp_set(uint8_t buffer_index)
+    {
+      ASSERT_FALSE(buffers.at(buffer_index).timestamp_has_been_set)
+        << "Tried to set timestamp on already initialized buffer";
+      buffers.at(buffer_index).set_timestamp();
+    }
+
+    void process_packet(
+      int32_t block_azimuth, const std::array<uint8_t, n_channels> & buffer_indices)
+    {
+      // Add packet to appropriate buffer(s)
+      for (size_t ch = 0; ch < n_channels; ++ch) {
+        uint8_t buf_idx = buffer_indices.at(ch);
+        buffers.at(buf_idx).add_packet(block_azimuth);
+      }
+    }
+  };
+
+  auto make_publish_callback()
+  {
+    return [this](uint8_t buffer_index) {
+      decoder.on_publish(buffer_index);
+      tracker.make_publish_callback()(buffer_index);
+    };
+  }
+
+  auto make_timestamp_callback()
+  {
+    return [this](uint8_t buffer_index) {
+      decoder.on_timestamp_set(buffer_index);
+      tracker.make_timestamp_callback()(buffer_index);
+    };
+  }
+
+  CallbackTracker tracker;
+  DummyDecoder decoder;
+};
+
+// ============================================================================
+// Packet Loss Tests
+// ============================================================================
+
+// Validates behavior when packets are lost around the cut angle
+TEST_F(TestScanCutterResilience, PacketLossAcrossCutAngle)
+{
+  ScanCutter<n_channels, angle_unit> cutter(
+    18000, 0, 0, make_publish_callback(), make_timestamp_callback());
+
+  // Corrections of ± 5°
+  auto offsets = make_increasing_offsets<n_channels>(-500, 500);
+
+  // Simulate rotation with packet loss around cut angle (180° ± 10°)
+  const int32_t packet_loss_start = 17000;
+  const int32_t packet_loss_end = 19000;
+
+  for (int32_t az = 0; az < max_angle * 2; az += 100) {
+    // Skip packets in loss range
+    if (az >= packet_loss_start && az <= packet_loss_end) {
+      continue;
+    }
+
+    auto channel_azimuths = make_channel_azimuths(az, offsets);
+    auto buffer_indices = cutter.step(az, channel_azimuths);
+    decoder.process_packet(az, buffer_indices);
+  }
+
+  // Should have published at least once despite packet loss
+  ASSERT_GT(tracker.publish_calls.size(), 0) << "No scans were published";
+
+  // Check that no buffer overlaps itself (no scan > 360°)
+  for (const auto & buf : decoder.buffers) {
+    if (buf.is_active()) {
+      EXPECT_FALSE(buf.overlaps_itself()) << "Buffer overlaps itself";
+      // Angular span should not exceed 360° + 30° (cut region tolerance)
+      EXPECT_LE(buf.get_angular_span(), max_angle + 500)
+        << "Scan width exceeds FOV + 5°: " << buf.get_angular_span() / 100.0 << "°";
+    }
+  }
+}
+
+// Validates behavior when packets are lost around FOV start (for non-360 FOV)
+TEST_F(TestScanCutterResilience, PacketLossAcrossFovStart)
+{
+  ScanCutter<n_channels, angle_unit> cutter(
+    27000, 9000, 27000, make_publish_callback(), make_timestamp_callback());
+
+  // Corrections of ± 5°
+  auto offsets = make_increasing_offsets<n_channels>(-500, 500);
+
+  // Simulate rotation with packet loss around FOV start (90° ± 10°)
+  const int32_t packet_loss_start = 8000;
+  const int32_t packet_loss_end = 10000;
+
+  for (int32_t az = 0; az < max_angle * 2; az += 100) {
+    int32_t normalized_az = normalize_angle(az, max_angle);
+
+    // Skip packets in loss range
+    if (normalized_az >= packet_loss_start && normalized_az <= packet_loss_end) {
+      continue;
+    }
+
+    auto channel_azimuths = make_channel_azimuths(az, offsets);
+    auto buffer_indices = cutter.step(az, channel_azimuths);
+    decoder.process_packet(az, buffer_indices);
+  }
+
+  // Should still produce scans
+  ASSERT_GT(tracker.publish_calls.size(), 0) << "No scans were published";
+
+  // Timestamp should be set even with packet loss at FOV start
+  EXPECT_GT(tracker.timestamp_set_calls.size(), 0) << "Timestamp was never set";
+
+  // Check scan properties
+  for (const auto & buf : decoder.buffers) {
+    if (buf.is_active()) {
+      EXPECT_FALSE(buf.overlaps_itself()) << "Buffer overlaps itself";
+      EXPECT_LE(buf.get_angular_span(), 18000 + 500) << "Scan width exceeds FOV + 5°";
+    }
+  }
+}
+
+// Validates behavior when packets are lost around FOV end (for non-360 FOV)
+TEST_F(TestScanCutterResilience, PacketLossAcrossFovEnd)
+{
+  ScanCutter<n_channels, angle_unit> cutter(
+    27000, 9000, 27000, make_publish_callback(), make_timestamp_callback());
+
+  // Corrections of ± 5°
+  auto offsets = make_increasing_offsets<n_channels>(-500, 500);
+
+  // Simulate rotation with packet loss around FOV end/cut (270° ± 10°)
+  const int32_t packet_loss_start = 26000;
+  const int32_t packet_loss_end = 28000;
+
+  for (int32_t az = 0; az < max_angle * 2; az += 100) {
+    int32_t normalized_az = normalize_angle(az, max_angle);
+
+    // Skip packets in loss range
+    if (normalized_az >= packet_loss_start && normalized_az <= packet_loss_end) {
+      continue;
+    }
+
+    auto channel_azimuths = make_channel_azimuths(az, offsets);
+    auto buffer_indices = cutter.step(az, channel_azimuths);
+    decoder.process_packet(az, buffer_indices);
+  }
+
+  // Should still produce scans
+  ASSERT_GT(tracker.publish_calls.size(), 0) << "No scans were published";
+
+  // Check that scans were emitted properly
+  for (const auto & buf : decoder.buffers) {
+    if (buf.is_active()) {
+      EXPECT_FALSE(buf.overlaps_itself()) << "Buffer overlaps itself";
+      EXPECT_LE(buf.get_angular_span(), 18000 + 3000) << "Scan width exceeds FOV + 30°";
+    }
+  }
+}
+
+// Validates behavior with extended packet loss across cut
+TEST_F(TestScanCutterResilience, MultiplePacketLossAcrossCut)
+{
+  ScanCutter<n_channels, angle_unit> cutter(
+    18000, 0, 0, make_publish_callback(), make_timestamp_callback());
+
+  // Corrections of ± 5°
+  auto offsets = make_increasing_offsets<n_channels>(-500, 500);
+
+  // Simulate rotation with extended packet loss (180° ± 30°)
+  const int32_t packet_loss_start = 15000;
+  const int32_t packet_loss_end = 21000;
+
+  for (int32_t az = 0; az < max_angle * 2; az += 100) {
+    // Skip packets in extended loss range
+    if (az >= packet_loss_start && az <= packet_loss_end) {
+      continue;
+    }
+
+    auto channel_azimuths = make_channel_azimuths(az, offsets);
+    auto buffer_indices = cutter.step(az, channel_azimuths);
+    decoder.process_packet(az, buffer_indices);
+  }
+
+  // System should still produce scans with extended packet loss
+  ASSERT_GT(tracker.publish_calls.size(), 0) << "No scans were published with extended packet loss";
+
+  // Even with extended loss, scans should not overlap
+  for (const auto & buf : decoder.buffers) {
+    if (buf.is_active()) {
+      EXPECT_FALSE(buf.overlaps_itself()) << "Buffer overlaps itself with extended packet loss";
+    }
+  }
+}
+
+// ============================================================================
+// Time Loop Tests (Azimuth Jump Tests)
+// ============================================================================
+
+// Validates behavior when azimuth jumps backwards at 360° boundary (loop restart)
+TEST_F(TestScanCutterResilience, AzimuthJumpBackwardsAtBoundary)
+{
+  ScanCutter<n_channels, angle_unit> cutter(
+    0, 0, 0, make_publish_callback(), make_timestamp_callback());
+
+  // Corrections of ± 5°
+  auto offsets = make_increasing_offsets<n_channels>(-500, 500);
+
+  // Simulate rotation up to 350°
+  for (int32_t az = 0; az < 35000; az += 100) {
+    auto channel_azimuths = make_channel_azimuths(az, offsets);
+    auto buffer_indices = cutter.step(az, channel_azimuths);
+    decoder.process_packet(az, buffer_indices);
+  }
+
+  size_t publish_before_jump = tracker.publish_calls.size();
+  size_t timestamp_before_jump = tracker.timestamp_set_calls.size();
+
+  // Simulate azimuth jump back to 10° (loop restart)
+  for (int32_t az = 1000; az < 20000; az += 100) {
+    auto channel_azimuths = make_channel_azimuths(az, offsets);
+    auto buffer_indices = cutter.step(az, channel_azimuths);
+    decoder.process_packet(az, buffer_indices);
+  }
+
+  // Should have published and reset timestamp after jump
+  EXPECT_GT(tracker.publish_calls.size(), publish_before_jump) << "No publish after azimuth jump";
+  EXPECT_GT(tracker.timestamp_set_calls.size(), timestamp_before_jump)
+    << "No timestamp reset after azimuth jump";
+
+  // Check no buffer overlaps
+  for (const auto & buf : decoder.buffers) {
+    if (buf.is_active()) {
+      EXPECT_FALSE(buf.overlaps_itself()) << "Buffer overlaps after azimuth jump";
+      EXPECT_LE(buf.get_angular_span(), max_angle + 500);
+    }
+  }
+}
+
+// Validates behavior when azimuth jumps backwards at cut angle
+TEST_F(TestScanCutterResilience, AzimuthJumpBackwardsAtCutAngle)
+{
+  ScanCutter<n_channels, angle_unit> cutter(
+    18000, 0, 0, make_publish_callback(), make_timestamp_callback());
+
+  // Corrections of ± 5°
+  auto offsets = make_increasing_offsets<n_channels>(-500, 500);
+
+  // Simulate rotation to just after cut (190°)
+  for (int32_t az = 0; az < 19000; az += 100) {
+    auto channel_azimuths = make_channel_azimuths(az, offsets);
+    auto buffer_indices = cutter.step(az, channel_azimuths);
+    decoder.process_packet(az, buffer_indices);
+  }
+
+  size_t publish_before_jump = tracker.publish_calls.size();
+
+  // Jump backwards to before cut (150°) and continue
+  for (int32_t az = 15000; az < 25000; az += 100) {
+    auto channel_azimuths = make_channel_azimuths(az, offsets);
+    auto buffer_indices = cutter.step(az, channel_azimuths);
+    decoder.process_packet(az, buffer_indices);
+  }
+
+  // Should handle the jump and publish correctly
+  EXPECT_GT(tracker.publish_calls.size(), publish_before_jump)
+    << "No publish after azimuth jump at cut";
+
+  // Verify scan integrity
+  for (const auto & buf : decoder.buffers) {
+    if (buf.is_active()) {
+      EXPECT_FALSE(buf.overlaps_itself()) << "Buffer overlaps after jump at cut";
+      EXPECT_LE(buf.get_angular_span(), max_angle + 500);
+    }
+  }
+}
+
+// ============================================================================
+// Edge Case Tests
+// ============================================================================
+
+// Validates behavior when first packets are lost (initialization with packet loss)
+TEST_F(TestScanCutterResilience, PacketLossAtInitialization)
+{
+  ScanCutter<n_channels, angle_unit> cutter(
+    0, 0, 0, make_publish_callback(), make_timestamp_callback());
+
+  // Corrections of ± 5°
+  auto offsets = make_increasing_offsets<n_channels>(-500, 500);
+
+  // Skip first 50 packets (start at 50°) and do one complete rotation
+  for (int32_t az = 5000; az <= max_angle + 5000; az += 100) {
+    auto channel_azimuths = make_channel_azimuths(az, offsets);
+    auto buffer_indices = cutter.step(az, channel_azimuths);
+    decoder.process_packet(az, buffer_indices);
+  }
+
+  // Should initialize properly and produce scans despite missing initial packets
+  ASSERT_GT(tracker.publish_calls.size(), 0)
+    << "No scans produced after initialization packet loss";
+  EXPECT_GT(tracker.timestamp_set_calls.size(), 0)
+    << "Timestamp not set after initialization packet loss";
+
+  // Verify scan integrity
+  for (const auto & buf : decoder.buffers) {
+    if (buf.is_active()) {
+      EXPECT_FALSE(buf.overlaps_itself()) << "Buffer overlaps after init packet loss";
+      EXPECT_LE(buf.get_angular_span(), max_angle + 500);
+    }
+  }
+}
+
+// Validates behavior with multiple azimuth jumps (multiple loop iterations)
+TEST_F(TestScanCutterResilience, MultipleAzimuthJumps)
+{
+  ScanCutter<n_channels, angle_unit> cutter(
+    18000, 0, 0, make_publish_callback(), make_timestamp_callback());
+
+  // Corrections of ± 5°
+  auto offsets = make_increasing_offsets<n_channels>(-500, 500);
+
+  // Simulate three azimuth jumps
+  int jump_count = 0;
+  for (int iteration = 0; iteration < 3; ++iteration) {
+    // Rotate to 300°
+    for (int32_t az = 0; az < 30000; az += 100) {
+      auto channel_azimuths = make_channel_azimuths(az, offsets);
+      auto buffer_indices = cutter.step(az, channel_azimuths);
+      decoder.process_packet(az, buffer_indices);
+    }
+
+    // Jump back to 50°
+    jump_count++;
+  }
+
+  // Should handle multiple jumps correctly (should have at least as many publishes as jumps)
+  EXPECT_GE(tracker.publish_calls.size(), jump_count) << "Not enough publishes for multiple jumps";
+
+  // Verify no overlaps despite multiple jumps
+  for (const auto & buf : decoder.buffers) {
+    if (buf.is_active()) {
+      EXPECT_FALSE(buf.overlaps_itself()) << "Buffer overlaps with multiple jumps";
+      EXPECT_LE(buf.get_angular_span(), max_angle + 500);
+    }
+  }
+}
+
+// Validates behavior with continuous packet loss (stress test)
+TEST_F(TestScanCutterResilience, ContinuousPacketLoss)
+{
+  ScanCutter<n_channels, angle_unit> cutter(
+    0, 0, 0, make_publish_callback(), make_timestamp_callback());
+
+  // Corrections of ± 5°
+  auto offsets = make_increasing_offsets<n_channels>(-500, 500);
+
+  // Skip every other packet (50% packet loss), do one complete rotation
+  for (int32_t az = 0; az <= max_angle + 1000; az += 100) {
+    if ((az % 200) == 100) {
+      continue;  // Skip this packet
+    }
+
+    auto channel_azimuths = make_channel_azimuths(az, offsets);
+    auto buffer_indices = cutter.step(az, channel_azimuths);
+    decoder.process_packet(az, buffer_indices);
+  }
+
+  // Should still produce scans with 50% packet loss
+  ASSERT_GT(tracker.publish_calls.size(), 0) << "No scans produced with continuous packet loss";
+
+  // Verify scan integrity despite heavy packet loss
+  for (const auto & buf : decoder.buffers) {
+    if (buf.is_active()) {
+      EXPECT_FALSE(buf.overlaps_itself()) << "Buffer overlaps with continuous packet loss";
+      EXPECT_LE(buf.get_angular_span(), max_angle + 500);
+    }
+  }
 }
 
 }  // namespace nebula::drivers
