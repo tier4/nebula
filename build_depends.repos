@@ -1,14 +1,4 @@
 repositories:
-  # TCP version of transport drivers
-  transport_drivers:
-    type: git
-    url: https://github.com/autowarefoundation/transport_drivers
-    version: main
-  # Continental compatible version of ROS 2 socket CAN
-  ros2_socketcan:
-    type: git
-    url: https://github.com/autowarefoundation/ros2_socketcan
-    version: main
   sync_tooling_msgs:
     type: git
     url: https://github.com/tier4/sync_tooling_msgs.git
