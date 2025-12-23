@@ -47,12 +47,6 @@
 
 namespace nebula::drivers::connections
 {
-// Reusing SocketError and UsageError from udp.hpp or defining them here if they are not shared.
-// Since they are defined in udp.hpp and not in a common header, I will redefine them here or
-// ideally they should be moved to a common header. For now, to avoid modifying udp.hpp and
-// causing potential conflicts, I will redefine them (or assume they might be moved later).
-// However, to keep it self-contained as requested "minimal dependencies", I'll include them.
-
 
 class TcpSocket
 {
