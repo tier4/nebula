@@ -19,7 +19,7 @@ RobosenseHwInterface::RobosenseHwInterface(const std::shared_ptr<loggers::Logger
 {
 }
 
-void RobosenseHwInterface::receive_sensor_packet_callback(const std::vector<uint8_t> & buffer)
+void RobosenseHwInterface::receive_sensor_packet_callback(std::vector<uint8_t> & buffer)
 {
   if (!scan_reception_callback_) {
     return;
@@ -28,7 +28,7 @@ void RobosenseHwInterface::receive_sensor_packet_callback(const std::vector<uint
   scan_reception_callback_(buffer);
 }
 
-void RobosenseHwInterface::receive_info_packet_callback(const std::vector<uint8_t> & buffer)
+void RobosenseHwInterface::receive_info_packet_callback(std::vector<uint8_t> & buffer)
 {
   if (!info_reception_callback_) {
     return;
@@ -51,7 +51,7 @@ Status RobosenseHwInterface::sensor_interface_start()
         .bind());
 
     cloud_udp_driver_->subscribe(
-      [this](const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata &) {
+      [this](std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata &) {
         this->receive_sensor_packet_callback(buffer);
       });
   } catch (const std::exception & ex) {
@@ -78,7 +78,7 @@ Status RobosenseHwInterface::info_interface_start()
         .bind());
 
     info_udp_driver_->subscribe(
-      [this](const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata &) {
+      [this](std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata &) {
         this->receive_info_packet_callback(buffer);
       });
   } catch (const std::exception & ex) {
@@ -107,14 +107,14 @@ Status RobosenseHwInterface::set_sensor_configuration(
 }
 
 Status RobosenseHwInterface::register_scan_callback(
-  std::function<void(const std::vector<uint8_t> &)> scan_callback)
+  std::function<void(std::vector<uint8_t> &)> scan_callback)
 {
   scan_reception_callback_ = std::move(scan_callback);
   return Status::OK;
 }
 
 Status RobosenseHwInterface::register_info_callback(
-  std::function<void(const std::vector<uint8_t> &)> info_callback)
+  std::function<void(std::vector<uint8_t> &)> info_callback)
 {
   info_reception_callback_ = std::move(info_callback);
   return Status::OK;

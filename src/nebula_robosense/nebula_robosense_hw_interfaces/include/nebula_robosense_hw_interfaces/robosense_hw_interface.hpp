@@ -39,9 +39,9 @@ private:
   std::unique_ptr<connections::UdpSocket> cloud_udp_driver_;
   std::unique_ptr<connections::UdpSocket> info_udp_driver_;
   std::shared_ptr<const RobosenseSensorConfiguration> sensor_configuration_;
-  std::function<void(const std::vector<uint8_t> & buffer)>
+  std::function<void(std::vector<uint8_t> & buffer)>
     scan_reception_callback_; /**This function pointer is called when the scan is complete*/
-  std::function<void(const std::vector<uint8_t> & buffer)>
+  std::function<void(std::vector<uint8_t> & buffer)>
     info_reception_callback_; /**This function pointer is called when DIFOP packet is received*/
   std::shared_ptr<loggers::Logger> logger_;
 
@@ -51,11 +51,11 @@ public:
 
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void receive_sensor_packet_callback(const std::vector<uint8_t> & buffer);
+  void receive_sensor_packet_callback(std::vector<uint8_t> & buffer);
 
   /// @brief Callback function to receive the Info Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
-  void receive_info_packet_callback(const std::vector<uint8_t> & buffer);
+  void receive_info_packet_callback(std::vector<uint8_t> & buffer);
 
   /// @brief Starting the interface that handles UDP streams for MSOP packets
   /// @return Resulting status
@@ -74,12 +74,12 @@ public:
   /// @brief Registering callback for RobosenseScan
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status register_scan_callback(std::function<void(const std::vector<uint8_t> &)> scan_callback);
+  Status register_scan_callback(std::function<void(std::vector<uint8_t> &)> scan_callback);
 
   /// @brief Registering callback for RobosensePacket
   /// @param scan_callback Callback function
   /// @return Resulting status
-  Status register_info_callback(std::function<void(const std::vector<uint8_t> &)> info_callback);
+  Status register_info_callback(std::function<void(std::vector<uint8_t> &)> info_callback);
 };
 
 }  // namespace nebula::drivers
