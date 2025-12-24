@@ -17,7 +17,6 @@
 
 #include <nebula_continental_common/continental_srr520.hpp>
 #include <nebula_core_common/util/crc.hpp>
-#include <rclcpp/time.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -169,8 +168,14 @@ void ContinentalSRR520HwInterface::sensor_sync_follow_up(builtin_interfaces::msg
   t0s.nanosec = 0;
   const auto & t1r = stamp;
 
-  builtin_interfaces::msg::Time t4r =
-    rclcpp::Time(rclcpp::Time() + (rclcpp::Time(t1r) - rclcpp::Time(t0s)));
+  int64_t t1r_ns = static_cast<int64_t>(t1r.sec) * 1'000'000'000 + t1r.nanosec;
+  int64_t t0s_ns = static_cast<int64_t>(t0s.sec) * 1'000'000'000 + t0s.nanosec;
+  int64_t diff_ns = t1r_ns - t0s_ns;
+
+  builtin_interfaces::msg::Time t4r;
+  t4r.sec = static_cast<int32_t>(diff_ns / 1'000'000'000);
+  t4r.nanosec = static_cast<uint32_t>(diff_ns % 1'000'000'000);
+
   uint8_t t4r_seconds = static_cast<uint8_t>(t4r.sec);
   uint32_t t4r_nanoseconds = t4r.nanosec;
   std::array<uint8_t, 8> data;

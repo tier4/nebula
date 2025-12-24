@@ -18,7 +18,6 @@
   <depend>nebula_core_common</depend>
   <depend>nebula_core_hw_interfaces</depend>
   <depend>nebula_msgs</depend>
-  <depend>rclcpp</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

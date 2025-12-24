@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(nebula_continental_hw_interfaces)
 
 find_package(autoware_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
+
 autoware_package()
 
 add_library(
@@ -20,7 +20,7 @@ ament_target_dependencies(
   PUBLIC
 
   nebula_msgs
-  rclcpp
+
 
   nebula_core_common
   nebula_continental_common
