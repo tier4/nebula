@@ -48,6 +48,10 @@
 namespace nebula::drivers::connections
 {
 
+/**
+ * @brief A wrapper around a TCP socket (AF_INET, SOCK_STREAM).
+ *        Supports both client and server functionality (though server part not fully shown here).
+ */
 class TcpSocket
 {
   struct SocketConfig
@@ -65,6 +69,14 @@ class TcpSocket
 public:
   TcpSocket() : sock_fd_(), poll_fd_{-1, POLLIN, 0} {}
 
+  /**
+   * @brief Open a connection to the specified IP and port.
+   *        Closes any existing connection before opening a new one.
+   *
+   * @param ip The target IP address.
+   * @param port The target port.
+   * @throws SocketError if socket creation or connection fails.
+   */
   void open(const std::string & ip, uint16_t port)
   {
     if (sock_fd_.get() != -1) {
@@ -88,12 +100,32 @@ public:
     poll_fd_.fd = sock_fd_.get();
   }
 
+  /**
+   * @brief Open a connection to the specified endpoint.
+   *
+   * @param target The target endpoint (IP and port).
+   */
   void open(const Endpoint & target) { open(to_string(target.ip), target.port); }
 
+  /**
+   * @brief Check if the socket file descriptor is valid (open).
+   * @return True if open, false otherwise.
+   */
   bool isOpen() const { return sock_fd_.get() != -1; }
 
+  /**
+   * @brief Close the socket.
+   */
   void close() { sock_fd_ = SockFd(); }
 
+  /**
+   * @brief Receive exactly n bytes from the socket.
+   *        This is a blocking call.
+   *
+   * @param n The number of bytes to receive.
+   * @return A vector containing the received bytes. Size may be less than n if connection closed.
+   * @throws SocketError if receive fails.
+   */
   std::vector<uint8_t> receive(size_t n)
   {
     std::vector<uint8_t> buffer(n);
@@ -193,6 +225,10 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Check if the socket is currently subscribed and receiving data.
+   * @return True if receiving, false otherwise.
+   */
   bool is_subscribed() { return running_; }
 
   /**

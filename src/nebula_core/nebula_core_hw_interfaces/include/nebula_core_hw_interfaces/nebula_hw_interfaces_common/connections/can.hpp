@@ -50,6 +50,10 @@
 namespace nebula::drivers::connections
 {
 
+/**
+ * @brief A wrapper around a raw CAN socket (AF_CAN).
+ *        Supports both standard CAN and CAN FD frames.
+ */
 class CanSocket
 {
   struct SocketConfig
@@ -136,6 +140,10 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Check if the socket is currently subscribed and receiving data.
+   * @return True if receiving, false otherwise.
+   */
   bool is_subscribed() { return running_; }
 
   /**
@@ -150,12 +158,21 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Close the socket and return the file descriptor to uninitialized state.
+   */
   void close()
   {
     unsubscribe();
     sock_fd_ = SockFd{};
   }
 
+  /**
+   * @brief Send a standard CAN frame.
+   *
+   * @param frame The CAN frame to send.
+   * @throws SocketError if the write fails or is incomplete.
+   */
   void send(const can_frame & frame)
   {
     ssize_t result = ::write(sock_fd_.get(), &frame, sizeof(frame));
@@ -163,6 +180,12 @@ public:
     if (result != sizeof(frame)) throw SocketError("Incomplete CAN frame write");
   }
 
+  /**
+   * @brief Send a CAN FD frame.
+   *
+   * @param frame The CAN FD frame to send.
+   * @throws SocketError if the write fails or is incomplete.
+   */
   void send_fd(const canfd_frame & frame)
   {
     ssize_t result = ::write(sock_fd_.get(), &frame, sizeof(frame));
@@ -170,6 +193,12 @@ public:
     if (result != sizeof(frame)) throw SocketError("Incomplete CAN FD frame write");
   }
 
+  /**
+   * @brief Enable or disable CAN FD frame support on the socket.
+   *
+   * @param enable True to enable, false to disable.
+   * @throws SocketError if setsockopt fails.
+   */
   void set_fd_mode(bool enable)
   {
     int fd_mode = enable ? 1 : 0;
@@ -177,6 +206,12 @@ public:
     if (!result.has_value()) throw SocketError(result.error());
   }
 
+  /**
+   * @brief Enable or disable kernel socket timestamping (SO_TIMESTAMP).
+   *
+   * @param enable True to enable, false to disable.
+   * @throws SocketError if setsockopt fails.
+   */
   void set_timestamping(bool enable)
   {
     int timestamping = enable ? 1 : 0;
@@ -184,6 +219,12 @@ public:
     if (!result.has_value()) throw SocketError(result.error());
   }
 
+  /**
+   * @brief Set CAN raw filters.
+   *
+   * @param filters Vector of can_filter structures.
+   * @throws SocketError if setsockopt fails.
+   */
   void set_filters(const std::vector<can_filter> & filters)
   {
     int result = ::setsockopt(
@@ -192,6 +233,14 @@ public:
     if (result == -1) throw SocketError(errno);
   }
 
+  /**
+   * @brief Receive a CAN FD frame with a timeout.
+   *
+   * @param frame Reference to a canfd_frame to store the received data.
+   * @param timeout Timeout duration.
+   * @return True if a frame was received, false if timeout occurred.
+   * @throws SocketError if poll or read fails.
+   */
   bool receive_fd(canfd_frame & frame, std::chrono::nanoseconds timeout)
   {
     RxMetadata metadata;
@@ -205,10 +254,6 @@ public:
     int status = poll(&pfd, 1, timeout_ms);
     if (status == -1) throw SocketError(errno);
     if (status == 0) return false;
-
-    // To get timestamps, we should use recvmsg, but for now let's just use system time
-    // if we want to keep it simple, or implement recvmsg here.
-    // For CAN, SO_TIMESTAMP also works.
 
     struct iovec iov;
     struct msghdr msg;
