@@ -337,7 +337,7 @@ public:
     util::Stopwatch decode_watch;
 
     if (!parse_packet(packet)) {
-      return {PerformanceCounters{decode_watch.elapsed_ns(), 0}, DecodeError::PACKET_PARSE_FAILED};
+      return {PerformanceCounters{decode_watch.elapsed_ns()}, DecodeError::PACKET_PARSE_FAILED};
     }
 
     if (packet_loss_detector_) {
@@ -369,18 +369,11 @@ public:
     }
 
     uint64_t decode_duration_ns = decode_watch.elapsed_ns();
-    uint64_t callbacks_duration_ns = 0;
-
-    // if (did_scan_complete) {
-    //   util::Stopwatch callback_watch;
-    //   on_scan_complete();
-    //   callbacks_duration_ns = callback_watch.elapsed_ns();
-    // }
 
     PacketMetadata metadata;
     metadata.packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
     metadata.did_scan_complete = did_scan_complete;
-    return {PerformanceCounters{decode_duration_ns, callbacks_duration_ns}, metadata};
+    return {PerformanceCounters{decode_duration_ns}, metadata};
   }
 };
 

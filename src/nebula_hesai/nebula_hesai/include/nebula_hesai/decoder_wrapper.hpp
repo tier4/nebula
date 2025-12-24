@@ -72,6 +72,8 @@ public:
   /// scan.
   void reset_decoder();
 
+  void publish_and_reset_performance_counters(const rclcpp::Time & scan_timestamp);
+
   nebula::Status status();
 
 private:
