@@ -182,7 +182,7 @@ public:
   /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
   /// @param buffer Buffer containing the data received from the UDP socket
   void receive_sensor_packet_callback(
-    const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata);
+    std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata);
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
   Status sensor_interface_start();
