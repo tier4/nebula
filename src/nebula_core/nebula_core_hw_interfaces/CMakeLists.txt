@@ -39,6 +39,10 @@ if(BUILD_TESTING)
   ament_add_gtest(test_http_client test/common/test_http_client.cpp)
   target_include_directories(test_http_client PRIVATE include test)
   target_link_libraries(test_http_client nebula_core_common::nebula_core_common)
+
+  ament_add_gtest(test_socket_utils test/common/test_socket_utils.cpp)
+  target_include_directories(test_socket_utils PRIVATE include test)
+  target_link_libraries(test_socket_utils nebula_core_common::nebula_core_common)
 endif()
 
 ament_export_targets(export_nebula_core_hw_interfaces)

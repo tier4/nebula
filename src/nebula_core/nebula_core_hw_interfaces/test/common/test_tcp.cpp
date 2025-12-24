@@ -1,4 +1,4 @@
-// Copyright 2024 TIER IV, Inc.
+// Copyright 2025 TIER IV, Inc.
 
 #include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/tcp.hpp"
 
@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 namespace nebula::drivers::connections
@@ -115,6 +116,87 @@ TEST(TestTcp, TestSendReceive)
   }
 
   ASSERT_TRUE(received);
+}
+
+TEST(TestTcp, TestBlockingReceive)
+{
+  TcpServer server(g_server_port);
+  std::vector<uint8_t> payload{0xAA, 0xBB, 0xCC, 0xDD};
+
+  auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
+
+  // Send data to trigger echo
+  sock.send(payload);
+
+  // Blocking receive
+  auto received = sock.receive(4);
+  ASSERT_EQ(received.size(), 4);
+  ASSERT_EQ(received, payload);
+}
+
+TEST(TestTcp, TestReopen)
+{
+  TcpServer server(g_server_port);
+  auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
+  ASSERT_TRUE(sock.isOpen());
+  sock.close();
+  ASSERT_FALSE(sock.isOpen());
+  sock.open(g_localhost_ip, g_server_port);
+  ASSERT_TRUE(sock.isOpen());
+}
+
+TEST(TestTcp, TestBuilderSetSocketBufferSize)
+{
+  TcpServer server(g_server_port);
+  ASSERT_NO_THROW(
+    TcpSocket::Builder(g_localhost_ip, g_server_port).set_socket_buffer_size(8192).connect());
+}
+
+TEST(TestTcp, TestBuilderSetPollingInterval)
+{
+  TcpServer server(g_server_port);
+  ASSERT_NO_THROW(
+    TcpSocket::Builder(g_localhost_ip, g_server_port).set_polling_interval(50).connect());
+}
+
+TEST(TestTcp, TestConnectionFailure)
+{
+  // Port 9999 should not have a listening server
+  ASSERT_THROW(TcpSocket::Builder(g_localhost_ip, 9999).connect(), SocketError);
+}
+
+TEST(TestTcp, TestIsSubscribed)
+{
+  TcpServer server(g_server_port);
+  auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
+  ASSERT_FALSE(sock.is_subscribed());
+  sock.subscribe([](const auto &) {});
+  ASSERT_TRUE(sock.is_subscribed());
+  sock.unsubscribe();
+  ASSERT_FALSE(sock.is_subscribed());
+}
+
+TEST(TestTcp, TestMoveSemantics)
+{
+  TcpServer server(g_server_port);
+  auto sock1 = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
+  sock1.subscribe([](const auto &) {});
+  ASSERT_TRUE(sock1.is_subscribed());
+
+  TcpSocket sock2(std::move(sock1));
+  ASSERT_TRUE(sock2.is_subscribed());
+  ASSERT_TRUE(sock2.isOpen());
+}
+
+TEST(TestTcp, TestOpenWithEndpoint)
+{
+  TcpServer server(g_server_port);
+  Endpoint endpoint{parse_ip(g_localhost_ip).value_or_throw(), g_server_port};
+
+  TcpSocket sock;
+  ASSERT_FALSE(sock.isOpen());
+  sock.open(endpoint);
+  ASSERT_TRUE(sock.isOpen());
 }
 
 }  // namespace nebula::drivers::connections
