@@ -82,15 +82,7 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
   int retry_count = 0;
   while (bytes_received < 8 && retry_count < 10) {
     std::vector<uint8_t> chunk;
-    // Receive 8 - bytes_received
-    // TcpSocket receive takes count
-    // We assume it blocks or returns what it can
-    // We need to implement a loop to ensure we get 8 bytes
-    // Since TcpSocket::receive returns a vector, we can't easily append without copy
-    // But for small header it's fine.
-    // Wait, TcpSocket::receive(n) creates a buffer of size n.
-    // If we want to be robust, we should handle partial reads.
-    // But for now, let's try to read 8 bytes.
+
     chunk = tcp_socket_->receive(8 - bytes_received);
     if (chunk.empty()) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -227,9 +219,14 @@ Status HesaiHwInterface::get_calibration_configuration(
 Status HesaiHwInterface::initialize_tcp_driver()
 {
   tcp_socket_ = std::make_unique<connections::TcpSocket>();
-  // We don't open here, we open on demand in send_receive to be robust
-  // But we can try to open here to fail early
-  tcp_socket_->open(sensor_configuration_->sensor_ip, g_pandar_tcp_command_port);
+  // Attempt to connect immediately to validate configuration.
+  // Reconnection is handled automatically in send_receive() if the connection is dropped.
+  try {
+    tcp_socket_->open(sensor_configuration_->sensor_ip, g_pandar_tcp_command_port);
+  } catch (const connections::SocketError & e) {
+    return Status::ERROR_1;
+  }
+
   if (!tcp_socket_->isOpen()) {
     return Status::ERROR_1;
   }
@@ -238,8 +235,7 @@ Status HesaiHwInterface::initialize_tcp_driver()
   try {
     http_client_ = std::make_unique<connections::HttpClient>(sensor_configuration_->sensor_ip, 80);
   } catch (const std::exception & ex) {
-    // Log error but don't fail TCP driver init?
-    // HTTP might be optional depending on sensor model
+    logger_->warn("Failed to initialize HTTP client: " + std::string(ex.what()));
   }
 
   return Status::OK;
@@ -249,6 +245,7 @@ Status HesaiHwInterface::finalize_tcp_driver()
 {
   if (tcp_socket_) {
     tcp_socket_->close();
+    tcp_socket_.reset();
   }
   return Status::OK;
 }
