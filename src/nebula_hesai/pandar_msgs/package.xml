@@ -6,8 +6,11 @@
     ROS message definition for the Hesai PandarQT/Pandar64/Pandar40P/Pandar20A/Pandar20B/Pandar40M LiDAR
         sensor.
   </description>
-  <maintainer email="shinnosuke.hirakawa@tier4.jp">hirakawa</maintainer>
+  <maintainer email="david.wong@tier4.jp">David Wong</maintainer>
+  <maintainer email="max.schmeller@tier4.jp">Max Schmeller</maintainer>
+
   <license>Apache 2</license>
+  <author>TIER IV</author>
 
   <buildtool_depend>autoware_cmake</buildtool_depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>

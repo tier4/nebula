@@ -34,4 +34,4 @@ Nebula works with ROS 2 and is the recommended sensor driver for the [Autoware](
 ## Development
 
 - [Tutorials](tutorials.md)
-- [Contributing](contribute.md)
+- [Contributing](contributing/index.md)
