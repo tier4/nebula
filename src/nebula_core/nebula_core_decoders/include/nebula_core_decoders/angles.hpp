@@ -75,7 +75,7 @@ struct FieldOfView
  * so degrees, radians, and arbitrary scale factors can be used.
  */
 template <typename T>
-bool angle_is_between(
+inline bool angle_is_between(
   T start_angle, T end_angle, T angle, bool start_inclusive = true, bool end_inclusive = true)
 {
   if (!start_inclusive && angle == start_angle) return false;
