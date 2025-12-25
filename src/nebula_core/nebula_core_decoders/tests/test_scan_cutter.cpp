@@ -91,7 +91,7 @@ void simulate_rotation(
 
   while (current_azimuth < end_azimuth) {
     auto channel_azimuths = make_channel_azimuths(current_azimuth, offsets);
-    cutter.step(current_azimuth, channel_azimuths);
+    cutter.step(channel_azimuths);
     current_azimuth += step_size;
   }
 }
@@ -168,7 +168,7 @@ TEST_F(TestScanCutterTimestamps, TimestampSetBeforeFirstPoint)
   offsets.fill(0);  // No corrections
   auto channel_azimuths = make_channel_azimuths<n_channels>(0, offsets);
 
-  cutter.step(0, channel_azimuths);
+  cutter.step(channel_azimuths);
 
   // After initialization, timestamp should be set for buffer 0
   ASSERT_GE(tracker.timestamp_set_calls.size(), 1);
@@ -210,7 +210,7 @@ TEST_F(TestScanCutterTimestamps, TimestampResetOnFovStart)
   // Simulate rotation through FoV entry
   for (int32_t az = 0; az < max_angle * 2; az += 100) {
     auto channel_azimuths = make_channel_azimuths<n_channels>(az, offsets);
-    cutter.step(az, channel_azimuths);
+    cutter.step(channel_azimuths);
   }
 
   // Verify timestamps were set
@@ -321,7 +321,7 @@ TEST_F(TestScanCutterChannelCorrections, BlockStraddlesCut)
 
   // Step right at the cut angle
   auto channel_azimuths = make_channel_azimuths<n_channels>(18000, offsets);
-  auto scan_state = cutter.step(18000, channel_azimuths);
+  auto scan_state = cutter.step(channel_azimuths);
 
   // Verify channels are split across buffers
   bool has_buffer_0 = false;
@@ -538,11 +538,11 @@ TEST_F(TestScanCutterEdgeCases, VeryLargeAzimuthJump)
   offsets.fill(0);
 
   auto channel_azimuths = make_channel_azimuths<n_channels>(0, offsets);
-  cutter.step(0, channel_azimuths);
+  cutter.step(channel_azimuths);
 
   // Jump by 20000 centi-degrees (200 degrees)
   channel_azimuths = make_channel_azimuths<n_channels>(20000, offsets);
-  cutter.step(20000, channel_azimuths);
+  cutter.step(channel_azimuths);
 
   // Should handle gracefully
   EXPECT_GE(tracker.timestamp_set_calls.size(), 1);
@@ -562,7 +562,7 @@ TEST_F(TestScanCutterEdgeCases, FoVEntryAndExit)
   // Step through various azimuths including outside FoV
   for (int32_t az = 0; az < max_angle * 2; az += 1000) {
     auto channel_azimuths = make_channel_azimuths<n_channels>(az, offsets);
-    auto scan_state = cutter.step(az, channel_azimuths);
+    auto scan_state = cutter.step(channel_azimuths);
 
     // Check FoV filtering
     bool in_fov = scan_state.does_block_intersect_fov();
@@ -583,11 +583,10 @@ TEST_F(TestScanCutterEdgeCases, MultipleRotations)
   std::array<int32_t, n_channels> offsets{};
   offsets.fill(0);
 
-  // Simulate 3 complete rotations
+  // Simulate 3 complete rotations (passes cut angle 3 times)
   simulate_rotation(cutter, 0, 100, offsets, max_angle * 3);
 
-  // Should publish approximately 3 times
-  EXPECT_GE(tracker.publish_calls.size(), 2);
+  EXPECT_EQ(tracker.publish_calls.size(), 3);
 }
 
 // =============================================================================
@@ -617,13 +616,13 @@ TEST_F(TestScanCutterPublishBehavior, Case1_AllSameToDifferent)
 
   // Initialize before cut
   auto channel_azimuths = make_channel_azimuths<n_channels>(17000, offsets);
-  cutter.step(17000, channel_azimuths);
+  cutter.step(channel_azimuths);
 
   size_t timestamp_calls_before = tracker.timestamp_set_calls.size();
 
   // Step into cut region - should trigger case 1
   channel_azimuths = make_channel_azimuths<n_channels>(18000, offsets);
-  cutter.step(18000, channel_azimuths);
+  cutter.step(channel_azimuths);
 
   // Should have set timestamp for next buffer
   EXPECT_GT(tracker.timestamp_set_calls.size(), timestamp_calls_before);
@@ -645,13 +644,13 @@ TEST_F(TestScanCutterPublishBehavior, Case2_DifferentToAllSame)
 
   // Get into different state (straddling cut)
   auto channel_azimuths = make_channel_azimuths<n_channels>(18000, offsets);
-  cutter.step(18000, channel_azimuths);
+  cutter.step(channel_azimuths);
 
   size_t publish_calls_before = tracker.publish_calls.size();
 
   // Move past cut - should trigger case 2 (publish)
   channel_azimuths = make_channel_azimuths<n_channels>(19000, offsets);
-  cutter.step(19000, channel_azimuths);
+  cutter.step(channel_azimuths);
 
   // Should have published
   EXPECT_GT(tracker.publish_calls.size(), publish_calls_before);
@@ -669,14 +668,14 @@ TEST_F(TestScanCutterPublishBehavior, Case3_AllSameToAllSameBufferChange)
 
   // Start before cut
   auto channel_azimuths = make_channel_azimuths<n_channels>(17900, offsets);
-  cutter.step(17900, channel_azimuths);
+  cutter.step(channel_azimuths);
 
   size_t publish_calls_before = tracker.publish_calls.size();
   size_t timestamp_calls_before = tracker.timestamp_set_calls.size();
 
   // Cross cut cleanly
   channel_azimuths = make_channel_azimuths<n_channels>(18100, offsets);
-  cutter.step(18100, channel_azimuths);
+  cutter.step(channel_azimuths);
 
   // Should have published and set timestamp
   EXPECT_GT(tracker.publish_calls.size(), publish_calls_before);
@@ -694,14 +693,14 @@ TEST_F(TestScanCutterPublishBehavior, NoActionWhenStableState)
 
   // Step far from cut
   auto channel_azimuths = make_channel_azimuths<n_channels>(9000, offsets);
-  cutter.step(9000, channel_azimuths);
+  cutter.step(channel_azimuths);
 
   size_t publish_calls_before = tracker.publish_calls.size();
   size_t timestamp_calls_before = tracker.timestamp_set_calls.size();
 
   // Another step still far from cut
   channel_azimuths = make_channel_azimuths<n_channels>(9100, offsets);
-  cutter.step(9100, channel_azimuths);
+  cutter.step(channel_azimuths);
 
   // Should not trigger any callbacks
   EXPECT_EQ(tracker.publish_calls.size(), publish_calls_before);
@@ -729,7 +728,7 @@ TEST(TestScanCutterIntegration, CompleteScenarioWithCorrections)
   for (int rotation = 0; rotation < 2; ++rotation) {
     for (int32_t az = 0; az < max_angle; az += 100) {
       auto channel_azimuths = make_channel_azimuths<n_channels>(az, offsets);
-      auto scan_state = cutter.step(az, channel_azimuths);
+      auto scan_state = cutter.step(channel_azimuths);
 
       // Verify buffer indices are valid
       for (auto idx : scan_state.channel_buffer_indices) {
@@ -893,7 +892,7 @@ TEST_F(TestScanCutterResilience, PacketLossAcrossCutAngle)
     }
 
     auto channel_azimuths = make_channel_azimuths(az, offsets);
-    auto scan_state = cutter.step(az, channel_azimuths);
+    auto scan_state = cutter.step(channel_azimuths);
     decoder.process_packet(az, scan_state);
   }
 
@@ -933,7 +932,7 @@ TEST_F(TestScanCutterResilience, PacketLossAcrossFovStart)
     }
 
     auto channel_azimuths = make_channel_azimuths(az, offsets);
-    auto scan_state = cutter.step(az, channel_azimuths);
+    auto scan_state = cutter.step(channel_azimuths);
     decoder.process_packet(az, scan_state);
   }
 
@@ -974,7 +973,7 @@ TEST_F(TestScanCutterResilience, PacketLossAcrossFovEnd)
     }
 
     auto channel_azimuths = make_channel_azimuths(az, offsets);
-    auto scan_state = cutter.step(az, channel_azimuths);
+    auto scan_state = cutter.step(channel_azimuths);
     decoder.process_packet(az, scan_state);
   }
 
@@ -1010,7 +1009,7 @@ TEST_F(TestScanCutterResilience, MultiplePacketLossAcrossCut)
     }
 
     auto channel_azimuths = make_channel_azimuths(az, offsets);
-    auto scan_state = cutter.step(az, channel_azimuths);
+    auto scan_state = cutter.step(channel_azimuths);
     decoder.process_packet(az, scan_state);
   }
 
@@ -1041,7 +1040,7 @@ TEST_F(TestScanCutterResilience, AzimuthJumpBackwardsAtBoundary)
   // Simulate rotation up to 350°
   for (int32_t az = 0; az < 35000; az += 100) {
     auto channel_azimuths = make_channel_azimuths(az, offsets);
-    auto scan_state = cutter.step(az, channel_azimuths);
+    auto scan_state = cutter.step(channel_azimuths);
     decoder.process_packet(az, scan_state);
   }
 
@@ -1051,7 +1050,7 @@ TEST_F(TestScanCutterResilience, AzimuthJumpBackwardsAtBoundary)
   // Simulate azimuth jump back to 10° (loop restart)
   for (int32_t az = 1000; az < 20000; az += 100) {
     auto channel_azimuths = make_channel_azimuths(az, offsets);
-    auto scan_state = cutter.step(az, channel_azimuths);
+    auto scan_state = cutter.step(channel_azimuths);
     decoder.process_packet(az, scan_state);
   }
 
@@ -1123,14 +1122,14 @@ TEST_F(TestScanCutterResilience, PacketLossAtInitialization)
   // Skip first 50 packets (start at 50°) and do one complete rotation
   for (int32_t az = 5000; az <= max_angle + 5000; az += 100) {
     auto channel_azimuths = make_channel_azimuths(az, offsets);
-    auto scan_state = cutter.step(az, channel_azimuths);
+    auto scan_state = cutter.step(channel_azimuths);
     decoder.process_packet(az, scan_state);
   }
 
   // Should initialize properly and produce scans despite missing initial packets
-  ASSERT_GT(tracker.publish_calls.size(), 0)
+  ASSERT_EQ(tracker.publish_calls.size(), 1)
     << "No scans produced after initialization packet loss";
-  EXPECT_GT(tracker.timestamp_set_calls.size(), 0)
+  EXPECT_EQ(tracker.timestamp_set_calls.size(), 1)
     << "Timestamp not set after initialization packet loss";
 
   // Verify scan integrity
@@ -1157,7 +1156,7 @@ TEST_F(TestScanCutterResilience, MultipleAzimuthJumps)
     // Rotate to 300°
     for (int32_t az = 0; az < 30000; az += 100) {
       auto channel_azimuths = make_channel_azimuths(az, offsets);
-      auto scan_state = cutter.step(az, channel_azimuths);
+      auto scan_state = cutter.step(channel_azimuths);
       decoder.process_packet(az, scan_state);
     }
 
@@ -1193,7 +1192,7 @@ TEST_F(TestScanCutterResilience, ContinuousPacketLoss)
     }
 
     auto channel_azimuths = make_channel_azimuths(az, offsets);
-    auto scan_state = cutter.step(az, channel_azimuths);
+    auto scan_state = cutter.step(channel_azimuths);
     decoder.process_packet(az, scan_state);
   }
 

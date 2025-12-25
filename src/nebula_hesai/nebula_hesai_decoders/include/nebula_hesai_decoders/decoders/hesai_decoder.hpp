@@ -364,7 +364,7 @@ public:
       auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
 
       auto channel_azimuths_out = angle_corrector_.get_corrected_azimuths(block_azimuth);
-      const auto & scan_state = scan_cutter_.step(block_azimuth, channel_azimuths_out);
+      const auto & scan_state = scan_cutter_.step(channel_azimuths_out);
 
       if (scan_state.does_block_intersect_fov()) {
         convert_returns(block_id, n_returns, scan_state);

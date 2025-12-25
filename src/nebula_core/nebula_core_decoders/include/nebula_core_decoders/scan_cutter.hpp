@@ -378,9 +378,7 @@ public:
     }
   }
 
-  const State & step(
-    [[maybe_unused]] int32_t block_azimuth_out,
-    const CorrectedAzimuths<NChannels> & corrected_azimuths_out)
+  const State & step(const CorrectedAzimuths<NChannels> & corrected_azimuths_out)
   {
     if (!state_) {
       initialize_state(corrected_azimuths_out);
