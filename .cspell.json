@@ -50,6 +50,8 @@
     "QT",
     "rclcpp",
     "RCPPUTILS",
+    "rosbag",
+    "rosbags",
     "schedutil",
     "srvs",
     "STD_COUT",
