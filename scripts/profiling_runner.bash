@@ -1,7 +1,5 @@
 #!/usr/bin/bash
 
-# Configuration
-
 print_usage() {
     # Print optionally passed error message
     if [ -n "$1" ]; then
@@ -91,7 +89,7 @@ if [ -z "$sensor_model" ]; then
 fi
 
 echo "Nebula home is $nebula_dir"
-output_dir="$nebula_dir/profiling_output"
+output_dir="$PWD/profiling_output"
 mkdir -p "$output_dir"
 echo "Outputting to '$output_dir/$run_name-[1-$n_runs].log'"
 
@@ -121,7 +119,7 @@ unlockfreq() {
 echo "Setting up for compiling"
 unlockfreq
 
-colcon build --symlink-install --packages-up-to nebula_ros --cmake-args -DCMAKE_BUILD_TYPE=Release || exit 1
+colcon build --mixin release compile-commands || exit 1
 # shellcheck disable=SC1091
 source "$nebula_dir/install/setup.bash"
 
@@ -131,12 +129,15 @@ ros2 daemon start
 echo "Setting up for test run"
 lockfreq
 
-for ((i = 1; i <= n_runs; i++)); do
+for i in $(seq 1 "$n_runs"); do
     echo "Running iteration $i of $n_runs"
     # set the log level to debug for all ros 2 nodes
 
-    timeout -s INT "$runtime" taskset -c "$taskset_cores" ros2 launch nebula_ros nebula_launch.py "sensor_model:=$sensor_model" launch_hw:=false debug_logging:=true >"$output_dir/$run_name-$i.log" 2>&1 &
-    (sleep 3 && timeout -s KILL $((runtime - 3)) nohup ros2 bag play -l "$rosbag_path") >/dev/null &
+    timeout -s INT "$runtime" taskset -c "$taskset_cores" ros2 launch nebula nebula_launch.py "sensor_model:=$sensor_model" launch_hw:=false >"$output_dir/$run_name-$i.log" 2>&1 &
+    (sleep 1 && timeout -s KILL $((runtime - 1)) nohup ros2 bag play -l "$rosbag_path") >/dev/null 2>&1 &
+    timeout -s INT "$runtime" ros2 topic echo --field data --csv /nebula/debug/receive_duration_ms autoware_internal_debug_msgs/msg/Float64Stamped >>"$output_dir/$run_name-$i-receive-duration.csv" &
+    timeout -s INT "$runtime" ros2 topic echo --field data --csv /nebula/debug/decode_duration_ms autoware_internal_debug_msgs/msg/Float64Stamped >>"$output_dir/$run_name-$i-decode-duration.csv" &
+    timeout -s INT "$runtime" ros2 topic echo --field data --csv /nebula/debug/publish_duration_ms autoware_internal_debug_msgs/msg/Float64Stamped >>"$output_dir/$run_name-$i-publish-duration.csv" &
     wait
 done
 
