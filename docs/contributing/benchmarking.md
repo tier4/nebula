@@ -28,20 +28,20 @@ Use `profiling_runner.bash` to run benchmarks:
 
 ### Required Arguments
 
-| Argument | Description |
-|----------|-------------|
-| `<run_name>` | Name for this benchmark run (used in output filenames) |
-| `--sensor-model`, `-m` | Sensor model name (e.g., `Pandar64`, `AT128`) |
-| `--rosbag-path`, `-b` | Path to a rosbag containing sensor packets |
+| Argument               | Description                                            |
+| ---------------------- | ------------------------------------------------------ |
+| `<run_name>`           | Name for this benchmark run (used in output filenames) |
+| `--sensor-model`, `-m` | Sensor model name (e.g., `Pandar64`, `AT128`)          |
+| `--rosbag-path`, `-b`  | Path to a rosbag containing sensor packets             |
 
 ### Optional Arguments
 
-| Argument | Default | Description |
-|----------|---------|-------------|
-| `--runtime`, `-t` | 20 | Duration of each test run in seconds |
-| `--n-runs`, `-n` | 3 | Number of runs per test |
-| `--maxfreq`, `-f` | 2300000 | CPU frequency in Hz (for consistent results) |
-| `--taskset-cores`, `-c` | all cores | CPU cores to pin the process to |
+| Argument                | Default   | Description                                  |
+| ----------------------- | --------- | -------------------------------------------- |
+| `--runtime`, `-t`       | 20        | Duration of each test run in seconds         |
+| `--n-runs`, `-n`        | 3         | Number of runs per test                      |
+| `--maxfreq`, `-f`       | 2300000   | CPU frequency in Hz (for consistent results) |
+| `--taskset-cores`, `-c` | all cores | CPU cores to pin the process to              |
 
 ### Example
 
@@ -65,8 +65,8 @@ Use `plot_times.py` to visualize benchmark results:
 
 ### Options
 
-| Argument | Default | Description |
-|----------|---------|-------------|
+| Argument    | Default                  | Description     |
+| ----------- | ------------------------ | --------------- |
 | `--metrics` | `receive decode publish` | Metrics to plot |
 
 ### Example
