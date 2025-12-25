@@ -59,8 +59,8 @@ TEST_P(ScanCuttingTest, NoPointsOutsideFov)
   int check_cnt = 0;
   int skip_first = 2;
 
-  auto fov_min_rad = drivers::deg2rad(hesai_driver_->params_.fov_start);
-  auto fov_max_rad = drivers::deg2rad(hesai_driver_->params_.fov_end);
+  auto fov_min_rad = drivers::deg2rad(static_cast<float>(hesai_driver_->params_.fov_start));
+  auto fov_max_rad = drivers::deg2rad(static_cast<float>(hesai_driver_->params_.fov_end));
 
   auto scan_callback = [&](uint64_t, uint64_t, nebula::drivers::NebulaPointCloudPtr pointcloud) {
     if (!pointcloud || skip_first-- > 0) return;
@@ -82,9 +82,9 @@ TEST_P(ScanCuttingTest, PointsNearFovBoundaries)
   int check_cnt = 0;
   int skip_first = 2;
 
-  auto fov_min_rad = drivers::deg2rad(hesai_driver_->params_.fov_start);
-  auto fov_max_rad = drivers::deg2rad(hesai_driver_->params_.fov_end);
-  auto near_threshold_rad = drivers::deg2rad(0.3);
+  auto fov_min_rad = drivers::deg2rad(static_cast<float>(hesai_driver_->params_.fov_start));
+  auto fov_max_rad = drivers::deg2rad(static_cast<float>(hesai_driver_->params_.fov_end));
+  auto near_threshold_rad = drivers::deg2rad(0.3F);
 
   auto scan_callback = [&](uint64_t, uint64_t, nebula::drivers::NebulaPointCloudPtr pointcloud) {
     if (!pointcloud || skip_first-- > 0) return;

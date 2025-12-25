@@ -58,7 +58,7 @@ pcl::PointCloud<PointXYZIRADT>::Ptr convert_point_xyzircaedt_to_point_xyziradt(
     point.z = p.z;
     point.intensity = p.intensity;
     point.ring = p.channel;
-    point.azimuth = rad2deg(p.azimuth) * 100.0;
+    point.azimuth = rad2deg(p.azimuth) * 100.0F;
     point.distance = p.distance;
     point.time_stamp = stamp + static_cast<double>(p.time_stamp) * 1e-9;
     output_pointcloud->points.emplace_back(point);

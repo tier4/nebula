@@ -146,7 +146,7 @@ public:
     }
   }
 
-  bool excluded(const NebulaPoint & point)
+  [[nodiscard]] bool excluded(const NebulaPoint & point) const
   {
     double azi_normalized = (point.azimuth - azimuth_range_.start) / azimuth_range_.extent();
 
