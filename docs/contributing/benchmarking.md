@@ -10,12 +10,6 @@ Install dependencies:
 pip install -r scripts/requirements.txt
 ```
 
-Additionally, `seaborn` is required for plotting:
-
-```shell
-pip install seaborn
-```
-
 ## Running Benchmarks
 
 Use `profiling_runner.bash` to run benchmarks:
