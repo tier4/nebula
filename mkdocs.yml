@@ -67,7 +67,9 @@ nav:
   - Point cloud types: point_types.md
   - Design: design.md
   - Tutorials: tutorials.md
-  - Contributing: contribute.md
+  - Contributing:
+      - contributing/index.md
+      - Benchmarking: contributing/benchmarking.md
   - API reference:
       - api_reference.md
       - Core:
