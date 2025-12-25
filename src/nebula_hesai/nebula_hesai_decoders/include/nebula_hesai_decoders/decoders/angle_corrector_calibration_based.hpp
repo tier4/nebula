@@ -46,6 +46,9 @@ private:
   std::array<std::array<float, ChannelN>, max_azimuth> azimuth_cos_{};
   std::array<std::array<float, ChannelN>, max_azimuth> azimuth_sin_{};
 
+  size_t min_correction_index_{};
+  size_t max_correction_index_{};
+
   [[nodiscard]] int32_t to_exact_angle(double angle_deg) const
   {
     return std::round(angle_deg * AngleUnit);
@@ -102,6 +105,10 @@ public:
         azimuth_sin_[block_azimuth][channel_id] = sinf(spatial_azimuth_rad);
       }
     }
+
+    const auto & az = azimuth_offset_exact_;
+    min_correction_index_ = std::min_element(az.begin(), az.end()) - az.begin();
+    max_correction_index_ = std::max_element(az.begin(), az.end()) - az.begin();
   }
 
   [[nodiscard]] CorrectedAngleData get_corrected_angle_data(
@@ -124,16 +131,19 @@ public:
       elevation_cos_[channel_id]};
   }
 
-  [[nodiscard]] std::array<int32_t, ChannelN> get_corrected_azimuths(
+  [[nodiscard]] CorrectedAzimuths<ChannelN> get_corrected_azimuths(
     uint32_t block_azimuth) const override
   {
-    std::array<int32_t, ChannelN> corrected_azimuths;
+    CorrectedAzimuths<ChannelN> corrected_azimuths;
 
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
       int32_t exact_azimuth = block_azimuth + azimuth_offset_exact_[channel_id];
       exact_azimuth = normalize_angle(exact_azimuth, max_azimuth);
-      corrected_azimuths[channel_id] = exact_azimuth;
+      corrected_azimuths.azimuths[channel_id] = exact_azimuth;
     }
+
+    corrected_azimuths.min_correction_index = min_correction_index_;
+    corrected_azimuths.max_correction_index = max_correction_index_;
 
     return corrected_azimuths;
   }

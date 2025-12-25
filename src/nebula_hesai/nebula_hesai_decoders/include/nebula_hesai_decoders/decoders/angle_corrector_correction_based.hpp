@@ -76,7 +76,7 @@ private:
     return deg2rad(angle_exact / static_cast<double>(AngleUnit));
   }
 
-  [[nodiscard]] int32_t get_corrected_azimuth(
+  [[nodiscard]] int32_t get_unnormalized_corrected_azimuth(
     size_t field, uint32_t block_azimuth, size_t channel_id) const
   {
     assert(field < correction_->frameNumber);
@@ -94,7 +94,6 @@ private:
     azimuth_exact -= correction_->azimuth[channel_id];
     azimuth_exact += correction_->get_azimuth_adjust_v3(channel_id, block_azimuth) *
                      static_cast<int32_t>(AngleUnit / 100);
-    azimuth_exact = normalize_angle(azimuth_exact, max_azimuth);
 
     return azimuth_exact;
   }
@@ -145,7 +144,8 @@ public:
     elevation_exact = normalize_angle(elevation_exact, max_azimuth);
 
     size_t field = find_field(block_azimuth);
-    int32_t azimuth_exact = get_corrected_azimuth(field, block_azimuth, channel_id);
+    int32_t azimuth_exact = get_unnormalized_corrected_azimuth(field, block_azimuth, channel_id);
+    azimuth_exact = normalize_angle(azimuth_exact, max_azimuth);
     float azimuth_rad = to_radians(azimuth_exact);
 
     return {
@@ -158,14 +158,24 @@ public:
       cos_[elevation_exact]};
   }
 
-  [[nodiscard]] std::array<int32_t, ChannelN> get_corrected_azimuths(
+  [[nodiscard]] CorrectedAzimuths<ChannelN> get_corrected_azimuths(
     uint32_t block_azimuth) const override
   {
-    std::array<int32_t, ChannelN> corrected_azimuths;
+    CorrectedAzimuths<ChannelN> corrected_azimuths;
     size_t field = find_field(block_azimuth);
 
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-      corrected_azimuths[channel_id] = get_corrected_azimuth(field, block_azimuth, channel_id);
+      corrected_azimuths.azimuths[channel_id] =
+        get_unnormalized_corrected_azimuth(field, block_azimuth, channel_id);
+    }
+
+    const auto & az = corrected_azimuths.azimuths;
+    corrected_azimuths.min_correction_index = std::min_element(az.begin(), az.end()) - az.begin();
+    corrected_azimuths.max_correction_index = std::max_element(az.begin(), az.end()) - az.begin();
+
+    for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
+      corrected_azimuths.azimuths[channel_id] =
+        normalize_angle(corrected_azimuths.azimuths[channel_id], max_azimuth);
     }
 
     return corrected_azimuths;

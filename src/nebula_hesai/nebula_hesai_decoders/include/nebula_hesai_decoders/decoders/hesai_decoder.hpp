@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include "nebula_core_decoders/angles.hpp"
 #include "nebula_core_decoders/point_filters/blockage_mask.hpp"
 #include "nebula_core_decoders/point_filters/downsample_mask.hpp"
 #include "nebula_core_decoders/scan_cutter.hpp"
@@ -32,7 +31,6 @@
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -74,7 +72,10 @@ private:
   std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
     functional_safety_decoder_;
   std::shared_ptr<PacketLossDetectorTypedBase<typename SensorT::packet_t>> packet_loss_detector_;
+
   typename SensorT::packet_t packet_;
+  uint64_t callback_time_ns_{0};
+
   std::shared_ptr<loggers::Logger> logger_;
 
   /// @brief For each channel, its firing offset relative to the block in nanoseconds
@@ -117,7 +118,7 @@ private:
   /// the packet footer)
   void convert_returns(
     size_t start_block_id, size_t n_blocks,
-    const std::array<uint8_t, SensorT::packet_t::n_channels> & channel_buffer_indices)
+    const typename decltype(scan_cutter_)::State & scan_state)
   {
     uint64_t packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
     uint32_t raw_azimuth = packet_.body.blocks[start_block_id].get_azimuth();
@@ -185,12 +186,11 @@ private:
         CorrectedAngleData corrected_angle_data =
           angle_corrector_.get_corrected_angle_data(raw_azimuth, channel_id);
 
-        bool in_fov = scan_cutter_.is_point_inside_fov(corrected_angle_data.azimuth_exact);
-        if (!in_fov) {
+        if (!scan_state.channels_in_fov[channel_id]) {
           continue;
         }
 
-        auto & frame = frame_buffers_[channel_buffer_indices[channel_id]];
+        auto & frame = frame_buffers_[scan_state.channel_buffer_indices[channel_id]];
 
         float azimuth = corrected_angle_data.azimuth_rad;
         if (frame.blockage_mask) {
@@ -274,7 +274,9 @@ private:
       (static_cast<double>(completed_frame.scan_timestamp_ns % nanoseconds_per_second) / 1e9);
 
     if (pointcloud_callback_) {
+      util::Stopwatch stopwatch;
       pointcloud_callback_(completed_frame.pointcloud, scan_timestamp_s);
+      callback_time_ns_ = stopwatch.elapsed_ns();
     }
 
     if (blockage_mask_plugin_ && completed_frame.blockage_mask) {
@@ -335,6 +337,7 @@ public:
   PacketDecodeResult unpack(const std::vector<uint8_t> & packet) override
   {
     util::Stopwatch decode_watch;
+    callback_time_ns_ = 0;
 
     if (!parse_packet(packet)) {
       return {PerformanceCounters{decode_watch.elapsed_ns()}, DecodeError::PACKET_PARSE_FAILED};
@@ -361,10 +364,10 @@ public:
       auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
 
       auto channel_azimuths_out = angle_corrector_.get_corrected_azimuths(block_azimuth);
-      const auto & channel_buffer_indices = scan_cutter_.step(block_azimuth, channel_azimuths_out);
+      const auto & scan_state = scan_cutter_.step(block_azimuth, channel_azimuths_out);
 
-      if (scan_cutter_.does_block_intersect_fov(channel_azimuths_out)) {
-        convert_returns(block_id, n_returns, channel_buffer_indices);
+      if (scan_state.does_block_intersect_fov()) {
+        convert_returns(block_id, n_returns, scan_state);
       }
     }
 
@@ -373,7 +376,7 @@ public:
     PacketMetadata metadata;
     metadata.packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
     metadata.did_scan_complete = did_scan_complete;
-    return {PerformanceCounters{decode_duration_ns}, metadata};
+    return {PerformanceCounters{decode_duration_ns - callback_time_ns_}, metadata};
   }
 };
 
