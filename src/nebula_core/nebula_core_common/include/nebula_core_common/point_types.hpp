@@ -43,7 +43,7 @@ struct PointXYZICATR
  * This point type is not using PCL_ADD_POINT4D to avoid the addition of a 32-bit dummy word.
  * The fields are ordered to meet the SSE alignment.
  */
-struct PointXYZIRCAEDT
+struct EIGEN_ALIGN16 PointXYZIRCAEDT
 {
   float x;
   float y;
