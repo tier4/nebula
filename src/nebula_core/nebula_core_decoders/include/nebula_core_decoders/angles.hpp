@@ -91,17 +91,10 @@ inline bool angle_is_between(
  * scaled units such as centi-degrees (36000).
  */
 template <typename T, typename U = T>
-inline std::enable_if_t<std::is_floating_point_v<T>, T> normalize_angle(T angle, U max_angle)
+inline T normalize_angle(T angle, U max_angle)
 {
-  T max_angle_casted = static_cast<T>(max_angle);
-  return angle - (std::floor(angle / max_angle_casted) * max_angle_casted);
-}
-
-template <typename T, typename U = T>
-inline std::enable_if_t<std::is_integral_v<T>, T> normalize_angle(T angle, U max_angle)
-{
-  T max_angle_casted = static_cast<T>(max_angle);
-  return angle - ((angle / max_angle_casted) * max_angle_casted);
+  T factor = std::floor(static_cast<double>(angle) / static_cast<double>(max_angle));
+  return angle - static_cast<T>(factor * max_angle);
 }
 
 }  // namespace nebula::drivers
