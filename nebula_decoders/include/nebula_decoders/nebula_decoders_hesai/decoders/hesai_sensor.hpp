@@ -22,6 +22,7 @@
 #include <nebula_common/nebula_common.hpp>
 
 #include <algorithm>
+#include <span>
 #include <type_traits>
 #include <vector>
 
@@ -39,7 +40,7 @@ private:
   /// @brief Whether the unit given by return_idx is the strongest (in terms of intensity) among all
   /// return_units
   /// @param return_idx The index of the unit in return_units
-  /// @param return_units The vector of all the units corresponding to the same return group (i.e.
+  /// @param return_units The span of all the units corresponding to the same return group (i.e.
   /// length 2 for dual-return with both units having the same channel but coming from different
   /// blocks)
   /// @return true if the reflectivity of the unit is strictly greater than that of all other units
@@ -48,22 +49,22 @@ private:
     uint32_t return_idx,
     const std::vector<const typename PacketT::body_t::block_t::unit_t *> & return_units)
   {
-    for (unsigned int i = 0; i < return_units.size(); ++i) {
+    const size_t n = return_units.size();
+    const auto target_reflectivity = return_units[return_idx]->reflectivity;
+    for (size_t i = 0; i < n; ++i) {
       if (i == return_idx) {
         continue;
       }
-
-      if (return_units[return_idx]->reflectivity < return_units[i]->reflectivity) {
+      if (target_reflectivity < return_units[i]->reflectivity) {
         return false;
       }
     }
-
     return true;
-  };
+  }
 
   /// @brief Whether the unit given by return_idx is a duplicate of any other unit in return_units
-  /// @param return_idx The unit's index in the return_units vector
-  /// @param return_units The vector of all the units corresponding to the same return group (i.e.
+  /// @param return_idx The unit's index in the return_units span
+  /// @param return_units The span of all the units corresponding to the same return group (i.e.
   /// length 2 for dual-return with both units having the same channel but coming from different
   /// blocks)
   /// @return true if the unit is identical to any other one in return_units, false otherwise
@@ -71,20 +72,20 @@ private:
     uint32_t return_idx,
     const std::vector<const typename PacketT::body_t::block_t::unit_t *> & return_units)
   {
-    for (unsigned int i = 0; i < return_units.size(); ++i) {
+    const size_t n = return_units.size();
+    const auto target_distance = return_units[return_idx]->distance;
+    const auto target_reflectivity = return_units[return_idx]->reflectivity;
+    for (size_t i = 0; i < n; ++i) {
       if (i == return_idx) {
         continue;
       }
-
-      if (
-        return_units[return_idx]->distance == return_units[i]->distance &&
-        return_units[return_idx]->reflectivity == return_units[i]->reflectivity) {
+      if (return_units[i]->distance == target_distance &&
+          return_units[i]->reflectivity == target_reflectivity) {
         return true;
       }
     }
-
     return false;
-  };
+  }
 
 public:
   using packet_t = PacketT;

@@ -33,6 +33,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <span>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -89,6 +90,13 @@ private:
 
   std::optional<point_filters::DownsampleMaskFilter> mask_filter_;
 
+  // ============ PERFORMANCE OPTIMIZATION: Pre-allocated buffers ============
+  /// @brief Pre-allocated return unit pointers to avoid heap allocation per channel
+  std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units_buf_;
+  /// @brief Pre-computed distances for current return group
+  std::array<float, SensorT::packet_t::max_returns> distances_buf_;
+  // =========================================================================
+
   /// @brief Validates and parse PandarPacket. Currently only checks size, not checksums etc.
   /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
@@ -117,46 +125,60 @@ private:
   /// the packet footer)
   void convert_returns(size_t start_block_id, size_t n_blocks)
   {
-    uint64_t packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
-    uint32_t raw_azimuth = packet_.body.blocks[start_block_id].get_azimuth();
+    // ====== OPTIMIZATION: Cache packet-level values once ======
+    const uint64_t packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
+    const uint32_t raw_azimuth = packet_.body.blocks[start_block_id].get_azimuth();
+    const float dis_unit = hesai_packet::get_dis_unit(packet_);  // Cache once per call
+    const auto return_mode =
+      static_cast<hesai_packet::return_mode::ReturnMode>(packet_.tail.return_mode);
+    const float dual_return_threshold = sensor_configuration_->dual_return_distance_threshold;
+    const float cfg_min_range = sensor_configuration_->min_range;
+    const float cfg_max_range = sensor_configuration_->max_range;
+    const bool is_inside_overlap = angle_corrector_.is_inside_overlap(last_azimuth_, raw_azimuth);
+    const bool has_mask_filter = mask_filter_.has_value();
 
-    std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units;
+    // Pre-fetch block pointers for this return group
+    const auto * const blocks = &packet_.body.blocks[start_block_id];
 
     for (size_t channel_id = 0; channel_id < SensorT::packet_t::n_channels; ++channel_id) {
-      // Find the units corresponding to the same return group as the current one.
-      // These are used to find duplicates in multi-return mode.
-      return_units.clear();
+      // ====== OPTIMIZATION: Use pre-allocated vector (resize is O(1) when capacity sufficient) ======
+      return_units_buf_.resize(n_blocks);
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
-        return_units.push_back(
-          &packet_.body.blocks[block_offset + start_block_id].units[channel_id]);
+        return_units_buf_[block_offset] = &blocks[block_offset].units[channel_id];
+        // Pre-compute distance to avoid redundant calculations in inner loop
+        distances_buf_[block_offset] =
+          return_units_buf_[block_offset]->distance * dis_unit;
       }
 
       for (size_t block_offset = 0; block_offset < n_blocks; ++block_offset) {
-        auto & unit = *return_units[block_offset];
+        const auto & unit = *return_units_buf_[block_offset];
 
-        if (unit.distance == 0) {
+        // Use pre-computed distance
+        const float distance = distances_buf_[block_offset];
+
+        // Early exit for zero distance (common case)
+        if (__builtin_expect(unit.distance == 0, 0)) {
           continue;
         }
 
-        float distance = get_distance(unit);
-
-        if (
-          distance < SensorT::min_range || SensorT::max_range < distance ||
-          distance < sensor_configuration_->min_range ||
-          sensor_configuration_->max_range < distance) {
+        // ====== OPTIMIZATION: Combined range check with likely/unlikely hints ======
+        if (__builtin_expect(
+              distance < SensorT::min_range || distance > SensorT::max_range ||
+                distance < cfg_min_range || distance > cfg_max_range,
+              0)) {
           continue;
         }
 
-        auto return_type = sensor_.get_return_type(
-          static_cast<hesai_packet::return_mode::ReturnMode>(packet_.tail.return_mode),
-          block_offset, return_units);
+        // Use pre-allocated vector (no heap allocation due to reserve in constructor)
+        const auto return_type = sensor_.get_return_type(
+          return_mode, block_offset, return_units_buf_);
 
         // Keep only last of multiple identical points
         if (return_type == ReturnType::IDENTICAL && block_offset != n_blocks - 1) {
           continue;
         }
 
-        // Keep only last (if any) of multiple points that are too close
+        // ====== OPTIMIZATION: Use pre-computed distances for threshold check ======
         if (block_offset != n_blocks - 1) {
           bool is_below_multi_return_threshold = false;
 
@@ -164,10 +186,8 @@ private:
             if (return_idx == block_offset) {
               continue;
             }
-
-            if (
-              fabsf(get_distance(*return_units[return_idx]) - distance) <
-              sensor_configuration_->dual_return_distance_threshold) {
+            // Use pre-computed distance instead of calling get_distance()
+            if (fabsf(distances_buf_[return_idx] - distance) < dual_return_threshold) {
               is_below_multi_return_threshold = true;
               break;
             }
@@ -178,50 +198,44 @@ private:
           }
         }
 
-        CorrectedAngleData corrected_angle_data =
+        const CorrectedAngleData corrected_angle_data =
           angle_corrector_.get_corrected_angle_data(raw_azimuth, channel_id);
-        float azimuth = corrected_angle_data.azimuth_rad;
+        const float azimuth = corrected_angle_data.azimuth_rad;
 
-        bool in_fov = angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.fov_max, azimuth);
-        if (!in_fov) {
+        if (!angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.fov_max, azimuth)) {
           continue;
         }
 
         bool in_current_scan = true;
-
         if (
-          angle_corrector_.is_inside_overlap(last_azimuth_, raw_azimuth) &&
+          is_inside_overlap &&
           angle_is_between(
             scan_cut_angles_.scan_emit_angle, scan_cut_angles_.scan_emit_angle + deg2rad(20),
             azimuth)) {
           in_current_scan = false;
         }
 
-        auto pc = in_current_scan ? decode_pc_ : output_pc_;
-        uint64_t scan_timestamp_ns =
+        const auto pc = in_current_scan ? decode_pc_ : output_pc_;
+        const uint64_t scan_timestamp_ns =
           in_current_scan ? decode_scan_timestamp_ns_ : output_scan_timestamp_ns_;
 
+        // ====== OPTIMIZATION: Direct member assignment ======
         NebulaPoint point;
         point.distance = distance;
         point.intensity = unit.reflectivity;
         point.time_stamp = get_point_time_relative(
           scan_timestamp_ns, packet_timestamp_ns, block_offset + start_block_id, channel_id);
-
         point.return_type = static_cast<uint8_t>(return_type);
         point.channel = channel_id;
 
-        // The raw_azimuth and channel are only used as indices, sin/cos functions use the precise
-        // corrected angles
-        float xy_distance = distance * corrected_angle_data.cos_elevation;
+        const float xy_distance = distance * corrected_angle_data.cos_elevation;
         point.x = xy_distance * corrected_angle_data.sin_azimuth;
         point.y = xy_distance * corrected_angle_data.cos_azimuth;
         point.z = distance * corrected_angle_data.sin_elevation;
-
-        // The driver wrapper converts to degrees, expects radians
         point.azimuth = corrected_angle_data.azimuth_rad;
         point.elevation = corrected_angle_data.elevation_rad;
 
-        if (!mask_filter_ || !mask_filter_->excluded(point)) {
+        if (!has_mask_filter || !mask_filter_->excluded(point)) {
           pc->emplace_back(point);
         }
       }
@@ -269,6 +283,9 @@ public:
   {
     decode_pc_ = std::make_shared<NebulaPointCloud>();
     output_pc_ = std::make_shared<NebulaPointCloud>();
+
+    // Pre-allocate return units buffer to avoid heap allocation during decoding
+    return_units_buf_.reserve(SensorT::packet_t::max_returns);
 
     if (sensor_configuration->downsample_mask_path) {
       mask_filter_ = point_filters::DownsampleMaskFilter(
