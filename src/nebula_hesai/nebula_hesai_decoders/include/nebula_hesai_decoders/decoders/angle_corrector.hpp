@@ -26,8 +26,6 @@ namespace nebula::drivers
 /// radians
 struct CorrectedAngleData
 {
-  /// @brief Exact corrected azimuth, without float conversion or rounding
-  uint32_t azimuth_exact;
   float azimuth_rad;
   float elevation_rad;
   float sin_azimuth;

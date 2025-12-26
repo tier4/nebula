@@ -145,14 +145,8 @@ public:
     int32_t azimuth_exact = get_corrected_azimuth(field, block_azimuth, channel_id);
     float azimuth_rad = to_radians(azimuth_exact);
 
-    return {
-      static_cast<uint32_t>(azimuth_exact),
-      azimuth_rad,
-      elevation_rad,
-      sin_[azimuth_exact],
-      cos_[azimuth_exact],
-      sin_[elevation_exact],
-      cos_[elevation_exact]};
+    return {azimuth_rad,         elevation_rad,         sin_[azimuth_exact],
+            cos_[azimuth_exact], sin_[elevation_exact], cos_[elevation_exact]};
   }
 
   [[nodiscard]] CorrectedAzimuths<ChannelN> get_corrected_azimuths(

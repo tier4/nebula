@@ -37,6 +37,8 @@ private:
 
   std::array<float, ChannelN> elevation_angle_rad_{};
   std::array<int32_t, ChannelN> azimuth_offset_exact_{};
+  std::array<float, ChannelN> azimuth_offset_rad_{};
+  std::array<float, max_azimuth> block_azimuth_rad_{};
 
   std::array<float, ChannelN> elevation_cos_{};
   std::array<float, ChannelN> elevation_sin_{};
@@ -85,6 +87,7 @@ public:
 
       elevation_angle_rad_[channel_id] = deg2rad(elevation_angle_deg);
       azimuth_offset_exact_[channel_id] = azimuth_offset;
+      azimuth_offset_rad_[channel_id] = to_radians(azimuth_offset);
 
       elevation_cos_[channel_id] = cosf(elevation_angle_rad_[channel_id]);
       elevation_sin_[channel_id] = sinf(elevation_angle_rad_[channel_id]);
@@ -95,6 +98,7 @@ public:
     // ////////////////////////////////////////
 
     for (size_t block_azimuth = 0; block_azimuth < max_azimuth; block_azimuth++) {
+      block_azimuth_rad_[block_azimuth] = to_radians(block_azimuth);
       for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
         int32_t spatial_azimuth = block_azimuth + azimuth_offset_exact_[channel_id];
         float spatial_azimuth_rad = to_radians(spatial_azimuth);
@@ -111,15 +115,12 @@ public:
   [[nodiscard]] CorrectedAngleData get_corrected_angle_data(
     uint32_t block_azimuth, uint32_t channel_id) const override
   {
-    int32_t spatial_azimuth = block_azimuth + azimuth_offset_exact_[channel_id];
-    spatial_azimuth = normalize_angle(spatial_azimuth, max_azimuth);
-    float azimuth_rad = to_radians(spatial_azimuth);
+    float azimuth_rad = block_azimuth_rad_[block_azimuth] + azimuth_offset_rad_[channel_id];
+    azimuth_rad = normalize_angle(azimuth_rad, M_PIf * 2);
 
     float elevation_rad = elevation_angle_rad_[channel_id];
-    elevation_rad = normalize_angle(elevation_rad, M_PIf * 2);
 
     return {
-      static_cast<uint32_t>(spatial_azimuth),
       azimuth_rad,
       elevation_rad,
       azimuth_sin_[block_azimuth][channel_id],
