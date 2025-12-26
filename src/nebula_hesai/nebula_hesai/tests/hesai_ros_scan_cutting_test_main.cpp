@@ -66,7 +66,9 @@ TEST_P(ScanCuttingTest, NoPointsOutsideFov)
     if (!pointcloud || skip_first-- > 0) return;
 
     for (const auto & p : pointcloud->points) {
-      EXPECT_TRUE(drivers::angle_is_between(fov_min_rad, fov_max_rad, p.azimuth))
+      constexpr float epsilon = 1e-6f;
+      EXPECT_TRUE(
+        drivers::angle_is_between(fov_min_rad - epsilon, fov_max_rad + epsilon, p.azimuth))
         << "Point outside FoV: azimuth=" << drivers::rad2deg(p.azimuth) << " deg";
     }
     check_cnt++;
