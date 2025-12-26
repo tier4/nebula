@@ -175,7 +175,7 @@ private:
     int32_t cut_region_start = normalize_angle(cut_angle_out_ - (max_angle / 4), max_angle);
     int32_t cut_region_end = normalize_angle(cut_angle_out_ + (max_angle / 4), max_angle);
 
-    const std::array<int32_t, NChannels> minmax_azimuths_out = {
+    const std::array<int32_t, 2> minmax_azimuths_out = {
       corrected_azimuths_out.azimuths[corrected_azimuths_out.min_correction_index],
       corrected_azimuths_out.azimuths[corrected_azimuths_out.max_correction_index]};
 
@@ -195,7 +195,7 @@ private:
         return angle_is_between(start_angle, end_angle, azimuth_out, false, true);
       });
 
-    return n_points_beyond_cut != 0 && n_points_beyond_cut != NChannels;
+    return n_points_beyond_cut != 0 && n_points_beyond_cut != 2;
   }
 
   [[nodiscard]] bool has_channel_crossed_cut(int32_t last_azimuth_out, int32_t azimuth_out) const
@@ -229,7 +229,7 @@ private:
   {
     // start <= azi + cmin AND azi + cmax <= end
     // => start - cmin <= azi <= end - cmax
-    const std::array<int32_t, NChannels> minmax_azimuths_out = {
+    const std::array<int32_t, 2> minmax_azimuths_out = {
       corrected_azimuths_out.azimuths[corrected_azimuths_out.min_correction_index],
       corrected_azimuths_out.azimuths[corrected_azimuths_out.max_correction_index]};
     return std::any_of(

@@ -1048,16 +1048,13 @@ TEST_F(TestScanCutterResilience, PacketLossAtInitialization)
   auto offsets = make_increasing_offsets<n_channels>(-500, 500);
 
   // Skip first 50 packets (start at 50°) and do one complete rotation
-  for (int32_t az = 5000; az <= max_angle + 5000; az += 100) {
-    auto channel_azimuths = make_channel_azimuths(az, offsets);
-    auto scan_state = cutter.step(channel_azimuths);
-    decoder.process_packet(az, scan_state);
-  }
+  simulate_rotation(cutter, 5000, 100, offsets);
 
   // Should initialize properly and produce scans despite missing initial packets
   ASSERT_EQ(tracker.publish_calls.size(), 1)
     << "No scans produced after initialization packet loss";
-  EXPECT_EQ(tracker.timestamp_set_calls.size(), 1)
+  // Two timestamp calls expected: initial (at 50°) + after crossing cut (for next buffer)
+  EXPECT_EQ(tracker.timestamp_set_calls.size(), 2)
     << "Timestamp not set after initialization packet loss";
 
   // Verify scan integrity
