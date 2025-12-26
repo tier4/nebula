@@ -24,15 +24,9 @@
 #include <array>
 #include <cassert>
 #include <cstdint>
-#include <functional>
 #include <memory>
-#include <optional>
-#include <ostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <utility>
-#include <vector>
 
 namespace nebula::drivers
 {
@@ -51,19 +45,21 @@ private:
   /// @brief For a given azimuth value, find its corresponding output field
   /// @param azimuth The azimuth to get the field for
   /// @return The correct output field, as specified in @ref HesaiCorrection
-  [[nodiscard]] size_t find_field(uint32_t azimuth) const
+  [[nodiscard]] size_t find_field(int32_t azimuth) const
   {
-    // Assumes that:
-    // * none of the startFrames are defined as > 360 deg (< 0 not possible since they are unsigned)
-    // * the fields are arranged in ascending order (e.g. field 1: 20-140deg, field 2: 140-260deg
-    // etc.) These assumptions hold for AT128E2X.
-    size_t field = correction_->frameNumber - 1;
     for (size_t i = 0; i < correction_->frameNumber; ++i) {
-      if (azimuth < correction_->startFrame[i]) return field;
-      field = i;
+      int32_t start_azimuth = correction_->startFrame[i];
+      int32_t end_azimuth = correction_->endFrame[i];
+      if (angle_is_between(start_azimuth, end_azimuth, azimuth)) return i;
     }
 
-    return field;
+    std::stringstream ss;
+    ss << "Azimuth " << azimuth << " not in any field\n";
+    for (size_t i = 0; i < correction_->frameNumber; ++i) {
+      ss << "Field " << i << ": " << correction_->startFrame[i] << " - " << correction_->endFrame[i]
+         << '\n';
+    }
+    throw std::runtime_error(ss.str());
   }
 
   [[nodiscard]] int32_t to_exact_angle(double angle_deg) const
@@ -76,7 +72,7 @@ private:
     return deg2rad(angle_exact / static_cast<double>(AngleUnit));
   }
 
-  [[nodiscard]] int32_t get_unnormalized_corrected_azimuth(
+  [[nodiscard]] int32_t get_corrected_azimuth(
     size_t field, uint32_t block_azimuth, size_t channel_id) const
   {
     assert(field < correction_->frameNumber);
@@ -94,13 +90,15 @@ private:
     azimuth_exact -= correction_->azimuth[channel_id];
     azimuth_exact += correction_->get_azimuth_adjust_v3(channel_id, block_azimuth) *
                      static_cast<int32_t>(AngleUnit / 100);
+    azimuth_exact = normalize_angle(azimuth_exact, max_azimuth);
 
+    assert(azimuth_exact >= 10 * static_cast<int32_t>(AngleUnit));
+    assert(azimuth_exact <= 170 * static_cast<int32_t>(AngleUnit));
     return azimuth_exact;
   }
 
   [[nodiscard]] int32_t get_corrected_elevation(uint32_t block_azimuth, size_t channel_id) const
   {
-    assert(field < correction_->frameNumber);
     assert(channel_id < ChannelN);
 
     int32_t elevation_exact = correction_->elevation[channel_id];
@@ -144,8 +142,7 @@ public:
     elevation_exact = normalize_angle(elevation_exact, max_azimuth);
 
     size_t field = find_field(block_azimuth);
-    int32_t azimuth_exact = get_unnormalized_corrected_azimuth(field, block_azimuth, channel_id);
-    azimuth_exact = normalize_angle(azimuth_exact, max_azimuth);
+    int32_t azimuth_exact = get_corrected_azimuth(field, block_azimuth, channel_id);
     float azimuth_rad = to_radians(azimuth_exact);
 
     return {
@@ -166,17 +163,12 @@ public:
 
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
       corrected_azimuths.azimuths[channel_id] =
-        get_unnormalized_corrected_azimuth(field, block_azimuth, channel_id);
+        get_corrected_azimuth(field, block_azimuth, channel_id);
     }
 
     const auto & az = corrected_azimuths.azimuths;
     corrected_azimuths.min_correction_index = std::min_element(az.begin(), az.end()) - az.begin();
     corrected_azimuths.max_correction_index = std::max_element(az.begin(), az.end()) - az.begin();
-
-    for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-      corrected_azimuths.azimuths[channel_id] =
-        normalize_angle(corrected_azimuths.azimuths[channel_id], max_azimuth);
-    }
 
     return corrected_azimuths;
   }
