@@ -406,7 +406,7 @@ public:
     TransitionActions actions{};
 
     if (cuts_at_fov_end) {
-      // Use the complex 8-state FSM for cut at FoV end
+      // Use the 6-state FSM for cut at FoV end
       actions = FsmCutAtFovEnd::step(
         buffer_state_before, buffer_state_after, fov_state_before, fov_state_after,
         state_->current_buffer_index);

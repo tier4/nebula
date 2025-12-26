@@ -22,30 +22,26 @@ namespace nebula::drivers
 {
 
 /// @brief FSM for scan cutting when the cut angle is at the FoV end (limited FoV mode).
-/// This is the more complex 8-state FSM that tracks both buffer and FoV state.
+/// This is a 6-state FSM that tracks both buffer and FoV state.
 ///
 /// States:
 /// - O0: All channels in buffer 0, all outside FoV (Outside 0)
-/// - S0: All channels in buffer 0, some in FoV, some outside (Spanning 0)
-/// - F0: All channels in buffer 0, all in FoV (Filled 0)
+/// - F0: All channels in buffer 0, at least one in FoV (Filled 0)
 /// - C0_1: Channels split between buffers, transitioning 0->1 (Crossing 0->1)
 /// - O1: All channels in buffer 1, all outside FoV (Outside 1)
-/// - S1: All channels in buffer 1, some in FoV, some outside (Spanning 1)
-/// - F1: All channels in buffer 1, all in FoV (Filled 1)
+/// - F1: All channels in buffer 1, at least one in FoV (Filled 1)
 /// - C1_0: Channels split between buffers, transitioning 1->0 (Crossing 1->0)
 ///
 /// Transition table for buffer 0 states (From columns, To rows):
 ///
-/// | To \ From | O0      | S0      | F0      | C0_1    |
-/// | --------- | ------- | ------- | ------- | ------- |
-/// | O0        | -       |         |         |         |
-/// | S0        | T0      | -       |         |         |
-/// | F0        | T0      | -       | -       |         |
-/// | C0_1      | T0      | -       | -       | -       |
-/// | O1        | T1, E0  | E0      | E0      | E0      |
-/// | S1        |         | T1, E0  | T1, E0  | T1, E0  |
-/// | F1        |         |         | T1, E0  | T1, E0  |
-/// | C1_0      |         |         |         | ⛔      |
+/// | To \ From | O0      | F0      | C0_1    |
+/// | --------- | ------- | ------- | ------- |
+/// | O0        | -       |         |         |
+/// | F0        | T0      | -       |         |
+/// | C0_1      | T0      | -       | -       |
+/// | O1        | T1, E0  | E0      | E0      |
+/// | F1        |         | T1, E0  | T1, E0  |
+/// | C1_0      |         |         | ⛔      |
 ///
 /// Analogous transitions exist for buffer 1 states (symmetric).
 class FsmCutAtFovEnd
@@ -62,12 +58,10 @@ public:
 
   enum class State : uint8_t {
     O0,    // All channels in buffer 0, all outside FoV
-    S0,    // All channels in buffer 0, spanning FoV boundary
-    F0,    // All channels in buffer 0, all in FoV
+    F0,    // All channels in buffer 0, at least one in FoV
     C0_1,  // Crossing from buffer 0 to buffer 1
     O1,    // All channels in buffer 1, all outside FoV
-    S1,    // All channels in buffer 1, spanning FoV boundary
-    F1,    // All channels in buffer 1, all in FoV
+    F1,    // All channels in buffer 1, at least one in FoV
     C1_0   // Crossing from buffer 1 to buffer 0
   };
 
@@ -88,15 +82,16 @@ public:
     // All channels are in the same buffer
     buffer_index_t buffer_index = std::get<AllSame<buffer_index_t>>(buffer_state).value;
 
-    // Determine FoV-based state
+    // Determine FoV-based state: F if any channel is in FoV, O if all outside
+    bool any_in_fov{};
     if (std::holds_alternative<Different>(fov_state)) {
-      // Spanning FoV boundary
-      return buffer_index == 0 ? State::S0 : State::S1;
+      // Mixed: some in FoV, some outside -> at least one in FoV
+      any_in_fov = true;
+    } else {
+      any_in_fov = std::get<AllSame<bool>>(fov_state).value;
     }
 
-    bool all_in_fov = std::get<AllSame<bool>>(fov_state).value;
-    if (all_in_fov) {
-      // All in FoV
+    if (any_in_fov) {
       return buffer_index == 0 ? State::F0 : State::F1;
     }
     // All outside FoV
@@ -121,10 +116,9 @@ public:
     switch (state_before) {
       case State::O0:
         switch (state_after) {
-          case State::S0:
           case State::F0:
           case State::C0_1:
-            // O0 -> S0/F0/C0_1: T0 (reset timestamp of buffer 0)
+            // O0 -> F0/C0_1: T0 (reset timestamp of buffer 0)
             actions.reset_timestamp_buffer = 0;
             break;
           case State::O1:
@@ -133,24 +127,7 @@ public:
             actions.emit_scan_buffer = 0;
             break;
           default:
-            // O0 -> S1/F1/C1_0: invalid (empty cells)
-            break;
-        }
-        break;
-
-      case State::S0:
-        switch (state_after) {
-          case State::O1:
-            // S0 -> O1: E0 (emit buffer 0)
-            actions.emit_scan_buffer = 0;
-            break;
-          case State::S1:
-            // S0 -> S1: T1, E0 (reset timestamp 1, emit buffer 0)
-            actions.reset_timestamp_buffer = 1;
-            actions.emit_scan_buffer = 0;
-            break;
-          default:
-            // S0 -> O0/F0/C0_1/F1/C1_0: invalid or no action
+            // O0 -> F1/C1_0: invalid (empty cells)
             break;
         }
         break;
@@ -161,15 +138,13 @@ public:
             // F0 -> O1: E0 (emit buffer 0)
             actions.emit_scan_buffer = 0;
             break;
-          case State::S1:
-          // F0 -> S1: T1, E0 (reset timestamp 1, emit buffer 0)
           case State::F1:
             // F0 -> F1: T1, E0 (reset timestamp 1, emit buffer 0)
             actions.reset_timestamp_buffer = 1;
             actions.emit_scan_buffer = 0;
             break;
           default:
-            // F0 -> O0/S0/C0_1/C1_0: invalid or no action
+            // F0 -> O0/C0_1/C1_0: invalid or no action
             break;
         }
         break;
@@ -180,8 +155,6 @@ public:
             // C0_1 -> O1: E0 (emit buffer 0)
             actions.emit_scan_buffer = 0;
             break;
-          case State::S1:
-          // C0_1 -> S1: T1, E0 (reset timestamp 1, emit buffer 0)
           case State::F1:
             // C0_1 -> F1: T1, E0 (reset timestamp 1, emit buffer 0)
             actions.reset_timestamp_buffer = 1;
@@ -191,7 +164,7 @@ public:
             // C0_1 -> C1_0: ⛔ Invalid transition
             throw std::runtime_error("Invalid FSM transition: C0_1 -> C1_0");
           default:
-            // C0_1 -> O0/S0/F0: invalid
+            // C0_1 -> O0/F0: invalid
             break;
         }
         break;
@@ -199,10 +172,9 @@ public:
       // Symmetric transitions for buffer 1 states
       case State::O1:
         switch (state_after) {
-          case State::S1:
           case State::F1:
           case State::C1_0:
-            // O1 -> S1/F1/C1_0: T1 (reset timestamp of buffer 1)
+            // O1 -> F1/C1_0: T1 (reset timestamp of buffer 1)
             actions.reset_timestamp_buffer = 1;
             break;
           case State::O0:
@@ -211,24 +183,7 @@ public:
             actions.emit_scan_buffer = 1;
             break;
           default:
-            // O1 -> S0/F0/C0_1: invalid (empty cells)
-            break;
-        }
-        break;
-
-      case State::S1:
-        switch (state_after) {
-          case State::O0:
-            // S1 -> O0: E1 (emit buffer 1)
-            actions.emit_scan_buffer = 1;
-            break;
-          case State::S0:
-            // S1 -> S0: T0, E1 (reset timestamp 0, emit buffer 1)
-            actions.reset_timestamp_buffer = 0;
-            actions.emit_scan_buffer = 1;
-            break;
-          default:
-            // S1 -> O1/F1/C1_0/F0/C0_1: invalid or no action
+            // O1 -> F0/C0_1: invalid (empty cells)
             break;
         }
         break;
@@ -239,15 +194,13 @@ public:
             // F1 -> O0: E1 (emit buffer 1)
             actions.emit_scan_buffer = 1;
             break;
-          case State::S0:
-          // F1 -> S0: T0, E1 (reset timestamp 0, emit buffer 1)
           case State::F0:
             // F1 -> F0: T0, E1 (reset timestamp 0, emit buffer 1)
             actions.reset_timestamp_buffer = 0;
             actions.emit_scan_buffer = 1;
             break;
           default:
-            // F1 -> O1/S1/C1_0/C0_1: invalid or no action
+            // F1 -> O1/C1_0/C0_1: invalid or no action
             break;
         }
         break;
@@ -258,8 +211,6 @@ public:
             // C1_0 -> O0: E1 (emit buffer 1)
             actions.emit_scan_buffer = 1;
             break;
-          case State::S0:
-          // C1_0 -> S0: T0, E1 (reset timestamp 0, emit buffer 1)
           case State::F0:
             // C1_0 -> F0: T0, E1 (reset timestamp 0, emit buffer 1)
             actions.reset_timestamp_buffer = 0;
@@ -269,7 +220,7 @@ public:
             // C1_0 -> C0_1: ⛔ Invalid transition
             throw std::runtime_error("Invalid FSM transition: C1_0 -> C0_1");
           default:
-            // C1_0 -> O1/S1/F1: invalid
+            // C1_0 -> O1/F1: invalid
             break;
         }
         break;
