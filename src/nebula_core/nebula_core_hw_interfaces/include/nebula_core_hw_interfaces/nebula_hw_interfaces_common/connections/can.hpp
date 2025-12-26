@@ -1,0 +1,353 @@
+// Copyright 2025 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#pragma once
+
+#ifndef _GNU_SOURCE
+// See `man strerror_r`
+#define _GNU_SOURCE
+#endif
+
+#include <nebula_core_common/util/errno.hpp>
+#include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/socket_utils.hpp>
+
+#include <linux/can.h>
+#include <linux/can/raw.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <sys/poll.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+#include <algorithm>
+#include <atomic>
+#include <cassert>
+#include <cerrno>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <thread>
+#include <utility>
+#include <vector>
+
+namespace nebula::drivers::connections
+{
+
+/**
+ * @brief A wrapper around a raw CAN socket (AF_CAN).
+ *        Supports both standard CAN and CAN FD frames.
+ */
+class CanSocket
+{
+  struct SocketConfig
+  {
+    int32_t polling_interval_ms{10};
+    std::string interface_name;
+  };
+
+  CanSocket(SockFd sock_fd, SocketConfig config)
+  : sock_fd_(std::move(sock_fd)), poll_fd_{sock_fd_.get(), POLLIN, 0}, config_{std::move(config)}
+  {
+  }
+
+public:
+  class Builder
+  {
+  public:
+    /**
+     * @brief Build a CAN socket.
+     *
+     * @param interface_name The name of the CAN interface (e.g., "can0", "vcan0").
+     */
+    explicit Builder(const std::string & interface_name)
+    {
+      config_.interface_name = interface_name;
+
+      int sock_fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+      if (sock_fd == -1) throw SocketError(errno);
+      sock_fd_ = SockFd{sock_fd};
+    }
+
+    /**
+     * @brief Set the interval at which the socket polls for new data.
+     *
+     * @param interval_ms The desired polling interval.
+     */
+    Builder && set_polling_interval(int32_t interval_ms)
+    {
+      config_.polling_interval_ms = interval_ms;
+      return std::move(*this);
+    }
+
+    /**
+     * @brief Bind the socket to the CAN interface.
+     */
+    CanSocket bind() &&
+    {
+      ifreq ifr{};
+      std::strncpy(ifr.ifr_name, config_.interface_name.c_str(), IFNAMSIZ - 1);
+      if (ioctl(sock_fd_.get(), SIOCGIFINDEX, &ifr) == -1) throw SocketError(errno);
+
+      sockaddr_can addr{};
+      addr.can_family = AF_CAN;
+      addr.can_ifindex = ifr.ifr_ifindex;
+
+      int result = ::bind(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
+      if (result == -1) throw SocketError(errno);
+
+      return CanSocket{std::move(sock_fd_), config_};
+    }
+
+  private:
+    SockFd sock_fd_;
+    SocketConfig config_;
+  };
+
+  struct RxMetadata
+  {
+    std::uint64_t timestamp_ns{0};
+  };
+
+  using callback_t = std::function<void(const can_frame & frame)>;
+
+  /**
+   * @brief Register a callback for processing received frames and start the receiver thread.
+   *
+   * @param callback The function to be executed for each received frame.
+   */
+  CanSocket & subscribe(callback_t && callback)
+  {
+    unsubscribe();
+    callback_ = std::move(callback);
+    launch_receiver();
+    return *this;
+  }
+
+  /**
+   * @brief Check if the socket is currently subscribed and receiving data.
+   * @return True if receiving, false otherwise.
+   */
+  bool is_subscribed() { return running_; }
+
+  /**
+   * @brief Gracefully stops the active receiver thread.
+   */
+  CanSocket & unsubscribe()
+  {
+    running_ = false;
+    if (receive_thread_.joinable()) {
+      receive_thread_.join();
+    }
+    return *this;
+  }
+
+  /**
+   * @brief Close the socket and return the file descriptor to uninitialized state.
+   */
+  void close()
+  {
+    unsubscribe();
+    sock_fd_ = SockFd{};
+  }
+
+  /**
+   * @brief Send a standard CAN frame.
+   *
+   * @param frame The CAN frame to send.
+   * @throws SocketError if the write fails or is incomplete.
+   */
+  void send(const can_frame & frame)
+  {
+    ssize_t result = ::write(sock_fd_.get(), &frame, sizeof(frame));
+    if (result == -1) throw SocketError(errno);
+    if (result != sizeof(frame)) throw SocketError("Incomplete CAN frame write");
+  }
+
+  /**
+   * @brief Send a CAN FD frame.
+   *
+   * @param frame The CAN FD frame to send.
+   * @throws SocketError if the write fails or is incomplete.
+   */
+  void send_fd(const canfd_frame & frame)
+  {
+    ssize_t result = ::write(sock_fd_.get(), &frame, sizeof(frame));
+    if (result == -1) throw SocketError(errno);
+    if (result != sizeof(frame)) throw SocketError("Incomplete CAN FD frame write");
+  }
+
+  /**
+   * @brief Enable or disable CAN FD frame support on the socket.
+   *
+   * @param enable True to enable, false to disable.
+   * @throws SocketError if setsockopt fails.
+   */
+  void set_fd_mode(bool enable)
+  {
+    int fd_mode = enable ? 1 : 0;
+    auto result = sock_fd_.setsockopt(SOL_CAN_RAW, CAN_RAW_FD_FRAMES, fd_mode);
+    if (!result.has_value()) throw SocketError(result.error());
+  }
+
+  /**
+   * @brief Enable or disable kernel socket timestamping (SO_TIMESTAMP).
+   *
+   * @param enable True to enable, false to disable.
+   * @throws SocketError if setsockopt fails.
+   */
+  void set_timestamping(bool enable)
+  {
+    int timestamping = enable ? 1 : 0;
+    auto result = sock_fd_.setsockopt(SOL_SOCKET, SO_TIMESTAMP, timestamping);
+    if (!result.has_value()) throw SocketError(result.error());
+  }
+
+  /**
+   * @brief Set CAN raw filters.
+   *
+   * @param filters Vector of can_filter structures.
+   * @throws SocketError if setsockopt fails.
+   */
+  void set_filters(const std::vector<can_filter> & filters)
+  {
+    int result = ::setsockopt(
+      sock_fd_.get(), SOL_CAN_RAW, CAN_RAW_FILTER, filters.data(),
+      filters.size() * sizeof(can_filter));
+    if (result == -1) throw SocketError(errno);
+  }
+
+  /**
+   * @brief Receive a CAN FD frame with a timeout.
+   *
+   * @param frame Reference to a canfd_frame to store the received data.
+   * @param timeout Timeout duration.
+   * @return True if a frame was received, false if timeout occurred.
+   * @throws SocketError if poll or read fails.
+   */
+  bool receive_fd(canfd_frame & frame, std::chrono::nanoseconds timeout)
+  {
+    RxMetadata metadata;
+    return receive_fd(frame, timeout, metadata);
+  }
+
+  bool receive_fd(canfd_frame & frame, std::chrono::nanoseconds timeout, RxMetadata & metadata)
+  {
+    pollfd pfd{sock_fd_.get(), POLLIN, 0};
+    int timeout_ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count();
+    int status = poll(&pfd, 1, timeout_ms);
+    if (status == -1) throw SocketError(errno);
+    if (status == 0) return false;
+
+    struct iovec iov;
+    struct msghdr msg;
+    char ctrl[CMSG_SPACE(sizeof(struct timeval))];
+    struct sockaddr_can addr;
+
+    iov.iov_base = &frame;
+    iov.iov_len = sizeof(frame);
+
+    msg.msg_name = &addr;
+    msg.msg_namelen = sizeof(addr);
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+    msg.msg_control = ctrl;
+    msg.msg_controllen = sizeof(ctrl);
+    msg.msg_flags = 0;
+
+    ssize_t recv_result = recvmsg(sock_fd_.get(), &msg, 0);
+    if (recv_result < 0) throw SocketError(errno);
+
+    metadata.timestamp_ns = 0;
+    for (struct cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
+         cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+      if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMP) {
+        struct timeval * tv = (struct timeval *)CMSG_DATA(cmsg);
+        metadata.timestamp_ns =
+          (uint64_t)tv->tv_sec * 1000000000ULL + (uint64_t)tv->tv_usec * 1000ULL;
+      }
+    }
+
+    if (metadata.timestamp_ns == 0) {
+      metadata.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                std::chrono::system_clock::now().time_since_epoch())
+                                .count();
+    }
+
+    if (static_cast<size_t>(recv_result) < sizeof(frame)) {
+      throw SocketError("Incomplete CAN FD frame received");
+    }
+    return true;
+  }
+
+  CanSocket(const CanSocket &) = delete;
+  CanSocket(CanSocket && other)
+  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))),
+    poll_fd_(other.poll_fd_),
+    config_(other.config_)
+  {
+    if (other.callback_) subscribe(std::move(other.callback_));
+  };
+
+  CanSocket & operator=(const CanSocket &) = delete;
+  CanSocket & operator=(CanSocket &&) = delete;
+
+  ~CanSocket() { unsubscribe(); }
+
+private:
+  void launch_receiver()
+  {
+    assert(callback_);
+
+    running_ = true;
+    receive_thread_ = std::thread([this]() {
+      while (running_) {
+        auto data_available = is_data_available();
+        if (!data_available.has_value()) throw SocketError(data_available.error());
+        if (!data_available.value()) continue;
+
+        can_frame frame{};
+        ssize_t recv_result = ::read(sock_fd_.get(), &frame, sizeof(frame));
+        if (recv_result < 0) throw SocketError(errno);
+        if (recv_result < static_cast<ssize_t>(sizeof(frame)))
+          continue;  // Ignore incomplete frames
+
+        callback_(frame);
+      }
+    });
+  }
+
+  util::expected<bool, int> is_data_available()
+  {
+    int status = poll(&poll_fd_, 1, config_.polling_interval_ms);
+    if (status == -1) return errno;
+    return (poll_fd_.revents & POLLIN) && (status > 0);
+  }
+
+  SockFd sock_fd_;
+  pollfd poll_fd_;
+
+  SocketConfig config_;
+
+  std::atomic_bool running_{false};
+  std::thread receive_thread_;
+  callback_t callback_;
+};
+
+}  // namespace nebula::drivers::connections
