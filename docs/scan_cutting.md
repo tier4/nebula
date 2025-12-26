@@ -40,28 +40,25 @@ Analogously for `F1` and `C1->0`.
 
 State definitions:
 
-| State   | Condition                                                                      |
-| ------- | ------------------------------------------------------------------------------ |
-| `O0`    | $\forall c . c \in buf_0 \land c \notin fov$                                   |
-| `S0`    | $\forall c . c \in buf_0 \land \exists c . c \in fov \exists c . c \notin fov$ |
-| `F0`    | $\forall c . c \in buf_0 \land c \in fov$                                      |
-| `C0->1` | $buf = buf_0 \land \exists c . c \in buf_1$                                    |
+| State   | Condition                                             |
+| ------- | ----------------------------------------------------- |
+| `O0`    | $\forall c . c \in buf_0 \land c \notin fov$          |
+| `F0`    | $\forall c . c \in buf_0 \land \exists c . c \in fov$ |
+| `C0->1` | $buf = buf_0 \land \exists c . c \in buf_1$           |
 
-Analogously for `O1`, `S1`, `F1`, and `C1->0`.
+Analogously for `O1`, `F1`, and `C1->0`.
 
 Transition actions:
 
-| To \ From | `O0`     | `S0`     | `F0`     | `C0->1`  |
-| --------- | -------- | -------- | -------- | -------- |
-| `O0`      | -        |          |          |          |
-| `S0`      | `T0`     | -        |          |          |
-| `F0`      | `T0`     | -        | -        |          |
-| `C0->1`   | `T0`     | -        | -        | -        |
-| `O1`      | `T1, E0` | `E0`     | `E0`     | `E0`     |
-| `S1`      |          | `T1, E0` | `T1, E0` | `T1, E0` |
-| `F1`      |          |          | `T1, E0` | `T1, E0` |
-| `C1->0`   |          |          |          | ⛔       |
+| To \ From | `O0`     | `F0`     | `C0->1`  |
+| --------- | -------- | -------- | -------- |
+| `O0`      | -        |          |          |
+| `F0`      | `T0`     | -        |          |
+| `C0->1`   | `T0`     | -        | -        |
+| `O1`      | `T1, E0` | `E0`     | `E0`     |
+| `F1`      |          | `T1, E0` | `T1, E0` |
+| `C1->0`   |          |          | ⛔       |
 
-Analogously for `O1`, `S1`, `F1`, and `C1->0`.
+Analogously for `O1`, `F1`, and `C1->0`.
 
 ![FSM-CutAtFovEnd](img/scan_cutting_fsm.drawio)
