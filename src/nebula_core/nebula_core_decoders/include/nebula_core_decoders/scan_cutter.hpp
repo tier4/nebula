@@ -256,32 +256,6 @@ private:
     return Different{};
   }
 
-  [[nodiscard]] bool has_jumped_cut(
-    const ChannelBufferState & buffer_state_before,
-    const ChannelBufferState & buffer_state_after) const
-  {
-    // The cut has been jumped if:
-    // 1. All channels were in the same buffer before (AllSame)
-    // 2. All channels are in the same buffer after (AllSame)
-    // 3. The buffer indices are different (jumped from one buffer to another)
-    //
-    // If these conditions are met, all channels must have crossed the cut angle simultaneously,
-    // which means the azimuth step was large enough to skip the cut for all channels.
-
-    if (!std::holds_alternative<AllSame<buffer_index_t>>(buffer_state_before)) {
-      return false;
-    }
-
-    if (!std::holds_alternative<AllSame<buffer_index_t>>(buffer_state_after)) {
-      return false;
-    }
-
-    buffer_index_t buffer_before = std::get<AllSame<buffer_index_t>>(buffer_state_before).value;
-    buffer_index_t buffer_after = std::get<AllSame<buffer_index_t>>(buffer_state_after).value;
-
-    return buffer_before != buffer_after;
-  }
-
   [[nodiscard]] bool is_point_inside_fov(int32_t azimuth_out) const
   {
     // 360deg FoV
@@ -292,27 +266,6 @@ private:
     // Both start and end are inclusive.
     // start <= azi <= end
     return angle_is_between(fov_start_out_, fov_end_out_, azimuth_out);
-  }
-
-  ChannelFovState aggregate_fov_state(const ChannelFovState & fov_state, bool channel_in_fov) const
-  {
-    const auto * all_same_opt = std::get_if<AllSame<bool>>(&fov_state);
-    if (all_same_opt && all_same_opt->value == channel_in_fov) {
-      return fov_state;
-    }
-
-    return Different{};
-  }
-
-  ChannelBufferState aggregate_buffer_state(
-    const ChannelBufferState & buffer_state, buffer_index_t buffer_index) const
-  {
-    const auto * all_same_opt = std::get_if<AllSame<buffer_index_t>>(&buffer_state);
-    if (all_same_opt && all_same_opt->value == buffer_index) {
-      return buffer_state;
-    }
-
-    return Different{};
   }
 
   void update_state(const CorrectedAzimuths<NChannels> & corrected_azimuths_out)
