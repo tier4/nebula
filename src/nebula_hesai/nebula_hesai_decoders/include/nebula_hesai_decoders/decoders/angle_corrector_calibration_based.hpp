@@ -139,6 +139,10 @@ public:
       corrected_azimuths.azimuths[channel_id] = exact_azimuth;
     }
 
+    // Use precomputed min/max indices based on correction terms (offsets).
+    // min_correction_index = channel that lags behind (smallest offset)
+    // max_correction_index = channel that races ahead (largest offset)
+    // These are invariant across block_azimuth values.
     corrected_azimuths.min_correction_index = min_correction_index_;
     corrected_azimuths.max_correction_index = max_correction_index_;
 

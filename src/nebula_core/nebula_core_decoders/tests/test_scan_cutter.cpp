@@ -1048,7 +1048,14 @@ TEST_F(TestScanCutterResilience, PacketLossAtInitialization)
   auto offsets = make_increasing_offsets<n_channels>(-500, 500);
 
   // Skip first 50 packets (start at 50°) and do one complete rotation
-  simulate_rotation(cutter, 5000, 100, offsets);
+  // Note: Using explicit loop instead of simulate_rotation to call decoder.process_packet
+  int32_t start_azimuth = 5000;  // Start at 50° (simulating 50 lost packets)
+  int32_t end_azimuth = start_azimuth + max_angle;
+  for (int32_t az = start_azimuth; az < end_azimuth; az += 100) {
+    auto channel_azimuths = make_channel_azimuths(az, offsets);
+    auto scan_state = cutter.step(channel_azimuths);
+    decoder.process_packet(az, scan_state);
+  }
 
   // Should initialize properly and produce scans despite missing initial packets
   ASSERT_EQ(tracker.publish_calls.size(), 1)
@@ -1059,7 +1066,7 @@ TEST_F(TestScanCutterResilience, PacketLossAtInitialization)
 
   // Verify scan integrity
   for (const auto & buf : decoder.buffers) {
-    if (buf.is_active()) {
+    if (buf.is_active() && buf.has_points()) {
       EXPECT_FALSE(buf.overlaps_itself()) << "Buffer overlaps after init packet loss";
       EXPECT_LE(buf.get_angular_span(), max_angle + 500);
     }

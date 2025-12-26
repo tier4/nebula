@@ -319,10 +319,8 @@ private:
   {
     assert(state_);
 
-    ChannelFovState fov_state{};
-    ChannelBufferState buffer_state{};
-
     const auto & az = corrected_azimuths_out.azimuths;
+
     for (size_t channel_id = 0; channel_id < NChannels; ++channel_id) {
       int32_t channel_azimuth_out = az[channel_id];
       bool channel_in_fov = is_point_inside_fov(channel_azimuth_out);
@@ -334,19 +332,27 @@ private:
       }
 
       state_->channel_last_azimuths[channel_id] = channel_azimuth_out;
-
-      buffer_index_t buffer_index = state_->channel_buffer_indices[channel_id];
-      if (channel_id == corrected_azimuths_out.min_correction_index) {
-        fov_state = AllSame<bool>{channel_in_fov};
-        buffer_state = AllSame<buffer_index_t>{buffer_index};
-      } else if (channel_id == corrected_azimuths_out.max_correction_index) {
-        fov_state = aggregate_fov_state(fov_state, channel_in_fov);
-        buffer_state = aggregate_buffer_state(buffer_state, buffer_index);
-      }
     }
 
-    state_->buffer_state = buffer_state;
-    state_->fov_state = fov_state;
+    // Compute buffer_state and fov_state using only the min/max correction channels.
+    // If the channel with the minimum correction term (lags behind) and the channel with
+    // the maximum correction term (races ahead) have the same state, all channels in
+    // between must also have that state.
+    // NOTE: We check both at the end rather than during iteration because the channel
+    // with min_correction_index may have a higher channel_id than max_correction_index.
+    size_t min_idx = corrected_azimuths_out.min_correction_index;
+    size_t max_idx = corrected_azimuths_out.max_correction_index;
+
+    buffer_index_t min_buffer = state_->channel_buffer_indices[min_idx];
+    buffer_index_t max_buffer = state_->channel_buffer_indices[max_idx];
+    state_->buffer_state = (min_buffer == max_buffer)
+                             ? ChannelBufferState{AllSame<buffer_index_t>{min_buffer}}
+                             : ChannelBufferState{Different{}};
+
+    bool min_in_fov = state_->channels_in_fov[min_idx];
+    bool max_in_fov = state_->channels_in_fov[max_idx];
+    state_->fov_state = (min_in_fov == max_in_fov) ? ChannelFovState{AllSame<bool>{min_in_fov}}
+                                                   : ChannelFovState{Different{}};
   }
 
 public:
