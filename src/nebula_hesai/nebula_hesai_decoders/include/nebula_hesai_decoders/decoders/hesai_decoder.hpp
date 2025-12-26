@@ -125,6 +125,9 @@ private:
 
     std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units;
 
+    // If the blockage mask plugin is not present, we can return early if distance checks fail
+    const bool filters_can_return_early = !blockage_mask_plugin_;
+
     for (size_t channel_id = 0; channel_id < SensorT::packet_t::n_channels; ++channel_id) {
       // Find the units corresponding to the same return group as the current one.
       // These are used to find duplicates in multi-return mode.
@@ -183,13 +186,16 @@ private:
           }
         }
 
-        CorrectedAngleData corrected_angle_data =
-          angle_corrector_.get_corrected_angle_data(raw_azimuth, channel_id);
+        if (filters_can_return_early && !point_is_valid) {
+          continue;
+        }
 
         if (!scan_state.channels_in_fov[channel_id]) {
           continue;
         }
 
+        CorrectedAngleData corrected_angle_data =
+          angle_corrector_.get_corrected_angle_data(raw_azimuth, channel_id);
         auto & frame = frame_buffers_[scan_state.channel_buffer_indices[channel_id]];
 
         float azimuth = corrected_angle_data.azimuth_rad;
