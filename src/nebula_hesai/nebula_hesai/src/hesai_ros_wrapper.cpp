@@ -416,10 +416,24 @@ void HesaiRosWrapper::receive_scan_message_callback(
     return;
   }
 
+  if (scan_msg->packets.empty()) {
+    return;
+  }
+
+  if (!replay_state_) {
+    replay_state_ = ReplayState{scan_msg->packets.front().stamp};
+  }
+
   for (auto & pkt : scan_msg->packets) {
     auto nebula_pkt_ptr = std::make_unique<nebula_msgs::msg::NebulaPacket>();
     nebula_pkt_ptr->stamp = pkt.stamp;
     std::copy(pkt.data.begin(), pkt.data.end(), std::back_inserter(nebula_pkt_ptr->data));
+
+    if (rclcpp::Time(pkt.stamp) < replay_state_->last_scan_timestamp_) {
+      decoder_wrapper_->reset_decoder();
+    }
+
+    replay_state_->last_scan_timestamp_ = rclcpp::Time(pkt.stamp);
 
     decoder_wrapper_->process_cloud_packet(std::move(nebula_pkt_ptr), receive_watch.elapsed_ns());
     // This reset is placed at the end of the loop, so that in the first iteration, the possible
