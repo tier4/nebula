@@ -1,12 +1,12 @@
 # Contributing to Nebula
 
 Thank you for your interest in contributing to Nebula!
-We’re excited to work with the open-source community to build an even better project.
+We're excited to work with the open-source community to build an even better project.
 Before submitting your contributions, please take a moment to review our guidelines to ensure a smooth process.
 
 ## Getting Started
 
-- Set up your development environment: [installation](installation.md)
+- Set up your development environment: [installation](../installation.md)
 - Enable <a href="https://pre-commit.com/#install" target="_blank">pre-commit</a>
 
   ```shell
