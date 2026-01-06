@@ -78,14 +78,6 @@ private:
     assert(field < correction_->frameNumber);
     assert(channel_id < ChannelN);
 
-    /*
-        int32_t azimuth_exact = (block_azimuth + max_azimuth - correction_->startFrame[field]) * 2 -
-                                correction_->azimuth[channel_id] +
-                                correction_->get_azimuth_adjust_v3(channel_id, block_azimuth) *
-                                  static_cast<int32_t>(AngleUnit / 100);
-        azimuth_exact = normalize_angle(azimuth_exact, max_azimuth);
-    */
-
     int32_t azimuth_exact = (block_azimuth - correction_->startFrame[field]) * 2;
     azimuth_exact -= correction_->azimuth[channel_id];
     azimuth_exact += correction_->get_azimuth_adjust_v3(channel_id, block_azimuth) *
