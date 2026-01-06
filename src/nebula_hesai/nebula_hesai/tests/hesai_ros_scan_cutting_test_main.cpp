@@ -179,12 +179,8 @@ TEST_P(ScanCuttingTest, NoHighTimestampsAfterCut)
         critical_range_start_deg + epsilon, critical_range_end_deg, azimuth_deg);
 
       if (in_critical_range) {
-        // Points in [cut+eps, cut+30°] should have timestamps < 110ms.
-        // We use 110ms instead of 100ms to account for:
-        // 1. Initialization artifacts that can cause ~5-10ms timestamp offsets
-        // 2. Channel azimuth offsets that can cause points to appear from different blocks
-        // 3. Timing jitter in packet timestamps
-        // This test catches severe timestamp bugs (100s of ms off), not minor artifacts.
+        // Points in [cut+eps, cut+30°] should have timestamps << 100ms.
+        // This test catches severe timestamp bugs (>=100ms off), not minor artifacts.
         ASSERT_LT(p.time_stamp, 100'000'000ULL)
           << "High timestamp right after cut detected: azimuth=" << p.azimuth << " rad ("
           << drivers::rad2deg(p.azimuth) << " deg)"
