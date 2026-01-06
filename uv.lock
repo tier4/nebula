@@ -622,6 +622,18 @@ wheels = [
 ]
 
 [[package]]
+name = "mkdoxy"
+version = "1.2.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "mkdocs" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8e/14/253c06c0a28b2288e35351a19c83473b11700bf0e82e16bbf668dc0ba45c/mkdoxy-1.2.8.tar.gz", hash = "sha256:95129608a332096ca52a7620c024ed33125e830508e5be0639a32766d9e44228", size = 653739, upload-time = "2025-08-29T18:05:04.946Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/43/82/dd8e3798b2bb75fd10a8f524b2bf8765d2cd396f21912333abffdd1e6666/mkdoxy-1.2.8-py3-none-any.whl", hash = "sha256:6bcc60a5409fb2b8f845d5ed69aa010f35569ea8ae2208172e1580f0d375b4a1", size = 44816, upload-time = "2025-08-29T18:05:03.262Z" },
+]
+
+[[package]]
 name = "nebula-docs"
 version = "0.1.0"
 source = { virtual = "." }
@@ -639,6 +651,7 @@ dev = [
     { name = "mkdocs-material" },
     { name = "mkdocs-section-index" },
     { name = "mkdocstrings", extra = ["python"] },
+    { name = "mkdoxy" },
     { name = "pymdown-extensions" },
 ]
 
@@ -655,6 +668,7 @@ dev = [
     { name = "mkdocs-material", specifier = ">=9.6.9" },
     { name = "mkdocs-section-index", specifier = ">=0.3.9" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.29.0" },
+    { name = "mkdoxy", specifier = ">=1.2.8" },
     { name = "pymdown-extensions", specifier = ">=10.15" },
 ]
 

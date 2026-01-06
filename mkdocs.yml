@@ -66,7 +66,9 @@ nav:
           - ARS548: parameters/vendors/continental/ars548.md
           - SRR520: parameters/vendors/continental/srr520.md
   - Point cloud types: point_types.md
-  - Design: design.md
+  - Design:
+      - design.md
+      - Scan cutting: design/scan_cutting.md
   - Tutorials: tutorials.md
   - Contributing:
       - contributing/index.md
@@ -277,6 +279,7 @@ plugins:
 
 markdown_extensions:
   - admonition
+  - md_in_html
   - pymdownx.details
   - pymdownx.highlight
   - pymdownx.superfences

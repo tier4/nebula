@@ -19,4 +19,5 @@ dev = [
     "mkdocstrings[python]>=0.29.0",
     "mkdocs-macros-plugin>=1.3.7",
     "pymdown-extensions>=10.15",
+    "mkdoxy>=1.2.8",
 ]
