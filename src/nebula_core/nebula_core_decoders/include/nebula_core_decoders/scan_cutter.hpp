@@ -99,8 +99,6 @@ private:
   publish_callback_t publish_callback_;
   set_timestamp_callback_t set_timestamp_callback_;
 
-  mutable std::ofstream debug_file_;
-
   std::optional<State> state_;
 
   [[nodiscard]] static buffer_index_t buffer_index_add(buffer_index_t buffer_index, int32_t offset)
@@ -316,8 +314,7 @@ public:
     fov_start_out_(normalize_angle(fov_start_out, max_angle)),
     fov_end_out_(normalize_angle(fov_end_out, max_angle)),
     publish_callback_(std::move(publish_callback)),
-    set_timestamp_callback_(std::move(set_timestamp_callback)),
-    debug_file_("scan_cutter_debug.csv")
+    set_timestamp_callback_(std::move(set_timestamp_callback))
   {
     if (!publish_callback_) {
       throw std::invalid_argument("publish_callback cannot be nullptr");
