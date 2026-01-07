@@ -45,13 +45,13 @@ from pathlib import Path
 import numpy as np
 import open3d as o3d
 from matplotlib import pyplot as plt
-from matplotlib.colors import LogNorm
+from matplotlib.colors import SymLogNorm
 
 
 def print_stats(pts1, pts2, dists):
     print(f"PCD1: {len(pts1)} points")
     print(f"PCD2: {len(pts2)} points")
-    
+
     if len(pts1) != len(pts2):
         print(f"Diff: {len(pts1) - len(pts2)} points")
     else:
@@ -62,12 +62,10 @@ def print_stats(pts1, pts2, dists):
     print(f"Distance range (mm): [{dist_min * 1e3:.3f}, {dist_max * 1e3:.3f}]")
 
 
-def visualize(pts2, dists, pcd1_path: str, pcd2_path: str):
-    # Calculate Azimuth and Elevation for pts2
-    # x is forward, y is left, z is up in standard LiDAR frames
-    x = pts2[:, 0]
-    y = pts2[:, 1]
-    z = pts2[:, 2]
+def to_polar(pts):
+    x = pts[:, 0]
+    y = pts[:, 1]
+    z = pts[:, 2]
     r = np.sqrt(x * x + y * y + z * z)
 
     azimuths = np.arctan2(y, x)
@@ -77,27 +75,38 @@ def visualize(pts2, dists, pcd1_path: str, pcd2_path: str):
     azimuths_deg = np.degrees(azimuths)
     elevations_deg = np.degrees(elevations)
 
+    return azimuths_deg, elevations_deg
+
+
+def plot_diff(pts1,pts2, dists, pcd1_path: str, pcd2_path: str):
     # Setup plot
     # 16:9 aspect ratio
     fig_width = 16
     fig_height = 9
     plt.figure(figsize=(fig_width, fig_height))
 
-    # Scatter plot
-    # Use LogNorm with millimeters
-    # Add small epsilon to avoid log(0)
+    azimuths1, elevations1 = to_polar(pts1)
+    plt.scatter(azimuths1, elevations1, c="grey", s=1, alpha=0.8)
+
+    azimuths_deg, elevations_deg = to_polar(pts2)
     dists_mm = dists * 1000
-    epsilon_mm = 1e-6
-    c = dists_mm + epsilon_mm
+    c = dists_mm
+    vmax = dists_mm.max()
 
     scatter = plt.scatter(
-        azimuths_deg, elevations_deg, c=c, cmap="plasma", s=1, alpha=0.8, norm=LogNorm()
+        azimuths_deg,
+        elevations_deg,
+        c=c,
+        cmap="plasma",
+        s=1,
+        alpha=0.8,
+        norm=SymLogNorm(linthresh=1e-3, vmin=0, vmax=vmax, clip=True),
     )
 
     plt.xlabel("Azimuth (degrees)")
     plt.ylabel("Elevation (degrees)")
     plt.title(
-        f"Pseudo Range Image Diff\n{Path(pcd1_path).basename} vs {Path(pcd2_path).basename}"
+        f"Pseudo Range Image Diff\n{Path(pcd1_path).name} vs {Path(pcd2_path).name}"
     )
 
     cbar = plt.colorbar(scatter)
@@ -132,7 +141,7 @@ def main(pcd1_path: str, pcd2_path: str, visualize: bool):
     dists = calculate_dists(pcd1, pcd2)
 
     if visualize:
-        visualize(pts2, dists, pcd1_path, pcd2_path)
+        plot_diff(pts1, pts2, dists, pcd1_path, pcd2_path)
 
     print_stats(pts1, pts2, dists)
 
