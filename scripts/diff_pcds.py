@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "matplotlib",
+#     "numpy",
+#     "open3d",
+# ]
+# ///
 
 """
 This script visualizes the difference between two point clouds.

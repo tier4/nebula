@@ -4,18 +4,6 @@ version = "0.1.0"
 description = "Nebula scripts and documentation"
 authors = [{ name = "TIER IV"}]
 requires-python = ">=3.10"
-dependencies = [
-    "matplotlib>=3.10.8",
-    "numpy>=2.2.6",
-    "open3d>=0.19.0",
-    "pandas>=2.3.3",
-    "rich>=14.2.0",
-    "seaborn>=0.13.2",
-    "tabulate>=0.9.0",
-]
-
-[tool.uv]
-default-groups = ["docs"]
 
 [dependency-groups]
 docs = [

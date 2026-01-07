@@ -21,21 +21,9 @@ jobs:
         with:
           key: ${{ github.ref }}
           path: .cache
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.x
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-      - run: |
-          sudo apt update && sudo apt install -y doxygen && \
-          pip install mkdocs \
-          mkdocs-material \
-          Jinja2 \
-          ruamel.yaml && \
-          pip install git+https://github.com/JakubAndrysek/mkdoxy && \
-          pip install -r docs/requirements.txt
-      - run: mkdocs build --site-dir _site
+      - uses: astral-sh/setup-uv@v7
+      - run: sudo apt update && sudo apt install -y doxygen && uv sync --extra docs
+      - run: uv run mkdocs build --site-dir _site
       - run: touch _site/.nojekyll
       - run: |
           chmod -c -R +rX "_site/" | while read line; do

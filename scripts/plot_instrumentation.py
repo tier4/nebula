@@ -1,4 +1,11 @@
 #!/usr/bin/python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "matplotlib",
+#     "pandas",
+# ]
+# ///
 
 import argparse
 from collections import defaultdict
