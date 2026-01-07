@@ -1,0 +1,32 @@
+[project]
+name = "nebula-scripts"
+version = "0.1.0"
+description = "Nebula scripts and documentation"
+authors = [{ name = "TIER IV"}]
+requires-python = ">=3.10"
+dependencies = [
+    "matplotlib>=3.10.8",
+    "numpy>=2.2.6",
+    "open3d>=0.19.0",
+    "pandas>=2.3.3",
+    "rich>=14.2.0",
+    "seaborn>=0.13.2",
+    "tabulate>=0.9.0",
+]
+
+[tool.uv]
+default-groups = ["docs"]
+
+[dependency-groups]
+docs = [
+    "mkdocs-drawio>=1.8.2",
+    "mkdocs>=1.6.1",
+    "mkdocs-api-autonav>=0.2.1",
+    "mkdocs-autorefs>=1.4.1",
+    "mkdocs-material>=9.6.9",
+    "mkdocs-section-index>=0.3.9",
+    "mkdocstrings[python]>=0.29.0",
+    "mkdocs-macros-plugin>=1.3.7",
+    "pymdown-extensions>=10.15",
+    "mkdoxy>=1.2.8",
+]
