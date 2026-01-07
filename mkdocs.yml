@@ -69,7 +69,9 @@ nav:
   - Tutorials:
       - tutorials.md
       - Integration guide: integration_guide.md
-  - Contributing: contribute.md
+  - Contributing:
+      - contributing/index.md
+      - Benchmarking: contributing/benchmarking.md
   - API reference:
       - api_reference.md
       - Core:
