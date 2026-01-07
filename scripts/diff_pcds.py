@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+
+"""
+This script visualizes the difference between two point clouds.
+
+Difference here is defined as the nearest neighbor distance for each point in the second point cloud
+to the first point cloud.
+
+The output is a pseudo range image (an azimuth/elevation scatter plot) where each point is colored
+by that difference.
+
+The script also prints statistics, such as
+* the number of points in each point cloud
+* the minimum and maximum distance difference
+
+Limitations:
+
+    Since the difference is based on nearest neighbor distance, pointclouds have to be similar in
+    size and transformation for the comparison to be meaningful.
+
+Usage:
+
+    ```bash
+        ./scripts/diff_pcds.py <pointcloud1.pcd> <pointcloud2.pcd>
+    ```
+
+Usage as a Git difftool:
+
+    ```bash
+    git difftool -y --extcmd=./scripts/diff_pcds.py <ref> <ref> -- <path/to/pointcloud.pcd>
+    ```
+"""
+
+from argparse import ArgumentParser
+from pathlib import Path
+
+import numpy as np
+import open3d as o3d
+from matplotlib import pyplot as plt
+from matplotlib.colors import LogNorm
+
+
+def print_stats(pts1, pts2, dists):
+    print(f"PCD1: {len(pts1)} points")
+    print(f"PCD2: {len(pts2)} points")
+    
+    if len(pts1) != len(pts2):
+        print(f"Diff: {len(pts1) - len(pts2)} points")
+    else:
+        print("Same size")
+
+    dist_min = dists.min()
+    dist_max = dists.max()
+    print(f"Distance range (mm): [{dist_min * 1e3:.3f}, {dist_max * 1e3:.3f}]")
+
+
+def visualize(pts2, dists, pcd1_path: str, pcd2_path: str):
+    # Calculate Azimuth and Elevation for pts2
+    # x is forward, y is left, z is up in standard LiDAR frames
+    x = pts2[:, 0]
+    y = pts2[:, 1]
+    z = pts2[:, 2]
+    r = np.sqrt(x * x + y * y + z * z)
+
+    azimuths = np.arctan2(y, x)
+    elevations = np.arcsin(z / r)
+
+    # Convert to degrees for easier reading
+    azimuths_deg = np.degrees(azimuths)
+    elevations_deg = np.degrees(elevations)
+
+    # Setup plot
+    # 16:9 aspect ratio
+    fig_width = 16
+    fig_height = 9
+    plt.figure(figsize=(fig_width, fig_height))
+
+    # Scatter plot
+    # Use LogNorm with millimeters
+    # Add small epsilon to avoid log(0)
+    dists_mm = dists * 1000
+    epsilon_mm = 1e-6
+    c = dists_mm + epsilon_mm
+
+    scatter = plt.scatter(
+        azimuths_deg, elevations_deg, c=c, cmap="plasma", s=1, alpha=0.8, norm=LogNorm()
+    )
+
+    plt.xlabel("Azimuth (degrees)")
+    plt.ylabel("Elevation (degrees)")
+    plt.title(
+        f"Pseudo Range Image Diff\n{Path(pcd1_path).basename} vs {Path(pcd2_path).basename}"
+    )
+
+    cbar = plt.colorbar(scatter)
+    cbar.set_label("Distance Difference [mm]")
+
+    plt.axis("tight")
+    plt.grid(True, linestyle="--", alpha=0.5)
+
+    out_png = f"diff_{Path(pcd1_path).stem}_{Path(pcd2_path).stem}.png"
+
+    plt.savefig(out_png, dpi=150)
+    print(f"Saved {out_png}")
+
+
+def calculate_dists(pcd1, pcd2):
+    pcd1_tree = o3d.geometry.KDTreeFlann(pcd1)
+    dists = []
+    for pt in pcd2.points:
+        [_, _, dist_sq] = pcd1_tree.search_knn_vector_3d(pt, 1)
+        dist = np.sqrt(dist_sq[0])
+        dists.append(dist)
+    return np.asarray(dists)
+
+
+def main(pcd1_path: str, pcd2_path: str, visualize: bool):
+    pcd1 = o3d.io.read_point_cloud(pcd1_path)
+    pcd2 = o3d.io.read_point_cloud(pcd2_path)
+
+    pts1 = np.asarray(pcd1.points)
+    pts2 = np.asarray(pcd2.points)
+
+    dists = calculate_dists(pcd1, pcd2)
+
+    if visualize:
+        visualize(pts2, dists, pcd1_path, pcd2_path)
+
+    print_stats(pts1, pts2, dists)
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("pcd1", type=str, help="Path to first point cloud")
+    parser.add_argument("pcd2", type=str, help="Path to second point cloud")
+    parser.add_argument(
+        "--no-visualize", action="store_true", help="Do not visualize the point cloud"
+    )
+    args = parser.parse_args()
+
+    main(args.pcd1, args.pcd2, not args.no_visualize)
