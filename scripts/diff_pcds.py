@@ -108,7 +108,7 @@ def plot_diff(pts1, pts2, dists, pcd1_path: str, pcd2_path: str):
     plt.xlabel("Azimuth (degrees)")
     plt.ylabel("Elevation (degrees)")
     plt.title(
-        f"Pseudo Range Image Diff\n" 
+        f"Pseudo Range Image Diff\n"
         f"{Path(pcd1_path).name} vs {Path(pcd2_path).name}\n"
         f"Distance range (mm): [{dists_mm.min():.3f}, {dists_mm.max():.3f}]"
     )
