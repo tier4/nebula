@@ -42,10 +42,10 @@ Usage as a Git difftool:
 from argparse import ArgumentParser
 from pathlib import Path
 
-import numpy as np
-import open3d as o3d
 from matplotlib import pyplot as plt
 from matplotlib.colors import SymLogNorm
+import numpy as np
+import open3d as o3d
 
 
 def print_stats(pts1, pts2, dists):
@@ -78,7 +78,7 @@ def to_polar(pts):
     return azimuths_deg, elevations_deg
 
 
-def plot_diff(pts1,pts2, dists, pcd1_path: str, pcd2_path: str):
+def plot_diff(pts1, pts2, dists, pcd1_path: str, pcd2_path: str):
     # Setup plot
     # 16:9 aspect ratio
     fig_width = 16
@@ -105,9 +105,7 @@ def plot_diff(pts1,pts2, dists, pcd1_path: str, pcd2_path: str):
 
     plt.xlabel("Azimuth (degrees)")
     plt.ylabel("Elevation (degrees)")
-    plt.title(
-        f"Pseudo Range Image Diff\n{Path(pcd1_path).name} vs {Path(pcd2_path).name}"
-    )
+    plt.title(f"Pseudo Range Image Diff\n{Path(pcd1_path).name} vs {Path(pcd2_path).name}")
 
     cbar = plt.colorbar(scatter)
     cbar.set_label("Distance Difference [mm]")
