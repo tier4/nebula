@@ -68,7 +68,9 @@ def to_polar(pts):
     z = pts[:, 2]
     r = np.sqrt(x * x + y * y + z * z)
 
-    azimuths = np.arctan2(y, x)
+    # Sensor angle conventions are assumed to be:
+    # Azimuth: angle in XY plane from Y axis toward X axis
+    azimuths = np.arctan2(x, y)
     elevations = np.arcsin(z / r)
 
     # Convert to degrees for easier reading
@@ -106,7 +108,9 @@ def plot_diff(pts1,pts2, dists, pcd1_path: str, pcd2_path: str):
     plt.xlabel("Azimuth (degrees)")
     plt.ylabel("Elevation (degrees)")
     plt.title(
-        f"Pseudo Range Image Diff\n{Path(pcd1_path).name} vs {Path(pcd2_path).name}"
+        f"Pseudo Range Image Diff\n" 
+        f"{Path(pcd1_path).name} vs {Path(pcd2_path).name}\n"
+        f"Distance range (mm): [{dists_mm.min():.3f}, {dists_mm.max():.3f}]"
     )
 
     cbar = plt.colorbar(scatter)
@@ -154,5 +158,7 @@ if __name__ == "__main__":
         "--no-visualize", action="store_true", help="Do not visualize the point cloud"
     )
     args = parser.parse_args()
+
+    print(f"Comparing {args.pcd1} to {args.pcd2}")
 
     main(args.pcd1, args.pcd2, not args.no_visualize)
