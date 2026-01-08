@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <ostream>
 #include <string>
+#include <type_traits>
 
 namespace nebula::drivers
 {
@@ -509,6 +510,12 @@ template <typename T>
 static inline std::enable_if_t<std::is_floating_point_v<T>, T> deg2rad(T degrees)
 {
   return degrees * static_cast<T>(M_PI / 180.0);
+}
+
+template <typename T>
+static inline std::enable_if_t<std::is_integral_v<T>, double> deg2rad(T degrees)
+{
+  return deg2rad<double>(static_cast<double>(degrees));
 }
 
 /// @brief Converts radians to degrees
