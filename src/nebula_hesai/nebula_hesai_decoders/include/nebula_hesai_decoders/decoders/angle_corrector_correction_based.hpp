@@ -141,15 +141,15 @@ public:
             cos_[azimuth_exact], sin_[elevation_exact], cos_[elevation_exact]};
   }
 
-  [[nodiscard]] CorrectedAzimuths<ChannelN> get_corrected_azimuths(
+  [[nodiscard]] CorrectedAzimuths<ChannelN, float> get_corrected_azimuths(
     uint32_t block_azimuth) const override
   {
-    CorrectedAzimuths<ChannelN> corrected_azimuths;
+    CorrectedAzimuths<ChannelN, float> corrected_azimuths;
     size_t field = find_field(block_azimuth);
 
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-      corrected_azimuths.azimuths[channel_id] =
-        get_corrected_azimuth(field, block_azimuth, channel_id);
+      int32_t azimuth_exact = get_corrected_azimuth(field, block_azimuth, channel_id);
+      corrected_azimuths.azimuths[channel_id] = to_radians(azimuth_exact);
     }
 
     const auto & az = corrected_azimuths.azimuths;

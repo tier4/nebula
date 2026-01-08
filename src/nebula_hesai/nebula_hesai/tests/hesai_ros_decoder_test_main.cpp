@@ -10,6 +10,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <gtest/gtest.h>
+#include <pcl/common/io.h>
 #include <pcl/conversions.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_cloud.h>
@@ -54,6 +55,8 @@ TEST_P(DecoderTest, TestPcd)
   auto ref_pointcloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
   int check_cnt = 0;
 
+  pcl::PCDWriter pcd_writer;
+
   auto scan_callback = [&](
                          uint64_t msg_timestamp, uint64_t /*scan_timestamp*/,
                          nebula::drivers::NebulaPointCloudPtr pointcloud) {
@@ -64,6 +67,9 @@ TEST_P(DecoderTest, TestPcd)
     auto target_pcd_path = (pcd_dir / fn);
     RCLCPP_DEBUG_STREAM(*logger_, target_pcd_path);
     if (target_pcd_path.exists()) {
+      pcl::PointCloud<pcl::PointXYZ> pcd_pointcloud;
+      pcl::copyPointCloud(*pointcloud, pcd_pointcloud);
+      pcd_writer.writeBinary(target_pcd_path.string(), pcd_pointcloud);
       RCLCPP_DEBUG_STREAM(*logger_, "exists: " << target_pcd_path);
       auto rt = pcd_reader.read(target_pcd_path.string(), *ref_pointcloud);
       RCLCPP_DEBUG_STREAM(*logger_, rt << " loaded: " << target_pcd_path);

@@ -70,11 +70,11 @@ std::array<int32_t, N> make_increasing_offsets(int32_t from, int32_t to)
 }
 
 /// Helper to create synthetic channel azimuths with given offsets
-template <size_t N>
-CorrectedAzimuths<N> make_channel_azimuths(
-  int32_t base_azimuth, const std::array<int32_t, N> & offsets)
+template <size_t N, typename AngleT>
+CorrectedAzimuths<N, AngleT> make_channel_azimuths(
+  int32_t base_azimuth, const std::array<AngleT, N> & offsets)
 {
-  CorrectedAzimuths<N> result{};
+  CorrectedAzimuths<N, AngleT> result{};
 
   result.min_correction_index = std::min_element(offsets.begin(), offsets.end()) - offsets.begin();
   result.max_correction_index = std::max_element(offsets.begin(), offsets.end()) - offsets.begin();
@@ -89,10 +89,10 @@ CorrectedAzimuths<N> make_channel_azimuths(
 }
 
 /// Helper to simulate a full rotation
-template <size_t NChannels, uint32_t AngleUnit>
+template <size_t NChannels>
 void simulate_rotation(
-  ScanCutter<NChannels, AngleUnit> & cutter, int32_t start_azimuth, int32_t step_size,
-  const std::array<int32_t, NChannels> & offsets, int32_t total_rotation = 360 * AngleUnit)
+  ScanCutter<NChannels, int32_t> & cutter, int32_t start_azimuth, int32_t step_size,
+  const std::array<int32_t, NChannels> & offsets, int32_t total_rotation = max_angle)
 {
   int32_t end_azimuth = start_azimuth + total_rotation;
 
@@ -109,10 +109,10 @@ TEST(TestScanCutterBasic, Construction)
   auto make_cutter =
     [](
       int32_t cut_angle, int32_t fov_start, int32_t fov_end,
-      const ScanCutter<n_channels, angle_unit>::publish_callback_t & publish_callback,
-      const ScanCutter<n_channels, angle_unit>::set_timestamp_callback_t & set_timestamp_callback) {
-      ScanCutter<n_channels, angle_unit> cutter(
-        cut_angle, fov_start, fov_end, publish_callback, set_timestamp_callback);
+      const ScanCutter<n_channels, int32_t>::publish_callback_t & publish_callback,
+      const ScanCutter<n_channels, int32_t>::set_timestamp_callback_t & set_timestamp_callback) {
+      ScanCutter<n_channels, int32_t> cutter(
+        max_angle, cut_angle, fov_start, fov_end, publish_callback, set_timestamp_callback);
       return cutter;
     };
 
@@ -160,7 +160,8 @@ protected:
 TEST_F(TestScanCutterTimestamps, TimestampSetBeforeFirstPoint)
 {
   // Verify timestamp_set is called during initialization before any points are decoded
-  ScanCutter<n_channels, angle_unit> cutter(
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle,
     18000,  // cut at 180 degrees
     0,      // fov start at 0
     0,      // fov end at 0 (360 deg FoV)
@@ -184,8 +185,8 @@ TEST_F(TestScanCutterTimestamps, TimestampSetBeforeFirstPoint)
 TEST_F(TestScanCutterTimestamps, TimestampSetOncePerFrameIn360FoV)
 {
   // For 360 degree FoV, each scan should get timestamp set exactly once
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   std::array<int32_t, n_channels> offsets{};
   offsets.fill(0);
@@ -204,7 +205,8 @@ TEST_F(TestScanCutterTimestamps, TimestampSetOncePerFrameIn360FoV)
 TEST_F(TestScanCutterTimestamps, TimestampResetOnFovStart)
 {
   // When cut_angle == fov_end, timestamp should reset on FoV start
-  ScanCutter<n_channels, angle_unit> cutter(
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle,
     27000,  // cut at 270 degrees
     9000,   // fov start at 90
     27000,  // fov end at 270 (same as cut)
@@ -232,8 +234,8 @@ protected:
 TEST_F(TestScanCutterChannelCorrections, NoCorrections)
 {
   // All channel azimuths equal encoder azimuth
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   std::array<int32_t, n_channels> offsets{};
   offsets.fill(0);
@@ -248,8 +250,8 @@ TEST_F(TestScanCutterChannelCorrections, NoCorrections)
 TEST_F(TestScanCutterChannelCorrections, SymmetricSpread)
 {
   // Channels spread equally in positive and negative directions
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   auto offsets = make_increasing_offsets<n_channels>(-500, 500);
 
@@ -261,8 +263,8 @@ TEST_F(TestScanCutterChannelCorrections, SymmetricSpread)
 TEST_F(TestScanCutterChannelCorrections, AsymmetricSpread)
 {
   // abs(min_offset) != abs(max_offset)
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   auto offsets = make_increasing_offsets<n_channels>(-1000, 500);
 
@@ -274,8 +276,8 @@ TEST_F(TestScanCutterChannelCorrections, AsymmetricSpread)
 TEST_F(TestScanCutterChannelCorrections, PositiveOnlySpread)
 {
   // All corrections are positive
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   auto offsets = make_increasing_offsets<n_channels>(0, 1000);
 
@@ -287,8 +289,8 @@ TEST_F(TestScanCutterChannelCorrections, PositiveOnlySpread)
 TEST_F(TestScanCutterChannelCorrections, NegativeOnlySpread)
 {
   // All corrections are negative
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   auto offsets = make_increasing_offsets<n_channels>(-1000, 0);
 
@@ -300,8 +302,8 @@ TEST_F(TestScanCutterChannelCorrections, NegativeOnlySpread)
 TEST_F(TestScanCutterChannelCorrections, BlockStraddlesCut)
 {
   // Test when a block has some channels before cut and some after
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   std::array<int32_t, n_channels> offsets = make_increasing_offsets<n_channels>(-200, 200);
 
@@ -333,8 +335,8 @@ protected:
 TEST_F(TestScanCutterFoVConfigurations, FullRotation360Deg)
 {
   // start == end (360 degree FoV)
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   std::array<int32_t, n_channels> offsets{};
   offsets.fill(0);
@@ -348,7 +350,8 @@ TEST_F(TestScanCutterFoVConfigurations, FullRotation360Deg)
 TEST_F(TestScanCutterFoVConfigurations, CutInMiddleOfFoV)
 {
   // start < cut < end (non-360 FoV with cut in middle)
-  ScanCutter<n_channels, angle_unit> cutter(
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle,
     18000,  // cut at 180 degrees
     9000,   // fov start at 90
     27000,  // fov end at 270
@@ -365,7 +368,8 @@ TEST_F(TestScanCutterFoVConfigurations, CutInMiddleOfFoV)
 TEST_F(TestScanCutterFoVConfigurations, CutAtFovEnd)
 {
   // cut == end (special reset behavior)
-  ScanCutter<n_channels, angle_unit> cutter(
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle,
     27000,  // cut at 270 degrees
     9000,   // fov start at 90
     27000,  // fov end at 270 (same as cut)
@@ -383,7 +387,8 @@ TEST_F(TestScanCutterFoVConfigurations, CutAtFovEnd)
 TEST_F(TestScanCutterFoVConfigurations, WraparoundFoV)
 {
   // FoV crosses 0° (e.g., 270 to 90)
-  ScanCutter<n_channels, angle_unit> cutter(
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle,
     0,      // cut at 0 degrees
     27000,  // fov start at 270
     9000,   // fov end at 90
@@ -400,7 +405,8 @@ TEST_F(TestScanCutterFoVConfigurations, WraparoundFoV)
 TEST_F(TestScanCutterFoVConfigurations, CutCrossesZero)
 {
   // Cut angle near 0 with wraparound
-  ScanCutter<n_channels, angle_unit> cutter(
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle,
     35000,  // cut at 350 degrees
     27000,  // fov start at 270
     9000,   // fov end at 90
@@ -419,8 +425,8 @@ TEST_F(TestScanCutterFoVConfigurations, FoV360AsMaxAngleEquivalentToZero)
   // FoV with end = 360° (max_angle) should be equivalent to end = 0°
   // Both represent full 360° FoV when start = 0
   tracker.reset();
-  ScanCutter<n_channels, angle_unit> cutter_with_zero(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter_with_zero(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   std::array<int32_t, n_channels> offsets{};
   offsets.fill(0);
@@ -431,8 +437,9 @@ TEST_F(TestScanCutterFoVConfigurations, FoV360AsMaxAngleEquivalentToZero)
 
   // Now test with fov_end = max_angle (360°)
   tracker.reset();
-  ScanCutter<n_channels, angle_unit> cutter_with_max(
-    18000, 0, max_angle, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter_with_max(
+    max_angle, 18000, 0, max_angle, tracker.make_publish_callback(),
+    tracker.make_timestamp_callback());
 
   simulate_rotation(cutter_with_max, 0, 100, offsets);
   auto publish_count_max = tracker.publish_calls.size();
@@ -447,8 +454,8 @@ TEST_F(TestScanCutterFoVConfigurations, CutAt360EquivalentToCutAtZero)
 {
   // Cut angle at 360° should be equivalent to cut at 0°
   tracker.reset();
-  ScanCutter<n_channels, angle_unit> cutter_cut_zero(
-    0, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter_cut_zero(
+    max_angle, 0, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   std::array<int32_t, n_channels> offsets{};
   offsets.fill(0);
@@ -459,8 +466,8 @@ TEST_F(TestScanCutterFoVConfigurations, CutAt360EquivalentToCutAtZero)
 
   // Now test with cut at max_angle (360°)
   tracker.reset();
-  ScanCutter<n_channels, angle_unit> cutter_cut_max(
-    max_angle, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter_cut_max(
+    max_angle, max_angle, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   simulate_rotation(cutter_cut_max, 0, 100, offsets);
   auto publish_count_max = tracker.publish_calls.size();
@@ -484,7 +491,8 @@ protected:
 TEST_F(TestScanCutterEdgeCases, CutAndEndVeryClose)
 {
   // end - cut < max channel correction
-  ScanCutter<n_channels, angle_unit> cutter(
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle,
     27000,  // cut at 270 degrees
     9000,   // fov start at 90
     27050,  // fov end at 270.5 degrees (only 50 centi-degrees apart)
@@ -501,8 +509,8 @@ TEST_F(TestScanCutterEdgeCases, CutAndEndVeryClose)
 TEST_F(TestScanCutterEdgeCases, LargeAzimuthJump)
 {
   // Azimuth increases by more than 1 per step
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   std::array<int32_t, n_channels> offsets{};
   offsets.fill(0);
@@ -517,8 +525,8 @@ TEST_F(TestScanCutterEdgeCases, LargeAzimuthJump)
 TEST_F(TestScanCutterEdgeCases, VeryLargeAzimuthJump)
 {
   // Azimuth jump larger than 180 degrees
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   std::array<int32_t, n_channels> offsets{};
   offsets.fill(0);
@@ -537,7 +545,8 @@ TEST_F(TestScanCutterEdgeCases, VeryLargeAzimuthJump)
 TEST_F(TestScanCutterEdgeCases, FoVEntryAndExit)
 {
   // Points enter and leave FoV
-  ScanCutter<n_channels, angle_unit> cutter(
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle,
     18000,  // cut at 180 degrees
     9000,   // fov start at 90
     27000,  // fov end at 270
@@ -563,8 +572,8 @@ TEST_F(TestScanCutterEdgeCases, FoVEntryAndExit)
 TEST_F(TestScanCutterEdgeCases, MultipleRotations)
 {
   // Multiple complete rotations
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   std::array<int32_t, n_channels> offsets{};
   offsets.fill(0);
@@ -587,8 +596,8 @@ protected:
 
 TEST_F(TestScanCutterPublishBehavior, InFrameToCrossingCut)
 {
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   std::array<int32_t, n_channels> offsets = make_increasing_offsets<n_channels>(-300, 300);
 
@@ -608,8 +617,8 @@ TEST_F(TestScanCutterPublishBehavior, InFrameToCrossingCut)
 
 TEST_F(TestScanCutterPublishBehavior, CrossingCutToInFrame)
 {
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   std::array<int32_t, n_channels> offsets = make_increasing_offsets<n_channels>(-300, 300);
 
@@ -631,8 +640,8 @@ TEST_F(TestScanCutterPublishBehavior, Case3_AllSameToAllSameBufferChange)
 {
   // Case 3: AllSame → AllSame with buffer change
   // This happens with no channel corrections and a clean cut crossing
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   std::array<int32_t, n_channels> offsets{};
   offsets.fill(0);  // No corrections
@@ -656,8 +665,8 @@ TEST_F(TestScanCutterPublishBehavior, Case3_AllSameToAllSameBufferChange)
 TEST_F(TestScanCutterPublishBehavior, NoActionWhenStableState)
 {
   // No action when channels remain in same state (not crossing cut)
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, tracker.make_publish_callback(), tracker.make_timestamp_callback());
 
   std::array<int32_t, n_channels> offsets{};
   offsets.fill(0);
@@ -686,7 +695,8 @@ TEST(TestScanCutterIntegration, CompleteScenarioWithCorrections)
 {
   // Integration test simulating realistic scenario
   CallbackTracker tracker;
-  ScanCutter<n_channels, angle_unit> cutter(
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle,
     18000,  // cut at 180
     9000,   // fov start at 90
     27000,  // fov end at 270
@@ -809,7 +819,7 @@ protected:
     }
 
     void process_packet(
-      int32_t block_azimuth, const typename ScanCutter<n_channels, angle_unit>::State & scan_state)
+      int32_t block_azimuth, const typename ScanCutter<n_channels, int32_t>::State & scan_state)
     {
       // Add packet to appropriate buffer(s)
       for (size_t ch = 0; ch < n_channels; ++ch) {
@@ -846,8 +856,8 @@ protected:
 // Validates behavior when packets are lost around the cut angle
 TEST_F(TestScanCutterResilience, PacketLossAcrossCutAngle)
 {
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, make_publish_callback(), make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, make_publish_callback(), make_timestamp_callback());
 
   // Corrections of ± 5°
   auto offsets = make_increasing_offsets<n_channels>(-500, 500);
@@ -883,8 +893,8 @@ TEST_F(TestScanCutterResilience, PacketLossAcrossCutAngle)
 // Validates behavior when packets are lost around FOV start (for non-360 FOV)
 TEST_F(TestScanCutterResilience, PacketLossAcrossFovStart)
 {
-  ScanCutter<n_channels, angle_unit> cutter(
-    27000, 9000, 27000, make_publish_callback(), make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 27000, 9000, 27000, make_publish_callback(), make_timestamp_callback());
 
   // Corrections of ± 5°
   auto offsets = make_increasing_offsets<n_channels>(-500, 500);
@@ -923,8 +933,8 @@ TEST_F(TestScanCutterResilience, PacketLossAcrossFovStart)
 // Validates behavior when packets are lost around FOV end (for non-360 FOV)
 TEST_F(TestScanCutterResilience, PacketLossAcrossFovEnd)
 {
-  ScanCutter<n_channels, angle_unit> cutter(
-    27000, 9000, 27000, make_publish_callback(), make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 27000, 9000, 27000, make_publish_callback(), make_timestamp_callback());
 
   // Corrections of ± 5°
   auto offsets = make_increasing_offsets<n_channels>(-500, 500);
@@ -960,8 +970,8 @@ TEST_F(TestScanCutterResilience, PacketLossAcrossFovEnd)
 // Validates behavior with extended packet loss across cut
 TEST_F(TestScanCutterResilience, MultiplePacketLossAcrossCut)
 {
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, make_publish_callback(), make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, make_publish_callback(), make_timestamp_callback());
 
   // Corrections of ± 5°
   auto offsets = make_increasing_offsets<n_channels>(-500, 500);
@@ -998,8 +1008,8 @@ TEST_F(TestScanCutterResilience, MultiplePacketLossAcrossCut)
 // Validates behavior when azimuth jumps backwards at 360° boundary (loop restart)
 TEST_F(TestScanCutterResilience, AzimuthJumpBackwardsAtBoundary)
 {
-  ScanCutter<n_channels, angle_unit> cutter(
-    0, 0, 0, make_publish_callback(), make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 0, 0, 0, make_publish_callback(), make_timestamp_callback());
 
   // Corrections of ± 5°
   auto offsets = make_increasing_offsets<n_channels>(-500, 500);
@@ -1041,8 +1051,8 @@ TEST_F(TestScanCutterResilience, AzimuthJumpBackwardsAtBoundary)
 // Validates behavior when first packets are lost (initialization with packet loss)
 TEST_F(TestScanCutterResilience, PacketLossAtInitialization)
 {
-  ScanCutter<n_channels, angle_unit> cutter(
-    0, 0, 0, make_publish_callback(), make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 0, 0, 0, make_publish_callback(), make_timestamp_callback());
 
   // Corrections of ± 5°
   auto offsets = make_increasing_offsets<n_channels>(-500, 500);
@@ -1076,8 +1086,8 @@ TEST_F(TestScanCutterResilience, PacketLossAtInitialization)
 // Validates behavior with multiple azimuth jumps (multiple loop iterations)
 TEST_F(TestScanCutterResilience, MultipleAzimuthJumps)
 {
-  ScanCutter<n_channels, angle_unit> cutter(
-    18000, 0, 0, make_publish_callback(), make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 18000, 0, 0, make_publish_callback(), make_timestamp_callback());
 
   // Corrections of ± 5°
   auto offsets = make_increasing_offsets<n_channels>(-500, 500);
@@ -1111,8 +1121,8 @@ TEST_F(TestScanCutterResilience, MultipleAzimuthJumps)
 // Validates behavior with continuous packet loss (stress test)
 TEST_F(TestScanCutterResilience, ContinuousPacketLoss)
 {
-  ScanCutter<n_channels, angle_unit> cutter(
-    0, 0, 0, make_publish_callback(), make_timestamp_callback());
+  ScanCutter<n_channels, int32_t> cutter(
+    max_angle, 0, 0, 0, make_publish_callback(), make_timestamp_callback());
 
   // Corrections of ± 5°
   auto offsets = make_increasing_offsets<n_channels>(-500, 500);

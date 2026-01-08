@@ -46,7 +46,6 @@ template <typename SensorT>
 class HesaiDecoder : public HesaiScanDecoder
 {
 private:
-  constexpr static uint32_t angle_unit = SensorT::packet_t::degree_subdivisions;
   struct DecodeFrame
   {
     NebulaPointCloudPtr pointcloud;
@@ -67,7 +66,7 @@ private:
   typename SensorT::angle_corrector_t angle_corrector_;
 
   /// @brief Keeps track of scan cutting state
-  ScanCutter<SensorT::packet_t::n_channels, SensorT::packet_t::degree_subdivisions> scan_cutter_;
+  ScanCutter<SensorT::packet_t::n_channels, float> scan_cutter_;
 
   std::shared_ptr<FunctionalSafetyDecoderTypedBase<typename SensorT::packet_t>>
     functional_safety_decoder_;
@@ -317,9 +316,9 @@ public:
   : sensor_configuration_(sensor_configuration),
     angle_corrector_(correction_data),
     scan_cutter_(
-      sensor_configuration_->cut_angle * angle_unit,
-      sensor_configuration_->cloud_min_angle * angle_unit,
-      sensor_configuration_->cloud_max_angle * angle_unit,
+      2 * M_PIf, deg2rad(sensor_configuration_->cut_angle),
+      deg2rad(sensor_configuration_->cloud_min_angle),
+      deg2rad(sensor_configuration_->cloud_max_angle),
       [this](uint8_t buffer_index) { on_scan_complete(buffer_index); },
       [this](uint8_t buffer_index) { on_set_timestamp(buffer_index); }),
     functional_safety_decoder_(functional_safety_decoder),

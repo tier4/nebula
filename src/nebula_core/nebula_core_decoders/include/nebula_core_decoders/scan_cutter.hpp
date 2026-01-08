@@ -25,7 +25,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <fstream>
 #include <functional>
 #include <optional>
 #include <variant>
@@ -33,19 +32,18 @@
 namespace nebula::drivers
 {
 
-template <size_t NChannels>
+template <size_t NChannels, typename AngleT>
 struct CorrectedAzimuths
 {
-  std::array<int32_t, NChannels> azimuths;
+  std::array<AngleT, NChannels> azimuths;
   size_t min_correction_index;
   size_t max_correction_index;
 };
 
-template <size_t NChannels, uint32_t AngleUnit>
+template <size_t NChannels, typename AngleT>
 class ScanCutter
 {
 public:
-  static constexpr int32_t max_angle = 360 * AngleUnit;
   static constexpr uint8_t n_buffers = 2;
   using buffer_index_t = scan_cutter::buffer_index_t;
 
@@ -65,7 +63,7 @@ public:
     /// The buffer being scheduled for emission after the next cut.
     buffer_index_t current_buffer_index{};
     /// The last processed azimuth for each channel.
-    std::array<int32_t, NChannels> channel_last_azimuths;
+    std::array<AngleT, NChannels> channel_last_azimuths;
     /// Whether each channel is in the FoV.
     std::array<bool, NChannels> channels_in_fov;
     /// The buffer index for each channel.
@@ -92,9 +90,10 @@ public:
   };
 
 private:
-  int32_t cut_angle_out_;
-  int32_t fov_start_out_;
-  int32_t fov_end_out_;
+  AngleT max_angle_;
+  AngleT cut_angle_out_;
+  AngleT fov_start_out_;
+  AngleT fov_end_out_;
 
   publish_callback_t publish_callback_;
   set_timestamp_callback_t set_timestamp_callback_;
@@ -106,7 +105,7 @@ private:
     return static_cast<buffer_index_t>((buffer_index + offset) % n_buffers);
   }
 
-  void initialize_state(const CorrectedAzimuths<NChannels> & corrected_azimuths_out)
+  void initialize_state(const CorrectedAzimuths<NChannels, AngleT> & corrected_azimuths_out)
   {
     state_ = State{};
     state_->current_buffer_index = 0;
@@ -132,9 +131,9 @@ private:
 
     // Block intersects cut, some points are in the current scan, some in the next.
     for (size_t channel_id = 0; channel_id < NChannels; ++channel_id) {
-      int32_t channel_azimuth_out = corrected_azimuths_out.azimuths[channel_id];
-      int32_t start_angle = cut_angle_out_;
-      int32_t end_angle = normalize_angle(cut_angle_out_ + (max_angle / 2), max_angle);
+      AngleT channel_azimuth_out = corrected_azimuths_out.azimuths[channel_id];
+      AngleT start_angle = cut_angle_out_;
+      AngleT end_angle = normalize_angle(cut_angle_out_ + (max_angle_ / 2), max_angle_);
       bool point_is_after_cut =
         angle_is_between(start_angle, end_angle, channel_azimuth_out, false, true);
       state_->channel_buffer_indices[channel_id] = point_is_after_cut ? 1 : 0;
@@ -167,18 +166,17 @@ private:
   }
 
   [[nodiscard]] bool compute_if_block_intersects_cut(
-    const CorrectedAzimuths<NChannels> & corrected_azimuths_out) const
+    const CorrectedAzimuths<NChannels, AngleT> & corrected_azimuths_out) const
   {
     // First, check if all channels are in the same hemisphere as the cut.
-    int32_t cut_region_start = normalize_angle(cut_angle_out_ - (max_angle / 4), max_angle);
-    int32_t cut_region_end = normalize_angle(cut_angle_out_ + (max_angle / 4), max_angle);
-
-    const std::array<int32_t, 2> minmax_azimuths_out = {
+    AngleT cut_region_start = normalize_angle(cut_angle_out_ - (max_angle_ / 4), max_angle_);
+    AngleT cut_region_end = normalize_angle(cut_angle_out_ + (max_angle_ / 4), max_angle_);
+    const std::array<AngleT, 2> minmax_azimuths_out = {
       corrected_azimuths_out.azimuths[corrected_azimuths_out.min_correction_index],
       corrected_azimuths_out.azimuths[corrected_azimuths_out.max_correction_index]};
 
     if (!std::all_of(
-          minmax_azimuths_out.begin(), minmax_azimuths_out.end(), [=](int32_t azimuth_out) {
+          minmax_azimuths_out.begin(), minmax_azimuths_out.end(), [=](AngleT azimuth_out) {
             return angle_is_between(cut_region_start, cut_region_end, azimuth_out);
           })) {
       return false;
@@ -187,16 +185,16 @@ private:
     // Note: Cut itself is considered part of the previous scan.
     // azi + cmin <= cut < azi + cmax
     size_t n_points_beyond_cut = std::count_if(
-      minmax_azimuths_out.begin(), minmax_azimuths_out.end(), [this](int32_t azimuth_out) {
-        int32_t start_angle = cut_angle_out_;
-        int32_t end_angle = normalize_angle(cut_angle_out_ + (max_angle / 2), max_angle);
+      minmax_azimuths_out.begin(), minmax_azimuths_out.end(), [this](AngleT azimuth_out) {
+        AngleT start_angle = cut_angle_out_;
+        AngleT end_angle = normalize_angle(cut_angle_out_ + (max_angle_ / 2), max_angle_);
         return angle_is_between(start_angle, end_angle, azimuth_out, false, true);
       });
 
     return n_points_beyond_cut != 0 && n_points_beyond_cut != 2;
   }
 
-  [[nodiscard]] bool has_channel_crossed_cut(int32_t last_azimuth_out, int32_t azimuth_out) const
+  [[nodiscard]] bool has_channel_crossed_cut(AngleT last_azimuth_out, AngleT azimuth_out) const
   {
     // Note: Cut itself is considered part of the previous scan.
     // last <= cut < current
@@ -223,16 +221,16 @@ private:
   }
 
   [[nodiscard]] bool compute_if_block_intersects_fov(
-    const CorrectedAzimuths<NChannels> & corrected_azimuths_out) const
+    const CorrectedAzimuths<NChannels, AngleT> & corrected_azimuths_out) const
   {
     // start <= azi + cmin AND azi + cmax <= end
     // => start - cmin <= azi <= end - cmax
-    const std::array<int32_t, 2> minmax_azimuths_out = {
+    const std::array<AngleT, 2> minmax_azimuths_out = {
       corrected_azimuths_out.azimuths[corrected_azimuths_out.min_correction_index],
       corrected_azimuths_out.azimuths[corrected_azimuths_out.max_correction_index]};
     return std::any_of(
       minmax_azimuths_out.begin(), minmax_azimuths_out.end(),
-      [this](int32_t azimuth_out) { return is_point_inside_fov(azimuth_out); });
+      [this](AngleT azimuth_out) { return is_point_inside_fov(azimuth_out); });
   }
 
   [[nodiscard]] ChannelFovState compute_fov_state() const
@@ -254,7 +252,7 @@ private:
     return Different{};
   }
 
-  [[nodiscard]] bool is_point_inside_fov(int32_t azimuth_out) const
+  [[nodiscard]] bool is_point_inside_fov(AngleT azimuth_out) const
   {
     // 360deg FoV
     if (fov_start_out_ == fov_end_out_) {
@@ -266,14 +264,14 @@ private:
     return angle_is_between(fov_start_out_, fov_end_out_, azimuth_out);
   }
 
-  void update_state(const CorrectedAzimuths<NChannels> & corrected_azimuths_out)
+  void update_state(const CorrectedAzimuths<NChannels, AngleT> & corrected_azimuths_out)
   {
     assert(state_);
 
     const auto & az = corrected_azimuths_out.azimuths;
 
     for (size_t channel_id = 0; channel_id < NChannels; ++channel_id) {
-      int32_t channel_azimuth_out = az[channel_id];
+      AngleT channel_azimuth_out = az[channel_id];
       bool channel_in_fov = is_point_inside_fov(channel_azimuth_out);
       state_->channels_in_fov[channel_id] = channel_in_fov;
 
@@ -308,9 +306,10 @@ private:
 
 public:
   ScanCutter(
-    int32_t cut_angle_out, int32_t fov_start_out, int32_t fov_end_out,
+    AngleT max_angle, AngleT cut_angle_out, AngleT fov_start_out, AngleT fov_end_out,
     publish_callback_t publish_callback, set_timestamp_callback_t set_timestamp_callback)
-  : cut_angle_out_(normalize_angle(cut_angle_out, max_angle)),
+  : max_angle_(max_angle),
+    cut_angle_out_(normalize_angle(cut_angle_out, max_angle)),
     fov_start_out_(normalize_angle(fov_start_out, max_angle)),
     fov_end_out_(normalize_angle(fov_end_out, max_angle)),
     publish_callback_(std::move(publish_callback)),
@@ -334,7 +333,7 @@ public:
     }
   }
 
-  const State & step(const CorrectedAzimuths<NChannels> & corrected_azimuths_out)
+  const State & step(const CorrectedAzimuths<NChannels, AngleT> & corrected_azimuths_out)
   {
     if (!state_) {
       initialize_state(corrected_azimuths_out);

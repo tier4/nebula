@@ -36,7 +36,6 @@ private:
   static constexpr size_t max_azimuth = 360 * AngleUnit;
 
   std::array<float, ChannelN> elevation_angle_rad_{};
-  std::array<int32_t, ChannelN> azimuth_offset_exact_{};
   std::array<float, ChannelN> azimuth_offset_rad_{};
   std::array<float, max_azimuth> block_azimuth_rad_{};
 
@@ -83,11 +82,8 @@ public:
       float elevation_angle_deg = sensor_calibration->elev_angle_map.at(channel_id);
       float azimuth_offset_deg = sensor_calibration->azimuth_offset_map.at(channel_id);
 
-      int32_t azimuth_offset = to_exact_angle(azimuth_offset_deg);
-
       elevation_angle_rad_[channel_id] = deg2rad(elevation_angle_deg);
-      azimuth_offset_exact_[channel_id] = azimuth_offset;
-      azimuth_offset_rad_[channel_id] = to_radians(azimuth_offset);
+      azimuth_offset_rad_[channel_id] = deg2rad(azimuth_offset_deg);
 
       elevation_cos_[channel_id] = cosf(elevation_angle_rad_[channel_id]);
       elevation_sin_[channel_id] = sinf(elevation_angle_rad_[channel_id]);
@@ -100,14 +96,14 @@ public:
     for (size_t block_azimuth = 0; block_azimuth < max_azimuth; block_azimuth++) {
       block_azimuth_rad_[block_azimuth] = to_radians(block_azimuth);
       for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-        int32_t spatial_azimuth = block_azimuth + azimuth_offset_exact_[channel_id];
-        float spatial_azimuth_rad = to_radians(spatial_azimuth);
+        float spatial_azimuth_rad =
+          block_azimuth_rad_[block_azimuth] + azimuth_offset_rad_[channel_id];
         azimuth_cos_[block_azimuth][channel_id] = cosf(spatial_azimuth_rad);
         azimuth_sin_[block_azimuth][channel_id] = sinf(spatial_azimuth_rad);
       }
     }
 
-    const auto & az = azimuth_offset_exact_;
+    const auto & az = azimuth_offset_rad_;
     min_correction_index_ = std::min_element(az.begin(), az.end()) - az.begin();
     max_correction_index_ = std::max_element(az.begin(), az.end()) - az.begin();
   }
@@ -129,14 +125,15 @@ public:
       elevation_cos_[channel_id]};
   }
 
-  [[nodiscard]] CorrectedAzimuths<ChannelN> get_corrected_azimuths(
+  [[nodiscard]] CorrectedAzimuths<ChannelN, float> get_corrected_azimuths(
     uint32_t block_azimuth) const override
   {
-    CorrectedAzimuths<ChannelN> corrected_azimuths;
+    CorrectedAzimuths<ChannelN, float> corrected_azimuths;
+    float block_azimuth_rad = block_azimuth_rad_[block_azimuth];
 
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-      int32_t exact_azimuth = block_azimuth + azimuth_offset_exact_[channel_id];
-      exact_azimuth = normalize_angle(exact_azimuth, max_azimuth);
+      float exact_azimuth = block_azimuth_rad + azimuth_offset_rad_[channel_id];
+      exact_azimuth = normalize_angle(exact_azimuth, 2 * M_PIf);
       corrected_azimuths.azimuths[channel_id] = exact_azimuth;
     }
 

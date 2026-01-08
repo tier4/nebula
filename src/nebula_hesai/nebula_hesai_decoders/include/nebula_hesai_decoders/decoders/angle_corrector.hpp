@@ -59,7 +59,7 @@ public:
   [[nodiscard]] virtual CorrectedAngleData get_corrected_angle_data(
     uint32_t encoder_azimuth, uint32_t channel_id) const = 0;
 
-  [[nodiscard]] virtual CorrectedAzimuths<ChannelN> get_corrected_azimuths(
+  [[nodiscard]] virtual CorrectedAzimuths<ChannelN, float> get_corrected_azimuths(
     uint32_t block_azimuth) const = 0;
 };
 
