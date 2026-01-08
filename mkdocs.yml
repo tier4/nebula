@@ -19,6 +19,7 @@ theme:
     - navigation.top
     - search.suggest
     - search.highlight
+    - content.math.jax
   palette:
     - scheme: default
       primary: white
@@ -65,7 +66,9 @@ nav:
           - ARS548: parameters/vendors/continental/ars548.md
           - SRR520: parameters/vendors/continental/srr520.md
   - Point cloud types: point_types.md
-  - Design: design.md
+  - Design:
+      - design.md
+      - Scan cutting: design/scan_cutting.md
   - Tutorials: tutorials.md
   - Contributing:
       - contributing/index.md
@@ -185,6 +188,7 @@ nav:
 
 ### Extra Settings ###
 plugins:
+  - drawio
   - macros:
       module_name: mkdocs_macros
       render_by_default: false
@@ -275,6 +279,14 @@ plugins:
 
 markdown_extensions:
   - admonition
+  - md_in_html
   - pymdownx.details
   - pymdownx.highlight
   - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - js/mathjax.js
+  - js/drawio-reload.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js

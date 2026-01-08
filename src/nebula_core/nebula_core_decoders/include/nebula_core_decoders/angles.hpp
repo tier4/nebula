@@ -75,7 +75,7 @@ struct FieldOfView
  * so degrees, radians, and arbitrary scale factors can be used.
  */
 template <typename T>
-bool angle_is_between(
+inline bool angle_is_between(
   T start_angle, T end_angle, T angle, bool start_inclusive = true, bool end_inclusive = true)
 {
   if (!start_inclusive && angle == start_angle) return false;
@@ -90,11 +90,11 @@ bool angle_is_between(
  * `max_angle` is 360 for degrees, 2 * M_PI for radians, and the corresponding scaled value for
  * scaled units such as centi-degrees (36000).
  */
-template <typename T>
-T normalize_angle(T angle, T max_angle)
+template <typename T, typename U = T>
+inline T normalize_angle(T angle, U max_angle)
 {
-  T factor = std::floor((1.0 * angle) / max_angle);
-  return angle - (factor * max_angle);
+  T factor = std::floor(static_cast<double>(angle) / static_cast<double>(max_angle));
+  return angle - static_cast<T>(factor * max_angle);
 }
 
 }  // namespace nebula::drivers

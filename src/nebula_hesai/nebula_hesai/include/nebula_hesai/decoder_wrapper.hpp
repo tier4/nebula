@@ -68,6 +68,12 @@ public:
     const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> &
       new_calibration);
 
+  /// @brief Reset the decoder to its initial state, discarding all state related to the current
+  /// scan.
+  void reset_decoder();
+
+  void publish_and_reset_performance_counters(const rclcpp::Time & scan_timestamp);
+
   nebula::Status status();
 
 private:
