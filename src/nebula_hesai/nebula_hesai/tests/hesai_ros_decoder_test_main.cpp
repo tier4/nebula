@@ -26,24 +26,24 @@ namespace nebula::test
 {
 
 const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[9] = {
-  {"Pandar40P", "Dual", "Pandar40P.csv", "40p/1673400149412331409", "hesai", 0, 0.0, 0., 360., 0.3f,
-   200.f},
-  {"Pandar64", "Dual", "Pandar64.csv", "64/1673403880599376836", "hesai", 0, 0.0, 0., 360., 0.3f,
-   200.f},
+  {"Pandar40P", "Dual", "Pandar40P.csv", "40p/1673400149412331409", "hesai", 0, 0.0, 0., 360., 0.3F,
+   200.F},
+  {"Pandar64", "Dual", "Pandar64.csv", "64/1673403880599376836", "hesai", 0, 0.0, 0., 360., 0.3F,
+   200.F},
   {"PandarAT128", "LastStrongest", "PandarAT128.dat", "at128/1679653308406038376", "hesai", 0,
-   150.0, 30., 150., 1.f, 180.f},
+   150.0, 30., 150., 1.F, 180.F},
   {"PandarQT64", "Dual", "PandarQT64.csv", "qt64/1673401195788312575", "hesai", 0, 0.0, 0., 360.,
-   0.1f, 60.f},
+   0.1F, 60.F},
   {"PandarXT16", "Dual", "PandarXT16.csv", "xt16/1732848127890747768", "hesai", 0, 0.0, 0., 360.,
-   0.05f, 120.f},
+   0.05F, 120.F},
   {"PandarXT32", "Dual", "PandarXT32.csv", "xt32/1673400677802009732", "hesai", 0, 0.0, 0., 360.,
-   0.05f, 120.f},
+   0.05F, 120.F},
   {"PandarXT32M", "LastStrongest", "PandarXT32M.csv", "xt32m/1660893203042895158", "hesai", 0, 0.0,
-   0., 360., 0.5f, 300.f},
+   0., 360., 0.5F, 300.F},
   {"PandarQT128", "LastStrongest", "PandarQT128.csv", "qt128/1730273789074637152", "hesai", 0, 0.0,
-   0., 360., 0.3f, 300.f},
+   0., 360., 0.3F, 300.F},
   {"Pandar128E4X", "LastStrongest", "Pandar128E4X.csv", "ot128/1730271167765338806", "hesai", 0,
-   0.0, 0., 360., 0.3f, 300.f}};
+   0.0, 0., 360., 0.3F, 300.F}};
 
 // Compares geometrical output of decoder against pre-recorded reference pointcloud.
 TEST_P(DecoderTest, TestPcd)
@@ -55,8 +55,6 @@ TEST_P(DecoderTest, TestPcd)
   auto ref_pointcloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
   int check_cnt = 0;
 
-  pcl::PCDWriter pcd_writer;
-
   auto scan_callback = [&](
                          uint64_t msg_timestamp, uint64_t /*scan_timestamp*/,
                          nebula::drivers::NebulaPointCloudPtr pointcloud) {
@@ -67,9 +65,6 @@ TEST_P(DecoderTest, TestPcd)
     auto target_pcd_path = (pcd_dir / fn);
     RCLCPP_DEBUG_STREAM(*logger_, target_pcd_path);
     if (target_pcd_path.exists()) {
-      pcl::PointCloud<pcl::PointXYZ> pcd_pointcloud;
-      pcl::copyPointCloud(*pointcloud, pcd_pointcloud);
-      pcd_writer.writeBinary(target_pcd_path.string(), pcd_pointcloud);
       RCLCPP_DEBUG_STREAM(*logger_, "exists: " << target_pcd_path);
       auto rt = pcd_reader.read(target_pcd_path.string(), *ref_pointcloud);
       RCLCPP_DEBUG_STREAM(*logger_, rt << " loaded: " << target_pcd_path);
