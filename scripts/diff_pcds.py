@@ -48,7 +48,7 @@ import numpy as np
 import open3d as o3d
 
 
-def print_stats(pts1, pts2, dists):
+def print_sizes(pts1, pts2):
     print(f"PCD1: {len(pts1)} points")
     print(f"PCD2: {len(pts2)} points")
 
@@ -57,6 +57,8 @@ def print_stats(pts1, pts2, dists):
     else:
         print("Same size")
 
+
+def print_stats(dists):
     dist_min = dists.min()
     dist_max = dists.max()
     print(f"Distance range (mm): [{dist_min * 1e3:.3f}, {dist_max * 1e3:.3f}]")
@@ -68,10 +70,13 @@ def to_polar(pts):
     z = pts[:, 2]
     r = np.sqrt(x * x + y * y + z * z)
 
-    # Sensor angle conventions are assumed to be:
+    # Sensor angle conventions are assumed to be (Hesai coordinate frame):
     # Azimuth: angle in XY plane from Y axis toward X axis
+    # Note: Other LiDAR vendors may use different conventions, and the azimuths could be off by
+    # 90 degrees and/or be flipped.
     azimuths = np.arctan2(x, y)
-    elevations = np.arcsin(z / r)
+    # Avoid division by zero for points at the origin. Place such points at 0 elevation.
+    elevations = np.arcsin(np.where(r > 0, z / r, 0))
 
     # Convert to degrees for easier reading
     azimuths_deg = np.degrees(azimuths)
@@ -142,12 +147,18 @@ def main(pcd1_path: str, pcd2_path: str, visualize: bool):
     pts1 = np.asarray(pcd1.points)
     pts2 = np.asarray(pcd2.points)
 
+    print_sizes(pts1, pts2)
+
+    if len(pts1) == 0 or len(pts2) == 0:
+        print("One or both point clouds are empty. Skipping stats and visualization.")
+        return
+
     dists = calculate_dists(pcd1, pcd2)
+
+    print_stats(dists)
 
     if visualize:
         plot_diff(pts1, pts2, dists, pcd1_path, pcd2_path)
-
-    print_stats(pts1, pts2, dists)
 
 
 if __name__ == "__main__":
