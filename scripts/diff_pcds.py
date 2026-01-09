@@ -150,7 +150,7 @@ def main(pcd1_path: str, pcd2_path: str, visualize: bool):
     print_sizes(pts1, pts2)
 
     if len(pts1) == 0 or len(pts2) == 0:
-        print("One or both point clouds are empty. Skipping stats and visualization.")
+        print("Comparing against empty pointcloud. Skipping stats and visualization.")
         return
 
     dists = calculate_dists(pcd1, pcd2)
