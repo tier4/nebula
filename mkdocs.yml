@@ -66,7 +66,9 @@ nav:
           - SRR520: parameters/vendors/continental/srr520.md
   - Point cloud types: point_types.md
   - Design: design.md
-  - Tutorials: tutorials.md
+  - Tutorials:
+      - tutorials.md
+      - Integration guide: integration_guide.md
   - Contributing:
       - contributing/index.md
       - Benchmarking: contributing/benchmarking.md
@@ -192,83 +194,6 @@ plugins:
         *
         !*_source.md
         !class*.md
-  - mkdoxy:
-      projects:
-        core:
-          src-dirs: >
-            src/nebula_core/nebula_core_common/include
-            src/nebula_core/nebula_core_decoders/include
-            src/nebula_core/nebula_core_hw_interfaces/include
-            src/nebula_core/nebula_core_ros/include
-          full-doc: true
-          doxy-cfg:
-            FILE_PATTERNS: "*.hpp *.h"
-            RECURSIVE: true
-            EXTRACT_ALL: true
-            INLINE_SOURCES: true
-            ENABLE_PREPROCESSING: true
-            MACRO_EXPANSION: true
-        hesai:
-          src-dirs: >
-            src/nebula_hesai/nebula_hesai_common/include
-            src/nebula_hesai/nebula_hesai_decoders/include
-            src/nebula_hesai/nebula_hesai_hw_interfaces/include
-            src/nebula_hesai/nebula_hesai/include
-          full-doc: true
-          doxy-cfg:
-            FILE_PATTERNS: "*.hpp *.h"
-            RECURSIVE: true
-            EXTRACT_ALL: true
-            INLINE_SOURCES: true
-            ENABLE_PREPROCESSING: true
-            MACRO_EXPANSION: true
-        velodyne:
-          src-dirs: >
-            src/nebula_velodyne/nebula_velodyne_common/include
-            src/nebula_velodyne/nebula_velodyne_decoders/include
-            src/nebula_velodyne/nebula_velodyne_hw_interfaces/include
-            src/nebula_velodyne/nebula_velodyne/include
-          full-doc: true
-          doxy-cfg:
-            FILE_PATTERNS: "*.hpp *.h"
-            RECURSIVE: true
-            EXTRACT_ALL: true
-            INLINE_SOURCES: true
-            ENABLE_PREPROCESSING: true
-            MACRO_EXPANSION: true
-        robosense:
-          src-dirs: >
-            src/nebula_robosense/nebula_robosense_common/include
-            src/nebula_robosense/nebula_robosense_decoders/include
-            src/nebula_robosense/nebula_robosense_hw_interfaces/include
-            src/nebula_robosense/nebula_robosense/include
-          full-doc: true
-          doxy-cfg:
-            FILE_PATTERNS: "*.hpp *.h"
-            RECURSIVE: true
-            EXTRACT_ALL: true
-            INLINE_SOURCES: true
-            ENABLE_PREPROCESSING: true
-            MACRO_EXPANSION: true
-        continental:
-          src-dirs: >
-            src/nebula_continental/nebula_continental_common/include
-            src/nebula_continental/nebula_continental_decoders/include
-            src/nebula_continental/nebula_continental_hw_interfaces/include
-            src/nebula_continental/nebula_continental/include
-          full-doc: true
-          doxy-cfg:
-            FILE_PATTERNS: "*.hpp *.h"
-            RECURSIVE: true
-            EXTRACT_ALL: true
-            INLINE_SOURCES: true
-            ENABLE_PREPROCESSING: true
-            MACRO_EXPANSION: true
-
-      save-api: .mkdoxy
-      full-doc: true
-      debug: false
-      ignore-errors: false
 
   - search:
       lang: en
@@ -277,4 +202,8 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.highlight
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format

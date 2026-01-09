@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>nebula_sample</name>
+  <version>0.3.0</version>
+  <description>Nebula Sample ROS 2 Package</description>
+  <maintainer email="david.wong@tier4.jp">David Wong</maintainer>
+  <maintainer email="max.schmeller@tier4.jp">Max Schmeller</maintainer>
+
+  <license>Apache 2</license>
+  <author>TIER IV</author>
+
+  <buildtool_depend>autoware_cmake</buildtool_depend>
+
+  <depend>nebula_core_common</depend>
+  <depend>nebula_core_ros</depend>
+  <depend>nebula_sample_common</depend>
+  <depend>nebula_sample_decoders</depend>
+  <depend>nebula_sample_hw_interfaces</depend>
+  <depend>pcl_conversions</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>sensor_msgs</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
