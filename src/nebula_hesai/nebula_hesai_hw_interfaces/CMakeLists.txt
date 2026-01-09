@@ -12,7 +12,7 @@ target_include_directories(
          $<INSTALL_INTERFACE:include>)
 
 ament_target_dependencies(
-  nebula_hesai_hw_interfaces PUBLIC boost_tcp_driver nebula_core_common
+  nebula_hesai_hw_interfaces PUBLIC nebula_core_common
   nebula_hesai_common nebula_core_hw_interfaces)
 
 install(TARGETS nebula_hesai_hw_interfaces
@@ -21,7 +21,7 @@ install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_hesai_hw_interfaces)
-ament_export_dependencies(boost_tcp_driver nebula_core_common
+ament_export_dependencies( nebula_core_common
                           nebula_hesai_common nebula_core_hw_interfaces)
 
 ament_package()

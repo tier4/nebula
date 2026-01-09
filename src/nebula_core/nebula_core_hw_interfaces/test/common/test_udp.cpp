@@ -1,4 +1,4 @@
-// Copyright 2024 TIER IV, Inc.
+// Copyright 2025 TIER IV, Inc.
 
 #include "common/test_udp/utils.hpp"
 #include "nebula_core_common/util/expected.hpp"
@@ -228,6 +228,16 @@ TEST(TestUdp, TestSending)
   ASSERT_TRUE(result3.has_value());
   auto const & [recv_payload, metadata] = result3.value();
   ASSERT_EQ(recv_payload, payload);
+}
+
+TEST(TestUdp, TestClose)
+{
+  auto sock = UdpSocket::Builder(g_localhost_ip, g_host_port).bind();
+  sock.subscribe(empty_cb());
+  ASSERT_TRUE(sock.is_subscribed());
+
+  sock.close();
+  ASSERT_FALSE(sock.is_subscribed());
 }
 
 }  // namespace nebula::drivers::connections

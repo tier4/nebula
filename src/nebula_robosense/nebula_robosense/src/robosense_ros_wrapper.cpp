@@ -64,8 +64,7 @@ RobosenseRosWrapper::RobosenseRosWrapper(const rclcpp::NodeOptions & options)
       std::bind(&RobosenseRosWrapper::receive_scan_message_callback, this, std::placeholders::_1));
     info_packets_sub_ = create_subscription<robosense_msgs::msg::RobosenseInfoPacket>(
       "robosense_info_packets", 10, [this](const robosense_msgs::msg::RobosenseInfoPacket & msg) {
-        std::vector<uint8_t> raw_packet;
-        std::copy(msg.packet.data.cbegin(), msg.packet.data.cend(), std::back_inserter(raw_packet));
+        std::vector<uint8_t> raw_packet(msg.packet.data.begin(), msg.packet.data.end());
         receive_info_packet_callback(raw_packet);
       });
     RCLCPP_INFO_STREAM(
