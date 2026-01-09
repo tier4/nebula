@@ -53,7 +53,7 @@ def print_sizes(pts1, pts2):
     print(f"PCD2: {len(pts2)} points")
 
     if len(pts1) != len(pts2):
-        print(f"Diff: {len(pts1) - len(pts2)} points")
+        print(f"Diff: {len(pts2) - len(pts1)} points")
     else:
         print("Same size")
 
