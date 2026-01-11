@@ -1,10 +1,12 @@
 # cspell: ignore nojekyll
 name: documentation
 on:
+  workflow_dispatch:
   push:
     branches:
       - develop
       - main
+      - feat/migrate-mkdocs-to-zensical
   pull_request:
     types: [closed]
 permissions:
@@ -21,21 +23,28 @@ jobs:
         with:
           key: ${{ github.ref }}
           path: .cache
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.x
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
       - run: |
-          sudo apt update && sudo apt install -y doxygen && \
-          pip install mkdocs \
-          mkdocs-material \
-          Jinja2 \
-          ruamel.yaml && \
-          pip install git+https://github.com/JakubAndrysek/mkdoxy && \
-          pip install -r docs/requirements.txt
-      - run: mkdocs build --site-dir _site
+          sudo apt update && sudo apt install -y doxygen
+      - run: |
+          python -m venv .venv-mkdocs
+          . .venv-mkdocs/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install mkdoxy==1.2.8
+          rm -rf .mkdoxy
+          mkdocs build --config-file scripts/mkdoxy_gen.yml --site-dir _mkdocs_site
+      - run: |
+          python -m venv .venv-zensical && \
+          . .venv-zensical/bin/activate && \
+          pip install -r docs/requirements.txt && \
+          MKDOXY_DIR=".mkdoxy" && \
+          if [ ! -f "$MKDOXY_DIR/core/links.md" ]; then MKDOXY_DIR="_mkdocs_site/assets/.doxy"; fi && \
+          test -f "$MKDOXY_DIR/core/links.md" && \
+          python3 scripts/preprocess_zensical_docs.py --mkdoxy-dir "$MKDOXY_DIR" --site-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" && \
+          zensical build --config-file .zensical.toml && \
+          test -f _site/core/links/index.html
       - run: touch _site/.nojekyll
       - run: |
           chmod -c -R +rX "_site/" | while read line; do
