@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
-#define NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
+#ifndef NEBULA_VELODYNE_DECODERS__DECODERS__VELODYNE_SCAN_DECODER_HPP_
+#define NEBULA_VELODYNE_DECODERS__DECODERS__VELODYNE_SCAN_DECODER_HPP_
 
 #include <nebula_core_common/point_types.hpp>
 #include <nebula_velodyne_common/velodyne_calibration_decoder.hpp>
@@ -244,4 +244,4 @@ public:
 
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_WS_VELODYNE_SCAN_DECODER_HPP
+#endif  // NEBULA_VELODYNE_DECODERS__DECODERS__VELODYNE_SCAN_DECODER_HPP_
