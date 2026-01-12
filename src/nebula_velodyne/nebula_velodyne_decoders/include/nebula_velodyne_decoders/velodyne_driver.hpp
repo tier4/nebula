@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_VELODYNE_DRIVER_H
-#define NEBULA_VELODYNE_DRIVER_H
+#ifndef NEBULA_VELODYNE_DECODERS__VELODYNE_DRIVER_HPP_
+#define NEBULA_VELODYNE_DECODERS__VELODYNE_DRIVER_HPP_
 
 #include "nebula_core_common/nebula_common.hpp"
 #include "nebula_core_common/nebula_status.hpp"
@@ -74,4 +74,4 @@ public:
 
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_VELODYNE_DRIVER_H
+#endif  // NEBULA_VELODYNE_DECODERS__VELODYNE_DRIVER_HPP_
