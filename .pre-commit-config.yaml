@@ -1,6 +1,12 @@
+# This file is automatically synced from:
+# https://github.com/autowarefoundation/sync-file-templates
+# To make changes, update the source repository and follow the guidelines in its README.
+
+# https://pre-commit.ci/#configuration
 ci:
-  autofix_commit_msg: "ci(pre-commit): autofix"
-  autoupdate_commit_msg: "ci(pre-commit): autoupdate"
+  autofix_commit_msg: "style(pre-commit): autofix"
+  autoupdate_schedule: quarterly
+  autoupdate_commit_msg: "ci(pre-commit): quarterly autoupdate"
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -11,7 +17,7 @@ repos:
       - id: check-toml
       - id: check-xml
       - id: check-yaml
-        args: [--allow-multiple-documents]
+        args: [--unsafe]
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: mixed-line-ending
@@ -19,7 +25,7 @@ repos:
         args: [--markdown-linebreak-ext=md]
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.45.0
+    rev: v0.47.0
     hooks:
       - id: markdownlint
         args: [-c, .markdownlint.yaml, --fix]
@@ -35,10 +41,19 @@ repos:
     hooks:
       - id: yamllint
 
+  - repo: https://github.com/autowarefoundation/autoware-guideline-check
+    rev: 0.2.0
+    hooks:
+      - id: check-package-depends
+
   - repo: https://github.com/tier4/pre-commit-hooks-ros
     rev: v0.10.0
     hooks:
+      - id: flake8-ros
+      - id: prettier-xacro
+      - id: prettier-launch-xml
       - id: prettier-package-xml
+      - id: ros-include-guard
       - id: sort-package-xml
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
@@ -53,44 +68,48 @@ repos:
         args: [-w, -s, -i=4]
 
   - repo: https://github.com/pycqa/isort
-    rev: 6.0.1
+    rev: 7.0.0
     hooks:
       - id: isort
+        args: [--profile=black, --line-length=100]
 
-  - repo: https://github.com/psf/black
-    rev: 25.9.0
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 25.12.0
     hooks:
       - id: black
         args: [--line-length=100]
 
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.3.0
-    hooks:
-      - id: flake8
-        additional_dependencies:
-          [
-            flake8-blind-except,
-            flake8-builtins,
-            flake8-class-newline,
-            flake8-comprehensions,
-            flake8-deprecated,
-            flake8-docstrings,
-            flake8-import-order,
-            flake8-quotes,
-          ]
-
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v21.1.1
+    rev: v21.1.8
     hooks:
       - id: clang-format
+        types_or: [c++, c, cuda]
 
   - repo: https://github.com/cpplint/cpplint
     rev: 2.0.2
     hooks:
       - id: cpplint
-        # runtime/arrays uses the name of the variable to determine const-ness.
-        # This does not play well with our naming conventions
-        args: [--quiet, '--filter=-runtime/arrays,-build/c++17,-readability/casting']
+        args: [--quiet]
         exclude: .cu
 
-exclude: .svg
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.36.0
+    hooks:
+      - id: check-metaschema
+        files: ^.+/schema/.*schema\.json$
+
+  - repo: local
+    hooks:
+      - id: prettier-svg
+        name: prettier svg
+        description: Apply Prettier with plugin-xml to svg.
+        entry: prettier --write --list-different --ignore-unknown --print-width 200 --xml-self-closing-space false --xml-whitespace-sensitivity ignore
+        language: node
+        files: .svg$
+        additional_dependencies: [prettier@2.7.1, "@prettier/plugin-xml@2.2.0"]
+
+  - repo: https://github.com/AleksaC/hadolint-py
+    rev: v2.14.0
+    hooks:
+      - id: hadolint
+        exclude: .svg$
