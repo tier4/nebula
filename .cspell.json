@@ -61,6 +61,7 @@
     "stds",
     "struct",
     "structs",
+    "tablefmt",
     "TOLOWER",
     "UDP_SEQ",
     "UNSYNCHRONIZED",
