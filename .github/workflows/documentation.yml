@@ -6,7 +6,6 @@ on:
     branches:
       - develop
       - main
-      - feat/migrate-mkdocs-to-zensical
   pull_request:
     types: [closed]
 
