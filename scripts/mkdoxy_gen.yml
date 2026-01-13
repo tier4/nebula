@@ -9,7 +9,7 @@ plugins:
             src/nebula_core/nebula_core_decoders/include
             src/nebula_core/nebula_core_hw_interfaces/include
             src/nebula_core/nebula_core_ros/include
-          api-path: "."
+          api-path: .
           full-doc: true
           doxy-cfg:
             FILE_PATTERNS: "*.hpp *.h"
@@ -24,7 +24,7 @@ plugins:
             src/nebula_hesai/nebula_hesai_decoders/include
             src/nebula_hesai/nebula_hesai_hw_interfaces/include
             src/nebula_hesai/nebula_hesai/include
-          api-path: "."
+          api-path: .
           full-doc: true
           doxy-cfg:
             FILE_PATTERNS: "*.hpp *.h"
@@ -39,7 +39,7 @@ plugins:
             src/nebula_velodyne/nebula_velodyne_decoders/include
             src/nebula_velodyne/nebula_velodyne_hw_interfaces/include
             src/nebula_velodyne/nebula_velodyne/include
-          api-path: "."
+          api-path: .
           full-doc: true
           doxy-cfg:
             FILE_PATTERNS: "*.hpp *.h"
@@ -54,7 +54,7 @@ plugins:
             src/nebula_robosense/nebula_robosense_decoders/include
             src/nebula_robosense/nebula_robosense_hw_interfaces/include
             src/nebula_robosense/nebula_robosense/include
-          api-path: "."
+          api-path: .
           full-doc: true
           doxy-cfg:
             FILE_PATTERNS: "*.hpp *.h"
@@ -69,7 +69,7 @@ plugins:
             src/nebula_continental/nebula_continental_decoders/include
             src/nebula_continental/nebula_continental_hw_interfaces/include
             src/nebula_continental/nebula_continental/include
-          api-path: "."
+          api-path: .
           full-doc: true
           doxy-cfg:
             FILE_PATTERNS: "*.hpp *.h"
