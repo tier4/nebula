@@ -1,2 +1,4 @@
+mkdocs==1.6.1
+mkdoxy==1.2.8
 zensical==0.0.15
 tabulate

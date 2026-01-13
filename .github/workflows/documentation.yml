@@ -35,34 +35,24 @@ jobs:
       - name: Install Doxygen
         run: sudo apt update && sudo apt install -y doxygen
 
-      - name: Set up mkdoxy environment
+      - name: Install Python dependencies
         run: |
-          python -m venv .venv-mkdocs
-          . .venv-mkdocs/bin/activate
-          pip install --upgrade pip
-          pip install mkdoxy==1.2.8
+          python -m pip install --upgrade pip
+          python -m pip install -r docs/requirements.txt
 
       - name: Generate API reference
         run: |
-          . .venv-mkdocs/bin/activate
           rm -rf .mkdoxy
           mkdocs build --config-file scripts/mkdoxy_gen.yml
 
-      - name: Set up Zensical environment
-        run: |
-          python -m venv .venv-zensical
-          . .venv-zensical/bin/activate
-          pip install -r docs/requirements.txt
-
       - name: Preprocess documentation
         run: |
-          . .venv-zensical/bin/activate
           python3 scripts/preprocess_zensical_docs.py \
+            --mkdoxy-dir .mkdoxy \
             --site-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
 
       - name: Build documentation site
         run: |
-          . .venv-zensical/bin/activate
           zensical build --config-file .zensical.toml
 
       - name: Verify API reference output

@@ -68,7 +68,6 @@ _(optional)_ To build and serve the documentation locally (including API referen
 sudo apt install doxygen
 
 # Install Python dependencies
-pip3 install mkdoxy==1.2.8
 pip3 install -r docs/requirements.txt
 
 # Generate API reference from C++ sources
