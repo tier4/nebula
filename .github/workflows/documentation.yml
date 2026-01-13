@@ -1,7 +1,6 @@
 # cspell: ignore nojekyll
 name: documentation
 on:
-  workflow_dispatch:
   push:
     branches:
       - develop
