@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+"""Preprocess documentation for Zensical by expanding json_to_markdown macros.
+
+This script prepares a Zensical-compatible docs tree by:
+1. Copying source docs to an output directory
+2. Merging mkdoxy-generated API reference markdown
+3. Expanding {{ json_to_markdown(...) }} macros into GitHub-Flavored Markdown tables
+4. Generating a derived Zensical config with updated paths
+"""
 
 import argparse
 import ast
@@ -19,6 +27,7 @@ _MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 
 
 def _md_links_to_html(text: str) -> str:
+    """Convert markdown links with absolute paths to HTML anchor tags."""
     def repl(match: re.Match) -> str:
         label = match.group(1)
         href = match.group(2)
@@ -29,19 +38,22 @@ def _md_links_to_html(text: str) -> str:
     return _MARKDOWN_LINK_RE.sub(repl, text)
 
 
-def format_param_type(param_type):
+def format_param_type(param_type: str) -> str:
+    """Convert JSON schema type to display type (e.g., 'number' -> 'float')."""
     if param_type == "number":
         return "float"
     return param_type
 
 
-def ensure_word_breaks(text):
+def ensure_word_breaks(text: str) -> str:
+    """Insert HTML word break hints after slashes for better table rendering."""
     if not isinstance(text, str):
         return text
     return text.replace("/", "/<wbr>")
 
 
-def format_param_range(param):
+def format_param_range(param: dict) -> str:
+    """Format JSON schema constraints (min, max, enum) as a human-readable string."""
     list_of_range = []
     if "enum" in param:
         list_of_range.append(", ".join(map(str, param["enum"])))
@@ -62,7 +74,8 @@ def format_param_range(param):
     return "<br/>".join(map(str, list_of_range))
 
 
-def get_json_path(json_data: dict, json_path: list):
+def get_json_path(json_data: dict, json_path: list) -> dict:
+    """Traverse a nested dict/list structure using a path of keys/indices."""
     for elem in json_path:
         if isinstance(elem, int):
             json_data = list(json_data.values())[elem]
@@ -73,10 +86,11 @@ def get_json_path(json_data: dict, json_path: list):
 
 def extract_parameter_info(
     parameters: dict,
-    namespace="",
+    namespace: str = "",
     file_directory: str = "",
-    include_refs=False,
-):
+    include_refs: bool = False,
+) -> list[dict]:
+    """Recursively extract parameter metadata from a JSON schema properties dict."""
     params = []
     for k, v in parameters.items():
         if not isinstance(v, dict):
@@ -127,14 +141,28 @@ def extract_parameter_info(
 
 
 def to_gfm_table(rows: list[dict]) -> str:
+    """Convert a list of dicts to a GitHub-Flavored Markdown table."""
     return tabulate(rows, headers="keys", tablefmt="github")
 
 
 def json_to_markdown(
-    json_schema_file_path,
-    json_path=["definitions", 0, "properties"],
-    include_refs=True,
-):
+    json_schema_file_path: str,
+    json_path: list | None = None,
+    include_refs: bool = True,
+) -> str:
+    """Convert a JSON schema file to a GitHub-Flavored Markdown parameter table.
+
+    Args:
+        json_schema_file_path: Path to the JSON schema file.
+        json_path: Path within the JSON to the properties dict.
+        include_refs: Whether to follow $ref references.
+
+    Returns:
+        A GFM table string listing parameter names, types, defaults, and ranges.
+    """
+    if json_path is None:
+        json_path = ["definitions", 0, "properties"]
+
     with open(json_schema_file_path, encoding="utf-8") as f:
         data = json.load(f)
 
@@ -148,6 +176,7 @@ def json_to_markdown(
 
 
 def _parse_python_call_args(args_src: str) -> tuple[list, dict]:
+    """Parse a Python function call's arguments from source text."""
     expr = ast.parse(f"f({args_src})", mode="eval").body
     if not isinstance(expr, ast.Call):
         raise ValueError("unexpected AST (not a call)")
@@ -179,6 +208,10 @@ _MACRO_RE = re.compile(
 
 
 def render_macros_in_markdown_file(path: Path) -> bool:
+    """Expand json_to_markdown macros in a markdown file in-place.
+
+    Returns True if any macros were expanded, False otherwise.
+    """
     text = path.read_text(encoding="utf-8")
     if "{{" not in text or "json_to_markdown" not in text:
         return False
@@ -203,6 +236,7 @@ def write_derived_zensical_config(
     site_dir: str,
     site_url: str | None,
 ) -> None:
+    """Generate a derived Zensical config with updated docs_dir, site_dir, and site_url."""
     lines = src.read_text(encoding="utf-8").splitlines(keepends=True)
     found_docs_dir = False
     found_site_dir = False
@@ -230,6 +264,7 @@ def write_derived_zensical_config(
 
 
 def main() -> int:
+    """CLI entrypoint: preprocess docs and generate derived Zensical config."""
     parser = argparse.ArgumentParser(
         description="Prepare a Zensical-compatible docs tree (expands json_to_markdown macros)."
     )
