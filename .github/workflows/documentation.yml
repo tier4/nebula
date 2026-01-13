@@ -6,6 +6,7 @@ on:
     branches:
       - develop
       - main
+      - feat/migrate-mkdocs-to-zensical
   pull_request:
     types: [closed]
 
@@ -47,7 +48,7 @@ jobs:
         run: |
           . .venv-mkdocs/bin/activate
           rm -rf .mkdoxy
-          mkdocs build --config-file scripts/mkdoxy_gen.yml --site-dir _mkdocs_site
+          mkdocs build --config-file scripts/mkdoxy_gen.yml
 
       - name: Set up Zensical environment
         run: |
@@ -59,7 +60,6 @@ jobs:
         run: |
           . .venv-zensical/bin/activate
           python3 scripts/preprocess_zensical_docs.py \
-            --mkdoxy-dir .mkdoxy \
             --site-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
 
       - name: Build documentation site
