@@ -12,13 +12,12 @@ import argparse
 import ast
 import json
 import os
+from pathlib import Path
 import re
 import shutil
 import sys
-from pathlib import Path
 
 from tabulate import tabulate
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -28,6 +27,7 @@ _MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 
 def _md_links_to_html(text: str) -> str:
     """Convert markdown links with absolute paths to HTML anchor tags."""
+
     def repl(match: re.Match) -> str:
         label = match.group(1)
         href = match.group(2)
@@ -334,7 +334,9 @@ def main() -> int:
 
     docs_dir_in_config = os.path.relpath(out_dir, start=ROOT)
     site_url = (args.site_url or "").strip() or None
-    write_derived_zensical_config(config_src, config_out, docs_dir_in_config, args.site_dir, site_url)
+    write_derived_zensical_config(
+        config_src, config_out, docs_dir_in_config, args.site_dir, site_url
+    )
 
     print(f"Prepared docs in {docs_dir_in_config} (rendered {rendered} file(s))")
     return 0
