@@ -3,7 +3,7 @@ docs_dir: ../docs
 plugins:
   - mkdoxy:
       projects:
-        core:
+        api_reference/core:
           src-dirs: >
             src/nebula_core/nebula_core_common/include
             src/nebula_core/nebula_core_decoders/include
@@ -18,7 +18,7 @@ plugins:
             INLINE_SOURCES: true
             ENABLE_PREPROCESSING: true
             MACRO_EXPANSION: true
-        hesai:
+        api_reference/hesai:
           src-dirs: >
             src/nebula_hesai/nebula_hesai_common/include
             src/nebula_hesai/nebula_hesai_decoders/include
@@ -33,7 +33,7 @@ plugins:
             INLINE_SOURCES: true
             ENABLE_PREPROCESSING: true
             MACRO_EXPANSION: true
-        velodyne:
+        api_reference/velodyne:
           src-dirs: >
             src/nebula_velodyne/nebula_velodyne_common/include
             src/nebula_velodyne/nebula_velodyne_decoders/include
@@ -48,7 +48,7 @@ plugins:
             INLINE_SOURCES: true
             ENABLE_PREPROCESSING: true
             MACRO_EXPANSION: true
-        robosense:
+        api_reference/robosense:
           src-dirs: >
             src/nebula_robosense/nebula_robosense_common/include
             src/nebula_robosense/nebula_robosense_decoders/include
@@ -63,7 +63,7 @@ plugins:
             INLINE_SOURCES: true
             ENABLE_PREPROCESSING: true
             MACRO_EXPANSION: true
-        continental:
+        api_reference/continental:
           src-dirs: >
             src/nebula_continental/nebula_continental_common/include
             src/nebula_continental/nebula_continental_decoders/include

@@ -1,3 +1,7 @@
+---
+icon: lucide/home
+---
+
 # Welcome to the Nebula documentation
 
 Welcome to the Nebula documentation. Here you will find information about the background of the project, how to install and use with ROS 2, and also how to add new sensors to the Nebula driver.
@@ -23,7 +27,7 @@ Nebula works with ROS 2 and is the recommended sensor driver for the [Autoware](
 ## Nebula architecture
 
 - [Design](design.md)
-- [Parameters](parameters.md)
+- [Parameters](parameters/index.md)
 - [Point cloud types](point_types.md)
 - [Point filters](filters.md)
 

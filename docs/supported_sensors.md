@@ -1,3 +1,7 @@
+---
+icon: lucide/aperture
+---
+
 # Supported sensors
 
 Nebula currently supports the sensor models listed below. The test status column indicates how many of the sensors' features are supported.

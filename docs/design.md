@@ -1,3 +1,7 @@
+---
+icon: lucide/layout
+---
+
 # Nebula design
 
 WIP - please check back soon!

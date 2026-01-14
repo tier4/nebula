@@ -1,3 +1,7 @@
+---
+icon: lucide/file-edit
+---
+
 # Contributing to Nebula
 
 Thank you for your interest in contributing to Nebula!

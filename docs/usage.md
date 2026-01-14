@@ -1,3 +1,7 @@
+---
+icon: lucide/play-circle
+---
+
 # Running Nebula
 
 ## Launch with default parameters

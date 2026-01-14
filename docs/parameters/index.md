@@ -1,3 +1,7 @@
+---
+icon: lucide/sliders
+---
+
 # Common Parameters
 
 - Sensor-specific parameters are defined in `nebula_<vendor>/schema/<sensor_model>.schema.json` and are described in the sensor-specific parameter pages in this tab.
@@ -97,4 +101,4 @@ For multiple returns that are close together, the points will be fused into one 
 
 ### `point_filters`
 
-Filters that are applied while decoding the pointcloud. For the full reference, see [Point filters](filters.md).
+Filters that are applied while decoding the pointcloud. For the full reference, see [Point filters](../filters.md).

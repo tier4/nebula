@@ -1,3 +1,7 @@
+---
+icon: lucide/gauge
+---
+
 # Benchmarking
 
 Nebula includes scripts for measuring decoder performance. Use these to validate that performance-related changes do not introduce regressions.

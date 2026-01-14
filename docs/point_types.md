@@ -1,3 +1,7 @@
+---
+icon: lucide/cloudy
+---
+
 # Nebula point cloud types
 
 Nebula currently supports the below point cloud output types.
