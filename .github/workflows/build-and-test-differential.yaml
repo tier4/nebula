@@ -170,7 +170,7 @@ jobs:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
           build-depends-repos: ${{ matrix.build-depends-repos }}
-          cmake-build-type: Debug  # Faster compilation than Release
+          cmake-build-type: Debug # Faster compilation than Release
 
       - name: Show ccache stats after build
         if: steps.cache-analysis.outputs.cache-hit != 'true'

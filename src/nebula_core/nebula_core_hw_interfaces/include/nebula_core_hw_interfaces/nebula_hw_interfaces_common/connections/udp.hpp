@@ -14,10 +14,10 @@
 
 #pragma once
 
-#ifndef _GNU_SOURCE
+#ifndef NEBULA_CORE_HW_INTERFACES__NEBULA_HW_INTERFACES_COMMON__CONNECTIONS__UDP_HPP_
 // See `man strerror_r`
-#define _GNU_SOURCE
-#endif
+#define NEBULA_CORE_HW_INTERFACES__NEBULA_HW_INTERFACES_COMMON__CONNECTIONS__UDP_HPP_
+#endif  // NEBULA_CORE_HW_INTERFACES__NEBULA_HW_INTERFACES_COMMON__CONNECTIONS__UDP_HPP_
 
 #include <nebula_core_common/util/errno.hpp>
 #include <nebula_core_common/util/expected.hpp>

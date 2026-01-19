@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_HESAI_HW_INTERFACE_H
-#define NEBULA_HESAI_HW_INTERFACE_H
+#ifndef NEBULA_HESAI_HW_INTERFACES__HESAI_HW_INTERFACE_HPP_
+#define NEBULA_HESAI_HW_INTERFACES__HESAI_HW_INTERFACE_HPP_
 // Have to define macros to silence warnings about deprecated headers being used by
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
@@ -460,4 +460,4 @@ public:
 };
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_HESAI_HW_INTERFACE_H
+#endif  // NEBULA_HESAI_HW_INTERFACES__HESAI_HW_INTERFACE_HPP_

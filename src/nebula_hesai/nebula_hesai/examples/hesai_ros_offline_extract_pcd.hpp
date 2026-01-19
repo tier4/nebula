@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_HesaiRosOfflineExtractSample_H
-#define NEBULA_HesaiRosOfflineExtractSample_H
+#ifndef NEBULA_HESAI__NEBULA_HESAI__EXAMPLES__HESAI_ROS_OFFLINE_EXTRACT_PCD_HPP_
+#define NEBULA_HESAI__NEBULA_HESAI__EXAMPLES__HESAI_ROS_OFFLINE_EXTRACT_PCD_HPP_
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_core_common/nebula_common.hpp>
@@ -90,4 +90,4 @@ private:
 
 }  // namespace nebula::ros
 
-#endif  // NEBULA_HesaiRosOfflineExtractSample_H
+#endif  // NEBULA_HESAI__NEBULA_HESAI__EXAMPLES__HESAI_ROS_OFFLINE_EXTRACT_PCD_HPP_

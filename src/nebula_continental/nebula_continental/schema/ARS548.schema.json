@@ -56,9 +56,7 @@
         },
         "sensor_model": {
           "$ref": "radar_continental.json#/definitions/sensor_model",
-          "enum": [
-            "ARS548"
-          ]
+          "enum": ["ARS548"]
         },
         "diagnostics": {
           "type": "object",
@@ -87,10 +85,7 @@
                       "description": "Maximum blockage status level considered as Warning (0: Blind, 1: High, 2: Mid, 3: Low, 4: None). Can not be greater than `ok`. If `ok` is equal to `warn`, the status will be set to `ERROR` if the blockage status is greater than `ok`."
                     }
                   },
-                  "required": [
-                    "ok",
-                    "warn"
-                  ]
+                  "required": ["ok", "warn"]
                 },
                 "test_level": {
                   "type": "object",
@@ -110,10 +105,7 @@
                       "description": "Maximum blockage test level considered as Warning (0: Self test failed, 1: Self test passed, 2: Self test ongoing). Can not be greater than `ok`. If `ok` is equal to `warn`, the status will be set to `ERROR` if the blockage test is greater than `ok`."
                     }
                   },
-                  "required": [
-                    "ok",
-                    "warn"
-                  ]
+                  "required": ["ok", "warn"]
                 },
                 "num_frame_transition": {
                   "type": "integer",
@@ -165,14 +157,10 @@
           "$ref": "#/definitions/ARS548"
         }
       },
-      "required": [
-        "ros__parameters"
-      ],
+      "required": ["ros__parameters"],
       "additionalProperties": false
     }
   },
-  "required": [
-    "/**"
-  ],
+  "required": ["/**"],
   "additionalProperties": false
 }
