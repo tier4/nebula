@@ -73,7 +73,11 @@ private:
   std::shared_ptr<PacketLossDetectorTypedBase<typename SensorT::packet_t>> packet_loss_detector_;
 
   typename SensorT::packet_t packet_;
+
+  /// @brief Accumulated callback time during the current unpack() call (reset per packet)
   uint64_t callback_time_ns_{0};
+  /// @brief Whether a scan was completed during the current unpack() call (reset per packet)
+  bool did_scan_complete_{false};
 
   std::shared_ptr<loggers::Logger> logger_;
 
@@ -272,6 +276,8 @@ private:
   /// @brief Called when a scan is complete, published and then clears the output frame.
   void on_scan_complete(uint8_t buffer_index)
   {
+    did_scan_complete_ = true;
+
     auto & completed_frame = frame_buffers_[buffer_index];
     constexpr uint64_t nanoseconds_per_second = 1'000'000'000ULL;
     double scan_timestamp_s =
@@ -281,7 +287,8 @@ private:
     if (pointcloud_callback_) {
       util::Stopwatch stopwatch;
       pointcloud_callback_(completed_frame.pointcloud, scan_timestamp_s);
-      callback_time_ns_ = stopwatch.elapsed_ns();
+      callback_time_ns_ +=
+        stopwatch.elapsed_ns();  // Accumulate in case of multiple scans per packet
     }
 
     if (blockage_mask_plugin_ && completed_frame.blockage_mask) {
@@ -343,6 +350,7 @@ public:
   {
     util::Stopwatch decode_watch;
     callback_time_ns_ = 0;
+    did_scan_complete_ = false;
 
     if (!parse_packet(packet)) {
       return {PerformanceCounters{decode_watch.elapsed_ns()}, DecodeError::PACKET_PARSE_FAILED};
@@ -362,8 +370,6 @@ public:
     // past, and since the frame check sequence of the packet is already checked by the NIC, we skip
     // it here.
 
-    bool did_scan_complete = false;
-
     const size_t n_returns = hesai_packet::get_n_returns(packet_.tail.return_mode);
     for (size_t block_id = 0; block_id < SensorT::packet_t::n_blocks; block_id += n_returns) {
       auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
@@ -380,7 +386,7 @@ public:
 
     PacketMetadata metadata;
     metadata.packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
-    metadata.did_scan_complete = did_scan_complete;
+    metadata.did_scan_complete = did_scan_complete_;
     return {PerformanceCounters{decode_duration_ns - callback_time_ns_}, metadata};
   }
 };
