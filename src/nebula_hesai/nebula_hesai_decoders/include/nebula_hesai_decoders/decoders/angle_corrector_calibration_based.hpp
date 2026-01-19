@@ -172,6 +172,7 @@ public:
 
   bool is_inside_overlap(uint32_t last_azimuth, uint32_t current_azimuth) override
   {
+    if (timestamp_reset_angle_raw_ == emit_angle_raw_) return false;
     return angle_is_between(timestamp_reset_angle_raw_, emit_angle_raw_, current_azimuth) ||
            angle_is_between(timestamp_reset_angle_raw_, emit_angle_raw_, last_azimuth);
   }
