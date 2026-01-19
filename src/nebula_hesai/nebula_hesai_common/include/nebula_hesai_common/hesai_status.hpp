@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HESAI_STATUS_HPP
-#define HESAI_STATUS_HPP
+#ifndef NEBULA_HESAI_COMMON__HESAI_STATUS_HPP_
+#define NEBULA_HESAI_COMMON__HESAI_STATUS_HPP_
 
 #include "nebula_core_common/nebula_status.hpp"
 
@@ -80,4 +80,4 @@ public:
   }
 };
 }  // namespace nebula
-#endif  // HESAI_STATUS_HPP
+#endif  // NEBULA_HESAI_COMMON__HESAI_STATUS_HPP_

@@ -22,7 +22,7 @@ jobs:
             build-depends-repos: build_depends.repos
     env:
       CCACHE_DIR: /root/.ccache
-      CCACHE_SIZE: 1G  # The GitHub cache action allows for 10G but the runners' disk space is limited
+      CCACHE_SIZE: 1G # The GitHub cache action allows for 10G but the runners' disk space is limited
       CC: /usr/lib/ccache/gcc
       CXX: /usr/lib/ccache/g++
 

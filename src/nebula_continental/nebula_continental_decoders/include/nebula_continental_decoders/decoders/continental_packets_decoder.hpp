@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_WS_CONTINENTAL_PACKETS_DECODER_HPP
-#define NEBULA_WS_CONTINENTAL_PACKETS_DECODER_HPP
+#ifndef NEBULA_CONTINENTAL_DECODERS__DECODERS__CONTINENTAL_PACKETS_DECODER_HPP_
+#define NEBULA_CONTINENTAL_DECODERS__DECODERS__CONTINENTAL_PACKETS_DECODER_HPP_
 
 #include <nebula_core_common/nebula_status.hpp>
 #include <nebula_core_common/point_types.hpp>
@@ -47,4 +47,4 @@ public:
   virtual bool process_packet(std::unique_ptr<nebula_msgs::msg::NebulaPacket> packet_msg) = 0;
 };
 }  // namespace nebula::drivers
-#endif  // NEBULA_WS_CONTINENTAL_PACKETS_DECODER_HPP
+#endif  // NEBULA_CONTINENTAL_DECODERS__DECODERS__CONTINENTAL_PACKETS_DECODER_HPP_
