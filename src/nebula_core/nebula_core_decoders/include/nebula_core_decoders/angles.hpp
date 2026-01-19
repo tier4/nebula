@@ -125,8 +125,12 @@ inline bool angle_is_between(
 template <typename T, typename U = T>
 inline T normalize_angle(T angle, U max_angle)
 {
-  T factor = std::floor(static_cast<double>(angle) / static_cast<double>(max_angle));
-  return angle - static_cast<T>(factor * max_angle);
+  // Note: double can represent the full int32_t range, so this is not less accurate than using
+  // integer math. Reconciling T and U as double, in case they differ in size and signedness.
+  const auto a = static_cast<double>(angle);
+  const auto m = static_cast<double>(max_angle);
+  const double factor = std::floor(a / m);
+  return static_cast<T>(a - (factor * m));
 }
 
 }  // namespace nebula::drivers
