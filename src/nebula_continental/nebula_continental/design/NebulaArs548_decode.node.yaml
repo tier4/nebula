@@ -1,0 +1,40 @@
+autoware_system_design_format: v0.1.0
+
+name: NebulaArs548_decode.node
+
+inheritance: NebulaArs548.node
+
+override:
+  inputs:
+  - name: nebula_packets
+    message_type: nebula_msgs/msg/NebulaPackets
+    remap_target: "nebula_packets"
+  processes:
+  - name: decoder
+    trigger_conditions:
+    - from_input: nebula_packets
+    outcomes:
+    - to_output: continental_objects
+    - to_output: continental_detections
+    - to_output: detection_points
+    - to_output: object_points
+    - to_output: radar_objects
+    - to_output: scan_raw
+    - to_output: objects_raw
+    - to_output: marker_array
+    - to_output: diagnostics
+    - to_output: radar_info
+  parameters:
+  - name: launch_hw
+    type: bool
+    default: false
+
+remove:
+  inputs:
+  - name: odometry_input
+  - name: acceleration_input
+  - name: steering_angle_input
+  outputs:
+  - name: nebula_packets
+  processes:
+  - name: hw_interface
