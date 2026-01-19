@@ -1,11 +1,11 @@
 autoware_system_design_format: v0.1.0
 
-name: NebulaHesaiPandar128E4X.node
+name: NebulaVelodyneVLS128.node
 
 launch:
-  package: nebula_hesai
-  plugin: HesaiRosWrapper
-  executable: hesai_ros_wrapper_node
+  package: nebula_velodyne
+  plugin: VelodyneRosWrapper
+  executable: velodyne_ros_wrapper_node
   node_output: screen
   use_container: true
   container_name: pointcloud_container
@@ -14,15 +14,15 @@ launch:
 inputs: []
 
 outputs:
-  - name: pandar_packets
-    message_type: pandar_msgs/msg/PandarScan
-    remap_target: "pandar_packets"
+  - name: velodyne_packets
+    message_type: velodyne_msgs/msg/VelodyneScan
+    remap_target: "velodyne_packets"
     qos:
       depth: 10
       reliability: best_effort
-  - name: pandar_points
+  - name: velodyne_points
     message_type: sensor_msgs/msg/PointCloud2
-    remap_target: "pandar_points"
+    remap_target: "velodyne_points"
     qos:
       depth: 10
       reliability: best_effort
@@ -45,8 +45,8 @@ outputs:
 # parameters
 parameter_files: 
   - name: config_file
-    default: config/Pandar128E4X.param.yaml
-    schema: schema/Pandar128E4X.schema.json
+    default: config/VLS128.param.yaml
+    schema: schema/VLS128.schema.json
     allow_substs: true
   
 parameters: 
@@ -55,7 +55,7 @@ parameters:
     default: true
   - name: sensor_model
     type: string
-    default: Pandar128E4X
+    default: VLS128
   - name: host_ip
     type: string
     default: 192.168.1.10
@@ -85,7 +85,7 @@ parameters:
     default: false
   - name: frame_id
     type: string
-    default: hesai
+    default: velodyne
   - name: diag_span
     type: int
     default: 1000
@@ -189,9 +189,9 @@ processes:
     trigger_conditions:
       - periodic: 100 # Hz
     outcomes:
-      - to_output: pandar_packets
+      - to_output: velodyne_packets
   - name: decoder
     trigger_conditions:
       - periodic: 10 # Hz
     outcomes:
-      - to_output: pandar_points
+      - to_output: velodyne_points
