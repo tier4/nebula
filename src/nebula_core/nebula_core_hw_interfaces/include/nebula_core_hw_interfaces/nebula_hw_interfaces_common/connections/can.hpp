@@ -64,7 +64,7 @@ class CanSocket
   };
 
   CanSocket(SockFd sock_fd, SocketConfig config)
-  : sock_fd_(std::move(sock_fd)), poll_fd_{sock_fd_.get(), POLLIN, 0}, config_{std::move(config)}
+  : sock_fd_(std::move(sock_fd)), config_{std::move(config)}
   {
   }
 
@@ -123,7 +123,7 @@ public:
 
   struct RxMetadata
   {
-    std::uint64_t timestamp_ns{0};
+    std::optional<uint64_t> timestamp_ns;
   };
 
   using callback_t = std::function<void(const can_frame & frame, const RxMetadata & metadata)>;
@@ -256,13 +256,44 @@ public:
     if (status == -1) throw SocketError(errno);
     if (status == 0) return false;
 
+    ssize_t recv_result = receive_frame_with_metadata(&frame, sizeof(frame), metadata);
+    if (static_cast<size_t>(recv_result) < sizeof(frame)) {
+      throw SocketError("Incomplete CAN FD frame received");
+    }
+    return true;
+  }
+
+  CanSocket(const CanSocket &) = delete;
+  CanSocket(CanSocket && other)
+  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))), config_(other.config_)
+  {
+    if (other.callback_) subscribe(std::move(other.callback_));
+  };
+
+  CanSocket & operator=(const CanSocket &) = delete;
+  CanSocket & operator=(CanSocket &&) = delete;
+
+  ~CanSocket() { unsubscribe(); }
+
+private:
+  /**
+   * @brief Receive a frame using recvmsg and extract timestamp from ancillary data.
+   *
+   * @param frame_ptr Pointer to the frame buffer.
+   * @param frame_size Size of the frame buffer.
+   * @param metadata Output metadata including timestamp.
+   * @return Number of bytes received.
+   * @throws SocketError if recvmsg fails.
+   */
+  ssize_t receive_frame_with_metadata(void * frame_ptr, size_t frame_size, RxMetadata & metadata)
+  {
     struct iovec iov;
     struct msghdr msg;
     char ctrl[CMSG_SPACE(sizeof(struct timeval))];
     struct sockaddr_can addr;
 
-    iov.iov_base = &frame;
-    iov.iov_len = sizeof(frame);
+    iov.iov_base = frame_ptr;
+    iov.iov_len = frame_size;
 
     msg.msg_name = &addr;
     msg.msg_namelen = sizeof(addr);
@@ -275,43 +306,29 @@ public:
     ssize_t recv_result = recvmsg(sock_fd_.get(), &msg, 0);
     if (recv_result < 0) throw SocketError(errno);
 
-    metadata.timestamp_ns = 0;
-    for (struct cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
-         cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-      if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMP) {
-        struct timeval * tv = (struct timeval *)CMSG_DATA(cmsg);
-        metadata.timestamp_ns =
-          (uint64_t)tv->tv_sec * 1000000000ULL + (uint64_t)tv->tv_usec * 1000ULL;
-      }
-    }
-
-    if (metadata.timestamp_ns == 0) {
-      metadata.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                std::chrono::system_clock::now().time_since_epoch())
-                                .count();
-    }
-
-    if (static_cast<size_t>(recv_result) < sizeof(frame)) {
-      throw SocketError("Incomplete CAN FD frame received");
-    }
-    return true;
+    metadata.timestamp_ns = extract_timestamp(msg);
+    return recv_result;
   }
 
-  CanSocket(const CanSocket &) = delete;
-  CanSocket(CanSocket && other)
-  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))),
-    poll_fd_(other.poll_fd_),
-    config_(other.config_)
+  /**
+   * @brief Extract SO_TIMESTAMP from ancillary data.
+   *
+   * @param msg The msghdr containing ancillary data.
+   * @return Timestamp in nanoseconds, or std::nullopt if not available.
+   */
+  static std::optional<uint64_t> extract_timestamp(const msghdr & msg)
   {
-    if (other.callback_) subscribe(std::move(other.callback_));
-  };
+    for (struct cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr;
+         cmsg = CMSG_NXTHDR(const_cast<msghdr *>(&msg), cmsg)) {
+      if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMP) {
+        struct timeval * tv = reinterpret_cast<struct timeval *>(CMSG_DATA(cmsg));
+        return static_cast<uint64_t>(tv->tv_sec) * 1000000000ULL +
+               static_cast<uint64_t>(tv->tv_usec) * 1000ULL;
+      }
+    }
+    return std::nullopt;
+  }
 
-  CanSocket & operator=(const CanSocket &) = delete;
-  CanSocket & operator=(CanSocket &&) = delete;
-
-  ~CanSocket() { unsubscribe(); }
-
-private:
   void launch_receiver()
   {
     assert(callback_);
@@ -327,42 +344,9 @@ private:
           can_frame frame{};
           RxMetadata metadata{};
 
-          struct iovec iov;
-          struct msghdr msg;
-          char ctrl[CMSG_SPACE(sizeof(struct timeval))];
-          struct sockaddr_can addr;
-
-          iov.iov_base = &frame;
-          iov.iov_len = sizeof(frame);
-
-          msg.msg_name = &addr;
-          msg.msg_namelen = sizeof(addr);
-          msg.msg_iov = &iov;
-          msg.msg_iovlen = 1;
-          msg.msg_control = ctrl;
-          msg.msg_controllen = sizeof(ctrl);
-          msg.msg_flags = 0;
-
-          ssize_t recv_result = recvmsg(sock_fd_.get(), &msg, 0);
-          if (recv_result < 0) throw SocketError(errno);
+          ssize_t recv_result = receive_frame_with_metadata(&frame, sizeof(frame), metadata);
           if (recv_result < static_cast<ssize_t>(sizeof(frame)))
             continue;  // Ignore incomplete frames
-
-          metadata.timestamp_ns = 0;
-          for (struct cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
-               cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-            if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMP) {
-              struct timeval * tv = (struct timeval *)CMSG_DATA(cmsg);
-              metadata.timestamp_ns =
-                (uint64_t)tv->tv_sec * 1000000000ULL + (uint64_t)tv->tv_usec * 1000ULL;
-            }
-          }
-
-          if (metadata.timestamp_ns == 0) {
-            metadata.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                      std::chrono::system_clock::now().time_since_epoch())
-                                      .count();
-          }
 
           callback_(frame, metadata);
         } catch (const SocketError & e) {
@@ -375,13 +359,13 @@ private:
 
   util::expected<bool, int> is_data_available()
   {
-    int status = poll(&poll_fd_, 1, config_.polling_interval_ms);
+    pollfd pfd{sock_fd_.get(), POLLIN, 0};
+    int status = poll(&pfd, 1, config_.polling_interval_ms);
     if (status == -1) return errno;
-    return (poll_fd_.revents & POLLIN) && (status > 0);
+    return (pfd.revents & POLLIN) && (status > 0);
   }
 
   SockFd sock_fd_;
-  pollfd poll_fd_;
 
   SocketConfig config_;
 

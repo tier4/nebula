@@ -63,12 +63,12 @@ class TcpSocket
   };
 
   TcpSocket(SockFd sock_fd, SocketConfig config)
-  : sock_fd_(std::move(sock_fd)), poll_fd_{sock_fd_.get(), POLLIN, 0}, config_{std::move(config)}
+  : sock_fd_(std::move(sock_fd)), config_{std::move(config)}
   {
   }
 
 public:
-  TcpSocket() : sock_fd_(), poll_fd_{-1, POLLIN, 0} {}
+  TcpSocket() : sock_fd_() {}
 
   /**
    * @brief Open a connection to the specified IP and port.
@@ -98,7 +98,6 @@ public:
     if (result == -1) throw SocketError(errno);
 
     config_.target = {target_in_addr, port};
-    poll_fd_.fd = sock_fd_.get();
   }
 
   /**
@@ -257,9 +256,7 @@ public:
 
   TcpSocket(const TcpSocket &) = delete;
   TcpSocket(TcpSocket && other)
-  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))),
-    poll_fd_(other.poll_fd_),
-    config_(other.config_)
+  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))), config_(other.config_)
   {
     if (other.callback_) subscribe(std::move(other.callback_));
   };
@@ -297,7 +294,8 @@ private:
           callback_(received_data);
         } catch (const SocketError & e) {
           // In a real application, we might want to log this properly or have an on_error callback.
-          // For now, we print to stderr and stop the thread to prevent the application from crashing.
+          // For now, we print to stderr and stop the thread to prevent the application from
+          // crashing.
           std::cerr << "TcpSocket receiver error: " << e.what() << std::endl;
           running_ = false;
         }
@@ -311,7 +309,6 @@ private:
   }
 
   SockFd sock_fd_;
-  pollfd poll_fd_;
 
   SocketConfig config_;
 

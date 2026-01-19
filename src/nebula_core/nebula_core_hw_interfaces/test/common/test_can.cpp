@@ -159,7 +159,9 @@ TEST(TestCan, TestAsyncTimestamp)
     uint64_t received_ts{0};
 
     sock2.subscribe([&](const can_frame &, const CanSocket::RxMetadata & metadata) {
-      received_ts = metadata.timestamp_ns;
+      if (metadata.timestamp_ns.has_value()) {
+        received_ts = metadata.timestamp_ns.value();
+      }
       received = true;
     });
 
@@ -177,7 +179,6 @@ TEST(TestCan, TestAsyncTimestamp)
 
     ASSERT_TRUE(received);
     EXPECT_GT(received_ts, 0u);
-
   } catch (const SocketError &) {
     GTEST_SKIP() << "Could not bind to " << g_can_interface;
   }
@@ -225,8 +226,8 @@ TEST(TestCan, TestReceiveFdWithMetadata)
 
     ASSERT_TRUE(success);
     ASSERT_EQ(recv_frame.can_id, sent_frame.can_id);
-    // Timestamp should be non-zero (either from kernel or fallback)
-    EXPECT_GT(metadata.timestamp_ns, 0u);
+    // Timestamp should be present when timestamping is enabled
+    EXPECT_TRUE(metadata.timestamp_ns.has_value());
   } catch (const SocketError &) {
     GTEST_SKIP() << "Could not bind to " << g_can_interface << ", or FD not supported";
   }
