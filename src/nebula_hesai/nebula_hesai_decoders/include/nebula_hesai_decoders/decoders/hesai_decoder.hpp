@@ -78,6 +78,8 @@ private:
   uint64_t callback_time_ns_{0};
   /// @brief Whether a scan was completed during the current unpack() call (reset per packet)
   bool did_scan_complete_{false};
+  /// @brief The current block being processed (used for timestamp reset calculation)
+  size_t current_block_id_{0};
 
   std::shared_ptr<loggers::Logger> logger_;
 
@@ -303,7 +305,8 @@ private:
   {
     auto & frame = frame_buffers_[buffer_index];
     frame.scan_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
-    frame.scan_timestamp_ns += sensor_.get_earliest_point_time_offset_for_block(0, packet_);
+    frame.scan_timestamp_ns +=
+      sensor_.get_earliest_point_time_offset_for_block(current_block_id_, packet_);
   }
 
 public:
@@ -375,6 +378,8 @@ public:
       auto block_azimuth = packet_.body.blocks[block_id].get_azimuth();
 
       auto channel_azimuths_out = angle_corrector_.get_corrected_azimuths(block_azimuth);
+      // Store current block ID for use in on_set_timestamp() callback
+      current_block_id_ = block_id;
       const auto & scan_state = scan_cutter_.step(channel_azimuths_out);
 
       if (scan_state.does_block_intersect_fov()) {
