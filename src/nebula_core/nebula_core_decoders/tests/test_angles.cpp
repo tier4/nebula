@@ -23,6 +23,9 @@ constexpr float two_pi = 2.0F * M_PIf;
 
 TEST(AngleIsBetweenTest, BasicTest)
 {
+  // Note that [0, 0] and [0, 360] are both considered to cover the full circle.
+  EXPECT_TRUE(angle_is_between(0, 0, 0));
+  EXPECT_TRUE(angle_is_between(0, 0, 180));
   EXPECT_TRUE(angle_is_between(0, 360, 180));
   EXPECT_FALSE(angle_is_between(0, 180, 270));
   EXPECT_FALSE(angle_is_between(270, 90, 180));
@@ -31,6 +34,7 @@ TEST(AngleIsBetweenTest, BasicTest)
 
 TEST(AngleIsBetweenTest, BoundaryTest)
 {
+  // Non-360-degree sector
   EXPECT_TRUE(angle_is_between(0, 10, 0));
   EXPECT_TRUE(angle_is_between(0, 10, 10));
   EXPECT_FALSE(angle_is_between(0, 10, 0, false));
@@ -46,9 +50,10 @@ TEST(AngleIsBetweenTest, WrapAroundTest)
 
 TEST(AngleIsBetweenTest, StartEqualsEndTest)
 {
+  EXPECT_TRUE(angle_is_between(0, 0, 10));
   EXPECT_TRUE(angle_is_between(10, 10, 10));
-  EXPECT_FALSE(angle_is_between(10, 10, 10, false));
-  EXPECT_FALSE(angle_is_between(10, 10, 10, true, false));
+  EXPECT_TRUE(angle_is_between(10, 10, 10, false));
+  EXPECT_TRUE(angle_is_between(10, 10, 10, true, false));
   EXPECT_FALSE(angle_is_between(10, 10, 10, false, false));
 }
 
@@ -79,6 +84,9 @@ TEST(NormalizeAngleTest, FloatTest)
   EXPECT_FLOAT_EQ(normalize_angle(0.0F, two_pi), 0.0F);
   EXPECT_FLOAT_EQ(normalize_angle(1.0F, two_pi), 1.0F);
   EXPECT_FLOAT_EQ(normalize_angle(two_pi, two_pi), 0.0F);
+
+  constexpr float epsilon = 1e-6F;
+  EXPECT_FLOAT_EQ(normalize_angle(two_pi - epsilon, two_pi), two_pi - epsilon);
   EXPECT_FLOAT_EQ(normalize_angle(two_pi + 1.0F, two_pi), 1.0F);
 }
 

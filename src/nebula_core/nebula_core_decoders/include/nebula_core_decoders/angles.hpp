@@ -69,26 +69,58 @@ struct FieldOfView
 };
 
 /**
- * @brief Tests if `angle` is in the region of the circle defined by `start_angle` and `end_angle`.
- * Notably, `end_angle` can be smaller than `start_angle`, in which case the region passes over the
- * 360/0 deg bound. This function is unit-independent (but all angles have to have the same unit),
- * so degrees, radians, and arbitrary scale factors can be used.
+ * @brief Tests if `angle` is in the angular sector defined by `start_angle` and `end_angle`.
+ *
+ * Assumes that all three angles are normalized to the interval [0; max_angle) before comparison.
+ * This function is unit-independent (max_angle can be 360 for degrees, 2 * M_PI for radians, 36000
+ * for centi-degrees, etc.) as long as the above assumption is fulfilled.
+ *
+ * If `start_angle` equals `end_angle`, the sector is considered to cover the full circle. In this
+ * case, an `angle` is always considered to be in the sector, except when it coincides with the
+ * `start_angle`/`end_angle` and both boundaries are exclusive. There is no way to define a
+ * zero-width sector.
+ *
+ * When `start_angle` and `end_angle` differ, `angle` is considered to be in the sector if
+ * - `start_angle <= angle <= end_angle`, or
+ * - `end_angle < start_angle` and (`angle <= end_angle` or `start_angle <= angle`)
+ *
+ * Examples:
+ * ```c++
+ * assert(angle_is_between(90, 270, 180) == true);
+ * assert(angle_is_between(270, 90, 0) == true);  // wrap-around case
+ * assert(angle_is_between(0, 0, 0) == true);
+ * assert(angle_is_between(0, 0, 0, false, false) == false);
+ * ```
  */
 template <typename T>
 inline bool angle_is_between(
   T start_angle, T end_angle, T angle, bool start_inclusive = true, bool end_inclusive = true)
 {
+  // Note: comments in this function refer to 360 degrees as the max_angle for simplicity, but the
+  // logic works equally for other units, such as radians or centi-degrees.
+  // 360-degree sector, angle coincides with boundary
+  if (start_angle == end_angle && start_angle == angle) return start_inclusive || end_inclusive;
+
+  // 360-degree sector, angle is fully inside
+  if (start_angle == end_angle) return true;
+
+  // Non-360-degree sector, angle coincides with boundary
   if (!start_inclusive && angle == start_angle) return false;
   if (!end_inclusive && angle == end_angle) return false;
 
-  return (start_angle <= angle && angle <= end_angle) ||
-         ((end_angle < start_angle) && (angle <= end_angle || start_angle <= angle));
+  // Sector wraps around at 360/0
+  if (end_angle < start_angle) return (angle <= end_angle) || (start_angle <= angle);
+
+  // Sector does not wrap around
+  return (start_angle <= angle) && (angle <= end_angle);
 }
 
 /**
- * @brief Normalizes an angle to the interval [0; max_angle]. This function is unit-independent.
+ * @brief Normalizes an angle to the interval [0; max_angle). This function is unit-independent.
  * `max_angle` is 360 for degrees, 2 * M_PI for radians, and the corresponding scaled value for
  * scaled units such as centi-degrees (36000).
+ *
+ * Mathematically, the normalization is a modulo operation, yielding an angle with winding number 0.
  */
 template <typename T, typename U = T>
 inline T normalize_angle(T angle, U max_angle)
