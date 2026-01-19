@@ -1,0 +1,27 @@
+autoware_system_design_format: v0.1.0
+
+name: NebulaVelodyneVLP16_decode.node
+
+inheritance: NebulaVelodyneVLP16.node
+
+override:
+  inputs:
+  - name: velodyne_packets
+    message_type: pandar_msgs/msg/PandarScan
+    remap_target: "velodyne_packets"
+  processes:
+  - name: decoder
+    trigger_conditions:
+    - from_input: velodyne_packets
+    outcomes:
+    - to_output: velodyne_points
+  parameters:
+  - name: launch_hw
+    type: bool
+    default: false
+
+remove:
+  outputs:
+  - name: velodyne_packets
+  processes:
+  - name: hw_interface
