@@ -65,7 +65,9 @@ nav:
           - ARS548: parameters/vendors/continental/ars548.md
           - SRR520: parameters/vendors/continental/srr520.md
   - Point cloud types: point_types.md
-  - Design: design.md
+  - Design:
+      - design.md
+      - Scan cutting: design/scan_cutting.md
   - Tutorials: tutorials.md
   - Contributing: contribute.md
   - API reference:
@@ -215,12 +217,20 @@ plugins:
       full-doc: true
       debug: false
       ignore-errors: false
-
   - search:
       lang: en
+  - drawio:
+      darkmode: true
 
 markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.highlight
   - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - js/katex.js
+  - https://unpkg.com/katex@0/dist/katex.min.js
+  - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
