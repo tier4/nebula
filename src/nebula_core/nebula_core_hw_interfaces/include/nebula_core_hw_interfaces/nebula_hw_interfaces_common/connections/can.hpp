@@ -42,6 +42,7 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -373,5 +374,60 @@ private:
   std::thread receive_thread_;
   callback_t callback_;
 };
+
+/**
+ * @brief Parse CAN filters from string format "id:mask,id:mask".
+ *
+ * For each filter:
+ * - If only ID is given, mask is auto-generated based on ID range (SFF vs EFF).
+ * - If ID > CAN_SFF_MASK (0x7FF), it's treated as an extended ID.
+ *
+ * @param filters_str Comma-separated filter definitions (e.g., "0x123:0x7FF,0x456").
+ * @return Vector of can_filter structures.
+ */
+inline std::vector<can_filter> parse_can_filters(const std::string & filters_str)
+{
+  std::vector<can_filter> filters;
+  if (filters_str.empty()) {
+    return filters;
+  }
+
+  std::istringstream stream(filters_str);
+  std::string part;
+
+  while (std::getline(stream, part, ',')) {
+    // Trim whitespace
+    auto start = part.find_first_not_of(" \t");
+    auto end = part.find_last_not_of(" \t");
+    if (start == std::string::npos) continue;
+    part = part.substr(start, end - start + 1);
+
+    // Find colon separator
+    auto colon_pos = part.find(':');
+
+    try {
+      can_filter filter{};
+      if (colon_pos != std::string::npos) {
+        filter.can_id = std::stoul(part.substr(0, colon_pos), nullptr, 0);
+        filter.can_mask = std::stoul(part.substr(colon_pos + 1), nullptr, 0);
+      } else {
+        filter.can_id = std::stoul(part, nullptr, 0);
+        // Auto-generate mask based on ID range
+        if (filter.can_id > CAN_SFF_MASK) {
+          filter.can_id |= CAN_EFF_FLAG;
+          filter.can_mask = CAN_EFF_MASK | CAN_EFF_FLAG | CAN_RTR_FLAG;
+        } else {
+          filter.can_mask = CAN_SFF_MASK | CAN_EFF_FLAG | CAN_RTR_FLAG;
+        }
+      }
+      filters.push_back(filter);
+    } catch (const std::exception &) {
+      // Skip invalid filter entries silently
+      continue;
+    }
+  }
+
+  return filters;
+}
 
 }  // namespace nebula::drivers::connections

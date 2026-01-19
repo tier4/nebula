@@ -56,7 +56,7 @@ Status ContinentalSRR520HwInterface::sensor_interface_start()
       connections::CanSocket::Builder(config_ptr_->interface).bind());
     can_socket_->set_fd_mode(true);
     can_socket_->set_timestamping(true);
-    can_socket_->set_filters(parse_can_filters(config_ptr_->filters));
+    can_socket_->set_filters(connections::parse_can_filters(config_ptr_->filters));
 
     logger_->info(std::string("applied filters: ") + config_ptr_->filters);
 
@@ -114,7 +114,7 @@ void ContinentalSRR520HwInterface::receive_loop()
         continue;
       }
 
-      uint64_t stamp_ns = metadata.timestamp_ns;
+      uint64_t stamp_ns = metadata.timestamp_ns.value_or(0);
       if (!use_bus_time || stamp_ns == 0) {
         stamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
                      std::chrono::system_clock::now().time_since_epoch())
@@ -384,48 +384,4 @@ Status ContinentalSRR520HwInterface::set_vehicle_dynamics(
     return Status::CAN_CONNECTION_ERROR;
   }
 }
-
-std::vector<can_filter> ContinentalSRR520HwInterface::parse_can_filters(
-  const std::string & filters_str)
-{
-  std::vector<can_filter> filters;
-  if (filters_str.empty()) {
-    return filters;
-  }
-
-  using tokenizer = boost::tokenizer<boost::char_separator<char>>;
-  boost::char_separator<char> sep_comma(",");
-  tokenizer tokens_comma(filters_str, sep_comma);
-
-  for (const auto & part : tokens_comma) {
-    boost::char_separator<char> sep_colon(":");
-    tokenizer tokens_colon(part, sep_colon);
-
-    auto it = tokens_colon.begin();
-    if (it == tokens_colon.end()) {
-      continue;
-    }
-
-    try {
-      can_filter filter{};
-      filter.can_id = std::stoul(*it, nullptr, 0);
-      if (++it != tokens_colon.end()) {
-        filter.can_mask = std::stoul(*it, nullptr, 0);
-      } else {
-        if (filter.can_id > CAN_SFF_MASK) {
-          filter.can_id |= CAN_EFF_FLAG;
-          filter.can_mask = CAN_EFF_MASK | CAN_EFF_FLAG | CAN_RTR_FLAG;
-        } else {
-          filter.can_mask = CAN_SFF_MASK | CAN_EFF_FLAG | CAN_RTR_FLAG;
-        }
-      }
-      filters.push_back(filter);
-    } catch (const std::exception & ex) {
-      logger_->error("Failed to parse CAN filter: " + part + " (" + ex.what() + ")");
-    }
-  }
-
-  return filters;
-}
-
 }  // namespace nebula::drivers::continental_srr520

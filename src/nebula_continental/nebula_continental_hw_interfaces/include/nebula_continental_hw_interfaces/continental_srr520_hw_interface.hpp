@@ -118,11 +118,6 @@ private:
   /// @brief Main loop of the CAN receiver thread
   void receive_loop();
 
-  /// @brief Parse CAN filters from string
-  /// @param filters_str String containing filters in "id:mask,id:mask" format
-  /// @return Vector of can_filter structures
-  std::vector<can_filter> parse_can_filters(const std::string & filters_str);
-
   std::unique_ptr<connections::CanSocket> can_socket_;
   std::unique_ptr<std::thread> receiver_thread_ptr_;
 
