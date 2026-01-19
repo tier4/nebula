@@ -31,6 +31,10 @@ if(BUILD_TESTING)
   target_include_directories(test_downsample_mask PRIVATE include)
   target_link_libraries(test_downsample_mask nebula_core_decoders)
 
+  ament_add_gtest(test_scan_cutter tests/test_scan_cutter.cpp)
+  target_include_directories(test_scan_cutter PRIVATE include)
+  target_link_libraries(test_scan_cutter nebula_core_decoders)
+
   ament_add_gtest(test_angles tests/test_angles.cpp)
   target_include_directories(test_angles PRIVATE include)
   target_link_libraries(test_angles nebula_core_decoders)

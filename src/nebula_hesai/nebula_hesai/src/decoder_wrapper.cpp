@@ -9,6 +9,7 @@
 #include "nebula_hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 #include "nebula_hesai_decoders/decoders/functional_safety.hpp"
 
+#include <nebula_core_common/util/stopwatch.hpp>
 #include <nebula_core_common/util/string_conversions.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
 #include <rclcpp/logging.hpp>
@@ -22,6 +23,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <mutex>
 #include <utility>
 
 #if defined(__clang__)
@@ -101,17 +103,29 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
 void HesaiDecoderWrapper::on_config_change(
   const std::shared_ptr<const nebula::drivers::HesaiSensorConfiguration> & new_config)
 {
-  std::lock_guard lock(mtx_driver_ptr_);
-  driver_ptr_ = initialize_driver(new_config, calibration_cfg_ptr_);
-  sensor_cfg_ = new_config;
+  {
+    std::lock_guard lock(mtx_driver_ptr_);
+    sensor_cfg_ = new_config;
+  }
+  reset_decoder();
 }
 
 void HesaiDecoderWrapper::on_calibration_change(
   const std::shared_ptr<const nebula::drivers::HesaiCalibrationConfigurationBase> & new_calibration)
 {
+  {
+    std::lock_guard lock(mtx_driver_ptr_);
+    calibration_cfg_ptr_ = new_calibration;
+  }
+  reset_decoder();
+}
+
+void HesaiDecoderWrapper::reset_decoder()
+{
   std::lock_guard lock(mtx_driver_ptr_);
-  driver_ptr_ = initialize_driver(sensor_cfg_, new_calibration);
-  calibration_cfg_ptr_ = new_calibration;
+  current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
+  driver_ptr_ = initialize_driver(sensor_cfg_, calibration_cfg_ptr_);
+  current_scan_perf_counters_ = {};
 }
 
 drivers::PacketDecodeResult HesaiDecoderWrapper::process_cloud_packet(
@@ -140,34 +154,6 @@ drivers::PacketDecodeResult HesaiDecoderWrapper::process_cloud_packet(
 
   current_scan_perf_counters_.decode_time_current_scan_ns +=
     decode_result.performance_counters.decode_time_ns;
-  current_scan_perf_counters_.publish_time_current_scan_ns +=
-    decode_result.performance_counters.callback_time_ns;
-
-  if (
-    decode_result.metadata_or_error.has_value() &&
-    decode_result.metadata_or_error.value().did_scan_complete) {
-    const auto & metadata = decode_result.metadata_or_error.value();
-    rclcpp::Time timestamp{static_cast<int64_t>(metadata.packet_timestamp_ns)};
-
-    autoware_internal_debug_msgs::msg::Float64Stamped receive_time_msg;
-    receive_time_msg.stamp = timestamp;
-    receive_time_msg.data =
-      (current_scan_perf_counters_.receive_time_current_scan_ns) / 1'000'000.0;
-    debug_publisher_.publish("debug/receive_duration_ms", receive_time_msg);
-
-    autoware_internal_debug_msgs::msg::Float64Stamped decode_time_msg;
-    decode_time_msg.stamp = timestamp;
-    decode_time_msg.data = (current_scan_perf_counters_.decode_time_current_scan_ns) / 1'000'000.0;
-    debug_publisher_.publish("debug/decode_duration_ms", decode_time_msg);
-
-    autoware_internal_debug_msgs::msg::Float64Stamped publish_time_msg;
-    publish_time_msg.stamp = timestamp;
-    publish_time_msg.data =
-      (current_scan_perf_counters_.publish_time_current_scan_ns) / 1'000'000.0;
-    debug_publisher_.publish("debug/publish_duration_ms", publish_time_msg);
-
-    current_scan_perf_counters_ = {};
-  }
 
   return decode_result;
 }
@@ -175,6 +161,8 @@ drivers::PacketDecodeResult HesaiDecoderWrapper::process_cloud_packet(
 void HesaiDecoderWrapper::on_pointcloud_decoded(
   const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s)
 {
+  util::Stopwatch publish_watch;
+
   // Publish scan message only if it has been written to
   if (current_scan_msg_ && !current_scan_msg_->packets.empty() && packets_pub_thread_) {
     bool success = packets_pub_thread_->try_push(std::move(current_scan_msg_));
@@ -211,6 +199,32 @@ void HesaiDecoderWrapper::on_pointcloud_decoded(
   }
 
   publish_diagnostic_.tick();
+
+  uint64_t publish_duration_ns = publish_watch.elapsed_ns();
+  current_scan_perf_counters_.publish_time_current_scan_ns += publish_duration_ns;
+
+  publish_and_reset_performance_counters(cloud_stamp);
+}
+
+void HesaiDecoderWrapper::publish_and_reset_performance_counters(
+  const rclcpp::Time & scan_timestamp)
+{
+  autoware_internal_debug_msgs::msg::Float64Stamped receive_time_msg;
+  receive_time_msg.stamp = scan_timestamp;
+  receive_time_msg.data = (current_scan_perf_counters_.receive_time_current_scan_ns) / 1'000'000.0;
+  debug_publisher_.publish("debug/receive_duration_ms", receive_time_msg);
+
+  autoware_internal_debug_msgs::msg::Float64Stamped decode_time_msg;
+  decode_time_msg.stamp = scan_timestamp;
+  decode_time_msg.data = (current_scan_perf_counters_.decode_time_current_scan_ns) / 1'000'000.0;
+  debug_publisher_.publish("debug/decode_duration_ms", decode_time_msg);
+
+  autoware_internal_debug_msgs::msg::Float64Stamped publish_time_msg;
+  publish_time_msg.stamp = scan_timestamp;
+  publish_time_msg.data = (current_scan_perf_counters_.publish_time_current_scan_ns) / 1'000'000.0;
+  debug_publisher_.publish("debug/publish_duration_ms", publish_time_msg);
+
+  current_scan_perf_counters_ = {};
 }
 
 void HesaiDecoderWrapper::publish_cloud(

@@ -24,15 +24,13 @@
 #include <cmath>
 #include <cstdint>
 #include <memory>
-#include <optional>
-#include <ostream>
-#include <utility>
 
 namespace nebula::drivers
 {
 
 template <size_t ChannelN, size_t AngleUnit>
-class AngleCorrectorCalibrationBased : public AngleCorrector<HesaiCalibrationConfiguration>
+class AngleCorrectorCalibrationBased
+: public AngleCorrector<HesaiCalibrationConfiguration, ChannelN>
 {
 private:
   static constexpr size_t max_azimuth = 360 * AngleUnit;
@@ -46,17 +44,30 @@ private:
   std::array<std::array<float, ChannelN>, max_azimuth> azimuth_cos_{};
   std::array<std::array<float, ChannelN>, max_azimuth> azimuth_sin_{};
 
+  size_t min_correction_index_{};
+  size_t max_correction_index_{};
+
+  [[nodiscard]] int32_t to_exact_angle(double angle_deg) const
+  {
+    return std::round(angle_deg * AngleUnit);
+  }
+
+  [[nodiscard]] float to_radians(int32_t angle_exact) const
+  {
+    return deg2rad(angle_exact / static_cast<double>(AngleUnit));
+  }
+
 public:
-  uint32_t emit_angle_raw_;
-  uint32_t timestamp_reset_angle_raw_;
-  uint32_t fov_start_raw_;
-  uint32_t fov_end_raw_;
-
-  bool is_360_;
-
+  /// @brief Construct an AngleCorrectorCalibrationBased and pre-compute trigonometry lookup tables
+  ///
+  /// @param sensor_calibration The sensor calibration data
+  /// @param fov_start_azimuth_deg The start of the FoV in spatial degrees
+  /// @param fov_end_azimuth_deg The end of the FoV in spatial degrees
+  /// @param scan_cut_azimuth_deg The angle at which the scan is cut in spatial degrees
+  /// @throws std::runtime_error if the sensor calibration data is nullptr
+  /// @return The constructed AngleCorrectorCalibrationBased
   explicit AngleCorrectorCalibrationBased(
-    const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration,
-    double fov_start_azimuth_deg, double fov_end_azimuth_deg, double scan_cut_azimuth_deg)
+    const std::shared_ptr<const HesaiCalibrationConfiguration> & sensor_calibration)
   {
     if (sensor_calibration == nullptr) {
       throw std::runtime_error(
@@ -67,20 +78,9 @@ public:
     // Elevation lookup tables
     // ////////////////////////////////////////
 
-    int32_t correction_min = INT32_MAX;
-    int32_t correction_max = INT32_MIN;
-
-    auto round_away_from_zero = [](float value) {
-      return (value < 0) ? std::floor(value) : std::ceil(value);
-    };
-
     for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
       float elevation_angle_deg = sensor_calibration->elev_angle_map.at(channel_id);
       float azimuth_offset_deg = sensor_calibration->azimuth_offset_map.at(channel_id);
-
-      int32_t azimuth_offset_raw = round_away_from_zero(azimuth_offset_deg * AngleUnit);
-      correction_min = std::min(correction_min, azimuth_offset_raw);
-      correction_max = std::max(correction_max, azimuth_offset_raw);
 
       elevation_angle_rad_[channel_id] = deg2rad(elevation_angle_deg);
       azimuth_offset_rad_[channel_id] = deg2rad(azimuth_offset_deg);
@@ -90,54 +90,26 @@ public:
     }
 
     // ////////////////////////////////////////
-    // Raw azimuth threshold angles
-    // ////////////////////////////////////////
-
-    int32_t emit_angle_raw = std::ceil(scan_cut_azimuth_deg * AngleUnit);
-    emit_angle_raw -= correction_min;
-    emit_angle_raw_ = normalize_angle<int32_t>(emit_angle_raw, max_azimuth);
-
-    int32_t fov_start_raw = std::floor(fov_start_azimuth_deg * AngleUnit);
-    fov_start_raw -= correction_max;
-    fov_start_raw_ = normalize_angle<int32_t>(fov_start_raw, max_azimuth);
-
-    int32_t fov_end_raw = std::ceil(fov_end_azimuth_deg * AngleUnit);
-    fov_end_raw -= correction_min;
-    fov_end_raw_ = normalize_angle<int32_t>(fov_end_raw, max_azimuth);
-
-    // Reset timestamp on FoV start if FoV < 360 deg and scan is cut at FoV end.
-    // Otherwise, reset timestamp on publish
-    is_360_ =
-      normalize_angle(fov_start_azimuth_deg, 360.) == normalize_angle(fov_end_azimuth_deg, 360.);
-    bool reset_timestamp_on_publish = is_360_ || (normalize_angle(fov_end_azimuth_deg, 360.) !=
-                                                  normalize_angle(scan_cut_azimuth_deg, 360.));
-
-    if (reset_timestamp_on_publish) {
-      int32_t timestamp_reset_angle_raw = std::floor(scan_cut_azimuth_deg * AngleUnit);
-      timestamp_reset_angle_raw -= correction_max;
-      timestamp_reset_angle_raw_ = normalize_angle<int32_t>(timestamp_reset_angle_raw, max_azimuth);
-    } else {
-      timestamp_reset_angle_raw_ = fov_start_raw_;
-    }
-
-    // ////////////////////////////////////////
     // Azimuth lookup tables
     // ////////////////////////////////////////
 
     for (size_t block_azimuth = 0; block_azimuth < max_azimuth; block_azimuth++) {
-      block_azimuth_rad_[block_azimuth] = deg2rad(block_azimuth / static_cast<double>(AngleUnit));
-
+      block_azimuth_rad_[block_azimuth] = to_radians(block_azimuth);
       for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
-        float precision_azimuth =
+        float spatial_azimuth_rad =
           block_azimuth_rad_[block_azimuth] + azimuth_offset_rad_[channel_id];
-
-        azimuth_cos_[block_azimuth][channel_id] = cosf(precision_azimuth);
-        azimuth_sin_[block_azimuth][channel_id] = sinf(precision_azimuth);
+        azimuth_cos_[block_azimuth][channel_id] = cosf(spatial_azimuth_rad);
+        azimuth_sin_[block_azimuth][channel_id] = sinf(spatial_azimuth_rad);
       }
     }
+
+    const auto & az = azimuth_offset_rad_;
+    min_correction_index_ = std::min_element(az.begin(), az.end()) - az.begin();
+    max_correction_index_ = std::max_element(az.begin(), az.end()) - az.begin();
   }
 
-  CorrectedAngleData get_corrected_angle_data(uint32_t block_azimuth, uint32_t channel_id) override
+  [[nodiscard]] CorrectedAngleData get_corrected_angle_data(
+    uint32_t block_azimuth, uint32_t channel_id) const override
   {
     float azimuth_rad = block_azimuth_rad_[block_azimuth] + azimuth_offset_rad_[channel_id];
     azimuth_rad = normalize_angle(azimuth_rad, M_PIf * 2);
@@ -153,28 +125,26 @@ public:
       elevation_cos_[channel_id]};
   }
 
-  bool passed_emit_angle(uint32_t last_azimuth, uint32_t current_azimuth) override
+  [[nodiscard]] CorrectedAzimuths<ChannelN, float> get_corrected_azimuths(
+    uint32_t block_azimuth) const override
   {
-    return angle_is_between(last_azimuth, current_azimuth, emit_angle_raw_, false);
-  }
+    CorrectedAzimuths<ChannelN, float> corrected_azimuths;
+    float block_azimuth_rad = block_azimuth_rad_[block_azimuth];
 
-  bool passed_timestamp_reset_angle(uint32_t last_azimuth, uint32_t current_azimuth) override
-  {
-    return angle_is_between(last_azimuth, current_azimuth, timestamp_reset_angle_raw_, false);
-  }
+    for (size_t channel_id = 0; channel_id < ChannelN; ++channel_id) {
+      float exact_azimuth = block_azimuth_rad + azimuth_offset_rad_[channel_id];
+      exact_azimuth = normalize_angle(exact_azimuth, 2 * M_PIf);
+      corrected_azimuths.azimuths[channel_id] = exact_azimuth;
+    }
 
-  bool is_inside_fov(uint32_t last_azimuth, uint32_t current_azimuth) override
-  {
-    if (is_360_) return true;
-    return angle_is_between(fov_start_raw_, fov_end_raw_, current_azimuth) ||
-           angle_is_between(timestamp_reset_angle_raw_, emit_angle_raw_, last_azimuth);
-  }
+    // Use precomputed min/max indices based on correction terms (offsets).
+    // min_correction_index = channel that lags behind (smallest offset)
+    // max_correction_index = channel that races ahead (largest offset)
+    // These are invariant across block_azimuth values.
+    corrected_azimuths.min_correction_index = min_correction_index_;
+    corrected_azimuths.max_correction_index = max_correction_index_;
 
-  bool is_inside_overlap(uint32_t last_azimuth, uint32_t current_azimuth) override
-  {
-    if (timestamp_reset_angle_raw_ == emit_angle_raw_) return false;
-    return angle_is_between(timestamp_reset_angle_raw_, emit_angle_raw_, current_azimuth) ||
-           angle_is_between(timestamp_reset_angle_raw_, emit_angle_raw_, last_azimuth);
+    return corrected_azimuths;
   }
 };
 

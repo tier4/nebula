@@ -34,6 +34,8 @@ Nebula's hardware monitor treats only the `locked` state as `OK`, `tracking` as 
 
 ## Scan Cutting and Field of View
 
+Read more about scan cutting design and behavior in the [design doc](../../../design/scan_cutting.md).
+
 Scan cutting influences the time stamps of points and the point cloud headers.
 The point cloud header time stamp is always the absolute time of the earliest (theoretical) point in the cloud.
 This means that for different parameter combinations, different timing behaviors are observed:

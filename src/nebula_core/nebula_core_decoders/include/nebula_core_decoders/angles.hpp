@@ -93,7 +93,7 @@ struct FieldOfView
  * ```
  */
 template <typename T>
-bool angle_is_between(
+inline bool angle_is_between(
   T start_angle, T end_angle, T angle, bool start_inclusive = true, bool end_inclusive = true)
 {
   // Note: comments in this function refer to 360 degrees as the max_angle for simplicity, but the
@@ -122,11 +122,15 @@ bool angle_is_between(
  *
  * Mathematically, the normalization is a modulo operation, yielding an angle with winding number 0.
  */
-template <typename T>
-T normalize_angle(T angle, T max_angle)
+template <typename T, typename U = T>
+inline T normalize_angle(T angle, U max_angle)
 {
-  T factor = std::floor((1.0 * angle) / max_angle);
-  return angle - (factor * max_angle);
+  // Note: double can represent the full int32_t range, so this is not less accurate than using
+  // integer math. Reconciling T and U as double, in case they differ in size and signedness.
+  const auto a = static_cast<double>(angle);
+  const auto m = static_cast<double>(max_angle);
+  const double factor = std::floor(a / m);
+  return static_cast<T>(a - (factor * m));
 }
 
 }  // namespace nebula::drivers
