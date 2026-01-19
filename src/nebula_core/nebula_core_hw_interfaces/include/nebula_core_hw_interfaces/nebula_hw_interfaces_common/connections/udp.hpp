@@ -39,6 +39,7 @@
 #include <cstring>
 #include <exception>
 #include <functional>
+#include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -349,46 +350,51 @@ private:
       PerfCounters current_packet_perf_counters{};
 
       while (running_) {
-        auto data_available = is_data_available();
+        try {
+          auto data_available = is_data_available();
 
-        auto t_start = std::chrono::steady_clock::now();
-        if (!data_available.has_value()) throw SocketError(data_available.error());
-        if (!data_available.value()) {
-          current_packet_perf_counters.n_woken_without_data++;
+          auto t_start = std::chrono::steady_clock::now();
+          if (!data_available.has_value()) throw SocketError(data_available.error());
+          if (!data_available.value()) {
+            current_packet_perf_counters.n_woken_without_data++;
+            current_packet_perf_counters.receive_duration_ns +=
+              (std::chrono::steady_clock::now() - t_start).count();
+            continue;
+          }
+
+          buffer.resize(config_.buffer_size);
+          MsgBuffers msg_header{buffer};
+
+          // As per `man recvmsg`, zero-length datagrams are permitted and valid. Since the socket is
+          // blocking, a recv_result of 0 means we received a valid 0-length datagram.
+          ssize_t recv_result = recvmsg(sock_fd_.get(), &msg_header.msg, MSG_TRUNC);
+          if (recv_result < 0) throw SocketError(errno);
+          size_t untruncated_packet_length = recv_result;
+
+          if (!is_accepted_sender(msg_header.sender_addr)) {
+            current_packet_perf_counters.n_woken_by_wrong_sender++;
+            current_packet_perf_counters.receive_duration_ns +=
+              (std::chrono::steady_clock::now() - t_start).count();
+            continue;
+          }
+
+          RxMetadata metadata;
+          get_receive_metadata(msg_header.msg, metadata, drop_monitor);
+          metadata.truncated = untruncated_packet_length > config_.buffer_size;
+
+          buffer.resize(std::min(config_.buffer_size, untruncated_packet_length));
+
           current_packet_perf_counters.receive_duration_ns +=
             (std::chrono::steady_clock::now() - t_start).count();
-          continue;
+
+          metadata.packet_perf_counters = current_packet_perf_counters;
+          current_packet_perf_counters = {};
+
+          callback_(buffer, metadata);
+        } catch (const SocketError & e) {
+          std::cerr << "UdpSocket receiver error: " << e.what() << std::endl;
+          running_ = false;
         }
-
-        buffer.resize(config_.buffer_size);
-        MsgBuffers msg_header{buffer};
-
-        // As per `man recvmsg`, zero-length datagrams are permitted and valid. Since the socket is
-        // blocking, a recv_result of 0 means we received a valid 0-length datagram.
-        ssize_t recv_result = recvmsg(sock_fd_.get(), &msg_header.msg, MSG_TRUNC);
-        if (recv_result < 0) throw SocketError(errno);
-        size_t untruncated_packet_length = recv_result;
-
-        if (!is_accepted_sender(msg_header.sender_addr)) {
-          current_packet_perf_counters.n_woken_by_wrong_sender++;
-          current_packet_perf_counters.receive_duration_ns +=
-            (std::chrono::steady_clock::now() - t_start).count();
-          continue;
-        }
-
-        RxMetadata metadata;
-        get_receive_metadata(msg_header.msg, metadata, drop_monitor);
-        metadata.truncated = untruncated_packet_length > config_.buffer_size;
-
-        buffer.resize(std::min(config_.buffer_size, untruncated_packet_length));
-
-        current_packet_perf_counters.receive_duration_ns +=
-          (std::chrono::steady_clock::now() - t_start).count();
-
-        metadata.packet_perf_counters = current_packet_perf_counters;
-        current_packet_perf_counters = {};
-
-        callback_(buffer, metadata);
       }
     });
   }

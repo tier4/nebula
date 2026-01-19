@@ -20,7 +20,7 @@ TEST(TestCan, TestLifecycle)
 {
   try {
     auto sock = CanSocket::Builder(g_can_interface).bind();
-    sock.subscribe([](const auto &) {});
+    sock.subscribe([](const auto &, const auto &) {});
     sock.unsubscribe();
   } catch (const SocketError &) {
     GTEST_SKIP() << "Could not bind to " << g_can_interface << ", skipping CAN tests";
@@ -42,7 +42,7 @@ TEST(TestCan, TestSendReceive)
     sent_frame.data[2] = 0xBE;
     sent_frame.data[3] = 0xEF;
 
-    sock2.subscribe([&](const can_frame & frame) {
+    sock2.subscribe([&](const can_frame & frame, const auto &) {
       if (
         frame.can_id == sent_frame.can_id && frame.can_dlc == sent_frame.can_dlc &&
         std::memcmp(frame.data, sent_frame.data, frame.can_dlc) == 0) {
@@ -114,7 +114,7 @@ TEST(TestCan, TestIsSubscribed)
   try {
     auto sock = CanSocket::Builder(g_can_interface).bind();
     ASSERT_FALSE(sock.is_subscribed());
-    sock.subscribe([](const auto &) {});
+    sock.subscribe([](const auto &, const auto &) {});
     ASSERT_TRUE(sock.is_subscribed());
     sock.unsubscribe();
     ASSERT_FALSE(sock.is_subscribed());
@@ -127,7 +127,7 @@ TEST(TestCan, TestClose)
 {
   try {
     auto sock = CanSocket::Builder(g_can_interface).bind();
-    sock.subscribe([](const auto &) {});
+    sock.subscribe([](const auto &, const auto &) {});
     ASSERT_TRUE(sock.is_subscribed());
     sock.close();
     ASSERT_FALSE(sock.is_subscribed());
@@ -142,6 +142,42 @@ TEST(TestCan, TestSetTimestamping)
     auto sock = CanSocket::Builder(g_can_interface).bind();
     ASSERT_NO_THROW(sock.set_timestamping(true));
     ASSERT_NO_THROW(sock.set_timestamping(false));
+  } catch (const SocketError &) {
+    GTEST_SKIP() << "Could not bind to " << g_can_interface;
+  }
+}
+
+TEST(TestCan, TestAsyncTimestamp)
+{
+  try {
+    auto sock1 = CanSocket::Builder(g_can_interface).bind();
+    auto sock2 = CanSocket::Builder(g_can_interface).bind();
+
+    sock2.set_timestamping(true);
+
+    std::atomic_bool received{false};
+    uint64_t received_ts{0};
+
+    sock2.subscribe([&](const can_frame &, const CanSocket::RxMetadata & metadata) {
+      received_ts = metadata.timestamp_ns;
+      received = true;
+    });
+
+    can_frame frame{};
+    frame.can_id = 0x100;
+    frame.can_dlc = 1;
+    frame.data[0] = 0x01;
+
+    sock1.send(frame);
+
+    for (int i = 0; i < 20; ++i) {
+      if (received) break;
+      std::this_thread::sleep_for(50ms);
+    }
+
+    ASSERT_TRUE(received);
+    EXPECT_GT(received_ts, 0u);
+
   } catch (const SocketError &) {
     GTEST_SKIP() << "Could not bind to " << g_can_interface;
   }

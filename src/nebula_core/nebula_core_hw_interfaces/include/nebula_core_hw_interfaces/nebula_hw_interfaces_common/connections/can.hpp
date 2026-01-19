@@ -39,6 +39,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <optional>
 #include <string>
@@ -125,7 +126,7 @@ public:
     std::uint64_t timestamp_ns{0};
   };
 
-  using callback_t = std::function<void(const can_frame & frame)>;
+  using callback_t = std::function<void(const can_frame & frame, const RxMetadata & metadata)>;
 
   /**
    * @brief Register a callback for processing received frames and start the receiver thread.
@@ -318,17 +319,56 @@ private:
     running_ = true;
     receive_thread_ = std::thread([this]() {
       while (running_) {
-        auto data_available = is_data_available();
-        if (!data_available.has_value()) throw SocketError(data_available.error());
-        if (!data_available.value()) continue;
+        try {
+          auto data_available = is_data_available();
+          if (!data_available.has_value()) throw SocketError(data_available.error());
+          if (!data_available.value()) continue;
 
-        can_frame frame{};
-        ssize_t recv_result = ::read(sock_fd_.get(), &frame, sizeof(frame));
-        if (recv_result < 0) throw SocketError(errno);
-        if (recv_result < static_cast<ssize_t>(sizeof(frame)))
-          continue;  // Ignore incomplete frames
+          can_frame frame{};
+          RxMetadata metadata{};
 
-        callback_(frame);
+          struct iovec iov;
+          struct msghdr msg;
+          char ctrl[CMSG_SPACE(sizeof(struct timeval))];
+          struct sockaddr_can addr;
+
+          iov.iov_base = &frame;
+          iov.iov_len = sizeof(frame);
+
+          msg.msg_name = &addr;
+          msg.msg_namelen = sizeof(addr);
+          msg.msg_iov = &iov;
+          msg.msg_iovlen = 1;
+          msg.msg_control = ctrl;
+          msg.msg_controllen = sizeof(ctrl);
+          msg.msg_flags = 0;
+
+          ssize_t recv_result = recvmsg(sock_fd_.get(), &msg, 0);
+          if (recv_result < 0) throw SocketError(errno);
+          if (recv_result < static_cast<ssize_t>(sizeof(frame)))
+            continue;  // Ignore incomplete frames
+
+          metadata.timestamp_ns = 0;
+          for (struct cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
+               cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+            if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMP) {
+              struct timeval * tv = (struct timeval *)CMSG_DATA(cmsg);
+              metadata.timestamp_ns =
+                (uint64_t)tv->tv_sec * 1000000000ULL + (uint64_t)tv->tv_usec * 1000ULL;
+            }
+          }
+
+          if (metadata.timestamp_ns == 0) {
+            metadata.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                      std::chrono::system_clock::now().time_since_epoch())
+                                      .count();
+          }
+
+          callback_(frame, metadata);
+        } catch (const SocketError & e) {
+          std::cerr << "CanSocket receiver error: " << e.what() << std::endl;
+          running_ = false;
+        }
       }
     });
   }

@@ -37,6 +37,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <optional>
 #include <string>
@@ -279,20 +280,27 @@ private:
       buffer.resize(config_.buffer_size);
 
       while (running_) {
-        auto data_available = is_data_available();
-        if (!data_available.has_value()) throw SocketError(data_available.error());
-        if (!data_available.value()) continue;
+        try {
+          auto data_available = is_data_available();
+          if (!data_available.has_value()) throw SocketError(data_available.error());
+          if (!data_available.value()) continue;
 
-        ssize_t recv_result = ::recv(sock_fd_.get(), buffer.data(), buffer.size(), 0);
-        if (recv_result < 0) throw SocketError(errno);
-        if (recv_result == 0) {
-          // Connection closed by peer
+          ssize_t recv_result = ::recv(sock_fd_.get(), buffer.data(), buffer.size(), 0);
+          if (recv_result < 0) throw SocketError(errno);
+          if (recv_result == 0) {
+            // Connection closed by peer
+            running_ = false;
+            return;
+          }
+
+          std::vector<uint8_t> received_data(buffer.begin(), buffer.begin() + recv_result);
+          callback_(received_data);
+        } catch (const SocketError & e) {
+          // In a real application, we might want to log this properly or have an on_error callback.
+          // For now, we print to stderr and stop the thread to prevent the application from crashing.
+          std::cerr << "TcpSocket receiver error: " << e.what() << std::endl;
           running_ = false;
-          return;
         }
-
-        std::vector<uint8_t> received_data(buffer.begin(), buffer.begin() + recv_result);
-        callback_(received_data);
       }
     });
   }
