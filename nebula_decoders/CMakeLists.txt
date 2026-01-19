@@ -149,6 +149,10 @@ if(BUILD_TESTING)
     target_include_directories(test_downsample_mask PUBLIC
         include
         ${PNG_INCLUDE_DIRS})
+
+    ament_add_gtest(test_angles tests/test_angles.cpp)
+    target_include_directories(test_angles PRIVATE include)
+    target_link_libraries(test_angles nebula_decoders_hesai)
 endif()
 
 ament_export_include_directories("include/${PROJECT_NAME}")
