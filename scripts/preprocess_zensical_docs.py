@@ -5,19 +5,27 @@ This script prepares a Zensical-compatible docs tree by:
 1. Copying source docs to an output directory
 2. Merging mkdoxy-generated API reference markdown
 3. Expanding {{ json_to_markdown(...) }} macros into GitHub-Flavored Markdown tables
-4. Generating a derived Zensical config with updated paths
+4. Rendering drawio diagrams as embedded mxgraph divs
+5. Generating a derived Zensical config with updated paths
 """
 
 import argparse
 import ast
+from html import escape
 import json
+import logging
 import os
 from pathlib import Path
 import re
 import shutil
 import sys
 
+from lxml import etree
+from mkdocs_drawio.plugin import DrawioPlugin
+from mkdocs_drawio.plugin import SUB_TEMPLATE as MXGRAPH_TEMPLATE
 from tabulate import tabulate
+
+LOGGER = logging.getLogger(__name__)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -206,6 +214,91 @@ _MACRO_RE = re.compile(
     flags=re.DOTALL,
 )
 
+# Drawio support: regex to match markdown images referencing .drawio files
+# Matches: ![alt text](path/to/file.drawio)
+_DRAWIO_IMG_RE = re.compile(
+    r"!\[(?P<alt>[^\]]*)\]\((?P<src>[^)]+\.drawio)\)",
+    flags=re.IGNORECASE,
+)
+
+# Script tag to load the drawio viewer (added at end of files with diagrams)
+_DRAWIO_VIEWER_SCRIPT = (
+    '\n\n<script src="https://viewer.diagrams.net/js/viewer-static.min.js"></script>\n'
+)
+
+# Default mxgraph viewer configuration (matching mkdocs-drawio defaults)
+_DRAWIO_CONFIG = {
+    "toolbar": "pages tags zoom layers lightbox",
+    "toolbar-position": "bottom",
+    "toolbar-nohide": "0",
+    "tooltips": "1",
+    "border": 5,
+    "resize": "1",
+    "edit": "_blank",
+    "lightbox": "1",
+    "darkmode": True,
+}
+
+
+def _render_drawio_to_html(drawio_path: Path, page_name: str) -> str:
+    """Render a drawio file as an embedded mxgraph HTML div.
+
+    Uses DrawioPlugin.parse_diagram() and MXGRAPH_TEMPLATE from mkdocs-drawio.
+
+    Args:
+        drawio_path: Path to the .drawio file.
+        page_name: Name of the page to display (from image alt text).
+
+    Returns:
+        HTML string containing the mxgraph div.
+    """
+    config = dict(_DRAWIO_CONFIG)
+    try:
+        diagram_xml = etree.parse(drawio_path)
+        config["xml"] = DrawioPlugin.parse_diagram(diagram_xml, page_name)
+    except Exception as e:
+        LOGGER.error(f"Could not parse diagram file '{drawio_path}': {e}")
+        config["xml"] = ""
+
+    return MXGRAPH_TEMPLATE.substitute(config=escape(json.dumps(config)))
+
+
+def render_drawio_diagrams_in_markdown_file(path: Path) -> bool:
+    """Replace drawio markdown images with embedded mxgraph divs in-place.
+
+    Args:
+        path: Path to the markdown file.
+
+    Returns:
+        True if any diagrams were rendered, False otherwise.
+    """
+    text = path.read_text(encoding="utf-8")
+    if ".drawio" not in text.lower():
+        return False
+
+    md_dir = path.parent
+
+    def repl(match: re.Match) -> str:
+        alt = match.group("alt")
+        src = match.group("src")
+        drawio_path = (md_dir / src).resolve()
+
+        if not drawio_path.exists():
+            LOGGER.error(f"Drawio file not found: {drawio_path}")
+            return match.group(0)  # Keep original if file not found
+
+        return _render_drawio_to_html(drawio_path, alt)
+
+    new_text, count = _DRAWIO_IMG_RE.subn(repl, text)
+    if count == 0:
+        return False
+
+    # Add the drawio viewer script at the end of the file
+    new_text += _DRAWIO_VIEWER_SCRIPT
+
+    path.write_text(new_text, encoding="utf-8")
+    return True
+
 
 def render_macros_in_markdown_file(path: Path) -> bool:
     """Expand json_to_markdown macros in a markdown file in-place.
@@ -327,10 +420,13 @@ def main() -> int:
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(md, target)
 
-    rendered = 0
+    macros_rendered = 0
+    drawio_rendered = 0
     for md in out_dir.rglob("*.md"):
         if render_macros_in_markdown_file(md):
-            rendered += 1
+            macros_rendered += 1
+        if render_drawio_diagrams_in_markdown_file(md):
+            drawio_rendered += 1
 
     docs_dir_in_config = os.path.relpath(out_dir, start=ROOT)
     site_url = (args.site_url or "").strip() or None
@@ -338,7 +434,10 @@ def main() -> int:
         config_src, config_out, docs_dir_in_config, args.site_dir, site_url
     )
 
-    print(f"Prepared docs in {docs_dir_in_config} (rendered {rendered} file(s))")
+    print(
+        f"Prepared docs in {docs_dir_in_config} "
+        f"(rendered {macros_rendered} macro file(s), {drawio_rendered} drawio file(s))"
+    )
     return 0
 
 

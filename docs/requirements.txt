@@ -3,3 +3,4 @@ mkdocs-drawio>=1.8.2
 mkdoxy==1.2.8
 zensical==0.0.15
 tabulate
+lxml
