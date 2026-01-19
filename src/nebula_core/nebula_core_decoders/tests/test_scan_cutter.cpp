@@ -899,20 +899,23 @@ protected:
 
     void add_packet(int32_t azimuth)
     {
+      const int32_t new_end = normalize_angle(azimuth, max_angle);
+
       if (!stats_) {
         stats_ = PacketStats{
-          normalize_angle(azimuth, max_angle),
-          normalize_angle(azimuth, max_angle),
-          0,
+          new_end,
+          new_end,
+          1,
           0,
         };
+        return;
       }
 
-      stats_->end_azimuth = normalize_angle(azimuth, max_angle);
-      stats_->packet_count++;
-
-      int32_t diff = normalize_angle(azimuth - stats_->end_azimuth, max_angle);
+      // Compute diff BEFORE updating end_azimuth to track accumulated span
+      const int32_t diff = normalize_angle(new_end - stats_->end_azimuth, max_angle);
       stats_->azimuth_span_accumulated += diff;
+      stats_->end_azimuth = new_end;
+      stats_->packet_count++;
     }
 
     [[nodiscard]] bool overlaps_itself() const
