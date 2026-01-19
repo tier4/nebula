@@ -50,6 +50,8 @@ class AngleCorrector
 public:
   using correction_data_t = CorrectionDataT;
 
+  virtual ~AngleCorrector() = default;
+
   /// @brief Get the corrected azimuth and elevation for a given block and channel, along with their
   /// sin/cos values.
   /// @param block_azimuth The block's azimuth (including optional fine azimuth), in the sensor's
