@@ -167,19 +167,19 @@ public:
   explicit HesaiHwInterface(const std::shared_ptr<loggers::Logger> & logger);
   /// @brief Destructor
   ~HesaiHwInterface();
-  /// @brief Initializing tcp_driver for TCP communication
-  /// @param setup_sensor Whether to also initialize tcp_driver for sensor configuration
+  /// @brief Initializing tcp_socket for TCP communication
+  /// @param setup_sensor Whether to also initialize tcp_socket for sensor configuration
   /// @return Resulting status
-  Status initialize_tcp_driver();
-  /// @brief Closes the TcpDriver and related resources
+  Status initialize_tcp_socket();
+  /// @brief Closes the TcpSocket and related resources
   /// @return Status result
-  Status finalize_tcp_driver();
+  Status finalize_tcp_socket();
   /// @brief Parsing json string to property_tree
   /// @param str JSON string
   /// @return Parsed property_tree
   boost::property_tree::ptree parse_json(const std::string & str);
 
-  /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
+  /// @brief Callback function to receive the Cloud Packet data from the UDP Socket
   /// @param buffer Buffer containing the data received from the UDP socket
   void receive_sensor_packet_callback(
     std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata);

@@ -42,7 +42,7 @@ HesaiHwInterface::HesaiHwInterface(const std::shared_ptr<loggers::Logger> & logg
 
 HesaiHwInterface::~HesaiHwInterface()
 {
-  finalize_tcp_driver();
+  finalize_tcp_socket();
 }
 
 HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
@@ -216,7 +216,7 @@ Status HesaiHwInterface::get_calibration_configuration(
   return Status::ERROR_1;
 }
 
-Status HesaiHwInterface::initialize_tcp_driver()
+Status HesaiHwInterface::initialize_tcp_socket()
 {
   tcp_socket_ = std::make_unique<connections::TcpSocket>();
   // Attempt to connect immediately to validate configuration.
@@ -241,7 +241,7 @@ Status HesaiHwInterface::initialize_tcp_driver()
   return Status::OK;
 }
 
-Status HesaiHwInterface::finalize_tcp_driver()
+Status HesaiHwInterface::finalize_tcp_socket()
 {
   if (tcp_socket_) {
     tcp_socket_->close();

@@ -48,7 +48,7 @@ Status ContinentalARS548HwInterface::set_sensor_configuration(
 Status ContinentalARS548HwInterface::sensor_interface_start()
 {
   try {
-    udp_driver_ = std::make_unique<connections::UdpSocket>(
+    udp_socket_ = std::make_unique<connections::UdpSocket>(
       connections::UdpSocket::Builder(config_ptr_->host_ip, config_ptr_->data_port)
         .join_multicast_group(config_ptr_->multicast_ip)
         .set_send_destination(config_ptr_->sensor_ip, config_ptr_->configuration_sensor_port)
@@ -56,7 +56,7 @@ Status ContinentalARS548HwInterface::sensor_interface_start()
         .set_mtu(2 << 16)
         .bind());
 
-    udp_driver_->subscribe(
+    udp_socket_->subscribe(
       [this](
         const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata) {
         this->receive_callback(buffer, metadata);
@@ -104,8 +104,8 @@ void ContinentalARS548HwInterface::receive_callback(
 
 Status ContinentalARS548HwInterface::sensor_interface_stop()
 {
-  if (udp_driver_) {
-    udp_driver_->close();
+  if (udp_socket_) {
+    udp_socket_->close();
   }
   return Status::OK;
 }
@@ -284,7 +284,7 @@ Status ContinentalARS548HwInterface::set_acceleration_lateral_cog(float lateral_
   std::vector<uint8_t> send_vector(sizeof(AccelerationLateralCoGPacket));
   std::memcpy(send_vector.data(), &acceleration_lateral_cog, sizeof(AccelerationLateralCoGPacket));
 
-  udp_driver_->send(send_vector);
+  udp_socket_->send(send_vector);
 
   return Status::OK;
 }
@@ -450,13 +450,13 @@ Status ContinentalARS548HwInterface::set_yaw_rate(float yaw_rate)
 
 Status ContinentalARS548HwInterface::safe_send(const std::vector<uint8_t> & buffer)
 {
-  if (!udp_driver_) {
+  if (!udp_socket_) {
     logger_->error("UDP socket not initialized");
     return Status::UDP_CONNECTION_ERROR;
   }
 
   try {
-    udp_driver_->send(buffer);
+    udp_socket_->send(buffer);
   } catch (const connections::SocketError & e) {
     logger_->error("Failed to send packet: " + std::string(e.what()));
     return Status::UDP_CONNECTION_ERROR;

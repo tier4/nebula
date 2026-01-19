@@ -36,8 +36,8 @@ constexpr uint16_t bpearl_info_packet_size = 1248;
 class RobosenseHwInterface
 {
 private:
-  std::unique_ptr<connections::UdpSocket> cloud_udp_driver_;
-  std::unique_ptr<connections::UdpSocket> info_udp_driver_;
+  std::unique_ptr<connections::UdpSocket> cloud_udp_socket_;
+  std::unique_ptr<connections::UdpSocket> info_udp_socket_;
   std::shared_ptr<const RobosenseSensorConfiguration> sensor_configuration_;
   std::function<void(std::vector<uint8_t> & buffer)>
     scan_reception_callback_; /**This function pointer is called when the scan is complete*/

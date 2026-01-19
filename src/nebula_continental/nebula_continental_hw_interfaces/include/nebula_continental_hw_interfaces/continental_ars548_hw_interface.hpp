@@ -142,7 +142,7 @@ private:
   /// @return Resulting status
   [[nodiscard]] Status safe_send(const std::vector<uint8_t> & buffer);
 
-  std::unique_ptr<connections::UdpSocket> udp_driver_;
+  std::unique_ptr<connections::UdpSocket> udp_socket_;
   std::shared_ptr<const ContinentalARS548SensorConfiguration> config_ptr_;
   std::function<void(std::unique_ptr<nebula_msgs::msg::NebulaPacket>)> packet_callback_;
   std::shared_ptr<loggers::Logger> logger_;
