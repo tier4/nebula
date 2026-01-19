@@ -81,7 +81,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
           verbose: true
-          flags: differential
 
   fb-infer-differential:
     if: contains(github.event.pull_request.labels.*.name, 'run:fb-infer')

@@ -31,8 +31,8 @@ namespace nebula::drivers::continental_ars548
 ContinentalARS548Decoder::ContinentalARS548Decoder(
   const std::shared_ptr<const continental_ars548::ContinentalARS548SensorConfiguration> &
     sensor_configuration)
+: config_ptr_(sensor_configuration)
 {
-  config_ptr_ = sensor_configuration;
 }
 
 Status ContinentalARS548Decoder::get_status()
