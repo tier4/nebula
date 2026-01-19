@@ -113,14 +113,17 @@ private:
     state_->channels_in_fov.fill(false);
     state_->channel_buffer_indices.fill(0);
 
-    bool block_intersects_cut = compute_if_block_intersects_cut(corrected_azimuths_out);
+    for (size_t channel_id = 0; channel_id < NChannels; ++channel_id) {
+      state_->channels_in_fov[channel_id] =
+        is_point_inside_fov(corrected_azimuths_out.azimuths[channel_id]);
+    }
 
+    bool block_intersects_cut = compute_if_block_intersects_cut(corrected_azimuths_out);
     if (!block_intersects_cut) {
-      // All points are in the same scan, assign to buffer 0.
+      // Block does not intersect cut, all points are in the same buffer. Start with buffer 0.
       state_->channel_buffer_indices.fill(0);
 
-      bool overlaps_fov = compute_if_block_intersects_fov(corrected_azimuths_out);
-      if (overlaps_fov) {
+      if (compute_if_block_intersects_fov(corrected_azimuths_out)) {
         set_timestamp_callback_(0);
       }
 
@@ -129,7 +132,7 @@ private:
       return;
     }
 
-    // Block intersects cut, some points are in the current scan, some in the next.
+    // Block does intersect cut, some points are in the current buffer, some in the next.
     for (size_t channel_id = 0; channel_id < NChannels; ++channel_id) {
       AngleT channel_azimuth_out = corrected_azimuths_out.azimuths[channel_id];
       AngleT start_angle = cut_angle_out_;
@@ -137,7 +140,6 @@ private:
       bool point_is_after_cut =
         angle_is_between(start_angle, end_angle, channel_azimuth_out, false, true);
       state_->channel_buffer_indices[channel_id] = point_is_after_cut ? 1 : 0;
-      state_->channels_in_fov[channel_id] = is_point_inside_fov(channel_azimuth_out);
     }
 
     bool overlaps_fov_0 = false;
