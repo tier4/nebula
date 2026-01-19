@@ -153,6 +153,10 @@ if(BUILD_TESTING)
     ament_add_gtest(test_angles tests/test_angles.cpp)
     target_include_directories(test_angles PRIVATE include)
     target_link_libraries(test_angles nebula_decoders_hesai)
+
+    ament_add_gtest(test_scan_cutter tests/test_scan_cutter.cpp)
+    target_include_directories(test_scan_cutter PRIVATE include)
+    target_link_libraries(test_scan_cutter nebula_decoders_hesai)
 endif()
 
 ament_export_include_directories("include/${PROJECT_NAME}")
