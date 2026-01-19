@@ -14,3 +14,4 @@ plantuml-markdown
 pymdown-extensions
 python-markdown-math
 tabulate
+lxml
