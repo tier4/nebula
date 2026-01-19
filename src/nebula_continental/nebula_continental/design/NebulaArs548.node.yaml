@@ -3,7 +3,7 @@ autoware_system_design_format: v0.1.0
 name: NebulaArs548.node
 
 launch:
-  package: nebula_ros
+  package: nebula_continental
   plugin: nebula::ros::ContinentalARS548RosWrapper
   executable: continental_ars548_ros_wrapper_node
   node_output: screen
