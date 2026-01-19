@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <vector>
@@ -145,6 +146,144 @@ TEST(TestScanCutterBasic, Construction)
   EXPECT_THROW(make_cutter(18000, 0, 36000, nullptr, dummy_cb), std::invalid_argument);
   EXPECT_THROW(make_cutter(18000, 0, 36000, dummy_cb, nullptr), std::invalid_argument);
   EXPECT_THROW(make_cutter(18000, 0, 36000, nullptr, nullptr), std::invalid_argument);
+}
+
+TEST(TestScanCutterBasic, InitializeStateAllChannelsInFoV)
+{
+  // Test that when a block is clearly inside the FoV and does NOT cross the cut angle,
+  // all channels are initialized with channels_in_fov = true
+  constexpr size_t n_ch = 4;
+  using ScanCutterT = ScanCutter<n_ch, double>;
+
+  bool published = false;
+  ScanCutterT cutter(
+    2 * M_PI,  // Max angle (360 deg in radians)
+    M_PI,      // Cut angle (180 deg)
+    0.0,       // FoV Start (0 deg)
+    2 * M_PI,  // FoV End (360 deg) - Full FoV
+    [&](ScanCutterT::buffer_index_t) { published = true; }, [](ScanCutterT::buffer_index_t) {});
+
+  // Create a block that is clearly inside the FoV but does NOT cross the cut
+  CorrectedAzimuths<n_ch, double> azimuths{};
+  azimuths.azimuths = {0.1, 0.2, 0.3, 0.4};  // Small angles, far from PI
+  azimuths.min_correction_index = 0;
+  azimuths.max_correction_index = 3;
+
+  const auto & state = cutter.step(azimuths);
+
+  // Verify all channels are marked as being in FoV
+  for (size_t i = 0; i < n_ch; ++i) {
+    EXPECT_TRUE(state.channels_in_fov.at(i)) << "Channel " << i << " should be in FoV";
+  }
+
+  EXPECT_FALSE(state.does_block_intersect_cut());
+  EXPECT_TRUE(state.does_block_intersect_fov());
+  EXPECT_FALSE(published);
+}
+
+TEST(TestScanCutterBasic, InitializeStateNoCutSomeOutsideFoV)
+{
+  // Not overlapping cut, some channels outside FoV, some inside
+  constexpr size_t n_ch = 4;
+  using ScanCutterT = ScanCutter<n_ch, double>;
+
+  ScanCutterT cutter(
+    2 * M_PI, 1.4,  // max_angle, cut at 1.0 rad (within FoV)
+    0.5, 1.5,       // FoV: [0.5, 1.5] radians
+    [](ScanCutterT::buffer_index_t) {}, [](ScanCutterT::buffer_index_t) {});
+
+  CorrectedAzimuths<n_ch, double> azimuths{};
+  azimuths.azimuths = {
+    0.3, 0.4, 0.6, 0.7};  // 0.3 and 0.4 outside FoV, 0.6 and 0.7 inside, all < cut
+  azimuths.min_correction_index = 0;
+  azimuths.max_correction_index = 3;
+
+  const auto & state = cutter.step(azimuths);
+
+  EXPECT_FALSE(state.channels_in_fov.at(0));  // 0.3 < 0.5
+  EXPECT_FALSE(state.channels_in_fov.at(1));  // 0.4 < 0.5
+  EXPECT_TRUE(state.channels_in_fov.at(2));   // 0.6 in [0.5, 1.5]
+  EXPECT_TRUE(state.channels_in_fov.at(3));   // 0.7 in [0.5, 1.5]
+  EXPECT_FALSE(state.does_block_intersect_cut());
+}
+
+TEST(TestScanCutterBasic, InitializeStateNoCutAllOutsideFoV)
+{
+  // Not overlapping cut, all channels outside FoV
+  constexpr size_t n_ch = 4;
+  using ScanCutterT = ScanCutter<n_ch, double>;
+
+  ScanCutterT cutter(
+    2 * M_PI, 1.0,  // max_angle, cut at 1.0 rad (within FoV)
+    0.5, 1.5,       // FoV: [0.5, 1.5] radians
+    [](ScanCutterT::buffer_index_t) {}, [](ScanCutterT::buffer_index_t) {});
+
+  CorrectedAzimuths<n_ch, double> azimuths{};
+  azimuths.azimuths = {1.6, 1.7, 1.8, 1.9};  // All outside FoV (and don't cross cut)
+  azimuths.min_correction_index = 0;
+  azimuths.max_correction_index = 3;
+
+  const auto & state = cutter.step(azimuths);
+
+  for (size_t i = 0; i < n_ch; ++i) {
+    EXPECT_FALSE(state.channels_in_fov.at(i)) << "Channel " << i << " should be outside FoV";
+  }
+  EXPECT_FALSE(state.does_block_intersect_cut());
+  EXPECT_FALSE(state.does_block_intersect_fov());
+}
+
+TEST(TestScanCutterBasic, InitializeStateCrossessCutAllInsideFoV)
+{
+  // Overlapping cut, all channels inside FoV (360° FoV)
+  constexpr size_t n_ch = 4;
+  using ScanCutterT = ScanCutter<n_ch, double>;
+
+  ScanCutterT cutter(
+    2 * M_PI, M_PI,  // max_angle, cut at 180° (PI)
+    0.0, 2 * M_PI,   // Full 360° FoV
+    [](ScanCutterT::buffer_index_t) {}, [](ScanCutterT::buffer_index_t) {});
+
+  CorrectedAzimuths<n_ch, double> azimuths{};
+  azimuths.azimuths = {M_PI - 0.2, M_PI - 0.1, M_PI + 0.1, M_PI + 0.2};  // Straddles cut
+  azimuths.min_correction_index = 0;
+  azimuths.max_correction_index = 3;
+
+  const auto & state = cutter.step(azimuths);
+
+  for (size_t i = 0; i < n_ch; ++i) {
+    EXPECT_TRUE(state.channels_in_fov.at(i)) << "Channel " << i << " should be in FoV";
+  }
+  EXPECT_TRUE(state.does_block_intersect_cut());
+  // Channels should be split across buffers
+  EXPECT_EQ(state.channel_buffer_indices.at(0), 0);  // Before cut
+  EXPECT_EQ(state.channel_buffer_indices.at(1), 0);  // Before cut
+  EXPECT_EQ(state.channel_buffer_indices.at(2), 1);  // After cut
+  EXPECT_EQ(state.channel_buffer_indices.at(3), 1);  // After cut
+}
+
+TEST(TestScanCutterBasic, InitializeStateCrossesCutSomeOutsideFoV)
+{
+  // Overlapping cut, some channels outside FoV
+  constexpr size_t n_ch = 4;
+  using ScanCutterT = ScanCutter<n_ch, double>;
+
+  ScanCutterT cutter(
+    2 * M_PI, M_PI,            // max_angle, cut at 180° (PI)
+    M_PI - 0.15, M_PI + 0.15,  // FoV: narrow band around cut
+    [](ScanCutterT::buffer_index_t) {}, [](ScanCutterT::buffer_index_t) {});
+
+  CorrectedAzimuths<n_ch, double> azimuths{};
+  azimuths.azimuths = {M_PI - 0.2, M_PI - 0.1, M_PI + 0.1, M_PI + 0.2};  // Straddles cut
+  azimuths.min_correction_index = 0;
+  azimuths.max_correction_index = 3;
+
+  const auto & state = cutter.step(azimuths);
+
+  EXPECT_FALSE(state.channels_in_fov.at(0));  // PI - 0.2 outside [PI - 0.15, PI + 0.15]
+  EXPECT_TRUE(state.channels_in_fov.at(1));   // PI - 0.1 inside
+  EXPECT_TRUE(state.channels_in_fov.at(2));   // PI + 0.1 inside
+  EXPECT_FALSE(state.channels_in_fov.at(3));  // PI + 0.2 outside
+  EXPECT_TRUE(state.does_block_intersect_cut());
 }
 
 // =============================================================================
