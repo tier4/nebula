@@ -19,7 +19,7 @@
 
 #include <boost/tokenizer.hpp>
 
-#include <algorithm>
+#include <cmath>
 #include <ostream>
 #include <string>
 #include <type_traits>
