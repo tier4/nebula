@@ -42,7 +42,8 @@ ament_target_dependencies(
   pandar_msgs
   sensor_msgs
   pcl_conversions
-  sync_tooling_msgs)
+  sync_tooling_msgs
+  rclcpp_components)
 
 if("$ENV{ENABLE_AGNOCAST}")
   message("Agnocast support is enabled")

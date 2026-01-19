@@ -21,6 +21,7 @@
 
 #include <nebula_core_common/util/errno.hpp>
 #include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/socket_utils.hpp>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -38,6 +39,7 @@
 #include <cstring>
 #include <exception>
 #include <functional>
+#include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -50,78 +52,8 @@
 namespace nebula::drivers::connections
 {
 
-class SocketError : public std::exception
-{
-public:
-  explicit SocketError(int err_no) : what_{util::errno_to_string(err_no)} {}
-
-  explicit SocketError(const std::string_view & msg) : what_(msg) {}
-
-  const char * what() const noexcept override { return what_.c_str(); }
-
-private:
-  std::string what_;
-};
-
-class UsageError : public std::runtime_error
-{
-public:
-  explicit UsageError(const std::string & msg) : std::runtime_error(msg) {}
-};
-
-inline util::expected<in_addr, UsageError> parse_ip(const std::string & ip)
-{
-  in_addr parsed_addr{};
-  bool valid = inet_aton(ip.c_str(), &parsed_addr);
-  if (!valid) return UsageError("Invalid IP address given");
-  return parsed_addr;
-}
-
 class UdpSocket
 {
-  struct Endpoint
-  {
-    in_addr ip;
-    /// In host byte order.
-    uint16_t port;
-  };
-
-  class SockFd
-  {
-    static const int uninitialized = -1;
-    int sock_fd_;
-
-  public:
-    SockFd() : sock_fd_{uninitialized} {}
-    explicit SockFd(int sock_fd) : sock_fd_{sock_fd} {}
-    SockFd(SockFd && other) noexcept : sock_fd_{other.sock_fd_} { other.sock_fd_ = uninitialized; }
-
-    SockFd(const SockFd &) = delete;
-    SockFd & operator=(const SockFd &) = delete;
-    SockFd & operator=(SockFd && other) noexcept
-    {
-      std::swap(sock_fd_, other.sock_fd_);
-      return *this;
-    };
-
-    ~SockFd()
-    {
-      if (sock_fd_ == uninitialized) return;
-      close(sock_fd_);
-    }
-
-    [[nodiscard]] int get() const { return sock_fd_; }
-
-    template <typename T>
-    [[nodiscard]] util::expected<std::monostate, SocketError> setsockopt(
-      int level, int optname, const T & optval)
-    {
-      int result = ::setsockopt(sock_fd_, level, optname, &optval, sizeof(T));
-      if (result == -1) return SocketError(errno);
-      return std::monostate{};
-    }
-  };
-
   struct SocketConfig
   {
     int32_t polling_interval_ms{10};
@@ -332,8 +264,7 @@ public:
     bool truncated;
   };
 
-  using callback_t =
-    std::function<void(const std::vector<uint8_t> & data, const RxMetadata & metadata)>;
+  using callback_t = std::function<void(std::vector<uint8_t> & data, const RxMetadata & metadata)>;
 
   /**
    * @brief Register a callback for processing received packets and start the receiver thread. The
@@ -363,6 +294,12 @@ public:
       receive_thread_.join();
     }
     return *this;
+  }
+
+  void close()
+  {
+    unsubscribe();
+    sock_fd_ = SockFd{};
   }
 
   /**
@@ -413,46 +350,51 @@ private:
       PerfCounters current_packet_perf_counters{};
 
       while (running_) {
-        auto data_available = is_data_available();
+        try {
+          auto data_available = is_data_available();
 
-        auto t_start = std::chrono::steady_clock::now();
-        if (!data_available.has_value()) throw SocketError(data_available.error());
-        if (!data_available.value()) {
-          current_packet_perf_counters.n_woken_without_data++;
+          auto t_start = std::chrono::steady_clock::now();
+          if (!data_available.has_value()) throw SocketError(data_available.error());
+          if (!data_available.value()) {
+            current_packet_perf_counters.n_woken_without_data++;
+            current_packet_perf_counters.receive_duration_ns +=
+              (std::chrono::steady_clock::now() - t_start).count();
+            continue;
+          }
+
+          buffer.resize(config_.buffer_size);
+          MsgBuffers msg_header{buffer};
+
+          // As per `man recvmsg`, zero-length datagrams are permitted and valid. Since the socket
+          // is blocking, a recv_result of 0 means we received a valid 0-length datagram.
+          ssize_t recv_result = recvmsg(sock_fd_.get(), &msg_header.msg, MSG_TRUNC);
+          if (recv_result < 0) throw SocketError(errno);
+          size_t untruncated_packet_length = recv_result;
+
+          if (!is_accepted_sender(msg_header.sender_addr)) {
+            current_packet_perf_counters.n_woken_by_wrong_sender++;
+            current_packet_perf_counters.receive_duration_ns +=
+              (std::chrono::steady_clock::now() - t_start).count();
+            continue;
+          }
+
+          RxMetadata metadata;
+          get_receive_metadata(msg_header.msg, metadata, drop_monitor);
+          metadata.truncated = untruncated_packet_length > config_.buffer_size;
+
+          buffer.resize(std::min(config_.buffer_size, untruncated_packet_length));
+
           current_packet_perf_counters.receive_duration_ns +=
             (std::chrono::steady_clock::now() - t_start).count();
-          continue;
+
+          metadata.packet_perf_counters = current_packet_perf_counters;
+          current_packet_perf_counters = {};
+
+          callback_(buffer, metadata);
+        } catch (const SocketError & e) {
+          std::cerr << "UdpSocket receiver error: " << e.what() << std::endl;
+          running_ = false;
         }
-
-        buffer.resize(config_.buffer_size);
-        MsgBuffers msg_header{buffer};
-
-        // As per `man recvmsg`, zero-length datagrams are permitted and valid. Since the socket is
-        // blocking, a recv_result of 0 means we received a valid 0-length datagram.
-        ssize_t recv_result = recvmsg(sock_fd_.get(), &msg_header.msg, MSG_TRUNC);
-        if (recv_result < 0) throw SocketError(errno);
-        size_t untruncated_packet_length = recv_result;
-
-        if (!is_accepted_sender(msg_header.sender_addr)) {
-          current_packet_perf_counters.n_woken_by_wrong_sender++;
-          current_packet_perf_counters.receive_duration_ns +=
-            (std::chrono::steady_clock::now() - t_start).count();
-          continue;
-        }
-
-        RxMetadata metadata;
-        get_receive_metadata(msg_header.msg, metadata, drop_monitor);
-        metadata.truncated = untruncated_packet_length > config_.buffer_size;
-
-        buffer.resize(std::min(config_.buffer_size, untruncated_packet_length));
-
-        current_packet_perf_counters.receive_duration_ns +=
-          (std::chrono::steady_clock::now() - t_start).count();
-
-        metadata.packet_perf_counters = current_packet_perf_counters;
-        current_packet_perf_counters = {};
-
-        callback_(buffer, metadata);
       }
     });
   }
@@ -483,9 +425,7 @@ private:
 
   util::expected<bool, int> is_data_available()
   {
-    int status = poll(&poll_fd_, 1, config_.polling_interval_ms);
-    if (status == -1) return errno;
-    return (poll_fd_.revents & POLLIN) && (status > 0);
+    return is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
   }
 
   bool is_accepted_sender(const sockaddr_in & sender_addr)

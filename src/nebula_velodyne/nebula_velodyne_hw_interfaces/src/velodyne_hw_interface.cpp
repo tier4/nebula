@@ -15,9 +15,7 @@ namespace nebula::drivers
 using std::string_literals::operator""s;
 
 VelodyneHwInterface::VelodyneHwInterface(const std::shared_ptr<loggers::Logger> & logger)
-: boost_ctx_{new boost::asio::io_context()},
-  http_client_driver_{new ::drivers::tcp_driver::HttpClientDriver(boost_ctx_)},
-  logger_{logger}
+: logger_{logger}
 {
 }
 
@@ -25,18 +23,16 @@ nebula::util::expected<std::string, VelodyneStatus> VelodyneHwInterface::http_ge
   const std::string & endpoint)
 {
   std::lock_guard lock(mtx_inflight_request_);
-  auto do_request = [this, &endpoint]() { return http_client_driver_->get(endpoint); };
-  return do_http_request_with_retries(do_request, http_client_driver_);
+  auto do_request = [this, &endpoint]() { return http_client_->get(endpoint); };
+  return do_http_request_with_retries(do_request);
 }
 
 nebula::util::expected<std::string, VelodyneStatus> VelodyneHwInterface::http_post_request(
   const std::string & endpoint, const std::string & body)
 {
   std::lock_guard lock(mtx_inflight_request_);
-  auto do_request = [this, &endpoint, &body]() {
-    return http_client_driver_->post(endpoint, body);
-  };
-  return do_http_request_with_retries(do_request, http_client_driver_);
+  auto do_request = [this, &endpoint, &body]() { return http_client_->post(endpoint, body); };
+  return do_http_request_with_retries(do_request);
 }
 
 Status VelodyneHwInterface::initialize_sensor_configuration(
@@ -108,10 +104,7 @@ Status VelodyneHwInterface::get_sensor_configuration(SensorConfigurationBase & s
 VelodyneStatus VelodyneHwInterface::init_http_client()
 {
   try {
-    http_client_driver_->init_client(sensor_configuration_->sensor_ip, 80);
-    if (!http_client_driver_->client()->isOpen()) {
-      http_client_driver_->client()->open();
-    }
+    http_client_ = std::make_unique<connections::HttpClient>(sensor_configuration_->sensor_ip, 80);
   } catch (const std::exception & ex) {
     VelodyneStatus status = Status::HTTP_CONNECTION_ERROR;
     return status;
