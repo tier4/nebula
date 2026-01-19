@@ -21,6 +21,7 @@
     "DHAVE",
     "Difop",
     "extrinsics",
+    "elts",
     "fout",
     "gprmc",
     "gptp",
@@ -35,6 +36,7 @@
     "millidegrees",
     "mkdoxy",
     "Msop",
+    "lucide",
     "nohup",
     "nproc",
     "nsec",
@@ -60,6 +62,7 @@
     "stds",
     "struct",
     "structs",
+    "tablefmt",
     "textproto",
     "TOLOWER",
     "UDP_SEQ",
@@ -71,6 +74,8 @@
     "Wbitwise",
     "XT",
     "XTM",
-    "yukkysaito"
+    "yukkysaito",
+    "zensical",
+    "Zensical"
   ]
 }

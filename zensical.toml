@@ -1,0 +1,246 @@
+[project]
+site_name = "Nebula"
+site_description = "Nebula Multi-Sensor Driver Framework"
+site_author = "TIER IV, Inc."
+site_url = "https://tier4.github.io/nebula/"
+repo_url = "https://github.com/tier4/nebula"
+docs_dir = "docs"
+site_dir = "_site"
+use_directory_urls = true
+copyright = """
+Copyright &copy; 2023 TIER IV, Inc.
+"""
+nav = [
+  { "Home" = "index.md" },
+  { "Supported sensors" = "supported_sensors.md" },
+  { "Installation" = "installation.md" },
+  { "Usage" = "usage.md" },
+  { "Parameters" = [
+    { "Common Parameters" = "parameters.md" },
+    { "Hesai" = [
+      { "Common" = "parameters/vendors/hesai/common.md" },
+      { "Pandar40P" = "parameters/vendors/hesai/pandar40p.md" },
+      { "Pandar64" = "parameters/vendors/hesai/pandar64.md" },
+      { "OT128" = "parameters/vendors/hesai/ot128.md" },
+      { "QT64" = "parameters/vendors/hesai/qt64.md" },
+      { "QT128" = "parameters/vendors/hesai/qt128.md" },
+      { "AT128" = "parameters/vendors/hesai/at128.md" },
+      { "XT16" = "parameters/vendors/hesai/xt16.md" },
+      { "XT32" = "parameters/vendors/hesai/xt32.md" },
+      { "XT32M" = "parameters/vendors/hesai/xt32m.md" },
+    ]},
+    { "Velodyne" = [
+      { "Common" = "parameters/vendors/velodyne/common.md" },
+      { "VLP16" = "parameters/vendors/velodyne/vlp16.md" },
+      { "VLP32" = "parameters/vendors/velodyne/vlp32.md" },
+      { "VLS128" = "parameters/vendors/velodyne/vls128.md" },
+    ]},
+    { "Robosense" = [
+      { "Common" = "parameters/vendors/robosense/common.md" },
+      { "BPearl" = "parameters/vendors/robosense/bpearl.md" },
+      { "Helios" = "parameters/vendors/robosense/helios.md" },
+    ]},
+    { "Continental" = [
+      { "Common" = "parameters/vendors/continental/common.md" },
+      { "ARS548" = "parameters/vendors/continental/ars548.md" },
+      { "SRR520" = "parameters/vendors/continental/srr520.md" },
+    ]},
+  ]},
+  { "Point cloud types" = "point_types.md" },
+  { "Design" = [
+    { "Design" = "design.md" },
+    { "Scan cutting" = "design/scan_cutting.md" },
+  ]},
+  { "Tutorials" = "tutorials.md" },
+  { "Contributing" = [
+    { "Contributing to Nebula" = "contributing/index.md" },
+    { "Benchmarking" = "contributing/benchmarking.md" },
+  ]},
+  { "API Reference" = [
+    { "API Reference" = "api_reference.md" },
+    { "Core" = [
+      { "Links" = "core/links.md" },
+      { "Classes" = [
+        { "Class List" = "core/annotated.md" },
+        { "Class Index" = "core/classes.md" },
+        { "Class Hierarchy" = "core/hierarchy.md" },
+        { "Class Members" = "core/class_members.md" },
+        { "Class Member Functions" = "core/class_member_functions.md" },
+        { "Class Member Variables" = "core/class_member_variables.md" },
+        { "Class Member Typedefs" = "core/class_member_typedefs.md" },
+        { "Class Member Enumerations" = "core/class_member_enums.md" },
+      ]},
+      { "Namespaces" = [
+        { "Namespace List" = "core/namespaces.md" },
+        { "Namespace Members" = "core/namespace_members.md" },
+        { "Namespace Member Functions" = "core/namespace_member_functions.md" },
+        { "Namespace Member Variables" = "core/namespace_member_variables.md" },
+        { "Namespace Member Typedefs" = "core/namespace_member_typedefs.md" },
+        { "Namespace Member Enumerations" = "core/namespace_member_enums.md" },
+      ]},
+      { "Functions" = "core/functions.md" },
+      { "Variables" = "core/variables.md" },
+      { "Macros" = "core/macros.md" },
+      { "Files" = "core/files.md" },
+    ]},
+    { "Hesai" = [
+      { "Links" = "hesai/links.md" },
+      { "Classes" = [
+        { "Class List" = "hesai/annotated.md" },
+        { "Class Index" = "hesai/classes.md" },
+        { "Class Hierarchy" = "hesai/hierarchy.md" },
+        { "Class Members" = "hesai/class_members.md" },
+        { "Class Member Functions" = "hesai/class_member_functions.md" },
+        { "Class Member Variables" = "hesai/class_member_variables.md" },
+        { "Class Member Typedefs" = "hesai/class_member_typedefs.md" },
+        { "Class Member Enumerations" = "hesai/class_member_enums.md" },
+      ]},
+      { "Namespaces" = [
+        { "Namespace List" = "hesai/namespaces.md" },
+        { "Namespace Members" = "hesai/namespace_members.md" },
+        { "Namespace Member Functions" = "hesai/namespace_member_functions.md" },
+        { "Namespace Member Variables" = "hesai/namespace_member_variables.md" },
+        { "Namespace Member Typedefs" = "hesai/namespace_member_typedefs.md" },
+        { "Namespace Member Enumerations" = "hesai/namespace_member_enums.md" },
+      ]},
+      { "Functions" = "hesai/functions.md" },
+      { "Variables" = "hesai/variables.md" },
+      { "Macros" = "hesai/macros.md" },
+      { "Files" = "hesai/files.md" },
+    ]},
+    { "Velodyne" = [
+      { "Links" = "velodyne/links.md" },
+      { "Classes" = [
+        { "Class List" = "velodyne/annotated.md" },
+        { "Class Index" = "velodyne/classes.md" },
+        { "Class Hierarchy" = "velodyne/hierarchy.md" },
+        { "Class Members" = "velodyne/class_members.md" },
+        { "Class Member Functions" = "velodyne/class_member_functions.md" },
+        { "Class Member Variables" = "velodyne/class_member_variables.md" },
+        { "Class Member Typedefs" = "velodyne/class_member_typedefs.md" },
+        { "Class Member Enumerations" = "velodyne/class_member_enums.md" },
+      ]},
+      { "Namespaces" = [
+        { "Namespace List" = "velodyne/namespaces.md" },
+        { "Namespace Members" = "velodyne/namespace_members.md" },
+        { "Namespace Member Functions" = "velodyne/namespace_member_functions.md" },
+        { "Namespace Member Variables" = "velodyne/namespace_member_variables.md" },
+        { "Namespace Member Typedefs" = "velodyne/namespace_member_typedefs.md" },
+        { "Namespace Member Enumerations" = "velodyne/namespace_member_enums.md" },
+      ]},
+      { "Functions" = "velodyne/functions.md" },
+      { "Variables" = "velodyne/variables.md" },
+      { "Macros" = "velodyne/macros.md" },
+      { "Files" = "velodyne/files.md" },
+    ]},
+    { "Robosense" = [
+      { "Links" = "robosense/links.md" },
+      { "Classes" = [
+        { "Class List" = "robosense/annotated.md" },
+        { "Class Index" = "robosense/classes.md" },
+        { "Class Hierarchy" = "robosense/hierarchy.md" },
+        { "Class Members" = "robosense/class_members.md" },
+        { "Class Member Functions" = "robosense/class_member_functions.md" },
+        { "Class Member Variables" = "robosense/class_member_variables.md" },
+        { "Class Member Typedefs" = "robosense/class_member_typedefs.md" },
+        { "Class Member Enumerations" = "robosense/class_member_enums.md" },
+      ]},
+      { "Namespaces" = [
+        { "Namespace List" = "robosense/namespaces.md" },
+        { "Namespace Members" = "robosense/namespace_members.md" },
+        { "Namespace Member Functions" = "robosense/namespace_member_functions.md" },
+        { "Namespace Member Variables" = "robosense/namespace_member_variables.md" },
+        { "Namespace Member Typedefs" = "robosense/namespace_member_typedefs.md" },
+        { "Namespace Member Enumerations" = "robosense/namespace_member_enums.md" },
+      ]},
+      { "Functions" = "robosense/functions.md" },
+      { "Variables" = "robosense/variables.md" },
+      { "Macros" = "robosense/macros.md" },
+      { "Files" = "robosense/files.md" },
+    ]},
+    { "Continental" = [
+      { "Links" = "continental/links.md" },
+      { "Classes" = [
+        { "Class List" = "continental/annotated.md" },
+        { "Class Index" = "continental/classes.md" },
+        { "Class Hierarchy" = "continental/hierarchy.md" },
+        { "Class Members" = "continental/class_members.md" },
+        { "Class Member Functions" = "continental/class_member_functions.md" },
+        { "Class Member Variables" = "continental/class_member_variables.md" },
+        { "Class Member Typedefs" = "continental/class_member_typedefs.md" },
+        { "Class Member Enumerations" = "continental/class_member_enums.md" },
+      ]},
+      { "Namespaces" = [
+        { "Namespace List" = "continental/namespaces.md" },
+        { "Namespace Members" = "continental/namespace_members.md" },
+        { "Namespace Member Functions" = "continental/namespace_member_functions.md" },
+        { "Namespace Member Variables" = "continental/namespace_member_variables.md" },
+        { "Namespace Member Typedefs" = "continental/namespace_member_typedefs.md" },
+        { "Namespace Member Enumerations" = "continental/namespace_member_enums.md" },
+      ]},
+      { "Functions" = "continental/functions.md" },
+      { "Variables" = "continental/variables.md" },
+      { "Macros" = "continental/macros.md" },
+      { "Files" = "continental/files.md" },
+    ]},
+  ]},
+]
+
+plugins = [
+  "search",
+]
+
+markdown_extensions = [
+  "admonition",
+  "pymdownx.details",
+  "pymdownx.highlight",
+  "pymdownx.superfences",
+]
+
+[markdown_extensions.pymdownx.arithmatex]
+generic = true
+
+extra_javascript = [
+    "js/mathjax.js",
+    "js/drawio-reload.js",
+    "https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"
+]
+
+[project.theme]
+language = "en"
+features = [
+    "announce.dismiss",
+    "content.code.annotate",
+    "content.code.copy",
+    "content.code.select",
+    "content.footnote.tooltips",
+    "content.tabs.link",
+    "content.tooltips",
+    "navigation.footer",
+    "navigation.indexes",
+    "navigation.instant",
+    "navigation.instant.prefetch",
+    "navigation.path",
+    "navigation.sections",
+    "navigation.top",
+    "navigation.tracking",
+    "search.highlight",
+]
+
+[[project.theme.palette]]
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to light mode"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/tier4/nebula"
+
+[project.repo]
+url = "https://github.com/tier4/nebula"
+name = "GitHub"

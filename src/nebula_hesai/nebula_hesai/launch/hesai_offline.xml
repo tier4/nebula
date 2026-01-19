@@ -5,8 +5,8 @@
     <arg name="frame_id"  default="hesai"/>
     <arg name="scan_phase" default="0.0" />
 
-    <arg name="calibration_file" default="$(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).csv"/>
-    <arg name="correction_file" default="$(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).dat"/>
+    <arg name="calibration_file" default="$(find-pkg-share nebula_hesai_decoders)/calibration/$(var sensor_model).csv"/>
+    <arg name="correction_file" default="$(find-pkg-share nebula_hesai_decoders)/calibration/$(var sensor_model).dat"/>
 
     <arg name="bag_path" default="path to bag dir"/>
     <arg name="storage_id" default="sqlite3"/>
