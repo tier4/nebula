@@ -13,7 +13,7 @@
     },
     "calibration_file": {
       "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/calibration_file",
-      "default": "$(find-pkg-share nebula_decoders)/calibration/velodyne/$(var sensor_model).yaml"
+      "default": "$(find-pkg-share nebula_velodyne_decoders)/calibration/$(var sensor_model).yaml"
     },
     "return_mode": {
       "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/return_mode",
