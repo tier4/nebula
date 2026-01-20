@@ -134,6 +134,45 @@ TEST(TestTcp, TestBlockingReceive)
   ASSERT_EQ(received, payload);
 }
 
+TEST(TestTcp, TestReceiveTimeout)
+{
+  TcpServer server(g_server_port);
+  auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
+
+  // Expect empty return on timeout (100ms) with no data sent
+  auto received = sock.receive(4, 100ms);
+  ASSERT_TRUE(received.empty());
+  ASSERT_TRUE(received.empty());
+}
+
+TEST(TestTcp, TestReceiveOnClosedSocket)
+{
+  TcpServer server(g_server_port);
+  auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
+
+  std::vector<uint8_t> payload{1, 2, 3, 4};
+  sock.send(payload);
+
+  // Receive the echo
+  sock.receive(4);
+
+  // Server implementation closes connection after echo.
+  // Next receive should throw "Connection closed"
+  // Wait a bit to ensure close propagates (though it's on localhost)
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+  EXPECT_THROW(
+    {
+      try {
+        sock.receive(1);
+      } catch (const SocketError & e) {
+        EXPECT_STREQ(e.what(), "Connection closed");
+        throw;
+      }
+    },
+    SocketError);
+}
+
 TEST(TestTcp, TestReopen)
 {
   TcpServer server(g_server_port);

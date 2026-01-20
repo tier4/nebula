@@ -84,9 +84,8 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
     while (bytes_received < 8 && retry_count < 10) {
       std::vector<uint8_t> chunk;
 
-      chunk = tcp_socket_->receive(8 - bytes_received);
+      chunk = tcp_socket_->receive(8 - bytes_received, std::chrono::milliseconds(10));
       if (chunk.empty()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         retry_count++;
         continue;
       }
@@ -118,9 +117,9 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
     bytes_received = 0;
     retry_count = 0;
     while (bytes_received < payload_len && retry_count < 50) {  // 500ms timeout approx
-      std::vector<uint8_t> chunk = tcp_socket_->receive(payload_len - bytes_received);
+      std::vector<uint8_t> chunk =
+        tcp_socket_->receive(payload_len - bytes_received, std::chrono::milliseconds(10));
       if (chunk.empty()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         retry_count++;
         continue;
       }

@@ -33,6 +33,7 @@
 #include <atomic>
 #include <cassert>
 #include <cerrno>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -84,12 +85,28 @@ public:
    * @return A vector containing the received bytes. Size may be less than n if connection closed.
    * @throws SocketError if receive fails.
    */
-  std::vector<uint8_t> receive(size_t n)
+  /**
+   * @brief Receive exactly n bytes from the socket.
+   *        This is a blocking call with an optional timeout.
+   *
+   * @param n The number of bytes to receive.
+   * @param timeout The timeout duration. If 0, blocks indefinitely.
+   * @return A vector containing the received bytes. Empty if timeout.
+   * @throws SocketError if receive fails or connection is closed.
+   */
+  std::vector<uint8_t> receive(
+    size_t n, std::chrono::milliseconds timeout = std::chrono::milliseconds(0))
   {
+    if (timeout.count() > 0) {
+      auto ready = is_socket_ready(sock_fd_.get(), timeout.count());
+      if (!ready.has_value()) throw SocketError(ready.error());
+      if (!ready.value()) return {};
+    }
+
     std::vector<uint8_t> buffer(n);
     ssize_t result = ::recv(sock_fd_.get(), buffer.data(), n, 0);
     if (result < 0) throw SocketError(errno);
-    if (result == 0) return {};
+    if (result == 0) throw SocketError("Connection closed");
     buffer.resize(result);
     return buffer;
   }

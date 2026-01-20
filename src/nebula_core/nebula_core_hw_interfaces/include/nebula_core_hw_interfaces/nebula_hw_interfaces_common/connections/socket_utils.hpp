@@ -137,11 +137,11 @@ inline util::expected<in_addr, UsageError> parse_ip(const std::string & ip)
  * @param addr The address to convert.
  * @return String representation (e.g., "192.168.1.1").
  */
-inline std::string to_string(const in_addr & addr)
+inline util::expected<std::string, SocketError> to_string(const in_addr & addr)
 {
   char buf[INET_ADDRSTRLEN];
   if (inet_ntop(AF_INET, &addr, buf, INET_ADDRSTRLEN) == nullptr) {
-    return "0.0.0.0";
+    return SocketError(errno);
   }
   return std::string(buf);
 }

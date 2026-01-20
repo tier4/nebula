@@ -16,15 +16,15 @@ TEST(TestSocketUtils, TestParseIpValid)
 {
   auto result = parse_ip("192.168.1.100");
   ASSERT_TRUE(result.has_value());
-  EXPECT_EQ(to_string(result.value()), "192.168.1.100");
+  EXPECT_EQ(to_string(result.value()).value(), "192.168.1.100");
 
   result = parse_ip("0.0.0.0");
   ASSERT_TRUE(result.has_value());
-  EXPECT_EQ(to_string(result.value()), "0.0.0.0");
+  EXPECT_EQ(to_string(result.value()).value(), "0.0.0.0");
 
   result = parse_ip("255.255.255.255");
   ASSERT_TRUE(result.has_value());
-  EXPECT_EQ(to_string(result.value()), "255.255.255.255");
+  EXPECT_EQ(to_string(result.value()).value(), "255.255.255.255");
 }
 
 TEST(TestSocketUtils, TestParseIpInvalid)
@@ -38,10 +38,10 @@ TEST(TestSocketUtils, TestToString)
 {
   in_addr addr{};
   addr.s_addr = htonl(0xC0A80164);  // 192.168.1.100
-  EXPECT_EQ(to_string(addr), "192.168.1.100");
+  EXPECT_EQ(to_string(addr).value(), "192.168.1.100");
 
   addr.s_addr = 0;
-  EXPECT_EQ(to_string(addr), "0.0.0.0");
+  EXPECT_EQ(to_string(addr).value(), "0.0.0.0");
 }
 
 TEST(TestSocketUtils, TestSockFdRaii)
