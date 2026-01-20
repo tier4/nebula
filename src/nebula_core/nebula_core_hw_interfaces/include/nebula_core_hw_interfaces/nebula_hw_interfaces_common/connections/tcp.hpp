@@ -70,53 +70,10 @@ class TcpSocket
 public:
   ~TcpSocket() { unsubscribe(); }
 
-  TcpSocket() : sock_fd_() {}
-
-  /**
-   * @brief Open a connection to the specified IP and port.
-   *        Closes any existing connection before opening a new one.
-   *
-   * @param ip The target IP address.
-   * @param port The target port.
-   * @throws SocketError if socket creation or connection fails.
-   */
-  void open(const std::string & ip, uint16_t port)
-  {
-    if (sock_fd_.get() != -1) {
-      sock_fd_ = SockFd();
-    }
-
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd == -1) throw SocketError(errno);
-    sock_fd_ = SockFd(fd);
-
-    sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    in_addr target_in_addr = parse_ip(ip).value_or_throw();
-    addr.sin_addr = target_in_addr;
-
-    int result = ::connect(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
-    if (result == -1) throw SocketError(errno);
-
-    config_.target = {target_in_addr, port};
-  }
-
   /**
    * @brief Open a connection to the specified endpoint.
    *
    * @param target The target endpoint (IP and port).
-   */
-  void open(const Endpoint & target) { open(to_string(target.ip), target.port); }
-
-  /**
-   * @brief Check if the socket file descriptor is valid (open).
-   * @return True if open, false otherwise.
-   */
-  bool isOpen() const { return sock_fd_.get() != -1; }
-
-  /**
-   * @brief Close the socket.
    */
 
   /**

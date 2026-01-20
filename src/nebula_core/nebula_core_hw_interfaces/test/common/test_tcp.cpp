@@ -139,11 +139,10 @@ TEST(TestTcp, TestReopen)
   TcpServer server(g_server_port);
   {
     auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
-    ASSERT_TRUE(sock.isOpen());
+    // Socket is guaranteed open if exception not thrown
   }  // sock destroyed here
   {
     auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
-    ASSERT_TRUE(sock.isOpen());
   }
 }
 
@@ -187,18 +186,7 @@ TEST(TestTcp, TestMoveSemantics)
 
   TcpSocket sock2(std::move(sock1));
   ASSERT_TRUE(sock2.is_subscribed());
-  ASSERT_TRUE(sock2.isOpen());
-}
-
-TEST(TestTcp, TestOpenWithEndpoint)
-{
-  TcpServer server(g_server_port);
-  Endpoint endpoint{parse_ip(g_localhost_ip).value_or_throw(), g_server_port};
-
-  TcpSocket sock;
-  ASSERT_FALSE(sock.isOpen());
-  sock.open(endpoint);
-  ASSERT_TRUE(sock.isOpen());
+  ASSERT_TRUE(sock2.is_subscribed());
 }
 
 }  // namespace nebula::drivers::connections

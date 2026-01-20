@@ -50,13 +50,13 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
 {
   std::lock_guard lock(mtx_inflight_tcp_request_);
 
+  // Auto-connect if not connected?
   if (!tcp_socket_) {
-    return ptc_error_t{g_ptc_error_code_server_conn_failed, 0};
-  }
-
-  if (!tcp_socket_->isOpen()) {
-    tcp_socket_->open(sensor_configuration_->sensor_ip, g_pandar_tcp_command_port);
-    if (!tcp_socket_->isOpen()) {
+    try {
+      tcp_socket_ = std::make_unique<connections::TcpSocket>(
+        connections::TcpSocket::Builder(sensor_configuration_->sensor_ip, g_pandar_tcp_command_port)
+          .connect());
+    } catch (const connections::SocketError &) {
       return ptc_error_t{g_ptc_error_code_server_conn_failed, 0};
     }
   }
@@ -74,69 +74,72 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
   send_buf.emplace_back(len & 0xff);
   send_buf.insert(send_buf.end(), payload.begin(), payload.end());
 
-  tcp_socket_->send(send_buf);
+  try {
+    tcp_socket_->send(send_buf);
 
-  // Receive Header (8 bytes)
-  std::vector<uint8_t> header_bytes;
-  size_t bytes_received = 0;
-  int retry_count = 0;
-  while (bytes_received < 8 && retry_count < 10) {
-    std::vector<uint8_t> chunk;
+    // Receive Header (8 bytes)
+    std::vector<uint8_t> header_bytes;
+    size_t bytes_received = 0;
+    int retry_count = 0;
+    while (bytes_received < 8 && retry_count < 10) {
+      std::vector<uint8_t> chunk;
 
-    chunk = tcp_socket_->receive(8 - bytes_received);
-    if (chunk.empty()) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      retry_count++;
-      continue;
+      chunk = tcp_socket_->receive(8 - bytes_received);
+      if (chunk.empty()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        retry_count++;
+        continue;
+      }
+      header_bytes.insert(header_bytes.end(), chunk.begin(), chunk.end());
+      bytes_received += chunk.size();
     }
-    header_bytes.insert(header_bytes.end(), chunk.begin(), chunk.end());
-    bytes_received += chunk.size();
-  }
 
-  if (header_bytes.size() < 8) {
-    return ptc_error_t{g_tcp_error_timeout, 0};
-  }
+    if (header_bytes.size() < 8) {
+      return ptc_error_t{g_tcp_error_timeout, 0};
+    }
 
-  ptc_error_t error_code;
-  error_code.ptc_error_code = header_bytes[3];
+    ptc_error_t error_code;
+    error_code.ptc_error_code = header_bytes[3];
 
-  size_t payload_len =
-    (header_bytes[4] << 24) | (header_bytes[5] << 16) | (header_bytes[6] << 8) | header_bytes[7];
+    size_t payload_len =
+      (header_bytes[4] << 24) | (header_bytes[5] << 16) | (header_bytes[6] << 8) | header_bytes[7];
 
-  if (header_bytes[2] != command_id) {
-    error_code.error_flags |= g_tcp_error_unrelated_response;
-  }
+    if (header_bytes[2] != command_id) {
+      error_code.error_flags |= g_tcp_error_unrelated_response;
+    }
 
-  if (payload_len == 0) {
+    if (payload_len == 0) {
+      if (!error_code.ok()) return error_code;
+      return std::vector<uint8_t>();
+    }
+
+    // Receive Payload
+    std::vector<uint8_t> recv_buf;
+    bytes_received = 0;
+    retry_count = 0;
+    while (bytes_received < payload_len && retry_count < 50) {  // 500ms timeout approx
+      std::vector<uint8_t> chunk = tcp_socket_->receive(payload_len - bytes_received);
+      if (chunk.empty()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        retry_count++;
+        continue;
+      }
+      recv_buf.insert(recv_buf.end(), chunk.begin(), chunk.end());
+      bytes_received += chunk.size();
+    }
+
+    // Check payload completeness?
+    if (bytes_received < payload_len) {
+      return ptc_error_t{g_tcp_error_incomplete_response, 0};
+    }
+
     if (!error_code.ok()) return error_code;
-    return std::vector<uint8_t>();
+    return recv_buf;
+  } catch (const connections::SocketError &) {
+    // If socket failed, reset it so next call tries to reconnect
+    tcp_socket_.reset();
+    return ptc_error_t{g_ptc_error_code_server_conn_failed, 0};
   }
-
-  // Receive Payload
-  std::vector<uint8_t> recv_buf;
-  bytes_received = 0;
-  retry_count = 0;
-  while (bytes_received < payload_len && retry_count < 50) {  // 500ms timeout approx
-    std::vector<uint8_t> chunk = tcp_socket_->receive(payload_len - bytes_received);
-    if (chunk.empty()) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      retry_count++;
-      continue;
-    }
-    recv_buf.insert(recv_buf.end(), chunk.begin(), chunk.end());
-    bytes_received += chunk.size();
-  }
-
-  if (recv_buf.size() < payload_len) {
-    error_code.error_flags |= g_tcp_error_incomplete_response;
-    return error_code;
-  }
-
-  if (!error_code.ok()) {
-    return error_code;
-  }
-
-  return recv_buf;
 }
 
 Status HesaiHwInterface::set_sensor_configuration(
@@ -218,16 +221,11 @@ Status HesaiHwInterface::get_calibration_configuration(
 
 Status HesaiHwInterface::initialize_tcp_socket()
 {
-  tcp_socket_ = std::make_unique<connections::TcpSocket>();
-  // Attempt to connect immediately to validate configuration.
-  // Reconnection is handled automatically in send_receive() if the connection is dropped.
   try {
-    tcp_socket_->open(sensor_configuration_->sensor_ip, g_pandar_tcp_command_port);
+    tcp_socket_ = std::make_unique<connections::TcpSocket>(
+      connections::TcpSocket::Builder(sensor_configuration_->sensor_ip, g_pandar_tcp_command_port)
+        .connect());
   } catch (const connections::SocketError & e) {
-    return Status::ERROR_1;
-  }
-
-  if (!tcp_socket_->isOpen()) {
     return Status::ERROR_1;
   }
 
