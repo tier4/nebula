@@ -68,6 +68,8 @@ class TcpSocket
   }
 
 public:
+  ~TcpSocket() { unsubscribe(); }
+
   TcpSocket() : sock_fd_() {}
 
   /**
@@ -116,7 +118,6 @@ public:
   /**
    * @brief Close the socket.
    */
-  void close() { sock_fd_ = SockFd(); }
 
   /**
    * @brief Receive exactly n bytes from the socket.
@@ -263,8 +264,6 @@ public:
 
   TcpSocket & operator=(const TcpSocket &) = delete;
   TcpSocket & operator=(TcpSocket &&) = delete;
-
-  ~TcpSocket() { unsubscribe(); }
 
 private:
   void launch_receiver()

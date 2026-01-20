@@ -111,6 +111,8 @@ class UdpSocket
   }
 
 public:
+  ~UdpSocket() { unsubscribe(); }
+
   class Builder
   {
   public:
@@ -296,12 +298,6 @@ public:
     return *this;
   }
 
-  void close()
-  {
-    unsubscribe();
-    sock_fd_ = SockFd{};
-  }
-
   /**
    * @brief Send a datagram to the destination set in `set_send_destination()`.
    *
@@ -335,8 +331,6 @@ public:
 
   UdpSocket & operator=(const UdpSocket &) = delete;
   UdpSocket & operator=(UdpSocket &&) = delete;
-
-  ~UdpSocket() { unsubscribe(); }
 
 private:
   void launch_receiver()

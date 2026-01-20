@@ -230,16 +230,6 @@ TEST(TestUdp, TestSending)
   ASSERT_EQ(recv_payload, payload);
 }
 
-TEST(TestUdp, TestClose)
-{
-  auto sock = UdpSocket::Builder(g_localhost_ip, g_host_port).bind();
-  sock.subscribe(empty_cb());
-  ASSERT_TRUE(sock.is_subscribed());
-
-  sock.close();
-  ASSERT_FALSE(sock.is_subscribed());
-}
-
 }  // namespace nebula::drivers::connections
 
 int main(int argc, char * argv[])

@@ -123,19 +123,6 @@ TEST(TestCan, TestIsSubscribed)
   }
 }
 
-TEST(TestCan, TestClose)
-{
-  try {
-    auto sock = CanSocket::Builder(g_can_interface).bind();
-    sock.subscribe([](const auto &, const auto &) {});
-    ASSERT_TRUE(sock.is_subscribed());
-    sock.close();
-    ASSERT_FALSE(sock.is_subscribed());
-  } catch (const SocketError &) {
-    GTEST_SKIP() << "Could not bind to " << g_can_interface;
-  }
-}
-
 TEST(TestCan, TestSetTimestamping)
 {
   try {

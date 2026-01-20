@@ -137,12 +137,14 @@ TEST(TestTcp, TestBlockingReceive)
 TEST(TestTcp, TestReopen)
 {
   TcpServer server(g_server_port);
-  auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
-  ASSERT_TRUE(sock.isOpen());
-  sock.close();
-  ASSERT_FALSE(sock.isOpen());
-  sock.open(g_localhost_ip, g_server_port);
-  ASSERT_TRUE(sock.isOpen());
+  {
+    auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
+    ASSERT_TRUE(sock.isOpen());
+  }  // sock destroyed here
+  {
+    auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
+    ASSERT_TRUE(sock.isOpen());
+  }
 }
 
 TEST(TestTcp, TestBuilderSetSocketBufferSize)

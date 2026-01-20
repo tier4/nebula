@@ -244,8 +244,7 @@ Status HesaiHwInterface::initialize_tcp_socket()
 Status HesaiHwInterface::finalize_tcp_socket()
 {
   if (tcp_socket_) {
-    tcp_socket_->close();
-    tcp_socket_.reset();
+    tcp_socket_ = {};
   }
   return Status::OK;
 }

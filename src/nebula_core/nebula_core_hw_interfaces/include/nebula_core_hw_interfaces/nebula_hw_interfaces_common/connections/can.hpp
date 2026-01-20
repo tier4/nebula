@@ -70,6 +70,7 @@ class CanSocket
   }
 
 public:
+  ~CanSocket() { unsubscribe(); }
   class Builder
   {
   public:
@@ -163,11 +164,6 @@ public:
   /**
    * @brief Close the socket and return the file descriptor to uninitialized state.
    */
-  void close()
-  {
-    unsubscribe();
-    sock_fd_ = SockFd{};
-  }
 
   /**
    * @brief Send a standard CAN frame.
@@ -273,8 +269,6 @@ public:
 
   CanSocket & operator=(const CanSocket &) = delete;
   CanSocket & operator=(CanSocket &&) = delete;
-
-  ~CanSocket() { unsubscribe(); }
 
 private:
   /**

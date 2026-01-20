@@ -104,9 +104,7 @@ void ContinentalARS548HwInterface::receive_callback(
 
 Status ContinentalARS548HwInterface::sensor_interface_stop()
 {
-  if (udp_socket_) {
-    udp_socket_->close();
-  }
+  udp_socket_ = {};
   return Status::OK;
 }
 
