@@ -278,7 +278,7 @@ private:
 
       while (running_) {
         try {
-          auto data_available = is_data_available();
+          auto data_available = is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
           if (!data_available.has_value()) throw SocketError(data_available.error());
           if (!data_available.value()) continue;
 
@@ -301,11 +301,6 @@ private:
         }
       }
     });
-  }
-
-  util::expected<bool, int> is_data_available()
-  {
-    return is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
   }
 
   SockFd sock_fd_;

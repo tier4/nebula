@@ -338,7 +338,7 @@ private:
     receive_thread_ = std::thread([this]() {
       while (running_) {
         try {
-          auto data_available = is_data_available();
+          auto data_available = is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
           if (!data_available.has_value()) throw SocketError(data_available.error());
           if (!data_available.value()) continue;
 
@@ -356,14 +356,6 @@ private:
         }
       }
     });
-  }
-
-  util::expected<bool, int> is_data_available()
-  {
-    pollfd pfd{sock_fd_.get(), POLLIN, 0};
-    int status = poll(&pfd, 1, config_.polling_interval_ms);
-    if (status == -1) return errno;
-    return (pfd.revents & POLLIN) && (status > 0);
   }
 
   SockFd sock_fd_;

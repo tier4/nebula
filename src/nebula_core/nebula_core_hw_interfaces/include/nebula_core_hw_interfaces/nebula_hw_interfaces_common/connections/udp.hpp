@@ -351,7 +351,7 @@ private:
 
       while (running_) {
         try {
-          auto data_available = is_data_available();
+          auto data_available = is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
 
           auto t_start = std::chrono::steady_clock::now();
           if (!data_available.has_value()) throw SocketError(data_available.error());
@@ -421,11 +421,6 @@ private:
           continue;
       }
     }
-  }
-
-  util::expected<bool, int> is_data_available()
-  {
-    return is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
   }
 
   bool is_accepted_sender(const sockaddr_in & sender_addr)
