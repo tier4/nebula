@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 project(nebula_continental)
 
 find_package(autoware_cmake REQUIRED)
+find_package(message_filters REQUIRED)
+find_package(tf2_ros REQUIRED)
 autoware_package()
 
 # # Continental
@@ -21,7 +23,6 @@ target_include_directories(
 target_link_libraries(
   continental_ars548_ros_wrapper
   PUBLIC diagnostic_updater::diagnostic_updater
-         tf2_ros::tf2_ros
          nebula_continental_decoders::nebula_continental_decoders
          nebula_continental_hw_interfaces::nebula_continental_hw_interfaces
          nebula_core_ros::nebula_core_ros
@@ -40,7 +41,9 @@ ament_target_dependencies(
   sensor_msgs
   visualization_msgs
   sync_tooling_msgs
-  rclcpp_components)
+  rclcpp_components
+  message_filters
+  tf2_ros)
 
 rclcpp_components_register_node(
   continental_ars548_ros_wrapper PLUGIN "ContinentalARS548RosWrapper"
@@ -60,9 +63,7 @@ target_include_directories(
 
 target_link_libraries(
   continental_srr520_ros_wrapper
-  PUBLIC tf2_ros::tf2_ros
-         message_filters::message_filters
-         nebula_continental_decoders::nebula_continental_decoders
+  PUBLIC nebula_continental_decoders::nebula_continental_decoders
          nebula_continental_hw_interfaces::nebula_continental_hw_interfaces
          nebula_core_ros::nebula_core_ros
          pcl_common)
@@ -79,7 +80,9 @@ ament_target_dependencies(
   radar_msgs
   sensor_msgs
   visualization_msgs
-  rclcpp_components)
+  rclcpp_components
+  message_filters
+  tf2_ros)
 
 rclcpp_components_register_node(
   continental_srr520_ros_wrapper PLUGIN "ContinentalSRR520RosWrapper"

@@ -18,8 +18,9 @@
 
 #include <nebula_continental_common/continental_ars548.hpp>
 #include <nebula_core_common/util/string_conversions.hpp>
-#include <tf2_ros/buffer.hpp>
-#include <tf2_ros/transform_listener.hpp>
+
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
 
 #include <memory>
 
