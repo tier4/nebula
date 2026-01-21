@@ -98,9 +98,9 @@ public:
     bool is_chunked = false;
     size_t parse_pos = 0;
 
-    socket.subscribe([&](const std::vector<uint8_t> & data) {
+    socket.subscribe([&](const std::vector<uint8_t> & data, size_t bytes) {
       std::lock_guard<std::mutex> lock(mtx);
-      response_str.append(reinterpret_cast<const char *>(data.data()), data.size());
+      response_str.append(reinterpret_cast<const char *>(data.data()), bytes);
 
       if (!header_parsed) {
         // Search for double CRLF to find end of headers

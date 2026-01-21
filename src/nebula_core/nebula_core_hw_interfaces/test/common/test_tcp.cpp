@@ -92,7 +92,7 @@ TEST(TestTcp, TestBasicLifecycle)
   ASSERT_NO_THROW(
     TcpSocket::Builder(g_localhost_ip, g_server_port)
       .connect()
-      .subscribe([](const auto &) {})
+      .subscribe([](const auto &, size_t) {})
       .unsubscribe());
 }
 
@@ -103,8 +103,12 @@ TEST(TestTcp, TestSendReceive)
   std::atomic_bool received{false};
 
   auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
-  sock.subscribe([&](const std::vector<uint8_t> & data) {
-    if (data == payload) received = true;
+  sock.subscribe([&](const std::vector<uint8_t> & data, size_t bytes) {
+    // Check if the valid part of the buffer matches payload
+    if (
+      bytes == payload.size() && std::equal(data.begin(), data.begin() + bytes, payload.begin())) {
+      received = true;
+    }
   });
 
   sock.send(payload);
@@ -141,7 +145,6 @@ TEST(TestTcp, TestReceiveTimeout)
 
   // Expect empty return on timeout (100ms) with no data sent
   auto received = sock.receive(4, 100ms);
-  ASSERT_TRUE(received.empty());
   ASSERT_TRUE(received.empty());
 }
 
@@ -210,7 +213,7 @@ TEST(TestTcp, TestIsSubscribed)
   TcpServer server(g_server_port);
   auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
   ASSERT_FALSE(sock.is_subscribed());
-  sock.subscribe([](const auto &) {});
+  sock.subscribe([](const auto &, size_t) {});
   ASSERT_TRUE(sock.is_subscribed());
   sock.unsubscribe();
   ASSERT_FALSE(sock.is_subscribed());
@@ -220,11 +223,15 @@ TEST(TestTcp, TestMoveSemantics)
 {
   TcpServer server(g_server_port);
   auto sock1 = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
-  sock1.subscribe([](const auto &) {});
+  sock1.subscribe([](const auto &, size_t) {});
   ASSERT_TRUE(sock1.is_subscribed());
 
   TcpSocket sock2(std::move(sock1));
-  ASSERT_TRUE(sock2.is_subscribed());
+  // Moved-to socket should NOT auto-subscribe due to safety reasons
+  ASSERT_FALSE(sock2.is_subscribed());
+
+  // Verify we can subscribe again
+  sock2.subscribe([](const auto &, size_t) {});
   ASSERT_TRUE(sock2.is_subscribed());
 }
 

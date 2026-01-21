@@ -25,6 +25,7 @@
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -84,6 +85,10 @@ public:
   std::vector<uint8_t> receive(
     size_t n, std::chrono::milliseconds timeout = std::chrono::milliseconds(0))
   {
+    if (is_subscribed()) {
+      throw UsageError("Cannot call receive() while subscribed");
+    }
+
     if (timeout.count() > 0) {
       auto ready = is_socket_ready(sock_fd_.get(), timeout.count());
       if (!ready.has_value()) throw SocketError(ready.error());
@@ -91,7 +96,11 @@ public:
     }
 
     std::vector<uint8_t> buffer(n);
-    ssize_t result = ::recv(sock_fd_.get(), buffer.data(), n, 0);
+    ssize_t result;
+    do {
+      result = ::recv(sock_fd_.get(), buffer.data(), n, 0);
+    } while (result == -1 && errno == EINTR);
+
     if (result < 0) throw SocketError(errno);
     if (result == 0) throw SocketError("Connection closed");
     buffer.resize(result);
@@ -111,18 +120,13 @@ public:
       in_addr target_in_addr = parse_ip(target_ip).value_or_throw();
       config_.target = {target_in_addr, target_port};
 
-      int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-      if (sock_fd == -1) throw SocketError(errno);
-      sock_fd_ = SockFd{sock_fd};
+      init_socket();
     }
 
     explicit Builder(const Endpoint & target)
     {
       config_.target = target;
-
-      int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-      if (sock_fd == -1) throw SocketError(errno);
-      sock_fd_ = SockFd{sock_fd};
+      init_socket();
     }
 
     /**
@@ -152,24 +156,52 @@ public:
     }
 
     /**
+     * @brief Set the internal buffer size for receiving data.
+     *
+     * @param bytes The desired buffer size in bytes.
+     */
+    Builder && set_buffer_size(size_t bytes)
+    {
+      config_.buffer_size = bytes;
+      return std::move(*this);
+    }
+
+    /**
      * @brief Connect the socket to the target IP and port.
      */
     TcpSocket connect() &&
     {
       sockaddr_in addr = config_.target.to_sockaddr();
 
-      int result = ::connect(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
+      int result;
+      do {
+        result = ::connect(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
+      } while (result == -1 && errno == EINTR);
+
       if (result == -1) throw SocketError(errno);
 
       return TcpSocket{std::move(sock_fd_), config_};
     }
 
   private:
+    void init_socket()
+    {
+      int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+      if (sock_fd == -1) throw SocketError(errno);
+      sock_fd_ = SockFd{sock_fd};
+
+      // Enable TCP_NODELAY to reduce latency
+      int one = 1;
+      sock_fd_.setsockopt(IPPROTO_TCP, TCP_NODELAY, one).value_or_throw();
+    }
+
     SockFd sock_fd_;
     SocketConfig config_;
   };
 
-  using callback_t = std::function<void(const std::vector<uint8_t> & data)>;
+  // Callback receives the buffer and the number of bytes received in it
+  using callback_t =
+    std::function<void(const std::vector<uint8_t> & buffer, size_t bytes_received)>;
 
   /**
    * @brief Register a callback for processing received data and start the receiver thread.
@@ -213,8 +245,12 @@ public:
   {
     size_t total_sent = 0;
     while (total_sent < data.size()) {
-      ssize_t result =
-        ::send(sock_fd_.get(), data.data() + total_sent, data.size() - total_sent, 0);
+      ssize_t result;
+      do {
+        result =
+          ::send(sock_fd_.get(), data.data() + total_sent, data.size() - total_sent, MSG_NOSIGNAL);
+      } while (result == -1 && errno == EINTR);
+
       if (result == -1) throw SocketError(errno);
       total_sent += static_cast<size_t>(result);
     }
@@ -223,10 +259,11 @@ public:
   TcpSocket(const TcpSocket &) = delete;
   TcpSocket(TcpSocket && other) : sock_fd_(), config_(other.config_)
   {
-    other.unsubscribe();
-    callback_t cb = std::move(other.callback_);
+    other.unsubscribe();  // Stop the other thread
+    // No need to start our own thread; remain unsubscribed until user calls subscribe()
+    // We just take ownership of the FD and config.
     sock_fd_ = std::move(other.sock_fd_);
-    if (cb) subscribe(std::move(cb));
+    // callback_ is not transferred to avoid implicit thread restart confusion
   };
 
   TcpSocket & operator=(const TcpSocket &) = delete;
@@ -248,7 +285,11 @@ private:
           if (!data_available.has_value()) throw SocketError(data_available.error());
           if (!data_available.value()) continue;
 
-          ssize_t recv_result = ::recv(sock_fd_.get(), buffer.data(), buffer.size(), 0);
+          ssize_t recv_result;
+          do {
+            recv_result = ::recv(sock_fd_.get(), buffer.data(), buffer.size(), 0);
+          } while (recv_result == -1 && errno == EINTR);
+
           if (recv_result < 0) throw SocketError(errno);
           if (recv_result == 0) {
             // Connection closed by peer
@@ -256,8 +297,8 @@ private:
             return;
           }
 
-          std::vector<uint8_t> received_data(buffer.begin(), buffer.begin() + recv_result);
-          callback_(received_data);
+          // Pass direct view of buffer
+          callback_(buffer, static_cast<size_t>(recv_result));
         } catch (const SocketError & e) {
           // In a real application, we might want to log this properly or have an on_error callback.
           // For now, we print to stderr and stop the thread to prevent the application from
