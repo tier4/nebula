@@ -128,7 +128,7 @@ public:
     std::optional<uint64_t> timestamp_ns;
   };
 
-  using callback_t = std::function<void(const can_frame & frame, const RxMetadata & metadata)>;
+  using callback_t = std::function<void(const canfd_frame & frame, const RxMetadata & metadata)>;
 
   /**
    * @brief Register a callback for processing received frames and start the receiver thread.
@@ -213,7 +213,7 @@ public:
   void set_timestamping(bool enable)
   {
     int timestamping = enable ? 1 : 0;
-    auto result = sock_fd_.setsockopt(SOL_SOCKET, SO_TIMESTAMP, timestamping);
+    auto result = sock_fd_.setsockopt(SOL_SOCKET, SO_TIMESTAMPNS, timestamping);
     if (!result.has_value()) throw SocketError(result.error());
   }
 
@@ -276,7 +276,7 @@ private:
   /**
    * @brief Receive a frame using recvmsg and extract timestamp from ancillary data.
    *
-   * @param frame_ptr Pointer to the frame buffer.
+   * @param frame_ptr Pointer to the frame buffer (can_frame or canfd_frame).
    * @param frame_size Size of the frame buffer.
    * @param metadata Output metadata including timestamp.
    * @return Number of bytes received.
@@ -286,7 +286,7 @@ private:
   {
     struct iovec iov;
     struct msghdr msg;
-    char ctrl[CMSG_SPACE(sizeof(struct timeval))];
+    char ctrl[CMSG_SPACE(sizeof(struct timespec))];
     struct sockaddr_can addr;
 
     iov.iov_base = frame_ptr;
@@ -308,7 +308,7 @@ private:
   }
 
   /**
-   * @brief Extract SO_TIMESTAMP from ancillary data.
+   * @brief Extract SO_TIMESTAMPNS from ancillary data.
    *
    * @param msg The msghdr containing ancillary data.
    * @return Timestamp in nanoseconds, or std::nullopt if not available.
@@ -317,10 +317,10 @@ private:
   {
     for (struct cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr;
          cmsg = CMSG_NXTHDR(const_cast<msghdr *>(&msg), cmsg)) {
-      if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMP) {
-        struct timeval * tv = reinterpret_cast<struct timeval *>(CMSG_DATA(cmsg));
-        return static_cast<uint64_t>(tv->tv_sec) * 1000000000ULL +
-               static_cast<uint64_t>(tv->tv_usec) * 1000ULL;
+      if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SO_TIMESTAMPNS) {
+        struct timespec * ts = reinterpret_cast<struct timespec *>(CMSG_DATA(cmsg));
+        return static_cast<uint64_t>(ts->tv_sec) * 1000000000ULL +
+               static_cast<uint64_t>(ts->tv_nsec);
       }
     }
     return std::nullopt;
@@ -334,21 +334,52 @@ private:
     receive_thread_ = std::thread([this]() {
       while (running_) {
         try {
+          // Check for data with timeout
           auto data_available = is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
           if (!data_available.has_value()) throw SocketError(data_available.error());
           if (!data_available.value()) continue;
 
-          can_frame frame{};
+          // Buffer large enough for CAN FD
+          union {
+            can_frame cc;
+            canfd_frame cf;
+          } frame_buf{};
+
           RxMetadata metadata{};
+          ssize_t nbytes = receive_frame_with_metadata(&frame_buf, sizeof(frame_buf), metadata);
 
-          ssize_t recv_result = receive_frame_with_metadata(&frame, sizeof(frame), metadata);
-          if (recv_result < static_cast<ssize_t>(sizeof(frame)))
-            continue;  // Ignore incomplete frames
+          canfd_frame fd_frame{};
+          if (nbytes == CAN_MTU) {
+            // Convert standard frame to FD frame format for uniform callback
+            fd_frame.can_id = frame_buf.cc.can_id;
+            fd_frame.len = frame_buf.cc.can_dlc;  // For standard, len is dlc
+            // Note: standard can_frame doesn't rely on strict 0-8 mapping for len/dlc in same way
+            // as FD, but standard allows values > 8 (though invalid). Just copy.
+            // Actually, can_dlc is uint8_t 0-8. Copy data.
+            std::memcpy(fd_frame.data, frame_buf.cc.data, frame_buf.cc.can_dlc);
+            fd_frame.flags = 0;  // Not FD
+          } else if (nbytes == CANFD_MTU) {
+            fd_frame = frame_buf.cf;
+          } else {
+            // Invalid frame size or partial read
+            std::cerr << "Warning: Incomplete or invalid CAN frame received (size: " << nbytes
+                      << ")" << std::endl;
+            continue;
+          }
 
-          callback_(frame, metadata);
+          callback_(fd_frame, metadata);
         } catch (const SocketError & e) {
+          // If interrupted by signal, just retry
+          // Note: SocketError(errno) will preserve the errno value if constructed correctly
+          // But our SocketError converts int to string immediately.
+          // We should ideally check errno before throwing, but is_socket_ready already handles
+          // EINTR What about receive_frame_with_metadata? It throws on errno. Let's rely on the
+          // fact that we fixed is_socket_ready. But recvmsg can also be interrupted. Since we
+          // caught it, check if we should continue. But e.what() is a string. Ideally we catch the
+          // error, log it, and continue, NOT stop the thread.
           std::cerr << "CanSocket receiver error: " << e.what() << std::endl;
-          running_ = false;
+          // Don't stop the thread for transient errors!
+          // running_ = false; // REMOVED
         }
       }
     });

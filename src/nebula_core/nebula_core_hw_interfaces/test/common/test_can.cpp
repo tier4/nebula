@@ -42,10 +42,10 @@ TEST(TestCan, TestSendReceive)
     sent_frame.data[2] = 0xBE;
     sent_frame.data[3] = 0xEF;
 
-    sock2.subscribe([&](const can_frame & frame, const auto &) {
+    sock2.subscribe([&](const canfd_frame & frame, const auto &) {
       if (
-        frame.can_id == sent_frame.can_id && frame.can_dlc == sent_frame.can_dlc &&
-        std::memcmp(frame.data, sent_frame.data, frame.can_dlc) == 0) {
+        frame.can_id == sent_frame.can_id && frame.len == sent_frame.can_dlc &&
+        std::memcmp(frame.data, sent_frame.data, frame.len) == 0) {
         received = true;
       }
     });
@@ -145,7 +145,7 @@ TEST(TestCan, TestAsyncTimestamp)
     std::atomic_bool received{false};
     uint64_t received_ts{0};
 
-    sock2.subscribe([&](const can_frame &, const CanSocket::RxMetadata & metadata) {
+    sock2.subscribe([&](const canfd_frame &, const CanSocket::RxMetadata & metadata) {
       if (metadata.timestamp_ns.has_value()) {
         received_ts = metadata.timestamp_ns.value();
       }
