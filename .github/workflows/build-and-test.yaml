@@ -104,7 +104,7 @@ jobs:
           build-depends-repos: build_depends.repos
 
       - name: Upload coverage to CodeCov
-        if: ${{ steps.test.outputs.coverage-report-files != '' }}
+        if: ${{ steps.test.outputs.coverage-report-files != '' && matrix.agnocast_enabled == 0 }}
         uses: codecov/codecov-action@v4
         with:
           files: ${{ steps.test.outputs.coverage-report-files }}
