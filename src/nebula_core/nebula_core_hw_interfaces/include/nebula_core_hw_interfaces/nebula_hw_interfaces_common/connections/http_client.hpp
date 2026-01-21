@@ -155,33 +155,41 @@ public:
     socket.send(req_bytes);
 
     std::unique_lock<std::mutex> lock(mtx);
-    if (cv.wait_for(lock, std::chrono::milliseconds(timeout_ms), [&] { return done; })) {
-      auto body_pos = response_str.find("\r\n\r\n");
-      if (body_pos != std::string::npos) {
-        if (is_chunked) {
-          std::string decoded_body;
-          size_t pos = body_pos + 4;
-          while (true) {
-            auto crlf = response_str.find("\r\n", pos);
-            if (crlf == std::string::npos) break;
-            size_t chunk_size = 0;
-            try {
-              chunk_size = std::stoul(response_str.substr(pos, crlf - pos), nullptr, 16);
-            } catch (...) {
-              break;
-            }
-            if (chunk_size == 0) break;
-            decoded_body += response_str.substr(crlf + 2, chunk_size);
-            pos = crlf + 2 + chunk_size + 2;
-          }
-          return decoded_body;
-        } else {
-          return response_str.substr(body_pos + 4);
-        }
-      }
+    cv.wait_for(lock, std::chrono::milliseconds(timeout_ms), [&] { return done; });
+    lock.unlock();
+
+    // Ensure receiver thread is stopped before locals go out of scope
+    socket.unsubscribe();
+
+    if (!done) {
+      return "";
     }
 
-    return "";
+    auto body_pos = response_str.find("\r\n\r\n");
+    if (body_pos == std::string::npos) {
+      return "";
+    }
+
+    if (is_chunked) {
+      std::string decoded_body;
+      size_t pos = body_pos + 4;
+      while (true) {
+        auto crlf = response_str.find("\r\n", pos);
+        if (crlf == std::string::npos) break;
+        size_t chunk_size = 0;
+        try {
+          chunk_size = std::stoul(response_str.substr(pos, crlf - pos), nullptr, 16);
+        } catch (...) {
+          break;
+        }
+        if (chunk_size == 0) break;
+        decoded_body += response_str.substr(crlf + 2, chunk_size);
+        pos = crlf + 2 + chunk_size + 2;
+      }
+      return decoded_body;
+    }
+
+    return response_str.substr(body_pos + 4);
   }
 
 private:
