@@ -7,20 +7,20 @@ on:
 jobs:
   build-and-test-differential:
     runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
+    container: ros:${{ matrix.rosdistro }}
     strategy:
       fail-fast: false
       matrix:
         rosdistro:
           - humble
-        include:
-          - rosdistro: humble
-            container: ros:humble
-            build-depends-repos: build_depends.repos
+        agnocast_enabled:
+          - 0
+          - 1
     env:
       CCACHE_DIR: /root/.ccache
       CC: /usr/lib/ccache/gcc
       CXX: /usr/lib/ccache/g++
+      AGNOCAST_ENABLED: ${{ matrix.agnocast_enabled }}
 
     steps:
       - name: Check out repository
@@ -57,7 +57,7 @@ jobs:
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
-          build-depends-repos: ${{ matrix.build-depends-repos }}
+          build-depends-repos: build_depends.repos
 
       - name: Show ccache stats after build
         run: |
@@ -71,7 +71,7 @@ jobs:
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
-          build-depends-repos: ${{ matrix.build-depends-repos }}
+          build-depends-repos: build_depends.repos
 
       - name: Upload coverage to CodeCov
         if: steps.test.outputs.coverage-report-files != ''
