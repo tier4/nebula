@@ -7,7 +7,7 @@ inheritance: NebulaVelodyneVLS128.node
 override:
   inputs:
   - name: velodyne_packets
-    message_type: pandar_msgs/msg/PandarScan
+    message_type: velodyne_msgs/msg/VelodyneScan
     remap_target: "velodyne_packets"
   processes:
   - name: decoder
