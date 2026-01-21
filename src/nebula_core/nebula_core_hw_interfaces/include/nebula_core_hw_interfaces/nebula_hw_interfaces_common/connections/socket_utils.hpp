@@ -157,7 +157,10 @@ inline util::expected<std::string, SocketError> to_string(const in_addr & addr)
 inline util::expected<bool, int> is_socket_ready(int fd, int timeout_ms, int events = POLLIN)
 {
   pollfd pfd{fd, static_cast<std::int16_t>(events), 0};
-  int status = poll(&pfd, 1, timeout_ms);
+  int status;
+  do {
+    status = poll(&pfd, 1, timeout_ms);
+  } while (status == -1 && errno == EINTR);
   if (status == -1) return errno;
   return (pfd.revents & events) && (status > 0);
 }
