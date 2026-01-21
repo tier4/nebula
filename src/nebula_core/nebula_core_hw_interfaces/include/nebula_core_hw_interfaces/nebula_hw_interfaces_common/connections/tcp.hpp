@@ -72,26 +72,13 @@ public:
   ~TcpSocket() { unsubscribe(); }
 
   /**
-   * @brief Open a connection to the specified endpoint.
-   *
-   * @param target The target endpoint (IP and port).
-   */
-
-  /**
-   * @brief Receive exactly n bytes from the socket.
-   *        This is a blocking call.
-   *
-   * @param n The number of bytes to receive.
-   * @return A vector containing the received bytes. Size may be less than n if connection closed.
-   * @throws SocketError if receive fails.
-   */
-  /**
-   * @brief Receive exactly n bytes from the socket.
+   * @brief Receive up to n bytes from the socket.
    *        This is a blocking call with an optional timeout.
    *
-   * @param n The number of bytes to receive.
+   * @param n The maximum number of bytes to receive.
    * @param timeout The timeout duration. If 0, blocks indefinitely.
    * @return A vector containing the received bytes. Empty if timeout.
+   *         May contain fewer than n bytes if less data is available.
    * @throws SocketError if receive fails or connection is closed.
    */
   std::vector<uint8_t> receive(
@@ -220,13 +207,20 @@ public:
 
   /**
    * @brief Send data to the connected target.
+   *        Handles partial sends by retrying until all data is transmitted.
    *
    * @param data The data to send
+   * @throws SocketError if send fails
    */
   void send(const std::vector<uint8_t> & data)
   {
-    ssize_t result = ::send(sock_fd_.get(), data.data(), data.size(), 0);
-    if (result == -1) throw SocketError(errno);
+    size_t total_sent = 0;
+    while (total_sent < data.size()) {
+      ssize_t result =
+        ::send(sock_fd_.get(), data.data() + total_sent, data.size() - total_sent, 0);
+      if (result == -1) throw SocketError(errno);
+      total_sent += static_cast<size_t>(result);
+    }
   }
 
   TcpSocket(const TcpSocket &) = delete;
