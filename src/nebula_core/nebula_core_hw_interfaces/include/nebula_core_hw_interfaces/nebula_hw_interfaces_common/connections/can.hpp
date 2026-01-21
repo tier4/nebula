@@ -261,10 +261,12 @@ public:
   }
 
   CanSocket(const CanSocket &) = delete;
-  CanSocket(CanSocket && other)
-  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))), config_(other.config_)
+  CanSocket(CanSocket && other) : sock_fd_(), config_(other.config_)
   {
-    if (other.callback_) subscribe(std::move(other.callback_));
+    other.unsubscribe();
+    callback_t cb = std::move(other.callback_);
+    sock_fd_ = std::move(other.sock_fd_);
+    if (cb) subscribe(std::move(cb));
   };
 
   CanSocket & operator=(const CanSocket &) = delete;

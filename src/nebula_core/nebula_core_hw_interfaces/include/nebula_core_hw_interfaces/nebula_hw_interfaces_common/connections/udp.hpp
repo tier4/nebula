@@ -321,12 +321,12 @@ public:
   }
 
   UdpSocket(const UdpSocket &) = delete;
-  UdpSocket(UdpSocket && other)
-  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))),
-    poll_fd_(other.poll_fd_),
-    config_(other.config_)
+  UdpSocket(UdpSocket && other) : sock_fd_(), poll_fd_(other.poll_fd_), config_(other.config_)
   {
-    if (other.callback_) subscribe(std::move(other.callback_));
+    other.unsubscribe();
+    callback_t cb = std::move(other.callback_);
+    sock_fd_ = std::move(other.sock_fd_);
+    if (cb) subscribe(std::move(cb));
   };
 
   UdpSocket & operator=(const UdpSocket &) = delete;
