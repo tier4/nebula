@@ -7,16 +7,13 @@ on:
 jobs:
   build-and-test-differential:
     runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
+    container: ros:${{ matrix.rosdistro }}
     strategy:
       fail-fast: false
       matrix:
         rosdistro:
           - humble
-        include:
-          - rosdistro: humble
-            container: ros:humble
-            build-depends-repos: build_depends.repos
+          - jazzy
     env:
       CCACHE_DIR: /root/.ccache
       CC: /usr/lib/ccache/gcc
@@ -57,7 +54,7 @@ jobs:
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
-          build-depends-repos: ${{ matrix.build-depends-repos }}
+          build-depends-repos: build_depends-${{ matrix.rosdistro }}.repos
 
       - name: Show ccache stats after build
         run: |
@@ -71,7 +68,7 @@ jobs:
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
-          build-depends-repos: ${{ matrix.build-depends-repos }}
+          build-depends-repos: build_depends-${{ matrix.rosdistro }}.repos
 
       - name: Upload coverage to CodeCov
         if: steps.test.outputs.coverage-report-files != ''
@@ -86,7 +83,7 @@ jobs:
   fb-infer-differential:
     if: contains(github.event.pull_request.labels.*.name, 'run:fb-infer')
     runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
+    container: ros:${{ matrix.rosdistro }}
     strategy:
       fail-fast: false
       matrix:
@@ -95,10 +92,6 @@ jobs:
         ref:
           - ${{ github.event.pull_request.head.sha }}
           - ${{ github.event.pull_request.base.sha }}
-        include:
-          - rosdistro: humble
-            container: ros:humble
-            build-depends-repos: build_depends.repos
     env:
       # Compilation with Clang is required for FB Infer
       CC: /usr/lib/ccache/clang-15
@@ -169,7 +162,7 @@ jobs:
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
-          build-depends-repos: ${{ matrix.build-depends-repos }}
+          build-depends-repos: build_depends-${{ matrix.rosdistro }}.repos
           cmake-build-type: Debug  # Faster compilation than Release
 
       - name: Show ccache stats after build
