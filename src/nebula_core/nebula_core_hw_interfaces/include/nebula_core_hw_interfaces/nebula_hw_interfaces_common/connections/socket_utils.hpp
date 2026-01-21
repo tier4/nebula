@@ -76,7 +76,11 @@ public:
   SockFd & operator=(const SockFd &) = delete;
   SockFd & operator=(SockFd && other) noexcept
   {
-    std::swap(sock_fd_, other.sock_fd_);
+    if (this != &other) {
+      if (sock_fd_ != uninitialized) ::close(sock_fd_);
+      sock_fd_ = other.sock_fd_;
+      other.sock_fd_ = uninitialized;
+    }
     return *this;
   };
 
@@ -115,6 +119,15 @@ struct Endpoint
   in_addr ip;
   /// In host byte order.
   uint16_t port;
+
+  [[nodiscard]] sockaddr_in to_sockaddr() const
+  {
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_addr = ip;
+    addr.sin_port = htons(port);
+    return addr;
+  }
 };
 
 /**
@@ -126,8 +139,8 @@ struct Endpoint
 inline util::expected<in_addr, UsageError> parse_ip(const std::string & ip)
 {
   in_addr parsed_addr{};
-  bool valid = inet_aton(ip.c_str(), &parsed_addr);
-  if (!valid) return UsageError("Invalid IP address given");
+  int result = inet_pton(AF_INET, ip.c_str(), &parsed_addr);
+  if (result <= 0) return UsageError("Invalid IP address given");
   return parsed_addr;
 }
 
@@ -162,7 +175,7 @@ inline util::expected<bool, int> is_socket_ready(int fd, int timeout_ms, int eve
     status = poll(&pfd, 1, timeout_ms);
   } while (status == -1 && errno == EINTR);
   if (status == -1) return errno;
-  return (pfd.revents & events) && (status > 0);
+  return (status > 0) && (pfd.revents & (events | POLLERR | POLLHUP | POLLNVAL));
 }
 
 }  // namespace nebula::drivers::connections

@@ -156,10 +156,7 @@ public:
      */
     TcpSocket connect() &&
     {
-      sockaddr_in addr{};
-      addr.sin_family = AF_INET;
-      addr.sin_port = htons(config_.target.port);
-      addr.sin_addr = config_.target.ip;
+      sockaddr_in addr = config_.target.to_sockaddr();
 
       int result = ::connect(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
       if (result == -1) throw SocketError(errno);

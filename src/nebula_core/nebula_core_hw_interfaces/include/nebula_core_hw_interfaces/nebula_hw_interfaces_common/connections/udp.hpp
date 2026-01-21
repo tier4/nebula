@@ -235,10 +235,10 @@ public:
      */
     UdpSocket bind() &&
     {
-      sockaddr_in addr{};
-      addr.sin_family = AF_INET;
-      addr.sin_port = htons(config_.host.port);
-      addr.sin_addr = config_.multicast_ip ? *config_.multicast_ip : config_.host.ip;
+      sockaddr_in addr = config_.host.to_sockaddr();
+      if (config_.multicast_ip) {
+        addr.sin_addr = *config_.multicast_ip;
+      }
 
       int result = ::bind(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
       if (result == -1) throw SocketError(errno);
@@ -309,10 +309,7 @@ public:
   {
     if (!config_.send_to) throw UsageError("No destination set");
 
-    sockaddr_in dest_addr{};
-    dest_addr.sin_family = AF_INET;
-    dest_addr.sin_port = htons(config_.send_to->port);
-    dest_addr.sin_addr = config_.send_to->ip;
+    sockaddr_in dest_addr = config_.send_to->to_sockaddr();
 
     ssize_t result = sendto(
       sock_fd_.get(), data.data(), data.size(), 0, (sockaddr *)&dest_addr, sizeof(dest_addr));
