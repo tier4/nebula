@@ -410,7 +410,7 @@ inline std::vector<can_filter> parse_can_filters(const std::string & filters_str
       }
       filters.push_back(filter);
     } catch (const std::exception &) {
-      // Skip invalid filter entries silently
+      std::cerr << "Warning: Invalid CAN filter entry '" << part << "', skipping" << std::endl;
       continue;
     }
   }
