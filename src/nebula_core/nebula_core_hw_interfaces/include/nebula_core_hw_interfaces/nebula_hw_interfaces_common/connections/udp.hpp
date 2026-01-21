@@ -311,8 +311,11 @@ public:
 
     sockaddr_in dest_addr = config_.send_to->to_sockaddr();
 
-    ssize_t result = sendto(
-      sock_fd_.get(), data.data(), data.size(), 0, (sockaddr *)&dest_addr, sizeof(dest_addr));
+    ssize_t result;
+    do {
+      result = sendto(
+        sock_fd_.get(), data.data(), data.size(), 0, (sockaddr *)&dest_addr, sizeof(dest_addr));
+    } while (result == -1 && errno == EINTR);
 
     if (result == -1) throw SocketError(errno);
   }
@@ -336,31 +339,43 @@ private:
 
     running_ = true;
     receive_thread_ = std::thread([this]() {
+      // Allocate buffer once outside the loop
       std::vector<uint8_t> buffer;
+      buffer.resize(config_.buffer_size);
+      MsgBuffers msg_header{buffer};
+
       DropMonitor drop_monitor{};
       PerfCounters current_packet_perf_counters{};
 
       while (running_) {
         try {
           auto data_available = is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
-
-          auto t_start = std::chrono::steady_clock::now();
           if (!data_available.has_value()) throw SocketError(data_available.error());
+
+          // Only measure "processing" time after we confirm data is there, or if we want to count
+          // wakeups
+          auto t_start = std::chrono::steady_clock::now();
+
           if (!data_available.value()) {
             current_packet_perf_counters.n_woken_without_data++;
-            current_packet_perf_counters.receive_duration_ns +=
-              (std::chrono::steady_clock::now() - t_start).count();
+            // We do NOT add to receive_duration_ns here because no packet was processed.
+            // Only purely idle wakeups.
             continue;
           }
 
-          buffer.resize(config_.buffer_size);
-          MsgBuffers msg_header{buffer};
+          // Reset iovec length to full capacity for next read
+          // note: buffer.size() should be equal to capacity here if we resized back up
+          msg_header.iov.iov_len = buffer.size();
+          msg_header.msg.msg_flags = 0;
 
-          // As per `man recvmsg`, zero-length datagrams are permitted and valid. Since the socket
-          // is blocking, a recv_result of 0 means we received a valid 0-length datagram.
-          ssize_t recv_result = recvmsg(sock_fd_.get(), &msg_header.msg, MSG_TRUNC);
+          // Loop on EINTR
+          ssize_t recv_result;
+          do {
+            recv_result = recvmsg(sock_fd_.get(), &msg_header.msg, MSG_TRUNC);
+          } while (recv_result == -1 && errno == EINTR);
+
           if (recv_result < 0) throw SocketError(errno);
-          size_t untruncated_packet_length = recv_result;
+          size_t untruncated_packet_length = static_cast<size_t>(recv_result);
 
           if (!is_accepted_sender(msg_header.sender_addr)) {
             current_packet_perf_counters.n_woken_by_wrong_sender++;
@@ -373,7 +388,9 @@ private:
           get_receive_metadata(msg_header.msg, metadata, drop_monitor);
           metadata.truncated = untruncated_packet_length > config_.buffer_size;
 
-          buffer.resize(std::min(config_.buffer_size, untruncated_packet_length));
+          // Resize down to match received data so callback sees correct size
+          size_t valids = std::min(config_.buffer_size, untruncated_packet_length);
+          buffer.resize(valids);
 
           current_packet_perf_counters.receive_duration_ns +=
             (std::chrono::steady_clock::now() - t_start).count();
@@ -382,6 +399,12 @@ private:
           current_packet_perf_counters = {};
 
           callback_(buffer, metadata);
+
+          // Restore buffer size for next receive
+          buffer.resize(config_.buffer_size);
+          // Re-point iov_base just in case resize caused reallocation (unlikely if capacity
+          // sufficient)
+          msg_header.iov.iov_base = buffer.data();
         } catch (const SocketError & e) {
           std::cerr << "UdpSocket receiver error: " << e.what() << std::endl;
           running_ = false;
