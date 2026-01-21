@@ -20,8 +20,7 @@ target_link_libraries(
   PUBLIC diagnostic_updater::diagnostic_updater
          nebula_velodyne_decoders::nebula_velodyne_decoders
          nebula_velodyne_hw_interfaces::nebula_velodyne_hw_interfaces
-         nebula_core_ros::nebula_core_ros
-         pcl_common)
+         nebula_core_ros::nebula_core_ros)
 
 ament_target_dependencies(velodyne_ros_wrapper PUBLIC diagnostic_msgs
                           velodyne_msgs nebula_msgs rclcpp_components)
@@ -40,7 +39,6 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(rosbag2_cpp REQUIRED)
-  find_package(PCL REQUIRED COMPONENTS common io)
 
   ament_lint_auto_find_test_dependencies()
 
@@ -57,7 +55,7 @@ if(BUILD_TESTING)
                              PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
   target_link_libraries(
     velodyne_ros_decoder_test_vlp16
-    PRIVATE nebula_core_common::nebula_core_common nebula_core_ros::nebula_core_ros pcl_common pcl_io
+    PRIVATE nebula_core_common::nebula_core_common nebula_core_ros::nebula_core_ros
             rosbag2_cpp::rosbag2_cpp diagnostic_updater::diagnostic_updater
             nebula_velodyne_decoders::nebula_velodyne_decoders)
 
@@ -80,7 +78,7 @@ if(BUILD_TESTING)
   target_include_directories(velodyne_ros_decoder_test_vls128 PRIVATE include)
   target_link_libraries(
     velodyne_ros_decoder_test_vls128
-    PRIVATE nebula_core_common::nebula_core_common nebula_core_ros::nebula_core_ros pcl_common pcl_io
+    PRIVATE nebula_core_common::nebula_core_common nebula_core_ros::nebula_core_ros
             rosbag2_cpp::rosbag2_cpp diagnostic_updater::diagnostic_updater
             nebula_velodyne_decoders::nebula_velodyne_decoders)
 
@@ -102,7 +100,7 @@ if(BUILD_TESTING)
   target_include_directories(velodyne_ros_decoder_test_vlp32 PRIVATE include)
   target_link_libraries(
     velodyne_ros_decoder_test_vlp32
-    PRIVATE nebula_core_common::nebula_core_common nebula_core_ros::nebula_core_ros pcl_common pcl_io
+    PRIVATE nebula_core_common::nebula_core_common nebula_core_ros::nebula_core_ros
             rosbag2_cpp::rosbag2_cpp diagnostic_updater::diagnostic_updater
             nebula_velodyne_decoders::nebula_velodyne_decoders)
 
@@ -120,7 +118,6 @@ if(BUILD_TESTING)
 endif()
 
 if(BUILD_EXAMPLES)
-  find_package(PCL REQUIRED COMPONENTS common io)
   find_package(rosbag2_cpp REQUIRED)
 
   add_library(velodyne_ros_offline_extract_bag_pcd SHARED
@@ -130,8 +127,6 @@ if(BUILD_EXAMPLES)
   target_link_libraries(
     velodyne_ros_offline_extract_bag_pcd
     PRIVATE nebula_core_common::nebula_core_common
-            pcl_common
-            pcl_io
             rosbag2_cpp::rosbag2_cpp
             nebula_velodyne_decoders::nebula_velodyne_decoders
             nebula_core_ros::nebula_core_ros)
@@ -153,7 +148,6 @@ ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_velodyne_ros_wrapper)
 
 ament_export_dependencies(
-  PCL
   diagnostic_msgs
   diagnostic_updater
   nebula_core_common

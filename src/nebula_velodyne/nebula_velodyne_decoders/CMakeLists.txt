@@ -22,11 +22,10 @@ ament_target_dependencies(
   nebula_core_common
   nebula_velodyne_common
   nebula_core_decoders
-  pcl_conversions
   rclcpp
   velodyne_msgs)
 
-target_link_libraries(nebula_velodyne_decoders PUBLIC pcl_common)
+target_link_libraries(nebula_velodyne_decoders PUBLIC)
 
 install(TARGETS nebula_velodyne_decoders EXPORT export_nebula_velodyne_decoders)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
@@ -37,8 +36,6 @@ ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_velodyne_decoders)
 
 ament_export_dependencies(
-  PCL
-  pcl_conversions
   angles
   nebula_core_common
   nebula_velodyne_common
