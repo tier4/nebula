@@ -109,7 +109,7 @@ parameters:
     default: 0.0
   - name: calibration_file
     type: string
-    default: ""
+    default: $(find-pkg-share nebula_velodyne_decoders)/calibration/VLS128.yaml
   - name: calibration_download_enabled
     type: bool
     default: true
