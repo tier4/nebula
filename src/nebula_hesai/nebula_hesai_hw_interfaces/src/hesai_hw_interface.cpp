@@ -27,6 +27,8 @@
 #include <ctime>
 #endif
 
+#include <boost/format.hpp>
+
 #include <utility>
 
 namespace nebula::drivers
@@ -776,21 +778,51 @@ HesaiStatus HesaiHwInterface::set_spin_speed_async_http(uint16_t rpm)
 }
 
 HesaiStatus HesaiHwInterface::set_ptp_config_sync_http(
-  int /*profile*/, int /*domain*/, int /*network*/, int /*logAnnounceInterval*/,
-  int /*logSyncInterval*/, int /*logMinDelayReqInterval*/)
+  int profile, int domain, int network, int logAnnounceInterval, int logSyncInterval,
+  int logMinDelayReqInterval)
 {
-  // TODO(drwnz): HTTP-based PTP configuration is not currently implemented.
-  // The HTTP endpoint for this functionality is not documented in the sensor API.
-  // Use the TCP-based set_ptp_config() method instead.
-  return HesaiStatus::NOT_IMPLEMENTED;
+  if (!http_client_) {
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
+  }
+
+  auto response =
+    http_client_->get((boost::format(
+                         "/pandar.cgi?action=set&object=lidar&key=ptp_configuration&value={"
+                         "\"Profile\": %d,"
+                         "\"Domain\": %d,"
+                         "\"Network\": %d,"
+                         "\"LogAnnounceInterval\": %d,"
+                         "\"LogSyncInterval\": %d,"
+                         "\"LogMinDelayReqInterval\": %d,"
+                         "\"tsn_switch\": %d"
+                         "}") %
+                       profile % domain % network % logAnnounceInterval % logSyncInterval %
+                       logMinDelayReqInterval % 0)
+                        .str());
+
+  if (response.empty()) {
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
+  }
+  return unwrap_http_response(response).first;
 }
 
-HesaiStatus HesaiHwInterface::set_sync_angle_sync_http(int /*enable*/, int /*angle*/)
+HesaiStatus HesaiHwInterface::set_sync_angle_sync_http(int enable, int angle)
 {
-  // TODO(drwnz): HTTP-based sync angle configuration is not currently implemented.
-  // The HTTP endpoint for this functionality is not documented in the sensor API.
-  // Use the TCP-based set_sync_angle() method instead.
-  return HesaiStatus::NOT_IMPLEMENTED;
+  if (!http_client_) {
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
+  }
+  auto tmp_str = (boost::format(
+                    "/pandar.cgi?action=set&object=lidar_sync&key=sync_angle&value={"
+                    "\"sync\": %d,"
+                    "\"syncAngle\": %d"
+                    "}") %
+                  enable % angle)
+                   .str();
+  auto response = http_client_->get(tmp_str);
+  if (response.empty()) {
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
+  }
+  return unwrap_http_response(response).first;
 }
 
 HesaiStatus HesaiHwInterface::get_lidar_monitor_async_http(
