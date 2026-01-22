@@ -2,7 +2,7 @@ autoware_system_design_format: v0.1.0
 
 name: NebulaArs548_decode.node
 
-inheritance: NebulaArs548.node
+base: NebulaArs548.node
 
 override:
   inputs:
