@@ -32,7 +32,7 @@ Here you will find information about the background of the project, how to insta
 - [Launching with ROS 2](https://tier4.github.io/nebula/usage)
 - [Parameters](https://tier4.github.io/nebula/parameters)
 - [Point cloud types](https://tier4.github.io/nebula/point_types)
-- [Contributing](https://tier4.github.io/nebula/contribute)
+- [Contributing](https://tier4.github.io/nebula/contributing)
 - [Tutorials](https://tier4.github.io/nebula/tutorials)
 
 To build and serve the documentation locally, see the build steps further below.
@@ -61,12 +61,23 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_E
 To build with support for [Agnocast](https://github.com/tier4/agnocast), TIER IV's zero-copy
 middleware, refer to the Agnocast section below.
 
-_(optional)_ To build and serve the documentation, run the following commands in your workspace:
+_(optional)_ To build and serve the documentation locally (including API reference), run:
 
 ```shell
-cd src
+# Install system dependencies
+sudo apt install doxygen
+
+# Install Python dependencies
 pip3 install -r docs/requirements.txt
-mkdocs serve
+
+# Generate API reference from C++ sources
+mkdocs build --config-file scripts/mkdoxy_gen.yml
+
+# Preprocess docs (expands macros, merges API reference)
+python3 scripts/preprocess_zensical_docs.py
+
+# Serve locally at http://localhost:8000
+zensical serve --config-file .zensical.toml
 ```
 
 To launch Nebula as a ROS 2 node with default parameters for your sensor model:

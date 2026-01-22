@@ -5,7 +5,7 @@
     <arg name="frame_id"  default="velodyne"/>
     <arg name="scan_phase" default="0.0" />
 
-    <arg name="calibration_file" default="$(find-pkg-share nebula_decoders)/calibration/velodyne/$(var sensor_model).yaml"/>
+    <arg name="calibration_file" default="$(find-pkg-share nebula_velodyne_decoders)/calibration/$(var sensor_model).yaml"/>
 
     <arg name="bag_path" default="path to bag dir"/>
     <arg name="storage_id" default="sqlite3"/>
