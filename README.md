@@ -32,7 +32,7 @@ Here you will find information about the background of the project, how to insta
 - [Launching with ROS 2](https://tier4.github.io/nebula/usage)
 - [Parameters](https://tier4.github.io/nebula/parameters)
 - [Point cloud types](https://tier4.github.io/nebula/point_types)
-- [Contributing](https://tier4.github.io/nebula/contributing)
+- [Contributing](https://tier4.github.io/nebula/contribute)
 - [Tutorials](https://tier4.github.io/nebula/tutorials)
 
 To build and serve the documentation locally, see the build steps further below.
