@@ -66,6 +66,12 @@ TEST(TestUdp, TestSpecialAddressesBind)
   ASSERT_NO_THROW(UdpSocket::Builder(g_any_ip, g_host_port).bind());
 }
 
+TEST(TestUdp, TestBuilderInvalidIp)
+{
+  ASSERT_THROW(UdpSocket::Builder("invalid_ip", g_host_port), UsageError);
+  ASSERT_THROW(UdpSocket::Builder("999.999.999.999", g_host_port), UsageError);
+}
+
 TEST(TestUdp, TestJoiningInvalidMulticastGroup)
 {
   ASSERT_THROW(

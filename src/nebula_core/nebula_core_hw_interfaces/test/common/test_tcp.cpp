@@ -208,6 +208,12 @@ TEST(TestTcp, TestConnectionFailure)
   ASSERT_THROW(TcpSocket::Builder(g_localhost_ip, 9999).connect(), SocketError);
 }
 
+TEST(TestTcp, TestBuilderInvalidIp)
+{
+  ASSERT_THROW(TcpSocket::Builder("invalid_ip", g_server_port), UsageError);
+  ASSERT_THROW(TcpSocket::Builder("256.0.0.1", g_server_port), UsageError);
+}
+
 TEST(TestTcp, TestIsSubscribed)
 {
   TcpServer server(g_server_port);
