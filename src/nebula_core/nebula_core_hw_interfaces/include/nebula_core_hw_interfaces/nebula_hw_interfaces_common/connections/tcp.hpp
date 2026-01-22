@@ -293,6 +293,7 @@ private:
           if (recv_result < 0) throw SocketError(errno);
           if (recv_result == 0) {
             // Connection closed by peer
+            callback_(buffer, 0);
             running_ = false;
             return;
           }

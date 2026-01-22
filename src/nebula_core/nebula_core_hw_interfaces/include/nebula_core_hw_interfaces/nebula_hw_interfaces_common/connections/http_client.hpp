@@ -1,4 +1,16 @@
 // Copyright 2025 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #ifndef NEBULA_CORE_HW_INTERFACES__NEBULA_HW_INTERFACES_COMMON__CONNECTIONS__HTTP_CLIENT_HPP_
 #define NEBULA_CORE_HW_INTERFACES__NEBULA_HW_INTERFACES_COMMON__CONNECTIONS__HTTP_CLIENT_HPP_
@@ -100,19 +112,23 @@ public:
 
     socket.subscribe([&](const std::vector<uint8_t> & data, size_t bytes) {
       std::lock_guard<std::mutex> lock(mtx);
+      if (bytes == 0) {
+        // Connection closed by peer
+        done = true;
+        cv.notify_one();
+        return;
+      }
+
       response_str.append(reinterpret_cast<const char *>(data.data()), bytes);
 
       if (!header_parsed) {
         // Search for double CRLF to find end of headers
-        // Optimization: only search the newly added part plus overlap, but for headers,
-        // searching from beginning is acceptable as headers are small.
         auto header_end = response_str.find("\r\n\r\n");
         if (header_end != std::string::npos) {
           header_parsed = true;
 
           // Parse headers (Case-insensitive)
           std::string headers = response_str.substr(0, header_end);
-          // Simple lowercasing for easier search
           std::transform(headers.begin(), headers.end(), headers.begin(), [](unsigned char c) {
             return std::tolower(c);
           });
@@ -120,16 +136,17 @@ public:
           if (headers.find("transfer-encoding: chunked") != std::string::npos) {
             is_chunked = true;
           } else {
-            auto cl_pos = headers.find("content-length: ");
-            if (cl_pos != std::string::npos) {
-              auto cl_end = headers.find("\r\n", cl_pos);
-              try {
-                // headers is a copy, so indexes match relative to start
-                // But we need to use the value from the original string?
-                // Actually, digits are same in lower/upper, so it's fine.
-                content_length = std::stoul(headers.substr(cl_pos + 16, cl_end - (cl_pos + 16)));
-              } catch (...) {
-                content_length = 0;
+            auto cl_key = headers.find("content-length:");
+            if (cl_key != std::string::npos) {
+              // Robust parsing: find first digit
+              auto val_start = headers.find_first_of("0123456789", cl_key);
+              auto val_end = headers.find("\r\n", cl_key);
+              if (val_start != std::string::npos && val_start < val_end) {
+                try {
+                  content_length = std::stoul(headers.substr(val_start, val_end - val_start));
+                } catch (...) {
+                  content_length = 0;
+                }
               }
             }
           }
@@ -150,11 +167,20 @@ public:
               chunk_size =
                 std::stoul(response_str.substr(parse_pos, crlf - parse_pos), nullptr, 16);
             } catch (...) {
-              // Invalid chunk size format? Should probably error out or break.
               break;
             }
 
             size_t next_chunk_start = crlf + 2 + chunk_size + 2;  // size_line + CRLF + data + CRLF
+
+            // Check for overflow or massive chunk size
+            if (
+              chunk_size > response_str.max_size() || next_chunk_start < parse_pos ||
+              next_chunk_start < chunk_size) {
+              done = true;  // Error state, stop waiting
+              cv.notify_one();
+              break;
+            }
+
             if (response_str.length() >= next_chunk_start) {
               if (chunk_size == 0) {
                 // 0-sized chunk indicates end of stream
@@ -170,26 +196,13 @@ public:
           }
         } else {
           // Content-Length mode
-          // If content_length is 0, we might be waiting for connection close,
-          // or there really is no content.
-          // If we have a content_length > 0, check if we have enough data.
-          // Note: parse_pos is set to body start.
           if (content_length > 0) {
             if (response_str.length() >= parse_pos + content_length) {
               done = true;
               cv.notify_one();
             }
-          } else {
-            // content_length == 0. If headers didn't specify, we shouldn't assume we are done
-            // if we expect connection close behavior.
-            // BUT, if the response was truly 0 length (e.g. 204 No Content), we hang?
-            // "Connection: close" handling without explicit length is tricky with purely this
-            // logic. For this implementation, we won't set done=true here to allow receiving until
-            // close/timeout if strict behavior is desired. However, common safe default for simple
-            // clients: if CL=0 and not chunked, maybe assume done? Reviewer said: "The client
-            // should not set done = true... It must wait until the socket detects a remote
-            // closure". So we do NOTHING here. we wait for timeout or close.
           }
+          // If content_length == 0, we just wait for connection close (handled by bytes==0 check)
         }
       }
     });
@@ -232,6 +245,7 @@ public:
           break;
         }
         if (chunk_size == 0) break;
+        if (response_str.length() < crlf + 2 + chunk_size) break;  // Safety check
         decoded_body += response_str.substr(crlf + 2, chunk_size);
         pos = crlf + 2 + chunk_size + 2;
       }
