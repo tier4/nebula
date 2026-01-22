@@ -129,7 +129,6 @@ TEST(TestSocketUtils, TestUsageError)
   EXPECT_STREQ(err.what(), "Invalid usage");
 }
 
-
 TEST(TestSocketUtils, TestEndpointToSockaddr)
 {
   Endpoint ep;
