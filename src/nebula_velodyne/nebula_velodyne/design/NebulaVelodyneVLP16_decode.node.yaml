@@ -2,7 +2,7 @@ autoware_system_design_format: v0.1.0
 
 name: NebulaVelodyneVLP16_decode.node
 
-inheritance: NebulaVelodyneVLP16.node
+base: NebulaVelodyneVLP16.node
 
 override:
   inputs:

@@ -2,7 +2,7 @@ autoware_system_design_format: v0.1.0
 
 name: NebulaHesaiPandar128E4X_decode.node
 
-inheritance: NebulaHesaiPandar128E4X.node
+base: NebulaHesaiPandar128E4X.node
 
 override:
   inputs:
