@@ -57,7 +57,7 @@ if(BUILD_TESTING)
                              PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
   target_link_libraries(
     velodyne_ros_decoder_test_vlp16
-    PRIVATE nebula_core_common::nebula_core_common pcl_common pcl_io
+    PRIVATE nebula_core_common::nebula_core_common nebula_core_ros::nebula_core_ros pcl_common pcl_io
             rosbag2_cpp::rosbag2_cpp diagnostic_updater::diagnostic_updater
             nebula_velodyne_decoders::nebula_velodyne_decoders)
 
@@ -80,7 +80,7 @@ if(BUILD_TESTING)
   target_include_directories(velodyne_ros_decoder_test_vls128 PRIVATE include)
   target_link_libraries(
     velodyne_ros_decoder_test_vls128
-    PRIVATE nebula_core_common::nebula_core_common pcl_common pcl_io
+    PRIVATE nebula_core_common::nebula_core_common nebula_core_ros::nebula_core_ros pcl_common pcl_io
             rosbag2_cpp::rosbag2_cpp diagnostic_updater::diagnostic_updater
             nebula_velodyne_decoders::nebula_velodyne_decoders)
 
@@ -102,7 +102,7 @@ if(BUILD_TESTING)
   target_include_directories(velodyne_ros_decoder_test_vlp32 PRIVATE include)
   target_link_libraries(
     velodyne_ros_decoder_test_vlp32
-    PRIVATE nebula_core_common::nebula_core_common pcl_common pcl_io
+    PRIVATE nebula_core_common::nebula_core_common nebula_core_ros::nebula_core_ros pcl_common pcl_io
             rosbag2_cpp::rosbag2_cpp diagnostic_updater::diagnostic_updater
             nebula_velodyne_decoders::nebula_velodyne_decoders)
 

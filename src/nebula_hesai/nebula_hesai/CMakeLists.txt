@@ -112,6 +112,7 @@ if(BUILD_TESTING)
     hesai_ros_scan_cutting_test_main
     hesai_ros_decoder_test
     nebula_core_common::nebula_core_common
+    nebula_core_ros::nebula_core_ros
     nebula_hesai_common::nebula_hesai_common
     nebula_hesai_decoders::nebula_hesai_decoders
     diagnostic_updater::diagnostic_updater

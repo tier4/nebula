@@ -3,6 +3,7 @@
 #include "hesai_ros_decoder_test.hpp"
 
 #include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_ros/compatibility/serialized_bag_message.hpp>
 #include <nebula_core_ros/rclcpp_logger.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
 #include <rclcpp/serialization.hpp>
@@ -184,15 +185,15 @@ void HesaiRosDecoderTest::read_bag(
       serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
 
       RCLCPP_DEBUG_STREAM(
-        get_logger(),
-        "Found data in topic " << bag_message->topic_name << ": " << bag_message->time_stamp);
+        get_logger(), "Found data in topic " << bag_message->topic_name << ": "
+                                             << get_timestamp_ns(*bag_message));
 
       auto extracted_msg_ptr = std::make_shared<pandar_msgs::msg::PandarScan>(extracted_msg);
 
       drivers::HesaiScanDecoder::pointcloud_callback_t pointcloud_cb =
         [&](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
           auto timestamp_ns = static_cast<uint64_t>(timestamp_s * 1e9);
-          scan_callback(bag_message->time_stamp, timestamp_ns, pointcloud);
+          scan_callback(get_timestamp_ns(*bag_message), timestamp_ns, pointcloud);
         };
 
       driver_ptr_->set_pointcloud_callback(pointcloud_cb);
