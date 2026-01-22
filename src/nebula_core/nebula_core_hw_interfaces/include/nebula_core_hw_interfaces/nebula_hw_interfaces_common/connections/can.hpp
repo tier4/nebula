@@ -14,6 +14,9 @@
 
 #pragma once
 
+// cspell: ignore TIMESTAMPNS
+
+
 #ifndef _GNU_SOURCE
 // See `man strerror_r`
 #define _GNU_SOURCE
