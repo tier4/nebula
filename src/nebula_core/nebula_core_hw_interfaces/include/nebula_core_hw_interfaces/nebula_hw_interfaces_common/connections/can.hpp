@@ -300,7 +300,11 @@ private:
     msg.msg_controllen = sizeof(ctrl);
     msg.msg_flags = 0;
 
-    ssize_t recv_result = recvmsg(sock_fd_.get(), &msg, 0);
+    ssize_t recv_result;
+    do {
+      recv_result = recvmsg(sock_fd_.get(), &msg, 0);
+    } while (recv_result == -1 && errno == EINTR);
+
     if (recv_result < 0) throw SocketError(errno);
 
     metadata.timestamp_ns = extract_timestamp(msg);
@@ -369,17 +373,7 @@ private:
 
           callback_(fd_frame, metadata);
         } catch (const SocketError & e) {
-          // If interrupted by signal, just retry
-          // Note: SocketError(errno) will preserve the errno value if constructed correctly
-          // But our SocketError converts int to string immediately.
-          // We should ideally check errno before throwing, but is_socket_ready already handles
-          // EINTR What about receive_frame_with_metadata? It throws on errno. Let's rely on the
-          // fact that we fixed is_socket_ready. But recvmsg can also be interrupted. Since we
-          // caught it, check if we should continue. But e.what() is a string. Ideally we catch the
-          // error, log it, and continue, NOT stop the thread.
           std::cerr << "CanSocket receiver error: " << e.what() << std::endl;
-          // Don't stop the thread for transient errors!
-          // running_ = false; // REMOVED
         }
       }
     });
