@@ -141,6 +141,46 @@ TEST(TestHttpClient, TestConnectionFailure)
   EXPECT_THROW(client.get("/test"), SocketError);
 }
 
+TEST(TestHttpClient, TestInvalidHost)
+{
+  ASSERT_THROW(HttpClient("invalid_ip", 80), UsageError);
+  ASSERT_THROW(HttpClient("256.0.0.1", 80), UsageError);
+}
+
+TEST(TestHttpClient, TestRobustHeaderParsing)
+{
+  uint16_t port = 8082;
+  std::thread server_thread([port]() {
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    int opt = 1;
+    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(port);
+    if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
+      listen(fd, 1);
+      int client = accept(fd, nullptr, nullptr);
+      if (client >= 0) {
+        char buf[1024];
+        if (read(client, buf, 1024) > 0) {
+          // Send weird header: Content-Length:5 (no space)
+          std::string resp = "HTTP/1.1 200 OK\r\nContent-Length:5\r\n\r\nHello";
+          send(client, resp.c_str(), resp.length(), 0);
+        }
+        close(client);
+      }
+      close(fd);
+    }
+  });
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  HttpClient client(g_localhost_ip, port);
+  auto resp = client.get("/robust");
+  ASSERT_EQ(resp, "Hello");
+  if (server_thread.joinable()) server_thread.join();
+}
+
 TEST(TestHttpClient, TestEmptyResponse)
 {
   HttpServer server(g_server_port);

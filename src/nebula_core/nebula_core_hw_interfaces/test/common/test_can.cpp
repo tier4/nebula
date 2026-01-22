@@ -16,6 +16,11 @@ using std::chrono_literals::operator""ms;
 
 static const char * const g_can_interface = "vcan0";
 
+TEST(TestCan, TestBuilderInvalidInterface)
+{
+  ASSERT_THROW(CanSocket::Builder("invalid_can").bind(), SocketError);
+}
+
 TEST(TestCan, TestLifecycle)
 {
   try {
