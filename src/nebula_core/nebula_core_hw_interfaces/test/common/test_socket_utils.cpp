@@ -129,6 +129,50 @@ TEST(TestSocketUtils, TestUsageError)
   EXPECT_STREQ(err.what(), "Invalid usage");
 }
 
+
+TEST(TestSocketUtils, TestEndpointToSockaddr)
+{
+  Endpoint ep;
+  ep.ip.s_addr = htonl(0x7F000001);  // 127.0.0.1
+  ep.port = 8080;
+
+  sockaddr_in addr = ep.to_sockaddr();
+  EXPECT_EQ(addr.sin_family, AF_INET);
+  EXPECT_EQ(addr.sin_addr.s_addr, ep.ip.s_addr);
+  EXPECT_EQ(addr.sin_port, htons(8080));
+}
+
+TEST(TestSocketUtils, TestSockFdSetsockoptFailure)
+{
+  SockFd sock;  // uninitialized, -1
+  auto result = sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1);
+  ASSERT_FALSE(result.has_value());
+  // Should return error because fd is -1 (EBADF)
+  EXPECT_STREQ(result.error().what(), util::errno_to_string(EBADF).c_str());
+}
+
+TEST(TestSocketUtils, TestIsSocketReadyNonBlocking)
+{
+  int fds[2];
+  ASSERT_EQ(socketpair(AF_UNIX, SOCK_STREAM, 0, fds), 0);
+
+  // Poll with 0 timeout (non-blocking)
+  auto result = is_socket_ready(fds[0], 0);
+  ASSERT_TRUE(result.has_value());
+  EXPECT_FALSE(result.value());
+
+  // Write data
+  char buf = 'x';
+  ASSERT_EQ(write(fds[1], &buf, 1), 1);
+
+  result = is_socket_ready(fds[0], 0);
+  ASSERT_TRUE(result.has_value());
+  EXPECT_TRUE(result.value());
+
+  ::close(fds[0]);
+  ::close(fds[1]);
+}
+
 }  // namespace nebula::drivers::connections
 
 int main(int argc, char * argv[])
