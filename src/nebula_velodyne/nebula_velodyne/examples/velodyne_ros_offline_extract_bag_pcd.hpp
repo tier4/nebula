@@ -19,7 +19,6 @@
 #include "nebula_velodyne_common/velodyne_common.hpp"
 #include "nebula_velodyne_decoders/velodyne_driver.hpp"
 
-#include <ament_index_cpp/get_package_prefix.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
