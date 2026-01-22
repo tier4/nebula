@@ -301,9 +301,6 @@ private:
           // Pass direct view of buffer
           callback_(buffer, static_cast<size_t>(recv_result));
         } catch (const SocketError & e) {
-          // In a real application, we might want to log this properly or have an on_error callback.
-          // For now, we print to stderr and stop the thread to prevent the application from
-          // crashing.
           std::cerr << "TcpSocket receiver error: " << e.what() << std::endl;
           running_ = false;
         }
