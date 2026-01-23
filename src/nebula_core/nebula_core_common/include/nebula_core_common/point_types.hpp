@@ -23,6 +23,22 @@
 namespace nebula::drivers
 {
 
+struct PointXYZ
+{
+  float x;
+  float y;
+  float z;
+
+  static std::array<PointField, 3> fields()
+  {
+    return {
+      {PointField{"x", offsetof(PointXYZ, x), PointField::DataType::Float32, 1},
+       PointField{"y", offsetof(PointXYZ, y), PointField::DataType::Float32, 1},
+       PointField{"z", offsetof(PointXYZ, z), PointField::DataType::Float32, 1}},
+    };
+  };
+};
+
 struct PointXYZIR
 {
   float x;
