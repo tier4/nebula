@@ -18,8 +18,7 @@
 #include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
 
 #include <nebula_core_common/util/string_conversions.hpp>
-
-#include <pcl_conversions/pcl_conversions.h>
+#include <nebula_core_ros/point_cloud_conversions.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -204,9 +203,9 @@ void ContinentalARS548DecoderWrapper::detection_list_callback(
   if (
     detection_pointcloud_pub_->get_subscription_count() > 0 ||
     detection_pointcloud_pub_->get_intra_process_subscription_count() > 0) {
-    const auto detection_pointcloud_ptr = convert_to_pointcloud(*msg);
+    const auto detection_pointcloud = convert_to_pointcloud(*msg);
     auto detection_pointcloud_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*detection_pointcloud_ptr, *detection_pointcloud_msg_ptr);
+    *detection_pointcloud_msg_ptr = nebula::ros::to_ros_msg(detection_pointcloud);
 
     detection_pointcloud_msg_ptr->header = msg->header;
     detection_pointcloud_pub_->publish(std::move(detection_pointcloud_msg_ptr));
@@ -245,9 +244,9 @@ void ContinentalARS548DecoderWrapper::object_list_callback(
   if (
     object_pointcloud_pub_->get_subscription_count() > 0 ||
     object_pointcloud_pub_->get_intra_process_subscription_count() > 0) {
-    const auto object_pointcloud_ptr = convert_to_pointcloud(*msg);
+    const auto object_pointcloud = convert_to_pointcloud(*msg);
     auto object_pointcloud_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*object_pointcloud_ptr, *object_pointcloud_msg_ptr);
+    *object_pointcloud_msg_ptr = nebula::ros::to_ros_msg(object_pointcloud);
 
     object_pointcloud_msg_ptr->header = msg->header;
     object_pointcloud_pub_->publish(std::move(object_pointcloud_msg_ptr));
@@ -731,15 +730,14 @@ ContinentalARS548DecoderWrapper::convert_to_autoware_radar_objects(
   return autoware_objects;
 }
 
-pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr
+drivers::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>
 ContinentalARS548DecoderWrapper::convert_to_pointcloud(
   const continental_msgs::msg::ContinentalArs548DetectionList & msg)
 {
   namespace ars548 = nebula::drivers::continental_ars548;
 
-  pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr output_pointcloud(
-    new pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>);
-  output_pointcloud->reserve(msg.detections.size());
+  drivers::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection> output_pointcloud;
+  output_pointcloud.reserve(msg.detections.size());
 
   nebula::drivers::continental_ars548::PointARS548Detection point{};
   for (const auto & detection : msg.detections) {
@@ -767,23 +765,20 @@ ContinentalARS548DecoderWrapper::convert_to_pointcloud(
     point.object_id = detection.object_id;
     point.ambiguity_flag = ars548::normalize_probability(detection.raw_ambiguity_flag);
 
-    output_pointcloud->points.emplace_back(point);
+    output_pointcloud.emplace_back(point);
   }
 
-  output_pointcloud->height = 1;
-  output_pointcloud->width = output_pointcloud->points.size();
   return output_pointcloud;
 }
 
-pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr
+drivers::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>
 ContinentalARS548DecoderWrapper::convert_to_pointcloud(
   const continental_msgs::msg::ContinentalArs548ObjectList & msg)
 {
   namespace ars548 = nebula::drivers::continental_ars548;
 
-  pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr output_pointcloud(
-    new pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>);
-  output_pointcloud->reserve(msg.objects.size());
+  drivers::PointCloud<nebula::drivers::continental_ars548::PointARS548Object> output_pointcloud;
+  output_pointcloud.reserve(msg.objects.size());
 
   nebula::drivers::continental_ars548::PointARS548Object point{};
   for (const auto & object : msg.objects) {
@@ -811,11 +806,9 @@ ContinentalARS548DecoderWrapper::convert_to_pointcloud(
     point.shape_width_edge_mean = object.shape_width_edge_mean;
     point.dynamics_orientation_rate_mean = object.orientation_rate_mean;
 
-    output_pointcloud->points.emplace_back(point);
+    output_pointcloud.emplace_back(point);
   }
 
-  output_pointcloud->height = 1;
-  output_pointcloud->width = output_pointcloud->points.size();
   return output_pointcloud;
 }
 

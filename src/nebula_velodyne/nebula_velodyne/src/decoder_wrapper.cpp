@@ -3,6 +3,7 @@
 #include "nebula_velodyne/decoder_wrapper.hpp"
 
 #include <nebula_core_common/util/string_conversions.hpp>
+#include <nebula_core_ros/point_cloud_conversions.hpp>
 #include <rclcpp/time.hpp>
 
 #include <algorithm>
@@ -202,7 +203,7 @@ void VelodyneDecoderWrapper::process_cloud_packet(
     nebula_points_pub_->get_subscription_count() > 0 ||
     nebula_points_pub_->get_intra_process_subscription_count() > 0) {
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
+    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(*pointcloud);
     ros_pc_msg_ptr->header.stamp =
       rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
     publish_cloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
@@ -213,7 +214,7 @@ void VelodyneDecoderWrapper::process_cloud_packet(
     const auto autoware_cloud_xyzi =
       nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(pointcloud);
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*autoware_cloud_xyzi, *ros_pc_msg_ptr);
+    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(*autoware_cloud_xyzi);
     ros_pc_msg_ptr->header.stamp =
       rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
@@ -224,7 +225,7 @@ void VelodyneDecoderWrapper::process_cloud_packet(
     const auto autoware_ex_cloud = nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(
       pointcloud, std::get<1>(pointcloud_ts));
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
+    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(*autoware_ex_cloud);
     ros_pc_msg_ptr->header.stamp =
       rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);

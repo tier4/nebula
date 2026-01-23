@@ -26,7 +26,6 @@
 #include <boost/format.hpp>
 
 #include <angles/angles.h>
-#include <pcl/point_cloud.h>
 
 #include <cerrno>
 #include <cmath>

@@ -15,6 +15,7 @@
 #pragma once
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
+#include <nebula_core_common/io/pcd.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/nebula_status.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
@@ -25,19 +26,20 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <memory>
 
 namespace nebula::test
 {
 
 inline void check_pcds(
   const nebula::drivers::NebulaPointCloudPtr & pc,
-  const pcl::PointCloud<pcl::PointXYZ>::Ptr & pc_ref)
+  const std::shared_ptr<drivers::PointCloud<drivers::PointXYZ>> & pc_ref)
 {
-  ASSERT_EQ(pc->points.size(), pc_ref->points.size()) << "The point clouds are not the same size.";
-  auto bound = std::min(pc->points.size(), pc_ref->points.size());
+  ASSERT_EQ(pc->size(), pc_ref->size()) << "The point clouds are not the same size.";
+  auto bound = std::min(pc->size(), pc_ref->size());
   for (uint32_t i = 0; i < bound; i++) {
-    auto p = pc->points[i];
-    auto p_ref = pc_ref->points[i];
+    auto p = pc->at(i);
+    auto p_ref = pc_ref->at(i);
 
     EXPECT_FLOAT_EQ(p.x, p_ref.x);
     EXPECT_FLOAT_EQ(p.y, p_ref.y);

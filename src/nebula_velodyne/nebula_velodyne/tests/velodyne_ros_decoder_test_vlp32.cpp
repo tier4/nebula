@@ -9,6 +9,7 @@
 #include "rosbag2_cpp/readers/sequential_reader.hpp"
 #include "rosbag2_storage/storage_options.hpp"
 
+#include <nebula_core_common/io/pcd.hpp>
 #include <nebula_core_ros/compatibility/serialized_bag_message.hpp>
 
 #include <gtest/gtest.h>
@@ -261,7 +262,7 @@ Status VelodyneRosDecoderTest::get_parameters(
 
 void print_pcd(nebula::drivers::NebulaPointCloudPtr pp)
 {
-  for (auto p : pp->points) {
+  for (auto p : *pp) {
     std::cout << "(" << p.x << ", " << p.y << "," << p.z << "): " << p.intensity << ", "
               << p.channel << ", " << p.azimuth << ", " << p.return_type << ", " << p.time_stamp
               << std::endl;
@@ -270,10 +271,10 @@ void print_pcd(nebula::drivers::NebulaPointCloudPtr pp)
 
 void check_pcds(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::NebulaPointCloudPtr pp2)
 {
-  EXPECT_EQ(pp1->points.size(), pp2->points.size());
-  for (uint32_t i = 0; i < pp1->points.size(); i++) {
-    auto p1 = pp1->points[i];
-    auto p2 = pp2->points[i];
+  EXPECT_EQ(pp1->size(), pp2->size());
+  for (uint32_t i = 0; i < pp1->size(); i++) {
+    auto p1 = pp1->at(i);
+    auto p2 = pp2->at(i);
     EXPECT_FLOAT_EQ(p1.x, p2.x);
     EXPECT_FLOAT_EQ(p1.y, p2.y);
     EXPECT_FLOAT_EQ(p1.z, p2.z);
@@ -285,12 +286,14 @@ void check_pcds(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::Nebul
   }
 }
 
-void check_pcds(nebula::drivers::NebulaPointCloudPtr pp1, pcl::PointCloud<pcl::PointXYZ>::Ptr pp2)
+void check_pcds(
+  nebula::drivers::NebulaPointCloudPtr pp1,
+  std::shared_ptr<nebula::drivers::PointCloud<nebula::drivers::PointXYZ>> pp2)
 {
-  EXPECT_EQ(pp1->points.size(), pp2->points.size());
-  for (uint32_t i = 0; i < pp1->points.size(); i++) {
-    auto p1 = pp1->points[i];
-    auto p2 = pp2->points[i];
+  EXPECT_EQ(pp1->size(), pp2->size());
+  for (uint32_t i = 0; i < pp1->size(); i++) {
+    auto p1 = pp1->at(i);
+    auto p2 = (*pp2)[i];
     EXPECT_FLOAT_EQ(p1.x, p2.x);
     EXPECT_FLOAT_EQ(p1.y, p2.y);
     EXPECT_FLOAT_EQ(p1.z, p2.z);
@@ -313,8 +316,6 @@ void VelodyneRosDecoderTest::read_bag()
   }
   target_topic_name = std::regex_replace(target_topic_name, std::regex("/"), "_");
 
-  pcl::PCDReader pcd_reader;
-
   rcpputils::fs::path bag_dir(bag_path_);
   rcpputils::fs::path pcd_dir = bag_dir.parent_path();
   int check_cnt = 0;
@@ -324,7 +325,7 @@ void VelodyneRosDecoderTest::read_bag()
   converter_options.output_serialization_format = format_;
   rclcpp::Serialization<velodyne_msgs::msg::VelodyneScan> serialization;
   nebula::drivers::NebulaPointCloudPtr pointcloud(new nebula::drivers::NebulaPointCloud);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr ref_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
+  auto ref_pointcloud = std::make_shared<nebula::drivers::PointCloud<nebula::drivers::PointXYZ>>();
   {
     rosbag2_cpp::Reader bag_reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
     bag_reader.open(storage_options, converter_options);
@@ -358,11 +359,13 @@ void VelodyneRosDecoderTest::read_bag()
 
           if (target_pcd_path.exists()) {
             std::cout << "exists: " << target_pcd_path << std::endl;
-            auto rt = pcd_reader.read(target_pcd_path.string(), *ref_pointcloud);
-            std::cout << rt << " loaded: " << target_pcd_path << std::endl;
+            *ref_pointcloud = nebula::drivers::io::PcdReader::read<nebula::drivers::PointXYZ>(
+              target_pcd_path.string());
+            std::cout << "loaded: " << target_pcd_path << std::endl;
             check_pcds(pointcloud, ref_pointcloud);
             check_cnt++;
-            ref_pointcloud.reset(new pcl::PointCloud<pcl::PointXYZ>);
+            ref_pointcloud =
+              std::make_shared<nebula::drivers::PointCloud<nebula::drivers::PointXYZ>>();
           }
           pointcloud.reset(new nebula::drivers::NebulaPointCloud);
         }

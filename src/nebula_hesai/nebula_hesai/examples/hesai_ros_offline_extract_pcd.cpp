@@ -14,6 +14,7 @@
 
 #include "hesai_ros_offline_extract_pcd.hpp"
 
+#include <nebula_core_common/io/pcd.hpp>
 #include <nebula_core_ros/compatibility/serialized_bag_message.hpp>
 #include <nebula_core_ros/rclcpp_logger.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
@@ -184,8 +185,6 @@ Status HesaiRosOfflineExtractSample::read_bag()
     std::cout << "created: " << o_dir << std::endl;
   }
 
-  pcl::PCDWriter writer;
-
   storage_options.uri = bag_path_;
   storage_options.storage_id = storage_id_;
   converter_options.output_serialization_format = format_;
@@ -212,7 +211,7 @@ Status HesaiRosOfflineExtractSample::read_bag()
     drivers::HesaiScanDecoder::pointcloud_callback_t pointcloud_cb =
       [&](const drivers::NebulaPointCloudPtr & pointcloud, double /* timestamp_s */) {
         auto fn = std::to_string(get_timestamp_ns(*bag_message)) + ".pcd";
-        writer.writeBinary((o_dir / fn).string(), *pointcloud);
+        drivers::io::PcdWriter::write_binary((o_dir / fn).string(), *pointcloud);
       };
 
     driver_ptr_->set_pointcloud_callback(pointcloud_cb);
