@@ -12,29 +12,46 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_POINT_TYPES_H
-#define NEBULA_POINT_TYPES_H
+#pragma once
 
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
+#include <nebula_core_common/point_cloud.hpp>
 
+#include <array>
+#include <cstdint>
 #include <memory>
 
 namespace nebula::drivers
 {
-struct EIGEN_ALIGN16 PointXYZIR
+
+struct PointXYZIR
 {
-  PCL_ADD_POINT4D;
+  float x;
+  float y;
+  float z;
+  union {
+    float padding_;
+  };
+
   float intensity;
   uint16_t ring;
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  static std::array<PointField, 5> fields()
+  {
+    return {
+      {PointField{"x", offsetof(PointXYZIR, x), PointField::DataType::Float32, 1},
+       PointField{"y", offsetof(PointXYZIR, y), PointField::DataType::Float32, 1},
+       PointField{"z", offsetof(PointXYZIR, z), PointField::DataType::Float32, 1},
+       PointField{"intensity", offsetof(PointXYZIR, intensity), PointField::DataType::Float32, 1},
+       PointField{"ring", offsetof(PointXYZIR, ring), PointField::DataType::UInt16, 1}},
+    };
+  };
 };
 
 /**
  * This point type is not using PCL_ADD_POINT4D to avoid the addition of a 32-bit dummy word.
  * The fields are ordered to meet the SSE alignment.
  */
-struct EIGEN_ALIGN16 PointXYZIRCAEDT
+struct PointXYZIRCAEDT
 {
   float x;
   float y;
@@ -46,42 +63,66 @@ struct EIGEN_ALIGN16 PointXYZIRCAEDT
   float elevation;
   float distance;
   std::uint32_t time_stamp;
+
+  static std::array<PointField, 10> fields()
+  {
+    return {
+      {PointField{"x", offsetof(PointXYZIRCAEDT, x), PointField::DataType::Float32, 1},
+       PointField{"y", offsetof(PointXYZIRCAEDT, y), PointField::DataType::Float32, 1},
+       PointField{"z", offsetof(PointXYZIRCAEDT, z), PointField::DataType::Float32, 1},
+       PointField{
+         "intensity", offsetof(PointXYZIRCAEDT, intensity), PointField::DataType::UInt8, 1},
+       PointField{
+         "return_type", offsetof(PointXYZIRCAEDT, return_type), PointField::DataType::UInt8, 1},
+       PointField{"channel", offsetof(PointXYZIRCAEDT, channel), PointField::DataType::UInt16, 1},
+       PointField{"azimuth", offsetof(PointXYZIRCAEDT, azimuth), PointField::DataType::Float32, 1},
+       PointField{
+         "elevation", offsetof(PointXYZIRCAEDT, elevation), PointField::DataType::Float32, 1},
+       PointField{
+         "distance", offsetof(PointXYZIRCAEDT, distance), PointField::DataType::Float32, 1},
+       PointField{
+         "time_stamp", offsetof(PointXYZIRCAEDT, time_stamp), PointField::DataType::UInt32, 1}},
+    };
+  };
 };
 
-struct EIGEN_ALIGN16 PointXYZIRADT
+struct PointXYZIRADT
 {
-  PCL_ADD_POINT4D;
+  float x;
+  float y;
+  float z;
+  union {
+    float padding_;
+  };
+
   float intensity;
   uint16_t ring;
   float azimuth;
   float distance;
   uint8_t return_type;
   double time_stamp;
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  static std::array<PointField, 9> fields()
+  {
+    return {
+      {PointField{"x", offsetof(PointXYZIRADT, x), PointField::DataType::Float32, 1},
+       PointField{"y", offsetof(PointXYZIRADT, y), PointField::DataType::Float32, 1},
+       PointField{"z", offsetof(PointXYZIRADT, z), PointField::DataType::Float32, 1},
+       PointField{
+         "intensity", offsetof(PointXYZIRADT, intensity), PointField::DataType::Float32, 1},
+       PointField{"ring", offsetof(PointXYZIRADT, ring), PointField::DataType::UInt16, 1},
+       PointField{"azimuth", offsetof(PointXYZIRADT, azimuth), PointField::DataType::Float32, 1},
+       PointField{"distance", offsetof(PointXYZIRADT, distance), PointField::DataType::Float32, 1},
+       PointField{
+         "return_type", offsetof(PointXYZIRADT, return_type), PointField::DataType::UInt8, 1},
+       PointField{
+         "time_stamp", offsetof(PointXYZIRADT, time_stamp), PointField::DataType::Float64, 1}},
+    };
+  };
 };
 
 using NebulaPoint = PointXYZIRCAEDT;
-using NebulaPointPtr = std::shared_ptr<NebulaPoint>;
-using NebulaPointCloud = pcl::PointCloud<NebulaPoint>;
-using NebulaPointCloudPtr = pcl::PointCloud<NebulaPoint>::Ptr;
+using NebulaPointCloud = PointCloud<NebulaPoint>;
+using NebulaPointCloudPtr = std::shared_ptr<NebulaPointCloud>;
 
 }  // namespace nebula::drivers
-
-POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::PointXYZIR,
-  (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring))
-
-POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::PointXYZIRADT,
-  (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(std::uint16_t, ring, ring)(
-    float, azimuth, azimuth)(float, distance, distance)(std::uint8_t, return_type, return_type)(
-    double, time_stamp, time_stamp))
-
-POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::PointXYZIRCAEDT,
-  (float, x, x)(float, y, y)(float, z, z)(std::uint8_t, intensity, intensity)(
-    std::uint8_t, return_type,
-    return_type)(std::uint16_t, channel, channel)(float, azimuth, azimuth)(
-    float, elevation, elevation)(float, distance, distance)(std::uint32_t, time_stamp, time_stamp))
-
-#endif

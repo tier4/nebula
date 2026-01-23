@@ -20,10 +20,10 @@
 #include <boost/tokenizer.hpp>
 
 #include <cmath>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <type_traits>
-
 namespace nebula::drivers
 {
 /// @brief Return type of each scan
@@ -494,14 +494,11 @@ inline ReturnMode return_mode_from_string(const std::string & return_mode)
   return ReturnMode::UNKNOWN;
 }
 
-[[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr convert_point_xyziradt_to_point_xyzir(
-  const pcl::PointCloud<PointXYZIRADT>::ConstPtr & input_pointcloud);
+std::shared_ptr<PointCloud<PointXYZIR>> convert_point_xyzircaedt_to_point_xyzir(
+  const std::shared_ptr<const PointCloud<PointXYZIRCAEDT>> & input_pointcloud);
 
-[[maybe_unused]] pcl::PointCloud<PointXYZIR>::Ptr convert_point_xyzircaedt_to_point_xyzir(
-  const pcl::PointCloud<PointXYZIRCAEDT>::ConstPtr & input_pointcloud);
-
-pcl::PointCloud<PointXYZIRADT>::Ptr convert_point_xyzircaedt_to_point_xyziradt(
-  const pcl::PointCloud<PointXYZIRCAEDT>::ConstPtr & input_pointcloud, double stamp);
+std::shared_ptr<PointCloud<PointXYZIRADT>> convert_point_xyzircaedt_to_point_xyziradt(
+  const std::shared_ptr<const PointCloud<PointXYZIRCAEDT>> & input_pointcloud, double stamp);
 
 /// @brief Converts degrees to radians
 /// @param radians
