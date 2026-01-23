@@ -40,4 +40,16 @@ PointCloud<PointXYZIRADT> convert_point_xyzircaedt_to_point_xyziradt(
 
   return output_pointcloud;
 }
+
+PointCloud<PointXYZ> convert_point_xyzircaedt_to_point_xyz(
+  const PointCloud<PointXYZIRCAEDT> & input_pointcloud)
+{
+  PointCloud<PointXYZ> output_pointcloud;
+  output_pointcloud.reserve(input_pointcloud.size());
+  for (const auto & p : input_pointcloud) {
+    output_pointcloud.emplace_back(PointXYZ{p.x, p.y, p.z});
+  }
+  return output_pointcloud;
+}
+
 }  // namespace nebula::drivers

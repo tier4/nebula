@@ -500,6 +500,9 @@ std::shared_ptr<PointCloud<PointXYZIR>> convert_point_xyzircaedt_to_point_xyzir(
 std::shared_ptr<PointCloud<PointXYZIRADT>> convert_point_xyzircaedt_to_point_xyziradt(
   const std::shared_ptr<const PointCloud<PointXYZIRCAEDT>> & input_pointcloud, double stamp);
 
+PointCloud<PointXYZ> convert_point_xyzircaedt_to_point_xyz(
+  const PointCloud<PointXYZIRCAEDT> & input_pointcloud);
+
 /// @brief Converts degrees to radians
 /// @param radians
 /// @return degrees
