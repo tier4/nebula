@@ -39,7 +39,13 @@ To build and serve the documentation locally, see the build steps further below.
 
 ## Quick start
 
-Nebula builds with ROS 2 Galactic and Humble.
+Nebula officially supports the following ROS 2 distros:
+
+- [Humble](https://docs.ros.org/en/humble/Installation.html)
+- [Jazzy](https://docs.ros.org/en/jazzy/Installation.html)
+
+Other ROS 2 distros, such as [Rolling](https://docs.ros.org/en/rolling/Installation.html), might
+work, but are not officially supported at this time.
 
 > **Note**
 >
