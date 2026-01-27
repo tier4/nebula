@@ -57,14 +57,14 @@ void operator>>(const YAML::Node & node, std::pair<int, VelodyneLaserCorrection>
   }
 
   if (node[g_max_intensity]) {
-    float max_intensity_float = node[g_max_intensity].as<float>();
+    auto max_intensity_float = node[g_max_intensity].as<float>();
     correction.second.max_intensity = floor(max_intensity_float);
   } else {
     correction.second.max_intensity = 255;
   }
 
   if (node[g_min_intensity]) {
-    float min_intensity_float = node[g_min_intensity].as<float>();
+    auto min_intensity_float = node[g_min_intensity].as<float>();
     correction.second.min_intensity = floor(min_intensity_float);
   } else {
     correction.second.min_intensity = 0;
@@ -85,7 +85,7 @@ void operator>>(const YAML::Node & node, std::pair<int, VelodyneLaserCorrection>
 void operator>>(const YAML::Node & node, VelodyneCalibration & calibration)
 {
   int num_lasers = node[g_num_lasers].as<int>();
-  float distance_resolution_m = node[g_distance_resolution].as<float>();
+  auto distance_resolution_m = node[g_distance_resolution].as<float>();
   const YAML::Node & lasers = node[g_lasers];
   calibration.laser_corrections.clear();
   calibration.num_lasers = num_lasers;
