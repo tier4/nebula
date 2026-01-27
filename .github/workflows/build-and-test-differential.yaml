@@ -14,10 +14,14 @@ jobs:
         rosdistro:
           - humble
           - jazzy
+        agnocast_enabled:
+          - 0
+          - 1
     env:
       CCACHE_DIR: /root/.ccache
       CC: /usr/lib/ccache/gcc
       CXX: /usr/lib/ccache/g++
+      AGNOCAST_ENABLED: ${{ matrix.agnocast_enabled }}
 
     steps:
       - name: Check out repository

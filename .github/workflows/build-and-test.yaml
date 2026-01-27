@@ -17,11 +17,15 @@ jobs:
         rosdistro:
           - humble
           - jazzy
+        agnocast_enabled:
+          - 0
+          - 1
     env:
       CCACHE_DIR: /root/.ccache
       CCACHE_SIZE: 1G  # The GitHub cache action allows for 10G but the runners' disk space is limited
       CC: /usr/lib/ccache/gcc
       CXX: /usr/lib/ccache/g++
+      AGNOCAST_ENABLED: ${{ matrix.agnocast_enabled }}
 
     steps:
       - name: Check out repository
@@ -101,7 +105,7 @@ jobs:
           build-depends-repos: build_depends-${{ matrix.rosdistro }}.repos
 
       - name: Upload coverage to CodeCov
-        if: ${{ steps.test.outputs.coverage-report-files != '' }}
+        if: ${{ steps.test.outputs.coverage-report-files != '' && matrix.agnocast_enabled == 0 }}
         uses: codecov/codecov-action@v4
         with:
           files: ${{ steps.test.outputs.coverage-report-files }}
