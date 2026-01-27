@@ -14,12 +14,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rosdistro:
-          - humble
-          - jazzy
-        agnocast_enabled:
-          - 0
-          - 1
+        rosdistro: [humble, jazzy]
+        agnocast_enabled: [0, 1]
+        exclude:
+          - rosdistro: jazzy
+            agnocast_enabled: 1  # Agnocast does not yet support Jazzy
     env:
       CCACHE_DIR: /root/.ccache
       CCACHE_SIZE: 1G  # The GitHub cache action allows for 10G but the runners' disk space is limited
