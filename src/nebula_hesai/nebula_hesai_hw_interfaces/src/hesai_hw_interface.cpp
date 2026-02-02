@@ -709,10 +709,22 @@ Status HesaiHwInterface::set_ptp_config(
   request_payload.emplace_back(profile & 0xff);
   request_payload.emplace_back(domain & 0xff);
   request_payload.emplace_back(network & 0xff);
+
   if (profile == 0) {
     request_payload.emplace_back(logAnnounceInterval & 0xff);
     request_payload.emplace_back(logSyncInterval & 0xff);
     request_payload.emplace_back(logMinDelayReqInterval & 0xff);
+
+    // Check if we need to append the reserved byte (New Generation sensors)
+    bool is_new_gen =
+      (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARQT128 ||
+       sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
+       sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X);
+
+    if (is_new_gen) {
+      request_payload.emplace_back(0);  // Reserved byte
+    }
+
   } else if (profile == 2 || profile == 3) {
     request_payload.emplace_back(switch_type & 0xff);
   }
@@ -722,25 +734,86 @@ Status HesaiHwInterface::set_ptp_config(
   return Status::OK;
 }
 
-HesaiPtpConfig HesaiHwInterface::get_ptp_config()
+std::shared_ptr<HesaiPtpConfigBase> HesaiHwInterface::get_ptp_config()
 {
   auto response_or_err = send_receive(g_ptc_command_get_ptp_config);
   auto response =
     response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
 
-  if (response.size() < sizeof(HesaiPtpConfig)) {
-    throw std::runtime_error("HesaiPtpConfig has unexpected payload size");
-  } else if (response.size() > sizeof(HesaiPtpConfig)) {
-    logger_->error("HesaiPtpConfig from Sensor has unknown format. Will parse anyway.");
+  if (response.size() < 4) {
+    throw std::runtime_error("HesaiPtpConfig response too short");
   }
 
-  HesaiPtpConfig hesai_ptp_config;
-  memcpy(&hesai_ptp_config.status, response.data(), 1);
+  uint8_t status = response[0];
+  uint8_t profile = response[1];
+  uint8_t domain = response[2];
+  uint8_t network = response[3];
 
-  size_t bytes_to_parse = (hesai_ptp_config.status == 0) ? sizeof(HesaiPtpConfig) : 4;
-  memcpy(&hesai_ptp_config, response.data(), bytes_to_parse);
+  // Base fields are 4 bytes.
 
-  return hesai_ptp_config;
+  if (profile == 0) {
+    // 1588v2
+    // Check payload size to determine if it's extended or legacy
+    // Legacy: 4 + 3 = 7 bytes
+    // Extended: 4 + 4 = 8 bytes
+    if (response.size() >= 8) {
+      auto config = std::make_shared<HesaiPtpConfig1588v2Extended>();
+      config->status = status;
+      config->profile = profile;
+      config->domain = domain;
+      config->network = network;
+      config->logAnnounceInterval = response[4];
+      config->logSyncInterval = response[5];
+      config->logMinDelayReqInterval = response[6];
+      config->reserved = response[7];
+      return config;
+    } else if (response.size() >= 7) {
+      auto config = std::make_shared<HesaiPtpConfig1588v2>();
+      config->status = status;
+      config->profile = profile;
+      config->domain = domain;
+      config->network = network;
+      config->logAnnounceInterval = response[4];
+      config->logSyncInterval = response[5];
+      config->logMinDelayReqInterval = response[6];
+      return config;
+    }
+  } else if (profile == 2 || profile == 3) {
+    // 802.1AS
+    // Expect 4 + 1 = 5 bytes
+    if (response.size() >= 5) {
+      auto config = std::make_shared<HesaiPtpConfig8021AS>();
+      config->status = status;
+      config->profile = profile;
+      config->domain = domain;
+      config->network = network;
+      config->switch_type = response[4];
+      return config;
+    }
+  }
+
+  // Fallback if payload doesn't match expected structure or unknown profile
+  // Just return the base info we have
+  // We need a concrete class to return, so let's make a generic derived class or just separate
+  // base? Since base has pure virtuals, we need a concrete generic implementation. Actually, let's
+  // use 1588v2 check as fallback for now or throw?
+
+  // Create a minimal concrete class for unknown types?
+  // For now, let's assume if it fails the checks above, we might have partial data or just header.
+  // Let's create an anonymous struct or use the Base if we made it not abstract?
+  // HesaiPtpConfigBase has pure virtuals.
+  // Let's create a "Generic" or "BaseImpl"
+
+  // Wait, I designed Base to have pure virtuals. I should add a Generic one or make 1588v2 handle
+  // defaults. Converting 1588v2 to be the "Default" might be misleading if profile is 2.
+
+  // Let's just define a local helper struct for fallback if needed, or better,
+  // ensure we cover cases.
+
+  // If we are here, something is weird. But we can try to return what we parsed.
+  // Re-use HesaiPtpConfig1588v2 with zeros? No.
+
+  throw std::runtime_error("Unknown PTP Config format or size mismatch");
 }
 
 Status HesaiHwInterface::set_ptp_lock_offset(uint8_t lock_offset_us)
