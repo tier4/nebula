@@ -622,10 +622,13 @@ void check_connection() {
 
 **Order of operations**:
 
-1. **Stop stream**: Call `sensor_interface_stop()`
+Prefer RAII-based shutdown: sockets/threads/buffers should be owned by objects whose destructors
+stop/join/close automatically, so the wrapper does not require sensor-specific shutdown logic.
+
+1. **Stop stream**: Ensure receiver threads stop and join
 2. **Close sockets**: Ensure all network resources are closed
-3. **Clear buffers**: Release point cloud buffers
-4. **Reset pointers**: Reset shared_ptr members
+3. **Release buffers**: Release point cloud buffers
+4. **Destroy owners**: Destroy the owning objects (RAII)
 
 **Example**:
 
