@@ -490,59 +490,7 @@ Status MyVendorHwInterface::sensor_interface_stop() {
 Edit `src/myvendor_ros_wrapper.cpp`:
 
 ```cpp
-MyVendorRosWrapper::MyVendorRosWrapper(const rclcpp::NodeOptions & options)
-: Node("nebula_myvendor_ros_wrapper", options) {
-
-  // 1. Declare ROS parameters
-  declare_parameter("sensor_ip", "192.168.1.201");
-  declare_parameter("host_ip", "192.168.1.100");
-  declare_parameter("data_port", 2368);
-  declare_parameter("frame_id", "myvendor_lidar");
-  declare_parameter("launch_hw", true);
-
-  // 2. Create sensor configuration
-  sensor_cfg_ptr_ = std::make_shared<MyVendorSensorConfiguration>();
-  sensor_cfg_ptr_->sensor_ip = get_parameter("sensor_ip").as_string();
-  sensor_cfg_ptr_->host_ip = get_parameter("host_ip").as_string();
-  sensor_cfg_ptr_->data_port = get_parameter("data_port").as_int();
-  sensor_cfg_ptr_->frame_id = get_parameter("frame_id").as_string();
-  launch_hw_ = get_parameter("launch_hw").as_bool();
-
-  // 3. Initialize driver
-  driver_ptr_ = std::make_unique<MyVendorDriver>(sensor_cfg_ptr_);
-
-  // 4. Register pointcloud callback
-  driver_ptr_->set_pointcloud_callback(
-    [this](const NebulaPointCloudPtr & cloud, double timestamp_s) {
-      auto ros_msg = std::make_unique<sensor_msgs::msg::PointCloud2>();
-      pcl::toROSMsg(*cloud, *ros_msg);
-      ros_msg->header.stamp = rclcpp::Time(timestamp_s * 1e9);
-      ros_msg->header.frame_id = sensor_cfg_ptr_->frame_id;
-      points_pub_->publish(std::move(ros_msg));
-    });
-
-  // 5. Initialize HW interface
-  if (launch_hw_) {
-    hw_interface_ptr_ = std::make_unique<MyVendorHwInterface>();
-    hw_interface_ptr_->set_sensor_configuration(sensor_cfg_ptr_);
-    hw_interface_ptr_->register_scan_callback(
-      [this](const std::vector<uint8_t> & packet, const auto & metadata) {
-        (void)metadata;
-        driver_ptr_->parse_cloud_packet(packet);
-      });
-  }
-
-  // 6. Create publisher
-  points_pub_ = create_publisher<sensor_msgs::msg::PointCloud2>(
-    "points", rclcpp::SensorDataQoS());
-}
-
-Status MyVendorRosWrapper::stream_start() {
-  if (hw_interface_ptr_) {
-    return hw_interface_ptr_->sensor_interface_start();
-  }
-  return Status::OK;
-}
+--8<-- "../../src/nebula_sample/nebula_sample/src/sample_ros_wrapper.cpp"
 ```
 
 ---
