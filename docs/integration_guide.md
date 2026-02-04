@@ -119,6 +119,23 @@ nebula::Status validate_config() {
 }
 ```
 
+For new code, prefer returning values via `nebula::util::expected<T, E>` (instead of passing error
+codes around separately). This keeps APIs explicit about what can fail:
+
+```cpp
+#include "nebula_core_common/nebula_status.hpp"
+#include "nebula_core_common/util/expected.hpp"
+
+#include <variant>
+
+nebula::util::expected<std::monostate, nebula::Status> validate_config() {
+  if (!config_valid) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+  return std::monostate{};
+}
+```
+
 ### 3. Point cloud types
 
 **Location**: `nebula_core_common/include/nebula_core_common/point_types.hpp`
