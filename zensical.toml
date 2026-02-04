@@ -51,12 +51,9 @@ nav = [
     { "Design" = "design.md" },
     { "Scan cutting" = "design/scan_cutting.md" },
   ] },
-  { "Tutorials" = [
-    { "Tutorials" = "tutorials.md" },
-    { "Integration Guide" = "integration_guide.md" },
-  ] },
   { "Contributing" = [
     { "Contributing to Nebula" = "contributing/index.md" },
+    { "Integration Guide" = "integration_guide.md" },
     { "Benchmarking" = "contributing/benchmarking.md" },
   ] },
   { "API Reference" = [
