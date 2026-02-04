@@ -583,7 +583,7 @@ rcl_interfaces::msg::SetParametersResult on_parameter_change(
 
 1. **Timeout detection**: Monitor time since last packet
 2. **Diagnostic update**: Set diagnostic status to ERROR
-3. **Logging**: Log connection loss with timestamp
+3. **Logging**: Log connection loss only on state changes (avoid log spam)
 4. **Recovery**: Optionally attempt reconnection
 
 **Example**:
@@ -601,8 +601,11 @@ void check_connection() {
   auto time_since_last_packet = now() - last_packet_time_;
 
   if (time_since_last_packet > timeout_threshold_) {
-    RCLCPP_ERROR(get_logger(), "Connection lost - no packets for %.1fs",
-                 time_since_last_packet.seconds());
+    if (!connection_lost_) {
+      connection_lost_ = true;
+      RCLCPP_WARN(
+        get_logger(), "Connection lost - no packets for %.1fs", time_since_last_packet.seconds());
+    }
 
     // Update diagnostics
     diagnostic_updater_.broadcast(
