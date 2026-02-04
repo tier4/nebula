@@ -647,10 +647,9 @@ stop/join/close automatically, so the wrapper does not require sensor-specific s
 
 **Required diagnostic information**:
 
-- **Packet rate**: Packets received per second
-- **Scan rate**: Complete scans per second (should match rotation speed)
-- **Connection status**: OK / WARN / ERROR
-- **Decode errors**: Count of failed packet parses
+- **Publish rate**: Use `custom_diagnostic_tasks::RateBoundStatus`
+- **Liveness**: Use `nebula::ros::LivenessMonitor`
+- **Debug timings**: Publish receive/decode/publish durations for profiling
 
 **Example**:
 
