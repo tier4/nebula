@@ -584,7 +584,7 @@ rcl_interfaces::msg::SetParametersResult on_parameter_change(
 1. **Timeout detection**: Monitor time since last packet
 2. **Diagnostic update**: Set diagnostic status to ERROR
 3. **Logging**: Log connection loss only on state changes (avoid log spam)
-4. **Recovery**: Optionally attempt reconnection
+4. **Recovery**: Attempt reconnection transparently (with backoff)
 
 **Example**:
 
@@ -612,7 +612,7 @@ void check_connection() {
       diagnostic_msgs::msg::DiagnosticStatus::ERROR,
       "Connection lost");
 
-    // Optionally attempt reconnection
+    // Attempt reconnection (ideally transparent to the user)
     attempt_reconnection();
   }
 }
