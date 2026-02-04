@@ -245,7 +245,7 @@ Rename all occurrences of "sample"/"Sample" to your vendor name:
 
 - **Directories**: `nebula_sample_*` → `nebula_myvendor_*`
 - **Files**: `sample_*.{cpp,hpp}` → `myvendor_*.{cpp,hpp}`
-- **Classes**: `SampleDriver` → `MyVendorDriver`
+- **Classes**: Rename wrapper / decoder / HW interface classes (e.g., `SampleRosWrapper`, `SampleDecoder`, `SampleHwInterface`)
 - **Namespaces**: Update in all files
 - **CMake/package**: Update `CMakeLists.txt` and `package.xml`
 
