@@ -214,6 +214,9 @@ custom_fences = [
 [project.markdown_extensions.pymdownx.arithmatex]
 generic = true
 
+[project.markdown_extensions.pymdownx.tasklist]
+custom_checkbox = true
+
 [project.theme]
 language = "en"
 features = [
