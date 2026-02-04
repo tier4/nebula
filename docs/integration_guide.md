@@ -74,8 +74,6 @@ graph TD
 3. **Decoder** parses packets, accumulates points, detects scan completion, and calls a callback with a complete point cloud
 4. **ROS wrapper** converts to ROS message and publishes
 
----
-
 ## Provided components
 
 Nebula provides reusable components to simplify sensor integration. You should use these instead of implementing from scratch.
@@ -268,8 +266,6 @@ diagnostic_updater_.add(liveness_diag_);
 // liveness_diag_.tick();
 ```
 
----
-
 ## Integration workflow
 
 ### Step 1: Clone and rename template
@@ -305,8 +301,6 @@ See [Implementation details](#implementation-details) below.
 ### Step 4: Verify
 
 See [Verification](#verification) below.
-
----
 
 ## Implementation details
 
@@ -493,8 +487,6 @@ Edit `src/myvendor_ros_wrapper.cpp`:
 --8<-- "../../src/nebula_sample/nebula_sample/src/sample_ros_wrapper.cpp"
 ```
 
----
-
 ## Required behaviors
 
 Your sensor integration must implement these behaviors correctly.
@@ -676,8 +668,6 @@ void check_scan_rate(diagnostic_updater::DiagnosticStatusWrapper & stat) {
 }
 ```
 
----
-
 ## Verification
 
 ### Build
@@ -731,8 +721,6 @@ ros2 launch nebula_myvendor nebula_myvendor.launch.xml launch_hw:=false
 ros2 bag play your_sensor_data.bag
 ```
 
----
-
 ## Integration checklist
 
 - [ ] Cloned and renamed all files and directories
@@ -752,8 +740,6 @@ ros2 bag play your_sensor_data.bag
 - [ ] Verified point cloud publishes
 - [ ] Verified scan rate matches expected
 - [ ] Tested with real sensor or PCAP data
-
----
 
 ## Additional resources
 
