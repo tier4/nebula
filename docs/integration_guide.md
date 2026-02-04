@@ -226,21 +226,46 @@ NEBULA_LOG_STREAM(logger_->error, "Failed to parse packet");
 
 ### 7. Diagnostic integration
 
-**Location**: ROS 2 `diagnostic_updater` package (used in ROS wrapper)
+**Location**:
+
+- `nebula_core_ros/include/nebula_core_ros/diagnostics/*`
+- ROS 2 `diagnostic_updater` package (used in ROS wrapper)
 
 **What it provides**:
 
-- Automatic diagnostic publishing
-- Status monitoring (OK, WARN, ERROR)
-- Rate monitoring for scan frequency
+- Diagnostic task helpers used across Nebula (e.g., `RateBoundStatus`, `LivenessMonitor`)
+- Consistent patterns for publish-rate and liveness monitoring
 
 **Usage**:
 
 ```cpp
 #include <diagnostic_updater/diagnostic_updater.hpp>
 
+#include "nebula_core_ros/diagnostics/liveness_monitor.hpp"
+#include "nebula_core_ros/diagnostics/rate_bound_status.hpp"
+
 diagnostic_updater::Updater diagnostic_updater_;
-// Add diagnostics in your ROS wrapper
+
+// Monitor publish rate (tick this on publish)
+custom_diagnostic_tasks::RateBoundStatus publish_rate_diag_{
+  this,
+  custom_diagnostic_tasks::RateBoundStatusParam{9.0, 11.0},   // OK range
+  custom_diagnostic_tasks::RateBoundStatusParam{8.0, 12.0},   // WARN range
+  5,                                                         // hysteresis frames
+  false                                                      // immediate error report
+};
+
+// Monitor liveness (tick this on packet receive / decode loop)
+nebula::ros::LivenessMonitor liveness_diag_{
+  "packet receive", this, rclcpp::Duration::from_seconds(1.0)};
+
+// Register tasks
+diagnostic_updater_.add(publish_rate_diag_);
+diagnostic_updater_.add(liveness_diag_);
+
+// In your code paths:
+// publish_rate_diag_.tick();
+// liveness_diag_.tick();
 ```
 
 ---
