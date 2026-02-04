@@ -80,7 +80,7 @@ graph TD
 
 Nebula provides reusable components to simplify sensor integration. You should use these instead of implementing from scratch.
 
-### 1. UDP socket handling
+### UDP socket handling
 
 **Location**: `nebula_core_hw_interfaces/include/nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp`
 
@@ -97,7 +97,7 @@ Nebula provides reusable components to simplify sensor integration. You should u
 --8<-- "../../src/nebula_sample/nebula_sample_hw_interfaces/examples/udp_socket_usage_example.cpp"
 ```
 
-### 2. Status codes
+### Status codes
 
 **Location**: `nebula_core_common/include/nebula_core_common/nebula_status.hpp`
 
@@ -136,7 +136,7 @@ nebula::util::expected<std::monostate, nebula::Status> validate_config() {
 }
 ```
 
-### 3. Point cloud types
+### Point cloud types
 
 **Location**: `nebula_core_common/include/nebula_core_common/point_types.hpp`
 
@@ -159,7 +159,7 @@ point.z = distance * sin_elevation;
 cloud->push_back(point);
 ```
 
-### 4. Angle utilities
+### Angle utilities
 
 **Location**: `nebula_core_decoders/include/nebula_core_decoders/angles.hpp`
 
@@ -182,7 +182,7 @@ float azimuth_deg_norm = normalize_angle(azimuth_deg, 360.0f);
 float azimuth_rad_norm = normalize_angle(azimuth_rad, static_cast<float>(Radians::circle_modulus));
 ```
 
-### 5. Configuration base classes
+### Configuration base classes
 
 **Location**: `nebula_core_common/include/nebula_core_common/nebula_common.hpp`
 
@@ -201,7 +201,7 @@ struct MySensorConfiguration : public LidarConfigurationBase {
 };
 ```
 
-### 6. Logger integration
+### Logger integration
 
 **Location**: `nebula_core_common/include/nebula_core_common/loggers/logger.hpp`
 
@@ -224,7 +224,7 @@ std::shared_ptr<loggers::Logger> logger_;
 NEBULA_LOG_STREAM(logger_->error, "Failed to parse packet");
 ```
 
-### 7. Diagnostic integration
+### Diagnostic integration
 
 **Location**:
 
@@ -310,11 +310,11 @@ See [Verification](#verification) below.
 
 ## Implementation details
 
-### A. Common package (`nebula_myvendor_common`)
+### Common package (`nebula_myvendor_common`)
 
 **Purpose**: Define configuration and calibration structures.
 
-#### 1. Sensor configuration
+#### Sensor configuration
 
 Edit `include/nebula_myvendor_common/myvendor_common.hpp`:
 
@@ -334,7 +334,7 @@ struct MyVendorSensorConfiguration : public LidarConfigurationBase {
 };
 ```
 
-#### 2. Calibration configuration (optional)
+#### Calibration configuration (optional)
 
 Only implement if your sensor needs calibration data:
 
@@ -351,15 +351,15 @@ struct MyVendorCalibrationConfiguration : public CalibrationConfigurationBase {
 };
 ```
 
-### B. Decoders package (`nebula_myvendor_decoders`)
+### Decoders package (`nebula_myvendor_decoders`)
 
 **Purpose**: Parse packets and generate point clouds.
 
-#### 1. Decoder interface
+#### Decoder interface
 
 The interface is already defined in `myvendor_scan_decoder.hpp`. You don't need to modify it.
 
-#### 2. Decoder implementation
+#### Decoder implementation
 
 Edit `include/nebula_myvendor_decoders/decoders/myvendor_decoder.hpp`:
 
@@ -423,7 +423,7 @@ private:
 };
 ```
 
-#### 3. Driver implementation
+#### Driver implementation
 
 The driver is a thin wrapper. Edit `src/myvendor_driver.cpp`:
 
@@ -441,7 +441,7 @@ PacketDecodeResult MyVendorDriver::parse_cloud_packet(
 }
 ```
 
-### C. HW interfaces package (`nebula_myvendor_hw_interfaces`)
+### HW interfaces package (`nebula_myvendor_hw_interfaces`)
 
 **Purpose**: Manage UDP communication with the sensor.
 
@@ -483,7 +483,7 @@ Status MyVendorHwInterface::sensor_interface_stop() {
 }
 ```
 
-### D. ROS wrapper package (`nebula_myvendor`)
+### ROS wrapper package (`nebula_myvendor`)
 
 **Purpose**: Bridge C++ driver with ROS 2.
 
@@ -551,7 +551,7 @@ Status MyVendorRosWrapper::stream_start() {
 
 Your sensor integration must implement these behaviors correctly.
 
-### 1. Startup sequence
+### Startup sequence
 
 **Order of operations**:
 
@@ -589,7 +589,7 @@ try {
 stream_start();
 ```
 
-### 2. Reconfiguration
+### Reconfiguration
 
 **When parameters change at runtime**:
 
@@ -629,7 +629,7 @@ rcl_interfaces::msg::SetParametersResult on_parameter_change(
 }
 ```
 
-### 3. Connection loss handling
+### Connection loss handling
 
 **Detect and handle sensor disconnection**:
 
@@ -667,7 +667,7 @@ void check_connection() {
 }
 ```
 
-### 4. Shutdown sequence
+### Shutdown sequence
 
 **Order of operations**:
 
@@ -689,7 +689,7 @@ void check_connection() {
 }
 ```
 
-### 5. Diagnostic reporting
+### Diagnostic reporting
 
 **Required diagnostic information**:
 
@@ -727,20 +727,20 @@ void check_scan_rate(diagnostic_updater::DiagnosticStatusWrapper & stat) {
 
 ## Verification
 
-### 1. Build
+### Build
 
 ```bash
 colcon build --packages-up-to nebula_myvendor
 source install/setup.bash
 ```
 
-### 2. Launch
+### Launch
 
 ```bash
 ros2 launch nebula_myvendor nebula_myvendor.launch.xml
 ```
 
-### 3. Verify topics
+### Verify topics
 
 ```bash
 # List topics
@@ -753,7 +753,7 @@ ros2 topic echo /points --field header
 ros2 topic hz /points
 ```
 
-### 4. Visualize
+### Visualize
 
 ```bash
 rviz2
@@ -762,13 +762,13 @@ rviz2
 # Set Fixed Frame to your frame_id
 ```
 
-### 5. Check diagnostics
+### Check diagnostics
 
 ```bash
 ros2 topic echo /diagnostics
 ```
 
-### 6. Test with PCAP (offline)
+### Test with PCAP (offline)
 
 ```bash
 # Set launch_hw:=false to use PCAP playback
