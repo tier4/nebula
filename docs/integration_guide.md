@@ -2,8 +2,6 @@
 
 This guide provides instructions for adding support for a new LiDAR sensor to Nebula using the `nebula_sample` package as a template.
 
----
-
 ## Architecture overview
 
 ### Overall package structure
