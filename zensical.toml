@@ -186,6 +186,32 @@ nav = [
       { "Macros" = "continental/macros.md" },
       { "Files" = "continental/files.md" },
     ] },
+
+    { "Sample" = [
+      { "Links" = "sample/links.md" },
+      { "Classes" = [
+        { "Class List" = "sample/annotated.md" },
+        { "Class Index" = "sample/classes.md" },
+        { "Class Hierarchy" = "sample/hierarchy.md" },
+        { "Class Members" = "sample/class_members.md" },
+        { "Class Member Functions" = "sample/class_member_functions.md" },
+        { "Class Member Variables" = "sample/class_member_variables.md" },
+        { "Class Member Typedefs" = "sample/class_member_typedefs.md" },
+        { "Class Member Enumerations" = "sample/class_member_enums.md" },
+      ] },
+      { "Namespaces" = [
+        { "Namespace List" = "sample/namespaces.md" },
+        { "Namespace Members" = "sample/namespace_members.md" },
+        { "Namespace Member Functions" = "sample/namespace_member_functions.md" },
+        { "Namespace Member Variables" = "sample/namespace_member_variables.md" },
+        { "Namespace Member Typedefs" = "sample/namespace_member_typedefs.md" },
+        { "Namespace Member Enumerations" = "sample/namespace_member_enums.md" },
+      ] },
+      { "Functions" = "sample/functions.md" },
+      { "Variables" = "sample/variables.md" },
+      { "Macros" = "sample/macros.md" },
+      { "Files" = "sample/files.md" },
+    ] },
   ] },
 ]
 
