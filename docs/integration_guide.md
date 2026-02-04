@@ -505,27 +505,18 @@ Your sensor integration must implement these behaviors correctly.
 
 **Error handling**:
 
-- If any step fails, log error and throw exception
+- If any step fails, log the error and stop initialization (throwing exceptions is optional)
 - Do not proceed to next step if previous failed
 - Clean up resources on failure
 
 **Example**:
 
 ```cpp
-// In constructor
-try {
-  load_parameters();
-  validate_configuration();
-  initialize_driver();
-  register_callbacks();
-  initialize_hw_interface();
-  create_publishers();
-} catch (const std::exception & e) {
-  RCLCPP_ERROR(get_logger(), "Initialization failed: %s", e.what());
-  throw;
+if (!initialize()) {
+  RCLCPP_ERROR(get_logger(), "Initialization failed");
+  return;
 }
 
-// In separate method or after construction
 stream_start();
 ```
 
