@@ -721,13 +721,13 @@ rviz2
 ros2 topic echo /diagnostics
 ```
 
-### Test with PCAP (offline)
+### Test with Rosbag (offline)
 
 ```bash
-# Set launch_hw:=false to use PCAP playback
+# Set launch_hw:=false to use rosbag replay
 ros2 launch nebula_myvendor nebula_myvendor.launch.xml launch_hw:=false
 
-# In another terminal, play PCAP
+# In another terminal, play a ROS 2 bag
 ros2 bag play your_sensor_data.bag
 ```
 
