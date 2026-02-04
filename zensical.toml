@@ -237,6 +237,8 @@ custom_fences = [
   { "name" = "mermaid", "class" = "mermaid", "format" = "pymdownx.superfences.fence_code_format" },
 ]
 
+[project.markdown_extensions.pymdownx.snippets]
+
 [project.markdown_extensions.pymdownx.arithmatex]
 generic = true
 

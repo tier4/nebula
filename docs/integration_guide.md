@@ -94,15 +94,7 @@ Nebula provides reusable components to simplify sensor integration. You should u
 **Usage**:
 
 ```cpp
-#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
-
-// In your HW interface:
-connections::UdpSocket udp_socket_;
-
-// Start receiving:
-udp_socket_.open(host_ip, port);
-udp_socket_.bind();
-udp_socket_.asyncReceive(callback);
+--8<-- "../../src/nebula_sample/nebula_sample_hw_interfaces/examples/udp_socket_usage_example.cpp"
 ```
 
 ### 2. Status codes

@@ -15,6 +15,15 @@ ament_target_dependencies(
   nebula_sample_hw_interfaces PUBLIC boost_tcp_driver nebula_core_common
   nebula_sample_common nebula_core_hw_interfaces)
 
+if(BUILD_TESTING OR BUILD_EXAMPLES)
+  add_library(
+    nebula_sample_hw_interfaces_examples OBJECT
+    examples/udp_socket_usage_example.cpp)
+  target_link_libraries(
+    nebula_sample_hw_interfaces_examples
+    PRIVATE nebula_core_hw_interfaces::nebula_core_hw_interfaces)
+endif()
+
 install(TARGETS nebula_sample_hw_interfaces
         EXPORT export_nebula_sample_hw_interfaces)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
