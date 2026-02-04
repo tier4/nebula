@@ -211,6 +211,10 @@ struct MySensorConfiguration : public LidarConfigurationBase {
 - ROS 2 logger wrapper (`RclcppLogger`)
 - Macros: `NEBULA_LOG_STREAM(logger->info, "message")`
 
+This is a dependency-injection pattern: non-ROS (ROS-independent) modules log through the generic
+`loggers::Logger` interface, while the ROS wrapper can provide a `RclcppLogger` implementation so
+those modules still log into ROS 2.
+
 **Usage**:
 
 ```cpp
