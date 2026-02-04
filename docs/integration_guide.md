@@ -364,6 +364,7 @@ public:
     }
 
     // 4. Detect scan completion (azimuth wrap)
+    //    Note: comparing to the previous azimuth handles wrap-around at the 0/360 boundary.
     bool scan_complete = (azimuth < last_azimuth_);
     last_azimuth_ = azimuth;
 
