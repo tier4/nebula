@@ -23,7 +23,6 @@
 #include "nebula_hesai/hw_monitor_wrapper.hpp"
 #include "nebula_hesai_common/hesai_common.hpp"
 
-#include <ament_index_cpp/get_package_prefix.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
@@ -54,6 +53,11 @@ class HesaiRosWrapper final : public rclcpp::Node
   {
     std::shared_ptr<SyncToolingWorker> worker;
     util::RateLimiter rate_limiter;
+  };
+
+  struct ReplayState
+  {
+    rclcpp::Time last_scan_timestamp_;
   };
 
 public:
@@ -122,6 +126,9 @@ private:
   rclcpp::Subscription<pandar_msgs::msg::PandarScan>::SharedPtr packets_sub_{};
 
   bool launch_hw_;
+  /// @brief Only exists if launch_hw_ is false. Tracks replay state, e.g. to reset state when a
+  /// rosbag is restarted.
+  std::optional<ReplayState> replay_state_;
 
   std::optional<SyncToolingPlugin> sync_tooling_plugin_;
 

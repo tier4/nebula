@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-# %%
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "matplotlib",
+#     "pandas",
+#     "seaborn",
+# ]
+# ///
 
 import argparse
 import glob
@@ -55,8 +62,6 @@ def plot_timing_comparison(run_names, metrics):
     fig.tight_layout()
     plt.show()
 
-
-# %%
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

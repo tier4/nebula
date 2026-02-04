@@ -12,7 +12,7 @@ target_include_directories(
                          $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(
-  nebula_core_ros PUBLIC rclcpp::rclcpp nebula_core_common::nebula_core_common)
+  nebula_core_ros PUBLIC rclcpp::rclcpp nebula_core_common::nebula_core_common rosbag2_storage::rosbag2_storage)
 
 install(
   TARGETS nebula_core_ros
@@ -40,6 +40,6 @@ ament_export_targets(export_nebula_core_ros)
 install(DIRECTORY schema DESTINATION share/${PROJECT_NAME})
 
 ament_export_dependencies(diagnostic_msgs diagnostic_updater nebula_core_common
-                          rclcpp)
+                          rclcpp rosbag2_storage)
 
 ament_package()

@@ -8,25 +8,13 @@
 
 #include <nebula_velodyne_common/velodyne_calibration_decoder.hpp>
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <limits>
 #include <map>
 #include <string>
 #include <utility>
-
-#ifdef HAVE_NEW_YAMLCPP
-namespace YAML
-{
-// The >> operator disappeared in yaml-cpp 0.5, so this function is
-// added to provide support for code written under the yaml-cpp 0.3 API.
-template <typename T>
-void operator>>(const YAML::Node & node, T & i)
-{
-  i = node.as<T>();
-}
-}  // namespace YAML
-#endif  // HAVE_NEW_YAMLCPP
 
 namespace nebula::drivers
 {
@@ -50,67 +38,39 @@ const char g_focal_slope[] = "focal_slope";
 /** Read calibration for a single laser. */
 void operator>>(const YAML::Node & node, std::pair<int, VelodyneLaserCorrection> & correction)
 {
-  node[g_laser_id] >> correction.first;
-  node[g_rot_correction] >> correction.second.rot_correction;
-  node[g_vert_correction] >> correction.second.vert_correction;
-  node[g_dist_correction] >> correction.second.dist_correction;
-#ifdef HAVE_NEW_YAMLCPP
-  if (node[g_two_pt_correction_available])
-    node[g_two_pt_correction_available] >> correction.second.two_pt_correction_available;
-#else
-  if (const YAML::Node * pName = node.FindValue(TWO_PT_CORRECTION_AVAILABLE))
-    *pName >> correction.second.two_pt_correction_available;
-#endif
-  else
+  correction.first = node[g_laser_id].as<int>();
+  correction.second.rot_correction = node[g_rot_correction].as<float>();
+  correction.second.vert_correction = node[g_vert_correction].as<float>();
+  correction.second.dist_correction = node[g_dist_correction].as<float>();
+  if (node[g_two_pt_correction_available]) {
+    correction.second.two_pt_correction_available = node[g_two_pt_correction_available].as<bool>();
+  } else {
     correction.second.two_pt_correction_available = false;
-  node[g_dist_correction_x] >> correction.second.dist_correction_x;
-  node[g_dist_correction_y] >> correction.second.dist_correction_y;
-  node[g_vert_offset_correction] >> correction.second.vert_offset_correction;
-#ifdef HAVE_NEW_YAMLCPP
-  if (node[g_horiz_offset_correction])
-    node[g_horiz_offset_correction] >> correction.second.horiz_offset_correction;
-#else
-  if (const YAML::Node * pName = node.FindValue(HORIZ_OFFSET_CORRECTION))
-    *pName >> correction.second.horiz_offset_correction;
-#endif
-  else
-    correction.second.horiz_offset_correction = 0;
-
-  const YAML::Node * max_intensity_node = NULL;
-#ifdef HAVE_NEW_YAMLCPP
-  if (node[g_max_intensity]) {
-    const YAML::Node max_intensity_node_ref = node[g_max_intensity];
-    max_intensity_node = &max_intensity_node_ref;
   }
-#else
-  if (const YAML::Node * pName = node.FindValue(MAX_INTENSITY)) max_intensity_node = pName;
-#endif
-  if (max_intensity_node) {
-    float max_intensity_float;
-    *max_intensity_node >> max_intensity_float;
+  correction.second.dist_correction_x = node[g_dist_correction_x].as<float>();
+  correction.second.dist_correction_y = node[g_dist_correction_y].as<float>();
+  correction.second.vert_offset_correction = node[g_vert_offset_correction].as<float>();
+  if (node[g_horiz_offset_correction]) {
+    correction.second.horiz_offset_correction = node[g_horiz_offset_correction].as<float>();
+  } else {
+    correction.second.horiz_offset_correction = 0;
+  }
+
+  if (node[g_max_intensity]) {
+    auto max_intensity_float = node[g_max_intensity].as<float>();
     correction.second.max_intensity = floor(max_intensity_float);
   } else {
     correction.second.max_intensity = 255;
   }
 
-  const YAML::Node * min_intensity_node = NULL;
-#ifdef HAVE_NEW_YAMLCPP
   if (node[g_min_intensity]) {
-    const YAML::Node min_intensity_node_ref = node[g_min_intensity];
-    min_intensity_node = &min_intensity_node_ref;
-  }
-#else
-  if (const YAML::Node * pName = node.FindValue(MIN_INTENSITY)) min_intensity_node = pName;
-#endif
-  if (min_intensity_node) {
-    float min_intensity_float;
-    *min_intensity_node >> min_intensity_float;
+    auto min_intensity_float = node[g_min_intensity].as<float>();
     correction.second.min_intensity = floor(min_intensity_float);
   } else {
     correction.second.min_intensity = 0;
   }
-  node[g_focal_distance] >> correction.second.focal_distance;
-  node[g_focal_slope] >> correction.second.focal_slope;
+  correction.second.focal_distance = node[g_focal_distance].as<float>();
+  correction.second.focal_slope = node[g_focal_slope].as<float>();
 
   // Calculate cached values
   correction.second.cos_rot_correction = cosf(correction.second.rot_correction);
@@ -124,10 +84,8 @@ void operator>>(const YAML::Node & node, std::pair<int, VelodyneLaserCorrection>
 /** Read entire calibration file. */
 void operator>>(const YAML::Node & node, VelodyneCalibration & calibration)
 {
-  int num_lasers;
-  node[g_num_lasers] >> num_lasers;
-  float distance_resolution_m;
-  node[g_distance_resolution] >> distance_resolution_m;
+  int num_lasers = node[g_num_lasers].as<int>();
+  auto distance_resolution_m = node[g_distance_resolution].as<float>();
   const YAML::Node & lasers = node[g_lasers];
   calibration.laser_corrections.clear();
   calibration.num_lasers = num_lasers;
@@ -212,27 +170,14 @@ YAML::Emitter & operator<<(YAML::Emitter & out, const VelodyneCalibration & cali
 
 void VelodyneCalibration::read(const std::string & calibration_file)
 {
-  std::ifstream fin(calibration_file.c_str());
-  if (!fin.is_open()) {
-    initialized = false;
-    return;
-  }
   initialized = true;
   try {
-    YAML::Node doc;
-#ifdef HAVE_NEW_YAMLCPP
-    fin.close();
-    doc = YAML::LoadFile(calibration_file);
-#else
-    YAML::Parser parser(fin);
-    parser.GetNextDocument(doc);
-#endif
+    YAML::Node doc = YAML::LoadFile(calibration_file);
     doc >> *this;
   } catch (YAML::Exception & e) {
     std::cerr << "YAML Exception: " << e.what() << std::endl;
     initialized = false;
   }
-  fin.close();
 }
 
 void VelodyneCalibration::write(const std::string & calibration_file)

@@ -117,7 +117,8 @@ if(BUILD_TESTING)
     continental_ros_decoder_test_ars548
     PRIVATE nebula_core_common::nebula_core_common pcl_common
             rosbag2_cpp::rosbag2_cpp diagnostic_updater::diagnostic_updater
-            nebula_continental_decoders::nebula_continental_decoders)
+            nebula_continental_decoders::nebula_continental_decoders
+            nebula_core_ros::nebula_core_ros)
 
   ament_add_gtest(continental_ros_decoder_test_main_ars548
                   tests/continental_ros_decoder_test_main_ars548.cpp)
@@ -140,7 +141,8 @@ if(BUILD_TESTING)
   target_link_libraries(
     continental_ros_decoder_test_srr520 nebula_core_common::nebula_core_common
     pcl_common rosbag2_cpp::rosbag2_cpp diagnostic_updater::diagnostic_updater
-    nebula_continental_decoders::nebula_continental_decoders)
+    nebula_continental_decoders::nebula_continental_decoders
+    nebula_core_ros::nebula_core_ros)
 
   ament_add_gtest(continental_ros_decoder_test_main_srr520
                   tests/continental_ros_decoder_test_main_srr520.cpp)

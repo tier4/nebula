@@ -14,6 +14,7 @@
 
 #include "velodyne_ros_offline_extract_bag_pcd.hpp"
 
+#include <nebula_core_ros/compatibility/serialized_bag_message.hpp>
 #include <rosbag2_cpp/reader.hpp>
 #include <rosbag2_cpp/writers/sequential_writer.hpp>
 
@@ -344,7 +345,7 @@ Status VelodyneRosOfflineExtractBag::read_bag()
         serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
 
         std::cout << "Found data in topic " << bag_message->topic_name << ": "
-                  << bag_message->time_stamp << std::endl;
+                  << get_timestamp_ns(*bag_message) << std::endl;
 
         //        nebula::drivers::NebulaPointCloudPtr pointcloud =
         //        driver_ptr_->ConvertScanToPointcloud(
@@ -360,11 +361,11 @@ Status VelodyneRosOfflineExtractBag::read_bag()
             continue;
           }
 
-          auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
+          auto fn = std::to_string(get_timestamp_ns(*bag_message)) + ".pcd";
 
           if (needs_open) {
             const rosbag2_storage::StorageOptions storage_options_w(
-              {(o_dir / std::to_string(bag_message->time_stamp)).string(), "sqlite3"});
+              {(o_dir / std::to_string(get_timestamp_ns(*bag_message))).string(), "sqlite3"});
             const rosbag2_cpp::ConverterOptions converter_options_w(
               {rmw_get_serialization_format(), rmw_get_serialization_format()});
             bag_writer = std::make_unique<rosbag2_cpp::writers::SequentialWriter>();

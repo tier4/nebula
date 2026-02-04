@@ -2,6 +2,7 @@
   "version": "0.2",
   "language": "en",
   "allowCompoundWords": true,
+  "ignorePaths": ["*.drawio"],
   "words": [
     "adctp",
     "Adctp",
@@ -21,6 +22,7 @@
     "DHAVE",
     "Difop",
     "extrinsics",
+    "elts",
     "fout",
     "gprmc",
     "gptp",
@@ -29,6 +31,9 @@
     "horiz",
     "Idat",
     "ipaddr",
+    "katex",
+    "lucide",
+    "lxml",
     "manc",
     "mdeg",
     "memcpy",
@@ -36,6 +41,7 @@
     "mkdoxy",
     "Msop",
     "myvendor",
+    "nohide",
     "nohup",
     "nproc",
     "nsec",
@@ -62,6 +68,8 @@
     "stds",
     "struct",
     "structs",
+    "tablefmt",
+    "textproto",
     "TOLOWER",
     "UDP_SEQ",
     "UNSYNCHRONIZED",
@@ -72,6 +80,8 @@
     "Wbitwise",
     "XT",
     "XTM",
-    "yukkysaito"
+    "yukkysaito",
+    "zensical",
+    "Zensical"
   ]
 }
