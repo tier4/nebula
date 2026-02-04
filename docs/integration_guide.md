@@ -176,6 +176,10 @@ cloud->push_back(point);
 
 float azimuth_rad = deg2rad(azimuth_deg);
 bool in_fov = angle_is_between(fov_min, fov_max, azimuth_rad);
+
+// Normalize any angle to [0, 360) or [0, 2pi) (depending on the chosen max_angle):
+float azimuth_deg_norm = normalize_angle(azimuth_deg, 360.0f);
+float azimuth_rad_norm = normalize_angle(azimuth_rad, static_cast<float>(Radians::circle_modulus));
 ```
 
 ### 5. Configuration base classes
