@@ -40,39 +40,38 @@ graph TB
 
 - **Common packages** provide reusable functionality (UDP sockets, point types, etc.)
 - **Vendor packages** implement vendor-specific logic (packet parsing, calibration)
-- All vendor packages follow the **same 4-layer structure** for consistency
+- Vendor packages are typically split into **common / decoders / hw_interfaces / ROS wrapper**
 - Vendor packages **depend on** common packages but not on each other
 
 ### Layered architecture (per vendor)
 
-Each vendor package uses a layered architecture to separate functional blocks and promote code reuse:
+Each vendor package uses a layered architecture to separate functional blocks and promote code reuse.
+In the current Nebula codebase, most orchestration ("driver" responsibilities) is implemented in the
+ROS wrapper / decoder wrapper, while the `*_decoders` library focuses on packet decoding:
 
 ```mermaid
 graph TD
 
     %% --- NODES ---
     %% Apply classes using the triple colon syntax (:::className)
-    Wrapper[<b>ROS 2 wrapper layer</b><br/>Parameter handling, ROS message conversion, publishing]
-
-    Driver[<b>Driver layer</b><br/>High-level API, manages decoder and HW interface]
+    Wrapper[<b>ROS 2 wrapper / decoder wrapper</b><br/>Parameters, lifecycle, publishing, orchestration]
 
     Decoder[<b>Decoder layer</b><br/>Packet parsing<br/>point cloud generation]
 
     HW[<b>HW interface</b><br/>UDP/TCP communication<br/>socket management]
 
     %% --- RELATIONSHIPS ---
-    Wrapper --> Driver
-    Driver --> Decoder
-    Driver --> HW
+    Wrapper --> Decoder
+    Wrapper --> HW
 
 
 ```
 
 ### Data flow
 
-1. **Hardware interface** receives raw UDP packets from the sensor and defines TCP protocols for communication and configuration
-2. **Driver** receives packets and delegates to **Decoder**
-3. **Decoder** parses packets, accumulates points, detects scan completion, and calls callback with complete point cloud
+1. **HW interface** receives raw UDP packets from the sensor
+2. **ROS wrapper / decoder wrapper** receives packets and delegates to the **Decoder**
+3. **Decoder** parses packets, accumulates points, detects scan completion, and calls a callback with a complete point cloud
 4. **ROS wrapper** converts to ROS message and publishes
 
 ---
