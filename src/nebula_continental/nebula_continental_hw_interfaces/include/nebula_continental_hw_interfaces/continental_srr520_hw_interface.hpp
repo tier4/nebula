@@ -15,7 +15,7 @@
 #ifndef NEBULA_CONTINENTAL_SRR520_HW_INTERFACE_H
 #define NEBULA_CONTINENTAL_SRR520_HW_INTERFACE_H
 
-#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
+#include "nebula_core_hw_interfaces/nebula_hw_interface_base.hpp"
 
 #include <nebula_continental_common/continental_srr520.hpp>
 #include <nebula_core_common/loggers/logger.hpp>

@@ -1,6 +1,7 @@
 # New sensor integration guide
 
-This guide provides instructions for adding support for a new LiDAR sensor to Nebula using the `nebula_sample` package as a template.
+This guide provides instructions for adding support for a new LiDAR sensor to Nebula using the
+`nebula_sample` package as a template.
 
 ## Architecture overview
 
@@ -80,7 +81,7 @@ Nebula provides reusable components to simplify sensor integration. You should u
 
 ### UDP socket handling
 
-**Location**: `nebula_core_hw_interfaces/include/nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp`
+**Location**: `src/nebula_core/nebula_core_hw_interfaces/include/nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp`
 
 **What it provides**:
 
@@ -92,7 +93,7 @@ Nebula provides reusable components to simplify sensor integration. You should u
 **Usage**:
 
 ```cpp
---8<-- "../../src/nebula_sample/nebula_sample_hw_interfaces/examples/udp_socket_usage_example.cpp"
+--8<-- "src/nebula_core/nebula_core_hw_interfaces/examples/udp_socket_usage_example.cpp:udp_socket_usage"
 ```
 
 ### Status codes
@@ -121,15 +122,25 @@ For new code, prefer returning values via `nebula::util::expected<T, E>` (instea
 codes around separately). This keeps APIs explicit about what can fail:
 
 ```cpp
-#include "nebula_core_common/nebula_status.hpp"
 #include "nebula_core_common/util/expected.hpp"
 
-#include <variant>
+enum class ValidateConfigError {
+  MissingField,
+  OutOfRange,
+  // ...
+};
 
-nebula::util::expected<std::monostate, nebula::Status> validate_config() {
-  if (!config_valid) {
-    return Status::SENSOR_CONFIG_ERROR;
+nebula::util::expected<std::monostate, ValidateConfigError> validate_config(
+  const Config & config
+  ) {
+  if (config.required_field.empty()) {
+    return ValidateConfigError::MissingField;
   }
+
+  if (config.percentage_field < 0 || config.percentage_field > 100) {
+    return ValidateConfigError::OutOfRange;
+  }
+
   return std::monostate{};
 }
 ```
@@ -484,7 +495,7 @@ Status MyVendorHwInterface::sensor_interface_stop() {
 Edit `src/myvendor_ros_wrapper.cpp`:
 
 ```cpp
---8<-- "../../src/nebula_sample/nebula_sample/src/sample_ros_wrapper.cpp"
+--8<-- "src/nebula_sample/nebula_sample/src/sample_ros_wrapper.cpp"
 ```
 
 ## Required behaviors

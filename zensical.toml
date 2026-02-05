@@ -235,6 +235,8 @@ custom_fences = [
 ]
 
 [project.markdown_extensions.pymdownx.snippets]
+check_paths = true
+dedent_subsections = true
 
 [project.markdown_extensions.pymdownx.arithmatex]
 generic = true

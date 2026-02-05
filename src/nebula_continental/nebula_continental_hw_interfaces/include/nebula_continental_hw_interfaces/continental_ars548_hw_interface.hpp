@@ -16,7 +16,7 @@
 #define NEBULA_CONTINENTAL_ARS548_HW_INTERFACE_H
 
 #include "nebula_core_common/nebula_status.hpp"
-#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
+#include "nebula_core_hw_interfaces/connections/udp.hpp"
 
 #include <boost_udp_driver/udp_driver.hpp>
 #include <nebula_continental_common/continental_ars548.hpp>

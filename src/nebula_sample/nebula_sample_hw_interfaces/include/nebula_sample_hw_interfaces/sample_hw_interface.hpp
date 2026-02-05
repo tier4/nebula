@@ -16,11 +16,10 @@
 #define NEBULA_SAMPLE_HW_INTERFACE_HPP
 
 #include <nebula_core_common/nebula_status.hpp>
-#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp>
+#include <nebula_core_hw_interfaces/connections/udp.hpp>
 #include <nebula_sample_common/sample_common.hpp>
 
 #include <memory>
-#include <vector>
 
 namespace nebula::drivers
 {

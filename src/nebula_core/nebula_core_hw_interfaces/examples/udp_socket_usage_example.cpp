@@ -17,22 +17,21 @@
 #include <cstdint>
 #include <vector>
 
-namespace nebula::drivers::examples
+int main()
 {
+  using nebula::drivers::connections::UdpSocket;
+  // # --8<-- [start:udp_socket_usage]
+  auto socket = UdpSocket::Builder("192.168.1.10", 9000)
+                  .set_socket_buffer_size(10'000'000)
+                  .limit_to_sender("192.168.10.20", 7000)
+                  .bind();
 
-void udp_socket_usage_example()
-{
-  // This file is intended to be compiled (via CMake) to keep documentation snippets up-to-date.
-  // It does not need to be executed.
-  auto socket = connections::UdpSocket::Builder("0.0.0.0", static_cast<uint16_t>(0)).bind();
-
-  socket.subscribe(
-    [](const std::vector<uint8_t> & data, const connections::UdpSocket::RxMetadata & metadata) {
-      (void)data;
-      (void)metadata;
-    });
+  socket.subscribe([](const std::vector<uint8_t> & data, const UdpSocket::RxMetadata & metadata) {
+    (void)data;
+    (void)metadata;
+  });
 
   socket.unsubscribe();
+  // # --8<-- [end:udp_socket_usage]
+  return 0;
 }
-
-}  // namespace nebula::drivers::examples
