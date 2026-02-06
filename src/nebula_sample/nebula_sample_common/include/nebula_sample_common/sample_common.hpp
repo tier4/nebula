@@ -18,8 +18,12 @@
 #include "nebula_core_common/nebula_common.hpp"
 #include "nebula_core_common/nebula_status.hpp"
 
+#include <nebula_core_common/util/expected.hpp>
+
+#include <fstream>
 #include <iostream>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace nebula
@@ -58,30 +62,49 @@ inline std::ostream & operator<<(std::ostream & os, SampleSensorConfiguration co
 /// - Intensity corrections
 /// - Timing offsets
 /// If your sensor doesn't need calibration, you can remove this struct entirely.
-struct SampleCalibrationConfiguration : public CalibrationConfigurationBase
+struct SampleCalibrationData
 {
   /// @brief Load calibration data from a file
   /// @param calibration_file Path to the calibration file
   /// @return Status::OK on success, error status otherwise
   /// @details Implement parsing logic for your sensor's calibration file format (CSV, XML, binary,
   /// etc.)
-  nebula::Status load_from_file(const std::string & calibration_file)
+  static util::expected<SampleCalibrationData, std::string> load_from_file(
+    const std::string & calibration_file)
   {
-    // Implementation Items: Implement calibration file parsing
-    // Example: Parse CSV/XML/binary file containing angle corrections
-    (void)calibration_file;
-    return Status::OK;
+    std::ifstream file;
+    file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+    try {
+      file.open(calibration_file);
+    } catch (const std::ifstream::failure & e) {
+      return "Failed to open calibration file: " + calibration_file + " Error: " + e.what();
+    }
+
+    // Parse the file and populate calibration data fields here
+
+    return SampleCalibrationData{};
   }
 
   /// @brief Save calibration data to a file
   /// @param calibration_file Path to save the calibration file
   /// @return Status::OK on success, error status otherwise
   /// @details Implement serialization logic for your sensor's calibration format
-  nebula::Status save_to_file(const std::string & calibration_file)
+  util::expected<std::monostate, std::string> save_to_file(const std::string & calibration_file)
   {
+    std::ofstream file;
+    file.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+
+    try {
+      file.open(calibration_file);
+    } catch (const std::ofstream::failure & e) {
+      return "Failed to open calibration file for writing: " + calibration_file +
+             " Error: " + e.what();
+    }
+
     // Implementation Items: Implement calibration file writing
-    (void)calibration_file;
-    return Status::OK;
+
+    return std::monostate{};
   }
 };
 

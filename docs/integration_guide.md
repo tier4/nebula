@@ -109,6 +109,14 @@ exceptions. This keeps APIs explicit about what can fail:
 --8<-- "src/nebula_core/nebula_core_common/examples/expected_usage_example.cpp:usage"
 ```
 
+!!! tip
+If the happy path has no meaningful return value, use `std::monostate` (a type with no data) as
+`T`:
+
+    ```cpp
+    nebula::util::expected<std::monostate, ErrorCode> do_something();
+    ```
+
 ### Point cloud types
 
 ```c++
