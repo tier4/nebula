@@ -15,42 +15,36 @@
 #ifndef NEBULA_SAMPLE_COMMON_H
 #define NEBULA_SAMPLE_COMMON_H
 
-#include "nebula_core_common/nebula_common.hpp"
-#include "nebula_core_common/nebula_status.hpp"
-
 #include <nebula_core_common/util/expected.hpp>
 
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <variant>
-#include <vector>
 
-namespace nebula
-{
-namespace drivers
+namespace nebula::drivers
 {
 
 /// @brief Sensor-specific configuration for the Sample LiDAR
-/// @details This struct extends LidarConfigurationBase with any sensor-specific settings.
+///
 /// When implementing for a real sensor, add fields for:
-/// - Return mode (single, dual, strongest, last, etc.)
+/// - Return mode (single, strongest, forst_strongest, etc.)
 /// - Rotation speed / scan frequency
 /// - IP addresses (sensor, host)
 /// - Port numbers
 /// - FOV settings
 /// - Any vendor-specific parameters
-struct SampleSensorConfiguration : public LidarConfigurationBase
+struct SampleSensorConfiguration
 {
-  // Example field - replace with actual sensor parameters
-  std::string sample_field;
+  std::string host_ip;
+  std::string sensor_ip;
 };
 
 inline std::ostream & operator<<(std::ostream & os, SampleSensorConfiguration const & arg)
 {
   os << "Sample Sensor Configuration:" << '\n';
-  os << static_cast<const LidarConfigurationBase &>(arg) << '\n';
-  os << "Sample Field: " << arg.sample_field << '\n';
+  os << "Host IP: " << arg.host_ip << '\n';
+  os << "Sensor IP: " << arg.sensor_ip << '\n';
   return os;
 }
 
@@ -66,9 +60,7 @@ struct SampleCalibrationData
 {
   /// @brief Load calibration data from a file
   /// @param calibration_file Path to the calibration file
-  /// @return Status::OK on success, error status otherwise
-  /// @details Implement parsing logic for your sensor's calibration file format (CSV, XML, binary,
-  /// etc.)
+  /// @return Nothing on success, error message otherwise
   static util::expected<SampleCalibrationData, std::string> load_from_file(
     const std::string & calibration_file)
   {
@@ -88,8 +80,7 @@ struct SampleCalibrationData
 
   /// @brief Save calibration data to a file
   /// @param calibration_file Path to save the calibration file
-  /// @return Status::OK on success, error status otherwise
-  /// @details Implement serialization logic for your sensor's calibration format
+  /// @return Nothing on success, error message otherwise
   util::expected<std::monostate, std::string> save_to_file(const std::string & calibration_file)
   {
     std::ofstream file;
@@ -108,7 +99,6 @@ struct SampleCalibrationData
   }
 };
 
-}  // namespace drivers
-}  // namespace nebula
+}  // namespace nebula::drivers
 
 #endif  // NEBULA_SAMPLE_COMMON_H
