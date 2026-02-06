@@ -17,6 +17,15 @@ ament_target_dependencies(nebula_core_decoders INTERFACE nebula_core_common
 install(TARGETS nebula_core_decoders EXPORT export_nebula_core_decoders)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
+if(BUILD_TESTING OR BUILD_EXAMPLES)
+  add_library(
+    nebula_core_decoders_examples OBJECT
+    examples/angle_utilities_usage_example.cpp)
+  target_link_libraries(
+    nebula_core_decoders_examples
+    PRIVATE nebula_core_decoders nebula_core_common::nebula_core_common)
+endif()
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()

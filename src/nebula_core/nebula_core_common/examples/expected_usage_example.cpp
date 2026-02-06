@@ -13,27 +13,35 @@
 // limitations under the License.
 
 // # --8<-- [start:include]
-#include "nebula_core_hw_interfaces/connections/udp.hpp"
+#include "nebula_core_common/util/expected.hpp"
 // # --8<-- [end:include]
 
 #include <cstdint>
-#include <vector>
+#include <string>
+#include <variant>
 
-int main()
+struct Config
 {
-  // # --8<-- [start:usage]
-  using nebula::drivers::connections::UdpSocket;
-  auto socket = UdpSocket::Builder("192.168.1.10", 9000)
-                  .set_socket_buffer_size(10'000'000)
-                  .limit_to_sender("192.168.10.20", 7000)
-                  .bind();
+  std::string required_field;
+  int percentage_field{0};
+};
 
-  socket.subscribe([](const std::vector<uint8_t> & data, const UdpSocket::RxMetadata & metadata) {
-    (void)data;
-    (void)metadata;
-  });
+// # --8<-- [start:usage]
+enum class ValidationError : uint8_t {
+  MissingField,
+  OutOfRange,
+};
 
-  socket.unsubscribe();
-  // # --8<-- [end:usage]
-  return 0;
+nebula::util::expected<std::monostate, ValidationError> validate(const Config & config)
+{
+  if (config.required_field.empty()) {
+    return ValidationError::MissingField;
+  }
+
+  if (config.percentage_field < 0 || config.percentage_field > 100) {
+    return ValidationError::OutOfRange;
+  }
+
+  return std::monostate{};
 }
+// # --8<-- [end:usage]

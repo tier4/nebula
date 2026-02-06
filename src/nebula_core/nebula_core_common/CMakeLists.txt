@@ -28,6 +28,14 @@ endif()
 install(TARGETS nebula_core_common EXPORT export_nebula_core_common)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
+if(BUILD_TESTING OR BUILD_EXAMPLES)
+  add_library(
+    nebula_core_common_examples OBJECT
+    examples/expected_usage_example.cpp
+    examples/logger_integration_usage_example.cpp)
+  target_link_libraries(nebula_core_common_examples PRIVATE nebula_core_common)
+endif()
+
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_core_common)
 
