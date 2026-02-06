@@ -1,13 +1,13 @@
-# New sensor integration guide
+# Integrating a new Sensor
 
-This guide provides instructions for adding support for a new LiDAR sensor to Nebula using the
-`nebula_sample` package as a template.
+This guide provides instructions for adding support for a new sensor to Nebula. We provide a
+template implementation (`nebula_sample`) and reusable components to simplify the process.
 
 ## Architecture overview
 
 ### Overall package structure
 
-Nebula is organized into common (reusable) packages and vendor-specific packages:
+Nebula is organized into corepackages and vendor-specific packages:
 
 ```mermaid
 graph TB
@@ -37,186 +37,128 @@ graph TB
 
 ```
 
-**Key principles**:
+- Core packages provide reusable functionality (UDP sockets, point types, etc.)
+- Vendor packages implement vendor-specific logic (packet parsing, calibration)
+- Vendor packages are typically split into `common`, `decoders`, `hw_interfaces` and
+  `ROS wrapper`:
+  - `common`: Vendor-specific types, internal interfaces and utilities
+  - `decoders`: Packet parsing and conversion to point clouds
+  - `hw_interfaces`: Network communication
+  - `ROS wrapper`: ROS 2 node, parameters, publishers, orchestration
+- Vendor packages depend on core packages but not on each other
 
-- **Common packages** provide reusable functionality (UDP sockets, point types, etc.)
-- **Vendor packages** implement vendor-specific logic (packet parsing, calibration)
-- Vendor packages are typically split into **common / decoders / hw_interfaces / ROS wrapper**
-- Vendor packages **depend on** common packages but not on each other
+Except for the ROS wrappers, no package should depend on ROS 2. This allows users to run parts
+of Nebula as a library e.g. in ML pipelines without ROS 2.
 
-### Layered architecture (per vendor)
+!!! warning
+Existing vendor implementations do not strictly follow this architecture as the project
+evolved over time. New implementations should follow the architecture described here.
 
-Each vendor package uses a layered architecture to separate functional blocks and promote code reuse.
-In the current Nebula codebase, most orchestration ("driver" responsibilities) is implemented in the
-ROS wrapper / decoder wrapper, while the `*_decoders` library focuses on packet decoding:
+### Data Flow
+
+Packets flow from the hardware interface to the decoder to the ROS wrapper as follows:
 
 ```mermaid
-graph TD
-
-    %% --- NODES ---
-    %% Apply classes using the triple colon syntax (:::className)
-    Wrapper[<b>ROS 2 wrapper / decoder wrapper</b><br/>Parameters, lifecycle, publishing, orchestration]
-
-    Decoder[<b>Decoder layer</b><br/>Packet parsing<br/>point cloud generation]
-
-    HW[<b>HW interface</b><br/>UDP/TCP communication<br/>socket management]
-
-    %% --- RELATIONSHIPS ---
-    Wrapper --> Decoder
-    Wrapper --> HW
-
-
+flowchart LR
+    HW[Hardware Interface] -->| Raw packets | DC[Decoder]
+    DC -->| Nebula PointCloud | RW[ROS Wrapper]
+    RW -->| ROS 2 PointCloud2 | ROS[ROS 2]
 ```
 
-### Data flow
+Since decoder and HW interface are separate libraries, the ROS wrapper sets up the data flow
+between them on startup by registering callbacks.
 
-1. **HW interface** receives raw UDP packets from the sensor
-2. **ROS wrapper / decoder wrapper** receives packets and delegates to the **Decoder**
-3. **Decoder** parses packets, accumulates points, detects scan completion, and calls a callback with a complete point cloud
-4. **ROS wrapper** converts to ROS message and publishes
+## Component Library
 
-## Provided components
-
-Nebula provides reusable components to simplify sensor integration. You should use these instead of implementing from scratch.
+Nebula provides reusable components to simplify sensor integration. Use these components to
+reduce boilerplate code and ensure consistent behavior across sensors and vendors.
 
 ### UDP socket handling
 
-**Location**: `src/nebula_core/nebula_core_hw_interfaces/include/nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp`
+```cpp
+--8<-- "src/nebula_core/nebula_core_hw_interfaces/examples/udp_socket_usage_example.cpp:include"
+```
 
 **What it provides**:
 
-- Asynchronous UDP socket
-- Automatic packet reception loop
-- Callback-based packet delivery
-- Metadata (timestamp, source IP) for each packet
+- UDP socket with easy builder-style configuration
+- Threaded packet reception with user-defined callback
+- Metadata (socket timestamp, buffer overflow count) for each packet
 
 **Usage**:
 
 ```cpp
---8<-- "src/nebula_core/nebula_core_hw_interfaces/examples/udp_socket_usage_example.cpp:udp_socket_usage"
+--8<-- "src/nebula_core/nebula_core_hw_interfaces/examples/udp_socket_usage_example.cpp:usage"
 ```
 
-### Status codes
+### Expected
 
-**Location**: `nebula_core_common/include/nebula_core_common/nebula_status.hpp`
+```c++
+--8<-- "src/nebula_core/nebula_core_common/examples/expected_usage_example.cpp:include"
+```
 
 **What it provides**:
 
-- Standardized error/success codes
-- `Status` enum with values like `OK`, `INVALID_CALIBRATION_FILE`, `SENSOR_CONFIG_ERROR`, etc.
+For operations that can fail, but should not crash the program, return values via
+`nebula::util::expected<T, E>`. Avoid sentinel return values (e.g., `nullptr`, `-1`) and
+exceptions. This keeps APIs explicit about what can fail:
 
 **Usage**:
 
 ```cpp
-#include "nebula_core_common/nebula_status.hpp"
-
-nebula::Status validate_config() {
-  if (!config_valid) {
-    return Status::SENSOR_CONFIG_ERROR;
-  }
-  return Status::OK;
-}
-```
-
-For new code, prefer returning values via `nebula::util::expected<T, E>` (instead of passing error
-codes around separately). This keeps APIs explicit about what can fail:
-
-```cpp
-#include "nebula_core_common/util/expected.hpp"
-
-enum class ValidateConfigError {
-  MissingField,
-  OutOfRange,
-  // ...
-};
-
-nebula::util::expected<std::monostate, ValidateConfigError> validate_config(
-  const Config & config
-  ) {
-  if (config.required_field.empty()) {
-    return ValidateConfigError::MissingField;
-  }
-
-  if (config.percentage_field < 0 || config.percentage_field > 100) {
-    return ValidateConfigError::OutOfRange;
-  }
-
-  return std::monostate{};
-}
+--8<-- "src/nebula_core/nebula_core_common/examples/expected_usage_example.cpp:usage"
 ```
 
 ### Point cloud types
 
-**Location**: `nebula_core_common/include/nebula_core_common/point_types.hpp`
+```c++
+--8<-- "src/nebula_core/nebula_core_ros/examples/point_types_usage_example.cpp:include"
+```
 
 **What it provides**:
 
-- `NebulaPoint` - Standard point type with x, y, z, intensity, timestamp, return_type, channel, azimuth, elevation, distance
-- `NebulaPointCloud` - PCL point cloud of NebulaPoints
+- `NebulaPoint` - Standard point type with x, y, z, intensity, timestamp, return_type, channel,
+  azimuth, elevation, distance
+- `NebulaPointCloud` - Point cloud of NebulaPoints
 - Conversion utilities to ROS/Autoware point types
+
+Nebula point types are designed for compatibility with and efficiency of downstream tasks.
+Since Nebula is the official sensor driver framework for Autoware, using Nebula point types
+ensures seamless integration with Autoware components.
 
 **Usage**:
 
 ```cpp
-#include "nebula_core_common/point_types.hpp"
-
-NebulaPointCloudPtr cloud = std::make_shared<NebulaPointCloud>();
-NebulaPoint point;
-point.x = distance * sin_azimuth * cos_elevation;
-point.y = distance * cos_azimuth * cos_elevation;
-point.z = distance * sin_elevation;
-cloud->push_back(point);
+--8<-- "src/nebula_core/nebula_core_ros/examples/point_types_usage_example.cpp:usage"
 ```
 
 ### Angle utilities
 
-**Location**: `nebula_core_decoders/include/nebula_core_decoders/angles.hpp`
+```c++
+--8<-- "src/nebula_core/nebula_core_decoders/examples/angle_utilities_usage_example.cpp:include"
+```
 
 **What it provides**:
 
 - `deg2rad()`, `rad2deg()` - Angle conversions
-- `angle_is_between()` - Check if angle is within FOV
+- `angle_is_between()` - Angle checks with wrap-around support
 - Angle normalization functions
 
 **Usage**:
 
-```cpp
-#include "nebula_core_decoders/angles.hpp"
-
-float azimuth_rad = deg2rad(azimuth_deg);
-bool in_fov = angle_is_between(fov_min, fov_max, azimuth_rad);
-
-// Normalize any angle to [0, 360) or [0, 2pi) (depending on the chosen max_angle):
-float azimuth_deg_norm = normalize_angle(azimuth_deg, 360.0f);
-float azimuth_rad_norm = normalize_angle(azimuth_rad, static_cast<float>(Radians::circle_modulus));
-```
-
-### Configuration base classes
-
-**Location**: `nebula_core_common/include/nebula_core_common/nebula_common.hpp`
-
-**What it provides**:
-
-- `LidarConfigurationBase` - Base for sensor configuration (frame_id, sensor_model, return_mode, etc.)
-- `CalibrationConfigurationBase` - Base for calibration data
-
-**Usage**:
-
-```cpp
-struct MySensorConfiguration : public LidarConfigurationBase {
-  std::string sensor_ip;
-  uint16_t data_port;
-  // ... sensor-specific fields
-};
+```c++
+--8<-- "src/nebula_core/nebula_core_decoders/examples/angle_utilities_usage_example.cpp:usage"
 ```
 
 ### Logger integration
 
-**Location**: `nebula_core_common/include/nebula_core_common/loggers/logger.hpp`
+```c++
+--8<-- "src/nebula_core/nebula_core_common/examples/logger_integration_usage_example.cpp:include"
+```
 
 **What it provides**:
 
-- Unified logging interface
+- Unified logging interface via `Logger`
 - ROS 2 logger wrapper (`RclcppLogger`)
 - Macros: `NEBULA_LOG_STREAM(logger->info, "message")`
 
@@ -227,18 +169,14 @@ those modules still log into ROS 2.
 **Usage**:
 
 ```cpp
-#include "nebula_core_common/loggers/logger.hpp"
-
-std::shared_ptr<loggers::Logger> logger_;
-NEBULA_LOG_STREAM(logger_->error, "Failed to parse packet");
+--8<-- "src/nebula_core/nebula_core_common/examples/logger_integration_usage_example.cpp:usage"
 ```
 
 ### Diagnostic integration
 
-**Location**:
-
-- `nebula_core_ros/include/nebula_core_ros/diagnostics/*`
-- ROS 2 `diagnostic_updater` package (used in ROS wrapper)
+```c++
+--8<-- "src/nebula_core/nebula_core_ros/examples/diagnostic_integration_usage_example.cpp:include"
+```
 
 **What it provides**:
 
@@ -248,33 +186,7 @@ NEBULA_LOG_STREAM(logger_->error, "Failed to parse packet");
 **Usage**:
 
 ```cpp
-#include <diagnostic_updater/diagnostic_updater.hpp>
-
-#include "nebula_core_ros/diagnostics/liveness_monitor.hpp"
-#include "nebula_core_ros/diagnostics/rate_bound_status.hpp"
-
-diagnostic_updater::Updater diagnostic_updater_;
-
-// Monitor publish rate (tick this on publish)
-custom_diagnostic_tasks::RateBoundStatus publish_rate_diag_{
-  this,
-  custom_diagnostic_tasks::RateBoundStatusParam{9.0, 11.0},   // OK range
-  custom_diagnostic_tasks::RateBoundStatusParam{8.0, 12.0},   // WARN range
-  5,                                                         // hysteresis frames
-  false                                                      // immediate error report
-};
-
-// Monitor liveness (tick this on packet receive / decode loop)
-nebula::ros::LivenessMonitor liveness_diag_{
-  "packet receive", this, rclcpp::Duration::from_seconds(1.0)};
-
-// Register tasks
-diagnostic_updater_.add(publish_rate_diag_);
-diagnostic_updater_.add(liveness_diag_);
-
-// In your code paths:
-// publish_rate_diag_.tick();
-// liveness_diag_.tick();
+--8<-- "src/nebula_core/nebula_core_ros/examples/diagnostic_integration_usage_example.cpp:usage"
 ```
 
 ## Integration workflow
@@ -292,13 +204,14 @@ cp -r nebula_sample nebula_myvendor
 
 Rename all occurrences of "sample"/"Sample" to your vendor name:
 
-- **Directories**: `nebula_sample_*` → `nebula_myvendor_*`
-- **Files**: `sample_*.{cpp,hpp}` → `myvendor_*.{cpp,hpp}`
-- **Classes**: Rename wrapper / decoder / HW interface classes (e.g., `SampleRosWrapper`, `SampleDecoder`, `SampleHwInterface`)
-- **Namespaces**: Update in all files
-- **CMake/package**: Update `CMakeLists.txt` and `package.xml`
+- Directories: `nebula_sample_*` → `nebula_myvendor_*`
+- Files: `sample_*.{cpp,hpp}` → `myvendor_*.{cpp,hpp}`
+- Classes: Rename wrapper / decoder / HW interface classes (e.g., `SampleRosWrapper`,
+  `SampleDecoder`, `SampleHwInterface`)
+- Namespaces: Update in all files
+- CMake/package: Update `CMakeLists.txt` and `package.xml`
 
-**Tip**: Use find-and-replace tools:
+Tip: Use find-and-replace tools:
 
 ```bash
 find nebula_myvendor -type f -exec sed -i 's/sample/myvendor/g' {} +
@@ -315,188 +228,32 @@ See [Verification](#verification) below.
 
 ## Implementation details
 
-### Common package (`nebula_myvendor_common`)
+The `nebula_sample` package provides a template implementation. Its source files contain
+comments and TODOs throughout to guide you through the implementation.
 
-**Purpose**: Define configuration and calibration structures.
+Some examples might not be relevant for your sensor, e.g. calibration handling. Implement only
+what is necessary for your sensor.
 
-#### Sensor configuration
+### About SDK integration
 
-Edit `include/nebula_myvendor_common/myvendor_common.hpp`:
+If you are a sensor vendor with your own SDK, you might be able to replace parts of the decoder
+and HW interface with calls to the SDK. Integrate your SDK either through Git submodules, or
+by adding it to `build_depends.repos`.
 
-```cpp
-struct MyVendorSensorConfiguration : public LidarConfigurationBase {
-  // Network settings
-  std::string sensor_ip{"192.168.1.201"};
-  std::string host_ip{"192.168.1.100"};
-  uint16_t data_port{2368};
+!!! warning
+Nebula is licensed under the Apache 2.0 license and has a strict no-binaries policy. Ensure
+that your SDK _source code_ is public, and ensure that your SDK license allows shipping as
+part of an Apache 2.0 project.
 
-  // Sensor settings
-  uint16_t rotation_speed{600};  // RPM
-  uint16_t cloud_min_angle{0};
-  uint16_t cloud_max_angle{360};
+Please ensure that the SDK is fit for automotive use cases (real-time, safety, reliability).
+Nebula interfaces like
 
-  // Add your sensor-specific fields
-};
-```
+- `/nebula_points` (including correct point types)
+- `/nebula_packets` (publish and replay)
+- `/diagnostics`
+- launch patterns
 
-#### Calibration configuration (optional)
-
-Only implement if your sensor needs calibration data:
-
-```cpp
-struct MyVendorCalibrationConfiguration : public CalibrationConfigurationBase {
-  std::vector<float> elevation_angles;
-  std::vector<float> azimuth_offsets;
-
-  Status load_from_file(const std::string & calibration_file) override {
-    // Parse your calibration file format (CSV, XML, binary, etc.)
-    // Populate elevation_angles and azimuth_offsets
-    return Status::OK;
-  }
-};
-```
-
-### Decoders package (`nebula_myvendor_decoders`)
-
-**Purpose**: Parse packets and generate point clouds.
-
-#### Decoder interface
-
-The interface is already defined in `myvendor_scan_decoder.hpp`. You don't need to modify it.
-
-#### Decoder implementation
-
-Edit `include/nebula_myvendor_decoders/decoders/myvendor_decoder.hpp`:
-
-```cpp
-class MyVendorDecoder : public MyVendorScanDecoder {
-public:
-  explicit MyVendorDecoder(
-    const std::shared_ptr<const MyVendorSensorConfiguration> & config)
-  : config_(config) {
-    current_cloud_ = std::make_shared<NebulaPointCloud>();
-    current_cloud_->reserve(100000);  // Pre-allocate
-  }
-
-  PacketDecodeResult unpack(const std::vector<uint8_t> & packet) override {
-    // 1. Validate packet size
-    if (packet.size() != EXPECTED_PACKET_SIZE) {
-      return {% raw %}{{}, DecodeError::INVALID_PACKET_SIZE}{% endraw %};
-    }
-
-    // 2. Parse packet header
-    uint64_t timestamp_ns = parse_timestamp(packet);
-    uint16_t azimuth = parse_azimuth(packet);
-
-    // 3. Extract and convert points
-    for (int block = 0; block < NUM_BLOCKS; ++block) {
-      for (int channel = 0; channel < NUM_CHANNELS; ++channel) {
-        uint16_t distance_raw = parse_distance(packet, block, channel);
-        uint8_t intensity = parse_intensity(packet, block, channel);
-
-        // Convert to 3D point
-        NebulaPoint point = convert_to_point(
-          distance_raw, intensity, azimuth, channel, timestamp_ns);
-        current_cloud_->push_back(point);
-      }
-    }
-
-    // 4. Detect scan completion (azimuth wrap)
-    //    Note: comparing to the previous azimuth handles wrap-around at the 0/360 boundary.
-    bool scan_complete = (azimuth < last_azimuth_);
-    last_azimuth_ = azimuth;
-
-    // 5. If scan complete, call callback
-    if (scan_complete && pointcloud_callback_) {
-      pointcloud_callback_(current_cloud_, timestamp_ns * 1e-9);
-      current_cloud_ = std::make_shared<NebulaPointCloud>();
-      current_cloud_->reserve(100000);
-    }
-
-    // 6. Return result
-    PacketMetadata metadata;
-    metadata.packet_timestamp_ns = timestamp_ns;
-    metadata.did_scan_complete = scan_complete;
-    return {% raw %}{{}, metadata}{% endraw %};
-  }
-
-private:
-  std::shared_ptr<const MyVendorSensorConfiguration> config_;
-  NebulaPointCloudPtr current_cloud_;
-  uint16_t last_azimuth_{0};
-  pointcloud_callback_t pointcloud_callback_;
-};
-```
-
-#### Driver implementation
-
-The driver is a thin wrapper. Edit `src/myvendor_driver.cpp`:
-
-```cpp
-MyVendorDriver::MyVendorDriver(
-  const std::shared_ptr<const MyVendorSensorConfiguration> & config)
-: config_(config) {
-  scan_decoder_ = std::make_unique<MyVendorDecoder>(config);
-  driver_status_ = Status::OK;
-}
-
-PacketDecodeResult MyVendorDriver::parse_cloud_packet(
-  const std::vector<uint8_t> & packet) {
-  return scan_decoder_->unpack(packet);
-}
-```
-
-### HW interfaces package (`nebula_myvendor_hw_interfaces`)
-
-**Purpose**: Manage UDP communication with the sensor.
-
-Edit `src/myvendor_hw_interface.cpp`:
-
-```cpp
-Status MyVendorHwInterface::sensor_interface_start() {
-  if (!sensor_configuration_) {
-    return Status::SENSOR_CONFIG_ERROR;
-  }
-
-  // Create UDP socket using Nebula's UdpSocket
-  udp_socket_ = std::make_unique<connections::UdpSocket>();
-
-  // Open and bind
-  udp_socket_->open(
-    sensor_configuration_->host_ip,
-    sensor_configuration_->data_port);
-  udp_socket_->bind();
-
-  // Start async receive with callback
-  udp_socket_->asyncReceive(
-    [this](const std::vector<uint8_t> & buffer,
-           const connections::UdpSocket::RxMetadata & metadata) {
-      if (cloud_packet_callback_) {
-        cloud_packet_callback_(buffer, metadata);
-      }
-    });
-
-  return Status::OK;
-}
-
-Status MyVendorHwInterface::sensor_interface_stop() {
-  if (udp_socket_) {
-    udp_socket_->close();
-    udp_socket_.reset();
-  }
-  return Status::OK;
-}
-```
-
-### ROS wrapper package (`nebula_myvendor`)
-
-**Purpose**: Bridge C++ driver with ROS 2.
-
-Edit `src/myvendor_ros_wrapper.cpp`:
-
-```cpp
---8<-- "src/nebula_sample/nebula_sample/src/sample_ros_wrapper.cpp"
-```
+must be implemented correctly.
 
 ## Required behaviors
 
@@ -504,256 +261,138 @@ Your sensor integration must implement these behaviors correctly.
 
 ### Startup sequence
 
-**Order of operations**:
+Order of operations:
 
-1. **Parameter loading**: Declare and read all ROS parameters
-2. **Configuration validation**: Validate IP addresses, ports, ranges
-3. **Driver initialization**: Create driver with validated config
-4. **Callback registration**: Register pointcloud callback
-5. **HW interface initialization**: Create and configure HW interface
-6. **Publisher creation**: Create ROS publishers
-7. **Stream start**: Call `sensor_interface_start()` to begin receiving data
+1. Parameter loading: Declare and read ROS parameters
+2. Configuration validation: Validate IP addresses, ports, ranges
+3. Decoder initialization: Create decoder with validated config
+4. Callback registration: Register pointcloud callback
+5. HW interface initialization: Create and configure HW interface
+6. Publisher creation: Create ROS publishers
+7. Stream start: Call `sensor_interface_start()` to begin receiving data
 
-**Error handling**:
+### Reconfiguration (optional)
 
-- If any step fails, log the error and stop initialization (throwing exceptions is optional)
-- Do not proceed to next step if previous failed
-- Clean up resources on failure
+When parameters change at runtime:
 
-**Example**:
-
-```cpp
-if (!initialize()) {
-  RCLCPP_ERROR(get_logger(), "Initialization failed");
-  return;
-}
-
-stream_start();
-```
-
-### Reconfiguration
-
-**When parameters change at runtime**:
-
-1. **Validate new parameters**: Check if new values are valid
-2. **Stop stream**: Call `sensor_interface_stop()`
-3. **Update configuration**: Apply new parameter values
-4. **Reinitialize driver**: Create new driver with updated config
-5. **Restart stream**: Call `sensor_interface_start()`
-
-**Example**:
-
-```cpp
-rcl_interfaces::msg::SetParametersResult on_parameter_change(
-  const std::vector<rclcpp::Parameter> & parameters) {
-
-  auto result = rcl_interfaces::msg::SetParametersResult();
-  result.successful = true;
-
-  // Validate parameters
-  for (const auto & param : parameters) {
-    if (param.get_name() == "rotation_speed") {
-      if (param.as_int() < 300 || param.as_int() > 1200) {
-        result.successful = false;
-        result.reason = "Invalid rotation speed";
-        return result;
-      }
-    }
-  }
-
-  // Apply changes
-  sensor_interface_stop();
-  update_configuration(parameters);
-  reinitialize_driver();
-  sensor_interface_start();
-
-  return result;
-}
-```
+1. Validate new parameters: Check if new values are valid
+2. Update configuration: Apply new parameter values
+3. Reinitialize driver: Create new driver with updated config
 
 ### Connection loss handling
 
-**Detect and handle sensor disconnection**:
+Detect and handle sensor disconnection:
 
-1. **Timeout detection**: Monitor time since last packet
-2. **Diagnostic update**: Set diagnostic status to ERROR
-3. **Logging**: Log connection loss only on state changes (avoid log spam)
-4. **Recovery**: Attempt reconnection transparently (with backoff)
-
-**Example**:
-
-```cpp
-// In packet callback
-void receive_packet_callback(const std::vector<uint8_t> & packet) {
-  last_packet_time_ = now();
-
-  // Process packet...
-}
-
-// In timer callback (e.g., 1 Hz)
-void check_connection() {
-  auto time_since_last_packet = now() - last_packet_time_;
-
-  if (time_since_last_packet > timeout_threshold_) {
-    if (!connection_lost_) {
-      connection_lost_ = true;
-      RCLCPP_WARN(
-        get_logger(), "Connection lost - no packets for %.1fs", time_since_last_packet.seconds());
-    }
-
-    // Update diagnostics
-    diagnostic_updater_.broadcast(
-      diagnostic_msgs::msg::DiagnosticStatus::ERROR,
-      "Connection lost");
-
-    // Attempt reconnection (ideally transparent to the user)
-    attempt_reconnection();
-  }
-}
-```
+1. Timeout detection: Monitor time since last packet
+2. Diagnostic update: Set diagnostic status to `ERROR`
+3. Logging: Log connection loss only on state changes (avoid log spam)
+4. Recovery: Attempt reconnection transparently
 
 ### Shutdown sequence
 
-**Order of operations**:
+Order of operations:
 
 Prefer RAII-based shutdown: sockets/threads/buffers should be owned by objects whose destructors
 stop/join/close automatically, so the wrapper does not require sensor-specific shutdown logic.
 
-1. **Stop stream**: Ensure receiver threads stop and join
-2. **Close sockets**: Ensure all network resources are closed
-3. **Release buffers**: Release point cloud buffers
-4. **Destroy owners**: Destroy the owning objects (RAII)
-
-**Example**:
-
-```cpp
-~MyVendorRosWrapper() {
-  if (hw_interface_ptr_) {
-    hw_interface_ptr_->sensor_interface_stop();
-  }
-
-  driver_ptr_.reset();
-  hw_interface_ptr_.reset();
-}
-```
+1. Stop stream: Ensure receiver threads stop and join
+2. Close sockets: Ensure all network resources are closed
+3. Release buffers: Release point cloud buffers
+4. Destroy owners: Destroy the owning objects (RAII)
 
 ### Diagnostic reporting
 
-**Required diagnostic information**:
+Required diagnostic information:
 
-- **Publish rate**: Use `custom_diagnostic_tasks::RateBoundStatus`
-- **Liveness**: Use `nebula::ros::LivenessMonitor`
-- **Debug timings**: Publish receive/decode/publish durations for profiling
-
-**Example**:
-
-```cpp
-diagnostic_updater::Updater diagnostic_updater_;
-
-// In constructor
-diagnostic_updater_.setHardwareID("MyVendor LiDAR");
-diagnostic_updater_.add("Scan Rate", this, &MyVendorRosWrapper::check_scan_rate);
-
-// Diagnostic function
-void check_scan_rate(diagnostic_updater::DiagnosticStatusWrapper & stat) {
-  double expected_rate = sensor_cfg_ptr_->rotation_speed / 60.0;  // Hz
-  double actual_rate = measured_scan_rate_;
-
-  if (std::abs(actual_rate - expected_rate) < 0.5) {
-    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "Scan rate OK");
-  } else {
-    stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "Scan rate mismatch");
-  }
-
-  stat.add("Expected (Hz)", expected_rate);
-  stat.add("Actual (Hz)", actual_rate);
-}
-```
+- Publish rate: Use `custom_diagnostic_tasks::RateBoundStatus`
+- Liveness: Use `nebula::ros::LivenessMonitor`
+- Debug timings: Publish receive/decode/publish durations for profiling
 
 ## Verification
 
-### Build
+This section contains basic commands you can use to verify your implementation.
+
+### Build and test
+
+Build and test both have to succeed without warnings or errors.
 
 ```bash
 colcon build --packages-up-to nebula_myvendor
-source install/setup.bash
+# This tests all myvendor packages
+colcon test --packages-select-regex nebula_myvendor
+colcon test-result --verbose
 ```
 
-### Launch
+### Live testing
+
+For testing with a real sensor, launch Nebula with your sensor model:
 
 ```bash
-ros2 launch nebula_myvendor nebula_myvendor.launch.xml
+# From your package
+ros2 launch nebula_myvendor nebula_myvendor.launch.xml sensor_model:=mysensor
+# From the `nebula` package
+ros2 launch nebula nebula_launch.py sensor_model:=mysensor
 ```
 
-### Verify topics
+To record a rosbag of Nebula packet output for later replay:
 
 ```bash
-# List topics
-ros2 topic list
-
-# Check point cloud
-ros2 topic echo /points --field header
-
-# Monitor frequency
-ros2 topic hz /points
+ros2 bag record /nebula_packets -o mysensor_packets
 ```
 
-### Visualize
+### Replay testing
 
-```bash
-rviz2
-# Add PointCloud2 display
-# Set topic to /points
-# Set Fixed Frame to your frame_id
-```
-
-### Check diagnostics
-
-```bash
-ros2 topic echo /diagnostics
-```
-
-### Test with Rosbag (offline)
+You can test Nebula offline with the rosbag recorded above:
 
 ```bash
 # Set launch_hw:=false to use rosbag replay
 ros2 launch nebula_myvendor nebula_myvendor.launch.xml launch_hw:=false
 
-# In another terminal, play a ROS 2 bag
-ros2 bag play your_sensor_data.bag
+# In another terminal, play the recorded ROS 2 bag
+ros2 bag play mysensor_packets
 ```
 
 ## Integration checklist
 
-- [ ] Cloned and renamed all files and directories
-- [ ] Updated `CMakeLists.txt` in all packages
-- [ ] Updated `package.xml` in all packages
+### Basic setup
+
+- [ ] Copied and renamed `nebula_sample` to `nebula_myvendor`
+- [ ] Renamed all occurrences of "sample"/"Sample" to your vendor name
+- [ ] Updated `package.xml`s with author and package info
+- [ ] Updated copyright headers
+
+### Implementation tasks
+
 - [ ] Implemented `SensorConfiguration` struct
+- [ ] Mapped ROS parameters in Wrapper
 - [ ] Implemented `unpack()` method in Decoder
 - [ ] Implemented scan completion detection
-- [ ] Implemented UDP reception in HW Interface
-- [ ] Mapped ROS parameters in Wrapper
+- [ ] Implemented communication in HW Interface
 - [ ] Implemented startup sequence
 - [ ] Implemented shutdown sequence
 - [ ] Added diagnostic reporting
 - [ ] Added connection loss handling
-- [ ] Added copyright headers
-- [ ] Verified build succeeds
+
+### Verification tasks
+
+- [ ] Verified build succeeds without warnings
 - [ ] Verified point cloud publishes
 - [ ] Verified scan rate matches expected
-- [ ] Tested with real sensor or PCAP data
+- [ ] Verified diagnostics report correctly
+- [ ] Tested with real sensor
+- [ ] Tested rosbag recording of Nebula packet output
+- [ ] Tested rosbag replay with `launch_hw:=false`
 
 ## Additional resources
 
-- **Hesai implementation**: `src/nebula_hesai` - Full reference implementation
-- **Velodyne implementation**: `src/nebula_velodyne` - Alternative reference
-- **Core components**: `src/nebula_core` - Reusable utilities
-- **Point types**: See `docs/point_types.md`
-- **Parameters**: See `docs/parameters.md`
+- Hesai implementation: `src/nebula_hesai` - Full reference implementation
+- Velodyne implementation: `src/nebula_velodyne` - Alternative reference
+- Core components: `src/nebula_core` - Reusable building blocks
+- Point types: See `docs/point_types.md`
+- Parameters: See `docs/parameters.md`
 
 ## Getting help
 
 - Check existing sensor implementations for examples
-- Review inline code documentation (Doxygen comments)
-- Consult the API reference documentation
+- Consult the [API reference](https://tier4.github.io/nebula/api_reference/)
 - Ask questions in [GitHub Issues](https://github.com/tier4/nebula/issues)
