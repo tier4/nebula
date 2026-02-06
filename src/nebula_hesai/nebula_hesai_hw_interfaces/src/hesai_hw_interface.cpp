@@ -844,27 +844,6 @@ std::shared_ptr<HesaiPtpConfigBase> HesaiHwInterface::get_ptp_config()
     }
   }
 
-  // Fallback if payload doesn't match expected structure or unknown profile
-  // Just return the base info we have
-  // We need a concrete class to return, so let's make a generic derived class or just separate
-  // base? Since base has pure virtuals, we need a concrete generic implementation. Actually, let's
-  // use 1588v2 check as fallback for now or throw?
-
-  // Create a minimal concrete class for unknown types?
-  // For now, let's assume if it fails the checks above, we might have partial data or just header.
-  // Let's create an anonymous struct or use the Base if we made it not abstract?
-  // HesaiPtpConfigBase has pure virtuals.
-  // Let's create a "Generic" or "BaseImpl"
-
-  // Wait, I designed Base to have pure virtuals. I should add a Generic one or make 1588v2 handle
-  // defaults. Converting 1588v2 to be the "Default" might be misleading if profile is 2.
-
-  // Let's just define a local helper struct for fallback if needed, or better,
-  // ensure we cover cases.
-
-  // If we are here, something is weird. But we can try to return what we parsed.
-  // Re-use HesaiPtpConfig1588v2 with zeros? No.
-
   throw std::runtime_error("Unknown PTP Config format or size mismatch");
 }
 
