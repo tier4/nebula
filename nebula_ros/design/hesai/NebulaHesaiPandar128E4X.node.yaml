@@ -1,0 +1,206 @@
+autoware_system_design_format: v0.1.0
+
+name: NebulaHesaiPandar128E4X.node
+
+launch:
+  package: nebula_ros
+  plugin: HesaiRosWrapper
+  executable: hesai_ros_wrapper_node
+  node_output: screen
+  use_container: true
+  container_name: pointcloud_container
+
+# interfaces
+inputs: []
+
+outputs:
+  - name: pandar_packets
+    message_type: pandar_msgs/msg/PandarScan
+    remap_target: "pandar_packets"
+    qos:
+      depth: 10
+      reliability: best_effort
+  - name: pandar_points
+    message_type: sensor_msgs/msg/PointCloud2
+    remap_target: "pandar_points"
+    qos:
+      depth: 10
+      reliability: best_effort
+  - name: aw_points
+    message_type: sensor_msgs/msg/PointCloud2
+    remap_target: "aw_points"
+    qos:
+      depth: 10
+      reliability: best_effort
+  - name: aw_points_ex
+    message_type: sensor_msgs/msg/PointCloud2
+    remap_target: "aw_points_ex"
+    qos:
+      depth: 10
+      reliability: best_effort
+  - name: blockage_mask
+    message_type: sensor_msgs/msg/Image
+    remap_target: "blockage_mask"
+
+# parameters
+parameter_files: 
+  - name: config_file
+    default: config/lidar/hesai/Pandar128E4X.param.yaml
+    schema: schema/Pandar128E4X.schema.json
+    allow_substs: true
+  
+parameters: 
+  - name: launch_hw
+    type: bool
+    default: true
+  - name: sensor_model
+    type: string
+    default: Pandar128E4X
+  - name: host_ip
+    type: string
+    default: 192.168.1.10
+  - name: sensor_ip
+    type: string
+    default: 192.168.1.201
+  - name: multicast_ip
+    type: string
+    default: ""
+  - name: data_port
+    type: int
+    default: 2368
+  - name: gnss_port
+    type: int
+    default: 10110
+  - name: udp_socket_receive_buffer_size_bytes
+    type: int
+    default: 5400000
+  - name: packet_mtu_size
+    type: int
+    default: 1500
+  - name: setup_sensor
+    type: bool
+    default: true
+  - name: udp_only
+    type: bool
+    default: false
+  - name: frame_id
+    type: string
+    default: hesai
+  - name: diag_span
+    type: int
+    default: 1000
+  - name: min_range
+    type: double
+    default: 0.3
+  - name: max_range
+    type: double
+    default: 300.0
+  - name: cloud_min_angle
+    type: int
+    default: 0
+  - name: cloud_max_angle
+    type: int
+    default: 360
+  - name: sync_angle
+    type: int
+    default: 0
+  - name: cut_angle
+    type: double
+    default: 0.0
+  - name: calibration_file
+    type: string
+    default: $(find-pkg-share nebula_decoders)/calibration/hesai/Pandar128E4X.csv
+  - name: calibration_download_enabled
+    type: bool
+    default: true
+  - name: rotation_speed
+    type: int
+    default: 600
+  - name: return_mode
+    type: string
+    default: Dual
+  - name: ptp_profile
+    type: string
+    default: automotive
+  - name: ptp_domain
+    type: int
+    default: 0
+  - name: ptp_transport_type
+    type: string
+    default: L2
+  - name: ptp_switch_type
+    type: string
+    default: TSN
+  - name: ptp_lock_threshold
+    type: int
+    default: 100
+  - name: retry_hw
+    type: bool
+    default: true
+  - name: dual_return_distance_threshold
+    type: double
+    default: 0.1
+  - name: hires_mode
+    type: bool
+    default: true
+  - name: blockage_range
+    type: string
+    default: "[0.0, 0.0]"
+  - name: horizontal_ring_id
+    type: int
+    default: 40
+  - name: is_channel_order_top2down
+    type: bool
+    default: true
+  - name: point_filters.downsample_mask.path
+    type: string
+    default: ""
+  - name: min_azimuth_deg
+    type: double
+    default: 135.0
+  - name: max_azimuth_deg
+    type: double
+    default: 225.0
+  - name: polar_voxel_visibility_estimation_mode
+    type: string
+    default: disable
+  - name: vertical_bins
+    type: int
+    default: 128
+  - name: horizontal_resolution
+    type: double
+    default: 0.4
+  - name: enable_blockage_diag
+    type: bool
+    default: true
+  - name: blockage_diagnostics_param_file
+    type: string
+    default: config/blockage_diagnostics_param_file.yaml
+  - name: use_dual_return_filter
+    type: bool
+    default: false
+  - name: diagnostics.packet_loss.error_threshold
+    type: int
+    default: 20
+  - name: diagnostics.functional_safety.mode
+    type: string
+    default: advanced
+  - name: diagnostics.functional_safety.error_definitions_path
+    type: string
+    default: config/lidar/hesai/error_definitions.csv
+  - name: diagnostics.functional_safety.ignored_error_codes
+    type: array
+    default: []
+
+# processes
+processes:
+  - name: hw_interface
+    trigger_conditions:
+      - periodic: 100 # Hz
+    outcomes:
+      - to_output: pandar_packets
+  - name: decoder
+    trigger_conditions:
+      - periodic: 10 # Hz
+    outcomes:
+      - to_output: pandar_points
