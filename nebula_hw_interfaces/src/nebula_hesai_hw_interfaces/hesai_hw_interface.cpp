@@ -42,6 +42,58 @@ namespace nebula::drivers
 using std::string_literals::operator""s;
 using nlohmann::json;
 
+namespace
+{
+uint8_t effective_sensor_ptp_profile(const HesaiSensorConfiguration & config)
+{
+  auto desired_profile = static_cast<uint8_t>(config.ptp_profile);
+  // OT128 uses 0x03 for automotive profile on the wire.
+  if (
+    config.sensor_model == SensorModel::HESAI_PANDAR128_E4X &&
+    desired_profile == static_cast<uint8_t>(PtpProfile::IEEE_802_1AS_AUTO)) {
+    return 3;
+  }
+  return desired_profile;
+}
+
+bool ptp_config_matches_desired(
+  const HesaiPtpConfigBase & current, const HesaiSensorConfiguration & config)
+{
+  if (current.profile != effective_sensor_ptp_profile(config)) {
+    return false;
+  }
+  if (current.domain != config.ptp_domain) {
+    return false;
+  }
+  if (current.network != static_cast<int>(config.ptp_transport_type)) {
+    return false;
+  }
+
+  if (static_cast<int>(config.ptp_profile) == 0) {
+    // IEEE 1588v2
+    const auto * current_1588 = dynamic_cast<const HesaiPtpConfig1588v2 *>(&current);
+    if (!current_1588) {
+      return false;
+    }
+    return current_1588->logAnnounceInterval == g_ptp_log_announce_interval &&
+           current_1588->logSyncInterval == g_ptp_sync_interval &&
+           current_1588->logMinDelayReqInterval == g_ptp_log_min_delay_interval;
+  }
+
+  if (static_cast<int>(config.ptp_profile) == 2 || static_cast<int>(config.ptp_profile) == 3) {
+    // IEEE 802.1AS variants
+    const auto * current_8021as = dynamic_cast<const HesaiPtpConfig8021AS *>(&current);
+    if (!current_8021as) {
+      return false;
+    }
+    return current_8021as->switch_type == static_cast<int>(config.ptp_switch_type);
+  }
+
+  // Unknown / unsupported profile: play it safe and assume mismatch.
+  return false;
+}
+}  // namespace
+
 HesaiHwInterface::HesaiHwInterface(const std::shared_ptr<loggers::Logger> & logger)
 : logger_(logger),
   m_owned_ctx_{new boost::asio::io_context(1)},
@@ -709,10 +761,22 @@ Status HesaiHwInterface::set_ptp_config(
   request_payload.emplace_back(profile & 0xff);
   request_payload.emplace_back(domain & 0xff);
   request_payload.emplace_back(network & 0xff);
+
   if (profile == 0) {
     request_payload.emplace_back(logAnnounceInterval & 0xff);
     request_payload.emplace_back(logSyncInterval & 0xff);
     request_payload.emplace_back(logMinDelayReqInterval & 0xff);
+
+    // Check if we need to append the reserved byte (New Generation sensors)
+    bool is_new_gen =
+      (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARQT128 ||
+       sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
+       sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR128_E4X);
+
+    if (is_new_gen) {
+      request_payload.emplace_back(0);  // Reserved byte
+    }
+
   } else if (profile == 2 || profile == 3) {
     request_payload.emplace_back(switch_type & 0xff);
   }
@@ -722,25 +786,65 @@ Status HesaiHwInterface::set_ptp_config(
   return Status::OK;
 }
 
-HesaiPtpConfig HesaiHwInterface::get_ptp_config()
+std::shared_ptr<HesaiPtpConfigBase> HesaiHwInterface::get_ptp_config()
 {
   auto response_or_err = send_receive(g_ptc_command_get_ptp_config);
   auto response =
     response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
 
-  if (response.size() < sizeof(HesaiPtpConfig)) {
-    throw std::runtime_error("HesaiPtpConfig has unexpected payload size");
-  } else if (response.size() > sizeof(HesaiPtpConfig)) {
-    logger_->error("HesaiPtpConfig from Sensor has unknown format. Will parse anyway.");
+  if (response.size() < 4) {
+    throw std::runtime_error("HesaiPtpConfig response too short");
   }
 
-  HesaiPtpConfig hesai_ptp_config;
-  memcpy(&hesai_ptp_config.status, response.data(), 1);
+  uint8_t status = response[0];
+  uint8_t profile = response[1];
+  uint8_t domain = response[2];
+  uint8_t network = response[3];
 
-  size_t bytes_to_parse = (hesai_ptp_config.status == 0) ? sizeof(HesaiPtpConfig) : 4;
-  memcpy(&hesai_ptp_config, response.data(), bytes_to_parse);
+  // Base fields are 4 bytes.
 
-  return hesai_ptp_config;
+  if (profile == 0) {
+    // 1588v2
+    // Check payload size to determine if it's extended or legacy
+    // Legacy: 4 + 3 = 7 bytes
+    // Extended: 4 + 4 = 8 bytes
+    if (response.size() >= 8) {
+      auto config = std::make_shared<HesaiPtpConfig1588v2Extended>();
+      config->status = status;
+      config->profile = profile;
+      config->domain = domain;
+      config->network = network;
+      config->logAnnounceInterval = response[4];
+      config->logSyncInterval = response[5];
+      config->logMinDelayReqInterval = response[6];
+      config->reserved = response[7];
+      return config;
+    } else if (response.size() >= 7) {
+      auto config = std::make_shared<HesaiPtpConfig1588v2>();
+      config->status = status;
+      config->profile = profile;
+      config->domain = domain;
+      config->network = network;
+      config->logAnnounceInterval = response[4];
+      config->logSyncInterval = response[5];
+      config->logMinDelayReqInterval = response[6];
+      return config;
+    }
+  } else if (profile == 2 || profile == 3) {
+    // 802.1AS
+    // Expect 4 + 1 = 5 bytes
+    if (response.size() >= 5) {
+      auto config = std::make_shared<HesaiPtpConfig8021AS>();
+      config->status = status;
+      config->profile = profile;
+      config->domain = domain;
+      config->network = network;
+      config->switch_type = response[4];
+      return config;
+    }
+  }
+
+  throw std::runtime_error("Unknown PTP Config format or size mismatch");
 }
 
 Status HesaiHwInterface::set_ptp_lock_offset(uint8_t lock_offset_us)
@@ -1114,17 +1218,24 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
         logger_->info("Trying to set Clock source to PTP");
         set_clock_source(g_hesai_lidar_ptp_clock_source);
       }
-      std::ostringstream tmp_ostringstream;
-      tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
-                        << ", Domain: " << std::to_string(sensor_configuration->ptp_domain)
-                        << ", Transport: " << sensor_configuration->ptp_transport_type
-                        << ", Switch Type: " << sensor_configuration->ptp_switch_type << " via TCP";
-      logger_->info(tmp_ostringstream.str());
-      set_ptp_config(
-        static_cast<int>(sensor_configuration->ptp_profile), sensor_configuration->ptp_domain,
-        static_cast<int>(sensor_configuration->ptp_transport_type),
-        static_cast<int>(sensor_configuration->ptp_switch_type), g_ptp_log_announce_interval,
-        g_ptp_sync_interval, g_ptp_log_min_delay_interval);
+
+      auto current_ptp = get_ptp_config();
+      bool needs_ptp_update = !ptp_config_matches_desired(*current_ptp, *sensor_configuration);
+
+      if (needs_ptp_update) {
+        std::ostringstream tmp_ostringstream;
+        tmp_ostringstream << "Trying to set PTP Config: " << sensor_configuration->ptp_profile
+                          << ", Domain: " << std::to_string(sensor_configuration->ptp_domain)
+                          << ", Transport: " << sensor_configuration->ptp_transport_type
+                          << ", Switch Type: " << sensor_configuration->ptp_switch_type
+                          << " via TCP";
+        logger_->info(tmp_ostringstream.str());
+        set_ptp_config(
+          static_cast<int>(sensor_configuration->ptp_profile), sensor_configuration->ptp_domain,
+          static_cast<int>(sensor_configuration->ptp_transport_type),
+          static_cast<int>(sensor_configuration->ptp_switch_type), g_ptp_log_announce_interval,
+          g_ptp_sync_interval, g_ptp_log_min_delay_interval);
+      }
       logger_->debug("Setting properties done");
     });
     logger_->debug("Waiting for thread to finish");

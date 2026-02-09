@@ -866,35 +866,106 @@ struct HesaiLidarRangeAll
 };
 
 /// @brief struct of PTC_COMMAND_GET_PTP_CONFIG
-struct HesaiPtpConfig
+struct HesaiPtpConfigBase
 {
-  int8_t status;
-  int8_t profile;
-  int8_t domain;
-  int8_t network;
+  uint8_t status;
+  uint8_t profile;
+  uint8_t domain;
+  uint8_t network;
+
+  virtual ~HesaiPtpConfigBase() = default;
+
+  [[nodiscard]] ordered_json to_json() const
+  {
+    ordered_json j;
+    j["status"] = status ? "Enabled" : "Disabled";
+    j["profile"] = get_str_profile(profile);
+    j["domain"] = domain;
+    j["network"] = get_str_network(network);
+    j.update(sensor_specifics_to_json());
+    return j;
+  }
+
+  [[nodiscard]] virtual const HesaiPtpConfigBase & get() const = 0;
+
+protected:
+  [[nodiscard]] virtual ordered_json sensor_specifics_to_json() const = 0;
+
+  [[nodiscard]] static std::string get_str_profile(uint8_t profile)
+  {
+    switch (profile) {
+      case 0:
+        return "IEEE 1588v2";
+      case 1:
+        return "IEEE 802.1AS";
+      case 2:
+        return "IEEE 802.1AS Automotive";
+      case 3:
+        return "IEEE 802.1AS AUTOSAR";
+      default:
+        return "Unknown(" + std::to_string(static_cast<int>(profile)) + ")";
+    }
+  }
+
+  [[nodiscard]] static std::string get_str_network(uint8_t network)
+  {
+    switch (network) {
+      case 0:
+        return "UDP/IP";
+      case 1:
+        return "L2";
+      default:
+        return "Unknown(" + std::to_string(static_cast<int>(network)) + ")";
+    }
+  }
+};
+
+inline std::ostream & operator<<(std::ostream & os, const HesaiPtpConfigBase & arg)
+{
+  ordered_json j = arg.to_json();
+  for (const auto & [key, value] : j.items()) {
+    os << key << ": " << to_string(value) << '\n';
+  }
+  return os;
+}
+
+struct HesaiPtpConfig1588v2 : public HesaiPtpConfigBase
+{
   int8_t logAnnounceInterval;
   int8_t logSyncInterval;
   int8_t logMinDelayReqInterval;
-  // FIXME: this format is not correct for OT128, or for AT128 on 802.1AS
 
-  friend std::ostream & operator<<(std::ostream & os, nebula::HesaiPtpConfig const & arg)
+  [[nodiscard]] const HesaiPtpConfigBase & get() const override { return *this; }
+
+protected:
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
   {
-    os << "status: " << static_cast<int>(arg.status);
-    os << ", ";
-    os << "profile: " << static_cast<int>(arg.profile);
-    os << ", ";
-    os << "domain: " << static_cast<int>(arg.domain);
-    os << ", ";
-    os << "network: " << static_cast<int>(arg.network);
-    if (arg.status == 0) {
-      os << ", ";
-      os << "logAnnounceInterval: " << static_cast<int>(arg.logAnnounceInterval);
-      os << ", ";
-      os << "logSyncInterval: " << static_cast<int>(arg.logSyncInterval);
-      os << ", ";
-      os << "logMinDelayReqInterval: " << static_cast<int>(arg.logMinDelayReqInterval);
-    }
-    return os;
+    ordered_json j;
+    j["logAnnounceInterval"] = logAnnounceInterval;
+    j["logSyncInterval"] = logSyncInterval;
+    j["logMinDelayReqInterval"] = logMinDelayReqInterval;
+    return j;
+  }
+};
+
+struct HesaiPtpConfig1588v2Extended : public HesaiPtpConfig1588v2
+{
+  uint8_t reserved = 0;
+  // No extra fields to show in JSON currently, but good to have the struct for potential future use
+};
+
+struct HesaiPtpConfig8021AS : public HesaiPtpConfigBase
+{
+  uint8_t switch_type;
+
+  [[nodiscard]] const HesaiPtpConfigBase & get() const override { return *this; }
+
+protected:
+  [[nodiscard]] ordered_json sensor_specifics_to_json() const override
+  {
+    ordered_json j;
+    j["switch_type"] = (switch_type == 1) ? "TSN" : "Non-TSN";
+    return j;
   }
 };
 
