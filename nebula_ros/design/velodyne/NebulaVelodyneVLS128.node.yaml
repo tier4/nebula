@@ -1,9 +1,12 @@
-autoware_system_design_format: v0.1.0
+autoware_system_design_format: v0.2.0
 
 name: NebulaVelodyneVLS128.node
 
+package:
+  name: nebula_ros
+  provider: nebula
+
 launch:
-  package: nebula_ros
   plugin: HesaiRosWrapper
   executable: velodyne_ros_wrapper_node
   node_output: screen
