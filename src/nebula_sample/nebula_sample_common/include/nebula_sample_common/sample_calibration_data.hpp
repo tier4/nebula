@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_SAMPLE_COMMON_H
-#define NEBULA_SAMPLE_COMMON_H
+#pragma once
 
 #include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_decoders/angles.hpp>
+#include <nlohmann/json.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -24,29 +25,6 @@
 
 namespace nebula::drivers
 {
-
-/// @brief Sensor-specific configuration for the Sample LiDAR
-///
-/// When implementing for a real sensor, add fields for:
-/// - Return mode (single, strongest, forst_strongest, etc.)
-/// - Rotation speed / scan frequency
-/// - IP addresses (sensor, host)
-/// - Port numbers
-/// - FOV settings
-/// - Any vendor-specific parameters
-struct SampleSensorConfiguration
-{
-  std::string host_ip;
-  std::string sensor_ip;
-};
-
-inline std::ostream & operator<<(std::ostream & os, SampleSensorConfiguration const & arg)
-{
-  os << "Sample Sensor Configuration:" << '\n';
-  os << "Host IP: " << arg.host_ip << '\n';
-  os << "Sensor IP: " << arg.sensor_ip << '\n';
-  return os;
-}
 
 /// @brief Calibration data for the Sample LiDAR (optional)
 /// @details This struct is only needed if your sensor requires calibration data.
@@ -100,5 +78,3 @@ struct SampleCalibrationData
 };
 
 }  // namespace nebula::drivers
-
-#endif  // NEBULA_SAMPLE_COMMON_H

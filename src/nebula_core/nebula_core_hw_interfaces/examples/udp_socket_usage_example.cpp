@@ -31,6 +31,8 @@ int main()
   socket.subscribe([](const std::vector<uint8_t> & data, const UdpSocket::RxMetadata & metadata) {
     (void)data;
     (void)metadata;
+    // Process received data and metadata here. This callback will be executed in the socket's
+    // receive thread.
   });
 
   socket.unsubscribe();

@@ -4,24 +4,21 @@
 
 /**:
   ros__parameters:
-    # Sensor configuration
+    # ROS wrapper configuration
     sensor_model: SampleSensor
-    return_mode: Dual
+    launch_hw: true
     frame_id: sample_lidar
 
     # Network configuration
-    sensor_ip: 192.168.1.201
-    host_ip: 192.168.1.100
-    data_port: 2368
+    connection:
+      sensor_ip: 192.168.1.201
+      host_ip: 192.168.1.100
 
-    # Scan configuration
-    scan_phase: 0
-    rotation_speed: 600  # RPM
-    cloud_min_angle: 0   # degrees
-    cloud_max_angle: 360 # degrees
-
-    # Optional: Calibration file path
-    # calibration_file: "$(find-pkg-share nebula_sample)/config/calibration.dat"
-
-    # Hardware interface
-    launch_hw: true
+    # Decoder configuration
+    fov:
+      azimuth:
+        min_deg: 0.0
+        max_deg: 360.0
+      elevation:
+        min_deg: -15.0
+        max_deg: 15.0

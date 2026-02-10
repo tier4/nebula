@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_SAMPLE_SCAN_DECODER_HPP
-#define NEBULA_SAMPLE_SCAN_DECODER_HPP
+#ifndef NEBULA_SAMPLE_DECODER_HPP
+#define NEBULA_SAMPLE_DECODER_HPP
 
 #include <nebula_core_common/point_types.hpp>
 #include <nebula_core_common/util/expected.hpp>
-#include <nebula_sample_common/sample_common.hpp>
+#include <nebula_core_decoders/angles.hpp>
 
-#include <cstdint>
 #include <functional>
 #include <vector>
 
 namespace nebula::drivers
 {
+
 /// @brief Error codes returned during packet decoding
 enum class DecodeError : uint8_t {
   PACKET_PARSE_FAILED,  ///< Failed to parse packet data (invalid format, checksum error, etc.)
@@ -54,13 +54,15 @@ struct PacketDecodeResult
   util::expected<PacketMetadata, DecodeError> metadata_or_error;  ///< Decode result or error
 };
 
-/// @brief Base interface for packet decoders
-/// @details Implement this interface to decode raw UDP packets into point clouds.
-/// The decoder is responsible for:
-/// - Parsing binary packet data according to the sensor's protocol
-/// - Accumulating points until a full scan is complete
-/// - Calling the pointcloud callback when a scan is ready
-class SampleScanDecoder
+/// @brief Concrete implementation of the Sample packet decoder
+/// @details This class implements the SampleScanDecoder interface.
+/// Implement the following in this class:
+/// - Parse raw UDP packets according to your sensor's protocol specification
+/// - Perform validation checks
+/// - Extract point data (x, y, z, intensity, timestamp, etc.)
+/// - Accumulate points until a full scan is complete
+/// - Call the pointcloud callback when a scan is ready
+class SampleDecoder
 {
 public:
   /// @brief Callback type for publishing complete point clouds
@@ -69,27 +71,36 @@ public:
   using pointcloud_callback_t =
     std::function<void(const NebulaPointCloudPtr & pointcloud, double timestamp_s)>;
 
-  SampleScanDecoder(SampleScanDecoder && c) = delete;
-  SampleScanDecoder & operator=(SampleScanDecoder && c) = delete;
-  SampleScanDecoder(const SampleScanDecoder & c) = delete;
-  SampleScanDecoder & operator=(const SampleScanDecoder & c) = delete;
-
-  virtual ~SampleScanDecoder() = default;
-  SampleScanDecoder() = default;
+  /// @brief Constructor
+  /// @param fov Field of view to crop the point cloud to
+  /// @details Initialize any internal state needed for decoding (e.g., point accumulation buffers)
+  explicit SampleDecoder(
+    FieldOfView<float, Degrees> fov /*, other decoder args */, pointcloud_callback_t pointcloud_cb);
 
   /// @brief Decode a single UDP packet
-  /// @param packet Raw packet data received from the sensor
-  /// @return PacketDecodeResult containing metadata or error, plus performance counters
-  /// @details This is the main decoding function. Implement sensor-specific parsing logic here.
-  /// Parse the packet, extract points, and accumulate them. When a full scan is complete,
-  /// call the pointcloud callback and set did_scan_complete = true.
-  virtual PacketDecodeResult unpack(const std::vector<uint8_t> & packet) = 0;
+  /// @param packet Raw packet bytes from the sensor
+  /// @return PacketDecodeResult with metadata or error
+  /// @details Implement your sensor's packet parsing logic here:
+  /// 1. Validate packet size and checksum
+  /// 2. Parse packet header (timestamp, azimuth, etc.)
+  /// 3. Extract point data blocks
+  /// 4. Convert raw data to 3D points (apply calibration if needed)
+  /// 5. Accumulate points in the current scan
+  /// 6. Detect scan completion
+  /// 7. If scan complete, call pointcloud_callback_ and set did_scan_complete=true
+  PacketDecodeResult unpack(const std::vector<uint8_t> & packet);
 
-  /// @brief Register a callback to receive complete point clouds
-  /// @param callback Function to call when a full scan is decoded
-  /// @details The decoder calls this callback when a complete scan is ready
-  virtual void set_pointcloud_callback(pointcloud_callback_t callback) = 0;
+private:
+  pointcloud_callback_t pointcloud_callback_;  ///< Callback for publishing scans
+  // Implementation Items: Add member variables for:
+  // - Point cloud accumulation buffer
+  // - Previous azimuth for scan completion detection
+  // - Scan timestamp
+  // - Optionally: Double-buffering (two point cloud buffers) for handling scan overlap
+  //   (required if azimuth correction is done in Nebula)
+  // - Any sensor-specific state
 };
+
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_SAMPLE_SCAN_DECODER_HPP
+#endif  // NEBULA_SAMPLE_DECODER_HPP
