@@ -19,31 +19,31 @@ inputs: []
 outputs:
   - name: pandar_packets
     message_type: pandar_msgs/msg/PandarScan
-    remap_target: "pandar_packets"
+    remap_target: pandar_packets
     qos:
       depth: 10
       reliability: best_effort
   - name: pandar_points
     message_type: sensor_msgs/msg/PointCloud2
-    remap_target: "pandar_points"
+    remap_target: pandar_points
     qos:
       depth: 10
       reliability: best_effort
   - name: aw_points
     message_type: sensor_msgs/msg/PointCloud2
-    remap_target: "aw_points"
+    remap_target: aw_points
     qos:
       depth: 10
       reliability: best_effort
   - name: aw_points_ex
     message_type: sensor_msgs/msg/PointCloud2
-    remap_target: "aw_points_ex"
+    remap_target: aw_points_ex
     qos:
       depth: 10
       reliability: best_effort
   - name: blockage_mask
     message_type: sensor_msgs/msg/Image
-    remap_target: "blockage_mask"
+    remap_target: blockage_mask
 
 # parameters
 parameter_files:

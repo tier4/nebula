@@ -6,22 +6,22 @@ base: NebulaHesaiPandar128E4X.node
 
 override:
   inputs:
-  - name: pandar_packets
-    message_type: pandar_msgs/msg/PandarScan
-    remap_target: "pandar_packets"
+    - name: pandar_packets
+      message_type: pandar_msgs/msg/PandarScan
+      remap_target: pandar_packets
   processes:
-  - name: decoder
-    trigger_conditions:
-    - from_input: pandar_packets
-    outcomes:
-    - to_output: pandar_points
+    - name: decoder
+      trigger_conditions:
+        - from_input: pandar_packets
+      outcomes:
+        - to_output: pandar_points
   parameters:
-  - name: launch_hw
-    type: bool
-    default: false
+    - name: launch_hw
+      type: bool
+      default: false
 
 remove:
   outputs:
-  - name: pandar_packets
+    - name: pandar_packets
   processes:
-  - name: hw_interface
+    - name: hw_interface
