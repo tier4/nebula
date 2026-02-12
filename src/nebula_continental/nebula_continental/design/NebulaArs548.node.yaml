@@ -16,44 +16,44 @@ launch:
 inputs:
   - name: odometry_input
     message_type: geometry_msgs/msg/TwistWithCovarianceStamped
-    remap_target: "odometry_input"
+    remap_target: odometry_input
   - name: acceleration_input
     message_type: geometry_msgs/msg/AccelWithCovarianceStamped
-    remap_target: "acceleration_input"
+    remap_target: acceleration_input
   - name: steering_angle_input
     message_type: std_msgs/msg/Float32
-    remap_target: "steering_angle_input"
+    remap_target: steering_angle_input
 outputs:
   - name: nebula_packets
     message_type: nebula_msgs/msg/NebulaPackets
-    remap_target: "nebula_packets"
+    remap_target: nebula_packets
   - name: continental_detections
     message_type: continental_msgs/msg/ContinentalArs548DetectionList
-    remap_target: "continental_detections"
+    remap_target: continental_detections
   - name: continental_objects
     message_type: continental_msgs/msg/ContinentalArs548ObjectList
-    remap_target: "continental_objects"
+    remap_target: continental_objects
   - name: detection_points
     message_type: sensor_msgs/msg/PointCloud2
-    remap_target: "detection_points"
+    remap_target: detection_points
   - name: object_points
     message_type: sensor_msgs/msg/PointCloud2
-    remap_target: "object_points"
+    remap_target: object_points
   - name: scan_raw
     message_type: radar_msgs/msg/RadarScan
-    remap_target: "scan_raw"
+    remap_target: scan_raw
   - name: objects_raw
     message_type: radar_msgs/msg/RadarTracks
-    remap_target: "objects_raw"
+    remap_target: objects_raw
   - name: marker_array
     message_type: visualization_msgs/msg/MarkerArray
-    remap_target: "marker_array"
+    remap_target: marker_array
   - name: radar_objects
     message_type: autoware_sensing_msgs/msg/RadarObjects
-    remap_target: "radar_objects"
+    remap_target: radar_objects
   - name: radar_info
     message_type: autoware_sensing_msgs/msg/RadarInfo
-    remap_target: "radar_info"
+    remap_target: radar_info
 
 # parameters
 parameter_files:
