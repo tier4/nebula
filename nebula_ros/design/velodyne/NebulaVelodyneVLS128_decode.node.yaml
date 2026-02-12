@@ -6,22 +6,22 @@ base: NebulaVelodyneVLS128.node
 
 override:
   inputs:
-  - name: velodyne_packets
-    message_type: velodyne_msgs/msg/VelodyneScan
-    remap_target: "velodyne_packets"
+    - name: velodyne_packets
+      message_type: velodyne_msgs/msg/VelodyneScan
+      remap_target: velodyne_packets
   processes:
-  - name: decoder
-    trigger_conditions:
-    - from_input: velodyne_packets
-    outcomes:
-    - to_output: velodyne_points
+    - name: decoder
+      trigger_conditions:
+        - from_input: velodyne_packets
+      outcomes:
+        - to_output: velodyne_points
   parameters:
-  - name: launch_hw
-    type: bool
-    default: false
+    - name: launch_hw
+      type: bool
+      default: false
 
 remove:
   outputs:
-  - name: velodyne_packets
+    - name: velodyne_packets
   processes:
-  - name: hw_interface
+    - name: hw_interface
