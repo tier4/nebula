@@ -19,7 +19,7 @@
     },
     "calibration_file": {
       "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/calibration_file",
-      "default": "$(find-pkg-share nebula_decoders)/calibration/hesai/$(var sensor_model).csv"
+      "default": "$(find-pkg-share nebula_hesai_decoders)/calibration/$(var sensor_model).csv"
     },
     "calibration_download_enabled": {
       "description": "Whether to download the calibration data from the sensor and store it in `calibration_file`, or to use the file at `calibration_file` as-is. In `udp_only` and offline (`launch_hw = false`) mode, calibration from file is always used.",

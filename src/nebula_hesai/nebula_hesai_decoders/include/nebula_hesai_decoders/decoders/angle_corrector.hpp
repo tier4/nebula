@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <nebula_core_decoders/scan_cutter.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <cstdint>
@@ -21,6 +22,8 @@
 namespace nebula::drivers
 {
 
+/// @brief Corrected angles (azimuth, elevation) and their sin/cos values, all spatial angles in
+/// radians
 struct CorrectedAngleData
 {
   float azimuth_rad;
@@ -33,11 +36,21 @@ struct CorrectedAngleData
 
 /// @brief Handles angle correction for given azimuth/channel combinations, as well as trigonometry
 /// lookup tables
-template <typename CorrectionDataT>
+///
+/// This module performs conversions between raw encoder angles as sent by the sensor, and
+/// user-facing spatial angles as output in pointclouds.
+///
+/// Terminology:
+/// - encoder angle: raw angle as sent by the sensor
+/// - spatial angle: user-facing, geometrically meaningful angle as output in pointclouds, used for
+///   scan cutting and FoV settings
+template <typename CorrectionDataT, size_t ChannelN>
 class AngleCorrector
 {
 public:
   using correction_data_t = CorrectionDataT;
+
+  virtual ~AngleCorrector() = default;
 
   /// @brief Get the corrected azimuth and elevation for a given block and channel, along with their
   /// sin/cos values.
@@ -45,13 +58,11 @@ public:
   /// angle unit
   /// @param channel_id The laser channel's id
   /// @return The corrected angles (azimuth, elevation) in radians and their sin/cos values
-  virtual CorrectedAngleData get_corrected_angle_data(
-    uint32_t block_azimuth, uint32_t channel_id) = 0;
+  [[nodiscard]] virtual CorrectedAngleData get_corrected_angle_data(
+    uint32_t encoder_azimuth, uint32_t channel_id) const = 0;
 
-  virtual bool passed_emit_angle(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
-  virtual bool passed_timestamp_reset_angle(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
-  virtual bool is_inside_fov(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
-  virtual bool is_inside_overlap(uint32_t last_azimuth, uint32_t current_azimuth) = 0;
+  [[nodiscard]] virtual CorrectedAzimuths<ChannelN, float> get_corrected_azimuths(
+    uint32_t block_azimuth) const = 0;
 };
 
 }  // namespace nebula::drivers

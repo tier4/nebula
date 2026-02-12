@@ -14,6 +14,7 @@
 
 #include "hesai_ros_offline_extract_pcd.hpp"
 
+#include <nebula_core_ros/compatibility/serialized_bag_message.hpp>
 #include <nebula_core_ros/rclcpp_logger.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
 #include <rclcpp/serialization.hpp>
@@ -206,11 +207,11 @@ Status HesaiRosOfflineExtractSample::read_bag()
     serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
 
     std::cout << "Found data in topic " << bag_message->topic_name << ": "
-              << bag_message->time_stamp << std::endl;
+              << get_timestamp_ns(*bag_message) << std::endl;
 
     drivers::HesaiScanDecoder::pointcloud_callback_t pointcloud_cb =
       [&](const drivers::NebulaPointCloudPtr & pointcloud, double /* timestamp_s */) {
-        auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
+        auto fn = std::to_string(get_timestamp_ns(*bag_message)) + ".pcd";
         writer.writeBinary((o_dir / fn).string(), *pointcloud);
       };
 

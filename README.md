@@ -39,7 +39,13 @@ To build and serve the documentation locally, see the build steps further below.
 
 ## Quick start
 
-Nebula builds with ROS 2 Galactic and Humble.
+Nebula officially supports the following ROS 2 distros:
+
+- [Humble](https://docs.ros.org/en/humble/Installation.html)
+- [Jazzy](https://docs.ros.org/en/jazzy/Installation.html)
+
+Other ROS 2 distros, such as [Rolling](https://docs.ros.org/en/rolling/Installation.html), might
+work, but are not officially supported at this time.
 
 > **Note**
 >
@@ -52,8 +58,8 @@ To build Nebula run the following commands in your workspace:
 git clone https://github.com/tier4/nebula.git
 cd nebula
 # Import dependencies
-vcs import < build_depends.repos
-rosdep install --from-paths . --ignore-src -y -r
+vcs import < build_depends-${ROS_DISTRO}.repos
+rosdep install --from-paths . --ignore-src -y
 # Build Nebula
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 ```

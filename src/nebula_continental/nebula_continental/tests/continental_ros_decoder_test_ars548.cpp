@@ -16,6 +16,7 @@
 
 #include "parameter_descriptors.hpp"
 
+#include <nebula_core_ros/compatibility/serialized_bag_message.hpp>
 #include <rclcpp/serialization.hpp>
 #include <rclcpp/serialized_message.hpp>
 #include <rcpputils/filesystem_helper.hpp>
@@ -216,7 +217,7 @@ void ContinentalRosDecoderTest::read_bag()
         serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
 
         std::cout << "Found data in topic " << bag_message->topic_name << ": "
-                  << bag_message->time_stamp << std::endl;
+                  << get_timestamp_ns(*bag_message) << std::endl;
 
         ASSERT_EQ(1, extracted_msg.packets.size());
 

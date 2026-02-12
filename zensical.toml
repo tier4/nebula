@@ -47,7 +47,10 @@ nav = [
     ]},
   ]},
   { "Point cloud types" = "point_types.md" },
-  { "Design" = "design.md" },
+  { "Design" = [
+    { "Design" = "design.md" },
+    { "Scan cutting" = "design/scan_cutting.md" },
+  ]},
   { "Tutorials" = "tutorials.md" },
   { "Contributing" = [
     { "Contributing to Nebula" = "contributing/index.md" },
@@ -187,12 +190,24 @@ plugins = [
   "search",
 ]
 
-markdown_extensions = [
-  "admonition",
-  "pymdownx.details",
-  "pymdownx.highlight",
-  "pymdownx.superfences",
+extra_javascript = [
+    "js/katex.js",
+    "https://unpkg.com/katex@0/dist/katex.min.js",
+    "https://unpkg.com/katex@0/dist/contrib/auto-render.min.js",
+    "https://viewer.diagrams.net/js/viewer-static.min.js"
 ]
+
+extra_css = [
+    "css/drawio-darkmode.css",
+    "https://unpkg.com/katex@0/dist/katex.min.css"
+]
+
+[project.markdown_extensions.admonition]
+[project.markdown_extensions.pymdownx.details]
+[project.markdown_extensions.pymdownx.highlight]
+[project.markdown_extensions.pymdownx.superfences]
+[project.markdown_extensions.pymdownx.arithmatex]
+generic = true
 
 [project.theme]
 language = "en"

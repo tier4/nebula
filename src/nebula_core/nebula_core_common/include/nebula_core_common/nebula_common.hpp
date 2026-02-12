@@ -19,9 +19,10 @@
 
 #include <boost/tokenizer.hpp>
 
-#include <algorithm>
+#include <cmath>
 #include <ostream>
 #include <string>
+#include <type_traits>
 
 namespace nebula::drivers
 {
@@ -505,17 +506,25 @@ pcl::PointCloud<PointXYZIRADT>::Ptr convert_point_xyzircaedt_to_point_xyziradt(
 /// @brief Converts degrees to radians
 /// @param radians
 /// @return degrees
-static inline float deg2rad(double degrees)
+template <typename T>
+static inline std::enable_if_t<std::is_floating_point_v<T>, T> deg2rad(T degrees)
 {
-  return degrees * M_PI / 180.0;
+  return degrees * static_cast<T>(M_PI / 180.0);
+}
+
+template <typename T>
+static inline std::enable_if_t<std::is_integral_v<T>, double> deg2rad(T degrees)
+{
+  return deg2rad<double>(static_cast<double>(degrees));
 }
 
 /// @brief Converts radians to degrees
 /// @param radians
 /// @return degrees
-static inline float rad2deg(double radians)
+template <typename T>
+static inline std::enable_if_t<std::is_floating_point_v<T>, T> rad2deg(T radians)
 {
-  return radians * 180.0 / M_PI;
+  return radians * static_cast<T>(180.0 / M_PI);
 }
 
 /// @brief Converts RPM to Hertz

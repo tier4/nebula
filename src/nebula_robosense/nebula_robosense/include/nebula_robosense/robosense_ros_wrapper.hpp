@@ -18,7 +18,6 @@
 #include "nebula_robosense/hw_interface_wrapper.hpp"
 #include "nebula_robosense/hw_monitor_wrapper.hpp"
 
-#include <ament_index_cpp/get_package_prefix.hpp>
 #include <boost_tcp_driver/tcp_driver.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/nebula_status.hpp>

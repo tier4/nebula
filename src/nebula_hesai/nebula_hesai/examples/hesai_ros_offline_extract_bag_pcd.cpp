@@ -14,6 +14,7 @@
 
 #include "hesai_ros_offline_extract_bag_pcd.hpp"
 
+#include <nebula_core_ros/compatibility/serialized_bag_message.hpp>
 #include <nebula_core_ros/rclcpp_logger.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
 #include <rclcpp/serialization.hpp>
@@ -242,12 +243,12 @@ Status HesaiRosOfflineExtractBag::read_bag()
     serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
 
     std::cout << "Found data in topic " << bag_message->topic_name << ": "
-              << bag_message->time_stamp << std::endl;
+              << get_timestamp_ns(*bag_message) << std::endl;
 
     // Initialize the bag writer if it is not initialized
     if (!bag_writer) {
       const rosbag2_storage::StorageOptions storage_options_w(
-        {(o_dir / std::to_string(bag_message->time_stamp)).string(), "sqlite3"});
+        {(o_dir / std::to_string(get_timestamp_ns(*bag_message))).string(), "sqlite3"});
       const rosbag2_cpp::ConverterOptions converter_options_w(
         {rmw_get_serialization_format(), rmw_get_serialization_format()});
       bag_writer = std::make_unique<rosbag2_cpp::writers::SequentialWriter>();
@@ -271,7 +272,7 @@ Status HesaiRosOfflineExtractBag::read_bag()
 
     drivers::HesaiScanDecoder::pointcloud_callback_t pointcloud_cb =
       [&](const drivers::NebulaPointCloudPtr & pointcloud, double /* timestamp_s */) {
-        auto fn = std::to_string(bag_message->time_stamp) + ".pcd";
+        auto fn = std::to_string(get_timestamp_ns(*bag_message)) + ".pcd";
 
         cnt++;
         if (skip_num_ < cnt) {
@@ -302,7 +303,7 @@ Status HesaiRosOfflineExtractBag::read_bag()
             // Create a bag message for the pointcloud
             auto cloud_bag_msg = std::make_shared<rosbag2_storage::SerializedBagMessage>();
             cloud_bag_msg->topic_name = output_pointcloud_topic_;
-            cloud_bag_msg->time_stamp = bag_message->time_stamp;
+            cloud_bag_msg->time_stamp = get_timestamp_ns(*bag_message);
 
             // Create a new shared_ptr for the serialized data
             cloud_bag_msg->serialized_data = std::make_shared<rcutils_uint8_array_t>(
