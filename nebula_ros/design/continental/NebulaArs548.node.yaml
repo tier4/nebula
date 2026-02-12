@@ -13,7 +13,7 @@ launch:
   use_container: false
 
 # interfaces
-inputs: 
+inputs:
   - name: odometry_input
     message_type: geometry_msgs/msg/TwistWithCovarianceStamped
     remap_target: "odometry_input"
@@ -56,13 +56,13 @@ outputs:
     remap_target: "radar_info"
 
 # parameters
-parameter_files: 
+parameter_files:
   - name: config_file
     default: config/radar/continental/ARS548.param.yaml
     schema: schema/ARS548.schema.json
     allow_substs: true
-  
-parameters: 
+
+parameters:
   - name: launch_hw
     type: bool
     default: true
@@ -113,7 +113,7 @@ parameters:
     default: 2.5
   - name: configuration_vehicle_wheelbase
     type: double
-    default: 2.79 
+    default: 2.79
 
 # processes
 processes:
