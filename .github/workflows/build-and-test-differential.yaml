@@ -78,24 +78,17 @@ jobs:
         if: steps.test.outputs.coverage-report-files != ''
         shell: bash
         run: |
-          flags=""
           modified_packages="${{ steps.get-modified-packages.outputs.modified-packages }}"
-
+          flags=""
+          declare -A seen
           for pkg in $modified_packages; do
-            if [[ "$pkg" == nebula_core* ]]; then
-              [[ "$flags" == *"Core"* ]] || flags="${flags}Core,"
-            elif [[ "$pkg" == nebula_hesai* ]]; then
-              [[ "$flags" == *"Hesai"* ]] || flags="${flags}Hesai,"
-            elif [[ "$pkg" == nebula_velodyne* ]]; then
-              [[ "$flags" == *"Velodyne"* ]] || flags="${flags}Velodyne,"
-            elif [[ "$pkg" == nebula_continental* ]]; then
-              [[ "$flags" == *"Continental"* ]] || flags="${flags}Continental,"
-            elif [[ "$pkg" == nebula_robosense* ]]; then
-              [[ "$flags" == *"Robosense"* ]] || flags="${flags}Robosense,"
+            # Flags map 1:1 to package names.
+            if [[ -n "$pkg" && -z "${seen[$pkg]:-}" ]]; then
+              flags="${flags:+$flags,}$pkg"
+              seen[$pkg]=1
             fi
           done
 
-          flags="${flags%,}"
           echo "flags=$flags" >> "$GITHUB_OUTPUT"
           echo "Modified packages: $modified_packages"
           echo "Determined flags: $flags"
