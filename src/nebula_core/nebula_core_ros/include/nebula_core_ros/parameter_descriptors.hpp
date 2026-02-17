@@ -16,6 +16,7 @@
 
 #include <rcl_interfaces/msg/parameter.hpp>
 #include <rcl_interfaces/msg/parameter_descriptor.hpp>
+#include <rclcpp/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <string>
@@ -50,6 +51,16 @@ bool get_param(const std::vector<rclcpp::Parameter> & p, const std::string & nam
     return true;
   }
   return false;
+}
+
+template <typename T>
+T ensure_and_get_parameter(rclcpp::Node & node, const std::string & name)
+{
+  if (!node.has_parameter(name)) {
+    node.declare_parameter<T>(name);
+  }
+
+  return node.get_parameter<T>(name);
 }
 
 }  // namespace nebula::ros

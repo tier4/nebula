@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_core_decoders/angles.hpp"
+#include "nebula_core_common/util/angles.hpp"
 
 #include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_core_common/nebula_common.hpp>

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "nebula_core_decoders/angles.hpp"
+#include "nebula_core_common/util/angles.hpp"
 
 #include <gtest/gtest.h>
 

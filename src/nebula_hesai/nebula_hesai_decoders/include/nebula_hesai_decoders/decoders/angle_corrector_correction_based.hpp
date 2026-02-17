@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_core_decoders/angles.hpp"
+#include "nebula_core_common/util/angles.hpp"
 #include "nebula_hesai_common/hesai_common.hpp"
 #include "nebula_hesai_decoders/decoders/angle_corrector.hpp"
 

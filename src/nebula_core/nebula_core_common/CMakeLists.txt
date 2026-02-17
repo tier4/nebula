@@ -32,7 +32,8 @@ if(BUILD_TESTING OR BUILD_EXAMPLES)
   add_library(
     nebula_core_common_examples OBJECT
     examples/expected_usage_example.cpp
-    examples/logger_integration_usage_example.cpp)
+    examples/logger_integration_usage_example.cpp
+    examples/angle_utilities_usage_example.cpp)
   target_link_libraries(nebula_core_common_examples PRIVATE nebula_core_common)
 endif()
 

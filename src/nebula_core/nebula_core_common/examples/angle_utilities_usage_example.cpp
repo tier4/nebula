@@ -14,7 +14,7 @@
 
 // # --8<-- [start:include]
 #include "nebula_core_common/nebula_common.hpp"
-#include "nebula_core_decoders/angles.hpp"
+#include "nebula_core_common/util/angles.hpp"
 // # --8<-- [end:include]
 
 #include <cassert>

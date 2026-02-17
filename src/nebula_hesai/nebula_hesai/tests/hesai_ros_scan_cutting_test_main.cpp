@@ -6,7 +6,7 @@
 
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/point_types.hpp>
-#include <nebula_core_decoders/angles.hpp>
+#include <nebula_core_common/util/angles.hpp>
 #include <pcl/impl/point_types.hpp>
 #include <rclcpp/executors/single_threaded_executor.hpp>
 #include <rclcpp/rclcpp.hpp>

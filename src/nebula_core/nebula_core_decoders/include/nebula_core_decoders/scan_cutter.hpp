@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "nebula_core_decoders/angles.hpp"
+#include "nebula_core_common/util/angles.hpp"
 #include "nebula_core_decoders/scan_cutter/fsm_cut_at_fov_end.hpp"
 #include "nebula_core_decoders/scan_cutter/fsm_cut_in_fov.hpp"
 #include "nebula_core_decoders/scan_cutter/types.hpp"
