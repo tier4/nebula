@@ -1,70 +1,70 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Diagnostics parameters.",
-  "type": "object",
-  "definitions": {
-    "rate_bound_status": {
-      "type": "object",
-      "description": "Frequency bounds within which an OK is issued.",
-      "properties": {
-        "frequency_ok": {
-          "type": "object",
-          "properties": {
-            "min_hz": {
-              "type": "number",
-              "description": "Minimum frequency in Hertz.",
-              "default": 9.5
+    "$id": "nebula_ros_base/schema/diagnostics.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "packet_loss_diagnostic_task": {
+            "properties": {
+                "error_threshold": {
+                    "description": "Threshold for the number of lost packets. If the number of lost packets exceeds this threshold, the diagnostic will be set to ERROR. For non-zero packet loss below this threshold, the diagnostic will be set to WARN.",
+                    "type": "number"
+                }
             },
-            "max_hz": {
-              "type": "number",
-              "description": "Maximum frequency in Hertz.",
-              "default": 10.5
-            }
-          },
-          "required": [
-            "min_hz"
-          ]
+            "type": "object"
         },
-        "frequency_warn": {
-          "type": "object",
-          "description": "Frequency bounds within which a warning is issued, if the frequency is not within `frequency_ok`. Beyond these bounds, an error is issued.",
-          "properties": {
-            "min_hz": {
-              "type": "number",
-              "description": "Minimum frequency in Hertz.",
-              "default": "9.0"
+        "rate_bound_status": {
+            "description": "Frequency bounds within which an OK is issued.",
+            "properties": {
+                "frequency_ok": {
+                    "properties": {
+                        "max_hz": {
+                            "default": 10.5,
+                            "description": "Maximum frequency in Hertz.",
+                            "type": "number"
+                        },
+                        "min_hz": {
+                            "default": 9.5,
+                            "description": "Minimum frequency in Hertz.",
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "min_hz"
+                    ],
+                    "type": "object"
+                },
+                "frequency_warn": {
+                    "description": "Frequency bounds within which a warning is issued, if the frequency is not within `frequency_ok`. Beyond these bounds, an error is issued.",
+                    "properties": {
+                        "max_hz": {
+                            "default": "11.0",
+                            "description": "Maximum frequency in Hertz.",
+                            "type": "number"
+                        },
+                        "min_hz": {
+                            "default": "9.0",
+                            "description": "Minimum frequency in Hertz.",
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "min_hz"
+                    ],
+                    "type": "object"
+                },
+                "num_frame_transition": {
+                    "default": 3,
+                    "description": "Number of frames to wait before transitioning diagnostic status.",
+                    "minimum": 1,
+                    "type": "integer"
+                }
             },
-            "max_hz": {
-              "type": "number",
-              "description": "Maximum frequency in Hertz.",
-              "default": "11.0"
-            }
-          },
-          "required": [
-            "min_hz"
-          ]
-        },
-        "num_frame_transition": {
-          "type": "integer",
-          "description": "Number of frames to wait before transitioning diagnostic status.",
-          "default": 3,
-          "minimum": 1
+            "required": [
+                "frequency_ok",
+                "frequency_warn"
+            ],
+            "type": "object"
         }
-      },
-      "required": [
-        "frequency_ok",
-        "frequency_warn"
-      ]
     },
-    "packet_loss_diagnostic_task": {
-      "type": "object",
-      "properties": {
-        "error_threshold": {
-          "type": "number",
-          "description": "Threshold for the number of lost packets. If the number of lost packets exceeds this threshold, the diagnostic will be set to ERROR. For non-zero packet loss below this threshold, the diagnostic will be set to WARN."
-        }
-      }
-    }
-  },
-  "$id": "nebula_ros_base/schema/diagnostics.json"
+    "title": "Diagnostics parameters.",
+    "type": "object"
 }

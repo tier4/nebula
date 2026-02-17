@@ -1,125 +1,125 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Sensors common parameters.",
-  "type": "object",
-  "definitions": {
-    "calibration_file": {
-      "type": "string",
-      "default": "$(find-pkg-share nebula_decoders)/calibration/$(var sensor_vendor)/$(var sensor_model).yaml",
-      "description": "Sensor calibration file."
-    },
-    "correction_file": {
-      "type": "string",
-      "default": "$(find-pkg-share nebula_decoders)/calibration/$(var sensor_vendor)/$(var sensor_model).dat",
-      "pattern": "^.*\\.dat$",
-      "description": "Sensor correction file."
-    },
-    "cloud_max_angle": {
-      "type": "integer",
-      "default": "360",
-      "minimum": 0,
-      "maximum": 360,
-      "description": "Field of View, end degrees."
-    },
-    "cloud_min_angle": {
-      "type": "integer",
-      "default": "0",
-      "minimum": 0,
-      "maximum": 360,
-      "description": "Field of View, start degrees."
-    },
-    "configuration_vehicle_height": {
-      "type": "number",
-      "default": "2.5",
-      "minimum": 0.0,
-      "readOnly": true,
-      "description": "New vehicle height."
-    },
-    "configuration_vehicle_length": {
-      "type": "number",
-      "default": "4.9",
-      "minimum": 0.0,
-      "readOnly": true,
-      "description": "New vehicle length."
-    },
-    "configuration_vehicle_wheelbase": {
-      "type": "number",
-      "default": "2.8",
-      "minimum": 0.0,
-      "readOnly": true,
-      "description": "New vehicle wheelbase."
-    },
-    "configuration_vehicle_width": {
-      "type": "number",
-      "default": "1.9",
-      "minimum": 0.0,
-      "readOnly": true,
-      "description": "New vehicle width."
-    },
-    "dual_return_distance_threshold": {
-      "type": "number",
-      "default": "0.1",
-      "minimum": 0.01,
-      "maximum": 0.5,
-      "description": "Distance threshold between two neighboring points for dual return mode."
-    },
-    "max_range": {
-      "type": "number",
-      "default": "300.0",
-      "minimum": 0.0,
-      "description": "Sensor maximum single point range."
-    },
-    "min_range": {
-      "type": "number",
-      "default": "0.3",
-      "minimum": 0.0,
-      "description": "Sensor minimum single point range."
-    },
-    "return_mode": {
-      "type": "string",
-      "description": "Sensor return mode."
-    },
-    "scan_phase": {
-      "type": "number",
-      "default": "0.0",
-      "minimum": 0.0,
-      "maximum": 360.0,
-      "description": "Sensor scan phase."
-    },
-    "point_filters": {
-      "title": "Filters to apply while decoding",
-      "type": "object",
-      "properties": {
-        "downsample_mask": {
-          "title": "A 2D boolean mask to filter regions of the pointcloud",
-          "type": "object",
-          "properties": {
-            "path": {
-              "title": "Path to a grayscale PNG mask (0: filter all, 128: keep 50%, 255: keep all)",
-              "description": "See [Filters](/filters/) for more information.",
-              "type": "string",
-              "default": "\"\""
-            }
-          },
-          "required": [
-            "path"
-          ],
-          "additionalProperties": false
+    "$id": "nebula_ros_base/schema/misc.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "calibration_file": {
+            "default": "$(find-pkg-share nebula_decoders)/calibration/$(var sensor_vendor)/$(var sensor_model).yaml",
+            "description": "Sensor calibration file.",
+            "type": "string"
+        },
+        "cloud_max_angle": {
+            "default": "360",
+            "description": "Field of View, end degrees.",
+            "maximum": 360,
+            "minimum": 0,
+            "type": "integer"
+        },
+        "cloud_min_angle": {
+            "default": "0",
+            "description": "Field of View, start degrees.",
+            "maximum": 360,
+            "minimum": 0,
+            "type": "integer"
+        },
+        "configuration_vehicle_height": {
+            "default": "2.5",
+            "description": "New vehicle height.",
+            "minimum": 0.0,
+            "readOnly": true,
+            "type": "number"
+        },
+        "configuration_vehicle_length": {
+            "default": "4.9",
+            "description": "New vehicle length.",
+            "minimum": 0.0,
+            "readOnly": true,
+            "type": "number"
+        },
+        "configuration_vehicle_wheelbase": {
+            "default": "2.8",
+            "description": "New vehicle wheelbase.",
+            "minimum": 0.0,
+            "readOnly": true,
+            "type": "number"
+        },
+        "configuration_vehicle_width": {
+            "default": "1.9",
+            "description": "New vehicle width.",
+            "minimum": 0.0,
+            "readOnly": true,
+            "type": "number"
+        },
+        "correction_file": {
+            "default": "$(find-pkg-share nebula_decoders)/calibration/$(var sensor_vendor)/$(var sensor_model).dat",
+            "description": "Sensor correction file.",
+            "pattern": "^.*\\.dat$",
+            "type": "string"
+        },
+        "dual_return_distance_threshold": {
+            "default": "0.1",
+            "description": "Distance threshold between two neighboring points for dual return mode.",
+            "maximum": 0.5,
+            "minimum": 0.01,
+            "type": "number"
+        },
+        "max_range": {
+            "default": "300.0",
+            "description": "Sensor maximum single point range.",
+            "minimum": 0.0,
+            "type": "number"
+        },
+        "min_range": {
+            "default": "0.3",
+            "description": "Sensor minimum single point range.",
+            "minimum": 0.0,
+            "type": "number"
+        },
+        "point_filters": {
+            "additionalProperties": false,
+            "properties": {
+                "downsample_mask": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "path": {
+                            "default": "\"\"",
+                            "description": "See [Filters](/filters/) for more information.",
+                            "title": "Path to a grayscale PNG mask (0: filter all, 128: keep 50%, 255: keep all)",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "path"
+                    ],
+                    "title": "A 2D boolean mask to filter regions of the pointcloud",
+                    "type": "object"
+                }
+            },
+            "title": "Filters to apply while decoding",
+            "type": "object"
+        },
+        "return_mode": {
+            "description": "Sensor return mode.",
+            "type": "string"
+        },
+        "scan_phase": {
+            "default": "0.0",
+            "description": "Sensor scan phase.",
+            "maximum": 360.0,
+            "minimum": 0.0,
+            "type": "number"
+        },
+        "sync_diagnostics": {
+            "properties": {
+                "topic": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "topic"
+            ],
+            "type": "object"
         }
-      },
-      "additionalProperties": false
     },
-    "sync_diagnostics": {
-      "type": "object",
-      "properties": {
-        "topic": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "topic"
-      ]
-    }
-  },
-  "$id": "nebula_ros_base/schema/misc.json"
+    "title": "Sensors common parameters.",
+    "type": "object"
 }
