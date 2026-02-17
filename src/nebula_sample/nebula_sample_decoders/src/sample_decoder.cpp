@@ -24,12 +24,12 @@ namespace nebula::drivers
 const char * to_cstr(const DecodeError error)
 {
   switch (error) {
-    case DecodeError::PACKET_PARSE_FAILED:
-      return "packet parse failed";
-    case DecodeError::DRIVER_NOT_OK:
-      return "decoder is not ready";
-    case DecodeError::INVALID_PACKET_SIZE:
-      return "invalid packet size";
+    case DecodeError::PACKET_FORMAT_INVALID:
+      return "packet format invalid";
+    case DecodeError::CALLBACK_NOT_SET:
+      return "pointcloud callback is not set";
+    case DecodeError::EMPTY_PACKET:
+      return "packet is empty";
     default:
       return "unknown decode error";
   }
@@ -44,19 +44,46 @@ SampleDecoder::SampleDecoder(
 PacketDecodeResult SampleDecoder::unpack(const std::vector<uint8_t> & packet)
 {
   const auto decode_begin = std::chrono::steady_clock::now();
-  PacketDecodeResult result{{}, DecodeError::DRIVER_NOT_OK};
+  PacketDecodeResult result{{}, DecodeError::CALLBACK_NOT_SET};
 
   if (!pointcloud_callback_) {
-    result.metadata_or_error = DecodeError::DRIVER_NOT_OK;
+    result.metadata_or_error = DecodeError::CALLBACK_NOT_SET;
   } else if (packet.empty()) {
-    result.metadata_or_error = DecodeError::INVALID_PACKET_SIZE;
+    result.metadata_or_error = DecodeError::EMPTY_PACKET;
   } else {
+    ++packet_count_;
+
+    NebulaPoint point{};
+    point.x = static_cast<float>(packet_count_);
+    point.y = 0.0F;
+    point.z = 0.0F;
+    point.intensity = packet.front();
+    point.return_type = 0U;
+    point.channel = 0U;
+    point.azimuth = fov_.azimuth.start;
+    point.elevation = fov_.elevation.start;
+    point.distance = static_cast<float>(packet.size());
+    point.time_stamp = static_cast<uint32_t>(packet_count_);
+    current_scan_cloud_->push_back(point);
+
     PacketMetadata metadata{};
     metadata.packet_timestamp_ns =
       static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
                               std::chrono::system_clock::now().time_since_epoch())
                               .count());
-    metadata.did_scan_complete = false;
+    metadata.did_scan_complete = (packet_count_ % kPacketsPerDummyScan) == 0;
+
+    if (metadata.did_scan_complete) {
+      const auto callback_begin = std::chrono::steady_clock::now();
+      pointcloud_callback_(
+        current_scan_cloud_, static_cast<double>(metadata.packet_timestamp_ns) * 1e-9);
+      result.performance_counters.callback_time_ns =
+        static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                std::chrono::steady_clock::now() - callback_begin)
+                                .count());
+      current_scan_cloud_.reset(new NebulaPointCloud());
+    }
+
     result.metadata_or_error = metadata;
   }
 

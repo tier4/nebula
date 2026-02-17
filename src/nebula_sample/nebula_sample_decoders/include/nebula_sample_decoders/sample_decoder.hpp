@@ -28,9 +28,9 @@ namespace nebula::drivers
 
 /// @brief Error codes returned during packet decoding
 enum class DecodeError : uint8_t {
-  PACKET_PARSE_FAILED,  ///< Failed to parse packet data (invalid format, checksum error, etc.)
-  DRIVER_NOT_OK,        ///< Driver is not in a valid state to decode packets
-  INVALID_PACKET_SIZE,  ///< Packet size doesn't match expected size for this sensor
+  PACKET_FORMAT_INVALID,  ///< Packet content did not match the expected format
+  CALLBACK_NOT_SET,       ///< Decoder cannot publish scans because callback is missing
+  EMPTY_PACKET,           ///< Received packet had zero bytes
 };
 
 const char * to_cstr(DecodeError error);
@@ -96,8 +96,12 @@ public:
   void set_pointcloud_callback(pointcloud_callback_t pointcloud_cb);
 
 private:
+  static constexpr uint64_t kPacketsPerDummyScan = 10;
+
   FieldOfView<float, Degrees> fov_;            ///< Field of view used for future point filtering
   pointcloud_callback_t pointcloud_callback_;  ///< Callback for publishing scans
+  NebulaPointCloudPtr current_scan_cloud_{new NebulaPointCloud()};
+  uint64_t packet_count_{0};
   // Implementation Items: Add member variables for:
   // - Point cloud accumulation buffer
   // - Previous azimuth for scan completion detection
