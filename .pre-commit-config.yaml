@@ -7,6 +7,8 @@ repos:
     rev: v6.0.0
     hooks:
       - id: check-json
+      - id: pretty-format-json
+        args: [--autofix, --indent=4]
       - id: check-merge-conflict
       - id: check-toml
       - id: check-xml
