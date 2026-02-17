@@ -45,9 +45,9 @@ The guide covers:
 
 ### Decoder (`*_decoders`)
 
-- `SampleScanDecoder` - Base decoder interface
 - `SampleDecoder` - Packet decoder implementation
-- `SampleDriver` - Main driver class
+- `PacketDecodeResult` - Decoder output containing metadata/error and performance counters
+- `DecodeError` - Decoder error codes for packet handling failures
 
 ### Hardware interface (`*_hw_interfaces`)
 
