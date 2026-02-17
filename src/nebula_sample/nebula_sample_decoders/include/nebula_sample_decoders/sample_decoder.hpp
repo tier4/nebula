@@ -16,9 +16,10 @@
 #define NEBULA_SAMPLE_DECODER_HPP
 
 #include <nebula_core_common/point_types.hpp>
+#include <nebula_core_common/util/angles.hpp>
 #include <nebula_core_common/util/expected.hpp>
-#include <nebula_core_decoders/angles.hpp>
 
+#include <cstdint>
 #include <functional>
 #include <vector>
 
@@ -31,6 +32,8 @@ enum class DecodeError : uint8_t {
   DRIVER_NOT_OK,        ///< Driver is not in a valid state to decode packets
   INVALID_PACKET_SIZE,  ///< Packet size doesn't match expected size for this sensor
 };
+
+const char * to_cstr(DecodeError error);
 
 /// @brief Metadata extracted from a decoded packet
 struct PacketMetadata
@@ -88,9 +91,12 @@ public:
   /// 5. Accumulate points in the current scan
   /// 6. Detect scan completion
   /// 7. If scan complete, call pointcloud_callback_ and set did_scan_complete=true
-  PacketDecodeResult unpack(const std::vector<uint8_t> & packet);
+  [[nodiscard]] PacketDecodeResult unpack(const std::vector<uint8_t> & packet);
+
+  void set_pointcloud_callback(pointcloud_callback_t pointcloud_cb);
 
 private:
+  FieldOfView<float, Degrees> fov_;            ///< Field of view used for future point filtering
   pointcloud_callback_t pointcloud_callback_;  ///< Callback for publishing scans
   // Implementation Items: Add member variables for:
   // - Point cloud accumulation buffer

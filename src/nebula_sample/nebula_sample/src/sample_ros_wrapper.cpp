@@ -189,8 +189,8 @@ void SampleRosWrapper::receive_cloud_packet_callback(
   const auto decode_result = decoder_->unpack(packet);
   if (!decode_result.metadata_or_error.has_value()) {
     RCLCPP_DEBUG_THROTTLE(
-      get_logger(), *get_clock(), 1000, "Packet decode failed with error code %u.",
-      static_cast<unsigned int>(decode_result.metadata_or_error.error()));
+      get_logger(), *get_clock(), 1000, "Packet decode failed: %s.",
+      drivers::to_cstr(decode_result.metadata_or_error.error()));
   }
 }
 
