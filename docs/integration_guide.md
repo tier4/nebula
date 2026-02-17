@@ -143,7 +143,7 @@ ensures seamless integration with Autoware components.
 ### Angle utilities
 
 ```c++
---8<-- "src/nebula_core/nebula_core_decoders/examples/angle_utilities_usage_example.cpp:include"
+--8<-- "src/nebula_core/nebula_core_common/examples/angle_utilities_usage_example.cpp:include"
 ```
 
 **What it provides**:
@@ -155,7 +155,7 @@ ensures seamless integration with Autoware components.
 **Usage**:
 
 ```c++
---8<-- "src/nebula_core/nebula_core_decoders/examples/angle_utilities_usage_example.cpp:usage"
+--8<-- "src/nebula_core/nebula_core_common/examples/angle_utilities_usage_example.cpp:usage"
 ```
 
 ### Logger integration
