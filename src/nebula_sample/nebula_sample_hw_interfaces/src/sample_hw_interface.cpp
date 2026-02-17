@@ -14,50 +14,50 @@
 
 #include "nebula_sample_hw_interfaces/sample_hw_interface.hpp"
 
-#include <memory>
+#include <utility>
 
 namespace nebula::drivers
 {
 
-SampleHwInterface::SampleHwInterface()
+SampleHwInterface::SampleHwInterface(SampleSensorConfiguration sensor_configuration)
+: sensor_configuration_(std::move(sensor_configuration))
 {
   // Constructor - initialize any member variables if needed
 }
 
-Status SampleHwInterface::sensor_interface_start()
+util::expected<std::monostate, SampleHwInterface::Error> SampleHwInterface::sensor_interface_start()
 {
+  if (!packet_callback_) {
+    return Error::CALLBACK_NOT_REGISTERED;
+  }
+
   // Implementation Items: Implement sensor interface startup
   // 1. Create UDP socket using connections::UdpSocket
   // 2. Bind to the port specified in sensor_configuration_
   // 3. Start async receive loop
-  // 4. When packets arrive, call cloud_packet_callback_ with the packet data
+  // 4. When packets arrive, call packet_callback_ with the packet data
   // 5. Optionally: send HTTP/TCP command to sensor to start scanning
 
-  return Status::OK;
+  return std::monostate{};
 }
 
-Status SampleHwInterface::sensor_interface_stop()
+util::expected<std::monostate, SampleHwInterface::Error> SampleHwInterface::sensor_interface_stop()
 {
   // Implementation Items: Implement sensor interface shutdown
   // 1. Stop the receive loop
   // 3. Optionally: send command to sensor to stop scanning
 
-  return Status::OK;
+  return std::monostate{};
 }
 
-Status SampleHwInterface::set_sensor_configuration(
-  std::shared_ptr<const SampleSensorConfiguration> sensor_configuration)
+util::expected<std::monostate, SampleHwInterface::Error> SampleHwInterface::register_scan_callback(
+  connections::UdpSocket::callback_t scan_callback)
 {
-  // Store the sensor configuration for later use
-  sensor_configuration_ = sensor_configuration;
-  return Status::OK;
-}
-
-Status SampleHwInterface::register_scan_callback(connections::UdpSocket::callback_t scan_callback)
-{
-  // Store the callback to be called when packets arrive
-  cloud_packet_callback_ = scan_callback;
-  return Status::OK;
+  if (!scan_callback) {
+    return Error::INVALID_CALLBACK;
+  }
+  packet_callback_.emplace(std::move(scan_callback));
+  return std::monostate{};
 }
 
 }  // namespace nebula::drivers

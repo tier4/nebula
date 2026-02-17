@@ -29,6 +29,8 @@ target_link_libraries(
 ament_target_dependencies(
   sample_ros_wrapper
   PUBLIC
+  rclcpp
+  rclcpp_components
   sensor_msgs
   pcl_conversions)
 

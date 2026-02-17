@@ -15,11 +15,13 @@
 #ifndef NEBULA_SAMPLE_HW_INTERFACE_HPP
 #define NEBULA_SAMPLE_HW_INTERFACE_HPP
 
-#include <nebula_core_common/nebula_status.hpp>
+#include <nebula_core_common/util/expected.hpp>
 #include <nebula_core_hw_interfaces/connections/udp.hpp>
 #include <nebula_sample_common/sample_configuration.hpp>
 
-#include <memory>
+#include <cstdint>
+#include <optional>
+#include <variant>
 
 namespace nebula::drivers
 {
@@ -39,34 +41,40 @@ namespace nebula::drivers
 class SampleHwInterface
 {
 public:
-  explicit SampleHwInterface(ConnectionConfiguration connection_config /*, other args */);
+  enum class Error : uint8_t {
+    CALLBACK_NOT_REGISTERED,
+    INVALID_CALLBACK,
+  };
+
+  explicit SampleHwInterface(SampleSensorConfiguration sensor_configuration);
 
   /// @brief Start receiving packets from the sensor
-  /// @return Status::OK on success, error status otherwise
+  /// @return Nothing on success, error otherwise
   /// @details Implement the following:
   /// 1. Create UDP socket(s) for data reception
   /// 2. Bind to the configured port(s)
   /// 3. Start async receive loop
   /// 4. Optionally: send start command to sensor
-  Status sensor_interface_start();
+  util::expected<std::monostate, Error> sensor_interface_start();
 
   /// @brief Stop receiving packets from the sensor
-  /// @return Status::OK on success, error status otherwise
+  /// @return Nothing on success, error otherwise
   /// @details Implement the following:
   /// 1. Stop the receive loop
   /// 2. Close UDP socket(s)
   /// 3. Optionally: send stop command to sensor
-  Status sensor_interface_stop();
+  util::expected<std::monostate, Error> sensor_interface_stop();
 
   /// @brief Register callback for incoming packets
   /// @param scan_callback Function to call when a packet is received
-  /// @return Status::OK on success, error status otherwise
+  /// @return Nothing on success, error otherwise
   /// @details The callback receives raw packet data and metadata (timestamp, source IP, etc.)
-  Status register_scan_callback(connections::UdpSocket::callback_t scan_callback);
+  util::expected<std::monostate, Error> register_scan_callback(
+    connections::UdpSocket::callback_t scan_callback);
 
 private:
-  std::shared_ptr<const SampleSensorConfiguration> sensor_configuration_;  ///< Sensor config
-  connections::UdpSocket::callback_t cloud_packet_callback_;               ///< Packet callback
+  SampleSensorConfiguration sensor_configuration_;                     ///< Sensor configuration
+  std::optional<connections::UdpSocket::callback_t> packet_callback_;  ///< Packet callback
   // Implementation Items: Add member variables for:
   // - UDP socket instance(s) for data reception
   // - IO context for async operations

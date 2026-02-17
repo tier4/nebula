@@ -15,7 +15,6 @@
   <depend>nebula_core_common</depend>
   <depend>nebula_core_decoders</depend>
   <depend>nebula_sample_common</depend>
-  <depend>rclcpp</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -14,100 +14,210 @@
 
 #include "nebula_sample/sample_ros_wrapper.hpp"
 
+#include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_ros/parameter_descriptors.hpp>
+#include <nebula_sample_common/sample_configuration.hpp>
+#include <rcl_interfaces/msg/parameter_descriptor.hpp>
+#include <rclcpp_components/register_node_macro.hpp>
+
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <cstdint>
+#include <functional>
 #include <memory>
+#include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
 namespace nebula::ros
 {
 
-SampleRosWrapper::SampleRosWrapper(const rclcpp::NodeOptions & options)
-: Node("nebula_sample_ros_wrapper", options)
+namespace
 {
-  // ========== ROS Parameter Declaration ==========
-  // Implementation Items: Add more parameters for sensor configuration (IP, port, return mode,
-  // etc.)
-  declare_parameter("launch_hw", true);
-  launch_hw_ = get_parameter("launch_hw").as_bool();
+template <typename T>
+util::expected<T, ConfigError> declare_required_parameter(
+  rclcpp::Node & node, const std::string & name,
+  const rcl_interfaces::msg::ParameterDescriptor & descriptor)
+{
+  try {
+    return node.declare_parameter<T>(name, descriptor);
+  } catch (const std::exception & e) {
+    return ConfigError{"Failed to declare/read parameter '" + name + "': " + e.what()};
+  }
+}
+}  // namespace
 
-  // ========== Initialize Sensor Configuration ==========
-  // Implementation Items: Read ROS parameters and populate sensor_cfg_ptr_ fields
-  // Example:
-  // sensor_cfg_ptr_->sensor_ip = get_parameter("sensor_ip").as_string();
-  // sensor_cfg_ptr_->host_ip = get_parameter("host_ip").as_string();
-  // sensor_cfg_ptr_->data_port = get_parameter("data_port").as_int();
-  sensor_cfg_ptr_ = std::make_shared<drivers::SampleSensorConfiguration>();
+util::expected<drivers::SampleSensorConfiguration, ConfigError> load_config_from_ros_parameters(
+  rclcpp::Node & node)
+{
+  drivers::SampleSensorConfiguration config{};
 
-  // ========== Initialize Driver ==========
-  driver_ptr_ = std::make_shared<drivers::SampleDriver>(sensor_cfg_ptr_);
+  const auto host_ip =
+    declare_required_parameter<std::string>(node, "connection.host_ip", param_read_only());
+  if (!host_ip.has_value()) {
+    return host_ip.error();
+  }
+  config.connection.host_ip = host_ip.value();
 
-  // Register callback to receive decoded point clouds from the driver
-  driver_ptr_->set_pointcloud_callback(
-    [this](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
-      // This callback is called when the decoder completes a full scan
+  const auto sensor_ip =
+    declare_required_parameter<std::string>(node, "connection.sensor_ip", param_read_only());
+  if (!sensor_ip.has_value()) {
+    return sensor_ip.error();
+  }
+  config.connection.sensor_ip = sensor_ip.value();
+
+  const auto data_port =
+    declare_required_parameter<int64_t>(node, "connection.data_port", param_read_only());
+  if (!data_port.has_value()) {
+    return data_port.error();
+  }
+  if (data_port.value() < 0 || data_port.value() > 65535) {
+    return ConfigError{
+      "Parameter 'connection.data_port' must be in [0, 65535], got " +
+      std::to_string(data_port.value())};
+  }
+  config.connection.data_port = static_cast<uint16_t>(data_port.value());
+
+  const auto azimuth_min =
+    declare_required_parameter<double>(node, "fov.azimuth.min_deg", param_read_write());
+  if (!azimuth_min.has_value()) {
+    return azimuth_min.error();
+  }
+  const auto azimuth_max =
+    declare_required_parameter<double>(node, "fov.azimuth.max_deg", param_read_write());
+  if (!azimuth_max.has_value()) {
+    return azimuth_max.error();
+  }
+  const auto elevation_min =
+    declare_required_parameter<double>(node, "fov.elevation.min_deg", param_read_write());
+  if (!elevation_min.has_value()) {
+    return elevation_min.error();
+  }
+  const auto elevation_max =
+    declare_required_parameter<double>(node, "fov.elevation.max_deg", param_read_write());
+  if (!elevation_max.has_value()) {
+    return elevation_max.error();
+  }
+
+  config.fov.azimuth.start = static_cast<float>(azimuth_min.value());
+  config.fov.azimuth.end = static_cast<float>(azimuth_max.value());
+  config.fov.elevation.start = static_cast<float>(elevation_min.value());
+  config.fov.elevation.end = static_cast<float>(elevation_max.value());
+
+  return config;
+}
+
+SampleRosWrapper::SampleRosWrapper(const rclcpp::NodeOptions & options)
+: Node("nebula_sample_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true))
+{
+  const bool launch_hw = declare_parameter<bool>("launch_hw", true, param_read_only());
+  declare_parameter<std::string>("sensor_model", "SampleSensor", param_read_only());
+  frame_id_ = declare_parameter<std::string>("frame_id", "sample_lidar", param_read_write());
+
+  const auto config_or_error = load_config_from_ros_parameters(*this);
+  if (!config_or_error.has_value()) {
+    throw std::runtime_error(
+      "Invalid sample sensor configuration: " + config_or_error.error().message);
+  }
+  config_ = config_or_error.value();
+
+  points_pub_ =
+    create_publisher<sensor_msgs::msg::PointCloud2>("points_raw", rclcpp::SensorDataQoS());
+
+  decoder_.emplace(
+    config_.fov, [this](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
       (void)timestamp_s;
-      // Only publish if there are subscribers and the pointcloud is valid
       if (points_pub_->get_subscription_count() > 0 && pointcloud) {
-        // Convert PCL point cloud to ROS message
         auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
         pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
-        ros_pc_msg_ptr->header.stamp = this->now();
+        ros_pc_msg_ptr->header.stamp = now();
+        ros_pc_msg_ptr->header.frame_id = frame_id_;
         points_pub_->publish(std::move(ros_pc_msg_ptr));
       }
     });
 
-  // ========== Initialize Hardware Interface ==========
-  // Only create HW interface if launch_hw is true (false for offline bag playback)
-  if (launch_hw_) {
-    hw_interface_ptr_ = std::make_shared<drivers::SampleHwInterface>();
-    hw_interface_ptr_->set_sensor_configuration(sensor_cfg_ptr_);
-
-    // Register callback to receive raw packets from the HW interface
-    hw_interface_ptr_->register_scan_callback(
+  if (launch_hw) {
+    hw_interface_.emplace(config_);
+    const auto callback_result = hw_interface_->register_scan_callback(
       std::bind(
         &SampleRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1,
         std::placeholders::_2));
+    if (!callback_result.has_value()) {
+      throw std::runtime_error(
+        "Failed to register sample sensor packet callback: " +
+        std::string(to_cstr(callback_result.error())));
+    }
 
-    // Start receiving packets
-    stream_start();
+    const auto stream_start_result = stream_start();
+    if (!stream_start_result.has_value()) {
+      throw std::runtime_error(
+        "Failed to start sample sensor stream: " +
+        std::string(to_cstr(stream_start_result.error())));
+    }
   }
-
-  // ========== Create ROS Publishers ==========
-  points_pub_ = create_publisher<sensor_msgs::msg::PointCloud2>("points_raw", 10);
 }
 
 SampleRosWrapper::~SampleRosWrapper()
 {
-  if (hw_interface_ptr_) {
-    hw_interface_ptr_->sensor_interface_stop();
+  if (hw_interface_) {
+    const auto stop_result = hw_interface_->sensor_interface_stop();
+    (void)stop_result;
   }
 }
 
-Status SampleRosWrapper::get_status()
+util::expected<std::monostate, SampleRosWrapper::Error> SampleRosWrapper::stream_start()
 {
-  return Status::OK;
-}
-
-Status SampleRosWrapper::stream_start()
-{
-  if (hw_interface_ptr_) {
-    return hw_interface_ptr_->sensor_interface_start();
+  if (hw_interface_) {
+    const auto start_result = hw_interface_->sensor_interface_start();
+    if (!start_result.has_value()) {
+      return Error::HW_STREAM_START_FAILED;
+    }
+    return std::monostate{};
   }
-  return Status::NOT_INITIALIZED;
+  return Error::HW_INTERFACE_NOT_INITIALIZED;
 }
 
 void SampleRosWrapper::receive_cloud_packet_callback(
   const std::vector<uint8_t> & packet, const drivers::connections::UdpSocket::RxMetadata & metadata)
 {
-  // This callback is called by the HW interface when a UDP packet arrives
-  // Pass the packet to the driver for decoding
-  (void)metadata;  // Metadata (timestamp, source IP) not used in this simple example
-  driver_ptr_->parse_cloud_packet(packet);
+  (void)metadata;
+  if (!decoder_) {
+    return;
+  }
+
+  const auto decode_result = decoder_->unpack(packet);
+  if (!decode_result.metadata_or_error.has_value()) {
+    RCLCPP_DEBUG_THROTTLE(
+      get_logger(), *get_clock(), 1000, "Packet decode failed with error code %u.",
+      static_cast<unsigned int>(decode_result.metadata_or_error.error()));
+  }
+}
+
+const char * SampleRosWrapper::to_cstr(const Error error)
+{
+  switch (error) {
+    case Error::HW_INTERFACE_NOT_INITIALIZED:
+      return "hardware interface not initialized";
+    case Error::HW_STREAM_START_FAILED:
+      return "hardware stream start failed";
+    default:
+      return "unknown wrapper error";
+  }
+}
+
+const char * SampleRosWrapper::to_cstr(const drivers::SampleHwInterface::Error error)
+{
+  switch (error) {
+    case drivers::SampleHwInterface::Error::CALLBACK_NOT_REGISTERED:
+      return "callback not registered";
+    case drivers::SampleHwInterface::Error::INVALID_CALLBACK:
+      return "invalid callback";
+    default:
+      return "unknown hardware error";
+  }
 }
 
 }  // namespace nebula::ros
 
-#include <rclcpp_components/register_node_macro.hpp>
 RCLCPP_COMPONENTS_REGISTER_NODE(nebula::ros::SampleRosWrapper)

@@ -14,9 +14,8 @@
 
 #pragma once
 
+#include <nebula_core_common/util/angles.hpp>
 #include <nebula_core_common/util/expected.hpp>
-#include <nebula_core_decoders/angles.hpp>
-#include <nlohmann/detail/macro_scope.hpp>
 #include <nlohmann/json.hpp>
 
 #include <string>

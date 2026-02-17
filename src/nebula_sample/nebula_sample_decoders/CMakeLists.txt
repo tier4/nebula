@@ -5,7 +5,7 @@ find_package(autoware_cmake REQUIRED)
 autoware_package()
 
 # Sample Decoder
-add_library(nebula_sample_decoders SHARED src/sample_driver.cpp)
+add_library(nebula_sample_decoders SHARED src/sample_decoder.cpp)
 
 target_include_directories(
   nebula_sample_decoders
@@ -16,7 +16,7 @@ target_link_libraries(
   nebula_sample_decoders
   PUBLIC nebula_core_common::nebula_core_common
          nebula_sample_common::nebula_sample_common
-         nebula_core_decoders::nebula_core_decoders rclcpp::rclcpp)
+         nebula_core_decoders::nebula_core_decoders)
 
 install(TARGETS nebula_sample_decoders EXPORT export_nebula_sample_decoders)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
@@ -24,7 +24,6 @@ install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_sample_decoders)
 
-ament_export_dependencies(nebula_core_common nebula_sample_common
-                          nebula_core_decoders rclcpp)
+ament_export_dependencies(nebula_core_common nebula_sample_common nebula_core_decoders)
 
 ament_package()
