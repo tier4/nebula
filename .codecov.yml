@@ -13,31 +13,28 @@ ignore:
 comment:
   layout: header, diff, flags, components
 
-component_management:
+flag_management:
   default_rules:
+    carryforward: true
     statuses:
-      - type: project # inherit project rules for coverage statuses
-  individual_components:
-    - component_id: common
-      name: Common
+      - type: project
+        target: auto
+        threshold: 1%
+      - type: patch
+        target: 90%
+  individual_flags:
+    - name: Core
       paths:
-        - "!**hesai**"
-        - "!**velodyne**"
-        - "!**continental**"
-        - "!**robosense**"
-    - component_id: hesai
-      name: Hesai
+        - src/nebula_core
+    - name: Hesai
       paths:
-        - "**hesai**"
-    - component_id: velodyne
-      name: Velodyne
+        - src/nebula_hesai
+    - name: Velodyne
       paths:
-        - "**velodyne**"
-    - component_id: continental
-      name: Continental
+        - src/nebula_velodyne
+    - name: Continental
       paths:
-        - "**continental**"
-    - component_id: robosense
-      name: Robosense
+        - src/nebula_continental
+    - name: Robosense
       paths:
-        - "**robosense**"
+        - src/nebula_robosense

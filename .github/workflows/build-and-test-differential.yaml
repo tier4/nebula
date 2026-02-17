@@ -73,15 +73,41 @@ jobs:
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
           build-depends-repos: build_depends-${{ matrix.rosdistro }}.repos
 
+      - name: Determine CodeCov flags from modified packages
+        id: determine-flags
+        if: steps.test.outputs.coverage-report-files != ''
+        run: |
+          flags=""
+          modified_packages="${{ steps.get-modified-packages.outputs.modified-packages }}"
+
+          for pkg in $modified_packages; do
+            if [[ "$pkg" == nebula_core* ]]; then
+              [[ "$flags" == *"Core"* ]] || flags="${flags}Core,"
+            elif [[ "$pkg" == nebula_hesai* ]]; then
+              [[ "$flags" == *"Hesai"* ]] || flags="${flags}Hesai,"
+            elif [[ "$pkg" == nebula_velodyne* ]]; then
+              [[ "$flags" == *"Velodyne"* ]] || flags="${flags}Velodyne,"
+            elif [[ "$pkg" == nebula_continental* ]]; then
+              [[ "$flags" == *"Continental"* ]] || flags="${flags}Continental,"
+            elif [[ "$pkg" == nebula_robosense* ]]; then
+              [[ "$flags" == *"Robosense"* ]] || flags="${flags}Robosense,"
+            fi
+          done
+
+          flags="${flags%,}"
+          echo "flags=$flags" >> "$GITHUB_OUTPUT"
+          echo "Modified packages: $modified_packages"
+          echo "Determined flags: $flags"
+
       - name: Upload coverage to CodeCov
-        if: steps.test.outputs.coverage-report-files != '' && matrix.rosdistro == 'humble'
+        if: steps.test.outputs.coverage-report-files != '' && matrix.rosdistro == 'humble' && steps.determine-flags.outputs.flags != ''
         uses: codecov/codecov-action@v4
         with:
           files: ${{ steps.test.outputs.coverage-report-files }}
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
           verbose: true
-          flags: differential
+          flags: ${{ steps.determine-flags.outputs.flags }}
 
   fb-infer-differential:
     if: contains(github.event.pull_request.labels.*.name, 'run:fb-infer')
