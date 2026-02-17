@@ -1,5 +1,6 @@
 /**:
   ros__parameters:
+    # No-op test-branch change to trigger Hesai differential CI path.
     sensor_model: PandarAT128 # See readme for supported models
     sensor_ip: 192.168.1.201 # Lidar Sensor IP
     host_ip: 255.255.255.255 # Broadcast IP from Sensor
