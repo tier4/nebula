@@ -79,15 +79,7 @@ jobs:
         shell: bash
         run: |
           modified_packages="${{ steps.get-modified-packages.outputs.modified-packages }}"
-          flags=""
-          declare -A seen
-          for pkg in $modified_packages; do
-            # Flags map 1:1 to package names.
-            if [[ -n "$pkg" && -z "${seen[$pkg]:-}" ]]; then
-              flags="${flags:+$flags,}$pkg"
-              seen[$pkg]=1
-            fi
-          done
+          flags="$(tr -s '[:space:]' '\n' <<<"$modified_packages" | awk 'NF && !seen[$0]++' | paste -sd, -)"
 
           echo "flags=$flags" >> "$GITHUB_OUTPUT"
           echo "Modified packages: $modified_packages"
