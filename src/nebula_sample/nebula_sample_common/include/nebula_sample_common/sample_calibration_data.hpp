@@ -15,11 +15,9 @@
 #pragma once
 
 #include <nebula_core_common/util/expected.hpp>
-#include <nebula_core_decoders/angles.hpp>
-#include <nlohmann/json.hpp>
 
+#include <cstdint>
 #include <fstream>
-#include <iostream>
 #include <string>
 #include <variant>
 
@@ -36,10 +34,21 @@ namespace nebula::drivers
 /// If your sensor doesn't need calibration, you can remove this struct entirely.
 struct SampleCalibrationData
 {
+  enum class ErrorCode : uint8_t {
+    OPEN_FOR_READ_FAILED,
+    OPEN_FOR_WRITE_FAILED,
+  };
+
+  struct Error
+  {
+    ErrorCode code;
+    std::string message;
+  };
+
   /// @brief Load calibration data from a file
   /// @param calibration_file Path to the calibration file
-  /// @return Nothing on success, error message otherwise
-  static util::expected<SampleCalibrationData, std::string> load_from_file(
+  /// @return Calibration data on success, error otherwise
+  static util::expected<SampleCalibrationData, Error> load_from_file(
     const std::string & calibration_file)
   {
     std::ifstream file;
@@ -48,7 +57,9 @@ struct SampleCalibrationData
     try {
       file.open(calibration_file);
     } catch (const std::ifstream::failure & e) {
-      return "Failed to open calibration file: " + calibration_file + " Error: " + e.what();
+      return Error{
+        ErrorCode::OPEN_FOR_READ_FAILED,
+        "Failed to open calibration file: " + calibration_file + " Error: " + e.what()};
     }
 
     // Parse the file and populate calibration data fields here
@@ -58,8 +69,8 @@ struct SampleCalibrationData
 
   /// @brief Save calibration data to a file
   /// @param calibration_file Path to save the calibration file
-  /// @return Nothing on success, error message otherwise
-  util::expected<std::monostate, std::string> save_to_file(const std::string & calibration_file)
+  /// @return Nothing on success, error otherwise
+  util::expected<std::monostate, Error> save_to_file(const std::string & calibration_file)
   {
     std::ofstream file;
     file.exceptions(std::ofstream::failbit | std::ofstream::badbit);
@@ -67,8 +78,9 @@ struct SampleCalibrationData
     try {
       file.open(calibration_file);
     } catch (const std::ofstream::failure & e) {
-      return "Failed to open calibration file for writing: " + calibration_file +
-             " Error: " + e.what();
+      return Error{
+        ErrorCode::OPEN_FOR_WRITE_FAILED,
+        "Failed to open calibration file for writing: " + calibration_file + " Error: " + e.what()};
     }
 
     // Implementation Items: Implement calibration file writing
