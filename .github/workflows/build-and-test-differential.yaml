@@ -76,6 +76,7 @@ jobs:
       - name: Determine CodeCov flags from modified packages
         id: determine-flags
         if: steps.test.outputs.coverage-report-files != ''
+        shell: bash
         run: |
           flags=""
           modified_packages="${{ steps.get-modified-packages.outputs.modified-packages }}"
