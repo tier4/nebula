@@ -90,10 +90,10 @@ private:
   drivers::SampleSensorConfiguration config_;
   std::string frame_id_;
 
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr points_pub_;
+
   std::optional<drivers::SampleDecoder> decoder_;
   std::optional<drivers::SampleHwInterface> hw_interface_;
-
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr points_pub_;
 };
 
 }  // namespace nebula::ros

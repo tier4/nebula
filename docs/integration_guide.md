@@ -242,7 +242,7 @@ See [Verification](#verification) below.
 ## Implementation details
 
 The `nebula_sample` package provides a template implementation. Its source files contain
-comments and TODOs throughout to guide you through the implementation.
+comments and concise `Implement:` markers in key stubs to guide implementation.
 
 Some examples might not be relevant for your sensor, e.g. calibration handling. Implement only
 what is necessary for your sensor.
@@ -279,10 +279,10 @@ Order of operations:
 
 1. Parameter loading: Declare and read ROS parameters
 2. Configuration validation: Validate IP addresses, ports, ranges
-3. Decoder initialization: Create decoder with validated config
-4. Callback registration: Register pointcloud callback
+3. Publisher creation: Create ROS publishers
+4. Decoder initialization: Create decoder and register pointcloud callback
 5. HW interface initialization: Create and configure HW interface
-6. Publisher creation: Create ROS publishers
+6. Forward packets: Register packet callback to forward packets from HW interface to decoder
 7. Stream start: Call `sensor_interface_start()` to begin receiving data
 
 ### Reconfiguration (optional)
@@ -304,15 +304,15 @@ Detect and handle sensor disconnection:
 
 ### Shutdown sequence
 
+Prefer RAII-based shutdown: sockets/threads/buffers should be owned by objects whose destructors
+stop/join/close automatically, so the wrapper does not require sensor-specific resource cleanup.
+
 Order of operations:
 
-Prefer RAII-based shutdown: sockets/threads/buffers should be owned by objects whose destructors
-stop/join/close automatically, so the wrapper does not require sensor-specific shutdown logic.
-
-1. Stop stream: Ensure receiver threads stop and join
-2. Close sockets: Ensure all network resources are closed
-3. Release buffers: Release point cloud buffers
-4. Destroy owners: Destroy the owning objects (RAII)
+1. Stop stream explicitly (e.g., `sensor_interface_stop()`)
+2. Use RAII to clean up resources (sockets, threads, buffers)
+3. Make sure that dependent components are still valid during shutdown (e.g., decoder should not be
+   destroyed before HW interface stops)
 
 ### Diagnostic reporting
 
