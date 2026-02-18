@@ -51,8 +51,9 @@ Except for the ROS wrappers, no package should depend on ROS 2. This allows user
 of Nebula as a library e.g. in ML pipelines without ROS 2.
 
 !!! warning
-Existing vendor implementations do not strictly follow this architecture as the project
-evolved over time. New implementations should follow the architecture described here.
+
+    Existing vendor implementations do not strictly follow this architecture as the project
+    evolved over time. New implementations should follow the architecture described here.
 
 ### Data Flow
 
@@ -110,12 +111,16 @@ exceptions. This keeps APIs explicit about what can fail:
 ```
 
 !!! tip
-If the happy path has no meaningful return value, use `std::monostate` (a type with no data) as
-`T`:
+
+    If the happy path has no meaningful return value, use `std::monostate` (a type with no data) as
+    `T`:
 
     ```cpp
     nebula::util::expected<std::monostate, ErrorCode> do_something();
     ```
+
+See [CPP Reference](https://en.cppreference.com/w/cpp/utility/expected.html) for more details on the
+`std::expected` type of C++23, which `nebula::util::expected` is based on.
 
 ### Point cloud types
 
@@ -249,9 +254,10 @@ and HW interface with calls to the SDK. Integrate your SDK either through Git su
 by adding it to `build_depends.repos`.
 
 !!! warning
-Nebula is licensed under the Apache 2.0 license and has a strict no-binaries policy. Ensure
-that your SDK _source code_ is public, and ensure that your SDK license allows shipping as
-part of an Apache 2.0 project.
+
+    Nebula is licensed under the Apache 2.0 license and has a strict no-binaries policy. Ensure
+    that your SDK _source code_ is public, and ensure that your SDK license allows shipping as
+    part of an Apache 2.0 project.
 
 Please ensure that the SDK is fit for automotive use cases (real-time, safety, reliability).
 Nebula interfaces like
