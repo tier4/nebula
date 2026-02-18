@@ -23,10 +23,15 @@
 namespace nebula::drivers
 {
 
+/// @brief Network endpoint settings used by the sample driver.
+/// @details These values define where the UDP packets are received from and on which local port.
 struct ConnectionConfiguration
 {
+  /// IP address of the host interface that receives LiDAR packets.
   std::string host_ip;
+  /// IP address assigned to the sensor.
   std::string sensor_ip;
+  /// UDP destination port on the host for sensor data.
   uint16_t data_port;
 };
 
@@ -34,25 +39,17 @@ struct ConnectionConfiguration
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ConnectionConfiguration, host_ip, sensor_ip, data_port);
 
 /// @brief Sensor-specific configuration for the Sample LiDAR
-///
-/// When implementing for a real sensor, add fields for:
-/// - Return mode (single, strongest, forst_strongest, etc.)
-/// - Rotation speed / scan frequency
-/// - IP addresses (sensor, host)
-/// - Port numbers
-/// - FOV settings
-/// - Any vendor-specific parameters
+/// @details Minimal tutorial configuration that combines connection settings and angular filtering.
 struct SampleSensorConfiguration
 {
   ConnectionConfiguration connection;
   FieldOfView<float, Degrees> fov{};
 };
 
-// These allow automatic serialization/deserialization:
-// ```c++
-// nlohmann::ordered_json j = config;               // to_json
-// SampleSensorConfiguration config = j.get<...>(); // from_json
-// ```
+/// @brief Serialize SampleSensorConfiguration to JSON.
+/// @details The JSON schema contains:
+/// - `connection` (ConnectionConfiguration)
+/// - `fov` (FieldOfView)
 inline void to_json(nlohmann::json & j, const SampleSensorConfiguration & config)
 {
   j = nlohmann::json{};
@@ -69,6 +66,8 @@ inline void to_json(nlohmann::json & j, const SampleSensorConfiguration & config
   j["fov"] = {{"azimuth", azimuth_fov}, {"elevation", elevation_fov}};
 }
 
+/// @brief Parse SampleSensorConfiguration from JSON.
+/// @throws nlohmann::json::exception if required fields are missing or have incompatible types.
 inline void from_json(const nlohmann::json & j, SampleSensorConfiguration & config)
 {
   j.at("connection").get_to(config.connection);

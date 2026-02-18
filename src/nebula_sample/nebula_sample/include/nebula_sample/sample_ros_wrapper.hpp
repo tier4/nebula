@@ -39,15 +39,18 @@ struct ConfigError
   std::string message;
 };
 
+/// @brief Read and validate sample driver configuration from ROS parameters.
+/// @param node Node used to declare/read parameters.
+/// @return Parsed SampleSensorConfiguration or ConfigError on validation failure.
 util::expected<drivers::SampleSensorConfiguration, ConfigError> load_config_from_ros_parameters(
   rclcpp::Node & node);
 
 /// @brief ROS 2 wrapper for the Sample LiDAR driver
 /// @details This node bridges the C++ driver with ROS 2.
 /// Responsibilities:
-/// - Declare and read ROS parameters for sensor configuration
-/// - Initialize the driver and hardware interface
-/// - Receive packets from HW interface and pass to driver
+/// - Turn ROS 2 parameters into sensor configuration
+/// - Initialize decoder and hardware interface
+/// - Forward packets from HW interface and pass to decoder
 /// - Convert decoded point clouds to ROS messages
 /// - Publish point clouds on ROS topics
 /// - Optionally: provide services for runtime configuration
@@ -55,29 +58,28 @@ class SampleRosWrapper : public rclcpp::Node
 {
 public:
   enum class Error : uint8_t {
-    HW_INTERFACE_NOT_INITIALIZED,
-    HW_STREAM_START_FAILED,
+    HW_INTERFACE_NOT_INITIALIZED,  ///< Stream start requested while HW interface is absent.
+    HW_STREAM_START_FAILED,        ///< Underlying HW interface failed to start.
   };
 
-  /// @brief Constructor
-  /// @param options ROS node options
-  /// @details Initializes the driver, HW interface, and ROS publishers
+  /// @brief Construct the ROS 2 node and initialize decoder + optional HW stream.
+  /// @param options Standard ROS 2 component/node options.
+  /// @throws std::runtime_error on invalid configuration or startup failures.
   explicit SampleRosWrapper(const rclcpp::NodeOptions & options);
 
-  /// @brief Destructor
-  /// @details Stops the hardware interface cleanly
+  /// @brief Stop sensor streaming before destruction when initialized.
   ~SampleRosWrapper() override;
 
-  /// @brief Start the sensor data stream
-  /// @return Nothing on success, error otherwise
-  util::expected<std::monostate, Error> stream_start();
-
 private:
-  /// @brief Callback for incoming UDP packets
-  /// @param packet Raw packet data from the sensor
-  /// @param metadata Packet metadata (timestamp, source IP, etc.)
-  /// @details This is called by the HW interface when a packet arrives.
-  /// Passes the packet to the driver for decoding.
+  /// @brief Publish a decoded pointcloud to ROS.
+  /// @param pointcloud Decoded pointcloud from the decoder.
+  /// @param timestamp_s Scan timestamp in seconds, epoch time.
+  void publish_pointcloud_callback(
+    const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s);
+
+  /// @brief Process one received UDP packet through the decoder pipeline.
+  /// @param packet Raw packet payload.
+  /// @param metadata Transport metadata provided by the UDP receiver.
   void receive_cloud_packet_callback(
     const std::vector<uint8_t> & packet,
     const drivers::connections::UdpSocket::RxMetadata & metadata);

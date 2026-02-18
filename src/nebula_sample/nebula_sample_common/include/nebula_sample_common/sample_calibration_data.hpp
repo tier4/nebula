@@ -24,30 +24,26 @@
 namespace nebula::drivers
 {
 
-/// @brief Calibration data for the Sample LiDAR (optional)
-/// @details This struct is only needed if your sensor requires calibration data.
-/// Common calibration data includes:
-/// - Vertical/horizontal angle corrections per laser
-/// - Distance corrections
-/// - Intensity corrections
-/// - Timing offsets
-/// If your sensor doesn't need calibration, you can remove this struct entirely.
+/// @brief Calibration data for the Sample LiDAR (required for some sensors)
+/// @details Real sensor integrations can replace this stub with calibration tables
+/// such as per-laser angle offsets, distance corrections, or timing offsets.
 struct SampleCalibrationData
 {
   enum class ErrorCode : uint8_t {
-    OPEN_FOR_READ_FAILED,
-    OPEN_FOR_WRITE_FAILED,
+    OPEN_FOR_READ_FAILED,   ///< Opening a calibration file for reading failed.
+    OPEN_FOR_WRITE_FAILED,  ///< Opening a calibration file for writing failed.
   };
 
+  /// @brief Error payload for calibration file operations.
   struct Error
   {
     ErrorCode code;
     std::string message;
   };
 
-  /// @brief Load calibration data from a file
+  /// @brief Load calibration data from a file, e.g. for offline decoding
   /// @param calibration_file Path to the calibration file
-  /// @return Calibration data on success, error otherwise
+  /// @return Parsed calibration data on success, Error on failure.
   static util::expected<SampleCalibrationData, Error> load_from_file(
     const std::string & calibration_file)
   {
@@ -62,14 +58,13 @@ struct SampleCalibrationData
         "Failed to open calibration file: " + calibration_file + " Error: " + e.what()};
     }
 
-    // Parse the file and populate calibration data fields here
-
+    // Implement: Parse and validate sensor calibration fields from the opened file.
     return SampleCalibrationData{};
   }
 
   /// @brief Save calibration data to a file
   /// @param calibration_file Path to save the calibration file
-  /// @return Nothing on success, error otherwise
+  /// @return std::monostate on success, Error on failure.
   util::expected<std::monostate, Error> save_to_file(const std::string & calibration_file)
   {
     std::ofstream file;
@@ -83,8 +78,7 @@ struct SampleCalibrationData
         "Failed to open calibration file for writing: " + calibration_file + " Error: " + e.what()};
     }
 
-    // Implementation Items: Implement calibration file writing
-
+    // Implement: Serialize sensor calibration fields to the opened file.
     return std::monostate{};
   }
 };

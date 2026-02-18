@@ -26,61 +26,40 @@
 namespace nebula::drivers
 {
 
-/// @brief Hardware interface for Sample LiDAR communication
-/// @details This class manages network communication with the sensor.
-/// Responsibilities:
-/// - Setting up UDP sockets for receiving data packets
-/// - Starting/stopping packet reception
-/// - Calling registered callbacks when packets arrive
-/// - Optionally: sending commands to the sensor (start/stop scan, change settings, etc.)
-///
-/// @note Advanced implementations may also include:
-/// - TCP connections for sensor configuration commands
-/// - HTTP API support for newer sensor models
-/// - These are optional and can be added as needed for your specific sensor
+/// @brief Receives raw sensor packets and forwards them to a registered callback.
+/// @details This class owns the transport-facing state used by the sample driver.
 class SampleHwInterface
 {
 public:
   enum class Error : uint8_t {
-    CALLBACK_NOT_REGISTERED,
-    INVALID_CALLBACK,
+    CALLBACK_NOT_REGISTERED,  ///< Start requested before a callback was registered.
+    INVALID_CALLBACK,         ///< Empty callback passed to register_scan_callback.
   };
 
-  explicit SampleHwInterface(SampleSensorConfiguration sensor_configuration);
+  static const char * to_cstr(Error error);
 
-  /// @brief Start receiving packets from the sensor
-  /// @return Nothing on success, error otherwise
-  /// @details Implement the following:
-  /// 1. Create UDP socket(s) for data reception
-  /// 2. Bind to the configured port(s)
-  /// 3. Start async receive loop
-  /// 4. Optionally: send start command to sensor
+  /// @brief Construct the hardware interface with connection settings.
+  /// @param connection_configuration Network addresses and ports used by the sensor stream.
+  explicit SampleHwInterface(ConnectionConfiguration connection_configuration);
+
+  /// @brief Start packet reception.
+  /// @return std::monostate on success, Error on failure.
+  /// @post On success, incoming packets are delivered through the registered callback.
   util::expected<std::monostate, Error> sensor_interface_start();
 
-  /// @brief Stop receiving packets from the sensor
-  /// @return Nothing on success, error otherwise
-  /// @details Implement the following:
-  /// 1. Stop the receive loop
-  /// 2. Close UDP socket(s)
-  /// 3. Optionally: send stop command to sensor
+  /// @brief Stop packet reception.
+  /// @return std::monostate on success, Error on failure.
   util::expected<std::monostate, Error> sensor_interface_stop();
 
-  /// @brief Register callback for incoming packets
-  /// @param scan_callback Function to call when a packet is received
-  /// @return Nothing on success, error otherwise
-  /// @details The callback receives raw packet data and metadata (timestamp, source IP, etc.)
+  /// @brief Register or replace the callback invoked for each incoming packet.
+  /// @param scan_callback Callback receiving packet bytes and transport metadata.
+  /// @return std::monostate if callback is accepted, Error otherwise.
   util::expected<std::monostate, Error> register_scan_callback(
     connections::UdpSocket::callback_t scan_callback);
 
 private:
-  SampleSensorConfiguration sensor_configuration_;                     ///< Sensor configuration
-  std::optional<connections::UdpSocket::callback_t> packet_callback_;  ///< Packet callback
-  // Implementation Items: Add member variables for:
-  // - UDP socket instance(s) for data reception
-  // - IO context for async operations
-  // - Optionally: TCP driver for sensor configuration commands
-  // - Optionally: HTTP client for newer sensor models
-  // - Any sensor-specific state
+  ConnectionConfiguration connection_configuration_;
+  std::optional<connections::UdpSocket::callback_t> packet_callback_;
 };
 
 }  // namespace nebula::drivers

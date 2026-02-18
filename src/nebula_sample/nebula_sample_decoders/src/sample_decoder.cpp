@@ -15,6 +15,7 @@
 #include "nebula_sample_decoders/sample_decoder.hpp"
 
 #include <chrono>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -37,8 +38,9 @@ const char * to_cstr(const DecodeError error)
 
 SampleDecoder::SampleDecoder(
   FieldOfView<float, Degrees> fov /*, other decoder args */, pointcloud_callback_t pointcloud_cb)
-: fov_(std::move(fov)), pointcloud_callback_(std::move(pointcloud_cb))
+: fov_(fov), pointcloud_callback_(std::move(pointcloud_cb))
 {
+  // Implement: Initialize sensor-specific decode state (buffers, angle tracking, timestamps).
 }
 
 PacketDecodeResult SampleDecoder::unpack(const std::vector<uint8_t> & packet)
@@ -71,7 +73,7 @@ PacketDecodeResult SampleDecoder::unpack(const std::vector<uint8_t> & packet)
       static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
                               std::chrono::system_clock::now().time_since_epoch())
                               .count());
-    metadata.did_scan_complete = (packet_count_ % kPacketsPerDummyScan) == 0;
+    metadata.did_scan_complete = (packet_count_ % k_packets_per_dummy_scan) == 0;
 
     if (metadata.did_scan_complete) {
       const auto callback_begin = std::chrono::steady_clock::now();
@@ -81,7 +83,7 @@ PacketDecodeResult SampleDecoder::unpack(const std::vector<uint8_t> & packet)
         static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
                                 std::chrono::steady_clock::now() - callback_begin)
                                 .count());
-      current_scan_cloud_.reset(new NebulaPointCloud());
+      current_scan_cloud_ = std::make_shared<NebulaPointCloud>();
     }
 
     result.metadata_or_error = metadata;

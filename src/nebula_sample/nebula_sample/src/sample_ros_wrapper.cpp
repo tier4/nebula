@@ -17,6 +17,7 @@
 #include <nebula_core_common/util/expected.hpp>
 #include <nebula_core_ros/parameter_descriptors.hpp>
 #include <nebula_sample_common/sample_configuration.hpp>
+#include <nebula_sample_hw_interfaces/sample_hw_interface.hpp>
 #include <rcl_interfaces/msg/parameter_descriptor.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
@@ -127,55 +128,43 @@ SampleRosWrapper::SampleRosWrapper(const rclcpp::NodeOptions & options)
 
   decoder_.emplace(
     config_.fov, [this](const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s) {
-      (void)timestamp_s;
-      if (points_pub_->get_subscription_count() > 0 && pointcloud) {
-        auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-        pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
-        ros_pc_msg_ptr->header.stamp = now();
-        ros_pc_msg_ptr->header.frame_id = frame_id_;
-        points_pub_->publish(std::move(ros_pc_msg_ptr));
-      }
+      publish_pointcloud_callback(pointcloud, timestamp_s);
     });
 
   if (launch_hw) {
-    hw_interface_.emplace(config_);
+    hw_interface_.emplace(config_.connection);
     const auto callback_result = hw_interface_->register_scan_callback(
-      std::bind(
-        &SampleRosWrapper::receive_cloud_packet_callback, this, std::placeholders::_1,
-        std::placeholders::_2));
+      [this](
+        const std::vector<uint8_t> & raw_packet,
+        const drivers::connections::UdpSocket::RxMetadata & metadata) {
+        receive_cloud_packet_callback(raw_packet, metadata);
+      });
     if (!callback_result.has_value()) {
       throw std::runtime_error(
         "Failed to register sample sensor packet callback: " +
-        std::string(to_cstr(callback_result.error())));
+        std::string(drivers::SampleHwInterface::to_cstr(callback_result.error())));
     }
 
-    const auto stream_start_result = stream_start();
+    const auto stream_start_result = hw_interface_->sensor_interface_start();
     if (!stream_start_result.has_value()) {
       throw std::runtime_error(
         "Failed to start sample sensor stream: " +
-        std::string(to_cstr(stream_start_result.error())));
+        std::string(drivers::SampleHwInterface::to_cstr(stream_start_result.error())));
     }
   }
 }
 
-SampleRosWrapper::~SampleRosWrapper()
+void SampleRosWrapper::publish_pointcloud_callback(
+  const drivers::NebulaPointCloudPtr & pointcloud, double timestamp_s)
 {
-  if (hw_interface_) {
-    const auto stop_result = hw_interface_->sensor_interface_stop();
-    (void)stop_result;
+  (void)timestamp_s;
+  if (points_pub_->get_subscription_count() > 0 && pointcloud) {
+    auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
+    pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
+    ros_pc_msg_ptr->header.stamp = now();
+    ros_pc_msg_ptr->header.frame_id = frame_id_;
+    points_pub_->publish(std::move(ros_pc_msg_ptr));
   }
-}
-
-util::expected<std::monostate, SampleRosWrapper::Error> SampleRosWrapper::stream_start()
-{
-  if (hw_interface_) {
-    const auto start_result = hw_interface_->sensor_interface_start();
-    if (!start_result.has_value()) {
-      return Error::HW_STREAM_START_FAILED;
-    }
-    return std::monostate{};
-  }
-  return Error::HW_INTERFACE_NOT_INITIALIZED;
 }
 
 void SampleRosWrapper::receive_cloud_packet_callback(
@@ -203,18 +192,6 @@ const char * SampleRosWrapper::to_cstr(const Error error)
       return "hardware stream start failed";
     default:
       return "unknown wrapper error";
-  }
-}
-
-const char * SampleRosWrapper::to_cstr(const drivers::SampleHwInterface::Error error)
-{
-  switch (error) {
-    case drivers::SampleHwInterface::Error::CALLBACK_NOT_REGISTERED:
-      return "callback not registered";
-    case drivers::SampleHwInterface::Error::INVALID_CALLBACK:
-      return "invalid callback";
-    default:
-      return "unknown hardware error";
   }
 }
 

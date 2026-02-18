@@ -19,10 +19,10 @@
 namespace nebula::drivers
 {
 
-SampleHwInterface::SampleHwInterface(SampleSensorConfiguration sensor_configuration)
-: sensor_configuration_(std::move(sensor_configuration))
+SampleHwInterface::SampleHwInterface(ConnectionConfiguration connection_configuration)
+: connection_configuration_(std::move(connection_configuration))
 {
-  // Constructor - initialize any member variables if needed
+  // Implement: Initialize non-pointcloud hardware connections, and sync/check sensor settings
 }
 
 util::expected<std::monostate, SampleHwInterface::Error> SampleHwInterface::sensor_interface_start()
@@ -31,22 +31,13 @@ util::expected<std::monostate, SampleHwInterface::Error> SampleHwInterface::sens
     return Error::CALLBACK_NOT_REGISTERED;
   }
 
-  // Implementation Items: Implement sensor interface startup
-  // 1. Create UDP socket using connections::UdpSocket
-  // 2. Bind to the port specified in sensor_configuration_
-  // 3. Start async receive loop
-  // 4. When packets arrive, call packet_callback_ with the packet data
-  // 5. Optionally: send HTTP/TCP command to sensor to start scanning
-
+  // Implement: Create/bind UDP receiver and forward incoming packets to packet_callback_.
   return std::monostate{};
 }
 
 util::expected<std::monostate, SampleHwInterface::Error> SampleHwInterface::sensor_interface_stop()
 {
-  // Implementation Items: Implement sensor interface shutdown
-  // 1. Stop the receive loop
-  // 3. Optionally: send command to sensor to stop scanning
-
+  // Implement: Stop receiver threads and release network resources (RAII preferred).
   return std::monostate{};
 }
 
@@ -56,8 +47,23 @@ util::expected<std::monostate, SampleHwInterface::Error> SampleHwInterface::regi
   if (!scan_callback) {
     return Error::INVALID_CALLBACK;
   }
+
+  // Implement: Depending on threading model, may need synchronization around packet_callback_
+  // access.
   packet_callback_.emplace(std::move(scan_callback));
   return std::monostate{};
+}
+
+const char * SampleHwInterface::to_cstr(SampleHwInterface::Error error)
+{
+  switch (error) {
+    case Error::CALLBACK_NOT_REGISTERED:
+      return "callback not registered";
+    case Error::INVALID_CALLBACK:
+      return "invalid callback";
+    default:
+      return "unknown hardware error";
+  }
 }
 
 }  // namespace nebula::drivers
