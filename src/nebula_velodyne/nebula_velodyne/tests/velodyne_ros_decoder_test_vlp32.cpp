@@ -260,21 +260,23 @@ Status VelodyneRosDecoderTest::get_parameters(
   return Status::OK;
 }
 
-void print_pcd(nebula::drivers::NebulaPointCloudPtr pp)
+void print_pcd(const nebula::drivers::NebulaPointCloud & pointcloud)
 {
-  for (auto p : *pp) {
+  for (const auto & p : pointcloud) {
     std::cout << "(" << p.x << ", " << p.y << "," << p.z << "): " << p.intensity << ", "
               << p.channel << ", " << p.azimuth << ", " << p.return_type << ", " << p.time_stamp
               << std::endl;
   }
 }
 
-void check_pcds(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::NebulaPointCloudPtr pp2)
+void check_pcds(
+  const nebula::drivers::NebulaPointCloud & pointcloud1,
+  const nebula::drivers::NebulaPointCloud & pointcloud2)
 {
-  EXPECT_EQ(pp1->size(), pp2->size());
-  for (uint32_t i = 0; i < pp1->size(); i++) {
-    auto p1 = pp1->at(i);
-    auto p2 = pp2->at(i);
+  EXPECT_EQ(pointcloud1.size(), pointcloud2.size());
+  for (size_t i = 0; i < pointcloud1.size(); i++) {
+    const auto & p1 = pointcloud1.at(i);
+    const auto & p2 = pointcloud2.at(i);
     EXPECT_FLOAT_EQ(p1.x, p2.x);
     EXPECT_FLOAT_EQ(p1.y, p2.y);
     EXPECT_FLOAT_EQ(p1.z, p2.z);
@@ -287,13 +289,13 @@ void check_pcds(nebula::drivers::NebulaPointCloudPtr pp1, nebula::drivers::Nebul
 }
 
 void check_pcds(
-  nebula::drivers::NebulaPointCloudPtr pp1,
-  std::shared_ptr<nebula::drivers::PointCloud<nebula::drivers::PointXYZ>> pp2)
+  const nebula::drivers::NebulaPointCloud & pointcloud,
+  const nebula::drivers::PointCloud<nebula::drivers::PointXYZ> & ref_pointcloud)
 {
-  EXPECT_EQ(pp1->size(), pp2->size());
-  for (uint32_t i = 0; i < pp1->size(); i++) {
-    auto p1 = pp1->at(i);
-    auto p2 = (*pp2)[i];
+  EXPECT_EQ(pointcloud.size(), ref_pointcloud.size());
+  for (size_t i = 0; i < pointcloud.size(); i++) {
+    const auto & p1 = pointcloud.at(i);
+    const auto & p2 = ref_pointcloud.at(i);
     EXPECT_FLOAT_EQ(p1.x, p2.x);
     EXPECT_FLOAT_EQ(p1.y, p2.y);
     EXPECT_FLOAT_EQ(p1.z, p2.z);
@@ -362,7 +364,7 @@ void VelodyneRosDecoderTest::read_bag()
             *ref_pointcloud = nebula::drivers::io::PcdReader::read<nebula::drivers::PointXYZ>(
               target_pcd_path.string());
             std::cout << "loaded: " << target_pcd_path << std::endl;
-            check_pcds(pointcloud, ref_pointcloud);
+            check_pcds(*pointcloud, *ref_pointcloud);
             check_cnt++;
             ref_pointcloud =
               std::make_shared<nebula::drivers::PointCloud<nebula::drivers::PointXYZ>>();

@@ -32,14 +32,14 @@ namespace nebula::test
 {
 
 inline void check_pcds(
-  const nebula::drivers::NebulaPointCloudPtr & pc,
-  const std::shared_ptr<drivers::PointCloud<drivers::PointXYZ>> & pc_ref)
+  const nebula::drivers::NebulaPointCloud & pointcloud,
+  const drivers::PointCloud<drivers::PointXYZ> & ref_pointcloud)
 {
-  ASSERT_EQ(pc->size(), pc_ref->size()) << "The point clouds are not the same size.";
-  auto bound = std::min(pc->size(), pc_ref->size());
+  ASSERT_EQ(pointcloud.size(), ref_pointcloud.size()) << "The point clouds are not the same size.";
+  auto bound = std::min(pointcloud.size(), ref_pointcloud.size());
   for (uint32_t i = 0; i < bound; i++) {
-    auto p = pc->at(i);
-    auto p_ref = pc_ref->at(i);
+    const auto & p = pointcloud.at(i);
+    const auto & p_ref = ref_pointcloud.at(i);
 
     EXPECT_FLOAT_EQ(p.x, p_ref.x);
     EXPECT_FLOAT_EQ(p.y, p_ref.y);

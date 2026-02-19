@@ -65,7 +65,7 @@ TEST_P(DecoderTest, TestPcd)
         nebula::drivers::io::PcdReader::read<nebula::drivers::PointXYZ>(target_pcd_path.string());
       *ref_pointcloud = std::move(loaded_cloud);
       RCLCPP_DEBUG_STREAM(*logger_, "loaded: " << target_pcd_path);
-      check_pcds(pointcloud, ref_pointcloud);
+      check_pcds(*pointcloud, *ref_pointcloud);
       check_cnt++;
       ref_pointcloud = std::make_shared<nebula::drivers::PointCloud<nebula::drivers::PointXYZ>>();
     }

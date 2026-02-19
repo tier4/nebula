@@ -21,12 +21,10 @@
 #include <cstdint>
 #include <cstring>
 #include <fstream>
-#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 #include <vector>
 
 namespace nebula::drivers::io
@@ -104,16 +102,6 @@ inline std::vector<std::string> split(const std::string & str)
   return tokens;
 }
 
-/// @brief Structure to hold PCD field information
-struct PcdFieldInfo
-{
-  std::string name;
-  uint32_t size;
-  char type;
-  uint32_t count;
-  uint32_t offset;
-};
-
 /// @brief Parse a value from ASCII string to the target type
 template <typename T>
 T parse_value(const std::string & str)
@@ -154,7 +142,10 @@ public:
   /// @tparam PointT The target point type (must have a static fields() method)
   /// @param filename Path to the PCD file
   /// @return The loaded point cloud
-  /// @throws std::runtime_error if the file cannot be read or is malformed
+  /// @throws std::runtime_error if the file cannot be opened, the header/data are malformed,
+  ///         the data is truncated, or the PCD DATA format is unsupported.
+  /// @throws std::invalid_argument if numeric tokens in header/data cannot be parsed.
+  /// @throws std::out_of_range if numeric tokens in header/data exceed target numeric range.
   template <typename PointT>
   static PointCloud<PointT> read(const std::string & filename)
   {
@@ -166,177 +157,320 @@ public:
       throw std::runtime_error("Failed to open PCD file: " + filename);
     }
 
-    // Parse header
-    std::vector<detail::PcdFieldInfo> pcd_fields;
-    uint32_t width = 0;
-    uint32_t height = 1;
-    uint32_t points = 0;
-    std::string data_format;
-    uint32_t pcd_point_size = 0;
+    const auto header = parse_header(file);
 
+    // Build mapping from PCD fields to target point type fields
+    const auto target_fields = PointT::fields();
+    const auto target_field_indices = build_target_field_indices(header.fields, target_fields);
+
+    if (header.data_format == "ascii") {
+      return read_ascii_points<PointT>(file, header, target_fields, target_field_indices);
+    }
+    if (header.data_format == "binary") {
+      return read_binary_points<PointT>(file, header, target_fields, target_field_indices);
+    }
+    if (header.data_format == "binary_compressed") {
+      throw std::runtime_error("Compressed PCD format is not supported");
+    }
+    throw std::runtime_error("Unknown DATA format: " + header.data_format);
+  }
+
+private:
+  struct PcdFieldInfo
+  {
+    std::string name;
+    uint32_t size{0};
+    char type{'\0'};
+    uint32_t count{1};
+    uint32_t offset{0};
+  };
+
+  struct PcdHeader
+  {
+    std::vector<PcdFieldInfo> fields;
+    uint32_t width{0};
+    uint32_t height{1};
+    uint32_t points{0};
+    std::string data_format;
+    uint32_t point_size{0};
+  };
+
+  static void validate_field_value_count(
+    const std::vector<std::string> & tokens, size_t field_count, const char * keyword)
+  {
+    if (tokens.size() - 1 != field_count) {
+      throw std::runtime_error(std::string(keyword) + " count does not match FIELDS count");
+    }
+  }
+
+  static void validate_minimum_token_count(
+    const std::vector<std::string> & tokens, size_t min_tokens, const char * keyword)
+  {
+    if (tokens.size() < min_tokens) {
+      throw std::runtime_error(std::string("Malformed PCD header line: ") + keyword);
+    }
+  }
+
+  static std::vector<PcdFieldInfo> parse_fields(const std::vector<std::string> & tokens)
+  {
+    validate_minimum_token_count(tokens, 2, "FIELDS");
+    std::vector<PcdFieldInfo> fields;
+    fields.reserve(tokens.size() - 1);
+    for (size_t i = 1; i < tokens.size(); ++i) {
+      fields.push_back(PcdFieldInfo{tokens[i]});
+    }
+    return fields;
+  }
+
+  static void parse_sizes(
+    const std::vector<std::string> & tokens, std::vector<PcdFieldInfo> & fields)
+  {
+    validate_minimum_token_count(tokens, 2, "SIZE");
+    validate_field_value_count(tokens, fields.size(), "SIZE");
+    for (size_t i = 1; i < tokens.size(); ++i) {
+      fields[i - 1].size = static_cast<uint32_t>(std::stoul(tokens[i]));
+    }
+  }
+
+  static void parse_types(
+    const std::vector<std::string> & tokens, std::vector<PcdFieldInfo> & fields)
+  {
+    validate_minimum_token_count(tokens, 2, "TYPE");
+    validate_field_value_count(tokens, fields.size(), "TYPE");
+    for (size_t i = 1; i < tokens.size(); ++i) {
+      fields[i - 1].type = tokens[i][0];
+    }
+  }
+
+  static void parse_counts(
+    const std::vector<std::string> & tokens, std::vector<PcdFieldInfo> & fields)
+  {
+    validate_minimum_token_count(tokens, 2, "COUNT");
+    validate_field_value_count(tokens, fields.size(), "COUNT");
+    for (size_t i = 1; i < tokens.size(); ++i) {
+      fields[i - 1].count = static_cast<uint32_t>(std::stoul(tokens[i]));
+    }
+  }
+
+  static uint32_t assign_field_offsets(std::vector<PcdFieldInfo> & fields)
+  {
+    uint32_t offset = 0;
+    for (auto & field : fields) {
+      field.offset = offset;
+      offset += field.size * field.count;
+    }
+    return offset;
+  }
+
+  static void validate_header(const PcdHeader & header)
+  {
+    if (header.data_format.empty()) {
+      throw std::runtime_error("Malformed PCD header: missing DATA line");
+    }
+    if (header.fields.empty()) {
+      throw std::runtime_error("Malformed PCD header: missing FIELDS line");
+    }
+    for (const auto & field : header.fields) {
+      if (field.size == 0) {
+        throw std::runtime_error("Malformed PCD header: missing SIZE line");
+      }
+      if (field.type == '\0') {
+        throw std::runtime_error("Malformed PCD header: missing TYPE line");
+      }
+      if (field.count == 0) {
+        throw std::runtime_error("Malformed PCD header: invalid COUNT value");
+      }
+    }
+  }
+
+  static PcdHeader parse_header(std::istream & file)
+  {
+    PcdHeader header;
     std::string line;
     while (std::getline(file, line)) {
       line = detail::trim(line);
       if (line.empty() || line[0] == '#') continue;
 
-      auto tokens = detail::split(line);
+      const auto tokens = detail::split(line);
       if (tokens.empty()) continue;
 
-      const std::string & keyword = tokens[0];
-
-      if (keyword == "VERSION") {
-        // Version 0.7 is expected
+      const auto & keyword = tokens[0];
+      if (keyword == "VERSION" || keyword == "VIEWPOINT") {
         continue;
-      } else if (keyword == "FIELDS") {
-        for (size_t i = 1; i < tokens.size(); ++i) {
-          detail::PcdFieldInfo field;
-          field.name = tokens[i];
-          pcd_fields.push_back(field);
-        }
+      }
+      if (keyword == "FIELDS") {
+        header.fields = parse_fields(tokens);
       } else if (keyword == "SIZE") {
-        if (tokens.size() - 1 != pcd_fields.size()) {
-          throw std::runtime_error("SIZE count does not match FIELDS count");
-        }
-        for (size_t i = 1; i < tokens.size(); ++i) {
-          pcd_fields[i - 1].size = static_cast<uint32_t>(std::stoul(tokens[i]));
-        }
+        parse_sizes(tokens, header.fields);
       } else if (keyword == "TYPE") {
-        if (tokens.size() - 1 != pcd_fields.size()) {
-          throw std::runtime_error("TYPE count does not match FIELDS count");
-        }
-        for (size_t i = 1; i < tokens.size(); ++i) {
-          pcd_fields[i - 1].type = tokens[i][0];
-        }
+        parse_types(tokens, header.fields);
       } else if (keyword == "COUNT") {
-        if (tokens.size() - 1 != pcd_fields.size()) {
-          throw std::runtime_error("COUNT count does not match FIELDS count");
-        }
-        for (size_t i = 1; i < tokens.size(); ++i) {
-          pcd_fields[i - 1].count = static_cast<uint32_t>(std::stoul(tokens[i]));
-        }
+        parse_counts(tokens, header.fields);
       } else if (keyword == "WIDTH") {
-        width = static_cast<uint32_t>(std::stoul(tokens[1]));
+        validate_minimum_token_count(tokens, 2, "WIDTH");
+        header.width = static_cast<uint32_t>(std::stoul(tokens[1]));
       } else if (keyword == "HEIGHT") {
-        height = static_cast<uint32_t>(std::stoul(tokens[1]));
-      } else if (keyword == "VIEWPOINT") {
-        // Ignore viewpoint
-        continue;
+        validate_minimum_token_count(tokens, 2, "HEIGHT");
+        header.height = static_cast<uint32_t>(std::stoul(tokens[1]));
       } else if (keyword == "POINTS") {
-        points = static_cast<uint32_t>(std::stoul(tokens[1]));
+        validate_minimum_token_count(tokens, 2, "POINTS");
+        header.points = static_cast<uint32_t>(std::stoul(tokens[1]));
       } else if (keyword == "DATA") {
-        data_format = tokens[1];
-        break;  // Header ends here
+        validate_minimum_token_count(tokens, 2, "DATA");
+        header.data_format = tokens[1];
+        break;
       }
     }
 
-    // Calculate offsets and total point size for PCD format
-    uint32_t offset = 0;
-    for (auto & field : pcd_fields) {
-      field.offset = offset;
-      offset += field.size * field.count;
-    }
-    pcd_point_size = offset;
+    validate_header(header);
 
-    if (points == 0) {
-      points = width * height;
+    header.point_size = assign_field_offsets(header.fields);
+    if (header.points == 0) {
+      header.points = header.width * header.height;
+    }
+    return header;
+  }
+
+  template <typename PcdFieldsT, typename FieldsT>
+  static std::vector<int32_t> build_target_field_indices(
+    const PcdFieldsT & pcd_fields, const FieldsT & target_fields)
+  {
+    std::vector<int32_t> target_field_indices(pcd_fields.size(), -1);
+    for (size_t pcd_idx = 0; pcd_idx < pcd_fields.size(); ++pcd_idx) {
+      for (size_t target_idx = 0; target_idx < target_fields.size(); ++target_idx) {
+        if (pcd_fields[pcd_idx].name == target_fields[target_idx].name) {
+          target_field_indices[pcd_idx] = static_cast<int32_t>(target_idx);
+          break;
+        }
+      }
+    }
+    return target_field_indices;
+  }
+
+  static size_t scalar_count(const std::vector<PcdFieldInfo> & pcd_fields)
+  {
+    size_t count = 0;
+    for (const auto & field : pcd_fields) {
+      count += field.count;
+    }
+    return count;
+  }
+
+  static void parse_ascii_scalar(
+    uint8_t * dst, PointField::DataType datatype, const std::string & value)
+  {
+    switch (datatype) {
+      case PointField::DataType::Float32:
+        *reinterpret_cast<float *>(dst) = detail::parse_value<float>(value);
+        break;
+      case PointField::DataType::Float64:
+        *reinterpret_cast<double *>(dst) = detail::parse_value<double>(value);
+        break;
+      case PointField::DataType::Int8:
+        *reinterpret_cast<int8_t *>(dst) = detail::parse_value<int8_t>(value);
+        break;
+      case PointField::DataType::UInt8:
+        *reinterpret_cast<uint8_t *>(dst) = detail::parse_value<uint8_t>(value);
+        break;
+      case PointField::DataType::Int16:
+        *reinterpret_cast<int16_t *>(dst) = detail::parse_value<int16_t>(value);
+        break;
+      case PointField::DataType::UInt16:
+        *reinterpret_cast<uint16_t *>(dst) = detail::parse_value<uint16_t>(value);
+        break;
+      case PointField::DataType::Int32:
+        *reinterpret_cast<int32_t *>(dst) = detail::parse_value<int32_t>(value);
+        break;
+      case PointField::DataType::UInt32:
+        *reinterpret_cast<uint32_t *>(dst) = detail::parse_value<uint32_t>(value);
+        break;
+    }
+  }
+
+  template <typename PointT, typename FieldsT>
+  static PointT parse_ascii_point(
+    const std::string & line, const std::vector<PcdFieldInfo> & pcd_fields,
+    const FieldsT & target_fields, const std::vector<int32_t> & target_field_indices)
+  {
+    const auto values = detail::split(line);
+    if (values.size() < scalar_count(pcd_fields)) {
+      throw std::runtime_error("Not enough values in ASCII line");
     }
 
-    // Build mapping from PCD fields to target point type fields
-    const auto target_fields = PointT::fields();
-    std::unordered_map<std::string, size_t> target_field_map;
-    for (size_t i = 0; i < target_fields.size(); ++i) {
-      target_field_map[target_fields[i].name] = i;
+    PointT point{};
+    size_t value_idx = 0;
+    for (size_t pcd_idx = 0; pcd_idx < pcd_fields.size(); ++pcd_idx) {
+      const auto & pcd_field = pcd_fields[pcd_idx];
+      const int32_t target_idx = target_field_indices[pcd_idx];
+      if (target_idx >= 0) {
+        const auto & target_field = target_fields[static_cast<size_t>(target_idx)];
+        auto * const ptr = reinterpret_cast<uint8_t *>(&point) + target_field.offset;
+        parse_ascii_scalar(ptr, target_field.datatype, values[value_idx]);
+      }
+      value_idx += pcd_field.count;
     }
+    return point;
+  }
 
+  template <typename PointT, typename FieldsT>
+  static PointT parse_binary_point(
+    const uint8_t * pcd_point_data, const std::vector<PcdFieldInfo> & pcd_fields,
+    const FieldsT & target_fields, const std::vector<int32_t> & target_field_indices)
+  {
+    PointT point{};
+    for (size_t pcd_idx = 0; pcd_idx < pcd_fields.size(); ++pcd_idx) {
+      const auto & pcd_field = pcd_fields[pcd_idx];
+      const int32_t target_idx = target_field_indices[pcd_idx];
+      if (target_idx < 0) continue;
+
+      const auto & target_field = target_fields[static_cast<size_t>(target_idx)];
+      auto * const dst = reinterpret_cast<uint8_t *>(&point) + target_field.offset;
+      const auto * const src = pcd_point_data + pcd_field.offset;
+      const auto copy_size = std::min(
+        pcd_field.size * pcd_field.count,
+        detail::datatype_size(target_field.datatype) * target_field.count);
+      std::memcpy(dst, src, copy_size);
+    }
+    return point;
+  }
+
+  template <typename PointT, typename FieldsT>
+  static PointCloud<PointT> read_ascii_points(
+    std::istream & file, const PcdHeader & header, const FieldsT & target_fields,
+    const std::vector<int32_t> & target_field_indices)
+  {
     PointCloud<PointT> cloud;
-    cloud.reserve(points);
+    cloud.reserve(header.points);
 
-    if (data_format == "ascii") {
-      // Read ASCII data
-      for (uint32_t i = 0; i < points; ++i) {
-        if (!std::getline(file, line)) {
-          throw std::runtime_error("Unexpected end of file while reading ASCII data");
-        }
-        auto values = detail::split(line);
-        if (values.size() < pcd_fields.size()) {
-          throw std::runtime_error("Not enough values in ASCII line");
-        }
-
-        PointT point{};
-        size_t value_idx = 0;
-        for (const auto & pcd_field : pcd_fields) {
-          auto it = target_field_map.find(pcd_field.name);
-          if (it != target_field_map.end()) {
-            const auto & target_field = target_fields[it->second];
-            uint8_t * ptr = reinterpret_cast<uint8_t *>(&point) + target_field.offset;
-
-            // Parse value based on target type
-            switch (target_field.datatype) {
-              case PointField::DataType::Float32:
-                *reinterpret_cast<float *>(ptr) = detail::parse_value<float>(values[value_idx]);
-                break;
-              case PointField::DataType::Float64:
-                *reinterpret_cast<double *>(ptr) = detail::parse_value<double>(values[value_idx]);
-                break;
-              case PointField::DataType::Int8:
-                *reinterpret_cast<int8_t *>(ptr) = detail::parse_value<int8_t>(values[value_idx]);
-                break;
-              case PointField::DataType::UInt8:
-                *reinterpret_cast<uint8_t *>(ptr) = detail::parse_value<uint8_t>(values[value_idx]);
-                break;
-              case PointField::DataType::Int16:
-                *reinterpret_cast<int16_t *>(ptr) = detail::parse_value<int16_t>(values[value_idx]);
-                break;
-              case PointField::DataType::UInt16:
-                *reinterpret_cast<uint16_t *>(ptr) =
-                  detail::parse_value<uint16_t>(values[value_idx]);
-                break;
-              case PointField::DataType::Int32:
-                *reinterpret_cast<int32_t *>(ptr) = detail::parse_value<int32_t>(values[value_idx]);
-                break;
-              case PointField::DataType::UInt32:
-                *reinterpret_cast<uint32_t *>(ptr) =
-                  detail::parse_value<uint32_t>(values[value_idx]);
-                break;
-            }
-          }
-          value_idx += pcd_field.count;
-        }
-        cloud.push_back(point);
+    std::string line;
+    for (uint32_t i = 0; i < header.points; ++i) {
+      if (!std::getline(file, line)) {
+        throw std::runtime_error("Unexpected end of file while reading ASCII data");
       }
-    } else if (data_format == "binary") {
-      // Read binary data
-      std::vector<uint8_t> pcd_point_buffer(pcd_point_size);
-
-      for (uint32_t i = 0; i < points; ++i) {
-        file.read(reinterpret_cast<char *>(pcd_point_buffer.data()), pcd_point_size);
-        if (!file) {
-          throw std::runtime_error("Unexpected end of file while reading binary data");
-        }
-
-        PointT point{};
-        for (const auto & pcd_field : pcd_fields) {
-          auto it = target_field_map.find(pcd_field.name);
-          if (it != target_field_map.end()) {
-            const auto & target_field = target_fields[it->second];
-            uint8_t * dst = reinterpret_cast<uint8_t *>(&point) + target_field.offset;
-            const uint8_t * src = pcd_point_buffer.data() + pcd_field.offset;
-
-            // Copy the minimum of source and destination sizes
-            uint32_t copy_size = std::min(
-              pcd_field.size * pcd_field.count,
-              detail::datatype_size(target_field.datatype) * target_field.count);
-            std::memcpy(dst, src, copy_size);
-          }
-        }
-        cloud.push_back(point);
-      }
-    } else if (data_format == "binary_compressed") {
-      throw std::runtime_error("Compressed PCD format is not supported");
-    } else {
-      throw std::runtime_error("Unknown DATA format: " + data_format);
+      cloud.push_back(
+        parse_ascii_point<PointT>(line, header.fields, target_fields, target_field_indices));
     }
+    return cloud;
+  }
 
+  template <typename PointT, typename FieldsT>
+  static PointCloud<PointT> read_binary_points(
+    std::istream & file, const PcdHeader & header, const FieldsT & target_fields,
+    const std::vector<int32_t> & target_field_indices)
+  {
+    PointCloud<PointT> cloud;
+    cloud.reserve(header.points);
+
+    std::vector<uint8_t> pcd_point_buffer(header.point_size);
+    for (uint32_t i = 0; i < header.points; ++i) {
+      file.read(reinterpret_cast<char *>(pcd_point_buffer.data()), header.point_size);
+      if (!file) {
+        throw std::runtime_error("Unexpected end of file while reading binary data");
+      }
+      cloud.push_back(
+        parse_binary_point<PointT>(
+          pcd_point_buffer.data(), header.fields, target_fields, target_field_indices));
+    }
     return cloud;
   }
 };
@@ -349,7 +483,7 @@ public:
   /// @tparam PointT The point type (must have a static fields() method)
   /// @param filename Path to the output PCD file
   /// @param cloud The point cloud to write
-  /// @throws std::runtime_error if the file cannot be written
+  /// @throws std::runtime_error if the output file cannot be opened or written.
   template <typename PointT>
   static void write_binary(const std::string & filename, const PointCloud<PointT> & cloud)
   {
@@ -362,45 +496,7 @@ public:
     }
 
     const auto fields = PointT::fields();
-
-    // Write header
-    file << "# .PCD v0.7 - Point Cloud Data file format\n";
-    file << "VERSION 0.7\n";
-
-    // FIELDS
-    file << "FIELDS";
-    for (const auto & field : fields) {
-      file << " " << field.name;
-    }
-    file << "\n";
-
-    // SIZE
-    file << "SIZE";
-    for (const auto & field : fields) {
-      file << " " << detail::datatype_size(field.datatype);
-    }
-    file << "\n";
-
-    // TYPE
-    file << "TYPE";
-    for (const auto & field : fields) {
-      file << " " << detail::datatype_to_pcd_type(field.datatype);
-    }
-    file << "\n";
-
-    // COUNT
-    file << "COUNT";
-    for (const auto & field : fields) {
-      file << " " << field.count;
-    }
-    file << "\n";
-
-    // Dimensions
-    file << "WIDTH " << cloud.size() << "\n";
-    file << "HEIGHT 1\n";
-    file << "VIEWPOINT 0 0 0 1 0 0 0\n";
-    file << "POINTS " << cloud.size() << "\n";
-    file << "DATA binary\n";
+    write_binary_header(file, fields, cloud.size());
 
     // Write binary data
     // Note: We write the entire point structure, which may include padding bytes.
@@ -414,34 +510,36 @@ public:
     }
   }
 
-  /// @brief Write a shared_ptr PointCloud to a binary PCD file
-  /// @tparam PointT The point type (must have a static fields() method)
-  /// @param filename Path to the output PCD file
-  /// @param cloud The point cloud to write
-  /// @throws std::runtime_error if the file cannot be written
-  template <typename PointT>
-  static void write_binary(
-    const std::string & filename, const std::shared_ptr<PointCloud<PointT>> & cloud)
+private:
+  template <typename FieldsT, typename ValueFn>
+  static void write_field_line(
+    std::ostream & file, const char * key, const FieldsT & fields, ValueFn && value_fn)
   {
-    if (!cloud) {
-      throw std::runtime_error("Cannot write null point cloud");
+    file << key;
+    for (const auto & field : fields) {
+      file << " " << value_fn(field);
     }
-    write_binary(filename, *cloud);
+    file << "\n";
   }
 
-  /// @brief Write a shared_ptr to const PointCloud to a binary PCD file
-  /// @tparam PointT The point type (must have a static fields() method)
-  /// @param filename Path to the output PCD file
-  /// @param cloud The point cloud to write
-  /// @throws std::runtime_error if the file cannot be written
-  template <typename PointT>
-  static void write_binary(
-    const std::string & filename, const std::shared_ptr<const PointCloud<PointT>> & cloud)
+  template <typename FieldsT>
+  static void write_binary_header(std::ostream & file, const FieldsT & fields, size_t point_count)
   {
-    if (!cloud) {
-      throw std::runtime_error("Cannot write null point cloud");
-    }
-    write_binary(filename, *cloud);
+    file << "# .PCD v0.7 - Point Cloud Data file format\n";
+    file << "VERSION 0.7\n";
+    write_field_line(file, "FIELDS", fields, [](const auto & field) { return field.name; });
+    write_field_line(file, "SIZE", fields, [](const auto & field) {
+      return detail::datatype_size(field.datatype);
+    });
+    write_field_line(file, "TYPE", fields, [](const auto & field) {
+      return detail::datatype_to_pcd_type(field.datatype);
+    });
+    write_field_line(file, "COUNT", fields, [](const auto & field) { return field.count; });
+    file << "WIDTH " << point_count << "\n";
+    file << "HEIGHT 1\n";
+    file << "VIEWPOINT 0 0 0 1 0 0 0\n";
+    file << "POINTS " << point_count << "\n";
+    file << "DATA binary\n";
   }
 };
 
