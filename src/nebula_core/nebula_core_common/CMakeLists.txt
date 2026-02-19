@@ -21,6 +21,11 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_rate_checker test/test_rate_checker.cpp)
   target_link_libraries(test_rate_checker nebula_core_common)
+
+  ament_add_gtest(test_pcd_io test/test_pcd_io.cpp)
+  target_link_libraries(test_pcd_io nebula_core_common)
+  target_compile_definitions(
+    test_pcd_io PRIVATE NEBULA_CORE_COMMON_TEST_RESOURCES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/test_resources")
 endif()
 
 install(TARGETS nebula_core_common EXPORT export_nebula_core_common)
