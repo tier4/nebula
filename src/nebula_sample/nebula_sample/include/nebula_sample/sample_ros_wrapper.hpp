@@ -67,9 +67,6 @@ public:
   /// @throws std::runtime_error on invalid configuration or startup failures.
   explicit SampleRosWrapper(const rclcpp::NodeOptions & options);
 
-  /// @brief Stop sensor streaming before destruction when initialized.
-  ~SampleRosWrapper() override;
-
 private:
   /// @brief Publish a decoded pointcloud to ROS.
   /// @param pointcloud Decoded pointcloud from the decoder.

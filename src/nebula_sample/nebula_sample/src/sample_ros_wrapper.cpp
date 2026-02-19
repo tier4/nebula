@@ -160,7 +160,7 @@ void SampleRosWrapper::publish_pointcloud_callback(
   if (points_pub_->get_subscription_count() > 0 && pointcloud) {
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
     pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
-    ros_pc_msg_ptr->header.stamp = now();
+    ros_pc_msg_ptr->header.stamp = rclcpp::Time(timestamp_s);
     ros_pc_msg_ptr->header.frame_id = frame_id_;
     points_pub_->publish(std::move(ros_pc_msg_ptr));
   }
