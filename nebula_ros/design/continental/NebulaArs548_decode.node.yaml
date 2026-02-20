@@ -1,4 +1,4 @@
-autoware_system_design_format: 0.2.0
+autoware_system_design_format: 0.3.0
 
 name: NebulaArs548_decode.node
 
@@ -24,7 +24,7 @@ override:
         - to_output: marker_array
         - to_output: diagnostics
         - to_output: radar_info
-  parameters:
+  param_values:
     - name: launch_hw
       type: bool
       default: false
