@@ -20,7 +20,10 @@
 #include <nebula_sample_common/sample_configuration.hpp>
 
 #include <cstdint>
+#include <memory>
+#include <mutex>
 #include <optional>
+#include <string>
 #include <variant>
 
 namespace nebula::drivers
@@ -31,12 +34,23 @@ namespace nebula::drivers
 class SampleHwInterface
 {
 public:
-  enum class Error : uint8_t {
-    CALLBACK_NOT_REGISTERED,  ///< Start requested before a callback was registered.
-    INVALID_CALLBACK,         ///< Empty callback passed to register_scan_callback.
+  /// @brief Rich error payload for hardware interface operations.
+  struct Error
+  {
+    /// @brief Coarse category for quick handling and branching.
+    enum class Code : uint8_t {
+      CALLBACK_NOT_REGISTERED,  ///< Start requested before a callback was registered.
+      INVALID_CALLBACK,         ///< Empty callback passed to register_scan_callback.
+      INVALID_OPERATION,        ///< Operation is invalid in the current interface state.
+      SOCKET_OPEN_FAILED,       ///< UDP socket creation/bind/subscribe failed.
+      SOCKET_CLOSE_FAILED,      ///< UDP socket unsubscribe/teardown failed.
+    };
+
+    Code code;
+    std::string message;
   };
 
-  static const char * to_cstr(Error error);
+  static const char * to_cstr(Error::Code code);
 
   /// @brief Construct the hardware interface with connection settings.
   /// @param connection_configuration Network addresses and ports used by the sensor stream.
@@ -59,7 +73,9 @@ public:
 
 private:
   ConnectionConfiguration connection_configuration_;
-  std::optional<connections::UdpSocket::callback_t> packet_callback_;
+  std::optional<connections::UdpSocket> udp_socket_;
+  std::shared_ptr<connections::UdpSocket::callback_t> packet_callback_;
+  std::mutex callback_mutex_;
 };
 
 }  // namespace nebula::drivers

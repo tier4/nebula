@@ -29,9 +29,11 @@ target_link_libraries(
 ament_target_dependencies(
   sample_ros_wrapper
   PUBLIC
+  diagnostic_updater
   rclcpp
   rclcpp_components
   sensor_msgs
+  std_msgs
   pcl_conversions)
 
 rclcpp_components_register_node(sample_ros_wrapper PLUGIN "nebula::ros::SampleRosWrapper"
@@ -57,8 +59,10 @@ ament_export_dependencies(
   nebula_core_hw_interfaces
   nebula_sample_hw_interfaces
   nebula_core_ros
+  diagnostic_updater
   rclcpp_components
   sensor_msgs
+  std_msgs
   pcl_conversions)
 
 ament_package()

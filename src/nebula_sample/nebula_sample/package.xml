@@ -12,6 +12,7 @@
 
   <buildtool_depend>autoware_cmake</buildtool_depend>
 
+  <depend>diagnostic_updater</depend>
   <depend>nebula_core_common</depend>
   <depend>nebula_core_ros</depend>
   <depend>nebula_sample_common</depend>
@@ -21,6 +22,7 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

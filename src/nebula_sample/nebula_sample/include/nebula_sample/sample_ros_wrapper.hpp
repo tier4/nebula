@@ -18,17 +18,19 @@
 #include "nebula_sample_decoders/sample_decoder.hpp"
 #include "nebula_sample_hw_interfaces/sample_hw_interface.hpp"
 
+#include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_ros/diagnostics/liveness_monitor.hpp>
+#include <nebula_core_ros/diagnostics/rate_bound_status.hpp>
 #include <nebula_sample_common/sample_configuration.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <sensor_msgs/msg/point_cloud2.hpp>
+#include <std_msgs/msg/float64.hpp>
 
 #include <cstdint>
-#include <memory>
 #include <optional>
 #include <string>
-#include <variant>
 #include <vector>
 
 namespace nebula::ros
@@ -36,6 +38,12 @@ namespace nebula::ros
 
 struct ConfigError
 {
+  enum class Code : uint8_t {
+    PARAMETER_DECLARATION_FAILED,  ///< Parameter declaration/read failed.
+    PARAMETER_VALIDATION_FAILED,   ///< Parameter value failed semantic validation.
+  };
+
+  Code code;
   std::string message;
 };
 
@@ -57,17 +65,41 @@ util::expected<drivers::SampleSensorConfiguration, ConfigError> load_config_from
 class SampleRosWrapper : public rclcpp::Node
 {
 public:
-  enum class Error : uint8_t {
-    HW_INTERFACE_NOT_INITIALIZED,  ///< Stream start requested while HW interface is absent.
-    HW_STREAM_START_FAILED,        ///< Underlying HW interface failed to start.
+  struct Error
+  {
+    enum class Code : uint8_t {
+      HW_INTERFACE_NOT_INITIALIZED,  ///< Stream start requested while HW interface is absent.
+      HW_STREAM_START_FAILED,        ///< Underlying HW interface failed to start.
+    };
+
+    Code code;
+    std::string message;
   };
 
   /// @brief Construct the ROS 2 node and initialize decoder + optional HW stream.
   /// @param options Standard ROS 2 component/node options.
   /// @throws std::runtime_error on invalid configuration or startup failures.
   explicit SampleRosWrapper(const rclcpp::NodeOptions & options);
+  ~SampleRosWrapper() override;
 
 private:
+  struct Publishers
+  {
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr points;
+    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr receive_duration_ms;
+    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr decode_duration_ms;
+    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr publish_duration_ms;
+  };
+
+  struct Diagnostics
+  {
+    explicit Diagnostics(rclcpp::Node * node) : updater(node) {}
+
+    diagnostic_updater::Updater updater;
+    std::optional<custom_diagnostic_tasks::RateBoundStatus> publish_rate;
+    std::optional<LivenessMonitor> packet_liveness;
+  };
+
   /// @brief Publish a decoded pointcloud to ROS.
   /// @param pointcloud Decoded pointcloud from the decoder.
   /// @param timestamp_s Scan timestamp in seconds, epoch time.
@@ -81,13 +113,22 @@ private:
     const std::vector<uint8_t> & packet,
     const drivers::connections::UdpSocket::RxMetadata & metadata);
 
-  static const char * to_cstr(Error error);
-  static const char * to_cstr(drivers::SampleHwInterface::Error error);
+  /// @brief Configure common diagnostics used by most sensor integrations.
+  void initialize_diagnostics();
+
+  /// @brief Publish receive/decode/publish debug durations.
+  /// @param receive_duration_ns Time spent in transport receive path.
+  /// @param decode_duration_ns Time spent decoding one packet.
+  /// @param publish_duration_ns Time spent publishing one completed scan callback.
+  void publish_debug_durations(
+    uint64_t receive_duration_ns, uint64_t decode_duration_ns, uint64_t publish_duration_ns) const;
+
+  static const char * to_cstr(Error::Code code);
 
   drivers::SampleSensorConfiguration config_;
   std::string frame_id_;
-
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr points_pub_;
+  Publishers publishers_;
+  Diagnostics diagnostics_;
 
   std::optional<drivers::SampleDecoder> decoder_;
   std::optional<drivers::SampleHwInterface> hw_interface_;
