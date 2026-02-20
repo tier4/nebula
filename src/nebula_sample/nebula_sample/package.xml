@@ -15,6 +15,7 @@
   <depend>diagnostic_updater</depend>
   <depend>nebula_core_common</depend>
   <depend>nebula_core_ros</depend>
+  <depend>nebula_msgs</depend>
   <depend>nebula_sample_common</depend>
   <depend>nebula_sample_decoders</depend>
   <depend>nebula_sample_hw_interfaces</depend>

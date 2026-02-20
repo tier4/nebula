@@ -25,12 +25,17 @@
 #include <nebula_sample_common/sample_configuration.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <nebula_msgs/msg/nebula_packet.hpp>
+#include <nebula_msgs/msg/nebula_packets.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <std_msgs/msg/float64.hpp>
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
+#include <utility>
+#include <variant>
 #include <vector>
 
 namespace nebula::ros
@@ -83,6 +88,26 @@ public:
   ~SampleRosWrapper() override;
 
 private:
+  /// @brief Resources used only when launch_hw is true.
+  struct OnlineMode
+  {
+    explicit OnlineMode(drivers::ConnectionConfiguration connection_configuration)
+    : hw_interface(std::move(connection_configuration))
+    {
+    }
+
+    drivers::SampleHwInterface hw_interface;
+    rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub;
+    std::unique_ptr<nebula_msgs::msg::NebulaPackets> current_scan_packets_msg{
+      std::make_unique<nebula_msgs::msg::NebulaPackets>()};
+  };
+
+  /// @brief Resources used only when launch_hw is false.
+  struct OfflineMode
+  {
+    rclcpp::Subscription<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_sub;
+  };
+
   struct Publishers
   {
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr points;
@@ -113,8 +138,18 @@ private:
     const std::vector<uint8_t> & packet,
     const drivers::connections::UdpSocket::RxMetadata & metadata);
 
+  /// @brief Process one replayed NebulaPackets message.
+  /// @param packets_msg Packed scan data used for software-only replay.
+  void receive_packets_message_callback(
+    std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg);
+
   /// @brief Configure common diagnostics used by most sensor integrations.
   void initialize_diagnostics();
+
+  /// @brief Decode one packet and publish relevant outputs.
+  /// @param packet Raw packet payload.
+  /// @param receive_duration_ns Time spent in transport receive path for this packet.
+  void process_packet(const std::vector<uint8_t> & packet, uint64_t receive_duration_ns);
 
   /// @brief Publish receive/decode/publish debug durations.
   /// @param receive_duration_ns Time spent in transport receive path.
@@ -131,7 +166,9 @@ private:
   Diagnostics diagnostics_;
 
   std::optional<drivers::SampleDecoder> decoder_;
-  std::optional<drivers::SampleHwInterface> hw_interface_;
+  /// @brief Exactly one runtime mode is active: offline replay or online hardware mode.
+  /// @details During construction, neither mode is active.
+  std::variant<std::monostate, OfflineMode, OnlineMode> runtime_mode_;
 };
 
 }  // namespace nebula::ros

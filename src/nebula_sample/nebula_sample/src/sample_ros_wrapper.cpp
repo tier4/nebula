@@ -19,6 +19,7 @@
 #include <nebula_sample_common/sample_configuration.hpp>
 #include <nebula_sample_hw_interfaces/sample_hw_interface.hpp>
 #include <rcl_interfaces/msg/parameter_descriptor.hpp>
+#include <rclcpp/logging.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
 #include <std_msgs/msg/float64.hpp>
@@ -40,6 +41,13 @@ namespace nebula::ros
 namespace
 {
 constexpr double k_ns_to_ms = 1e-6;
+
+uint64_t current_system_time_ns()
+{
+  return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                 std::chrono::system_clock::now().time_since_epoch())
+                                 .count());
+}
 
 template <typename T>
 util::expected<T, ConfigError> declare_required_parameter(
@@ -131,7 +139,8 @@ util::expected<drivers::SampleSensorConfiguration, ConfigError> load_config_from
 
 SampleRosWrapper::SampleRosWrapper(const rclcpp::NodeOptions & options)
 : Node("nebula_sample_ros_wrapper", rclcpp::NodeOptions(options).use_intra_process_comms(true)),
-  diagnostics_(this)
+  diagnostics_(this),
+  runtime_mode_(std::monostate{})
 {
   const bool launch_hw = declare_parameter<bool>("launch_hw", true, param_read_only());
   declare_parameter<std::string>("sensor_model", "SampleSensor", param_read_only());
@@ -161,8 +170,11 @@ SampleRosWrapper::SampleRosWrapper(const rclcpp::NodeOptions & options)
     });
 
   if (launch_hw) {
-    hw_interface_.emplace(config_.connection);
-    const auto callback_result = hw_interface_->register_scan_callback(
+    runtime_mode_.emplace<OnlineMode>(config_.connection);
+    auto & online_mode = std::get<OnlineMode>(runtime_mode_);
+    online_mode.packets_pub =
+      create_publisher<nebula_msgs::msg::NebulaPackets>("packets_raw", rclcpp::SensorDataQoS());
+    const auto callback_result = online_mode.hw_interface.register_scan_callback(
       [this](
         const std::vector<uint8_t> & raw_packet,
         const drivers::connections::UdpSocket::RxMetadata & metadata) {
@@ -174,26 +186,33 @@ SampleRosWrapper::SampleRosWrapper(const rclcpp::NodeOptions & options)
         "Failed to register sample sensor packet callback: " + error.message);
     }
 
-    const auto stream_start_result = hw_interface_->sensor_interface_start();
+    const auto stream_start_result = online_mode.hw_interface.sensor_interface_start();
     if (!stream_start_result.has_value()) {
       const auto error = stream_start_result.error();
       throw std::runtime_error("Failed to start sample sensor stream: " + error.message);
     }
   } else {
+    runtime_mode_.emplace<OfflineMode>();
+    auto & offline_mode = std::get<OfflineMode>(runtime_mode_);
+    offline_mode.packets_sub = create_subscription<nebula_msgs::msg::NebulaPackets>(
+      "packets_raw", rclcpp::SensorDataQoS(),
+      [this](std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg) {
+        receive_packets_message_callback(std::move(packets_msg));
+      });
     RCLCPP_INFO(
-      get_logger(),
-      "Hardware connection disabled (launch_hw:=false). Sample wrapper currently expects live UDP "
-      "packets only.");
+      get_logger(), "Hardware connection disabled, listening for packets on %s",
+      offline_mode.packets_sub->get_topic_name());
   }
 }
 
 SampleRosWrapper::~SampleRosWrapper()
 {
-  if (!hw_interface_) {
+  auto * online_mode = std::get_if<OnlineMode>(&runtime_mode_);
+  if (!online_mode) {
     return;
   }
 
-  const auto stop_result = hw_interface_->sensor_interface_stop();
+  const auto stop_result = online_mode->hw_interface.sensor_interface_stop();
   if (!stop_result.has_value()) {
     const auto error = stop_result.error();
     RCLCPP_WARN(
@@ -269,21 +288,74 @@ void SampleRosWrapper::receive_cloud_packet_callback(
   const std::vector<uint8_t> & packet, const drivers::connections::UdpSocket::RxMetadata & metadata)
 {
   diagnostics_.packet_liveness->tick();
+  auto * online_mode = std::get_if<OnlineMode>(&runtime_mode_);
+  if (online_mode && online_mode->packets_pub) {
+    if (!online_mode->current_scan_packets_msg) {
+      online_mode->current_scan_packets_msg = std::make_unique<nebula_msgs::msg::NebulaPackets>();
+    }
 
+    const auto packet_timestamp_ns = metadata.timestamp_ns.value_or(current_system_time_ns());
+    nebula_msgs::msg::NebulaPacket packet_msg{};
+    packet_msg.stamp.sec = static_cast<int32_t>(packet_timestamp_ns / 1'000'000'000ULL);
+    packet_msg.stamp.nanosec = static_cast<uint32_t>(packet_timestamp_ns % 1'000'000'000ULL);
+    packet_msg.data = packet;
+    if (online_mode->current_scan_packets_msg->packets.empty()) {
+      online_mode->current_scan_packets_msg->header.stamp = packet_msg.stamp;
+      online_mode->current_scan_packets_msg->header.frame_id = frame_id_;
+    }
+    online_mode->current_scan_packets_msg->packets.emplace_back(std::move(packet_msg));
+  }
+
+  process_packet(packet, metadata.packet_perf_counters.receive_duration_ns);
+}
+
+void SampleRosWrapper::receive_packets_message_callback(
+  std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg)
+{
+  if (!packets_msg) {
+    return;
+  }
+
+  if (!std::holds_alternative<OfflineMode>(runtime_mode_)) {
+    RCLCPP_ERROR_ONCE(
+      get_logger(),
+      "Ignoring NebulaPackets. Launch with launch_hw:=false to enable NebulaPackets replay.");
+    return;
+  }
+
+  for (const auto & packet_msg : packets_msg->packets) {
+    diagnostics_.packet_liveness->tick();
+    process_packet(packet_msg.data, 0U);
+  }
+}
+
+void SampleRosWrapper::process_packet(
+  const std::vector<uint8_t> & packet, const uint64_t receive_duration_ns)
+{
   if (!decoder_) {
     return;
   }
 
   const auto decode_result = decoder_->unpack(packet);
   publish_debug_durations(
-    metadata.packet_perf_counters.receive_duration_ns,
-    decode_result.performance_counters.decode_time_ns,
+    receive_duration_ns, decode_result.performance_counters.decode_time_ns,
     decode_result.performance_counters.callback_time_ns);
 
   if (!decode_result.metadata_or_error.has_value()) {
     RCLCPP_DEBUG_THROTTLE(
       get_logger(), *get_clock(), 1000, "Packet decode failed: %s.",
       drivers::to_cstr(decode_result.metadata_or_error.error()));
+    return;
+  }
+
+  auto * online_mode = std::get_if<OnlineMode>(&runtime_mode_);
+  if (
+    online_mode && online_mode->packets_pub &&
+    decode_result.metadata_or_error.value().did_scan_complete &&
+    online_mode->current_scan_packets_msg &&
+    !online_mode->current_scan_packets_msg->packets.empty()) {
+    online_mode->packets_pub->publish(std::move(online_mode->current_scan_packets_msg));
+    online_mode->current_scan_packets_msg = std::make_unique<nebula_msgs::msg::NebulaPackets>();
   }
 }
 

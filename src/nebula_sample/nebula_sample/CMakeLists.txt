@@ -30,6 +30,7 @@ ament_target_dependencies(
   sample_ros_wrapper
   PUBLIC
   diagnostic_updater
+  nebula_msgs
   rclcpp
   rclcpp_components
   sensor_msgs
@@ -60,6 +61,7 @@ ament_export_dependencies(
   nebula_sample_hw_interfaces
   nebula_core_ros
   diagnostic_updater
+  nebula_msgs
   rclcpp_components
   sensor_msgs
   std_msgs
