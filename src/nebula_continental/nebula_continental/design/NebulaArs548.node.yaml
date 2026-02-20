@@ -1,4 +1,4 @@
-autoware_system_design_format: 0.2.0
+autoware_system_design_format: 0.3.0
 
 name: NebulaArs548.node
 
@@ -56,13 +56,13 @@ outputs:
     remap_target: radar_info
 
 # parameters
-parameter_files:
+param_files:
   - name: config_file
     default: config/radar/continental/ARS548.param.yaml
     schema: schema/ARS548.schema.json
     allow_substs: true
 
-parameters:
+param_values:
   - name: launch_hw
     type: bool
     default: true
