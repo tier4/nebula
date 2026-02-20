@@ -24,7 +24,10 @@ colcon build --packages-up-to nebula_sample
 ## Running
 
 ```bash
+# Online mode (with hardware)
 ros2 launch nebula_sample nebula_sample.launch.xml
+# Offline mode (replay from rosbag)
+ros2 launch nebula_sample nebula_sample.launch.xml launch_hw:=false
 ```
 
 ## Using as a template
@@ -56,7 +59,9 @@ The guide covers:
 ### ROS wrapper
 
 - `SampleRosWrapper` - ROS 2 node wrapping the driver
-- Point cloud publisher on `/points_raw`
+- Point cloud publisher on `/points`
+- Packet publish/replay topic on `/packets` (`nebula_msgs/msg/NebulaPackets`) depending on
+  runtime mode (`launch_hw` parameter)
 
 ## Reference implementation
 

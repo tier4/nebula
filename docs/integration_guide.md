@@ -33,8 +33,6 @@ graph TB
             Sample["<b>nebula_sample</b><br/>sample_common<br/>sample_decoders<br/>sample_hw_interfaces<br/>ROS wrapper"]
         end
     end
-
-
 ```
 
 - Core packages provide reusable functionality (UDP sockets, point types, etc.)
@@ -57,17 +55,48 @@ of Nebula as a library e.g. in ML pipelines without ROS 2.
 
 ### Data Flow
 
-Packets flow from the hardware interface to the decoder to the ROS wrapper as follows:
+`nebula_sample` supports two runtime modes controlled by `launch_hw`:
 
 ```mermaid
 flowchart LR
-    HW[Hardware Interface] -->| Raw packets | DC[Decoder]
-    DC -->| Nebula PointCloud | RW[ROS Wrapper]
-    RW -->| ROS 2 PointCloud2 | ROS[ROS 2]
+
+    subgraph Online["launch_hw:=true (online)"]
+      direction LR
+
+      S[Sensor]
+      HW[Hardware Interface]
+      DC[Decoder]
+      RW[ROS Wrapper]
+      PKT[(packets / NebulaPackets)]
+
+      S-->|UDP| HW
+      HW -->|data packet| DC
+      HW -->|data packet| RW
+      DC -->|pointcloud| RW
+      RW -->|decoded scan's raw packets| PKT[(packets / NebulaPackets)]
+    end
+
+    subgraph Offline["launch_hw:=false (offline replay)"]
+      direction LR
+
+      PKT2[(packets / NebulaPackets)]
+      DC2[Decoder]
+      RW2[ROS Wrapper]
+
+      PKT2 -->|replayed packets| DC2
+      DC2 -->|pointcloud| RW2
+    end
+
+    PTS[(points / PointCloud2)]
+
+    RW -->|decoded scan| PTS
+    RW2 -->|decoded scan| PTS
 ```
 
-Since decoder and HW interface are separate libraries, the ROS wrapper sets up the data flow
-between them on startup by registering callbacks.
+The ROS wrapper owns the runtime mode resources and wiring:
+
+- Online mode: hardware interface + packet publisher
+- Offline mode: packet subscriber
 
 ## Component Library
 
@@ -262,8 +291,8 @@ by adding it to `build_depends.repos`.
 Please ensure that the SDK is fit for automotive use cases (real-time, safety, reliability).
 Nebula interfaces like
 
-- `/nebula_points` (including correct point types)
-- `/nebula_packets` (publish and replay)
+- pointcloud output topic (the sample template uses `/points` with `PointCloud2`)
+- packet publish/replay topic (the sample template uses `/packets` with `NebulaPackets`)
 - `/diagnostics`
 - launch patterns
 
@@ -281,9 +310,13 @@ Order of operations:
 2. Configuration validation: Validate IP addresses, ports, ranges
 3. Publisher creation: Create ROS publishers
 4. Decoder initialization: Create decoder and register pointcloud callback
-5. HW interface initialization: Create and configure HW interface
-6. Forward packets: Register packet callback to forward packets from HW interface to decoder
-7. Stream start: Call `sensor_interface_start()` to begin receiving data
+5. Runtime mode setup:
+   - `launch_hw:=true`: create HW interface + packet publisher
+   - `launch_hw:=false`: create packet subscriber for replay
+6. Packet forwarding:
+   - online: register HW callback, decode packets, publish accumulated `NebulaPackets` per scan
+   - offline: decode packets received from `NebulaPackets` subscription
+7. Stream start (online only): call `sensor_interface_start()`
 
 ### Reconfiguration (optional)
 
@@ -297,10 +330,9 @@ When parameters change at runtime:
 
 Detect and handle sensor disconnection:
 
-1. Timeout detection: Monitor time since last packet
-2. Diagnostic update: Set diagnostic status to `ERROR`
-3. Logging: Log connection loss only on state changes (avoid log spam)
-4. Recovery: Attempt reconnection transparently
+1. Liveness timeout: Configure `diagnostics.packet_liveness.timeout_ms`
+2. Diagnostic update: Tick `LivenessMonitor` on each packet path (online and replay)
+3. Optional: Add explicit connection-loss logs/recovery if required by your sensor
 
 ### Shutdown sequence
 
@@ -351,7 +383,7 @@ ros2 launch nebula nebula_launch.py sensor_model:=mysensor
 To record a rosbag of Nebula packet output for later replay:
 
 ```bash
-ros2 bag record /nebula_packets -o mysensor_packets
+ros2 bag record /packets -o mysensor_packets
 ```
 
 ### Replay testing
@@ -385,7 +417,7 @@ ros2 bag play mysensor_packets
 - [ ] Implemented startup sequence
 - [ ] Implemented shutdown sequence
 - [ ] Added diagnostic reporting
-- [ ] Added connection loss handling
+- [ ] Added packet liveness diagnostics
 
 ### Verification tasks
 

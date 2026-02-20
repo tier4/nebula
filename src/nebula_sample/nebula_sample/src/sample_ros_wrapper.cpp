@@ -154,7 +154,7 @@ SampleRosWrapper::SampleRosWrapper(const rclcpp::NodeOptions & options)
   config_ = config_or_error.value();
 
   publishers_.points =
-    create_publisher<sensor_msgs::msg::PointCloud2>("points_raw", rclcpp::SensorDataQoS());
+    create_publisher<sensor_msgs::msg::PointCloud2>("points", rclcpp::SensorDataQoS());
   publishers_.receive_duration_ms =
     create_publisher<std_msgs::msg::Float64>("debug/receive_duration_ms", 10);
   publishers_.decode_duration_ms =
@@ -173,7 +173,7 @@ SampleRosWrapper::SampleRosWrapper(const rclcpp::NodeOptions & options)
     runtime_mode_.emplace<OnlineMode>(config_.connection);
     auto & online_mode = std::get<OnlineMode>(runtime_mode_);
     online_mode.packets_pub =
-      create_publisher<nebula_msgs::msg::NebulaPackets>("packets_raw", rclcpp::SensorDataQoS());
+      create_publisher<nebula_msgs::msg::NebulaPackets>("packets", rclcpp::SensorDataQoS());
     const auto callback_result = online_mode.hw_interface.register_scan_callback(
       [this](
         const std::vector<uint8_t> & raw_packet,
@@ -195,7 +195,7 @@ SampleRosWrapper::SampleRosWrapper(const rclcpp::NodeOptions & options)
     runtime_mode_.emplace<OfflineMode>();
     auto & offline_mode = std::get<OfflineMode>(runtime_mode_);
     offline_mode.packets_sub = create_subscription<nebula_msgs::msg::NebulaPackets>(
-      "packets_raw", rclcpp::SensorDataQoS(),
+      "packets", rclcpp::SensorDataQoS(),
       [this](std::unique_ptr<nebula_msgs::msg::NebulaPackets> packets_msg) {
         receive_packets_message_callback(std::move(packets_msg));
       });
