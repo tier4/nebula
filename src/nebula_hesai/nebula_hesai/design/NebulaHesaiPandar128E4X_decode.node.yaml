@@ -1,4 +1,4 @@
-autoware_system_design_format: 0.1.0
+autoware_system_design_format: 0.3.0
 
 name: NebulaHesaiPandar128E4X_decode.node
 
@@ -15,7 +15,7 @@ override:
         - from_input: pandar_packets
       outcomes:
         - to_output: pandar_points
-  parameters:
+  param_values:
     - name: launch_hw
       type: bool
       default: false
