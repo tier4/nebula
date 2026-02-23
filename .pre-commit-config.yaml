@@ -36,7 +36,7 @@ repos:
       - id: yamllint
 
   - repo: https://github.com/tier4/pre-commit-hooks-ros
-    rev: v0.10.1
+    rev: v0.10.2
     hooks:
       - id: prettier-package-xml
       - id: sort-package-xml
@@ -53,7 +53,7 @@ repos:
         args: [-w, -s, -i=4]
 
   - repo: https://github.com/pycqa/isort
-    rev: 7.0.0
+    rev: 8.0.0
     hooks:
       - id: isort
 
