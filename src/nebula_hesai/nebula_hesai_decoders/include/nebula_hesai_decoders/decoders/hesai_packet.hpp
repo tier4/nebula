@@ -89,6 +89,27 @@ struct SecondsSinceEpoch
   }
 };
 
+struct Header19B  // FT120
+{
+  // manual, 3.1.2.1
+  /// @brief Start of Packet, 0xEEFF
+  uint16_t sop;
+  uint8_t protocol_major;
+  uint8_t protocol_minor;
+  uint8_t reserved1[2];
+
+  // manual, 3.1.2.2
+  uint16_t column_num;  // 160
+  uint16_t row_num;   // 120
+  uint8_t column_res;   // 63, to be multiplied by standard coefficient of 0.01°
+  uint8_t row_res;   // 63, to be multiplied by standard coefficient of 0.01°
+  uint8_t return_num; // 0, single return, 1 dual return & block 1 returns first type of dual mode; 2 dual return & block 1 returns second type of dual mode;
+  uint8_t dis_unit;  // 4, mm
+  uint8_t reserved2;
+  uint16_t block_row_num;    // 120
+  uint8_t reserved3[8];
+};
+
 struct Header12B
 {
   uint16_t sop;
@@ -129,6 +150,13 @@ struct Unit4B
   uint8_t confidence_or_reserved;
 };
 
+struct Unit5B
+{
+  uint16_t distance;
+  uint8_t reflectivity;
+  uint16_t reserved;
+};
+
 template <typename UnitT, size_t UnitN>
 struct Block
 {
@@ -137,6 +165,17 @@ struct Block
   using unit_t = UnitT;
 
   [[nodiscard]] uint32_t get_azimuth() const { return azimuth; }
+};
+
+template <typename UnitT, size_t UnitN>
+struct NoAzimuthBlock
+{
+  UnitT units[UnitN];
+  using unit_t = UnitT;
+  // FT120: azimuth came from angle correction file: each ray has its own angle
+  // uint32_t azimuth{0}; // do not add data into struct, or it changes data alignment
+
+  [[nodiscard]] uint32_t get_azimuth() const { return 0; }
 };
 
 template <typename UnitT, size_t UnitN>
