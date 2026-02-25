@@ -18,6 +18,7 @@
 #include "nebula_core_decoders/point_filters/downsample_mask.hpp"
 #include "nebula_hesai_decoders/decoders/angle_corrector_calibration_based.hpp"
 #include "nebula_hesai_decoders/decoders/angle_corrector_correction_based.hpp"
+#include "nebula_hesai_decoders/decoders/angle_corrector_calibration_based_solid_state.hpp"
 #include "nebula_hesai_decoders/decoders/hesai_packet.hpp"
 
 #include <nebula_core_common/nebula_common.hpp>
@@ -29,7 +30,10 @@
 namespace nebula::drivers
 {
 
-enum class AngleCorrectionType { CALIBRATION, CORRECTION };
+enum class AngleCorrectionType { CALIBRATION = 0, CORRECTION, SOLIDSTATE };
+
+template<std::size_t N, typename... T>
+using static_switch = typename std::tuple_element<N, std::tuple<T...> >::type;
 
 /// @brief Base class for all sensor definitions
 /// @tparam PacketT The packet type of the sensor
@@ -89,10 +93,12 @@ private:
 
 public:
   using packet_t = PacketT;
-  using angle_corrector_t = typename std::conditional<
-    (AngleCorrection == AngleCorrectionType::CALIBRATION),
-    AngleCorrectorCalibrationBased<PacketT::n_channels, PacketT::degree_subdivisions>,
-    AngleCorrectorCorrectionBased<PacketT::n_channels, PacketT::degree_subdivisions>>::type;
+
+  using angle_corrector_t = static_switch<
+    static_cast<int>(AngleCorrection),
+    AngleCorrectorCalibrationBased<PacketT::n_channels, PacketT::degree_subdivisions>,                  // CALIBRATION
+    AngleCorrectorCorrectionBased<PacketT::n_channels, PacketT::degree_subdivisions>,                   // CORRECTION
+    AngleCorrectorCalibrationBasedSolidState<PacketT::n_channels, PacketT::degree_subdivisions>>;       // SOLIDSTATE; degree_subdivisions represent the sensor column count
 
   HesaiSensor() = default;
   virtual ~HesaiSensor() = default;
