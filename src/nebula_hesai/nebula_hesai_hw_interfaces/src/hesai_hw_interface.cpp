@@ -419,6 +419,10 @@ std::shared_ptr<HesaiInventoryBase> HesaiHwInterface::get_inventory()
       auto lidar_config = check_size_and_parse<HesaiInventory_OT128::Internal>(response);
       return std::make_shared<HesaiInventory_OT128>(lidar_config);
     }
+    case SensorModel::HESAI_PANDARFT120: {
+      auto lidar_config = check_size_and_parse<HesaiInventory_FT120::Internal>(response);
+      return std::make_shared<HesaiInventory_FT120>(lidar_config);
+    }
   }
 }
 
@@ -442,6 +446,10 @@ std::shared_ptr<HesaiConfigBase> HesaiHwInterface::get_config()
     case SensorModel::HESAI_PANDARAT128: {
       auto lidar_config = check_size_and_parse<HesaiConfig_OT128_AT128::Internal>(response);
       return std::make_shared<HesaiConfig_OT128_AT128>(lidar_config);
+    }
+    case SensorModel::HESAI_PANDARFT120: {
+      auto lidar_config = check_size_and_parse<HesaiConfig_FT120::Internal>(response);
+      return std::make_shared<HesaiConfig_FT120>(lidar_config);
     }
   }
 }
@@ -473,11 +481,19 @@ std::shared_ptr<HesaiLidarStatusBase> HesaiHwInterface::get_lidar_status()
       auto hesai_lidarstatus = check_size_and_parse<HesaiLidarStatusQT128::Internal>(response);
       return std::make_shared<HesaiLidarStatusQT128>(hesai_lidarstatus);
     }
+    case SensorModel::HESAI_PANDARFT120: {
+      auto hesai_lidarstatus = check_size_and_parse<HesaiLidarStatusFT120::Internal>(response);
+      return std::make_shared<HesaiLidarStatusFT120>(hesai_lidarstatus);
+    }
   }
 }
 
 Status HesaiHwInterface::set_spin_rate(uint16_t rpm)
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARFT120) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
   std::vector<unsigned char> request_payload;
   request_payload.emplace_back((rpm >> 8) & 0xff);
   request_payload.emplace_back(rpm & 0xff);
@@ -599,7 +615,8 @@ Status HesaiHwInterface::set_lidar_range(int start_ddeg, int end_ddeg)
 {
   if (
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
-    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64 ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARFT120) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -623,7 +640,9 @@ HesaiLidarRangeAll HesaiHwInterface::get_lidar_range()
 {
   if (
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
-    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64
+    || sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARFT120
+  ) {
     throw std::runtime_error("Not supported on this sensor");
   }
 
@@ -707,7 +726,8 @@ bool HesaiHwInterface::get_up_close_blockage_detection()
 Status HesaiHwInterface::check_and_set_lidar_range(
   const HesaiCalibrationConfigurationBase & calibration)
 {
-  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128) {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128
+  || sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARFT120) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
@@ -758,6 +778,12 @@ Status HesaiHwInterface::set_ptp_config(
   }
 
   std::vector<unsigned char> request_payload;
+
+  // On the FT120 there is always a reserved byte
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARFT120) {
+    request_payload.emplace_back(1 & 0xff);
+  }
+
   request_payload.emplace_back(profile & 0xff);
   request_payload.emplace_back(domain & 0xff);
   request_payload.emplace_back(network & 0xff);
@@ -874,6 +900,10 @@ Status HesaiHwInterface::send_reset()
 
 Status HesaiHwInterface::set_rot_dir(int mode)
 {
+  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARFT120) {
+    return Status::SENSOR_CONFIG_ERROR;
+  }
+
   std::vector<unsigned char> request_payload;
   request_payload.emplace_back(mode & 0xff);
 
@@ -1120,24 +1150,27 @@ HesaiStatus HesaiHwInterface::check_and_set_config(
     std::this_thread::sleep_for(wait_time);
   }
 
-  auto current_rotation_speed = hesai_config.spin_rate;
-  if (sensor_configuration->rotation_speed != current_rotation_speed.value()) {
-    logger_->info(
-      "current lidar rotation_speed: " +
-      std::to_string(static_cast<int>(current_rotation_speed.value())));
-    logger_->info(
-      "current configuration rotation_speed: " +
-      std::to_string(sensor_configuration->rotation_speed));
-    if (use_http_set_spin_rate()) {
-      set_spin_speed_async_http(sensor_configuration->rotation_speed);
-    } else {
+  // do not configure rotation for solid state sensors
+  if (sensor_configuration_->sensor_model != SensorModel::HESAI_PANDARFT120) {
+    auto current_rotation_speed = hesai_config.spin_rate;
+    if (sensor_configuration->rotation_speed != current_rotation_speed.value()) {
       logger_->info(
-        "Setting up spin rate via TCP." + std::to_string(sensor_configuration->rotation_speed));
-      std::thread t(
-        [this, sensor_configuration] { set_spin_rate(sensor_configuration->rotation_speed); });
-      t.join();
+        "current lidar rotation_speed: " +
+        std::to_string(static_cast<int>(current_rotation_speed.value())));
+      logger_->info(
+        "current configuration rotation_speed: " +
+        std::to_string(sensor_configuration->rotation_speed));
+      if (use_http_set_spin_rate()) {
+        set_spin_speed_async_http(sensor_configuration->rotation_speed);
+      } else {
+        logger_->info(
+          "Setting up spin rate via TCP." + std::to_string(sensor_configuration->rotation_speed));
+        std::thread t(
+          [this, sensor_configuration] { set_spin_rate(sensor_configuration->rotation_speed); });
+        t.join();
+      }
+      std::this_thread::sleep_for(wait_time);
     }
-    std::this_thread::sleep_for(wait_time);
   }
 
   bool set_flg = false;
@@ -1389,7 +1422,8 @@ HesaiStatus HesaiHwInterface::check_and_set_config()
 
   if (
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
-    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64) {
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64 ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARFT120) {
     return Status::OK;
   }
 
@@ -1419,6 +1453,7 @@ HesaiStatus HesaiHwInterface::check_and_set_config()
 40: AT128?
 42: OT128
 48: ?
+120: FT120
 */
 int HesaiHwInterface::nebula_model_to_hesai_model_no(nebula::drivers::SensorModel model)
 {
@@ -1445,6 +1480,8 @@ int HesaiHwInterface::nebula_model_to_hesai_model_no(nebula::drivers::SensorMode
       return 42;
     case SensorModel::HESAI_PANDARAT128:
       return 48;
+    case SensorModel::HESAI_PANDARFT120:
+      return 120;
     // All other vendors and unknown sensors
     default:
       return -1;
@@ -1475,6 +1512,7 @@ bool HesaiHwInterface::use_http_set_spin_rate(int model)
     case 38:
     case 42:
     case 48:
+    case 120:
       return false;
   }
 }
@@ -1498,6 +1536,7 @@ bool HesaiHwInterface::use_http_get_lidar_monitor(int model)
     case 38:
     case 42:
     case 48:
+    case 120:
       return false;
   }
 }
