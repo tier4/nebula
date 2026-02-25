@@ -10,6 +10,7 @@
 #include "nebula_hesai_decoders/decoders/pandar_40.hpp"
 #include "nebula_hesai_decoders/decoders/pandar_64.hpp"
 #include "nebula_hesai_decoders/decoders/pandar_at128.hpp"
+#include "nebula_hesai_decoders/decoders/pandar_ft120.hpp"
 #include "nebula_hesai_decoders/decoders/pandar_qt128.hpp"
 #include "nebula_hesai_decoders/decoders/pandar_qt64.hpp"
 #include "nebula_hesai_decoders/decoders/pandar_xt16.hpp"
@@ -83,6 +84,12 @@ HesaiDriver::HesaiDriver(
         std::move(blockage_mask_plugin));
       break;
     }
+    case SensorModel::HESAI_PANDARFT120: {
+      scan_decoder_ = initialize_decoder<PandarFT120>(
+        sensor_configuration, calibration_data, alive_cb, stuck_cb, status_cb, lost_cb,
+        std::move(blockage_mask_plugin));
+      break;
+    }
     case SensorModel::UNKNOWN:
       driver_status_ = nebula::Status::INVALID_SENSOR_MODEL;
       throw std::runtime_error("Invalid sensor model.");
@@ -110,7 +117,10 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
   auto packet_loss_detector = initialize_packet_loss_detector<SensorT>(lost_cb);
 
   using CalibT = typename SensorT::angle_corrector_t::correction_data_t;
-  return std::make_shared<HesaiDecoder<SensorT>>(
+
+  using HesaiDecoderTp = typename std::conditional<(std::is_same<SensorT, PandarFT120>::value), HesaiSolidStateDecoder<SensorT>, HesaiDecoder<SensorT>>::type;
+
+  return std::make_shared<HesaiDecoderTp>(
     sensor_configuration, std::dynamic_pointer_cast<const CalibT>(calibration_configuration),
     logger_->child("Decoder"), functional_safety_decoder, packet_loss_detector,
     std::move(blockage_mask_plugin));
