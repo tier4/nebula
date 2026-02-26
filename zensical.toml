@@ -1,4 +1,5 @@
 [project]
+
 site_name = "Nebula"
 site_description = "Nebula Multi-Sensor Driver Framework"
 site_author = "TIER IV, Inc."
@@ -7,56 +8,56 @@ repo_url = "https://github.com/tier4/nebula"
 docs_dir = "docs"
 site_dir = "_site"
 use_directory_urls = true
-copyright = """
-Copyright &copy; 2023 TIER IV, Inc.
-"""
+copyright = "Copyright &copy; 2023 TIER IV, Inc."
+
 nav = [
-  { "Home" = "index.md" },
-  { "Supported sensors" = "supported_sensors.md" },
-  { "Installation" = "installation.md" },
-  { "Usage" = "usage.md" },
-  { "Parameters" = [
-    { "Common Parameters" = "parameters/index.md" },
-    { "Hesai" = [
-      { "Common" = "parameters/vendors/hesai/index.md" },
-      { "Pandar40P" = "parameters/vendors/hesai/pandar40p.md" },
-      { "Pandar64" = "parameters/vendors/hesai/pandar64.md" },
-      { "OT128" = "parameters/vendors/hesai/ot128.md" },
-      { "QT64" = "parameters/vendors/hesai/qt64.md" },
-      { "QT128" = "parameters/vendors/hesai/qt128.md" },
-      { "AT128" = "parameters/vendors/hesai/at128.md" },
-      { "XT16" = "parameters/vendors/hesai/xt16.md" },
-      { "XT32" = "parameters/vendors/hesai/xt32.md" },
-      { "XT32M" = "parameters/vendors/hesai/xt32m.md" },
-    ]},
-    { "Velodyne" = [
-      { "Common" = "parameters/vendors/velodyne/index.md" },
-      { "VLP16" = "parameters/vendors/velodyne/vlp16.md" },
-      { "VLP32" = "parameters/vendors/velodyne/vlp32.md" },
-      { "VLS128" = "parameters/vendors/velodyne/vls128.md" },
-    ]},
-    { "Robosense" = [
-      { "Common" = "parameters/vendors/robosense/index.md" },
-      { "BPearl" = "parameters/vendors/robosense/bpearl.md" },
-      { "Helios" = "parameters/vendors/robosense/helios.md" },
-    ]},
-    { "Continental" = [
-      { "Common" = "parameters/vendors/continental/index.md" },
-      { "ARS548" = "parameters/vendors/continental/ars548.md" },
-      { "SRR520" = "parameters/vendors/continental/srr520.md" },
-    ]},
-  ]},
-  { "Point cloud types" = "point_types.md" },
-  { "Design" = "design.md" },
-  { "Tutorials" = "tutorials.md" },
-  { "Contributing" = [
-    { "Contributing to Nebula" = "contributing/index.md" },
-    { "Benchmarking" = "contributing/benchmarking.md" },
-  ]},
+  { "Home" = [
+    { "Home" = "home/home.md" },
+    { "Getting Started" = [
+      { "Installation" = "getting_started/installation.md" },
+      { "Supported sensors" = "getting_started/supported_sensors.md" },
+    ] },
+    { "Design" = "home/design/index.md" },
+  ] },
+  { "Usage" = [
+    { "Running Nebula" = "usage/running_nebula.md" },
+    { "Parameters" = [
+      { "Common Parameters" = "parameters/index.md" },
+      { "Hesai" = [
+        { "Common" = "parameters/vendors/hesai/index.md" },
+        { "Pandar40P" = "parameters/vendors/hesai/pandar40p.md" },
+        { "Pandar64" = "parameters/vendors/hesai/pandar64.md" },
+        { "OT128" = "parameters/vendors/hesai/ot128.md" },
+        { "QT64" = "parameters/vendors/hesai/qt64.md" },
+        { "QT128" = "parameters/vendors/hesai/qt128.md" },
+        { "AT128" = "parameters/vendors/hesai/at128.md" },
+        { "XT16" = "parameters/vendors/hesai/xt16.md" },
+        { "XT32" = "parameters/vendors/hesai/xt32.md" },
+        { "XT32M" = "parameters/vendors/hesai/xt32m.md" },
+      ] },
+      { "Velodyne" = [
+        { "Common" = "parameters/vendors/velodyne/index.md" },
+        { "VLP16" = "parameters/vendors/velodyne/vlp16.md" },
+        { "VLP32" = "parameters/vendors/velodyne/vlp32.md" },
+        { "VLS128" = "parameters/vendors/velodyne/vls128.md" },
+      ] },
+      { "Robosense" = [
+        { "Common" = "parameters/vendors/robosense/index.md" },
+        { "BPearl" = "parameters/vendors/robosense/bpearl.md" },
+        { "Helios" = "parameters/vendors/robosense/helios.md" },
+      ] },
+      { "Continental" = [
+        { "Common" = "parameters/vendors/continental/index.md" },
+        { "ARS548" = "parameters/vendors/continental/ars548.md" },
+        { "SRR520" = "parameters/vendors/continental/srr520.md" },
+      ] },
+    ] },
+    { "Point types" = "usage/point_types.md" },
+    { "Point filters" = "usage/filters.md" },
+  ] },
   { "API Reference" = [
-    { "API Reference" = "api_reference/index.md" },
+    "api_reference/index.md",
     { "Core" = [
-      { "Links" = "api_reference/core/links.md" },
       { "Classes" = [
         { "Class List" = "api_reference/core/annotated.md" },
         { "Class Index" = "api_reference/core/classes.md" },
@@ -66,7 +67,7 @@ nav = [
         { "Class Member Variables" = "api_reference/core/class_member_variables.md" },
         { "Class Member Typedefs" = "api_reference/core/class_member_typedefs.md" },
         { "Class Member Enumerations" = "api_reference/core/class_member_enums.md" },
-      ]},
+      ] },
       { "Namespaces" = [
         { "Namespace List" = "api_reference/core/namespaces.md" },
         { "Namespace Members" = "api_reference/core/namespace_members.md" },
@@ -74,14 +75,11 @@ nav = [
         { "Namespace Member Variables" = "api_reference/core/namespace_member_variables.md" },
         { "Namespace Member Typedefs" = "api_reference/core/namespace_member_typedefs.md" },
         { "Namespace Member Enumerations" = "api_reference/core/namespace_member_enums.md" },
-      ]},
-      { "Functions" = "api_reference/core/functions.md" },
-      { "Variables" = "api_reference/core/variables.md" },
+      ] },
       { "Macros" = "api_reference/core/macros.md" },
       { "Files" = "api_reference/core/files.md" },
-    ]},
+    ] },
     { "Hesai" = [
-      { "Links" = "api_reference/hesai/links.md" },
       { "Classes" = [
         { "Class List" = "api_reference/hesai/annotated.md" },
         { "Class Index" = "api_reference/hesai/classes.md" },
@@ -91,7 +89,7 @@ nav = [
         { "Class Member Variables" = "api_reference/hesai/class_member_variables.md" },
         { "Class Member Typedefs" = "api_reference/hesai/class_member_typedefs.md" },
         { "Class Member Enumerations" = "api_reference/hesai/class_member_enums.md" },
-      ]},
+      ] },
       { "Namespaces" = [
         { "Namespace List" = "api_reference/hesai/namespaces.md" },
         { "Namespace Members" = "api_reference/hesai/namespace_members.md" },
@@ -99,14 +97,11 @@ nav = [
         { "Namespace Member Variables" = "api_reference/hesai/namespace_member_variables.md" },
         { "Namespace Member Typedefs" = "api_reference/hesai/namespace_member_typedefs.md" },
         { "Namespace Member Enumerations" = "api_reference/hesai/namespace_member_enums.md" },
-      ]},
-      { "Functions" = "api_reference/hesai/functions.md" },
-      { "Variables" = "api_reference/hesai/variables.md" },
+      ] },
       { "Macros" = "api_reference/hesai/macros.md" },
       { "Files" = "api_reference/hesai/files.md" },
-    ]},
+    ] },
     { "Velodyne" = [
-      { "Links" = "api_reference/velodyne/links.md" },
       { "Classes" = [
         { "Class List" = "api_reference/velodyne/annotated.md" },
         { "Class Index" = "api_reference/velodyne/classes.md" },
@@ -116,7 +111,7 @@ nav = [
         { "Class Member Variables" = "api_reference/velodyne/class_member_variables.md" },
         { "Class Member Typedefs" = "api_reference/velodyne/class_member_typedefs.md" },
         { "Class Member Enumerations" = "api_reference/velodyne/class_member_enums.md" },
-      ]},
+      ] },
       { "Namespaces" = [
         { "Namespace List" = "api_reference/velodyne/namespaces.md" },
         { "Namespace Members" = "api_reference/velodyne/namespace_members.md" },
@@ -124,14 +119,11 @@ nav = [
         { "Namespace Member Variables" = "api_reference/velodyne/namespace_member_variables.md" },
         { "Namespace Member Typedefs" = "api_reference/velodyne/namespace_member_typedefs.md" },
         { "Namespace Member Enumerations" = "api_reference/velodyne/namespace_member_enums.md" },
-      ]},
-      { "Functions" = "api_reference/velodyne/functions.md" },
-      { "Variables" = "api_reference/velodyne/variables.md" },
+      ] },
       { "Macros" = "api_reference/velodyne/macros.md" },
       { "Files" = "api_reference/velodyne/files.md" },
-    ]},
+    ] },
     { "Robosense" = [
-      { "Links" = "api_reference/robosense/links.md" },
       { "Classes" = [
         { "Class List" = "api_reference/robosense/annotated.md" },
         { "Class Index" = "api_reference/robosense/classes.md" },
@@ -141,7 +133,7 @@ nav = [
         { "Class Member Variables" = "api_reference/robosense/class_member_variables.md" },
         { "Class Member Typedefs" = "api_reference/robosense/class_member_typedefs.md" },
         { "Class Member Enumerations" = "api_reference/robosense/class_member_enums.md" },
-      ]},
+      ] },
       { "Namespaces" = [
         { "Namespace List" = "api_reference/robosense/namespaces.md" },
         { "Namespace Members" = "api_reference/robosense/namespace_members.md" },
@@ -149,14 +141,11 @@ nav = [
         { "Namespace Member Variables" = "api_reference/robosense/namespace_member_variables.md" },
         { "Namespace Member Typedefs" = "api_reference/robosense/namespace_member_typedefs.md" },
         { "Namespace Member Enumerations" = "api_reference/robosense/namespace_member_enums.md" },
-      ]},
-      { "Functions" = "api_reference/robosense/functions.md" },
-      { "Variables" = "api_reference/robosense/variables.md" },
+      ] },
       { "Macros" = "api_reference/robosense/macros.md" },
       { "Files" = "api_reference/robosense/files.md" },
-    ]},
+    ] },
     { "Continental" = [
-      { "Links" = "api_reference/continental/links.md" },
       { "Classes" = [
         { "Class List" = "api_reference/continental/annotated.md" },
         { "Class Index" = "api_reference/continental/classes.md" },
@@ -166,7 +155,7 @@ nav = [
         { "Class Member Variables" = "api_reference/continental/class_member_variables.md" },
         { "Class Member Typedefs" = "api_reference/continental/class_member_typedefs.md" },
         { "Class Member Enumerations" = "api_reference/continental/class_member_enums.md" },
-      ]},
+      ] },
       { "Namespaces" = [
         { "Namespace List" = "api_reference/continental/namespaces.md" },
         { "Namespace Members" = "api_reference/continental/namespace_members.md" },
@@ -174,18 +163,19 @@ nav = [
         { "Namespace Member Variables" = "api_reference/continental/namespace_member_variables.md" },
         { "Namespace Member Typedefs" = "api_reference/continental/namespace_member_typedefs.md" },
         { "Namespace Member Enumerations" = "api_reference/continental/namespace_member_enums.md" },
-      ]},
-      { "Functions" = "api_reference/continental/functions.md" },
-      { "Variables" = "api_reference/continental/variables.md" },
+      ] },
       { "Macros" = "api_reference/continental/macros.md" },
       { "Files" = "api_reference/continental/files.md" },
-    ]},
-  ]},
+    ] },
+  ] },
+  { "Contributing" = [
+    { "Contributing" = "contributing/contributing.md" },
+    { "Tutorials" = "contributing/tutorials.md" },
+    { "Benchmarking" = "contributing/benchmarking.md" },
+  ] },
 ]
 
-plugins = [
-  "search",
-]
+plugins = ["search"]
 
 markdown_extensions = [
   "admonition",
@@ -197,22 +187,22 @@ markdown_extensions = [
 [project.theme]
 language = "en"
 features = [
-    "announce.dismiss",
-    "content.code.annotate",
-    "content.code.copy",
-    "content.code.select",
-    "content.footnote.tooltips",
-    "content.tabs.link",
-    "content.tooltips",
-    "navigation.footer",
-    "navigation.indexes",
-    "navigation.instant",
-    "navigation.instant.prefetch",
-    "navigation.path",
-    "navigation.sections",
-    "navigation.top",
-    "navigation.tracking",
-    "search.highlight",
+  "announce.dismiss",
+  "content.code.annotate",
+  "content.code.copy",
+  "content.code.select",
+  "content.footnote.tooltips",
+  "content.tabs.link",
+  "content.tooltips",
+  "navigation.footer",
+  "navigation.indexes",
+  "navigation.instant",
+  "navigation.instant.prefetch",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.tabs",
+  "navigation.tracking",
+  "search.highlight",
 ]
 
 [[project.theme.palette]]

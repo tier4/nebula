@@ -101,4 +101,4 @@ For multiple returns that are close together, the points will be fused into one 
 
 ### `point_filters`
 
-Filters that are applied while decoding the pointcloud. For the full reference, see [Point filters](../filters.md).
+Filters that are applied while decoding the pointcloud. For the full reference, see [Point filters](../usage/filters.md).

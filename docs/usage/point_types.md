@@ -7,7 +7,7 @@ icon: lucide/cloudy
 Nebula currently supports the below point cloud output types.
 However, it can easily be extended to support other custom point cloud types.
 
-These definitions can be found in `nebula_core_common/include/nebula_core_common/point_types.hpp`.
+These definitions can be found in [`nebula_core_common/include/nebula_core_common/point_types.hpp`](/api_reference/core/files.md#nebula_core_commoninclude-nebula_core_commonpoint_typeshpp).
 
 ## NebulaPoint = PointXYZIRCAEDT
 

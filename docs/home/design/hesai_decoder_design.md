@@ -113,7 +113,7 @@ The sensor-specific layout for sensor XYZ is defined in `PacketXYZ` and usually 
 The header formats are largely shared between sensors.
 The packet body (i.e. point data) is mainly parameterized by bytes per point, points per block, and blocks per body. Thus, parameterized templated structs are used. A few skews such as fine azimuth blocks and blocks with a start-of-block (SOB) header exist and are implemented as their own structs.
 
-![HesaiPacket diagram](./GenericHesaiDecoder-Packet%20Formats.png)
+![HesaiPacket diagram](GenericHesaiDecoder-Packet Formats.png)
 
 ### `HesaiSensor`
 

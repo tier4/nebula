@@ -10,7 +10,7 @@ Before submitting your contributions, please take a moment to review our guideli
 
 ## Getting Started
 
-- Set up your development environment: [installation](../installation.md)
+- Set up your development environment: [installation](../getting_started/installation.md)
 - Enable <a href="https://pre-commit.com/#install" target="_blank">pre-commit</a>
 
   ```shell
