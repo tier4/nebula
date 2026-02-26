@@ -32,24 +32,29 @@ struct TailFT120
 {
   uint8_t reserved1[7];
   uint16_t column_id;
-  uint8_t frame_id; // counter, 0-255; incremented at each new scan
+  uint8_t frame_id;  // counter, 0-255; incremented at each new scan
   uint8_t reserved2;
   uint8_t return_mode;
-  uint16_t frame_period; // 100, ms (sensor works @ 10Hz)
+  uint16_t frame_period;  // 100, ms (sensor works @ 10Hz)
   SecondsSinceEpoch date_time;
   uint32_t timestamp;
   uint8_t factory_information;  // fixed, 0x42
   uint32_t udp_sequence;
   uint32_t crc_tail;
-  uint32_t signature[4]; // packet AES signature, pre-header to crc_tail; 0, if no key set in sensor
+  uint32_t
+    signature[4];  // packet AES signature, pre-header to crc_tail; 0, if no key set in sensor
 };
 
-struct PacketFT120 : public PacketBase<1, 120, 2, 160>  // using degreeSubdivisions as the column count, to be supplied in AngleCorrectorCalibrationBasedSolidState
+struct PacketFT120
+: public PacketBase<1, 120, 2, 160>  // using degreeSubdivisions as the column count, to be supplied
+                                     // in AngleCorrectorCalibrationBasedSolidState
 {
-  using body_t = Body<NoAzimuthBlock<Unit5B, PacketFT120::n_channels>, PacketFT120::n_blocks>; // manual, 3.1.2.3
+  using body_t = Body<
+    NoAzimuthBlock<Unit5B, PacketFT120::n_channels>, PacketFT120::n_blocks>;  // manual, 3.1.2.3
   Header19B header;
   body_t body;
-  TailFT120 tail; // tail contains ColumnID value, used to identify the column of sensor readings inside the packet
+  TailFT120 tail;  // tail contains ColumnID value, used to identify the column of sensor readings
+                   // inside the packet
 
   /* Ignored optional fields */
   // 3.1.3. Ethernet tail, 4 more bytes for frame check sequence
@@ -60,18 +65,17 @@ struct PacketFT120 : public PacketBase<1, 120, 2, 160>  // using degreeSubdivisi
 
 }  // namespace hesai_packet
 
-class PandarFT120 : public
-HesaiSensor<hesai_packet::PacketFT120, AngleCorrectionType::SOLIDSTATE>
+class PandarFT120 : public HesaiSensor<hesai_packet::PacketFT120, AngleCorrectionType::SOLIDSTATE>
 {
 private:
-
 public:
   static constexpr float min_range = 0.05;
   static constexpr float max_range = 25.0;
   static constexpr int32_t col_N = 160;
   static constexpr int32_t row_N = 120;
   static constexpr size_t max_scan_buffer_points = col_N * row_N;
-  static constexpr FieldOfView<int32_t, MilliDegrees> fov_mdeg{{40'000, 140'000}, {-37'500, 37'500}};
+  static constexpr FieldOfView<int32_t, MilliDegrees> fov_mdeg{
+    {40'000, 140'000}, {-37'500, 37'500}};
   static constexpr AnglePair<int32_t, MilliDegrees> peak_resolution_mdeg{
     (fov_mdeg.azimuth.end - fov_mdeg.azimuth.start) / col_N,
     (fov_mdeg.elevation.end - fov_mdeg.elevation.start) / row_N,
@@ -81,11 +85,11 @@ public:
     uint32_t block_id, uint32_t channel_id, const packet_t & packet) override
   {
     // avoid warning "unused parameter"
-    (void) block_id;
-    (void) channel_id;
-    (void) packet;
+    (void)block_id;
+    (void)channel_id;
+    (void)packet;
 
-    return 0; // all measurements are took at the same time
+    return 0;  // all measurements are took at the same time
   }
 
   ReturnType get_return_type(
@@ -96,7 +100,7 @@ public:
     // - return_mode is a copy of PandarFT120.tail.return_mode
     // - return_idx is a copy of PandarFT120.header.return_num
 
-    (void) return_units;
+    (void)return_units;
 
     switch (return_mode) {
       case hesai_packet::return_mode::SINGLE_FIRST:

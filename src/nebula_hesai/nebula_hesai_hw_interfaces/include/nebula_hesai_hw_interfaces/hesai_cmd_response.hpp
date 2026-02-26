@@ -451,30 +451,32 @@ private:
 
 struct HesaiInventory_FT120 : public HesaiInventoryBase
 {
-  struct Internal // : public HesaiInventoryBase::Internal
+  struct Internal  // : public HesaiInventoryBase::Internal
   {
     // byte 0-15: SN
     char sn[18];
     // byte 19: model name, char  -->  17-24 + empty bytes
     char product_name[32];
-    char date_of_manufacture[16]; // yyyy-mm-dd + 6 empty bytes
+    char date_of_manufacture[16];  // yyyy-mm-dd + 6 empty bytes
     uint8_t mac[6];
     char sw_ver[16];
-    char unknown[16]; // contains string "unused"
-    char hw_ver[16];  // firmware version
-    char unknown2[16]; // contains string "3"
+    char unknown[16];   // contains string "unused"
+    char hw_ver[16];    // firmware version
+    char unknown2[16];  // contains string "3"
     char control_fw_ver[16];
     char sensor_fw_ver[16];
-    char unknown3[16]; // contains string "51e19f60"
-    char unknown4[16]; // contains string "a3db47f7"
+    char unknown3[16];  // contains string "51e19f60"
+    char unknown4[16];  // contains string "a3db47f7"
     char unknown5[4];
     uint8_t product_model;  // ex: 78; char: x; dec: 120!
-    char unknown6[11]; // contains string "x" in the middle
+    char unknown6[11];      // contains string "x" in the middle
   };
 
-  explicit HesaiInventory_FT120(Internal value) : value(value) {
+  explicit HesaiInventory_FT120(Internal value) : value(value)
+  {
     std::memcpy(base.sn, value.sn, sizeof(base.sn));
-    std::memcpy(base.date_of_manufacture, value.date_of_manufacture, sizeof(base.date_of_manufacture));
+    std::memcpy(
+      base.date_of_manufacture, value.date_of_manufacture, sizeof(base.date_of_manufacture));
     std::memcpy(base.mac, value.mac, sizeof(base.mac));
     std::memcpy(base.sw_ver, value.sw_ver, sizeof(base.sw_ver));
     std::memcpy(base.hw_ver, value.hw_ver, sizeof(base.hw_ver));
@@ -499,7 +501,6 @@ private:
   Internal value;
   HesaiInventoryBase::Internal base;
 };
-
 
 /// @brief struct of PTC_COMMAND_GET_CONFIG_INFO
 struct HesaiConfigBase
@@ -622,18 +623,19 @@ private:
 
 struct HesaiConfig_FT120 : public HesaiConfigBase
 {
-  struct Internal // structure does not begin like HesaiConfigBase::Internal
+  struct Internal  // structure does not begin like HesaiConfigBase::Internal
   {
     uint8_t ipaddr[4];
     uint8_t mask[4];
     uint8_t gateway[4];
     uint8_t dest_ipaddr[4];
     big_uint16_buf_t dest_LiDAR_udp_port;
-    uint8_t unknown1[4];  // here there are some numbers; their meaning is unknown... Samples: 126 39 0 (maybe sync_angle) 200 (maybe fake rpm)
+    uint8_t unknown1[4];  // here there are some numbers; their meaning is unknown... Samples: 126
+                          // 39 0 (maybe sync_angle) 200 (maybe fake rpm)
     uint8_t unknown2[10];
     uint8_t unknown3;
     uint8_t unknown4[8];
-    big_uint16_buf_t dest_gps_udp_port; // byte 41
+    big_uint16_buf_t dest_gps_udp_port;  // byte 41
 
     // here the last four bytes can be used to simulate some rotating sensors standard parameters
     big_uint16_buf_t spin_rate;
@@ -641,8 +643,8 @@ struct HesaiConfig_FT120 : public HesaiConfigBase
     uint8_t unknown5;
   };
 
-  explicit HesaiConfig_FT120(Internal value) : value(value) {
-
+  explicit HesaiConfig_FT120(Internal value) : value(value)
+  {
     std::memcpy(base.ipaddr, value.ipaddr, sizeof(base.ipaddr));
     std::memcpy(base.mask, value.mask, sizeof(base.mask));
     std::memcpy(base.gateway, value.gateway, sizeof(base.gateway));
@@ -664,10 +666,10 @@ struct HesaiConfig_FT120 : public HesaiConfigBase
 
 private:
   Internal value;
-  // adding a HesaiConfigBase::Internal private structure to be used for the output of the get() method
+  // adding a HesaiConfigBase::Internal private structure to be used for the output of the get()
+  // method
   HesaiConfigBase::Internal base;
 };
-
 
 struct HesaiConfig_XT_40P_64_QT128 : public HesaiConfigBase
 {
@@ -899,10 +901,9 @@ private:
   Internal value;
 };
 
-
 struct HesaiLidarStatusFT120 : public HesaiLidarStatus_AT128_QT128_FT120
 {
-  explicit HesaiLidarStatusFT120(Internal value) : HesaiLidarStatus_AT128_QT128_FT120(value) { }
+  explicit HesaiLidarStatusFT120(Internal value) : HesaiLidarStatus_AT128_QT128_FT120(value) {}
 
 protected:
   [[nodiscard]] std::array<std::string, 9> get_temperature_names() const override

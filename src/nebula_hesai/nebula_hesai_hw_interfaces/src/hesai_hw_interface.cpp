@@ -640,9 +640,8 @@ HesaiLidarRangeAll HesaiHwInterface::get_lidar_range()
 {
   if (
     sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
-    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64
-    || sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARFT120
-  ) {
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDAR64 ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARFT120) {
     throw std::runtime_error("Not supported on this sensor");
   }
 
@@ -726,8 +725,9 @@ bool HesaiHwInterface::get_up_close_blockage_detection()
 Status HesaiHwInterface::check_and_set_lidar_range(
   const HesaiCalibrationConfigurationBase & calibration)
 {
-  if (sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128
-  || sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARFT120) {
+  if (
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARAT128 ||
+    sensor_configuration_->sensor_model == SensorModel::HESAI_PANDARFT120) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 

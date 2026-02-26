@@ -396,9 +396,8 @@ public:
   }
 };
 
-
 template <typename SensorT>
-class HesaiSolidStateDecoder : public HesaiScanDecoder // for Solid State sensor
+class HesaiSolidStateDecoder : public HesaiScanDecoder  // for Solid State sensor
 {
 private:
   struct ScanCutAngles
@@ -479,10 +478,10 @@ private:
   /// the packet footer)
   void convert_returns(size_t start_block_id, size_t n_returns)
   {
-    (void) start_block_id;
+    (void)start_block_id;
 
     uint64_t packet_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
-    uint32_t column_id  = packet_.tail.column_id;
+    uint32_t column_id = packet_.tail.column_id;
 
     std::vector<const typename SensorT::packet_t::body_t::block_t::unit_t *> return_units;
 
@@ -492,11 +491,11 @@ private:
     const unsigned int return_idx = packet_.header.return_num;
 
     const auto return_type = sensor_.get_return_type(
-          static_cast<hesai_packet::return_mode::ReturnMode>(packet_.tail.return_mode),
-          return_idx, return_units);
+      static_cast<hesai_packet::return_mode::ReturnMode>(packet_.tail.return_mode), return_idx,
+      return_units);
 
     // dual return: store current packet and wait for the 2nd
-    if (n_returns == 2 &&  return_idx == 1 ) {
+    if (n_returns == 2 && return_idx == 1) {
       std::swap(packet_, previous_packet_);
       return;
     }
@@ -509,17 +508,15 @@ private:
       // These are used to find duplicates in multi-return mode.
       return_units.clear();
 
-      return_units.push_back(
-        &packet_.body.blocks[0].units[row_id]);
+      return_units.push_back(&packet_.body.blocks[0].units[row_id]);
 
       // eventually, get the first return from the previous packet
-      if (return_idx == 2 ) {
-        return_units.push_back(
-          &previous_packet_.body.blocks[0].units[row_id]);
+      if (return_idx == 2) {
+        return_units.push_back(&previous_packet_.body.blocks[0].units[row_id]);
       }
 
       const CorrectedAngleData corrected_angle_data =
-          angle_corrector_.get_corrected_angle_data(row_id, column_id);
+        angle_corrector_.get_corrected_angle_data(row_id, column_id);
 
       for (size_t block_offset = 0; block_offset < n_returns; ++block_offset) {
         auto & unit = *return_units[block_offset];
@@ -539,9 +536,9 @@ private:
           point_is_valid = false;
         }
 
-        // the second return is transmitted using the following block, so in order to remove duplicated points,
-        // we should compare distance between points in this packet and in the previus one
-        // Keep only last (if any) of multiple points that are too close
+        // the second return is transmitted using the following block, so in order to remove
+        // duplicated points, we should compare distance between points in this packet and in the
+        // previus one Keep only last (if any) of multiple points that are too close
         if (block_offset != n_returns - 1) {
           bool is_below_multi_return_threshold = false;
 
@@ -569,7 +566,8 @@ private:
 
         float azimuth = corrected_angle_data.azimuth_rad;
 
-        const bool in_fov = angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.fov_max, azimuth);
+        const bool in_fov =
+          angle_is_between(scan_cut_angles_.fov_min, scan_cut_angles_.fov_max, azimuth);
         if (!in_fov) {
           continue;
         }
@@ -579,8 +577,7 @@ private:
         auto & frame = in_current_scan ? decode_frame_ : output_frame_;
 
         if (frame.blockage_mask) {
-          frame.blockage_mask->update(
-            azimuth, row_id, sensor_.get_blockage_type(unit.distance));
+          frame.blockage_mask->update(azimuth, row_id, sensor_.get_blockage_type(unit.distance));
         }
 
         if (!point_is_valid) {
@@ -627,11 +624,11 @@ private:
   uint32_t get_point_time_relative(
     uint64_t scan_timestamp_ns, uint64_t packet_timestamp_ns, size_t block_id, size_t channel_id)
   {
-    (void) block_id;
-    (void) channel_id;
+    (void)block_id;
+    (void)channel_id;
 
-    // this is a flash solid state LIDAR, point_to_packet_offset_ns is 0 as measurements comes from the same light emission and
-    // there is non need to correct packet_to_scan_offset_ns
+    // this is a flash solid state LIDAR, point_to_packet_offset_ns is 0 as measurements comes from
+    // the same light emission and there is non need to correct packet_to_scan_offset_ns
     auto packet_to_scan_offset_ns = static_cast<uint32_t>(packet_timestamp_ns - scan_timestamp_ns);
     return packet_to_scan_offset_ns;
   }
@@ -733,8 +730,7 @@ public:
     // This is the first scan, set scan timestamp to whatever packet arrived first
     // It is valid for a flash LIDAR sensor as the FT120
     if (decode_frame_.scan_timestamp_ns == 0) {
-      decode_frame_.scan_timestamp_ns =
-        hesai_packet::get_timestamp_ns(packet_);
+      decode_frame_.scan_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
     }
 
     bool did_scan_complete = false;
@@ -745,8 +741,7 @@ public:
 
     // We have a new scan when new azimut (block_column_id) go back to first column
     if (angle_corrector_.passed_timestamp_reset_angle(last_azimuth_id_, block_column_id)) {
-      uint64_t new_scan_timestamp_ns =
-        hesai_packet::get_timestamp_ns(packet_);
+      uint64_t new_scan_timestamp_ns = hesai_packet::get_timestamp_ns(packet_);
 
       // Check FT120: it should always go into the "else" branch
       if (sensor_configuration_->cut_angle == sensor_configuration_->cloud_max_angle) {
@@ -791,6 +786,5 @@ public:
     return {PerformanceCounters{decode_duration_ns - callbacks_duration_ns}, metadata};
   }
 };
-
 
 }  // namespace nebula::drivers

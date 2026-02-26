@@ -32,21 +32,21 @@ namespace nebula::drivers
 {
 
 template <size_t RowN, size_t ColumnN>
-class AngleCorrectorCalibrationBasedSolidState : public AngleCorrector<HesaiSolidStateCalibration, ColumnN>
+class AngleCorrectorCalibrationBasedSolidState
+: public AngleCorrector<HesaiSolidStateCalibration, ColumnN>
 {
 private:
   std::array<std::array<CorrectedAngleData, RowN>, ColumnN> correctedAngleData;
 
 public:
-
   explicit AngleCorrectorCalibrationBasedSolidState(
     const std::shared_ptr<const HesaiSolidStateCalibration> & sensor_calibration,
     double fov_start_azimuth_deg, double fov_end_azimuth_deg, double scan_cut_azimuth_deg)
   {
     // not used parameters
-    (void) fov_start_azimuth_deg;
-    (void) fov_end_azimuth_deg;
-    (void) scan_cut_azimuth_deg;
+    (void)fov_start_azimuth_deg;
+    (void)fov_end_azimuth_deg;
+    (void)scan_cut_azimuth_deg;
 
     if (sensor_calibration == nullptr) {
       throw std::runtime_error(
@@ -59,7 +59,8 @@ public:
 
     size_t calib_i = 0;
 
-    const double res_coeff = 0.01 * sensor_calibration->resolution * M_PI / 180.;  // also, convert to rad
+    const double res_coeff =
+      0.01 * sensor_calibration->resolution * M_PI / 180.;  // also, convert to rad
 
     for (size_t j = 0; j < ColumnN; j++)  // column
     {
@@ -74,7 +75,7 @@ public:
         // Note: azimuth has a value of 0° when the point lies in the plane X=0 (so
         // to get correct point coordinates, sine and cosine have to be used correctly,
         // as described in user manual. See hesai_decoder.hpp for the implementation)
-        const double azi = sensor_calibration->azimuth_adjust.at(calib_i) * res_coeff ;
+        const double azi = sensor_calibration->azimuth_adjust.at(calib_i) * res_coeff;
         const double ele = sensor_calibration->elevation_adjust.at(calib_i) * res_coeff;
 
         ++calib_i;
@@ -98,11 +99,13 @@ public:
     return correctedAngleData[col_id][row_id];
   }
 
-  // this base method is not used for solid state sensor, as all angles came from get_corrected_angle_data
-  [[nodiscard]] CorrectedAzimuths<ColumnN, float> get_corrected_azimuths(uint32_t block_azimuth) const
+  // this base method is not used for solid state sensor, as all angles came from
+  // get_corrected_angle_data
+  [[nodiscard]] CorrectedAzimuths<ColumnN, float> get_corrected_azimuths(
+    uint32_t block_azimuth) const
   {
     // not used parameters
-    (void) block_azimuth;
+    (void)block_azimuth;
     return CorrectedAzimuths<ColumnN, float>();
   };
 

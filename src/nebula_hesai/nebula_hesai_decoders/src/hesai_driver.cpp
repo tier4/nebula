@@ -118,7 +118,9 @@ std::shared_ptr<HesaiScanDecoder> HesaiDriver::initialize_decoder(
 
   using CalibT = typename SensorT::angle_corrector_t::correction_data_t;
 
-  using HesaiDecoderTp = typename std::conditional<(std::is_same<SensorT, PandarFT120>::value), HesaiSolidStateDecoder<SensorT>, HesaiDecoder<SensorT>>::type;
+  using HesaiDecoderTp = typename std::conditional<
+    (std::is_same<SensorT, PandarFT120>::value), HesaiSolidStateDecoder<SensorT>,
+    HesaiDecoder<SensorT>>::type;
 
   return std::make_shared<HesaiDecoderTp>(
     sensor_configuration, std::dynamic_pointer_cast<const CalibT>(calibration_configuration),

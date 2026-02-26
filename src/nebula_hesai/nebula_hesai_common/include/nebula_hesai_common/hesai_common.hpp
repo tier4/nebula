@@ -594,7 +594,7 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
 /// @brief struct for Hesai correction configuration for solid state sensors (for FT120)
 struct HesaiSolidStateCalibration : public HesaiCalibrationConfigurationBase
 {
-  public:
+public:
   std::vector<int32_t> azimuth_adjust;
   std::vector<int32_t> elevation_adjust;
 
@@ -610,8 +610,8 @@ struct HesaiSolidStateCalibration : public HesaiCalibrationConfigurationBase
     row_count = raw_ptr[7];
     resolution = raw_ptr[8];
 
-    const auto count{col_count*row_count};
-    const auto count_bytes{4*count};
+    const auto count{col_count * row_count};
+    const auto count_bytes{4 * count};
 
     auto ref = &(buf[9]);
 
@@ -619,7 +619,7 @@ struct HesaiSolidStateCalibration : public HesaiCalibrationConfigurationBase
     std::memcpy(azimuth_adjust.data(), ref, count_bytes);
 
     elevation_adjust.resize(count);
-    std::memcpy(elevation_adjust.data(), ref + count_bytes , count_bytes);
+    std::memcpy(elevation_adjust.data(), ref + count_bytes, count_bytes);
 
     return Status::OK;
   }
@@ -627,7 +627,8 @@ struct HesaiSolidStateCalibration : public HesaiCalibrationConfigurationBase
   inline nebula::Status load_from_file(const std::string & calibration_file) override
   {
     std::ifstream stream(calibration_file, std::ios::in | std::ios::binary);
-    std::vector<uint8_t> contents((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+    std::vector<uint8_t> contents(
+      (std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
 
     load_from_bytes(contents);
 
