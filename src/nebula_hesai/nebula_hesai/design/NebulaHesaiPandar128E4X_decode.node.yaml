@@ -5,7 +5,7 @@ name: NebulaHesaiPandar128E4X_decode.node
 base: NebulaHesaiPandar128E4X.node
 
 override:
-  inputs:
+  subscribers:
     - name: pandar_packets
       message_type: pandar_msgs/msg/PandarScan
       remap_target: pandar_packets

@@ -5,7 +5,7 @@ name: NebulaVelodyneVLS128_decode.node
 base: NebulaVelodyneVLS128.node
 
 override:
-  inputs:
+  subscribers:
     - name: velodyne_packets
       message_type: velodyne_msgs/msg/VelodyneScan
       remap_target: velodyne_packets
