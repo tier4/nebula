@@ -114,7 +114,7 @@ TEST_P(DecoderTest, TestTimezone)
 
   // Perform the next run with a different timezone, e.g. JST, check if set successfully,
   // then decode and record times again
-  setenv("TZ", "/usr/share/zoneinfo/Japan", 1);
+  setenv("TZ", "/usr/share/zoneinfo/Asia/Tokyo", 1);
   tzset();
   ASSERT_STREQ(tzname[0], "JST");
   auto jst = timezone;

@@ -23,7 +23,6 @@
 #include "nebula_hesai/hw_monitor_wrapper.hpp"
 #include "nebula_hesai_common/hesai_common.hpp"
 
-#include <ament_index_cpp/get_package_prefix.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>

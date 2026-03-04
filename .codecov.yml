@@ -13,31 +13,91 @@ ignore:
 comment:
   layout: header, diff, flags, components
 
-component_management:
+flag_management:
   default_rules:
+    carryforward: true
     statuses:
-      - type: project # inherit project rules for coverage statuses
-  individual_components:
-    - component_id: common
-      name: Common
+      - type: project
+        target: auto
+        threshold: 1%
+      - type: patch
+        target: 90%
+  individual_flags:
+    - name: continental_msgs
       paths:
-        - "!**hesai**"
-        - "!**velodyne**"
-        - "!**continental**"
-        - "!**robosense**"
-    - component_id: hesai
-      name: Hesai
+        - src/nebula_continental/continental_msgs
+    - name: continental_srvs
       paths:
-        - "**hesai**"
-    - component_id: velodyne
-      name: Velodyne
+        - src/nebula_continental/continental_srvs
+    - name: nebula
       paths:
-        - "**velodyne**"
-    - component_id: continental
-      name: Continental
+        - src/nebula
+    - name: nebula_continental
       paths:
-        - "**continental**"
-    - component_id: robosense
-      name: Robosense
+        - src/nebula_continental
+    - name: nebula_continental_common
       paths:
-        - "**robosense**"
+        - src/nebula_continental/nebula_continental_common
+    - name: nebula_continental_decoders
+      paths:
+        - src/nebula_continental/nebula_continental_decoders
+    - name: nebula_continental_hw_interfaces
+      paths:
+        - src/nebula_continental/nebula_continental_hw_interfaces
+    - name: nebula_core_common
+      paths:
+        - src/nebula_core/nebula_core_common
+    - name: nebula_core_decoders
+      paths:
+        - src/nebula_core/nebula_core_decoders
+    - name: nebula_core_hw_interfaces
+      paths:
+        - src/nebula_core/nebula_core_hw_interfaces
+    - name: nebula_core_ros
+      paths:
+        - src/nebula_core/nebula_core_ros
+    - name: nebula_hesai
+      paths:
+        - src/nebula_hesai/nebula_hesai
+    - name: nebula_hesai_common
+      paths:
+        - src/nebula_hesai/nebula_hesai_common
+    - name: nebula_hesai_decoders
+      paths:
+        - src/nebula_hesai/nebula_hesai_decoders
+    - name: nebula_hesai_hw_interfaces
+      paths:
+        - src/nebula_hesai/nebula_hesai_hw_interfaces
+    - name: nebula_msgs
+      paths:
+        - src/nebula_core/nebula_msgs
+    - name: nebula_robosense
+      paths:
+        - src/nebula_robosense/nebula_robosense
+    - name: nebula_robosense_common
+      paths:
+        - src/nebula_robosense/nebula_robosense_common
+    - name: nebula_robosense_decoders
+      paths:
+        - src/nebula_robosense/nebula_robosense_decoders
+    - name: nebula_robosense_hw_interfaces
+      paths:
+        - src/nebula_robosense/nebula_robosense_hw_interfaces
+    - name: nebula_velodyne
+      paths:
+        - src/nebula_velodyne/nebula_velodyne
+    - name: nebula_velodyne_common
+      paths:
+        - src/nebula_velodyne/nebula_velodyne_common
+    - name: nebula_velodyne_decoders
+      paths:
+        - src/nebula_velodyne/nebula_velodyne_decoders
+    - name: nebula_velodyne_hw_interfaces
+      paths:
+        - src/nebula_velodyne/nebula_velodyne_hw_interfaces
+    - name: pandar_msgs
+      paths:
+        - src/nebula_hesai/pandar_msgs
+    - name: robosense_msgs
+      paths:
+        - src/nebula_robosense/robosense_msgs
