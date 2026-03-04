@@ -255,8 +255,21 @@ public:
     if (status == -1) throw SocketError(errno);
     if (status == 0) return false;
 
-    ssize_t recv_result = receive_frame_with_metadata(&frame, sizeof(frame), metadata);
-    if (static_cast<size_t>(recv_result) < sizeof(frame)) {
+    size_t recv_result = receive_frame_with_metadata(&frame, sizeof(frame), metadata);
+
+    if (recv_result < sizeof(frame.can_id) + sizeof(frame.len)) {
+      throw SocketError("Corrupted CAN frame received");
+    }
+
+    if (frame.len > CANFD_MAX_DLEN) {
+      throw SocketError("Frame length is larger than max allowed CAN FD payload length");
+    }
+
+    const auto data_length = static_cast<size_t>(frame.len);
+    // some CAN FD frames are shorter than 64 bytes
+    const auto expected_length = sizeof(frame) - sizeof(frame.data) + data_length;
+
+    if (recv_result < expected_length) {
       throw SocketError("Incomplete CAN FD frame received");
     }
     return true;
