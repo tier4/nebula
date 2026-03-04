@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <type_traits>
 #include <vector>
+#include <tuple>
 
 namespace nebula::drivers
 {

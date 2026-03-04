@@ -20,6 +20,8 @@
 
 #include <nebula_core_common/util/bitfield.hpp>
 
+#include <vector>
+
 namespace nebula::drivers
 {
 
