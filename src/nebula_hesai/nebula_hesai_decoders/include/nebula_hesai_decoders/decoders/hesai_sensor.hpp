@@ -24,9 +24,9 @@
 #include <nebula_core_common/nebula_common.hpp>
 
 #include <algorithm>
+#include <tuple>
 #include <type_traits>
 #include <vector>
-#include <tuple>
 
 namespace nebula::drivers
 {
