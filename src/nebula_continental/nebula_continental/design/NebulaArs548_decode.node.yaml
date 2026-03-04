@@ -5,7 +5,7 @@ name: NebulaArs548_decode.node
 base: NebulaArs548.node
 
 override:
-  inputs:
+  subscribers:
     - name: nebula_packets
       message_type: nebula_msgs/msg/NebulaPackets
       remap_target: nebula_packets
@@ -30,7 +30,7 @@ override:
       default: false
 
 remove:
-  inputs:
+  subscribers:
     - name: odometry_input
     - name: acceleration_input
     - name: steering_angle_input

@@ -13,7 +13,7 @@ launch:
   use_container: false
 
 # interfaces
-inputs:
+subscribers:
   - name: odometry_input
     message_type: geometry_msgs/msg/TwistWithCovarianceStamped
     remap_target: odometry_input
