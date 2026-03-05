@@ -297,7 +297,7 @@ private:
    * @return Number of bytes received.
    * @throws SocketError if recvmsg fails.
    */
-  ssize_t receive_frame_with_metadata(void * frame_ptr, size_t frame_size, RxMetadata & metadata)
+  size_t receive_frame_with_metadata(void * frame_ptr, size_t frame_size, RxMetadata & metadata)
   {
     struct iovec iov;
     struct msghdr msg;
@@ -315,7 +315,7 @@ private:
     msg.msg_controllen = sizeof(ctrl);
     msg.msg_flags = 0;
 
-    ssize_t recv_result;
+    ssize_t recv_result{};
     do {
       recv_result = recvmsg(sock_fd_.get(), &msg, 0);
     } while (recv_result == -1 && errno == EINTR);
@@ -323,7 +323,7 @@ private:
     if (recv_result < 0) throw SocketError(errno);
 
     metadata.timestamp_ns = extract_timestamp(msg);
-    return recv_result;
+    return static_cast<size_t>(recv_result);
   }
 
   /**
