@@ -23,7 +23,7 @@ subscribers:
   - name: steering_angle_input
     message_type: std_msgs/msg/Float32
     remap_target: steering_angle_input
-outputs:
+publishers:
   - name: nebula_packets
     message_type: nebula_msgs/msg/NebulaPackets
     remap_target: nebula_packets
