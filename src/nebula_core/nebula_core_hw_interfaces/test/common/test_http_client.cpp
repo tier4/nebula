@@ -131,14 +131,16 @@ TEST(TestHttpClient, TestTimeout)
 {
   // No server running on this port, connection should fail or timeout
   HttpClient client(g_localhost_ip, 9998);
-  // This will throw because connection fails, but the client returns empty on timeout
-  EXPECT_THROW(client.get("/test", 100), SocketError);
+  // Client now catches SocketError internally and returns an empty string
+  auto response = client.get("/test", 100);
+  EXPECT_EQ(response, "");
 }
 
 TEST(TestHttpClient, TestConnectionFailure)
 {
   HttpClient client(g_localhost_ip, 9997);
-  EXPECT_THROW(client.get("/test"), SocketError);
+  auto response = client.get("/test");
+  EXPECT_EQ(response, "");
 }
 
 TEST(TestHttpClient, TestInvalidHost)

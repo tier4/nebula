@@ -282,9 +282,7 @@ Status ContinentalARS548HwInterface::set_acceleration_lateral_cog(float lateral_
   std::vector<uint8_t> send_vector(sizeof(AccelerationLateralCoGPacket));
   std::memcpy(send_vector.data(), &acceleration_lateral_cog, sizeof(AccelerationLateralCoGPacket));
 
-  udp_socket_->send(send_vector);
-
-  return Status::OK;
+  return safe_send(send_vector);
 }
 
 Status ContinentalARS548HwInterface::set_acceleration_longitudinal_cog(

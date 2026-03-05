@@ -24,6 +24,7 @@
 #include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/socket_utils.hpp>
 
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <sys/poll.h>
@@ -60,6 +61,7 @@ class TcpSocket
   struct SocketConfig
   {
     int32_t polling_interval_ms{10};
+    int32_t connect_timeout_ms{3000};
     size_t buffer_size{4096};
     Endpoint target;
   };
@@ -156,6 +158,17 @@ public:
     }
 
     /**
+     * @brief Set the timeout duration for the initial TCP connect attempt.
+     *
+     * @param timeout_ms The desired connection timeout in milliseconds.
+     */
+    Builder && set_connect_timeout(int32_t timeout_ms)
+    {
+      config_.connect_timeout_ms = timeout_ms;
+      return std::move(*this);
+    }
+
+    /**
      * @brief Set the internal buffer size for receiving data.
      *
      * @param bytes The desired buffer size in bytes.
@@ -173,12 +186,44 @@ public:
     {
       sockaddr_in addr = config_.target.to_sockaddr();
 
+      // Set socket to non-blocking
+      int flags = fcntl(sock_fd_.get(), F_GETFL, 0);
+      if (flags == -1) throw SocketError(errno);
+      if (fcntl(sock_fd_.get(), F_SETFL, flags | O_NONBLOCK) == -1) throw SocketError(errno);
+
       int result;
       do {
         result = ::connect(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
       } while (result == -1 && errno == EINTR);
 
-      if (result == -1) throw SocketError(errno);
+      if (result == -1) {
+        if (errno != EINPROGRESS) {
+          throw SocketError(errno);
+        }
+
+        // Connection is in progress, poll for completion
+        pollfd pfd{sock_fd_.get(), POLLOUT, 0};
+        int poll_result = poll(&pfd, 1, config_.connect_timeout_ms);
+
+        if (poll_result == -1) {
+          throw SocketError(errno);
+        } else if (poll_result == 0) {
+          throw SocketError("Connection timeout");
+        }
+
+        // Check socket error status
+        int so_error = 0;
+        socklen_t len = sizeof(so_error);
+        if (getsockopt(sock_fd_.get(), SOL_SOCKET, SO_ERROR, &so_error, &len) == -1) {
+          throw SocketError(errno);
+        }
+        if (so_error != 0) {
+          throw SocketError(so_error);
+        }
+      }
+
+      // Restore blocking mode
+      if (fcntl(sock_fd_.get(), F_SETFL, flags) == -1) throw SocketError(errno);
 
       return TcpSocket{std::move(sock_fd_), config_};
     }

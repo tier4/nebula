@@ -85,7 +85,14 @@ public:
       endpoint = "/" + endpoint;
     }
 
-    TcpSocket socket = TcpSocket::Builder(host_endpoint_).connect();
+    std::unique_ptr<TcpSocket> socket_ptr;
+    try {
+      socket_ptr = std::make_unique<TcpSocket>(TcpSocket::Builder(host_endpoint_).connect());
+    } catch (const SocketError &) {
+      return "";
+    }
+    auto & socket = *socket_ptr;
+
     std::stringstream request_ss;
     request_ss << method << " " << endpoint << " HTTP/1.1\r\n";
     request_ss << "Host: " << host_ip_ << "\r\n";
@@ -209,7 +216,12 @@ public:
 
     std::string req_str = request_ss.str();
     std::vector<uint8_t> req_bytes(req_str.begin(), req_str.end());
-    socket.send(req_bytes);
+    try {
+      socket.send(req_bytes);
+    } catch (const SocketError &) {
+      socket.unsubscribe();
+      return "";
+    }
 
     std::unique_lock<std::mutex> lock(mtx);
     // Wait for done OR timeout
