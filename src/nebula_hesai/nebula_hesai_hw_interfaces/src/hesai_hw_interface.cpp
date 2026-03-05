@@ -108,8 +108,7 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
   if (!tcp_socket_) {
     try {
       tcp_socket_ = std::make_unique<connections::TcpSocket>(
-        connections::TcpSocket::Builder(sensor_configuration_->sensor_ip, g_pandar_tcp_command_port)
-          .connect());
+        connections::TcpSocket::Builder(sensor_configuration_->sensor_ip, tcp_port_).connect());
     } catch (const connections::SocketError &) {
       return ptc_error_t{g_ptc_error_code_server_conn_failed, 0};
     }
@@ -191,7 +190,7 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
   } catch (const connections::SocketError &) {
     // If socket failed, reset it so next call tries to reconnect
     tcp_socket_.reset();
-    return ptc_error_t{g_ptc_error_code_server_conn_failed, 0};
+    return ptc_error_t{0, g_ptc_error_code_server_conn_failed};
   }
 }
 
@@ -276,15 +275,15 @@ Status HesaiHwInterface::initialize_tcp_socket()
 {
   try {
     tcp_socket_ = std::make_unique<connections::TcpSocket>(
-      connections::TcpSocket::Builder(sensor_configuration_->sensor_ip, g_pandar_tcp_command_port)
-        .connect());
+      connections::TcpSocket::Builder(sensor_configuration_->sensor_ip, tcp_port_).connect());
   } catch (const connections::SocketError & e) {
     return Status::ERROR_1;
   }
 
   // Initialize HTTP client as well
   try {
-    http_client_ = std::make_unique<connections::HttpClient>(sensor_configuration_->sensor_ip, 80);
+    http_client_ =
+      std::make_unique<connections::HttpClient>(sensor_configuration_->sensor_ip, http_port_);
   } catch (const std::exception & ex) {
     logger_->warn("Failed to initialize HTTP client: " + std::string(ex.what()));
   }
@@ -1404,6 +1403,12 @@ bool HesaiHwInterface::use_http_get_lidar_monitor(int model)
 [[nodiscard]] bool HesaiHwInterface::use_http_get_lidar_monitor() const
 {
   return use_http_get_lidar_monitor(target_model_no_);
+}
+
+void HesaiHwInterface::set_target_ports(uint16_t tcp_port, uint16_t http_port)
+{
+  tcp_port_ = tcp_port;
+  http_port_ = http_port;
 }
 
 }  // namespace nebula::drivers

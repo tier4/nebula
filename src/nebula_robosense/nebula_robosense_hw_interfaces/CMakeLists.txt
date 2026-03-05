@@ -36,3 +36,29 @@ ament_export_dependencies(
   robosense_msgs)
 
 ament_package()
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gtest REQUIRED)
+
+  ament_add_gtest(
+    test_robosense_hw_interface
+    test/test_robosense_hw_interface.cpp
+  )
+  target_include_directories(
+    test_robosense_hw_interface
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  )
+  target_link_libraries(
+    test_robosense_hw_interface
+    nebula_robosense_hw_interfaces
+  )
+  ament_target_dependencies(
+    test_robosense_hw_interface
+    nebula_core_common
+    nebula_robosense_common
+    nebula_core_hw_interfaces
+  )
+endif()

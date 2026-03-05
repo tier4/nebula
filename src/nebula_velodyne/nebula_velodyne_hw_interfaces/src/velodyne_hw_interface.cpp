@@ -104,7 +104,8 @@ Status VelodyneHwInterface::get_sensor_configuration(SensorConfigurationBase & s
 VelodyneStatus VelodyneHwInterface::init_http_client()
 {
   try {
-    http_client_ = std::make_unique<connections::HttpClient>(sensor_configuration_->sensor_ip, 80);
+    http_client_ =
+      std::make_unique<connections::HttpClient>(sensor_configuration_->sensor_ip, http_port_);
   } catch (const std::exception & ex) {
     VelodyneStatus status = Status::HTTP_CONNECTION_ERROR;
     return status;
@@ -115,6 +116,11 @@ VelodyneStatus VelodyneHwInterface::init_http_client()
 void VelodyneHwInterface::string_callback(const std::string & str)
 {
   logger_->debug("VelodyneHwInterface::string_callback: " + str);
+}
+
+void VelodyneHwInterface::set_target_port(uint16_t http_port)
+{
+  http_port_ = http_port;
 }
 
 boost::property_tree::ptree VelodyneHwInterface::parse_json(const std::string & str)

@@ -60,6 +60,7 @@ private:
   std::optional<connections::UdpSocket> udp_socket_;
 
   std::unique_ptr<connections::HttpClient> http_client_;
+  uint16_t http_port_{80};
 
   std::mutex mtx_inflight_request_;
 
@@ -164,6 +165,10 @@ public:
   /// @param str JSON string
   /// @return property_tree
   boost::property_tree::ptree parse_json(const std::string & str);
+
+  /// @brief Setting custom target port for testing
+  /// @param http_port Custom HTTP port
+  void set_target_port(uint16_t http_port);
 
   /// @brief Initializing HTTP client (sync)
   /// @return Resulting status

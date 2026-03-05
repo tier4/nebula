@@ -269,7 +269,9 @@ Status ContinentalSRR520HwInterface::sensor_interface_stop()
   }
 
   can_socket_ = {};
-  receiver_thread_ptr_->join();
+  if (receiver_thread_ptr_ && receiver_thread_ptr_->joinable()) {
+    receiver_thread_ptr_->join();
+  }
   return Status::OK;
 }
 

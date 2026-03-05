@@ -36,3 +36,48 @@ ament_export_dependencies(
   nebula_core_hw_interfaces nebula_msgs)
 
 ament_package()
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gtest REQUIRED)
+
+  ament_add_gtest(
+    test_ars548_hw_interface
+    test/test_ars548_hw_interface.cpp
+  )
+  target_include_directories(
+    test_ars548_hw_interface
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  )
+  target_link_libraries(
+    test_ars548_hw_interface
+    nebula_continental_hw_interfaces
+  )
+  ament_target_dependencies(
+    test_ars548_hw_interface
+    nebula_core_common
+    nebula_continental_common
+    nebula_core_hw_interfaces
+  )
+
+  ament_add_gtest(
+    test_srr520_hw_interface
+    test/test_srr520_hw_interface.cpp
+  )
+  target_include_directories(
+    test_srr520_hw_interface
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  )
+  target_link_libraries(
+    test_srr520_hw_interface
+    nebula_continental_hw_interfaces
+  )
+  ament_target_dependencies(
+    test_srr520_hw_interface
+    nebula_core_common
+    nebula_continental_common
+    nebula_core_hw_interfaces
+  )
+endif()

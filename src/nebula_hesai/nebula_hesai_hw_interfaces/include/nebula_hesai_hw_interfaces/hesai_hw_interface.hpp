@@ -135,6 +135,9 @@ private:
 
   std::mutex mtx_inflight_tcp_request_;
 
+  uint16_t tcp_port_{9347};
+  uint16_t http_port_{80};
+
   int target_model_no_;
   /// @brief A callback that receives a string (just prints)
   /// @param str Received string
@@ -405,6 +408,12 @@ public:
   /// target model)
   /// @param model Model
   void set_target_model(nebula::drivers::SensorModel model);
+
+  /// @brief Set target ports for TCP command and HTTP client (useful for unit testing without
+  /// privileges)
+  /// @param tcp_port TCP port
+  /// @param http_port HTTP port
+  void set_target_ports(uint16_t tcp_port, uint16_t http_port);
 
   /// @brief Whether to use HTTP for setting SpinRate
   /// @param model Model number
