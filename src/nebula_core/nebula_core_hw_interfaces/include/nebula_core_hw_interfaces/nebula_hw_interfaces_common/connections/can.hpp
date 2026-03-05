@@ -85,9 +85,16 @@ public:
     {
       config_.interface_name = interface_name;
 
-      int sock_fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-      if (sock_fd == -1) throw SocketError(errno);
-      sock_fd_ = SockFd{sock_fd};
+      if (interface_name.rfind("mock_fd:", 0) == 0) {
+        int fd = std::stoi(interface_name.substr(8));
+        int new_fd = dup(fd);
+        if (new_fd == -1) throw SocketError(errno);
+        sock_fd_ = SockFd{new_fd};
+      } else {
+        int sock_fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+        if (sock_fd == -1) throw SocketError(errno);
+        sock_fd_ = SockFd{sock_fd};
+      }
     }
 
     /**
@@ -106,16 +113,18 @@ public:
      */
     CanSocket bind() &&
     {
-      ifreq ifr{};
-      std::strncpy(ifr.ifr_name, config_.interface_name.c_str(), IFNAMSIZ - 1);
-      if (ioctl(sock_fd_.get(), SIOCGIFINDEX, &ifr) == -1) throw SocketError(errno);
+      if (config_.interface_name.rfind("mock_fd:", 0) != 0) {
+        ifreq ifr{};
+        std::strncpy(ifr.ifr_name, config_.interface_name.c_str(), IFNAMSIZ - 1);
+        if (ioctl(sock_fd_.get(), SIOCGIFINDEX, &ifr) == -1) throw SocketError(errno);
 
-      sockaddr_can addr{};
-      addr.can_family = AF_CAN;
-      addr.can_ifindex = ifr.ifr_ifindex;
+        sockaddr_can addr{};
+        addr.can_family = AF_CAN;
+        addr.can_ifindex = ifr.ifr_ifindex;
 
-      int result = ::bind(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
-      if (result == -1) throw SocketError(errno);
+        int result = ::bind(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
+        if (result == -1) throw SocketError(errno);
+      }
 
       return CanSocket{std::move(sock_fd_), config_};
     }
@@ -201,6 +210,7 @@ public:
    */
   void set_fd_mode(bool enable)
   {
+    if (config_.interface_name.rfind("mock_fd:", 0) == 0) return;
     int fd_mode = enable ? 1 : 0;
     auto result = sock_fd_.setsockopt(SOL_CAN_RAW, CAN_RAW_FD_FRAMES, fd_mode);
     if (!result.has_value()) throw SocketError(result.error());
@@ -216,7 +226,9 @@ public:
   {
     int timestamping = enable ? 1 : 0;
     auto result = sock_fd_.setsockopt(SOL_SOCKET, SO_TIMESTAMPNS, timestamping);
-    if (!result.has_value()) throw SocketError(result.error());
+    if (!result.has_value() && config_.interface_name.rfind("mock_fd:", 0) != 0) {
+      throw SocketError(result.error());
+    }
   }
 
   /**
@@ -227,6 +239,7 @@ public:
    */
   void set_filters(const std::vector<can_filter> & filters)
   {
+    if (config_.interface_name.rfind("mock_fd:", 0) == 0) return;
     int result = ::setsockopt(
       sock_fd_.get(), SOL_CAN_RAW, CAN_RAW_FILTER, filters.data(),
       filters.size() * sizeof(can_filter));

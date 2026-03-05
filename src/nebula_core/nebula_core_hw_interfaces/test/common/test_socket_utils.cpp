@@ -172,6 +172,25 @@ TEST(TestSocketUtils, TestIsSocketReadyNonBlocking)
   ::close(fds[1]);
 }
 
+TEST(TestSocketUtils, TestEndpointFromString)
+{
+  Endpoint ep;
+  ep.ip = parse_ip("192.168.2.5").value();
+  ep.port = 9090;
+  sockaddr_in addr = ep.to_sockaddr();
+  EXPECT_EQ(addr.sin_family, AF_INET);
+  EXPECT_EQ(addr.sin_addr.s_addr, htonl(0xC0A80205));  // 192.168.2.5
+  EXPECT_EQ(addr.sin_port, htons(9090));
+}
+
+TEST(TestSocketUtils, TestIsSocketReadyInvalidFd)
+{
+  // Using a negative FD is allowed by poll (it is simply ignored and revents is set to 0).
+  auto result = is_socket_ready(-1, 10);
+  ASSERT_TRUE(result.has_value());
+  EXPECT_FALSE(result.value());
+}
+
 }  // namespace nebula::drivers::connections
 
 int main(int argc, char * argv[])

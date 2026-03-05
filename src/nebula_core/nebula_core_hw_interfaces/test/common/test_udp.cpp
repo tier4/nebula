@@ -236,6 +236,11 @@ TEST(TestUdp, TestSending)
   ASSERT_EQ(recv_payload, payload);
 }
 
+TEST(TestUdp, TestSetPollingInterval)
+{
+  ASSERT_NO_THROW(UdpSocket::Builder(g_localhost_ip, g_host_port).set_polling_interval(50).bind());
+}
+
 }  // namespace nebula::drivers::connections
 
 int main(int argc, char * argv[])

@@ -10,6 +10,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstdio>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -52,7 +53,9 @@ public:
       while (running_) {
         sockaddr_in client_addr{};
         int addrlen = sizeof(client_addr);
-        int new_socket = accept(fd_, (struct sockaddr *)&client_addr, (socklen_t *)&addrlen);
+        int new_socket = accept(
+          fd_, reinterpret_cast<struct sockaddr *>(&client_addr),
+          reinterpret_cast<socklen_t *>(&addrlen));
         if (new_socket < 0) {
           if (running_)
             continue;
@@ -72,6 +75,28 @@ public:
               response += "1\r\n \r\n";
               response += "6\r\nWorld!\r\n";
               response += "0\r\n\r\n";
+            } else if (request.find("/slow") != std::string::npos) {
+              std::this_thread::sleep_for(std::chrono::milliseconds(200));
+              response = "HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nSlow";
+            } else if (request.find("/large") != std::string::npos) {
+              response = "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n";
+              std::string large_chunk(5000, 'A');
+              char len_buf[16];
+              snprintf(len_buf, sizeof(len_buf), "%zx\r\n", large_chunk.length());
+              response += len_buf;
+              response += large_chunk;
+              response += "\r\n";
+              response += len_buf;
+              response += large_chunk;
+              response += "\r\n";
+              response += "0\r\n\r\n";
+            } else if (request.find("/error") != std::string::npos) {
+              response = "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 9\r\n\r\nErrorBody";
+            } else if (request.find("/drop") != std::string::npos) {
+              response = "HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\nPartial";
+              send(new_socket, response.c_str(), response.length(), 0);
+              ::close(new_socket);
+              continue;
             } else {
               response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!";
             }
@@ -187,10 +212,55 @@ TEST(TestHttpClient, TestEmptyResponse)
 {
   HttpServer server(g_server_port);
   HttpClient client(g_localhost_ip, g_server_port);
-  // The server doesn't have a /empty endpoint, but we can test with what exists
-  // The current server returns "Hello, World!" for any GET
   auto response = client.get("/anything");
   ASSERT_EQ(response, "Hello, World!");
+}
+
+TEST(TestHttpClient, TestSlowServer)
+{
+  HttpServer server(g_server_port);
+  HttpClient client(g_localhost_ip, g_server_port);
+  auto response = client.get("/slow", 50);  // Timeout before server responds
+  EXPECT_EQ(response, "");
+}
+
+TEST(TestHttpClient, TestLargeChunkedResponse)
+{
+  HttpServer server(g_server_port);
+  HttpClient client(g_localhost_ip, g_server_port);
+  auto response = client.get("/large");
+  // 5000 'A's + 5000 'A's = 10000 characters
+  EXPECT_EQ(response.length(), 10000u);
+  EXPECT_TRUE(response.find_first_not_of('A') == std::string::npos);
+}
+
+TEST(TestHttpClient, TestEndpointNormalization)
+{
+  HttpServer server(g_server_port);
+  HttpClient client(g_localhost_ip, g_server_port);
+  // Missing leading slash, client should prefix it automatically.
+  // Should hit fallback Hello World
+  auto response = client.get("normalize");
+  EXPECT_EQ(response, "Hello, World!");
+}
+
+TEST(TestHttpClient, TestServerError)
+{
+  HttpServer server(g_server_port);
+  HttpClient client(g_localhost_ip, g_server_port);
+  auto response = client.get("/error");
+  // Our HttpClient presently extracts body regardless of status code if parsable
+  EXPECT_EQ(response, "ErrorBody");
+}
+
+TEST(TestHttpClient, TestConnectionDropMidResponse)
+{
+  HttpServer server(g_server_port);
+  HttpClient client(g_localhost_ip, g_server_port);
+  auto response = client.get("/drop");
+  // Connection closed before complete content length was received, but
+  // our client retains the partial body for robustness
+  EXPECT_EQ(response, "Partial");
 }
 
 }  // namespace nebula::drivers::connections

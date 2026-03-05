@@ -53,7 +53,9 @@ public:
       while (running_) {
         sockaddr_in client_addr{};
         int addrlen = sizeof(client_addr);
-        int new_socket = accept(fd_, (struct sockaddr *)&client_addr, (socklen_t *)&addrlen);
+        int new_socket = accept(
+          fd_, reinterpret_cast<struct sockaddr *>(&client_addr),
+          reinterpret_cast<socklen_t *>(&addrlen));
         if (new_socket < 0) {
           if (running_)
             continue;  // Accept failed, maybe timeout or closed
@@ -65,7 +67,7 @@ public:
         char buffer[1024] = {0};
         ssize_t valread = read(new_socket, buffer, 1024);
         if (valread > 0) {
-          send(new_socket, buffer, valread, 0);
+          send(new_socket, buffer, valread, MSG_NOSIGNAL);
         }
         ::close(new_socket);
       }
@@ -239,6 +241,140 @@ TEST(TestTcp, TestMoveSemantics)
   // Verify we can subscribe again
   sock2.subscribe([](const auto &, size_t) {});
   ASSERT_TRUE(sock2.is_subscribed());
+}
+
+TEST(TestTcp, TestConnectTimeout)
+{
+  // 192.0.2.1 is part of TEST-NET-1 (RFC 5737), which is non-routable.
+  // Connection should timeout rapidly according to our setting, not system default.
+  auto start = std::chrono::steady_clock::now();
+  EXPECT_THROW(
+    {
+      try {
+        TcpSocket::Builder("192.0.2.1", 80)
+          .set_connect_timeout(200)  // 200 ms timeout
+          .connect();
+      } catch (const SocketError & e) {
+        EXPECT_STREQ(e.what(), "Connection timeout");
+        throw;
+      }
+    },
+    SocketError);
+  auto duration = std::chrono::steady_clock::now() - start;
+  // It shouldn't take more than ~500ms if the 200ms timeout works natively.
+  EXPECT_LT(duration, std::chrono::milliseconds(500));
+}
+
+TEST(TestTcp, TestSetConnectTimeout)
+{
+  TcpServer server(g_server_port);
+  ASSERT_NO_THROW(
+    TcpSocket::Builder(g_localhost_ip, g_server_port).set_connect_timeout(500).connect());
+}
+
+TEST(TestTcp, TestSetBufferSize)
+{
+  TcpServer server(g_server_port);
+  ASSERT_NO_THROW(
+    TcpSocket::Builder(g_localhost_ip, g_server_port).set_socket_buffer_size(8192).connect());
+}
+
+class TcpEchoLoopServer
+{
+public:
+  explicit TcpEchoLoopServer(uint16_t port)
+  {
+    fd_ = socket(AF_INET, SOCK_STREAM, 0);
+    int opt = 1;
+    setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt));
+
+    sockaddr_in address{};
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(port);
+
+    bind(fd_, (struct sockaddr *)&address, sizeof(address));
+    listen(fd_, 3);
+
+    running_ = true;
+    thread_ = std::thread([this]() {
+      while (running_) {
+        sockaddr_in client_addr{};
+        int addrlen = sizeof(client_addr);
+        int new_socket = accept(
+          fd_, reinterpret_cast<struct sockaddr *>(&client_addr),
+          reinterpret_cast<socklen_t *>(&addrlen));
+        if (new_socket < 0) {
+          if (running_)
+            continue;
+          else
+            break;
+        }
+
+        char buffer[8192] = {0};
+        while (running_) {
+          ssize_t valread = read(new_socket, buffer, 8192);
+          if (valread > 0) {
+            send(new_socket, buffer, valread, MSG_NOSIGNAL);
+          } else {
+            break;
+          }
+        }
+        ::close(new_socket);
+      }
+    });
+  }
+
+  ~TcpEchoLoopServer()
+  {
+    running_ = false;
+    shutdown(fd_, SHUT_RDWR);
+    ::close(fd_);
+    if (thread_.joinable()) thread_.join();
+  }
+
+private:
+  int fd_;
+  std::atomic_bool running_;
+  std::thread thread_;
+};
+
+TEST(TestTcp, TestLargePayloadSendReceive)
+{
+  TcpEchoLoopServer server(g_server_port);
+
+  // Large payload to ensure it exceeds default MTU / buffers, triggering partial sends & multiple
+  // receives.
+  const size_t large_size = 65536;  // 64 KB
+  std::vector<uint8_t> payload(large_size, 0xAA);
+  for (size_t i = 0; i < payload.size(); ++i) {
+    payload[i] = static_cast<uint8_t>(i % 256);
+  }
+
+  std::vector<uint8_t> received_data;
+  std::atomic_bool finished{false};
+
+  auto sock =
+    TcpSocket::Builder(g_localhost_ip, g_server_port).set_socket_buffer_size(32768).connect();
+  sock.subscribe([&](const std::vector<uint8_t> & data, size_t bytes) {
+    received_data.insert(received_data.end(), data.begin(), data.begin() + bytes);
+    if (received_data.size() >= payload.size()) {
+      finished = true;
+    }
+  });
+
+  std::thread sender([&]() { sock.send(payload); });
+
+  for (int i = 0; i < 100; ++i) {  // Wait up to 5s
+    if (finished) break;
+    std::this_thread::sleep_for(50ms);
+  }
+
+  sender.join();
+
+  ASSERT_TRUE(finished);
+  ASSERT_EQ(received_data.size(), payload.size());
+  EXPECT_TRUE(std::equal(received_data.begin(), received_data.end(), payload.begin()));
 }
 
 }  // namespace nebula::drivers::connections
