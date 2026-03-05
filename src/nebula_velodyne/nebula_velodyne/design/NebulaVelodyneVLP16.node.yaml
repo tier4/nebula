@@ -16,7 +16,7 @@ launch:
 # interfaces
 subscribers: []
 
-outputs:
+publishers:
   - name: velodyne_packets
     message_type: velodyne_msgs/msg/VelodyneScan
     remap_target: velodyne_packets

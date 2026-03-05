@@ -16,7 +16,7 @@ launch:
 # interfaces
 subscribers: []
 
-outputs:
+publishers:
   - name: pandar_packets
     message_type: pandar_msgs/msg/PandarScan
     remap_target: pandar_packets

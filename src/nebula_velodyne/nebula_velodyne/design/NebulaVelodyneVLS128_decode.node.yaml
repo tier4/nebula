@@ -21,7 +21,7 @@ override:
       default: false
 
 remove:
-  outputs:
+  publishers:
     - name: velodyne_packets
   processes:
     - name: hw_interface

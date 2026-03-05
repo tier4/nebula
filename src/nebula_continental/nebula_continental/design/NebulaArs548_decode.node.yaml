@@ -34,7 +34,7 @@ remove:
     - name: odometry_input
     - name: acceleration_input
     - name: steering_angle_input
-  outputs:
+  publishers:
     - name: nebula_packets
   processes:
     - name: hw_interface
