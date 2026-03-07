@@ -141,7 +141,7 @@ void Vlp16Decoder::unpack(const std::vector<uint8_t> & packet, double packet_sec
 
   const raw_packet_t * raw = (const raw_packet_t *)packet.data();
   float last_azimuth_diff = 0;
-  uint16_t azimuth_next;
+  uint16_t azimuth_next = 0;
   const uint8_t return_mode = packet[g_return_mode_index];
   const bool dual_return = (return_mode == g_return_mode_dual);
 

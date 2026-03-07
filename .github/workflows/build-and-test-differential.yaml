@@ -73,15 +73,27 @@ jobs:
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
           build-depends-repos: build_depends-${{ matrix.rosdistro }}.repos
 
+      - name: Determine CodeCov flags from modified packages
+        id: determine-flags
+        if: steps.test.outputs.coverage-report-files != ''
+        shell: bash
+        run: |
+          modified_packages="${{ steps.get-modified-packages.outputs.modified-packages }}"
+          flags="$(tr -s '[:space:]' '\n' <<<"$modified_packages" | awk 'NF && !seen[$0]++' | paste -sd, -)"
+
+          echo "flags=$flags" >> "$GITHUB_OUTPUT"
+          echo "Modified packages: $modified_packages"
+          echo "Determined flags: $flags"
+
       - name: Upload coverage to CodeCov
-        if: steps.test.outputs.coverage-report-files != '' && matrix.rosdistro == 'humble'
+        if: steps.test.outputs.coverage-report-files != '' && matrix.rosdistro == 'humble' && steps.determine-flags.outputs.flags != ''
         uses: codecov/codecov-action@v4
         with:
           files: ${{ steps.test.outputs.coverage-report-files }}
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
           verbose: true
-          flags: differential
+          flags: ${{ steps.determine-flags.outputs.flags }}
 
   fb-infer-differential:
     if: contains(github.event.pull_request.labels.*.name, 'run:fb-infer')
