@@ -58,7 +58,7 @@ publishers:
 # parameters
 param_files:
   - name: config_file
-    default: config/radar/continental/ARS548.param.yaml
+    default: config/ARS548.param.yaml
     schema: schema/ARS548.schema.json
     allow_substs: true
 
@@ -66,54 +66,6 @@ param_values:
   - name: launch_hw
     type: bool
     default: true
-  - name: host_ip
-    type: string
-    default: 10.13.1.166
-  - name: sensor_ip
-    type: string
-    default: 10.13.1.113
-  - name: data_port
-    type: int
-    default: 42102
-  - name: frame_id
-    type: string
-    default: radar
-  - name: base_frame
-    type: string
-    default: base_link
-  - name: object_frame
-    type: string
-    default: base_link
-  - name: multicast_ip
-    type: string
-    default: 224.0.2.2
-  - name: sensor_model
-    type: string
-    default: ARS548
-  - name: configuration_host_port
-    type: int
-    default: 42401
-  - name: configuration_sensor_port
-    type: int
-    default: 42101
-  - name: use_sensor_time
-    type: bool
-    default: false
-  - name: radar_info_rate_subsample
-    type: int
-    default: 10
-  - name: configuration_vehicle_length
-    type: double
-    default: 4.89
-  - name: configuration_vehicle_width
-    type: double
-    default: 1.896
-  - name: configuration_vehicle_height
-    type: double
-    default: 2.5
-  - name: configuration_vehicle_wheelbase
-    type: double
-    default: 2.79
 
 # processes
 processes:
