@@ -7,7 +7,7 @@ template implementation (`nebula_sample`) and reusable components to simplify th
 
 ### Overall package structure
 
-Nebula is organized into corepackages and vendor-specific packages:
+Nebula is organized into core packages and vendor-specific packages:
 
 ```mermaid
 graph TB
@@ -434,8 +434,8 @@ ros2 bag play mysensor_packets
 - Hesai implementation: `src/nebula_hesai` - Full reference implementation
 - Velodyne implementation: `src/nebula_velodyne` - Alternative reference
 - Core components: `src/nebula_core` - Reusable building blocks
-- Point types: See `docs/point_types.md`
-- Parameters: See `docs/parameters.md`
+- Point types: See [`docs/point_types.md`](point_types.md)
+- Parameters: See [`docs/parameters.md`](parameters.md)
 
 ## Getting help
 
