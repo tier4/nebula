@@ -59,16 +59,21 @@ param_values:
   - name: point_filters.downsample_mask.path
     type: string
     default: ""
+  - name: rotation_speed
+    type: float
+    default: 600.0
 
 # processes
 processes:
   - name: hw_interface
     trigger_conditions:
-      - periodic: 100 # Hz
+      - periodic: 600.0 # future: ${parameter rotation_speed}
     outcomes:
       - to_output: pandar_packets
   - name: decoder
     trigger_conditions:
-      - periodic: 10 # Hz
+      - and:
+        - on_trigger: hw_interface
+        - periodic: 10 # Hz
     outcomes:
       - to_output: pandar_points
