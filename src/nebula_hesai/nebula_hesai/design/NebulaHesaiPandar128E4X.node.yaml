@@ -73,7 +73,7 @@ processes:
   - name: decoder
     trigger_conditions:
       - and:
-        - on_trigger: hw_interface
-        - periodic: 10 # Hz
+          - on_trigger: hw_interface
+          - periodic: 10 # Hz
     outcomes:
       - to_output: pandar_points
