@@ -94,4 +94,10 @@ repos:
         args: [--quiet, '--filter=-runtime/arrays,-build/c++17,-readability/casting']
         exclude: .cu
 
+  - repo: https://github.com/autowarefoundation/autoware_system_designer
+    rev: v0.3.0
+    hooks:
+      - id: lint-system-design-format
+        args: [--format=github-actions]
+
 exclude: .svg
