@@ -147,6 +147,7 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
     }
 
     if (header_bytes.size() < 8) {
+      tcp_socket_.reset();
       return ptc_error_t{g_tcp_error_timeout, 0};
     }
 
@@ -161,7 +162,12 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
     }
 
     if (payload_len == 0) {
-      if (!error_code.ok()) return error_code;
+      if (!error_code.ok()) {
+        if (error_code.error_flags != 0) {
+          tcp_socket_.reset();
+        }
+        return error_code;
+      }
       return std::vector<uint8_t>();
     }
 
@@ -182,10 +188,16 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
 
     // Check payload completeness?
     if (bytes_received < payload_len) {
+      tcp_socket_.reset();
       return ptc_error_t{g_tcp_error_incomplete_response, 0};
     }
 
-    if (!error_code.ok()) return error_code;
+    if (!error_code.ok()) {
+      if (error_code.error_flags != 0) {
+        tcp_socket_.reset();
+      }
+      return error_code;
+    }
     return recv_buf;
   } catch (const connections::SocketError &) {
     // If socket failed, reset it so next call tries to reconnect
