@@ -41,9 +41,6 @@ publishers:
     qos:
       depth: 10
       reliability: best_effort
-  - name: blockage_mask
-    message_type: sensor_msgs/msg/Image
-    remap_target: blockage_mask
 
 # parameters
 param_files:
