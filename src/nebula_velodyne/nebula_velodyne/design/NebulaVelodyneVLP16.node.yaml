@@ -10,7 +10,6 @@ launch:
   plugin: VelodyneRosWrapper
   executable: velodyne_ros_wrapper_node
   node_output: screen
-  use_container: true
 
 # interfaces
 subscribers: []
