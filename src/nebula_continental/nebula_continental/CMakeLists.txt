@@ -42,7 +42,6 @@ ament_target_dependencies(
   visualization_msgs
   sync_tooling_msgs
   rclcpp_components
-  message_filters
   tf2_ros)
 
 rclcpp_components_register_node(
