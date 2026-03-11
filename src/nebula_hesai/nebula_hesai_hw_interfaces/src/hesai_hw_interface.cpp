@@ -134,7 +134,7 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
     std::vector<uint8_t> header_bytes;
     size_t bytes_received = 0;
     int retry_count = 0;
-    while (bytes_received < 8 && retry_count < 10) {
+    while (bytes_received < 8 && retry_count < 100) {
       std::vector<uint8_t> chunk;
 
       chunk = tcp_socket_->receive(8 - bytes_received, std::chrono::milliseconds(10));
@@ -175,7 +175,7 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
     std::vector<uint8_t> recv_buf;
     bytes_received = 0;
     retry_count = 0;
-    while (bytes_received < payload_len && retry_count < 50) {  // 500ms timeout approx
+    while (bytes_received < payload_len && retry_count < 100) {  // 1000ms timeout approx
       std::vector<uint8_t> chunk =
         tcp_socket_->receive(payload_len - bytes_received, std::chrono::milliseconds(10));
       if (chunk.empty()) {
@@ -319,7 +319,9 @@ boost::property_tree::ptree HesaiHwInterface::parse_json(const std::string & str
     ss << str;
     boost::property_tree::read_json(ss, tree);
   } catch (boost::property_tree::json_parser_error & e) {
-    logger_->error(e.what());
+    std::stringstream err_ss;
+    err_ss << "Could not parse JSON (" << e.what() << "): " << str;
+    logger_->error(err_ss.str());
   }
   return tree;
 }
@@ -884,8 +886,24 @@ HesaiStatus HesaiHwInterface::set_spin_speed_async_http(uint16_t rpm)
   if (!http_client_) {
     return HesaiStatus::HTTP_CONNECTION_ERROR;
   }
-  std::string body = "rpm=" + std::to_string(rpm);
-  auto result = http_client_->post("/cgi/setting", body);
+
+  int rpm_key = 2;
+  switch (rpm) {
+    case 300:
+      rpm_key = 1;
+      break;
+    case 600:
+      rpm_key = 2;
+      break;
+    case 1200:
+      rpm_key = 3;
+      break;
+    default:
+      return HesaiStatus::INVALID_RPM_ERROR;
+      break;
+  }
+  auto result = http_client_->get(
+    (boost::format("/pandar.cgi?action=set&object=lidar&key=spin_speed&value=%d") % rpm_key).str());
   if (result.empty()) {
     return HesaiStatus::HTTP_CONNECTION_ERROR;
   }
@@ -946,7 +964,7 @@ HesaiStatus HesaiHwInterface::get_lidar_monitor_async_http(
   if (!http_client_) {
     return HesaiStatus::HTTP_CONNECTION_ERROR;
   }
-  auto result = http_client_->get("/cgi/status.json");
+  auto result = http_client_->get("/pandar.cgi?action=get&object=lidar_monitor");
   if (result.empty()) {
     return HesaiStatus::HTTP_CONNECTION_ERROR;
   }
