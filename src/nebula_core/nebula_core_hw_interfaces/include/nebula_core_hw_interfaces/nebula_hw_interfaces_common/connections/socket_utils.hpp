@@ -175,7 +175,7 @@ inline util::expected<bool, int> is_socket_ready(int fd, int timeout_ms, int eve
     status = poll(&pfd, 1, timeout_ms);
   } while (status == -1 && errno == EINTR);
   if (status == -1) return errno;
-  return (status > 0) && (pfd.revents & (events | POLLERR | POLLHUP | POLLNVAL));
+  return (status > 0) && (pfd.revents & events);
 }
 
 }  // namespace nebula::drivers::connections
