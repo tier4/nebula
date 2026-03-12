@@ -204,14 +204,15 @@ public:
     SocketConfig config_;
   };
 
-  // Callback receives the buffer and the number of bytes received in it
-  using callback_t =
-    std::function<void(const std::vector<uint8_t> & buffer, size_t bytes_received)>;
+  using receive_result_t = util::expected<std::vector<uint8_t>, SocketError>;
+
+  // Callback receives either payload bytes or a socket error.
+  using callback_t = std::function<void(const receive_result_t & result)>;
 
   /**
-   * @brief Register a callback for processing received data and start the receiver thread.
+   * @brief Register a callback for receive events and start the receiver thread.
    *
-   * @param callback The function to be executed for received data.
+   * @param callback The function to execute with either payload bytes or SocketError.
    */
   TcpSocket & subscribe(callback_t && callback)
   {
@@ -317,7 +318,11 @@ private:
 
       while (running_) {
         auto data_available = is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
-        if (!data_available.has_value()) throw SocketError(data_available.error());
+        if (!data_available.has_value()) {
+          callback_(SocketError(data_available.error()));
+          running_ = false;
+          return;
+        }
         if (!data_available.value()) continue;
 
         ssize_t recv_result{-1};
@@ -325,16 +330,25 @@ private:
           recv_result = ::recv(sock_fd_.get(), buffer.data(), buffer.size(), 0);
         } while (recv_result == -1 && errno == EINTR);
 
-        if (recv_result < 0) throw SocketError(errno);
+        if (recv_result == -1) {
+          callback_(SocketError(errno));
+          running_ = false;
+          return;
+        }
         if (recv_result == 0) {
-          // Connection closed by peer
-          callback_(buffer, 0);
+          callback_(SocketError("Connection closed"));
           running_ = false;
           return;
         }
 
-        // Pass direct view of buffer
-        callback_(buffer, static_cast<size_t>(recv_result));
+        assert(recv_result > 0);
+
+        auto bytes_received = static_cast<size_t>(recv_result);
+        assert(bytes_received <= buffer.size());
+
+        buffer.resize(bytes_received);
+        // This currently incurs a copy!
+        callback_(buffer);
       }
     });
   }

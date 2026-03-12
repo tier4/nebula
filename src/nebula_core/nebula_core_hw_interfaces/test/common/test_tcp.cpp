@@ -24,16 +24,17 @@ using std::chrono_literals::operator""ms;
 static const char * const g_localhost_ip = "127.0.0.1";
 static const uint16_t g_server_port = 8080;
 
-class TcpServer
+class TcpEchoThenCloseServer
 {
 public:
-  explicit TcpServer(uint16_t port)
+  explicit TcpEchoThenCloseServer(uint16_t port) : fd_(socket(AF_INET, SOCK_STREAM, 0))
   {
-    fd_ = socket(AF_INET, SOCK_STREAM, 0);
     if (fd_ == -1) throw std::runtime_error("Failed to create server socket");
 
     int opt = 1;
-    setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt));
+    if (setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) == -1) {
+      throw std::runtime_error("Failed to set socket options");
+    }
 
     sockaddr_in address{};
     address.sin_family = AF_INET;
@@ -44,11 +45,10 @@ public:
       throw std::runtime_error("Bind failed");
     }
 
-    if (listen(fd_, 3) < 0) {
+    if (listen(fd_, 3) == -1) {
       throw std::runtime_error("Listen failed");
     }
 
-    running_ = true;
     thread_ = std::thread([this]() {
       while (running_) {
         sockaddr_in client_addr{};
@@ -56,7 +56,7 @@ public:
         int new_socket = accept(
           fd_, reinterpret_cast<struct sockaddr *>(&client_addr),
           reinterpret_cast<socklen_t *>(&addrlen));
-        if (new_socket < 0) {
+        if (new_socket == -1) {
           if (running_)
             continue;  // Accept failed, maybe timeout or closed
           else
@@ -74,7 +74,12 @@ public:
     });
   }
 
-  ~TcpServer()
+  TcpEchoThenCloseServer(const TcpEchoThenCloseServer &) = delete;
+  TcpEchoThenCloseServer(TcpEchoThenCloseServer &&) = delete;
+  TcpEchoThenCloseServer & operator=(const TcpEchoThenCloseServer &) = delete;
+  TcpEchoThenCloseServer & operator=(TcpEchoThenCloseServer &&) = delete;
+
+  ~TcpEchoThenCloseServer()
   {
     running_ = false;
     shutdown(fd_, SHUT_RDWR);
@@ -84,31 +89,35 @@ public:
 
 private:
   int fd_;
-  std::atomic_bool running_;
+  std::atomic_bool running_{true};
   std::thread thread_;
 };
 
 TEST(TestTcp, TestBasicLifecycle)
 {
-  TcpServer server(g_server_port);
+  TcpEchoThenCloseServer server(g_server_port);
   ASSERT_NO_THROW(
     TcpSocket::Builder(g_localhost_ip, g_server_port)
       .connect()
-      .subscribe([](const auto &, size_t) {})
+      .subscribe([](const auto &) {})
       .unsubscribe());
 }
 
 TEST(TestTcp, TestSendReceive)
 {
-  TcpServer server(g_server_port);
+  TcpEchoThenCloseServer server(g_server_port);
   std::vector<uint8_t> payload{1, 2, 3, 4};
   std::atomic_bool received{false};
 
   auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
-  sock.subscribe([&](const std::vector<uint8_t> & data, size_t bytes) {
+  sock.subscribe([&](const TcpSocket::receive_result_t & result) {
+    if (!result.has_value()) return;
+
+    const auto data = result.value();
+    const size_t bytes = data.size();
+
     // Check if the valid part of the buffer matches payload
-    if (
-      bytes == payload.size() && std::equal(data.begin(), data.begin() + bytes, payload.begin())) {
+    if (bytes == payload.size() && data == payload) {
       received = true;
     }
   });
@@ -126,7 +135,7 @@ TEST(TestTcp, TestSendReceive)
 
 TEST(TestTcp, TestBlockingReceive)
 {
-  TcpServer server(g_server_port);
+  TcpEchoThenCloseServer server(g_server_port);
   std::vector<uint8_t> payload{0xAA, 0xBB, 0xCC, 0xDD};
 
   auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
@@ -142,7 +151,7 @@ TEST(TestTcp, TestBlockingReceive)
 
 TEST(TestTcp, TestReceiveTimeout)
 {
-  TcpServer server(g_server_port);
+  TcpEchoThenCloseServer server(g_server_port);
   auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
 
   // Expect empty return on timeout (100ms) with no data sent
@@ -152,7 +161,7 @@ TEST(TestTcp, TestReceiveTimeout)
 
 TEST(TestTcp, TestReceiveOnClosedSocket)
 {
-  TcpServer server(g_server_port);
+  TcpEchoThenCloseServer server(g_server_port);
   auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
 
   std::vector<uint8_t> payload{1, 2, 3, 4};
@@ -180,7 +189,7 @@ TEST(TestTcp, TestReceiveOnClosedSocket)
 
 TEST(TestTcp, TestReopen)
 {
-  TcpServer server(g_server_port);
+  TcpEchoThenCloseServer server(g_server_port);
   {
     auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
     // Socket is guaranteed open if exception not thrown
@@ -192,14 +201,14 @@ TEST(TestTcp, TestReopen)
 
 TEST(TestTcp, TestBuilderSetSocketBufferSize)
 {
-  TcpServer server(g_server_port);
+  TcpEchoThenCloseServer server(g_server_port);
   ASSERT_NO_THROW(
     TcpSocket::Builder(g_localhost_ip, g_server_port).set_socket_buffer_size(8192).connect());
 }
 
 TEST(TestTcp, TestBuilderSetPollingInterval)
 {
-  TcpServer server(g_server_port);
+  TcpEchoThenCloseServer server(g_server_port);
   ASSERT_NO_THROW(
     TcpSocket::Builder(g_localhost_ip, g_server_port).set_polling_interval(50).connect());
 }
@@ -218,10 +227,10 @@ TEST(TestTcp, TestBuilderInvalidIp)
 
 TEST(TestTcp, TestIsSubscribed)
 {
-  TcpServer server(g_server_port);
+  TcpEchoThenCloseServer server(g_server_port);
   auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
   ASSERT_FALSE(sock.is_subscribed());
-  sock.subscribe([](const auto &, size_t) {});
+  sock.subscribe([](const auto &) {});
   ASSERT_TRUE(sock.is_subscribed());
   sock.unsubscribe();
   ASSERT_FALSE(sock.is_subscribed());
@@ -229,9 +238,9 @@ TEST(TestTcp, TestIsSubscribed)
 
 TEST(TestTcp, TestMoveSemantics)
 {
-  TcpServer server(g_server_port);
+  TcpEchoThenCloseServer server(g_server_port);
   auto sock1 = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
-  sock1.subscribe([](const auto &, size_t) {});
+  sock1.subscribe([](const auto &) {});
   ASSERT_TRUE(sock1.is_subscribed());
 
   TcpSocket sock2(std::move(sock1));
@@ -239,7 +248,7 @@ TEST(TestTcp, TestMoveSemantics)
   ASSERT_FALSE(sock2.is_subscribed());
 
   // Verify we can subscribe again
-  sock2.subscribe([](const auto &, size_t) {});
+  sock2.subscribe([](const auto &) {});
   ASSERT_TRUE(sock2.is_subscribed());
 }
 
@@ -267,14 +276,14 @@ TEST(TestTcp, TestConnectTimeout)
 
 TEST(TestTcp, TestSetConnectTimeout)
 {
-  TcpServer server(g_server_port);
+  TcpEchoThenCloseServer server(g_server_port);
   ASSERT_NO_THROW(
     TcpSocket::Builder(g_localhost_ip, g_server_port).set_connect_timeout(500).connect());
 }
 
 TEST(TestTcp, TestSetBufferSize)
 {
-  TcpServer server(g_server_port);
+  TcpEchoThenCloseServer server(g_server_port);
   ASSERT_NO_THROW(
     TcpSocket::Builder(g_localhost_ip, g_server_port).set_socket_buffer_size(8192).connect());
 }
@@ -282,9 +291,10 @@ TEST(TestTcp, TestSetBufferSize)
 class TcpEchoLoopServer
 {
 public:
-  explicit TcpEchoLoopServer(uint16_t port)
+  explicit TcpEchoLoopServer(uint16_t port) : fd_(socket(AF_INET, SOCK_STREAM, 0))
   {
-    fd_ = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd_ == -1) throw std::runtime_error("Failed to create server socket");
+
     int opt = 1;
     setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt));
 
@@ -293,10 +303,11 @@ public:
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(port);
 
-    bind(fd_, (struct sockaddr *)&address, sizeof(address));
+    int result = bind(fd_, (struct sockaddr *)&address, sizeof(address));
+    if (result == -1) throw std::runtime_error("Failed to bind server socket");
+
     listen(fd_, 3);
 
-    running_ = true;
     thread_ = std::thread([this]() {
       while (running_) {
         sockaddr_in client_addr{};
@@ -325,6 +336,11 @@ public:
     });
   }
 
+  TcpEchoLoopServer(const TcpEchoLoopServer &) = delete;
+  TcpEchoLoopServer(TcpEchoLoopServer &&) = delete;
+  TcpEchoLoopServer & operator=(const TcpEchoLoopServer &) = delete;
+  TcpEchoLoopServer & operator=(TcpEchoLoopServer &&) = delete;
+
   ~TcpEchoLoopServer()
   {
     running_ = false;
@@ -335,7 +351,7 @@ public:
 
 private:
   int fd_;
-  std::atomic_bool running_;
+  std::atomic_bool running_{true};
   std::thread thread_;
 };
 
@@ -356,8 +372,11 @@ TEST(TestTcp, TestLargePayloadSendReceive)
 
   auto sock =
     TcpSocket::Builder(g_localhost_ip, g_server_port).set_socket_buffer_size(32768).connect();
-  sock.subscribe([&](const std::vector<uint8_t> & data, size_t bytes) {
-    received_data.insert(received_data.end(), data.begin(), data.begin() + bytes);
+  sock.subscribe([&](const TcpSocket::receive_result_t & result) {
+    if (!result.has_value()) return;
+
+    const auto data = result.value();
+    received_data.insert(received_data.end(), data.begin(), data.end());
     if (received_data.size() >= payload.size()) {
       finished = true;
     }
@@ -375,6 +394,28 @@ TEST(TestTcp, TestLargePayloadSendReceive)
   ASSERT_TRUE(finished);
   ASSERT_EQ(received_data.size(), payload.size());
   EXPECT_TRUE(std::equal(received_data.begin(), received_data.end(), payload.begin()));
+}
+
+TEST(TestTcp, TestSubscribeReportsConnectionClosedError)
+{
+  TcpEchoThenCloseServer server(g_server_port);
+  std::atomic_bool got_close_error{false};
+
+  auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
+  sock.subscribe([&](const TcpSocket::receive_result_t & result) {
+    if (!result.has_value() && std::string(result.error().what()) == "Connection closed") {
+      got_close_error = true;
+    }
+  });
+
+  sock.send(std::vector<uint8_t>{1, 2, 3, 4});
+
+  for (int i = 0; i < 20; ++i) {
+    if (got_close_error) break;
+    std::this_thread::sleep_for(50ms);
+  }
+
+  EXPECT_TRUE(got_close_error);
 }
 
 }  // namespace nebula::drivers::connections

@@ -117,14 +117,16 @@ public:
     bool is_chunked = false;
     size_t parse_pos = 0;
 
-    socket.subscribe([&](const std::vector<uint8_t> & data, size_t bytes) {
+    socket.subscribe([&](const TcpSocket::receive_result_t & result) {
       std::lock_guard<std::mutex> lock(mtx);
-      if (bytes == 0) {
-        // Connection closed by peer
+      if (!result.has_value()) {
         done = true;
         cv.notify_one();
         return;
       }
+
+      const auto data = result.value();
+      const size_t bytes = data.size();
 
       response_str.append(reinterpret_cast<const char *>(data.data()), bytes);
 
