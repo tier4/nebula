@@ -355,8 +355,8 @@ private:
 
         ssize_t recv_result{-1};
         do {
-          // As per `man recvmsg`, zero-length datagrams are permitted and valid. Since the socket is
-          // blocking, a recv_result of 0 means we received a valid 0-length datagram.
+          // As per `man recvmsg`, zero-length datagrams are permitted and valid. Since the socket
+          // is blocking, a recv_result of 0 means we received a valid 0-length datagram.
           recv_result = recvmsg(sock_fd_.get(), &msg_header.msg, MSG_TRUNC);
         } while (recv_result == -1 && errno == EINTR);
 
@@ -396,13 +396,13 @@ private:
 
       switch (cmsg->cmsg_type) {
         case SO_TIMESTAMP: {
-          const auto *tv = (const timeval *)CMSG_DATA(cmsg);
+          const auto * tv = (const timeval *)CMSG_DATA(cmsg);
           uint64_t timestamp_ns = tv->tv_sec * 1'000'000'000 + tv->tv_usec * 1000;
           metadata.timestamp_ns.emplace(timestamp_ns);
           break;
         }
         case SO_RXQ_OVFL: {
-          const auto *drops = (const uint32_t *)CMSG_DATA(cmsg);
+          const auto * drops = (const uint32_t *)CMSG_DATA(cmsg);
           metadata.n_packets_dropped_since_last_receive =
             drop_monitor.get_drops_since_last_receive(*drops);
           break;
