@@ -74,40 +74,6 @@ class TcpSocket
 public:
   ~TcpSocket() { unsubscribe(); }
 
-  /**
-   * @brief Receive up to n bytes from the socket.
-   *        This is a blocking call with an optional timeout.
-   *
-   * @param n The maximum number of bytes to receive.
-   * @param timeout The timeout duration. If 0, blocks indefinitely.
-   * @return A vector containing the received bytes. Empty if timeout.
-   *         May contain fewer than n bytes if less data is available.
-   * @throws SocketError if receive fails or connection is closed.
-   */
-  std::vector<uint8_t> receive(
-    size_t n, std::chrono::milliseconds timeout = std::chrono::milliseconds(0))
-  {
-    if (is_subscribed()) {
-      throw UsageError("Cannot call receive() while subscribed");
-    }
-
-    if (timeout.count() > 0) {
-      auto ready = is_socket_ready(sock_fd_.get(), timeout.count());
-      if (!ready.has_value()) throw SocketError(ready.error());
-      if (!ready.value()) return {};
-    }
-
-    std::vector<uint8_t> buffer(n);
-    ssize_t result;
-    do {
-      result = ::recv(sock_fd_.get(), buffer.data(), n, 0);
-    } while (result == -1 && errno == EINTR);
-
-    if (result < 0) throw SocketError(errno);
-    if (result == 0) throw SocketError("Connection closed");
-    buffer.resize(result);
-    return buffer;
-  }
   class Builder
   {
   public:
@@ -299,6 +265,41 @@ public:
       if (result == -1) throw SocketError(errno);
       total_sent += static_cast<size_t>(result);
     }
+  }
+
+  /**
+   * @brief Receive up to n bytes from the socket.
+   *        This is a blocking call with an optional timeout.
+   *
+   * @param n The maximum number of bytes to receive.
+   * @param timeout The timeout duration. If 0, blocks indefinitely.
+   * @return A vector containing the received bytes. Empty if timeout.
+   *         May contain fewer than n bytes if less data is available.
+   * @throws SocketError if receive fails or connection is closed.
+   */
+  std::vector<uint8_t> receive(
+    size_t n, std::chrono::milliseconds timeout = std::chrono::milliseconds(0))
+  {
+    if (is_subscribed()) {
+      throw UsageError("Cannot call receive() while subscribed");
+    }
+
+    if (timeout.count() > 0) {
+      auto ready = is_socket_ready(sock_fd_.get(), static_cast<int>(timeout.count()));
+      if (!ready.has_value()) throw SocketError(ready.error());
+      if (!ready.value()) return {};
+    }
+
+    std::vector<uint8_t> buffer(n);
+    ssize_t result{-1};
+    do {
+      result = ::recv(sock_fd_.get(), buffer.data(), n, 0);
+    } while (result == -1 && errno == EINTR);
+
+    if (result < 0) throw SocketError(errno);
+    if (result == 0) throw SocketError("Connection closed");
+    buffer.resize(result);
+    return buffer;
   }
 
   TcpSocket(const TcpSocket &) = delete;
