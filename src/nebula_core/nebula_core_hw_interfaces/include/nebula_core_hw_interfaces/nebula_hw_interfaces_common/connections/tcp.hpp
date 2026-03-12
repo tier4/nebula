@@ -31,7 +31,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <cerrno>
@@ -40,9 +39,6 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
-#include <iostream>
-#include <memory>
-#include <optional>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -63,13 +59,10 @@ class TcpSocket
     int32_t polling_interval_ms{10};
     int32_t connect_timeout_ms{3000};
     size_t buffer_size{4096};
-    Endpoint target;
+    Endpoint target{};
   };
 
-  TcpSocket(SockFd sock_fd, SocketConfig config)
-  : sock_fd_(std::move(sock_fd)), config_{std::move(config)}
-  {
-  }
+  TcpSocket(SockFd sock_fd, SocketConfig config) : sock_fd_(std::move(sock_fd)), config_{config} {}
 
 public:
   ~TcpSocket() { unsubscribe(); }
@@ -157,7 +150,7 @@ public:
       if (flags == -1) throw SocketError(errno);
       if (fcntl(sock_fd_.get(), F_SETFL, flags | O_NONBLOCK) == -1) throw SocketError(errno);
 
-      int result;
+      int result{-1};
       do {
         result = ::connect(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
       } while (result == -1 && errno == EINTR);
@@ -173,7 +166,8 @@ public:
 
         if (poll_result == -1) {
           throw SocketError(errno);
-        } else if (poll_result == 0) {
+        }
+        if (poll_result == 0) {
           throw SocketError("Connection timeout");
         }
 
@@ -256,7 +250,7 @@ public:
   {
     size_t total_sent = 0;
     while (total_sent < data.size()) {
-      ssize_t result;
+      ssize_t result{-1};
       do {
         result =
           ::send(sock_fd_.get(), data.data() + total_sent, data.size() - total_sent, MSG_NOSIGNAL);
@@ -303,14 +297,10 @@ public:
   }
 
   TcpSocket(const TcpSocket &) = delete;
-  TcpSocket(TcpSocket && other) : sock_fd_(), config_(other.config_)
+  TcpSocket(TcpSocket && other) noexcept
+  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))), config_(other.config_)
   {
-    other.unsubscribe();  // Stop the other thread
-    // No need to start our own thread; remain unsubscribed until user calls subscribe()
-    // We just take ownership of the FD and config.
-    sock_fd_ = std::move(other.sock_fd_);
-    // callback_ is not transferred to avoid implicit thread restart confusion
-  };
+  }
 
   TcpSocket & operator=(const TcpSocket &) = delete;
   TcpSocket & operator=(TcpSocket &&) = delete;
@@ -326,30 +316,25 @@ private:
       buffer.resize(config_.buffer_size);
 
       while (running_) {
-        try {
-          auto data_available = is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
-          if (!data_available.has_value()) throw SocketError(data_available.error());
-          if (!data_available.value()) continue;
+        auto data_available = is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
+        if (!data_available.has_value()) throw SocketError(data_available.error());
+        if (!data_available.value()) continue;
 
-          ssize_t recv_result;
-          do {
-            recv_result = ::recv(sock_fd_.get(), buffer.data(), buffer.size(), 0);
-          } while (recv_result == -1 && errno == EINTR);
+        ssize_t recv_result{-1};
+        do {
+          recv_result = ::recv(sock_fd_.get(), buffer.data(), buffer.size(), 0);
+        } while (recv_result == -1 && errno == EINTR);
 
-          if (recv_result < 0) throw SocketError(errno);
-          if (recv_result == 0) {
-            // Connection closed by peer
-            callback_(buffer, 0);
-            running_ = false;
-            return;
-          }
-
-          // Pass direct view of buffer
-          callback_(buffer, static_cast<size_t>(recv_result));
-        } catch (const SocketError & e) {
-          std::cerr << "TcpSocket receiver error: " << e.what() << std::endl;
+        if (recv_result < 0) throw SocketError(errno);
+        if (recv_result == 0) {
+          // Connection closed by peer
+          callback_(buffer, 0);
           running_ = false;
+          return;
         }
+
+        // Pass direct view of buffer
+        callback_(buffer, static_cast<size_t>(recv_result));
       }
     });
   }
