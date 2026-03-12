@@ -5,10 +5,10 @@
 #include "nebula_core_ros/parameter_descriptors.hpp"
 
 #include <nebula_core_common/nebula_common.hpp>
+#include <nebula_core_common/util/angles.hpp>
 #include <nebula_core_common/util/rate_limiter.hpp>
 #include <nebula_core_common/util/stopwatch.hpp>
 #include <nebula_core_common/util/string_conversions.hpp>
-#include <nebula_core_decoders/angles.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
 
 #include <algorithm>

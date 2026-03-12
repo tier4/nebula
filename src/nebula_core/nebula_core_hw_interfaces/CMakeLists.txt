@@ -30,6 +30,13 @@ if(BUILD_TESTING)
   target_link_libraries(test_udp nebula_core_common::nebula_core_common)
 endif()
 
+if(BUILD_TESTING OR BUILD_EXAMPLES)
+  add_library(nebula_core_hw_interfaces_examples OBJECT
+              examples/udp_socket_usage_example.cpp)
+  target_link_libraries(nebula_core_hw_interfaces_examples
+                        PRIVATE nebula_core_hw_interfaces)
+endif()
+
 ament_export_targets(export_nebula_core_hw_interfaces)
 ament_export_dependencies(nebula_core_common)
 

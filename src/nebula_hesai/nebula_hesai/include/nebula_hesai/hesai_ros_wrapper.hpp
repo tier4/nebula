@@ -16,7 +16,7 @@
 
 #include "nebula_core_common/nebula_common.hpp"
 #include "nebula_core_common/nebula_status.hpp"
-#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
+#include "nebula_core_hw_interfaces/connections/udp.hpp"
 #include "nebula_core_ros/sync_tooling/sync_tooling_worker.hpp"
 #include "nebula_hesai/decoder_wrapper.hpp"
 #include "nebula_hesai/hw_interface_wrapper.hpp"

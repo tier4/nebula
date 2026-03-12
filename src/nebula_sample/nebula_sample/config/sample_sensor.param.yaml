@@ -1,0 +1,38 @@
+# Sample Sensor ROS 2 Parameters
+# This file contains example parameters for the Sample LiDAR sensor.
+# Copy and modify this file for your specific sensor model.
+
+/**:
+  ros__parameters:
+    # ROS wrapper configuration
+    sensor_model: SampleSensor
+    launch_hw: true
+    frame_id: sample_lidar
+
+    # Network configuration
+    connection:
+      sensor_ip: 192.168.1.201
+      host_ip: 192.168.1.100
+      data_port: 2368
+
+    # Decoder configuration
+    fov:
+      azimuth:
+        min_deg: 0.0
+        max_deg: 360.0
+      elevation:
+        min_deg: -15.0
+        max_deg: 15.0
+
+    # Diagnostics configuration
+    diagnostics:
+      pointcloud_publish_rate:
+        frequency_ok:
+          min_hz: 9.0
+          max_hz: 11.0
+        frequency_warn:
+          min_hz: 8.0
+          max_hz: 12.0
+        num_frame_transition: 1
+      packet_liveness:
+        timeout_ms: 10

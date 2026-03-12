@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="launch_hw" default="true" />
+    <arg name="config_file" default="$(find-pkg-share nebula_sample)/config/sample_sensor.param.yaml"/>
+    <node_container pkg="rclcpp_components" exec="component_container" name="nebula_sample_container" namespace="">
+        <composable_node pkg="nebula_sample" plugin="nebula::ros::SampleRosWrapper" name="nebula_sample_ros_wrapper">
+            <param from="$(var config_file)" allow_substs="true"/>
+            <param name="launch_hw" value="$(var launch_hw)"/>
+        </composable_node>
+    </node_container>
+</launch>

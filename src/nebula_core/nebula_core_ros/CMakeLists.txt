@@ -20,6 +20,16 @@ install(
   LIBRARY DESTINATION lib)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
+if(BUILD_TESTING OR BUILD_EXAMPLES)
+  add_library(
+    nebula_core_ros_examples OBJECT
+    examples/diagnostic_integration_usage_example.cpp
+    examples/point_types_usage_example.cpp)
+  target_link_libraries(nebula_core_ros_examples PRIVATE nebula_core_ros)
+  ament_target_dependencies(nebula_core_ros_examples PUBLIC
+    diagnostic_msgs diagnostic_updater rclcpp sensor_msgs pcl_conversions)
+endif()
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_gtest REQUIRED)
