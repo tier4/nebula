@@ -1,0 +1,79 @@
+autoware_system_design_format: 0.3.0
+
+name: NebulaHesaiPandar128E4X.node
+
+package:
+  name: nebula_hesai
+  provider: nebula
+
+launch:
+  plugin: HesaiRosWrapper
+  executable: hesai_ros_wrapper_node
+  node_output: screen
+  use_container: true
+  container_name: pointcloud_container
+
+# interfaces
+subscribers: []
+
+publishers:
+  - name: pandar_packets
+    message_type: pandar_msgs/msg/PandarScan
+    remap_target: pandar_packets
+    qos:
+      depth: 10
+      reliability: best_effort
+  - name: pandar_points
+    message_type: sensor_msgs/msg/PointCloud2
+    remap_target: pandar_points
+    qos:
+      depth: 10
+      reliability: best_effort
+  - name: aw_points
+    message_type: sensor_msgs/msg/PointCloud2
+    remap_target: aw_points
+    qos:
+      depth: 10
+      reliability: best_effort
+  - name: aw_points_ex
+    message_type: sensor_msgs/msg/PointCloud2
+    remap_target: aw_points_ex
+    qos:
+      depth: 10
+      reliability: best_effort
+  - name: blockage_mask
+    message_type: sensor_msgs/msg/Image
+    remap_target: blockage_mask
+
+# parameters
+param_files:
+  - name: config_file
+    default: config/Pandar128E4X.param.yaml
+    schema: schema/Pandar128E4X.schema.json
+    allow_substs: true
+
+param_values:
+  - name: launch_hw
+    type: boolean
+    default: true
+  - name: point_filters.downsample_mask.path
+    type: string
+    default: ""
+  - name: rotation_speed
+    type: float
+    default: 600.0
+
+# processes
+processes:
+  - name: hw_interface
+    trigger_conditions:
+      - periodic: 600.0 # future: ${parameter rotation_speed}
+    outcomes:
+      - to_output: pandar_packets
+  - name: decoder
+    trigger_conditions:
+      - and:
+          - on_trigger: hw_interface
+          - periodic: 10 # Hz
+    outcomes:
+      - to_output: pandar_points

@@ -1,0 +1,27 @@
+autoware_system_design_format: 0.3.0
+
+name: NebulaVelodyneVLP16_decode.node
+
+base: NebulaVelodyneVLP16.node
+
+override:
+  subscribers:
+    - name: velodyne_packets
+      message_type: velodyne_msgs/msg/VelodyneScan
+      remap_target: velodyne_packets
+  processes:
+    - name: decoder
+      trigger_conditions:
+        - from_input: velodyne_packets
+      outcomes:
+        - to_output: velodyne_points
+  param_values:
+    - name: launch_hw
+      type: bool
+      default: false
+
+remove:
+  publishers:
+    - name: velodyne_packets
+  processes:
+    - name: hw_interface

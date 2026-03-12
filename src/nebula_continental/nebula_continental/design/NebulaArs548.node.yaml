@@ -1,0 +1,90 @@
+autoware_system_design_format: 0.3.0
+
+name: NebulaArs548.node
+
+package:
+  name: nebula_continental
+  provider: nebula
+
+launch:
+  plugin: nebula::ros::ContinentalARS548RosWrapper
+  executable: continental_ars548_ros_wrapper_node
+  node_output: screen
+  use_container: false
+
+# interfaces
+subscribers:
+  - name: odometry_input
+    message_type: geometry_msgs/msg/TwistWithCovarianceStamped
+    remap_target: odometry_input
+  - name: acceleration_input
+    message_type: geometry_msgs/msg/AccelWithCovarianceStamped
+    remap_target: acceleration_input
+  - name: steering_angle_input
+    message_type: std_msgs/msg/Float32
+    remap_target: steering_angle_input
+publishers:
+  - name: nebula_packets
+    message_type: nebula_msgs/msg/NebulaPackets
+    remap_target: nebula_packets
+  - name: continental_detections
+    message_type: continental_msgs/msg/ContinentalArs548DetectionList
+    remap_target: continental_detections
+  - name: continental_objects
+    message_type: continental_msgs/msg/ContinentalArs548ObjectList
+    remap_target: continental_objects
+  - name: detection_points
+    message_type: sensor_msgs/msg/PointCloud2
+    remap_target: detection_points
+  - name: object_points
+    message_type: sensor_msgs/msg/PointCloud2
+    remap_target: object_points
+  - name: scan_raw
+    message_type: radar_msgs/msg/RadarScan
+    remap_target: scan_raw
+  - name: objects_raw
+    message_type: radar_msgs/msg/RadarTracks
+    remap_target: objects_raw
+  - name: marker_array
+    message_type: visualization_msgs/msg/MarkerArray
+    remap_target: marker_array
+  - name: radar_objects
+    message_type: autoware_sensing_msgs/msg/RadarObjects
+    remap_target: radar_objects
+  - name: radar_info
+    message_type: autoware_sensing_msgs/msg/RadarInfo
+    remap_target: radar_info
+
+# parameters
+param_files:
+  - name: config_file
+    default: config/ARS548.param.yaml
+    schema: schema/ARS548.schema.json
+    allow_substs: true
+
+param_values:
+  - name: launch_hw
+    type: bool
+    default: true
+
+# processes
+processes:
+  - name: hw_interface
+    trigger_conditions:
+      - periodic: 100 # Hz
+    outcomes:
+      - to_output: nebula_packets
+  - name: decoder
+    trigger_conditions:
+      - periodic: 10 # Hz
+    outcomes:
+      - to_output: continental_objects
+      - to_output: continental_detections
+      - to_output: detection_points
+      - to_output: object_points
+      - to_output: radar_objects
+      - to_output: scan_raw
+      - to_output: objects_raw
+      - to_output: marker_array
+      - to_output: diagnostics
+      - to_output: radar_info
