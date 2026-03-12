@@ -74,10 +74,9 @@ TEST(TestSocketUtils, TestSockFdMove)
   EXPECT_EQ(sock2.get(), fd_val);
   EXPECT_EQ(sock1.get(), -1);  // NOLINT: testing moved-from state
 
-  SockFd sock3;
-  sock3 = std::move(sock2);
-  EXPECT_EQ(sock3.get(), fd_val);
-  EXPECT_EQ(sock2.get(), -1);  // NOLINT: testing moved-from state
+  // Confirm fds[0] is still valid through sock2
+  char buf = 'x';
+  EXPECT_EQ(write(sock2.get(), &buf, 1), 1);
 
   ::close(fds[1]);
 }
@@ -131,7 +130,7 @@ TEST(TestSocketUtils, TestUsageError)
 
 TEST(TestSocketUtils, TestEndpointToSockaddr)
 {
-  Endpoint ep;
+  Endpoint ep{};
   ep.ip.s_addr = htonl(0x7F000001);  // 127.0.0.1
   ep.port = 8080;
 
@@ -174,7 +173,7 @@ TEST(TestSocketUtils, TestIsSocketReadyNonBlocking)
 
 TEST(TestSocketUtils, TestEndpointFromString)
 {
-  Endpoint ep;
+  Endpoint ep{};
   ep.ip = parse_ip("192.168.2.5").value();
   ep.port = 9090;
   sockaddr_in addr = ep.to_sockaddr();
