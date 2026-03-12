@@ -29,7 +29,6 @@
 #endif
 
 #include "nebula_core_common/util/expected.hpp"
-#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 
 #include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/http_client.hpp>
@@ -104,12 +103,6 @@ private:
     const std::string & endpoint);
   nebula::util::expected<std::string, VelodyneStatus> http_post_request(
     const std::string & endpoint, const std::string & body);
-
-  /// @brief Get a one-off HTTP client to communicate with the hardware
-  /// @param ctx IO Context
-  /// @param hcd Got http client driver
-  /// @return Resulting status
-  VelodyneStatus get_http_client_driver_once(std::unique_ptr<connections::HttpClient> & hcd);
 
   /// @brief Checking the current settings and changing the difference point
   /// @param sensor_configuration Current SensorConfiguration
