@@ -100,10 +100,7 @@ class UdpSocket
     }
   };
 
-  UdpSocket(SockFd sock_fd, SocketConfig config)
-  : sock_fd_(std::move(sock_fd)), poll_fd_{sock_fd_.get(), POLLIN, 0}, config_{std::move(config)}
-  {
-  }
+  UdpSocket(SockFd sock_fd, SocketConfig config) : sock_fd_(std::move(sock_fd)), config_{config} {}
 
 public:
   ~UdpSocket() { unsubscribe(); }
@@ -317,9 +314,7 @@ public:
 
   UdpSocket(const UdpSocket &) = delete;
   UdpSocket(UdpSocket && other) noexcept
-  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))),
-    poll_fd_(other.poll_fd_),
-    config_(other.config_)
+  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))), config_(other.config_)
   {
     if (other.callback_) subscribe(std::move(other.callback_));
   };
@@ -389,7 +384,7 @@ private:
     });
   }
 
-  void get_receive_metadata(msghdr & msg, RxMetadata & metadata, DropMonitor & drop_monitor)
+  static void get_receive_metadata(msghdr & msg, RxMetadata & metadata, DropMonitor & drop_monitor)
   {
     for (cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
       if (cmsg->cmsg_level != SOL_SOCKET) continue;
@@ -420,7 +415,6 @@ private:
   }
 
   SockFd sock_fd_;
-  pollfd poll_fd_;
 
   SocketConfig config_;
 
