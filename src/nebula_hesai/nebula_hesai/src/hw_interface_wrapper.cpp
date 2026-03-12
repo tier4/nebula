@@ -44,7 +44,7 @@ HesaiHwInterfaceWrapper::HesaiHwInterfaceWrapper(
   int retry_count = 0;
 
   while (true) {
-    status_ = hw_interface_->initialize_tcp_driver();
+    status_ = hw_interface_->initialize_tcp_socket();
     if (status_ == Status::OK || !retry_connect) {
       break;
     }

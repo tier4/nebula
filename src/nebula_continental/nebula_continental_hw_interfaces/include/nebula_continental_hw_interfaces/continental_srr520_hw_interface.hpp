@@ -15,16 +15,17 @@
 #ifndef NEBULA_CONTINENTAL_SRR520_HW_INTERFACE_H
 #define NEBULA_CONTINENTAL_SRR520_HW_INTERFACE_H
 
+#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/can.hpp"
 #include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/nebula_hw_interface_base.hpp"
 
 #include <nebula_continental_common/continental_srr520.hpp>
 #include <nebula_core_common/loggers/logger.hpp>
-#include <ros2_socketcan/socket_can_receiver.hpp>
-#include <ros2_socketcan/socket_can_sender.hpp>
 
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
 
+#include <array>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -117,8 +118,7 @@ private:
   /// @brief Main loop of the CAN receiver thread
   void receive_loop();
 
-  std::unique_ptr<::drivers::socketcan::SocketCanReceiver> can_receiver_ptr_;
-  std::unique_ptr<::drivers::socketcan::SocketCanSender> can_sender_ptr_;
+  std::unique_ptr<connections::CanSocket> can_socket_;
   std::unique_ptr<std::thread> receiver_thread_ptr_;
 
   std::shared_ptr<const ContinentalSRR520SensorConfiguration> config_ptr_;

@@ -21,6 +21,7 @@
 
 #include <nebula_core_common/util/errno.hpp>
 #include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/socket_utils.hpp>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -36,98 +37,24 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <exception>
 #include <functional>
 #include <optional>
-#include <stdexcept>
 #include <string>
-#include <string_view>
 #include <thread>
 #include <utility>
-#include <variant>
 #include <vector>
 
 namespace nebula::drivers::connections
 {
 
-class SocketError : public std::exception
-{
-public:
-  explicit SocketError(int err_no) : what_{util::errno_to_string(err_no)} {}
-
-  explicit SocketError(const std::string_view & msg) : what_(msg) {}
-
-  const char * what() const noexcept override { return what_.c_str(); }
-
-private:
-  std::string what_;
-};
-
-class UsageError : public std::runtime_error
-{
-public:
-  explicit UsageError(const std::string & msg) : std::runtime_error(msg) {}
-};
-
-inline util::expected<in_addr, UsageError> parse_ip(const std::string & ip)
-{
-  in_addr parsed_addr{};
-  bool valid = inet_aton(ip.c_str(), &parsed_addr);
-  if (!valid) return UsageError("Invalid IP address given");
-  return parsed_addr;
-}
-
 class UdpSocket
 {
-  struct Endpoint
-  {
-    in_addr ip;
-    /// In host byte order.
-    uint16_t port;
-  };
-
-  class SockFd
-  {
-    static const int uninitialized = -1;
-    int sock_fd_;
-
-  public:
-    SockFd() : sock_fd_{uninitialized} {}
-    explicit SockFd(int sock_fd) : sock_fd_{sock_fd} {}
-    SockFd(SockFd && other) noexcept : sock_fd_{other.sock_fd_} { other.sock_fd_ = uninitialized; }
-
-    SockFd(const SockFd &) = delete;
-    SockFd & operator=(const SockFd &) = delete;
-    SockFd & operator=(SockFd && other) noexcept
-    {
-      std::swap(sock_fd_, other.sock_fd_);
-      return *this;
-    };
-
-    ~SockFd()
-    {
-      if (sock_fd_ == uninitialized) return;
-      close(sock_fd_);
-    }
-
-    [[nodiscard]] int get() const { return sock_fd_; }
-
-    template <typename T>
-    [[nodiscard]] util::expected<std::monostate, SocketError> setsockopt(
-      int level, int optname, const T & optval)
-    {
-      int result = ::setsockopt(sock_fd_, level, optname, &optval, sizeof(T));
-      if (result == -1) return SocketError(errno);
-      return std::monostate{};
-    }
-  };
-
   struct SocketConfig
   {
     int32_t polling_interval_ms{10};
 
     size_t buffer_size{1500};
-    Endpoint host;
+    Endpoint host{};
     std::optional<in_addr> multicast_ip;
     std::optional<Endpoint> sender_filter;
     std::optional<Endpoint> send_to;
@@ -173,12 +100,11 @@ class UdpSocket
     }
   };
 
-  UdpSocket(SockFd sock_fd, SocketConfig config)
-  : sock_fd_(std::move(sock_fd)), poll_fd_{sock_fd_.get(), POLLIN, 0}, config_{std::move(config)}
-  {
-  }
+  UdpSocket(SockFd sock_fd, SocketConfig config) : sock_fd_(std::move(sock_fd)), config_{config} {}
 
 public:
+  ~UdpSocket() { unsubscribe(); }
+
   class Builder
   {
   public:
@@ -301,10 +227,10 @@ public:
      */
     UdpSocket bind() &&
     {
-      sockaddr_in addr{};
-      addr.sin_family = AF_INET;
-      addr.sin_port = htons(config_.host.port);
-      addr.sin_addr = config_.multicast_ip ? *config_.multicast_ip : config_.host.ip;
+      sockaddr_in addr = config_.host.to_sockaddr();
+      if (config_.multicast_ip) {
+        addr.sin_addr = *config_.multicast_ip;
+      }
 
       int result = ::bind(sock_fd_.get(), (sockaddr *)&addr, sizeof(addr));
       if (result == -1) throw SocketError(errno);
@@ -329,11 +255,10 @@ public:
     std::optional<uint64_t> timestamp_ns;
     uint64_t n_packets_dropped_since_last_receive{0};
     PerfCounters packet_perf_counters{};
-    bool truncated;
+    bool truncated{};
   };
 
-  using callback_t =
-    std::function<void(const std::vector<uint8_t> & data, const RxMetadata & metadata)>;
+  using callback_t = std::function<void(std::vector<uint8_t> & data, const RxMetadata & metadata)>;
 
   /**
    * @brief Register a callback for processing received packets and start the receiver thread. The
@@ -376,30 +301,26 @@ public:
   {
     if (!config_.send_to) throw UsageError("No destination set");
 
-    sockaddr_in dest_addr{};
-    dest_addr.sin_family = AF_INET;
-    dest_addr.sin_port = htons(config_.send_to->port);
-    dest_addr.sin_addr = config_.send_to->ip;
+    sockaddr_in dest_addr = config_.send_to->to_sockaddr();
 
-    ssize_t result = sendto(
-      sock_fd_.get(), data.data(), data.size(), 0, (sockaddr *)&dest_addr, sizeof(dest_addr));
+    ssize_t result{-1};
+    do {
+      result = sendto(
+        sock_fd_.get(), data.data(), data.size(), 0, (sockaddr *)&dest_addr, sizeof(dest_addr));
+    } while (result == -1 && errno == EINTR);
 
     if (result == -1) throw SocketError(errno);
   }
 
   UdpSocket(const UdpSocket &) = delete;
-  UdpSocket(UdpSocket && other)
-  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))),
-    poll_fd_(other.poll_fd_),
-    config_(other.config_)
+  UdpSocket(UdpSocket && other) noexcept
+  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))), config_(other.config_)
   {
     if (other.callback_) subscribe(std::move(other.callback_));
   };
 
   UdpSocket & operator=(const UdpSocket &) = delete;
   UdpSocket & operator=(UdpSocket &&) = delete;
-
-  ~UdpSocket() { unsubscribe(); }
 
 private:
   void launch_receiver()
@@ -413,7 +334,7 @@ private:
       PerfCounters current_packet_perf_counters{};
 
       while (running_) {
-        auto data_available = is_data_available();
+        auto data_available = is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
 
         auto t_start = std::chrono::steady_clock::now();
         if (!data_available.has_value()) throw SocketError(data_available.error());
@@ -427,11 +348,15 @@ private:
         buffer.resize(config_.buffer_size);
         MsgBuffers msg_header{buffer};
 
-        // As per `man recvmsg`, zero-length datagrams are permitted and valid. Since the socket is
-        // blocking, a recv_result of 0 means we received a valid 0-length datagram.
-        ssize_t recv_result = recvmsg(sock_fd_.get(), &msg_header.msg, MSG_TRUNC);
+        ssize_t recv_result{-1};
+        do {
+          // As per `man recvmsg`, zero-length datagrams are permitted and valid. Since the socket
+          // is blocking, a recv_result of 0 means we received a valid 0-length datagram.
+          recv_result = recvmsg(sock_fd_.get(), &msg_header.msg, MSG_TRUNC);
+        } while (recv_result == -1 && errno == EINTR);
+
         if (recv_result < 0) throw SocketError(errno);
-        size_t untruncated_packet_length = recv_result;
+        auto untruncated_packet_length = static_cast<size_t>(recv_result);
 
         if (!is_accepted_sender(msg_header.sender_addr)) {
           current_packet_perf_counters.n_woken_by_wrong_sender++;
@@ -444,7 +369,9 @@ private:
         get_receive_metadata(msg_header.msg, metadata, drop_monitor);
         metadata.truncated = untruncated_packet_length > config_.buffer_size;
 
-        buffer.resize(std::min(config_.buffer_size, untruncated_packet_length));
+        // Resize down to match received data so callback sees correct size
+        auto valids = std::min(config_.buffer_size, untruncated_packet_length);
+        buffer.resize(valids);
 
         current_packet_perf_counters.receive_duration_ns +=
           (std::chrono::steady_clock::now() - t_start).count();
@@ -457,20 +384,20 @@ private:
     });
   }
 
-  void get_receive_metadata(msghdr & msg, RxMetadata & metadata, DropMonitor & drop_monitor)
+  static void get_receive_metadata(msghdr & msg, RxMetadata & metadata, DropMonitor & drop_monitor)
   {
     for (cmsghdr * cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
       if (cmsg->cmsg_level != SOL_SOCKET) continue;
 
       switch (cmsg->cmsg_type) {
         case SO_TIMESTAMP: {
-          auto tv = (timeval const *)CMSG_DATA(cmsg);
+          const auto * tv = (const timeval *)CMSG_DATA(cmsg);
           uint64_t timestamp_ns = tv->tv_sec * 1'000'000'000 + tv->tv_usec * 1000;
           metadata.timestamp_ns.emplace(timestamp_ns);
           break;
         }
         case SO_RXQ_OVFL: {
-          auto drops = (uint32_t const *)CMSG_DATA(cmsg);
+          const auto * drops = (const uint32_t *)CMSG_DATA(cmsg);
           metadata.n_packets_dropped_since_last_receive =
             drop_monitor.get_drops_since_last_receive(*drops);
           break;
@@ -481,13 +408,6 @@ private:
     }
   }
 
-  util::expected<bool, int> is_data_available()
-  {
-    int status = poll(&poll_fd_, 1, config_.polling_interval_ms);
-    if (status == -1) return errno;
-    return (poll_fd_.revents & POLLIN) && (status > 0);
-  }
-
   bool is_accepted_sender(const sockaddr_in & sender_addr)
   {
     if (!config_.sender_filter) return true;
@@ -495,7 +415,6 @@ private:
   }
 
   SockFd sock_fd_;
-  pollfd poll_fd_;
 
   SocketConfig config_;
 

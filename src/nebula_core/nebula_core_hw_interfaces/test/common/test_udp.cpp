@@ -1,4 +1,4 @@
-// Copyright 2024 TIER IV, Inc.
+// Copyright 2025 TIER IV, Inc.
 
 #include "common/test_udp/utils.hpp"
 #include "nebula_core_common/util/expected.hpp"
@@ -64,6 +64,12 @@ TEST(TestUdp, TestSpecialAddressesBind)
 {
   ASSERT_THROW(UdpSocket::Builder(g_broadcast_ip, g_host_port), UsageError);
   ASSERT_NO_THROW(UdpSocket::Builder(g_any_ip, g_host_port).bind());
+}
+
+TEST(TestUdp, TestBuilderInvalidIp)
+{
+  ASSERT_THROW(UdpSocket::Builder("invalid_ip", g_host_port), UsageError);
+  ASSERT_THROW(UdpSocket::Builder("999.999.999.999", g_host_port), UsageError);
 }
 
 TEST(TestUdp, TestJoiningInvalidMulticastGroup)
@@ -228,6 +234,11 @@ TEST(TestUdp, TestSending)
   ASSERT_TRUE(result3.has_value());
   auto const & [recv_payload, metadata] = result3.value();
   ASSERT_EQ(recv_payload, payload);
+}
+
+TEST(TestUdp, TestSetPollingInterval)
+{
+  ASSERT_NO_THROW(UdpSocket::Builder(g_localhost_ip, g_host_port).set_polling_interval(50).bind());
 }
 
 }  // namespace nebula::drivers::connections

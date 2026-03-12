@@ -10,11 +10,6 @@
 #include "nebula_hesai_common/hesai_status.hpp"
 #include "nebula_hesai_hw_interfaces/hesai_cmd_response.hpp"
 
-#include <nlohmann/json.hpp>
-#include <rclcpp/logging.hpp>
-
-#include <boost/asio/socket_base.hpp>
-
 #include <cassert>
 #include <cstddef>
 #include <iostream>
@@ -32,7 +27,7 @@
 #include <ctime>
 #endif
 
-#include <boost/asio.hpp>
+#include <boost/format.hpp>
 
 #include <utility>
 
@@ -95,22 +90,29 @@ bool ptp_config_matches_desired(
 }  // namespace
 
 HesaiHwInterface::HesaiHwInterface(const std::shared_ptr<loggers::Logger> & logger)
-: logger_(logger),
-  m_owned_ctx_{new boost::asio::io_context(1)},
-  tcp_driver_{new ::drivers::tcp_driver::TcpDriver(m_owned_ctx_)},
-  target_model_no_(nebula_model_to_hesai_model_no(SensorModel::UNKNOWN))
+: logger_(logger), target_model_no_(nebula_model_to_hesai_model_no(SensorModel::UNKNOWN))
 {
 }
 
 HesaiHwInterface::~HesaiHwInterface()
 {
-  finalize_tcp_driver();
+  finalize_tcp_socket();
 }
 
 HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
   const uint8_t command_id, const std::vector<uint8_t> & payload)
 {
   std::lock_guard lock(mtx_inflight_tcp_request_);
+
+  // Auto-connect if not connected?
+  if (!tcp_socket_) {
+    try {
+      tcp_socket_ = std::make_unique<connections::TcpSocket>(
+        connections::TcpSocket::Builder(sensor_configuration_->sensor_ip, tcp_port_).connect());
+    } catch (const connections::SocketError &) {
+      return ptc_error_t{g_ptc_error_code_server_conn_failed, 0};
+    }
+  }
 
   uint32_t len = payload.size();
 
@@ -125,89 +127,83 @@ HesaiHwInterface::ptc_cmd_result_t HesaiHwInterface::send_receive(
   send_buf.emplace_back(len & 0xff);
   send_buf.insert(send_buf.end(), payload.begin(), payload.end());
 
-  // These are shared_ptrs so that in case of request timeout, the callback (if ever called) can
-  // access valid memory
-  auto recv_buf = std::make_shared<std::vector<uint8_t>>();
-  auto response_complete = std::make_shared<bool>(false);
+  try {
+    tcp_socket_->send(send_buf);
 
-  auto error_code = std::make_shared<ptc_error_t>();
+    // Receive Header (8 bytes)
+    std::vector<uint8_t> header_bytes;
+    size_t bytes_received = 0;
+    int retry_count = 0;
+    while (bytes_received < 8 && retry_count < 100) {
+      std::vector<uint8_t> chunk;
 
-  std::stringstream ss;
-  ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(command_id)
-     << " (" << len << ") ";
-  std::string log_tag = ss.str();
-
-  logger_->debug(log_tag + "Entering lock");
-
-  std::timed_mutex tm;
-  tm.lock();
-
-  if (tcp_driver_->GetIOContext()->stopped()) {
-    logger_->debug(log_tag + "IOContext was stopped");
-    tcp_driver_->GetIOContext()->restart();
-  }
-
-  logger_->debug(log_tag + "Sending payload");
-  tcp_driver_->asyncSendReceiveHeaderPayload(
-    send_buf,
-    [this, log_tag, command_id, response_complete,
-     error_code](const std::vector<uint8_t> & header_bytes) {
-      error_code->ptc_error_code = header_bytes[3];
-
-      size_t payload_len = (header_bytes[4] << 24) | (header_bytes[5] << 16) |
-                           (header_bytes[6] << 8) | header_bytes[7];
-      logger_->debug(
-        log_tag + "Received header (expecting " + std::to_string(payload_len) + "B payload)");
-      // If command_id in the response does not match, we got a response for another command (or
-      // rubbish), probably as a result of too many simultaneous TCP connections to the sensor (e.g.
-      // from GUI, Web UI, another nebula instance, etc.)
-      if (header_bytes[2] != command_id) {
-        error_code->error_flags |= g_tcp_error_unrelated_response;
+      chunk = tcp_socket_->receive(8 - bytes_received, std::chrono::milliseconds(10));
+      if (chunk.empty()) {
+        retry_count++;
+        continue;
       }
-      if (payload_len == 0) {
-        *response_complete = true;
+      header_bytes.insert(header_bytes.end(), chunk.begin(), chunk.end());
+      bytes_received += chunk.size();
+    }
+
+    if (header_bytes.size() < 8) {
+      tcp_socket_.reset();
+      return ptc_error_t{g_tcp_error_timeout, 0};
+    }
+
+    ptc_error_t error_code;
+    error_code.ptc_error_code = header_bytes[3];
+
+    size_t payload_len =
+      (header_bytes[4] << 24) | (header_bytes[5] << 16) | (header_bytes[6] << 8) | header_bytes[7];
+
+    if (header_bytes[2] != command_id) {
+      error_code.error_flags |= g_tcp_error_unrelated_response;
+    }
+
+    if (payload_len == 0) {
+      if (!error_code.ok()) {
+        if (error_code.error_flags != 0) {
+          tcp_socket_.reset();
+        }
+        return error_code;
       }
-    },
-    [this, log_tag, recv_buf, response_complete,
-     error_code](const std::vector<uint8_t> & payload_bytes) {
-      logger_->debug(log_tag + "Received payload");
+      return std::vector<uint8_t>();
+    }
 
-      // Header had payload length 0 (thus, header callback processed request successfully already),
-      // but we still received a payload: invalid state
-      if (*response_complete) {
-        error_code->error_flags |= g_tcp_error_unexpected_payload;
-        return;
+    // Receive Payload
+    std::vector<uint8_t> recv_buf;
+    bytes_received = 0;
+    retry_count = 0;
+    while (bytes_received < payload_len && retry_count < 100) {  // 1000ms timeout approx
+      std::vector<uint8_t> chunk =
+        tcp_socket_->receive(payload_len - bytes_received, std::chrono::milliseconds(10));
+      if (chunk.empty()) {
+        retry_count++;
+        continue;
       }
+      recv_buf.insert(recv_buf.end(), chunk.begin(), chunk.end());
+      bytes_received += chunk.size();
+    }
 
-      // Skip 8 header bytes
-      recv_buf->insert(recv_buf->end(), std::next(payload_bytes.begin(), 8), payload_bytes.end());
-      *response_complete = true;
-    },
-    [this, log_tag, &tm]() {
-      logger_->debug(log_tag + "Unlocking mutex");
-      tm.unlock();
-      logger_->debug(log_tag + "Unlocked mutex");
-    });
-  this->io_context_run();
-  if (!tm.try_lock_for(std::chrono::seconds(1))) {
-    logger_->error(log_tag + "Request did not finish within 1s");
-    error_code->error_flags |= g_tcp_error_timeout;
-    return *error_code;
+    // Check payload completeness?
+    if (bytes_received < payload_len) {
+      tcp_socket_.reset();
+      return ptc_error_t{g_tcp_error_incomplete_response, 0};
+    }
+
+    if (!error_code.ok()) {
+      if (error_code.error_flags != 0) {
+        tcp_socket_.reset();
+      }
+      return error_code;
+    }
+    return recv_buf;
+  } catch (const connections::SocketError &) {
+    // If socket failed, reset it so next call tries to reconnect
+    tcp_socket_.reset();
+    return ptc_error_t{0, g_ptc_error_code_server_conn_failed};
   }
-
-  if (!response_complete) {
-    logger_->error(log_tag + "Did not receive response");
-    error_code->error_flags |= g_tcp_error_incomplete_response;
-    return *error_code;
-  }
-
-  if (!error_code->ok()) {
-    return *error_code;
-  }
-
-  logger_->debug(log_tag + "Received response");
-
-  return *recv_buf;
 }
 
 Status HesaiHwInterface::set_sensor_configuration(
@@ -244,7 +240,7 @@ Status HesaiHwInterface::sensor_interface_start()
   udp_socket_.emplace(std::move(builder).bind());
 
   udp_socket_->subscribe(
-    [&](const std::vector<uint8_t> & packet, const connections::UdpSocket::RxMetadata & metadata) {
+    [&](std::vector<uint8_t> & packet, const connections::UdpSocket::RxMetadata & metadata) {
       receive_sensor_packet_callback(packet, metadata);
     });
 
@@ -258,7 +254,7 @@ Status HesaiHwInterface::register_scan_callback(connections::UdpSocket::callback
 }
 
 void HesaiHwInterface::receive_sensor_packet_callback(
-  const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata)
+  std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata)
 {
   cloud_packet_callback_(buffer, metadata);
 }
@@ -287,41 +283,30 @@ Status HesaiHwInterface::get_calibration_configuration(
   return Status::ERROR_1;
 }
 
-Status HesaiHwInterface::initialize_tcp_driver()
+Status HesaiHwInterface::initialize_tcp_socket()
 {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  logger_->debug("HesaiHwInterface::InitializeTcpDriver");
-  logger_->debug("st: tcp_driver_->init_socket");
-  logger_->debug("sensor_configuration_->sensor_ip=" + sensor_configuration_->sensor_ip);
-  logger_->debug("sensor_configuration_->host_ip=" + sensor_configuration_->host_ip);
-  logger_->debug("PandarTcpCommandPort=" + std::to_string(g_pandar_tcp_command_port));
-#endif
-  tcp_driver_->init_socket(
-    sensor_configuration_->sensor_ip, g_pandar_tcp_command_port, sensor_configuration_->host_ip,
-    g_pandar_tcp_command_port);
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-  logger_->debug("ed: tcp_driver_->init_socket");
-#endif
-  if (!tcp_driver_->open()) {
-#ifdef WITH_DEBUG_STDOUT_HESAI_HW_INTERFACE
-    logger_->debug("!tcp_driver_->open()");
-#endif
-    //    tcp_driver_->close();
-    tcp_driver_->closeSync();
+  try {
+    tcp_socket_ = std::make_unique<connections::TcpSocket>(
+      connections::TcpSocket::Builder(sensor_configuration_->sensor_ip, tcp_port_).connect());
+  } catch (const connections::SocketError & e) {
     return Status::ERROR_1;
   }
+
+  // Initialize HTTP client as well
+  try {
+    http_client_ =
+      std::make_unique<connections::HttpClient>(sensor_configuration_->sensor_ip, http_port_);
+  } catch (const std::exception & ex) {
+    logger_->warn("Failed to initialize HTTP client: " + std::string(ex.what()));
+  }
+
   return Status::OK;
 }
 
-Status HesaiHwInterface::finalize_tcp_driver()
+Status HesaiHwInterface::finalize_tcp_socket()
 {
-  try {
-    if (tcp_driver_) {
-      tcp_driver_->close();
-    }
-  } catch (std::exception & e) {
-    logger_->error("Error while finalizing the TcpDriver");
-    return Status::UDP_CONNECTION_ERROR;
+  if (tcp_socket_) {
+    tcp_socket_ = {};
   }
   return Status::OK;
 }
@@ -334,7 +319,9 @@ boost::property_tree::ptree HesaiHwInterface::parse_json(const std::string & str
     ss << str;
     boost::property_tree::read_json(ss, tree);
   } catch (boost::property_tree::json_parser_error & e) {
-    logger_->error(e.what());
+    std::stringstream err_ss;
+    err_ss << "Could not parse JSON (" << e.what() << "): " << str;
+    logger_->error(err_ss.str());
   }
   return tree;
 }
@@ -894,79 +881,10 @@ HesaiLidarMonitor HesaiHwInterface::get_lidar_monitor()
   return check_size_and_parse<HesaiLidarMonitor>(response);
 }
 
-void HesaiHwInterface::io_context_run()
+HesaiStatus HesaiHwInterface::set_spin_speed_async_http(uint16_t rpm)
 {
-  m_owned_ctx_->run();
-}
-
-std::shared_ptr<boost::asio::io_context> HesaiHwInterface::get_io_context()
-{
-  return m_owned_ctx_;
-}
-
-HesaiStatus HesaiHwInterface::get_http_client_driver_once(
-  std::shared_ptr<boost::asio::io_context> ctx,
-  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd)
-{
-  hcd = std::unique_ptr<::drivers::tcp_driver::HttpClientDriver>(
-    new ::drivers::tcp_driver::HttpClientDriver(ctx));
-  try {
-    hcd->init_client(sensor_configuration_->sensor_ip, 80);
-  } catch (const std::exception & ex) {
-    Status status = Status::HTTP_CONNECTION_ERROR;
-    std::stringstream ss;
-    ss << "HesaiHwInterface::GetHttpClientDriverOnce: " << status
-       << sensor_configuration_->sensor_ip << "," << 80 << std::endl;
-    logger_->error(ss.str());
-    return Status::HTTP_CONNECTION_ERROR;
-  }
-  return Status::OK;
-}
-
-HesaiStatus HesaiHwInterface::get_http_client_driver_once(
-  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd)
-{
-  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd_tmp;
-  auto st = get_http_client_driver_once(std::make_shared<boost::asio::io_context>(), hcd_tmp);
-  hcd = std::move(hcd_tmp);
-  return st;
-}
-
-void HesaiHwInterface::str_cb(const std::string & str)
-{
-  logger_->info(str);
-}
-
-std::pair<HesaiStatus, std::string> HesaiHwInterface::unwrap_http_response(
-  const std::string & response)
-{
-  json j;
-  try {
-    j = json::parse(response);
-  } catch (const json::parse_error & e) {
-    return {Status::ERROR_1, "JSON response malformed: "s + e.what()};
-  }
-
-  if (!j.contains("Head") || !j["Head"].contains("ErrorCode") || !j["Head"].contains("Message")) {
-    return {Status::ERROR_1, "Unexpected JSON structure"};
-  }
-
-  json error_code = j["Head"]["ErrorCode"];
-  json message = j["Head"]["Message"];
-  if (error_code == "0") {
-    return {Status::OK, message};
-  }
-
-  return {Status::ERROR_1, message};
-}
-
-HesaiStatus HesaiHwInterface::set_spin_speed_async_http(
-  std::shared_ptr<boost::asio::io_context> ctx, uint16_t rpm)
-{
-  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
-  auto st = get_http_client_driver_once(ctx, hcd);
-  if (st != Status::OK) {
-    return st;
+  if (!http_client_) {
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
   }
 
   int rpm_key = 2;
@@ -984,61 +902,47 @@ HesaiStatus HesaiHwInterface::set_spin_speed_async_http(
       return HesaiStatus::INVALID_RPM_ERROR;
       break;
   }
-  hcd->asyncGet(
-    [this](const std::string & str) { str_cb(str); },
+  auto result = http_client_->get(
     (boost::format("/pandar.cgi?action=set&object=lidar&key=spin_speed&value=%d") % rpm_key).str());
-  ctx->run();
-  return Status::WAITING_FOR_SENSOR_RESPONSE;
-}
-
-HesaiStatus HesaiHwInterface::set_spin_speed_async_http(uint16_t rpm)
-{
-  return set_spin_speed_async_http(std::make_shared<boost::asio::io_context>(), rpm);
-}
-
-HesaiStatus HesaiHwInterface::set_ptp_config_sync_http(
-  std::shared_ptr<boost::asio::io_context> ctx, int profile, int domain, int network,
-  int logAnnounceInterval, int logSyncInterval, int logMinDelayReqInterval)
-{
-  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
-  auto st = get_http_client_driver_once(ctx, hcd);
-  if (st != Status::OK) {
-    return st;
+  if (result.empty()) {
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
   }
-
-  auto response = hcd->get((boost::format(
-                              "/pandar.cgi?action=set&object=lidar&key=ptp_configuration&value={"
-                              "\"Profile\": %d,"
-                              "\"Domain\": %d,"
-                              "\"Network\": %d,"
-                              "\"LogAnnounceInterval\": %d,"
-                              "\"LogSyncInterval\": %d,"
-                              "\"LogMinDelayReqInterval\": %d,"
-                              "\"tsn_switch\": %d"
-                              "}") %
-                            profile % domain % network % logAnnounceInterval % logSyncInterval %
-                            logMinDelayReqInterval % 0)
-                             .str());
-  ctx->run();
-  return unwrap_http_response(response).first;
+  return HesaiStatus::OK;
 }
 
 HesaiStatus HesaiHwInterface::set_ptp_config_sync_http(
   int profile, int domain, int network, int logAnnounceInterval, int logSyncInterval,
   int logMinDelayReqInterval)
 {
-  return set_ptp_config_sync_http(
-    std::make_shared<boost::asio::io_context>(), profile, domain, network, logAnnounceInterval,
-    logSyncInterval, logMinDelayReqInterval);
+  if (!http_client_) {
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
+  }
+
+  auto response =
+    http_client_->get((boost::format(
+                         "/pandar.cgi?action=set&object=lidar&key=ptp_configuration&value={"
+                         "\"Profile\": %d,"
+                         "\"Domain\": %d,"
+                         "\"Network\": %d,"
+                         "\"LogAnnounceInterval\": %d,"
+                         "\"LogSyncInterval\": %d,"
+                         "\"LogMinDelayReqInterval\": %d,"
+                         "\"tsn_switch\": %d"
+                         "}") %
+                       profile % domain % network % logAnnounceInterval % logSyncInterval %
+                       logMinDelayReqInterval % 0)
+                        .str());
+
+  if (response.empty()) {
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
+  }
+  return unwrap_http_response(response).first;
 }
 
-HesaiStatus HesaiHwInterface::set_sync_angle_sync_http(
-  std::shared_ptr<boost::asio::io_context> ctx, int enable, int angle)
+HesaiStatus HesaiHwInterface::set_sync_angle_sync_http(int enable, int angle)
 {
-  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
-  auto st = get_http_client_driver_once(ctx, hcd);
-  if (st != Status::OK) {
-    return st;
+  if (!http_client_) {
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
   }
   auto tmp_str = (boost::format(
                     "/pandar.cgi?action=set&object=lidar_sync&key=sync_angle&value={"
@@ -1047,42 +951,25 @@ HesaiStatus HesaiHwInterface::set_sync_angle_sync_http(
                     "}") %
                   enable % angle)
                    .str();
-  auto response = hcd->get(tmp_str);
-  ctx->run();
+  auto response = http_client_->get(tmp_str);
+  if (response.empty()) {
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
+  }
   return unwrap_http_response(response).first;
 }
 
-HesaiStatus HesaiHwInterface::set_sync_angle_sync_http(int enable, int angle)
-{
-  return set_sync_angle_sync_http(std::make_shared<boost::asio::io_context>(), enable, angle);
-}
-
-HesaiStatus HesaiHwInterface::get_lidar_monitor_async_http(
-  std::shared_ptr<boost::asio::io_context> ctx,
-  std::function<void(const std::string & str)> str_callback)
-{
-  std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> hcd;
-  auto st = get_http_client_driver_once(ctx, hcd);
-  if (st != Status::OK) {
-    logger_->error("HesaiHwInterface::GetLidarMonitorAsyncHttp: cannot GetHttpClientDriverOnce");
-    return st;
-  }
-
-  hcd->asyncGet(
-    [str_callback](const std::string & str) { str_callback(str); },
-    "/pandar.cgi?action=get&object=lidar_monitor");
-  boost::system::error_code ec;
-  ctx->run(ec);
-  if (ec) {
-    logger_->error("HesaiHwInterface::GetLidarMonitorAsyncHttp: " + ec.message());
-  }
-  return Status::WAITING_FOR_SENSOR_RESPONSE;
-}
-
 HesaiStatus HesaiHwInterface::get_lidar_monitor_async_http(
   std::function<void(const std::string & str)> str_callback)
 {
-  return get_lidar_monitor_async_http(std::make_shared<boost::asio::io_context>(), str_callback);
+  if (!http_client_) {
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
+  }
+  auto result = http_client_->get("/pandar.cgi?action=get&object=lidar_monitor");
+  if (result.empty()) {
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
+  }
+  str_callback(result);
+  return HesaiStatus::OK;
 }
 
 HesaiStatus HesaiHwInterface::check_and_set_config(
@@ -1405,6 +1292,43 @@ HesaiStatus HesaiHwInterface::check_and_set_config()
   return Status::OK;
 }
 
+void HesaiHwInterface::str_cb(const std::string & str)
+{
+  logger_->debug(str);
+}
+
+std::string HesaiHwInterface::pretty_print_ptc_error(ptc_error_t error_code)
+{
+  if (error_code.ok()) {
+    return "No error";
+  }
+  std::string s = "PTC Error: ";
+  if (error_code.error_flags & g_tcp_error_unrelated_response) s += "Unrelated response; ";
+  if (error_code.error_flags & g_tcp_error_unexpected_payload) s += "Unexpected payload; ";
+  if (error_code.error_flags & g_tcp_error_timeout) s += "Timeout; ";
+  if (error_code.error_flags & g_tcp_error_incomplete_response) s += "Incomplete response; ";
+  if (error_code.ptc_error_code)
+    s += "PTC Error Code: " + std::to_string(error_code.ptc_error_code);
+  return s;
+}
+
+template <typename T>
+T HesaiHwInterface::check_size_and_parse(const std::vector<uint8_t> & data)
+{
+  if (data.size() < sizeof(T)) {
+    throw std::runtime_error("Data size too small for struct");
+  }
+  T t;
+  memcpy(&t, data.data(), sizeof(T));
+  return t;
+}
+
+std::pair<HesaiStatus, std::string> HesaiHwInterface::unwrap_http_response(
+  const std::string & response)
+{
+  return {HesaiStatus::OK, response};
+}
+
 /*
 0: Pandar40P
 2: Pandar64
@@ -1450,10 +1374,12 @@ int HesaiHwInterface::nebula_model_to_hesai_model_no(nebula::drivers::SensorMode
       return -1;
   }
 }
+
 void HesaiHwInterface::set_target_model(int model)
 {
   target_model_no_ = model;
 }
+
 void HesaiHwInterface::set_target_model(nebula::drivers::SensorModel model)
 {
   target_model_no_ = nebula_model_to_hesai_model_no(model);
@@ -1478,10 +1404,12 @@ bool HesaiHwInterface::use_http_set_spin_rate(int model)
       return false;
   }
 }
+
 [[nodiscard]] bool HesaiHwInterface::use_http_set_spin_rate() const
 {
   return use_http_set_spin_rate(target_model_no_);
 }
+
 bool HesaiHwInterface::use_http_get_lidar_monitor(int model)
 {
   switch (model) {
@@ -1501,104 +1429,16 @@ bool HesaiHwInterface::use_http_get_lidar_monitor(int model)
       return false;
   }
 }
+
 [[nodiscard]] bool HesaiHwInterface::use_http_get_lidar_monitor() const
 {
   return use_http_get_lidar_monitor(target_model_no_);
 }
 
-std::string HesaiHwInterface::pretty_print_ptc_error(ptc_error_t error_code)
+void HesaiHwInterface::set_target_ports(uint16_t tcp_port, uint16_t http_port)
 {
-  if (error_code.ok()) {
-    return "No error";
-  }
-
-  auto ptc_error = error_code.ptc_error_code;
-  auto error_flags = error_code.error_flags;
-  std::stringstream ss;
-
-  if (ptc_error) {
-    ss << "Sensor error: 0x" << std::setfill('0') << std::setw(2) << std::hex
-       << static_cast<int>(ptc_error) << ' ';
-  }
-
-  switch (ptc_error) {
-    case g_ptc_error_code_no_error:
-      break;
-    case g_ptc_error_code_invalid_input_param:
-      ss << "Invalid input parameter";
-      break;
-    case g_ptc_error_code_server_conn_failed:
-      ss << "Failure to connect to server";
-      break;
-    case g_ptc_error_code_invalid_data:
-      ss << "No valid data returned";
-      break;
-    case g_ptc_error_code_out_of_memory:
-      ss << "Server does not have enough memory";
-      break;
-    case g_ptc_error_code_unsupported_cmd:
-      ss << "Server does not support this command yet";
-      break;
-    case g_ptc_error_code_fpga_comm_failed:
-      ss << "Server failed to communicate with FPGA";
-      break;
-    case g_ptc_error_code_other:
-      ss << "Unspecified internal error";
-      break;
-    default:
-      ss << "Unknown error";
-      break;
-  }
-
-  if (!error_flags) {
-    return ss.str();
-  }
-
-  if (ptc_error) {
-    ss << ", ";
-  }
-
-  ss << "Communication error: ";
-  std::vector<std::string> nebula_errors;
-
-  if (error_flags & g_tcp_error_incomplete_response) {
-    nebula_errors.emplace_back("Incomplete response payload");
-  }
-  if (error_flags & g_tcp_error_timeout) {
-    nebula_errors.emplace_back("Request timeout");
-  }
-  if (error_flags & g_tcp_error_unexpected_payload) {
-    nebula_errors.emplace_back("Received payload but expected payload length 0");
-  }
-  if (error_flags & g_tcp_error_unrelated_response) {
-    nebula_errors.emplace_back("Received unrelated response");
-  }
-
-  ss << boost::algorithm::join(nebula_errors, ", ");
-
-  return ss.str();
-}
-
-template <typename T>
-T HesaiHwInterface::check_size_and_parse(const std::vector<uint8_t> & data)
-{
-  if (data.size() < sizeof(T)) {
-    throw std::runtime_error("Attempted to parse too-small payload");
-  }
-
-  if (data.size() > sizeof(T)) {
-    // TODO(mojomex): having  a static variable for this is not optimal, but the loggers::Logger
-    // class does not support things like _ONCE macros yet
-    static bool already_warned_for_this_type = false;
-    if (!already_warned_for_this_type) {
-      logger_->warn("Sensor returned longer payload than expected. Truncating and parsing anyway.");
-      already_warned_for_this_type = true;
-    }
-  }
-
-  T parsed;
-  memcpy(&parsed, data.data(), sizeof(T));
-  return parsed;
+  tcp_port_ = tcp_port;
+  http_port_ = http_port;
 }
 
 }  // namespace nebula::drivers

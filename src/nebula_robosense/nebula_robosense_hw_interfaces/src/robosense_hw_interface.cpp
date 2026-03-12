@@ -4,18 +4,18 @@
 
 #include "nebula_core_common/util/string_conversions.hpp"
 
+#include <algorithm>
+#include <chrono>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 namespace nebula::drivers
 {
 RobosenseHwInterface::RobosenseHwInterface(const std::shared_ptr<loggers::Logger> & logger)
-: cloud_io_context_(new ::drivers::common::IoContext(1)),
-  info_io_context_(new ::drivers::common::IoContext(1)),
-  cloud_udp_driver_(new ::drivers::udp_driver::UdpDriver(*cloud_io_context_)),
-  info_udp_driver_(new ::drivers::udp_driver::UdpDriver(*info_io_context_)),
-  logger_(logger)
+: logger_(logger)
 {
 }
 
@@ -43,19 +43,22 @@ Status RobosenseHwInterface::sensor_interface_start()
     logger_->info(
       "Starting UDP server for data packets on: " + sensor_configuration_->sensor_ip + ": " +
       std::to_string(sensor_configuration_->data_port));
-    cloud_udp_driver_->init_receiver(
-      sensor_configuration_->host_ip, sensor_configuration_->data_port);
-    cloud_udp_driver_->receiver()->open();
-    cloud_udp_driver_->receiver()->bind();
 
-    cloud_udp_driver_->receiver()->asyncReceive(
-      std::bind(
-        &RobosenseHwInterface::receive_sensor_packet_callback, this, std::placeholders::_1));
+    cloud_udp_socket_ = std::make_unique<connections::UdpSocket>(
+      connections::UdpSocket::Builder(
+        sensor_configuration_->host_ip, sensor_configuration_->data_port)
+        .limit_to_sender(sensor_configuration_->sensor_ip, sensor_configuration_->data_port)
+        .bind());
+
+    cloud_udp_socket_->subscribe(
+      [this](std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata &) {
+        this->receive_sensor_packet_callback(buffer);
+      });
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
     logger_->error(
       util::to_string(status) + " " + sensor_configuration_->sensor_ip + "," +
-      std::to_string(sensor_configuration_->data_port));
+      std::to_string(sensor_configuration_->data_port) + ": " + ex.what());
     return status;
   }
   return Status::OK;
@@ -67,18 +70,22 @@ Status RobosenseHwInterface::info_interface_start()
     logger_->info(
       "Starting UDP server for info packets on: " + sensor_configuration_->sensor_ip + ": " +
       std::to_string(sensor_configuration_->gnss_port));
-    info_udp_driver_->init_receiver(
-      sensor_configuration_->host_ip, sensor_configuration_->gnss_port);
-    info_udp_driver_->receiver()->open();
-    info_udp_driver_->receiver()->bind();
 
-    info_udp_driver_->receiver()->asyncReceive(
-      std::bind(&RobosenseHwInterface::receive_info_packet_callback, this, std::placeholders::_1));
+    info_udp_socket_ = std::make_unique<connections::UdpSocket>(
+      connections::UdpSocket::Builder(
+        sensor_configuration_->host_ip, sensor_configuration_->gnss_port)
+        .limit_to_sender(sensor_configuration_->sensor_ip, sensor_configuration_->gnss_port)
+        .bind());
+
+    info_udp_socket_->subscribe(
+      [this](std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata &) {
+        this->receive_info_packet_callback(buffer);
+      });
   } catch (const std::exception & ex) {
     Status status = Status::UDP_CONNECTION_ERROR;
     logger_->error(
       util::to_string(status) + " " + sensor_configuration_->sensor_ip + "," +
-      std::to_string(sensor_configuration_->gnss_port));
+      std::to_string(sensor_configuration_->gnss_port) + ": " + ex.what());
     return status;
   }
 
