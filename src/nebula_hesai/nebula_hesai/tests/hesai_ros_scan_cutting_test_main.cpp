@@ -7,15 +7,10 @@
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/point_types.hpp>
 #include <nebula_core_decoders/angles.hpp>
-#include <pcl/impl/point_types.hpp>
 #include <rclcpp/executors/single_threaded_executor.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <gtest/gtest.h>
-#include <pcl/conversions.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/pcl_macros.h>
-#include <pcl/point_cloud.h>
 #include <rcutils/logging.h>
 
 #include <algorithm>
@@ -65,7 +60,7 @@ TEST_P(ScanCuttingTest, NoPointsOutsideFov)
   auto scan_callback = [&](uint64_t, uint64_t, nebula::drivers::NebulaPointCloudPtr pointcloud) {
     if (!pointcloud || skip_first-- > 0) return;
 
-    for (const auto & p : pointcloud->points) {
+    for (const auto & p : *pointcloud) {
       constexpr float epsilon = 1e-6f;
       EXPECT_TRUE(
         drivers::angle_is_between(fov_min_rad - epsilon, fov_max_rad + epsilon, p.azimuth))
@@ -94,7 +89,7 @@ TEST_P(ScanCuttingTest, PointsNearFovBoundaries)
     std::map<uint16_t, bool> has_points_near_start;
     std::map<uint16_t, bool> has_points_near_end;
 
-    for (const auto & p : pointcloud->points) {
+    for (const auto & p : *pointcloud) {
       if (has_points_near_start.find(p.channel) == has_points_near_start.end()) {
         has_points_near_start.emplace(p.channel, false);
       }
@@ -172,7 +167,7 @@ TEST_P(ScanCuttingTest, NoHighTimestampsAfterCut)
     double critical_range_end_deg = critical_range_start_deg + critical_range_end_offset;
     critical_range_end_deg = drivers::normalize_angle(critical_range_end_deg, 360);
 
-    for (const auto & p : pointcloud->points) {
+    for (const auto & p : *pointcloud) {
       double azimuth_deg = drivers::rad2deg(p.azimuth);
       azimuth_deg = drivers::normalize_angle(azimuth_deg, 360);
       bool in_critical_range = drivers::angle_is_between(
@@ -204,7 +199,7 @@ TEST_P(ScanCuttingTest, TimestampsNonNegative)
   auto scan_callback = [&](uint64_t, uint64_t, nebula::drivers::NebulaPointCloudPtr pointcloud) {
     if (!pointcloud || skip_first-- > 0) return;
 
-    for (const auto & p : pointcloud->points) {
+    for (const auto & p : *pointcloud) {
       // time_stamp is uint64_t, check it's not suspiciously large (indicating underflow)
       EXPECT_LT(p.time_stamp, UINT64_MAX / 2)
         << "Suspiciously large timestamp (possible underflow): " << p.time_stamp << " ns";
@@ -228,7 +223,7 @@ TEST_P(ScanCuttingTest, TimestampsWithin120ms)
   auto scan_callback = [&](uint64_t, uint64_t, nebula::drivers::NebulaPointCloudPtr pointcloud) {
     if (!pointcloud || skip_first-- > 0) return;
 
-    for (const auto & p : pointcloud->points) {
+    for (const auto & p : *pointcloud) {
       ASSERT_LE(p.time_stamp, MAX_ALLOWED_NS)
         << "Timestamp exceeds 120ms: " << (p.time_stamp / 1'000'000.0) << " ms";
     }
@@ -252,7 +247,7 @@ TEST_P(ScanCuttingTest, TimestampsSemiMonotonic)
 
     int64_t max_seen_timestamp = 0;
 
-    for (const auto & p : pointcloud->points) {
+    for (const auto & p : *pointcloud) {
       auto current_timestamp = static_cast<int64_t>(p.time_stamp);
       if (current_timestamp + JITTER_TOLERANCE_NS < max_seen_timestamp) {
         int64_t jump_backwards = max_seen_timestamp - current_timestamp;

@@ -13,8 +13,6 @@
   <buildtool_depend>autoware_cmake</buildtool_depend>
   <buildtool_depend>ros_environment</buildtool_depend>
   <buildtool_depend>ros_testing</buildtool_depend>
-  <build_depend>libpcl-all-dev</build_depend>
-  <build_export_depend>libpcl-all-dev</build_export_depend>
 
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
@@ -26,7 +24,6 @@
   <depend>nebula_robosense_common</depend>
   <depend>nebula_robosense_decoders</depend>
   <depend>nebula_robosense_hw_interfaces</depend>
-  <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>robosense_msgs</depend>

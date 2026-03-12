@@ -98,14 +98,14 @@ private:
   /// @brief Convert SRR520 detections to a pointcloud
   /// @param msg The SRR520 detection list msg
   /// @return Resulting detection pointcloud
-  pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Detection>::Ptr
+  drivers::PointCloud<nebula::drivers::continental_srr520::PointSRR520Detection>
   convert_to_pointcloud(const continental_msgs::msg::ContinentalSrr520DetectionList & msg);
 
   /// @brief Convert SRR520 objects to a pointcloud
   /// @param msg The SRR520 object list msg
   /// @return Resulting object pointcloud
-  pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Object>::Ptr
-  convert_to_pointcloud(const continental_msgs::msg::ContinentalSrr520ObjectList & msg);
+  drivers::PointCloud<nebula::drivers::continental_srr520::PointSRR520Object> convert_to_pointcloud(
+    const continental_msgs::msg::ContinentalSrr520ObjectList & msg);
 
   /// @brief Convert SRR520 detections to a standard RadarScan msg
   /// @param msg The SRR520 detection list msg

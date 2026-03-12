@@ -64,20 +64,17 @@ Vls128Decoder::Vls128Decoder(
 std::tuple<drivers::NebulaPointCloudPtr, double> Vls128Decoder::get_pointcloud()
 {
   double phase = angles::from_degrees(sensor_configuration_->scan_phase);
-  if (!scan_pc_->points.empty()) {
-    auto current_azimuth = scan_pc_->points.back().azimuth;
+  if (!scan_pc_->empty()) {
+    auto current_azimuth = scan_pc_->back().azimuth;
     auto phase_diff =
       static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
-    while (phase_diff < M_PI_2 && !scan_pc_->points.empty()) {
-      overflow_pc_->points.push_back(scan_pc_->points.back());
-      scan_pc_->points.pop_back();
-      current_azimuth = scan_pc_->points.back().azimuth;
+    while (phase_diff < M_PI_2 && !scan_pc_->empty()) {
+      overflow_pc_->push_back(scan_pc_->back());
+      scan_pc_->pop_back();
+      current_azimuth = scan_pc_->back().azimuth;
       phase_diff =
         static_cast<size_t>(angles::to_degrees(2 * M_PI + current_azimuth - phase)) % 360;
     }
-    overflow_pc_->width = overflow_pc_->points.size();
-    scan_pc_->width = scan_pc_->points.size();
-    scan_pc_->height = 1;
   }
   return std::make_tuple(scan_pc_, scan_timestamp_);
 }
@@ -95,29 +92,28 @@ void Vls128Decoder::reset_pointcloud(double time_stamp)
 
 void Vls128Decoder::reset_overflow(double time_stamp)
 {
-  if (overflow_pc_->points.size() == 0) {
+  if (overflow_pc_->size() == 0) {
     scan_timestamp_ = -1;
-    overflow_pc_->points.reserve(max_pts_);
+    overflow_pc_->reserve(max_pts_);
     return;
   }
 
   // Compute the absolute time stamp of the last point of the overflow pointcloud
-  const double last_overflow_time_stamp =
-    scan_timestamp_ + 1e-9 * overflow_pc_->points.back().time_stamp;
+  const double last_overflow_time_stamp = scan_timestamp_ + 1e-9 * overflow_pc_->back().time_stamp;
 
   // Detect cases where there is an unacceptable time difference between the last overflow point and
   // the first point of the next packet. In that case, there was probably a packet drop so it is
   // better to ignore the overflow pointcloud
   if (time_stamp - last_overflow_time_stamp > 0.05) {
     scan_timestamp_ = -1;
-    overflow_pc_->points.clear();
-    overflow_pc_->points.reserve(max_pts_);
+    overflow_pc_->clear();
+    overflow_pc_->reserve(max_pts_);
     return;
   }
 
   // Add the overflow buffer points
-  while (overflow_pc_->points.size() > 0) {
-    auto overflow_point = overflow_pc_->points.back();
+  while (overflow_pc_->size() > 0) {
+    auto overflow_point = overflow_pc_->back();
 
     // The overflow points had the stamps from the previous pointcloud. These need to be changed to
     // be relative to the overflow's packet timestamp
@@ -126,14 +122,14 @@ void Vls128Decoder::reset_overflow(double time_stamp)
     overflow_point.time_stamp =
       static_cast<uint32_t>(new_timestamp_seconds < 0.0 ? 0.0 : 1e9 * new_timestamp_seconds);
 
-    scan_pc_->points.emplace_back(overflow_point);
-    overflow_pc_->points.pop_back();
+    scan_pc_->emplace_back(overflow_point);
+    overflow_pc_->pop_back();
   }
 
   // When there is overflow, the timestamp becomes the overflow packets' one
   scan_timestamp_ = last_block_timestamp_;
-  overflow_pc_->points.clear();
-  overflow_pc_->points.reserve(max_pts_);
+  overflow_pc_->clear();
+  overflow_pc_->reserve(max_pts_);
 }
 
 void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_seconds)
@@ -338,7 +334,7 @@ void Vls128Decoder::unpack(const std::vector<uint8_t> & packet, double packet_se
               if (point_ts < 0) point_ts = 0;
               current_point.time_stamp = static_cast<uint32_t>(point_ts * 1e9);
               current_point.intensity = intensity;
-              scan_pc_->points.emplace_back(current_point);
+              scan_pc_->emplace_back(current_point);
             }  // 2nd scan area condition
           }  // distance condition
         }  // empty "else"

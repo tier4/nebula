@@ -15,12 +15,11 @@
 #pragma once
 
 #include "nebula_core_common/nebula_common.hpp"
+#include "nebula_core_common/point_cloud.hpp"
 
 #include <boost/endian/buffers.hpp>
 
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <ctime>
@@ -235,9 +234,14 @@ struct FollowUpPacket
 
 #pragma pack(pop)
 
-struct EIGEN_ALIGN16 PointSRR520Detection
+struct PointSRR520Detection
 {
-  PCL_ADD_POINT4D;
+  float x;
+  float y;
+  float z;
+  union {
+    float padding_;
+  };
   float range;
   float azimuth;
   float range_rate;
@@ -249,14 +253,40 @@ struct EIGEN_ALIGN16 PointSRR520Detection
   uint8_t pdh04;
   uint8_t pdh05;
   float snr;
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  static std::array<PointField, 14> fields()
+  {
+    return {
+      PointField{"x", offsetof(PointSRR520Detection, x), PointField::DataType::Float32, 1},
+      PointField{"y", offsetof(PointSRR520Detection, y), PointField::DataType::Float32, 1},
+      PointField{"z", offsetof(PointSRR520Detection, z), PointField::DataType::Float32, 1},
+      PointField{"range", offsetof(PointSRR520Detection, range), PointField::DataType::Float32, 1},
+      PointField{
+        "azimuth", offsetof(PointSRR520Detection, azimuth), PointField::DataType::Float32, 1},
+      PointField{
+        "range_rate", offsetof(PointSRR520Detection, range_rate), PointField::DataType::Float32, 1},
+      PointField{"rcs", offsetof(PointSRR520Detection, rcs), PointField::DataType::UInt8, 1},
+      PointField{"pdh00", offsetof(PointSRR520Detection, pdh00), PointField::DataType::UInt8, 1},
+      PointField{"pdh01", offsetof(PointSRR520Detection, pdh01), PointField::DataType::UInt8, 1},
+      PointField{"pdh02", offsetof(PointSRR520Detection, pdh02), PointField::DataType::UInt8, 1},
+      PointField{"pdh03", offsetof(PointSRR520Detection, pdh03), PointField::DataType::UInt8, 1},
+      PointField{"pdh04", offsetof(PointSRR520Detection, pdh04), PointField::DataType::UInt8, 1},
+      PointField{"pdh05", offsetof(PointSRR520Detection, pdh05), PointField::DataType::UInt8, 1},
+      PointField{"snr", offsetof(PointSRR520Detection, snr), PointField::DataType::Float32, 1},
+    };
+  }
 };
 
 // Note we only use a subset of the data since POINT_CLOUD_REGISTER_POINT_STRUCT has a limit in the
 // number of fields
-struct EIGEN_ALIGN16 PointSRR520Object
+struct PointSRR520Object
 {
-  PCL_ADD_POINT4D;
+  float x;
+  float y;
+  float z;
+  union {
+    float padding_;
+  };
   uint32_t id;
   uint16_t age;
   float orientation;
@@ -269,25 +299,42 @@ struct EIGEN_ALIGN16 PointSRR520Object
   float dynamics_abs_acc_y;
   float box_length;
   float box_width;
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  static std::array<PointField, 15> fields()
+  {
+    return {
+      PointField{"x", offsetof(PointSRR520Object, x), PointField::DataType::Float32, 1},
+      PointField{"y", offsetof(PointSRR520Object, y), PointField::DataType::Float32, 1},
+      PointField{"z", offsetof(PointSRR520Object, z), PointField::DataType::Float32, 1},
+      PointField{"id", offsetof(PointSRR520Object, id), PointField::DataType::UInt32, 1},
+      PointField{"age", offsetof(PointSRR520Object, age), PointField::DataType::UInt16, 1},
+      PointField{
+        "orientation", offsetof(PointSRR520Object, orientation), PointField::DataType::Float32, 1},
+      PointField{"rcs", offsetof(PointSRR520Object, rcs), PointField::DataType::Float32, 1},
+      PointField{"score", offsetof(PointSRR520Object, score), PointField::DataType::Float32, 1},
+      PointField{
+        "object_status", offsetof(PointSRR520Object, object_status), PointField::DataType::UInt8,
+        1},
+      PointField{
+        "dynamics_abs_vel_x", offsetof(PointSRR520Object, dynamics_abs_vel_x),
+        PointField::DataType::Float32, 1},
+      PointField{
+        "dynamics_abs_vel_y", offsetof(PointSRR520Object, dynamics_abs_vel_y),
+        PointField::DataType::Float32, 1},
+      PointField{
+        "dynamics_abs_acc_x", offsetof(PointSRR520Object, dynamics_abs_acc_x),
+        PointField::DataType::Float32, 1},
+      PointField{
+        "dynamics_abs_acc_y", offsetof(PointSRR520Object, dynamics_abs_acc_y),
+        PointField::DataType::Float32, 1},
+      PointField{
+        "box_length", offsetof(PointSRR520Object, box_length), PointField::DataType::Float32, 1},
+      PointField{
+        "box_width", offsetof(PointSRR520Object, box_width), PointField::DataType::Float32, 1},
+    };
+  }
 };
 
 }  // namespace continental_srr520
 }  // namespace drivers
 }  // namespace nebula
-
-POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::continental_srr520::PointSRR520Detection,
-  (float, x, x)(float, y, y)(float, z, z)(float, azimuth, azimuth)(float, range, range)(
-    float, range_rate, range_rate)(int8_t, rcs, rcs)(uint8_t, pdh00, pdh00)(uint8_t, pdh01, pdh01)(
-    uint8_t, pdh02,
-    pdh02)(uint16_t, pdh03, pdh03)(uint8_t, pdh04, pdh04)(uint8_t, pdh05, pdh05)(float, snr, snr))
-
-POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::continental_srr520::PointSRR520Object,
-  (float, x, x)(float, y, y)(float, z, z)(uint32_t, id, id)(uint16_t, age, age)(
-    float, orientation,
-    orientation)(float, rcs, rcs)(float, score, score)(uint8_t, object_status, object_status)(
-    float, dynamics_abs_vel_x, dynamics_abs_vel_x)(float, dynamics_abs_vel_y, dynamics_abs_vel_y)(
-    float, dynamics_abs_acc_x, dynamics_abs_acc_x)(float, dynamics_abs_acc_y, dynamics_abs_acc_y)(
-    float, box_length, box_length)(float, box_width, box_width))

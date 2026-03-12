@@ -15,12 +15,10 @@
 #pragma once
 
 #include "nebula_core_common/nebula_common.hpp"
+#include "nebula_core_common/point_cloud.hpp"
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/endian/buffers.hpp>
-
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
 
 #include <iomanip>
 #include <iostream>
@@ -706,9 +704,14 @@ inline float normalize_probability(T & raw_prob)
   return static_cast<float>(raw_prob) / raw_prob_norm;
 };
 
-struct EIGEN_ALIGN16 PointARS548Detection
+struct PointARS548Detection
 {
-  PCL_ADD_POINT4D;
+  float x;
+  float y;
+  float z;
+  union {
+    float padding_;
+  };
   float azimuth;
   float azimuth_std;
   float elevation;
@@ -724,14 +727,63 @@ struct EIGEN_ALIGN16 PointARS548Detection
   uint8_t multi_target_probability;
   uint16_t object_id;
   uint8_t ambiguity_flag;
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  static std::array<PointField, 18> fields()
+  {
+    return {
+      PointField{"x", offsetof(PointARS548Detection, x), PointField::DataType::Float32, 1},
+      PointField{"y", offsetof(PointARS548Detection, y), PointField::DataType::Float32, 1},
+      PointField{"z", offsetof(PointARS548Detection, z), PointField::DataType::Float32, 1},
+      PointField{
+        "azimuth", offsetof(PointARS548Detection, azimuth), PointField::DataType::Float32, 1},
+      PointField{
+        "azimuth_std", offsetof(PointARS548Detection, azimuth_std), PointField::DataType::Float32,
+        1},
+      PointField{
+        "elevation", offsetof(PointARS548Detection, elevation), PointField::DataType::Float32, 1},
+      PointField{
+        "elevation_std", offsetof(PointARS548Detection, elevation_std),
+        PointField::DataType::Float32, 1},
+      PointField{"range", offsetof(PointARS548Detection, range), PointField::DataType::Float32, 1},
+      PointField{
+        "range_std", offsetof(PointARS548Detection, range_std), PointField::DataType::Float32, 1},
+      PointField{
+        "range_rate", offsetof(PointARS548Detection, range_rate), PointField::DataType::Float32, 1},
+      PointField{
+        "range_rate_std", offsetof(PointARS548Detection, range_rate_std),
+        PointField::DataType::Float32, 1},
+      PointField{"rcs", offsetof(PointARS548Detection, rcs), PointField::DataType::Int8, 1},
+      PointField{
+        "measurement_id", offsetof(PointARS548Detection, measurement_id),
+        PointField::DataType::UInt16, 1},
+      PointField{
+        "positive_predictive_value", offsetof(PointARS548Detection, positive_predictive_value),
+        PointField::DataType::UInt8, 1},
+      PointField{
+        "classification", offsetof(PointARS548Detection, classification),
+        PointField::DataType::UInt8, 1},
+      PointField{
+        "multi_target_probability", offsetof(PointARS548Detection, multi_target_probability),
+        PointField::DataType::UInt8, 1},
+      PointField{
+        "object_id", offsetof(PointARS548Detection, object_id), PointField::DataType::UInt16, 1},
+      PointField{
+        "ambiguity_flag", offsetof(PointARS548Detection, ambiguity_flag),
+        PointField::DataType::UInt8, 1},
+    };
+  }
 };
 
 // Note we only use a subset of the data since POINT_CLOUD_REGISTER_POINT_STRUCT has a limit in the
 // number of fields
-struct EIGEN_ALIGN16 PointARS548Object
+struct PointARS548Object
 {
-  PCL_ADD_POINT4D;
+  float x;
+  float y;
+  float z;
+  union {
+    float padding_;
+  };
   uint32_t id;
   uint16_t age;
   uint8_t status_measurement;
@@ -749,36 +801,65 @@ struct EIGEN_ALIGN16 PointARS548Object
   float shape_length_edge_mean;
   float shape_width_edge_mean;
   float dynamics_orientation_rate_mean;
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+  static std::array<PointField, 20> fields()
+  {
+    return {
+      PointField{"x", offsetof(PointARS548Object, x), PointField::DataType::Float32, 1},
+      PointField{"y", offsetof(PointARS548Object, y), PointField::DataType::Float32, 1},
+      PointField{"z", offsetof(PointARS548Object, z), PointField::DataType::Float32, 1},
+      PointField{"id", offsetof(PointARS548Object, id), PointField::DataType::UInt32, 1},
+      PointField{"age", offsetof(PointARS548Object, age), PointField::DataType::UInt16, 1},
+      PointField{
+        "status_measurement", offsetof(PointARS548Object, status_measurement),
+        PointField::DataType::UInt8, 1},
+      PointField{
+        "status_movement", offsetof(PointARS548Object, status_movement),
+        PointField::DataType::UInt8, 1},
+      PointField{
+        "position_reference", offsetof(PointARS548Object, position_reference),
+        PointField::DataType::UInt8, 1},
+      PointField{
+        "classification_car", offsetof(PointARS548Object, classification_car),
+        PointField::DataType::UInt8, 1},
+      PointField{
+        "classification_truck", offsetof(PointARS548Object, classification_truck),
+        PointField::DataType::UInt8, 1},
+      PointField{
+        "classification_motorcycle", offsetof(PointARS548Object, classification_motorcycle),
+        PointField::DataType::UInt8, 1},
+      PointField{
+        "classification_bicycle", offsetof(PointARS548Object, classification_bicycle),
+        PointField::DataType::UInt8, 1},
+      PointField{
+        "classification_pedestrian", offsetof(PointARS548Object, classification_pedestrian),
+        PointField::DataType::UInt8, 1},
+      PointField{
+        "dynamics_abs_vel_x", offsetof(PointARS548Object, dynamics_abs_vel_x),
+        PointField::DataType::Float32, 1},
+      PointField{
+        "dynamics_abs_vel_y", offsetof(PointARS548Object, dynamics_abs_vel_y),
+        PointField::DataType::Float32, 1},
+      PointField{
+        "dynamics_rel_vel_x", offsetof(PointARS548Object, dynamics_rel_vel_x),
+        PointField::DataType::Float32, 1},
+      PointField{
+        "dynamics_rel_vel_y", offsetof(PointARS548Object, dynamics_rel_vel_y),
+        PointField::DataType::Float32, 1},
+      PointField{
+        "shape_length_edge_mean", offsetof(PointARS548Object, shape_length_edge_mean),
+        PointField::DataType::Float32, 1},
+      PointField{
+        "shape_width_edge_mean", offsetof(PointARS548Object, shape_width_edge_mean),
+        PointField::DataType::Float32, 1},
+      PointField{
+        "dynamics_orientation_rate_mean",
+        offsetof(PointARS548Object, dynamics_orientation_rate_mean), PointField::DataType::Float32,
+        1},
+    };
+  }
 };
 
 }  // namespace continental_ars548
 }  // namespace drivers
 }  // namespace nebula
-
-POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::continental_ars548::PointARS548Detection,
-  (float, x, x)(float, y, y)(float, z, z)(float, azimuth, azimuth)(float, azimuth_std, azimuth_std)(
-    float, elevation, elevation)(float, elevation_std, elevation_std)(float, range, range)(
-    float, range_std, range_std)(int8_t, rcs, rcs)(uint16_t, measurement_id, measurement_id)(
-    uint8_t, positive_predictive_value,
-    positive_predictive_value)(uint8_t, classification, classification)(
-    uint8_t, multi_target_probability, multi_target_probability)(uint16_t, object_id, object_id)(
-    uint8_t, ambiguity_flag, ambiguity_flag))
-
-// Note: we can only use up to 20 fields
-POINT_CLOUD_REGISTER_POINT_STRUCT(
-  nebula::drivers::continental_ars548::PointARS548Object,
-  (float, x, x)(float, y, y)(float, z, z)(uint32_t, id, id)(uint16_t, age, age)(
-    uint8_t, status_measurement, status_measurement)(uint8_t, status_movement, status_movement)(
-    uint8_t, position_reference,
-    position_reference)(uint8_t, classification_car, classification_car)(
-    uint8_t, classification_truck,
-    classification_truck)(uint8_t, classification_motorcycle, classification_motorcycle)(
-    uint8_t, classification_bicycle,
-    classification_bicycle)(uint8_t, classification_pedestrian, classification_pedestrian)(
-    float, dynamics_abs_vel_x, dynamics_abs_vel_x)(float, dynamics_abs_vel_y, dynamics_abs_vel_y)(
-    float, dynamics_rel_vel_x, dynamics_rel_vel_x)(float, dynamics_rel_vel_y, dynamics_rel_vel_y)(
-    float, shape_length_edge_mean,
-    shape_length_edge_mean)(float, shape_width_edge_mean, shape_width_edge_mean)(
-    float, dynamics_orientation_rate_mean, dynamics_orientation_rate_mean))

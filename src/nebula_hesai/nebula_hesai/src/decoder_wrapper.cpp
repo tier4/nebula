@@ -3,6 +3,7 @@
 #include "nebula_hesai/decoder_wrapper.hpp"
 
 #include "nebula_core_ros/agnocast_wrapper/nebula_agnocast_wrapper.hpp"
+#include "nebula_core_ros/point_cloud_conversions.hpp"
 #include "nebula_core_ros/rclcpp_logger.hpp"
 #include "nebula_hesai/diagnostics/functional_safety_advanced.hpp"
 #include "nebula_hesai/diagnostics/functional_safety_basic.hpp"
@@ -18,8 +19,6 @@
 #include <autoware_internal_debug_msgs/msg/float64_stamped.hpp>
 #include <autoware_internal_debug_msgs/msg/int64_stamped.hpp>
 #include <sensor_msgs/image_encodings.hpp>
-
-#include <pcl_conversions/pcl_conversions.h>
 
 #include <algorithm>
 #include <memory>
@@ -177,7 +176,7 @@ void HesaiDecoderWrapper::on_pointcloud_decoded(
 
   if (NEBULA_HAS_ANY_SUBSCRIPTIONS(nebula_points_pub_)) {
     auto ros_pc_msg_ptr = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(nebula_points_pub_);
-    pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
+    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(*pointcloud);
     ros_pc_msg_ptr->header.stamp = cloud_stamp;
     publish_cloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
   }
@@ -185,7 +184,7 @@ void HesaiDecoderWrapper::on_pointcloud_decoded(
     const auto autoware_cloud_xyzi =
       nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(pointcloud);
     auto ros_pc_msg_ptr = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(aw_points_base_pub_);
-    pcl::toROSMsg(*autoware_cloud_xyzi, *ros_pc_msg_ptr);
+    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(*autoware_cloud_xyzi);
     ros_pc_msg_ptr->header.stamp = cloud_stamp;
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
   }
@@ -193,7 +192,7 @@ void HesaiDecoderWrapper::on_pointcloud_decoded(
     const auto autoware_ex_cloud =
       nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(pointcloud, timestamp_s);
     auto ros_pc_msg_ptr = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(aw_points_ex_pub_);
-    pcl::toROSMsg(*autoware_ex_cloud, *ros_pc_msg_ptr);
+    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(*autoware_ex_cloud);
     ros_pc_msg_ptr->header.stamp = cloud_stamp;
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
   }

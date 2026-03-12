@@ -21,8 +21,7 @@ target_link_libraries(
          nebula_robosense_decoders::nebula_robosense_decoders
          nebula_robosense_decoders::nebula_robosense_decoders_info
          nebula_robosense_hw_interfaces::nebula_robosense_hw_interfaces
-         nebula_core_ros::nebula_core_ros
-         pcl_common)
+         nebula_core_ros::nebula_core_ros)
 
 ament_target_dependencies(
   robosense_ros_wrapper
@@ -31,8 +30,7 @@ ament_target_dependencies(
   robosense_msgs
   nebula_msgs
   rclcpp_components
-  sensor_msgs
-  pcl_conversions)
+  sensor_msgs)
 
 rclcpp_components_register_node(
   robosense_ros_wrapper PLUGIN "RobosenseRosWrapper" EXECUTABLE
@@ -50,7 +48,6 @@ ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_robosense_ros_wrapper)
 
 ament_export_dependencies(
-  PCL
   diagnostic_msgs
   diagnostic_updater
   nebula_core_common
@@ -64,7 +61,6 @@ ament_export_dependencies(
   rclcpp_components
   robosense_msgs
   sensor_msgs
-  pcl_conversions
   yaml-cpp)
 
 ament_package()

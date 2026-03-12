@@ -5,21 +5,17 @@
 #include "hesai_common.hpp"
 #include "hesai_ros_decoder_test.hpp"
 
-#include <pcl/impl/point_types.hpp>
 #include <rclcpp/executors/single_threaded_executor.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <gtest/gtest.h>
-#include <pcl/common/io.h>
-#include <pcl/conversions.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/point_cloud.h>
 
 #include <cstdlib>
 #include <ctime>
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace nebula::test
@@ -48,11 +44,10 @@ const nebula::ros::HesaiRosDecoderTestParams TEST_CONFIGS[9] = {
 // Compares geometrical output of decoder against pre-recorded reference pointcloud.
 TEST_P(DecoderTest, TestPcd)
 {
-  pcl::PCDReader pcd_reader;
   rcpputils::fs::path bag_dir(hesai_driver_->params_.bag_path);
   rcpputils::fs::path pcd_dir = bag_dir.parent_path();
 
-  auto ref_pointcloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
+  auto ref_pointcloud = std::make_shared<nebula::drivers::PointCloud<nebula::drivers::PointXYZ>>();
   int check_cnt = 0;
 
   auto scan_callback = [&](
@@ -66,12 +61,13 @@ TEST_P(DecoderTest, TestPcd)
     RCLCPP_DEBUG_STREAM(*logger_, target_pcd_path);
     if (target_pcd_path.exists()) {
       RCLCPP_DEBUG_STREAM(*logger_, "exists: " << target_pcd_path);
-      auto rt = pcd_reader.read(target_pcd_path.string(), *ref_pointcloud);
-      RCLCPP_DEBUG_STREAM(*logger_, rt << " loaded: " << target_pcd_path);
-      check_pcds(pointcloud, ref_pointcloud);
+      auto loaded_cloud =
+        nebula::drivers::io::PcdReader::read<nebula::drivers::PointXYZ>(target_pcd_path.string());
+      *ref_pointcloud = std::move(loaded_cloud);
+      RCLCPP_DEBUG_STREAM(*logger_, "loaded: " << target_pcd_path);
+      check_pcds(*pointcloud, *ref_pointcloud);
       check_cnt++;
-      // ref_pointcloud.reset(new nebula::drivers::NebulaPointCloud);
-      ref_pointcloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
+      ref_pointcloud = std::make_shared<nebula::drivers::PointCloud<nebula::drivers::PointXYZ>>();
     }
   };
 
