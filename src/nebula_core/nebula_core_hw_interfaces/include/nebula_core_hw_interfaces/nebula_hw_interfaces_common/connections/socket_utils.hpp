@@ -22,12 +22,12 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <array>
 #include <cstdint>
 #include <exception>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <variant>
 
 namespace nebula::drivers::connections
@@ -43,7 +43,7 @@ public:
 
   explicit SocketError(const std::string_view & msg) : what_(msg) {}
 
-  const char * what() const noexcept override { return what_.c_str(); }
+  [[nodiscard]] const char * what() const noexcept override { return what_.c_str(); }
 
 private:
   std::string what_;
@@ -64,29 +64,29 @@ public:
  */
 class SockFd
 {
-  static const int uninitialized = -1;
+  static const int g_uninitialized = -1;
   int sock_fd_;
 
 public:
-  SockFd() : sock_fd_{uninitialized} {}
+  SockFd() : sock_fd_{g_uninitialized} {}
   explicit SockFd(int sock_fd) : sock_fd_{sock_fd} {}
-  SockFd(SockFd && other) noexcept : sock_fd_{other.sock_fd_} { other.sock_fd_ = uninitialized; }
+  SockFd(SockFd && other) noexcept : sock_fd_{other.sock_fd_} { other.sock_fd_ = g_uninitialized; }
 
   SockFd(const SockFd &) = delete;
   SockFd & operator=(const SockFd &) = delete;
   SockFd & operator=(SockFd && other) noexcept
   {
     if (this != &other) {
-      if (sock_fd_ != uninitialized) ::close(sock_fd_);
+      if (sock_fd_ != g_uninitialized) ::close(sock_fd_);
       sock_fd_ = other.sock_fd_;
-      other.sock_fd_ = uninitialized;
+      other.sock_fd_ = g_uninitialized;
     }
     return *this;
   };
 
   ~SockFd()
   {
-    if (sock_fd_ == uninitialized) return;
+    if (sock_fd_ == g_uninitialized) return;
     ::close(sock_fd_);
   }
 
@@ -152,11 +152,11 @@ inline util::expected<in_addr, UsageError> parse_ip(const std::string & ip)
  */
 inline util::expected<std::string, SocketError> to_string(const in_addr & addr)
 {
-  char buf[INET_ADDRSTRLEN];
-  if (inet_ntop(AF_INET, &addr, buf, INET_ADDRSTRLEN) == nullptr) {
+  std::array<char, INET_ADDRSTRLEN> buf{0};
+  if (inet_ntop(AF_INET, &addr, buf.data(), INET_ADDRSTRLEN) == nullptr) {
     return SocketError(errno);
   }
-  return std::string(buf);
+  return std::string(buf.data());
 }
 
 /**
@@ -170,7 +170,7 @@ inline util::expected<std::string, SocketError> to_string(const in_addr & addr)
 inline util::expected<bool, int> is_socket_ready(int fd, int timeout_ms, int events = POLLIN)
 {
   pollfd pfd{fd, static_cast<std::int16_t>(events), 0};
-  int status;
+  int status{-1};
   do {
     status = poll(&pfd, 1, timeout_ms);
   } while (status == -1 && errno == EINTR);
