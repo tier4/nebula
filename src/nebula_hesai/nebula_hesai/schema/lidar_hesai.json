@@ -14,7 +14,8 @@
         "PandarQT64",
         "PandarQT128",
         "Pandar128E4X",
-        "PandarAT128"
+        "PandarAT128",
+        "PandarFT120"
       ]
     },
     "calibration_file": {

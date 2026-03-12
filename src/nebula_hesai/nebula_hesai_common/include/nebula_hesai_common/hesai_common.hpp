@@ -591,6 +591,82 @@ struct HesaiCorrection : public HesaiCalibrationConfigurationBase
   }
 };
 
+/// @brief struct for Hesai correction configuration for solid state sensors (for FT120)
+struct HesaiSolidStateCalibration : public HesaiCalibrationConfigurationBase
+{
+public:
+  std::vector<int32_t> azimuth_adjust;
+  std::vector<int32_t> elevation_adjust;
+
+  uint32_t col_count;
+  uint32_t row_count;
+  uint32_t resolution;
+
+  nebula::Status load_from_bytes(const std::vector<uint8_t> & buf) override
+  {
+    // get the matrix info from buffer
+    auto raw_ptr = buf.data();
+    col_count = raw_ptr[6];
+    row_count = raw_ptr[7];
+    resolution = raw_ptr[8];
+
+    const auto count{col_count * row_count};
+    const auto count_bytes{4 * count};
+
+    auto ref = &(buf[9]);
+
+    azimuth_adjust.resize(count);
+    std::memcpy(azimuth_adjust.data(), ref, count_bytes);
+
+    elevation_adjust.resize(count);
+    std::memcpy(elevation_adjust.data(), ref + count_bytes, count_bytes);
+
+    return Status::OK;
+  }
+
+  inline nebula::Status load_from_file(const std::string & calibration_file) override
+  {
+    std::ifstream stream(calibration_file, std::ios::in | std::ios::binary);
+    std::vector<uint8_t> contents(
+      (std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+
+    load_from_bytes(contents);
+
+    return Status::OK;
+  }
+
+  // from HesaiCorrection
+  nebula::Status save_to_file_from_bytes(
+    const std::string & calibration_file, const std::vector<uint8_t> & buf) override
+  {
+    std::ofstream ofs(calibration_file, std::ios::trunc | std::ios::binary);
+    if (!ofs) {
+      std::cerr << "Could not create file: " << calibration_file << "\n";
+      return Status::CANNOT_SAVE_FILE;
+    }
+    bool sop_received = false;
+    for (const auto & byte : buf) {
+      if (!sop_received) {
+        if (byte == 0xEE) {
+          sop_received = true;
+        }
+      }
+      if (sop_received) {
+        ofs << byte;
+      }
+    }
+    ofs.close();
+    if (sop_received) return Status::OK;
+    return Status::INVALID_CALIBRATION_FILE;
+  }
+
+  [[nodiscard]] std::tuple<float, float> get_fov_padding() const override
+  {
+    // For FT120 should be enough
+    return {-0.1, 0.1};
+  }
+};
+
 /*
 <option value="0">Last Return</option>
 <option value="1">Strongest Return</option>
@@ -623,6 +699,7 @@ inline ReturnMode return_mode_from_string_hesai(
     case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::HESAI_PANDARFT120:
       if (return_mode == "Last") return ReturnMode::LAST;
       if (return_mode == "Strongest") return ReturnMode::STRONGEST;
       if (return_mode == "Dual" || return_mode == "LastStrongest")
@@ -665,6 +742,7 @@ inline ReturnMode return_mode_from_int_hesai(
     case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::HESAI_PANDARFT120:
       if (return_mode == 0) return ReturnMode::LAST;
       if (return_mode == 1) return ReturnMode::STRONGEST;
       if (return_mode == 2) return ReturnMode::DUAL_LAST_STRONGEST;
@@ -705,6 +783,7 @@ inline int int_from_return_mode_hesai(
     case SensorModel::HESAI_PANDAR128_E3X:
     case SensorModel::HESAI_PANDAR128_E4X:
     case SensorModel::HESAI_PANDARQT128:
+    case SensorModel::HESAI_PANDARFT120:
       if (return_mode == ReturnMode::LAST) return 0;
       if (return_mode == ReturnMode::STRONGEST) return 1;
       if (return_mode == ReturnMode::DUAL || return_mode == ReturnMode::DUAL_LAST_STRONGEST)
