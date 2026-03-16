@@ -36,7 +36,7 @@ class AngleCorrectorCalibrationBasedSolidState
 : public AngleCorrector<HesaiSolidStateCalibration, ColumnN>
 {
 private:
-  std::array<std::array<CorrectedAngleData, RowN>, ColumnN> correctedAngleData;
+  std::array<std::array<CorrectedAngleData, RowN>, ColumnN> corrected_angle_data;
 
 public:
   explicit AngleCorrectorCalibrationBasedSolidState(
@@ -80,23 +80,23 @@ public:
 
         ++calib_i;
 
-        auto C = CorrectedAngleData();
+        auto pixel_angle_data = CorrectedAngleData();
 
-        C.azimuth_rad = static_cast<float>(azi);
-        C.elevation_rad = static_cast<float>(ele);
-        C.sin_azimuth = static_cast<float>(sin(azi));
-        C.cos_azimuth = static_cast<float>(cos(azi));
-        C.sin_elevation = static_cast<float>(sin(ele));
-        C.cos_elevation = static_cast<float>(cos(ele));
+        pixel_angle_data.azimuth_rad = static_cast<float>(azi);
+        pixel_angle_data.elevation_rad = static_cast<float>(ele);
+        pixel_angle_data.sin_azimuth = static_cast<float>(sin(azi));
+        pixel_angle_data.cos_azimuth = static_cast<float>(cos(azi));
+        pixel_angle_data.sin_elevation = static_cast<float>(sin(ele));
+        pixel_angle_data.cos_elevation = static_cast<float>(cos(ele));
 
-        correctedAngleData[j][i] = C;
+        corrected_angle_data[j][i] = pixel_angle_data;
       }
     }
   }
 
   [[nodiscard]] CorrectedAngleData get_corrected_angle_data(uint32_t row_id, uint32_t col_id) const
   {
-    return correctedAngleData[col_id][row_id];
+    return corrected_angle_data[col_id][row_id];
   }
 
   // this base method is not used for solid state sensor, as all angles came from
