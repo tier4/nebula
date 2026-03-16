@@ -488,7 +488,7 @@ private:
     // If the blockage mask plugin is not present, we can return early if distance checks fail
     const bool filters_can_return_early = !blockage_mask_plugin_;
 
-    const unsigned int return_idx = packet_.header.return_num;
+    const unsigned int return_idx = packet_.header.first_block_return;
 
     const auto return_type = sensor_.get_return_type(
       static_cast<hesai_packet::return_mode::ReturnMode>(packet_.tail.return_mode), return_idx,

@@ -100,7 +100,7 @@ public:
   {
     // we could get info directly from packet contents:
     // - return_mode is a copy of PandarFT120.tail.return_mode
-    // - return_idx is a copy of PandarFT120.header.return_num
+    // - return_idx is a copy of PandarFT120.header.first_block_return
 
     (void)return_units;
 
