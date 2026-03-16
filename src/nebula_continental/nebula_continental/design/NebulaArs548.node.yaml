@@ -10,7 +10,6 @@ launch:
   plugin: nebula::ros::ContinentalARS548RosWrapper
   executable: continental_ars548_ros_wrapper_node
   node_output: screen
-  use_container: false
 
 # interfaces
 subscribers:
