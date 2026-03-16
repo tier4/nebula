@@ -704,7 +704,7 @@ inline float normalize_probability(T & raw_prob)
   return static_cast<float>(raw_prob) / raw_prob_norm;
 };
 
-struct PointARS548Detection
+struct alignas(16) PointARS548Detection
 {
   float x;
   float y;
@@ -776,7 +776,7 @@ struct PointARS548Detection
 
 // Note we only use a subset of the data since POINT_CLOUD_REGISTER_POINT_STRUCT has a limit in the
 // number of fields
-struct PointARS548Object
+struct alignas(16) PointARS548Object
 {
   float x;
   float y;

@@ -23,7 +23,7 @@
 namespace nebula::drivers
 {
 
-struct PointXYZ
+struct alignas(16) PointXYZ
 {
   float x;
   float y;
@@ -39,7 +39,7 @@ struct PointXYZ
   };
 };
 
-struct PointXYZIR
+struct alignas(16) PointXYZIR
 {
   float x;
   float y;
@@ -67,7 +67,7 @@ struct PointXYZIR
  * This point type is not using PCL_ADD_POINT4D to avoid the addition of a 32-bit dummy word.
  * The fields are ordered to meet the SSE alignment.
  */
-struct PointXYZIRCAEDT
+struct alignas(16) PointXYZIRCAEDT
 {
   float x;
   float y;
@@ -102,7 +102,7 @@ struct PointXYZIRCAEDT
   };
 };
 
-struct PointXYZIRADT
+struct alignas(16) PointXYZIRADT
 {
   float x;
   float y;

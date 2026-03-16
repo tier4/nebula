@@ -234,7 +234,7 @@ struct FollowUpPacket
 
 #pragma pack(pop)
 
-struct PointSRR520Detection
+struct alignas(16) PointSRR520Detection
 {
   float x;
   float y;
@@ -279,7 +279,7 @@ struct PointSRR520Detection
 
 // Note we only use a subset of the data since POINT_CLOUD_REGISTER_POINT_STRUCT has a limit in the
 // number of fields
-struct PointSRR520Object
+struct alignas(16) PointSRR520Object
 {
   float x;
   float y;
