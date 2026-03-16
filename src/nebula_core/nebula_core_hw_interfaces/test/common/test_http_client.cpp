@@ -69,7 +69,17 @@ public:
           std::string request(buffer, valread);
           std::string response;
           if (request.find("GET") == 0) {
-            if (request.find("/chunked") != std::string::npos) {
+            if (request.find("/strict") != std::string::npos) {
+              const bool has_header_terminator = request.find("\r\n\r\n") != std::string::npos;
+              const bool has_connection_close =
+                request.find("Connection: close") != std::string::npos;
+              if (!has_header_terminator || !has_connection_close) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                ::close(new_socket);
+                continue;
+              }
+              response = "HTTP/1.1 200 OK\r\nContent-Length: 9\r\n\r\nStrict-OK";
+            } else if (request.find("/chunked") != std::string::npos) {
               response = "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n";
               response += "5\r\nHello\r\n";
               response += "1\r\n \r\n";
@@ -242,6 +252,14 @@ TEST(TestHttpClient, TestEndpointNormalization)
   // Should hit fallback Hello World
   auto response = client.get("normalize");
   EXPECT_EQ(response, "Hello, World!");
+}
+
+TEST(TestHttpClient, TestGetRequestFraming)
+{
+  HttpServer server(g_server_port);
+  HttpClient client(g_localhost_ip, g_server_port);
+  auto response = client.get("/strict", 500);
+  EXPECT_EQ(response, "Strict-OK");
 }
 
 TEST(TestHttpClient, TestServerError)

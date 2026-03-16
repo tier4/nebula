@@ -19,11 +19,8 @@
 
 #include <algorithm>
 #include <cctype>
-#include <condition_variable>
-#include <iostream>
-#include <memory>
-#include <mutex>
-#include <sstream>
+#include <chrono>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -32,8 +29,7 @@ namespace nebula::drivers::connections
 /**
  * @brief A simple HTTP/1.1 client for GET and POST requests.
  *
- * @note This client supports responses with Content-Length header and
- *       Transfer-Encoding: chunked.
+ * @note This client currently supports responses with Content-Length only.
  */
 class HttpClient
 {
@@ -47,12 +43,14 @@ public:
    * @brief Perform an HTTP GET request.
    *
    * @param endpoint The resource path (e.g. "/api/v1/status").
-   * @param timeout_ms Timeout associated with request. Default is 1000ms.
+   * @param timeout_ms Timeout associated with request. Default is 500ms.
    * @return The response body as a string.
    */
-  std::string get(const std::string & endpoint, int timeout_ms = 1000)
+  std::string get(const std::string & endpoint, int timeout_ms = 500)
   {
-    return request("GET", endpoint, "", timeout_ms);
+    std::string req = build_http_request_boilerplate("GET", endpoint, host_ip_);
+    req += "Connection: close\r\n\r\n";
+    return request(req, timeout_ms);
   }
 
   /**
@@ -60,216 +58,161 @@ public:
    *
    * @param endpoint The resource path.
    * @param body The body content to send.
-   * @param timeout_ms Timeout associated with request. Default is 1000ms.
+   * @param timeout_ms Timeout associated with request. Default is 500ms.
    * @return The response body as a string.
    */
-  std::string post(const std::string & endpoint, const std::string & body, int timeout_ms = 1000)
+  std::string post(const std::string & endpoint, const std::string & body, int timeout_ms = 500)
   {
-    return request("POST", endpoint, body, timeout_ms);
+    std::string req = build_http_request_boilerplate("POST", endpoint, host_ip_);
+    req += "Content-Type: application/x-www-form-urlencoded\r\n";
+    req += "Content-Length: " + std::to_string(body.length()) + "\r\n";
+    req += "Connection: close\r\n\r\n";
+    req += body;
+    return request(req, timeout_ms);
   }
 
   /**
    * @brief Perform a raw HTTP request.
-   *        Supports Content-Length and Transfer-Encoding: chunked.
+   *        Supports Content-Length responses.
    *
-   * @param method HTTP method (GET, POST, etc.).
-   * @param endpoint The resource path.
-   * @param body The body content to send.
+   * @param req A complete, well-formed HTTP request string (including headers and body).
    * @param timeout_ms Timeout associated with request.
    * @return The response body as a string, decoded if chunked.
    */
-  std::string request(
-    const std::string & method, std::string endpoint, const std::string & body, int timeout_ms)
+  std::string request(const std::string & req, int timeout_ms)
   {
-    if (endpoint.empty() || endpoint[0] != '/') {
-      endpoint = "/" + endpoint;
+    if (timeout_ms < 0) {
+      throw UsageError("timeout_ms must be non-negative");
     }
 
-    std::unique_ptr<TcpSocket> socket_ptr;
-    try {
-      socket_ptr = std::make_unique<TcpSocket>(TcpSocket::Builder(host_endpoint_).connect());
-    } catch (const SocketError &) {
-      return "";
-    }
-    auto & socket = *socket_ptr;
+    TcpSocket socket =
+      timeout_ms > 0 ? TcpSocket::Builder(host_endpoint_).set_connect_timeout(timeout_ms).connect()
+                     : TcpSocket::Builder(host_endpoint_).connect();
 
-    std::stringstream request_ss;
-    request_ss << method << " " << endpoint << " HTTP/1.1\r\n";
-    request_ss << "Host: " << host_ip_ << "\r\n";
-    if (method == "POST") {
-      request_ss << "Content-Type: application/x-www-form-urlencoded\r\n";
-      request_ss << "Content-Length: " << body.length() << "\r\n";
-    }
-    request_ss << "Connection: close\r\n\r\n";
-    if (method == "POST") {
-      request_ss << body;
-    }
+    std::vector<uint8_t> req_bytes(req.begin(), req.end());
+    socket.send(req_bytes);
 
     std::string response_str;
-    // Reserve some memory to avoid frequent reallocations
     response_str.reserve(4096);
 
-    std::mutex mtx;
-    std::condition_variable cv;
-    bool done = false;
-    size_t content_length = 0;
-    bool header_parsed = false;
-    bool is_chunked = false;
-    size_t parse_pos = 0;
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
 
-    socket.subscribe([&](const TcpSocket::receive_result_t & result) {
-      std::lock_guard<std::mutex> lock(mtx);
-      if (!result.has_value()) {
-        done = true;
-        cv.notify_one();
-        return;
+    bool header_parsed = false;
+    size_t content_length = 0;
+    size_t body_pos = std::string::npos;
+
+    while (true) {
+      const auto now = std::chrono::steady_clock::now();
+      if (now >= deadline) {
+        throw SocketError("HTTP receive timeout");
       }
 
-      const auto data = result.value();
-      const size_t bytes = data.size();
+      const auto remaining_duration = deadline - now;
+      auto remaining = std::chrono::duration_cast<std::chrono::milliseconds>(remaining_duration);
+      if (remaining.count() <= 0) {
+        remaining = std::chrono::milliseconds(1);
+      }
+      auto chunk = socket.receive(remaining);
+      if (chunk.empty()) {
+        throw SocketError("HTTP receive timeout");
+      }
 
-      response_str.append(reinterpret_cast<const char *>(data.data()), bytes);
+      response_str.append(reinterpret_cast<const char *>(chunk.data()), chunk.size());
 
       if (!header_parsed) {
-        // Search for double CRLF to find end of headers
         auto header_end = response_str.find("\r\n\r\n");
         if (header_end != std::string::npos) {
           header_parsed = true;
-
-          // Parse headers (Case-insensitive)
-          std::string headers = response_str.substr(0, header_end);
-          std::transform(headers.begin(), headers.end(), headers.begin(), [](unsigned char c) {
-            return std::tolower(c);
-          });
-
-          if (headers.find("transfer-encoding: chunked") != std::string::npos) {
-            is_chunked = true;
-          } else {
-            auto cl_key = headers.find("content-length:");
-            if (cl_key != std::string::npos) {
-              // Robust parsing: find first digit
-              auto val_start = headers.find_first_of("0123456789", cl_key);
-              auto val_end = headers.find("\r\n", cl_key);
-              if (val_start != std::string::npos && val_start < val_end) {
-                try {
-                  content_length = std::stoul(headers.substr(val_start, val_end - val_start));
-                } catch (...) {
-                  content_length = 0;
-                }
-              }
-            }
-          }
-          // Initialize parse_pos to start of body
-          parse_pos = header_end + 4;
+          body_pos = header_end;
+          parse_headers(response_str, body_pos, content_length);
         }
       }
 
-      if (header_parsed) {
-        if (is_chunked) {
-          // Stateful chunk parsing loop
-          while (true) {
-            auto crlf = response_str.find("\r\n", parse_pos);
-            if (crlf == std::string::npos) break;  // Need more data for size line
-
-            size_t chunk_size = 0;
-            try {
-              chunk_size =
-                std::stoul(response_str.substr(parse_pos, crlf - parse_pos), nullptr, 16);
-            } catch (...) {
-              break;
-            }
-
-            size_t next_chunk_start = crlf + 2 + chunk_size + 2;  // size_line + CRLF + data + CRLF
-
-            // Check for overflow or massive chunk size
-            if (
-              chunk_size > response_str.max_size() || next_chunk_start < parse_pos ||
-              next_chunk_start < chunk_size) {
-              done = true;  // Error state, stop waiting
-              cv.notify_one();
-              break;
-            }
-
-            if (response_str.length() >= next_chunk_start) {
-              if (chunk_size == 0) {
-                // 0-sized chunk indicates end of stream
-                done = true;
-                cv.notify_one();
-                break;
-              }
-              // Move to next chunk
-              parse_pos = next_chunk_start;
-            } else {
-              break;  // Need more data for content
-            }
-          }
-        } else {
-          // Content-Length mode
-          if (content_length > 0) {
-            if (response_str.length() >= parse_pos + content_length) {
-              done = true;
-              cv.notify_one();
-            }
-          }
-          // If content_length == 0, we just wait for connection close (handled by bytes==0 check)
-        }
+      if (!header_parsed) {
+        continue;
       }
-    });
 
-    std::string req_str = request_ss.str();
-    std::vector<uint8_t> req_bytes(req_str.begin(), req_str.end());
-    try {
-      socket.send(req_bytes);
-    } catch (const SocketError &) {
-      socket.unsubscribe();
-      return "";
-    }
-
-    std::unique_lock<std::mutex> lock(mtx);
-    // Wait for done OR timeout
-    cv.wait_for(lock, std::chrono::milliseconds(timeout_ms), [&] { return done; });
-    lock.unlock();
-
-    // Ensure receiver thread is stopped before locals go out of scope
-    socket.unsubscribe();
-
-    if (!done && is_chunked) {
-      // If chunked and not done, it's incomplete
-      return "";
-    }
-    // If not chunked and not done (e.g. timeout or connection close), we might still have data
-    // For Connection: close, we take what we have.
-
-    auto body_pos = response_str.find("\r\n\r\n");
-    if (body_pos == std::string::npos) {
-      return "";
-    }
-
-    if (is_chunked) {
-      std::string decoded_body;
-      decoded_body.reserve(response_str.size());  // Approximation
-      size_t pos = body_pos + 4;
-      while (true) {
-        auto crlf = response_str.find("\r\n", pos);
-        if (crlf == std::string::npos) break;
-        size_t chunk_size = 0;
-        try {
-          chunk_size = std::stoul(response_str.substr(pos, crlf - pos), nullptr, 16);
-        } catch (...) {
-          break;
-        }
-        if (chunk_size == 0) break;
-        if (response_str.length() < crlf + 2 + chunk_size) break;  // Safety check
-        decoded_body += response_str.substr(crlf + 2, chunk_size);
-        pos = crlf + 2 + chunk_size + 2;
+      const size_t body_start = body_pos + 4;
+      if (response_str.size() >= body_start + content_length) {
+        return response_str.substr(body_start, content_length);
       }
-      return decoded_body;
     }
-
-    return response_str.substr(body_pos + 4);
   }
 
 private:
+  static void parse_headers(
+    const std::string & response, size_t header_end_pos, size_t & content_length)
+  {
+    const std::string headers = response.substr(0, header_end_pos);
+    const auto line_end = headers.find("\r\n");
+    if (line_end == std::string::npos) {
+      throw SocketError("Invalid HTTP response: malformed status line");
+    }
+
+    const auto status_line = headers.substr(0, line_end);
+    if (status_line.rfind("HTTP/", 0) != 0) {
+      throw SocketError("Invalid HTTP response: status line does not start with HTTP/");
+    }
+
+    std::string lower_headers = headers;
+    std::transform(
+      lower_headers.begin(), lower_headers.end(), lower_headers.begin(),
+      [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+    if (lower_headers.find("transfer-encoding: chunked") != std::string::npos) {
+      throw SocketError("Invalid HTTP response: chunked transfer encoding is not supported");
+    }
+
+    const std::string cl_key = "content-length:";
+    const auto cl_pos = lower_headers.find(cl_key);
+    if (cl_pos == std::string::npos) {
+      throw SocketError("Invalid HTTP response: missing Content-Length");
+    }
+
+    size_t value_start = cl_pos + cl_key.size();
+    while (value_start < lower_headers.size() &&
+           (lower_headers[value_start] == ' ' || lower_headers[value_start] == '\t')) {
+      ++value_start;
+    }
+    auto value_end = lower_headers.find("\r\n", value_start);
+    if (value_end == std::string::npos) {
+      value_end = lower_headers.size();
+    }
+    while (value_end > value_start &&
+           (lower_headers[value_end - 1] == ' ' || lower_headers[value_end - 1] == '\t')) {
+      --value_end;
+    }
+    if (value_start == value_end) {
+      throw SocketError("Invalid HTTP response: malformed Content-Length");
+    }
+    for (size_t i = value_start; i < value_end; ++i) {
+      if (!std::isdigit(static_cast<unsigned char>(lower_headers[i]))) {
+        throw SocketError("Invalid HTTP response: non-numeric Content-Length");
+      }
+    }
+
+    try {
+      content_length = std::stoull(lower_headers.substr(value_start, value_end - value_start));
+    } catch (const std::invalid_argument & e) {
+      throw SocketError("Invalid HTTP response: Content-Length invalid: " + std::string(e.what()));
+    } catch (const std::out_of_range & e) {
+      throw SocketError(
+        "Invalid HTTP response: Content-Length out of range: " + std::string(e.what()));
+    }
+  }
+
+  static std::string build_http_request_boilerplate(
+    const std::string & method, const std::string & endpoint, const std::string & host_ip)
+  {
+    std::string req = method + " ";
+    if (endpoint.empty() || endpoint[0] != '/') {
+      req += "/";
+    }
+    req += endpoint + " HTTP/1.1\r\n";
+    req += "Host: " + host_ip + "\r\n";
+    return req;
+  }
+
   std::string host_ip_;
   Endpoint host_endpoint_;
 };
