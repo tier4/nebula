@@ -572,7 +572,9 @@ private:
           continue;
         }
 
-        bool in_current_scan = 0 != column_id;  // write in output_frame as frames are being swapped after this method exit
+        bool in_current_scan =
+          0 !=
+          column_id;  // write in output_frame as frames are being swapped after this method exit
 
         auto & frame = in_current_scan ? decode_frame_ : output_frame_;
 
