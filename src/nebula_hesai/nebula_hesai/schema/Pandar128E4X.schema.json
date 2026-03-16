@@ -62,9 +62,7 @@
         },
         "sensor_model": {
           "$ref": "lidar_hesai.json#/definitions/sensor_model",
-          "enum": [
-            "Pandar128E4X"
-          ]
+          "enum": ["Pandar128E4X"]
         },
         "calibration_file": {
           "$ref": "lidar_hesai.json#/definitions/calibration_file"
@@ -89,18 +87,14 @@
         },
         "ptp_profile": {
           "$ref": "lidar_hesai.json#/definitions/ptp_profile",
-          "enum": [
-            "automotive"
-          ]
+          "enum": ["automotive"]
         },
         "ptp_domain": {
           "$ref": "lidar_hesai.json#/definitions/ptp_domain"
         },
         "ptp_transport_type": {
           "$ref": "lidar_hesai.json#/definitions/ptp_transport_type",
-          "enum": [
-            "L2"
-          ]
+          "enum": ["L2"]
         },
         "ptp_switch_type": {
           "$ref": "lidar_hesai.json#/definitions/ptp_switch_type"
@@ -125,10 +119,7 @@
         },
         "diagnostics": {
           "$ref": "lidar_hesai.json#/definitions/diagnostics",
-          "required": [
-            "pointcloud_publish_rate",
-            "packet_loss"
-          ]
+          "required": ["pointcloud_publish_rate", "packet_loss"]
         },
         "sync_diagnostics": {
           "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/sync_diagnostics"
@@ -177,13 +168,9 @@
         },
         "additionalProperties": false
       },
-      "required": [
-        "ros__parameters"
-      ]
+      "required": ["ros__parameters"]
     }
   },
-  "required": [
-    "/**"
-  ],
+  "required": ["/**"],
   "additionalProperties": false
 }
