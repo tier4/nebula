@@ -96,57 +96,19 @@ private:
 TEST(TestTcp, TestBasicLifecycle)
 {
   TcpEchoThenCloseServer server(g_server_port);
-  ASSERT_NO_THROW(
-    TcpSocket::Builder(g_localhost_ip, g_server_port)
-      .connect()
-      .subscribe([](const auto &) {})
-      .unsubscribe());
+  ASSERT_NO_THROW(TcpSocket::Builder(g_localhost_ip, g_server_port).connect());
 }
 
 TEST(TestTcp, TestSendReceive)
 {
   TcpEchoThenCloseServer server(g_server_port);
   std::vector<uint8_t> payload{1, 2, 3, 4};
-  std::atomic_bool received{false};
 
   auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
-  sock.subscribe([&](const TcpSocket::receive_result_t & result) {
-    if (!result.has_value()) return;
-
-    const auto data = result.value();
-    const size_t bytes = data.size();
-
-    // Check if the valid part of the buffer matches payload
-    if (bytes == payload.size() && data == payload) {
-      received = true;
-    }
-  });
-
   sock.send(payload);
-
-  // Wait for echo
-  for (int i = 0; i < 20; ++i) {
-    if (received) break;
-    std::this_thread::sleep_for(50ms);
-  }
-
-  ASSERT_TRUE(received);
-}
-
-TEST(TestTcp, TestBlockingReceive)
-{
-  TcpEchoThenCloseServer server(g_server_port);
-  std::vector<uint8_t> payload{0xAA, 0xBB, 0xCC, 0xDD};
-
-  auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
-
-  // Send data to trigger echo
-  sock.send(payload);
-
-  // Blocking receive
   auto received = sock.receive(4);
   ASSERT_EQ(received.size(), 4);
-  ASSERT_EQ(received, payload);
+  EXPECT_EQ(received, payload);
 }
 
 TEST(TestTcp, TestReceiveTimeout)
@@ -223,33 +185,6 @@ TEST(TestTcp, TestBuilderInvalidIp)
 {
   ASSERT_THROW(TcpSocket::Builder("invalid_ip", g_server_port), UsageError);
   ASSERT_THROW(TcpSocket::Builder("256.0.0.1", g_server_port), UsageError);
-}
-
-TEST(TestTcp, TestIsSubscribed)
-{
-  TcpEchoThenCloseServer server(g_server_port);
-  auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
-  ASSERT_FALSE(sock.is_subscribed());
-  sock.subscribe([](const auto &) {});
-  ASSERT_TRUE(sock.is_subscribed());
-  sock.unsubscribe();
-  ASSERT_FALSE(sock.is_subscribed());
-}
-
-TEST(TestTcp, TestMoveSemantics)
-{
-  TcpEchoThenCloseServer server(g_server_port);
-  auto sock1 = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
-  sock1.subscribe([](const auto &) {});
-  ASSERT_TRUE(sock1.is_subscribed());
-
-  TcpSocket sock2(std::move(sock1));
-  // Moved-to socket should NOT auto-subscribe due to safety reasons
-  ASSERT_FALSE(sock2.is_subscribed());
-
-  // Verify we can subscribe again
-  sock2.subscribe([](const auto &) {});
-  ASSERT_TRUE(sock2.is_subscribed());
 }
 
 TEST(TestTcp, TestConnectTimeout)
@@ -368,54 +303,21 @@ TEST(TestTcp, TestLargePayloadSendReceive)
   }
 
   std::vector<uint8_t> received_data;
-  std::atomic_bool finished{false};
+  received_data.reserve(payload.size());
 
   auto sock =
     TcpSocket::Builder(g_localhost_ip, g_server_port).set_socket_buffer_size(32768).connect();
-  sock.subscribe([&](const TcpSocket::receive_result_t & result) {
-    if (!result.has_value()) return;
 
-    const auto data = result.value();
-    received_data.insert(received_data.end(), data.begin(), data.end());
-    if (received_data.size() >= payload.size()) {
-      finished = true;
-    }
-  });
+  sock.send(payload);
 
-  std::thread sender([&]() { sock.send(payload); });
-
-  for (int i = 0; i < 100; ++i) {  // Wait up to 5s
-    if (finished) break;
-    std::this_thread::sleep_for(50ms);
+  for (int i = 0; i < 100 && received_data.size() < payload.size(); ++i) {  // Wait up to 5s
+    auto chunk = sock.receive(8192, 50ms);
+    if (chunk.empty()) continue;
+    received_data.insert(received_data.end(), chunk.begin(), chunk.end());
   }
 
-  sender.join();
-
-  ASSERT_TRUE(finished);
   ASSERT_EQ(received_data.size(), payload.size());
   EXPECT_TRUE(std::equal(received_data.begin(), received_data.end(), payload.begin()));
-}
-
-TEST(TestTcp, TestSubscribeReportsConnectionClosedError)
-{
-  TcpEchoThenCloseServer server(g_server_port);
-  std::atomic_bool got_close_error{false};
-
-  auto sock = TcpSocket::Builder(g_localhost_ip, g_server_port).connect();
-  sock.subscribe([&](const TcpSocket::receive_result_t & result) {
-    if (!result.has_value() && std::string(result.error().what()) == "Connection closed") {
-      got_close_error = true;
-    }
-  });
-
-  sock.send(std::vector<uint8_t>{1, 2, 3, 4});
-
-  for (int i = 0; i < 20; ++i) {
-    if (got_close_error) break;
-    std::this_thread::sleep_for(50ms);
-  }
-
-  EXPECT_TRUE(got_close_error);
 }
 
 }  // namespace nebula::drivers::connections
