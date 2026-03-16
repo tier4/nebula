@@ -605,13 +605,17 @@ public:
   nebula::Status load_from_bytes(const std::vector<uint8_t> & buf) override
   {
     // get the matrix info from buffer
-    auto raw_ptr = buf.data();
-    col_count = raw_ptr[6];
-    row_count = raw_ptr[7];
-    resolution = raw_ptr[8];
+    col_count = buf.at(6);
+    row_count = buf.at(7);
+    resolution = buf.at(8);
 
     const auto count{col_count * row_count};
     const auto count_bytes{4 * count};
+
+    // size check for the upcoming memcpy operations (0-8 + 2 arrays)
+    if (buf.size() < (9 + 2*count_bytes)) {
+        return Status::INVALID_CALIBRATION_FILE;
+    }
 
     auto ref = &(buf[9]);
 
