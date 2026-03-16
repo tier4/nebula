@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_STATUS_HPP
-#define NEBULA_STATUS_HPP
+#ifndef NEBULA_CORE_COMMON__NEBULA_STATUS_HPP_
+#define NEBULA_CORE_COMMON__NEBULA_STATUS_HPP_
 
 #include <ostream>
 
@@ -96,4 +96,4 @@ struct Status
 };
 
 }  // namespace nebula
-#endif  // NEBULA_STATUS_HPP
+#endif  // NEBULA_CORE_COMMON__NEBULA_STATUS_HPP_

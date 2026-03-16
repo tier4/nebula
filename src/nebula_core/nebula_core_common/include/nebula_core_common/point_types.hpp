@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NEBULA_POINT_TYPES_H
-#define NEBULA_POINT_TYPES_H
+#ifndef NEBULA_CORE_COMMON__POINT_TYPES_HPP_
+#define NEBULA_CORE_COMMON__POINT_TYPES_HPP_
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -99,4 +99,4 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
     return_type)(std::uint16_t, channel, channel)(float, azimuth, azimuth)(
     float, elevation, elevation)(float, distance, distance)(std::uint32_t, time_stamp, time_stamp))
 
-#endif
+#endif  // NEBULA_CORE_COMMON__POINT_TYPES_HPP_
