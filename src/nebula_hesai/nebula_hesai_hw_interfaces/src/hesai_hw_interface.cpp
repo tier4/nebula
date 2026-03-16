@@ -902,8 +902,16 @@ HesaiStatus HesaiHwInterface::set_spin_speed_async_http(uint16_t rpm)
       return HesaiStatus::INVALID_RPM_ERROR;
       break;
   }
-  auto result = http_client_->get(
-    (boost::format("/pandar.cgi?action=set&object=lidar&key=spin_speed&value=%d") % rpm_key).str());
+  std::string result;
+  try {
+    result = http_client_->get(
+      (boost::format("/pandar.cgi?action=set&object=lidar&key=spin_speed&value=%d") % rpm_key)
+        .str());
+  } catch (const connections::SocketError & e) {
+    logger_->error("HTTP set_spin_speed failed: " + std::string(e.what()));
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
+  }
+
   if (result.empty()) {
     return HesaiStatus::HTTP_CONNECTION_ERROR;
   }
@@ -918,20 +926,26 @@ HesaiStatus HesaiHwInterface::set_ptp_config_sync_http(
     return HesaiStatus::HTTP_CONNECTION_ERROR;
   }
 
-  auto response =
-    http_client_->get((boost::format(
-                         "/pandar.cgi?action=set&object=lidar&key=ptp_configuration&value={"
-                         "\"Profile\": %d,"
-                         "\"Domain\": %d,"
-                         "\"Network\": %d,"
-                         "\"LogAnnounceInterval\": %d,"
-                         "\"LogSyncInterval\": %d,"
-                         "\"LogMinDelayReqInterval\": %d,"
-                         "\"tsn_switch\": %d"
-                         "}") %
-                       profile % domain % network % logAnnounceInterval % logSyncInterval %
-                       logMinDelayReqInterval % 0)
-                        .str());
+  std::string response;
+  try {
+    response =
+      http_client_->get((boost::format(
+                           "/pandar.cgi?action=set&object=lidar&key=ptp_configuration&value={"
+                           "\"Profile\": %d,"
+                           "\"Domain\": %d,"
+                           "\"Network\": %d,"
+                           "\"LogAnnounceInterval\": %d,"
+                           "\"LogSyncInterval\": %d,"
+                           "\"LogMinDelayReqInterval\": %d,"
+                           "\"tsn_switch\": %d"
+                           "}") %
+                         profile % domain % network % logAnnounceInterval % logSyncInterval %
+                         logMinDelayReqInterval % 0)
+                          .str());
+  } catch (const connections::SocketError & e) {
+    logger_->error("HTTP set_ptp_config failed: " + std::string(e.what()));
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
+  }
 
   if (response.empty()) {
     return HesaiStatus::HTTP_CONNECTION_ERROR;
@@ -951,7 +965,14 @@ HesaiStatus HesaiHwInterface::set_sync_angle_sync_http(int enable, int angle)
                     "}") %
                   enable % angle)
                    .str();
-  auto response = http_client_->get(tmp_str);
+  std::string response;
+  try {
+    response = http_client_->get(tmp_str);
+  } catch (const connections::SocketError & e) {
+    logger_->error("HTTP set_sync_angle failed: " + std::string(e.what()));
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
+  }
+
   if (response.empty()) {
     return HesaiStatus::HTTP_CONNECTION_ERROR;
   }
@@ -964,7 +985,15 @@ HesaiStatus HesaiHwInterface::get_lidar_monitor_async_http(
   if (!http_client_) {
     return HesaiStatus::HTTP_CONNECTION_ERROR;
   }
-  auto result = http_client_->get("/pandar.cgi?action=get&object=lidar_monitor");
+
+  std::string result;
+  try {
+    result = http_client_->get("/pandar.cgi?action=get&object=lidar_monitor");
+  } catch (const connections::SocketError & e) {
+    logger_->error("HTTP get_lidar_monitor failed: " + std::string(e.what()));
+    return HesaiStatus::HTTP_CONNECTION_ERROR;
+  }
+
   if (result.empty()) {
     return HesaiStatus::HTTP_CONNECTION_ERROR;
   }
