@@ -65,8 +65,6 @@ class TcpSocket
   TcpSocket(SockFd sock_fd, SocketConfig config) : sock_fd_(std::move(sock_fd)), config_{config} {}
 
 public:
-  ~TcpSocket() { unsubscribe(); }
-
   class Builder
   {
   public:
@@ -204,45 +202,12 @@ public:
     SocketConfig config_;
   };
 
-  using receive_result_t = util::expected<std::vector<uint8_t>, SocketError>;
-
-  // Callback receives either payload bytes or a socket error.
-  using callback_t = std::function<void(const receive_result_t & result)>;
-
-  /**
-   * @brief Register a callback for receive events and start the receiver thread.
-   *
-   * @param callback The function to execute with either payload bytes or SocketError.
-   */
-  TcpSocket & subscribe(callback_t && callback)
-  {
-    unsubscribe();
-    callback_ = std::move(callback);
-    launch_receiver();
-    return *this;
-  }
-
-  /**
-   * @brief Check if the socket is currently subscribed and receiving data.
-   * @return True if receiving, false otherwise.
-   */
-  bool is_subscribed() { return running_; }
-
-  /**
-   * @brief Gracefully stops the active receiver thread.
-   */
-  TcpSocket & unsubscribe()
-  {
-    running_ = false;
-    if (receive_thread_.joinable()) {
-      receive_thread_.join();
-    }
-    return *this;
-  }
-
   /**
    * @brief Send data to the connected target.
    *        Handles partial sends by retrying until all data is transmitted.
+   *
+   * When this function throws, the socket may be in an undefined state and has to be closed and
+   * re-created by the caller before the socket can be used again.
    *
    * @param data The data to send
    * @throws SocketError if send fails
@@ -266,6 +231,9 @@ public:
    * @brief Receive up to n bytes from the socket.
    *        This is a blocking call with an optional timeout.
    *
+   * When this function throws, the socket may be in an undefined state and has to be closed and
+   * re-created by the caller before the socket can be used again.
+   *
    * @param n The maximum number of bytes to receive.
    * @param timeout The timeout duration. If 0, blocks indefinitely.
    * @return A vector containing the received bytes. Empty if timeout.
@@ -275,9 +243,35 @@ public:
   std::vector<uint8_t> receive(
     size_t n, std::chrono::milliseconds timeout = std::chrono::milliseconds(0))
   {
-    if (is_subscribed()) {
-      throw UsageError("Cannot call receive() while subscribed");
-    }
+    return receive_impl(n, timeout);
+  }
+
+  /**
+   * @brief Receive up to the configured internal buffer size.
+   *        This is a blocking call with an optional timeout.
+   *
+   * @param timeout The timeout duration. If 0, blocks indefinitely.
+   * @return A vector containing the received bytes. Empty if timeout.
+   * @throws SocketError if receive fails or connection is closed.
+   */
+  std::vector<uint8_t> receive(std::chrono::milliseconds timeout = std::chrono::milliseconds(0))
+  {
+    return receive_impl(config_.buffer_size, timeout);
+  }
+
+  TcpSocket(const TcpSocket &) = delete;
+  TcpSocket(TcpSocket && other) noexcept
+  : sock_fd_(std::move(other.sock_fd_)), config_(other.config_)
+  {
+  }
+
+  TcpSocket & operator=(const TcpSocket &) = delete;
+  TcpSocket & operator=(TcpSocket &&) = delete;
+
+private:
+  std::vector<uint8_t> receive_impl(size_t n, std::chrono::milliseconds timeout)
+  {
+    if (n == 0) throw UsageError("Receive size must be greater than zero");
 
     if (timeout.count() > 0) {
       auto ready = is_socket_ready(sock_fd_.get(), static_cast<int>(timeout.count()));
@@ -297,69 +291,8 @@ public:
     return buffer;
   }
 
-  TcpSocket(const TcpSocket &) = delete;
-  TcpSocket(TcpSocket && other) noexcept
-  : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))), config_(other.config_)
-  {
-  }
-
-  TcpSocket & operator=(const TcpSocket &) = delete;
-  TcpSocket & operator=(TcpSocket &&) = delete;
-
-private:
-  void launch_receiver()
-  {
-    assert(callback_);
-
-    running_ = true;
-    receive_thread_ = std::thread([this]() {
-      std::vector<uint8_t> buffer;
-      buffer.resize(config_.buffer_size);
-
-      while (running_) {
-        auto data_available = is_socket_ready(sock_fd_.get(), config_.polling_interval_ms);
-        if (!data_available.has_value()) {
-          callback_(SocketError(data_available.error()));
-          running_ = false;
-          return;
-        }
-        if (!data_available.value()) continue;
-
-        ssize_t recv_result{-1};
-        do {
-          recv_result = ::recv(sock_fd_.get(), buffer.data(), buffer.size(), 0);
-        } while (recv_result == -1 && errno == EINTR);
-
-        if (recv_result == -1) {
-          callback_(SocketError(errno));
-          running_ = false;
-          return;
-        }
-        if (recv_result == 0) {
-          callback_(SocketError("Connection closed"));
-          running_ = false;
-          return;
-        }
-
-        assert(recv_result > 0);
-
-        auto bytes_received = static_cast<size_t>(recv_result);
-        assert(bytes_received <= buffer.size());
-
-        buffer.resize(bytes_received);
-        // This currently incurs a copy!
-        callback_(buffer);
-      }
-    });
-  }
-
   SockFd sock_fd_;
-
   SocketConfig config_;
-
-  std::atomic_bool running_{false};
-  std::thread receive_thread_;
-  callback_t callback_;
 };
 
 }  // namespace nebula::drivers::connections
