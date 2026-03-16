@@ -496,7 +496,7 @@ public:
     }
 
     const auto fields = PointT::fields();
-    write_binary_header(file, fields, cloud.size());
+    write_binary_header(file, fields, cloud.size(), sizeof(PointT));
 
     // Write binary data
     // Note: We write the entire point structure, which may include padding bytes.
@@ -523,18 +523,60 @@ private:
   }
 
   template <typename FieldsT>
-  static void write_binary_header(std::ostream & file, const FieldsT & fields, size_t point_count)
+  static auto build_binary_header_fields(const FieldsT & fields, size_t point_size)
   {
+    using FieldT = std::decay_t<decltype(*std::begin(fields))>;
+    static_assert(std::is_same_v<FieldT, PointField>, "FieldsT must be a container of PointField");
+
+    auto padding_field = [](uint32_t offset, uint32_t size) {
+      return PointField{"_", offset, PointField::DataType::UInt8, size};
+    };
+
+    std::vector<PointField> ordered_fields(std::begin(fields), std::end(fields));
+    std::sort(ordered_fields.begin(), ordered_fields.end(), [](const auto & lhs, const auto & rhs) {
+      return lhs.offset < rhs.offset;
+    });
+
+    std::vector<PointField> header_fields;
+    header_fields.reserve(ordered_fields.size() + 1U);
+
+    uint32_t current_offset = 0;
+    for (const auto & field : ordered_fields) {
+      if (field.offset < current_offset) {
+        throw std::runtime_error("PointField offsets overlap, cannot write binary PCD");
+      }
+      if (field.offset > current_offset) {
+        header_fields.push_back(padding_field(current_offset, field.offset - current_offset));
+        current_offset = field.offset;
+      }
+
+      header_fields.push_back(field);
+      uint32_t field_size = detail::datatype_size(field.datatype) * field.count;
+      current_offset = std::max(current_offset, field.offset + field_size);
+    }
+
+    if (current_offset < point_size) {
+      header_fields.push_back(padding_field(current_offset, point_size - current_offset));
+    }
+    return header_fields;
+  }
+
+  template <typename FieldsT>
+  static void write_binary_header(
+    std::ostream & file, const FieldsT & fields, size_t point_count, size_t point_size)
+  {
+    const auto padded_fields = build_binary_header_fields(fields, point_size);
+
     file << "# .PCD v0.7 - Point Cloud Data file format\n";
     file << "VERSION 0.7\n";
-    write_field_line(file, "FIELDS", fields, [](const auto & field) { return field.name; });
-    write_field_line(file, "SIZE", fields, [](const auto & field) {
+    write_field_line(file, "FIELDS", padded_fields, [](const auto & field) { return field.name; });
+    write_field_line(file, "SIZE", padded_fields, [](const auto & field) {
       return detail::datatype_size(field.datatype);
     });
-    write_field_line(file, "TYPE", fields, [](const auto & field) {
+    write_field_line(file, "TYPE", padded_fields, [](const auto & field) {
       return detail::datatype_to_pcd_type(field.datatype);
     });
-    write_field_line(file, "COUNT", fields, [](const auto & field) { return field.count; });
+    write_field_line(file, "COUNT", padded_fields, [](const auto & field) { return field.count; });
     file << "WIDTH " << point_count << "\n";
     file << "HEIGHT 1\n";
     file << "VIEWPOINT 0 0 0 1 0 0 0\n";

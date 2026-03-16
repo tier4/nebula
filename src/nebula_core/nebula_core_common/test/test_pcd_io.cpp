@@ -33,6 +33,7 @@ namespace
 namespace fs = std::filesystem;
 using nebula::drivers::PointCloud;
 using nebula::drivers::PointXYZ;
+using nebula::drivers::PointXYZIR;
 using nebula::drivers::io::PcdReader;
 using nebula::drivers::io::PcdWriter;
 
@@ -110,6 +111,39 @@ TEST_F(PcdIoTest, RoundTripBinaryPointXYZ)
     EXPECT_FLOAT_EQ(loaded_cloud[i].x, input_cloud[i].x);
     EXPECT_FLOAT_EQ(loaded_cloud[i].y, input_cloud[i].y);
     EXPECT_FLOAT_EQ(loaded_cloud[i].z, input_cloud[i].z);
+  }
+}
+
+TEST_F(PcdIoTest, RoundTripBinaryPointXYZIRWithPadding)
+{
+  PointCloud<PointXYZIR> input_cloud;
+  PointXYZIR p0{};
+  p0.x = 1.0F;
+  p0.y = 2.0F;
+  p0.z = 3.0F;
+  p0.intensity = 10.5F;
+  p0.ring = 3U;
+  input_cloud.push_back(p0);
+
+  PointXYZIR p1{};
+  p1.x = -4.5F;
+  p1.y = 5.5F;
+  p1.z = -6.5F;
+  p1.intensity = 42.0F;
+  p1.ring = 511U;
+  input_cloud.push_back(p1);
+
+  const auto path = temp_dir_ / "round_trip_xyzir.pcd";
+  PcdWriter::write_binary(path.string(), input_cloud);
+
+  const auto loaded_cloud = PcdReader::read<PointXYZIR>(path.string());
+  ASSERT_EQ(loaded_cloud.size(), input_cloud.size());
+  for (size_t i = 0; i < input_cloud.size(); ++i) {
+    EXPECT_FLOAT_EQ(loaded_cloud[i].x, input_cloud[i].x);
+    EXPECT_FLOAT_EQ(loaded_cloud[i].y, input_cloud[i].y);
+    EXPECT_FLOAT_EQ(loaded_cloud[i].z, input_cloud[i].z);
+    EXPECT_FLOAT_EQ(loaded_cloud[i].intensity, input_cloud[i].intensity);
+    EXPECT_EQ(loaded_cloud[i].ring, input_cloud[i].ring);
   }
 }
 
