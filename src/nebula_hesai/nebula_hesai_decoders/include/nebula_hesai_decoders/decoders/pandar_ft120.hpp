@@ -43,7 +43,8 @@ struct TailFT120
   uint8_t factory_information;  // fixed, 0x42
   uint32_t udp_sequence;
   uint32_t crc_tail;
-  uint8_t signature[16];  // packet AES signature, pre-header to crc_tail; 0, if no key set in sensor
+  uint8_t
+    signature[16];  // packet AES signature, pre-header to crc_tail; 0, if no key set in sensor
 };
 
 struct PacketFT120

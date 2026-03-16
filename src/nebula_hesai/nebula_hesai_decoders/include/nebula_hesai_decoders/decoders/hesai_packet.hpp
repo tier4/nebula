@@ -99,15 +99,16 @@ struct Header19B  // FT120
   uint8_t reserved1[2];
 
   // manual, 3.1.2.2
-  uint16_t column_num;          // 160
-  uint16_t row_num;             // 120
-  uint8_t column_res;           // 63, to be multiplied by standard coefficient of 0.01°
-  uint8_t row_res;              // 63, to be multiplied by standard coefficient of 0.01°
-  uint8_t first_block_return;   // 0, single return, 1 dual return & block 1 returns first type of dual mode;
-                                // 2 dual return & block 1 returns second type of dual mode;
-  uint8_t dis_unit;             // 4, mm
+  uint16_t column_num;  // 160
+  uint16_t row_num;     // 120
+  uint8_t column_res;   // 63, to be multiplied by standard coefficient of 0.01°
+  uint8_t row_res;      // 63, to be multiplied by standard coefficient of 0.01°
+  uint8_t
+    first_block_return;  // 0, single return, 1 dual return & block 1 returns first type of dual
+                         // mode; 2 dual return & block 1 returns second type of dual mode;
+  uint8_t dis_unit;  // 4, mm
   uint8_t reserved2;
-  uint16_t block_row_num;       // 120
+  uint16_t block_row_num;  // 120
   uint8_t reserved3[8];
 };
 

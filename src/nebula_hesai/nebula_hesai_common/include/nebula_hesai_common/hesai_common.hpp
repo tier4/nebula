@@ -613,8 +613,8 @@ public:
     const auto count_bytes{4 * count};
 
     // size check for the upcoming memcpy operations (0-8 + 2 arrays)
-    if (buf.size() < (9 + 2*count_bytes)) {
-        return Status::INVALID_CALIBRATION_FILE;
+    if (buf.size() < (9 + 2 * count_bytes)) {
+      return Status::INVALID_CALIBRATION_FILE;
     }
 
     auto ref = &(buf[9]);
