@@ -4,6 +4,8 @@ project(nebula_continental)
 find_package(autoware_cmake REQUIRED)
 autoware_package()
 
+find_package(autoware_agnocast_wrapper REQUIRED)
+
 # # Continental
 
 # ARS548
@@ -42,9 +44,11 @@ ament_target_dependencies(
   sync_tooling_msgs
   rclcpp_components)
 
-rclcpp_components_register_node(
+autoware_agnocast_wrapper_register_node(
   continental_ars548_ros_wrapper PLUGIN "ContinentalARS548RosWrapper"
-  EXECUTABLE continental_ars548_ros_wrapper_node)
+  EXECUTABLE continental_ars548_ros_wrapper_node
+  ROS2_EXECUTOR SingleThreadedExecutor
+  AGNOCAST_EXECUTOR CallbackIsolatedAgnocastExecutor)
 
 # SRR520
 add_library(
