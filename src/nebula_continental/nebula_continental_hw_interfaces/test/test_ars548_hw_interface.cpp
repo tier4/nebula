@@ -1,4 +1,4 @@
-// Copyright 2025 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 
 #include "nebula_continental_hw_interfaces/continental_ars548_hw_interface.hpp"
 

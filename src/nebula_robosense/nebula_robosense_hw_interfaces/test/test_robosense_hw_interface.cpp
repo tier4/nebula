@@ -1,4 +1,4 @@
-// Copyright 2025 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 
 #include "nebula_robosense_hw_interfaces/robosense_hw_interface.hpp"
 

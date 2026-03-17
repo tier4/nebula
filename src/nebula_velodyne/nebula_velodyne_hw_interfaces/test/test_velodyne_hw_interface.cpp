@@ -1,4 +1,4 @@
-// Copyright 2025 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 
 #include "nebula_velodyne_hw_interfaces/velodyne_hw_interface.hpp"
 
