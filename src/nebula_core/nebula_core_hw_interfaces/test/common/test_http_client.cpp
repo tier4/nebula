@@ -1,4 +1,4 @@
-// Copyright 2025 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 
 #include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/http_client.hpp"
 
@@ -157,25 +157,35 @@ TEST(TestHttpClient, TestPost)
 TEST(TestHttpClient, TestChunkedResponse)
 {
   HttpServer server(g_server_port);
-  HttpClient client(g_localhost_ip, g_server_port);
-  auto response = client.get("/chunked");
-  ASSERT_EQ(response, "Hello World!");
+  try {
+    HttpClient client(g_localhost_ip, g_server_port);
+    client.get("/chunked");
+    FAIL() << "Expected exception";
+  } catch (std::exception & e) {
+    EXPECT_STREQ(e.what(), "Invalid HTTP response: chunked transfer encoding is not supported");
+  }
 }
 
 TEST(TestHttpClient, TestTimeout)
 {
-  // No server running on this port, connection should fail or timeout
-  HttpClient client(g_localhost_ip, 9998);
-  // Client now catches SocketError internally and returns an empty string
-  auto response = client.get("/test", 100);
-  EXPECT_EQ(response, "");
+  try {
+    HttpClient client(g_localhost_ip, 9998);
+    client.get("/test", 100);
+    FAIL() << "Expected exception";
+  } catch (std::exception & e) {
+    EXPECT_STREQ(e.what(), "Connection refused");
+  }
 }
 
 TEST(TestHttpClient, TestConnectionFailure)
 {
-  HttpClient client(g_localhost_ip, 9997);
-  auto response = client.get("/test");
-  EXPECT_EQ(response, "");
+  try {
+    HttpClient client(g_localhost_ip, 9997);
+    client.get("/test");
+    FAIL() << "Expected exception";
+  } catch (std::exception & e) {
+    EXPECT_STREQ(e.what(), "Connection refused");
+  }
 }
 
 TEST(TestHttpClient, TestInvalidHost)
@@ -229,19 +239,25 @@ TEST(TestHttpClient, TestEmptyResponse)
 TEST(TestHttpClient, TestSlowServer)
 {
   HttpServer server(g_server_port);
-  HttpClient client(g_localhost_ip, g_server_port);
-  auto response = client.get("/slow", 50);  // Timeout before server responds
-  EXPECT_EQ(response, "");
+  try {
+    HttpClient client(g_localhost_ip, g_server_port);
+    client.get("/slow", 50);
+    FAIL() << "Expected exception";
+  } catch (std::exception & e) {
+    EXPECT_STREQ(e.what(), "HTTP receive timeout");
+  }
 }
 
 TEST(TestHttpClient, TestLargeChunkedResponse)
 {
   HttpServer server(g_server_port);
-  HttpClient client(g_localhost_ip, g_server_port);
-  auto response = client.get("/large");
-  // 5000 'A's + 5000 'A's = 10000 characters
-  EXPECT_EQ(response.length(), 10000u);
-  EXPECT_TRUE(response.find_first_not_of('A') == std::string::npos);
+  try {
+    HttpClient client(g_localhost_ip, g_server_port);
+    client.get("/large");
+    FAIL() << "Expected exception";
+  } catch (std::exception & e) {
+    EXPECT_STREQ(e.what(), "Invalid HTTP response: chunked transfer encoding is not supported");
+  }
 }
 
 TEST(TestHttpClient, TestEndpointNormalization)
@@ -274,13 +290,14 @@ TEST(TestHttpClient, TestServerError)
 TEST(TestHttpClient, TestConnectionDropMidResponse)
 {
   HttpServer server(g_server_port);
-  HttpClient client(g_localhost_ip, g_server_port);
-  auto response = client.get("/drop");
-  // Connection closed before complete content length was received, but
-  // our client retains the partial body for robustness
-  EXPECT_EQ(response, "Partial");
+  try {
+    HttpClient client(g_localhost_ip, g_server_port);
+    client.get("/drop");
+    FAIL() << "Expected exception";
+  } catch (std::exception & e) {
+    EXPECT_STREQ(e.what(), "Connection closed");
+  }
 }
-
 }  // namespace nebula::drivers::connections
 
 int main(int argc, char * argv[])
