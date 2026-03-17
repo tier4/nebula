@@ -35,7 +35,8 @@ ament_target_dependencies(
   nebula_msgs
   pandar_msgs
   sensor_msgs
-  sync_tooling_msgs)
+  sync_tooling_msgs
+  rclcpp_components)
 
 if("$ENV{ENABLE_AGNOCAST}")
   message("Agnocast support is enabled")

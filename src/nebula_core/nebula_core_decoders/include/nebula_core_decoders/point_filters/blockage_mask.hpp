@@ -56,9 +56,10 @@ public:
   BlockageMask(
     AngleRange<int32_t, MilliDegrees> azimuth_range_mdeg, uint32_t bin_size_mdeg,
     uint16_t n_channels)
-  : azimuth_range_rad_{  // a
-    deg2rad(azimuth_range_mdeg.start / 1000.),  // a
-    deg2rad(azimuth_range_mdeg.end / 1000.)},
+  : azimuth_range_rad_{
+      // a
+      deg2rad(azimuth_range_mdeg.start / 1000.),  // a
+      deg2rad(azimuth_range_mdeg.end / 1000.)},
     bin_size_rad_{deg2rad(bin_size_mdeg / 1000.)},
     n_channels_{n_channels}
   {
