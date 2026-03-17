@@ -114,10 +114,10 @@ void RobosenseDecoderWrapper::process_cloud_packet(
   if (
     aw_points_base_pub_->get_subscription_count() > 0 ||
     aw_points_base_pub_->get_intra_process_subscription_count() > 0) {
-    const auto autoware_cloud_xyzi =
-      nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(pointcloud);
+    auto autoware_cloud_xyzi =
+      nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(*pointcloud);
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(*autoware_cloud_xyzi);
+    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(autoware_cloud_xyzi);
     ros_pc_msg_ptr->header.stamp =
       rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
@@ -125,10 +125,10 @@ void RobosenseDecoderWrapper::process_cloud_packet(
   if (
     aw_points_ex_pub_->get_subscription_count() > 0 ||
     aw_points_ex_pub_->get_intra_process_subscription_count() > 0) {
-    const auto autoware_ex_cloud = nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(
-      pointcloud, std::get<1>(pointcloud_ts));
+    auto autoware_ex_cloud = nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(
+      *pointcloud, std::get<1>(pointcloud_ts));
     auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(*autoware_ex_cloud);
+    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(autoware_ex_cloud);
     ros_pc_msg_ptr->header.stamp =
       rclcpp::Time(seconds_to_chrono_nano_seconds(std::get<1>(pointcloud_ts)).count());
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);

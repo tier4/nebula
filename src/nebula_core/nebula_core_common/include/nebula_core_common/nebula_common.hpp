@@ -494,11 +494,11 @@ inline ReturnMode return_mode_from_string(const std::string & return_mode)
   return ReturnMode::UNKNOWN;
 }
 
-std::shared_ptr<PointCloud<PointXYZIR>> convert_point_xyzircaedt_to_point_xyzir(
-  const std::shared_ptr<const PointCloud<PointXYZIRCAEDT>> & input_pointcloud);
+PointCloud<PointXYZIR> convert_point_xyzircaedt_to_point_xyzir(
+  const PointCloud<PointXYZIRCAEDT> & input_pointcloud);
 
-std::shared_ptr<PointCloud<PointXYZIRADT>> convert_point_xyzircaedt_to_point_xyziradt(
-  const std::shared_ptr<const PointCloud<PointXYZIRCAEDT>> & input_pointcloud, double stamp);
+PointCloud<PointXYZIRADT> convert_point_xyzircaedt_to_point_xyziradt(
+  const PointCloud<PointXYZIRCAEDT> & input_pointcloud, double stamp);
 
 PointCloud<PointXYZ> convert_point_xyzircaedt_to_point_xyz(
   const PointCloud<PointXYZIRCAEDT> & input_pointcloud);

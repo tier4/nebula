@@ -181,18 +181,18 @@ void HesaiDecoderWrapper::on_pointcloud_decoded(
     publish_cloud(std::move(ros_pc_msg_ptr), nebula_points_pub_);
   }
   if (NEBULA_HAS_ANY_SUBSCRIPTIONS(aw_points_base_pub_)) {
-    const auto autoware_cloud_xyzi =
-      nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(pointcloud);
+    auto autoware_cloud_xyzi =
+      nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(*pointcloud);
     auto ros_pc_msg_ptr = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(aw_points_base_pub_);
-    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(*autoware_cloud_xyzi);
+    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(autoware_cloud_xyzi);
     ros_pc_msg_ptr->header.stamp = cloud_stamp;
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_base_pub_);
   }
   if (NEBULA_HAS_ANY_SUBSCRIPTIONS(aw_points_ex_pub_)) {
-    const auto autoware_ex_cloud =
-      nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(pointcloud, timestamp_s);
+    auto autoware_ex_cloud =
+      nebula::drivers::convert_point_xyzircaedt_to_point_xyziradt(*pointcloud, timestamp_s);
     auto ros_pc_msg_ptr = ALLOCATE_OUTPUT_MESSAGE_UNIQUE(aw_points_ex_pub_);
-    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(*autoware_ex_cloud);
+    *ros_pc_msg_ptr = nebula::ros::to_ros_msg(autoware_ex_cloud);
     ros_pc_msg_ptr->header.stamp = cloud_stamp;
     publish_cloud(std::move(ros_pc_msg_ptr), aw_points_ex_pub_);
   }
