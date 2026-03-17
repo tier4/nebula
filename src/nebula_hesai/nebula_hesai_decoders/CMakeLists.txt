@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(nebula_hesai_decoders)
 
 find_package(autoware_cmake REQUIRED)
+find_package(Boost REQUIRED)
 autoware_package()
 
 # Hesai Decoder
@@ -16,7 +17,8 @@ target_link_libraries(
   nebula_hesai_decoders
   PUBLIC nebula_core_common::nebula_core_common
          nebula_hesai_common::nebula_hesai_common
-         nebula_core_decoders::nebula_core_decoders rclcpp::rclcpp)
+         nebula_core_decoders::nebula_core_decoders rclcpp::rclcpp
+         Boost::headers)
 
 install(TARGETS nebula_hesai_decoders EXPORT export_nebula_hesai_decoders)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
@@ -26,7 +28,7 @@ install(DIRECTORY calibration DESTINATION share/${PROJECT_NAME})
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_hesai_decoders)
 
-ament_export_dependencies(nebula_core_common nebula_hesai_common
+ament_export_dependencies(Boost nebula_core_common nebula_hesai_common
                           nebula_core_decoders rclcpp)
 
 ament_package()

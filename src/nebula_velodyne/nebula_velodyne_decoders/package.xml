@@ -14,6 +14,7 @@
   <buildtool_depend>ros_environment</buildtool_depend>
 
   <depend>angles</depend>
+  <depend>boost</depend>
   <depend>nebula_core_common</depend>
   <depend>nebula_core_decoders</depend>
   <depend>nebula_velodyne_common</depend>

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(nebula_velodyne)
 
 find_package(autoware_cmake REQUIRED)
+find_package(Boost REQUIRED)
 autoware_package()
 
 # # Velodyne
@@ -17,7 +18,8 @@ target_include_directories(
 
 target_link_libraries(
   velodyne_ros_wrapper
-  PUBLIC diagnostic_updater::diagnostic_updater
+  PUBLIC Boost::headers
+         diagnostic_updater::diagnostic_updater
          nebula_velodyne_decoders::nebula_velodyne_decoders
          nebula_velodyne_hw_interfaces::nebula_velodyne_hw_interfaces
          nebula_core_ros::nebula_core_ros)
@@ -148,6 +150,7 @@ ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_velodyne_ros_wrapper)
 
 ament_export_dependencies(
+  Boost
   diagnostic_msgs
   diagnostic_updater
   nebula_core_common

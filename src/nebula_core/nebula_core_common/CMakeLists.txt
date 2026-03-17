@@ -3,6 +3,7 @@ project(nebula_core_common)
 
 find_package(autoware_cmake REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(Boost REQUIRED)
 autoware_package()
 
 add_library(nebula_core_common SHARED src/nebula_common.cpp)
@@ -12,7 +13,9 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(nebula_core_common PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(nebula_core_common PUBLIC
+  nlohmann_json::nlohmann_json
+  Boost::headers)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -34,6 +37,6 @@ install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_core_common)
 
-ament_export_dependencies(nlohmann_json)
+ament_export_dependencies(Boost nlohmann_json)
 
 ament_package()

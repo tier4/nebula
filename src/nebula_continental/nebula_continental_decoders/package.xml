@@ -14,6 +14,7 @@
 
   <buildtool_depend>autoware_cmake</buildtool_depend>
   <buildtool_depend>ros_environment</buildtool_depend>
+  <depend>boost</depend>
   <depend>continental_msgs</depend>
   <depend>diagnostic_msgs</depend>
   <depend>nebula_continental_common</depend>

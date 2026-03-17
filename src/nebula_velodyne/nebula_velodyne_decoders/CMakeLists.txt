@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(nebula_velodyne_decoders)
 
 find_package(autoware_cmake REQUIRED)
+find_package(Boost REQUIRED)
 autoware_package()
 
 # Velodyne Decoder
@@ -25,7 +26,7 @@ ament_target_dependencies(
   rclcpp
   velodyne_msgs)
 
-target_link_libraries(nebula_velodyne_decoders PUBLIC)
+target_link_libraries(nebula_velodyne_decoders PUBLIC Boost::headers)
 
 install(TARGETS nebula_velodyne_decoders EXPORT export_nebula_velodyne_decoders)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
@@ -36,6 +37,7 @@ ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_velodyne_decoders)
 
 ament_export_dependencies(
+  Boost
   angles
   nebula_core_common
   nebula_velodyne_common
