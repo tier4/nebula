@@ -25,6 +25,7 @@
 #include <nebula_msgs/msg/nebula_packet.hpp>
 #include <nebula_msgs/msg/nebula_packets.hpp>
 
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
