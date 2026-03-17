@@ -25,6 +25,7 @@
 #include <nebula_msgs/msg/nebula_packets.hpp>
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 
 namespace nebula::drivers::continental_ars548
