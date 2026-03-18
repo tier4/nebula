@@ -6,7 +6,7 @@ find_package(message_filters REQUIRED)
 find_package(tf2_ros REQUIRED)
 autoware_package()
 
-find_package(autoware_agnocast_wrapper REQUIRED)
+find_package(agnocast_components REQUIRED)
 
 # # Continental
 
@@ -44,11 +44,10 @@ ament_target_dependencies(
   rclcpp_components
   tf2_ros)
 
-autoware_agnocast_wrapper_register_node(
+agnocast_components_register_node(
   continental_ars548_ros_wrapper PLUGIN "ContinentalARS548RosWrapper"
   EXECUTABLE continental_ars548_ros_wrapper_node
-  ROS2_EXECUTOR SingleThreadedExecutor
-  AGNOCAST_EXECUTOR CallbackIsolatedAgnocastExecutor)
+  EXECUTOR CallbackIsolatedAgnocastExecutor)
 
 # SRR520
 add_library(
