@@ -90,9 +90,15 @@ ament_target_dependencies(
   message_filters
   tf2_ros)
 
-rclcpp_components_register_node(
-  continental_srr520_ros_wrapper PLUGIN "ContinentalSRR520RosWrapper"
-  EXECUTABLE continental_srr520_ros_wrapper_node)
+if("$ENV{ENABLE_AGNOCAST}")
+  agnocast_components_register_node(
+    continental_srr520_ros_wrapper PLUGIN "ContinentalSRR520RosWrapper"
+    EXECUTABLE continental_srr520_ros_wrapper_node)
+else()
+  rclcpp_components_register_node(
+    continental_srr520_ros_wrapper PLUGIN "ContinentalSRR520RosWrapper"
+    EXECUTABLE continental_srr520_ros_wrapper_node)
+endif()
 
 install(
   TARGETS continental_ars548_ros_wrapper
