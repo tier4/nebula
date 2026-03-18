@@ -16,6 +16,7 @@
 
 #include "nebula_core_decoders/angles.hpp"
 
+#include <Eigen/Core>
 #include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/point_types.hpp>
@@ -24,7 +25,6 @@
 #include <png++/gray_pixel.hpp>
 #include <png++/image.hpp>
 
-#include <Eigen/src/Core/Matrix.h>
 #include <sys/types.h>
 
 #include <algorithm>

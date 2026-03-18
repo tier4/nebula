@@ -237,6 +237,7 @@ _DRAWIO_CONFIG = {
     "edit": "_blank",
     "lightbox": "1",
     "darkmode": True,
+    "style": "",
 }
 
 
@@ -260,7 +261,13 @@ def _render_drawio_to_html(drawio_path: Path, page_name: str) -> str:
         LOGGER.error(f"Could not parse diagram file '{drawio_path}': {e}")
         config["xml"] = ""
 
-    return MXGRAPH_TEMPLATE.substitute(config=escape(json.dumps(config)))
+    # The mkdocs-drawio template expects placeholders like $style and $xml in addition to $config.
+    # Provide defaults here to avoid KeyError when rendering.
+    return MXGRAPH_TEMPLATE.substitute(
+        config=escape(json.dumps(config)),
+        style="",
+        xml=config.get("xml", ""),
+    )
 
 
 def render_drawio_diagrams_in_markdown_file(path: Path) -> bool:

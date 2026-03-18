@@ -135,14 +135,14 @@ private:
   /// @brief Convert ARS548 detections to a pointcloud
   /// @param msg The ARS548 detection list msg
   /// @return Resulting detection pointcloud
-  pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>::Ptr
+  drivers::PointCloud<nebula::drivers::continental_ars548::PointARS548Detection>
   convert_to_pointcloud(const continental_msgs::msg::ContinentalArs548DetectionList & msg);
 
   /// @brief Convert ARS548 objects to a pointcloud
   /// @param msg The ARS548 object list msg
   /// @return Resulting object pointcloud
-  pcl::PointCloud<nebula::drivers::continental_ars548::PointARS548Object>::Ptr
-  convert_to_pointcloud(const continental_msgs::msg::ContinentalArs548ObjectList & msg);
+  drivers::PointCloud<nebula::drivers::continental_ars548::PointARS548Object> convert_to_pointcloud(
+    const continental_msgs::msg::ContinentalArs548ObjectList & msg);
 
   /// @brief Convert ARS548 detections to a standard RadarScan msg
   /// @param msg The ARS548 detection list msg

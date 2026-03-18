@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include <boost_tcp_driver/tcp_driver.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_robosense_common/robosense_common.hpp>

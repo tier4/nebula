@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(nebula_continental_decoders)
 
 find_package(autoware_cmake REQUIRED)
+find_package(Boost REQUIRED)
 autoware_package()
 
 # Continental Decoder
@@ -18,7 +19,8 @@ target_include_directories(
 target_link_libraries(
   nebula_continental_decoders
   PUBLIC nebula_core_common::nebula_core_common
-         nebula_continental_common::nebula_continental_common rclcpp::rclcpp)
+         nebula_continental_common::nebula_continental_common rclcpp::rclcpp
+         Boost::headers)
 
 ament_target_dependencies(nebula_continental_decoders PUBLIC continental_msgs
                           diagnostic_msgs nebula_msgs)
@@ -30,7 +32,7 @@ install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_continental_decoders)
 
-ament_export_dependencies(continental_msgs diagnostic_msgs nebula_core_common
+ament_export_dependencies(Boost continental_msgs diagnostic_msgs nebula_core_common
                           nebula_continental_common nebula_msgs rclcpp)
 
 ament_package()

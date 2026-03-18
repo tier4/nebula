@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(nebula_core_ros)
 
 find_package(autoware_cmake REQUIRED)
+find_package(Boost REQUIRED)
 autoware_package()
 
 # Common library for parameter descriptors
@@ -12,7 +13,8 @@ target_include_directories(
                          $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(
-  nebula_core_ros PUBLIC rclcpp::rclcpp nebula_core_common::nebula_core_common rosbag2_storage::rosbag2_storage)
+  nebula_core_ros PUBLIC rclcpp::rclcpp nebula_core_common::nebula_core_common
+                         rosbag2_storage::rosbag2_storage Boost::headers)
 
 install(
   TARGETS nebula_core_ros
@@ -39,7 +41,7 @@ ament_export_targets(export_nebula_core_ros)
 
 install(DIRECTORY schema DESTINATION share/${PROJECT_NAME})
 
-ament_export_dependencies(diagnostic_msgs diagnostic_updater nebula_core_common
-                          rclcpp rosbag2_storage)
+ament_export_dependencies(Boost diagnostic_msgs diagnostic_updater
+                          nebula_core_common rclcpp rosbag2_storage)
 
 ament_package()

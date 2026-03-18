@@ -14,6 +14,8 @@
 
 #include "velodyne_ros_offline_extract_bag_pcd.hpp"
 
+#include <nebula_core_common/io/pcd.hpp>
+#include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_ros/compatibility/serialized_bag_message.hpp>
 #include <rosbag2_cpp/reader.hpp>
 #include <rosbag2_cpp/writers/sequential_writer.hpp>
@@ -320,8 +322,6 @@ Status VelodyneRosOfflineExtractBag::read_bag()
   }
   //  return Status::OK;
 
-  pcl::PCDWriter pcd_writer;
-
   std::unique_ptr<rosbag2_cpp::writers::SequentialWriter> bag_writer;
   bool needs_open = true;
   storage_options.uri = bag_path_;
@@ -380,11 +380,10 @@ Status VelodyneRosOfflineExtractBag::read_bag()
           if (skip_num_ < cnt) {
             out_cnt++;
             if (only_xyz_) {
-              pcl::PointCloud<pcl::PointXYZ> cloud_xyz;
-              pcl::copyPointCloud(*pointcloud, cloud_xyz);
-              pcd_writer.writeBinary((o_dir / fn).string(), cloud_xyz);
+              auto cloud_xyz = convert_point_xyzircaedt_to_point_xyz(*pointcloud);
+              drivers::io::PcdWriter::write_binary((o_dir / fn).string(), cloud_xyz);
             } else {
-              pcd_writer.writeBinary((o_dir / fn).string(), *pointcloud);
+              drivers::io::PcdWriter::write_binary((o_dir / fn).string(), *pointcloud);
             }
           }
           if (out_num_ <= out_cnt) {
