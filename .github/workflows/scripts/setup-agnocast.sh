@@ -12,7 +12,12 @@ if [ -z "$ROS_DISTRO" ]; then
     exit 1
 fi
 
-sudo apt-get install -yqq software-properties-common linux-headers-"$(uname -r)"
+# Extract the kernel flavor (e.g., 'azure')
+# Some CI runner images do not have corresponding linux-headers packages, so we need to get the
+# base/generic headers of the flavor instead.
+FLAVOR=$(uname -r | sed 's/.*[0-9]-//')
+
+sudo apt-get install -yqq software-properties-common linux-headers-"$FLAVOR"
 sudo apt-add-repository -y ppa:t4-system-software/agnocast
 sudo apt-get install -yqq agnocast-{kmod,heaphook}-v"${AGNOCAST_VERSION}"
 
