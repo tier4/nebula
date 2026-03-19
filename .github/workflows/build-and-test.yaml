@@ -25,6 +25,7 @@ jobs:
       CC: /usr/lib/ccache/gcc
       CXX: /usr/lib/ccache/g++
       ENABLE_AGNOCAST: ${{ matrix.enable_agnocast }}
+      AGNOCAST_VERSION: 2.3.1
 
     steps:
       - name: Check out repository
@@ -47,7 +48,8 @@ jobs:
 
       - run: ./.github/workflows/scripts/ensure-apt-up-to-date.sh
       - run: ./.github/workflows/scripts/setup-ccache.sh
-
+      - run: ./.github/workflows/scripts/setup-agnocast.sh
+        if: matrix.enable_agnocast == '1'
 
       - name: Limit ccache size
         run: |
