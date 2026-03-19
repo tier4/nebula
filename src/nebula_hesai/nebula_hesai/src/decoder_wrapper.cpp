@@ -46,6 +46,7 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   publish_diagnostic_(make_rate_bound_status(sensor_cfg_->rotation_speed, *parent_node)),
   debug_publisher_(parent_node, "nebula")
 {
+  // TEMP: ci trigger
   if (!sensor_cfg_) {
     throw std::runtime_error("HesaiDecoderWrapper cannot be instantiated without a valid config!");
   }
