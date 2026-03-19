@@ -12,7 +12,7 @@ if [ -z "$ROS_DISTRO" ]; then
     exit 1
 fi
 
-sudo apt-get install -yqq software-properties-common
+sudo apt-get install -yqq software-properties-common linux-headers-"$(uname -r)"
 sudo apt-add-repository -y ppa:t4-system-software/agnocast
 sudo apt-get install -yqq agnocast-{kmod,heaphook}-v"${AGNOCAST_VERSION}"
 
