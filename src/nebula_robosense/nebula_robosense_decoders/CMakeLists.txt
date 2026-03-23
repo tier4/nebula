@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(nebula_robosense_decoders)
 
 find_package(autoware_cmake REQUIRED)
+find_package(Boost REQUIRED)
 autoware_package()
 
 # Robosense Decoder
@@ -16,7 +17,8 @@ target_link_libraries(
   nebula_robosense_decoders
   PUBLIC nebula_core_common::nebula_core_common
          nebula_robosense_common::nebula_robosense_common
-         nebula_core_decoders::nebula_core_decoders rclcpp::rclcpp)
+         nebula_core_decoders::nebula_core_decoders rclcpp::rclcpp
+         Boost::headers)
 
 # Robosense Info Decoder
 add_library(nebula_robosense_decoders_info SHARED src/robosense_info_driver.cpp)
@@ -30,7 +32,8 @@ target_link_libraries(
   nebula_robosense_decoders_info
   PUBLIC nebula_core_common::nebula_core_common
          nebula_robosense_common::nebula_robosense_common
-         nebula_core_decoders::nebula_core_decoders rclcpp::rclcpp)
+         nebula_core_decoders::nebula_core_decoders rclcpp::rclcpp
+         Boost::headers)
 
 install(TARGETS nebula_robosense_decoders
         EXPORT export_nebula_robosense_decoders)
@@ -42,7 +45,7 @@ ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_nebula_robosense_decoders)
 ament_export_targets(export_nebula_robosense_decoders_info)
 
-ament_export_dependencies(nebula_core_common nebula_robosense_common
+ament_export_dependencies(Boost nebula_core_common nebula_robosense_common
                           nebula_core_decoders rclcpp)
 
 ament_package()

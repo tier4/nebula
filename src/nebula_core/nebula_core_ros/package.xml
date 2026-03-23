@@ -13,6 +13,7 @@
   <buildtool_depend>autoware_cmake</buildtool_depend>
   <buildtool_depend>ros_environment</buildtool_depend>
   <buildtool_depend>ros_testing</buildtool_depend>
+  <depend>boost</depend>
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
   <depend>nebula_core_common</depend>

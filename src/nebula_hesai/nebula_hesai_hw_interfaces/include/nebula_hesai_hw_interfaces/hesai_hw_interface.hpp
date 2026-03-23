@@ -32,10 +32,10 @@
 #endif
 #include "nebula_hesai_hw_interfaces/hesai_cmd_response.hpp"
 
-#include <boost_tcp_driver/http_client_driver.hpp>
-#include <boost_tcp_driver/tcp_driver.hpp>
 #include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/http_client.hpp>
+#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/tcp.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
 #include <nebula_hesai_common/hesai_status.hpp>
 
@@ -128,28 +128,17 @@ private:
 
   std::shared_ptr<loggers::Logger> logger_;
   std::optional<connections::UdpSocket> udp_socket_;
-  std::shared_ptr<boost::asio::io_context> m_owned_ctx_;
-  std::shared_ptr<::drivers::tcp_driver::TcpDriver> tcp_driver_;
+  std::unique_ptr<connections::TcpSocket> tcp_socket_;
+  std::unique_ptr<connections::HttpClient> http_client_;
   std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration_;
   connections::UdpSocket::callback_t cloud_packet_callback_;
 
   std::mutex mtx_inflight_tcp_request_;
 
-  int target_model_no_;
+  uint16_t tcp_port_{9347};
+  uint16_t http_port_{80};
 
-  /// @brief Get a one-off HTTP client to communicate with the hardware
-  /// @param ctx IO Context
-  /// @param hcd Got http client driver
-  /// @return Resulting status
-  HesaiStatus get_http_client_driver_once(
-    std::shared_ptr<boost::asio::io_context> ctx,
-    std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd);
-  /// @brief Get a one-off HTTP client to communicate with the hardware (without specifying
-  /// io_context)
-  /// @param hcd Got http client driver
-  /// @return Resulting status
-  HesaiStatus get_http_client_driver_once(
-    std::unique_ptr<::drivers::tcp_driver::HttpClientDriver> & hcd);
+  int target_model_no_;
   /// @brief A callback that receives a string (just prints)
   /// @param str Received string
   void str_cb(const std::string & str);
@@ -181,22 +170,22 @@ public:
   explicit HesaiHwInterface(const std::shared_ptr<loggers::Logger> & logger);
   /// @brief Destructor
   ~HesaiHwInterface();
-  /// @brief Initializing tcp_driver for TCP communication
-  /// @param setup_sensor Whether to also initialize tcp_driver for sensor configuration
+  /// @brief Initializing tcp_socket for TCP communication
+  /// @param setup_sensor Whether to also initialize tcp_socket for sensor configuration
   /// @return Resulting status
-  Status initialize_tcp_driver();
-  /// @brief Closes the TcpDriver and related resources
+  Status initialize_tcp_socket();
+  /// @brief Closes the TcpSocket and related resources
   /// @return Status result
-  Status finalize_tcp_driver();
+  Status finalize_tcp_socket();
   /// @brief Parsing json string to property_tree
   /// @param str JSON string
   /// @return Parsed property_tree
   boost::property_tree::ptree parse_json(const std::string & str);
 
-  /// @brief Callback function to receive the Cloud Packet data from the UDP Driver
+  /// @brief Callback function to receive the Cloud Packet data from the UDP Socket
   /// @param buffer Buffer containing the data received from the UDP socket
   void receive_sensor_packet_callback(
-    const std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata);
+    std::vector<uint8_t> & buffer, const connections::UdpSocket::RxMetadata & metadata);
   /// @brief Starting the interface that handles UDP streams
   /// @return Resulting status
   Status sensor_interface_start();
@@ -371,39 +360,16 @@ public:
   /// @return Resulting status
   HesaiLidarMonitor get_lidar_monitor();
 
-  /// @brief Call run() of IO Context
-  void io_context_run();
-  /// @brief GetIO Context
-  /// @return IO Context
-  std::shared_ptr<boost::asio::io_context> get_io_context();
-
-  /// @brief Setting spin_speed via HTTP API
-  /// @param ctx IO Context used
-  /// @param rpm spin_speed (300, 600, 1200)
-  /// @return Resulting status
-  HesaiStatus set_spin_speed_async_http(std::shared_ptr<boost::asio::io_context> ctx, uint16_t rpm);
   /// @brief Setting spin_speed via HTTP API
   /// @param rpm spin_speed (300, 600, 1200)
   /// @return Resulting status
   HesaiStatus set_spin_speed_async_http(uint16_t rpm);
 
   HesaiStatus set_ptp_config_sync_http(
-    std::shared_ptr<boost::asio::io_context> ctx, int profile, int domain, int network,
-    int logAnnounceInterval, int logSyncInterval, int logMinDelayReqInterval);
-  HesaiStatus set_ptp_config_sync_http(
     int profile, int domain, int network, int logAnnounceInterval, int logSyncInterval,
     int logMinDelayReqInterval);
-  HesaiStatus set_sync_angle_sync_http(
-    std::shared_ptr<boost::asio::io_context> ctx, int enable, int angle);
   HesaiStatus set_sync_angle_sync_http(int enable, int angle);
 
-  /// @brief Getting lidar_monitor via HTTP API
-  /// @param ctx IO Context
-  /// @param str_callback Callback function for received string
-  /// @return Resulting status
-  HesaiStatus get_lidar_monitor_async_http(
-    std::shared_ptr<boost::asio::io_context> ctx,
-    std::function<void(const std::string & str)> str_callback);
   /// @brief Getting lidar_monitor via HTTP API
   /// @param str_callback Callback function for received string
   /// @return Resulting status
@@ -442,6 +408,12 @@ public:
   /// target model)
   /// @param model Model
   void set_target_model(nebula::drivers::SensorModel model);
+
+  /// @brief Set target ports for TCP command and HTTP client (useful for unit testing without
+  /// privileges)
+  /// @param tcp_port TCP port
+  /// @param http_port HTTP port
+  void set_target_ports(uint16_t tcp_port, uint16_t http_port);
 
   /// @brief Whether to use HTTP for setting SpinRate
   /// @param model Model number

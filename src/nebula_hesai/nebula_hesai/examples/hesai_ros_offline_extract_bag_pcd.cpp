@@ -14,7 +14,9 @@
 
 #include "hesai_ros_offline_extract_bag_pcd.hpp"
 
+#include <nebula_core_common/io/pcd.hpp>
 #include <nebula_core_ros/compatibility/serialized_bag_message.hpp>
+#include <nebula_core_ros/point_cloud_conversions.hpp>
 #include <nebula_core_ros/rclcpp_logger.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
 #include <rclcpp/serialization.hpp>
@@ -24,8 +26,6 @@
 #include <rosbag2_cpp/readers/sequential_reader.hpp>
 #include <rosbag2_cpp/writers/sequential_writer.hpp>
 #include <rosbag2_storage/storage_options.hpp>
-
-#include <pcl_conversions/pcl_conversions.h>
 
 #include <iostream>
 #include <memory>
@@ -214,8 +214,6 @@ Status HesaiRosOfflineExtractBag::read_bag()
     std::cout << "created: " << o_dir << std::endl;
   }
 
-  pcl::PCDWriter pcd_writer;
-
   std::unique_ptr<rosbag2_cpp::writers::SequentialWriter> bag_writer{};
   storage_options.uri = bag_path_;
   storage_options.storage_id = storage_id_;
@@ -280,18 +278,16 @@ Status HesaiRosOfflineExtractBag::read_bag()
 
           if (output_pcd_) {
             if (only_xyz_) {
-              pcl::PointCloud<pcl::PointXYZ> cloud_xyz;
-              pcl::copyPointCloud(*pointcloud, cloud_xyz);
-              pcd_writer.writeBinary((o_dir / fn).string(), cloud_xyz);
+              auto cloud_xyz = convert_point_xyzircaedt_to_point_xyz(*pointcloud);
+              drivers::io::PcdWriter::write_binary((o_dir / fn).string(), cloud_xyz);
             } else {
-              pcd_writer.writeBinary((o_dir / fn).string(), *pointcloud);
+              drivers::io::PcdWriter::write_binary((o_dir / fn).string(), *pointcloud);
             }
           }
 
           if (output_rosbag_) {
             // Create ROS Pointcloud from PCL pointcloud
-            sensor_msgs::msg::PointCloud2 cloud_msg;
-            pcl::toROSMsg(*pointcloud, cloud_msg);
+            auto cloud_msg = nebula::ros::to_ros_msg(*pointcloud);
             cloud_msg.header = extracted_msg.header;
             cloud_msg.header.frame_id = frame_id_;
 

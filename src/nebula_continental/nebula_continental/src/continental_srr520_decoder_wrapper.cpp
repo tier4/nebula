@@ -15,8 +15,7 @@
 #include "nebula_continental/continental_srr520_decoder_wrapper.hpp"
 
 #include <nebula_core_common/util/string_conversions.hpp>
-
-#include <pcl_conversions/pcl_conversions.h>
+#include <nebula_core_ros/point_cloud_conversions.hpp>
 
 #include <memory>
 #include <unordered_set>
@@ -155,9 +154,9 @@ void ContinentalSRR520DecoderWrapper::near_detection_list_callback(
   if (
     near_detection_pointcloud_pub_->get_subscription_count() > 0 ||
     near_detection_pointcloud_pub_->get_intra_process_subscription_count() > 0) {
-    const auto detection_pointcloud_ptr = convert_to_pointcloud(*msg);
+    const auto detection_pointcloud = convert_to_pointcloud(*msg);
     auto detection_pointcloud_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*detection_pointcloud_ptr, *detection_pointcloud_msg_ptr);
+    *detection_pointcloud_msg_ptr = nebula::ros::to_ros_msg(detection_pointcloud);
 
     detection_pointcloud_msg_ptr->header = msg->header;
     near_detection_pointcloud_pub_->publish(std::move(detection_pointcloud_msg_ptr));
@@ -184,9 +183,9 @@ void ContinentalSRR520DecoderWrapper::hrr_detection_list_callback(
   if (
     hrr_detection_pointcloud_pub_->get_subscription_count() > 0 ||
     hrr_detection_pointcloud_pub_->get_intra_process_subscription_count() > 0) {
-    const auto detection_pointcloud_ptr = convert_to_pointcloud(*msg);
+    const auto detection_pointcloud = convert_to_pointcloud(*msg);
     auto detection_pointcloud_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*detection_pointcloud_ptr, *detection_pointcloud_msg_ptr);
+    *detection_pointcloud_msg_ptr = nebula::ros::to_ros_msg(detection_pointcloud);
 
     detection_pointcloud_msg_ptr->header = msg->header;
     hrr_detection_pointcloud_pub_->publish(std::move(detection_pointcloud_msg_ptr));
@@ -213,9 +212,9 @@ void ContinentalSRR520DecoderWrapper::object_list_callback(
   if (
     object_pointcloud_pub_->get_subscription_count() > 0 ||
     object_pointcloud_pub_->get_intra_process_subscription_count() > 0) {
-    const auto object_pointcloud_ptr = convert_to_pointcloud(*msg);
+    const auto object_pointcloud = convert_to_pointcloud(*msg);
     auto object_pointcloud_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*object_pointcloud_ptr, *object_pointcloud_msg_ptr);
+    *object_pointcloud_msg_ptr = nebula::ros::to_ros_msg(object_pointcloud);
 
     object_pointcloud_msg_ptr->header = msg->header;
     object_pointcloud_pub_->publish(std::move(object_pointcloud_msg_ptr));
@@ -249,13 +248,12 @@ void ContinentalSRR520DecoderWrapper::status_callback(
   status_pub_->publish(std::move(status_msg_ptr));
 }
 
-pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Detection>::Ptr
+drivers::PointCloud<nebula::drivers::continental_srr520::PointSRR520Detection>
 ContinentalSRR520DecoderWrapper::convert_to_pointcloud(
   const continental_msgs::msg::ContinentalSrr520DetectionList & msg)
 {
-  pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Detection>::Ptr output_pointcloud(
-    new pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Detection>);
-  output_pointcloud->reserve(msg.detections.size());
+  drivers::PointCloud<nebula::drivers::continental_srr520::PointSRR520Detection> output_pointcloud;
+  output_pointcloud.reserve(msg.detections.size());
 
   nebula::drivers::continental_srr520::PointSRR520Detection point{};
   for (const auto & detection : msg.detections) {
@@ -275,21 +273,18 @@ ContinentalSRR520DecoderWrapper::convert_to_pointcloud(
     point.pdh04 = detection.pdh04;
     point.pdh05 = detection.pdh05;
 
-    output_pointcloud->points.emplace_back(point);
+    output_pointcloud.emplace_back(point);
   }
 
-  output_pointcloud->height = 1;
-  output_pointcloud->width = output_pointcloud->points.size();
   return output_pointcloud;
 }
 
-pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Object>::Ptr
+drivers::PointCloud<nebula::drivers::continental_srr520::PointSRR520Object>
 ContinentalSRR520DecoderWrapper::convert_to_pointcloud(
   const continental_msgs::msg::ContinentalSrr520ObjectList & msg)
 {
-  pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Object>::Ptr output_pointcloud(
-    new pcl::PointCloud<nebula::drivers::continental_srr520::PointSRR520Object>);
-  output_pointcloud->reserve(msg.objects.size());
+  drivers::PointCloud<nebula::drivers::continental_srr520::PointSRR520Object> output_pointcloud;
+  output_pointcloud.reserve(msg.objects.size());
 
   nebula::drivers::continental_srr520::PointSRR520Object point{};
   for (const auto & object : msg.objects) {
@@ -312,11 +307,9 @@ ContinentalSRR520DecoderWrapper::convert_to_pointcloud(
     point.dynamics_abs_acc_x = object.a_abs_x;
     point.dynamics_abs_acc_y = object.a_abs_y;
 
-    output_pointcloud->points.emplace_back(point);
+    output_pointcloud.emplace_back(point);
   }
 
-  output_pointcloud->height = 1;
-  output_pointcloud->width = output_pointcloud->points.size();
   return output_pointcloud;
 }
 

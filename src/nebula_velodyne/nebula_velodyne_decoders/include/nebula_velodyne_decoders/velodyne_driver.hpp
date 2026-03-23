@@ -25,8 +25,6 @@
 #include <velodyne_msgs/msg/velodyne_packet.hpp>
 #include <velodyne_msgs/msg/velodyne_scan.hpp>
 
-#include <pcl_conversions/pcl_conversions.h>
-
 #include <iostream>
 #include <memory>
 #include <stdexcept>

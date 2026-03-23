@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION 3.20)
 project(nebula_core_decoders)
 
 find_package(autoware_cmake REQUIRED)
+find_package(PNG REQUIRED)
+find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(Boost REQUIRED)
 autoware_package()
+
 
 add_library(nebula_core_decoders INTERFACE)
 
@@ -10,7 +14,8 @@ target_include_directories(
   nebula_core_decoders
   INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:include>)
-target_link_libraries(nebula_core_decoders INTERFACE PNG::PNG)
+target_link_libraries(nebula_core_decoders INTERFACE PNG::PNG Eigen3::Eigen
+                                                   Boost::headers)
 ament_target_dependencies(nebula_core_decoders INTERFACE nebula_core_common
                           sensor_msgs)
 
@@ -41,6 +46,6 @@ if(BUILD_TESTING)
 endif()
 
 ament_export_targets(export_nebula_core_decoders)
-ament_export_dependencies(nebula_core_common sensor_msgs PNG)
+ament_export_dependencies(Boost nebula_core_common sensor_msgs PNG Eigen3)
 
 ament_package()
