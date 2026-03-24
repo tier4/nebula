@@ -28,7 +28,7 @@ int main()
                   .limit_to_sender("192.168.10.20", 7000)
                   .bind();
 
-  socket.subscribe([](const std::vector<uint8_t> & data, const UdpSocket::RxMetadata & metadata) {
+  socket.subscribe([](std::vector<uint8_t> & data, const UdpSocket::RxMetadata & metadata) {
     (void)data;
     (void)metadata;
     // Process received data and metadata here. This callback will be executed in the socket's
