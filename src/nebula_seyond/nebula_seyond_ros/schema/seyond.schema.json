@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lidar Seyond parameters.",
+  "type": "object",
+  "definitions": {
+    "sensor_model": {
+      "$ref": "../../../nebula_core/nebula_core_ros/schema/hardware.json#/definitions/sensor_model",
+      "enum": [
+        "FalconK",
+        "RobinW",
+        "RobinE1X",
+        "HummingbirdD1"
+      ]
+    },
+    "host_ip": {
+      "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/host_ip",
+      "default": "172.168.1.100"
+    },
+    "sensor_ip": {
+      "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/sensor_ip",
+      "default": "172.168.1.10"
+    },
+    "udp_port": {
+      "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/data_port",
+      "default": 8010
+    },
+    "use_sensor_time": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to use the sensor's timestamp or the host's timestamp."
+    },
+    "frame_id": {
+      "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/frame_id",
+      "default": "seyond"
+    },
+    "setup_sensor": {
+      "$ref": "../../../nebula_core/nebula_core_ros/schema/hardware.json#/definitions/setup_sensor",
+      "default": true
+    },
+    "return_mode": {
+      "type": "string",
+      "enum": ["Single", "Dual", "StrongestFurthest"],
+      "default": "Single"
+    },
+    "reflectance_mode": {
+      "type": "string",
+      "enum": ["None", "Intensity", "Reflectivity"],
+      "default": "Reflectivity"
+    },
+    "time_sync": {
+      "type": "string",
+      "enum": ["Host", "PTP", "GPS", "File", "NTP"],
+      "default": "Host"
+    }
+  },
+  "$id": "nebula_seyond/schema/seyond.schema.json"
+}

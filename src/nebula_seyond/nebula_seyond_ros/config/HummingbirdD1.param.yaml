@@ -1,0 +1,12 @@
+/**:
+  ros__parameters:
+    sensor_model: HummingbirdD1
+    host_ip: 172.168.1.100
+    sensor_ip: 172.168.1.10
+    udp_port: 8010
+    use_sensor_time: false
+    frame_id: seyond
+    setup_sensor: true
+    return_mode: Single
+    reflectance_mode: Reflectivity
+    time_sync: Host

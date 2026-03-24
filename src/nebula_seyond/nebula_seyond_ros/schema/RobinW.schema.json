@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LiDAR Seyond RobinW parameters.",
+  "type": "object",
+  "definitions": {
+    "RobinW": {
+      "type": "object",
+      "properties": {
+        "host_ip": {
+          "$ref": "seyond.schema.json#/definitions/host_ip"
+        },
+        "sensor_ip": {
+          "$ref": "seyond.schema.json#/definitions/sensor_ip"
+        },
+        "udp_port": {
+          "$ref": "seyond.schema.json#/definitions/udp_port"
+        },
+        "sensor_model": {
+          "$ref": "seyond.schema.json#/definitions/sensor_model",
+          "enum": [
+            "RobinW"
+          ]
+        },
+        "use_sensor_time": {
+          "$ref": "seyond.schema.json#/definitions/use_sensor_time"
+        },
+        "frame_id": {
+          "$ref": "seyond.schema.json#/definitions/frame_id"
+        },
+        "setup_sensor": {
+          "$ref": "seyond.schema.json#/definitions/setup_sensor"
+        },
+        "return_mode": {
+          "$ref": "seyond.schema.json#/definitions/return_mode"
+        },
+        "reflectance_mode": {
+          "$ref": "seyond.schema.json#/definitions/reflectance_mode"
+        },
+        "time_sync": {
+          "$ref": "seyond.schema.json#/definitions/time_sync"
+        }
+      },
+      "required": [
+        "host_ip",
+        "sensor_ip",
+        "udp_port",
+        "sensor_model",
+        "use_sensor_time",
+        "frame_id",
+        "setup_sensor",
+        "return_mode",
+        "reflectance_mode",
+        "time_sync"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/RobinW"
+        },
+        "additionalProperties": false
+      },
+      "required": [
+        "ros__parameters"
+      ]
+    }
+  },
+  "required": [
+    "/**"
+  ],
+  "additionalProperties": false
+}

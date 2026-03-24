@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="sensor_model">
+    <choice value="FalconK" />
+    <choice value="RobinW" />
+    <choice value="RobinE1X" />
+    <choice value="HummingbirdD1" />
+  </arg>
+  <arg name="sensor_ip" default="172.168.1.10" />
+  <arg name="host_ip" default="172.168.1.100" />
+  <arg name="udp_port" default="8010" />
+  <arg name="launch_hw" default="true" description="Whether to connect to a real sensor (true) or to accept packet messages (false).">
+    <choice value="true" />
+    <choice value="false" />
+  </arg>
+  <arg name="setup_sensor" default="true" description="Enable sensor setup on hardware driver.">
+    <choice value="true" />
+    <choice value="false" />
+  </arg>
+  <arg name="config_file" default="$(find-pkg-share nebula_seyond_ros)/config/$(var sensor_model).param.yaml"/>
+
+  <node pkg="nebula_seyond_ros" exec="seyond_ros_wrapper_node" name="seyond_ros_wrapper_node" output="screen">
+    <param from="$(var config_file)" allow_substs="true"/>
+    <param name="launch_hw" value="$(var launch_hw)"/>
+    <param name="sensor_ip" value="$(var sensor_ip)"/>
+    <param name="host_ip" value="$(var host_ip)"/>
+    <param name="udp_port" value="$(var udp_port)"/>
+    <param name="setup_sensor" value="$(var setup_sensor)"/>
+  </node>
+
+</launch>
