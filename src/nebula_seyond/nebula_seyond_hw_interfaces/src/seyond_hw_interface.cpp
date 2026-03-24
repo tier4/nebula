@@ -26,8 +26,8 @@ namespace nebula::drivers
 SeyondHwInterface::SeyondHwInterface(const SeyondSensorConfiguration & config)
 : sensor_config_(config)
 {
-  http_client_ = std::make_unique<connections::HttpClient>(
-    sensor_config_.connection.seyond_sensor_ip, k_http_port);
+  http_client_ =
+    std::make_unique<connections::HttpClient>(sensor_config_.connection.sensor_ip, k_http_port);
 }
 
 Status SeyondHwInterface::sensor_interface_start()
@@ -43,8 +43,8 @@ Status SeyondHwInterface::sensor_interface_start()
   }
 
   try {
-    std::string ip = sensor_config_.connection.seyond_host_ip;
-    uint16_t port = sensor_config_.connection.seyond_udp_port;
+    std::string ip = sensor_config_.connection.host_ip;
+    uint16_t port = sensor_config_.connection.udp_port;
     connections::UdpSocket::Builder builder{ip, port};
     udp_socket_.emplace(std::move(builder).bind());
   } catch (const std::exception & e) {
@@ -124,9 +124,10 @@ SeyondHwInterface::get_calibration()
     }
   }
 
-  // Fetch anglehv_table for RobinW and Hummingbird
+  // Fetch anglehv_table for Robin W, Robin E1X, and Hummingbird D1
   if (
     sensor_config_.sensor_model == SeyondSensorModel::ROBIN_W ||
+    sensor_config_.sensor_model == SeyondSensorModel::ROBIN_E1X ||
     sensor_config_.sensor_model == SeyondSensorModel::HUMMINGBIRD_D1) {
     try {
       std::string table_response = http_client_->get("/command/?get_anglehv_table", 2000);
@@ -142,10 +143,9 @@ SeyondHwInterface::get_calibration()
 Status SeyondHwInterface::setup_sensor(const SeyondSensorConfiguration & config)
 {
   // Set destination network settings
-  std::string network_val = std::to_string(config.connection.seyond_udp_port) + "," +
-                            std::to_string(config.connection.seyond_udp_port) + "," +
-                            std::to_string(config.connection.seyond_udp_port) + "," +
-                            config.connection.seyond_host_ip;
+  std::string network_val =
+    std::to_string(config.connection.udp_port) + "," + std::to_string(config.connection.udp_port) +
+    "," + std::to_string(config.connection.udp_port) + "," + config.connection.host_ip;
   auto status = set_attribute("udp_ports_ip", network_val);
   if (status != Status::OK) {
     return status;

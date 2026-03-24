@@ -27,25 +27,25 @@ namespace nebula::drivers
 /// @brief Network endpoint settings used by the Seyond driver.
 struct SeyondConnectionConfiguration
 {
-  std::string seyond_host_ip;
-  std::string seyond_sensor_ip;
-  uint16_t seyond_udp_port;
+  std::string host_ip;
+  std::string sensor_ip;
+  uint16_t udp_port;
 };
 
 /// @brief Serialize SeyondConnectionConfiguration to JSON.
 inline void to_json(nlohmann::json & j, const SeyondConnectionConfiguration & config)
 {
-  j["seyond_host_ip"] = config.seyond_host_ip;
-  j["seyond_sensor_ip"] = config.seyond_sensor_ip;
-  j["seyond_udp_port"] = config.seyond_udp_port;
+  j["host_ip"] = config.host_ip;
+  j["sensor_ip"] = config.sensor_ip;
+  j["udp_port"] = config.udp_port;
 }
 
 /// @brief Deserialize SeyondConnectionConfiguration from JSON.
 inline void from_json(const nlohmann::json & j, SeyondConnectionConfiguration & config)
 {
-  j.at("seyond_host_ip").get_to(config.seyond_host_ip);
-  j.at("seyond_sensor_ip").get_to(config.seyond_sensor_ip);
-  j.at("seyond_udp_port").get_to(config.seyond_udp_port);
+  j.at("host_ip").get_to(config.host_ip);
+  j.at("sensor_ip").get_to(config.sensor_ip);
+  j.at("udp_port").get_to(config.udp_port);
 }
 
 /// @brief Sensor-specific configuration for Seyond LiDARs

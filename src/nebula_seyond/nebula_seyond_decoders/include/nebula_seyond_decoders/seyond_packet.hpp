@@ -84,10 +84,15 @@ struct SeyondBlockHeader
   uint64_t reserved_flags : 2;
 };
 
+/// @brief FalconK standard channel point (SDK: InnoChannelPoint) — 4 bytes packed
 struct SeyondChannelPoint
 {
-  uint16_t reflectance;
-  uint16_t radius;
+  /// distance unit: 1/200m (normal) or 1/100m (long_distance_mode)
+  uint32_t radius : 17;
+  uint32_t refl : 8;  ///< reflectance or intensity
+  uint32_t is_2nd_return : 1;
+  uint32_t type : 2;  ///< 0=normal, 1=ground, 2=fog
+  uint32_t elongation : 4;
 };
 
 struct SeyondBlock

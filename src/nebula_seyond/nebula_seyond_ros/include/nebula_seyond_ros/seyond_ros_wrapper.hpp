@@ -50,6 +50,7 @@ private:
   std::unique_ptr<nebula::drivers::SeyondHwInterface> hw_interface_;
   std::unique_ptr<nebula::drivers::SeyondDecoder> decoder_;
   nebula::drivers::SeyondSensorConfiguration config_;
+  bool launch_hw_{true};
 
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
 };

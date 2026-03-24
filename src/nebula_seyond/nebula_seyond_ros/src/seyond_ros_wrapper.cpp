@@ -34,42 +34,53 @@ SeyondRosWrapper::SeyondRosWrapper(const rclcpp::NodeOptions & options)
   cloud_pub_ =
     create_publisher<sensor_msgs::msg::PointCloud2>("seyond_points", rclcpp::SensorDataQoS());
 
-  hw_interface_ = std::make_unique<nebula::drivers::SeyondHwInterface>(config_);
-  hw_interface_->register_scan_callback(
-    std::bind(
-      &SeyondRosWrapper::receive_packet_callback, this, std::placeholders::_1,
-      std::placeholders::_2));
+  // Calibration defaults to empty (live sensor will override)
+  nebula::drivers::SeyondCalibrationData calibration{};
 
-  if (config_.setup_sensor) {
-    auto status = hw_interface_->setup_sensor(config_);
-    if (status != nebula::Status::OK) {
-      RCLCPP_ERROR(
-        get_logger(), "Failed to setup Seyond sensor: %s",
-        (boost::format("%1%") % status).str().c_str());
-    } else {
-      RCLCPP_INFO(get_logger(), "Seyond sensor setup successfully");
+  if (launch_hw_) {
+    hw_interface_ = std::make_unique<nebula::drivers::SeyondHwInterface>(config_);
+    hw_interface_->register_scan_callback(
+      std::bind(
+        &SeyondRosWrapper::receive_packet_callback, this, std::placeholders::_1,
+        std::placeholders::_2));
+
+    if (config_.setup_sensor) {
+      auto status = hw_interface_->setup_sensor(config_);
+      if (status != nebula::Status::OK) {
+        RCLCPP_ERROR(
+          get_logger(), "Failed to setup Seyond sensor: %s",
+          (boost::format("%1%") % status).str().c_str());
+      } else {
+        RCLCPP_INFO(get_logger(), "Seyond sensor setup successfully");
+      }
     }
-  }
 
-  // Fetch calibration
-  auto calibration_or_error = hw_interface_->get_calibration();
-  if (!calibration_or_error.has_value()) {
-    RCLCPP_WARN(get_logger(), "Failed to fetch calibration from sensor. Using defaults.");
+    // Fetch calibration from sensor
+    auto calibration_or_error = hw_interface_->get_calibration();
+    if (calibration_or_error.has_value()) {
+      calibration = calibration_or_error.value();
+    } else {
+      RCLCPP_WARN(get_logger(), "Failed to fetch calibration from sensor. Using defaults.");
+    }
+  } else {
+    RCLCPP_INFO(
+      get_logger(), "Hardware connection disabled (launch_hw:=false). Decoder only mode active.");
   }
 
   decoder_ = std::make_unique<nebula::drivers::SeyondDecoder>(
     config_,
     std::bind(&SeyondRosWrapper::publish_cloud, this, std::placeholders::_1, std::placeholders::_2),
-    calibration_or_error.has_value() ? calibration_or_error.value()
-                                     : nebula::drivers::SeyondCalibrationData{});
+    calibration);
 
-  auto status = hw_interface_->sensor_interface_start();
-  if (status != nebula::Status::OK) {
-    RCLCPP_ERROR(
-      get_logger(), "Failed to start Seyond hardware interface: %s",
-      (boost::format("%1%") % status).str().c_str());
-  } else {
-    RCLCPP_INFO(get_logger(), "Seyond hardware interface started successfully");
+  if (launch_hw_) {
+    auto status = hw_interface_->sensor_interface_start();
+    if (status != nebula::Status::OK) {
+      RCLCPP_ERROR(
+        get_logger(), "Failed to start Seyond hardware interface: %s",
+        (boost::format("%1%") % status).str().c_str());
+    } else {
+      RCLCPP_INFO(get_logger(), "Seyond hardware interface started successfully");
+    }
   }
 }
 
@@ -90,10 +101,10 @@ void SeyondRosWrapper::publish_cloud(
   ros_msg.header.frame_id = config_.frame_id;
 
   if (config_.use_sensor_time && !cloud->empty()) {
-    // use the timestamp of the first point
+    // Base timestamp (frame start) + relative point offset
     uint64_t ts_ns = base_timestamp_ns + cloud->front().time_stamp;
-    ros_msg.header.stamp.sec = ts_ns / 1000000000;
-    ros_msg.header.stamp.nanosec = ts_ns % 1000000000;
+    ros_msg.header.stamp.sec = static_cast<int32_t>(ts_ns / 1000000000);
+    ros_msg.header.stamp.nanosec = static_cast<uint32_t>(ts_ns % 1000000000);
   } else {
     ros_msg.header.stamp = now();
   }
@@ -103,6 +114,7 @@ void SeyondRosWrapper::publish_cloud(
 
 void SeyondRosWrapper::declare_parameters()
 {
+  declare_parameter<bool>("launch_hw", true);
   declare_parameter<std::string>("sensor_model", "FalconK");
   declare_parameter<std::string>("host_ip", "192.168.1.100");
   declare_parameter<std::string>("sensor_ip", "192.168.1.10");
@@ -117,11 +129,17 @@ void SeyondRosWrapper::declare_parameters()
 
 void SeyondRosWrapper::get_parameters()
 {
+  launch_hw_ = get_parameter("launch_hw").as_bool();
+
   std::string model_str = get_parameter("sensor_model").as_string();
   config_.sensor_model = nebula::drivers::seyond_sensor_model_from_string(model_str);
-  config_.connection.seyond_host_ip = get_parameter("host_ip").as_string();
-  config_.connection.seyond_sensor_ip = get_parameter("sensor_ip").as_string();
-  config_.connection.seyond_udp_port = get_parameter("udp_port").as_int();
+  if (config_.sensor_model == nebula::drivers::SeyondSensorModel::UNKNOWN) {
+    RCLCPP_WARN(get_logger(), "Unknown Seyond sensor model: '%s'", model_str.c_str());
+  }
+
+  config_.connection.host_ip = get_parameter("host_ip").as_string();
+  config_.connection.sensor_ip = get_parameter("sensor_ip").as_string();
+  config_.connection.udp_port = get_parameter("udp_port").as_int();
   config_.use_sensor_time = get_parameter("use_sensor_time").as_bool();
   config_.frame_id = get_parameter("frame_id").as_string();
   config_.setup_sensor = get_parameter("setup_sensor").as_bool();

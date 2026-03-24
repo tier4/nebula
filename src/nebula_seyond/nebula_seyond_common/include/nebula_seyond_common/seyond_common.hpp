@@ -18,10 +18,8 @@
 #include <nebula_core_common/nebula_common.hpp>
 
 #include <cstdint>
-#include <cstdio>
 #include <ostream>
 #include <string>
-#include <vector>
 
 namespace nebula::drivers
 {

@@ -39,8 +39,9 @@
     },
     "return_mode": {
       "type": "string",
-      "enum": ["Single", "Dual", "StrongestFurthest"],
-      "default": "Single"
+      "enum": ["Single", "Dual", "Triple", "StrongestFurthest"],
+      "default": "Single",
+      "description": "Single=strongest only; Dual=2-strongest; Triple=3-strongest; StrongestFurthest=strongest+furthest"
     },
     "reflectance_mode": {
       "type": "string",

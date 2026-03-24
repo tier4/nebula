@@ -17,8 +17,10 @@
 
 #include <nebula_core_common/util/expected.hpp>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <string>
 #include <variant>
 #include <vector>
@@ -37,43 +39,64 @@ struct SeyondCalibrationData
     std::string message;
   };
 
+  /// @brief v_angle_offset for FalconK/RobinW coarse calibration fallback
   double v_angle_offset{0.0};
+  /// @brief Raw binary anglehv_table fetched from sensor (or loaded from file)
   std::vector<uint8_t> angle_hv_table{};
 
-  /// @brief Load calibration data from a file
+  /// @brief Load calibration data from a binary file
   static util::expected<SeyondCalibrationData, Error> load_from_file(
     const std::string & calibration_file)
   {
-    std::ifstream file;
-    file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
-    try {
-      file.open(calibration_file);
-    } catch (const std::exception & e) {
-      return Error{
-        ErrorCode::OPEN_FAILED,
-        "Failed to open calibration file: " + calibration_file + " Error: " + e.what()};
+    std::ifstream file(calibration_file, std::ios::binary);
+    if (!file.is_open()) {
+      return Error{ErrorCode::OPEN_FAILED, "Failed to open calibration file: " + calibration_file};
     }
 
-    // placeholder for now
-    return SeyondCalibrationData{};
+    SeyondCalibrationData calibration;
+
+    // First line: optional v_angle_offset as a text value
+    // Remaining bytes: raw binary anglehv_table
+    std::string first_line;
+    std::getline(file, first_line);
+    if (!first_line.empty()) {
+      try {
+        calibration.v_angle_offset = std::stod(first_line);
+      } catch (const std::exception &) {
+        // Not a numeric first line — treat whole file as binary table
+        file.seekg(0, std::ios::beg);
+      }
+    }
+
+    // Read remaining bytes as anglehv_table binary blob
+    calibration.angle_hv_table.assign(
+      std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+
+    return calibration;
   }
 
-  /// @brief Save calibration data to a file
-  util::expected<std::monostate, Error> save_to_file(const std::string & calibration_file)
+  /// @brief Save calibration data to a binary file
+  util::expected<std::monostate, Error> save_to_file(const std::string & calibration_file) const
   {
-    std::ofstream file;
-    file.exceptions(std::ofstream::failbit | std::ofstream::badbit);
-
-    try {
-      file.open(calibration_file);
-    } catch (const std::exception & e) {
+    std::ofstream file(calibration_file, std::ios::binary | std::ios::trunc);
+    if (!file.is_open()) {
       return Error{
         ErrorCode::OPEN_FOR_WRITE_FAILED,
-        "Failed to open calibration file for writing: " + calibration_file + " Error: " + e.what()};
+        "Failed to open calibration file for writing: " + calibration_file};
     }
 
-    // placeholder for now
+    // Write v_angle_offset as first line if non-zero
+    if (v_angle_offset != 0.0) {
+      file << v_angle_offset << "\n";
+    }
+
+    // Write raw binary table
+    if (!angle_hv_table.empty()) {
+      file.write(
+        reinterpret_cast<const char *>(angle_hv_table.data()),
+        static_cast<std::streamsize>(angle_hv_table.size()));
+    }
+
     return std::monostate{};
   }
 };
