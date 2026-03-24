@@ -16,9 +16,10 @@
 // # --8<-- [start:include]
 #include "nebula_core_common/point_types.hpp"
 // # --8<-- [end:include]
+#include <nebula_core_ros/point_cloud_conversions.hpp>
+
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
-#include <pcl_conversions/pcl_conversions.h>
 #include <sys/types.h>
 
 #include <cassert>
@@ -47,11 +48,9 @@ void point_types_usage_example()
   point.time_stamp = 42U;
   cloud->push_back(point);
 
-  const auto cloud_xyzir = nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(cloud);
-  assert(cloud_xyzir != nullptr);
+  const auto cloud_xyzir = nebula::drivers::convert_point_xyzircaedt_to_point_xyzir(*cloud);
 
-  sensor_msgs::msg::PointCloud2 cloud_ros{};
-  pcl::toROSMsg(*cloud_xyzir, cloud_ros);
+  auto cloud_ros = nebula::ros::to_ros_msg(cloud_xyzir);
 
   // my_publisher->publish(cloud_ros);
   // # --8<-- [end:usage]

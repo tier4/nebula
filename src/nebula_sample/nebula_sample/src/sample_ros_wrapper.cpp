@@ -1,4 +1,4 @@
-// Copyright 2025 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include <nebula_core_common/util/expected.hpp>
 #include <nebula_core_ros/parameter_descriptors.hpp>
+#include <nebula_core_ros/point_cloud_conversions.hpp>
 #include <nebula_sample_common/sample_configuration.hpp>
 #include <nebula_sample_hw_interfaces/sample_hw_interface.hpp>
 #include <rcl_interfaces/msg/parameter_descriptor.hpp>
@@ -23,8 +24,6 @@
 #include <rclcpp_components/register_node_macro.hpp>
 
 #include <std_msgs/msg/float64.hpp>
-
-#include <pcl_conversions/pcl_conversions.h>
 
 #include <algorithm>
 #include <chrono>
@@ -176,7 +175,7 @@ SampleRosWrapper::SampleRosWrapper(const rclcpp::NodeOptions & options)
       create_publisher<nebula_msgs::msg::NebulaPackets>("packets", rclcpp::SensorDataQoS());
     const auto callback_result = online_mode.hw_interface.register_scan_callback(
       [this](
-        const std::vector<uint8_t> & raw_packet,
+        std::vector<uint8_t> & raw_packet,
         const drivers::connections::UdpSocket::RxMetadata & metadata) {
         receive_cloud_packet_callback(raw_packet, metadata);
       });
@@ -274,8 +273,8 @@ void SampleRosWrapper::publish_pointcloud_callback(
   }
 
   if (publishers_.points->get_subscription_count() > 0) {
-    auto ros_pc_msg_ptr = std::make_unique<sensor_msgs::msg::PointCloud2>();
-    pcl::toROSMsg(*pointcloud, *ros_pc_msg_ptr);
+    auto ros_pc_msg_ptr =
+      std::make_unique<sensor_msgs::msg::PointCloud2>(nebula::ros::to_ros_msg(*pointcloud));
     ros_pc_msg_ptr->header.stamp = rclcpp::Time(static_cast<int64_t>(timestamp_s * 1e9));
     ros_pc_msg_ptr->header.frame_id = frame_id_;
     publishers_.points->publish(std::move(ros_pc_msg_ptr));
@@ -285,7 +284,7 @@ void SampleRosWrapper::publish_pointcloud_callback(
 }
 
 void SampleRosWrapper::receive_cloud_packet_callback(
-  const std::vector<uint8_t> & packet, const drivers::connections::UdpSocket::RxMetadata & metadata)
+  std::vector<uint8_t> & packet, const drivers::connections::UdpSocket::RxMetadata & metadata)
 {
   diagnostics_.packet_liveness->tick();
   auto * online_mode = std::get_if<OnlineMode>(&runtime_mode_);

@@ -16,8 +16,8 @@
 #define NEBULA_SAMPLE_DECODER_HPP
 
 #include <nebula_core_common/point_types.hpp>
-#include <nebula_core_common/util/angles.hpp>
 #include <nebula_core_common/util/expected.hpp>
+#include <nebula_core_decoders/angles.hpp>
 
 #include <cstdint>
 #include <functional>

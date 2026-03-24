@@ -4,12 +4,6 @@ project(nebula_sample)
 find_package(autoware_cmake REQUIRED)
 autoware_package()
 
-if(BUILD_TESTING OR BUILD_EXAMPLES)
-  find_package(PCL REQUIRED components common io)
-else()
-  find_package(PCL REQUIRED components common)
-endif()
-
 # Sample
 add_library(
   sample_ros_wrapper SHARED
@@ -22,20 +16,19 @@ target_include_directories(
 
 target_link_libraries(
   sample_ros_wrapper
-  PUBLIC nebula_sample_decoders::nebula_sample_decoders
+  PUBLIC diagnostic_updater::diagnostic_updater
+         nebula_sample_decoders::nebula_sample_decoders
          nebula_sample_hw_interfaces::nebula_sample_hw_interfaces
-         nebula_core_ros::nebula_core_ros
-         pcl_common)
+         nebula_core_ros::nebula_core_ros)
 ament_target_dependencies(
   sample_ros_wrapper
   PUBLIC
-  diagnostic_updater
+  diagnostic_msgs
   nebula_msgs
   rclcpp
   rclcpp_components
   sensor_msgs
-  std_msgs
-  pcl_conversions)
+  std_msgs)
 
 rclcpp_components_register_node(sample_ros_wrapper PLUGIN "nebula::ros::SampleRosWrapper"
                                 EXECUTABLE sample_ros_wrapper_node)
@@ -52,7 +45,8 @@ ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_targets(export_sample_ros_wrapper)
 
 ament_export_dependencies(
-  PCL
+  diagnostic_msgs
+  diagnostic_updater
   nebula_core_common
   nebula_sample_common
   nebula_core_decoders
@@ -60,11 +54,9 @@ ament_export_dependencies(
   nebula_core_hw_interfaces
   nebula_sample_hw_interfaces
   nebula_core_ros
-  diagnostic_updater
   nebula_msgs
   rclcpp_components
   sensor_msgs
-  std_msgs
-  pcl_conversions)
+  std_msgs)
 
 ament_package()

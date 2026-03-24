@@ -14,6 +14,7 @@
   <buildtool_depend>ros_environment</buildtool_depend>
 
   <depend>nebula_core_common</depend>
+  <depend>nebula_core_decoders</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -1,4 +1,4 @@
-// Copyright 2025 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -135,8 +135,7 @@ private:
   /// @param packet Raw packet payload.
   /// @param metadata Transport metadata provided by the UDP receiver.
   void receive_cloud_packet_callback(
-    const std::vector<uint8_t> & packet,
-    const drivers::connections::UdpSocket::RxMetadata & metadata);
+    std::vector<uint8_t> & packet, const drivers::connections::UdpSocket::RxMetadata & metadata);
 
   /// @brief Process one replayed NebulaPackets message.
   /// @param packets_msg Packed scan data used for software-only replay.

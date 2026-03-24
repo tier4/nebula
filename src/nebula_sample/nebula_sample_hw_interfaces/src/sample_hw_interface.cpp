@@ -1,4 +1,4 @@
-// Copyright 2025 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,8 +51,7 @@ util::expected<std::monostate, SampleHwInterface::Error> SampleHwInterface::sens
 
     // Callback can only be set while udp_socket_ is nullopt, so we don't need locking here
     udp_socket_->subscribe(
-      [this](
-        const std::vector<uint8_t> & packet, const connections::UdpSocket::RxMetadata & metadata) {
+      [this](std::vector<uint8_t> & packet, const connections::UdpSocket::RxMetadata & metadata) {
         if (this->packet_callback_ && *this->packet_callback_) {
           (*this->packet_callback_)(packet, metadata);
         }

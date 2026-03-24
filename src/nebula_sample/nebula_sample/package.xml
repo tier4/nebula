@@ -12,6 +12,7 @@
 
   <buildtool_depend>autoware_cmake</buildtool_depend>
 
+  <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
   <depend>nebula_core_common</depend>
   <depend>nebula_core_ros</depend>
@@ -19,7 +20,6 @@
   <depend>nebula_sample_common</depend>
   <depend>nebula_sample_decoders</depend>
   <depend>nebula_sample_hw_interfaces</depend>
-  <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>sensor_msgs</depend>

@@ -17,7 +17,6 @@
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
   <depend>nebula_core_common</depend>
-  <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>
   <depend>rosbag2_storage</depend>
 
