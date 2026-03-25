@@ -12,15 +12,17 @@ jobs:
       fail-fast: false
       matrix:
         rosdistro: [humble, jazzy]
-        agnocast_enabled: [0, 1]
+        enable_agnocast: [0, 1]
         exclude:
           - rosdistro: jazzy
-            agnocast_enabled: 1  # Agnocast does not yet support Jazzy
+            # ros-jazzy-agnocastlib is not yet available on Apt
+            # (but has already been released to rosdistro)
+            enable_agnocast: 1
     env:
       CCACHE_DIR: /root/.ccache
       CC: /usr/lib/ccache/gcc
       CXX: /usr/lib/ccache/g++
-      AGNOCAST_ENABLED: ${{ matrix.agnocast_enabled }}
+      ENABLE_AGNOCAST: ${{ matrix.enable_agnocast }}
 
     steps:
       - name: Check out repository
@@ -68,6 +70,8 @@ jobs:
         id: test
         if: steps.build.outcome == 'success'
         uses: autowarefoundation/autoware-github-actions/colcon-test@v1
+        env:
+          ENABLE_AGNOCAST: 0
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
