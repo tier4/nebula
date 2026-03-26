@@ -102,10 +102,10 @@ ros2 launch nebula nebula_launch.py sensor_model:=Pandar40P
 
 Nebula supports [Agnocast](https://github.com/tier4/agnocast) features as follows:
 
-| Feature | Hesai | Continental |
-| --- | --- | --- |
-| IPC zero-copy | Yes | No |
-| [CallbackIsolatedAgnocastExecutor (CIE)](https://github.com/autowarefoundation/agnocast/blob/main/docs/callback_isolated_executor_for_agnocast.md) | Yes | Yes |
+| Feature                                                                                                                                            | Hesai | Continental |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------- |
+| IPC zero-copy                                                                                                                                      | Yes   | No          |
+| [CallbackIsolatedAgnocastExecutor (CIE)](https://github.com/autowarefoundation/agnocast/blob/main/docs/callback_isolated_executor_for_agnocast.md) | Yes   | Yes         |
 
 To build with support for Agnocast, execute the above `colcon build` command with the environment
 variable `ENABLE_AGNOCAST=1` set.
