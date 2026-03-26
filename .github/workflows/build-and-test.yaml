@@ -15,18 +15,16 @@ jobs:
       fail-fast: false
       matrix:
         rosdistro: [humble, jazzy]
-        enable_agnocast: [0, 1]
+        agnocast_enabled: [0, 1]
         exclude:
           - rosdistro: jazzy
-            # ros-jazzy-agnocastlib is not yet available on Apt
-            # (but has already been released to rosdistro)
-            enable_agnocast: 1
+            agnocast_enabled: 1  # Agnocast does not yet support Jazzy
     env:
       CCACHE_DIR: /root/.ccache
       CCACHE_SIZE: 1G  # The GitHub cache action allows for 10G but the runners' disk space is limited
       CC: /usr/lib/ccache/gcc
       CXX: /usr/lib/ccache/g++
-      ENABLE_AGNOCAST: ${{ matrix.enable_agnocast }}
+      AGNOCAST_ENABLED: ${{ matrix.agnocast_enabled }}
 
     steps:
       - name: Check out repository
@@ -47,8 +45,15 @@ jobs:
         id: get-self-packages
         uses: autowarefoundation/autoware-github-actions/get-self-packages@v1
 
-      - run: ./.github/workflows/scripts/ensure-apt-up-to-date.sh
-      - run: ./.github/workflows/scripts/setup-ccache.sh
+      - name: Install ccache
+        run: sudo apt-get update && sudo apt-get install -y ccache
+        shell: bash
+
+      - name: Create ccache directory
+        run: |
+          mkdir -p ${CCACHE_DIR}
+          du -sh ${CCACHE_DIR} && ccache -s
+        shell: bash
 
       - name: Limit ccache size
         run: |
@@ -93,15 +98,13 @@ jobs:
         if: ${{ steps.get-self-packages.outputs.self-packages != '' }}
         id: test
         uses: autowarefoundation/autoware-github-actions/colcon-test@v1
-        env:
-          ENABLE_AGNOCAST: 0
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
           build-depends-repos: build_depends-${{ matrix.rosdistro }}.repos
 
       - name: Upload coverage to CodeCov
-        if: ${{ steps.test.outputs.coverage-report-files != '' && matrix.enable_agnocast == 0 }}
+        if: ${{ steps.test.outputs.coverage-report-files != '' && matrix.agnocast_enabled == 0 }}
         uses: codecov/codecov-action@v4
         with:
           files: ${{ steps.test.outputs.coverage-report-files }}
