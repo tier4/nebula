@@ -78,8 +78,9 @@ inline ReturnMode return_mode_from_string_seyond(const std::string & return_mode
 {
   if (return_mode == "Single" || return_mode == "1") return ReturnMode::STRONGEST;
   if (return_mode == "Dual" || return_mode == "2") return ReturnMode::DUAL;
-  if (return_mode == "Triple" || return_mode == "3") return ReturnMode::TRIPLE;
-  if (return_mode == "StrongestFurthest") return ReturnMode::DUAL_LAST_STRONGEST;
+  if (return_mode == "StrongestFurthest" || return_mode == "3") {
+    return ReturnMode::DUAL_LAST_STRONGEST;
+  }
   return ReturnMode::UNKNOWN;
 }
 

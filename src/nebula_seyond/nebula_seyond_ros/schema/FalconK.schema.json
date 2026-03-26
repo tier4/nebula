@@ -12,8 +12,20 @@
         "sensor_ip": {
           "$ref": "seyond.schema.json#/definitions/sensor_ip"
         },
+        "netmask": {
+          "$ref": "seyond.schema.json#/definitions/netmask"
+        },
+        "gateway": {
+          "$ref": "seyond.schema.json#/definitions/gateway"
+        },
         "udp_port": {
           "$ref": "seyond.schema.json#/definitions/udp_port"
+        },
+        "udp_message_port": {
+          "$ref": "seyond.schema.json#/definitions/udp_message_port"
+        },
+        "udp_status_port": {
+          "$ref": "seyond.schema.json#/definitions/udp_status_port"
         },
         "sensor_model": {
           "$ref": "seyond.schema.json#/definitions/sensor_model",
@@ -38,19 +50,35 @@
         },
         "time_sync": {
           "$ref": "seyond.schema.json#/definitions/time_sync"
+        },
+        "frame_rate": {
+          "$ref": "seyond.schema.json#/definitions/frame_rate"
+        },
+        "horizontal_roi": {
+          "$ref": "seyond.schema.json#/definitions/horizontal_roi"
+        },
+        "vertical_roi": {
+          "$ref": "seyond.schema.json#/definitions/vertical_roi"
         }
       },
       "required": [
         "host_ip",
         "sensor_ip",
+        "netmask",
+        "gateway",
         "udp_port",
+        "udp_message_port",
+        "udp_status_port",
         "sensor_model",
         "use_sensor_time",
         "frame_id",
         "setup_sensor",
         "return_mode",
         "reflectance_mode",
-        "time_sync"
+        "time_sync",
+        "frame_rate",
+        "horizontal_roi",
+        "vertical_roi"
       ],
       "additionalProperties": false
     }

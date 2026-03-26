@@ -17,6 +17,7 @@
 
 #include <nebula_core_common/nebula_status.hpp>
 #include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/http_client.hpp>
+#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/tcp.hpp>
 #include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp>
 #include <nebula_seyond_common/seyond_calibration_data.hpp>
 #include <nebula_seyond_common/seyond_configuration.hpp>
@@ -59,6 +60,13 @@ public:
   Status setup_sensor(const SeyondSensorConfiguration & config);
 
 private:
+  Status send_raw_command(
+    const std::string & command, std::string * response = nullptr, int timeout_ms = 2000);
+  Status set_network(
+    const std::string & sensor_ip, const std::string & netmask, const std::string & gateway);
+  Status set_frame_rate(double frame_rate);
+  Status set_time_sync(SeyondSyncMode sync_mode);
+
   SeyondSensorConfiguration sensor_config_;
   connections::UdpSocket::callback_t scan_callback_;
   std::optional<connections::UdpSocket> udp_socket_;
@@ -66,6 +74,7 @@ private:
   std::mutex interface_mutex_;
 
   static constexpr uint16_t k_http_port = 8010;
+  static constexpr uint16_t k_control_port = 8010;
 };
 
 }  // namespace nebula::drivers

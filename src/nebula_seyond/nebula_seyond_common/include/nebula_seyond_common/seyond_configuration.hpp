@@ -19,6 +19,7 @@
 #include <nebula_seyond_common/seyond_common.hpp>
 #include <nlohmann/json.hpp>
 
+#include <limits>
 #include <string>
 
 namespace nebula::drivers
@@ -29,7 +30,11 @@ struct SeyondConnectionConfiguration
 {
   std::string host_ip;
   std::string sensor_ip;
+  std::string netmask;
+  std::string gateway;
   uint16_t udp_port;
+  uint16_t udp_message_port;
+  uint16_t udp_status_port;
 };
 
 /// @brief Serialize SeyondConnectionConfiguration to JSON.
@@ -37,7 +42,11 @@ inline void to_json(nlohmann::json & j, const SeyondConnectionConfiguration & co
 {
   j["host_ip"] = config.host_ip;
   j["sensor_ip"] = config.sensor_ip;
+  j["netmask"] = config.netmask;
+  j["gateway"] = config.gateway;
   j["udp_port"] = config.udp_port;
+  j["udp_message_port"] = config.udp_message_port;
+  j["udp_status_port"] = config.udp_status_port;
 }
 
 /// @brief Deserialize SeyondConnectionConfiguration from JSON.
@@ -45,7 +54,11 @@ inline void from_json(const nlohmann::json & j, SeyondConnectionConfiguration & 
 {
   j.at("host_ip").get_to(config.host_ip);
   j.at("sensor_ip").get_to(config.sensor_ip);
+  if (j.contains("netmask")) j.at("netmask").get_to(config.netmask);
+  if (j.contains("gateway")) j.at("gateway").get_to(config.gateway);
   j.at("udp_port").get_to(config.udp_port);
+  if (j.contains("udp_message_port")) j.at("udp_message_port").get_to(config.udp_message_port);
+  if (j.contains("udp_status_port")) j.at("udp_status_port").get_to(config.udp_status_port);
 }
 
 /// @brief Sensor-specific configuration for Seyond LiDARs
@@ -60,6 +73,9 @@ struct SeyondSensorConfiguration
   ReturnMode return_mode{ReturnMode::STRONGEST};
   SeyondReflectanceMode reflectance_mode{SeyondReflectanceMode::REFLECTIVITY};
   SeyondSyncMode sync_mode{SeyondSyncMode::HOST};
+  double frame_rate{0.0};
+  double horizontal_roi{10000.0};
+  double vertical_roi{10000.0};
 };
 
 /// @brief Serialize SeyondSensorConfiguration to JSON.
@@ -73,6 +89,9 @@ inline void to_json(nlohmann::json & j, const SeyondSensorConfiguration & config
   j["return_mode"] = static_cast<uint8_t>(config.return_mode);
   j["reflectance_mode"] = static_cast<uint8_t>(config.reflectance_mode);
   j["sync_mode"] = static_cast<uint8_t>(config.sync_mode);
+  j["frame_rate"] = config.frame_rate;
+  j["horizontal_roi"] = config.horizontal_roi;
+  j["vertical_roi"] = config.vertical_roi;
 
   nlohmann::json azimuth_fov;
   azimuth_fov["min_deg"] = config.fov.azimuth.start;
@@ -93,13 +112,19 @@ inline void from_json(const nlohmann::json & j, SeyondSensorConfiguration & conf
   j.at("use_sensor_time").get_to(config.use_sensor_time);
   j.at("frame_id").get_to(config.frame_id);
   j.at("setup_sensor").get_to(config.setup_sensor);
-  if (j.contains("return_mode"))
+  if (j.contains("return_mode")) {
     config.return_mode = static_cast<ReturnMode>(j.at("return_mode").get<uint8_t>());
-  if (j.contains("reflectance_mode"))
+  }
+  if (j.contains("reflectance_mode")) {
     config.reflectance_mode =
       static_cast<SeyondReflectanceMode>(j.at("reflectance_mode").get<uint8_t>());
-  if (j.contains("sync_mode"))
+  }
+  if (j.contains("sync_mode")) {
     config.sync_mode = static_cast<SeyondSyncMode>(j.at("sync_mode").get<uint8_t>());
+  }
+  if (j.contains("frame_rate")) j.at("frame_rate").get_to(config.frame_rate);
+  if (j.contains("horizontal_roi")) j.at("horizontal_roi").get_to(config.horizontal_roi);
+  if (j.contains("vertical_roi")) j.at("vertical_roi").get_to(config.vertical_roi);
 
   const auto & fov_json = j.at("fov");
   const auto & azimuth_fov = fov_json.at("azimuth");

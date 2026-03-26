@@ -3,10 +3,17 @@
     sensor_model: FalconK
     host_ip: 172.168.1.100
     sensor_ip: 172.168.1.10
+    netmask: 255.255.255.0
+    gateway: 0.0.0.0
     udp_port: 8010
+    udp_message_port: 8010
+    udp_status_port: 8010
     use_sensor_time: false
     frame_id: seyond
     setup_sensor: true
     return_mode: Single
     reflectance_mode: Reflectivity
     time_sync: Host
+    frame_rate: 0.0
+    horizontal_roi: 10000.0
+    vertical_roi: 10000.0

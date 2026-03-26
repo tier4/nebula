@@ -18,6 +18,7 @@
 
 #include <boost/format.hpp>
 
+#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
@@ -34,7 +35,6 @@ SeyondRosWrapper::SeyondRosWrapper(const rclcpp::NodeOptions & options)
   cloud_pub_ =
     create_publisher<sensor_msgs::msg::PointCloud2>("seyond_points", rclcpp::SensorDataQoS());
 
-  // Calibration defaults to empty (live sensor will override)
   nebula::drivers::SeyondCalibrationData calibration{};
 
   if (launch_hw_) {
@@ -55,7 +55,6 @@ SeyondRosWrapper::SeyondRosWrapper(const rclcpp::NodeOptions & options)
       }
     }
 
-    // Fetch calibration from sensor
     auto calibration_or_error = hw_interface_->get_calibration();
     if (calibration_or_error.has_value()) {
       calibration = calibration_or_error.value();
@@ -97,11 +96,9 @@ void SeyondRosWrapper::publish_cloud(
 {
   auto ros_msg = nebula::ros::to_ros_msg(cloud);
 
-  // Set header
   ros_msg.header.frame_id = config_.frame_id;
 
   if (config_.use_sensor_time && !cloud->empty()) {
-    // Base timestamp (frame start) + relative point offset
     uint64_t ts_ns = base_timestamp_ns + cloud->front().time_stamp;
     ros_msg.header.stamp.sec = static_cast<int32_t>(ts_ns / 1000000000);
     ros_msg.header.stamp.nanosec = static_cast<uint32_t>(ts_ns % 1000000000);
@@ -116,15 +113,22 @@ void SeyondRosWrapper::declare_parameters()
 {
   declare_parameter<bool>("launch_hw", true);
   declare_parameter<std::string>("sensor_model", "FalconK");
-  declare_parameter<std::string>("host_ip", "192.168.1.100");
-  declare_parameter<std::string>("sensor_ip", "192.168.1.10");
+  declare_parameter<std::string>("host_ip", "172.168.1.100");
+  declare_parameter<std::string>("sensor_ip", "172.168.1.10");
+  declare_parameter<std::string>("netmask", "255.255.255.0");
+  declare_parameter<std::string>("gateway", "0.0.0.0");
   declare_parameter<int>("udp_port", 8010);
+  declare_parameter<int>("udp_message_port", 8010);
+  declare_parameter<int>("udp_status_port", 8010);
   declare_parameter<bool>("use_sensor_time", false);
   declare_parameter<std::string>("frame_id", "seyond");
   declare_parameter<bool>("setup_sensor", true);
   declare_parameter<std::string>("return_mode", "Single");
   declare_parameter<std::string>("reflectance_mode", "Reflectivity");
   declare_parameter<std::string>("time_sync", "Host");
+  declare_parameter<double>("frame_rate", 0.0);
+  declare_parameter<double>("horizontal_roi", 10000.0);
+  declare_parameter<double>("vertical_roi", 10000.0);
 }
 
 void SeyondRosWrapper::get_parameters()
@@ -139,7 +143,13 @@ void SeyondRosWrapper::get_parameters()
 
   config_.connection.host_ip = get_parameter("host_ip").as_string();
   config_.connection.sensor_ip = get_parameter("sensor_ip").as_string();
-  config_.connection.udp_port = get_parameter("udp_port").as_int();
+  config_.connection.netmask = get_parameter("netmask").as_string();
+  config_.connection.gateway = get_parameter("gateway").as_string();
+  config_.connection.udp_port = static_cast<uint16_t>(get_parameter("udp_port").as_int());
+  config_.connection.udp_message_port =
+    static_cast<uint16_t>(get_parameter("udp_message_port").as_int());
+  config_.connection.udp_status_port =
+    static_cast<uint16_t>(get_parameter("udp_status_port").as_int());
   config_.use_sensor_time = get_parameter("use_sensor_time").as_bool();
   config_.frame_id = get_parameter("frame_id").as_string();
   config_.setup_sensor = get_parameter("setup_sensor").as_bool();
@@ -149,6 +159,9 @@ void SeyondRosWrapper::get_parameters()
     get_parameter("reflectance_mode").as_string());
   config_.sync_mode =
     nebula::drivers::sync_mode_from_string_seyond(get_parameter("time_sync").as_string());
+  config_.frame_rate = get_parameter("frame_rate").as_double();
+  config_.horizontal_roi = get_parameter("horizontal_roi").as_double();
+  config_.vertical_roi = get_parameter("vertical_roi").as_double();
 }
 
 }  // namespace nebula::ros

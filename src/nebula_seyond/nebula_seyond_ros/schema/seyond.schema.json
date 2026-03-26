@@ -20,7 +20,23 @@
       "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/sensor_ip",
       "default": "172.168.1.10"
     },
+    "netmask": {
+      "type": "string",
+      "default": "255.255.255.0"
+    },
+    "gateway": {
+      "type": "string",
+      "default": "0.0.0.0"
+    },
     "udp_port": {
+      "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/data_port",
+      "default": 8010
+    },
+    "udp_message_port": {
+      "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/data_port",
+      "default": 8010
+    },
+    "udp_status_port": {
       "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/data_port",
       "default": 8010
     },
@@ -39,9 +55,9 @@
     },
     "return_mode": {
       "type": "string",
-      "enum": ["Single", "Dual", "Triple", "StrongestFurthest"],
+      "enum": ["Single", "Dual", "StrongestFurthest"],
       "default": "Single",
-      "description": "Single=strongest only; Dual=2-strongest; Triple=3-strongest; StrongestFurthest=strongest+furthest"
+      "description": "Single=strongest only; Dual=2-strongest; StrongestFurthest=strongest+furthest"
     },
     "reflectance_mode": {
       "type": "string",
@@ -52,6 +68,21 @@
       "type": "string",
       "enum": ["Host", "PTP", "GPS", "File", "NTP"],
       "default": "Host"
+    },
+    "frame_rate": {
+      "type": "number",
+      "default": 0.0,
+      "description": "Requested sensor frame rate in Hz. Use 0 to leave unchanged."
+    },
+    "horizontal_roi": {
+      "type": "number",
+      "default": 10000.0,
+      "description": "Requested hardware ROI horizontal center angle in degrees. Use 10000 to leave unchanged."
+    },
+    "vertical_roi": {
+      "type": "number",
+      "default": 10000.0,
+      "description": "Requested hardware ROI vertical center angle in degrees. Use 10000 to leave unchanged."
     }
   },
   "$id": "nebula_seyond/schema/seyond.schema.json"
