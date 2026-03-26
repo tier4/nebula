@@ -8,7 +8,6 @@
   <maintainer email="max.schmeller@tier4.jp">Max Schmeller</maintainer>
   <license>Apache 2</license>
 
-  <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>autoware_cmake</buildtool_depend>
 
   <depend>nebula_core_common</depend>

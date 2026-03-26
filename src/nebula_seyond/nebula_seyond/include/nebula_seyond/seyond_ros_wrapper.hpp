@@ -15,8 +15,11 @@
 #ifndef NEBULA_SEYOND_ROS_WRAPPER_HPP
 #define NEBULA_SEYOND_ROS_WRAPPER_HPP
 
+#include <diagnostic_updater/diagnostic_updater.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/nebula_status.hpp>
+#include <nebula_seyond/hw_interface_wrapper.hpp>
+#include <nebula_seyond/hw_monitor_wrapper.hpp>
 #include <nebula_seyond_common/seyond_configuration.hpp>
 #include <nebula_seyond_decoders/seyond_decoder.hpp>
 #include <nebula_seyond_hw_interfaces/seyond_hw_interface.hpp>
@@ -32,7 +35,6 @@
 namespace nebula::ros
 {
 
-/// @brief ROS 2 wrapper for the Seyond LiDAR driver.
 class SeyondRosWrapper : public rclcpp::Node
 {
 public:
@@ -47,8 +49,11 @@ private:
   void declare_parameters();
   void get_parameters();
 
-  std::unique_ptr<nebula::drivers::SeyondHwInterface> hw_interface_;
+  std::shared_ptr<nebula::drivers::SeyondHwInterface> hw_interface_;
+  std::unique_ptr<SeyondHwInterfaceWrapper> hw_interface_wrapper_;
+  std::unique_ptr<SeyondHwMonitorWrapper> hw_monitor_wrapper_;
   std::unique_ptr<nebula::drivers::SeyondDecoder> decoder_;
+  diagnostic_updater::Updater diagnostic_updater_;
   nebula::drivers::SeyondSensorConfiguration config_;
   bool launch_hw_{true};
 

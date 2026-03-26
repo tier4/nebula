@@ -17,9 +17,9 @@
     <choice value="true" />
     <choice value="false" />
   </arg>
-  <arg name="config_file" default="$(find-pkg-share nebula_seyond_ros)/config/$(var sensor_model).param.yaml"/>
+  <arg name="config_file" default="$(find-pkg-share nebula_seyond)/config/$(var sensor_model).param.yaml"/>
 
-  <node pkg="nebula_seyond_ros" exec="seyond_ros_wrapper_node" name="seyond_ros_wrapper_node" output="screen">
+  <node pkg="nebula_seyond" exec="seyond_ros_wrapper_node" name="seyond_ros_wrapper_node" output="screen">
     <param from="$(var config_file)" allow_substs="true"/>
     <param name="launch_hw" value="$(var launch_hw)"/>
     <param name="sensor_ip" value="$(var sensor_ip)"/>

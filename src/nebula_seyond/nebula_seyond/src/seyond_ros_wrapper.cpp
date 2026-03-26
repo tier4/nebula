@@ -13,12 +13,13 @@
 // limitations under the License.
 
 #include <nebula_core_ros/point_cloud_conversions.hpp>
-#include <nebula_seyond_ros/seyond_ros_wrapper.hpp>
+#include <nebula_seyond/hw_interface_wrapper.hpp>
+#include <nebula_seyond/hw_monitor_wrapper.hpp>
+#include <nebula_seyond/seyond_ros_wrapper.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <boost/format.hpp>
 
-#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
@@ -27,10 +28,12 @@ namespace nebula::ros
 {
 
 SeyondRosWrapper::SeyondRosWrapper(const rclcpp::NodeOptions & options)
-: rclcpp::Node("seyond_ros_wrapper", options)
+: rclcpp::Node("seyond_ros_wrapper", options), diagnostic_updater_(this)
 {
   declare_parameters();
   get_parameters();
+
+  diagnostic_updater_.setHardwareID(config_.connection.sensor_ip);
 
   cloud_pub_ =
     create_publisher<sensor_msgs::msg::PointCloud2>("seyond_points", rclcpp::SensorDataQoS());
@@ -38,28 +41,19 @@ SeyondRosWrapper::SeyondRosWrapper(const rclcpp::NodeOptions & options)
   nebula::drivers::SeyondCalibrationData calibration{};
 
   if (launch_hw_) {
-    hw_interface_ = std::make_unique<nebula::drivers::SeyondHwInterface>(config_);
-    hw_interface_->register_scan_callback(
-      std::bind(
-        &SeyondRosWrapper::receive_packet_callback, this, std::placeholders::_1,
-        std::placeholders::_2));
-
-    if (config_.setup_sensor) {
-      auto status = hw_interface_->setup_sensor(config_);
-      if (status != nebula::Status::OK) {
-        RCLCPP_ERROR(
-          get_logger(), "Failed to setup Seyond sensor: %s",
-          (boost::format("%1%") % status).str().c_str());
-      } else {
-        RCLCPP_INFO(get_logger(), "Seyond sensor setup successfully");
-      }
-    }
-
-    auto calibration_or_error = hw_interface_->get_calibration();
-    if (calibration_or_error.has_value()) {
-      calibration = calibration_or_error.value();
-    } else {
-      RCLCPP_WARN(get_logger(), "Failed to fetch calibration from sensor. Using defaults.");
+    auto config_ptr = std::make_shared<const nebula::drivers::SeyondSensorConfiguration>(config_);
+    try {
+      hw_interface_wrapper_ = std::make_unique<SeyondHwInterfaceWrapper>(this, config_ptr);
+      hw_interface_ = hw_interface_wrapper_->hw_interface();
+      hw_interface_->register_scan_callback(
+        std::bind(
+          &SeyondRosWrapper::receive_packet_callback, this, std::placeholders::_1,
+          std::placeholders::_2));
+      hw_monitor_wrapper_ = std::make_unique<SeyondHwMonitorWrapper>(
+        this, diagnostic_updater_, hw_interface_, config_ptr);
+      calibration = *hw_interface_wrapper_->calibration();
+    } catch (const std::exception & ex) {
+      RCLCPP_ERROR(get_logger(), "Failed to initialize Seyond hardware wrappers: %s", ex.what());
     }
   } else {
     RCLCPP_INFO(
@@ -71,7 +65,7 @@ SeyondRosWrapper::SeyondRosWrapper(const rclcpp::NodeOptions & options)
     std::bind(&SeyondRosWrapper::publish_cloud, this, std::placeholders::_1, std::placeholders::_2),
     calibration);
 
-  if (launch_hw_) {
+  if (launch_hw_ && hw_interface_) {
     auto status = hw_interface_->sensor_interface_start();
     if (status != nebula::Status::OK) {
       RCLCPP_ERROR(
