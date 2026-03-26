@@ -44,7 +44,7 @@ ament_target_dependencies(
   rclcpp_components)
 
 if("$ENV{ENABLE_AGNOCAST}")
-  message("Agnocast support is enabled")
+  message(STATUS "Agnocast support is enabled")
   ament_target_dependencies(hesai_ros_wrapper PUBLIC agnocastlib)
   add_definitions(-DUSE_AGNOCAST_ENABLED)
 endif()
