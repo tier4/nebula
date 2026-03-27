@@ -46,13 +46,17 @@ struct SeyondCalibrationData
   double v_angle_offset{0.0};
   /// @brief Raw binary anglehv_table fetched from sensor (or loaded from file)
   std::vector<uint8_t> angle_hv_table{};
+  /// @brief Raw binary geo yaml blob fetched from sensor (or loaded from file)
+  std::vector<uint8_t> geo_yaml{};
+  /// @brief Raw binary serial-number yaml blob fetched from sensor (or loaded from file)
+  std::vector<uint8_t> sn_yaml{};
 
   /// @brief Load calibration data from a binary file
   static util::expected<SeyondCalibrationData, Error> load_from_file(
     const std::string & calibration_file)
   {
-    constexpr std::array<char, 12> k_magic{
-      'S', 'E', 'Y', 'O', 'N', 'D', '_', 'C', 'A', 'L', 'I', 'B'};
+    constexpr std::array<char, 12> k_magic{'S', 'E', 'Y', 'O', 'N', 'D',
+                                           '_', 'C', 'A', 'L', 'I', 'B'};
 
     std::ifstream file(calibration_file, std::ios::binary);
     if (!file.is_open()) {
@@ -63,17 +67,15 @@ struct SeyondCalibrationData
 
     std::array<char, k_magic.size()> magic{};
     file.read(magic.data(), static_cast<std::streamsize>(magic.size()));
-    if (
-      file.good() &&
-      std::memcmp(magic.data(), k_magic.data(), k_magic.size()) == 0)
-    {
+    if (file.good() && std::memcmp(magic.data(), k_magic.data(), k_magic.size()) == 0) {
       uint32_t version = 0;
       uint32_t angle_size = 0;
       uint32_t geo_size = 0;
       uint32_t sn_size = 0;
 
       file.read(reinterpret_cast<char *>(&version), sizeof(version));
-      file.read(reinterpret_cast<char *>(&calibration.v_angle_offset), sizeof(calibration.v_angle_offset));
+      file.read(
+        reinterpret_cast<char *>(&calibration.v_angle_offset), sizeof(calibration.v_angle_offset));
       file.read(reinterpret_cast<char *>(&angle_size), sizeof(angle_size));
       file.read(reinterpret_cast<char *>(&geo_size), sizeof(geo_size));
       file.read(reinterpret_cast<char *>(&sn_size), sizeof(sn_size));
@@ -131,8 +133,8 @@ struct SeyondCalibrationData
   /// @brief Save calibration data to a binary file
   util::expected<std::monostate, Error> save_to_file(const std::string & calibration_file) const
   {
-    constexpr std::array<char, 12> k_magic{
-      'S', 'E', 'Y', 'O', 'N', 'D', '_', 'C', 'A', 'L', 'I', 'B'};
+    constexpr std::array<char, 12> k_magic{'S', 'E', 'Y', 'O', 'N', 'D',
+                                           '_', 'C', 'A', 'L', 'I', 'B'};
 
     std::ofstream file(calibration_file, std::ios::binary | std::ios::trunc);
     if (!file.is_open()) {
@@ -171,8 +173,7 @@ struct SeyondCalibrationData
 
     if (!file.good()) {
       return Error{
-        ErrorCode::OPEN_FOR_WRITE_FAILED,
-        "Failed to write calibration file: " + calibration_file};
+        ErrorCode::OPEN_FOR_WRITE_FAILED, "Failed to write calibration file: " + calibration_file};
     }
 
     return std::monostate{};
