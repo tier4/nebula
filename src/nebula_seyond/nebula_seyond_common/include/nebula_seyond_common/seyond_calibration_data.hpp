@@ -18,6 +18,9 @@
 #include <nebula_core_common/util/expected.hpp>
 
 #include <algorithm>
+#include <array>
+#include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -48,12 +51,62 @@ struct SeyondCalibrationData
   static util::expected<SeyondCalibrationData, Error> load_from_file(
     const std::string & calibration_file)
   {
+    constexpr std::array<char, 12> k_magic{
+      'S', 'E', 'Y', 'O', 'N', 'D', '_', 'C', 'A', 'L', 'I', 'B'};
+
     std::ifstream file(calibration_file, std::ios::binary);
     if (!file.is_open()) {
       return Error{ErrorCode::OPEN_FAILED, "Failed to open calibration file: " + calibration_file};
     }
 
     SeyondCalibrationData calibration;
+
+    std::array<char, k_magic.size()> magic{};
+    file.read(magic.data(), static_cast<std::streamsize>(magic.size()));
+    if (
+      file.good() &&
+      std::memcmp(magic.data(), k_magic.data(), k_magic.size()) == 0)
+    {
+      uint32_t version = 0;
+      uint32_t angle_size = 0;
+      uint32_t geo_size = 0;
+      uint32_t sn_size = 0;
+
+      file.read(reinterpret_cast<char *>(&version), sizeof(version));
+      file.read(reinterpret_cast<char *>(&calibration.v_angle_offset), sizeof(calibration.v_angle_offset));
+      file.read(reinterpret_cast<char *>(&angle_size), sizeof(angle_size));
+      file.read(reinterpret_cast<char *>(&geo_size), sizeof(geo_size));
+      file.read(reinterpret_cast<char *>(&sn_size), sizeof(sn_size));
+
+      if (!file.good() || version != 1U) {
+        return Error{
+          ErrorCode::PARSE_FAILED, "Failed to parse calibration file header: " + calibration_file};
+      }
+
+      calibration.angle_hv_table.resize(angle_size);
+      calibration.geo_yaml.resize(geo_size);
+      calibration.sn_yaml.resize(sn_size);
+
+      file.read(
+        reinterpret_cast<char *>(calibration.angle_hv_table.data()),
+        static_cast<std::streamsize>(calibration.angle_hv_table.size()));
+      file.read(
+        reinterpret_cast<char *>(calibration.geo_yaml.data()),
+        static_cast<std::streamsize>(calibration.geo_yaml.size()));
+      file.read(
+        reinterpret_cast<char *>(calibration.sn_yaml.data()),
+        static_cast<std::streamsize>(calibration.sn_yaml.size()));
+
+      if (!file.good() && !file.eof()) {
+        return Error{
+          ErrorCode::PARSE_FAILED, "Failed to parse calibration payload: " + calibration_file};
+      }
+
+      return calibration;
+    }
+
+    file.clear();
+    file.seekg(0, std::ios::beg);
 
     // First line: optional v_angle_offset as a text value
     // Remaining bytes: raw binary anglehv_table
@@ -78,6 +131,9 @@ struct SeyondCalibrationData
   /// @brief Save calibration data to a binary file
   util::expected<std::monostate, Error> save_to_file(const std::string & calibration_file) const
   {
+    constexpr std::array<char, 12> k_magic{
+      'S', 'E', 'Y', 'O', 'N', 'D', '_', 'C', 'A', 'L', 'I', 'B'};
+
     std::ofstream file(calibration_file, std::ios::binary | std::ios::trunc);
     if (!file.is_open()) {
       return Error{
@@ -85,16 +141,38 @@ struct SeyondCalibrationData
         "Failed to open calibration file for writing: " + calibration_file};
     }
 
-    // Write v_angle_offset as first line if non-zero
-    if (v_angle_offset != 0.0) {
-      file << v_angle_offset << "\n";
-    }
+    const uint32_t version = 1U;
+    const auto angle_size = static_cast<uint32_t>(angle_hv_table.size());
+    const auto geo_size = static_cast<uint32_t>(geo_yaml.size());
+    const auto sn_size = static_cast<uint32_t>(sn_yaml.size());
 
-    // Write raw binary table
+    file.write(k_magic.data(), static_cast<std::streamsize>(k_magic.size()));
+    file.write(reinterpret_cast<const char *>(&version), sizeof(version));
+    file.write(reinterpret_cast<const char *>(&v_angle_offset), sizeof(v_angle_offset));
+    file.write(reinterpret_cast<const char *>(&angle_size), sizeof(angle_size));
+    file.write(reinterpret_cast<const char *>(&geo_size), sizeof(geo_size));
+    file.write(reinterpret_cast<const char *>(&sn_size), sizeof(sn_size));
+
     if (!angle_hv_table.empty()) {
       file.write(
         reinterpret_cast<const char *>(angle_hv_table.data()),
         static_cast<std::streamsize>(angle_hv_table.size()));
+    }
+    if (!geo_yaml.empty()) {
+      file.write(
+        reinterpret_cast<const char *>(geo_yaml.data()),
+        static_cast<std::streamsize>(geo_yaml.size()));
+    }
+    if (!sn_yaml.empty()) {
+      file.write(
+        reinterpret_cast<const char *>(sn_yaml.data()),
+        static_cast<std::streamsize>(sn_yaml.size()));
+    }
+
+    if (!file.good()) {
+      return Error{
+        ErrorCode::OPEN_FOR_WRITE_FAILED,
+        "Failed to write calibration file: " + calibration_file};
     }
 
     return std::monostate{};
