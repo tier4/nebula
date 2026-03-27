@@ -45,7 +45,7 @@ override:
     - name: decoder
       trigger_conditions:
         - and:
-          - from_input: nebula_packets
+          - on_input: nebula_packets
           - periodic: 10 # Hz
       outcomes:
         - to_output: continental_objects

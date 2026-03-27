@@ -13,32 +13,7 @@ launch:
 
 # interfaces
 subscribers: []
-
-publishers:
-  - name: velodyne_packets
-    message_type: velodyne_msgs/msg/VelodyneScan
-    remap_target: velodyne_packets
-    qos:
-      depth: 10
-      reliability: best_effort
-  - name: velodyne_points
-    message_type: sensor_msgs/msg/PointCloud2
-    remap_target: velodyne_points
-    qos:
-      depth: 10
-      reliability: best_effort
-  - name: aw_points
-    message_type: sensor_msgs/msg/PointCloud2
-    remap_target: aw_points
-    qos:
-      depth: 10
-      reliability: best_effort
-  - name: aw_points_ex
-    message_type: sensor_msgs/msg/PointCloud2
-    remap_target: aw_points_ex
-    qos:
-      depth: 10
-      reliability: best_effort
+publishers: []
 
 # parameters
 param_files:
@@ -53,14 +28,4 @@ param_values:
     default: true
 
 # processes
-processes:
-  - name: hw_interface
-    trigger_conditions:
-      - periodic: 100 # Hz
-    outcomes:
-      - to_output: velodyne_packets
-  - name: decoder
-    trigger_conditions:
-      - periodic: 10 # Hz
-    outcomes:
-      - to_output: velodyne_points
+processes: []
