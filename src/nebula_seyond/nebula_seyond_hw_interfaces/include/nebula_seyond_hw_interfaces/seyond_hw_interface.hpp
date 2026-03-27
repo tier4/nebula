@@ -64,17 +64,25 @@ private:
     const std::string & command, std::string * response = nullptr, int timeout_ms = 2000);
   Status set_network(
     const std::string & sensor_ip, const std::string & netmask, const std::string & gateway);
-  Status set_frame_rate(double frame_rate);
+  Status save_configuration();
+  Status set_reflectance_mode(SeyondReflectanceMode reflectance_mode);
+  Status set_return_mode(ReturnMode return_mode);
   Status set_time_sync(SeyondSyncMode sync_mode);
+  Status set_frame_rate(double frame_rate);
+  bool is_falcon_sensor() const;
+  bool uses_six_field_udp_ports_ip() const;
+  std::string build_udp_ports_ip_value(const SeyondConnectionConfiguration & config) const;
+  Status download_binary_file(const std::string & command, std::vector<uint8_t> & output);
 
   SeyondSensorConfiguration sensor_config_;
   connections::UdpSocket::callback_t scan_callback_;
   std::optional<connections::UdpSocket> udp_socket_;
   std::unique_ptr<connections::HttpClient> http_client_;
+  std::unique_ptr<connections::TcpSocket> streaming_control_socket_;
   std::mutex interface_mutex_;
 
   static constexpr uint16_t k_http_port = 8010;
-  static constexpr uint16_t k_control_port = 8010;
+  static constexpr uint16_t k_control_port = 8002;
 };
 
 }  // namespace nebula::drivers
