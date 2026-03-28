@@ -61,6 +61,37 @@ util::expected<T, ConfigError> declare_required_parameter(
       "Failed to declare/read parameter '" + name + "': " + e.what()};
   }
 }
+
+util::expected<std::monostate, ConfigError> validate_fov(
+  const drivers::FieldOfView<float, drivers::Degrees> & fov)
+{
+  if (fov.azimuth.start < 0.0F || fov.azimuth.start >= 360.0F) {
+    return ConfigError{
+      ConfigError::Code::PARAMETER_VALIDATION_FAILED,
+      "Parameter 'fov.azimuth.min_deg' must be in [0, 360), got " +
+        std::to_string(fov.azimuth.start)};
+  }
+  if (fov.azimuth.end <= fov.azimuth.start || fov.azimuth.end > 360.0F) {
+    return ConfigError{
+      ConfigError::Code::PARAMETER_VALIDATION_FAILED,
+      "Parameter 'fov.azimuth.max_deg' must be in (" + std::to_string(fov.azimuth.start) +
+        ", 360], got " + std::to_string(fov.azimuth.end)};
+  }
+  if (fov.elevation.start < -90.0F || fov.elevation.start >= 90.0F) {
+    return ConfigError{
+      ConfigError::Code::PARAMETER_VALIDATION_FAILED,
+      "Parameter 'fov.elevation.min_deg' must be in [-90, 90), got " +
+        std::to_string(fov.elevation.start)};
+  }
+  if (fov.elevation.end <= fov.elevation.start || fov.elevation.end > 90.0F) {
+    return ConfigError{
+      ConfigError::Code::PARAMETER_VALIDATION_FAILED,
+      "Parameter 'fov.elevation.max_deg' must be in (" + std::to_string(fov.elevation.start) +
+        ", 90], got " + std::to_string(fov.elevation.end)};
+  }
+
+  return std::monostate{};
+}
 }  // namespace
 
 util::expected<drivers::SampleSensorConfiguration, ConfigError> load_config_from_ros_parameters(
@@ -132,6 +163,11 @@ util::expected<drivers::SampleSensorConfiguration, ConfigError> load_config_from
   config.fov.azimuth.end = static_cast<float>(azimuth_max.value());
   config.fov.elevation.start = static_cast<float>(elevation_min.value());
   config.fov.elevation.end = static_cast<float>(elevation_max.value());
+
+  const auto fov_validation = validate_fov(config.fov);
+  if (!fov_validation.has_value()) {
+    return fov_validation.error();
+  }
 
   return config;
 }

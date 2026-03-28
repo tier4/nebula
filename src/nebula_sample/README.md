@@ -1,10 +1,15 @@
 # Nebula sample sensor package
 
-A template sensor package for the Nebula LiDAR driver framework. This package provides a minimal, working example that developers can copy and modify to add support for new sensors.
+A minimal template sensor package for the Nebula LiDAR driver framework.
 
 ## Purpose
 
-This package serves as a starting point for adding new sensor support to Nebula. It includes all necessary components with empty/stub implementations that compile and run without errors.
+This package is a starting point for adding new sensor support to Nebula. It compiles, launches,
+and exercises the ROS packet/pointcloud pipeline with intentionally minimal behavior.
+
+The sample decoder does not invent fake sensor geometry. It only counts packets, reports a scan
+boundary every 10 packets, and emits an empty pointcloud for that scan. Replace that logic with
+real packet parsing and scan-cutting for your sensor.
 
 ## Package structure
 
@@ -44,11 +49,11 @@ The guide covers:
 
 ### Configuration (`*_common`)
 
-- `SampleSensorConfiguration` - Sensor-specific settings
+- `SampleSensorConfiguration` - Minimal sensor-specific settings for an IP-based sensor
 
 ### Decoder (`*_decoders`)
 
-- `SampleDecoder` - Packet decoder implementation
+- `SampleDecoder` - Minimal decoder stub with packet counting and scan-boundary callbacks
 - `PacketDecodeResult` - Decoder output containing metadata/error and performance counters
 - `DecodeError` - Decoder error codes for packet handling failures
 
@@ -65,6 +70,7 @@ The guide covers:
 
 ## Reference implementation
 
-This package provides a template structure for adding new sensor support. For complete examples, refer to existing sensor packages like `nebula_hesai` or `nebula_velodyne`.
+This package provides a template structure for adding new sensor support. For complete examples,
+refer to existing sensor packages like `nebula_hesai` or `nebula_velodyne`.
 
 **For detailed integration instructions, see the [Integration guide](../../docs/integration_guide.md) in the documentation.**

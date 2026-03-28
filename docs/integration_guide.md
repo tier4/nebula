@@ -271,10 +271,17 @@ See [Verification](#verification) below.
 ## Implementation details
 
 The `nebula_sample` package provides a template implementation. Its source files contain
-comments and concise `Implement:` markers in key stubs to guide implementation.
+comments and concise `Implement:` markers at key extension points to guide implementation.
 
-Some examples might not be relevant for your sensor, e.g. calibration handling. Implement only
-what is necessary for your sensor.
+The sample decoder is intentionally minimal: it tracks packet counts, marks a scan complete every
+10 packets, and emits an empty pointcloud. It does not model real sensor geometry or packet
+layout.
+
+Some parts might not be relevant for your sensor, e.g. calibration handling. Implement only what
+is necessary for your sensor.
+
+For IP-based sensors, the sample keeps the common `host_ip`, `sensor_ip`, and `data_port`
+parameters and uses `sensor_ip` as a UDP sender filter in the sample hardware interface.
 
 ### About SDK integration
 

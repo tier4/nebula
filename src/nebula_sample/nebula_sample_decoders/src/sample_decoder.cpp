@@ -53,27 +53,35 @@ PacketDecodeResult SampleDecoder::unpack(const std::vector<uint8_t> & packet)
   } else if (packet.empty()) {
     result.metadata_or_error = DecodeError::EMPTY_PACKET;
   } else {
+    // Implement: Replace packet counting with real packet parsing and real scan-cut logic.
     ++packet_count_;
 
+    // Implement: Decode packet fields into a NebulaPoint and append it to current_scan_cloud_.
+    // Keep the field assignments together so the mapping from vendor packet fields to NebulaPoint
+    // stays easy to review.
     NebulaPoint point{};
-    point.x = static_cast<float>(packet_count_);
-    point.y = 0.0F;
-    point.z = 0.0F;
-    point.intensity = packet.front();
-    point.return_type = 0U;
-    point.channel = 0U;
-    point.azimuth = fov_.azimuth.start;
-    point.elevation = fov_.elevation.start;
-    point.distance = static_cast<float>(packet.size());
-    point.time_stamp = static_cast<uint32_t>(packet_count_);
-    current_scan_cloud_->push_back(point);
+    // Example assignments once packet parsing exists:
+    // point.x = decoded_x_m;
+    // point.y = decoded_y_m;
+    // point.z = decoded_z_m;
+    // point.intensity = decoded_intensity;
+    // point.return_type = decoded_return_type;
+    // point.channel = decoded_channel;
+    // point.azimuth = decoded_azimuth_deg;
+    // point.elevation = decoded_elevation_deg;
+    // point.distance = decoded_distance_m;
+    // point.time_stamp = decoded_relative_time_ns;
+
+    // Keep the placeholder variable until real point assignment is added, to avoid unused variable
+    // warnings. This should be removed once real point assignments are implemented.
+    (void)point;
 
     PacketMetadata metadata{};
     metadata.packet_timestamp_ns =
       static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
                               std::chrono::system_clock::now().time_since_epoch())
                               .count());
-    metadata.did_scan_complete = (packet_count_ % k_packets_per_dummy_scan) == 0;
+    metadata.did_scan_complete = (packet_count_ % k_packets_per_sample_scan) == 0;
 
     if (metadata.did_scan_complete) {
       const auto callback_begin = std::chrono::steady_clock::now();

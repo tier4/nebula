@@ -35,4 +35,4 @@
           max_hz: 12.0
         num_frame_transition: 1
       packet_liveness:
-        timeout_ms: 10
+        timeout_ms: 1000

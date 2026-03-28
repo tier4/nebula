@@ -60,8 +60,9 @@ struct PacketDecodeResult
   util::expected<PacketMetadata, DecodeError> metadata_or_error;
 };
 
-/// @brief Decoder that accumulates and converts incoming raw packets into point clouds.
-/// @details The tutorial implementation emits synthetic points for demonstration purposes.
+/// @brief Decoder that accumulates incoming raw packets and marks scan boundaries.
+/// @details The tutorial implementation emits empty pointclouds so the ROS pipeline can be
+/// exercised without inventing fake sensor geometry.
 class SampleDecoder
 {
 public:
@@ -87,7 +88,7 @@ public:
   void set_pointcloud_callback(pointcloud_callback_t pointcloud_cb);
 
 private:
-  static constexpr uint64_t k_packets_per_dummy_scan = 10;
+  static constexpr uint64_t k_packets_per_sample_scan = 10;
 
   FieldOfView<float, Degrees> fov_;
   pointcloud_callback_t pointcloud_callback_;

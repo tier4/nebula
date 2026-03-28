@@ -47,6 +47,7 @@ util::expected<std::monostate, SampleHwInterface::Error> SampleHwInterface::sens
     udp_socket_.emplace(
       connections::UdpSocket::Builder(
         connection_configuration_.host_ip, connection_configuration_.data_port)
+        .limit_to_sender(connection_configuration_.sensor_ip, connection_configuration_.data_port)
         .bind());
 
     // Callback can only be set while udp_socket_ is nullopt, so we don't need locking here
