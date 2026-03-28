@@ -16,6 +16,7 @@
   <buildtool_depend>ros_environment</buildtool_depend>
   <buildtool_depend>ros_testing</buildtool_depend>
 
+  <depend condition="$ENABLE_AGNOCAST == 1">agnocast_components</depend>
   <depend>autoware_sensing_msgs</depend>
   <depend>continental_msgs</depend>
   <depend>continental_srvs</depend>
