@@ -52,6 +52,7 @@ public:
 private:
   void parse_falcon_k(const SeyondDataPacket * packet);
   void parse_robin_w_e1x(const SeyondDataPacket * packet);
+  void parse_robin_compact(const SeyondDataPacket * packet);
   void parse_hummingbird_d1(const SeyondDataPacket * packet);
 
   void add_point(
