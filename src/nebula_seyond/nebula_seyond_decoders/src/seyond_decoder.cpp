@@ -12,10 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <nebula_seyond_decoders/falcon_nps_adjustment.hpp>
+#include <nebula_seyond_decoders/robin_e2x_nps_adjustment.hpp>
+#include <nebula_seyond_decoders/robin_w_nps_adjustment.hpp>
 #include <nebula_seyond_decoders/seyond_decoder.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -36,20 +41,26 @@ const uint8_t robinelite_channel_mapping[96] = {
   24, 26, 28, 73, 75, 77, 30, 32, 34, 79, 81, 83, 36, 38, 40, 85, 87, 89, 42, 44, 46, 91, 93, 95,
 };
 
-// SDK calibration constants
 const int kPolygonMaxFacets = 4;
 const int kPolygonTableSize = 65;
 const int kInnoRobinWMaxSetNumber = 6;
 const int kInnoRobinELiteMaxSetNumber = 12;
+const int kInnoRobinE2XMaxSetNumber = 24;
 const int kMaxReceiverInSet = 8;
 const int kHBHTableSize = 256;
 const int kHBVTableSize = 192;
 const int kEncoderTableShift = 8;
 const int kEncoderTableMask = 255;
 const int kEncoderTableStep = 256;
-const int kPolygonMinAngle = -8192;  // -45 degrees in InnoAngleUnit
+const int kPolygonMinAngle = -8192;
+const int kRobinNpsTableShift = 9;
+const int kRobinNpsTableStep = 1 << kRobinNpsTableShift;
+const int kRobinNpsTableHalfStep = 1 << (kRobinNpsTableShift - 1);
+const int kRobinNpsTableMask = kRobinNpsTableStep - 1;
+const int kRobinNpsTableSize = 64;
+const int kRobinNpsEffectiveHalfSize = 27;
+const double kRobinNpsAdjustmentUnitMeters = 0.001;
 
-// Minimum expected byte sizes for tables (version:2 + id:8 = 10 bytes header)
 const size_t kAngleHVTableHeaderSize = 10;
 const size_t kRobinWTableMinSize =
   kAngleHVTableHeaderSize + sizeof(int16_t) * 2 * kPolygonMaxFacets * kPolygonTableSize *
@@ -57,21 +68,222 @@ const size_t kRobinWTableMinSize =
 const size_t kRobinELiteTableMinSize =
   kAngleHVTableHeaderSize + sizeof(int16_t) * 2 * kPolygonMaxFacets * kPolygonTableSize *
                               kInnoRobinELiteMaxSetNumber * kMaxReceiverInSet;
+const size_t kRobinE2XTableMinSize =
+  kAngleHVTableHeaderSize + sizeof(int16_t) * 2 * kPolygonMaxFacets * kPolygonTableSize *
+                              kInnoRobinE2XMaxSetNumber * kMaxReceiverInSet;
 const size_t kHummingbirdTableMinSize =
   kAngleHVTableHeaderSize + sizeof(int16_t) * 2 * kHBVTableSize * kHBHTableSize;
 
-// Vertical angle diff base values per model (SDK: kVAngleDiffBase)
-const int kFalconKVAngleDiffBase = 196;  // unit: InnoAngleUnit (≈0.006°)
-const int kRobinWVAngleDiffBase = 240;   // unit: InnoAngleUnit
-
-// Robin E1X inset-line offset (empirically derived from SDK)
-const int kRobinE1XInsetLineOffset = 18;  // InnoAngleUnit
+const int kFalconKVAngleDiffBase = 196;
+const int kRobinWVAngleDiffBase = 240;
+const int kRobinE1XInsetLineOffset = 18;
+constexpr double kInnoAngleUnitsPerDegree = 32768.0 / 180.0;
+const uint16_t kInnoMagicNumberDataPacket = 0x176A;
+const uint8_t kItemTypeSpherePointCloud = 1;
+const uint8_t kItemTypeRobinESpherePointCloud = 5;
+const uint8_t kItemTypeRobinWSpherePointCloud = 7;
+const uint8_t kItemTypeRobinWCompactPointCloud = 13;
+const uint8_t kItemTypeRobinE2XCompactPointCloud = 19;
+const uint8_t kItemTypeHummingbirdCompactPointCloud = 22;
+constexpr size_t kCompactChannelCount = 8;
+const int kFalconNpsTableShift = 9;
+const int kFalconNpsTableSizeH = 64;
+const int kFalconNpsTableSizeV = 16;
+const int kFalconNpsEffectiveHalfSizeH = 22;
+const int kFalconNpsEffectiveHalfSizeV = 6;
+const double kFalconNpsAdjustmentUnitMeters = 0.0025;
 
 struct AngleHV
 {
   int16_t v;
   int16_t h;
 };
+
+struct RobinAdjustment
+{
+  double x;
+  double y;
+  double z;
+};
+
+struct FalconAdjustment
+{
+  double x;
+  double z;
+};
+
+bool is_supported_compact_item_size(uint16_t item_size)
+{
+  const size_t payload_size = item_size - sizeof(SeyondCoBlockHeader);
+  return item_size >=
+           sizeof(SeyondCoBlockHeader) + sizeof(SeyondCoChannelPoint) * kCompactChannelCount &&
+         payload_size % (sizeof(SeyondCoChannelPoint) * kCompactChannelCount) == 0;
+}
+
+bool is_robin_inside_compact_fov(const AngleHV & angle)
+{
+  constexpr int kFovLeft = static_cast<int>(-60.0 * kInnoAngleUnitsPerDegree);
+  constexpr int kFovRight = static_cast<int>(60.0 * kInnoAngleUnitsPerDegree);
+  return angle.h >= kFovLeft && angle.h <= kFovRight;
+}
+
+bool is_hummingbird_inside_compact_fov(const AngleHV & angle)
+{
+  constexpr int kFovLeft = static_cast<int>(-70.0 * kInnoAngleUnitsPerDegree);
+  constexpr int kFovRight = static_cast<int>(70.0 * kInnoAngleUnitsPerDegree);
+  constexpr int kFovLow = static_cast<int>(-50.0 * kInnoAngleUnitsPerDegree);
+  constexpr int kFovHigh = static_cast<int>(50.0 * kInnoAngleUnitsPerDegree);
+  return angle.h >= kFovLeft && angle.h <= kFovRight && angle.v >= kFovLow && angle.v <= kFovHigh;
+}
+
+size_t compact_return_count(uint16_t item_size)
+{
+  if (!is_supported_compact_item_size(item_size)) {
+    return 0;
+  }
+  return (item_size - sizeof(SeyondCoBlockHeader)) /
+         (sizeof(SeyondCoChannelPoint) * kCompactChannelCount);
+}
+
+template <int MaxSetNumber>
+std::array<AngleHV, kCompactChannelCount> interpolate_robin_compact_angles_impl(
+  const SeyondCoBlockHeader & header, const std::vector<uint8_t> & angle_hv_table,
+  int max_set_number)
+{
+  std::array<AngleHV, kCompactChannelCount> angles{};
+  if (angle_hv_table.size() < kAngleHVTableHeaderSize) {
+    return angles;
+  }
+
+  int h_offset_total = header.p_angle - kPolygonMinAngle;
+  if (h_offset_total < 0) {
+    h_offset_total = 0;
+  }
+
+  int h_idx = h_offset_total >> kEncoderTableShift;
+  int h_offset = h_offset_total & kEncoderTableMask;
+  int h_offset2 = kEncoderTableStep - h_offset;
+  h_idx = std::min(kPolygonTableSize - 2, h_idx);
+
+  int set_num = header.scan_id % max_set_number;
+  using TableType = AngleHV[kPolygonMaxFacets][kPolygonTableSize][MaxSetNumber][kMaxReceiverInSet];
+  const auto & table =
+    *reinterpret_cast<const TableType *>(angle_hv_table.data() + kAngleHVTableHeaderSize);
+
+  for (size_t channel = 0; channel < kCompactChannelCount; ++channel) {
+    const auto & b1 = table[header.facet][h_idx][set_num][channel];
+    const auto & b2 = table[header.facet][h_idx + 1][set_num][channel];
+    angles[channel].h =
+      static_cast<int16_t>((b1.h * h_offset2 + b2.h * h_offset) >> kEncoderTableShift);
+    angles[channel].v =
+      static_cast<int16_t>((b1.v * h_offset2 + b2.v * h_offset) >> kEncoderTableShift);
+    if (header.scan_id >= static_cast<uint32_t>(max_set_number)) {
+      angles[channel].v = static_cast<int16_t>(angles[channel].v + kRobinE1XInsetLineOffset);
+    }
+  }
+
+  return angles;
+}
+
+std::array<AngleHV, kCompactChannelCount> interpolate_robin_compact_angles(
+  const SeyondCoBlockHeader & header, const std::vector<uint8_t> & angle_hv_table,
+  int max_set_number)
+{
+  switch (max_set_number) {
+    case kInnoRobinWMaxSetNumber:
+      return interpolate_robin_compact_angles_impl<kInnoRobinWMaxSetNumber>(
+        header, angle_hv_table, max_set_number);
+    case kInnoRobinE2XMaxSetNumber:
+      return interpolate_robin_compact_angles_impl<kInnoRobinE2XMaxSetNumber>(
+        header, angle_hv_table, max_set_number);
+    default:
+      return {};
+  }
+}
+
+FalconAdjustment lookup_falcon_adjustment(int h_angle, int v_angle, uint32_t channel)
+{
+  FalconAdjustment adjustment{};
+  if (channel >= 4) {
+    return adjustment;
+  }
+
+  int v_index = (v_angle >> kFalconNpsTableShift) + kFalconNpsEffectiveHalfSizeV;
+  int h_index = (h_angle >> kFalconNpsTableShift) + kFalconNpsEffectiveHalfSizeH;
+  v_index &= (kFalconNpsTableSizeV - 1);
+  h_index &= (kFalconNpsTableSizeH - 1);
+
+  const auto quantize = [](double value) {
+    return static_cast<int>(std::floor(value / kFalconNpsAdjustmentUnitMeters + 0.5));
+  };
+
+  adjustment.x =
+    quantize(kInnoPs2Nps[0][channel][v_index][h_index]) * kFalconNpsAdjustmentUnitMeters;
+  adjustment.z =
+    quantize(kInnoPs2Nps[1][channel][v_index][h_index]) * kFalconNpsAdjustmentUnitMeters;
+  return adjustment;
+}
+
+RobinAdjustment interpolate_robin_w_adjustment(int h_angle, uint32_t scan_id)
+{
+  RobinAdjustment adjustment{};
+  if (scan_id >= 192) {
+    return adjustment;
+  }
+
+  int adjusted_h_angle = h_angle + (kRobinNpsEffectiveHalfSize << kRobinNpsTableShift);
+  int h_index = adjusted_h_angle >> kRobinNpsTableShift;
+  h_index &= (kRobinNpsTableSize - 1);
+  if (h_index > kRobinNpsTableSize - 2) {
+    h_index = kRobinNpsTableSize - 2;
+  }
+
+  const int h_offset = adjusted_h_angle & kRobinNpsTableMask;
+  const int h_offset2 = kRobinNpsTableStep - h_offset;
+
+  const auto interpolate_axis = [&](size_t axis) {
+    const int u = static_cast<int>(std::floor(robinW_kInnoPs2Nps[axis][scan_id][h_index] + 0.5));
+    const int v =
+      static_cast<int>(std::floor(robinW_kInnoPs2Nps[axis][scan_id][h_index + 1] + 0.5));
+    const int blended =
+      (u * h_offset2 + v * h_offset + kRobinNpsTableHalfStep) >> kRobinNpsTableShift;
+    return blended * kRobinNpsAdjustmentUnitMeters;
+  };
+
+  adjustment.x = interpolate_axis(0);
+  adjustment.y = interpolate_axis(1);
+  adjustment.z = interpolate_axis(2);
+  return adjustment;
+}
+
+RobinAdjustment interpolate_robin_e2x_adjustment(int h_angle)
+{
+  RobinAdjustment adjustment{};
+
+  int adjusted_h_angle = h_angle + (kRobinNpsEffectiveHalfSize << kRobinNpsTableShift);
+  int h_index = adjusted_h_angle >> kRobinNpsTableShift;
+  h_index &= (kRobinNpsTableSize - 1);
+  if (h_index > kRobinNpsTableSize - 2) {
+    h_index = kRobinNpsTableSize - 2;
+  }
+
+  const int h_offset = adjusted_h_angle & kRobinNpsTableMask;
+  const int h_offset2 = kRobinNpsTableStep - h_offset;
+
+  const auto interpolate_axis = [&](size_t axis) {
+    const int u = static_cast<int>(std::floor(robinE2_kInnoPs2Nps[axis][h_index] + 0.5));
+    const int v = static_cast<int>(std::floor(robinE2_kInnoPs2Nps[axis][h_index + 1] + 0.5));
+    const int blended =
+      (u * h_offset2 + v * h_offset + kRobinNpsTableHalfStep) >> kRobinNpsTableShift;
+    return blended * kRobinNpsAdjustmentUnitMeters;
+  };
+
+  adjustment.x = interpolate_axis(0);
+  adjustment.y = interpolate_axis(1);
+  adjustment.z = interpolate_axis(2);
+  return adjustment;
+}
+
 }  // namespace
 
 SeyondDecoder::SeyondDecoder(
@@ -89,6 +301,50 @@ SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & pack
   }
 
   const auto * packet = reinterpret_cast<const SeyondDataPacket *>(packet_data.data());
+  if (packet->common.magic_number != kInnoMagicNumberDataPacket) {
+    return {0, 0};
+  }
+  if (packet->common.size < sizeof(SeyondDataPacket) || packet->common.size > packet_data.size()) {
+    return {0, 0};
+  }
+
+  const auto payload_size = static_cast<size_t>(packet->common.size) - sizeof(SeyondDataPacket);
+  const auto required_payload_size =
+    static_cast<uint64_t>(packet->item_number) * static_cast<uint64_t>(packet->item_size);
+  if (required_payload_size > payload_size) {
+    return {0, 0};
+  }
+
+  bool supported_layout = false;
+  switch (config_.sensor_model) {
+    case SeyondSensorModel::FALCON_K:
+      supported_layout =
+        packet->type == kItemTypeSpherePointCloud && packet->item_size == sizeof(SeyondBlock);
+      break;
+    case SeyondSensorModel::ROBIN_W:
+      supported_layout = (packet->type == kItemTypeRobinWSpherePointCloud &&
+                          packet->item_size == sizeof(SeyondEnBlock)) ||
+                         (packet->type == kItemTypeRobinWCompactPointCloud &&
+                          is_supported_compact_item_size(packet->item_size));
+      break;
+    case SeyondSensorModel::ROBIN_E1X:
+      supported_layout = (packet->type == kItemTypeRobinESpherePointCloud &&
+                          packet->item_size == sizeof(SeyondEnBlock)) ||
+                         (packet->type == kItemTypeRobinE2XCompactPointCloud &&
+                          is_supported_compact_item_size(packet->item_size));
+      break;
+    case SeyondSensorModel::HUMMINGBIRD_D1:
+      supported_layout = packet->type == kItemTypeHummingbirdCompactPointCloud &&
+                         is_supported_compact_item_size(packet->item_size);
+      break;
+    default:
+      break;
+  }
+
+  if (!supported_layout) {
+    return {packet->common.ts_start_us * 1000, 0};
+  }
+
   size_t initial_points = current_scan_cloud_->size();
 
   switch (config_.sensor_model) {
@@ -96,8 +352,18 @@ SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & pack
       parse_falcon_k(packet);
       break;
     case SeyondSensorModel::ROBIN_W:
+      if (packet->type == kItemTypeRobinWCompactPointCloud) {
+        parse_robin_compact(packet);
+      } else {
+        parse_robin_w_e1x(packet);
+      }
+      break;
     case SeyondSensorModel::ROBIN_E1X:
-      parse_robin_w_e1x(packet);
+      if (packet->type == kItemTypeRobinE2XCompactPointCloud) {
+        parse_robin_compact(packet);
+      } else {
+        parse_robin_w_e1x(packet);
+      }
       break;
     case SeyondSensorModel::HUMMINGBIRD_D1:
       parse_hummingbird_d1(packet);
@@ -109,7 +375,6 @@ SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & pack
   size_t points_unpacked = current_scan_cloud_->size() - initial_points;
   const uint64_t base_ts_ns = packet->common.ts_start_us * 1000;
 
-  // Publish only when the last sub-frame of a complete scan arrives
   if (packet->is_last_sub_frame && !current_scan_cloud_->empty()) {
     pointcloud_callback_(current_scan_cloud_, base_ts_ns);
     current_scan_cloud_ = std::make_shared<NebulaPointCloud>();
@@ -124,12 +389,8 @@ void SeyondDecoder::parse_falcon_k(const SeyondDataPacket * packet)
   const auto * blocks = reinterpret_cast<const SeyondBlock *>(payload);
 
   const double kRadPerInnoAngleUnit = M_PI / 32768.0;
-
-  // FalconK distance unit changes based on long_distance_mode flag
-  // Normal: 1/200 m;  Long-distance: 1/100 m
   const double kMeterPerUnit = packet->long_distance_mode ? (1.0 / 100.0) : (1.0 / 200.0);
 
-  // Use calibration if available, else fallback to SDK-defined kVAngleDiffBase
   int v_angle_diff_base = (calibration_.v_angle_offset != 0.0)
                             ? static_cast<int>(calibration_.v_angle_offset)
                             : kFalconKVAngleDiffBase;
@@ -147,7 +408,6 @@ void SeyondDecoder::parse_falcon_k(const SeyondDataPacket * packet)
       int32_t ha_raw = block.header.h_angle;
       int32_t va_raw = block.header.v_angle;
 
-      // FalconK uses reflectance (no separate intensity field)
       uint8_t intensity = static_cast<uint8_t>((static_cast<uint32_t>(pt.refl) * 255) / 255);
 
       if (ch == 1) {
@@ -169,6 +429,9 @@ void SeyondDecoder::parse_falcon_k(const SeyondDataPacket * packet)
       float x = static_cast<float>(radius * cos_va * std::cos(ha));
       float y = static_cast<float>(-radius * cos_va * std::sin(ha));
       float z = static_cast<float>(radius * std::sin(va));
+      const auto adjustment = lookup_falcon_adjustment(ha_raw, va_raw, ch);
+      x = static_cast<float>(x + adjustment.z);
+      z = static_cast<float>(z + adjustment.x);
 
       add_point(
         x, y, z, intensity, static_cast<uint16_t>(block.header.scan_id),
@@ -220,23 +483,31 @@ void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
       int32_t ha_raw, va_raw;
 
       if (use_calibration) {
-        // High-precision bilinear interpolation using anglehv_table
         int h_offset_total = header.h_angle - kPolygonMinAngle;
         if (h_offset_total < 0) h_offset_total = 0;
         int h_idx = std::min(kPolygonTableSize - 2, h_offset_total >> kEncoderTableShift);
         int h_offset = h_offset_total & kEncoderTableMask;
         int h_offset2 = kEncoderTableStep - h_offset;
-
-        using TableType = AngleHV[kPolygonMaxFacets][kPolygonTableSize][12][kMaxReceiverInSet];
-        const TableType & table =
-          *reinterpret_cast<const TableType *>(calibration_.angle_hv_table.data() + 10);
-
         int set_num = header.scan_id % max_set;
-        const AngleHV & b1 = table[header.facet][h_idx][set_num][ch];
-        const AngleHV & b2 = table[header.facet][h_idx + 1][set_num][ch];
-
-        ha_raw = (b1.h * h_offset2 + b2.h * h_offset) >> kEncoderTableShift;
-        va_raw = (b1.v * h_offset2 + b2.v * h_offset) >> kEncoderTableShift;
+        if (is_robin_w) {
+          using RobinWTableType = AngleHV[kPolygonMaxFacets][kPolygonTableSize]
+                                         [kInnoRobinWMaxSetNumber][kMaxReceiverInSet];
+          const auto & table =
+            *reinterpret_cast<const RobinWTableType *>(calibration_.angle_hv_table.data() + 10);
+          const AngleHV & b1 = table[header.facet][h_idx][set_num][ch];
+          const AngleHV & b2 = table[header.facet][h_idx + 1][set_num][ch];
+          ha_raw = (b1.h * h_offset2 + b2.h * h_offset) >> kEncoderTableShift;
+          va_raw = (b1.v * h_offset2 + b2.v * h_offset) >> kEncoderTableShift;
+        } else {
+          using RobinETableType = AngleHV[kPolygonMaxFacets][kPolygonTableSize]
+                                         [kInnoRobinELiteMaxSetNumber][kMaxReceiverInSet];
+          const auto & table =
+            *reinterpret_cast<const RobinETableType *>(calibration_.angle_hv_table.data() + 10);
+          const AngleHV & b1 = table[header.facet][h_idx][set_num][ch];
+          const AngleHV & b2 = table[header.facet][h_idx + 1][set_num][ch];
+          ha_raw = (b1.h * h_offset2 + b2.h * h_offset) >> kEncoderTableShift;
+          va_raw = (b1.v * h_offset2 + b2.v * h_offset) >> kEncoderTableShift;
+        }
 
         if (is_robin_e1x && header.scan_id >= static_cast<uint32_t>(max_set)) {
           va_raw += kRobinE1XInsetLineOffset;
@@ -266,7 +537,6 @@ void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
       float y = static_cast<float>(-radius * cos_va * std::sin(ha));
       float z = static_cast<float>(radius * std::sin(va));
 
-      // Bounds-checked physical channel mapping
       uint16_t physical_channel = static_cast<uint16_t>(ch);
       if (is_robin_w) {
         size_t map_idx = static_cast<size_t>((header.scan_id % 12) * 4 + ch);
@@ -280,9 +550,100 @@ void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
           physical_channel = robinelite_channel_mapping[map_idx];
         }
       }
+      if (is_robin_w) {
+        const auto adjustment = interpolate_robin_w_adjustment(ha_raw, physical_channel);
+        x = static_cast<float>(x + adjustment.z);
+        y = static_cast<float>(y - adjustment.y);
+        z = static_cast<float>(z + adjustment.x);
+      }
 
       add_point(
         x, y, z, intensity, physical_channel, static_cast<uint32_t>(header.ts_10us * 10000));
+    }
+  }
+}
+
+void SeyondDecoder::parse_robin_compact(const SeyondDataPacket * packet)
+{
+  const auto * payload = reinterpret_cast<const uint8_t *>(packet) + sizeof(SeyondDataPacket);
+  const auto return_count = compact_return_count(packet->item_size);
+  if (return_count == 0) {
+    return;
+  }
+
+  const bool is_robin_w_compact = packet->type == kItemTypeRobinWCompactPointCloud;
+  const bool is_robin_e2x_compact = packet->type == kItemTypeRobinE2XCompactPointCloud;
+  const int max_set_number =
+    is_robin_w_compact ? kInnoRobinWMaxSetNumber : kInnoRobinE2XMaxSetNumber;
+  const size_t table_min_size = is_robin_w_compact ? kRobinWTableMinSize : kRobinE2XTableMinSize;
+  const bool use_calibration = calibration_.angle_hv_table.size() >= table_min_size;
+  const double kRadPerInnoAngleUnit = M_PI / 32768.0;
+  const double kMeterPerUnit = 1.0 / 400.0;
+
+  for (uint32_t i = 0; i < packet->item_number; ++i) {
+    const auto * block_ptr =
+      reinterpret_cast<const SeyondCoBlock *>(payload + i * packet->item_size);
+    const auto & header = block_ptr->header;
+    const auto * points = reinterpret_cast<const SeyondCoChannelPoint *>(
+      payload + i * packet->item_size + sizeof(SeyondCoBlockHeader));
+
+    std::array<AngleHV, kCompactChannelCount> angles{};
+    if (use_calibration) {
+      angles =
+        interpolate_robin_compact_angles(header, calibration_.angle_hv_table, max_set_number);
+    }
+
+    for (size_t channel = 0; channel < kCompactChannelCount; ++channel) {
+      for (size_t return_idx = 0; return_idx < return_count; ++return_idx) {
+        const auto & pt = points[channel + return_idx * kCompactChannelCount];
+        if (pt.radius == 0) {
+          continue;
+        }
+
+        double ha = 0.0;
+        double va = 0.0;
+        if (use_calibration) {
+          ha = static_cast<double>(angles[channel].h) * kRadPerInnoAngleUnit;
+          va = static_cast<double>(angles[channel].v) * kRadPerInnoAngleUnit;
+          if (!is_robin_inside_compact_fov(angles[channel])) {
+            continue;
+          }
+        } else {
+          ha = static_cast<double>(header.p_angle) * kRadPerInnoAngleUnit;
+          va = static_cast<double>(header.g_angle) * kRadPerInnoAngleUnit;
+        }
+
+        double radius = pt.radius * kMeterPerUnit;
+        double cos_va = std::cos(va);
+        float x = static_cast<float>(radius * cos_va * std::cos(ha));
+        float y = static_cast<float>(-radius * cos_va * std::sin(ha));
+        float z = static_cast<float>(radius * std::sin(va));
+        uint16_t physical_channel =
+          static_cast<uint16_t>(header.scan_id * kCompactChannelCount + channel);
+        if (is_robin_w_compact) {
+          const size_t map_idx =
+            static_cast<size_t>(header.scan_id * kCompactChannelCount + channel);
+          if (map_idx < sizeof(robinw_channel_mapping)) {
+            physical_channel = static_cast<uint16_t>(robinw_channel_mapping[map_idx]) +
+                               static_cast<uint16_t>(header.facet * 48);
+          }
+          const auto adjustment = interpolate_robin_w_adjustment(
+            use_calibration ? angles[channel].h : header.p_angle, physical_channel);
+          x = static_cast<float>(x + adjustment.z);
+          y = static_cast<float>(y - adjustment.y);
+          z = static_cast<float>(z + adjustment.x);
+        } else if (is_robin_e2x_compact) {
+          const int h_angle_raw = use_calibration ? angles[channel].h : header.p_angle;
+          const auto adjustment = interpolate_robin_e2x_adjustment(h_angle_raw);
+          x = static_cast<float>(x + adjustment.z);
+          y = static_cast<float>(y - adjustment.y);
+          z = static_cast<float>(z + adjustment.x);
+        }
+        uint8_t intensity = static_cast<uint8_t>((static_cast<uint32_t>(pt.refl) * 255) / 4095);
+
+        add_point(
+          x, y, z, intensity, physical_channel, static_cast<uint32_t>(header.ts_10us * 10000));
+      }
     }
   }
 }
@@ -291,41 +652,51 @@ void SeyondDecoder::parse_hummingbird_d1(const SeyondDataPacket * packet)
 {
   const auto * payload = reinterpret_cast<const uint8_t *>(packet) + sizeof(SeyondDataPacket);
   bool use_calibration = (calibration_.angle_hv_table.size() >= kHummingbirdTableMinSize);
+  const auto return_count = compact_return_count(packet->item_size);
+  if (return_count == 0) {
+    return;
+  }
 
   for (uint32_t i = 0; i < packet->item_number; ++i) {
     const auto * block_ptr =
       reinterpret_cast<const SeyondCoBlock *>(payload + i * packet->item_size);
     const auto & header = block_ptr->header;
+    const auto * points = reinterpret_cast<const SeyondCoChannelPoint *>(
+      payload + i * packet->item_size + sizeof(SeyondCoBlockHeader));
     uint16_t base_channel = static_cast<uint16_t>(header.scan_id % 4) * 8;
 
-    for (uint32_t ch = 0; ch < 8; ++ch) {
-      const auto & pt = block_ptr->points[ch];
-      if (pt.radius == 0) continue;
+    for (size_t ch = 0; ch < kCompactChannelCount; ++ch) {
+      for (size_t return_idx = 0; return_idx < return_count; ++return_idx) {
+        const auto & pt = points[ch + return_idx * kCompactChannelCount];
+        if (pt.radius == 0) continue;
 
-      double ha, va;
-      if (use_calibration) {
-        using TableType = AngleHV[kHBVTableSize][kHBHTableSize];
-        const TableType & table =
-          *reinterpret_cast<const TableType *>(calibration_.angle_hv_table.data() + 10);
-        ha = table[header.scan_id][header.scan_idx + ch].h * (M_PI / 32768.0);
-        va = table[header.scan_id][header.scan_idx + ch].v * (M_PI / 32768.0);
-      } else {
-        ha = header.p_angle * (M_PI / 32768.0);
-        va = header.g_angle * (M_PI / 32768.0);
+        double ha, va;
+        if (use_calibration) {
+          using TableType = AngleHV[kHBVTableSize][kHBHTableSize];
+          const TableType & table =
+            *reinterpret_cast<const TableType *>(calibration_.angle_hv_table.data() + 10);
+          const AngleHV & angle = table[header.scan_id][header.scan_idx + ch];
+          if (!is_hummingbird_inside_compact_fov(angle)) continue;
+          ha = angle.h * (M_PI / 32768.0);
+          va = angle.v * (M_PI / 32768.0);
+        } else {
+          ha = header.p_angle * (M_PI / 32768.0);
+          va = header.g_angle * (M_PI / 32768.0);
+        }
+
+        double radius = pt.radius * (1.0 / 400.0);
+
+        double cos_va = std::cos(va);
+        float x = static_cast<float>(radius * cos_va * std::cos(ha));
+        float y = static_cast<float>(-radius * cos_va * std::sin(ha));
+        float z = static_cast<float>(radius * std::sin(va));
+
+        uint8_t intensity = static_cast<uint8_t>((static_cast<uint32_t>(pt.refl) * 255) / 4095);
+
+        add_point(
+          x, y, z, intensity, static_cast<uint16_t>(base_channel + ch),
+          static_cast<uint32_t>(header.ts_10us * 10000));
       }
-
-      double radius = pt.radius * (1.0 / 400.0);
-
-      double cos_va = std::cos(va);
-      float x = static_cast<float>(radius * cos_va * std::cos(ha));
-      float y = static_cast<float>(-radius * cos_va * std::sin(ha));
-      float z = static_cast<float>(radius * std::sin(va));
-
-      uint8_t intensity = static_cast<uint8_t>((static_cast<uint32_t>(pt.refl) * 255) / 4095);
-
-      add_point(
-        x, y, z, intensity, static_cast<uint16_t>(base_channel + ch),
-        static_cast<uint32_t>(header.ts_10us * 10000));
     }
   }
 }
@@ -333,7 +704,6 @@ void SeyondDecoder::parse_hummingbird_d1(const SeyondDataPacket * packet)
 void SeyondDecoder::add_point(
   float x, float y, float z, uint8_t intensity, uint16_t channel, uint32_t timestamp_ns)
 {
-  // FOV filtering (start == end means full-circle / no filter for that axis)
   const float azimuth_deg =
     normalize_angle(std::atan2(-y, x) * (180.0f / static_cast<float>(M_PI)), 360.0f);
   const float elevation_deg =

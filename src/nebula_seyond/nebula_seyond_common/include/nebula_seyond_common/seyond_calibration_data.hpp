@@ -31,6 +31,60 @@
 namespace nebula::drivers
 {
 
+namespace detail
+{
+#pragma pack(push, 1)
+struct SeyondPacketCommonHeader
+{
+  uint16_t magic_number;
+  uint8_t major_version;
+  uint8_t minor_version;
+  uint16_t fw_sequence;
+  uint32_t checksum;
+  uint32_t size;
+  uint8_t source_id : 4;
+  uint8_t timestamp_sync_type : 4;
+  uint8_t lidar_type;
+  uint64_t ts_start_us;
+  uint8_t lidar_mode;
+  uint8_t lidar_status;
+};
+
+struct SeyondDataPacketHeader
+{
+  SeyondPacketCommonHeader common;
+  uint64_t idx;
+  uint16_t sub_idx;
+  uint16_t sub_seq;
+  uint32_t type : 8;
+  uint32_t item_number : 24;
+  uint16_t item_size;
+  uint32_t topic;
+  uint16_t scanner_direction : 1;
+  uint16_t use_reflectance : 1;
+  uint16_t multi_return_mode : 3;
+  uint16_t confidence_level : 2;
+  uint16_t is_last_sub_frame : 1;
+  uint16_t is_last_sequence : 1;
+  uint16_t has_tail : 1;
+  uint16_t frame_sync_locked : 1;
+  uint16_t is_first_sub_frame : 1;
+  uint16_t last_four_channel : 1;
+  uint16_t long_distance_mode : 1;
+  uint16_t reserved_flag : 2;
+  int16_t roi_h_angle;
+  int16_t roi_v_angle;
+  uint32_t extend_reserved[4];
+};
+#pragma pack(pop)
+
+constexpr uint16_t kSeyondDataPacketMagic = 0x176A;
+constexpr uint8_t kRobinWAngleHvTableType = 100;
+constexpr uint8_t kRobinE1XAngleHvTableType = 101;
+constexpr uint8_t kHummingbirdAngleHvTableType = 103;
+constexpr uint8_t kRobinE2XAngleHvTableType = 104;
+}  // namespace detail
+
 /// @brief Calibration data for Seyond LiDARs
 struct SeyondCalibrationData
 {
@@ -126,6 +180,39 @@ struct SeyondCalibrationData
     // Read remaining bytes as anglehv_table binary blob
     calibration.angle_hv_table.assign(
       std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+
+    const auto maybe_strip_packet_wrapper = [&calibration]() {
+      using detail::SeyondDataPacketHeader;
+      if (calibration.angle_hv_table.size() < sizeof(SeyondDataPacketHeader)) {
+        return;
+      }
+
+      const auto * packet =
+        reinterpret_cast<const SeyondDataPacketHeader *>(calibration.angle_hv_table.data());
+      const bool supported_anglehv_packet =
+        packet->common.magic_number == detail::kSeyondDataPacketMagic &&
+        (packet->type == detail::kRobinWAngleHvTableType ||
+         packet->type == detail::kRobinE1XAngleHvTableType ||
+         packet->type == detail::kHummingbirdAngleHvTableType ||
+         packet->type == detail::kRobinE2XAngleHvTableType);
+      if (!supported_anglehv_packet) {
+        return;
+      }
+
+      const size_t packet_size = packet->common.size;
+      if (
+        packet_size < sizeof(SeyondDataPacketHeader) ||
+        packet_size > calibration.angle_hv_table.size()) {
+        return;
+      }
+
+      calibration.angle_hv_table.erase(
+        calibration.angle_hv_table.begin(),
+        calibration.angle_hv_table.begin() +
+          static_cast<std::ptrdiff_t>(sizeof(SeyondDataPacketHeader)));
+      calibration.angle_hv_table.resize(packet_size - sizeof(SeyondDataPacketHeader));
+    };
+    maybe_strip_packet_wrapper();
 
     return calibration;
   }
