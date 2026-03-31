@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <initializer_list>
 #include <sstream>
@@ -318,11 +319,9 @@ TEST(NebulaCommonTest, PointConversionsPreserveRelevantFields)
 
 TEST(NebulaCommonTest, AngleAndSpeedHelpersConvertUnits)
 {
-  constexpr double pi = 3.14159265358979323846;
-
-  EXPECT_NEAR(nebula::drivers::deg2rad(180.0), pi, 1.0e-12);
-  EXPECT_NEAR(nebula::drivers::deg2rad(180), pi, 1.0e-12);
-  EXPECT_NEAR(nebula::drivers::rad2deg(pi / 2.0), 90.0, 1.0e-12);
+  EXPECT_NEAR(nebula::drivers::deg2rad(180.0), M_PI, 1.0e-12);
+  EXPECT_NEAR(nebula::drivers::deg2rad(180), M_PI, 1.0e-12);
+  EXPECT_NEAR(nebula::drivers::rad2deg(M_PI / 2.0), 90.0, 1.0e-12);
   EXPECT_DOUBLE_EQ(nebula::drivers::rpm2hz(600.0), 10.0);
 }
 

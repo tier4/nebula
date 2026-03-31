@@ -113,10 +113,10 @@ TEST(UtilityHelpersTest, RateLimiterSuppressesCallsInsideWindow)
 
   auto action = [&]() { ++invocations; };
 
-  limiter.with_rate_limit(100000000ULL, action);
-  limiter.with_rate_limit(150000000ULL, action);
-  limiter.with_rate_limit(199999999ULL, action);
-  limiter.with_rate_limit(200000000ULL, action);
+  limiter.with_rate_limit(100'000'000ULL, action);
+  limiter.with_rate_limit(150'000'000ULL, action);
+  limiter.with_rate_limit(199'999'999ULL, action);
+  limiter.with_rate_limit(200'000'000ULL, action);
 
   EXPECT_EQ(invocations, 2);
 }
