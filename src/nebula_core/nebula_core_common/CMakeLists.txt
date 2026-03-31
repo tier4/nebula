@@ -35,6 +35,9 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_ring_buffer test/test_ring_buffer.cpp)
   target_link_libraries(test_ring_buffer nebula_core_common)
+
+  ament_add_gtest(test_utility_helpers test/test_utility_helpers.cpp)
+  target_link_libraries(test_utility_helpers nebula_core_common)
 endif()
 
 install(TARGETS nebula_core_common EXPORT export_nebula_core_common)

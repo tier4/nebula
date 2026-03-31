@@ -43,7 +43,7 @@ constexpr OutT get_bitfield(const InT & storage)
 {
   constexpr uint8_t n_bits = HighBit - LowBit + 1;
   constexpr InT all_ones = ~static_cast<InT>(0);
-  constexpr InT mask = ~(all_ones << n_bits);
+  constexpr InT mask = static_cast<InT>(~static_cast<InT>(all_ones << n_bits));
 
   InT raw_value = (storage >> LowBit) & mask;
   return static_cast<OutT>(raw_value);
