@@ -111,12 +111,12 @@ TEST(HesaiCommonTest, PtpProfilesParseCaseInsensitivelyAndStreamExpectedValues)
     }};
 
   for (const auto & [string_value, expected_profile, streamed_value] : expected_values) {
-    EXPECT_EQ(nebula::drivers::ptp_profile_from_string(std::string(string_value)), expected_profile);
+    EXPECT_EQ(
+      nebula::drivers::ptp_profile_from_string(std::string(string_value)), expected_profile);
     EXPECT_EQ(stream_to_string(expected_profile), streamed_value);
   }
 
-  EXPECT_EQ(
-    nebula::drivers::ptp_profile_from_string("unsupported"), PtpProfile::UNKNOWN_PROFILE);
+  EXPECT_EQ(nebula::drivers::ptp_profile_from_string("unsupported"), PtpProfile::UNKNOWN_PROFILE);
   EXPECT_EQ(stream_to_string(PtpProfile::UNKNOWN_PROFILE), "UNKNOWN");
 }
 
@@ -165,13 +165,12 @@ TEST(HesaiCommonTest, ReturnModeConversionsRoundTripForXtFamily)
   constexpr SensorModel sensor_model = SensorModel::HESAI_PANDARXT32;
 
   expect_hesai_return_mode_round_trip(
-    sensor_model,
-    {{"Last", 0, ReturnMode::LAST},
-     {"Strongest", 1, ReturnMode::STRONGEST},
-     {"Dual", 2, ReturnMode::DUAL_LAST_STRONGEST},
-     {"First", 3, ReturnMode::FIRST},
-     {"LastFirst", 4, ReturnMode::DUAL_LAST_FIRST},
-     {"FirstStrongest", 5, ReturnMode::DUAL_FIRST_STRONGEST}});
+    sensor_model, {{"Last", 0, ReturnMode::LAST},
+                   {"Strongest", 1, ReturnMode::STRONGEST},
+                   {"Dual", 2, ReturnMode::DUAL_LAST_STRONGEST},
+                   {"First", 3, ReturnMode::FIRST},
+                   {"LastFirst", 4, ReturnMode::DUAL_LAST_FIRST},
+                   {"FirstStrongest", 5, ReturnMode::DUAL_FIRST_STRONGEST}});
 
   EXPECT_EQ(
     nebula::drivers::return_mode_from_string_hesai("LastStrongest", sensor_model),
@@ -184,10 +183,9 @@ TEST(HesaiCommonTest, ReturnModeConversionsRoundTripForQt64Family)
   constexpr SensorModel sensor_model = SensorModel::HESAI_PANDARQT64;
 
   expect_hesai_return_mode_round_trip(
-    sensor_model,
-    {{"Last", 0, ReturnMode::LAST},
-     {"Dual", 2, ReturnMode::DUAL_LAST_FIRST},
-     {"First", 3, ReturnMode::FIRST}});
+    sensor_model, {{"Last", 0, ReturnMode::LAST},
+                   {"Dual", 2, ReturnMode::DUAL_LAST_FIRST},
+                   {"First", 3, ReturnMode::FIRST}});
 
   EXPECT_EQ(
     nebula::drivers::return_mode_from_string_hesai("LastFirst", sensor_model),
@@ -200,10 +198,9 @@ TEST(HesaiCommonTest, ReturnModeConversionsRoundTripForLegacyDualFamily)
   constexpr SensorModel sensor_model = SensorModel::HESAI_PANDARAT128;
 
   expect_hesai_return_mode_round_trip(
-    sensor_model,
-    {{"Last", 0, ReturnMode::LAST},
-     {"Strongest", 1, ReturnMode::STRONGEST},
-     {"Dual", 2, ReturnMode::DUAL_LAST_STRONGEST}});
+    sensor_model, {{"Last", 0, ReturnMode::LAST},
+                   {"Strongest", 1, ReturnMode::STRONGEST},
+                   {"Dual", 2, ReturnMode::DUAL_LAST_STRONGEST}});
 
   EXPECT_EQ(
     nebula::drivers::return_mode_from_string_hesai("LastStrongest", sensor_model),
@@ -216,10 +213,15 @@ TEST(HesaiCommonTest, ReturnModeConversionsHandleUnexpectedValues)
   constexpr SensorModel xt_sensor_model = SensorModel::HESAI_PANDARXT16;
   constexpr SensorModel at_sensor_model = SensorModel::HESAI_PANDAR64;
 
-  EXPECT_EQ(nebula::drivers::return_mode_from_string_hesai("last", xt_sensor_model), ReturnMode::UNKNOWN);
+  EXPECT_EQ(
+    nebula::drivers::return_mode_from_string_hesai("last", xt_sensor_model), ReturnMode::UNKNOWN);
   EXPECT_EQ(nebula::drivers::return_mode_from_int_hesai(99, xt_sensor_model), ReturnMode::UNKNOWN);
-  EXPECT_EQ(nebula::drivers::return_mode_from_string_hesai("Strongest", SensorModel::HESAI_PANDARQT64), ReturnMode::UNKNOWN);
-  EXPECT_EQ(nebula::drivers::return_mode_from_int_hesai(1, SensorModel::HESAI_PANDARQT64), ReturnMode::UNKNOWN);
+  EXPECT_EQ(
+    nebula::drivers::return_mode_from_string_hesai("Strongest", SensorModel::HESAI_PANDARQT64),
+    ReturnMode::UNKNOWN);
+  EXPECT_EQ(
+    nebula::drivers::return_mode_from_int_hesai(1, SensorModel::HESAI_PANDARQT64),
+    ReturnMode::UNKNOWN);
   EXPECT_EQ(nebula::drivers::int_from_return_mode_hesai(ReturnMode::UNKNOWN, xt_sensor_model), -1);
   EXPECT_EQ(nebula::drivers::int_from_return_mode_hesai(ReturnMode::FIRST, at_sensor_model), -1);
 }
@@ -230,7 +232,8 @@ TEST(HesaiCommonTest, ReturnModeConversionsRejectUnsupportedSensorModels)
 
   EXPECT_THROW(
     nebula::drivers::return_mode_from_string_hesai("Last", unsupported_model), std::runtime_error);
-  EXPECT_THROW(nebula::drivers::return_mode_from_int_hesai(0, unsupported_model), std::runtime_error);
+  EXPECT_THROW(
+    nebula::drivers::return_mode_from_int_hesai(0, unsupported_model), std::runtime_error);
   EXPECT_THROW(
     nebula::drivers::int_from_return_mode_hesai(ReturnMode::LAST, unsupported_model),
     std::runtime_error);
@@ -257,8 +260,7 @@ TEST(HesaiCommonTest, SupportPredicatesReflectVendorCapabilities)
 
 TEST(HesaiCommonTest, AdvancedFunctionalSafetyConfigurationStreamingReflectsConfiguredValues)
 {
-  const AdvancedFunctionalSafetyConfiguration advanced{
-    "/tmp/error-definitions.json", {0x1a, 0x2b}};
+  const AdvancedFunctionalSafetyConfiguration advanced{"/tmp/error-definitions.json", {0x1a, 0x2b}};
   const AdvancedFunctionalSafetyConfiguration basic{"/tmp/error-definitions.json", {}};
 
   expect_contains_all(
@@ -276,39 +278,38 @@ TEST(HesaiCommonTest, HesaiSensorConfigurationStreamingReflectsConfiguredValues)
   const std::string output = stream_to_string(configuration);
 
   expect_contains_all(
-    output,
-    {"Hesai Sensor Configuration:",
-     "Sensor Model: Pandar128_E4X_OT",
-     "Frame ID: hesai_frame",
-     "Host IP: 192.168.1.10",
-     "Sensor IP: 192.168.1.201",
-     "Data Port: 2368",
-     "Return Mode: LastStrongest",
-     "MTU: 1200",
-     "Use Sensor Time: 1",
-     "Multicast: enabled, group: 239.1.2.3",
-     "GNSS Port: 10110",
-     "UDP Socket Receive Buffer Size: 4096 B",
-     "Rotation Speed: 1200",
-     "Sync Angle: 123",
-     "Cut Angle: 45.5",
-     "FoV Start: 100",
-     "FoV End: 200",
-     "Dual Return Distance Threshold: 0.75",
-     "Calibration Path: /tmp/hesai.csv",
-     "Calibration Download: enabled",
-     "PTP Profile: IEEE_802.1AS Automotive",
-     "PTP Domain: 7",
-     "PTP Transport Type: UDP/IP",
-     "PTP Switch Type: TSN",
-     "PTP Lock Threshold: 4",
-     "High Resolution Mode: enabled",
-     "Downsample Filter: enabled, path: /tmp/downsample.csv",
-     "Blockage Mask Output: enabled, horizontal bin size: 250 mdeg",
-     "Synchronization Diagnostics: enabled, topic: /diagnostics/ptp",
-     "Functional Safety: advanced",
-     "/tmp/error-definitions.json",
-     "0x1a, 0x2b"});
+    output, {"Hesai Sensor Configuration:",
+             "Sensor Model: Pandar128_E4X_OT",
+             "Frame ID: hesai_frame",
+             "Host IP: 192.168.1.10",
+             "Sensor IP: 192.168.1.201",
+             "Data Port: 2368",
+             "Return Mode: LastStrongest",
+             "MTU: 1200",
+             "Use Sensor Time: 1",
+             "Multicast: enabled, group: 239.1.2.3",
+             "GNSS Port: 10110",
+             "UDP Socket Receive Buffer Size: 4096 B",
+             "Rotation Speed: 1200",
+             "Sync Angle: 123",
+             "Cut Angle: 45.5",
+             "FoV Start: 100",
+             "FoV End: 200",
+             "Dual Return Distance Threshold: 0.75",
+             "Calibration Path: /tmp/hesai.csv",
+             "Calibration Download: enabled",
+             "PTP Profile: IEEE_802.1AS Automotive",
+             "PTP Domain: 7",
+             "PTP Transport Type: UDP/IP",
+             "PTP Switch Type: TSN",
+             "PTP Lock Threshold: 4",
+             "High Resolution Mode: enabled",
+             "Downsample Filter: enabled, path: /tmp/downsample.csv",
+             "Blockage Mask Output: enabled, horizontal bin size: 250 mdeg",
+             "Synchronization Diagnostics: enabled, topic: /diagnostics/ptp",
+             "Functional Safety: advanced",
+             "/tmp/error-definitions.json",
+             "0x1a, 0x2b"});
 }
 
 TEST(HesaiCommonTest, HesaiSensorConfigurationStreamingHandlesDisabledOptionals)
@@ -327,13 +328,9 @@ TEST(HesaiCommonTest, HesaiSensorConfigurationStreamingHandlesDisabledOptionals)
   const std::string output = stream_to_string(configuration);
 
   expect_contains_all(
-    output,
-    {"Multicast: disabled",
-     "Calibration Download: disabled",
-     "High Resolution Mode: disabled",
-     "Downsample Filter: disabled",
-     "Blockage Mask Output: disabled",
-     "Synchronization Diagnostics: disabled"});
+    output, {"Multicast: disabled", "Calibration Download: disabled",
+             "High Resolution Mode: disabled", "Downsample Filter: disabled",
+             "Blockage Mask Output: disabled", "Synchronization Diagnostics: disabled"});
   EXPECT_EQ(output.find("Functional Safety:"), std::string::npos) << output;
 }
 
