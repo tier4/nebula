@@ -185,8 +185,7 @@ TEST(NebulaCommonTest, SensorModelStreamingAndStringConversionsRoundTrip)
     EXPECT_EQ(nebula::drivers::sensor_model_to_string(expected_model), string_value);
   }
 
-  EXPECT_EQ(
-    nebula::drivers::sensor_model_from_string("Bpearl"), SensorModel::ROBOSENSE_BPEARL_V4);
+  EXPECT_EQ(nebula::drivers::sensor_model_from_string("Bpearl"), SensorModel::ROBOSENSE_BPEARL_V4);
   EXPECT_EQ(nebula::drivers::sensor_model_from_string("NotASensor"), SensorModel::UNKNOWN);
   EXPECT_EQ(nebula::drivers::sensor_model_to_string(SensorModel::UNKNOWN), "UNKNOWN");
 }
