@@ -49,6 +49,7 @@ constexpr OutT get_bitfield(const InT & storage)
   static_assert(HighBit < storage_bits, "HighBit must be within the width of InT");
   constexpr uint8_t n_bits = HighBit - LowBit + 1;
   constexpr InT all_ones = ~static_cast<InT>(0);
+  // This low-bit mask relies on InT being unsigned so the right shift zero-fills.
   constexpr InT mask = static_cast<InT>(all_ones >> (storage_bits - n_bits));
 
   InT raw_value = (storage >> LowBit) & mask;
