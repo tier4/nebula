@@ -16,6 +16,7 @@
 #include "nebula_velodyne_common/velodyne_status.hpp"
 
 #include <gtest/gtest.h>
+#include <unistd.h>
 
 #include <cmath>
 #include <filesystem>
@@ -24,7 +25,6 @@
 #include <sstream>
 #include <string>
 #include <string_view>
-#include <unistd.h>
 
 namespace
 {
@@ -117,14 +117,10 @@ lasers:
 TEST(VelodyneCommonTest, VelodyneReturnModeParsingCoversKnownAndUnknownValues)
 {
   EXPECT_EQ(
-    nebula::drivers::return_mode_from_string_velodyne("Strongest"),
-    ReturnMode::SINGLE_STRONGEST);
-  EXPECT_EQ(
-    nebula::drivers::return_mode_from_string_velodyne("Last"), ReturnMode::SINGLE_LAST);
-  EXPECT_EQ(
-    nebula::drivers::return_mode_from_string_velodyne("Dual"), ReturnMode::DUAL_ONLY);
-  EXPECT_EQ(
-    nebula::drivers::return_mode_from_string_velodyne("unexpected"), ReturnMode::UNKNOWN);
+    nebula::drivers::return_mode_from_string_velodyne("Strongest"), ReturnMode::SINGLE_STRONGEST);
+  EXPECT_EQ(nebula::drivers::return_mode_from_string_velodyne("Last"), ReturnMode::SINGLE_LAST);
+  EXPECT_EQ(nebula::drivers::return_mode_from_string_velodyne("Dual"), ReturnMode::DUAL_ONLY);
+  EXPECT_EQ(nebula::drivers::return_mode_from_string_velodyne("unexpected"), ReturnMode::UNKNOWN);
 }
 
 TEST(VelodyneCommonTest, SensorConfigurationStreamingReflectsConfiguredValues)
@@ -133,21 +129,10 @@ TEST(VelodyneCommonTest, SensorConfigurationStreamingReflectsConfiguredValues)
   const std::string output = stream_to_string(configuration);
 
   expect_contains_all(
-    output,
-    {"Velodyne Sensor Configuration:",
-     "Sensor Model: VLS128",
-     "Frame ID: velodyne_frame",
-     "Host IP: 192.168.1.10",
-     "Sensor IP: 192.168.1.201",
-     "Data Port: 2368",
-     "Return Mode: Dual",
-     "MTU: 1500",
-     "Use Sensor Time: 1",
-     "GNSS Port: 8308",
-     "Scan Phase: 90.5",
-     "Rotation Speed: 600",
-     "FoV Start: 100",
-     "FoV End: 300"});
+    output, {"Velodyne Sensor Configuration:", "Sensor Model: VLS128", "Frame ID: velodyne_frame",
+             "Host IP: 192.168.1.10", "Sensor IP: 192.168.1.201", "Data Port: 2368",
+             "Return Mode: Dual", "MTU: 1500", "Use Sensor Time: 1", "GNSS Port: 8308",
+             "Scan Phase: 90.5", "Rotation Speed: 600", "FoV Start: 100", "FoV End: 300"});
 }
 
 TEST(VelodyneCommonTest, VelodyneStatusStreamingCoversCustomAndBaseStatuses)
@@ -163,11 +148,14 @@ TEST(VelodyneCommonTest, VelodyneStatusStreamingCoversCustomAndBaseStatuses)
     stream_to_string(VelodyneStatus{VelodyneStatus::INVALID_RETURN_MODE_ERROR}),
     "Invalid return mode(only SINGLE_STRONGEST, SINGLE_LAST, DUAL_ONLY)");
   EXPECT_EQ(
-    stream_to_string(VelodyneStatus{Status::INVALID_CALIBRATION_FILE}),
-    "Invalid Calibration File");
+    stream_to_string(VelodyneStatus{Status::INVALID_CALIBRATION_FILE}), "Invalid Calibration File");
 
-  EXPECT_EQ(VelodyneStatus{VelodyneStatus::INVALID_FOV_ERROR}, VelodyneStatus{VelodyneStatus::INVALID_FOV_ERROR});
-  EXPECT_NE(VelodyneStatus{VelodyneStatus::INVALID_FOV_ERROR}, VelodyneStatus{VelodyneStatus::INVALID_RPM_ERROR});
+  EXPECT_EQ(
+    VelodyneStatus{VelodyneStatus::INVALID_FOV_ERROR},
+    VelodyneStatus{VelodyneStatus::INVALID_FOV_ERROR});
+  EXPECT_NE(
+    VelodyneStatus{VelodyneStatus::INVALID_FOV_ERROR},
+    VelodyneStatus{VelodyneStatus::INVALID_RPM_ERROR});
 }
 
 TEST(VelodyneCommonTest, CalibrationDecoderReadsYAMLAndPopulatesDerivedFields)
