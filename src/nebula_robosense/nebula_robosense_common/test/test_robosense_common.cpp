@@ -15,6 +15,7 @@
 #include "nebula_robosense_common/robosense_common.hpp"
 
 #include <gtest/gtest.h>
+#include <unistd.h>
 
 #include <cmath>
 #include <filesystem>
@@ -23,7 +24,6 @@
 #include <sstream>
 #include <string>
 #include <string_view>
-#include <unistd.h>
 
 namespace
 {
@@ -78,14 +78,10 @@ TEST(RobosenseCommonTest, RobosenseReturnModeParsingCoversKnownAndUnknownValues)
 {
   EXPECT_EQ(nebula::drivers::return_mode_from_string_robosense("Dual"), ReturnMode::DUAL);
   EXPECT_EQ(
-    nebula::drivers::return_mode_from_string_robosense("Strongest"),
-    ReturnMode::SINGLE_STRONGEST);
-  EXPECT_EQ(
-    nebula::drivers::return_mode_from_string_robosense("Last"), ReturnMode::SINGLE_LAST);
-  EXPECT_EQ(
-    nebula::drivers::return_mode_from_string_robosense("First"), ReturnMode::SINGLE_FIRST);
-  EXPECT_EQ(
-    nebula::drivers::return_mode_from_string_robosense("unexpected"), ReturnMode::UNKNOWN);
+    nebula::drivers::return_mode_from_string_robosense("Strongest"), ReturnMode::SINGLE_STRONGEST);
+  EXPECT_EQ(nebula::drivers::return_mode_from_string_robosense("Last"), ReturnMode::SINGLE_LAST);
+  EXPECT_EQ(nebula::drivers::return_mode_from_string_robosense("First"), ReturnMode::SINGLE_FIRST);
+  EXPECT_EQ(nebula::drivers::return_mode_from_string_robosense("unexpected"), ReturnMode::UNKNOWN);
 }
 
 TEST(RobosenseCommonTest, ChannelCorrectionHasValueTracksNanState)
@@ -105,18 +101,10 @@ TEST(RobosenseCommonTest, SensorConfigurationStreamingReflectsConfiguredValues)
   const std::string output = stream_to_string(configuration);
 
   expect_contains_all(
-    output,
-    {"Robosense Sensor Configuration:",
-     "Sensor Model: HELIOS",
-     "Frame ID: robosense_frame",
-     "Host IP: 192.168.1.10",
-     "Sensor IP: 192.168.1.200",
-     "Data Port: 6699",
-     "Return Mode: SingleLast",
-     "MTU: 1200",
-     "Use Sensor Time: 1",
-     "GNSS Port: 7788",
-     "Scan Phase: 45.5"});
+    output, {"Robosense Sensor Configuration:", "Sensor Model: HELIOS", "Frame ID: robosense_frame",
+             "Host IP: 192.168.1.10", "Sensor IP: 192.168.1.200", "Data Port: 6699",
+             "Return Mode: SingleLast", "MTU: 1200", "Use Sensor Time: 1", "GNSS Port: 7788",
+             "Scan Phase: 45.5"});
 }
 
 TEST(RobosenseCommonTest, CalibrationConfigurationLoadsValidCalibrationAndCreatesChannels)
@@ -189,15 +177,17 @@ TEST(RobosenseCommonTest, CalibrationConfigurationLoadsAndSavesFiles)
 
 TEST(RobosenseCommonTest, CalibrationConfigurationReportsFileErrors)
 {
-  const auto missing_directory_file =
-    std::filesystem::temp_directory_path() /
-    ("nebula_robosense_missing_" + std::to_string(getpid())) / "calibration.csv";
+  const auto missing_directory_file = std::filesystem::temp_directory_path() /
+                                      ("nebula_robosense_missing_" + std::to_string(getpid())) /
+                                      "calibration.csv";
 
   RobosenseCalibrationConfiguration configuration{};
   configuration.set_channel_size(1);
   configuration.calibration[0] = ChannelCorrection{10.0F, 1.25F};
 
-  EXPECT_EQ(configuration.load_from_file(missing_directory_file.string()), Status::INVALID_CALIBRATION_FILE);
+  EXPECT_EQ(
+    configuration.load_from_file(missing_directory_file.string()),
+    Status::INVALID_CALIBRATION_FILE);
   EXPECT_EQ(configuration.save_file(missing_directory_file.string()), Status::CANNOT_SAVE_FILE);
 }
 
