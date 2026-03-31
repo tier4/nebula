@@ -56,6 +56,24 @@ TEST(UtilityHelpersTest, BitfieldExtractionSupportsRawAndAccessorUsage)
   EXPECT_EQ(packet.counter(), 10U);
 }
 
+TEST(UtilityHelpersTest, BitfieldExtractionHandlesUnsignedStorageEdgeCases)
+{
+  constexpr std::uint8_t byte_storage = 0x81U;
+  EXPECT_EQ((nebula::util::get_bitfield<std::uint8_t, 0, 0>(byte_storage)), 1U);
+  EXPECT_EQ((nebula::util::get_bitfield<std::uint8_t, 7, 7>(byte_storage)), 1U);
+  EXPECT_EQ((nebula::util::get_bitfield<std::uint8_t, 0, 7>(byte_storage)), byte_storage);
+
+  constexpr std::uint16_t word_storage = 0x8001U;
+  EXPECT_EQ((nebula::util::get_bitfield<std::uint8_t, 0, 0>(word_storage)), 1U);
+  EXPECT_EQ((nebula::util::get_bitfield<std::uint8_t, 15, 15>(word_storage)), 1U);
+  EXPECT_EQ((nebula::util::get_bitfield<std::uint16_t, 0, 15>(word_storage)), word_storage);
+
+  constexpr std::uint32_t dword_storage = 0xF0000001U;
+  EXPECT_EQ((nebula::util::get_bitfield<std::uint8_t, 0, 0>(dword_storage)), 1U);
+  EXPECT_EQ((nebula::util::get_bitfield<std::uint8_t, 28, 31>(dword_storage)), 0x0FU);
+  EXPECT_EQ((nebula::util::get_bitfield<std::uint32_t, 0, 31>(dword_storage)), dword_storage);
+}
+
 TEST(UtilityHelpersTest, ExpectedProvidesValueAndErrorAccessors)
 {
   const nebula::util::expected<int, std::string> value{42};
