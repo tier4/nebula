@@ -13,6 +13,15 @@ target_include_directories(
 target_link_libraries(nebula_hesai_common
                       INTERFACE nebula_core_common::nebula_core_common)
 
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+
+  ament_add_gtest(test_hesai_common test/test_hesai_common.cpp)
+  target_link_libraries(test_hesai_common nebula_hesai_common)
+endif()
+
 install(TARGETS nebula_hesai_common EXPORT export_nebula_hesai_common)
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION include/${PROJECT_NAME})
 
