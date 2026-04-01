@@ -228,7 +228,8 @@ TEST(HesaiCommonTest, AdvancedFunctionalSafetyConfigurationStreamingReflectsConf
 
   expect_contains_all(
     stream_to_string(advanced), {"advanced", "/tmp/error-definitions.json", "0x1a, 0x2b"});
-  expect_contains_all(stream_to_string(no_exemptions), {"advanced", "/tmp/error-definitions.json", "none"});
+  expect_contains_all(
+    stream_to_string(no_exemptions), {"advanced", "/tmp/error-definitions.json", "none"});
 }
 
 TEST(HesaiCommonTest, DefaultInitializedSensorConfigurationStreamsWithoutCrashing)
