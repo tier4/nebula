@@ -65,24 +65,6 @@ void write_text_file(const std::filesystem::path & path, const std::string & con
   output << content;
 }
 
-VelodyneSensorConfiguration make_sensor_configuration()
-{
-  VelodyneSensorConfiguration configuration{};
-  configuration.sensor_model = SensorModel::VELODYNE_VLS128;
-  configuration.frame_id = "velodyne_frame";
-  configuration.host_ip = "192.168.1.10";
-  configuration.sensor_ip = "192.168.1.201";
-  configuration.data_port = 2368;
-  configuration.return_mode = ReturnMode::DUAL_ONLY;
-  configuration.packet_mtu_size = 1500;
-  configuration.use_sensor_time = true;
-  configuration.gnss_port = 8308;
-  configuration.scan_phase = 90.5;
-  configuration.rotation_speed = 600;
-  configuration.cloud_min_angle = 100;
-  configuration.cloud_max_angle = 300;
-  return configuration;
-}
 
 std::string calibration_yaml()
 {
@@ -123,10 +105,33 @@ TEST(VelodyneCommonTest, VelodyneReturnModeParsingCoversKnownAndUnknownValues)
   EXPECT_EQ(nebula::drivers::return_mode_from_string_velodyne("unexpected"), ReturnMode::UNKNOWN);
 }
 
+TEST(VelodyneCommonTest, DefaultInitializedSensorConfigurationStreamsWithoutCrashing)
+{
+  const VelodyneSensorConfiguration configuration{};
+  EXPECT_NO_THROW({
+    const auto output = stream_to_string(configuration);
+    EXPECT_FALSE(output.empty());
+  });
+}
+
 TEST(VelodyneCommonTest, SensorConfigurationStreamingReflectsConfiguredValues)
 {
-  const auto configuration = make_sensor_configuration();
-  const std::string output = stream_to_string(configuration);
+  VelodyneSensorConfiguration configuration{};
+  configuration.sensor_model = SensorModel::VELODYNE_VLS128;
+  configuration.frame_id = "velodyne_frame";
+  configuration.host_ip = "192.168.1.10";
+  configuration.sensor_ip = "192.168.1.201";
+  configuration.data_port = 2368;
+  configuration.return_mode = ReturnMode::DUAL_ONLY;
+  configuration.packet_mtu_size = 1500;
+  configuration.use_sensor_time = true;
+  configuration.gnss_port = 8308;
+  configuration.scan_phase = 90.5;
+  configuration.rotation_speed = 600;
+  configuration.cloud_min_angle = 100;
+  configuration.cloud_max_angle = 300;
+
+  const auto output = stream_to_string(configuration);
 
   expect_contains_all(
     output, {"Velodyne Sensor Configuration:", "Sensor Model: VLS128", "Frame ID: velodyne_frame",
