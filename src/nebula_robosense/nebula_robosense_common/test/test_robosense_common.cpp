@@ -20,7 +20,6 @@
 #include <cmath>
 #include <filesystem>
 #include <initializer_list>
-#include <optional>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -57,22 +56,6 @@ std::filesystem::path make_temp_file_path(std::string_view stem)
          (std::string(stem) + "_" + std::to_string(getpid()) + ".csv");
 }
 
-RobosenseSensorConfiguration make_sensor_configuration()
-{
-  RobosenseSensorConfiguration configuration{};
-  configuration.sensor_model = SensorModel::ROBOSENSE_HELIOS;
-  configuration.frame_id = "robosense_frame";
-  configuration.host_ip = "192.168.1.10";
-  configuration.sensor_ip = "192.168.1.200";
-  configuration.data_port = 6699;
-  configuration.return_mode = ReturnMode::SINGLE_LAST;
-  configuration.packet_mtu_size = 1200;
-  configuration.use_sensor_time = true;
-  configuration.gnss_port = 7788;
-  configuration.scan_phase = 45.5;
-  configuration.dual_return_distance_threshold = 0.8;
-  return configuration;
-}
 
 TEST(RobosenseCommonTest, RobosenseReturnModeParsingCoversKnownAndUnknownValues)
 {
@@ -95,10 +78,30 @@ TEST(RobosenseCommonTest, ChannelCorrectionHasValueTracksNanState)
   EXPECT_TRUE(populated_correction.has_value());
 }
 
+TEST(RobosenseCommonTest, DefaultInitializedSensorConfigurationStreamsWithoutCrashing)
+{
+  const RobosenseSensorConfiguration configuration{};
+  EXPECT_NO_THROW({
+    const auto output = stream_to_string(configuration);
+    EXPECT_FALSE(output.empty());
+  });
+}
+
 TEST(RobosenseCommonTest, SensorConfigurationStreamingReflectsConfiguredValues)
 {
-  const auto configuration = make_sensor_configuration();
-  const std::string output = stream_to_string(configuration);
+  RobosenseSensorConfiguration configuration{};
+  configuration.sensor_model = SensorModel::ROBOSENSE_HELIOS;
+  configuration.frame_id = "robosense_frame";
+  configuration.host_ip = "192.168.1.10";
+  configuration.sensor_ip = "192.168.1.200";
+  configuration.data_port = 6699;
+  configuration.return_mode = ReturnMode::SINGLE_LAST;
+  configuration.packet_mtu_size = 1200;
+  configuration.use_sensor_time = true;
+  configuration.gnss_port = 7788;
+  configuration.scan_phase = 45.5;
+
+  const auto output = stream_to_string(configuration);
 
   expect_contains_all(
     output, {"Robosense Sensor Configuration:", "Sensor Model: HELIOS", "Frame ID: robosense_frame",
