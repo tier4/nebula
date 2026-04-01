@@ -224,11 +224,11 @@ TEST(HesaiCommonTest, SupportPredicatesReflectVendorCapabilities)
 TEST(HesaiCommonTest, AdvancedFunctionalSafetyConfigurationStreamingReflectsConfiguredValues)
 {
   const AdvancedFunctionalSafetyConfiguration advanced{"/tmp/error-definitions.json", {0x1a, 0x2b}};
-  const AdvancedFunctionalSafetyConfiguration basic{"/tmp/error-definitions.json", {}};
+  const AdvancedFunctionalSafetyConfiguration no_exemptions{"/tmp/error-definitions.json", {}};
 
   expect_contains_all(
     stream_to_string(advanced), {"advanced", "/tmp/error-definitions.json", "0x1a, 0x2b"});
-  expect_contains_all(stream_to_string(basic), {"advanced", "/tmp/error-definitions.json", "none"});
+  expect_contains_all(stream_to_string(no_exemptions), {"advanced", "/tmp/error-definitions.json", "none"});
 }
 
 TEST(HesaiCommonTest, DefaultInitializedSensorConfigurationStreamsWithoutCrashing)
@@ -269,10 +269,10 @@ TEST(HesaiCommonTest, HesaiSensorConfigurationStreamingReflectsConfiguredValues)
   configuration.ptp_transport_type = PtpTransportType::UDP_IP;
   configuration.ptp_switch_type = PtpSwitchType::TSN;
   configuration.ptp_lock_threshold = 4;
-  configuration.downsample_mask_path = "/tmp/downsample.csv";
+  configuration.downsample_mask_path = "/tmp/downsample.png";
   configuration.hires_mode = true;
   configuration.blockage_mask_horizontal_bin_size_mdeg = 250;
-  configuration.sync_diagnostics_topic = "/diagnostics/ptp";
+  configuration.sync_diagnostics_topic = "/sync_diag/graph_updates";
   configuration.functional_safety =
     AdvancedFunctionalSafetyConfiguration{"/tmp/error-definitions.json", {0x1a, 0x2b}};
 
@@ -305,9 +305,9 @@ TEST(HesaiCommonTest, HesaiSensorConfigurationStreamingReflectsConfiguredValues)
              "PTP Switch Type: TSN",
              "PTP Lock Threshold: 4",
              "High Resolution Mode: enabled",
-             "Downsample Filter: enabled, path: /tmp/downsample.csv",
+             "Downsample Filter: enabled, path: /tmp/downsample.png",
              "Blockage Mask Output: enabled, horizontal bin size: 250 mdeg",
-             "Synchronization Diagnostics: enabled, topic: /diagnostics/ptp",
+             "Synchronization Diagnostics: enabled, topic: /sync_diag/graph_updates",
              "Functional Safety: advanced",
              "/tmp/error-definitions.json",
              "0x1a, 0x2b"});
