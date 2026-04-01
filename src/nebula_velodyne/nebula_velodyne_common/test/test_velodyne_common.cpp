@@ -65,7 +65,6 @@ void write_text_file(const std::filesystem::path & path, const std::string & con
   output << content;
 }
 
-
 std::string calibration_yaml()
 {
   return R"(num_lasers: 2
