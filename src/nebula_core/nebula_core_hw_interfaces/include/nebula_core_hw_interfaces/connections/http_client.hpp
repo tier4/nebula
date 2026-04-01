@@ -15,7 +15,7 @@
 #ifndef NEBULA_CORE_HW_INTERFACES__NEBULA_HW_INTERFACES_COMMON__CONNECTIONS__HTTP_CLIENT_HPP_
 #define NEBULA_CORE_HW_INTERFACES__NEBULA_HW_INTERFACES_COMMON__CONNECTIONS__HTTP_CLIENT_HPP_
 
-#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/tcp.hpp"
+#include "nebula_core_hw_interfaces/connections/tcp.hpp"
 
 #include <algorithm>
 #include <cctype>

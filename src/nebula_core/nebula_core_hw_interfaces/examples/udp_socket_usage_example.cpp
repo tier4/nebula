@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // # --8<-- [start:include]
-#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
+#include "nebula_core_hw_interfaces/connections/udp.hpp"
 // # --8<-- [end:include]
 
 #include <cstdint>

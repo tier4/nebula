@@ -1,6 +1,6 @@
 // Copyright 2026 TIER IV, Inc.
 
-#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/tcp.hpp"
+#include "nebula_core_hw_interfaces/connections/tcp.hpp"
 
 #include <arpa/inet.h>
 #include <gtest/gtest.h>
