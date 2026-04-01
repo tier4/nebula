@@ -56,7 +56,6 @@ std::filesystem::path make_temp_file_path(std::string_view stem)
          (std::string(stem) + "_" + std::to_string(getpid()) + ".csv");
 }
 
-
 TEST(RobosenseCommonTest, RobosenseReturnModeParsingCoversKnownAndUnknownValues)
 {
   EXPECT_EQ(nebula::drivers::return_mode_from_string_robosense("Dual"), ReturnMode::DUAL);
