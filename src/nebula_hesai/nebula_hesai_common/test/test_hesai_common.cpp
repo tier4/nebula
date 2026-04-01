@@ -18,7 +18,6 @@
 
 #include <array>
 #include <initializer_list>
-#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -63,42 +62,6 @@ void expect_hesai_return_mode_round_trip(
     EXPECT_EQ(nebula::drivers::return_mode_from_int_hesai(int_value, sensor_model), expected_mode);
     EXPECT_EQ(nebula::drivers::int_from_return_mode_hesai(expected_mode, sensor_model), int_value);
   }
-}
-
-HesaiSensorConfiguration make_hesai_sensor_configuration(const SensorModel sensor_model)
-{
-  HesaiSensorConfiguration configuration{};
-  configuration.sensor_model = sensor_model;
-  configuration.frame_id = "hesai_frame";
-  configuration.host_ip = "192.168.1.10";
-  configuration.sensor_ip = "192.168.1.201";
-  configuration.data_port = 2368;
-  configuration.return_mode = ReturnMode::DUAL_LAST_STRONGEST;
-  configuration.packet_mtu_size = 1200;
-  configuration.min_range = 1.0;
-  configuration.max_range = 200.0;
-  configuration.use_sensor_time = true;
-  configuration.multicast_ip = "239.1.2.3";
-  configuration.gnss_port = 10110;
-  configuration.udp_socket_receive_buffer_size_bytes = 4096;
-  configuration.sync_angle = 123;
-  configuration.cut_angle = 45.5;
-  configuration.dual_return_distance_threshold = 0.75;
-  configuration.calibration_path = "/tmp/hesai.csv";
-  configuration.calibration_download_enabled = true;
-  configuration.rotation_speed = 1200;
-  configuration.cloud_min_angle = 100;
-  configuration.cloud_max_angle = 200;
-  configuration.ptp_profile = PtpProfile::IEEE_802_1AS_AUTO;
-  configuration.ptp_domain = 7;
-  configuration.ptp_transport_type = PtpTransportType::UDP_IP;
-  configuration.ptp_switch_type = PtpSwitchType::TSN;
-  configuration.ptp_lock_threshold = 4;
-  configuration.downsample_mask_path = "/tmp/downsample.csv";
-  configuration.hires_mode = true;
-  configuration.blockage_mask_horizontal_bin_size_mdeg = 250;
-  configuration.sync_diagnostics_topic = "/diagnostics/ptp";
-  return configuration;
 }
 
 TEST(HesaiCommonTest, PtpProfilesParseCaseInsensitivelyAndStreamExpectedValues)
@@ -268,10 +231,48 @@ TEST(HesaiCommonTest, AdvancedFunctionalSafetyConfigurationStreamingReflectsConf
   expect_contains_all(stream_to_string(basic), {"advanced", "/tmp/error-definitions.json", "none"});
 }
 
+TEST(HesaiCommonTest, DefaultInitializedSensorConfigurationStreamsWithoutCrashing)
+{
+  const HesaiSensorConfiguration configuration{};
+  EXPECT_NO_THROW({
+    const auto output = stream_to_string(configuration);
+    EXPECT_FALSE(output.empty());
+  });
+}
+
 TEST(HesaiCommonTest, HesaiSensorConfigurationStreamingReflectsConfiguredValues)
 {
-  HesaiSensorConfiguration configuration =
-    make_hesai_sensor_configuration(SensorModel::HESAI_PANDAR128_E4X);
+  HesaiSensorConfiguration configuration{};
+  configuration.sensor_model = SensorModel::HESAI_PANDAR128_E4X;
+  configuration.frame_id = "hesai_frame";
+  configuration.host_ip = "192.168.1.10";
+  configuration.sensor_ip = "192.168.1.201";
+  configuration.data_port = 2368;
+  configuration.return_mode = ReturnMode::DUAL_LAST_STRONGEST;
+  configuration.packet_mtu_size = 1200;
+  configuration.min_range = 1.0;
+  configuration.max_range = 200.0;
+  configuration.use_sensor_time = true;
+  configuration.multicast_ip = "239.1.2.3";
+  configuration.gnss_port = 10110;
+  configuration.udp_socket_receive_buffer_size_bytes = 4096;
+  configuration.sync_angle = 123;
+  configuration.cut_angle = 45.5;
+  configuration.dual_return_distance_threshold = 0.75;
+  configuration.calibration_path = "/tmp/hesai.csv";
+  configuration.calibration_download_enabled = true;
+  configuration.rotation_speed = 1200;
+  configuration.cloud_min_angle = 100;
+  configuration.cloud_max_angle = 200;
+  configuration.ptp_profile = PtpProfile::IEEE_802_1AS_AUTO;
+  configuration.ptp_domain = 7;
+  configuration.ptp_transport_type = PtpTransportType::UDP_IP;
+  configuration.ptp_switch_type = PtpSwitchType::TSN;
+  configuration.ptp_lock_threshold = 4;
+  configuration.downsample_mask_path = "/tmp/downsample.csv";
+  configuration.hires_mode = true;
+  configuration.blockage_mask_horizontal_bin_size_mdeg = 250;
+  configuration.sync_diagnostics_topic = "/diagnostics/ptp";
   configuration.functional_safety =
     AdvancedFunctionalSafetyConfiguration{"/tmp/error-definitions.json", {0x1a, 0x2b}};
 
@@ -314,16 +315,8 @@ TEST(HesaiCommonTest, HesaiSensorConfigurationStreamingReflectsConfiguredValues)
 
 TEST(HesaiCommonTest, HesaiSensorConfigurationStreamingHandlesDisabledOptionals)
 {
-  HesaiSensorConfiguration configuration =
-    make_hesai_sensor_configuration(SensorModel::HESAI_PANDARXT32);
-  configuration.multicast_ip.clear();
-  configuration.calibration_download_enabled = false;
-  configuration.hires_mode = false;
-  configuration.downsample_mask_path.reset();
-  configuration.blockage_mask_horizontal_bin_size_mdeg.reset();
-  configuration.sync_diagnostics_topic.reset();
-  configuration.functional_safety =
-    AdvancedFunctionalSafetyConfiguration{"/tmp/error-definitions.json", {0x1a}};
+  HesaiSensorConfiguration configuration{};
+  configuration.sensor_model = SensorModel::HESAI_PANDARXT32;
 
   const std::string output = stream_to_string(configuration);
 
@@ -336,9 +329,8 @@ TEST(HesaiCommonTest, HesaiSensorConfigurationStreamingHandlesDisabledOptionals)
 
 TEST(HesaiCommonTest, HesaiSensorConfigurationStreamingFallsBackToBasicFunctionalSafety)
 {
-  HesaiSensorConfiguration configuration =
-    make_hesai_sensor_configuration(SensorModel::HESAI_PANDARQT128);
-  configuration.functional_safety = std::nullopt;
+  HesaiSensorConfiguration configuration{};
+  configuration.sensor_model = SensorModel::HESAI_PANDARQT128;
 
   const std::string output = stream_to_string(configuration);
 
