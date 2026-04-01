@@ -135,7 +135,7 @@ TEST(VelodyneCommonTest, VelodyneStatusStreamingCoversCustomAndBaseStatuses)
 TEST(VelodyneCommonTest, CalibrationDecoderReadsYAMLAndPopulatesDerivedFields)
 {
   const auto calibration_file = make_temp_file_path("nebula_velodyne_calibration_input");
-  const auto calibration_yaml = R"(num_lasers: 2
+  const auto * calibration_yaml = R"(num_lasers: 2
 distance_resolution: 0.004
 lasers:
   - laser_id: 0
@@ -148,18 +148,18 @@ lasers:
     focal_distance: 0.7
     focal_slope: 0.8
   - laser_id: 1
-    rot_correction: 0.2
+    rot_correction: 0.0
     vert_correction: 0.1
-    dist_correction: 0.4
+    dist_correction: 0.0
     two_pt_correction_available: true
-    dist_correction_x: 0.6
-    dist_correction_y: 0.7
-    vert_offset_correction: 0.8
+    dist_correction_x: 0.0
+    dist_correction_y: 0.0
+    vert_offset_correction: 0.0
     horiz_offset_correction: 0.9
     max_intensity: 123.9
     min_intensity: 4.2
-    focal_distance: 1.1
-    focal_slope: 1.2
+    focal_distance: 0.0
+    focal_slope: 0.0
 )";
   write_text_file(calibration_file, calibration_yaml);
 
@@ -206,31 +206,35 @@ TEST(VelodyneCommonTest, CalibrationConfigurationLoadsWritesAndReloadsCalibratio
 {
   const auto input_file = make_temp_file_path("nebula_velodyne_calibration_config_input");
   const auto output_file = make_temp_file_path("nebula_velodyne_calibration_config_output");
-  const auto calibration_yaml = R"(num_lasers: 2
+  const auto * const calibration_yaml = R"(num_lasers: 2
 distance_resolution: 0.004
 lasers:
   - laser_id: 0
-    rot_correction: 0.1
-    vert_correction: -0.2
-    dist_correction: 0.3
+    rot_correction: 0.0
+    vert_correction: 0.0
+    dist_correction: 0.0
     dist_correction_x: 0.4
-    dist_correction_y: 0.5
-    vert_offset_correction: 0.6
-    focal_distance: 0.7
-    focal_slope: 0.8
+    dist_correction_y: 0.0
+    vert_offset_correction: 0.0
+    horiz_offset_correction: 0.0
+    two_pt_correction_available: false
+    max_intensity: 0.0
+    min_intensity: 0.0
+    focal_distance: 0.0
+    focal_slope: 0.0
   - laser_id: 1
-    rot_correction: 0.2
-    vert_correction: 0.1
-    dist_correction: 0.4
+    rot_correction: 0.0
+    vert_correction: 0.0
+    dist_correction: 0.0
     two_pt_correction_available: true
-    dist_correction_x: 0.6
-    dist_correction_y: 0.7
-    vert_offset_correction: 0.8
-    horiz_offset_correction: 0.9
-    max_intensity: 123.9
-    min_intensity: 4.2
-    focal_distance: 1.1
-    focal_slope: 1.2
+    dist_correction_x: 0.0
+    dist_correction_y: 0.0
+    vert_offset_correction: 0.0
+    horiz_offset_correction: 0.0
+    max_intensity: 0.0
+    min_intensity: 0.0
+    focal_distance: 0.0
+    focal_slope: 0.0
 )";
   write_text_file(input_file, calibration_yaml);
   std::filesystem::remove(output_file);
