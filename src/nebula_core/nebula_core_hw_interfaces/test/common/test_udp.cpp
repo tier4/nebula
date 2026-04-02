@@ -97,6 +97,33 @@ TEST(TestUdp, TestBufferResize)
     UsageError);
 }
 
+TEST(TestUdp, TestBufferClampingDetected)
+{
+  auto rmem_max_maybe = read_sys_param("net.core.rmem_max");
+  if (!rmem_max_maybe.has_value()) GTEST_SKIP() << rmem_max_maybe.error();
+  size_t rmem_max = rmem_max_maybe.value();
+
+  // Nebula's configured buffer size for Pandar128E4X
+  constexpr size_t nebula_buf_size = 5400000;
+
+  if (rmem_max >= nebula_buf_size) {
+    // On a properly configured system, requesting 5.4 MB should succeed because
+    // the kernel doubles SO_RCVBUF internally, so actual (10.8 MB) >= requested (5.4 MB).
+    ASSERT_NO_THROW(
+      UdpSocket::Builder(g_localhost_ip, g_host_port)
+        .set_socket_buffer_size(nebula_buf_size)
+        .bind());
+  } else {
+    // On a system with default rmem_max (~212 KB), requesting 5.4 MB should throw
+    // SocketError because getsockopt will return ~2*rmem_max < 5.4 MB.
+    ASSERT_THROW(
+      UdpSocket::Builder(g_localhost_ip, g_host_port)
+        .set_socket_buffer_size(nebula_buf_size)
+        .bind(),
+      SocketError);
+  }
+}
+
 TEST(TestUdp, TestCorrectUsageIsEnforced)
 {
   // The following functions can be called in any order, any number of times

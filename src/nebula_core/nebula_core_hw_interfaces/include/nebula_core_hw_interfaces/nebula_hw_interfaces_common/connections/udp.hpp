@@ -185,6 +185,26 @@ public:
 
       auto buf_size = static_cast<int>(bytes);
       sock_fd_.setsockopt(SOL_SOCKET, SO_RCVBUF, buf_size).value_or_throw();
+
+      // The kernel silently clamps SO_RCVBUF to net.core.rmem_max (default ~212 KB).
+      // Read back the actual value to detect this.
+      int actual = 0;
+      socklen_t len = sizeof(actual);
+      if (::getsockopt(sock_fd_.get(), SOL_SOCKET, SO_RCVBUF, &actual, &len) == 0) {
+        // The kernel internally doubles SO_RCVBUF, so `actual` is normally ~2x requested.
+        // When the requested value is near INT32_MAX, the doubled value may overflow or
+        // the kernel may round down slightly, so only flag significant differences (>4KB).
+        // The real clamping case (e.g. 5.4MB requested, 212KB rmem_max -> actual=424KB)
+        // has a difference of millions of bytes, well above this threshold.
+        if (actual < buf_size && (buf_size - actual) > 4096) {
+          throw SocketError(
+            "SO_RCVBUF was clamped by the kernel: requested " + std::to_string(buf_size) +
+            " bytes, got " + std::to_string(actual) +
+            " bytes. Increase net.core.rmem_max: sudo sysctl -w net.core.rmem_max=" +
+            std::to_string(buf_size));
+        }
+      }
+
       return std::move(*this);
     }
 
