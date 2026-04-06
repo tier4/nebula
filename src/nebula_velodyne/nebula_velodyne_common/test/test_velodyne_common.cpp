@@ -262,4 +262,79 @@ TEST(VelodyneCommonTest, CalibrationConfigurationReportsInvalidCalibrationFiles)
   EXPECT_EQ(configuration.load_from_file(missing_file.string()), Status::INVALID_CALIBRATION_FILE);
 }
 
+TEST(VelodyneCommonTest, CalibrationDecoderRejectsMalformedFilesAndClearsPreviousData)
+{
+  const auto valid_file = make_temp_file_path("nebula_velodyne_valid_calibration");
+  const auto malformed_file = make_temp_file_path("nebula_velodyne_malformed_calibration");
+  const auto * const valid_yaml = R"(num_lasers: 1
+distance_resolution: 0.004
+lasers:
+  - laser_id: 0
+    rot_correction: 0.0
+    vert_correction: 0.1
+    dist_correction: 0.0
+    dist_correction_x: 0.0
+    dist_correction_y: 0.0
+    vert_offset_correction: 0.0
+    focal_distance: 0.0
+    focal_slope: 0.0
+)";
+  const auto * const malformed_yaml = R"(num_lasers: 1
+distance_resolution: 0.004
+lasers:
+  - laser_id: 0
+    rot_correction: not-a-number
+)";
+
+  write_text_file(valid_file, valid_yaml);
+  write_text_file(malformed_file, malformed_yaml);
+
+  VelodyneCalibration calibration{};
+  ASSERT_EQ(calibration.read(valid_file.string()), Status::OK);
+  ASSERT_TRUE(calibration.initialized);
+  ASSERT_EQ(calibration.laser_corrections.size(), 1U);
+
+  EXPECT_EQ(calibration.read(malformed_file.string()), Status::INVALID_CALIBRATION_FILE);
+  EXPECT_FALSE(calibration.initialized);
+  EXPECT_EQ(calibration.num_lasers, 0);
+  EXPECT_TRUE(calibration.laser_corrections.empty());
+  EXPECT_TRUE(calibration.laser_corrections_map.empty());
+  EXPECT_FLOAT_EQ(calibration.distance_resolution_m, 0.002F);
+
+  std::filesystem::remove(valid_file);
+  std::filesystem::remove(malformed_file);
+}
+
+TEST(VelodyneCommonTest, CalibrationConfigurationSaveReportsUnwritableOutputPath)
+{
+  const auto input_file = make_temp_file_path("nebula_velodyne_calibration_write_input");
+  const auto missing_directory =
+    std::filesystem::temp_directory_path() /
+    ("nebula_velodyne_missing_dir_" + std::to_string(getpid()));
+  const auto output_file = missing_directory / "calibration.yaml";
+  const auto * const calibration_yaml = R"(num_lasers: 1
+distance_resolution: 0.004
+lasers:
+  - laser_id: 0
+    rot_correction: 0.0
+    vert_correction: 0.1
+    dist_correction: 0.0
+    dist_correction_x: 0.0
+    dist_correction_y: 0.0
+    vert_offset_correction: 0.0
+    focal_distance: 0.0
+    focal_slope: 0.0
+)";
+
+  write_text_file(input_file, calibration_yaml);
+  std::filesystem::remove_all(missing_directory);
+
+  VelodyneCalibrationConfiguration configuration{};
+  ASSERT_EQ(configuration.load_from_file(input_file.string()), Status::OK);
+  EXPECT_EQ(configuration.save_file(output_file.string()), Status::CANNOT_SAVE_FILE);
+  EXPECT_FALSE(std::filesystem::exists(output_file));
+
+  std::filesystem::remove(input_file);
+}
+
 }  // namespace

@@ -55,17 +55,11 @@ struct VelodyneCalibrationConfiguration : CalibrationConfigurationBase
   VelodyneCalibration velodyne_calibration;
   inline nebula::Status load_from_file(const std::string & calibration_file)
   {
-    velodyne_calibration.read(calibration_file);
-    if (!velodyne_calibration.initialized) {
-      return Status::INVALID_CALIBRATION_FILE;
-    } else {
-      return Status::OK;
-    }
+    return velodyne_calibration.read(calibration_file);
   }
   inline nebula::Status save_file(const std::string & calibration_file)
   {
-    velodyne_calibration.write(calibration_file);
-    return Status::OK;
+    return velodyne_calibration.write(calibration_file);
   }
 };
 
