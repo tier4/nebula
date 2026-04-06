@@ -21,7 +21,10 @@
 
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <vector>
+
+#include <ouster/types.h>
 
 namespace nebula::drivers
 {
@@ -58,11 +61,15 @@ struct PacketDecodeResult
   PerformanceCounters performance_counters;
   /// Successful metadata or a decode error.
   util::expected<PacketMetadata, DecodeError> metadata_or_error;
+
+  PacketDecodeResult()
+  : performance_counters{}, metadata_or_error(DecodeError::CALLBACK_NOT_SET)
+  {
+  }
 };
 
-/// @brief Decoder that accumulates incoming raw packets and marks scan boundaries.
-/// @details The tutorial implementation emits empty pointclouds so the ROS pipeline can be
-/// exercised without inventing fake sensor geometry.
+/// @brief Decoder that batches Ouster UDP packets via ouster-sdk (@c ScanBatcher) and publishes
+/// Nebula point clouds.
 class OusterDecoder
 {
 public:
@@ -74,9 +81,19 @@ public:
 
   /// @brief Constructor
   /// @param fov Field of view to crop the point cloud to
+  /// @param sensor_info Ouster sensor info object.
+  /// @param apply_sensor_extrinsics If true, pass-through extrinsics when building the XYZ LUT.
   /// @param pointcloud_cb Callback invoked when a full scan is assembled
-  explicit OusterDecoder(
-    FieldOfView<float, Degrees> fov /*, other decoder args */, pointcloud_callback_t pointcloud_cb);
+  OusterDecoder(
+    FieldOfView<float, Degrees> fov, std::shared_ptr<ouster::sdk::core::SensorInfo> & sensor_info,
+    bool apply_sensor_extrinsics, pointcloud_callback_t pointcloud_cb);
+
+  ~OusterDecoder();
+
+  OusterDecoder(const OusterDecoder &) = delete;
+  OusterDecoder & operator=(const OusterDecoder &) = delete;
+  OusterDecoder(OusterDecoder && other) noexcept;
+  OusterDecoder & operator=(OusterDecoder && other) noexcept;
 
   /// @brief Decode a single UDP packet
   /// @param packet Raw packet bytes from the sensor
@@ -88,12 +105,8 @@ public:
   void set_pointcloud_callback(pointcloud_callback_t pointcloud_cb);
 
 private:
-  static constexpr uint64_t k_packets_per_ouster_scan = 10;
-
-  FieldOfView<float, Degrees> fov_;
-  pointcloud_callback_t pointcloud_callback_;
-  NebulaPointCloudPtr current_scan_cloud_{std::make_shared<NebulaPointCloud>()};
-  uint64_t packet_count_{0};
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 }  // namespace nebula::drivers
