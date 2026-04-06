@@ -17,7 +17,7 @@
 // Have to define macros to silence warnings about deprecated headers being used by
 // boost/property_tree/ in some versions of boost.
 // See: https://github.com/boostorg/property_tree/issues/51
-#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
+#include "nebula_core_hw_interfaces/connections/udp.hpp"
 
 #include <nebula_core_common/nebula_status.hpp>
 
@@ -34,8 +34,8 @@
 
 #include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_core_common/util/expected.hpp>
-#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/http_client.hpp>
-#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/tcp.hpp>
+#include <nebula_core_hw_interfaces/connections/http_client.hpp>
+#include <nebula_core_hw_interfaces/connections/tcp.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
 #include <nebula_hesai_common/hesai_status.hpp>
 
