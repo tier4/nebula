@@ -60,7 +60,7 @@ private:
 
 // create a dump_info that wraps the given container
 template <typename Container>
-inline details::dump_info<typename Container::const_iterator> to_hex(const Container &container,
+inline details::dump_info<typename Container::const_iterator> to_hex(const Container& container,
                                                                      size_t size_per_line = 32) {
     static_assert(sizeof(typename Container::value_type) == 1,
                   "sizeof(Container::value_type) != 1");
@@ -72,7 +72,7 @@ inline details::dump_info<typename Container::const_iterator> to_hex(const Conta
 
 template <typename Value, size_t Extent>
 inline details::dump_info<typename std::span<Value, Extent>::iterator> to_hex(
-    const std::span<Value, Extent> &container, size_t size_per_line = 32) {
+    const std::span<Value, Extent>& container, size_t size_per_line = 32) {
     using Container = std::span<Value, Extent>;
     static_assert(sizeof(typename Container::value_type) == 1,
                   "sizeof(Container::value_type) != 1");
@@ -111,7 +111,7 @@ struct formatter<spdlog::details::dump_info<T>, char> {
 
     // parse the format string flags
     template <typename ParseContext>
-    SPDLOG_CONSTEXPR_FUNC auto parse(ParseContext &ctx) -> decltype(ctx.begin()) {
+    SPDLOG_CONSTEXPR_FUNC auto parse(ParseContext& ctx) -> decltype(ctx.begin()) {
         auto it = ctx.begin();
         while (it != ctx.end() && *it != '}') {
             switch (*it) {
@@ -142,11 +142,11 @@ struct formatter<spdlog::details::dump_info<T>, char> {
 
     // format the given bytes range as hex
     template <typename FormatContext, typename Container>
-    auto format(const spdlog::details::dump_info<Container> &the_range, FormatContext &ctx) const
+    auto format(const spdlog::details::dump_info<Container>& the_range, FormatContext& ctx) const
         -> decltype(ctx.out()) {
-        SPDLOG_CONSTEXPR const char *hex_upper = "0123456789ABCDEF";
-        SPDLOG_CONSTEXPR const char *hex_lower = "0123456789abcdef";
-        const char *hex_chars = use_uppercase ? hex_upper : hex_lower;
+        SPDLOG_CONSTEXPR const char* hex_upper = "0123456789ABCDEF";
+        SPDLOG_CONSTEXPR const char* hex_lower = "0123456789abcdef";
+        const char* hex_chars = use_uppercase ? hex_upper : hex_lower;
 
 #if !defined(SPDLOG_USE_STD_FORMAT) && FMT_VERSION < 60000
         auto inserter = ctx.begin();

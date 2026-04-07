@@ -5,33 +5,36 @@
 
 #pragma once
 
-#include <string>
-
 #include "nonstd/optional.hpp"
 #include "ouster/visibility.h"
 
-namespace ouster {
-namespace sdk {
-namespace core {
+#include <string>
+
+namespace ouster
+{
+namespace sdk
+{
+namespace core
+{
 
 enum class IoType {
-    OSF = 0,
-    PCAP = 1,
-    SENSOR = 2,
-    BAG = 3,
-    CSV = 4,
-    PLY = 5,
-    PCD = 6,
-    LAS = 7,
-    MCAP = 8,
-    PNG = 9,
-    STL = 10
+  OSF = 0,
+  PCAP = 1,
+  SENSOR = 2,
+  BAG = 3,
+  CSV = 4,
+  PLY = 5,
+  PCD = 6,
+  LAS = 7,
+  MCAP = 8,
+  PNG = 9,
+  STL = 10
 };
 
 /// Return a IoType given a source arg str
 /// @throws std::runtime_error if IoType is unknown
 OUSTER_API_FUNCTION
-IoType io_type(const std::string& source);
+IoType io_type(const std::string & source);
 
 /// Convert an IoType to human readable string
 /// @throws std::runtime_error if IoType is invalid
@@ -41,7 +44,7 @@ std::string to_string(IoType type);
 /// Return an IoType given the file extension for the provided file path
 /// @throws std::runtime_error if IoType is unknown
 OUSTER_API_FUNCTION
-IoType io_type_from_extension(const std::string& filename);
+IoType io_type_from_extension(const std::string & filename);
 
 /// Return a file extension for the given source type, if it's a file-based
 /// source.

@@ -10,13 +10,12 @@
 #include <string>
 #include <vector>
 
-namespace jsoncons { 
-namespace jsonpath {
+namespace jsoncons
+{
+namespace jsonpath
+{
 
-
-
-
-} // namespace jsonpath
-} // namespace jsoncons
+}  // namespace jsonpath
+}  // namespace jsoncons
 
 #endif

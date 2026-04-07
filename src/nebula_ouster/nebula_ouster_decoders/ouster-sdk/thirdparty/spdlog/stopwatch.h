@@ -59,7 +59,7 @@ namespace
 template <>
 struct formatter<spdlog::stopwatch> : formatter<double> {
     template <typename FormatContext>
-    auto format(const spdlog::stopwatch &sw, FormatContext &ctx) const -> decltype(ctx.out()) {
+    auto format(const spdlog::stopwatch& sw, FormatContext& ctx) const -> decltype(ctx.out()) {
         return formatter<double>::format(sw.elapsed().count(), ctx);
     }
 };

@@ -7,17 +7,16 @@
 #ifndef JSONCONS_JSON_FWD_HPP
 #define JSONCONS_JSON_FWD_HPP
 
-#include <memory> // std::allocator
+#include <memory>  // std::allocator
 
-namespace jsoncons {
+namespace jsoncons
+{
 
 struct sorted_policy;
-                        
-template <class CharT, 
-          class Policy = sorted_policy, 
-          class Allocator = std::allocator<CharT>>
+
+template <class CharT, class Policy = sorted_policy, class Allocator = std::allocator<CharT>>
 class basic_json;
 
-}
+}  // namespace jsoncons
 
 #endif

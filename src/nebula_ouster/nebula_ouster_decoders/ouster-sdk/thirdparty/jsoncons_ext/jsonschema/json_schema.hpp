@@ -8,47 +8,48 @@
 #define JSONCONS_JSONSCHEMA_JSON_SCHEMA_HPP
 
 #include <jsoncons/config/jsoncons_config.hpp>
-#include <jsoncons/uri.hpp>
 #include <jsoncons/json.hpp>
+#include <jsoncons/uri.hpp>
 #include <jsoncons_ext/jsonpointer/jsonpointer.hpp>
-#include <jsoncons_ext/jsonschema/jsonschema_error.hpp>
 #include <jsoncons_ext/jsonschema/common/keyword_validator.hpp>
+#include <jsoncons_ext/jsonschema/jsonschema_error.hpp>
 
-namespace jsoncons {
-namespace jsonschema {
+namespace jsoncons
+{
+namespace jsonschema
+{
 
-    template <class Json>
-    class json_schema
-    {
-        using validator_type = typename std::unique_ptr<keyword_validator<Json>>;
+template <class Json>
+class json_schema
+{
+  using validator_type = typename std::unique_ptr<keyword_validator<Json>>;
 
-        std::vector<validator_type> subschemas_;
-        validator_type root_;
-    public:
-        json_schema(std::vector<validator_type>&& subschemas, validator_type&& root)
-            : subschemas_(std::move(subschemas)), root_(std::move(root))
-        {
-            if (root_ == nullptr)
-                JSONCONS_THROW(schema_error("There is no root schema to validate an instance against"));
-        }
+  std::vector<validator_type> subschemas_;
+  validator_type root_;
 
-        json_schema(const json_schema&) = delete;
-        json_schema(json_schema&&) = default;
-        json_schema& operator=(const json_schema&) = delete;
-        json_schema& operator=(json_schema&&) = default;
+public:
+  json_schema(std::vector<validator_type> && subschemas, validator_type && root)
+  : subschemas_(std::move(subschemas)), root_(std::move(root))
+  {
+    if (root_ == nullptr)
+      JSONCONS_THROW(schema_error("There is no root schema to validate an instance against"));
+  }
 
-        void validate(const Json& instance, 
-                      const jsonpointer::json_pointer& instance_location, 
-                      error_reporter& reporter, 
-                      Json& patch) const 
-        {
-            JSONCONS_ASSERT(root_ != nullptr);
-            root_->validate(instance, instance_location, reporter, patch);
-        }
-    };
+  json_schema(const json_schema &) = delete;
+  json_schema(json_schema &&) = default;
+  json_schema & operator=(const json_schema &) = delete;
+  json_schema & operator=(json_schema &&) = default;
 
+  void validate(
+    const Json & instance, const jsonpointer::json_pointer & instance_location,
+    error_reporter & reporter, Json & patch) const
+  {
+    JSONCONS_ASSERT(root_ != nullptr);
+    root_->validate(instance, instance_location, reporter, patch);
+  }
+};
 
-} // namespace jsonschema
-} // namespace jsoncons
+}  // namespace jsonschema
+}  // namespace jsoncons
 
-#endif // JSONCONS_JSONSCHEMA_SCHEMA_HPP
+#endif  // JSONCONS_JSONSCHEMA_SCHEMA_HPP

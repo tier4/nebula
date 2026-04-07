@@ -7,60 +7,65 @@
 #ifndef JSONCONS_ALLOCATOR_STRATEGY_HPP
 #define JSONCONS_ALLOCATOR_STRATEGY_HPP
 
-#include <memory>
 #include <jsoncons/tag_type.hpp>
 
-namespace jsoncons {
+#include <memory>
 
-template <class Allocator,class TempAllocator>
+namespace jsoncons
+{
+
+template <class Allocator, class TempAllocator>
 class allocator_set
 {
-    Allocator result_alloc_;
-    TempAllocator temp_alloc_;
+  Allocator result_alloc_;
+  TempAllocator temp_alloc_;
+
 public:
-    using allocator_type = Allocator;
-    using temp_allocator_type = TempAllocator;
+  using allocator_type = Allocator;
+  using temp_allocator_type = TempAllocator;
 
-    allocator_set(const Allocator& alloc=Allocator(), 
-        const TempAllocator& temp_alloc=TempAllocator())
-        : result_alloc_(alloc), temp_alloc_(temp_alloc)
-    {
-    }
+  allocator_set(
+    const Allocator & alloc = Allocator(), const TempAllocator & temp_alloc = TempAllocator())
+  : result_alloc_(alloc), temp_alloc_(temp_alloc)
+  {
+  }
 
-    allocator_set(const allocator_set&)  = default;
-    allocator_set(allocator_set&&)  = default;
-    allocator_set& operator=(const allocator_set&)  = delete;
-    allocator_set& operator=(allocator_set&&)  = delete;
-    ~allocator_set() = default;
+  allocator_set(const allocator_set &) = default;
+  allocator_set(allocator_set &&) = default;
+  allocator_set & operator=(const allocator_set &) = delete;
+  allocator_set & operator=(allocator_set &&) = delete;
+  ~allocator_set() = default;
 
-    Allocator get_allocator() const {return result_alloc_;}
-    TempAllocator get_temp_allocator() const {return temp_alloc_;}
+  Allocator get_allocator() const { return result_alloc_; }
+  TempAllocator get_temp_allocator() const { return temp_alloc_; }
 };
 
-inline
-allocator_set<std::allocator<char>,std::allocator<char>> combine_allocators()
+inline allocator_set<std::allocator<char>, std::allocator<char>> combine_allocators()
 {
-    return allocator_set<std::allocator<char>,std::allocator<char>>(std::allocator<char>(), std::allocator<char>());
+  return allocator_set<std::allocator<char>, std::allocator<char>>(
+    std::allocator<char>(), std::allocator<char>());
 }
 
 template <class Allocator>
-allocator_set<Allocator,std::allocator<char>> combine_allocators(const Allocator& alloc)
+allocator_set<Allocator, std::allocator<char>> combine_allocators(const Allocator & alloc)
 {
-    return allocator_set<Allocator,std::allocator<char>>(alloc, std::allocator<char>());
+  return allocator_set<Allocator, std::allocator<char>>(alloc, std::allocator<char>());
 }
 
-template <class Allocator,class TempAllocator>
-allocator_set<Allocator,TempAllocator> combine_allocators(const Allocator& alloc, const TempAllocator& temp_alloc)
+template <class Allocator, class TempAllocator>
+allocator_set<Allocator, TempAllocator> combine_allocators(
+  const Allocator & alloc, const TempAllocator & temp_alloc)
 {
-    return allocator_set<Allocator,TempAllocator>(alloc, temp_alloc);
+  return allocator_set<Allocator, TempAllocator>(alloc, temp_alloc);
 }
 
 template <class TempAllocator>
-allocator_set<std::allocator<char>,TempAllocator> temp_allocator_only(const TempAllocator& temp_alloc)
+allocator_set<std::allocator<char>, TempAllocator> temp_allocator_only(
+  const TempAllocator & temp_alloc)
 {
-    return allocator_set<std::allocator<char>,TempAllocator>(std::allocator<char>(), temp_alloc);
+  return allocator_set<std::allocator<char>, TempAllocator>(std::allocator<char>(), temp_alloc);
 }
 
-} // namespace jsoncons
+}  // namespace jsoncons
 
 #endif

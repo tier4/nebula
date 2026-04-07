@@ -32,7 +32,7 @@ class tcp_client {
         }
     }
 
-    static void throw_winsock_error_(const std::string &msg, int last_error) {
+    static void throw_winsock_error_(const std::string& msg, int last_error) {
         char buf[512];
         ::FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
                          last_error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buf,
@@ -59,11 +59,11 @@ public:
     SOCKET fd() const { return socket_; }
 
     // try to connect or throw on failure
-    void connect(const std::string &host, int port) {
+    void connect(const std::string& host, int port) {
         if (is_connected()) {
             close();
         }
-        struct addrinfo hints {};
+        struct addrinfo hints{};
         ZeroMemory(&hints, sizeof(hints));
 
         hints.ai_family = AF_UNSPEC;      // To work with IPv4, IPv6, and so on
@@ -72,7 +72,7 @@ public:
         hints.ai_protocol = 0;
 
         auto port_str = std::to_string(port);
-        struct addrinfo *addrinfo_result;
+        struct addrinfo* addrinfo_result;
         auto rv = ::getaddrinfo(host.c_str(), port_str.c_str(), &hints, &addrinfo_result);
         int last_error = 0;
         if (rv != 0) {
@@ -83,7 +83,7 @@ public:
 
         // Try each address until we successfully connect(2).
 
-        for (auto *rp = addrinfo_result; rp != nullptr; rp = rp->ai_next) {
+        for (auto* rp = addrinfo_result; rp != nullptr; rp = rp->ai_next) {
             socket_ = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
             if (socket_ == INVALID_SOCKET) {
                 last_error = ::WSAGetLastError();
@@ -105,13 +105,13 @@ public:
 
         // set TCP_NODELAY
         int enable_flag = 1;
-        ::setsockopt(socket_, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char *>(&enable_flag),
+        ::setsockopt(socket_, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<char*>(&enable_flag),
                      sizeof(enable_flag));
     }
 
     // Send exactly n_bytes of the given data.
     // On error close the connection and throw.
-    void send(const char *data, size_t n_bytes) {
+    void send(const char* data, size_t n_bytes) {
         size_t bytes_sent = 0;
         while (bytes_sent < n_bytes) {
             const int send_flags = 0;

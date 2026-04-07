@@ -34,12 +34,12 @@ static const size_t default_async_q_size = 8192;
 template <async_overflow_policy OverflowPolicy = async_overflow_policy::block>
 struct async_factory_impl {
     template <typename Sink, typename... SinkArgs>
-    static std::shared_ptr<async_logger> create(std::string logger_name, SinkArgs &&...args) {
-        auto &registry_inst = details::registry::instance();
+    static std::shared_ptr<async_logger> create(std::string logger_name, SinkArgs&&... args) {
+        auto& registry_inst = details::registry::instance();
 
         // create global thread pool if not already exists..
 
-        auto &mutex = registry_inst.tp_mutex();
+        auto& mutex = registry_inst.tp_mutex();
         std::lock_guard<std::recursive_mutex> tp_lock(mutex);
         auto tp = registry_inst.get_tp();
         if (tp == nullptr) {
@@ -60,14 +60,14 @@ using async_factory_nonblock = async_factory_impl<async_overflow_policy::overrun
 
 template <typename Sink, typename... SinkArgs>
 inline std::shared_ptr<spdlog::logger> create_async(std::string logger_name,
-                                                    SinkArgs &&...sink_args) {
+                                                    SinkArgs&&... sink_args) {
     return async_factory::create<Sink>(std::move(logger_name),
                                        std::forward<SinkArgs>(sink_args)...);
 }
 
 template <typename Sink, typename... SinkArgs>
 inline std::shared_ptr<spdlog::logger> create_async_nb(std::string logger_name,
-                                                       SinkArgs &&...sink_args) {
+                                                       SinkArgs&&... sink_args) {
     return async_factory_nonblock::create<Sink>(std::move(logger_name),
                                                 std::forward<SinkArgs>(sink_args)...);
 }
@@ -89,8 +89,7 @@ inline void init_thread_pool(size_t q_size,
 }
 
 inline void init_thread_pool(size_t q_size, size_t thread_count) {
-    init_thread_pool(
-        q_size, thread_count, [] {}, [] {});
+    init_thread_pool(q_size, thread_count, [] {}, [] {});
 }
 
 // get the global thread pool.

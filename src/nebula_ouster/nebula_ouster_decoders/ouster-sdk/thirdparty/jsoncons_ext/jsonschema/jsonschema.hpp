@@ -11,4 +11,4 @@
 #include <jsoncons_ext/jsonschema/json_validator.hpp>
 #include <jsoncons_ext/jsonschema/schema_factory.hpp>
 
-#endif // JSONCONS_JSONSCHEMA_JSONSCHEMA_HPP
+#endif  // JSONCONS_JSONSCHEMA_JSONSCHEMA_HPP

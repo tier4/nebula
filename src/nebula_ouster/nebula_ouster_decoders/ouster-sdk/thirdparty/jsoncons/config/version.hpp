@@ -6,35 +6,34 @@
 
 #ifndef JSONCONS_VERSION_HPP
 #define JSONCONS_VERSION_HPP
- 
+
 #include <iostream>
-    
+
 #define JSONCONS_VERSION_MAJOR 0
 #define JSONCONS_VERSION_MINOR 173
 #define JSONCONS_VERSION_PATCH 4
 
-namespace jsoncons {
+namespace jsoncons
+{
 
 struct versioning_info
 {
-    unsigned int const major;
-    unsigned int const minor;
-    unsigned int const patch;
+  unsigned int const major;
+  unsigned int const minor;
+  unsigned int const patch;
 
-    friend std::ostream& operator<<(std::ostream& os, const versioning_info& ver)
-    {
-        os << ver.major << '.'
-           << ver.minor << '.'
-           << ver.patch;
-        return os;
-    }
-}; 
+  friend std::ostream & operator<<(std::ostream & os, const versioning_info & ver)
+  {
+    os << ver.major << '.' << ver.minor << '.' << ver.patch;
+    return os;
+  }
+};
 
 constexpr versioning_info version()
 {
-    return versioning_info{JSONCONS_VERSION_MAJOR, JSONCONS_VERSION_MINOR, JSONCONS_VERSION_PATCH};
+  return versioning_info{JSONCONS_VERSION_MAJOR, JSONCONS_VERSION_MINOR, JSONCONS_VERSION_PATCH};
 }
 
-}
+}  // namespace jsoncons
 
 #endif

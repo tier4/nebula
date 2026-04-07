@@ -9,42 +9,49 @@
 
 #include <jsoncons_ext/jsonschema/draft7/schema_parser_impl.hpp>
 
-namespace jsoncons {
-namespace jsonschema {
+namespace jsoncons
+{
+namespace jsonschema
+{
 
-    template <class Json,class URIResolver>
-    typename std::enable_if<extension_traits::is_unary_function_object_exact<URIResolver,Json,std::string>::value,std::shared_ptr<json_schema<Json>>>::type
-    make_schema(const Json& schema, const std::string& retrieval_uri, const URIResolver& resolver)
-    {
-        jsoncons::jsonschema::draft7::schema_parser_impl<Json> parser(resolver);
-        parser.parse(schema, retrieval_uri);
+template <class Json, class URIResolver>
+typename std::enable_if<
+  extension_traits::is_unary_function_object_exact<URIResolver, Json, std::string>::value,
+  std::shared_ptr<json_schema<Json>>>::type
+make_schema(const Json & schema, const std::string & retrieval_uri, const URIResolver & resolver)
+{
+  jsoncons::jsonschema::draft7::schema_parser_impl<Json> parser(resolver);
+  parser.parse(schema, retrieval_uri);
 
-        return parser.get_schema();
-    }
+  return parser.get_schema();
+}
 
-    template <class Json,class URIResolver>
-    typename std::enable_if<extension_traits::is_unary_function_object_exact<URIResolver,Json,std::string>::value,std::shared_ptr<json_schema<Json>>>::type
-    make_schema(const Json& schema, const URIResolver& resolver)
-    {
-        return make_schema(schema, "#", resolver);
-    }
+template <class Json, class URIResolver>
+typename std::enable_if<
+  extension_traits::is_unary_function_object_exact<URIResolver, Json, std::string>::value,
+  std::shared_ptr<json_schema<Json>>>::type
+make_schema(const Json & schema, const URIResolver & resolver)
+{
+  return make_schema(schema, "#", resolver);
+}
 
-    template <class Json>
-    std::shared_ptr<json_schema<Json>> make_schema(const Json& schema, const std::string& retrieval_uri)
-    {
-        jsoncons::jsonschema::draft7::schema_parser_impl<Json> parser{};
-        parser.parse(schema, retrieval_uri);
+template <class Json>
+std::shared_ptr<json_schema<Json>> make_schema(
+  const Json & schema, const std::string & retrieval_uri)
+{
+  jsoncons::jsonschema::draft7::schema_parser_impl<Json> parser{};
+  parser.parse(schema, retrieval_uri);
 
-        return parser.get_schema();
-    }
+  return parser.get_schema();
+}
 
-    template <class Json>
-    std::shared_ptr<json_schema<Json>> make_schema(const Json& schema)
-    {
-        return make_schema(schema, "#");
-    }
+template <class Json>
+std::shared_ptr<json_schema<Json>> make_schema(const Json & schema)
+{
+  return make_schema(schema, "#");
+}
 
-} // namespace jsonschema
-} // namespace jsoncons
+}  // namespace jsonschema
+}  // namespace jsoncons
 
-#endif // JSONCONS_JSONSCHEMA_SCHEMA_HPP
+#endif  // JSONCONS_JSONSCHEMA_SCHEMA_HPP

@@ -16,9 +16,9 @@
 
     // Avoid including windows.h (https://stackoverflow.com/a/30741042)
     #if defined(SPDLOG_WCHAR_TO_UTF8_SUPPORT)
-extern "C" __declspec(dllimport) void __stdcall OutputDebugStringW(const wchar_t *lpOutputString);
+extern "C" __declspec(dllimport) void __stdcall OutputDebugStringW(const wchar_t* lpOutputString);
     #else
-extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char *lpOutputString);
+extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char* lpOutputString);
     #endif
 extern "C" __declspec(dllimport) int __stdcall IsDebuggerPresent();
 
@@ -35,7 +35,7 @@ public:
         : check_debugger_present_{check_debugger_present} {};
 
 protected:
-    void sink_it_(const details::log_msg &msg) override {
+    void sink_it_(const details::log_msg& msg) override {
         if (check_debugger_present_ && !IsDebuggerPresent()) {
             return;
         }

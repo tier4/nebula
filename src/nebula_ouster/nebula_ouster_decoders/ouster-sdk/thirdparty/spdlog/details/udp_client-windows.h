@@ -36,7 +36,7 @@ class udp_client {
         }
     }
 
-    static void throw_winsock_error_(const std::string &msg, int last_error) {
+    static void throw_winsock_error_(const std::string& msg, int last_error) {
         char buf[512];
         ::FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
                          last_error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buf,
@@ -54,7 +54,7 @@ class udp_client {
     }
 
 public:
-    udp_client(const std::string &host, uint16_t port) {
+    udp_client(const std::string& host, uint16_t port) {
         init_winsock_();
 
         addr_.sin_family = PF_INET;
@@ -75,7 +75,7 @@ public:
 
         int option_value = TX_BUFFER_SIZE;
         if (::setsockopt(socket_, SOL_SOCKET, SO_SNDBUF,
-                         reinterpret_cast<const char *>(&option_value), sizeof(option_value)) < 0) {
+                         reinterpret_cast<const char*>(&option_value), sizeof(option_value)) < 0) {
             int last_error = ::WSAGetLastError();
             cleanup_();
             throw_winsock_error_("error: setsockopt(SO_SNDBUF) Failed!", last_error);
@@ -86,9 +86,9 @@ public:
 
     SOCKET fd() const { return socket_; }
 
-    void send(const char *data, size_t n_bytes) {
+    void send(const char* data, size_t n_bytes) {
         socklen_t tolen = sizeof(struct sockaddr);
-        if (::sendto(socket_, data, static_cast<int>(n_bytes), 0, (struct sockaddr *)&addr_,
+        if (::sendto(socket_, data, static_cast<int>(n_bytes), 0, (struct sockaddr*)&addr_,
                      tolen) == -1) {
             throw_spdlog_ex("sendto(2) failed", errno);
         }

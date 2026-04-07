@@ -20,17 +20,17 @@
 namespace spdlog {
 namespace details {
 
-SPDLOG_INLINE file_helper::file_helper(const file_event_handlers &event_handlers)
+SPDLOG_INLINE file_helper::file_helper(const file_event_handlers& event_handlers)
     : event_handlers_(event_handlers) {}
 
 SPDLOG_INLINE file_helper::~file_helper() { close(); }
 
-SPDLOG_INLINE void file_helper::open(const filename_t &fname, bool truncate) {
+SPDLOG_INLINE void file_helper::open(const filename_t& fname, bool truncate) {
     close();
     filename_ = fname;
 
-    auto *mode = SPDLOG_FILENAME_T("ab");
-    auto *trunc_mode = SPDLOG_FILENAME_T("wb");
+    auto* mode = SPDLOG_FILENAME_T("ab");
+    auto* trunc_mode = SPDLOG_FILENAME_T("wb");
 
     if (event_handlers_.before_open) {
         event_handlers_.before_open(filename_);
@@ -43,7 +43,7 @@ SPDLOG_INLINE void file_helper::open(const filename_t &fname, bool truncate) {
             // opening the actual log-we-write-to in "ab" mode, since that
             // interacts more politely with eternal processes that might
             // rotate/truncate the file underneath us.
-            std::FILE *tmp;
+            std::FILE* tmp;
             if (os::fopen_s(&tmp, fname, trunc_mode)) {
                 continue;
             }
@@ -97,7 +97,7 @@ SPDLOG_INLINE void file_helper::close() {
     }
 }
 
-SPDLOG_INLINE void file_helper::write(const memory_buf_t &buf) {
+SPDLOG_INLINE void file_helper::write(const memory_buf_t& buf) {
     if (fd_ == nullptr) return;
     size_t msg_size = buf.size();
     auto data = buf.data();
@@ -113,7 +113,7 @@ SPDLOG_INLINE size_t file_helper::size() const {
     return os::filesize(fd_);
 }
 
-SPDLOG_INLINE const filename_t &file_helper::filename() const { return filename_; }
+SPDLOG_INLINE const filename_t& file_helper::filename() const { return filename_; }
 
 //
 // return file path and its extension:
@@ -129,7 +129,7 @@ SPDLOG_INLINE const filename_t &file_helper::filename() const { return filename_
 // "my_folder/.mylog" => ("my_folder/.mylog", "")
 // "my_folder/.mylog.txt" => ("my_folder/.mylog", ".txt")
 SPDLOG_INLINE std::tuple<filename_t, filename_t> file_helper::split_by_extension(
-    const filename_t &fname) {
+    const filename_t& fname) {
     auto ext_index = fname.rfind('.');
 
     // no valid extension found - return whole path and empty string as

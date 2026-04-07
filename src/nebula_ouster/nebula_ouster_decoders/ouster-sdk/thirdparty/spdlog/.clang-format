@@ -1,12 +1,12 @@
 ---
-Language:        Cpp
-BasedOnStyle:  Google
+Language: Cpp
+BasedOnStyle: Google
 AccessModifierOffset: -4
-Standard:        c++17
-IndentWidth:     4
-TabWidth:        4
-UseTab:          Never
-ColumnLimit:     100
+Standard: c++17
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
 AlignAfterOpenBracket: Align
 BinPackParameters: false
 AlignEscapedNewlines: Left
@@ -14,6 +14,5 @@ AlwaysBreakTemplateDeclarations: Yes
 PackConstructorInitializers: Never
 BreakConstructorInitializersBeforeComma: false
 IndentPPDirectives: BeforeHash
-SortIncludes:    Never
+SortIncludes: Never
 ...
-

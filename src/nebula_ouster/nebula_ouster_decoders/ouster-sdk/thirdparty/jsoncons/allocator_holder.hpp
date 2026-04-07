@@ -7,32 +7,30 @@
 #ifndef JSONCONS_ALLOCATOR_HOLDER_HPP
 #define JSONCONS_ALLOCATOR_HOLDER_HPP
 
-namespace jsoncons {
+namespace jsoncons
+{
 
 template <class Allocator>
 class allocator_holder
 {
 public:
-    using allocator_type = Allocator;
+  using allocator_type = Allocator;
+
 private:
-    allocator_type alloc_;
+  allocator_type alloc_;
+
 public:
-    allocator_holder() = default;
-    allocator_holder(const allocator_holder&)  = default;
-    allocator_holder(allocator_holder&&)  = default;
-    allocator_holder& operator=(const allocator_holder&)  = default;
-    allocator_holder& operator=(allocator_holder&&)  = default;
-    allocator_holder(const allocator_type& alloc)
-        : alloc_(alloc)
-        {}
-    ~allocator_holder() = default;
-    
-    allocator_type get_allocator() const
-    {
-        return alloc_;
-    }
+  allocator_holder() = default;
+  allocator_holder(const allocator_holder &) = default;
+  allocator_holder(allocator_holder &&) = default;
+  allocator_holder & operator=(const allocator_holder &) = default;
+  allocator_holder & operator=(allocator_holder &&) = default;
+  allocator_holder(const allocator_type & alloc) : alloc_(alloc) {}
+  ~allocator_holder() = default;
+
+  allocator_type get_allocator() const { return alloc_; }
 };
 
-}
+}  // namespace jsoncons
 
 #endif

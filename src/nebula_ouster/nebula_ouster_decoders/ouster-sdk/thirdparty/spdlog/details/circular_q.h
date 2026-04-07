@@ -30,20 +30,20 @@ public:
           ,
           v_(max_items_) {}
 
-    circular_q(const circular_q &) = default;
-    circular_q &operator=(const circular_q &) = default;
+    circular_q(const circular_q&) = default;
+    circular_q& operator=(const circular_q&) = default;
 
     // move cannot be default,
     // since we need to reset head_, tail_, etc to zero in the moved object
-    circular_q(circular_q &&other) SPDLOG_NOEXCEPT { copy_moveable(std::move(other)); }
+    circular_q(circular_q&& other) SPDLOG_NOEXCEPT { copy_moveable(std::move(other)); }
 
-    circular_q &operator=(circular_q &&other) SPDLOG_NOEXCEPT {
+    circular_q& operator=(circular_q&& other) SPDLOG_NOEXCEPT {
         copy_moveable(std::move(other));
         return *this;
     }
 
     // push back, overrun (oldest) item if no room left
-    void push_back(T &&item) {
+    void push_back(T&& item) {
         if (max_items_ > 0) {
             v_[tail_] = std::move(item);
             tail_ = (tail_ + 1) % max_items_;
@@ -58,9 +58,9 @@ public:
 
     // Return reference to the front item.
     // If there are no elements in the container, the behavior is undefined.
-    const T &front() const { return v_[head_]; }
+    const T& front() const { return v_[head_]; }
 
-    T &front() { return v_[head_]; }
+    T& front() { return v_[head_]; }
 
     // Return number of elements actually stored
     size_t size() const {
@@ -73,7 +73,7 @@ public:
 
     // Return const reference to item by index.
     // If index is out of range 0…size()-1, the behavior is undefined.
-    const T &at(size_t i) const {
+    const T& at(size_t i) const {
         assert(i < size());
         return v_[(head_ + i) % max_items_];
     }
@@ -98,7 +98,7 @@ public:
 
 private:
     // copy from other&& and reset it to disabled state
-    void copy_moveable(circular_q &&other) SPDLOG_NOEXCEPT {
+    void copy_moveable(circular_q&& other) SPDLOG_NOEXCEPT {
         max_items_ = other.max_items_;
         head_ = other.head_;
         tail_ = other.tail_;

@@ -8,113 +8,105 @@
 #define JSONCONS_JSONSCHEMA_JSON_VALIDATOR_HPP
 
 #include <jsoncons/config/jsoncons_config.hpp>
-#include <jsoncons/uri.hpp>
 #include <jsoncons/json.hpp>
+#include <jsoncons/uri.hpp>
 #include <jsoncons_ext/jsonpointer/jsonpointer.hpp>
 #include <jsoncons_ext/jsonschema/json_schema.hpp>
-#include <cassert>
-#include <set>
-#include <sstream>
-#include <iostream>
+
 #include <cassert>
 #include <functional>
+#include <iostream>
+#include <set>
+#include <sstream>
 
-namespace jsoncons {
-namespace jsonschema {
+namespace jsoncons
+{
+namespace jsonschema
+{
 
-    class throwing_error_reporter : public error_reporter
-    {
-        void do_error(const validation_output& o) override
-        {
-            JSONCONS_THROW(validation_error(o.message()));
-        }
-    };
+class throwing_error_reporter : public error_reporter
+{
+  void do_error(const validation_output & o) override
+  {
+    JSONCONS_THROW(validation_error(o.message()));
+  }
+};
 
-    class fail_early_reporter : public error_reporter
-    {
-        void do_error(const validation_output&) override
-        {
-        }
-    public:
-        fail_early_reporter()
-            : error_reporter(true)
-        {
-        }
-    };
+class fail_early_reporter : public error_reporter
+{
+  void do_error(const validation_output &) override {}
 
-    using error_reporter_t = std::function<void(const validation_output& o)>;
+public:
+  fail_early_reporter() : error_reporter(true) {}
+};
 
-    struct error_reporter_adaptor : public error_reporter
-    {
-        error_reporter_t reporter_;
+using error_reporter_t = std::function<void(const validation_output & o)>;
 
-        error_reporter_adaptor(const error_reporter_t& reporter)
-            : reporter_(reporter)
-        {
-        }
-    private:
-        void do_error(const validation_output& e) override
-        {
-            reporter_(e);
-        }
-    };
+struct error_reporter_adaptor : public error_reporter
+{
+  error_reporter_t reporter_;
 
-    template <class Json>
-    class json_validator
-    {
-        std::shared_ptr<json_schema<Json>> root_;
+  error_reporter_adaptor(const error_reporter_t & reporter) : reporter_(reporter) {}
 
-    public:
-        json_validator(std::shared_ptr<json_schema<Json>> root)
-            : root_(root)
-        {
-        }
+private:
+  void do_error(const validation_output & e) override { reporter_(e); }
+};
 
-        json_validator(json_validator &&) = default;
-        json_validator &operator=(json_validator &&) = default;
+template <class Json>
+class json_validator
+{
+  std::shared_ptr<json_schema<Json>> root_;
 
-        json_validator(json_validator const &) = delete;
-        json_validator &operator=(json_validator const &) = delete;
+public:
+  json_validator(std::shared_ptr<json_schema<Json>> root) : root_(root) {}
 
-        ~json_validator() = default;
+  json_validator(json_validator &&) = default;
+  json_validator & operator=(json_validator &&) = default;
 
-        // Validate input JSON against a JSON Schema with a default throwing error reporter
-        Json validate(const Json& instance) const
-        {
-            throwing_error_reporter reporter;
-            jsonpointer::json_pointer instance_location("#");
-            Json patch(json_array_arg);
+  json_validator(json_validator const &) = delete;
+  json_validator & operator=(json_validator const &) = delete;
 
-            root_->validate(instance, instance_location, reporter, patch);
-            return patch;
-        }
+  ~json_validator() = default;
 
-        // Validate input JSON against a JSON Schema 
-        bool is_valid(const Json& instance) const
-        {
-            fail_early_reporter reporter;
-            jsonpointer::json_pointer instance_location("#");
-            Json patch(json_array_arg);
+  // Validate input JSON against a JSON Schema with a default throwing error reporter
+  Json validate(const Json & instance) const
+  {
+    throwing_error_reporter reporter;
+    jsonpointer::json_pointer instance_location("#");
+    Json patch(json_array_arg);
 
-            root_->validate(instance, instance_location, reporter, patch);
-            return reporter.error_count() == 0;
-        }
+    root_->validate(instance, instance_location, reporter, patch);
+    return patch;
+  }
 
-        // Validate input JSON against a JSON Schema with a provided error reporter
-        template <class Reporter>
-        typename std::enable_if<extension_traits::is_unary_function_object_exact<Reporter,void,validation_output>::value,Json>::type
-        validate(const Json& instance, const Reporter& reporter) const
-        {
-            jsonpointer::json_pointer instance_location("#");
-            Json patch(json_array_arg);
+  // Validate input JSON against a JSON Schema
+  bool is_valid(const Json & instance) const
+  {
+    fail_early_reporter reporter;
+    jsonpointer::json_pointer instance_location("#");
+    Json patch(json_array_arg);
 
-            error_reporter_adaptor adaptor(reporter);
-            root_->validate(instance, instance_location, adaptor, patch);
-            return patch;
-        }
-    };
+    root_->validate(instance, instance_location, reporter, patch);
+    return reporter.error_count() == 0;
+  }
 
-} // namespace jsonschema
-} // namespace jsoncons
+  // Validate input JSON against a JSON Schema with a provided error reporter
+  template <class Reporter>
+  typename std::enable_if<
+    extension_traits::is_unary_function_object_exact<Reporter, void, validation_output>::value,
+    Json>::type
+  validate(const Json & instance, const Reporter & reporter) const
+  {
+    jsonpointer::json_pointer instance_location("#");
+    Json patch(json_array_arg);
 
-#endif // JSONCONS_JSONSCHEMA_JSON_VALIDATOR_HPP
+    error_reporter_adaptor adaptor(reporter);
+    root_->validate(instance, instance_location, adaptor, patch);
+    return patch;
+  }
+};
+
+}  // namespace jsonschema
+}  // namespace jsoncons
+
+#endif  // JSONCONS_JSONSCHEMA_JSON_VALIDATOR_HPP

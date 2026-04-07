@@ -14,14 +14,14 @@ namespace sinks {
 template <typename Mutex>
 class ostream_sink final : public base_sink<Mutex> {
 public:
-    explicit ostream_sink(std::ostream &os, bool force_flush = false)
+    explicit ostream_sink(std::ostream& os, bool force_flush = false)
         : ostream_(os),
           force_flush_(force_flush) {}
-    ostream_sink(const ostream_sink &) = delete;
-    ostream_sink &operator=(const ostream_sink &) = delete;
+    ostream_sink(const ostream_sink&) = delete;
+    ostream_sink& operator=(const ostream_sink&) = delete;
 
 protected:
-    void sink_it_(const details::log_msg &msg) override {
+    void sink_it_(const details::log_msg& msg) override {
         memory_buf_t formatted;
         base_sink<Mutex>::formatter_->format(msg, formatted);
         ostream_.write(formatted.data(), static_cast<std::streamsize>(formatted.size()));
@@ -32,7 +32,7 @@ protected:
 
     void flush_() override { ostream_.flush(); }
 
-    std::ostream &ostream_;
+    std::ostream& ostream_;
     bool force_flush_;
 };
 

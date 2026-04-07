@@ -16,7 +16,7 @@ SPDLOG_INLINE void initialize_logger(std::shared_ptr<logger> logger) {
     details::registry::instance().initialize_logger(std::move(logger));
 }
 
-SPDLOG_INLINE std::shared_ptr<logger> get(const std::string &name) {
+SPDLOG_INLINE std::shared_ptr<logger> get(const std::string& name) {
     return details::registry::instance().get(name);
 }
 
@@ -51,7 +51,7 @@ SPDLOG_INLINE void flush_on(level::level_enum log_level) {
     details::registry::instance().flush_on(log_level);
 }
 
-SPDLOG_INLINE void set_error_handler(void (*handler)(const std::string &msg)) {
+SPDLOG_INLINE void set_error_handler(void (*handler)(const std::string& msg)) {
     details::registry::instance().set_error_handler(handler);
 }
 
@@ -59,11 +59,11 @@ SPDLOG_INLINE void register_logger(std::shared_ptr<logger> logger) {
     details::registry::instance().register_logger(std::move(logger));
 }
 
-SPDLOG_INLINE void apply_all(const std::function<void(std::shared_ptr<logger>)> &fun) {
+SPDLOG_INLINE void apply_all(const std::function<void(std::shared_ptr<logger>)>& fun) {
     details::registry::instance().apply_all(fun);
 }
 
-SPDLOG_INLINE void drop(const std::string &name) { details::registry::instance().drop(name); }
+SPDLOG_INLINE void drop(const std::string& name) { details::registry::instance().drop(name); }
 
 SPDLOG_INLINE void drop_all() { details::registry::instance().drop_all(); }
 
@@ -77,7 +77,7 @@ SPDLOG_INLINE std::shared_ptr<spdlog::logger> default_logger() {
     return details::registry::instance().default_logger();
 }
 
-SPDLOG_INLINE spdlog::logger *default_logger_raw() {
+SPDLOG_INLINE spdlog::logger* default_logger_raw() {
     return details::registry::instance().get_default_raw();
 }
 

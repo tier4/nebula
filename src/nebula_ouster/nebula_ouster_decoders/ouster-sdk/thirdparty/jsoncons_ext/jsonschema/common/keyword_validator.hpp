@@ -8,149 +8,129 @@
 #define JSONCONS_JSONSCHEMA_COMMON_KEYWORD_VALIDATOR_HPP
 
 #include <jsoncons/config/jsoncons_config.hpp>
-#include <jsoncons/uri.hpp>
 #include <jsoncons/json.hpp>
+#include <jsoncons/uri.hpp>
 #include <jsoncons_ext/jsonpointer/jsonpointer.hpp>
 #include <jsoncons_ext/jsonschema/jsonschema_error.hpp>
 
-namespace jsoncons {
-namespace jsonschema {
+namespace jsoncons
+{
+namespace jsonschema
+{
 
-    // Interface for validation error handlers
-    class error_reporter
-    {
-        bool fail_early_;
-        std::size_t error_count_;
-    public:
-        error_reporter(bool fail_early = false)
-            : fail_early_(fail_early), error_count_(0)
-        {
-        }
+// Interface for validation error handlers
+class error_reporter
+{
+  bool fail_early_;
+  std::size_t error_count_;
 
-        virtual ~error_reporter() = default;
+public:
+  error_reporter(bool fail_early = false) : fail_early_(fail_early), error_count_(0) {}
 
-        void error(const validation_output& o)
-        {
-            ++error_count_;
-            do_error(o);
-        }
+  virtual ~error_reporter() = default;
 
-        std::size_t error_count() const
-        {
-            return error_count_;
-        }
+  void error(const validation_output & o)
+  {
+    ++error_count_;
+    do_error(o);
+  }
 
-        bool fail_early() const
-        {
-            return fail_early_;
-        }
+  std::size_t error_count() const { return error_count_; }
 
-    private:
-        virtual void do_error(const validation_output& /* e */) = 0;
-    };
+  bool fail_early() const { return fail_early_; }
 
-    template <class Json>
-    class keyword_validator 
-    {
-        std::string schema_path_;
-    public:
-        using validator_type = std::unique_ptr<keyword_validator<Json>>;
-        using self_pointer = keyword_validator<Json>*;
+private:
+  virtual void do_error(const validation_output & /* e */) = 0;
+};
 
-        keyword_validator(const std::string& schema_path)
-            : schema_path_(schema_path)
-        {
-        }
+template <class Json>
+class keyword_validator
+{
+  std::string schema_path_;
 
-        keyword_validator(const keyword_validator&) = delete;
-        keyword_validator(keyword_validator&&) = default;
-        keyword_validator& operator=(const keyword_validator&) = delete;
-        keyword_validator& operator=(keyword_validator&&) = default;
+public:
+  using validator_type = std::unique_ptr<keyword_validator<Json>>;
+  using self_pointer = keyword_validator<Json> *;
 
-        virtual ~keyword_validator() = default;
+  keyword_validator(const std::string & schema_path) : schema_path_(schema_path) {}
 
-        const std::string& schema_path() const
-        {
-            return schema_path_;
-        }
+  keyword_validator(const keyword_validator &) = delete;
+  keyword_validator(keyword_validator &&) = default;
+  keyword_validator & operator=(const keyword_validator &) = delete;
+  keyword_validator & operator=(keyword_validator &&) = default;
 
-        void validate(const Json& instance, 
-                      const jsonpointer::json_pointer& instance_location, 
-                      error_reporter& reporter, 
-                      Json& patch) const 
-        {
-            do_validate(instance, 
-                        instance_location,
-                        reporter,
-                        patch);
-        }
+  virtual ~keyword_validator() = default;
 
-        virtual jsoncons::optional<Json> get_default_value(const jsonpointer::json_pointer&, const Json&, error_reporter&) const
-        {
-            return jsoncons::optional<Json>();
-        }
+  const std::string & schema_path() const { return schema_path_; }
 
-    private:
-        virtual void do_validate(const Json& instance, 
-                                 const jsonpointer::json_pointer& instance_location, 
-                                 error_reporter& reporter, 
-                                 Json& patch) const = 0;
-    };
+  void validate(
+    const Json & instance, const jsonpointer::json_pointer & instance_location,
+    error_reporter & reporter, Json & patch) const
+  {
+    do_validate(instance, instance_location, reporter, patch);
+  }
 
-    template <class Json>
-    using uri_resolver = std::function<Json(const jsoncons::uri & /*id*/)>;
+  virtual jsoncons::optional<Json> get_default_value(
+    const jsonpointer::json_pointer &, const Json &, error_reporter &) const
+  {
+    return jsoncons::optional<Json>();
+  }
 
-    template <class Json>
-    class reference_schema : public keyword_validator<Json>
-    {
-        using validator_type = typename std::unique_ptr<keyword_validator<Json>>;
-        using validator_pointer = typename keyword_validator<Json>::self_pointer;
+private:
+  virtual void do_validate(
+    const Json & instance, const jsonpointer::json_pointer & instance_location,
+    error_reporter & reporter, Json & patch) const = 0;
+};
 
-        validator_pointer referred_schema_;
+template <class Json>
+using uri_resolver = std::function<Json(const jsoncons::uri & /*id*/)>;
 
-    public:
-        reference_schema(const std::string& id)
-            : keyword_validator<Json>(id), referred_schema_(nullptr) {}
+template <class Json>
+class reference_schema : public keyword_validator<Json>
+{
+  using validator_type = typename std::unique_ptr<keyword_validator<Json>>;
+  using validator_pointer = typename keyword_validator<Json>::self_pointer;
 
-        void set_referred_schema(validator_pointer target) { referred_schema_ = target; }
+  validator_pointer referred_schema_;
 
-    private:
+public:
+  reference_schema(const std::string & id) : keyword_validator<Json>(id), referred_schema_(nullptr)
+  {
+  }
 
-        void do_validate(const Json& instance, 
-                         const jsonpointer::json_pointer& instance_location, 
-                         error_reporter& reporter, 
-                         Json& patch) const override
-        {
-            if (!referred_schema_)
-            {
-                reporter.error(validation_output("", 
-                                                 this->schema_path(), 
-                                                 instance_location.to_uri_fragment(), 
-                                                 "Unresolved schema reference " + this->schema_path()));
-                return;
-            }
+  void set_referred_schema(validator_pointer target) { referred_schema_ = target; }
 
-            referred_schema_->validate(instance, instance_location, reporter, patch);
-        }
+private:
+  void do_validate(
+    const Json & instance, const jsonpointer::json_pointer & instance_location,
+    error_reporter & reporter, Json & patch) const override
+  {
+    if (!referred_schema_) {
+      reporter.error(validation_output(
+        "", this->schema_path(), instance_location.to_uri_fragment(),
+        "Unresolved schema reference " + this->schema_path()));
+      return;
+    }
 
-        jsoncons::optional<Json> get_default_value(const jsonpointer::json_pointer& instance_location, 
-                                                   const Json& instance, 
-                                                   error_reporter& reporter) const override
-        {
-            if (!referred_schema_)
-            {
-                reporter.error(validation_output("", 
-                                                 this->schema_path(), 
-                                                 instance_location.to_uri_fragment(), 
-                                                 "Unresolved schema reference " + this->schema_path()));
-                return jsoncons::optional<Json>();
-            }
+    referred_schema_->validate(instance, instance_location, reporter, patch);
+  }
 
-            return referred_schema_->get_default_value(instance_location, instance, reporter);
-        }
-    };
+  jsoncons::optional<Json> get_default_value(
+    const jsonpointer::json_pointer & instance_location, const Json & instance,
+    error_reporter & reporter) const override
+  {
+    if (!referred_schema_) {
+      reporter.error(validation_output(
+        "", this->schema_path(), instance_location.to_uri_fragment(),
+        "Unresolved schema reference " + this->schema_path()));
+      return jsoncons::optional<Json>();
+    }
 
-} // namespace jsonschema
-} // namespace jsoncons
+    return referred_schema_->get_default_value(instance_location, instance, reporter);
+  }
+};
 
-#endif // JSONCONS_JSONSCHEMA_KEYWORD_VALIDATOR_HPP
+}  // namespace jsonschema
+}  // namespace jsoncons
+
+#endif  // JSONCONS_JSONSCHEMA_KEYWORD_VALIDATOR_HPP

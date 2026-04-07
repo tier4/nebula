@@ -60,43 +60,42 @@ extern "C" {
 // Buffer returned by library
 struct ZPNG_Buffer
 {
-    // Pointer to data
-    unsigned char* Data;
+  // Pointer to data
+  unsigned char * Data;
 
-    // Size of buffer in bytes
-    unsigned Bytes;
+  // Size of buffer in bytes
+  unsigned Bytes;
 };
 
 // Image data returned by the library
 struct ZPNG_ImageData
 {
-    // Pixel data
-    ZPNG_Buffer Buffer;
+  // Pixel data
+  ZPNG_Buffer Buffer;
 
-    // Number of bytes for each color channel (1-2)
-    unsigned BytesPerChannel;
+  // Number of bytes for each color channel (1-2)
+  unsigned BytesPerChannel;
 
-    // Number of channels for each pixel (1-4)
-    unsigned Channels;
+  // Number of channels for each pixel (1-4)
+  unsigned Channels;
 
-    // Width in pixels of image
-    unsigned WidthPixels;
+  // Width in pixels of image
+  unsigned WidthPixels;
 
-    // Height in pixels of image
-    unsigned HeightPixels;
+  // Height in pixels of image
+  unsigned HeightPixels;
 
-    // Width of pixel row in bytes
-    unsigned StrideBytes;
+  // Width of pixel row in bytes
+  unsigned StrideBytes;
 };
 
 struct ZPNG_Allocator
 {
-    // optional
-    void* AllocatorData;
-    
-    void* (*Allocator)(uint64_t len, void*);
-};
+  // optional
+  void * AllocatorData;
 
+  void * (*Allocator)(uint64_t len, void *);
+};
 
 //------------------------------------------------------------------------------
 // API
@@ -111,15 +110,10 @@ struct ZPNG_Allocator
     On success returns a valid data pointer.
     On failure returns a null pointer.
 */
-ZPNG_Buffer ZPNG_Compress(
-    const ZPNG_ImageData* imageData
-);
+ZPNG_Buffer ZPNG_Compress(const ZPNG_ImageData * imageData);
 
 ZPNG_Buffer ZPNG_CompressEx(
-    const ZPNG_ImageData* imageData,
-    const ZPNG_Allocator* allocator,
-    int compressionLevel
-);
+  const ZPNG_ImageData * imageData, const ZPNG_Allocator * allocator, int compressionLevel);
 
 /*
     ZPNG_Decompress()
@@ -131,14 +125,9 @@ ZPNG_Buffer ZPNG_CompressEx(
     On success returns a valid data pointer.
     On failure returns a null pointer.
 */
-ZPNG_ImageData ZPNG_Decompress(
-    ZPNG_Buffer buffer
-);
+ZPNG_ImageData ZPNG_Decompress(ZPNG_Buffer buffer);
 
-ZPNG_ImageData ZPNG_DecompressEx(
-    ZPNG_Buffer buffer,
-    const ZPNG_Allocator* allocator
-);
+ZPNG_ImageData ZPNG_DecompressEx(ZPNG_Buffer buffer, const ZPNG_Allocator * allocator);
 
 /*
     ZPNG_Free()
@@ -147,14 +136,10 @@ ZPNG_ImageData ZPNG_DecompressEx(
 
     This will also set the buffer data pointer to null.
 */
-void ZPNG_Free(
-    ZPNG_Buffer* buffer
-);
-
+void ZPNG_Free(ZPNG_Buffer * buffer);
 
 #ifdef __cplusplus
 }
 #endif
 
-
-#endif // CAT_ZPNG_H
+#endif  // CAT_ZPNG_H

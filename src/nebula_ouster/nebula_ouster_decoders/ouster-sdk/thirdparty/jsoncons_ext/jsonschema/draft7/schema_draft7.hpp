@@ -9,16 +9,19 @@
 
 #include <jsoncons/json.hpp>
 
-namespace jsoncons {
-namespace jsonschema {
-namespace draft7 {
-    
-    template <class Json>
-    struct schema_draft7
-    {
-        static Json get_schema() 
-        {
-            static Json schema = Json::parse(R"(
+namespace jsoncons
+{
+namespace jsonschema
+{
+namespace draft7
+{
+
+template <class Json>
+struct schema_draft7
+{
+  static Json get_schema()
+  {
+    static Json schema = Json::parse(R"(
     {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "$id": "http://json-schema.org/draft-07/schema#",
@@ -186,15 +189,15 @@ namespace draft7 {
             "not": { "$ref": "#" }
         },
         "default": true
-    } 
-            )"); 
+    }
+            )");
 
-            return schema;
-        }
-    };
+    return schema;
+  }
+};
 
-} // namespace draft7
-} // namespace jsonschema
-} // namespace jsoncons
+}  // namespace draft7
+}  // namespace jsonschema
+}  // namespace jsoncons
 
-#endif // JSONCONS_JSONSCHEMA_SCHEMA_DRAFT7_HPP
+#endif  // JSONCONS_JSONSCHEMA_SCHEMA_DRAFT7_HPP

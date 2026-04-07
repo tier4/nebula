@@ -16,7 +16,7 @@
 namespace spdlog {
 namespace sinks {
 template <typename ConsoleMutex>
-SPDLOG_INLINE wincolor_sink<ConsoleMutex>::wincolor_sink(void *out_handle, color_mode mode)
+SPDLOG_INLINE wincolor_sink<ConsoleMutex>::wincolor_sink(void* out_handle, color_mode mode)
     : out_handle_(out_handle),
       mutex_(ConsoleMutex::mutex()),
       formatter_(details::make_unique<spdlog::pattern_formatter>()) {
@@ -48,7 +48,7 @@ void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::set_color(level::level_enum leve
 }
 
 template <typename ConsoleMutex>
-void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::log(const details::log_msg &msg) {
+void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::log(const details::log_msg& msg) {
     if (out_handle_ == nullptr || out_handle_ == INVALID_HANDLE_VALUE) {
         return;
     }
@@ -80,7 +80,7 @@ void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::flush() {
 }
 
 template <typename ConsoleMutex>
-void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::set_pattern(const std::string &pattern) {
+void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::set_pattern(const std::string& pattern) {
     std::lock_guard<mutex_t> lock(mutex_);
     formatter_ = std::unique_ptr<spdlog::formatter>(new pattern_formatter(pattern));
 }
@@ -130,7 +130,7 @@ wincolor_sink<ConsoleMutex>::set_foreground_color_(std::uint16_t attribs) {
 
 // print a range of formatted message to console
 template <typename ConsoleMutex>
-void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::print_range_(const memory_buf_t &formatted,
+void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::print_range_(const memory_buf_t& formatted,
                                                              size_t start,
                                                              size_t end) {
     if (end > start) {
@@ -142,7 +142,7 @@ void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::print_range_(const memory_buf_t 
 }
 
 template <typename ConsoleMutex>
-void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::write_to_file_(const memory_buf_t &formatted) {
+void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::write_to_file_(const memory_buf_t& formatted) {
     auto size = static_cast<DWORD>(formatted.size());
     DWORD bytes_written = 0;
     auto ignored = ::WriteFile(static_cast<HANDLE>(out_handle_), formatted.data(), size,

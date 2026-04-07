@@ -29,7 +29,7 @@
 
 #ifndef SPDLOG_NO_EXCEPTIONS
     #define SPDLOG_LOGGER_CATCH(location)                                                 \
-        catch (const std::exception &ex) {                                                \
+        catch (const std::exception& ex) {                                                \
             if (location.filename) {                                                      \
                 err_handler_(fmt_lib::format(SPDLOG_FMT_STRING("{} [{}({})]"), ex.what(), \
                                              location.filename, location.line));          \
@@ -70,31 +70,31 @@ public:
 
     virtual ~logger() = default;
 
-    logger(const logger &other);
-    logger(logger &&other) SPDLOG_NOEXCEPT;
-    logger &operator=(logger other) SPDLOG_NOEXCEPT;
-    void swap(spdlog::logger &other) SPDLOG_NOEXCEPT;
+    logger(const logger& other);
+    logger(logger&& other) SPDLOG_NOEXCEPT;
+    logger& operator=(logger other) SPDLOG_NOEXCEPT;
+    void swap(spdlog::logger& other) SPDLOG_NOEXCEPT;
 
     template <typename... Args>
-    void log(source_loc loc, level::level_enum lvl, format_string_t<Args...> fmt, Args &&...args) {
+    void log(source_loc loc, level::level_enum lvl, format_string_t<Args...> fmt, Args&&... args) {
         log_(loc, lvl, details::to_string_view(fmt), std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void log(level::level_enum lvl, format_string_t<Args...> fmt, Args &&...args) {
+    void log(level::level_enum lvl, format_string_t<Args...> fmt, Args&&... args) {
         log(source_loc{}, lvl, fmt, std::forward<Args>(args)...);
     }
 
     template <typename T>
-    void log(level::level_enum lvl, const T &msg) {
+    void log(level::level_enum lvl, const T& msg) {
         log(source_loc{}, lvl, msg);
     }
 
     // T cannot be statically converted to format string (including string_view/wstring_view)
     template <class T,
-              typename std::enable_if<!is_convertible_to_any_format_string<const T &>::value,
+              typename std::enable_if<!is_convertible_to_any_format_string<const T&>::value,
                                       int>::type = 0>
-    void log(source_loc loc, level::level_enum lvl, const T &msg) {
+    void log(source_loc loc, level::level_enum lvl, const T& msg) {
         log(loc, lvl, "{}", msg);
     }
 
@@ -126,43 +126,43 @@ public:
     void log(level::level_enum lvl, string_view_t msg) { log(source_loc{}, lvl, msg); }
 
     template <typename... Args>
-    void trace(format_string_t<Args...> fmt, Args &&...args) {
+    void trace(format_string_t<Args...> fmt, Args&&... args) {
         log(level::trace, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void debug(format_string_t<Args...> fmt, Args &&...args) {
+    void debug(format_string_t<Args...> fmt, Args&&... args) {
         log(level::debug, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void info(format_string_t<Args...> fmt, Args &&...args) {
+    void info(format_string_t<Args...> fmt, Args&&... args) {
         log(level::info, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void warn(format_string_t<Args...> fmt, Args &&...args) {
+    void warn(format_string_t<Args...> fmt, Args&&... args) {
         log(level::warn, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void error(format_string_t<Args...> fmt, Args &&...args) {
+    void error(format_string_t<Args...> fmt, Args&&... args) {
         log(level::err, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void critical(format_string_t<Args...> fmt, Args &&...args) {
+    void critical(format_string_t<Args...> fmt, Args&&... args) {
         log(level::critical, fmt, std::forward<Args>(args)...);
     }
 
 #ifdef SPDLOG_WCHAR_TO_UTF8_SUPPORT
     template <typename... Args>
-    void log(source_loc loc, level::level_enum lvl, wformat_string_t<Args...> fmt, Args &&...args) {
+    void log(source_loc loc, level::level_enum lvl, wformat_string_t<Args...> fmt, Args&&... args) {
         log_(loc, lvl, details::to_string_view(fmt), std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void log(level::level_enum lvl, wformat_string_t<Args...> fmt, Args &&...args) {
+    void log(level::level_enum lvl, wformat_string_t<Args...> fmt, Args&&... args) {
         log(source_loc{}, lvl, fmt, std::forward<Args>(args)...);
     }
 
@@ -198,63 +198,63 @@ public:
     void log(level::level_enum lvl, wstring_view_t msg) { log(source_loc{}, lvl, msg); }
 
     template <typename... Args>
-    void trace(wformat_string_t<Args...> fmt, Args &&...args) {
+    void trace(wformat_string_t<Args...> fmt, Args&&... args) {
         log(level::trace, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void debug(wformat_string_t<Args...> fmt, Args &&...args) {
+    void debug(wformat_string_t<Args...> fmt, Args&&... args) {
         log(level::debug, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void info(wformat_string_t<Args...> fmt, Args &&...args) {
+    void info(wformat_string_t<Args...> fmt, Args&&... args) {
         log(level::info, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void warn(wformat_string_t<Args...> fmt, Args &&...args) {
+    void warn(wformat_string_t<Args...> fmt, Args&&... args) {
         log(level::warn, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void error(wformat_string_t<Args...> fmt, Args &&...args) {
+    void error(wformat_string_t<Args...> fmt, Args&&... args) {
         log(level::err, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void critical(wformat_string_t<Args...> fmt, Args &&...args) {
+    void critical(wformat_string_t<Args...> fmt, Args&&... args) {
         log(level::critical, fmt, std::forward<Args>(args)...);
     }
 #endif
 
     template <typename T>
-    void trace(const T &msg) {
+    void trace(const T& msg) {
         log(level::trace, msg);
     }
 
     template <typename T>
-    void debug(const T &msg) {
+    void debug(const T& msg) {
         log(level::debug, msg);
     }
 
     template <typename T>
-    void info(const T &msg) {
+    void info(const T& msg) {
         log(level::info, msg);
     }
 
     template <typename T>
-    void warn(const T &msg) {
+    void warn(const T& msg) {
         log(level::warn, msg);
     }
 
     template <typename T>
-    void error(const T &msg) {
+    void error(const T& msg) {
         log(level::err, msg);
     }
 
     template <typename T>
-    void critical(const T &msg) {
+    void critical(const T& msg) {
         log(level::critical, msg);
     }
 
@@ -270,7 +270,7 @@ public:
 
     level::level_enum level() const;
 
-    const std::string &name() const;
+    const std::string& name() const;
 
     // set formatting for the sinks in this logger.
     // each sink will get a separate instance of the formatter object.
@@ -294,9 +294,9 @@ public:
     level::level_enum flush_level() const;
 
     // sinks
-    const std::vector<sink_ptr> &sinks() const;
+    const std::vector<sink_ptr>& sinks() const;
 
-    std::vector<sink_ptr> &sinks();
+    std::vector<sink_ptr>& sinks();
 
     // error handler
     void set_error_handler(err_handler);
@@ -314,7 +314,7 @@ protected:
 
     // common implementation for after templated public api has been resolved
     template <typename... Args>
-    void log_(source_loc loc, level::level_enum lvl, string_view_t fmt, Args &&...args) {
+    void log_(source_loc loc, level::level_enum lvl, string_view_t fmt, Args&&... args) {
         bool log_enabled = should_log(lvl);
         bool traceback_enabled = tracer_.enabled();
         if (!log_enabled && !traceback_enabled) {
@@ -336,7 +336,7 @@ protected:
 
 #ifdef SPDLOG_WCHAR_TO_UTF8_SUPPORT
     template <typename... Args>
-    void log_(source_loc loc, level::level_enum lvl, wstring_view_t fmt, Args &&...args) {
+    void log_(source_loc loc, level::level_enum lvl, wstring_view_t fmt, Args&&... args) {
         bool log_enabled = should_log(lvl);
         bool traceback_enabled = tracer_.enabled();
         if (!log_enabled && !traceback_enabled) {
@@ -359,18 +359,18 @@ protected:
 
     // log the given message (if the given log level is high enough),
     // and save backtrace (if backtrace is enabled).
-    void log_it_(const details::log_msg &log_msg, bool log_enabled, bool traceback_enabled);
-    virtual void sink_it_(const details::log_msg &msg);
+    void log_it_(const details::log_msg& log_msg, bool log_enabled, bool traceback_enabled);
+    virtual void sink_it_(const details::log_msg& msg);
     virtual void flush_();
     void dump_backtrace_();
-    bool should_flush_(const details::log_msg &msg);
+    bool should_flush_(const details::log_msg& msg);
 
     // handle errors during logging.
     // default handler prints the error to stderr at max rate of 1 message/sec.
-    void err_handler_(const std::string &msg);
+    void err_handler_(const std::string& msg);
 };
 
-void swap(logger &a, logger &b);
+void swap(logger& a, logger& b);
 
 }  // namespace spdlog
 

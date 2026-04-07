@@ -14,7 +14,7 @@ namespace spdlog {
 namespace sinks {
 
 template <typename ConsoleMutex>
-SPDLOG_INLINE ansicolor_sink<ConsoleMutex>::ansicolor_sink(FILE *target_file, color_mode mode)
+SPDLOG_INLINE ansicolor_sink<ConsoleMutex>::ansicolor_sink(FILE* target_file, color_mode mode)
     : target_file_(target_file),
       mutex_(ConsoleMutex::mutex()),
       formatter_(details::make_unique<spdlog::pattern_formatter>())
@@ -38,7 +38,7 @@ SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::set_color(level::level_enum col
 }
 
 template <typename ConsoleMutex>
-SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::log(const details::log_msg &msg) {
+SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::log(const details::log_msg& msg) {
     // Wrap the originally formatted message in color codes.
     // If color is not supported in the terminal, log as is instead.
     std::lock_guard<mutex_t> lock(mutex_);
@@ -69,7 +69,7 @@ SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::flush() {
 }
 
 template <typename ConsoleMutex>
-SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::set_pattern(const std::string &pattern) {
+SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::set_pattern(const std::string& pattern) {
     std::lock_guard<mutex_t> lock(mutex_);
     formatter_ = std::unique_ptr<spdlog::formatter>(new pattern_formatter(pattern));
 }
@@ -105,19 +105,19 @@ SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::set_color_mode(color_mode mode)
 }
 
 template <typename ConsoleMutex>
-SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::print_ccode_(const string_view_t &color_code) {
+SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::print_ccode_(const string_view_t& color_code) {
     fwrite(color_code.data(), sizeof(char), color_code.size(), target_file_);
 }
 
 template <typename ConsoleMutex>
-SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::print_range_(const memory_buf_t &formatted,
+SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::print_range_(const memory_buf_t& formatted,
                                                               size_t start,
                                                               size_t end) {
     fwrite(formatted.data() + start, sizeof(char), end - start, target_file_);
 }
 
 template <typename ConsoleMutex>
-SPDLOG_INLINE std::string ansicolor_sink<ConsoleMutex>::to_string_(const string_view_t &sv) {
+SPDLOG_INLINE std::string ansicolor_sink<ConsoleMutex>::to_string_(const string_view_t& sv) {
     return std::string(sv.data(), sv.size());
 }
 

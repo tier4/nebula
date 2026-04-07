@@ -7,142 +7,121 @@
 #ifndef JSONCONS_BUFFER_READER_HPP
 #define JSONCONS_BUFFER_READER_HPP
 
-#include <cstddef>
-#include <string>
-#include <vector>
-#include <stdexcept>
-#include <system_error>
-#include <memory> // std::allocator_traits
-#include <vector> // std::vector
-#include <jsoncons/unicode_traits.hpp>
-#include <jsoncons/json_error.hpp> // json_errc
-#include <jsoncons/source.hpp>
+#include <jsoncons/json_error.hpp>  // json_errc
 #include <jsoncons/json_exception.hpp>
+#include <jsoncons/source.hpp>
+#include <jsoncons/unicode_traits.hpp>
 
-namespace jsoncons {
+#include <cstddef>
+#include <memory>  // std::allocator_traits
+#include <stdexcept>
+#include <string>
+#include <system_error>
+#include <vector>
+#include <vector>  // std::vector
 
-    // text_source_adaptor
+namespace jsoncons
+{
 
-    template<class Source>
-    class text_source_adaptor 
-    {
-    public:
-        using value_type = typename Source::value_type;
-    private:
-        Source source_;
-        bool bof_;
+// text_source_adaptor
 
-    public:
-        text_source_adaptor()
-            : bof_(true)
-        {
-        }
+template <class Source>
+class text_source_adaptor
+{
+public:
+  using value_type = typename Source::value_type;
 
-        template <class Sourceable>
-        text_source_adaptor(Sourceable&& source)
-            : source_(std::forward<Sourceable>(source)), bof_(true)
-        {
-        }
+private:
+  Source source_;
+  bool bof_;
 
-        bool eof() const
-        {
-            return source_.eof();
-        }
+public:
+  text_source_adaptor() : bof_(true) {}
 
-        bool is_error() const
-        {
-            return source_.is_error();  
-        }
+  template <class Sourceable>
+  text_source_adaptor(Sourceable && source) : source_(std::forward<Sourceable>(source)), bof_(true)
+  {
+  }
 
-        span<const value_type> read_buffer(std::error_code& ec)
-        {
-            if (source_.eof())
-            {
-                return span<const value_type>();
-            }
+  bool eof() const { return source_.eof(); }
 
-            auto s = source_.read_buffer();
-            const value_type* data = s.data();
-            std::size_t length = s.size();
+  bool is_error() const { return source_.is_error(); }
 
-            if (bof_ && length > 0)
-            {
-                auto r = unicode_traits::detect_encoding_from_bom(data, length);
-                if (!(r.encoding == unicode_traits::encoding_kind::utf8 || r.encoding == unicode_traits::encoding_kind::undetected))
-                {
-                    ec = json_errc::illegal_unicode_character;
-                    return span<const value_type>();
-                }
-                length -= (r.ptr - data);
-                data = r.ptr;
-                bof_ = false;
-            }
-            return span<const value_type>(data, length);           
-        }
-    };
+  span<const value_type> read_buffer(std::error_code & ec)
+  {
+    if (source_.eof()) {
+      return span<const value_type>();
+    }
 
-    // json_source_adaptor
+    auto s = source_.read_buffer();
+    const value_type * data = s.data();
+    std::size_t length = s.size();
 
-    template<class Source>
-    class json_source_adaptor 
-    {
-    public:
-        using value_type = typename Source::value_type;
-    private:
-        Source source_;
-        bool bof_;
+    if (bof_ && length > 0) {
+      auto r = unicode_traits::detect_encoding_from_bom(data, length);
+      if (!(r.encoding == unicode_traits::encoding_kind::utf8 ||
+            r.encoding == unicode_traits::encoding_kind::undetected)) {
+        ec = json_errc::illegal_unicode_character;
+        return span<const value_type>();
+      }
+      length -= (r.ptr - data);
+      data = r.ptr;
+      bof_ = false;
+    }
+    return span<const value_type>(data, length);
+  }
+};
 
-    public:
-        json_source_adaptor()
-            : bof_(true)
-        {
-        }
+// json_source_adaptor
 
-        template <class Sourceable>
-        json_source_adaptor(Sourceable&& source)
-            : source_(std::forward<Sourceable>(source)), bof_(true)
-        {
-        }
+template <class Source>
+class json_source_adaptor
+{
+public:
+  using value_type = typename Source::value_type;
 
-        bool eof() const
-        {
-            return source_.eof();
-        }
+private:
+  Source source_;
+  bool bof_;
 
-        bool is_error() const
-        {
-            return source_.is_error();  
-        }
+public:
+  json_source_adaptor() : bof_(true) {}
 
-        span<const value_type> read_buffer(std::error_code& ec)
-        {
-            if (source_.eof())
-            {
-                return span<const value_type>();
-            }
+  template <class Sourceable>
+  json_source_adaptor(Sourceable && source) : source_(std::forward<Sourceable>(source)), bof_(true)
+  {
+  }
 
-            auto s = source_.read_buffer();
-            const value_type* data = s.data();
-            std::size_t length = s.size();
+  bool eof() const { return source_.eof(); }
 
-            if (bof_ && length > 0)
-            {
-                auto r = unicode_traits::detect_json_encoding(data, length);
-                if (!(r.encoding == unicode_traits::encoding_kind::utf8 || r.encoding == unicode_traits::encoding_kind::undetected))
-                {
-                    ec = json_errc::illegal_unicode_character;
-                    return span<const value_type>();
-                }
-                length -= (r.ptr - data);
-                data = r.ptr;
-                bof_ = false;
-            }
-            
-            return span<const value_type>(data, length);           
-        }
-    };
+  bool is_error() const { return source_.is_error(); }
 
-} // namespace jsoncons
+  span<const value_type> read_buffer(std::error_code & ec)
+  {
+    if (source_.eof()) {
+      return span<const value_type>();
+    }
+
+    auto s = source_.read_buffer();
+    const value_type * data = s.data();
+    std::size_t length = s.size();
+
+    if (bof_ && length > 0) {
+      auto r = unicode_traits::detect_json_encoding(data, length);
+      if (!(r.encoding == unicode_traits::encoding_kind::utf8 ||
+            r.encoding == unicode_traits::encoding_kind::undetected)) {
+        ec = json_errc::illegal_unicode_character;
+        return span<const value_type>();
+      }
+      length -= (r.ptr - data);
+      data = r.ptr;
+      bof_ = false;
+    }
+
+    return span<const value_type>(data, length);
+  }
+};
+
+}  // namespace jsoncons
 
 #endif
-

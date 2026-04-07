@@ -38,7 +38,7 @@ public:
           use_raw_msg_(use_raw_msg) {}
 
 protected:
-    void sink_it_(const details::log_msg &msg) override {
+    void sink_it_(const details::log_msg& msg) override {
         const android_LogPriority priority = convert_to_android_(msg.level);
         memory_buf_t formatted;
         if (use_raw_msg_) {
@@ -47,7 +47,7 @@ protected:
             base_sink<Mutex>::formatter_->format(msg, formatted);
         }
         formatted.push_back('\0');
-        const char *msg_output = formatted.data();
+        const char* msg_output = formatted.data();
 
         // See system/core/liblog/logger_write.c for explanation of return value
         int ret = android_log(priority, tag_.c_str(), msg_output);
@@ -75,13 +75,13 @@ private:
     // when using the default log buffer, always log via __android_log_write.
     template <int ID = BufferID>
     typename std::enable_if<ID == static_cast<int>(log_id::LOG_ID_MAIN), int>::type android_log(
-        int prio, const char *tag, const char *text) {
+        int prio, const char* tag, const char* text) {
         return __android_log_write(prio, tag, text);
     }
 
     template <int ID = BufferID>
     typename std::enable_if<ID != static_cast<int>(log_id::LOG_ID_MAIN), int>::type android_log(
-        int prio, const char *tag, const char *text) {
+        int prio, const char* tag, const char* text) {
         return __android_log_buf_write(ID, prio, tag, text);
     }
 
@@ -121,14 +121,14 @@ using android_sink_buf_st = android_sink<details::null_mutex, BufferId>;
 // Create and register android syslog logger
 
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> android_logger_mt(const std::string &logger_name,
-                                                 const std::string &tag = "spdlog") {
+inline std::shared_ptr<logger> android_logger_mt(const std::string& logger_name,
+                                                 const std::string& tag = "spdlog") {
     return Factory::template create<sinks::android_sink_mt>(logger_name, tag);
 }
 
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> android_logger_st(const std::string &logger_name,
-                                                 const std::string &tag = "spdlog") {
+inline std::shared_ptr<logger> android_logger_st(const std::string& logger_name,
+                                                 const std::string& tag = "spdlog") {
     return Factory::template create<sinks::android_sink_st>(logger_name, tag);
 }
 

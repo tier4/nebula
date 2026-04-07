@@ -64,7 +64,7 @@ public:
             if (topic_ == nullptr) {
                 throw_spdlog_ex(fmt_lib::format("create topic failed err:{}", errstr));
             }
-        } catch (const std::exception &e) {
+        } catch (const std::exception& e) {
             throw_spdlog_ex(fmt_lib::format("error create kafka instance: {}", e.what()));
         }
     }
@@ -72,9 +72,9 @@ public:
     ~kafka_sink() { producer_->flush(config_.flush_timeout_ms); }
 
 protected:
-    void sink_it_(const details::log_msg &msg) override {
+    void sink_it_(const details::log_msg& msg) override {
         producer_->produce(topic_.get(), 0, RdKafka::Producer::RK_MSG_COPY,
-                           (void *)msg.payload.data(), msg.payload.size(), NULL, NULL);
+                           (void*)msg.payload.data(), msg.payload.size(), NULL, NULL);
     }
 
     void flush_() override { producer_->flush(config_.flush_timeout_ms); }
@@ -93,13 +93,13 @@ using kafka_sink_st = kafka_sink<spdlog::details::null_mutex>;
 }  // namespace sinks
 
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> kafka_logger_mt(const std::string &logger_name,
+inline std::shared_ptr<logger> kafka_logger_mt(const std::string& logger_name,
                                                spdlog::sinks::kafka_sink_config config) {
     return Factory::template create<sinks::kafka_sink_mt>(logger_name, config);
 }
 
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> kafka_logger_st(const std::string &logger_name,
+inline std::shared_ptr<logger> kafka_logger_st(const std::string& logger_name,
                                                spdlog::sinks::kafka_sink_config config) {
     return Factory::template create<sinks::kafka_sink_st>(logger_name, config);
 }

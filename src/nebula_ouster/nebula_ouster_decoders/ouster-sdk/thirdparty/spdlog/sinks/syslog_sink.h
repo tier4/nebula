@@ -35,11 +35,11 @@ public:
 
     ~syslog_sink() override { ::closelog(); }
 
-    syslog_sink(const syslog_sink &) = delete;
-    syslog_sink &operator=(const syslog_sink &) = delete;
+    syslog_sink(const syslog_sink&) = delete;
+    syslog_sink& operator=(const syslog_sink&) = delete;
 
 protected:
-    void sink_it_(const details::log_msg &msg) override {
+    void sink_it_(const details::log_msg& msg) override {
         string_view_t payload;
         memory_buf_t formatted;
         if (enable_formatting_) {
@@ -64,7 +64,7 @@ protected:
     //
     // Simply maps spdlog's log level to syslog priority level.
     //
-    int syslog_prio_from_level(const details::log_msg &msg) const {
+    int syslog_prio_from_level(const details::log_msg& msg) const {
         return syslog_levels_.at(static_cast<levels_array::size_type>(msg.level));
     }
 
@@ -82,8 +82,8 @@ using syslog_sink_st = syslog_sink<details::null_mutex>;
 
 // Create and register a syslog logger
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> syslog_logger_mt(const std::string &logger_name,
-                                                const std::string &syslog_ident = "",
+inline std::shared_ptr<logger> syslog_logger_mt(const std::string& logger_name,
+                                                const std::string& syslog_ident = "",
                                                 int syslog_option = 0,
                                                 int syslog_facility = LOG_USER,
                                                 bool enable_formatting = false) {
@@ -92,8 +92,8 @@ inline std::shared_ptr<logger> syslog_logger_mt(const std::string &logger_name,
 }
 
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> syslog_logger_st(const std::string &logger_name,
-                                                const std::string &syslog_ident = "",
+inline std::shared_ptr<logger> syslog_logger_st(const std::string& logger_name,
+                                                const std::string& syslog_ident = "",
                                                 int syslog_option = 0,
                                                 int syslog_facility = LOG_USER,
                                                 bool enable_formatting = false) {

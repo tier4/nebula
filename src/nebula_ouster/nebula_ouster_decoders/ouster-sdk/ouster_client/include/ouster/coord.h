@@ -6,9 +6,12 @@
 
 #include "ouster/eigen.h"  // NOLINT(unused-includes,misc-include-cleaner)
 
-namespace ouster {
-namespace sdk {
-namespace core {
+namespace ouster
+{
+namespace sdk
+{
+namespace core
+{
 
 /// A 3D coordinate represented as an Eigen vector of three floats.
 using Coord = Eigen::Vector3f;

@@ -55,8 +55,8 @@ struct local_alloc_t {
 
     SPDLOG_CONSTEXPR local_alloc_t() SPDLOG_NOEXCEPT : hlocal_(nullptr) {}
 
-    local_alloc_t(local_alloc_t const &) = delete;
-    local_alloc_t &operator=(local_alloc_t const &) = delete;
+    local_alloc_t(local_alloc_t const&) = delete;
+    local_alloc_t& operator=(local_alloc_t const&) = delete;
 
     ~local_alloc_t() SPDLOG_NOEXCEPT {
         if (hlocal_) {
@@ -68,7 +68,7 @@ struct local_alloc_t {
 /** Windows error */
 struct win32_error : public spdlog_ex {
     /** Formats an error report line: "user-message: error-code (system message)" */
-    static std::string format(std::string const &user_message, DWORD error_code = GetLastError()) {
+    static std::string format(std::string const& user_message, DWORD error_code = GetLastError()) {
         std::string system_message;
 
         local_alloc_t format_message_result{};
@@ -85,7 +85,7 @@ struct win32_error : public spdlog_ex {
         return fmt_lib::format("{}: {}{}", user_message, error_code, system_message);
     }
 
-    explicit win32_error(std::string const &func_name, DWORD error = GetLastError())
+    explicit win32_error(std::string const& func_name, DWORD error = GetLastError())
         : spdlog_ex(format(func_name, error)) {}
 };
 
@@ -114,7 +114,7 @@ public:
     }
 
     /** Retrieves pointer to the internal buffer contents as SID* */
-    SID *as_sid() const { return buffer_.empty() ? nullptr : (SID *)buffer_.data(); }
+    SID* as_sid() const { return buffer_.empty() ? nullptr : (SID*)buffer_.data(); }
 
     /** Get SID for the current user */
     static sid_t get_current_user_sid() {
@@ -148,12 +148,12 @@ public:
         }
 
         // create a wrapper of the SID data as stored in the user token
-        return sid_t::duplicate_sid(((TOKEN_USER *)buffer.data())->User.Sid);
+        return sid_t::duplicate_sid(((TOKEN_USER*)buffer.data())->User.Sid);
     }
 };
 
 struct eventlog {
-    static WORD get_event_type(details::log_msg const &msg) {
+    static WORD get_event_type(details::log_msg const& msg) {
         switch (msg.level) {
             case level::trace:
             case level::debug:
@@ -175,7 +175,7 @@ struct eventlog {
         }
     }
 
-    static WORD get_event_category(details::log_msg const &msg) { return (WORD)msg.level; }
+    static WORD get_event_category(details::log_msg const& msg) { return (WORD)msg.level; }
 };
 
 }  // namespace internal
@@ -203,7 +203,7 @@ private:
     }
 
 protected:
-    void sink_it_(const details::log_msg &msg) override {
+    void sink_it_(const details::log_msg& msg) override {
         using namespace internal;
 
         bool succeeded;
@@ -234,7 +234,7 @@ protected:
     void flush_() override {}
 
 public:
-    win_eventlog_sink(std::string const &source,
+    win_eventlog_sink(std::string const& source,
                       DWORD event_id = 1000 /* according to mscoree.dll */)
         : source_(source),
           event_id_(event_id) {

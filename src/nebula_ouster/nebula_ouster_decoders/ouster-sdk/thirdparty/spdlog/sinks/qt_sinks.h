@@ -29,7 +29,7 @@ namespace sinks {
 template <typename Mutex>
 class qt_sink : public base_sink<Mutex> {
 public:
-    qt_sink(QObject *qt_object, std::string meta_method)
+    qt_sink(QObject* qt_object, std::string meta_method)
         : qt_object_(qt_object),
           meta_method_(std::move(meta_method)) {
         if (!qt_object_) {
@@ -40,7 +40,7 @@ public:
     ~qt_sink() { flush_(); }
 
 protected:
-    void sink_it_(const details::log_msg &msg) override {
+    void sink_it_(const details::log_msg& msg) override {
         memory_buf_t formatted;
         base_sink<Mutex>::formatter_->format(msg, formatted);
         const string_view_t str = string_view_t(formatted.data(), formatted.size());
@@ -52,7 +52,7 @@ protected:
     void flush_() override {}
 
 private:
-    QObject *qt_object_ = nullptr;
+    QObject* qt_object_ = nullptr;
     std::string meta_method_;
 };
 
@@ -65,7 +65,7 @@ private:
 template <typename Mutex>
 class qt_color_sink : public base_sink<Mutex> {
 public:
-    qt_color_sink(QTextEdit *qt_text_edit,
+    qt_color_sink(QTextEdit* qt_text_edit,
                   int max_lines,
                   bool dark_colors = false,
                   bool is_utf8 = false)
@@ -112,12 +112,12 @@ public:
         colors_.at(static_cast<size_t>(color_level)) = format;
     }
 
-    QTextCharFormat &get_level_color(level::level_enum color_level) {
+    QTextCharFormat& get_level_color(level::level_enum color_level) {
         std::lock_guard<Mutex> lock(base_sink<Mutex>::mutex_);
         return colors_.at(static_cast<size_t>(color_level));
     }
 
-    QTextCharFormat &get_default_color() {
+    QTextCharFormat& get_default_color() {
         std::lock_guard<Mutex> lock(base_sink<Mutex>::mutex_);
         return default_color_;
     }
@@ -125,7 +125,7 @@ public:
 protected:
     struct invoke_params {
         invoke_params(int max_lines,
-                      QTextEdit *q_text_edit,
+                      QTextEdit* q_text_edit,
                       QString payload,
                       QTextCharFormat default_color,
                       QTextCharFormat level_color,
@@ -139,7 +139,7 @@ protected:
               color_range_start(color_range_start),
               color_range_end(color_range_end) {}
         int max_lines;
-        QTextEdit *q_text_edit;
+        QTextEdit* q_text_edit;
         QString payload;
         QTextCharFormat default_color;
         QTextCharFormat level_color;
@@ -147,7 +147,7 @@ protected:
         int color_range_end;
     };
 
-    void sink_it_(const details::log_msg &msg) override {
+    void sink_it_(const details::log_msg& msg) override {
         memory_buf_t formatted;
         base_sink<Mutex>::formatter_->format(msg, formatted);
 
@@ -186,7 +186,7 @@ protected:
     // prematurely before it is invoked.
 
     static void invoke_method_(invoke_params params) {
-        auto *document = params.q_text_edit->document();
+        auto* document = params.q_text_edit->document();
         QTextCursor cursor(document);
 
         // remove first blocks if number of blocks exceeds max_lines
@@ -218,7 +218,7 @@ protected:
         cursor.insertText(params.payload.mid(params.color_range_end));
     }
 
-    QTextEdit *qt_text_edit_;
+    QTextEdit* qt_text_edit_;
     int max_lines_;
     bool is_utf8_;
     QTextCharFormat default_color_;
@@ -240,52 +240,52 @@ using qt_color_sink_st = qt_color_sink<details::null_mutex>;
 
 // log to QTextEdit
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> qt_logger_mt(const std::string &logger_name,
-                                            QTextEdit *qt_object,
-                                            const std::string &meta_method = "append") {
+inline std::shared_ptr<logger> qt_logger_mt(const std::string& logger_name,
+                                            QTextEdit* qt_object,
+                                            const std::string& meta_method = "append") {
     return Factory::template create<sinks::qt_sink_mt>(logger_name, qt_object, meta_method);
 }
 
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> qt_logger_st(const std::string &logger_name,
-                                            QTextEdit *qt_object,
-                                            const std::string &meta_method = "append") {
+inline std::shared_ptr<logger> qt_logger_st(const std::string& logger_name,
+                                            QTextEdit* qt_object,
+                                            const std::string& meta_method = "append") {
     return Factory::template create<sinks::qt_sink_st>(logger_name, qt_object, meta_method);
 }
 
 // log to QPlainTextEdit
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> qt_logger_mt(const std::string &logger_name,
-                                            QPlainTextEdit *qt_object,
-                                            const std::string &meta_method = "appendPlainText") {
+inline std::shared_ptr<logger> qt_logger_mt(const std::string& logger_name,
+                                            QPlainTextEdit* qt_object,
+                                            const std::string& meta_method = "appendPlainText") {
     return Factory::template create<sinks::qt_sink_mt>(logger_name, qt_object, meta_method);
 }
 
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> qt_logger_st(const std::string &logger_name,
-                                            QPlainTextEdit *qt_object,
-                                            const std::string &meta_method = "appendPlainText") {
+inline std::shared_ptr<logger> qt_logger_st(const std::string& logger_name,
+                                            QPlainTextEdit* qt_object,
+                                            const std::string& meta_method = "appendPlainText") {
     return Factory::template create<sinks::qt_sink_st>(logger_name, qt_object, meta_method);
 }
 // log to QObject
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> qt_logger_mt(const std::string &logger_name,
-                                            QObject *qt_object,
-                                            const std::string &meta_method) {
+inline std::shared_ptr<logger> qt_logger_mt(const std::string& logger_name,
+                                            QObject* qt_object,
+                                            const std::string& meta_method) {
     return Factory::template create<sinks::qt_sink_mt>(logger_name, qt_object, meta_method);
 }
 
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> qt_logger_st(const std::string &logger_name,
-                                            QObject *qt_object,
-                                            const std::string &meta_method) {
+inline std::shared_ptr<logger> qt_logger_st(const std::string& logger_name,
+                                            QObject* qt_object,
+                                            const std::string& meta_method) {
     return Factory::template create<sinks::qt_sink_st>(logger_name, qt_object, meta_method);
 }
 
 // log to QTextEdit with colorized output
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> qt_color_logger_mt(const std::string &logger_name,
-                                                  QTextEdit *qt_text_edit,
+inline std::shared_ptr<logger> qt_color_logger_mt(const std::string& logger_name,
+                                                  QTextEdit* qt_text_edit,
                                                   int max_lines,
                                                   bool is_utf8 = false) {
     return Factory::template create<sinks::qt_color_sink_mt>(logger_name, qt_text_edit, max_lines,
@@ -293,8 +293,8 @@ inline std::shared_ptr<logger> qt_color_logger_mt(const std::string &logger_name
 }
 
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> qt_color_logger_st(const std::string &logger_name,
-                                                  QTextEdit *qt_text_edit,
+inline std::shared_ptr<logger> qt_color_logger_st(const std::string& logger_name,
+                                                  QTextEdit* qt_text_edit,
                                                   int max_lines,
                                                   bool is_utf8 = false) {
     return Factory::template create<sinks::qt_color_sink_st>(logger_name, qt_text_edit, max_lines,

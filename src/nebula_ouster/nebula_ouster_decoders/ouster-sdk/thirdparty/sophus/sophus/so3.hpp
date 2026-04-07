@@ -516,8 +516,8 @@ class SO3 : public SO3Base<SO3<Scalar_, Options>> {
   SOPHUS_FUNC SO3(Transformation const& R) : unit_quaternion_(R) {
     SOPHUS_ENSURE(isOrthogonal(R), "R is not orthogonal:\n {}", "%s",
                   SOPHUS_FMT_ARG(R * R.transpose()));
-    SOPHUS_ENSURE(R.determinant() > Scalar(0), "det(R) is not positive: {}", "%s",
-                  SOPHUS_FMT_ARG(R.determinant()));
+    SOPHUS_ENSURE(R.determinant() > Scalar(0), "det(R) is not positive: {}",
+                  "%s", SOPHUS_FMT_ARG(R.determinant()));
   }
 
   /// Constructor from quaternion
@@ -723,8 +723,8 @@ class SO3 : public SO3Base<SO3<Scalar_, Options>> {
         QuaternionMember(real_factor, imag_factor * omega.x(),
                          imag_factor * omega.y(), imag_factor * omega.z());
     SOPHUS_ENSURE(abs(q.unit_quaternion().squaredNorm() - Scalar(1)) <
-                      Sophus::Constants<Scalar>::epsilon(), "%s",
-                  "SO3::exp failed! omega: {}, real: {}, img: {}",
+                      Sophus::Constants<Scalar>::epsilon(),
+                  "%s", "SO3::exp failed! omega: {}, real: {}, img: {}",
                   SOPHUS_FMT_ARG(omega.transpose()),
                   SOPHUS_FMT_ARG(real_factor), SOPHUS_FMT_ARG(imag_factor));
     return q;

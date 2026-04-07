@@ -7,83 +7,79 @@
 #ifndef JSONCONS_PRETTY_PRINT_HPP
 #define JSONCONS_PRETTY_PRINT_HPP
 
-#include <string>
-#include <exception>
-#include <cstring>
-#include <ostream>
-#include <memory>
-#include <typeinfo>
-#include <cstring>
+#include <jsoncons/json_encoder.hpp>
+#include <jsoncons/json_error.hpp>
 #include <jsoncons/json_exception.hpp>
 #include <jsoncons/json_options.hpp>
-#include <jsoncons/json_encoder.hpp>
 #include <jsoncons/json_type_traits.hpp>
-#include <jsoncons/json_error.hpp>
 
-namespace jsoncons {
+#include <cstring>
+#include <exception>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <typeinfo>
 
-template<class Json>
+namespace jsoncons
+{
+
+template <class Json>
 class json_printable
 {
 public:
-    using char_type = typename Json::char_type;
+  using char_type = typename Json::char_type;
 
-    json_printable(const Json& j, indenting indent)
-       : j_(&j), indenting_(indent)
-    {
-    }
+  json_printable(const Json & j, indenting indent) : j_(&j), indenting_(indent) {}
 
-    json_printable(const Json& j,
-                   const basic_json_encode_options<char_type>& options,
-                   indenting indent)
-       : j_(&j), options_(options), indenting_(indent)
-    {
-    }
+  json_printable(
+    const Json & j, const basic_json_encode_options<char_type> & options, indenting indent)
+  : j_(&j), options_(options), indenting_(indent)
+  {
+  }
 
-    void dump(std::basic_ostream<char_type>& os) const
-    {
-        j_->dump(os, options_, indenting_);
-    }
+  void dump(std::basic_ostream<char_type> & os) const { j_->dump(os, options_, indenting_); }
 
-    friend std::basic_ostream<char_type>& operator<<(std::basic_ostream<char_type>& os, const json_printable<Json>& pr)
-    {
-        pr.dump(os);
-        return os;
-    }
+  friend std::basic_ostream<char_type> & operator<<(
+    std::basic_ostream<char_type> & os, const json_printable<Json> & pr)
+  {
+    pr.dump(os);
+    return os;
+  }
 
-    const Json *j_;
-    basic_json_encode_options<char_type> options_;
-    indenting indenting_;
+  const Json * j_;
+  basic_json_encode_options<char_type> options_;
+  indenting indenting_;
+
 private:
-    json_printable();
+  json_printable();
 };
 
-template<class Json>
-json_printable<Json> print(const Json& j)
+template <class Json>
+json_printable<Json> print(const Json & j)
 {
-    return json_printable<Json>(j, indenting::no_indent);
+  return json_printable<Json>(j, indenting::no_indent);
 }
 
-template<class Json>
-json_printable<Json> print(const Json& j,
-                           const basic_json_encode_options<typename Json::char_type>& options)
+template <class Json>
+json_printable<Json> print(
+  const Json & j, const basic_json_encode_options<typename Json::char_type> & options)
 {
-    return json_printable<Json>(j, options, indenting::no_indent);
+  return json_printable<Json>(j, options, indenting::no_indent);
 }
 
-template<class Json>
-json_printable<Json> pretty_print(const Json& j)
+template <class Json>
+json_printable<Json> pretty_print(const Json & j)
 {
-    return json_printable<Json>(j, indenting::indent);
+  return json_printable<Json>(j, indenting::indent);
 }
 
-template<class Json>
-json_printable<Json> pretty_print(const Json& j,
-                                  const basic_json_encode_options<typename Json::char_type>& options)
+template <class Json>
+json_printable<Json> pretty_print(
+  const Json & j, const basic_json_encode_options<typename Json::char_type> & options)
 {
-    return json_printable<Json>(j, options, indenting::indent);
+  return json_printable<Json>(j, options, indenting::indent);
 }
 
-}
+}  // namespace jsoncons
 
 #endif

@@ -8,16 +8,20 @@
 
 #pragma once
 
-#include <Eigen/Core>
-#include <cmath>
-#include <utility>
-
 #include "ouster/typedefs.h"
 #include "ouster/visibility.h"
 
-namespace ouster {
-namespace sdk {
-namespace core {
+#include <Eigen/Core>
+
+#include <cmath>
+#include <utility>
+
+namespace ouster
+{
+namespace sdk
+{
+namespace core
+{
 
 /// Default target neighbour distance in meters (25 mm).
 constexpr double DEFAULT_TARGET_DISTANCE_METER = 0.025;
@@ -57,12 +61,10 @@ constexpr double DEFAULT_MIN_ANGLE_INCIDENCE_RAD = 1 * M_PI / 180.0;
  */
 OUSTER_API_FUNCTION
 MatrixX3dR normals(
-    const Eigen::Ref<const PointCloudXYZd> xyz,
-    const Eigen::Ref<const img_t<uint32_t>> range,
-    const Eigen::Ref<const MatrixX3dR> sensor_origins_xyz,
-    size_t pixel_search_range = 1,
-    double min_angle_of_incidence_rad = DEFAULT_MIN_ANGLE_INCIDENCE_RAD,
-    double target_distance_m = DEFAULT_TARGET_DISTANCE_METER);
+  const Eigen::Ref<const PointCloudXYZd> xyz, const Eigen::Ref<const img_t<uint32_t>> range,
+  const Eigen::Ref<const MatrixX3dR> sensor_origins_xyz, size_t pixel_search_range = 1,
+  double min_angle_of_incidence_rad = DEFAULT_MIN_ANGLE_INCIDENCE_RAD,
+  double target_distance_m = DEFAULT_TARGET_DISTANCE_METER);
 
 /**
  * Compute normal values for both returns of a destaggered point cloud.
@@ -99,14 +101,11 @@ MatrixX3dR normals(
  */
 OUSTER_API_FUNCTION
 std::pair<MatrixX3dR, MatrixX3dR> normals(
-    const Eigen::Ref<const PointCloudXYZd> xyz,
-    const Eigen::Ref<const img_t<uint32_t>> range,
-    const Eigen::Ref<const PointCloudXYZd> xyz2,
-    const Eigen::Ref<const img_t<uint32_t>> range2,
-    const Eigen::Ref<const MatrixX3dR> sensor_origins_xyz,
-    size_t pixel_search_range = 1,
-    double min_angle_of_incidence_rad = DEFAULT_MIN_ANGLE_INCIDENCE_RAD,
-    double target_distance_m = DEFAULT_TARGET_DISTANCE_METER);
+  const Eigen::Ref<const PointCloudXYZd> xyz, const Eigen::Ref<const img_t<uint32_t>> range,
+  const Eigen::Ref<const PointCloudXYZd> xyz2, const Eigen::Ref<const img_t<uint32_t>> range2,
+  const Eigen::Ref<const MatrixX3dR> sensor_origins_xyz, size_t pixel_search_range = 1,
+  double min_angle_of_incidence_rad = DEFAULT_MIN_ANGLE_INCIDENCE_RAD,
+  double target_distance_m = DEFAULT_TARGET_DISTANCE_METER);
 
 }  // namespace core
 }  // namespace sdk

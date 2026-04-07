@@ -38,8 +38,7 @@ SPDLOG_INLINE thread_pool::thread_pool(size_t q_max_items,
     : thread_pool(q_max_items, threads_n, on_thread_start, [] {}) {}
 
 SPDLOG_INLINE thread_pool::thread_pool(size_t q_max_items, size_t threads_n)
-    : thread_pool(
-          q_max_items, threads_n, [] {}, [] {}) {}
+    : thread_pool(q_max_items, threads_n, [] {}, [] {}) {}
 
 // message all threads to terminate gracefully join them
 SPDLOG_INLINE thread_pool::~thread_pool() {
@@ -48,21 +47,21 @@ SPDLOG_INLINE thread_pool::~thread_pool() {
             post_async_msg_(async_msg(async_msg_type::terminate), async_overflow_policy::block);
         }
 
-        for (auto &t : threads_) {
+        for (auto& t : threads_) {
             t.join();
         }
     }
     SPDLOG_CATCH_STD
 }
 
-void SPDLOG_INLINE thread_pool::post_log(async_logger_ptr &&worker_ptr,
-                                         const details::log_msg &msg,
+void SPDLOG_INLINE thread_pool::post_log(async_logger_ptr&& worker_ptr,
+                                         const details::log_msg& msg,
                                          async_overflow_policy overflow_policy) {
     async_msg async_m(std::move(worker_ptr), async_msg_type::log, msg);
     post_async_msg_(std::move(async_m), overflow_policy);
 }
 
-std::future<void> SPDLOG_INLINE thread_pool::post_flush(async_logger_ptr &&worker_ptr,
+std::future<void> SPDLOG_INLINE thread_pool::post_flush(async_logger_ptr&& worker_ptr,
                                                         async_overflow_policy overflow_policy) {
     std::promise<void> promise;
     std::future<void> future = promise.get_future();
@@ -81,7 +80,7 @@ void SPDLOG_INLINE thread_pool::reset_discard_counter() { q_.reset_discard_count
 
 size_t SPDLOG_INLINE thread_pool::queue_size() { return q_.size(); }
 
-void SPDLOG_INLINE thread_pool::post_async_msg_(async_msg &&new_msg,
+void SPDLOG_INLINE thread_pool::post_async_msg_(async_msg&& new_msg,
                                                 async_overflow_policy overflow_policy) {
     if (overflow_policy == async_overflow_policy::block) {
         q_.enqueue(std::move(new_msg));

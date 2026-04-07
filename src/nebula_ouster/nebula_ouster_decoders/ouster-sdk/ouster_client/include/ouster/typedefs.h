@@ -1,11 +1,14 @@
 #pragma once
-#include <Eigen/Core>
-
 #include "ouster/visibility.h"
 
-namespace ouster {
-namespace sdk {
-namespace core {
+#include <Eigen/Core>
+
+namespace ouster
+{
+namespace sdk
+{
+namespace core
+{
 
 /**
  * @brief Vector of 16 elements.
@@ -122,7 +125,7 @@ using mat4d = Eigen::Matrix<double, 4, 4, Eigen::DontAlign>;
  * @return mat4d matrix
  */
 OUSTER_API_FUNCTION
-mat4d mat4d_from_array(const std::array<double, mat4d::SizeAtCompileTime>& arr);
+mat4d mat4d_from_array(const std::array<double, mat4d::SizeAtCompileTime> & arr);
 
 /**
  * Convert a mat4d to a std::array<double, 16> (row-major)
@@ -130,7 +133,7 @@ mat4d mat4d_from_array(const std::array<double, mat4d::SizeAtCompileTime>& arr);
  * @return array of 16 doubles
  */
 OUSTER_API_FUNCTION
-std::array<double, mat4d::SizeAtCompileTime> mat4d_to_array(const mat4d& mat);
+std::array<double, mat4d::SizeAtCompileTime> mat4d_to_array(const mat4d & mat);
 
 /**
  * Point cloud with 3D coordinates, row-major layout (Nx3).
@@ -151,12 +154,9 @@ using PointCloudXYZd = PointCloudXYZ<double>;
 
 // Backward compatibility (will trigger a deprecation warning)
 template <typename T>
-using PointsT [[deprecated("Use PointCloudXYZ instead of PointsT")]] =
-    PointCloudXYZ<T>;
-using PointsD [[deprecated("Use PointCloudXYZd instead of PointsD")]] =
-    PointCloudXYZd;
-using PointsF [[deprecated("Use PointCloudXYZf instead of PointsF")]] =
-    PointCloudXYZf;
+using PointsT [[deprecated("Use PointCloudXYZ instead of PointsT")]] = PointCloudXYZ<T>;
+using PointsD [[deprecated("Use PointCloudXYZd instead of PointsD")]] = PointCloudXYZd;
+using PointsF [[deprecated("Use PointCloudXYZf instead of PointsF")]] = PointCloudXYZf;
 
 }  // namespace core
 }  // namespace sdk

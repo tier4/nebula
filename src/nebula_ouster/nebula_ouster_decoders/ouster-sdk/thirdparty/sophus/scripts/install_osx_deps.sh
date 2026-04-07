@@ -6,7 +6,6 @@ set -e # exit on error
 brew update
 brew install fmt
 
-
 # Build a specific version of ceres-solver instead of one shipped over brew
 curl https://raw.githubusercontent.com/Homebrew/homebrew-core/b0792ccba6e71cd028263ca7621db894afc602d2/Formula/ceres-solver.rb -o ceres-solver.rb
 patch <<EOF
@@ -26,7 +25,7 @@ patch <<EOF
 @@ -31,23 +31,16 @@
    depends_on "suite-sparse"
    depends_on "tbb"
- 
+
 -  # Fix compatibility with TBB 2021.1
 -  # See https://github.com/ceres-solver/ceres-solver/issues/669
 -  # Remove in the next release
@@ -34,7 +33,7 @@ patch <<EOF
 -    url "https://github.com/ceres-solver/ceres-solver/commit/941ea13475913ef8322584f7401633de9967ccc8.patch?full_index=1"
 -    sha256 "c61ca2ff1e92cc2134ba8e154bd9052717ba3fcae085e8f44957b9c22e6aa4ff"
 -  end
- 
+
    def install
      system "cmake", ".", *std_cmake_args,
                      "-DBUILD_SHARED_LIBS=ON",

@@ -36,8 +36,8 @@ public:
 
     ~systemd_sink() override {}
 
-    systemd_sink(const systemd_sink &) = delete;
-    systemd_sink &operator=(const systemd_sink &) = delete;
+    systemd_sink(const systemd_sink&) = delete;
+    systemd_sink& operator=(const systemd_sink&) = delete;
 
 protected:
     const std::string ident_;
@@ -45,7 +45,7 @@ protected:
     using levels_array = std::array<int, 7>;
     levels_array syslog_levels_;
 
-    void sink_it_(const details::log_msg &msg) override {
+    void sink_it_(const details::log_msg& msg) override {
         int err;
         string_view_t payload;
         memory_buf_t formatted;
@@ -106,15 +106,15 @@ using systemd_sink_st = systemd_sink<details::null_mutex>;
 
 // Create and register a syslog logger
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> systemd_logger_mt(const std::string &logger_name,
-                                                 const std::string &ident = "",
+inline std::shared_ptr<logger> systemd_logger_mt(const std::string& logger_name,
+                                                 const std::string& ident = "",
                                                  bool enable_formatting = false) {
     return Factory::template create<sinks::systemd_sink_mt>(logger_name, ident, enable_formatting);
 }
 
 template <typename Factory = spdlog::synchronous_factory>
-inline std::shared_ptr<logger> systemd_logger_st(const std::string &logger_name,
-                                                 const std::string &ident = "",
+inline std::shared_ptr<logger> systemd_logger_st(const std::string& logger_name,
+                                                 const std::string& ident = "",
                                                  bool enable_formatting = false) {
     return Factory::template create<sinks::systemd_sink_st>(logger_name, ident, enable_formatting);
 }
