@@ -2,6 +2,8 @@
 icon: lucide/rocket
 ---
 
+<!-- prettier-ignore-start -->
+
 # Cutting Releases
 
 Release rules at one glance:
@@ -54,3 +56,5 @@ as follows:
     is usually every 1-2 months. This means there is a significant time delay from cutting a
     release to users being able to install it via APT.
     Time-sensitive users should add Nebula to their `build_depends.repos` and do a source build.
+
+<!-- prettier-ignore-end -->
