@@ -41,24 +41,20 @@ float normalize_azimuth_deg(float az_deg)
 }  // namespace
 
 using ouster::sdk::core::LidarScan;
-using ouster::sdk::core::XYZLut;
-using ouster::sdk::core::SensorInfo;
 using ouster::sdk::core::RANGE_UNIT;
+using ouster::sdk::core::SensorInfo;
+using ouster::sdk::core::XYZLut;
 namespace ChanField = ouster::sdk::core::ChanField;
 
 NebulaPointCloudPtr nebula_point_cloud_from_lidar_scan(
-  const LidarScan & scan, const XYZLut & lut,
-  const FieldOfView<float, Degrees> & fov)
+  const LidarScan & scan, const XYZLut & lut, const FieldOfView<float, Degrees> & fov)
 {
   if (!scan.has_field(ChanField::RANGE) || scan.w == 0 || scan.h == 0) {
     return std::make_shared<NebulaPointCloud>();
   }
 
-
   const auto range_img = scan.field<uint32_t>(ChanField::RANGE);
-  const ouster::sdk::core::PointCloudXYZd xyz =
-    ouster::sdk::core::cartesian(range_img, lut);
-
+  const ouster::sdk::core::PointCloudXYZd xyz = ouster::sdk::core::cartesian(range_img, lut);
 
   const bool dual = scan.sensor_info->num_returns() > 1;
   const Eigen::Index h = static_cast<Eigen::Index>(scan.h);
@@ -87,8 +83,8 @@ NebulaPointCloudPtr nebula_point_cloud_from_lidar_scan(
         continue;
       }
 
-      const size_t i = static_cast<size_t>(row) * static_cast<size_t>(scan.w) +
-        static_cast<size_t>(col);
+      const size_t i =
+        static_cast<size_t>(row) * static_cast<size_t>(scan.w) + static_cast<size_t>(col);
 
       Eigen::Vector3d pt = xyz.row(i);
 
@@ -115,8 +111,8 @@ NebulaPointCloudPtr nebula_point_cloud_from_lidar_scan(
         tgt_pt.intensity = static_cast<std::uint8_t>(std::min<uint16_t>(255U, v >> 4));
       }
       // TODO[unaal]: retrieve return type from the sensor_info config
-      tgt_pt.return_type = static_cast<std::uint8_t>(
-        dual ? ReturnType::LAST : ReturnType::STRONGEST);
+      tgt_pt.return_type =
+        static_cast<std::uint8_t>(dual ? ReturnType::LAST : ReturnType::STRONGEST);
       tgt_pt.channel = static_cast<std::uint16_t>(row);
       tgt_pt.azimuth = deg2rad(azimuth_deg);
       tgt_pt.elevation = deg2rad(altitude_deg);
