@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>nebula_ouster_decoders</name>
+  <version>0.3.0</version>
+  <description>Nebula Ouster Decoders Library</description>
+  <maintainer email="ussama.naal@ouster.io">Ussama Naal</maintainer>
+
+  <license>Apache 2</license>
+  <author>Ouster</author>
+
+  <buildtool_depend>autoware_cmake</buildtool_depend>
+  <buildtool_depend>ros_environment</buildtool_depend>
+  <build_depend>eigen3_cmake_module</build_depend>
+  <depend>eigen</depend>
+  <depend>libssl-dev</depend>
+  <depend>libzip-dev</depend>
+  <depend>nebula_core_common</depend>
+  <depend>nebula_core_decoders</depend>
+  <depend>nebula_ouster_common</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
