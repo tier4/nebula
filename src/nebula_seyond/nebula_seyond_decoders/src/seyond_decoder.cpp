@@ -43,9 +43,9 @@ const uint8_t robinelite_channel_mapping[96] = {
 
 const int kPolygonMaxFacets = 4;
 const int kPolygonTableSize = 65;
-const int kInnoRobinWMaxSetNumber = 6;
-const int kInnoRobinELiteMaxSetNumber = 12;
-const int kInnoRobinE2XMaxSetNumber = 24;
+const int kRobinWMaxSetNumber = 6;
+const int kRobinELiteMaxSetNumber = 12;
+const int kRobinE2XMaxSetNumber = 24;
 const int kMaxReceiverInSet = 8;
 const int kHBHTableSize = 256;
 const int kHBVTableSize = 192;
@@ -64,21 +64,21 @@ const double kRobinNpsAdjustmentUnitMeters = 0.001;
 const size_t kAngleHVTableHeaderSize = 10;
 const size_t kRobinWTableMinSize =
   kAngleHVTableHeaderSize + sizeof(int16_t) * 2 * kPolygonMaxFacets * kPolygonTableSize *
-                              kInnoRobinWMaxSetNumber * kMaxReceiverInSet;
+                              kRobinWMaxSetNumber * kMaxReceiverInSet;
 const size_t kRobinELiteTableMinSize =
   kAngleHVTableHeaderSize + sizeof(int16_t) * 2 * kPolygonMaxFacets * kPolygonTableSize *
-                              kInnoRobinELiteMaxSetNumber * kMaxReceiverInSet;
+                              kRobinELiteMaxSetNumber * kMaxReceiverInSet;
 const size_t kRobinE2XTableMinSize =
   kAngleHVTableHeaderSize + sizeof(int16_t) * 2 * kPolygonMaxFacets * kPolygonTableSize *
-                              kInnoRobinE2XMaxSetNumber * kMaxReceiverInSet;
+                              kRobinE2XMaxSetNumber * kMaxReceiverInSet;
 const size_t kHummingbirdTableMinSize =
   kAngleHVTableHeaderSize + sizeof(int16_t) * 2 * kHBVTableSize * kHBHTableSize;
 
 const int kFalconKVAngleDiffBase = 196;
 const int kRobinWVAngleDiffBase = 240;
 const int kRobinE1XInsetLineOffset = 18;
-constexpr double kInnoAngleUnitsPerDegree = 32768.0 / 180.0;
-const uint16_t kInnoMagicNumberDataPacket = 0x176A;
+constexpr double packet_angle_units_per_degree = 32768.0 / 180.0;
+const uint16_t seyond_data_packet_magic_number = 0x176A;
 const uint8_t kItemTypeSpherePointCloud = 1;
 const uint8_t kItemTypeRobinESpherePointCloud = 5;
 const uint8_t kItemTypeRobinWSpherePointCloud = 7;
@@ -122,18 +122,18 @@ bool is_supported_compact_item_size(uint16_t item_size)
 
 bool is_robin_inside_compact_fov(const AngleHV & angle)
 {
-  constexpr int kFovLeft = static_cast<int>(-60.0 * kInnoAngleUnitsPerDegree);
-  constexpr int kFovRight = static_cast<int>(60.0 * kInnoAngleUnitsPerDegree);
-  return angle.h >= kFovLeft && angle.h <= kFovRight;
+  constexpr int fov_left = static_cast<int>(-60.0 * packet_angle_units_per_degree);
+  constexpr int fov_right = static_cast<int>(60.0 * packet_angle_units_per_degree);
+  return angle.h >= fov_left && angle.h <= fov_right;
 }
 
 bool is_hummingbird_inside_compact_fov(const AngleHV & angle)
 {
-  constexpr int kFovLeft = static_cast<int>(-70.0 * kInnoAngleUnitsPerDegree);
-  constexpr int kFovRight = static_cast<int>(70.0 * kInnoAngleUnitsPerDegree);
-  constexpr int kFovLow = static_cast<int>(-50.0 * kInnoAngleUnitsPerDegree);
-  constexpr int kFovHigh = static_cast<int>(50.0 * kInnoAngleUnitsPerDegree);
-  return angle.h >= kFovLeft && angle.h <= kFovRight && angle.v >= kFovLow && angle.v <= kFovHigh;
+  constexpr int fov_left = static_cast<int>(-70.0 * packet_angle_units_per_degree);
+  constexpr int fov_right = static_cast<int>(70.0 * packet_angle_units_per_degree);
+  constexpr int fov_low = static_cast<int>(-50.0 * packet_angle_units_per_degree);
+  constexpr int fov_high = static_cast<int>(50.0 * packet_angle_units_per_degree);
+  return angle.h >= fov_left && angle.h <= fov_right && angle.v >= fov_low && angle.v <= fov_high;
 }
 
 size_t compact_return_count(uint16_t item_size)
@@ -190,11 +190,11 @@ std::array<AngleHV, kCompactChannelCount> interpolate_robin_compact_angles(
   int max_set_number)
 {
   switch (max_set_number) {
-    case kInnoRobinWMaxSetNumber:
-      return interpolate_robin_compact_angles_impl<kInnoRobinWMaxSetNumber>(
+    case kRobinWMaxSetNumber:
+      return interpolate_robin_compact_angles_impl<kRobinWMaxSetNumber>(
         header, angle_hv_table, max_set_number);
-    case kInnoRobinE2XMaxSetNumber:
-      return interpolate_robin_compact_angles_impl<kInnoRobinE2XMaxSetNumber>(
+    case kRobinE2XMaxSetNumber:
+      return interpolate_robin_compact_angles_impl<kRobinE2XMaxSetNumber>(
         header, angle_hv_table, max_set_number);
     default:
       return {};
@@ -218,9 +218,11 @@ FalconAdjustment lookup_falcon_adjustment(int h_angle, int v_angle, uint32_t cha
   };
 
   adjustment.x =
-    quantize(kInnoPs2Nps[0][channel][v_index][h_index]) * kFalconNpsAdjustmentUnitMeters;
+    quantize(falcon_ps_to_nps_adjustment[0][channel][v_index][h_index]) *
+    kFalconNpsAdjustmentUnitMeters;
   adjustment.z =
-    quantize(kInnoPs2Nps[1][channel][v_index][h_index]) * kFalconNpsAdjustmentUnitMeters;
+    quantize(falcon_ps_to_nps_adjustment[1][channel][v_index][h_index]) *
+    kFalconNpsAdjustmentUnitMeters;
   return adjustment;
 }
 
@@ -242,9 +244,10 @@ RobinAdjustment interpolate_robin_w_adjustment(int h_angle, uint32_t scan_id)
   const int h_offset2 = kRobinNpsTableStep - h_offset;
 
   const auto interpolate_axis = [&](size_t axis) {
-    const int u = static_cast<int>(std::floor(robinW_kInnoPs2Nps[axis][scan_id][h_index] + 0.5));
+    const int u =
+      static_cast<int>(std::floor(robin_w_ps_to_nps_adjustment[axis][scan_id][h_index] + 0.5));
     const int v =
-      static_cast<int>(std::floor(robinW_kInnoPs2Nps[axis][scan_id][h_index + 1] + 0.5));
+      static_cast<int>(std::floor(robin_w_ps_to_nps_adjustment[axis][scan_id][h_index + 1] + 0.5));
     const int blended =
       (u * h_offset2 + v * h_offset + kRobinNpsTableHalfStep) >> kRobinNpsTableShift;
     return blended * kRobinNpsAdjustmentUnitMeters;
@@ -271,8 +274,9 @@ RobinAdjustment interpolate_robin_e2x_adjustment(int h_angle)
   const int h_offset2 = kRobinNpsTableStep - h_offset;
 
   const auto interpolate_axis = [&](size_t axis) {
-    const int u = static_cast<int>(std::floor(robinE2_kInnoPs2Nps[axis][h_index] + 0.5));
-    const int v = static_cast<int>(std::floor(robinE2_kInnoPs2Nps[axis][h_index + 1] + 0.5));
+    const int u = static_cast<int>(std::floor(robin_e2x_ps_to_nps_adjustment[axis][h_index] + 0.5));
+    const int v =
+      static_cast<int>(std::floor(robin_e2x_ps_to_nps_adjustment[axis][h_index + 1] + 0.5));
     const int blended =
       (u * h_offset2 + v * h_offset + kRobinNpsTableHalfStep) >> kRobinNpsTableShift;
     return blended * kRobinNpsAdjustmentUnitMeters;
@@ -301,7 +305,7 @@ SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & pack
   }
 
   const auto * packet = reinterpret_cast<const SeyondDataPacket *>(packet_data.data());
-  if (packet->common.magic_number != kInnoMagicNumberDataPacket) {
+  if (packet->common.magic_number != seyond_data_packet_magic_number) {
     return {0, 0};
   }
   if (packet->common.size < sizeof(SeyondDataPacket) || packet->common.size > packet_data.size()) {
@@ -388,7 +392,7 @@ void SeyondDecoder::parse_falcon_k(const SeyondDataPacket * packet)
   const auto * payload = reinterpret_cast<const uint8_t *>(packet) + sizeof(SeyondDataPacket);
   const auto * blocks = reinterpret_cast<const SeyondBlock *>(payload);
 
-  const double kRadPerInnoAngleUnit = M_PI / 32768.0;
+  const double radians_per_packet_angle_unit = M_PI / 32768.0;
   const double kMeterPerUnit = packet->long_distance_mode ? (1.0 / 100.0) : (1.0 / 200.0);
 
   int v_angle_diff_base = (calibration_.v_angle_offset != 0.0)
@@ -421,8 +425,8 @@ void SeyondDecoder::parse_falcon_k(const SeyondDataPacket * packet)
         va_raw += block.header.v_angle_diff_3 + 3 * v_angle_diff_base;
       }
 
-      double ha = ha_raw * kRadPerInnoAngleUnit;
-      double va = va_raw * kRadPerInnoAngleUnit;
+      double ha = ha_raw * radians_per_packet_angle_unit;
+      double va = va_raw * radians_per_packet_angle_unit;
       double radius = pt.radius * kMeterPerUnit;
 
       double cos_va = std::cos(va);
@@ -444,23 +448,23 @@ void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
 {
   const auto * payload = reinterpret_cast<const uint8_t *>(packet) + sizeof(SeyondDataPacket);
 
-  const double kRadPerInnoAngleUnit = M_PI / 32768.0;
+  const double radians_per_packet_angle_unit = M_PI / 32768.0;
   const double kMeterPerUnit = 1.0 / 400.0;
 
   const bool is_robin_w = (config_.sensor_model == SeyondSensorModel::ROBIN_W);
   const bool is_robin_e1x = (config_.sensor_model == SeyondSensorModel::ROBIN_E1X);
 
   int v_base = 0;
-  int max_set = kInnoRobinWMaxSetNumber;
+  int max_set = kRobinWMaxSetNumber;
   size_t table_min_size = kRobinWTableMinSize;
 
   if (is_robin_w) {
     v_base = (calibration_.v_angle_offset != 0.0) ? static_cast<int>(calibration_.v_angle_offset)
                                                   : kRobinWVAngleDiffBase;
-    max_set = kInnoRobinWMaxSetNumber;
+    max_set = kRobinWMaxSetNumber;
     table_min_size = kRobinWTableMinSize;
   } else if (is_robin_e1x) {
-    max_set = kInnoRobinELiteMaxSetNumber;
+    max_set = kRobinELiteMaxSetNumber;
     table_min_size = kRobinELiteTableMinSize;
   }
 
@@ -491,7 +495,7 @@ void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
         int set_num = header.scan_id % max_set;
         if (is_robin_w) {
           using RobinWTableType = AngleHV[kPolygonMaxFacets][kPolygonTableSize]
-                                         [kInnoRobinWMaxSetNumber][kMaxReceiverInSet];
+                                         [kRobinWMaxSetNumber][kMaxReceiverInSet];
           const auto & table =
             *reinterpret_cast<const RobinWTableType *>(calibration_.angle_hv_table.data() + 10);
           const AngleHV & b1 = table[header.facet][h_idx][set_num][ch];
@@ -500,7 +504,7 @@ void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
           va_raw = (b1.v * h_offset2 + b2.v * h_offset) >> kEncoderTableShift;
         } else {
           using RobinETableType = AngleHV[kPolygonMaxFacets][kPolygonTableSize]
-                                         [kInnoRobinELiteMaxSetNumber][kMaxReceiverInSet];
+                                         [kRobinELiteMaxSetNumber][kMaxReceiverInSet];
           const auto & table =
             *reinterpret_cast<const RobinETableType *>(calibration_.angle_hv_table.data() + 10);
           const AngleHV & b1 = table[header.facet][h_idx][set_num][ch];
@@ -528,8 +532,8 @@ void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
         }
       }
 
-      double ha = ha_raw * kRadPerInnoAngleUnit;
-      double va = va_raw * kRadPerInnoAngleUnit;
+      double ha = ha_raw * radians_per_packet_angle_unit;
+      double va = va_raw * radians_per_packet_angle_unit;
       double radius = pt.radius * kMeterPerUnit;
 
       double cos_va = std::cos(va);
@@ -574,10 +578,10 @@ void SeyondDecoder::parse_robin_compact(const SeyondDataPacket * packet)
   const bool is_robin_w_compact = packet->type == kItemTypeRobinWCompactPointCloud;
   const bool is_robin_e2x_compact = packet->type == kItemTypeRobinE2XCompactPointCloud;
   const int max_set_number =
-    is_robin_w_compact ? kInnoRobinWMaxSetNumber : kInnoRobinE2XMaxSetNumber;
+    is_robin_w_compact ? kRobinWMaxSetNumber : kRobinE2XMaxSetNumber;
   const size_t table_min_size = is_robin_w_compact ? kRobinWTableMinSize : kRobinE2XTableMinSize;
   const bool use_calibration = calibration_.angle_hv_table.size() >= table_min_size;
-  const double kRadPerInnoAngleUnit = M_PI / 32768.0;
+  const double radians_per_packet_angle_unit = M_PI / 32768.0;
   const double kMeterPerUnit = 1.0 / 400.0;
 
   for (uint32_t i = 0; i < packet->item_number; ++i) {
@@ -603,14 +607,14 @@ void SeyondDecoder::parse_robin_compact(const SeyondDataPacket * packet)
         double ha = 0.0;
         double va = 0.0;
         if (use_calibration) {
-          ha = static_cast<double>(angles[channel].h) * kRadPerInnoAngleUnit;
-          va = static_cast<double>(angles[channel].v) * kRadPerInnoAngleUnit;
+          ha = static_cast<double>(angles[channel].h) * radians_per_packet_angle_unit;
+          va = static_cast<double>(angles[channel].v) * radians_per_packet_angle_unit;
           if (!is_robin_inside_compact_fov(angles[channel])) {
             continue;
           }
         } else {
-          ha = static_cast<double>(header.p_angle) * kRadPerInnoAngleUnit;
-          va = static_cast<double>(header.g_angle) * kRadPerInnoAngleUnit;
+          ha = static_cast<double>(header.p_angle) * radians_per_packet_angle_unit;
+          va = static_cast<double>(header.g_angle) * radians_per_packet_angle_unit;
         }
 
         double radius = pt.radius * kMeterPerUnit;

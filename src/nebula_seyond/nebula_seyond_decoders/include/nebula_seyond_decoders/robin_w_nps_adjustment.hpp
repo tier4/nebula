@@ -6,7 +6,7 @@
 namespace nebula::drivers
 {
 
-static const double robinW_kInnoPs2Nps[3][192][55] = {
+static const double robin_w_ps_to_nps_adjustment[3][192][55] = {
   {
     {1.011,  0.795,  0.585,  0.383,  0.187,  -0.001, -0.182, -0.356, -0.523, -0.682, -0.834, -0.977,
      -1.113, -1.241, -1.360, -1.471, -1.574, -1.668, -1.754, -1.831, -1.899, -1.958, -2.008, -2.050,
