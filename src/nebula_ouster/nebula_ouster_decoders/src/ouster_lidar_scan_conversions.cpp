@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 
 namespace nebula::drivers
 {
@@ -93,7 +94,7 @@ NebulaPointCloudPtr nebula_point_cloud_from_lidar_scan(
         continue;
       }
 
-      // TODO[unaal]: could we read this directly from beam_azimuth_angles?
+      // TODO(unaal) could we read this directly from beam_azimuth_angles?
       const float azimuth_deg =
         normalize_azimuth_deg(static_cast<float>(rad2deg(std::atan2(pt.y(), pt.x()))));
       if (azimuth_deg < fov.azimuth.start || azimuth_deg > fov.azimuth.end) {
@@ -110,7 +111,7 @@ NebulaPointCloudPtr nebula_point_cloud_from_lidar_scan(
         const auto v = scan.field<uint16_t>(ChanField::SIGNAL)(row, col);
         tgt_pt.intensity = static_cast<std::uint8_t>(std::min<uint16_t>(255U, v >> 4));
       }
-      // TODO[unaal]: retrieve return type from the sensor_info config
+      // TODO(unaal) retrieve return type from the sensor_info config
       tgt_pt.return_type =
         static_cast<std::uint8_t>(dual ? ReturnType::LAST : ReturnType::STRONGEST);
       tgt_pt.channel = static_cast<std::uint16_t>(row);

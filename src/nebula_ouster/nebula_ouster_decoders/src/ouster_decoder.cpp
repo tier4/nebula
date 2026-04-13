@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace nebula::drivers
 {
@@ -117,7 +118,7 @@ PacketDecodeResult OusterDecoder::unpack(const std::vector<uint8_t> & packet)
   }
 
   bool complete = false;
-  // TODO[unaal]: refactor the code so we don't have to copy packet data.
+  // TODO(unaal) refactor the code so we don't have to copy packet data.
   if (packet.size() == pf.lidar_packet_size) {
     ouster::sdk::core::LidarPacket lidar_pkt(static_cast<int>(packet.size()));
     std::memcpy(lidar_pkt.buf.data(), packet.data(), packet.size());
