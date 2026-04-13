@@ -859,7 +859,7 @@ Status HesaiHwInterface::send_reset()
   return Status::OK;
 }
 
- Status HesaiHwInterface::send_restart()
+Status HesaiHwInterface::send_restart()
 {
   auto response_or_err = send_receive(g_ptc_command_restart);
   response_or_err.value_or_throw(pretty_print_ptc_error(response_or_err.error_or({})));
