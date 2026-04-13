@@ -239,7 +239,7 @@ void HesaiRosWrapper::send_functional_safety_reset(FunctionalSafetyEvaluation &&
                     << format_functional_safety_evaluation(evaluation));
 
   try {
-    hw_interface_wrapper_->hw_interface()->send_reset();
+    hw_interface_wrapper_->hw_interface()->send_restart();
     RCLCPP_ERROR_STREAM(
       get_logger(), "FuSa-triggered Hesai PTC soft-reset command completed for codes "
                       << detail::error_codes_to_string(evaluation.triggering_error_codes));

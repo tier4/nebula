@@ -81,6 +81,7 @@ const uint8_t g_ptc_command_get_high_resolution_mode = 0x28;
 const uint8_t g_ptp_command_set_ptp_lock_offset = 0x39;
 const uint8_t g_ptp_command_get_ptp_lock_offset = 0x3a;
 const uint8_t g_ptc_command_reset = 0x25;
+const uint8_t g_ptc_command_restart = 0x10;
 const uint8_t g_ptc_command_set_rotate_direction = 0x2a;
 const uint8_t g_ptc_command_lidar_monitor = 0x27;
 const uint8_t g_ptc_command_set_up_close_blockage_detection = 0x58;
@@ -352,6 +353,9 @@ public:
   /// @brief Sending command with PTC_COMMAND_RESET
   /// @return Resulting status
   Status send_reset();
+  /// @brief Sending command with PTC_COMMAND_RESTART
+  /// @return Resulting status
+  Status send_restart();
   /// @brief Setting values with PTC_COMMAND_SET_ROTATE_DIRECTION
   /// @param mode Rotation of the motor
   /// @return Resulting status
