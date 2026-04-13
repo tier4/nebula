@@ -16,9 +16,9 @@
 #define NEBULA_SEYOND_HW_INTERFACE_HPP
 
 #include <nebula_core_common/nebula_status.hpp>
-#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/http_client.hpp>
-#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/tcp.hpp>
-#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp>
+#include <nebula_core_hw_interfaces/connections/http_client.hpp>
+#include <nebula_core_hw_interfaces/connections/tcp.hpp>
+#include <nebula_core_hw_interfaces/connections/udp.hpp>
 #include <nebula_seyond_common/seyond_calibration_data.hpp>
 #include <nebula_seyond_common/seyond_configuration.hpp>
 
