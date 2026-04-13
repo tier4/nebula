@@ -100,15 +100,19 @@ ros2 launch nebula nebula_launch.py sensor_model:=Pandar40P
 
 ## Agnocast
 
-Nebula supports the [Agnocast](https://github.com/tier4/agnocast) zero-copy middleware for
-pointcloud and blockage mask outputs.
+Nebula supports [Agnocast](https://github.com/tier4/agnocast) features as follows:
 
-> **Note**
->
-> Agnocast support is currently limited to Hesai sensors.
+| Feature                                                                                                                                            | Hesai | Continental |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------- |
+| IPC zero-copy                                                                                                                                      | Yes   | No          |
+| [CallbackIsolatedAgnocastExecutor (CIE)](https://github.com/autowarefoundation/agnocast/blob/main/docs/callback_isolated_executor_for_agnocast.md) | Yes   | Yes         |
 
 To build with support for Agnocast, execute the above `colcon build` command with the environment
 variable `ENABLE_AGNOCAST=1` set.
+
+### IPC zero-copy
+
+Agnocast IPC zero-copy is used for pointcloud and blockage mask outputs on Hesai sensors.
 
 The following apt dependencies are required at run time:
 
@@ -136,7 +140,7 @@ In addition, the Agnocast kernel module must be loaded at runtime:
 sudo modprobe agnocast
 ```
 
-To confirm that Agnocast support is enabled, run:
+To confirm that Agnocast IPC zero-copy is enabled, run:
 
 ```bash
 $ ros2 topic list_agnocast
@@ -148,6 +152,13 @@ $ ros2 topic list_agnocast
 
 Please note that the `packets` topics do not support Agnocast, as they are purely used for
 data recording and tools like `ros2 bag` do not have Agnocast support yet.
+
+### CallbackIsolatedAgnocastExecutor (CIE)
+
+CIE is a real-time Executor that enables per-callback-group Scheduling Attributes configuration. This is enabled for the following nodes when `ENABLE_AGNOCAST=1`:
+
+- `nebula_hesai`: `HesaiRosWrapper`
+- `nebula_continental`: `ContinentalARS548RosWrapper`
 
 ## Building only specific vendors
 

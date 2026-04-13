@@ -31,8 +31,8 @@
 #include "nebula_core_common/util/expected.hpp"
 
 #include <nebula_core_common/loggers/logger.hpp>
-#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/http_client.hpp>
-#include <nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp>
+#include <nebula_core_hw_interfaces/connections/http_client.hpp>
+#include <nebula_core_hw_interfaces/connections/udp.hpp>
 #include <nebula_velodyne_common/velodyne_common.hpp>
 #include <nebula_velodyne_common/velodyne_status.hpp>
 

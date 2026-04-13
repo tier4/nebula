@@ -2,7 +2,7 @@
 
 #include "common/test_udp/utils.hpp"
 #include "nebula_core_common/util/expected.hpp"
-#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/udp.hpp"
+#include "nebula_core_hw_interfaces/connections/udp.hpp"
 
 #include <gtest/gtest.h>
 #include <gtest/internal/gtest-internal.h>

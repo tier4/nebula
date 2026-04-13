@@ -8,6 +8,9 @@ autoware_package()
 if("$ENV{ENABLE_AGNOCAST}" AND NOT agnocastlib_FOUND)
   message(FATAL_ERROR "agnocastlib is required when Agnocast is enabled")
 endif()
+if("$ENV{ENABLE_AGNOCAST}" AND NOT agnocast_components_FOUND)
+  message(FATAL_ERROR "agnocast_components is required when Agnocast is enabled")
+endif()
 
 # Hesai
 add_library(
@@ -41,13 +44,20 @@ ament_target_dependencies(
   rclcpp_components)
 
 if("$ENV{ENABLE_AGNOCAST}")
-  message("Agnocast support is enabled")
+  message(STATUS "Agnocast support is enabled")
   ament_target_dependencies(hesai_ros_wrapper PUBLIC agnocastlib)
   add_definitions(-DUSE_AGNOCAST_ENABLED)
 endif()
 
-rclcpp_components_register_node(hesai_ros_wrapper PLUGIN "HesaiRosWrapper"
-                                EXECUTABLE hesai_ros_wrapper_node)
+if("$ENV{ENABLE_AGNOCAST}")
+  agnocast_components_register_node(
+    hesai_ros_wrapper PLUGIN "HesaiRosWrapper"
+    EXECUTABLE hesai_ros_wrapper_node
+    EXECUTOR CallbackIsolatedAgnocastExecutor)
+else()
+  rclcpp_components_register_node(hesai_ros_wrapper PLUGIN "HesaiRosWrapper"
+                                  EXECUTABLE hesai_ros_wrapper_node)
+endif()
 
 install(
   TARGETS hesai_ros_wrapper
@@ -185,6 +195,7 @@ ament_export_dependencies(
 
 if("$ENV{ENABLE_AGNOCAST}")
   ament_export_dependencies(agnocastlib)
+  ament_export_dependencies(agnocast_components)
 endif()
 
 ament_package()

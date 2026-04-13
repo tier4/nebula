@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>nebula_hesai</name>
-  <version>0.3.0</version>
+  <version>1.0.0</version>
   <description>Nebula Hesai ROS Wrapper</description>
   <maintainer email="david.wong@tier4.jp">David Wong</maintainer>
   <maintainer email="max.schmeller@tier4.jp">Max Schmeller</maintainer>
@@ -14,6 +14,7 @@
   <buildtool_depend>ros_environment</buildtool_depend>
   <buildtool_depend>ros_testing</buildtool_depend>
 
+  <depend condition="$ENABLE_AGNOCAST == 1">agnocast_components</depend>
   <depend condition="$ENABLE_AGNOCAST == 1">agnocastlib</depend>
   <depend>autoware_internal_debug_msgs</depend>
   <depend>autoware_utils_debug</depend>
