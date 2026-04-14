@@ -34,6 +34,7 @@ struct SeyondPacketDecodeResult
 {
   uint64_t sensor_timestamp_ns;
   size_t points_unpacked;
+  bool scan_complete;
 };
 
 /// @brief Decoder for Seyond LiDAR data packets

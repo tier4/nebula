@@ -11,6 +11,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nebula_core_common REQUIRED)
 find_package(nebula_core_ros REQUIRED)
+find_package(nebula_msgs REQUIRED)
 find_package(nebula_seyond_common REQUIRED)
 find_package(nebula_seyond_hw_interfaces REQUIRED)
 find_package(nebula_seyond_decoders REQUIRED)
@@ -40,6 +41,7 @@ ament_target_dependencies(
   seyond_ros_wrapper
   PUBLIC
   diagnostic_updater
+  nebula_msgs
   rclcpp
   rclcpp_components
   sensor_msgs)
@@ -85,6 +87,7 @@ ament_export_dependencies(
   diagnostic_updater
   nebula_core_common
   nebula_core_ros
+  nebula_msgs
   nebula_seyond_common
   nebula_seyond_hw_interfaces
   nebula_seyond_decoders

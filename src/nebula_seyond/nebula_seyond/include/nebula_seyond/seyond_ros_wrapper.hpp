@@ -26,6 +26,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
+#include <nebula_msgs/msg/nebula_packets.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include <memory>
@@ -44,6 +45,7 @@ private:
   void receive_packet_callback(
     std::vector<uint8_t> & packet,
     const nebula::drivers::connections::UdpSocket::RxMetadata & metadata);
+  void receive_packets_ros_callback(const nebula_msgs::msg::NebulaPackets::SharedPtr packets_msg);
   void publish_cloud(nebula::drivers::NebulaPointCloudPtr cloud, uint64_t base_timestamp_ns);
 
   void declare_parameters();
@@ -59,6 +61,9 @@ private:
   std::string calibration_file_;
 
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
+  rclcpp::Publisher<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_pub_;
+  rclcpp::Subscription<nebula_msgs::msg::NebulaPackets>::SharedPtr packets_sub_;
+  std::unique_ptr<nebula_msgs::msg::NebulaPackets> current_packets_msg_;
 };
 
 }  // namespace nebula::ros

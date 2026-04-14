@@ -329,12 +329,12 @@ SeyondDecoder::SeyondDecoder(
 SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & packet_data)
 {
   if (packet_data.size() < sizeof(SeyondDataPacket)) {
-    return {0, 0};
+    return {0, 0, false};
   }
 
   const auto * common = reinterpret_cast<const SeyondPacketCommon *>(packet_data.data());
   if (common->magic_number != seyond_data_packet_magic_number) {
-    return {0, 0};
+    return {0, 0, false};
   }
 
   bool supported_layout = false;
@@ -343,39 +343,44 @@ SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & pack
   bool is_last_sub_frame = false;
   uint64_t packet_start_timestamp_ns = 0;
   size_t initial_points = 0;
+  bool scan_complete = false;
+
   switch (config_.sensor_model) {
     case SeyondSensorModel::FALCON_K: {
       const auto * packet = reinterpret_cast<const SeyondFalconDataPacket *>(packet_data.data());
       if (
         packet->common.size < sizeof(SeyondFalconDataPacket) ||
         packet->common.size > packet_data.size()) {
-        return {0, 0};
+        return {0, 0, false};
       }
       const auto payload_size =
         static_cast<size_t>(packet->common.size) - sizeof(SeyondFalconDataPacket);
       const auto required_payload_size =
         static_cast<uint64_t>(packet->item_number) * static_cast<uint64_t>(packet->item_size);
       if (required_payload_size > payload_size) {
-        return {0, 0};
+        return {0, 0, false};
       }
       supported_layout =
         packet->type == item_type_sphere_pointcloud &&
         (packet->item_size == sizeof(SeyondBlock) || packet->item_size == sizeof(SeyondBlockDual));
       if (!supported_layout) {
-        return {packet_timestamp_us_to_ns(packet->common.ts_start_us), 0};
+        return {packet_timestamp_us_to_ns(packet->common.ts_start_us), 0, false};
       }
       packet_index = packet->idx;
       is_first_sub_frame = packet->is_first_sub_frame;
       is_last_sub_frame = packet->is_last_sub_frame;
       packet_start_timestamp_ns = packet_timestamp_us_to_ns(packet->common.ts_start_us);
+
       if (has_current_scan_frame_ && packet_index != current_scan_frame_idx_) {
         if (!current_scan_cloud_->empty()) {
           pointcloud_callback_(current_scan_cloud_, current_scan_start_timestamp_ns_);
           current_scan_cloud_ = std::make_shared<NebulaPointCloud>();
+          scan_complete = true;
         }
         current_scan_start_timestamp_ns_ = 0;
         has_current_scan_frame_ = false;
       }
+
       if (
         !has_current_scan_frame_ || current_scan_start_timestamp_ns_ == 0 || is_first_sub_frame ||
         current_scan_cloud_->empty() ||
@@ -384,6 +389,7 @@ SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & pack
         current_scan_start_timestamp_ns_ = packet_start_timestamp_ns;
         has_current_scan_frame_ = true;
       }
+
       initial_points = current_scan_cloud_->size();
       parse_falcon_k(packet);
       break;
@@ -395,14 +401,14 @@ SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & pack
       if (
         packet->common.size < sizeof(SeyondDataPacket) ||
         packet->common.size > packet_data.size()) {
-        return {0, 0};
+        return {0, 0, false};
       }
 
       const auto payload_size = static_cast<size_t>(packet->common.size) - sizeof(SeyondDataPacket);
       const auto required_payload_size =
         static_cast<uint64_t>(packet->item_number) * static_cast<uint64_t>(packet->item_size);
       if (required_payload_size > payload_size) {
-        return {0, 0};
+        return {0, 0, false};
       }
 
       if (config_.sensor_model == SeyondSensorModel::ROBIN_W) {
@@ -420,21 +426,24 @@ SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & pack
                            is_supported_compact_item_size(packet->item_size);
       }
       if (!supported_layout) {
-        return {packet_timestamp_us_to_ns(packet->common.ts_start_us), 0};
+        return {packet_timestamp_us_to_ns(packet->common.ts_start_us), 0, false};
       }
 
       packet_index = packet->idx;
       is_first_sub_frame = packet->is_first_sub_frame;
       is_last_sub_frame = packet->is_last_sub_frame;
       packet_start_timestamp_ns = packet_timestamp_us_to_ns(packet->common.ts_start_us);
+
       if (has_current_scan_frame_ && packet_index != current_scan_frame_idx_) {
         if (!current_scan_cloud_->empty()) {
           pointcloud_callback_(current_scan_cloud_, current_scan_start_timestamp_ns_);
           current_scan_cloud_ = std::make_shared<NebulaPointCloud>();
+          scan_complete = true;
         }
         current_scan_start_timestamp_ns_ = 0;
         has_current_scan_frame_ = false;
       }
+
       if (
         !has_current_scan_frame_ || current_scan_start_timestamp_ns_ == 0 || is_first_sub_frame ||
         current_scan_cloud_->empty() ||
@@ -463,7 +472,7 @@ SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & pack
       break;
     }
     default:
-      break;
+      return {0, 0, false};
   }
 
   size_t points_unpacked = current_scan_cloud_->size() - initial_points;
@@ -474,9 +483,10 @@ SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & pack
     current_scan_frame_idx_ = 0;
     current_scan_start_timestamp_ns_ = 0;
     has_current_scan_frame_ = false;
+    scan_complete = true;
   }
 
-  return {packet_start_timestamp_ns, points_unpacked};
+  return {packet_start_timestamp_ns, points_unpacked, scan_complete};
 }
 
 void SeyondDecoder::parse_falcon_k(const SeyondFalconDataPacket * packet)

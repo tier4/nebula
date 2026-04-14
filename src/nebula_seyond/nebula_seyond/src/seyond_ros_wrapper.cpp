@@ -25,6 +25,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace nebula::ros
@@ -69,6 +70,11 @@ SeyondRosWrapper::SeyondRosWrapper(const rclcpp::NodeOptions & options)
 
   cloud_pub_ =
     create_publisher<sensor_msgs::msg::PointCloud2>("seyond_points", rclcpp::SensorDataQoS());
+  packets_pub_ =
+    create_publisher<nebula_msgs::msg::NebulaPackets>("seyond_packets", rclcpp::SensorDataQoS());
+
+  current_packets_msg_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
+  current_packets_msg_->header.frame_id = config_.frame_id;
 
   nebula::drivers::SeyondCalibrationData calibration{};
 
@@ -90,8 +96,14 @@ SeyondRosWrapper::SeyondRosWrapper(const rclcpp::NodeOptions & options)
     } catch (const std::exception & ex) {
       RCLCPP_ERROR(get_logger(), "Failed to initialize Seyond hardware wrappers: %s", ex.what());
     }
-  } else if (!calibration_file_.empty()) {
-    calibration = load_calibration_file_or_throw(calibration_file_);
+  } else {
+    packets_sub_ = create_subscription<nebula_msgs::msg::NebulaPackets>(
+      "seyond_packets", rclcpp::SensorDataQoS(),
+      std::bind(&SeyondRosWrapper::receive_packets_ros_callback, this, std::placeholders::_1));
+
+    if (!calibration_file_.empty()) {
+      calibration = load_calibration_file_or_throw(calibration_file_);
+    }
   }
 
   decoder_ = std::make_unique<nebula::drivers::SeyondDecoder>(
@@ -115,8 +127,31 @@ void SeyondRosWrapper::receive_packet_callback(
   std::vector<uint8_t> & packet,
   const nebula::drivers::connections::UdpSocket::RxMetadata & metadata)
 {
-  (void)metadata;
-  decoder_->unpack(packet);
+  if (packets_pub_->get_subscription_count() > 0) {
+    nebula_msgs::msg::NebulaPacket packet_msg;
+    packet_msg.stamp = clamp_ros_time(metadata.timestamp_ns.value_or(0));
+    packet_msg.data = packet;
+
+    if (current_packets_msg_->packets.empty()) {
+      current_packets_msg_->header.stamp = packet_msg.stamp;
+    }
+    current_packets_msg_->packets.emplace_back(std::move(packet_msg));
+  }
+
+  auto result = decoder_->unpack(packet);
+  if (result.scan_complete && !current_packets_msg_->packets.empty()) {
+    packets_pub_->publish(std::move(current_packets_msg_));
+    current_packets_msg_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
+    current_packets_msg_->header.frame_id = config_.frame_id;
+  }
+}
+
+void SeyondRosWrapper::receive_packets_ros_callback(
+  const nebula_msgs::msg::NebulaPackets::SharedPtr packets_msg)
+{
+  for (auto & packet : packets_msg->packets) {
+    decoder_->unpack(packet.data);
+  }
 }
 
 void SeyondRosWrapper::publish_cloud(
