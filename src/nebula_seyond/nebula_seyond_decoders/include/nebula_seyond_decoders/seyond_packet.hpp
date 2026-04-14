@@ -65,6 +65,32 @@ struct SeyondDataPacket
   uint32_t extend_reserved[4];
 };
 
+struct SeyondFalconDataPacket
+{
+  SeyondPacketCommon common;
+  uint64_t idx;
+  uint16_t sub_idx;
+  uint16_t sub_seq;
+  uint32_t type : 8;
+  uint32_t item_number : 24;
+  uint16_t item_size;
+  uint32_t topic;
+  uint16_t scanner_direction : 1;
+  uint16_t use_reflectance : 1;
+  uint16_t multi_return_mode : 3;
+  uint16_t confidence_level : 2;
+  uint16_t is_last_sub_frame : 1;
+  uint16_t is_last_sequence : 1;
+  uint16_t has_tail : 1;
+  uint16_t frame_sync_locked : 1;
+  uint16_t is_first_sub_frame : 1;
+  uint16_t last_four_channel : 1;
+  uint16_t long_distance_mode : 1;
+  uint16_t reserved_flag : 2;
+  int16_t roi_h_angle;
+  int16_t roi_v_angle;
+};
+
 /// @brief Standard block header
 struct SeyondBlockHeader
 {
@@ -99,6 +125,12 @@ struct SeyondBlock
 {
   SeyondBlockHeader header;
   SeyondChannelPoint points[4];
+};
+
+struct SeyondBlockDual
+{
+  SeyondBlockHeader header;
+  SeyondChannelPoint points[8];
 };
 
 /// @brief Enhanced block for Robin W / E1X

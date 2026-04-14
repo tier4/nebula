@@ -78,11 +78,11 @@ struct SeyondDataPacketHeader
 };
 #pragma pack(pop)
 
-constexpr uint16_t kSeyondDataPacketMagic = 0x176A;
-constexpr uint8_t kRobinWAngleHvTableType = 100;
-constexpr uint8_t kRobinE1XAngleHvTableType = 101;
-constexpr uint8_t kHummingbirdAngleHvTableType = 103;
-constexpr uint8_t kRobinE2XAngleHvTableType = 104;
+constexpr uint16_t seyond_data_packet_magic = 0x176A;
+constexpr uint8_t robinw_angle_hv_table_type = 100;
+constexpr uint8_t robine1x_angle_hv_table_type = 101;
+constexpr uint8_t hummingbird_angle_hv_table_type = 103;
+constexpr uint8_t robine2x_angle_hv_table_type = 104;
 }  // namespace detail
 
 /// @brief Calibration data for Seyond LiDARs
@@ -190,11 +190,11 @@ struct SeyondCalibrationData
       const auto * packet =
         reinterpret_cast<const SeyondDataPacketHeader *>(calibration.angle_hv_table.data());
       const bool supported_anglehv_packet =
-        packet->common.magic_number == detail::kSeyondDataPacketMagic &&
-        (packet->type == detail::kRobinWAngleHvTableType ||
-         packet->type == detail::kRobinE1XAngleHvTableType ||
-         packet->type == detail::kHummingbirdAngleHvTableType ||
-         packet->type == detail::kRobinE2XAngleHvTableType);
+        packet->common.magic_number == detail::seyond_data_packet_magic &&
+        (packet->type == detail::robinw_angle_hv_table_type ||
+         packet->type == detail::robine1x_angle_hv_table_type ||
+         packet->type == detail::hummingbird_angle_hv_table_type ||
+         packet->type == detail::robine2x_angle_hv_table_type);
       if (!supported_anglehv_packet) {
         return;
       }
