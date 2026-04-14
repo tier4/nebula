@@ -33,7 +33,7 @@ struct SeyondPacketCommon
   uint8_t source_id : 4;
   uint8_t timestamp_sync_type : 4;
   uint8_t lidar_type;
-  uint64_t ts_start_us;
+  double ts_start_us;
   uint8_t lidar_mode;
   uint8_t lidar_status;
 };

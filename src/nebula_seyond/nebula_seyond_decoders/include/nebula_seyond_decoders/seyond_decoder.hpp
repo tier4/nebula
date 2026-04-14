@@ -62,6 +62,9 @@ private:
   SeyondCalibrationData calibration_;
   pointcloud_callback_t pointcloud_callback_;
   NebulaPointCloudPtr current_scan_cloud_;
+  uint64_t current_scan_frame_idx_{0};
+  uint64_t current_scan_start_timestamp_ns_{0};
+  bool has_current_scan_frame_{false};
 };
 
 }  // namespace nebula::drivers

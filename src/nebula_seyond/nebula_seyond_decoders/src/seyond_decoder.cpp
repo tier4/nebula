@@ -21,7 +21,9 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 namespace nebula::drivers
@@ -145,6 +147,29 @@ size_t compact_return_count(uint16_t item_size)
          (sizeof(SeyondCoChannelPoint) * kCompactChannelCount);
 }
 
+uint32_t to_scan_relative_timestamp_ns(
+  uint64_t scan_start_timestamp_ns, uint64_t packet_start_timestamp_ns,
+  uint32_t packet_relative_timestamp_ns)
+{
+  const uint64_t packet_offset_ns = packet_start_timestamp_ns >= scan_start_timestamp_ns
+                                      ? packet_start_timestamp_ns - scan_start_timestamp_ns
+                                      : 0;
+  const uint64_t point_timestamp_ns = packet_offset_ns + packet_relative_timestamp_ns;
+  return static_cast<uint32_t>(
+    std::min<uint64_t>(point_timestamp_ns, std::numeric_limits<uint32_t>::max()));
+}
+
+uint64_t packet_timestamp_us_to_ns(double packet_timestamp_us)
+{
+  if (!std::isfinite(packet_timestamp_us) || packet_timestamp_us < 0.0) {
+    return 0;
+  }
+
+  const long double packet_timestamp_ns = static_cast<long double>(packet_timestamp_us) * 1000.0L;
+  return static_cast<uint64_t>(std::min<long double>(
+    packet_timestamp_ns, static_cast<long double>(std::numeric_limits<uint64_t>::max())));
+}
+
 template <int MaxSetNumber>
 std::array<AngleHV, kCompactChannelCount> interpolate_robin_compact_angles_impl(
   const SeyondCoBlockHeader & header, const std::vector<uint8_t> & angle_hv_table,
@@ -217,12 +242,10 @@ FalconAdjustment lookup_falcon_adjustment(int h_angle, int v_angle, uint32_t cha
     return static_cast<int>(std::floor(value / kFalconNpsAdjustmentUnitMeters + 0.5));
   };
 
-  adjustment.x =
-    quantize(falcon_ps_to_nps_adjustment[0][channel][v_index][h_index]) *
-    kFalconNpsAdjustmentUnitMeters;
-  adjustment.z =
-    quantize(falcon_ps_to_nps_adjustment[1][channel][v_index][h_index]) *
-    kFalconNpsAdjustmentUnitMeters;
+  adjustment.x = quantize(falcon_ps_to_nps_adjustment[0][channel][v_index][h_index]) *
+                 kFalconNpsAdjustmentUnitMeters;
+  adjustment.z = quantize(falcon_ps_to_nps_adjustment[1][channel][v_index][h_index]) *
+                 kFalconNpsAdjustmentUnitMeters;
   return adjustment;
 }
 
@@ -296,6 +319,9 @@ SeyondDecoder::SeyondDecoder(
 : config_(config), calibration_(calibration), pointcloud_callback_(pointcloud_cb)
 {
   current_scan_cloud_ = std::make_shared<NebulaPointCloud>();
+  current_scan_frame_idx_ = 0;
+  current_scan_start_timestamp_ns_ = 0;
+  has_current_scan_frame_ = false;
 }
 
 SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & packet_data)
@@ -346,7 +372,25 @@ SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & pack
   }
 
   if (!supported_layout) {
-    return {packet->common.ts_start_us * 1000, 0};
+    return {packet_timestamp_us_to_ns(packet->common.ts_start_us), 0};
+  }
+
+  const uint64_t packet_start_timestamp_ns = packet_timestamp_us_to_ns(packet->common.ts_start_us);
+  if (has_current_scan_frame_ && packet->idx != current_scan_frame_idx_) {
+    if (!current_scan_cloud_->empty()) {
+      pointcloud_callback_(current_scan_cloud_, current_scan_start_timestamp_ns_);
+      current_scan_cloud_ = std::make_shared<NebulaPointCloud>();
+    }
+    current_scan_start_timestamp_ns_ = 0;
+    has_current_scan_frame_ = false;
+  }
+  if (
+    !has_current_scan_frame_ || current_scan_start_timestamp_ns_ == 0 ||
+    packet->is_first_sub_frame || current_scan_cloud_->empty() ||
+    packet_start_timestamp_ns < current_scan_start_timestamp_ns_) {
+    current_scan_frame_idx_ = packet->idx;
+    current_scan_start_timestamp_ns_ = packet_start_timestamp_ns;
+    has_current_scan_frame_ = true;
   }
 
   size_t initial_points = current_scan_cloud_->size();
@@ -377,20 +421,23 @@ SeyondPacketDecodeResult SeyondDecoder::unpack(const std::vector<uint8_t> & pack
   }
 
   size_t points_unpacked = current_scan_cloud_->size() - initial_points;
-  const uint64_t base_ts_ns = packet->common.ts_start_us * 1000;
 
   if (packet->is_last_sub_frame && !current_scan_cloud_->empty()) {
-    pointcloud_callback_(current_scan_cloud_, base_ts_ns);
+    pointcloud_callback_(current_scan_cloud_, current_scan_start_timestamp_ns_);
     current_scan_cloud_ = std::make_shared<NebulaPointCloud>();
+    current_scan_frame_idx_ = 0;
+    current_scan_start_timestamp_ns_ = 0;
+    has_current_scan_frame_ = false;
   }
 
-  return {base_ts_ns, points_unpacked};
+  return {packet_start_timestamp_ns, points_unpacked};
 }
 
 void SeyondDecoder::parse_falcon_k(const SeyondDataPacket * packet)
 {
   const auto * payload = reinterpret_cast<const uint8_t *>(packet) + sizeof(SeyondDataPacket);
   const auto * blocks = reinterpret_cast<const SeyondBlock *>(payload);
+  const uint64_t packet_start_timestamp_ns = packet_timestamp_us_to_ns(packet->common.ts_start_us);
 
   const double radians_per_packet_angle_unit = M_PI / 32768.0;
   const double kMeterPerUnit = packet->long_distance_mode ? (1.0 / 100.0) : (1.0 / 200.0);
@@ -439,7 +486,9 @@ void SeyondDecoder::parse_falcon_k(const SeyondDataPacket * packet)
 
       add_point(
         x, y, z, intensity, static_cast<uint16_t>(block.header.scan_id),
-        static_cast<uint32_t>(block.header.ts_10us * 10000));
+        to_scan_relative_timestamp_ns(
+          current_scan_start_timestamp_ns_, packet_start_timestamp_ns,
+          static_cast<uint32_t>(block.header.ts_10us) * 10000U));
     }
   }
 }
@@ -447,6 +496,7 @@ void SeyondDecoder::parse_falcon_k(const SeyondDataPacket * packet)
 void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
 {
   const auto * payload = reinterpret_cast<const uint8_t *>(packet) + sizeof(SeyondDataPacket);
+  const uint64_t packet_start_timestamp_ns = packet_timestamp_us_to_ns(packet->common.ts_start_us);
 
   const double radians_per_packet_angle_unit = M_PI / 32768.0;
   const double kMeterPerUnit = 1.0 / 400.0;
@@ -494,8 +544,8 @@ void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
         int h_offset2 = kEncoderTableStep - h_offset;
         int set_num = header.scan_id % max_set;
         if (is_robin_w) {
-          using RobinWTableType = AngleHV[kPolygonMaxFacets][kPolygonTableSize]
-                                         [kRobinWMaxSetNumber][kMaxReceiverInSet];
+          using RobinWTableType =
+            AngleHV[kPolygonMaxFacets][kPolygonTableSize][kRobinWMaxSetNumber][kMaxReceiverInSet];
           const auto & table =
             *reinterpret_cast<const RobinWTableType *>(calibration_.angle_hv_table.data() + 10);
           const AngleHV & b1 = table[header.facet][h_idx][set_num][ch];
@@ -564,7 +614,10 @@ void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
       }
 
       add_point(
-        x, y, z, intensity, physical_channel, static_cast<uint32_t>(header.ts_10us * 10000));
+        x, y, z, intensity, physical_channel,
+        to_scan_relative_timestamp_ns(
+          current_scan_start_timestamp_ns_, packet_start_timestamp_ns,
+          static_cast<uint32_t>(header.ts_10us) * 10000U));
     }
   }
 }
@@ -572,6 +625,7 @@ void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
 void SeyondDecoder::parse_robin_compact(const SeyondDataPacket * packet)
 {
   const auto * payload = reinterpret_cast<const uint8_t *>(packet) + sizeof(SeyondDataPacket);
+  const uint64_t packet_start_timestamp_ns = packet_timestamp_us_to_ns(packet->common.ts_start_us);
   const auto return_count = compact_return_count(packet->item_size);
   if (return_count == 0) {
     return;
@@ -579,8 +633,7 @@ void SeyondDecoder::parse_robin_compact(const SeyondDataPacket * packet)
 
   const bool is_robin_w_compact = packet->type == kItemTypeRobinWCompactPointCloud;
   const bool is_robin_e2x_compact = packet->type == kItemTypeRobinE2XCompactPointCloud;
-  const int max_set_number =
-    is_robin_w_compact ? kRobinWMaxSetNumber : kRobinE2XMaxSetNumber;
+  const int max_set_number = is_robin_w_compact ? kRobinWMaxSetNumber : kRobinE2XMaxSetNumber;
   const size_t table_min_size = is_robin_w_compact ? kRobinWTableMinSize : kRobinE2XTableMinSize;
   const bool use_calibration = calibration_.angle_hv_table.size() >= table_min_size;
   const double radians_per_packet_angle_unit = M_PI / 32768.0;
@@ -650,7 +703,10 @@ void SeyondDecoder::parse_robin_compact(const SeyondDataPacket * packet)
         uint8_t intensity = static_cast<uint8_t>((static_cast<uint32_t>(pt.refl) * 255) / 4095);
 
         add_point(
-          x, y, z, intensity, physical_channel, static_cast<uint32_t>(header.ts_10us * 10000));
+          x, y, z, intensity, physical_channel,
+          to_scan_relative_timestamp_ns(
+            current_scan_start_timestamp_ns_, packet_start_timestamp_ns,
+            static_cast<uint32_t>(header.ts_10us) * 10000U));
       }
     }
   }
@@ -659,6 +715,7 @@ void SeyondDecoder::parse_robin_compact(const SeyondDataPacket * packet)
 void SeyondDecoder::parse_hummingbird_d1(const SeyondDataPacket * packet)
 {
   const auto * payload = reinterpret_cast<const uint8_t *>(packet) + sizeof(SeyondDataPacket);
+  const uint64_t packet_start_timestamp_ns = packet_timestamp_us_to_ns(packet->common.ts_start_us);
   bool use_calibration = (calibration_.angle_hv_table.size() >= kHummingbirdTableMinSize);
   const auto return_count = compact_return_count(packet->item_size);
   if (return_count == 0) {
@@ -703,7 +760,9 @@ void SeyondDecoder::parse_hummingbird_d1(const SeyondDataPacket * packet)
 
         add_point(
           x, y, z, intensity, static_cast<uint16_t>(base_channel + ch),
-          static_cast<uint32_t>(header.ts_10us * 10000));
+          to_scan_relative_timestamp_ns(
+            current_scan_start_timestamp_ns_, packet_start_timestamp_ns,
+            static_cast<uint32_t>(header.ts_10us) * 10000U));
       }
     }
   }
