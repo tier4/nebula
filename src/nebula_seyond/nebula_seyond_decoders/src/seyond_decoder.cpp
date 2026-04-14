@@ -559,6 +559,8 @@ void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
         x = static_cast<float>(x + adjustment.z);
         y = static_cast<float>(y - adjustment.y);
         z = static_cast<float>(z + adjustment.x);
+        y = -y;
+        z = -z;
       }
 
       add_point(
@@ -636,6 +638,8 @@ void SeyondDecoder::parse_robin_compact(const SeyondDataPacket * packet)
           x = static_cast<float>(x + adjustment.z);
           y = static_cast<float>(y - adjustment.y);
           z = static_cast<float>(z + adjustment.x);
+          y = -y;
+          z = -z;
         } else if (is_robin_e2x_compact) {
           const int h_angle_raw = use_calibration ? angles[channel].h : header.p_angle;
           const auto adjustment = interpolate_robin_e2x_adjustment(h_angle_raw);
