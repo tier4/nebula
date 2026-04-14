@@ -109,8 +109,8 @@ struct SeyondCalibrationData
   static util::expected<SeyondCalibrationData, Error> load_from_file(
     const std::string & calibration_file)
   {
-    constexpr std::array<char, 12> k_magic{'S', 'E', 'Y', 'O', 'N', 'D',
-                                           '_', 'C', 'A', 'L', 'I', 'B'};
+    constexpr std::array<char, 12> CALIBRATION_FILE_MAGIC{'S', 'E', 'Y', 'O', 'N', 'D',
+                                                          '_', 'C', 'A', 'L', 'I', 'B'};
 
     std::ifstream file(calibration_file, std::ios::binary);
     if (!file.is_open()) {
@@ -119,9 +119,12 @@ struct SeyondCalibrationData
 
     SeyondCalibrationData calibration;
 
-    std::array<char, k_magic.size()> magic{};
-    file.read(magic.data(), static_cast<std::streamsize>(magic.size()));
-    if (file.good() && std::memcmp(magic.data(), k_magic.data(), k_magic.size()) == 0) {
+    std::array<char, CALIBRATION_FILE_MAGIC.size()> magic_check{};
+    file.read(magic_check.data(), static_cast<std::streamsize>(magic_check.size()));
+    if (
+      file.good() &&
+      std::memcmp(
+        magic_check.data(), CALIBRATION_FILE_MAGIC.data(), CALIBRATION_FILE_MAGIC.size()) == 0) {
       uint32_t version = 0;
       uint32_t angle_size = 0;
       uint32_t geo_size = 0;
@@ -220,8 +223,8 @@ struct SeyondCalibrationData
   /// @brief Save calibration data to a binary file
   util::expected<std::monostate, Error> save_to_file(const std::string & calibration_file) const
   {
-    constexpr std::array<char, 12> k_magic{'S', 'E', 'Y', 'O', 'N', 'D',
-                                           '_', 'C', 'A', 'L', 'I', 'B'};
+    constexpr std::array<char, 12> CALIBRATION_FILE_MAGIC{'S', 'E', 'Y', 'O', 'N', 'D',
+                                                          '_', 'C', 'A', 'L', 'I', 'B'};
 
     std::ofstream file(calibration_file, std::ios::binary | std::ios::trunc);
     if (!file.is_open()) {
@@ -235,7 +238,8 @@ struct SeyondCalibrationData
     const auto geo_size = static_cast<uint32_t>(geo_yaml.size());
     const auto sn_size = static_cast<uint32_t>(sn_yaml.size());
 
-    file.write(k_magic.data(), static_cast<std::streamsize>(k_magic.size()));
+    file.write(
+      CALIBRATION_FILE_MAGIC.data(), static_cast<std::streamsize>(CALIBRATION_FILE_MAGIC.size()));
     file.write(reinterpret_cast<const char *>(&version), sizeof(version));
     file.write(reinterpret_cast<const char *>(&v_angle_offset), sizeof(v_angle_offset));
     file.write(reinterpret_cast<const char *>(&angle_size), sizeof(angle_size));

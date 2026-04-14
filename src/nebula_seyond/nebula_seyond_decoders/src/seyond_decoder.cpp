@@ -501,36 +501,36 @@ void SeyondDecoder::parse_falcon_k(const SeyondFalconDataPacket * packet)
       payload + i * packet->item_size + sizeof(SeyondBlockHeader));
 
     for (uint32_t return_idx = 0; return_idx < return_count; ++return_idx) {
-      for (uint32_t ch = 0; ch < channel_count; ++ch) {
-        const auto & pt = points[ch + return_idx * channel_count];
+      for (uint32_t channel = 0; channel < channel_count; ++channel) {
+        const auto & point = points[channel + return_idx * channel_count];
 
-        if (pt.radius == 0) continue;
+        if (point.radius == 0) continue;
 
-        int32_t ha_raw = block.h_angle;
-        int32_t va_raw = block.v_angle;
+        int32_t h_angle_raw = block.h_angle;
+        int32_t v_angle_raw = block.v_angle;
 
-        uint8_t intensity = static_cast<uint8_t>((static_cast<uint32_t>(pt.refl) * 255) / 255);
+        uint8_t intensity = static_cast<uint8_t>((static_cast<uint32_t>(point.refl) * 255) / 255);
 
-        if (ch == 1) {
-          ha_raw += block.h_angle_diff_1;
-          va_raw += block.v_angle_diff_1 + 1 * v_angle_diff_base;
-        } else if (ch == 2) {
-          ha_raw += block.h_angle_diff_2;
-          va_raw += block.v_angle_diff_2 + 2 * v_angle_diff_base;
-        } else if (ch == 3) {
-          ha_raw += block.h_angle_diff_3;
-          va_raw += block.v_angle_diff_3 + 3 * v_angle_diff_base;
+        if (channel == 1) {
+          h_angle_raw += block.h_angle_diff_1;
+          v_angle_raw += block.v_angle_diff_1 + 1 * v_angle_diff_base;
+        } else if (channel == 2) {
+          h_angle_raw += block.h_angle_diff_2;
+          v_angle_raw += block.v_angle_diff_2 + 2 * v_angle_diff_base;
+        } else if (channel == 3) {
+          h_angle_raw += block.h_angle_diff_3;
+          v_angle_raw += block.v_angle_diff_3 + 3 * v_angle_diff_base;
         }
 
-        double ha = ha_raw * radians_per_packet_angle_unit;
-        double va = va_raw * radians_per_packet_angle_unit;
-        double radius = pt.radius * meter_per_unit;
+        double h_angle = h_angle_raw * radians_per_packet_angle_unit;
+        double v_angle = v_angle_raw * radians_per_packet_angle_unit;
+        double radius = point.radius * meter_per_unit;
 
-        double cos_va = std::cos(va);
-        float x = static_cast<float>(radius * cos_va * std::cos(ha));
-        float y = static_cast<float>(-radius * cos_va * std::sin(ha));
-        float z = static_cast<float>(radius * std::sin(va));
-        const auto adjustment = lookup_falcon_adjustment(ha_raw, va_raw, ch);
+        double cos_v_angle = std::cos(v_angle);
+        float x = static_cast<float>(radius * cos_v_angle * std::cos(h_angle));
+        float y = static_cast<float>(-radius * cos_v_angle * std::sin(h_angle));
+        float z = static_cast<float>(radius * std::sin(v_angle));
+        const auto adjustment = lookup_falcon_adjustment(h_angle_raw, v_angle_raw, channel);
         x = static_cast<float>(x + adjustment.z);
         z = static_cast<float>(z + adjustment.x);
 
@@ -576,16 +576,16 @@ void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
       reinterpret_cast<const SeyondEnBlock *>(payload + i * packet->item_size);
     const auto & header = block_ptr->header;
 
-    for (uint32_t ch = 0; ch < 4; ++ch) {
-      const auto & pt = block_ptr->points[ch];
-      if (pt.radius == 0) continue;
+    for (uint32_t channel = 0; channel < 4; ++channel) {
+      const auto & point = block_ptr->points[channel];
+      if (point.radius == 0) continue;
 
       uint16_t raw_val = (config_.reflectance_mode == SeyondReflectanceMode::REFLECTIVITY)
-                           ? pt.reflectance
-                           : pt.intensity;
+                           ? point.reflectance
+                           : point.intensity;
       uint8_t intensity = static_cast<uint8_t>((static_cast<uint32_t>(raw_val) * 255) / 4095);
 
-      int32_t ha_raw, va_raw;
+      int32_t h_angle_raw, v_angle_raw;
 
       if (use_calibration) {
         int h_offset_total = header.h_angle - polygon_min_angle;
@@ -599,64 +599,64 @@ void SeyondDecoder::parse_robin_w_e1x(const SeyondDataPacket * packet)
                                          [robinw_max_set_number][max_receiver_in_set];
           const auto & table =
             *reinterpret_cast<const RobinWTableType *>(calibration_.angle_hv_table.data() + 10);
-          const AngleHV & b1 = table[header.facet][h_idx][set_num][ch];
-          const AngleHV & b2 = table[header.facet][h_idx + 1][set_num][ch];
-          ha_raw = (b1.h * h_offset2 + b2.h * h_offset) >> encoder_table_shift;
-          va_raw = (b1.v * h_offset2 + b2.v * h_offset) >> encoder_table_shift;
+          const AngleHV & b1 = table[header.facet][h_idx][set_num][channel];
+          const AngleHV & b2 = table[header.facet][h_idx + 1][set_num][channel];
+          h_angle_raw = (b1.h * h_offset2 + b2.h * h_offset) >> encoder_table_shift;
+          v_angle_raw = (b1.v * h_offset2 + b2.v * h_offset) >> encoder_table_shift;
         } else {
           using RobinETableType = AngleHV[polygon_max_facets][polygon_table_size]
                                          [robine_lite_max_set_number][max_receiver_in_set];
           const auto & table =
             *reinterpret_cast<const RobinETableType *>(calibration_.angle_hv_table.data() + 10);
-          const AngleHV & b1 = table[header.facet][h_idx][set_num][ch];
-          const AngleHV & b2 = table[header.facet][h_idx + 1][set_num][ch];
-          ha_raw = (b1.h * h_offset2 + b2.h * h_offset) >> encoder_table_shift;
-          va_raw = (b1.v * h_offset2 + b2.v * h_offset) >> encoder_table_shift;
+          const AngleHV & b1 = table[header.facet][h_idx][set_num][channel];
+          const AngleHV & b2 = table[header.facet][h_idx + 1][set_num][channel];
+          h_angle_raw = (b1.h * h_offset2 + b2.h * h_offset) >> encoder_table_shift;
+          v_angle_raw = (b1.v * h_offset2 + b2.v * h_offset) >> encoder_table_shift;
         }
 
         if (is_robin_e1x && header.scan_id >= static_cast<uint32_t>(max_set)) {
-          va_raw += robine1x_inset_line_offset;
+          v_angle_raw += robine1x_inset_line_offset;
         }
       } else {
-        ha_raw = header.h_angle;
-        va_raw = header.v_angle;
+        h_angle_raw = header.h_angle;
+        v_angle_raw = header.v_angle;
 
-        if (ch == 1) {
-          ha_raw += header.h_angle_diff_1;
-          va_raw += header.v_angle_diff_1 + 1 * v_base;
-        } else if (ch == 2) {
-          ha_raw += header.h_angle_diff_2;
-          va_raw += header.v_angle_diff_2 + 2 * v_base;
-        } else if (ch == 3) {
-          ha_raw += header.h_angle_diff_3;
-          va_raw += header.v_angle_diff_3 + 3 * v_base;
+        if (channel == 1) {
+          h_angle_raw += header.h_angle_diff_1;
+          v_angle_raw += header.v_angle_diff_1 + 1 * v_base;
+        } else if (channel == 2) {
+          h_angle_raw += header.h_angle_diff_2;
+          v_angle_raw += header.v_angle_diff_2 + 2 * v_base;
+        } else if (channel == 3) {
+          h_angle_raw += header.h_angle_diff_3;
+          v_angle_raw += header.v_angle_diff_3 + 3 * v_base;
         }
       }
 
-      double ha = ha_raw * radians_per_packet_angle_unit;
-      double va = va_raw * radians_per_packet_angle_unit;
-      double radius = pt.radius * meter_per_unit;
+      double h_angle = h_angle_raw * radians_per_packet_angle_unit;
+      double v_angle = v_angle_raw * radians_per_packet_angle_unit;
+      double radius = point.radius * meter_per_unit;
 
-      double cos_va = std::cos(va);
-      float x = static_cast<float>(radius * cos_va * std::cos(ha));
-      float y = static_cast<float>(-radius * cos_va * std::sin(ha));
-      float z = static_cast<float>(radius * std::sin(va));
+      double cos_v_angle = std::cos(v_angle);
+      float x = static_cast<float>(radius * cos_v_angle * std::cos(h_angle));
+      float y = static_cast<float>(-radius * cos_v_angle * std::sin(h_angle));
+      float z = static_cast<float>(radius * std::sin(v_angle));
 
-      uint16_t physical_channel = static_cast<uint16_t>(ch);
+      uint16_t physical_channel = static_cast<uint16_t>(channel);
       if (is_robin_w) {
-        size_t map_idx = static_cast<size_t>((header.scan_id % 12) * 4 + ch);
+        size_t map_idx = static_cast<size_t>((header.scan_id % 12) * 4 + channel);
         if (map_idx < sizeof(robinw_channel_mapping)) {
           physical_channel = static_cast<uint16_t>(robinw_channel_mapping[map_idx]) +
                              static_cast<uint16_t>(header.facet * 48);
         }
       } else if (is_robin_e1x) {
-        size_t map_idx = static_cast<size_t>((header.scan_id % 24) * 4 + ch);
+        size_t map_idx = static_cast<size_t>((header.scan_id % 24) * 4 + channel);
         if (map_idx < sizeof(robinelite_channel_mapping)) {
           physical_channel = robinelite_channel_mapping[map_idx];
         }
       }
       if (is_robin_w) {
-        const auto adjustment = interpolate_robin_w_adjustment(ha_raw, physical_channel);
+        const auto adjustment = interpolate_robin_w_adjustment(h_angle_raw, physical_channel);
         x = static_cast<float>(x + adjustment.z);
         y = static_cast<float>(y - adjustment.y);
         z = static_cast<float>(z + adjustment.x);
@@ -706,29 +706,29 @@ void SeyondDecoder::parse_robin_compact(const SeyondDataPacket * packet)
 
     for (size_t channel = 0; channel < compact_channel_count; ++channel) {
       for (size_t return_idx = 0; return_idx < return_count; ++return_idx) {
-        const auto & pt = points[channel + return_idx * compact_channel_count];
-        if (pt.radius == 0) {
+        const auto & point = points[channel + return_idx * compact_channel_count];
+        if (point.radius == 0) {
           continue;
         }
 
-        double ha = 0.0;
-        double va = 0.0;
+        double h_angle = 0.0;
+        double v_angle = 0.0;
         if (use_calibration) {
-          ha = static_cast<double>(angles[channel].h) * radians_per_packet_angle_unit;
-          va = static_cast<double>(angles[channel].v) * radians_per_packet_angle_unit;
+          h_angle = static_cast<double>(angles[channel].h) * radians_per_packet_angle_unit;
+          v_angle = static_cast<double>(angles[channel].v) * radians_per_packet_angle_unit;
           if (!is_robin_inside_compact_fov(angles[channel])) {
             continue;
           }
         } else {
-          ha = static_cast<double>(header.p_angle) * radians_per_packet_angle_unit;
-          va = static_cast<double>(header.g_angle) * radians_per_packet_angle_unit;
+          h_angle = static_cast<double>(header.p_angle) * radians_per_packet_angle_unit;
+          v_angle = static_cast<double>(header.g_angle) * radians_per_packet_angle_unit;
         }
 
-        double radius = pt.radius * meter_per_unit;
-        double cos_va = std::cos(va);
-        float x = static_cast<float>(radius * cos_va * std::cos(ha));
-        float y = static_cast<float>(-radius * cos_va * std::sin(ha));
-        float z = static_cast<float>(radius * std::sin(va));
+        double radius = point.radius * meter_per_unit;
+        double cos_v_angle = std::cos(v_angle);
+        float x = static_cast<float>(radius * cos_v_angle * std::cos(h_angle));
+        float y = static_cast<float>(-radius * cos_v_angle * std::sin(h_angle));
+        float z = static_cast<float>(radius * std::sin(v_angle));
         uint16_t physical_channel =
           static_cast<uint16_t>(header.scan_id * compact_channel_count + channel);
         if (is_robin_w_compact) {
@@ -752,7 +752,7 @@ void SeyondDecoder::parse_robin_compact(const SeyondDataPacket * packet)
           y = static_cast<float>(y - adjustment.y);
           z = static_cast<float>(z + adjustment.x);
         }
-        uint8_t intensity = static_cast<uint8_t>((static_cast<uint32_t>(pt.refl) * 255) / 4095);
+        uint8_t intensity = static_cast<uint8_t>((static_cast<uint32_t>(point.refl) * 255) / 4095);
 
         add_point(
           x, y, z, intensity, physical_channel,
@@ -782,36 +782,35 @@ void SeyondDecoder::parse_hummingbird_d1(const SeyondDataPacket * packet)
       payload + i * packet->item_size + sizeof(SeyondCoBlockHeader));
     uint16_t base_channel = static_cast<uint16_t>(header.scan_id % 4) * 8;
 
-    for (size_t ch = 0; ch < compact_channel_count; ++ch) {
+    for (size_t channel = 0; channel < compact_channel_count; ++channel) {
       for (size_t return_idx = 0; return_idx < return_count; ++return_idx) {
-        const auto & pt = points[ch + return_idx * compact_channel_count];
-        if (pt.radius == 0) continue;
+        const auto & point = points[channel + return_idx * compact_channel_count];
+        if (point.radius == 0) continue;
 
-        double ha, va;
+        double h_angle, v_angle;
         if (use_calibration) {
           using TableType = AngleHV[hummingbird_table_height][hummingbird_table_width];
           const TableType & table =
             *reinterpret_cast<const TableType *>(calibration_.angle_hv_table.data() + 10);
-          const AngleHV & angle = table[header.scan_id][header.scan_idx + ch];
+          const AngleHV & angle = table[header.scan_id][header.scan_idx + channel];
           if (!is_hummingbird_inside_compact_fov(angle)) continue;
-          ha = angle.h * (M_PI / 32768.0);
-          va = angle.v * (M_PI / 32768.0);
+          h_angle = angle.h * (M_PI / 32768.0);
+          v_angle = angle.v * (M_PI / 32768.0);
         } else {
-          ha = header.p_angle * (M_PI / 32768.0);
-          va = header.g_angle * (M_PI / 32768.0);
+          h_angle = header.p_angle * (M_PI / 32768.0);
+          v_angle = header.g_angle * (M_PI / 32768.0);
         }
 
-        double radius = pt.radius * (1.0 / 400.0);
+        double radius = point.radius * (1.0 / 400.0);
+        double cos_v_angle = std::cos(v_angle);
+        float x = static_cast<float>(radius * cos_v_angle * std::cos(h_angle));
+        float y = static_cast<float>(-radius * cos_v_angle * std::sin(h_angle));
+        float z = static_cast<float>(radius * std::sin(v_angle));
 
-        double cos_va = std::cos(va);
-        float x = static_cast<float>(radius * cos_va * std::cos(ha));
-        float y = static_cast<float>(-radius * cos_va * std::sin(ha));
-        float z = static_cast<float>(radius * std::sin(va));
-
-        uint8_t intensity = static_cast<uint8_t>((static_cast<uint32_t>(pt.refl) * 255) / 4095);
+        uint8_t intensity = static_cast<uint8_t>((static_cast<uint32_t>(point.refl) * 255) / 4095);
 
         add_point(
-          x, y, z, intensity, static_cast<uint16_t>(base_channel + ch),
+          x, y, z, intensity, static_cast<uint16_t>(base_channel + channel),
           to_scan_relative_timestamp_ns(
             current_scan_start_timestamp_ns_, packet_start_timestamp_ns,
             static_cast<uint32_t>(header.ts_10us) * 10000U));

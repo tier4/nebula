@@ -16,6 +16,7 @@
 
 #include <arpa/inet.h>
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cmath>
@@ -31,7 +32,7 @@ namespace nebula::drivers
 {
 namespace
 {
-constexpr double k_no_roi_value = 10000.0;
+constexpr double no_roi_value = 10000.0;
 constexpr size_t k_seyond_udp_mtu = 10000;
 constexpr size_t k_seyond_udp_socket_buffer_size = 4 * 1024 * 1024;
 
@@ -58,7 +59,7 @@ SeyondHwInterface::SeyondHwInterface(const SeyondSensorConfiguration & config)
 : sensor_config_(config)
 {
   http_client_ =
-    std::make_unique<connections::HttpClient>(sensor_config_.connection.sensor_ip, k_http_port);
+    std::make_unique<connections::HttpClient>(sensor_config_.connection.sensor_ip, http_port);
 }
 
 bool SeyondHwInterface::is_falcon_sensor() const
@@ -92,10 +93,9 @@ Status SeyondHwInterface::download_binary_file(
   output.clear();
 
   try {
-    auto socket =
-      connections::TcpSocket::Builder(sensor_config_.connection.sensor_ip, k_control_port)
-        .set_connect_timeout(2000)
-        .connect();
+    auto socket = connections::TcpSocket::Builder(sensor_config_.connection.sensor_ip, control_port)
+                    .set_connect_timeout(2000)
+                    .connect();
 
     std::string wire_command = command + "\n";
     socket.send(std::vector<uint8_t>(wire_command.begin(), wire_command.end()));
@@ -158,9 +158,9 @@ Status SeyondHwInterface::sensor_interface_start()
   }
 
   try {
-    std::string ip = sensor_config_.connection.host_ip;
+    std::string host_ip = sensor_config_.connection.host_ip;
     uint16_t port = sensor_config_.connection.udp_port;
-    connections::UdpSocket::Builder builder{ip, port};
+    connections::UdpSocket::Builder builder{host_ip, port};
     builder.set_mtu(k_seyond_udp_mtu).set_socket_buffer_size(k_seyond_udp_socket_buffer_size);
     udp_socket_.emplace(std::move(builder).bind());
   } catch (const std::exception &) {
@@ -170,7 +170,7 @@ Status SeyondHwInterface::sensor_interface_start()
   if (is_falcon_sensor() && sensor_config_.setup_sensor) {
     try {
       streaming_control_socket_ = std::make_unique<connections::TcpSocket>(
-        connections::TcpSocket::Builder(sensor_config_.connection.sensor_ip, k_control_port)
+        connections::TcpSocket::Builder(sensor_config_.connection.sensor_ip, control_port)
           .set_connect_timeout(2000)
           .set_buffer_size(4096)
           .connect());
@@ -249,11 +249,10 @@ Status SeyondHwInterface::send_raw_command(
   const std::string & command, std::string * response, int timeout_ms)
 {
   try {
-    auto socket =
-      connections::TcpSocket::Builder(sensor_config_.connection.sensor_ip, k_control_port)
-        .set_connect_timeout(timeout_ms)
-        .set_buffer_size(4096)
-        .connect();
+    auto socket = connections::TcpSocket::Builder(sensor_config_.connection.sensor_ip, control_port)
+                    .set_connect_timeout(timeout_ms)
+                    .set_buffer_size(4096)
+                    .connect();
 
     std::string wire_command = command + "\n";
     socket.send(std::vector<uint8_t>(wire_command.begin(), wire_command.end()));
@@ -294,20 +293,21 @@ Status SeyondHwInterface::send_raw_command(
 Status SeyondHwInterface::set_network(
   const std::string & sensor_ip, const std::string & netmask, const std::string & gateway)
 {
-  const auto ip = parse_ipv4_octets(sensor_ip);
-  const auto mask = parse_ipv4_octets(netmask);
-  const auto gw = parse_ipv4_octets(gateway.empty() ? std::string{"0.0.0.0"} : gateway);
-  if (!ip || !mask || !gw) {
+  const auto source_ip = parse_ipv4_octets(sensor_ip);
+  const auto network_mask = parse_ipv4_octets(netmask);
+  const auto gateway_ip = parse_ipv4_octets(gateway.empty() ? std::string{"0.0.0.0"} : gateway);
+  if (!source_ip || !network_mask || !gateway_ip) {
     return Status::SENSOR_CONFIG_ERROR;
   }
 
   std::ostringstream command;
-  command << "set_network " << static_cast<int>((*ip)[0]) << ' ' << static_cast<int>((*ip)[1])
-          << ' ' << static_cast<int>((*ip)[2]) << ' ' << static_cast<int>((*ip)[3]) << ' '
-          << static_cast<int>((*mask)[0]) << ' ' << static_cast<int>((*mask)[1]) << ' '
-          << static_cast<int>((*mask)[2]) << ' ' << static_cast<int>((*mask)[3]) << ' '
-          << static_cast<int>((*gw)[0]) << ' ' << static_cast<int>((*gw)[1]) << ' '
-          << static_cast<int>((*gw)[2]) << ' ' << static_cast<int>((*gw)[3]);
+  command << "set_network " << static_cast<int>((*source_ip)[0]) << ' '
+          << static_cast<int>((*source_ip)[1]) << ' ' << static_cast<int>((*source_ip)[2]) << ' '
+          << static_cast<int>((*source_ip)[3]) << ' ' << static_cast<int>((*network_mask)[0]) << ' '
+          << static_cast<int>((*network_mask)[1]) << ' ' << static_cast<int>((*network_mask)[2])
+          << ' ' << static_cast<int>((*network_mask)[3]) << ' '
+          << static_cast<int>((*gateway_ip)[0]) << ' ' << static_cast<int>((*gateway_ip)[1]) << ' '
+          << static_cast<int>((*gateway_ip)[2]) << ' ' << static_cast<int>((*gateway_ip)[3]);
   return send_raw_command(command.str());
 }
 
@@ -400,7 +400,7 @@ Status SeyondHwInterface::setup_sensor(const SeyondSensorConfiguration & config)
 {
   sensor_config_ = config;
   http_client_ =
-    std::make_unique<connections::HttpClient>(sensor_config_.connection.sensor_ip, k_http_port);
+    std::make_unique<connections::HttpClient>(sensor_config_.connection.sensor_ip, http_port);
 
   auto status = set_network(
     config.connection.sensor_ip, config.connection.netmask,
@@ -436,7 +436,7 @@ Status SeyondHwInterface::setup_sensor(const SeyondSensorConfiguration & config)
     }
   }
 
-  if (config.horizontal_roi != k_no_roi_value || config.vertical_roi != k_no_roi_value) {
+  if (config.horizontal_roi != no_roi_value || config.vertical_roi != no_roi_value) {
     std::ostringstream roi_val;
     roi_val << format_double(config.horizontal_roi) << ',' << format_double(config.vertical_roi);
     status = set_attribute("roi", roi_val.str());

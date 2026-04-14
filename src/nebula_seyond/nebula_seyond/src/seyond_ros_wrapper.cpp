@@ -20,8 +20,9 @@
 
 #include <boost/format.hpp>
 
-#include <memory>
+#include <algorithm>
 #include <limits>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>

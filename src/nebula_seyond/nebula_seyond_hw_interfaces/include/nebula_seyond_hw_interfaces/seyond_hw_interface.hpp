@@ -81,8 +81,8 @@ private:
   std::unique_ptr<connections::TcpSocket> streaming_control_socket_;
   std::mutex interface_mutex_;
 
-  static constexpr uint16_t k_http_port = 8010;
-  static constexpr uint16_t k_control_port = 8002;
+  static constexpr uint16_t http_port = 8010;
+  static constexpr uint16_t control_port = 8002;
 };
 
 }  // namespace nebula::drivers
