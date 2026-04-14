@@ -127,7 +127,16 @@ void SeyondRosWrapper::receive_packet_callback(
   std::vector<uint8_t> & packet,
   const nebula::drivers::connections::UdpSocket::RxMetadata & metadata)
 {
-  if (packets_pub_->get_subscription_count() > 0) {
+  const bool has_cloud_sub = cloud_pub_->get_subscription_count() > 0 ||
+                             cloud_pub_->get_intra_process_subscription_count() > 0;
+  const bool has_packets_sub = packets_pub_->get_subscription_count() > 0 ||
+                               packets_pub_->get_intra_process_subscription_count() > 0;
+
+  if (!has_cloud_sub && !has_packets_sub) {
+    return;
+  }
+
+  if (has_packets_sub) {
     nebula_msgs::msg::NebulaPacket packet_msg;
     packet_msg.stamp = clamp_ros_time(metadata.timestamp_ns.value_or(0));
     packet_msg.data = packet;
@@ -139,8 +148,10 @@ void SeyondRosWrapper::receive_packet_callback(
   }
 
   auto result = decoder_->unpack(packet);
-  if (result.scan_complete && !current_packets_msg_->packets.empty()) {
-    packets_pub_->publish(std::move(current_packets_msg_));
+  if (result.scan_complete) {
+    if (has_packets_sub && !current_packets_msg_->packets.empty()) {
+      packets_pub_->publish(std::move(current_packets_msg_));
+    }
     current_packets_msg_ = std::make_unique<nebula_msgs::msg::NebulaPackets>();
     current_packets_msg_->header.frame_id = config_.frame_id;
   }
@@ -149,6 +160,12 @@ void SeyondRosWrapper::receive_packet_callback(
 void SeyondRosWrapper::receive_packets_ros_callback(
   const nebula_msgs::msg::NebulaPackets::SharedPtr packets_msg)
 {
+  if (
+    cloud_pub_->get_subscription_count() == 0 &&
+    cloud_pub_->get_intra_process_subscription_count() == 0) {
+    return;
+  }
+
   for (auto & packet : packets_msg->packets) {
     decoder_->unpack(packet.data);
   }
