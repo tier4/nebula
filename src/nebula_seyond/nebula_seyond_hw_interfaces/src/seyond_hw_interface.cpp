@@ -167,7 +167,7 @@ Status SeyondHwInterface::sensor_interface_start()
     return Status::UDP_CONNECTION_ERROR;
   }
 
-  if (is_falcon_sensor()) {
+  if (is_falcon_sensor() && sensor_config_.setup_sensor) {
     try {
       streaming_control_socket_ = std::make_unique<connections::TcpSocket>(
         connections::TcpSocket::Builder(sensor_config_.connection.sensor_ip, k_control_port)
