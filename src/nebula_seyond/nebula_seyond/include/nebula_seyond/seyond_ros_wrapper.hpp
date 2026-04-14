@@ -56,6 +56,7 @@ private:
   diagnostic_updater::Updater diagnostic_updater_;
   nebula::drivers::SeyondSensorConfiguration config_;
   bool launch_hw_{true};
+  std::string calibration_file_;
 
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
 };

@@ -9,6 +9,8 @@
   <arg name="sensor_ip" default="172.168.1.10" />
   <arg name="host_ip" default="172.168.1.100" />
   <arg name="udp_port" default="8010" />
+  <arg name="calibration_file" default="" />
+  <arg name="diag_span" default="1000" />
   <arg name="launch_hw" default="true" description="Whether to connect to a real sensor (true) or to accept packet messages (false).">
     <choice value="true" />
     <choice value="false" />
@@ -25,6 +27,8 @@
     <param name="sensor_ip" value="$(var sensor_ip)"/>
     <param name="host_ip" value="$(var host_ip)"/>
     <param name="udp_port" value="$(var udp_port)"/>
+    <param name="calibration_file" value="$(var calibration_file)"/>
+    <param name="diag_span" value="$(var diag_span)"/>
     <param name="setup_sensor" value="$(var setup_sensor)"/>
   </node>
 

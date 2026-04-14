@@ -32,6 +32,8 @@ namespace nebula::drivers
 namespace
 {
 constexpr double k_no_roi_value = 10000.0;
+constexpr size_t k_seyond_udp_mtu = 10000;
+constexpr size_t k_seyond_udp_socket_buffer_size = 4 * 1024 * 1024;
 
 std::optional<std::array<uint8_t, 4>> parse_ipv4_octets(const std::string & ip)
 {
@@ -159,6 +161,7 @@ Status SeyondHwInterface::sensor_interface_start()
     std::string ip = sensor_config_.connection.host_ip;
     uint16_t port = sensor_config_.connection.udp_port;
     connections::UdpSocket::Builder builder{ip, port};
+    builder.set_mtu(k_seyond_udp_mtu).set_socket_buffer_size(k_seyond_udp_socket_buffer_size);
     udp_socket_.emplace(std::move(builder).bind());
   } catch (const std::exception &) {
     return Status::UDP_CONNECTION_ERROR;

@@ -20,6 +20,7 @@ add_library(
   src/seyond_ros_wrapper.cpp
   src/hw_interface_wrapper.cpp
   src/hw_monitor_wrapper.cpp)
+set_target_properties(seyond_ros_wrapper PROPERTIES OUTPUT_NAME nebula_seyond_ros_wrapper)
 
 target_include_directories(
   seyond_ros_wrapper

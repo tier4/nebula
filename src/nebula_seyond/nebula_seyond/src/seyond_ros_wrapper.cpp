@@ -21,11 +21,42 @@
 #include <boost/format.hpp>
 
 #include <memory>
+#include <limits>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 namespace nebula::ros
 {
+
+namespace
+{
+
+builtin_interfaces::msg::Time clamp_ros_time(uint64_t timestamp_ns)
+{
+  builtin_interfaces::msg::Time stamp{};
+  const uint64_t max_ros_time_ns =
+    static_cast<uint64_t>(std::numeric_limits<int32_t>::max()) * 1000000000ULL + 999999999ULL;
+  const uint64_t clamped_timestamp_ns = std::min(timestamp_ns, max_ros_time_ns);
+  stamp.sec = static_cast<int32_t>(clamped_timestamp_ns / 1000000000ULL);
+  stamp.nanosec = static_cast<uint32_t>(clamped_timestamp_ns % 1000000000ULL);
+  return stamp;
+}
+
+nebula::drivers::SeyondCalibrationData load_calibration_file_or_throw(
+  const std::string & calibration_file)
+{
+  auto calibration_or_error =
+    nebula::drivers::SeyondCalibrationData::load_from_file(calibration_file);
+  if (!calibration_or_error.has_value()) {
+    throw std::runtime_error(
+      "Failed to load Seyond calibration file '" + calibration_file +
+      "': " + calibration_or_error.error().message);
+  }
+  return calibration_or_error.value();
+}
+
+}  // namespace
 
 SeyondRosWrapper::SeyondRosWrapper(const rclcpp::NodeOptions & options)
 : rclcpp::Node("seyond_ros_wrapper", options), diagnostic_updater_(this)
@@ -52,12 +83,14 @@ SeyondRosWrapper::SeyondRosWrapper(const rclcpp::NodeOptions & options)
       hw_monitor_wrapper_ = std::make_unique<SeyondHwMonitorWrapper>(
         this, diagnostic_updater_, hw_interface_, config_ptr);
       calibration = *hw_interface_wrapper_->calibration();
+      if (!calibration_file_.empty()) {
+        calibration = load_calibration_file_or_throw(calibration_file_);
+      }
     } catch (const std::exception & ex) {
       RCLCPP_ERROR(get_logger(), "Failed to initialize Seyond hardware wrappers: %s", ex.what());
     }
-  } else {
-    RCLCPP_INFO(
-      get_logger(), "Hardware connection disabled (launch_hw:=false). Decoder only mode active.");
+  } else if (!calibration_file_.empty()) {
+    calibration = load_calibration_file_or_throw(calibration_file_);
   }
 
   decoder_ = std::make_unique<nebula::drivers::SeyondDecoder>(
@@ -88,14 +121,23 @@ void SeyondRosWrapper::receive_packet_callback(
 void SeyondRosWrapper::publish_cloud(
   nebula::drivers::NebulaPointCloudPtr cloud, uint64_t base_timestamp_ns)
 {
+  if (!cloud || cloud->empty()) {
+    return;
+  }
+
+  if (
+    cloud_pub_->get_subscription_count() == 0 &&
+    cloud_pub_->get_intra_process_subscription_count() == 0) {
+    return;
+  }
+
   auto ros_msg = nebula::ros::to_ros_msg(cloud);
 
   ros_msg.header.frame_id = config_.frame_id;
 
-  if (config_.use_sensor_time && !cloud->empty()) {
+  if (config_.use_sensor_time) {
     uint64_t ts_ns = base_timestamp_ns + cloud->front().time_stamp;
-    ros_msg.header.stamp.sec = static_cast<int32_t>(ts_ns / 1000000000);
-    ros_msg.header.stamp.nanosec = static_cast<uint32_t>(ts_ns % 1000000000);
+    ros_msg.header.stamp = clamp_ros_time(ts_ns);
   } else {
     ros_msg.header.stamp = now();
   }
@@ -123,6 +165,7 @@ void SeyondRosWrapper::declare_parameters()
   declare_parameter<double>("frame_rate", 0.0);
   declare_parameter<double>("horizontal_roi", 10000.0);
   declare_parameter<double>("vertical_roi", 10000.0);
+  declare_parameter<std::string>("calibration_file", "");
 }
 
 void SeyondRosWrapper::get_parameters()
@@ -156,6 +199,7 @@ void SeyondRosWrapper::get_parameters()
   config_.frame_rate = get_parameter("frame_rate").as_double();
   config_.horizontal_roi = get_parameter("horizontal_roi").as_double();
   config_.vertical_roi = get_parameter("vertical_roi").as_double();
+  calibration_file_ = get_parameter("calibration_file").as_string();
 }
 
 }  // namespace nebula::ros
