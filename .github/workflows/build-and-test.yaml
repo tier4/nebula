@@ -15,16 +15,18 @@ jobs:
       fail-fast: false
       matrix:
         rosdistro: [humble, jazzy]
-        agnocast_enabled: [0, 1]
+        enable_agnocast: [0, 1]
         exclude:
           - rosdistro: jazzy
-            agnocast_enabled: 1  # Agnocast does not yet support Jazzy
+            # ros-jazzy-agnocastlib is not yet available on Apt
+            # (but has already been released to rosdistro)
+            enable_agnocast: 1
     env:
       CCACHE_DIR: /root/.ccache
       CCACHE_SIZE: 1G  # The GitHub cache action allows for 10G but the runners' disk space is limited
       CC: /usr/lib/ccache/gcc
       CXX: /usr/lib/ccache/g++
-      AGNOCAST_ENABLED: ${{ matrix.agnocast_enabled }}
+      ENABLE_AGNOCAST: ${{ matrix.enable_agnocast }}
 
     steps:
       - name: Check out repository
@@ -97,7 +99,7 @@ jobs:
           build-depends-repos: build_depends-${{ matrix.rosdistro }}.repos
 
       - name: Upload coverage to CodeCov
-        if: ${{ steps.test.outputs.coverage-report-files != '' && matrix.agnocast_enabled == 0 }}
+        if: ${{ steps.test.outputs.coverage-report-files != '' && matrix.enable_agnocast == 0 }}
         uses: codecov/codecov-action@v4
         with:
           files: ${{ steps.test.outputs.coverage-report-files }}
