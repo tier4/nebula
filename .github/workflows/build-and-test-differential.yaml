@@ -70,6 +70,8 @@ jobs:
         id: test
         if: steps.build.outcome == 'success'
         uses: autowarefoundation/autoware-github-actions/colcon-test@v1
+        env:
+          ENABLE_AGNOCAST: 0
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}

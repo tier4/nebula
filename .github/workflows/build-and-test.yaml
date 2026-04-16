@@ -93,6 +93,8 @@ jobs:
         if: ${{ steps.get-self-packages.outputs.self-packages != '' }}
         id: test
         uses: autowarefoundation/autoware-github-actions/colcon-test@v1
+        env:
+          ENABLE_AGNOCAST: 0
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
