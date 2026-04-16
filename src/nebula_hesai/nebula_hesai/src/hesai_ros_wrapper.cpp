@@ -37,6 +37,7 @@ HesaiRosWrapper::HesaiRosWrapper(const rclcpp::NodeOptions & options)
   diagnostic_updater_general_((declare_parameter<bool>("diagnostic_updater.use_fqn", true), this)),
   diagnostic_updater_functional_safety_(this)
 {
+  // CI trigger
   setvbuf(stdout, nullptr, _IONBF, BUFSIZ);
 
   wrapper_status_ = declare_and_get_sensor_config_params();
