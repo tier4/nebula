@@ -45,15 +45,8 @@ jobs:
         id: get-self-packages
         uses: autowarefoundation/autoware-github-actions/get-self-packages@v1
 
-      - name: Install ccache
-        run: sudo apt-get update && sudo apt-get install -y ccache
-        shell: bash
-
-      - name: Create ccache directory
-        run: |
-          mkdir -p ${CCACHE_DIR}
-          du -sh ${CCACHE_DIR} && ccache -s
-        shell: bash
+      - run: ./.github/workflows/scripts/ensure-apt-up-to-date.sh
+      - run: ./.github/workflows/scripts/setup-ccache.sh
 
       - name: Limit ccache size
         run: |
