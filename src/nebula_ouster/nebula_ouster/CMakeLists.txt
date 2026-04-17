@@ -9,11 +9,22 @@ add_library(
   ouster_ros_wrapper SHARED
   src/ouster_ros_wrapper.cpp)
 
-set(_nebula_ouster_sdk "${CMAKE_CURRENT_SOURCE_DIR}/../../../ouster-sdk")
-if(NOT EXISTS "${_nebula_ouster_sdk}/CMakeLists.txt")
-  message(
-    FATAL_ERROR
-      "nebula_ouster_decoders: bundled ouster-sdk is missing (${_nebula_ouster_sdk})")
+set(_nebula_ouster_sdk_candidates
+  "${CMAKE_CURRENT_SOURCE_DIR}/../../../ouster-sdk"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../../../dependency_ws/ouster-sdk"
+)
+
+set(_nebula_ouster_sdk "")
+foreach(_candidate IN LISTS _nebula_ouster_sdk_candidates)
+  if(EXISTS "${_candidate}/CMakeLists.txt")
+    set(_nebula_ouster_sdk "${_candidate}")
+    break()
+  endif()
+endforeach()
+
+if(_nebula_ouster_sdk STREQUAL "")
+  message(FATAL_ERROR
+    "nebula_ouster_decoders: ouster-sdk is missing. Checked: ${_nebula_ouster_sdk_candidates}")
 endif()
 
 set(BUILD_SENSOR ON CACHE BOOL "Ouster SDK: sensor module" FORCE)
