@@ -35,6 +35,9 @@ add_subdirectory("${_nebula_ouster_sdk}" "${CMAKE_CURRENT_BINARY_DIR}/ouster-sdk
 
 if(TARGET ouster_client)
   target_compile_options(ouster_client PRIVATE -Wno-pedantic)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(ouster_client PRIVATE -Wno-error=stringop-overflow)  # cspell:ignore stringop
+  endif()
 endif()
 if(TARGET nmea)
   target_compile_options(nmea PRIVATE -Wno-pedantic)
@@ -43,7 +46,9 @@ endif()
 find_package(Eigen3 REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
-find_package(libzip REQUIRED)
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(LIBZIP REQUIRED IMPORTED_TARGET libzip)
 
 # vcpkg / distro CMake config names differ; normalize to IMPORTED target @c libzip::zip .
 if(NOT TARGET libzip::zip)
@@ -51,6 +56,8 @@ if(NOT TARGET libzip::zip)
     add_library(libzip::zip ALIAS libzip::libzip)
   elseif(TARGET LibZip::libzip)
     add_library(libzip::zip ALIAS LibZip::libzip)
+  elseif(TARGET PkgConfig::LIBZIP)
+    add_library(libzip::zip ALIAS PkgConfig::LIBZIP)
   endif()
 endif()
 if(NOT TARGET libzip::zip)
