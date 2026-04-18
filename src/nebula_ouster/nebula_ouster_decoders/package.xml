@@ -15,7 +15,7 @@
   <depend>eigen</depend>
   <depend>libssl-dev</depend>
   <depend>libzip-dev</depend>
-  <depend>zipcmp</depend> 
+  <depend>curl</depend> 
   <depend>nebula_core_common</depend>
   <depend>nebula_core_decoders</depend>
   <depend>nebula_ouster_common</depend>
