@@ -22,11 +22,13 @@ The ouster sensor consists of four packages:
 
 When cloning the Nebula driver make sure to clone as a recursive submodule or if you already have
 the project cloned then simply invoke the following command to init the submodules before proceeding:
+
 ```bash
 git submodule update --init --recursive src/nebula_ouster/lib/ouster-sdk.
 ```
 
 Now invoke the following command to build nebula_ouster package
+
 ```bash
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-up-to nebula_ouster
 ```
