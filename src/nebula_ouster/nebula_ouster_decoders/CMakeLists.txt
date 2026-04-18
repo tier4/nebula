@@ -4,22 +4,13 @@ project(nebula_ouster_decoders)
 find_package(autoware_cmake REQUIRED)
 autoware_package()
 
-set(_nebula_ouster_sdk_candidates
-  "${CMAKE_CURRENT_SOURCE_DIR}/../../../ouster-sdk"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../../../dependency_ws/ouster-sdk"
-)
+set(_nebula_ouster_sdk "${CMAKE_CURRENT_SOURCE_DIR}/../lib/ouster-sdk")
 
-set(_nebula_ouster_sdk "")
-foreach(_candidate IN LISTS _nebula_ouster_sdk_candidates)
-  if(EXISTS "${_candidate}/CMakeLists.txt")
-    set(_nebula_ouster_sdk "${_candidate}")
-    break()
-  endif()
-endforeach()
-
-if(_nebula_ouster_sdk STREQUAL "")
+if(NOT EXISTS "${_nebula_ouster_sdk}/CMakeLists.txt")
   message(FATAL_ERROR
-    "nebula_ouster_decoders: ouster-sdk is missing. Checked: ${_nebula_ouster_sdk_candidates}")
+    "nebula_ouster_decoders: ouster-sdk is missing! init submodules using:"
+    "\n\tgit submodule update --init --recursive src/nebula_ouster/lib/ouster-sdk.
+    \nChecked:\n\t${_nebula_ouster_sdk}")
 endif()
 
 set(BUILD_SENSOR OFF CACHE BOOL "Ouster SDK: sensor module" FORCE)

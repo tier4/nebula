@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
       - name: Free disk space (Ubuntu)
         uses: jlumbroso/free-disk-space@v1.2.0

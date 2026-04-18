@@ -3,8 +3,3 @@ repositories:
     type: git
     url: https://github.com/tier4/sync_tooling_msgs.git
     version: main
-
-  ouster-sdk:
-    type: git
-    url: https://github.com/ouster-lidar/ouster-sdk.git
-    version: master
