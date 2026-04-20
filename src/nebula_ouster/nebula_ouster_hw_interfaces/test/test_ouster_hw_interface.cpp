@@ -39,8 +39,13 @@ protected:
   void setup_mock_sender(uint16_t src_port, uint16_t dst_port)
   {
     mock_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
+    if (mock_fd_ < 0) {
+      throw std::runtime_error("socket() failed");
+    }
     int opt = 1;
-    setsockopt(mock_fd_, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt));
+    if (setsockopt(mock_fd_, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
+      throw std::runtime_error("setsockopt failed");
+    }
 
     sockaddr_in src_addr{};
     src_addr.sin_family = AF_INET;
@@ -59,9 +64,12 @@ protected:
   void send_mock_payload()
   {
     std::vector<uint8_t> dummy_payload(512, 0xAB);
-    sendto(
+    ssize_t sent = sendto(
       mock_fd_, dummy_payload.data(), dummy_payload.size(), 0,
       reinterpret_cast<struct sockaddr *>(&dst_addr_), sizeof(dst_addr_));
+    if (sent < 0) {
+      throw std::runtime_error("sendto failed");
+    }
   }
 
   nebula::drivers::ConnectionConfiguration config_;
