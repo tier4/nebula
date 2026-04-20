@@ -12,7 +12,7 @@
 
   <depend>nebula_core_common</depend>
   <depend>nebula_core_decoders</depend>
-  <depend>nlohmann_json</depend>
+  <depend>nlohmann-json-dev</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
