@@ -43,14 +43,19 @@ protected:
       throw std::runtime_error("socket() failed");
     }
     int opt = 1;
-    if (setsockopt(mock_fd_, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
+    if (setsockopt(mock_fd_, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
       throw std::runtime_error("setsockopt failed");
     }
+#ifdef SO_REUSEPORT
+    if (setsockopt(mock_fd_, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
+      throw std::runtime_error("setsockopt failed");
+    }
+#endif
 
     sockaddr_in src_addr{};
     src_addr.sin_family = AF_INET;
     src_addr.sin_port = htons(src_port);
-    inet_pton(AF_INET, "127.0.0.2", &src_addr.sin_addr);
+    inet_pton(AF_INET, config_.sensor_ip.c_str(), &src_addr.sin_addr);
 
     if (bind(mock_fd_, reinterpret_cast<struct sockaddr *>(&src_addr), sizeof(src_addr)) < 0) {
       throw std::runtime_error("bind mock fd failed");
@@ -58,7 +63,7 @@ protected:
 
     dst_addr_.sin_family = AF_INET;
     dst_addr_.sin_port = htons(dst_port);
-    inet_pton(AF_INET, "127.0.0.1", &dst_addr_.sin_addr);
+    inet_pton(AF_INET, config_.host_ip.c_str(), &dst_addr_.sin_addr);
   }
 
   void send_mock_payload()
