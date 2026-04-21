@@ -88,8 +88,7 @@ TEST_F(TestOusterHwInterface, TestStartWithoutCallback)
   auto result = hw.sensor_interface_start();
   ASSERT_FALSE(result.has_value());
   EXPECT_EQ(
-    result.error().code,
-    nebula::drivers::OusterHwInterface::Error::Code::CALLBACK_NOT_REGISTERED);
+    result.error().code, nebula::drivers::OusterHwInterface::Error::Code::CALLBACK_NOT_REGISTERED);
 }
 
 TEST_F(TestOusterHwInterface, TestRegisterEmptyCallback)
@@ -97,8 +96,7 @@ TEST_F(TestOusterHwInterface, TestRegisterEmptyCallback)
   nebula::drivers::OusterHwInterface hw(config_);
   auto result = hw.register_scan_callback(nullptr);
   ASSERT_FALSE(result.has_value());
-  EXPECT_EQ(
-    result.error().code, nebula::drivers::OusterHwInterface::Error::Code::INVALID_CALLBACK);
+  EXPECT_EQ(result.error().code, nebula::drivers::OusterHwInterface::Error::Code::INVALID_CALLBACK);
 }
 
 TEST_F(TestOusterHwInterface, TestLifecycle)
@@ -170,8 +168,7 @@ TEST_F(TestOusterHwInterface, TestScanPacketCallback)
   std::atomic_bool callback_triggered{false};
   auto reg_result = hw.register_scan_callback(
     [&](
-      std::vector<uint8_t> & buffer,
-      const nebula::drivers::connections::UdpSocket::RxMetadata &) {
+      std::vector<uint8_t> & buffer, const nebula::drivers::connections::UdpSocket::RxMetadata &) {
       if (buffer.size() > 0) callback_triggered = true;
     });
   ASSERT_TRUE(reg_result.has_value());
