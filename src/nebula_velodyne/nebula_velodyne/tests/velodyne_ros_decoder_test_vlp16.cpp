@@ -360,7 +360,6 @@ void VelodyneRosDecoderTest::read_bag()
           std::cout << target_pcd_path << std::endl;
           if (target_pcd_path.exists()) {
             std::cout << "exists: " << target_pcd_path << std::endl;
-            nebula::drivers::io::PcdWriter::write_binary(target_pcd_path.string(), *pointcloud);
             auto loaded_cloud = nebula::drivers::io::PcdReader::read<nebula::drivers::PointXYZ>(
               target_pcd_path.string());
             *ref_pointcloud = std::move(loaded_cloud);
