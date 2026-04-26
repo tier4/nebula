@@ -62,15 +62,24 @@ SeyondHwInterface::SeyondHwInterface(const SeyondSensorConfiguration & config)
     std::make_unique<connections::HttpClient>(sensor_config_.connection.sensor_ip, http_port);
 }
 
-bool SeyondHwInterface::is_falcon_sensor() const
+bool SeyondHwInterface::requires_direct_start_command() const
 {
   return sensor_config_.sensor_model == SeyondSensorModel::HUMMINGBIRD_D1 ||
+         sensor_config_.sensor_model == SeyondSensorModel::ROBIN_W ||
+         sensor_config_.sensor_model == SeyondSensorModel::ROBIN_E1X ||
+         sensor_config_.sensor_model == SeyondSensorModel::FALCON_K;
+}
+
+bool SeyondHwInterface::uses_four_field_udp_ports_ip() const
+{
+  return sensor_config_.sensor_model == SeyondSensorModel::HUMMINGBIRD_D1 ||
+         sensor_config_.sensor_model == SeyondSensorModel::ROBIN_W ||
          sensor_config_.sensor_model == SeyondSensorModel::FALCON_K;
 }
 
 bool SeyondHwInterface::uses_six_field_udp_ports_ip() const
 {
-  return !is_falcon_sensor();
+  return !uses_four_field_udp_ports_ip();
 }
 
 std::string SeyondHwInterface::build_udp_ports_ip_value(
@@ -167,13 +176,16 @@ Status SeyondHwInterface::sensor_interface_start()
     return Status::UDP_CONNECTION_ERROR;
   }
 
-  if (is_falcon_sensor() && sensor_config_.setup_sensor) {
+  if (requires_direct_start_command()) {
     try {
       streaming_control_socket_ = std::make_unique<connections::TcpSocket>(
         connections::TcpSocket::Builder(sensor_config_.connection.sensor_ip, control_port)
           .set_connect_timeout(2000)
           .set_buffer_size(4096)
           .connect());
+
+      std::string start_cmd = "start\n";
+      streaming_control_socket_->send(std::vector<uint8_t>(start_cmd.begin(), start_cmd.end()));
 
       std::string direct_cmd =
         "start direct " + std::to_string(sensor_config_.connection.udp_port) + '\n';
@@ -445,12 +457,12 @@ Status SeyondHwInterface::setup_sensor(const SeyondSensorConfiguration & config)
     }
   }
 
-  status = set_attribute("mode", "3");
+  status = set_attribute("enabled", "1");
   if (status != Status::OK) {
     return status;
   }
 
-  status = set_attribute("enabled", "1");
+  status = set_attribute("mode", "3");
   if (status != Status::OK) {
     return status;
   }

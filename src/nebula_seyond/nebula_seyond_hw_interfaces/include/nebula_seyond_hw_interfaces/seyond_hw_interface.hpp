@@ -69,7 +69,8 @@ private:
   Status set_return_mode(ReturnMode return_mode);
   Status set_time_sync(SeyondSyncMode sync_mode);
   Status set_frame_rate(double frame_rate);
-  bool is_falcon_sensor() const;
+  bool requires_direct_start_command() const;
+  bool uses_four_field_udp_ports_ip() const;
   bool uses_six_field_udp_ports_ip() const;
   std::string build_udp_ports_ip_value(const SeyondConnectionConfiguration & config) const;
   Status download_binary_file(const std::string & command, std::vector<uint8_t> & output);
