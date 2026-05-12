@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Radar Continental SRR520 parameters.",
+  "type": "object",
+  "definitions": {
+    "SRR520": {
+      "type": "object",
+      "properties": {
+        "interface": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/interface"
+        },
+        "receiver_timeout_sec": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/receiver_timeout_sec"
+        },
+        "sender_timeout_sec": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/sender_timeout_sec"
+        },
+        "filters": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/filters"
+        },
+        "launch_hw": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/hardware.json#/definitions/launch_hw"
+        },
+        "frame_id": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/frame_id"
+        },
+        "base_frame": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/base_frame"
+        },
+        "object_frame": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/object_frame"
+        },
+        "use_bus_time": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/use_bus_time"
+        },
+        "configuration_vehicle_wheelbase": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/configuration_vehicle_wheelbase"
+        },
+        "sensor_model": {
+          "$ref": "radar_continental.json#/definitions/sensor_model",
+          "enum": [
+            "SRR520"
+          ]
+        }
+      },
+      "required": [
+        "interface",
+        "receiver_timeout_sec",
+        "sender_timeout_sec",
+        "filters",
+        "use_bus_time",
+        "launch_hw",
+        "configuration_vehicle_wheelbase",
+        "sensor_model"
+      ]
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/SRR520"
+        }
+      },
+      "required": [
+        "ros__parameters"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "/**"
+  ],
+  "additionalProperties": false
+}

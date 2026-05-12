@@ -1,0 +1,178 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Radar Continental ARS548 parameters.",
+  "type": "object",
+  "definitions": {
+    "ARS548": {
+      "type": "object",
+      "properties": {
+        "host_ip": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/host_ip"
+        },
+        "sensor_ip": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/sensor_ip"
+        },
+        "multicast_ip": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/multicast_ip"
+        },
+        "data_port": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/data_port"
+        },
+        "configuration_host_port": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/configuration_host_port"
+        },
+        "configuration_sensor_port": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/communication.json#/definitions/configuration_sensor_port"
+        },
+        "launch_hw": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/hardware.json#/definitions/launch_hw"
+        },
+        "frame_id": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/frame_id"
+        },
+        "base_frame": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/base_frame"
+        },
+        "object_frame": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/object_frame"
+        },
+        "use_sensor_time": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/use_sensor_time"
+        },
+        "radar_info_rate_subsample": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/topic.json#/definitions/radar_info_rate_subsample"
+        },
+        "configuration_vehicle_length": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/configuration_vehicle_length"
+        },
+        "configuration_vehicle_width": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/configuration_vehicle_width"
+        },
+        "configuration_vehicle_height": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/configuration_vehicle_height"
+        },
+        "configuration_vehicle_wheelbase": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/configuration_vehicle_wheelbase"
+        },
+        "sensor_model": {
+          "$ref": "radar_continental.json#/definitions/sensor_model",
+          "enum": [
+            "ARS548"
+          ]
+        },
+        "diagnostics": {
+          "type": "object",
+          "properties": {
+            "rate_bound_status": {
+              "$ref": "../../../nebula_core/nebula_core_ros/schema/diagnostics.json#/definitions/rate_bound_status"
+            },
+            "blockage": {
+              "type": "object",
+              "properties": {
+                "status_level": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "integer",
+                      "default": "2",
+                      "minimum": 0,
+                      "maximum": 4,
+                      "description": "Maximum blockage status level considered as OK (0: Blind, 1: High, 2: Mid, 3: Low, 4: None)"
+                    },
+                    "warn": {
+                      "type": "integer",
+                      "default": "1",
+                      "minimum": 0,
+                      "maximum": 4,
+                      "description": "Maximum blockage status level considered as Warning (0: Blind, 1: High, 2: Mid, 3: Low, 4: None). Can not be greater than `ok`. If `ok` is equal to `warn`, the status will be set to `ERROR` if the blockage status is greater than `ok`."
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "warn"
+                  ]
+                },
+                "test_level": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "integer",
+                      "default": "1",
+                      "minimum": 0,
+                      "maximum": 2,
+                      "description": "Maximum blockage test level considered as OK (0: Self test failed, 1: Self test passed, 2: Self test ongoing)"
+                    },
+                    "warn": {
+                      "type": "integer",
+                      "default": "1",
+                      "minimum": 0,
+                      "maximum": 2,
+                      "description": "Maximum blockage test level considered as Warning (0: Self test failed, 1: Self test passed, 2: Self test ongoing). Can not be greater than `ok`. If `ok` is equal to `warn`, the status will be set to `ERROR` if the blockage test is greater than `ok`."
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "warn"
+                  ]
+                },
+                "num_frame_transition": {
+                  "type": "integer",
+                  "description": "Number of frames to wait before transitioning diagnostic status for blockage.",
+                  "default": 5,
+                  "minimum": 1
+                }
+              }
+            },
+            "internal": {
+              "type": "object",
+              "properties": {
+                "num_frame_transition": {
+                  "type": "integer",
+                  "description": "Number of frames to wait before transitioning diagnostic status for internal errors.",
+                  "default": 10,
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        },
+        "sync_diagnostics": {
+          "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/sync_diagnostics"
+        }
+      },
+      "required": [
+        "host_ip",
+        "sensor_ip",
+        "multicast_ip",
+        "data_port",
+        "configuration_host_port",
+        "configuration_sensor_port",
+        "launch_hw",
+        "configuration_vehicle_length",
+        "configuration_vehicle_width",
+        "configuration_vehicle_height",
+        "configuration_vehicle_wheelbase",
+        "sensor_model",
+        "diagnostics"
+      ]
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/ARS548"
+        }
+      },
+      "required": [
+        "ros__parameters"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "/**"
+  ],
+  "additionalProperties": false
+}

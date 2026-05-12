@@ -15,6 +15,9 @@ log/
 # Clangd
 .cache/
 
+# FB Infer
+infer-out*/
+
 # profiling
 profiling_output/
 
@@ -26,8 +29,11 @@ __pycache__
 # Ignore generated docs
 *.dox
 .mkdoxy/
+.zensical/
+.zensical.toml
 *.wikidoc
 site/
+_site/
 # eclipse stuff
 .project
 .cproject

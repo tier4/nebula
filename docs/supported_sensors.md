@@ -2,13 +2,9 @@
 
 Nebula currently supports the sensor models listed below. The test status column indicates how many of the sensors' features are supported.
 
-For all sensors, the respective configuration file is found under `nebula_ros/config/<type>/<vendor>/<filename>` where
+For all sensors, the respective configuration file is found under `nebula_<vendor>/config/<filename>`.
 
-- `<type>` is either lidar or radar,
-- `<vendor>` is the vendor of the sensor and
-- `<filename>` is listed in the table below.
-
-The launch file for a given vendor is called `<vendor>_launch_all_hw.xml`.
+The launch file for a given vendor is called `<vendor>_launch_all_hw.xml` and is found in the `nebula_<vendor>` package.
 The `sensor_model` parameter below decides which sensor driver is launched.
 
 ## Hesai LiDARs

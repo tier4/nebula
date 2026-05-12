@@ -7,39 +7,68 @@ on:
       - main
   pull_request:
     types: [closed]
+
 permissions:
   contents: write
   id-token: write
   pages: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event.pull_request.merged == true
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/cache@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
         with:
           key: ${{ github.ref }}
           path: .cache
-      - uses: actions/setup-python@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-      - run: |
-          sudo apt update && sudo apt install -y doxygen && \
-          pip install mkdocs \
-          mkdocs-material \
-          Jinja2 \
-          ruamel.yaml && \
-          pip install git+https://github.com/JakubAndrysek/mkdoxy && \
-          pip install -r docs/requirements.txt
-      - run: mkdocs build --site-dir _site
-      - run: touch _site/.nojekyll
-      - run: |
+
+      - name: Install Doxygen
+        run: sudo apt update && sudo apt install -y doxygen
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r docs/requirements.txt
+
+      - name: Generate API reference
+        run: |
+          rm -rf .mkdoxy
+          mkdocs build --config-file scripts/mkdoxy_gen.yml
+
+      - name: Preprocess documentation
+        run: |
+          python3 scripts/preprocess_zensical_docs.py \
+            --mkdoxy-dir .mkdoxy \
+            --site-url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+
+      - name: Build documentation site
+        run: |
+          zensical build --config-file .zensical.toml
+
+      - name: Verify API reference output
+        run: test -f _site/core/links/index.html
+
+      - name: Disable Jekyll processing
+        run: touch _site/.nojekyll
+
+      - name: Fix file permissions
+        run: |
           chmod -c -R +rX "_site/" | while read line; do
             echo "::warning title=Invalid file permissions automatically fixed::$line"
           done
-      - uses: actions/upload-pages-artifact@v3
-      - uses: actions/deploy-pages@v4
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

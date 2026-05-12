@@ -1,6 +1,6 @@
 ## Overview
 
-{{ json_to_markdown("nebula_ros/schema/sub/lidar_hesai.json", ["definitions"], True) }}
+{{ json_to_markdown("src/nebula_hesai/nebula_hesai/schema/lidar_hesai.json", ["definitions"], True) }}
 
 ## PTP Settings
 
@@ -33,6 +33,8 @@ When this threshold is crossed, the sensor will report its synchronization state
 Nebula's hardware monitor treats only the `locked` state as `OK`, `tracking` as `WARNING` and `frozen` and `free run` as `ERROR`.
 
 ## Scan Cutting and Field of View
+
+Read more about scan cutting design and behavior in the [design doc](../../../design/scan_cutting.md).
 
 Scan cutting influences the time stamps of points and the point cloud headers.
 The point cloud header time stamp is always the absolute time of the earliest (theoretical) point in the cloud.

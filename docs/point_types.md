@@ -3,7 +3,7 @@
 Nebula currently supports the below point cloud output types.
 However, it can easily be extended to support other custom point cloud types.
 
-These definitions can be found in the `nebula_common/include/point_types.hpp`.
+These definitions can be found in `nebula_core_common/include/nebula_core_common/point_types.hpp`.
 
 ## NebulaPoint = PointXYZIRCAEDT
 
