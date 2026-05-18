@@ -117,9 +117,9 @@ protected:
     config_ =
       std::make_shared<nebula::drivers::continental_ars548::ContinentalARS548SensorConfiguration>();
     config_->host_ip = "127.0.0.1";
-    config_->data_port = 42102;
+    config_->data_port = 32102;
     config_->sensor_ip = "127.0.0.1";
-    config_->configuration_sensor_port = 42101;
+    config_->configuration_sensor_port = 32101;
     config_->multicast_ip = "224.0.2.2";
 
     hw_interface_->set_sensor_configuration(config_);
