@@ -19,7 +19,7 @@
     },
     "data_port": {
       "type": "integer",
-      "default": "32102",
+      "default": "2368",
       "minimum": 0,
       "readOnly": true,
       "description": "Sensor data port."
