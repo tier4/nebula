@@ -46,7 +46,8 @@
 #define NEBULA_SUBSCRIPTION_OPTIONS agnocast::SubscriptionOptions
 #define NEBULA_PUBLISHER_OPTIONS agnocast::PublisherOptions
 
-#define NEBULA_HAS_ANY_SUBSCRIPTIONS(publisher) (publisher->get_subscription_count() > 0)
+#define NEBULA_HAS_ANY_SUBSCRIPTIONS(publisher) \
+  (publisher->get_subscription_count() > 0 || publisher->get_intra_subscription_count() > 0)
 
 #define ALLOCATE_OUTPUT_MESSAGE_UNIQUE(publisher) publisher->allocate_output_message_unique()
 #define ALLOCATE_OUTPUT_MESSAGE_SHARED(publisher) publisher->allocate_output_message_shared()
@@ -279,6 +280,7 @@ public:
   virtual void publish(NEBULA_MESSAGE_SHARED_PTR(MessageT) && message) = 0;
 
   virtual uint32_t get_subscription_count() const = 0;
+  virtual uint32_t get_intra_subscription_count() const = 0;
 };
 
 template <typename MessageT>
@@ -315,6 +317,10 @@ public:
   }
 
   uint32_t get_subscription_count() const override { return publisher_->get_subscription_count(); }
+  uint32_t get_intra_subscription_count() const override
+  {
+    return publisher_->get_intra_subscription_count();
+  }
 };
 
 template <typename MessageT>
@@ -353,6 +359,10 @@ public:
   }
 
   uint32_t get_subscription_count() const override { return publisher_->get_subscription_count(); }
+  uint32_t get_intra_subscription_count() const override
+  {
+    return publisher_->get_intra_process_subscription_count();
+  }
 };
 
 template <typename MessageT>
