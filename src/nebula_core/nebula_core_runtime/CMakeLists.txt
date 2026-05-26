@@ -1,30 +1,43 @@
 cmake_minimum_required(VERSION 3.20)
-project(nebula_core_decoders)
+project(nebula_core_runtime)
 
 if(DEFINED ENV{AMENT_PREFIX_PATH})
     find_package(autoware_cmake REQUIRED)
 endif()
 
-find_package(PNG REQUIRED)
-find_package(Eigen3 REQUIRED NO_MODULE)
+find_package(nlohmann_json REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem system)
 find_package(nebula_core_common REQUIRED)
+find_package(nebula_core_decoders REQUIRED)
+find_package(nebula_core_hw_interfaces REQUIRED)
 
-add_library(nebula_core_decoders SHARED src/dummy.cpp)
+add_library(nebula_core_runtime SHARED
+  src/sensor_registry.cpp
+  src/packet_router.cpp
+  src/replay_session_runner.cpp
+  src/live_transport_graph.cpp
+)
 
 target_include_directories(
-  nebula_core_decoders
+  nebula_core_runtime
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:include>)
-target_link_libraries(nebula_core_decoders PUBLIC PNG::PNG Eigen3::Eigen
-                                                  Boost::headers
-                                                  nebula_core_common::nebula_core_common)
+
+target_link_libraries(nebula_core_runtime PUBLIC
+  nlohmann_json::nlohmann_json
+  Boost::filesystem
+  Boost::system
+  nebula_core_common::nebula_core_common
+  nebula_core_decoders::nebula_core_decoders
+  nebula_core_hw_interfaces::nebula_core_hw_interfaces
+  ${CMAKE_DL_LIBS}
+)
 
 # Standard CMake install and config generation
 include(CMakePackageConfigHelpers)
 set(CPACK_PACKAGE_VERSION "1.0.0")
 
-install(TARGETS nebula_core_decoders
+install(TARGETS nebula_core_runtime
         EXPORT export_${PROJECT_NAME}
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
@@ -74,22 +87,21 @@ if(BUILD_TESTING)
       target_link_libraries(${name} GTest::gtest_main)
       add_test(NAME ${name} COMMAND ${name})
     endif()
-    target_include_directories(${name} PRIVATE include)
-    target_link_libraries(${name} ${PROJECT_NAME})
+    target_link_libraries(${name} ${PROJECT_NAME} Boost::filesystem Boost::system)
+    target_compile_definitions(${name} PRIVATE
+      NEBULA_TEST_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}")
   endfunction()
 
-  nebula_add_test(test_angles tests/test_angles.cpp)
-  nebula_add_test(test_core_interfaces tests/test_core_interfaces.cpp)
-  nebula_add_test(test_scan_cutter tests/test_scan_cutter.cpp)
-  nebula_add_test(test_downsample_mask tests/point_filters/test_downsample_mask.cpp)
-  target_compile_definitions(test_downsample_mask PRIVATE
-    _TEST_RESOURCES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test_resources")
+  nebula_add_test(test_sensor_registry test/test_sensor_registry.cpp)
+  nebula_add_test(test_sample_plugin_integration test/test_sample_plugin_integration.cpp)
+  nebula_add_test(test_packet_router test/test_packet_router.cpp)
+  nebula_add_test(test_replay_session_runner test/test_replay_session_runner.cpp)
 endif()
 
 if(DEFINED ENV{AMENT_PREFIX_PATH})
     ament_export_include_directories(include)
     ament_export_targets(export_${PROJECT_NAME})
-    ament_export_dependencies(Boost nebula_core_common PNG Eigen3)
+    ament_export_dependencies(Boost nlohmann_json nebula_core_common nebula_core_decoders nebula_core_hw_interfaces)
     autoware_package()
     ament_package()
 endif()

@@ -125,7 +125,7 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnMode 
       os << "SingleLast";
       break;
     case ReturnMode::DUAL_ONLY:
-      os << "Dual";
+      os << "DualOnly";
       break;
     case ReturnMode::DUAL_FIRST:
       os << "DualFirst";
@@ -203,7 +203,8 @@ enum class SensorModel : uint8_t {
   ROBOSENSE_BPEARL_V3,
   ROBOSENSE_BPEARL_V4,
   CONTINENTAL_ARS548,
-  CONTINENTAL_SRR520
+  CONTINENTAL_SRR520,
+  SAMPLE
 };
 
 enum class PtpProfile : uint8_t {
@@ -290,6 +291,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::CONTINENTAL_SRR520:
       os << "SRR520";
       break;
+    case SensorModel::SAMPLE:
+      os << "Sample";
+      break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
       break;
@@ -300,7 +304,7 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
 /// @brief Base struct for Sensor configuration
 struct SensorConfigurationBase
 {
-  SensorModel sensor_model;
+  SensorModel sensor_model{SensorModel::UNKNOWN};
   std::string frame_id;
 };
 
@@ -327,10 +331,10 @@ struct CANSensorConfigurationBase : public SensorConfigurationBase
 /// @brief Base struct for Lidar configuration
 struct LidarConfigurationBase : public EthernetSensorConfigurationBase
 {
-  ReturnMode return_mode;
-  uint16_t packet_mtu_size;
-  double min_range;
-  double max_range;
+  ReturnMode return_mode{ReturnMode::UNKNOWN};
+  uint16_t packet_mtu_size{};
+  double min_range{0.1};
+  double max_range{200.0};
   bool use_sensor_time{false};
 };
 
@@ -408,6 +412,8 @@ inline SensorModel sensor_model_from_string(const std::string & sensor_model)
   if (sensor_model == "PandarAT128") return SensorModel::HESAI_PANDARAT128;
   if (sensor_model == "PandarQT64") return SensorModel::HESAI_PANDARQT64;
   if (sensor_model == "PandarQT128") return SensorModel::HESAI_PANDARQT128;
+  if (sensor_model == "Pandar128E3X" || sensor_model == "Pandar128_E3X")
+    return SensorModel::HESAI_PANDAR128_E3X;
   if (sensor_model == "Pandar128E4X") return SensorModel::HESAI_PANDAR128_E4X;
   // Velodyne
   if (sensor_model == "VLS128") return SensorModel::VELODYNE_VLS128;
@@ -424,6 +430,8 @@ inline SensorModel sensor_model_from_string(const std::string & sensor_model)
   // Continental
   if (sensor_model == "ARS548") return SensorModel::CONTINENTAL_ARS548;
   if (sensor_model == "SRR520") return SensorModel::CONTINENTAL_SRR520;
+  // Sample
+  if (sensor_model == "Sample") return SensorModel::SAMPLE;
   return SensorModel::UNKNOWN;
 }
 
@@ -449,6 +457,8 @@ inline std::string sensor_model_to_string(const SensorModel & sensor_model)
       return "PandarQT64";
     case SensorModel::HESAI_PANDARQT128:
       return "PandarQT128";
+    case SensorModel::HESAI_PANDAR128_E3X:
+      return "Pandar128E3X";
     case SensorModel::HESAI_PANDAR128_E4X:
       return "Pandar128E4X";
     // Velodyne
@@ -476,6 +486,8 @@ inline std::string sensor_model_to_string(const SensorModel & sensor_model)
       return "ARS548";
     case SensorModel::CONTINENTAL_SRR520:
       return "SRR520";
+    case SensorModel::SAMPLE:
+      return "Sample";
     default:
       return "UNKNOWN";
   }
@@ -489,7 +501,22 @@ inline ReturnMode return_mode_from_string(const std::string & return_mode)
   if (return_mode == "SingleFirst") return ReturnMode::SINGLE_FIRST;
   if (return_mode == "SingleStrongest") return ReturnMode::SINGLE_STRONGEST;
   if (return_mode == "SingleLast") return ReturnMode::SINGLE_LAST;
-  if (return_mode == "Dual") return ReturnMode::DUAL_ONLY;
+  if (return_mode == "DualOnly") return ReturnMode::DUAL_ONLY;
+  if (return_mode == "DualFirst") return ReturnMode::DUAL_FIRST;
+  if (return_mode == "DualLast") return ReturnMode::DUAL_LAST;
+  if (return_mode == "WeakFirst") return ReturnMode::DUAL_WEAK_FIRST;
+  if (return_mode == "WeakLast") return ReturnMode::DUAL_WEAK_LAST;
+  if (return_mode == "StrongLast") return ReturnMode::DUAL_STRONGEST_LAST;
+  if (return_mode == "StrongFirst") return ReturnMode::DUAL_STRONGEST_FIRST;
+  if (return_mode == "Triple") return ReturnMode::TRIPLE;
+  if (return_mode == "Last") return ReturnMode::LAST;
+  if (return_mode == "Strongest") return ReturnMode::STRONGEST;
+  if (return_mode == "LastStrongest") return ReturnMode::DUAL_LAST_STRONGEST;
+  if (return_mode == "First") return ReturnMode::FIRST;
+  if (return_mode == "LastFirst") return ReturnMode::DUAL_LAST_FIRST;
+  if (return_mode == "FirstStrongest") return ReturnMode::DUAL_FIRST_STRONGEST;
+  if (return_mode == "Dual") return ReturnMode::DUAL;
+  if (return_mode == "Unknown") return ReturnMode::UNKNOWN;
 
   return ReturnMode::UNKNOWN;
 }
@@ -537,4 +564,4 @@ static inline double rpm2hz(double rpm)
 
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_CONFIGURATION_BASE_H
+#endif  // NEBULA_COMMON_H

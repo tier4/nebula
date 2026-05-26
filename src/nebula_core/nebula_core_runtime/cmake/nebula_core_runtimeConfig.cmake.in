@@ -1,0 +1,15 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_package(nlohmann_json REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem system)
+find_package(nebula_core_common REQUIRED)
+find_package(nebula_core_decoders REQUIRED)
+find_package(nebula_core_hw_interfaces REQUIRED)
+
+if(NOT TARGET @PROJECT_NAME@::@PROJECT_NAME@)
+    include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+endif()
+
+check_required_components(@PROJECT_NAME@)
