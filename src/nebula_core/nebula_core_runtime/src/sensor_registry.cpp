@@ -262,15 +262,15 @@ void SensorRegistry::finalize()
 
 std::shared_ptr<SensorPlugin> SensorRegistry::load_plugin(const SensorPluginMetadata & metadata)
 {
+  auto plugin_it = instantiated_plugins_.find(metadata.package_name);
+  if (plugin_it != instantiated_plugins_.end()) {
+    return plugin_it->second;
+  }
+
   if (finalized_) {
     throw std::logic_error(
       "SensorRegistry::load_plugin called after finalize() — all plugins must be loaded before "
       "the registry is frozen");
-  }
-
-  auto plugin_it = instantiated_plugins_.find(metadata.package_name);
-  if (plugin_it != instantiated_plugins_.end()) {
-    return plugin_it->second;
   }
 
   std::string load_error;

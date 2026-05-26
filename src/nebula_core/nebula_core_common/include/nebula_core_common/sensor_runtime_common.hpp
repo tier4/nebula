@@ -102,8 +102,6 @@ struct SensorConfiguration : public LidarConfigurationBase
   } fov;
 
   double rotation_speed{600};
-  double min_range{0.1};
-  double max_range{200.0};
 
   // Generic key-value store for vendor-specific parameters
   std::map<std::string, std::string> extra_params;

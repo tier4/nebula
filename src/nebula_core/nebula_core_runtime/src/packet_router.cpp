@@ -38,8 +38,8 @@ void PacketRouter::configure(const std::vector<PacketChannelRequirement> & requi
       req.transport != SensorTransportKind::CAN) {
       // HTTP and other transports are not routed through PacketRouter;
       // they are handled as control endpoints in LiveTransportGraph.
-      std::cerr << "PacketRouter: ignoring requirement '" << req.name
-                << "' with unsupported transport (not UDP/TCP/CAN)" << std::endl;
+      std::cerr << "PacketRouter: ignoring unsupported transport requirement"
+                << " (not UDP/TCP/CAN)" << std::endl;
     }
   }
 

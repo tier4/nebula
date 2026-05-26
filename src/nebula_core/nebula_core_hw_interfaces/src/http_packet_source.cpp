@@ -50,53 +50,63 @@ void HttpPacketSource::set_error_callback(SensorErrorCallback callback)
 
 void HttpPacketSource::start()
 {
-  if (running_) return;
-  running_ = true;
-  thread_ = std::thread(&HttpPacketSource::run, this);
+  if (running_ && running_->load()) return;
+  if (thread_.joinable()) {
+    if (thread_.get_id() == std::this_thread::get_id()) return;
+    thread_.join();
+  }
+
+  running_ = std::make_shared<std::atomic<bool>>(true);
+  thread_ = std::thread(
+    &HttpPacketSource::run, running_, host_ip_, port_, path_, callback_, error_callback_);
 }
 
 void HttpPacketSource::stop()
 {
-  running_ = false;
+  if (running_) {
+    running_->store(false);
+  }
   if (thread_.joinable()) {
     if (thread_.get_id() == std::this_thread::get_id()) {
       thread_.detach();
-    } else {
-      thread_.join();
+      return;
     }
+    thread_.join();
   }
 }
 
 bool HttpPacketSource::is_running() const
 {
-  return running_;
+  return running_ && running_->load();
 }
 
-void HttpPacketSource::run()
+void HttpPacketSource::run(
+  std::shared_ptr<std::atomic<bool>> running, std::string host_ip, uint16_t port, std::string path,
+  SensorPacketCallback callback, SensorErrorCallback error_callback)
 {
-  client_ = std::make_unique<connections::HttpClient>(host_ip_, port_);
+  auto client = std::make_unique<connections::HttpClient>(host_ip, port);
 
-  while (running_) {
+  while (running->load()) {
     try {
-      auto response = client_->get(path_, 1000);
-      if (!response.empty() && callback_) {
+      auto response = client->get(path, 1000);
+      if (!response.empty() && callback) {
         SensorPacket sp;
         sp.transport = SensorTransportKind::HTTP;
         sp.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
                             std::chrono::system_clock::now().time_since_epoch())
                             .count();
 
-        sp.destination = SensorEndpoint{host_ip_, port_};
+        sp.destination = SensorEndpoint{host_ip, port};
         sp.payload.assign(response.begin(), response.end());
 
-        callback_(sp);
+        callback(sp);
       }
     } catch (const std::exception & e) {
-      if (error_callback_) {
+      if (error_callback) {
         SensorError error;
         error.type = SensorErrorType::TransportError;
         error.message = e.what();
-        error_callback_(error);
+        error_callback(error);
       }
     }
 
@@ -104,8 +114,7 @@ void HttpPacketSource::run()
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
-  client_.reset();
-  running_ = false;
+  running->store(false);
 }
 
 }  // namespace nebula::drivers

@@ -39,16 +39,17 @@ public:
   bool is_running() const override;
 
 private:
-  void run();
+  static void run(
+    std::shared_ptr<std::atomic<bool>> running, std::string host_ip, uint16_t port,
+    std::string path, SensorPacketCallback callback, SensorErrorCallback error_callback);
 
   std::string host_ip_;
   uint16_t port_{0};
   std::string path_;
   SensorPacketCallback callback_;
   SensorErrorCallback error_callback_;
-  std::unique_ptr<connections::HttpClient> client_;
   std::thread thread_;
-  std::atomic<bool> running_{false};
+  std::shared_ptr<std::atomic<bool>> running_{std::make_shared<std::atomic<bool>>(false)};
 };
 
 }  // namespace nebula::drivers

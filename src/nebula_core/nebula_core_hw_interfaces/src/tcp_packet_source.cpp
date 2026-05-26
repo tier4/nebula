@@ -49,74 +49,84 @@ void TcpPacketSource::set_error_callback(SensorErrorCallback callback)
 
 void TcpPacketSource::start()
 {
-  if (running_) return;
-  running_ = true;
-  thread_ = std::thread(&TcpPacketSource::run, this);
+  if (running_ && running_->load()) return;
+  if (thread_.joinable()) {
+    if (thread_.get_id() == std::this_thread::get_id()) return;
+    thread_.join();
+  }
+
+  running_ = std::make_shared<std::atomic<bool>>(true);
+  thread_ =
+    std::thread(&TcpPacketSource::run, running_, host_ip_, port_, callback_, error_callback_);
 }
 
 void TcpPacketSource::stop()
 {
-  running_ = false;
+  if (running_) {
+    running_->store(false);
+  }
   if (thread_.joinable()) {
     if (thread_.get_id() == std::this_thread::get_id()) {
       thread_.detach();
-    } else {
-      thread_.join();
+      return;
     }
+    thread_.join();
   }
 }
 
 bool TcpPacketSource::is_running() const
 {
-  return running_;
+  return running_ && running_->load();
 }
 
-void TcpPacketSource::run()
+void TcpPacketSource::run(
+  std::shared_ptr<std::atomic<bool>> running, std::string host_ip, uint16_t port,
+  SensorPacketCallback callback, SensorErrorCallback error_callback)
 {
+  std::unique_ptr<connections::TcpSocket> socket;
   try {
-    auto s_builder = connections::TcpSocket::Builder(host_ip_, port_);
+    auto s_builder = connections::TcpSocket::Builder(host_ip, port);
     s_builder.set_connect_timeout(1000);
-    auto sock = std::make_unique<connections::TcpSocket>(std::move(s_builder).connect());
-    socket_ = std::move(sock);
+    socket = std::make_unique<connections::TcpSocket>(std::move(s_builder).connect());
   } catch (const std::exception & e) {
-    if (error_callback_) {
+    if (error_callback) {
       SensorError error;
       error.type = SensorErrorType::TransportError;
       error.message = e.what();
-      error_callback_(error);
+      error_callback(error);
     }
-    running_ = false;
+    running->store(false);
     return;
   }
 
-  while (running_ && socket_) {
+  while (running->load() && socket) {
     try {
-      auto data = socket_->receive(std::chrono::milliseconds(100));
-      if (!data.empty() && callback_) {
+      auto data = socket->receive(std::chrono::milliseconds(100));
+      if (!data.empty() && callback) {
         SensorPacket sp;
         sp.transport = SensorTransportKind::TCP;
         sp.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
                             std::chrono::system_clock::now().time_since_epoch())
                             .count();
 
-        sp.destination = SensorEndpoint{host_ip_, port_};
+        sp.destination = SensorEndpoint{host_ip, port};
         sp.payload = std::move(data);
 
-        callback_(sp);
+        callback(sp);
       }
     } catch (const std::exception & e) {
-      if (error_callback_) {
+      if (error_callback) {
         SensorError error;
         error.type = SensorErrorType::TransportError;
         error.message = e.what();
-        error_callback_(error);
+        error_callback(error);
       }
       break;
     }
   }
 
-  socket_.reset();
-  running_ = false;
+  socket.reset();
+  running->store(false);
 }
 
 }  // namespace nebula::drivers

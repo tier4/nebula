@@ -61,13 +61,14 @@ private:
 
   std::shared_ptr<SensorRegistry> registry_;
   std::shared_ptr<SensorDecoderRuntime> runtime_;
-  std::vector<std::unique_ptr<PacketSource>> sources_;
+  std::vector<std::shared_ptr<PacketSource>> sources_;
   std::map<std::string, std::unique_ptr<HttpControlEndpoint>> http_controls_;
   std::shared_ptr<PacketRouter> router_;
 
   SensorOutputCallback output_callback_;
   SensorErrorCallback error_callback_;
   SensorProgressCallback progress_callback_;
+  std::mutex lifecycle_mutex_;
   mutable std::mutex mutex_;
   std::mutex processing_mutex_;
 };

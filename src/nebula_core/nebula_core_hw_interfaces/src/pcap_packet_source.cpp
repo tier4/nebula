@@ -49,7 +49,7 @@ PcapPacketSource::~PcapPacketSource()
 
 void PcapPacketSource::open(const std::string & pcap_file)
 {
-  if (running_) {
+  if (running_ && running_->load()) {
     throw std::runtime_error("Cannot open a PCAP file while replay is running");
   }
 
@@ -65,7 +65,6 @@ void PcapPacketSource::open(const std::string & pcap_file)
       "Unsupported PCAP link type: " + std::to_string(link_type) + ". Only Ethernet is supported.");
   }
   pcap_file_ = pcap_file;
-  assemblies_.clear();
 }
 
 void PcapPacketSource::set_packet_callback(SensorPacketCallback callback)
@@ -80,20 +79,27 @@ void PcapPacketSource::set_error_callback(SensorErrorCallback callback)
 
 void PcapPacketSource::start()
 {
-  if (running_) return;
-  running_ = true;
-  thread_ = std::thread(&PcapPacketSource::run, this);
+  if (running_ && running_->load()) return;
+  if (thread_.joinable()) {
+    if (thread_.get_id() == std::this_thread::get_id()) return;
+    thread_.join();
+  }
+
+  running_ = std::make_shared<std::atomic<bool>>(true);
+  thread_ = std::thread(&PcapPacketSource::run, running_, pcap_file_, callback_, error_callback_);
 }
 
 void PcapPacketSource::stop()
 {
-  running_ = false;
+  if (running_) {
+    running_->store(false);
+  }
   if (thread_.joinable()) {
     if (thread_.get_id() == std::this_thread::get_id()) {
       thread_.detach();
-    } else {
-      thread_.join();
+      return;
     }
+    thread_.join();
   }
 }
 
@@ -102,39 +108,41 @@ void PcapPacketSource::wait_until_finished()
   if (thread_.joinable()) {
     if (thread_.get_id() == std::this_thread::get_id()) {
       thread_.detach();
-    } else {
-      thread_.join();
+      return;
     }
+    thread_.join();
   }
 }
 
-void PcapPacketSource::run()
+void PcapPacketSource::run(
+  std::shared_ptr<std::atomic<bool>> running, std::string pcap_file, SensorPacketCallback callback,
+  SensorErrorCallback error_callback)
 {
-  assemblies_.clear();
+  std::map<ReassemblyKey, FragmentAssembly> assemblies;
 
   char errbuf[PCAP_ERRBUF_SIZE];
-  pcap_t * handle = pcap_open_offline(pcap_file_.c_str(), errbuf);
+  pcap_t * handle = pcap_open_offline(pcap_file.c_str(), errbuf);
   if (!handle) {
-    if (error_callback_) {
+    if (error_callback) {
       SensorError error;
       error.type = SensorErrorType::TransportError;
       error.message = std::string("Could not open PCAP file: ") + errbuf;
-      error_callback_(error);
+      error_callback(error);
     }
-    running_ = false;
+    running->store(false);
     return;
   }
 
   int link_type = pcap_datalink(handle);
   if (link_type != DLT_EN10MB) {
-    if (error_callback_) {
+    if (error_callback) {
       SensorError error;
       error.type = SensorErrorType::TransportError;
       error.message = "Unsupported PCAP link type: " + std::to_string(link_type);
-      error_callback_(error);
+      error_callback(error);
     }
     pcap_close(handle);
-    running_ = false;
+    running->store(false);
     return;
   }
 
@@ -142,7 +150,7 @@ void PcapPacketSource::run()
   const u_char * pkt_data;
 
   int next_status = 0;
-  while (running_ && (next_status = pcap_next_ex(handle, &header, &pkt_data)) >= 0) {
+  while (running->load() && (next_status = pcap_next_ex(handle, &header, &pkt_data)) >= 0) {
     if (next_status == 0) {
       continue;
     }
@@ -214,7 +222,7 @@ void PcapPacketSource::run()
 
         if (!more_frags) {
           // Not fragmented
-          if (callback_) {
+          if (callback) {
             SensorPacket sp;
             sp.transport = SensorTransportKind::UDP;
             sp.from_replay = true;
@@ -225,22 +233,22 @@ void PcapPacketSource::run()
             sp.payload.assign(
               ip_payload + sizeof(struct udphdr),
               ip_payload + std::min(static_cast<size_t>(udp_len), ip_payload_len));
-            callback_(sp);
+            callback(sp);
           }
         } else {
           // First fragment of many
-          auto & ass = assemblies_[key];
+          const size_t total_size = udp_len - sizeof(struct udphdr);
+          if (total_size == 0) {
+            continue;
+          }
+
+          auto & ass = assemblies[key];
           ass.src_ip = src_ip_str;
           ass.dst_ip = dst_ip_str;
           ass.src_port = src_port;
           ass.dst_port = dst_port;
           ass.timestamp_ns = static_cast<uint64_t>(header->ts.tv_sec) * 1000000000ULL +
                              static_cast<uint64_t>(header->ts.tv_usec) * 1000ULL;
-          const size_t total_size = udp_len - sizeof(struct udphdr);
-          if (total_size == 0) {
-            continue;
-          }
-
           ass.total_size = total_size;
           ass.data.resize(ass.total_size);
           ass.received.resize(ass.total_size, false);
@@ -254,8 +262,8 @@ void PcapPacketSource::run()
         }
       } else {
         // Subsequent fragment
-        if (assemblies_.count(key)) {
-          auto & ass = assemblies_[key];
+        if (assemblies.count(key)) {
+          auto & ass = assemblies[key];
           if (frag_offset < sizeof(struct udphdr)) {
             continue;
           }
@@ -273,7 +281,7 @@ void PcapPacketSource::run()
           if (!more_frags) ass.saw_last = true;
 
           if (ass.is_complete()) {
-            if (callback_) {
+            if (callback) {
               SensorPacket sp;
               sp.transport = SensorTransportKind::UDP;
               sp.from_replay = true;
@@ -281,24 +289,24 @@ void PcapPacketSource::run()
               sp.source = {ass.src_ip, ass.src_port};
               sp.destination = {ass.dst_ip, ass.dst_port};
               sp.payload = std::move(ass.data);
-              callback_(sp);
+              callback(sp);
             }
-            assemblies_.erase(key);
+            assemblies.erase(key);
           }
         }
       }
     }
   }
 
-  if (next_status == -1 && error_callback_) {
+  if (next_status == -1 && error_callback) {
     SensorError error;
     error.type = SensorErrorType::TransportError;
     error.message = std::string("Failed while reading PCAP file: ") + pcap_geterr(handle);
-    error_callback_(error);
+    error_callback(error);
   }
 
   pcap_close(handle);
-  running_ = false;
+  running->store(false);
 }
 
 }  // namespace nebula::drivers

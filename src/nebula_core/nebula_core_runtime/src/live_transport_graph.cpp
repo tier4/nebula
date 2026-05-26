@@ -43,6 +43,8 @@ LiveTransportGraph::LiveTransportGraph(std::shared_ptr<SensorRegistry> registry)
 
 void LiveTransportGraph::configure(const LiveSessionConfig & config)
 {
+  std::lock_guard<std::mutex> lifecycle_lock(lifecycle_mutex_);
+
   auto metadata = registry_->find_plugin_for_model(config.model);
   if (!metadata) {
     throw std::runtime_error("No plugin found for model");
@@ -66,13 +68,13 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
   auto router = std::make_shared<PacketRouter>();
   router->configure(plugin->packet_requirements(config.sensor_config));
 
-  std::vector<std::unique_ptr<PacketSource>> new_sources;
+  std::vector<std::shared_ptr<PacketSource>> new_sources;
   std::map<std::string, std::unique_ptr<HttpControlEndpoint>> new_http_controls;
   auto requirements = plugin->live_transport_requirements(config.sensor_config);
   for (const auto & req : requirements) {
     if (req.transport == SensorTransportKind::UDP) {
       const auto port = require_port(req);
-      auto source = std::make_unique<UdpPacketSource>();
+      auto source = std::make_shared<UdpPacketSource>();
       source->configure(config.sensor_config.host_ip, port);
       source->set_error_callback(
         std::bind(&LiveTransportGraph::on_error, this, std::placeholders::_1));
@@ -80,7 +82,7 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
         std::bind(&LiveTransportGraph::on_packet, this, std::placeholders::_1));
       new_sources.push_back(std::move(source));
     } else if (req.transport == SensorTransportKind::CAN) {
-      auto source = std::make_unique<CanPacketSource>();
+      auto source = std::make_shared<CanPacketSource>();
       std::string interface = "can0";
       if (config.extra_params.count("can_interface")) {
         interface = config.extra_params.at("can_interface");
@@ -93,7 +95,7 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
       new_sources.push_back(std::move(source));
     } else if (req.transport == SensorTransportKind::TCP) {
       const auto port = require_port(req);
-      auto source = std::make_unique<TcpPacketSource>();
+      auto source = std::make_shared<TcpPacketSource>();
       source->configure(config.sensor_config.sensor_ip, port);
       source->set_error_callback(
         std::bind(&LiveTransportGraph::on_error, this, std::placeholders::_1));
@@ -116,7 +118,7 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
   // processing_mutex_ here: source threads invoke on_packet() which acquires
   // processing_mutex_, so joining them while holding it would deadlock.
   {
-    std::vector<std::unique_ptr<PacketSource>> old_sources;
+    std::vector<std::shared_ptr<PacketSource>> old_sources;
     std::map<std::string, std::unique_ptr<HttpControlEndpoint>> old_http_controls;
     {
       std::lock_guard<std::mutex> lock(mutex_);
@@ -160,28 +162,32 @@ void LiveTransportGraph::set_progress_callback(SensorProgressCallback callback)
 
 void LiveTransportGraph::start()
 {
-  std::vector<PacketSource *> snapshot;
+  std::lock_guard<std::mutex> lifecycle_lock(lifecycle_mutex_);
+
+  std::vector<std::shared_ptr<PacketSource>> snapshot;
   {
     std::lock_guard<std::mutex> lock(mutex_);
     for (auto & src : sources_) {
-      snapshot.push_back(src.get());
+      snapshot.push_back(src);
     }
   }
-  for (auto * src : snapshot) {
+  for (auto & src : snapshot) {
     src->start();
   }
 }
 
 void LiveTransportGraph::stop()
 {
-  std::vector<PacketSource *> snapshot;
+  std::lock_guard<std::mutex> lifecycle_lock(lifecycle_mutex_);
+
+  std::vector<std::shared_ptr<PacketSource>> snapshot;
   {
     std::lock_guard<std::mutex> lock(mutex_);
     for (auto & src : sources_) {
-      snapshot.push_back(src.get());
+      snapshot.push_back(src);
     }
   }
-  for (auto * src : snapshot) {
+  for (auto & src : snapshot) {
     src->stop();
   }
 }

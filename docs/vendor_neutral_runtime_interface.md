@@ -381,9 +381,11 @@ For example, UDP, TCP, and HTTP requirements need a port.
 3. Once all old source threads are joined, acquire both mutexes and install the
    new state atomically.
 
-**`start()` and `stop()`** snapshot `sources_` under `mutex_` and call
-`start()`/`stop()` on each source outside the lock, preventing a race with a
-concurrent `configure()` call.
+**`start()` and `stop()`** are serialized with `configure()` by the graph
+lifecycle mutex. They snapshot shared source ownership under `mutex_` and call
+`start()`/`stop()` on each source outside the state lock, so a concurrent
+reconfiguration cannot destroy a source while the lifecycle operation is using
+it.
 
 **User callbacks** are invoked outside all graph mutexes so that callback code
 can coordinate shutdown without deadlocking the graph.
@@ -419,6 +421,10 @@ registry->load_registry({"/path/to/plugin/descriptors"});
 auto metadata = registry->find_plugin_for_model(nebula::drivers::SensorModel::SAMPLE);
 if (!metadata) {
   throw std::runtime_error("No plugin found for requested model");
+}
+
+if (!registry->load_plugin(*metadata)) {
+  throw std::runtime_error("Failed to load requested plugin");
 }
 
 // Freeze the registry before starting any real-time threads.
@@ -494,9 +500,10 @@ A minimal plugin implementation should:
    `SensorPacketView`.
 7. Add registry, routing, replay, and sample integration tests.
 
-The sample plugin in `nebula_sample_decoders` demonstrates this pattern,
-including the `nebula_plugin_abi_version()` export and the `SensorPacketView`
-hot path.
+The sample plugin in `nebula_sample_decoders` demonstrates the plugin shape,
+including the `nebula_plugin_abi_version()` export and `SensorPacketView`
+contract. The sample decoder itself is not RT-capable; it adapts the packet view
+back into the existing sample decoder payload type.
 
 ### Minimal plugin export file
 

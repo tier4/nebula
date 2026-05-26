@@ -27,6 +27,7 @@ using nebula::drivers::SensorDecoderRuntime;
 using nebula::drivers::SensorErrorCallback;
 using nebula::drivers::SensorModelInfo;
 using nebula::drivers::SensorOutputCallback;
+using nebula::drivers::SensorOutputSink;
 using nebula::drivers::SensorPacket;
 using nebula::drivers::SensorPacketResult;
 using nebula::drivers::SensorPacketView;

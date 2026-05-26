@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <atomic>
 #include <map>
+#include <memory>
 #include <string>
 #include <thread>
 #include <vector>
@@ -38,10 +39,12 @@ public:
   void start() override;
   void stop() override;
   void wait_until_finished();
-  bool is_running() const override { return running_; }
+  bool is_running() const override { return running_ && running_->load(); }
 
 private:
-  void run();
+  static void run(
+    std::shared_ptr<std::atomic<bool>> running, std::string pcap_file,
+    SensorPacketCallback callback, SensorErrorCallback error_callback);
 
   struct ReassemblyKey
   {
@@ -82,8 +85,7 @@ private:
   SensorPacketCallback callback_;
   SensorErrorCallback error_callback_;
   std::thread thread_;
-  std::atomic<bool> running_{false};
-  std::map<ReassemblyKey, FragmentAssembly> assemblies_;
+  std::shared_ptr<std::atomic<bool>> running_{std::make_shared<std::atomic<bool>>(false)};
 };
 
 }  // namespace nebula::drivers
