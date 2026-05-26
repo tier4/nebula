@@ -79,6 +79,22 @@ plugins:
             ENABLE_PREPROCESSING: true
             MACRO_EXPANSION: true
 
+        sample:
+          src-dirs: >
+            src/nebula_sample/nebula_sample_common/include
+            src/nebula_sample/nebula_sample_decoders/include
+            src/nebula_sample/nebula_sample_hw_interfaces/include
+            src/nebula_sample/nebula_sample/include
+          api-path: .
+          full-doc: true
+          doxy-cfg:
+            FILE_PATTERNS: "*.hpp *.h"
+            RECURSIVE: true
+            EXTRACT_ALL: true
+            INLINE_SOURCES: true
+            ENABLE_PREPROCESSING: true
+            MACRO_EXPANSION: true
+
       save-api: .mkdoxy
       full-doc: true
       debug: false

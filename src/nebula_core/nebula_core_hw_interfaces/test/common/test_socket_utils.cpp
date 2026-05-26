@@ -1,6 +1,6 @@
 // Copyright 2026 TIER IV, Inc.
 
-#include "nebula_core_hw_interfaces/nebula_hw_interfaces_common/connections/socket_utils.hpp"
+#include "nebula_core_hw_interfaces/connections/socket_utils.hpp"
 
 #include <gtest/gtest.h>
 #include <sys/socket.h>

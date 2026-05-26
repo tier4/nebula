@@ -9,6 +9,8 @@ coverage:
 ignore:
   - ^build.* # for generated message wrappers
   - ^nebula_examples.* # not safety-related
+  - (^|.*/)test/.* # unit test code
+  - (^|.*/)tests/.* # unit test code
 
 comment:
   layout: header, diff, flags, components

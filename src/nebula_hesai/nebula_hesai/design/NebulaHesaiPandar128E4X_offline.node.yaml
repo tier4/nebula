@@ -1,0 +1,45 @@
+autoware_system_design_format: 0.3.0
+
+name: NebulaHesaiPandar128E4X_offline.node
+
+base: NebulaHesaiPandar128E4X.node
+
+override:
+  subscribers:
+    - name: pandar_packets
+      message_type: pandar_msgs/msg/PandarScan
+      remap_target: pandar_packets
+  publishers:
+    - name: pandar_points
+      message_type: sensor_msgs/msg/PointCloud2
+      remap_target: pandar_points
+      qos:
+        depth: 10
+        reliability: best_effort
+    - name: aw_points
+      message_type: sensor_msgs/msg/PointCloud2
+      remap_target: aw_points
+      qos:
+        depth: 10
+        reliability: best_effort
+    - name: aw_points_ex
+      message_type: sensor_msgs/msg/PointCloud2
+      remap_target: aw_points_ex
+      qos:
+        depth: 10
+        reliability: best_effort
+    - name: blockage_mask
+      message_type: sensor_msgs/msg/Image
+      remap_target: blockage_mask
+  param_values:
+    - name: launch_hw
+      type: bool
+      default: false
+  processes:
+    - name: decoder
+      trigger_conditions:
+        - and:
+            - on_input: pandar_packets
+            - periodic: 10 # Hz
+      outcomes:
+        - to_output: pandar_points
