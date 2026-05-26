@@ -1,4 +1,4 @@
-// Copyright 2024 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,11 +20,23 @@
 
 #include <memory>
 #include <sstream>
+#include <string>
 #include <utility>
 #include <variant>
 #include <vector>
 
-using namespace nebula::drivers;
+using nebula::drivers::NebulaPointCloud;
+using nebula::drivers::NebulaPointCloudPtr;
+using nebula::drivers::return_mode_from_string;
+using nebula::drivers::ReturnMode;
+using nebula::drivers::sensor_model_from_string;
+using nebula::drivers::sensor_model_to_string;
+using nebula::drivers::SensorDecodedOutput;
+using nebula::drivers::SensorModel;
+using nebula::drivers::SensorOutputKind;
+using nebula::drivers::SensorPacket;
+using nebula::drivers::SensorPacketChannel;
+using nebula::drivers::SensorTransportKind;
 
 TEST(TestCoreTypes, SensorPacket)
 {

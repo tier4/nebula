@@ -1,4 +1,4 @@
-#Vendor - neutral runtime interface
+# Vendor-neutral runtime interface
 
 The vendor-neutral runtime interface is Nebula's generic layer for loading
 sensor plugins, routing raw packets, and running decoders in live or replay
@@ -37,14 +37,14 @@ adapters by itself.
 
 ## Package map
 
-| Package | Responsibility |
-| --- | --- |
-| `nebula_core_common` | ROS-free packet, output, radar, status, configuration, progress, and error types. |
-| `nebula_core_decoders` | `SensorPlugin`, `SensorDecoderRuntime`, packet requirements, and live transport requirements. |
+| Package                     | Responsibility                                                                                            |
+| --------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `nebula_core_common`        | ROS-free packet, output, radar, status, configuration, progress, and error types.                         |
+| `nebula_core_decoders`      | `SensorPlugin`, `SensorDecoderRuntime`, packet requirements, and live transport requirements.             |
 | `nebula_core_hw_interfaces` | Reusable packet sources and connection primitives for UDP, TCP, CAN, HTTP, HTTP control, and PCAP replay. |
-| `nebula_core_runtime` | Plugin registry, packet router, replay session runner, and live transport graph. |
-| `nebula_sample_common` | Sample plugin descriptor and schema assets. |
-| `nebula_sample_decoders` | Reference plugin and decoder runtime implementation. |
+| `nebula_core_runtime`       | Plugin registry, packet router, replay session runner, and live transport graph.                          |
+| `nebula_sample_common`      | Sample plugin descriptor and schema assets.                                                               |
+| `nebula_sample_decoders`    | Reference plugin and decoder runtime implementation.                                                      |
 
 ## Architecture
 
@@ -84,21 +84,42 @@ The main boundary is between generic runtime code and plugin code:
 
 ## Core contracts
 
-### `SensorPacket`
+### `SensorPacket` and `SensorPacketView`
 
 `SensorPacket` is the generic raw packet container. It carries:
 
-- the transport kind, such as UDP, TCP, CAN, HTTP, or replay metadata,
-- the routed packet channel, such as data, info, status, control, correction, or
-  radar,
+- the transport kind (UDP, TCP, CAN, HTTP),
+- the routed packet channel (data, info, status, control, correction, or radar),
 - timestamp and replay metadata,
 - source/destination endpoint metadata or CAN metadata, and
-- the raw packet payload bytes.
+- the raw packet payload bytes (`std::vector<uint8_t>`).
 
 Replay uses the same transport identity as live data. For example, a UDP packet
 read from a PCAP is still emitted as `SensorTransportKind::UDP` with
 `from_replay = true`. This keeps live and replay traffic on the same decoder
 path.
+
+`SensorPacketView` is a lightweight, non-owning view into a `SensorPacket`.
+It is used on the decoder hot path to avoid copying the payload vector:
+
+```cpp
+SensorPacket packet = /* received packet */;
+SensorPacketView view = SensorPacketView::from(packet);
+router.route(view);                         // assigns view.channel
+runtime->process_packet(view);              // decodes without copying payload
+```
+
+The view holds raw pointers into the originating packet, which must remain
+alive for the duration of any call that uses the view. To enforce this at
+compile time, `SensorPacketView::from(SensorPacket&&)` is deleted — creating a
+view from a temporary is a compile error.
+
+`SensorEndpoint::address` and `SensorCanMetadata::interface_name` use
+fixed-size `std::array<char, N>` rather than `std::string`. This eliminates
+the heap allocation that `std::string` members would impose on every received
+packet. The sizes match POSIX limits: 45 characters for a full IPv6 address and
+16 bytes for Linux `IFNAMSIZ`. An `assert` fires in debug builds if an address
+longer than the limit is written.
 
 ### `SensorDecodedOutput`
 
@@ -155,77 +176,158 @@ that declaration.
 Each plugin creates a `SensorDecoderRuntime`. The runtime is responsible for:
 
 - configuring the decoder from `SensorConfiguration`,
-- receiving routed `SensorPacket` objects,
+- receiving routed `SensorPacketView` objects via `process_packet()`,
 - emitting `SensorDecodedOutput`,
 - reporting `SensorError`, and
 - reporting `SensorProgress`.
+
+`process_packet()` receives a `SensorPacketView`, not a `SensorPacket`, to
+avoid copying the payload on the hot path. The view is valid only for the
+duration of the call.
 
 The decoder runtime should return `SensorPacketResult::Buffered` when a packet
 was accepted but does not yet produce output, `Success` when packet processing
 completed successfully, `Ignored` for irrelevant packets, and `Error` for
 decoder failures.
 
-## Plugin descriptors
+#### RT-safe output sink
 
-Plugins are discovered through JSON descriptors. A minimal descriptor looks like
-this:
+`SensorOutputSink` is an alternative to `std::function` callbacks for
+RT-capable runtimes. Implement this interface and register it with
+`set_sink()`:
 
-```json
+```cpp
+class MySink : public nebula::drivers::SensorOutputSink
 {
-  "vendor" : "nebula",
-             "package" : "nebula_sample_decoders",
-                         "library" : "libnebula_sample_decoders_plugin.so",
-                                     "factory" : "create_nebula_sensor_plugin",
-                                                 "models" : ["Sample"],
-                                                            "schema" : "schemas/sample.schema.json"
+public:
+  void on_output(const SensorDecodedOutput & output) override { /* no heap alloc */ }
+  void on_error(const SensorError & error) override { /* optional */ }
+  void on_progress(const SensorProgress & progress) override { /* optional */ }
+};
+```
+
+The sink pointer must outlive the runtime it is registered with. The default
+`set_sink()` implementation is a no-op; RT-capable runtimes should override it.
+The existing `set_output_callback()` / `set_error_callback()` interface remains
+available for non-RT use.
+
+## Plugin ABI versioning
+
+Plugins export a version integer alongside the factory symbol. The runtime
+registry uses this to detect ABI mismatches before constructing any plugin
+object:
+
+```cpp
+// In sensor_plugin.hpp
+constexpr uint32_t kNebulaPluginAbiVersion = 1;
+```
+
+Plugins must export:
+
+```cpp
+extern "C" uint32_t nebula_plugin_abi_version()
+{
+  return nebula::drivers::kNebulaPluginAbiVersion;
 }
 ```
 
-    Descriptor fields :
+`SensorRegistry::load_plugin()` calls this symbol after opening the library.
+If the returned version differs from `kNebulaPluginAbiVersion`, loading fails
+with a logged error. If the symbol is absent (pre-versioned plugins), loading
+continues with a warning. Increment `kNebulaPluginAbiVersion` when any change
+to the plugin ABI requires all plugins to be recompiled.
 
-  |
-  Field | Required | Meaning | | -- - | -- - | -- - | | `vendor` | Yes | Vendor or
-  owner name.| | `package` | Yes | Plugin package name.This is also the registry key.| | `library` |
-    Yes | Shared library path or
-  library filename
-      .Relative paths are resolved from the descriptor directory and known install prefixes.|
-    | `factory` | No |
-    C symbol used to create the plugin.Defaults to `create_nebula_sensor_plugin`.| | `models` |
-    Yes | Sensor model names supported by the plugin.| | `schema` | No | Relative or
-  absolute path to a configuration schema.| | `config_defaults` | No | Relative or
-  absolute path to default configuration assets.| | `calibration_assets` | No | Relative or
-  absolute path to calibration assets.|
+## Plugin descriptors
 
-`SensorRegistry` can load descriptors from explicit directories and from these environment
-      variables :
+Plugins are discovered through JSON descriptors. A minimal descriptor looks
+like this:
 
-  - `NEBULA_PLUGINS_PATH`,
-  - `AMENT_PREFIX_PATH`,
-  and- `COLCON_PREFIX_PATH`.
+```json
+{
+  "vendor": "nebula",
+  "package": "nebula_sample_decoders",
+  "library": "libnebula_sample_decoders_plugin.so",
+  "factory": "create_nebula_sensor_plugin",
+  "models": ["Sample"],
+  "schema": "schemas/sample.schema.json"
+}
+```
 
-       Relative schema /
-      config /
-      calibration paths are resolved relative to the descriptor file.This allows tools to discover
-        plugin assets without vendor -
-    specific search logic.
+Descriptor fields:
 
-    Plugin shared libraries must export both lifecycle functions :
+| Field                | Required | Meaning                                                                                                                |
+| -------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `vendor`             | Yes      | Vendor or owner name.                                                                                                  |
+| `package`            | Yes      | Plugin package name. Also used as the registry key.                                                                    |
+| `library`            | Yes      | Shared library path or filename. Relative paths are resolved from the descriptor directory and known install prefixes. |
+| `factory`            | No       | C symbol used to create the plugin. Defaults to `create_nebula_sensor_plugin`.                                         |
+| `models`             | Yes      | Sensor model names supported by the plugin.                                                                            |
+| `schema`             | No       | Relative or absolute path to a configuration schema.                                                                   |
+| `config_defaults`    | No       | Relative or absolute path to default configuration assets.                                                             |
+| `calibration_assets` | No       | Relative or absolute path to calibration assets.                                                                       |
+
+`SensorRegistry` can load descriptors from explicit directories and from these
+environment variables:
+
+- `NEBULA_PLUGINS_PATH`,
+- `AMENT_PREFIX_PATH`, and
+- `COLCON_PREFIX_PATH`.
+
+Relative schema/config/calibration paths are resolved relative to the
+descriptor file. This allows tools to discover plugin assets without
+vendor-specific search logic.
+
+Plugin shared libraries must export all three lifecycle symbols:
 
 ```cpp
 #include <nebula_core_decoders/sensor_plugin_export.hpp>
 
-  extern "C" nebula::drivers::SensorPlugin *
-  create_nebula_sensor_plugin();
+extern "C" nebula::drivers::SensorPlugin * create_nebula_sensor_plugin();
 extern "C" void destroy_nebula_sensor_plugin(nebula::drivers::SensorPlugin * plugin);
+extern "C" uint32_t nebula_plugin_abi_version();
 ```
+
+The `sensor_plugin_export.hpp` header declares these signatures. Include it in
+exactly one translation unit per plugin library.
 
 The registry calls the destroy function through a custom deleter and keeps the
 plugin library loaded until the last plugin instance is destroyed. Do not rely
 on callers deleting plugin objects directly.
 
+## Plugin registry lifecycle
+
+`SensorRegistry` has two phases: load and run.
+
+During the **load phase**, call `load_registry()` to populate descriptors from
+the filesystem and `load_plugin()` to instantiate specific plugins.
+
+Call `finalize()` to transition to the **run phase**. After `finalize()`:
+
+- `load_registry()` throws `std::logic_error`.
+- `load_plugin()` throws `std::logic_error`.
+- `find_plugin_for_model()` and `get_registered_plugins()` remain available.
+
+Call `finalize()` before starting any real-time threads. This guarantees that
+no `dlopen` call or heap allocation from descriptor loading can occur on the
+RT path.
+
+```cpp
+auto registry = std::make_shared<nebula::drivers::SensorRegistry>();
+registry->load_registry({"/path/to/plugin/descriptors"});
+registry->load_plugin(*registry->find_plugin_for_model(model));
+registry->finalize();   // freeze — no more loads allowed
+// start RT threads here
+```
+
 ## Packet routing
 
 `PacketRouter` maps incoming packets to plugin-declared packet channels.
+
+After `configure()`, the router stores requirements in two sorted flat vectors:
+one for UDP/TCP entries keyed by destination port, one for CAN entries keyed by
+CAN ID. `route()` uses `std::lower_bound` binary search with no heap allocation
+and no dynamic dispatch. This makes `route()` safe to call from RT threads once
+`configure()` has returned.
 
 For UDP and TCP packets, routing can match by destination port and optional
 payload signature. For CAN packets, routing can match by CAN ID and optional
@@ -239,6 +341,10 @@ Use payload signatures when multiple packet types share the same transport
 endpoint. Use channels to communicate packet meaning to the decoder runtime.
 For example, a LiDAR plugin can route measurement packets to `Data` and
 calibration/info packets to `Info`.
+
+HTTP requirements are not routed through `PacketRouter`; they are managed as
+control endpoints in `LiveTransportGraph`. Passing an HTTP requirement to
+`PacketRouter::configure()` emits a warning and is otherwise ignored.
 
 ## Live transport requirements
 
@@ -254,8 +360,33 @@ HTTP control requirements are modeled as request/response endpoints, not as
 packet streams. `HttpPacketSource` remains available for sensors that expose
 polling-style telemetry, but live control should use `HttpControlEndpoint`.
 
-Malformed required transport declarations should fail during live graph
-configuration. For example, UDP, TCP, and HTTP requirements need a port.
+Malformed required transport declarations fail during live graph configuration.
+For example, UDP, TCP, and HTTP requirements need a port.
+
+## Live transport graph threading model
+
+`LiveTransportGraph` uses two mutexes:
+
+- `mutex_` — guards the callback members and the `sources_`, `runtime_`,
+  `router_`, and `http_controls_` state fields.
+- `processing_mutex_` — serializes `on_packet()` calls so that decoder
+  runtimes that are not thread-safe receive packets one at a time.
+
+**Reconfigure sequence** (`configure()`):
+
+1. Build new runtime, router, and sources outside any lock.
+2. Remove old sources from `sources_` under `mutex_` and stop each one without
+   holding any lock. Source threads call `on_packet()` which acquires
+   `processing_mutex_`; joining them while holding that mutex would deadlock.
+3. Once all old source threads are joined, acquire both mutexes and install the
+   new state atomically.
+
+**`start()` and `stop()`** snapshot `sources_` under `mutex_` and call
+`start()`/`stop()` on each source outside the lock, preventing a race with a
+concurrent `configure()` call.
+
+**User callbacks** are invoked outside all graph mutexes so that callback code
+can coordinate shutdown without deadlocking the graph.
 
 ## Replay sessions
 
@@ -272,52 +403,34 @@ unsupported link types fail before the worker thread starts. PCAP UDP packets
 preserve their UDP transport and are marked with `from_replay`.
 
 Replay is intended to test the same decoder path as live data. There is no
-separate replay transport kind;
-decoders should use `from_replay` only when they need to distinguish recorded packets from live
-  packets.
+separate replay transport kind; decoders should use `from_replay` only when
+they need to distinguish recorded packets from live packets.
 
-  ##Live sessions
+## Example usage
 
-`LiveTransportGraph` composes :
-
-  1. `SensorRegistry`,
-  2. the selected plugin, 3. transport sources based on plugin requirements, 4. `PacketRouter`,
-  and5. the plugin's decoder runtime.
-
-     The graph serializes packet delivery into the decoder runtime
-       .Transport errors and decoder errors are reported through the configured error
-         callback.Callbacks are stored on the graph and forwarded through stable internal wrappers,
-  so callbacks can be installed before or
-    after configuration without reconfiguring packet sources or
-    decoder runtimes
-        .
-
-      User callbacks are invoked outside the graph state mutex.This avoids forcing application
-        callbacks to be non -
-      reentrant and allows callback code to coordinate shutdown without deadlocking the graph.
-
-      ##Example usage
-
-      ## #Discover plugins
+### Discover plugins
 
 ```cpp
 #include <nebula_core_runtime/sensor_registry.hpp>
 
-      auto registry = std::make_shared<nebula::drivers::SensorRegistry>();
+auto registry = std::make_shared<nebula::drivers::SensorRegistry>();
 registry->load_registry({"/path/to/plugin/descriptors"});
 
 auto metadata = registry->find_plugin_for_model(nebula::drivers::SensorModel::SAMPLE);
 if (!metadata) {
   throw std::runtime_error("No plugin found for requested model");
 }
+
+// Freeze the registry before starting any real-time threads.
+registry->finalize();
 ```
 
-  ## #Run PCAP replay
+### Run PCAP replay
 
 ```cpp
 #include <nebula_core_runtime/replay_session_runner.hpp>
 
-    nebula::drivers::ReplaySessionRunner runner(registry);
+nebula::drivers::ReplaySessionRunner runner(registry);
 
 runner.set_output_callback([](const nebula::drivers::SensorDecodedOutput & output) {
   // Forward output to a file, tool, test assertion, or ROS bridge.
@@ -338,12 +451,12 @@ runner.start();
 runner.wait_until_finished();
 ```
 
-  ## #Run live transport
+### Run live transport
 
 ```cpp
 #include <nebula_core_runtime/live_transport_graph.hpp>
 
-    nebula::drivers::LiveTransportGraph graph(registry);
+nebula::drivers::LiveTransportGraph graph(registry);
 
 graph.set_output_callback([](const nebula::drivers::SensorDecodedOutput & output) {
   // Consume decoded output.
@@ -362,25 +475,50 @@ config.sensor_config.data_port = 2368;
 
 graph.configure(config);
 graph.start();
+// ...
+graph.stop();   // call before destruction if the application has a shutdown sequence
 ```
-
-Call `stop()` before destroying a live graph if the surrounding application has
-an explicit shutdown sequence.
 
 ## Implementing a plugin
 
 A minimal plugin implementation should:
 
 1. Provide a descriptor JSON file and install it with the package.
-2. Export a shared library with `create_nebula_sensor_plugin` and
-   `destroy_nebula_sensor_plugin`.
+2. Export a shared library with all three lifecycle symbols:
+   `create_nebula_sensor_plugin`, `destroy_nebula_sensor_plugin`, and
+   `nebula_plugin_abi_version`.
 3. Implement `SensorPlugin::metadata()` and `supported_models()`.
 4. Implement `packet_requirements()` for the packet types the decoder accepts.
 5. Implement `live_transport_requirements()` for live operation.
-6. Implement a `SensorDecoderRuntime`.
+6. Implement a `SensorDecoderRuntime` whose `process_packet()` accepts a
+   `SensorPacketView`.
 7. Add registry, routing, replay, and sample integration tests.
 
-The sample plugin demonstrates this pattern in `nebula_sample_decoders`.
+The sample plugin in `nebula_sample_decoders` demonstrates this pattern,
+including the `nebula_plugin_abi_version()` export and the `SensorPacketView`
+hot path.
+
+### Minimal plugin export file
+
+```cpp
+#include <nebula_core_decoders/sensor_plugin_export.hpp>
+#include "my_plugin.hpp"
+
+nebula::drivers::SensorPlugin * create_nebula_sensor_plugin()
+{
+  return new MyPlugin();
+}
+
+void destroy_nebula_sensor_plugin(nebula::drivers::SensorPlugin * plugin)
+{
+  delete plugin;
+}
+
+uint32_t nebula_plugin_abi_version()
+{
+  return nebula::drivers::kNebulaPluginAbiVersion;
+}
+```
 
 ## Build modes
 
@@ -428,5 +566,7 @@ Expected follow-up work includes:
 
 - migrating vendor adapters onto these contracts,
 - connecting ROS wrappers to the runtime layer where appropriate,
+- wiring `SensorOutputSink` into `LiveTransportGraph` and a first RT-capable
+  decoder runtime,
 - expanding non-privileged tests for additional transports, and
 - using descriptor metadata from external tools.

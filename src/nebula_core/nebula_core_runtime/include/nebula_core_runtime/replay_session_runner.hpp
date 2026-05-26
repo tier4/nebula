@@ -1,4 +1,4 @@
-// Copyright 2024 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include <nebula_core_runtime/sensor_registry.hpp>
 
 #include <memory>
+#include <string>
 
 namespace nebula::drivers
 {
@@ -33,7 +34,7 @@ struct ReplaySessionConfig
 class ReplaySessionRunner
 {
 public:
-  ReplaySessionRunner(std::shared_ptr<SensorRegistry> registry);
+  explicit ReplaySessionRunner(std::shared_ptr<SensorRegistry> registry);
 
   void configure(const ReplaySessionConfig & config);
   void set_output_callback(SensorOutputCallback callback);

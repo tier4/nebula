@@ -1,4 +1,4 @@
-// Copyright 2024 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,10 @@
 #include <nebula_core_hw_interfaces/connections/udp.hpp>
 #include <nebula_core_hw_interfaces/packet_source.hpp>
 
+#include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace nebula::drivers
 {

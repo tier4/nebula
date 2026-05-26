@@ -1,4 +1,4 @@
-// Copyright 2024 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,9 @@
 #include <array>
 #include <cstdint>
 #include <fstream>
+#include <memory>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace nebula::drivers::test
