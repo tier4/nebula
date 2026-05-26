@@ -19,7 +19,6 @@
 #include <nebula_core_common/sensor_runtime_common.hpp>
 #include <nebula_core_decoders/sensor_requirements.hpp>
 
-#include <map>
 #include <vector>
 
 namespace nebula::drivers
@@ -29,22 +28,35 @@ class PacketRouter
 public:
   PacketRouter() = default;
 
+  // Build lookup tables from the plugin's channel requirements. Must be called
+  // before route(); entries are sorted so route() is allocation-free.
   void configure(const std::vector<PacketChannelRequirement> & requirements);
 
-  /// @brief Route a packet and assign its channel
-  /// @param packet The packet to route
-  /// @return True if the packet matched a requirement and was assigned a channel
-  bool route(SensorPacket & packet);
+  // Assign the channel field of the view based on transport, port, and CAN ID.
+  // Returns true if the packet matched a requirement. RT-safe after configure().
+  bool route(SensorPacketView & packet);
 
   const SensorProgress & get_metrics() const;
 
 private:
-  std::multimap<uint16_t, PacketChannelRequirement> udp_port_map_;
-  std::multimap<uint16_t, PacketChannelRequirement> tcp_port_map_;
-  std::multimap<uint32_t, PacketChannelRequirement> can_id_map_;
+  struct UdpEntry
+  {
+    uint16_t port{0};
+    PacketChannelRequirement req;
+  };
+
+  struct CanEntry
+  {
+    uint32_t can_id{0};
+    PacketChannelRequirement req;
+  };
+
+  // Both vectors are sorted by key after configure() and never modified during route().
+  std::vector<UdpEntry> udp_entries_;
+  std::vector<CanEntry> can_entries_;
   SensorProgress metrics_;
 
-  bool match_signature(const std::vector<uint8_t> & payload, const PayloadSignature & signature);
+  bool match_signature(const uint8_t * data, size_t size, const PayloadSignature & signature) const;
 };
 
 }  // namespace nebula::drivers

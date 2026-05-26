@@ -15,6 +15,8 @@
 #include <nebula_core_hw_interfaces/can_packet_source.hpp>
 
 #include <chrono>
+#include <memory>
+#include <string>
 
 namespace nebula::drivers
 {
@@ -51,8 +53,9 @@ void CanPacketSource::start()
     socket_ = std::make_unique<connections::CanSocket>(
       connections::CanSocket::Builder(interface_name_).bind());
 
-    socket_->subscribe(std::bind(
-      &CanPacketSource::on_can_frame, this, std::placeholders::_1, std::placeholders::_2));
+    socket_->subscribe(
+      std::bind(
+        &CanPacketSource::on_can_frame, this, std::placeholders::_1, std::placeholders::_2));
   } catch (const std::exception & e) {
     if (error_callback_) {
       SensorError error;
@@ -93,7 +96,7 @@ void CanPacketSource::on_can_frame(
     }
 
     SensorCanMetadata can_md;
-    can_md.interface_name = interface_name_;
+    can_md.set_interface_name(interface_name_);
     can_md.can_id = frame.can_id & CAN_EFF_MASK;
     can_md.is_extended_id = (frame.can_id & CAN_EFF_FLAG) != 0;
     can_md.dlc = frame.len;

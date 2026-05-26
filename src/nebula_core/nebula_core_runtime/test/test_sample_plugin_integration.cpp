@@ -22,6 +22,9 @@
 #include <gtest/gtest.h>
 
 #include <fstream>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace nebula::drivers::test
 {
@@ -128,9 +131,10 @@ TEST_F(TestSamplePluginIntegration, LoadAndRunSamplePlugin)
     packet.transport = SensorTransportKind::UDP;
     packet.destination = SensorEndpoint{"", 2368};
     packet.payload = {0xde, 0xad, 0xbe, 0xef};
-    ASSERT_TRUE(router.route(packet));
-    EXPECT_EQ(packet.channel, SensorPacketChannel::Data);
-    auto result = runtime->process_packet(packet);
+    SensorPacketView view = SensorPacketView::from(packet);
+    ASSERT_TRUE(router.route(view));
+    EXPECT_EQ(view.channel, SensorPacketChannel::Data);
+    auto result = runtime->process_packet(view);
     EXPECT_EQ(result, SensorPacketResult::Success);
   }
 

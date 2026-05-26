@@ -15,6 +15,10 @@
 #include <nebula_core_hw_interfaces/udp_packet_source.hpp>
 
 #include <chrono>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace nebula::drivers
 {
@@ -52,8 +56,9 @@ void UdpPacketSource::start()
     socket_ = std::make_unique<connections::UdpSocket>(
       connections::UdpSocket::Builder(host_ip_, port_).bind());
 
-    socket_->subscribe(std::bind(
-      &UdpPacketSource::on_udp_packet, this, std::placeholders::_1, std::placeholders::_2));
+    socket_->subscribe(
+      std::bind(
+        &UdpPacketSource::on_udp_packet, this, std::placeholders::_1, std::placeholders::_2));
   } catch (const std::exception & e) {
     if (error_callback_) {
       SensorError error;
@@ -93,11 +98,7 @@ void UdpPacketSource::on_udp_packet(
                           .count();
     }
 
-    // destination information is implicitly known from our bind port
-    SensorEndpoint dst;
-    dst.address = host_ip_;
-    dst.port = port_;
-    sp.destination = dst;
+    sp.destination = SensorEndpoint{host_ip_, port_};
 
     sp.payload = std::move(data);
 

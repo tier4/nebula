@@ -20,6 +20,7 @@
 extern "C" {
 nebula::drivers::SensorPlugin * create_nebula_sensor_plugin();
 void destroy_nebula_sensor_plugin(nebula::drivers::SensorPlugin * plugin);
+uint32_t nebula_plugin_abi_version();
 }
 
 #endif  // NEBULA_SENSOR_PLUGIN_EXPORT_HPP

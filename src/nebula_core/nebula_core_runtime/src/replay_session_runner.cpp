@@ -15,6 +15,7 @@
 #include <nebula_core_runtime/replay_session_runner.hpp>
 
 #include <iostream>
+#include <memory>
 
 namespace nebula::drivers
 {
@@ -108,13 +109,13 @@ void ReplaySessionRunner::wait_until_finished()
 
 void ReplaySessionRunner::on_packet(const SensorPacket & packet)
 {
-  SensorPacket mutable_packet = packet;
-  if (router_->route(mutable_packet)) {
-    const auto result = runtime_->process_packet(mutable_packet);
+  SensorPacketView view = SensorPacketView::from(packet);
+  if (router_->route(view)) {
+    const auto result = runtime_->process_packet(view);
     if (result == SensorPacketResult::Error && error_callback_) {
       SensorError error;
       error.type = SensorErrorType::DecoderError;
-      error.timestamp_ns = mutable_packet.timestamp_ns;
+      error.timestamp_ns = view.timestamp_ns;
       error.message = "Decoder runtime returned SensorPacketResult::Error";
       error_callback_(error);
     }

@@ -49,9 +49,16 @@ public:
   /// @brief Get all registered plugins
   const std::map<std::string, SensorPluginMetadata> & get_registered_plugins() const;
 
+  /// @brief Mark the registry as immutable. After this call load_plugin() throws
+  /// std::logic_error. Call once all required plugins have been loaded, before
+  /// starting any real-time threads.
+  void finalize();
+  bool is_finalized() const { return finalized_; }
+
 private:
   struct LoadedLibrary;
 
+  bool finalized_{false};
   std::map<std::string, SensorPluginMetadata> registered_plugins_;
   std::map<std::string, std::shared_ptr<LoadedLibrary>> loaded_libraries_;
   std::map<std::string, std::string> failed_library_errors_;

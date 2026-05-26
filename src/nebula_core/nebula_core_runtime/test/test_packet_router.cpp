@@ -38,12 +38,11 @@ TEST(TestPacketRouter, RouteUdpPacket)
 
   SensorPacket packet;
   packet.transport = SensorTransportKind::UDP;
-  SensorEndpoint dst;
-  dst.port = 2368;
-  packet.destination = dst;
+  packet.destination = SensorEndpoint{"", 2368};
 
-  EXPECT_TRUE(router.route(packet));
-  EXPECT_EQ(packet.channel, SensorPacketChannel::Data);
+  SensorPacketView view = SensorPacketView::from(packet);
+  EXPECT_TRUE(router.route(view));
+  EXPECT_EQ(view.channel, SensorPacketChannel::Data);
 
   EXPECT_EQ(router.get_metrics().matched_packets, 1u);
   EXPECT_EQ(router.get_metrics().processed_packets, 1u);
@@ -56,11 +55,10 @@ TEST(TestPacketRouter, DropUnmatchedPacket)
 
   SensorPacket packet;
   packet.transport = SensorTransportKind::UDP;
-  SensorEndpoint dst;
-  dst.port = 2368;
-  packet.destination = dst;
+  packet.destination = SensorEndpoint{"", 2368};
 
-  EXPECT_FALSE(router.route(packet));
+  SensorPacketView view = SensorPacketView::from(packet);
+  EXPECT_FALSE(router.route(view));
   EXPECT_EQ(router.get_metrics().dropped_packets, 1u);
 }
 
@@ -78,8 +76,9 @@ TEST(TestPacketRouter, RouteTcpPacket)
   packet.transport = SensorTransportKind::TCP;
   packet.destination = SensorEndpoint{"", 9347};
 
-  EXPECT_TRUE(router.route(packet));
-  EXPECT_EQ(packet.channel, SensorPacketChannel::Control);
+  SensorPacketView view = SensorPacketView::from(packet);
+  EXPECT_TRUE(router.route(view));
+  EXPECT_EQ(view.channel, SensorPacketChannel::Control);
 }
 
 TEST(TestPacketRouter, RoutePacketWithOffsetSignature)
@@ -98,8 +97,9 @@ TEST(TestPacketRouter, RoutePacketWithOffsetSignature)
   packet.destination = SensorEndpoint{"", 2368};
   packet.payload = {0xde, 0xad, 0xbe, 0xef};
 
-  EXPECT_TRUE(router.route(packet));
-  EXPECT_EQ(packet.channel, SensorPacketChannel::Info);
+  SensorPacketView view = SensorPacketView::from(packet);
+  EXPECT_TRUE(router.route(view));
+  EXPECT_EQ(view.channel, SensorPacketChannel::Info);
 }
 
 TEST(TestPacketRouter, RoutePacketWithMaskedSignature)
@@ -118,8 +118,9 @@ TEST(TestPacketRouter, RoutePacketWithMaskedSignature)
   packet.destination = SensorEndpoint{"", 2368};
   packet.payload = {0xf7};
 
-  EXPECT_TRUE(router.route(packet));
-  EXPECT_EQ(packet.channel, SensorPacketChannel::Status);
+  SensorPacketView view = SensorPacketView::from(packet);
+  EXPECT_TRUE(router.route(view));
+  EXPECT_EQ(view.channel, SensorPacketChannel::Status);
 }
 
 TEST(TestPacketRouter, DropPacketWhenSignatureOffsetWouldOverflow)
@@ -139,8 +140,9 @@ TEST(TestPacketRouter, DropPacketWhenSignatureOffsetWouldOverflow)
   packet.destination = SensorEndpoint{"", 2368};
   packet.payload = {0xbe};
 
-  EXPECT_FALSE(router.route(packet));
-  EXPECT_EQ(packet.channel, SensorPacketChannel::Unknown);
+  SensorPacketView view = SensorPacketView::from(packet);
+  EXPECT_FALSE(router.route(view));
+  EXPECT_EQ(view.channel, SensorPacketChannel::Unknown);
 }
 
 }  // namespace nebula::drivers::test

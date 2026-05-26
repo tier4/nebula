@@ -15,63 +15,69 @@
 #include <nebula_core_runtime/packet_router.hpp>
 
 #include <algorithm>
+#include <vector>
 
 namespace nebula::drivers
 {
 
 void PacketRouter::configure(const std::vector<PacketChannelRequirement> & requirements)
 {
-  udp_port_map_.clear();
-  tcp_port_map_.clear();
-  can_id_map_.clear();
+  udp_entries_.clear();
+  can_entries_.clear();
+
   for (const auto & req : requirements) {
-    if (req.transport == SensorTransportKind::UDP && req.destination_port.has_value()) {
-      udp_port_map_.emplace(*req.destination_port, req);
-    } else if (req.transport == SensorTransportKind::TCP && req.destination_port.has_value()) {
-      tcp_port_map_.emplace(*req.destination_port, req);
+    if (
+      (req.transport == SensorTransportKind::UDP || req.transport == SensorTransportKind::TCP) &&
+      req.destination_port.has_value()) {
+      udp_entries_.push_back({*req.destination_port, req});
     } else if (req.transport == SensorTransportKind::CAN && req.can_id.has_value()) {
-      can_id_map_.emplace(*req.can_id, req);
+      can_entries_.push_back({*req.can_id, req});
     }
   }
+
+  std::sort(udp_entries_.begin(), udp_entries_.end(), [](const UdpEntry & a, const UdpEntry & b) {
+    return a.port < b.port;
+  });
+  std::sort(can_entries_.begin(), can_entries_.end(), [](const CanEntry & a, const CanEntry & b) {
+    return a.can_id < b.can_id;
+  });
 }
 
-bool PacketRouter::route(SensorPacket & packet)
+bool PacketRouter::route(SensorPacketView & packet)
 {
   metrics_.processed_packets++;
 
-  bool matched = false;
   if (
     (packet.transport == SensorTransportKind::UDP ||
      packet.transport == SensorTransportKind::TCP) &&
-    packet.destination.has_value()) {
-    const auto & port_map =
-      packet.transport == SensorTransportKind::UDP ? udp_port_map_ : tcp_port_map_;
-    auto range = port_map.equal_range(packet.destination->port);
-    for (auto it = range.first; it != range.second; ++it) {
+    packet.destination) {
+    const uint16_t port = packet.destination->port;
+    auto lo = std::lower_bound(
+      udp_entries_.begin(), udp_entries_.end(), port,
+      [](const UdpEntry & e, uint16_t p) { return e.port < p; });
+    for (auto it = lo; it != udp_entries_.end() && it->port == port; ++it) {
       if (
-        !it->second.payload_signature.has_value() ||
-        match_signature(packet.payload, *it->second.payload_signature)) {
-        packet.channel = it->second.channel;
-        matched = true;
-        break;
+        !it->req.payload_signature.has_value() ||
+        match_signature(packet.payload_data, packet.payload_size, *it->req.payload_signature)) {
+        packet.channel = it->req.channel;
+        metrics_.matched_packets++;
+        return true;
       }
     }
-  } else if (packet.transport == SensorTransportKind::CAN && packet.can.has_value()) {
-    auto range = can_id_map_.equal_range(packet.can->can_id);
-    for (auto it = range.first; it != range.second; ++it) {
+  } else if (packet.transport == SensorTransportKind::CAN && packet.can) {
+    const uint32_t can_id = packet.can->can_id;
+    auto lo = std::lower_bound(
+      can_entries_.begin(), can_entries_.end(), can_id,
+      [](const CanEntry & e, uint32_t id) { return e.can_id < id; });
+    for (auto it = lo; it != can_entries_.end() && it->can_id == can_id; ++it) {
       if (
-        !it->second.payload_signature.has_value() ||
-        match_signature(packet.payload, *it->second.payload_signature)) {
-        packet.channel = it->second.channel;
-        matched = true;
-        break;
+        !it->req.payload_signature.has_value() ||
+        match_signature(packet.payload_data, packet.payload_size, *it->req.payload_signature)) {
+        packet.channel = it->req.channel;
+        metrics_.matched_packets++;
+        return true;
       }
     }
-  }
-
-  if (matched) {
-    metrics_.matched_packets++;
-    return true;
   }
 
   metrics_.dropped_packets++;
@@ -84,15 +90,15 @@ const SensorProgress & PacketRouter::get_metrics() const
 }
 
 bool PacketRouter::match_signature(
-  const std::vector<uint8_t> & payload, const PayloadSignature & signature)
+  const uint8_t * data, size_t size, const PayloadSignature & signature) const
 {
   if (signature.bytes.empty()) return true;
   if (signature.mask.has_value() && signature.mask->size() != signature.bytes.size()) return false;
-  if (signature.offset > payload.size()) return false;
-  if (signature.bytes.size() > payload.size() - signature.offset) return false;
+  if (signature.offset > size) return false;
+  if (signature.bytes.size() > size - signature.offset) return false;
 
   for (size_t i = 0; i < signature.bytes.size(); ++i) {
-    const uint8_t payload_byte = payload[signature.offset + i];
+    const uint8_t payload_byte = data[signature.offset + i];
     const uint8_t expected = signature.bytes[i];
     if (signature.mask.has_value()) {
       const uint8_t mask = (*signature.mask)[i];

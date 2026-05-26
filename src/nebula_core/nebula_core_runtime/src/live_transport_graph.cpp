@@ -15,7 +15,12 @@
 #include <nebula_core_runtime/live_transport_graph.hpp>
 
 #include <iostream>
+#include <map>
+#include <memory>
 #include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace nebula::drivers
 {
@@ -181,7 +186,7 @@ void LiveTransportGraph::on_packet(const SensorPacket & packet)
   SensorErrorCallback error_callback;
   SensorError error;
   bool emit_error = false;
-  SensorPacket mutable_packet = packet;
+  SensorPacketView view = SensorPacketView::from(packet);
 
   {
     std::lock_guard<std::mutex> processing_lock(processing_mutex_);
@@ -196,14 +201,14 @@ void LiveTransportGraph::on_packet(const SensorPacket & packet)
       return;
     }
 
-    if (router->route(mutable_packet)) {
-      const auto result = runtime->process_packet(mutable_packet);
+    if (router->route(view)) {
+      const auto result = runtime->process_packet(view);
       emit_error = result == SensorPacketResult::Error && static_cast<bool>(error_callback);
     }
 
     if (emit_error) {
       error.type = SensorErrorType::DecoderError;
-      error.timestamp_ns = mutable_packet.timestamp_ns;
+      error.timestamp_ns = view.timestamp_ns;
       error.message = "Decoder runtime returned SensorPacketResult::Error";
     }
   }

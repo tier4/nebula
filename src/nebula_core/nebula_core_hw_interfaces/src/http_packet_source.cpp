@@ -15,6 +15,8 @@
 #include <nebula_core_hw_interfaces/http_packet_source.hpp>
 
 #include <chrono>
+#include <memory>
+#include <string>
 
 namespace nebula::drivers
 {
@@ -84,10 +86,7 @@ void HttpPacketSource::run()
                             std::chrono::system_clock::now().time_since_epoch())
                             .count();
 
-        SensorEndpoint dst;
-        dst.address = host_ip_;
-        dst.port = port_;
-        sp.destination = dst;
+        sp.destination = SensorEndpoint{host_ip_, port_};
         sp.payload.assign(response.begin(), response.end());
 
         callback_(sp);

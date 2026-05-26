@@ -18,6 +18,9 @@
 #include <nebula_core_decoders/sensor_plugin.hpp>
 #include <nebula_sample_decoders/sample_decoder.hpp>
 
+#include <memory>
+#include <vector>
+
 namespace nebula::drivers
 {
 class SampleSensorDecoderRuntime : public SensorDecoderRuntime
@@ -28,7 +31,7 @@ public:
   void set_output_callback(SensorOutputCallback callback) override;
   void set_error_callback(SensorErrorCallback callback) override;
   void set_progress_callback(SensorProgressCallback callback) override;
-  SensorPacketResult process_packet(const SensorPacket & packet) override;
+  SensorPacketResult process_packet(const SensorPacketView & packet) override;
   void flush() override;
 
 private:
@@ -47,8 +50,10 @@ class SampleSensorPlugin : public SensorPlugin
 public:
   SensorPluginMetadata metadata() const override;
   std::vector<SensorModelInfo> supported_models() const override;
-  std::vector<PacketChannelRequirement> packet_requirements(const SensorConfiguration & config) const override;
-  std::vector<LiveTransportRequirement> live_transport_requirements(const SensorConfiguration & config) const override;
+  std::vector<PacketChannelRequirement> packet_requirements(
+    const SensorConfiguration & config) const override;
+  std::vector<LiveTransportRequirement> live_transport_requirements(
+    const SensorConfiguration & config) const override;
   std::unique_ptr<SensorDecoderRuntime> create_decoder_runtime() const override;
 };
 

@@ -15,9 +15,12 @@
 #ifndef NEBULA_SENSOR_PACKET_HPP
 #define NEBULA_SENSOR_PACKET_HPP
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <optional>
-#include <string>
+#include <string_view>
 #include <vector>
 
 namespace nebula::drivers
@@ -39,18 +42,40 @@ enum class SensorPacketChannel {
   Unknown,
 };
 
+// Fixed-size address avoids heap allocation on the packet hot path.
+// Holds up to 45 characters (max IPv6 length) plus a null terminator.
 struct SensorEndpoint
 {
-  std::string address;
-  uint16_t port = 0;
+  std::array<char, 46> address{};
+  uint16_t port{0};
+
+  SensorEndpoint() = default;
+  SensorEndpoint(std::string_view addr, uint16_t p) : port(p)
+  {
+    auto n = addr.size() < address.size() - 1 ? addr.size() : address.size() - 1;
+    std::memcpy(address.data(), addr.data(), n);
+    address[n] = '\0';
+  }
+
+  std::string_view address_view() const { return address.data(); }
 };
 
+// Fixed-size interface name matches Linux IFNAMSIZ (16 bytes including null).
 struct SensorCanMetadata
 {
-  std::string interface_name;
-  uint32_t can_id = 0;
-  bool is_extended_id = false;
-  uint8_t dlc = 0;
+  std::array<char, 16> interface_name{};
+  uint32_t can_id{0};
+  bool is_extended_id{false};
+  uint8_t dlc{0};
+
+  void set_interface_name(std::string_view name)
+  {
+    auto n = name.size() < interface_name.size() - 1 ? name.size() : interface_name.size() - 1;
+    std::memcpy(interface_name.data(), name.data(), n);
+    interface_name[n] = '\0';
+  }
+
+  std::string_view interface_name_view() const { return interface_name.data(); }
 };
 
 struct SensorPacket
@@ -63,6 +88,38 @@ struct SensorPacket
   std::optional<SensorEndpoint> destination;
   std::optional<SensorCanMetadata> can;
   std::vector<uint8_t> payload;
+};
+
+// Non-owning view into a SensorPacket used on the decoder hot path.
+// Avoids copying the payload vector. Lifetime is bounded by the originating
+// SensorPacket — the packet must remain alive for the duration of any call
+// that receives this view.
+struct SensorPacketView
+{
+  SensorTransportKind transport{SensorTransportKind::UDP};
+  SensorPacketChannel channel{SensorPacketChannel::Unknown};  // written by PacketRouter
+  uint64_t timestamp_ns{0};
+  bool from_replay{false};
+  const SensorEndpoint * source{nullptr};
+  const SensorEndpoint * destination{nullptr};
+  const SensorCanMetadata * can{nullptr};
+  const uint8_t * payload_data{nullptr};
+  size_t payload_size{0};
+
+  static SensorPacketView from(const SensorPacket & p)
+  {
+    SensorPacketView v;
+    v.transport = p.transport;
+    v.channel = p.channel;
+    v.timestamp_ns = p.timestamp_ns;
+    v.from_replay = p.from_replay;
+    v.source = p.source.has_value() ? &*p.source : nullptr;
+    v.destination = p.destination.has_value() ? &*p.destination : nullptr;
+    v.can = p.can.has_value() ? &*p.can : nullptr;
+    v.payload_data = p.payload.empty() ? nullptr : p.payload.data();
+    v.payload_size = p.payload.size();
+    return v;
+  }
 };
 
 struct NebulaPacket

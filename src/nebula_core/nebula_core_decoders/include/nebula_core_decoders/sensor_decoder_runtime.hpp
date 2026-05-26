@@ -25,7 +25,20 @@
 namespace nebula::drivers
 {
 using SensorOutputCallback = std::function<void(const SensorDecodedOutput &)>;
+using SensorErrorCallback = std::function<void(const SensorError &)>;
 using SensorProgressCallback = std::function<void(const SensorProgress &)>;
+
+// RT-safe alternative to std::function callbacks. Implement this interface and
+// pass it to SensorDecoderRuntime::set_sink() on paths that must not heap-allocate.
+// The sink pointer must outlive the runtime it is registered with.
+class SensorOutputSink
+{
+public:
+  virtual ~SensorOutputSink() = default;
+  virtual void on_output(const SensorDecodedOutput &) = 0;
+  virtual void on_error(const SensorError &) {}
+  virtual void on_progress(const SensorProgress &) {}
+};
 
 class SensorDecoderRuntime
 {
@@ -38,7 +51,12 @@ public:
   virtual void set_error_callback(SensorErrorCallback callback) = 0;
   virtual void set_progress_callback(SensorProgressCallback callback) = 0;
 
-  virtual SensorPacketResult process_packet(const SensorPacket & packet) = 0;
+  // RT-safe alternative to set_*_callback(). The sink pointer must outlive this
+  // runtime. Default is a no-op; override in RT-capable runtimes.
+  virtual void set_sink(SensorOutputSink * /*sink*/) {}
+
+  // Accepts a non-owning view to avoid copying the packet payload on the hot path.
+  virtual SensorPacketResult process_packet(const SensorPacketView & packet) = 0;
   virtual void flush() = 0;
 };
 

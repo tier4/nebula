@@ -18,8 +18,21 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <vector>
 
-using namespace nebula::drivers;
+using nebula::drivers::LiveTransportRequirement;
+using nebula::drivers::PacketChannelRequirement;
+using nebula::drivers::SensorConfiguration;
+using nebula::drivers::SensorDecoderRuntime;
+using nebula::drivers::SensorErrorCallback;
+using nebula::drivers::SensorModelInfo;
+using nebula::drivers::SensorOutputCallback;
+using nebula::drivers::SensorPacket;
+using nebula::drivers::SensorPacketResult;
+using nebula::drivers::SensorPacketView;
+using nebula::drivers::SensorPlugin;
+using nebula::drivers::SensorPluginMetadata;
+using nebula::drivers::SensorProgressCallback;
 
 class MockSensorDecoderRuntime : public SensorDecoderRuntime
 {
@@ -28,7 +41,10 @@ public:
   void set_output_callback(SensorOutputCallback) override {}
   void set_error_callback(SensorErrorCallback) override {}
   void set_progress_callback(SensorProgressCallback) override {}
-  SensorPacketResult process_packet(const SensorPacket &) override { return SensorPacketResult::Success; }
+  SensorPacketResult process_packet(const SensorPacketView &) override
+  {
+    return SensorPacketResult::Success;
+  }
   void flush() override {}
 };
 
@@ -37,8 +53,16 @@ class MockSensorPlugin : public SensorPlugin
 public:
   SensorPluginMetadata metadata() const override { return {}; }
   std::vector<SensorModelInfo> supported_models() const override { return {}; }
-  std::vector<PacketChannelRequirement> packet_requirements(const SensorConfiguration &) const override { return {}; }
-  std::vector<LiveTransportRequirement> live_transport_requirements(const SensorConfiguration &) const override { return {}; }
+  std::vector<PacketChannelRequirement> packet_requirements(
+    const SensorConfiguration &) const override
+  {
+    return {};
+  }
+  std::vector<LiveTransportRequirement> live_transport_requirements(
+    const SensorConfiguration &) const override
+  {
+    return {};
+  }
   std::unique_ptr<SensorDecoderRuntime> create_decoder_runtime() const override
   {
     return std::make_unique<MockSensorDecoderRuntime>();
@@ -49,7 +73,7 @@ TEST(TestCoreInterfaces, SensorDecoderRuntime)
 {
   std::unique_ptr<SensorDecoderRuntime> runtime = std::make_unique<MockSensorDecoderRuntime>();
   SensorPacket packet;
-  EXPECT_EQ(runtime->process_packet(packet), SensorPacketResult::Success);
+  EXPECT_EQ(runtime->process_packet(SensorPacketView::from(packet)), SensorPacketResult::Success);
 }
 
 TEST(TestCoreInterfaces, SensorPlugin)

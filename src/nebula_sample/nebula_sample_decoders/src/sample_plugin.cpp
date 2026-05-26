@@ -17,6 +17,8 @@
 #include <nebula_sample_decoders/sample_plugin.hpp>
 
 #include <iostream>
+#include <memory>
+#include <vector>
 
 namespace nebula::drivers
 {
@@ -59,7 +61,7 @@ void SampleSensorDecoderRuntime::set_progress_callback(SensorProgressCallback ca
   progress_callback_ = callback;
 }
 
-SensorPacketResult SampleSensorDecoderRuntime::process_packet(const SensorPacket & packet)
+SensorPacketResult SampleSensorDecoderRuntime::process_packet(const SensorPacketView & packet)
 {
   if (!decoder_) {
     return SensorPacketResult::Error;
@@ -70,7 +72,9 @@ SensorPacketResult SampleSensorDecoderRuntime::process_packet(const SensorPacket
   // For sample sensor, we only care about UDP Data channel
   if (packet.transport == SensorTransportKind::UDP && packet.channel == SensorPacketChannel::Data) {
     progress_.matched_packets++;
-    auto result = decoder_->unpack(packet.payload);
+    const std::vector<uint8_t> payload(
+      packet.payload_data, packet.payload_data + packet.payload_size);
+    auto result = decoder_->unpack(payload);
 
     if (result.metadata_or_error.has_value()) {
       progress_.decoded_packets++;
@@ -177,5 +181,10 @@ nebula::drivers::SensorPlugin * create_nebula_sensor_plugin()
 void destroy_nebula_sensor_plugin(nebula::drivers::SensorPlugin * plugin)
 {
   delete plugin;
+}
+
+uint32_t nebula_plugin_abi_version()
+{
+  return nebula::drivers::kNebulaPluginAbiVersion;
 }
 }

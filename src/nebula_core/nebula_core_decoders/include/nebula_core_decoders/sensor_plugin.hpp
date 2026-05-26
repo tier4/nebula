@@ -18,11 +18,17 @@
 #include <nebula_core_decoders/sensor_decoder_runtime.hpp>
 #include <nebula_core_decoders/sensor_requirements.hpp>
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 
 namespace nebula::drivers
 {
+// Increment whenever the SensorPlugin or SensorDecoderRuntime vtable layout changes.
+// Plugins must export nebula_plugin_abi_version() returning this value; the registry
+// rejects plugins whose version does not match.
+constexpr uint32_t kNebulaPluginAbiVersion = 1;
+
 class SensorPlugin
 {
 public:
@@ -41,5 +47,12 @@ public:
 };
 
 }  // namespace nebula::drivers
+
+// Factory and ABI version symbols exported by every plugin shared library.
+extern "C" {
+nebula::drivers::SensorPlugin * create_nebula_sensor_plugin();
+void destroy_nebula_sensor_plugin(nebula::drivers::SensorPlugin * plugin);
+uint32_t nebula_plugin_abi_version();
+}
 
 #endif  // NEBULA_SENSOR_PLUGIN_HPP

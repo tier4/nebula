@@ -22,6 +22,10 @@
 
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace nebula::drivers
 {
@@ -245,8 +249,19 @@ std::optional<SensorPluginMetadata> SensorRegistry::find_plugin_for_model(Sensor
   return std::nullopt;
 }
 
+void SensorRegistry::finalize()
+{
+  finalized_ = true;
+}
+
 std::shared_ptr<SensorPlugin> SensorRegistry::load_plugin(const SensorPluginMetadata & metadata)
 {
+  if (finalized_) {
+    throw std::logic_error(
+      "SensorRegistry::load_plugin called after finalize() — all plugins must be loaded before "
+      "the registry is frozen");
+  }
+
   auto plugin_it = instantiated_plugins_.find(metadata.package_name);
   if (plugin_it != instantiated_plugins_.end()) {
     return plugin_it->second;
@@ -277,6 +292,21 @@ std::shared_ptr<SensorPlugin> SensorRegistry::load_plugin(const SensorPluginMeta
     std::cerr << "Failed to find destroy symbol 'destroy_nebula_sensor_plugin' in "
               << metadata.library_path << ": " << dlerror() << std::endl;
     return nullptr;
+  }
+
+  using VersionFunc = uint32_t (*)();
+  auto version_func =
+    reinterpret_cast<VersionFunc>(dlsym(library->handle, "nebula_plugin_abi_version"));
+  if (version_func) {
+    const uint32_t plugin_version = version_func();
+    if (plugin_version != kNebulaPluginAbiVersion) {
+      std::cerr << "Plugin ABI version mismatch for " << metadata.package_name << ": host expects "
+                << kNebulaPluginAbiVersion << ", plugin reports " << plugin_version << std::endl;
+      return nullptr;
+    }
+  } else {
+    std::cerr << "Warning: plugin " << metadata.package_name
+              << " does not export nebula_plugin_abi_version(); assuming compatible" << std::endl;
   }
 
   std::shared_ptr<SensorPlugin> plugin(create_func(), [library, destroy_func](SensorPlugin * ptr) {
