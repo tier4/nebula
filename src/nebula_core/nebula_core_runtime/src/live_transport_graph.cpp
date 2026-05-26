@@ -66,8 +66,8 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
   auto router = std::make_shared<PacketRouter>();
   router->configure(plugin->packet_requirements(config.sensor_config));
 
-  std::vector<std::unique_ptr<PacketSource>> sources;
-  std::map<std::string, std::unique_ptr<HttpControlEndpoint>> http_controls;
+  std::vector<std::unique_ptr<PacketSource>> new_sources;
+  std::map<std::string, std::unique_ptr<HttpControlEndpoint>> new_http_controls;
   auto requirements = plugin->live_transport_requirements(config.sensor_config);
   for (const auto & req : requirements) {
     if (req.transport == SensorTransportKind::UDP) {
@@ -78,7 +78,7 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
         std::bind(&LiveTransportGraph::on_error, this, std::placeholders::_1));
       source->set_packet_callback(
         std::bind(&LiveTransportGraph::on_packet, this, std::placeholders::_1));
-      sources.push_back(std::move(source));
+      new_sources.push_back(std::move(source));
     } else if (req.transport == SensorTransportKind::CAN) {
       auto source = std::make_unique<CanPacketSource>();
       std::string interface = "can0";
@@ -90,7 +90,7 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
         std::bind(&LiveTransportGraph::on_error, this, std::placeholders::_1));
       source->set_packet_callback(
         std::bind(&LiveTransportGraph::on_packet, this, std::placeholders::_1));
-      sources.push_back(std::move(source));
+      new_sources.push_back(std::move(source));
     } else if (req.transport == SensorTransportKind::TCP) {
       const auto port = require_port(req);
       auto source = std::make_unique<TcpPacketSource>();
@@ -99,30 +99,44 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
         std::bind(&LiveTransportGraph::on_error, this, std::placeholders::_1));
       source->set_packet_callback(
         std::bind(&LiveTransportGraph::on_packet, this, std::placeholders::_1));
-      sources.push_back(std::move(source));
+      new_sources.push_back(std::move(source));
     } else if (req.transport == SensorTransportKind::HTTP) {
       const auto port = require_port(req);
       auto endpoint = std::make_unique<HttpControlEndpoint>();
       const std::string path = req.http_path.value_or("/");
       endpoint->configure(req.name, config.sensor_config.sensor_ip, port, path);
-      http_controls[req.name] = std::move(endpoint);
+      new_http_controls[req.name] = std::move(endpoint);
     } else if (req.required) {
       throw std::runtime_error(
         "Unsupported required live transport requirement '" + req.name + "'");
     }
   }
 
-  std::vector<std::unique_ptr<PacketSource>> old_sources;
-  std::map<std::string, std::unique_ptr<HttpControlEndpoint>> old_http_controls;
-  std::lock_guard<std::mutex> processing_lock(processing_mutex_);
+  // Drain existing sources before installing new state. Must NOT hold
+  // processing_mutex_ here: source threads invoke on_packet() which acquires
+  // processing_mutex_, so joining them while holding it would deadlock.
   {
+    std::vector<std::unique_ptr<PacketSource>> old_sources;
+    std::map<std::string, std::unique_ptr<HttpControlEndpoint>> old_http_controls;
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      old_sources = std::move(sources_);
+      old_http_controls = std::move(http_controls_);
+    }
+    for (auto & src : old_sources) {
+      src->stop();
+    }
+  }  // old sources fully stopped and destroyed before new state is installed
+
+  // Install new state while holding processing_mutex_ so no on_packet() callback
+  // from a newly started source can observe a partially initialized runtime or router.
+  {
+    std::lock_guard<std::mutex> processing_lock(processing_mutex_);
     std::lock_guard<std::mutex> state_lock(mutex_);
-    old_sources = std::move(sources_);
-    old_http_controls = std::move(http_controls_);
     runtime_ = std::move(runtime);
     router_ = std::move(router);
-    sources_ = std::move(sources);
-    http_controls_ = std::move(http_controls);
+    sources_ = std::move(new_sources);
+    http_controls_ = std::move(new_http_controls);
   }
 }
 
@@ -146,15 +160,29 @@ void LiveTransportGraph::set_progress_callback(SensorProgressCallback callback)
 
 void LiveTransportGraph::start()
 {
-  for (auto & source : sources_) {
-    source->start();
+  std::vector<PacketSource *> snapshot;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto & src : sources_) {
+      snapshot.push_back(src.get());
+    }
+  }
+  for (auto * src : snapshot) {
+    src->start();
   }
 }
 
 void LiveTransportGraph::stop()
 {
-  for (auto & source : sources_) {
-    source->stop();
+  std::vector<PacketSource *> snapshot;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto & src : sources_) {
+      snapshot.push_back(src.get());
+    }
+  }
+  for (auto * src : snapshot) {
+    src->stop();
   }
 }
 

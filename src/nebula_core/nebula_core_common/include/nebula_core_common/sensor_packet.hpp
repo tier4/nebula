@@ -16,6 +16,7 @@
 #define NEBULA_SENSOR_PACKET_HPP
 
 #include <array>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -44,6 +45,7 @@ enum class SensorPacketChannel {
 
 // Fixed-size address avoids heap allocation on the packet hot path.
 // Holds up to 45 characters (max IPv6 length) plus a null terminator.
+// Addresses longer than 45 characters are a programmer error and trigger an assertion.
 struct SensorEndpoint
 {
   std::array<char, 46> address{};
@@ -52,6 +54,7 @@ struct SensorEndpoint
   SensorEndpoint() = default;
   SensorEndpoint(std::string_view addr, uint16_t p) : port(p)
   {
+    assert(addr.size() < address.size() && "SensorEndpoint: address exceeds 45-char IPv6 maximum");
     auto n = addr.size() < address.size() - 1 ? addr.size() : address.size() - 1;
     std::memcpy(address.data(), addr.data(), n);
     address[n] = '\0';
@@ -120,6 +123,10 @@ struct SensorPacketView
     v.payload_size = p.payload.size();
     return v;
   }
+
+  // Prevent views from being created from temporaries: the view holds raw
+  // pointers into the packet, so the packet must outlive the view.
+  static SensorPacketView from(SensorPacket &&) = delete;
 };
 
 struct NebulaPacket

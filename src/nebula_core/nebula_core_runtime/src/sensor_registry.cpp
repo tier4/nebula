@@ -127,6 +127,12 @@ SensorRegistry::~SensorRegistry()
 
 void SensorRegistry::load_registry(const std::vector<std::string> & search_paths)
 {
+  if (finalized_) {
+    throw std::logic_error(
+      "SensorRegistry::load_registry called after finalize() — all descriptors must be loaded "
+      "before the registry is frozen");
+  }
+
   std::vector<std::string> descriptor_files;
 
   // 1. Explicit search paths
@@ -342,24 +348,30 @@ std::shared_ptr<SensorRegistry::LoadedLibrary> SensorRegistry::load_library(
   }
 
   void * handle = dlopen(library_path.c_str(), RTLD_LAZY | RTLD_LOCAL);
-  const char * direct_error = handle ? nullptr : dlerror();
-  if (direct_error) {
-    error = direct_error;
+  // Capture dlerror() immediately into std::string before any subsequent dlopen()
+  // call could overwrite the thread-local error buffer.
+  if (!handle) {
+    const char * raw = dlerror();
+    error = raw ? raw : "unknown dlopen error";
   }
 
   if (!handle && fs::path(library_path).is_relative()) {
     auto resolved = resolve_library_from_prefixes(library_path, package_name);
     if (resolved) {
       handle = dlopen(resolved->c_str(), RTLD_LAZY | RTLD_LOCAL);
-      const char * path_error = handle ? nullptr : dlerror();
-      if (path_error) {
-        error = path_error;
+      if (!handle) {
+        const char * raw = dlerror();
+        error = raw ? raw : "unknown dlopen error";
       }
     }
   }
 
   if (handle) {
     auto library = std::make_shared<LoadedLibrary>(handle);
+    // Intentional: successful loads are cached so subsequent calls return the
+    // same shared_ptr (and thus the same dlopen handle). Once in loaded_libraries_,
+    // a path is never retried even after a factory symbol error — callers that
+    // need a fresh load must construct a new SensorRegistry.
     loaded_libraries_[library_path] = library;
     return library;
   } else {

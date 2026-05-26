@@ -41,6 +41,7 @@ public:
   void set_output_callback(SensorOutputCallback) override {}
   void set_error_callback(SensorErrorCallback) override {}
   void set_progress_callback(SensorProgressCallback) override {}
+  void set_sink(SensorOutputSink *) override {}
   SensorPacketResult process_packet(const SensorPacketView &) override
   {
     return SensorPacketResult::Success;

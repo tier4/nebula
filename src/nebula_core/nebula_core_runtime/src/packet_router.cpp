@@ -15,6 +15,7 @@
 #include <nebula_core_runtime/packet_router.hpp>
 
 #include <algorithm>
+#include <iostream>
 #include <vector>
 
 namespace nebula::drivers
@@ -32,6 +33,13 @@ void PacketRouter::configure(const std::vector<PacketChannelRequirement> & requi
       udp_entries_.push_back({*req.destination_port, req});
     } else if (req.transport == SensorTransportKind::CAN && req.can_id.has_value()) {
       can_entries_.push_back({*req.can_id, req});
+    } else if (
+      req.transport != SensorTransportKind::UDP && req.transport != SensorTransportKind::TCP &&
+      req.transport != SensorTransportKind::CAN) {
+      // HTTP and other transports are not routed through PacketRouter;
+      // they are handled as control endpoints in LiveTransportGraph.
+      std::cerr << "PacketRouter: ignoring requirement '" << req.name
+                << "' with unsupported transport (not UDP/TCP/CAN)" << std::endl;
     }
   }
 
@@ -94,7 +102,8 @@ bool PacketRouter::match_signature(
 {
   if (signature.bytes.empty()) return true;
   if (signature.mask.has_value() && signature.mask->size() != signature.bytes.size()) return false;
-  if (signature.offset > size) return false;
+  // Guard 1 must precede guard 2: if offset >= size then (size - offset) wraps for unsigned types.
+  if (signature.offset >= size) return false;
   if (signature.bytes.size() > size - signature.offset) return false;
 
   for (size_t i = 0; i < signature.bytes.size(); ++i) {

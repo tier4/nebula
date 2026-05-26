@@ -53,6 +53,8 @@ public:
 
   // RT-safe alternative to set_*_callback(). The sink pointer must outlive this
   // runtime. Default is a no-op; override in RT-capable runtimes.
+  // TODO(drwnz): wire up in SampleSensorDecoderRuntime and LiveTransportGraph
+  // once an RT-capable runtime is available.
   virtual void set_sink(SensorOutputSink * /*sink*/) {}
 
   // Accepts a non-owning view to avoid copying the packet payload on the hot path.
