@@ -284,11 +284,13 @@ public:
   UdpSocket & unsubscribe()
   {
     running_ = false;
-    // Self-join guard: if called from the receive thread itself (e.g. a user
-    // callback stopping the graph), detach so the thread can return normally.
-    if (receive_thread_.get_id() == std::this_thread::get_id()) {
-      receive_thread_.detach();
-    } else if (receive_thread_.joinable()) {
+    // Calling unsubscribe() from the receive thread is a self-join and is
+    // prohibited. Lifecycle calls (stop, configure, destruction) must be
+    // deferred to a thread that is not the receive thread.
+    assert(
+      receive_thread_.get_id() != std::this_thread::get_id() &&
+      "unsubscribe() must not be called from the receive thread itself");
+    if (receive_thread_.joinable()) {
       receive_thread_.join();
     }
     return *this;
