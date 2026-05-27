@@ -109,7 +109,7 @@ struct SensorPacketView
   const uint8_t * payload_data{nullptr};
   size_t payload_size{0};
 
-  static SensorPacketView from(const SensorPacket & p)
+  static SensorPacketView from(const SensorPacket & p) noexcept
   {
     SensorPacketView v;
     v.transport = p.transport;

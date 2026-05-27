@@ -25,7 +25,7 @@
 namespace nebula::drivers
 {
 using SensorOutputCallback = std::function<void(const SensorDecodedOutput &)>;
-using SensorErrorCallback = std::function<void(const SensorError &)>;
+// SensorErrorCallback is defined in sensor_runtime_common.hpp (included above).
 using SensorProgressCallback = std::function<void(const SensorProgress &)>;
 
 // RT-safe alternative to std::function callbacks. Implement this interface and
@@ -34,7 +34,7 @@ using SensorProgressCallback = std::function<void(const SensorProgress &)>;
 class SensorOutputSink
 {
 public:
-  virtual ~SensorOutputSink() = default;
+  virtual ~SensorOutputSink() noexcept = default;
   virtual void on_output(const SensorDecodedOutput &) = 0;
   virtual void on_error(const SensorError &) {}
   virtual void on_progress(const SensorProgress &) {}
@@ -43,7 +43,7 @@ public:
 class SensorDecoderRuntime
 {
 public:
-  virtual ~SensorDecoderRuntime() = default;
+  virtual ~SensorDecoderRuntime() noexcept = default;
 
   virtual void configure(const SensorConfiguration & config) = 0;
 

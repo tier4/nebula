@@ -96,6 +96,7 @@ if(BUILD_TESTING)
   nebula_add_test(test_sample_plugin_integration test/test_sample_plugin_integration.cpp)
   nebula_add_test(test_packet_router test/test_packet_router.cpp)
   nebula_add_test(test_replay_session_runner test/test_replay_session_runner.cpp)
+  nebula_add_test(test_live_transport_graph test/test_live_transport_graph.cpp)
 endif()
 
 if(DEFINED ENV{AMENT_PREFIX_PATH})

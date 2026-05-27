@@ -81,7 +81,7 @@ protected:
     if (!plugin_library_path_.empty() && fs::exists(plugin_library_path_)) {
       fs::path dep = fs::path(plugin_library_path_).parent_path() / "libnebula_sample_decoders.so";
       if (fs::exists(dep)) {
-        dependency_handle_ = dlopen(dep.string().c_str(), RTLD_LAZY | RTLD_LOCAL);
+        dependency_handle_ = dlopen(dep.string().c_str(), RTLD_LAZY | RTLD_GLOBAL);
         ASSERT_NE(dependency_handle_, nullptr) << dlerror();
       }
     }

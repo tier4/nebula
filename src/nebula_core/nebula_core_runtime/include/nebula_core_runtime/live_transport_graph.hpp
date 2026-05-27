@@ -42,6 +42,7 @@ class LiveTransportGraph
 public:
   explicit LiveTransportGraph(std::shared_ptr<SensorRegistry> registry);
 
+  // After configure() the graph is stopped. Call start() to resume packet processing.
   void configure(const LiveSessionConfig & config);
   void set_output_callback(SensorOutputCallback callback);
   void set_error_callback(SensorErrorCallback callback);
@@ -62,7 +63,7 @@ private:
   std::shared_ptr<SensorRegistry> registry_;
   std::shared_ptr<SensorDecoderRuntime> runtime_;
   std::vector<std::shared_ptr<PacketSource>> sources_;
-  std::map<std::string, std::unique_ptr<HttpControlEndpoint>> http_controls_;
+  std::map<std::string, std::shared_ptr<HttpControlEndpoint>> http_controls_;
   std::shared_ptr<PacketRouter> router_;
 
   SensorOutputCallback output_callback_;

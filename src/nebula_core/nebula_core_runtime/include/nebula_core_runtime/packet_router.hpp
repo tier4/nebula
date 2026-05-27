@@ -34,7 +34,7 @@ public:
 
   // Assign the channel field of the view based on transport, port, and CAN ID.
   // Returns true if the packet matched a requirement. RT-safe after configure().
-  bool route(SensorPacketView & packet);
+  bool route(SensorPacketView & packet) noexcept;
 
   const SensorProgress & get_metrics() const;
 
@@ -56,7 +56,8 @@ private:
   std::vector<CanEntry> can_entries_;
   SensorProgress metrics_;
 
-  bool match_signature(const uint8_t * data, size_t size, const PayloadSignature & signature) const;
+  bool match_signature(
+    const uint8_t * data, size_t size, const PayloadSignature & signature) const noexcept;
 };
 
 }  // namespace nebula::drivers

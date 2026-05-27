@@ -69,7 +69,7 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
   router->configure(plugin->packet_requirements(config.sensor_config));
 
   std::vector<std::shared_ptr<PacketSource>> new_sources;
-  std::map<std::string, std::unique_ptr<HttpControlEndpoint>> new_http_controls;
+  std::map<std::string, std::shared_ptr<HttpControlEndpoint>> new_http_controls;
   auto requirements = plugin->live_transport_requirements(config.sensor_config);
   for (const auto & req : requirements) {
     if (req.transport == SensorTransportKind::UDP) {
@@ -104,7 +104,7 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
       new_sources.push_back(std::move(source));
     } else if (req.transport == SensorTransportKind::HTTP) {
       const auto port = require_port(req);
-      auto endpoint = std::make_unique<HttpControlEndpoint>();
+      auto endpoint = std::make_shared<HttpControlEndpoint>();
       const std::string path = req.http_path.value_or("/");
       endpoint->configure(req.name, config.sensor_config.sensor_ip, port, path);
       new_http_controls[req.name] = std::move(endpoint);
@@ -119,7 +119,7 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
   // processing_mutex_, so joining them while holding it would deadlock.
   {
     std::vector<std::shared_ptr<PacketSource>> old_sources;
-    std::map<std::string, std::unique_ptr<HttpControlEndpoint>> old_http_controls;
+    std::map<std::string, std::shared_ptr<HttpControlEndpoint>> old_http_controls;
     {
       std::lock_guard<std::mutex> lock(mutex_);
       old_sources = std::move(sources_);
@@ -194,23 +194,33 @@ void LiveTransportGraph::stop()
 
 std::string LiveTransportGraph::http_get(const std::string & endpoint_name, int timeout_ms) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
-  auto endpoint = http_controls_.find(endpoint_name);
-  if (endpoint == http_controls_.end()) {
-    throw std::invalid_argument("No HTTP control endpoint named '" + endpoint_name + "'");
+  // Copy the shared_ptr under the lock, then do I/O outside it. Holding mutex_
+  // across a blocking network call would stall on_packet() for the full timeout.
+  std::shared_ptr<HttpControlEndpoint> ep;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = http_controls_.find(endpoint_name);
+    if (it == http_controls_.end()) {
+      throw std::invalid_argument("No HTTP control endpoint named '" + endpoint_name + "'");
+    }
+    ep = it->second;
   }
-  return endpoint->second->get(timeout_ms);
+  return ep->get(timeout_ms);
 }
 
 std::string LiveTransportGraph::http_post(
   const std::string & endpoint_name, const std::string & body, int timeout_ms) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
-  auto endpoint = http_controls_.find(endpoint_name);
-  if (endpoint == http_controls_.end()) {
-    throw std::invalid_argument("No HTTP control endpoint named '" + endpoint_name + "'");
+  std::shared_ptr<HttpControlEndpoint> ep;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = http_controls_.find(endpoint_name);
+    if (it == http_controls_.end()) {
+      throw std::invalid_argument("No HTTP control endpoint named '" + endpoint_name + "'");
+    }
+    ep = it->second;
   }
-  return endpoint->second->post(body, timeout_ms);
+  return ep->post(body, timeout_ms);
 }
 
 void LiveTransportGraph::on_packet(const SensorPacket & packet)

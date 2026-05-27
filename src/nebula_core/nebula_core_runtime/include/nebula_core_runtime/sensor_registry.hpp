@@ -43,14 +43,15 @@ public:
 
   /// @brief Load a plugin library and instantiate the plugin object
   /// @param metadata The metadata of the plugin to load
-  /// @return A unique pointer to the instantiated plugin, or nullptr on failure
+  /// @return A shared pointer to the instantiated plugin, or nullptr on failure
   std::shared_ptr<SensorPlugin> load_plugin(const SensorPluginMetadata & metadata);
 
   /// @brief Get all registered plugins
   const std::map<std::string, SensorPluginMetadata> & get_registered_plugins() const;
 
-  /// @brief Mark the registry as immutable. After this call load_plugin() throws
-  /// std::logic_error. Call once all required plugins have been loaded, before
+  /// @brief Mark the registry as immutable. After this call, load_plugin() throws
+  /// std::logic_error for plugins not yet loaded; already-loaded plugins are still
+  /// returned from cache. Call once all required plugins have been loaded, before
   /// starting any real-time threads.
   void finalize();
   bool is_finalized() const { return finalized_; }

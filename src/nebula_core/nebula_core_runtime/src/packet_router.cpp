@@ -51,7 +51,7 @@ void PacketRouter::configure(const std::vector<PacketChannelRequirement> & requi
   });
 }
 
-bool PacketRouter::route(SensorPacketView & packet)
+bool PacketRouter::route(SensorPacketView & packet) noexcept
 {
   metrics_.processed_packets++;
 
@@ -98,7 +98,7 @@ const SensorProgress & PacketRouter::get_metrics() const
 }
 
 bool PacketRouter::match_signature(
-  const uint8_t * data, size_t size, const PayloadSignature & signature) const
+  const uint8_t * data, size_t size, const PayloadSignature & signature) const noexcept
 {
   if (signature.bytes.empty()) return true;
   if (signature.mask.has_value() && signature.mask->size() != signature.bytes.size()) return false;

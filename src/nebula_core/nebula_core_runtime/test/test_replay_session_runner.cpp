@@ -155,25 +155,34 @@ protected:
         plugin_library_path_ = isolated.string();
       }
     }
+
+    if (!plugin_library_path_.empty() && fs::exists(plugin_library_path_)) {
+      fs::path dep = fs::path(plugin_library_path_).parent_path() / "libnebula_sample_decoders.so";
+      if (fs::exists(dep)) {
+        dependency_handle_ = dlopen(dep.string().c_str(), RTLD_LAZY | RTLD_GLOBAL);
+        ASSERT_NE(dependency_handle_, nullptr) << dlerror();
+      }
+    }
   }
 
-  void TearDown() override { fs::remove_all(test_dir_); }
+  void TearDown() override
+  {
+    fs::remove_all(test_dir_);
+    if (dependency_handle_) {
+      dlclose(dependency_handle_);
+      dependency_handle_ = nullptr;
+    }
+  }
 
   fs::path test_dir_;
   std::string plugin_library_path_;
+  void * dependency_handle_{nullptr};
 };
 
 TEST_F(TestReplaySessionRunner, ReplaySampleSensor)
 {
   if (plugin_library_path_.empty() || !fs::exists(plugin_library_path_)) {
     GTEST_SKIP() << "Sample plugin library not found";
-  }
-
-  fs::path dependency_path =
-    fs::path(plugin_library_path_).parent_path() / "libnebula_sample_decoders.so";
-  if (fs::exists(dependency_path)) {
-    void * dependency = dlopen(dependency_path.string().c_str(), RTLD_LAZY | RTLD_GLOBAL);
-    ASSERT_NE(dependency, nullptr) << dlerror();
   }
 
   // Create a dummy descriptor

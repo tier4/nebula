@@ -32,7 +32,7 @@ constexpr uint32_t kNebulaPluginAbiVersion = 1;
 class SensorPlugin
 {
 public:
-  virtual ~SensorPlugin() = default;
+  virtual ~SensorPlugin() noexcept = default;
 
   virtual SensorPluginMetadata metadata() const = 0;
   virtual std::vector<SensorModelInfo> supported_models() const = 0;
@@ -47,12 +47,5 @@ public:
 };
 
 }  // namespace nebula::drivers
-
-// Factory and ABI version symbols exported by every plugin shared library.
-extern "C" {
-nebula::drivers::SensorPlugin * create_nebula_sensor_plugin();
-void destroy_nebula_sensor_plugin(nebula::drivers::SensorPlugin * plugin);
-uint32_t nebula_plugin_abi_version();
-}
 
 #endif  // NEBULA_SENSOR_PLUGIN_HPP

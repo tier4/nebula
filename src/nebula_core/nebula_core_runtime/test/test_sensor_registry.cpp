@@ -96,4 +96,33 @@ TEST_F(TestSensorRegistry, FindPluginForModel)
   EXPECT_FALSE(not_found.has_value());
 }
 
+TEST_F(TestSensorRegistry, LoadRegistryThrowsAfterFinalize)
+{
+  SensorRegistry registry;
+  registry.finalize();
+  EXPECT_THROW(registry.load_registry({test_dir_.string()}), std::logic_error);
+}
+
+TEST_F(TestSensorRegistry, LoadPluginThrowsForNewPluginAfterFinalize)
+{
+  fs::path descriptor_path = test_dir_ / "test_plugin.json";
+  std::ofstream ofs(descriptor_path.string());
+  ofs << R"({
+    "vendor": "test_vendor",
+    "package": "nebula_test_decoders",
+    "library": "libnebula_test_plugin.so",
+    "factory": "create_nebula_sensor_plugin",
+    "models": ["Pandar64"]
+  })";
+  ofs.close();
+
+  SensorRegistry registry;
+  registry.load_registry({test_dir_.string()});
+  registry.finalize();
+
+  auto metadata = registry.find_plugin_for_model(SensorModel::HESAI_PANDAR64);
+  ASSERT_TRUE(metadata.has_value());
+  EXPECT_THROW(registry.load_plugin(*metadata), std::logic_error);
+}
+
 }  // namespace nebula::drivers::test

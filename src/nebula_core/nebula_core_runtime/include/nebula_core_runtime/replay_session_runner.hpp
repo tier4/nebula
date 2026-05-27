@@ -31,6 +31,8 @@ struct ReplaySessionConfig
   SensorConfiguration sensor_config;
 };
 
+// Thread-safety: all set_*_callback() and configure() calls must complete before
+// start() is called. Callbacks registered after start() may race with on_packet().
 class ReplaySessionRunner
 {
 public:

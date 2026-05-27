@@ -304,7 +304,8 @@ the filesystem and `load_plugin()` to instantiate specific plugins.
 Call `finalize()` to transition to the **run phase**. After `finalize()`:
 
 - `load_registry()` throws `std::logic_error`.
-- `load_plugin()` throws `std::logic_error`.
+- `load_plugin()` throws `std::logic_error` for plugins not yet loaded; plugins
+  already instantiated before `finalize()` are still returned from cache.
 - `find_plugin_for_model()` and `get_registered_plugins()` remain available.
 
 Call `finalize()` before starting any real-time threads. This guarantees that
@@ -375,9 +376,10 @@ For example, UDP, TCP, and HTTP requirements need a port.
 **Reconfigure sequence** (`configure()`):
 
 1. Build new runtime, router, and sources outside any lock.
-2. Remove old sources from `sources_` under `mutex_` and stop each one without
-   holding any lock. Source threads call `on_packet()` which acquires
-   `processing_mutex_`; joining them while holding that mutex would deadlock.
+2. Move old `sources_` and `http_controls_` out under `mutex_`, then stop each
+   source without holding any lock. Source threads call `on_packet()` which
+   acquires `processing_mutex_`; joining them while holding that mutex would
+   deadlock.
 3. Once all old source threads are joined, acquire both mutexes and install the
    new state atomically.
 

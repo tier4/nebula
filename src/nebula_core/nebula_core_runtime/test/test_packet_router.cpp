@@ -145,4 +145,36 @@ TEST(TestPacketRouter, DropPacketWhenSignatureOffsetWouldOverflow)
   EXPECT_EQ(view.channel, SensorPacketChannel::Unknown);
 }
 
+TEST(TestPacketRouter, RouteCanPacket)
+{
+  PacketRouter router;
+  PacketChannelRequirement req;
+  req.transport = SensorTransportKind::CAN;
+  req.channel = SensorPacketChannel::Status;
+  req.can_id = 0x18FF50E5;
+
+  router.configure({req});
+
+  SensorPacket packet;
+  packet.transport = SensorTransportKind::CAN;
+  SensorCanMetadata can_meta;
+  can_meta.can_id = 0x18FF50E5;
+  can_meta.is_extended_id = true;
+  packet.can = can_meta;
+
+  SensorPacketView view = SensorPacketView::from(packet);
+  EXPECT_TRUE(router.route(view));
+  EXPECT_EQ(view.channel, SensorPacketChannel::Status);
+
+  SensorPacket other_packet;
+  other_packet.transport = SensorTransportKind::CAN;
+  SensorCanMetadata other_can;
+  other_can.can_id = 0x00000001;
+  other_packet.can = other_can;
+
+  SensorPacketView other_view = SensorPacketView::from(other_packet);
+  EXPECT_FALSE(router.route(other_view));
+  EXPECT_EQ(router.get_metrics().dropped_packets, 1u);
+}
+
 }  // namespace nebula::drivers::test
