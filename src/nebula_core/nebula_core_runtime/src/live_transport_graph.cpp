@@ -145,10 +145,12 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
     }
   }  // old sources fully stopped and destroyed before new state is installed
 
-  // Install new state while holding processing_mutex_ so no on_packet() callback
-  // from a newly started source can observe a partially initialized runtime or router.
+  // Install new state under mutex_ only. on_packet() snapshots runtime_ and router_
+  // atomically under the same mutex, so the swap is invisible to in-progress calls.
+  // processing_mutex_ is intentionally NOT held here: holding it would deadlock if a
+  // user callback (firing from within process_packet() while processing_mutex_ is held)
+  // calls configure().
   {
-    std::lock_guard<std::mutex> processing_lock(processing_mutex_);
     std::lock_guard<std::mutex> state_lock(mutex_);
     runtime_ = std::move(runtime);
     router_ = std::move(router);

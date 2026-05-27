@@ -279,14 +279,15 @@ Relative schema/config/calibration paths are resolved relative to the
 descriptor file. This allows tools to discover plugin assets without
 vendor-specific search logic.
 
-Plugin shared libraries must export all three lifecycle symbols:
+Plugin shared libraries must export the two factory symbols and should export
+the ABI version symbol:
 
 ```cpp
 #include <nebula_core_decoders/sensor_plugin_export.hpp>
 
-extern "C" nebula::drivers::SensorPlugin * create_nebula_sensor_plugin();
-extern "C" void destroy_nebula_sensor_plugin(nebula::drivers::SensorPlugin * plugin);
-extern "C" uint32_t nebula_plugin_abi_version();
+extern "C" nebula::drivers::SensorPlugin * create_nebula_sensor_plugin();  // required
+extern "C" void destroy_nebula_sensor_plugin(nebula::drivers::SensorPlugin * plugin);  // required
+extern "C" uint32_t nebula_plugin_abi_version();  // strongly recommended; see ABI versioning section
 ```
 
 The `sensor_plugin_export.hpp` header declares these signatures. Include it in
@@ -384,8 +385,9 @@ For example, UDP, TCP, and HTTP requirements need a port.
    source without holding any lock. Source threads call `on_packet()` which
    acquires `processing_mutex_`; joining them while holding that mutex would
    deadlock.
-3. Once all old source threads are joined, acquire both mutexes and install the
-   new state atomically.
+3. Once all old source threads are joined, acquire `mutex_` and install the new
+   state. `processing_mutex_` is not held during install to avoid deadlocking
+   if a user callback calls `configure()` from within `process_packet()`.
 
 **`start()` and `stop()`** are serialized with `configure()` by the graph
 lifecycle mutex. They snapshot shared source ownership under `mutex_` and call
@@ -393,8 +395,10 @@ lifecycle mutex. They snapshot shared source ownership under `mutex_` and call
 reconfiguration cannot destroy a source while the lifecycle operation is using
 it.
 
-**User callbacks** are invoked outside all graph mutexes so that callback code
-can coordinate shutdown without deadlocking the graph.
+**User callbacks** (output, error, progress) are invoked outside `mutex_`. They
+may execute while `processing_mutex_` is held (since they can fire synchronously
+from within `process_packet()`), but all public `LiveTransportGraph` APIs are
+safe to call from within user callbacks without deadlocking the graph.
 
 ## Replay sessions
 

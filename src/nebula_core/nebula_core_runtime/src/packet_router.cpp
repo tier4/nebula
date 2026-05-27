@@ -76,8 +76,9 @@ bool PacketRouter::route(SensorPacketView & packet) noexcept
       [](const UdpEntry & e, uint16_t p) { return e.port < p; });
     for (auto it = lo; it != udp_entries_.end() && it->port == port; ++it) {
       if (
-        !it->req.payload_signature.has_value() ||
-        match_signature(packet.payload_data, packet.payload_size, *it->req.payload_signature)) {
+        it->req.transport == packet.transport &&
+        (!it->req.payload_signature.has_value() ||
+         match_signature(packet.payload_data, packet.payload_size, *it->req.payload_signature))) {
         packet.channel = it->req.channel;
         metrics_.matched_packets++;
         return true;

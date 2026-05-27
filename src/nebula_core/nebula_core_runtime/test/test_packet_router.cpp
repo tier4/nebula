@@ -145,6 +145,24 @@ TEST(TestPacketRouter, DropPacketWhenSignatureOffsetWouldOverflow)
   EXPECT_EQ(view.channel, SensorPacketChannel::Unknown);
 }
 
+TEST(TestPacketRouter, TcpPacketDoesNotMatchUdpEntryOnSamePort)
+{
+  PacketRouter router;
+  PacketChannelRequirement req;
+  req.transport = SensorTransportKind::UDP;
+  req.channel = SensorPacketChannel::Data;
+  req.destination_port = 2368;
+  router.configure({req});
+
+  SensorPacket packet;
+  packet.transport = SensorTransportKind::TCP;
+  packet.destination = SensorEndpoint{"", 2368};
+
+  SensorPacketView view = SensorPacketView::from(packet);
+  EXPECT_FALSE(router.route(view));
+  EXPECT_EQ(router.get_metrics().dropped_packets, 1u);
+}
+
 TEST(TestPacketRouter, ConfigureThrowsForRequiredUdpWithoutPort)
 {
   PacketRouter router;

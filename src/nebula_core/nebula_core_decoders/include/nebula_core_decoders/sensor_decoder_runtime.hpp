@@ -51,10 +51,10 @@ public:
   virtual void set_error_callback(SensorErrorCallback callback) = 0;
   virtual void set_progress_callback(SensorProgressCallback callback) = 0;
 
-  // RT-safe alternative to set_*_callback(). The sink pointer must outlive this
-  // runtime. Default is a no-op; override in RT-capable runtimes.
-  // TODO(drwnz): wire up in SampleSensorDecoderRuntime and LiveTransportGraph
-  // once an RT-capable runtime is available.
+  // EXPERIMENTAL — not yet wired into SampleSensorDecoderRuntime or
+  // LiveTransportGraph. API is subject to change in future revisions.
+  // RT-safe alternative to set_*_callback() for runtimes that must avoid heap
+  // allocation on the output path. The sink pointer must outlive this runtime.
   virtual void set_sink(SensorOutputSink * /*sink*/) {}
 
   // Accepts a non-owning view to avoid copying the packet payload on the hot path.
