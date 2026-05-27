@@ -145,6 +145,28 @@ TEST(TestPacketRouter, DropPacketWhenSignatureOffsetWouldOverflow)
   EXPECT_EQ(view.channel, SensorPacketChannel::Unknown);
 }
 
+TEST(TestPacketRouter, ConfigureThrowsForRequiredUdpWithoutPort)
+{
+  PacketRouter router;
+  PacketChannelRequirement req;
+  req.transport = SensorTransportKind::UDP;
+  req.channel = SensorPacketChannel::Data;
+  req.required = true;
+  // no destination_port set
+  EXPECT_THROW(router.configure({req}), std::invalid_argument);
+}
+
+TEST(TestPacketRouter, ConfigureThrowsForRequiredCanWithoutId)
+{
+  PacketRouter router;
+  PacketChannelRequirement req;
+  req.transport = SensorTransportKind::CAN;
+  req.channel = SensorPacketChannel::Status;
+  req.required = true;
+  // no can_id set
+  EXPECT_THROW(router.configure({req}), std::invalid_argument);
+}
+
 TEST(TestPacketRouter, RouteCanPacket)
 {
   PacketRouter router;

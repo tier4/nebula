@@ -34,6 +34,17 @@ void PacketRouter::configure(const std::vector<PacketChannelRequirement> & requi
     } else if (req.transport == SensorTransportKind::CAN && req.can_id.has_value()) {
       can_entries_.push_back({*req.can_id, req});
     } else if (
+      (req.transport == SensorTransportKind::UDP || req.transport == SensorTransportKind::TCP) &&
+      !req.destination_port.has_value()) {
+      if (req.required) {
+        throw std::invalid_argument(
+          "Required UDP/TCP packet channel requirement is missing destination_port");
+      }
+    } else if (req.transport == SensorTransportKind::CAN && !req.can_id.has_value()) {
+      if (req.required) {
+        throw std::invalid_argument("Required CAN packet channel requirement is missing can_id");
+      }
+    } else if (
       req.transport != SensorTransportKind::UDP && req.transport != SensorTransportKind::TCP &&
       req.transport != SensorTransportKind::CAN) {
       // HTTP and other transports are not routed through PacketRouter;

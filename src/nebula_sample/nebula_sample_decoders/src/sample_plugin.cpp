@@ -72,6 +72,11 @@ SensorPacketResult SampleSensorDecoderRuntime::process_packet(const SensorPacket
   // For sample sensor, we only care about UDP Data channel
   if (packet.transport == SensorTransportKind::UDP && packet.channel == SensorPacketChannel::Data) {
     progress_.matched_packets++;
+    if (packet.payload_size == 0) {
+      progress_.dropped_packets++;
+      if (progress_callback_) progress_callback_(progress_);
+      return SensorPacketResult::Ignored;
+    }
     // Adapter copy: SampleDecoder::unpack() requires a vector; real decoders should use the view
     // directly.
     const std::vector<uint8_t> payload(

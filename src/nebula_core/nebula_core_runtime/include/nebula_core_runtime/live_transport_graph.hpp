@@ -41,6 +41,9 @@ class LiveTransportGraph
 {
 public:
   explicit LiveTransportGraph(std::shared_ptr<SensorRegistry> registry);
+  // Stops all active sources before member destruction so that source threads cannot
+  // call back into partially destroyed graph state (mutexes, callbacks, router).
+  ~LiveTransportGraph();
 
   // After configure() the graph is stopped. Call start() to resume packet processing.
   void configure(const LiveSessionConfig & config);

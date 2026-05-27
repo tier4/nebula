@@ -84,7 +84,19 @@ void HttpPacketSource::run(
   std::shared_ptr<std::atomic<bool>> running, std::string host_ip, uint16_t port, std::string path,
   SensorPacketCallback callback, SensorErrorCallback error_callback)
 {
-  auto client = std::make_unique<connections::HttpClient>(host_ip, port);
+  std::unique_ptr<connections::HttpClient> client;
+  try {
+    client = std::make_unique<connections::HttpClient>(host_ip, port);
+  } catch (const std::exception & e) {
+    if (error_callback) {
+      SensorError error;
+      error.type = SensorErrorType::ConfigError;
+      error.message = std::string("HttpPacketSource: failed to create HTTP client: ") + e.what();
+      error_callback(error);
+    }
+    running->store(false);
+    return;
+  }
 
   while (running->load()) {
     try {

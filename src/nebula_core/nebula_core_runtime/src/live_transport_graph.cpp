@@ -41,6 +41,21 @@ LiveTransportGraph::LiveTransportGraph(std::shared_ptr<SensorRegistry> registry)
 {
 }
 
+LiveTransportGraph::~LiveTransportGraph()
+{
+  // Stop sources while all graph state is still alive. C++ destroys members in reverse
+  // declaration order: processing_mutex_ and mutex_ would be destroyed before sources_,
+  // so source threads calling on_packet() could access dangling synchronization state.
+  std::vector<std::shared_ptr<PacketSource>> snapshot;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    snapshot = std::move(sources_);
+  }
+  for (auto & src : snapshot) {
+    src->stop();
+  }
+}
+
 void LiveTransportGraph::configure(const LiveSessionConfig & config)
 {
   std::lock_guard<std::mutex> lifecycle_lock(lifecycle_mutex_);

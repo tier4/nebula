@@ -222,7 +222,7 @@ object:
 constexpr uint32_t kNebulaPluginAbiVersion = 1;
 ```
 
-Plugins must export:
+Plugins should export:
 
 ```cpp
 extern "C" uint32_t nebula_plugin_abi_version()
@@ -233,9 +233,11 @@ extern "C" uint32_t nebula_plugin_abi_version()
 
 `SensorRegistry::load_plugin()` calls this symbol after opening the library.
 If the returned version differs from `kNebulaPluginAbiVersion`, loading fails
-with a logged error. If the symbol is absent (pre-versioned plugins), loading
-continues with a warning. Increment `kNebulaPluginAbiVersion` when any change
-to the plugin ABI requires all plugins to be recompiled.
+with a logged error. If the symbol is absent, loading continues with a warning
+and the plugin is assumed compatible (for backward compatibility with
+pre-versioned plugins). Omitting the symbol is deprecated; new plugins must
+export it. Increment `kNebulaPluginAbiVersion` when any change to the plugin
+ABI requires all plugins to be recompiled.
 
 ## Plugin descriptors
 
@@ -366,8 +368,10 @@ For example, UDP, TCP, and HTTP requirements need a port.
 
 ## Live transport graph threading model
 
-`LiveTransportGraph` uses two mutexes:
+`LiveTransportGraph` uses three mutexes:
 
+- `lifecycle_mutex_` — serializes `configure()`, `start()`, and `stop()` with
+  each other so that concurrent lifecycle calls cannot interleave.
 - `mutex_` — guards the callback members and the `sources_`, `runtime_`,
   `router_`, and `http_controls_` state fields.
 - `processing_mutex_` — serializes `on_packet()` calls so that decoder

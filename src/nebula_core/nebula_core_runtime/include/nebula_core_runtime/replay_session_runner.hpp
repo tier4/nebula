@@ -37,6 +37,8 @@ class ReplaySessionRunner
 {
 public:
   explicit ReplaySessionRunner(std::shared_ptr<SensorRegistry> registry);
+  // Stops and joins the source thread while router_ and runtime_ are still alive.
+  ~ReplaySessionRunner();
 
   void configure(const ReplaySessionConfig & config);
   void set_output_callback(SensorOutputCallback callback);

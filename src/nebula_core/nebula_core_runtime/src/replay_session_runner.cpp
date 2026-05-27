@@ -25,6 +25,17 @@ ReplaySessionRunner::ReplaySessionRunner(std::shared_ptr<SensorRegistry> registr
 {
 }
 
+ReplaySessionRunner::~ReplaySessionRunner()
+{
+  // Stop and join the source thread while router_ and runtime_ are still alive.
+  // Member destruction order would destroy router_ before source_ joins its thread,
+  // leaving on_packet() with a dangling router_ pointer.
+  if (source_) {
+    source_->stop();
+    source_.reset();
+  }
+}
+
 void ReplaySessionRunner::configure(const ReplaySessionConfig & config)
 {
   auto metadata = registry_->find_plugin_for_model(config.model);
