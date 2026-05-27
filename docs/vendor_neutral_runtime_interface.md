@@ -397,8 +397,12 @@ it.
 
 **User callbacks** (output, error, progress) are invoked outside `mutex_`. They
 may execute while `processing_mutex_` is held (since they can fire synchronously
-from within `process_packet()`), but all public `LiveTransportGraph` APIs are
-safe to call from within user callbacks without deadlocking the graph.
+from within `process_packet()`). Read-only or enqueueing operations are safe to
+perform inside these callbacks. However, **lifecycle calls** (`configure()`,
+`stop()`, or destroying the graph) must **not** be made from within a user
+callback: those callbacks fire on a packet-source receive thread, and stopping a
+source from its own receive thread causes a self-join. Defer lifecycle transitions
+to a separate thread (e.g. post to an executor or thread pool).
 
 ## Replay sessions
 

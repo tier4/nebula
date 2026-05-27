@@ -25,8 +25,8 @@
 namespace nebula::drivers
 {
 // Increment whenever the SensorPlugin or SensorDecoderRuntime vtable layout changes.
-// Plugins must export nebula_plugin_abi_version() returning this value; the registry
-// rejects plugins whose version does not match.
+// Plugins should export nebula_plugin_abi_version() returning this value; the registry
+// warns and skips plugins whose version does not match (see SensorRegistry::load_plugin).
 constexpr uint32_t kNebulaPluginAbiVersion = 1;
 
 class SensorPlugin
