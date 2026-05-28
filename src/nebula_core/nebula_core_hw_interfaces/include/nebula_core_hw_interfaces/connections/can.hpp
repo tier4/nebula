@@ -384,12 +384,15 @@ private:
           } frame_buf{};
 
           RxMetadata metadata{};
-          ssize_t nbytes = receive_frame_with_metadata(&frame_buf, sizeof(frame_buf), metadata);
+          size_t nbytes = receive_frame_with_metadata(&frame_buf, sizeof(frame_buf), metadata);
 
           canfd_frame fd_frame{};
           if (nbytes == CAN_MTU) {
-            // Convert standard frame to FD frame format for uniform callback
-            fd_frame.can_id = frame_buf.cc.can_id;
+            // Convert standard frame to FD frame format for uniform callback.
+            // Mask off kernel flag bits (CAN_EFF_FLAG, CAN_RTR_FLAG, CAN_ERR_FLAG)
+            // so the ID is always a bare numeric value, consistent with
+            // CanPacketSource::on_can_frame() and PacketRouter can_id lookups.
+            fd_frame.can_id = frame_buf.cc.can_id & CAN_EFF_MASK;
             fd_frame.len = frame_buf.cc.can_dlc;  // For standard, len is dlc
             // Note: standard can_frame doesn't rely on strict 0-8 mapping for len/dlc in same way
             // as FD, but standard allows values > 8 (though invalid). Just copy.
@@ -398,6 +401,7 @@ private:
             fd_frame.flags = 0;  // Not FD
           } else if (nbytes == CANFD_MTU) {
             fd_frame = frame_buf.cf;
+            fd_frame.can_id &= CAN_EFF_MASK;
           } else {
             // Invalid frame size or partial read
             std::cerr << "Warning: Incomplete or invalid CAN frame received (size: " << nbytes

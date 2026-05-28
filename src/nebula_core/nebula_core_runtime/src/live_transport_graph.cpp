@@ -43,6 +43,12 @@ LiveTransportGraph::LiveTransportGraph(std::shared_ptr<SensorRegistry> registry)
 
 LiveTransportGraph::~LiveTransportGraph()
 {
+  // Hold lifecycle_mutex_ for the same reason configure()/start()/stop() do:
+  // concurrent lifecycle calls must not interleave with destruction. Without it,
+  // a concurrent configure() could install new sources pointing at on_packet()
+  // on an already-destroyed object.
+  std::lock_guard<std::mutex> lifecycle_lock(lifecycle_mutex_);
+
   // Stop sources while all graph state is still alive. C++ destroys members in reverse
   // declaration order: processing_mutex_ and mutex_ would be destroyed before sources_,
   // so source threads calling on_packet() could access dangling synchronization state.
@@ -244,9 +250,6 @@ void LiveTransportGraph::on_packet(const SensorPacket & packet)
 {
   std::shared_ptr<SensorDecoderRuntime> runtime;
   std::shared_ptr<PacketRouter> router;
-  SensorErrorCallback error_callback;
-  SensorError error;
-  bool emit_error = false;
   SensorPacketView view = SensorPacketView::from(packet);
 
   {
@@ -255,7 +258,6 @@ void LiveTransportGraph::on_packet(const SensorPacket & packet)
       std::lock_guard<std::mutex> state_lock(mutex_);
       runtime = runtime_;
       router = router_;
-      error_callback = error_callback_;
     }
 
     if (!router || !runtime) {
@@ -263,19 +265,11 @@ void LiveTransportGraph::on_packet(const SensorPacket & packet)
     }
 
     if (router->route(view)) {
-      const auto result = runtime->process_packet(view);
-      emit_error = result == SensorPacketResult::Error && static_cast<bool>(error_callback);
+      // Error reporting is the runtime's responsibility via set_error_callback().
+      // Synthesizing a second error here would double-report for runtimes that
+      // already call error_callback_ with full context before returning Error.
+      runtime->process_packet(view);
     }
-
-    if (emit_error) {
-      error.type = SensorErrorType::DecoderError;
-      error.timestamp_ns = view.timestamp_ns;
-      error.message = "Decoder runtime returned SensorPacketResult::Error";
-    }
-  }
-
-  if (emit_error && error_callback) {
-    error_callback(error);
   }
 }
 

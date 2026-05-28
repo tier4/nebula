@@ -38,6 +38,14 @@ ReplaySessionRunner::~ReplaySessionRunner()
 
 void ReplaySessionRunner::configure(const ReplaySessionConfig & config)
 {
+  // Stop and release any in-flight source before replacing runtime_ and router_.
+  // on_packet() reads both pointers without a lock, so they must not be replaced
+  // while the source thread is still running.
+  if (source_) {
+    source_->stop();
+    source_.reset();
+  }
+
   auto metadata = registry_->find_plugin_for_model(config.model);
   if (!metadata) {
     throw std::runtime_error("No plugin found for model");
@@ -122,14 +130,8 @@ void ReplaySessionRunner::on_packet(const SensorPacket & packet)
 {
   SensorPacketView view = SensorPacketView::from(packet);
   if (router_->route(view)) {
-    const auto result = runtime_->process_packet(view);
-    if (result == SensorPacketResult::Error && error_callback_) {
-      SensorError error;
-      error.type = SensorErrorType::DecoderError;
-      error.timestamp_ns = view.timestamp_ns;
-      error.message = "Decoder runtime returned SensorPacketResult::Error";
-      error_callback_(error);
-    }
+    // Error reporting is the runtime's responsibility via set_error_callback().
+    runtime_->process_packet(view);
   }
 }
 

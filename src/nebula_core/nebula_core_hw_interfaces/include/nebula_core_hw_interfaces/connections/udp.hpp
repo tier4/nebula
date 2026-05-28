@@ -93,7 +93,7 @@ class UdpSocket
 
       bool counter_did_wrap = current_drop_counter < last;
       if (counter_did_wrap) {
-        return (UINT32_MAX - last) + current_drop_counter;
+        return (UINT32_MAX - last) + current_drop_counter + 1;
       }
 
       return current_drop_counter - last;
@@ -417,7 +417,8 @@ private:
   bool is_accepted_sender(const sockaddr_in & sender_addr)
   {
     if (!config_.sender_filter) return true;
-    return sender_addr.sin_addr.s_addr == config_.sender_filter->ip.s_addr;
+    return sender_addr.sin_addr.s_addr == config_.sender_filter->ip.s_addr &&
+           ntohs(sender_addr.sin_port) == config_.sender_filter->port;
   }
 
   SockFd sock_fd_;

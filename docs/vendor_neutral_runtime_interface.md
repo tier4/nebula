@@ -389,11 +389,13 @@ For example, UDP, TCP, and HTTP requirements need a port.
    state. `processing_mutex_` is not held during install to avoid deadlocking
    if a user callback calls `configure()` from within `process_packet()`.
 
-**`start()` and `stop()`** are serialized with `configure()` by the graph
-lifecycle mutex. They snapshot shared source ownership under `mutex_` and call
-`start()`/`stop()` on each source outside the state lock, so a concurrent
+**`start()`, `stop()`, and destruction** are all serialized with `configure()`
+by `lifecycle_mutex_`. They snapshot shared source ownership under `mutex_` and
+call `start()`/`stop()` on each source outside the state lock, so a concurrent
 reconfiguration cannot destroy a source while the lifecycle operation is using
-it.
+it. The caller must ensure no `configure()`, `start()`, or `stop()` call is in
+progress before destroying a `LiveTransportGraph`; concurrent destruction and
+lifecycle calls are not safe.
 
 **User callbacks** (output, error, progress) are invoked outside `mutex_`. They
 may execute while `processing_mutex_` is held (since they can fire synchronously
@@ -403,6 +405,12 @@ perform inside these callbacks. However, **lifecycle calls** (`configure()`,
 callback: those callbacks fire on a packet-source receive thread, and stopping a
 source from its own receive thread causes a self-join. Defer lifecycle transitions
 to a separate thread (e.g. post to an executor or thread pool).
+
+**Error reporting** from `SensorDecoderRuntime` is done exclusively via the
+`error_callback` registered with `set_error_callback()`. The runtime calls this
+directly with full context. The hosting graph does not synthesize a second error
+from the `SensorPacketResult::Error` return value, so each decode failure
+produces exactly one error event.
 
 ## Replay sessions
 
