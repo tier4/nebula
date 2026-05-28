@@ -33,9 +33,17 @@ public:
   void configure(const std::vector<PacketChannelRequirement> & requirements);
 
   // Assign the channel field of the view based on transport, port, and CAN ID.
-  // Returns true if the packet matched a requirement. RT-safe after configure().
+  // Returns true if the packet matched a requirement.
+  //
+  // Thread-safety: route() mutates non-atomic metrics_, so it is safe to call
+  // only from a single RT thread once configure() has returned. Concurrent
+  // route() calls from multiple threads, or a concurrent get_metrics() against
+  // an in-flight route(), require external serialization. LiveTransportGraph
+  // provides this serialization via processing_mutex_.
   bool route(SensorPacketView & packet) noexcept;
 
+  // Returns a reference to the live metrics. Not thread-safe against in-flight
+  // route() calls; see route() above for the synchronization contract.
   const SensorProgress & get_metrics() const;
 
 private:

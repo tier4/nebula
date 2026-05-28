@@ -217,4 +217,73 @@ TEST(TestPacketRouter, RouteCanPacket)
   EXPECT_EQ(router.get_metrics().dropped_packets, 1u);
 }
 
+TEST(TestPacketRouter, CanRequirementPinnedToExtendedIdRejectsStandardFrame)
+{
+  PacketRouter router;
+  PacketChannelRequirement req;
+  req.transport = SensorTransportKind::CAN;
+  req.channel = SensorPacketChannel::Status;
+  req.can_id = 0x123;
+  req.is_extended_id = true;
+  router.configure({req});
+
+  // Extended frame with the pinned ID: matches.
+  SensorPacket extended_packet;
+  extended_packet.transport = SensorTransportKind::CAN;
+  SensorCanMetadata extended_meta;
+  extended_meta.can_id = 0x123;
+  extended_meta.is_extended_id = true;
+  extended_packet.can = extended_meta;
+
+  SensorPacketView extended_view = SensorPacketView::from(extended_packet);
+  EXPECT_TRUE(router.route(extended_view));
+  EXPECT_EQ(extended_view.channel, SensorPacketChannel::Status);
+
+  // Standard frame with the same numeric ID: does not match.
+  SensorPacket standard_packet;
+  standard_packet.transport = SensorTransportKind::CAN;
+  SensorCanMetadata standard_meta;
+  standard_meta.can_id = 0x123;
+  standard_meta.is_extended_id = false;
+  standard_packet.can = standard_meta;
+
+  SensorPacketView standard_view = SensorPacketView::from(standard_packet);
+  EXPECT_FALSE(router.route(standard_view));
+  EXPECT_EQ(standard_view.channel, SensorPacketChannel::Unknown);
+}
+
+TEST(TestPacketRouter, CanRequirementPinnedToStandardIdRejectsExtendedFrame)
+{
+  PacketRouter router;
+  PacketChannelRequirement req;
+  req.transport = SensorTransportKind::CAN;
+  req.channel = SensorPacketChannel::Data;
+  req.can_id = 0x123;
+  req.is_extended_id = false;
+  router.configure({req});
+
+  // Standard frame with the pinned ID: matches.
+  SensorPacket standard_packet;
+  standard_packet.transport = SensorTransportKind::CAN;
+  SensorCanMetadata standard_meta;
+  standard_meta.can_id = 0x123;
+  standard_meta.is_extended_id = false;
+  standard_packet.can = standard_meta;
+
+  SensorPacketView standard_view = SensorPacketView::from(standard_packet);
+  EXPECT_TRUE(router.route(standard_view));
+  EXPECT_EQ(standard_view.channel, SensorPacketChannel::Data);
+
+  // Extended frame with the same numeric ID: does not match.
+  SensorPacket extended_packet;
+  extended_packet.transport = SensorTransportKind::CAN;
+  SensorCanMetadata extended_meta;
+  extended_meta.can_id = 0x123;
+  extended_meta.is_extended_id = true;
+  extended_packet.can = extended_meta;
+
+  SensorPacketView extended_view = SensorPacketView::from(extended_packet);
+  EXPECT_FALSE(router.route(extended_view));
+}
+
 }  // namespace nebula::drivers::test
