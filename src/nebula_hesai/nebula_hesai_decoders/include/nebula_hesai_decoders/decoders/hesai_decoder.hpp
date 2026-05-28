@@ -23,6 +23,10 @@
 #include "nebula_hesai_decoders/decoders/hesai_scan_decoder.hpp"
 #include "nebula_hesai_decoders/decoders/packet_loss_detector.hpp"
 
+#ifdef NEBULA_CUDA_ENABLED
+#include "nebula_hesai_decoders/cuda/hesai_cuda_decoder.hpp"
+#endif
+
 #include <nebula_core_common/loggers/logger.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 #include <nebula_core_common/point_types.hpp>
@@ -31,11 +35,14 @@
 #include <rclcpp/logging.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -96,6 +103,21 @@ private:
 
   std::array<DecodeFrame, 2> frame_buffers_{initialize_frame(), initialize_frame()};
 
+#ifdef NEBULA_CUDA_ENABLED
+  /// @brief RAII CUDA decoder managing all GPU resources for batched scan decoding.
+  /// nullptr when CUDA is disabled or initialization failed.
+  std::unique_ptr<cuda::HesaiScanDecoderCuda> cuda_scan_decoder_;
+
+  /// @brief Number of azimuth divisions for angle lookup table (LUT resolution)
+  static constexpr uint32_t cuda_n_azimuths_ = 36000;  // 0.01 degree resolution
+  /// @brief Sensor's native azimuth range (max_azimuth = 360 * degree_subdivisions)
+  static constexpr uint32_t sensor_max_azimuth_ = 360 * SensorT::packet_t::degree_subdivisions;
+  /// @brief Scale factor from sensor native azimuth to LUT index
+  static constexpr uint32_t azimuth_scale_ = sensor_max_azimuth_ / cuda_n_azimuths_;
+
+  static constexpr uint32_t MAX_PACKETS_PER_SCAN = 4000;
+#endif  // NEBULA_CUDA_ENABLED
+
   /// @brief Validates and parse PandarPacket. Checks size and, if present, CRC checksums.
   /// @param packet The incoming PandarPacket
   /// @return Whether the packet was parsed successfully
@@ -115,6 +137,230 @@ private:
 
     return true;
   }
+
+#ifdef NEBULA_CUDA_ENABLED
+  /// @brief Accumulate block group data to GPU scan buffer for batch processing
+  /// @param start_block_id The first block in the group of returns
+  /// @param n_blocks The number of returns in the group
+  /// @param scan_state CPU ScanCutter state with per-channel FOV and buffer assignments
+  void accumulate_packet_to_gpu_buffer(
+    size_t start_block_id, size_t n_blocks,
+    const typename decltype(scan_cutter_)::State & scan_state)
+  {
+    if (cuda_scan_decoder_->packet_count() >= cuda_scan_decoder_->max_packets()) {
+      NEBULA_LOG_STREAM(logger_->warn, "GPU scan buffer full, dropping block group");
+      return;
+    }
+
+    const uint32_t entry_id = cuda_scan_decoder_->packet_count();
+    const size_t n_channels = SensorT::packet_t::n_channels;
+    const size_t max_returns = SensorT::packet_t::max_returns;
+
+    // Store metadata for this block group
+    uint32_t raw_azimuth = packet_.body.blocks[start_block_id].get_azimuth();
+    cuda_scan_decoder_->raw_azimuths_staging()[entry_id] = raw_azimuth;
+    cuda_scan_decoder_->n_returns_staging()[entry_id] = n_blocks;
+    cuda_scan_decoder_->packet_timestamps_staging()[entry_id] =
+      hesai_packet::get_timestamp_ns(packet_);
+
+    // Store per-channel scan flags from CPU ScanCutter:
+    // - 0xFF = channel not in FOV (GPU will skip)
+    // - buffer_index (0 or 1) = which frame buffer this channel belongs to
+    // The buffer_index is remapped to in_current_scan (0/1) at flush time.
+    const size_t flag_offset = entry_id * n_channels;
+    for (size_t ch = 0; ch < n_channels; ++ch) {
+      cuda_scan_decoder_->scan_flags_staging()[flag_offset + ch] =
+        scan_state.channels_in_fov[ch] ? scan_state.channel_buffer_indices[ch] : 0xFF;
+    }
+
+    // Extract distances/reflectivities to pinned host memory
+    // Layout: [entry][channel][return] with max_returns stride
+    const size_t entry_offset = entry_id * n_channels * max_returns;
+
+    for (size_t ch = 0; ch < n_channels; ++ch) {
+      for (size_t blk = 0; blk < n_blocks; ++blk) {
+        const auto & unit = packet_.body.blocks[start_block_id + blk].units[ch];
+        const size_t idx = entry_offset + ch * max_returns + blk;
+        cuda_scan_decoder_->distances_staging()[idx] = unit.distance;
+        cuda_scan_decoder_->reflectivities_staging()[idx] = unit.reflectivity;
+      }
+    }
+
+    cuda_scan_decoder_->increment_packet_count();
+  }
+
+  /// @brief Build the CudaDecoderConfig for a batched kernel launch
+  /// @param n_entries Number of block-group entries accumulated
+  /// @return Populated config ready for GPU upload
+  cuda::CudaDecoderConfig build_batch_config(uint32_t n_entries)
+  {
+    const size_t n_channels = SensorT::packet_t::n_channels;
+    const size_t max_returns = SensorT::packet_t::max_returns;
+
+    cuda::CudaDecoderConfig config{};
+    config.min_range = sensor_configuration_->min_range;
+    config.max_range = sensor_configuration_->max_range;
+    config.sensor_min_range = SensorT::min_range;
+    config.sensor_max_range = SensorT::max_range;
+    config.dual_return_distance_threshold = sensor_configuration_->dual_return_distance_threshold;
+    config.n_channels = n_channels;
+    config.max_returns = max_returns;
+    config.dis_unit = hesai_packet::get_dis_unit(packet_);
+    config.azimuth_scale = azimuth_scale_;
+    config.max_output_points = n_entries * n_channels * max_returns;
+
+    return config;
+  }
+
+  /// @brief Copy GPU results from host buffer and place into correct frame buffers
+  /// @param completed_buffer_index The buffer index of the just-completed scan
+  /// @param n_entries Number of block-group entries in the scan
+  void process_gpu_results(uint8_t completed_buffer_index, uint32_t n_entries)
+  {
+    const auto & host_buffer = cuda_scan_decoder_->host_point_buffer();
+    const uint32_t sparse_buffer_size =
+      n_entries * SensorT::packet_t::n_channels * SensorT::packet_t::max_returns;
+    const uint32_t copy_size =
+      std::min(sparse_buffer_size, static_cast<uint32_t>(host_buffer.size()));
+
+    // Iterate sparse buffer, skip invalid points (distance <= 0)
+    for (uint32_t i = 0; i < copy_size; ++i) {
+      const auto & cuda_pt = host_buffer[i];
+
+      if (cuda_pt.distance <= 0.0f) {
+        continue;
+      }
+
+      // in_current_scan=1: belongs to the completed scan (completed_buffer_index)
+      // in_current_scan=0: belongs to the next scan (1 - completed_buffer_index)
+      auto & frame = cuda_pt.in_current_scan ? frame_buffers_[completed_buffer_index]
+                                             : frame_buffers_[1 - completed_buffer_index];
+
+      const uint32_t entry_id = cuda_pt.entry_id;
+      const uint64_t packet_timestamp_ns =
+        (entry_id < n_entries) ? cuda_scan_decoder_->packet_timestamps_staging()[entry_id]
+                               : hesai_packet::get_timestamp_ns(packet_);
+
+      NebulaPoint point;
+      point.x = cuda_pt.x;
+      point.y = cuda_pt.y;
+      point.z = cuda_pt.z;
+      point.distance = cuda_pt.distance;
+      point.azimuth = cuda_pt.azimuth;
+      point.elevation = cuda_pt.elevation;
+      point.intensity = cuda_pt.intensity;
+      point.return_type = cuda_pt.return_type;
+      point.channel = cuda_pt.channel;
+      // Compute relative timestamp in signed 64-bit to avoid underflow.
+      {
+        auto point_to_packet_offset_ns =
+          sensor_.get_packet_relative_point_time_offset(0, cuda_pt.channel, packet_);
+        int64_t rel_ns = static_cast<int64_t>(packet_timestamp_ns) -
+                         static_cast<int64_t>(frame.scan_timestamp_ns) + point_to_packet_offset_ns;
+        point.time_stamp = (rel_ns >= 0) ? static_cast<uint32_t>(rel_ns) : 0;
+      }
+
+      if (!mask_filter_ || !mask_filter_->excluded(point)) {
+        frame.pointcloud->emplace_back(point);
+      }
+    }
+  }
+
+  /// @brief Flush accumulated packets - one batched kernel launch for the entire scan
+  /// @param completed_buffer_index The buffer index of the just-completed scan
+  void flush_gpu_scan_buffer(uint8_t completed_buffer_index)
+  {
+    if (cuda_scan_decoder_->packet_count() == 0) return;
+
+    const uint32_t n_entries = cuda_scan_decoder_->packet_count();
+    const size_t n_channels = SensorT::packet_t::n_channels;
+
+    // Remap scan_flags: raw buffer_index (0/1) -> in_current_scan (1/0), 0xFF stays
+    for (uint32_t e = 0; e < n_entries; ++e) {
+      for (size_t ch = 0; ch < n_channels; ++ch) {
+        uint8_t & flag = cuda_scan_decoder_->scan_flags_staging()[e * n_channels + ch];
+        if (flag == 0xFF) continue;
+        flag = (flag == completed_buffer_index) ? 1 : 0;
+      }
+    }
+
+    cuda::CudaDecoderConfig config = build_batch_config(n_entries);
+    cuda_scan_decoder_->transfer_to_device(n_entries);
+
+    uint32_t valid_point_count = cuda_scan_decoder_->launch_and_sync(config, n_entries);
+    if (valid_point_count == 0) {
+      cuda_scan_decoder_->reset_packet_count();
+      return;
+    }
+
+    process_gpu_results(completed_buffer_index, n_entries);
+    cuda_scan_decoder_->reset_packet_count();
+  }
+
+  /// @brief Initialize CUDA decoder and upload angle corrections.
+  /// CUDA decode is opt-in: set NEBULA_USE_CUDA=1 environment variable to enable.
+  /// Scan boundaries are driven by the CPU ScanCutter, so GPU output is identical to CPU.
+  void initialize_cuda()
+  {
+    const char * cuda_env = std::getenv("NEBULA_USE_CUDA");
+    if (!cuda_env || std::string(cuda_env) != "1") {
+      NEBULA_LOG_STREAM(logger_->info, "CUDA decode disabled (set NEBULA_USE_CUDA=1 to enable)");
+      return;
+    }
+
+    const uint32_t n_channels = SensorT::packet_t::n_channels;
+    const uint32_t max_returns = SensorT::packet_t::max_returns;
+    const size_t max_sparse_buffer_points =
+      static_cast<size_t>(MAX_PACKETS_PER_SCAN) * n_channels * max_returns;
+    const size_t max_output_points =
+      std::max(static_cast<size_t>(SensorT::max_scan_buffer_points), max_sparse_buffer_points);
+
+    try {
+      cuda_scan_decoder_ = std::make_unique<cuda::HesaiScanDecoderCuda>(
+        n_channels, max_returns, MAX_PACKETS_PER_SCAN, max_output_points, cuda_n_azimuths_,
+        azimuth_scale_);
+    } catch (const std::runtime_error & e) {
+      NEBULA_LOG_STREAM(logger_->warn, "Failed to initialize CUDA decoder: " << e.what());
+      return;
+    }
+
+    // Build and upload angle correction lookup table
+    std::vector<cuda::CudaAngleCorrectionData> angle_lut;
+    angle_lut.reserve(cuda_n_azimuths_ * n_channels);
+
+    NEBULA_LOG_STREAM(
+      logger_->info, "Building CUDA angle LUT: azimuth_scale="
+                       << azimuth_scale_ << " sensor_max_azimuth=" << sensor_max_azimuth_
+                       << " cuda_n_azimuths=" << cuda_n_azimuths_);
+
+    for (uint32_t lut_idx = 0; lut_idx < cuda_n_azimuths_; ++lut_idx) {
+      uint32_t sensor_azimuth = lut_idx * azimuth_scale_;
+      for (uint32_t channel = 0; channel < n_channels; ++channel) {
+        CorrectedAngleData cpu_data =
+          angle_corrector_.get_corrected_angle_data(sensor_azimuth, channel);
+        cuda::CudaAngleCorrectionData gpu_data;
+        gpu_data.azimuth_rad = cpu_data.azimuth_rad;
+        gpu_data.elevation_rad = cpu_data.elevation_rad;
+        gpu_data.sin_azimuth = cpu_data.sin_azimuth;
+        gpu_data.cos_azimuth = cpu_data.cos_azimuth;
+        gpu_data.sin_elevation = cpu_data.sin_elevation;
+        gpu_data.cos_elevation = cpu_data.cos_elevation;
+        angle_lut.push_back(gpu_data);
+      }
+    }
+
+    if (!cuda_scan_decoder_->upload_angle_corrections(angle_lut, cuda_n_azimuths_, n_channels)) {
+      NEBULA_LOG_STREAM(logger_->warn, "Failed to upload CUDA angle corrections");
+      cuda_scan_decoder_.reset();
+      return;
+    }
+
+    NEBULA_LOG_STREAM(
+      logger_->info, "CUDA decoder initialized successfully with " << n_channels << " channels and "
+                                                                   << cuda_n_azimuths_
+                                                                   << " azimuth divisions");
+  }
+#endif  // NEBULA_CUDA_ENABLED
 
   /// @brief Converts a group of returns (i.e. 1 for single return, 2 for dual return, etc.) to
   /// points and appends them to the point cloud
@@ -280,6 +526,12 @@ private:
   {
     did_scan_complete_ = true;
 
+#ifdef NEBULA_CUDA_ENABLED
+    if (cuda_scan_decoder_ && cuda_scan_decoder_->packet_count() > 0) {
+      flush_gpu_scan_buffer(buffer_index);
+    }
+#endif
+
     auto & completed_frame = frame_buffers_[buffer_index];
     constexpr uint64_t nanoseconds_per_second = 1'000'000'000ULL;
     double scan_timestamp_s =
@@ -342,6 +594,10 @@ public:
         SensorT::peak_resolution_mdeg.azimuth, SensorT::packet_t::n_channels,
         logger_->child("Downsample Mask"), true, sensor_.get_dither_transform());
     }
+
+#ifdef NEBULA_CUDA_ENABLED
+    initialize_cuda();
+#endif
   }
 
   void set_pointcloud_callback(pointcloud_callback_t callback) override
@@ -383,7 +639,15 @@ public:
       const auto & scan_state = scan_cutter_.step(channel_azimuths_out);
 
       if (scan_state.does_block_intersect_fov()) {
-        convert_returns(block_id, n_returns, scan_state);
+#ifdef NEBULA_CUDA_ENABLED
+        if (cuda_scan_decoder_) {
+          accumulate_packet_to_gpu_buffer(block_id, n_returns, scan_state);
+        } else {  // NOLINT(readability/braces)
+#endif
+          convert_returns(block_id, n_returns, scan_state);
+#ifdef NEBULA_CUDA_ENABLED
+        }
+#endif
       }
     }
 
