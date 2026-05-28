@@ -20,7 +20,7 @@ To build Nebula run the following commands in your workspace:
 
 ```bash
 # In workspace
-git clone https://github.com/tier4/nebula.git
+git clone --recurse-submodules https://github.com/tier4/nebula.git
 cd nebula
 # Import dependencies
 vcs import < build_depends-${ROS_DISTRO}.repos
