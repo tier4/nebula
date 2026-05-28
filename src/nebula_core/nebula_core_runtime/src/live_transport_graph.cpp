@@ -43,10 +43,13 @@ LiveTransportGraph::LiveTransportGraph(std::shared_ptr<SensorRegistry> registry)
 
 LiveTransportGraph::~LiveTransportGraph()
 {
-  // Hold lifecycle_mutex_ for the same reason configure()/start()/stop() do:
-  // concurrent lifecycle calls must not interleave with destruction. Without it,
-  // a concurrent configure() could install new sources pointing at on_packet()
-  // on an already-destroyed object.
+  // Acquire lifecycle_mutex_ defensively to drain any orderly lifecycle call
+  // (e.g. a stop() finishing on another thread). It does NOT make destruction
+  // safe under truly concurrent configure()/start()/stop(): once the destructor
+  // is invoked, the caller has already committed to teardown and the other
+  // thread's stack frames may still reference *this after this function returns.
+  // Callers must serialize destruction with lifecycle calls externally (see
+  // docs/vendor_neutral_runtime_interface.md threading model).
   std::lock_guard<std::mutex> lifecycle_lock(lifecycle_mutex_);
 
   // Stop sources while all graph state is still alive. C++ destroys members in reverse

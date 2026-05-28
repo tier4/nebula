@@ -29,8 +29,6 @@ SampleSensorDecoderRuntime::SampleSensorDecoderRuntime()
 
 void SampleSensorDecoderRuntime::configure(const SensorConfiguration & config)
 {
-  config_ = config;
-
   SampleSensorConfiguration sample_config;
   sample_config.connection.host_ip = config.host_ip;
   sample_config.connection.sensor_ip = config.sensor_ip;

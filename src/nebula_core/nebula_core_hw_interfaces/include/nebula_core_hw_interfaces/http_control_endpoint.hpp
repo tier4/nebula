@@ -41,9 +41,23 @@ public:
   }
 
   const std::string & name() const { return name_; }
-  const std::string & default_path() const { return default_path_; }
 
-  std::string get(int timeout_ms = 500) const { return get(default_path_, timeout_ms); }
+  // Returns a copy because the underlying string may be reassigned by configure().
+  std::string default_path() const
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return default_path_;
+  }
+
+  std::string get(int timeout_ms = 500) const
+  {
+    std::string path;
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      path = default_path_;
+    }
+    return get(path, timeout_ms);
+  }
 
   std::string get(const std::string & path, int timeout_ms = 500) const
   {
@@ -53,7 +67,12 @@ public:
 
   std::string post(const std::string & body, int timeout_ms = 500) const
   {
-    return post(default_path_, body, timeout_ms);
+    std::string path;
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      path = default_path_;
+    }
+    return post(path, body, timeout_ms);
   }
 
   std::string post(const std::string & path, const std::string & body, int timeout_ms = 500) const

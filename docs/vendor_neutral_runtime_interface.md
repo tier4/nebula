@@ -185,10 +185,13 @@ Each plugin creates a `SensorDecoderRuntime`. The runtime is responsible for:
 avoid copying the payload on the hot path. The view is valid only for the
 duration of the call.
 
-The decoder runtime should return `SensorPacketResult::Buffered` when a packet
-was accepted but does not yet produce output, `Success` when packet processing
-completed successfully, `Ignored` for irrelevant packets, and `Error` for
-decoder failures.
+The decoder runtime returns `SensorPacketResult::Success` when packet processing
+completed successfully, `Ignored` for irrelevant packets, and `Error` for decoder
+failures. `Buffered` is reserved for runtimes that accept a packet but do not
+yet produce output; the current hosts (`LiveTransportGraph`, `ReplaySessionRunner`)
+do not differentiate it from `Success`. Error reporting is performed by the
+runtime itself through `error_callback`; hosts do not synthesize a second error
+from the return value.
 
 #### RT-safe output sink
 

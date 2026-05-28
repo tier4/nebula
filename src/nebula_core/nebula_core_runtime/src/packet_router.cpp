@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <stdexcept>
 #include <vector>
 
 namespace nebula::drivers
@@ -27,6 +28,15 @@ void PacketRouter::configure(const std::vector<PacketChannelRequirement> & requi
   can_entries_.clear();
 
   for (const auto & req : requirements) {
+    // Validate payload signature shape at configure time so a misconfigured
+    // mask doesn't silently drop every packet for a channel at runtime.
+    if (req.payload_signature.has_value()) {
+      const auto & sig = *req.payload_signature;
+      if (sig.mask.has_value() && sig.mask->size() != sig.bytes.size()) {
+        throw std::invalid_argument(
+          "Packet channel requirement has payload signature with mask size != bytes size");
+      }
+    }
     if (
       (req.transport == SensorTransportKind::UDP || req.transport == SensorTransportKind::TCP) &&
       req.destination_port.has_value()) {

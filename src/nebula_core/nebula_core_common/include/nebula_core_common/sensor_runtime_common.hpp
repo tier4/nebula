@@ -32,6 +32,12 @@ struct SensorModelInfo
   std::string description;
 };
 
+// Plugin-identity fields are owned by the plugin's metadata() method:
+// vendor, package_name, library_path, factory_symbol, supported_models.
+// Filesystem-path fields (descriptor_path, package_share_path, schema_path,
+// config_defaults_path, calibration_assets_path) are populated by SensorRegistry
+// from the plugin descriptor JSON and are empty when obtained directly via
+// SensorPlugin::metadata().
 struct SensorPluginMetadata
 {
   std::string vendor;

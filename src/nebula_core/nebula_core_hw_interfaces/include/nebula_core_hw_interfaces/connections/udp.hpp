@@ -38,6 +38,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <iostream>
 #include <optional>
 #include <string>
 #include <thread>
@@ -319,7 +320,10 @@ public:
   }
 
   UdpSocket(const UdpSocket &) = delete;
-  UdpSocket(UdpSocket && other) noexcept
+  // Not noexcept: unsubscribe() may throw from thread::join() and subscribe() may
+  // throw from std::thread construction. Marking noexcept would turn either into
+  // std::terminate.
+  UdpSocket(UdpSocket && other)
   : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))), config_(other.config_)
   {
     if (other.callback_) subscribe(std::move(other.callback_));
@@ -385,7 +389,16 @@ private:
         metadata.packet_perf_counters = current_packet_perf_counters;
         current_packet_perf_counters = {};
 
-        callback_(buffer, metadata);
+        // A user callback that throws would escape the std::thread function and
+        // terminate the process. Log and continue so a single bad packet does
+        // not take down the receiver.
+        try {
+          callback_(buffer, metadata);
+        } catch (const std::exception & e) {
+          std::cerr << "UdpSocket receiver: user callback threw: " << e.what() << std::endl;
+        } catch (...) {
+          std::cerr << "UdpSocket receiver: user callback threw a non-std::exception" << std::endl;
+        }
       }
     });
   }

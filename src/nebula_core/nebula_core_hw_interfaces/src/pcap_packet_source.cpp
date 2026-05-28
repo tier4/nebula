@@ -22,6 +22,8 @@
 
 #include <algorithm>
 #include <cstring>
+#include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -36,6 +38,10 @@ uint16_t read_be16(const u_char * data)
   std::memcpy(&value, data, sizeof(value));
   return ntohs(value);
 }
+
+// Maximum number of in-flight fragment reassemblies. Bounds memory in pathological
+// PCAPs where last fragments are missing (truncated capture, IP-id reuse, etc.).
+constexpr size_t kMaxPendingAssemblies = 1024;
 }  // namespace
 
 PcapPacketSource::PcapPacketSource()
@@ -233,7 +239,23 @@ void PcapPacketSource::run(
             sp.payload.assign(
               ip_payload + sizeof(struct udphdr),
               ip_payload + std::min(static_cast<size_t>(udp_len), ip_payload_len));
-            callback(sp);
+            try {
+              callback(sp);
+            } catch (const std::exception & e) {
+              if (error_callback) {
+                SensorError err;
+                err.type = SensorErrorType::DecoderError;
+                err.message = std::string("PcapPacketSource: callback threw: ") + e.what();
+                error_callback(err);
+              }
+            } catch (...) {
+              if (error_callback) {
+                SensorError err;
+                err.type = SensorErrorType::DecoderError;
+                err.message = "PcapPacketSource: callback threw a non-std::exception";
+                error_callback(err);
+              }
+            }
           }
         } else {
           // First fragment of many
@@ -242,7 +264,24 @@ void PcapPacketSource::run(
             continue;
           }
 
+          // If the map is at capacity and this is a brand-new key, evict the
+          // oldest pending assembly (by pcap timestamp) to keep memory bounded.
+          if (
+            assemblies.size() >= kMaxPendingAssemblies &&
+            assemblies.find(key) == assemblies.end()) {
+            auto oldest = std::min_element(
+              assemblies.begin(), assemblies.end(), [](const auto & a, const auto & b) {
+                return a.second.timestamp_ns < b.second.timestamp_ns;
+              });
+            if (oldest != assemblies.end()) assemblies.erase(oldest);
+          }
+
+          // Always reset the assembly for this key. A new first-fragment with the
+          // same (src,dst,id,proto) means the previous datagram never completed
+          // (or its IP-id was reused); stale received[] / saw_last would otherwise
+          // bleed into the new assembly.
           auto & ass = assemblies[key];
+          ass = FragmentAssembly{};
           ass.src_ip = src_ip_str;
           ass.dst_ip = dst_ip_str;
           ass.src_port = src_port;
@@ -289,7 +328,23 @@ void PcapPacketSource::run(
               sp.source = {ass.src_ip, ass.src_port};
               sp.destination = {ass.dst_ip, ass.dst_port};
               sp.payload = std::move(ass.data);
-              callback(sp);
+              try {
+                callback(sp);
+              } catch (const std::exception & e) {
+                if (error_callback) {
+                  SensorError err;
+                  err.type = SensorErrorType::DecoderError;
+                  err.message = std::string("PcapPacketSource: callback threw: ") + e.what();
+                  error_callback(err);
+                }
+              } catch (...) {
+                if (error_callback) {
+                  SensorError err;
+                  err.type = SensorErrorType::DecoderError;
+                  err.message = "PcapPacketSource: callback threw a non-std::exception";
+                  error_callback(err);
+                }
+              }
             }
             assemblies.erase(key);
           }

@@ -57,6 +57,9 @@ void CanPacketSource::start()
       std::bind(
         &CanPacketSource::on_can_frame, this, std::placeholders::_1, std::placeholders::_2));
   } catch (const std::exception & e) {
+    // Reset before rethrowing so is_running() reflects the failed start and a
+    // subsequent start() does not see a populated socket_ with no receive thread.
+    socket_.reset();
     if (error_callback_) {
       SensorError error;
       error.type = SensorErrorType::TransportError;

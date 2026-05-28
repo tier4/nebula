@@ -40,7 +40,6 @@ private:
   SensorErrorCallback error_callback_;
   SensorProgressCallback progress_callback_;
   SensorProgress progress_;
-  SensorConfiguration config_;
 
   void on_pointcloud(const NebulaPointCloudPtr & pointcloud, double timestamp_s);
 };
