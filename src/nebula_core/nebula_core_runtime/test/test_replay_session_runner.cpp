@@ -245,6 +245,9 @@ TEST_F(TestReplaySessionRunner, ConfigureRejectsMissingPcap)
   registry->load_registry({test_dir_.string()});
 
   ReplaySessionRunner runner(registry);
+  size_t error_count = 0;
+  runner.set_error_callback([&](const SensorError &) { ++error_count; });
+
   ReplaySessionConfig config;
   config.model = SensorModel::SAMPLE;
   config.pcap_file = (test_dir_ / "missing.pcap").string();
@@ -252,6 +255,9 @@ TEST_F(TestReplaySessionRunner, ConfigureRejectsMissingPcap)
   config.sensor_config.data_port = 2368;
 
   EXPECT_THROW(runner.configure(config), std::runtime_error);
+  EXPECT_NO_THROW(runner.start());
+  EXPECT_NO_THROW(runner.wait_until_finished());
+  EXPECT_EQ(error_count, 0u);
 }
 
 }  // namespace nebula::drivers::test

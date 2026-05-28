@@ -38,13 +38,16 @@ ReplaySessionRunner::~ReplaySessionRunner()
 
 void ReplaySessionRunner::configure(const ReplaySessionConfig & config)
 {
-  // Stop and release any in-flight source before replacing runtime_ and router_.
-  // on_packet() reads both pointers without a lock, so they must not be replaced
-  // while the source thread is still running.
+  // Stop and release any in-flight source before replacing runtime_ and router_:
+  // on_packet() reads both pointers without a lock. Clear the old member state
+  // before constructing replacements so a later exception leaves the runner
+  // unconfigured rather than half-configured.
   if (source_) {
     source_->stop();
-    source_.reset();
   }
+  source_.reset();
+  router_.reset();
+  runtime_.reset();
 
   auto metadata = registry_->find_plugin_for_model(config.model);
   if (!metadata) {
@@ -56,26 +59,30 @@ void ReplaySessionRunner::configure(const ReplaySessionConfig & config)
     throw std::runtime_error("Failed to load plugin");
   }
 
-  runtime_ = plugin->create_decoder_runtime();
+  auto runtime = plugin->create_decoder_runtime();
   if (output_callback_) {
-    runtime_->set_output_callback(output_callback_);
+    runtime->set_output_callback(output_callback_);
   }
   if (error_callback_) {
-    runtime_->set_error_callback(error_callback_);
+    runtime->set_error_callback(error_callback_);
   }
   if (progress_callback_) {
-    runtime_->set_progress_callback(progress_callback_);
+    runtime->set_progress_callback(progress_callback_);
   }
-  runtime_->configure(config.sensor_config);
+  runtime->configure(config.sensor_config);
 
-  router_ = std::make_unique<PacketRouter>();
-  router_->configure(plugin->packet_requirements(config.sensor_config));
+  auto router = std::make_unique<PacketRouter>();
+  router->configure(plugin->packet_requirements(config.sensor_config));
 
-  source_ = std::make_unique<PcapPacketSource>();
-  source_->set_error_callback(error_callback_);
-  source_->open(config.pcap_file);
-  source_->set_packet_callback(
+  auto source = std::make_unique<PcapPacketSource>();
+  source->set_error_callback(error_callback_);
+  source->open(config.pcap_file);
+  source->set_packet_callback(
     std::bind(&ReplaySessionRunner::on_packet, this, std::placeholders::_1));
+
+  runtime_ = std::move(runtime);
+  router_ = std::move(router);
+  source_ = std::move(source);
 }
 
 void ReplaySessionRunner::set_output_callback(SensorOutputCallback callback)

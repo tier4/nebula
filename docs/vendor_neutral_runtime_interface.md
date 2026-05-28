@@ -386,8 +386,8 @@ For example, UDP, TCP, and HTTP requirements need a port.
    acquires `processing_mutex_`; joining them while holding that mutex would
    deadlock.
 3. Once all old source threads are joined, acquire `mutex_` and install the new
-   state. `processing_mutex_` is not held during install to avoid deadlocking
-   if a user callback calls `configure()` from within `process_packet()`.
+   state. `processing_mutex_` is not held during install, which avoids lock
+   inversion with in-flight packet processing.
 
 **`start()`, `stop()`, and destruction** are all serialized with `configure()`
 by `lifecycle_mutex_`. They snapshot shared source ownership under `mutex_` and
