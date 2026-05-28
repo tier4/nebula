@@ -100,6 +100,14 @@ bool PacketRouter::route(SensorPacketView & packet) noexcept
       can_entries_.begin(), can_entries_.end(), can_id,
       [](const CanEntry & e, uint32_t id) { return e.can_id < id; });
     for (auto it = lo; it != can_entries_.end() && it->can_id == can_id; ++it) {
+      // Standard (11-bit) and extended (29-bit) CAN IDs share the same numeric
+      // space but identify different frame classes. When the requirement pins
+      // is_extended_id, only matching frames pass.
+      if (
+        it->req.is_extended_id.has_value() &&
+        *it->req.is_extended_id != packet.can->is_extended_id) {
+        continue;
+      }
       if (
         !it->req.payload_signature.has_value() ||
         match_signature(packet.payload_data, packet.payload_size, *it->req.payload_signature)) {

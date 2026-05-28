@@ -21,7 +21,9 @@
 #include <pcap.h>
 
 #include <algorithm>
+#include <cassert>
 #include <cstring>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -85,9 +87,13 @@ void PcapPacketSource::set_error_callback(SensorErrorCallback callback)
 
 void PcapPacketSource::start()
 {
+  // Lifecycle calls from the worker thread itself are prohibited: see the
+  // threading contract in docs/vendor_neutral_runtime_interface.md.
+  assert(
+    (!thread_.joinable() || thread_.get_id() != std::this_thread::get_id()) &&
+    "start() must not be called from the worker thread");
   if (running_ && running_->load()) return;
   if (thread_.joinable()) {
-    if (thread_.get_id() == std::this_thread::get_id()) return;
     thread_.join();
   }
 
@@ -97,25 +103,27 @@ void PcapPacketSource::start()
 
 void PcapPacketSource::stop()
 {
+  // Stopping from the worker thread is a self-join. Reject explicitly rather
+  // than detach (the prior behaviour) so a user callback that calls stop()
+  // surfaces the misuse instead of leaving a detached source running while the
+  // owner tears down graph state.
+  assert(
+    (!thread_.joinable() || thread_.get_id() != std::this_thread::get_id()) &&
+    "stop() must not be called from the worker thread");
   if (running_) {
     running_->store(false);
   }
   if (thread_.joinable()) {
-    if (thread_.get_id() == std::this_thread::get_id()) {
-      thread_.detach();
-      return;
-    }
     thread_.join();
   }
 }
 
 void PcapPacketSource::wait_until_finished()
 {
+  assert(
+    (!thread_.joinable() || thread_.get_id() != std::this_thread::get_id()) &&
+    "wait_until_finished() must not be called from the worker thread");
   if (thread_.joinable()) {
-    if (thread_.get_id() == std::this_thread::get_id()) {
-      thread_.detach();
-      return;
-    }
     thread_.join();
   }
 }
@@ -242,19 +250,10 @@ void PcapPacketSource::run(
             try {
               callback(sp);
             } catch (const std::exception & e) {
-              if (error_callback) {
-                SensorError err;
-                err.type = SensorErrorType::DecoderError;
-                err.message = std::string("PcapPacketSource: callback threw: ") + e.what();
-                error_callback(err);
-              }
+              std::cerr << "PcapPacketSource: user callback threw: " << e.what() << std::endl;
             } catch (...) {
-              if (error_callback) {
-                SensorError err;
-                err.type = SensorErrorType::DecoderError;
-                err.message = "PcapPacketSource: callback threw a non-std::exception";
-                error_callback(err);
-              }
+              std::cerr << "PcapPacketSource: user callback threw a non-std::exception"
+                        << std::endl;
             }
           }
         } else {
@@ -331,19 +330,10 @@ void PcapPacketSource::run(
               try {
                 callback(sp);
               } catch (const std::exception & e) {
-                if (error_callback) {
-                  SensorError err;
-                  err.type = SensorErrorType::DecoderError;
-                  err.message = std::string("PcapPacketSource: callback threw: ") + e.what();
-                  error_callback(err);
-                }
+                std::cerr << "PcapPacketSource: user callback threw: " << e.what() << std::endl;
               } catch (...) {
-                if (error_callback) {
-                  SensorError err;
-                  err.type = SensorErrorType::DecoderError;
-                  err.message = "PcapPacketSource: callback threw a non-std::exception";
-                  error_callback(err);
-                }
+                std::cerr << "PcapPacketSource: user callback threw a non-std::exception"
+                          << std::endl;
               }
             }
             assemblies.erase(key);

@@ -38,6 +38,10 @@ struct PacketChannelRequirement
   bool required{false};
   std::optional<uint16_t> destination_port;
   std::optional<uint32_t> can_id;
+  // When set, only matches CAN frames whose extended-ID flag equals this value.
+  // Unset means the requirement matches both standard (11-bit) and extended
+  // (29-bit) frames with the numeric can_id.
+  std::optional<bool> is_extended_id;
   std::optional<PayloadSignature> payload_signature;
 };
 

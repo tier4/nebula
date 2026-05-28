@@ -333,8 +333,17 @@ registry->finalize();   // freeze — no more loads allowed
 After `configure()`, the router stores requirements in two sorted flat vectors:
 one for UDP/TCP entries keyed by destination port, one for CAN entries keyed by
 CAN ID. `route()` uses `std::lower_bound` binary search with no heap allocation
-and no dynamic dispatch. This makes `route()` safe to call from RT threads once
-`configure()` has returned.
+and no dynamic dispatch.
+
+`route()` is safe to call from a single RT thread once `configure()` has
+returned. It mutates non-atomic counters in `metrics_`, so concurrent `route()`
+calls from multiple threads, or a concurrent `get_metrics()` against an
+in-flight `route()`, require external serialization. `LiveTransportGraph`
+provides this serialization via `processing_mutex_`; callers using the router
+directly must arrange their own.
+
+CAN requirements may also pin `is_extended_id` to disambiguate standard
+(11-bit) and extended (29-bit) frames with the same numeric ID.
 
 For UDP and TCP packets, routing can match by destination port and optional
 payload signature. For CAN packets, routing can match by CAN ID and optional
@@ -381,9 +390,11 @@ For example, UDP, TCP, and HTTP requirements need a port.
 - `processing_mutex_` — serializes `on_packet()` calls so that decoder
   runtimes that are not thread-safe receive packets one at a time.
 
-**Reconfigure sequence** (`configure()`):
+**Reconfigure sequence** (`configure()` holds `lifecycle_mutex_` throughout):
 
-1. Build new runtime, router, and sources outside any lock.
+1. Build the new runtime, router, and sources without acquiring `mutex_` or
+   `processing_mutex_`, so in-flight `on_packet()` calls are not blocked while
+   plugin code runs.
 2. Move old `sources_` and `http_controls_` out under `mutex_`, then stop each
    source without holding any lock. Source threads call `on_packet()` which
    acquires `processing_mutex_`; joining them while holding that mutex would
@@ -406,8 +417,19 @@ from within `process_packet()`). Read-only or enqueueing operations are safe to
 perform inside these callbacks. However, **lifecycle calls** (`configure()`,
 `stop()`, or destroying the graph) must **not** be made from within a user
 callback: those callbacks fire on a packet-source receive thread, and stopping a
-source from its own receive thread causes a self-join. Defer lifecycle transitions
-to a separate thread (e.g. post to an executor or thread pool).
+source from its own receive thread causes a self-join, which the affected source
+will now reject via `assert()`. Defer lifecycle transitions to a separate
+thread (e.g. post to an executor or thread pool).
+
+**Callback exception contract.** User callbacks (output, error, progress, and
+the per-source packet callbacks) should not throw. If a callback does throw, the
+host (`LiveTransportGraph`) and every packet source (`UdpPacketSource`,
+`CanPacketSource`, `TcpPacketSource`, `HttpPacketSource`, `PcapPacketSource`)
+catches the exception, logs it to `stderr`, and continues running. Transport
+errors and decoder errors continue to flow through the dedicated error callback
+with the appropriate `SensorErrorType`; user-callback throws are not reported
+through the error callback because they are programming errors in user code,
+not faults of the runtime.
 
 **Error reporting** from `SensorDecoderRuntime` is done exclusively via the
 `error_callback` registered with `set_error_callback()`. The runtime calls this

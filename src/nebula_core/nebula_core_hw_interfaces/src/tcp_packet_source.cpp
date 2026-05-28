@@ -14,10 +14,14 @@
 
 #include <nebula_core_hw_interfaces/tcp_packet_source.hpp>
 
+#include <cassert>
 #include <chrono>
+#include <iostream>
 #include <memory>
 #include <string>
+#include <thread>
 #include <utility>
+#include <vector>
 
 namespace nebula::drivers
 {
@@ -49,9 +53,12 @@ void TcpPacketSource::set_error_callback(SensorErrorCallback callback)
 
 void TcpPacketSource::start()
 {
+  // Lifecycle calls from the worker thread itself are prohibited.
+  assert(
+    (!thread_.joinable() || thread_.get_id() != std::this_thread::get_id()) &&
+    "start() must not be called from the worker thread");
   if (running_ && running_->load()) return;
   if (thread_.joinable()) {
-    if (thread_.get_id() == std::this_thread::get_id()) return;
     thread_.join();
   }
 
@@ -62,14 +69,14 @@ void TcpPacketSource::start()
 
 void TcpPacketSource::stop()
 {
+  // Reject self-stop instead of detaching: see the PCAP source for rationale.
+  assert(
+    (!thread_.joinable() || thread_.get_id() != std::this_thread::get_id()) &&
+    "stop() must not be called from the worker thread");
   if (running_) {
     running_->store(false);
   }
   if (thread_.joinable()) {
-    if (thread_.get_id() == std::this_thread::get_id()) {
-      thread_.detach();
-      return;
-    }
     thread_.join();
   }
 }
@@ -100,20 +107,9 @@ void TcpPacketSource::run(
   }
 
   while (running->load() && socket) {
+    std::vector<uint8_t> data;
     try {
-      auto data = socket->receive(std::chrono::milliseconds(100));
-      if (!data.empty() && callback) {
-        SensorPacket sp;
-        sp.transport = SensorTransportKind::TCP;
-        sp.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                            std::chrono::system_clock::now().time_since_epoch())
-                            .count();
-
-        sp.destination = SensorEndpoint{host_ip, port};
-        sp.payload = std::move(data);
-
-        callback(sp);
-      }
+      data = socket->receive(std::chrono::milliseconds(100));
     } catch (const std::exception & e) {
       if (error_callback) {
         SensorError error;
@@ -122,6 +118,27 @@ void TcpPacketSource::run(
         error_callback(error);
       }
       break;
+    }
+
+    if (data.empty() || !callback) continue;
+
+    SensorPacket sp;
+    sp.transport = SensorTransportKind::TCP;
+    sp.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::system_clock::now().time_since_epoch())
+                        .count();
+
+    sp.destination = SensorEndpoint{host_ip, port};
+    sp.payload = std::move(data);
+
+    // User-callback exceptions are non-fatal and do not stop the source. See
+    // the threading contract in docs/vendor_neutral_runtime_interface.md.
+    try {
+      callback(sp);
+    } catch (const std::exception & e) {
+      std::cerr << "TcpPacketSource: user callback threw: " << e.what() << std::endl;
+    } catch (...) {
+      std::cerr << "TcpPacketSource: user callback threw a non-std::exception" << std::endl;
     }
   }
 

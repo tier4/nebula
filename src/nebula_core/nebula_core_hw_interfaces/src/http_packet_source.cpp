@@ -14,9 +14,12 @@
 
 #include <nebula_core_hw_interfaces/http_packet_source.hpp>
 
+#include <cassert>
 #include <chrono>
+#include <iostream>
 #include <memory>
 #include <string>
+#include <thread>
 
 namespace nebula::drivers
 {
@@ -50,9 +53,12 @@ void HttpPacketSource::set_error_callback(SensorErrorCallback callback)
 
 void HttpPacketSource::start()
 {
+  // Lifecycle calls from the worker thread itself are prohibited.
+  assert(
+    (!thread_.joinable() || thread_.get_id() != std::this_thread::get_id()) &&
+    "start() must not be called from the worker thread");
   if (running_ && running_->load()) return;
   if (thread_.joinable()) {
-    if (thread_.get_id() == std::this_thread::get_id()) return;
     thread_.join();
   }
 
@@ -63,14 +69,14 @@ void HttpPacketSource::start()
 
 void HttpPacketSource::stop()
 {
+  // Reject self-stop instead of detaching: see the PCAP source for rationale.
+  assert(
+    (!thread_.joinable() || thread_.get_id() != std::this_thread::get_id()) &&
+    "stop() must not be called from the worker thread");
   if (running_) {
     running_->store(false);
   }
   if (thread_.joinable()) {
-    if (thread_.get_id() == std::this_thread::get_id()) {
-      thread_.detach();
-      return;
-    }
     thread_.join();
   }
 }
@@ -99,26 +105,37 @@ void HttpPacketSource::run(
   }
 
   while (running->load()) {
+    std::string response;
     try {
-      auto response = client->get(path, 1000);
-      if (!response.empty() && callback) {
-        SensorPacket sp;
-        sp.transport = SensorTransportKind::HTTP;
-        sp.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                            std::chrono::system_clock::now().time_since_epoch())
-                            .count();
-
-        sp.destination = SensorEndpoint{host_ip, port};
-        sp.payload.assign(response.begin(), response.end());
-
-        callback(sp);
-      }
+      response = client->get(path, 1000);
     } catch (const std::exception & e) {
       if (error_callback) {
         SensorError error;
         error.type = SensorErrorType::TransportError;
         error.message = e.what();
         error_callback(error);
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      continue;
+    }
+
+    if (!response.empty() && callback) {
+      SensorPacket sp;
+      sp.transport = SensorTransportKind::HTTP;
+      sp.timestamp_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                          std::chrono::system_clock::now().time_since_epoch())
+                          .count();
+
+      sp.destination = SensorEndpoint{host_ip, port};
+      sp.payload.assign(response.begin(), response.end());
+
+      // User-callback exceptions are non-fatal and do not stop the source.
+      try {
+        callback(sp);
+      } catch (const std::exception & e) {
+        std::cerr << "HttpPacketSource: user callback threw: " << e.what() << std::endl;
+      } catch (...) {
+        std::cerr << "HttpPacketSource: user callback threw a non-std::exception" << std::endl;
       }
     }
 

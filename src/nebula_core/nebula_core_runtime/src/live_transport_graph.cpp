@@ -285,8 +285,17 @@ void LiveTransportGraph::on_output(const SensorDecodedOutput & output)
     output_callback = output_callback_;
   }
 
-  if (output_callback) {
+  if (!output_callback) return;
+
+  // User-callback exceptions are non-fatal here. The graph keeps running and
+  // logs to stderr; see the threading contract in
+  // docs/vendor_neutral_runtime_interface.md.
+  try {
     output_callback(output);
+  } catch (const std::exception & e) {
+    std::cerr << "LiveTransportGraph: output callback threw: " << e.what() << std::endl;
+  } catch (...) {
+    std::cerr << "LiveTransportGraph: output callback threw a non-std::exception" << std::endl;
   }
 }
 
@@ -299,8 +308,14 @@ void LiveTransportGraph::on_error(const SensorError & error)
     error_callback = error_callback_;
   }
 
-  if (error_callback) {
+  if (!error_callback) return;
+
+  try {
     error_callback(error);
+  } catch (const std::exception & e) {
+    std::cerr << "LiveTransportGraph: error callback threw: " << e.what() << std::endl;
+  } catch (...) {
+    std::cerr << "LiveTransportGraph: error callback threw a non-std::exception" << std::endl;
   }
 }
 
@@ -313,8 +328,14 @@ void LiveTransportGraph::on_progress(const SensorProgress & progress)
     progress_callback = progress_callback_;
   }
 
-  if (progress_callback) {
+  if (!progress_callback) return;
+
+  try {
     progress_callback(progress);
+  } catch (const std::exception & e) {
+    std::cerr << "LiveTransportGraph: progress callback threw: " << e.what() << std::endl;
+  } catch (...) {
+    std::cerr << "LiveTransportGraph: progress callback threw a non-std::exception" << std::endl;
   }
 }
 
