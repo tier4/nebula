@@ -21,9 +21,7 @@
               "default": 10.5
             }
           },
-          "required": [
-            "min_hz"
-          ]
+          "required": ["min_hz"]
         },
         "frequency_warn": {
           "type": "object",
@@ -40,9 +38,7 @@
               "default": "11.0"
             }
           },
-          "required": [
-            "min_hz"
-          ]
+          "required": ["min_hz"]
         },
         "num_frame_transition": {
           "type": "integer",
@@ -51,10 +47,7 @@
           "minimum": 1
         }
       },
-      "required": [
-        "frequency_ok",
-        "frequency_warn"
-      ]
+      "required": ["frequency_ok", "frequency_warn"]
     },
     "packet_loss_diagnostic_task": {
       "type": "object",
