@@ -101,9 +101,7 @@
               "default": "\"\""
             }
           },
-          "required": [
-            "path"
-          ],
+          "required": ["path"],
           "additionalProperties": false
         }
       },
@@ -116,9 +114,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "topic"
-      ]
+      "required": ["topic"]
     }
   },
   "$id": "nebula_ros_base/schema/misc.json"
