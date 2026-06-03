@@ -2,6 +2,9 @@
 Changelog for package nebula_hesai_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.0.0 (2026-04-06)
 ------------------
 

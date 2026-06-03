@@ -2,6 +2,9 @@
 Changelog for package nebula_velodyne_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.0.0 (2026-04-06)
 ------------------
 

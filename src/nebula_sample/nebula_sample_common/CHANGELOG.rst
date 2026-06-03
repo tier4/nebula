@@ -2,6 +2,9 @@
 Changelog for package nebula_sample_common
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 1.0.0 (2026-04-06)
 ------------------
 * feat(nebula_sample): add sample sensor package as template (`#382 <https://github.com/tier4/nebula/issues/382>`_)

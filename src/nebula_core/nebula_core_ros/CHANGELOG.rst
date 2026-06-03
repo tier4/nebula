@@ -2,6 +2,15 @@
 Changelog for package nebula_core_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix(nebula_agnocast_wrapper): add agnocast intra process subscription count (`#447 <https://github.com/tier4/nebula/issues/447>`_)
+  * fix: add intra_sub_count
+  * chore: re-trigger CI
+  * chore: re-trigger CI
+  ---------
+* Contributors: Yutaro Kobayashi
+
 1.0.0 (2026-04-06)
 ------------------
 * feat(nebula_sample): add sample sensor package as template (`#382 <https://github.com/tier4/nebula/issues/382>`_)
