@@ -2,6 +2,9 @@
 Changelog for package nebula_core_hw_interfaces
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.1 (2026-06-03)
+------------------
+
 1.0.0 (2026-04-06)
 ------------------
 * refactor(nebula_core_hw_interfaces): flatten obsolete include path (`#430 <https://github.com/tier4/nebula/issues/430>`_)
