@@ -2,8 +2,8 @@
 Changelog for package nebula_velodyne_decoders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.1.1 (2026-06-03)
+------------------
 * fix(nebula_velodyne): fix inconsistent angle units in phase_diff logic (`#441 <https://github.com/tier4/nebula/issues/441>`_)
   * Fix inconsistent angle units in phase_diff logic
   * Replace magic number 90 with named constant for angle threshold

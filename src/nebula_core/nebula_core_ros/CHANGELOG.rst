@@ -2,8 +2,8 @@
 Changelog for package nebula_core_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.1.1 (2026-06-03)
+------------------
 * fix(nebula_agnocast_wrapper): add agnocast intra process subscription count (`#447 <https://github.com/tier4/nebula/issues/447>`_)
   * fix: add intra_sub_count
   * chore: re-trigger CI
