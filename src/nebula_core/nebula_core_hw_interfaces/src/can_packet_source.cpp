@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "packet_source_utils.hpp"
+
 #include <nebula_core_hw_interfaces/can_packet_source.hpp>
 
 #include <algorithm>
@@ -61,12 +63,7 @@ void CanPacketSource::start()
     // Reset before rethrowing so is_running() reflects the failed start and a
     // subsequent start() does not see a populated socket_ with no receive thread.
     socket_.reset();
-    if (error_callback_) {
-      SensorError error;
-      error.type = SensorErrorType::TransportError;
-      error.message = e.what();
-      error_callback_(error);
-    }
+    report_transport_error(error_callback_, SensorErrorType::TransportError, e.what());
     throw;
   }
 }
@@ -109,7 +106,7 @@ void CanPacketSource::on_can_frame(
 
     sp.payload.assign(frame.data, frame.data + len);
 
-    callback_(sp);
+    invoke_packet_callback("CanPacketSource", callback_, sp);
   }
 }
 

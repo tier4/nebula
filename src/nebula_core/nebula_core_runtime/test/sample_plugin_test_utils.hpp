@@ -44,14 +44,13 @@ inline std::string find_sample_plugin_library()
         continue;
       }
 
-      const fs::path common =
-        fs::path(prefix) / "lib" / "libnebula_sample_decoders_plugin.so";
+      const fs::path common = fs::path(prefix) / "lib" / "libnebula_sample_decoders_plugin.so";
       if (fs::exists(common)) {
         return common.string();
       }
 
-      const fs::path isolated = fs::path(prefix) / "nebula_sample_decoders" / "lib" /
-                                "libnebula_sample_decoders_plugin.so";
+      const fs::path isolated =
+        fs::path(prefix) / "nebula_sample_decoders" / "lib" / "libnebula_sample_decoders_plugin.so";
       if (fs::exists(isolated)) {
         return isolated.string();
       }

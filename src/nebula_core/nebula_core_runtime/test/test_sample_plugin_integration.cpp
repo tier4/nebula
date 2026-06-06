@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sample_plugin_test_utils.hpp"
+
 #include <nebula_core_runtime/packet_router.hpp>
 #include <nebula_core_runtime/sensor_registry.hpp>
-
-#include "sample_plugin_test_utils.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -63,6 +63,7 @@ TEST_F(TestSamplePluginIntegration, LoadAndRunSamplePlugin)
   metadata.package_name = "nebula_sample_decoders";
   metadata.library_path = plugin_library_path_;
   metadata.factory_symbol = "create_nebula_sensor_plugin";
+  metadata.destroy_symbol = "destroy_nebula_sensor_plugin";
   metadata.supported_models = {SensorModel::SAMPLE};
 
   auto plugin = registry.load_plugin(metadata);
@@ -118,6 +119,7 @@ TEST_F(TestSamplePluginIntegration, PluginCanOutliveRegistry)
     metadata.package_name = "nebula_sample_decoders";
     metadata.library_path = plugin_library_path_;
     metadata.factory_symbol = "create_nebula_sensor_plugin";
+    metadata.destroy_symbol = "destroy_nebula_sensor_plugin";
     metadata.supported_models = {SensorModel::SAMPLE};
 
     plugin = registry.load_plugin(metadata);

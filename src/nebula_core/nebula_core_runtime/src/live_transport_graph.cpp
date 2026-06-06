@@ -37,8 +37,7 @@ uint16_t require_port(const LiveTransportRequirement & requirement)
 
 template <typename CallbackT, typename ArgT>
 void invoke_user_callback(
-  const char * owner_name, const char * callback_name, const CallbackT & callback,
-  const ArgT & arg)
+  const char * owner_name, const char * callback_name, const CallbackT & callback, const ArgT & arg)
 {
   if (!callback) {
     return;
@@ -50,8 +49,8 @@ void invoke_user_callback(
     std::cerr << owner_name << ": " << callback_name << " callback threw: " << e.what()
               << std::endl;
   } catch (...) {
-    std::cerr << owner_name << ": " << callback_name
-              << " callback threw a non-std::exception" << std::endl;
+    std::cerr << owner_name << ": " << callback_name << " callback threw a non-std::exception"
+              << std::endl;
   }
 }
 }  // namespace
@@ -100,6 +99,9 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
   }
 
   auto runtime_unique = plugin->create_decoder_runtime();
+  if (!runtime_unique) {
+    throw std::runtime_error("Plugin returned null decoder runtime");
+  }
   auto runtime = std::shared_ptr<SensorDecoderRuntime>(std::move(runtime_unique));
   runtime->set_output_callback(
     std::bind(&LiveTransportGraph::on_output, this, std::placeholders::_1));

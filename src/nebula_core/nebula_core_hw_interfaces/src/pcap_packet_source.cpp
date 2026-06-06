@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <nebula_core_hw_interfaces/pcap_packet_source.hpp>
-
 #include "packet_source_utils.hpp"
+
+#include <nebula_core_hw_interfaces/pcap_packet_source.hpp>
 
 #include <arpa/inet.h>
 #include <net/ethernet.h>
@@ -243,8 +243,8 @@ void PcapPacketSource::run(
 
           // Always reset the assembly for this key. A new first-fragment with the
           // same (src,dst,id,proto) means the previous datagram never completed
-          // (or its IP-id was reused); stale received[] / saw_last would otherwise
-          // bleed into the new assembly.
+          // (or its IP-id was reused); stale fragment state would otherwise bleed
+          // into the new assembly.
           auto & ass = assemblies[key];
           ass = FragmentAssembly{};
           ass.src_ip = src_ip_str;
@@ -253,16 +253,14 @@ void PcapPacketSource::run(
           ass.dst_port = dst_port;
           ass.timestamp_ns = static_cast<uint64_t>(header->ts.tv_sec) * 1000000000ULL +
                              static_cast<uint64_t>(header->ts.tv_usec) * 1000ULL;
-          ass.total_size = total_size;
-          ass.data.resize(ass.total_size);
-          ass.received.resize(ass.total_size, false);
+          ass.data.resize(total_size);
 
           size_t frag_data_len = ip_payload_len - sizeof(struct udphdr);
-          if (frag_data_len > ass.total_size) frag_data_len = ass.total_size;
+          if (frag_data_len > ass.data.size()) frag_data_len = ass.data.size();
           std::copy(
             ip_payload + sizeof(struct udphdr), ip_payload + sizeof(struct udphdr) + frag_data_len,
             ass.data.begin());
-          std::fill(ass.received.begin(), ass.received.begin() + frag_data_len, true);
+          ass.mark_received(0, frag_data_len);
         }
       } else {
         // Subsequent fragment
@@ -279,9 +277,7 @@ void PcapPacketSource::run(
             ip_payload_len = ass.data.size() - udp_data_offset;
           }
           std::copy(ip_payload, ip_payload + ip_payload_len, ass.data.begin() + udp_data_offset);
-          std::fill(
-            ass.received.begin() + udp_data_offset,
-            ass.received.begin() + udp_data_offset + ip_payload_len, true);
+          ass.mark_received(udp_data_offset, ip_payload_len);
           if (!more_frags) ass.saw_last = true;
 
           if (ass.is_complete()) {

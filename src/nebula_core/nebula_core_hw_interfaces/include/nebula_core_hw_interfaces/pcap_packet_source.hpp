@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 namespace nebula::drivers
@@ -65,8 +66,7 @@ private:
   struct FragmentAssembly
   {
     std::vector<uint8_t> data;
-    std::vector<bool> received;
-    size_t total_size{0};
+    std::vector<std::pair<size_t, size_t>> received_ranges;
     bool saw_last{false};
     uint64_t timestamp_ns{0};
     uint16_t src_port{0};
@@ -76,8 +76,32 @@ private:
 
     bool is_complete() const
     {
-      return saw_last && total_size > 0 && data.size() >= total_size &&
-             std::all_of(received.begin(), received.end(), [](bool v) { return v; });
+      return saw_last && !data.empty() && received_ranges.size() == 1 &&
+             received_ranges.front().first == 0 && received_ranges.front().second >= data.size();
+    }
+
+    void mark_received(size_t offset, size_t length)
+    {
+      if (length == 0) {
+        return;
+      }
+
+      std::pair<size_t, size_t> next_range{offset, offset + length};
+      auto it = received_ranges.begin();
+      while (it != received_ranges.end()) {
+        if (next_range.second < it->first) {
+          break;
+        }
+        if (it->second < next_range.first) {
+          ++it;
+          continue;
+        }
+
+        next_range.first = std::min(next_range.first, it->first);
+        next_range.second = std::max(next_range.second, it->second);
+        it = received_ranges.erase(it);
+      }
+      received_ranges.insert(it, next_range);
     }
   };
 

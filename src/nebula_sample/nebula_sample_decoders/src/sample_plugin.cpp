@@ -138,6 +138,7 @@ SensorPluginMetadata SampleSensorPlugin::metadata() const
   md.package_name = "nebula_sample_decoders";
   md.library_path = "libnebula_sample_decoders_plugin.so";
   md.factory_symbol = "create_nebula_sensor_plugin";
+  md.destroy_symbol = "destroy_nebula_sensor_plugin";
   md.supported_models = {SensorModel::SAMPLE};
   return md;
 }

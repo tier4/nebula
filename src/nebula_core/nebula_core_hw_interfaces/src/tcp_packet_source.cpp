@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <nebula_core_hw_interfaces/tcp_packet_source.hpp>
-
 #include "packet_source_utils.hpp"
+
+#include <nebula_core_hw_interfaces/tcp_packet_source.hpp>
 
 #include <chrono>
 #include <memory>

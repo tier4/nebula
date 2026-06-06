@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <memory>
+#include <utility>
 
 namespace nebula::drivers
 {
@@ -60,6 +61,9 @@ void ReplaySessionRunner::configure(const ReplaySessionConfig & config)
   }
 
   auto runtime = plugin->create_decoder_runtime();
+  if (!runtime) {
+    throw std::runtime_error("Plugin returned null decoder runtime");
+  }
   if (output_callback_) {
     runtime->set_output_callback(output_callback_);
   }

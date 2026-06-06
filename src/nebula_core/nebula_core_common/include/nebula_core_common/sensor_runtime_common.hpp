@@ -26,7 +26,8 @@
 namespace nebula::drivers
 {
 // Plugin-identity fields are owned by the plugin's metadata() method:
-// vendor, package_name, library_path, factory_symbol, supported_models.
+// vendor, package_name, library_path, factory_symbol, destroy_symbol,
+// supported_models.
 // Filesystem-path fields (descriptor_path, package_share_path, schema_path,
 // config_defaults_path, calibration_assets_path) are populated by SensorRegistry
 // from the plugin descriptor JSON and are empty when obtained directly via
@@ -37,6 +38,7 @@ struct SensorPluginMetadata
   std::string package_name;
   std::string library_path;
   std::string factory_symbol;
+  std::string destroy_symbol;
   std::string descriptor_path;
   std::string package_share_path;
   std::string schema_path;

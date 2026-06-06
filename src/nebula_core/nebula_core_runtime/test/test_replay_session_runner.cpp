@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <nebula_core_runtime/replay_session_runner.hpp>
-
 #include "sample_plugin_test_utils.hpp"
+
+#include <nebula_core_runtime/replay_session_runner.hpp>
 
 #include <boost/filesystem.hpp>
 

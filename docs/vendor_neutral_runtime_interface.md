@@ -250,6 +250,7 @@ like this:
   "package": "nebula_sample_decoders",
   "library": "libnebula_sample_decoders_plugin.so",
   "factory": "create_nebula_sensor_plugin",
+  "destroy": "destroy_nebula_sensor_plugin",
   "models": ["Sample"],
   "schema": "schemas/sample.schema.json"
 }
@@ -263,6 +264,7 @@ Descriptor fields:
 | `package`            | Yes      | Plugin package name. Also used as the registry key.                                                                    |
 | `library`            | Yes      | Shared library path or filename. Relative paths are resolved from the descriptor directory and known install prefixes. |
 | `factory`            | No       | C symbol used to create the plugin. Defaults to `create_nebula_sensor_plugin`.                                         |
+| `destroy`            | No       | C symbol used to destroy plugin instances. Defaults to `destroy_nebula_sensor_plugin`.                                 |
 | `models`             | Yes      | Sensor model names supported by the plugin.                                                                            |
 | `schema`             | No       | Relative or absolute path to a configuration schema.                                                                   |
 | `config_defaults`    | No       | Relative or absolute path to default configuration assets.                                                             |
@@ -279,8 +281,17 @@ Relative schema/config/calibration paths are resolved relative to the
 descriptor file. This allows tools to discover plugin assets without
 vendor-specific search logic.
 
-Plugin shared libraries must export the two factory symbols and should export
-the ABI version symbol:
+Descriptor discovery is based on JSON content, not filename conventions. Any
+`.json` file in an explicit descriptor directory or discovered package share
+directory may be considered; files that do not contain the required plugin
+fields are ignored. Every entry in `models` must map to a known `SensorModel`.
+Unknown model names are rejected so a typo cannot register a plugin for
+`SensorModel::UNKNOWN`. If multiple descriptors declare the same `package`,
+the registry keeps the first descriptor discovered and logs a duplicate
+diagnostic instead of silently overwriting metadata.
+
+Plugin shared libraries must export the create and destroy symbols named by
+the descriptor and should export the ABI version symbol:
 
 ```cpp
 #include <nebula_core_decoders/sensor_plugin_export.hpp>
