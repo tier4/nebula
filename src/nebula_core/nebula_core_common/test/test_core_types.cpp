@@ -70,9 +70,8 @@ TEST(TestCoreTypes, SensorDecodedOutput)
 
 TEST(TestCoreTypes, SensorModelRoundTrip)
 {
-  EXPECT_EQ(sensor_model_from_string("Pandar128E3X"), SensorModel::HESAI_PANDAR128_E3X);
-  EXPECT_EQ(sensor_model_from_string("Pandar128_E3X"), SensorModel::HESAI_PANDAR128_E3X);
-  EXPECT_EQ(sensor_model_to_string(SensorModel::HESAI_PANDAR128_E3X), "Pandar128E3X");
+  EXPECT_EQ(sensor_model_from_string("Sample"), SensorModel::SAMPLE);
+  EXPECT_EQ(sensor_model_to_string(SensorModel::SAMPLE), "Sample");
 }
 
 TEST(TestCoreTypes, ReturnModeRoundTrip)

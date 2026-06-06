@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(nebula_core_decoders)
+# cspell: ignore CPACK ARGN
 
 if(DEFINED ENV{AMENT_PREFIX_PATH})
     find_package(autoware_cmake REQUIRED)
@@ -10,15 +11,15 @@ find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(Boost REQUIRED COMPONENTS filesystem system)
 find_package(nebula_core_common REQUIRED)
 
-add_library(nebula_core_decoders SHARED src/dummy.cpp)
+add_library(nebula_core_decoders INTERFACE)
 
 target_include_directories(
   nebula_core_decoders
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-         $<INSTALL_INTERFACE:include>)
-target_link_libraries(nebula_core_decoders PUBLIC PNG::PNG Eigen3::Eigen
-                                                  Boost::headers
-                                                  nebula_core_common::nebula_core_common)
+  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:include>)
+target_link_libraries(nebula_core_decoders INTERFACE PNG::PNG Eigen3::Eigen
+                                                     Boost::headers
+                                                     nebula_core_common::nebula_core_common)
 
 # Standard CMake install and config generation
 include(CMakePackageConfigHelpers)

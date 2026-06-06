@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(nebula_core_runtime)
+# cspell: ignore CPACK ARGN
 
 if(DEFINED ENV{AMENT_PREFIX_PATH})
     find_package(autoware_cmake REQUIRED)

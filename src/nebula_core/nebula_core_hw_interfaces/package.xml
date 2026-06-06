@@ -12,8 +12,8 @@
 
   <buildtool_depend>autoware_cmake</buildtool_depend>
 
+  <depend>libpcap</depend>
   <depend>nebula_core_common</depend>
-  <depend>libpcap-dev</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>

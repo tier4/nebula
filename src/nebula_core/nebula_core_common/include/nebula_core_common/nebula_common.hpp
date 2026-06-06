@@ -412,8 +412,6 @@ inline SensorModel sensor_model_from_string(const std::string & sensor_model)
   if (sensor_model == "PandarAT128") return SensorModel::HESAI_PANDARAT128;
   if (sensor_model == "PandarQT64") return SensorModel::HESAI_PANDARQT64;
   if (sensor_model == "PandarQT128") return SensorModel::HESAI_PANDARQT128;
-  if (sensor_model == "Pandar128E3X" || sensor_model == "Pandar128_E3X")
-    return SensorModel::HESAI_PANDAR128_E3X;
   if (sensor_model == "Pandar128E4X") return SensorModel::HESAI_PANDAR128_E4X;
   // Velodyne
   if (sensor_model == "VLS128") return SensorModel::VELODYNE_VLS128;
@@ -457,8 +455,6 @@ inline std::string sensor_model_to_string(const SensorModel & sensor_model)
       return "PandarQT64";
     case SensorModel::HESAI_PANDARQT128:
       return "PandarQT128";
-    case SensorModel::HESAI_PANDAR128_E3X:
-      return "Pandar128E3X";
     case SensorModel::HESAI_PANDAR128_E4X:
       return "Pandar128E4X";
     // Velodyne

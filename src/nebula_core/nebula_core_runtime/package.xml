@@ -14,10 +14,10 @@
   <buildtool_depend>ros_environment</buildtool_depend>
 
   <depend>boost</depend>
-  <depend>nlohmann-json-dev</depend>
   <depend>nebula_core_common</depend>
   <depend>nebula_core_decoders</depend>
   <depend>nebula_core_hw_interfaces</depend>
+  <depend>nlohmann-json-dev</depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>
