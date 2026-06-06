@@ -91,6 +91,7 @@ if(BUILD_TESTING)
   nebula_add_test(test_can test/common/test_can.cpp)
   nebula_add_test(test_tcp test/common/test_tcp.cpp)
   nebula_add_test(test_http_client test/common/test_http_client.cpp)
+  nebula_add_test(test_socket_utils test/common/test_socket_utils.cpp)
 endif()
 
 if(DEFINED ENV{AMENT_PREFIX_PATH})

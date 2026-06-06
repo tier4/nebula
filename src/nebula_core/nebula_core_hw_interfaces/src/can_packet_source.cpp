@@ -14,6 +14,7 @@
 
 #include <nebula_core_hw_interfaces/can_packet_source.hpp>
 
+#include <algorithm>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -102,10 +103,11 @@ void CanPacketSource::on_can_frame(
     can_md.set_interface_name(interface_name_);
     can_md.can_id = frame.can_id & CAN_EFF_MASK;
     can_md.is_extended_id = (frame.can_id & CAN_EFF_FLAG) != 0;
-    can_md.dlc = frame.len;
+    const uint8_t len = std::min<uint8_t>(frame.len, CANFD_MAX_DLEN);
+    can_md.dlc = len;
     sp.can = can_md;
 
-    sp.payload.assign(frame.data, frame.data + frame.len);
+    sp.payload.assign(frame.data, frame.data + len);
 
     callback_(sp);
   }
