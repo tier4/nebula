@@ -34,7 +34,6 @@ struct LiveSessionConfig
 {
   SensorModel model;
   SensorConfiguration sensor_config;
-  std::map<std::string, std::string> extra_params;
 };
 
 class LiveTransportGraph

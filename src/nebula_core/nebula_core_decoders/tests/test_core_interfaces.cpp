@@ -25,7 +25,6 @@ using nebula::drivers::PacketChannelRequirement;
 using nebula::drivers::SensorConfiguration;
 using nebula::drivers::SensorDecoderRuntime;
 using nebula::drivers::SensorErrorCallback;
-using nebula::drivers::SensorModelInfo;
 using nebula::drivers::SensorOutputCallback;
 using nebula::drivers::SensorOutputSink;
 using nebula::drivers::SensorPacket;
@@ -54,7 +53,6 @@ class MockSensorPlugin : public SensorPlugin
 {
 public:
   SensorPluginMetadata metadata() const override { return {}; }
-  std::vector<SensorModelInfo> supported_models() const override { return {}; }
   std::vector<PacketChannelRequirement> packet_requirements(
     const SensorConfiguration &) const override
   {

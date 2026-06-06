@@ -14,12 +14,11 @@
 
 #include <nebula_core_hw_interfaces/tcp_packet_source.hpp>
 
-#include <cassert>
+#include "packet_source_utils.hpp"
+
 #include <chrono>
-#include <iostream>
 #include <memory>
 #include <string>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -53,32 +52,14 @@ void TcpPacketSource::set_error_callback(SensorErrorCallback callback)
 
 void TcpPacketSource::start()
 {
-  // Lifecycle calls from the worker thread itself are prohibited.
-  assert(
-    (!thread_.joinable() || thread_.get_id() != std::this_thread::get_id()) &&
-    "start() must not be called from the worker thread");
-  if (running_ && running_->load()) return;
-  if (thread_.joinable()) {
-    thread_.join();
-  }
-
-  running_ = std::make_shared<std::atomic<bool>>(true);
-  thread_ =
-    std::thread(&TcpPacketSource::run, running_, host_ip_, port_, callback_, error_callback_);
+  start_worker_thread(running_, thread_, [this](std::shared_ptr<std::atomic<bool>> running) {
+    return std::thread(&TcpPacketSource::run, running, host_ip_, port_, callback_, error_callback_);
+  });
 }
 
 void TcpPacketSource::stop()
 {
-  // Reject self-stop instead of detaching: see the PCAP source for rationale.
-  assert(
-    (!thread_.joinable() || thread_.get_id() != std::this_thread::get_id()) &&
-    "stop() must not be called from the worker thread");
-  if (running_) {
-    running_->store(false);
-  }
-  if (thread_.joinable()) {
-    thread_.join();
-  }
+  stop_worker_thread(running_, thread_);
 }
 
 bool TcpPacketSource::is_running() const
@@ -96,12 +77,7 @@ void TcpPacketSource::run(
     s_builder.set_connect_timeout(1000);
     socket = std::make_unique<connections::TcpSocket>(std::move(s_builder).connect());
   } catch (const std::exception & e) {
-    if (error_callback) {
-      SensorError error;
-      error.type = SensorErrorType::TransportError;
-      error.message = e.what();
-      error_callback(error);
-    }
+    report_transport_error(error_callback, SensorErrorType::TransportError, e.what());
     running->store(false);
     return;
   }
@@ -111,12 +87,7 @@ void TcpPacketSource::run(
     try {
       data = socket->receive(std::chrono::milliseconds(100));
     } catch (const std::exception & e) {
-      if (error_callback) {
-        SensorError error;
-        error.type = SensorErrorType::TransportError;
-        error.message = e.what();
-        error_callback(error);
-      }
+      report_transport_error(error_callback, SensorErrorType::TransportError, e.what());
       break;
     }
 
@@ -131,15 +102,7 @@ void TcpPacketSource::run(
     sp.destination = SensorEndpoint{host_ip, port};
     sp.payload = std::move(data);
 
-    // User-callback exceptions are non-fatal and do not stop the source. See
-    // the threading contract in docs/vendor_neutral_runtime_interface.md.
-    try {
-      callback(sp);
-    } catch (const std::exception & e) {
-      std::cerr << "TcpPacketSource: user callback threw: " << e.what() << std::endl;
-    } catch (...) {
-      std::cerr << "TcpPacketSource: user callback threw a non-std::exception" << std::endl;
-    }
+    invoke_packet_callback("TcpPacketSource", callback, sp);
   }
 
   socket.reset();

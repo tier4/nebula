@@ -14,6 +14,8 @@
 
 #include <nebula_core_hw_interfaces/pcap_packet_source.hpp>
 
+#include "packet_source_utils.hpp"
+
 #include <arpa/inet.h>
 #include <net/ethernet.h>
 #include <netinet/ip.h>
@@ -21,9 +23,7 @@
 #include <pcap.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstring>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -87,35 +87,14 @@ void PcapPacketSource::set_error_callback(SensorErrorCallback callback)
 
 void PcapPacketSource::start()
 {
-  // Lifecycle calls from the worker thread itself are prohibited: see the
-  // threading contract in docs/vendor_neutral_runtime_interface.md.
-  assert(
-    (!thread_.joinable() || thread_.get_id() != std::this_thread::get_id()) &&
-    "start() must not be called from the worker thread");
-  if (running_ && running_->load()) return;
-  if (thread_.joinable()) {
-    thread_.join();
-  }
-
-  running_ = std::make_shared<std::atomic<bool>>(true);
-  thread_ = std::thread(&PcapPacketSource::run, running_, pcap_file_, callback_, error_callback_);
+  start_worker_thread(running_, thread_, [this](std::shared_ptr<std::atomic<bool>> running) {
+    return std::thread(&PcapPacketSource::run, running, pcap_file_, callback_, error_callback_);
+  });
 }
 
 void PcapPacketSource::stop()
 {
-  // Stopping from the worker thread is a self-join. Reject explicitly rather
-  // than detach (the prior behaviour) so a user callback that calls stop()
-  // surfaces the misuse instead of leaving a detached source running while the
-  // owner tears down graph state.
-  assert(
-    (!thread_.joinable() || thread_.get_id() != std::this_thread::get_id()) &&
-    "stop() must not be called from the worker thread");
-  if (running_) {
-    running_->store(false);
-  }
-  if (thread_.joinable()) {
-    thread_.join();
-  }
+  stop_worker_thread(running_, thread_);
 }
 
 void PcapPacketSource::wait_until_finished()
@@ -137,24 +116,18 @@ void PcapPacketSource::run(
   char errbuf[PCAP_ERRBUF_SIZE];
   pcap_t * handle = pcap_open_offline(pcap_file.c_str(), errbuf);
   if (!handle) {
-    if (error_callback) {
-      SensorError error;
-      error.type = SensorErrorType::TransportError;
-      error.message = std::string("Could not open PCAP file: ") + errbuf;
-      error_callback(error);
-    }
+    report_transport_error(
+      error_callback, SensorErrorType::TransportError,
+      std::string("Could not open PCAP file: ") + errbuf);
     running->store(false);
     return;
   }
 
   int link_type = pcap_datalink(handle);
   if (link_type != DLT_EN10MB) {
-    if (error_callback) {
-      SensorError error;
-      error.type = SensorErrorType::TransportError;
-      error.message = "Unsupported PCAP link type: " + std::to_string(link_type);
-      error_callback(error);
-    }
+    report_transport_error(
+      error_callback, SensorErrorType::TransportError,
+      "Unsupported PCAP link type: " + std::to_string(link_type));
     pcap_close(handle);
     running->store(false);
     return;
@@ -247,14 +220,7 @@ void PcapPacketSource::run(
             sp.payload.assign(
               ip_payload + sizeof(struct udphdr),
               ip_payload + std::min(static_cast<size_t>(udp_len), ip_payload_len));
-            try {
-              callback(sp);
-            } catch (const std::exception & e) {
-              std::cerr << "PcapPacketSource: user callback threw: " << e.what() << std::endl;
-            } catch (...) {
-              std::cerr << "PcapPacketSource: user callback threw a non-std::exception"
-                        << std::endl;
-            }
+            invoke_packet_callback("PcapPacketSource", callback, sp);
           }
         } else {
           // First fragment of many
@@ -327,14 +293,7 @@ void PcapPacketSource::run(
               sp.source = {ass.src_ip, ass.src_port};
               sp.destination = {ass.dst_ip, ass.dst_port};
               sp.payload = std::move(ass.data);
-              try {
-                callback(sp);
-              } catch (const std::exception & e) {
-                std::cerr << "PcapPacketSource: user callback threw: " << e.what() << std::endl;
-              } catch (...) {
-                std::cerr << "PcapPacketSource: user callback threw a non-std::exception"
-                          << std::endl;
-              }
+              invoke_packet_callback("PcapPacketSource", callback, sp);
             }
             assemblies.erase(key);
           }
@@ -344,10 +303,9 @@ void PcapPacketSource::run(
   }
 
   if (next_status == -1 && error_callback) {
-    SensorError error;
-    error.type = SensorErrorType::TransportError;
-    error.message = std::string("Failed while reading PCAP file: ") + pcap_geterr(handle);
-    error_callback(error);
+    report_transport_error(
+      error_callback, SensorErrorType::TransportError,
+      std::string("Failed while reading PCAP file: ") + pcap_geterr(handle));
   }
 
   pcap_close(handle);

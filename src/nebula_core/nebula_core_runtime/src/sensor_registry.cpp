@@ -20,10 +20,12 @@
 
 #include <dlfcn.h>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -117,6 +119,123 @@ std::string resolve_library_path(
   auto resolved = resolve_library_from_prefixes(library_path, package_name);
   return resolved.value_or(library_path);
 }
+
+void append_json_files_from_directory(
+  const fs::path & directory, std::vector<std::string> & descriptor_files,
+  bool require_plugin_filename)
+{
+  if (!fs::exists(directory) || !fs::is_directory(directory)) {
+    return;
+  }
+
+  for (fs::directory_iterator it(directory); it != fs::directory_iterator(); ++it) {
+    if (!fs::is_regular_file(it->status()) || it->path().extension() != ".json") {
+      continue;
+    }
+    if (
+      require_plugin_filename &&
+      it->path().filename().string().find("plugin") == std::string::npos) {
+      continue;
+    }
+    descriptor_files.push_back(it->path().string());
+  }
+}
+
+std::vector<std::string> split_env_paths(const char * env_value)
+{
+  std::vector<std::string> paths;
+  if (!env_value) {
+    return paths;
+  }
+
+  boost::split(paths, env_value, boost::is_any_of(":"));
+  paths.erase(
+    std::remove_if(paths.begin(), paths.end(), [](const std::string & path) { return path.empty(); }),
+    paths.end());
+  return paths;
+}
+
+void append_plugin_descriptors_from_share_path(
+  const fs::path & share_path, std::vector<std::string> & descriptor_files)
+{
+  if (!fs::exists(share_path) || !fs::is_directory(share_path)) {
+    return;
+  }
+
+  for (fs::directory_iterator it(share_path); it != fs::directory_iterator(); ++it) {
+    if (fs::is_directory(it->status())) {
+      append_json_files_from_directory(it->path(), descriptor_files, true);
+    }
+  }
+}
+
+void append_prefix_descriptor_files(
+  const std::string & prefix, std::vector<std::string> & descriptor_files)
+{
+  append_plugin_descriptors_from_share_path(fs::path(prefix) / "share", descriptor_files);
+
+  // Isolated colcon installs use <prefix>/<package>/share/<package>.
+  if (!fs::exists(prefix) || !fs::is_directory(prefix)) {
+    return;
+  }
+  for (fs::directory_iterator it(prefix); it != fs::directory_iterator(); ++it) {
+    if (fs::is_directory(it->status())) {
+      append_plugin_descriptors_from_share_path(it->path() / "share", descriptor_files);
+    }
+  }
+}
+
+std::vector<std::string> collect_descriptor_files(const std::vector<std::string> & search_paths)
+{
+  std::vector<std::string> descriptor_files;
+
+  for (const auto & path : search_paths) {
+    append_json_files_from_directory(path, descriptor_files, false);
+  }
+
+  for (const auto & path : split_env_paths(std::getenv("NEBULA_PLUGINS_PATH"))) {
+    append_json_files_from_directory(path, descriptor_files, false);
+  }
+
+  for (const auto & env_name : {"AMENT_PREFIX_PATH", "COLCON_PREFIX_PATH"}) {
+    for (const auto & prefix : split_env_paths(std::getenv(env_name))) {
+      append_prefix_descriptor_files(prefix, descriptor_files);
+    }
+  }
+
+  return descriptor_files;
+}
+
+std::optional<SensorPluginMetadata> parse_descriptor(const std::string & file_path)
+{
+  std::ifstream ifs(file_path);
+  nlohmann::json j = nlohmann::json::parse(ifs);
+
+  if (!j.contains("vendor") || !j.contains("package") || !j.contains("library")) {
+    return std::nullopt;
+  }
+
+  SensorPluginMetadata metadata;
+  metadata.vendor = j.at("vendor").get<std::string>();
+  metadata.package_name = j.at("package").get<std::string>();
+  metadata.library_path = j.at("library").get<std::string>();
+  metadata.factory_symbol = j.value("factory", "create_nebula_sensor_plugin");
+  metadata.descriptor_path = file_path;
+  metadata.package_share_path = fs::path(file_path).parent_path().string();
+  metadata.schema_path = resolve_descriptor_path(file_path, j.value("schema", ""));
+  metadata.config_defaults_path = resolve_descriptor_path(file_path, j.value("config_defaults", ""));
+  metadata.calibration_assets_path =
+    resolve_descriptor_path(file_path, j.value("calibration_assets", ""));
+
+  for (const auto & m : j.at("models")) {
+    metadata.supported_models.push_back(sensor_model_from_string(m.get<std::string>()));
+  }
+
+  metadata.library_path =
+    resolve_library_path(file_path, metadata.library_path, metadata.package_name);
+
+  return metadata;
+}
 }  // namespace
 
 SensorRegistry::~SensorRegistry()
@@ -133,109 +252,13 @@ void SensorRegistry::load_registry(const std::vector<std::string> & search_paths
       "before the registry is frozen");
   }
 
-  std::vector<std::string> descriptor_files;
-
-  // 1. Explicit search paths
-  for (const auto & path : search_paths) {
-    if (fs::exists(path) && fs::is_directory(path)) {
-      for (fs::directory_iterator it(path); it != fs::directory_iterator(); ++it) {
-        if (fs::is_regular_file(it->status()) && it->path().extension() == ".json") {
-          descriptor_files.push_back(it->path().string());
-        }
-      }
-    }
-  }
-
-  // 2. Add paths from NEBULA_PLUGINS_PATH
-  char * nebula_env = std::getenv("NEBULA_PLUGINS_PATH");
-  if (nebula_env) {
-    std::vector<std::string> env_paths;
-    boost::split(env_paths, nebula_env, boost::is_any_of(":"));
-    for (const auto & path : env_paths) {
-      if (fs::exists(path) && fs::is_directory(path)) {
-        for (fs::directory_iterator it(path); it != fs::directory_iterator(); ++it) {
-          if (fs::is_regular_file(it->status()) && it->path().extension() == ".json") {
-            descriptor_files.push_back(it->path().string());
-          }
-        }
-      }
-    }
-  }
-
-  // 3. Auto-discover from AMENT_PREFIX_PATH and COLCON_PREFIX_PATH
-  std::vector<std::string> prefix_envs = {"AMENT_PREFIX_PATH", "COLCON_PREFIX_PATH"};
-  for (const auto & env_name : prefix_envs) {
-    char * env_val = std::getenv(env_name.c_str());
-    if (env_val) {
-      std::vector<std::string> prefixes;
-      boost::split(prefixes, env_val, boost::is_any_of(":"));
-      for (const auto & prefix : prefixes) {
-        if (prefix.empty()) continue;
-
-        std::vector<fs::path> share_paths;
-        // Add <prefix>/share (merged install or ament prefix)
-        share_paths.push_back(fs::path(prefix) / "share");
-
-        // Add <prefix>/*/share (isolated colcon install)
-        if (fs::exists(prefix) && fs::is_directory(prefix)) {
-          for (fs::directory_iterator it(prefix); it != fs::directory_iterator(); ++it) {
-            if (fs::is_directory(it->status())) {
-              share_paths.push_back(it->path() / "share");
-            }
-          }
-        }
-
-        for (const auto & share_path : share_paths) {
-          if (fs::exists(share_path) && fs::is_directory(share_path)) {
-            for (fs::directory_iterator it(share_path); it != fs::directory_iterator(); ++it) {
-              if (fs::is_directory(it->status())) {
-                for (fs::directory_iterator pkg_it(it->path()); pkg_it != fs::directory_iterator();
-                     ++pkg_it) {
-                  if (
-                    fs::is_regular_file(pkg_it->status()) &&
-                    (pkg_it->path().extension() == ".json") &&
-                    (pkg_it->path().filename().string().find("plugin") != std::string::npos)) {
-                    descriptor_files.push_back(pkg_it->path().string());
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  for (const auto & file_path : descriptor_files) {
+  for (const auto & file_path : collect_descriptor_files(search_paths)) {
     try {
-      std::ifstream ifs(file_path);
-      nlohmann::json j = nlohmann::json::parse(ifs);
-
-      if (!j.contains("vendor") || !j.contains("package") || !j.contains("library")) {
+      auto metadata = parse_descriptor(file_path);
+      if (!metadata) {
         continue;
       }
-
-      SensorPluginMetadata metadata;
-      metadata.vendor = j.at("vendor").get<std::string>();
-      metadata.package_name = j.at("package").get<std::string>();
-      metadata.library_path = j.at("library").get<std::string>();
-      metadata.factory_symbol = j.value("factory", "create_nebula_sensor_plugin");
-      metadata.descriptor_path = file_path;
-      metadata.package_share_path = fs::path(file_path).parent_path().string();
-      metadata.schema_path = resolve_descriptor_path(file_path, j.value("schema", ""));
-      metadata.config_defaults_path =
-        resolve_descriptor_path(file_path, j.value("config_defaults", ""));
-      metadata.calibration_assets_path =
-        resolve_descriptor_path(file_path, j.value("calibration_assets", ""));
-
-      for (const auto & m : j.at("models")) {
-        metadata.supported_models.push_back(sensor_model_from_string(m.get<std::string>()));
-      }
-
-      metadata.library_path =
-        resolve_library_path(file_path, metadata.library_path, metadata.package_name);
-
-      registered_plugins_[metadata.package_name] = metadata;
+      registered_plugins_[metadata->package_name] = *metadata;
     } catch (const std::exception & e) {
       std::cerr << "Failed to parse plugin descriptor " << file_path << ": " << e.what()
                 << std::endl;

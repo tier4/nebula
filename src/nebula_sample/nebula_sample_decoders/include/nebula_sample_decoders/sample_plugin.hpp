@@ -48,7 +48,6 @@ class SampleSensorPlugin : public SensorPlugin
 {
 public:
   SensorPluginMetadata metadata() const override;
-  std::vector<SensorModelInfo> supported_models() const override;
   std::vector<PacketChannelRequirement> packet_requirements(
     const SensorConfiguration & config) const override;
   std::vector<LiveTransportRequirement> live_transport_requirements(

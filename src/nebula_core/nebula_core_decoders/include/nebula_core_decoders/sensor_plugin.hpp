@@ -35,7 +35,6 @@ public:
   virtual ~SensorPlugin() noexcept = default;
 
   virtual SensorPluginMetadata metadata() const = 0;
-  virtual std::vector<SensorModelInfo> supported_models() const = 0;
 
   virtual std::vector<PacketChannelRequirement> packet_requirements(
     const SensorConfiguration & config) const = 0;

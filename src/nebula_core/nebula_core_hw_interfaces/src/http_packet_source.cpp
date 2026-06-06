@@ -14,9 +14,9 @@
 
 #include <nebula_core_hw_interfaces/http_packet_source.hpp>
 
-#include <cassert>
+#include "packet_source_utils.hpp"
+
 #include <chrono>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <thread>
@@ -53,32 +53,15 @@ void HttpPacketSource::set_error_callback(SensorErrorCallback callback)
 
 void HttpPacketSource::start()
 {
-  // Lifecycle calls from the worker thread itself are prohibited.
-  assert(
-    (!thread_.joinable() || thread_.get_id() != std::this_thread::get_id()) &&
-    "start() must not be called from the worker thread");
-  if (running_ && running_->load()) return;
-  if (thread_.joinable()) {
-    thread_.join();
-  }
-
-  running_ = std::make_shared<std::atomic<bool>>(true);
-  thread_ = std::thread(
-    &HttpPacketSource::run, running_, host_ip_, port_, path_, callback_, error_callback_);
+  start_worker_thread(running_, thread_, [this](std::shared_ptr<std::atomic<bool>> running) {
+    return std::thread(
+      &HttpPacketSource::run, running, host_ip_, port_, path_, callback_, error_callback_);
+  });
 }
 
 void HttpPacketSource::stop()
 {
-  // Reject self-stop instead of detaching: see the PCAP source for rationale.
-  assert(
-    (!thread_.joinable() || thread_.get_id() != std::this_thread::get_id()) &&
-    "stop() must not be called from the worker thread");
-  if (running_) {
-    running_->store(false);
-  }
-  if (thread_.joinable()) {
-    thread_.join();
-  }
+  stop_worker_thread(running_, thread_);
 }
 
 bool HttpPacketSource::is_running() const
@@ -94,12 +77,9 @@ void HttpPacketSource::run(
   try {
     client = std::make_unique<connections::HttpClient>(host_ip, port);
   } catch (const std::exception & e) {
-    if (error_callback) {
-      SensorError error;
-      error.type = SensorErrorType::ConfigError;
-      error.message = std::string("HttpPacketSource: failed to create HTTP client: ") + e.what();
-      error_callback(error);
-    }
+    report_transport_error(
+      error_callback, SensorErrorType::ConfigError,
+      std::string("HttpPacketSource: failed to create HTTP client: ") + e.what());
     running->store(false);
     return;
   }
@@ -109,12 +89,7 @@ void HttpPacketSource::run(
     try {
       response = client->get(path, 1000);
     } catch (const std::exception & e) {
-      if (error_callback) {
-        SensorError error;
-        error.type = SensorErrorType::TransportError;
-        error.message = e.what();
-        error_callback(error);
-      }
+      report_transport_error(error_callback, SensorErrorType::TransportError, e.what());
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
       continue;
     }
@@ -129,14 +104,7 @@ void HttpPacketSource::run(
       sp.destination = SensorEndpoint{host_ip, port};
       sp.payload.assign(response.begin(), response.end());
 
-      // User-callback exceptions are non-fatal and do not stop the source.
-      try {
-        callback(sp);
-      } catch (const std::exception & e) {
-        std::cerr << "HttpPacketSource: user callback threw: " << e.what() << std::endl;
-      } catch (...) {
-        std::cerr << "HttpPacketSource: user callback threw a non-std::exception" << std::endl;
-      }
+      invoke_packet_callback("HttpPacketSource", callback, sp);
     }
 
     // Basic polling interval for HTTP source

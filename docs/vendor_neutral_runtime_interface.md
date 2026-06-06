@@ -26,9 +26,6 @@ concerns from sensor-specific implementation.
 
 ## Naming
 
-The extraction branch is named `feat/vendor_neutral_runtime_interface`. In
-public documentation and PR text, use `vendor-neutral runtime interface`.
-
 Avoid calling this layer a harness. The runtime interface is broader than a
 test harness because it includes plugin contracts, packet sources, packet
 routing, and session runners. It is narrower than a full driver because it does
@@ -162,7 +159,7 @@ vendor-specific configuration structs during `configure()`.
 
 Each plugin implements `SensorPlugin`. The plugin is responsible for:
 
-- returning metadata and supported models,
+- returning metadata, including supported models,
 - declaring packet-channel requirements,
 - declaring live transport requirements, and
 - constructing a decoder runtime.
@@ -540,7 +537,7 @@ A minimal plugin implementation should:
 2. Export a shared library with all three lifecycle symbols:
    `create_nebula_sensor_plugin`, `destroy_nebula_sensor_plugin`, and
    `nebula_plugin_abi_version`.
-3. Implement `SensorPlugin::metadata()` and `supported_models()`.
+3. Implement `SensorPlugin::metadata()`, including the supported model list.
 4. Implement `packet_requirements()` for the packet types the decoder accepts.
 5. Implement `live_transport_requirements()` for live operation.
 6. Implement a `SensorDecoderRuntime` whose `process_packet()` accepts a
@@ -586,9 +583,10 @@ remain the only packages that depend directly on ROS 2 APIs.
 
 ## Compatibility model
 
-This branch is additive relative to the existing driver stack. It adds common
-types, plugin contracts, packet sources, routing, and session runners without
-changing the production Hesai, Robosense, or Velodyne decoder paths.
+The runtime interface is additive relative to the existing driver stack. It
+adds common types, plugin contracts, packet sources, routing, and session
+runners without changing the production Hesai, Robosense, or Velodyne decoder
+paths.
 
 Backward compatibility for existing deployments comes from leaving those
 drivers on their current APIs. Forward compatibility for the runtime interface
@@ -604,12 +602,11 @@ can opt into the runtime contracts.
 ## Current boundaries
 
 The runtime interface does not replace existing production vendor drivers in
-this branch. It also does not include vendor-specific runtime adapters from the
-broader `feat/vendor_neutral_interface` work.
+the initial interface layer.
 
 Existing Hesai, Robosense, and Velodyne ROS drivers are not migrated by this
-branch. They continue to build and run through their existing decoder and
-hardware-interface paths, subject to their current behavior on `main`.
+interface layer. They continue to build and run through their existing decoder
+and hardware-interface paths.
 
 The new runtime API can only instantiate plugins that implement `SensorPlugin`,
 export the required lifecycle symbols, and provide a plugin descriptor. Existing

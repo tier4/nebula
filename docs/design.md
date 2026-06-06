@@ -1,7 +1,5 @@
 # Nebula design
 
-WIP - please check back soon!
-
 For the generic plugin, replay, and live runtime architecture, see the
 [vendor-neutral runtime interface](vendor_neutral_runtime_interface.md).
 

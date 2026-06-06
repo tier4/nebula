@@ -142,11 +142,6 @@ SensorPluginMetadata SampleSensorPlugin::metadata() const
   return md;
 }
 
-std::vector<SensorModelInfo> SampleSensorPlugin::supported_models() const
-{
-  return {{SensorModel::SAMPLE, "Sample", "Nebula Sample LiDAR Sensor"}};
-}
-
 std::vector<PacketChannelRequirement> SampleSensorPlugin::packet_requirements(
   const SensorConfiguration & config) const
 {

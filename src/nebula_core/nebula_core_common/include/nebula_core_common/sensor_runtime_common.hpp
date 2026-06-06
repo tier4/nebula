@@ -25,13 +25,6 @@
 
 namespace nebula::drivers
 {
-struct SensorModelInfo
-{
-  SensorModel model;
-  std::string name;
-  std::string description;
-};
-
 // Plugin-identity fields are owned by the plugin's metadata() method:
 // vendor, package_name, library_path, factory_symbol, supported_models.
 // Filesystem-path fields (descriptor_path, package_share_path, schema_path,

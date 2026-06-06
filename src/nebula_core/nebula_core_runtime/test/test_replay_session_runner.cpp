@@ -14,7 +14,8 @@
 
 #include <nebula_core_runtime/replay_session_runner.hpp>
 
-#include <boost/algorithm/string.hpp>
+#include "sample_plugin_test_utils.hpp"
+
 #include <boost/filesystem.hpp>
 
 #include <dlfcn.h>
@@ -30,8 +31,6 @@
 
 namespace nebula::drivers::test
 {
-namespace fs = boost::filesystem;
-
 namespace
 {
 void append_u16_be(std::vector<uint8_t> & bytes, uint16_t value)
@@ -121,48 +120,8 @@ protected:
     test_dir_ = fs::temp_directory_path() / fs::unique_path();
     fs::create_directories(test_dir_);
 
-    std::vector<std::string> prefix_envs = {"AMENT_PREFIX_PATH", "COLCON_PREFIX_PATH"};
-    for (const auto & env_name : prefix_envs) {
-      char * env_val = std::getenv(env_name.c_str());
-      if (env_val) {
-        std::vector<std::string> prefixes;
-        boost::split(prefixes, env_val, boost::is_any_of(":"));
-        for (const auto & prefix : prefixes) {
-          if (prefix.empty()) continue;
-          // Try common lib
-          fs::path p1 = fs::path(prefix) / "lib" / "libnebula_sample_decoders_plugin.so";
-          if (fs::exists(p1)) {
-            plugin_library_path_ = p1.string();
-            break;
-          }
-          // Try isolated lib
-          fs::path p2 = fs::path(prefix) / "nebula_sample_decoders" / "lib" /
-                        "libnebula_sample_decoders_plugin.so";
-          if (fs::exists(p2)) {
-            plugin_library_path_ = p2.string();
-            break;
-          }
-        }
-        if (!plugin_library_path_.empty()) break;
-      }
-    }
-
-    if (plugin_library_path_.empty()) {
-      fs::path install_prefix(NEBULA_TEST_INSTALL_PREFIX);
-      fs::path isolated = install_prefix.parent_path() / "nebula_sample_decoders" / "lib" /
-                          "libnebula_sample_decoders_plugin.so";
-      if (fs::exists(isolated)) {
-        plugin_library_path_ = isolated.string();
-      }
-    }
-
-    if (!plugin_library_path_.empty() && fs::exists(plugin_library_path_)) {
-      fs::path dep = fs::path(plugin_library_path_).parent_path() / "libnebula_sample_decoders.so";
-      if (fs::exists(dep)) {
-        dependency_handle_ = dlopen(dep.string().c_str(), RTLD_LAZY | RTLD_GLOBAL);
-        ASSERT_NE(dependency_handle_, nullptr) << dlerror();
-      }
-    }
+    plugin_library_path_ = find_sample_plugin_library();
+    ASSERT_NO_THROW(dependency_handle_ = load_sample_plugin_dependency(plugin_library_path_));
   }
 
   void TearDown() override

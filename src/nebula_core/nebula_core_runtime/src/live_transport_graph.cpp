@@ -34,6 +34,26 @@ uint16_t require_port(const LiveTransportRequirement & requirement)
   }
   return *requirement.port;
 }
+
+template <typename CallbackT, typename ArgT>
+void invoke_user_callback(
+  const char * owner_name, const char * callback_name, const CallbackT & callback,
+  const ArgT & arg)
+{
+  if (!callback) {
+    return;
+  }
+
+  try {
+    callback(arg);
+  } catch (const std::exception & e) {
+    std::cerr << owner_name << ": " << callback_name << " callback threw: " << e.what()
+              << std::endl;
+  } catch (...) {
+    std::cerr << owner_name << ": " << callback_name
+              << " callback threw a non-std::exception" << std::endl;
+  }
+}
 }  // namespace
 
 LiveTransportGraph::LiveTransportGraph(std::shared_ptr<SensorRegistry> registry)
@@ -108,8 +128,8 @@ void LiveTransportGraph::configure(const LiveSessionConfig & config)
     } else if (req.transport == SensorTransportKind::CAN) {
       auto source = std::make_shared<CanPacketSource>();
       std::string interface = "can0";
-      if (config.extra_params.count("can_interface")) {
-        interface = config.extra_params.at("can_interface");
+      if (config.sensor_config.extra_params.count("can_interface")) {
+        interface = config.sensor_config.extra_params.at("can_interface");
       }
       source->configure(interface);
       source->set_error_callback(
@@ -285,18 +305,7 @@ void LiveTransportGraph::on_output(const SensorDecodedOutput & output)
     output_callback = output_callback_;
   }
 
-  if (!output_callback) return;
-
-  // User-callback exceptions are non-fatal here. The graph keeps running and
-  // logs to stderr; see the threading contract in
-  // docs/vendor_neutral_runtime_interface.md.
-  try {
-    output_callback(output);
-  } catch (const std::exception & e) {
-    std::cerr << "LiveTransportGraph: output callback threw: " << e.what() << std::endl;
-  } catch (...) {
-    std::cerr << "LiveTransportGraph: output callback threw a non-std::exception" << std::endl;
-  }
+  invoke_user_callback("LiveTransportGraph", "output", output_callback, output);
 }
 
 void LiveTransportGraph::on_error(const SensorError & error)
@@ -308,15 +317,7 @@ void LiveTransportGraph::on_error(const SensorError & error)
     error_callback = error_callback_;
   }
 
-  if (!error_callback) return;
-
-  try {
-    error_callback(error);
-  } catch (const std::exception & e) {
-    std::cerr << "LiveTransportGraph: error callback threw: " << e.what() << std::endl;
-  } catch (...) {
-    std::cerr << "LiveTransportGraph: error callback threw a non-std::exception" << std::endl;
-  }
+  invoke_user_callback("LiveTransportGraph", "error", error_callback, error);
 }
 
 void LiveTransportGraph::on_progress(const SensorProgress & progress)
@@ -328,15 +329,7 @@ void LiveTransportGraph::on_progress(const SensorProgress & progress)
     progress_callback = progress_callback_;
   }
 
-  if (!progress_callback) return;
-
-  try {
-    progress_callback(progress);
-  } catch (const std::exception & e) {
-    std::cerr << "LiveTransportGraph: progress callback threw: " << e.what() << std::endl;
-  } catch (...) {
-    std::cerr << "LiveTransportGraph: progress callback threw a non-std::exception" << std::endl;
-  }
+  invoke_user_callback("LiveTransportGraph", "progress", progress_callback, progress);
 }
 
 }  // namespace nebula::drivers
