@@ -80,22 +80,7 @@ TEST(TestCoreTypes, ReturnModeRoundTrip)
     {ReturnMode::SINGLE_FIRST, "SingleFirst"},
     {ReturnMode::SINGLE_STRONGEST, "SingleStrongest"},
     {ReturnMode::SINGLE_LAST, "SingleLast"},
-    {ReturnMode::DUAL_ONLY, "DualOnly"},
-    {ReturnMode::DUAL_FIRST, "DualFirst"},
-    {ReturnMode::DUAL_LAST, "DualLast"},
-    {ReturnMode::DUAL_WEAK_FIRST, "WeakFirst"},
-    {ReturnMode::DUAL_WEAK_LAST, "WeakLast"},
-    {ReturnMode::DUAL_STRONGEST_LAST, "StrongLast"},
-    {ReturnMode::DUAL_STRONGEST_FIRST, "StrongFirst"},
-    {ReturnMode::TRIPLE, "Triple"},
-    {ReturnMode::LAST, "Last"},
-    {ReturnMode::STRONGEST, "Strongest"},
-    {ReturnMode::DUAL_LAST_STRONGEST, "LastStrongest"},
-    {ReturnMode::FIRST, "First"},
-    {ReturnMode::DUAL_LAST_FIRST, "LastFirst"},
-    {ReturnMode::DUAL_FIRST_STRONGEST, "FirstStrongest"},
-    {ReturnMode::DUAL, "Dual"},
-    {ReturnMode::UNKNOWN, "Unknown"},
+    {ReturnMode::DUAL_ONLY, "Dual"},
   };
 
   for (const auto & test_case : cases) {
@@ -104,6 +89,11 @@ TEST(TestCoreTypes, ReturnModeRoundTrip)
     EXPECT_EQ(stream.str(), test_case.second);
     EXPECT_EQ(return_mode_from_string(test_case.second), test_case.first);
   }
+
+  EXPECT_EQ(return_mode_from_string("DualOnly"), ReturnMode::UNKNOWN);
+  EXPECT_EQ(return_mode_from_string("LastStrongest"), ReturnMode::UNKNOWN);
+  EXPECT_EQ(return_mode_from_string("FirstStrongest"), ReturnMode::UNKNOWN);
+  EXPECT_EQ(return_mode_from_string("Unknown"), ReturnMode::UNKNOWN);
 }
 
 int main(int argc, char ** argv)

@@ -1,9 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
 project(nebula_core_decoders)
-# cspell: ignore CPACK ARGN
 
+set(NEBULA_CORE_DECODERS_USE_ROS OFF)
 if(DEFINED ENV{AMENT_PREFIX_PATH})
+    set(NEBULA_CORE_DECODERS_USE_ROS ON)
     find_package(autoware_cmake REQUIRED)
+    # TODO(drwnz): remove this ROS compatibility dependency once  # cspell: ignore drwnz
+    # vendor implementations no longer include the legacy driver base.
+    find_package(sensor_msgs REQUIRED)
 endif()
 
 find_package(PNG REQUIRED)
@@ -20,6 +24,11 @@ target_include_directories(
 target_link_libraries(nebula_core_decoders INTERFACE PNG::PNG Eigen3::Eigen
                                                      Boost::headers
                                                      nebula_core_common::nebula_core_common)
+if(DEFINED ENV{AMENT_PREFIX_PATH})
+  # TODO(drwnz): remove this when vendor implementations use  # cspell: ignore drwnz
+  # the vendor-neutral runtime interfaces directly.
+  ament_target_dependencies(nebula_core_decoders INTERFACE sensor_msgs)
+endif()
 
 # Standard CMake install and config generation
 include(CMakePackageConfigHelpers)
@@ -90,7 +99,9 @@ endif()
 if(DEFINED ENV{AMENT_PREFIX_PATH})
     ament_export_include_directories(include)
     ament_export_targets(export_${PROJECT_NAME})
-    ament_export_dependencies(Boost nebula_core_common PNG Eigen3)
+    # TODO(drwnz): remove sensor_msgs after the legacy  # cspell: ignore drwnz
+    # ROS-facing vendor decoder base is no longer part of this interface.
+    ament_export_dependencies(Boost nebula_core_common sensor_msgs PNG Eigen3)
     autoware_package()
     ament_package()
 endif()

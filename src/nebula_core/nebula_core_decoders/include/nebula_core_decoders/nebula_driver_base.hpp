@@ -18,6 +18,8 @@
 #include "nebula_core_common/nebula_common.hpp"
 #include "nebula_core_common/nebula_status.hpp"
 
+#include <sensor_msgs/msg/point_cloud2.hpp>
+
 #include <string>
 #include <vector>
 
