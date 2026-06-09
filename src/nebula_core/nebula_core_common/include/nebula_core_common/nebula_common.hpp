@@ -1,4 +1,4 @@
-// Copyright 2024 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -203,7 +203,8 @@ enum class SensorModel : uint8_t {
   ROBOSENSE_BPEARL_V3,
   ROBOSENSE_BPEARL_V4,
   CONTINENTAL_ARS548,
-  CONTINENTAL_SRR520
+  CONTINENTAL_SRR520,
+  SAMPLE
 };
 
 enum class PtpProfile : uint8_t {
@@ -290,6 +291,9 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
     case SensorModel::CONTINENTAL_SRR520:
       os << "SRR520";
       break;
+    case SensorModel::SAMPLE:
+      os << "Sample";
+      break;
     case SensorModel::UNKNOWN:
       os << "Sensor Unknown";
       break;
@@ -300,7 +304,7 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::SensorModel
 /// @brief Base struct for Sensor configuration
 struct SensorConfigurationBase
 {
-  SensorModel sensor_model;
+  SensorModel sensor_model{SensorModel::UNKNOWN};
   std::string frame_id;
 };
 
@@ -327,10 +331,10 @@ struct CANSensorConfigurationBase : public SensorConfigurationBase
 /// @brief Base struct for Lidar configuration
 struct LidarConfigurationBase : public EthernetSensorConfigurationBase
 {
-  ReturnMode return_mode;
-  uint16_t packet_mtu_size;
-  double min_range;
-  double max_range;
+  ReturnMode return_mode{ReturnMode::UNKNOWN};
+  uint16_t packet_mtu_size{};
+  double min_range{0.1};
+  double max_range{200.0};
   bool use_sensor_time{false};
 };
 
@@ -424,6 +428,8 @@ inline SensorModel sensor_model_from_string(const std::string & sensor_model)
   // Continental
   if (sensor_model == "ARS548") return SensorModel::CONTINENTAL_ARS548;
   if (sensor_model == "SRR520") return SensorModel::CONTINENTAL_SRR520;
+  // Sample
+  if (sensor_model == "Sample") return SensorModel::SAMPLE;
   return SensorModel::UNKNOWN;
 }
 
@@ -476,6 +482,8 @@ inline std::string sensor_model_to_string(const SensorModel & sensor_model)
       return "ARS548";
     case SensorModel::CONTINENTAL_SRR520:
       return "SRR520";
+    case SensorModel::SAMPLE:
+      return "Sample";
     default:
       return "UNKNOWN";
   }
@@ -537,4 +545,4 @@ static inline double rpm2hz(double rpm)
 
 }  // namespace nebula::drivers
 
-#endif  // NEBULA_CONFIGURATION_BASE_H
+#endif  // NEBULA_COMMON_H
