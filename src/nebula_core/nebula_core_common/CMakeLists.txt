@@ -25,6 +25,9 @@ if(BUILD_TESTING)
   ament_add_gtest(test_rate_checker test/test_rate_checker.cpp)
   target_link_libraries(test_rate_checker nebula_core_common)
 
+  ament_add_gtest(test_core_types test/test_core_types.cpp)
+  target_link_libraries(test_core_types nebula_core_common)
+
   ament_add_gtest(test_pcd_io test/test_pcd_io.cpp)
   target_link_libraries(test_pcd_io nebula_core_common)
   target_compile_definitions(
