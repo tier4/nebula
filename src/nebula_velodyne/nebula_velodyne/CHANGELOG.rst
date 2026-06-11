@@ -2,6 +2,17 @@
 Changelog for package nebula_velodyne
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.1 (2026-06-03)
+------------------
+* fix(nebula_velodyne): fix inconsistent angle units in phase_diff logic (`#441 <https://github.com/tier4/nebula/issues/441>`_)
+  * Fix inconsistent angle units in phase_diff logic
+  * Replace magic number 90 with named constant for angle threshold
+  * Update VLP16 decoder test to handle angle unit mismatch
+  * Regenerate ground truth PCDs using PCDWriter
+  * Revert "Update VLP16 decoder test to handle angle unit mismatch"
+  This reverts commit 313a80c6e484e7e02291b8949f322880bf46f0dc.
+* Contributors: koji-oka-fsi
+
 1.0.0 (2026-04-06)
 ------------------
 
