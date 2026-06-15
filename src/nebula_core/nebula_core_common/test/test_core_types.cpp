@@ -31,9 +31,9 @@ TEST(TestCoreTypes, ReturnModeRoundTrip)
     {ReturnMode::SINGLE_FIRST, "SingleFirst"},
     {ReturnMode::SINGLE_LAST, "SingleLast"},
     {ReturnMode::SINGLE_STRONGEST, "SingleStrongest"},
-    {ReturnMode::DUAL_FIRST_LAST, "LastFirst"},
+    {ReturnMode::DUAL_FIRST_LAST, "FirstLast"},
     {ReturnMode::DUAL_FIRST_STRONGEST, "FirstStrongest"},
-    {ReturnMode::DUAL_STRONGEST_LAST, "LastStrongest"},
+    {ReturnMode::DUAL_STRONGEST_LAST, "StrongestLast"},
     {ReturnMode::TRIPLE, "Triple"},
   };
 
@@ -48,8 +48,8 @@ TEST(TestCoreTypes, ReturnModeRoundTrip)
   EXPECT_EQ(return_mode_from_string("Last"), ReturnMode::SINGLE_LAST);
   EXPECT_EQ(return_mode_from_string("Strongest"), ReturnMode::SINGLE_STRONGEST);
   EXPECT_EQ(return_mode_from_string("Dual"), ReturnMode::DUAL_STRONGEST_LAST);
-  EXPECT_EQ(return_mode_from_string("FirstLast"), ReturnMode::DUAL_FIRST_LAST);
-  EXPECT_EQ(return_mode_from_string("StrongestLast"), ReturnMode::DUAL_STRONGEST_LAST);
+  EXPECT_EQ(return_mode_from_string("LastFirst"), ReturnMode::DUAL_FIRST_LAST);
+  EXPECT_EQ(return_mode_from_string("LastStrongest"), ReturnMode::DUAL_STRONGEST_LAST);
 
   EXPECT_EQ(return_mode_from_string("DualOnly"), ReturnMode::UNKNOWN);
   EXPECT_EQ(return_mode_from_string("DualFirst"), ReturnMode::UNKNOWN);
