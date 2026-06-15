@@ -124,7 +124,7 @@ public:
         return ReturnType::LAST;
       case ReturnMode::SINGLE_STRONGEST:
         return ReturnType::STRONGEST;
-      case ReturnMode::DUAL:
+      case ReturnMode::DUAL_STRONGEST_LAST:
         if (return_idx == 0) {
           return ReturnType::STRONGEST;
         } else {

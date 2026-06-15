@@ -44,7 +44,7 @@ Vlp32Decoder::Vlp32Decoder(
   double full_firing_cycle = 55.296 * 1e-6;  // seconds
   double single_firing = 2.304 * 1e-6;       // seconds
   double dataBlockIndex, dataPointIndex;
-  bool dual_mode = sensor_configuration_->return_mode == ReturnMode::DUAL;
+  bool dual_mode = sensor_configuration_->return_mode == ReturnMode::DUAL_STRONGEST_LAST;
   // compute timing offsets
   for (size_t x = 0; x < timing_offsets_.size(); ++x) {
     for (size_t y = 0; y < timing_offsets_[x].size(); ++y) {

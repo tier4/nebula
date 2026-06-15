@@ -270,7 +270,8 @@ TEST_F(TestVelodyneHwInterface, TestHTTPMethods)
     hw_interface_->set_return_type(nebula::drivers::ReturnMode::SINGLE_STRONGEST),
     nebula::Status::OK);
   EXPECT_EQ(
-    hw_interface_->set_return_type(nebula::drivers::ReturnMode::DUAL_ONLY), nebula::Status::OK);
+    hw_interface_->set_return_type(nebula::drivers::ReturnMode::DUAL_STRONGEST_LAST),
+    nebula::Status::OK);
 
   EXPECT_EQ(hw_interface_->save_config(), nebula::Status::OK);
   EXPECT_EQ(hw_interface_->reset_system(), nebula::Status::OK);
@@ -300,8 +301,9 @@ TEST_F(TestVelodyneHwInterface, TestSetSensorConfiguration)
 
   // The mock snapshot returns rpm 600, returns Strongest, fov start 0 end 359
   auto new_config = std::make_shared<nebula::drivers::VelodyneSensorConfiguration>(*config_);
-  new_config->rotation_speed = 1200;                                 // triggers set_rpm
-  new_config->return_mode = nebula::drivers::ReturnMode::DUAL_ONLY;  // triggers set_return_type
+  new_config->rotation_speed = 1200;  // triggers set_rpm
+  new_config->return_mode =
+    nebula::drivers::ReturnMode::DUAL_STRONGEST_LAST;  // triggers set_return_type
   new_config->cloud_min_angle = 10;
   new_config->cloud_max_angle = 350;
 

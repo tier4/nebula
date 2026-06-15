@@ -315,7 +315,7 @@ VelodyneStatus VelodyneHwInterface::set_return_type(nebula::drivers::ReturnMode 
     case nebula::drivers::ReturnMode::SINGLE_LAST:
       body_str = "returns=Last";
       break;
-    case nebula::drivers::ReturnMode::DUAL_ONLY:
+    case nebula::drivers::ReturnMode::DUAL_STRONGEST_LAST:
       body_str = "returns=Dual";
       break;
     default:

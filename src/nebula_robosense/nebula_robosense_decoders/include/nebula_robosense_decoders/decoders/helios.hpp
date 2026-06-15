@@ -262,7 +262,7 @@ public:
     const uint32_t block_id, const uint32_t channel_id,
     const std::shared_ptr<const RobosenseSensorConfiguration> & sensor_configuration) override
   {
-    if (sensor_configuration->return_mode == ReturnMode::DUAL)
+    if (sensor_configuration->return_mode == ReturnMode::DUAL_STRONGEST_LAST)
       return firing_time_offset_ns_dual[block_id][channel_id];
     else
       return firing_time_offset_ns_single[block_id][channel_id];
@@ -272,7 +272,7 @@ public:
   {
     switch (info_packet.return_mode.value()) {
       case dual_return_flag:
-        return ReturnMode::DUAL;
+        return ReturnMode::DUAL_STRONGEST_LAST;
       case strongest_return_flag:
         return ReturnMode::SINGLE_STRONGEST;
       case last_return_flag:
