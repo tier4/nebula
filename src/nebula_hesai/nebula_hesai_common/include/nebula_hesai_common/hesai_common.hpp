@@ -625,16 +625,22 @@ inline ReturnMode return_mode_from_string_hesai(
     case SensorModel::HESAI_PANDARQT128:
       if (return_mode == "Last") return ReturnMode::SINGLE_LAST;
       if (return_mode == "Strongest") return ReturnMode::SINGLE_STRONGEST;
-      if (return_mode == "Dual" || return_mode == "LastStrongest" || return_mode == "StrongestLast")
+      if (
+        return_mode == "Dual" || return_mode == "DualStrongestLast" ||
+        return_mode == "StrongestLast" || return_mode == "LastStrongest")
         return ReturnMode::DUAL_STRONGEST_LAST;
       if (return_mode == "First") return ReturnMode::SINGLE_FIRST;
-      if (return_mode == "LastFirst" || return_mode == "FirstLast")
+      if (
+        return_mode == "DualFirstLast" || return_mode == "FirstLast" || return_mode == "LastFirst")
         return ReturnMode::DUAL_FIRST_LAST;
-      if (return_mode == "FirstStrongest") return ReturnMode::DUAL_FIRST_STRONGEST;
+      if (return_mode == "DualFirstStrongest" || return_mode == "FirstStrongest")
+        return ReturnMode::DUAL_FIRST_STRONGEST;
       break;
     case SensorModel::HESAI_PANDARQT64:
       if (return_mode == "Last") return ReturnMode::SINGLE_LAST;
-      if (return_mode == "Dual" || return_mode == "LastFirst" || return_mode == "FirstLast")
+      if (
+        return_mode == "Dual" || return_mode == "DualFirstLast" || return_mode == "FirstLast" ||
+        return_mode == "LastFirst")
         return ReturnMode::DUAL_FIRST_LAST;
       if (return_mode == "First") return ReturnMode::SINGLE_FIRST;
       break;
@@ -643,7 +649,9 @@ inline ReturnMode return_mode_from_string_hesai(
     case SensorModel::HESAI_PANDAR40P:
       if (return_mode == "Last") return ReturnMode::SINGLE_LAST;
       if (return_mode == "Strongest") return ReturnMode::SINGLE_STRONGEST;
-      if (return_mode == "Dual" || return_mode == "LastStrongest" || return_mode == "StrongestLast")
+      if (
+        return_mode == "Dual" || return_mode == "DualStrongestLast" ||
+        return_mode == "StrongestLast" || return_mode == "LastStrongest")
         return ReturnMode::DUAL_STRONGEST_LAST;
       break;
     default:

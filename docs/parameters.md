@@ -92,16 +92,17 @@ Depending on perception requirements, one might be interested in specific return
 This parameter is used to set this preference.
 
 The canonical return mode strings are `SingleFirst`, `SingleLast`, `SingleStrongest`,
-`FirstLast`, `FirstStrongest`, `StrongestLast`, and `Triple`. For compatibility with
-existing configuration files, Nebula also accepts the aliases `First`, `Last`, `Strongest`,
-`Dual`, `LastFirst`, and `LastStrongest` where they are valid for the selected sensor
-model. Individual sensor schemas restrict this parameter to the return modes supported
-by that model.
+`DualFirstLast`, `DualFirstStrongest`, `DualStrongestLast`, and `Triple`. For
+compatibility with existing configuration files, Nebula also accepts the aliases `First`,
+`Last`, `Strongest`, `Dual`, `FirstLast`, `LastFirst`, `FirstStrongest`,
+`StrongestLast`, and `LastStrongest` where they are valid for the selected sensor model.
+Individual sensor schemas restrict this parameter to the return modes supported by that
+model.
 
 Sensor manufacturers often name dual return modes after the return order in the UDP
 packet structure. For example, one sensor may expose the same conceptual strongest/last
 mode as `LastStrongest` because that is the packet order, while Nebula's canonical name
-is `StrongestLast`. These names describe the same return selection, so Nebula accepts
+is `DualStrongestLast`. These names describe the same return selection, so Nebula accepts
 manufacturer-specific aliases where needed.
 
 ### `dual_return_distance_threshold`
