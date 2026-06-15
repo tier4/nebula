@@ -21,6 +21,8 @@
         "SingleStrongest",
         "SingleLast",
         "Dual",
+        "DualStrongestLast",
+        "StrongestLast",
         "SingleFirst"
       ]
     },

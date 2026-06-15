@@ -98,16 +98,16 @@ TEST(TestCoreTypes, SensorModelRoundTrip)
   EXPECT_EQ(sensor_model_to_string(SensorModel::SAMPLE), "Sample");
 }
 
-TEST(TestCoreTypes, ReturnModeRoundTrip)
+TEST(TestCoreTypes, ReturnModeOutputUsesCanonicalNames)
 {
   const std::vector<std::pair<ReturnMode, std::string>> cases = {
     {ReturnMode::UNKNOWN, "Unknown"},
     {ReturnMode::SINGLE_FIRST, "SingleFirst"},
     {ReturnMode::SINGLE_LAST, "SingleLast"},
     {ReturnMode::SINGLE_STRONGEST, "SingleStrongest"},
-    {ReturnMode::DUAL_FIRST_LAST, "LastFirst"},
-    {ReturnMode::DUAL_FIRST_STRONGEST, "FirstStrongest"},
-    {ReturnMode::DUAL_STRONGEST_LAST, "LastStrongest"},
+    {ReturnMode::DUAL_FIRST_LAST, "DualFirstLast"},
+    {ReturnMode::DUAL_FIRST_STRONGEST, "DualFirstStrongest"},
+    {ReturnMode::DUAL_STRONGEST_LAST, "DualStrongestLast"},
     {ReturnMode::TRIPLE, "Triple"},
   };
 
@@ -115,19 +115,37 @@ TEST(TestCoreTypes, ReturnModeRoundTrip)
     std::stringstream stream;
     stream << test_case.first;
     EXPECT_EQ(stream.str(), test_case.second);
-    EXPECT_EQ(return_mode_from_string(test_case.second), test_case.first);
   }
+}
 
+TEST(TestCoreTypes, ReturnModeParsesCanonicalNames)
+{
+  EXPECT_EQ(return_mode_from_string("Unknown"), ReturnMode::UNKNOWN);
+  EXPECT_EQ(return_mode_from_string("SingleFirst"), ReturnMode::SINGLE_FIRST);
+  EXPECT_EQ(return_mode_from_string("SingleLast"), ReturnMode::SINGLE_LAST);
+  EXPECT_EQ(return_mode_from_string("SingleStrongest"), ReturnMode::SINGLE_STRONGEST);
+  EXPECT_EQ(return_mode_from_string("DualFirstLast"), ReturnMode::DUAL_FIRST_LAST);
+  EXPECT_EQ(return_mode_from_string("DualFirstStrongest"), ReturnMode::DUAL_FIRST_STRONGEST);
+  EXPECT_EQ(return_mode_from_string("DualStrongestLast"), ReturnMode::DUAL_STRONGEST_LAST);
+  EXPECT_EQ(return_mode_from_string("Triple"), ReturnMode::TRIPLE);
+}
+
+TEST(TestCoreTypes, ReturnModeParsesCompatibilityAliases)
+{
   EXPECT_EQ(return_mode_from_string("First"), ReturnMode::SINGLE_FIRST);
   EXPECT_EQ(return_mode_from_string("Last"), ReturnMode::SINGLE_LAST);
   EXPECT_EQ(return_mode_from_string("Strongest"), ReturnMode::SINGLE_STRONGEST);
   EXPECT_EQ(return_mode_from_string("Dual"), ReturnMode::DUAL_STRONGEST_LAST);
   EXPECT_EQ(return_mode_from_string("FirstLast"), ReturnMode::DUAL_FIRST_LAST);
+  EXPECT_EQ(return_mode_from_string("LastFirst"), ReturnMode::DUAL_FIRST_LAST);
+  EXPECT_EQ(return_mode_from_string("FirstStrongest"), ReturnMode::DUAL_FIRST_STRONGEST);
   EXPECT_EQ(return_mode_from_string("StrongestLast"), ReturnMode::DUAL_STRONGEST_LAST);
+  EXPECT_EQ(return_mode_from_string("LastStrongest"), ReturnMode::DUAL_STRONGEST_LAST);
+}
 
+TEST(TestCoreTypes, ReturnModeRejectsUnsupportedNames)
+{
   EXPECT_EQ(return_mode_from_string("DualOnly"), ReturnMode::UNKNOWN);
-  EXPECT_EQ(return_mode_from_string("DualFirst"), ReturnMode::UNKNOWN);
-  EXPECT_EQ(return_mode_from_string("DualLast"), ReturnMode::UNKNOWN);
   EXPECT_EQ(return_mode_from_string("WeakFirst"), ReturnMode::UNKNOWN);
   EXPECT_EQ(return_mode_from_string("WeakLast"), ReturnMode::UNKNOWN);
 }

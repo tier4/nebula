@@ -14,6 +14,8 @@
       "$ref": "../../../nebula_core/nebula_core_ros/schema/misc.json#/definitions/return_mode",
       "enum": [
         "Dual",
+        "DualStrongestLast",
+        "StrongestLast",
         "Strongest",
         "Last",
         "First"

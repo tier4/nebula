@@ -117,13 +117,13 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnMode 
       os << "SingleStrongest";
       break;
     case ReturnMode::DUAL_FIRST_LAST:
-      os << "LastFirst";
+      os << "DualFirstLast";
       break;
     case ReturnMode::DUAL_FIRST_STRONGEST:
-      os << "FirstStrongest";
+      os << "DualFirstStrongest";
       break;
     case ReturnMode::DUAL_STRONGEST_LAST:
-      os << "LastStrongest";
+      os << "DualStrongestLast";
       break;
     case ReturnMode::TRIPLE:
       os << "Triple";
@@ -454,10 +454,14 @@ inline ReturnMode return_mode_from_string(const std::string & return_mode)
   if (return_mode == "Last" || return_mode == "SingleLast") return ReturnMode::SINGLE_LAST;
   if (return_mode == "Strongest" || return_mode == "SingleStrongest")
     return ReturnMode::SINGLE_STRONGEST;
-  if (return_mode == "Dual" || return_mode == "LastStrongest" || return_mode == "StrongestLast")
+  if (
+    return_mode == "Dual" || return_mode == "DualStrongestLast" || return_mode == "StrongestLast" ||
+    return_mode == "LastStrongest")
     return ReturnMode::DUAL_STRONGEST_LAST;
-  if (return_mode == "LastFirst" || return_mode == "FirstLast") return ReturnMode::DUAL_FIRST_LAST;
-  if (return_mode == "FirstStrongest") return ReturnMode::DUAL_FIRST_STRONGEST;
+  if (return_mode == "DualFirstLast" || return_mode == "FirstLast" || return_mode == "LastFirst")
+    return ReturnMode::DUAL_FIRST_LAST;
+  if (return_mode == "DualFirstStrongest" || return_mode == "FirstStrongest")
+    return ReturnMode::DUAL_FIRST_STRONGEST;
   if (return_mode == "Triple") return ReturnMode::TRIPLE;
 
   return ReturnMode::UNKNOWN;
