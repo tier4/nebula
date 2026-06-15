@@ -91,6 +91,19 @@ Each laser beam can result in multiple returns: if there is a semi-transparent o
 Depending on perception requirements, one might be interested in specific returns, e.g. the strongest and last returns, or only the first return.
 This parameter is used to set this preference.
 
+The canonical return mode strings are `SingleFirst`, `SingleLast`, `SingleStrongest`,
+`FirstLast`, `FirstStrongest`, `StrongestLast`, and `Triple`. For compatibility with
+existing configuration files, Nebula also accepts the aliases `First`, `Last`, `Strongest`,
+`Dual`, `LastFirst`, and `LastStrongest` where they are valid for the selected sensor
+model. Individual sensor schemas restrict this parameter to the return modes supported
+by that model.
+
+Sensor manufacturers often name dual return modes after the return order in the UDP
+packet structure. For example, one sensor may expose the same conceptual strongest/last
+mode as `LastStrongest` because that is the packet order, while Nebula's canonical name
+is `StrongestLast`. These names describe the same return selection, so Nebula accepts
+manufacturer-specific aliases where needed.
+
 ### `dual_return_distance_threshold`
 
 For multiple returns that are close together, the points will be fused into one if they are below this threshold (in meters).

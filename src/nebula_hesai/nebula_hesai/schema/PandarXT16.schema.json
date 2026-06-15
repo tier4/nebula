@@ -81,8 +81,10 @@
             "Last",
             "Strongest",
             "LastStrongest",
+            "StrongestLast",
             "First",
             "LastFirst",
+            "FirstLast",
             "FirstStrongest",
             "Dual"
           ]
