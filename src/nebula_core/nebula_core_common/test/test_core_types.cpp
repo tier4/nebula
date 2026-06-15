@@ -101,10 +101,16 @@ TEST(TestCoreTypes, SensorModelRoundTrip)
 TEST(TestCoreTypes, ReturnModeRoundTrip)
 {
   const std::vector<std::pair<ReturnMode, std::string>> cases = {
+    {ReturnMode::FIRST, "First"},
+    {ReturnMode::LAST, "Last"},
+    {ReturnMode::STRONGEST, "Strongest"},
     {ReturnMode::SINGLE_FIRST, "SingleFirst"},
     {ReturnMode::SINGLE_STRONGEST, "SingleStrongest"},
     {ReturnMode::SINGLE_LAST, "SingleLast"},
-    {ReturnMode::DUAL_ONLY, "Dual"},
+    {ReturnMode::DUAL, "Dual"},
+    {ReturnMode::DUAL_LAST_STRONGEST, "LastStrongest"},
+    {ReturnMode::DUAL_LAST_FIRST, "LastFirst"},
+    {ReturnMode::DUAL_FIRST_STRONGEST, "FirstStrongest"},
   };
 
   for (const auto & test_case : cases) {
@@ -115,8 +121,9 @@ TEST(TestCoreTypes, ReturnModeRoundTrip)
   }
 
   EXPECT_EQ(return_mode_from_string("DualOnly"), ReturnMode::UNKNOWN);
-  EXPECT_EQ(return_mode_from_string("LastStrongest"), ReturnMode::UNKNOWN);
-  EXPECT_EQ(return_mode_from_string("FirstStrongest"), ReturnMode::UNKNOWN);
+  EXPECT_EQ(return_mode_from_string("DualFirst"), ReturnMode::UNKNOWN);
+  EXPECT_EQ(return_mode_from_string("DualLast"), ReturnMode::UNKNOWN);
+  EXPECT_EQ(return_mode_from_string("Triple"), ReturnMode::UNKNOWN);
   EXPECT_EQ(return_mode_from_string("Unknown"), ReturnMode::UNKNOWN);
 }
 

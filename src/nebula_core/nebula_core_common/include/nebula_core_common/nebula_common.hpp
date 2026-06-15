@@ -494,10 +494,16 @@ inline std::string sensor_model_to_string(const SensorModel & sensor_model)
 /// @return Corresponding ReturnMode
 inline ReturnMode return_mode_from_string(const std::string & return_mode)
 {
+  if (return_mode == "First") return ReturnMode::FIRST;
+  if (return_mode == "Last") return ReturnMode::LAST;
+  if (return_mode == "Strongest") return ReturnMode::STRONGEST;
   if (return_mode == "SingleFirst") return ReturnMode::SINGLE_FIRST;
   if (return_mode == "SingleStrongest") return ReturnMode::SINGLE_STRONGEST;
   if (return_mode == "SingleLast") return ReturnMode::SINGLE_LAST;
-  if (return_mode == "Dual") return ReturnMode::DUAL_ONLY;
+  if (return_mode == "Dual") return ReturnMode::DUAL;
+  if (return_mode == "LastStrongest") return ReturnMode::DUAL_LAST_STRONGEST;
+  if (return_mode == "LastFirst") return ReturnMode::DUAL_LAST_FIRST;
+  if (return_mode == "FirstStrongest") return ReturnMode::DUAL_FIRST_STRONGEST;
 
   return ReturnMode::UNKNOWN;
 }
