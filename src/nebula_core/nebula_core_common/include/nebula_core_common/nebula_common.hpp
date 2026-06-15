@@ -44,24 +44,13 @@ enum class ReturnType : uint8_t {
 /// @brief Return mode of each LiDAR
 enum class ReturnMode : uint8_t {
   UNKNOWN = 0,
-  SINGLE_STRONGEST,
-  SINGLE_LAST,
-  DUAL_FIRST,
-  DUAL_LAST,
-  DUAL_ONLY,
   SINGLE_FIRST,
-  DUAL_STRONGEST_FIRST,
-  DUAL_STRONGEST_LAST,
-  DUAL_WEAK_FIRST,
-  DUAL_WEAK_LAST,
-  TRIPLE,
-  LAST,
-  STRONGEST,
-  DUAL_LAST_STRONGEST,
-  FIRST,
-  DUAL_LAST_FIRST,
+  SINGLE_LAST,
+  SINGLE_STRONGEST,
+  DUAL_FIRST_LAST,
   DUAL_FIRST_STRONGEST,
-  DUAL
+  DUAL_STRONGEST_LAST,
+  TRIPLE
 };
 
 /// @brief Convert ReturnType enum to string (Overloading the << operator)
@@ -115,63 +104,29 @@ inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnType 
 inline std::ostream & operator<<(std::ostream & os, nebula::drivers::ReturnMode const & arg)
 {
   switch (arg) {
+    case ReturnMode::UNKNOWN:
+      os << "Unknown";
+      break;
     case ReturnMode::SINGLE_FIRST:
       os << "SingleFirst";
-      break;
-    case ReturnMode::SINGLE_STRONGEST:
-      os << "SingleStrongest";
       break;
     case ReturnMode::SINGLE_LAST:
       os << "SingleLast";
       break;
-    case ReturnMode::DUAL_ONLY:
-      os << "Dual";
+    case ReturnMode::SINGLE_STRONGEST:
+      os << "SingleStrongest";
       break;
-    case ReturnMode::DUAL_FIRST:
-      os << "DualFirst";
-      break;
-    case ReturnMode::DUAL_LAST:
-      os << "DualLast";
-      break;
-    case ReturnMode::DUAL_WEAK_FIRST:
-      os << "WeakFirst";
-      break;
-    case ReturnMode::DUAL_WEAK_LAST:
-      os << "WeakLast";
-      break;
-    case ReturnMode::DUAL_STRONGEST_LAST:
-      os << "StrongLast";
-      break;
-    case ReturnMode::DUAL_STRONGEST_FIRST:
-      os << "StrongFirst";
-      break;
-    case ReturnMode::TRIPLE:
-      os << "Triple";
-      break;
-    // for Hesai
-    case ReturnMode::LAST:
-      os << "Last";
-      break;
-    case ReturnMode::STRONGEST:
-      os << "Strongest";
-      break;
-    case ReturnMode::DUAL_LAST_STRONGEST:
-      os << "LastStrongest";
-      break;
-    case ReturnMode::FIRST:
-      os << "First";
-      break;
-    case ReturnMode::DUAL_LAST_FIRST:
+    case ReturnMode::DUAL_FIRST_LAST:
       os << "LastFirst";
       break;
     case ReturnMode::DUAL_FIRST_STRONGEST:
       os << "FirstStrongest";
       break;
-    case ReturnMode::DUAL:
-      os << "Dual";
+    case ReturnMode::DUAL_STRONGEST_LAST:
+      os << "LastStrongest";
       break;
-    case ReturnMode::UNKNOWN:
-      os << "Unknown";
+    case ReturnMode::TRIPLE:
+      os << "Triple";
       break;
   }
   return os;
@@ -494,16 +449,16 @@ inline std::string sensor_model_to_string(const SensorModel & sensor_model)
 /// @return Corresponding ReturnMode
 inline ReturnMode return_mode_from_string(const std::string & return_mode)
 {
-  if (return_mode == "First") return ReturnMode::FIRST;
-  if (return_mode == "Last") return ReturnMode::LAST;
-  if (return_mode == "Strongest") return ReturnMode::STRONGEST;
-  if (return_mode == "SingleFirst") return ReturnMode::SINGLE_FIRST;
-  if (return_mode == "SingleStrongest") return ReturnMode::SINGLE_STRONGEST;
-  if (return_mode == "SingleLast") return ReturnMode::SINGLE_LAST;
-  if (return_mode == "Dual") return ReturnMode::DUAL;
-  if (return_mode == "LastStrongest") return ReturnMode::DUAL_LAST_STRONGEST;
-  if (return_mode == "LastFirst") return ReturnMode::DUAL_LAST_FIRST;
+  if (return_mode == "Unknown") return ReturnMode::UNKNOWN;
+  if (return_mode == "First" || return_mode == "SingleFirst") return ReturnMode::SINGLE_FIRST;
+  if (return_mode == "Last" || return_mode == "SingleLast") return ReturnMode::SINGLE_LAST;
+  if (return_mode == "Strongest" || return_mode == "SingleStrongest")
+    return ReturnMode::SINGLE_STRONGEST;
+  if (return_mode == "Dual" || return_mode == "LastStrongest" || return_mode == "StrongestLast")
+    return ReturnMode::DUAL_STRONGEST_LAST;
+  if (return_mode == "LastFirst" || return_mode == "FirstLast") return ReturnMode::DUAL_FIRST_LAST;
   if (return_mode == "FirstStrongest") return ReturnMode::DUAL_FIRST_STRONGEST;
+  if (return_mode == "Triple") return ReturnMode::TRIPLE;
 
   return ReturnMode::UNKNOWN;
 }

@@ -232,7 +232,7 @@ struct SerialNumber
 /// @return The number of returns
 inline size_t get_n_returns(ReturnMode return_mode)
 {
-  if (return_mode == ReturnMode::DUAL) {
+  if (return_mode == ReturnMode::DUAL_STRONGEST_LAST) {
     return 2;
   }
   return 1;

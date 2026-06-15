@@ -71,7 +71,7 @@ public:
         os << "Invalid fov value(0 to 359)";
         break;
       case HesaiStatus::INVALID_RETURN_MODE_ERROR:
-        os << "Invalid return mode(only SINGLE_STRONGEST, SINGLE_LAST, DUAL_ONLY)";
+        os << "Invalid return mode(only SINGLE_STRONGEST, SINGLE_LAST, DUAL_STRONGEST_LAST)";
         break;
       default:
         os << Status(arg._type);

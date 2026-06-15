@@ -101,16 +101,14 @@ TEST(TestCoreTypes, SensorModelRoundTrip)
 TEST(TestCoreTypes, ReturnModeRoundTrip)
 {
   const std::vector<std::pair<ReturnMode, std::string>> cases = {
-    {ReturnMode::FIRST, "First"},
-    {ReturnMode::LAST, "Last"},
-    {ReturnMode::STRONGEST, "Strongest"},
+    {ReturnMode::UNKNOWN, "Unknown"},
     {ReturnMode::SINGLE_FIRST, "SingleFirst"},
-    {ReturnMode::SINGLE_STRONGEST, "SingleStrongest"},
     {ReturnMode::SINGLE_LAST, "SingleLast"},
-    {ReturnMode::DUAL, "Dual"},
-    {ReturnMode::DUAL_LAST_STRONGEST, "LastStrongest"},
-    {ReturnMode::DUAL_LAST_FIRST, "LastFirst"},
+    {ReturnMode::SINGLE_STRONGEST, "SingleStrongest"},
+    {ReturnMode::DUAL_FIRST_LAST, "LastFirst"},
     {ReturnMode::DUAL_FIRST_STRONGEST, "FirstStrongest"},
+    {ReturnMode::DUAL_STRONGEST_LAST, "LastStrongest"},
+    {ReturnMode::TRIPLE, "Triple"},
   };
 
   for (const auto & test_case : cases) {
@@ -120,11 +118,18 @@ TEST(TestCoreTypes, ReturnModeRoundTrip)
     EXPECT_EQ(return_mode_from_string(test_case.second), test_case.first);
   }
 
+  EXPECT_EQ(return_mode_from_string("First"), ReturnMode::SINGLE_FIRST);
+  EXPECT_EQ(return_mode_from_string("Last"), ReturnMode::SINGLE_LAST);
+  EXPECT_EQ(return_mode_from_string("Strongest"), ReturnMode::SINGLE_STRONGEST);
+  EXPECT_EQ(return_mode_from_string("Dual"), ReturnMode::DUAL_STRONGEST_LAST);
+  EXPECT_EQ(return_mode_from_string("FirstLast"), ReturnMode::DUAL_FIRST_LAST);
+  EXPECT_EQ(return_mode_from_string("StrongestLast"), ReturnMode::DUAL_STRONGEST_LAST);
+
   EXPECT_EQ(return_mode_from_string("DualOnly"), ReturnMode::UNKNOWN);
   EXPECT_EQ(return_mode_from_string("DualFirst"), ReturnMode::UNKNOWN);
   EXPECT_EQ(return_mode_from_string("DualLast"), ReturnMode::UNKNOWN);
-  EXPECT_EQ(return_mode_from_string("Triple"), ReturnMode::UNKNOWN);
-  EXPECT_EQ(return_mode_from_string("Unknown"), ReturnMode::UNKNOWN);
+  EXPECT_EQ(return_mode_from_string("WeakFirst"), ReturnMode::UNKNOWN);
+  EXPECT_EQ(return_mode_from_string("WeakLast"), ReturnMode::UNKNOWN);
 }
 
 int main(int argc, char ** argv)
