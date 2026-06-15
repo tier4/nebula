@@ -37,12 +37,15 @@ Runtime requirements:
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 import ipaddress
+from pathlib import Path
 import struct
 import sys
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Iterator, List, Sequence, Tuple
+from typing import Iterator
+from typing import List
+from typing import Sequence
+from typing import Tuple
 
 SUPPORTED_TYPES = {
     "nebula_msgs/msg/NebulaPacket",
@@ -176,8 +179,8 @@ class BagReaderError(RuntimeError):
 
 def import_ros_deps():
     try:
-        import rosbag2_py  # type: ignore
         from rclpy.serialization import deserialize_message  # type: ignore
+        import rosbag2_py  # type: ignore
         from rosidl_runtime_py.utilities import get_message  # type: ignore
 
         return rosbag2_py, deserialize_message, get_message
