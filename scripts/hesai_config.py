@@ -185,7 +185,7 @@ def parse_inventory(payload: bytes) -> dict[str, str]:
             encoder_disk_correction_flag,
             _reserved,
         ) = struct.unpack(
-            "!16s16s16s16sHBBBBB9s",
+            "!16s 16s 16s 16s H B B B B B 9s",
             payload[INVENTORY_BASE_SIZE:INVENTORY_AT128_SIZE],
         )
         result.update(
