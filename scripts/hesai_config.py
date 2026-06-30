@@ -81,7 +81,6 @@ MODEL_MAP = {
     3: "Pandar128",
     15: "PandarQT64",
     17: "Pandar40M",
-    20: "PandarMind(PM64)",
     25: "PandarXT32",
     26: "PandarXT16",
     32: "QT128C2X",
