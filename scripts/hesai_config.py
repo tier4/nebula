@@ -120,9 +120,7 @@ def detect_inventory_variant(payload: bytes) -> str:
 
     model_at_106 = payload[PRODUCT_MODEL_OFFSET_XT_QT_OT]
     model_at_170 = (
-        payload[PRODUCT_MODEL_OFFSET_AT128]
-        if payload_len > PRODUCT_MODEL_OFFSET_AT128
-        else None
+        payload[PRODUCT_MODEL_OFFSET_AT128] if payload_len > PRODUCT_MODEL_OFFSET_AT128 else None
     )
 
     # OT128 before AT128: padded OT responses can exceed 184 bytes.
