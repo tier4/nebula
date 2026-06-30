@@ -67,6 +67,14 @@ INVENTORY_QT128_SIZE = 144
 INVENTORY_OT128_SIZE = 162
 INVENTORY_AT128_SIZE = 184
 
+PRODUCT_MODEL_OFFSET_XT_QT_OT = 106
+PRODUCT_MODEL_OFFSET_AT128 = 170
+
+OT128_PRODUCT_MODEL = 42
+AT128_PRODUCT_MODELS = frozenset({40, 48})
+QT128_PRODUCT_MODEL = 32
+XT_PRODUCT_MODELS = frozenset({0, 2, 3, 15, 17, 20, 25, 26, 38})
+
 MODEL_MAP = {
     0: "Pandar40P",
     2: "Pandar64",
@@ -105,6 +113,40 @@ def get_motor_type(motor_type: int) -> str:
     return MOTOR_TYPE_MAP.get(motor_type, "unknown")
 
 
+def detect_inventory_variant(payload: bytes) -> str:
+    payload_len = len(payload)
+    if payload_len < INVENTORY_XT_SIZE:
+        return "base_only"
+
+    model_at_106 = payload[PRODUCT_MODEL_OFFSET_XT_QT_OT]
+    model_at_170 = (
+        payload[PRODUCT_MODEL_OFFSET_AT128]
+        if payload_len > PRODUCT_MODEL_OFFSET_AT128
+        else None
+    )
+
+    # OT128 before AT128: padded OT responses can exceed 184 bytes.
+    if payload_len >= INVENTORY_OT128_SIZE and model_at_106 == OT128_PRODUCT_MODEL:
+        return "OT128"
+    if payload_len >= INVENTORY_AT128_SIZE and model_at_170 in AT128_PRODUCT_MODELS:
+        return "AT128"
+    if payload_len >= INVENTORY_QT128_SIZE and model_at_106 == QT128_PRODUCT_MODEL:
+        return "QT128"
+    if payload_len >= INVENTORY_XT_SIZE and model_at_106 in XT_PRODUCT_MODELS:
+        return "XT16_32_40P"
+
+    if payload_len >= INVENTORY_OT128_SIZE and payload_len < INVENTORY_AT128_SIZE:
+        return "OT128"
+    if payload_len >= INVENTORY_QT128_SIZE and payload_len < INVENTORY_OT128_SIZE:
+        return "QT128"
+    if payload_len >= INVENTORY_XT_SIZE and payload_len < INVENTORY_QT128_SIZE:
+        return "XT16_32_40P"
+    if payload_len >= INVENTORY_AT128_SIZE:
+        return "AT128"
+
+    return "base_only"
+
+
 def parse_inventory(payload: bytes) -> dict[str, str]:
     if len(payload) < INVENTORY_BASE_SIZE:
         msg = f"Inventory payload too short: {len(payload)} bytes (expected at least {INVENTORY_BASE_SIZE})"
@@ -130,7 +172,9 @@ def parse_inventory(payload: bytes) -> dict[str, str]:
         "sensor_fw_ver": decode_c_string(sensor_fw_ver),
     }
 
-    if len(payload) >= INVENTORY_AT128_SIZE:
+    variant = detect_inventory_variant(payload)
+
+    if variant == "AT128":
         (
             fpga_para_ver,
             fpga_cfg_ver,
@@ -164,7 +208,7 @@ def parse_inventory(payload: bytes) -> dict[str, str]:
                 ),
             }
         )
-    elif len(payload) >= INVENTORY_OT128_SIZE:
+    elif variant == "OT128":
         (
             zero_angle_offset,
             product_model,
@@ -189,7 +233,7 @@ def parse_inventory(payload: bytes) -> dict[str, str]:
         )
         if customer_pn_enable:
             result["customer_pn"] = decode_c_string(customer_pn)
-    elif len(payload) >= INVENTORY_QT128_SIZE:
+    elif variant == "QT128":
         (
             zero_angle_offset,
             angle_offset_cc,
@@ -213,7 +257,7 @@ def parse_inventory(payload: bytes) -> dict[str, str]:
                 "pn": decode_c_string(pn),
             }
         )
-    elif len(payload) >= INVENTORY_XT_SIZE:
+    elif variant == "XT16_32_40P":
         (
             zero_angle_offset,
             product_model,
