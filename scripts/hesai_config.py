@@ -79,7 +79,7 @@ MODEL_MAP = {
     0: "Pandar40P",
     2: "Pandar64",
     3: "Pandar128",
-    15: "PandarQT",
+    15: "PandarQT64",
     17: "Pandar40M",
     20: "PandarMind(PM64)",
     25: "PandarXT32",
