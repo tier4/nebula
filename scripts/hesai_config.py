@@ -20,6 +20,7 @@ from rich import print  # noqa: A004
 from rich.syntax import Syntax
 from rich.table import Table
 
+GET_INVENTORY_INFO_COMMAND = 0x07
 GET_CONFIG_INFO_COMMAND = 0x08
 GET_LIDAR_STATUS_COMMAND = 0x09
 GET_PTP_CONFIG_COMMAND = 0x26
@@ -59,6 +60,191 @@ RETURN_MODE_MAP = {
     4: "Last + First",
     5: "First + Strongest",
 }
+
+INVENTORY_BASE_SIZE = 104
+INVENTORY_XT_SIZE = 120
+INVENTORY_QT128_SIZE = 144
+INVENTORY_OT128_SIZE = 162
+INVENTORY_AT128_SIZE = 184
+
+MODEL_MAP = {
+    0: "Pandar40P",
+    2: "Pandar64",
+    3: "Pandar128",
+    15: "PandarQT",
+    17: "Pandar40M",
+    20: "PandarMind(PM64)",
+    25: "PandarXT32",
+    26: "PandarXT16",
+    32: "QT128C2X",
+    38: "PandarXT32M",
+    40: "PandarAT128",
+    42: "OT128",
+    48: "PandarAT128",
+}
+
+MOTOR_TYPE_MAP = {
+    0: "unidirectional",
+    1: "bidirectional",
+}
+
+
+def decode_c_string(data: bytes) -> str:
+    return data.split(b"\x00", 1)[0].decode("ascii", errors="replace")
+
+
+def format_mac(mac: bytes) -> str:
+    return ":".join(f"{byte:02x}" for byte in mac)
+
+
+def get_str_model(model: int) -> str:
+    return MODEL_MAP.get(model, f"Unknown({model})")
+
+
+def get_motor_type(motor_type: int) -> str:
+    return MOTOR_TYPE_MAP.get(motor_type, "unknown")
+
+
+def parse_inventory(payload: bytes) -> dict[str, str]:
+    if len(payload) < INVENTORY_BASE_SIZE:
+        msg = f"Inventory payload too short: {len(payload)} bytes (expected at least {INVENTORY_BASE_SIZE})"
+        raise ValueError(msg)
+
+    (
+        sn,
+        date_of_manufacture,
+        mac,
+        sw_ver,
+        hw_ver,
+        control_fw_ver,
+        sensor_fw_ver,
+    ) = struct.unpack("18s 16s 6s 16s 16s 16s 16s", payload[:INVENTORY_BASE_SIZE])
+
+    result = {
+        "sn": decode_c_string(sn),
+        "date_of_manufacture": decode_c_string(date_of_manufacture),
+        "mac": format_mac(mac),
+        "sw_ver": decode_c_string(sw_ver),
+        "hw_ver": decode_c_string(hw_ver),
+        "control_fw_ver": decode_c_string(control_fw_ver),
+        "sensor_fw_ver": decode_c_string(sensor_fw_ver),
+    }
+
+    if len(payload) >= INVENTORY_AT128_SIZE:
+        (
+            fpga_para_ver,
+            fpga_cfg_ver,
+            fpga_para_sha,
+            fpga_cfg_sha,
+            unused_angle_offset,
+            product_model,
+            motor_type,
+            num_of_lines,
+            motor_correction_flag,
+            encoder_disk_correction_flag,
+            _reserved,
+        ) = struct.unpack(
+            "16s 16s 16s 16s !H B B B B B 9s",
+            payload[INVENTORY_BASE_SIZE:INVENTORY_AT128_SIZE],
+        )
+        result.update(
+            {
+                "variant": "AT128",
+                "fpga_para_ver": decode_c_string(fpga_para_ver),
+                "fpga_cfg_ver": decode_c_string(fpga_cfg_ver),
+                "fpga_para_sha": decode_c_string(fpga_para_sha),
+                "fpga_cfg_sha": decode_c_string(fpga_cfg_sha),
+                "zero_angle_offset": str(unused_angle_offset),
+                "model": get_str_model(product_model),
+                "motor_type": get_motor_type(motor_type),
+                "num_of_lines": str(num_of_lines),
+                "motor_correction_flag": "finished" if motor_correction_flag else "not finished",
+                "encoder_disk_correction_flag": (
+                    "finished" if encoder_disk_correction_flag else "not finished"
+                ),
+            }
+        )
+    elif len(payload) >= INVENTORY_OT128_SIZE:
+        (
+            zero_angle_offset,
+            product_model,
+            motor_type,
+            num_of_lines,
+            pn,
+            customer_pn_enable,
+            customer_pn,
+        ) = struct.unpack(
+            "!H B B B 32s B 20s",
+            payload[INVENTORY_BASE_SIZE:INVENTORY_OT128_SIZE],
+        )
+        result.update(
+            {
+                "variant": "OT128",
+                "zero_angle_offset": str(zero_angle_offset),
+                "model": get_str_model(product_model),
+                "motor_type": get_motor_type(motor_type),
+                "num_of_lines": str(num_of_lines),
+                "pn": decode_c_string(pn),
+            }
+        )
+        if customer_pn_enable:
+            result["customer_pn"] = decode_c_string(customer_pn)
+    elif len(payload) >= INVENTORY_QT128_SIZE:
+        (
+            zero_angle_offset,
+            angle_offset_cc,
+            product_model,
+            motor_type,
+            num_of_lines,
+            pn,
+            _reserved,
+        ) = struct.unpack(
+            "!H H B B B 32s B",
+            payload[INVENTORY_BASE_SIZE:INVENTORY_QT128_SIZE],
+        )
+        result.update(
+            {
+                "variant": "QT128",
+                "zero_angle_offset": str(zero_angle_offset),
+                "zero_angle_offset_cc": str(angle_offset_cc),
+                "model": get_str_model(product_model),
+                "motor_type": get_motor_type(motor_type),
+                "num_of_lines": str(num_of_lines),
+                "pn": decode_c_string(pn),
+            }
+        )
+    elif len(payload) >= INVENTORY_XT_SIZE:
+        (
+            zero_angle_offset,
+            product_model,
+            motor_type,
+            num_of_lines,
+            _reserved,
+        ) = struct.unpack(
+            "!H B B B 11s",
+            payload[INVENTORY_BASE_SIZE:INVENTORY_XT_SIZE],
+        )
+        result.update(
+            {
+                "variant": "XT16_32_40P",
+                "zero_angle_offset": str(zero_angle_offset),
+                "model": get_str_model(product_model),
+                "motor_type": get_motor_type(motor_type),
+                "num_of_lines": str(num_of_lines),
+            }
+        )
+    else:
+        result["variant"] = "base_only"
+
+    return result
+
+
+@dataclass
+class PtcCommandGetInventory(PtcCommandBase):
+    fields: dict[str, str]
+
+    def parse(self) -> dict[str, str]:
+        return self.fields
 
 
 @dataclass
@@ -221,6 +407,16 @@ def get_ptp_config(sock: socket.socket):
     return PtcCommandGetPtpConfig(*fields)
 
 
+def get_inventory(sock: socket.socket):
+    sock.sendall(compose_packet(GET_INVENTORY_INFO_COMMAND))
+
+    response = list(sock.recv(8))
+    payload_length = sum(response[4:])
+    payload = sock.recv(payload_length)
+
+    return PtcCommandGetInventory(parse_inventory(payload))
+
+
 def is_valid_ip(ip: str | None) -> bool:
     if ip is None:
         return True
@@ -345,6 +541,11 @@ if __name__ == "__main__":
     sock.connect((args.sensor_ip, 9347))
 
     try:
+        inventory = get_inventory(sock)
+        inventory.print(title="Inventory Info (0x07)")
+
+        print()
+
         config_info = get_config_info(sock)
         config_info.print(title="Config Info (0x08)")
 
