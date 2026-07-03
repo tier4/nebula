@@ -10,6 +10,10 @@
 #include "nebula_hesai/diagnostics/functional_safety_diagnostic_task.hpp"
 #include "nebula_hesai_decoders/decoders/functional_safety.hpp"
 
+#ifdef USE_AGNOCAST_ENABLED
+#include <agnocast_cie_thread_configurator/cie_thread_configurator.hpp>
+#endif
+
 #include <nebula_core_common/util/stopwatch.hpp>
 #include <nebula_core_common/util/string_conversions.hpp>
 #include <nebula_hesai_common/hesai_common.hpp>
@@ -21,8 +25,10 @@
 #include <sensor_msgs/image_encodings.hpp>
 
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <utility>
 
 #if defined(__clang__)
@@ -74,13 +80,25 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
     current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
     packets_pub_ = parent_node->create_publisher<pandar_msgs::msg::PandarScan>(
       "pandar_packets", rclcpp::SensorDataQoS());
+
+    SingleConsumerProcessor<pandar_msgs::msg::PandarScan::UniquePtr>::thread_factory_t
+      thread_factory = nullptr;
+#ifdef USE_AGNOCAST_ENABLED
+    // The frame_id makes the name unique per sensor, as required by cie_thread_configurator.
+    std::string thread_name = "nebula_hesai_packets_pub@" + sensor_cfg_->frame_id;
+    thread_factory = [thread_name = std::move(thread_name)](std::function<void()> && thread_body) {
+      return agnocast_cie_thread_configurator::spawn_non_ros2_thread(
+        thread_name.c_str(), std::move(thread_body));
+    };
+#endif
+
     packets_pub_thread_.emplace(
       [this](pandar_msgs::msg::PandarScan::UniquePtr && msg) {
         if (packets_pub_) {
           packets_pub_->publish(std::move(msg));
         }
       },
-      10);
+      10, std::move(thread_factory));
   }
 
   auto qos_profile = rmw_qos_profile_sensor_data;

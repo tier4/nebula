@@ -260,17 +260,24 @@ public:
 
   using callback_t = std::function<void(std::vector<uint8_t> & data, const RxMetadata & metadata)>;
 
+  /// Creates the receiver thread from a given thread body. Allows callers to integrate the
+  /// receiver thread with external thread management frameworks (e.g. to control its scheduling
+  /// policy). If not given, a plain `std::thread` is created.
+  using thread_factory_t = std::function<std::thread(std::function<void()> && thread_body)>;
+
   /**
    * @brief Register a callback for processing received packets and start the receiver thread. The
    * callback will be called for each received packet, and will be executed in the receive thread.
    * Has to be called on a bound socket (`bind()` has to have been called before).
    *
    * @param callback The function to be executed for each received packet.
+   * @param thread_factory Optional factory used to create the receiver thread.
    */
-  UdpSocket & subscribe(callback_t && callback)
+  UdpSocket & subscribe(callback_t && callback, thread_factory_t thread_factory = nullptr)
   {
     unsubscribe();
     callback_ = std::move(callback);
+    thread_factory_ = std::move(thread_factory);
     launch_receiver();
     return *this;
   }
@@ -316,7 +323,7 @@ public:
   UdpSocket(UdpSocket && other) noexcept
   : sock_fd_((other.unsubscribe(), std::move(other.sock_fd_))), config_(other.config_)
   {
-    if (other.callback_) subscribe(std::move(other.callback_));
+    if (other.callback_) subscribe(std::move(other.callback_), std::move(other.thread_factory_));
   };
 
   UdpSocket & operator=(const UdpSocket &) = delete;
@@ -328,7 +335,7 @@ private:
     assert(callback_);
 
     running_ = true;
-    receive_thread_ = std::thread([this]() {
+    std::function<void()> receive_loop = [this]() {
       std::vector<uint8_t> buffer;
       DropMonitor drop_monitor{};
       PerfCounters current_packet_perf_counters{};
@@ -381,7 +388,13 @@ private:
 
         callback_(buffer, metadata);
       }
-    });
+    };
+
+    if (thread_factory_) {
+      receive_thread_ = thread_factory_(std::move(receive_loop));
+    } else {
+      receive_thread_ = std::thread(std::move(receive_loop));
+    }
   }
 
   static void get_receive_metadata(msghdr & msg, RxMetadata & metadata, DropMonitor & drop_monitor)
@@ -421,6 +434,7 @@ private:
   std::atomic_bool running_{false};
   std::thread receive_thread_;
   callback_t callback_;
+  thread_factory_t thread_factory_;
 };
 
 }  // namespace nebula::drivers::connections
