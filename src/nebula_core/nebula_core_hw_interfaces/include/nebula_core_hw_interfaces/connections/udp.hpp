@@ -271,7 +271,8 @@ public:
    * Has to be called on a bound socket (`bind()` has to have been called before).
    *
    * @param callback The function to be executed for each received packet.
-   * @param thread_factory Optional factory used to create the receiver thread.
+   * @param thread_factory Optional factory used to create the receiver thread. If not given, a
+   * plain `std::thread` is created.
    */
   UdpSocket & subscribe(callback_t && callback, thread_factory_t thread_factory = nullptr)
   {
@@ -392,6 +393,8 @@ private:
 
     if (thread_factory_) {
       receive_thread_ = thread_factory_(std::move(receive_loop));
+      // A factory returning a non-joinable thread would leave the socket silently dead.
+      assert(receive_thread_.joinable());
     } else {
       receive_thread_ = std::thread(std::move(receive_loop));
     }

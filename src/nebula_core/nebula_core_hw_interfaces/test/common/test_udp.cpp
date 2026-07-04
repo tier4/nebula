@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <functional>
 #include <optional>
 #include <string>
 #include <thread>
@@ -213,6 +214,45 @@ TEST(TestUdp, TestMoveable)
 
   std::this_thread::sleep_for(100ms);
   ASSERT_EQ(n_received, 2);
+}
+
+TEST(TestUdp, TestThreadFactoryCreatesReceiverThread)
+{
+  const std::vector<uint8_t> payload{1, 2, 3};
+
+  size_t n_received = 0;
+  size_t n_factory_calls = 0;
+
+  auto sock = UdpSocket::Builder(g_localhost_ip, g_host_port).bind();
+  sock.subscribe(
+    [&n_received](const auto &, const auto &) { n_received++; },
+    [&n_factory_calls](std::function<void()> && thread_body) {
+      n_factory_calls++;
+      return std::thread(std::move(thread_body));
+    });
+
+  ASSERT_EQ(n_factory_calls, 1);
+
+  auto err_no_opt = udp_send(g_localhost_ip, g_host_port, payload);
+  if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
+
+  std::this_thread::sleep_for(100ms);
+  ASSERT_EQ(n_received, 1);
+
+  // The factory moves with the socket and is re-invoked to launch the new receiver thread
+  UdpSocket sock2{std::move(sock)};
+  ASSERT_TRUE(sock2.is_subscribed());
+  ASSERT_EQ(n_factory_calls, 2);
+
+  err_no_opt = udp_send(g_localhost_ip, g_host_port, payload);
+  if (err_no_opt.has_value()) GTEST_SKIP() << strerror(err_no_opt.value());
+
+  std::this_thread::sleep_for(100ms);
+  ASSERT_EQ(n_received, 2);
+
+  // Unsubscribing joins the factory-created thread without further factory calls
+  sock2.unsubscribe();
+  ASSERT_EQ(n_factory_calls, 2);
 }
 
 TEST(TestUdp, TestSending)

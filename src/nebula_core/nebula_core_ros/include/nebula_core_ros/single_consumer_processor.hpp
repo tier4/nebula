@@ -46,7 +46,8 @@ public:
   /// @brief Constructor
   /// @param callback The callback function to execute on each item
   /// @param max_queue_size The maximum size of the queue
-  /// @param thread_factory Optional factory used to create the consumer thread.
+  /// @param thread_factory Optional factory used to create the consumer thread. If not given, a
+  /// plain `std::thread` is created.
   explicit SingleConsumerProcessor(
     callback_t callback, size_t max_queue_size, thread_factory_t thread_factory = nullptr)
   : callback_(std::move(callback)), max_queue_size_(max_queue_size)
@@ -61,6 +62,8 @@ public:
 
     if (thread_factory) {
       consumer_thread_ = thread_factory([this]() { consumer_loop(); });
+      // A factory returning a non-joinable thread would leave the processor silently dead.
+      assert(consumer_thread_.joinable());
     } else {
       consumer_thread_ = std::thread(&SingleConsumerProcessor::consumer_loop, this);
     }
