@@ -396,8 +396,11 @@ private:
 
     if (thread_factory_) {
       receive_thread_ = thread_factory_(std::move(receive_loop));
-      // A factory returning a non-joinable thread would leave the socket silently dead.
-      assert(receive_thread_.joinable());
+      if (!receive_thread_.joinable()) {
+        // Roll back so the socket is left in a consistent unsubscribed state.
+        running_ = false;
+        throw UsageError("Thread factory must return a joinable thread");
+      }
     } else {
       receive_thread_ = std::thread(std::move(receive_loop));
     }

@@ -62,8 +62,9 @@ public:
 
     if (thread_factory) {
       consumer_thread_ = thread_factory([this]() { consumer_loop(); });
-      // A factory returning a non-joinable thread would leave the processor silently dead.
-      assert(consumer_thread_.joinable());
+      if (!consumer_thread_.joinable()) {
+        throw std::invalid_argument("Thread factory must return a joinable thread");
+      }
     } else {
       consumer_thread_ = std::thread(&SingleConsumerProcessor::consumer_loop, this);
     }
