@@ -263,6 +263,9 @@ public:
   /// Creates the receiver thread from a given thread body. Allows callers to integrate the
   /// receiver thread with external thread management frameworks (e.g. to control its scheduling
   /// policy). If not given, a plain `std::thread` is created.
+  /// Note: the factory is invoked again each time the receiver thread is relaunched, i.e. when a
+  /// subscribed socket is re-subscribed or moved (the previous thread is joined first, so two
+  /// factory-created threads never coexist).
   using thread_factory_t = std::function<std::thread(std::function<void()> && thread_body)>;
 
   /**
