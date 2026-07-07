@@ -73,7 +73,7 @@ HesaiDecoderWrapper::HesaiDecoderWrapper(
   if (publish_packets) {
     current_scan_msg_ = std::make_unique<pandar_msgs::msg::PandarScan>();
     packets_pub_ = parent_node->create_publisher<pandar_msgs::msg::PandarScan>(
-      "pandar_packets", rclcpp::SensorDataQoS());
+      "pandar_packets", rclcpp::SensorDataQoS().reliable());
     packets_pub_thread_.emplace(
       [this](pandar_msgs::msg::PandarScan::UniquePtr && msg) {
         if (packets_pub_) {
