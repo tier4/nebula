@@ -51,7 +51,8 @@ ament_target_dependencies(
 if("$ENV{ENABLE_AGNOCAST}")
   message(STATUS "Agnocast support is enabled")
   ament_target_dependencies(hesai_ros_wrapper PUBLIC agnocastlib)
-  # Used only in decoder_wrapper.cpp; not part of the exported interface.
+  # Used only in the private cie_thread_factory.hpp helper; not part of the
+  # exported interface.
   target_link_libraries(
     hesai_ros_wrapper
     PRIVATE agnocast_cie_thread_configurator::agnocast_thread_configurator)

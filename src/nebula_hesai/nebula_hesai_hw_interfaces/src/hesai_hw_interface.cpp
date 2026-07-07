@@ -10,13 +10,8 @@
 #include "nebula_hesai_common/hesai_status.hpp"
 #include "nebula_hesai_hw_interfaces/hesai_cmd_response.hpp"
 
-#ifdef USE_AGNOCAST_ENABLED
-#include <agnocast_cie_thread_configurator/cie_thread_configurator.hpp>
-#endif
-
 #include <cassert>
 #include <cstddef>
-#include <functional>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -94,8 +89,12 @@ bool ptp_config_matches_desired(
 }
 }  // namespace
 
-HesaiHwInterface::HesaiHwInterface(const std::shared_ptr<loggers::Logger> & logger)
-: logger_(logger), target_model_no_(nebula_model_to_hesai_model_no(SensorModel::UNKNOWN))
+HesaiHwInterface::HesaiHwInterface(
+  const std::shared_ptr<loggers::Logger> & logger,
+  connections::UdpSocket::thread_factory_t udp_thread_factory)
+: logger_(logger),
+  udp_thread_factory_(std::move(udp_thread_factory)),
+  target_model_no_(nebula_model_to_hesai_model_no(SensorModel::UNKNOWN))
 {
 }
 
@@ -244,21 +243,12 @@ Status HesaiHwInterface::sensor_interface_start()
 
   udp_socket_.emplace(std::move(builder).bind());
 
-  connections::UdpSocket::thread_factory_t thread_factory = nullptr;
-#ifdef USE_AGNOCAST_ENABLED
-  // The frame_id makes the name unique per sensor, as required by cie_thread_configurator.
-  std::string thread_name = "nebula_hesai_udp_receiver@" + sensor_configuration_->frame_id;
-  thread_factory = [thread_name = std::move(thread_name)](std::function<void()> && thread_body) {
-    return agnocast_cie_thread_configurator::spawn_non_ros2_thread(
-      thread_name.c_str(), std::move(thread_body));
-  };
-#endif
-
+  // Copy rather than move the factory: the interface can be stopped and restarted.
   udp_socket_->subscribe(
     [&](std::vector<uint8_t> & packet, const connections::UdpSocket::RxMetadata & metadata) {
       receive_sensor_packet_callback(packet, metadata);
     },
-    std::move(thread_factory));
+    udp_thread_factory_);
 
   return Status::OK;
 }

@@ -5,12 +5,6 @@ find_package(autoware_cmake REQUIRED)
 find_package(Boost REQUIRED)
 autoware_package()
 
-if("$ENV{ENABLE_AGNOCAST}" AND NOT agnocast_cie_thread_configurator_FOUND)
-  message(
-    FATAL_ERROR
-      "agnocast_cie_thread_configurator is required when Agnocast is enabled")
-endif()
-
 add_library(nebula_hesai_hw_interfaces SHARED src/hesai_hw_interface.cpp)
 
 target_include_directories(
@@ -23,14 +17,6 @@ target_link_libraries(nebula_hesai_hw_interfaces PUBLIC Boost::headers)
 ament_target_dependencies(
   nebula_hesai_hw_interfaces PUBLIC nebula_core_common
   nebula_hesai_common nebula_core_hw_interfaces)
-
-if("$ENV{ENABLE_AGNOCAST}")
-  add_definitions(-DUSE_AGNOCAST_ENABLED)
-  # Used only in hesai_hw_interface.cpp; not part of the exported interface.
-  target_link_libraries(
-    nebula_hesai_hw_interfaces
-    PRIVATE agnocast_cie_thread_configurator::agnocast_thread_configurator)
-endif()
 
 install(TARGETS nebula_hesai_hw_interfaces
         EXPORT export_nebula_hesai_hw_interfaces)

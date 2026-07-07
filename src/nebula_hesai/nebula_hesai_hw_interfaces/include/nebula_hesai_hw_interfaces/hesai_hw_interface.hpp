@@ -132,6 +132,7 @@ private:
   std::unique_ptr<connections::HttpClient> http_client_;
   std::shared_ptr<const HesaiSensorConfiguration> sensor_configuration_;
   connections::UdpSocket::callback_t cloud_packet_callback_;
+  connections::UdpSocket::thread_factory_t udp_thread_factory_;
 
   std::mutex mtx_inflight_tcp_request_;
 
@@ -167,7 +168,12 @@ private:
 
 public:
   /// @brief Constructor
-  explicit HesaiHwInterface(const std::shared_ptr<loggers::Logger> & logger);
+  /// @param logger Logger
+  /// @param udp_thread_factory Optional factory used to spawn the UDP receive thread. When
+  /// nullptr, a plain std::thread is spawned.
+  explicit HesaiHwInterface(
+    const std::shared_ptr<loggers::Logger> & logger,
+    connections::UdpSocket::thread_factory_t udp_thread_factory = nullptr);
   /// @brief Destructor
   ~HesaiHwInterface();
   /// @brief Initializing tcp_socket for TCP communication
