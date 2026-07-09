@@ -144,7 +144,7 @@ struct OusterDecoder::Impl
 
     NebulaPoint pt{};
     pt.x = x;
-    pt.y = y;
+    pt.y = -y; 
     pt.z = z;
     pt.intensity = intensity;
     pt.return_type = static_cast<uint8_t>(return_type);
@@ -155,6 +155,7 @@ struct OusterDecoder::Impl
     pt.time_stamp = point_time_offset_ns;
     scan_cloud->push_back(pt);
   }
+  // To Do: The ouster cordinates of Y if sign flipped is giving correct orientation of points.
 
   /// @brief Parse one lidar UDP packet and add its points to the current scan.
   /// @param host_time_ns Host arrival time of this packet (ns, epoch), used as the scan-start
