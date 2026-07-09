@@ -16,22 +16,28 @@
 
 #include <nebula_core_common/util/expected.hpp>
 
+#include <ouster/types.h>
+
 #include <cstdint>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <variant>
 
 namespace nebula::drivers
 {
 
-/// @brief Calibration data for the Ouster LiDAR (required for some sensors)
-/// @details Real sensor integrations can replace this stub with calibration tables
-/// such as per-laser angle offsets, distance corrections, or timing offsets.
+/// @brief Calibration data for the Ouster LiDAR.
+/// @details Wraps the Ouster sensor metadata JSON (equivalent to ouster::sdk::core::SensorInfo).
+/// The JSON metadata contains beam angles, transforms, data format, and other sensor-specific
+/// calibration needed by the decoder. This struct keeps the common package SDK-free by storing
+/// the raw JSON string; the decoder package constructs SensorInfo from it.
 struct OusterCalibrationData
 {
   enum class ErrorCode : uint8_t {
     OPEN_FOR_READ_FAILED,   ///< Opening a calibration file for reading failed.
     OPEN_FOR_WRITE_FAILED,  ///< Opening a calibration file for writing failed.
+    EMPTY_METADATA,         ///< Metadata JSON string is empty.
   };
 
   /// @brief Error payload for calibration file operations.
@@ -41,10 +47,20 @@ struct OusterCalibrationData
     std::string message;
   };
 
-  /// @brief Load calibration data from a file, e.g. for offline decoding
-  /// @param calibration_file Path to the calibration file
+  /// @brief The path from which calibration was loaded (for diagnostics/logging).
+  std::string calibration_file;
+
+  /// @brief Raw sensor metadata JSON string (Ouster SensorInfo serialization).
+  std::string metadata_json;
+  /// @brief Ouster SensorInfo object constructed from the metadata JSON.
+  std::shared_ptr<ouster::sdk::core::SensorInfo> sensor_info;
+  /// @brief Ouster PacketFormat object constructed from the SensorInfo.
+  std::shared_ptr<ouster::sdk::core::PacketFormat> packet_format;
+
+  /// @brief Load calibration data from a JSON metadata file (e.g. for offline decoding).
+  /// @param calibration_file Path to the JSON metadata file.
   /// @return Parsed calibration data on success, Error on failure.
-  static util::expected<OusterCalibrationData, Error> load_from_file(
+  [[nodiscard]] static util::expected<OusterCalibrationData, Error> load_from_file(
     const std::string & calibration_file)
   {
     std::ifstream file;
@@ -58,14 +74,44 @@ struct OusterCalibrationData
         "Failed to open calibration file: " + calibration_file + " Error: " + e.what()};
     }
 
-    // Implement: Parse and validate sensor calibration fields from the opened file.
-    return OusterCalibrationData{};
+    std::stringstream buf;
+    buf << file.rdbuf();
+    std::string json_content = buf.str();
+
+    if (json_content.empty()) {
+      return Error{ErrorCode::EMPTY_METADATA, "Calibration file is empty: " + calibration_file};
+    }
+
+    OusterCalibrationData data;
+    data.calibration_file = calibration_file;
+    data.metadata_json = std::move(json_content);
+    data.sensor_info = std::make_shared<ouster::sdk::core::SensorInfo>(data.metadata_json);
+    data.packet_format = std::make_shared<ouster::sdk::core::PacketFormat>(*data.sensor_info);
+    return data;
   }
 
-  /// @brief Save calibration data to a file
-  /// @param calibration_file Path to save the calibration file
+  /// @brief Create calibration data from a metadata JSON string (e.g. fetched from sensor HTTP).
+  /// @param metadata_json_str The raw JSON metadata string from the sensor.
+  /// @return Calibration data on success, Error if the string is empty.
+  [[nodiscard]] static util::expected<OusterCalibrationData, Error> load_from_string(
+    const std::string & metadata_json_str)
+  {
+    if (metadata_json_str.empty()) {
+      return Error{ErrorCode::EMPTY_METADATA, "Metadata JSON string is empty"};
+    }
+
+    OusterCalibrationData data;
+    data.metadata_json = metadata_json_str;
+    data.sensor_info = std::make_shared<ouster::sdk::core::SensorInfo>(metadata_json_str);
+    data.packet_format = std::make_shared<ouster::sdk::core::PacketFormat>(*data.sensor_info);
+    return data;
+  }
+
+  /// @brief Save calibration data (metadata JSON) to a file.
+  /// @param calibration_file Path to save the calibration file.
   /// @return std::monostate on success, Error on failure.
-  util::expected<std::monostate, Error> save_to_file(const std::string & calibration_file)
+  [[nodiscard]] util::expected<std::monostate, Error> save_to_file(
+    const std::string & calibration_file) const
   {
     std::ofstream file;
     file.exceptions(std::ofstream::failbit | std::ofstream::badbit);
@@ -78,7 +124,7 @@ struct OusterCalibrationData
         "Failed to open calibration file for writing: " + calibration_file + " Error: " + e.what()};
     }
 
-    // Implement: Serialize sensor calibration fields to the opened file.
+    file << metadata_json;
     return std::monostate{};
   }
 };
