@@ -14,6 +14,7 @@
 
 #include "nebula_ouster_decoders/ouster_lidar_scan_conversions.hpp"
 
+#include <nebula_core_decoders/angles.hpp>
 #include <nebula_core_common/nebula_common.hpp>
 
 #include <ouster/chanfield.h>
@@ -25,21 +26,6 @@
 
 namespace nebula::drivers
 {
-
-namespace
-{
-float normalize_azimuth_deg(float az_deg)
-{
-  while (az_deg < 0.0f) {
-    az_deg += 360.0F;
-  }
-  while (az_deg >= 360.0f) {
-    az_deg -= 360.0F;
-  }
-  return az_deg;
-}
-
-}  // namespace
 
 using ouster::sdk::core::LidarScan;
 using ouster::sdk::core::RANGE_UNIT;
@@ -72,6 +58,9 @@ NebulaPointCloudPtr nebula_point_cloud_from_lidar_scan(
 
   Eigen::ArrayX<uint32_t> status = scan.status();
 
+  auto fov_azimuth_start_rad = deg2rad(fov.azimuth.start);
+  auto fov_azimuth_end_rad = deg2rad(fov.azimuth.end); 
+
   for (Eigen::Index row = 0; row < h; ++row) {
     for (Eigen::Index col = 0; col < w; ++col) {
       // Skip invalid columns.
@@ -94,10 +83,9 @@ NebulaPointCloudPtr nebula_point_cloud_from_lidar_scan(
         continue;
       }
 
-      // TODO(unaal) could we read this directly from beam_azimuth_angles?
-      const float azimuth_deg =
-        normalize_azimuth_deg(static_cast<float>(rad2deg(std::atan2(pt.y(), pt.x()))));
-      if (azimuth_deg < fov.azimuth.start || azimuth_deg > fov.azimuth.end) {
+      const float azimuth_rad = static_cast<float>(
+        normalize_angle(std::atan2(pt.y(), pt.x()), 2 * M_PI));
+      if (azimuth_rad < fov_azimuth_start_rad || azimuth_rad > fov_azimuth_end_rad) {
         continue;
       }
 
@@ -115,7 +103,7 @@ NebulaPointCloudPtr nebula_point_cloud_from_lidar_scan(
       tgt_pt.return_type =
         static_cast<std::uint8_t>(dual ? ReturnType::LAST : ReturnType::STRONGEST);
       tgt_pt.channel = static_cast<std::uint16_t>(row);
-      tgt_pt.azimuth = deg2rad(azimuth_deg);
+      tgt_pt.azimuth = azimuth_rad;
       tgt_pt.elevation = deg2rad(altitude_deg);
       tgt_pt.distance = static_cast<float>(r_mm) * static_cast<float>(RANGE_UNIT);
 
